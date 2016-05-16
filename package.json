@@ -1,0 +1,15 @@
+{
+  "name": "gitop",
+  "version": "0.1.0",
+  "description": "AN electron app for dealing with those darn git issues",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "gulp test-all"
+  },
+  "author": "Jonathan Glanz",
+  "license": "MIT",
+  "devDependencies": {
+    "webpack": "^2.1.0-beta.7",
+    "webpack-dev-server": "^2.1.0-beta.0"
+  }
+}
