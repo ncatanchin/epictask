@@ -1,3 +1,6 @@
+///<reference path="../../typings/main.d.ts"/>
+require('source-map-support').install()
+require('enhanced-require')
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import * as path from 'path'
 
@@ -18,11 +21,15 @@ app.on('ready', () => {
 		height: 728
 	})
 
-	const dataUrl = require('dataurl')
-	const mainTemplate = require('./MainEntry.jade')
-	const mainEntryUrl = dataUrl.format({mimetype:'text/html',data:mainTemplate()})
-	console.log('Ready - loading now!!!!',mainEntryUrl)
-	mainWindow.loadURL(mainEntryUrl)
+	//const dataUrl = require('dataurl')
+	// const mainTemplate = require('./MainEntry.jade')
+	// const mainEntryUrl = dataUrl.format({mimetype:'text/html',data:mainTemplate()})
+	// console.log('Ready - loading now!!!!',mainEntryUrl)
+
+	const rawUrl = require('!!file?name=[name].[hash].html!./MainEntry.html')
+	const entryUrl = 'file://' + path.resolve('.','dist',rawUrl)
+	console.log('entry url',entryUrl,rawUrl)
+	mainWindow.loadURL(entryUrl)
 
 
 	mainWindow.webContents.on('did-finish-load', () => {

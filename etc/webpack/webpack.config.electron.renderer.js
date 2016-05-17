@@ -1,25 +1,22 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 const webpack = require('webpack')
+const assert = require('assert')
 
 module.exports = (projectConfig) => {
-	const config = require('./webpack.config.dev')(projectConfig)
-
+	const config = require('./webpack.config')(projectConfig)
+	
 	return Object.assign(config, {
 
 		entry: {
 			"AppEntry": ["./src/app/AppEntry"]
 		},
 
-		target: 'electron-renderer',
-
 		output: Object.assign(config.output, isDev ? {
-			publicPath: 'http://localhost:4444/'
+			publicPath: `http://localhost:${projectConfig.port}/dist`
 		} : {}),
-		plugins: [
-			...config.plugins,
-			new webpack.HotModuleReplacementPlugin()
-		],
 
+		
+
+		// Mark a couple of simple externals
 		externals: [
 			{
 				debug: "''"

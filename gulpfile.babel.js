@@ -1,11 +1,13 @@
+const del = require('del')
+
+del(['.awcache/**/*.*','dist'])
 
 // Load the global common runtime for build/test/tools
 require('./etc/tools/global-env')
 
 
-const 
+const
 	gulp = require('gulp'),
-	del = require('del'),
 	runSequence = require('run-sequence'),
 	git = require('gulp-git'),
 	ghRelease = require('gulp-github-release'),
@@ -13,6 +15,7 @@ const
 	tsc = require('typescript'),
 	babel = require('gulp-babel'),
 	tsdoc = require('gulp-typedoc')
+
 
 
 Object.assign(global,{
@@ -32,7 +35,6 @@ Object.assign(global,{
  */
 
 require('./etc/gulp/tasks')
-
 
 
 

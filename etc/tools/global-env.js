@@ -6,9 +6,33 @@ const
 	helpers = require('./helpers'),
 	{readJSONFileSync} = helpers,
 	_ = require('lodash'),
-
 	processDir = process.cwd(),
 	env = process.env.NODE_ENV || 'development'
+
+
+const RunMode = {
+	DevServer: 'DevServer',
+	Watch: 'Watch'
+}
+
+const TargetType = {
+	ElectronMain: {
+		target: 'electron-main',
+		env: {
+			development: {
+				runMode: RunMode.Watch
+			}
+		}
+	},
+	ElectronRenderer: {
+		target: 'electron-renderer',
+		env: {
+			development: {
+				runMode: RunMode.DevServer
+			}
+		}
+	}
+}
 
 Object.assign(global,{
 	_,
@@ -17,7 +41,11 @@ Object.assign(global,{
 	isDev: env === 'development',
 	processDir,
 	baseDir:processDir,
-	basePackageJson: readJSONFileSync(`${processDir}/package.json`)
+	basePackageJson: readJSONFileSync(`${processDir}/package.json`),
+	RunMode,
+	TargetType,
+	Deferred: require('./deferred'),
+	assert: require('assert')
 },helpers)
 
 // Config for release and versioning
