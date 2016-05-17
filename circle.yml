@@ -9,7 +9,7 @@ machine:
 test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/mocha/
-    - cp test-results.xml $CIRCLE_TEST_REPORTS/mocha/
+    - cp target/reports/test-results.xml $CIRCLE_TEST_REPORTS/mocha/
 general:
   branches:
     ignore:

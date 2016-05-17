@@ -1,33 +1,31 @@
 
 // Load the global common runtime for build/test/tools
-require('./etc/global-env')
+require('./etc/tools/global-env')
 
 
 const 
 	gulp = require('gulp'),
 	del = require('del'),
-	tsdoc = require('gulp-typedoc'),
 	runSequence = require('run-sequence'),
 	git = require('gulp-git'),
 	ghRelease = require('gulp-github-release'),
 	ts = require('gulp-typescript'),
-	glob = require('glob')
-
+	tsc = require('typescript'),
+	babel = require('gulp-babel'),
+	tsdoc = require('gulp-typedoc')
 
 
 Object.assign(global,{
-	glob,
 	ts,
+	tsc,
+	babel,
+	tsdoc,
 	gulp,
 	runSequence,
-	tsdoc,
 	del,
 	git,
 	ghRelease
 })
-
-// Now map and configure all the projects/plugins
-global.projects = projectNames.map(require('./etc/gulp/project-tasks'))
 
 /**
  * Load auxillary tasks

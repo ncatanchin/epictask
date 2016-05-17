@@ -28,10 +28,9 @@ module.exports = function (wallaby) {
 		 */
 		files: [
 			'typings/browser.d.ts',
-			'packages/*/src/**/*.ts',
-			'!packages/*/src/**/*.d.ts',
-			'!packages/*/src/test/**/*.spec.ts',
-			{ pattern: 'packages/*/src/test/fixtures/*.ts', instrument:false }
+			'src/**/*.ts',
+			'!src/**/*.spec.ts',
+			{ pattern: 'src/test/fixtures/*.ts', instrument:false }
 		],
 
 
@@ -39,7 +38,7 @@ module.exports = function (wallaby) {
 		 * Tests
 		 */
 		tests: [
-			'packages/*/src/test/**/*.spec.ts'
+			'src/**/*.spec.ts'
 		],
 
 		// Mocha
@@ -68,7 +67,7 @@ module.exports = function (wallaby) {
 		preprocessors: {
 			'**/*.js': file => {
 				return require('babel-core').transform(file.content,{
-					sourceMap: true, presets: ['es2015','stage-0']
+					sourceMap: true, presets: ['es2015','stage-0','react']
 				})
 			}
 		},
@@ -91,10 +90,6 @@ module.exports = function (wallaby) {
 			global.assert = require('assert')
 			require(mochaPath)
 
-
-
-
-
 		}
-	};
-};
+	}
+}

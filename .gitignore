@@ -8,7 +8,7 @@ dist
 .awcache
 
 # Config is auto generated
-tsconfig.json
+# tsconfig.json
 
 # Any log file
 *.log
