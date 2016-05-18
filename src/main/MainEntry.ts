@@ -7,10 +7,11 @@ import * as path from 'path'
 let menu
 let template
 let mainWindow = null
-
+let inHotReload = false
 
 app.on('window-all-closed', () => {
-	if (process.platform !== 'darwin') app.quit()
+	if (process.platform !== 'darwin' && !inHotReload) 
+		app.quit()
 })
 
 
@@ -253,5 +254,13 @@ app.on('ready', () => {
  * If in dev with HMR enabled
  */
 if (module.hot) {
+	console.info('Setting up HMR')
 	module.hot.accept()
+	module.hot.dispose(() => {
+		console.info('disposing main')
+		inHotReload = true
+		
+		if (mainWindow)
+			mainWindow.close()
+	})
 }
