@@ -9,3 +9,4 @@
 /// <reference path="browser/ambient/redux-thunk/index.d.ts" />
 /// <reference path="browser/ambient/redux/index.d.ts" />
 /// <reference path="browser/ambient/sinon/index.d.ts" />
+///<reference path="webpack-env.d.ts"/>

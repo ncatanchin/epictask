@@ -6,14 +6,14 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 /************************************************
-*                                               *
-*               Node.js v6.x API                *
-*                                               *
-************************************************/
+ *                                               *
+ *               Node.js v6.x API                *
+ *                                               *
+ ************************************************/
 
-interface Error {
-    stack?: string;
-}
+// interface Error {
+//     stack?: string;
+// }
 
 
 // compat for TypeScript 1.8
@@ -25,10 +25,10 @@ interface SetConstructor {}
 interface WeakSetConstructor {}
 
 /************************************************
-*                                               *
-*                   GLOBAL                      *
-*                                               *
-************************************************/
+ *                                               *
+ *                   GLOBAL                      *
+ *                                               *
+ ************************************************/
 declare var process: NodeJS.Process;
 declare var global: NodeJS.Global;
 
@@ -202,10 +202,10 @@ declare var Buffer: {
 };
 
 /************************************************
-*                                               *
-*               GLOBAL INTERFACES               *
-*                                               *
-************************************************/
+ *                                               *
+ *               GLOBAL INTERFACES               *
+ *                                               *
+ ************************************************/
 declare namespace NodeJS {
     export interface ErrnoException extends Error {
         errno?: number;
@@ -467,7 +467,7 @@ interface NodeBuffer extends Uint8Array {
     writeFloatBE(value: number, offset: number, noAssert?: boolean): number;
     writeDoubleLE(value: number, offset: number, noAssert?: boolean): number;
     writeDoubleBE(value: number, offset: number, noAssert?: boolean): number;
-    fill(value: any, offset?: number, end?: number): Buffer;
+    fill(value: number, start?: number, end?: number):this;
     // TODO: encoding param
     indexOf(value: string | number | Buffer, byteOffset?: number): number;
     // TODO: entries
@@ -477,10 +477,10 @@ interface NodeBuffer extends Uint8Array {
 }
 
 /************************************************
-*                                               *
-*                   MODULES                     *
-*                                               *
-************************************************/
+ *                                               *
+ *                   MODULES                     *
+ *                                               *
+ ************************************************/
 declare module "buffer" {
     export var INSPECT_MAX_BYTES: number;
     var BuffType: typeof Buffer;
@@ -1747,33 +1747,33 @@ declare module "path" {
     export function format(pathObject: ParsedPath): string;
 
     export module posix {
-      export function normalize(p: string): string;
-      export function join(...paths: any[]): string;
-      export function resolve(...pathSegments: any[]): string;
-      export function isAbsolute(p: string): boolean;
-      export function relative(from: string, to: string): string;
-      export function dirname(p: string): string;
-      export function basename(p: string, ext?: string): string;
-      export function extname(p: string): string;
-      export var sep: string;
-      export var delimiter: string;
-      export function parse(p: string): ParsedPath;
-      export function format(pP: ParsedPath): string;
+        export function normalize(p: string): string;
+        export function join(...paths: any[]): string;
+        export function resolve(...pathSegments: any[]): string;
+        export function isAbsolute(p: string): boolean;
+        export function relative(from: string, to: string): string;
+        export function dirname(p: string): string;
+        export function basename(p: string, ext?: string): string;
+        export function extname(p: string): string;
+        export var sep: string;
+        export var delimiter: string;
+        export function parse(p: string): ParsedPath;
+        export function format(pP: ParsedPath): string;
     }
 
     export module win32 {
-      export function normalize(p: string): string;
-      export function join(...paths: any[]): string;
-      export function resolve(...pathSegments: any[]): string;
-      export function isAbsolute(p: string): boolean;
-      export function relative(from: string, to: string): string;
-      export function dirname(p: string): string;
-      export function basename(p: string, ext?: string): string;
-      export function extname(p: string): string;
-      export var sep: string;
-      export var delimiter: string;
-      export function parse(p: string): ParsedPath;
-      export function format(pP: ParsedPath): string;
+        export function normalize(p: string): string;
+        export function join(...paths: any[]): string;
+        export function resolve(...pathSegments: any[]): string;
+        export function isAbsolute(p: string): boolean;
+        export function relative(from: string, to: string): string;
+        export function dirname(p: string): string;
+        export function basename(p: string, ext?: string): string;
+        export function extname(p: string): string;
+        export var sep: string;
+        export var delimiter: string;
+        export function parse(p: string): ParsedPath;
+        export function format(pP: ParsedPath): string;
     }
 }
 
@@ -2103,7 +2103,7 @@ declare module "assert" {
             generatedMessage: boolean;
 
             constructor(options?: {message?: string; actual?: any; expected?: any;
-                                  operator?: string; stackStartFunction?: Function});
+                operator?: string; stackStartFunction?: Function});
         }
 
         export function fail(actual?: any, expected?: any, message?: string, operator?: string): void;

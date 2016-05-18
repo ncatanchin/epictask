@@ -95,7 +95,7 @@ function webpackComplete(callback) {
  * Local dev server
  * 
  * @param port
- * @param wpConfig
+ * @param projectConfig
  */
 function runDevServer(port,projectConfig) {
 
@@ -114,8 +114,10 @@ function runDevServer(port,projectConfig) {
 	serverApp.use(devMiddleware)
 
 
-	const webpackHotMiddleware = require('webpack-hot-middleware')
-	serverApp.use(webpackHotMiddleware(compiler))
+	const
+		webpackHotMiddleware = require('webpack-hot-middleware'),
+		hotMiddleware = webpackHotMiddleware(compiler)
+	serverApp.use(hotMiddleware)
 
 
 	serverApp.listen(port,'0.0.0.0', err => {
@@ -123,7 +125,12 @@ function runDevServer(port,projectConfig) {
 			console.error(`Failed to start dev server`, err)
 			return
 		}
-		devMiddleware.invalidate()
+
+		setTimeout(() => {
+			devMiddleware.invalidate()
+			//hotMiddleware.invalidate()
+		}, 1000)
+
 		console.log(`Dev server is listening on port ${port}`)
 	})
 }

@@ -12,7 +12,7 @@ function startElectron() {
 		log.info('Starting electron')
 		electronChild = child({
 			command: `${baseDir}/node_modules/.bin/cross-env`,
-			args: ['electron','--disable-http-cache','./dist/MainEntry.js'],
+			args: [`${baseDir}/node_modules/.bin/electron`,'--disable-http-cache','./dist/MainEntry.js'],
 			options: {
 				env: Object.assign({}, process.env, {
 					HOT: '1',
@@ -30,9 +30,9 @@ function startElectron() {
 		})
 
 	} else {
-		electronChild.restart((code) => {
-			log.info(`Restarted Electron: ${code}`)
-		},9)
+		// electronChild.restart((code) => {
+		// 	log.info(`Restarted Electron: ${code}`)
+		// },9)
 	}
 }
 
@@ -59,7 +59,7 @@ function makeConfigs() {
 					return
 				}
 
-				//rendererReady.promise.then(startElectron)
+				rendererReady.promise.then(startElectron)
 			}
 		},
 

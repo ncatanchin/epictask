@@ -1,0 +1,25 @@
+doctype html
+html(class="fill-width fill-height")
+	head
+		meta(charset='utf-8')
+		title GitOp
+		script.
+			(function () {
+				if (!process.env.HOT) {
+					const link = document.createElement('link');
+					link.rel = 'stylesheet';
+					link.href = '../../dist/style.css';
+					document.write(link.outerHTML);
+				}
+			}());
+
+		if process.env.HOT
+			style=require('!!raw!./MainEntry.global.css')
+	body(class="fill-width fill-height")
+		#root
+		script.
+			(function () {
+				const script = document.createElement('script');
+				script.src = (process.env.HOT) ? 'http://localhost:4444/dist/AppEntry.js' : '../../dist/AppEntry.js';
+				document.write(script.outerHTML);
+			}());

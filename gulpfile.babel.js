@@ -1,12 +1,13 @@
-const del = require('del')
-
-del(['.awcache/**/*.*','dist'])
+// const del = require('del')
+//
+// del(['.awcache/**/*.*','dist'])
 
 // Load the global common runtime for build/test/tools
 require('./etc/tools/global-env')
 
 
 const
+	del = require('del'),
 	gulp = require('gulp'),
 	runSequence = require('run-sequence'),
 	git = require('gulp-git'),

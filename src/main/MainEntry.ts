@@ -18,18 +18,21 @@ app.on('ready', () => {
 	mainWindow = new BrowserWindow({
 		show: false,
 		width: 1024,
-		height: 728
+		height: 728,
+		titleBarStyle: 'hidden',
+		darkTheme:true
 	})
 
-	//const dataUrl = require('dataurl')
-	// const mainTemplate = require('./MainEntry.jade')
-	// const mainEntryUrl = dataUrl.format({mimetype:'text/html',data:mainTemplate()})
+	const dataUrl = require('dataurl')
+	const mainTemplate = require('./MainEntry.jade')
+	const mainEntryUrl = dataUrl.format({mimetype:'text/html',data:mainTemplate()})
+	mainWindow.loadURL(mainEntryUrl)
 	// console.log('Ready - loading now!!!!',mainEntryUrl)
 
-	const rawUrl = require('!!file?name=[name].[hash].html!./MainEntry.html')
-	const entryUrl = 'file://' + path.resolve('.','dist',rawUrl)
-	console.log('entry url',entryUrl,rawUrl)
-	mainWindow.loadURL(entryUrl)
+	//const rawUrl = require('!!file?name=[name].[hash].html!./MainEntry.html')
+	//const entryUrl = 'file://' + path.resolve('.','dist',rawUrl)
+	//console.log('entry url',entryUrl,rawUrl)
+	//mainWindow.loadURL(entryUrl)
 
 
 	mainWindow.webContents.on('did-finish-load', () => {
@@ -245,3 +248,10 @@ app.on('ready', () => {
 		mainWindow.setMenu(menu)
 	}
 })
+
+/**
+ * If in dev with HMR enabled
+ */
+if (module.hot) {
+	module.hot.accept()
+}
