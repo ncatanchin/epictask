@@ -1,5 +1,5 @@
 doctype html
-html(class="fill-width fill-height")
+html.fill-width.fill-height
 	head
 		meta(charset='utf-8')
 		title GitOp
@@ -15,8 +15,8 @@ html(class="fill-width fill-height")
 
 		if process.env.HOT
 			style=require('!!raw!./MainEntry.global.css')
-	body(class="fill-width fill-height")
-		#root
+	body.fill-width.fill-height()
+		#root.fill-width.fill-height
 		script.
 			(function () {
 				const script = document.createElement('script');

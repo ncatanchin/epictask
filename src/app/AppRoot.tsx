@@ -1,29 +1,46 @@
-
+import * as Log from 'typelogger'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-
-//const MuiThemeProvider = require('material-ui/styles/MuiThemeProvider').default
-//const Styles = require('material-ui/styles')
-
-import * as MUI from 'material-ui'
-import * as MUIStyles from 'material-ui/styles'
+import * as Styles from 'material-ui/styles'
 import {MuiThemeProvider} from "material-ui/styles"
-//import {ThemeWrapper} from 'material-ui'
 import Header from './components/Header'
-//import ThemeManager from 'material-ui/lib/styles/theme-manager'
-//import {Styles} from "material-ui"
-//import {ThemeManager} from "material-ui/lib/styles/theme-manager"
-//import Styles from 'material-ui/lib/styles'
+import {getTheme} from "./ThemeManager";
+
+const log = Log.create(__filename)
 
 
-console.log('BootStrapping')
+log.info('BootStrapping')
 
-const theme = MUIStyles.getMuiTheme(MUIStyles.darkBaseTheme)
+class App extends React.Component<any,any> {
 
-const App = () => {
-	return <MuiThemeProvider muiTheme={theme}>
-		<Header/>
-	</MuiThemeProvider>
+	static childContextTypes = {
+		muiTheme: React.PropTypes.object.isRequired
+	}
+
+	getChildContext() {
+		return {muiTheme: getTheme()};
+	}
+
+	/**
+	 * Render the app container
+	 *
+	 * @returns {any}
+	 */
+	render() {
+		const theme = getTheme()
+
+		const canvasStyle = {
+			backgroundColor: theme.palette.canvasColor
+		}
+
+		return (
+			<MuiThemeProvider muiTheme={theme}>
+				<div className="fill-width fill-height" style={canvasStyle}>
+					<Header/>
+				</div>
+			</MuiThemeProvider>
+		)
+	}
 }
 
 ReactDOM.render(

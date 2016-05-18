@@ -1,3 +1,5 @@
+require('../tools/global-env')
+
 const ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 const webpack = require('webpack')
 const assert = require('assert')
@@ -11,7 +13,7 @@ const {DefinePlugin,HotModuleReplacementPlugin} = webpack
 // Import globals - just for linting
 const {isDev,env} = global
 
-module.exports = (projectConfig) => {
+module.exports = function (projectConfig) {
 	
 
 	const config = {
@@ -29,10 +31,12 @@ module.exports = (projectConfig) => {
 		// Currently we need to add '.ts' to the resolve.extensions array.
 		resolve: {
 			alias: {
-				assert: 'browser-assert'
+				assert: 'browser-assert',
+				shared: path.resolve(baseDir,'src/shared')
 			},
 			modules: [
-				path.resolve(baseDir, 'node_modules')
+				path.resolve(baseDir,'node_modules'),
+				path.resolve(baseDir,'src')
 			],
 			modulesDirectories: [
 				path.resolve(baseDir, 'node_modules')
@@ -55,7 +59,11 @@ module.exports = (projectConfig) => {
 					NODE_ENV: JSON.stringify(env)
 				}
 			})
-		]
+		],
+		node: {
+			__dirname: true,
+			__filename: true
+		}
 	}
 	
 	// Development specific updates

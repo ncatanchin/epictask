@@ -1,3 +1,4 @@
+
 # Typestore Files
 src/**/*.js
 src/**/*.map
@@ -8,7 +9,8 @@ dist
 .awcache
 
 # Config is auto generated
-# tsconfig.json
+etc/tsconfig.*.json
+.tsconfig.*.json
 
 # Any log file
 *.log

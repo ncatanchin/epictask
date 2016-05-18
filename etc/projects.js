@@ -1,41 +1,11 @@
+import {startElectron} from './tools/electron-dev-spawn'
+import {makeTsConfig} from './tools/ts-config'
+
+const {Deferred,TargetType,RunMode,log,isDev,env} = global
 const path = require('path')
 const baseDir = path.resolve(__dirname,'..')
 const getPort = require('get-port')
-const nodemon = require('nodemon')
-const child = require('child')
 const rendererReady = new Deferred()
-
-let electronChild = null
-
-function startElectron() {
-	if (!electronChild) {
-		log.info('Starting electron')
-		electronChild = child({
-			command: `${baseDir}/node_modules/.bin/cross-env`,
-			args: [`${baseDir}/node_modules/.bin/electron`,'--disable-http-cache','./dist/MainEntry.js'],
-			options: {
-				env: Object.assign({}, process.env, {
-					HOT: '1',
-					PATH: `${baseDir}/node_modules/.bin:${process.env.PATH}`
-				})
-			},
-			autoRestart: false,
-			cbClose(exitCode) {
-				log.info(`Electron closed with ${exitCode}`)
-			}
-		})
-
-		electronChild.start(() => {
-			log.info(`Started Electron: ${code}`)
-		})
-
-	} else {
-		// electronChild.restart((code) => {
-		// 	log.info(`Restarted Electron: ${code}`)
-		// },9)
-	}
-}
-
 
 function makeConfigs() {
 	
@@ -46,7 +16,32 @@ function makeConfigs() {
 		 */
 		"electron-main": {
 			targetType: TargetType.ElectronMain,
-			tsconfig: `${baseDir}/etc/tsconfig.main.json`,
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,{
+				"awesomeTypescriptLoaderOptions": {
+					"instanceName": "electron-main",
+					"useBabel": true,
+					"forkChecker": true,
+					"useCache": true,
+					"babelOptions": {
+						"presets": [
+							"es2015-native-modules",
+							"stage-0",
+							"react"
+						],
+						"sourceMaps": true,
+						"env": {
+							"development": {
+								"presets": [
+									"react-hmre"
+								],
+								"plugins": 	[
+									["transform-runtime"]
+								]
+							}
+						}
+					}
+				}
+			}),
 			onCompileCallback(err,stats,watchMode = false) {
 				log.info('Compile callback main!!!',err,isDev,watchMode)
 				if (err) {
@@ -59,7 +54,7 @@ function makeConfigs() {
 					return
 				}
 
-				rendererReady.promise.then(startElectron)
+				//rendererReady.promise.then(startElectron)
 			}
 		},
 
@@ -69,7 +64,40 @@ function makeConfigs() {
 		 */
 		"electron-renderer": {
 			targetType: TargetType.ElectronRenderer,
-			tsconfig: `${baseDir}/etc/tsconfig.renderer.json`,
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,{
+				"compilerOptions": {
+					"jsx": "react"	
+				},
+				
+				"awesomeTypescriptLoaderOptions": {
+					"instanceName": "electron-renderer",
+					"useBabel": true,
+					"forkChecker": true,
+					"useCache": true,
+					"babelOptions": {
+						"presets": [
+							"es2015",
+							"stage-0",
+							"react"
+						],
+						"sourceMaps": true,
+						"env": {
+							"development": {
+								"plugins": 	[
+									[{
+										"transforms": [{
+											"transform": "react-transform-hmr",
+											"imports": ["react"],
+											"locals": ["module"]
+										}]
+									}],
+									["transform-runtime"]
+								]
+							}
+						}
+					}
+				}
+			}),
 			port: 4444,
 			onCompileCallback(err,stats) {
 				if (err)
@@ -81,23 +109,35 @@ function makeConfigs() {
 		}
 	}
 
-	Object.keys(configs).forEach(name => {
-		const config = configs[name]
-		config.name = name
+	Object.keys(configs).forEach((projectName) => {
+		console.log('Project name ' + projectName)
+
+		const projectConfig = configs[projectName]
+		projectConfig.name = projectName
 		
 		// Get target information
-		const {targetType} = config
+		const {targetType} = projectConfig
 		const targetEnv = targetType.env[env]
-		
-		// Get webpackconfig
-		config.webpackConfig = require(`./webpack/webpack.config.${name.replace(/-/g,'.')}`)(config)
-		Object.assign(config.webpackConfig,{
-			name,
+
+
+
+		projectConfig.webpackConfig = Object.assign({},{
+			projectName,
+			name: projectName,
 			target: targetType.target
 		})
-		
-		Object.assign(config,{
-			runMode: targetEnv.runMode
+
+
+		Object.assign(projectConfig,{
+			runMode: targetEnv.runMode,
+			webpackConfigFn() {
+				// Get webpackconfig
+				const normalizedName = projectName.replace('-','.')
+				const webpackConfigFilename = path.resolve(__dirname,`webpack/webpack.config.${normalizedName}`)
+				console.log(`Prepared project: ${webpackConfigFilename}`,targetEnv,targetType)
+
+				return require(webpackConfigFilename)(projectConfig)
+			}
 		})
 	})
 

@@ -1,12 +1,37 @@
 require('source-map-support').install()
 require('shelljs/global')
+require('../webpack/parts/stats')
+const
+	del = require('del'),
+	gulp = require('gulp'),
+	runSequence = require('run-sequence'),
+	git = require('gulp-git'),
+	ghRelease = require('gulp-github-release'),
+	ts = require('gulp-typescript'),
+	tsc = require('typescript'),
+	babel = require('gulp-babel'),
+	tsdoc = require('gulp-typedoc')
+
+
+
+Object.assign(global,{
+	ts,
+	tsc,
+	babel,
+	tsdoc,
+	gulp,
+	runSequence,
+	del,
+	git,
+	ghRelease,
+	Deferred: require('./deferred')
+},require('./helpers'))
 
 const
 	semver = require('semver'),
-	helpers = require('./helpers'),
-	{readJSONFileSync} = helpers,
+	path = require('path'),
 	_ = require('lodash'),
-	processDir = process.cwd(),
+	processDir = path.resolve(__dirname,'../..'),
 	env = process.env.NODE_ENV || 'development'
 
 
@@ -34,6 +59,8 @@ const TargetType = {
 	}
 }
 
+
+//noinspection JSUnresolvedFunction
 Object.assign(global,{
 	_,
 	log: console,
@@ -46,11 +73,20 @@ Object.assign(global,{
 	TargetType,
 	Deferred: require('./deferred'),
 	assert: require('assert')
-},helpers)
+})
+
+
 
 // Config for release and versioning
+/**
+ * Project configuration
+ */
+const projectConfigs = require('../projects')
+
+//noinspection JSUnresolvedVariable
 Object.assign(global,{
 	nextMinorVersion: semver.inc(basePackageJson.version,'patch'),
 	releaseFiles: [],
-	releaseDir: `${process.cwd()}/target/releases`
+	releaseDir: `${process.cwd()}/target/releases`,
+	projectConfigs
 })

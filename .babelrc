@@ -1,8 +1,16 @@
 {
 	"presets": [
 		"es2015",
-		"stage-0"
+		"stage-0",
+		"react"
 	],
 	"sourceMaps": true,
-	"plugins": ["transform-runtime"]
+	"plugins": ["transform-runtime"],
+	"env": {
+		"development": {
+			"presets": [
+				"react-hmre"
+			]
+		}
+	}
 }

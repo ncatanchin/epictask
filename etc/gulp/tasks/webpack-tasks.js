@@ -1,27 +1,31 @@
-require ('./webpack.stats')
+require ('./../../webpack/parts/stats.js')
 const path = require('path')
 const fs = require('fs')
 const gutil = require('gulp-util')
 const webpack = require('webpack')
+//const webpackStream = require('webpack-stream')
 const express = require('express')
 
 const makeSrcGlobs = require('../../tools/project-srcs')
-const named = require('vinyl-named')
+//const named = require('vinyl-named')
 
 const srcs = makeSrcGlobs()
 
-/**
- * Project configuration
- */
-const projectConfigs = require('../../projects')
+
 
 /**
  * Run all compile tasks sequentially
  */
 function makeWebpackCompile(projectConfig,watch = false) {
-	return function(done) {
-		const wpConfig = projectConfig.webpackConfig
-		
+	return (done) => {
+
+		const wpConfig = projectConfig.webpackConfigFn()
+
+		// if (watch)
+		// 	Object.assign(wpConfig,{
+		// 		watch,
+		// 		hot:true
+		// 	})
 		const compiler = webpack(wpConfig)
 
 		function doCallback(err,stats) {
@@ -31,19 +35,24 @@ function makeWebpackCompile(projectConfig,watch = false) {
 
 		if (watch) {
 			compiler.watch({},webpackComplete((err,stats) => {
+				if (err) {
+					log.error('an error occured', err)
+					return
+				}
 				log.info(`Compilation completed for ${wpConfig.name} - in watch mode`)
 
 				doCallback(err,stats)
 			}))
 		} else {
-
 			// Execute single build
 			compiler.run(webpackComplete((err,stats) => {
 				log.info(`Compilation completed for ${wpConfig.name}`)
-				doCallback(err,stats)
-				done(err)
+
+				 doCallback(err,stats)
+				 done(err)
 			}))
 		}
+
 
 	}
 }
@@ -97,11 +106,9 @@ function webpackComplete(callback) {
  * @param port
  * @param projectConfig
  */
-function runDevServer(port,projectConfig) {
+function runDevServer(port,projectConfig,wpConfig) {
 
-	const
-		wpConfig = projectConfig.webpackConfig,
-		compiler = webpack(wpConfig, webpackComplete(projectConfig.onCompileCallback))
+	const compiler = webpack(wpConfig, webpackComplete(projectConfig.onCompileCallback))
 	
 	const serverApp = express()
 	const
@@ -142,9 +149,10 @@ function runDevServer(port,projectConfig) {
  * @returns {Function}
  */
 function makeWebpackDevServer(projectConfig) {
-	return function(done) {
-		
-		const wpConfig = projectConfig.webpackConfig
+	return (done) => {
+
+		const wpConfig = projectConfig.webpackConfigFn()
+		//const wpConfig = projectConfig.webpackConfig
 		let {hostname,port,https} = Object.assign({},DevDefaults,projectConfig)
 
 		const
@@ -163,20 +171,23 @@ function makeWebpackDevServer(projectConfig) {
 				.forEach(name => addHotClient(wpConfig.entry[name]))
 		}
 		
-		runDevServer(projectConfig.port,projectConfig)
+		runDevServer(projectConfig.port,projectConfig,wpConfig)
 
 	}
 }
 
 function makeDevTask(projectConfig) {
-	switch (projectConfig.runMode) {
-		case RunMode.DevServer:
-			return makeWebpackDevServer(projectConfig)
-		case RunMode.Watch:
-			return makeWebpackCompile(projectConfig,true)
-	}
+	return (done) => {
+		switch (projectConfig.runMode) {
+			case RunMode.DevServer:
+				return makeWebpackDevServer(projectConfig)(done)
+			case RunMode.Watch:
+				return makeWebpackCompile(projectConfig, true)(done)
+			default:
+				throw new Error('Unknown run mode')
 
-	throw new Error('Unknown run mode')
+		}
+	}
 }
 
 const allTaskNames = {}
@@ -192,6 +203,7 @@ function makeTaskNames(projectConfig) {
 }
 
 _.each(projectConfigs,projectConfig => {
+	debugger
 	assert(projectConfig.runMode, `Project runmode is required ${projectConfig.name}`)
 
 	const taskNames = makeTaskNames(projectConfig)

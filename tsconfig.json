@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"declaration": false,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"preserveConstEnums": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"baseUrl": "./",
+		"paths": {
+			"shared/*": ["./src/shared/*"],
+			"main/*": ["./src/main/*"],
+			"app/*": ["./src/app/*"]
+		}
+	},
+	"exclude": [
+		"node_modules/**/*.*",
+		"node_modules",
+		"**/node_modules",
+		"typings",
+		"typings/main",
+		"dist"
+	]
+}

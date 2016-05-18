@@ -1,4 +1,6 @@
+/// <reference path="index.d.ts" />
 /// <reference path="main/ambient/chai/index.d.ts" />
+/// <reference path="main/ambient/electron-window-state/index.d.ts" />
 /// <reference path="main/ambient/expectations/index.d.ts" />
 /// <reference path="main/ambient/github-electron/index.d.ts" />
 /// <reference path="main/ambient/material-ui/index.d.ts" />
@@ -9,4 +11,5 @@
 /// <reference path="main/ambient/redux-thunk/index.d.ts" />
 /// <reference path="main/ambient/redux/index.d.ts" />
 /// <reference path="main/ambient/sinon/index.d.ts" />
-///<reference path="webpack-env.d.ts"/>
+/// <reference path="main/definitions/lodash/index.d.ts" />
+/// <reference path="webpack-env.d.ts" />

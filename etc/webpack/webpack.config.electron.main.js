@@ -1,43 +1,61 @@
 
+require('../tools/global-env')
+
 //const HtmlWebpackPlugin = require('html-webpack-plugin')
-const webpack = require('webpack')
-const nodeExternals = require('webpack-node-externals')
-//const JsonpTemplatePlugin = webpack.JsonpTemplatePlugin
-const FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin')
-const NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin')
-const ExternalsPlugin = webpack.ExternalsPlugin
+const
+	webpack = require('webpack'),
+	nodeExternals = require('webpack-node-externals'),
+	//JsonpTemplatePlugin = webpack.JsonpTemplatePlugin
+	HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin,
+	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
+	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
+	ExternalsPlugin = webpack.ExternalsPlugin,
+	fs = require('fs'),
+	baseConfig = require('./webpack.config')
+
+const nodeModules = fs.readdirSync('node_modules')
+	.filter((x) => ['.bin'].indexOf(x) === -1)
+
+module.exports = function(projectConfig) {
+	projectConfig = projectConfig || projectConfigs['electron-main']
+	const config = baseConfig(projectConfig)
 
 
-module.exports = (projectConfig) => {
-	const config = require('./webpack.config')(projectConfig)
+	const hmrEntry = [
+		//'webpack/hot/only-dev-server',
+		'webpack/hot/poll.js?1000'
+	]
+	//const hmrEntry = 'webpack/hot/signal.js'
+	let mainEntries = ["./src/main/MainEntry"]
+	if (isDev)
+		mainEntries.unshift(...hmrEntry)
 
-	const hmrEntry = 'webpack/hot/poll.js' //'webpack/hot/signal.js'
 	console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
-	return Object.assign(config, {
+	Object.assign(config, {
 
 		entry: {
-			"MainEntry": (isDev ? [hmrEntry,'webpack/hot/server'] : []).concat([
-				"./src/main/MainEntry"
-			])
+			"MainEntry": mainEntries
 		},
-
-		target: 'electron-renderer',
-
-		devtool: 'source-map',
 
 		output: Object.assign(config.output,{
-			libraryTarget:'commonjs2'
+			libraryTarget: "commonjs2"
 		}),
 
+		target: 'electron-main',
+		devtool: 'source-map',
+		watch: isDev,
+		hot:isDev,
 		externals: {
-			electron: "require('electron')"
+			electron: 'commonjs electron'
 		},
+
 
 		plugins: [
 			...config.plugins,
-			new ExternalsPlugin('commonjs',nodeExternals()),
+			//new ExternalsPlugin('commonjs','electron'),
+			//new ExternalsPlugin('commonjs',nodeExternals()),
 			new NodeTargetPlugin(),
-			new webpack.HotModuleReplacementPlugin()
+
 
 		],
 		node: {
@@ -45,4 +63,9 @@ module.exports = (projectConfig) => {
 			__filename: true
 		}
 	})
+
+
+	console.log(config)
+
+	return config
 }

@@ -1,9 +1,12 @@
 {
   "name": "gitop",
   "version": false,
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519"
+  },
   "ambientDependencies": {
     "chai": "registry:dt/chai#3.4.0+20160317120654",
+    "electron-window-state": "registry:dt/electron-window-state#2.0.0+20160212171354",
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "github-electron": "registry:dt/github-electron#0.37.8+20160509083739",
     "material-ui": "registry:dt/material-ui#0.14.4+20160514161815",
