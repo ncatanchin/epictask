@@ -34,7 +34,7 @@ export class NotMutableError extends Error {
  * @constructor
  */
 export function RecordModel(opts = {}) {
-	return (target) => {
+	return target => {
 		console.log('In decorator')
 	}
 }
