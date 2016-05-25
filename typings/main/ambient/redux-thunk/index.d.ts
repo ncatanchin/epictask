@@ -5,11 +5,12 @@
 // Definitions by: Qubo <https://github.com/tkqubo>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
+import * as Redux from 'redux'
 
 declare namespace ReduxThunk {
     export interface Thunk extends Redux.Middleware {}
     export interface ThunkInterface {
-      <T>(dispatch: Redux.Dispatch, getState?: () => T): any;
+        <T>(dispatch: Redux.Dispatch<any>, getState?: () => T): any;
     }
 }
 

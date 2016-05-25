@@ -1,4 +1,4 @@
-///<reference path="../../typings/main.d.ts"/>
+import 'shared/CommonEntry'
 
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import windowStateKeeper = require('electron-window-state')
@@ -7,6 +7,7 @@ import {toDataUrl} from 'shared/util/Templates'
 import * as Log from 'typelogger'
 import * as MainWindowType from './MainWindow'
 let MainWindow = MainWindowType
+
 
 
 const log = Log.create(__filename)

@@ -67,7 +67,7 @@ const DevDefaults = {
 /**
  * Standardized callback creator for
  * webpack compiler
- * 
+ *
  * @param callback
  * @returns {Function}
  */
@@ -78,7 +78,7 @@ function webpackComplete(callback) {
 		}
 
 		log.info("[webpack] Completed", (stats) ? stats.toString(WebpackStatsConfig) : null, err)
-		
+
 		if (err && !err.toJson) {
 			if (env !== 'development')
 				throw new (gutil.PluginError)('webpack', err)
@@ -102,14 +102,14 @@ function webpackComplete(callback) {
 
 /**
  * Local dev server
- * 
+ *
  * @param port
  * @param projectConfig
  */
 function runDevServer(port,projectConfig,wpConfig) {
 
 	const compiler = webpack(wpConfig, webpackComplete(projectConfig.onCompileCallback))
-	
+
 	const serverApp = express()
 	const
 		webpackDevMiddleware = require('webpack-dev-middleware'),
@@ -144,7 +144,7 @@ function runDevServer(port,projectConfig,wpConfig) {
 
 /**
  * Create a gulp task that runs a local dev server
- * 
+ *
  * @param projectConfig
  * @returns {Function}
  */
@@ -170,7 +170,7 @@ function makeWebpackDevServer(projectConfig) {
 			Object.keys(wpConfig.entry)
 				.forEach(name => addHotClient(wpConfig.entry[name]))
 		}
-		
+
 		runDevServer(projectConfig.port,projectConfig,wpConfig)
 
 	}
@@ -217,4 +217,6 @@ gulp.task('dev',[],(done) => {
 	log.info("Starting all dev tasks: " + allTaskNames.dev.join(', '))
 	runSequence(allTaskNames.dev)
 })
+
+gulp.task('compile-watch',['dev'])
 

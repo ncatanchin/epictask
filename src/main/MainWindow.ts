@@ -26,10 +26,10 @@ export function stop() {
  */
 export function restart() {
 	log.info('> restart')
-	
+
 	stop()
 	start()
-	
+
 	return this
 }
 
@@ -59,8 +59,9 @@ function loadRootWindow() {
 
 
 
-
-	mainWindow.loadURL(toDataUrl(require('./MainEntry.jade')))
+	const templatePath = 'file://' + require('!!file?name=[name].html!../../etc/tools/jade-template-loader!./MainEntry.jade')
+	log.info(`Template Path: ${templatePath}`)
+	mainWindow.loadURL(templatePath)
 
 	mainWindow.webContents.on('did-finish-load', () => {
 		mainWindow.show()

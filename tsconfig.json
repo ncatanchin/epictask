@@ -20,8 +20,6 @@
 		"node_modules/**/*.*",
 		"node_modules",
 		"**/node_modules",
-		"typings",
-		"typings/main",
 		"dist"
 	]
 }

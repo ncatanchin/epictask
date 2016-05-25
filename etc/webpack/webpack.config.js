@@ -14,7 +14,7 @@ const {DefinePlugin,HotModuleReplacementPlugin} = webpack
 const {isDev,env} = global
 
 module.exports = function (projectConfig) {
-	
+
 
 	const config = {
 		context: baseDir,
@@ -35,8 +35,10 @@ module.exports = function (projectConfig) {
 				shared: path.resolve(baseDir,'src/shared')
 			},
 			modules: [
+				//path.resolve(baseDir,'..'),
 				path.resolve(baseDir,'node_modules'),
-				path.resolve(baseDir,'src')
+				path.resolve(baseDir,'src'),
+
 			],
 			modulesDirectories: [
 				path.resolve(baseDir, 'node_modules')
@@ -55,6 +57,7 @@ module.exports = function (projectConfig) {
 			new ForkCheckerPlugin(),
 			new DefinePlugin({
 				__DEV__: isDev,
+				DEBUG: isDev,
 				'process.env': {
 					NODE_ENV: JSON.stringify(env)
 				}
@@ -65,7 +68,7 @@ module.exports = function (projectConfig) {
 			__filename: true
 		}
 	}
-	
+
 	// Development specific updates
 	Object.assign(config,{
 
@@ -75,11 +78,11 @@ module.exports = function (projectConfig) {
 		// In development specify absolute path - better
 		// debugger support
 		output: Object.assign({},config.output, isDev ? {
-			devtoolModuleFilenameTemplate: "[absolute-resource-path]"
+			devtoolModuleFilenameTemplate: "webpack://[absolute-resource-path]"
 		} : {}),
 
-		
-		
+
+
 
 		debug: isDev,
 		dev: isDev

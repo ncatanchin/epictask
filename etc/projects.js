@@ -8,7 +8,7 @@ const getPort = require('get-port')
 const rendererReady = new Deferred()
 
 function makeConfigs() {
-	
+
 	let configs = {
 
 		/**
@@ -16,7 +16,7 @@ function makeConfigs() {
 		 */
 		"electron-main": {
 			targetType: TargetType.ElectronMain,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,{
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,'main',{
 				"awesomeTypescriptLoaderOptions": {
 					"instanceName": "electron-main",
 					"useBabel": true,
@@ -64,11 +64,11 @@ function makeConfigs() {
 		 */
 		"electron-renderer": {
 			targetType: TargetType.ElectronRenderer,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,{
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,'browser',{
 				"compilerOptions": {
-					"jsx": "react"	
+					"jsx": "react"
 				},
-				
+
 				"awesomeTypescriptLoaderOptions": {
 					"instanceName": "electron-renderer",
 					"useBabel": true,
@@ -80,7 +80,7 @@ function makeConfigs() {
 							"stage-0",
 							"react"
 						],
-						"sourceMaps": true,
+						"sourceMaps": "both",
 						"env": {
 							"development": {
 								"plugins": 	[
@@ -102,7 +102,7 @@ function makeConfigs() {
 			onCompileCallback(err,stats) {
 				if (err)
 					return
-				
+
 				log.info('Renderer ready')
 				rendererReady.resolve(true)
 			}
@@ -114,7 +114,7 @@ function makeConfigs() {
 
 		const projectConfig = configs[projectName]
 		projectConfig.name = projectName
-		
+
 		// Get target information
 		const {targetType} = projectConfig
 		const targetEnv = targetType.env[env]

@@ -6,14 +6,16 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 
-declare namespace ReduxThunk {
-    export interface Thunk extends Redux.Middleware {}
-    export interface ThunkInterface {
-      <T>(dispatch: Redux.Dispatch, getState?: () => T): any;
-    }
-}
 
 declare module "redux-thunk" {
+    import * as Redux from 'redux'
+    namespace ReduxThunk {
+
+        export interface Thunk extends Redux.Middleware {}
+        export interface ThunkInterface {
+            <T>(dispatch: Redux.Dispatch<any>, getState?: () => T): any;
+        }
+    }
     var thunk: ReduxThunk.Thunk;
     export default thunk;
 }

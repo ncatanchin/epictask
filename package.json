@@ -1,5 +1,5 @@
 {
-  "name": "gitop",
+  "name": "gittus",
   "version": "0.1.0",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/index.js",
@@ -108,6 +108,8 @@
   },
   "dependencies": {
     "babel-runtime": "^6.6.1",
+    "core-js": "^2.4.0",
+    "cryptr": "^2.0.0",
     "css-modules-require-hook": "^4.0.0",
     "dataurl": "^0.1.0",
     "debug": "^2.2.0",
@@ -117,20 +119,28 @@
     "github-api": "^1.3.0",
     "github-extended": "^0.1.0",
     "graceful-fs": "^4.1.4",
+    "history": "^2.1.1",
     "html-loader": "^0.4.3",
+    "immutable": "^3.8.1",
     "lodash": "^4.12.0",
+    "lowdb": "^0.12.5",
     "material-ui": "^0.15.0",
     "postcss": "^5.0.21",
     "react": "^15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
     "react-dom": "^15.0.2",
     "react-redux": "^4.4.5",
-    "react-router": "^2.4.0",
+    "react-router": "^2.4.1",
     "react-router-redux": "^4.0.4",
     "react-tap-event-plugin": "^1.0.0",
     "redux": "^3.5.2",
+    "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
+    "reflect-metadata": "^0.1.3",
     "source-map-support": "^0.4.0",
-    "typelogger": "^1.0.1"
+    "typedux": "densebrain/typedux",
+    "typelogger": "densebrain/typelogger",
+    "typemutant": "densebrain/typemutant",
+    "typestore": "densebrain/typestore"
   }
 }

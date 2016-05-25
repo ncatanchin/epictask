@@ -4,7 +4,7 @@ import {AppBar} from "material-ui";
 
 
 
-export default class Header extends React.Component<any,any> {
+export class Header extends React.Component<any,any> {
 
 	constructor(props, context) {
 		super(props, context)
@@ -13,7 +13,7 @@ export default class Header extends React.Component<any,any> {
 
 	render() {
 		return <AppBar>
-			<div>teasda123</div>
+			<div>Game On</div>
 			</AppBar>
 	}
 }

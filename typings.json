@@ -2,7 +2,10 @@
   "name": "gitop",
   "version": false,
   "dependencies": {
-    "lodash": "registry:npm/lodash#4.0.0+20160416211519"
+    "history": "registry:npm/history#2.0.0+20160406171533",
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519",
+    "react-redux": "registry:npm/react-redux#4.4.0+20160207114942",
+    "react-router": "registry:npm/react-router#2.0.0+20160214194820"
   },
   "ambientDependencies": {
     "chai": "registry:dt/chai#3.4.0+20160317120654",
@@ -15,6 +18,7 @@
     "react": "registry:dt/react#0.14.0+20160423065914",
     "react-dom": "registry:dt/react-dom#0.14.0+20160412154040",
     "redux": "registry:dt/redux#3.3.1+20160326112656",
+    "redux-logger": "registry:dt/redux-logger#2.6.0+20160316155526",
     "redux-thunk": "registry:dt/redux-thunk#2.0.1+20160317120654",
     "sinon": "registry:dt/sinon#1.16.0+20160317120654"
   }

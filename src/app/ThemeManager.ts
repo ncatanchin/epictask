@@ -41,7 +41,7 @@ let theme = DefaultTheme
 
 /**
  * Set the current theme
- * 
+ *
  * @param newTheme
  */
 export function setTheme(newTheme) {
@@ -51,3 +51,18 @@ export function setTheme(newTheme) {
 export function getTheme() {
 	return theme
 }
+
+/**
+ * Export getTheme globally
+ *
+ * @global getTheme
+ */
+declare global {
+	var getTheme:any
+}
+
+
+// Export globals
+Object.assign(global as any,{
+	getTheme
+})

@@ -4,13 +4,6 @@
 		"stage-0",
 		"react"
 	],
-	"sourceMaps": true,
-	"plugins": ["transform-runtime"],
-	"env": {
-		"development": {
-			"presets": [
-				"react-hmre"
-			]
-		}
-	}
+	"sourceMaps": "both",
+	"plugins": ["transform-runtime"]
 }
