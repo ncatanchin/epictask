@@ -69,6 +69,7 @@ export function RecordProperty(opts = {}) {
  */
 export interface RecordModelConstructor<T> extends Function {
 	new (props?:any): T;
+	new ():T;
 }
 
 
@@ -85,6 +86,7 @@ export type Mutator<T> = (obj:T) => T
  *
  * look in file header for credits
  */
+	
 export class RecordTypeWrapper<T, TType extends RecordModelConstructor<T>> {
 
 
@@ -95,7 +97,7 @@ export class RecordTypeWrapper<T, TType extends RecordModelConstructor<T>> {
 	 * @param _type
 	 * @param dupe
 	 */
-	constructor(private _type: new () => T, dupe: TType = undefined) {}
+	constructor(private _type:new () => T, dupe: TType = undefined) {}
 
 	/**
 	 * Return instance type
@@ -167,6 +169,12 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	private record
 
 
+	private typeClazz
+	private finalClazz
+	private modelClazz
+	private propTypeMap
+	private recordType
+
 	/**
 	 * Is the current instance mutable
 	 *
@@ -201,13 +209,19 @@ export class RecordBaseObject<T extends any,TT extends any> {
 		props?:any
 	)
 	constructor(
-		private typeClazz?:{new():TT},
-		private finalClazz?:any,
-		private modelClazz?:{new():T},
-		private propTypeMap?,
-		private recordType?:Immutable.Record.Class,
+		typeClazz?:{new():TT},
+		finalClazz?:any,
+		modelClazz?:{new():T},
+		propTypeMap?,
+		recordType?:Immutable.Record.Class,
 		props?:any
 	){
+
+		this.typeClazz = typeClazz
+		this.finalClazz = finalClazz
+		this.modelClazz = modelClazz
+		this.propTypeMap = propTypeMap
+		this.recordType = recordType
 
 		if (!this.record)
 			this.record = new recordType(props)
@@ -288,6 +302,11 @@ export class RecordBaseObject<T extends any,TT extends any> {
 }
 
 
+export function makeRecordType<T extends Object>(modelClazz:{new():T}) {
+	return new RecordTypeWrapper(modelClazz,modelClazz)
+		.mixType(RecordBaseObject,RecordBaseObject)
+}
+
 /**
  * Create an immutable version of the
  * class provided by merging types
@@ -298,11 +317,10 @@ export class RecordBaseObject<T extends any,TT extends any> {
  * @param modelClazz
  * @returns {modelClazz & RecordBaseObject<T>}
  */
-export function makeImmutable<T extends Object>(modelClazz:{new():T}) {
+export function makeRecord<T extends Object>(modelClazz:{new():T}) {
 
+	const typeWrapper = makeRecordType(modelClazz)
 
-	const typeWrapper = new RecordTypeWrapper(modelClazz,modelClazz)
-		.mixType(RecordBaseObject,RecordBaseObject)
 
 	type ComposedRecordType = typeof typeWrapper.asType
 	type ComposedRecordConstructorType = RecordModelConstructor<RecordBaseObject<T,ComposedRecordType> & T>

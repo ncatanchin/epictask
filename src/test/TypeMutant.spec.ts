@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 import {
 	RecordModel,
 	RecordProperty,
-	makeImmutable,
+	makeRecord,
 	NotMutableError
 } from '../TypeMutant'
 
@@ -32,7 +32,7 @@ describe('#typetools',() => {
 
 
 
-	const MyPersistentModel = makeImmutable(MyModel)
+	const MyPersistentModel = makeRecord(MyModel)
 
 
 	before(() => {

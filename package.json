@@ -3,6 +3,7 @@
     "version": "0.1.4",
     "description": "TypeScript classes and decorators meet immutable.js",
     "main": "dist/index.js",
+    "typings": "dist/index.d.ts",
     "scripts": {
         "prepublish": "./etc/scripts/prepublish",
         "test": "gulp test"
