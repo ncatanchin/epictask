@@ -70,6 +70,7 @@ export function RecordProperty(opts = {}) {
 export interface RecordModelConstructor<T> extends Function {
 	new (props?:any): T;
 	new ():T;
+	//new (...args:any[]):T;
 }
 
 
@@ -86,7 +87,7 @@ export type Mutator<T> = (obj:T) => T
  *
  * look in file header for credits
  */
-	
+
 export class RecordTypeWrapper<T, TType extends RecordModelConstructor<T>> {
 
 
@@ -245,7 +246,7 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * @param mutator
 	 * @returns {RecordBaseObject}
 	 */
-	withMutation(mutator:Mutator<TT>) {
+	withMutation(mutator:Mutator<TT>):TT {
 		const newRecord = this.record.withMutations((recordMutating:this) => {
 			this.mutable = true
 			this.recordMutating = recordMutating
@@ -317,13 +318,13 @@ export function makeRecordType<T extends Object>(modelClazz:{new():T}) {
  * @param modelClazz
  * @returns {modelClazz & RecordBaseObject<T>}
  */
-export function makeRecord<T extends Object>(modelClazz:{new():T}) {
+export function makeRecord<T extends Object>(modelClazz:{new():T}):T & RecordBaseObject<T,T> & RecordModelConstructor<T> {
 
 	const typeWrapper = makeRecordType(modelClazz)
 
 
-	type ComposedRecordType = typeof typeWrapper.asType
-	type ComposedRecordConstructorType = RecordModelConstructor<RecordBaseObject<T,ComposedRecordType> & T>
+	 type ComposedRecordType = typeof typeWrapper.asType
+	// type ComposedRecordConstructorType = RecordModelConstructor<RecordBaseObject<T,ComposedRecordType> & T>
 
 	/**
 	 * Create the anonymous class that implements the
@@ -331,92 +332,105 @@ export function makeRecord<T extends Object>(modelClazz:{new():T}) {
 	 *
 	 * @returns {any}
 	 */
-	function makeClazz():ComposedRecordConstructorType {
+	//function makeClazz() {
 
-		const propTypeMap = Reflect.getMetadata(PropertyTypeMapKey, modelClazz.prototype)
-		if (!propTypeMap)
-			throw new Error('No annotated property metadata was found - make sure you have @Model and @Property')
-
-
-		// Create an instance of the defaults
-		const modelInstance = new modelClazz()
+	const propTypeMap = Reflect.getMetadata(PropertyTypeMapKey, modelClazz.prototype)
+	if (!propTypeMap)
+		throw new Error('No annotated property metadata was found - make sure you have @Model and @Property')
 
 
-		// Map only the defaults
-		const recordDefaults = Object.keys(propTypeMap)
-			.reduce((recordDefaults, propKey) => {
-				recordDefaults[propKey] = modelInstance[propKey]
-				return recordDefaults
-			}, {})
+	// Create an instance of the defaults
+	const modelInstance = new modelClazz()
 
 
-		// Create an ImmutableRecordClass
-		const recordType = Immutable.Record(recordDefaults)
+	// Map only the defaults
+	const recordDefaults = Object.keys(propTypeMap)
+		.reduce((recordDefaults, propKey) => {
+			recordDefaults[propKey] = modelInstance[propKey]
+			return recordDefaults
+		}, {})
 
 
-		// Build the final class
-		const newClazz = class extends RecordBaseObject<T,ComposedRecordType> {
-			constructor(private props = {}) {
-				super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType, props)
-			}
+	// Create an ImmutableRecordClass
+	const recordType = Immutable.Record(recordDefaults)
+
+
+	// Build the final class
+	const newClazz = class RecordClazz extends RecordBaseObject<T,T> {
+
+		constructor()
+		constructor(private props = {}) {
+			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType, props)
 		}
-
-
-		// type comboTypeWrapper = typeof typeWrapper.asType
-
-		// Map all the functions first
-
-
-		Object.getOwnPropertyNames(modelClazz.prototype)
-			.filter(propName => propName !== 'constructor' && isFunction(modelClazz.prototype[propName]))
-			.forEach(funcName => {
-				log.debug(`Defining function "${modelClazz.name}.${funcName}"`)
-				newClazz.prototype[funcName] = modelClazz.prototype[funcName]
-			})
-
-
-		Object.keys(propTypeMap)
-			.forEach(propName => {
-				log.debug(`Defining property "${modelClazz.name}.${propName}"`)
-
-
-				Object.defineProperty(newClazz.prototype, propName, {
-					configurable: false,
-
-					/**
-					 * Getter for annotated property
-					 * - if this.isMutable, the mutating record
-					 *      is used
-					 * - otherwise the non mutating record is used
-					 * @returns {any}
-					 */
-					get: function () {
-						return (this.isMutable) ?
-							this.recordMutating[propName] :
-							this.record[propName]
-					},
-
-					/**
-					 * Setter for @RecordProperty
-					 * - sets mutating value, error if not mutating
-					 * @param newVal
-					 * @throws NotMutableError if not mutating - duh
-					 */
-					set: function (newVal) {
-						if (!this.isMutable)
-							throw new NotMutableError(`${modelClazz.name}.${propName}`)
-
-
-						//throw new MutationRequiresSetterError()
-						this.recordMutating[propName] = newVal
-					}
-				})
-			})
-
-
-		return newClazz as any
 	}
 
 
-	return makeClazz()
+
+	// type comboTypeWrapper = typeof typeWrapper.asType
+
+	// Map all the functions first
+
+
+	Object.getOwnPropertyNames(modelClazz.prototype)
+		.filter(propName => propName !== 'constructor' && isFunction(modelClazz.prototype[propName]))
+		.forEach(funcName => {
+			log.debug(`Defining function "${modelClazz.name}.${funcName}"`)
+			newClazz.prototype[funcName] = modelClazz.prototype[funcName]
+		})
+
+
+	Object.keys(propTypeMap)
+		.forEach(propName => {
+			log.debug(`Defining property "${modelClazz.name}.${propName}"`)
+
+
+			Object.defineProperty(newClazz.prototype, propName, {
+				configurable: false,
+
+				/**
+				 * Getter for annotated property
+				 * - if this.isMutable, the mutating record
+				 *      is used
+				 * - otherwise the non mutating record is used
+				 * @returns {any}
+				 */
+				get: function () {
+					return (this.isMutable) ?
+						this.recordMutating[propName] :
+						this.record[propName]
+				},
+
+				/**
+				 * Setter for @RecordProperty
+				 * - sets mutating value, error if not mutating
+				 * @param newVal
+				 * @throws NotMutableError if not mutating - duh
+				 */
+				set: function (newVal) {
+					if (!this.isMutable)
+						throw new NotMutableError(`${modelClazz.name}.${propName}`)
+
+
+					//throw new MutationRequiresSetterError()
+					this.recordMutating[propName] = newVal
+				}
+			})
+		})
+
+	//return newClazz as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
+	const typeWrapper2 = new RecordTypeWrapper(newClazz,newClazz)
+		.mixType(modelClazz,modelClazz)
+	//
+	type newClazzType = typeof typeWrapper2.asType
+	return typeWrapper2.asStaticType as any
+	//
+	// //
+	// //
+	// return typeWrapper2.asStaticType as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
+	//return newClazz as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
+	//
+	//
+	// return makeClazz()
+
+	//return modelClazz as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
 }
