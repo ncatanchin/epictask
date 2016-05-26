@@ -3,6 +3,6 @@
 		"es2015",
 		"stage-0"
 	],
-	"sourceMaps": "both",
+	"sourceMaps": true,
 	"plugins": []
 }
