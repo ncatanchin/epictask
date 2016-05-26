@@ -28,15 +28,11 @@ function makeConfigs() {
 							"stage-0",
 							"react"
 						],
+						"plugins": 	["transform-runtime"],
 						"sourceMaps": true,
 						"env": {
 							"development": {
-								"presets": [
-									"react-hmre"
-								],
-								"plugins": 	[
-									["transform-runtime"]
-								]
+								"presets": ["react-hmre"]
 							}
 						}
 					}
@@ -76,25 +72,12 @@ function makeConfigs() {
 					"useCache": true,
 					"babelOptions": {
 						"presets": [
-							"es2015",
+							"es2015-native-modules",
 							"stage-0",
 							"react"
 						],
-						"sourceMaps": "both",
-						"env": {
-							"development": {
-								"plugins": 	[
-									[{
-										"transforms": [{
-											"transform": "react-transform-hmr",
-											"imports": ["react"],
-											"locals": ["module"]
-										}]
-									}],
-									["transform-runtime"]
-								]
-							}
-						}
+						"plugins": 	["transform-runtime"],
+						"sourceMaps": "both"
 					}
 				}
 			}),

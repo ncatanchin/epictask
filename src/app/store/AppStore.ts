@@ -52,6 +52,7 @@ function getReducers():ILeafReducer<any,any>[] {
 
 function onChange() {
 	log.debug(`Store state changed`)
+	
 }
 
 /**

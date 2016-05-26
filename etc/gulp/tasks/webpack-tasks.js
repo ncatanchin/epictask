@@ -3,11 +3,8 @@ const path = require('path')
 const fs = require('fs')
 const gutil = require('gulp-util')
 const webpack = require('webpack')
-//const webpackStream = require('webpack-stream')
 const express = require('express')
-
 const makeSrcGlobs = require('../../tools/project-srcs')
-//const named = require('vinyl-named')
 
 const srcs = makeSrcGlobs()
 
@@ -36,7 +33,7 @@ function makeWebpackCompile(projectConfig,watch = false) {
 		if (watch) {
 			compiler.watch({},webpackComplete((err,stats) => {
 				if (err) {
-					log.error('an error occured', err)
+					log.error('an error occurred', err)
 					return
 				}
 				log.info(`Compilation completed for ${wpConfig.name} - in watch mode`)
@@ -105,38 +102,50 @@ function webpackComplete(callback) {
  *
  * @param port
  * @param projectConfig
+ * @param wpConfig
  */
 function runDevServer(port,projectConfig,wpConfig) {
 
-	const compiler = webpack(wpConfig, webpackComplete(projectConfig.onCompileCallback))
+	let firstRun = true, devMiddleware = null
+
+	const compiler = webpack(wpConfig, webpackComplete((err,stats) => {
+
+		if (firstRun) {
+			console.log('First run complete, invalidating')
+			devMiddleware.invalidate()
+			firstRun = false
+		}
+
+		if (projectConfig.onCompileCallback)
+			projectConfig.onCompileCallback(err,stats)
+	}))
 
 	const serverApp = express()
-	const
-		webpackDevMiddleware = require('webpack-dev-middleware'),
-		devMiddleware = webpackDevMiddleware(compiler,{
-			publicPath: wpConfig.output.publicPath,
-			stats: WebpackStatsConfig
-		})
+
+	// Create the dev middleware
+	const webpackDevMiddleware = require('webpack-dev-middleware')
+	devMiddleware = webpackDevMiddleware(compiler,{
+		publicPath: wpConfig.output.publicPath,
+		stats: WebpackStatsConfig
+	})
 
 	serverApp.use(devMiddleware)
 
-
+	// Now the HMR middleware
 	const
 		webpackHotMiddleware = require('webpack-hot-middleware'),
 		hotMiddleware = webpackHotMiddleware(compiler)
+
 	serverApp.use(hotMiddleware)
 
+	// Now server any static assets
+	serverApp.use(express.static(path.resolve(__dirname,'../../..')))
 
 	serverApp.listen(port,'0.0.0.0', err => {
 		if (err) {
 			console.error(`Failed to start dev server`, err)
 			return
 		}
-
-		setTimeout(() => {
-			devMiddleware.invalidate()
-			//hotMiddleware.invalidate()
-		}, 1000)
 
 		console.log(`Dev server is listening on port ${port}`)
 	})
@@ -212,6 +221,17 @@ _.each(projectConfigs,projectConfig => {
 })
 
 //log.info('All dynamic task names',allTaskNames)
+gulp.task('dll',[],(done) => {
+	const dllConfig = require('../../webpack/webpack.config.dll')()
+	const compiler = webpack(dllConfig)
+
+	// Execute single build
+	compiler.run(webpackComplete((err,stats) => {
+		log.info(`Compilation completed for DLL`)
+
+		done(err)
+	}))
+})
 
 gulp.task('dev',[],(done) => {
 	log.info("Starting all dev tasks: " + allTaskNames.dev.join(', '))

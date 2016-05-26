@@ -13,10 +13,17 @@ const {DefinePlugin,HotModuleReplacementPlugin} = webpack
 // Import globals - just for linting
 const {isDev,env} = global
 
+// DLL Config
+
+
+
+
+
 module.exports = function (projectConfig) {
 
 
 	const config = {
+
 		context: baseDir,
 
 		stats: WebpackStatsConfig,
@@ -32,10 +39,11 @@ module.exports = function (projectConfig) {
 		resolve: {
 			alias: {
 				assert: 'browser-assert',
-				shared: path.resolve(baseDir,'src/shared')
+				shared: path.resolve(baseDir,'src/shared'),
+				DLLEntry: path.resolve(distDir,'DLLEntry')
 			},
 			modules: [
-				//path.resolve(baseDir,'..'),
+				path.resolve(baseDir,'..'),
 				path.resolve(baseDir,'node_modules'),
 				path.resolve(baseDir,'src'),
 
@@ -52,6 +60,7 @@ module.exports = function (projectConfig) {
 		module: require('./parts/loaders')(projectConfig),
 
 		plugins: [
+			new webpack.IgnorePlugin(/vertx/),
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			new webpack.NoErrorsPlugin(),
 			new ForkCheckerPlugin(),
@@ -66,7 +75,10 @@ module.exports = function (projectConfig) {
 		node: {
 			__dirname: true,
 			__filename: true
-		}
+		},
+
+		// Add the DLL config
+		DLL: require('./webpack.dll')
 	}
 
 	// Development specific updates

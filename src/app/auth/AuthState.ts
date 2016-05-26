@@ -1,28 +1,9 @@
-import {
-	RecordModel,
-	RecordProperty,
-	makeRecordType,
-	makeRecord
-} from 'typemutant'
 
-@RecordModel()
-class AuthStateModel {
 
-	@RecordProperty()
-	authenticated:boolean = false
+// const AuthStateType = makeRecordType(AuthStateModel).asType
+// const AuthStateStaticType = makeRecordType(AuthStateModel).asStaticType
 
-	@RecordProperty()
-	username:string
-
-	@RecordProperty()
-	email:string
-
-	@RecordProperty()
-	token:string
-
-}
-
-export const AuthState = makeRecord(AuthStateModel)
-
-export const AuthStateType = makeRecordType(AuthStateModel).asType
+// export {
+// 	AuthState
+// }
 //export type AuthStateType = AuthStateTypeWrapper.asType

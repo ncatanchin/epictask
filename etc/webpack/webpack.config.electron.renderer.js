@@ -3,7 +3,7 @@ const assert = require('assert')
 
 module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
-	
+
 	return Object.assign(config, {
 
 		entry: {
@@ -14,7 +14,9 @@ module.exports = (projectConfig) => {
 			publicPath: `http://localhost:${projectConfig.port}/dist`
 		} : {}),
 
-		
+		plugins: config.plugins.concat([
+			config.DLL.DllReferencePlugin
+		]),
 
 		// Mark a couple of simple externals
 		externals: [

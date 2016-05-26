@@ -1,6 +1,7 @@
 import * as React from 'react'
 
 
+
 /**
  * The root container for the app
  */
@@ -12,7 +13,7 @@ export class AppBody extends React.Component<any,any> {
 
 
 	render() {
-		
+
 		return (
 			<div>
 				{this.props.children}

@@ -45,16 +45,38 @@ module.exports = function(projectConfig) {
 		devtool: 'source-map',
 		watch: isDev,
 		hot:isDev,
-		externals: {
-			electron: 'commonjs electron'
-		},
+		externals:
+			{
+				electron: 'commonjs electron'
+			}
+		,
+
+		// 	[
+		// 	function(context, request, callback) {
+		// 		if (request === 'electron')
+		// 			callback(null,'commonjs2 ' + request)
+		//
+		//
+		// 		callback()
+		// 	}
+		// ],
+	// 	{
+	// ///(?!.*electron.*)node_modules/: 'commonjs'
+	// [/(?!.*electron.*)node_modules/] : 'commonjs'
+	// // 	,
+	// // {
+	// // 	electron: 'commonjs electron',
+	// // 	DLLEntry: 'commonjs DLLEntry'
+	// // }
+	//},
 
 
 		plugins: [
 			...config.plugins,
 			//new ExternalsPlugin('commonjs','electron'),
-			//new ExternalsPlugin('commonjs',nodeExternals()),
+			new ExternalsPlugin(nodeExternals()),
 			new NodeTargetPlugin(),
+			//config.DLL.DllReferencePlugin,
 
 
 		],

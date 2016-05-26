@@ -29,7 +29,7 @@ const history = syncHistoryWithStore(hashHistory, store.getReduxStore(),{
 	selectLocationState: (state) => {
 		const routingState = state.get('routing')
 		const routingStateJs = (routingState) ? routingState.toJS() : null
-		log.info('Location state', state,JSON.stringify(routingStateJs,null,4))
+		//log.info('Location state', state,JSON.stringify(routingStateJs,null,4))
 		return routingStateJs
 	}
 })
@@ -46,8 +46,6 @@ class App extends React.Component<any,any> {
 
 	/**
 	 * Render the app container
-	 *
-	 * @returns {any}
 	 */
 	render() {
 		return (
