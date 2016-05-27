@@ -12,6 +12,11 @@ if (hotReloadEnabled)
 log.info('starting')
 let inHotReload = false
 
+if (DEBUG) {
+	app.commandLine.appendSwitch('remote-debugging-port', '8315');
+	app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+}
+
 /**
  * Load the window
  */

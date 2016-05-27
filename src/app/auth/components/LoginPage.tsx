@@ -13,16 +13,19 @@ export class LoginPage extends React.Component<any,any> {
 	}
 
 
+	login() {
+		log.info('Executing login')
+	}
+
 	render() {
 
 		return (
 			<div styleName="loginPage">
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
 				<RaisedButton
-					label="Github Link"
-					linkButton={true}
-					href="https://github.com/callemall/material-ui"
+					label="Authenticate GitHub"
 					primary={true}
+					onMouseUp={this.login.bind(this)}
 					icon={<FontIcon className="fa fa-github" />}
 				/>
 

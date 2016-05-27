@@ -2,7 +2,7 @@
 const log = require('typelogger').create(__filename)
 
 function loadAppRoot() {
-	require('./AppRoot')
+	require('./AppRoot.tsx')
 }
 
 loadAppRoot()

@@ -90,7 +90,7 @@ module.exports = function (projectConfig) {
 		// In development specify absolute path - better
 		// debugger support
 		output: Object.assign({},config.output, isDev ? {
-			devtoolModuleFilenameTemplate: "webpack://[absolute-resource-path]"
+			devtoolModuleFilenameTemplate: "[absolute-resource-path]"
 		} : {}),
 
 

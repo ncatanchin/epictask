@@ -11,8 +11,10 @@ let menu
 let template
 let mainWindow = null
 
+const REMOTE = !process.env.REMOTE
+
 // If in debug mode then add electron-debug
-if (DEBUG || isDev) {
+if ((DEBUG || isDev) && !REMOTE) {
 	require('electron-debug')({showDevTools: true})
 }
 export function stop() {
@@ -73,7 +75,7 @@ function loadRootWindow() {
 		mainWindow = null
 	})
 
-	if (process.env.NODE_ENV === 'development') {
+	if (DEBUG && !REMOTE) {
 		mainWindow.openDevTools()
 	}
 
@@ -145,7 +147,10 @@ function loadRootWindow() {
 				label: 'Reload',
 				accelerator: 'Command+R',
 				click() {
-					mainWindow.restart()
+					mainWindow.reload()
+					//restart()
+
+					//mainWindow.restart()
 				}
 			}, {
 				label: 'Toggle Full Screen',

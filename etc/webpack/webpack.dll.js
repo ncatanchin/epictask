@@ -4,7 +4,7 @@ const
 	fs = require('fs')
 
 const
-	baseDir = path.resolve(__dirname,'../..'),
+	baseDir = path.resolve(__dirname, '../..'),
 	distDir = `${baseDir}/dist`,
 	srcDir = `${baseDir}/src`,
 	manifestPath = `${distDir}/dll-manifest.json`
@@ -39,6 +39,8 @@ module.exports = {
 		"github-extended",
 		"history",
 		"reflect-metadata",
+		"electron-is-dev",
+		"electron-oauth-github",
 		"immutable",
 		"lodash",
 		"material-ui",
@@ -48,6 +50,7 @@ module.exports = {
 		"react-redux",
 		"react-router",
 		"react-router-redux",
+		"react-css-modules",
 		"react-tap-event-plugin",
 		"redux",
 		"redux-logger",

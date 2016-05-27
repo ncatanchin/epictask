@@ -41,7 +41,8 @@ const history = syncHistoryWithStore(hashHistory, store.getReduxStore(),{
 	}
 })
 
-const DevTools = (DEBUG) ? require('./debug/DevTools') : <div/>
+// DEBUG then load DevTools
+const DevTools = (DEBUG) ? require('./debug/DevTools.tsx') : <div></div>
 
 /**
  * Root App Component
