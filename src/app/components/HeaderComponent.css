@@ -1,0 +1,10 @@
+
+.header {
+	composes: flex-row-center from 'assets/styles/flex.css';
+
+	/*padding: 0.3rem 0;*/
+}
+
+.title {
+	margin-left: 5rem;
+}

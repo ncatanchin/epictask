@@ -28,7 +28,7 @@ module.exports = function (projectConfig) {
 
 		stats: WebpackStatsConfig,
 		output: {
-			path: distDir,
+			path: `${distDir}/`,
 			publicPath: `${distDir}/`,
 			filename: '[name].js'
 		},

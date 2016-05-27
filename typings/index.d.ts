@@ -1,3 +1,4 @@
+///<reference path="custom/material-ui/index.d.ts"/>
 
 /**
  * Extend window

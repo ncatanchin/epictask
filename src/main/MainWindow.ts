@@ -1,19 +1,20 @@
 
 import { app, BrowserWindow, Menu, shell } from 'electron'
 import windowStateKeeper = require('electron-window-state')
-import * as path from 'path'
 import * as Log from 'typelogger'
-import * as MainWindow from './MainWindow'
-import {toDataUrl} from 'shared/util/Templates'
 
+const isDev = require('electron-is-dev')
 const log = Log.create(__filename)
-log.info('starting2')
+log.info(`Starting GITTUS (inDev=${isDev})`,process.env.NODE_ENV)
 
 let menu
 let template
 let mainWindow = null
 
-
+// If in debug mode then add electron-debug
+if (DEBUG || isDev) {
+	require('electron-debug')({showDevTools: true})
+}
 export function stop() {
 	console.info('disposing main')
 	BrowserWindow.getAllWindows().forEach(win => win.close())

@@ -1,10 +1,11 @@
 import * as React from 'react'
-import {Link} from 'react-router'
+
+
 
 /**
  * The root container for the app
  */
-export class Login extends React.Component<any,any> {
+export class AppBody extends React.Component<any,any> {
 
 	constructor(props, context) {
 		super(props, context)
@@ -15,7 +16,10 @@ export class Login extends React.Component<any,any> {
 
 		return (
 			<div>
-				Login here, <Link to="/repos">Goto Repos</Link>
+				<div>body content wrapper</div>
+				<div>
+					{this.props.children}
+				</div>
 			</div>
 		)
 	}

@@ -1,11 +1,10 @@
 import * as React from 'react'
 
 
-
 /**
  * The root container for the app
  */
-export class AppBody extends React.Component<any,any> {
+export class ReposPage extends React.Component<any,any> {
 
 	constructor(props, context) {
 		super(props, context)
@@ -16,7 +15,7 @@ export class AppBody extends React.Component<any,any> {
 
 		return (
 			<div>
-				{this.props.children}
+				Repos here
 			</div>
 		)
 	}

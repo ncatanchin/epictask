@@ -1,11 +1,11 @@
 import * as React from 'react'
-import {Header} from './'
+import {HeaderComponent} from './'
 
 /**
  * The root container for the app
  */
-export class Container extends React.Component<any,any> {
-
+export class RootContainerComponent extends React.Component<any,any> {
+	
 	constructor(props, context) {
 		super(props, context)
 	}

@@ -6,7 +6,6 @@ import { StoreEnhancer,compose, applyMiddleware } from 'redux'
 
 import {
 	setStoreProvider,
-	StateObserver,
 	ILeafReducer,
 	ObservableStore
 } from 'typedux'
@@ -20,9 +19,10 @@ const reduxLogger = createLogger();
  * @type {function(): *}
  */
 const devToolsMiddleware =
-	(DEBUG && window.devToolsExtension) ?
-		window.devToolsExtension() :
-		f => f
+	(!DEBUG) ? f => f :
+	(window.devToolsExtension) ? window.devToolsExtension() :
+	require('../debug/DevTools.tsx').instrument()
+
 
 /**
  * Middleware includes thunk and in
@@ -42,8 +42,8 @@ function getReducers():ILeafReducer<any,any>[] {
 	const {AuthReducer} = require('../auth')
 	const {RoutingReducer} = require('../routing')
 	const reducers = [
-		new RoutingReducer(),
-		new AuthReducer()
+		new AuthReducer(),
+		new RoutingReducer()
 	]
 
 	log.debug('Returning reducers',reducers)
@@ -52,7 +52,7 @@ function getReducers():ILeafReducer<any,any>[] {
 
 function onChange() {
 	log.debug(`Store state changed`)
-	
+
 }
 
 /**

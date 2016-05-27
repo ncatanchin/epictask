@@ -47,15 +47,35 @@ module.exports = (projectConfig) => {
 				loader: 'jade-loader'
 			},
 			{
+				type: 'fonts',
+				test: /\.(eot|svg|ttf|woff|woff2)\w*/,
+				loader: 'file?name=assets/fonts/[name].[hash].[ext]'
+
+			},
+			{
+				test: /\.(png|jpg|gif|ico)$/,
+				loader: 'file?name=assets/images/[name].[hash].[ext]',
+				type: 'images'
+			},
+			{
 				test: /\.global\.css$/,
 				loaders: [
 					'style-loader',
 					'css-loader?sourceMap'
 				]
 			},
+			{
+				test: /node_modules.*\.css$/,
+				loader: 'file?name=assets/images/[name].[hash].[ext]'
+				// loaders: [
+				// 	'',
+				// 	'css-loader'
+				// ]
+			},
 
 			{
 				test: /^((?!\.global).)*\.css$/,
+				exclude: /(node_modules|DLLEntry)/,
 				loaders: [
 					'style-loader',
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'

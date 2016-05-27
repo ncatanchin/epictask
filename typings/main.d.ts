@@ -3,7 +3,6 @@
 /// <reference path="main/ambient/electron-window-state/index.d.ts" />
 /// <reference path="main/ambient/expectations/index.d.ts" />
 /// <reference path="main/ambient/github-electron/index.d.ts" />
-/// <reference path="main/ambient/material-ui/index.d.ts" />
 /// <reference path="main/ambient/mocha/index.d.ts" />
 /// <reference path="main/ambient/node/index.d.ts" />
 /// <reference path="main/ambient/react-dom/index.d.ts" />

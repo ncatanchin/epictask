@@ -1,21 +1,28 @@
 import 'shared/CommonEntry'
+import './AppGlobals'
 
-const log = getLogger(__filename)
+require('../assets/fonts/fonts.global.css')
+
+// Retrieve the getTheme method from the theme manager
+import "./ThemeManager"
 
 // Imports
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
-import {Router,IndexRoute,Route,hashHistory} from 'react-router'
+import {Router,IndexRedirect,Route,hashHistory} from 'react-router'
+import {ReposPage} from './repos'
+import {LoginPage} from './auth'
 import {syncHistoryWithStore} from 'react-router-redux'
 
-// Retrieve the getTheme method from the theme manager
-import "./ThemeManager"
+
 
 // Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
-import {Container,Header,Repos,Login,AppBody} from './components'
-import {getStore} from './store'
+import {RootContainerComponent,HeaderComponent,AppBody} from './components'
+import {getStore} from './store/AppStore'
+
+const log = getLogger(__filename)
 
 // Build the container
 log.info('BootStrapping')
@@ -34,6 +41,11 @@ const history = syncHistoryWithStore(hashHistory, store.getReduxStore(),{
 	}
 })
 
+const DevTools = (DEBUG) ? require('./debug/DevTools') : <div/>
+
+/**
+ * Root App Component
+ */
 class App extends React.Component<any,any> {
 
 	static childContextTypes = {
@@ -50,18 +62,25 @@ class App extends React.Component<any,any> {
 	render() {
 		return (
 			<Provider store={store.getReduxStore()}>
-				<MuiThemeProvider muiTheme={getTheme()}>
-					<Container>
-						<Header/>
-						<Router history={history}>
-							<Route path="/" component={AppBody} >
-								<IndexRoute component={Login}/>
-								<Route path="/repos" component={Repos}/>
-								<Route path="*" component={Login}/>
-							</Route>
-						</Router>
-					</Container>
-				</MuiThemeProvider>
+				<div className="fill-height fill-width">
+
+					<MuiThemeProvider muiTheme={getTheme()}>
+						<div className="fill-height fill-width">
+							<HeaderComponent/>
+							<RootContainerComponent>
+								<Router history={history}>
+									<Route path="/login" component={LoginPage}/>
+									<Route path="/" component={AppBody} >
+										<IndexRedirect to="/login"/>
+										<Route path="/repos" component={ReposPage}/>
+										<Route path="*" component={LoginPage}/>
+									</Route>
+								</Router>
+							</RootContainerComponent>
+						</div>
+					</MuiThemeProvider>
+					<DevTools/>
+				</div>
 			</Provider>
 		)
 	}

@@ -1,16 +1,10 @@
 import 'shared/CommonEntry'
 
-import { app, BrowserWindow, Menu, shell } from 'electron'
+import { app } from 'electron'
 import windowStateKeeper = require('electron-window-state')
-import * as path from 'path'
-import {toDataUrl} from 'shared/util/Templates'
-import * as Log from 'typelogger'
 import * as MainWindowType from './MainWindow'
-let MainWindow = MainWindowType
 
-
-
-const log = Log.create(__filename)
+const log = getLogger(__filename)
 const hotReloadEnabled = !!process.env.HOT
 if (hotReloadEnabled)
 	log.info('Hot reload mode enabled')
@@ -18,7 +12,20 @@ if (hotReloadEnabled)
 log.info('starting')
 let inHotReload = false
 
-app.on('window-all-closed', () => {
+/**
+ * Load the window
+ */
+function loadWindow() {
+	return require('./MainWindow') as typeof MainWindowType
+}
+
+let mainWindow = loadWindow()
+
+/**
+ * All windows closed
+ */
+function onAllClosed() {
+
 	if (hotReloadEnabled) {
 		log.info('Skipping QUIT, in HOT mode')
 		return
@@ -27,22 +34,33 @@ app.on('window-all-closed', () => {
 	log.info('> all-closed')
 	if (process.platform !== 'darwin' && !inHotReload)
 		app.quit()
-})
 
+}
 
-app.on('ready', MainWindow.start)
+/**
+ * App started
+ */
+function onStart() {
+	mainWindow.start()
+}
+
+/**
+ * Bind events
+ */
+app.on('window-all-closed', onAllClosed)
+app.on('ready', onStart)
 
 
 /**
- * If in dev with HMR enabled
+ * Enable HMR
  */
 if (module.hot) {
 	console.info('Setting up HMR')
 
 	module.hot.accept(['./MainWindow'],(mods) => {
 		log.info("Accepting updates for",mods)
-		MainWindow = require('./MainWindow')
-		MainWindow.restart()
+		mainWindow = loadWindow()
+		mainWindow.restart()
 	})
 
 }
