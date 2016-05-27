@@ -10,6 +10,7 @@
 /// <reference path="browser/ambient/redux-logger/index.d.ts" />
 /// <reference path="browser/ambient/redux-thunk/index.d.ts" />
 /// <reference path="browser/ambient/sinon/index.d.ts" />
+/// <reference path="browser/ambient/superagent/index.d.ts" />
 /// <reference path="browser/definitions/history/index.d.ts" />
 /// <reference path="browser/definitions/lodash/index.d.ts" />
 /// <reference path="browser/definitions/react-redux/index.d.ts" />

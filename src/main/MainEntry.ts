@@ -1,20 +1,26 @@
-import 'shared/CommonEntry'
-
 import { app } from 'electron'
 import windowStateKeeper = require('electron-window-state')
+
+import 'shared/CommonEntry'
 import * as MainWindowType from './MainWindow'
 
 const log = getLogger(__filename)
-const hotReloadEnabled = !!process.env.HOT
-if (hotReloadEnabled)
-	log.info('Hot reload mode enabled')
 
-log.info('starting')
-let inHotReload = false
+/**
+ * HMR Configuration for development
+ */
+function isHotEnabled() {
+	return Env.isHot
+}
+const hotReloadEnabled = Env.isHot
+log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
 
+/**
+ * In debug mode enable remote debugging
+ */
 if (DEBUG) {
 	app.commandLine.appendSwitch('remote-debugging-port', '8315');
-	app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
+	//app.commandLine.appendSwitch('host-rules', 'MAP * 127.0.0.1');
 }
 
 /**
@@ -30,29 +36,24 @@ let mainWindow = loadWindow()
  * All windows closed
  */
 function onAllClosed() {
-
-	if (hotReloadEnabled) {
-		log.info('Skipping QUIT, in HOT mode')
-		return
-	}
-
-	log.info('> all-closed')
-	if (process.platform !== 'darwin' && !inHotReload)
+	if (process.platform !== 'darwin')
 		app.quit()
-
 }
 
 /**
  * App started
  */
 function onStart() {
+	app.setName('epic.ly')
 	mainWindow.start()
 }
 
 /**
  * Bind events
  */
-app.on('window-all-closed', onAllClosed)
+
+if (!Env.isHot)
+	app.on('window-all-closed', onAllClosed)
 app.on('ready', onStart)
 
 

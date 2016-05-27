@@ -5,7 +5,7 @@ import {HeaderComponent} from './'
  * The root container for the app
  */
 export class RootContainerComponent extends React.Component<any,any> {
-	
+
 	constructor(props, context) {
 		super(props, context)
 	}
@@ -25,7 +25,7 @@ export class RootContainerComponent extends React.Component<any,any> {
 		}
 
 		return (
-			<div className="fill-width fill-height" style={canvasStyle}>
+			<div style={canvasStyle}>
 				{this.props.children}
 			</div>
 		)

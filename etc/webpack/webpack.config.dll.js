@@ -4,10 +4,8 @@ require('../tools/global-env')
 //const HtmlWebpackPlugin = require('html-webpack-plugin')
 const
 	webpack = require('webpack'),
-	//nodeExternals = require('webpack-node-externals'),
 	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
 	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
-	//ExternalsPlugin = webpack.ExternalsPlugin,
 	fs = require('fs'),
 	baseConfig = require('./webpack.config')
 
@@ -20,7 +18,6 @@ module.exports = function() {
 		{DLL} = config
 
 	
-	//console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
 	Object.assign(config, {
 
 		entry: {

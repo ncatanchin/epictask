@@ -1,11 +1,15 @@
 import * as React from 'react'
-import {dialog} from 'electron'
+import {remote,ipcRenderer} from 'electron'
 import {Link} from 'react-router'
 import {RaisedButton,FontIcon} from 'material-ui'
-import {GitHubConfig} from 'shared/Constants'
+import {GitHubConfig,AuthKey} from 'shared/Constants'
+import {AuthActionFactory} from '../AuthActionFactory'
+
 const log = getLogger(__filename)
 const {Flexbox,FlexItem} = require('flexbox-react')
+
 const styles = require('./LoginPage.css')
+const authActions = new AuthActionFactory()
 
 /**
  * The root container for the app
@@ -19,17 +23,9 @@ export class LoginPage extends React.Component<any,any> {
 
 	login() {
 		log.info('Executing login')
+		//ipcRenderer.send(AuthKey,'start')
+		authActions.authenticate()
 
-		const OAuthGithub = require('electron-oauth-github')
-		const authRequest = OAuthGithub(GitHubConfig)
-
-		authRequest.startRequest(function(accessToken, err) {
-			if (err) {
-				log.error(err);
-			}
-
-			dialog.showErrorBox('Status', 'access_token: ' + accessToken);
-		});
 	}
 
 	render() {
@@ -46,6 +42,7 @@ export class LoginPage extends React.Component<any,any> {
 					/>
 
 				</FlexItem>
+
 
 			</Flexbox>
 		)

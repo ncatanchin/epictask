@@ -1,25 +1,61 @@
 
-import { app, BrowserWindow, Menu, shell } from 'electron'
+import { app, BrowserWindow, Menu, shell,ipcMain,dialog } from 'electron'
 import windowStateKeeper = require('electron-window-state')
 import * as Log from 'typelogger'
+import {GitHubConfig,AuthKey} from 'shared/Constants'
 
-const isDev = require('electron-is-dev')
 const log = Log.create(__filename)
-log.info(`Starting GITTUS (inDev=${isDev})`,process.env.NODE_ENV)
+log.info(`Starting GITTUS (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let menu
 let template
 let mainWindow = null
 
-const REMOTE = !process.env.REMOTE
+
+ipcMain.on(AuthKey,(event,arg) => {
+	log.info('Got auth request',event,arg)
+
+	const OAuthGithub = require('electron-oauth-github')
+	const authRequest = new OAuthGithub(GitHubConfig)
+
+	authRequest.startRequest(function(err,token) {
+		if (err) {
+			log.error(err);
+		}
+
+		event.sender.send(AuthKey,{token})
+		log.info('GH token received: ' + token)
+	});
+})
+
+
+const REMOTE = process.env.REMOTE === 'true'
 
 // If in debug mode then add electron-debug
-if ((DEBUG || isDev) && !REMOTE) {
-	require('electron-debug')({showDevTools: true})
+if ((Env.isDev || Env.isDev) && !REMOTE) {
+	//{showDevTools: true}
+	require('electron-debug')({})
 }
+
 export function stop() {
 	console.info('disposing main')
-	BrowserWindow.getAllWindows().forEach(win => win.close())
+
+	if (mainWindow) {
+		//mainWindow.close()
+	}
+	// while (true) {
+	// 	const allWindows = BrowserWindow.getAllWindows()
+	// 	if (!allWindows || allWindows.length === 0)
+	// 		break
+	//
+	// 	try {
+	// 		const win = allWindows.pop()
+	// 		win && win.close()
+	// 	} catch (err) {
+	// 		log.warn('Unable to close window',err)
+	// 	}
+	// }
+
 	mainWindow = null
 }
 
@@ -44,6 +80,10 @@ export function start() {
 	loadRootWindow()
 }
 
+
+/**
+ * Load the actual window
+ */
 function loadRootWindow() {
 	log.info('> ready')
 
@@ -55,12 +95,11 @@ function loadRootWindow() {
 	mainWindow = new BrowserWindow(Object.assign({},mainWindowState,{
 		show: true,
 		titleBarStyle: 'hidden',
-		darkTheme:true
+		darkTheme:true,
+		title: 'epic.ly'
 	}))
 
 	mainWindowState.manage(mainWindow)
-
-
 
 	const templatePath = 'file://' + require('!!file?name=[name].html!../../etc/tools/jade-template-loader!./MainEntry.jade')
 	log.info(`Template Path: ${templatePath}`)
@@ -142,15 +181,12 @@ function loadRootWindow() {
 				selector: 'selectAll:'
 			}]
 		}, {
-			label: 'View',
-			submenu: (process.env.NODE_ENV === 'development') ? [{
+			label: 'View2',
+			submenu: (Env.isDebug) ? [{
 				label: 'Reload',
 				accelerator: 'Command+R',
 				click() {
 					mainWindow.reload()
-					//restart()
-
-					//mainWindow.restart()
 				}
 			}, {
 				label: 'Toggle Full Screen',
@@ -283,3 +319,14 @@ function loadRootWindow() {
 	}
 }
 
+/**
+ * HMR Enabled -> on dispose remove mainWindow
+ */
+if (module.hot) {
+	module.hot.dispose(() => {
+		if (mainWindow) {
+			mainWindow.close()
+			mainWindow = null
+		}
+	})
+}

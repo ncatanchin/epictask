@@ -30,7 +30,8 @@ module.exports = function (projectConfig) {
 		output: {
 			path: `${distDir}/`,
 			publicPath: `${distDir}/`,
-			filename: '[name].js'
+			filename: '[name].js',
+			//libraryTarget: 'commonjs2'
 		},
 
 		recordsPath: `${distDir}/_records`,

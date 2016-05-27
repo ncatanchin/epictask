@@ -30,7 +30,7 @@ module.exports = function(projectConfig) {
 	if (isDev)
 		mainEntries.unshift(...hmrEntry)
 
-	console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
+	//console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
 	Object.assign(config, {
 
 		entry: {
@@ -45,41 +45,37 @@ module.exports = function(projectConfig) {
 		devtool: 'source-map',
 		watch: isDev,
 		hot:isDev,
-		externals:
-			{
-				electron: 'commonjs electron'
-			}
-		,
+		// externals: {
+		// 	electron: 'commonjs electron',
+		// 	formidable: 'commonjs formidable',
+		// 	debug: "commonjs debug",
+		// 	superagent: "commonjs superagent",
+		// 	//assert: "commonjs assert",
+		// 	'electron-is-dev': 'commonjs electron-is-dev'
+		// },
 
-		// 	[
-		// 	function(context, request, callback) {
-		// 		if (request === 'electron')
-		// 			callback(null,'commonjs2 ' + request)
-		//
-		//
-		// 		callback()
-		// 	}
-		// ],
-	// 	{
-	// ///(?!.*electron.*)node_modules/: 'commonjs'
-	// [/(?!.*electron.*)node_modules/] : 'commonjs'
-	// // 	,
-	// // {
-	// // 	electron: 'commonjs electron',
-	// // 	DLLEntry: 'commonjs DLLEntry'
-	// // }
-	//},
+		externals:
+		{
+			debug: "commonjs debug",
+			electron: 'commonjs electron',
+			'source-map-support': 'commonjs source-map-support',
+			'font-awesome': 'commonjs font-awesome',
+			formidable: 'commonjs formidable',
+			superagent: 'commonjs superagent',
+			'any-promise': 'commonjs any-promise',
+			'electron-is-dev': 'commonjs formidable',
+			dns: 'commonjs dns',
+			request: 'commonjs request',
+			http: 'commonjs http',
+		},
 
 
 		plugins: [
 			...config.plugins,
-			//new ExternalsPlugin('commonjs','electron'),
 			new ExternalsPlugin(nodeExternals()),
-			new NodeTargetPlugin(),
-			//config.DLL.DllReferencePlugin,
-
-
+			new NodeTargetPlugin()
 		],
+
 		node: {
 			__dirname: true,
 			__filename: true
@@ -87,7 +83,7 @@ module.exports = function(projectConfig) {
 	})
 
 
-	console.log(config)
+	//console.log(config)
 
 	return config
 }

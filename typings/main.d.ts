@@ -11,6 +11,7 @@
 /// <reference path="main/ambient/redux-logger/index.d.ts" />
 /// <reference path="main/ambient/redux-thunk/index.d.ts" />
 /// <reference path="main/ambient/sinon/index.d.ts" />
+/// <reference path="main/ambient/superagent/index.d.ts" />
 /// <reference path="main/definitions/history/index.d.ts" />
 /// <reference path="main/definitions/lodash/index.d.ts" />
 /// <reference path="main/definitions/react-redux/index.d.ts" />

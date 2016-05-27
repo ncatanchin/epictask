@@ -6,6 +6,6 @@ module.exports = global.WebpackStatsConfig = {
 	chunkModules: false,
 	hash: false,
 	reasons: false,
-	modules: false,
+	modules: true,
 	chunkOrigins: false
 }

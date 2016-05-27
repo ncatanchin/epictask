@@ -117,7 +117,7 @@ function makeConfigs() {
 				// Get webpackconfig
 				const normalizedName = projectName.replace('-','.')
 				const webpackConfigFilename = path.resolve(__dirname,`webpack/webpack.config.${normalizedName}`)
-				console.log(`Prepared project: ${webpackConfigFilename}`,targetEnv,targetType)
+				//console.log(`Prepared project: ${webpackConfigFilename}`,targetEnv,targetType)
 
 				return require(webpackConfigFilename)(projectConfig)
 			}

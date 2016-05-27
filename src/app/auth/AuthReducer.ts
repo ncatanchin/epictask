@@ -16,8 +16,6 @@ export class AuthReducer extends DefaultLeafReducer<any,AuthMessage> {
 
 
 	defaultState():any {
-		return new AuthState({
-			authenticated: false
-		})
+		return new AuthState()
 	}
 }

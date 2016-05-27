@@ -1,4 +1,4 @@
-import {getUserDataFilename} from './Files'
+import {getUserDataFilename} from './util/Files'
 import * as fs from 'fs'
 import * as _ from 'lodash'
 

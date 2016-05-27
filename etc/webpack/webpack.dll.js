@@ -34,16 +34,15 @@ module.exports = {
 	Libs: [
 		"cryptr",
 		"dataurl",
-		"electron-window-state",
+		//"babel-runtime",
 		"github-api",
 		"github-extended",
 		"history",
 		"reflect-metadata",
-		"electron-is-dev",
-		"electron-oauth-github",
 		"immutable",
 		"lodash",
 		"material-ui",
+		"flexbox-react",
 		"react",
 		"react-addons-css-transition-group",
 		"react-dom",
@@ -54,6 +53,13 @@ module.exports = {
 		"react-tap-event-plugin",
 		"redux",
 		"redux-logger",
-		"redux-thunk"
+		"redux-thunk",
+		//"react-dock",
+
+
+		// TODO: exclude from prod build
+		//"redux-devtools-log-monitor",
+		//"redux-devtools",
+
 	]
 }

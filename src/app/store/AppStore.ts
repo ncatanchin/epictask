@@ -39,9 +39,12 @@ const middleware = [
 let store:ObservableStore<any>
 
 function getReducers():ILeafReducer<any,any>[] {
+	const {AppReducer} = require('../AppReducer')
 	const {AuthReducer} = require('../auth')
 	const {RoutingReducer} = require('../routing')
+	
 	const reducers = [
+		new AppReducer(),
 		new AuthReducer(),
 		new RoutingReducer()
 	]

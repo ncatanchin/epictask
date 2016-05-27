@@ -1,2 +1,2 @@
 export * from './AuthActionFactory'
-export {LoginPage} from './components'
+export * from './components'

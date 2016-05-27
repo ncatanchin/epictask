@@ -17,12 +17,6 @@ function makeWebpackCompile(projectConfig,watch = false) {
 	return (done) => {
 
 		const wpConfig = projectConfig.webpackConfigFn()
-
-		// if (watch)
-		// 	Object.assign(wpConfig,{
-		// 		watch,
-		// 		hot:true
-		// 	})
 		const compiler = webpack(wpConfig)
 
 		function doCallback(err,stats) {
@@ -139,7 +133,11 @@ function runDevServer(port,projectConfig,wpConfig) {
 	serverApp.use(hotMiddleware)
 
 	// Now server any static assets
-	serverApp.use(express.static(path.resolve(__dirname,'../../..')))
+	serverApp.use('/dist',express.static(path.resolve(__dirname,'../../../dist')))
+
+	const homePath = process.env.HOME
+	gutil.log('Using home path',homePath)
+	serverApp.use(homePath,express.static(homePath))
 
 	serverApp.listen(port,'0.0.0.0', err => {
 		if (err) {

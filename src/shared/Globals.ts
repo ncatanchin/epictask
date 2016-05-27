@@ -5,6 +5,7 @@ import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
 
+import {AppStateType as AppStateTypeGlobal} from './AppStateType'
 
 /**
  * Declare globals
@@ -18,16 +19,24 @@ declare global {
 	var requireContext:typeof ContextUtils.requireContext
 	var mergeContext:typeof ContextUtils.mergeContext
 	var _:typeof LodashGlobal
+	var Env:any
+
 }
 
-
-
 // Export globals
+const isDev = process.env.NODE_ENV === 'development'
+
 Object.assign(global as any,{
 	getLogger: LoggerFactory,
 	Immutable: ImmutableGlobal,
 	TypeMutant: TypeMutantGlobal,
-	_:LodashGlobal
+	_:LodashGlobal,
+	AppStateType: AppStateTypeGlobal,
+	Env: {
+		isDev,
+		isDebug: DEBUG && isDev,
+		isHot: !LodashGlobal.isNil(process.env.HOT)
+	}
 },ContextUtils)
 
 
