@@ -1,6 +1,9 @@
 import * as React from 'react'
 import {Link} from 'react-router'
 import {RaisedButton,FontIcon} from 'material-ui'
+
+const log = getLogger(__filename)
+const {Flexbox,FlexItem} = require('flexbox-react')
 const styles = require('./LoginPage.css')
 
 /**
@@ -20,16 +23,19 @@ export class LoginPage extends React.Component<any,any> {
 	render() {
 
 		return (
-			<div styleName="loginPage">
+			<Flexbox flexDirection="row" justifyContent="center" minHeight="100vh" minWidth="100vw" styleName="loginPage">
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				<RaisedButton
-					label="Authenticate GitHub"
-					primary={true}
-					onMouseUp={this.login.bind(this)}
-					icon={<FontIcon className="fa fa-github" />}
-				/>
+				<FlexItem alignSelf="center">
+					<RaisedButton
+						label="Authenticate GitHub"
+						primary={true}
+						onMouseUp={this.login.bind(this)}
+						icon={<FontIcon className="fa fa-github" />}
+					/>
 
-			</div>
+				</FlexItem>
+
+			</Flexbox>
 		)
 	}
 }
