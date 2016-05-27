@@ -1,7 +1,8 @@
 import * as React from 'react'
+import {dialog} from 'electron'
 import {Link} from 'react-router'
 import {RaisedButton,FontIcon} from 'material-ui'
-
+import {GitHubConfig} from 'shared/Constants'
 const log = getLogger(__filename)
 const {Flexbox,FlexItem} = require('flexbox-react')
 const styles = require('./LoginPage.css')
@@ -18,6 +19,17 @@ export class LoginPage extends React.Component<any,any> {
 
 	login() {
 		log.info('Executing login')
+
+		const OAuthGithub = require('electron-oauth-github')
+		const authRequest = OAuthGithub(GitHubConfig)
+
+		authRequest.startRequest(function(accessToken, err) {
+			if (err) {
+				log.error(err);
+			}
+
+			dialog.showErrorBox('Status', 'access_token: ' + accessToken);
+		});
 	}
 
 	render() {
