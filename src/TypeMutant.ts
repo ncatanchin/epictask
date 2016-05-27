@@ -142,6 +142,15 @@ export class RecordTypeWrapper<T, TType extends RecordModelConstructor<T>> {
 
 }
 
+/**
+ * Type Guard for Record object classes
+ *
+ * @param o
+ * @returns {boolean}
+ */
+export function isRecordObject(o:any):o is RecordBaseObject<any,any> {
+	return o.type && o.withMutation
+}
 
 /**
  * Immutable class wrapper
@@ -316,9 +325,10 @@ export function makeRecordType<T extends Object>(modelClazz:{new():T}) {
  * solved with https://github.com/Microsoft/TypeScript/issues/7934
  *
  * @param modelClazz
+ * @param defaultProps
  * @returns {modelClazz & RecordBaseObject<T>}
  */
-export function makeRecord<T extends Object>(modelClazz:{new():T}):T & RecordBaseObject<T,T> & RecordModelConstructor<T> {
+export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps = {}):T & RecordBaseObject<T,T> & RecordModelConstructor<T> {
 
 	const typeWrapper = makeRecordType(modelClazz)
 
@@ -360,7 +370,7 @@ export function makeRecord<T extends Object>(modelClazz:{new():T}):T & RecordBas
 
 		constructor()
 		constructor(private props = {}) {
-			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType, props)
+			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType, Object.assign({},defaultProps,props))
 		}
 	}
 
