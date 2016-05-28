@@ -1,8 +1,8 @@
 
-import { app, BrowserWindow, Menu, shell,ipcMain,dialog } from 'electron'
+const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = require('electron')
 import windowStateKeeper = require('electron-window-state')
 import * as Log from 'typelogger'
-import {GitHubConfig,AuthKey} from 'shared/Constants'
+import {GitHubConfig,AuthKey} from '../shared/Constants'
 
 const log = Log.create(__filename)
 log.info(`Starting GITTUS (inDev=${Env.isDev})`,process.env.NODE_ENV)

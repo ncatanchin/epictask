@@ -1,4 +1,4 @@
-import 'shared/CommonEntry'
+import '../shared/CommonEntry'
 import './AppGlobals'
 import './AppServices'
 

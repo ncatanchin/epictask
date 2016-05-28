@@ -210,7 +210,7 @@ function makeTaskNames(projectConfig) {
 }
 
 _.each(projectConfigs,projectConfig => {
-	debugger
+	
 	assert(projectConfig.runMode, `Project runmode is required ${projectConfig.name}`)
 
 	const taskNames = makeTaskNames(projectConfig)

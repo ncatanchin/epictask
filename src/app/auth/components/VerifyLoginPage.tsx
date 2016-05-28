@@ -1,8 +1,6 @@
 import * as React from 'react'
-import {remote, ipcRenderer} from 'electron'
-import {Link} from 'react-router'
-import {RaisedButton, FontIcon} from 'material-ui'
-import {GitHubConfig, AuthKey} from 'shared/Constants'
+const {remote, ipcRenderer} = require('electron')
+
 import {AuthActionFactory} from '../AuthActionFactory'
 import {CircularProgress} from 'material-ui'
 const log = getLogger(__filename)

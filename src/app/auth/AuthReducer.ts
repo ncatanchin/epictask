@@ -1,5 +1,5 @@
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
-import {AuthKey} from "shared/Constants"
+import {AuthKey} from "../../shared/Constants"
 import {AuthState} from './AuthState'
 
 

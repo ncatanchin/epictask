@@ -122,7 +122,7 @@
     "dataurl": "^0.1.0",
     "debug": "^2.2.0",
     "electron-is-dev": "^0.1.1",
-    "electron-oauth-github": "densebrain/electron-oauth-github",
+    "electron-oauth-github": "jglanz/electron-oauth-github",
     "electron-window-state": "^3.0.3",
     "enhanced-require": "^0.5.0-beta6",
     "flexbox-react": "^2.0.0",

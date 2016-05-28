@@ -20,6 +20,7 @@ function defaultSettings() {
 }
 
 
+
 /**
  * Load settings from disk
  */

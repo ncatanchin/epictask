@@ -1,4 +1,4 @@
-import * as Settings from 'shared/Settings'
+import * as Settings from './Settings'
 import * as Constants from './Constants'
 import * as request from 'superagent'
 

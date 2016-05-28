@@ -1,10 +1,12 @@
 import {getStore} from './store'
 import {AppActionFactory} from './AppActionFactory'
-import {createClient} from 'shared/GitHubClient'
+import {AuthActionFactory} from './auth/AuthActionFactory'
+
 
 const log = getLogger(__filename)
 const store = getStore()
 const appActions = new AppActionFactory()
+const authActions = new AuthActionFactory()
 
 let stateType = null
 
@@ -17,13 +19,7 @@ async function updateStateType() {
 	stateType = newStateType
 
 	if (stateType === AppStateType.VerifyLogin) {
-		const client = createClient()
-		const user = await client.user()
-
-		log.info(`Verified user as`,user)
-		if (!user || !user.login) {
-			throw new Error('Invalid user token')
-		}
+		authActions.verify()
 	}
 }
 

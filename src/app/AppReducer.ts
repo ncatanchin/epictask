@@ -1,7 +1,7 @@
 
 
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
-import {AppKey} from "shared/Constants"
+import {AppKey} from "../shared/Constants"
 import {AppState} from './AppState'
 
 

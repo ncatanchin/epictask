@@ -4,11 +4,12 @@ const ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 const webpack = require('webpack')
 const assert = require('assert')
 const path = require('path')
+const nodeExternals = require('webpack-node-externals')
 
 const
 	baseDir = path.resolve(__dirname,'../..'),
 	distDir = `${baseDir}/dist`
-const {DefinePlugin,HotModuleReplacementPlugin} = webpack
+const {DefinePlugin,ExternalsPlugin,HotModuleReplacementPlugin} = webpack
 
 // Import globals - just for linting
 const {isDev,env} = global
@@ -31,7 +32,8 @@ module.exports = function (projectConfig) {
 			path: `${distDir}/`,
 			publicPath: `${distDir}/`,
 			filename: '[name].js',
-			//libraryTarget: 'commonjs2'
+			libraryTarget: 'commonjs2'
+
 		},
 
 		recordsPath: `${distDir}/_records`,
@@ -40,17 +42,12 @@ module.exports = function (projectConfig) {
 		resolve: {
 			alias: {
 				assert: 'browser-assert',
-				shared: path.resolve(baseDir,'src/shared'),
 				DLLEntry: path.resolve(distDir,'DLLEntry')
 			},
 			modules: [
-				path.resolve(baseDir,'..'),
 				path.resolve(baseDir,'node_modules'),
 				path.resolve(baseDir,'src'),
 
-			],
-			modulesDirectories: [
-				path.resolve(baseDir, 'node_modules')
 			],
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -77,6 +74,15 @@ module.exports = function (projectConfig) {
 			__dirname: true,
 			__filename: true
 		},
+
+		externals:[
+			nodeExternals({
+				whitelist: [
+					/webpack\/hot/,
+					/webpack-hot/
+				]
+			})
+		],
 
 		// Add the DLL config
 		DLL: require('./webpack.dll')

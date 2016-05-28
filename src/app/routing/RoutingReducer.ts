@@ -1,5 +1,5 @@
 import {ILeafReducer} from 'typedux'
-import {RoutingKey} from 'shared/Constants'
+import {RoutingKey} from '../../shared/Constants'
 import {LOCATION_CHANGE} from 'react-router-redux'
 import {RoutingMessage} from './RoutingMessage'
 import {RoutingStateType} from './RoutingState'

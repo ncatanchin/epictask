@@ -25,16 +25,18 @@ function makeConfigs() {
 					"babelOptions": {
 						"presets": [
 							"es2015-native-modules",
+							//"es2015",
 							"stage-0",
 							"react"
 						],
-						"plugins": 	["transform-runtime"],
+						//"plugins": ["add-module-exports","transform-runtime"],
+						"plugins": ["add-module-exports"],
 						"sourceMaps": true,
-						"env": {
-							"development": {
-								"presets": ["react-hmre"]
-							}
-						}
+						// "env": {
+						// 	"development": {
+						// 		"presets": ["react-hmre"]
+						// 	}
+						// }
 					}
 				}
 			}),
@@ -73,10 +75,13 @@ function makeConfigs() {
 					"babelOptions": {
 						"presets": [
 							"es2015-native-modules",
+							//"es2015",
 							"stage-0",
 							"react"
 						],
-						"plugins": 	["transform-runtime"],
+						//"plugins": 	["add-module-exports","transform-runtime"],
+						//"plugins": 	["transform-runtime"],
+						"plugins": ["add-module-exports"],
 						"sourceMaps": "both"
 					}
 				}

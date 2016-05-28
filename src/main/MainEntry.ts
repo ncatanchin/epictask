@@ -1,9 +1,10 @@
-import { app } from 'electron'
-import windowStateKeeper = require('electron-window-state')
+const electron = require('electron')
+const windowStateKeeper = require('electron-window-state')
 
-import 'shared/CommonEntry'
+import '../shared/CommonEntry'
 import * as MainWindowType from './MainWindow'
 
+const {app} = electron
 const log = getLogger(__filename)
 
 /**

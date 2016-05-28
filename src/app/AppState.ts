@@ -9,8 +9,8 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import * as Settings from 'shared/Settings'
-import * as Constants from 'shared/Constants'
+import * as Settings from '../shared/Settings'
+import * as Constants from '../shared/Constants'
 
 
 @RecordModel()

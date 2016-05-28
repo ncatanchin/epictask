@@ -1,10 +1,13 @@
 import {ActionFactory,Action} from 'typedux'
-import {AuthKey} from "shared/Constants"
+import {createClient} from 'shared/GitHubClient'
+import {AuthKey} from "../../shared/Constants"
+import {AppActionFactory} from '../AppActionFactory'
 import {AuthState} from './AuthState'
 import {AuthMessage} from './AuthReducer'
-import {ipcRenderer} from 'electron'
+const {ipcRenderer} = require('electron')
 
 const log = getLogger(__filename)
+const gAppActions = new AppActionFactory()
 
 export * from './AuthState'
 export * from './AuthReducer'
@@ -43,9 +46,28 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	}
 
 	@Action()
+	verify() {
+		return async (dispatch,getState) => {
+			const client = createClient()
+			const user = await client.user()
+
+			const appActions = gAppActions.withDispatcher(dispatch,getState)
+
+			log.info(`Verified user as`,user)
+			const invalidUser = !user || !user.login
+			if (invalidUser) {
+				log.error(`Invalid token, set login state`,user)
+			}
+
+			appActions.setStateType(invalidUser ? AppStateType.Login : AppStateType.Ready)
+		}
+	}
+
+	@Action()
 	authenticate() {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
+			const appActions = gAppActions.withDispatcher(dispatch,getState)
 			actions.setAuthenticating(true)
 
 			return new Promise((resolve,reject) => {
@@ -53,9 +75,11 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 
 					if (err) {
 						actions.setError(err)
+						appActions.setStateType(AppStateType.Login)
 						reject(err)
 					} else {
 						actions.setToken(token)
+						appActions.setStateType(AppStateType.VerifyLogin)
 						resolve(token)
 					}
 				})

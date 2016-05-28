@@ -1,6 +1,6 @@
 
 
-import * as electron from 'electron'
+const  electron = require('electron')
 
 const app = electron.app || electron.remote.app
 const userDataPath = app.getPath('userData')
