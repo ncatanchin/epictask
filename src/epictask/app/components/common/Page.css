@@ -1,0 +1,3 @@
+.page {
+	composes: flex-row,flex-scale from 'epictask/assets/styles/flex.css';
+}

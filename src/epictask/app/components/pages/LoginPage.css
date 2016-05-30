@@ -1,0 +1,3 @@
+.loginPage {
+	composes: flex-column-center from 'epictask/assets/styles/flex.css'
+}

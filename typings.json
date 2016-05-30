@@ -21,6 +21,7 @@
     "redux-logger": "registry:dt/redux-logger#2.6.0+20160316155526",
     "redux-thunk": "registry:dt/redux-thunk#2.0.1+20160317120654",
     "sinon": "registry:dt/sinon#1.16.0+20160317120654",
-    "superagent": "registry:dt/superagent#1.4.0+20160317120654"
+    "superagent": "registry:dt/superagent#1.4.0+20160317120654",
+    "whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160524142046"
   }
 }

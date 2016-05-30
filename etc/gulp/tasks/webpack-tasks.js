@@ -210,7 +210,7 @@ function makeTaskNames(projectConfig) {
 }
 
 _.each(projectConfigs,projectConfig => {
-	
+
 	assert(projectConfig.runMode, `Project runmode is required ${projectConfig.name}`)
 
 	const taskNames = makeTaskNames(projectConfig)
@@ -237,4 +237,6 @@ gulp.task('dev',[],(done) => {
 })
 
 gulp.task('compile-watch',['dev'])
-
+gulp.task('clean-dev',['clean'], (done) => {
+	runSequence('dev',done)
+})

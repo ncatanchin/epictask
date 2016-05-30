@@ -7,6 +7,9 @@ const baseDir = path.resolve(__dirname,'..')
 const getPort = require('get-port')
 const rendererReady = new Deferred()
 
+
+
+
 function makeConfigs() {
 
 	let configs = {
@@ -16,30 +19,7 @@ function makeConfigs() {
 		 */
 		"electron-main": {
 			targetType: TargetType.ElectronMain,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,'main',{
-				"awesomeTypescriptLoaderOptions": {
-					"instanceName": "electron-main",
-					"useBabel": true,
-					"forkChecker": true,
-					"useCache": true,
-					"babelOptions": {
-						"presets": [
-							"es2015-native-modules",
-							//"es2015",
-							"stage-0",
-							"react"
-						],
-						//"plugins": ["add-module-exports","transform-runtime"],
-						"plugins": ["add-module-exports"],
-						"sourceMaps": true,
-						// "env": {
-						// 	"development": {
-						// 		"presets": ["react-hmre"]
-						// 	}
-						// }
-					}
-				}
-			}),
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,'main',require('./awesome-typescript-loader-options')),
 			onCompileCallback(err,stats,watchMode = false) {
 				log.info('Compile callback main!!!',err,isDev,watchMode)
 				if (err) {
@@ -49,7 +29,7 @@ function makeConfigs() {
 
 				if (!watchMode && !isDev) {
 					log.info('we only autostart electron in dev or watch modes')
-					return
+					//return
 				}
 
 				//rendererReady.promise.then(startElectron)
@@ -62,29 +42,10 @@ function makeConfigs() {
 		 */
 		"electron-renderer": {
 			targetType: TargetType.ElectronRenderer,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,'browser',{
+			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,'browser',require('./awesome-typescript-loader-options'), {
 				"compilerOptions": {
 					"jsx": "react"
 				},
-
-				"awesomeTypescriptLoaderOptions": {
-					"instanceName": "electron-renderer",
-					"useBabel": true,
-					"forkChecker": true,
-					"useCache": true,
-					"babelOptions": {
-						"presets": [
-							"es2015-native-modules",
-							//"es2015",
-							"stage-0",
-							"react"
-						],
-						//"plugins": 	["add-module-exports","transform-runtime"],
-						//"plugins": 	["transform-runtime"],
-						"plugins": ["add-module-exports"],
-						"sourceMaps": "both"
-					}
-				}
 			}),
 			port: 4444,
 			onCompileCallback(err,stats) {

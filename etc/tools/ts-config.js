@@ -1,9 +1,9 @@
 
 
 
-export function makeTsConfig(dest,typingMode,opts) {
+export function makeTsConfig(dest,typingMode,...extraOpts) {
 	const baseConfig = readJSONFileSync(`${baseDir}/tsconfig.json`)
-	const tsConfigJson = _.merge({},baseConfig,opts)
+	const tsConfigJson = _.merge({},baseConfig,...extraOpts)
 
 	tsConfigJson.exclude = tsConfigJson.exclude.concat(
 		typingMode === 'main' ? [

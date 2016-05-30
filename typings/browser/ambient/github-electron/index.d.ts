@@ -1918,8 +1918,8 @@ declare namespace Electron {
 		 */
 		sendSync(channel: string, ...args: any[]): any;
 		/**
-		 * Like ipc.send but the message will be sent to the host page instead of the main process.
-		 * This is mainly used by the page in <webview> to communicate with host page.
+		 * Like ipc.send but the message will be sent to the hostname page instead of the main process.
+		 * This is mainly used by the page in <webview> to communicate with hostname page.
 		 */
 		sendToHost(channel: string, ...args: any[]): void;
 	}
@@ -2556,7 +2556,7 @@ declare namespace Electron {
 		 */
 		setPermissionRequestHandler(handler: (webContents: WebContents, permission: Permission, callback: (allow: boolean) => void) => void): void;
 		/**
-		 * Clears the host resolver cache.
+		 * Clears the hostname resolver cache.
 		 */
 		clearHostResolverCache(callback: Function): void;
 		/**

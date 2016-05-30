@@ -10,8 +10,8 @@ interface Window {
 }
 
 declare enum AppStateType {
-	Login = 1,
-	VerifyLogin,
+	AuthLogin = 1,
+	AuthVerify,
 	Ready
 }
 

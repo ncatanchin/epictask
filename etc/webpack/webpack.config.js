@@ -9,20 +9,14 @@ const nodeExternals = require('webpack-node-externals')
 const
 	baseDir = path.resolve(__dirname,'../..'),
 	distDir = `${baseDir}/dist`
+
 const {DefinePlugin,ExternalsPlugin,HotModuleReplacementPlugin} = webpack
 
 // Import globals - just for linting
 const {isDev,env} = global
 
-// DLL Config
-
-
-
-
 
 module.exports = function (projectConfig) {
-
-
 	const config = {
 
 		context: baseDir,
@@ -42,12 +36,14 @@ module.exports = function (projectConfig) {
 		resolve: {
 			alias: {
 				assert: 'browser-assert',
-				DLLEntry: path.resolve(distDir,'DLLEntry')
+				//epictask: path.resolve(baseDir,'src/epictask')
 			},
 			modules: [
-				path.resolve(baseDir,'node_modules'),
 				path.resolve(baseDir,'src'),
-
+				path.resolve(baseDir,'node_modules'),
+				path.resolve(baseDir,'../typedux','node_modules'),
+				path.resolve(baseDir,'../typemutant','node_modules'),
+				path.resolve(baseDir,'../typelogger','node_modules')
 			],
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -65,9 +61,7 @@ module.exports = function (projectConfig) {
 			new DefinePlugin({
 				__DEV__: isDev,
 				DEBUG: isDev,
-				'process.env': {
-					NODE_ENV: JSON.stringify(env)
-				}
+				'process.env.NODE_ENV': JSON.stringify(env)
 			})
 		],
 		node: {
@@ -79,13 +73,16 @@ module.exports = function (projectConfig) {
 			nodeExternals({
 				whitelist: [
 					/webpack\/hot/,
-					/webpack-hot/
+					/webpack-hot/,
+					/typemutant/,
+					/typedux/,
+					/typelogger/,
+					/electron-oauth-github/,
+					/browser-next-tick/
 				]
 			})
-		],
+		]
 
-		// Add the DLL config
-		DLL: require('./webpack.dll')
 	}
 
 	// Development specific updates

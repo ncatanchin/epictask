@@ -6,7 +6,7 @@
 require('./etc/tools/global-env')
 
 /**
- * Load auxillary tasks
+ * Load auxiliary tasks
  */
 
 require('./etc/gulp/tasks')
