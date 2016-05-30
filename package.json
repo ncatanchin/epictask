@@ -83,6 +83,7 @@
     "merge2": "^1.0.2",
     "mocha": "^2.4.5",
     "mocha-junit-reporter": "^1.11.1",
+    "node-sass": "^3.7.0",
     "node-uuid": "^1.4.7",
     "nodemon": "^1.9.2",
     "normalize.css": "^4.1.1",
@@ -99,6 +100,7 @@
     "redux-logger": "^2.6.1",
     "redux-slider-monitor": "^1.0.5",
     "run-sequence": "^1.1.5",
+    "sass-loader": "^3.2.0",
     "semver": "^5.1.0",
     "shelljs": "^0.7.0",
     "sinon": "^1.17.4",
@@ -145,6 +147,7 @@
     "react-redux": "^4.4.5",
     "react-router": "^2.4.1",
     "react-router-redux": "^4.0.4",
+    "react-split-pane": "^0.1.42",
     "react-tap-event-plugin": "^1.0.0",
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
@@ -155,6 +158,8 @@
     "typedux": "densebrain/typedux",
     "typelogger": "densebrain/typelogger",
     "typemutant": "densebrain/typemutant",
-    "typestore": "densebrain/typestore"
+    "typestore": "densebrain/typestore",
+    "urlsearchparams": "densebrain/URLSearchParams",
+    "winston": "^2.2.0"
   }
 }

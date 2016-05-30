@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import * as fs from 'fs'
 import {getUserDataFilename, readFileSync} from './util/Files'
-import {Property, JSONInclude} from "./util/Decorations";
+import {Property} from "./util/Decorations";
 import {Repo} from './GitHubSchema'
 import {toJSON} from "./util/JSONUtil";
 
@@ -32,6 +32,8 @@ function onChange(propertyKey:string, newVal:any) {
 	this.isLoaded && this.save()
 }
 
+const visiblePropOpts = {onChange,jsonInclude:true}
+
 /**
  * Application settings object
  */
@@ -42,19 +44,20 @@ class SettingsFile {
 	}
 
 
-	@Property({enumerable:false})
+	@Property({enumerable:false,jsonInclude:true})
 	isLoaded:boolean
 
-	@Property({onChange})
-	@JSONInclude()
+	@Property(visiblePropOpts)
+
 	token:string
 
-	@Property({onChange})
-	@JSONInclude()
+	@Property(visiblePropOpts)
+	availableRepos:Repo[]
+	
+	@Property(visiblePropOpts)
 	repos:Repo[]
 
-	@Property({onChange})
-	@JSONInclude()
+	@Property(visiblePropOpts)
 	repo:Repo
 
 	save() {

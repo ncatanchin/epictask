@@ -1,11 +1,18 @@
 import 'reflect-metadata'
-import {getLogger as LoggerFactory,setCategoryLevels} from 'typelogger'
+
+
+import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
+//import * as winston from 'winston'
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
 
-
+// Configure global logging first
+// const processType = process.env.PROCESS_TYPE
+// winston.add(winston.transports.File,{filename:`logs/${processType}.log`})
+//
+// setLoggerOutput(winston)
 setCategoryLevels(require('./LogCategories'))
 
 /**
@@ -30,8 +37,20 @@ const isRemote = typeof process.env.REMOTE !== 'undefined'
 // Polyfill Fetch/FormData/etc
 function installGlobals() {
 	const g = global as any
+	const w = ((typeof window !== 'undefined') ? window : {}) as any
 	if (!g.fetch) g.fetch = require('node-fetch')
 	if (!g.FormData) g.FormData = require('form-data')
+	if (!g.TextEncoder) {
+		const te = require("utf8-encoding");
+		g.TextEncoder = te.TextEncoder;
+		g.TextDecoder = te.TextDecoder;
+
+	}
+
+	if (!w.TextEncoder) {
+		w.TextEncoder = g.TextEncoder
+		w.TextDecoder = g.TextDecoder
+	}
 
 	// Assign all of our internal globals
 	Object.assign(g,{

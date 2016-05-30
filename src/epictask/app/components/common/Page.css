@@ -1,3 +1,9 @@
 .page {
-	composes: flex-row,flex-scale from 'epictask/assets/styles/flex.css';
+	composes: flex-row flex-scale from 'styles/flex.css';
+	position: relative;
 }
+
+/*.splitter {*/
+	/*flex: 1 1 0;*/
+	/*width: 100%;*/
+/*}*/

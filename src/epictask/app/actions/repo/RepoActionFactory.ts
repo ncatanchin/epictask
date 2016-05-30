@@ -33,16 +33,20 @@ import {Repo} from 'epictask/shared/GitHubSchema'
 	}
 
 	@Action()
-	getRepos() {
+	setAvailableRepos(repos:Repo[]) {
+	}
+
+	@Action()
+	getAvailableRepos() {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
 			const client = github.createClient()
 
 			try {
-				let repos = await client.userRepos()
+				let repos = await client.userRepos({traversePages:true})
 				log.info(`Received repos`,repos)
-				actions.setRepos(repos)
+				actions.setAvailableRepos(repos)
 			} catch (err) {
 				log.error('Failed to get repos',err)
 				actions.setError(err)

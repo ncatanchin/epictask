@@ -1,0 +1,3 @@
+.app {
+	composes: flex-column flex-scale from 'styles/flex.css';
+}

@@ -81,3 +81,4 @@ const AuthStateDefaults = {
 }
 
 export const AuthState = makeRecord(AuthStateModel,AuthStateDefaults)
+export type TAuthState = typeof AuthState

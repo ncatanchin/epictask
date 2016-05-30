@@ -1,65 +1,84 @@
 import * as React from 'react'
-import {List,ListItem,Paper} from 'material-ui'
+import {Dialog,AutoComplete,FlatButton} from 'material-ui'
 
 const log = getLogger(__filename)
-
-import {RepoActionFactory,RepoState,TRepoState} from 'epictask/app/actions'
+import {RepoActionFactory,AuthActionFactory,TRepoState,TAuthState} from 'epictask/app/actions'
+import {RepoPanel,IssuesPanel,IssueDetailPanel} from 'components'
+import {Repo} from 'epictask/shared'
 import {getStore} from '../../store'
 import {Page} from '../common'
+import {AppActionFactory} from '../../actions/AppActionFactory'
+import {AppStateType} from '../../../shared/AppStateType'
+import {connect} from 'react-redux'
+import * as SplitPane from 'react-split-pane'
 const {Flexbox,FlexItem} = require('flexbox-react')
 
 const styles = require('./HomePage.css')
 const repoActions = new RepoActionFactory()
+const authActions = new AuthActionFactory()
+const appActions = new AppActionFactory()
+
+interface IHomeProps {
+	repo?:Repo
+	addRepoDialog?:boolean
+
+}
+
+function mapToProps(state) {
+	return {
+		repo: repoActions.state.repo,
+		addRepoDialog: appActions.state.stateType === AppStateType.RepoAdd
+	}
+}
 
 /**
  * The root container for the app
  */
-export class HomePage extends React.Component<any,TRepoState> {
-
-	static getInitialState() {
-		return repoActions.state
-	}
-
-	// Unsubscribe ref
-	private observer
+@connect(mapToProps)
+export class HomePage extends React.Component<IHomeProps,any> {
 
 	constructor(props, context) {
 		super(props, context)
 	}
 
-	componentDidMount() {
-		this.observer = getStore().observe(repoActions.leaf(),() => {
-			this.setState(repoActions.state)
-		})
-	}
-
-	componentWillUnmount() {
-		if (this.observer) {
-			this.observer()
-			this.observer = null
-		}
+	handleClose = () => {
+		appActions.setStateType(AppStateType.Home)
 	}
 
 	render() {
-		const repos = repoActions.state.repos || []
+		//const repos = repoActions.state.repos || []
+
+		const addRepoActions = [
+			<FlatButton
+				label="Cancel"
+				primary={true}
+				onTouchTap={this.handleClose}
+			/>,
+			<FlatButton
+				label="Submit"
+				primary={true}
+				disabled={true}
+				onTouchTap={this.handleClose}
+			/>,
+		]
 
 		return (
-			<Page styleName="homePage">
+			<Page>
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
 				{/*Repo list*/}
-				<FlexItem flexGrow={1} flexShrink={1} flexBasis="0px">
+				<SplitPane split="vertical" className={styles.splitter}>
+					<RepoPanel />
+					<IssuesPanel />
+				</SplitPane>
 
-					<List>
-						{repos.map(repo => {
-							return <ListItem key={repo.id}>
-								<Paper>{repo.name}</Paper>
-							</ListItem>
-						})}
-					</List>
-
-				</FlexItem>
-
-
+				<Dialog
+					title="add a repo..."
+					modal={true}
+					open={this.props.addRepoDialog}
+				    actions={addRepoActions}
+				>
+					Add repo here
+				</Dialog>
 			</Page>
 		)
 	}

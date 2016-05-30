@@ -27,7 +27,6 @@ module.exports = function (projectConfig) {
 			publicPath: `${distDir}/`,
 			filename: '[name].js',
 			libraryTarget: 'commonjs2'
-
 		},
 
 		recordsPath: `${distDir}/_records`,
@@ -36,7 +35,9 @@ module.exports = function (projectConfig) {
 		resolve: {
 			alias: {
 				assert: 'browser-assert',
-				//epictask: path.resolve(baseDir,'src/epictask')
+				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
+				assets: path.resolve(baseDir,'src/epictask/assets'),
+				components: path.resolve(baseDir,'src/epictask/app/components')
 			},
 			modules: [
 				path.resolve(baseDir,'src'),
@@ -78,7 +79,8 @@ module.exports = function (projectConfig) {
 					/typedux/,
 					/typelogger/,
 					/electron-oauth-github/,
-					/browser-next-tick/
+					/browser-next-tick/,
+					/urlsearchparams/
 				]
 			})
 		]

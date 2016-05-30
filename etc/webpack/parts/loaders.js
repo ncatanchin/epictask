@@ -31,7 +31,6 @@ module.exports = (projectConfig) => {
 		assert(fs.existsSync(tsconfigFile), `tsconfig must exists: ${tsconfigFile}`)
 
 		loaders.loaders = loaders.loaders.concat([
-
 			{
 				test: /\.tsx?$/,
 				loaders: (() => {
@@ -65,17 +64,20 @@ module.exports = (projectConfig) => {
 				]
 			},
 			{
+				test: /\.global\.scss$/,
+				loaders: [
+					'style-loader',
+					'css-loader',
+					'sass'
+				]
+			},
+			{
 				test: /node_modules.*\.css$/,
 				loader: 'file?name=assets/images/[name].[hash].[ext]'
-				// loaders: [
-				// 	'',
-				// 	'css-loader'
-				// ]
 			},
-
 			{
 				test: /^((?!\.global).)*\.css$/,
-				exclude: /(node_modules|DLLEntry)/,
+				exclude: /(node_modules)/,
 				loaders: [
 					'style-loader',
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'

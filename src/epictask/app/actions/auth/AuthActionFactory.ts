@@ -51,7 +51,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 			if (invalidUser)
 				Settings.token = null
 
-			appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Ready)
+			appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Home)
 		}
 	}
 

@@ -14,6 +14,12 @@ module.exports = (projectConfig) => {
 			publicPath: `http://localhost:${projectConfig.port}/dist`
 		} : {}),
 
+		plugins: [
+			...config.plugins,
+			new webpack.DefinePlugin({
+				'process.env.PROCESS_TYPE': JSON.stringify('renderer')
+			})
+		],
 
 		target: 'electron-renderer'
 	})

@@ -25,6 +25,11 @@ import {Settings,Constants} from '../../../shared'
 @RecordModel()
 class RepoStateModel {
 
+
+
+	@RecordProperty()
+	availableRepos:Repo[]
+
 	@RecordProperty()
 	repos:Repo[]
 
@@ -35,6 +40,16 @@ class RepoStateModel {
 	error:Error
 
 
+	/**
+	 * Set user repo list
+	 *
+	 * @param repos
+	 * @returns {RepoStateModel}
+	 */
+	setAvailableRepos(repos:Repo[]) {
+		this.availableRepos = repos
+		return this
+	}
 
 	/**
 	 * Set user repo list
@@ -58,13 +73,14 @@ class RepoStateModel {
 		this.error = err
 		return this
 	}
-
 }
 
 
 
 const RepoStateDefaults = {
-	repos: Settings.repos
+	repo: Settings.repo,
+	repos: Settings.repos,
+	availableRepos: Settings.availableRepos
 }
 
 export const RepoState = makeRecord(RepoStateModel,RepoStateDefaults)

@@ -16,6 +16,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 	}
 
 	@Action()
+	setTheme(theme:any) {}
+
+	@Action()
 	setStateType(stateType:AppStateType) {}
 
 	@Action()

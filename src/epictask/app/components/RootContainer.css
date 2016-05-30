@@ -1,3 +1,3 @@
 .root-container {
-	composes: flex-column,flex-scale from 'epictask/assets/styles/flex.css';
+	composes: flex-column,flex-scale from 'styles/flex.css';
 }

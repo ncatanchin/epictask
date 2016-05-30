@@ -13,6 +13,7 @@ const repoActions = new RepoActionFactory()
 
 let stateType = null
 
+
 async function updateStateType() {
 	const newStateType = appActions.state.stateType
 	if (!newStateType || stateType === newStateType)
@@ -23,8 +24,8 @@ async function updateStateType() {
 
 	if (stateType === AppStateType.AuthVerify) {
 		authActions.verify()
-	} else if (stateType === AppStateType.Ready) {
-		repoActions.getRepos()
+	} else if (stateType === AppStateType.Home) {
+		repoActions.getAvailableRepos()
 	}
 }
 

@@ -43,6 +43,9 @@ module.exports = function(projectConfig) {
 
 		plugins: [
 			...config.plugins,
+			new webpack.DefinePlugin({
+				'process.env.PROCESS_TYPE': JSON.stringify('main')
+			})
 		],
 
 		node: {

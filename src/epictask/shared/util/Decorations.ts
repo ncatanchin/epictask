@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 
 import {JSONKey} from '../Constants'
+import {isNil} from './ObjectUtil'
 /**
  * Keep track of annotated property values
  *
@@ -27,6 +28,7 @@ export type OnChangeFn  = (propertyKey:string, newVal:any) => any
 export interface ConfigurePropertyOptions {
 	enumerable?:boolean
 	onChange?:OnChangeFn
+	jsonInclude?:boolean
 }
 
 /**
@@ -40,9 +42,17 @@ export interface ConfigurePropertyOptions {
 export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 	return function (target:any, propertyKey:string | symbol) {
 
-		const isEnumerable = opts.enumerable !== false
+		// Get vals
+		const {jsonInclude,enumerable} = opts
+
+		// If a value for jsonInclude was provided, define
+		// it in the key's metadata
+		if (!isNil(jsonInclude))
+			Reflect.defineMetadata(JSONKey,{jsonInclude},target,propertyKey)
+
+
 		Object.defineProperty(target,propertyKey,{
-			enumerable: isEnumerable,
+			enumerable: isNil(enumerable) ? true : enumerable,
 			get: function() {
 				return getProps(this)[propertyKey] as any
 			},
@@ -56,12 +66,5 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 
 		})
 	}
-	
-
 }
 
-export function JSONInclude() {
-	return function(target:any,propertyKey:string|symbol) {
-		Reflect.defineMetadata(JSONKey,{jsonInclude:true},target,propertyKey)
-	}
-}

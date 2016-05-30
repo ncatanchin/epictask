@@ -1,0 +1,23 @@
+
+
+.panel {
+	composes: flex-column flex-scale from 'styles/flex.css';
+	composes: fill-height fill-width from 'styles/basics.css';
+	align-items: stretch;
+	max-width: 100%;
+	overflow: hidden;
+
+}
+
+.drawer {
+	composes: flex-column flex-scale from 'styles/flex.css';
+	align-items: stretch;
+}
+
+.header {
+	flex: 0 0 auto;
+}
+
+.list, .list-container {
+	composes: flex-column flex-scale from 'styles/flex.css';
+}

@@ -11,26 +11,15 @@ const authActions = new AuthActionFactory()
 const store = getStore()
 
 
+export interface IHeaderProps {
+	
+}
+
 /**
  * The app header component, title/logo/settings
  */
 @CSSModules(styles)
-export class HeaderComponent extends React.Component<any,IAuthState> {
-
-	/**
-	 * Sets the default state to
-	 * the current authentication state
-	 *
-	 * @returns {any}
-	 */
-	static getInitialState() {
-		return authActions.state
-	}
-
-	/**
-	 * Observer reference
-	 */
-	private observer
+export class HeaderComponent extends React.Component<IHeaderProps,any> {
 
 	/**
 	 * Create a new header component
@@ -42,25 +31,6 @@ export class HeaderComponent extends React.Component<any,IAuthState> {
 		super(props, context)
 	}
 
-
-
-	stateChanged() {
-		log.info('State change triggered')
-		this.setState(authActions.state)
-
-	}
-
-
-	componentWillMount():void {
-		this.observer = store.observe(authActions.leaf(),this.stateChanged.bind(this))
-	}
-
-	componentWillUnmount():void {
-		if (this.observer) {
-			this.observer()
-			this.observer = null
-		}
-	}
 
 	render() {
 		const state = authActions.state
