@@ -1,4 +1,4 @@
-
+import 'reflect-metadata'
 import './Globals'
 import * as Immutable from 'immutable'
 import {isFunction,Enumerable} from "./util"
@@ -35,7 +35,9 @@ export class NotMutableError extends Error {
  */
 export function RecordModel(opts = {}) {
 	return target => {
-		console.log('In decorator')
+		Reflect.defineMetadata('test',target,{hello:'hello'})
+		const targetType = Reflect.getMetadata('design:type',target)
+		console.log('In decorator',targetType)
 	}
 }
 
@@ -198,7 +200,7 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	/**
 	 * Empty constructor for typing purposes
 	 */
-	constructor()
+	//constructor()
 
 	/**
 	 * Real constructor
@@ -210,14 +212,14 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * @param recordType - the Record.Class
 	 * @param props - initial properties
 	 */
-	constructor(
-		typeClazz:{new():TT},
-		finalClazz:any,
-		modelClazz:{new():T},
-		propTypeMap,
-		recordType:Immutable.Record.Class,
-		props?:any
-	)
+	// constructor(
+	// 	typeClazz:{new():TT},
+	// 	finalClazz:any,
+	// 	modelClazz:{new():T},
+	// 	propTypeMap,
+	// 	recordType:Immutable.Record.Class,
+	// 	props?:any
+	// )
 	constructor(
 		typeClazz?:{new():TT},
 		finalClazz?:any,
@@ -237,6 +239,7 @@ export class RecordBaseObject<T extends any,TT extends any> {
 			this.record = new recordType(props)
 
 	}
+
 
 
 	/**

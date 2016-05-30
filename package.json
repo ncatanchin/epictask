@@ -1,41 +1,42 @@
 {
-    "name": "typemutant",
-    "version": "0.1.4",
-    "description": "TypeScript classes and decorators meet immutable.js",
-    "main": "dist/index.js",
-    "typings": "dist/index.d.ts",
-    "scripts": {
-        "prepublish": "./etc/scripts/prepublish",
-        "test": "gulp test"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/densebrian/typemutant.git"
-    },
-    "keywords": [
-        "typescript",
-        "immutable"
-    ],
-    "author": "Jonathan Glanz",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/densebrian/typemutant/issues"
-    },
-    "homepage": "https://github.com/densebrian/typemutant#readme",
-    "dependencies": {
-        "immutable": "^3.8.1",
-        "reflect-metadata": "^0.1.3",
-        "source-map-support": "^0.4.0",
-        "typelogger": "densebrain/typelogger"
-    },
-    "devDependencies": {
-      "chai": "^3.5.0",
-        "gulp": "^3.9.1",
-        "mocha": "^2.4.5",
-        "mocha-junit-reporter": "^1.11.1",
-        "sinon": "^1.17.4",
-        "source-map-support": "^0.4.0",
-        "typeproject": "^1.0.19",
-        "typescript": "^1.9.0-dev.20160518-1.0"
-    }
+  "name": "typemutant",
+  "version": "0.1.4",
+  "description": "TypeScript classes and decorators meet immutable.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "prepublish": "./etc/scripts/prepublish",
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/densebrian/typemutant.git"
+  },
+  "keywords": [
+    "typescript",
+    "immutable"
+  ],
+  "author": "Jonathan Glanz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/densebrian/typemutant/issues"
+  },
+  "homepage": "https://github.com/densebrian/typemutant#readme",
+  "dependencies": {
+    "immutable": "^3.8.1",
+    "reflect-metadata": "^0.1.3",
+    "source-map-support": "^0.4.0",
+    "typelogger": "densebrain/typelogger"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "gulp": "^3.9.1",
+    "minimist": "^1.2.0",
+    "mocha": "^2.4.5",
+    "mocha-junit-reporter": "^1.11.1",
+    "sinon": "^1.17.4",
+    "source-map-support": "^0.4.0",
+    "typeproject": "^1.0.19",
+    "typescript": "^1.9.0-dev.20160516"
+  }
 }
