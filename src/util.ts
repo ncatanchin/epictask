@@ -21,6 +21,55 @@ export function isArray<T>(o:any|Array<T>):o is Array<T> {
 	return Array.isArray(o)
 }
 
+
+/**
+ * Internal map for property values
+ *
+ * @type {WeakMap<any, any>}
+ */
+const propertyValues = new WeakMap<any,any>()
+
+/**
+ * Simply function to get retype object properties
+ *
+ * @param target
+ * @returns {any}
+ */
+function getProps(target) {
+	let props = propertyValues[target]
+	if (!props)
+		props = propertyValues[target] = {}
+
+	return props
+}
+/**
+ * Mark a property as enumerable - or not
+ *
+ * @param value
+ * @returns {function(any, string, PropertyDescriptor): undefined}
+ * @constructor
+ */
+export function EnumerableProperty(value:boolean) {
+	return function (target:any, propertyKey:string) {
+		const descriptor = {
+			enumerable:value,
+			set: function(newVal) {
+				const props = getProps(this)
+				if (props[propertyKey] === newVal)
+					return
+
+				props[propertyKey] = newVal
+			},
+			get: function() {
+				return getProps(this)[propertyKey]
+			}
+		}
+		Object.defineProperty(target,propertyKey,descriptor)
+		//descriptor.enumerable = value
+	}
+}
+
+
 /**
  * Mark a property as enumerable - or not
  *

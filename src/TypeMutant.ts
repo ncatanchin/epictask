@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import './Globals'
 import * as Immutable from 'immutable'
-import {isFunction,Enumerable} from "./util"
+import {isFunction,Enumerable,EnumerableProperty} from "./util"
 
 
 const log = getLogger(__filename)
@@ -166,6 +166,8 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * this is for performance and
 	 * the goal being to limit object creation
 	 */
+
+	//@EnumerableProperty(false)
 	private recordMutating
 
 	/**
@@ -181,10 +183,19 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	private record
 
 
+	//@EnumerableProperty(false)
 	private typeClazz
+
+	//@EnumerableProperty(false)
 	private finalClazz
+
+	//@EnumerableProperty(false)
 	private modelClazz
+
+	//@EnumerableProperty(false)
 	private propTypeMap
+
+	//@EnumerableProperty(false)
 	private recordType
 
 	/**
@@ -399,6 +410,7 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 
 			Object.defineProperty(newClazz.prototype, propName, {
 				configurable: false,
+				enumerable:false,
 
 				/**
 				 * Getter for annotated property
