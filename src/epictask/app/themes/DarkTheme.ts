@@ -19,8 +19,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		},
 		style: {
 			color: 'white',
-			height: 24,
-			backgroundImage: "-webkit-linear-gradient(#4b4e54 0%, #4b4e54 1.9%, #494c51 2%, #333539 100%)"
+			height: 50,
+			//backgroundImage: "-webkit-linear-gradient(#4b4e54 0%, #4b4e54 1.9%, #494c51 2%, #333539 100%)"
+			// backgroundColor: c.purple500
+			backgroundColor: c.indigo500
 		}
 	},
 

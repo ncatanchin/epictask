@@ -40,7 +40,12 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 
 
 		return <div styleName='header' style={style}>
-			<div styleName="title" style={titleStyle}>GITTUS</div>
+			<div  styleName="logo">
+				<img src={require('assets/images/epictask-logo.png')}/>
+				{/*// <div styleName="title" style={titleStyle}>*/}
+					{/**/}
+				{/*</div>*/}
+			</div>
 		</div>
 	}
 }

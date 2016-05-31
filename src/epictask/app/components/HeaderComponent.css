@@ -1,10 +1,28 @@
 
 .header {
 	composes: flex-row-center from 'epictask/assets/styles/flex.css';
-
-	/*padding: 0.3rem 0;*/
+	justify-content: flex-end;
+	position: relative;
+	padding: 1rem 1rem;
+		/*padding: 0.3rem 0;*/
 }
 
 .title {
-	margin-left: 5rem;
+	align-self: flex-end;
+	margin-right: 1rem;
+	max-height: 100%;
+
+}
+
+.logo {
+	composes: flex-column-center from 'styles/flex.css';
+	flex: 0 1 auto;
+	height: 100%;
+}
+
+
+.logo > img {
+	height: 100%;
+	width: auto;
+	flex: 1 1 0;
 }
