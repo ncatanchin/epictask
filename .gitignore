@@ -1,6 +1,6 @@
 
 # Typestore Files
-src/**/*.js
+#src/**/*.js
 src/**/*.map
 src/**/*.d.ts
 dist
