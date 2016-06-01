@@ -1,3 +1,4 @@
+import {requireContext} from '../../shared/util/ContextUtils'
 const log = getLogger(__filename)
 
 import thunkMiddleware from 'redux-thunk'
@@ -12,6 +13,9 @@ import {
 
 
 const reduxLogger = createLogger();
+
+
+
 
 /**
  * DevToolsMiddleware is configured in DEBUG mode anyway
@@ -37,23 +41,50 @@ const middleware = [
 
 
 let store:ObservableStore<any>
+let ctx:any
+
+let hmrReady = false
 
 function getReducers():ILeafReducer<any,any>[] {
-	const {AppReducer} = require('../actions/AppReducer')
-	const {AuthReducer} = require('../actions/auth')
-	const {RepoReducer} = require('../actions/repo')
+	ctx = require.context('../actions',true,/Reducer\.ts$/)
+
+	// If HMR enabled then prepare for it
+	if (module.hot && !hmrReady) {
+		hmrReady = true
+		module.hot.accept([ctx.id],(updates) => {
+			log.info('Updates received, reloading reducers',updates)
+			getStore().replaceReducers(...getReducers())
+		})
+	}
+
+	const mods = ctx.keys().map(ctx)
+
+
+	const reducers = []
+	mods.forEach(mod => {
+		for (let key of Object.keys(mod)) {
+			if (_.endsWith(key,'Reducer'))
+				reducers.push(new (mod[key])())
+		}
+	})
+	
+	// const {AppReducer} = require('../actions/AppReducer')
+	// const {AuthReducer} = require('../actions/auth')
+	// const {RepoReducer} = require('../actions/repo')
 	//const {RoutingReducer} = require('../routing')
 
-	const reducers = [
-		new AppReducer(),
-		new AuthReducer(),
-		new RepoReducer()
-		// ,new RoutingReducer()
-	]
+	// const reducers = [
+	// 	new AppReducer(),
+	// 	new AuthReducer(),
+	// 	new RepoReducer()
+	// 	// ,new RoutingReducer()
+	// ]
 
 	log.debug('Returning reducers',reducers)
 	return reducers
 }
+
+
 
 function onChange() {
 	log.debug(`Store state changed`)
@@ -68,7 +99,7 @@ function initStore() {
 		getReducers(),
 		compose(applyMiddleware(...middleware), devToolsMiddleware) as StoreEnhancer<any>
 	)
-	
+
 	newStore.subscribe(onChange)
 
 	store = newStore
@@ -87,3 +118,4 @@ export function getStore() {
 export function getReduxStore() {
 	return getStore().getReduxStore()
 }
+

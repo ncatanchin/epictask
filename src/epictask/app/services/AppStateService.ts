@@ -31,6 +31,6 @@ async function updateStateType() {
 
 updateStateType()
 
-let observer = store.observe(appActions.leaf(),() => {
+store.observe(appActions.leaf(),() => {
 	updateStateType()
 })

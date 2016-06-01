@@ -1,29 +1,21 @@
-@import "styles/vars.global.scss";
-
+@import "styles/mixins.global.scss";
 
 .app {
 	composes: flex-column flex-scale from 'styles/flex.css';
-
-
+	overflow: hidden;
 
 }
 
 .header, .content {
-	transition: all $transition-time ease-out;
-	transition-property: flex-basis, flex-shrink, flex-grow, height, width;
+	@include make-default-transition('flex-basis, flex-shrink, flex-grow, height, width')
 }
 
 .header {
 	composes: flex-row-center from 'epictask/assets/styles/flex.css';
 
-
-	&.expanded {
-		height: 100%;
-		flex-basis: 100%;
-		flex-grow: 1;
-		flex-shrink: 1;
-	}
 }
+
+
 
 
 .content {
@@ -31,8 +23,9 @@
 	flex-grow: 1;
 	flex-shrink: 1;
 
-	&.collapsed {
-		flex-grow: 0;
-		flex-shrink: 0;
-	}
+
+}
+
+.collapsed {
+	flex-grow: 0;
 }

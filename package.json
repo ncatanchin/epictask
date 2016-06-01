@@ -79,7 +79,7 @@
     "jade-loader": "^0.8.0",
     "jsdom": "^9.1.0",
     "json-loader": "^0.5.4",
-    "loader-utils": "^0.2.15",
+        "loader-utils": "^0.2.15",
     "lodash": "^4.11.2",
     "merge2": "^1.0.2",
     "mocha": "^2.4.5",

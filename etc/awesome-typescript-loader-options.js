@@ -1,5 +1,6 @@
 module.exports = {
 	"awesomeTypescriptLoaderOptions": {
+		
 		"instanceName": "electron-main",
 		"useBabel": true,
 		"forkChecker": true,
@@ -12,7 +13,7 @@ module.exports = {
 				"react"
 			],
 			"plugins": [
-				"add-module-exports"
+				"add-module-exports","transform-runtime"
 				// ["module-alias", [
 				// 	{ "src": `${baseDir}/src/epictask`, "expose": "epictask" },
 				// 	// { "src": "./src/components", "expose": "awesome/components" },

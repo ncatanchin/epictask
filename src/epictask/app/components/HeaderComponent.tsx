@@ -1,23 +1,26 @@
 import * as React from 'react'
-//import {AppBar} from "material-ui";
-import {IAuthState} from '../actions/auth/AuthState'
 import {AuthActionFactory} from '../actions/auth/AuthActionFactory'
-import {getStore} from '../store/AppStore'
-
+import {getStore} from '../store'
+import {Themeable} from '../ThemeManager'
+import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
+import {SearchPanel} from './'
 
 const styles = require('./HeaderComponent.scss')
 const log = getLogger(__filename)
 const authActions = new AuthActionFactory()
 const store = getStore()
 
+const repoActions = new RepoActionFactory()
 
 export interface IHeaderProps {
 	className:string
+	expanded:boolean
 }
 
 /**
  * The app header component, title/logo/settings
  */
+@Themeable()
 @CSSModules(styles)
 export class HeaderComponent extends React.Component<IHeaderProps,any> {
 
@@ -31,30 +34,48 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 		super(props, context)
 	}
 
+	windowClose = () => {
+		log.info('window close')
+	}
+
+	windowMin = () => {
+		log.info('window min')
+	}
+
+	windowMax = () => {
+		log.info('window max')
+	}
+
+
 
 	render() {
-		const state = authActions.state
 		const theme = getTheme()
+		const {expanded} = this.props
 
-		const {titleStyle,style,controlStyle} = theme.navBar
+		let {logoStyle,style,controlStyle} = theme.navBar
+		let logoClazz = styles[expanded ? 'logo-expanded' : 'logo']
+		let headerClazz = styles[expanded ? 'header-expanded' : 'header']
+		style = Object.assign({},style,{
+			height: (expanded) ? '100%' : style.height
+		})
 
-		const height = style.height
+		const imgStyle = !expanded ? {} :  {
+			maxHeight: '20%',
+			maxWidth:  '25%'
+		}
 
 
-		return <div className={`${this.props.className + ' ' + styles.header}`} style={style}>
+		return <div className={`${styles.header + ' ' + this.props.className}`} style={style}>
 			<div styleName='window-controls'>
-				<button className="close fa fa-times" style={controlStyle} />
-				<button className="min fa fa-minus" style={controlStyle}/>
-				<button className="max fa fa-plus" style={controlStyle}/>
+				<button className="close fa fa-times" style={controlStyle} onClick={this.windowClose} />
+				<button className="min fa fa-minus" style={controlStyle} onClick={this.windowMin}/>
+				<button className="max fa fa-plus" style={controlStyle} onClick={this.windowMax}/>
 			</div>
-			<div styleName="space">
+			<SearchPanel inlineResults={expanded} expanded={expanded}/>
+			<div  className={logoClazz} style={logoStyle}>
+				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}
 			</div>
-			<div  styleName="logo">
-				<img src={require('assets/images/epictask-logo.png')}/>
-				{/*// <div styleName="title" style={titleStyle}>*/}
-					{/**/}
-				{/*</div>*/}
-			</div>
+
 		</div>
 	}
 }

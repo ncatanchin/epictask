@@ -1,6 +1,10 @@
 const assert = require('assert')
 const fs = require('fs')
+const path = require('path')
 
+const baseDir = path.resolve(__dirname,'../../..')
+const sassContentLoader = path.resolve(baseDir,'src/epictask/tools/sass-constants-preloader')
+const themesJs = path.resolve(baseDir,'src/epictask/app/themes/Palettes.js')
 
 
 module.exports = (projectConfig) => {
@@ -100,7 +104,8 @@ module.exports = (projectConfig) => {
 				loaders: [
 					'style-loader',
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
-					'sass'
+					'sass',
+					sassContentLoader + '?path=' + themesJs
 				]
 			}
 		])

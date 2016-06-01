@@ -1,8 +1,11 @@
+//require('typelogger').setStylerEnabled(false)
+
 import '../shared/CommonEntry'
 import './AppGlobals'
 import './services/index'
 
-const log = require('typelogger').create(__filename)
+
+const log = getLogger(__filename)
 
 function loadAppContent() {
 	require('./components/AppRoot.tsx')

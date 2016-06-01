@@ -176,3 +176,8 @@ export interface Repo {
 	permissions: Permission;
 }
 
+
+
+export function isIssue(o:any):o is Issue {
+	return o.title && o.id && o.labels
+}

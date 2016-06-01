@@ -15,8 +15,8 @@ import {getStore} from '../store/AppStore'
 import {getPage} from './pages/index'
 import {AppActionFactory} from '../actions/AppActionFactory'
 import {AppState, TAppState} from '../actions/AppState'
-import {AppStateType} from 'epictask/shared'
-import {AppKey} from '../../shared/Constants'
+import {AppStateType,Repo} from 'epictask/shared'
+import {AppKey, RepoKey} from '../../shared/Constants'
 const log = getLogger(__filename)
 
 // Build the container
@@ -32,15 +32,18 @@ const DevTools = (DEBUG) ? require('./debug/DevTools.tsx') : <div></div>
 interface AppProps {
 	store:any
 	theme:any
-	stateType:AppStateType
+	stateType:AppStateType,
+	repo?:Repo
 }
 
 // Redux state -> props
 function mapStateToProps(state) {
 	const appState = state.get(AppKey)
+	const repoState = state.get(RepoKey)
 	return {
 		theme: getTheme(),//appState.theme,
-		stateType: appState.stateType
+		stateType: appState.stateType,
+		repo: repoState.repo
 	}
 }
 
@@ -70,13 +73,17 @@ class App extends React.Component<AppProps,TAppState> {
 			display: 'flex',
 			flexDirection: 'column'
 		}
+
+		
+		const bodyCollapsed = (this.props.repo) ? '' : ' ' + styles.collapsed
+
 		return (
 			<MuiThemeProvider muiTheme={this.props.theme}>
 				<Provider store={store.getReduxStore()}>
 					{/* Global flex box */}
 					<div className="fill-height fill-width" styleName="app">
-						<HeaderComponent className={styles.header}/>
-						<div style={contentStyles} >
+						<HeaderComponent expanded={!this.props.repo} className={styles.header}/>
+						<div style={contentStyles} className={styles.content + bodyCollapsed}>
 							<page.component />
 						</div>
 						<DevTools/>

@@ -1,0 +1,66 @@
+@import "styles/mixins.global.scss";
+
+.search-panel {
+	@include make-default-transition();
+	composes: flex-column-center flex-scale from 'styles/flex.css';
+	position: relative;
+
+	input {
+		font-weight: 100 !important;
+
+
+	}
+
+	::-webkit-input-placeholder {
+		//color: 'blue';
+	}
+}
+
+
+.search-panel-expanded {
+	composes: search-panel;
+	position: absolute;
+	left: 0;
+	top: 50%;
+	height: 50%;
+	width: 100%;
+
+
+
+}
+
+
+.search-wrapper {
+	padding: 0rem 1rem;
+	position: relative;
+
+	//composes: flex-column-center flex-scale from 'styles/flex.css';
+
+	> div {
+		//overflow:hidden;
+
+		input {
+			color: #303F9F !important;
+		}
+	}
+
+
+}
+
+
+.search-wrapper-expanded {
+	composes: search-wrapper;
+	display: block;
+	position: absolute;
+	left: 50%;
+	top: 0;
+	max-height: 100%;
+	max-width: 70%;
+	width: 70%;
+	transform: translate(-50%,0);
+	//composes: flex-row-center from 'styles/flex.css';
+	//flex: 0 0 auto;
+
+
+}
+

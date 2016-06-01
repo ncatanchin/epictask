@@ -1,1 +1,2 @@
 require('./AppStateService')
+require('./SearchStateService')
