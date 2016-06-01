@@ -12,7 +12,7 @@ const store = getStore()
 
 
 export interface IHeaderProps {
-	
+	className:string
 }
 
 /**
@@ -39,7 +39,7 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 		const {titleStyle,style} = theme.navBar
 
 
-		return <div styleName='header' style={style}>
+		return <div className={`${this.props.className}`} style={style}>
 			<div  styleName="logo">
 				<img src={require('assets/images/epictask-logo.png')}/>
 				{/*// <div styleName="title" style={titleStyle}>*/}

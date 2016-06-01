@@ -1,12 +1,4 @@
 
-.header {
-	composes: flex-row-center from 'epictask/assets/styles/flex.css';
-	justify-content: flex-end;
-	position: relative;
-	padding: 1rem 1rem;
-		/*padding: 0.3rem 0;*/
-}
-
 .title {
 	align-self: flex-end;
 	margin-right: 1rem;

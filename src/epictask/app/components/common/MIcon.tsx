@@ -33,16 +33,6 @@ export class MIcon extends React.Component<any,any> {
 		super(props)
 	}
 
-	componentWillMount() {
-	}
-
-	componentDidMount() {
-	}
-
-	componentWillUnmount() {
-
-	}
-
 	render() {
 		const className = (this.props.className || '') + ' ' + 'material-icons'
 		return <FontIcon className={className} {...this.props}>

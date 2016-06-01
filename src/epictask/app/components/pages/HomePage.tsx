@@ -11,7 +11,7 @@ import {AppActionFactory} from '../../actions/AppActionFactory'
 import {AppStateType} from '../../../shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
-const {Flexbox,FlexItem} = require('flexbox-react')
+import {MIcon} from '../common'
 
 const styles = require('./HomePage.css')
 const repoActions = new RepoActionFactory()
@@ -20,13 +20,17 @@ const appActions = new AppActionFactory()
 
 interface IHomeProps {
 	repo?:Repo
+	repos?:Repo[]
 	addRepoDialog?:boolean
 
 }
 
 function mapToProps(state) {
+	const repoState = repoActions.state
+
 	return {
-		repo: repoActions.state.repo,
+		repo: repoState.repo,
+		repos: repoState.repos,
 		addRepoDialog: appActions.state.stateType === AppStateType.RepoAdd
 	}
 }
@@ -35,6 +39,7 @@ function mapToProps(state) {
  * The root container for the app
  */
 @connect(mapToProps)
+@CSSModules(styles)
 export class HomePage extends React.Component<IHomeProps,any> {
 
 	constructor(props, context) {
@@ -62,15 +67,26 @@ export class HomePage extends React.Component<IHomeProps,any> {
 			/>,
 		]
 
+		const repos = this.props.repos || []
+
+		const bodyContent = (repos.length) ?
+			<SplitPane split="vertical" className={styles.splitter}>
+				<RepoPanel />
+				<IssuesPanel />
+			</SplitPane>
+		:
+			<MIcon onClick={() => appActions.setStateType(AppStateType.RepoAdd)}>add</MIcon>
+
+
 		return (
 			<Page>
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
 				{/*Repo list*/}
-				<SplitPane split="vertical" className={styles.splitter}>
-					<RepoPanel />
-					<IssuesPanel />
-				</SplitPane>
 
+				
+				{/* If there are no repos then show an add button */}
+				{bodyContent}
+				
 				<Dialog
 					title="add a repo..."
 					modal={true}

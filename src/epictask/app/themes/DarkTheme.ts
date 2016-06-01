@@ -29,9 +29,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	fontFamily: 'Play,sans-serif',
 	fontWeight: 400,
 	palette: {
-		primary1Color: c.purple500,
-		primary2Color: c.purple300,
-		primary3Color: c.purple700,
+		primary1Color: c.indigo500,
+		primary2Color: c.indigo300,
+		primary3Color: c.indigo900,
 		accent1Color: c.blueGrey500,
 		accent2Color: c.blueGrey700,
 		canvasColor: c.blueGrey700,

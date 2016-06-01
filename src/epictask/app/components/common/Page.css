@@ -1,6 +1,7 @@
 .page {
-	composes: flex-row flex-scale from 'styles/flex.css';
+	composes: flex-row-center flex-scale from 'styles/flex.css';
 	position: relative;
+	justify-content: center;
 }
 
 /*.splitter {*/

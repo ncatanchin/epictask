@@ -5,16 +5,16 @@
 
 // Imports
 import * as React from 'react'
-import { Provider,connect } from 'react-redux'
-const {Flexbox,FlexItem} = require('flexbox-react')
+import {Provider, connect} from 'react-redux'
+const {Flexbox, FlexItem} = require('flexbox-react')
 
 // Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
-import {RootContainerComponent,HeaderComponent} from './'
+import {RootContainerComponent, HeaderComponent} from './'
 import {getStore} from '../store/AppStore'
 import {getPage} from './pages/index'
 import {AppActionFactory} from '../actions/AppActionFactory'
-import {AppState,TAppState} from '../actions/AppState'
+import {AppState, TAppState} from '../actions/AppState'
 import {AppStateType} from 'epictask/shared'
 import {AppKey} from '../../shared/Constants'
 const log = getLogger(__filename)
@@ -48,32 +48,38 @@ function mapStateToProps(state) {
  * Root App Component
  */
 @connect(mapStateToProps)
-@CSSModules(require('./AppRoot.css'))
+@CSSModules(require('./AppRoot.scss'))
 class App extends React.Component<AppProps,TAppState> {
 
 
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 	}
 
 	/**
 	 * Render the app container
 	 */
 	render() {
-		const page = {component:getPage(this.props.stateType)}
+		const page = {component: getPage(this.props.stateType)}
 
+		const contentStyles = {
+			backgroundColor: theme.palette.canvasColor,
+			//flex: '1 1 0',
+			display: 'flex',
+			flexDirection: 'column'
+		}
 		return (
 			<MuiThemeProvider muiTheme={this.props.theme}>
-			<Provider store={store.getReduxStore()}>
-				{/* Global flex box */}
-				<div className="fill-height fill-width" styleName="app">
-					<HeaderComponent/>
-					<RootContainerComponent>
-						<page.component />
-					</RootContainerComponent>
-					<DevTools/>
-				</div>
-			</Provider>
+				<Provider store={store.getReduxStore()}>
+					{/* Global flex box */}
+					<div className="fill-height fill-width" styleName="app">
+						<HeaderComponent className={styles.header}/>
+						<div style={contentStyles} >
+							<page.component />
+						</div>
+						<DevTools/>
+					</div>
+				</Provider>
 			</MuiThemeProvider>
 
 		)
@@ -87,7 +93,7 @@ function render() {
 		<App
 			store={store.getReduxStore()}
 			theme={appState.theme}
-		    stateType={appState.stateType}
+			stateType={appState.stateType}
 		/>,
 		document.getElementById('root')
 	)
@@ -109,7 +115,7 @@ if (module.hot) {
 		// 	observer()
 		// 	observer = null
 		// }
- 	})
+	})
 }
 
 
