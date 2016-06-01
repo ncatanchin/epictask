@@ -1,0 +1,49 @@
+@import "styles/vars.global.scss";
+
+.header {
+	justify-content: flex-end;
+	position: relative;
+
+	flex-basis: auto;
+	flex-grow: 0;
+	flex-shrink: 0;
+}
+
+.window-controls {
+	composes: flex-row-center from 'styles/flex.css';
+	flex: 0 0 auto;
+
+	> * {
+		-webkit-app-region: no-drag;
+		background: transparent;
+		border: 0;
+		opacity: 0.5;
+		&:hover {
+
+		}
+
+	}
+}
+
+
+.space {
+	composes: flex-scale from 'styles/flex.css';
+}
+
+.logo {
+	align-self: flex-end;
+	padding: 1rem 1rem;
+}
+
+
+.logo {
+	composes: flex-column-center from 'styles/flex.css';
+	flex: 0 1 auto;
+	height: 100%;
+
+	> img {
+		height: 100%;
+		width: auto;
+		flex: 1 1 0;
+	}
+}

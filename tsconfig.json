@@ -12,8 +12,11 @@
 		"sourceMap": true,
 		"baseUrl": "./src",
 		"paths": {
+			"epictask": ["./epictask/*"],
+			"epictask/*": ["./epictask/*"],
 			"components": ["./epictask/app/components/index.ts"],
 			"components/*": ["./epictask/app/components/*"]
+
 		}
 	},
 	"exclude": [

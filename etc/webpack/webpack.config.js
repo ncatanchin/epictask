@@ -33,18 +33,21 @@ module.exports = function (projectConfig) {
 
 		// Currently we need to add '.ts' to the resolve.extensions array.
 		resolve: {
+
 			alias: {
 				assert: 'browser-assert',
+				epictask: path.resolve(baseDir,'src/epictask'),
 				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
 				assets: path.resolve(baseDir,'src/epictask/assets'),
 				components: path.resolve(baseDir,'src/epictask/app/components')
 			},
 			modules: [
 				path.resolve(baseDir,'src'),
+				//path.resolve(baseDir,'src/epictask/assets'),
 				path.resolve(baseDir,'node_modules'),
-				path.resolve(baseDir,'../typedux','node_modules'),
-				path.resolve(baseDir,'../typemutant','node_modules'),
-				path.resolve(baseDir,'../typelogger','node_modules')
+				// path.resolve(baseDir,'../typedux','node_modules'),
+				// path.resolve(baseDir,'../typemutant','node_modules'),
+				// path.resolve(baseDir,'../typelogger','node_modules')
 			],
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -53,6 +56,12 @@ module.exports = function (projectConfig) {
 
 		// Add the loader for .ts files.
 		module: require('./parts/loaders')(projectConfig),
+
+		// SASS/SCSS Loader Config
+		sassLoader: {
+			includePaths: [path.resolve(baseDir, "./src/epictask/assets")]
+		},
+
 
 		plugins: [
 			new webpack.IgnorePlugin(/vertx/),
@@ -75,9 +84,6 @@ module.exports = function (projectConfig) {
 				whitelist: [
 					/webpack\/hot/,
 					/webpack-hot/,
-					/typemutant/,
-					/typedux/,
-					/typelogger/,
 					/electron-oauth-github/,
 					/browser-next-tick/,
 					/urlsearchparams/

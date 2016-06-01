@@ -5,7 +5,7 @@ import {AuthActionFactory} from '../actions/auth/AuthActionFactory'
 import {getStore} from '../store/AppStore'
 
 
-const styles = require('./HeaderComponent.css')
+const styles = require('./HeaderComponent.scss')
 const log = getLogger(__filename)
 const authActions = new AuthActionFactory()
 const store = getStore()
@@ -36,10 +36,19 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 		const state = authActions.state
 		const theme = getTheme()
 
-		const {titleStyle,style} = theme.navBar
+		const {titleStyle,style,controlStyle} = theme.navBar
+
+		const height = style.height
 
 
-		return <div className={`${this.props.className}`} style={style}>
+		return <div className={`${this.props.className + ' ' + styles.header}`} style={style}>
+			<div styleName='window-controls'>
+				<button className="close fa fa-times" style={controlStyle} />
+				<button className="min fa fa-minus" style={controlStyle}/>
+				<button className="max fa fa-plus" style={controlStyle}/>
+			</div>
+			<div styleName="space">
+			</div>
 			<div  styleName="logo">
 				<img src={require('assets/images/epictask-logo.png')}/>
 				{/*// <div styleName="title" style={titleStyle}>*/}

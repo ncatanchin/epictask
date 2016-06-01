@@ -29,7 +29,6 @@ function makeConfigs() {
 
 				if (!watchMode && !isDev) {
 					log.info('we only autostart electron in dev or watch modes')
-					//return
 				}
 
 				//rendererReady.promise.then(startElectron)
@@ -58,6 +57,10 @@ function makeConfigs() {
 		}
 	}
 
+
+	/**
+	 * Iterator projects completing configuration
+	 */
 	Object.keys(configs).forEach((projectName) => {
 		console.log('Project name ' + projectName)
 

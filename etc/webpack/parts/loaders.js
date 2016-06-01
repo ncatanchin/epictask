@@ -31,8 +31,8 @@ module.exports = (projectConfig) => {
 		assert(fs.existsSync(tsconfigFile), `tsconfig must exists: ${tsconfigFile}`)
 
 		loaders.loaders = loaders.loaders.concat([
-			
-			// TYPESCRIPT	
+
+			// TYPESCRIPT
 			{
 				test: /\.tsx?$/,
 				loaders: (() => {
@@ -43,13 +43,13 @@ module.exports = (projectConfig) => {
 					return loaders
 				})(),
 			},
-			
+
 			// JADE
 			{
 				test: /\.(jade|pug)$/,
 				loader: 'jade-loader'
 			},
-			
+
 			// ASSETS
 			{
 				type: 'fonts',
@@ -62,8 +62,8 @@ module.exports = (projectConfig) => {
 				loader: 'file?name=assets/images/[name].[hash].[ext]',
 				type: 'images'
 			},
-			
-			
+
+
 			// CSS
 			{
 				test: /\.global\.css$/,
@@ -84,7 +84,7 @@ module.exports = (projectConfig) => {
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'
 				]
 			},
-			
+
 			// SCSS
 			{
 				test: /\.global\.scss$/,
@@ -100,7 +100,7 @@ module.exports = (projectConfig) => {
 				loaders: [
 					'style-loader',
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
-					'scss'
+					'sass'
 				]
 			}
 		])

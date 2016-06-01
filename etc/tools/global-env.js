@@ -7,7 +7,6 @@ const
 	runSequence = require('run-sequence'),
 	git = require('gulp-git'),
 	ghRelease = require('gulp-github-release'),
-	ts = require('gulp-typescript'),
 	tsc = require('typescript'),
 	babel = require('gulp-babel'),
 	tsdoc = require('gulp-typedoc')
@@ -15,7 +14,6 @@ const
 
 
 Object.assign(global,{
-	ts,
 	tsc,
 	babel,
 	tsdoc,

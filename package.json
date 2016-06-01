@@ -1,5 +1,5 @@
 {
-  "name": "epicly",
+  "name": "epictask",
   "version": "0.1.0",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/index.js",
@@ -48,6 +48,7 @@
     "concurrently": "^2.1.0",
     "cross-env": "^1.0.7",
     "css-loader": "^0.23.1",
+    "del": "^2.2.0",
     "devtron": "^1.1.2",
     "electron-debug": "^1.0.0",
     "electron-packager": "^7.0.1",
@@ -107,7 +108,7 @@
     "source-map-loader": "^0.1.5",
     "style-loader": "^0.13.1",
     "typedoc": "sierrasoftworks/typedoc#v1.8.10",
-    "typescript": "^1.9.0-dev.20160529-1.0",
+    "typescript": "^1.9.0-dev.20160601-1.0",
     "vinyl-named": "^1.1.0",
     "webpack": "^2.1.0-beta.8",
     "webpack-dev-middleware": "^1.6.1",

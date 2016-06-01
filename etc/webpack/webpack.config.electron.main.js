@@ -39,7 +39,7 @@ module.exports = function(projectConfig) {
 		target: 'electron-main',
 		devtool: 'source-map',
 		watch: isDev,
-		hot:isDev,
+		//hot:isDev,
 
 		plugins: [
 			...config.plugins,

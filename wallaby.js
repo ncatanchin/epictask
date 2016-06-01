@@ -4,10 +4,14 @@
 var path = require('path')
 var projectRoot = path.resolve(__dirname)
 var _ = require('lodash')
-var nodeModuleRelativePaths = require('glob').sync('packages/*/node_modules')
-var nodeModulePaths = _.map(nodeModuleRelativePaths,function(modPath) {
-	return path.resolve('.',modPath)
-})
+
+// var nodeModulePaths = _.map(nodeModuleRelativePaths,function(modPath) {
+// 	return path.resolve('.',modPath)
+// })
+
+var nodeModulePaths = ['node_modules','..','src']
+	.map(key => path.resolve(__dirname,key))
+
 var nodePath = (process.env.NODE_PATH || "") + ':' + nodeModulePaths.join(':')
 //var tsConfig = require('./tsconfig.json').compilerOptions
 //console.log('Using runner node path\n',nodeModulePaths,'\n',nodePath)

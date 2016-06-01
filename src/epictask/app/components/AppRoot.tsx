@@ -44,11 +44,13 @@ function mapStateToProps(state) {
 	}
 }
 
+const styles = require('./AppRoot.scss')
+
 /**
  * Root App Component
  */
 @connect(mapStateToProps)
-@CSSModules(require('./AppRoot.scss'))
+@CSSModules(styles)
 class App extends React.Component<AppProps,TAppState> {
 
 
@@ -61,10 +63,10 @@ class App extends React.Component<AppProps,TAppState> {
 	 */
 	render() {
 		const page = {component: getPage(this.props.stateType)}
-
+		const {theme} = this.props
 		const contentStyles = {
 			backgroundColor: theme.palette.canvasColor,
-			//flex: '1 1 0',
+			flex: '1 1 0',
 			display: 'flex',
 			flexDirection: 'column'
 		}
