@@ -4,16 +4,18 @@
 
 // Imports
 import * as React from 'react'
-import {AutoComplete,MenuItem} from 'material-ui'
+import {Paper,TextField,AutoComplete,MenuItem} from 'material-ui'
 import {connect} from 'react-redux'
 import {SearchKey} from '../../shared/Constants'
 import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
 import {SearchActionFactory} from '../actions/search/SearchActionFactory'
 import {SearchResults, SearchResult, SearchResultType} from '../actions/search/SearchState'
+import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
 // Constants
 const log = getLogger(__filename)
 const styles = require("./SearchPanel.scss")
+
 const repoActions = new RepoActionFactory()
 const searchActions = new SearchActionFactory()
 
@@ -69,49 +71,69 @@ export class SearchPanel extends React.Component<ISearchPanelProps,any> {
 	constructor(props,context) {
 		super(props,context)
 
-
+		this.state = {focused: false}
 	}
+
+
 
 	handleQueryUpdate = (value) => {
 		log.info('Search value: ',value)
 		searchActions.setQuery(value)
-		// const allRepos = repoActions.state.availableRepos || []
-		// const result = allRepos
-		// 	.filter(repo => repo.name.toLowerCase().indexOf(value.toLowerCase()) > -1)
-		// 	.map(repo => {
-		// 		return {
-		// 			text: repo.name,
-		// 			value: <MenuItem
-		// 				      primaryText={repo.name}
-		// 				      key={repo}
-		// 			      />
-		// 		}
-		// 	})
-		// this.setState({
-		// 	dataSource: result
-		// })
 	}
 
 	handleBlur = () => {
+		this.setState({focused: false})
+	}
 
+	handleFocus = () => {
+		this.setState({focused: true})
+	}
+
+	renderResults() {
+
+		return []
 	}
 
 	render() {
 		const {searchPanel:spTheme} = getTheme()
 		const {expanded} = this.props
-		const panelClazz = expanded ? 'search-panel-expanded' : 'search-panel'
-		const wrapperClazz = expanded ? 'search-wrapper-expanded' : 'search-wrapper'
 
-		return <div styleName={panelClazz}>
-			<div styleName={wrapperClazz} style={spTheme.wrapperStyle}>
-				<AutoComplete
-					hintText={<div style={spTheme.hintStyle}>Search for a repo or issue</div>}
-					dataSource={this.props.dataSource}
-					onUpdateInput={this.handleQueryUpdate}
+		const panelClazz = expanded ? styles.searchPanelExpanded :
+			styles.seachPanel
+
+		const wrapperClazz = expanded ? styles.searchWrapperExpanded :
+			styles.searchWrapper
+
+		const focusedClazz = this.state.focused ? ' ' + styles.focused : ''
+
+
+
+		return <div className={panelClazz}>
+			<Paper className={wrapperClazz + focusedClazz}
+			       style={spTheme.wrapperStyle}
+			       zDepth={2}
+			>
+				<TextField
+					hintText={<div style={spTheme.hintStyle}>Search2 for a repo or issue</div>}
+				    onChange={this.handleQueryUpdate}
 					onBlur={this.handleBlur}
+					onFocus={this.handleFocus}
 					style={spTheme.style}
-				/>
-			</div>
+				    query={this.props.query}
+				    />
+
+
+				<div className={styles.results}>
+					<CSSReactTransitionGroup
+						transitionName={styles.results}
+						transitionEnterTimeout={250}
+						transitionLeaveTimeout={150}>
+
+						{this.renderResults()}
+
+					</CSSReactTransitionGroup>
+				</div>
+			</Paper>
 		</div>
 	}
 

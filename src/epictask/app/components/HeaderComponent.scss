@@ -60,45 +60,40 @@
 }
 
 
-
+/**
+	Logo in regular mode, top right corner
+**/
 .logo {
-	align-self: flex-end;
-	padding: 1rem 1rem;
-
 	@include make-default-transition();
-
 	position: absolute;
 	display: flex;
+
+	padding: 1rem 1rem;
+
+
 	align-items: center;
 	justify-content: center;
 
 	top: 0;
 	right: 0;
 
-
 	background-image: url('assets/images/epictask-logo.png');
-	background-size: 50%;
+	background-size: 40%;
 	background-repeat: no-repeat;
-	background-position: center;
-	//> img {
-	//	height: 100%;
-	//	width: auto;
-	//	flex: 1 1 0;
-	//}
+	background-position: bottom center;
+	background-origin: content-box;
 }
 
+/**
+	Logo in full expanded mode
+**/
 .logo-expanded {
 	composes: logo;
 
-	padding: 5rem;
-
+	padding: 10rem 10rem 4rem 10rem;
 	height: 50% !important;
-	width: 100%;
+	width: auto;
 	top: 0;
 	left: 0;
-
-	//> img {
-	//	transform: translate(-50%,-50%);
-	//}
 
 }

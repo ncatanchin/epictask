@@ -29,6 +29,14 @@ const {
 
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	name: 'DarkTheme',
+
+	/**
+	 * Global
+	 */
+
+	fontFamily: 'Roboto,sans-serif',
+	fontWeight: 400,
+	
 	navBar: {
 		logoStyle: {
 			height: navBarHeight
@@ -49,23 +57,25 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
+	/**
+	 * Search Panel
+	 */
 	searchPanel: {
 		wrapperStyle: {
-			backgroundColor: alternateBgColor,
+			backgroundColor: primary2Color,
 		},
 		hintStyle: {
-			backgroundColor: alternateBgColor,
-			color: alternateTextColor,
+			backgroundColor: 'transparent',
+			color: textColor,
 			fontWeight: 100
 		},
 		style: {
-			backgroundColor: primary1ColorText,
+			backgroundColor: 'transparent',
 			color: alternateTextColor
 		}
 	},
 
-	fontFamily: 'Roboto,sans-serif',
-	fontWeight: 400,
+	
 	palette: {
 		primary1Color,
 		primary2Color,

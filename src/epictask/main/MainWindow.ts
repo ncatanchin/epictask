@@ -184,12 +184,18 @@ function loadRootWindow() {
 				selector: 'selectAll:'
 			}]
 		}, {
-			label: 'View2',
+			label: 'View',
 			submenu: (Env.isDebug) ? [{
 				label: 'Reload',
 				accelerator: 'Command+R',
 				click() {
 					mainWindow.reload()
+				}
+			},{
+				label: 'Break',
+				accelerator: 'Command+F8',
+				click() {
+					mainWindow.debugger.attach()
 				}
 			}, {
 				label: 'Toggle Full Screen',

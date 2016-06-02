@@ -1,55 +1,68 @@
 @import "styles/mixins.global.scss";
 
-.search-panel {
+//Global Container in normal mode
+.searchPanel {
 	@include make-default-transition();
 	composes: flex-column-center flex-scale from 'styles/flex.css';
 	position: relative;
-
-	input {
-		font-weight: 100 !important;
-
-
-	}
-
-	::-webkit-input-placeholder {
-		//color: 'blue';
-	}
+	background-color: transparent !important;
 }
 
 
-.search-panel-expanded {
-	composes: search-panel;
+// Expanded mode
+.searchPanelExpanded {
+	composes: searchPanel;
 	position: absolute;
 	left: 0;
 	top: 50%;
 	height: 50%;
 	width: 100%;
 
-
-
 }
 
 
-.search-wrapper {
+.searchWrapper {
+
 	padding: 0rem 1rem;
 	position: relative;
 
 	//composes: flex-column-center flex-scale from 'styles/flex.css';
 
-	> div {
+	div {
 		//overflow:hidden;
+		width: 100% !important;
 
-		input {
-			color: #303F9F !important;
-		}
 	}
 
+	input {
+		background-color: transparent;
+		width: 100% !important;
+	}
+
+	hr {
+		opacity: 0;
+	}
+
+	&,* {
+		@include make-default-transition();
+	}
 
 }
 
+.focused {
+	background-color: #{map-get($dark,'alternateBgColor')} !important;
 
-.search-wrapper-expanded {
-	composes: search-wrapper;
+	hr {
+		opacity: 1;
+	}
+
+	input {
+		color: #{map-get($dark,'alternateTextColor')} !important;
+	}
+}
+
+.searchWrapperExpanded {
+	composes: searchWrapper;
 	display: block;
 	position: absolute;
 	left: 50%;

@@ -5,6 +5,7 @@
 /// <reference path="main/ambient/github-electron/index.d.ts" />
 /// <reference path="main/ambient/mocha/index.d.ts" />
 /// <reference path="main/ambient/node/index.d.ts" />
+/// <reference path="main/ambient/react-addons-css-transition-group/index.d.ts" />
 /// <reference path="main/ambient/react-dom/index.d.ts" />
 /// <reference path="main/ambient/react-router-redux/index.d.ts" />
 /// <reference path="main/ambient/react-split-pane/index.d.ts" />

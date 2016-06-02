@@ -64,27 +64,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 			log.info('Search completed',results)
 			return results
-			// const appActions = gAppActions.withDispatcher(dispatch,getState)
-			// actions.setSearchenticating(true)
-			//
-			// return new Promise((resolve,reject) => {
-			// 	ipcRenderer.once(SearchKey,(event,{err,token}) => {
-			//
-			// 		Settings.token = err ? null : token
-			//
-			// 		if (err) {
-			// 			actions.setError(err)
-			// 			appActions.setStateType(AppStateType.SearchLogin)
-			// 			reject(err)
-			// 		} else {
-			// 			actions.setToken(token)
-			// 			appActions.setStateType(AppStateType.SearchVerify)
-			// 			resolve(token)
-			// 		}
-			// 	})
-			//
-			// 	ipcRenderer.send(SearchKey)
-			// })
+			
 
 
 		}
