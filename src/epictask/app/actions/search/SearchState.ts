@@ -41,7 +41,7 @@ export class SearchResults {
 	issues:SearchResult<Issue>[] = []
 	all:SearchResult<Issue|Repo>[] = []
 
-	constructor(all:Array<Repo | Issue>) {
+	constructor(all:SearchResult<Repo|Issue>[]) {
 
 
 		all.forEach((item:SearchResult<Repo|Issue>) => {

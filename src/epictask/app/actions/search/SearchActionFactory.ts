@@ -5,7 +5,7 @@ import {AppActionFactory,RepoActionFactory} from '../'
 import {SearchState, SearchResults, SearchResult} from './SearchState'
 import {SearchMessage} from './SearchReducer'
 import {AppStateType,Settings} from 'epictask/shared'
-import {Repo} from '../../../shared/GitHubSchema'
+import {Repo, Issue} from '../../../shared/GitHubSchema'
 
 const log = getLogger(__filename)
 const gAppActions = new AppActionFactory()
@@ -54,13 +54,13 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 
 			const {query} = actions.state
-			const allMatches = []
+			const allMatches:SearchResult<Repo|Issue>[] = []
 
 			if (query && query.length) {
 				allMatches.push(...await findRepos(query, repoState.repos))
 				allMatches.push(...await findRepos(query, repoState.availableRepos))
 			}
-			
+
 			const results = new SearchResults(allMatches)
 			actions.setResults(results)
 
