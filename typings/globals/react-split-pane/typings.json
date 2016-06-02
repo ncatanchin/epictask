@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/53c91ff9a7aca751cf75cf940fc3c163e1713b99/react-split-pane/react-split-pane.d.ts",
+    "raw": "registry:dt/react-split-pane#0.1.38+20160501160952",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/53c91ff9a7aca751cf75cf940fc3c163e1713b99/react-split-pane/react-split-pane.d.ts"
+  }
+}

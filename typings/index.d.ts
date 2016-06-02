@@ -1,27 +1,29 @@
-///<reference path="custom/material-ui/index.d.ts"/>
-///<reference path="../node_modules/urlsearchparams/types/webidl.d.ts"/>
-///<reference path="../node_modules/urlsearchparams/types/utf8-encoding.d.ts"/>
-///<reference path="../node_modules/urlsearchparams/urlsearchparams.d.ts"/>
-
-
-/**
- * Extend window
- */
-interface Window {
-	devToolsExtension:Function
-	__DEV__:boolean
-	oauth2Callback:any
-}
-
-declare enum AppStateType {
-	AuthLogin = 1,
-	AuthVerify,
-	Ready
-}
-
-declare namespace NodeJS {
-	export interface Global {
-		hotReload:boolean
-		__DEV__:boolean
-	}
-}
+/// <reference path="custom/index.d.ts" />
+/// <reference path="globals/chai/index.d.ts" />
+/// <reference path="globals/electron-window-state/index.d.ts" />
+/// <reference path="globals/expectations/index.d.ts" />
+/// <reference path="globals/github-electron/index.d.ts" />
+/// <reference path="globals/history/index.d.ts" />
+/// <reference path="globals/mocha/index.d.ts" />
+/// <reference path="globals/node/index.d.ts" />
+/// <reference path="globals/react-addons-css-transition-group/index.d.ts" />
+/// <reference path="globals/react-addons-perf/index.d.ts" />
+/// <reference path="globals/react-addons-pure-render-mixin/index.d.ts" />
+/// <reference path="globals/react-addons-shallow-compare/index.d.ts" />
+/// <reference path="globals/react-addons-test-utils/index.d.ts" />
+/// <reference path="globals/react-addons-transition-group/index.d.ts" />
+/// <reference path="globals/react-addons-update/index.d.ts" />
+/// <reference path="globals/react-dom/index.d.ts" />
+/// <reference path="globals/react-router-redux/index.d.ts" />
+/// <reference path="globals/react-split-pane/index.d.ts" />
+/// <reference path="globals/react/index.d.ts" />
+/// <reference path="globals/redux-devtools-dock-monitor/index.d.ts" />
+/// <reference path="globals/redux-devtools/index.d.ts" />
+/// <reference path="globals/redux-logger/index.d.ts" />
+/// <reference path="globals/redux-thunk/index.d.ts" />
+/// <reference path="globals/sinon/index.d.ts" />
+/// <reference path="globals/whatwg-fetch/index.d.ts" />
+/// <reference path="modules/history/index.d.ts" />
+/// <reference path="modules/lodash/index.d.ts" />
+/// <reference path="modules/react-redux/index.d.ts" />
+/// <reference path="modules/react-router/index.d.ts" />

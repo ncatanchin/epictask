@@ -1,4 +1,3 @@
-//require('typelogger').setStylerEnabled(false)
 
 import '../shared/CommonEntry'
 import './AppGlobals'

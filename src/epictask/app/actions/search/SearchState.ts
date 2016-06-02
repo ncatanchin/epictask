@@ -39,20 +39,22 @@ export class SearchResults {
 	repos:SearchResult<Repo>[] = []
 	availableRepos:SearchResult<Repo>[] = []
 	issues:SearchResult<Issue>[] = []
+	all:SearchResult<Issue|Repo>[] = []
 
-	constructor(public all:Array<Repo | Issue>) {
+	constructor(all:Array<Repo | Issue>) {
 
 
-		all.forEach(item => {
-			const searchItem = new SearchResult(item)
+		all.forEach((item:SearchResult<Repo|Issue>) => {
+			//const searchItem = new SearchResult(item)
 
 			//noinspection JSMismatchedCollectionQueryUpdate
-			const itemList:SearchResult<Repo|Issue>[] = ((searchItem.type === SearchResultType.Issue) ?
-				this.issues : (searchItem.type === SearchResultType.Repo) ?
+			const itemList:SearchResult<Repo|Issue>[] = ((item.type === SearchResultType.Issue) ?
+				this.issues : (item.type === SearchResultType.Repo) ?
 				this.repos :
 				this.availableRepos)
 
-			itemList.push(searchItem)
+			itemList.push(item)
+			this.all.push(item)
 		})
 	}
 }

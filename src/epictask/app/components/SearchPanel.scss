@@ -73,7 +73,12 @@
 	transform: translate(-50%,0);
 	//composes: flex-row-center from 'styles/flex.css';
 	//flex: 0 0 auto;
+}
 
+.results {
 
 }
 
+.result {
+	color: #{map-get($dark,'alternateTextColor')} !important;
+}

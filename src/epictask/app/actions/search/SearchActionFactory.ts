@@ -56,15 +56,17 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 			const {query} = actions.state
 			const allMatches = []
 
-			allMatches.push(...await findRepos(query,repoState.repos))
-			allMatches.push(...await findRepos(query,repoState.availableRepos))
-
+			if (query && query.length) {
+				allMatches.push(...await findRepos(query, repoState.repos))
+				allMatches.push(...await findRepos(query, repoState.availableRepos))
+			}
+			
 			const results = new SearchResults(allMatches)
 			actions.setResults(results)
 
 			log.info('Search completed',results)
 			return results
-			
+
 
 
 		}

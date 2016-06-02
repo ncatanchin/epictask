@@ -11,6 +11,7 @@ import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
 import {SearchActionFactory} from '../actions/search/SearchActionFactory'
 import {SearchResults, SearchResult, SearchResultType} from '../actions/search/SearchState'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
+import {isIssue} from '../../shared/GitHubSchema'
 
 // Constants
 const log = getLogger(__filename)
@@ -76,9 +77,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,any> {
 
 
 
-	handleQueryUpdate = (value) => {
-		log.info('Search value: ',value)
-		searchActions.setQuery(value)
+	handleQueryUpdate = (event) => {
+		const query = event.target.value
+		log.info('Search value: ' + query)
+		searchActions.setQuery(query)
 	}
 
 	handleBlur = () => {
@@ -90,13 +92,19 @@ export class SearchPanel extends React.Component<ISearchPanelProps,any> {
 	}
 
 	renderResults() {
-
-		return []
+		const results = this.props.results || null
+		return (!results) ? undefined : results.all.map(result => {
+			return (
+				<div key={result.value.id} className={styles.result}>
+					{isIssue(result.value) ? result.value.title : result.value.name}
+				</div>
+			)
+		})
 	}
 
 	render() {
 		const {searchPanel:spTheme} = getTheme()
-		const {expanded} = this.props
+		const {expanded,query} = this.props
 
 		const panelClazz = expanded ? styles.searchPanelExpanded :
 			styles.seachPanel
@@ -104,9 +112,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,any> {
 		const wrapperClazz = expanded ? styles.searchWrapperExpanded :
 			styles.searchWrapper
 
-		const focusedClazz = this.state.focused ? ' ' + styles.focused : ''
 
-
+		const focused = this.state.focused || (query && query.length > 0)
+		const focusedClazz = focused ? ' ' + styles.focused : ''
 
 		return <div className={panelClazz}>
 			<Paper className={wrapperClazz + focusedClazz}
@@ -119,19 +127,19 @@ export class SearchPanel extends React.Component<ISearchPanelProps,any> {
 					onBlur={this.handleBlur}
 					onFocus={this.handleFocus}
 					style={spTheme.style}
-				    query={this.props.query}
+				    value={this.props.query}
 				    />
 
 
 				<div className={styles.results}>
-					<CSSReactTransitionGroup
-						transitionName={styles.results}
+					<CSSTransitionGroup
+						transitionName="results"
 						transitionEnterTimeout={250}
 						transitionLeaveTimeout={150}>
 
 						{this.renderResults()}
 
-					</CSSReactTransitionGroup>
+					</CSSTransitionGroup>
 				</div>
 			</Paper>
 		</div>

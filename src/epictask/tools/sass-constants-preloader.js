@@ -83,7 +83,7 @@ module.exports = function (content) {
 	loadContent()
 		.then((obj) => {
 			const sass = jsonToSassVars(obj)
-			console.log('out sass = ',sass)
+			//console.log('out sass = ',sass)
 			callback(null,sass ? sass + '\n ' + content : content)
 		})
 		.catch(err => callback(err))

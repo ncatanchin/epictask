@@ -14,7 +14,7 @@ module.exports = (projectConfig) => {
 		preLoaders: [
 			{
 				test: /\.tsx?$/,
-				exclude: /(node_modules|DLLEntry)/,
+				exclude: /(node_modules|DLLEntry|typelogger)/,
 				loader: 'source-map-loader'
 			},
 			{

@@ -47,7 +47,7 @@ module.exports = function (projectConfig) {
 				path.resolve(baseDir,'node_modules'),
 				// path.resolve(baseDir,'../typedux','node_modules'),
 				// path.resolve(baseDir,'../typemutant','node_modules'),
-				// path.resolve(baseDir,'../typelogger','node_modules')
+				//path.resolve(baseDir,'..','node_modules')
 			],
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -84,6 +84,7 @@ module.exports = function (projectConfig) {
 				whitelist: [
 					/webpack\/hot/,
 					/webpack-hot/,
+					// /typelogger/,
 					/electron-oauth-github/,
 					/browser-next-tick/,
 					/urlsearchparams/

@@ -4,6 +4,8 @@
 src/**/*.map
 src/**/*.d.ts
 dist
+logs
+.sass-cache
 
 # Webpack Example - ignore loader cache
 .awcache

@@ -1,19 +1,13 @@
 import 'reflect-metadata'
 
 
-import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
-//import * as winston from 'winston'
+import {getLogger as LoggerFactory} from 'typelogger'
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
 
-// Configure global logging first
-// const processType = process.env.PROCESS_TYPE
-// winston.add(winston.transports.File,{filename:`logs/${processType}.log`})
-//
-// setLoggerOutput(winston)
-setCategoryLevels(require('./LogCategories'))
+
 
 /**
  * Declare globals
@@ -54,7 +48,6 @@ function installGlobals() {
 
 	// Assign all of our internal globals
 	Object.assign(g,{
-		getLogger: LoggerFactory,
 		Immutable: ImmutableGlobal,
 		TypeMutant: TypeMutantGlobal,
 		_:LodashGlobal,

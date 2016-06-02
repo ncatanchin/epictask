@@ -67,18 +67,6 @@ function getReducers():ILeafReducer<any,any>[] {
 				reducers.push(new (mod[key])())
 		}
 	})
-	
-	// const {AppReducer} = require('../actions/AppReducer')
-	// const {AuthReducer} = require('../actions/auth')
-	// const {RepoReducer} = require('../actions/repo')
-	//const {RoutingReducer} = require('../routing')
-
-	// const reducers = [
-	// 	new AppReducer(),
-	// 	new AuthReducer(),
-	// 	new RepoReducer()
-	// 	// ,new RoutingReducer()
-	// ]
 
 	log.debug('Returning reducers',reducers)
 	return reducers
@@ -91,10 +79,25 @@ function onChange() {
 
 }
 
+function getDebugSessionKey() {
+	// You can write custom logic here!
+	// By default we try to read the key from ?debug_session=<key> in the address bar
+	//const matches = window.location.href.match(/[?&]debug_session=([^&#]+)\b/);
+	//return (matches && matches.length > 0)? matches[1] : null;
+	return 'electron-debug-session'
+}
+
 /**
  * Initialize/Create the store
  */
 function initStore() {
+
+	const devTools = [devToolsMiddleware]
+	if (Env.isDev) {
+		const statePersistence = require('redux-devtools').persistState(getDebugSessionKey())
+		devTools.push(statePersistence)
+	}
+
 	const newStore = ObservableStore.createObservableStore(
 		getReducers(),
 		compose(applyMiddleware(...middleware), devToolsMiddleware) as StoreEnhancer<any>

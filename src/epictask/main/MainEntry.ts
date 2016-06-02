@@ -1,6 +1,12 @@
 const electron = require('electron')
 const windowStateKeeper = require('electron-window-state')
 
+
+// LOGGING
+import './MainLogging'
+
+
+// LOAD EVERYTHING
 import '../shared/CommonEntry'
 import * as MainWindowType from './MainWindow'
 
