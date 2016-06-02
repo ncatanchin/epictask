@@ -40,6 +40,26 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "typeproject": "^1.0.19",
+
+    "babel-register": "^6.9.0",
+    "commander": "^2.9.0",
+    "glob": "^7.0.3",
+    "inquirer": "^1.0.2",
+    "lodash": "^4.13.1",
+    "shelljs": "^0.7.0",
+    "winston": "^2.2.0",
+    "del": "^2.2.0",
+    "gulp-babel": "^6.1.2",
+    "gulp-debug": "^2.1.2",
+    "gulp-git": "^1.7.1",
+    "gulp-mocha": "^2.2.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.13.4",
+    "gulp-util": "^3.0.7",
+    "merge2": "^1.0.2",
+    "run-sequence": "^1.2.0",
+    "semver": "^5.1.0",
+
     "typescript": "^1.9.0-dev.20160601-1.0"
   }
 }
