@@ -20,6 +20,8 @@ starter.then(() => {
 
 	loadAppContent()
 
+	
+
 	if (module.hot) {
 
 		module.hot.accept(['./components/root/AppRoot.tsx'], (updates) => {

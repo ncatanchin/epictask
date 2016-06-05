@@ -8,6 +8,11 @@ import {TRepoState,RepoActionFactory,AppActionFactory} from 'app/actions'
 import {RepoList,MIcon} from 'components'
 import {Drawer,RaisedButton} from 'material-ui'
 
+// Key mapping tools
+import * as KeyMaps from 'shared/KeyMaps'
+const {CommonKeys:Keys} = KeyMaps
+const {HotKeys} = require('react-hotkeys')
+
 // Constants
 const log = getLogger(__filename)
 //const styles = require("./RepoPanel.css")
@@ -76,6 +81,7 @@ function mapStateToProps(state) {
 }
 
 
+
 /**
  * RepoDrawer
  *
@@ -84,7 +90,6 @@ function mapStateToProps(state) {
  **/
 @connect(mapStateToProps)
 @Themeable()
-@CSSModules(styles)
 export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 
 	constructor(props, context) {
@@ -92,20 +97,21 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 	}
 
 
-	componentDidUpdate() {
-		log.info('Component updated')
+	onBlur = () => {
+		repoActions.clearSelectedRepos()
 	}
-
+	
+	keyHandlers = {
+		
+	}
 
 	render() {
 		const state = this.props.repoState || ({} as any)
 		const theme = this.props.theme
 		const {palette:p,repoPanel:{headerStyle}} = theme
 
-
-
 		return (
-			<div style={styles.drawerWrapper}>
+			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
 				<Drawer docked={true} zIndex={2} containerStyle={styles.drawer} style={styles.panel}>
 					<div style={makeStyle(styles.header,headerStyle)}>
 						<RaisedButton
@@ -121,10 +127,10 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 						</RaisedButton>
 					</div>
 					<div style={styles.listContainer}>
-						<RepoList repos={state.repos} availableRepos={state.availableRepos} selectedRepo={state.repo} style={styles.list}/>
+						<RepoList repos={state.repos} availableRepos={state.availableRepos} style={styles.list}/>
 					</div>
 				</Drawer>
-			</div>
+			</HotKeys>
 		)
 
 	}

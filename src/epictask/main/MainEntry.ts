@@ -27,7 +27,9 @@ log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
  */
 if (DEBUG) {
 	app.commandLine.appendSwitch('remote-debugging-port', '8315');
+	
 	//app.commandLine.appendSwitch('hostname-rules', 'MAP * 127.0.0.1');
+
 }
 
 /**
@@ -38,7 +40,7 @@ function loadWindow() {
 }
 
 let mainWindow = loadWindow()
-
+//require('electron-react-devtools').inject()
 /**
  * All windows closed
  */
@@ -52,6 +54,9 @@ function onAllClosed() {
  */
 function onStart() {
 	app.setName('epic.ly')
+	// electron.BrowserWindow.addDevToolsExtension("/Users/jglanz/Downloads/0.14.10_0")
+	// electron.BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
+	// mainWindow.addDevToolsExtension('/Users/jglanz/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	mainWindow.start()
 }
 
@@ -61,6 +66,7 @@ function onStart() {
 
 if (!Env.isHot)
 	app.on('window-all-closed', onAllClosed)
+
 app.on('ready', onStart)
 
 

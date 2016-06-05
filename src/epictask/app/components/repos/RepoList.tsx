@@ -77,13 +77,17 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	constructor(props) {
 		super(props)
 
-		this.state = {hover:false}
+		this.state = {hoverId:null}
 	}
 
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo,!isSelected)
 		} else {
+			if (this.props.selectedRepos.length) {
+				repoActions.clearSelectedRepos()
+			}
+
 			repoActions.setRepoEnabled(availRepo, !availRepo.enabled)
 		}
 	}
@@ -102,21 +106,21 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 				const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.id === availRepo.id)
 				const isEnabled = availRepo.enabled
-
+				const isHovering = this.state.hoverId === availRepo.id
 				return <li data-selected={isSelected}
 				           data-enabled={isEnabled}
-				           key={repo.id}
-				           onMouseEnter={() => this.setState({hover:true})}
-				           onMouseLeave={() => this.setState({hover:false})}
+				           key={availRepo.id}
+				           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
+				           onMouseLeave={() => this.setState({hoverId:null})}
 				           onClick={(event) => this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)}
 				           style={makeStyle(
 				                styles.item,
 				                themeStyles.list.item,
 				                isEnabled && styles.itemEnabled,
 				                isEnabled && themeStyles.list.itemEnabled,
-				                this.state.hover && themeStyles.list.itemHover,
+				                isHovering && themeStyles.list.itemHover,
 				                isSelected && themeStyles.list.itemSelected,
-				                (isSelected && this.state.hover) && themeStyles.list.itemSelectedHover
+				                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
 			                )}>
 					<MIcon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</MIcon>
 					<div style={styles.itemLabel}>{repo.name}</div>

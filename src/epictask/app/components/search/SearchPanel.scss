@@ -18,15 +18,31 @@
 	position: absolute;
 	left: 0;
 	top: 50%;
-	height: 50%;
-	width: 100%;
-
+	width: 70%;
+	max-width: 70%;
+	height: 40% !important;
+	max-height: 40% !important;
+	min-height: 40% !important;
+	overflow: auto;
 }
 
 .inputWrapper {
-	padding: 0 1rem;
+	//padding: 0 1rem;
 	position: relative;
 	width: 100%;
+
+	composes: flex-column flex-scale from 'styles/flex.css';
+
+	> div:not(.results) {
+		flex: 0 0 auto;
+	}
+
+	> div.results {
+		//flex: 1 1 auto;
+		max-height: 100%;
+		overflow: auto !important;
+	}
+
 }
 
 .searchWrapper {
@@ -34,8 +50,16 @@
 	width: 100%;
 	border-radius: 0.2rem;
 
-	div {
+
+
+	> div, >div >div, >div >div>div {
 		width: 100% !important;
+		position: relative;
+	}
+
+	>div >div:not(.results) {
+		padding: 0 1rem !important;
+		height: 100%;
 	}
 
 	input {
@@ -45,11 +69,19 @@
 
 	hr {
 		opacity: 0;
+		width: 100% !important;
+
 	}
 
-	&,* {
+	input, hr {
+
+	}
+
+	&, input {
 		@include make-default-transition();
 	}
+
+
 
 }
 
@@ -69,15 +101,18 @@
 
 
 .searchWrapperExpanded {
+
 	composes: searchWrapper;
-	display: block;
+	display: flex;
 	position: absolute;
+	//composes: flex-column from 'styles/flex.css';
 	left: 50%;
 	top: 0;
-	max-height: 100%;
+
 	max-width: 70%;
 	width: 70%;
 	transform: translate(-50%,0);
+	max-height: 100% !important;
 	//composes: flex-row-center from 'styles/flex.css';
 	//flex: 0 0 auto;
 }

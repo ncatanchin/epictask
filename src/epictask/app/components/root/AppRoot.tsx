@@ -16,7 +16,7 @@ import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'app/actions'
 import {AppState, TAppState} from 'app/actions'
-import {AppStateType,Repo} from 'shared'
+import {AppStateType,AvailableRepo} from 'shared'
 import {AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 
@@ -37,7 +37,7 @@ interface AppProps {
 	store:any
 	theme:any
 	stateType:AppStateType,
-	repo?:Repo
+	availableRepos?:AvailableRepo[]
 }
 
 // Redux state -> props
@@ -47,7 +47,7 @@ function mapStateToProps(state) {
 	return {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
-		repo: repoState.repo
+		availableRepos: repoState.availableRepos
 	}
 }
 
@@ -90,8 +90,10 @@ class App extends React.Component<AppProps,TAppState> {
 			flexDirection: 'column'
 		}
 
+		const {availableRepos} = this.props
+		const expanded = !availableRepos || availableRepos.length === 0
 
-		const bodyCollapsed = (this.props.repo) ? '' : ' ' + styles.collapsed
+		const bodyCollapsed = (!expanded) ? '' : ' ' + styles.collapsed
 
 		return (
 			<MuiThemeProvider muiTheme={this.props.theme}>
@@ -99,7 +101,7 @@ class App extends React.Component<AppProps,TAppState> {
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
 						{/* Global flex box */}
 						<div className="fill-height fill-width" styleName="app">
-							<HeaderComponent expanded={!this.props.repo} className={styles.header}/>
+							<HeaderComponent expanded={expanded} className={styles.header}/>
 							<HotKeys ref={(c) => this.pageBodyHolder = c} style={makeStyle(FlexScale,FlexColumn)}>
 								<div style={contentStyles} className={styles.content + bodyCollapsed}>
 									<page.component />

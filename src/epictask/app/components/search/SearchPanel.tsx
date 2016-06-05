@@ -11,13 +11,13 @@ import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'app/actions/search/SearchActionFactory'
 import {SearchResults, SearchResult, SearchResultType} from 'app/actions/search/SearchState'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexAlignEnd,FlexScale,Fill,makeTransition} from 'app/themes'
+import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexAlignEnd,FlexScale,FillWidth,Fill,makeTransition} from 'app/themes'
 import {SearchResultsList} from './SearchResultsList'
 import {isIssue} from 'shared/GitHubModels'
+
+// Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
-
 const {CommonKeys:Keys} = KeyMaps
-
 const {HotKeys} = require('react-hotkeys')
 
 // Constants
@@ -50,7 +50,7 @@ function mapStateToProps(state) {
 		theme:      getTheme(),
         query,
         results
-		
+
 	}
 }
 
@@ -84,9 +84,20 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		this.setState({focused: true})
 	}
 
-	onBlur = () => {
-		log.info('Search panel blur')
-		this.setState({focused: false})
+	/**
+	 * Blue handler checks to see if
+	 * focus has moved away from the search panel
+	 * 
+	 * @param event
+	 */
+	onBlur = (event) => {
+		const searchPanel = document.getElementById('searchPanel')
+		if (event.relatedTarget && !searchPanel.contains(event.relatedTarget)) {
+			log.info('Search panel blur')
+			this.setState({focused: false})
+		} else {
+			log.info('Probably text box blur')
+		}
 	}
 
 	/**
@@ -137,6 +148,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				throw new Error('No result provided and no result matching index: ' + selectedIndex)
 		}
 		searchActions.select(result)
+		this.setState({focused: false})
 	}
 
 	onHover = (result:SearchResult<any>) => {
@@ -192,40 +204,46 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const wrapperClazz = expanded ? styles.searchWrapperExpanded :
 			styles.searchWrapper
 
-		const inputStyle = Object.assign({}, spTheme.style, focused ? spTheme.focusedStyle : {})
+		const inputStyle = Object.assign({}, spTheme.style, focused ? spTheme.focusedStyle : {}, {
+
+		})
 		const focusedClazz = focused ? ' ' + styles.focused : ''
 
 
 		const panel = <Paper className={wrapperClazz + focusedClazz}
-		                     style={makeStyle(panelStyle,Fill)}
+		                     style={makeStyle(panelStyle)}
 		                     zDepth={2}
-		                     ref="panel">
+		                     ref="panel"
+		                     id="searchPanel">
 
 
-			<div id="searchPanel" className={styles.inputWrapper} style={Fill}>
+			<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
 				<TextField
 					hintText={<div style={spTheme.hintStyle}>Search2 for a repo or issue</div>}
 					onChange={this.onInputChange}
-					onBlur={this.onInputBlur}
-					onFocus={this.onInputFocus}
+
 					inputStyle={inputStyle}
 					defaultValue={this.props.query}
 				/>
-			</div>
-		</Paper>
-
-
-		return <HotKeys handlers={this.keyHandlers} style={Fill}>
-			<div onFocus={this.onFocus} onBlur={this.onBlur} className={panelClazz}  style={Fill}>
-				{panel}
 				<SearchResultsList ref="resultsList"
 				                   anchor={'#searchPanel'}
 				                   results={this.props.results}
 				                   selectedIndex={this.state.selectedIndex}
 				                   open={resultsOpen}
+				                   inline={expanded}
 				                   onResultHover={this.onHover}
 				                   onResultSelected={this.onSelect}
-				                   containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}/>
+				                   containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}
+				                   className={styles.results}
+				/>
+			</div>
+		</Paper>
+
+
+		return <HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
+			<div  className={panelClazz}  style={Fill}>
+				{panel}
+
 			</div>
 		</HotKeys>
 	}

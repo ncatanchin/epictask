@@ -137,6 +137,8 @@ function runDevServer(port,projectConfig,wpConfig) {
 
 	// Add node specifically for source mappings
 	serverApp.use('/dist',express.static('/Users/jglanz/Development/oss/node-6.1.0/lib'))
+	serverApp.use('/react-devtools',express.static('/Users/jglanz/Downloads/0.14.10_0'))
+	//electron.BrowserWindow.addDevToolsExtension("/Users/jglanz/Downloads/0.14.10_0")
 
 	const homePath = process.env.HOME
 	gutil.log('Using home path',homePath)

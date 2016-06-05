@@ -52,7 +52,8 @@ const styles = {
 	},
 
 	result: makeStyle(makeTransition(),FlexRowCenter,{
-		padding: `0.1rem 1rem`
+		padding: `0.1rem 1rem`,
+		cursor: 'pointer'
 	}),
 
 	resultInfo: makeStyle(FlexColumnCenter,{
@@ -109,9 +110,10 @@ const styles = {
 export interface ISearchResultsListProps {
 	anchor?: string | React.ReactElement<any>
 	containerStyle?:any
-	absolute?: boolean
+	inline?: boolean
 	open:boolean
 	selectedIndex?:number
+	className?:string
 	results?:SearchResults
 	onResultSelected?:(result:SearchResult<any>) => void
 	onResultHover?:(result:SearchResult<any>) => void
@@ -150,7 +152,8 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 	}
 
 	componentWillReceiveProps(nextProps:ISearchResultsListProps, nextContext:any):void {
-		this.renderResults(nextProps)
+		if (!nextProps.inline)
+			this.renderResults(nextProps)
 	}
 
 	componentWillUnmount():void {
@@ -216,7 +219,7 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 	renderRepo(repoResult:SearchResult<Repo>,isSelected) {
 		const repo = repoResult.value
 
-		return this.renderResult(repo.name,'Add issue repo','repo',isSelected)
+		return this.renderResult(repo.full_name,'Add issue repo','repo',isSelected)
 	}
 
 	/**
@@ -237,7 +240,7 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		// Row 1: label
 		// Row 2: possible action
 		return this.renderResult(
-			repo.name,
+			repo.full_name,
 			(availRepoSelected) ? 'Hide issues' : 'Show Issues',
 			'repo',
 			isSelected)
@@ -270,9 +273,7 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 			.filter(t => _.isFinite(_.toNumber(t)))
 			.map(t => _.toNumber(t))
 
-		const sections = [
-			//<div key={'top'} style={styles.resultsTitle}>Results</div>
-		]
+		let rows = []
 
 		log.info(`Selected index in results ${selectedIndex}`)
 
@@ -281,7 +282,7 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 
 			const sectionResults = results.all.filter(result => result.type === type)
 
-			const rows = sectionResults.map(result => {
+			rows = rows.concat(sectionResults.map(result => {
 				const isSelected = selectedIndex === result.index
 				const resultContent = (result.type === SearchResultType.Repo) ? this.renderRepo(result,isSelected) :
 					(result.type === SearchResultType.Issue) ? this.renderIssue(result,isSelected) :
@@ -298,29 +299,17 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 					<div key={result.value.id}
 					     className={isSelected && 'selected'}
 					     style={resultStyle}
+					     onMouseEnter={() => onResultHover && onResultHover(result)}
 					     onClick={() => onResultSelected && onResultSelected(result)}
-					     onMouseOver={() => onResultHover && onResultHover(result)}>
+					>
 						{resultContent}
 					</div>
 				)
-			})
+			}))
 
-
-			const section = <div data-search-result-type={type}
-			                     key={type}
-			                     style={styles.resultSection}>
-
-				{/*<div style={styles.resultSectionTitle}>{SearchResultType[type]}</div>*/}
-
-				{/* If rows then render otherwise place holder */}
-				{rows}
-				{/*{rows.length ? rows : <div style={styles.noResults}>No matching items</div>}*/}
-			</div>
-
-			sections.push(section)
 		})
 
-		return sections
+		return rows
 	}
 
 
@@ -328,52 +317,69 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		const t = getTheme()
 		const {palette:p} = t
 
-		const anchor = typeof props.anchor === 'string' ?
-			document.querySelector(props.anchor) :
-			props.anchor
-
-		const containerStyle = props.open && anchor ? (() => {
-			const rect =  anchor.getBoundingClientRect()
-			return {
-				position: 'absolute',
-				display: 'block',
-				width: rect.width + 'px',
-				top: (rect.height + rect.top) + 'px',
-				left: rect.left + 'px',
-				height: '100%',
-				fontFamily: t.fontFamily,
-				fontWidth: t.fontWeight,
-				zIndex: 99999
-			}
-		})() : {
-			height: 0
-		}
-
-
-
-		const resultsStyle = makeStyle(styles.results,{
+		let resultsStyle = makeStyle(styles.results,{
 			backgroundColor: p.alternateBgColor,
 			color: p.alternateTextColor
-		},props.containerStyle)
+		})
 
-		const resultsElement = (<div style={resultsStyle}>
-			<CSSTransitionGroup
-				transitionName="results"
-				transitionEnterTimeout={250}
-				transitionLeaveTimeout={150}>
 
+
+
+		if (!this.props.inline) {
+			const anchor = typeof props.anchor === 'string' ?
+				document.querySelector(props.anchor) :
+				props.anchor
+
+			const containerStyle = props.open && anchor ? (() => {
+				const rect =  anchor.getBoundingClientRect()
+				const top = (rect.height + rect.top)
+				const winHeight = window.innerHeight
+				const height = winHeight - top - (winHeight * .1)
+				const maxHeight = `${height}px`
+				return {
+					position: 'absolute',
+					display: 'block',
+					width: rect.width + 'px',
+					top: `${top}px`,
+					left: rect.left + 'px',
+					height: maxHeight,
+					maxHeight,
+					overflow: 'auto',
+					fontFamily: t.fontFamily,
+					fontWidth: t.fontWeight,
+					zIndex: 99999
+				}
+			})() : {
+				height: 0
+			}
+
+
+			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
+			const resultsElement = (<div style={resultsStyle}>
+				<CSSTransitionGroup
+					transitionName="results"
+					transitionEnterTimeout={250}
+					transitionLeaveTimeout={150}>
+
+					{props.open && this.prepareResults(props)}
+
+				</CSSTransitionGroup>
+			</div>)
+
+			_.assign(this.node.style, containerStyle)
+			ReactDOM.render(resultsElement, this.node)
+		} else {
+			return <div className={props.className} style={resultsStyle}>
 				{props.open && this.prepareResults(props)}
-
-			</CSSTransitionGroup>
-		</div>)
-
-		_.assign(this.node.style,containerStyle)
-		ReactDOM.render(resultsElement,this.node)
+			</div>
+		}
 		//renderSubtreeIntoContainer(this,resultsElement,this.node)
 	}
 
 	render() {
-		return React.DOM.noscript()
+		return (this.props.inline) ?
+			this.renderResults(this.props) :
+			React.DOM.noscript()
 	}
 
 }

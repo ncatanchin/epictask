@@ -110,6 +110,7 @@ function loadRootWindow() {
 	mainWindow.webContents.on('did-finish-load', () => {
 		mainWindow.show()
 		mainWindow.focus()
+		BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application\ Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	})
 
 	mainWindow.on('closed', () => {
