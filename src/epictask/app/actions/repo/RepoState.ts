@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 
 /**
  * Repo State Holder
@@ -9,26 +8,17 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {Repo} from '../../../shared/GitHubSchema'
-
-import {Settings,Constants} from '../../../shared'
-
-// export interface IAuthState {
-// 	authenticated?:boolean
-// 	username?:string
-// 	email?:string
-// 	token?:string
-// 	authenticating?:boolean
-// 	error?:Error
-// }
+import {Repo, AvailableRepo} from 'shared/GitHubModels'
+import {Settings,Constants} from 'shared'
 
 @RecordModel()
 class RepoStateModel {
 
-
+	@RecordProperty()
+	selectedRepos:AvailableRepo[]
 
 	@RecordProperty()
-	availableRepos:Repo[]
+	availableRepos:AvailableRepo[]
 
 	@RecordProperty()
 	repos:Repo[]
@@ -46,7 +36,7 @@ class RepoStateModel {
 	 * @param repos
 	 * @returns {RepoStateModel}
 	 */
-	setAvailableRepos(repos:Repo[]) {
+	setAvailableRepos(repos:AvailableRepo[]) {
 		this.availableRepos = repos
 		return this
 	}
@@ -64,10 +54,36 @@ class RepoStateModel {
 
 
 	setRepo(repo:Repo) {
+		Settings.repoId = repo.id
 		this.repo = repo
 		return this
 	}
 
+	clearSelectedRepos() {
+		this.selectedRepos = []
+		return this
+	}
+
+	setRepoSelected(selectedAvailRepo:AvailableRepo,selected:boolean) {
+		this.selectedRepos = (selected) ?
+			_.uniq(this.selectedRepos.concat([selectedAvailRepo])) :
+			this.selectedRepos.filter(availRepo => availRepo.id !== selectedAvailRepo.id)
+		return this
+	}
+
+	updateAvailableRepo(updatedAvailRepo:AvailableRepo) {
+		const index = this.availableRepos.findIndex(availRepo => availRepo.id === updatedAvailRepo.id)
+		this.availableRepos = Array.from(this.availableRepos)
+
+		if (index > -1) {
+			this.availableRepos[index] = updatedAvailRepo
+		} else {
+			this.availableRepos.push(updatedAvailRepo)
+		}
+
+		return this
+
+	}
 
 	setError(err:Error) {
 		this.error = err
@@ -78,9 +94,10 @@ class RepoStateModel {
 
 
 const RepoStateDefaults = {
-	repo: Settings.repo,
-	repos: Settings.repos,
-	availableRepos: Settings.availableRepos
+	repo: null,
+	repos: [],
+	availableRepos: [],
+	selectedRepos: []
 }
 
 export const RepoState = makeRecord(RepoStateModel,RepoStateDefaults)

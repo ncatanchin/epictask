@@ -24,9 +24,14 @@ export class PageLink {
 	 */
 	static parseLinkHeader(rawHeader:string) {
 		if (!rawHeader)
-			return []
+			return {}
 
-		return rawHeader.split(',').map(rawLink => new PageLink(rawLink))
+		return rawHeader.split(',')
+			.map(rawLink => new PageLink(rawLink))
+			.reduce((linkMap,nextLink) => {
+				linkMap[nextLink.type] = nextLink
+				return linkMap
+			},{})
 	}
 
 	/**
@@ -64,7 +69,7 @@ export class PagedArray<T extends any> extends Array<T> {
 	 */
 	get isLastPage() {
 		const lastPageLink = this.pageLinks[PageLinkType.last]
-		return !lastPageLink || lastPageLink.pageNumber === this.pageNumber
+		return _.isNil(lastPageLink) || lastPageLink.pageNumber === this.pageNumber
 	}
 
 }

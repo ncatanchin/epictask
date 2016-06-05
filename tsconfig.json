@@ -11,18 +11,125 @@
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
 		"baseUrl": "./src",
+		"outDir": "./dist/tsc",
 		"paths": {
-			"epictask": ["./epictask/*"],
-			"epictask/*": ["./epictask/*"],
-			"components": ["./epictask/app/components/index.ts"],
-			"components/*": ["./epictask/app/components/*"]
-
+			"epictask/*": [
+				"./epictask/*"
+			],
+			"app": [
+				"./epictask/app/index.ts"
+			],
+			"app/*": [
+				"./epictask/app/*"
+			],
+			"shared": [
+				"./epictask/shared/index.ts"
+			],
+			"shared/*": [
+				"./epictask/shared/*"
+			],
+			"main": [
+				"./epictask/main/index.ts"
+			],
+			"main/*": [
+				"./epictask/main/*"
+			],
+			"components": [
+				"./epictask/app/components/index.ts"
+			],
+			"components/*": [
+				"./epictask/app/components/*"
+			]
 		}
 	},
 	"exclude": [
-		"node_modules/**/*.*",
 		"node_modules",
-		"**/node_modules",
 		"dist"
-	]
+	],
+	"filesGlob": [
+		"typings/index.d.ts",
+		"src/**/*.ts",
+		"src/**/*.tsx"
+	],
+	"files": [
+		"typings/index.d.ts",
+		"src/epictask/app/actions/AppActionFactory.ts",
+		"src/epictask/app/actions/AppReducer.ts",
+		"src/epictask/app/actions/AppState.ts",
+		"src/epictask/app/actions/auth/AuthActionFactory.ts",
+		"src/epictask/app/actions/auth/AuthReducer.ts",
+		"src/epictask/app/actions/auth/AuthState.ts",
+		"src/epictask/app/actions/auth/index.ts",
+		"src/epictask/app/actions/index.ts",
+		"src/epictask/app/actions/repo/index.ts",
+		"src/epictask/app/actions/repo/RepoActionFactory.ts",
+		"src/epictask/app/actions/repo/RepoReducer.ts",
+		"src/epictask/app/actions/repo/RepoState.ts",
+		"src/epictask/app/actions/routing/index.ts",
+		"src/epictask/app/actions/routing/RoutingComponentSetupBackup.ts",
+		"src/epictask/app/actions/routing/RoutingMessage.ts",
+		"src/epictask/app/actions/routing/RoutingReducer.ts",
+		"src/epictask/app/actions/routing/RoutingState.ts",
+		"src/epictask/app/actions/search/index.ts",
+		"src/epictask/app/actions/search/SearchActionFactory.ts",
+		"src/epictask/app/actions/search/SearchReducer.ts",
+		"src/epictask/app/actions/search/SearchState.ts",
+		"src/epictask/app/AppEntry.ts",
+		"src/epictask/app/AppGlobals.ts",
+		"src/epictask/app/components/common/index.ts",
+		"src/epictask/app/components/index.ts",
+		"src/epictask/app/components/pages/index.ts",
+		"src/epictask/app/components/repos/index.ts",
+		"src/epictask/app/components/root/index.ts",
+		"src/epictask/app/components/search/index.ts",
+		"src/epictask/app/services/AppStateService.ts",
+		"src/epictask/app/services/index.ts",
+		"src/epictask/app/services/SearchStateService.ts",
+		"src/epictask/app/store/AppStore.ts",
+		"src/epictask/app/store/index.ts",
+		"src/epictask/app/themes/DarkTheme.ts",
+		"src/epictask/app/themes/index.ts",
+		"src/epictask/main/auth/GitHubOAuthWindow.ts",
+		"src/epictask/main/MainBoot.ts",
+		"src/epictask/main/MainEntry.ts",
+		"src/epictask/main/MainLogging.ts",
+		"src/epictask/main/MainWindow.ts",
+		"src/epictask/shared/AppStateType.ts",
+		"src/epictask/shared/CommonEntry.ts",
+		"src/epictask/shared/Constants.ts",
+		"src/epictask/shared/DBService.ts",
+		"src/epictask/shared/GitHubClient.ts",
+		"src/epictask/shared/GitHubModels.ts",
+		"src/epictask/shared/Globals.ts",
+		"src/epictask/shared/index.ts",
+		"src/epictask/shared/LogCategories.js",
+		"src/epictask/shared/PagedArray.ts",
+		"src/epictask/shared/Settings.ts",
+		"src/epictask/shared/util/ContextUtils.ts",
+		"src/epictask/shared/util/Decorations.ts",
+		"src/epictask/shared/util/Files.ts",
+		"src/epictask/shared/util/JSONUtil.ts",
+		"src/epictask/shared/util/ObjectUtil.ts",
+		"src/epictask/shared/util/Templates.ts",
+		"src/epictask/app/components/common/MIcon.tsx",
+		"src/epictask/app/components/debug/DevTools.tsx",
+		"src/epictask/app/components/issues/IssueDetailPanel.tsx",
+		"src/epictask/app/components/issues/IssuesPanel.tsx",
+		"src/epictask/app/components/pages/HomePage.tsx",
+		"src/epictask/app/components/pages/LoginPage.tsx",
+		"src/epictask/app/components/pages/Page.tsx",
+		"src/epictask/app/components/pages/VerifyLoginPage.tsx",
+		"src/epictask/app/components/repos/RepoList.tsx",
+		"src/epictask/app/components/repos/RepoPanel.tsx",
+		"src/epictask/app/components/root/AppBodyComponent.tsx",
+		"src/epictask/app/components/root/AppRoot.tsx",
+		"src/epictask/app/components/root/HeaderComponent.tsx",
+		"src/epictask/app/components/root/RootContainerComponent.tsx",
+		"src/epictask/app/components/search/SearchPanel.tsx",
+		"src/epictask/app/components/search/SearchResultsList.tsx",
+		"src/epictask/app/ThemeManager.tsx"
+	],
+	"atom": {
+		"rewriteTsconfig": true
+	}
 }

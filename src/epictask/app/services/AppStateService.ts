@@ -3,6 +3,7 @@ import {getStore} from '../store'
 import {AppActionFactory,} from '../actions'
 import {AuthActionFactory} from '../actions/auth'
 import {RepoActionFactory} from '../actions/repo'
+import {Settings} from '../../shared/Settings'
 
 
 const log = getLogger(__filename)
@@ -25,7 +26,23 @@ async function updateStateType() {
 	if (stateType === AppStateType.AuthVerify) {
 		authActions.verify()
 	} else if (stateType === AppStateType.Home) {
-		repoActions.getAvailableRepos()
+		await Promise.all([repoActions.getAvailableRepos(),repoActions.getRepos()])
+
+
+		const repoId = Settings.repoId
+		if (repoId) {
+			log.info('Looking for previous repo id',repoId)
+			for (let repo of repoActions.state.repos) {
+				if (repo.id === repoId) {
+					log.info('Previously opened: ',repoId,repo)
+					repoActions.setRepo(repo)
+					break
+				}
+			}
+		}
+
+		repoActions.syncRepos()
+
 	}
 }
 

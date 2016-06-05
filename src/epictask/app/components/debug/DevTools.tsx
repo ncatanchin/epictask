@@ -9,19 +9,13 @@ const Inspector = require('redux-devtools-inspector').default
 const LogMonitor = require('redux-devtools-log-monitor').default
 
 export = createDevTools(
-	<DockMonitor toggleVisibilityKey="ctrl-h"
-	             changePositionKey="ctrl-q"
-	             changeMonitorKey='ctrl-m'
-				defaultPosition="bottom">
+    <DockMonitor toggleVisibilityKey="ctrl-h"
+        changePositionKey="ctrl-q"
+        changeMonitorKey='ctrl-m'
+        defaultPosition="bottom">
 
-		<LogMonitor theme={'tomorrow'}/>
-		<SliderMonitor/>
-		<Inspector theme={'tomorrow'} supportImmutable={true} isLightTheme={false}/>
-
-
-
-	</DockMonitor>
+        <LogMonitor theme={'tomorrow'}/>
+				<Inspector theme={'tomorrow'} supportImmutable={true} isLightTheme={false}/>
+        <SliderMonitor/>
+    </DockMonitor>
 )
-
-
-

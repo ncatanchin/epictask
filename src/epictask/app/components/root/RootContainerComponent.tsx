@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {HeaderComponent} from './'
+import {HeaderComponent} from 'components'
 
 const log = getLogger(__filename)
 

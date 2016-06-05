@@ -6,7 +6,8 @@
   "scripts": {
     "test": "gulp compile test",
     "test-watch": "gulp compile-watch",
-    "start-dev": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./dist/MainEntry.js"
+    "start-dev": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./dist/MainEntry.js",
+    "start-dev-debug": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js"
   },
   "bin": {
     "electron": "./node_modules/.bin/electron"
@@ -28,11 +29,13 @@
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.4",
     "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-bluebird-async-functions": "^1.2.0",
     "babel-plugin-module-alias": "^1.4.0",
     "babel-plugin-react-transform": "^2.0.2",
     "babel-plugin-transform-runtime": "^6.8.0",
     "babel-plugin-webpack-loaders": "^0.4.0",
     "babel-polyfill": "^6.8.0",
+    "babel-preset-async-to-bluebird": "^1.1.0",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-es2015-native-modules": "^6.6.0",
     "babel-preset-react": "^6.5.0",
@@ -109,8 +112,8 @@
     "style-loader": "^0.13.1",
     "typedoc": "sierrasoftworks/typedoc#v1.8.10",
     "typescript": "^1.9.0-dev.20160601-1.0",
+    "typestore-mocks": "^0.1.7",
     "vinyl-named": "^1.1.0",
-    "typestore-mocks":  "^0.1.7",
     "webpack": "^2.1.0-beta.8",
     "webpack-dev-middleware": "^1.6.1",
     "webpack-dev-server": "^2.1.0-beta.0",
@@ -121,15 +124,18 @@
   },
   "dependencies": {
     "babel-runtime": "^6.9.0",
+    "bluebird": "^3.4.0",
     "client-oauth2": "^2.2.0",
     "core-js": "^2.4.0",
     "cryptr": "^2.0.0",
     "css-modules-require-hook": "^4.0.0",
     "dataurl": "^0.1.0",
     "debug": "^2.2.0",
+    "dexie": "^1.3.6",
     "electron-is-dev": "^0.1.1",
     "electron-oauth-github": "jglanz/electron-oauth-github",
     "electron-window-state": "^3.0.3",
+    "element-class": "^0.2.2",
     "enhanced-require": "^0.5.0-beta6",
     "flexbox-react": "^2.0.0",
     "font-awesome": "^4.6.3",
@@ -143,10 +149,13 @@
     "material-ui": "^0.15.0",
     "mkdirp": "^0.5.1",
     "node-fetch": "^1.5.3",
+    "node-uuid": "^1.4.7",
     "react": "^15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
+    "react-component-resizable": "^1.0.0",
     "react-css-modules": "^3.7.6",
     "react-dom": "^15.0.2",
+    "react-hotkeys": "^0.8.0",
     "react-redux": "^4.4.5",
     "react-router": "^2.4.1",
     "react-router-redux": "^4.0.4",
@@ -163,7 +172,6 @@
     "typemutant": "densebrain/typemutant",
     "typestore": "^0.1.7",
     "typestore-plugin-indexeddb": "^0.1.7",
-
     "urlsearchparams": "densebrain/URLSearchParams",
     "winston": "^2.2.0"
   }

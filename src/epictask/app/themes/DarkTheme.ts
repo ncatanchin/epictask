@@ -10,6 +10,7 @@ const baseTheme = _.cloneDeep(Styles.darkBaseTheme)
 const navBarHeight = 50
 const windowControlDim = navBarHeight / 5
 
+const palette = require('./Palettes').dark
 
 const {
 	textColor,
@@ -22,9 +23,15 @@ const {
 	accent1ColorText,
 	accent2Color,
 	accent2ColorText,
+	accent3Color,
+	accent3ColorText,
+	accent4Color,
+	accent4ColorText,
+	highlightColor,
+	highlightColorText,
 	alternateBgColor,
 	alternateTextColor
-} = require('./Palettes').dark
+} = palette
 
 
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
@@ -36,7 +43,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 	fontFamily: 'Roboto,sans-serif',
 	fontWeight: 400,
-	
+
 	navBar: {
 		logoStyle: {
 			height: navBarHeight
@@ -57,6 +64,43 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
+
+	repoPanel: {
+		headerStyle: {
+			backgroundColor: accent3Color,
+			// padding: '1rem 1rem'
+		},
+		list: {
+			item: {
+				backgroundColor: accent2Color,
+				opacity: 0.6
+			},
+
+			itemHover: {
+				backgroundColor: accent4Color,
+				opacity: 0.7
+			},
+
+			itemEnabled: {
+				backgroundColor: accent3Color,
+				opacity: 0.8
+			},
+
+			itemSelected: {
+				backgroundColor: highlightColor,
+				color: highlightColorText,
+				opacity: 0.8
+			},
+			itemSelectedHover: {
+				backgroundColor: highlightColor,
+				color: highlightColorText,
+				opacity: 1
+			}
+
+
+		}
+	},
+
 	/**
 	 * Search Panel
 	 */
@@ -64,26 +108,57 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		wrapperStyle: {
 			backgroundColor: primary2Color,
 		},
+
+		wrapperExpandedStyle: {
+
+		},
+
 		hintStyle: {
 			backgroundColor: 'transparent',
 			color: textColor,
 			fontWeight: 100
 		},
+
 		style: {
 			backgroundColor: 'transparent',
 			color: alternateTextColor
+		},
+		focusedStyle: {
+			backgroundColor: alternateBgColor,
+			color: primary3Color
 		}
 	},
 
-	
-	palette: {
-		primary1Color,
-		primary2Color,
-		primary3Color,
-		accent1Color,
-		accent2Color,
-		canvasColor,
-		textColor,
-		alternateTextColor
-	}
+	searchResults: {
+		result: {
+			normal: {
+				backgroundColor: textColor,
+				color: canvasColor
+			},
+			selected: {
+				backgroundColor: highlightColor,
+				color: highlightColorText
+			}
+		},
+
+		content: {
+			label: {
+
+			},
+			action: {
+
+			},
+			type: {
+				backgroundColor: accent2Color,
+				color: accent2ColorText
+			},
+			selected: {
+
+			}
+
+		}
+	},
+
+
+	palette
 }))

@@ -1,7 +1,19 @@
-import {ModelDescriptor,AttributeDescriptor} from 'typestore'
+import {
+	ModelDescriptor,
+	AttributeDescriptor,
+	FinderDescriptor,
+	DefaultModel,
+	DefaultValue,
+	Repo as TSRepo
+} from 'typestore'
+
+import * as uuid from 'node-uuid'
+import * as _ from 'lodash'
+import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+import {getRepo} from './DBService'
 
 @ModelDescriptor()
-export class User {
+export class User extends DefaultModel {
 
 
 	@AttributeDescriptor({primaryKey:true})
@@ -28,13 +40,16 @@ export class User {
 	site_admin: boolean;
 
 	constructor(props = {}) {
+		super()
 		Object.assign(this,props)
 	}
 
 
 }
 
-export class Label {
+@ModelDescriptor()
+export class Label extends DefaultModel {
+	@AttributeDescriptor({primaryKey:true})
 	url: string;
 
 
@@ -42,12 +57,13 @@ export class Label {
 	color: string;
 
 	constructor(props = {}) {
+		super()
 		Object.assign(this,props)
 	}
 }
 
 @ModelDescriptor()
-export class Milestone {
+export class Milestone extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -70,6 +86,7 @@ export class Milestone {
 	due_on: Date;
 
 	constructor(props = {}) {
+		super()
 		Object.assign(this,props)
 	}
 }
@@ -88,10 +105,12 @@ export class PullRequest {
 
 
 @ModelDescriptor()
-export class Issue {
+export class Issue extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
+
+
 	url: string;
 	repository_url: string;
 	labels_url: string;
@@ -115,6 +134,7 @@ export class Issue {
 	closed_by: User;
 
 	constructor(props = {}) {
+		super()
 		Object.assign(this,props)
 	}
 }
@@ -136,7 +156,7 @@ export class Reactions {
 }
 
 @ModelDescriptor()
-export class Comment {
+export class Comment extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -151,6 +171,7 @@ export class Comment {
 	updated_at: Date;
 
 	constructor(props = {}) {
+		super()
 		Object.assign(this,props)
 	}
 }
@@ -166,8 +187,10 @@ export class Permission {
 	}
 }
 
+
+
 @ModelDescriptor()
-export class Repo {
+export class Repo extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -246,11 +269,143 @@ export class Repo {
 	permissions: Permission;
 
 	constructor(props = {}) {
+		super()
+
 		Object.assign(this,props)
 	}
 }
 
+/**
+ * Repository for accessing repos
+ */
+export class RepoRepo extends TSRepo<Repo> {
+	constructor() {
+		super(RepoRepo,Repo)
+	}
 
+	@IndexedDBFinderDescriptor({
+		async fn(repo,...args) {
+			const {table,mapper,db} = repo
+			const limit = args[1] || 5000
+			const query = args[0]
+			return await table
+				.filter(json => _.lowerCase(json.name).indexOf(_.lowerCase(query)) > -1)
+				.limit(limit)
+				.toArray()
+
+			//const jsons = await table.where('name').equalsIgnoreCase(args[0]).toArray()
+			//return jsons.map(json => mapper.fromObject(json))
+		}
+	})
+	@FinderDescriptor()
+	findByName(name:string,limit = null):Promise<Repo[]> {
+		return null
+	}
+
+	@IndexedDBFinderDescriptor({
+		async fn(tsRepo,...args) {
+			const {mapper} = tsRepo
+			return await tsRepo.table.toArray()
+			//return allJson.map(json => mapper.fromObject(json))
+		}
+	})
+	@FinderDescriptor()
+	findAll():Promise<Repo[]> {
+		return null
+	}
+}
+
+
+/**
+ * Maps repos that have been configured for tasks
+ * to real repos
+ *
+ */
+@ModelDescriptor({
+	transientAttrs: ['repo']
+})
+export class AvailableRepo extends DefaultModel {
+
+	@DefaultValue(() => uuid.v4())
+	@AttributeDescriptor({primaryKey:true})
+	id:string
+	repoId:number
+	enabled:boolean
+
+	@AttributeDescriptor({transient:true})
+	repo
+
+	constructor(props = {}) {
+		super()
+
+		Object.assign(this,props)
+	}
+
+
+
+	async getRepo() {
+		if (this.repo)
+			return this.repo
+
+		const repoRepo = getRepo(RepoRepo)
+		const repo = await repoRepo.get(repoRepo.key(this.repoId))
+
+		if (!repo) {
+			throw new Error('Integrated repo must have a valid repo')
+		}
+
+		this.repo = repo
+		return repo
+	}
+}
+
+
+/**
+ * Repository for accessing repos
+ */
+export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
+	constructor() {
+		super(AvailableRepoRepo,AvailableRepo)
+	}
+
+	@IndexedDBFinderDescriptor({
+		async fn(tsRepo,...args) {
+			const allJson = await tsRepo.table.toArray()
+
+			// Finally map the results
+			const repoRepo = getRepo(RepoRepo)
+			return allJson
+				.filter(async (json) => {
+
+					const repo = await repoRepo.get(repoRepo.key(json.repoId))
+
+					return _.lowerCase(repo.name).includes(_.lowerCase(args[0]))
+				})
+
+		}
+	})
+	@FinderDescriptor()
+	findByName(name:string):Promise<AvailableRepo[]> {
+		return null
+	}
+
+
+	@IndexedDBFinderDescriptor({
+		fn(tsRepo,...args) {
+			const {mapper} = tsRepo
+			return tsRepo.table.toArray()
+			// 	.then(allJson => {
+			//
+			// 	return allJson.map(json => mapper.fromObject(json))
+			// })
+		}
+	})
+	@FinderDescriptor()
+	findAll():Promise<AvailableRepo[]> {
+		return null
+	}
+
+}
 
 export function isIssue(o:any):o is Issue {
 	return o.title && o.id && o.labels

@@ -6,17 +6,21 @@
 // Imports
 import * as React from 'react'
 import {Provider, connect} from 'react-redux'
-const {Flexbox, FlexItem} = require('flexbox-react')
+const {HotKeys} = require('react-hotkeys')
+import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexScale,Fill,makeTransition} from 'app/themes'
 
 // Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
-import {RootContainerComponent, HeaderComponent} from './'
-import {getStore} from '../store/AppStore'
-import {getPage} from './pages/index'
-import {AppActionFactory} from '../actions/AppActionFactory'
-import {AppState, TAppState} from '../actions/AppState'
-import {AppStateType,Repo} from 'epictask/shared'
-import {AppKey, RepoKey} from '../../shared/Constants'
+import {HeaderComponent} from 'components'
+import {getStore} from 'app/store/AppStore'
+import {getPage} from 'components/pages'
+import {AppActionFactory} from 'app/actions'
+import {AppState, TAppState} from 'app/actions'
+import {AppStateType,Repo} from 'shared'
+import {AppKey, RepoKey} from 'shared/Constants'
+import * as KeyMaps from 'shared/KeyMaps'
+
+
 const log = getLogger(__filename)
 
 // Build the container
@@ -27,7 +31,7 @@ const store = getStore()
 const appActions = new AppActionFactory()
 
 // DEBUG then load DevTools
-const DevTools = (DEBUG) ? require('./debug/DevTools.tsx') : <div></div>
+const DevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : <div></div>
 
 interface AppProps {
 	store:any
@@ -49,6 +53,8 @@ function mapStateToProps(state) {
 
 const styles = require('./AppRoot.scss')
 
+
+
 /**
  * Root App Component
  */
@@ -56,9 +62,19 @@ const styles = require('./AppRoot.scss')
 @CSSModules(styles)
 class App extends React.Component<AppProps,TAppState> {
 
+	pageBodyHolder
 
 	constructor(props, context) {
 		super(props, context)
+	}
+
+
+
+	keyHandlers = {
+		[KeyMaps.CommonKeys.Escape]: () => {
+			log.info('Escaping and moving focus')
+			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
+		}
 	}
 
 	/**
@@ -74,20 +90,24 @@ class App extends React.Component<AppProps,TAppState> {
 			flexDirection: 'column'
 		}
 
-		
+
 		const bodyCollapsed = (this.props.repo) ? '' : ' ' + styles.collapsed
 
 		return (
 			<MuiThemeProvider muiTheme={this.props.theme}>
 				<Provider store={store.getReduxStore()}>
-					{/* Global flex box */}
-					<div className="fill-height fill-width" styleName="app">
-						<HeaderComponent expanded={!this.props.repo} className={styles.header}/>
-						<div style={contentStyles} className={styles.content + bodyCollapsed}>
-							<page.component />
+					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
+						{/* Global flex box */}
+						<div className="fill-height fill-width" styleName="app">
+							<HeaderComponent expanded={!this.props.repo} className={styles.header}/>
+							<HotKeys ref={(c) => this.pageBodyHolder = c} style={makeStyle(FlexScale,FlexColumn)}>
+								<div style={contentStyles} className={styles.content + bodyCollapsed}>
+									<page.component />
+								</div>
+								<DevTools/>
+							</HotKeys>
 						</div>
-						<DevTools/>
-					</div>
+					</HotKeys>
 				</Provider>
 			</MuiThemeProvider>
 

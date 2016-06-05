@@ -1,9 +1,9 @@
 import * as React from 'react'
-import {AuthActionFactory} from '../actions/auth/AuthActionFactory'
-import {getStore} from '../store'
-import {Themeable} from '../ThemeManager'
-import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
-import {SearchPanel} from './'
+import {AuthActionFactory} from 'app/actions/auth/AuthActionFactory'
+import {getStore} from 'app/store'
+import {Themeable} from 'app/ThemeManager'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
+import {SearchPanel} from 'components'
 
 const styles = require('./HeaderComponent.scss')
 const log = getLogger(__filename)
@@ -48,6 +48,7 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 
 
 
+
 	render() {
 		const theme = getTheme()
 		const {expanded} = this.props
@@ -55,17 +56,12 @@ export class HeaderComponent extends React.Component<IHeaderProps,any> {
 		let {logoStyle,style,controlStyle} = theme.navBar
 		let logoClazz = styles[expanded ? 'logo-expanded' : 'logo']
 		let headerClazz = styles[expanded ? 'header-expanded' : 'header']
+
 		style = Object.assign({},style,{
 			height: (expanded) ? '100%' : style.height
 		})
 
-		const imgStyle = !expanded ? {} :  {
-			maxHeight: '20%',
-			maxWidth:  '25%'
-		}
-
-
-		return <div className={`${styles.header + ' ' + this.props.className}`} style={style}>
+		return <div className={headerClazz} style={style}>
 			<div styleName='window-controls'>
 				<button className="close fa fa-times" style={controlStyle} onClick={this.windowClose} />
 				<button className="min fa fa-minus" style={controlStyle} onClick={this.windowMin}/>

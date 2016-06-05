@@ -1,4 +1,4 @@
-@import "styles/mixins.global.scss";
+@import "styles/mixins.global";
 
 //Global Container in normal mode
 .searchPanel {
@@ -6,6 +6,9 @@
 	composes: flex-column-center flex-scale from 'styles/flex.css';
 	position: relative;
 	background-color: transparent !important;
+	flex: 1 1 50%;
+	height: 100%;
+	overflow: hidden;
 }
 
 
@@ -20,18 +23,19 @@
 
 }
 
+.inputWrapper {
+	padding: 0 1rem;
+	position: relative;
+	width: 100%;
+}
 
 .searchWrapper {
-
-	padding: 0rem 1rem;
 	position: relative;
-
-	//composes: flex-column-center flex-scale from 'styles/flex.css';
+	width: 100%;
+	border-radius: 0.2rem;
 
 	div {
-		//overflow:hidden;
 		width: 100% !important;
-
 	}
 
 	input {
@@ -50,16 +54,19 @@
 }
 
 .focused {
-	background-color: #{map-get($dark,'alternateBgColor')} !important;
+	// background-color: #{map-get($dark,'alternateBgColor')} !important;
+	border-bottom-left-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
 
 	hr {
 		opacity: 1;
 	}
 
 	input {
-		color: #{map-get($dark,'alternateTextColor')} !important;
+		// color: #{map-get($dark,'alternateTextColor')} !important;
 	}
 }
+
 
 .searchWrapperExpanded {
 	composes: searchWrapper;
@@ -73,12 +80,4 @@
 	transform: translate(-50%,0);
 	//composes: flex-row-center from 'styles/flex.css';
 	//flex: 0 0 auto;
-}
-
-.results {
-
-}
-
-.result {
-	color: #{map-get($dark,'alternateTextColor')} !important;
 }

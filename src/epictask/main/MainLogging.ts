@@ -33,3 +33,16 @@ Object.assign(global as any,{MainLogger:logger,LoggerFactory})
 setLoggerOutput(logger)
 setCategoryLevels(require('../shared/LogCategories'))
 
+declare global {
+	var getLogger:typeof LoggerFactory
+}
+
+
+// Export globals
+Object.assign(global as any,{
+	getLogger: LoggerFactory
+})
+
+export {
+	
+}

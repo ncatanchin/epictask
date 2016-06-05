@@ -7,7 +7,7 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {Issue, isIssue, Repo} from '../../../shared/GitHubSchema'
+import {Issue, isIssue, Repo, AvailableRepo} from '../../../shared/GitHubModels'
 import {getStore} from '../../store'
 import {RepoKey} from '../../../shared/Constants'
 
@@ -17,8 +17,9 @@ export enum SearchResultType {
 	AvailableRepo
 }
 
-export class SearchResult<T extends Issue|Repo> {
+export class SearchResult<T extends Issue|Repo|AvailableRepo> {
 
+	index:number = -1
 	type:SearchResultType
 
 
@@ -26,7 +27,7 @@ export class SearchResult<T extends Issue|Repo> {
 		const repoState = getStore().getState().get(RepoKey)
 
 		this.type = isIssue(value) ? SearchResultType.Issue :
-			_.includes(repoState.repos,value) ? SearchResultType.Repo :
+			(value instanceof Repo) ? SearchResultType.Repo :
 				SearchResultType.AvailableRepo
 	}
 
@@ -44,10 +45,9 @@ export class SearchResults {
 	constructor(all:SearchResult<Repo|Issue>[]) {
 
 
-		all.forEach((item:SearchResult<Repo|Issue>) => {
-			//const searchItem = new SearchResult(item)
+		all.forEach((item:SearchResult<Repo|Issue>,index) => {
+			item.index = index
 
-			//noinspection JSMismatchedCollectionQueryUpdate
 			const itemList:SearchResult<Repo|Issue>[] = ((item.type === SearchResultType.Issue) ?
 				this.issues : (item.type === SearchResultType.Repo) ?
 				this.repos :

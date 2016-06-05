@@ -1,4 +1,4 @@
-import 'reflect-metadata'
+
 
 /**
  * Authentication State Holder
@@ -66,6 +66,8 @@ class AppStateModel {
 		this.error = err
 		return this
 	}
+
+	
 
 }
 

@@ -195,7 +195,8 @@ function loadRootWindow() {
 				label: 'Break',
 				accelerator: 'Command+F8',
 				click() {
-					mainWindow.debugger.attach()
+					//mainWindow.debugger.attach()
+					mainWindow.webContents.executeJavaScript('debugger;')
 				}
 			}, {
 				label: 'Toggle Full Screen',

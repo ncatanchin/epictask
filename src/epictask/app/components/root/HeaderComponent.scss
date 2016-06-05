@@ -1,4 +1,4 @@
-@import "styles/mixins.global.scss";
+@import "../../../assets/styles/mixins.global";
 
 .header {
 	justify-content: flex-end;
@@ -7,6 +7,8 @@
 	flex-basis: auto;
 	flex-grow: 0;
 	flex-shrink: 0;
+
+	padding: 0.3rem 12vw;
 }
 
 
@@ -66,21 +68,21 @@
 .logo {
 	@include make-default-transition();
 	position: absolute;
-	display: flex;
 
 	padding: 1rem 1rem;
-
 
 	align-items: center;
 	justify-content: center;
 
 	top: 0;
 	right: 0;
+	width: 10vw;
+	height: 100%;
 
 	background-image: url('assets/images/epictask-logo.png');
-	background-size: 40%;
+	background-size: contain;
 	background-repeat: no-repeat;
-	background-position: bottom center;
+
 	background-origin: content-box;
 }
 
@@ -95,5 +97,7 @@
 	width: auto;
 	top: 0;
 	left: 0;
+	background-size: 40%;
+	background-position: bottom center;
 
 }

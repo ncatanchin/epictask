@@ -53,25 +53,76 @@ loadThemes()
 
 
 /**
- * ThemeableComponent wrapper
+ * Base state for themed component
  */
-export class ThemedComponent extends React.Component<any,any> {
+export interface IThemedState {
+	theme:any
+}
+
+/**
+ * A component with the theme injected into the state
+ */
+export abstract class BaseThemedComponent<P,S extends IThemedState> extends React.Component<P,S> {
+
 	private observer
 
-	constructor(props,context) {
+	constructor(props,context,state = null) {
 		super(props,context)
-		this.state = {
+
+		this.state = _.assign({},state,this.getNewThemedState() as any) as any
+	}
+
+	getNewThemedState():IThemedState {
+		return {
 			theme: getTheme()
 		}
 	}
 
+	componentDidMount() {
+		this.observer = store.observe([appActions.leaf(),'theme'],() => {
+			this.setState(this.getNewThemedState() as any)
+		})
+	}
+
+	componentWillUnmount() {
+		if (this.observer) {
+			this.observer()
+			this.observer = null
+		}
+	}
+
+}
+
+/**
+ * ThemeableComponent wrapper
+ */
+export class ThemedComponent extends React.Component<any,any> {
+	static childContextTypes = {
+		theme:React.PropTypes.object
+	}
+
+	private observer
+
+
+	constructor(props,context) {
+		super(props,context)
+		this.state = this.getNewState()
+	}
+
+	getNewState() {
+		return {
+			theme: getTheme()
+		}
+	}
+
+	getChildContext() {
+    return this.state
+  }
 
 
 	componentDidMount() {
 		this.observer = store.observe([appActions.leaf(),'theme'],() => {
-			this.setState({
-				theme: getTheme()
-			})
+			this.setState(this.getNewState())
 		})
 	}
 
@@ -97,6 +148,10 @@ export function Themeable() {
 			return <ThemedComponent>
 				<TargetComponent {...props} />
 			</ThemedComponent>
+		}
+
+		TargetComponent.contextTypes = {
+			theme:React.PropTypes.object
 		}
 
 		return ThemedComponentWrapper;

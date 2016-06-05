@@ -1,5 +1,6 @@
 require('../tools/global-env')
 
+
 const ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 const webpack = require('webpack')
 const assert = require('assert')
@@ -39,12 +40,17 @@ module.exports = function (projectConfig) {
 				epictask: path.resolve(baseDir,'src/epictask'),
 				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
 				assets: path.resolve(baseDir,'src/epictask/assets'),
-				components: path.resolve(baseDir,'src/epictask/app/components')
+				components: path.resolve(baseDir,'src/epictask/app/components'),
+				app: path.resolve(baseDir,'src/epictask/app'),
+				shared: path.resolve(baseDir,'src/epictask/shared'),
+				main: path.resolve(baseDir,'src/epictask/main')
 			},
 			modules: [
 				path.resolve(baseDir,'src'),
 				//path.resolve(baseDir,'src/epictask/assets'),
 				path.resolve(baseDir,'node_modules'),
+				// path.resolve(baseDir,'../typestore/packages'),
+				// path.resolve(baseDir,'..'),
 				// path.resolve(baseDir,'../typedux','node_modules'),
 				// path.resolve(baseDir,'../typemutant','node_modules'),
 				//path.resolve(baseDir,'..','node_modules')
@@ -73,6 +79,9 @@ module.exports = function (projectConfig) {
 				DEBUG: isDev,
 				'process.env.NODE_ENV': JSON.stringify(env)
 			})
+			// new webpack.ProvidePlugin({
+			// 	'Promise': 'bluebird'
+			// })
 		],
 		node: {
 			__dirname: true,
@@ -85,6 +94,11 @@ module.exports = function (projectConfig) {
 					/webpack\/hot/,
 					/webpack-hot/,
 					// /typelogger/,
+					/Dexie/,
+					// /typestore-plugin-indexeddb/,
+					// /typestore/,
+					// /typedux/,
+					// /typemutant/,
 					/electron-oauth-github/,
 					/browser-next-tick/,
 					/urlsearchparams/

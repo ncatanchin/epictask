@@ -1,5 +1,5 @@
-const Styles = require('material-ui/styles')
-const {colors:c} = Styles
+//const Styles = require('material-ui/styles')
+const c = require('./Colors')
 
 
 function makeDarkPalette() {
@@ -21,6 +21,12 @@ function makeDarkPalette() {
 	const accent1ColorText = textColor
 	const accent2Color = c.blueGrey700
 	const accent2ColorText = textColor
+	const accent3Color = c.blueGrey800
+	const accent3ColorText = textColor
+	const accent4Color = c.blueGrey900
+	const accent4ColorText = c.lightWhite
+	const highlightColor = c.pink500
+	const highlightColorText = c.white
 
 	return {
 		primary1Color,
@@ -33,6 +39,12 @@ function makeDarkPalette() {
 		accent1ColorText,
 		accent2Color,
 		accent2ColorText,
+		accent3Color,
+		accent3ColorText,
+		accent4Color,
+		accent4ColorText,
+		highlightColor,
+		highlightColorText,
 		canvasColor: bgColor,
 		textColor,
 		alternateBgColor,
@@ -41,7 +53,4 @@ function makeDarkPalette() {
 }
 
 
-
-module.exports = {
-	"dark": makeDarkPalette()
-}
+export const dark = makeDarkPalette()

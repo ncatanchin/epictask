@@ -135,6 +135,9 @@ function runDevServer(port,projectConfig,wpConfig) {
 	// Now server any static assets
 	serverApp.use('/dist',express.static(path.resolve(__dirname,'../../../dist')))
 
+	// Add node specifically for source mappings
+	serverApp.use('/dist',express.static('/Users/jglanz/Development/oss/node-6.1.0/lib'))
+
 	const homePath = process.env.HOME
 	gutil.log('Using home path',homePath)
 	serverApp.use(homePath,express.static(homePath))

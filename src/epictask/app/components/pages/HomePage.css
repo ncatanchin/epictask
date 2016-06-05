@@ -1,8 +1,13 @@
 
-.home-page {
+.homePage {
 
 }
 
-.add-button {
+.addButton {
 
+}
+
+.bodyWrapper {
+	width: 100%;
+	height: 100%;
 }

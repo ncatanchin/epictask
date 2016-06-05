@@ -1,7 +1,48 @@
+// LOGGING CONFIG FIRST
+Object.assign(global as any,{
+	TypeLoggerCategories: require('epictask/shared/LogCategories'),
+	TypeLoggerDefaultLevel: 3
+	
+})
+
+
+// Now everything else
 import 'reflect-metadata'
-
-
 import {getLogger as LoggerFactory} from 'typelogger'
+
+const log = LoggerFactory(__filename)
+
+// OVERRIDE PROMISE - FIRST
+const Bluebird = require('bluebird')
+Bluebird.config({
+	cancellation: true,
+	longStackTraces: true,
+	warnings: true,
+	monitoring: true
+})
+
+Promise = Bluebird
+
+Object.assign(global as any,{Promise:Bluebird})
+
+// if (typeof window !== 'undefined') {
+// 	window.onerror = function(message,url,line) {
+// 		log.error('Window error occured',message,url,line)
+// 	}
+// }
+
+process.on("unhandledRejection", function (reason, promise) {
+	console.trace(reason)
+	log.error(`Epic Task Unhandled Exception`, reason, reason.stack, reason,promise)
+})
+//
+// process.on("rejectionHandled", function (promise) {
+//
+// })
+
+
+
+
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'

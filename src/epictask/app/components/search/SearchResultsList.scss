@@ -1,0 +1,41 @@
+
+@import "styles/mixins.global";
+
+
+.resultsModal {
+	position: absolute;
+	z-index: 100;
+}
+
+.results {
+	@include make-default-transition();
+}
+
+.resultsTitle {
+	font-weight: 900;
+	text-transform: uppercase;
+	padding: 0.3rem 0.8rem;
+
+}
+
+.resultSection {
+	padding: 0.5rem 1rem;
+
+}
+
+.resultSectionTitle {
+	border-bottom: 0.1rem solid transparent;
+	margin-bottom: 0.2rem;
+
+}
+
+.result {
+	composes: flex-row-center flex-scale from 'styles/flex.css'
+}
+
+
+.noResults {
+	font-style: italic;
+	font-size: 0.7rem;
+	opacity: 0.8;
+}

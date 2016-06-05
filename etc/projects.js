@@ -6,7 +6,7 @@ const path = require('path')
 const baseDir = path.resolve(__dirname,'..')
 const getPort = require('get-port')
 const rendererReady = new Deferred()
-
+const gutil = require('gulp-util')
 
 
 
@@ -19,7 +19,10 @@ function makeConfigs() {
 		 */
 		"electron-main": {
 			targetType: TargetType.ElectronMain,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.main.json`,'main',require('./awesome-typescript-loader-options')),
+			tsconfig: makeTsConfig(
+				`${baseDir}/.tsconfig.main.json`,
+				'main',
+				require('./awesome-typescript-loader-options')),
 			onCompileCallback(err,stats,watchMode = false) {
 				log.info('Compile callback main!!!',err,isDev,watchMode)
 				if (err) {
@@ -70,7 +73,7 @@ function makeConfigs() {
 		// Get target information
 		const {targetType} = projectConfig
 		const targetEnv = targetType.env[env]
-
+		gutil.log('target type',targetType,targetEnv)
 
 
 		projectConfig.webpackConfig = Object.assign({},{

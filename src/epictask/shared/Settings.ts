@@ -1,8 +1,7 @@
-import 'reflect-metadata'
 import * as fs from 'fs'
 import {getUserDataFilename, readFileSync} from './util/Files'
 import {Property} from "./util/Decorations";
-import {Repo} from './GitHubSchema'
+import {Repo} from './GitHubModels'
 import {toJSON} from "./util/JSONUtil";
 
 const log = getLogger(__filename)
@@ -48,17 +47,10 @@ class SettingsFile {
 	isLoaded:boolean
 
 	@Property(visiblePropOpts)
-
 	token:string
 
 	@Property(visiblePropOpts)
-	availableRepos:Repo[]
-	
-	@Property(visiblePropOpts)
-	repos:Repo[]
-
-	@Property(visiblePropOpts)
-	repo:Repo
+	repoId:number
 
 	save() {
 		const settingsToSave = JSON.stringify(this,(k,v) => {

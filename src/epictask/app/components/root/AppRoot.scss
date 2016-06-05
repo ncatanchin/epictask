@@ -1,4 +1,4 @@
-@import "styles/mixins.global.scss";
+@import "../../../assets/styles/mixins.global";
 
 .app {
 	composes: flex-column flex-scale from 'styles/flex.css';
@@ -12,18 +12,12 @@
 
 .header {
 	composes: flex-row-center from 'epictask/assets/styles/flex.css';
-
 }
-
-
-
 
 .content {
 	flex-basis: 0;
 	flex-grow: 1;
 	flex-shrink: 1;
-
-
 }
 
 .collapsed {

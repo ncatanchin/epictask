@@ -1,5 +1,3 @@
-import 'reflect-metadata'
-
 import {JSONKey} from '../Constants'
 import {isNil} from './ObjectUtil'
 /**

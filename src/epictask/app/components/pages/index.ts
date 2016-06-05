@@ -1,9 +1,9 @@
 
-import {AppStateType} from '../../../shared'
+import {AppStateType} from 'shared'
 import {LoginPage} from './LoginPage'
 import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
-import {AppActionFactory} from '../../actions/AppActionFactory'
+import {AppActionFactory} from 'app/actions'
 
 const appActions = new AppActionFactory()
 
