@@ -167,8 +167,8 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * the goal being to limit object creation
 	 */
 
-	//@EnumerableProperty(false)
-	private recordMutating
+	@EnumerableProperty(false)
+	recordMutating
 
 	/**
 	 * Current object mutable
@@ -182,21 +182,22 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 */
 	private record
 
-
-	//@EnumerableProperty(false)
-	private typeClazz
-
-	//@EnumerableProperty(false)
+	/**
+	 * the final class intersection
+	 */
 	private finalClazz
 
-	//@EnumerableProperty(false)
-	private modelClazz
+	@EnumerableProperty(false)
+	typeClazz
 
-	//@EnumerableProperty(false)
-	private propTypeMap
+	@EnumerableProperty(false)
+	modelClazz
 
-	//@EnumerableProperty(false)
-	private recordType
+	@EnumerableProperty(false)
+	propTypeMap
+
+	@EnumerableProperty(false)
+	recordType
 
 	/**
 	 * Is the current instance mutable
@@ -223,14 +224,6 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * @param recordType - the Record.Class
 	 * @param props - initial properties
 	 */
-	// constructor(
-	// 	typeClazz:{new():TT},
-	// 	finalClazz:any,
-	// 	modelClazz:{new():T},
-	// 	propTypeMap,
-	// 	recordType:Immutable.Record.Class,
-	// 	props?:any
-	// )
 	constructor(
 		typeClazz?:{new():TT},
 		finalClazz?:any,
@@ -241,10 +234,17 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	){
 
 		this.typeClazz = typeClazz
-		this.finalClazz = finalClazz
+
 		this.modelClazz = modelClazz
 		this.propTypeMap = propTypeMap
 		this.recordType = recordType
+
+		// Final clazz MUST be hidden in the constructor so that
+		// clone understands its type
+		Object.defineProperty(this,'finalClazz',{
+			enumerable: false,
+			value: finalClazz
+		})
 
 		if (!this.record)
 			this.record = new recordType(props)
