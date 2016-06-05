@@ -37,7 +37,7 @@ export function RecordModel(opts = {}) {
 	return target => {
 		Reflect.defineMetadata('test',target,{hello:'hello'})
 		const targetType = Reflect.getMetadata('design:type',target)
-		console.log('In decorator',targetType)
+		log.debug('In decorator',targetType)
 	}
 }
 
