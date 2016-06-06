@@ -1,12 +1,21 @@
 const log = getLogger(__filename)
 
 import * as React from 'react'
-import {AuthActionFactory} from '../../actions/auth/AuthActionFactory'
+import {AuthActionFactory} from 'app/actions'
 import {CircularProgress} from 'material-ui'
-const {Flexbox, FlexItem} = require('flexbox-react')
+import {Page} from '../common'
 
-const styles = require('./VerifyLoginPage.css')
 const authActions = new AuthActionFactory()
+
+const styles = {
+	page: makeStyle(FlexColumnCenter,FlexScale,{
+		WebkitAppRegion: 'drag'
+	}),
+
+	panel: makeStyle(FlexAuto,{
+
+	})
+}
 
 /**
  * The root container for the app
@@ -15,19 +24,20 @@ export class VerifyLoginPage extends React.Component<any,any> {
 
 
 	render() {
+		const theme = getTheme()
+		const {palette} = theme
+		const pageStyle = makeStyle(styles.page,{
+			backgroundColor: palette.accent4Color,
+			color: palette.accent4ColorText
+		})
+
 		return (
-			<Flexbox flexDirection="row" justifyContent="center" minHeight="100vh" minWidth="100vw"
-			         styleName="verifyLoginPage">
+			<Page style={pageStyle}>
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				<FlexItem alignSelf="center">
-					{/*Verify*/}
+				<div style={styles.panel}>
 					<CircularProgress size={2} />
-
-
-				</FlexItem>
-
-
-			</Flexbox>
+				</div>
+			</Page>
 		)
 	}
 }

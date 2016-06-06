@@ -4,7 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {TRepoState,RepoActionFactory,AppActionFactory} from 'app/actions'
+import {TRepoState,RepoActionFactory,AuthActionFactory,AppActionFactory} from 'app/actions'
 import {RepoList,MIcon} from 'components'
 import {Drawer,RaisedButton} from 'material-ui'
 
@@ -18,6 +18,8 @@ const log = getLogger(__filename)
 //const styles = require("./RepoPanel.css")
 const repoActions = new RepoActionFactory()
 const appActions = new AppActionFactory()
+const authActions = new AuthActionFactory()
+
 import { connect } from 'react-redux'
 import {Themeable} from 'app/ThemeManager'
 import {makeStyle,rem,FlexColumn,FlexScale,FlexAuto,FlexAlignEnd,FlexRow,Ellipsis,FlexRowCenter,FlexColumnCenter,Fill,FillWidth,makeTransition} from 'app/themes'
@@ -100,9 +102,9 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 	onBlur = () => {
 		repoActions.clearSelectedRepos()
 	}
-	
+
 	keyHandlers = {
-		
+
 	}
 
 	render() {
@@ -122,8 +124,21 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 							label=""
 							fullWidth={true}
 							labelStyle={styles.headerButtonLabel}
-							icon={<MIcon extraStyle={styles.headerButtonIcon}>add</MIcon>}
-							>
+							icon={<MIcon extraStyle={styles.headerButtonIcon}>add</MIcon>}>
+						</RaisedButton>
+					</div>
+					<div style={makeStyle(styles.header,headerStyle)}>
+						<RaisedButton
+							backgroundColor={p.accent4Color}
+							style={styles.headerButton}
+							labelColor={p.textColor}
+							labelPosition='before'
+							label="sign-out"
+							fullWidth={true}
+							labelStyle={styles.headerButtonLabel}
+							onClick={() => authActions.logout()}
+							icon={<MIcon extraStyle={styles.headerButtonIcon} className='fa fa-sign-out'></MIcon>}
+						>
 						</RaisedButton>
 					</div>
 					<div style={styles.listContainer}>

@@ -6,8 +6,6 @@ import {Repo, User, Milestone, Issue, Comment, AvailableRepo}  from './GitHubMod
 
 export type TRepoMap = {[name:string]:TSRepo<any>}
 
-
-
 export let coordinator:TSCoordinator = null
 export let repos:TRepoMap = null
 export let storePlugin:IndexedDBPlugin = null
@@ -16,7 +14,8 @@ async function start() {
 
 	// Create the store Plugin first
 	storePlugin = new IndexedDBPlugin({
-		databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`
+		databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
+		version: 1
 	})
 
 

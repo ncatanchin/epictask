@@ -34,7 +34,11 @@ export class MIcon extends React.Component<any,any> {
 	}
 
 	render() {
-		const className = (this.props.className || '') + ' ' + 'material-icons'
+		let className = this.props.className || ''
+		if (className.indexOf('fa') === -1) {
+			className += ' material-icons'
+		}
+		
 		const style:any = Object.assign({},this.props.style || {},this.props.extraStyle)
 
 		if (this.props.fontSize) {

@@ -8,7 +8,7 @@ const store = getStore()
 const log = getLogger(__filename)
 const appActions = new AppActionFactory()
 
-
+import * as Styles from 'app/styles'
 
 /**
  * Define our dark palette

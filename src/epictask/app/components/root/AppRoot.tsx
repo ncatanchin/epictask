@@ -2,16 +2,15 @@
  * Content root for epicly
  */
 
-
 // Imports
 import * as React from 'react'
 import {Provider, connect} from 'react-redux'
 const {HotKeys} = require('react-hotkeys')
-import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexScale,Fill,makeTransition} from 'app/themes'
+import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexScale,Fill,makeTransition} from 'app/styles'
 
 // Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
-import {HeaderComponent} from 'components'
+import {Header,HeaderVisibility} from 'components'
 import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'app/actions'
@@ -40,6 +39,27 @@ interface AppProps {
 	availableRepos?:AvailableRepo[]
 }
 
+// Styles
+const styles = {
+	app: makeStyle(FlexColumn,FlexScale,{
+		overflow: 'hidden'
+	}),
+
+	header: makeStyle(makeTransition(), FlexRowCenter, {
+
+	}),
+
+	content: makeStyle(makeTransition(), FlexColumn,{
+		flexBasis: 0,
+		flexGrow: 1,
+		flexShrink: 1
+	}),
+
+	collapsed: makeStyle({flexGrow: 0})
+}
+
+
+
 // Redux state -> props
 function mapStateToProps(state) {
 	const appState = state.get(AppKey)
@@ -51,7 +71,7 @@ function mapStateToProps(state) {
 	}
 }
 
-const styles = require('./AppRoot.scss')
+//const styles = require('./AppRoot.scss')
 
 
 
@@ -59,7 +79,6 @@ const styles = require('./AppRoot.scss')
  * Root App Component
  */
 @connect(mapStateToProps)
-@CSSModules(styles)
 class App extends React.Component<AppProps,TAppState> {
 
 	pageBodyHolder
@@ -81,32 +100,36 @@ class App extends React.Component<AppProps,TAppState> {
 	 * Render the app container
 	 */
 	render() {
-		const page = {component: getPage(this.props.stateType)}
-		const {theme} = this.props
-		const contentStyles = {
-			backgroundColor: theme.palette.canvasColor,
-			flex: '1 1 0',
-			display: 'flex',
-			flexDirection: 'column'
-		}
-
-		const {availableRepos} = this.props
-		const expanded = !availableRepos || availableRepos.length === 0
-
-		const bodyCollapsed = (!expanded) ? '' : ' ' + styles.collapsed
+		const {availableRepos,stateType,theme} = this.props
+		const
+			page = {component: getPage(stateType)},
+			expanded = stateType > AppStateType.AuthLogin && (!availableRepos || availableRepos.length === 0),
+			contentStyles = makeStyle(styles.content, {
+				backgroundColor: theme.palette.canvasColor,
+				display: 'flex',
+				flexDirection: 'column'
+			},expanded && styles.collapsed),
+			headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
+				(expanded) ? HeaderVisibility.Expanded :
+					HeaderVisibility.Normal
 
 		return (
 			<MuiThemeProvider muiTheme={this.props.theme}>
 				<Provider store={store.getReduxStore()}>
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
 						{/* Global flex box */}
-						<div className="fill-height fill-width" styleName="app">
-							<HeaderComponent expanded={expanded} className={styles.header}/>
-							<HotKeys ref={(c) => this.pageBodyHolder = c} style={makeStyle(FlexScale,FlexColumn)}>
-								<div style={contentStyles} className={styles.content + bodyCollapsed}>
+						<div className="fill-height fill-width" style={styles.content}>
+							<Header visibility={headerVisibility}/>
+							<HotKeys ref={(c) => this.pageBodyHolder = c}
+							         style={makeStyle(FlexScale,FlexColumn)}>
+
+								<div style={contentStyles}>
 									<page.component />
 								</div>
+
+								{/* DevTools */}
 								<DevTools/>
+
 							</HotKeys>
 						</div>
 					</HotKeys>
@@ -130,22 +153,12 @@ function render() {
 	)
 }
 
-//if (appActions.state.theme)
 render()
-
-// Observe theme changes
-// let observer = store.observe([appActions.leaf(),'theme'],() => {
-// 	log.info('Theme change received')
-// 	render()
-// })
 
 if (module.hot) {
 	module.hot.accept()
 	module.hot.dispose(() => {
-		// if (observer) {
-		// 	observer()
-		// 	observer = null
-		// }
+		log.info('HMR - App Root Disposed')
 	})
 }
 

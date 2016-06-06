@@ -55,6 +55,18 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 		}
 	}
 
+
+
+	@Action()
+	logout() {
+		return (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+			const appActions = gAppActions.withDispatcher(dispatch,getState)
+			actions.setToken(null)
+			appActions.setStateType(AppStateType.AuthLogin)
+		}
+	}
+
 	@Action()
 	authenticate() {
 		return (dispatch,getState) => {

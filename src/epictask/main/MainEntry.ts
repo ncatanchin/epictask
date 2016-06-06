@@ -27,7 +27,7 @@ log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
  */
 if (DEBUG) {
 	app.commandLine.appendSwitch('remote-debugging-port', '8315');
-	
+
 	//app.commandLine.appendSwitch('hostname-rules', 'MAP * 127.0.0.1');
 
 }

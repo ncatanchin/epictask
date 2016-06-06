@@ -1,14 +1,20 @@
 import * as React from 'react'
 const log = getLogger(__filename)
-const {remote,ipcRenderer} = require('electron')
-import {Link} from 'react-router'
+
 import {RaisedButton,FontIcon} from 'material-ui'
 import {AuthActionFactory} from '../../actions/auth/AuthActionFactory'
 import {Page} from '../common'
 
-const {Flexbox,FlexItem} = require('flexbox-react')
+const styles = {
+	page: makeStyle(FlexColumnCenter,FlexScale,{
+		WebkitAppRegion: 'drag'
+	}),
+	
+	panel: makeStyle(FlexAuto,{
+		
+	})
+}
 
-const styles = require('./LoginPage.css')
 const authActions = new AuthActionFactory()
 
 /**
@@ -22,19 +28,25 @@ export class LoginPage extends React.Component<any,any> {
 
 
 	render() {
-
+		const theme = getTheme()
+		const {palette} = theme
+		const pageStyle = makeStyle(styles.page,{
+			backgroundColor: palette.accent4Color,
+			color: palette.accent4ColorText
+		})
+		
 		return (
-			<Page styleName="loginPage">
+			<Page style={pageStyle} id='loginPage'>
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				<FlexItem alignSelf="center">
+				<div style={styles.panel}>
 					<RaisedButton
 						label="Authenticate GitHub"
 						primary={true}
-						onMouseUp={() => authActions.authenticate()}
+						onClick={() => authActions.authenticate()}
 						icon={<FontIcon className="fa fa-github" />}
 					/>
 
-				</FlexItem>
+				</div>
 			</Page>
 		)
 	}

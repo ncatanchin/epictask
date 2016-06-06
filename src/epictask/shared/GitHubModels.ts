@@ -329,7 +329,11 @@ export class AvailableRepo extends DefaultModel {
 	@DefaultValue(() => uuid.v4())
 	@AttributeDescriptor({primaryKey:true})
 	id:string
+
+	@AttributeDescriptor({index:{unique:true,name:'repoId'}})
 	repoId:number
+
+	@AttributeDescriptor()
 	enabled:boolean
 
 	@AttributeDescriptor({transient:true})
@@ -340,7 +344,6 @@ export class AvailableRepo extends DefaultModel {
 
 		Object.assign(this,props)
 	}
-
 
 
 	async getRepo() {

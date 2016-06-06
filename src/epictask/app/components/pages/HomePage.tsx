@@ -15,10 +15,13 @@ import {MIcon} from '../common'
 
 const Resizable = require('react-component-resizable')
 
-const styles = require('./HomePage.css')
 const repoActions = new RepoActionFactory()
 const authActions = new AuthActionFactory()
 const appActions = new AppActionFactory()
+
+const styles = {
+	bodyWrapper: makeStyle(FlexScale,Fill)
+}
 
 interface IHomeProps {
 	repo?:Repo
@@ -41,7 +44,6 @@ function mapToProps(state) {
  * The root container for the app
  */
 @connect(mapToProps)
-@CSSModules(styles)
 export class HomePage extends React.Component<IHomeProps,any> {
 
 	constructor(props, context) {
@@ -81,8 +83,8 @@ export class HomePage extends React.Component<IHomeProps,any> {
 		const repos = this.props.repos || []
 
 		const bodyContent = (repos.length) ?
-			<Resizable onResize={this.onResize} className={styles.bodyWrapper}>
-				<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2} className={styles.splitter}>
+			<Resizable onResize={this.onResize} style={styles.bodyWrapper}>
+				<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}>
 					<RepoPanel />
 					<IssuesPanel />
 				</SplitPane>
@@ -104,8 +106,7 @@ export class HomePage extends React.Component<IHomeProps,any> {
 					title="add a repo..."
 					modal={true}
 					open={this.props.addRepoDialog}
-				    actions={addRepoActions}
-				>
+				    actions={addRepoActions}>
 					Add repo here
 				</Dialog>
 			</Page>

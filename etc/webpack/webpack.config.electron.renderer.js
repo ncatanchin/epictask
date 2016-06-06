@@ -11,7 +11,7 @@ module.exports = (projectConfig) => {
 		},
 
 		output: Object.assign(config.output, isDev ? {
-			publicPath: `http://localhost:${projectConfig.port}/dist`
+			publicPath: `http://localhost:${projectConfig.port}/dist/`
 		} : {}),
 
 		plugins: [

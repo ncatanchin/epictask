@@ -1,6 +1,7 @@
 @import "../../../assets/styles/mixins.global";
 
 .header {
+
 	justify-content: flex-end;
 	position: relative;
 
@@ -9,6 +10,11 @@
 	flex-shrink: 0;
 
 	padding: 0.3rem 12vw;
+
+	&, * {
+		-webkit-user-select: none;
+		-webkit-app-region: drag;
+	}
 }
 
 

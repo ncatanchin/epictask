@@ -3,7 +3,7 @@ html.fill-width.fill-height(lang="en")
 
 	head
 		meta(charset='utf-8')
-		link(rel="stylesheet",href="../node_modules/font-awesome/css/font-awesome.min.css")
+		link(rel="stylesheet",href=baseDir + "/node_modules/font-awesome/css/font-awesome.min.css")
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 
 		title epic.ly
@@ -15,42 +15,18 @@ html.fill-width.fill-height(lang="en")
 				if (!process.env.HOT) {
 					const link = document.createElement('link');
 					link.rel = 'stylesheet';
-					link.href = '../../dist/style.css';
+					link.href = baseDir + '/dist/style.css';
 					document.write(link.outerHTML);
 				}
 			}());
-		style.
-			* {
-				box-sizing: border-box !important;
-			}
-			.fill-height {
-				height: 100vh;
-				min-height: 100vh;
-				max-height: 100vh;
-			}
-			.fill-width {
-				width: 100vw;
-				min-width: 100vw;
-				max-width: 100vw;
-			}
-			html, body {
-				margin: 0;
-				padding: 0;
-				border: 0;
-			}
-			html {
-				font-size: 10px;
-			}
-			body {
-				font-size: 14px;
-			}
-	body.fill-width.fill-height()
+		style=cssGlobal
+	body.fill-width.fill-height(style="-webkit-app-region: drag")
 		#root.fill-width.fill-height
 		script.
 			(function () {
 				function addScript(scriptPath) {
 					const script = document.createElement('script');
-					const basePath = (process.env.HOT) ? 'http://localhost:4444/dist' : '../../dist';
+					const basePath = (process.env.HOT) ? 'http://localhost:4444/dist' : baseDir + '/dist';
 					script.src = basePath + scriptPath
 					document.write(script.outerHTML);
 				}

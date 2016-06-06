@@ -5,6 +5,7 @@ import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
 import {AppActionFactory} from 'app/actions'
 
+const log = getLogger(__filename)
 const appActions = new AppActionFactory()
 
 const Pages = {
@@ -14,7 +15,11 @@ const Pages = {
 
 export function getPage(stateType:AppStateType = null) {
 	stateType = stateType || appActions.state.stateType
-	return Pages[stateType] || HomePage
+	const page = Pages[stateType] || HomePage
+
+	log.debug('Returning page for app state type', stateType,AppStateType[stateType])
+
+	return page
 }
 
 export {

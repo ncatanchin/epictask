@@ -4,6 +4,7 @@ import "./ThemeManager"
 import ReactGlobal = require('react')
 import * as ReactDOMGlobal from 'react-dom'
 
+
 declare global {
 	var CSSModules:any
 	var React:typeof ReactGlobal

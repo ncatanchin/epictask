@@ -44,7 +44,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	fontFamily: 'Roboto,sans-serif',
 	fontWeight: 400,
 
-	navBar: {
+	header: {
 		logoStyle: {
 			height: navBarHeight
 		},
@@ -53,6 +53,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 			height: windowControlDim,
 			width: windowControlDim,
 			fontSize: windowControlDim * 0.7,
+			backgroundColor: 'white',
 			borderRadius: windowControlDim / 2,
 			borderColor: 'rgba(255,255,255,0.2)',
 			margin: '0.2rem'

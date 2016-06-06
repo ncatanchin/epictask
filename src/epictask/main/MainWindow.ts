@@ -1,10 +1,13 @@
-
+import * as fs from 'fs'
+import * as path from 'path'
+import {toDataUrl} from '../shared/util/Templates'
 const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = require('electron')
 
 import windowStateKeeper = require('electron-window-state')
 import * as Log from 'typelogger'
 import {GitHubConfig,AuthKey} from '../shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
+
 const log = Log.create(__filename)
 log.info(`Starting GITTUS (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
@@ -81,7 +84,22 @@ export function start() {
 	loadRootWindow()
 }
 
+function makeMainTemplate() {
+	const cssGlobal = require('!!raw!sass!styles/MainEntry.global.scss')
+	const mainTemplatePath = require('!!file!./MainEntry.jade')
+	const mainTemplateSrc = fs.readFileSync(mainTemplatePath,'utf-8')
 
+	const pug = require('pug')
+	const mainTemplate = pug.render(mainTemplateSrc,{cssGlobal,baseDir:path.resolve(__dirname,'../../..')})
+	// const html = mainTemplate({cssGlobal})
+
+	//return toDataUrl(mainTemplate,{cssGlobal})
+	let templatePath = app.getPath('temp') + '/entry-' + require('node-uuid').v4() + '.html'
+	fs.writeFileSync(templatePath,mainTemplate)
+
+	templatePath = 'file://' + templatePath
+	return templatePath
+}
 /**
  * Load the actual window
  */
@@ -101,16 +119,17 @@ function loadRootWindow() {
 		title: 'epictask'
 	}))
 
+
 	mainWindowState.manage(mainWindow)
 
-	const templatePath = 'file://' + require('!!file?name=[name].html!..//tools/jade-template-loader!./MainEntry.jade')
-	log.info(`Template Path: ${templatePath}`)
-	mainWindow.loadURL(templatePath)
+	const templateURL = makeMainTemplate()
+	log.info(`Template Path: ${templateURL}`)
+	mainWindow.loadURL(templateURL)
 
 	mainWindow.webContents.on('did-finish-load', () => {
 		mainWindow.show()
 		mainWindow.focus()
-		BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application\ Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
+		//BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application\ Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	})
 
 	mainWindow.on('closed', () => {

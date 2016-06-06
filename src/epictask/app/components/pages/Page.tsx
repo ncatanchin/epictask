@@ -1,9 +1,13 @@
 import * as React from 'react'
 
 const log = getLogger(__filename)
-const styles = require('./Page.css')
 
-@CSSModules(styles)
+const styles = {
+	page: makeStyle(FlexRowCenter,FlexScale,PositionRelative,{
+		overflow: 'hidden'
+	})
+}
+
 export class Page extends React.Component<any,any> {
 
 	constructor(props, context) {
@@ -13,7 +17,11 @@ export class Page extends React.Component<any,any> {
 
 
 	render() {
-		return <div styleName="page">
+
+		let {style} = this.props
+		const pageStyle = makeStyle(styles.page,style)
+
+		return <div {...this.props} style={pageStyle}>
 			{this.props.children}
 		</div>
 	}

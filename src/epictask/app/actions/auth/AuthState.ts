@@ -47,10 +47,9 @@ class AuthStateModel {
 	 * @returns {AuthStateModel}
 	 */
 	setToken(token:string) {
-
-		this.token = token
+		this.token = Settings.token = token
 		this.authenticating = false
-		this.authenticated = true
+		this.authenticated = !_.isNil(token)
 		this.error = null
 		return this
 	}
@@ -71,6 +70,8 @@ class AuthStateModel {
 		this.error = err
 		return this
 	}
+	
+	
 
 }
 
