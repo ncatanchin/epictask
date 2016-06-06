@@ -1,0 +1,75 @@
+@import "./mixins.global";
+
+* {
+	box-sizing: border-box;
+	outline: none;
+}
+
+
+.fill-height {
+	height: 100vh;
+	min-height: 100vh;
+	max-height: 100vh;
+}
+
+.fill-width {
+	width: 100vw;
+	min-width: 100vw;
+	max-width: 100vw;
+}
+
+html,body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+
+}
+
+html {
+	font-size: 10px;
+}
+body {
+	font-size: 14px;
+}
+
+.window-controls {
+	position:absolute;
+	display: block;
+	top: 0;
+	left: 0;
+
+	button {
+		@include make-default-transition();
+		display: inline-flex;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+
+		//display: inline-block;
+		-webkit-app-region: no-drag;
+		background-color: white;
+		outline: none;
+		opacity: 1;
+		border: 0.2rem solid transparent;
+		padding: 0;
+
+		&:before {
+			@include make-default-transition();
+			opacity: 0;
+		}
+
+		&,&:before,* {
+			cursor: pointer !important;
+		}
+
+		&:hover {
+			cursor: pointer  !important;
+			background-color: transparent  !important;
+
+			&:before {
+				opacity: 1 !important;
+			}
+		}
+	}
+}
+
