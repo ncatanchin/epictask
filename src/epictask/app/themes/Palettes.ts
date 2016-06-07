@@ -27,6 +27,7 @@ function makeDarkPalette() {
 	const accent4ColorText = c.lightWhite
 	const highlightColor = c.pink500
 	const highlightColorText = c.white
+	const errorColor = c.red500
 
 	return {
 		primary1Color,
@@ -48,7 +49,8 @@ function makeDarkPalette() {
 		canvasColor: bgColor,
 		textColor,
 		alternateBgColor,
-		alternateTextColor
+		alternateTextColor,
+		errorColor
 	}
 }
 

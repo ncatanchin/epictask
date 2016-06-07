@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 
 import {RaisedButton,FlatButton,FontIcon} from 'material-ui'
 import {AuthActionFactory} from '../../actions/auth/AuthActionFactory'
-import {Page} from '../common'
+import {Page} from './'
 
 const styles = {
 	page: makeStyle(FlexColumnCenter,FlexScale,{

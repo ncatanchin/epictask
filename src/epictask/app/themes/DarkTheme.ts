@@ -30,7 +30,8 @@ const {
 	highlightColor,
 	highlightColorText,
 	alternateBgColor,
-	alternateTextColor
+	alternateTextColor,
+	errorColor
 } = palette
 
 
@@ -43,7 +44,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 	fontFamily: 'Roboto,sans-serif',
 	fontWeight: 400,
-
+	
+	snackbar: {
+		root: {
+			height: 48
+		}	
+	},
+	
 	header: {
 		logoStyle: {
 			height: navBarHeight

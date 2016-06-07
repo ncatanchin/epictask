@@ -6,24 +6,24 @@ import {starter} from 'epictask/shared/DBService'
 starter.then(() => {
 	console.log('Db Started')
 
-
-
 	const log = getLogger(__filename)
 
 	function loadAppContent() {
 
-			require('./services')
-			require('./components/root/AppRoot.tsx')
+		// First load services
+		require('./services')
 
+		// Load Styles
+		require('./styles')
+
+		// Load App Root
+		require('./components/root/AppRoot.tsx')
 
 	}
 
 	loadAppContent()
 
-	
-
 	if (module.hot) {
-
 		module.hot.accept(['./components/root/AppRoot.tsx'], (updates) => {
 			log.info('HMR Updates, reloading app content',updates)
 			loadAppContent()

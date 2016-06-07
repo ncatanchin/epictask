@@ -5,6 +5,8 @@ import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
 import {AppActionFactory} from 'app/actions'
 
+export * from './Page'
+
 const log = getLogger(__filename)
 const appActions = new AppActionFactory()
 

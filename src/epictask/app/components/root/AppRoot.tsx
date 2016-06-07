@@ -1,18 +1,22 @@
 /**
- * Content root for epicly
+ * Global CSS
  */
+require('assets/fonts/fonts.global.scss')
+require('styles/split-pane.global.scss')
 
-// Imports
+
+// Logger
+const log = getLogger(__filename)
+
+//region Imports
 import * as React from 'react'
 import * as _ from 'lodash'
 import {Provider, connect} from 'react-redux'
 const {HotKeys} = require('react-hotkeys')
-import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexScale,Fill,makeTransition} from 'app/styles'
 
-// Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
 import {Snackbar} from 'material-ui'
-import {Header,HeaderVisibility} from 'components'
+import {Header,HeaderVisibility,ToastMessages} from 'components'
 import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'app/actions'
@@ -20,35 +24,28 @@ import {TAppState,IToastMessage} from 'app/actions'
 import {AppStateType,AvailableRepo} from 'shared'
 import {AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
-import {Ellipsis} from '../../styles/CommonStyles'
+//endregion
 
 
-const log = getLogger(__filename)
+
 
 // Build the container
-require('assets/fonts/fonts.global.scss')
-require('styles/split-pane.global.scss')
 
 const store = getStore()
 const appActions = new AppActionFactory()
 
-// DEBUG then load DevTools
+
+//region DEBUG Components/Vars
 const DevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : <div></div>
 let devToolsRef = null
 let appElement = null
 let monitorStateSubscribed = false
 let monitorStatePrevious = null
+//endregion
 
-export interface IAppProps {
-	store:any
-	theme:any
-	stateType:AppStateType
-	hasAvailableRepos:boolean
-	messages:IToastMessage[]
-	adjustedBodyStyle:any
-}
 
-// Styles
+
+//region Styles
 const styles = {
 	app: makeStyle(FlexColumn,FlexScale,{
 		overflow: 'hidden'
@@ -64,16 +61,13 @@ const styles = {
 		flexShrink: 1
 	}),
 
-	collapsed: makeStyle({flexGrow: 0}),
+	collapsed: makeStyle({flexGrow: 0})
 
-	toast: makeStyle(PositionAbsolute,Ellipsis,{
-		bottom: 0,
-		left: '50%',
-		transform: 'translateX(-50%)',
-		overflow: 'hidden'
-	})
+
 }
+//endregion
 
+//region Monitor State Layout Adjustment
 /**
  * Calculates an adjusted style in DEBUG when the monitor is
  * visible so that the full body can be seen
@@ -138,8 +132,26 @@ function getAdjustedBodyStyle(connectInstance:any) {
 
 	return bodyStyle
 }
+//endregion
 
-// Redux state -> props
+
+/**
+ * Properties for App/State
+ */
+export interface IAppProps {
+	store:any
+	theme:any
+	stateType:AppStateType
+	hasAvailableRepos:boolean
+	adjustedBodyStyle:any
+}
+
+
+/**
+ * Map redux state to props
+ *
+ * @param state
+ */
 function mapStateToProps(state) {
 	const appState = state.get(AppKey)
 	const {availableRepos} = state.get(RepoKey)
@@ -147,13 +159,9 @@ function mapStateToProps(state) {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
 		hasAvailableRepos: availableRepos && availableRepos.length > 0,
-		messages: appState.messages,
 		adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
 }
-
-//const styles = require('./AppRoot.scss')
-
 
 
 /**
@@ -176,39 +184,32 @@ class App extends React.Component<IAppProps,any> {
 		}
 	}
 
+
+
+
+
 	/**
 	 * Render the app container
 	 */
 	render() {
-		const
-			{hasAvailableRepos,messages,stateType,theme,adjustedBodyStyle} = this.props,
+		const {hasAvailableRepos,stateType,theme,adjustedBodyStyle} = this.props,
 			{palette} = theme
 
-		const
-			page = {component: getPage(stateType)},
-			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
-			contentStyles = makeStyle(styles.content, {
-				backgroundColor: palette.canvasColor,
-				display: 'flex',
-				flexDirection: 'column'
-			},expanded && styles.collapsed),
-			headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
-				(expanded) ? HeaderVisibility.Expanded :
-					HeaderVisibility.Normal,
+		const page = {component: getPage(stateType)},
+			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos
 
-			toastBodyStyle = makeStyle(Ellipsis,{
-				backgroundColor: palette.accent3Color,
-				overflow: 'hidden',
-				position: 'relative',
-				display: 'block'
-			}),
-			toastStyle = makeStyle(styles.toast,toastBodyStyle,{
-				fontFamily: theme.fontFamily
-			}),
-			toastContentStyle = makeStyle(toastBodyStyle, {
-				color: palette.accent3ColorText,
-				maxWidth: '100%'
-			})
+		const headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
+				(expanded) ? HeaderVisibility.Expanded :
+					HeaderVisibility.Normal
+
+		//region Create Themed Styles
+		const contentStyles = makeStyle(styles.content, {
+			backgroundColor: palette.canvasColor,
+			display: 'flex',
+			flexDirection: 'column'
+		},expanded && styles.collapsed)
+		//endregion
+
 
 		return (
 			<MuiThemeProvider muiTheme={theme}>
@@ -226,25 +227,12 @@ class App extends React.Component<IAppProps,any> {
 
 								{/* DevTools */}
 								<DevTools ref={(c) => devToolsRef = c}/>
+								<ToastMessages/>
 							</HotKeys>
-							{messages.map(msg => {
-								return <Snackbar
-									key={msg.id}
-									open={true}
-									message={<div style={toastContentStyle}>{msg.content}</div>}
-									bodyStyle={toastBodyStyle}
-									style={toastStyle}
-									autoHideDuration={4000}
-									onRequestClose={() => appActions.removeMessage(msg.id)}
-								/>
-							})}
+
 						</div>
-
-
 					</HotKeys>
-
 				</Provider>
-
 			</MuiThemeProvider>
 
 		)

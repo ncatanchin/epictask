@@ -12,18 +12,21 @@ export function makeFlexAlign(alignItems,justifyContent = null) {
 	return {justifyContent,alignItems}
 }
 
-export function makeTransition(props = null,duration = 0.25,easing = 'ease-out') {
-
-	props = (props && props.length) ? props : ['all']
-
+export function makeTransition(props:string[] = null,duration = 0.25,easing = 'ease-out') {
+	props = props || ['all']
 	return {
-		transition: `none ${duration}s ${easing}`,
-		transitionProperty: props.join(' ')
+		transition: props
+            .map(prop => `${prop} ${duration}s ${easing}`)
+            .join(', '),
 	}
 }
 
 export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
+}
+
+export const OverflowHidden = {
+	overflow: 'hidden'
 }
 
 export const PositionRelative = {

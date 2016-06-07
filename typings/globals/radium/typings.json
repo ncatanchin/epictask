@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/8c9d2af6b3aa98491ac8996a299bf4715715fd73/radium/radium.d.ts",
+    "raw": "registry:dt/radium#0.17.1+20160414124459",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/8c9d2af6b3aa98491ac8996a299bf4715715fd73/radium/radium.d.ts"
+  }
+}

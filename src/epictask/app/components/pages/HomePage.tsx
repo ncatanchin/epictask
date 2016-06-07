@@ -6,12 +6,12 @@ import {RepoActionFactory,AuthActionFactory,TRepoState,TAuthState} from 'epictas
 import {RepoPanel,IssuesPanel,IssueDetailPanel} from 'components'
 import {Repo} from 'epictask/shared'
 import {getStore} from '../../store'
-import {Page} from '../common'
+import {Page} from './'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
-import {MIcon} from '../common'
+import {Icon} from '../common'
 
 const Resizable = require('react-component-resizable')
 
@@ -90,7 +90,7 @@ export class HomePage extends React.Component<IHomeProps,any> {
 				</SplitPane>
 			</Resizable>
 		:
-			<MIcon onClick={() => appActions.setStateType(AppStateType.RepoAdd)}>add</MIcon>
+			<Icon onClick={() => appActions.setStateType(AppStateType.RepoAdd)}>add</Icon>
 
 
 		return (

@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/7efee1b88f7e7d619cd2630fef83530e78a2d5a2/lunr/lunr.d.ts",
+    "raw": "registry:dt/lunr#0.5.4+20160326120315",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/7efee1b88f7e7d619cd2630fef83530e78a2d5a2/lunr/lunr.d.ts"
+  }
+}

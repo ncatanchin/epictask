@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 import * as React from 'react'
 import {AuthActionFactory} from 'app/actions'
 import {CircularProgress} from 'material-ui'
-import {Page} from '../common'
+import {Page} from './'
 
 const authActions = new AuthActionFactory()
 

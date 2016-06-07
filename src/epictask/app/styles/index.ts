@@ -20,7 +20,8 @@ declare global {
 		PositionAbsolute:any,
 		makeTransition:typeof CommonStyles.makeTransition,
 		makeAbsolute:typeof CommonStyles.makeAbsolute,
-		makeStyle:typeof CommonStyles.makeStyle
+		makeStyle:typeof CommonStyles.makeStyle,
+		makeFlexAlign:typeof CommonStyles.makeFlexAlign
 }
 
 Object.assign(global as any,CommonStyles)

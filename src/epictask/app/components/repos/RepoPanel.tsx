@@ -5,7 +5,7 @@
 // Imports
 import * as React from 'react'
 import {TRepoState,RepoActionFactory,AuthActionFactory,AppActionFactory} from 'app/actions'
-import {RepoList,MIcon} from 'components'
+import {RepoList,Icon} from 'components'
 import {Drawer,RaisedButton} from 'material-ui'
 
 // Key mapping tools
@@ -137,7 +137,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 							fullWidth={true}
 							labelStyle={styles.headerButtonLabel}
 							onClick={() => authActions.logout()}
-							icon={<MIcon extraStyle={styles.headerButtonIcon} className='fa fa-sign-out'></MIcon>}
+							icon={<Icon extraStyle={styles.headerButtonIcon} className='fa fa-sign-out'></Icon>}
 						>
 						</RaisedButton>
 					</div>

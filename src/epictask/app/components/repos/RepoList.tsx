@@ -7,7 +7,7 @@ const log = getLogger(__filename)
 
 import * as React from 'react'
 import {TRepoState,RepoActionFactory} from 'app/actions'
-import {MIcon} from 'app/components'
+import {Icon} from 'app/components'
 import {AvailableRepo,Repo} from 'shared'
 import {connect} from 'react-redux'
 import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexAuto,FlexScale,FlexAlignStart,FillWidth,Ellipsis,FlexColumnCenter,makeTransition} from 'app/themes'
@@ -122,7 +122,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				                isSelected && themeStyles.list.itemSelected,
 				                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
 			                )}>
-					<MIcon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</MIcon>
+					<Icon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</Icon>
 					<div style={styles.itemLabel}>{repo.name}</div>
 				</li>
 			})}
