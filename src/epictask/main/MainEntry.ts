@@ -5,14 +5,10 @@ import './MainLogging'
 
 
 // LOAD EVERYTHING
-import '../shared/CommonEntry'
+import 'shared/CommonEntry'
+import 'shared/ErrorHandling'
+
 import * as MainWindowType from './MainWindow'
-
-process.on("unhandledRejection", function (reason, promise) {
-	//console.trace(reason)
-	log.error(`Epic Task Unhandled Exception`, reason, reason && reason.stack, promise)
-})
-
 const {app} = electron
 const log = getLogger(__filename)
 
@@ -36,13 +32,10 @@ if (DEBUG) {
 /**
  * Load the window
  */
-function loadWindow() {
-	return require('./MainWindow') as typeof MainWindowType
-}
+const loadWindow = () => require('./MainWindow') as typeof MainWindowType
 
 let mainWindow = loadWindow()
-let browserWindow = null
-//require('electron-react-devtools').inject()
+
 /**
  * All windows closed
  */
@@ -57,11 +50,8 @@ function onAllClosed() {
  * App started
  */
 function onStart() {
-	app.setName('epic.ly')
+	app.setName('EpicTask')
 
-	// electron.BrowserWindow.addDevToolsExtension("/Users/jglanz/Downloads/0.14.10_0")
-	// electron.BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
-	// mainWindow.addDevToolsExtension('/Users/jglanz/Library/Application Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	mainWindow.start()
 }
 

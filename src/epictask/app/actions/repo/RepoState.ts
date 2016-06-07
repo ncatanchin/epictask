@@ -11,6 +11,21 @@ import {
 import {Repo, AvailableRepo} from 'shared/GitHubModels'
 import {Settings,Constants} from 'shared'
 
+
+export enum SyncStatus {
+	NotStarted = 1,
+	InProgress,
+	Completed,
+	Failed
+}
+
+export interface ISyncDetails {
+	error?:Error
+	progress?:number
+	message?:any
+	time?:number
+}
+
 @RecordModel()
 class RepoStateModel {
 
@@ -23,8 +38,6 @@ class RepoStateModel {
 	@RecordProperty()
 	repos:Repo[]
 
-	@RecordProperty()
-	repo:Repo
 
 	@RecordProperty()
 	error:Error
@@ -53,12 +66,6 @@ class RepoStateModel {
 	}
 
 
-	setRepo(repo:Repo) {
-		Settings.repoId = repo.id
-		this.repo = repo
-		return this
-	}
-
 	clearSelectedRepos() {
 		this.selectedRepos = []
 		return this
@@ -85,6 +92,10 @@ class RepoStateModel {
 
 	}
 
+	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {
+
+	}
+
 	setError(err:Error) {
 		this.error = err
 		return this
@@ -94,7 +105,6 @@ class RepoStateModel {
 
 
 const RepoStateDefaults = {
-	repo: null,
 	repos: [],
 	availableRepos: [],
 	selectedRepos: []

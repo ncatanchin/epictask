@@ -46,9 +46,12 @@ function updateQuery() {
 
 }
 
-updateQuery()
-
-store.observe([searchActions.leaf(),'query'],(newQuery) => {
-	log.debug('Got new query',newQuery,lastQuery)
+export async function start() {
 	updateQuery()
-})
+
+	store.observe([searchActions.leaf(),'query'],(newQuery) => {
+		log.debug('Got new query',newQuery,lastQuery)
+		updateQuery()
+	})
+}
+

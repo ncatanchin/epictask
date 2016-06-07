@@ -10,8 +10,21 @@ export let coordinator:TSCoordinator = null
 export let repos:TRepoMap = null
 export let storePlugin:IndexedDBPlugin = null
 
-async function start() {
 
+let started = false
+
+/**
+ * Start the database and data services
+ * 
+ * @returns {boolean}
+ */
+export async function start() {
+	if (started)
+		return true
+	
+	// Mark
+	started = true
+	
 	// Create the store Plugin first
 	storePlugin = new IndexedDBPlugin({
 		databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
@@ -36,11 +49,15 @@ async function start() {
 	return true
 }
 
+/**
+ * Get a repo instance for the local database
+ * 
+ * @param repoClazz
+ * @returns {T}
+ */
 export function getRepo<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
 	return coordinator.getRepo(repoClazz)
 }
 
 
-
-export const starter = start()
 

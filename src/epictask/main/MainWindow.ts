@@ -105,26 +105,32 @@ function loadRootWindow() {
 	log.info(`Template Path: ${templateURL}`)
 	mainWindow.loadURL(templateURL)
 
+	/**
+	 * When the page loads, let's show it and focus
+	 */
 	mainWindow.webContents.on('did-finish-load', () => {
+		mainWindow.setTitle('EpicTask')
+		
 		mainWindow.show()
 
 		if (firstLoad)
 			mainWindow.focus()
 
 		firstLoad = false
-		//BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application\ Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	})
 
 	mainWindow.on('closed', () => {
 		mainWindow = null
 	})
 
-	log.debug('Env',Env)
-
+	/**
+	 * IN DEV MODE - NOT REMOTE RENDER DEBUG - SHOW DEV TOOLS
+	 */
 	if (Env.isDev && !Env.isRemote) {
 		mainWindow.openDevTools()
 	}
 
+	//TODO: Move menu out
 	if (process.platform === 'darwin') {
 		template = [{
 			label: 'Super-Duper',

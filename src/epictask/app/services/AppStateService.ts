@@ -32,8 +32,12 @@ async function updateStateType() {
 	}
 }
 
-updateStateType()
 
-store.observe(appActions.leaf(),() => {
-	updateStateType()
-})
+export async function start() {
+	await updateStateType()
+
+	store.observe(appActions.leaf(),() => {
+		updateStateType()
+	})	
+}
+

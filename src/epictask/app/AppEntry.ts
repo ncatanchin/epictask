@@ -1,32 +1,41 @@
-import 'shared/CommonEntry'
+// Load all global/env stuff first
 import './AppGlobals'
 
-import {starter} from 'epictask/shared/DBService'
+// Load logger
+const log = getLogger(__filename)
 
-starter.then(() => {
-	console.log('Db Started')
+// Load Styles
+import './styles'
 
-	const log = getLogger(__filename)
+// Get the DBService starter
+import * as DBService from 'shared/DBService'
+import * as Services from 'app/services'
 
-	function loadAppContent() {
+async function boot() {
 
-		// First load services
-		require('./services')
 
-		// Load Styles
-		require('./styles')
+	log.info('Starting Database')
+	await DBService.start()
 
-		// Load App Root
-		require('./components/root/AppRoot.tsx')
 
-	}
+	log.info('Starting services')
+	const servicePromises = Object.keys(Services)
+		.map(serviceKey => Services[serviceKey].start())
 
-	loadAppContent()
+	log.info('Waiting for all services to load')
+	await Promise.all(servicePromises)
+
+	log.info('Loading app root')
+	const loadAppRoot = () => require('./components/root/AppRoot.tsx')
+	loadAppRoot()
+
+
+
 
 	if (module.hot) {
 		module.hot.accept(['./components/root/AppRoot.tsx'], (updates) => {
 			log.info('HMR Updates, reloading app content',updates)
-			loadAppContent()
+			loadAppRoot()
 		})
 
 		module.hot.accept()
@@ -34,6 +43,7 @@ starter.then(() => {
 			log.info('HMR AppEntry Update')
 		})
 	}
+}
 
-})
 
+boot().then(() => log.info('Booted App'))

@@ -1,8 +1,42 @@
+/**
+ * Install source map support with a custom handler
+ * for NON absolute paths
+ */
+require('source-map-support').install({
+	retrieveSourceMap(source) {
+		if (/^(\/|\.|http|file)/.test(source)) {
+			return null
+		}
+
+		return {map:{
+			version: 3,
+			file: "null.js.map",
+			sources: [],
+			sourceRoot: "/",
+			names: [],
+			mappings: ""
+		}}
+	}
+})
+
+/**
+ * Grab a ref to global marked as any for augmentation
+ * 
+ * @type {any}
+ */
+const g = global as any
+
+/**
+ * Replace es6-promise with bluebird
+ * 
+ * @type {any|"~bluebird/bluebird".Bluebird}
+ */
+require('babel-runtime/core-js/promise').default = require('bluebird')
+
 // LOGGING CONFIG FIRST
 Object.assign(global as any,{
 	TypeLoggerCategories: require('epictask/shared/LogCategories'),
 	TypeLoggerDefaultLevel: 3
-
 })
 
 
@@ -10,42 +44,17 @@ Object.assign(global as any,{
 import 'reflect-metadata'
 import {getLogger as LoggerFactory} from 'typelogger'
 
-const log = LoggerFactory(__filename)
-
 // OVERRIDE PROMISE - FIRST
-const Bluebird = require('bluebird')
-Bluebird.config({
-	cancellation: true,
-	longStackTraces: true,
-	warnings: true,
-	monitoring: true
-})
+const Bluebird = require('./PromiseConfig')
 
 Promise = Bluebird
 
-Object.assign(global as any,{Promise:Bluebird})
-
-if (typeof window !== 'undefined') {
-	window.onerror = function(message,url,line) {
-		log.error('Window error occured',message,url,line)
-	}
-}
-
-
-//
-process.on("rejectionHandled", function (reason,promise) {
-	console.error('Unhandled error',reason,promise)
-	log.error('Unhandled error',reason,promise)
-})
-
-
-
-
+// Import everything else
+import './ErrorHandling'
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
-
 
 
 /**
@@ -69,7 +78,6 @@ const isRemote = typeof process.env.REMOTE !== 'undefined'
 
 // Polyfill Fetch/FormData/etc
 function installGlobals() {
-	const g = global as any
 	const w = ((typeof window !== 'undefined') ? window : {}) as any
 	if (!g.fetch) g.fetch = require('node-fetch')
 	if (!g.FormData) g.FormData = require('form-data')
@@ -90,7 +98,7 @@ function installGlobals() {
 		Immutable: ImmutableGlobal,
 		TypeMutant: TypeMutantGlobal,
 		_:LodashGlobal,
-
+		Promise:Bluebird,
 		Env: {
 			isDev,
 			isDebug: DEBUG && isDev,

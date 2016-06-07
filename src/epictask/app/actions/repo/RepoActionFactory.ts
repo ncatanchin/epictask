@@ -1,6 +1,6 @@
 
 
-import {AvailableRepoRepo, AvailableRepo} from '../../../shared/GitHubModels'
+
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -10,10 +10,13 @@ const log = getLogger(__filename)
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey} from "epictask/shared/Constants"
-import {RepoMessage,RepoState} from './index'
-import {Repo, RepoRepo,github} from 'epictask/shared'
+import {RepoMessage,RepoState,ISyncDetails,SyncStatus} from './index'
+import {Repo, RepoRepo,AvailableRepo,AvailableRepoRepo,github} from 'epictask/shared'
 import {getRepo} from 'epictask/shared/DBService'
+import {JobActionFactory,AppActionFactory,JobHandler} from 'app/actions'
 
+const JobActions = new JobActionFactory()
+const AppActions = new AppActionFactory()
 /**
  * RepoActionFactory.ts
  *
@@ -84,10 +87,55 @@ import {getRepo} from 'epictask/shared/DBService'
 		}
 	}
 
+	@Action()
+	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {}
 
 	@Action()
-	getAvailableRepos() {
-		return async (dispatch,getState) => {
+	syncIssues(availRepo:AvailableRepo) {
+		return async(dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch,getState)
+			const jobActions = JobActions.withDispatcher(dispatch,getState)
+			const appActions = AppActions.withDispatcher(dispatch,getState)
+
+			try {
+				actions.setSyncStatus(availRepo,SyncStatus.InProgress,{progress: 0})
+
+				await jobActions.processJob((handler:JobHandler) => {
+					// TODO: Do actual sync here
+				})
+
+				actions.setSyncStatus(availRepo,SyncStatus.Completed,{progress: 100})
+			} catch (err) {
+				log.error('failed to sync repo issues',err)
+				appActions.addErrorMessage(err)
+				actions.setSyncStatus(availRepo,SyncStatus.Failed,{error:err})
+			}
+		}
+	}
+
+	/**
+	 * Starts a synchronization for all repos that
+	 * have been marked as available by the user
+	 *
+	 * _note_: this includes repos that are not enabled
+	 */
+	@Action()
+	syncAllIssues() {
+		return async(dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch,getState)
+
+			log.debug('Getting avail repos from DB, not state')
+			const availRepos = await actions.getAvailableRepos()
+			availRepos.forEach(availRepo => {
+				actions.syncIssues(availRepo)
+			})
+		}
+	}
+
+
+	@Action()
+	getAvailableRepos():Promise<AvailableRepo[]> {
+		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const availRepos = await getRepo(AvailableRepoRepo).findAll()
 
@@ -107,7 +155,9 @@ import {getRepo} from 'epictask/shared/DBService'
 
 			log.debug('Loaded available repos',availRepos)
 			actions.setAvailableRepos(availRepos)
-		}
+
+			return availRepos
+		}) as any
 	}
 
 	@Action()
@@ -127,7 +177,7 @@ import {getRepo} from 'epictask/shared/DBService'
 	updateAvailableRepo(availRepo:AvailableRepo) {}
 
 	@Action()
-	setRepoSelected(selectedAvailRepo:AvailableRepo,selected:boolean) { }
+	setRepoSelected(selectedAvailableRepo:AvailableRepo,selected:boolean) { }
 
 	@Action()
 	setRepoEnabled(availRepo:AvailableRepo,enabled:boolean) {

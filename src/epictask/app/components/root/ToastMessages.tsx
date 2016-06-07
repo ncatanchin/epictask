@@ -132,6 +132,16 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 		})
 	}
 
+	/**
+	 * Render an individual message
+	 *
+	 * @param msg
+	 * @param isError
+	 * @param isInfo
+	 * @param palette
+	 * @param styles
+	 * @returns {any}
+	 */
 	renderMessageContent(msg,isError,isInfo,palette,styles) {
 
 		function iconStyle(color) {
@@ -157,6 +167,12 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 		</div>
 	}
 
+	/**
+	 * Render the snackbar container
+	 * and child messages
+	 *
+	 * @returns {any}
+	 */
 	render() {
 		const {messages,theme} = this.props,
 			{palette} = theme
@@ -167,6 +183,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 			<CSSTransitionGroup
 				transitionName="messages"
 				transitionAppear={true}
+				transitionAppearTimeout={250}
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 				{messages.map(msg => {

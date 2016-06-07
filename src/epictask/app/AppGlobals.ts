@@ -1,15 +1,5 @@
-
-// Retrieve the getTheme method from the theme manager
-import "./ThemeManager"
 import ReactGlobal = require('react')
 import * as ReactDOMGlobal from 'react-dom'
-
-
-declare global {
-	var CSSModules:any
-	var React:typeof ReactGlobal
-	var ReactDOM:typeof ReactDOMGlobal
-}
 
 /**
  * Configure the local logger
@@ -38,9 +28,8 @@ function LoggerFactory(name) {
 
 		return newLogger
 	},{})
-
-
 }
+
 Object.assign(global,{
 	CSSModules: require('react-css-modules'),
 	React: ReactGlobal,
@@ -49,6 +38,22 @@ Object.assign(global,{
 		return LoggerFactory(name)
 	}
 })
+
+/**
+ * Now the shared globals - this is required for propper logging config
+ */
+import "shared/Globals"
+import "./ThemeManager"
+
+
+
+declare global {
+	var CSSModules:any
+	var React:typeof ReactGlobal
+	var ReactDOM:typeof ReactDOMGlobal
+}
+
+
 
 function onErrorReceived(err:Error) {
 	const {AppActionFactory} = require('app/actions')
