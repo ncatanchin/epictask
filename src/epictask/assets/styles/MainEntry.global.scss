@@ -73,3 +73,11 @@ body {
 	}
 }
 
+
+#root {
+	overflow: hidden;
+}
+
+::-webkit-scrollbar {
+	display: none;
+}

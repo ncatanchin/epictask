@@ -25,20 +25,18 @@ Promise = Bluebird
 
 Object.assign(global as any,{Promise:Bluebird})
 
-// if (typeof window !== 'undefined') {
-// 	window.onerror = function(message,url,line) {
-// 		log.error('Window error occured',message,url,line)
-// 	}
-// }
+if (typeof window !== 'undefined') {
+	window.onerror = function(message,url,line) {
+		log.error('Window error occured',message,url,line)
+	}
+}
 
-process.on("unhandledRejection", function (reason, promise) {
-	console.trace(reason)
-	log.error(`Epic Task Unhandled Exception`, reason, reason.stack, reason,promise)
+
+//
+process.on("rejectionHandled", function (reason,promise) {
+	console.error('Unhandled error',reason,promise)
+	log.error('Unhandled error',reason,promise)
 })
-//
-// process.on("rejectionHandled", function (promise) {
-//
-// })
 
 
 

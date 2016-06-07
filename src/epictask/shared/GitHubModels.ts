@@ -321,9 +321,7 @@ export class RepoRepo extends TSRepo<Repo> {
  * to real repos
  *
  */
-@ModelDescriptor({
-	transientAttrs: ['repo']
-})
+@ModelDescriptor({transientAttrs: ['repo']})
 export class AvailableRepo extends DefaultModel {
 
 	@DefaultValue(() => uuid.v4())

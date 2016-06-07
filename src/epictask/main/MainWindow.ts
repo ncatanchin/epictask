@@ -9,12 +9,12 @@ import {GitHubConfig,AuthKey} from '../shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 
 const log = Log.create(__filename)
-log.info(`Starting GITTUS (inDev=${Env.isDev})`,process.env.NODE_ENV)
+log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let menu
 let template
 let mainWindow = null
-
+let firstLoad = true
 
 ipcMain.on(AuthKey,(event,arg) => {
 	log.info('Got auth request',event,arg)
@@ -32,34 +32,13 @@ ipcMain.on(AuthKey,(event,arg) => {
 	});
 })
 
-
-
-
 // If in debug mode then add electron-debug
 if ((Env.isDev || Env.isDev) && !Env.isRemote) {
-	//{showDevTools: true}
 	require('electron-debug')({})
 }
 
 export function stop() {
 	console.info('disposing main')
-
-	if (mainWindow) {
-		//mainWindow.close()
-	}
-	// while (true) {
-	// 	const allWindows = BrowserWindow.getAllWindows()
-	// 	if (!allWindows || allWindows.length === 0)
-	// 		break
-	//
-	// 	try {
-	// 		const win = allWindows.pop()
-	// 		win && win.close()
-	// 	} catch (err) {
-	// 		log.warn('Unable to close window',err)
-	// 	}
-	// }
-
 	mainWindow = null
 }
 
@@ -68,12 +47,9 @@ export function stop() {
  * launches a new one
  */
 export function restart() {
-	log.info('> restart')
 
-	stop()
-	start()
 
-	return this
+	return start()
 }
 
 /**
@@ -81,8 +57,10 @@ export function restart() {
  */
 export function start() {
 	log.info('> start')
-	loadRootWindow()
+	return loadRootWindow()
 }
+
+
 
 function makeMainTemplate() {
 	const cssGlobal = require('!!raw!sass!styles/MainEntry.global.scss')
@@ -90,10 +68,11 @@ function makeMainTemplate() {
 	const mainTemplateSrc = fs.readFileSync(mainTemplatePath,'utf-8')
 
 	const pug = require('pug')
-	const mainTemplate = pug.render(mainTemplateSrc,{cssGlobal,baseDir:path.resolve(__dirname,'../../..')})
-	// const html = mainTemplate({cssGlobal})
-
-	//return toDataUrl(mainTemplate,{cssGlobal})
+	const mainTemplate = pug.render(mainTemplateSrc,{
+		cssGlobal,
+		Env,
+		baseDir:path.resolve(__dirname,'../../..')
+	})
 	let templatePath = app.getPath('temp') + '/entry-' + require('node-uuid').v4() + '.html'
 	fs.writeFileSync(templatePath,mainTemplate)
 
@@ -128,7 +107,11 @@ function loadRootWindow() {
 
 	mainWindow.webContents.on('did-finish-load', () => {
 		mainWindow.show()
-		mainWindow.focus()
+
+		if (firstLoad)
+			mainWindow.focus()
+
+		firstLoad = false
 		//BrowserWindow.addDevToolsExtension('/Users/jglanz/Library/Application\ Support/Google/Chrome/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/0.14.10_0')
 	})
 
@@ -136,7 +119,8 @@ function loadRootWindow() {
 		mainWindow = null
 	})
 
-	log.debug('debug = ',DEBUG,'dev',Env.isDev,'remote',process.env.REMOTE,Env)
+	log.debug('Env',Env)
+
 	if (Env.isDev && !Env.isRemote) {
 		mainWindow.openDevTools()
 	}
@@ -346,17 +330,35 @@ function loadRootWindow() {
 		}]
 		menu = Menu.buildFromTemplate(template)
 		mainWindow.setMenu(menu)
+
+
 	}
+	return mainWindow
 }
 
 /**
  * HMR Enabled -> on dispose remove mainWindow
  */
 if (module.hot) {
-	module.hot.dispose(() => {
-		if (mainWindow) {
-			mainWindow.close()
-			mainWindow = null
-		}
+	module.hot.accept(['!!file!./MainEntry.jade'], (updates) => {
+		log.info("HMR update jade", updates)
+
+		const templateURL = makeMainTemplate()
+		log.info(`Template Path: ${templateURL}`)
+		mainWindow.loadURL(templateURL)
+
+		// if (mainWindow) {
+		// 	mainWindow.close()
+		// 	mainWindow = null
+		// }
+		//
+		// loadRootWindow()
 	})
+
+	// module.hot.dispose(() => {
+	// 	if (mainWindow) {
+	// 		mainWindow.close()
+	// 		mainWindow = null
+	// 	}
+	// })
 }

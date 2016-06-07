@@ -1,6 +1,7 @@
 require('source-map-support').install()
 require('shelljs/global')
 require('../webpack/parts/stats')
+
 const
 	del = require('del'),
 	gulp = require('gulp'),

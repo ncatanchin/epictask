@@ -3,7 +3,7 @@ import * as React from 'react'
 import {createDevTools} from 'redux-devtools'
 
 // import * as LogMonitor from 'redux-devtools-log-monitor'
-import DockMonitor from 'redux-devtools-dock-monitor'
+const DockMonitor = require('redux-devtools-dock-monitor').default
 const SliderMonitor = require('redux-slider-monitor')
 const Inspector = require('redux-devtools-inspector').default
 const LogMonitor = require('redux-devtools-log-monitor').default

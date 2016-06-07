@@ -115,18 +115,18 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 		return (
 			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
 				<Drawer docked={true} zIndex={2} containerStyle={styles.drawer} style={styles.panel}>
-					<div style={makeStyle(styles.header,headerStyle)}>
-						<RaisedButton
-							backgroundColor={p.accent4Color}
-							style={styles.headerButton}
-							labelColor={p.textColor}
-							labelPosition='before'
-							label=""
-							fullWidth={true}
-							labelStyle={styles.headerButtonLabel}
-							icon={<MIcon extraStyle={styles.headerButtonIcon}>add</MIcon>}>
-						</RaisedButton>
-					</div>
+					{/*<div style={makeStyle(styles.header,headerStyle)}>*/}
+						{/*<RaisedButton*/}
+							{/*backgroundColor={p.accent4Color}*/}
+							{/*style={styles.headerButton}*/}
+							{/*labelColor={p.textColor}*/}
+							{/*labelPosition='before'*/}
+							{/*label=""*/}
+							{/*fullWidth={true}*/}
+							{/*labelStyle={styles.headerButtonLabel}*/}
+							{/*icon={<MIcon extraStyle={styles.headerButtonIcon}>add</MIcon>}>*/}
+						{/*</RaisedButton>*/}
+					{/*</div>*/}
 					<div style={makeStyle(styles.header,headerStyle)}>
 						<RaisedButton
 							backgroundColor={p.accent4Color}

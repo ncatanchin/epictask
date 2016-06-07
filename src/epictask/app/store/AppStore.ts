@@ -4,6 +4,7 @@ const log = getLogger(__filename)
 import thunkMiddleware from 'redux-thunk'
 import * as createLogger from 'redux-logger'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
+import {AppActionFactory as AppActionFactoryType} from 'app/actions'
 
 import {
 	setStoreProvider,
@@ -13,8 +14,6 @@ import {
 
 
 const reduxLogger = createLogger();
-
-
 
 
 /**
@@ -87,6 +86,13 @@ function getDebugSessionKey() {
 	return 'electron-debug-session'
 }
 
+function onError(err:Error,reducer?:ILeafReducer<any,any>) {
+	const AppActionFactory:typeof AppActionFactoryType = require('app/actions').AppActionFactory
+
+	const actions = new AppActionFactory()
+	actions.addErrorMessage(err)
+}
+
 /**
  * Initialize/Create the store
  */
@@ -103,6 +109,7 @@ function initStore() {
 		compose(applyMiddleware(...middleware), devToolsMiddleware) as StoreEnhancer<any>
 	)
 
+	newStore.rootReducer.onError = onError
 	newStore.subscribe(onChange)
 
 	store = newStore

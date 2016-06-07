@@ -47,14 +47,9 @@ module.exports = function (projectConfig) {
 			},
 			modules: [
 				path.resolve(baseDir,'src'),
-				//path.resolve(baseDir,'src/epictask/assets'),
-				path.resolve(baseDir,'node_modules'),
-				// path.resolve(baseDir,'../typestore/packages'),
-				// path.resolve(baseDir,'..'),
-				// path.resolve(baseDir,'../typedux','node_modules'),
-				// path.resolve(baseDir,'../typemutant','node_modules'),
-				//path.resolve(baseDir,'..','node_modules')
+				path.resolve(baseDir,'node_modules')
 			],
+			
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
 
@@ -77,6 +72,7 @@ module.exports = function (projectConfig) {
 			new DefinePlugin({
 				__DEV__: isDev,
 				DEBUG: isDev,
+				'process.env.__DEV__': isDev,
 				'process.env.NODE_ENV': JSON.stringify(env)
 			})
 			// new webpack.ProvidePlugin({

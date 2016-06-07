@@ -7,28 +7,70 @@ html.fill-width.fill-height(lang="en")
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 
 		title epic.ly
-		//if process.env.HOT
-		//	base(href="http://localhost:4444")
-		script.
+		if __DEV__
+			base(href="http://localhost:4444")
+		style=cssGlobal
+		script(id='et-loader').
+			if (!window.$)
+				window.$ = require('jquery')
 
-			(function () {
-				if (!process.env.HOT) {
+			if (!window.log)
+				window.log = require('electron').remote.getGlobal('getLogger')('MainEntry.jade')
+
+			if (!$.fn.getStyles) {
+				$.fn.getStyles = function () {
+					var styles = window.getComputedStyle(this[0])
+					var styleObj = {}
+					for (var i = 0; i < styles.length;i++) {
+						var prop = styles[i]
+						var val = styles[prop]
+						if (val)
+							styleObj[prop] = val
+					}
+					console.log(styleObj)
+					log.info('styles',styleObj)
+					return styleObj
+				}
+			}
+			var baseDir = "#{baseDir}"
+			var loaded = false
+			var isDev = "#{Env.isDev}" === 'true'
+			function addScript(scriptPath) {
+				const script = document.createElement('script');
+				const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
+				script.src = basePath + scriptPath
+
+				document.body.appendChild(script)
+			}
+
+			window.loadEpicTask = function() {
+				if (loaded) {
+					if (!isDev) {
+						console.warn('loadEpicTask is disabled in non dev mode')
+						return
+					}
+
+					console.log('Reloading content in dev mode')
+
+					var sElem = document.getElementById('et-loader')
+					var nextElem = sElem
+					while (nextElem = nextElem.nextSibling) {
+						nextElem.parentNode.removeChild(nextElem)
+					}
+				}
+
+				loaded = true
+				document.body.innerHTML = "<div id='root' class='fill-width fill-height'></div>"
+
+				if (!isDev) {
 					const link = document.createElement('link');
 					link.rel = 'stylesheet';
 					link.href = baseDir + '/dist/style.css';
 					document.write(link.outerHTML);
 				}
-			}());
-		style=cssGlobal
-	body.fill-width.fill-height(style="-webkit-app-region: drag")
-		#root.fill-width.fill-height
-		script.
-			(function () {
-				function addScript(scriptPath) {
-					const script = document.createElement('script');
-					const basePath = (process.env.HOT) ? 'http://localhost:4444/dist' : baseDir + '/dist';
-					script.src = basePath + scriptPath
-					document.write(script.outerHTML);
-				}
+
 				addScript('/AppEntry.js')
-			}());
+			}
+	body.fill-width.fill-height(style="-webkit-app-region: drag")
+		script.
+			window.loadEpicTask()

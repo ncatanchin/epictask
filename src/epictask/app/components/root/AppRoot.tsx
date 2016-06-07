@@ -4,20 +4,23 @@
 
 // Imports
 import * as React from 'react'
+import * as _ from 'lodash'
 import {Provider, connect} from 'react-redux'
 const {HotKeys} = require('react-hotkeys')
 import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexScale,Fill,makeTransition} from 'app/styles'
 
 // Get the pieces
 import {MuiThemeProvider} from "material-ui/styles"
+import {Snackbar} from 'material-ui'
 import {Header,HeaderVisibility} from 'components'
 import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'app/actions'
-import {AppState, TAppState} from 'app/actions'
+import {TAppState,IToastMessage} from 'app/actions'
 import {AppStateType,AvailableRepo} from 'shared'
 import {AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
+import {Ellipsis} from '../../styles/CommonStyles'
 
 
 const log = getLogger(__filename)
@@ -31,12 +34,18 @@ const appActions = new AppActionFactory()
 
 // DEBUG then load DevTools
 const DevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : <div></div>
+let devToolsRef = null
+let appElement = null
+let monitorStateSubscribed = false
+let monitorStatePrevious = null
 
-interface AppProps {
+export interface IAppProps {
 	store:any
 	theme:any
-	stateType:AppStateType,
-	availableRepos?:AvailableRepo[]
+	stateType:AppStateType
+	hasAvailableRepos:boolean
+	messages:IToastMessage[]
+	adjustedBodyStyle:any
 }
 
 // Styles
@@ -49,25 +58,97 @@ const styles = {
 
 	}),
 
-	content: makeStyle(makeTransition(), FlexColumn,{
+	content: makeStyle(makeTransition(), FlexColumn, PositionRelative, {
 		flexBasis: 0,
 		flexGrow: 1,
 		flexShrink: 1
 	}),
 
-	collapsed: makeStyle({flexGrow: 0})
+	collapsed: makeStyle({flexGrow: 0}),
+
+	toast: makeStyle(PositionAbsolute,Ellipsis,{
+		bottom: 0,
+		left: '50%',
+		transform: 'translateX(-50%)',
+		overflow: 'hidden'
+	})
 }
 
+/**
+ * Calculates an adjusted style in DEBUG when the monitor is
+ * visible so that the full body can be seen
+ *
+ * @param connectInstance
+ * @returns {any}
+ */
+function getAdjustedBodyStyle(connectInstance:any) {
+	const store = (connectInstance) ? connectInstance.store : {}
+	const {liftedStore} = store
+	if (!DEBUG || !liftedStore)
+		return {}
 
+	const {monitorState} = liftedStore.getState()
+	let bodyStyle:any = {
+		maxWidth: '100%',
+		minWidth: '100%',
+		maxHeight: '100%',
+		minHeight: '100%'
+	}
+
+	if (monitorState && !monitorStateSubscribed) {
+		monitorStateSubscribed = true
+		liftedStore.subscribe(_.debounce(function() {
+			const newMonitorState = _.pick(liftedStore.getState().monitorState,'isVisible','position')
+			if (_.isEqual(monitorStatePrevious, newMonitorState) || _.isEqual(appActions.state.monitorState, newMonitorState)) {
+				// no change
+			} else if (!appElement) {
+				log.debug('monitor state changed, but no app element yet')
+			} else {
+				monitorStatePrevious = newMonitorState
+				appActions.setMonitorState(newMonitorState)
+			}
+		},500))
+	}
+
+	if (devToolsRef && monitorState && monitorState.isVisible) {
+		const elem = (ReactDOM.findDOMNode(devToolsRef) as any).children[0]
+		const {position} = monitorState
+
+		const
+			maxHeight = window.innerHeight - elem.clientHeight,
+			maxWidth = window.innerWidth - elem.clientWidth
+
+		bodyStyle = (position === 'top') ? {
+			maxHeight,
+			minHeight: maxHeight,
+			marginTop: elem.clientHeight
+		} : (position === 'bottom') ? {
+			maxHeight,
+			minHeight: maxHeight
+		} : (position === 'right') ? {
+			maxWidth,
+			minWidth: maxWidth
+		} : {
+			maxWidth,
+			minWidth: maxWidth,
+			marginLeft: elem.clientWidth
+		}
+
+	}
+
+	return bodyStyle
+}
 
 // Redux state -> props
 function mapStateToProps(state) {
 	const appState = state.get(AppKey)
-	const repoState = state.get(RepoKey)
+	const {availableRepos} = state.get(RepoKey)
 	return {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
-		availableRepos: repoState.availableRepos
+		hasAvailableRepos: availableRepos && availableRepos.length > 0,
+		messages: appState.messages,
+		adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
 }
 
@@ -79,15 +160,14 @@ function mapStateToProps(state) {
  * Root App Component
  */
 @connect(mapStateToProps)
-class App extends React.Component<AppProps,TAppState> {
+class App extends React.Component<IAppProps,any> {
 
 	pageBodyHolder
 
 	constructor(props, context) {
 		super(props, context)
+
 	}
-
-
 
 	keyHandlers = {
 		[KeyMaps.CommonKeys.Escape]: () => {
@@ -100,25 +180,42 @@ class App extends React.Component<AppProps,TAppState> {
 	 * Render the app container
 	 */
 	render() {
-		const {availableRepos,stateType,theme} = this.props
+		const
+			{hasAvailableRepos,messages,stateType,theme,adjustedBodyStyle} = this.props,
+			{palette} = theme
+
 		const
 			page = {component: getPage(stateType)},
-			expanded = stateType > AppStateType.AuthLogin && (!availableRepos || availableRepos.length === 0),
+			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
 			contentStyles = makeStyle(styles.content, {
-				backgroundColor: theme.palette.canvasColor,
+				backgroundColor: palette.canvasColor,
 				display: 'flex',
 				flexDirection: 'column'
 			},expanded && styles.collapsed),
 			headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
 				(expanded) ? HeaderVisibility.Expanded :
-					HeaderVisibility.Normal
+					HeaderVisibility.Normal,
+
+			toastBodyStyle = makeStyle(Ellipsis,{
+				backgroundColor: palette.accent3Color,
+				overflow: 'hidden',
+				position: 'relative',
+				display: 'block'
+			}),
+			toastStyle = makeStyle(styles.toast,toastBodyStyle,{
+				fontFamily: theme.fontFamily
+			}),
+			toastContentStyle = makeStyle(toastBodyStyle, {
+				color: palette.accent3ColorText,
+				maxWidth: '100%'
+			})
 
 		return (
-			<MuiThemeProvider muiTheme={this.props.theme}>
+			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={store.getReduxStore()}>
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
 						{/* Global flex box */}
-						<div className="fill-height fill-width" style={styles.content}>
+						<div className="fill-height fill-width" style={makeStyle(styles.content,adjustedBodyStyle)}>
 							<Header visibility={headerVisibility}/>
 							<HotKeys ref={(c) => this.pageBodyHolder = c}
 							         style={makeStyle(FlexScale,FlexColumn)}>
@@ -128,12 +225,26 @@ class App extends React.Component<AppProps,TAppState> {
 								</div>
 
 								{/* DevTools */}
-								<DevTools/>
-
+								<DevTools ref={(c) => devToolsRef = c}/>
 							</HotKeys>
+							{messages.map(msg => {
+								return <Snackbar
+									key={msg.id}
+									open={true}
+									message={<div style={toastContentStyle}>{msg.content}</div>}
+									bodyStyle={toastBodyStyle}
+									style={toastStyle}
+									autoHideDuration={4000}
+									onRequestClose={() => appActions.removeMessage(msg.id)}
+								/>
+							})}
 						</div>
+
+
 					</HotKeys>
+
 				</Provider>
+
 			</MuiThemeProvider>
 
 		)
@@ -142,13 +253,14 @@ class App extends React.Component<AppProps,TAppState> {
 
 
 function render() {
-	const appState = appActions.state
+	// const appState = appActions.state
+	const props = mapStateToProps(store.getState())
+	appElement = <App
+		store={store.getReduxStore()}
+		{...props}
+	/>
 	ReactDOM.render(
-		<App
-			store={store.getReduxStore()}
-			theme={appState.theme}
-			stateType={appState.stateType}
-		/>,
+		appElement,
 		document.getElementById('root')
 	)
 }
