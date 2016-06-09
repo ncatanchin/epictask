@@ -1,4 +1,4 @@
-import 'reflect-metadata'
+//import 'reflect-metadata'
 import {getLogger as LoggerFactory} from 'typelogger'
 import * as ImmutableGlobal from 'immutable'
 

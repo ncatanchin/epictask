@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import './Globals'
 import * as Immutable from 'immutable'
 import {isFunction,Enumerable,EnumerableProperty} from "./util"
@@ -34,10 +33,11 @@ export class NotMutableError extends Error {
  * @constructor
  */
 export function RecordModel(opts = {}) {
-	return target => {
-		Reflect.defineMetadata('test',target,{hello:'hello'})
-		const targetType = Reflect.getMetadata('design:type',target)
-		log.debug('In decorator',targetType)
+	return function(constructor:Function) {
+		//Reflect.defineMetadata('test',target,{hello:'hello'})
+		const targetType = Reflect.getOwnMetadata('design:type',constructor)
+		log.info('Decoratoring Mutant:',constructor,targetType)
+		Reflect.defineMetadata('db:mutant',constructor,{isMutant:'true'})
 	}
 }
 
