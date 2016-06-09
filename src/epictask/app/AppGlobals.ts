@@ -42,10 +42,7 @@ Object.assign(global,{
 /**
  * Now the shared globals - this is required for propper logging config
  */
-import "shared/Globals"
-import "./ThemeManager"
-
-
+require("shared/Globals")
 
 declare global {
 	var CSSModules:any

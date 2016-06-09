@@ -58,7 +58,6 @@ function getReducers():ILeafReducer<any,any>[] {
 
 	const mods = ctx.keys().map(ctx)
 
-
 	const reducers = []
 	mods.forEach(mod => {
 		for (let key of Object.keys(mod)) {

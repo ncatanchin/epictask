@@ -1,18 +1,17 @@
 import {ActionFactory,Action} from 'typedux'
-import {createClient} from '../../../shared/GitHubClient'
 import {SearchKey} from "../../../shared/Constants"
-import {AppActionFactory,RepoActionFactory} from '../'
+
 import {SearchState, SearchResults, SearchResult, SearchResultType} from './SearchState'
 import {SearchMessage} from './SearchReducer'
-import {AppStateType,Settings} from 'epictask/shared'
-import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from '../../../shared/GitHubModels'
-import {getRepo} from '../../../shared/DBService'
-import {IModel, Repo as TSRepo} from 'typestore'
+import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from 'shared/models'
+import {getRepo} from 'shared/DB'
+import {AppActionFactory} from '../AppActionFactory'
+import {RepoActionFactory} from '../repo/RepoActionFactory'
 
 const uuid = require('node-uuid')
 const log = getLogger(__filename)
 const gAppActions = new AppActionFactory()
-const gRepoActions = new RepoActionFactory()
+
 
 async function findRepos<M extends AvailableRepo|Repo,R extends AvailableRepoRepo|RepoRepo>(query:string,repoClazz:{new():R}):Promise<SearchResult<any>[]> {
 	const tsRepo = getRepo(repoClazz) as AvailableRepoRepo|RepoRepo
@@ -58,7 +57,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 		log.info('selected result',result)
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const repoActions = gRepoActions.withDispatcher(dispatch,getState)
+			const repoActions = RepoActionFactory.newWithDispatcher(RepoActionFactory,dispatch,getState)
 
 			switch (result.type) {
 				case SearchResultType.AvailableRepo:

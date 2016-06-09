@@ -7,9 +7,9 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {Issue, isIssue, Repo, AvailableRepo} from '../../../shared/GitHubModels'
+import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {getStore} from '../../store'
-import {RepoKey} from '../../../shared/Constants'
+import {RepoKey} from 'shared/Constants'
 
 export enum SearchResultType {
 	Issue = 1,

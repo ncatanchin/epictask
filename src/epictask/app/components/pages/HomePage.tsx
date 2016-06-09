@@ -2,22 +2,21 @@ import * as React from 'react'
 import {Dialog,AutoComplete,FlatButton} from 'material-ui'
 
 const log = getLogger(__filename)
-import {RepoActionFactory,AuthActionFactory,TRepoState,TAuthState} from 'epictask/app/actions'
 import {RepoPanel,IssuesPanel,IssueDetailPanel} from 'components'
 import {Repo} from 'epictask/shared'
-import {getStore} from '../../store'
+import {getStore} from 'app/store'
 import {Page} from './'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
 import {Icon} from '../common'
+import {RepoKey} from '../../../shared/Constants'
 
 const Resizable = require('react-component-resizable')
 
-const repoActions = new RepoActionFactory()
-const authActions = new AuthActionFactory()
 const appActions = new AppActionFactory()
+
 
 const styles = {
 	bodyWrapper: makeStyle(FlexScale,Fill)
@@ -31,7 +30,7 @@ interface IHomeProps {
 }
 
 function mapToProps(state) {
-	const repoState = repoActions.state
+	const repoState = state.get(RepoKey)
 
 	return {
 		repo: repoState.repo,

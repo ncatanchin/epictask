@@ -1,9 +1,8 @@
-import {AppStateType} from '../../shared'
+import {AppStateType} from '../../shared/AppStateType'
 import {getStore} from '../store'
-import {AppActionFactory,} from '../actions'
-import {AuthActionFactory} from '../actions/auth'
-import {RepoActionFactory} from '../actions/repo'
-import {Settings} from '../../shared/Settings'
+import {AppActionFactory} from '../actions/AppActionFactory'
+import {AuthActionFactory} from '../actions/auth/AuthActionFactory'
+import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
 
 
 const log = getLogger(__filename)
@@ -13,7 +12,6 @@ const authActions = new AuthActionFactory()
 const repoActions = new RepoActionFactory()
 
 let stateType = null
-
 
 async function updateStateType() {
 	const newStateType = appActions.state.stateType
@@ -38,6 +36,6 @@ export async function start() {
 
 	store.observe(appActions.leaf(),() => {
 		updateStateType()
-	})	
+	})
 }
 

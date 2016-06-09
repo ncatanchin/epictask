@@ -4,22 +4,30 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {JobHandler} from './'
-
-export enum JobStatus {
-	Created = 1,
-	InProgress,
-	Completed,
-	Failed
-}
+import {JobStatus} from './JobStatus'
+import {JobHandler} from './JobHandler'
+import * as uuid from 'node-uuid'
 
 export interface IJob {
 	id:string
 	status:JobStatus
-	handler:JobHandler
 	progress:number
+	request:IJobRequest
+	handler?:JobHandler
 	message?:string
 	error?:Error
+	updatedAt?:number
+}
+
+
+export interface IJobExecutor {
+	(handler:JobHandler):void
+}
+
+
+export interface IJobRequest {
+	oneAtATime?:boolean
+	executor:IJobExecutor
 }
 
 @RecordModel()
@@ -37,6 +45,8 @@ class JobStateModel {
 		if (existingJob)
 			updatedJob = Object.assign({},existingJob,updatedJob)
 
+		Object.assign(updatedJob,{updatedAt:Date.now()})
+
 		this.jobs = this.jobs
 			.filter(job => job.id !== updatedJob.id)
 			.concat([updatedJob])
@@ -44,8 +54,14 @@ class JobStateModel {
 		return this
 	}
 
-	createJob(newJob:IJob) {
-		return this.updateJob(newJob)
+	createJob(request:IJobRequest) {
+		const job = {
+			id: uuid.v4(),
+			    request,
+			progress: 0,
+			status: JobStatus.Created
+		}
+		return this.updateJob(job)
 	}
 
 	removeJob(oldJob:IJob|string) {
@@ -56,8 +72,9 @@ class JobStateModel {
 		return this
 	}
 
-	
-	
+
+
+
 	setError(err:Error) {
 		this.error = err
 		return this

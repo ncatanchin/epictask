@@ -1,13 +1,36 @@
-
+import 'lunr'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
 
-import {Repo, User, Milestone, Issue, Comment, AvailableRepo}  from './GitHubModels'
+import {
+	Repo,
+	RepoRepo,
+	User,
+	Milestone,
+	MilestoneRepo,
+	Issue,
+	IssueRepo,
+	Comment,
+	CommentRepo,
+	Label,
+	LabelRepo,
+	AvailableRepo,
+	AvailableRepoRepo
+}  from 'shared/models'
 
-export type TRepoMap = {[name:string]:TSRepo<any>}
+export interface IRepos {
+	issue:IssueRepo
+	repo: RepoRepo
+	availableRepo: AvailableRepoRepo
+	milestone: MilestoneRepo
+	comment: CommentRepo
+	label: LabelRepo
+
+}
+
+export const Repos:IRepos = {} as any
 
 export let coordinator:TSCoordinator = null
-export let repos:TRepoMap = null
 export let storePlugin:IndexedDBPlugin = null
 
 
@@ -15,16 +38,16 @@ let started = false
 
 /**
  * Start the database and data services
- * 
+ *
  * @returns {boolean}
  */
 export async function start() {
 	if (started)
 		return true
-	
+
 	// Mark
 	started = true
-	
+
 	// Create the store Plugin first
 	storePlugin = new IndexedDBPlugin({
 		databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
@@ -36,22 +59,33 @@ export async function start() {
 	coordinator = new TSCoordinator()
 	await coordinator.init({},storePlugin)
 
-	// const {Repo, User, Milestone, Issue, Comment, AvailableRepo} = require('./GitHubModels')
-	const modelClazzes = [Repo,User,Milestone,Issue,Comment,AvailableRepo]
+	const modelClazzes = [
+		Repo,
+		User,
+		Milestone,
+		Issue,
+		Label,
+		Comment,
+		AvailableRepo
+	]
+
 	await coordinator.start(...modelClazzes)
 
-	repos = modelClazzes.reduce((repoMap,modelClazz:Function) => {
-		repoMap[modelClazz.name] = coordinator.getRepo
-
-		return repoMap
-	},{})
+	Object.assign(Repos,{
+		issue: getRepo(IssueRepo),
+		repo: getRepo(RepoRepo),
+		availableRepo: getRepo(AvailableRepoRepo),
+		milestone: getRepo(MilestoneRepo),
+		comment: getRepo(CommentRepo),
+		label: getRepo(LabelRepo)
+	})
 
 	return true
 }
 
 /**
  * Get a repo instance for the local database
- * 
+ *
  * @param repoClazz
  * @returns {T}
  */

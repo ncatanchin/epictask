@@ -13,7 +13,7 @@ import {SearchResults, SearchResult, SearchResultType} from 'app/actions/search/
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexColumnCenter,FlexAlignEnd,FlexScale,FillWidth,Fill,makeTransition} from 'app/themes'
 import {SearchResultsList} from './SearchResultsList'
-import {isIssue} from 'shared/GitHubModels'
+import {isIssue} from 'shared/models'
 
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
@@ -64,8 +64,6 @@ function mapStateToProps(state) {
 @CSSModules(styles)
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 
-
-
 	static defaultProps = {
 		inlineResults: false,
 		expanded:      false
@@ -87,7 +85,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Blue handler checks to see if
 	 * focus has moved away from the search panel
-	 * 
+	 *
 	 * @param event
 	 */
 	onBlur = (event) => {

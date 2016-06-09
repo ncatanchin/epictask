@@ -29,6 +29,7 @@ export interface IStatus {
 	message?:string
 }
 
+
 export enum ToastMessageType {
 	Debug = 1,
 	Info,
@@ -56,7 +57,7 @@ export function makeToastMessage(opts:any) {
 }
 
 @RecordModel()
-class AppStateModel {
+export class AppStateModel {
 
 	@RecordProperty()
 	stateType:AppStateType

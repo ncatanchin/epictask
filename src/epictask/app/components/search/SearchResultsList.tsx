@@ -6,25 +6,30 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import {isIssue,Repo,AvailableRepo} from 'shared'
+import {isIssue,Repo,AvailableRepo} from 'shared/models'
 import {SearchResults, SearchResult, SearchResultType} from 'app/actions/search/SearchState'
-import {BaseThemedComponent, IThemedState} from '../../ThemeManager'
-import {makeStyle,rem,FlexRowCenter,Ellipsis,FlexColumnCenter,makeTransition} from 'app/themes'
-import {Issue} from '../../../shared/GitHubModels'
-import {RepoActionFactory} from '../../actions/repo/RepoActionFactory'
+import {BaseThemedComponent, IThemedState} from 'app/ThemeManager'
+import {makeStyle,rem,FlexRow,FontBlack,
+	FlexRowCenter,FlexScale,FlexAuto,makeFlexAlign,
+	Ellipsis,FlexColumnCenter,makeTransition} from 'app/themes'
+import {Issue} from 'shared/models'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
+import {Renderers} from 'app/components'
+import * as Radium from 'radium'
 
 // Constants
 const log = getLogger(__filename)
 
 const repoActions = new RepoActionFactory()
-const elementClass = require('element-class')
+//const elementClass = require('element-class')
 //const styleVisible = styles.resultsModalVisible
-const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;
+//const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;
 
 const doc = document
 const {body} = doc
 
 
+//region Styles
 const styles = {
 	resultsModal: {
 		position: 'absolute',
@@ -52,19 +57,25 @@ const styles = {
 	},
 
 	result: makeStyle(makeTransition(),FlexRowCenter,{
-		padding: `0.1rem 1rem`,
+		padding: `1rem 1rem`,
 		cursor: 'pointer'
 	}),
 
-	resultInfo: makeStyle(FlexColumnCenter,{
-		alignItems: 'flex-start',
-		justifyContent: 'flex-start'
-
+	resultInfo: makeStyle(FlexColumnCenter,makeFlexAlign('stretch','center'),{
+			paddingRight: '2rem'
 	}),
 
-	resultLabel: makeStyle(Ellipsis,{
+
+	resultLabel: makeStyle(Ellipsis,FlexAuto,{
+		flexShrink: 1,
 		fontWeight: 100,
-		fontSize: rem(1.6)
+		fontSize: rem(1.6),
+		padding: '0 0 0.5rem 0'
+	}),
+
+	resultLabelSecond: makeStyle(FlexAuto,{
+		fontWeight: 100,
+		fontSize: rem(1.2)
 	}),
 
 	resultLabelSelected: {
@@ -100,8 +111,13 @@ const styles = {
 		fontSize: rem(0.8),
 		opacity: 0.8,
 		padding: `0.1rem 1rem`
-	})
+	}),
+
+	padded: {
+		padding: '0.2rem 1rem'
+	}
 }
+//endregion
 
 
 /**
@@ -125,14 +141,16 @@ export interface ISearchResultsListProps {
  * @class SearchResults
  * @constructor
  **/
-
-@CSSModules(styles)
+@Radium
 export class SearchResultsList extends BaseThemedComponent<ISearchResultsListProps,IThemedState> {
 
 	static getInitialState() {
 		return {}
 	}
 
+	/**
+	 * Mount node for search results
+	 */
 	node:HTMLElement
 
 	constructor(props,context) {
@@ -168,7 +186,8 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		return this.state.theme.searchResults
 	}
 
-	renderResult(label,actionLabel,typeLabel,isSelected) {
+
+	renderResult(label:any,labelSecond:any,actionLabel,typeLabel,isSelected) {
 		const
 			// Get theme pack
 			themeStyles = this.getThemeStyles(),
@@ -201,16 +220,18 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 			)
 
 		return <div style={resultStyle}>
-			<div style={styles.resultInfo}>
+			<div style={makeStyle(styles.resultInfo,styles.padded)}>
 				<div style={labelStyle}>
 					{label}
 				</div>
-
-				<div style={actionStyle}>
-					{actionLabel}
-				</div>
+				{/*<div style={actionStyle}>*/}
+					{/*{actionLabel}*/}
+				{/*</div>*/}
 			</div>
-			<div style={typeStyle}>
+			<div style={makeStyle(labelStyle,styles.resultLabelSecond,styles.padded)}>
+				{labelSecond}
+			</div>
+			<div style={makeStyle(typeStyle,styles.padded)}>
 				{typeLabel}
 			</div>
 		</div>
@@ -219,7 +240,11 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 	renderRepo(repoResult:SearchResult<Repo>,isSelected) {
 		const repo = repoResult.value
 
-		return this.renderResult(repo.full_name,'Add issue repo','repo',isSelected)
+		return this.renderResult(
+			Renderers.repoName(repo),
+			`${repo.open_issues_count} open issues`,
+			'Add issue repo','repo',
+			isSelected)
 	}
 
 	/**
@@ -240,7 +265,8 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		// Row 1: label
 		// Row 2: possible action
 		return this.renderResult(
-			repo.full_name,
+			Renderers.repoName(repo),
+			`${repo.open_issues_count} open issues`,
 			(availRepoSelected) ? 'Hide issues' : 'Show Issues',
 			'repo',
 			isSelected)

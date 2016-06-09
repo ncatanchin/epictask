@@ -1,7 +1,6 @@
 import * as fs from 'fs'
 import {getUserDataFilename, readFileSync} from './util/Files'
 import {Property} from "./util/Decorations";
-import {Repo} from './GitHubModels'
 import {toJSON} from "./util/JSONUtil";
 
 const log = getLogger(__filename)

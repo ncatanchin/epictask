@@ -6,13 +6,13 @@ import {RepoKey} from '../../../shared/Constants'
 const log = getLogger(__filename)
 
 import * as React from 'react'
-import {TRepoState,RepoActionFactory} from 'app/actions'
-import {Icon} from 'app/components'
+import {TRepoState,RepoActionFactory} from 'app/actions/repo'
+import {Icon,Renderers} from 'app/components'
 import {AvailableRepo,Repo} from 'shared'
 import {connect} from 'react-redux'
 import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexAuto,FlexScale,FlexAlignStart,FillWidth,Ellipsis,FlexColumnCenter,makeTransition} from 'app/themes'
 
-const repoActions = new RepoActionFactory()
+
 
 export interface IRepoListProps {
 	availableRepos?:AvailableRepo[]
@@ -81,6 +81,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
+		const repoActions = new RepoActionFactory()
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo,!isSelected)
 		} else {
@@ -93,7 +94,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	render() {
-
+		const repoActions = new RepoActionFactory()
 		const {availableRepos,repos,theme,selectedRepos = []} = this.props
 
 		const themeStyles = theme.repoPanel
@@ -123,7 +124,12 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
 			                )}>
 					<Icon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</Icon>
-					<div style={styles.itemLabel}>{repo.name}</div>
+					<div style={styles.itemLabel}>{Renderers.repoName(repo)}</div>
+					<Icon extraStyle={{}} onClick={(e) => {
+						e.stopPropagation()
+						e.preventDefault()
+						repoActions.syncIssues(availRepo)
+					}}>sync</Icon>
 				</li>
 			})}
 		</ul>

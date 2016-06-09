@@ -49,7 +49,7 @@ module.exports = function (projectConfig) {
 				path.resolve(baseDir,'src'),
 				path.resolve(baseDir,'node_modules')
 			],
-			
+
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
 
@@ -97,7 +97,6 @@ module.exports = function (projectConfig) {
 					// /typestore/,
 					// /typedux/,
 					// /typemutant/,
-					/electron-oauth-github/,
 					/browser-next-tick/,
 					/urlsearchparams/
 				]

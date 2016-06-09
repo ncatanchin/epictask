@@ -1,34 +1,14 @@
-/**
- * Install source map support with a custom handler
- * for NON absolute paths
- */
-require('source-map-support').install({
-	retrieveSourceMap(source) {
-		if (/^(\/|\.|http|file)/.test(source)) {
-			return null
-		}
-
-		return {map:{
-			version: 3,
-			file: "null.js.map",
-			sources: [],
-			sourceRoot: "/",
-			names: [],
-			mappings: ""
-		}}
-	}
-})
 
 /**
  * Grab a ref to global marked as any for augmentation
- * 
+ *
  * @type {any}
  */
 const g = global as any
 
 /**
  * Replace es6-promise with bluebird
- * 
+ *
  * @type {any|"~bluebird/bluebird".Bluebird}
  */
 require('babel-runtime/core-js/promise').default = require('bluebird')
@@ -41,7 +21,6 @@ Object.assign(global as any,{
 
 
 // Now everything else
-import 'reflect-metadata'
 import {getLogger as LoggerFactory} from 'typelogger'
 
 // OVERRIDE PROMISE - FIRST

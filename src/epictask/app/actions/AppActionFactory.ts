@@ -1,8 +1,8 @@
 import {ActionFactory,Action,ActionMessage} from 'typedux'
-import {AppStateType} from '../../shared'
-import {AppKey} from "../../shared/Constants"
+import {AppStateType} from 'shared/AppStateType'
+import {AppKey} from "shared/Constants"
 import {AppState, IToastMessage} from './AppState'
-import {Repo} from '../../shared/GitHubModels'
+import {Repo} from 'shared/models'
 
 const log = getLogger(__filename)
 
@@ -36,8 +36,8 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	removeMessage(id:string) {}
-	
+
 	@Action()
 	setMonitorState(monitorState:any) {}
-	
+
 }

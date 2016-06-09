@@ -17,6 +17,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 		super(AuthState)
 	}
 
+
 	leaf():string {
 		return AuthKey;
 	}

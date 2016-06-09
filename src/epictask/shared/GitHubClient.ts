@@ -1,6 +1,7 @@
 import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {Settings} from './Settings'
-import * as GitHubSchema from './GitHubModels'
+import * as GitHubSchema from 'shared/models'
+import {Repo,Issue,User} from 'shared/models'
 const {URLSearchParams} = require('urlsearchparams')
 
 const log = getLogger(__filename)
@@ -15,6 +16,11 @@ function makeUrl(path:string,query:any = null) {
 
 }
 
+const DefaultGetOpts ={
+	traversePages:true,
+	page:0
+}
+
 enum HttpMethod {
 	GET,
 	POST,
@@ -23,11 +29,14 @@ enum HttpMethod {
 	DELETE
 }
 
+export type OnPageCallback<M> = (pageNumber:number,totalPages:number,pageItems:M[]) => void
+
 export interface RequestOptions {
 	traversePages?:boolean
 	perPage?:number
 	page?:number
 	params?:number
+	onPageCallback?:OnPageCallback<any>
 }
 
 
@@ -103,16 +112,45 @@ export class GitHubClient {
 		return result as any
 	}
 
-	async user():Promise<GitHubSchema.User> {
+
+	async user():Promise<User> {
 		return await this.get<GitHubSchema.User>('/user')
 	}
 
-
-	async userRepos(opts:RequestOptions = {traversePages:false,page:0}):Promise<PagedArray<GitHubSchema.Repo>> {
-		const {traversePages,page} = opts
-
-		return await this.get<PagedArray<GitHubSchema.Repo>>('/user/repos',{traversePages,page})
+	async userRepos(opts:RequestOptions = DefaultGetOpts):Promise<PagedArray<GitHubSchema.Repo>> {
+		return await this.get<PagedArray<Repo>>('/user/repos',opts)
 	}
+
+
+	/**
+	 * Helper function for building paged gets with repo param
+	 *
+	 * @param model
+	 * @param urlTemplate
+	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
+	 */
+	private makePagedRepoGetter<M>(model:{new():M;},urlTemplate:string) {
+		return async (repo:Repo,opts:RequestOptions = DefaultGetOpts) => {
+			const url = urlTemplate.replace(/<repoName>/g,repo.full_name)
+			return await this.get<PagedArray<M>>(url,opts)
+		}
+	}
+
+	/**
+	 * Get all issues in repo
+	 */
+	repoIssues = this.makePagedRepoGetter(Issue,'/repos/<repoName>/issues')
+
+	/**
+	 * Get all labels in repo
+	 */
+	repoLabels = this.makePagedRepoGetter(Issue,'/repos/<repoName>/labels')
+
+	/**
+	 * Get all milestones
+	 */
+	repoMilestones = this.makePagedRepoGetter(Issue,'/repos/<repoName>/milestones')
+
 }
 
 export function createClient(token:string = null) {

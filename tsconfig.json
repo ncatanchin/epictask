@@ -10,6 +10,7 @@
 		"preserveConstEnums": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
+		"outDir": "dist/tsc",
 		"baseUrl": "./src",
 		"paths": {
 			"epictask/*": [

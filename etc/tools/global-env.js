@@ -9,15 +9,13 @@ const
 	git = require('gulp-git'),
 	ghRelease = require('gulp-github-release'),
 	tsc = require('typescript'),
-	babel = require('gulp-babel'),
-	tsdoc = require('gulp-typedoc')
+	babel = require('gulp-babel')
 
 
 
 Object.assign(global,{
 	tsc,
 	babel,
-	tsdoc,
 	gulp,
 	runSequence,
 	del,

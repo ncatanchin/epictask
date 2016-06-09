@@ -1,5 +1,5 @@
 import {getStore} from './store'
-import {AppActionFactory} from './actions'
+import {AppActionFactory} from './actions/AppActionFactory'
 import {MuiThemeProvider} from "material-ui/styles"
 import {PropTypes} from 'react'
 import * as React from 'react'

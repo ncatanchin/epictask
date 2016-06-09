@@ -25,10 +25,13 @@ export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
 
+
+
 export const OverflowHidden = {
 	overflow: 'hidden'
 }
 
+//region Positioning
 export const PositionRelative = {
 	position: 'relative'
 }
@@ -51,8 +54,12 @@ export const FillWidth = {
 	overflow: 'hidden'
 }
 
-export const Fill = makeStyle(FillHeight,FillWidth)
 
+export const Fill = makeStyle(FillHeight,FillWidth)
+//endregion
+
+
+//region Flexbox
 export const Flex = {
 	display: 'flex'
 }
@@ -89,9 +96,16 @@ export const FlexAlignCenter = makeFlexAlign('center')
 export const FlexAlignStart = makeFlexAlign('flex-start')
 
 export const FlexAlignEnd = makeFlexAlign('flex-end')
+//endregion
+
+//region Text/Font
+export const FontBlack = {
+	fontWeight:700
+}
 
 export const Ellipsis = makeStyle(Flex,{
 	whiteSpace: 'nowrap',
 	overflow: 'hidden',
 	textOverflow: 'ellipsis'
 })
+//endregion

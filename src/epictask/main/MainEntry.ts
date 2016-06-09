@@ -1,3 +1,5 @@
+require('shared/SourceMapSupport')
+import 'reflect-metadata'
 const electron = require('electron')
 
 // LOGGING
@@ -5,7 +7,7 @@ import './MainLogging'
 
 
 // LOAD EVERYTHING
-import 'shared/CommonEntry'
+import 'shared/Globals'
 import 'shared/ErrorHandling'
 
 import * as MainWindowType from './MainWindow'

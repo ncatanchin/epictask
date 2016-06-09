@@ -6,6 +6,7 @@
 	],
 	"sourceMaps": "both",
 	"plugins": [
+		"add-module-exports",
 		"transform-runtime"
 	]
 }

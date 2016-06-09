@@ -8,23 +8,13 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {Repo, AvailableRepo} from 'shared/GitHubModels'
-import {Settings,Constants} from 'shared'
+import {Repo, AvailableRepo} from 'shared/models'
 
 
-export enum SyncStatus {
-	NotStarted = 1,
-	InProgress,
-	Completed,
-	Failed
-}
+const log = getLogger(__filename)
 
-export interface ISyncDetails {
-	error?:Error
-	progress?:number
-	message?:any
-	time?:number
-}
+import {SyncStatus,ISyncDetails} from 'shared/models'
+
 
 @RecordModel()
 class RepoStateModel {
@@ -93,7 +83,8 @@ class RepoStateModel {
 	}
 
 	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {
-
+		log.info('Update sync status needs to be implemented ;) - probably just map to job')
+		return this
 	}
 
 	setError(err:Error) {

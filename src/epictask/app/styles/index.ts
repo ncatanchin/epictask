@@ -18,6 +18,7 @@ declare global {
 		Ellipsis:any,
 		PositionRelative:any,
 		PositionAbsolute:any,
+		FontBlack:any,
 		makeTransition:typeof CommonStyles.makeTransition,
 		makeAbsolute:typeof CommonStyles.makeAbsolute,
 		makeStyle:typeof CommonStyles.makeStyle,

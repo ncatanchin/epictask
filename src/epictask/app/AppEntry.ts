@@ -1,29 +1,38 @@
-// Load all global/env stuff first
-import './AppGlobals'
-
-// Load logger
-const log = getLogger(__filename)
-
-// Load Styles
-import './styles'
+require('shared/SourceMapSupport')
+import 'reflect-metadata'
 
 // Get the DBService starter
-import * as DBService from 'shared/DBService'
-import * as Services from 'app/services'
+import * as DBService from '../shared/DB'
 
 async function boot() {
+	// Load all global/env stuff first
+	require('./AppGlobals')
+
+	// Load logger
+	const log = getLogger(__filename)
+
+	// Load Styles
+	require('./styles')
 
 
 	log.info('Starting Database')
 	await DBService.start()
 
 
+
+
 	log.info('Starting services')
+	const Services = require('app/services')
 	const servicePromises = Object.keys(Services)
 		.map(serviceKey => Services[serviceKey].start())
 
 	log.info('Waiting for all services to load')
-	await Promise.all(servicePromises)
+	servicePromises.forEach(async (service) => await service)
+
+	// Now the theme manager
+	require("./ThemeManager.tsx")
+
+
 
 	log.info('Loading app root')
 	const loadAppRoot = () => require('./components/root/AppRoot.tsx')
@@ -46,4 +55,4 @@ async function boot() {
 }
 
 
-boot().then(() => log.info('Booted App'))
+boot().then(() => console.log('Booted App'))

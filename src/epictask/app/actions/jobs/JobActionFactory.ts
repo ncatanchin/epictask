@@ -1,6 +1,4 @@
 
-
-import {AvailableRepoRepo, AvailableRepo} from 'shared/GitHubModels'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -11,7 +9,9 @@ const log = getLogger(__filename)
 import {ActionFactory,Action} from 'typedux'
 import {JobKey} from "epictask/shared/Constants"
 
-import {JobMessage,JobState,IJob} from './'
+import {JobMessage} from './JobReducer'
+import {JobState,IJob,IJobRequest} from './JobState'
+import {JobHandler} from './JobHandler'
 
 
 /**
@@ -31,22 +31,28 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 		return JobKey;
 	}
 
+
 	@Action()
-	createJob(job:IJob) {
+	createJob(request:IJobRequest) {
 	}
 
 	@Action()
 	updateJob(job:IJob) {
+
 	}
 
 	@Action()
-	removeJob(job:IJob) {
-	}
+	removeJob(job:IJob) {}
 
 	@Action()
-	processJob(jobFn:Function) {
-		return async (dispatcher,getState) => {
+	processJob(job:IJob):Promise<IJob> {
+		return (async (dispatcher,getState) => {
+			const actions = this.withDispatcher(dispatcher,getState)
+			const handler = new JobHandler(actions,job)
 
-		}
+			log.info(`Starting job handler for job: (id=${job.id})`)
+			await handler.execute()
+
+		}) as any
 	}
 }

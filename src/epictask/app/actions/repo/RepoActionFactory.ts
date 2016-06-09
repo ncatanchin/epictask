@@ -9,14 +9,17 @@ const log = getLogger(__filename)
 
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
-import {RepoKey} from "epictask/shared/Constants"
-import {RepoMessage,RepoState,ISyncDetails,SyncStatus} from './index'
-import {Repo, RepoRepo,AvailableRepo,AvailableRepoRepo,github} from 'epictask/shared'
-import {getRepo} from 'epictask/shared/DBService'
-import {JobActionFactory,AppActionFactory,JobHandler} from 'app/actions'
+import {RepoKey} from "shared/Constants"
+import {Repos} from 'shared/DB'
 
-const JobActions = new JobActionFactory()
-const AppActions = new AppActionFactory()
+import {SyncStatus,ISyncDetails} from 'shared/models'
+import {RepoState} from './RepoState'
+import {RepoMessage} from './RepoReducer'
+import {Repo, RepoRepo,AvailableRepo,AvailableRepoRepo,github} from 'epictask/shared'
+import {AppActionFactory} from 'app/actions/AppActionFactory'
+import {JobActionFactory} from '../jobs/JobActionFactory'
+import {JobHandler} from '../jobs/JobHandler'
+
 /**
  * RepoActionFactory.ts
  *
@@ -52,7 +55,7 @@ const AppActions = new AppActionFactory()
 	 * @param newRepos
 	 */
 	private async persistRepos(newRepos:Repo[]):Promise<number> {
-		const repoRepo =  getRepo(RepoRepo)
+		const repoRepo =  Repos.repo
 
 		log.debug(`Persisting ${newRepos.length} repos`)
 		const beforeCount = await repoRepo.count()
@@ -90,26 +93,44 @@ const AppActions = new AppActionFactory()
 	@Action()
 	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {}
 
+
 	@Action()
 	syncIssues(availRepo:AvailableRepo) {
 		return async(dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const jobActions = JobActions.withDispatcher(dispatch,getState)
-			const appActions = AppActions.withDispatcher(dispatch,getState)
+			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
+			const appActions = AppActionFactory.newWithDispatcher(AppActionFactory,dispatch,getState)
 
-			try {
-				actions.setSyncStatus(availRepo,SyncStatus.InProgress,{progress: 0})
+			jobActions.createJob({
+				executor: async (handler:JobHandler) => {
+					const {job} = handler
 
-				await jobActions.processJob((handler:JobHandler) => {
-					// TODO: Do actual sync here
-				})
+					log.info(`Starting repo sync job: `, job.id)
+					try {
 
-				actions.setSyncStatus(availRepo,SyncStatus.Completed,{progress: 100})
-			} catch (err) {
-				log.error('failed to sync repo issues',err)
-				appActions.addErrorMessage(err)
-				actions.setSyncStatus(availRepo,SyncStatus.Failed,{error:err})
-			}
+						const client = github.createClient()
+
+						// Grab the repo
+						let {repo,repoId} = availRepo
+						if (!repo) repo = await actions.getRepo(repoId)
+
+						// Load the issues, eventually track progress
+						const issues = await client.repoIssues(repo)
+						log.info(`Loaded issues, time to persist`, issues)
+
+						// await dispatch(actions.setSyncStatus(availRepo,SyncStatus.InProgress,{progress: 0}))
+						//
+						//
+						// actions.setSyncStatus(availRepo,SyncStatus.Completed,{progress: 100})
+					} catch (err) {
+						log.error('failed to sync repo issues',err)
+						appActions.addErrorMessage(err)
+						actions.setSyncStatus(availRepo,SyncStatus.Failed,{error:err})
+					}
+				}
+			})
+
+
 		}
 	}
 
@@ -137,9 +158,9 @@ const AppActions = new AppActionFactory()
 	getAvailableRepos():Promise<AvailableRepo[]> {
 		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepos = await getRepo(AvailableRepoRepo).findAll()
+			const availRepos = await Repos.availableRepo.findAll()
 
-			const repoRepo = getRepo(RepoRepo)
+			const repoRepo = Repos.repo
 
 			availRepos.forEach(async (availRepo) => {
 				const repoState = actions.state
@@ -161,10 +182,19 @@ const AppActions = new AppActionFactory()
 	}
 
 	@Action()
+	getRepo(id:number):Promise<Repo> {
+		return (async (dispatch,getState) => {
+			const repoRepo = Repos.repo
+			const repo = await repoRepo.get(repoRepo.key(id))
+			return repo
+		}) as any
+	}
+
+	@Action()
 	getRepos() {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const repos = await getRepo(RepoRepo).findAll()
+			const repos = await Repos.repo.findAll()
 			log.debug('Loaded all repos',repos)
 			actions.setRepos(repos)
 		}
@@ -187,7 +217,7 @@ const AppActions = new AppActionFactory()
 			if (enabled === availRepo.enabled)
 				return
 
-			const availRepoRepo = getRepo(AvailableRepoRepo)
+			const availRepoRepo = Repos.availableRepo
 
 			const newAvailRepo = new AvailableRepo(availRepoRepo.mapper.toObject(availRepo))
 			newAvailRepo.enabled = enabled

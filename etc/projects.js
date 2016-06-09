@@ -22,7 +22,10 @@ function makeConfigs() {
 			tsconfig: makeTsConfig(
 				`${baseDir}/.tsconfig.main.json`,
 				'main',
-				require('./awesome-typescript-loader-options')),
+				require('./awesome-typescript-loader-options')({
+				// instanceName:'electron-main'
+				})
+			),
 			onCompileCallback(err,stats,watchMode = false) {
 				log.info('Compile callback main!!!',err,isDev,watchMode)
 				if (err) {
@@ -44,11 +47,18 @@ function makeConfigs() {
 		 */
 		"electron-renderer": {
 			targetType: TargetType.ElectronRenderer,
-			tsconfig: makeTsConfig(`${baseDir}/.tsconfig.renderer.json`,'browser',require('./awesome-typescript-loader-options'), {
-				"compilerOptions": {
-					"jsx": "react"
-				},
-			}),
+			tsconfig: makeTsConfig(
+				`${baseDir}/.tsconfig.renderer.json`,
+				'browser',
+				require('./awesome-typescript-loader-options')({
+					// instanceName:'electron-renderer'
+				}),
+				{
+					"compilerOptions": {
+						"jsx": "react"
+					},
+				}
+			),
 			port: 4444,
 			onCompileCallback(err,stats) {
 				if (err)
