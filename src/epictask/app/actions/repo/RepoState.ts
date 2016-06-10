@@ -8,13 +8,9 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {Repo, AvailableRepo} from 'shared/models'
-
-
 const log = getLogger(__filename)
 
-import {SyncStatus,ISyncDetails} from 'shared/models'
-
+import {Repo, AvailableRepo,Issue,SyncStatus,ISyncDetails} from 'shared/models'
 
 @RecordModel()
 class RepoStateModel {
@@ -26,8 +22,16 @@ class RepoStateModel {
 	availableRepos:AvailableRepo[]
 
 	@RecordProperty()
-	repos:Repo[]
+	issues:Issue[]
 
+	@RecordProperty()
+	selectedIssues:Issue[]
+
+	@RecordProperty()
+	selectedIssue:Issue
+
+	@RecordProperty()
+	repos:Repo[]
 
 	@RecordProperty()
 	error:Error
@@ -55,6 +59,21 @@ class RepoStateModel {
 		return this
 	}
 
+	setIssues(issues:Issue[]) {
+		this.issues = issues
+		return this
+	}
+
+	setSelectedIssues(selectedIssues:Issue[]) {
+		this.selectedIssues = selectedIssues
+
+		// if the length is 1 or 0 then we update the base
+		// selected issue id for an appropriate reset value
+		if (selectedIssues.length < 2)
+			this.selectedIssue = selectedIssues[0]
+
+		return this
+	}
 
 	clearSelectedRepos() {
 		this.selectedRepos = []
@@ -82,6 +101,8 @@ class RepoStateModel {
 
 	}
 
+
+
 	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {
 		log.info('Update sync status needs to be implemented ;) - probably just map to job')
 		return this
@@ -98,7 +119,9 @@ class RepoStateModel {
 const RepoStateDefaults = {
 	repos: [],
 	availableRepos: [],
-	selectedRepos: []
+	selectedRepos: [],
+	selectedIssues: [],
+	issues: []
 }
 
 export const RepoState = makeRecord(RepoStateModel,RepoStateDefaults)

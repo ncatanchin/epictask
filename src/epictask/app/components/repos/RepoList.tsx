@@ -12,7 +12,7 @@ import {AvailableRepo,Repo} from 'shared'
 import {connect} from 'react-redux'
 import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexAuto,FlexScale,FlexAlignStart,FillWidth,Ellipsis,FlexColumnCenter,makeTransition} from 'app/themes'
 
-
+const repoActions = new RepoActionFactory()
 
 export interface IRepoListProps {
 	availableRepos?:AvailableRepo[]
@@ -94,45 +94,53 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	render() {
-		const repoActions = new RepoActionFactory()
+
 		const {availableRepos,repos,theme,selectedRepos = []} = this.props
 
 		const themeStyles = theme.repoPanel
 
-		return <ul {...this.props} style={styles.list} className={this.props.className}>
-			{availableRepos && availableRepos.map((availRepo,availRepoIndex) => {
-				const repo = _.find(repos,(it) => it.id === availRepo.repoId)
-				if (!repo)
-					return
+		return <div {...this.props}
+			style={styles.list}
+			className={this.props.className}>
+			{availableRepos
+				.filter(availRepo => _.isString(availRepo.id))
+				.map((availRepo,availRepoIndex) => {
+					const id = availRepo.id
+					const repo = _.find(repos,(it) => it.id === availRepo.repoId)
+					const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.id === availRepo.id)
+					const isEnabled = availRepo.enabled
+					const isHovering = this.state.hoverId === availRepo.id
 
-				const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.id === availRepo.id)
-				const isEnabled = availRepo.enabled
-				const isHovering = this.state.hoverId === availRepo.id
-				return <li data-selected={isSelected}
-				           data-enabled={isEnabled}
-				           key={availRepo.id}
-				           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
-				           onMouseLeave={() => this.setState({hoverId:null})}
-				           onClick={(event) => this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)}
-				           style={makeStyle(
-				                styles.item,
-				                themeStyles.list.item,
-				                isEnabled && styles.itemEnabled,
-				                isEnabled && themeStyles.list.itemEnabled,
-				                isHovering && themeStyles.list.itemHover,
-				                isSelected && themeStyles.list.itemSelected,
-				                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
-			                )}>
-					<Icon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</Icon>
-					<div style={styles.itemLabel}>{Renderers.repoName(repo)}</div>
-					<Icon extraStyle={{}} onClick={(e) => {
-						e.stopPropagation()
+					const onSyncClicked = (e) => {
 						e.preventDefault()
-						repoActions.syncIssues(availRepo)
-					}}>sync</Icon>
-				</li>
-			})}
-		</ul>
+						e.stopPropagation()
+
+						repoActions.syncRepoDetails(availRepo)
+						return false
+					}
+
+					return <div key={id}
+					           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
+					           onMouseLeave={() => this.setState({hoverId:null})}
+					           onClick={(e) => {
+									this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
+					           }}
+					           style={makeStyle(
+					                styles.item,
+					                themeStyles.list.item,
+					                isEnabled && styles.itemEnabled,
+					                isEnabled && themeStyles.list.itemEnabled,
+					                isHovering && themeStyles.list.itemHover,
+					                isSelected && themeStyles.list.itemSelected,
+					                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
+				                )}>
+						<Icon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</Icon>
+						<span style={styles.itemLabel}>{Renderers.repoName(repo)}</span>
+						<Icon extraStyle={{}} onClick={onSyncClicked}>sync</Icon>
+					</div>
+				})
+			}
+		</div>
 	}
 
 

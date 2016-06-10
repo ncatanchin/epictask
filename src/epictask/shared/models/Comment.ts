@@ -16,7 +16,7 @@ import {LunrIndex} from '../LunrIndex'
  *
  * @type {LunrIndex}
  */
-export const CommentIndex = new LunrIndex(Comment, {
+export const CommentIndex = new LunrIndex<Comment>('Comment', {
 	ref: 'id',
 	fields: {
 		body: 3,

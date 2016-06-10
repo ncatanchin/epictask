@@ -14,6 +14,7 @@ import {
 
 
 const reduxLogger = createLogger();
+//const reduxLogger = f => f
 
 
 /**
@@ -35,7 +36,7 @@ const devToolsMiddleware =
  */
 const middleware = [
 	thunkMiddleware,
-	reduxLogger
+	//reduxLogger
 ]
 
 

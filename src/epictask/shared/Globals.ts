@@ -34,6 +34,7 @@ import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
+import './util/ObjectUtil'
 
 
 /**
@@ -47,7 +48,7 @@ declare global {
 	var TypeMutant:typeof TypeMutantGlobal
 	var requireContext:typeof ContextUtils.requireContext
 	var mergeContext:typeof ContextUtils.mergeContext
-	var _:typeof LodashGlobal
+	var _:typeof LodashGlobal & LodashMixins
 	var Env:any
 }
 

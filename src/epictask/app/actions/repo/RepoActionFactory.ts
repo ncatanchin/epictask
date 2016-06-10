@@ -11,11 +11,12 @@ const log = getLogger(__filename)
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey} from "shared/Constants"
 import {Repos} from 'shared/DB'
+import {LunrIndex} from 'shared/LunrIndex'
 
 import {SyncStatus,ISyncDetails} from 'shared/models'
 import {RepoState} from './RepoState'
 import {RepoMessage} from './RepoReducer'
-import {Repo, RepoRepo,AvailableRepo,AvailableRepoRepo,github} from 'epictask/shared'
+import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import {JobHandler} from '../jobs/JobHandler'
@@ -44,6 +45,11 @@ import {JobHandler} from '../jobs/JobHandler'
 	@Action()
 	setRepo(repo:Repo) {
 	}
+
+	@Action()
+	setIssues(issues:Issue[]) {
+	}
+
 
 	@Action()
 	setAvailableRepos(repos:AvailableRepo[]) {
@@ -94,9 +100,14 @@ import {JobHandler} from '../jobs/JobHandler'
 	setSyncStatus(availRepo:AvailableRepo,status:SyncStatus,details:ISyncDetails) {}
 
 
+	/**
+	 * Sync issues
+	 * @param availRepo
+	 * @returns {function(any, any): Promise<undefined>}
+	 */
 	@Action()
-	syncIssues(availRepo:AvailableRepo) {
-		return async(dispatch,getState) => {
+	syncRepoDetails(availRepo:AvailableRepo) {
+		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
 			const appActions = AppActionFactory.newWithDispatcher(AppActionFactory,dispatch,getState)
@@ -115,8 +126,36 @@ import {JobHandler} from '../jobs/JobHandler'
 						if (!repo) repo = await actions.getRepo(repoId)
 
 						// Load the issues, eventually track progress
-						const issues = await client.repoIssues(repo)
-						log.info(`Loaded issues, time to persist`, issues)
+						async function syncIssues() {
+							const issues = await client.repoIssues(repo)
+							issues.forEach(issue => issue.repoId = repo.id)
+							log.info(`Loaded issues, time to persist`, issues)
+							await Repos.issue.bulkSave(...issues)
+						}
+
+
+						async function syncLabels() {
+							const labels = await client.repoLabels(repo)
+							labels.forEach(label => label.repoId = repo.id)
+							log.debug(`Loaded labels, time to persist`,labels)
+							await Repos.label.bulkSave(...labels)
+						}
+
+						async function syncMilestones() {
+							const milestones = await client.repoMilestones(repo)
+							milestones.forEach(milestone => milestone.repoId = repo.id)
+							log.debug(`Loaded milestones, time to persist`,milestones)
+							await Repos.milestone.bulkSave(...milestones)
+						}
+
+						log.debug('waiting for all promises')
+						await Promise.all([syncIssues(),syncLabels(),syncMilestones()])
+						log.debug('all promises completed, NOW SYNC COMMENTS')
+
+						log.debug(`Updating all indexes now`)
+						await LunrIndex.persistAll()
+						log.debug('Persisted all indexes')
+
 
 						// await dispatch(actions.setSyncStatus(availRepo,SyncStatus.InProgress,{progress: 0}))
 						//
@@ -141,14 +180,14 @@ import {JobHandler} from '../jobs/JobHandler'
 	 * _note_: this includes repos that are not enabled
 	 */
 	@Action()
-	syncAllIssues() {
+	syncAllRepoDetails() {
 		return async(dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
 			log.debug('Getting avail repos from DB, not state')
 			const availRepos = await actions.getAvailableRepos()
 			availRepos.forEach(availRepo => {
-				actions.syncIssues(availRepo)
+				actions.syncRepoDetails(availRepo)
 			})
 		}
 	}
@@ -210,6 +249,9 @@ import {JobHandler} from '../jobs/JobHandler'
 	setRepoSelected(selectedAvailableRepo:AvailableRepo,selected:boolean) { }
 
 	@Action()
+	setSelectedIssues(selectedIssues:Issue[]) {}
+
+	@Action()
 	setRepoEnabled(availRepo:AvailableRepo,enabled:boolean) {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
@@ -230,6 +272,32 @@ import {JobHandler} from '../jobs/JobHandler'
 
 			return true
 		}
+	}
+
+
+
+	@Action()
+	loadIssues() {
+		return async (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+
+			// Issue repo
+			const issueRepo = Repos.issue
+
+			// All the currently selected repos
+			const {availableRepos} = actions.state
+			const enabledRepos = availableRepos.filter(availRepo => availRepo.enabled)
+			const repos = await Promise.all(enabledRepos.map((availRepo) => availRepo.getRepo()))
+			const repoIds = repos.map((repo:Repo) => repo.id)
+
+			log.info(`Loading issues for repos`,repoIds)
+			const issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
+
+			actions.setIssues(issues)
+		}
+
+
+
 	}
 
 }

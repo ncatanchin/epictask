@@ -3,17 +3,16 @@ require('shelljs/global')
 require('../webpack/parts/stats')
 
 const
-	del = require('del'),
-	gulp = require('gulp'),
+	del         = require('del'),
+	gulp        = require('gulp'),
 	runSequence = require('run-sequence'),
-	git = require('gulp-git'),
-	ghRelease = require('gulp-github-release'),
-	tsc = require('typescript'),
-	babel = require('gulp-babel')
+	git         = require('gulp-git'),
+	ghRelease   = require('gulp-github-release'),
+	tsc         = require('typescript'),
+	babel       = require('gulp-babel')
 
 
-
-Object.assign(global,{
+Object.assign(global, {
 	tsc,
 	babel,
 	gulp,
@@ -22,14 +21,14 @@ Object.assign(global,{
 	git,
 	ghRelease,
 	Deferred: require('./deferred')
-},require('./helpers'))
+}, require('./helpers'))
 
 const
-	semver = require('semver'),
-	path = require('path'),
-	_ = require('lodash'),
-	processDir = path.resolve(__dirname,'../..'),
-	env = process.env.NODE_ENV || 'development'
+	semver     = require('semver'),
+	path       = require('path'),
+	_          = require('lodash'),
+	processDir = path.resolve(__dirname, '../..'),
+	env        = process.env.NODE_ENV || 'development'
 
 
 const RunMode = {
@@ -58,20 +57,19 @@ const TargetType = {
 
 
 //noinspection JSUnresolvedFunction
-Object.assign(global,{
+Object.assign(global, {
 	_,
 	log: console,
 	env,
 	isDev: env === 'development',
 	processDir,
-	baseDir:processDir,
+	baseDir: processDir,
 	basePackageJson: readJSONFileSync(`${processDir}/package.json`),
 	RunMode,
 	TargetType,
 	Deferred: require('./deferred'),
 	assert: require('assert')
 })
-
 
 
 // Config for release and versioning
@@ -81,8 +79,8 @@ Object.assign(global,{
 const projectConfigs = require('../projects')
 
 //noinspection JSUnresolvedVariable
-Object.assign(global,{
-	nextMinorVersion: semver.inc(basePackageJson.version,'patch'),
+Object.assign(global, {
+	nextMinorVersion: semver.inc(basePackageJson.version, 'patch'),
 	releaseFiles: [],
 	releaseDir: `${process.cwd()}/target/releases`,
 	projectConfigs

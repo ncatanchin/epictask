@@ -1,6 +1,7 @@
-import 'lunr'
+import * as lunr from 'lunr'
 import {ModelPersistenceEventType} from 'typestore'
-import {getUserDataFilename, readFileSync, writeFileSync, readJSONFileSync, writeJSONFileSync} from './util/Files'
+import {getUserDataFilename, readFile, writeFile, readJSONFile, writeJSONFile} from './util/Files'
+
 
 const log = getLogger(__filename)
 
@@ -14,15 +15,25 @@ export const AllLunrIndexes= []
 
 export class LunrIndex<M> {
 
+	static async persistAll() {
+		log.info(`Persisting all indexes`)
+		const allPromises = AllLunrIndexes.map(idx => idx.persist())
+		await Promise.all(allPromises)
+		log.info(`Persisted all indexes`)
+	}
+
 	private idxFile
 	private idx
 	private dirty = false
 
-	constructor(private modelType:{new():M;},private schema:ILunrSchema<M>) {
-		this.idxFile = getUserDataFilename(`${modelType.name}.idx`)
+	constructor(private name,private schema:ILunrSchema<M>) {
+		this.idxFile = getUserDataFilename(`${name}.idx`)
 
-		log.debug(`Index file for ${modelType.name} is ${this.idxFile}`)
-		this.idx = lunr(function() {
+		log.debug(`Index file for ${name} is ${this.idxFile}`)
+
+		const idxState = readJSONFile(this.idxFile)
+
+		this.idx = (idxState) ? lunr.Index.load(idxState) : lunr(function() {
 			const {ref,fields} = schema
 
 			// Add each field with boost
@@ -34,18 +45,14 @@ export class LunrIndex<M> {
 			this.ref(ref)
 		})
 
-
-
-		const idxState = readJSONFileSync(this.idxFile)
-		if (idxState) {
-			this.idx.load(idxState)
-		}
-
 		AllLunrIndexes.push(this)
 	}
 
-	onPersistenceEvent = (type:ModelPersistenceEventType, model:M) => {
-		(type === ModelPersistenceEventType.Remove) ? this.remove(model) : this.update(model)
+	get onPersistenceEvent()  {
+		const self = this
+		return function(type:ModelPersistenceEventType, model:M) {
+			(type === ModelPersistenceEventType.Remove) ? self.remove(model) : self.update(model)
+		}
 	}
 
 	update(model:M) {
@@ -64,25 +71,27 @@ export class LunrIndex<M> {
 	 *
 	 * IF INDEX IS NOT DIRTY THEN RETURNS
 	 */
-	persist() {
-		if (!this.dirty)
+	async persist() {
+		if (!this.dirty) {
+			log.info(`Index ${this.name} NOT dirty ${this.idxFile}`)
 			return
+		}
 
-		writeJSONFileSync(this.idxFile,this.idx.toJSON())
+		log.info(`Writing index ${this.name} to ${this.idxFile}`)
+		await writeJSONFile(this.idxFile,this.idx.toJSON())
 		this.dirty = false
 	}
 
 	/**
 	 * Shutdown the index and persist if dirty
 	 */
-	shutdown() {
-		this.persist()
+	async shutdown() {
+		await this.persist()
 
 		const index = AllLunrIndexes.findIndex(idx => idx === this)
 		if (index > -1) {
 			AllLunrIndexes.splice(index,1)
 		}
 	}
-
-
 }
+

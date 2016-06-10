@@ -16,7 +16,7 @@ import {LunrIndex} from '../LunrIndex'
  *
  * @type {LunrIndex}
  */
-export const MilestoneIndex = new LunrIndex(Milestone, {
+export const MilestoneIndex = new LunrIndex<Milestone>('Milestone', {
 	ref: 'id',
 	fields: {
 		title: 3

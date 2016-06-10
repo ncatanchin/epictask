@@ -12,10 +12,10 @@ export = createDevTools(
     <DockMonitor toggleVisibilityKey="ctrl-h"
         changePositionKey="ctrl-q"
         changeMonitorKey='ctrl-m'
-        defaultPosition="bottom">
+        defaultPosition="right">
 
+	    <Inspector theme={'tomorrow'} supportImmutable={true} isLightTheme={false}/>
         <LogMonitor theme={'tomorrow'}/>
-				<Inspector theme={'tomorrow'} supportImmutable={true} isLightTheme={false}/>
         <SliderMonitor/>
     </DockMonitor>
 )

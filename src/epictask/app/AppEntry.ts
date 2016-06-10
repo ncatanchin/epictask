@@ -1,5 +1,6 @@
 require('shared/SourceMapSupport')
 import 'reflect-metadata'
+import './AppLogging'
 
 // Get the DBService starter
 import * as DBService from '../shared/DB'
@@ -32,14 +33,9 @@ async function boot() {
 	// Now the theme manager
 	require("./ThemeManager.tsx")
 
-
-
 	log.info('Loading app root')
 	const loadAppRoot = () => require('./components/root/AppRoot.tsx')
 	loadAppRoot()
-
-
-
 
 	if (module.hot) {
 		module.hot.accept(['./components/root/AppRoot.tsx'], (updates) => {

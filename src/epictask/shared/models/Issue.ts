@@ -19,7 +19,7 @@ import {LunrIndex} from 'shared/LunrIndex'
  *
  * @type {LunrIndex}
  */
-export const IssueIndex = new LunrIndex(Issue, {
+export const IssueIndex = new LunrIndex<Issue>('Issue', {
 	ref: 'id',
 	fields: {
 		title: 5,
@@ -42,6 +42,7 @@ export const IssueIndex = new LunrIndex(Issue, {
 @ModelDescriptor({
 	onPersistenceEvent: IssueIndex.onPersistenceEvent
 })
+
 export class Issue extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
@@ -103,6 +104,21 @@ export class IssueRepo extends TSRepo<Issue> {
 		return null
 	}
 
+	/**
+	 * Find all issues in provided repo ids
+	 * @param repoIds
+	 * @returns {null}
+	 */
+	@IndexedDBFinderDescriptor({
+		fn(tsRepo,...args) {
+			const repoIds = args[0]
+			return tsRepo.table.where('repoId').anyOf(repoIds).toArray()
+		}
+	})
+	@FinderDescriptor()
+	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
+		return null
+	}
 
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {

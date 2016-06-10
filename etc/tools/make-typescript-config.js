@@ -13,9 +13,9 @@ const tsBaseConfig = readJSONFileSync(tsConfigFile)
  */
 function makeTypeScriptConfig() {
 	const tsConfig = _.cloneDeep(tsBaseConfig)
-	
+
 	//tsConfig.filesGlob = makeSrcGlobs(null,null,true)
-	
+
 	const tsSettings = Object.assign({},tsConfig.compileOptions,{
 		typescript: tsc
 	})

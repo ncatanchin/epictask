@@ -907,3 +907,7 @@ declare namespace lunr
  * ```
  */
 declare function lunr(config:Function):lunr.Index;
+
+declare module 'lunr' {
+    export = lunr
+}

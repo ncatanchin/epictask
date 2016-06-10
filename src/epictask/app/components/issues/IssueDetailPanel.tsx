@@ -4,16 +4,33 @@
 
 // Imports
 import * as React from 'react'
+import {connect} from 'react-redux'
+import {Issue} from 'shared/models'
+import {AppKey, RepoKey} from '../../../shared/Constants'
 
 // Constants
 const log = getLogger(__filename)
-const styles = require("./IssueDetailPanel.css")
+const styles = {
+
+}
+
+function mapStateToProps(state) {
+	const appState = state.get(AppKey)
+	const repoState = state.get(RepoKey)
+
+	return {
+		theme: appState.theme,
+		issues: repoState.selectedIssues
+	}
+}
 
 /**
  * IIssueDetailPanelProps
  */
-export interface IIssueDetailPanelProps {
 
+export interface IIssueDetailPanelProps {
+	issues?:Issue[]
+	theme?:any
 }
 
 /**
@@ -23,29 +40,35 @@ export interface IIssueDetailPanelProps {
  * @constructor
  **/
 
-@CSSModules(styles)
+@connect(mapStateToProps)
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
-	static getInitialState() {
-		return {}
-	}
 
 	constructor(props = {}) {
 		super(props)
 	}
 
-	componentWillMount() {
+	renderMulti(issues:Issue[]) {
+		return <div>
+			{issues.length} selected issues
+		</div>
 	}
 
-	componentDidMount() {
-	}
-
-	componentWillUnmount() {
-
+	renderIssue(issue:Issue) {
+		return <div>
+			{issue.title}
+		</div>
 	}
 
 	render() {
-		return <div/>
+		const {issues,theme} = this.props
+		return <div>
+			{issues.length === 0 ? <div/> :
+				issues.length > 1 ?
+					this.renderMulti(issues) :
+					this.renderIssue(issues[0])
+			}
+		</div>
 	}
 
 }

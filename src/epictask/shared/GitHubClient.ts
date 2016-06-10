@@ -1,7 +1,7 @@
 import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {Settings} from './Settings'
 import * as GitHubSchema from 'shared/models'
-import {Repo,Issue,User} from 'shared/models'
+import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
 const {URLSearchParams} = require('urlsearchparams')
 
 const log = getLogger(__filename)
@@ -64,7 +64,7 @@ export class GitHubClient {
 		return request
 	}
 
-	async get<T>(path:string,opts:RequestOptions = {}):Promise<T> { // | PagedArray<T>
+	async get<T>(path:string,modelType:any,opts:RequestOptions = {}):Promise<T> { // | PagedArray<T>
 		// Built search query
 		const query = new URLSearchParams()
 		const page = opts.page || 0
@@ -83,9 +83,10 @@ export class GitHubClient {
 			log.debug(`Header (${name}): ${value}`)
 		})
 
-
 		let result = await response.json()
+
 		if (Array.isArray(result)) {
+			result = result.map(json => new (modelType)(json))
 			const pageLinks = PageLink.parseLinkHeader(headers.get('link'))
 			result = new PagedArray(
 				result,
@@ -103,10 +104,12 @@ export class GitHubClient {
 					nextPage++
 
 					const nextOpts = Object.assign({},opts,{page:nextPage})
-					let nextResult = await this.get<T>(path,nextOpts) as T
+					let nextResult = await this.get<T>(path,modelType,nextOpts) as T
 					result.push(...(nextResult as any))
 				}
 			}
+		} else {
+			result = new modelType(result)
 		}
 
 		return result as any
@@ -114,11 +117,11 @@ export class GitHubClient {
 
 
 	async user():Promise<User> {
-		return await this.get<GitHubSchema.User>('/user')
+		return await this.get<GitHubSchema.User>('/user',User)
 	}
 
 	async userRepos(opts:RequestOptions = DefaultGetOpts):Promise<PagedArray<GitHubSchema.Repo>> {
-		return await this.get<PagedArray<Repo>>('/user/repos',opts)
+		return await this.get<PagedArray<Repo>>('/user/repos',Repo,opts)
 	}
 
 
@@ -129,10 +132,10 @@ export class GitHubClient {
 	 * @param urlTemplate
 	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
 	 */
-	private makePagedRepoGetter<M>(model:{new():M;},urlTemplate:string) {
+	private makePagedRepoGetter<M>(modelType:{new():M;},urlTemplate:string) {
 		return async (repo:Repo,opts:RequestOptions = DefaultGetOpts) => {
 			const url = urlTemplate.replace(/<repoName>/g,repo.full_name)
-			return await this.get<PagedArray<M>>(url,opts)
+			return await this.get<PagedArray<M>>(url,modelType,opts)
 		}
 	}
 
@@ -142,14 +145,22 @@ export class GitHubClient {
 	repoIssues = this.makePagedRepoGetter(Issue,'/repos/<repoName>/issues')
 
 	/**
+	 * Get all comments on an issue in a repo
+	 */
+	repoComments = async (repo:Repo,issue:Issue,opts:RequestOptions = DefaultGetOpts) => {
+		const url = `/repos/${repo.full_name}/issues/${issue.id}/comments`
+		return await this.get<PagedArray<Comment>>(url,Comment,opts)
+	}
+
+	/**
 	 * Get all labels in repo
 	 */
-	repoLabels = this.makePagedRepoGetter(Issue,'/repos/<repoName>/labels')
+	repoLabels = this.makePagedRepoGetter(Label,'/repos/<repoName>/labels')
 
 	/**
 	 * Get all milestones
 	 */
-	repoMilestones = this.makePagedRepoGetter(Issue,'/repos/<repoName>/milestones')
+	repoMilestones = this.makePagedRepoGetter(Milestone,'/repos/<repoName>/milestones')
 
 }
 

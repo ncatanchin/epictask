@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import {getUserDataFilename, readFileSync} from './util/Files'
+import {getUserDataFilename, readFile} from './util/Files'
 import {Property} from "./util/Decorations";
 import {toJSON} from "./util/JSONUtil";
 
@@ -66,7 +66,7 @@ class SettingsFile {
 		let newSettings = null
 		try {
 			if (fs.existsSync(settingsFilename)) {
-				newSettings = JSON.parse(readFileSync(settingsFilename),(k,v) => {
+				newSettings = JSON.parse(readFile(settingsFilename),(k, v) => {
 					return (k === 'isLoaded') ? undefined : v
 				})
 			}

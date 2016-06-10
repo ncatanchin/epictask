@@ -62,7 +62,7 @@ const styles = {
 	}),
 
 	resultInfo: makeStyle(FlexColumnCenter,makeFlexAlign('stretch','center'),{
-			paddingRight: '2rem'
+		padding: '0.2rem 2rem 0.2rem 1rem'
 	}),
 
 

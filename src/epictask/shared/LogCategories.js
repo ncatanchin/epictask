@@ -9,5 +9,7 @@ const LogLevel = {
 module.exports = {
 	RootReducer: LogLevel.INFO,
 	ModelDecorations: LogLevel.INFO,
-	GitHubClient: LogLevel.INFO
+	GitHubClient: LogLevel.INFO,
+	RepoActionFactory: LogLevel.DEBUG,
+	LunrIndex: LogLevel.DEBUG
 }

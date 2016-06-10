@@ -16,7 +16,7 @@ import {LunrIndex} from '../LunrIndex'
  *
  * @type {LunrIndex}
  */
-export const LabelIndex = new LunrIndex(Comment, {
+export const LabelIndex = new LunrIndex<Label>('Label', {
 	ref: 'id',
 	fields: {
 		name: 3
@@ -28,16 +28,12 @@ export const LabelIndex = new LunrIndex(Comment, {
 export class Label extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
-	@DefaultValue(() => uuid.v4())
-	id:string
+	url: string
 
-	@AttributeDescriptor()
+	@AttributeDescriptor({index:{name:'repoId'}})
 	repoId:number
 
-	@AttributeDescriptor({index:{name:'LabelUrl',unique:true}})
-	url: string;
-
-	@AttributeDescriptor({index:{unique:true,name:'labelName'}})
+	@AttributeDescriptor({index:{name:'labelName'}})
 	name: string;
 
 	@AttributeDescriptor()

@@ -44,13 +44,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 	fontFamily: 'Roboto,sans-serif',
 	fontWeight: 400,
-	
+
 	snackbar: {
 		root: {
 			height: 48
-		}	
+		}
 	},
-	
+
 	header: {
 		logoStyle: {
 			height: navBarHeight
@@ -80,18 +80,18 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		},
 		list: {
 			item: {
-				backgroundColor: accent2Color,
+				backgroundColor: accent1Color,
 				opacity: 0.6
 			},
 
 			itemHover: {
 				backgroundColor: accent4Color,
-				opacity: 0.7
+				opacity: 1
 			},
 
 			itemEnabled: {
-				backgroundColor: accent3Color,
-				opacity: 0.8
+				backgroundColor: accent4Color,
+				opacity: 0.7
 			},
 
 			itemSelected: {

@@ -110,11 +110,15 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 	render() {
 		const state = this.props.repoState || ({} as any)
 		const theme = this.props.theme
-		const {palette:p,repoPanel:{headerStyle}} = theme
+		const
+			{palette:p,repoPanel:{headerStyle}} = theme,
+			drawerStyle = makeStyle(styles.drawer,{
+				backgroundColor: p.accent3Color
+			})
 
 		return (
 			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
-				<Drawer docked={true} zIndex={2} containerStyle={styles.drawer} style={styles.panel}>
+				<Drawer docked={true} zIndex={2} containerStyle={drawerStyle} style={styles.panel}>
 					{/*<div style={makeStyle(styles.header,headerStyle)}>*/}
 						{/*<RaisedButton*/}
 							{/*backgroundColor={p.accent4Color}*/}
@@ -142,7 +146,9 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 						</RaisedButton>
 					</div>
 					<div style={styles.listContainer}>
-						<RepoList repos={state.repos} availableRepos={state.availableRepos} style={styles.list}/>
+						<RepoList repos={state.repos}
+						          availableRepos={state.availableRepos}
+						          style={styles.list} />
 					</div>
 				</Drawer>
 			</HotKeys>
