@@ -14,6 +14,8 @@ import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 import {LunrIndex} from 'shared/LunrIndex'
 
+export type IssueState = "open" | "closed"
+
 /**
  * Create issue index
  *
@@ -59,7 +61,7 @@ export class Issue extends DefaultModel {
 	events_url: string;
 	html_url: string;
 	number: number;
-	state: string;
+	state: IssueState;
 	title: string;
 	body: string;
 	user: User;
@@ -111,7 +113,7 @@ export class IssueRepo extends TSRepo<Issue> {
 	 */
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {
-			const repoIds = args[0]
+			const repoIds = args
 			return tsRepo.table.where('repoId').anyOf(repoIds).toArray()
 		}
 	})

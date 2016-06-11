@@ -35,7 +35,7 @@ export interface RequestOptions {
 	traversePages?:boolean
 	perPage?:number
 	page?:number
-	params?:number
+	params?:any
 	onPageCallback?:OnPageCallback<any>
 }
 
@@ -64,7 +64,10 @@ export class GitHubClient {
 		return request
 	}
 
-	async get<T>(path:string,modelType:any,opts:RequestOptions = {}):Promise<T> { // | PagedArray<T>
+	async get<T>(path:string,modelType:any,opts:RequestOptions = null):Promise<T> { // | PagedArray<T>
+
+		opts = _.merge({},DefaultGetOpts,opts)
+
 		// Built search query
 		const query = new URLSearchParams()
 		const page = opts.page || 0
@@ -120,7 +123,7 @@ export class GitHubClient {
 		return await this.get<GitHubSchema.User>('/user',User)
 	}
 
-	async userRepos(opts:RequestOptions = DefaultGetOpts):Promise<PagedArray<GitHubSchema.Repo>> {
+	async userRepos(opts:RequestOptions = null):Promise<PagedArray<GitHubSchema.Repo>> {
 		return await this.get<PagedArray<Repo>>('/user/repos',Repo,opts)
 	}
 
@@ -133,7 +136,7 @@ export class GitHubClient {
 	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
 	 */
 	private makePagedRepoGetter<M>(modelType:{new():M;},urlTemplate:string) {
-		return async (repo:Repo,opts:RequestOptions = DefaultGetOpts) => {
+		return async (repo:Repo,opts:RequestOptions = null) => {
 			const url = urlTemplate.replace(/<repoName>/g,repo.full_name)
 			return await this.get<PagedArray<M>>(url,modelType,opts)
 		}
@@ -147,7 +150,7 @@ export class GitHubClient {
 	/**
 	 * Get all comments on an issue in a repo
 	 */
-	repoComments = async (repo:Repo,issue:Issue,opts:RequestOptions = DefaultGetOpts) => {
+	repoComments = async (repo:Repo,issue:Issue,opts:RequestOptions = null) => {
 		const url = `/repos/${repo.full_name}/issues/${issue.id}/comments`
 		return await this.get<PagedArray<Comment>>(url,Comment,opts)
 	}

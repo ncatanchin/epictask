@@ -50,8 +50,10 @@ export class LunrIndex<M> {
 
 	get onPersistenceEvent()  {
 		const self = this
-		return function(type:ModelPersistenceEventType, model:M) {
-			(type === ModelPersistenceEventType.Remove) ? self.remove(model) : self.update(model)
+		return function(type:ModelPersistenceEventType, ...models:M[]) {
+			models.forEach(model => {
+				(type === ModelPersistenceEventType.Remove) ? self.remove(model) : self.update(model)
+			})
 		}
 	}
 
@@ -62,6 +64,10 @@ export class LunrIndex<M> {
 	}
 
 	remove(model:M) {
+		if (!model) {
+			log.warn(`${this.name} lunr index got null model`)
+			return
+		}
 		this.idx.remove(model)
 		this.dirty = true
 	}

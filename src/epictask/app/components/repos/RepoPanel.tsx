@@ -4,9 +4,13 @@
 
 // Imports
 import * as React from 'react'
-import {TRepoState,RepoActionFactory,AuthActionFactory,AppActionFactory} from 'app/actions'
-import {RepoList,Icon} from 'components'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
+import {TRepoState} from 'app/actions/repo/RepoState'
+import {AppActionFactory} from 'app/actions/AppActionFactory'
+
+import {RepoList,Icon,Button} from 'components'
 import {Drawer,RaisedButton} from 'material-ui'
+import * as Radium from 'radium'
 
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
@@ -18,7 +22,6 @@ const log = getLogger(__filename)
 //const styles = require("./RepoPanel.css")
 const repoActions = new RepoActionFactory()
 const appActions = new AppActionFactory()
-const authActions = new AuthActionFactory()
 
 import { connect } from 'react-redux'
 import {Themeable} from 'app/ThemeManager'
@@ -43,14 +46,15 @@ const styles = {
 		position: 'relative'
 	}),
 
-	header: makeStyle(Ellipsis,FlexRow,FlexAuto,FlexAlignEnd),
+	header: makeStyle(Ellipsis,FlexRow,FlexAuto,FlexAlignStart),
 
-	headerButton: makeStyle(FlexRowCenter,FillWidth,{
+	headerButton: makeStyle(FlexRowCenter,{
 		height: rem(2)
 	}),
 
 	headerButtonLabel: {
-		fontSize: rem(0.9)
+		fontSize: rem(0.9),
+		padding: '0 0.5rem 0 0'
 	},
 
 	headerButtonIcon: {
@@ -59,11 +63,9 @@ const styles = {
 
 	listContainer: makeStyle(FlexColumn,FlexScale, {
 		overflow: 'hidden'
-	}),
-
-	list: makeStyle(FlexColumn,FlexScale, {
-		overflowY: 'auto'
 	})
+
+
 
 }
 
@@ -71,13 +73,11 @@ const styles = {
  * IRepoDrawerProps
  */
 export interface IRepoPanelProps {
-	repoState?: TRepoState,
 	theme?:any
 }
 
 function mapStateToProps(state) {
 	return {
-		repoState: repoActions.state,
 		theme: appActions.state.theme
 	}
 }
@@ -92,6 +92,7 @@ function mapStateToProps(state) {
  **/
 @connect(mapStateToProps)
 @Themeable()
+@Radium
 export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 
 	constructor(props, context) {
@@ -99,58 +100,41 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 	}
 
 
-	onBlur = () => {
-		repoActions.clearSelectedRepos()
-	}
+	onBlur = () => repoActions.clearSelectedRepos()
+	//onLogout = () => authActions.logout()
+	onAddRepo = () => log.info('add repo here')
 
 	keyHandlers = {
 
 	}
 
 	render() {
-		const state = this.props.repoState || ({} as any)
-		const theme = this.props.theme
 		const
-			{palette:p,repoPanel:{headerStyle}} = theme,
-			drawerStyle = makeStyle(styles.drawer,{
-				backgroundColor: p.accent3Color
+			{theme} = this.props,
+			{repoPanel:themeStyle} = theme,
+
+			panelStyle = makeStyle(styles.panel,themeStyle.root),
+			drawerStyle = makeStyle(styles.drawer,themeStyle.root),
+			headerStyle = makeStyle(styles.header,themeStyle.header),
+			headerButtonStyle = makeStyle(styles.headerButton,themeStyle.headerButton,{
+				':hover': themeStyle.headerButtonHover
 			})
 
 		return (
 			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
-				<Drawer docked={true} zIndex={2} containerStyle={drawerStyle} style={styles.panel}>
-					{/*<div style={makeStyle(styles.header,headerStyle)}>*/}
-						{/*<RaisedButton*/}
-							{/*backgroundColor={p.accent4Color}*/}
-							{/*style={styles.headerButton}*/}
-							{/*labelColor={p.textColor}*/}
-							{/*labelPosition='before'*/}
-							{/*label=""*/}
-							{/*fullWidth={true}*/}
-							{/*labelStyle={styles.headerButtonLabel}*/}
-							{/*icon={<MIcon extraStyle={styles.headerButtonIcon}>add</MIcon>}>*/}
-						{/*</RaisedButton>*/}
-					{/*</div>*/}
-					<div style={makeStyle(styles.header,headerStyle)}>
-						<RaisedButton
-							backgroundColor={p.accent4Color}
-							style={styles.headerButton}
-							labelColor={p.textColor}
-							labelPosition='before'
-							label="sign-out"
-							fullWidth={true}
-							labelStyle={styles.headerButtonLabel}
-							onClick={() => authActions.logout()}
-							icon={<Icon extraStyle={styles.headerButtonIcon} className='fa fa-sign-out'></Icon>}
-						>
-						</RaisedButton>
+				<div style={panelStyle}>
+					<div style={headerStyle}>
+						<Button style={headerButtonStyle} onClick={this.onAddRepo}>
+							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'></Icon>
+						</Button>
+						{/*<Button style={headerButtonStyle} onClick={this.onLogout}>*/}
+							{/*<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='sign-out'></Icon>*/}
+						{/*</Button>*/}
 					</div>
 					<div style={styles.listContainer}>
-						<RepoList repos={state.repos}
-						          availableRepos={state.availableRepos}
-						          style={styles.list} />
+						<RepoList />
 					</div>
-				</Drawer>
+				</div>
 			</HotKeys>
 		)
 

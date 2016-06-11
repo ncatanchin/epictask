@@ -19,9 +19,11 @@ declare global {
 		PositionRelative:any,
 		PositionAbsolute:any,
 		FontBlack:any,
+		OverflowHidden:any,
 		makeTransition:typeof CommonStyles.makeTransition,
 		makeAbsolute:typeof CommonStyles.makeAbsolute,
 		makeStyle:typeof CommonStyles.makeStyle,
+		mergeStyles: typeof CommonStyles.mergeStyles,
 		makeFlexAlign:typeof CommonStyles.makeFlexAlign
 }
 

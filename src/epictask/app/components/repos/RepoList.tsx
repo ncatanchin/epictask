@@ -1,12 +1,13 @@
 
-import {RepoKey} from '../../../shared/Constants'
+import {RepoKey, AppKey} from '../../../shared/Constants'
 /**
  * Displays a list of repos
  */
 const log = getLogger(__filename)
 
 import * as React from 'react'
-import {TRepoState,RepoActionFactory} from 'app/actions/repo'
+import {TRepoState} from 'app/actions/repo/RepoState'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
 import {Icon,Renderers} from 'app/components'
 import {AvailableRepo,Repo} from 'shared'
 import {connect} from 'react-redux'
@@ -14,6 +15,7 @@ import {makeStyle,rem,FlexRowCenter,FlexColumn,FlexAuto,FlexScale,FlexAlignStart
 
 const repoActions = new RepoActionFactory()
 
+//region Props
 export interface IRepoListProps {
 	availableRepos?:AvailableRepo[]
 	repos?:Repo[]
@@ -24,9 +26,12 @@ export interface IRepoListProps {
 	selectedRepos?:AvailableRepo[]
 	theme?: any
 }
+//endregion
 
+//region Styles
 const styles = {
-	list: makeStyle(FlexColumn,FlexAlignStart,FillWidth,{
+	list: makeStyle(FlexColumn,FlexScale,FlexAlignStart,FillWidth,{
+		overflowY: 'auto',
 		margin: 0,
 		padding: 0,
 		border: 0
@@ -37,32 +42,37 @@ const styles = {
 		margin: 0,
 		padding: '0.5rem 0.5rem',
 		border: 0,
-		cursor: 'pointer'
-
+		cursor: 'pointer',
+		alignItems: 'center',
+		fontSize: themeFontSize(1.1)
 	}),
 
 	itemEnabled: {
-
+		fontSize: themeFontSize(1.3)
 	},
 
 	itemIcon: makeStyle(FlexAuto,{
-		padding: rem(0.2),
-		fontSize: rem(1.1)
+		padding: '0 0.2rem',
+		fontSize: rem(1.3)
 	}),
 
-	itemLabel: makeStyle(Ellipsis,FlexScale,{
-		padding: '0.2rem 0.2rem 0.2rem 1rem',
-		fontSize: rem(1.2),
+	itemLabel: makeStyle(FlexColumn,FlexScale,{
+		padding: '0.2rem 0.2rem 0 0.5rem',
+		justifyContent: 'center',
+		// fontSize: themeFontSize(1.1),
 		fontWeight: 100
 	})
 }
+//endregion
 
 function mapToProps(state) {
-	const repoState = state.get(RepoKey) as TRepoState
-
+	const repoState = state.get(RepoKey)
+	const appState = state.get(AppKey)
 	return {
+		repos: repoState.repos,
+		availableRepos: repoState.availableRepos,
 		selectedRepos: repoState.selectedRepos,
-		theme: getTheme()
+		theme: appState.theme
 	}
 }
 
@@ -99,9 +109,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 		const themeStyles = theme.repoPanel
 
-		return <div {...this.props}
-			style={styles.list}
-			className={this.props.className}>
+		return <div style={styles.list}>
 			{availableRepos
 				.filter(availRepo => _.isString(availRepo.id))
 				.map((availRepo,availRepoIndex) => {
@@ -122,7 +130,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					return <div key={id}
 					           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
-					           onClick={(e) => {
+					           onClick={(event) => {
 									this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
 					           }}
 					           style={makeStyle(
@@ -134,9 +142,8 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					                isSelected && themeStyles.list.itemSelected,
 					                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
 				                )}>
-						<Icon extraStyle={styles.itemIcon}>{isEnabled ? 'check_circle' : 'radio_button_unchecked'}</Icon>
-						<span style={styles.itemLabel}>{Renderers.repoName(repo)}</span>
-						<Icon extraStyle={{}} onClick={onSyncClicked}>sync</Icon>
+						<Icon style={styles.itemIcon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
+						<div style={styles.itemLabel}>{Renderers.repoName(repo)}</div>
 					</div>
 				})
 			}

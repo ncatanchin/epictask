@@ -3,34 +3,132 @@
  */
 
 // Imports
+import * as moment from 'moment'
 import * as React from 'react'
-import {IssueDetailPanel} from './IssueDetailPanel'
+import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
-import {Table,TableHeader,TableHeaderColumn,TableRow,TableRowColumn,TableBody,TableFooter} from 'material-ui'
-import {RepoActionFactory,AppActionFactory} from 'app/actions'
-import {Issue,Repo,AvailableRepo,Milestone,Label,Comment} from 'shared/models'
-import {RepoKey,AppKey} from 'shared/Constants'
 
-const Color = require('color')
+import {Renderers} from '../common'
+import {IssueDetailPanel} from './IssueDetailPanel'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
+import {AppActionFactory} from 'app/actions/AppActionFactory'
+
+import {Issue,Repo} from 'shared/models'
+import {RepoKey, AppKey} from 'shared/Constants'
 
 // Constants
 const log = getLogger(__filename)
 const repoActions = new RepoActionFactory()
 const appActions = new AppActionFactory()
+const tinycolor = require('tinycolor2')
 
 const styles = {
-	panel: makeStyle(Fill,{
-
+	avatar: makeStyle({
+		backgroundRepeat: 'no-repeat',
+		backgroundSize: '100%',
+		width: 25,
+		height: 25,
+		borderRadius: '50%',
+		border: '0.2rem solid transparent',
+		margin: '0 0 0 1rem'
 	}),
+	user: makeStyle(FlexAuto,FlexRowCenter,Ellipsis,{
+		fontSize: themeFontSize(1),
+		padding: '0 1rem'
+	}),
+
+	username: makeStyle({
+		padding: '0 0 0 0'
+	}),
+
+	panel:          makeStyle(Fill, {}),
 	panelSplitPane: makeStyle(Fill),
-	listContainer: makeStyle(FlexColumn,FlexScale,{
+	listContainer:  makeStyle(FlexColumn, FlexScale,FillWidth,FillHeight,{
+		overflow: 'auto'
+	}),
+
+	issue: makeStyle(FlexRow, FlexAuto,
+		FillWidth,FlexAlignStart, makeTransition(),
+		{
+			padding: '1.5rem 1rem 1.5rem 1rem',
+			cursor: 'pointer',
+			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black'
+		}
+	),
+
+
+	issueSelected: makeStyle({
 
 	}),
 
-	issue: makeStyle()
+	issueMarkers: makeStyle(FlexColumn, FlexAuto, {
+		minWidth: '1rem'
+	}),
+
+
+
+	issueDetails: makeStyle(FlexColumn, FlexScale, FillWidth,OverflowHidden, {
+
+	}),
+
+	issueRepoRow:makeStyle(FlexRow,makeFlexAlign('stretch','center'),{
+
+	}),
+
+	issueRepo: makeStyle(Ellipsis,FlexRow,FlexScale,{
+		fontSize: themeFontSize(1),
+		padding: '0 0 0.5rem 0.5rem'
+	}),
+
+	issueTitleRow: makeStyle(FlexRowCenter,FillWidth,OverflowHidden,{
+		padding:  '0 1rem 1rem 0.5rem'
+	}),
+
+	issueTitleTime: makeStyle(FlexAuto,{
+		// alignSelf: 'flex-end',
+		fontSize: themeFontSize(1),
+		fontWeight: 100,
+	}),
+
+	issueTitle:   makeStyle(Ellipsis,FlexScale,{
+		display: 'block',
+		fontWeight: 300,
+		fontSize: themeFontSize(1.4),
+		padding: '0 1rem 0 0'
+	}),
+
+
+	issueTitleSelected: makeStyle({
+		fontWeight: 500
+	}),
+
+	issueBottomRow: makeStyle(FlexRowCenter,{
+		margin: '0.5rem 0 0.3rem 0.5rem',
+	}),
+
+	issueMilestone: makeStyle(FlexAuto,Ellipsis,{
+		fontSize: themeFontSize(1),
+		padding: '0 1rem'
+	}),
+
+
+
+	issueLabels: makeStyle(FlexScale,{
+		padding: '0 1rem 0 0'
+	}),
+
+	issueLabel: makeStyle({
+		display: 'inline-block',
+		padding: '0.6rem 1rem',
+		borderRadius: '0.3rem',
+		fontSize: themeFontSize(1),
+		fontWeight: 700,
+		margin: '0 1rem 0 0',
+		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
+	})
 
 }
 
@@ -42,6 +140,7 @@ export interface IIssuesPanelProps {
 	theme?:any
 	issues?:Issue[]
 	selectedIssues?:Issue[]
+	repos?:Repo[]
 }
 
 function mapStateToProps(state) {
@@ -49,8 +148,9 @@ function mapStateToProps(state) {
 	const repoState = state.get(RepoKey)
 
 	return {
-		theme: appState.theme,
-		issues: repoState.issues,
+		repos: repoState.repos,
+		theme:          appState.theme,
+		issues:         repoState.issues,
 		selectedIssues: repoState.selectedIssues
 	}
 }
@@ -70,72 +170,126 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		super(props)
 	}
 
-	onIssueSelected = (indexes) => {
-		const issues = indexes.map(index => this.props.issues[index])
-		repoActions.setSelectedIssues(issues)
+	onIssueSelected = (event, issue) => {
+		if (event.metaKey) {
+			let {selectedIssues} = this.props
+			const wasSelected = !_.isNil(selectedIssues.find(selectedIssue => selectedIssue.id === issue.id))
+			selectedIssues = (wasSelected) ? selectedIssues.filter(selectedIssue => selectedIssue.id !== issue.id) :
+				selectedIssues.concat([issue])
+
+			repoActions.setSelectedIssues(selectedIssues)
+		} else {
+			repoActions.setSelectedIssues([issue])
+		}
 		log.info('Received issue select')
 	}
 
 
+	renderLabels(labels,theme,s) {
+		return labels.map(label => {
+
+			const
+				p = theme.palette,
+				backgroundColor = '#' + label.color,
+				labelStyle = makeStyle(s.issueLabel, {
+					backgroundColor,
+					color: tinycolor.mostReadable(backgroundColor,[
+						p.text.secondary,
+						p.alternateText.secondary
+					])
+				})
+			return <div key={label.url} style={labelStyle}>{label.name}</div>
+
+		})
+	}
+
+	renderIssue(issue, s) {
+		const
+			{selectedIssues,repos,theme} = this.props,
+			repo = repos.find(repo => repo.id === issue.repoId),
+			selectedIssueIds = selectedIssues.map(issue => issue.id),
+			selectedMulti = selectedIssueIds.length > 1,
+			selected = selectedIssueIds.includes(issue.id),
+
+			issueStyles = [
+				s.issue,
+				selected  && s.issueSelected,
+				(selected && selectedMulti) && s.issueSelectedMulti
+			],
+			issueTitleStyle = [
+				s.issueTitle,
+				selected && s.issueTitleSelected,
+				selectedMulti && s.issueTitleSelectedMulti
+			]
+
+		return <div key={issue.id}
+		            style={issueStyles}
+		            selected={selected}>
+
+			<div style={s.issueMarkers}></div>
+			<div style={s.issueDetails}
+			     onClick={(event) => this.onIssueSelected(event,issue)}>
+
+				<div style={s.issueRepoRow}>
+					<div style={s.issueRepo}>
+						{Renderers.repoName(repo)}
+					</div>
+
+					{/* ASSIGNEE */}
+					<div style={s.user}>
+						<div style={s.username}>{issue.assignee ? issue.assignee.login : 'unassigned'}</div>
+						{issue.assignee && <div style={makeStyle(s.avatar,{
+							backgroundImage: `url(${issue.assignee.avatar_url})`
+						})}></div>}
+					</div>
+				</div>
+
+
+				<div style={s.issueTitleRow}>
+					<div style={issueTitleStyle}>{issue.title}</div>
+					<div style={s.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>
+				</div>
+
+				<div style={s.issueBottomRow}>
+
+					{/* LABELS */}
+					<div style={s.issueLabels}>
+						{this.renderLabels(issue.labels,theme,s)}
+					</div>
+					{/* MILESTONE */}
+					{issue.milestone && <div style={s.issueMilestone}>
+						{issue.milestone.title}
+					</div>}
+				</div>
+			</div>
+		</div>
+
+	}
+
 	render() {
 		const
-			{theme,issues,selectedIssues} = this.props,
-			{palette} = theme,
-			panelStyle = makeStyle(styles.panel,{backgroundColor: palette.accent4Color}),
-			bodyStyle = makeStyle({
-				backgroundColor: palette.accent1Color,
-				color: palette.accent1ColorText
-			}),
-			issueStyle = makeStyle(styles.issue,{
-				backgroundColor: palette.accent4Color,
-				color: palette.accent4ColorText
-			}),
-			issueSelectedStyle = makeStyle(issueStyle,{
-				backgroundColor: palette.accent4Color,
-				color: palette.accent3ColorText
-			}),
-			issueMultiSelectedStyle = makeStyle(issueSelectedStyle,{
-				backgroundColor: palette.highlightColor,
-				color: palette.highlightColorText
-			}),
+			{theme, issues, selectedIssues} = this.props,
 			allowResize = selectedIssues.length > 0,
 			listMinWidth = !allowResize ? '100%' : '50%',
 			listMaxWidth = !allowResize ? '100%' : '80%',
-			selectedIssueIds = selectedIssues.map(issue => issue.id),
-			selectedMulti = selectedIssueIds.length > 1
+			themeStyles = mergeStyles(styles, theme.issuesPanel)
 
-
-
-		return <div style={panelStyle}>
+		return <div style={themeStyles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
-			       rules={styles.panelSplitPane} />
+			       rules={styles.panelSplitPane}/>
 
-			<SplitPane split="vertical" allowResize={allowResize} minSize={listMinWidth} maxSize={listMaxWidth} className='issuePanelSplitPane'>
-				<div style={styles.listContainer}>
-					<Table bodyStyle={bodyStyle} onRowSelection={this.onIssueSelected}>
-						<TableHeader adjustForCheckbox={false} displaySelectAll={false}>
-							<TableRow>
-								<TableHeaderColumn>Title</TableHeaderColumn>
-								<TableHeaderColumn>Labels</TableHeaderColumn>
-							</TableRow>
-						</TableHeader>
-						<TableBody style={bodyStyle} displayRowCheckbox={false}>
-							{issues.map(issue => {
-								const
-									selected = selectedIssueIds.includes(issue.id)
+			<SplitPane split="vertical"
+			           allowResize={allowResize}
+			           minSize={listMinWidth}
+			           maxSize={listMaxWidth}
+			           className='issuePanelSplitPane'>
 
-								return <TableRow
-										key={issue.id}
-										style={selectedMulti && selected ? issueMultiSelectedStyle :
-											selected ? issueSelectedStyle :
-											issueStyle}
-										selected={selected}>
-									<TableRowColumn>{issue.title}</TableRowColumn>
-									<TableRowColumn>{issue.labels.map(label => label.name)}</TableRowColumn>
-								</TableRow>
-							})}
-						</TableBody>
-					</Table>
+				<div style={themeStyles.listContainer}>
+					<CSSTransitionGroup transitionName='issue'
+					                    transitionEnterTimeout={200}
+					                    transitionLeaveTimeout={200}>
+						{issues.map(issue => this.renderIssue(issue, themeStyles))}
+					</CSSTransitionGroup>
 
 				</div>
 				<IssueDetailPanel />

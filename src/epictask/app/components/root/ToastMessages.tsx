@@ -6,12 +6,14 @@
 import * as React from 'react'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import * as Radium from 'radium'
-import {Snackbar,FlatButton} from 'material-ui'
+import {Snackbar, FlatButton} from 'material-ui'
 import {connect} from 'react-redux'
 import {AppKey} from 'shared/Constants'
-import {IToastMessage,ToastMessageType,AppActionFactory} from 'app/actions'
-import {Icon,Button} from 'app/components'
+import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
+import {AppActionFactory} from 'app/actions'
+import {Icon, Button} from 'app/components'
 import {Themeable} from 'app/ThemeManager'
+const {Style} = Radium
 //endregion
 
 //region Logger
@@ -24,34 +26,66 @@ const appActions = new AppActionFactory()
 
 
 //region Styles
-const baseStyles = {
-	root: makeStyle(makeTransition(),PositionAbsolute,{
+const styles = {
+	root:            makeStyle(makeTransition(), PositionAbsolute, {
 		backgroundColor: 'transparent',
-		right: 0,
-		bottom: 0,
-		margin: '2rem'
+		right:           0,
+		bottom:          0,
+		left:            'auto',
+		padding:         '2rem'
 	}),
-	toast: makeStyle(makeTransition(),PositionAbsolute,Ellipsis,{
+	transitionGroup: makeStyle(makeTransition(), FlexColumn, FlexAlignEnd, {}),
+	toastMessagesTransition: {
+		'.toastMessages-enter': {
+			height: 0,
+			opacity: .01
+		},
+		'.toastMessages-enter-active': {
+			height: 48,
+			opacity: 1
+		},
+		'.toastMessages-leave': {
+			height: 48,
+			opacity: 1
+		},
+		'.toastMessages-leave-active': {
+			height: 0,
+			opacity: .01
+		}
+	},
+	body:         makeStyle(OverflowHidden, Ellipsis, PositionRelative, {
 		backgroundColor: 'transparent',
-		margin: '0.5rem',
-		// bottom: 0,
-		// left: '50%',
-		// transform: 'translateX(-50%)',
-		overflow: 'hidden'
+		display:         'block'
 	}),
-	icon: makeStyle({
-		paddingRight: '1rem'
+	toast:        makeStyle(makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd, {
+		backgroundColor: 'transparent',
+		margin:          '0.5rem',
+		width:           '100%',
+		maxWidth:        '100%',
+		maxHeight:       '100%'
+
 	}),
-	text: makeStyle(FlexScale,Ellipsis),
-	action: makeStyle(FlexRowCenter,FlexAuto,{
-		marginLeft: '1rem',
-		textTransform: 'uppercase',
+	toastContent: makeStyle(FlexRowCenter, {
+		borderRadius: '0.2rem',
+		maxWidth:     '100%',
+		maxHeight:    '100%',
+		padding:      '0 0 0'
+	}),
+	icon:         makeStyle({
+		display: 'block',
 		padding: '0 1rem'
+	}),
+	text:         makeStyle(FlexScale, Ellipsis, {
+		display: 'block',
+		padding: '0 1rem 0 0'
+	}),
+	action:       makeStyle(FlexRowCenter, FlexAuto, {
+		textTransform: 'uppercase',
+		padding:       '0 1rem'
 	})
 
 }
 //endregion
-
 
 
 //region Component Properties
@@ -72,7 +106,7 @@ export interface IToastMessagesProps {
  * @param state
  */
 function mapStateToProps(state) {
-	const {theme,messages} = state.get(AppKey)
+	const {theme, messages} = state.get(AppKey)
 
 	return {
 		theme,
@@ -89,46 +123,47 @@ function mapStateToProps(state) {
  **/
 
 
-
 @connect(mapStateToProps)
 @Radium
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 	constructor(props = {}) {
 		super(props)
+
+		this.state = {messageWrappers: []}
 	}
 
 
-	makeStyles(theme,palette) {
-		const
-			toastBodyStyle = makeStyle(Ellipsis,{
-				backgroundColor: palette.accent3Color,
-				overflow: 'hidden',
-				position: 'relative',
-				display: 'block'
-			}),
-			toastStyle = makeStyle(baseStyles.toast,toastBodyStyle,{
-				fontFamily: theme.fontFamily
-			}),
-			toastContentStyle = makeStyle(toastBodyStyle, FlexRow,FlexScale,makeFlexAlign('center','flex-start'), {
-				color: palette.accent3ColorText,
-				maxWidth: '100%'
-			}),
-			action = makeStyle(baseStyles.action,{
-				height: theme.snackbar.root.height,
-				backgroundColor: palette.accent4Color,
-				color: palette.accent4ColorText,
-				':hover': {
-					backgroundColor: palette.highlightColor,
-					color: palette.highlightText
-				}
-			})
+	componentWillReceiveProps(nextProps:IToastMessagesProps, nextContext:any):void {
+		const messageWrappers:any[] = Array.from(this.state.messageWrappers)
+		const {messages:nextMessages} = nextProps
 
-		return Object.assign({},baseStyles,{
-			toastBodyStyle,
-			toastStyle,
-			toastContentStyle,
-			action
+		const nextIds = nextMessages.map(msg => msg.id)
+		const existingIds = messageWrappers.map(wrapper => wrapper.msg.id)
+		const removedIds = messageWrappers
+			.filter(wrapper => !nextIds.includes(wrapper.msg.id))
+			.map(wrapper => wrapper.msg.id)
+
+		_.remove(messageWrappers, (wrapper:any) => removedIds.includes(wrapper.msg.id))
+
+		messageWrappers.push(...nextMessages
+			.filter(msg => !existingIds.includes(msg.id))
+			.map(msg => {
+				return {
+					           msg,
+					component: this.renderMessageContent(msg, nextProps),
+					timer:     (msg.type === ToastMessageType.Error) ? null :
+						           setTimeout(() => {
+							           appActions.removeMessage(msg.id)
+						           }, 5000)
+				}
+
+
+			})
+		)
+
+		this.setState({
+			messageWrappers
 		})
 	}
 
@@ -142,28 +177,41 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderMessageContent(msg,isError,isInfo,palette,styles) {
+	renderMessageContent(msg, props) {
 
-		function iconStyle(color) {
-			return makeStyle(styles.icon,{color})
-		}
+		const
+			isError = msg.type === ToastMessageType.Error,
+			isInfo = msg.type === ToastMessageType.Info
+
+		const
+			{theme} = props,
+			s = mergeStyles(styles, theme.toast)
+
 
 		// Create an action callout if required
+		const [bg,fg,actionColors] = (isError) ?
+			[s.bgError, s.fgError, s.actionError] :
+			[s.bgInfo, s.fgInfo, s.actionInfo]
+
 		const action = !isError ? null :
-			<Button
-	            style={styles.action}
-	            onClick={() => appActions.removeMessage(msg.id)}>
+			<Button style={[s.action,actionColors]}
+			        onClick={() => appActions.removeMessage(msg.id)}>
 				Acknowledge
 			</Button>
 
 		// Construct the message
-		return <div style={styles.toastContentStyle}>
-			{(isError) ? <Icon style={iconStyle(palette.highlightColor)}>error_outline</Icon> :
-				(isInfo) ? <Icon style={iconStyle(palette.highlightColor)}>info_outline</Icon> :
-					null}
+		return <div key={msg.id}
+		            className='toastMessage'
+		            style={s.toast}>
 
-			<span style={styles.text}>{msg.content}</span>
-			{action}
+			<div style={[s.toastContent,bg]}>
+				{(isError) ? <Icon style={[s.icon,fg]}>error_outline</Icon> :
+					(isInfo) ? <Icon style={[s.icon,fg]}>info_outline</Icon> :
+						null}
+
+				<span style={[s.text,fg]}>{msg.content}</span>
+				{action}
+			</div>
 		</div>
 	}
 
@@ -174,35 +222,23 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * @returns {any}
 	 */
 	render() {
-		const {messages,theme} = this.props,
+		const {messages, theme} = this.props,
 			{palette} = theme
 
-		const styles = this.makeStyles(theme,palette)
+		const s = mergeStyles(styles, theme.toast)
 
-		return <div style={styles.root}>
+		return <div style={s.root}>
+			<Style scopeSelector=".toastMessageTransitionGroup"
+			       rules={_.merge({},s.transitionGroup,s.toastMessagesTransition)}/>
 			<CSSTransitionGroup
-				transitionName="messages"
+				className='toastMessageTransitionGroup'
+				transitionName="toastMessages"
 				transitionAppear={true}
 				transitionAppearTimeout={250}
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
-				{messages.map(msg => {
+				{this.state.messageWrappers.map(wrapper => wrapper.component)}
 
-					const
-						isError = msg.type === ToastMessageType.Error,
-						isInfo = msg.type === ToastMessageType.Info
-
-					return <Snackbar
-						key={msg.id}
-						open={true}
-						className="messages"
-						message={this.renderMessageContent(msg,isError,isInfo,palette,styles)}
-						bodyStyle={styles.toastBodyStyle}
-						style={styles.toastStyle}
-						autoHideDuration={isError ? 0 : 5000}
-						onRequestClose={(reason) => reason !== 'clickaway' && appActions.removeMessage(msg.id)}
-					/>
-				})}
 			</CSSTransitionGroup>
 		</div>
 	}

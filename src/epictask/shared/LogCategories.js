@@ -10,6 +10,6 @@ module.exports = {
 	RootReducer: LogLevel.INFO,
 	ModelDecorations: LogLevel.INFO,
 	GitHubClient: LogLevel.INFO,
-	RepoActionFactory: LogLevel.DEBUG,
+	RepoActionFactory: LogLevel.INFO,
 	LunrIndex: LogLevel.DEBUG
 }

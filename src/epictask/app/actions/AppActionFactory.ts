@@ -1,8 +1,9 @@
 import {ActionFactory,Action,ActionMessage} from 'typedux'
 import {AppStateType} from 'shared/AppStateType'
 import {AppKey} from "shared/Constants"
-import {AppState, IToastMessage} from './AppState'
-import {Repo} from 'shared/models'
+import {IToastMessage} from 'shared/models/Toast'
+import {AppState} from './AppState'
+
 
 const log = getLogger(__filename)
 
@@ -24,9 +25,6 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	setError(err:Error) {}
-
-	@Action()
-	setRepo(repo:Repo) {}
 
 	@Action()
 	addMessage(message:IToastMessage) {}

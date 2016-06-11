@@ -9,8 +9,9 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import {AppStateType} from '../../shared/AppStateType'
-import {Settings} from '../../shared'
+import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models/Toast'
+import {AppStateType} from 'shared/AppStateType'
+import {Settings} from 'shared/Settings'
 import * as uuid from 'node-uuid'
 
 /**
@@ -30,24 +31,6 @@ export interface IStatus {
 }
 
 
-export enum ToastMessageType {
-	Debug = 1,
-	Info,
-	Error
-}
-
-export interface IToastMessageAction {
-	label:string,
-	execute:Function
-}
-
-export interface IToastMessage {
-	id:string,
-	createdAt:number,
-	type:ToastMessageType,
-	content:any,
-	actions?:IToastMessageAction[]
-}
 
 export function makeToastMessage(opts:any) {
 	return Object.assign(opts,{

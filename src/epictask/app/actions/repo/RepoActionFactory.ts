@@ -1,6 +1,7 @@
 
 
 
+
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -13,13 +14,14 @@ import {RepoKey} from "shared/Constants"
 import {Repos} from 'shared/DB'
 import {LunrIndex} from 'shared/LunrIndex'
 
-import {SyncStatus,ISyncDetails} from 'shared/models'
+import {SyncStatus,ISyncDetails,Activity,ActivityRepo,ActivityType} from 'shared/models'
 import {RepoState} from './RepoState'
 import {RepoMessage} from './RepoReducer'
 import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
-import {JobHandler} from '../jobs/JobHandler'
+import {RepoSyncJob} from './RepoSyncJob'
+
 
 /**
  * RepoActionFactory.ts
@@ -112,62 +114,9 @@ import {JobHandler} from '../jobs/JobHandler'
 			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
 			const appActions = AppActionFactory.newWithDispatcher(AppActionFactory,dispatch,getState)
 
-			jobActions.createJob({
-				executor: async (handler:JobHandler) => {
-					const {job} = handler
+			await availRepo.getRepo()
 
-					log.info(`Starting repo sync job: `, job.id)
-					try {
-
-						const client = github.createClient()
-
-						// Grab the repo
-						let {repo,repoId} = availRepo
-						if (!repo) repo = await actions.getRepo(repoId)
-
-						// Load the issues, eventually track progress
-						async function syncIssues() {
-							const issues = await client.repoIssues(repo)
-							issues.forEach(issue => issue.repoId = repo.id)
-							log.info(`Loaded issues, time to persist`, issues)
-							await Repos.issue.bulkSave(...issues)
-						}
-
-
-						async function syncLabels() {
-							const labels = await client.repoLabels(repo)
-							labels.forEach(label => label.repoId = repo.id)
-							log.debug(`Loaded labels, time to persist`,labels)
-							await Repos.label.bulkSave(...labels)
-						}
-
-						async function syncMilestones() {
-							const milestones = await client.repoMilestones(repo)
-							milestones.forEach(milestone => milestone.repoId = repo.id)
-							log.debug(`Loaded milestones, time to persist`,milestones)
-							await Repos.milestone.bulkSave(...milestones)
-						}
-
-						log.debug('waiting for all promises')
-						await Promise.all([syncIssues(),syncLabels(),syncMilestones()])
-						log.debug('all promises completed, NOW SYNC COMMENTS')
-
-						log.debug(`Updating all indexes now`)
-						await LunrIndex.persistAll()
-						log.debug('Persisted all indexes')
-
-
-						// await dispatch(actions.setSyncStatus(availRepo,SyncStatus.InProgress,{progress: 0}))
-						//
-						//
-						// actions.setSyncStatus(availRepo,SyncStatus.Completed,{progress: 100})
-					} catch (err) {
-						log.error('failed to sync repo issues',err)
-						appActions.addErrorMessage(err)
-						actions.setSyncStatus(availRepo,SyncStatus.Failed,{error:err})
-					}
-				}
-			})
+			jobActions.createJob(new RepoSyncJob(availRepo))
 
 
 		}

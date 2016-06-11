@@ -55,6 +55,7 @@ declare global {
 // Export globals
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
+const isOSX = process.platform === 'darwin'
 
 // Polyfill Fetch/FormData/etc
 function installGlobals() {
@@ -80,6 +81,7 @@ function installGlobals() {
 		_:LodashGlobal,
 		Promise:Bluebird,
 		Env: {
+			isOSX,
 			isDev,
 			isDebug: DEBUG && isDev,
 			isHot: !LodashGlobal.isNil(process.env.HOT),

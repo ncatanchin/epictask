@@ -11,6 +11,32 @@ import {AppKey, RepoKey} from '../../../shared/Constants'
 // Constants
 const log = getLogger(__filename)
 const styles = {
+	root: makeStyle(FlexColumn,Fill,{
+
+	}),
+
+	issue: makeStyle(FlexColumn,FlexScale,{
+
+	}),
+
+	issueMulti: makeStyle(FlexColumn,FlexScale,{
+
+	}),
+
+	header: makeStyle(FlexAuto,{
+		title: makeStyle({
+			fontSize: themeFontSize(1.8)
+		}),
+	}),
+
+	body: makeStyle(FlexScale,{
+
+	}),
+
+
+	footer: makeStyle(FlexAuto,{
+
+	}),
 
 }
 
@@ -48,25 +74,51 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		super(props)
 	}
 
-	renderMulti(issues:Issue[]) {
+	renderMulti(issues:Issue[],s) {
 		return <div>
 			{issues.length} selected issues
 		</div>
 	}
 
-	renderIssue(issue:Issue) {
-		return <div>
-			{issue.title}
+	renderHeader(issue,s) {
+		return <div style={s.header}>
+			<div style={s.header.title}>
+				{issue.title}
+			</div>
+		</div>
+	}
+
+	renderFooter(issue,s) {
+		return <div style={s.footer}>
+			<div >
+				add comment here
+			</div>
+		</div>
+	}
+
+	renderIssue(issue:Issue,s) {
+		return <div style={s.issue}>
+			{this.renderHeader(issue,s)}
+
+			{/* Issue Detail Body */}
+			<div style={s.body}>
+				{issue.body}
+			</div>
+
+			{this.renderFooter(issue,s)}
 		</div>
 	}
 
 	render() {
-		const {issues,theme} = this.props
-		return <div>
+		const
+			{issues,theme} = this.props,
+			s = mergeStyles(styles,theme.issueDetail)
+
+		return <div style={s.root}>
 			{issues.length === 0 ? <div/> :
 				issues.length > 1 ?
-					this.renderMulti(issues) :
-					this.renderIssue(issues[0])
+					this.renderMulti(issues,s) :
+					this.renderIssue(issues[0],s)
 			}
 		</div>
 	}

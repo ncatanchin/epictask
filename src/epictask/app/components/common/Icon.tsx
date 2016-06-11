@@ -4,7 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {FontIcon} from 'material-ui'
+import * as Radium from 'radium'
 import {FAIcons} from './IconFontAwesomeNames'
 
 // Constants
@@ -19,11 +19,15 @@ const FontAwesome = 'fa'
 export interface IIconProps extends React.DOMAttributes {
 	className?:string
 	style?:any
-	extraStyle?:any
 	iconSet?:string
 	iconName?: string,
 	fontSize?:any
 
+}
+
+function faIconCode(iconName) {
+	const code = FAIcons[iconName]
+	return (code) ? String.fromCodePoint(parseInt(code,16)) : ''
 }
 
 /**
@@ -32,7 +36,7 @@ export interface IIconProps extends React.DOMAttributes {
  * @class Icon
  * @constructor
  **/
-
+@Radium
 export class Icon extends React.Component<IIconProps,any> {
 
 	constructor(props = {}) {
@@ -40,7 +44,7 @@ export class Icon extends React.Component<IIconProps,any> {
 	}
 
 	render() {
-		let {iconSet = MaterialIcons,className = '',extraStyle,style,iconName,children,fontSize} = this.props
+		let {iconSet = MaterialIcons,className = '',style,iconName,children,fontSize} = this.props
 
 		iconSet = iconSet || MaterialIcons
 		const declaredIconSet = [MaterialIcons,FontAwesome]
@@ -51,19 +55,14 @@ export class Icon extends React.Component<IIconProps,any> {
 			className += ' ' + iconSet
 		}
 
-		style = makeStyle(style,extraStyle) as any
-
-		if (fontSize) {
-			style.fontSize = fontSize
-		}
 
 		const iconContent = (iconSet === FontAwesome) ?
-			String.fromCodePoint(parseInt(FAIcons[iconName])) :
+			faIconCode(iconName) :
 			children
 
-		return <FontIcon {...this.props} className={className} style={style}>
+		return <i {...this.props} className={className} style={style}>
 			{iconContent}
-		</FontIcon>
+		</i>
 	}
 
 }

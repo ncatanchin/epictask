@@ -14,6 +14,7 @@ export interface IJob {
 	progress:number
 	request:IJobRequest
 	handler?:JobHandler
+	name?:string
 	message?:string
 	error?:Error
 	updatedAt?:number
@@ -27,6 +28,7 @@ export interface IJobExecutor {
 
 export interface IJobRequest {
 	oneAtATime?:boolean
+	name:string
 	executor:IJobExecutor
 }
 
@@ -57,7 +59,8 @@ class JobStateModel {
 	createJob(request:IJobRequest) {
 		const job = {
 			id: uuid.v4(),
-			    request,
+		    request,
+			name: request.name,
 			progress: 0,
 			status: JobStatus.Created
 		}

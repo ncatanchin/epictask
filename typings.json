@@ -16,6 +16,8 @@
     "history": "registry:dt/history#1.8.0+20160316155526",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
+    "moment": "registry:dt/moment#2.8.0+20160316155526",
+    "moment-node": "registry:dt/moment-node#2.11.1+20160511043338",
     "node": "registry:dt/node#6.0.0+20160524002506",
     "radium": "registry:dt/radium#0.17.1+20160414124459",
     "react": "registry:dt/react#0.14.0+20160526134601",

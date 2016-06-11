@@ -1,6 +1,7 @@
 import 'lunr'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
+import {AllLunrIndexes as Indexes} from './LunrIndex'
 
 import {
 	Repo,
@@ -15,7 +16,9 @@ import {
 	Label,
 	LabelRepo,
 	AvailableRepo,
-	AvailableRepoRepo
+	AvailableRepoRepo,
+	Activity,
+	ActivityRepo
 }  from 'shared/models'
 
 export interface IRepos {
@@ -25,7 +28,7 @@ export interface IRepos {
 	milestone: MilestoneRepo
 	comment: CommentRepo
 	label: LabelRepo
-
+	activity: ActivityRepo
 }
 
 export const Repos:IRepos = {} as any
@@ -61,12 +64,13 @@ export async function start() {
 
 	const modelClazzes = [
 		Repo,
+		AvailableRepo,
 		User,
 		Milestone,
 		Issue,
 		Label,
 		Comment,
-		AvailableRepo
+		Activity
 	]
 
 	await coordinator.start(...modelClazzes)
@@ -77,7 +81,8 @@ export async function start() {
 		availableRepo: getRepo(AvailableRepoRepo),
 		milestone: getRepo(MilestoneRepo),
 		comment: getRepo(CommentRepo),
-		label: getRepo(LabelRepo)
+		label: getRepo(LabelRepo),
+		activity: getRepo(ActivityRepo)
 	})
 
 	return true
@@ -93,5 +98,5 @@ export function getRepo<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ()
 	return coordinator.getRepo(repoClazz)
 }
 
-
+export {Indexes}
 

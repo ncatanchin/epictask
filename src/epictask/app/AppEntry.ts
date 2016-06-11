@@ -19,13 +19,14 @@ async function boot() {
 	log.info('Starting Database')
 	await DBService.start()
 
-
-
-
 	log.info('Starting services')
 	const Services = require('app/services')
 	const servicePromises = Object.keys(Services)
-		.map(serviceKey => Services[serviceKey].start())
+		.map(serviceKey => {
+			log.info(`Starting service: ${serviceKey}`)
+			const service = Services[serviceKey]
+			return (service.start) ? service.start() : Promise.resolve(service)
+		})
 
 	log.info('Waiting for all services to load')
 	servicePromises.forEach(async (service) => await service)

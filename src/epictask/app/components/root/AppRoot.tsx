@@ -20,8 +20,7 @@ import {Header,HeaderVisibility,ToastMessages} from 'components'
 import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'app/actions'
-import {TAppState,IToastMessage} from 'app/actions'
-import {AppStateType,AvailableRepo} from 'shared'
+import {AppStateType} from 'shared'
 import {AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 //endregion
@@ -174,8 +173,8 @@ class App extends React.Component<IAppProps,any> {
 
 	constructor(props, context) {
 		super(props, context)
-
 	}
+
 
 	keyHandlers = {
 		[KeyMaps.CommonKeys.Escape]: () => {
@@ -183,9 +182,6 @@ class App extends React.Component<IAppProps,any> {
 			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
 		}
 	}
-
-
-
 
 
 	/**
@@ -216,8 +212,11 @@ class App extends React.Component<IAppProps,any> {
 				<Provider store={store.getReduxStore()}>
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
 						{/* Global flex box */}
-						<div className="fill-height fill-width" style={makeStyle(styles.content,adjustedBodyStyle)}>
+						<div className="fill-height fill-width"
+						     style={makeStyle(styles.content,theme.app,adjustedBodyStyle)}>
+
 							<Header visibility={headerVisibility}/>
+
 							<HotKeys ref={(c) => this.pageBodyHolder = c}
 							         style={makeStyle(FlexScale,FlexColumn)}>
 

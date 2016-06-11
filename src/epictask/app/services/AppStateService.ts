@@ -1,9 +1,10 @@
-import {AppStateType} from '../../shared/AppStateType'
-import {getStore} from '../store'
-import {AppActionFactory} from '../actions/AppActionFactory'
-import {AuthActionFactory} from '../actions/auth/AuthActionFactory'
-import {RepoActionFactory} from '../actions/repo/RepoActionFactory'
 
+import {AppStateType} from 'shared/AppStateType'
+import {getStore} from 'app/store'
+import {AppActionFactory} from 'app/actions/AppActionFactory'
+import {AuthActionFactory} from 'app/actions/auth/AuthActionFactory'
+import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
+const electron = require('electron')
 
 const log = getLogger(__filename)
 const store = getStore()
@@ -12,6 +13,10 @@ const authActions = new AuthActionFactory()
 const repoActions = new RepoActionFactory()
 
 let stateType = null
+
+electron.ipcRenderer.on('syncAllRepoDetails',(event,details) => {
+	repoActions.syncAllRepoDetails()
+})
 
 async function updateStateType() {
 	const newStateType = appActions.state.stateType
@@ -31,6 +36,7 @@ async function updateStateType() {
 }
 
 
+
 export async function start() {
 	await updateStateType()
 
@@ -38,4 +44,5 @@ export async function start() {
 		updateStateType()
 	})
 }
+
 

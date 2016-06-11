@@ -4,10 +4,10 @@
 
 //region Imports
 import * as React from 'react'
-import * as ReactDOM from 'react-dom'
 import * as Radium from 'radium'
 import {connect} from 'react-redux'
 import {AppKey} from 'shared/Constants'
+const Ink = require('react-ink')
 //endregion
 
 //region Logger
@@ -16,8 +16,13 @@ const log = getLogger(__filename)
 
 //region Styles
 const styles = {
-	root: makeStyle({
-		cursor: 'pointer'
+	root: makeStyle(PositionRelative,{
+		cursor: 'pointer',
+		border: 0,
+		padding: '0.5rem 1rem',
+		margin: 0,
+		outline: 0,
+		width: 'auto'
 	})
 }
 //endrgion
@@ -28,8 +33,9 @@ const styles = {
  * IButtonProps
  */
 export interface IButtonProps extends React.DOMAttributes {
-	theme?:any,
+	theme?:any
 	style?:any
+	ripple?:boolean
 }
 //endregion
 
@@ -53,16 +59,21 @@ function mapStateToProps(state) {
 @Radium
 export class Button extends React.Component<IButtonProps,any> {
 
+	static defaultProps = {
+		ripple: true
+	}
+
 	constructor(props,context) {
 		super(props,context)
 	}
 
 	render() {
-		const {theme,style,children} = this.props
+		const {ripple,theme,style,children} = this.props
 
-		return <div {...this.props} style={makeStyle(styles.root,style)}>
+		return <button {...this.props} style={[styles.root,style]}>
+			{ripple && <Ink/>}
 			{children}
-		</div>
+		</button>
 	}
 
 }

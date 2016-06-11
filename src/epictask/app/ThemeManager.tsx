@@ -159,18 +159,35 @@ export function Themeable() {
 }
 
 /**
+ * Create a font size based on the themes font size
+ *
+ * This is needed due to the fact that font sizes
+ * can vary between fonts so dramatically,
+ * best example is Roboto and FiraCode
+ *
+ * @param multiplier
+ * @returns {number}
+ */
+export function makeThemeFontSize(multiplier) {
+	return getTheme().fontSize * multiplier
+}
+
+/**
  * Export getTheme globally
  *
  * @global getTheme
  */
+
 declare global {
 	var getTheme:any
+	var themeFontSize:typeof makeThemeFontSize
 }
 
 
 // Export globals
 Object.assign(global as any,{
-	getTheme
+	getTheme,
+	themeFontSize:makeThemeFontSize
 })
 
 

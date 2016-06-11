@@ -1,20 +1,20 @@
 import * as React from 'react'
 import {Dialog,AutoComplete,FlatButton} from 'material-ui'
 
-const log = getLogger(__filename)
+
 import {RepoPanel,IssuesPanel,IssueDetailPanel} from 'components'
-import {Repo} from 'epictask/shared'
-import {getStore} from 'app/store'
+import {Repo} from 'shared/models'
 import {Page} from './'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
 import {Icon} from '../common'
-import {RepoKey} from '../../../shared/Constants'
+import {RepoKey} from 'shared/Constants'
 
 const Resizable = require('react-component-resizable')
 
+const log = getLogger(__filename)
 const appActions = new AppActionFactory()
 
 

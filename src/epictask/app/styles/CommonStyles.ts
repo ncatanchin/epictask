@@ -7,6 +7,10 @@ export function makeStyle(...styles) {
 	return Object.assign({},...styles)
 }
 
+export function mergeStyles(...styles):any {
+	return _.merge({},...styles)
+}
+
 export function makeFlexAlign(alignItems,justifyContent = null) {
 	justifyContent = justifyContent || alignItems
 	return {justifyContent,alignItems}
@@ -76,7 +80,7 @@ export const FlexRow = makeStyle(Flex,{
 	flexDirection: 'row'
 })
 
-export const FlexRowCenter = makeStyle(FlexRow,FlexScale,{
+export const FlexRowCenter = makeStyle(FlexRow,{
 	justifyContent: 'center',
 	alignItems: 'center'
 })
@@ -103,7 +107,7 @@ export const FontBlack = {
 	fontWeight:700
 }
 
-export const Ellipsis = makeStyle(Flex,{
+export const Ellipsis = makeStyle({
 	whiteSpace: 'nowrap',
 	overflow: 'hidden',
 	textOverflow: 'ellipsis'
