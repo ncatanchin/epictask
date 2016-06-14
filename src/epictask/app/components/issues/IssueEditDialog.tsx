@@ -22,6 +22,9 @@ const appActions = new AppActionFactory()
 const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, {}),
 
+	input: {
+		fontWeight: 700
+	},
 	title: makeStyle(FlexRowCenter,FillWidth,{
 		label: makeStyle(FlexScale),
 		avatar: makeStyle(FlexAuto,{
@@ -82,7 +85,7 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
 
 @connect(mapStateToProps)
 @Radium
-@PureRender
+//@PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
 
@@ -92,25 +95,29 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 		this.state = this.getNewState(props)
 	}
 
-	getNewState(props,repoId = null) {
+	getNewState(props,repoId = null,issue = null) {
 		const {selectedIssue, availableRepos,repos} = props
 
+		repoId = (repoId) ? repoId :
+			(selectedIssue) ? selectedIssue.repoId :
+				(availableRepos && availableRepos[0]) ? availableRepos[0].repoId :
+					(repos && repos[0]) ? repos[0].id :
+						null
 
 		function newIssue() {
 
 
-			repoId = (repoId) ? repoId :
-				(selectedIssue) ? selectedIssue.repoId :
-					(availableRepos && availableRepos[0]) ? availableRepos[0].repoId :
-						(repos && repos[0]) ? repos[0].id :
-							null
+
 			return new Issue({repoId})
 		}
 
 		const {state} = this
-		const issue = (state && state.issue && (!props.issue || props.issue.id === state.issue.id)) ?
+		issue = issue ? issue : (state && state.issue && (!props.issue || props.issue.id === state.issue.id)) ?
 			state.issue : (props.issue) ? _.cloneDeep(props.issue) : newIssue()
 
+		if (issue && !issue.repoId) {
+
+		}
 		//const repo = repos.find(repo => repo.id === issue.repoId)
 		return {issue,availableRepo:availableRepos.find(availRepo => availRepo.repoId === issue.repoId)}
 	}
@@ -122,11 +129,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	 */
 	updateState(props) {
 		const
-			{state} = this
+			{state} = this,
+			{issue} = state
 
-		if (!state || !state.issue || state.issue.updated_at !== (props.issue ? props.issue.updated_at : -1)) {
-			this.setState(this.getNewState(props))
-		}
+		this.setState(this.getNewState(props,issue && issue.repoId,issue))
+		// if (!state || !state.issue || state.issue.updated_at !== (props.issue ? props.issue.updated_at : -1)) {
+		//
+		// }
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -146,7 +155,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	}
 
 	onLabelsChanged = (newLabels:Label[]) => {
-
+		const {issue} = this.state
+		log.info('new labels',newLabels)
+		if (issue) {
+			this.setState({
+				issue: _.assign(
+					_.cloneDeep(issue),
+					{labels:newLabels}
+				)
+			})
+		}
 	}
 
 	render() {
@@ -176,10 +194,18 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 		return <Dialog style={s.root}
 		               open={open}
 		               actions={actions}
+		               actionsContainerStyle={s.actions}
 		               modal={true}
+		               autoScrollBodyContent={true}
 		               bodyStyle={s.body}
 		               titleStyle={s.title}
 		               title={title}>
+
+			<Style rules={{
+				'.CodeMirror': {
+					height: '30vh'
+				}
+			}} />
 
 			<form name="issueEditDialogForm" id="issueEditDialogForm">
 
@@ -196,13 +222,24 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 				           underlineDisabledStyle={s.input.underlineDisabled}
 				           underlineFocusStyle={s.input.underlineFocus}
 				           underlineShow={true}
-				           fullWidth={true} />
+				           fullWidth={true}
+							autoFocus />
 
 				<LabelFieldEditor labels={issue.labels || []}
+				                  id="issueEditDialogLabels"
+				                  label="LABELS"
+				                  hint="Label me..."
+				                  inputStyle={s.input}
 				                  availableLabels={availableRepo ? availableRepo.labels : []}
-				                  onLabelsChanged={this.onLabelsChanged} />
+				                  onLabelsChanged={this.onLabelsChanged}
+				                  underlineStyle={s.input.underlineDisabled}
+				                  underlineFocusStyle={s.input.underlineFocus}
+				                  hintStyle={s.input.hint}
+				                  labelStyle={s.input.floatingLabel}
+				                  labelFocusStyle={s.input.floatingLabelFocus}/>
 
 				<SimpleMDE onChange={this.onMarkdownChange}
+				           style={{maxHeight: 500}}
 				           options={{value:issue.body}}></SimpleMDE>
 			</form>
 		</Dialog>

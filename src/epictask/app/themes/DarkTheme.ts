@@ -49,6 +49,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	fontSize,
 
 	textColor: text.primary,
+	alternateTextColor: alternateText.primary,
 
 	app: {
 		fontFamily,
@@ -84,10 +85,25 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
+	menuItem: {
+		list: {
+			padding: 0
+		}
+	},
+
 	dialog: {
 		titleFontSize: fontSize * 2,
 		bodyFontSize:  fontSize * 1.5,
 		bodyColor:     text.primary,
+
+		root: {
+
+		},
+
+		actions: {
+			color:           primary.hue1,
+			backgroundColor: text.primary
+		},
 
 		body: {
 			color:           primary.hue1,
