@@ -3,6 +3,7 @@ import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
 import {AllLunrIndexes as Indexes} from './LunrIndex'
 
+
 import {
 	Repo,
 	RepoRepo,
