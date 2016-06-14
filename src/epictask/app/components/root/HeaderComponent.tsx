@@ -152,11 +152,11 @@ export class Header extends React.Component<IHeaderProps,any> {
 		const controlStyle = makeStyle(theme.header.controlStyle,styles.controlButton)
 
 		return <div style={headerStyle} id='header'>
-			<div style={styles.controls} className='window-controls'>
-				<button className="close fa fa-times" style={controlStyle} onClick={this.windowClose}/>
-				<button className="min fa fa-minus" style={controlStyle} onClick={this.windowMin}/>
-				<button className="max fa fa-plus" style={controlStyle} onClick={this.windowMax}/>
-			</div>
+			{/*<div style={styles.controls} className='window-controls'>*/}
+				{/*<button className="close fa fa-times" style={controlStyle} onClick={this.windowClose}/>*/}
+				{/*<button className="min fa fa-minus" style={controlStyle} onClick={this.windowMin}/>*/}
+				{/*<button className="max fa fa-plus" style={controlStyle} onClick={this.windowMax}/>*/}
+			{/*</div>*/}
 			<SearchPanel inlineResults={expanded} expanded={expanded}/>
 			<div style={logoStyle}>
 				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}

@@ -94,8 +94,8 @@ function loadRootWindow() {
 	mainWindow = new BrowserWindow(Object.assign({},mainWindowState,{
 		show: true,
 		frame: false,
-		//titleBarStyle: 'hidden',
-		darkTheme:true,
+		titleBarStyle: 'hidden',
+		// darkTheme:true,
 		title: 'epictask'
 	}))
 
