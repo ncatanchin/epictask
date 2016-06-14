@@ -1,13 +1,13 @@
-
-import {getStore} from '../store/AppStore'
+import {ObservableStore} from 'typedux'
 import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
 import {Repos} from 'shared/DB'
 
 const log = getLogger(__filename)
-const store = getStore()
-const repoActions = new RepoActionFactory()
+let store:ObservableStore<any>
+let repoActions:RepoActionFactory
 
 const refMap:any = {}
+let selectedIssuesChanged
 
 async function enabledReposChanged() {
 	const {availableRepos} = repoActions.state
@@ -25,18 +25,37 @@ async function enabledReposChanged() {
 	repoActions.loadIssues()
 }
 
-const selectedIssuesChanged = _.debounce((selectedIssues) => {
 
-	if (selectedIssues && selectedIssues.length === 1) {
-		repoActions.loadIssue(selectedIssues[0])
-	}
-},150)
 
+/**
+ * Start the repo state service
+ */
 export async function start() {
-	enabledReposChanged()
+	const {RepoActionFactory} = require('app/actions/repo/RepoActionFactory')
+	const {getStore} = require('app/store')
+	repoActions = new RepoActionFactory()
+	store = getStore()
 
-	store.observe([repoActions.leaf(),'availableRepos'],() => enabledReposChanged())
+	// Issue selected handler
+	selectedIssuesChanged = _.debounce((selectedIssues) => {
+		if (selectedIssues && selectedIssues.length === 1) {
+			repoActions.loadIssue(selectedIssues[0])
+		}
+	},150)
+
+	// Enable repo change handler and selection change
+	enabledReposChanged()
+	selectedIssuesChanged(repoActions.state.selectedIssues)
+
+	// Setup watches for both
+	store.observe([repoActions.leaf(),'availableRepos'],enabledReposChanged)
 	store.observe([repoActions.leaf(),'selectedIssues'],selectedIssuesChanged)
-	//store.observe([repoActions.leaf(),'selectedRepos'],() => selectedReposChanged())
+
 }
 
+if (module.hot) {
+	module.hot.accept(['app/actions/repo/RepoActionFactory','app/store'],(updates) => {
+		log.info(`HMR received updates repo actions and store`, updates, 'restarting')
+		start()
+	})
+}

@@ -50,6 +50,19 @@ export class LabelRepo extends TSRepo<Label> {
 		super(LabelRepo,Label)
 	}
 
+	/**
+	 * Find all labels in provided repo ids
+	 * @param repoIds
+	 * @returns {Label[]}
+	 */
+	@IndexedDBFinderDescriptor({
+		fn: (tsRepo,...args) => tsRepo.table.where('repoId').anyOf(args).sortBy('name')
+	})
+	@FinderDescriptor()
+	findByRepoId(...repoIds:number[]):Promise<Label[]> {
+		return null
+	}
+
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {
 			return tsRepo.table.toArray()

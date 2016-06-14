@@ -149,19 +149,30 @@ import {RepoSyncJob} from './RepoSyncJob'
 			const actions = this.withDispatcher(dispatch,getState)
 			const availRepos = await Repos.availableRepo.findAll()
 
-			const repoRepo = Repos.repo
+			const
+				repoRepo = Repos.repo,
+				repoState = actions.state,
+				{repos} = repoState
 
-			availRepos.forEach(async (availRepo) => {
-				const repoState = actions.state
-				availRepo.repo = availRepo.repo ||
-					repoState.repos.find(repo => repo.id === availRepo.repoId)
+			await Promise.all(availRepos.map(async (availRepo) => {
 
-				if (availRepo.repo)
-					return
+				if (!availRepo.repo) {
+					availRepo.repo = availRepo.repo ||
+						repos.find(repo => repo.id === availRepo.repoId)
 
-				availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
+					availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
+				}
 
-			})
+				if (!availRepo.labels) {
+					availRepo.labels = await Repos.label.findByRepoId(availRepo.repoId)
+				}
+
+				if (!availRepo.milestones) {
+					availRepo.milestones = await Repos.milestone.findByRepoId(availRepo.repoId)
+				}
+
+				return availRepo
+			}))
 
 			log.debug('Loaded available repos',availRepos)
 			actions.setAvailableRepos(availRepos)
@@ -228,14 +239,14 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 
 	@Action()
-	loadIssue(issue:Issue){
+	loadIssue(issue:Issue,force:boolean = false){
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
 			return new Promise((resolve:any,reject:any) => {
 
 				const currentIssue = actions.state.issue
-				if (currentIssue && currentIssue.id === issue.id) {
+				if (!force && currentIssue && currentIssue.id === issue.id) {
 					return resolve(true)
 				}
 

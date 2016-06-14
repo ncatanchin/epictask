@@ -31,14 +31,17 @@ export class JobHandler {
 	 * @returns {IJob}
 	 */
 	async setStatus(status:JobStatus, progress = -1, err:Error = null) {
+		Object.assign(this.job,{status},
+			(progress > -1) ? {progress} : {},
+			(err) ? {error:err} : {})
+
 		const job = Object.assign(
 			{},
-			this.job,
-			{status},
-			(progress > -1) ? {progress} : {},
-			(err) ? {error:err} : {}
+			_.cloneDeep(this._job)
 		)
-		this._job = await this.actions.updateJob(job)
+
+		this.actions.updateJob(job)
+
 		return this.job
 	}
 

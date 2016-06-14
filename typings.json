@@ -14,6 +14,7 @@
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "github-electron": "registry:dt/github-electron#1.0.2+20160523035412",
     "history": "registry:dt/history#1.8.0+20160316155526",
+    "later": "registry:dt/later#0.0.0+20160317120654",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
     "moment": "registry:dt/moment#2.8.0+20160316155526",

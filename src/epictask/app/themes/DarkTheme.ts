@@ -1,5 +1,6 @@
 import * as Styles from 'material-ui/styles'
-import {makeTheme,Palettes} from './material/MaterialTools'
+import {makeTheme, Palettes} from './material/MaterialTools'
+
 //import * as _ from 'lodash'
 
 const tinycolor = require('tinycolor2')
@@ -15,18 +16,18 @@ const windowControlDim = navBarHeight / 5
 
 const theme = makeTheme(
 	Palettes.grey,
-	['l900','#303030','l800','l700'],
+	['l900', '#303030', 'l800', 'l700'],
 	Palettes.purple,
-	['l400','l300','l200','l100'],
+	['l400', 'l300', 'l200', 'l100'],
 	Palettes.teal,
-	['l400','l200','l100','l50'],
+	['l400', 'l200', 'l100', 'l50'],
 	Palettes.deepOrange,
-	['l400','l200','l100','l50'],
+	['l400', 'l200', 'l100', 'l50'],
 	Palettes.black,
 	true
 )
 
-const {primary,secondary,accent,warn,background,text,alternateText} = theme
+const {primary, secondary, accent, warn, background, text, alternateText} = theme
 
 const fontFamilyRegular = 'AvenirNext'
 const fontFamilyDetail = 'fira-code'
@@ -55,32 +56,117 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	},
 
 	avatar: {
-		root: {
-
-		},
+		root:   {},
 		avatar: {
-			borderColor: secondary.hue1
+			borderColor: secondary.hue1,
+			backgroundColor: accent.hue1
 		}
 	},
 
+	button: {
+		root: {
+			fontFamily: fontFamilyRegular,
+			fontWeight: 500,
+		},
+		flat: {
+			backgroundColor: primary.hue1,
+			color:           text.secondary,
+		},
+
+		raised: {
+			color:           text.primary,
+			backgroundColor: secondary.hue1
+		},
+
+		disabled: {
+			color:           text.hintOrDisabledOrIcon,
+			backgroundColor: primary.hue1
+		}
+	},
+
+	dialog: {
+		titleFontSize: fontSize * 2,
+		bodyFontSize:  fontSize * 1.5,
+		bodyColor:     text.primary,
+
+		body: {
+			color:           primary.hue1,
+			backgroundColor: text.primary
+		},
+
+		title: {
+			color:           text.primary,
+			backgroundColor: secondary.hue1,
+
+			label: {
+				textTransform: 'uppercase'
+			},
+
+			avatar: {
+				avatar: {
+					borderColor: accent.hue1
+				}
+			}
+		},
+
+		input: {
+			color: primary.hue1,
+
+			// backgroundColor: text.primary
+			hint:  {
+				color:           secondary.hue3,
+				backgroundColor: text.primary,
+				fontStyle:   'italic',
+				fontWeight: 100
+
+			},
+
+
+			floatingLabel: {
+				color:           primary.hue3,
+				backgroundColor: text.secondary
+			},
+
+			floatingLabelFocus: {
+				color:           secondary.hue2,
+				backgroundColor: text.secondary
+			},
+			underlineDisabled: {
+				borderColor: secondary.hue3,
+				borderBottomWidth: `0.1rem`,
+				transform: 'scaleX(1)'
+			},
+			underlineFocus: {
+				borderColor: secondary.hue2,
+				borderBottomWidth: `0.1rem`
+			}
+		},
+
+
+	},
+
+	issueEditDialog: {
+
+	},
+
 	header: {
-		logoStyle: {
+		logoStyle:    {
 			height: navBarHeight
 		},
 		controlStyle: {
-			color: 'white',
-			height: windowControlDim,
-			width: windowControlDim,
-			fontSize: windowControlDim * 0.7,
+			color:           'white',
+			height:          windowControlDim,
+			width:           windowControlDim,
+			fontSize:        windowControlDim * 0.7,
 			backgroundColor: 'white',
-			borderRadius: windowControlDim / 2,
-			borderColor: 'rgba(255,255,255,0.2)',
-			margin: '0.2rem'
+			borderRadius:    windowControlDim / 2,
+			borderColor:     'rgba(255,255,255,0.2)',
+			margin:          '0.2rem'
 		},
-		style: {
-			color: text.primary,
+		style:        {
+			color:           text.primary,
 			backgroundColor: background,//primary.hue1,
-			height: navBarHeight
+			height:          navBarHeight
 
 		}
 	},
@@ -89,47 +175,49 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	repoPanel: {
 		root: {
 			backgroundColor: primary.hue1,
-			color: text.primary
+			color:           text.primary
 		},
-		header: {
+
+
+		header:            {
 			backgroundColor: primary.hue2,
-			color: text.secondary
+			color:           text.secondary
 			// padding: '1rem 1rem'
 		},
-		headerButton: {
+		headerButton:      {
 			backgroundColor: primary.hue2,
-			color: text.secondary
+			color:           text.secondary
 		},
 		headerButtonHover: {
 			backgroundColor: accent.hue1,
 		},
-		list: {
+		list:              {
 			item: {
 				backgroundColor: primary.hue3,
-				opacity: 0.6
+				opacity:         0.6
 			},
 
 			itemHover: {
 				backgroundColor: accent.hue2,
-				color: text.primary,
-				opacity: 1
+				color:           text.primary,
+				opacity:         1
 			},
 
 			itemEnabled: {
 				backgroundColor: secondary.hue1,
-				color: text.primary,
-				opacity: 1
+				color:           text.primary,
+				opacity:         1
 			},
 
-			itemSelected: {
+			itemSelected:      {
 				backgroundColor: accent.hue1,
-				color: text.primary,
-				opacity: 1
+				color:           text.primary,
+				opacity:         1
 			},
 			itemSelectedHover: {
 				backgroundColor: accent.hue2,
-				color: text.primary,
-				opacity: 1
+				color:           text.primary,
+				opacity:         1
 			}
 
 
@@ -144,53 +232,45 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 			backgroundColor: primary.hue2,
 		},
 
-		wrapperExpandedStyle: {
-
-		},
+		wrapperExpandedStyle: {},
 
 		hintStyle: {
 			backgroundColor: 'transparent',
-			color: text.secondary,
-			fontWeight: 100
+			color:           text.secondary,
+			fontWeight:      100
 		},
 
 		style: {
 			backgroundColor: 'transparent',
-			color: text.secondary
+			color:           text.secondary
 		},
 
 		focusedStyle: {
 			backgroundColor: primary.hue4,
-			color: text.primary
+			color:           text.primary
 		}
 	},
 
 	searchResults: {
 		result: {
-			normal: {
+			normal:   {
 				backgroundColor: text.primary,
-				color: primary.hue1
+				color:           primary.hue1
 			},
 			selected: {
 				backgroundColor: accent.hue1,
-				color: text.primary
+				color:           text.primary
 			}
 		},
 
 		content: {
-			label: {
-
-			},
-			action: {
-
-			},
-			type: {
+			label:    {},
+			action:   {},
+			type:     {
 				backgroundColor: accent.hue3,
-				color: text.primary
+				color:           text.primary
 			},
-			selected: {
-
-			}
+			selected: {}
 
 		}
 	},
@@ -207,7 +287,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		issue: {
 			backgroundColor: primary.hue1,
-			color: text.primary
+			color:           text.primary
 		},
 
 		issueSelected: {
@@ -217,7 +297,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		issueSelectedMulti: {
 			backgroundColor: accent.hue1,
-			color: text.primary
+			color:           text.primary
 		},
 
 		issueMilestone: {
@@ -225,7 +305,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		},
 
 		issueRepo: {
-			color: secondary.hue1,
+			color:      secondary.hue1,
 			fontFamily: fontFamilyRegular,
 			fontWeight: 500
 		},
@@ -235,13 +315,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		},
 
 		issueTitle: {
-			color: text.hintOrDisabledOrIcon,
+			color:      text.hintOrDisabledOrIcon,
 			fontFamily: fontFamilyRegular,
 			fontWeight: 500
 		},
 
 		issueTitleSelected: {
-			color: text.primary,
+			color:      text.primary,
 			fontWeight: 500
 		},
 
@@ -249,9 +329,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 			// fontFamily: fontFamilyDetail
 		},
 
-		issueTitleSelectedMulti: {
-
-		}
+		issueTitleSelectedMulti: {}
 	},
 
 	/**
@@ -265,11 +343,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		header: {
 			//backgroundColor: accent.hue1,
 			backgroundColor: tinycolor(primary.hue2).setAlpha(0.5),
-			color: text.primary,
+			color:           text.primary,
 
 			row1: {
 				repo: {
-			        color: accent.hue2
+					color: accent.hue2
 					//color: secondary.hue1
 					//color: tinycolor(secondary.hue1).lighten(5)
 					//color: tinycolor(secondary.hue1).lighten()
@@ -279,22 +357,22 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		content: {
 			backgroundColor: primary.hue1, //secondary.hue1,
-			color: text.primary,
+			color:           text.primary,
 
 			activities: {
 				activity: {
 					user: {
 						backgroundColor: secondary.hue1,
-						borderColor: primary.hue1,
+						borderColor:     primary.hue1,
 					},
 
 					comment: {
 						backgroundColor: primary.hue2,
-						borderColor: tinycolor(secondary.hue1),
+						borderColor:     tinycolor(secondary.hue1),
 
 						details: {
 							backgroundColor: secondary.hue1,
-							color: text.primary
+							color:           text.primary
 						}
 					}
 				}
@@ -303,7 +381,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		footer: {
 			backgroundColor: accent.hue1,
-			color: text.primary
+			color:           text.primary
 		},
 
 	},
@@ -311,11 +389,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	 * Toast
 	 */
 
-	toast: {
-		bgInfo: {
+	toast:       {
+		bgInfo:  {
 			backgroundColor: secondary.hue1
-        },
-		fgInfo: {
+		},
+		fgInfo:  {
 			color: text.primary
 		},
 		bgError: {
@@ -348,40 +426,40 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		actionInfo: {
 			backgroundColor: secondary.hue1,
-			color: text.primary,
-			':hover': {
+			color:           text.primary,
+			':hover':        {
 				backgroundColor: secondary.hue2
 			}
 		},
 
 		actionError: {
 			backgroundColor: warn.hue1,
-			color: text.primary,
-			':hover': {
+			color:           text.primary,
+			':hover':        {
 				backgroundColor: warn.hue2
 			}
 		}
 	},
 
 	palette: {
-		text,
-		alternateText,
-		textColor: text.primary,
-		canvasColor: background,
-		primary1Color: primary.hue1,
+		                   text,
+		                   alternateText,
+		textColor:         text.primary,
+		canvasColor:       background,
+		primary1Color:     primary.hue1,
 		primary1ColorText: text.primary,
-		primary2Color: primary.hue2,
+		primary2Color:     primary.hue2,
 		primary2ColorText: text.primary,
-		primary3Color: primary.hue3,
+		primary3Color:     primary.hue3,
 		primary3ColorText: text.primary,
 
-		accent1Color: accent.hue1,
+		accent1Color:     accent.hue1,
 		accent1ColorText: text.primary,
-		accent2Color: accent.hue2,
+		accent2Color:     accent.hue2,
 		accent2ColorText: text.primary,
-		accent3Color: accent.hue3,
+		accent3Color:     accent.hue3,
 		accent3ColorText: text.primary,
-		highlightColor: accent.hue1,
-		errorColor: warn.hue1
+		highlightColor:   accent.hue1,
+		errorColor:       warn.hue1
 	}
 }))

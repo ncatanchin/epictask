@@ -62,6 +62,19 @@ export class MilestoneRepo extends TSRepo<Milestone> {
 		super(MilestoneRepo,Milestone)
 	}
 
+	/**
+	 * Find all labels in provided repo ids
+	 * @param repoIds
+	 * @returns {Label[]}
+	 */
+	@IndexedDBFinderDescriptor({
+		fn: (tsRepo,...args) => tsRepo.table.where('repoId').anyOf(args).sortBy('name')
+	})
+	@FinderDescriptor()
+	findByRepoId(...repoIds:number[]):Promise<Milestone[]> {
+		return null
+	}
+
 
 	// @IndexedDBFinderDescriptor({
 	// 	fn(tsRepo,...args) {

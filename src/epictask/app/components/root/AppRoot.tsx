@@ -16,6 +16,8 @@ const {HotKeys} = require('react-hotkeys')
 
 import {MuiThemeProvider} from "material-ui/styles"
 import {Snackbar} from 'material-ui'
+import {PureRender} from 'components/common'
+import {IssueEditDialog} from 'components/issues/IssueEditDialog'
 import {Header,HeaderVisibility,ToastMessages} from 'components'
 import {getStore} from 'app/store/AppStore'
 import {getPage} from 'components/pages'
@@ -147,7 +149,7 @@ export interface IAppProps {
 
 
 /**
- * Map redux state to props
+ * Mape store state to props
  *
  * @param state
  */
@@ -162,11 +164,11 @@ function mapStateToProps(state) {
 	}
 }
 
-
 /**
  * Root App Component
  */
 @connect(mapStateToProps)
+@PureRender
 class App extends React.Component<IAppProps,any> {
 
 	pageBodyHolder
@@ -176,7 +178,16 @@ class App extends React.Component<IAppProps,any> {
 	}
 
 
+	/**
+	 * Map hot keys for the root
+	 *
+	 * @type {{}}
+	 */
 	keyHandlers = {
+		[KeyMaps.CommonKeys.New]: () => {
+			log.info('New issue keys pressed - making dialog visible')
+			appActions.setDialogOpen(IssueEditDialog.name,true)
+		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
 			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
@@ -211,6 +222,8 @@ class App extends React.Component<IAppProps,any> {
 			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={store.getReduxStore()}>
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
+						<IssueEditDialog />
+
 						{/* Global flex box */}
 						<div className="fill-height fill-width"
 						     style={makeStyle(styles.content,theme.app,adjustedBodyStyle)}>

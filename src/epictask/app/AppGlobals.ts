@@ -1,12 +1,16 @@
 import ReactGlobal = require('react')
 import * as ReactDOMGlobal from 'react-dom'
 
+const g = global as any
 
-Object.assign(global,{
+
+Object.assign(g,{
 	CSSModules: require('react-css-modules'),
 	React: ReactGlobal,
 	ReactDOM: ReactDOMGlobal
 })
+
+
 
 /**
  * Now the shared globals - this is required for propper logging config

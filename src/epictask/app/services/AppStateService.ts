@@ -42,7 +42,9 @@ async function checkStateType() {
  * Start the app state service
  */
 export async function start() {
-	const {AppActionFactory,AuthActionFactory,RepoActionFactory} = require('app/actions')
+	const {AppActionFactory} = require('app/actions/AppActionFactory')
+	const {AuthActionFactory} = require('app/actions/auth/AuthActionFactory')
+	const {RepoActionFactory} = require('app/actions/repo/RepoActionFactory')
 
 	appActions = new AppActionFactory() as AppActionFactoryType
 	authActions = new AuthActionFactory() as AuthActionFactoryType
@@ -63,3 +65,9 @@ export async function start() {
 	}
 }
 
+if (module.hot) {
+	module.hot.accept(['app/actions/AppActionFactory','app/actions/auth/AuthActionFactory','app/actions/repo/RepoActionFactory'],updates => {
+		electron.ipcRenderer.removeAllListeners('syncAllRepoDetails')
+		start()
+	})
+}

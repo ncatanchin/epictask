@@ -2,6 +2,7 @@ import * as fs from 'fs'
 import {getUserDataFilename, readFile} from './util/Files'
 import {Property} from "./util/Decorations";
 import {toJSON} from "./util/JSONUtil";
+import {User} from 'shared/models'
 
 const log = getLogger(__filename)
 const settingsFilename = getUserDataFilename('settings.db')
@@ -54,6 +55,8 @@ class SettingsFile implements ISettings {
 	@Property(visiblePropOpts)
 	token:string
 
+	@Property(visiblePropOpts)
+	user:User
 
 
 	/**
@@ -94,6 +97,10 @@ class SettingsFile implements ISettings {
 		}
 
 		Object.assign(this,newSettings)
+
+		if (this.user)
+			this.user = new User(this.user)
+
 		this.isLoaded = true
 
 		log.info(`Loaded github token: ${this.token}`)

@@ -10,6 +10,7 @@ import {
 } from 'typemutant'
 
 import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models/Toast'
+import {User} from 'shared/models'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from 'shared/Settings'
 import * as uuid from 'node-uuid'
@@ -39,6 +40,9 @@ export function makeToastMessage(opts:any) {
 	})
 }
 
+export interface IUIState {
+	dialogs: {[name:string]:boolean}
+}
 
 @RecordModel()
 export class AppStateModel {
@@ -62,9 +66,29 @@ export class AppStateModel {
 	monitorState:any
 
 	@RecordProperty()
+	user:User
+
+	@RecordProperty()
+	ui:IUIState
+
+	@RecordProperty()
 	error:Error
 
+	setUser(user:User) {
+		this.user = user
+		return this
+	}
 
+
+	setDialogOpen(name:string,open:boolean) {
+		this.ui = _.merge({},this.ui,{
+			dialogs:{
+				[name]:open
+			}
+		})
+
+		return this
+	}
 	/**
 	 * Set app state
 	 *
@@ -115,6 +139,9 @@ export class AppStateModel {
 const AppStateDefaults = {
 	stateType: null,
 	messages: [],
+	ui: {
+		dialogs: {}
+	},
 	monitorState: {},
 	settings: Settings.toJSON()
 }

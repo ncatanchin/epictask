@@ -9,7 +9,7 @@ import * as Radium from 'radium'
 import * as Models from 'shared/models'
 import * as Constants from 'shared/Constants'
 
-const PureRenderMixin = require('react-addons-pure-render-mixin');
+const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')
 const hljs = require('highlight.js')
 

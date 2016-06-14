@@ -4,6 +4,7 @@
 /// <reference path="globals/expectations/index.d.ts" />
 /// <reference path="globals/github-electron/index.d.ts" />
 /// <reference path="globals/history/index.d.ts" />
+/// <reference path="globals/later/index.d.ts" />
 /// <reference path="globals/lunr/index.d.ts" />
 /// <reference path="globals/mocha/index.d.ts" />
 /// <reference path="globals/moment-node/index.d.ts" />

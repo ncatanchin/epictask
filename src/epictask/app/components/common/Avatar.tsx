@@ -21,7 +21,7 @@ const styles = {
 		backgroundSize: '100%',
 		width: 25,
 		height: 25,
-		borderRadius: '50%',
+		borderRadius: '10%',
 		border: '0.2rem solid transparent',
 		margin: '0 0 0 0',
 

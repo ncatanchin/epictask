@@ -22,7 +22,9 @@ const styles = {
 		padding: '0.5rem 1rem',
 		margin: 0,
 		outline: 0,
-		width: 'auto'
+		width: 'auto',
+		textTransform: 'uppercase',
+		fontSize: themeFontSize(1.3)
 	})
 }
 //endrgion
@@ -36,6 +38,8 @@ export interface IButtonProps extends React.DOMAttributes {
 	theme?:any
 	style?:any
 	ripple?:boolean
+	mode?:'flat'|'raised'|'fab'
+	disabled?:boolean
 }
 //endregion
 
@@ -60,7 +64,8 @@ function mapStateToProps(state) {
 export class Button extends React.Component<IButtonProps,any> {
 
 	static defaultProps = {
-		ripple: true
+		ripple: true,
+		mode: 'flat'
 	}
 
 	constructor(props,context) {
@@ -68,9 +73,13 @@ export class Button extends React.Component<IButtonProps,any> {
 	}
 
 	render() {
-		const {ripple,theme,style,children} = this.props
+		const
+			{ripple,theme,mode,disabled,style,children} = this.props,
+			s = mergeStyles(styles,theme.button)
 
-		return <button {...this.props} style={[styles.root,style]}>
+		const rootStyle = [s.root,s[mode],(disabled) && s.disabled,style]
+
+		return <button {...this.props} style={rootStyle}>
 			{ripple && <Ink/>}
 			{children}
 		</button>

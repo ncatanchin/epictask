@@ -6,11 +6,13 @@
 const log = getLogger(__filename)
 
 // IMPORTS
+import * as assert from 'assert'
+import * as uuid from 'node-uuid'
 import {ActionFactory,Action} from 'typedux'
 import {JobKey} from "epictask/shared/Constants"
 
 import {JobMessage} from './JobReducer'
-import {JobState,IJob,IJobRequest} from './JobState'
+import {JobState,IJob,IJobRequest,IScheduledJob} from './JobState'
 import {JobHandler} from './JobHandler'
 
 
@@ -31,18 +33,40 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 		return JobKey;
 	}
 
-
 	@Action()
 	createJob(request:IJobRequest) {
 	}
 
 	@Action()
-	updateJob(job:IJob) {
-
-	}
+	updateJob(job:IJob) {}
 
 	@Action()
 	removeJob(job:IJob) {}
+
+	@Action()
+	addScheduledJob(scheduledJob:IScheduledJob) {}
+
+	/**
+	 * Schedules a job for execution one or more times
+	 *
+	 * @param request
+	 */
+	scheduleJob(request:IJobRequest) {
+		assert.ok(request && !_.isNil(request.schedule) && !_.isNil(request.repeat),
+			'Only jobs with a schedule and non-null (false is ok) value for repeat can be scheduled')
+
+
+		const {schedule} = request
+		const scheduler:Later.IScheduleData = (_.isString(schedule)) ? later.parse.cron(schedule) :
+			schedule()
+
+		const scheduledJob:IScheduledJob = Object.assign({},request,{
+			id: uuid.v4(),
+			scheduler
+		})
+
+		this.addScheduledJob(scheduledJob)
+	}
 
 	@Action()
 	processJob(job:IJob):Promise<IJob> {

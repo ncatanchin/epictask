@@ -3,6 +3,8 @@ import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
 import {AllLunrIndexes as Indexes} from './LunrIndex'
 
+const log = getLogger(__filename)
+
 import {
 	Repo,
 	RepoRepo,
@@ -45,6 +47,28 @@ let started = false
  * @returns {boolean}
  */
 export async function start() {
+
+	// Actually types are reloaded here
+	// enabling hot code replacement
+	let {
+		Repo,
+		RepoRepo,
+		User,
+		Milestone,
+		MilestoneRepo,
+		Issue,
+		IssueRepo,
+		Comment,
+		CommentRepo,
+		Label,
+		LabelRepo,
+		AvailableRepo,
+		AvailableRepoRepo,
+		Activity,
+		ActivityRepo
+	}  = require('shared/models')
+
+
 	if (started)
 		return true
 
@@ -100,3 +124,9 @@ export function getRepo<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ()
 
 export {Indexes}
 
+if (module.hot) {
+	module.hot.accept(['shared/models'],updates => {
+		log.info(`HMR received updates to models`, updates, 'restarting')
+		start()
+	})
+}

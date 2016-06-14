@@ -3,7 +3,7 @@ import {AppStateType} from 'shared/AppStateType'
 import {AppKey} from "shared/Constants"
 import {IToastMessage} from 'shared/models/Toast'
 import {AppState} from './AppState'
-
+import {User} from 'shared/models/User'
 
 const log = getLogger(__filename)
 
@@ -19,6 +19,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	setTheme(theme:any) {}
+
+	@Action()
+	setDialogOpen(name:string,open:boolean) {}
 
 	@Action()
 	setStateType(stateType:AppStateType) {}
@@ -37,5 +40,8 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	setMonitorState(monitorState:any) {}
+
+	@Action()
+	setUser(user:User) {}
 
 }

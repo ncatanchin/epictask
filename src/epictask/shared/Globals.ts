@@ -29,6 +29,9 @@ const Bluebird = require('./PromiseConfig')
 Promise = Bluebird
 
 // Import everything else
+later = require('later/index-browserify')
+
+
 import './ErrorHandling'
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'

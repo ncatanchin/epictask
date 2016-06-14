@@ -168,7 +168,7 @@ export function Themeable() {
  * @param multiplier
  * @returns {number}
  */
-export function makeThemeFontSize(multiplier) {
+export function makeThemeFontSize(multiplier:number) {
 	return getTheme().fontSize * multiplier
 }
 

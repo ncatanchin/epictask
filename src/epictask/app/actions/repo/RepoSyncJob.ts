@@ -18,12 +18,18 @@ export class RepoSyncJob implements IJobRequest {
 	name:string
 	client:GitHubClient
 	lastSyncParams:any
+	oneAtATime = true
 
 	constructor(private availRepo:AvailableRepo) {
 		this.name = `syncing ${availRepo.repo.full_name}`
 		this.client = github.createClient()
 	}
 
+	/**
+	 * Init params
+	 *
+	 * @param repo
+	 */
 	async initParams(repo) {
 		const lastActivity = await ActivityManager.findLastActivity(ActivityType.RepoSync,repo.id)
 		const lastSyncTimestamp = new Date(lastActivity ? lastActivity.timestamp : 0)
@@ -35,6 +41,11 @@ export class RepoSyncJob implements IJobRequest {
 		}
 	}
 
+	/**
+	 * Synchronize all issues
+	 *
+	 * @param repo
+	 */
 	async syncIssues(repo) {
 		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
 		issues.forEach(issue => issue.repoId = repo.id)
@@ -42,6 +53,11 @@ export class RepoSyncJob implements IJobRequest {
 		await Repos.issue.bulkSave(...issues)
 	}
 
+	/**
+	 * Synchronize all labels
+	 *
+	 * @param repo
+	 */
 	async syncLabels(repo) {
 		const labels = await this.client.repoLabels(repo)
 		labels.forEach(label => label.repoId = repo.id)
@@ -49,6 +65,11 @@ export class RepoSyncJob implements IJobRequest {
 		await Repos.label.bulkSave(...labels)
 	}
 
+	/**
+	 * Synchronize all milestones in the repository
+	 *
+	 * @param repo
+	 */
 	async syncMilestones(repo) {
 		const milestones = await this.client.repoMilestones(repo)
 		milestones.forEach(milestone => milestone.repoId = repo.id)
@@ -56,8 +77,13 @@ export class RepoSyncJob implements IJobRequest {
 		await Repos.milestone.bulkSave(...milestones)
 	}
 
+	/**
+	 * Synchronize all comments in the repository
+	 *
+	 * @param repo
+	 */
 	async syncComments(repo) {
-		let comments = await this.client.repoComments(repo)
+		let comments = await this.client.repoComments(repo,{params:this.lastSyncParams})
 
 		// Filter JUST in case there are some missing issue urls
 		//comments = comments.filter(comment => comment.issue_url)
@@ -79,11 +105,15 @@ export class RepoSyncJob implements IJobRequest {
 		await Repos.comment.bulkSave(...comments)
 	}
 
+	/**
+	 * Job executor
+	 *
+	 * @param handler
+	 */
 	async executor(handler:JobHandler) {
 		const {availRepo} = this
 
 		const actions = new RepoActionFactory()
-		const jobActions = new JobActionFactory()
 		const appActions = new AppActionFactory()
 
 		const {job} = handler
@@ -107,18 +137,27 @@ export class RepoSyncJob implements IJobRequest {
 				this.syncComments(repo)
 			])
 
-			log.debug('all promises completed, NOW SYNC COMMENTS')
-
+			// Commit all text indexes
 			log.debug(`Updating all indexes now`)
 			await LunrIndex.persistAll()
 			log.debug('Persisted all indexes')
 
-
+			// Track the execution for timing/update purposes
+			// As well as throttling management
 			const repoSyncActivity = await ActivityManager.createActivity(ActivityType.RepoSync,repoId)
 			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
-			await actions.loadIssues()
+			// Reload all the issues
+			actions.loadIssues()
 
+			// Reload current issue if loaded
+			const currentIssue = actions.state.issue
+			if (currentIssue) {
+				log.debug('Reloading current issue')
+				actions.loadIssue(currentIssue,true)
+			}
+
+			// Notify of completion
 			ToastManager.addMessage(`Finished ${this.name}`)
 
 		} catch (err) {

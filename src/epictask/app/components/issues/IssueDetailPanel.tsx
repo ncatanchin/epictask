@@ -121,12 +121,12 @@ const styles = {
 					details: makeStyle(FlexRow,makeFlexAlign('center','flex-start'),FlexAuto,PositionRelative,{
 						padding: '0.3rem 1rem',
 						height: 40,
-						fontSize: themeFontSize('1.1rem'),
+						fontSize: themeFontSize(1.1),
 						username: {
 							fontWeight: 700
 						},
 						time: {
-							fontSize: themeFontSize('1.1rem'),
+							fontSize: themeFontSize(1.1),
 							padding: '0rem 0 0 0.5rem'
 						}
 					}),

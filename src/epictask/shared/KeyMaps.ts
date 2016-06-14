@@ -4,6 +4,7 @@ export enum CommonKeys {
 	MoveDown,
 	MoveRight,
 	MoveLeft,
+	New,
 	Escape,
 	Enter,
 	Delete,
@@ -11,6 +12,7 @@ export enum CommonKeys {
 }
 
 export const Global = {
+	[CommonKeys.New]: ['command+n','ctrl+n'],
 	[CommonKeys.MoveUp]: 'up',
 	[CommonKeys.MoveDown]: 'down',
 	[CommonKeys.MoveLeft]: 'left',

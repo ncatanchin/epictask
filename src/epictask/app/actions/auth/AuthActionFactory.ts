@@ -5,6 +5,7 @@ import {AppActionFactory} from '../AppActionFactory'
 import {AuthState} from './AuthState'
 import {AuthMessage} from './AuthReducer'
 import {AppStateType,Settings} from '../../../shared'
+import {User} from 'shared/models/User'
 
 const {ipcRenderer} = require('electron')
 const log = getLogger(__filename)
@@ -46,12 +47,13 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 			const invalidUser = !user || !user.login
 			if (invalidUser) {
 				log.error(`Invalid token, set login state`,user)
+				Settings.token = null
+				Settings.user = null
+			} else {
+				Settings.user = user
 			}
 
-
-			if (invalidUser)
-				Settings.token = null
-
+			appActions.setUser(user)
 			appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Home)
 		}
 	}

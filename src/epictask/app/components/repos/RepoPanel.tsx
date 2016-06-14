@@ -46,7 +46,11 @@ const styles = {
 		position: 'relative'
 	}),
 
-	header: makeStyle(Ellipsis,FlexRow,FlexAuto,FlexAlignStart),
+	header: makeStyle(Ellipsis,FlexRowCenter,FlexAuto),
+	headerTitle: makeStyle(Ellipsis,FlexScale,{
+		fontSize: themeFontSize(1.2),
+		padding: '0.4rem 0.5rem'
+	}),
 
 	headerButton: makeStyle(FlexRowCenter,{
 		height: rem(2)
@@ -112,7 +116,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 		const
 			{theme} = this.props,
 			{repoPanel:themeStyle} = theme,
-
+			s = mergeStyles(styles,themeStyle),
 			panelStyle = makeStyle(styles.panel,themeStyle.root),
 			drawerStyle = makeStyle(styles.drawer,themeStyle.root),
 			headerStyle = makeStyle(styles.header,themeStyle.header),
@@ -124,6 +128,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
 				<div style={panelStyle}>
 					<div style={headerStyle}>
+						<div style={s.headerTitle}>Repositories</div>
 						<Button style={headerButtonStyle} onClick={this.onAddRepo}>
 							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'></Icon>
 						</Button>

@@ -43,6 +43,7 @@ module.exports = function (projectConfig) {
 				components: path.resolve(baseDir,'src/epictask/app/components'),
 				app: path.resolve(baseDir,'src/epictask/app'),
 				shared: path.resolve(baseDir,'src/epictask/shared'),
+				//simplemde: path.resolve(baseDir,'node_modules/simplemde/src/js/simplemde.js'),
 				main: path.resolve(baseDir,'src/epictask/main')
 			},
 			modules: [
@@ -56,7 +57,9 @@ module.exports = function (projectConfig) {
 		},
 
 		// Add the loader for .ts files.
-		module: require('./parts/loaders')(projectConfig),
+		module: Object.assign({},require('./parts/loaders')(projectConfig),{
+			//noParse: [/simplemde\.min/]
+		}),
 
 		// SASS/SCSS Loader Config
 		sassLoader: {
@@ -74,10 +77,11 @@ module.exports = function (projectConfig) {
 				DEBUG: isDev,
 				'process.env.__DEV__': isDev,
 				'process.env.NODE_ENV': JSON.stringify(env)
+			}),
+			new webpack.ProvidePlugin({
+				//simplemde: 'simplemde/src/js/simplemde.js'
+				// 'Promise': 'bluebird'
 			})
-			// new webpack.ProvidePlugin({
-			// 	'Promise': 'bluebird'
-			// })
 		],
 		node: {
 			__dirname: true,

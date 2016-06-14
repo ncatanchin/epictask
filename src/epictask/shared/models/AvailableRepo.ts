@@ -11,7 +11,10 @@ import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import * as uuid from 'node-uuid'
 import * as _ from 'lodash'
 
-import {Repo,RepoRepo} from './Repo'
+import {Label} from './Label'
+import {Milestone} from './Milestone'
+import {User} from './User'
+import {Repo} from './Repo'
 import {Repos} from 'shared/DB'
 
 
@@ -37,6 +40,15 @@ export class AvailableRepo extends DefaultModel {
 
 	@AttributeDescriptor({transient:true})
 	repo:Repo
+
+	@AttributeDescriptor({transient:true})
+	labels:Label[]
+
+	@AttributeDescriptor({transient:true})
+	milestones:Milestone[]
+
+	@AttributeDescriptor({transient:true})
+	contributors:User[]
 
 	constructor(props = {}) {
 		super()
