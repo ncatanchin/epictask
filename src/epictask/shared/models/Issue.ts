@@ -55,6 +55,7 @@ export class Issue extends DefaultModel {
 
 	@AttributeDescriptor()
 	url: string;
+
 	repository_url: string;
 	labels_url: string;
 	comments_url: string;
@@ -75,6 +76,7 @@ export class Issue extends DefaultModel {
 	created_at: Date;
 	updated_at: Date;
 	closed_by: User;
+
 
 	constructor(props = {}) {
 		super()
@@ -114,7 +116,7 @@ export class IssueRepo extends TSRepo<Issue> {
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {
 			const repoIds = args
-			return tsRepo.table.where('repoId').anyOf(repoIds).toArray()
+			return tsRepo.table.where('repoId').anyOf(repoIds).desc().sortBy('updated_at')
 		}
 	})
 	@FinderDescriptor()

@@ -1,8 +1,12 @@
+
 import * as CommonStyles from './CommonStyles'
 export * from './CommonStyles'
 
 declare global {
-	var Fill:any,
+	var CSSHoverState:string,
+		CSSActiveState:string,
+		CSSFocusState:string,
+		Fill:any,
 		FillWidth:any,
 		FillHeight:any,
 		Flex:any,
@@ -20,11 +24,13 @@ declare global {
 		PositionAbsolute:any,
 		FontBlack:any,
 		OverflowHidden:any,
+		convertRem: typeof CommonStyles.convertRem,
 		makeTransition:typeof CommonStyles.makeTransition,
 		makeAbsolute:typeof CommonStyles.makeAbsolute,
 		makeStyle:typeof CommonStyles.makeStyle,
 		mergeStyles: typeof CommonStyles.mergeStyles,
-		makeFlexAlign:typeof CommonStyles.makeFlexAlign
+		makeFlexAlign:typeof CommonStyles.makeFlexAlign,
+		Styles:typeof CommonStyles
 }
 
-Object.assign(global as any,CommonStyles)
+Object.assign(global as any,CommonStyles,{Styles:CommonStyles})

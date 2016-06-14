@@ -217,7 +217,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 			<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
 				<TextField
-					hintText={<div style={spTheme.hintStyle}>Search2 for a repo or issue</div>}
+					hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 					onChange={this.onInputChange}
 
 					inputStyle={inputStyle}
@@ -236,7 +236,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				/>
 			</div>
 		</Paper>
-
 
 		return <HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
 			<div  className={panelClazz}  style={Fill}>

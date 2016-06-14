@@ -2,6 +2,7 @@ import * as Styles from 'material-ui/styles'
 import {makeTheme,Palettes} from './material/MaterialTools'
 //import * as _ from 'lodash'
 
+const tinycolor = require('tinycolor2')
 /**
  * Get colors ref
  */
@@ -16,7 +17,7 @@ const theme = makeTheme(
 	Palettes.grey,
 	['l900','#303030','l800','l700'],
 	Palettes.purple,
-	['l400','l200','l100','l50'],
+	['l400','l300','l200','l100'],
 	Palettes.teal,
 	['l400','l200','l100','l50'],
 	Palettes.deepOrange,
@@ -53,6 +54,14 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		fontWeight
 	},
 
+	avatar: {
+		root: {
+
+		},
+		avatar: {
+			borderColor: secondary.hue1
+		}
+	},
 
 	header: {
 		logoStyle: {
@@ -190,9 +199,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	 * Issues Panel
 	 */
 	issuesPanel: {
-		avatar: {
-			borderColor: secondary.hue1,
-		},
+
 
 		panel: {
 			backgroundColor: primary.hue2
@@ -253,7 +260,52 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	issueDetail: {
 		root: {
 			color: text.primary
-		}
+		},
+
+		header: {
+			//backgroundColor: accent.hue1,
+			backgroundColor: tinycolor(primary.hue2).setAlpha(0.5),
+			color: text.primary,
+
+			row1: {
+				repo: {
+			        color: accent.hue2
+					//color: secondary.hue1
+					//color: tinycolor(secondary.hue1).lighten(5)
+					//color: tinycolor(secondary.hue1).lighten()
+				}
+			}
+		},
+
+		content: {
+			backgroundColor: primary.hue1, //secondary.hue1,
+			color: text.primary,
+
+			activities: {
+				activity: {
+					user: {
+						backgroundColor: secondary.hue1,
+						borderColor: primary.hue1,
+					},
+
+					comment: {
+						backgroundColor: primary.hue2,
+						borderColor: tinycolor(secondary.hue1),
+
+						details: {
+							backgroundColor: secondary.hue1,
+							color: text.primary
+						}
+					}
+				}
+			}
+		},
+
+		footer: {
+			backgroundColor: accent.hue1,
+			color: text.primary
+		},
+
 	},
 	/**
 	 * Toast

@@ -4,14 +4,12 @@ import {SearchKey} from "../../../shared/Constants"
 import {SearchState, SearchResults, SearchResult, SearchResultType} from './SearchState'
 import {SearchMessage} from './SearchReducer'
 import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from 'shared/models'
-import {getRepo} from 'shared/DB'
+import {getRepo,Repos} from 'shared/DB'
 import {AppActionFactory} from '../AppActionFactory'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
 
 const uuid = require('node-uuid')
 const log = getLogger(__filename)
-const gAppActions = new AppActionFactory()
-
 
 async function findRepos<M extends AvailableRepo|Repo,R extends AvailableRepoRepo|RepoRepo>(query:string,repoClazz:{new():R}):Promise<SearchResult<any>[]> {
 	const tsRepo = getRepo(repoClazz) as AvailableRepoRepo|RepoRepo
@@ -65,17 +63,21 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 					break;
 
 				case SearchResultType.Repo:
-					const availRepo = new AvailableRepo({
-						id: uuid.v4(),
-						repoId: result.value.id
-					})
+					const
+						availRepoRepo = Repos.availableRepo,
+						availRepo = new AvailableRepo({
+							id: uuid.v4(),
+							repoId: result.value.id,
+							enabled: true
+						})
 
-					const availRepoRepo = getRepo(AvailableRepoRepo)
-
-					log.info('Saving new available repo as ',availRepo.id,availRepo)
+					log.info('Saving new available repo as ',availRepo.id)
 					await availRepoRepo.save(availRepo)
 
-					return repoActions.getAvailableRepos()
+
+
+					repoActions.getAvailableRepos()
+					repoActions.syncRepoDetails(availRepo)
 			}
 		}
 

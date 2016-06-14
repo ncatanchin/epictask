@@ -11,7 +11,7 @@ import {
 
 import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models/Toast'
 import {AppStateType} from 'shared/AppStateType'
-import {Settings} from 'shared/Settings'
+import {ISettings,Settings} from 'shared/Settings'
 import * as uuid from 'node-uuid'
 
 /**
@@ -26,7 +26,7 @@ export enum StatusType {
  * Simple status management for the app overall
  */
 export interface IStatus {
-	type:StatusType,
+	type:StatusType
 	message?:string
 }
 
@@ -39,6 +39,7 @@ export function makeToastMessage(opts:any) {
 	})
 }
 
+
 @RecordModel()
 export class AppStateModel {
 
@@ -50,6 +51,9 @@ export class AppStateModel {
 
 	@RecordProperty()
 	status:IStatus
+
+	@RecordProperty()
+	settings:ISettings
 
 	@RecordProperty()
 	messages:IToastMessage[]
@@ -109,9 +113,10 @@ export class AppStateModel {
 }
 
 const AppStateDefaults = {
-	stateType: ((Settings.token) ? AppStateType.AuthVerify : AppStateType.AuthLogin),
+	stateType: null,
 	messages: [],
-	monitorState: {}
+	monitorState: {},
+	settings: Settings.toJSON()
 }
 
 export const AppState = makeRecord(AppStateModel,AppStateDefaults)

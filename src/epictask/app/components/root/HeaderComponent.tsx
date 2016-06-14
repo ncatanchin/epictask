@@ -63,8 +63,9 @@ const styles = {
 		maxWidth:           '100%',
 		height:             '100%',
 		padding:            '0.2rem 1rem',
-		backgroundImage:    `url(${require('assets/images/epictask-logo.png')})`,
-		backgroundSize:     'contain',
+		//backgroundImage:    `url(${require('assets/images/epictask-logo.png')})`,
+		backgroundImage:    `url(${require('assets/images/densebrain-logo-2.png')})`,
+		backgroundSize:     '70%',
 		backgroundPosition: 'center',
 		backgroundOrigin:   'content-box',
 		backgroundRepeat:   'no-repeat'

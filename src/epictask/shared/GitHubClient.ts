@@ -99,15 +99,21 @@ export class GitHubClient {
 			)
 
 			const lastLink = pageLinks[PageLinkType.last]
-			if (result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
+			if (opts.traversePages && result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
 				log.debug('Going to traverse pages',opts,pageLinks,result)
 
-				let nextPage = 0 //opts.page
-				while (nextPage < lastLink.pageNumber) {
-					nextPage++
+				// Because we are going to traverse, we should do a page callback first
+				this.doPageCallback(opts,result.pageNumber,lastLink.pageNumber,result)
 
-					const nextOpts = Object.assign({},opts,{page:nextPage})
+				let nextPageNumber = 0 //opts.page
+				while (nextPageNumber < lastLink.pageNumber) {
+					nextPageNumber++
+
+					const nextOpts = Object.assign({},opts,{page:nextPageNumber})
 					let nextResult = await this.get<T>(path,modelType,nextOpts) as T
+
+					this.doPageCallback(opts,nextPageNumber,lastLink.pageNumber,nextResult)
+
 					result.push(...(nextResult as any))
 				}
 			}
@@ -116,6 +122,12 @@ export class GitHubClient {
 		}
 
 		return result as any
+	}
+
+	private doPageCallback(opts:RequestOptions,pageNumber,totalPages,results) {
+		if (opts.onPageCallback) {
+			opts.onPageCallback(pageNumber,totalPages,results)
+		}
 	}
 
 
@@ -150,8 +162,21 @@ export class GitHubClient {
 	/**
 	 * Get all comments on an issue in a repo
 	 */
-	repoComments = async (repo:Repo,issue:Issue,opts:RequestOptions = null) => {
+	issueComments = async (repo:Repo,issue:Issue,opts:RequestOptions = null) => {
 		const url = `/repos/${repo.full_name}/issues/${issue.id}/comments`
+		return await this.get<PagedArray<Comment>>(url,Comment,opts)
+	}
+
+	/**
+	 * All comments for all issues in a repo
+	 *
+	 * @param repo
+	 * @param issue
+	 * @param opts
+	 * @returns {PagedArray<Comment>}
+	 */
+	repoComments = async (repo:Repo,opts:RequestOptions = null) => {
+		const url = `/repos/${repo.full_name}/issues/comments`
 		return await this.get<PagedArray<Comment>>(url,Comment,opts)
 	}
 

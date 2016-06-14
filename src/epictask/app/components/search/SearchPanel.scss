@@ -2,7 +2,7 @@
 
 //Global Container in normal mode
 .searchPanel {
-	@include make-default-transition();
+	//@include make-default-transition();
 	composes: flex-column-center flex-scale from 'styles/flex.css';
 	position: relative;
 	background-color: transparent !important;
@@ -78,7 +78,7 @@
 	}
 
 	&, input {
-		@include make-default-transition();
+		@include make-default-transition('color,background-color,border,padding');
 	}
 
 

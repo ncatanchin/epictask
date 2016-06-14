@@ -32,10 +32,16 @@ function onChange(propertyKey:string, newVal:any) {
 
 const visiblePropOpts = {onChange,jsonInclude:true}
 
+
+export interface ISettings {
+	isLoaded:boolean
+	token:string
+}
+
 /**
  * Application settings object
  */
-class SettingsFile {
+class SettingsFile implements ISettings {
 
 	constructor() {
 		this.load()
@@ -48,9 +54,13 @@ class SettingsFile {
 	@Property(visiblePropOpts)
 	token:string
 
-	@Property(visiblePropOpts)
-	repoId:number
 
+
+	/**
+	 * Save the current settings to disk
+	 *
+	 * @returns {SettingsFile}
+	 */
 	save() {
 		const settingsToSave = JSON.stringify(this,(k,v) => {
 			return (k === 'isLoaded') ? undefined : v
@@ -62,6 +72,11 @@ class SettingsFile {
 		return this
 	}
 
+	/**
+	 * Load settings from disk
+	 *
+	 * @returns {SettingsFile}
+	 */
 	load() {
 		let newSettings = null
 		try {
@@ -80,6 +95,9 @@ class SettingsFile {
 
 		Object.assign(this,newSettings)
 		this.isLoaded = true
+
+		log.info(`Loaded github token: ${this.token}`)
+
 		return this
 	}
 

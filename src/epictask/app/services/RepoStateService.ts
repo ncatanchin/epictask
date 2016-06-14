@@ -25,10 +25,18 @@ async function enabledReposChanged() {
 	repoActions.loadIssues()
 }
 
+const selectedIssuesChanged = _.debounce((selectedIssues) => {
+
+	if (selectedIssues && selectedIssues.length === 1) {
+		repoActions.loadIssue(selectedIssues[0])
+	}
+},150)
+
 export async function start() {
 	enabledReposChanged()
 
 	store.observe([repoActions.leaf(),'availableRepos'],() => enabledReposChanged())
+	store.observe([repoActions.leaf(),'selectedIssues'],selectedIssuesChanged)
 	//store.observe([repoActions.leaf(),'selectedRepos'],() => selectedReposChanged())
 }
 

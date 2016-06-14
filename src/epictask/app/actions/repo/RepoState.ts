@@ -10,7 +10,7 @@ import {
 
 const log = getLogger(__filename)
 
-import {Repo, AvailableRepo,Issue,SyncStatus,ISyncDetails} from 'shared/models'
+import {Repo, AvailableRepo,Comment,Issue,Label,Milestone,SyncStatus,ISyncDetails} from 'shared/models'
 
 @RecordModel()
 class RepoStateModel {
@@ -23,6 +23,12 @@ class RepoStateModel {
 
 	@RecordProperty()
 	issues:Issue[]
+
+	@RecordProperty()
+	issue:Issue
+
+	@RecordProperty()
+	comments:Comment[]
 
 	@RecordProperty()
 	selectedIssues:Issue[]
@@ -61,6 +67,16 @@ class RepoStateModel {
 
 	setIssues(issues:Issue[]) {
 		this.issues = issues
+		return this
+	}
+
+	setIssue(issue:Issue) {
+		this.issue = issue
+		return this
+	}
+
+	setComments(comments:Comment[]) {
+		this.comments = comments
 		return this
 	}
 

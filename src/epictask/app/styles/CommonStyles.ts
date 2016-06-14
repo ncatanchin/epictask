@@ -29,7 +29,9 @@ export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
 
-
+export const CSSHoverState = ':hover'
+export const CSSActiveState = ':active'
+export const CSSFocusState = ':active'
 
 export const OverflowHidden = {
 	overflow: 'hidden'
@@ -113,3 +115,61 @@ export const Ellipsis = makeStyle({
 	textOverflow: 'ellipsis'
 })
 //endregion
+
+
+function getRootElementFontSize( ) {
+	// Returns a number
+	return parseFloat(
+		// of the computed font-size, so in px
+		getComputedStyle(
+			// for the root <html> element
+			document.documentElement
+		)
+			.fontSize
+	);
+}
+
+export function convertRem(value) {
+	return value * getRootElementFontSize();
+}
+
+
+
+function measureContentHeight(
+	html:string,
+	width:number|string,
+	style:any
+):any {
+	const elem = document.createElement('div')
+	if (!_.isString(width))
+		width = width + 'px'
+
+	const
+		useStyleKeys = Object.keys(style)
+			.filter(key => style[key] && style[key] !== '' && (
+			_.startsWith(key,'font') ||
+			_.startsWith(key,'text') || _.startsWith(key,'line'))),
+		useStyle = useStyleKeys.reduce((usedStyle,nextKey) => {
+			usedStyle[nextKey] = style[nextKey]
+			return usedStyle
+		},{})
+
+	Object.assign(elem.style,useStyle,{
+		          width,
+		maxWidth: width,
+		minWidth: width,
+		opacity: 0,
+		position: 'absolute',
+		display: 'block',
+		left: '-10000px',
+		top: '-10000px'
+	})
+
+	document.body.appendChild(elem)
+	elem.innerHTML = html
+
+	const result = _.pick(elem,'offsetHeight','scrollHeight')
+	document.body.removeChild(elem)
+	return result
+
+}

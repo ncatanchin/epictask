@@ -1,8 +1,13 @@
 @import "./mixins.global";
+@import './github-markdown.scss';
+
 
 * {
 	box-sizing: border-box;
 	outline: none;
+
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 

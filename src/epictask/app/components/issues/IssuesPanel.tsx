@@ -5,14 +5,16 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
+import * as PureRenderMixin from 'react-addons-pure-render-mixin'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
 
-import {Renderers} from '../common'
+import {Renderers,Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
+import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 
@@ -23,27 +25,9 @@ import {RepoKey, AppKey} from 'shared/Constants'
 const log = getLogger(__filename)
 const repoActions = new RepoActionFactory()
 const appActions = new AppActionFactory()
-const tinycolor = require('tinycolor2')
+
 
 const styles = {
-	avatar: makeStyle({
-		backgroundRepeat: 'no-repeat',
-		backgroundSize: '100%',
-		width: 25,
-		height: 25,
-		borderRadius: '50%',
-		border: '0.2rem solid transparent',
-		margin: '0 0 0 1rem'
-	}),
-	user: makeStyle(FlexAuto,FlexRowCenter,Ellipsis,{
-		fontSize: themeFontSize(1),
-		padding: '0 1rem'
-	}),
-
-	username: makeStyle({
-		padding: '0 0 0 0'
-	}),
-
 	panel:          makeStyle(Fill, {}),
 	panelSplitPane: makeStyle(Fill),
 	listContainer:  makeStyle(FlexColumn, FlexScale,FillWidth,FillHeight,{
@@ -51,13 +35,17 @@ const styles = {
 	}),
 
 	issue: makeStyle(FlexRow, FlexAuto,
-		FillWidth,FlexAlignStart, makeTransition(),
-		{
-			padding: '1.5rem 1rem 1.5rem 1rem',
-			cursor: 'pointer',
-			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black'
-		}
-	),
+		FillWidth,FlexAlignStart, makeTransition(['background-color']),{
+
+		padding: '1.5rem 1rem 1.5rem 1rem',
+		cursor: 'pointer',
+		boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
+
+		// Avatar component
+		avatar: makeStyle({
+			padding: '0 1rem'
+		})
+	}),
 
 
 	issueSelected: makeStyle({
@@ -65,17 +53,18 @@ const styles = {
 	}),
 
 	issueMarkers: makeStyle(FlexColumn, FlexAuto, {
-		minWidth: '1rem'
+		minWidth: '1rem',
+		pointerEvents: 'none'
 	}),
 
 
 
 	issueDetails: makeStyle(FlexColumn, FlexScale, FillWidth,OverflowHidden, {
-
+		pointerEvents: 'none'
 	}),
 
 	issueRepoRow:makeStyle(FlexRow,makeFlexAlign('stretch','center'),{
-
+		pointerEvents: 'none'
 	}),
 
 	issueRepo: makeStyle(Ellipsis,FlexRow,FlexScale,{
@@ -84,7 +73,8 @@ const styles = {
 	}),
 
 	issueTitleRow: makeStyle(FlexRowCenter,FillWidth,OverflowHidden,{
-		padding:  '0 1rem 1rem 0.5rem'
+		padding:  '0 1rem 1rem 0.5rem',
+		pointerEvents: 'none'
 	}),
 
 	issueTitleTime: makeStyle(FlexAuto,{
@@ -118,17 +108,8 @@ const styles = {
 
 	issueLabels: makeStyle(FlexScale,{
 		padding: '0 1rem 0 0'
-	}),
-
-	issueLabel: makeStyle({
-		display: 'inline-block',
-		padding: '0.6rem 1rem',
-		borderRadius: '0.3rem',
-		fontSize: themeFontSize(1),
-		fontWeight: 700,
-		margin: '0 1rem 0 0',
-		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
 	})
+
 
 }
 
@@ -166,8 +147,13 @@ function mapStateToProps(state) {
 @Radium
 export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
+	shouldComponentUpdate:Function
+
+
 	constructor(props) {
 		super(props)
+
+		this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this)
 	}
 
 	onIssueSelected = (event, issue) => {
@@ -185,23 +171,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 	}
 
 
-	renderLabels(labels,theme,s) {
-		return labels.map(label => {
 
-			const
-				p = theme.palette,
-				backgroundColor = '#' + label.color,
-				labelStyle = makeStyle(s.issueLabel, {
-					backgroundColor,
-					color: tinycolor.mostReadable(backgroundColor,[
-						p.text.secondary,
-						p.alternateText.secondary
-					])
-				})
-			return <div key={label.url} style={labelStyle}>{label.name}</div>
-
-		})
-	}
 
 	renderIssue(issue, s) {
 		const
@@ -224,11 +194,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 		return <div key={issue.id}
 		            style={issueStyles}
-		            selected={selected}>
+		            selected={selected}
+		            onClick={(event) => this.onIssueSelected(event,issue)}>
 
 			<div style={s.issueMarkers}></div>
-			<div style={s.issueDetails}
-			     onClick={(event) => this.onIssueSelected(event,issue)}>
+			<div style={s.issueDetails}>
 
 				<div style={s.issueRepoRow}>
 					<div style={s.issueRepo}>
@@ -236,12 +206,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 					</div>
 
 					{/* ASSIGNEE */}
-					<div style={s.user}>
-						<div style={s.username}>{issue.assignee ? issue.assignee.login : 'unassigned'}</div>
-						{issue.assignee && <div style={makeStyle(s.avatar,{
-							backgroundImage: `url(${issue.assignee.avatar_url})`
-						})}></div>}
-					</div>
+					<Avatar user={issue.assignee}
+					        style={s.issue.avatar}
+					        labelPlacement='before'
+					        labelStyle={s.username}
+					        avatarStyle={s.avatar} />
+
 				</div>
 
 
@@ -253,9 +223,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 				<div style={s.issueBottomRow}>
 
 					{/* LABELS */}
-					<div style={s.issueLabels}>
-						{this.renderLabels(issue.labels,theme,s)}
-					</div>
+					<IssueLabels labels={issue.labels} style={s.issueLabels}/>
+
 					{/* MILESTONE */}
 					{issue.milestone && <div style={s.issueMilestone}>
 						{issue.milestone.title}
@@ -270,8 +239,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		const
 			{theme, issues, selectedIssues} = this.props,
 			allowResize = selectedIssues.length > 0,
-			listMinWidth = !allowResize ? '100%' : '50%',
-			listMaxWidth = !allowResize ? '100%' : '80%',
+			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
+			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
 			themeStyles = mergeStyles(styles, theme.issuesPanel)
 
 		return <div style={themeStyles.panel}>

@@ -14,7 +14,7 @@ import {RepoKey} from "shared/Constants"
 import {Repos} from 'shared/DB'
 import {LunrIndex} from 'shared/LunrIndex'
 
-import {SyncStatus,ISyncDetails,Activity,ActivityRepo,ActivityType} from 'shared/models'
+import {SyncStatus,ISyncDetails,Comment,Activity,ActivityRepo,ActivityType} from 'shared/models'
 import {RepoState} from './RepoState'
 import {RepoMessage} from './RepoReducer'
 import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
@@ -49,8 +49,13 @@ import {RepoSyncJob} from './RepoSyncJob'
 	}
 
 	@Action()
-	setIssues(issues:Issue[]) {
-	}
+	setIssue(issue:Issue) {}
+
+	@Action()
+	setComments(comments:Comment[]) {}
+
+	@Action()
+	setIssues(issues:Issue[]) {}
 
 
 	@Action()
@@ -110,15 +115,11 @@ import {RepoSyncJob} from './RepoSyncJob'
 	@Action()
 	syncRepoDetails(availRepo:AvailableRepo) {
 		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
 			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
-			const appActions = AppActionFactory.newWithDispatcher(AppActionFactory,dispatch,getState)
 
 			await availRepo.getRepo()
 
 			jobActions.createJob(new RepoSyncJob(availRepo))
-
-
 		}
 	}
 
@@ -205,17 +206,19 @@ import {RepoSyncJob} from './RepoSyncJob'
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
-			if (enabled === availRepo.enabled)
+			if (enabled === availRepo.enabled) {
 				return
+			}
 
 			const availRepoRepo = Repos.availableRepo
-
 			const newAvailRepo = new AvailableRepo(availRepoRepo.mapper.toObject(availRepo))
 			newAvailRepo.enabled = enabled
 
-
 			await availRepoRepo.save(newAvailRepo)
 			actions.updateAvailableRepo(newAvailRepo)
+
+			// Finally trigger a repo sync update
+			this.syncRepoDetails(newAvailRepo)
 
 			log.info('Saved avail repo, setting enabled to',enabled,newAvailRepo)
 
@@ -224,6 +227,28 @@ import {RepoSyncJob} from './RepoSyncJob'
 	}
 
 
+	@Action()
+	loadIssue(issue:Issue){
+		return (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+
+			return new Promise((resolve:any,reject:any) => {
+
+				const currentIssue = actions.state.issue
+				if (currentIssue && currentIssue.id === issue.id) {
+					return resolve(true)
+				}
+
+				actions.setIssue(issue)
+
+				Repos.comment
+					.findByIssue(issue)
+					.then(comments => actions.setComments(comments))
+					.then(resolve).catch(reject)
+			})
+
+		}
+	}
 
 	@Action()
 	loadIssues() {
