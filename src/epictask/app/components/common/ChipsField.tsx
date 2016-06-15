@@ -12,10 +12,12 @@ import {AutoComplete,MenuItem} from 'material-ui'
 import * as Models from 'shared/models'
 import * as Constants from 'shared/Constants'
 import {PureRender} from 'components/common'
-
+import {AppActionFactory} from 'app/actions/AppActionFactory'
 const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
 const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
 const TextFieldUnderline = require('material-ui/TextField/TextFieldUnderline').default
+
+const appActions = new AppActionFactory()
 
 // Constants
 const log = getLogger(__filename)
@@ -61,7 +63,9 @@ const styles = {
 			width: 'auto !important',
 			flex: '1 0 20rem !important',
 			boxSizing: 'border-box',
-			marginTop: '14px !important'
+			marginTop: '14px !important',
+			padding: '0 1rem !important',
+			transform: 'translate(0,-25%)'
 		}
 	})
 
@@ -93,7 +97,7 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
 	selectedChips: M[]
 	onChipSelected: (item:M) => any
 	renderChip:(item:M) => any
-	renderChipSearchItem:(item:M) => any
+	renderChipSearchItem:(chipProps:any,item:M) => any
 	keySource: (item:M) => string|number
 
 	inputStyle?:any
@@ -115,6 +119,7 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
 
 @connect(mapStateToProps)
 @Radium
+@PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 
@@ -123,7 +128,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 		this.state = {
 			isFocused:false,
-			query: ''
+			query: null
 		}
 	}
 
@@ -138,9 +143,15 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 	makeDataSource(items) {
 		const newDataSource = items.map(item => {
+
+			const chipProps = {
+				//onClick: () => this.onChipSelected(item)
+			}
+
 			return {
-				text:  item.name,
-				value: this.props.renderChipSearchItem(item)
+				item,
+				text:  '',//this.props.keySource(item),
+				value: this.props.renderChipSearchItem(chipProps,item)
 			}
 		})
 
@@ -148,6 +159,11 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 		return newDataSource
 	}
 
+
+	onChipSelected = (item) => {
+		this.props.onChipSelected(item)
+		this.setState({query:null})
+	}
 
 	dataSourceFilter = (query,index) => {
 		const {allChips, filterChip} = this.props
@@ -157,6 +173,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	handleUpdateInput = (newQuery) => {
+		log.info('QUery updated',newQuery)
 		const newChipModels = this.props.allChips
 			.filter(item => this.props.filterChip(item,newQuery))
 
@@ -173,13 +190,29 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 		}
 	}
 
+	onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
+		log.info('Selected / Enter', chosenRequest,index)
+
+		const {dataSource} = this.state
+		if (!dataSource || !dataSource.length) {
+			appActions.addErrorMessage('Come on - try and pick a real item ;)')
+			return
+		}
+
+		index = index === -1 ? 0 : index
+
+		const {item} = dataSource[index]
+		this.onChipSelected(item)
+	}
+
+
 	render() {
 		const
 			{state,props} =this,
-			{query,isFocused} = state,
+			{isFocused,dataSource,query} = state,
 			{theme,selectedChips,renderChip,id,label,hint,inputStyle,labelStyle,labelFocusStyle,hintStyle} = props,
 			s = mergeStyles(styles, theme.component),
-			hasValue = query !== '' || selectedChips.length > 0
+			hasValue = (query && query !== '') || selectedChips.length > 0
 
 
 
@@ -217,12 +250,11 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 								backgroundColor: 'transparent !important'
 							  }}
 				              menuProps={{
-								maxHeight:300,
-								style: {
-									backgroundColor: 'transparent !important'
-								}
+								maxHeight:300
 				              }}
+				              onNewRequest={this.onItemSelectedOrEnterPressed}
 				              dataSource={this.state.dataSource}
+				              searchText={this.state.query ? this.state.query : ''}
 				              onUpdateInput={this.handleUpdateInput}
 				              openOnFocus={true}/>
 

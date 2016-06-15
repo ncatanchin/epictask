@@ -10,7 +10,7 @@ import {
 } from 'typemutant'
 
 import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models/Toast'
-import {User} from 'shared/models'
+import {User,Issue} from 'shared/models'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from 'shared/Settings'
 import * as uuid from 'node-uuid'
@@ -40,9 +40,6 @@ export function makeToastMessage(opts:any) {
 	})
 }
 
-export interface IUIState {
-	dialogs: {[name:string]:boolean}
-}
 
 @RecordModel()
 export class AppStateModel {
@@ -60,6 +57,12 @@ export class AppStateModel {
 	settings:ISettings
 
 	@RecordProperty()
+	dialogs: {[name:string]:boolean}
+
+	@RecordProperty()
+	editingIssue:Issue
+
+	@RecordProperty()
 	messages:IToastMessage[]
 
 	@RecordProperty()
@@ -68,8 +71,6 @@ export class AppStateModel {
 	@RecordProperty()
 	user:User
 
-	@RecordProperty()
-	ui:IUIState
 
 	@RecordProperty()
 	error:Error
@@ -79,12 +80,14 @@ export class AppStateModel {
 		return this
 	}
 
+	setEditingIssue(issue:Issue) {
+		this.editingIssue = issue
+		return this
+	}
 
 	setDialogOpen(name:string,open:boolean) {
-		this.ui = _.merge({},this.ui,{
-			dialogs:{
-				[name]:open
-			}
+		this.dialogs = Object.assign({},this.dialogs,{
+			[name]:open
 		})
 
 		return this
@@ -117,7 +120,8 @@ export class AppStateModel {
 		return this
 	}
 
-	addErrorMessage(err:Error) {
+	addErrorMessage(err:Error|string) {
+		err = ((_.isString(err)) ? new Error(err) : err) as Error
 		return this.addMessage(makeToastMessage({
 			type: ToastMessageType.Error,
 			content: err.message
@@ -139,9 +143,8 @@ export class AppStateModel {
 const AppStateDefaults = {
 	stateType: null,
 	messages: [],
-	ui: {
-		dialogs: {}
-	},
+	dialogs: {},
+
 	monitorState: {},
 	settings: Settings.toJSON()
 }

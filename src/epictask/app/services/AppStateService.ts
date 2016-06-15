@@ -33,8 +33,11 @@ async function checkStateType() {
 	if (stateType === AppStateType.AuthVerify) {
 		authActions.verify()
 	} else if (stateType === AppStateType.Home) {
-		await Promise.all([repoActions.getAvailableRepos(),repoActions.getRepos()])
-		repoActions.syncRepos()
+		repoActions.getRepos()
+			.then(() => repoActions.getAvailableRepos())
+			.then(() => repoActions.syncRepos())
+
+
 	}
 }
 

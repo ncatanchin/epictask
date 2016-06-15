@@ -16,10 +16,16 @@ export class User extends DefaultModel {
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
 
-	@AttributeDescriptor()
+	@AttributeDescriptor({
+		index:{
+			name: 'idxLogin',
+			unique:true
+		}
+	})
 	login: string;
 
-
+	@AttributeDescriptor()
+	repoIds: string[]
 	avatar_url: string;
 	gravatar_id: string;
 	url: string;
@@ -41,5 +47,65 @@ export class User extends DefaultModel {
 		Object.assign(this,props)
 	}
 
+	addRepoId(repoId) {
+		const repoIds = this.repoIds = this.repoIds || []
+
+		repoIds.push(repoId)
+		this.repoIds = _.uniq(repoIds)
+	}
+
+
+}
+
+
+
+/**
+ * Repository for accessing repos
+ */
+export class UserRepo extends TSRepo<User> {
+	constructor() {
+		super(UserRepo,User)
+	}
+
+
+	@IndexedDBFinderDescriptor({
+		singleResult:true,
+		async fn(tsRepo,...args) {
+			const
+				allJson = await tsRepo.table.toArray(),
+				query = _.lowerCase(args[0])
+
+			return allJson
+				.filter(json => _.lowerCase(json.login) === _.lowerCase(query))
+		}
+	})
+
+	@FinderDescriptor()
+	findByLogin(login:string):Promise<User> {
+		return null
+	}
+
+	/**
+	 * Find all issues in provided repo ids
+	 * @param repoIds
+	 * @returns {null}
+	 */
+	@IndexedDBFinderDescriptor({
+		fn(tsRepo,...args) {
+			return tsRepo.table.where('repoIds').anyOf(args).toArray()
+		}
+	})
+	@FinderDescriptor()
+	findByRepoId(...repoIds:number[]):Promise<User[]> {
+		return null
+	}
+
+	@IndexedDBFinderDescriptor({
+		fn: (tsRepo,...args) => tsRepo.table.toArray()
+	})
+	@FinderDescriptor()
+	findAll():Promise<User[]> {
+		return null
+	}
 
 }

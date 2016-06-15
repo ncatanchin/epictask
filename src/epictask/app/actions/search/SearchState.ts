@@ -8,7 +8,7 @@ import {
 } from 'typemutant'
 
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
-import {getStore} from '../../store'
+import {getStore} from 'app/store'
 import {RepoKey} from 'shared/Constants'
 
 export enum SearchResultType {
@@ -21,7 +21,6 @@ export class SearchResult<T extends Issue|Repo|AvailableRepo> {
 
 	index:number = -1
 	type:SearchResultType
-
 
 	constructor(public value:T) {
 		const repoState = getStore().getState().get(RepoKey)
@@ -57,6 +56,8 @@ export class SearchResults {
 			this.all.push(item)
 		})
 	}
+
+
 }
 
 @RecordModel()

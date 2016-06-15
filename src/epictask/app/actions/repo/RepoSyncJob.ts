@@ -7,7 +7,7 @@ import {ActivityManager,ToastManager} from 'app/services'
 import * as moment from 'moment'
 
 import {GitHubClient} from 'shared/GitHubClient'
-import {SyncStatus, AvailableRepo,Comment,ActivityType,github} from 'shared'
+import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType,github} from 'shared'
 import {Repos,Indexes} from 'shared/DB'
 import {LunrIndex} from 'shared/LunrIndex'
 
@@ -39,6 +39,36 @@ export class RepoSyncJob implements IJobRequest {
 		if (lastActivity) {
 			log.info(`Last repo sync for ${repo.full_name} was ${moment(lastActivity.timestamp).fromNow()}`)
 		}
+	}
+
+
+	/**
+	 * Synchronize all issues
+	 *
+	 * @param repo
+	 */
+	async syncCollaborators(repo:Repo) {
+		const userRepo = Repos.user
+
+		const collabsPromise = (repo.permissions.push) ?
+			this.client.repoCollaborators(repo) :
+			this.client.repoContributors(repo)
+
+		let collabs = await collabsPromise
+		collabs = await Promise.all(collabs.map(async (user:User) => {
+
+			const existingUser = await userRepo.findByLogin(user.login)
+			if (existingUser) {
+				user = new User(_.merge(user,existingUser))
+
+			}
+
+			user.addRepoId(repo.id)
+			return user
+		})) as any
+
+		log.debug(`Loaded collabs/users, time to persist`, collabs)
+		await userRepo.bulkSave(...collabs)
 	}
 
 	/**
@@ -134,7 +164,8 @@ export class RepoSyncJob implements IJobRequest {
 				this.syncIssues(repo),
 				this.syncLabels(repo),
 				this.syncMilestones(repo),
-				this.syncComments(repo)
+				this.syncComments(repo),
+				this.syncCollaborators(repo)
 			])
 
 			// Commit all text indexes

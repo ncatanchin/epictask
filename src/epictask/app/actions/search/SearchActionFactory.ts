@@ -5,8 +5,8 @@ import {SearchState, SearchResults, SearchResult, SearchResultType} from './Sear
 import {SearchMessage} from './SearchReducer'
 import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from 'shared/models'
 import {getRepo,Repos} from 'shared/DB'
-import {AppActionFactory} from '../AppActionFactory'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
+import {createClient} from 'shared/GitHubClient'
 
 const uuid = require('node-uuid')
 const log = getLogger(__filename)
@@ -51,6 +51,25 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	}
 
 	@Action()
+	updateResults(type: SearchResultType, newItems:SearchResult<Repo|Issue>[]) {
+		return (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch.getState)
+
+			const results = actions.state.results
+			if (!results) {
+				actions.setResults(new SearchResults(newItems))
+			} else {
+				const allItems = results.all
+					.filter(item => item.type !== type)
+					.concat(newItems)
+
+				actions.setResults(new SearchResults(allItems))
+			}
+		}
+	}
+
+
+	@Action()
 	select(result:SearchResult<any>) {
 		log.info('selected result',result)
 		return async (dispatch,getState) => {
@@ -74,8 +93,6 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 					log.info('Saving new available repo as ',availRepo.id)
 					await availRepoRepo.save(availRepo)
 
-
-
 					repoActions.getAvailableRepos()
 					repoActions.syncRepoDetails(availRepo)
 			}
@@ -87,35 +104,67 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	search() {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
+			const repoActions = RepoActionFactory.newWithDispatcher(RepoActionFactory,dispatch,getState)
 			actions.setSearching(true)
 
+			const promises:Array<Promise<any>> = []
+
 			const {query} = actions.state
-			const allMatches:SearchResult<Repo|Issue>[] = []
 
 			if (query && query.length) {
-				let allRepos = await findRepos(query, RepoRepo)
-				const availableRepos = await findRepos(query, AvailableRepoRepo)
 
-				const repoRepo = getRepo(RepoRepo)
-				availableRepos.forEach(async (availRepo:SearchResult<AvailableRepo>) => {
-					if (!availRepo.value.repo)
-						availRepo.value.repo = await repoRepo.get(repoRepo.key(availRepo.value.repoId))
+				promises.push(findRepos(query, RepoRepo)
+					.then(repoItems => {
+						actions.updateResults(SearchResultType.Repo,repoItems)
+						return repoItems
+					})
+					.then(async (repoItems) => {
+						if (query.split('/').length < 2) {
+							return
+						}
 
-				})
-				const availableRepoIds = availableRepos.map(availableRepo => availableRepo.value.repoId)
-				allRepos = allRepos.filter(repo => !availableRepoIds.includes(repo.value.id))
+						const repo = await createClient().repo(query)
+						log.info('GH repo result',repo)
+						if (repo) {
+							const repoState = repoActions.state
+							if (!repoState.repos.find(existingRepo => existingRepo.id === repo.id))
+								await repoActions.persistRepos([repo])
 
+							repoItems.push(new SearchResult(repo))
+							actions.updateResults(SearchResultType.Repo,repoItems)
+						}
+					}))
 
+				promises.push(findRepos(query, AvailableRepoRepo)
+					.then(async (availRepoItems) => {
+						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
 
-				allMatches.push(...availableRepos)
-				allMatches.push(...allRepos)
+						const repoState = repoActions.state
+
+						availRepoItems = availRepoItems.map((availRepoItem:SearchResult<AvailableRepo>) => {
+							const availRepo = availRepoItem.value
+							if (!availRepo.repo)
+								availRepo.repo = repoState.repos.find(repo => repo.id === availRepo.repoId)
+
+							return availRepoItem
+						})
+
+						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
+					}))
+
+			} else {
+				actions.setResults(new SearchResults([]))
 			}
 
-			const results = new SearchResults(allMatches)
-			actions.setResults(results)
-
-			log.info('Search completed',results)
-			return results
+			const onFinish = () => actions.setSearching(false)
+			Promise.all(promises).then(() => {
+				log.debug('search completed', query)
+				onFinish()
+			}).catch((err) => {
+				log.error('search failed',err)
+				onFinish()
+				throw err
+			})
 
 		}
 	}

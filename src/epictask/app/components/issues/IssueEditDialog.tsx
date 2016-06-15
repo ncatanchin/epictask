@@ -11,6 +11,7 @@ import {Issue, AvailableRepo, Repo, Milestone, User, Label} from 'shared/models'
 import * as Constants from 'shared/Constants'
 import {PureRender, Button,Avatar,LabelFieldEditor} from 'components'
 import {TextField,Dialog} from 'material-ui'
+import {Dialogs} from '../../../shared/Constants'
 
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
@@ -21,6 +22,10 @@ const appActions = new AppActionFactory()
 
 const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, {}),
+
+	action: {
+
+	},
 
 	input: {
 		fontWeight: 700
@@ -51,16 +56,21 @@ const styles = {
 function mapStateToProps(state) {
 	const appState = state.get(Constants.AppKey)
 	const repoState = state.get(Constants.RepoKey)
-	return Object.assign({}, _.pick(appState, [
-		'theme',
-		'user'
-	]), _.pick(repoState, [
-		'availableRepos',
-		'selectedIssue'
-	]), {
-		open: appState.ui.dialogs[IssueEditDialog.name] || false,
-		repos: repoState.availableRepos.map(availRepo => availRepo.repo)
-	})
+
+	const availableRepos = repoState.availableRepos,
+		issue = appState.editingIssue
+
+	return {
+		theme: appState.theme,
+		user: appState.user,
+		issue,
+		availableRepos,
+		availableRepo: (!issue) ? null :
+               availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
+		open: appState.dialogs[Dialogs.IssueEditDialog] || false
+
+	}
+
 }
 
 /**
@@ -70,8 +80,7 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
 	theme?:any
 	issue?:Issue
 	availableRepos?:AvailableRepo[]
-	repos?:Repo[]
-	selectedIssue?:Issue
+	availableRepo?:AvailableRepo
 	open?:boolean
 	user?:User
 }
@@ -85,65 +94,17 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
 
 @connect(mapStateToProps)
 @Radium
-//@PureRender
+@PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
 
 	constructor(props, context) {
 		super(props, context)
-
-		this.state = this.getNewState(props)
 	}
 
-	getNewState(props,repoId = null,issue = null) {
-		const {selectedIssue, availableRepos,repos} = props
-
-		repoId = (repoId) ? repoId :
-			(selectedIssue) ? selectedIssue.repoId :
-				(availableRepos && availableRepos[0]) ? availableRepos[0].repoId :
-					(repos && repos[0]) ? repos[0].id :
-						null
-
-		function newIssue() {
-
-
-
-			return new Issue({repoId})
-		}
-
-		const {state} = this
-		issue = issue ? issue : (state && state.issue && (!props.issue || props.issue.id === state.issue.id)) ?
-			state.issue : (props.issue) ? _.cloneDeep(props.issue) : newIssue()
-
-		if (issue && !issue.repoId) {
-
-		}
-		//const repo = repos.find(repo => repo.id === issue.repoId)
-		return {issue,availableRepo:availableRepos.find(availRepo => availRepo.repoId === issue.repoId)}
-	}
-
-	/**
-	 * Check to see if the issue has changed since we last received it
-	 *
-	 * @param props
-	 */
-	updateState(props) {
-		const
-			{state} = this,
-			{issue} = state
-
-		this.setState(this.getNewState(props,issue && issue.repoId,issue))
-		// if (!state || !state.issue || state.issue.updated_at !== (props.issue ? props.issue.updated_at : -1)) {
-		//
-		// }
-	}
-
-	componentWillReceiveProps(nextProps) {
-		this.updateState(nextProps)
-	}
 
 	onCancel = () => {
-		appActions.setDialogOpen(IssueEditDialog.name, false)
+		appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
 	}
 
 	onSave = () => {
@@ -155,27 +116,26 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	}
 
 	onLabelsChanged = (newLabels:Label[]) => {
-		const {issue} = this.state
+		const {issue} = this.props
+
 		log.info('new labels',newLabels)
 		if (issue) {
-			this.setState({
-				issue: _.assign(
-					_.cloneDeep(issue),
-					{labels:newLabels}
-				)
-			})
+			appActions.updateEditingIssue({labels:newLabels})
 		}
 	}
 
 	render() {
+
 		const
-			{theme, open,user} = this.props,
-			{issue,availableRepo} = this.state,
+			{theme,issue,availableRepo,open,user} = this.props,
 			s = mergeStyles(styles, theme.dialog,theme.issueEditDialog)
 
+		if (!issue)
+			return null
+
 		const actions = [
-			<Button onClick={this.onCancel}>Cancel</Button>,
-			<Button onClick={this.onSave} mode='raised'>Save</Button>
+			<Button onClick={this.onCancel} style={s.action}>Cancel</Button>,
+			<Button onClick={this.onSave} style={s.action} mode='raised'>Save</Button>
 		]
 
 		const title = <div style={s.title}>

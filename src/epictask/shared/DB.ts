@@ -8,7 +8,6 @@ const log = getLogger(__filename)
 import {
 	Repo,
 	RepoRepo,
-	User,
 	Milestone,
 	MilestoneRepo,
 	Issue,
@@ -20,7 +19,9 @@ import {
 	AvailableRepo,
 	AvailableRepoRepo,
 	Activity,
-	ActivityRepo
+	ActivityRepo,
+	User,
+	UserRepo
 }  from 'shared/models'
 
 export interface IRepos {
@@ -31,9 +32,11 @@ export interface IRepos {
 	comment: CommentRepo
 	label: LabelRepo
 	activity: ActivityRepo
+	user: UserRepo
 }
 
 export const Repos:IRepos = {} as any
+
 
 export let coordinator:TSCoordinator = null
 export let storePlugin:IndexedDBPlugin = null
@@ -47,6 +50,7 @@ let started = false
  * @returns {boolean}
  */
 export async function start() {
+
 
 	// Actually types are reloaded here
 	// enabling hot code replacement
@@ -106,9 +110,15 @@ export async function start() {
 		milestone: getRepo(MilestoneRepo),
 		comment: getRepo(CommentRepo),
 		label: getRepo(LabelRepo),
-		activity: getRepo(ActivityRepo)
+		activity: getRepo(ActivityRepo),
+		user: getRepo(UserRepo)
 	})
 
+	// In DEBUG mode expose repos on global
+	if (DEBUG) {
+		const g = global as any
+		g.Repos = Repos
+	}
 	return true
 }
 

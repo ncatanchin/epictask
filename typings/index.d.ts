@@ -21,6 +21,7 @@
 /// <reference path="globals/react-dom/index.d.ts" />
 /// <reference path="globals/react-router-redux/index.d.ts" />
 /// <reference path="globals/react-split-pane/index.d.ts" />
+/// <reference path="globals/react-tap-event-plugin/index.d.ts" />
 /// <reference path="globals/react/index.d.ts" />
 /// <reference path="globals/redux-devtools-dock-monitor/index.d.ts" />
 /// <reference path="globals/redux-devtools/index.d.ts" />

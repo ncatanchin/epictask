@@ -48,7 +48,7 @@ export class AvailableRepo extends DefaultModel {
 	milestones:Milestone[]
 
 	@AttributeDescriptor({transient:true})
-	contributors:User[]
+	collaborators:User[]
 
 	constructor(props = {}) {
 		super()

@@ -56,6 +56,16 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		fontWeight
 	},
 
+	chipsField: {
+		chipContent: {
+			control: {
+				':hover': {
+					color: warn.hue1
+				}
+			}
+		}
+	},
+
 	avatar: {
 		root:   {},
 		avatar: {
@@ -103,6 +113,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		actions: {
 			color:           primary.hue1,
 			backgroundColor: text.primary
+		},
+		action: {
+			titleFontSize: fontSize * 1.3,
+			padding: '1rem 2rem',
+			margin: '0 0 0 1rem'
 		},
 
 		body: {

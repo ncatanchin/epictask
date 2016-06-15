@@ -25,8 +25,7 @@ const reduxLogger = createLogger();
 const devToolsMiddleware =
 	(!DEBUG) ? f => f :
 	(window.devToolsExtension) ? window.devToolsExtension() :
-	require('../components/debug/DevTools.tsx').instrument()
-
+	require('../components/debug/DevTools.tsx').DevTools.instrument()
 
 /**
  * Middleware includes thunk and in

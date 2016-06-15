@@ -118,7 +118,7 @@ export class GitHubClient {
 				}
 			}
 		} else {
-			result = new modelType(result)
+			result = new (modelType)(result)
 		}
 
 		return result as any
@@ -140,6 +140,10 @@ export class GitHubClient {
 	}
 
 
+	async repo(repoName:string,opts:RequestOptions = null):Promise<GitHubSchema.Repo> {
+		return await this.get<Repo>(`/repos/${repoName}`,Repo,opts)
+	}
+
 	/**
 	 * Helper function for building paged gets with repo param
 	 *
@@ -158,6 +162,17 @@ export class GitHubClient {
 	 * Get all issues in repo
 	 */
 	repoIssues = this.makePagedRepoGetter(Issue,'/repos/<repoName>/issues')
+
+
+	/**
+	 * Get all collaborators for repo
+	 */
+	repoCollaborators = this.makePagedRepoGetter(User,'/repos/<repoName>/collaborators')
+
+	/**
+	 * Get all collaborators for repo
+	 */
+	repoContributors = this.makePagedRepoGetter(User,'/repos/<repoName>/contributors')
 
 	/**
 	 * Get all comments on an issue in a repo

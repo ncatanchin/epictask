@@ -8,7 +8,7 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Issue,Label,AvailableRepo} from 'shared/models'
 import * as Constants from 'shared/Constants'
-import {PureRender} from 'components/common'
+import {PureRender,Icon} from 'components/common'
 import {ChipsField} from './ChipsField'
 import {MenuItem} from 'material-ui'
 
@@ -18,12 +18,42 @@ const tinycolor = require('tinycolor2')
 const log = getLogger(__filename)
 const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, {}),
-	chip: makeStyle(FlexAuto,FlexRowCenter,{
+	chip: makeStyle(PositionRelative,{
+		// display: 'flex',
+		// padding: '0.4rem 2rem',
+		// borderRadius: '1.5rem',
+		height: '3.4rem',
+		padding: '1rem 1rem 0 0',
+		// fontWeight: 700
+	}),
+	chipContent: makeStyle(FlexAuto,FlexRowCenter,{
 		display: 'flex',
-		padding: '0.4rem 2rem',
 		borderRadius: '1.5rem',
-		height: '3rem',
-		fontWeight: 700
+		height: '2.4rem',
+
+
+		control: makeStyle(makeTransition(['background-color','font-weight','border-radius']),FlexAuto,FlexRowCenter,{
+			padding: '0.2rem 2rem',
+			borderRadius: '1.2rem',
+			height: '2.4rem',
+			width: '2.4rem',
+			boxSizing: 'border-box',
+			backgroundColor: 'rgba(0,0,0,0.2)',
+			cursor: 'pointer',
+			fontWeight: 400,
+			fontSize: '1.5rem',
+			':hover': {
+				backgroundColor: 'white',
+				borderRadius: '0rem',
+				fontWeight: 700,
+				fontSize: '2rem',
+			}
+		}),
+
+		label: makeStyle(FlexAuto,FlexRowCenter,OverflowHidden,{
+			padding: '0 2rem 0 1rem',
+			fontWeight: 700
+		})
 	})
 }
 
@@ -66,7 +96,7 @@ export interface ILabelFieldEditorProps extends React.DOMAttributes {
 
 @connect(mapStateToProps)
 @Radium
-//@PureRender
+@PureRender
 export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any> {
 
 
@@ -117,6 +147,11 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		this.props.onLabelsChanged(this.props.labels.concat([newLabel]))
 	}
 
+	onChipRemoved = (oldLabel) => {
+		log.info('removed label',oldLabel)
+		this.props.onLabelsChanged(this.props.labels.filter(label => label.url !== oldLabel.url))
+	}
+
 	chipFilter = (item:Label,query:string):boolean =>  {
 		return _(item.name).toLower().startsWith(_.toLower(query))
 	}
@@ -127,7 +162,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			backgroundColor = '#' + item.color,
 			color = tinycolor.mostReadable(backgroundColor,[
 				theme.textColor,
-				theme.alternateTextColor
+				tinycolor(theme.alternateTextColor).lighten(20)
 			]).toRgbString()
 
 		return {
@@ -140,22 +175,28 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	renderChip = (item:Label) => {
 		const
 			{theme} = this.props,
-			s = mergeStyles(styles, theme.component),
-			chipStyle = makeStyle(s.chip,this.labelColorStyle(item))
+			s = mergeStyles(styles, theme.labelFieldEditor,theme.chipsField),
+			chipContentStyle = makeStyle(s.chipContent,this.labelColorStyle(item))
 
-		return <div key={item.url} className='chip' style={chipStyle}>
-			<div>{item.name}</div>
+		return <div key={item.url} className='chip' style={s.chip}>
+			<div style={chipContentStyle}>
+				<Icon style={s.chipContent.control}
+				      onClick={() => this.onChipRemoved(item)}>clear</Icon>
+				<div style={s.chipContent.label}>
+					{item.name}
+				</div>
+			</div>
 		</div>
 	}
 
-	renderChipSearchItem = (item:Label) => {
+	renderChipSearchItem = (chipProps:any,item:Label) => {
 		const {theme} = this.props,
 			itemStyle = this.labelColorStyle(item)
 
 
 
-		return <MenuItem onClick={() => this.onChipSelected(item)}
-		                 style={itemStyle}
+		return <MenuItem {...chipProps}
+						 style={itemStyle}
 		                 primaryText={item.name}/>
 	}
 

@@ -9,6 +9,7 @@ require('styles/split-pane.global.scss')
 const log = getLogger(__filename)
 
 //region Imports
+import * as injectTapEventPlugin from 'react-tap-event-plugin'
 import * as React from 'react'
 import * as _ from 'lodash'
 import {Provider, connect} from 'react-redux'
@@ -27,6 +28,11 @@ import {AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 //endregion
 
+try {
+	injectTapEventPlugin()
+} catch (err) {
+	log.info('Failed to inject tap event handler = HMR??')
+}
 
 
 
@@ -37,7 +43,8 @@ const appActions = new AppActionFactory()
 
 
 //region DEBUG Components/Vars
-const DevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : <div></div>
+const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
+const DevTools = AllDevTools.DevTools || <div></div>
 let devToolsRef = null
 let appElement = null
 let monitorStateSubscribed = false
@@ -186,7 +193,7 @@ class App extends React.Component<IAppProps,any> {
 	keyHandlers = {
 		[KeyMaps.CommonKeys.New]: () => {
 			log.info('New issue keys pressed - making dialog visible')
-			appActions.setDialogOpen(IssueEditDialog.name,true)
+			appActions.newIssue()
 		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
@@ -266,6 +273,12 @@ function render() {
 }
 
 render()
+
+
+// if (DEBUG) {
+// 	const {showDevTools} = require('components/debug/DevTools.tsx')
+// 	showDevTools(store.getReduxStore())
+// }
 
 if (module.hot) {
 	module.hot.accept()

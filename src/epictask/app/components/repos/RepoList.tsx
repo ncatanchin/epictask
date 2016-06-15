@@ -114,7 +114,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				.filter(availRepo => _.isString(availRepo.id))
 				.map((availRepo,availRepoIndex) => {
 					const id = availRepo.id
-					const repo = _.find(repos,(it) => it.id === availRepo.repoId)
+					const repo = availRepo.repo //_.find(repos,(it) => it.id === availRepo.repoId)
 					const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.id === availRepo.id)
 					const isEnabled = availRepo.enabled
 					const isHovering = this.state.hoverId === availRepo.id

@@ -67,7 +67,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 	 *
 	 * @param newRepos
 	 */
-	private async persistRepos(newRepos:Repo[]):Promise<number> {
+	async persistRepos(newRepos:Repo[]):Promise<number> {
 		const repoRepo =  Repos.repo
 
 		log.debug(`Persisting ${newRepos.length} repos`)
@@ -117,8 +117,6 @@ import {RepoSyncJob} from './RepoSyncJob'
 		return async (dispatch,getState) => {
 			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
 
-			await availRepo.getRepo()
-
 			jobActions.createJob(new RepoSyncJob(availRepo))
 		}
 	}
@@ -157,8 +155,8 @@ import {RepoSyncJob} from './RepoSyncJob'
 			await Promise.all(availRepos.map(async (availRepo) => {
 
 				if (!availRepo.repo) {
-					availRepo.repo = availRepo.repo ||
-						repos.find(repo => repo.id === availRepo.repoId)
+					// availRepo.repo = availRepo.repo ||
+					// 	repos.find(repo => repo.id === availRepo.repoId)
 
 					availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
 				}
@@ -171,11 +169,15 @@ import {RepoSyncJob} from './RepoSyncJob'
 					availRepo.milestones = await Repos.milestone.findByRepoId(availRepo.repoId)
 				}
 
+				if (!availRepo.collaborators) {
+					availRepo.collaborators = await Repos.user.findByRepoId(availRepo.repoId)
+				}
+
 				return availRepo
 			}))
 
 			log.debug('Loaded available repos',availRepos)
-			actions.setAvailableRepos(availRepos)
+			actions.setAvailableRepos(_.cloneDeep(availRepos))
 
 			return availRepos
 		}) as any
@@ -191,13 +193,15 @@ import {RepoSyncJob} from './RepoSyncJob'
 	}
 
 	@Action()
-	getRepos() {
-		return async (dispatch,getState) => {
+	getRepos():Promise<Repo[]> {
+		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const repos = await Repos.repo.findAll()
+			let repos = await Repos.repo.findAll()
+			repos = _.cloneDeep(repos)
 			log.debug('Loaded all repos',repos)
 			actions.setRepos(repos)
-		}
+			return repos
+		}) as any
 	}
 
 	@Action()
