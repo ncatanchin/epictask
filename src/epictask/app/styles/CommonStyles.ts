@@ -3,6 +3,28 @@ export function rem(val:number) {
 	return `${val}rem`
 }
 
+export function createStyles(styles:any,topStyles:any = null) {
+	topStyles = topStyles || styles
+
+	return Object.keys(styles).reduce((expandedStyles,nextKey) => {
+		const baseStyleVal = styles[nextKey]
+
+		expandedStyles[nextKey] = (() => {
+			if (Array.isArray(baseStyleVal)) {
+				return createStyles(_.merge({},...baseStyleVal),topStyles)
+			} else if (_.isPlainObject(baseStyleVal)) {
+				return createStyles(baseStyleVal,topStyles)
+			} else if (_.isFunction(baseStyleVal)) {
+				return createStyles(baseStyleVal(topStyles),topStyles)
+			} else {
+				return baseStyleVal
+			}
+		})()
+
+		return expandedStyles
+	},{})
+}
+
 export function makeStyle(...styles) {
 	return Object.assign({},...styles)
 }

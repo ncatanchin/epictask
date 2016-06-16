@@ -36,3 +36,16 @@ _.mixin({
 export function isNil(o:any) {
 	return _.isNil(o)
 }
+
+export function cloneObject<T>(o:T):T {
+	const cloned = _.cloneDeep(o)
+
+	if (Array.isArray(cloned)) {
+		cloned.forEach((acloned,index) => acloned.id = o[index].id)
+	} else {
+		cloned.id = (o as any)['id']
+	}
+
+	return cloned
+
+}

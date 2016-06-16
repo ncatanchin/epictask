@@ -1,3 +1,5 @@
+import * as BluebirdGlobal from 'bluebird'
+
 const Bluebird = require('bluebird')
 
 Bluebird.config({
@@ -6,5 +8,7 @@ Bluebird.config({
 	warnings: true,
 	monitoring: true
 })
+
+Promise = Bluebird
 
 export = Bluebird

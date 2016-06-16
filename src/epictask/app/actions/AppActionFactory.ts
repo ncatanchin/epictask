@@ -1,12 +1,26 @@
 import {ActionFactory,Action,ActionMessage} from 'typedux'
 import {AppStateType} from 'shared/AppStateType'
-import {AppKey, Dialogs, RepoKey} from "shared/Constants"
+import {AppKey, Dialogs, RepoKey,RepoTransientProps} from "shared/Constants"
 import {IToastMessage} from 'shared/models/Toast'
+import {ISettings} from 'shared/Settings'
 import {Issue} from 'shared/models/Issue'
 import {AppState} from './AppState'
 import {User} from 'shared/models/User'
+import {cloneObject} from 'shared/util'
 
 const log = getLogger(__filename)
+
+function updateIssueTransients(issue,availableRepos) {
+
+	const
+		{repoId} = issue,
+		availRepo = availableRepos.find(availRepo => availRepo.repoId === repoId)
+
+	assert.ok(availRepo,'Unable to find repo with id: ' + repoId)
+
+	// Assign all transient props
+	Object.assign(issue,_.pick(availRepo.repo,RepoTransientProps))
+}
 
 export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof AppState>> {
 
@@ -33,7 +47,16 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			const issue = this.state.editingIssue
 			if (!issue) return
 
-			this.setEditingIssue(_.assign(_.cloneDeep(issue),props) as any)
+			const updatedIssue = Object.assign(cloneObject(issue),props)
+
+			if (updatedIssue.repoId !== issue.repoId || !updatedIssue.repo) {
+				updateIssueTransients(
+					updatedIssue,
+					getState().get(RepoKey).availableRepos
+				)
+			}
+
+			this.setEditingIssue(updatedIssue)
 		}
 	}
 
@@ -62,12 +85,15 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			}
 
 			const issue = new Issue({repoId})
+			updateIssueTransients(issue,availableRepos)
 
 			actions.setEditingIssue(issue)
 			actions.setDialogOpen(dialogName,true)
 		}
-
 	}
+
+	@Action()
+	updateSettings(newSettings:ISettings) {}
 
 	@Action()
 	setStateType(stateType:AppStateType) {}

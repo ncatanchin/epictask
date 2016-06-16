@@ -6,28 +6,32 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 import {FAIcons} from './IconFontAwesomeNames'
-
+import {GHIcons} from './IconOpticonNames'
 // Constants
 const log = getLogger(__filename)
 
 const MaterialIcons = 'material-icons'
 const FontAwesome = 'fa'
-
+const Octicons = 'octicon'
 /**
  * IMIconProps
  */
 export interface IIconProps extends React.DOMAttributes {
 	className?:string
 	style?:any
-	iconSet?:string
+	iconSet?:'material-icons'|'fa'|'octicon'
 	iconName?: string,
 	fontSize?:any
 
 }
 
-function faIconCode(iconName) {
-	const code = FAIcons[iconName]
-	return (code) ? String.fromCodePoint(parseInt(code,16)) : ''
+function iconCode(codeSet,iconName) {
+	let code = codeSet[iconName]
+	if (!code) return ''
+
+	code = (_.isNumber(code)) ? code : parseInt(code,16)
+
+	return String.fromCodePoint(code)
 }
 
 /**
@@ -44,10 +48,10 @@ export class Icon extends React.Component<IIconProps,any> {
 	}
 
 	render() {
-		let {iconSet = MaterialIcons,className = '',style,iconName,children,fontSize} = this.props
+		let {className = '',style,iconName,children,fontSize} = this.props
 
-		iconSet = iconSet || MaterialIcons
-		const declaredIconSet = [MaterialIcons,FontAwesome]
+		const iconSet = this.props.iconSet || MaterialIcons
+		const declaredIconSet = [MaterialIcons,FontAwesome,Octicons]
 				.filter(name => className.indexOf(name) > -1).length > 0
 
 
@@ -57,7 +61,8 @@ export class Icon extends React.Component<IIconProps,any> {
 
 
 		const iconContent = (iconSet === FontAwesome) ?
-			faIconCode(iconName) :
+			iconCode(FAIcons,iconName) : (iconSet === Octicons) ?
+			iconCode(GHIcons,iconName) :
 			children
 
 		return <i {...this.props} className={className} style={style}>

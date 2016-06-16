@@ -38,7 +38,7 @@ import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
 import './util/ObjectUtil'
-
+import * as assertGlobal from 'assert'
 
 /**
  * Declare globals
@@ -46,6 +46,7 @@ import './util/ObjectUtil'
  * @global getLogger
  */
 declare global {
+	var assert:typeof assertGlobal
 	var getLogger:typeof LoggerFactory
 	var Immutable:typeof ImmutableGlobal
 	var TypeMutant:typeof TypeMutantGlobal
@@ -82,7 +83,7 @@ function installGlobals() {
 		Immutable: ImmutableGlobal,
 		TypeMutant: TypeMutantGlobal,
 		_:LodashGlobal,
-		Promise:Bluebird,
+		assert:assertGlobal,
 		Env: {
 			isOSX,
 			isDev,

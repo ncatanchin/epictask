@@ -10,8 +10,9 @@ const log = getLogger(__filename)
 
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
-import {RepoKey} from "shared/Constants"
+import {RepoKey,RepoTransientProps,Dialogs} from "shared/Constants"
 import {Repos} from 'shared/DB'
+import {cloneObject} from 'shared/util/ObjectUtil'
 import {LunrIndex} from 'shared/LunrIndex'
 
 import {SyncStatus,ISyncDetails,Comment,Activity,ActivityRepo,ActivityType} from 'shared/models'
@@ -21,6 +22,7 @@ import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import {RepoSyncJob} from './RepoSyncJob'
+
 
 
 /**
@@ -62,6 +64,33 @@ import {RepoSyncJob} from './RepoSyncJob'
 	setAvailableRepos(repos:AvailableRepo[]) {
 	}
 
+	@Action()
+	issueSave(issue:Issue) {
+		return async (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch,getState)
+			const client = github.createClient()
+
+			const {repos} = this.state
+			const repo = issue.repo || repos.find(item => item.id === issue.repoId)
+
+
+			return client.issueSave(repo,issue)
+				.then(savedIssue => {
+					return Repos.issue.save(savedIssue)
+				})
+				.then(savedIssue => {
+					require('app/services/ToastService').addMessage(`Saved issue #${savedIssue.number}`)
+
+					const appActions = new AppActionFactory()
+					appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+				})
+				.catch(err => {
+					require('app/services/ToastService').addErrorMessage(err)
+				})
+
+		}
+	}
+
 	/**
 	 * Persis repos to database
 	 *
@@ -94,7 +123,21 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 				const newRepoCount = await actions.persistRepos(repos)
 				log.debug('New repos',newRepoCount)
-				actions.setRepos(repos)
+
+				// Deep merge the new repo data into the existing
+				// TODO: update sync functionality to use all of "MY" repos +
+				//  repos i follow, star and ones i added explicitly
+				const updatedRepos = cloneObject(actions.state.repos)
+				repos.forEach(repo => {
+					const updatedRepo = updatedRepos.find(item => item.id === repo.id)
+					if (updatedRepo) {
+						_.merge(updatedRepo,repo)
+					} else {
+						updatedRepos.push(repo)
+					}
+				})
+
+				actions.setRepos(updatedRepos)
 			} catch (err) {
 				log.error('Failed to get repos',err,err.stack)
 				actions.setError(err)
@@ -155,9 +198,6 @@ import {RepoSyncJob} from './RepoSyncJob'
 			await Promise.all(availRepos.map(async (availRepo) => {
 
 				if (!availRepo.repo) {
-					// availRepo.repo = availRepo.repo ||
-					// 	repos.find(repo => repo.id === availRepo.repoId)
-
 					availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
 				}
 
@@ -177,7 +217,8 @@ import {RepoSyncJob} from './RepoSyncJob'
 			}))
 
 			log.debug('Loaded available repos',availRepos)
-			actions.setAvailableRepos(_.cloneDeep(availRepos))
+			actions.setAvailableRepos(availRepos
+				.map(availRepo => cloneObject(availRepo)))
 
 			return availRepos
 		}) as any
@@ -197,8 +238,9 @@ import {RepoSyncJob} from './RepoSyncJob'
 		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			let repos = await Repos.repo.findAll()
-			repos = _.cloneDeep(repos)
+			repos = cloneObject(repos)
 			log.debug('Loaded all repos',repos)
+
 			actions.setRepos(repos)
 			return repos
 		}) as any
@@ -225,17 +267,19 @@ import {RepoSyncJob} from './RepoSyncJob'
 				return
 			}
 
-			const availRepoRepo = Repos.availableRepo
-			const newAvailRepo = new AvailableRepo(availRepoRepo.mapper.toObject(availRepo))
-			newAvailRepo.enabled = enabled
+			const newAvailRepo = Object.assign(cloneObject(availRepo),{enabled})
 
-			await availRepoRepo.save(newAvailRepo)
-			actions.updateAvailableRepo(newAvailRepo)
+			Repos.availableRepo.save(newAvailRepo)
+				.then(() => {
+					actions.updateAvailableRepo(newAvailRepo)
 
-			// Finally trigger a repo sync update
-			this.syncRepoDetails(newAvailRepo)
+					// Finally trigger a repo sync update
+					if (enabled)
+						this.syncRepoDetails(newAvailRepo)
 
-			log.info('Saved avail repo, setting enabled to',enabled,newAvailRepo)
+					log.info('Saved avail repo, setting enabled to',enabled,newAvailRepo)
+				})
+
 
 			return true
 		}
@@ -249,11 +293,13 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 			return new Promise((resolve:any,reject:any) => {
 
+
 				const currentIssue = actions.state.issue
 				if (!force && currentIssue && currentIssue.id === issue.id) {
 					return resolve(true)
 				}
 
+				issue = cloneObject(issue)
 				actions.setIssue(issue)
 
 				Repos.comment
@@ -263,6 +309,10 @@ import {RepoSyncJob} from './RepoSyncJob'
 			})
 
 		}
+	}
+
+	fillIssue(issue:Issue) {
+
 	}
 
 	@Action()
@@ -275,12 +325,32 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 			// All the currently selected repos
 			const {availableRepos} = actions.state
-			const enabledRepos = availableRepos.filter(availRepo => availRepo.enabled)
-			const repos = await Promise.all(enabledRepos.map((availRepo) => availRepo.getRepo()))
-			const repoIds = repos.map((repo:Repo) => repo.id)
+			const repoIds = availableRepos
+				.filter(availRepo => availRepo.enabled)
+				.map(availRepo => availRepo.repoId)
+
 
 			log.info(`Loading issues for repos`,repoIds)
-			const issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
+			let issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
+
+			/**
+			 * 1. Clone issues first to avoid cached objects
+			 * 2. Make sure we have a valid repo
+			 * 3. Copy transient repo,milestones,collaborators,etc
+			 */
+			issues = issues.map(issue => {
+				issue = cloneObject(issue)
+
+				const availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
+				assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
+				Object.assign(issue, {
+					repo: availRepo.repo,
+					milestones: [...availRepo.milestones],
+					collaborators: [...availRepo.collaborators]
+				})
+
+				return issue
+			})
 
 			actions.setIssues(issues)
 		}

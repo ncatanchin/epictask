@@ -29,6 +29,7 @@
 /// <reference path="globals/redux-thunk/index.d.ts" />
 /// <reference path="globals/sinon/index.d.ts" />
 /// <reference path="globals/whatwg-fetch/index.d.ts" />
+/// <reference path="modules/bluebird/index.d.ts" />
 /// <reference path="modules/history/index.d.ts" />
 /// <reference path="modules/lodash/index.d.ts" />
 /// <reference path="modules/node-uuid/index.d.ts" />

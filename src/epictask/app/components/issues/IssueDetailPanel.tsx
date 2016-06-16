@@ -8,10 +8,11 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import {connect} from 'react-redux'
-import {Avatar,Markdown,Renderers} from 'components/common'
-import {Issue,Comment,Label,Milestone,Repo} from 'shared/models'
+import {Avatar, Markdown, PureRender, Renderers} from 'components/common'
+import {Issue, Comment, Label, Milestone, Repo} from 'shared/models'
 import {AppKey, RepoKey} from 'shared/Constants'
 import {IssueLabels} from './IssueLabels'
+import {IssueActivityText} from './IssueActivityText'
 
 const {Textfit} = require('react-textfit')
 
@@ -20,34 +21,30 @@ const {Textfit} = require('react-textfit')
 const log = getLogger(__filename)
 
 //region Styles
-const flexTransition = makeTransition(['height','flex','flex-grow','flex-shrink','flex-basis'])
+const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
 const styles = {
-	root: makeStyle(FlexColumn,Fill,{
+	root: makeStyle(FlexColumn, Fill, OverflowHidden, {
 		minWidth: '36.5rem'
 	}),
 
-	time: makeStyle(FlexAuto,{
-		fontSize: themeFontSize(1),
+	time: makeStyle(FlexAuto, {
+		fontSize:   themeFontSize(1),
 		fontWeight: 100
 	}),
 
-	issue: makeStyle(flexTransition,FlexColumn,FlexScale,{
+	issue: makeStyle(flexTransition, FlexColumn, FlexScale, {}),
 
-	}),
+	issueMulti: makeStyle(FlexColumn, FlexScale, {}),
 
-	issueMulti: makeStyle(FlexColumn,FlexScale,{
-
-	}),
-
-	header: makeStyle(flexTransition,FlexAuto,FlexColumn,{
+	header: makeStyle(flexTransition, FlexAuto, FlexColumn, {
 		padding: "1rem",
 
-		row1: makeStyle(FlexRowCenter,FlexAuto,{
-			repo: makeStyle(FlexScale,{
-				fontSize: themeFontSize(1.4),
-				padding: '0 0 0.5rem 0',
-				fontWeight: 500,
-				fontSmooth: 'always',
+		row1: makeStyle(FlexRowCenter, FlexAuto, {
+			repo:     makeStyle(FlexScale, {
+				fontSize:            themeFontSize(1.4),
+				padding:             '0 0 0.5rem 0',
+				fontWeight:          500,
+				fontSmooth:          'always',
 				WebkitFontSmoothing: 'antialiased'
 			}),
 			assignee: makeStyle({
@@ -55,27 +52,23 @@ const styles = {
 			})
 		}),
 
-		row2: makeStyle(FlexRowCenter,FlexAuto,PositionRelative,{
+		row2: makeStyle(FlexRowCenter, FlexAuto, PositionRelative, {
 			padding: '0.5rem 0 1rem 0',
-			title: makeStyle(OverflowHidden,PositionRelative,FlexScale, {
-				fontSize:        themeFontSize(2),
+			title:   makeStyle(OverflowHidden, PositionRelative, FlexScale, {
+				fontSize:     themeFontSize(2),
 				textOverflow: 'clip ellipsis',
-				lineHeight: '2.2rem',
-				maxHeight: '4.4rem',
-				maxWidth: '100%'
+				lineHeight:   '2.2rem',
+				maxHeight:    '4.4rem',
+				maxWidth:     '100%'
 			}),
 
 
 		}),
 
 		// Row 3 - Labels + title
-		row3: makeStyle(flexTransition,FlexRowCenter,FlexAuto,{
-			labels: makeStyle(FlexScale,FlexAlignStart,{
-
-			}),
-			milestone: makeStyle({
-
-			})
+		row3: makeStyle(flexTransition, FlexRowCenter, FlexAuto, {
+			labels:    makeStyle(FlexScale, FlexAlignStart, {}),
+			milestone: makeStyle({})
 		})
 
 
@@ -84,81 +77,54 @@ const styles = {
 	/**
 	 * ISSUE DETAILS / COMMENTS / BODY
 	 */
-	content: makeStyle(flexTransition,FlexColumn,FlexScale,{
-		wrapper: makeStyle(FlexColumn,FlexScale,{
-			padding: '1rem 0rem'
+	content: makeStyle(flexTransition, FlexColumn, FlexScale, {
+		wrapper: makeStyle(FlexColumn, FlexScale, {
+			padding:   '1rem 0rem',
+			overflowX: 'hidden',
+			overflowY: 'auto'
 		}),
 
-		body: makeStyle(flexTransition,FlexAuto,{
+		body: makeStyle(flexTransition, FlexAuto, {
 			boxShadow: 'inset 0 -0.1rem 0.4rem -0.4rem black',
-			padding: '1rem 1rem 1rem 2rem'
+			padding:   '1rem 1rem 1rem 2rem'
 		}),
 
-		activities: makeStyle(flexTransition,FlexColumn,FlexAuto,{
-			activity: makeStyle(flexTransition,FlexRow,makeFlexAlign('flex-start','center'),
-				FlexAuto,{
+		activities: makeStyle(flexTransition, FlexColumn, FlexAuto, {
+			activity: makeStyle(flexTransition, FlexRow, makeFlexAlign('flex-start', 'flex-start'),
+				FlexAuto, {
 
-				title: makeStyle(flexTransition,FlexColumn,FlexAuto,{}),
+					title: makeStyle(flexTransition, FlexColumn, FlexAuto, {}),
 
-				margin: '1rem 1rem 1rem 0.5rem',
+					margin: '1rem 1rem 1rem 0.5rem',
 
-				avatar: {
-					width: 41,
-					height: 41
-				},
+					avatar: {
+						width:        41,
+						height:       41,
+						borderRadius: '50%'
+					},
 
-				user: {
-					// borderWidth: '0.1rem',
-					// borderStyle: 'solid',
-					borderRadius: '50% 0 0 50%'
-				},
-
-				comment: makeStyle(FlexColumn,FlexScale,{
-					borderWidth: '0.1rem',
-					borderStyle: 'solid',
-					borderRadius: '0 0.2rem 0.2rem 0.2rem',
-
-					details: makeStyle(FlexRow,makeFlexAlign('center','flex-start'),FlexAuto,PositionRelative,{
-						padding: '0.3rem 1rem',
-						height: 40,
-						fontSize: themeFontSize(1.1),
-						username: {
-							fontWeight: 700
-						},
-						time: {
-							fontSize: themeFontSize(1.1),
-							padding: '0rem 0 0 0.5rem'
-						}
-					}),
-
-
-					body: makeStyle(FlexColumn,FlexAuto,{
-						padding: '1rem',
-
-					}),
-
-					commentor: makeStyle({
-						padding: '0rem'
-					})
+					user: {
+						// borderWidth: '0.1rem',
+						// borderStyle: 'solid',
+						borderRadius: '50% 0 0 50%'
+					}
 				})
-			})
 		}),
 	}),
 
 	/**
 	 * PANEL FOOTER
 	 */
-	footer: makeStyle(flexTransition,FlexAuto,{
-
-	}),
+	footer: makeStyle(flexTransition, FlexAuto, {}),
 
 	markdown: makeStyle({
-		padding: '1rem',
+		padding:   '1rem',
 		overflowY: 'visible',
-		height: 'auto',
+		overflowX: 'auto',
+		height:    'auto',
 
 		'pre': {
-			width: '100%',
+			width:     '100%',
 			boxSizing: 'border-box'
 		}
 	})
@@ -172,9 +138,9 @@ function mapStateToProps(state) {
 	const repoState = state.get(RepoKey)
 
 	return {
-		theme: appState.theme,
-		issues: repoState.selectedIssues,
-		repos: repoState.repos,
+		theme:    appState.theme,
+		issues:   repoState.selectedIssues,
+		repos:    repoState.repos,
 		comments: repoState.comments
 	}
 }
@@ -200,6 +166,7 @@ export interface IIssueDetailPanelProps {
 
 @connect(mapStateToProps)
 @Radium
+@PureRender
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
@@ -210,17 +177,16 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	}
 
 
-
-	renderMulti(issues:Issue[],s) {
+	renderMulti(issues:Issue[], s) {
 		return <div>
 			{issues.length} selected issues
 		</div>
 	}
 
-	renderHeader(issue,repos,s) {
+	renderHeader(issue, s) {
 		const {header} = s,
-			{row1,row2,row3} = header,
-			repo = repos.find(repo => repo.id === issue.repoId)
+			{row1, row2, row3} = header,
+			{repo} = issue
 
 
 		return <div style={header}>
@@ -236,7 +202,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 				        prefixStyle={{padding: '0 0.5rem 0 0'}}
 				        labelPlacement='before'
 				        labelStyle={s.username}
-				        avatarStyle={s.avatar} />
+				        avatarStyle={s.avatar}/>
 
 
 			</div>
@@ -258,11 +224,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			</div>
 
 
-
 		</div>
 	}
 
-	renderFooter(issue,s) {
+	renderFooter(issue, s) {
 		return <div style={s.footer}>
 			<div >
 				add comment here
@@ -270,42 +235,45 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		</div>
 	}
 
-	renderBody(issue,s) {
-		return (issue.body) ? <div style={s.content.body}>
-			<Markdown source={issue.body}/>
-		</div> : <div/>
+	renderBody(issue, s) {
+		const
+			{activity} = s.content.activities
+
+		return <IssueActivityText
+			key={issue.id}
+			user={issue.user}
+			text={issue.body}
+			activityActionText='posted issue'
+			activityType='post'
+			createdAt={issue.created_at}
+			updatedAt={issue.updated_at}
+			issue={issue}
+			activityStyle={activity}/>
+
 	}
 
 
 	// COMMENT
-	renderComment(issue,comment,s) {
+	renderComment(issue, comment, s) {
 		const
-			{activity} = s.content.activities,
-			{comment:commentStyle} = activity,
-			timeStyle = makeStyle(s.time,commentStyle.details.time)
+			{activity} = s.content.activities
 
-		log.info(`Rendering comment`,comment)
-		return <div style={activity}  key={comment.id}>
-			{/* COMMENTOR AVATAR*/}
-			<Avatar user={comment.user}
-			        style={activity.user}
-			        labelPlacement='none'
-			        avatarStyle={makeStyle(s.avatar,activity.avatar)} />
 
-			<div style={commentStyle}>
-				<div style={commentStyle.details}>
-					<div style={commentStyle.details.username}>{comment.user.login}</div>
-					<div style={timeStyle}>commented {moment(comment.created_at).fromNow()}</div>
-					{comment.created_at !== comment.updated_at &&
-						<div style={timeStyle}>updated {moment(comment.updated_at).fromNow()}</div>}
-				</div>
-				<Markdown className={`markdown issue-${issue.id}`}  style={commentStyle.body} source={comment.body}/>
+		log.info(`Rendering comment`, comment)
+		return <IssueActivityText
+			key={comment.id}
+			user={comment.user}
+			text={comment.body}
+			activityActionText='commented'
+			activityType='comment'
+			createdAt={comment.created_at}
+			updatedAt={comment.updated_at}
+			issue={issue}
+			activityStyle={activity}/>
 
-			</div>
-		</div>
 	}
 
-	renderActivities(issue,comments,s) {
+	renderActivities(issue, comments, s) {
 		comments = comments || []
 
 		const
@@ -314,42 +282,45 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			{activity} = activities
 
 		return <div style={activities}>
-			{comments.map(comment => this.renderComment(issue,comment,s))}
+			{comments.map(comment => this.renderComment(issue, comment, s))}
 		</div>
 	}
 
-	renderIssue(issue:Issue,comments:Comment[],repos,s) {
+	renderIssue(issue:Issue, comments:Comment[], s) {
 		const {content} = s
 
 		return <div style={s.issue}>
 			<Style
 				scopeSelector={`.markdown.issue-${issue.id}`}
-			    rules={s.markdown}
+				rules={s.markdown}
 			/>
-			{this.renderHeader(issue,repos,s)}
+
+			{this.renderHeader(issue, s)}
 
 			{/* Issue Detail Body */}
 			<div style={content}>
 				<div style={content.wrapper}>
 
-					{this.renderBody(issue,s)}
-					{this.renderActivities(issue,comments,s)}
+					{this.renderBody(issue, s)}
+					{this.renderActivities(issue, comments, s)}
 				</div>
 			</div>
-			{this.renderFooter(issue,s)}
+
+			{this.renderFooter(issue, s)}
+
 		</div>
 	}
 
 	render() {
 		const
-			{issues,theme,repos,comments} = this.props,
-			s = mergeStyles(styles,theme.issueDetail)
+			{issues, theme, comments} = this.props,
+			s = mergeStyles(styles, theme.issueDetail)
 
 		return <div style={s.root}>
 			{issues.length === 0 ? <div/> :
 				issues.length > 1 ?
-					this.renderMulti(issues,s) :
-					this.renderIssue(issues[0],comments,repos,s)
+					this.renderMulti(issues, s) :
+					this.renderIssue(issues[0], comments, s)
 			}
 		</div>
 	}

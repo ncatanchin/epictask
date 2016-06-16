@@ -70,6 +70,7 @@ function mapStateToProps(state) {
  */
 export interface ILabelFieldEditorProps extends React.DOMAttributes {
 	theme?:any
+	style?:any
 	id:string
 
 	label?:string
@@ -143,12 +144,12 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	}
 
 	onChipSelected = (newLabel) => {
-		log.info('selected label',newLabel)
+		log.debug('selected label',newLabel)
 		this.props.onLabelsChanged(this.props.labels.concat([newLabel]))
 	}
 
 	onChipRemoved = (oldLabel) => {
-		log.info('removed label',oldLabel)
+		log.debug('removed label',oldLabel)
 		this.props.onLabelsChanged(this.props.labels.filter(label => label.url !== oldLabel.url))
 	}
 
@@ -213,7 +214,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 
 
 		return <ChipsField {...props}
-							style={s.root}
+							style={makeStyle(s.root,props.style)}
 							maxSearchResults={5}
 		                    modelType={Label}
 		                    filterChip={this.chipFilter}

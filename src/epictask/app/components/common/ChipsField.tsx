@@ -138,7 +138,13 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	componentWillReceiveProps(nextProps) {
-		this.setState({dataSource:this.makeDataSource(nextProps.allChips)})
+		if (this.state && _.isEqual(this.state.allChips,nextProps.allChips))
+			return
+
+		this.setState({
+			allChips:nextProps.allChips,
+			dataSource:this.makeDataSource(nextProps.allChips)
+		})
 	}
 
 	makeDataSource(items) {

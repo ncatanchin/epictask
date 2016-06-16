@@ -10,6 +10,7 @@ import {
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Label} from './Label'
+import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 import {LunrIndex} from 'shared/LunrIndex'
@@ -55,6 +56,16 @@ export class Issue extends DefaultModel {
 
 	@AttributeDescriptor()
 	url: string;
+
+
+	@AttributeDescriptor({transient:true})
+	repo:Repo
+
+	@AttributeDescriptor({transient:true})
+	milestones:Milestone[]
+
+	@AttributeDescriptor({transient:true})
+	collaborators:User[]
 
 	repository_url: string;
 	labels_url: string;

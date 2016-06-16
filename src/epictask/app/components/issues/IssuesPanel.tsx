@@ -12,7 +12,7 @@ import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
 
-import {Renderers,Avatar} from '../common'
+import {PureRender,Renderers,Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
 import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
@@ -29,7 +29,12 @@ const appActions = new AppActionFactory()
 
 const styles = {
 	panel:          makeStyle(Fill, {}),
-	panelSplitPane: makeStyle(Fill),
+	panelSplitPane: makeStyle(Fill, {
+		' > .Pane2': makeStyle(OverflowHidden,{
+
+		})
+
+	}),
 	listContainer:  makeStyle(FlexColumn, FlexScale,FillWidth,FillHeight,{
 		overflow: 'auto'
 	}),
@@ -121,7 +126,6 @@ export interface IIssuesPanelProps {
 	theme?:any
 	issues?:Issue[]
 	selectedIssues?:Issue[]
-	repos?:Repo[]
 }
 
 function mapStateToProps(state) {
@@ -129,7 +133,6 @@ function mapStateToProps(state) {
 	const repoState = state.get(RepoKey)
 
 	return {
-		repos: repoState.repos,
 		theme:          appState.theme,
 		issues:         repoState.issues,
 		selectedIssues: repoState.selectedIssues
@@ -145,15 +148,11 @@ function mapStateToProps(state) {
 
 @connect(mapStateToProps)
 @Radium
+@PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
-
-	shouldComponentUpdate:Function
-
 
 	constructor(props) {
 		super(props)
-
-		this.shouldComponentUpdate = PureRenderMixin.shouldComponentUpdate.bind(this)
 	}
 
 	onIssueSelected = (event, issue) => {
@@ -175,8 +174,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	renderIssue(issue, s) {
 		const
-			{selectedIssues,repos,theme} = this.props,
-			repo = repos.find(repo => repo.id === issue.repoId),
+			{selectedIssues,issues,theme} = this.props,
+			{repo,labels} = issue,
 			selectedIssueIds = selectedIssues.map(issue => issue.id),
 			selectedMulti = selectedIssueIds.length > 1,
 			selected = selectedIssueIds.includes(issue.id),
@@ -223,7 +222,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 				<div style={s.issueBottomRow}>
 
 					{/* LABELS */}
-					<IssueLabels labels={issue.labels} style={s.issueLabels}/>
+					<IssueLabels labels={labels} style={s.issueLabels}/>
 
 					{/* MILESTONE */}
 					{issue.milestone && <div style={s.issueMilestone}>
@@ -254,11 +253,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			           className='issuePanelSplitPane'>
 
 				<div style={themeStyles.listContainer}>
-					<CSSTransitionGroup transitionName='issue'
-					                    transitionEnterTimeout={200}
-					                    transitionLeaveTimeout={200}>
+					{/*<CSSTransitionGroup transitionName='issue'*/}
+					                    {/*transitionEnterTimeout={200}*/}
+					                    {/*transitionLeaveTimeout={200}>*/}
 						{issues.map(issue => this.renderIssue(issue, themeStyles))}
-					</CSSTransitionGroup>
+					{/*</CSSTransitionGroup>*/}
 
 				</div>
 				<IssueDetailPanel />

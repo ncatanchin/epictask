@@ -2,6 +2,7 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {Settings} from './Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
+import {cloneObject} from 'shared/util'
 const {URLSearchParams} = require('urlsearchparams')
 
 const log = getLogger(__filename)
@@ -49,13 +50,13 @@ export class GitHubClient {
 	constructor(private token:string) {
 	}
 
-	initRequest(method:HttpMethod,body = null) {
+	initRequest(method:HttpMethod,body = null,headers:any = {}) {
 		const request:RequestInit = {
 			method: HttpMethod[method],
 			cache: "no-cache" as RequestCache,
-			headers: {
+			headers: Object.assign({
 				Authorization: `token ${this.token}`
-			},
+			},headers),
 			mode: "cors" as RequestMode
 		}
 
@@ -80,6 +81,10 @@ export class GitHubClient {
 				.forEach(key => query.append(key,opts.params[key]))
 
 		let response =  await fetch(makeUrl(path,query),this.initRequest(HttpMethod.GET))
+
+		if (response.status >= 300) {
+			throw new Error(response.statusText)
+		}
 
 		const headers = response.headers
 		headers.forEach((value,name) => {
@@ -130,6 +135,53 @@ export class GitHubClient {
 		}
 	}
 
+
+	async issueSave(repo:Repo,issue:Issue):Promise<Issue> {
+		let issueJson = _.pick(issue,'title','body','state') as any
+		if (!issueJson.state)
+			issueJson.state = 'open'
+
+		if (issue.assignee)
+			issueJson.assignee == issue.assignee.login
+
+		if (issue.labels && issue.labels.length) {
+			issueJson.labels = issue.labels.map(label => label.name)
+		}
+
+		if (issue.milestone && issue.milestone.number) {
+			issueJson.milestone = issue.milestone.number
+		}
+
+		const issueNumber = issue.number
+		const [uri,method] = issueNumber ?
+			[`/repos/${repo.full_name}/issues/${issueNumber}`,HttpMethod.PATCH] :
+			[`/repos/${repo.full_name}/issues`,HttpMethod.POST]
+
+		const response = await fetch(makeUrl(uri), this.initRequest(method,JSON.stringify(issueJson),{
+			'Accept': 'application/json',
+			'Content-Type': 'application/json'
+		}))
+
+
+		if (response.status >= 300) {
+			let result = null
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+				throw new Error(response.statusText)
+			}
+
+			throw new Error(result.message)
+
+		}
+
+
+		let result = await response.json()
+
+		return _.merge(cloneObject(issue),result)
+
+	}
 
 	async user():Promise<User> {
 		return await this.get<GitHubSchema.User>('/user',User)

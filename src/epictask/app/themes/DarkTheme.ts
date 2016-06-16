@@ -21,7 +21,7 @@ const theme = makeTheme(
 	['l400', 'l300', 'l200', 'l100'],
 	Palettes.teal,
 	['l400', 'l200', 'l100', 'l50'],
-	Palettes.deepOrange,
+	Palettes.red,
 	['l400', 'l200', 'l100', 'l50'],
 	Palettes.black,
 	true
@@ -138,6 +138,22 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 					borderColor: accent.hue1
 				}
 			}
+		},
+
+		menu: {
+			color: primary.hue1,
+			fill: primary.hue3,
+			backgroundColor: text.primary
+		},
+
+		menuItem: {
+			color: primary.hue1,
+			backgroundColor: text.primary,
+			hover: {
+				color: text.primary + ' !important',
+				backgroundColor: accent.hue1 + ' !important'
+			}
+
 		},
 
 		input: {
@@ -379,9 +395,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 			row1: {
 				repo: {
 					color: accent.hue2
-					//color: secondary.hue1
-					//color: tinycolor(secondary.hue1).lighten(5)
-					//color: tinycolor(secondary.hue1).lighten()
 				}
 			}
 		},
@@ -392,14 +405,31 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 			activities: {
 				activity: {
-					user: {
-						backgroundColor: secondary.hue1,
-						borderColor:     primary.hue1,
+
+
+					post: {
+						backgroundColor: primary.hue2,
+						borderColor:     tinycolor(accent.hue1),
+
+						user: {
+							backgroundColor: accent.hue1,
+							borderColor:     primary.hue1,
+						},
+
+						details: {
+							backgroundColor: accent.hue1,
+							color:           text.primary
+						}
 					},
 
 					comment: {
 						backgroundColor: primary.hue2,
 						borderColor:     tinycolor(secondary.hue1),
+
+						user: {
+							backgroundColor: secondary.hue1,
+							borderColor:     primary.hue1,
+						},
 
 						details: {
 							backgroundColor: secondary.hue1,

@@ -24,6 +24,7 @@ declare global {
 		PositionAbsolute:any,
 		FontBlack:any,
 		OverflowHidden:any,
+		createStyles: typeof CommonStyles.createStyles,
 		convertRem: typeof CommonStyles.convertRem,
 		makeTransition:typeof CommonStyles.makeTransition,
 		makeAbsolute:typeof CommonStyles.makeAbsolute,

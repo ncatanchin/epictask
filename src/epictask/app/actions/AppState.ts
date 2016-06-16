@@ -138,6 +138,12 @@ export class AppStateModel {
 		return this
 	}
 
+
+	updateSettings(newSettings:ISettings) {
+		this.settings = _.merge({},this.settings,newSettings)
+		return this
+	}
+
 }
 
 const AppStateDefaults = {

@@ -35,8 +35,9 @@ const visiblePropOpts = {onChange,jsonInclude:true}
 
 
 export interface ISettings {
-	isLoaded:boolean
-	token:string
+	isLoaded?:boolean
+	token?:string
+	disableAutoSync?:boolean
 }
 
 /**
@@ -54,6 +55,9 @@ class SettingsFile implements ISettings {
 
 	@Property(visiblePropOpts)
 	token:string
+
+	@Property(visiblePropOpts)
+	disableAutoSync:boolean
 
 	@Property(visiblePropOpts)
 	user:User

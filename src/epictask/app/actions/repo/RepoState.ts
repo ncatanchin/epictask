@@ -105,13 +105,12 @@ class RepoStateModel {
 
 	updateAvailableRepo(updatedAvailRepo:AvailableRepo) {
 		const index = this.availableRepos.findIndex(availRepo => availRepo.id === updatedAvailRepo.id)
-		this.availableRepos = Array.from(this.availableRepos)
+		if (index === -1)
+			return this
 
-		if (index > -1) {
-			this.availableRepos[index] = updatedAvailRepo
-		} else {
-			this.availableRepos.push(updatedAvailRepo)
-		}
+		const newAvailRepos = [...this.availableRepos]
+		newAvailRepos.splice(index,1,updatedAvailRepo)
+		this.availableRepos = newAvailRepos
 
 		return this
 
