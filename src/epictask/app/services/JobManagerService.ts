@@ -16,7 +16,7 @@ let scheduledJobs:{[name:string]:IScheduledJob} = {}
 
 const syncAllReposJob = {
 	name: 'Sync-Enabled Repos',
-	schedule: '*/2 * * * *', // Every 2 minutes
+	schedule: '*/10 * * * *', // Every 10 minutes
 	repeat: true,
 	oneAtATime: true,
 	executor: async (handler:JobHandler) => {

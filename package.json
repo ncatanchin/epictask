@@ -120,6 +120,7 @@
     "webpack-stream": "^3.2.0"
   },
   "dependencies": {
+    "animate.css": "^3.5.1",
     "babel-runtime": "^6.9.0",
     "bluebird": "^3.4.0",
     "client-oauth2": "^2.2.0",
@@ -152,11 +153,13 @@
     "react": "^15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
     "react-addons-pure-render-mixin": "^15.1.0",
+    "react-animate.css": "0.0.4",
     "react-component-resizable": "^1.0.0",
     "react-css-modules": "^3.7.6",
     "react-dom": "^15.0.2",
     "react-hotkeys": "^0.8.0",
     "react-ink": "^5.1.1",
+    "react-list": "^0.7.18",
     "react-markdown": "densebrain/react-markdown",
     "react-redux": "^4.4.5",
     "react-simplemde-editor": "^3.0.0",

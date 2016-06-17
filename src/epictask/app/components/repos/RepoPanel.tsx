@@ -95,9 +95,8 @@ function mapStateToProps(state) {
  * @constructor
  **/
 @connect(mapStateToProps)
-@Themeable()
 @Radium
-export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
+export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 	constructor(props, context) {
 		super(props, context)
@@ -130,7 +129,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,TRepoState> {
 					<div style={headerStyle}>
 						<div style={s.headerTitle}>Repositories</div>
 						<Button style={headerButtonStyle} onClick={this.onAddRepo}>
-							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'></Icon>
+							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
 						</Button>
 						{/*<Button style={headerButtonStyle} onClick={this.onLogout}>*/}
 							{/*<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='sign-out'></Icon>*/}

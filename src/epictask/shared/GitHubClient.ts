@@ -142,7 +142,7 @@ export class GitHubClient {
 			issueJson.state = 'open'
 
 		if (issue.assignee)
-			issueJson.assignee == issue.assignee.login
+			issueJson.assignee = issue.assignee.login
 
 		if (issue.labels && issue.labels.length) {
 			issueJson.labels = issue.labels.map(label => label.name)
@@ -199,7 +199,7 @@ export class GitHubClient {
 	/**
 	 * Helper function for building paged gets with repo param
 	 *
-	 * @param model
+	 * @param modelType
 	 * @param urlTemplate
 	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
 	 */

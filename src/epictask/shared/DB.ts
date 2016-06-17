@@ -2,46 +2,23 @@ import 'lunr'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
 import {AllLunrIndexes as Indexes} from './LunrIndex'
+import {IRepos} from './DBRepos'
 
 const log = getLogger(__filename)
 
-import {
-	Repo,
-	RepoRepo,
-	Milestone,
-	MilestoneRepo,
-	Issue,
-	IssueRepo,
-	Comment,
-	CommentRepo,
-	Label,
-	LabelRepo,
-	AvailableRepo,
-	AvailableRepoRepo,
-	Activity,
-	ActivityRepo,
-	User,
-	UserRepo
-}  from 'shared/models'
-
-export interface IRepos {
-	issue:IssueRepo
-	repo: RepoRepo
-	availableRepo: AvailableRepoRepo
-	milestone: MilestoneRepo
-	comment: CommentRepo
-	label: LabelRepo
-	activity: ActivityRepo
-	user: UserRepo
-}
-
+/**
+ * All global repositories
+ */
+export {IRepos}
 export const Repos:IRepos = {} as any
 
-
+/**
+ * References to coordinator and plugins
+ */
 export let coordinator:TSCoordinator = null
 export let storePlugin:IndexedDBPlugin = null
 
-
+// Started or not
 let started = false
 
 /**
@@ -57,7 +34,6 @@ export async function start() {
 	let {
 		Repo,
 		RepoRepo,
-		User,
 		Milestone,
 		MilestoneRepo,
 		Issue,
@@ -69,7 +45,9 @@ export async function start() {
 		AvailableRepo,
 		AvailableRepoRepo,
 		Activity,
-		ActivityRepo
+		ActivityRepo,
+		User,
+		UserRepo
 	}  = require('shared/models')
 
 
@@ -135,7 +113,7 @@ export function getRepo<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ()
 export {Indexes}
 
 if (module.hot) {
-	module.hot.accept(['shared/models'],updates => {
+	module.hot.accept(['shared/models','./DBRepos'],updates => {
 		log.info(`HMR received updates to models`, updates, 'restarting')
 		start()
 	})

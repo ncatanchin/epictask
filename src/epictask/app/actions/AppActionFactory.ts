@@ -8,6 +8,7 @@ import {AppState} from './AppState'
 import {User} from 'shared/models/User'
 import {cloneObject} from 'shared/util'
 
+
 const log = getLogger(__filename)
 
 function updateIssueTransients(issue,availableRepos) {
@@ -47,14 +48,13 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			const issue = this.state.editingIssue
 			if (!issue) return
 
-			const updatedIssue = Object.assign(cloneObject(issue),props)
+			const
+				{RepoActionFactory} = require('./repo/RepoActionFactory'),
+				{availableRepos} = getState().get(RepoKey)
 
-			if (updatedIssue.repoId !== issue.repoId || !updatedIssue.repo) {
-				updateIssueTransients(
-					updatedIssue,
-					getState().get(RepoKey).availableRepos
-				)
-			}
+			const updatedIssue = RepoActionFactory
+					.fillIssue(Object.assign(cloneObject(issue),props),availableRepos)
+
 
 			this.setEditingIssue(updatedIssue)
 		}
@@ -84,8 +84,31 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 				return
 			}
 
-			const issue = new Issue({repoId})
-			updateIssueTransients(issue,availableRepos)
+			const {RepoActionFactory} = require('./repo/RepoActionFactory')
+			const issue = RepoActionFactory.fillIssue(new Issue({repoId}),availableRepos)
+
+			actions.setEditingIssue(issue)
+			actions.setDialogOpen(dialogName,true)
+		}
+	}
+
+	@Action()
+	editIssue(issue:Issue = null) {
+		return (dispatch,getState) => {
+			const
+				actions = this.withDispatcher(dispatch,getState),
+				dialogName = Dialogs.IssueEditDialog
+
+
+			const repoState = getState().get(RepoKey),
+				{availableRepos} = repoState,
+				{RepoActionFactory} = require('./repo/RepoActionFactory')
+
+
+			issue = issue || repoState.selectedIssue
+			assert(issue,'You must have an issue selected in order to edit one ;)')
+
+			issue = RepoActionFactory.fillIssue(issue,availableRepos)
 
 			actions.setEditingIssue(issue)
 			actions.setDialogOpen(dialogName,true)

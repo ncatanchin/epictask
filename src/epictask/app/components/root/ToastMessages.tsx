@@ -5,6 +5,7 @@
 //region Imports
 import * as React from 'react'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
+
 import * as Radium from 'radium'
 import {Snackbar, FlatButton} from 'material-ui'
 import {connect} from 'react-redux'
@@ -14,6 +15,7 @@ import {AppActionFactory} from 'app/actions'
 import {Icon, Button} from 'app/components'
 import {Themeable} from 'app/ThemeManager'
 const {Style} = Radium
+
 //endregion
 
 //region Logger
@@ -32,7 +34,8 @@ const styles = {
 		right:           0,
 		bottom:          0,
 		left:            'auto',
-		padding:         '2rem'
+		padding:         '2rem',
+		zIndex: 99999
 	}),
 	transitionGroup: makeStyle(makeTransition(), FlexColumn, FlexAlignEnd, {}),
 	toastMessagesTransition: {
@@ -57,19 +60,23 @@ const styles = {
 		backgroundColor: 'transparent',
 		display:         'block'
 	}),
+
 	toast:        makeStyle(makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd, {
 		backgroundColor: 'transparent',
 		margin:          '0.5rem',
 		width:           '100%',
 		maxWidth:        '100%',
-		maxHeight:       '100%'
+		maxHeight:       '100%',
+		animationDuration: '1s',
+		animationIterationCount: '2'
 
 	}),
 	toastContent: makeStyle(FlexRowCenter, {
 		borderRadius: '0.2rem',
 		maxWidth:     '100%',
 		maxHeight:    '100%',
-		padding:      '0 0 0'
+		padding:      '0 0 0',
+
 	}),
 	icon:         makeStyle({
 		display: 'block',
@@ -171,11 +178,8 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * Render an individual message
 	 *
 	 * @param msg
-	 * @param isError
-	 * @param isInfo
-	 * @param palette
-	 * @param styles
 	 * @returns {any}
+	 * @param props
 	 */
 	renderMessageContent(msg, props) {
 
@@ -201,10 +205,10 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 		// Construct the message
 		return <div key={msg.id}
-		            className='toastMessage'
+		            className='toastMessage animated bounce'
 		            style={s.toast}>
 
-			<div style={[s.toastContent,bg]}>
+			<div style={[s.toastContent,bg]} className=''>
 				{(isError) ? <Icon style={[s.icon,fg]}>error_outline</Icon> :
 					(isInfo) ? <Icon style={[s.icon,fg]}>info_outline</Icon> :
 						null}
@@ -230,6 +234,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 		return <div style={s.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
 			       rules={_.merge({},s.transitionGroup,s.toastMessagesTransition)}/>
+
 			<CSSTransitionGroup
 				className='toastMessageTransitionGroup'
 				transitionName="toastMessages"
@@ -237,6 +242,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 				transitionAppearTimeout={250}
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
+
 				{this.state.messageWrappers.map(wrapper => wrapper.component)}
 
 			</CSSTransitionGroup>

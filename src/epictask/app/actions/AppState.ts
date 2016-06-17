@@ -13,6 +13,7 @@ import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models
 import {User,Issue} from 'shared/models'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from 'shared/Settings'
+import {cloneObject} from 'shared/util'
 import * as uuid from 'node-uuid'
 
 /**
@@ -81,7 +82,7 @@ export class AppStateModel {
 	}
 
 	setEditingIssue(issue:Issue) {
-		this.editingIssue = issue
+		this.editingIssue = cloneObject(issue)
 		return this
 	}
 

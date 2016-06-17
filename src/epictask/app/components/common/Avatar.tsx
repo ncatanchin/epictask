@@ -86,7 +86,10 @@ export class Avatar extends React.Component<IAvatarProps,any> {
 			isNone = labelPlacement === 'none'
 
 		const prefix = <div style={makeStyle(s.prefix,props.prefixStyle)}>{(props.prefix) ? ' ' + props.prefix : ''}</div>
-		const usernameLabel = <div style={makeStyle(s.label,props.labelStyle)}>{user ? user.login : 'unassigned'}</div>
+		const usernameLabel = <div style={makeStyle(s.label,props.labelStyle)}>
+			{user ? (user.name ? `${user.name} <${user.login}>` : user.login) :
+				'unassigned'}
+			</div>
 
 		const avatarStyle = makeStyle(
 			s.avatar,

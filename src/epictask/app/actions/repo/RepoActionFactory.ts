@@ -10,12 +10,12 @@ const log = getLogger(__filename)
 
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
-import {RepoKey,RepoTransientProps,Dialogs} from "shared/Constants"
+import {RepoKey,Dialogs} from "shared/Constants"
 import {Repos} from 'shared/DB'
 import {cloneObject} from 'shared/util/ObjectUtil'
-import {LunrIndex} from 'shared/LunrIndex'
 
-import {SyncStatus,ISyncDetails,Comment,Activity,ActivityRepo,ActivityType} from 'shared/models'
+
+import {SyncStatus,ISyncDetails,Comment} from 'shared/models'
 import {RepoState} from './RepoState'
 import {RepoMessage} from './RepoReducer'
 import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
@@ -33,6 +33,29 @@ import {RepoSyncJob} from './RepoSyncJob'
  **/
 
  export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
+
+
+	/**
+	 * Add transient properties to `Issue`
+	 * repo, milestones, collaborators
+	 *
+	 * @param issue
+	 * @param availableRepos
+	 * @returns {Issue}
+	 */
+	static fillIssue(issue:Issue,availableRepos:AvailableRepo[]) {
+		issue = cloneObject(issue)
+
+		const availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
+		assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
+		Object.assign(issue, {
+			repo: availRepo.repo,
+			milestones: [...availRepo.milestones],
+			collaborators: [...availRepo.collaborators]
+		})
+
+		return issue
+	}
 
 	constructor() {
 		super(RepoState)
@@ -59,6 +82,32 @@ import {RepoSyncJob} from './RepoSyncJob'
 	@Action()
 	setIssues(issues:Issue[]) {}
 
+	@Action()
+	issuesChanged(...updatedIssues:Issue[]) {
+		return(dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch,getState)
+			const repoState = actions.state
+
+			for (let updatedIssue of updatedIssues) {
+				let index = repoState.issues.findIndex(issue => issue.url === updatedIssue.url)
+				if (index > -1) {
+					const newIssues = [...repoState.issues]
+					newIssues[index] = cloneObject(updatedIssue)
+					actions.setIssues(newIssues)
+				}
+
+				index = repoState.selectedIssues.findIndex(issue => issue.url === updatedIssue.url)
+				if (index > -1) {
+					const newIssues = [...repoState.selectedIssues]
+					newIssues[index] = cloneObject(updatedIssue)
+					actions.setSelectedIssues(newIssues)
+				}
+
+				if (repoState.issue && repoState.issue.url === updatedIssue.url)
+					actions.setIssue(updatedIssue)
+			}
+		}
+	}
 
 	@Action()
 	setAvailableRepos(repos:AvailableRepo[]) {
@@ -66,12 +115,14 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 	@Action()
 	issueSave(issue:Issue) {
-		return async (dispatch,getState) => {
+		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const client = github.createClient()
 
-			const {repos} = this.state
-			const repo = issue.repo || repos.find(item => item.id === issue.repoId)
+			const
+				repoState = this.state,
+				{repos} = repoState,
+				repo = issue.repo || repos.find(item => item.id === issue.repoId)
 
 
 			return client.issueSave(repo,issue)
@@ -81,10 +132,15 @@ import {RepoSyncJob} from './RepoSyncJob'
 				.then(savedIssue => {
 					require('app/services/ToastService').addMessage(`Saved issue #${savedIssue.number}`)
 
+
+
+					actions.issuesChanged(savedIssue)
+
 					const appActions = new AppActionFactory()
 					appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
 				})
 				.catch(err => {
+					log.error('failed to save issue', err)
 					require('app/services/ToastService').addErrorMessage(err)
 				})
 
@@ -311,9 +367,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 		}
 	}
 
-	fillIssue(issue:Issue) {
 
-	}
 
 	@Action()
 	loadIssues() {
@@ -338,19 +392,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 			 * 2. Make sure we have a valid repo
 			 * 3. Copy transient repo,milestones,collaborators,etc
 			 */
-			issues = issues.map(issue => {
-				issue = cloneObject(issue)
-
-				const availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-				assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
-				Object.assign(issue, {
-					repo: availRepo.repo,
-					milestones: [...availRepo.milestones],
-					collaborators: [...availRepo.collaborators]
-				})
-
-				return issue
-			})
+			issues = issues.map(issue => RepoActionFactory.fillIssue(issue,availableRepos))
 
 			actions.setIssues(issues)
 		}

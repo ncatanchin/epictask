@@ -61,8 +61,10 @@ function getReducers():ILeafReducer<any,any>[] {
 	const reducers = []
 	mods.forEach(mod => {
 		for (let key of Object.keys(mod)) {
-			if (_.endsWith(key,'Reducer'))
-				reducers.push(new (mod[key])())
+			if (_.endsWith(key,'Reducer')) {
+				const reducerClazz = mod[key]
+				reducers.push(new reducerClazz())
+			}
 		}
 	})
 
@@ -76,6 +78,7 @@ function onChange() {
 	log.debug(`Store state changed`)
 
 }
+
 
 function getDebugSessionKey() {
 	// You can write custom logic here!

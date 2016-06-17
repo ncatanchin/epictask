@@ -151,7 +151,7 @@ export interface IAppProps {
 	theme:any
 	stateType:AppStateType
 	hasAvailableRepos:boolean
-	adjustedBodyStyle:any
+	//adjustedBodyStyle:any
 }
 
 
@@ -167,7 +167,7 @@ function mapStateToProps(state) {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
 		hasAvailableRepos: availableRepos && availableRepos.length > 0,
-		adjustedBodyStyle: getAdjustedBodyStyle(this)
+		//adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
 }
 
@@ -195,6 +195,11 @@ class App extends React.Component<IAppProps,any> {
 			log.info('New issue keys pressed - making dialog visible')
 			appActions.newIssue()
 		},
+
+		[KeyMaps.CommonKeys.Edit]: () => {
+			log.info('Edit issue keys pressed - making dialog visible')
+			appActions.editIssue()
+		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
 			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
@@ -206,7 +211,8 @@ class App extends React.Component<IAppProps,any> {
 	 * Render the app container
 	 */
 	render() {
-		const {hasAvailableRepos,stateType,theme,adjustedBodyStyle} = this.props,
+		//adjustedBodyStyle
+		const {hasAvailableRepos,stateType,theme} = this.props,
 			{palette} = theme
 
 		const page = {component: getPage(stateType)},
@@ -233,7 +239,7 @@ class App extends React.Component<IAppProps,any> {
 
 						{/* Global flex box */}
 						<div className="fill-height fill-width"
-						     style={makeStyle(styles.content,theme.app,adjustedBodyStyle)}>
+						     style={makeStyle(styles.content,theme.app)}>
 
 							<Header visibility={headerVisibility}/>
 

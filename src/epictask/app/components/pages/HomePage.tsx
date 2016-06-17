@@ -9,7 +9,7 @@ import {AppActionFactory} from 'app/actions/AppActionFactory'
 import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
-import {Icon} from '../common'
+import {Icon,PureRender} from '../common'
 import {RepoKey} from 'shared/Constants'
 
 const Resizable = require('react-component-resizable')
@@ -23,26 +23,20 @@ const styles = {
 }
 
 interface IHomeProps {
-	repo?:Repo
-	repos?:Repo[]
-	addRepoDialog?:boolean
 
 }
 
 function mapToProps(state) {
 	const repoState = state.get(RepoKey)
 
-	return {
-		repo: repoState.repo,
-		repos: repoState.repos,
-		addRepoDialog: appActions.state.stateType === AppStateType.RepoAdd
-	}
+	return {}
 }
 
 /**
  * The root container for the app
  */
 @connect(mapToProps)
+@PureRender
 export class HomePage extends React.Component<IHomeProps,any> {
 
 	constructor(props, context) {
@@ -79,35 +73,16 @@ export class HomePage extends React.Component<IHomeProps,any> {
 			/>,
 		]
 
-		const repos = this.props.repos || []
-
-		const bodyContent = (repos.length) ?
-			<Resizable onResize={this.onResize} style={styles.bodyWrapper}>
-				<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}>
-					<RepoPanel />
-					<IssuesPanel />
-				</SplitPane>
-			</Resizable>
-		:
-			<Icon onClick={() => appActions.setStateType(AppStateType.RepoAdd)}>add</Icon>
 
 
 		return (
 			<Page>
-				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				{/*Repo list*/}
-
-
-				{/* If there are no repos then show an add button */}
-				{bodyContent}
-
-				<Dialog
-					title="add a repo..."
-					modal={true}
-					open={this.props.addRepoDialog}
-				    actions={addRepoActions}>
-					Add repo here
-				</Dialog>
+				<Resizable onResize={this.onResize} style={styles.bodyWrapper}>
+					<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}>
+						<RepoPanel />
+						<IssuesPanel />
+					</SplitPane>
+				</Resizable>
 			</Page>
 		)
 	}

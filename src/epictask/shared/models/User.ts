@@ -26,6 +26,10 @@ export class User extends DefaultModel {
 
 	@AttributeDescriptor()
 	repoIds: string[]
+
+
+
+	name:string
 	avatar_url: string;
 	gravatar_id: string;
 	url: string;

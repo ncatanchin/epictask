@@ -69,7 +69,6 @@ function mapToProps(state) {
 	const repoState = state.get(RepoKey)
 	const appState = state.get(AppKey)
 	return {
-		repos: repoState.repos,
 		availableRepos: repoState.availableRepos,
 		selectedRepos: repoState.selectedRepos,
 		theme: appState.theme
@@ -105,7 +104,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 	render() {
 
-		const {availableRepos,repos,theme,selectedRepos = []} = this.props
+		const {availableRepos,theme,selectedRepos = []} = this.props
 
 		const themeStyles = theme.repoPanel
 

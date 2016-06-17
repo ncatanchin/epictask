@@ -259,7 +259,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			{activity} = s.content.activities
 
 
-		log.info(`Rendering comment`, comment)
 		return <IssueActivityText
 			key={comment.id}
 			user={comment.user}

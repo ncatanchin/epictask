@@ -81,7 +81,7 @@ class RepoStateModel {
 	}
 
 	setSelectedIssues(selectedIssues:Issue[]) {
-		this.selectedIssues = selectedIssues
+		this.selectedIssues = [...selectedIssues]
 
 		// if the length is 1 or 0 then we update the base
 		// selected issue id for an appropriate reset value

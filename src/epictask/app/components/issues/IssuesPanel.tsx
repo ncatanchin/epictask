@@ -5,21 +5,23 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import * as PureRenderMixin from 'react-addons-pure-render-mixin'
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
 
-import {PureRender,Renderers,Avatar} from '../common'
+import {PureRender, Renderers, Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
 import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'app/actions/repo/RepoActionFactory'
 import {AppActionFactory} from 'app/actions/AppActionFactory'
 
-import {Issue,Repo} from 'shared/models'
+import {Issue, Repo} from 'shared/models'
 import {RepoKey, AppKey} from 'shared/Constants'
+import {cloneObject} from 'shared/util'
+
+// Non-typed Components
+const ReactList = require('react-list')
 
 // Constants
 const log = getLogger(__filename)
@@ -30,69 +32,64 @@ const appActions = new AppActionFactory()
 const styles = {
 	panel:          makeStyle(Fill, {}),
 	panelSplitPane: makeStyle(Fill, {
-		' > .Pane2': makeStyle(OverflowHidden,{
-
-		})
+		' > .Pane2': makeStyle(OverflowHidden, {})
 
 	}),
-	listContainer:  makeStyle(FlexColumn, FlexScale,FillWidth,FillHeight,{
+	listContainer:  makeStyle(FlexColumn, FlexScale, FillWidth, FillHeight, {
 		overflow: 'auto'
 	}),
 
 	issue: makeStyle(FlexRow, FlexAuto,
-		FillWidth,FlexAlignStart, makeTransition(['background-color']),{
+		FillWidth, FlexAlignStart, makeTransition(['background-color']), {
 
-		padding: '1.5rem 1rem 1.5rem 1rem',
-		cursor: 'pointer',
-		boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
+			padding:   '1.5rem 1rem 1.5rem 1rem',
+			cursor:    'pointer',
+			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 
-		// Avatar component
-		avatar: makeStyle({
-			padding: '0 1rem'
-		})
-	}),
+			// Avatar component
+			avatar: makeStyle({
+				padding: '0 1rem'
+			})
+		}),
 
 
-	issueSelected: makeStyle({
-
-	}),
+	issueSelected: makeStyle({}),
 
 	issueMarkers: makeStyle(FlexColumn, FlexAuto, {
-		minWidth: '1rem',
+		minWidth:      '1rem',
 		pointerEvents: 'none'
 	}),
 
 
-
-	issueDetails: makeStyle(FlexColumn, FlexScale, FillWidth,OverflowHidden, {
+	issueDetails: makeStyle(FlexColumn, FlexScale, FillWidth, OverflowHidden, {
 		pointerEvents: 'none'
 	}),
 
-	issueRepoRow:makeStyle(FlexRow,makeFlexAlign('stretch','center'),{
+	issueRepoRow: makeStyle(FlexRow, makeFlexAlign('stretch', 'center'), {
 		pointerEvents: 'none'
 	}),
 
-	issueRepo: makeStyle(Ellipsis,FlexRow,FlexScale,{
+	issueRepo: makeStyle(Ellipsis, FlexRow, FlexScale, {
 		fontSize: themeFontSize(1),
-		padding: '0 0 0.5rem 0.5rem'
+		padding:  '0 0 0.5rem 0.5rem'
 	}),
 
-	issueTitleRow: makeStyle(FlexRowCenter,FillWidth,OverflowHidden,{
-		padding:  '0 1rem 1rem 0.5rem',
+	issueTitleRow: makeStyle(FlexRowCenter, FillWidth, OverflowHidden, {
+		padding:       '0 1rem 1rem 0.5rem',
 		pointerEvents: 'none'
 	}),
 
-	issueTitleTime: makeStyle(FlexAuto,{
+	issueTitleTime: makeStyle(FlexAuto, {
 		// alignSelf: 'flex-end',
-		fontSize: themeFontSize(1),
+		fontSize:   themeFontSize(1),
 		fontWeight: 100,
 	}),
 
-	issueTitle:   makeStyle(Ellipsis,FlexScale,{
-		display: 'block',
+	issueTitle: makeStyle(Ellipsis, FlexScale, {
+		display:    'block',
 		fontWeight: 300,
-		fontSize: themeFontSize(1.4),
-		padding: '0 1rem 0 0'
+		fontSize:   themeFontSize(1.4),
+		padding:    '0 1rem 0 0'
 	}),
 
 
@@ -100,101 +97,87 @@ const styles = {
 		fontWeight: 500
 	}),
 
-	issueBottomRow: makeStyle(FlexRowCenter,{
+	issueBottomRow: makeStyle(FlexRowCenter, {
 		margin: '0.5rem 0 0.3rem 0.5rem',
 	}),
 
-	issueMilestone: makeStyle(FlexAuto,Ellipsis,{
+	issueMilestone: makeStyle(FlexAuto, Ellipsis, {
 		fontSize: themeFontSize(1),
-		padding: '0 1rem'
+		padding:  '0 1rem'
 	}),
 
 
-
-	issueLabels: makeStyle(FlexScale,{
+	issueLabels: makeStyle(FlexScale, {
 		padding: '0 1rem 0 0'
 	})
 
 
 }
 
-
-/**
- * IIssuesPanelProps
- */
-export interface IIssuesPanelProps {
-	theme?:any
-	issues?:Issue[]
-	selectedIssues?:Issue[]
-}
-
-function mapStateToProps(state) {
-	const appState = state.get(AppKey)
+function mapStateToItemProps(state,props) {
 	const repoState = state.get(RepoKey)
 
+	const
+		{index} = props,
+		{issues,selectedIssues} = repoState
+
+	const
+		issue = issues[index],
+		selected = issue && selectedIssues.find(item => item.id === issue.id),
+		selectedMulti = selectedIssues.length > 1
+
 	return {
-		theme:          appState.theme,
-		issues:         repoState.issues,
-		selectedIssues: repoState.selectedIssues
+		issue,selected,selectedMulti
 	}
+
 }
 
-/**
- * IssuesPanel
- *
- * @class IssuesPanel
- * @constructor
- **/
+interface IIssueItemProps extends React.DOMAttributes {
+	issue?:Issue
+	selected?:boolean
+	selectedMulti?:boolean
 
-@connect(mapStateToProps)
-@Radium
+	index:number
+	s:any
+	onSelected:(event:any, issue:Issue) => void
+}
+
 @PureRender
-export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
+@connect(mapStateToItemProps)
+class IssueItem extends React.Component<IIssueItemProps,any> {
 
 	constructor(props) {
 		super(props)
 	}
 
-	onIssueSelected = (event, issue) => {
-		if (event.metaKey) {
-			let {selectedIssues} = this.props
-			const wasSelected = !_.isNil(selectedIssues.find(selectedIssue => selectedIssue.id === issue.id))
-			selectedIssues = (wasSelected) ? selectedIssues.filter(selectedIssue => selectedIssue.id !== issue.id) :
-				selectedIssues.concat([issue])
-
-			repoActions.setSelectedIssues(selectedIssues)
-		} else {
-			repoActions.setSelectedIssues([issue])
-		}
-		log.info('Received issue select')
-	}
 
 
-
-
-	renderIssue(issue, s) {
+	render() {
 		const
-			{selectedIssues,issues,theme} = this.props,
-			{repo,labels} = issue,
-			selectedIssueIds = selectedIssues.map(issue => issue.id),
-			selectedMulti = selectedIssueIds.length > 1,
-			selected = selectedIssueIds.includes(issue.id),
+			{props} = this,
+			{s,issue, selectedMulti, selected, onSelected} = props
 
-			issueStyles = [
+		if (!issue)
+			return <div/>
+
+		const
+			{repo, labels} = issue,
+
+			issueStyles = makeStyle(
 				s.issue,
-				selected  && s.issueSelected,
+				selected && s.issueSelected,
 				(selected && selectedMulti) && s.issueSelectedMulti
-			],
-			issueTitleStyle = [
+			),
+			issueTitleStyle = makeStyle(
 				s.issueTitle,
 				selected && s.issueTitleSelected,
 				selectedMulti && s.issueTitleSelectedMulti
-			]
+			)
 
-		return <div key={issue.id}
-		            style={issueStyles}
-		            selected={selected}
-		            onClick={(event) => this.onIssueSelected(event,issue)}>
+		return <div {...props} style={issueStyles}
+		                       selected={selected}
+		                       className={selected ? 'selected' : ''}
+		                       onClick={(event) => onSelected(event,issue)}>
 
 			<div style={s.issueMarkers}></div>
 			<div style={s.issueDetails}>
@@ -209,7 +192,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 					        style={s.issue.avatar}
 					        labelPlacement='before'
 					        labelStyle={s.username}
-					        avatarStyle={s.avatar} />
+					        avatarStyle={s.avatar}/>
 
 				</div>
 
@@ -233,14 +216,102 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		</div>
 
 	}
+}
+
+/**
+ * IIssuesPanelProps
+ */
+export interface IIssuesPanelProps {
+	theme?:any
+	issues?:Issue[]
+	selectedIssues?:Issue[]
+	s?:any
+}
+
+function mapStateToProps(state) {
+	const appState = state.get(AppKey)
+	const repoState = state.get(RepoKey)
+	const {theme} = appState
+
+	return {
+		theme,
+		issues:         repoState.issues,
+		selectedIssues: repoState.selectedIssues,
+		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
+	}
+}
+
+
+/**
+ * IssuesPanel
+ *
+ * @class IssuesPanel
+ * @constructor
+ **/
+
+@connect(mapStateToProps)
+@Radium
+@PureRender
+export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
+
+	constructor(props) {
+		super(props)
+
+
+	}
+
+	componentWillMount() {
+		this.setState({lastIssues:this.props.issues})
+	}
+	componentWillReceiveProps(nextProps) {
+		const state = this.state || {},
+			{issueList,lastIssues} = state,
+			{issues} = nextProps.issues
+
+		if (issueList && lastIssues && lastIssues !== issues) {
+			this.setState({lastIssues:issues})
+			issueList.forceUpdate()
+		}
+	}
+
+
+	onIssueSelected = (event, issue) => {
+		if (event.metaKey) {
+			let {selectedIssues} = this.props
+			const wasSelected = !_.isNil(selectedIssues.find(selectedIssue => selectedIssue.id === issue.id))
+			selectedIssues = (wasSelected) ? selectedIssues.filter(selectedIssue => selectedIssue.id !== issue.id) :
+				selectedIssues.concat([issue])
+
+			repoActions.setSelectedIssues(selectedIssues)
+		} else {
+			repoActions.setSelectedIssues([issue])
+		}
+		log.info('Received issue select')
+	}
+
+
+	renderIssue = (index, key) => {
+		const
+			{props} = this,
+			{s} = props
+
+
+
+		return <IssueItem key={key}
+		                  s={s}
+		                  index={index}
+		                  onSelected={this.onIssueSelected}/>
+
+
+	}
 
 	render() {
 		const
-			{theme, issues, selectedIssues} = this.props,
+			{theme,selectedIssues,s:themeStyles} = this.props,
 			allowResize = selectedIssues.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
-			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
-			themeStyles = mergeStyles(styles, theme.issuesPanel)
+			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
+
 
 		return <div style={themeStyles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
@@ -253,10 +324,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			           className='issuePanelSplitPane'>
 
 				<div style={themeStyles.listContainer}>
+					<ReactList ref={c => this.setState({issueList:c})}
+					           itemRenderer={this.renderIssue}
+					           length={this.props.issues.length}
+					           type='simple'/>
 					{/*<CSSTransitionGroup transitionName='issue'*/}
-					                    {/*transitionEnterTimeout={200}*/}
-					                    {/*transitionLeaveTimeout={200}>*/}
-						{issues.map(issue => this.renderIssue(issue, themeStyles))}
+					{/*transitionEnterTimeout={200}*/}
+					{/*transitionLeaveTimeout={200}>*/}
+					{/*{issues.map(issue => this.renderIssue(issue, themeStyles))}*/}
 					{/*</CSSTransitionGroup>*/}
 
 				</div>

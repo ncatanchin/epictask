@@ -37,13 +37,17 @@ export function isNil(o:any) {
 	return _.isNil(o)
 }
 
-export function cloneObject<T>(o:T):T {
+export function cloneObject<T>(o:T,...newSources:any[]):T {
 	const cloned = _.cloneDeep(o)
 
 	if (Array.isArray(cloned)) {
-		cloned.forEach((acloned,index) => acloned.id = o[index].id)
+		cloned.forEach((acloned,index) => {
+			acloned.id = o[index].id
+			_.assign(acloned,...newSources)
+		})
 	} else {
 		cloned.id = (o as any)['id']
+		_.assign(cloned,...newSources)
 	}
 
 	return cloned
