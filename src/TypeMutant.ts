@@ -2,11 +2,9 @@ import './Globals'
 import * as Immutable from 'immutable'
 import {isFunction,Enumerable,EnumerableProperty} from "./util"
 
-
 const log = getLogger(__filename)
 
 const PropertyTypeMapKey = Symbol('typemutant:property-type-map-key')
-
 
 
 function makeErrorMsg(type,msg) {
@@ -22,7 +20,6 @@ export class NotMutableError extends Error {
 		super(makeErrorMsg('NotMutableError',msg))
 	}
 }
-
 
 
 /**
@@ -70,8 +67,9 @@ export function RecordProperty(opts = {}) {
  * Typed constructor for models
  */
 export interface RecordModelConstructor<T> extends Function {
-	new (props?:any): T;
-	new ():T;
+	new (props?:any): T
+	new ():T
+	fromJS(o:any):T
 	//new (...args:any[]):T;
 }
 
@@ -131,7 +129,8 @@ export class RecordTypeWrapper<T, TType extends RecordModelConstructor<T>> {
 	 * @returns {any}
 	 */
 	mixType<Z, ZType extends new () => Z> (
-		t: RecordModelConstructor<Z>,
+		t: Z,
+		tc: RecordModelConstructor<Z>,
 		dupe: ZType = undefined
 	): RecordTypeWrapper<T & Z, RecordModelConstructor<T & Z> & TType & ZType>  {
 
@@ -159,6 +158,11 @@ export function isRecordObject(o:any):o is RecordBaseObject<any,any> {
  */
 export class RecordBaseObject<T extends any,TT extends any> {
 
+	static recordType:Immutable.Record.Class
+
+	static fromJS(o:any) {
+		return null
+	}
 
 	/**
 	 * Temporary mutating property
@@ -199,6 +203,8 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	@EnumerableProperty(false)
 	recordType
 
+
+
 	/**
 	 * Is the current instance mutable
 	 *
@@ -208,6 +214,9 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	get isMutable() {
 		return this.mutable
 	}
+
+
+
 
 	/**
 	 * Empty constructor for typing purposes
@@ -246,11 +255,13 @@ export class RecordBaseObject<T extends any,TT extends any> {
 			value: finalClazz
 		})
 
-		if (!this.record)
+		if (props && props instanceof recordType) {
+			this.record = props
+		} else if (!this.record) {
 			this.record = new recordType(props)
+		}
 
 	}
-
 
 
 	/**
@@ -323,11 +334,16 @@ export class RecordBaseObject<T extends any,TT extends any> {
 		return newInstance
 	}
 
+	toJS() {
+		return this.record
+	}
+
 }
 
 
-export function makeRecordType<T extends Object>(modelClazz:{new():T}) {
-	return new RecordTypeWrapper(modelClazz,modelClazz)
+export function makeRecordType<T>(modelClazz:{new():T}) {
+	type mixedRecordType = RecordModelConstructor<T> & RecordBaseObject<T,T> & RecordModelConstructor<RecordBaseObject<T,T>>
+	return new RecordTypeWrapper(modelClazz,modelClazz as mixedRecordType)
 		.mixType(RecordBaseObject,RecordBaseObject)
 }
 
@@ -382,12 +398,30 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 	// Build the final class
 	const newClazz = class RecordClazz extends RecordBaseObject<T,T> {
 
+		static recordType = recordType
+
+		static fromJS(o:any) {
+			return null
+		}
+
 		constructor()
-		constructor(private props = {}) {
-			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType, Object.assign({},defaultProps,props))
+		constructor(private props:any = {}) {
+			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType,
+				(props instanceof recordType) ? props : Object.assign({},defaultProps,props))
 		}
 	}
 
+	/**
+	 * Override the hydration function
+	 *
+	 * @type {any}
+	 */
+	const newClazzAny = newClazz as any
+	newClazzAny.fromJS = function(o:any) {
+		const instance = new newClazzAny(o)
+
+		return instance
+	}
 
 
 	// type comboTypeWrapper = typeof typeWrapper.asType
@@ -444,9 +478,9 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 
 	//return newClazz as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
 	const typeWrapper2 = new RecordTypeWrapper(newClazz,newClazz)
-		.mixType(modelClazz,modelClazz)
+		.mixType(modelClazz,newClazz,modelClazz)
 	//
-	type newClazzType = typeof typeWrapper2.asType
+	//type newClazzType = typeof typeWrapper2.asType
 	return typeWrapper2.asStaticType as any
 	//
 	// //
