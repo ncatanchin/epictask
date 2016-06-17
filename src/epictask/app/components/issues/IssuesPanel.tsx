@@ -5,6 +5,7 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
+import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
@@ -150,8 +151,6 @@ class IssueItem extends React.Component<IIssueItemProps,any> {
 		super(props)
 	}
 
-
-
 	render() {
 		const
 			{props} = this,
@@ -176,7 +175,7 @@ class IssueItem extends React.Component<IIssueItemProps,any> {
 
 		return <div {...props} style={issueStyles}
 		                       selected={selected}
-		                       className={selected ? 'selected' : ''}
+		                       className={'animated fadeIn ' + (selected ? 'selected' : '')}
 		                       onClick={(event) => onSelected(event,issue)}>
 
 			<div style={s.issueMarkers}></div>
@@ -312,6 +311,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
+		//
+		// 	<CSSTransitionGroup
+		// ref={ref}
+		// transitionName='issue'
+		// transitionEnterTimeout={200}
+		// transitionLeaveTimeout={200}>
+		//
+		// 	{items}
+		//
+		// 	</CSSTransitionGroup>
 
 		return <div style={themeStyles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
@@ -326,13 +335,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 				<div style={themeStyles.listContainer}>
 					<ReactList ref={c => this.setState({issueList:c})}
 					           itemRenderer={this.renderIssue}
+					           itemsRenderer={(items, ref) => {
+					           	    return (
+					           	    	<div ref={ref}>{items}</div>
+
+					           	    )
+					           }}
 					           length={this.props.issues.length}
 					           type='simple'/>
-					{/*<CSSTransitionGroup transitionName='issue'*/}
-					{/*transitionEnterTimeout={200}*/}
-					{/*transitionLeaveTimeout={200}>*/}
-					{/*{issues.map(issue => this.renderIssue(issue, themeStyles))}*/}
-					{/*</CSSTransitionGroup>*/}
+
 
 				</div>
 				<IssueDetailPanel />
