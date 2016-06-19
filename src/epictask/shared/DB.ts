@@ -100,6 +100,10 @@ export async function start() {
 	return true
 }
 
+async function stop() {
+	return await coordinator ? coordinator.stop() : true
+}
+
 /**
  * Get a repo instance for the local database
  *
@@ -116,5 +120,10 @@ if (module.hot) {
 	module.hot.accept(['shared/models','./DBRepos'],updates => {
 		log.info(`HMR received updates to models`, updates, 'restarting')
 		start()
+	})
+
+	module.hot.dispose(() => {
+		log.info('DB being disposed of')
+		return stop().then(() => log.info('Fully shutdown old coordinator'))
 	})
 }

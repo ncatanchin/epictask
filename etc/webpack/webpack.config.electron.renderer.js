@@ -7,7 +7,8 @@ module.exports = (projectConfig) => {
 	return Object.assign(config, {
 
 		entry: {
-			"AppEntry": ['babel-polyfill','reflect-metadata',"./src/epictask/app/AppEntry"]
+			//'reflect-metadata'
+			"UIEntry": ['babel-polyfill',"./src/epictask/ui/UIEntry"]
 		},
 
 		output: Object.assign(config.output, isDev ? {

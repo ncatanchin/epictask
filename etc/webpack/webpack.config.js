@@ -40,8 +40,8 @@ module.exports = function (projectConfig) {
 				epictask: path.resolve(baseDir,'src/epictask'),
 				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
 				assets: path.resolve(baseDir,'src/epictask/assets'),
-				components: path.resolve(baseDir,'src/epictask/app/components'),
-				app: path.resolve(baseDir,'src/epictask/app'),
+				components: path.resolve(baseDir,'src/epictask/ui/components'),
+				ui: path.resolve(baseDir,'src/epictask/ui'),
 				shared: path.resolve(baseDir,'src/epictask/shared'),
 				//simplemde: path.resolve(baseDir,'node_modules/simplemde/src/js/simplemde.js'),
 				main: path.resolve(baseDir,'src/epictask/main')

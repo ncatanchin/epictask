@@ -17,9 +17,6 @@ const log = getLogger(__filename)
 /**
  * HMR Configuration for development
  */
-function isHotEnabled() {
-	return Env.isHot
-}
 
 const hotReloadEnabled = Env.isHot
 log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
@@ -42,7 +39,7 @@ let mainWindow = loadWindow()
  * All windows closed
  */
 function onAllClosed() {
-	log.info('All windows closed')
+	log.debug('All windows closed')
 
 	if (process.platform !== 'darwin')
 		app.quit()
@@ -55,6 +52,7 @@ function onStart() {
 	app.setName('EpicTask')
 
 	mainWindow.start()
+	require('./MainBoot')
 }
 
 /**

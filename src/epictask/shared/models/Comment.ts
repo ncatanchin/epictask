@@ -11,6 +11,7 @@ import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Issue} from './Issue'
 import {LunrIndex} from '../LunrIndex'
+import {PouchDBFinderDescriptor} from 'typestore-plugin-pouchdb'
 
 
 
@@ -49,7 +50,7 @@ export class Comment extends DefaultModel {
 	@AttributeDescriptor()
 	issueNumber:number
 
-	@AttributeDescriptor()
+	@AttributeDescriptor({index:{name:'parentRefId'}})
 	parentRefId:string
 
 	url: string
@@ -61,6 +62,7 @@ export class Comment extends DefaultModel {
 
 
 	user: User;
+	@AttributeDescriptor({index:{name:'created_at'}})
 	created_at: Date;
 	updated_at: Date;
 
@@ -76,6 +78,19 @@ export class CommentRepo extends TSRepo<Comment> {
 		super(CommentRepo,Comment)
 	}
 
+	@PouchDBFinderDescriptor({
+		selector(issue) {
+			const {repoId,number:issueNumber} = issue || {} as any
+			const refId = Comment.makeParentRefId(repoId,issueNumber)
+			return {
+				parentRefId: refId
+			}
+		},
+		sort: {
+			'attrs.created_at': 'desc'
+		}
+	})
+
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {
 			const {repoId,number:issueNumber} = args[0] || {} as any
@@ -87,6 +102,15 @@ export class CommentRepo extends TSRepo<Comment> {
 	findByIssue(issue:Issue):Promise<Comment[]> {
 		return null
 	}
+
+	@PouchDBFinderDescriptor({
+		index: { fields: ['parentRefId'] },
+		selector: (...repoIds)
+		sort: { created_at: 'desc' }
+		// filter: (model:Comment,{repoId,number:issueNumber}:Issue) =>
+		// 	model.parentRefId === Comment.makeParentRefId(repoId,issueNumber),
+
+	})
 
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {

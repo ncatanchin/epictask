@@ -167,6 +167,7 @@
     "react-tap-event-plugin": "^1.0.0",
     "react-textfit": "^0.1.8",
     "redux": "^3.5.2",
+    "redux-electron-store": "^0.3.10",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "reflect-metadata": "^0.1.3",
@@ -177,6 +178,7 @@
     "typelogger": "densebrain/typelogger",
     "typemutant": "densebrain/typemutant",
     "typestore": "^0.1.7",
+    "typestore-plugin-pouchdb": "^0.1.7",
     "typestore-plugin-indexeddb": "^0.1.7",
     "urlsearchparams": "densebrain/URLSearchParams",
     "winston": "^2.2.0"

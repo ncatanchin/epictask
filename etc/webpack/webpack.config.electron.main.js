@@ -25,7 +25,7 @@ module.exports = function(projectConfig) {
 		'webpack/hot/poll.js?1000'
 	]
 	//const hmrEntry = 'webpack/hot/signal.js'
-	let mainEntries = ["./src/epictask/main/MainEntry"]
+	let mainEntries = ['babel-polyfill',"./src/epictask/main/MainEntry"]
 	if (isDev)
 		mainEntries.unshift(...hmrEntry)
 

@@ -7,6 +7,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
+import {PouchDBFinderDescriptor} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import * as uuid from 'node-uuid'
 import * as _ from 'lodash'
@@ -82,6 +83,16 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 		super(AvailableRepoRepo,AvailableRepo)
 	}
 
+	@PouchDBFinderDescriptor({
+		fn(tsRepo,name) {
+			return tsRepo.all()
+				.then(({docs}) => {
+					const textFilter = new RegExp(name,'i')
+					return docs
+						.filter(doc => textFilter.test(doc.attrs.name))
+				})
+		}
+	})
 	@IndexedDBFinderDescriptor({
 		async fn(tsRepo,...args) {
 			const allJson = await tsRepo.table.toArray()
@@ -104,8 +115,13 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 	}
 
 
+	@PouchDBFinderDescriptor({
+		fn(tsRepo) {
+			return tsRepo.all()
+		}
+	})
 	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
+		fn(tsRepo) {
 			return tsRepo.table.toArray()
 		}
 	})

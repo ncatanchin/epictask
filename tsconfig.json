@@ -16,11 +16,11 @@
 			"epictask/*": [
 				"./epictask/*"
 			],
-			"app": [
-				"./epictask/app/index.ts"
+			"ui": [
+				"./epictask/ui/index.ts"
 			],
-			"app/*": [
-				"./epictask/app/*"
+			"ui/*": [
+				"./epictask/ui/*"
 			],
 			"shared": [
 				"./epictask/shared/index.ts"
@@ -35,10 +35,10 @@
 				"./epictask/main/*"
 			],
 			"components": [
-				"./epictask/app/components/index.ts"
+				"./epictask/ui/components/index.ts"
 			],
 			"components/*": [
-				"./epictask/app/components/*"
+				"./epictask/ui/components/*"
 			]
 		}
 	},

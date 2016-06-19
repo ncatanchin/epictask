@@ -1,4 +1,3 @@
-
 /**
  * Grab a ref to global marked as any for augmentation
  *
@@ -14,8 +13,8 @@ const g = global as any
 require('babel-runtime/core-js/promise').default = require('bluebird')
 
 // LOGGING CONFIG FIRST
-Object.assign(global as any,{
-	TypeLoggerCategories: require('epictask/shared/LogCategories'),
+Object.assign(global as any, {
+	TypeLoggerCategories:   require('epictask/shared/LogCategories'),
 	TypeLoggerDefaultLevel: 3
 })
 
@@ -40,26 +39,21 @@ import * as ContextUtils from './util/ContextUtils'
 import './util/ObjectUtil'
 import * as assertGlobal from 'assert'
 
-/**
- * Declare globals
- *
- * @global getLogger
- */
-declare global {
-	var assert:typeof assertGlobal
-	var getLogger:typeof LoggerFactory
-	var Immutable:typeof ImmutableGlobal
-	var TypeMutant:typeof TypeMutantGlobal
-	var requireContext:typeof ContextUtils.requireContext
-	var mergeContext:typeof ContextUtils.mergeContext
-	var _:typeof LodashGlobal & LodashMixins
-	var Env:any
-}
 
 // Export globals
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
+
+
+const EnvGlobal = {
+	            isOSX,
+	            isDev,
+	isDebug:    DEBUG && isDev,
+	isHot:      !LodashGlobal.isNil(process.env.HOT),
+	            isRemote,
+	isRenderer: process.type !== 'renderer'
+}
 
 // Polyfill Fetch/FormData/etc
 function installGlobals() {
@@ -79,22 +73,34 @@ function installGlobals() {
 	}
 
 	// Assign all of our internal globals
-	Object.assign(g,{
-		Immutable: ImmutableGlobal,
+	Object.assign(g, {
+		Immutable:  ImmutableGlobal,
 		TypeMutant: TypeMutantGlobal,
-		_:LodashGlobal,
-		assert:assertGlobal,
-		Env: {
-			isOSX,
-			isDev,
-			isDebug: DEBUG && isDev,
-			isHot: !LodashGlobal.isNil(process.env.HOT),
-			isRemote
-		}
-	},ContextUtils)
+		_:          LodashGlobal,
+		assert:     assertGlobal,
+		Env:        EnvGlobal
+	}, ContextUtils)
 }
+
+
+/**
+ * Declare globals
+ *
+ * @global getLogger
+ */
+declare global {
+	var assert:typeof assertGlobal
+	var getLogger:typeof LoggerFactory
+	var Immutable:typeof ImmutableGlobal
+	var TypeMutant:typeof TypeMutantGlobal
+	var requireContext:typeof ContextUtils.requireContext
+	var mergeContext:typeof ContextUtils.mergeContext
+	var _:typeof LodashGlobal & LodashMixins
+	var Env:typeof EnvGlobal
+}
+
 
 installGlobals()
 
 
-export { }
+export {}
