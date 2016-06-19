@@ -3,7 +3,6 @@ import {
 	AttributeDescriptor,
 	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	Repo as TSRepo
 } from 'typestore'
 
@@ -11,7 +10,7 @@ import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Issue} from './Issue'
 import {LunrIndex} from '../LunrIndex'
-import {PouchDBFinderDescriptor} from 'typestore-plugin-pouchdb'
+import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 
 
@@ -50,7 +49,7 @@ export class Comment extends DefaultModel {
 	@AttributeDescriptor()
 	issueNumber:number
 
-	@AttributeDescriptor({index:{name:'parentRefId'}})
+	@AttributeDescriptor()
 	parentRefId:string
 
 	url: string
@@ -78,14 +77,11 @@ export class CommentRepo extends TSRepo<Comment> {
 		super(CommentRepo,Comment)
 	}
 
-	@PouchDBFinderDescriptor({
-		selector(issue) {
-			const {repoId,number:issueNumber} = issue || {} as any
-			const refId = Comment.makeParentRefId(repoId,issueNumber)
-			return {
-				parentRefId: refId
-			}
-		},
+	@PouchDBMangoFinder({
+		indexFields: ['parentRefId'],
+		selector: ({repoId,number:issueNumber}) => ({
+			parentRefId:  Comment.makeParentRefId(repoId,issueNumber)
+		}),
 		sort: {
 			'attrs.created_at': 'desc'
 		}
@@ -98,27 +94,31 @@ export class CommentRepo extends TSRepo<Comment> {
 			return tsRepo.table.where('parentRefId').equals(refId).desc().sortBy('created_at') //.toArray()
 		}
 	})
-	@FinderDescriptor()
 	findByIssue(issue:Issue):Promise<Comment[]> {
 		return null
 	}
 
-	@PouchDBFinderDescriptor({
-		index: { fields: ['parentRefId'] },
-		selector: (...repoIds)
+	@PouchDBMangoFinder({
+		indexFields: ['repoId','created_at'],
+		selector: (...repoIds) => ({
+			repoId: {
+				$in: repoIds
+			},
+			created_at: {
+				$exists: true
+			}
+		}),
 		sort: { created_at: 'desc' }
 		// filter: (model:Comment,{repoId,number:issueNumber}:Issue) =>
 		// 	model.parentRefId === Comment.makeParentRefId(repoId,issueNumber),
 
 	})
-
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {
 			const repoIds = args
 			return tsRepo.table.where('repoId').anyOf(repoIds).toArray()
 		}
 	})
-	@FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<Comment[]> {
 		return null
 	}
