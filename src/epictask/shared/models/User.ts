@@ -3,10 +3,10 @@ import {
 	AttributeDescriptor,
 	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	Repo as TSRepo
 } from 'typestore'
 
+import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 
 @ModelDescriptor()
@@ -72,19 +72,22 @@ export class UserRepo extends TSRepo<User> {
 	}
 
 
-	@IndexedDBFinderDescriptor({
-		singleResult:true,
-		async fn(tsRepo,...args) {
-			const
-				allJson = await tsRepo.table.toArray(),
-				query = _.lowerCase(args[0])
+	// @IndexedDBFinderDescriptor({
+	// 	singleResult:true,
+	// 	async fn(tsRepo,...args) {
+	// 		const
+	// 			allJson = await tsRepo.table.toArray(),
+	// 			query = _.lowerCase(args[0])
+	//
+	// 		return allJson
+	// 			.filter(json => _.lowerCase(json.login) === _.lowerCase(query))
+	// 	}
+	// })
 
-			return allJson
-				.filter(json => _.lowerCase(json.login) === _.lowerCase(query))
-		}
-	})
-
-	@FinderDescriptor()
+	@PouchDBMangoFinder({selector:{
+		single:true,
+		selector: (login:string) => {login}
+	}})
 	findByLogin(login:string):Promise<User> {
 		return null
 	}
@@ -92,22 +95,32 @@ export class UserRepo extends TSRepo<User> {
 	/**
 	 * Find all issues in provided repo ids
 	 * @param repoIds
-	 * @returns {null}
+	 * @returns {Promise<User[]>}
 	 */
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			return tsRepo.table.where('repoIds').anyOf(args).toArray()
-		}
+	@PouchDBMangoFinder({
+		indexFields: ['repoId'],
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({
+				$eq: repoId
+			}))
+		})
 	})
-	@FinderDescriptor()
+	// @IndexedDBFinderDescriptor({
+	// 	fn(tsRepo,...args) {
+	// 		return tsRepo.table.where('repoIds').anyOf(args).toArray()
+	// 	}
+	// })
+	// @FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<User[]> {
 		return null
 	}
 
-	@IndexedDBFinderDescriptor({
-		fn: (tsRepo,...args) => tsRepo.table.toArray()
-	})
-	@FinderDescriptor()
+
+	@PouchDBMangoFinder({selector: {}})
+	// @IndexedDBFinderDescriptor({
+	// 	fn: (tsRepo,...args) => tsRepo.table.toArray()
+	// })
+	// @FinderDescriptor()
 	findAll():Promise<User[]> {
 		return null
 	}

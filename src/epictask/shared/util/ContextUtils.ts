@@ -43,7 +43,7 @@ export function requireContext(ctx,excludes = [],merge = false) {
 			}
 		}
 
-		_.set(modMap,key,ctx(key))
+		_.set(modMap,key,ctx(rawKey))
 		return modMap
 	},{})
 

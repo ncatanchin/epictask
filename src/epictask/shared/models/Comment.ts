@@ -13,7 +13,6 @@ import {LunrIndex} from '../LunrIndex'
 import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 
-
 /**
  * Create comment index
  *
@@ -78,12 +77,13 @@ export class CommentRepo extends TSRepo<Comment> {
 	}
 
 	@PouchDBMangoFinder({
-		indexFields: ['parentRefId'],
+		indexFields: ['parentRefId','created_at'],
 		selector: ({repoId,number:issueNumber}) => ({
-			parentRefId:  Comment.makeParentRefId(repoId,issueNumber)
+			parentRefId:  Comment.makeParentRefId(repoId,issueNumber),
+			created_at: { $exists: true }
 		}),
 		sort: {
-			'attrs.created_at': 'desc'
+			created_at: 'desc'
 		}
 	})
 
@@ -101,17 +101,10 @@ export class CommentRepo extends TSRepo<Comment> {
 	@PouchDBMangoFinder({
 		indexFields: ['repoId','created_at'],
 		selector: (...repoIds) => ({
-			repoId: {
-				$in: repoIds
-			},
-			created_at: {
-				$exists: true
-			}
+			repoId: { $in: repoIds },
+			created_at: { $exists: true }
 		}),
 		sort: { created_at: 'desc' }
-		// filter: (model:Comment,{repoId,number:issueNumber}:Issue) =>
-		// 	model.parentRefId === Comment.makeParentRefId(repoId,issueNumber),
-
 	})
 	@IndexedDBFinderDescriptor({
 		fn(tsRepo,...args) {

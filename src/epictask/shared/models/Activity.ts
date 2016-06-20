@@ -45,30 +45,4 @@ export class ActivityRepo extends TSRepo<Activity> {
 		super(ActivityRepo, Activity)
 	}
 
-	@IndexedDBFinderDescriptor({
-		fn: async (tsRepo,...args) => {
-			const [refId] = args
-			const result = await tsRepo.table.get(refId)
-			return (result) ? [result] : []
-		}
-	})
-	@FinderDescriptor()
-	findNewestByRefId(refId:string):Promise<Activity[]> {
-		return null
-	}
-
-	@IndexedDBFinderDescriptor({
-		fn: async (tsRepo,...args) => {
-			const [type,objectId] = args
-			const refId = `${type}-${objectId}`
-			const result = await tsRepo.table.get(refId)
-			return (result) ? [result] : []
-		}
-	})
-	@FinderDescriptor()
-	findNewestByTypeAndObjectId(type:ActivityType,objectId:string):Promise<Activity[]> {
-		return null
-	}
-
-
 }

@@ -3,7 +3,6 @@ import {
 	AttributeDescriptor,
 	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	Repo as TSRepo
 } from 'typestore'
 
@@ -14,6 +13,7 @@ import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 import {LunrIndex} from 'shared/LunrIndex'
+import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 export type IssueState = "open" | "closed"
 
@@ -37,7 +37,6 @@ export const IssueIndex = new LunrIndex<Issue>('Issue', {
 			allComments: 'merge comments here',
 			assigneeName: 'sadasda',
 			reporterName: 'sadasda'
-
 		})
 	}
 })
@@ -104,17 +103,9 @@ export class IssueRepo extends TSRepo<Issue> {
 		super(IssueRepo,Issue)
 	}
 
-	@IndexedDBFinderDescriptor({
-		async fn(tsRepo,...args) {
-			const
-				allJson = await tsRepo.table.toArray(),
-				titleQuery = _.lowerCase(args[0])
-
-			return allJson
-				.filter(json => _.lowerCase(json.title).includes(titleQuery))
-		}
+	@PouchDBFullTextFinder({
+		textFields: ['title']
 	})
-	@FinderDescriptor()
 	findByTitle(title:string):Promise<Issue[]> {
 		return null
 	}
@@ -122,31 +113,46 @@ export class IssueRepo extends TSRepo<Issue> {
 	/**
 	 * Find all issues in provided repo ids
 	 * @param repoIds
-	 * @returns {null}
+	 * @returns {Promise<Issue[]>}
 	 */
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			const repoIds = args
-			return tsRepo.table.where('repoId').anyOf(repoIds).desc().sortBy('updated_at')
-		}
+	@PouchDBMangoFinder({
+		indexFields: ['repoId'],
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({
+				$eq: repoId
+			}))
+		})
 	})
-	@FinderDescriptor()
+	// @IndexedDBFinderDescriptor({
+	// 	fn(tsRepo,...args) {
+	// 		const repoIds = args
+	// 		return tsRepo.table.where('repoId').anyOf(repoIds).desc().sortBy('updated_at')
+	// 	}
+	// })
+	// @FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
 		return null
 	}
 
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			return tsRepo.table.toArray()
-		}
-	})
-	@FinderDescriptor()
+	@PouchDBMangoFinder({selector:{}})
+	// @IndexedDBFinderDescriptor({
+	// 	fn(tsRepo,...args) {
+	// 		return tsRepo.table.toArray()
+	// 	}
+	// })
+	// @FinderDescriptor()
 	findAll():Promise<Issue[]> {
 		return null
 	}
 
 }
 
+/**
+ * TypeGuard for Issue shape
+ *
+ * @param o
+ * @returns {boolean}
+ */
 export function isIssue(o:any):o is Issue {
 	return o.title && o.id && o.labels
 }

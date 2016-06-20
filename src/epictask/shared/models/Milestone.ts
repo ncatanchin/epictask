@@ -7,6 +7,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
+import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {LunrIndex} from '../LunrIndex'
@@ -24,7 +25,9 @@ export const MilestoneIndex = new LunrIndex<Milestone>('Milestone', {
 })
 
 
-@ModelDescriptor({onPersistenceEvent:MilestoneIndex.onPersistenceEvent})
+@ModelDescriptor({
+	onPersistenceEvent:MilestoneIndex.onPersistenceEvent
+})
 export class Milestone extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
@@ -63,27 +66,20 @@ export class MilestoneRepo extends TSRepo<Milestone> {
 	}
 
 	/**
-	 * Find all labels in provided repo ids
+	 * Find all issues in provided repo ids
 	 * @param repoIds
-	 * @returns {Label[]}
+	 * @returns {Promise<Milestone[]>}
 	 */
-	@IndexedDBFinderDescriptor({
-		fn: (tsRepo,...args) => tsRepo.table.where('repoId').anyOf(args).sortBy('name')
+	@PouchDBMangoFinder({
+		indexFields: ['repoId'],
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({
+				$eq: repoId
+			}))
+		})
 	})
-	@FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<Milestone[]> {
 		return null
 	}
-
-
-	// @IndexedDBFinderDescriptor({
-	// 	fn(tsRepo,...args) {
-	// 		return tsRepo.table.toArray()
-	// 	}
-	// })
-	// @FinderDescriptor()
-	// findAll():Promise<Comment[]> {
-	// 	return null
-	// }
 
 }

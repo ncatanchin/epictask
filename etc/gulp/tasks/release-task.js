@@ -3,8 +3,8 @@ const path = require('path')
 const targetDir = `${processDir}/target/gitop`
 
 function release() {
-	log.info(`Packaging GitOp`)
-	const releaseFile = `${releaseDir}/gitop-${nextMinorVersion}.tar.gz`
+	log.info(`Packaging EpicTask`)
+	const releaseFile = `${releaseDir}/epictask-${nextMinorVersion}.tar.gz`
 	releaseFiles.push(releaseFile)
 	const targetPackageJsonFile = `${targetDir}/package.json`
 

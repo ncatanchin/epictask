@@ -1,8 +1,10 @@
 import 'lunr'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
+import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {AllLunrIndexes as Indexes} from './LunrIndex'
 import {IRepos} from './DBRepos'
+import {getUserDataFilename} from './util/Files'
 
 const log = getLogger(__filename)
 
@@ -16,7 +18,8 @@ export const Repos:IRepos = {} as any
  * References to coordinator and plugins
  */
 export let coordinator:TSCoordinator = null
-export let storePlugin:IndexedDBPlugin = null
+//export let storePlugin:IndexedDBPlugin = null
+export let storePlugin:PouchDBPlugin = null
 
 // Started or not
 let started = false
@@ -26,7 +29,7 @@ let started = false
  *
  * @returns {boolean}
  */
-export async function start() {
+export function start() {
 
 
 	// Actually types are reloaded here
@@ -58,46 +61,68 @@ export async function start() {
 	started = true
 
 	// Create the store Plugin first
-	storePlugin = new IndexedDBPlugin({
-		databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
-		version: 1
+	// storePlugin = new IndexedDBPlugin({
+	// 	databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
+	// 	version: 1
+	// })
+	const dbPath = getUserDataFilename('epictask.db')
+	log.info('DB Path:',dbPath)
+	storePlugin = new PouchDBPlugin({
+		filename: dbPath
+		//databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
+		//version: 1
 	})
+
 
 
 	// Pass plugin(s) to the coordinator
 	coordinator = new TSCoordinator()
-	await coordinator.init({},storePlugin)
+	return coordinator.init({}, storePlugin)
+		.then(() => {
+			log.info('Coordinator initialized')
 
-	const modelClazzes = [
-		Repo,
-		AvailableRepo,
-		User,
-		Milestone,
-		Issue,
-		Label,
-		Comment,
-		Activity
-	]
+			const modelClazzes = [
+				Repo,
+				AvailableRepo,
+				User,
+				Milestone,
+				Issue,
+				Label,
+				Comment,
+				Activity
+			]
 
-	await coordinator.start(...modelClazzes)
+			return coordinator.start(...modelClazzes)
+		})
+		.then(() => {
+			log.info('Coordinator started')
 
-	Object.assign(Repos,{
-		issue: getRepo(IssueRepo),
-		repo: getRepo(RepoRepo),
-		availableRepo: getRepo(AvailableRepoRepo),
-		milestone: getRepo(MilestoneRepo),
-		comment: getRepo(CommentRepo),
-		label: getRepo(LabelRepo),
-		activity: getRepo(ActivityRepo),
-		user: getRepo(UserRepo)
-	})
+			Object.assign(Repos, {
+				issue:         getRepo(IssueRepo),
+				repo:          getRepo(RepoRepo),
+				availableRepo: getRepo(AvailableRepoRepo),
+				milestone:     getRepo(MilestoneRepo),
+				comment:       getRepo(CommentRepo),
+				label:         getRepo(LabelRepo),
+				activity:      getRepo(ActivityRepo),
+				user:          getRepo(UserRepo)
+			})
 
-	// In DEBUG mode expose repos on global
-	if (DEBUG) {
-		const g = global as any
-		g.Repos = Repos
-	}
-	return true
+			log.info('Repos Loaded2')
+
+
+			// In DEBUG mode expose repos on global
+			if (DEBUG) {
+				const g = global as any
+				g.Repos = Repos
+			}
+			return true
+		})
+		.catch(err => {
+			log.error('DB failed to init',err)
+			throw err
+		})
+
 }
 
 async function stop() {

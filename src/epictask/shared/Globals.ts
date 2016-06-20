@@ -7,10 +7,9 @@ const g = global as any
 
 /**
  * Replace es6-promise with bluebird
- *
- * @type {any|"~bluebird/bluebird".Bluebird}
  */
 require('babel-runtime/core-js/promise').default = require('bluebird')
+g.Promise = require('bluebird')
 
 // LOGGING CONFIG FIRST
 Object.assign(global as any, {

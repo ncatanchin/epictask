@@ -14,8 +14,6 @@ async function boot() {
 	// Load Styles
 	require('./styles')
 
-
-
 	// Now the theme manager
 	require("./ThemeManager.tsx")
 

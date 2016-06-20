@@ -7,7 +7,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBFinderDescriptor} from 'typestore-plugin-pouchdb'
+import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import * as uuid from 'node-uuid'
 import * as _ from 'lodash'
@@ -83,49 +83,37 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 		super(AvailableRepoRepo,AvailableRepo)
 	}
 
-	@PouchDBFinderDescriptor({
-		fn(tsRepo,name) {
-			return tsRepo.all()
-				.then(({docs}) => {
-					const textFilter = new RegExp(name,'i')
-					return docs
-						.filter(doc => textFilter.test(doc.attrs.name))
-				})
-		}
+	@PouchDBFullTextFinder({
+		textFields: ['name']
 	})
-	@IndexedDBFinderDescriptor({
-		async fn(tsRepo,...args) {
-			const allJson = await tsRepo.table.toArray()
-
-			// Finally map the results
-			const repoRepo = Repos.repo
-			return allJson
-				.filter(async (json) => {
-
-					const repo = await repoRepo.get(repoRepo.key(json.repoId))
-
-					return _.lowerCase(repo.name).includes(_.lowerCase(args[0]))
-				})
-
-		}
-	})
+	// @IndexedDBFinderDescriptor({
+	// 	async fn(tsRepo,...args) {
+	// 		const allJson = await tsRepo.table.toArray()
+	//
+	// 		// Finally map the results
+	// 		const repoRepo = Repos.repo
+	// 		return allJson
+	// 			.filter(async (json) => {
+	//
+	// 				const repo = await repoRepo.get(repoRepo.key(json.repoId))
+	//
+	// 				return _.lowerCase(repo.name).includes(_.lowerCase(args[0]))
+	// 			})
+	//
+	// 	}
+	// })
 	@FinderDescriptor()
 	findByName(name:string):Promise<AvailableRepo[]> {
 		return null
 	}
 
 
-	@PouchDBFinderDescriptor({
-		fn(tsRepo) {
-			return tsRepo.all()
-		}
-	})
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo) {
-			return tsRepo.table.toArray()
-		}
-	})
-	@FinderDescriptor()
+	@PouchDBMangoFinder({selector:{}})
+	// @IndexedDBFinderDescriptor({
+	// 	fn(tsRepo) {
+	// 		return tsRepo.table.toArray()
+	// 	}
+	// })
 	findAll():Promise<AvailableRepo[]> {
 		return null
 	}

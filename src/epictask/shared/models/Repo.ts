@@ -4,9 +4,12 @@ import {
 	FinderDescriptor,
 	DefaultModel,
 	DefaultValue,
+	IFinderRequest,
 	Repo as TSRepo
 } from 'typestore'
 
+
+import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Permission} from './Permission'
@@ -28,7 +31,7 @@ export class Repo extends DefaultModel {
 	description: string;
 
 	@AttributeDescriptor()
-	private: boolean;
+	'private': boolean;
 	fork: boolean;
 	url: string;
 	html_url: string;
@@ -105,33 +108,33 @@ export class RepoRepo extends TSRepo<Repo> {
 		super(RepoRepo,Repo)
 	}
 
-	@IndexedDBFinderDescriptor({
-		async fn(repo,...args) {
-			const {table,mapper,db} = repo
-			const limit = args[1] || 5000
-			const query = args[0]
-			return await table
-				.filter(json => _.lowerCase(json.name).indexOf(_.lowerCase(query)) > -1)
-				.limit(limit)
-				.toArray()
-
-			//const jsons = await table.where('name').equalsIgnoreCase(args[0]).toArray()
-			//return jsons.map(json => mapper.fromObject(json))
-		}
+	@PouchDBFullTextFinder({
+		textFields: ['name']
 	})
-	@FinderDescriptor()
-	findByName(name:string,limit = null):Promise<Repo[]> {
+	// @IndexedDBFinderDescriptor({
+	// 	async fn(repo,...args) {
+	// 		const {table,mapper,db} = repo
+	// 		const limit = args[1] || 5000
+	// 		const query = args[0]
+	// 		return await table
+	// 			.filter(json => _.lowerCase(json.name).indexOf(_.lowerCase(query)) > -1)
+	// 			.limit(limit)
+	// 			.toArray()
+	//
+	// 		//const jsons = await table.where('name').equalsIgnoreCase(args[0]).toArray()
+	// 		//return jsons.map(json => mapper.fromObject(json))
+	// 	}
+	// })
+	// @FinderDescriptor()
+	findByName(name:string,opts:IFinderRequest = null):Promise<Repo[]> {
 		return null
 	}
 
-	@IndexedDBFinderDescriptor({
-		async fn(tsRepo,...args) {
-			const {mapper} = tsRepo
-			return await tsRepo.table.toArray()
-			//return allJson.map(json => mapper.fromObject(json))
-		}
-	})
-	@FinderDescriptor()
+	/**
+	 * Find all repos
+	 * @returns {Promise<Repo[]>}
+	 */
+	@PouchDBMangoFinder({selector:{}})
 	findAll():Promise<Repo[]> {
 		return null
 	}

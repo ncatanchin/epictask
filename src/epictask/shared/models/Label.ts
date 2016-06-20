@@ -3,11 +3,10 @@ import {
 	AttributeDescriptor,
 	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	Repo as TSRepo
 } from 'typestore'
-import * as uuid from 'node-uuid'
 
+import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {LunrIndex} from '../LunrIndex'
 
@@ -55,20 +54,21 @@ export class LabelRepo extends TSRepo<Label> {
 	 * @param repoIds
 	 * @returns {Label[]}
 	 */
-	@IndexedDBFinderDescriptor({
-		fn: (tsRepo,...args) => tsRepo.table.where('repoId').anyOf(args).sortBy('name')
+	@PouchDBMangoFinder({
+		indexFields: ['repoId'],
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({
+				$eq: repoId
+			}))
+		})
 	})
-	@FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<Label[]> {
 		return null
 	}
 
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			return tsRepo.table.toArray()
-		}
+	@PouchDBMangoFinder({
+		selector: {}
 	})
-	@FinderDescriptor()
 	findAll():Promise<Label[]> {
 		return null
 	}
