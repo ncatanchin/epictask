@@ -1,6 +1,6 @@
 {
     "name": "typemutant",
-    "version": "0.1.29",
+    "version": "0.1.30",
     "description": "TypeScript classes and decorators meet immutable.js",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
