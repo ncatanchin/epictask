@@ -1,7 +1,7 @@
 {
 	"typelogger" : {
 		"localFolder": "libs/typelogger",
-		"repository": "git@github.com:densebrain/typelogger.git",
+		"repository": "https://github.com/densebrain/typelogger.git",
 		"branch": "master"
 	},
 	"typemutant" : {
