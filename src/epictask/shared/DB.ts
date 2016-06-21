@@ -1,6 +1,5 @@
 import 'lunr'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
-import {IndexedDBPlugin} from 'typestore-plugin-indexeddb'
 import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {AllLunrIndexes as Indexes} from './LunrIndex'
 import {IRepos} from './DBRepos'
@@ -29,7 +28,7 @@ let started = false
  *
  * @returns {boolean}
  */
-export function start() {
+export function start():Promise<boolean> {
 
 
 	// Actually types are reloaded here
@@ -55,7 +54,7 @@ export function start() {
 
 
 	if (started)
-		return true
+		return Promise.resolve(true)
 
 	// Mark
 	started = true

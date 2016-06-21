@@ -39,6 +39,12 @@
 			],
 			"components/*": [
 				"./epictask/ui/components/*"
+			],
+			"typestore": [
+				"../../typestore/packages/typestore/src/index.ts"
+			],
+			"typestore-plugin-pouchdb": [
+				"../../typestore/packages/typestore-plugin-pouchdb/src/index.ts"
 			]
 		}
 	},
