@@ -7,7 +7,7 @@ import {
 	DefaultModel,
 	FinderDescriptor
 } from 'typestore'
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 
 export enum ActivityType {
 	RepoSync = 1

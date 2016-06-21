@@ -1,0 +1,22 @@
+{
+	"typelogger" : {
+		"localFolder": "libs/typelogger",
+		"repository": "git+ssh://git@github.com/densebrain/typelogger.git",
+		"branch": "master"
+	},
+	"typemutant" : {
+		"localFolder": "libs/typemutant",
+		"repository": "git+ssh://git@github.com/densebrain/typemutant.git",
+		"branch": "master"
+	},
+	"typedux" : {
+		"localFolder": "libs/typedux",
+		"repository": "git+ssh://git@github.com/densebrain/typedux.git",
+		"branch": "master"
+	},
+	"typestore" : {
+		"localFolder": "libs/typestore",
+		"repository": "git+ssh://git@github.com/densebrain/typestore.git",
+		"branch": "master"
+	}
+}

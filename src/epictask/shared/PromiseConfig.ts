@@ -1,5 +1,3 @@
-import * as BluebirdGlobal from 'bluebird'
-
 const Bluebird = require('bluebird')
 
 Bluebird.config({

@@ -8,7 +8,7 @@ import {
 } from 'typestore'
 
 import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import * as uuid from 'node-uuid'
 import * as _ from 'lodash'
 

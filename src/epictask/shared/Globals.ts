@@ -4,12 +4,7 @@
  * @type {any}
  */
 const g = global as any
-
-/**
- * Replace es6-promise with bluebird
- */
-require('babel-runtime/core-js/promise').default = require('bluebird')
-g.Promise = require('bluebird')
+const Bluebird = g.Bluebird
 
 // LOGGING CONFIG FIRST
 Object.assign(global as any, {
@@ -21,10 +16,6 @@ Object.assign(global as any, {
 // Now everything else
 import {getLogger as LoggerFactory} from 'typelogger'
 
-// OVERRIDE PROMISE - FIRST
-const Bluebird = require('./PromiseConfig')
-
-Promise = Bluebird
 
 // Import everything else
 later = require('later/index-browserify')

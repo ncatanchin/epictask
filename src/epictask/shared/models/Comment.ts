@@ -6,7 +6,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Issue} from './Issue'
 import {LunrIndex} from '../LunrIndex'
@@ -86,14 +86,6 @@ export class CommentRepo extends TSRepo<Comment> {
 			created_at: 'desc'
 		}
 	})
-
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			const {repoId,number:issueNumber} = args[0] || {} as any
-			const refId = Comment.makeParentRefId(repoId,issueNumber)
-			return tsRepo.table.where('parentRefId').equals(refId).desc().sortBy('created_at') //.toArray()
-		}
-	})
 	findByIssue(issue:Issue):Promise<Comment[]> {
 		return null
 	}
@@ -105,12 +97,6 @@ export class CommentRepo extends TSRepo<Comment> {
 			created_at: { $exists: true }
 		}),
 		sort: { created_at: 'desc' }
-	})
-	@IndexedDBFinderDescriptor({
-		fn(tsRepo,...args) {
-			const repoIds = args
-			return tsRepo.table.where('repoId').anyOf(repoIds).toArray()
-		}
 	})
 	findByRepoId(...repoIds:number[]):Promise<Comment[]> {
 		return null

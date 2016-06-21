@@ -1,8 +1,15 @@
-require('shared/SourceMapSupport')
+//require('shared/SourceMapSupport')
 import 'shared/ErrorHandling'
 
 import 'reflect-metadata'
 const electron = require('electron')
+
+const PouchDB = require('pouchdb')
+PouchDB.debug.enable('*');
+PouchDB.debug.enable('pouchdb:find')
+if (process.env.NODE_ENV === 'development') {
+
+}
 
 // LOGGING
 import './MainLogging'

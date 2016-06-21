@@ -64,7 +64,8 @@ export function start():Promise<boolean> {
 	// 	databaseName: `epictask-db${Env.isDev ? '-dev' : ''}`,
 	// 	version: 1
 	// })
-	const dbPath = getUserDataFilename('epictask.db')
+	// const dbPath = getUserDataFilename('epictask.db')
+	const dbPath = '/tmp/epictask-db2'
 	log.info('DB Path:',dbPath)
 	storePlugin = new PouchDBPlugin({
 		filename: dbPath
@@ -82,13 +83,15 @@ export function start():Promise<boolean> {
 
 			const modelClazzes = [
 				Repo,
-				AvailableRepo,
-				User,
-				Milestone,
-				Issue,
-				Label,
-				Comment,
-				Activity
+				// Issue,
+
+				// AvailableRepo,
+				// User,
+				// Milestone,
+				//
+				// Label,
+				// Comment,
+				// Activity
 			]
 
 			return coordinator.start(...modelClazzes)
@@ -97,14 +100,15 @@ export function start():Promise<boolean> {
 			log.info('Coordinator started')
 
 			Object.assign(Repos, {
-				issue:         getRepo(IssueRepo),
 				repo:          getRepo(RepoRepo),
-				availableRepo: getRepo(AvailableRepoRepo),
-				milestone:     getRepo(MilestoneRepo),
-				comment:       getRepo(CommentRepo),
-				label:         getRepo(LabelRepo),
-				activity:      getRepo(ActivityRepo),
-				user:          getRepo(UserRepo)
+				issue:         getRepo(IssueRepo),
+
+				// availableRepo: getRepo(AvailableRepoRepo),
+				// milestone:     getRepo(MilestoneRepo),
+				// comment:       getRepo(CommentRepo),
+				// label:         getRepo(LabelRepo),
+				// activity:      getRepo(ActivityRepo),
+				// user:          getRepo(UserRepo)
 			})
 
 			log.info('Repos Loaded2')
@@ -119,6 +123,7 @@ export function start():Promise<boolean> {
 		})
 		.catch(err => {
 			log.error('DB failed to init',err)
+
 			throw err
 		})
 

@@ -10,7 +10,8 @@ import {
 
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+
 import {User} from './User'
 import {Permission} from './Permission'
 
@@ -19,6 +20,7 @@ export class Repo extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
+
 	owner: User;
 
 	@AttributeDescriptor()
@@ -31,7 +33,7 @@ export class Repo extends DefaultModel {
 	description: string;
 
 	@AttributeDescriptor()
-	'private': boolean;
+	//'private': boolean;
 	fork: boolean;
 	url: string;
 	html_url: string;

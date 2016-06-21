@@ -1,4 +1,7 @@
 
+const StackTrace = require('stacktrace-js')
+Object.assign(global as any,{StackTrace})
+
 // Get an error logger
 const getErrorLogger = () => require('typelogger').create(__filename)
 
@@ -9,23 +12,47 @@ if (typeof window !== 'undefined') {
 	}
 }
 
+const deepTrace = (reason) => {
+	const log = getErrorLogger()
+
+	if (reason instanceof Error || reason.stack) {
+		StackTrace.fromError(reason)
+			.then(updatedErrorStack => {
+				log.error('error deep trace', updatedErrorStack)
+			})
+	} else {
+		StackTrace.get()
+			.then(function (stack) {
+				log.error('Deep Trace for Stack', reason, stack)
+			})
+			.catch(function (err) {
+				log.error('failed to get stack', err)
+			});
+	}
+}
 
 process.on("unhandledRejection", function (reason,promise) {
 	const log = getErrorLogger()
-	console.error('Unhandled rejection',reason,promise)
+
+	deepTrace(reason)
 	log.error('Unhandled rejection',reason,promise)
+
 })
 
 
 
-process.on("uncaughtException", function (reason,promise) {
+process.on("uncaughtException", function (err) {
 	const log = getErrorLogger()
-	console.error('Unhandled error',reason,promise)
-	log.error('Unhandled error',reason,promise)
+	console.error('Unhandled exception',err)
+	deepTrace(err)
+	log.error('Unhandled exception',err)
 })
 
-// process.on("rejectionHandled", function (reason,promise) {
-// 	const log = getErrorLogger()
-// 	console.error('Unhandled error',reason,promise)
-// 	log.error('Unhandled error',reason,promise)
-// })
+process.on("rejectionHandled", function (reason,promise) {
+ 	const log = getErrorLogger()
+
+	deepTrace(reason)
+
+	console.error('Handled rejection',reason,promise)
+ 	log.error('Handled rejection',reason,promise)
+ })

@@ -7,7 +7,7 @@ import {
 } from 'typestore'
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {LunrIndex} from '../LunrIndex'
 
 /**

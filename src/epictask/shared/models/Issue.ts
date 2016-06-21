@@ -6,7 +6,8 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+
+//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Label} from './Label'
 import {Repo} from './Repo'
