@@ -1,6 +1,5 @@
 import {IJobRequest} from 'shared/actions/jobs/JobState'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import * as ActivityManager from 'shared/actions/activity/ActivityManagerService'
@@ -9,8 +8,7 @@ import * as moment from 'moment'
 
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType,github} from 'shared'
-import {Repos,Indexes} from 'shared/DB'
-import {LunrIndex} from 'shared/LunrIndex'
+import {Repos} from 'shared/DB'
 
 const log = getLogger(__filename)
 
@@ -170,9 +168,9 @@ export class RepoSyncJob implements IJobRequest {
 			])
 
 			// Commit all text indexes
-			log.debug(`Updating all indexes now`)
-			await LunrIndex.persistAll()
-			log.debug('Persisted all indexes')
+			// log.debug(`Updating all indexes now`)
+			// await LunrIndex.persistAll()
+			// log.debug('Persisted all indexes')
 
 			// Track the execution for timing/update purposes
 			// As well as throttling management

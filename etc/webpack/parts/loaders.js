@@ -14,12 +14,12 @@ module.exports = (projectConfig) => {
 		preLoaders: [
 			{
 				test: /\.tsx?$/,
-				exclude: /(node_modules)/,
+				//exclude: /(node_modules)/,
 				loader: 'source-map-loader'
 			},
 			{
 				test: /\.js$/,
-				exclude: /(node_modules)/,
+				// exclude: /(node_modules)/,
 				loader: 'source-map-loader'
 			}
 		],

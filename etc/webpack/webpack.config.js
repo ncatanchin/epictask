@@ -45,24 +45,26 @@ module.exports = function (projectConfig) {
 				shared: path.resolve(baseDir,'src/epictask/shared'),
 				//simplemde: path.resolve(baseDir,'node_modules/simplemde/src/js/simplemde.js'),
 				main: path.resolve(baseDir,'src/epictask/main'),
-				"typedux": path.resolve(baseDir,"../typedux/src/index.ts"),
-				"typemutant": path.resolve(baseDir,"../typemutant/src/index.ts"),
-				"typelogger": path.resolve(baseDir,"../typelogger/src/index.ts"),
-				"typestore": path.resolve(baseDir,"../typestore/packages/typestore/src/index.ts"),
-				"typestore-mocks": path.resolve(baseDir,"../typestore/packages/typestore-plugin-mocks/src/index.ts"),
-				"typestore-plugin-indexeddb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-indexeddb/src/index.ts"),
-				"typestore-plugin-pouchdb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-pouchdb/src/index.ts")
+				// "typedux": path.resolve(baseDir,"../typedux/src/index.ts"),
+				// "typemutant": path.resolve(baseDir,"../typemutant/src/index.ts"),
+				// "typelogger": path.resolve(baseDir,"../typelogger/src/index.ts"),
+				// "typestore": path.resolve(baseDir,"../typestore/packages/typestore/src/index.ts"),
+				// "typestore-mocks": path.resolve(baseDir,"../typestore/packages/typestore-plugin-mocks/src/index.ts"),
+				// "typestore-plugin-indexeddb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-indexeddb/src/index.ts"),
+				// "typestore-plugin-pouchdb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-pouchdb/src/index.ts")
 			},
 			modules: [
 				path.resolve(baseDir,'src'),
-				// path.resolve(baseDir,'src'),
-				path.resolve(baseDir,'../typestore/packages/typestore-plugin-pouchdb/node_modules'),
-				path.resolve(baseDir,'../typedux/node_modules'),
-				path.resolve(baseDir,'../typemutant/node_modules'),
-				path.resolve(baseDir,'../typelogger/node_modules'),
 				path.resolve(baseDir,'node_modules'),
-				path.resolve(baseDir,'../typestore/node_modules'),
-				path.resolve(baseDir,'../typestore/packages/typestore-plugin-indexeddb/node_modules'),
+
+				// path.resolve(baseDir,'../typestore/packages/'),
+				// path.resolve(baseDir,'../typestore/packages/typestore-plugin-pouchdb/node_modules'),
+				// path.resolve(baseDir,'../typestore/node_modules'),
+				// path.resolve(baseDir,'../typedux/node_modules'),
+				// path.resolve(baseDir,'../typemutant/node_modules'),
+				// path.resolve(baseDir,'../typelogger/node_modules'),
+
+
 
 			],
 

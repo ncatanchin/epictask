@@ -1,12 +1,10 @@
 //require('shared/SourceMapSupport')
 import 'shared/ErrorHandling'
 
+
 import 'reflect-metadata'
 const electron = require('electron')
 
-const PouchDB = require('pouchdb')
-PouchDB.debug.enable('*');
-PouchDB.debug.enable('pouchdb:find')
 if (process.env.NODE_ENV === 'development') {
 
 }
@@ -18,8 +16,6 @@ import './MainLogging'
 // LOAD EVERYTHING
 import 'shared/Globals'
 
-
-import * as MainWindowType from './MainWindow'
 const {app} = electron
 const log = getLogger(__filename)
 
@@ -40,9 +36,9 @@ if (DEBUG) {
 /**
  * Load the window
  */
-const loadWindow = () => require('./MainWindow') as typeof MainWindowType
+const loadWindow = () => require('./MainWindow')
 
-let mainWindow = loadWindow()
+let mainWindow:any
 
 /**
  * All windows closed
@@ -60,7 +56,7 @@ function onAllClosed() {
 function onStart() {
 	app.setName('EpicTask')
 
-	mainWindow.start()
+	//mainWindow.start()
 	require('./MainBoot')
 }
 

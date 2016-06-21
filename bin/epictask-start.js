@@ -1,4 +1,6 @@
 require('source-map-support').install()
+
+console.log('starting epictask')
 require('babel-polyfill')
 
 /**
@@ -13,7 +15,7 @@ Bluebird.config({
 	monitoring: true
 })
 
-global.Promise = Bluebird
+//global.Promise = Bluebird
 require('babel-runtime/core-js/promise').default = Bluebird
 
 
