@@ -1,4 +1,6 @@
 
+libs/**/*.*
+
 # Typestore Files
 #src/**/*.js
 src/**/*.map
