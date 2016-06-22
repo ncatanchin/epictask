@@ -10,9 +10,7 @@
     "start-dev-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --enable-logging ./dist/MainEntry.js",
     "start-dev-debug": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
     "start-dev-debug-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
-
     "postinstall": "./etc/scripts/post-install.sh"
-
   },
   "bin": {
     "electron": "./node_modules/.bin/electron"
@@ -123,37 +121,35 @@
     "webpack-stream": "^3.2.0"
   },
   "dependencies": {
+    "animate.css": "^3.5.1",
+    "app-module-path": "^1.0.6",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-polyfill": "^6.8.0",
     "babel-preset-es2015-native-modules": "^6.6.0",
     "babel-preset-react": "^6.5.0",
-    "es6-shim": "^0.35.0",
-    "commander": "^2.9.0",
-    "del": "^2.2.0",
-    "dynamodb-local": "0.0.11",
-    "expectations": "^0.5.2",
-    "faker": "^3.1.0",
-    "glob": "^7.0.3",
-
-    "animate.css": "^3.5.1",
     "babel-runtime": "^6.9.0",
     "bluebird": "^3.4.0",
     "browser-next-tick": "^1.1.0",
     "client-oauth2": "^2.2.0",
+    "commander": "^2.9.0",
     "core-js": "^2.4.0",
     "cryptr": "^2.0.0",
     "css-modules-require-hook": "^4.0.0",
     "dataurl": "^0.1.0",
     "debug": "^2.2.0",
+    "del": "^2.2.0",
     "dexie": "^1.3.6",
-    "app-module-path": "^1.0.6",
-
+    "dynamodb-local": "0.0.11",
     "electron-is-dev": "^0.1.1",
     "electron-window-state": "^3.0.3",
     "element-class": "^0.2.2",
     "enhanced-require": "^0.5.0-beta6",
+    "es6-shim": "^0.35.0",
+    "expectations": "^0.5.2",
+    "faker": "^3.1.0",
     "font-awesome": "^4.6.3",
     "form-data": "^1.0.0-rc4",
+    "glob": "^7.0.3",
     "highlight.js": "^9.4.0",
     "immutable": "^3.8.1",
     "jquery": "^2.2.4",
@@ -164,7 +160,7 @@
     "lunr": "^0.7.1",
     "material-ui": "^0.15.0",
     "mkdirp": "^0.5.1",
-
+    "mocha-junit-reporter": "^1.11.1",
     "moment": "^2.13.0",
     "node-fetch": "^1.5.3",
     "node-uuid": "^1.4.7",
@@ -194,20 +190,19 @@
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "reflect-metadata": "^0.1.3",
+    "run-sequence": "^1.1.5",
+    "semver": "^5.1.0",
+    "shelljs": "^0.7.0",
     "simplemde": "^1.10.1",
+    "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "sqlite3": "^3.1.4",
     "stacktrace-js": "^1.3.0",
     "through2": "^2.0.1",
     "tinycolor2": "^1.3.0",
     "urlsearchparams": "densebrain/URLSearchParams",
+    "utf8-encoding": "^0.1.2",
     "websql": "^0.4.4",
-    "winston": "^2.2.0",
-    "mocha-junit-reporter": "^1.11.1",
-
-    "run-sequence": "^1.1.5",
-    "semver": "^5.1.0",
-    "shelljs": "^0.7.0",
-    "sinon": "^1.17.4"
+    "winston": "^2.2.0"
   }
 }
