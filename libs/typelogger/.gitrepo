@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:densebrain/typelogger.git
+	branch = master
+	commit = 358fcddc6470b23ee0d94284f10127f0b7f4f96f
+	parent = 3624d2c1912079aa2e0267c700ec5b297a0b8ea6
+	cmdver = 0.3.0
