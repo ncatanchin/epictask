@@ -57,11 +57,7 @@ export class User extends DefaultModel {
 		repoIds.push(repoId)
 		this.repoIds = _.uniq(repoIds)
 	}
-
-
 }
-
-
 
 /**
  * Repository for accessing repos
@@ -72,22 +68,13 @@ export class UserRepo extends TSRepo<User> {
 	}
 
 
-	// @IndexedDBFinderDescriptor({
-	// 	singleResult:true,
-	// 	async fn(tsRepo,...args) {
-	// 		const
-	// 			allJson = await tsRepo.table.toArray(),
-	// 			query = _.lowerCase(args[0])
-	//
-	// 		return allJson
-	// 			.filter(json => _.lowerCase(json.login) === _.lowerCase(query))
-	// 	}
-	// })
-
-	@PouchDBMangoFinder({selector:{
+	@PouchDBMangoFinder({
 		single:true,
-		selector: (login:string) => {login}
-	}})
+		indexFields: ['login'],
+		selector:{
+			selector: (login:string) => {login}
+		}
+	})
 	findByLogin(login:string):Promise<User> {
 		return null
 	}
@@ -105,24 +92,9 @@ export class UserRepo extends TSRepo<User> {
 			}))
 		})
 	})
-	// @IndexedDBFinderDescriptor({
-	// 	fn(tsRepo,...args) {
-	// 		return tsRepo.table.where('repoIds').anyOf(args).toArray()
-	// 	}
-	// })
-	// @FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<User[]> {
 		return null
 	}
 
-
-	@PouchDBMangoFinder({selector: {}})
-	// @IndexedDBFinderDescriptor({
-	// 	fn: (tsRepo,...args) => tsRepo.table.toArray()
-	// })
-	// @FinderDescriptor()
-	findAll():Promise<User[]> {
-		return null
-	}
 
 }

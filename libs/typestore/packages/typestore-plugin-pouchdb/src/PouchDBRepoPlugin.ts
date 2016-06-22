@@ -147,7 +147,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 	makeMangoFinder(finderKey:string,opts:IPouchDBMangoFinderOptions) {
 		let {selector,sort,limit,indexName,indexFields} = opts
-		assert((indexName || indexFields) && !(indexName && indexFields),
+		assert(indexName || indexFields,
 			"You MUST provide either indexFields or indexName")
 
 		assert(indexName || finderKey,`No valid index name indexName(${indexName}) / finderKey(${finderKey}`)

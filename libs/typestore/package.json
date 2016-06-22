@@ -19,7 +19,7 @@
     },
     "homepage": "https://github.com/densebrain/typestore#readme",
     "dependencies": {
-        "ansi-256-colors": "^1.1.0",
+
         "babel-plugin-add-module-exports": "^0.2.1",
         "babel-polyfill": "^6.8.0",
         "babel-preset-es2015-native-modules": "^6.6.0",
@@ -70,7 +70,6 @@
         "semver": "^5.1.0",
         "shelljs": "^0.7.0",
         "sinon": "^1.17.4",
-        "typedoc": "sierrasoftworks/typedoc#v1.8.10",
         "typescript": "^1.9.0-dev.20160601-1.0"
     }
 }

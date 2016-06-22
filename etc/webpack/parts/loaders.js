@@ -14,12 +14,12 @@ module.exports = (projectConfig) => {
 		preLoaders: [
 			{
 				test: /\.tsx?$/,
-				//exclude: /(node_modules)/,
+				exclude: /node_modules/,
 				loader: 'source-map-loader'
 			},
 			{
 				test: /\.js$/,
-				// exclude: /(node_modules)/,
+				exclude: /node_modules/,
 				loader: 'source-map-loader'
 			}
 		],
@@ -39,6 +39,7 @@ module.exports = (projectConfig) => {
 			// TYPESCRIPT
 			{
 				test: /\.tsx?$/,
+				exclude: /libs\/.*\/typings/,
 				loaders: (() => {
 					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 					if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)
@@ -52,7 +53,7 @@ module.exports = (projectConfig) => {
 			// BABEL/JS
 			{
 				test: /\.jsx?$/,
-				exclude: /(node_modules)/,
+				exclude: /node_modules/,
 				loaders: ['babel'],
 			},
 

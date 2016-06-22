@@ -5,18 +5,17 @@ import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 
 
 //import {AllLunrIndexes as Indexes} from './LunrIndex'
-//import {Repo,RepoRepo} from 'shared/models/Repo'
-//import {IRepos} from './DBRepos'
+import {IRepos} from './DBRepos'
 import {getUserDataFilename} from './util/Files'
 
 const log = getLogger(__filename)
 
+
 /**
  * All global repositories
  */
-//export {IRepos}
-//export const Repos:IRepos = {} as any
-export const Repos:any = {}
+export {IRepos}
+export const Repos:IRepos = {} as any
 
 /**
  * References to coordinator and plugins
@@ -38,24 +37,24 @@ export function start():Promise<boolean> {
 
 	// Actually types are reloaded here
 	// enabling hot code replacement
-	// let {
-	// 	Repo,
-	// 	RepoRepo,
-	// 	Milestone,
-	// 	MilestoneRepo,
-	// 	Issue,
-	// 	IssueRepo,
-	// 	Comment,
-	// 	CommentRepo,
-	// 	Label,
-	// 	LabelRepo,
-	// 	AvailableRepo,
-	// 	AvailableRepoRepo,
-	// 	Activity,
-	// 	ActivityRepo,
-	// 	User,
-	// 	UserRepo
-	// }  = require('shared/models')
+	let {
+		Repo,
+		RepoRepo,
+		Milestone,
+		MilestoneRepo,
+		Issue,
+		IssueRepo,
+		Comment,
+		CommentRepo,
+		Label,
+		LabelRepo,
+		AvailableRepo,
+		AvailableRepoRepo,
+		Activity,
+		ActivityRepo,
+		User,
+		UserRepo
+	}  = require('shared/models')
 	//let {RepoRepo,Repo} = require('shared/models/Repo')
 
 	if (started)
@@ -70,7 +69,7 @@ export function start():Promise<boolean> {
 	// 	version: 1
 	// })
 	//const dbPath = getUserDataFilename('epictask.db')
-	const dbPath = '/tmp/epictask-db6'
+	const dbPath = '/tmp/epictask-db7'
 	//const dbPath = '/tmp/epictask-db3'
 	log.info('DB Path:',dbPath)
 
@@ -95,15 +94,13 @@ export function start():Promise<boolean> {
 
 			const modelClazzes = [
 				Repo,
-				// Issue,
-
-				// AvailableRepo,
-				// User,
-				// Milestone,
-				//
-				// Label,
-				// Comment,
-				// Activity
+				Issue,
+				AvailableRepo,
+				User,
+				Milestone,
+				Label,
+				Comment,
+				Activity
 			]
 
 			return coordinator.start(...modelClazzes)
@@ -114,14 +111,13 @@ export function start():Promise<boolean> {
 
 			Object.assign(Repos, {
 				repo:          getRepo(RepoRepo),
-				//issue:         getRepo(IssueRepo),
-
-				// availableRepo: getRepo(AvailableRepoRepo),
-				// milestone:     getRepo(MilestoneRepo),
-				// comment:       getRepo(CommentRepo),
-				// label:         getRepo(LabelRepo),
-				// activity:      getRepo(ActivityRepo),
-				// user:          getRepo(UserRepo)
+				issue:         getRepo(IssueRepo),
+				availableRepo: getRepo(AvailableRepoRepo),
+				milestone:     getRepo(MilestoneRepo),
+				comment:       getRepo(CommentRepo),
+				label:         getRepo(LabelRepo),
+				activity:      getRepo(ActivityRepo),
+				user:          getRepo(UserRepo)
 			})
 
 			log.info('Repos Loaded2')
@@ -157,15 +153,15 @@ export function getRepo<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ()
 }
 
 //export {Indexes}
-//
-// if (module.hot) {
-// 	module.hot.accept(['shared/models','./DBRepos'],updates => {
-// 		log.info(`HMR received updates to models`, updates, 'restarting')
-// 		start()
-// 	})
-//
-// 	module.hot.dispose(() => {
-// 		log.info('DB being disposed of')
-// 		return stop().then(() => log.info('Fully shutdown old coordinator'))
-// 	})
-// }
+
+if (module.hot) {
+	module.hot.accept(['shared/models','./DBRepos'],updates => {
+		log.info(`HMR received updates to models`, updates, 'restarting')
+		start()
+	})
+
+	module.hot.dispose(() => {
+		log.info('DB being disposed of')
+		return stop().then(() => log.info('Fully shutdown old coordinator'))
+	})
+}

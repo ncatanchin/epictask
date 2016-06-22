@@ -68,13 +68,19 @@ module.exports = function (projectConfig) {
 			),
 			modules: resolveDirs(
 				'src',
+				'libs/typedux/src',
+				'libs/typemutant/src',
+				'libs/typelogger/src',
+				'libs/typestore/packages/typestore/src',
+				'libs/typestore/packages/typestore-mocks/src',
+				'libs/typestore/packages/typestore-plugin-pouchdb/src',
 				'libs',
-				'node_modules',
-				'libs/typestore/node_modules',
-				'libs/typestore/packages/typestore-plugin-pouchdb/node_modules',
-				'libs/typemutant/node_modules',
-				'libs/typedux/node_modules',
-				'libs/typelogger/node_modules'
+				'node_modules'
+				// 'libs/typestore/node_modules',
+				// 'libs/typestore/packages/typestore-plugin-pouchdb/node_modules',
+				// 'libs/typemutant/node_modules',
+				// 'libs/typedux/node_modules',
+				// 'libs/typelogger/node_modules'
 			).concat([
 
 				// path.resolve(baseDir,'../typestore/packages/'),
@@ -134,12 +140,12 @@ module.exports = function (projectConfig) {
 					// /Dexie/,
 					// /strip-ansi/,
 					// /ansi-regex/,
-					/(?!.*node_modules.*)typestore\//,
-					/(?!.*node_modules.*)typestore-plugin-pouchdb/,
-					/(?!.*node_modules.*)typestore-mocks/,
-					/(?!.*node_modules.*)typelogger/,
-					/(?!.*node_modules.*)typemutant/,
-					/(?!.*node_modules.*)typedux/,
+					/typestore\//,
+					/typestore-plugin-pouchdb/,
+					/typestore-mocks/,
+					/typelogger/,
+					/typemutant/,
+					/typedux/,
 					//
 					// /typestore-plugin-pouchdb/,
 					// /typestore-plugin-indexeddb/,

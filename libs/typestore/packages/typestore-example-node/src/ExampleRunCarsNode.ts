@@ -1,4 +1,4 @@
-/// <reference path="../typings/typestore-example-node.d.ts"/>
+
 import 'reflect-metadata'
 const assert = require('assert')
 
@@ -7,7 +7,7 @@ const assert = require('assert')
 Promise = require('bluebird')
 
 // We dont use the typings here - but you are welcome to
-// we are ONLY using it for credential config as you 
+// we are ONLY using it for credential config as you
 // will see
 const AWS = require('aws-sdk')
 
@@ -33,7 +33,7 @@ import {
 // Import the cloud search specific stuff
 import {CloudSearchProviderPlugin,CloudSearchFinderDescriptor,
 	CloudSearchLocalEndpoint} from 'typestore-plugin-cloudsearch'
-import {DynamoDBStorePlugin,DynamoDBFinderDescriptor,DynamoDBLocalEndpoint} 
+import {DynamoDBStorePlugin,DynamoDBFinderDescriptor,DynamoDBLocalEndpoint}
 	from 'typestore-plugin-dynamodb'
 
 
@@ -185,15 +185,15 @@ export async function runCars() {
 
 	// Create a coordinator
 	const coordinator = new Coordinator()
-	
+
 	// Initialize it with all plugins
 	await coordinator.init({
 		syncStrategy: SyncStrategy.Overwrite
 	},dynamoStore,cloudSearchProvider)
-	
+
 	// Then start it with all models
 	await coordinator.start(Car)
-	
+
 	let car1 = new Car({
 		manufacturer: 'volvo',
 		year: 1956,

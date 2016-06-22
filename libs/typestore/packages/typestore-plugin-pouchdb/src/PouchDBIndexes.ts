@@ -4,6 +4,7 @@ import {isString} from 'typestore'
 import {cleanFieldPrefixes,filterReservedFields,mapAttrsToField} from './PouchDBUtil'
 import {PouchDBAttributePrefix, PouchDBReservedFields} from './PouchDBConstants'
 
+
 const Bluebird = require('bluebird')
 const log = require('typelogger').create(__filename)
 
@@ -31,7 +32,7 @@ function updateCachedIndexMap(db) {
 				const
 					indexes = indexesResult.indexes
 
-				debugger
+
 				return indexes.reduce((map,index,i) => {
 					map[index.name] = {
 						index:  i,
@@ -61,20 +62,20 @@ function updateCachedIndexMap(db) {
 }
 
 export function getIndexMap(db,force = false):Promise<TPouchDBIndexMap> {
-	log.info('GETTING INDEXES',force)
+	log.debug('Getting indexes, force=',force)
 
-	return updateCachedIndexMap(db)
-	// if (force || !cachedIndexMapPromise) {
-	// 	if (cachedIndexMapPromise && force) {
-	// 		cachedIndexMapPromise.then(() => {
-	// 			return updateCachedIndexMap(db)
-	// 		})
-	// 	} else if (!cachedIndexMapPromise) {
-	// 		cachedIndexMapPromise = updateCachedIndexMap(db)
-	// 	}
-	// }
-	//
-	// return cachedIndexMapPromise
+
+	if (force || !cachedIndexMapPromise) {
+		if (cachedIndexMapPromise && force) {
+			cachedIndexMapPromise.then(() => {
+				return updateCachedIndexMap(db)
+			})
+		} else if (!cachedIndexMapPromise) {
+			cachedIndexMapPromise = updateCachedIndexMap(db)
+		}
+	}
+
+	return cachedIndexMapPromise
 
 }
 

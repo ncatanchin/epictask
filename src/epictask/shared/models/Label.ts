@@ -66,11 +66,6 @@ export class LabelRepo extends TSRepo<Label> {
 		return null
 	}
 
-	@PouchDBMangoFinder({
-		selector: {}
-	})
-	findAll():Promise<Label[]> {
-		return null
-	}
+
 
 }

@@ -124,27 +124,11 @@ export class IssueRepo extends TSRepo<Issue> {
 			}))
 		})
 	})
-	// @IndexedDBFinderDescriptor({
-	// 	fn(tsRepo,...args) {
-	// 		const repoIds = args
-	// 		return tsRepo.table.where('repoId').anyOf(repoIds).desc().sortBy('updated_at')
-	// 	}
-	// })
-	// @FinderDescriptor()
 	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
 		return null
 	}
 
-	@PouchDBMangoFinder({selector:{}})
-	// @IndexedDBFinderDescriptor({
-	// 	fn(tsRepo,...args) {
-	// 		return tsRepo.table.toArray()
-	// 	}
-	// })
-	// @FinderDescriptor()
-	findAll():Promise<Issue[]> {
-		return null
-	}
+
 
 }
 

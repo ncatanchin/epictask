@@ -113,21 +113,6 @@ export class RepoRepo extends TSRepo<Repo> {
 	@PouchDBFullTextFinder({
 		textFields: ['name']
 	})
-	// @IndexedDBFinderDescriptor({
-	// 	async fn(repo,...args) {
-	// 		const {table,mapper,db} = repo
-	// 		const limit = args[1] || 5000
-	// 		const query = args[0]
-	// 		return await table
-	// 			.filter(json => _.lowerCase(json.name).indexOf(_.lowerCase(query)) > -1)
-	// 			.limit(limit)
-	// 			.toArray()
-	//
-	// 		//const jsons = await table.where('name').equalsIgnoreCase(args[0]).toArray()
-	// 		//return jsons.map(json => mapper.fromObject(json))
-	// 	}
-	// })
-	// @FinderDescriptor()
 	findByName(name:string,opts:IFinderRequest = null):Promise<Repo[]> {
 		return null
 	}

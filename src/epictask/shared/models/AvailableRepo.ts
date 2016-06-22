@@ -108,12 +108,7 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 	}
 
 
-	@PouchDBMangoFinder({selector:{}})
-	// @IndexedDBFinderDescriptor({
-	// 	fn(tsRepo) {
-	// 		return tsRepo.table.toArray()
-	// 	}
-	// })
+
 	findAll():Promise<AvailableRepo[]> {
 		return null
 	}
