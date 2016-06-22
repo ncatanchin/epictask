@@ -1,3 +1,5 @@
+///<reference path="../../../typings/custom/index.d.ts"/>
+
 /**
  * Grab a ref to global marked as any for augmentation
  *
@@ -8,7 +10,7 @@ const Bluebird = g.Bluebird
 
 // LOGGING CONFIG FIRST
 Object.assign(global as any, {
-	TypeLoggerCategories:   require('epictask/shared/LogCategories'),
+	TypeLoggerCategories: require('epictask/shared/LogCategories'),
 	TypeLoggerDefaultLevel: 3
 })
 
@@ -37,12 +39,12 @@ const isOSX = process.platform === 'darwin'
 
 
 const EnvGlobal = {
-	            isOSX,
-	            isDev,
-	isDebug:    DEBUG && isDev,
-	isHot:      !LodashGlobal.isNil(process.env.HOT),
-	            isRemote,
-	isRenderer: process.type !== 'renderer'
+	isOSX,
+	isDev,
+	isDebug: DEBUG && isDev,
+	isHot: !LodashGlobal.isNil(process.env.HOT),
+	isRemote,
+	isRenderer: process.type === 'renderer'
 }
 
 // Polyfill Fetch/FormData/etc
@@ -64,11 +66,11 @@ function installGlobals() {
 
 	// Assign all of our internal globals
 	Object.assign(g, {
-		Immutable:  ImmutableGlobal,
+		Immutable: ImmutableGlobal,
 		TypeMutant: TypeMutantGlobal,
-		_:          LodashGlobal,
-		assert:     assertGlobal,
-		Env:        EnvGlobal
+		_: LodashGlobal,
+		assert: assertGlobal,
+		Env: EnvGlobal
 	}, ContextUtils)
 }
 
@@ -87,6 +89,9 @@ declare global {
 	var mergeContext:typeof ContextUtils.mergeContext
 	var _:typeof LodashGlobal & LodashMixins
 	var Env:typeof EnvGlobal
+	var MainBooted:boolean
+
+
 }
 
 

@@ -2,9 +2,10 @@ const log = getLogger(__filename)
 
 export * from './VariableProxy'
 
+
 /**
  * Is a given value a function
- * 
+ *
  * @param o
  * @returns {boolean}
  */
@@ -23,7 +24,7 @@ export function isArray<T>(o:any|Array<T>):o is Array<T> {
 
 /**
  * Mark a property as enumerable - or not
- * 
+ *
  * @param value
  * @returns {function(any, string, PropertyDescriptor): undefined}
  * @constructor
@@ -43,17 +44,17 @@ export type NextTickFunction = (callback: Function) => void
 function makeNextTick():NextTickFunction {
 	let nextTickFn
 	try {
-		
+
 		nextTickFn = require('process').nextTick.bind(process)
 	} catch (err) {
-		
+
 	}
-	
+
 	if (!nextTickFn) {
 		log.debug('In browser, using browser-next-tick')
 		nextTickFn = require('browser-next-tick')
 	}
-	
+
 	return nextTickFn as NextTickFunction
 }
 
@@ -61,9 +62,9 @@ export const nextTick = makeNextTick()
 
 /**
  * Retrieve a deep property by string
- * 
+ *
  * dot separated .
- * 
+ *
  * @param o
  * @param path
  * @param defaultValue
@@ -77,7 +78,7 @@ export function getProperty<T>(o:any,path:string,defaultValue:T = null):T {
 			return defaultValue
 		}
 	}
-	
+
 	return partVal as T
 }
 

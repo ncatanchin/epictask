@@ -4,7 +4,7 @@ import {SearchKey} from "shared/Constants"
 import {SearchState, SearchResults, SearchResult, SearchResultType} from './SearchState'
 import {SearchMessage} from './SearchReducer'
 import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from 'shared/models'
-import {getRepo,Repos} from 'shared/DB'
+import {getRepo,Repos} from '../../../main/db/DB'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {createClient} from 'shared/GitHubClient'
 

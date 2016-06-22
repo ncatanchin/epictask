@@ -16,15 +16,15 @@ import {Provider, connect} from 'react-redux'
 const {HotKeys} = require('react-hotkeys')
 
 import {MuiThemeProvider} from "material-ui/styles"
-import {Snackbar} from 'material-ui'
+
 import {PureRender} from 'ui/components/common'
 import {IssueEditDialog} from 'components/issues/IssueEditDialog'
-import {Header,HeaderVisibility,ToastMessages} from 'components'
+import {Header, HeaderVisibility, ToastMessages} from 'components'
 import {getStore} from 'shared/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'shared/actions'
 import {AppStateType} from 'shared'
-import {AppKey, RepoKey} from 'shared/Constants'
+import {Events,AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 //endregion
 
@@ -33,7 +33,6 @@ try {
 } catch (err) {
 	log.info('Failed to inject tap event handler = HMR??')
 }
-
 
 
 // Build the container
@@ -52,16 +51,13 @@ let monitorStatePrevious = null
 //endregion
 
 
-
 //region Styles
 const styles = {
-	app: makeStyle(FlexColumn,FlexScale,{
+	app: makeStyle(FlexColumn, FlexScale, {
 		overflow: 'hidden'
 	}),
 
-	header: makeStyle(makeTransition(), FlexRowCenter, {
-
-	}),
+	header: makeStyle(makeTransition(), FlexRowCenter, {}),
 
 	content: makeStyle(makeTransition(), FlexColumn, PositionRelative, {
 		flexBasis: 0,
@@ -99,8 +95,8 @@ function getAdjustedBodyStyle(connectInstance:any) {
 
 	if (monitorState && !monitorStateSubscribed) {
 		monitorStateSubscribed = true
-		liftedStore.subscribe(_.debounce(function() {
-			const newMonitorState = _.pick(liftedStore.getState().monitorState,'isVisible','position')
+		liftedStore.subscribe(_.debounce(function () {
+			const newMonitorState = _.pick(liftedStore.getState().monitorState, 'isVisible', 'position')
 			if (_.isEqual(monitorStatePrevious, newMonitorState) || _.isEqual(appActions.state.monitorState, newMonitorState)) {
 				// no change
 			} else if (!appElement) {
@@ -109,7 +105,7 @@ function getAdjustedBodyStyle(connectInstance:any) {
 				monitorStatePrevious = newMonitorState
 				appActions.setMonitorState(newMonitorState)
 			}
-		},500))
+		}, 500))
 	}
 
 	if (devToolsRef && monitorState && monitorState.isVisible) {
@@ -212,22 +208,22 @@ class App extends React.Component<IAppProps,any> {
 	 */
 	render() {
 		//adjustedBodyStyle
-		const {hasAvailableRepos,stateType,theme} = this.props,
+		const {hasAvailableRepos, stateType, theme} = this.props,
 			{palette} = theme
 
 		const page = {component: getPage(stateType)},
 			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos
 
 		const headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
-				(expanded) ? HeaderVisibility.Expanded :
-					HeaderVisibility.Normal
+			(expanded) ? HeaderVisibility.Expanded :
+				HeaderVisibility.Normal
 
 		//region Create Themed Styles
 		const contentStyles = makeStyle(styles.content, {
 			backgroundColor: palette.canvasColor,
 			display: 'flex',
 			flexDirection: 'column'
-		},expanded && styles.collapsed)
+		}, expanded && styles.collapsed)
 		//endregion
 
 
@@ -264,8 +260,25 @@ class App extends React.Component<IAppProps,any> {
 	}
 }
 
+//let rendered = false
 
 function render() {
+	const state = store.getState()
+	const appState = state ? state.get(AppKey) : null
+	const theme = appState ? appState.theme : null
+
+	if (!theme) {
+		log.info('Theme is not set yet')
+		const observer = store.observe([AppKey,'theme'],(newTheme) => {
+			log.info('RECEIVED THEME, NOW RENDER',newTheme)
+			observer()
+			render()
+		})
+		return
+	}
+
+	//rendered = true
+
 	// const appState = appActions.state
 	const props = mapStateToProps(store.getState())
 	appElement = <App
@@ -274,7 +287,13 @@ function render() {
 	/>
 	ReactDOM.render(
 		appElement,
-		document.getElementById('root')
+		document.getElementById('root'),
+		() => {
+			log.info('Rendered, hiding splash screen')
+
+
+			window.postMessage({type:Events.UIReady},"*")
+		}
 	)
 }
 

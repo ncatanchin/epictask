@@ -3,6 +3,8 @@ html.fill-width.fill-height(lang="en")
 
 	head
 		meta(charset='utf-8')
+		link(rel="stylesheet",type="text/css",href=baseDir + "/node_modules/splash-screen/dist/splash.min.css")
+		script(src=baseDir + "/node_modules/splash-screen/dist/splash.min.js")
 		link(rel="stylesheet",href=baseDir + "/node_modules/animate.css/animate.css")
 		link(rel="stylesheet",href=baseDir + "/node_modules/font-awesome/css/font-awesome.min.css")
 		link(rel="stylesheet",href=baseDir + "/node_modules/highlight.js/styles/dark.css")
@@ -11,16 +13,24 @@ html.fill-width.fill-height(lang="en")
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 
 		title epic.ly
-		//if Env.isDev
-		//	base(href="http://localhost:4444")
 		style=cssGlobal
 		script(id='et-loader').
+			var electron = require('electron'),
+					remote = electron.remote,
+					ipc = electron.ipcRenderer
+
+			var Splash = window.Splash
+
+			// Load jQuery to help with debugging more than anything else
 			if (!window.$)
 				window.$ = require('jquery')
 
+			// Make sure we have a global log function
 			if (!window.log)
-				window.log = require('electron').remote.getGlobal('getLogger')('MainEntry.jade')
+				window.log = remote.getGlobal('getLogger')('MainEntry.jade')
 
+
+			// Add getStyles - short for getComputedStyle
 			if (!$.fn.getStyles) {
 				$.fn.getStyles = function () {
 					var styles = window.getComputedStyle(this[0])
@@ -39,15 +49,27 @@ html.fill-width.fill-height(lang="en")
 			var baseDir = "#{baseDir}"
 			var loaded = false
 			var isDev = "#{Env.isDev}" === 'true'
-			function addScript(scriptPath) {
+
+			// Add a script tag to load content
+			function addScript(scriptPath,async) {
 				const script = document.createElement('script');
 				const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
+
+				script.type = 'text/javascript'
+				if (async) {
+					log.debug('Loading script async', scriptPath)
+					script.async = true
+				}
+
 				script.src = basePath + scriptPath
 
 				document.body.appendChild(script)
 			}
 
 			window.loadEpicTask = function() {
+
+				log.info('Loading UI')
+
 				if (loaded) {
 					if (!isDev) {
 						console.warn('loadEpicTask is disabled in non dev mode')
@@ -73,8 +95,36 @@ html.fill-width.fill-height(lang="en")
 					document.write(link.outerHTML);
 				}
 
-				addScript('/UIEntry.js')
+
+				addScript('/UIEntry.js', true)
+
+				var booted = remote.getGlobal("MainBooted")
+
 			}
+
+			function onUIReady(event,force) {
+				if (force || (event && event.data && event.data.type === "#{Events.UIReady}")) {
+					Splash.destroy()
+				}
+			}
+
+
 	body.fill-width.fill-height(style="-webkit-app-region: drag")
 		script.
-			window.loadEpicTask()
+			Splash.enable('windcatcher')
+
+			var booted = remote.getGlobal("MainBooted")
+			console.log('booted already =',booted)
+			if (booted) {
+				loadEpicTask()
+				onUIReady(null,true)
+			} else {
+				ipc.on("#{Events.MainReady}",function() {
+
+					console.log('IPC Received load request')
+					loadEpicTask()
+				})
+			}
+
+			window.addEventListener('message', onUIReady)
+

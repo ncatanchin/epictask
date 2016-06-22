@@ -1,5 +1,5 @@
 import * as uuid from 'node-uuid'
-import {Repos} from 'shared/DB'
+import {Repos} from '../../../main/db/DB'
 import {
 	Activity,
 	ActivityType

@@ -6,7 +6,7 @@ import * as github from './GitHubClient'
 
 export * from './AppStateType'
 export * from './models'
-export * from './DB'
+export * from '../main/db/DB'
 
 export {
 	Settings,

@@ -51,8 +51,11 @@ export function requireContext(ctx,excludes = [],merge = false) {
 }
 
 export function mergeContext(modMap) {
-	return Object.keys(modMap).reduce((exportMap,mod) => {
-		Object.assign(exportMap,mod)
+	return Object.keys(modMap).reduce((exportMap,modKey) => {
+		const mod = modMap[modKey]
+		Object.assign(exportMap,/^[A-Z]/.test(modKey) ? {
+			[modKey]:mod
+		} : mod)
 		return exportMap
 	},{})
 }

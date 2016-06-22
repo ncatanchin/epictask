@@ -1,4 +1,4 @@
-
+import 'reflect-metadata'
 
 declare global {
 	interface ObjectConstructor {
@@ -37,7 +37,7 @@ if (!Array.isEqual) {
 
 		if (arr1 === arr2) return true;
 		if (!Array.isArray(arr1) || !Array.isArray(arr2)) return false;
-		if (arr1.length != arr2.length) return false;
+		if (arr1.length !== arr2.length) return false;
 
 
 		// If you don't care about the order of the elements inside

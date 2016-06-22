@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="TypeScript Source" pattern="file[gitop]:src//*||file[gitop]:tests//*||file[gitop]:libs/typemutant/src//*||file[gitop]:libs/typelogger/src//*||file[gitop]:libs/typedux/src//*||file[gitop]:libs/typestore/packages/typestore-plugin-indexeddb/src//*||file[gitop]:libs/typestore/packages/typestore-mocks/src//*||file[gitop]:libs/typestore/packages/typestore/src//*||file[gitop]:libs/typestore/packages/typestore-plugin-pouchdb/src//*" />
+</component>

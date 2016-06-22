@@ -4,9 +4,12 @@ const log = getLogger(__filename)
 import thunkMiddleware from 'redux-thunk'
 import * as createLogger from 'redux-logger'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
-const { electronEnhancer } = require('redux-electron-store')
-
+import {Events} from 'shared/Constants'
 import {AppActionFactory as AppActionFactoryType} from 'shared/actions/AppActionFactory'
+
+const { electronEnhancer } = require('redux-electron-store')
+const electron = require('electron')
+const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
 
 import {
@@ -16,7 +19,20 @@ import {
 } from 'typedux'
 
 
-const reduxLogger = createLogger();
+//const reduxLogger = createLogger();
+
+
+const electronStoreSyncOpts = {
+	synchronous:false
+}
+
+function getMainProcessState() {
+
+	const mainState = ipc.sendSync(Events.GetMainState)
+	log.debug('Got main state',Object.keys(mainState))
+	return mainState
+}
+
 
 /**
  * Null middleware that can be used
@@ -33,7 +49,7 @@ const NullMiddleware = f => f
  * @type {function(): *}
  */
 const devToolsMiddleware =
-	(!DEBUG || Env.isRenderer) ? NullMiddleware :
+	(!DEBUG || !Env.isRenderer) ? NullMiddleware :
 	(window.devToolsExtension) ? window.devToolsExtension() :
 	require('ui/components/debug/DevTools.tsx').DevTools.instrument()
 
@@ -44,10 +60,12 @@ const devToolsMiddleware =
  * @type {*[]}
  */
 const middleware = [
-	thunkMiddleware,
-	//reduxLogger
+	thunkMiddleware
 ]
 
+// if (!Env.isRenderer) {
+// 	middleware.push(reduxLogger)
+// }
 
 let store:ObservableStore<any>
 let ctx:any
@@ -115,7 +133,7 @@ function getDebugSessionKey() {
 
 /**
  * OnError handling for all reducers
- * 
+ *
  * @param err
  * @param reducer
  */
@@ -129,21 +147,22 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 /**
  * Initialize/Create the store
  */
-function initStore() {
+function initStore(defaultState = null) {
 
 	const devTools = [devToolsMiddleware]
-	if (Env.isDev) {
-		const statePersistence = require('redux-devtools').persistState(getDebugSessionKey())
-		devTools.push(statePersistence)
-	}
+	// if (Env.isDev && Env.is) {
+	// 	const statePersistence = require('redux-devtools').persistState(getDebugSessionKey())
+	// 	devTools.push(statePersistence)
+	// }
 
 	const newStore = ObservableStore.createObservableStore(
 		getReducers(),
 		compose(
 			applyMiddleware(...middleware),
-			electronEnhancer(),
+			electronEnhancer(electronStoreSyncOpts),
 			devToolsMiddleware
-		) as StoreEnhancer<any>
+		) as StoreEnhancer<any>,
+		defaultState
 	)
 
 	newStore.rootReducer.onError = onError
@@ -151,19 +170,63 @@ function initStore() {
 
 	store = newStore
 	setStoreProvider(newStore)
+	return store
 }
 
 
+export function createStore() {
+	// if (createStorePromise)
+	// 	return createStorePromise
+
+
+	let defaultState = (Env.isRenderer) ?
+		getMainProcessState() :
+		null
+
+	return initStore(defaultState)
+
+	// createStorePromise = (!Env.isRenderer) ?
+	// 	Promise.resolve(initStore) :
+	// 	new Promise((resolve,reject) => {
+	// 		const {ipcRenderer} = require('electron')
+	// 		ipcRenderer.on(Events.GetMainState,(event,mainState) => {
+	// 			defaultState = mainState
+	// 		})
+	// 		ipcRenderer.sendSync(Events.GetMainState)
+	// 	})
+	//
+	// return createStorePromise
+}
 
 export function getStore() {
-	if (!store)
+	if (!store) {
+		if (Env.isRenderer) {
+			throw new Error('Only main process can synchronously init store, use createStore ')
+		}
 		initStore()
-
+	}
 	return store
 }
 
 export function getReduxStore() {
 	return getStore().getReduxStore()
 }
+
+
+
+// If on the main process then add a handler for
+// retrieving main state
+if (!Env.isRenderer) {
+
+	ipc.on(Events.GetMainState,(event) => {
+		log.info('Getting state for renderer')
+
+		const store = getReduxStore()
+		const mainState = store ? store.getState() : null
+
+		event.returnValue = mainState ? mainState.toJS() : null
+	})
+}
+
 
 

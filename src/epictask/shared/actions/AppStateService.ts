@@ -53,9 +53,9 @@ export async function start() {
 	authActions = new AuthActionFactory() as AuthActionFactoryType
 	repoActions = new RepoActionFactory() as RepoActionFactoryType
 
-	electron.ipcRenderer.on('syncAllRepoDetails',(event,details) => {
-		repoActions.syncAllRepoDetails()
-	})
+	// electron.ipcRenderer.on('syncAllRepoDetails',(event,details) => {
+	// 	repoActions.syncAllRepoDetails()
+	// })
 
 	store.observe([appActions.leaf(),'stateType'],() => {
 		checkStateType()

@@ -16,9 +16,6 @@ import {Label} from './Label'
 import {Milestone} from './Milestone'
 import {User} from './User'
 import {Repo} from './Repo'
-import {Repos} from 'shared/DB'
-
-
 
 
 /**
@@ -56,22 +53,6 @@ export class AvailableRepo extends DefaultModel {
 
 		Object.assign(this,props)
 	}
-
-
-	async getRepo() {
-		if (this.repo)
-			return this.repo
-
-		const repoRepo = Repos.repo
-		const repo = await repoRepo.get(repoRepo.key(this.repoId))
-
-		if (!repo) {
-			throw new Error('Integrated repo must have a valid repo')
-		}
-
-		this.repo = repo
-		return repo
-	}
 }
 
 
@@ -86,29 +67,13 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 	@PouchDBFullTextFinder({
 		textFields: ['name']
 	})
-	// @IndexedDBFinderDescriptor({
-	// 	async fn(tsRepo,...args) {
-	// 		const allJson = await tsRepo.table.toArray()
-	//
-	// 		// Finally map the results
-	// 		const repoRepo = Repos.repo
-	// 		return allJson
-	// 			.filter(async (json) => {
-	//
-	// 				const repo = await repoRepo.get(repoRepo.key(json.repoId))
-	//
-	// 				return _.lowerCase(repo.name).includes(_.lowerCase(args[0]))
-	// 			})
-	//
-	// 	}
-	// })
-	@FinderDescriptor()
 	findByName(name:string):Promise<AvailableRepo[]> {
 		return null
 	}
 
 
 
+	@PouchDBMangoFinder({all:true})
 	findAll():Promise<AvailableRepo[]> {
 		return null
 	}

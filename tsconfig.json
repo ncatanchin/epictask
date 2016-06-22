@@ -10,90 +10,89 @@
 		"preserveConstEnums": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
-		"outDir": "dist/tsc",
-		"baseUrl": "./",
+		"outDir": "../dist/tsc",
+		"baseUrl": "./src",
 		"paths": {
 			"epictask/*": [
-				"./src/epictask/*"
+				"./epictask/*"
 			],
 			"ui": [
-				"./src/epictask/ui/index.ts"
+				"./epictask/ui/index.ts"
 			],
 			"ui/*": [
-				"./src/epictask/ui/*"
+				"./epictask/ui/*"
 			],
 			"shared": [
-				"./src/epictask/shared/index.ts"
+				"./epictask/shared/index.ts"
 			],
 			"shared/*": [
-				"./src/epictask/shared/*"
+				"./epictask/shared/*"
 			],
 			"main": [
-				"./src/epictask/main/index.ts"
+				"./epictask/main/index.ts"
 			],
 			"main/*": [
-				"./src/epictask/main/*"
+				"./epictask/main/*"
 			],
 			"components": [
-				"./src/epictask/ui/components/index.ts"
+				"./epictask/ui/components/index.ts"
 			],
 			"components/*": [
-				"./src/epictask/ui/components/*"
+				"./epictask/ui/components/*"
 			],
 			"typedux": [
-				"./libs/typedux/src/index.ts"
+				"../libs/typedux/src/index.ts"
 			],
 			"typedux/*": [
-				"./libs/typedux/src/*"
+				"../libs/typedux/src/*"
 			],
 			"typemutant": [
-				"./libs/typemutant/src/index.ts"
+				"../libs/typemutant/src/index.ts"
 			],
 			"typemutant/*": [
-				"./libs/typemutant/src/*"
+				"../libs/typemutant/src/*"
 			],
 			"typelogger": [
-				"./libs/typelogger/src/index.ts"
+				"../libs/typelogger/src/index.ts"
 			],
 			"typelogger/*": [
-				"./libs/typelogger/src/*"
+				"../libs/typelogger/src/*"
 			],
 			"typestore": [
-				"./libs/typestore/packages/typestore/src/index.ts"
+				"../libs/typestore/packages/typestore/src/index.ts"
 			],
 			"typestore/*": [
-				"./libs/typestore/packages/typestore/src/*"
+				"../libs/typestore/packages/typestore/src/*"
 			],
 			"typestore-mocks": [
-				"./libs/typestore/packages/typestore-mocks/src/index.ts"
+				"../libs/typestore/packages/typestore-mocks/src/index.ts"
 			],
 			"typestore-mocks/*": [
-				"./libs/typestore/packages/typestore-mocks/src/*"
+				"../libs/typestore/packages/typestore-mocks/src/*"
 			],
 			"typestore-plugin-pouchdb": [
-				"./libs/typestore/packages/typestore-plugin-pouchdb/src/index.ts"
+				"../libs/typestore/packages/typestore-plugin-pouchdb/src/index.ts"
 			],
 			"typestore-plugin-pouchdb/*": [
-				"./libs/typestore/packages/typestore-plugin-pouchdb/src/*"
+				"../libs/typestore/packages/typestore-plugin-pouchdb/src/*"
 			]
 		}
 	},
 	"exclude": [
-		"**/libs/**/*.d.ts",
+		"libs/**/*.d.ts",
 		"libs/typestore/typings/browser.d.ts",
 		"libs/typestore/typings/main.d.ts",
-		"./libs/typestore/typings",
-		"./libs/typestore/typings/browser",
-		"./libs/typestore/typings/main",
-		"**/libs/typestore/typings/**/*.*",
+		"libs/typestore/typings",
+		"libs/typestore/typings/browser",
+		"libs/typestore/typings/main",
+		"libs/typestore/typings/**/*.*",
 		"libs/typestore/packages/typestore/typings",
 		"libs/typestore/packages/typestore-mocks/typings",
 		"libs/typestore/packages/typestore-plugin-pouchdb/typings",
 		"libs/typestore/packages/typestore-plugin-indexeddb/typings",
 		"libs/typelogger/typings",
-
-		"libs/typemutant/typings",
 		"libs/typedux/typings",
+		"libs/typemutant/typings",
 		"node_modules",
 		"node_modules/**/*.*",
 		"**/node_modules",

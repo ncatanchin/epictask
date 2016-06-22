@@ -44,6 +44,20 @@ import {getMetadata} from "./MetadataManager";
 // Logger
 const log = Log.create(__filename)
 
+const mapperCache = new WeakMap<any,IModelMapper<IModel>>()
+
+export function getDefaultMapper<T extends IModel>(clazz:{new():T}):IModelMapper<T> {
+	let mapper = mapperCache.get(clazz) as IModelMapper<T>
+
+	if (!mapper) {
+		mapper = new ModelMapper(clazz)
+		mapperCache.set(clazz,(mapper))
+	}
+
+	return mapper
+
+}
+
 /**
  * The core Repo implementation
  *
@@ -100,7 +114,7 @@ export class Repo<M extends IModel> {
 
 
 	getMapper<M extends IModel>(clazz:{new():M;}):IModelMapper<M> {
-		return new ModelMapper(clazz)
+		return getDefaultMapper(clazz)
 	}
 
 

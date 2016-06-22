@@ -8,7 +8,7 @@ import * as moment from 'moment'
 
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType,github} from 'shared'
-import {Repos} from 'shared/DB'
+import {Repos} from '../../../main/db/DB'
 
 const log = getLogger(__filename)
 

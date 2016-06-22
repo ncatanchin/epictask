@@ -146,6 +146,7 @@ module.exports = function (projectConfig) {
 					/typelogger/,
 					/typemutant/,
 					/typedux/,
+
 					//
 					// /typestore-plugin-pouchdb/,
 					// /typestore-plugin-indexeddb/,

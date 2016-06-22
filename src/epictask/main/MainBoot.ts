@@ -1,8 +1,9 @@
 const log = getLogger(__filename)
 
 // Get the DBService starter
-import * as DBServiceType from 'shared/DB'
+import * as DBServiceType from './db/DB'
 import * as ContextUtilsType from 'shared/util/ContextUtils'
+import * as StoreType from 'shared/store'
 
 let services = []
 
@@ -20,6 +21,8 @@ function shutdown() {
 	})
 }
 
+let bootPromise = null
+
 async function boot():Promise<any> {
 
 	// Just in case this is an HMR reload
@@ -27,7 +30,7 @@ async function boot():Promise<any> {
 	services = []
 
 	// Load dependencies
-	const DBService:typeof DBServiceType = require('shared/DB')
+	const DBService:typeof DBServiceType = require('./db/DB.ts')
 	const ContextUtils:typeof ContextUtilsType = require('shared/util/ContextUtils')
 
 	/**
@@ -35,8 +38,6 @@ async function boot():Promise<any> {
 	 */
 	log.info('Starting Database')
 	await DBService.start()
-
-
 
 	/**
 	 * Find all services
@@ -54,30 +55,42 @@ async function boot():Promise<any> {
 	/**
 	 * Load all available services
 	 */
-	const servicePromises = serviceKeys
-		.map(serviceKey => {
-			log.info(`Starting service: ${serviceKey}`)
-			const service = Services[serviceKey]
-			return (service.start) ? service.start() : Promise.resolve(service)
-		})
-
 	log.info('Waiting for all services to load')
-	servicePromises.forEach(async(service) => await service)
+	for (let serviceKey of serviceKeys) {
+		log.info(`Starting service: ${serviceKey}`)
+		const service = Services[serviceKey]
+		if (service.start) {
+			log.info(`Starting Service ${serviceKey}`)
+			await service.start()
+		} else {
+			log.info(`Started Service ${serviceKey} (No start event)`)
+		}
+	}
 
+
+
+	return Services
 }
 
-const bootPromise = boot()
-
-export = bootPromise
+export = function() {
+	return (bootPromise = boot())
+}
 
 /**
  * If HMR is enabled then sign me up
  */
 if (module.hot) {
-	module.hot.accept(['shared/DB','shared/util/ContextUtils'], updates => {
+	module.hot.accept(['./db/DB','shared/util/ContextUtils'], updates => {
 		log.info('HMR updates received - rebooting', updates)
 
 		log.info('Appending another boot onto the boot promise')
-		bootPromise.then(boot)
+
+		if (bootPromise)
+			bootPromise.then(boot)
 	})
+
+	module.hot.dispose(() => {
+		bootPromise = null
+	})
+
 }

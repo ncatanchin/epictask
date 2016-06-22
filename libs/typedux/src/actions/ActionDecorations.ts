@@ -5,7 +5,6 @@ import {isFunction} from '../util'
 import {ActionMessage} from './ActionTypes'
 import {Reducer} from '../reducers'
 import {ActionFactory} from './ActionFactory'
-import {isRecordObject} from 'typemutant'
 
 
 /**
@@ -23,7 +22,6 @@ export type ActionOptions = {
 	reducers?:Reducer<any,any>[]
 	mapped?:string[]
 }
-
 
 /**
  * Method decorator for actions
@@ -86,10 +84,10 @@ export function Action(options:ActionOptions = {}) {
 
 			// If no reducers are passed in the map directly to state
 			let finalReducers = (reducers) ? [...reducers] : []
-			if (finalReducers.length === 0) {
-				log.debug('Creating mapped handler', propertyKey)
-				finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
-			}
+			// if (finalReducers.length === 0) {
+			// 	log.debug('Creating mapped handler', propertyKey)
+			// 	finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
+			// }
 
 			// Create the action message -> Dispatch
 			const message = this.newMessage(propertyKey, finalReducers,args, data)
@@ -105,29 +103,3 @@ export function Action(options:ActionOptions = {}) {
 	}
 }
 
-/**
- * Create a simple mapped reducer fn
- *
- * @param propertyKey
- * @param args
- * @returns {function(S, M): S}
- */
-function makeMappedReducerFn<S,M>(propertyKey:string,args) {
-	return (state:S, message:M):S => {
-		let stateFn = state[propertyKey]
-		if (!stateFn)
-			throw new Error(`Unable to find mapped reduce function on state ${propertyKey}`)
-
-		if (isRecordObject(state)) {
-			const newState = state.withMutation(tempState => {
-				tempState[propertyKey](...args)
-				return tempState
-			})
-
-			return  ((newState === (state as any)) ? state : newState) as S
-
-		} else {
-			return stateFn(...args)
-		}
-	}
-}

@@ -1,14 +1,7 @@
 //require('shared/SourceMapSupport')
-import 'shared/ErrorHandling'
-
-
-
 import 'reflect-metadata'
+import 'shared/ErrorHandling'
 const electron = require('electron')
-
-if (process.env.NODE_ENV === 'development') {
-
-}
 
 // LOGGING
 import './MainLogging'
@@ -19,6 +12,11 @@ import 'shared/Globals'
 
 const {app} = electron
 const log = getLogger(__filename)
+
+/**
+ * Main window ref
+ */
+let mainWindow:any
 
 /**
  * HMR Configuration for development
@@ -39,7 +37,7 @@ if (DEBUG) {
  */
 const loadWindow = () => require('./MainWindow')
 
-let mainWindow:any
+
 
 /**
  * All windows closed
@@ -51,14 +49,39 @@ function onAllClosed() {
 		app.quit()
 }
 
+async function boot() {
+	global.MainBooted = false
+
+	log.info('Loading the REDUX store')
+	require('shared/store').getStore()
+	log.info('Store built')
+
+	mainWindow = loadWindow()
+
+	await mainWindow.start(async () => {
+		log.debug('Boot callback')
+
+		const mainBoot = require('./MainBoot')
+		const Services = await mainBoot()
+		log.info(`Boot Completed, services include`, Object.keys(Services))
+
+
+
+		return Services
+
+	})
+
+	// Notifying the main window that we are ready
+	global.MainBooted = true
+	mainWindow.ready()
+}
+
 /**
  * App started
  */
 function onStart() {
 	app.setName('EpicTask')
-
-	//mainWindow.start()
-	require('./MainBoot')
+	return boot()
 }
 
 /**
@@ -77,12 +100,13 @@ app.on('ready', onStart)
 if (module.hot) {
 	console.info('Setting up HMR')
 
-	module.hot.accept(['./MainWindow'],(mods) => {
-		log.info("Accepting updates for",mods)
-		mainWindow = loadWindow()
+	module.hot.accept(['./MainWindow','./MainBoot'],async (mods) => {
+		log.info("Rebooting main, updated dependencies",mods)
 
 		// We get a reference to the new window here
-		const newWindow = mainWindow.restart()
+		await boot()
+
+		const newWindow = mainWindow.getBrowserWindow()
 
 		// When it full loads we remove all the old ones
 		newWindow.webContents.on('did-finish-load', () => {
@@ -90,8 +114,6 @@ if (module.hot) {
 				.filter(win => win !== newWindow)
 				.forEach(oldWindow => oldWindow.close())
 		})
-
-
 
 	})
 

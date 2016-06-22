@@ -31,35 +31,12 @@ import {
 	IPouchDBFullTextFinderOptions
 } from './PouchDBDecorations'
 
-import {mapAttrsToField} from './PouchDBUtil'
+import {mapDocs, mapAttrsToField, transformDocumentKeys} from './PouchDBUtil'
+import {makeMangoFinder, makeFilterFinder, makeFnFinder, makeFullTextFinder, findWithSelector} from './PouchDBFinders'
 
 const log = Log.create(__filename)
 
-/**
- * Prepends all keys - DEEP
- * with `attrs.` making field reference easier
- * @param o
- * @returns {{}}
- */
-function transformDocumentKeys(o) {
-	return (Array.isArray(o)) ?
-		o.map(aVal => transformDocumentKeys(aVal)) :
-			(typeof o === "object") ?
-				Object
-					.keys(o)
-					.reduce((newObj,nextKey) => {
-						const nextVal = o[nextKey]
 
-						nextKey = PouchDBOperators.includes(nextKey) ?
-							nextKey : `${PouchDBAttributePrefix}${nextKey}`
-
-						newObj[nextKey] = transformDocumentKeys(nextVal)
-
-						return newObj
-					},{}) :
-				o
-
-}
 /**
  * Super simple plain jain key for now
  * what you send to the constructor comes out the
@@ -105,112 +82,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		repo.attach(this)
 	}
 
-	makeFullTextFinder(finderKey:string,opts:IPouchDBFullTextFinderOptions) {
-		enableQuickSearch()
-		let {textFields,queryMapper,build,minimumMatch,limit,offset} = opts
 
-		return (...args) => {
-			const query = (queryMapper) ?
-				queryMapper(...args) :
-				args[0]
-
-			return this.findWithText(
-				query,textFields,build,limit,offset,true)
-				.then(result => {
-					log.info('Full text result for ' + finderKey ,result,'args',args)
-					return this.mapDocs(result)
-				})
-
-
-		}
-	}
-
-	makeFilterFinder(finderKey:string,opts:IPouchDBFilterFinderOptions) {
-		log.warn(`Finder '${finderKey}' uses allDocs filter - THIS WILL BE SLOW`)
-
-		const {filter} = opts
-
-		return async (...args) => {
-			const allModels = await this.all()
-			return allModels.filter((doc) => filter(doc,...args))
-		}
-	}
-
-	makeFnFinder(finderKey:string,opts:IPouchDBFnFinderOptions) {
-		const {fn} = opts
-
-		return async (...args) => {
-			const result = await fn(this, ...args)
-			return this.mapDocs(result)
-		}
-	}
-
-	makeMangoFinder(finderKey:string,opts:IPouchDBMangoFinderOptions) {
-		let {selector,sort,limit,indexName,indexFields} = opts
-		assert(indexName || indexFields,
-			"You MUST provide either indexFields or indexName")
-
-		assert(indexName || finderKey,`No valid index name indexName(${indexName}) / finderKey(${finderKey}`)
-
-		// In the background create a promise for the index
-		//const indexDeferred = Bluebird.defer()
-		let indexReady = false
-		indexName = indexName || `idx_${finderKey}`
-
-		const indexCreate = () => getIndexByNameOrFields(this.db,indexName,indexFields)
-			.then(idx => {
-				assert(idx || (indexFields && indexFields.length > 0),
-					`No index found for ${indexName} and no indexFields provided`)
-
-				return (!idx || idx.name === indexName) ?
-					makeMangoIndex(
-						this.store.db,
-						this.modelType.name,
-						indexName || finderKey,
-						indexFields || []
-					).then(finalIdx => {
-						log.info('Index result received',finalIdx)
-						indexReady = true
-
-						return finalIdx
-					}) :
-					idx
-
-				// try {
-				// 	const idx = await
-				// 	indexDeferred.resolve(idx)
-				// } catch (err) {
-				// 	log.error(`Failed to create index for finder ${finderKey}`,err)
-				// 	indexDeferred.reject(err)
-				// }
-			})
-
-		const finder = (...args) => {
-			const selectorResult =
-				isFunction(selector) ? selector(...args) :
-					selector
-
-			return this.findWithSelector(
-				selectorResult,
-				sort,
-				limit).then(result => this.mapDocs(result))
-
-		}
-
-		return (...args) => {
-			if (!indexReady) {
-				log.info('index is not ready')
-				return indexCreate()
-					.then((idx) => {
-						log.info('Index is Ready')
-						return finder(...args)
-					})
-			} else {
-				return finder(...args) as any
-			}
-		}
-
-	}
 
 	/**
 	 * Create a finder method with descriptor
@@ -232,33 +104,27 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		if (!opts )
 			return null
 
-		const {
-			fn,
-			filter,
-			selector,
-			sort,
-			limit,
-			single,
-			textFields,
+		const { fn, filter, selector,
+			sort, limit, single,
+			textFields, all
 		} = opts
 
-		assert(fn || selector || filter || textFields,'selector or fn properties MUST be provided on an pouchdb finder descriptor')
 
-		const finderFn:any = (selector) ? this.makeMangoFinder(finderKey,opts) :
-			(filter) ? this.makeFilterFinder(finderKey,opts) :
-				(textFields) ? this.makeFullTextFinder(finderKey,opts) :
-					this.makeFnFinder(finderKey,opts)
 
-		return (...args) => {
-			return finderFn(...args)
-				.then((models) => {
-					log.info('Got finder result for ' + finderKey,'args',args,'models',models)
-					return (single) ? models[0] : models
-				})
+		assert(all || fn || selector || filter || textFields,'selector or fn properties MUST be provided on an pouchdb finder descriptor')
+
+		const finderFn:any = (selector || all) ? makeMangoFinder(this,finderKey,opts) :
+			(filter) ? makeFilterFinder(this,finderKey,opts) :
+				(textFields) ? makeFullTextFinder(this,finderKey,opts) :
+					makeFnFinder(this,finderKey,opts)
+
+		return async (...args) => {
+			const models = await finderFn(...args)
+
+			log.debug('Got finder result for ' + finderKey,'args',args,'models',models)
+			return (single) ? models[0] : models
+
 		}
-
-
-
 	}
 
 	/**
@@ -321,85 +187,19 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		return key.args[0]
 	}
 
-	private mapDocs(result:any):M[] {
-		const mapper = this.repo.getMapper(this.repo.modelClazz)
-
-		let docs = (result && Array.isArray(result)) ? result : result.docs
-		docs = docs || []
-		return docs.map(doc => mapper.fromObject(doc.attrs,(o, model) => {
-			(model as any).$$doc = doc
-			return model
-		}))
-	}
-
-	findWithText(text:string,fields:string[],build = true,limit = -1,offset = -1,includeDocs = true) {
-		enableQuickSearch()
-
-		const attrFields = mapAttrsToField(fields)
-		const opts:any = {
-			query:text,
-			fields: attrFields,
-			include_docs: includeDocs,
-			filter: (doc) => {
-				log.info('filtering full text',doc)
-				return doc.type === this.modelType.name
-			}
-		}
-
-		if (limit > 0) {
-			opts.limit = limit
-		}
-
-		if (offset > 0) {
-			opts.skip = offset
-		}
-
-		log.info('Querying full text with opts',opts)
-		return this.db.search(opts)
-			.then(result => {
-				log.debug(`Full-Text search result`,result)
-				return result.rows.map(row => row.doc)
-			})
-
-	}
-
-	findWithSelector(selector,sort = null,limit = -1,offset = -1,includeDocs = true) {
-
-		const opts = {
-			selector: Object.assign({
-				type: this.modelType.name
-			},transformDocumentKeys(selector))
-		} as any
-
-		if (sort)
-			opts.sort = transformDocumentKeys(sort)
-
-		if (limit > -1)
-			opts.limit = limit
-
-		if (offset > -1)
-			opts.offset = offset
-
-		log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
-
-		return this.db.find(opts)
-	}
 
 
 
-	get(key:PouchDBKeyValue):Promise<M> {
+
+	async get(key:PouchDBKeyValue):Promise<M> {
 		key = key.pouchDBKey ? key.args[0] : key
 
-		return this.findWithSelector({[this.primaryKeyAttr]: key}).then((result) => {
+		const result = await findWithSelector(this,{[this.primaryKeyAttr]: key})
 
-			if (result && result.docs.length > 1)
-				throw new Error(`More than one database object returned for key: ${key}`)
+		if (result && result.docs.length > 1)
+			throw new Error(`More than one database object returned for key: ${key}`)
 
-			return this.mapDocs(result)[0] as M
-		})
-
-
-
+		return mapDocs(this.repo.modelClazz,result)[0] as M
 	}
 
 	async save(model:M):Promise<M> {
@@ -466,19 +266,18 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 	}
 
-	all(includeDocs = true) {
+	async all(includeDocs = true) {
 		//return this.findWithSelector({},null,null,null,includeDocs)
-		return this.db.allDocs({include_docs:true})
-			.then(result => {
-				const docs = result.rows
-					.reduce((allDocs,nextRow) => {
-						allDocs.push(nextRow.doc)
-						return allDocs
-					},[])
-					.filter(doc => doc.type === this.modelType.name)
+		const result = await this.db.allDocs({include_docs:true})
 
-				return this.mapDocs(docs)
-			})
+		const docs = result.rows
+			.reduce((allDocs,nextRow) => {
+				allDocs.push(nextRow.doc)
+				return allDocs
+			},[])
+			.filter(doc => doc.type === this.modelType.name)
+
+		return mapDocs(this.repo.modelClazz,docs)
 	}
 
 	/**
@@ -491,16 +290,6 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		keys = keys.map(key => (key.pouchDBKey) ? key.args[0] : key)
 
 		return await Promise.all(keys.map(key => this.get(key)))
-		//const result
-		// const result = await this.findWithSelector({
-		// 	$or: keys.map(key => ({
-		// 		[PouchDBAttributePrefix + this.primaryKeyAttr]: key
-		// 	}))
-		// })
-
-
-		//return this.mapDocs(result) as M[]
-
 	}
 
 	/**

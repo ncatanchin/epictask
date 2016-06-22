@@ -50,7 +50,9 @@ module.exports = function(projectConfig) {
 
 		node: {
 			__dirname: true,
-			__filename: true
+			__filename: true,
+			global:true,
+			process: true
 		}
 	})
 

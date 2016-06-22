@@ -8,3 +8,9 @@ interface Window {
 	devToolsExtension:any
 }
 
+declare namespace NodeJS {
+	interface Global {
+
+		MainBooted:boolean
+	}
+}

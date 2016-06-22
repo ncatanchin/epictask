@@ -48,7 +48,7 @@ export default class GitHubOAuthWindow {
 
 
 			var authURL = 'https://github.com/login/oauth/authorize?client_id=' + this.clientId + this.scopeQuery
-
+			this.window.webContents.enableDeviceEmulation({fitToView:true})
 			this.window.webContents.on('did-finish-load', () => {
 				this.window.show()
 				this.window.focus()

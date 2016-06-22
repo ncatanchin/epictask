@@ -75,7 +75,8 @@ export function makeMainMenu(mainWindow) {
 				accelerator: 'Ctrl+S',
 				click() {
 					log.info('Sending sync all repos')
-					mainWindow.webContents.send('syncAllRepoDetails')
+					const {RepoActionFactory} = require('shared/actions/repo')
+					new RepoActionFactory().syncAllRepoDetails()
 				}
 			}]
 		}, {

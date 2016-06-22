@@ -11,7 +11,7 @@ const log = getLogger(__filename)
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey,Dialogs} from "shared/Constants"
-import {Repos} from 'shared/DB'
+import {Repos} from '../../../main/db/DB'
 import {cloneObject} from 'shared/util/ObjectUtil'
 
 
@@ -32,7 +32,7 @@ import {RepoSyncJob} from './RepoSyncJob'
  * @constructor
  **/
 
- export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
+export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 
 	/**
@@ -251,7 +251,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 				repoState = actions.state,
 				{repos} = repoState
 
-			await Promise.all(availRepos.map(async (availRepo) => {
+			for (let availRepo of availRepos) {
 
 				if (!availRepo.repo) {
 					availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
@@ -269,8 +269,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 					availRepo.collaborators = await Repos.user.findByRepoId(availRepo.repoId)
 				}
 
-				return availRepo
-			}))
+			}
 
 			log.debug('Loaded available repos',availRepos)
 			actions.setAvailableRepos(availRepos
@@ -284,8 +283,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 	getRepo(id:number):Promise<Repo> {
 		return (async (dispatch,getState) => {
 			const repoRepo = Repos.repo
-			const repo = await repoRepo.get(repoRepo.key(id))
-			return repo
+			return await repoRepo.get(repoRepo.key(id))
 		}) as any
 	}
 
@@ -343,7 +341,7 @@ import {RepoSyncJob} from './RepoSyncJob'
 
 
 	@Action()
-	loadIssue(issue:Issue,force:boolean = false){
+	loadIssue(issue:Issue,force:boolean = false) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 

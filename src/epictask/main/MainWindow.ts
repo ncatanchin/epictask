@@ -1,11 +1,12 @@
 import * as fs from 'fs'
 import * as path from 'path'
-import {toDataUrl} from '../shared/util/Templates'
-const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = require('electron')
+
+import electron = require('electron')
+const{ app, BrowserWindow, Menu, shell,ipcMain,dialog } = electron
 
 import windowStateKeeper = require('electron-window-state')
 import * as Log from 'typelogger'
-import {GitHubConfig,AuthKey} from '../shared/Constants'
+import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu} from './MainMenu'
 
@@ -14,8 +15,11 @@ log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let menu
 let template
-let mainWindow = null
+let browserWindow:Electron.BrowserWindow = null
 let firstLoad = true
+
+let webContentLoaded = false
+let mainReady = false
 
 ipcMain.on(AuthKey,(event,arg) => {
 	log.info('Got auth request',event,arg)
@@ -40,7 +44,7 @@ if ((Env.isDev || Env.isDev) && !Env.isRemote) {
 
 export function stop() {
 	console.info('disposing main')
-	mainWindow = null
+	browserWindow = null
 }
 
 /**
@@ -56,9 +60,26 @@ export function restart() {
 /**
  * Start the main window
  */
-export function start() {
+export function start(cb = null) {
 	log.info('> start')
-	return loadRootWindow()
+	return loadRootWindow(cb)
+}
+
+/**
+ * Ready - initiates the app content load
+ */
+export function ready() {
+	if (webContentLoaded)
+		browserWindow.webContents.send(Events.MainReady,Events.MainReady)
+}
+
+/**
+ * Retrieve the current browser window
+ *
+ * @returns {BrowserWindow}
+ */
+export function getBrowserWindow() {
+	return browserWindow
 }
 
 
@@ -72,7 +93,8 @@ function makeMainTemplate() {
 	const mainTemplate = pug.render(mainTemplateSrc,{
 		cssGlobal,
 		Env,
-		baseDir:path.resolve(__dirname,'../../..')
+		baseDir:path.resolve(__dirname,'../../..'),
+		Events
 	})
 	let templatePath = app.getPath('temp') + '/entry-' + require('node-uuid').v4() + '.html'
 	fs.writeFileSync(templatePath,mainTemplate)
@@ -83,62 +105,81 @@ function makeMainTemplate() {
 /**
  * Load the actual window
  */
-function loadRootWindow() {
-	log.info('> ready')
+function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
+	return new Promise((resolve,reject) => {
 
-	let mainWindowState = windowStateKeeper({
-		defaultWidth: 1024,
-		defaultHeight: 728
+		try {
+			log.debug('window is loading')
+
+			let mainWindowState = windowStateKeeper({
+				defaultWidth: 1024,
+				defaultHeight: 728
+			})
+
+			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, {
+				show: true,
+				frame: false,
+				titleBarStyle: 'hidden',
+				// darkTheme:true,
+				title: 'epictask'
+			}))
+
+
+			mainWindowState.manage(browserWindow)
+
+			const templateURL = makeMainTemplate()
+			log.info(`Template Path: ${templateURL}`)
+			browserWindow.loadURL(templateURL)
+
+			/**
+			 * On PageLoaded - show and focus
+			 */
+			browserWindow.webContents.on('did-finish-load', () => {
+				browserWindow.setTitle('EpicTask')
+				browserWindow.show()
+
+				if (firstLoad)
+					browserWindow.focus()
+
+				firstLoad = false
+
+				onFinishLoadCallback && onFinishLoadCallback()
+
+
+			})
+
+			browserWindow.webContents.on('did-fail-load',(event,code) => {
+				if (code === 3)
+					return
+
+				log.error('Failed to load content',event,code)
+				reject(new Error(`ui code did not load ${code}`))
+
+			})
+
+			browserWindow.on('closed', () => {
+				browserWindow = null
+			})
+
+			/**
+			 * IN DEV MODE - NOT REMOTE RENDER DEBUG - SHOW DEV TOOLS
+			 */
+			if (Env.isDev && !Env.isRemote) {
+				browserWindow.webContents.openDevTools()
+			}
+
+
+			// Make the menu
+			menu = makeMainMenu(browserWindow)
+
+			// Assign it based on OS
+			Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+
+			return resolve(browserWindow)
+		} catch (err) {
+			reject(err)
+		}
 	})
-
-	mainWindow = new BrowserWindow(Object.assign({},mainWindowState,{
-		show: true,
-		frame: false,
-		titleBarStyle: 'hidden',
-		// darkTheme:true,
-		title: 'epictask'
-	}))
-
-
-	mainWindowState.manage(mainWindow)
-
-	const templateURL = makeMainTemplate()
-	log.info(`Template Path: ${templateURL}`)
-	mainWindow.loadURL(templateURL)
-
-	/**
-	 * When the page loads, let's show it and focus
-	 */
-	mainWindow.webContents.on('did-finish-load', () => {
-		mainWindow.setTitle('EpicTask')
-
-		mainWindow.show()
-
-		if (firstLoad)
-			mainWindow.focus()
-
-		firstLoad = false
-	})
-
-	mainWindow.on('closed', () => {
-		mainWindow = null
-	})
-
-	/**
-	 * IN DEV MODE - NOT REMOTE RENDER DEBUG - SHOW DEV TOOLS
-	 */
-	if (Env.isDev && !Env.isRemote) {
-		mainWindow.openDevTools()
-	}
-
-
-	// Make the menu
-	menu = makeMainMenu(mainWindow)
-
-	// Assign it based on OS
-	Env.isOSX ? Menu.setApplicationMenu(menu) : mainWindow.setMenu(menu)
-
-	return mainWindow
 }
 
 /**
@@ -150,7 +191,8 @@ if (module.hot) {
 
 		const templateURL = makeMainTemplate()
 		log.info(`Template Path: ${templateURL}`)
-		mainWindow.loadURL(templateURL)
+		browserWindow.loadURL(templateURL)
+
 
 		// if (mainWindow) {
 		// 	mainWindow.close()

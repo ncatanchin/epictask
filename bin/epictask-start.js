@@ -3,6 +3,8 @@ require('source-map-support').install()
 console.log('starting epictask')
 require('babel-polyfill')
 
+process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+
 /**
  * Replace es6-promise with bluebird
  */
@@ -11,7 +13,9 @@ const Bluebird = require('bluebird')
 Bluebird.config({
 	cancellation: true,
 	longStackTraces: true,
-	warnings: true,
+	warnings: {
+		wForgottenReturn: false
+	},
 	monitoring: true
 })
 

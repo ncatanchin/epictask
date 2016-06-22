@@ -4,6 +4,7 @@ import * as Immutable from 'immutable'
 import {State} from './State'
 import {ActionMessage} from "../actions"
 import {ILeafReducer} from './LeafReducer'
+import {makeMappedReducerFn} from '../util/ActionMapper'
 
 const log = getLogger(__filename)
 
@@ -100,12 +101,26 @@ export class RootReducer {
 							reducerState)
 
 						// Now iterate the reducers on the message
-						if (action.reducers) {
+						if (action.reducers && action.reducers.length) {
 							action.reducers.forEach((actionReducer) => {
 								if (action.stateType && reducerState instanceof action.stateType)
 									checkReducerStateChange(actionReducer(reducerState, action))
 							})
+						} else {
+							log.debug('Checking for direct state reducer')
+
+							if (typeof reducerState[action.type] === 'function') {
+								log.debug('Called reducer directly on state function',action.type)
+								const reducerFn = makeMappedReducerFn(action.type,action.args)
+								checkReducerStateChange(reducerFn(reducerState,action))
+
+								// const
+								// log.debug('Creating mapped handler', propertyKey)
+								// finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
+							}
 						}
+
+
 
 
 					} catch (err) {

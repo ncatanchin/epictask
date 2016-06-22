@@ -2,10 +2,7 @@
 //import * as PouchDB from 'pouchdb'
 import {isString} from 'typestore'
 import {cleanFieldPrefixes,filterReservedFields,mapAttrsToField} from './PouchDBUtil'
-import {PouchDBAttributePrefix, PouchDBReservedFields} from './PouchDBConstants'
 
-
-const Bluebird = require('bluebird')
 const log = require('typelogger').create(__filename)
 
 let cachedIndexMapPromise = null
@@ -24,88 +21,95 @@ export interface IPouchDBIndex {
 
 export type TPouchDBIndexMap = {[idxName:string]:IPouchDBIndex}
 
-function updateCachedIndexMap(db) {
+async function updateCachedIndexMap(db) {
 
 	try {
-		return db.getIndexes()
-			.then(indexesResult => {
-				const
-					indexes = indexesResult.indexes
+		const indexesResult = await db.getIndexes()
 
+		return indexesResult.indexes.reduce((map,index,i) => {
+			map[index.name] = {
+				index:  i,
+				name:   index.name,
+				def:    index,
+				fields: index.def.fields.reduce((fieldList, nextFieldDef) => {
+					fieldList.push(...Object.keys(nextFieldDef))
+					return fieldList
+				}, [])
+			}
 
-				return indexes.reduce((map,index,i) => {
-					map[index.name] = {
-						index:  i,
-						name:   index.name,
-						def:    index,
-						fields: index.def.fields.reduce((fieldList, nextFieldDef) => {
-							fieldList.push(...Object.keys(nextFieldDef))
-							return fieldList
-						}, [])
-					}
+			return map
 
-					return map
+		},{})
 
-				},{})
-
-			}).catch(err => {
-				log.error('Failed to update index map', err)
-
-				return Promise.resolve({})
-
-		})
 	} catch (err) {
 		log.error('index map failed try/catch', err)
-
-		return Promise.resolve({})
 	}
+
+	return {}
 }
 
+/**
+ * Get the current index map
+ * - unless forced a cache version will be
+ *  returned when available
+ * @param db
+ * @param force
+ * @returns {null}
+ */
 export function getIndexMap(db,force = false):Promise<TPouchDBIndexMap> {
 	log.debug('Getting indexes, force=',force)
 
 
 	if (force || !cachedIndexMapPromise) {
-		if (cachedIndexMapPromise && force) {
-			cachedIndexMapPromise.then(() => {
-				return updateCachedIndexMap(db)
-			})
-		} else if (!cachedIndexMapPromise) {
-			cachedIndexMapPromise = updateCachedIndexMap(db)
-		}
+		cachedIndexMapPromise = updateCachedIndexMap(db)
 	}
 
 	return cachedIndexMapPromise
 
 }
 
+/**
+ * Compare index fields
+ *
+ * @param idx
+ * @param fields
+ * @returns {boolean}
+ */
+function indexFieldsMatch(idx:IPouchDBIndex,fields:string[]) {
+	const
+		f1 = cleanFieldPrefixes(filterReservedFields(idx.fields)),
+		f2 = cleanFieldPrefixes(filterReservedFields(fields))
 
-export function indexFieldsMatch(idx:IPouchDBIndex,fields:string[]) {
 	return Array.isEqual(
-		cleanFieldPrefixes(filterReservedFields(idx.fields)),
-		cleanFieldPrefixes(fields),
+		f1,
+		f2,
 		true
 	)
 }
 
-export function getIndexByNameOrFields(db,indexName:string,fields:string[]) {
-	return getIndexMap(db)
-		.then(idxMap => {
-			if (idxMap[indexName] || !fields || !fields.length)
-				return idxMap[indexName]
+/**
+ * Get an index by name
+ *
+ * @param db
+ * @param indexName
+ * @param fields
+ * @returns {IPouchDBIndex}
+ */
+export async function  getIndexByNameOrFields(db,indexName:string,fields:string[]) {
+	const idxMap = await getIndexMap(db)
 
-			fields = cleanFieldPrefixes(fields)
+	if (idxMap[indexName] || !fields || !fields.length)
+		return idxMap[indexName]
 
-			const
-				idxNames = Object.keys(idxMap),
-				existingIdxName = idxNames.find(idxName => {
-					const idx = idxMap[idxName]
-					return indexName === idxName || indexFieldsMatch(idx,fields)
-				})
-			return idxMap[existingIdxName]
+	fields = cleanFieldPrefixes(fields)
 
+	const
+		idxNames = Object.keys(idxMap),
+		existingIdxName = idxNames.find(idxName => {
+			const idx = idxMap[idxName]
+			return indexName === idxName || indexFieldsMatch(idx,fields)
 		})
-
+	return idxMap[existingIdxName]
 
 }
 
@@ -123,7 +127,7 @@ export function makeMangoIndexConfig(modelName:string,indexName:string,fields:st
  * @param db
  * @param indexConfig
  */
-function makeMangoIndex(db,indexConfig:PouchDBMangoIndexConfig)
+async function makeMangoIndex(db,indexConfig:PouchDBMangoIndexConfig)
 /**
  * Create an index config and then index
  *
@@ -132,8 +136,8 @@ function makeMangoIndex(db,indexConfig:PouchDBMangoIndexConfig)
  * @param indexName
  * @param fields
  */
-function makeMangoIndex(db,modelName:string, indexName:string,fields:string[])
-function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndexConfig, indexName?:string,fields?:string[]) {
+async function makeMangoIndex(db,modelName:string, indexName:string,fields:string[])
+async function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndexConfig, indexName?:string,fields?:string[]) {
 
 	// Make sure we have a valid index config first thing
 	const indexConfig = (!indexConfigOrModelName || isString(indexConfigOrModelName)) ?
@@ -145,39 +149,36 @@ function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndexConfig
 
 	log.info(`Checking index ${indexName}`)
 
-	return getIndexByNameOrFields(db, indexName, fields)
-		.then(idx => {
-			if (idx && (idx.name !== indexName || indexFieldsMatch(idx, fields))) {
-				log.info(`Index def has not changed: ${indexName}`)
-				return idx
-			} else {
+	const idx = await getIndexByNameOrFields(db, indexName, fields)
 
-				/**
-				 * Local fn to create the index
-				 *
-				 * @returns {any}
-				 */
-				const doCreate = () => {
-					return db.createIndex({index: indexConfig})
-						.then(createResult => {
-							log.info(`Create result for ${indexName}`)
-							return getIndexMap(db, true)
-						})
-						.then(updatedIdxMap => {
-							return updatedIdxMap[indexName]
-						})
-				}
+	if (idx && (idx.name !== indexName || indexFieldsMatch(idx, fields))) {
+		log.info(`Index def has not changed: ${indexName}`)
+		return idx
+	} else {
 
-				//return doCreate()
-				if (idx) {
-					log.info(`Index changed, deleting old version: ${indexName}`)
-					return db.deleteIndex(idx.def)
-						.then(doCreate)
-				} else {
-					return doCreate()
-				}
-			}
-		})
+		/**
+		 * Local fn to create the index
+		 *
+		 * @returns {any}
+		 */
+		const doCreate = async () => {
+			const createResult = await db.createIndex({index: indexConfig})
+
+			log.info(`Create result for ${indexName}`,createResult)
+			const updatedIdxMap = await getIndexMap(db, true)
+			return updatedIdxMap[indexName]
+		}
+
+		//return doCreate()
+		if (idx) {
+			const deleteResult = await db.deleteIndex(idx.def)
+			log.info(`Index changed, deleting old version: ${indexName}`,deleteResult)
+
+
+		}
+		return doCreate()
+
+	}
 
 
 }

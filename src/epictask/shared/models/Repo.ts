@@ -121,7 +121,7 @@ export class RepoRepo extends TSRepo<Repo> {
 	 * Find all repos
 	 * @returns {Promise<Repo[]>}
 	 */
-	// @PouchDBMangoFinder({selector:{}})
+	@PouchDBMangoFinder({all:true})
 	findAll():Promise<Repo[]> {
 		return null
 	}

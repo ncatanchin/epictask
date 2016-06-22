@@ -28,7 +28,11 @@ const syncAllReposJob = {
 	}
 }
 
-
+/**
+ * Execute a pending job
+ *
+ * @param job
+ */
 async function executeJob(job:IJob) {
 	workingJobs[job.id] = job
 	log.info(`Executing job ${job.id}`)
@@ -37,6 +41,11 @@ async function executeJob(job:IJob) {
 	log.info(`Job Completed`)
 }
 
+/**
+ * Update pending jobs
+ *
+ * @param newJobs
+ */
 function updateJobs(newJobs:IJob[]) {
 
 	// Pending jobs = any job that is 'Created' and we dont know about
@@ -46,6 +55,11 @@ function updateJobs(newJobs:IJob[]) {
 	pendingJobs.forEach(executeJob)
 }
 
+/**
+ * Clear a scheduled job
+ *
+ * @param job
+ */
 function clearScheduledJob(job:IScheduledJob) {
 	log.debug(`Removing job ${job.name}`)
 	if (job.timer) {
@@ -76,7 +90,7 @@ function scheduledJobExecutor(job:IScheduledJob) {
 
 		const jobRequest = scheduledJobToRequest(job)
 
-		log.info(`Creating scheduled job execution`,job,jobRequest)
+		log.debug(`Creating scheduled job execution`,job,jobRequest)
 
 		jobActions.createJob(jobRequest)
 	}
@@ -98,7 +112,7 @@ function updateScheduledJobs(newScheduledJobs:IScheduledJob[]) {
 	// Remove + clear jobs first
 	removedJobs.forEach(clearScheduledJob)
 
-	newJobs.forEach(job => {
+	newJobs.forEach((job:IScheduledJob) => {
 		const executor = scheduledJobExecutor(job)
 		job.timer = (job.repeat) ? later.setInterval(executor,job.scheduler) :
 			later.setTimeout(executor,job.scheduler)
@@ -119,33 +133,24 @@ export async function start() {
 	updateJobs(state.jobs)
 	updateScheduledJobs(state.scheduledJobs)
 
-
 	jobActions.createJob(scheduledJobToRequest(syncAllReposJob))
 	jobActions.scheduleJob(syncAllReposJob)
 
+	/**
+	 * Watch for job updates
+	 */
 	store.observe([jobActions.leaf(),'jobs'],(newJobs) => {
 		log.debug('Check new jobs for anything that need to be worked')
 		updateJobs(newJobs)
 	})
 
+	/**
+	 * Watch for new scheduled jobs
+	 */
 	store.observe([jobActions.leaf(),'scheduledJobs'],(newScheduledJobs) => {
 		log.debug('Scheduled jobs changed',newScheduledJobs)
 		updateScheduledJobs(newScheduledJobs)
 	})
 
-
-
-	// setTimeout(() => {
-	// 	jobActions.createJob(syncAllReposJob)
-	//
-	// },100)
-
 }
 
-
-if (module.hot) {
-	module.hot.accept([],(updates) => {
-		log.info('HMR updates for job manager', updates)
-		start()
-	})
-}

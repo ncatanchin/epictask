@@ -1,7 +1,7 @@
 
 const {PouchDB} = require('./PouchDBSetup')
 const Bluebird = require('bluebird')
-//const assert = require('assert')
+
 
 import {
 	ICoordinator,
@@ -25,6 +25,12 @@ import {getIndexMap,makeMangoIndex} from './PouchDBIndexes'
 
 const log = Log.create(__filename)
 
+export interface IPouchDBReplication {
+	to:string
+	live?:boolean
+	retry?:boolean
+}
+
 /**
  * Options interface
  */
@@ -32,6 +38,7 @@ export interface IPouchDBOptions {
 
 	filename:string
 	createOptions?:any
+	replication?: IPouchDBReplication
 }
 
 /**
@@ -52,6 +59,7 @@ export class PouchDBPlugin implements IStorePlugin {
 
 	private coordinator:ICoordinator
 	private internalDb:any
+	private syncHandler:any
 	private schema:any
 	private repoPlugins:{[modelName:string]:PouchDBRepoPlugin<any>} = {}
 
@@ -63,28 +71,25 @@ export class PouchDBPlugin implements IStorePlugin {
 	}
 
 	private newPouch() {
-		//return new PouchDB(this.opts.filename,{adapter: 'websql'})
 		return new PouchDB(this.opts.filename,this.opts.createOptions || {})
 	}
 
-	private open() {
+	private async open() {
+		const db = await this.newPouch()
 
-
-		return this.newPouch()
-			.then(db => {
-				this.internalDb = db
-				return db
+		const {replication} = this.opts
+		if (replication && replication.to) {
+			const remoteDB = new PouchDB(replication.to)
+			this.syncHandler = db.sync(remoteDB,{
+				live: replication.live,
+				retry: replication.retry
 			})
-		// this.internalDb = this.newPouch()
-		// return this.internalDb
-		// 	.then(db => {
-		// 		return db
-		// 	})
+		}
 
-		// Grab and cache index map
-		//getIndexMap(this.internalDb, true)
+		this.internalDb = db
+		return db
 
-		//return this.internalDb
+
 	}
 
 	get db() {

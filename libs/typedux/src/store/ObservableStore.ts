@@ -43,24 +43,24 @@ export class ObservableStore<S extends State> implements Store<S> {
 	 * @param enhancer
 	 * @returns {ObservableStore<State>}
 	 */
-	static createObservableStore(leafReducers:ILeafReducer<any,any>[],enhancer:StoreEnhancer<any> = null):ObservableStore<State> {
+	static createObservableStore(leafReducers:ILeafReducer<any,any>[],enhancer:StoreEnhancer<any> = null,defaultState = null):ObservableStore<State> {
 
-		return new ObservableStore(leafReducers,enhancer)
+		return new ObservableStore(leafReducers,enhancer,defaultState)
 	}
 
 	public rootReducer:RootReducer
-	
+
 	private observers:StateObserver[] = []
 	private rootReducerFn
 	private store
 	private pendingTick
 
-	constructor(leafReducers:ILeafReducer<any,any>[],enhancer:StoreEnhancer<S> = null) {
+	constructor(leafReducers:ILeafReducer<any,any>[],enhancer:StoreEnhancer<S> = null,defaultState = null) {
 
 		this.createRootReducer(...leafReducers)
 		this.store = createStore(
 			this.rootReducerFn,
-			this.rootReducer.defaultState(),
+			defaultState || this.rootReducer.defaultState(),
 			enhancer
 		)
 
