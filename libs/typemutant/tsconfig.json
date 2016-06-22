@@ -1,0 +1,26 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"declaration": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"preserveConstEnums": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"inlineSourceMap": true,
+		"baseUrl": "./",
+		"outDir": "dist",
+		"paths": {
+			"typemutant": ["./src/index"],
+			"typemutant/*": ["./src/*"]
+		}
+	},
+	"exclude": [
+		"node_modules",
+		"typings/main.d.ts",
+		"typings/main",
+		"dist"
+	]
+}
