@@ -1,0 +1,27 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"declaration": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"preserveConstEnums": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"inlineSourceMap": true,
+		"jsx": "react",
+		"baseUrl": "./",
+		"outDir": "dist",
+		"paths": {
+			"typedux": ["./src/index"],
+			"typedux/*": ["./src/*"]
+		}
+	},
+	"exclude": [
+		"node_modules",
+		"typings/main.d.ts",
+		"typings/main",
+		"dist"
+	]
+}
