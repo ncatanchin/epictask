@@ -2,6 +2,7 @@
 import 'shared/ErrorHandling'
 
 
+
 import 'reflect-metadata'
 const electron = require('electron')
 

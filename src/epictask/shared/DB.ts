@@ -3,6 +3,7 @@ import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 //require('pouchdb/extras/websql')
 
+
 //import {AllLunrIndexes as Indexes} from './LunrIndex'
 //import {Repo,RepoRepo} from 'shared/models/Repo'
 //import {IRepos} from './DBRepos'
