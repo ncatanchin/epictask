@@ -39,7 +39,29 @@
 			],
 			"components/*": [
 				"./epictask/ui/components/*"
+			],
+			"typedux": [
+				"libs/typedux/src/index.ts"
+			],
+			"typemutant": [
+				"libs/typemutant/src/index.ts"
+			],
+			"typelogger": [
+				"libs/typelogger/src/index.ts"
+			],
+			"typestore": [
+				"libs/typestore/packages/typestore/src/index.ts"
+			],
+			"typestore-mocks": [
+				"libs/typestore/packages/typestore-mocks/src/index.ts"
+			],
+			"typestore-plugin-pouchdb": [
+				"libs/typestore/packages/typestore-plugin-pouchdb/src/index.ts"
+			],
+			"typestore-plugin-indexeddb": [
+				"libs/typestore/packages/typestore-plugin-indexeddb/src/index.ts"
 			]
+
 
 		}
 	},

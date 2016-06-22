@@ -16,6 +16,11 @@ const {DefinePlugin,ExternalsPlugin,HotModuleReplacementPlugin} = webpack
 // Import globals - just for linting
 const {isDev,env} = global
 
+const libAlias = (name,libPath) => ({
+	[name]: path.resolve(baseDir,`libs/${libPath}`)
+})
+
+const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir,dir))
 
 module.exports = function (projectConfig) {
 	const config = {
@@ -35,7 +40,7 @@ module.exports = function (projectConfig) {
 		// Currently we need to add '.ts' to the resolve.extensions array.
 		resolve: {
 
-			alias: {
+			alias: _.assign({
 				assert: 'browser-assert',
 				epictask: path.resolve(baseDir,'src/epictask'),
 				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
@@ -53,9 +58,24 @@ module.exports = function (projectConfig) {
 				// "typestore-plugin-indexeddb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-indexeddb/src/index.ts"),
 				// "typestore-plugin-pouchdb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-pouchdb/src/index.ts")
 			},
-			modules: [
-				path.resolve(baseDir,'src'),
-				path.resolve(baseDir,'node_modules'),
+				libAlias('typedux','typedux/src/index.ts'),
+				libAlias('typemutant','typemutant/src/index.ts'),
+				libAlias('typelogger','typelogger/src/index.ts'),
+				libAlias('typestore','typestore/packages/typestore/src/index.ts'),
+				libAlias('typestore-mocks','typestore/packages/typestore-mocks/src/index.ts'),
+				libAlias('typestore-plugin-pouchdb','typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
+
+			),
+			modules: resolveDirs(
+				'src',
+				'libs',
+				'node_modules',
+				'libs/typestore/node_modules',
+				'libs/typestore/packages/typestore-plugin-pouchdb/node_modules',
+				'libs/typemutant/node_modules',
+				'libs/typedux/node_modules',
+				'libs/typelogger/node_modules'
+			).concat([
 
 				// path.resolve(baseDir,'../typestore/packages/'),
 				// path.resolve(baseDir,'../typestore/packages/typestore-plugin-pouchdb/node_modules'),
@@ -66,7 +86,7 @@ module.exports = function (projectConfig) {
 
 
 
-			],
+			]),
 
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -114,12 +134,19 @@ module.exports = function (projectConfig) {
 					// /Dexie/,
 					// /strip-ansi/,
 					// /ansi-regex/,
-					/typestore-plugin-pouchdb/,
-					/typestore-plugin-indexeddb/,
-					/typelogger/,
-					/typestore/,
-					/typedux/,
-					/typemutant/,
+					/(?!.*node_modules.*)typestore\//,
+					/(?!.*node_modules.*)typestore-plugin-pouchdb/,
+					/(?!.*node_modules.*)typestore-mocks/,
+					/(?!.*node_modules.*)typelogger/,
+					/(?!.*node_modules.*)typemutant/,
+					/(?!.*node_modules.*)typedux/,
+					//
+					// /typestore-plugin-pouchdb/,
+					// /typestore-plugin-indexeddb/,
+					// /typelogger/,
+					// /typestore/,
+					// /typedux/,
+					// /typemutant/,
 
 				]
 			})
