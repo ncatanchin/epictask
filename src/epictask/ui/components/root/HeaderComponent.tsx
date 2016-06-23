@@ -3,7 +3,7 @@ import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
 import {getStore} from 'shared/store'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchPanel} from 'components'
-import {makeAbsolute} from 'ui/styles/CommonStyles'
+import {makeAbsolute} from '../../../shared/themes/styles/CommonStyles'
 
 
 //const styles = require('./HeaderComponent.scss')

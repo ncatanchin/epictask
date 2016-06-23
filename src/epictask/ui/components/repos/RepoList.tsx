@@ -107,7 +107,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 		const themeStyles = theme.repoPanel
 
 		return <div style={styles.list}>
-			{availableRepos
+			{availableRepos && availableRepos
 				.filter(availRepo => _.isString(availRepo.id))
 				.map((availRepo,availRepoIndex) => {
 					const id = availRepo.id

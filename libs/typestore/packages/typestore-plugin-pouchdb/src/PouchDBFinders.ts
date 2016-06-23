@@ -19,7 +19,7 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
 		fields: attrFields,
 		include_docs: includeDocs,
 		filter: (doc) => {
-			log.info('filtering full text',doc)
+			//log.info('filtering full text',doc)
 			return doc.type === pouchRepo.modelType.name
 		}
 	}

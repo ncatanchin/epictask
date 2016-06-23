@@ -13,26 +13,27 @@ import {LunrIndex} from '../LunrIndex'
 import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 
-/**
- * Create comment index
- *
- * @type {LunrIndex}
- */
-export const CommentIndex = new LunrIndex<Comment>('Comment', {
-	ref: 'id',
-	fields: {
-		body: 3,
-		login: 1
-	},
-	normalizer(comment) {
-		return Object.assign({},comment,{
-			login: comment.user.login
-		})
-	}
-})
+// /**
+//  * Create comment index
+//  *
+//  * @type {LunrIndex}
+//  */
+// export const CommentIndex = new LunrIndex<Comment>('Comment', {
+// 	ref: 'id',
+// 	fields: {
+// 		body: 3,
+// 		login: 1
+// 	},
+// 	normalizer(comment) {
+// 		return Object.assign({},comment,{
+// 			login: comment.user.login
+// 		})
+// 	}
+// })
 
 
-@ModelDescriptor({onPersistenceEvent:CommentIndex.onPersistenceEvent})
+//@ModelDescriptor({onPersistenceEvent:CommentIndex.onPersistenceEvent})
+@ModelDescriptor()
 export class Comment extends DefaultModel {
 
 	static makeParentRefId(repoId,issueNumber) {

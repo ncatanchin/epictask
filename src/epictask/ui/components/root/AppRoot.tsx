@@ -290,8 +290,6 @@ function render() {
 		document.getElementById('root'),
 		() => {
 			log.info('Rendered, hiding splash screen')
-
-
 			window.postMessage({type:Events.UIReady},"*")
 		}
 	)

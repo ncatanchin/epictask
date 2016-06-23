@@ -33,7 +33,7 @@ const searchActions = new SearchActionFactory()
 export interface ISearchPanelProps {
 	inlineResults?:boolean,
 	expanded?:boolean,
-	results?:SearchResults,
+	results?:SearchResult<any>[],
 	query?:string
 	theme?:any
 }
@@ -134,7 +134,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			const {selectedIndex} = this.state
 			const {results} = this.props
 			if (results) {
-				for (let r of results.all) {
+				for (let r of results) {
 					if (r.index === selectedIndex) {
 						result = r
 						break
@@ -159,7 +159,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	setSelectedIndex = (selectedIndex) => {
 		const {results} = this.props
-		const endIndex = results ? results.all.length - 1 : 0
+		const endIndex = results ? results.length - 1 : 0
 
 
 		selectedIndex = selectedIndex < 0 ? endIndex :

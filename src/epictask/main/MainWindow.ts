@@ -10,6 +10,7 @@ import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu} from './MainMenu'
 
+
 const log = Log.create(__filename)
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
@@ -69,8 +70,7 @@ export function start(cb = null) {
  * Ready - initiates the app content load
  */
 export function ready() {
-	if (webContentLoaded)
-		browserWindow.webContents.send(Events.MainReady,Events.MainReady)
+	browserWindow.webContents.send(Events.MainReady)
 }
 
 /**
@@ -134,7 +134,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			/**
 			 * On PageLoaded - show and focus
 			 */
-			browserWindow.webContents.on('did-finish-load', () => {
+			browserWindow.webContents.on('did-finish-load',async () => {
 				browserWindow.setTitle('EpicTask')
 				browserWindow.show()
 
@@ -143,9 +143,16 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 
 				firstLoad = false
 
-				onFinishLoadCallback && onFinishLoadCallback()
 
+				if (onFinishLoadCallback) {
+					const result:any = onFinishLoadCallback()
+					if (result && result.then) {
+						log.info('waiting for window did-finish-load callback to complete')
+						await result
+					}
+				}
 
+				return resolve(browserWindow)
 			})
 
 			browserWindow.webContents.on('did-fail-load',(event,code) => {
@@ -175,7 +182,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			// Assign it based on OS
 			Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
 
-			return resolve(browserWindow)
+
 		} catch (err) {
 			reject(err)
 		}

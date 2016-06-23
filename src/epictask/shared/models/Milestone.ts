@@ -12,21 +12,21 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 import {User} from './User'
 import {LunrIndex} from '../LunrIndex'
 
-/**
- * Create milestone index
- *
- * @type {LunrIndex}
- */
-export const MilestoneIndex = new LunrIndex<Milestone>('Milestone', {
-	ref: 'id',
-	fields: {
-		title: 3
-	}
-})
+// /**
+//  * Create milestone index
+//  *
+//  * @type {LunrIndex}
+//  */
+// export const MilestoneIndex = new LunrIndex<Milestone>('Milestone', {
+// 	ref: 'id',
+// 	fields: {
+// 		title: 3
+// 	}
+// })
 
 
 @ModelDescriptor({
-	onPersistenceEvent:MilestoneIndex.onPersistenceEvent
+	//onPersistenceEvent:MilestoneIndex.onPersistenceEvent
 })
 export class Milestone extends DefaultModel {
 

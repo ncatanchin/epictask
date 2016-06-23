@@ -5,7 +5,7 @@ import {isFunction} from '../util'
 import {ActionMessage} from './ActionTypes'
 import {Reducer} from '../reducers'
 import {ActionFactory} from './ActionFactory'
-
+import {executeActionChain,registerAction} from './Actions'
 
 /**
  * Dispatch an action to the redux store
@@ -63,43 +63,51 @@ export function Action(options:ActionOptions = {}) {
 
 
 
+
 		// Override the default method
-		descriptor.value = function (...args:any[]) {
+		descriptor.value = function (...preArgs:any[]) {
+			return executeActionChain(this.leaf(),propertyKey,(...args) => {
 
-			// Grab the current dispatcher
-			const dispatcher = this.dispatcher
+				// Grab the current dispatcher
+				const dispatcher = this.dispatcher
 
-			let data:any = (actionCreator) ? actionCreator.apply(this, args) : {}
-
-			// If we got a function/thunk/promise - return it
-			if (isFunction(data))
-				return dispatcher(data)
+				let data:any = (actionCreator) ? actionCreator.apply(this, args) : {}
 
 
-			// If data not returned or this is Mapped - then
-			// loop mapped args
-			if (argNames) {
-				data = mapArgs(args)
-			}
+				// If we got a function/thunk/promise - return it
+				if (isFunction(data))
+					return dispatcher(data)
 
-			// If no reducers are passed in the map directly to state
-			let finalReducers = (reducers) ? [...reducers] : []
-			// if (finalReducers.length === 0) {
-			// 	log.debug('Creating mapped handler', propertyKey)
-			// 	finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
-			// }
 
-			// Create the action message -> Dispatch
-			const message = this.newMessage(propertyKey, finalReducers,args, data)
-			const dispatchResult = dispatcher(message)
-			// if (dispatchResult instanceof Promise)
-			// 	return dispatchResult
+				// If data not returned or this is Mapped - then
+				// loop mapped args
+				if (argNames) {
+					data = mapArgs(args)
+				}
 
-			return message
+				// If no reducers are passed in the map directly to state
+				let finalReducers = (reducers) ? [...reducers] : []
+				// if (finalReducers.length === 0) {
+				// 	log.debug('Creating mapped handler', propertyKey)
+				// 	finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
+				// }
+
+				// Create the action message -> Dispatch
+				const message = this.newMessage(propertyKey, finalReducers,args, data)
+				const dispatchResult = dispatcher(message)
+				// if (dispatchResult instanceof Promise)
+				// 	return dispatchResult
+
+				return message
+			},...preArgs)
 		}
+
+		registerAction(target.constructor,target.leaf ? target.leaf() : '__typedux',propertyKey,descriptor.value)
 
 		return descriptor
 
 	}
+
+
 }
 

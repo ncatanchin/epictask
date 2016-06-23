@@ -64,7 +64,7 @@ export class SearchResults {
 class SearchStateModel {
 
 	@RecordProperty()
-	results:SearchResults
+	results:SearchResult<any>[]
 
 	@RecordProperty()
 	error:Error
@@ -86,7 +86,7 @@ class SearchStateModel {
 	}
 
 	setResults(newResults:SearchResults) {
-		this.results = newResults
+		this.results = newResults.all
 		return this
 	}
 

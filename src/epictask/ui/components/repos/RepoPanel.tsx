@@ -24,7 +24,6 @@ const repoActions = new RepoActionFactory()
 const appActions = new AppActionFactory()
 
 import { connect } from 'react-redux'
-import {Themeable} from '../..//ThemeManager'
 
 const styles = {
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{

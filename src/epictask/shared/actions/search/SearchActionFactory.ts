@@ -59,7 +59,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 			if (!results) {
 				actions.setResults(new SearchResults(newItems))
 			} else {
-				const allItems = results.all
+				const allItems = results
 					.filter(item => item.type !== type)
 					.concat(newItems)
 

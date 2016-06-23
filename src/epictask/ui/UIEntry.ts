@@ -1,25 +1,30 @@
 // require('shared/SourceMapSupport')
 import 'reflect-metadata'
 
-import './UILogging'
+// Load all global/env stuff first
+// LOGGING CONFIG FIRST
+require('shared/LogConfig')
+
+require('./UILogging')
+require('./UIGlobals')
+
 
 
 
 async function boot() {
 
-	// Load all global/env stuff first
-	require('./UIGlobals')
+	const {createStore} = require('shared/store')
 
-	require('shared/store').createStore()
+	await createStore()
 
 	// Load logger
 	const log = getLogger(__filename)
 
 	// Load Styles
-	require('./styles')
+	require('shared/themes/styles')
 
 	// Now the theme manager
-	require("./ThemeManager.tsx")
+	require("shared/themes/ThemeManager")
 
 	log.info('Loading app root')
 	const loadAppRoot = () => require('ui/components/root/AppRoot.tsx')

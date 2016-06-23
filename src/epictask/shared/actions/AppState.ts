@@ -14,6 +14,8 @@ import {User,Issue} from 'shared/models'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from 'shared/Settings'
 import {cloneObject} from 'shared/util'
+import {getTheme} from 'shared/themes/ThemeManager'
+
 import * as uuid from 'node-uuid'
 
 /**
@@ -151,7 +153,7 @@ const AppStateDefaults = {
 	stateType: null,
 	messages: [],
 	dialogs: {},
-
+	theme: getTheme(),
 	monitorState: {},
 	settings: Settings.toJSON()
 }

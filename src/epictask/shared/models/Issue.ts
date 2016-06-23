@@ -18,32 +18,32 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 
 export type IssueState = "open" | "closed"
 
-/**
- * Create issue index
- *
- * @type {LunrIndex}
- */
-export const IssueIndex = new LunrIndex<Issue>('Issue', {
-	ref: 'id',
-	fields: {
-		title: 5,
-		body: 3,
-		allCommentsText: 2,
-		assigneeName: 1,
-		reporterName: 1
-
-	},
-	normalizer(issue) {
-		return Object.assign({},issue,{
-			allComments: 'merge comments here',
-			assigneeName: 'sadasda',
-			reporterName: 'sadasda'
-		})
-	}
-})
+// /**
+//  * Create issue index
+//  *
+//  * @type {LunrIndex}
+//  */
+// export const IssueIndex = new LunrIndex<Issue>('Issue', {
+// 	ref: 'id',
+// 	fields: {
+// 		title: 5,
+// 		body: 3,
+// 		allCommentsText: 2,
+// 		assigneeName: 1,
+// 		reporterName: 1
+//
+// 	},
+// 	normalizer(issue) {
+// 		return Object.assign({},issue,{
+// 			allComments: 'merge comments here',
+// 			assigneeName: 'sadasda',
+// 			reporterName: 'sadasda'
+// 		})
+// 	}
+// })
 
 @ModelDescriptor({
-	onPersistenceEvent: IssueIndex.onPersistenceEvent
+	//onPersistenceEvent: IssueIndex.onPersistenceEvent
 })
 
 export class Issue extends DefaultModel {

@@ -35,14 +35,14 @@ function onErrorReceived(err:Error) {
 if (typeof window !== 'undefined') {
 	window.onerror = function(message,url,line) {
 		console.error('unhandled',message,url,line)
-		onErrorReceived(new Error(message))
+		//onErrorReceived(new Error(message))
 	}
 }
 
 process.on("unhandledRejection", function (reason, promise) {
 	// console.trace(reason)
 	console.error(`Epic Task Unhandled Exception`, reason, reason && reason.stack,promise)
-	onErrorReceived(reason)
+	//onErrorReceived(reason)
 })
 
 

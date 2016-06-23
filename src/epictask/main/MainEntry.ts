@@ -3,12 +3,14 @@ import 'reflect-metadata'
 import 'shared/ErrorHandling'
 const electron = require('electron')
 
+// LOAD EVERYTHING
+import 'shared/Globals'
+
 // LOGGING
 import './MainLogging'
 
 
-// LOAD EVERYTHING
-import 'shared/Globals'
+
 
 const {app} = electron
 const log = getLogger(__filename)
@@ -50,27 +52,28 @@ function onAllClosed() {
 }
 
 async function boot() {
+	log.info("Boot start")
 	global.MainBooted = false
 
-	log.info('Loading the REDUX store')
-	require('shared/store').getStore()
-	log.info('Store built')
+	const configurator = require('./MainConfigurator')
 
+	log.info("Boot init")
+	await configurator.init()
+
+	log.info("Boot load window")
 	mainWindow = loadWindow()
 
+	log.info("Boot start")
 	await mainWindow.start(async () => {
 		log.debug('Boot callback')
 
-		const mainBoot = require('./MainBoot')
-		const Services = await mainBoot()
+		const Services = await configurator.start()
 		log.info(`Boot Completed, services include`, Object.keys(Services))
 
-
-
 		return Services
-
 	})
 
+	log.info("Boot complete, call ready")
 	// Notifying the main window that we are ready
 	global.MainBooted = true
 	mainWindow.ready()
@@ -100,7 +103,7 @@ app.on('ready', onStart)
 if (module.hot) {
 	console.info('Setting up HMR')
 
-	module.hot.accept(['./MainWindow','./MainBoot'],async (mods) => {
+	module.hot.accept(['./MainWindow','./MainConfigurator'],async (mods) => {
 		log.info("Rebooting main, updated dependencies",mods)
 
 		// We get a reference to the new window here

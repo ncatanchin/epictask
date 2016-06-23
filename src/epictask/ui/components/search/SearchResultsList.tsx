@@ -5,14 +5,15 @@
 // Imports
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
+import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Repo,AvailableRepo} from 'shared/models'
 import {SearchResults, SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
-import {BaseThemedComponent, IThemedState} from 'ui/ThemeManager'
 import {Issue} from 'shared/models'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components'
 import * as Radium from 'radium'
+import {AppKey} from 'shared/Constants'
 
 // Constants
 const log = getLogger(__filename)
@@ -124,12 +125,20 @@ export interface ISearchResultsListProps {
 	anchor?: string | React.ReactElement<any>
 	containerStyle?:any
 	inline?: boolean
+	theme?:any
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	results?:SearchResults
+	results?:SearchResult<any>[]
 	onResultSelected?:(result:SearchResult<any>) => void
 	onResultHover?:(result:SearchResult<any>) => void
+}
+
+function mapStateToProps(state) {
+	const appState = state.get(AppKey)
+	return {
+		theme: appState.theme
+	}
 }
 
 /**
@@ -138,12 +147,10 @@ export interface ISearchResultsListProps {
  * @class SearchResults
  * @constructor
  **/
+@connect(mapStateToProps)
 @Radium
-export class SearchResultsList extends BaseThemedComponent<ISearchResultsListProps,IThemedState> {
+export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
-	static getInitialState() {
-		return {}
-	}
 
 	/**
 	 * Mount node for search results
@@ -154,10 +161,8 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		super(props,context)
 	}
 
-
-
 	componentDidMount():void {
-		super.componentDidMount()
+
 
 		this.node = doc.createElement('div')
 		_.assign(this.node.style, styles.resultsModal)
@@ -172,7 +177,6 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 	}
 
 	componentWillUnmount():void {
-		super.componentWillUnmount()
 
 		ReactDOM.unmountComponentAtNode(this.node)
 		body.removeChild(this.node)
@@ -180,7 +184,8 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 	}
 
 	getThemeStyles() {
-		return this.state.theme.searchResults
+		const {theme} = this.props
+		return theme ? theme.searchResults : {}
 	}
 
 
@@ -303,7 +308,7 @@ export class SearchResultsList extends BaseThemedComponent<ISearchResultsListPro
 		// Iterate result types and build sections
 		types.forEach(type => {
 
-			const sectionResults = results.all.filter(result => result.type === type)
+			const sectionResults = results.filter(result => result.type === type)
 
 			rows = rows.concat(sectionResults.map(result => {
 				const isSelected = selectedIndex === result.index

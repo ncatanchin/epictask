@@ -73,7 +73,7 @@ class SettingsFile implements ISettings {
 			return (k === 'isLoaded') ? undefined : v
 		},4)
 
-		log.info('Saving', settingsToSave)
+		log.debug('Saving', settingsToSave)
 		fs.writeFileSync(settingsFilename,settingsToSave)
 
 		return this
@@ -107,7 +107,7 @@ class SettingsFile implements ISettings {
 
 		this.isLoaded = true
 
-		log.info(`Loaded github token: ${this.token}`)
+		log.debug(`Loaded github token: ${this.token}`)
 
 		return this
 	}

@@ -9,11 +9,7 @@ const g = global as any
 const Bluebird = g.Bluebird
 
 // LOGGING CONFIG FIRST
-Object.assign(global as any, {
-	TypeLoggerCategories: require('epictask/shared/LogCategories'),
-	TypeLoggerDefaultLevel: 3
-})
-
+require('shared/LogConfig')
 
 // Now everything else
 import {getLogger as LoggerFactory} from 'typelogger'

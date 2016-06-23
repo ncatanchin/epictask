@@ -10,6 +10,10 @@ import {State} from '../reducers'
 export type GetStoreState = () => State
 export type DispatchState = Dispatch<State>
 
+let registeredActions:any = {}
+
+let actionInterceptors = []
+
 /**
  * Reference to a dispatcher
  */
@@ -64,5 +68,40 @@ export function setStoreProvider(newDispatch:DispatchState|Store<State>,newGetSt
 		throw new Error('Set store provider must include both dispatch and getState')
 }
 
+export interface IActionInterceptorNext {
+	():any
+}
+
+export interface IActionInterceptor {
+	(leaf:string,name:string,next:IActionInterceptorNext,...args:any[]):any
+}
+
+export function addActionInterceptor(interceptor:IActionInterceptor) {
+	actionInterceptors.push(interceptor)
+}
+
+function executeActionInterceptor(index:number,leaf:string,name:string,action:Function,args:any[]) {
+	if (actionInterceptors.length > index) {
+		return actionInterceptors[index](leaf,name,() => {
+			return executeActionInterceptor(index + 1,leaf,name,action,args)
+		},...args)
+	} else {
+		return action(...args)
+	}
+}
+
+export function executeActionChain(leaf:string,name:string,action:Function,...args:any[]) {
+	return executeActionInterceptor(0,leaf,name,action,args)
+}
+
+export function registerAction(actionFactory:any,leaf:string,name:string,action:Function) {
+	registeredActions[`${leaf}:${name}`] = (...args) => {
+		const actions = new actionFactory()
+		return action.apply(actions,args)
+	}
+}
 
 
+export function getAction(leaf:string,name:string) {
+	return registeredActions[`${leaf}:${name}`]
+}

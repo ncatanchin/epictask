@@ -15,15 +15,16 @@ import {LunrIndex} from '../LunrIndex'
  *
  * @type {LunrIndex}
  */
-export const LabelIndex = new LunrIndex<Label>('Label', {
-	ref: 'id',
-	fields: {
-		name: 3
-	}
-})
+// export const LabelIndex = new LunrIndex<Label>('Label', {
+// 	ref: 'id',
+// 	fields: {
+// 		name: 3
+// 	}
+// })
 
 
-@ModelDescriptor({onPersistenceEvent:LabelIndex.onPersistenceEvent})
+//@ModelDescriptor({onPersistenceEvent:LabelIndex.onPersistenceEvent})
+@ModelDescriptor()
 export class Label extends DefaultModel {
 
 	@AttributeDescriptor({primaryKey:true})

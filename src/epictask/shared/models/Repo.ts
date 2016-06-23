@@ -111,7 +111,7 @@ export class RepoRepo extends TSRepo<Repo> {
 	}
 
 	@PouchDBFullTextFinder({
-		textFields: ['name']
+		textFields: ['name','full_name','description']
 	})
 	findByName(name:string,opts:IFinderRequest = null):Promise<Repo[]> {
 		return null

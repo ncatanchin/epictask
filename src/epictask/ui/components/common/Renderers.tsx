@@ -1,6 +1,6 @@
 
 
-import {FontBlack} from '../../styles/CommonStyles'
+import {FontBlack} from '../../../shared/themes/styles/CommonStyles'
 
 export function repoName(repo,style = {}) {
 	if (!repo || !repo.full_name)

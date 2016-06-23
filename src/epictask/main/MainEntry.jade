@@ -19,6 +19,13 @@ html.fill-width.fill-height(lang="en")
 					remote = electron.remote,
 					ipc = electron.ipcRenderer
 
+			function checkBooted() {
+				window.booted = remote.getGlobal("MainBooted")
+				return window.booted
+			}
+
+			console.log('Main has booted = ',checkBooted())
+
 			var Splash = window.Splash
 
 			// Load jQuery to help with debugging more than anything else
@@ -51,14 +58,16 @@ html.fill-width.fill-height(lang="en")
 			var isDev = "#{Env.isDev}" === 'true'
 
 			// Add a script tag to load content
-			function addScript(scriptPath,async) {
+			function addScript(scriptPath,asyncLoad,callback) {
 				const script = document.createElement('script');
 				const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
 
 				script.type = 'text/javascript'
-				if (async) {
+				if (asyncLoad) {
 					log.debug('Loading script async', scriptPath)
 					script.async = true
+					if (callback)
+						script.onload = callback
 				}
 
 				script.src = basePath + scriptPath
@@ -96,16 +105,37 @@ html.fill-width.fill-height(lang="en")
 				}
 
 
-				addScript('/UIEntry.js', true)
+				addScript('/UIEntry.js', true, function() {
 
-				var booted = remote.getGlobal("MainBooted")
+					if (checkBooted())
+						onUIReady(null,true)
+				})
 
 			}
 
 			function onUIReady(event,force) {
+				console.log('UI Ready Called, force=',force,
+						'event type =', (event && event.data) && event.data.type)
+
 				if (force || (event && event.data && event.data.type === "#{Events.UIReady}")) {
 					Splash.destroy()
 				}
+			}
+
+			window.onload = function() {
+				console.log('on load event')
+				if (checkBooted()) {
+					console.log('window already booted, loading immediately')
+					loadEpicTask()
+				} else {
+					console.log('waiting for main ready event now')
+					ipc.on("#{Events.MainReady}", function () {
+						console.log('IPC Received load request')
+						loadEpicTask()
+					})
+				}
+
+				window.addEventListener('message', onUIReady)
 			}
 
 
@@ -113,18 +143,4 @@ html.fill-width.fill-height(lang="en")
 		script.
 			Splash.enable('windcatcher')
 
-			var booted = remote.getGlobal("MainBooted")
-			console.log('booted already =',booted)
-			if (booted) {
-				loadEpicTask()
-				onUIReady(null,true)
-			} else {
-				ipc.on("#{Events.MainReady}",function() {
-
-					console.log('IPC Received load request')
-					loadEpicTask()
-				})
-			}
-
-			window.addEventListener('message', onUIReady)
 

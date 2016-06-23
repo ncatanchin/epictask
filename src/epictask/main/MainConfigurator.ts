@@ -3,9 +3,9 @@ const log = getLogger(__filename)
 // Get the DBService starter
 import * as DBServiceType from './db/DB'
 import * as ContextUtilsType from 'shared/util/ContextUtils'
-import * as StoreType from 'shared/store'
 
 let services = []
+let servicesCtx = null
 
 function shutdown() {
 	return Promise.all(
@@ -21,30 +21,23 @@ function shutdown() {
 	})
 }
 
-let bootPromise = null
 
-async function boot():Promise<any> {
+/**
+ * Find all services
+ */
+function loadServices() {
+	servicesCtx = require.context('shared/actions',true,/Service\.ts/)
+}
 
-	// Just in case this is an HMR reload
-	await shutdown()
-	services = []
+loadServices()
 
-	// Load dependencies
-	const DBService:typeof DBServiceType = require('./db/DB.ts')
+async function startServices() {
+	log.info('Starting services')
+
 	const ContextUtils:typeof ContextUtilsType = require('shared/util/ContextUtils')
 
-	/**
-	 * Load the database FIRST
-	 */
-	log.info('Starting Database')
-	await DBService.start()
-
-	/**
-	 * Find all services
-	 */
-	log.info('Starting services')
 	const Services = ContextUtils.requireContext(
-		require.context('shared/actions',true,/Service\.ts/),
+		servicesCtx,
 		[],
 		true
 	)
@@ -67,30 +60,54 @@ async function boot():Promise<any> {
 		}
 	}
 
-
-
 	return Services
 }
 
-export = function() {
-	return (bootPromise = boot())
+/**
+ * Initialize and load store
+ */
+export async function init():Promise<any> {
+	log.info('Loading the REDUX store')
+	const {createStore} = require('shared/store')
+	await createStore()
+	log.info('Store built')
+}
+
+/**
+ * Start the app
+ *
+ * @returns {any}
+ */
+export async function start():Promise<any> {
+
+	// Just in case this is an HMR reload
+	await shutdown()
+	services = []
+
+	// Load dependencies
+	const DBService:typeof DBServiceType = require('./db/DB.ts')
+
+
+	/**
+	 * Load the database FIRST
+	 */
+	log.info('Starting Database')
+	await DBService.start()
+
+	return await startServices()
 }
 
 /**
  * If HMR is enabled then sign me up
  */
 if (module.hot) {
-	module.hot.accept(['./db/DB','shared/util/ContextUtils'], updates => {
+	module.hot.accept(['shared/store','./db/DB','shared/util/ContextUtils',servicesCtx.id], updates => {
 		log.info('HMR updates received - rebooting', updates)
 
-		log.info('Appending another boot onto the boot promise')
+		loadServices()
+		init().then(start)
 
-		if (bootPromise)
-			bootPromise.then(boot)
 	})
 
-	module.hot.dispose(() => {
-		bootPromise = null
-	})
 
 }
