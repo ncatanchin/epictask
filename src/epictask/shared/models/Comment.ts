@@ -6,33 +6,10 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
 import {Issue} from './Issue'
-import {LunrIndex} from '../LunrIndex'
 import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
-
-// /**
-//  * Create comment index
-//  *
-//  * @type {LunrIndex}
-//  */
-// export const CommentIndex = new LunrIndex<Comment>('Comment', {
-// 	ref: 'id',
-// 	fields: {
-// 		body: 3,
-// 		login: 1
-// 	},
-// 	normalizer(comment) {
-// 		return Object.assign({},comment,{
-// 			login: comment.user.login
-// 		})
-// 	}
-// })
-
-
-//@ModelDescriptor({onPersistenceEvent:CommentIndex.onPersistenceEvent})
 @ModelDescriptor()
 export class Comment extends DefaultModel {
 
@@ -56,14 +33,10 @@ export class Comment extends DefaultModel {
 	html_url: string
 	issue_url:string
 
-	@AttributeDescriptor()
-	body: string;
-
-
-	user: User;
-	@AttributeDescriptor({index:{name:'created_at'}})
-	created_at: Date;
-	updated_at: Date;
+	body: string
+	user: User
+	created_at: Date
+	updated_at: Date
 
 	constructor(props = {}) {
 		super()
@@ -78,26 +51,32 @@ export class CommentRepo extends TSRepo<Comment> {
 	}
 
 	@PouchDBMangoFinder({
+		indexDirection: 'desc',
 		indexFields: ['parentRefId','created_at'],
 		selector: ({repoId,number:issueNumber}) => ({
 			parentRefId:  Comment.makeParentRefId(repoId,issueNumber),
-			created_at: { $exists: true }
+			created_at: { $gt: 0 }
 		}),
-		sort: {
-			created_at: 'desc'
-		}
+		sort: [
+			{ parentRefId: 'desc' },
+			{ created_at: 'desc' }
+		]
 	})
 	findByIssue(issue:Issue):Promise<Comment[]> {
 		return null
 	}
 
 	@PouchDBMangoFinder({
-		indexFields: ['repoId','created_at'],
+		indexDirection: 'desc',
+		indexFields: ['created_at','repoId'],
 		selector: (...repoIds) => ({
 			repoId: { $in: repoIds },
 			created_at: { $exists: true }
 		}),
-		sort: { created_at: 'desc' }
+		sort: [
+			{ created_at: 'desc' },
+			{ repoId: 'desc' }
+		]
 	})
 	findByRepoId(...repoIds:number[]):Promise<Comment[]> {
 		return null

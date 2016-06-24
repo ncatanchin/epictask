@@ -53,3 +53,22 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 	return cloned
 
 }
+
+
+export interface IValueTransformer {
+	(key:string,val:any):any
+}
+
+export function transformValues(o,fn:IValueTransformer) {
+	return (Array.isArray(o)) ?
+		o.map(aVal => transformValues(aVal,fn)) :
+		(typeof o === "object") ?
+			Object
+				.keys(o)
+				.reduce((newObj,nextKey) => {
+					newObj[nextKey] = fn(nextKey,o[nextKey])
+					return newObj
+				},{}) :
+			o
+
+}

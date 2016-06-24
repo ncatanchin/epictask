@@ -1,11 +1,6 @@
-import {ActionMessage,DefaultLeafReducer} from 'typedux'
-import {JobKey} from "../../../shared/Constants"
-import {JobState} from './JobState'
-
-
-export interface JobMessage extends ActionMessage<typeof JobState> {
-
-}
+import {DefaultLeafReducer} from 'typedux'
+import {JobKey} from "shared/Constants"
+import {JobMessage,JobState} from './JobState'
 
 
 export class JobReducer extends DefaultLeafReducer<any,JobMessage> {

@@ -133,7 +133,7 @@ export class RootReducer {
 					}
 
 					if (stateChangeDetected) {
-						tempState.set(leaf, toJS(reducerState))
+						tempState.set(leaf, reducerState)
 						hasChanged = true
 					}
 				}

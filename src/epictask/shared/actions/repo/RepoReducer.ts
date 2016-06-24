@@ -2,12 +2,8 @@ const log = getLogger(__filename)
 
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {RepoKey} from "../../../shared/Constants"
-import {RepoState} from './RepoState'
+import {RepoState,RepoMessage} from './RepoState'
 
-
-export interface RepoMessage extends ActionMessage<typeof RepoState> {
-
-}
 
 
 export class RepoReducer extends DefaultLeafReducer<any,RepoMessage> {

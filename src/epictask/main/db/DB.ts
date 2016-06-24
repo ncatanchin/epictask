@@ -47,13 +47,13 @@ async function initialize() {
 
 		const pouchOpts = {filename: dbPath}
 		if (Env.isDev) {
+			//return (storePlugin = new PouchDBPlugin({filename:'http://127.0.0.1:5984/epictask-dev'}))
 			_.assign(pouchOpts, {
-				replication: {
-					to:   'http://127.0.0.1:5984/epictask-dev',
-					live:  true,
-					retry: true
-
-				}
+				// replication: {
+				// 	to:   'http://127.0.0.1:5984/epictask-dev-2',
+				// 	live:  true,
+				// 	retry: true
+				// }
 			})
 		}
 
@@ -163,8 +163,4 @@ if (module.hot) {
 		return start()
 	})
 
-	module.hot.dispose(() => {
-		log.info('DB being disposed of')
-		return stop().then(() => log.info('Fully shutdown old coordinator'))
-	})
 }

@@ -44,7 +44,7 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	updateEditingIssue(props:any) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const issue = this.state.editingIssue
 			if (!issue) return
 
@@ -52,8 +52,13 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 				{RepoActionFactory} = require('./repo/RepoActionFactory'),
 				{availableRepos} = getState().get(RepoKey)
 
-			const updatedIssue = RepoActionFactory
-					.fillIssue(Object.assign(cloneObject(issue),props),availableRepos)
+			const updatedIssue = await RepoActionFactory
+				.fillIssue(
+					Object.assign(
+						cloneObject(issue),
+						props
+					),availableRepos
+				)
 
 
 			this.setEditingIssue(updatedIssue)
@@ -62,7 +67,7 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	newIssue() {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
 				dialogName = Dialogs.IssueEditDialog
@@ -85,7 +90,7 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			}
 
 			const {RepoActionFactory} = require('./repo/RepoActionFactory')
-			const issue = RepoActionFactory.fillIssue(new Issue({repoId}),availableRepos)
+			const issue = await RepoActionFactory.fillIssue(new Issue({repoId}),availableRepos)
 
 			actions.setEditingIssue(issue)
 			actions.setDialogOpen(dialogName,true)
@@ -94,7 +99,7 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	editIssue(issue:Issue = null) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
 				dialogName = Dialogs.IssueEditDialog
@@ -108,7 +113,7 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			issue = issue || repoState.selectedIssue
 			assert(issue,'You must have an issue selected in order to edit one ;)')
 
-			issue = RepoActionFactory.fillIssue(issue,availableRepos)
+			issue = await RepoActionFactory.fillIssue(issue,availableRepos)
 
 			actions.setEditingIssue(issue)
 			actions.setDialogOpen(dialogName,true)

@@ -115,46 +115,58 @@ const styles = {
 
 }
 
-function mapStateToItemProps(state,props) {
-	const repoState = state.get(RepoKey)
 
-	const
-		{index} = props,
-		{issues,selectedIssues} = repoState
-
-	const
-		issue = issues[index],
-		selected = issue && selectedIssues.find(item => item.id === issue.id),
-		selectedMulti = selectedIssues.length > 1
-
-	return {
-		issue,selected,selectedMulti
-	}
-
-}
 
 interface IIssueItemProps extends React.DOMAttributes {
-	issue?:Issue
-	selected?:boolean
-	selectedMulti?:boolean
-
 	index:number
 	s:any
 	onSelected:(event:any, issue:Issue) => void
 }
 
-@PureRender
-@connect(mapStateToItemProps)
-class IssueItem extends React.Component<IIssueItemProps,any> {
+interface IIssueState {
+	issue?:Issue
+	selected?:boolean
+	selectedMulti?:boolean
+}
 
-	constructor(props) {
-		super(props)
+@PureRender
+class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
+
+	constructor(props,context) {
+		super(props,context)
+	}
+
+	getNewState(props) {
+		const repoState = repoActions.state
+
+		const
+			{index} = props,
+			{issues,selectedIssues} = repoState
+
+		const
+			issue = issues[index],
+			selected = issue && selectedIssues.find(item => item.id === issue.id),
+			selectedMulti = selectedIssues.length > 1
+
+
+		return {
+			issue,selected,selectedMulti
+		}
+	}
+
+	componentWillMount() {
+		this.setState(this.getNewState(this.props))
+	}
+
+	componentWillReceiveProps(nextProps) {
+		this.setState(this.getNewState(nextProps))
 	}
 
 	render() {
 		const
-			{props} = this,
-			{s,issue, selectedMulti, selected, onSelected} = props
+			{props,state} = this,
+			{issue, selectedMulti, selected} = state,
+			{s,onSelected} = props
 
 		if (!issue)
 			return <div/>

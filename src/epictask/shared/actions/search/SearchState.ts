@@ -10,6 +10,7 @@ import {
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {getStore} from 'shared/store'
 import {RepoKey} from 'shared/Constants'
+import {ActionMessage} from 'typedux'
 
 export enum SearchResultType {
 	Issue = 1,
@@ -104,3 +105,7 @@ const SearchStateDefaults = {
 
 export const SearchState = makeRecord(SearchStateModel,SearchStateDefaults)
 export type TSearchState = typeof SearchState
+
+export interface SearchMessage extends ActionMessage<typeof SearchState> {
+
+}

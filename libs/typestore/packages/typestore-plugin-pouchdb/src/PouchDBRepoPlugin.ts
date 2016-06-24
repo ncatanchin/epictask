@@ -15,7 +15,8 @@ import {
 	getFinderOpts,
 	assert,
 	Log,
-	isFunction
+	isFunction,
+	IModelAttributeOptions
 } from 'typestore'
 
 import {enableQuickSearch} from './PouchDBSetup'
@@ -31,7 +32,7 @@ import {
 	IPouchDBFullTextFinderOptions
 } from './PouchDBDecorations'
 
-import {mapDocs, mapAttrsToField, transformDocumentKeys} from './PouchDBUtil'
+import {mapDocs, mapAttrsToField, transformDocumentKeys, dbKeyFromObject, convertModelToDoc} from './PouchDBUtil'
 import {makeMangoFinder, makeFilterFinder, makeFnFinder, makeFullTextFinder, findWithSelector} from './PouchDBFinders'
 
 const log = Log.create(__filename)
@@ -61,8 +62,8 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	supportedModels:any[]
 
 	private coordinator
-	private modelType
-	private primaryKeyAttr:string
+	modelType
+	private primaryKeyAttr:IModelAttributeOptions
 
 	/**
 	 * Construct a new repo/store
@@ -75,8 +76,8 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		this.supportedModels = [repo.modelClazz]
 		this.modelType = this.repo.modelType
 		this.primaryKeyAttr = this.modelType.options.attrs
-			.filter(attr => attr.primaryKey)
-			.map(attr => attr.name)[0]
+			.find(attr => attr.primaryKey)
+
 
 
 		repo.attach(this)
@@ -173,28 +174,15 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		return new PouchDBKeyValue(...args);
 	}
 
-
-	keyFromObject(o:any):PouchDBKeyValue {
-		return new PouchDBKeyValue(o[this.primaryKeyAttr])
+	private extractKeyValue(val:PouchDBKeyValue|any):any {
+		val = val.pouchDBKey ? val.args[0] : val
+		return val
 	}
-
-	dbKeyFromObject(o:any):string {
-		const key = o[this.primaryKeyAttr]
-		return (key) ? '' + key : null
-	}
-
-	dbKeyFromKey(key:PouchDBKeyValue) {
-		return key.args[0]
-	}
-
-
-
-
 
 	async get(key:PouchDBKeyValue):Promise<M> {
-		key = key.pouchDBKey ? key.args[0] : key
+		key = this.extractKeyValue(key)
 
-		const result = await findWithSelector(this,{[this.primaryKeyAttr]: key})
+		const result = await findWithSelector(this,{[this.primaryKeyAttr.name]: key})
 
 		if (result && result.docs.length > 1)
 			throw new Error(`More than one database object returned for key: ${key}`)
@@ -202,21 +190,37 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		return mapDocs(this.repo.modelClazz,result)[0] as M
 	}
 
+
+	/**
+	 * Retrieve the rev for a model id
+	 *
+	 * @param id
+	 * @returns {null}
+	 */
+	async getRev(id:any):Promise<string> {
+		const model:any = await this.get(id)
+		return (model) ? model.$$doc._rev : null
+	}
+
 	async save(model:M):Promise<M> {
 		const mapper = this.mapper
 		const json = mapper.toObject(model)
-		const doc = (model as any).$$doc || {} as any
 
-		if (!doc._id) {
-			const key = this.dbKeyFromObject(model)
-			if (key)
-				doc._id = key
+		const doc = convertModelToDoc(
+			this.modelType,
+			mapper,
+			this.primaryKeyAttr.name,
+			model
+		)
+
+		const id = model[this.primaryKeyAttr.name]
+		if (id && doc._id && !doc._rev) {
+			const rev = await this.getRev(id)
+			if (rev) {
+				doc._rev = rev
+			}
 		}
 
-
-
-		doc.type = this.modelType.name
-		doc.attrs = json
 
 		try {
 			const res:any = await this.db[doc._id ? 'put' : 'post'](doc)
@@ -301,24 +305,43 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	async bulkSave(...models:M[]):Promise<M[]> {
 		const mapper = this.repo.getMapper(this.repo.modelClazz)
 		const jsons = []
-		const docs = models.map(model => {
-			const json = mapper.toObject(model)
-			jsons.push(json)
 
-			const doc = (model as any).$$doc || {} as any
-			doc.type = this.modelType.name
-			doc.attrs = json
+		// Models -> Docs
+		const docs = models.map(model => convertModelToDoc(
+			this.modelType,
+			mapper,
+			this.primaryKeyAttr.name,
+			model
+		))
 
-			return doc
-		})
+		// Find all docs that have _id and not _rev
+		docs
+			.forEach(async (doc,index) => {
+				const id = models[index][this.primaryKeyAttr.name]
+				if (!id || !doc._id  || (doc._id && doc._rev))
+					return
 
+				const rev = await this.getRev(id)
+				if (rev) {
+					doc._rev = rev
+				}
+			})
+
+		// Do Save
 		const responses = await this.db.bulkDocs(docs)
 
+		// Docs -> Models
 		const savedModels = jsons.map((json,index) => {
 			const savedModel = mapper.fromObject(json)
 
 			const res = responses[index]
-			Object.assign(savedModel as any,{$$doc: {_id: res.id, '_rev': res.rev,attrs:json}})
+			Object.assign(savedModel as any,{
+				$$doc: {
+					_id: res.id,
+					_rev: res.rev,
+					attrs:json
+				}
+			})
 
 			return savedModel
 		})

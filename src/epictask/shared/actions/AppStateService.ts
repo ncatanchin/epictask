@@ -70,7 +70,7 @@ export async function start() {
 
 if (module.hot) {
 	module.hot.accept(['shared/actions/AppActionFactory','shared/actions/auth/AuthActionFactory','shared/actions/repo/RepoActionFactory'],updates => {
-		electron.ipcRenderer.removeAllListeners('syncAllRepoDetails')
+		electron.ipcMain.removeAllListeners('syncAllRepoDetails')
 		start()
 	})
 }

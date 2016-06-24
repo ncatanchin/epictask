@@ -10,9 +10,7 @@ import * as assert from 'assert'
 import * as uuid from 'node-uuid'
 import {ActionFactory,Action} from 'typedux'
 import {JobKey} from "epictask/shared/Constants"
-
-import {JobMessage} from './JobReducer'
-import {JobState,IJob,IJobRequest,IScheduledJob} from './JobState'
+import {JobState,JobMessage,IJob,IJobRequest,IScheduledJob} from './JobState'
 import {JobHandler} from './JobHandler'
 
 

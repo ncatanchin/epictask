@@ -136,7 +136,7 @@ export class PouchDBPlugin implements IStorePlugin {
 				// 	})
 			})
 			.then(async (db) => {
-				await makeMangoIndex(db,null,PouchDBTypeIndex,['type'])
+				await makeMangoIndex(db,null,PouchDBTypeIndex,'asc',['type'])
 				// const makeIndexPromises = [
 				//
 				// ]
@@ -163,11 +163,11 @@ export class PouchDBPlugin implements IStorePlugin {
 							if (primaryKey)
 								throw new Error('You can not specify a second index on the primary key')
 
-							indexArgs.push([db,modelType.name,index.name || name,[name]])
+							indexArgs.push([db,modelType.name,index.name || name,'asc',[name]])
 						}
 
 						if (primaryKey) {
-							indexArgs.push([db,modelType.name,PouchDBPKIndex,[name,'type']])
+							indexArgs.push([db,modelType.name,PouchDBPKIndex,'asc',[name,'type']])
 						}
 
 						newDetails[name] = attr

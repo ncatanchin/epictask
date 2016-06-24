@@ -122,14 +122,13 @@ export function makeFnFinder(pouchRepo,finderKey:string,opts:IPouchDBFnFinderOpt
 }
 
 export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFinderOptions) {
-	let {selector,sort,limit,all,indexName,indexFields} = opts
+	let {selector,sort,limit,all,indexName,indexDirection,indexFields} = opts
 
 	let indexReady = all === true
-	let indexCreate
+	let indexCreate = null
+
 	if (all) {
-		indexCreate = () => {
-			return true
-		}
+		indexCreate = Promise.resolve(null)
 	} else {
 		assert(indexName || indexFields,
 			"You MUST provide either indexFields or indexName")
@@ -139,25 +138,32 @@ export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFin
 		// In the background create a promise for the index
 		//const indexDeferred = Bluebird.defer()
 
-		indexName = indexName || `idx_${finderKey}`
+		indexName = indexName || `idx_${pouchRepo.modelType.name}_${finderKey}`
 
-		indexCreate = async () => {
-			const idx = await getIndexByNameOrFields(pouchRepo.db, indexName, indexFields)
+		indexCreate = (async () => {
+			let idx = await getIndexByNameOrFields(pouchRepo.db,indexName,indexFields)
+
+			log.info(`found index for finder ${finderKey}: ${idx && idx.name}/${indexName} with fields ${idx && idx.fields.join(',')}`)
 
 			assert(idx || (indexFields && indexFields.length > 0),
 				`No index found for ${indexName} and no indexFields provided`)
 
 			if (!idx || idx.name === indexName) {
-				await makeMangoIndex(
+				idx = await makeMangoIndex(
 					pouchRepo.store.db,
 					pouchRepo.modelType.name,
 					indexName || finderKey,
+					indexDirection,
 					indexFields || []
 				)
 
 				indexReady = true
 			}
-		}
+
+			return idx
+		})()
+
+
 
 
 	}
@@ -178,12 +184,9 @@ export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFin
 	}
 
 	return async (...args) => {
-		if (!indexReady) {
-			log.info('index is not ready')
-			const idx = await indexCreate()
-			log.info('Index is Ready',idx)
-		}
-
+		log.debug(`Executing finder ${finderKey} with index ${indexName}`)
+		const idx = await indexCreate
+		log.debug('Index is Ready',idx)
 		return finder(...args)
 	}
 

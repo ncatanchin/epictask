@@ -1,5 +1,7 @@
 import {PouchDBAttributePrefix, PouchDBReservedFields, PouchDBOperators} from './PouchDBConstants'
-import {IModel,getDefaultMapper} from 'typestore'
+import {IModel,IModelType,getDefaultMapper} from 'typestore'
+import {PouchDBKeyValue} from './PouchDBRepoPlugin'
+import {IModelMapper} from '../../typestore/src/Types'
 
 const attrRegex = new RegExp(`^${PouchDBAttributePrefix}`,'g')
 
@@ -14,7 +16,44 @@ export function filterReservedFields(fields:string[]) {
 
 export function mapAttrsToField(fields:string[]) {
 	return cleanFieldPrefixes(filterReservedFields(fields))
-		.map(field => `${PouchDBAttributePrefix}${field}`)
+		.map(field => `${PouchDBAttributePrefix}${field}` )
+}
+
+export function keyFromObject(o:any):PouchDBKeyValue {
+	return new PouchDBKeyValue(o[this.primaryKeyAttr])
+}
+
+export function dbKeyFromObject(primaryKeyAttribute:string,o:any):string {
+	const key = o[primaryKeyAttribute]
+	return (key) ? '' + key : null
+}
+
+export function dbKeyFromKey(key:PouchDBKeyValue) {
+	return key.args[0]
+}
+
+
+
+export function convertModelToDoc(
+	modelType:IModelType,
+	modelMapper:IModelMapper<any>,
+	primaryKeyAttribute:string,
+	model:any
+) {
+	const json = modelMapper.toObject(model)
+	const doc = model.$$doc || {} as any
+
+	if (!doc._id) {
+		const key = dbKeyFromObject(primaryKeyAttribute,model)
+		if (key)
+			doc._id = key
+	}
+
+
+	doc.type = modelType.name
+	doc.attrs = json
+
+	return doc
 }
 
 export function mapDocs<M extends IModel>(modelClazz:{new():M},result:any):M[] {

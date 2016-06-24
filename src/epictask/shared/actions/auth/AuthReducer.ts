@@ -1,11 +1,6 @@
-import {ActionMessage,DefaultLeafReducer} from 'typedux'
-import {AuthKey} from "../../../shared/Constants"
-import {AuthState} from './AuthState'
-
-
-export interface AuthMessage extends ActionMessage<typeof AuthState> {
-	token?:string
-}
+import {DefaultLeafReducer} from 'typedux'
+import {AuthKey} from "shared/Constants"
+import {AuthState,AuthMessage} from './AuthState'
 
 
 export class AuthReducer extends DefaultLeafReducer<any,AuthMessage> {

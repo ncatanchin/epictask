@@ -36,6 +36,7 @@ export interface IPouchDBMangoFinderOptions extends IPouchDBFinderOptions {
 	selector?:PouchDBSelectorFn|Object
 	sort?:any
 	indexName?:string
+	indexDirection?:string
 	indexFields?:string[]
 }
 

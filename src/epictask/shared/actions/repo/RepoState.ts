@@ -8,9 +8,11 @@ import {
 	makeRecord
 } from 'typemutant'
 
+import {ActionMessage} from 'typedux'
 const log = getLogger(__filename)
 
 import {Repo, AvailableRepo,Comment,Issue,Label,Milestone,SyncStatus,ISyncDetails} from 'shared/models'
+import {cloneObject} from 'shared/util/ObjectUtil'
 
 @RecordModel()
 class RepoStateModel {
@@ -50,7 +52,7 @@ class RepoStateModel {
 	 * @returns {RepoStateModel}
 	 */
 	setAvailableRepos(repos:AvailableRepo[]) {
-		this.availableRepos = repos
+		this.availableRepos = cloneObject(repos)
 		return this
 	}
 
@@ -61,32 +63,32 @@ class RepoStateModel {
 	 * @returns {RepoStateModel}
 	 */
 	setRepos(repos:Repo[]) {
-		this.repos = repos
+		this.repos = cloneObject(repos)
 		return this
 	}
 
 	setIssues(issues:Issue[]) {
-		this.issues = issues
+		this.issues = cloneObject(issues)
 		return this
 	}
 
 	setIssue(issue:Issue) {
-		this.issue = issue
+		this.issue = cloneObject(issue)
 		return this
 	}
 
 	setComments(comments:Comment[]) {
-		this.comments = comments
+		this.comments = cloneObject(comments)
 		return this
 	}
 
 	setSelectedIssues(selectedIssues:Issue[]) {
-		this.selectedIssues = [...selectedIssues]
+		this.selectedIssues = cloneObject(selectedIssues)
 
 		// if the length is 1 or 0 then we update the base
 		// selected issue id for an appropriate reset value
 		if (selectedIssues.length < 2)
-			this.selectedIssue = selectedIssues[0]
+			this.selectedIssue = cloneObject(selectedIssues[0])
 
 		return this
 	}
@@ -108,8 +110,8 @@ class RepoStateModel {
 		if (index === -1)
 			return this
 
-		const newAvailRepos = [...this.availableRepos]
-		newAvailRepos.splice(index,1,updatedAvailRepo)
+		const newAvailRepos = cloneObject(this.availableRepos)
+		newAvailRepos.splice(index,1,cloneObject(updatedAvailRepo))
 		this.availableRepos = newAvailRepos
 
 		return this
@@ -141,3 +143,8 @@ const RepoStateDefaults = {
 
 export const RepoState = makeRecord(RepoStateModel,RepoStateDefaults)
 export type TRepoState = typeof RepoState
+
+
+export interface RepoMessage extends ActionMessage<typeof RepoState> {
+
+}

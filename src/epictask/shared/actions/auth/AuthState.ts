@@ -7,8 +7,10 @@ import {
 	makeRecord
 } from 'typemutant'
 
-import Settings from '../../../shared/Settings'
-import * as Constants from '../../../shared/Constants'
+import {ActionMessage} from 'typedux'
+
+import Settings from 'shared/Settings'
+import * as Constants from 'shared/Constants'
 
 export interface IAuthState {
 	authenticated?:boolean
@@ -70,8 +72,8 @@ class AuthStateModel {
 		this.error = err
 		return this
 	}
-	
-	
+
+
 
 }
 
@@ -83,3 +85,9 @@ const AuthStateDefaults = {
 
 export const AuthState = makeRecord(AuthStateModel,AuthStateDefaults)
 export type TAuthState = typeof AuthState
+
+
+export interface AuthMessage extends ActionMessage<typeof AuthState> {
+	token?:string
+}
+

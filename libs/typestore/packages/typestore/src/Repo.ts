@@ -96,6 +96,10 @@ export class Repo<M extends IModel> {
 		return PluginFilter<IFinderPlugin>(this.plugins,PluginType.Finder)
 	}
 
+	attr(name:string) {
+		return this.modelType.options.attrs.find(attr => attr.name === name)
+	}
+
 	init(coordinator) {
 		this.coordinator = coordinator
 		this.modelType = coordinator.getModel(this.modelClazz)

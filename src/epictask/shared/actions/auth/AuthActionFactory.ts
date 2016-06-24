@@ -2,8 +2,7 @@ import {ActionFactory,Action} from 'typedux'
 import {createClient} from '../../../shared/GitHubClient'
 import {AuthKey} from "../../../shared/Constants"
 import {AppActionFactory} from '../AppActionFactory'
-import {AuthState} from './AuthState'
-import {AuthMessage} from './AuthReducer'
+import {AuthState,AuthMessage} from './AuthState'
 import {AppStateType,Settings} from '../../../shared'
 import {User} from 'shared/models/User'
 

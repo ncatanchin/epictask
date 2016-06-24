@@ -4,6 +4,8 @@ import {
 	makeRecord
 } from 'typemutant'
 
+import {ActionMessage} from 'typedux'
+
 import * as assert from 'assert'
 import {JobStatus} from './JobStatus'
 import {JobHandler} from './JobHandler'
@@ -192,3 +194,8 @@ const JobStateDefaults = {
 
 export const JobState = makeRecord(JobStateModel,JobStateDefaults)
 export type TJobState = typeof JobState
+
+export interface JobMessage extends ActionMessage<typeof JobState> {
+
+}
+

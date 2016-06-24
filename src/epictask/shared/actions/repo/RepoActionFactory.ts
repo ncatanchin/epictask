@@ -11,13 +11,12 @@ const log = getLogger(__filename)
 // IMPORTS
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey,Dialogs} from "shared/Constants"
-import {Repos} from '../../../main/db/DB'
+import {Repos} from 'main/db/DB'
 import {cloneObject} from 'shared/util/ObjectUtil'
 
 
 import {SyncStatus,ISyncDetails,Comment} from 'shared/models'
-import {RepoState} from './RepoState'
-import {RepoMessage} from './RepoReducer'
+import {RepoMessage,RepoState} from './RepoState'
 import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
@@ -43,18 +42,20 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @param availableRepos
 	 * @returns {Issue}
 	 */
-	static fillIssue(issue:Issue,availableRepos:AvailableRepo[]) {
-		issue = cloneObject(issue)
+	static async fillIssue(issue:Issue,availableRepos:AvailableRepo[]) {
+		//issue = cloneObject(issue)
 
-		const availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
+		let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
 		assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
-		Object.assign(issue, {
-			repo: availRepo.repo,
-			milestones: [...availRepo.milestones],
-			collaborators: [...availRepo.collaborators]
-		})
 
-		return issue
+		const filledAvailRepo = await Repos.availableRepo.load(availRepo)
+
+		return cloneObject(Object.assign({},issue, {
+			repo: filledAvailRepo.repo,
+			milestones: filledAvailRepo.milestones,
+			collaborators: filledAvailRepo.collaborators
+		}))
+
 	}
 
 	constructor() {
@@ -216,7 +217,8 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async (dispatch,getState) => {
 			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
 
-			jobActions.createJob(new RepoSyncJob(availRepo))
+			const loadedAvailRepo = await Repos.availableRepo.load(availRepo)
+			jobActions.createJob(new RepoSyncJob(loadedAvailRepo))
 		}
 	}
 
@@ -244,32 +246,12 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	getAvailableRepos():Promise<AvailableRepo[]> {
 		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepos = await Repos.availableRepo.findAll()
+			const availRepos = await Repos.availableRepo.loadAll()
 
 			const
-				repoRepo = Repos.repo,
 				repoState = actions.state,
 				{repos} = repoState
 
-			for (let availRepo of availRepos) {
-
-				if (!availRepo.repo) {
-					availRepo.repo = await repoRepo.get(repoRepo.key(availRepo.repoId))
-				}
-
-				if (!availRepo.labels) {
-					availRepo.labels = await Repos.label.findByRepoId(availRepo.repoId)
-				}
-
-				if (!availRepo.milestones) {
-					availRepo.milestones = await Repos.milestone.findByRepoId(availRepo.repoId)
-				}
-
-				if (!availRepo.collaborators) {
-					availRepo.collaborators = await Repos.user.findByRepoId(availRepo.repoId)
-				}
-
-			}
 
 			log.debug('Loaded available repos',availRepos)
 			actions.setAvailableRepos(availRepos
@@ -321,18 +303,18 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				return
 			}
 
-			const newAvailRepo = Object.assign(cloneObject(availRepo),{enabled})
+			let newAvailRepo = Object.assign(cloneObject(availRepo),{enabled})
 
-			Repos.availableRepo.save(newAvailRepo)
-				.then(() => {
-					actions.updateAvailableRepo(newAvailRepo)
+			await Repos.availableRepo.save(newAvailRepo)
+			newAvailRepo = await Repos.availableRepo.load(newAvailRepo)
+			actions.updateAvailableRepo(newAvailRepo)
 
-					// Finally trigger a repo sync update
-					if (enabled)
-						this.syncRepoDetails(newAvailRepo)
+			// Finally trigger a repo sync update
+			if (enabled)
+				this.syncRepoDetails(newAvailRepo)
 
-					log.info('Saved avail repo, setting enabled to',enabled,newAvailRepo)
-				})
+			log.info('Saved avail repo, setting enabled to',enabled,newAvailRepo)
+
 
 
 			return true
@@ -342,25 +324,22 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 	@Action()
 	loadIssue(issue:Issue,force:boolean = false) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
-			return new Promise((resolve:any,reject:any) => {
+			const currentIssue = actions.state.issue
+			if (!force && currentIssue && currentIssue.id === issue.id) {
+				return
+			}
 
+			issue = cloneObject(issue)
+			actions.setIssue(issue)
 
-				const currentIssue = actions.state.issue
-				if (!force && currentIssue && currentIssue.id === issue.id) {
-					return resolve(true)
-				}
+			const comments = await Repos.comment
+				.findByIssue(issue)
 
-				issue = cloneObject(issue)
-				actions.setIssue(issue)
+			actions.setComments(comments)
 
-				Repos.comment
-					.findByIssue(issue)
-					.then(comments => actions.setComments(comments))
-					.then(resolve).catch(reject)
-			})
 
 		}
 	}
@@ -390,9 +369,11 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			 * 2. Make sure we have a valid repo
 			 * 3. Copy transient repo,milestones,collaborators,etc
 			 */
-			issues = issues.map(issue => RepoActionFactory.fillIssue(issue,availableRepos))
+			const issuePromises = issues.map(issue => RepoActionFactory.fillIssue(issue,availableRepos))
 
-			actions.setIssues(issues)
+			const filledIssues = await Promise.all(issuePromises)
+
+			actions.setIssues(filledIssues)
 		}
 
 

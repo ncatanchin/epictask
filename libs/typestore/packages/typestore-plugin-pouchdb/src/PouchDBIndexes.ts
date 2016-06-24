@@ -9,6 +9,7 @@ let cachedIndexMapPromise = null
 
 export interface PouchDBMangoIndexConfig {
 	name:string
+	direction:string
 	fields:string[]
 }
 
@@ -95,7 +96,7 @@ function indexFieldsMatch(idx:IPouchDBIndex,fields:string[]) {
  * @param fields
  * @returns {IPouchDBIndex}
  */
-export async function  getIndexByNameOrFields(db,indexName:string,fields:string[]) {
+export async function  getIndexByNameOrFields(db,indexName:string,fields:string[]|any[]) {
 	const idxMap = await getIndexMap(db)
 
 	if (idxMap[indexName] || !fields || !fields.length)
@@ -113,12 +114,12 @@ export async function  getIndexByNameOrFields(db,indexName:string,fields:string[
 
 }
 
-export function makeMangoIndexConfig(modelName:string,indexName:string,fields:string[]) {
+export function makeMangoIndexConfig(modelName:string,indexName:string,indexDirection:string,fields:string[]) {
 	const name = `${modelName ? modelName + '_' : ''}${indexName}`
 
-	fields = ['type',...mapAttrsToField(fields)]
+	fields = [...mapAttrsToField(fields),'type']
 
-	return {name,fields}
+	return {name,direction:indexDirection,fields}
 }
 
 /**
@@ -136,24 +137,24 @@ async function makeMangoIndex(db,indexConfig:PouchDBMangoIndexConfig)
  * @param indexName
  * @param fields
  */
-async function makeMangoIndex(db,modelName:string, indexName:string,fields:string[])
-async function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndexConfig, indexName?:string,fields?:string[]) {
+async function makeMangoIndex(db,modelName:string, indexName:string,indexDirection:string,fields:string[])
+async function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndexConfig, indexName?:string,indexDirection?:string,fields?:string[]) {
 
 	// Make sure we have a valid index config first thing
 	const indexConfig = (!indexConfigOrModelName || isString(indexConfigOrModelName)) ?
-		makeMangoIndexConfig(<string>indexConfigOrModelName, indexName, fields) :
+		makeMangoIndexConfig(<string>indexConfigOrModelName, indexName,indexDirection, fields) :
 		indexConfigOrModelName
 
 
 	indexName = indexConfig.name
 
-	log.info(`Checking index ${indexName}`)
+	log.info(`Checking index ${indexName} with fields`,fields)
 
-	const idx = await getIndexByNameOrFields(db, indexName, fields)
+	let idx:IPouchDBIndex = await getIndexByNameOrFields(db, indexName, fields)
 
 	if (idx && (idx.name !== indexName || indexFieldsMatch(idx, fields))) {
 		log.info(`Index def has not changed: ${indexName}`)
-		return idx
+
 	} else {
 
 		/**
@@ -161,24 +162,26 @@ async function makeMangoIndex(db,indexConfigOrModelName:string|PouchDBMangoIndex
 		 *
 		 * @returns {any}
 		 */
-		const doCreate = async () => {
-			const createResult = await db.createIndex({index: indexConfig})
 
-			log.info(`Create result for ${indexName}`,createResult)
-			const updatedIdxMap = await getIndexMap(db, true)
-			return updatedIdxMap[indexName]
-		}
 
 		//return doCreate()
 		if (idx) {
 			const deleteResult = await db.deleteIndex(idx.def)
 			log.info(`Index changed, deleting old version: ${indexName}`,deleteResult)
-
-
 		}
-		return doCreate()
+
+		const createRequest = Object.assign({},indexConfig,{
+			fields: indexConfig.fields.map(field => ({[field]: indexConfig.direction || 'asc'}))
+		})
+		const createResult = await db.createIndex(createRequest)
+
+		log.info(`Create result for ${indexName}`,createResult)
+		const updatedIdxMap = await getIndexMap(db, true)
+		idx = updatedIdxMap[indexName]
 
 	}
+
+	return idx
 
 
 }

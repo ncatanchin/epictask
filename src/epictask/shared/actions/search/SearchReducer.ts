@@ -1,11 +1,6 @@
-import {ActionMessage,DefaultLeafReducer} from 'typedux'
+import {DefaultLeafReducer} from 'typedux'
 import {SearchKey} from "../../../shared/Constants"
-import {SearchState} from './SearchState'
-
-
-export interface SearchMessage extends ActionMessage<typeof SearchState> {
-	
-}
+import {SearchMessage,SearchState} from './SearchState'
 
 
 export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
