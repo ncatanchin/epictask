@@ -1,7 +1,7 @@
+import {IModelMapper,IModel,IModelType,getDefaultMapper,ModelMapper} from 'typestore'
+
 import {PouchDBAttributePrefix, PouchDBReservedFields, PouchDBOperators} from './PouchDBConstants'
-import {IModel,IModelType,getDefaultMapper} from 'typestore'
 import {PouchDBKeyValue} from './PouchDBRepoPlugin'
-import {IModelMapper} from '../../typestore/src/Types'
 
 const attrRegex = new RegExp(`^${PouchDBAttributePrefix}`,'g')
 
@@ -58,7 +58,8 @@ export function convertModelToDoc(
 
 export function mapDocs<M extends IModel>(modelClazz:{new():M},result:any):M[] {
 
-		const mapper = getDefaultMapper(modelClazz)
+	const mapper = getDefaultMapper(modelClazz)
+	//const mapper = new ModelMapper(modelClazz)
 
 		let docs = (result && Array.isArray(result)) ? result : result.docs
 		docs = docs || []

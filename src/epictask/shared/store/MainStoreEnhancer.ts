@@ -107,16 +107,14 @@ function broadcastActionAndStateToClients(action,newState) {
 	if (newState === lastSentState)
 		return
 
-	let statePatch = null
+
 
 	function getStatePatch() {
-		if (statePatch)
-			return statePatch
+
 
 
 		// First check the last state we sent
 		lastSentState = lastSentState || Immutable.Map()
-
 
 		// Create a patch
 		statePatch = diff(lastSentState,newState).toJS()
@@ -129,6 +127,8 @@ function broadcastActionAndStateToClients(action,newState) {
 		// newState = transformValues(newState,
 		// 	(key,val) => (val.toJS) ? val.toJS() : val)
 	}
+
+	let statePatch = getStatePatch()
 
 	Object.keys(clients)
 		.map(key => ({
@@ -144,7 +144,7 @@ function broadcastActionAndStateToClients(action,newState) {
 					return
 				}
 
-				webContents.send(Events.StoreMainStateChanged, {action, patch: getStatePatch()})
+				webContents.send(Events.StoreMainStateChanged, {action, patch: statePatch})
 			} catch (err) {
 				log.error('Failed to send message to renderer, probably destroyed, removing',err)
 				unregisterRenderer(webContentsId)

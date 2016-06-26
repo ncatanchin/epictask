@@ -23,9 +23,8 @@ export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
 		return state.merge({query})
 	}
 
-	setResults(state:SearchState,newResults:List<SearchResult<any>>) {
-
-		return state.set('results',List<SearchResult<any>>(newResults))
+	setResults(state:SearchState,newResults:List<any>) {
+		return state.set('results',newResults)
 	}
 
 	setError(state:SearchState,err:Error) {

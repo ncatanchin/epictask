@@ -3,8 +3,6 @@
  */
 import {List,Record,Map} from 'immutable'
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
-import {getStore} from 'shared/store'
-import {RepoKey} from 'shared/Constants'
 import {ActionMessage} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {registerModel} from 'shared/models/Registry'
@@ -41,7 +39,7 @@ registerModel('SearchResult',SearchResult)
 
 
 export const SearchStateRecord = Record({
-	results:List<SearchResult<any>>(),
+	results:List<any>(),
 	error: null,
 	query: null,
 	searching: false,
@@ -56,7 +54,7 @@ export class SearchState extends SearchStateRecord {
 		}))
 	}
 
-	results:List<SearchResult<any>>
+	results:List<any>
 
 	error:Error
 

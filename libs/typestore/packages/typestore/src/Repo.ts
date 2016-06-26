@@ -36,7 +36,7 @@ import {
 	isNumberOrString
 } from "./Util"
 
-import {ModelMapper} from "./ModelMapper"
+import {ModelMapper,getDefaultMapper} from "./ModelMapper"
 import {IModelType} from "./ModelTypes"
 import {IModelOptions, IModelKey, IKeyValue, TKeyValue} from "./decorations/ModelDecorations";
 import {getMetadata} from "./MetadataManager";
@@ -44,19 +44,6 @@ import {getMetadata} from "./MetadataManager";
 // Logger
 const log = Log.create(__filename)
 
-const mapperCache = new WeakMap<any,IModelMapper<IModel>>()
-
-export function getDefaultMapper<T extends IModel>(clazz:{new():T}):IModelMapper<T> {
-	let mapper = mapperCache.get(clazz) as IModelMapper<T>
-
-	if (!mapper) {
-		mapper = new ModelMapper(clazz)
-		mapperCache.set(clazz,(mapper))
-	}
-
-	return mapper
-
-}
 
 /**
  * The core Repo implementation

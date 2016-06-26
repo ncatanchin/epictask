@@ -56,6 +56,6 @@ export * from './Util'
 export * from './Messages'
 export * from './Errors'
 export * from './MetadataManager'
-
+export * from './ModelMapper'
 
 

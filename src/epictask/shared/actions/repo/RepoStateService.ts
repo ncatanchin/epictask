@@ -1,6 +1,6 @@
 import {ObservableStore} from 'typedux'
 import {RepoActionFactory} from './RepoActionFactory'
-import {Repos} from '../../../main/db/DB'
+import {Repos} from 'main/db/DB'
 
 const log = getLogger(__filename)
 let store:ObservableStore<any>

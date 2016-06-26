@@ -113,7 +113,6 @@
     "style-loader": "^0.13.1",
     "tslint": "^3.11.0",
     "typescript": "^1.9.0-dev.20160601-1.0",
-    "typestore-mocks": "^0.1.7",
     "vinyl-named": "^1.1.0",
     "webpack": "^2.1.0-beta.8",
     "webpack-dev-middleware": "^1.6.1",
