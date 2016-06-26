@@ -359,6 +359,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			const repoIds = availableRepos
 				.filter(availRepo => availRepo.enabled)
 				.map(availRepo => availRepo.repoId)
+				.toArray()
 
 
 			log.info(`Loading issues for repos`,repoIds)

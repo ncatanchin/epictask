@@ -1,16 +1,13 @@
 /**
  * State Holder
  */
-import {
-	RecordModel,
-	RecordProperty,
-	makeRecord
-} from 'typemutant'
-
+import {List,Record,Map} from 'immutable'
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {getStore} from 'shared/store'
 import {RepoKey} from 'shared/Constants'
 import {ActionMessage} from 'typedux'
+import {SearchKey} from 'shared/Constants'
+import {registerModel} from 'shared/models/Registry'
 
 export enum SearchResultType {
 	Issue = 1,
@@ -20,92 +17,63 @@ export enum SearchResultType {
 
 export class SearchResult<T extends Issue|Repo|AvailableRepo> {
 
+	$$clazz = 'SearchResult'
+
 	index:number = -1
 	type:SearchResultType
 
 	constructor(public value:T) {
-		const repoState = getStore().getState().get(RepoKey)
 
-		this.type = isIssue(value) ? SearchResultType.Issue :
-			(value instanceof Repo) ? SearchResultType.Repo :
-				SearchResultType.AvailableRepo
+		const vAny:any = value
+		if (vAny.type && vAny.value)
+			Object.assign(this,vAny)
+		else
+			//const repoState = getStore().getState().get(RepoKey)
+
+			this.type = isIssue(value) ? SearchResultType.Issue :
+				(value instanceof Repo) ? SearchResultType.Repo :
+					SearchResultType.AvailableRepo
 	}
 
 }
 
+registerModel('SearchResult',SearchResult)
 
 
-export class SearchResults {
+export const SearchStateRecord = Record({
+	results:List<SearchResult<any>>(),
+	error: null,
+	query: null,
+	searching: false,
 
-	repos:SearchResult<Repo>[] = []
-	availableRepos:SearchResult<Repo>[] = []
-	issues:SearchResult<Issue>[] = []
-	all:SearchResult<Issue|Repo>[] = []
+})
 
-	constructor(all:SearchResult<Repo|Issue>[]) {
+export class SearchState extends SearchStateRecord {
 
-
-		all.forEach((item:SearchResult<Repo|Issue>,index) => {
-			item.index = index
-
-			const itemList:SearchResult<Repo|Issue>[] = ((item.type === SearchResultType.Issue) ?
-				this.issues : (item.type === SearchResultType.Repo) ?
-				this.repos :
-				this.availableRepos)
-
-			itemList.push(item)
-			this.all.push(item)
-		})
+	static fromJS(o:any) {
+		return new SearchState(Object.assign({},o,{
+			results: List(o.results)
+		}))
 	}
 
+	results:List<SearchResult<any>>
 
-}
-
-@RecordModel()
-class SearchStateModel {
-
-	@RecordProperty()
-	results:SearchResult<any>[]
-
-	@RecordProperty()
 	error:Error
 
-	@RecordProperty()
 	query:string
 
-	@RecordProperty()
 	searching:boolean
 
-	setSearching(newSearching:boolean) {
-		this.searching = newSearching
-		return this
-	}
 
-	setQuery(newQuery:string) {
-		this.query = newQuery
-		return this
-	}
-
-	setResults(newResults:SearchResults) {
-		this.results = newResults.all
-		return this
-	}
-
-	setError(err:Error) {
-		this.error = err
-		return this
-	}
 
 }
 
-const SearchStateDefaults = {
-	results:new SearchResults([]),
-	searching:false
-}
 
-export const SearchState = makeRecord(SearchStateModel,SearchStateDefaults)
-export type TSearchState = typeof SearchState
-
-export interface SearchMessage extends ActionMessage<typeof SearchState> {
+/**
+ * The action message for search
+ */
+export interface SearchMessage extends ActionMessage<SearchState> {
 
 }
+
+registerModel(SearchKey,SearchState)

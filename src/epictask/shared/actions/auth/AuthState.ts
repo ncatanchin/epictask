@@ -1,16 +1,7 @@
-/**
- * Authentication State Holder
- */
-import {
-	RecordModel,
-	RecordProperty,
-	makeRecord
-} from 'typemutant'
-
+import {List,Record,Map} from 'immutable'
 import {ActionMessage} from 'typedux'
-
-import Settings from 'shared/Settings'
-import * as Constants from 'shared/Constants'
+import {AuthKey} from 'shared/Constants'
+import {registerModel} from 'shared/models/Registry'
 
 export interface IAuthState {
 	authenticated?:boolean
@@ -21,73 +12,42 @@ export interface IAuthState {
 	error?:Error
 }
 
-@RecordModel()
-class AuthStateModel {
+export const AuthStateRecord = Record({
+	authenticating: false,
+	error: null,
+	authenticated: false,
+	username: null,
+	email: null,
+	token: null
+})
 
-	@RecordProperty()
+export class AuthState extends AuthStateRecord {
+
+	static fromJS(o:any) {
+		return new AuthState(o)
+	}
+
 	authenticating:boolean
 
-	@RecordProperty()
 	error:Error
 
-	@RecordProperty()
 	authenticated:boolean
 
-	@RecordProperty()
 	username:string
 
-	@RecordProperty()
 	email:string
 
-	@RecordProperty()
 	token:string
 
-	/**
-	 * Set authentication token
-	 *
-	 * @param token
-	 * @returns {AuthStateModel}
-	 */
-	setToken(token:string) {
-		this.token = Settings.token = token
-		this.authenticating = false
-		this.authenticated = !_.isNil(token)
-		this.error = null
-		return this
-	}
-
-
-	/**
-	 * Set authenticating
-	 *
-	 * @param authenticating
-	 * @returns {AuthStateModel}
-	 */
-	setAuthenticating(authenticating:boolean) {
-		this.authenticating = authenticating
-		return this
-	}
-
-	setError(err:Error) {
-		this.error = err
-		return this
-	}
 
 
 
 }
 
 
-
-const AuthStateDefaults = {
-	token: Settings.token
-}
-
-export const AuthState = makeRecord(AuthStateModel,AuthStateDefaults)
-export type TAuthState = typeof AuthState
-
-
-export interface AuthMessage extends ActionMessage<typeof AuthState> {
+export interface AuthMessage extends ActionMessage<AuthState> {
 	token?:string
 }
 
+
+registerModel(AuthKey,AuthState)

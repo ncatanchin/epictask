@@ -34,12 +34,6 @@ if (DEBUG) {
 	app.commandLine.appendSwitch('remote-debugging-port', '8315');
 }
 
-/**
- * Load the window
- */
-const loadWindow = () => require('./MainWindow')
-
-
 
 /**
  * All windows closed
@@ -61,7 +55,7 @@ async function boot() {
 	await configurator.init()
 
 	log.info("Boot load window")
-	mainWindow = loadWindow()
+	mainWindow = require('./MainWindow')
 
 	log.info("Boot start")
 	await mainWindow.start(async () => {
@@ -103,19 +97,19 @@ app.on('ready', onStart)
 if (module.hot) {
 	console.info('Setting up HMR')
 
-	module.hot.accept(['./MainWindow','./MainConfigurator'],async (mods) => {
+	module.hot.accept(['./MainWindow','./MainConfigurator'], (mods) => {
 		log.info("Rebooting main, updated dependencies",mods)
 
 		// We get a reference to the new window here
-		await boot()
+		return boot().then(() => {
+			const newWindow = mainWindow.getBrowserWindow()
 
-		const newWindow = mainWindow.getBrowserWindow()
-
-		// When it full loads we remove all the old ones
-		newWindow.webContents.on('did-finish-load', () => {
-			electron.BrowserWindow.getAllWindows()
-				.filter(win => win !== newWindow)
-				.forEach(oldWindow => oldWindow.close())
+			// When it full loads we remove all the old ones
+			newWindow.webContents.on('did-finish-load', () => {
+				electron.BrowserWindow.getAllWindows()
+					.filter(win => win !== newWindow)
+					.forEach(oldWindow => oldWindow.close())
+			})
 		})
 
 	})

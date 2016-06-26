@@ -7,11 +7,15 @@ import {
 } from 'typestore'
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {registerModel} from './Registry'
 //import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
+
+export const UserClassName = 'User'
 
 @ModelDescriptor()
 export class User extends DefaultModel {
 
+	$$clazz = UserClassName
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -98,3 +102,5 @@ export class UserRepo extends TSRepo<User> {
 
 
 }
+
+registerModel(UserClassName,User)

@@ -20,6 +20,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {Issue, Repo} from 'shared/models'
 import {RepoKey, AppKey} from 'shared/Constants'
 import {cloneObject} from 'shared/util'
+import {List} from 'immutable'
 
 // Non-typed Components
 const ReactList = require('react-list')
@@ -27,7 +28,7 @@ const ReactList = require('react-list')
 // Constants
 const log = getLogger(__filename)
 const repoActions = new RepoActionFactory()
-const appActions = new AppActionFactory()
+
 
 
 const styles = {
@@ -121,6 +122,8 @@ interface IIssueItemProps extends React.DOMAttributes {
 	index:number
 	s:any
 	onSelected:(event:any, issue:Issue) => void
+	issues:List<Issue>
+	selectedIssues:List<Issue>
 }
 
 interface IIssueState {
@@ -137,14 +140,15 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 	}
 
 	getNewState(props) {
-		const repoState = repoActions.state
+		//const repoState = repoActions.state
 
 		const
-			{index} = props,
-			{issues,selectedIssues} = repoState
+			{index,issues,selectedIssues} = props
+			// ,
+			// {issues,selectedIssues} = repoState
 
 		const
-			issue = issues[index],
+			issue = issues.get(index),
 			selected = issue && selectedIssues.find(item => item.id === issue.id),
 			selectedMulti = selectedIssues.length > 1
 
@@ -234,8 +238,9 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
  */
 export interface IIssuesPanelProps {
 	theme?:any
-	issues?:Issue[]
-	selectedIssues?:Issue[]
+	issues?:List<Issue>
+	selectedIssues?:List<Issue>
+	selectedIssue?:Issue
 	s?:any
 }
 
@@ -247,6 +252,7 @@ function mapStateToProps(state) {
 	return {
 		theme,
 		issues:         repoState.issues,
+		selectedIssue: repoState.selectedIssue,
 		selectedIssues: repoState.selectedIssues,
 		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
 	}
@@ -288,12 +294,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	onIssueSelected = (event, issue) => {
 		if (event.metaKey) {
-			let {selectedIssues} = this.props
+			let {selectedIssues,issues} = this.props
 			const wasSelected = !_.isNil(selectedIssues.find(selectedIssue => selectedIssue.id === issue.id))
 			selectedIssues = (wasSelected) ? selectedIssues.filter(selectedIssue => selectedIssue.id !== issue.id) :
-				selectedIssues.concat([issue])
+				selectedIssues.push(issue) as any
 
-			repoActions.setSelectedIssues(selectedIssues)
+			repoActions.setSelectedIssues(selectedIssues.toArray())
 		} else {
 			repoActions.setSelectedIssues([issue])
 		}
@@ -304,13 +310,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 	renderIssue = (index, key) => {
 		const
 			{props} = this,
-			{s} = props
+			{s,selectedIssues,issues} = props
 
 
 
 		return <IssueItem key={key}
 		                  s={s}
 		                  index={index}
+		                  selectedIssues={selectedIssues}
+		                  issues={issues}
 		                  onSelected={this.onIssueSelected}/>
 
 
@@ -318,8 +326,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	render() {
 		const
-			{theme,selectedIssues,s:themeStyles} = this.props,
-			allowResize = selectedIssues.length > 0,
+			{selectedIssues,s:themeStyles} = this.props,
+			allowResize = selectedIssues.size > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
@@ -350,10 +358,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 					           itemsRenderer={(items, ref) => {
 					           	    return (
 					           	    	<div ref={ref}>{items}</div>
-
 					           	    )
 					           }}
-					           length={this.props.issues.length}
+					           length={this.props.issues.size}
 					           type='simple'/>
 
 

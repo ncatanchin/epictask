@@ -22,6 +22,26 @@ import {
 	IActionInterceptorNext
 } from 'typedux'
 
+
+
+// function startRemoteDevServer() {
+// 	if (Env.isDev && !Env.isRenderer) {
+// 		const g = global as any
+// 		if (!g.removeDevServerStarted) {
+// 			g.removeDevServerStarted = true
+// 			const remotedev = require('remotedev-server')
+// 			remotedev({ hostname: 'localhost', port: 8787 })
+// 		} else {
+// 			console.log('Remote dev server already started')
+// 		}
+//
+// 		console.log('remote redux dev server started at http://localhost:8787')
+// 	}
+// }
+//
+// if (Env.isDev && !Env.isRenderer)
+// 	startRemoteDevServer()
+
 if (Env.isRenderer) {
 	addActionInterceptor((leaf:string,name:string,next:IActionInterceptorNext,...args:any[]) => {
 		ipc.send(Events.StoreRendererDispatch,leaf,name,args)
@@ -42,15 +62,31 @@ let hmrReady = false
  */
 const NullMiddleware = f => f
 
+
+
+function makeRemoteDevTools() {
+	const remoteDevTools = require('remote-redux-devtools')
+	return remoteDevTools({
+		name: 'EpicTask - ELECTRON',
+		realtime: true,
+		hostname: 'localhost', port: 8787
+	})
+}
+
 /**
  * DevToolsMiddleware is configured in DEBUG mode anyway
  *
  * @type {function(): *}
  */
 const devToolsMiddleware =
-	(!DEBUG || !Env.isRenderer) ? NullMiddleware :
-	(window.devToolsExtension) ? window.devToolsExtension() :
-	require('ui/components/debug/DevTools.tsx').DevTools.instrument()
+	(!Env.isDev) ? NullMiddleware :
+		(!Env.isRenderer) ? makeRemoteDevTools() :
+			(window.devToolsExtension) ? window.devToolsExtension() :
+				require('ui/components/debug/DevTools.tsx').DevTools.instrument()
+
+
+
+
 
 /**
  * Middleware includes thunk and in
@@ -111,13 +147,15 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
  */
 function initStore() {
 
-	const devTools = [devToolsMiddleware]
+	//const devTools = [devToolsMiddleware]
 	// if (Env.isDev && Env.is) {
 	// 	const statePersistence = require('redux-devtools').persistState(getDebugSessionKey())
 	// 	devTools.push(statePersistence)
 	// }
 
 	let reducers = (Env.isRenderer) ? [] : getReducers()
+
+
 
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
@@ -152,14 +190,13 @@ function initStore() {
 
 export async function createStore() {
 	return initStore()
-
 }
 
 export function getStore() {
 	if (!store) {
-		if (Env.isRenderer) {
-			throw new Error('Only main process can synchronously init store, use createStore ')
-		}
+		//if (Env.isRenderer) {
+			//throw new Error('Only main process can synchronously init store, use createStore ')
+		//}
 		initStore()
 	}
 	return store

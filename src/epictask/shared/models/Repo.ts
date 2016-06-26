@@ -14,9 +14,14 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 
 import {User} from './User'
 import {Permission} from './Permission'
+import {registerModel} from './Registry'
+
+export const RepoClassName = 'Repo'
 
 @ModelDescriptor()
 export class Repo extends DefaultModel {
+
+	$$clazz = RepoClassName
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -126,3 +131,5 @@ export class RepoRepo extends TSRepo<Repo> {
 		return null
 	}
 }
+
+registerModel(RepoClassName,Repo)

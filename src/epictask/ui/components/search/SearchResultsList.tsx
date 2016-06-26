@@ -8,12 +8,12 @@ import * as ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Repo,AvailableRepo} from 'shared/models'
-import {SearchResults, SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
 import {Issue} from 'shared/models'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components'
 import * as Radium from 'radium'
-import {AppKey} from 'shared/Constants'
+import {AppKey, SearchKey} from 'shared/Constants'
 
 // Constants
 const log = getLogger(__filename)
@@ -136,8 +136,10 @@ export interface ISearchResultsListProps {
 
 function mapStateToProps(state) {
 	const appState = state.get(AppKey)
+	const searchState = state.get(SearchKey)
 	return {
-		theme: appState.theme
+		theme: appState.theme,
+		results: searchState.results
 	}
 }
 
@@ -308,7 +310,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		// Iterate result types and build sections
 		types.forEach(type => {
 
-			const sectionResults = results.filter(result => result.type === type)
+			const sectionResults = results.filter(result => result && result.type === type)
 
 			rows = rows.concat(sectionResults.map(result => {
 				const isSelected = selectedIndex === result.index

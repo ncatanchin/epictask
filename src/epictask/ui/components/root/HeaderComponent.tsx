@@ -1,17 +1,10 @@
 import * as React from 'react'
-import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
-import {getStore} from 'shared/store'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchPanel} from 'components'
 import {makeAbsolute} from '../../../shared/themes/styles/CommonStyles'
 
 
 //const styles = require('./HeaderComponent.scss')
 const log = getLogger(__filename)
-const authActions = new AuthActionFactory()
-const store = getStore()
-
-const repoActions = new RepoActionFactory()
 
 export enum HeaderVisibility {
 	Hidden,

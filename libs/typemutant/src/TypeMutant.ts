@@ -6,6 +6,7 @@ const log = getLogger(__filename)
 
 const PropertyTypeMapKey = Symbol('typemutant:property-type-map-key')
 
+const finalClazzMap = new WeakMap<any,any>()
 
 function makeErrorMsg(type,msg) {
 	return `${type}${(msg) ? ' ' + msg : ''}`
@@ -158,11 +159,14 @@ export function isRecordObject(o:any):o is RecordBaseObject<any,any> {
  */
 export class RecordBaseObject<T extends any,TT extends any> {
 
-	static recordType:Immutable.Record.Class
-
 	static fromJS(o:any) {
 		return null
 	}
+
+	/**
+	 * Underlying immutable js record
+	 */
+	record
 
 	/**
 	 * Temporary mutating property
@@ -179,17 +183,10 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 *
 	 * @type {boolean}
 	 */
+	@EnumerableProperty(false)
 	private mutable = false
 
-	/**
-	 * Underlying immutable js record
-	 */
-	private record
 
-	/**
-	 * the final class intersection
-	 */
-	private finalClazz
 
 	@EnumerableProperty(false)
 	typeClazz
@@ -239,27 +236,27 @@ export class RecordBaseObject<T extends any,TT extends any> {
 		modelClazz?:{new():T},
 		propTypeMap?,
 		recordType?:Immutable.Record.Class,
-		props?:any
+		record?:any
 	){
 
 		this.typeClazz = typeClazz
-
 		this.modelClazz = modelClazz
 		this.propTypeMap = propTypeMap
 		this.recordType = recordType
 
 		// Final clazz MUST be hidden in the constructor so that
 		// clone understands its type
-		Object.defineProperty(this,'finalClazz',{
-			enumerable: false,
-			value: finalClazz
-		})
+		// Object.defineProperty(this,'finalClazz',{
+		// 	enumerable: false,
+		// 	value: finalClazz
+		// })
 
-		if (props && props instanceof recordType) {
-			this.record = props
-		} else if (!this.record) {
-			this.record = new recordType(props)
-		}
+		this.record = record
+		// if (props && props instanceof recordType) {
+		// 	this.record = props
+		// } else if (!this.record) {
+		// 	this.record = new recordType(props)
+		// }
 
 	}
 
@@ -320,22 +317,12 @@ export class RecordBaseObject<T extends any,TT extends any> {
 	 * @returns {any}
 	 */
 	clone(newRecord = null) {
-		const newInstance = new this.finalClazz()
 
-		Object.assign(newInstance,{
-			recordType: this.recordType,
-			record: newRecord || this.record,
-			propTypeMap: this.propTypeMap,
-			modelClazz: this.modelClazz,
-			mutable: false
-		})
-
-
-		return newInstance
+		return null
 	}
 
 	toJS() {
-		return this.record
+		return this.record.toJS()
 	}
 
 }
@@ -362,18 +349,12 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 
 	const typeWrapper = makeRecordType(modelClazz)
 
-
-	 type ComposedRecordType = typeof typeWrapper.asType
-	// type ComposedRecordConstructorType = RecordModelConstructor<RecordBaseObject<T,ComposedRecordType> & T>
-
-	/**
+	 /**
 	 * Create the anonymous class that implements the
 	 * ComposedRecordType
 	 *
 	 * @returns {any}
 	 */
-	//function makeClazz() {
-
 	const propTypeMap = Reflect.getMetadata(PropertyTypeMapKey, modelClazz.prototype)
 	if (!propTypeMap)
 		throw new Error('No annotated property metadata was found - make sure you have @Model and @Property')
@@ -384,7 +365,8 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 
 
 	// Map only the defaults
-	const recordDefaults = Object.keys(propTypeMap)
+	const propNames = Object.keys(propTypeMap)
+	const recordDefaults = propNames
 		.reduce((recordDefaults, propKey) => {
 			recordDefaults[propKey] = modelInstance[propKey]
 			return recordDefaults
@@ -394,20 +376,39 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 	// Create an ImmutableRecordClass
 	const recordType = Immutable.Record(recordDefaults)
 
+	function createRecord(props) {
+		if (props instanceof recordType)
+			return props
+
+		const setProps = Object.assign({},defaultProps,props)
+
+		let record = new recordType().withMutations((record) => {
+			Object
+				.keys(setProps)
+				.filter(key => propNames.includes(key))
+				.forEach(key => record = record.set(key,setProps[key]))
+		})
+
+		return record
+	}
+
 
 	// Build the final class
 	const newClazz = class RecordClazz extends RecordBaseObject<T,T> {
-
-		static recordType = recordType
 
 		static fromJS(o:any) {
 			return null
 		}
 
 		constructor()
-		constructor(private props:any = {}) {
-			super(typeWrapper.asStaticType,newClazz,modelClazz, propTypeMap, recordType,
-				(props instanceof recordType) ? props : Object.assign({},defaultProps,props))
+		constructor(props:any = {}) {
+			super(
+				typeWrapper.asStaticType,
+				newClazz,modelClazz,
+				propTypeMap,
+				recordType,
+				createRecord(props)
+			)
 		}
 	}
 
@@ -418,17 +419,12 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 	 */
 	const newClazzAny = newClazz as any
 	newClazzAny.fromJS = function(o:any) {
-		const instance = new newClazzAny(o)
-
-		return instance
+		return new newClazzAny(o)
 	}
 
 
-	// type comboTypeWrapper = typeof typeWrapper.asType
 
 	// Map all the functions first
-
-
 	Object.getOwnPropertyNames(modelClazz.prototype)
 		.filter(propName => propName !== 'constructor' && isFunction(modelClazz.prototype[propName]))
 		.forEach(funcName => {
@@ -444,7 +440,7 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 
 			Object.defineProperty(newClazz.prototype, propName, {
 				configurable: false,
-				enumerable:false,
+				enumerable:true,
 
 				/**
 				 * Getter for annotated property
@@ -475,6 +471,13 @@ export function makeRecord<T extends Object>(modelClazz:{new():T},defaultProps =
 				}
 			})
 		})
+
+	// Create a map entry for new instances
+	//finalClazzMap.set(recordType,newClazz)
+
+	newClazzAny.prototype.clone = (newRecord = null) => {
+		return new newClazzAny(newRecord)
+	}
 
 	//return newClazz as T & RecordBaseObject<T,T> & RecordModelConstructor<T>
 	const typeWrapper2 = new RecordTypeWrapper(newClazz,newClazz)

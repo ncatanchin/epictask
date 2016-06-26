@@ -1,15 +1,15 @@
-import {
-	getAction
-} from 'typedux'
+import {getAction} from 'typedux'
 
+const diff = require('immutablediff')
 import {Events} from 'shared/Constants'
-import {transformValues} from '../util/ObjectUtil'
+import {transformValues} from 'shared/util/ObjectUtil'
 
 const log = getLogger(__filename)
 
 const clients = {}
 const windowMap = {}
 const ipcListeners = []
+
 const addIpcListener = (channel:string,listener) => {
 	ipcMain.on(channel,listener)
 	ipcListeners.push([channel,listener])
@@ -21,7 +21,8 @@ const {ipcMain,BrowserWindow} = electron
 
 
 function unregisterRenderer(webContentsId) {
-	clients[webContentsId].active = false
+	if (!Env.isDev)
+		clients[webContentsId].active = false
 }
 
 function attachEvents(store) {
@@ -36,9 +37,8 @@ function attachEvents(store) {
 	function getMainState(event) {
 		log.info('Getting state for renderer')
 
-		const mainState = store.getState()
-
-		event.returnValue = mainState ? mainState.toJS() : null
+		event.returnValue = transformValues(store.getState().toJS(),
+			(key,val) => (val.toJS) ? val.toJS() : val)
 	}
 
 
@@ -84,7 +84,7 @@ function attachEvents(store) {
 		windowMap[browserWindow.id] = webContentsId
 
 		// WebContents aren't automatically destroyed on window close
-		browserWindow.on('closed', () => unregisterRenderer(webContentsId))
+		// browserWindow.on('closed', () => unregisterRenderer(webContentsId))
 
 		event.returnValue = true
 	});
@@ -98,16 +98,37 @@ function attachEvents(store) {
  * @param action
  * @param newState
  */
+let lastSentState = null
+
 function broadcastActionAndStateToClients(action,newState) {
 	if (!newState || !action)
 		return
 
+	if (newState === lastSentState)
+		return
 
-	if (newState.toJS)
-		newState = newState.toJS()
+	let statePatch = null
 
-	newState = transformValues(newState,
-		(key,val) => (val.toJS) ? val.toJS() : val)
+	function getStatePatch() {
+		if (statePatch)
+			return statePatch
+
+
+		// First check the last state we sent
+		lastSentState = lastSentState || Immutable.Map()
+
+
+		// Create a patch
+		statePatch = diff(lastSentState,newState).toJS()
+		lastSentState = newState
+
+		return statePatch
+		// if (newState.toJS)
+		// 	newState = newState.toJS()
+		//
+		// newState = transformValues(newState,
+		// 	(key,val) => (val.toJS) ? val.toJS() : val)
+	}
 
 	Object.keys(clients)
 		.map(key => ({
@@ -117,12 +138,17 @@ function broadcastActionAndStateToClients(action,newState) {
 		.filter(({client}) => client.active)
 		.forEach(({webContentsId,client}) => {
 			const {webContents} = client
-			if (webContents.isCrashed() || webContents.isDestroyed()) {
-				unregisterRenderer(webContentsId)
-				return
-			}
+			try {
+				if (webContents.isCrashed() || webContents.isDestroyed()) {
+					unregisterRenderer(webContentsId)
+					return
+				}
 
-			webContents.send(Events.StoreMainStateChanged, {action,newState})
+				webContents.send(Events.StoreMainStateChanged, {action, patch: getStatePatch()})
+			} catch (err) {
+				log.error('Failed to send message to renderer, probably destroyed, removing',err)
+				unregisterRenderer(webContentsId)
+			}
 		})
 }
 

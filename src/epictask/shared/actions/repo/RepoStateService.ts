@@ -14,9 +14,7 @@ async function enabledReposChanged() {
 
 	const enabledRepoIds = availableRepos
 		.filter(availRepo => availRepo.enabled)
-		.map(async (availRepo) => (availRepo.repo) ?
-			availRepo.repo.id :
-			await Repos.repo.get(Repos.repo.key(availRepo.repoId)))
+		.map(availRepo => availRepo.repoId)
 
 	if (_.isArrayEqualBy(enabledRepoIds,refMap.enabledRepoIds,'id'))
 		return

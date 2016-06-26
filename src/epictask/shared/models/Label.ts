@@ -9,23 +9,15 @@ import {
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 //import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {LunrIndex} from '../LunrIndex'
-
-/**
- * Create label index
- *
- * @type {LunrIndex}
- */
-// export const LabelIndex = new LunrIndex<Label>('Label', {
-// 	ref: 'id',
-// 	fields: {
-// 		name: 3
-// 	}
-// })
+import {registerModel} from './Registry'
 
 
-//@ModelDescriptor({onPersistenceEvent:LabelIndex.onPersistenceEvent})
+export const LabelClassName = 'Label'
+
 @ModelDescriptor()
 export class Label extends DefaultModel {
+
+	$$clazz = LabelClassName
 
 	@AttributeDescriptor({primaryKey:true})
 	url: string
@@ -70,3 +62,5 @@ export class LabelRepo extends TSRepo<Label> {
 
 
 }
+
+registerModel(LabelClassName,Label)

@@ -1,22 +1,17 @@
 
 
-/**
- * Authentication State Holder
- */
-import {
-	RecordModel,
-	RecordProperty,
-	makeRecord
-} from 'typemutant'
+import {List,Record,Map} from 'immutable'
 
-import {ToastMessageType, IToastMessage,IToastMessageAction} from 'shared/models/Toast'
+// Register the state model
+import {AppKey} from 'shared/Constants'
+import {registerModel} from 'shared/models/Registry'
+
+import {IToastMessage} from 'shared/models/Toast'
 import {User,Issue} from 'shared/models'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from 'shared/Settings'
-import {cloneObject} from 'shared/util'
-import {getTheme} from 'shared/themes/ThemeManager'
 
-import * as uuid from 'node-uuid'
+import {getTheme} from 'shared/themes/ThemeManager'
 
 /**
  * Enumeration describing app status type
@@ -34,129 +29,65 @@ export interface IStatus {
 	message?:string
 }
 
+export type TDialogMap = {[name:string]:boolean}
 
 
-export function makeToastMessage(opts:any) {
-	return Object.assign(opts,{
-		id:uuid.v4(),
-		createdAt:Date.now()
-	})
-}
 
 
-@RecordModel()
-export class AppStateModel {
+export const AppStateRecord = Record({
+	stateType: null,
+	status: null,
+	settings: Settings.toJSON(),
 
-	@RecordProperty()
-	stateType:AppStateType
+	dialogs: Map<string,boolean>(),
+	theme: getTheme(),
+	messages: List<IToastMessage>(),
 
-	@RecordProperty()
-	theme:any
+	monitorState: {},
 
-	@RecordProperty()
-	status:IStatus
+})
 
-	@RecordProperty()
-	settings:ISettings
+export class AppState extends AppStateRecord {
 
-	@RecordProperty()
-	dialogs: {[name:string]:boolean}
-
-	@RecordProperty()
-	editingIssue:Issue
-
-	@RecordProperty()
-	messages:IToastMessage[]
-
-	@RecordProperty()
-	monitorState:any
-
-	@RecordProperty()
-	user:User
-
-
-	@RecordProperty()
-	error:Error
-
-	setUser(user:User) {
-		this.user = user
-		return this
-	}
-
-	setEditingIssue(issue:Issue) {
-		this.editingIssue = cloneObject(issue)
-		return this
-	}
-
-	setDialogOpen(name:string,open:boolean) {
-		this.dialogs = Object.assign({},this.dialogs,{
-			[name]:open
-		})
-
-		return this
-	}
-	/**
-	 * Set app state
-	 *
-	 * @returns {AuthStateModel}
-	 * @param newStateType
-	 */
-	setStateType(newStateType:AppStateType) {
-
-		this.stateType = newStateType
-		return this
-	}
-
-	setTheme(theme:any) {
-		this.theme = theme
-		return this
-	}
-
-
-	setError(err:Error) {
-		this.error = err
-		return this.addErrorMessage(err)
-	}
-
-	addMessage(message:IToastMessage) {
-		this.messages = [...this.messages,message]
-		return this
-	}
-
-	addErrorMessage(err:Error|string) {
-		err = ((_.isString(err)) ? new Error(err) : err) as Error
-		return this.addMessage(makeToastMessage({
-			type: ToastMessageType.Error,
-			content: err.message
+	static fromJS(o:any) {
+		return new AppState(Object.assign({},o,{
+			messages: List(o.messages)
 		}))
 	}
 
-	removeMessage(id:string) {
-		this.messages = this.messages.filter(msg => msg.id !== id)
-		return this
-	}
-
-	setMonitorState(monitorState:any) {
-		this.monitorState = monitorState
-		return this
-	}
+	stateType:AppStateType
 
 
-	updateSettings(newSettings:ISettings) {
-		this.settings = _.merge({},this.settings,newSettings)
-		return this
-	}
+	theme:any
+
+
+	status:IStatus
+
+
+	settings:ISettings
+
+
+	dialogs: TDialogMap
+
+
+	editingIssue:Issue
+
+
+	messages:List<IToastMessage>
+
+
+	monitorState:any
+
+
+	user:User
+
+
+
+	error:Error
+
+
 
 }
 
-const AppStateDefaults = {
-	stateType: null,
-	messages: [],
-	dialogs: {},
-	theme: getTheme(),
-	monitorState: {},
-	settings: Settings.toJSON()
-}
 
-export const AppState = makeRecord(AppStateModel,AppStateDefaults)
-export type TAppState = typeof AppState
+registerModel(AppKey,AppState)

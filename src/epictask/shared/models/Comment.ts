@@ -9,9 +9,14 @@ import {
 import {User} from './User'
 import {Issue} from './Issue'
 import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {registerModel} from './Registry'
+
+export const CommentClassName = 'Comment'
 
 @ModelDescriptor()
 export class Comment extends DefaultModel {
+
+	$$clazz = CommentClassName
 
 	static makeParentRefId(repoId,issueNumber) {
 		return `${repoId}-${issueNumber}`
@@ -82,3 +87,6 @@ export class CommentRepo extends TSRepo<Comment> {
 		return null
 	}
 }
+
+
+registerModel(CommentClassName,Comment)

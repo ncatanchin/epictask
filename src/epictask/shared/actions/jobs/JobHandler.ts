@@ -1,6 +1,6 @@
 
 import {JobStatus} from './JobStatus'
-import {IJob} from './JobState'
+//import {IJob} from './JobState'
 
 const log = getLogger(__filename)
 
@@ -9,16 +9,16 @@ const log = getLogger(__filename)
  */
 export class JobHandler {
 
-	private _job:IJob
+	private _job
 
 	constructor(
 		private actions,
-		job:IJob
+		job
 	) {
 		this._job = job
 	}
 
-	get job():IJob {
+	get job() {
 		return this._job
 	}
 

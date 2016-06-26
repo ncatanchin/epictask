@@ -5,6 +5,7 @@ import {State} from './State'
 import {ActionMessage} from "../actions"
 import {ILeafReducer} from './LeafReducer'
 import {makeMappedReducerFn} from '../util/ActionMapper'
+import {isFunction} from '../util/index'
 
 const log = getLogger(__filename)
 
@@ -44,7 +45,7 @@ export class RootReducer {
 
 		this.reducers.forEach((reducer) => {
 			const defaultState = reducer.defaultState()
-			state = state.set(reducer.leaf(), toJS(defaultState))
+			state = state.set(reducer.leaf(), defaultState)
 		})
 
 		return state
@@ -77,6 +78,7 @@ export class RootReducer {
 
 					let reducerState = startReducerState
 					let stateChangeDetected = false
+
 					try {
 						log.debug('Action type supported', leaf, action.type)
 
@@ -106,22 +108,19 @@ export class RootReducer {
 								if (action.stateType && reducerState instanceof action.stateType)
 									checkReducerStateChange(actionReducer(reducerState, action))
 							})
-						} else {
-							log.debug('Checking for direct state reducer')
-
-							if (typeof reducerState[action.type] === 'function') {
-								log.debug('Called reducer directly on state function',action.type)
-								const reducerFn = makeMappedReducerFn(action.type,action.args)
-								checkReducerStateChange(reducerFn(reducerState,action))
-
-								// const
-								// log.debug('Creating mapped handler', propertyKey)
-								// finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
-							}
 						}
 
+						if (isFunction(reducer[action.type])) {
+							checkReducerStateChange(reducer[action.type](reducerState,...action.args))
+						} else if (isFunction(reducerState[action.type])) {
+							log.debug('Called reducer directly on state function',action.type)
+							const reducerFn = makeMappedReducerFn(action.type,action.args)
+							checkReducerStateChange(reducerFn(reducerState,action))
 
-
+							// const
+							// log.debug('Creating mapped handler', propertyKey)
+							// finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
+						}
 
 					} catch (err) {
 						log.error(`Error occurred on reducer leaf ${leaf}`, err)

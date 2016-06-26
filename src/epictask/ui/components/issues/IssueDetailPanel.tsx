@@ -3,6 +3,7 @@
  */
 
 // Imports
+
 import * as moment from 'moment'
 import * as React from 'react'
 import * as Radium from 'radium'
@@ -13,7 +14,7 @@ import {Issue, Comment, Label, Milestone, Repo} from 'shared/models'
 import {AppKey, RepoKey} from 'shared/Constants'
 import {IssueLabels} from './IssueLabels'
 import {IssueActivityText} from './IssueActivityText'
-
+import {List} from 'immutable'
 const {Textfit} = require('react-textfit')
 
 
@@ -140,6 +141,7 @@ function mapStateToProps(state) {
 	return {
 		theme:    appState.theme,
 		issues:   repoState.selectedIssues,
+		issue:   repoState.selectedIssue,
 		repos:    repoState.repos,
 		comments: repoState.comments
 	}
@@ -150,8 +152,9 @@ function mapStateToProps(state) {
  */
 
 export interface IIssueDetailPanelProps {
-	issues?:Issue[]
-	repos?:Repo[]
+	issues?:List<Issue>
+	issue?:Issue
+	repos?:List<Repo>
 	comments?:Comment[]
 	theme?:any
 }
@@ -164,8 +167,8 @@ export interface IIssueDetailPanelProps {
  * @constructor
  **/
 
-@connect(mapStateToProps)
 @Radium
+@connect(mapStateToProps)
 @PureRender
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
@@ -177,9 +180,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	}
 
 
-	renderMulti(issues:Issue[], s) {
+	renderMulti(issues:List<Issue>, s) {
 		return <div>
-			{issues.length} selected issues
+			{issues.size} selected issues
 		</div>
 	}
 
@@ -316,10 +319,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			s = mergeStyles(styles, theme.issueDetail)
 
 		return <div style={s.root}>
-			{issues.length === 0 ? <div/> :
-				issues.length > 1 ?
+			{issues.size === 0 ? <div/> :
+				issues.size > 1 ?
 					this.renderMulti(issues, s) :
-					this.renderIssue(issues[0], comments, s)
+					this.renderIssue(issues.get(0), comments, s)
 			}
 		</div>
 	}

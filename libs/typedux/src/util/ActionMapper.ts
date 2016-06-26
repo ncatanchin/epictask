@@ -18,7 +18,7 @@ export function makeMappedReducerFn<S,M>(propertyKey:string,args) {
 
 		if (isRecordObject(state)) {
 			const newState = state.withMutation(tempState => {
-				tempState[propertyKey](...args)
+				tempState = tempState[propertyKey](...args)
 				return tempState
 			})
 

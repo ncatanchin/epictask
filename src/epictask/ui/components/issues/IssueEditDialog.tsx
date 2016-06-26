@@ -137,7 +137,7 @@ function mapStateToProps(state) {
 		               availableRepos,
 		availableRepo: (!issue) ? null :
 			               availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
-		open:          appState.dialogs[Dialogs.IssueEditDialog] || false
+		open:          appState.dialogs ? appState.dialogs[Dialogs.IssueEditDialog] : false
 
 	}
 

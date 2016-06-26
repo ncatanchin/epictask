@@ -1,12 +1,12 @@
 import {ActionFactory,Action} from 'typedux'
 import {SearchKey} from "shared/Constants"
 
-import {SearchMessage,SearchState, SearchResults, SearchResult, SearchResultType} from './SearchState'
+import {SearchMessage,SearchState, SearchResult, SearchResultType} from './SearchState'
 import {Repo, Issue, RepoRepo, AvailableRepoRepo, AvailableRepo} from 'shared/models'
 import {getRepo,Repos} from '../../../main/db/DB'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {createClient} from 'shared/GitHubClient'
-
+import {List} from 'immutable'
 const uuid = require('node-uuid')
 const log = getLogger(__filename)
 
@@ -46,7 +46,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	}
 
 	@Action()
-	setResults(results:SearchResults) {
+	setResults(newResults:List<SearchResult<any>>) {
 	}
 
 	@Action()
@@ -56,13 +56,14 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 			const results = actions.state.results
 			if (!results) {
-				actions.setResults(new SearchResults(newItems))
+				actions.setResults(List(newItems))
 			} else {
 				const allItems = results
 					.filter(item => item.type !== type)
-					.concat(newItems)
+					.concat(List(newItems))
 
-				actions.setResults(new SearchResults(allItems))
+
+				actions.setResults(allItems)
 			}
 		}
 	}
@@ -152,7 +153,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 					}))
 
 			} else {
-				actions.setResults(new SearchResults([]))
+				actions.setResults(List([]))
 			}
 
 			const onFinish = () => actions.setSearching(false)

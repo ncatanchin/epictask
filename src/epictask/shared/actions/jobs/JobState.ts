@@ -1,15 +1,16 @@
-import {
-	RecordModel,
-	RecordProperty,
-	makeRecord
-} from 'typemutant'
 
+import {List,Record,Map} from 'immutable'
+
+// Register the state model
 import {ActionMessage} from 'typedux'
 
-import * as assert from 'assert'
+import {JobKey} from 'shared/Constants'
+import {registerModel} from 'shared/models/Registry'
+
+
 import {JobStatus} from './JobStatus'
 import {JobHandler} from './JobHandler'
-import * as uuid from 'node-uuid'
+
 
 const log = getLogger(__filename)
 
@@ -75,127 +76,35 @@ export interface IScheduledJob extends IJobRequest {
 }
 
 
-/**
- * Find an existing job that matches the
- * current job request
- *
- * @param state
- * @param name
- * @returns {T|undefined}
- */
-export function findInProgressJob(state,{name}) {
-	return state.jobs
-		.find(job => job.status < JobStatus.Completed && job.name === name)
-}
 
-@RecordModel()
-class JobStateModel {
+export const JobStateRecord = Record({
+	jobs:List<IJob>(),
+	error:null,
+	scheduledJobs:List<IScheduledJob>()
+})
 
-	@RecordProperty()
-	jobs:IJob[]
 
-	@RecordProperty()
+
+export class JobState extends JobStateRecord {
+
+	static fromJS(o:any) {
+		return new JobState(Object.assign({},o,{
+			jobs: List(o.jobs),
+			scheduledJobs: List(o.scheduledJobs)
+		}))
+	}
+
+	jobs:List<IJob>
+	scheduledJobs:List<IScheduledJob>
 	error:Error
 
-	@RecordProperty()
-	scheduledJobs:IScheduledJob[]
-
-	updateJob(updatedJob:IJob) {
-		const existingJob = this.jobs.find(job => job.id === updatedJob.id)
-		if (existingJob)
-			updatedJob = Object.assign({},existingJob,updatedJob)
-
-		Object.assign(updatedJob,{updatedAt:Date.now()})
-
-		this.jobs = this.jobs
-			.filter(job => job.id !== updatedJob.id)
-			.concat([updatedJob])
-
-		return this
-	}
-
-	createJob(request:IJobRequest) {
-		if (request.oneAtATime) {
-			log.debug(`Job ${request.name} executed one at a time, looking for any current jobs`)
-			const existingJob = findInProgressJob(this,request)
-
-			if (existingJob) {
-				log.warn(`Job ${request.name} executes one at a time, found in progress job ${existingJob && existingJob.id}`, request, existingJob)
-				return
-			}
-		}
-
-		const job = {
-			id: uuid.v4(),
-		    request,
-			name: request.name,
-			progress: 0,
-			status: JobStatus.Created
-		}
-		return this.updateJob(job)
-	}
-
-	removeJob(oldJob:IJob|string) {
-		this.jobs = this.jobs
-			.filter(job => (typeof oldJob === 'string') ?
-				oldJob !== job.id : oldJob.id !== job.id)
-
-		return this
-	}
-
-	/**
-	 * Remove a scheduled job
-	 *
-	 * @param idOrName
-	 * @returns {JobStateModel}
-	 */
-	removeScheduledJob(idOrName:string) {
-		this.scheduledJobs = this.scheduledJobs
-			.filter(job => ![job.id,job.name].includes(idOrName))
-		return this
-	}
-
-	/**
-	 * Add a scheduled job to the
-	 * the state - the @see JobManager is
-	 * then responsible for scheduling etc
-	 *
-	 * @param scheduledJob
-	 * @returns {JobStateModel}
-	 */
-	addScheduledJob(scheduledJob:IScheduledJob) {
-
-		const existingJobs = this.scheduledJobs,
-			existingJob = existingJobs.find(job => job.name === scheduledJob.name ||
-				job.id === scheduledJob.id)
-
-		if (existingJob) {
-			log.warn(`Probably HMR: An existing job with a matching name (${scheduledJob.name}) or id (${scheduledJob.id}) already exists`)
-			return
-		}
-
-
-		this.scheduledJobs = existingJobs.concat([scheduledJob])
-		return this
-	}
-
-
-
-	setError(err:Error) {
-		this.error = err
-		return this
-	}
-}
-
-const JobStateDefaults = {
-	jobs: [],
-	scheduledJobs: []
-}
-
-export const JobState = makeRecord(JobStateModel,JobStateDefaults)
-export type TJobState = typeof JobState
-
-export interface JobMessage extends ActionMessage<typeof JobState> {
 
 }
 
+
+
+export interface JobMessage extends ActionMessage<JobState> {
+
+}
+
+registerModel(JobKey,JobState)

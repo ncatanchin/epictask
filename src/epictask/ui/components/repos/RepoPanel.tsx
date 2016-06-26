@@ -21,9 +21,9 @@ const {HotKeys} = require('react-hotkeys')
 const log = getLogger(__filename)
 //const styles = require("./RepoPanel.css")
 const repoActions = new RepoActionFactory()
-const appActions = new AppActionFactory()
 
 import { connect } from 'react-redux'
+import {AppKey} from '../../../shared/Constants'
 
 const styles = {
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{
@@ -79,8 +79,9 @@ export interface IRepoPanelProps {
 }
 
 function mapStateToProps(state) {
+	const {theme} = state.get(AppKey)
 	return {
-		theme: appActions.state.theme
+		theme
 	}
 }
 

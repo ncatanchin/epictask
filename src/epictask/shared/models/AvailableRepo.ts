@@ -17,7 +17,9 @@ import {Milestone,MilestoneRepo} from './Milestone'
 import {User,UserRepo} from './User'
 import {Repo,RepoRepo} from './Repo'
 import {cloneObject} from '../util/ObjectUtil'
+import {registerModel} from './Registry'
 
+export const AvailableRepoClassName = 'AvailableRepo'
 
 /**
  * Maps repos that have been configured for tasks
@@ -27,7 +29,8 @@ import {cloneObject} from '../util/ObjectUtil'
 @ModelDescriptor({transientAttrs: ['repo']})
 export class AvailableRepo extends DefaultModel {
 
-	@DefaultValue(() => uuid.v4())
+	$$clazz = AvailableRepoClassName
+
 	@AttributeDescriptor({primaryKey:true})
 	id:string
 
@@ -101,7 +104,7 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 		if (!availRepo.collaborators) {
 			filled.collaborators = await userRepo.findByRepoId(filled.repoId)
 		}
-		return cloneObject(filled)
+		return filled
 	}
 
 	async loadAll():Promise<AvailableRepo[]> {
@@ -118,3 +121,5 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 
 
 }
+
+registerModel(AvailableRepoClassName,AvailableRepo)

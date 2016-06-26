@@ -13,40 +13,18 @@ import {Label} from './Label'
 import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
-import {LunrIndex} from 'shared/LunrIndex'
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {registerModel} from './Registry'
+
 
 export type IssueState = "open" | "closed"
 
-// /**
-//  * Create issue index
-//  *
-//  * @type {LunrIndex}
-//  */
-// export const IssueIndex = new LunrIndex<Issue>('Issue', {
-// 	ref: 'id',
-// 	fields: {
-// 		title: 5,
-// 		body: 3,
-// 		allCommentsText: 2,
-// 		assigneeName: 1,
-// 		reporterName: 1
-//
-// 	},
-// 	normalizer(issue) {
-// 		return Object.assign({},issue,{
-// 			allComments: 'merge comments here',
-// 			assigneeName: 'sadasda',
-// 			reporterName: 'sadasda'
-// 		})
-// 	}
-// })
+export const IssueClassName = 'Issue'
 
-@ModelDescriptor({
-	//onPersistenceEvent: IssueIndex.onPersistenceEvent
-})
-
+@ModelDescriptor()
 export class Issue extends DefaultModel {
+
+	$$clazz = IssueClassName
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -141,3 +119,5 @@ export class IssueRepo extends TSRepo<Issue> {
 export function isIssue(o:any):o is Issue {
 	return o.title && o.id && o.labels
 }
+
+registerModel(IssueClassName,Issue)

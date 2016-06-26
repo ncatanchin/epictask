@@ -1,7 +1,11 @@
 import {Events} from 'shared/Constants'
 import {getReducers} from './Reducers'
+import {getModel} from 'shared/models/Registry'
+
+const nextTick = require('browser-next-tick')
 const log = getLogger(__filename)
 
+const patcher = require('immutablepatch')
 const electron = require('electron')
 const {ipcRenderer} = electron
 
@@ -10,6 +14,7 @@ const addIpcListener = (channel:string,listener) => {
 	ipcRenderer.on(channel,listener)
 	ipcListeners.push([channel,listener])
 }
+
 
 
 let reducers = getReducers()
@@ -21,27 +26,24 @@ if (module.hot) {
 	})
 }
 
+
 function hydrateState(state) {
+	const mappedState = Object
+		.keys(state)
+		.reduce((tempState,nextKey) => {
+			const modelClazz = getModel(nextKey)
+			const value = state[nextKey]
+			tempState[nextKey] = modelClazz ?
+				modelClazz.fromJS(value) :
+				value
+			return tempState
+		},{})
 
 
-	if (!state)
-		return Immutable.Map()
+	const revivedState = Immutable.Map(mappedState)
 
-	const keys = (Immutable.Map.isMap(state)) ?
-		state.keys() :
-		Object.keys(state)
-
-
-	return keys
-		.reduce((finalState,key) => {
-			//const reducer = reducers.find(reducer => reducer.leaf() === key)
-			let val = state.get ? state.get(key) : state[key]
-			// if (reducer) {
-			// 	val = reducer.prepareState(val)
-			// }
-
-			return finalState.set(key,val)
-		},Immutable.Map())
+	console.log('Revived state from main',state,revivedState,mappedState)
+	return revivedState
 
 
 }
@@ -61,10 +63,13 @@ function getMainProcessState() {
 }
 
 
-export default function rendererStoreEnhancer(storeCreator) {
-	return (reducer, initialState) => {
+let receivedState = null
 
-		initialState = getMainProcessState()
+
+export default function rendererStoreEnhancer(storeCreator) {
+	return (reducer) => {
+
+		receivedState = getMainProcessState()
 
 		const
 			{remote}= electron,
@@ -74,28 +79,43 @@ export default function rendererStoreEnhancer(storeCreator) {
 
 		ipcRenderer.send(Events.StoreRendererRegister,{clientId})
 
-		let receivedState = null
-		let receivedAction = null
-
-		reducer = (state = initialState,action) => {
-			if (receivedState) {
-				state = receivedState
-				receivedState = null
-			}
-
-			return state
+		reducer = () => {
+			return receivedState
 		}
 
-		let store = storeCreator(reducer, initialState)
+		let store = storeCreator(reducer, receivedState)
 
-		addIpcListener(Events.StoreMainStateChanged,(event,{action,newState}) => {
-			if (!newState)
+		addIpcListener(Events.StoreMainStateChanged,(event,{action,patch:patchJS}) => {
+			if (!patchJS)
 				return
 
+			// Model registry is used to revive classes
+			const patch = Immutable.fromJS(patchJS,(key,value:any) => {
+				const clazzName = value.get('$$clazz')
+				if (clazzName) {
+					const modelClazz = getModel(clazzName)
+					if (modelClazz)
+						return new modelClazz(value.toJS())
+				}
 
-			receivedState = hydrateState(_.cloneDeep(newState))
+				const isIndexed = Immutable.Iterable.isIndexed(value);
+				return isIndexed ? value.toList() : value.toMap();
+			})
+			// const patch = Immutable.List(patchJS)
+			// 	.map(patchItem => Immutable.Map(patchItem))
+
+			const lastState = receivedState
+			receivedState = patcher(lastState,patch)
+
+			console.log('received state patch',receivedState,'path',patch,'last state',lastState)
 			store.dispatch(action)
+			//dispatchLater(store,action)
+			// nextTick(() => {
+			//
+			// })
 		})
+
+		store.getState = () => receivedState
 
 		return store
 	}

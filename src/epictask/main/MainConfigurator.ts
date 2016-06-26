@@ -101,13 +101,13 @@ export async function start():Promise<any> {
  * If HMR is enabled then sign me up
  */
 if (module.hot) {
-	module.hot.accept(['shared/store','./db/DB','shared/util/ContextUtils',servicesCtx.id], updates => {
-		log.info('HMR updates received - rebooting', updates)
-
-		loadServices()
-		init().then(start)
-
-	})
+	// module.hot.accept(['shared/store','./db/DB','shared/util/ContextUtils',servicesCtx.id], updates => {
+	// 	log.info('HMR updates received - rebooting', updates)
+	//
+	// 	loadServices()
+	// 	init().then(start)
+	//
+	// })
 
 
 }

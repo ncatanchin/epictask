@@ -9,7 +9,7 @@ import {connect} from 'react-redux'
 import {SearchKey, AppKey} from 'shared/Constants'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResults, SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
 import {SearchResultsList} from './SearchResultsList'
@@ -225,7 +225,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				/>
 				<SearchResultsList ref="resultsList"
 				                   anchor={'#searchPanel'}
-				                   results={this.props.results}
 				                   selectedIndex={this.state.selectedIndex}
 				                   open={resultsOpen}
 				                   inline={expanded}

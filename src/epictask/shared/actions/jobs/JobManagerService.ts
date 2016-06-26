@@ -1,7 +1,8 @@
 import {ObservableStore} from 'typedux'
 import {JobActionFactory as JobActionFactoryType} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory as RepoActionFactoryType} from 'shared/actions/repo/RepoActionFactory'
-import {IJob,IScheduledJob,findInProgressJob} from 'shared/actions/jobs/JobState'
+import {IJob,IScheduledJob} from 'shared/actions/jobs/JobState'
+import {findInProgressJob} from 'shared/actions/jobs/JobReducer'
 import {JobStatus} from 'shared/actions/jobs/JobStatus'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 

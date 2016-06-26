@@ -71,73 +71,6 @@ const styles = {
 }
 //endregion
 
-//region Monitor State Layout Adjustment
-/**
- * Calculates an adjusted style in DEBUG when the monitor is
- * visible so that the full body can be seen
- *
- * @param connectInstance
- * @returns {any}
- */
-function getAdjustedBodyStyle(connectInstance:any) {
-	const store = (connectInstance) ? connectInstance.store : {}
-	const {liftedStore} = store
-	if (!DEBUG || !liftedStore)
-		return {}
-
-	const {monitorState} = liftedStore.getState()
-	let bodyStyle:any = {
-		maxWidth: '100%',
-		minWidth: '100%',
-		maxHeight: '100%',
-		minHeight: '100%'
-	}
-
-	if (monitorState && !monitorStateSubscribed) {
-		monitorStateSubscribed = true
-		liftedStore.subscribe(_.debounce(function () {
-			const newMonitorState = _.pick(liftedStore.getState().monitorState, 'isVisible', 'position')
-			if (_.isEqual(monitorStatePrevious, newMonitorState) || _.isEqual(appActions.state.monitorState, newMonitorState)) {
-				// no change
-			} else if (!appElement) {
-				log.debug('monitor state changed, but no app element yet')
-			} else {
-				monitorStatePrevious = newMonitorState
-				appActions.setMonitorState(newMonitorState)
-			}
-		}, 500))
-	}
-
-	if (devToolsRef && monitorState && monitorState.isVisible) {
-		const elem = (ReactDOM.findDOMNode(devToolsRef) as any).children[0]
-		const {position} = monitorState
-
-		const
-			maxHeight = window.innerHeight - elem.clientHeight,
-			maxWidth = window.innerWidth - elem.clientWidth
-
-		bodyStyle = (position === 'top') ? {
-			maxHeight,
-			minHeight: maxHeight,
-			marginTop: elem.clientHeight
-		} : (position === 'bottom') ? {
-			maxHeight,
-			minHeight: maxHeight
-		} : (position === 'right') ? {
-			maxWidth,
-			minWidth: maxWidth
-		} : {
-			maxWidth,
-			minWidth: maxWidth,
-			marginLeft: elem.clientWidth
-		}
-
-	}
-
-	return bodyStyle
-}
-//endregion
-
 
 /**
  * Properties for App/State
@@ -162,7 +95,7 @@ function mapStateToProps(state) {
 	return {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
-		hasAvailableRepos: availableRepos && availableRepos.length > 0,
+		hasAvailableRepos: availableRepos && availableRepos.size > 0,
 		//adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
 }
@@ -214,7 +147,8 @@ class App extends React.Component<IAppProps,any> {
 		const page = {component: getPage(stateType)},
 			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos
 
-		const headerVisibility = (stateType < AppStateType.Home) ? HeaderVisibility.Hidden :
+		const headerVisibility = (stateType < AppStateType.Home) ?
+			HeaderVisibility.Hidden :
 			(expanded) ? HeaderVisibility.Expanded :
 				HeaderVisibility.Normal
 
@@ -271,6 +205,10 @@ function render() {
 		log.info('Theme is not set yet')
 		const observer = store.observe([AppKey,'theme'],(newTheme) => {
 			log.info('RECEIVED THEME, NOW RENDER',newTheme)
+			if (!newTheme) {
+				log.info('Theme is still null')
+				return
+			}
 			observer()
 			render()
 		})

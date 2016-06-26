@@ -8,27 +8,17 @@ import {
 } from 'typestore'
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
-import {LunrIndex} from '../LunrIndex'
+import {registerModel} from './Registry'
 
-// /**
-//  * Create milestone index
-//  *
-//  * @type {LunrIndex}
-//  */
-// export const MilestoneIndex = new LunrIndex<Milestone>('Milestone', {
-// 	ref: 'id',
-// 	fields: {
-// 		title: 3
-// 	}
-// })
-
+export const MilestoneClassName = 'Milestone'
 
 @ModelDescriptor({
 	//onPersistenceEvent:MilestoneIndex.onPersistenceEvent
 })
 export class Milestone extends DefaultModel {
+
+	$$clazz = MilestoneClassName
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number
@@ -83,3 +73,6 @@ export class MilestoneRepo extends TSRepo<Milestone> {
 	}
 
 }
+
+
+registerModel(MilestoneClassName,Milestone)
