@@ -4,6 +4,7 @@ const diff = require('immutablediff')
 import {Events} from 'shared/Constants'
 import {transformValues} from 'shared/util/ObjectUtil'
 
+
 const log = getLogger(__filename)
 
 const clients = {}
@@ -117,9 +118,10 @@ function broadcastActionAndStateToClients(action,newState) {
 		lastSentState = lastSentState || Immutable.Map()
 
 		// Create a patch
-		statePatch = diff(lastSentState,newState).toJS()
+		statePatch = _.cloneDeep(diff(lastSentState,newState).toJS())
 		lastSentState = newState
 
+		//log.info('Sending state patch', JSON.stringify(statePatch,null,4))
 		return statePatch
 		// if (newState.toJS)
 		// 	newState = newState.toJS()
@@ -176,7 +178,9 @@ export default function mainStoreEnhancer(storeCreator) {
 				if (state === newState)
 					return
 
-				broadcastActionAndStateToClients(action,newState)
+
+					broadcastActionAndStateToClients(action,newState)
+
 			}
 
 			return store

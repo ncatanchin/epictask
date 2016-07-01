@@ -1,4 +1,5 @@
 import {List} from 'immutable'
+import {SearchResult} from 'shared/actions/search/SearchState'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
 import {Repo,RepoRepo} from 'shared/models/Repo'
 import {getRepo} from 'main/db/DB'
@@ -17,21 +18,29 @@ async function doSearch(query:string) {
 	log.info('Searching with query',query)
 	const repoRepo = getRepo(RepoRepo)
 	const results = await repoRepo.findByName(query)
-	searchActions.setResults(List(results))
-	// if (pendingSearch) {
-	// 	pendingSearch.then(() => searchActions.search())
-	// } else {
-	// 	pendingSearch = searchActions.search()
-	// }
-	//
-	// try {
-	// 	let result = await pendingSearch
-	// 	log.info('search result',pendingSearch)
-	// } catch (err) {
-	// 	log.error('Search failed', err.stack)
-	// } finally {
-	// 	pendingSearch = null
-	// }
+
+	// searchActions.setResults(
+	// 	List(
+	// 		results
+	// 			.map(result => new SearchResult(result))
+	// 	)
+	// )
+
+
+	if (pendingSearch) {
+		pendingSearch.then(() => searchActions.search())
+	} else {
+		pendingSearch = searchActions.search()
+	}
+
+	try {
+		let result = await pendingSearch
+		log.info('search result',pendingSearch)
+	} catch (err) {
+		log.error('Search failed', err.stack)
+	} finally {
+		pendingSearch = null
+	}
 }
 
 

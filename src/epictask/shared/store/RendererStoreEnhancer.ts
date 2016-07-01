@@ -1,7 +1,7 @@
 import {Events} from 'shared/Constants'
 import {getReducers} from './Reducers'
 import {getModel} from 'shared/models/Registry'
-
+import {cloneObject} from 'shared/util/ObjectUtil'
 const nextTick = require('browser-next-tick')
 const log = getLogger(__filename)
 
@@ -42,7 +42,7 @@ function hydrateState(state) {
 
 	const revivedState = Immutable.Map(mappedState)
 
-	console.log('Revived state from main',state,revivedState,mappedState)
+	//console.log('Revived state from main',state,revivedState,mappedState)
 	return revivedState
 
 
@@ -85,7 +85,8 @@ export default function rendererStoreEnhancer(storeCreator) {
 
 		let store = storeCreator(reducer, receivedState)
 
-		addIpcListener(Events.StoreMainStateChanged,(event,{action,patch:patchJS}) => {
+		addIpcListener(Events.StoreMainStateChanged,(event,payload) => {
+			const {action,patch:patchJS} = _.cloneDeep(payload)
 			if (!patchJS)
 				return
 
@@ -107,7 +108,7 @@ export default function rendererStoreEnhancer(storeCreator) {
 			const lastState = receivedState
 			receivedState = patcher(lastState,patch)
 
-			console.log('received state patch',receivedState,'path',patch,'last state',lastState)
+			//console.log('received state patch',receivedState,'path',patch,'last state',lastState)
 			store.dispatch(action)
 			//dispatchLater(store,action)
 			// nextTick(() => {

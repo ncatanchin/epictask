@@ -83,7 +83,8 @@ export class IssueRepo extends TSRepo<Issue> {
 	}
 
 	@PouchDBFullTextFinder({
-		textFields: ['title']
+		textFields: ['title'],
+		limit: 200,
 	})
 	findByTitle(title:string):Promise<Issue[]> {
 		return null
@@ -96,6 +97,7 @@ export class IssueRepo extends TSRepo<Issue> {
 	 */
 	@PouchDBMangoFinder({
 		indexFields: ['repoId'],
+		limit: 100,
 		selector: (...repoIds:number[]) => ({
 			$or: repoIds.map(repoId => ({
 				$eq: repoId

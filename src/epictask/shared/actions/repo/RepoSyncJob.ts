@@ -66,7 +66,7 @@ export class RepoSyncJob implements IJobRequest {
 			return user
 		})) as any
 
-		log.debug(`Loaded collabs/users, time to persist`, collabs)
+		//log.debug(`Loaded collabs/users, time to persist`, collabs)
 		await userRepo.bulkSave(...collabs)
 	}
 
@@ -78,7 +78,7 @@ export class RepoSyncJob implements IJobRequest {
 	async syncIssues(repo) {
 		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
 		issues.forEach(issue => issue.repoId = repo.id)
-		log.debug(`Loaded issues, time to persist`, issues)
+		//log.debug(`Loaded issues, time to persist`, issues)
 		await Repos.issue.bulkSave(...issues)
 	}
 
@@ -90,7 +90,7 @@ export class RepoSyncJob implements IJobRequest {
 	async syncLabels(repo) {
 		const labels = await this.client.repoLabels(repo)
 		labels.forEach(label => label.repoId = repo.id)
-		log.debug(`Loaded labels, time to persist`, labels)
+		//log.debug(`Loaded labels, time to persist`, labels)
 		await Repos.label.bulkSave(...labels)
 	}
 
@@ -102,7 +102,7 @@ export class RepoSyncJob implements IJobRequest {
 	async syncMilestones(repo) {
 		const milestones = await this.client.repoMilestones(repo)
 		milestones.forEach(milestone => milestone.repoId = repo.id)
-		log.debug(`Loaded milestones, time to persist`, milestones)
+		//log.debug(`Loaded milestones, time to persist`, milestones)
 		await Repos.milestone.bulkSave(...milestones)
 	}
 
@@ -130,7 +130,7 @@ export class RepoSyncJob implements IJobRequest {
 			comment.parentRefId = Comment.makeParentRefId(repo.id,comment.issueNumber)
 		})
 
-		log.debug(`Loaded comments, time to persist`, comments)
+		//log.debug(`Loaded comments, time to persist`, comments)
 		await Repos.comment.bulkSave(...comments)
 	}
 

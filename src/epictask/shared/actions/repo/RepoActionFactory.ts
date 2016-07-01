@@ -185,14 +185,15 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				// TODO: update sync functionality to use all of "MY" repos +
 				//  repos i follow, star and ones i added explicitly
 				const updatedRepos = cloneObject(actions.state.repos)
-				repos.forEach(repo => {
-					const updatedRepo = updatedRepos.find(item => item.id === repo.id)
-					if (updatedRepo) {
-						_.merge(updatedRepo,repo)
-					} else {
-						updatedRepos.push(repo)
-					}
-				})
+				// TODO: update immutably
+				// repos.forEach(repo => {
+				// 	const updatedRepo = updatedRepos.find(item => item.id === repo.id)
+				// 	if (updatedRepo) {
+				// 		_.merge(updatedRepo,repo)
+				// 	} else {
+				// 		updatedRepos.push(repo)
+				// 	}
+				// })
 
 				actions.setRepos(updatedRepos)
 			} catch (err) {

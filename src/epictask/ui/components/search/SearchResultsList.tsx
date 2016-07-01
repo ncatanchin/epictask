@@ -241,7 +241,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		</div>
 	}
 
-	renderRepo(repoResult:SearchResult<Repo>,isSelected) {
+	renderRepo = (repoResult:SearchResult<Repo>,isSelected) => {
 		const repo = repoResult.value
 
 		return this.renderResult(
@@ -258,7 +258,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 * @param isSelected
 	 * @returns {any}
 	 */
-	renderAvailableRepo(availRepoResult:SearchResult<AvailableRepo>,isSelected) {
+	renderAvailableRepo = (availRepoResult:SearchResult<AvailableRepo>,isSelected) => {
 		const
 			// Get data
 			availRepo = availRepoResult.value,
@@ -278,7 +278,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 	}
 
-	renderIssue(repoResult:SearchResult<Issue>,isSelected) {
+	renderIssue = (repoResult:Issue,isSelected) => {
 		return []
 	}
 
@@ -301,22 +301,27 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		// Map Result types
 		const types = Object.keys(SearchResultType)
 			.filter(t => _.isFinite(_.toNumber(t)))
-			.map(t => _.toNumber(t))
+			.map(t => SearchResultType[t])
 
 		let rows = []
 
 		log.info(`Selected index in results ${selectedIndex}`)
 
 		// Iterate result types and build sections
-		types.forEach(type => {
+		types.forEach(resultTypeStr => {
+			const resultType:SearchResultType = SearchResultType[resultTypeStr] as any
+			const resultRenderer:any = (resultType === SearchResultType.Repo) ?
+				this.renderRepo : (resultType === SearchResultType.AvailableRepo) ?
+				this.renderAvailableRepo :
+				this.renderIssue
 
-			const sectionResults = results.filter(result => result && result.type === type)
+			// Filter only the results for this section
+			const sectionResults = results.filter(result => result.type === resultType)
 
+			// Concat the other sections
 			rows = rows.concat(sectionResults.map(result => {
 				const isSelected = selectedIndex === result.index
-				const resultContent = (result.type === SearchResultType.Repo) ? this.renderRepo(result,isSelected) :
-					(result.type === SearchResultType.Issue) ? this.renderIssue(result,isSelected) :
-						this.renderAvailableRepo(result,isSelected)
+				const resultContent = resultRenderer(result, isSelected)
 
 				// Make the row style
 				const resultStyle = makeStyle(

@@ -32,7 +32,7 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
 		opts.skip = offset
 	}
 
-	log.info('Querying full text with opts',opts)
+	log.debug('Querying full text with opts',opts)
 	const result = await pouchRepo.db.search(opts)
 
 	log.debug(`Full-Text search result`,result)
@@ -92,7 +92,7 @@ export function makeFullTextFinder(pouchRepo,finderKey:string,opts:IPouchDBFullT
 			pouchRepo,query,textFields,limit,offset,true
 		)
 
-		log.info('Full text result for ' + finderKey ,result,'args',args)
+		log.debug('Full text result for ' + finderKey ,result,'args',args)
 
 		return mapDocs(pouchRepo.repo.modelClazz,result)
 
@@ -143,7 +143,7 @@ export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFin
 		indexCreate = (async () => {
 			let idx = await getIndexByNameOrFields(pouchRepo.db,indexName,indexFields)
 
-			log.info(`found index for finder ${finderKey}: ${idx && idx.name}/${indexName} with fields ${idx && idx.fields.join(',')}`)
+			log.debug(`found index for finder ${finderKey}: ${idx && idx.name}/${indexName} with fields ${idx && idx.fields.join(',')}`)
 
 			assert(idx || (indexFields && indexFields.length > 0),
 				`No index found for ${indexName} and no indexFields provided`)
@@ -184,9 +184,12 @@ export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFin
 	}
 
 	return async (...args) => {
-		log.debug(`Executing finder ${finderKey} with index ${indexName}`)
-		const idx = await indexCreate
-		log.debug('Index is Ready',idx)
+
+		if (!indexReady) {
+			log.debug(`Executing finder ${finderKey} with index ${indexName}`)
+			const idx = await indexCreate
+			log.debug('Index is Ready', idx)
+		}
 		return finder(...args)
 	}
 

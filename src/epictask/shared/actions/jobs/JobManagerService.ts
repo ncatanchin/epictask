@@ -5,6 +5,7 @@ import {IJob,IScheduledJob} from 'shared/actions/jobs/JobState'
 import {findInProgressJob} from 'shared/actions/jobs/JobReducer'
 import {JobStatus} from 'shared/actions/jobs/JobStatus'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
+import {List} from 'immutable'
 
 const log = getLogger(__filename)
 
@@ -14,6 +15,14 @@ let repoActions:RepoActionFactoryType
 
 let workingJobs = {}
 let scheduledJobs:{[name:string]:IScheduledJob} = {}
+
+
+function getJobActions() {
+	if (!jobActions)
+		jobActions = new (require('shared/actions/jobs/JobActionFactory').JobActionFactory)()
+
+	return jobActions
+}
 
 const syncAllReposJob = {
 	name: 'Sync-Enabled Repos',
@@ -37,7 +46,7 @@ const syncAllReposJob = {
 async function executeJob(job:IJob) {
 	workingJobs[job.id] = job
 	log.info(`Executing job ${job.id}`)
-	const handler = new JobHandler(jobActions,job)
+	const handler = new JobHandler(getJobActions(),job)
 	await handler.execute()
 	log.info(`Job Completed`)
 }
@@ -47,13 +56,15 @@ async function executeJob(job:IJob) {
  *
  * @param newJobs
  */
-function updateJobs(newJobs:IJob[]) {
+function updateJobs(newJobs:List<IJob>) {
 
 	// Pending jobs = any job that is 'Created' and we dont know about
 	const pendingJobs = newJobs
 		.filter(job => job.status === JobStatus.Created && !workingJobs[job.id])
 
 	pendingJobs.forEach(executeJob)
+	getJobActions().setJobs(newJobs)
+
 }
 
 /**
@@ -97,7 +108,7 @@ function scheduledJobExecutor(job:IScheduledJob) {
 	}
 }
 
-function updateScheduledJobs(newScheduledJobs:IScheduledJob[]) {
+function updateScheduledJobs(newScheduledJobs:List<IScheduledJob>) {
 	const
 		allIds = newScheduledJobs.map(job => job.id),
 		allNames = newScheduledJobs.map(job => job.name),
@@ -106,7 +117,7 @@ function updateScheduledJobs(newScheduledJobs:IScheduledJob[]) {
 		removedIds = oldIds.filter(id => !allIds.includes(id)),
 		removedJobs = removedIds.map(id => scheduledJobs[id]),
 		newIds = allIds.filter(id => !oldIds.includes(id)),
-		newJobs = _.clone(newScheduledJobs.filter(job => newIds.includes(job.id)))
+		newJobs = List(newScheduledJobs.filter(job => newIds.includes(job.id)))
 
 	log.debug('Scheduling new jobs', newJobs, ' and removing ', removedJobs)
 
@@ -126,8 +137,8 @@ function updateScheduledJobs(newScheduledJobs:IScheduledJob[]) {
 export async function start() {
 	// We use this loading method for HMR
 	store = require('shared/store').getStore()
-	const {JobActionFactory} = require('shared/actions/jobs/JobActionFactory')
-	jobActions = new JobActionFactory()
+
+	jobActions = getJobActions()
 
 	// Now load everything
 	const {state} = jobActions

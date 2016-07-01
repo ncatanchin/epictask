@@ -39,7 +39,7 @@ registerModel('SearchResult',SearchResult)
 
 
 export const SearchStateRecord = Record({
-	results:List<any>(),
+	results:List<SearchResult<any>>(),
 	error: null,
 	query: null,
 	searching: false,

@@ -28,12 +28,9 @@ import * as Log from './log'
 
 import {
 	isFunction,
-	isRepoPlugin,
 	isFinderPlugin,
 	PluginFilter,
-	PromiseMap,
-	isIndexerPlugin,
-	isNumberOrString
+	PromiseMap
 } from "./Util"
 
 import {ModelMapper,getDefaultMapper} from "./ModelMapper"

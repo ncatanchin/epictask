@@ -12,7 +12,7 @@ import {ActionFactory,Action} from 'typedux'
 import {JobKey} from "epictask/shared/Constants"
 import {JobState,JobMessage,IJob,IJobRequest,IScheduledJob} from './JobState'
 import {JobHandler} from './JobHandler'
-
+import {List} from 'immutable'
 
 /**
  * RepoActionFactory.ts
@@ -40,6 +40,9 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 
 	@Action()
 	removeJob(job:IJob) {}
+
+	@Action()
+	setJobs(jobs:List<IJob>) {}
 
 	@Action()
 	addScheduledJob(scheduledJob:IScheduledJob) {}
@@ -77,4 +80,7 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 
 		}) as any
 	}
+
+	@Action()
+	setScheduledJobs(scheduledJobs:List<IScheduledJob>) {}
 }

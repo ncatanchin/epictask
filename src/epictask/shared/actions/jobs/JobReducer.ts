@@ -2,7 +2,7 @@ import {JobStatus} from './JobStatus'
 import {DefaultLeafReducer} from 'typedux'
 import {JobKey} from "shared/Constants"
 import {JobMessage, JobState, IJob, IJobRequest, IScheduledJob} from './JobState'
-
+import {List} from 'immutable'
 const log = getLogger(__filename)
 import * as uuid from 'node-uuid'
 
@@ -35,12 +35,11 @@ export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
 
 	updateJob(state:JobState,updatedJob:IJob) {
 		const index = state.jobs.findIndex(job => job.id === updatedJob.id)
-		return (index === -1) ? state :
-			state.update(
-				'jobs',
-				(jobs) => jobs.update(index,
-					(currentJob) => Object.assign(
-						{},currentJob,updatedJob)))
+
+		return state.merge({
+			jobs: (index === -1) ? state.jobs.push(updatedJob) :
+				state.jobs.set(index,updatedJob)
+		})
 
 
 	}
@@ -51,7 +50,7 @@ export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
 			const existingJob = findInProgressJob(state,request)
 
 			if (existingJob) {
-				log.warn(`Job ${request.name} executes one at a time, found in progress job ${existingJob && existingJob.id}`, request, existingJob)
+				log.warn(`Job ${request.name} executes one at a time, found in progress job ${existingJob && existingJob.id}`)
 				return state
 			}
 		}
@@ -72,6 +71,10 @@ export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
 				.filter(job => (typeof oldJob === 'string') ?
 					oldJob !== job.id : oldJob.id !== job.id)
 		})
+	}
+
+	setJobs(state:JobState,jobs:List<IJob>) {
+		return state.merge({jobs})
 	}
 
 	/**
@@ -109,6 +112,10 @@ export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
 			scheduledJobs: existingJobs.push(scheduledJob)
 		})
 
+	}
+
+	setScheduledJobs(state:JobState,scheduledJobs:List<IScheduledJob>) {
+		return state.merge({scheduledJobs})
 	}
 
 	setError(state:JobState,err:Error) {

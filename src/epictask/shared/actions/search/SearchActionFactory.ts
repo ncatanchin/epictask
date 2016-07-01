@@ -47,7 +47,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	}
 
 	@Action()
-	setResults(newResults:List<any>) {
+	setResults(newResults:List<SearchResult<any>>) {
 	}
 
 	@Action()
@@ -114,62 +114,62 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 			const {query} = actions.state
 
 			if (query && query.length) {
-				const items = await findRepos(query, RepoRepo)
-				actions.setResults(List(items))
+				// const items = await findRepos(query, RepoRepo)
+				// actions.setResults(List(items))
 
-				//
-				// promises.push(findRepos(query, RepoRepo)
-				// 	.then(repoItems => {
-				// 		actions.updateResults(SearchResultType.Repo,cloneObject(repoItems))
-				// 		return repoItems
-				// 	})
-				// 	.then(async (repoItems) => {
-				// 		if (query.split('/').length < 2) {
-				// 			return
-				// 		}
-				//
-				// 		const repo = await createClient().repo(query)
-				// 		log.info('GH repo result',repo)
-				// 		if (repo) {
-				// 			const repoState = repoActions.state
-				// 			if (!repoState.repos.find(existingRepo => existingRepo.id === repo.id))
-				// 				await repoActions.persistRepos([repo])
-				//
-				// 			repoItems.push(new SearchResult(repo))
-				// 			actions.updateResults(SearchResultType.Repo,repoItems)
-				// 		}
-				// 	}))
-				//
-				// promises.push(findRepos(query, AvailableRepoRepo)
-				// 	.then(async (availRepoItems) => {
-				// 		actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
-				//
-				// 		const repoState = repoActions.state
-				//
-				// 		availRepoItems = availRepoItems.map((availRepoItem:SearchResult<AvailableRepo>) => {
-				// 			const availRepo = availRepoItem.value
-				// 			if (!availRepo.repo)
-				// 				availRepo.repo = repoState.repos.find(repo => repo.id === availRepo.repoId)
-				//
-				// 			return availRepoItem
-				// 		})
-				//
-				// 		actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
-				// 	}))
+
+				promises.push(findRepos(query, RepoRepo)
+					.then(repoItems => {
+						actions.updateResults(SearchResultType.Repo,cloneObject(repoItems))
+						return repoItems
+					})
+					.then(async (repoItems) => {
+						if (query.split('/').length < 2) {
+							return
+						}
+
+						const repo = await createClient().repo(query)
+						log.info('GH repo result',repo)
+						if (repo) {
+							const repoState = repoActions.state
+							if (!repoState.repos.find(existingRepo => existingRepo.id === repo.id))
+								await repoActions.persistRepos([repo])
+
+							repoItems.push(new SearchResult(repo))
+							actions.updateResults(SearchResultType.Repo,repoItems)
+						}
+					}))
+
+				promises.push(findRepos(query, AvailableRepoRepo)
+					.then(async (availRepoItems) => {
+						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
+
+						const repoState = repoActions.state
+
+						availRepoItems = availRepoItems.map((availRepoItem:SearchResult<AvailableRepo>) => {
+							const availRepo = availRepoItem.value
+							if (!availRepo.repo)
+								availRepo.repo = repoState.repos.find(repo => repo.id === availRepo.repoId)
+
+							return availRepoItem
+						})
+
+						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
+					}))
 
 			} else {
-				actions.setResults(List())
+				actions.setResults(List<SearchResult<any>>())
 			}
 
-			// const onFinish = () => actions.setSearching(false)
-			// Promise.all(promises).then(() => {
-			// 	log.debug('search completed', query)
-			// 	onFinish()
-			// }).catch((err) => {
-			// 	log.error('search failed',err)
-			// 	onFinish()
-			// 	throw err
-			// })
+			const onFinish = () => actions.setSearching(false)
+			Promise.all(promises).then(() => {
+				log.debug('search completed', query)
+				onFinish()
+			}).catch((err) => {
+				log.error('search failed',err)
+				onFinish()
+				throw err
+			})
 
 		}
 	}
