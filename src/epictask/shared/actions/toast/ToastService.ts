@@ -35,3 +35,27 @@ export function addErrorMessage(err:Error) {
 }
 
 
+const pendingTimers = {}
+
+export async function start() {
+
+	if (!Env.isRenderer) {
+		const {getStore} = require('shared/store')
+
+		const store = getStore()
+		store.observe([appActions.leaf(), 'messages'], (newMessages) => {
+			newMessages = newMessages.toJS()
+
+			newMessages.forEach(msg => {
+
+				if (pendingTimers[msg.id])
+					return
+
+				pendingTimers[msg.id] = setTimeout(() => {
+					appActions.removeMessage(msg.id)
+				}, 5000)
+			})
+		})
+	}
+
+}

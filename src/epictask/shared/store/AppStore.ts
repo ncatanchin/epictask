@@ -49,44 +49,24 @@ if (Env.isRenderer) {
 	})
 }
 
-//const reduxLogger = createLogger();
 
+// HMR - setup
 let hmrReady = false
 
 /**
- * Null middleware that can be used
- * wherever a passthru is required
- *
- * @param f
- * @constructor
+ * Attach to reducers, etc
  */
-const NullMiddleware = f => f
+function hmrSetup() {
+	if (!Env.isRenderer && module.hot && !hmrReady) {
+		hmrReady = true
 
+		module.hot.accept(['./Reducers'],(updates) => {
+			log.info(`Reducer Updates received, reloading reducers`, updates)
 
-
-function makeRemoteDevTools() {
-	const remoteDevTools = require('remote-redux-devtools')
-	return remoteDevTools({
-		name: 'EpicTask - ELECTRON',
-		realtime: true,
-		hostname: 'localhost', port: 8787
-	})
+			getStore().replaceReducers(...getReducers())
+		})
+	}
 }
-
-/**
- * DevToolsMiddleware is configured in DEBUG mode anyway
- *
- * @type {function(): *}
- */
-const devToolsMiddleware =
-	(!Env.isDev) ? NullMiddleware :
-		(!Env.isRenderer) ? makeRemoteDevTools() :
-			(window.devToolsExtension) ? window.devToolsExtension() :
-				require('ui/components/debug/DevTools.tsx').DevTools.instrument()
-
-
-
-
 
 /**
  * Middleware includes thunk and in
@@ -98,9 +78,60 @@ const middleware = [
 	thunkMiddleware
 ]
 
-// if (!Env.isRenderer) {
-// 	middleware.push(reduxLogger)
-// }
+// DEV + RENDERER - ADD LOGGER
+if (Env.isDev && Env.isRenderer) {
+	const reduxLogger = createLogger();
+	middleware.push(reduxLogger)
+}
+
+/**
+ * Null middleware that can be used
+ * wherever a passthru is required
+ *
+ * @param f
+ * @constructor
+ */
+const NullMiddleware = f => f
+
+
+/**
+ * Create remote dev tools enhancer
+ *
+ * @returns {any}
+ */
+function makeDevTools() {
+
+	/**
+	 * Make remote middleware
+	 *
+	 * @returns {Array<Middlware>}
+	 */
+	function makeRemoteMiddleware() {
+		const remoteDevTools = require('remote-redux-devtools')
+		return remoteDevTools({
+			name: 'EpicTask - ' + ((Env.isRenderer) ? 'RENDERER' : 'MAIN'),
+			realtime: true,
+			hostname: 'localhost', port: 8787
+		})
+	}
+
+	return (!Env.isDev) ? NullMiddleware :
+			makeRemoteMiddleware()
+}
+
+/**
+ * DevToolsMiddleware is configured in DEBUG mode anyway
+ *
+ * @type {function(): *}
+ */
+const devToolsMiddleware = makeDevTools()
+	// (!Env.isDev) ? NullMiddleware :
+	// 	(!Env.isRenderer) ? makeDevTools() :
+	// 		(window.devToolsExtension) ? window.devToolsExtension() :
+	// 			require('ui/components/debug/DevTools.tsx').DevTools.instrument()
+
+
+
 
 let store:ObservableStore<any>
 
@@ -145,7 +176,7 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 /**
  * Initialize/Create the store
  */
-function initStore() {
+export function initStore() {
 
 	//const devTools = [devToolsMiddleware]
 	// if (Env.isDev && Env.is) {
@@ -155,8 +186,7 @@ function initStore() {
 
 	let reducers = (Env.isRenderer) ? [] : getReducers()
 
-
-
+	// Create the store
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
 		compose(
@@ -167,16 +197,7 @@ function initStore() {
 	)
 
 	// If HMR enabled then prepare for it
-	if (!Env.isRenderer && module.hot && !hmrReady) {
-		hmrReady = true
-
-		module.hot.accept(['./Reducers'],(updates) => {
-			log.info(`Reducer Updates received, reloading reducers`,
-				updates)
-
-			getStore().replaceReducers(...getReducers())
-		})
-	}
+	hmrSetup()
 
 	newStore.rootReducer.onError = onError
 	newStore.subscribe(onChange)
@@ -187,16 +208,13 @@ function initStore() {
 	return store
 }
 
-
-export async function createStore() {
-	return initStore()
-}
-
+/**
+ * Get the observable store
+ *
+ * @returns {ObservableStore<any>}
+ */
 export function getStore() {
 	if (!store) {
-		//if (Env.isRenderer) {
-			//throw new Error('Only main process can synchronously init store, use createStore ')
-		//}
 		initStore()
 	}
 	return store

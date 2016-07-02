@@ -29,8 +29,16 @@ function loadServices() {
 	servicesCtx = require.context('shared/actions',true,/Service\.ts/)
 }
 
+/**
+ * Load all services context
+ */
 loadServices()
 
+/**
+ * Start all services
+ *
+ * @returns {{}}
+ */
 async function startServices() {
 	log.info('Starting services')
 
@@ -68,8 +76,7 @@ async function startServices() {
  */
 export async function init():Promise<any> {
 	log.info('Loading the REDUX store')
-	const {createStore} = require('shared/store')
-	await createStore()
+	require('shared/store').initStore()
 	log.info('Store built')
 }
 

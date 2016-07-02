@@ -1,8 +1,9 @@
-const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = require('electron')
+import Electron = require('electron')
+const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
 const log = getLogger(__filename)
 
 
-export function makeMainMenu(mainWindow) {
+export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
 	let menu
 
@@ -85,7 +86,8 @@ export function makeMainMenu(mainWindow) {
 				label: 'Reload',
 				accelerator: 'Command+Shift+R',
 				click() {
-					mainWindow.reload()
+					mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
+					//mainWindow.reload()
 				}
 			},{
 				label: 'Break',
@@ -104,7 +106,8 @@ export function makeMainMenu(mainWindow) {
 				label: 'Toggle Developer Tools',
 				accelerator: 'Alt+Command+I',
 				click() {
-					mainWindow.toggleDevTools()
+
+					(mainWindow as any).toggleDevTools()
 				}
 			}] : [{
 				label: 'Toggle Full Screen',
@@ -175,7 +178,8 @@ export function makeMainMenu(mainWindow) {
 				label:       '&Reload',
 				accelerator: 'Ctrl+R',
 				click() {
-					mainWindow.restart()
+					//mainWindow.restart()
+					mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
 				}
 			}, {
 				label:       'Toggle &Full Screen',
@@ -187,7 +191,7 @@ export function makeMainMenu(mainWindow) {
 				label:       'Toggle &Developer Tools',
 				accelerator: 'Alt+Ctrl+I',
 				click() {
-					mainWindow.toggleDevTools()
+					(mainWindow as any).toggleDevTools()
 				}
 			}] : [{
 				label:       'Toggle &Full Screen',

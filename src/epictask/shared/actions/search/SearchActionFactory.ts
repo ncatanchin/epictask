@@ -15,33 +15,38 @@ async function findRepos<M extends AvailableRepo|Repo,R extends AvailableRepoRep
 	const tsRepo = getRepo(repoClazz) as AvailableRepoRepo|RepoRepo
 
 	return await tsRepo.findByName(query)
-	// const {mapper} = tsRepo
-	//
-	// const count = await tsRepo.count()
-	// log.info('Current count =' + count)
-	// const models = jsons.map((json:any) => {
-	// 	return mapper.fromObject(json) as M
-	// })
 
-	//return jsons
+
 }
+
+/**
+ * Search Action Factory
+ */
 export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 	constructor() {
 		super(SearchState)
 	}
 
+	/**
+	 * Seach leaf
+	 *
+	 * @returns {string}
+	 */
 	leaf():string {
 		return SearchKey;
 	}
+
 
 	@Action()
 	setSearching(searching:boolean) {
 	}
 
-	@Action()
-	setToken(token:string) {}
-
+	/**
+	 * Set the search token
+	 *
+	 * @param query
+	 */
 	@Action()
 	setQuery(query:string) {
 	}
@@ -50,10 +55,19 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	setResults(newResults:List<SearchResult<any>>) {
 	}
 
+	/**
+	 * Update the search results
+	 *
+	 * @param type
+	 * @param newItems
+	 * @returns {function(any, any): undefined}
+	 */
 	@Action()
-	updateResults(type: SearchResultType, newItems:SearchResult<Repo|Issue>[]) {
+	updateResults(type: SearchResultType, newItems:SearchResult<Repo|AvailableRepo|Issue>[]) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
+
+
 
 			actions.setResults(List(newItems))
 			// const results = actions.state.results
@@ -71,6 +85,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	}
 
 
+
 	@Action()
 	select(result:SearchResult<any>) {
 		log.info('selected result',result)
@@ -84,19 +99,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 					break;
 
 				case SearchResultType.Repo:
-					const
-						availRepoRepo = Repos.availableRepo,
-						availRepo = new AvailableRepo({
-							id: uuid.v4(),
-							repoId: result.value.id,
-							enabled: true
-						})
-
-					log.info('Saving new available repo as ',availRepo.id)
-					await availRepoRepo.save(availRepo)
-
-					repoActions.getAvailableRepos()
-					repoActions.syncRepoDetails(availRepo)
+					repoActions.createAvailableRepo(result.value)
 			}
 		}
 
@@ -119,11 +122,17 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 
 				promises.push(findRepos(query, RepoRepo)
-					.then(repoItems => {
-						actions.updateResults(SearchResultType.Repo,cloneObject(repoItems))
-						return repoItems
+					.then((repoItems:Repo[]) => {
+						const availRepos = repoActions.state.availableRepos
+
+						repoItems = repoItems.filter(item => availRepos.findIndex(availRepo => availRepo.repoId === item.id) === -1)
+						const results = repoItems.map(result => new SearchResult<Repo>(cloneObject(result)))
+
+						actions.updateResults(SearchResultType.Repo,results)
+
+						return results
 					})
-					.then(async (repoItems) => {
+					.then(async (repoResults) => {
 						if (query.split('/').length < 2) {
 							return
 						}
@@ -135,26 +144,28 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 							if (!repoState.repos.find(existingRepo => existingRepo.id === repo.id))
 								await repoActions.persistRepos([repo])
 
-							repoItems.push(new SearchResult(repo))
-							actions.updateResults(SearchResultType.Repo,repoItems)
+							repoResults.push(new SearchResult(repo))
+							actions.updateResults(SearchResultType.Repo,repoResults)
 						}
 					}))
 
 				promises.push(findRepos(query, AvailableRepoRepo)
-					.then(async (availRepoItems) => {
-						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
+					.then(async (availRepoItems:AvailableRepo[]) => {
+						let results = availRepoItems.map(result => new SearchResult<AvailableRepo>(cloneObject(result)))
 
-						const repoState = repoActions.state
+						actions.updateResults(SearchResultType.AvailableRepo,results)
 
-						availRepoItems = availRepoItems.map((availRepoItem:SearchResult<AvailableRepo>) => {
-							const availRepo = availRepoItem.value
-							if (!availRepo.repo)
-								availRepo.repo = repoState.repos.find(repo => repo.id === availRepo.repoId)
+						//const repoState = repoActions.state
 
-							return availRepoItem
-						})
+						// results = results.map((availRepoItem:SearchResult<AvailableRepo>) => {
+						// 	const availRepo = availRepoItem.value
+						// 	if (!availRepo.repo)
+						// 		availRepo.repo = repoState.repos.find(repo => repo.id === availRepo.repoId)
+						//
+						// 	return availRepoItem
+						// })
 
-						actions.updateResults(SearchResultType.AvailableRepo,availRepoItems)
+						//actions.updateResults(SearchResultType.AvailableRepo,results)
 					}))
 
 			} else {

@@ -199,20 +199,5 @@ if (module.hot) {
 		const templateURL = makeMainTemplate()
 		log.info(`Template Path: ${templateURL}`)
 		browserWindow.loadURL(templateURL)
-
-
-		// if (mainWindow) {
-		// 	mainWindow.close()
-		// 	mainWindow = null
-		// }
-		//
-		// loadRootWindow()
 	})
-
-	// module.hot.dispose(() => {
-	// 	if (mainWindow) {
-	// 		mainWindow.close()
-	// 		mainWindow = null
-	// 	}
-	// })
 }

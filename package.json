@@ -6,6 +6,7 @@
   "scripts": {
     "test": "gulp compile test",
     "test-watch": "gulp compile-watch",
+    "redux-remotedev": "remotedev --hostname=localhost --port=8787",
     "start-dev": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./dist/MainEntry.js",
     "start-dev-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --enable-logging ./dist/MainEntry.js",
     "start-dev-debug": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",

@@ -23,6 +23,7 @@ import {JobActionFactory} from '../jobs/JobActionFactory'
 import {RepoSyncJob} from './RepoSyncJob'
 
 
+const uuid = require('node-uuid')
 
 /**
  * RepoActionFactory.ts
@@ -255,8 +256,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 
 			log.debug('Loaded available repos',availRepos)
-			actions.setAvailableRepos(availRepos
-				.map(availRepo => cloneObject(availRepo)))
+			actions.setAvailableRepos(availRepos)
 
 			return availRepos
 		}) as any
@@ -296,15 +296,60 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	setSelectedIssues(selectedIssues:Issue[]) {}
 
 	@Action()
-	setRepoEnabled(availRepo:AvailableRepo,enabled:boolean) {
+	createAvailableRepo(repo:Repo) {
+		return async(dispatch, getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+
+			const availRepos = actions.state.availableRepos
+
+			if (availRepos.findIndex(availRepo => availRepo.repoId === repo.id) > -1) {
+				throw new Error('Repository is already selected: ' + repo.full_name)
+			}
+
+			const
+				availRepoRepo = Repos.availableRepo,
+				availRepo = new AvailableRepo({
+					id: uuid.v4(),
+					repoId: repo.id,
+					enabled: true
+				})
+
+			log.info('Saving new available repo as ',availRepo.id)
+			await availRepoRepo.save(availRepo)
+
+			actions.getAvailableRepos()
+			actions.syncRepoDetails(availRepo)
+		}
+	}
+
+	@Action()
+	removeAvailableRepo(availRepoId:string) {
+		return async(dispatch, getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+
+
+			const availRepoRepo = Repos.availableRepo
+			await availRepoRepo.remove(availRepoId)
+
+			const availRepos = actions.state.availableRepos
+			actions.setAvailableRepos(availRepos.filter(availRepo => availRepo.id !== availRepoId))
+
+		}
+	}
+
+
+
+
+	@Action()
+	setRepoEnabled(availRepoId:string,enabled:boolean) {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-
+			const availRepo = await Repos.availableRepo.get(availRepoId)
 			if (enabled === availRepo.enabled) {
 				return
 			}
 
-			let newAvailRepo = Object.assign(cloneObject(availRepo),{enabled})
+			let newAvailRepo = Object.assign({},availRepo,{enabled})
 
 			await Repos.availableRepo.save(newAvailRepo)
 			newAvailRepo = await Repos.availableRepo.load(newAvailRepo)

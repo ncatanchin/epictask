@@ -76,23 +76,7 @@ module.exports = function (projectConfig) {
 				'libs/typestore/packages/typestore-plugin-pouchdb/src',
 				'libs',
 				'node_modules'
-				// 'libs/typestore/node_modules',
-				// 'libs/typestore/packages/typestore-plugin-pouchdb/node_modules',
-				// 'libs/typemutant/node_modules',
-				// 'libs/typedux/node_modules',
-				// 'libs/typelogger/node_modules'
-			).concat([
-
-				// path.resolve(baseDir,'../typestore/packages/'),
-				// path.resolve(baseDir,'../typestore/packages/typestore-plugin-pouchdb/node_modules'),
-				// path.resolve(baseDir,'../typestore/node_modules'),
-				// path.resolve(baseDir,'../typedux/node_modules'),
-				// path.resolve(baseDir,'../typemutant/node_modules'),
-				// path.resolve(baseDir,'../typelogger/node_modules'),
-
-
-
-			]),
+			),
 
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
@@ -118,7 +102,8 @@ module.exports = function (projectConfig) {
 				__DEV__: isDev,
 				DEBUG: isDev,
 				'process.env.__DEV__': isDev,
-				'process.env.NODE_ENV': JSON.stringify(env)
+				'process.env.NODE_ENV': JSON.stringify(env),
+				'process.env.BASEDIR': path.resolve(__dirname,'../..')
 			}),
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'
@@ -135,26 +120,13 @@ module.exports = function (projectConfig) {
 				whitelist: [
 					/webpack\/hot/,
 					/webpack-hot/,
-					// /browser-next-tick/,
 					/urlsearchparams/,
-					// /Dexie/,
-					// /strip-ansi/,
-					// /ansi-regex/,
 					/typestore\//,
 					/typestore-plugin-pouchdb/,
 					/typestore-mocks/,
 					/typelogger/,
 					/typemutant/,
-					/typedux/,
-
-					//
-					// /typestore-plugin-pouchdb/,
-					// /typestore-plugin-indexeddb/,
-					// /typelogger/,
-					// /typestore/,
-					// /typedux/,
-					// /typemutant/,
-
+					/typedux/
 				]
 			})
 		]

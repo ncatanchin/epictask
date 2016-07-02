@@ -51,7 +51,8 @@ export function convertModelToDoc(
 
 
 	doc.type = modelType.name
-	doc.attrs = json
+	doc.attrs = Object.assign({},json)
+	delete doc.attrs['$$doc']
 
 	return doc
 }

@@ -197,8 +197,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	},
 
 	header: {
-		logoStyle:    {
+		logoWrapper:    {
 			height: navBarHeight
+		},
+		logo:    {
+
 		},
 		controlStyle: {
 			color:           'white',

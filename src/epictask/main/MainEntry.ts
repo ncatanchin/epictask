@@ -104,12 +104,14 @@ if (module.hot) {
 		return boot().then(() => {
 			const newWindow = mainWindow.getBrowserWindow()
 
+			electron.BrowserWindow.getAllWindows()
+				.filter(win => win !== newWindow)
+				.forEach(oldWindow => oldWindow.close())
+
 			// When it full loads we remove all the old ones
-			newWindow.webContents.on('did-finish-load', () => {
-				electron.BrowserWindow.getAllWindows()
-					.filter(win => win !== newWindow)
-					.forEach(oldWindow => oldWindow.close())
-			})
+			// newWindow.webContents.on('did-finish-load', () => {
+			//
+			// })
 		})
 
 	})

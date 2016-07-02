@@ -13,9 +13,7 @@ require('./UIGlobals')
 
 async function boot() {
 
-	const {createStore} = require('shared/store')
-
-	await createStore()
+	require('shared/store').getStore()
 
 	// Load logger
 	const log = getLogger(__filename)

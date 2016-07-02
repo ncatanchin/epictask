@@ -32,8 +32,10 @@ let started = false
  */
 async function initialize() {
 
+	const dbName = 'epictask-6'
+
 	// Create the store Plugin first
-	const dbPath = getUserDataFilename('epictask.db')
+	const dbPath = getUserDataFilename(dbName + '.db')
 	log.info('DB Path:',dbPath)
 
 	/**
@@ -47,13 +49,13 @@ async function initialize() {
 
 		const pouchOpts = {filename: dbPath}
 		if (Env.isDev) {
-			//return (storePlugin = new PouchDBPlugin({filename:'http://127.0.0.1:5984/epictask-dev'}))
+			//return (storePlugin = new PouchDBPlugin({filename:'http://127.0.0.1:5984/epictask-dev-5'}))
 			_.assign(pouchOpts, {
-				// replication: {
-				// 	to:   'http://127.0.0.1:5984/epictask-dev-2',
-				// 	live:  true,
-				// 	retry: true
-				// }
+				replication: {
+					to:   'http://127.0.0.1:5984/' + dbName,
+					live:  true,
+					retry: true
+				}
 			})
 		}
 

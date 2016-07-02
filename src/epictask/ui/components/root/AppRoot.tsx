@@ -181,7 +181,7 @@ class App extends React.Component<IAppProps,any> {
 								</div>
 
 								{/* DevTools */}
-								<DevTools ref={(c) => devToolsRef = c}/>
+								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 								<ToastMessages/>
 							</HotKeys>
 
@@ -236,11 +236,9 @@ function render() {
 render()
 
 
-// if (DEBUG) {
-// 	const {showDevTools} = require('components/debug/DevTools.tsx')
-// 	showDevTools(store.getReduxStore())
-// }
-
+/**
+ * Enable HMR
+ */
 if (module.hot) {
 	module.hot.accept()
 	module.hot.dispose(() => {

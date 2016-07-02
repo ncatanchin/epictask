@@ -54,12 +54,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 			const updatedIssue = await RepoActionFactory
 				.fillIssue(
-					Object.assign(
-						cloneObject(issue),
-						props
-					),availableRepos
+					Object.assign(cloneObject(issue),props),
+					availableRepos
 				)
-
 
 			this.setEditingIssue(updatedIssue)
 		}

@@ -61,7 +61,10 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	addMessage(state:AppState,message:IToastMessage) {
-		return state.update('messages',(messages) => messages.push(message))
+		return state.set(
+			'messages',
+			state.messages.push(message)
+		)
 	}
 
 	addErrorMessage(state:AppState,err:Error|string) {
@@ -74,9 +77,10 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	removeMessage(state:AppState,id:string) {
-		return state.merge({
-			messages: state.messages.filter(msg => msg.id !== id)
-		})
+		return state.set(
+			'messages',
+			state.messages.filter(msg => msg.id !== id)
+		)
 	}
 
 	setMonitorState(state:AppState,monitorState:any) {

@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {List} from 'immutable'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
@@ -303,7 +304,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			.filter(t => _.isFinite(_.toNumber(t)))
 			.map(t => SearchResultType[t])
 
-		let rows = []
+		let rows = List<any>()
 
 		log.info(`Selected index in results ${selectedIndex}`)
 
@@ -340,7 +341,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 						{resultContent}
 					</div>
 				)
-			}))
+			}))  as List<any>
 
 		})
 
@@ -356,9 +357,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			backgroundColor: p.alternateBgColor,
 			color: p.alternateTextColor
 		})
-
-
-
 
 		if (!this.props.inline) {
 			const anchor = typeof props.anchor === 'string' ?

@@ -175,11 +175,13 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	}
 
 	private extractKeyValue(val:PouchDBKeyValue|any):any {
-		val = val.pouchDBKey ? val.args[0] : val
+		val = (val && val.pouchDBKey) ? val.args[0] : val
 		return val
 	}
 
 	async get(key:PouchDBKeyValue):Promise<M> {
+		if (!key)
+			throw new Error('key can not be undefined or falsy')
 		key = this.extractKeyValue(key)
 
 		const result = await findWithSelector(this,{[this.primaryKeyAttr.name]: key})

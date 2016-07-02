@@ -6,6 +6,7 @@
 import * as React from 'react'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
+import {List} from 'immutable'
 import * as Radium from 'radium'
 import {Snackbar, FlatButton} from 'material-ui'
 import {connect} from 'react-redux'
@@ -101,7 +102,7 @@ const styles = {
  */
 export interface IToastMessagesProps {
 	theme?:any
-	messages?:IToastMessage[]
+	messages?:List<IToastMessage>
 }
 //endregion
 
@@ -134,44 +135,9 @@ function mapStateToProps(state) {
 @Radium
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
-	constructor(props = {}) {
-		super(props)
+	constructor(props,context) {
+		super(props,context)
 
-		this.state = {messageWrappers: []}
-	}
-
-
-	componentWillReceiveProps(nextProps:IToastMessagesProps, nextContext:any):void {
-		const messageWrappers:any[] = Array.from(this.state.messageWrappers)
-		const {messages:nextMessages} = nextProps
-
-		const nextIds = nextMessages.map(msg => msg.id)
-		const existingIds = messageWrappers.map(wrapper => wrapper.msg.id)
-		const removedIds = messageWrappers
-			.filter(wrapper => !nextIds.includes(wrapper.msg.id))
-			.map(wrapper => wrapper.msg.id)
-
-		_.remove(messageWrappers, (wrapper:any) => removedIds.includes(wrapper.msg.id))
-
-		messageWrappers.push(...nextMessages
-			.filter(msg => !existingIds.includes(msg.id))
-			.map(msg => {
-				return {
-					           msg,
-					component: this.renderMessageContent(msg, nextProps),
-					timer:     (msg.type === ToastMessageType.Error) ? null :
-						           setTimeout(() => {
-							           appActions.removeMessage(msg.id)
-						           }, 5000)
-				}
-
-
-			})
-		)
-
-		this.setState({
-			messageWrappers
-		})
 	}
 
 	/**
@@ -181,14 +147,15 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * @returns {any}
 	 * @param props
 	 */
-	renderMessageContent(msg, props) {
+	renderMessageContent(msg) {
+		msg = msg.toJS ? msg.toJS() : msg
 
 		const
 			isError = msg.type === ToastMessageType.Error,
 			isInfo = msg.type === ToastMessageType.Info
 
 		const
-			{theme} = props,
+			{theme} = this.props,
 			s = mergeStyles(styles, theme.toast)
 
 
@@ -197,24 +164,27 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 			[s.bgError, s.fgError, s.actionError] :
 			[s.bgInfo, s.fgInfo, s.actionInfo]
 
-		const action = !isError ? null :
-			<Button style={[s.action,actionColors]}
-			        onClick={() => appActions.removeMessage(msg.id)}>
-				Acknowledge
-			</Button>
 
-		// Construct the message
+
+		if (!msg.id) {
+			log.error(`msg id is null`,msg)
+			return null
+		}
+
 		return <div key={msg.id}
 		            className='toastMessage animated bounce'
 		            style={s.toast}>
 
-			<div style={[s.toastContent,bg]} className=''>
-				{(isError) ? <Icon style={[s.icon,fg]}>error_outline</Icon> :
-					(isInfo) ? <Icon style={[s.icon,fg]}>info_outline</Icon> :
+			<div style={makeStyle(s.toastContent,bg)}>
+				{(isError) ? <Icon style={makeStyle(s.icon,fg)}>error_outline</Icon> :
+					(isInfo) ? <Icon style={makeStyle(s.icon,fg)}>info_outline</Icon> :
 						null}
 
-				<span style={[s.text,fg]}>{msg.content}</span>
-				{action}
+				<span style={makeStyle(s.text,fg)}>{msg.content}</span>
+				{isError && <Button style={makeStyle(s.action,actionColors)}
+				                    onClick={() => appActions.removeMessage(msg.id)}>
+					Acknowledge
+				</Button>}
 			</div>
 		</div>
 	}
@@ -235,6 +205,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 			<Style scopeSelector=".toastMessageTransitionGroup"
 			       rules={_.merge({},s.transitionGroup,s.toastMessagesTransition)}/>
 
+			<div>
 			<CSSTransitionGroup
 				className='toastMessageTransitionGroup'
 				transitionName="toastMessages"
@@ -243,9 +214,10 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 
-				{this.state.messageWrappers.map(wrapper => wrapper.component)}
+				{this.props.messages.map(msg => this.renderMessageContent(msg))}
 
 			</CSSTransitionGroup>
+			</div>
 		</div>
 	}
 

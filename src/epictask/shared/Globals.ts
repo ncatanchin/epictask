@@ -40,7 +40,8 @@ const EnvGlobal = {
 	isDebug: DEBUG && isDev,
 	isHot: !LodashGlobal.isNil(process.env.HOT),
 	isRemote,
-	isRenderer: process.type === 'renderer'
+	isRenderer: process.type === 'renderer',
+	baseDir: process.env.BASEDIR
 }
 
 // Polyfill Fetch/FormData/etc

@@ -1,9 +1,7 @@
 import * as React from 'react'
 import {SearchPanel} from 'components'
-import {makeAbsolute} from '../../../shared/themes/styles/CommonStyles'
+import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 
-
-//const styles = require('./HeaderComponent.scss')
 const log = getLogger(__filename)
 
 export enum HeaderVisibility {
@@ -48,25 +46,45 @@ const styles = {
 
 	controlButtonBefore: makeStyle(makeTransition()),
 
-	logo: makeStyle(makeTransition(), PositionAbsolute, {
+	logoWrapper: makeStyle(makeTransition(), PositionAbsolute, {
 		right:              0,
 		top:                0,
-		width:              '8rem',
-		maxWidth:           '100%',
-		height:             '100%',
+		width:              'auto',
 		padding:            '0.2rem 1rem',
-		//backgroundImage:    `url(${require('assets/images/epictask-logo.png')})`,
-		backgroundImage:    `url(${require('assets/images/densebrain-logo-2.png')})`,
-		backgroundSize:     '70%',
-		backgroundPosition: 'center',
-		backgroundOrigin:   'content-box',
-		backgroundRepeat:   'no-repeat'
+
+
 	}),
 
-	logoExpanded: makeStyle(makeAbsolute(0, 0), {
+	logo: makeStyle(makeTransition(), PositionAbsolute, {
+		top:'50%',
+		left:'50%',
+
+		height:             '70%',
+		width:              'auto',
+		maxWidth:           '70%',
+
+
+		transform:          'translate(-50%,-50%)'
+
+	}),
+
+	logoExpanded: makeStyle({
+		top:'50%',
+		left:'50%',
+		height:             '80%',
+		width:              'auto',
+		maxWidth:           '80%',
+		transform:          'translate(-50%,-50%)'
+	}),
+
+	logoWrapperExpanded: makeStyle({
+		top: '25%',
+		left: '50%',
+		right: 'inherit',
+		transform:          'translate(-50%,-50%)',
 		padding:            '10rem 10rem 4rem 10rem',
 		height:             '50%',
-		width:              '100%',
+		width:              '50%',
 		backgroundSize:     '40%',
 		backgroundPosition: 'bottom center'
 	})
@@ -116,13 +134,21 @@ export class Header extends React.Component<IHeaderProps,any> {
 			expanded = visibility === HeaderVisibility.Expanded
 
 		const themeHeight = theme.header.style.height
-		const logoStyle = makeStyle(
-			theme.header.logoStyle,
-			styles.logo,
+		const logoWrapperStyle = makeStyle(
+			styles.logoWrapper,
+			theme.header.logoWrapperStyle,
 			{
-				height: themeHeight
+				height: themeHeight,
+				width: themeHeight,
+				right: themeHeight / 2
 			},
-			expanded && styles.logoExpanded)
+			expanded && styles.logoWrapperExpanded)
+
+		const logoStyle = makeStyle(
+			styles.logo,
+			theme.header.logo,
+			expanded && styles.logoExpanded
+		)
 
 		let headerStyle = makeStyle(styles.header)
 
@@ -132,10 +158,8 @@ export class Header extends React.Component<IHeaderProps,any> {
 				style,
 				styles.header,
 				styles.headerNormal,
-				expanded && styles.headerExpanded,
-				{
-					height:          (visibility === HeaderVisibility.Expanded) ? '100%' :
-						                 themeHeight,
+				expanded && styles.headerExpanded, {
+					height: (visibility === HeaderVisibility.Expanded) ? '100%' : themeHeight,
 					WebkitAppRegion: 'drag'
 				}
 			)
@@ -150,7 +174,8 @@ export class Header extends React.Component<IHeaderProps,any> {
 				{/*<button className="max fa fa-plus" style={controlStyle} onClick={this.windowMax}/>*/}
 			{/*</div>*/}
 			<SearchPanel inlineResults={expanded} expanded={expanded}/>
-			<div style={logoStyle}>
+			<div style={logoWrapperStyle}>
+				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
 				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}
 			</div>
 

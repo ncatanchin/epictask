@@ -10,6 +10,8 @@ import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Icon,Renderers} from 'ui/components'
 import {AvailableRepo,Repo} from 'shared'
 import {connect} from 'react-redux'
+import * as Radium from 'radium'
+// import {Button} from 'ui/components/common/Button'
 
 const repoActions = new RepoActionFactory()
 
@@ -54,6 +56,17 @@ const styles = {
 		fontSize: rem(1.3)
 	}),
 
+	itemIconRemove: makeStyle(FlexAuto,{
+		padding: '0 0.2rem',
+		fontSize: rem(1.3),
+		opacity: 0,
+		':hover': {
+			opacity: 1
+		}
+	}),
+
+
+
 	itemLabel: makeStyle(FlexColumn,FlexScale,{
 		padding: '0.2rem 0.2rem 0 0.5rem',
 		justifyContent: 'center',
@@ -78,6 +91,7 @@ function mapToProps(state) {
  * A list of repos
  */
 @connect(mapToProps)
+@Radium
 export class RepoList extends React.Component<IRepoListProps,any> {
 
 
@@ -96,8 +110,18 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				repoActions.clearSelectedRepos()
 			}
 
-			repoActions.setRepoEnabled(availRepo, !availRepo.enabled)
+			repoActions.setRepoEnabled(availRepo.id, !availRepo.enabled)
 		}
+	}
+
+	onRemoveClicked = (e:React.MouseEvent,availRepoId:string) => {
+		const repoActions = new RepoActionFactory()
+
+		e.preventDefault()
+		e.stopPropagation()
+
+		repoActions.removeAvailableRepo(availRepoId)
+
 	}
 
 	render() {
@@ -124,6 +148,12 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						return false
 					}
 
+					const itemRemoveStyle = makeStyle(
+						styles.itemIcon,
+						styles.itemIconRemove,
+						isHovering && {opacity:1}
+					)
+
 					return <div key={id}
 					           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
@@ -140,7 +170,16 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
 				                )}>
 						<Icon style={styles.itemIcon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
+
 						<div style={styles.itemLabel}>{Renderers.repoName(repo)}</div>
+
+						<Icon style={itemRemoveStyle}
+						      onClick={(e) => this.onRemoveClicked(e,id)}>
+							remove_circle
+						</Icon>
+						{/*<Button style={styles.itemIcon}>*/}
+							{/**/}
+						{/*</Button>*/}
 					</div>
 				})
 			}

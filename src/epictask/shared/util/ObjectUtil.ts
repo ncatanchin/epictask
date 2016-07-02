@@ -14,6 +14,7 @@
 declare global {
 	interface LodashMixins {
 		isArrayEqualBy(arr1,arr2,prop):boolean
+		inline<R>(fn:()=>R):R
 	}
 }
 
@@ -30,6 +31,10 @@ _.mixin({
 			!arr1 ? null : arr1.map(v => v[prop]).sort(),
 			!arr2 ? null : arr2.map(v => v[prop]).sort()
 		)
+	},
+
+	inline<R>(fn:()=>R):R {
+		return fn()
 	}
 })
 
