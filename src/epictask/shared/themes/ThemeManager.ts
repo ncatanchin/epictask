@@ -29,13 +29,13 @@ export function setTheme(newTheme) {
 	themeName = newTheme.name
 	theme = newTheme
 
-	if (!firstLoad) {
-		if (!appActions) {
-			const AppActionFactory:typeof AppActionFactoryType = require('shared/actions/AppActionFactory')
-			appActions = new AppActionFactory()
-		}
-		appActions.setTheme(newTheme)
-	}
+	// if (!firstLoad) {
+	// 	if (!appActions) {
+	// 		const AppActionFactory:typeof AppActionFactoryType = require('shared/actions/AppActionFactory')
+	// 		appActions = new AppActionFactory()
+	// 	}
+	// 	//appActions.setTheme(newTheme)
+	// }
 }
 
 export function getTheme() {

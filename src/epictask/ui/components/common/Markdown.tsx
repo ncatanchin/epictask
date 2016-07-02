@@ -6,7 +6,6 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import * as Models from 'shared/models'
 import * as Constants from 'shared/Constants'
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
@@ -20,13 +19,11 @@ const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, {})
 }
 
-
-function mapStateToProps(state) {
-	const appState = state.get(Constants.AppKey)
-	return {
-		theme: appState.theme
-	}
-}
+/**
+ * Map theme into props - very shorthand
+ * @param state
+ */
+const mapStateToProps = (state) => ({theme: getTheme()})
 
 const CodeBlock = React.createClass({
 	displayName: 'CodeBlock',

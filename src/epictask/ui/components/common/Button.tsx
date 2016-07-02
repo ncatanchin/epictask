@@ -45,10 +45,8 @@ export interface IButtonProps extends React.DOMAttributes {
 
 //region Redux State -> Props Mapper
 function mapStateToProps(state) {
-	const {theme} = state.get(AppKey)
-
 	return {
-		theme
+		theme: getTheme()
 	}
 }
 //endregion

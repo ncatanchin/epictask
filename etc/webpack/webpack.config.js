@@ -30,7 +30,7 @@ module.exports = function (projectConfig) {
 		stats: WebpackStatsConfig,
 		output: {
 			path: `${distDir}/`,
-			publicPath: `${distDir}/`,
+			publicPath: `dist/`,
 			filename: '[name].js',
 			libraryTarget: 'commonjs2'
 		},

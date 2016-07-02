@@ -136,10 +136,9 @@ export interface ISearchResultsListProps {
 }
 
 function mapStateToProps(state) {
-	const appState = state.get(AppKey)
 	const searchState = state.get(SearchKey)
 	return {
-		theme: appState.theme,
+		theme: getTheme(),
 		results: searchState.results
 	}
 }

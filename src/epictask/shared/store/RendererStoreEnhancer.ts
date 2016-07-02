@@ -109,7 +109,7 @@ export default function rendererStoreEnhancer(storeCreator) {
 			receivedState = patcher(lastState,patch)
 
 			//console.log('received state patch',receivedState,'path',patch,'last state',lastState)
-			store.dispatch(action)
+			nextTick(() => store.dispatch(action))
 			//dispatchLater(store,action)
 			// nextTick(() => {
 			//

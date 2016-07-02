@@ -9,6 +9,7 @@ import * as moment from 'moment'
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType,github} from 'shared'
 import {Repos} from '../../../main/db/DB'
+import {Settings} from 'shared/Settings'
 
 const log = getLogger(__filename)
 
@@ -21,6 +22,11 @@ export class RepoSyncJob implements IJobRequest {
 
 	constructor(private availRepo:AvailableRepo) {
 		this.name = `syncing ${availRepo.repo.full_name}`
+		if (!Settings.token) {
+			log.info("Can not sync, not authenticated")
+			return
+		}
+
 		this.client = github.createClient()
 	}
 
@@ -144,6 +150,11 @@ export class RepoSyncJob implements IJobRequest {
 
 		const actions = new RepoActionFactory()
 		const appActions = new AppActionFactory()
+
+		if (!Settings.token) {
+			log.info("Can not sync, not authenticated")
+			return
+		}
 
 		const {job} = handler
 

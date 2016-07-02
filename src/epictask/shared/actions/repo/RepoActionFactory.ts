@@ -9,6 +9,7 @@
 const log = getLogger(__filename)
 
 // IMPORTS
+import {List} from 'immutable'
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey,Dialogs} from "shared/Constants"
 import {Repos} from 'main/db/DB'
@@ -17,7 +18,10 @@ import {cloneObject} from 'shared/util/ObjectUtil'
 
 import {SyncStatus,ISyncDetails,Comment} from 'shared/models'
 import {RepoMessage,RepoState} from './RepoState'
-import {Repo,AvailableRepo,Issue,github} from 'epictask/shared'
+import {github} from 'epictask/shared'
+import {Repo} from 'shared/models/Repo'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {IssueRepo,Issue} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import {RepoSyncJob} from './RepoSyncJob'
@@ -43,7 +47,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @param availableRepos
 	 * @returns {Issue}
 	 */
-	static async fillIssue(issue:Issue,availableRepos:AvailableRepo[]) {
+	static async fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) {
 		//issue = cloneObject(issue)
 
 		let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
@@ -117,7 +121,8 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 	@Action()
 	issueSave(issue:Issue) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
+			const toastService = require('shared/actions/toast/ToastService')
 			const actions = this.withDispatcher(dispatch,getState)
 			const client = github.createClient()
 
@@ -127,25 +132,22 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				repo = issue.repo || repos.find(item => item.id === issue.repoId)
 
 
-			return client.issueSave(repo,issue)
-				.then(savedIssue => {
-					return Repos.issue.save(savedIssue)
-				})
-				.then(savedIssue => {
-					require('shared/actions/toast/ToastService').addMessage(`Saved issue #${savedIssue.number}`)
 
+			try {
+				const issueRepo:IssueRepo = Repos.issue
+				let savedIssue:Issue = await client.issueSave(repo,issue)
+				savedIssue = await issueRepo.save(savedIssue)
 
+				actions.issuesChanged(savedIssue)
 
-					actions.issuesChanged(savedIssue)
+				const appActions = new AppActionFactory()
+				appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+				toastService.addMessage(`Saved issue #${savedIssue.number}`)
 
-					const appActions = new AppActionFactory()
-					appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-				})
-				.catch(err => {
-					log.error('failed to save issue', err)
-					require('shared/actions/toast/ToastService').addErrorMessage(err)
-				})
-
+			} catch (err) {
+				log.error('failed to save issue', err)
+				toastService.addErrorMessage(err)
+			}
 		}
 	}
 

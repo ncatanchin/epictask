@@ -37,6 +37,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 	setTheme(theme:any) {}
 
 	@Action()
+	setReady(ready:boolean) {}
+
+	@Action()
 	setDialogOpen(name:string,open:boolean) {}
 
 	@Action()
@@ -76,10 +79,11 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			}
 
 			const {availableRepos,selectedIssues} = getState().get(RepoKey)
-			const repoId = (selectedIssues && selectedIssues.length) ?
-				selectedIssues[0].repoId :
-				(availableRepos && availableRepos.length) ? availableRepos[0].repoId :
-						null
+			const repoId = (selectedIssues && selectedIssues.size) ?
+				selectedIssues.get(0).repoId :
+					(availableRepos && availableRepos.size) ?
+						availableRepos.get(0).repoId :
+							null
 
 			if (!repoId) {
 				actions.addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
@@ -116,6 +120,8 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 			actions.setDialogOpen(dialogName,true)
 		}
 	}
+
+
 
 	@Action()
 	updateSettings(newSettings:ISettings) {}

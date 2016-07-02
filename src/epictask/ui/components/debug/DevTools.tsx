@@ -13,7 +13,7 @@ export const DevTools = createDevTools(
 	<DockMonitor toggleVisibilityKey="ctrl-h"
 	             changePositionKey="ctrl-q"
 	             changeMonitorKey='ctrl-m'
-	             defaultPosition="right"
+	             defaultPosition="bottom"
 	             defaultSize={0.2}
 				 >
 

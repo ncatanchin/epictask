@@ -1,15 +1,32 @@
-
+const log = getLogger(__filename)
 
 const  electron = require('electron')
-
 const app = electron.app || electron.remote.app
 const userDataPath = app.getPath('userData')
 const fs = require('fs')
+const path = require('path')
 
 export function getUserDataFilename(filename:string) {
 	return `${userDataPath}/${filename}`
 }
 
+export function absoluteFilename(filename) {
+	return (fs.existsSync(filename)) ?
+		path.resolve(filename) : path.resolve(Env.baseDir,filename)
+}
+
+/**
+ * Convert a relative file path to a url
+ *
+ * @param filename
+ * @returns {string}
+ */
+export function filePathToUrl(filename) {
+	const realFilename = absoluteFilename(filename)
+	const fileUrl = `file://${realFilename}`
+	log.debug(`Created file (${filename}) / real filename (${realFilename}) / url ${fileUrl}`)
+	return fileUrl
+}
 
 /**
  * Read a file and parse to JSON object

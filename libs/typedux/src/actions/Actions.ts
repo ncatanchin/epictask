@@ -78,6 +78,10 @@ export interface IActionInterceptor {
 
 export function addActionInterceptor(interceptor:IActionInterceptor) {
 	actionInterceptors.push(interceptor)
+
+	return () => {
+		_.remove(actionInterceptors,o => interceptor === o)
+	}
 }
 
 function executeActionInterceptor(index:number,leaf:string,name:string,action:Function,args:any[]) {

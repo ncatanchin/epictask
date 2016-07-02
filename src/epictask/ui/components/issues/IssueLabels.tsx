@@ -25,13 +25,11 @@ const styles = {
 }
 
 
-function mapStateToProps(state) {
-	const appState = state.get(Constants.AppKey)
-	return {
-		theme: appState.theme
-
-	}
-}
+/**
+ * Map theme into props - very shorthand
+ * @param state
+ */
+const mapStateToProps = (state) => ({theme: getTheme()})
 
 /**
  * IIssueLabelsProps

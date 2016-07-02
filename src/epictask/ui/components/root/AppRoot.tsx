@@ -20,7 +20,7 @@ import {MuiThemeProvider} from "material-ui/styles"
 import {PureRender} from 'ui/components/common'
 import {IssueEditDialog} from 'components/issues/IssueEditDialog'
 import {Header, HeaderVisibility, ToastMessages} from 'components'
-import {getStore} from 'shared/store/AppStore'
+import {getStore,getDevTools} from 'shared/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'shared/actions'
 import {AppStateType} from 'shared'
@@ -42,12 +42,10 @@ const appActions = new AppActionFactory()
 
 
 //region DEBUG Components/Vars
-const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
-const DevTools = AllDevTools.DevTools || <div></div>
+//const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
+const DevTools = getDevTools() || <div></div>
 let devToolsRef = null
 let appElement = null
-let monitorStateSubscribed = false
-let monitorStatePrevious = null
 //endregion
 
 
@@ -181,7 +179,7 @@ class App extends React.Component<IAppProps,any> {
 								</div>
 
 								{/* DevTools */}
-								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
+								<DevTools ref={(c) => devToolsRef = c}/>
 								<ToastMessages/>
 							</HotKeys>
 
@@ -198,27 +196,9 @@ class App extends React.Component<IAppProps,any> {
 
 function render() {
 	const state = store.getState()
-	const appState = state ? state.get(AppKey) : null
-	const theme = appState ? appState.theme : null
-
-	if (!theme) {
-		log.info('Theme is not set yet')
-		const observer = store.observe([AppKey,'theme'],(newTheme) => {
-			log.info('RECEIVED THEME, NOW RENDER',newTheme)
-			if (!newTheme) {
-				log.info('Theme is still null')
-				return
-			}
-			observer()
-			render()
-		})
-		return
-	}
-
-	//rendered = true
 
 	// const appState = appActions.state
-	const props = mapStateToProps(store.getState())
+	const props = mapStateToProps(state)
 	appElement = <App
 		store={store.getReduxStore()}
 		{...props}
@@ -233,7 +213,32 @@ function render() {
 	)
 }
 
-render()
+/**
+ * Make sure the whole front end is loaded and the backend
+ * is ready for us to load everything
+ */
+function checkIfRenderIsReady() {
+	const state = store.getState()
+	const appState = state ? state.get(AppKey) : null
+	const ready = appState ? appState.ready : false
+
+	if (!ready) {
+		log.info('Theme is not set yet')
+		const observer = store.observe([AppKey,'ready'],(newReady) => {
+			log.info('RECEIVED READY, NOW RENDER',newReady)
+			if (!newReady !== true) {
+				log.info('Main is not ready',newReady)
+				return
+			}
+			observer()
+			render()
+		})
+	} else {
+		render()
+	}
+}
+
+checkIfRenderIsReady()
 
 
 /**

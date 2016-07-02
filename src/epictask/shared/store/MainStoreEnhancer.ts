@@ -141,7 +141,7 @@ function broadcastActionAndStateToClients(action,newState) {
 		.forEach(({webContentsId,client}) => {
 			const {webContents} = client
 			try {
-				if (webContents.isCrashed() || webContents.isDestroyed()) {
+				if (webContents.isDestroyed() || webContents.isCrashed()) {
 					unregisterRenderer(webContentsId)
 					return
 				}

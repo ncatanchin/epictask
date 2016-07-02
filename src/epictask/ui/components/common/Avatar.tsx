@@ -55,9 +55,8 @@ export interface IAvatarProps extends React.DOMAttributes {
 
 
 function mapStateToProps(state) {
-	const appState = state.get(AppKey)
 	return {
-		theme: appState.theme
+		theme: getTheme()
 	}
 }
 

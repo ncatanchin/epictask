@@ -24,29 +24,19 @@ import {
 
 
 
-// function startRemoteDevServer() {
-// 	if (Env.isDev && !Env.isRenderer) {
-// 		const g = global as any
-// 		if (!g.removeDevServerStarted) {
-// 			g.removeDevServerStarted = true
-// 			const remotedev = require('remotedev-server')
-// 			remotedev({ hostname: 'localhost', port: 8787 })
-// 		} else {
-// 			console.log('Remote dev server already started')
-// 		}
-//
-// 		console.log('remote redux dev server started at http://localhost:8787')
-// 	}
-// }
-//
-// if (Env.isDev && !Env.isRenderer)
-// 	startRemoteDevServer()
-
 if (Env.isRenderer) {
-	addActionInterceptor((leaf:string,name:string,next:IActionInterceptorNext,...args:any[]) => {
+	const unregisterInterceptor = addActionInterceptor((leaf:string,name:string,next:IActionInterceptorNext,...args:any[]) => {
 		ipc.send(Events.StoreRendererDispatch,leaf,name,args)
 		return
 	})
+
+	if (module.hot) {
+
+		module.hot.dispose(() => {
+			log.info(`HMR Removing action interceptor`)
+			unregisterInterceptor()
+		})
+	}
 }
 
 
@@ -94,29 +84,25 @@ if (Env.isDev && Env.isRenderer) {
 const NullMiddleware = f => f
 
 
+
 /**
- * Create remote dev tools enhancer
+ * Make remote middleware
  *
- * @returns {any}
+ * @returns {Array<Middlware>}
  */
-function makeDevTools() {
+function makeRemoteMiddleware() {
+	const remoteDevTools = require('remote-redux-devtools')
+	return remoteDevTools({
+		name: 'EpicTask - ' + ((Env.isRenderer) ? 'RENDERER' : 'MAIN'),
+		realtime: true,
+		hostname: 'localhost', port: 8787
+	})
+}
 
-	/**
-	 * Make remote middleware
-	 *
-	 * @returns {Array<Middlware>}
-	 */
-	function makeRemoteMiddleware() {
-		const remoteDevTools = require('remote-redux-devtools')
-		return remoteDevTools({
-			name: 'EpicTask - ' + ((Env.isRenderer) ? 'RENDERER' : 'MAIN'),
-			realtime: true,
-			hostname: 'localhost', port: 8787
-		})
-	}
+let DevTools = null
 
-	return (!Env.isDev) ? NullMiddleware :
-			makeRemoteMiddleware()
+export function getDevTools() {
+	return DevTools
 }
 
 /**
@@ -124,12 +110,11 @@ function makeDevTools() {
  *
  * @type {function(): *}
  */
-const devToolsMiddleware = makeDevTools()
-	// (!Env.isDev) ? NullMiddleware :
-	// 	(!Env.isRenderer) ? makeDevTools() :
-	// 		(window.devToolsExtension) ? window.devToolsExtension() :
-	// 			require('ui/components/debug/DevTools.tsx').DevTools.instrument()
-
+const devToolsMiddleware =
+	(!Env.isDev) ? NullMiddleware :
+		(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
+			(window.devToolsExtension) ? window.devToolsExtension() :
+				(DevTools = require('ui/components/debug/DevTools.tsx').DevTools).instrument()
 
 
 

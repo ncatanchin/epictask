@@ -135,6 +135,9 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			 * On PageLoaded - show and focus
 			 */
 			browserWindow.webContents.on('did-finish-load',async () => {
+				if (!browserWindow)
+					return
+
 				browserWindow.setTitle('EpicTask')
 				browserWindow.show()
 

@@ -2,6 +2,8 @@ import Electron = require('electron')
 const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
 const log = getLogger(__filename)
 
+const getAppActions = () => new (require('shared/actions/AppActionFactory').AppActionFactory)()
+const getAuthActions = () => new (require('shared/actions/auth/AuthActionFactory').AuthActionFactory)()
 
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
@@ -13,6 +15,14 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			submenu: [{
 				label: 'About ElectronReact',
 				selector: 'orderFrontStandardAboutPanel:'
+			},{
+				type: 'separator'
+			}, {
+				label: 'Signout...',
+				accelerator: 'Command+L',
+				click() {
+					getAuthActions().logout()
+				}
 			}, {
 				type: 'separator'
 			}, {
@@ -86,8 +96,8 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Reload',
 				accelerator: 'Command+Shift+R',
 				click() {
-					mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
-					//mainWindow.reload()
+					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
+					mainWindow.reload()
 				}
 			},{
 				label: 'Break',
@@ -163,23 +173,32 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 		template = [{
 			label:   '&File',
 			submenu: [{
-				label:       '&Open',
-				accelerator: 'Ctrl+O'
-			}, {
-				label:       '&Close',
-				accelerator: 'Ctrl+W',
+				label: 'Signout...',
+				accelerator: 'Command+L',
 				click() {
-					mainWindow.close()
+					getAuthActions().logout()
 				}
-			}]
+			}
+			// {
+			// 	label:       '&Open',
+			// 	accelerator: 'Ctrl+O'
+			// }, {
+			// 	label:       '&Close',
+			// 	accelerator: 'Ctrl+W',
+			// 	click() {
+			// 		mainWindow.close()
+			// 	}
+			// }
+			]
 		}, {
 			label:   '&View',
-			submenu: (process.env.NODE_ENV === 'development') ? [{
+			submenu: (Env.isDev) ? [{
 				label:       '&Reload',
 				accelerator: 'Ctrl+R',
 				click() {
 					//mainWindow.restart()
-					mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
+					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
+					mainWindow.reload()
 				}
 			}, {
 				label:       'Toggle &Full Screen',

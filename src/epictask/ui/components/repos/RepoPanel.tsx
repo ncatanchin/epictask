@@ -79,9 +79,8 @@ export interface IRepoPanelProps {
 }
 
 function mapStateToProps(state) {
-	const {theme} = state.get(AppKey)
 	return {
-		theme
+		theme: getTheme()
 	}
 }
 

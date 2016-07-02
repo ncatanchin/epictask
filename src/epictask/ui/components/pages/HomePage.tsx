@@ -26,16 +26,16 @@ interface IHomeProps {
 
 }
 
-function mapToProps(state) {
-	const repoState = state.get(RepoKey)
-
-	return {}
-}
+/**
+ * Map theme into props - very shorthand
+ * @param state
+ */
+const mapStateToProps = (state) => ({theme: getTheme()})
 
 /**
  * The root container for the app
  */
-@connect(mapToProps)
+@connect(mapStateToProps)
 @PureRender
 export class HomePage extends React.Component<IHomeProps,any> {
 

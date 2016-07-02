@@ -61,7 +61,7 @@ export class LoginPage extends React.Component<any,any> {
 			padding: '1rem',
 			height: 'auto',
 			// backgroundColor: 'transparent',
-			color: palette.accent4ColorText
+			color: palette.textColor
 		})
 
 		return (
@@ -69,7 +69,7 @@ export class LoginPage extends React.Component<any,any> {
 				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
 				<div style={styles.panel}>
 					<img style={styles.logo}
-					     src={require('assets/images/epictask-logo.png')}/>
+					     src={require('assets/images/epictask-logo-rainbow.png')}/>
 					<FlatButton
 						style={buttonStyle}
 						hoverColor={palette.accent3Color}

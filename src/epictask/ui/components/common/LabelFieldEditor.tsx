@@ -59,9 +59,8 @@ const styles = {
 
 
 function mapStateToProps(state) {
-	const appState = state.get(Constants.AppKey)
 	return {
-		theme: appState.theme
+		theme: getTheme()
 	}
 }
 

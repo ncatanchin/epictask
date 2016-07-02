@@ -10,8 +10,6 @@ import 'shared/Globals'
 import './MainLogging'
 
 
-
-
 const {app} = electron
 const log = getLogger(__filename)
 
@@ -67,9 +65,13 @@ async function boot() {
 		return Services
 	})
 
+
 	log.info("Boot complete, call ready")
 	// Notifying the main window that we are ready
 	global.MainBooted = true
+	const {AppActionFactory} = require('shared/actions/AppActionFactory')
+	const appActions = new AppActionFactory()
+	appActions.setReady(true)
 	mainWindow.ready()
 }
 
@@ -81,14 +83,32 @@ function onStart() {
 	return boot()
 }
 
+
+/**
+ * Make sure we are the only running instance
+ */
+const shouldQuit = app.makeSingleInstance(() => {
+	// Someone tried to run a second instance, we should focus our window.
+	if (mainWindow) {
+		const win = mainWindow.getBrowserWindow()
+		if (win.isMinimized())
+			win.restore()
+		win.focus()
+	}
+})
+
 /**
  * Bind events
  */
+if (shouldQuit) {
+	log.warn('*** Another instance is running, we will exit')
+	app.quit()
+} else {
+	if (!Env.isHot)
+		app.on('window-all-closed', onAllClosed)
 
-if (!Env.isHot)
-	app.on('window-all-closed', onAllClosed)
-
-app.on('ready', onStart)
+	app.on('ready', onStart)
+}
 
 
 /**

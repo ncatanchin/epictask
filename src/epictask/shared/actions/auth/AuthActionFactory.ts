@@ -1,9 +1,10 @@
 import {ActionFactory,Action} from 'typedux'
-import {createClient} from '../../../shared/GitHubClient'
-import {AuthKey} from "../../../shared/Constants"
-import {AppActionFactory} from '../AppActionFactory'
+import {createClient} from 'shared/GitHubClient'
+import {AuthKey,GitHubConfig} from "shared/Constants"
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {AuthState,AuthMessage} from './AuthState'
-import {AppStateType,Settings} from '../../../shared'
+import {AppStateType} from 'shared/AppStateType'
+import {Settings} from 'shared/Settings'
 import {User} from 'shared/models/User'
 
 const {ipcRenderer} = require('electron')
@@ -77,7 +78,24 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 			actions.setAuthenticating(true)
 
 			return new Promise((resolve,reject) => {
-				ipcRenderer.once(AuthKey,(event,{err,token}) => {
+				//log.info('Got auth request',event)
+
+				//const OAuthGithub = require('electron-oauth-github')
+				const GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default
+
+				// Create a new auth request/window
+				const authRequest = new GitHubOAuthWindow(GitHubConfig)
+
+				// Start authentication
+				authRequest.startRequest(function(err,token) {
+
+
+					if (err) {
+						log.error('GH token received: ' + token,err)
+						appActions.addErrorMessage(err)
+					} else {
+						log.info('GH token received: ' + token,err)
+					}
 
 					Settings.token = err ? null : token
 
@@ -90,9 +108,9 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 						appActions.setStateType(AppStateType.AuthVerify)
 						resolve(token)
 					}
-				})
 
-				ipcRenderer.send(AuthKey)
+
+				})
 			})
 
 

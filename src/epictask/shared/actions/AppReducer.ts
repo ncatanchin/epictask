@@ -30,21 +30,40 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 
+	/**
+	 * Set the user
+	 *
+	 * @param state
+	 * @param user
+	 * @returns {Map<string, User>}
+	 */
 	setUser(state:AppState,user:User) {
-		state.user = user
-		return state
+		return state.set('user',user)
+	}
+
+
+	/**
+	 *
+	 * @param state
+	 * @param ready
+	 * @returns {Map<string, V>}
+	 */
+	setReady(state:AppState,ready:boolean) {
+		return state.merge({ready})
 	}
 
 	setEditingIssue(state:AppState,issue:Issue) {
-		return state.merge({editingIssue:issue})
+		return state.set(
+			'editingIssue',
+			issue
+		)
 	}
 
 	setDialogOpen(state:AppState,name:string,open:boolean) {
-		return state.merge({
-			dialogs: Object.assign({},state.dialogs,{
-				[name]:open
-			})
-		})
+		return state.set(
+			'dialogs',
+			state.dialogs.set(name,open)
+		)
 	}
 
 	setStateType(state:AppState,stateType:AppStateType) {
@@ -88,8 +107,8 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	updateSettings(state:AppState,newSettings:ISettings) {
-		return state.merge({
-			settings: _.merge({},state.settings,newSettings)
-		})
+		return state.set(
+			'settings', newSettings
+		)
 	}
 }

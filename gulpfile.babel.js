@@ -1,6 +1,10 @@
+const path = require('path')
+
 const cleanExit = function() { process.exit() };
 process.on('SIGINT', cleanExit); // catch ctrl-c
 process.on('SIGTERM', cleanExit); // catch kill
+
+global.baseDir = path.resolve(__dirname)
 
 // const del = require('del')
 //

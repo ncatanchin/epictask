@@ -133,7 +133,7 @@ function runDevServer(port,projectConfig,wpConfig) {
 	serverApp.use(hotMiddleware)
 
 	// Now server any static assets
-	serverApp.use('/dist',express.static(path.resolve(__dirname,'../../../dist')))
+	serverApp.use('/dist',express.static(path.resolve(baseDir,'dist')))
 
 	// Add node specifically for source mappings
 	serverApp.use('/dist',express.static('/Users/jglanz/Development/oss/node-6.1.0/lib'))
@@ -188,6 +188,12 @@ function makeWebpackDevServer(projectConfig) {
 	}
 }
 
+function makeCompileTask(projectConfig) {
+	return (done) => {
+		return makeWebpackCompile(projectConfig, false)(done)
+	}
+}
+
 function makeDevTask(projectConfig) {
 	return (done) => {
 		switch (projectConfig.runMode) {
@@ -205,7 +211,7 @@ function makeDevTask(projectConfig) {
 const allTaskNames = {}
 
 function makeTaskNames(projectConfig) {
-	return ['dev','build','release']
+	return ['dev','compile','release']
 		.reduce((taskNames,taskName) => {
 			taskNames[taskName] = `${taskName}-${projectConfig.name}`
 			allTaskNames[taskName] = allTaskNames[taskName] || []
@@ -221,24 +227,30 @@ _.each(projectConfigs,projectConfig => {
 	const taskNames = makeTaskNames(projectConfig)
 	//log.info(`Making tasks: ${taskNames}`)
 	gulp.task(taskNames.dev,[],makeDevTask(projectConfig))
+	gulp.task(taskNames.compile,[],makeCompileTask(projectConfig))
 })
 
-//log.info('All dynamic task names',allTaskNames)
-gulp.task('dll',[],(done) => {
-	const dllConfig = require('../../webpack/webpack.config.dll')()
-	const compiler = webpack(dllConfig)
-
-	// Execute single build
-	compiler.run(webpackComplete((err,stats) => {
-		log.info(`Compilation completed for DLL`)
-
-		done(err)
-	}))
-})
+// //log.info('All dynamic task names',allTaskNames)
+// gulp.task('dll',[],(done) => {
+// 	const dllConfig = require('../../webpack/webpack.config.dll')()
+// 	const compiler = webpack(dllConfig)
+//
+// 	// Execute single build
+// 	compiler.run(webpackComplete((err,stats) => {
+// 		log.info(`Compilation completed for DLL`)
+//
+// 		done(err)
+// 	}))
+// })
 
 gulp.task('dev',[],(done) => {
 	log.info("Starting all dev tasks: " + allTaskNames.dev.join(', '))
 	runSequence(allTaskNames.dev)
+})
+
+gulp.task('compile',[],(done) => {
+	log.info("Starting all compile tasks: " + allTaskNames.compile.join(', '))
+	runSequence(allTaskNames.compile,done)
 })
 
 gulp.task('compile-watch',['dev'])

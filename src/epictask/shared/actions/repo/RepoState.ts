@@ -1,7 +1,7 @@
 import {RepoKey} from 'shared/Constants'
 import {registerModel} from 'shared/models/Registry'
 
-import {Map,List,Record} from 'immutable'
+import {Map,Set,List,Record} from 'immutable'
 
 import {ActionMessage} from 'typedux'
 const log = getLogger(__filename)
@@ -40,7 +40,7 @@ export class RepoState extends RepoStateRecord {
 	issues:List<Issue>
 	issue:Issue
 	comments:List<Comment>
-	selectedIssues:List<Issue>
+	selectedIssues:Set<Issue>
 	selectedIssue:Issue
 	repos:List<Repo>
 	error:Error

@@ -1,3 +1,5 @@
+import {List,Map} from 'immutable'
+
 //declare module 'lodash' {
 // declare module _ {
 // 	interface LoDashStatic {
@@ -15,7 +17,14 @@ declare global {
 	interface LodashMixins {
 		isArrayEqualBy(arr1,arr2,prop):boolean
 		inline<R>(fn:()=>R):R
+		uniqueListBy<T>(list:List<T>,...keyPath:string[]):List<T>
+		toJS(o:any):any
 	}
+
+
+	// interface List<T> extends Collection.Indexed<T> {
+	//
+	// }
 }
 
 const _ = require('lodash')
@@ -35,8 +44,33 @@ _.mixin({
 
 	inline<R>(fn:()=>R):R {
 		return fn()
+	},
+
+	uniqueListBy<T>(list:List<T>,...keyPath:string[]):List<T> {
+		function getKey(o) {
+			return Map.isMap(o) ?
+				(o as any).get(keyPath) :
+				_.get(o,keyPath)
+		}
+		return list.filter(item => {
+			const key = getKey(item)
+			const otherItem = list
+				.find(itemFind => itemFind !== item &&
+					key === getKey(itemFind))
+
+			return !otherItem
+		}) as any
+	},
+
+	toJS(o:any):any {
+		return (o && _.isFunction(o.toJS)) ? o.toJS() : o
 	}
 })
+
+
+
+
+
 
 export function isNil(o:any) {
 	return _.isNil(o)

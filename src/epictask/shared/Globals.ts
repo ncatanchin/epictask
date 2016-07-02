@@ -24,6 +24,7 @@ import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
 import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
+import * as path from 'path'
 import './util/ObjectUtil'
 import * as assertGlobal from 'assert'
 
@@ -32,7 +33,7 @@ import * as assertGlobal from 'assert'
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
-
+const isRenderer = process.type === 'renderer'
 
 const EnvGlobal = {
 	isOSX,
@@ -40,8 +41,9 @@ const EnvGlobal = {
 	isDebug: DEBUG && isDev,
 	isHot: !LodashGlobal.isNil(process.env.HOT),
 	isRemote,
-	isRenderer: process.type === 'renderer',
-	baseDir: process.env.BASEDIR
+	isRenderer,
+	isMain: !isRenderer,
+	baseDir: path.resolve(__dirname,'../../..')
 }
 
 // Polyfill Fetch/FormData/etc

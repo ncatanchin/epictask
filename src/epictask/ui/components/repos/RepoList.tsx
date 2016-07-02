@@ -78,11 +78,11 @@ const styles = {
 
 function mapToProps(state) {
 	const repoState = state.get(RepoKey)
-	const appState = state.get(AppKey)
+
 	return {
 		availableRepos: repoState.availableRepos,
 		selectedRepos: repoState.selectedRepos,
-		theme: appState.theme
+		theme: getTheme()
 	}
 }
 

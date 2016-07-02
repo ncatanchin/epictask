@@ -245,9 +245,8 @@ export interface IIssuesPanelProps {
 }
 
 function mapStateToProps(state) {
-	const appState = state.get(AppKey)
 	const repoState = state.get(RepoKey)
-	const {theme} = appState
+	const theme = getTheme()
 
 	return {
 		theme,

@@ -48,19 +48,20 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 	 * @returns {RepoStateModel}
 	 */
 	setRepos(state:RepoState,repos:Repo[]) {
-		return state.merge({repos:List(repos)})
+		return state.set('repos',_.uniqueListBy(List(repos),'id'))
 	}
 
 	setIssues(state:RepoState,issues:Issue[]) {
-		return state.merge({issues:List<Issue>(issues)})
+		return state.set('issues',_.uniqueListBy(List<Issue>(issues),'id'))
 	}
 
 	setIssue(state:RepoState,issue:Issue) {
-		return state.merge({issue:List<Issue>(issue)})
+		return state.set('issue',issue)
 	}
 
 	setComments(state:RepoState,comments:Comment[]) {
-		return state.merge({comments:List<Comment>(comments)})
+		return state.set('comments',_.uniqueListBy(List<Comment>(comments),'id'))
+
 
 	}
 
@@ -70,16 +71,15 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 		const selectedIssue = (selectedIssues.length === 1) ?
 			cloneObject(selectedIssues[0]) : null
 
-		return state.merge({
-			selectedIssues:List<Issue>(selectedIssues),
-			selectedIssue
-		}) as any
+		return state
+			.set('selectedIssues',_.uniqueListBy(List<Issue>(selectedIssues),'id'))
+			.set('selectedIssue',selectedIssue) as any
 
 
 	}
 
 	clearSelectedRepos(state:RepoState) {
-		return state.merge({selectedRepos:List<AvailableRepo>()})
+		return state.set('selectedRepos',List<AvailableRepo>())
 	}
 
 	setRepoSelected(state:RepoState,selectedAvailRepo:AvailableRepo,selected:boolean) {
@@ -90,7 +90,7 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 			if (selected)
 				selectedRepos = selectedRepos.push(selectedAvailRepo)
 
-			return temp.merge({selectedRepos})
+			return temp.set('selectedRepos',_.uniqueListBy(selectedRepos,'id'))
 		})
 	}
 
@@ -103,8 +103,7 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 		if (index === -1)
 			return state
 
-		availableRepos = availableRepos.set(index,updatedAvailRepo)
-		return state.merge({availableRepos})
+		return state.set('availableRepos',availableRepos.set(index,updatedAvailRepo))
 
 	}
 

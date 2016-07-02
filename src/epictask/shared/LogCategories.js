@@ -11,5 +11,6 @@ module.exports = {
 	ModelDecorations: LogLevel.INFO,
 	GitHubClient: LogLevel.INFO,
 	RepoActionFactory: LogLevel.INFO,
-	LunrIndex: LogLevel.DEBUG
+	LunrIndex: LogLevel.DEBUG,
+	Files: LogLevel.DEBUG
 }

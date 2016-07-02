@@ -107,6 +107,37 @@ export interface IToastMessagesProps {
 //endregion
 
 
+// let lastMessages = null
+// function processNotifications(newMessages) {
+// 	if (newMessages === lastMessages)
+// 		return
+//
+// 	lastMessages = newMessages
+// 	newMessages
+// 		.filter(msg => !messageNotifications[msg.id])
+// 		.forEach(msg => {
+//
+// 			const buttons = msg.type === ToastMessageType.Error ?
+// 				['Acknowledge'] : []
+//
+// 			window
+// 			const notification = new Notification({
+// 				body: msg.content,
+// 				icon: filePathToUrl(require('assets/images/epictask-logo-rainbow-square.png')),
+// 			})
+// 				// notifier.notify('epictask', {
+// 				//
+// 				// 	buttons
+// 				// })
+//
+// 			// Add Notification events
+// 			notificationEvents.forEach(event => notification.on(event, clearMessage))
+//
+// 			messageNotifications[msg.id] = notification
+//
+// 		})
+// }
+
 //region Redux State -> Props Mapper
 /**
  * Map redux state to props
@@ -114,14 +145,23 @@ export interface IToastMessagesProps {
  * @param state
  */
 function mapStateToProps(state) {
-	const {theme, messages} = state.get(AppKey)
+	const {messages} = state.get(AppKey)
+
+	// processNotifications(messages)
+	// if (lastMessages !== messages) {
+	// 	processNotifications()
+	// }
 
 	return {
-		theme,
+		theme: getTheme(),
 		messages
 	}
 }
 //endregion
+
+
+
+
 
 /**
  * ToastMessages
@@ -137,7 +177,6 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 	constructor(props,context) {
 		super(props,context)
-
 	}
 
 	/**

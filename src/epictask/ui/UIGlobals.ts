@@ -34,7 +34,9 @@ function onErrorReceived(err:Error) {
 // ERROR HANDLING
 if (typeof window !== 'undefined') {
 	window.onerror = function(message:any,url,line) {
-		console.error('unhandled',message,url,line)
+		const allErrorArgs = [...arguments]
+		
+		console.error('unhandled',allErrorArgs)
 		onErrorReceived((message instanceof Error) ? message : new Error(message))
 	}
 }

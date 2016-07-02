@@ -29,7 +29,7 @@ export interface IStatus {
 	message?:string
 }
 
-export type TDialogMap = {[name:string]:boolean}
+export type TDialogMap = Map<string,boolean>
 
 
 
@@ -40,50 +40,36 @@ export const AppStateRecord = Record({
 	settings: Settings.toJSON(),
 
 	dialogs: Map<string,boolean>(),
-	theme: getTheme(),
 	messages: List<IToastMessage>(),
-
+	editingIssue: null,
 	monitorState: {},
-
+	ready: false,
+	user: null
 })
 
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
 		return new AppState(Object.assign({},o,{
-			messages: List(o.messages)
+			messages: List(o.messages),
+			dialogs: Map(o.dialogs)
 		}))
 	}
 
 	stateType:AppStateType
-
-
-	theme:any
-
-
+	ready:boolean
 	status:IStatus
-
-
 	settings:ISettings
-
-
-	dialogs: TDialogMap
-
+	user:User
 
 	editingIssue:Issue
-
-
+	dialogs: TDialogMap
 	messages:List<IToastMessage>
 
 
 	monitorState:any
-
-
-	user:User
-
-
-
 	error:Error
+
 
 
 
