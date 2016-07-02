@@ -99,6 +99,7 @@
 		"**/node_modules/**/*.*",
 		"**/dist",
 		"**/dist/**/*.*",
+		"target",
 		"dist",
 		"logs",
 		"etc",

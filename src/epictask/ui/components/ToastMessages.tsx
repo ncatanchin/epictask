@@ -8,14 +8,18 @@ import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
 import {List} from 'immutable'
 import * as Radium from 'radium'
-import {Snackbar, FlatButton} from 'material-ui'
+
 import {connect} from 'react-redux'
 import {AppKey} from 'shared/Constants'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {AppActionFactory} from 'shared/actions'
 import {Icon, Button} from 'ui/components'
+import {filePathToUrl, absoluteFilename} from 'shared/util/Files'
 
+const dataUrl = require('dataurl')
 const {Style} = Radium
+
+const NotificationEvents = ['click','timeout']
 
 //endregion
 
@@ -107,36 +111,62 @@ export interface IToastMessagesProps {
 //endregion
 
 
-// let lastMessages = null
-// function processNotifications(newMessages) {
-// 	if (newMessages === lastMessages)
-// 		return
-//
-// 	lastMessages = newMessages
-// 	newMessages
-// 		.filter(msg => !messageNotifications[msg.id])
-// 		.forEach(msg => {
-//
-// 			const buttons = msg.type === ToastMessageType.Error ?
-// 				['Acknowledge'] : []
-//
-// 			window
-// 			const notification = new Notification({
-// 				body: msg.content,
-// 				icon: filePathToUrl(require('assets/images/epictask-logo-rainbow-square.png')),
-// 			})
-// 				// notifier.notify('epictask', {
-// 				//
-// 				// 	buttons
-// 				// })
-//
-// 			// Add Notification events
-// 			notificationEvents.forEach(event => notification.on(event, clearMessage))
-//
-// 			messageNotifications[msg.id] = notification
-//
-// 		})
-// }
+let lastMessages = null
+const messageNotifications = {}
+//const iconImageRaw = require('!!raw!assets/images/epictask-logo-rainbow-square.png')
+
+function processNotifications(newMessages) {
+	if (newMessages === lastMessages)
+		return
+
+	Object.keys(messageNotifications)
+		.forEach(msgId => {
+			if (newMessages.find(msg => msg.id === msgId)) {
+				log.debug('Message still exists, return')
+				return
+			}
+
+			const notification = messageNotifications[msgId]
+			notification.close()
+			delete messageNotifications[msgId]
+
+		})
+
+	lastMessages = newMessages
+	newMessages
+		.filter(msg => !messageNotifications[msg.id])
+		.forEach(msg => {
+			msg = _.toJS(msg)
+
+			const clearMessage = () => appActions.removeMessage(msg.id)
+
+			// const buttons = msg.type === ToastMessageType.Error ?
+			// 	['Acknowledge'] : []
+
+
+			const notification = new Notification('epictask',{
+				title: 'epictask',
+				body: msg.content,
+				icon: filePathToUrl(require('assets/images/epictask-logo-rainbow-square.png')),
+
+				//sticky: true,
+				// tag: msg.id,
+				//icon: absoluteFilename(require('assets/images/epictask-logo-rainbow-square.png')),
+				//icon: dataUrl({mimetype:'image/png',data:iconImageRaw}),
+			})
+
+
+			// Add Notification events
+			NotificationEvents
+				.forEach(event => {
+					//notification.on(event, clearMessage)
+					notification[`on${event}`] = clearMessage
+				})
+
+			messageNotifications[msg.id] = notification
+
+		})
+}
 
 //region Redux State -> Props Mapper
 /**
@@ -147,10 +177,8 @@ export interface IToastMessagesProps {
 function mapStateToProps(state) {
 	const {messages} = state.get(AppKey)
 
-	// processNotifications(messages)
-	// if (lastMessages !== messages) {
-	// 	processNotifications()
-	// }
+	processNotifications(messages)
+
 
 	return {
 		theme: getTheme(),

@@ -142,6 +142,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 	removeMessage(id:string) {}
 
 	@Action()
+	clearMessages() {}
+
+	@Action()
 	setMonitorState(monitorState:any) {}
 
 	@Action()

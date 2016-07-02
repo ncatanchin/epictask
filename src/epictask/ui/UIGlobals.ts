@@ -21,6 +21,7 @@ declare global {
 	var CSSModules:any
 	var React:typeof ReactGlobal
 	var ReactDOM:typeof ReactDOMGlobal
+	var Notification:any
 }
 
 
@@ -35,7 +36,7 @@ function onErrorReceived(err:Error) {
 if (typeof window !== 'undefined') {
 	window.onerror = function(message:any,url,line) {
 		const allErrorArgs = [...arguments]
-		
+
 		console.error('unhandled',allErrorArgs)
 		onErrorReceived((message instanceof Error) ? message : new Error(message))
 	}

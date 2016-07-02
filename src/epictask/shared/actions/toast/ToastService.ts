@@ -7,13 +7,13 @@ import * as uuid from 'node-uuid'
 
 const fs = require('fs')
 const path = require('path')
-const notifier = require('node-notifier')
 
-const notificationEvents = ['click','timeout']
 const appActions = new AppActionFactory()
 const pendingTimers = {}
-const messageNotifications = {}
-
+//const notifier = require('node-notifier')
+//const notificationEvents = ['click','timeout']
+//const messageNotifications = {}
+//let iconContent = null, iconPath = null
 
 /**
  * Report message to ui from anywhere
@@ -45,7 +45,7 @@ export function addErrorMessage(err:Error) {
 }
 
 
-let iconContent = null, iconPath = null
+
 /**
  * Triggered when messages change
  *
@@ -53,43 +53,9 @@ let iconContent = null, iconPath = null
  */
 function onMessagesChanged(newMessages) {
 
-	Object.keys(messageNotifications)
-		.forEach(msgId => {
-			if (newMessages.find(msg => msg.id === msgId)) {
-				log.debug('Message still exists, return')
-				return
-			}
-
-			const notification = messageNotifications[msgId]
-			delete messageNotifications[msgId]
-
-		})
-
 	_.toJS(newMessages).forEach(msg => {
-		if (!iconContent) {
-			iconPath = path.relative(process.cwd(),absoluteFilename(require('assets/images/epictask-logo-rainbow-square.png')))
-			iconContent = fs.readFileSync(iconPath)
-		}
 
 		const clearMessage = () => appActions.removeMessage(msg.id)
-
-		if (!messageNotifications[msg.id]) {
-			const buttons = msg.type === ToastMessageType.Error ?
-				['Acknowledge'] : []
-
-			const notification =
-				notifier.notify({
-					title: 'epictask',
-					message: msg.content,
-					icon: iconPath,
-					buttons
-				})
-
-			// Add Notification events
-			notificationEvents.forEach(event => notification.on(event,clearMessage))
-
-			messageNotifications[msg.id] = notification
-		}
 
 		// Dont add a remove timer for Error messages
 		if (msg.type === ToastMessageType.Error)
@@ -116,5 +82,17 @@ export async function start() {
 		const store = getStore()
 		store.observe([appActions.leaf(), 'messages'], onMessagesChanged)
 	}
+}
 
+if (module.hot) {
+	module.hot.dispose(() => {
+		log.info(`HMR - disposing toast timers/messages`)
+		Object.keys(pendingTimers)
+			.forEach(msgId => {
+				clearTimeout(pendingTimers[msgId])
+				delete pendingTimers[msgId]
+
+				appActions.clearMessages()
+			})
+	})
 }

@@ -1,5 +1,5 @@
 
-
+import {List} from 'immutable'
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "shared/Constants"
 import {AppState} from './AppState'
@@ -14,7 +14,8 @@ import * as uuid from 'node-uuid'
 export function makeToastMessage(opts:any) {
 	return Object.assign(opts,{
 		id:uuid.v4(),
-		createdAt:Date.now()
+		createdAt:Date.now(),
+		content: opts.content || 'No content provided - DANGER will robinson'
 	})
 }
 
@@ -82,7 +83,7 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	addMessage(state:AppState,message:IToastMessage) {
 		return state.set(
 			'messages',
-			state.messages.push(message)
+			_.uniqueListBy(state.messages.push(message),'id')
 		)
 	}
 
@@ -90,7 +91,7 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 		err = ((_.isString(err)) ? new Error(err) : err) as Error
 		const message = makeToastMessage({
 			type: ToastMessageType.Error,
-			content: err.message
+			content: err.message || err.toString()
 		})
 		return this.addMessage(state,message)
 	}
@@ -99,6 +100,12 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 		return state.set(
 			'messages',
 			state.messages.filter(msg => msg.id !== id)
+		)
+	}
+
+	clearMessages(state:AppState) {
+		return state.set(
+			'messages',List()
 		)
 	}
 
