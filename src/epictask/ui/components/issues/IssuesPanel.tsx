@@ -5,7 +5,6 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
@@ -15,11 +14,9 @@ import {PureRender, Renderers, Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
 import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
 
 import {Issue, Repo} from 'shared/models'
 import {RepoKey, AppKey} from 'shared/Constants'
-import {cloneObject} from 'shared/util'
 import {List} from 'immutable'
 
 // Non-typed Components
@@ -279,6 +276,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 	componentWillMount() {
 		this.setState({lastIssues:this.props.issues})
 	}
+
 	componentWillReceiveProps(nextProps) {
 		const state = this.state || {},
 			{issueList,lastIssues} = state,
@@ -329,17 +327,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			allowResize = selectedIssues.size > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
-
-		//
-		// 	<CSSTransitionGroup
-		// ref={ref}
-		// transitionName='issue'
-		// transitionEnterTimeout={200}
-		// transitionLeaveTimeout={200}>
-		//
-		// 	{items}
-		//
-		// 	</CSSTransitionGroup>
 
 		return <div style={themeStyles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"

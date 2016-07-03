@@ -1,9 +1,10 @@
+const log = getLogger(__filename)
+
 import {Events} from 'shared/Constants'
 import {getReducers} from './Reducers'
 import {getModel} from 'shared/models/Registry'
-import {cloneObject} from 'shared/util/ObjectUtil'
-const nextTick = require('browser-next-tick')
-const log = getLogger(__filename)
+//const nextTick = require('browser-next-tick')
+
 
 const patcher = require('immutablepatch')
 const electron = require('electron')
@@ -15,9 +16,9 @@ const addIpcListener = (channel:string,listener) => {
 	ipcListeners.push([channel,listener])
 }
 
-
-
 let reducers = getReducers()
+let receivedState = null
+let lastPatchNumber = -1
 
 if (module.hot) {
 	module.hot.accept(['./Reducers'],(updates) => {
@@ -27,6 +28,7 @@ if (module.hot) {
 }
 
 
+// Hydrate the state returned from the main process
 function hydrateState(state) {
 	const mappedState = Object
 		.keys(state)
@@ -40,15 +42,23 @@ function hydrateState(state) {
 		},{})
 
 
-	const revivedState = Immutable.Map(mappedState)
-
 	//console.log('Revived state from main',state,revivedState,mappedState)
-	return revivedState
+	return Immutable.Map(mappedState)
 
 
 }
 
+function stateReviver(key,value:any) {
+	const clazzName = value.get('$$clazz')
+	if (clazzName) {
+		const modelClazz = getModel(clazzName)
+		if (modelClazz)
+			return new modelClazz(value.toJS())
+	}
 
+	const isIndexed = Immutable.Iterable.isIndexed(value);
+	return isIndexed ? value.toList() : value.toMap();
+}
 
 
 function getMainProcessState() {
@@ -63,17 +73,17 @@ function getMainProcessState() {
 }
 
 
-let receivedState = null
 
-
-export default function rendererStoreEnhancer(storeCreator) {
+function rendererStoreEnhancer(storeCreator) {
 	return (reducer) => {
 
 		receivedState = getMainProcessState()
 
 		const
 			{remote}= electron,
-			{guestInstanceId} = (process as any),
+			{guestInstanceId} = (process as any)
+
+		const
 			rendererId = guestInstanceId || remote.getCurrentWindow().id,
 			clientId = (process as any).guestInstanceId ? `webview ${rendererId}` : `window ${rendererId}`
 
@@ -85,35 +95,31 @@ export default function rendererStoreEnhancer(storeCreator) {
 
 		let store = storeCreator(reducer, receivedState)
 
+
 		addIpcListener(Events.StoreMainStateChanged,(event,payload) => {
-			const {action,patch:patchJS} = _.cloneDeep(payload)
-			if (!patchJS)
-				return
+			const {action,patchNumber,patch:patchJS} = _.cloneDeep(payload)
 
-			// Model registry is used to revive classes
-			const patch = Immutable.fromJS(patchJS,(key,value:any) => {
-				const clazzName = value.get('$$clazz')
-				if (clazzName) {
-					const modelClazz = getModel(clazzName)
-					if (modelClazz)
-						return new modelClazz(value.toJS())
-				}
+			// Patch JS to apply to state
+			if (!patchJS) return
 
-				const isIndexed = Immutable.Iterable.isIndexed(value);
-				return isIndexed ? value.toList() : value.toMap();
-			})
-			// const patch = Immutable.List(patchJS)
-			// 	.map(patchItem => Immutable.Map(patchItem))
+			// Check if the patch numbers are in sync
+			const outOfSync = (patchNumber - 1 > lastPatchNumber)
 
-			const lastState = receivedState
-			receivedState = patcher(lastState,patch)
+			// Update the cached patch number
+			lastPatchNumber = patchNumber
 
-			//console.log('received state patch',receivedState,'path',patch,'last state',lastState)
-			nextTick(() => store.dispatch(action))
-			//dispatchLater(store,action)
-			// nextTick(() => {
-			//
-			// })
+			if (outOfSync) {
+				receivedState = getMainProcessState()
+			} else {
+				// Model registry is used to revive classes
+				const patch = Immutable.fromJS(patchJS,stateReviver)
+
+				const lastState = receivedState
+				receivedState = patcher(lastState,patch)
+			}
+
+
+			store.dispatch(action)
 		})
 
 		store.getState = () => receivedState
@@ -131,3 +137,5 @@ if (module.hot) {
 		})
 	})
 }
+
+export default rendererStoreEnhancer

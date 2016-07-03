@@ -91,7 +91,8 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 		err = ((_.isString(err)) ? new Error(err) : err) as Error
 		const message = makeToastMessage({
 			type: ToastMessageType.Error,
-			content: err.message || err.toString()
+			content: err.message || err.toString(),
+			stack: err.stack
 		})
 		return this.addMessage(state,message)
 	}

@@ -10,7 +10,6 @@ interface Window {
 
 declare namespace NodeJS {
 	interface Global {
-
 		MainBooted:boolean
 	}
 }

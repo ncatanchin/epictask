@@ -12,7 +12,7 @@
     "chai": "registry:dt/chai#3.4.0+20160317120654",
     "electron-window-state": "registry:dt/electron-window-state#2.0.0+20160212171354",
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
-    "github-electron": "registry:dt/github-electron#1.2.4+20160622101043",
+    "github-electron": "registry:dt/github-electron#1.2.5+20160624085047",
     "history": "registry:dt/history#1.8.0+20160316155526",
     "later": "registry:dt/later#0.0.0+20160317120654",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",

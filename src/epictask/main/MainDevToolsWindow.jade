@@ -1,0 +1,31 @@
+html
+	head
+		script.
+
+			var isDev = "#{Env.isDev}" === 'true'
+
+			// Add a script tag to load content
+			function addScript(scriptPath, asyncLoad, callback) {
+				const script = document.createElement('script');
+				const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
+
+				script.type = 'text/javascript'
+				if (asyncLoad) {
+					log.debug('Loading script async', scriptPath)
+					script.async = true
+					if (callback)
+						script.onload = callback
+				}
+
+				script.src = basePath + scriptPath
+
+				document.body.appendChild(script)
+			}
+
+
+	body
+		#root
+		script.
+			console.log('Loading dev tools')
+			addScript('/UIDevEntry.js', false)
+

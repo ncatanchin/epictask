@@ -40,8 +40,13 @@ export function addMessage(message:IToastMessage|string,type:ToastMessageType = 
  *
  * @param err
  */
-export function addErrorMessage(err:Error) {
-	appActions.addErrorMessage(err)
+export function addErrorMessage(err:Error|string) {
+	if (_.isString(err)) {
+		err = new Error(err)
+	}
+	const payload = _.pick(err,'message','code','stack','description') as any
+	//logError(err)
+	appActions.addErrorMessage(payload)
 }
 
 

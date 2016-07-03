@@ -100,6 +100,7 @@ function attachEvents(store) {
  * @param newState
  */
 let lastSentState = null
+let patchNumber = 0
 
 function broadcastActionAndStateToClients(action,newState) {
 	if (!newState || !action)
@@ -108,12 +109,7 @@ function broadcastActionAndStateToClients(action,newState) {
 	if (newState === lastSentState)
 		return
 
-
-
 	function getStatePatch() {
-
-
-
 		// First check the last state we sent
 		lastSentState = lastSentState || Immutable.Map()
 
@@ -121,17 +117,12 @@ function broadcastActionAndStateToClients(action,newState) {
 		statePatch = _.cloneDeep(diff(lastSentState,newState).toJS())
 		lastSentState = newState
 
-		//log.info('Sending state patch', JSON.stringify(statePatch,null,4))
 		return statePatch
-		// if (newState.toJS)
-		// 	newState = newState.toJS()
-		//
-		// newState = transformValues(newState,
-		// 	(key,val) => (val.toJS) ? val.toJS() : val)
+
 	}
 
 	let statePatch = getStatePatch()
-
+	patchNumber++
 	Object.keys(clients)
 		.map(key => ({
 			webContentsId:key,
@@ -146,7 +137,7 @@ function broadcastActionAndStateToClients(action,newState) {
 					return
 				}
 
-				webContents.send(Events.StoreMainStateChanged, {action, patch: statePatch})
+				webContents.send(Events.StoreMainStateChanged, {action, patchNumber, patch: statePatch})
 			} catch (err) {
 				log.error('Failed to send message to renderer, probably destroyed, removing',err)
 				unregisterRenderer(webContentsId)
@@ -161,7 +152,7 @@ function broadcastActionAndStateToClients(action,newState) {
  * @param storeCreator
  * @returns {(reducer:any, initialState:any)=>undefined}
  */
-export default function mainStoreEnhancer(storeCreator) {
+function mainStoreEnhancer(storeCreator) {
 
 		return (reducer, initialState) => {
 			let store = storeCreator(reducer, initialState)
@@ -197,3 +188,5 @@ if (module.hot) {
 		})
 	})
 }
+
+export default mainStoreEnhancer

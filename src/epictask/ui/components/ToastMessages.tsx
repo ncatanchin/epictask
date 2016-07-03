@@ -144,6 +144,7 @@ function processNotifications(newMessages) {
 			// 	['Acknowledge'] : []
 
 
+			// TODO: add 'tag' and 'sticky' for error
 			const notification = new Notification('epictask',{
 				title: 'epictask',
 				body: msg.content,
@@ -231,6 +232,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 			[s.bgError, s.fgError, s.actionError] :
 			[s.bgInfo, s.fgInfo, s.actionInfo]
 
+		const iconStyle = makeStyle(s.icon,fg)
 
 
 		if (!msg.id) {
@@ -238,14 +240,16 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 			return null
 		}
 
+		const icon = (isError || isInfo) ?
+			<Icon style={iconStyle}>{isError ? 'error_outline' : 'info_outline'}</Icon>
+			: null
+
 		return <div key={msg.id}
 		            className='toastMessage animated bounce'
 		            style={s.toast}>
 
 			<div style={makeStyle(s.toastContent,bg)}>
-				{(isError) ? <Icon style={makeStyle(s.icon,fg)}>error_outline</Icon> :
-					(isInfo) ? <Icon style={makeStyle(s.icon,fg)}>info_outline</Icon> :
-						null}
+				{icon}
 
 				<span style={makeStyle(s.text,fg)}>{msg.content}</span>
 				{isError && <Button style={makeStyle(s.action,actionColors)}
@@ -268,11 +272,11 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 		const s = mergeStyles(styles, theme.toast)
 
+
 		return <div style={s.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
 			       rules={_.merge({},s.transitionGroup,s.toastMessagesTransition)}/>
 
-			<div>
 			<CSSTransitionGroup
 				className='toastMessageTransitionGroup'
 				transitionName="toastMessages"
@@ -282,9 +286,8 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 				transitionLeaveTimeout={150}>
 
 				{this.props.messages.map(msg => this.renderMessageContent(msg))}
-
 			</CSSTransitionGroup>
-			</div>
+
 		</div>
 	}
 

@@ -1,26 +1,21 @@
-import * as fs from 'fs'
-import * as path from 'path'
+const log = getLogger(__filename)
 
-import electron = require('electron')
-const{ app, BrowserWindow, Menu, shell,ipcMain,dialog } = electron
 
 import windowStateKeeper = require('electron-window-state')
-import * as Log from 'typelogger'
+import Electron = require('electron')
+const {BrowserWindow,Menu,ipcMain} = Electron
+
+import {makeMainTemplate} from 'main/MainTemplates'
 import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu} from './MainMenu'
 
 
-const log = Log.create(__filename)
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let menu
-let template
 let browserWindow:Electron.BrowserWindow = null
 let firstLoad = true
-
-let webContentLoaded = false
-let mainReady = false
 
 ipcMain.on(AuthKey,(event,arg) => {
 	log.info('Got auth request',event,arg)
@@ -48,15 +43,6 @@ export function stop() {
 	browserWindow = null
 }
 
-/**
- * Kills all existing windows and then
- * launches a new one
- */
-export function restart() {
-
-
-	return start()
-}
 
 /**
  * Start the main window
@@ -84,24 +70,6 @@ export function getBrowserWindow() {
 
 
 
-function makeMainTemplate() {
-	const cssGlobal = require('!!raw!sass!styles/MainEntry.global.scss')
-	const mainTemplatePath = require('!!file!./MainEntry.jade')
-	const mainTemplateSrc = fs.readFileSync(mainTemplatePath,'utf-8')
-
-	const pug = require('pug')
-	const mainTemplate = pug.render(mainTemplateSrc,{
-		cssGlobal,
-		Env,
-		baseDir:path.resolve(__dirname,'../../..'),
-		Events
-	})
-	let templatePath = app.getPath('temp') + '/entry-' + require('node-uuid').v4() + '.html'
-	fs.writeFileSync(templatePath,mainTemplate)
-
-	templatePath = 'file://' + templatePath
-	return templatePath
-}
 /**
  * Load the actual window
  */
@@ -113,15 +81,16 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 
 			let mainWindowState = windowStateKeeper({
 				defaultWidth: 1024,
-				defaultHeight: 728
+				defaultHeight: 728,
+				file: 'main-window'
 			})
 
 			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, {
-				show: true,
+				show: false,
 				frame: false,
 				titleBarStyle: 'hidden',
+				title: 'epictask',
 				// darkTheme:true,
-				title: 'epictask'
 			}))
 
 
@@ -131,10 +100,10 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			log.info(`Template Path: ${templateURL}`)
 			browserWindow.loadURL(templateURL)
 
-			/**
-			 * On PageLoaded - show and focus
-			 */
+			// On PageLoaded - show and focus
 			browserWindow.webContents.on('did-finish-load',async () => {
+
+				// If HMR event occured - only for dev
 				if (!browserWindow)
 					return
 

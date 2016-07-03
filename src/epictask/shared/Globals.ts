@@ -6,7 +6,6 @@
  * @type {any}
  */
 const g = global as any
-const Bluebird = g.Bluebird
 
 // LOGGING CONFIG FIRST
 require('shared/LogConfig')
@@ -79,18 +78,27 @@ function installGlobals() {
  *
  * @global getLogger
  */
+
 declare global {
+
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var getLogger:typeof LoggerFactory
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Immutable:typeof ImmutableGlobal
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var TypeMutant:typeof TypeMutantGlobal
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var requireContext:typeof ContextUtils.requireContext
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var mergeContext:typeof ContextUtils.mergeContext
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal & LodashMixins
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Env:typeof EnvGlobal
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
-
-
 }
 
 

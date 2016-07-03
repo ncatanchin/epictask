@@ -104,9 +104,8 @@ html.fill-width.fill-height(lang="en")
 					document.write(link.outerHTML);
 				}
 
-
+				// Load the entry script
 				addScript('/UIEntry.js', true, function() {
-
 					if (checkBooted())
 						onUIReady(null,true)
 				})

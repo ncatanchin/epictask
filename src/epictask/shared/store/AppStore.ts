@@ -1,4 +1,3 @@
-import {requireContext} from '../util/ContextUtils'
 const log = getLogger(__filename)
 
 import * as Immutable from 'immutable'
@@ -90,32 +89,30 @@ const NullMiddleware = f => f
  *
  * @returns {Array<Middlware>}
  */
-function makeRemoteMiddleware() {
+function makeRemoteMiddleware(name:string = null) {
 	const remoteDevTools = require('remote-redux-devtools')
 	return remoteDevTools({
-		name: 'EpicTask - ' + ((Env.isRenderer) ? 'RENDERER' : 'MAIN'),
+		name: 'EpicTask - ' + (name || ((Env.isRenderer) ? 'RENDERER' : 'MAIN')),
 		realtime: true,
 		hostname: 'localhost', port: 8787
 	})
 }
 
-let DevTools = null
+let DevTools = null, DevToolsMiddleware = null
 
 export function getDevTools() {
 	return DevTools
 }
 
-/**
- * DevToolsMiddleware is configured in DEBUG mode anyway
- *
- * @type {function(): *}
- */
-const devToolsMiddleware =
-	(!Env.isDev) ? NullMiddleware :
-		(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
-			(window.devToolsExtension) ? window.devToolsExtension() :
-				(DevTools = require('ui/components/debug/DevTools.tsx').DevTools).instrument()
+export function loadDevTools() {
+	if (DevToolsMiddleware)
+		return DevToolsMiddleware
 
+	DevTools = require('ui/components/debug/DevTools.tsx').DevTools
+	DevToolsMiddleware = DevTools.instrument()
+
+	return DevToolsMiddleware
+}
 
 
 let store:ObservableStore<any>
@@ -161,13 +158,20 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 /**
  * Initialize/Create the store
  */
-export function initStore() {
+export function initStore(devToolsMode = false) {
 
-	//const devTools = [devToolsMiddleware]
-	// if (Env.isDev && Env.is) {
-	// 	const statePersistence = require('redux-devtools').persistState(getDebugSessionKey())
-	// 	devTools.push(statePersistence)
-	// }
+
+	/**
+	 * DevToolsMiddleware is configured in DEBUG mode anyway
+	 *
+	 * @type {function(): *}
+	 */
+	const debugMiddleware =
+		(devToolsMode) ? loadDevTools() :
+			(!Env.isDev) ? NullMiddleware :
+				(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
+					(window.devToolsExtension) ? window.devToolsExtension() :
+						loadDevTools()
 
 	let reducers = (Env.isRenderer) ? [] : getReducers()
 
@@ -177,7 +181,7 @@ export function initStore() {
 		compose(
 			applyMiddleware(...middleware),
 			storeEnhancer,
-			devToolsMiddleware
+			debugMiddleware
 		) as StoreEnhancer<any>
 	)
 

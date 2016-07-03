@@ -4,12 +4,18 @@ const assert = require('assert')
 module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
+	const entries = {
+		"UIEntry": ['babel-polyfill', "./src/epictask/ui/UIEntry"]
+	}
+
+	// In DEV add the UIDevEntry
+	if (isDev) {
+		entries.UIDevEntry =  ['babel-polyfill', "./src/epictask/ui/UIDevEntry"]
+	}
+
 	return Object.assign(config, {
 
-		entry: {
-			//'reflect-metadata'
-			"UIEntry": ['babel-polyfill',"./src/epictask/ui/UIEntry"]
-		},
+		entry: entries,
 
 		output: Object.assign(config.output, isDev ? {
 			publicPath: `http://localhost:${projectConfig.port}/dist/`

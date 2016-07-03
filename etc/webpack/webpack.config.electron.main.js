@@ -4,17 +4,17 @@ require('../tools/global-env')
 //const HtmlWebpackPlugin = require('html-webpack-plugin')
 const
 	webpack = require('webpack'),
-	nodeExternals = require('webpack-node-externals'),
+	//nodeExternals = require('webpack-node-externals'),
 	//JsonpTemplatePlugin = webpack.JsonpTemplatePlugin
-	HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin,
+	//HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin,
 	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
 	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
-	ExternalsPlugin = webpack.ExternalsPlugin,
+	//ExternalsPlugin = webpack.ExternalsPlugin,
 	fs = require('fs'),
 	baseConfig = require('./webpack.config')
 
-const nodeModules = fs.readdirSync('node_modules')
-	.filter((x) => ['.bin'].indexOf(x) === -1)
+// const nodeModules = fs.readdirSync('node_modules')
+// 	.filter((x) => ['.bin'].indexOf(x) === -1)
 
 module.exports = function(projectConfig) {
 	projectConfig = projectConfig || projectConfigs['electron-main']

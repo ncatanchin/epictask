@@ -6,7 +6,6 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 import {connect} from 'react-redux'
-import {AppKey} from 'shared/Constants'
 const Ink = require('react-ink')
 //endregion
 

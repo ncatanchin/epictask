@@ -1,28 +1,30 @@
-//require('shared/SourceMapSupport')
 import 'reflect-metadata'
 import 'shared/ErrorHandling'
-const electron = require('electron')
+import Electron = require('electron')
+const {app} = Electron
 
 // LOAD EVERYTHING
+//import {window as DevToolWindowType} from './MainDevToolWindow'
 import 'shared/Globals'
 
 // LOGGING
 import './MainLogging'
-
-
-const {app} = electron
 const log = getLogger(__filename)
 
-/**
- * Main window ref
- */
+
+
+
+
+
+// Main window ref
 let mainWindow:any
 
-/**
- * HMR Configuration for development
- */
-
+// HMR Configuration for development
 const hotReloadEnabled = Env.isHot
+
+// Reference for dev monitor window (redux, etc)
+let devWindow = null
+
 log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
 
 /**
@@ -54,6 +56,11 @@ async function boot() {
 
 	log.info("Boot load window")
 	mainWindow = require('./MainWindow')
+
+	if (Env.isDev && !devWindow) {
+		devWindow = require('./MainDevToolWindow').window as Electron.BrowserWindow
+	}
+
 
 	log.info("Boot start")
 	await mainWindow.start(async () => {
@@ -124,8 +131,8 @@ if (module.hot) {
 		return boot().then(() => {
 			const newWindow = mainWindow.getBrowserWindow()
 
-			electron.BrowserWindow.getAllWindows()
-				.filter(win => win !== newWindow)
+			Electron.BrowserWindow.getAllWindows()
+				.filter(win => win !== newWindow && win !== devWindow)
 				.forEach(oldWindow => oldWindow.close())
 
 			// When it full loads we remove all the old ones

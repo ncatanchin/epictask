@@ -9,17 +9,21 @@ const Inspector = require('redux-devtools-inspector').default
 const LogMonitor = require('redux-devtools-log-monitor').default
 
 
+function attachInspector(component) {
+	component.handleSelectTab('State')
+}
+
 export const DevTools = createDevTools(
 	<DockMonitor toggleVisibilityKey="ctrl-h"
 	             changePositionKey="ctrl-q"
 	             changeMonitorKey='ctrl-m'
 	             defaultPosition="bottom"
-	             defaultSize={0.2}
+	             defaultSize={1}
 				 >
 
-		{/*<Inspector theme={'tomorrow'} supportImmutable={true} isLightTheme={false}/>*/}
+		<Inspector ref={(c) => attachInspector(c)} theme={'tomorrow'} monitorState={{tab:'state'}} supportImmutable={true} isLightTheme={false}/>
 		<LogMonitor theme={'tomorrow'}/>
-		{/*<SliderMonitor/>*/}
+		<SliderMonitor/>
 	</DockMonitor>
 )
 

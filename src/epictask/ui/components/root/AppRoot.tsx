@@ -9,12 +9,11 @@ require('styles/split-pane.global.scss')
 const log = getLogger(__filename)
 
 //region Imports
+import * as Radium from 'radium'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
 import * as React from 'react'
-import * as _ from 'lodash'
+import * as ReactDOM from 'react-dom'
 import {Provider, connect} from 'react-redux'
-const {HotKeys} = require('react-hotkeys')
-
 import {MuiThemeProvider} from "material-ui/styles"
 
 import {PureRender} from 'ui/components/common'
@@ -26,6 +25,9 @@ import {AppActionFactory} from 'shared/actions'
 import {AppStateType} from 'shared'
 import {Events,AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
+
+const {StyleRoot} = Radium
+const {HotKeys} = require('react-hotkeys')
 //endregion
 
 try {
@@ -43,7 +45,8 @@ const appActions = new AppActionFactory()
 
 //region DEBUG Components/Vars
 //const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
-const DevTools = getDevTools() || <div></div>
+// const DevTools = getDevTools() || <div></div>
+const DevTools = <div/>
 let devToolsRef = null
 let appElement = null
 //endregion
@@ -160,33 +163,35 @@ class App extends React.Component<IAppProps,any> {
 
 
 		return (
-			<MuiThemeProvider muiTheme={theme}>
-				<Provider store={store.getReduxStore()}>
-					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
-						<IssueEditDialog />
+			<StyleRoot>
+				<MuiThemeProvider muiTheme={theme}>
+					<Provider store={store.getReduxStore()}>
+						<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
+							<IssueEditDialog />
 
-						{/* Global flex box */}
-						<div className="fill-height fill-width"
-						     style={makeStyle(styles.content,theme.app)}>
+							{/* Global flex box */}
+							<div className="fill-height fill-width"
+							     style={makeStyle(styles.content,theme.app)}>
 
-							<Header visibility={headerVisibility}/>
+								<Header visibility={headerVisibility}/>
 
-							<HotKeys ref={(c) => this.pageBodyHolder = c}
-							         style={makeStyle(FlexScale,FlexColumn)}>
+								<HotKeys ref={(c) => this.pageBodyHolder = c}
+								         style={makeStyle(FlexScale,FlexColumn)}>
 
-								<div style={contentStyles}>
-									<page.component />
-								</div>
+									<div style={contentStyles}>
+										<page.component />
+									</div>
 
-								{/* DevTools */}
-								<DevTools ref={(c) => devToolsRef = c}/>
-								<ToastMessages/>
-							</HotKeys>
+									{/* DevTools */}
+									{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
+									<ToastMessages/>
+								</HotKeys>
 
-						</div>
-					</HotKeys>
-				</Provider>
-			</MuiThemeProvider>
+							</div>
+						</HotKeys>
+					</Provider>
+				</MuiThemeProvider>
+			</StyleRoot>
 
 		)
 	}
