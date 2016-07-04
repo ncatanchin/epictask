@@ -1,17 +1,20 @@
+import {Container,AutoWired,Inject} from 'typescript-ioc'
 import {IJobRequest} from 'shared/actions/jobs/JobState'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import * as ActivityManager from 'shared/actions/activity/ActivityManagerService'
-import * as ToastService from 'shared/actions/toast/ToastService'
+import ActivityManagerService from 'main/services/ActivityManagerService'
+
 import * as moment from 'moment'
 
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType,github} from 'shared'
-import {Repos} from '../../../main/db/DB'
+import {Stores} from 'main/services/DBService'
 import {Settings} from 'shared/Settings'
+import Toaster from 'shared/Toaster'
 
 const log = getLogger(__filename)
+
 
 export class RepoSyncJob implements IJobRequest {
 
@@ -27,7 +30,7 @@ export class RepoSyncJob implements IJobRequest {
 			return
 		}
 
-		this.client = github.createClient()
+
 	}
 
 	/**
@@ -35,8 +38,10 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async initParams(repo) {
-		const lastActivity = await ActivityManager.findLastActivity(ActivityType.RepoSync,repo.id)
+	async initParams(activityManager,repo) {
+		this.client = Container.get(GitHubClient)
+
+		const lastActivity = await activityManager.findLastActivity(ActivityType.RepoSync,repo.id)
 		const lastSyncTimestamp = new Date(lastActivity ? lastActivity.timestamp : 0)
 		const lastSyncTimestamp8601 = moment(lastSyncTimestamp.getTime()).format()
 		this.lastSyncParams = {since: lastSyncTimestamp8601}
@@ -52,8 +57,8 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async syncCollaborators(repo:Repo) {
-		const userRepo = Repos.user
+	async syncCollaborators(stores:Stores,repo:Repo) {
+		const userRepo = stores.user
 
 		const collabsPromise = (repo.permissions.push) ?
 			this.client.repoCollaborators(repo) :
@@ -81,11 +86,11 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async syncIssues(repo) {
+	async syncIssues(stores:Stores,repo) {
 		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
 		issues.forEach(issue => issue.repoId = repo.id)
 		//log.debug(`Loaded issues, time to persist`, issues)
-		await Repos.issue.bulkSave(...issues)
+		await stores.issue.bulkSave(...issues)
 	}
 
 	/**
@@ -93,11 +98,11 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async syncLabels(repo) {
+	async syncLabels(stores,repo) {
 		const labels = await this.client.repoLabels(repo)
 		labels.forEach(label => label.repoId = repo.id)
 		//log.debug(`Loaded labels, time to persist`, labels)
-		await Repos.label.bulkSave(...labels)
+		await stores.label.bulkSave(...labels)
 	}
 
 	/**
@@ -105,11 +110,11 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async syncMilestones(repo) {
+	async syncMilestones(stores,repo) {
 		const milestones = await this.client.repoMilestones(repo)
 		milestones.forEach(milestone => milestone.repoId = repo.id)
 		//log.debug(`Loaded milestones, time to persist`, milestones)
-		await Repos.milestone.bulkSave(...milestones)
+		await stores.milestone.bulkSave(...milestones)
 	}
 
 	/**
@@ -117,7 +122,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
-	async syncComments(repo) {
+	async syncComments(stores,repo) {
 		let comments = await this.client.repoComments(repo,{params:this.lastSyncParams})
 
 		// Filter JUST in case there are some missing issue urls
@@ -137,7 +142,7 @@ export class RepoSyncJob implements IJobRequest {
 		})
 
 		//log.debug(`Loaded comments, time to persist`, comments)
-		await Repos.comment.bulkSave(...comments)
+		await stores.comment.bulkSave(...comments)
 	}
 
 	/**
@@ -146,10 +151,15 @@ export class RepoSyncJob implements IJobRequest {
 	 * @param handler
 	 */
 	async executor(handler:JobHandler) {
+		const activityManager = Container.get(ActivityManagerService)
+		const stores = Container.get(Stores)
+		const toaster = Container.get(Toaster)
+		const repoActions =  Container.get(RepoActionFactory)
+		const appActions = Container.get(AppActionFactory)
+
 		const {availRepo} = this
 
-		const actions = new RepoActionFactory()
-		const appActions = new AppActionFactory()
+
 
 		if (!Settings.token) {
 			log.info("Can not sync, not authenticated")
@@ -163,19 +173,19 @@ export class RepoSyncJob implements IJobRequest {
 
 			// Grab the repo
 			let {repo, repoId} = availRepo
-			if (!repo) repo = await actions.getRepo(repoId)
+			if (!repo) repo = await repoActions.getRepo(repoId)
 
 			// Check the last updated activity
-			await this.initParams(repo)
+			await this.initParams(activityManager,repo)
 
 			// Load the issues, eventually track progress
 			log.debug('waiting for all promises')
 			await Promise.all([
-				this.syncIssues(repo),
-				this.syncLabels(repo),
-				this.syncMilestones(repo),
-				this.syncComments(repo),
-				this.syncCollaborators(repo)
+				this.syncIssues(stores,repo),
+				this.syncLabels(stores,repo),
+				this.syncMilestones(stores,repo),
+				this.syncComments(stores,repo),
+				this.syncCollaborators(stores,repo)
 			])
 
 			// Commit all text indexes
@@ -185,26 +195,26 @@ export class RepoSyncJob implements IJobRequest {
 
 			// Track the execution for timing/update purposes
 			// As well as throttling management
-			const repoSyncActivity = await ActivityManager.createActivity(ActivityType.RepoSync,repoId)
+			const repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)
 			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
 			// Reload all the issues
-			actions.loadIssues()
+			repoActions.loadIssues()
 
 			// Reload current issue if loaded
-			const currentIssue = actions.state.issue
+			const currentIssue = repoActions.state.issue
 			if (currentIssue) {
 				log.debug('Reloading current issue')
-				actions.loadIssue(currentIssue,true)
+				repoActions.loadIssue(currentIssue,true)
 			}
 
 			// Notify of completion
-			ToastService.addMessage(`Finished ${this.name}`)
+			toaster.addMessage(`Finished ${this.name}`)
 
 		} catch (err) {
 			log.error('failed to sync repo issues', err)
 			appActions.addErrorMessage(err)
-			actions.setSyncStatus(availRepo, SyncStatus.Failed, {error: err})
+			repoActions.setSyncStatus(availRepo, SyncStatus.Failed, {error: err})
 		}
 	}
 }

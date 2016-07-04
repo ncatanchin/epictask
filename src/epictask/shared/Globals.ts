@@ -29,12 +29,17 @@ import * as assertGlobal from 'assert'
 
 
 // Export globals
+
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
 const isRenderer = process.type === 'renderer'
 
+const envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
+
+
 const EnvGlobal = {
+	envName,
 	isOSX,
 	isDev,
 	isDebug: DEBUG && isDev,

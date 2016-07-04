@@ -50,9 +50,9 @@ export class Milestone extends DefaultModel {
 }
 
 
-export class MilestoneRepo extends TSRepo<Milestone> {
+export class MilestoneStore extends TSRepo<Milestone> {
 	constructor() {
-		super(MilestoneRepo,Milestone)
+		super(MilestoneStore,Milestone)
 	}
 
 	/**

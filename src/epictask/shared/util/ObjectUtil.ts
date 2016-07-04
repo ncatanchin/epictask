@@ -19,6 +19,7 @@ declare global {
 		inline<R>(fn:()=>R):R
 		uniqueListBy<T>(list:List<T>,...keyPath:string[]):List<T>
 		toJS(o:any):any
+		assignGlobal(o:any):any
 	}
 
 
@@ -64,6 +65,11 @@ _.mixin({
 
 	toJS(o:any):any {
 		return (o && _.isFunction(o.toJS)) ? o.toJS() : o
+	},
+
+	assignGlobal(o:any) {
+		const g = global as any
+		Object.assign(g,o)
 	}
 })
 
@@ -111,3 +117,16 @@ export function transformValues(o,fn:IValueTransformer) {
 			o
 
 }
+
+export function convertEnumValuesToString(obj) {
+	Object.keys(obj).forEach((key) => {
+		if (isNaN(+key)) {
+			Object.defineProperty(obj, key, {
+				value: key,
+				enumerable: true
+			})
+		}
+	})
+	return obj;
+}
+

@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {AutoWired,Inject, Container} from 'typescript-ioc'
 import * as React from 'react'
 import {List} from 'immutable'
 import {connect} from 'react-redux'
@@ -162,11 +163,14 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
  * @constructor
  **/
 
+@AutoWired
 @connect(mapStateToProps)
 @Radium
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
+	@Inject
+	repoActions:RepoActionFactory
 
 	constructor(props, context) {
 		super(props, context)
@@ -178,7 +182,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 	onCancel = () => this.hide()
 
-	onSave = (event) => new RepoActionFactory().issueSave(
+	onSave = (event) => this.repoActions.issueSave(
 		cloneObject(this.props.issue, this.textInputState()))
 
 
@@ -187,7 +191,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 		body: this.state.bodyValue
 	})
 
-	updateIssueState = (newIssueProps) => appActions.updateEditingIssue(
+	updateIssueState = (newIssueProps) => this.repoActions.updateEditingIssue(
 		Object.assign(this.textInputState(), newIssueProps)
 	)
 
@@ -206,7 +210,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	onTitleChange = (event, value) => this.setState({titleValue: value})
 
 	onRepoChange = (event, index, value) => {
-		appActions.updateEditingIssue({repoId: value})
+		this.repoActions.updateEditingIssue({repoId: value})
 	}
 
 	onMilestoneChange = (event, index, value) => {

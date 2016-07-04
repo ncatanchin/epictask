@@ -110,9 +110,9 @@ export class Repo extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class RepoRepo extends TSRepo<Repo> {
+export class RepoStore extends TSRepo<Repo> {
 	constructor() {
-		super(RepoRepo,Repo)
+		super(RepoStore,Repo)
 	}
 
 	@PouchDBFullTextFinder({

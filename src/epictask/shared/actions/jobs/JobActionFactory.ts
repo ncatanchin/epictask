@@ -8,6 +8,7 @@ const log = getLogger(__filename)
 // IMPORTS
 import * as assert from 'assert'
 import * as uuid from 'node-uuid'
+import {AutoWired} from 'typescript-ioc'
 import {ActionFactory,Action} from 'typedux'
 import {JobKey} from "epictask/shared/Constants"
 import {JobState,JobMessage,IJob,IJobRequest,IScheduledJob} from './JobState'
@@ -21,6 +22,7 @@ import {List} from 'immutable'
  * @constructor
  **/
 
+@AutoWired
 export class JobActionFactory extends ActionFactory<any,JobMessage> {
 
 	constructor() {
@@ -84,3 +86,5 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 	@Action()
 	setScheduledJobs(scheduledJobs:List<IScheduledJob>) {}
 }
+
+export default JobActionFactory

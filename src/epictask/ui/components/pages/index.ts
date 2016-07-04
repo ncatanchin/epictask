@@ -1,21 +1,23 @@
-
+import {Container} from 'typescript-ioc'
 import {AppStateType} from 'shared'
 import {LoginPage} from './LoginPage'
 import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
-import {AppActionFactory} from 'shared/actions'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
 
 export * from './Page'
 
 const log = getLogger(__filename)
-const appActions = new AppActionFactory()
+
 
 const Pages = {
 	[AppStateType.AuthLogin]:  LoginPage,
-	[AppStateType.AuthVerify]: VerifyLoginPage
+	[AppStateType.AuthVerify]: VerifyLoginPage,
+	[AppStateType.Home]: HomePage
 }
 
 export function getPage(stateType:AppStateType = null) {
+	const appActions = Container.get(AppActionFactory)
 	stateType = stateType || appActions.state.stateType
 	const page = Pages[stateType] || HomePage
 

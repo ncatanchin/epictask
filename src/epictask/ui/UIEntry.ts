@@ -1,6 +1,10 @@
 // require('shared/SourceMapSupport')
 import 'reflect-metadata'
 
+import {ObservableStore} from 'typedux'
+import {Container} from 'typescript-ioc'
+
+
 // Load all global/env stuff first
 // LOGGING CONFIG FIRST
 require('shared/LogConfig')
@@ -13,7 +17,9 @@ require('./UIGlobals')
 
 async function boot() {
 
-	require('shared/store').getStore()
+	// Load Redux-Store FIRST
+	const store:ObservableStore<any> = require('shared/store').initStore()
+	Container.bind(ObservableStore).provider({ get: () => store})
 
 	// Load logger
 	const log = getLogger(__filename)

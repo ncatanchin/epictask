@@ -40,9 +40,9 @@ export class Activity extends DefaultModel {
 
 }
 
-export class ActivityRepo extends TSRepo<Activity> {
+export class ActivityStore extends TSRepo<Activity> {
 	constructor() {
-		super(ActivityRepo, Activity)
+		super(ActivityStore, Activity)
 	}
 
 }

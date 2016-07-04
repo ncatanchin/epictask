@@ -141,7 +141,7 @@ function mapStateToProps(state) {
 		theme:    getTheme(),
 		issues:   repoState.selectedIssues,
 		issue:   repoState.selectedIssue,
-		repos:    repoState.repos,
+		repos:    repoState.stores,
 		comments: repoState.comments
 	}
 }

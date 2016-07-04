@@ -267,6 +267,11 @@ export class Coordinator implements ICoordinator {
 		}
 
 		const modelOpts:IModelOptions = Reflect.getMetadata(TypeStoreModelKey,constructor)
+		if (!modelOpts) {
+			log.info(`Can not register a model without metadata ${(constructor && constructor.name) || 'unknown'}`)
+			return
+		}
+
 		model = {
 			options: modelOpts,
 			name: modelOpts.clazzName,

@@ -1,5 +1,6 @@
 import {getAction} from 'typedux'
 
+import {Container} from 'typescript-ioc'
 const diff = require('immutablediff')
 import {Events} from 'shared/Constants'
 import {transformValues} from 'shared/util/ObjectUtil'
@@ -38,8 +39,12 @@ function attachEvents(store) {
 	function getMainState(event) {
 		log.info('Getting state for renderer')
 
-		event.returnValue = transformValues(store.getState().toJS(),
+		const mainState = store.getState()
+		const mainStateJS = mainState.toJS()
+
+		const finalMainStateJS = transformValues(mainStateJS,
 			(key,val) => (val.toJS) ? val.toJS() : val)
+		event.returnValue = finalMainStateJS
 	}
 
 
@@ -57,7 +62,9 @@ function attachEvents(store) {
 			throw new Error(`Could not find action ${leaf}:${name} on main process`)
 
 		log.info(`Executing action on main: ${leaf}:${name}`)
-		action(...args)
+		action((factory) => {
+			return Container.get(factory)
+		},...args)
 	}
 
 	addIpcListener(Events.StoreGetMainState,getMainState)

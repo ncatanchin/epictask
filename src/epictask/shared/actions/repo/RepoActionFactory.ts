@@ -2,6 +2,7 @@
 
 
 
+import {Stores} from 'main/services/DBService'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -9,10 +10,10 @@
 const log = getLogger(__filename)
 
 // IMPORTS
+import {AutoWired,Inject,Container} from 'typescript-ioc'
 import {List} from 'immutable'
 import {ActionFactory,Action} from 'typedux'
 import {RepoKey,Dialogs} from "shared/Constants"
-import {Repos} from 'main/db/DB'
 import {cloneObject} from 'shared/util/ObjectUtil'
 
 
@@ -21,13 +22,41 @@ import {RepoMessage,RepoState} from './RepoState'
 import {github} from 'epictask/shared'
 import {Repo} from 'shared/models/Repo'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {IssueRepo,Issue} from 'shared/models/Issue'
+import {IssueStore,Issue} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import {RepoSyncJob} from './RepoSyncJob'
+import Toaster from 'shared/Toaster'
 
 
 const uuid = require('node-uuid')
+
+/**
+ * Add transient properties to `Issue`
+ * repo, milestones, collaborators
+ *
+ * @param issue
+ * @param availableRepos
+ * @returns {Issue}
+ */
+export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) {
+	//issue = cloneObject(issue)
+
+	let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
+	assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
+
+	const stores = Container.get(Stores)
+
+	const filledAvailRepo = await stores.availableRepo.load(availRepo)
+
+	return cloneObject(Object.assign({},issue, {
+		repo: filledAvailRepo.repo,
+		milestones: filledAvailRepo.milestones,
+		collaborators: filledAvailRepo.collaborators
+	}))
+
+}
+
 
 /**
  * RepoActionFactory.ts
@@ -35,33 +64,21 @@ const uuid = require('node-uuid')
  * @class RepoActionFactory.ts
  * @constructor
  **/
-
+@AutoWired
 export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
+	@Inject
+	stores:Stores
 
-	/**
-	 * Add transient properties to `Issue`
-	 * repo, milestones, collaborators
-	 *
-	 * @param issue
-	 * @param availableRepos
-	 * @returns {Issue}
-	 */
-	static async fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) {
-		//issue = cloneObject(issue)
+	@Inject
+	appActions:AppActionFactory
 
-		let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-		assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
+	@Inject
+	jobActions:JobActionFactory
 
-		const filledAvailRepo = await Repos.availableRepo.load(availRepo)
+	@Inject
+	toaster:Toaster
 
-		return cloneObject(Object.assign({},issue, {
-			repo: filledAvailRepo.repo,
-			milestones: filledAvailRepo.milestones,
-			collaborators: filledAvailRepo.collaborators
-		}))
-
-	}
 
 	constructor() {
 		super(RepoState)
@@ -122,7 +139,6 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	issueSave(issue:Issue) {
 		return async (dispatch,getState) => {
-			const toastService = require('shared/actions/toast/ToastService')
 			const actions = this.withDispatcher(dispatch,getState)
 			const client = github.createClient()
 
@@ -134,19 +150,19 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 
 			try {
-				const issueRepo:IssueRepo = Repos.issue
+				const issueStore:IssueStore = this.stores.issue
 				let savedIssue:Issue = await client.issueSave(repo,issue)
-				savedIssue = await issueRepo.save(savedIssue)
+				savedIssue = await issueStore.save(savedIssue)
 
 				actions.issuesChanged(savedIssue)
 
-				const appActions = new AppActionFactory()
-				appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-				toastService.addMessage(`Saved issue #${savedIssue.number}`)
+
+				this.appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+				this.toaster.addMessage(`Saved issue #${savedIssue.number}`)
 
 			} catch (err) {
 				log.error('failed to save issue', err)
-				toastService.addErrorMessage(err)
+				this.toaster.addErrorMessage(err)
 			}
 		}
 	}
@@ -157,12 +173,12 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @param newRepos
 	 */
 	async persistRepos(newRepos:Repo[]):Promise<number> {
-		const repoRepo =  Repos.repo
+		const repoStore =  this.stores.repo
 
 		log.debug(`Persisting ${newRepos.length} repos`)
-		const beforeCount = await repoRepo.count()
-		await repoRepo.bulkSave(...newRepos)
-		const afterCount = await repoRepo.count()
+		const beforeCount = await repoStore.count()
+		await repoStore.bulkSave(...newRepos)
+		const afterCount = await repoStore.count()
 
 		log.debug(`After persistence there are ${afterCount} repos in the system, new count = ${afterCount - beforeCount}`)
 
@@ -219,9 +235,10 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	syncRepoDetails(availRepo:AvailableRepo) {
 		return async (dispatch,getState) => {
-			const jobActions = JobActionFactory.newWithDispatcher(JobActionFactory,dispatch,getState)
+			const jobActions = this.jobActions
+				.withDispatcher(dispatch,getState)
 
-			const loadedAvailRepo = await Repos.availableRepo.load(availRepo)
+			const loadedAvailRepo = await this.stores.availableRepo.load(availRepo)
 			jobActions.createJob(new RepoSyncJob(loadedAvailRepo))
 		}
 	}
@@ -250,7 +267,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	getAvailableRepos():Promise<AvailableRepo[]> {
 		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepos = await Repos.availableRepo.loadAll()
+			const availRepos = await this.stores.availableRepo.loadAll()
 
 			const
 				repoState = actions.state,
@@ -267,8 +284,8 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	getRepo(id:number):Promise<Repo> {
 		return (async (dispatch,getState) => {
-			const repoRepo = Repos.repo
-			return await repoRepo.get(repoRepo.key(id))
+			const repoStore = this.stores.repo
+			return await repoStore.get(repoStore.key(id))
 		}) as any
 	}
 
@@ -276,7 +293,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	getRepos():Promise<Repo[]> {
 		return (async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			let repos = await Repos.repo.findAll()
+			let repos = await this.stores.repo.findAll()
 			repos = cloneObject(repos)
 			log.debug('Loaded all repos',repos)
 
@@ -309,7 +326,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			}
 
 			const
-				availRepoRepo = Repos.availableRepo,
+				availRepoRepo = this.stores.availableRepo,
 				availRepo = new AvailableRepo({
 					id: uuid.v4(),
 					repoId: repo.id,
@@ -330,7 +347,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			const actions = this.withDispatcher(dispatch, getState)
 
 
-			const availRepoRepo = Repos.availableRepo
+			const availRepoRepo = this.stores.availableRepo
 			await availRepoRepo.remove(availRepoId)
 
 			const availRepos = actions.state.availableRepos
@@ -345,16 +362,21 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	setRepoEnabled(availRepoId:string,enabled:boolean) {
 		return async (dispatch,getState) => {
+			const {
+				repo:repoStore,
+				availableRepo:availableRepoStore
+			} = this.stores
+
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepo = await Repos.availableRepo.get(availRepoId)
+			const availRepo = await availableRepoStore.get(availRepoId)
 			if (enabled === availRepo.enabled) {
 				return
 			}
 
 			let newAvailRepo = Object.assign({},availRepo,{enabled})
 
-			await Repos.availableRepo.save(newAvailRepo)
-			newAvailRepo = await Repos.availableRepo.load(newAvailRepo)
+			await availableRepoStore.save(newAvailRepo)
+			newAvailRepo = await availableRepoStore.load(newAvailRepo)
 			actions.updateAvailableRepo(newAvailRepo)
 
 			// Finally trigger a repo sync update
@@ -368,6 +390,83 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			return true
 		}
 	}
+
+	@Action()
+	setEditingIssue(issue:Issue) {}
+
+	@Action()
+	updateEditingIssue(props:any) {
+		return async (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch,getState)
+
+			const {availableRepos,editingIssue:issue} = actions.state
+			if (!issue)
+				return
+
+
+			const updatedIssue = await fillIssue(
+					Object.assign(cloneObject(issue),props),
+					availableRepos
+				)
+
+			actions.setEditingIssue(updatedIssue)
+		}
+	}
+
+	@Action()
+	newIssue() {
+		return async (dispatch,getState) => {
+			const
+				actions = this.withDispatcher(dispatch,getState),
+				dialogName = Dialogs.IssueEditDialog
+
+
+			if (actions.state.dialogs[dialogName]) {
+				log.info('Dialog is already open',dialogName)
+				return
+			}
+
+			const {availableRepos,selectedIssues} = getState().get(RepoKey)
+			const repoId = (selectedIssues && selectedIssues.size) ?
+				selectedIssues.get(0).repoId :
+				(availableRepos && availableRepos.size) ?
+					availableRepos.get(0).repoId :
+					null
+
+			if (!repoId) {
+				this.toaster.addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
+				return
+			}
+
+			const issue = await fillIssue(new Issue({repoId}),availableRepos)
+
+			actions.setEditingIssue(issue)
+
+			this.appActions.setDialogOpen(dialogName,true)
+		}
+	}
+
+	@Action()
+	editIssue(issue:Issue = null) {
+		return async (dispatch,getState) => {
+			const
+				actions = this.withDispatcher(dispatch,getState),
+				dialogName = Dialogs.IssueEditDialog
+
+
+			const repoState = this.state,
+				{availableRepos} = repoState
+
+			issue = issue || repoState.selectedIssue
+			assert(issue,'You must have an issue selected in order to edit one ;)')
+
+			issue = await fillIssue(issue,availableRepos)
+
+			actions.setEditingIssue(issue)
+			this.appActions.setDialogOpen(dialogName,true)
+		}
+	}
+
 
 
 	@Action()
@@ -383,7 +482,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			issue = cloneObject(issue)
 			actions.setIssue(issue)
 
-			const comments = await Repos.comment
+			const comments = await this.stores.comment
 				.findByIssue(issue)
 
 			actions.setComments(comments)
@@ -400,7 +499,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			const actions = this.withDispatcher(dispatch, getState)
 
 			// Issue repo
-			const issueRepo = Repos.issue
+			const issueRepo = this.stores.issue
 
 			// All the currently selected repos
 			const {availableRepos} = actions.state
@@ -418,7 +517,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			 * 2. Make sure we have a valid repo
 			 * 3. Copy transient repo,milestones,collaborators,etc
 			 */
-			const issuePromises = issues.map(issue => RepoActionFactory.fillIssue(issue,availableRepos))
+			const issuePromises = issues.map(issue => fillIssue(issue,availableRepos))
 
 			const filledIssues = await Promise.all(issuePromises)
 
@@ -430,3 +529,6 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	}
 
 }
+
+
+export default RepoActionFactory

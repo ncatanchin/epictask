@@ -1,18 +1,22 @@
+import {AutoWired, Inject} from 'typescript-ioc'
 import {ActionFactory,Action} from 'typedux'
-import {createClient} from 'shared/GitHubClient'
+import {GitHubClient} from 'shared/GitHubClient'
 import {AuthKey,GitHubConfig} from "shared/Constants"
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {AuthState,AuthMessage} from './AuthState'
 import {AppStateType} from 'shared/AppStateType'
 import {Settings} from 'shared/Settings'
-import {User} from 'shared/models/User'
 
-const {ipcRenderer} = require('electron')
 const log = getLogger(__filename)
-const gAppActions = new AppActionFactory()
 
-
+@AutoWired
 export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
+
+	@Inject
+	appActions:AppActionFactory
+
+	@Inject
+	client:GitHubClient
 
 	constructor() {
 		super(AuthState)
@@ -27,21 +31,16 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	setToken(token:string) {}
 
 	@Action()
-	setAuthenticating(authenticating:boolean) {
-	}
+	setAuthenticating(authenticating:boolean) {}
 
 	@Action()
-	setError(err:Error) {
-
-	}
+	setError(err:Error) {}
 
 	@Action()
 	verify() {
 		return async (dispatch,getState) => {
-			const client = createClient()
-			const user = await client.user()
-
-			const appActions = gAppActions.withDispatcher(dispatch,getState)
+			const appActions = this.appActions.withDispatcher(dispatch,getState)
+			const user = await this.client.user()
 
 			log.info(`Verified user as`,user)
 			const invalidUser = !user || !user.login
@@ -64,7 +63,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	logout() {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
-			const appActions = gAppActions.withDispatcher(dispatch,getState)
+			const appActions = this.appActions.withDispatcher(dispatch,getState)
 			actions.setToken(null)
 			appActions.setStateType(AppStateType.AuthLogin)
 		}
@@ -74,7 +73,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	authenticate() {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
-			const appActions = gAppActions.withDispatcher(dispatch,getState)
+			const appActions = this.appActions.withDispatcher(dispatch,getState)
 			actions.setAuthenticating(true)
 
 			return new Promise((resolve,reject) => {
@@ -117,3 +116,5 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 		}
 	}
 }
+
+export default AuthActionFactory

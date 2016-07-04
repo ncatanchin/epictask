@@ -263,7 +263,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			// Get data
 			availRepo = availRepoResult.value,
 			availRepoSelected = availRepo.enabled,
-			repo = availRepo.repo || repoActions.state.repos.find(item => item.id === availRepo.repoId)
+			repo = availRepo.repo || repoActions.state.stores.find(item => item.id === availRepo.repoId)
 
 		// The wrapper element with content inside
 		// Row 1: label

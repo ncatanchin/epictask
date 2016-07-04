@@ -1,22 +1,16 @@
 import {
 	ModelDescriptor,
 	AttributeDescriptor,
-	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	Repo as TSRepo
 } from 'typestore'
 
 import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
-//import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
-import * as uuid from 'node-uuid'
-import * as _ from 'lodash'
 
-import {Label,LabelRepo} from './Label'
-import {Milestone,MilestoneRepo} from './Milestone'
-import {User,UserRepo} from './User'
-import {Repo,RepoRepo} from './Repo'
-import {cloneObject} from '../util/ObjectUtil'
+import {Label,LabelStore} from './Label'
+import {Milestone,MilestoneStore} from './Milestone'
+import {User,UserStore} from './User'
+import {Repo,RepoStore} from './Repo'
 import {registerModel} from './Registry'
 
 export const AvailableRepoClassName = 'AvailableRepo'
@@ -63,9 +57,9 @@ export class AvailableRepo extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
+export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 	constructor() {
-		super(AvailableRepoRepo,AvailableRepo)
+		super(AvailableRepoStore,AvailableRepo)
 	}
 
 	@PouchDBFullTextFinder({
@@ -82,10 +76,10 @@ export class AvailableRepoRepo extends TSRepo<AvailableRepo> {
 
 	async load(availRepo:AvailableRepo):Promise<AvailableRepo> {
 		const
-			repoRepo = this.coordinator.getRepo(RepoRepo),
-			labelRepo = this.coordinator.getRepo(LabelRepo),
-			milestoneRepo = this.coordinator.getRepo(MilestoneRepo),
-			userRepo = this.coordinator.getRepo(UserRepo)
+			repoRepo = this.coordinator.getRepo(RepoStore),
+			labelRepo = this.coordinator.getRepo(LabelStore),
+			milestoneRepo = this.coordinator.getRepo(MilestoneStore),
+			userRepo = this.coordinator.getRepo(UserStore)
 
 		const filled = Object.assign({},availRepo)
 

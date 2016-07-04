@@ -1,11 +1,13 @@
 import 'reflect-metadata'
 import 'shared/ErrorHandling'
+import {Container} from 'typescript-ioc'
 import Electron = require('electron')
 const {app} = Electron
 
 // LOAD EVERYTHING
 //import {window as DevToolWindowType} from './MainDevToolWindow'
 import 'shared/Globals'
+import {MainConfigurator as MainConfiguratorType} from 'main/MainConfigurator'
 
 // LOGGING
 import './MainLogging'
@@ -49,7 +51,9 @@ async function boot() {
 	log.info("Boot start")
 	global.MainBooted = false
 
-	const configurator = require('./MainConfigurator')
+	const MainConfigurator = require('./MainConfigurator').default
+
+	const configurator:MainConfiguratorType = Container.get(MainConfigurator)
 
 	log.info("Boot init")
 	await configurator.init()

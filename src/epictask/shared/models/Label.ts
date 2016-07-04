@@ -37,9 +37,9 @@ export class Label extends DefaultModel {
 	}
 }
 
-export class LabelRepo extends TSRepo<Label> {
+export class LabelStore extends TSRepo<Label> {
 	constructor() {
-		super(LabelRepo,Label)
+		super(LabelStore,Label)
 	}
 
 	/**

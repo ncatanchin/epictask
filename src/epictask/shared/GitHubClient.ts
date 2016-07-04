@@ -1,3 +1,5 @@
+import {Container} from 'typescript-ioc'
+
 import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {Settings} from './Settings'
 import * as GitHubSchema from 'shared/models'
@@ -45,6 +47,7 @@ export interface RequestOptions {
  * GitHubClient for remote
  * API access
  */
+
 export class GitHubClient {
 
 	constructor(private token:string) {
@@ -268,3 +271,6 @@ export function createClient(token:string = null) {
 
 	return new GitHubClient(token)
 }
+
+
+Container.bind(GitHubClient).provider({ get: () => createClient()})

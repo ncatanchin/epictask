@@ -77,9 +77,9 @@ export class Issue extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class IssueRepo extends TSRepo<Issue> {
+export class IssueStore extends TSRepo<Issue> {
 	constructor() {
-		super(IssueRepo,Issue)
+		super(IssueStore,Issue)
 	}
 
 	@PouchDBFullTextFinder({

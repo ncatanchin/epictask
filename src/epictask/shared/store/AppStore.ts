@@ -194,6 +194,18 @@ export function initStore(devToolsMode = false) {
 	store = newStore
 	setStoreProvider(newStore)
 
+
+	// Initialize all action factories
+	if (!devToolsMode) {
+		const actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
+		actionCtx.keys()
+			.filter(key => !/AppActionFactory/.test(key))
+			.forEach(key => {
+				const mod:any = actionCtx(key)
+				const factory = mod.default
+				new factory()
+			})
+	}
 	return store
 }
 

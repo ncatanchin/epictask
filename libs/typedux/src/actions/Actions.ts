@@ -98,9 +98,14 @@ export function executeActionChain(leaf:string,name:string,action:Function,...ar
 	return executeActionInterceptor(0,leaf,name,action,args)
 }
 
+export type ActionFactoryDecorator<T> = (factory:{new():T}) => T
+
 export function registerAction(actionFactory:any,leaf:string,name:string,action:Function) {
-	registeredActions[`${leaf}:${name}`] = (...args) => {
-		const actions = new actionFactory()
+	registeredActions[`${leaf}:${name}`] = (decorator:ActionFactoryDecorator<any>,...args) => {
+		let actions = (decorator) ? decorator(actionFactory) : null
+		if (!actions)
+			actions =  new actionFactory()
+
 		return action.apply(actions,args)
 	}
 }

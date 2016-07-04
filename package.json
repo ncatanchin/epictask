@@ -220,6 +220,7 @@
     "stacktrace-js": "^1.3.0",
     "through2": "^2.0.1",
     "tinycolor2": "^1.3.0",
+    "typescript-ioc": "^0.2.3",
     "urlsearchparams": "densebrain/URLSearchParams",
     "utf8-encoding": "^0.1.2",
     "websql": "^0.4.4",

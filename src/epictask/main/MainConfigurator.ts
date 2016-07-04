@@ -1,120 +1,123 @@
 const log = getLogger(__filename)
 
+import {ObservableStore} from 'typedux'
+import {Singleton, AutoWired, Container} from 'typescript-ioc'
+import {IService, ServiceStatus} from './services/IService'
+
 // Get the DBService starter
-import * as DBServiceType from './db/DB'
-import * as ContextUtilsType from 'shared/util/ContextUtils'
+import DBService from 'main/services/DBService'
+import * as ContextUtils from 'shared/util/ContextUtils'
 
-let services = []
-let servicesCtx = null
+@AutoWired
+@Singleton
+export class MainConfigurator {
+	services:IService[] = []
+	servicesCtx = null
 
-function shutdown() {
-	return Promise.all(
-		services.map(service => service.stop ?
-			service.stop() : Promise.resolve(true)
-		)
-	).then(() => {
-		if (services.length)
-			log.info('All services are shutdown')
-
-	}).catch(err => {
-		log.error('service shutdowns failed',err)
-	})
-}
-
-
-/**
- * Find all services
- */
-function loadServices() {
-	servicesCtx = require.context('shared/actions',true,/Service\.ts/)
-}
-
-/**
- * Load all services context
- */
-loadServices()
-
-/**
- * Start all services
- *
- * @returns {{}}
- */
-async function startServices() {
-	log.info('Starting services')
-
-	const ContextUtils:typeof ContextUtilsType = require('shared/util/ContextUtils')
-
-	const Services = ContextUtils.requireContext(
-		servicesCtx,
-		[],
-		true
-	)
-
-	const serviceKeys = Object.keys(Services)
-	log.info('Discovered available services:', serviceKeys)
-
-	/**
-	 * Load all available services
-	 */
-	log.info('Waiting for all services to load')
-	for (let serviceKey of serviceKeys) {
-		log.info(`Starting service: ${serviceKey}`)
-		const service = Services[serviceKey]
-		if (service.start) {
-			log.info(`Starting Service ${serviceKey}`)
-			await service.start()
-		} else {
-			log.info(`Started Service ${serviceKey} (No start event)`)
-		}
+	loadServices() {
+		this.servicesCtx = require.context('main/services',true,/Service\.ts/)
 	}
 
-	return Services
-}
-
-/**
- * Initialize and load store
- */
-export async function init():Promise<any> {
-	log.info('Loading the REDUX store')
-	require('shared/store').initStore()
-	log.info('Store built')
-}
-
-/**
- * Start the app
- *
- * @returns {any}
- */
-export async function start():Promise<any> {
-
-	// Just in case this is an HMR reload
-	await shutdown()
-	services = []
-
-	// Load dependencies
-	const DBService:typeof DBServiceType = require('./db/DB.ts')
-
-
 	/**
-	 * Load the database FIRST
+	 * Start all services
+	 *
+	 * @returns {{}}
 	 */
-	log.info('Starting Database')
-	await DBService.start()
+	async startServices() {
+		log.info('Starting services')
 
-	return await startServices()
+		this.loadServices()
+		const Services = ContextUtils.requireContext(
+			this.servicesCtx,
+			[],
+			true
+		)
+
+		const serviceKeys = Object.keys(Services)
+		log.info('Discovered available services:', serviceKeys)
+
+		/**
+		 * Load all available services
+		 */
+		log.info('Waiting for all services to load')
+		for (let serviceKey of serviceKeys) {
+			if (['DBService','IService'].includes(serviceKey))
+				continue
+
+			log.info(`Starting service: ${serviceKey}`)
+			let service = Services[serviceKey]
+
+			if (service.default) {
+				service = Container.get(service.default)
+			}
+
+			if (service.status > ServiceStatus.Created) {
+				log.info(`${serviceKey} was already started, skipping`)
+				continue
+			}
+
+			const isService = !!service.status && !!service.start
+			assert(isService,"Services does not appear to implement IService")
+
+			if (service.init) {
+				log.info(`Init Service ${serviceKey}`)
+				await service.init()
+			}
+
+			if (service.start) {
+				log.info(`Starting Service ${serviceKey}`)
+				await service.start()
+			} else {
+				log.info(`Started Service ${serviceKey} (No start event)`)
+			}
+		}
+
+		return Services
+	}
+
+	async init():Promise<this> {
+		// Load Redux-Store FIRST
+		log.info('Loading the REDUX store')
+		const store:ObservableStore<any> = require('shared/store').initStore()
+		Container.bind(ObservableStore).provider({ get: () => store})
+
+		return this
+	}
+
+	async start():Promise<any> {
+
+		// Just in case this is an HMR reload
+		await this.stop()
+		this.services = []
+
+
+
+		// Load the database first
+		log.info('Starting Database')
+		const dbService = Container.get(DBService)
+		await dbService.init()
+		await dbService.start()
+
+		log.info('DB loaded, now services')
+		return await this.startServices()
+	}
+
+	stop() {
+		const stopPromises =
+			this.services.map(service => service.stop ?
+				service.stop() : Promise.resolve(service)
+			) as Promise<IService>[]
+
+		return Promise.all(stopPromises).then(() => {
+			if (this.services.length)
+				log.info('All services are shutdown')
+
+		}).catch(err => {
+			log.error('service shutdowns failed', err)
+		})
+	}
+
 }
 
-/**
- * If HMR is enabled then sign me up
- */
-if (module.hot) {
-	// module.hot.accept(['shared/store','./db/DB','shared/util/ContextUtils',servicesCtx.id], updates => {
-	// 	log.info('HMR updates received - rebooting', updates)
-	//
-	// 	loadServices()
-	// 	init().then(start)
-	//
-	// })
 
-
-}
+export default MainConfigurator

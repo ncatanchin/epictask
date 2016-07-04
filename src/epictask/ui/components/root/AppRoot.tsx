@@ -8,7 +8,10 @@ require('styles/split-pane.global.scss')
 // Logger
 const log = getLogger(__filename)
 
+import {AutoWired,Inject,Container} from 'typescript-ioc'
+
 //region Imports
+import {ObservableStore} from 'typedux'
 import * as Radium from 'radium'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
 import * as React from 'react'
@@ -19,9 +22,9 @@ import {MuiThemeProvider} from "material-ui/styles"
 import {PureRender} from 'ui/components/common'
 import {IssueEditDialog} from 'components/issues/IssueEditDialog'
 import {Header, HeaderVisibility, ToastMessages} from 'components'
-import {getStore,getDevTools} from 'shared/store/AppStore'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'shared/actions'
+import {RepoActionFactory} from 'shared/actions'
 import {AppStateType} from 'shared'
 import {Events,AppKey, RepoKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
@@ -38,9 +41,7 @@ try {
 
 
 // Build the container
-
-const store = getStore()
-const appActions = new AppActionFactory()
+const store = Container.get(ObservableStore)
 
 
 //region DEBUG Components/Vars
@@ -104,9 +105,16 @@ function mapStateToProps(state) {
 /**
  * Root App Component
  */
+@AutoWired
 @connect(mapStateToProps)
 @PureRender
 class App extends React.Component<IAppProps,any> {
+
+	@Inject
+	appActions:AppActionFactory
+
+	@Inject
+	repoActions:RepoActionFactory
 
 	pageBodyHolder
 
@@ -123,12 +131,12 @@ class App extends React.Component<IAppProps,any> {
 	keyHandlers = {
 		[KeyMaps.CommonKeys.New]: () => {
 			log.info('New issue keys pressed - making dialog visible')
-			appActions.newIssue()
+			this.repoActions.newIssue()
 		},
 
 		[KeyMaps.CommonKeys.Edit]: () => {
 			log.info('Edit issue keys pressed - making dialog visible')
-			appActions.editIssue()
+			this.repoActions.editIssue()
 		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')

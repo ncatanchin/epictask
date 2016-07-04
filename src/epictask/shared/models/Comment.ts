@@ -49,10 +49,10 @@ export class Comment extends DefaultModel {
 	}
 }
 
-export class CommentRepo extends TSRepo<Comment> {
+export class CommentStore extends TSRepo<Comment> {
 
 	constructor() {
-		super(CommentRepo,Comment)
+		super(CommentStore,Comment)
 	}
 
 	@PouchDBMangoFinder({

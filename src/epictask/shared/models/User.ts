@@ -66,9 +66,9 @@ export class User extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class UserRepo extends TSRepo<User> {
+export class UserStore extends TSRepo<User> {
 	constructor() {
-		super(UserRepo,User)
+		super(UserStore,User)
 	}
 
 

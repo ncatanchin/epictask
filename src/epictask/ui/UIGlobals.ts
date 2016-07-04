@@ -2,21 +2,13 @@ import ReactGlobal = require('react')
 import * as ReactDOMGlobal from 'react-dom'
 
 
-
-
-
-
-
 /**
  * Now the shared globals - this is required for propper logging config
  */
 require("shared/Globals")
 
 function logErrorGlobal(err:Error|string) {
-	require('shared/actions/toast/ToastService').addErrorMessage(err)
-	// const {AppActionFactory} =
-	// const actions = new AppActionFactory()
-	// actions.addErrorMessage(payload)
+	require('shared/Toaster').addErrorMessage(err)
 }
 
 
