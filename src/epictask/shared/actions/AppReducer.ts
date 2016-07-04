@@ -81,10 +81,8 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	addMessage(state:AppState,message:IToastMessage) {
-		return state.set(
-			'messages',
-			_.uniqueListBy(state.messages.push(message),'id')
-		)
+		const messageList = _.uniqueListBy(state.messages.push(message),'id')
+		return state.set('messages',messageList)
 	}
 
 	addErrorMessage(state:AppState,err:Error|string) {
@@ -105,9 +103,7 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	clearMessages(state:AppState) {
-		return state.set(
-			'messages',List()
-		)
+		return state.set('messages',List())
 	}
 
 	setMonitorState(state:AppState,monitorState:any) {
@@ -115,8 +111,6 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 	updateSettings(state:AppState,newSettings:ISettings) {
-		return state.set(
-			'settings', newSettings
-		)
+		return state.set('settings', newSettings)
 	}
 }

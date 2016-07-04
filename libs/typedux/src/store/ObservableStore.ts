@@ -28,6 +28,7 @@ export class ObservableStore<S extends State> implements Store<S> {
 		this.rootReducer = new RootReducer(...leafReducers)
 		this.rootReducerFn = this.rootReducer.makeGenericHandler()
 
+		return this.rootReducerFn
 		// <A extends ActionMessage<any>>(state:S,action:A):S => {
 		//
 		// 	return ((this.rootReducer) ?
@@ -85,8 +86,8 @@ export class ObservableStore<S extends State> implements Store<S> {
 	 * Update the reducers
 	 */
 	replaceReducers(...leafReducers:ILeafReducer<any,any>[]):void {
-		this.rootReducerFn = this.createRootReducer(...leafReducers)
-		this.store.replaceReducer(this.rootReducerFn)
+		const rootReducerFn = this.createRootReducer(...leafReducers)
+		this.store.replaceReducer(rootReducerFn)
 	}
 
 	/**

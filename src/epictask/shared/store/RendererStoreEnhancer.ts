@@ -103,7 +103,7 @@ function rendererStoreEnhancer(storeCreator) {
 			if (!patchJS) return
 
 			// Check if the patch numbers are in sync
-			const outOfSync = (patchNumber - 1 > lastPatchNumber)
+			const outOfSync = (patchNumber - 1 !== lastPatchNumber)
 
 			// Update the cached patch number
 			lastPatchNumber = patchNumber
