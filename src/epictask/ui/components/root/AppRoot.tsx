@@ -8,7 +8,7 @@ require('styles/split-pane.global.scss')
 // Logger
 const log = getLogger(__filename)
 
-import {AutoWired,Inject,Container} from 'typescript-ioc'
+import {AutoWired,Container} from 'typescript-ioc'
 
 //region Imports
 import {ObservableStore} from 'typedux'
@@ -21,6 +21,7 @@ import {MuiThemeProvider} from "material-ui/styles"
 
 import {PureRender} from 'ui/components/common'
 import {IssueEditDialog} from 'components/issues/IssueEditDialog'
+import {RepoAddDialog} from 'components/repos/RepoAddDialog'
 import {Header, HeaderVisibility, ToastMessages} from 'components'
 import {getPage} from 'components/pages'
 import {AppActionFactory} from 'shared/actions'
@@ -82,6 +83,7 @@ export interface IAppProps {
 	theme:any
 	stateType:AppStateType
 	hasAvailableRepos:boolean
+	dialogOpen:boolean
 	//adjustedBodyStyle:any
 }
 
@@ -92,12 +94,17 @@ export interface IAppProps {
  * @param state
  */
 function mapStateToProps(state) {
-	const appState = state.get(AppKey)
-	const {availableRepos} = state.get(RepoKey)
+	const
+		appState = state.get(AppKey),
+		{availableRepos} = state.get(RepoKey)
+
+	const dialogOpen = !_.isNil(appState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
+
 	return {
 		theme: getTheme(),//appState.theme,
 		stateType: appState.stateType,
 		hasAvailableRepos: availableRepos && availableRepos.size > 0,
+		dialogOpen
 		//adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
 }
@@ -110,16 +117,17 @@ function mapStateToProps(state) {
 @PureRender
 class App extends React.Component<IAppProps,any> {
 
-	@Inject
-	appActions:AppActionFactory
 
-	@Inject
+	appActions:AppActionFactory
 	repoActions:RepoActionFactory
 
 	pageBodyHolder
 
 	constructor(props, context) {
 		super(props, context)
+
+		this.appActions = Container.get(AppActionFactory)
+		this.repoActions = Container.get(RepoActionFactory)
 	}
 
 
@@ -150,7 +158,7 @@ class App extends React.Component<IAppProps,any> {
 	 */
 	render() {
 		//adjustedBodyStyle
-		const {hasAvailableRepos, stateType, theme} = this.props,
+		const {hasAvailableRepos, stateType,dialogOpen, theme} = this.props,
 			{palette} = theme
 
 		const page = {component: getPage(stateType)},
@@ -169,37 +177,41 @@ class App extends React.Component<IAppProps,any> {
 		}, expanded && styles.collapsed)
 		//endregion
 
+		let rootClasses = 'fill-height fill-width root-content'
+		if (dialogOpen)
+			rootClasses += ' dialog-open'
 
 		return (
-			<StyleRoot>
-				<MuiThemeProvider muiTheme={theme}>
-					<Provider store={store.getReduxStore()}>
-						<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
-							<IssueEditDialog />
 
-							{/* Global flex box */}
-							<div className="fill-height fill-width"
-							     style={makeStyle(styles.content,theme.app)}>
+			<MuiThemeProvider muiTheme={theme}>
+				<Provider store={store.getReduxStore()}>
+					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
+						<IssueEditDialog />
+						<RepoAddDialog />
 
-								<Header visibility={headerVisibility}/>
+						{/* Global flex box */}
+						<div className={rootClasses}
+						     style={makeStyle(styles.content,theme.app)}>
 
-								<HotKeys ref={(c) => this.pageBodyHolder = c}
-								         style={makeStyle(FlexScale,FlexColumn)}>
+							<Header visibility={headerVisibility}/>
 
-									<div style={contentStyles}>
-										<page.component />
-									</div>
+							<HotKeys ref={(c) => this.pageBodyHolder = c}
+							         style={makeStyle(FlexScale,FlexColumn)}>
 
-									{/* DevTools */}
-									{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
-									<ToastMessages/>
-								</HotKeys>
+								<div style={contentStyles}>
+									<page.component />
+								</div>
 
-							</div>
-						</HotKeys>
-					</Provider>
-				</MuiThemeProvider>
-			</StyleRoot>
+								{/* DevTools */}
+								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
+								<ToastMessages/>
+							</HotKeys>
+
+						</div>
+					</HotKeys>
+				</Provider>
+			</MuiThemeProvider>
+
 
 		)
 	}

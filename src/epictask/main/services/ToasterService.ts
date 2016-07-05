@@ -24,11 +24,14 @@ export default class ToastService implements IService {
 
 		_.toJS(newMessages).forEach(msg => {
 
-			const clearMessage = () => this.appActions.removeMessage(msg.id)
+			const
+				clearMessage = () => this.appActions.removeMessage(msg.id),
+				isError = msg.type === ToastMessageType.Error
+
 
 			// Dont add a remove timer for Error messages
-			if (msg.type === ToastMessageType.Error)
-				return
+			// if (msg.type === ToastMessageType.Error)
+			// 	return
 
 			if (this.pendingTimers[msg.id]) {
 				log.debug(`Timer already exists for message: ${msg.id}`)
@@ -36,7 +39,7 @@ export default class ToastService implements IService {
 			}
 
 			// Add the remove timer
-			this.pendingTimers[msg.id] = setTimeout(clearMessage, 5000)
+			this.pendingTimers[msg.id] = setTimeout(clearMessage, isError ? 20000 : 5000)
 		})
 	}
 

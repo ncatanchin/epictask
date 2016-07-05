@@ -141,10 +141,6 @@ if (module.hot) {
 				.filter(win => win !== newWindow && win !== devWindow)
 				.forEach(oldWindow => oldWindow.close())
 
-			// When it full loads we remove all the old ones
-			// newWindow.webContents.on('did-finish-load', () => {
-			//
-			// })
 		})
 
 	})

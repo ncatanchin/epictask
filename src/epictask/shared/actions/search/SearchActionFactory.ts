@@ -133,15 +133,19 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 							return
 						}
 
-						const repo = await createClient().repo(query)
-						log.info('GH repo result',repo)
-						if (repo) {
-							const repoState = repoActions.state
-							if (!repoState.stores.find(existingRepo => existingRepo.id === repo.id))
-								await repoActions.persistRepos([repo])
+						try {
+							const repo = await createClient().repo(query)
+							log.info('GH repo result', repo)
+							if (repo) {
+								const repoState = repoActions.state
+								if (!repoState.repos.find(existingRepo => existingRepo.id === repo.id))
+									await repoActions.persistRepos([repo])
 
-							repoResults.push(new SearchResult(repo))
-							actions.updateResults(SearchResultType.Repo,repoResults)
+								repoResults.push(new SearchResult(repo))
+								actions.updateResults(SearchResultType.Repo, repoResults)
+							}
+						} catch (err) {
+							log.info('Repo with explicity name not found',err)
 						}
 					}))
 

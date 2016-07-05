@@ -8,6 +8,8 @@ import * as React from 'react'
 import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
+import {AppState} from 'shared/actions/AppState'
+import {RepoState} from 'shared/actions/repo/RepoState'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Issue, AvailableRepo, Repo, Milestone, User, Label} from 'shared/models'
@@ -33,6 +35,7 @@ const styles = createStyles({
 	input: {
 		fontWeight: 700
 	},
+
 	title: makeStyle(FlexRowCenter, FillWidth, {
 		label: makeStyle(FlexScale),
 		avatar: makeStyle(FlexAuto, {
@@ -125,11 +128,14 @@ const styles = createStyles({
 
 
 function mapStateToProps(state) {
-	const appState = state.get(Constants.AppKey)
-	const repoState = state.get(Constants.RepoKey)
+	const appState = state.get(Constants.AppKey) as AppState
+	const repoState = state.get(Constants.RepoKey) as RepoState
 
-	const availableRepos = repoState.availableRepos,
-		issue = appState.editingIssue
+	const
+		open = appState.dialogs.get(Dialogs.IssueEditDialog),
+		availableRepos = repoState.availableRepos,
+		issue = repoState.editingIssue
+
 
 	return {
 		theme: getTheme(),
@@ -138,7 +144,7 @@ function mapStateToProps(state) {
 		availableRepos,
 		availableRepo: (!issue) ? null :
 			availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
-		open: appState.dialogs ? appState.dialogs.get(Dialogs.IssueEditDialog) : false
+		open
 
 	}
 
@@ -353,8 +359,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			{issue,theme,availableRepo, open, user} = this.props,
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 
-		if (!issue)
+		if (!issue || !open) {
+			if (open)
+				throw new Error('Open is true, but issue is null - invalid!!!!')
+
 			return null
+		}
 
 		const canPush = repo.permissions && repo.permissions.push
 
@@ -379,10 +389,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 
 		return <Dialog style={s.root}
-		               open={open || false}
+		               open={open}
 		               actions={actions}
 		               actionsContainerStyle={s.actions}
 		               modal={true}
+		               overlayStyle={s.backdrop}
 		               autoScrollBodyContent={true}
 		               bodyStyle={s.body}
 		               titleStyle={s.title}

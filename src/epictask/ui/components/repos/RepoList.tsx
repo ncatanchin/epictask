@@ -1,5 +1,5 @@
 
-import {RepoKey, AppKey} from 'shared/Constants'
+import {RepoKey} from 'shared/Constants'
 /**
  * Displays a list of repos
  */

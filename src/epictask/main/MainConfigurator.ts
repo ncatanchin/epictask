@@ -15,7 +15,7 @@ export class MainConfigurator {
 	servicesCtx = null
 
 	loadServices() {
-		this.servicesCtx = require.context('main/services',true,/Service\.ts/)
+		this.servicesCtx = require.context('main/services',true,/^(?!DBService|IService).*Service\.ts$/)
 	}
 
 	/**
@@ -72,6 +72,14 @@ export class MainConfigurator {
 			}
 		}
 
+
+		// HMR
+		if (module.hot) {
+			module.hot.accept([this.servicesCtx.id], updates => {
+				log.info('HMR Services updated: ', updates)
+			})
+		}
+
 		return Services
 	}
 
@@ -97,6 +105,8 @@ export class MainConfigurator {
 		const dbService = Container.get(DBService)
 		await dbService.init()
 		await dbService.start()
+
+
 
 		log.info('DB loaded, now services')
 		return await this.startServices()

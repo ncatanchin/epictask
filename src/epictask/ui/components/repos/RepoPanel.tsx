@@ -1,15 +1,16 @@
+
+
 /**
  * Created by jglanz on 5/30/16.
  */
 
 // Imports
+import {Container} from 'typescript-ioc'
 import * as React from 'react'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {TRepoState} from 'shared/actions/repo/RepoState'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {RepoList,Icon,Button} from 'components'
-import {Drawer,RaisedButton} from 'material-ui'
+import {Dialogs} from 'shared/Constants'
 import * as Radium from 'radium'
 
 // Key mapping tools
@@ -20,10 +21,10 @@ const {HotKeys} = require('react-hotkeys')
 // Constants
 const log = getLogger(__filename)
 //const styles = require("./RepoPanel.css")
-const repoActions = new RepoActionFactory()
+
 
 import { connect } from 'react-redux'
-import {AppKey} from '../../../shared/Constants'
+
 
 const styles = {
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{
@@ -87,23 +88,28 @@ function mapStateToProps(state) {
 
 
 /**
- * RepoDrawer
+ * RepoPanel
  *
- * @class RepoDrawer
+ * @class RepoPanel
  * @constructor
  **/
+
 @connect(mapStateToProps)
 @Radium
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
+
+
+	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
+	appActions:AppActionFactory = Container.get(AppActionFactory)
 
 	constructor(props, context) {
 		super(props, context)
 	}
 
 
-	onBlur = () => repoActions.clearSelectedRepos()
-	//onLogout = () => authActions.logout()
-	onAddRepo = () => log.info('add repo here')
+	onBlur = () => this.repoActions.clearSelectedRepos()
+
+	onAddRepoClicked = () => this.appActions.setDialogOpen(Dialogs.RepoAddDialog,true)
 
 	keyHandlers = {
 
@@ -126,12 +132,9 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 				<div style={panelStyle}>
 					<div style={headerStyle}>
 						<div style={s.headerTitle}>Repositories</div>
-						<Button style={headerButtonStyle} onClick={this.onAddRepo}>
+						<Button style={headerButtonStyle} onClick={this.onAddRepoClicked}>
 							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
 						</Button>
-						{/*<Button style={headerButtonStyle} onClick={this.onLogout}>*/}
-							{/*<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='sign-out'></Icon>*/}
-						{/*</Button>*/}
 					</div>
 					<div style={styles.listContainer}>
 						<RepoList />

@@ -69,6 +69,16 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 		return null
 	}
 
+
+	@PouchDBMangoFinder({
+		single: true,
+		indexFields: ['repoId'],
+		selector: (repoId) => ({repoId})
+	})
+	findByRepoId(repoId:number):Promise<AvailableRepo> {
+		return null
+	}
+
 	@PouchDBMangoFinder({all:true})
 	findAll():Promise<AvailableRepo[]> {
 		return null

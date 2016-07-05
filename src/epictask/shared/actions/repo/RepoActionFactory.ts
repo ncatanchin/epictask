@@ -43,9 +43,20 @@ export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) 
 	//issue = cloneObject(issue)
 
 	let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-	assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
-
 	const stores = Container.get(Stores)
+
+	if (!availRepo) {
+		log.warn('Available repo not loaded', issue.repoId,'for issue',issue.title,'with id',issue.id,'going to load direct form db')
+
+		const arStore = stores.availableRepo
+		availRepo = await arStore.findByRepoId(issue.repoId)
+		log.info(`Loaded available repo directly: ` + availRepo.repoId)
+	}
+
+
+	// assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
+
+
 
 	const filledAvailRepo = await stores.availableRepo.load(availRepo)
 
@@ -326,15 +337,24 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			}
 
 			const
-				availRepoRepo = this.stores.availableRepo,
+				repoStore = this.stores.repo,
+				availRepoStore = this.stores.availableRepo,
 				availRepo = new AvailableRepo({
 					id: uuid.v4(),
 					repoId: repo.id,
 					enabled: true
 				})
 
+			// Make sure the repo passed in exists in out
+			// local DB
+			let savedRepo = await repoStore.get(repo.id)
+			if (!savedRepo) {
+				log.info('Create available repo request with a repo that isnt in the db - probably direct query result from GitHUb, adding')
+				await repoStore.save(repo)
+			}
+
 			log.info('Saving new available repo as ',availRepo.id)
-			await availRepoRepo.save(availRepo)
+			await availRepoStore.save(availRepo)
 
 			actions.getAvailableRepos()
 			actions.syncRepoDetails(availRepo)
@@ -418,10 +438,13 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
+				{appActions} = actions,
 				dialogName = Dialogs.IssueEditDialog
 
 
-			if (actions.state.dialogs[dialogName]) {
+			// const appActions = Container.get(AppActionFactory)
+
+			if (appActions.state.dialogs[dialogName]) {
 				log.info('Dialog is already open',dialogName)
 				return
 			}
@@ -442,7 +465,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 			actions.setEditingIssue(issue)
 
-			this.appActions.setDialogOpen(dialogName,true)
+			appActions.setDialogOpen(dialogName,true)
 		}
 	}
 

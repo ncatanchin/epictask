@@ -81,6 +81,15 @@ body {
 
 #root {
 	overflow: hidden;
+
+	.root-content {
+		&.dialog-open {
+
+			-webkit-filter: blur(0.2rem); /* Chrome, Safari, Opera */
+			filter: blur(0.2rem);
+
+		}
+	}
 }
 
 ::-webkit-scrollbar {

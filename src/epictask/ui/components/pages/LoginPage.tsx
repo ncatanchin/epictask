@@ -7,7 +7,7 @@ import {Page} from './'
 
 const styles = {
 	page: makeStyle(FlexColumnCenter,FlexScale,{
-		WebkitAppRegion: 'drag'
+		// WebkitAppRegion: 'drag'
 	}),
 
 	panel: makeStyle(FlexAuto,FlexColumn,{

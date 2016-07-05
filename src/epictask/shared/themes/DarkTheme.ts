@@ -196,6 +196,14 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 	},
 
+	repoAddDialog: {
+		container: {
+			// boxShadow: `0 0 1rem ${accent.hue1}`,
+			boxShadow: `0 0 1rem ${text.primary}`,
+			minHeight: 50
+		}
+	},
+
 	header: {
 		logoWrapper:    {
 			height: navBarHeight

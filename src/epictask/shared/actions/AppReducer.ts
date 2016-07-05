@@ -4,7 +4,6 @@ import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "shared/Constants"
 import {AppState} from './AppState'
 import {User} from 'shared/models/User'
-import {Issue} from '../models/Issue'
 import {AppStateType} from '../AppStateType'
 import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
 import {ISettings} from '../Settings'
@@ -53,12 +52,6 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 		return state.merge({ready})
 	}
 
-	setEditingIssue(state:AppState,issue:Issue) {
-		return state.set(
-			'editingIssue',
-			issue
-		)
-	}
 
 	setDialogOpen(state:AppState,name:string,open:boolean) {
 		return state.set(

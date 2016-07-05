@@ -58,12 +58,9 @@ const styles = {
 	logo: makeStyle(makeTransition(), PositionAbsolute, {
 		top:'50%',
 		left:'50%',
-
 		height:             '70%',
 		width:              'auto',
 		maxWidth:           '70%',
-
-
 		transform:          'translate(-50%,-50%)'
 
 	}),
@@ -168,12 +165,7 @@ export class Header extends React.Component<IHeaderProps,any> {
 		const controlStyle = makeStyle(theme.header.controlStyle,styles.controlButton)
 
 		return <div style={headerStyle} id='header'>
-			{/*<div style={styles.controls} className='window-controls'>*/}
-				{/*<button className="close fa fa-times" style={controlStyle} onClick={this.windowClose}/>*/}
-				{/*<button className="min fa fa-minus" style={controlStyle} onClick={this.windowMin}/>*/}
-				{/*<button className="max fa fa-plus" style={controlStyle} onClick={this.windowMax}/>*/}
-			{/*</div>*/}
-			<SearchPanel inlineResults={expanded} expanded={expanded}/>
+			<SearchPanel inlineResults={expanded} expanded={expanded} mode={expanded ? 'repos' : 'issues'}/>
 			<div style={logoWrapperStyle}>
 				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
 				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}

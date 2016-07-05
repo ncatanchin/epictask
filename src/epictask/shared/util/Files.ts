@@ -16,7 +16,7 @@ const protos = [fileProto,httpProto,httpProto]
 
 
 const userDataPath = app.getPath('userData')
-const cachePath = `${userDataPath}/caches`
+const cachePath = `${userDataPath}/Cache`
 const tempPath = app.getPath('temp')
 
 log.info(`Using cache path: ${cachePath}`)

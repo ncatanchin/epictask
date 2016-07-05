@@ -130,7 +130,7 @@ export interface ISearchResultsListProps {
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	results?:SearchResult<any>[]
+	results:SearchResult<any>[]
 	onResultSelected?:(result:SearchResult<any>) => void
 	onResultHover?:(result:SearchResult<any>) => void
 }
@@ -138,8 +138,8 @@ export interface ISearchResultsListProps {
 function mapStateToProps(state) {
 	const searchState = state.get(SearchKey)
 	return {
-		theme: getTheme(),
-		results: searchState.results
+		theme: getTheme()
+
 	}
 }
 

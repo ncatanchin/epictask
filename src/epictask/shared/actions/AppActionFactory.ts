@@ -5,10 +5,8 @@ import {AppStateType} from 'shared/AppStateType'
 import {AppKey, Dialogs, RepoKey,RepoTransientProps} from "shared/Constants"
 import {IToastMessage} from 'shared/models/Toast'
 import {ISettings} from 'shared/Settings'
-import {Issue} from 'shared/models/Issue'
 import {AppState} from './AppState'
 import {User} from 'shared/models/User'
-import {cloneObject} from 'shared/util'
 
 
 const log = getLogger(__filename)

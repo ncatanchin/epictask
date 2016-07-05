@@ -9,11 +9,10 @@ import {connect} from 'react-redux'
 import {SearchKey, AppKey} from 'shared/Constants'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResult} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchState} from 'shared/actions/search/SearchState'
 
 
 import {SearchResultsList} from './SearchResultsList'
-import {isIssue} from 'shared/models'
 
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
@@ -36,6 +35,9 @@ export interface ISearchPanelProps {
 	results?:SearchResult<any>[],
 	query?:string
 	theme?:any
+	hidden?:boolean
+	mode:"repos"|"issues"
+	onResultSelected?:(result:SearchResult<any>) => void
 }
 
 export interface ISearchPanelState {
@@ -44,13 +46,12 @@ export interface ISearchPanelState {
 }
 
 function mapStateToProps(state) {
-	const searchState = state.get(SearchKey)
+	const searchState = state.get(SearchKey) as SearchState
 	const {query, results} = searchState
 	return {
 		theme:      getTheme(),
         query,
         results
-
 	}
 }
 
@@ -129,7 +130,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param result
 	 */
-	onSelect = (result:SearchResult<any> = null) => {
+	onResultSelected = (result:SearchResult<any> = null) => {
 		if (!result) {
 			const {selectedIndex} = this.state
 			const {results} = this.props
@@ -147,6 +148,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		}
 		searchActions.select(result)
 		this.setState({focused: false})
+
+		if (this.props.onResultSelected)
+			this.props.onResultSelected(result)
 	}
 
 	onHover = (result:SearchResult<any>) => {
@@ -180,7 +184,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	keyHandlers = {
 		[Keys.MoveUp]: () => this.moveSelection(-1),
 		[Keys.MoveDown]:() => this.moveSelection(1),
-		[Keys.Enter]: () => this.onSelect()
+		[Keys.Enter]: () => this.onResultSelected()
 
 	}
 
@@ -190,24 +194,33 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	render() {
-		const {expanded, theme, query} = this.props
+		const {expanded, theme,query,results,hidden} = this.props
 		const {searchPanel:spTheme} = theme
 		const focused = this.state.focused
-		const resultsOpen = (query && query.length > 0) && focused
+		const resultsOpen = (results.length ||
+			(query && query.length > 0)) &&
+				focused && !hidden
 
-		const panelClazz = expanded ? styles.searchPanelExpanded :
+		// Panel styles
+		const panelClazz = expanded ?
+			styles.searchPanelExpanded :
 			styles.searchPanel
 
 		const panelStyle = Object.assign({}, spTheme.wrapperStyle, expanded ? spTheme.wrapperExpandedStyle : {})
+
 		if (focused)
 			Object.assign(panelStyle, spTheme.focusedStyle)
 
+		// Wrapper Styles
 		const wrapperClazz = expanded ? styles.searchWrapperExpanded :
 			styles.searchWrapper
 
+		// Input Styles
 		const inputStyle = Object.assign({}, spTheme.style, focused ? spTheme.focusedStyle : {}, {
 
 		})
+
+		// Focused Styles
 		const focusedClazz = focused ? ' ' + styles.focused : ''
 
 
@@ -222,7 +235,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				<TextField
 					hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 					onChange={this.onInputChange}
-
 					inputStyle={inputStyle}
 					defaultValue={this.props.query}
 				/>
@@ -231,8 +243,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				                   selectedIndex={this.state.selectedIndex}
 				                   open={resultsOpen}
 				                   inline={expanded}
+				                   results={results}
 				                   onResultHover={this.onHover}
-				                   onResultSelected={this.onSelect}
+				                   onResultSelected={this.onResultSelected}
 				                   containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}
 				                   className={styles.results}
 				/>

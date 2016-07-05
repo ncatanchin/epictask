@@ -59,6 +59,14 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 		return state.set('issue',issue)
 	}
 
+
+	setEditingIssue(state:RepoState,issue:Issue) {
+		return state.set(
+			'editingIssue',
+			issue
+		)
+	}
+
 	setComments(state:RepoState,comments:Comment[]) {
 		return state.set('comments',_.uniqueListBy(List<Comment>(comments),'id'))
 

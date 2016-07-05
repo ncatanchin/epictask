@@ -154,9 +154,8 @@ function processNotifications(newMessages) {
 			const notification = new Notification('epictask',{
 				title: 'epictask',
 				body: msg.content,
-				//icon: IconDataUrl,
 				tag: msg.id,
-
+				//icon: IconDataUrl,
 				//sticky: true,
 
 			})
