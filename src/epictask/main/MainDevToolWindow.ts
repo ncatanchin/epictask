@@ -19,7 +19,7 @@ const window = new BrowserWindow(Object.assign({}, devWindowState, {
 
 devWindowState.manage(window)
 
-window.webContents.openDevTools()
+//window.webContents.openDevTools()
 window.loadURL(makeMainDevToolsTemplate())
 
 export { window }

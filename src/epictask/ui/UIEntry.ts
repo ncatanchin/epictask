@@ -1,16 +1,16 @@
-// require('shared/SourceMapSupport')
 import 'reflect-metadata'
+
+// Load all global/env stuff first
+// LOGGING CONFIG FIRST
+require('shared/LogConfig')
+require('./UILogging')
+require('./UIGlobals')
 
 import {ObservableStore} from 'typedux'
 import {Container} from 'typescript-ioc'
 
 
-// Load all global/env stuff first
-// LOGGING CONFIG FIRST
-require('shared/LogConfig')
 
-require('./UILogging')
-require('./UIGlobals')
 
 
 

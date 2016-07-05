@@ -119,3 +119,8 @@ class SettingsFile implements ISettings {
 
 export const Settings = new SettingsFile()
 export default Settings
+
+
+if (module.hot) {
+	module.hot.accept()
+}

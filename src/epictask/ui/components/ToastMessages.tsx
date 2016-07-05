@@ -10,11 +10,10 @@ import {List} from 'immutable'
 import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
-import {AppKey} from 'shared/Constants'
+import {AppKey,IconDataUrl} from 'shared/Constants'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {AppActionFactory} from 'shared/actions'
 import {Icon, Button} from 'ui/components'
-import {filePathToUrl, absoluteFilename} from 'shared/util/Files'
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
@@ -113,8 +112,15 @@ export interface IToastMessagesProps {
 
 let lastMessages = null
 const messageNotifications = {}
-//const iconImageRaw = require('!!raw!assets/images/epictask-logo-rainbow-square.png')
 
+
+
+/**
+ * Process current notifications
+ *
+ * @param newMessages
+ */
+//TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
 function processNotifications(newMessages) {
 	if (newMessages === lastMessages)
 		return
@@ -148,12 +154,11 @@ function processNotifications(newMessages) {
 			const notification = new Notification('epictask',{
 				title: 'epictask',
 				body: msg.content,
-				icon: filePathToUrl(require('assets/images/epictask-logo-rainbow-square.png')),
+				//icon: IconDataUrl,
+				tag: msg.id,
 
 				//sticky: true,
-				// tag: msg.id,
-				//icon: absoluteFilename(require('assets/images/epictask-logo-rainbow-square.png')),
-				//icon: dataUrl({mimetype:'image/png',data:iconImageRaw}),
+
 			})
 
 
@@ -167,6 +172,8 @@ function processNotifications(newMessages) {
 			messageNotifications[msg.id] = notification
 
 		})
+
+
 }
 
 //region Redux State -> Props Mapper

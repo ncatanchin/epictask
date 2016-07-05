@@ -7,10 +7,12 @@ const LogLevel = {
 }
 
 module.exports = {
+	ObservableStore: LogLevel.INFO,
+	AppStore: LogLevel.INFO,
 	RootReducer: LogLevel.INFO,
 	ModelDecorations: LogLevel.INFO,
 	GitHubClient: LogLevel.INFO,
 	RepoActionFactory: LogLevel.INFO,
 	LunrIndex: LogLevel.DEBUG,
-	Files: LogLevel.DEBUG
+	Files: LogLevel.INFO
 }

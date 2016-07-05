@@ -56,7 +56,7 @@ if (!Array.isEqual) {
 }
 
 
-if (!Array.prototype.size) {
+if (!Object.getOwnPropertyDescriptor(Array.prototype,'size')) {
 	Object.defineProperty(Array.prototype,'size',{
 		get: function() {
 			return this.length

@@ -55,7 +55,7 @@ const styles = {
 		padding: `0.1rem 0.8rem`
 	},
 
-	result: makeStyle(makeTransition(),FlexRowCenter,{
+	result: makeStyle(makeTransition(),FlexRowCenter,FillWidth,{
 		padding: `1rem 1rem`,
 		cursor: 'pointer'
 	}),
@@ -331,7 +331,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				)
 
 				return (
-					<div key={result.value.id}
+					<div key={result.index}
 					     className={isSelected && 'selected'}
 					     style={resultStyle}
 					     onMouseEnter={() => onResultHover && onResultHover(result)}

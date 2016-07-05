@@ -24,6 +24,7 @@ export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
 	}
 
 	setResults(state:SearchState,newResults:List<SearchResult<any>>) {
+
 		return state.set('results',newResults)
 	}
 

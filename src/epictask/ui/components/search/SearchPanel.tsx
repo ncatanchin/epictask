@@ -9,8 +9,8 @@ import {connect} from 'react-redux'
 import {SearchKey, AppKey} from 'shared/Constants'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
+import {SearchResult} from 'shared/actions/search/SearchState'
+
 
 import {SearchResultsList} from './SearchResultsList'
 import {isIssue} from 'shared/models'
@@ -159,14 +159,17 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	setSelectedIndex = (selectedIndex) => {
 		const {results} = this.props
-		const endIndex = results ? results.length - 1 : 0
+		const endIndex = Math.max(results ? results.size - 1 : 0,0)
 
 
-		selectedIndex = selectedIndex < 0 ? endIndex :
+
+		const newSelectedIndex = selectedIndex < 0 ? endIndex :
 			(selectedIndex > endIndex) ? 0 :
 				selectedIndex
 
-		this.setState({selectedIndex})
+
+		log.info('selectedIndex',selectedIndex,'newSelectedIndex',newSelectedIndex,'endIndex',endIndex,'results',results)
+		this.setState({selectedIndex:newSelectedIndex})
 	}
 
 	moveSelection = (increment:number) => {

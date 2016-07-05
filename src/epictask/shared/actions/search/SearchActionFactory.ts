@@ -2,7 +2,7 @@ import {ActionFactory,Action} from 'typedux'
 import {SearchKey} from "shared/Constants"
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 
-import {SearchMessage,SearchState, SearchResult, SearchResultType} from './SearchState'
+import {SearchMessage,SearchState, SearchResult, TSearchResult,SearchResultType} from './SearchState'
 import {Repo, Issue, RepoStore, AvailableRepoStore, AvailableRepo} from 'shared/models'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import {Stores} from 'main/services/DBService'
@@ -70,11 +70,17 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	 * @returns {function(any, any): undefined}
 	 */
 	@Action()
-	updateResults(type: SearchResultType, newItems:SearchResult<Repo|AvailableRepo|Issue>[]) {
+	updateResults(type: SearchResultType, newItems:TSearchResult[]) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
-			actions.setResults(List(newItems))
+			// Index the results
+			const indexedItems = newItems.map((item,index) => {
+				item.index = index
+				return item
+			})
+
+			actions.setResults(_.uniqueListBy(List(indexedItems),'value','id'))
 
 		}
 	}

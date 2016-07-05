@@ -3,6 +3,7 @@ import 'shared/ErrorHandling'
 import {Container} from 'typescript-ioc'
 import Electron = require('electron')
 const {app} = Electron
+import {RemoteDebuggingPort} from 'shared/Constants'
 
 // LOAD EVERYTHING
 //import {window as DevToolWindowType} from './MainDevToolWindow'
@@ -12,11 +13,6 @@ import {MainConfigurator as MainConfiguratorType} from 'main/MainConfigurator'
 // LOGGING
 import './MainLogging'
 const log = getLogger(__filename)
-
-
-
-
-
 
 // Main window ref
 let mainWindow:any
@@ -33,7 +29,7 @@ log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
  * In debug mode enable remote debugging
  */
 if (DEBUG) {
-	app.commandLine.appendSwitch('remote-debugging-port', '8315');
+	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort);
 }
 
 
@@ -128,6 +124,12 @@ if (shouldQuit) {
 if (module.hot) {
 	console.info('Setting up HMR')
 
+	// When constants change - ignore
+	module.hot.accept(['shared/Constants'], () => {
+		log.warn('Constants updated - maybe restart?? - up to you')
+	})
+
+	// Main window or configurator - reboot app
 	module.hot.accept(['./MainWindow','./MainConfigurator'], (mods) => {
 		log.info("Rebooting main, updated dependencies",mods)
 
@@ -146,5 +148,8 @@ if (module.hot) {
 		})
 
 	})
+
+	// Worst case - accept myself??
+	module.hot.accept()
 
 }

@@ -7,6 +7,8 @@ import {ActionMessage} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {registerModel} from 'shared/models/Registry'
 
+export type TSearchResult = SearchResult<Repo|AvailableRepo|Issue>
+
 export enum SearchResultType {
 	Issue = 1,
 	Repo,
