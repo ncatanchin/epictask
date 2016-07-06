@@ -9,11 +9,12 @@ import * as ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
-import {SearchResult, SearchResultType} from '../../../shared/actions/search/SearchState'
-import {RepoActionFactory} from '../../../shared/actions/repo/RepoActionFactory'
-import {Renderers} from '../common'
+
+import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {Renderers} from 'shared/common'
 import * as Radium from 'radium'
-import {AppKey, SearchKey} from '../../../shared/Constants'
+import {AppKey, SearchKey} from 'shared/Constants'
 
 // Constants
 const log = getLogger(__filename)
@@ -25,6 +26,7 @@ const repoActions = new RepoActionFactory()
 
 const doc = document
 const {body} = doc
+
 
 
 //region Styles

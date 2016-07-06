@@ -1,5 +1,6 @@
 import {startElectron} from './tools/electron-dev-spawn'
-import {makeTsConfig} from './tools/ts-config'
+import {makeTsConfigBase,makeTsConfig} from './tools/ts-config'
+
 
 const {Deferred,TargetType,RunMode,log,isDev,env} = global
 const path = require('path')
@@ -8,6 +9,7 @@ const getPort = require('get-port')
 const rendererReady = new Deferred()
 const gutil = require('gulp-util')
 
+makeTsConfigBase()
 
 const projectElectronMain = {
 	targetType: TargetType.ElectronMain,
