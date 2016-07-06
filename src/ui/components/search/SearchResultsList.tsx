@@ -12,7 +12,7 @@ import {Issue,Repo,AvailableRepo} from 'shared/models'
 
 import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {Renderers} from 'shared/common'
+import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
 import {AppKey, SearchKey} from 'shared/Constants'
 

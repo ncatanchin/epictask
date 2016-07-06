@@ -1,5 +1,5 @@
 const path = require('path')
-
+const fs = require('fs')
 
 const tsConfigBaseFile = () => `${baseDir}/src/tsconfig.json`
 
@@ -11,7 +11,9 @@ export function makeTsConfigBase() {
 	})
 
 	writeJSONFileSync(tsConfigBaseFile(),templateConfig)
-
+	const rootTsConfigFile = `${baseDir}/tsconfig.json`
+	fs.unlinkSync(rootTsConfigFile)
+	fs.linkSync(tsConfigBaseFile(),rootTsConfigFile)
 }
 
 export function makeTsConfig(dest,typingMode,...extraOpts) {
@@ -19,10 +21,10 @@ export function makeTsConfig(dest,typingMode,...extraOpts) {
 
 	const baseConfig = readJSONFileSync(tsConfigBaseFile())
 
-	Object.assign(baseConfig.compilerOptions,{
-		baseUrl: `./src`,
-		outDir: `../dist`
-	})
+	// Object.assign(baseConfig.compilerOptions,{
+	// 	baseUrl: `./src`,
+	// 	outDir: `../dist`
+	// })
 
 	Object.assign(baseConfig,{
 		// exclude: baseConfig.exclude.map(excludePath => path
