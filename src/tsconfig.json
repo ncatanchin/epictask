@@ -1,0 +1,86 @@
+{
+	"compilerOptions": {
+		"target": "es6",
+		"lib": ["es2015","es5","es6","es7","dom"],
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"declaration": false,
+		"emitDecoratorMetadata": true,
+		"jsx": "react",
+		"experimentalDecorators": true,
+		"preserveConstEnums": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"outDir": "../dist",
+		"paths": {
+			"epictask/*": [
+				"./*"
+			],
+			"ui": [
+				"./ui/index.ts"
+			],
+			"ui/*": [
+				"./ui/*"
+			],
+			"shared": [
+				"./shared/index.ts"
+			],
+			"shared/*": [
+				"./shared/*"
+			],
+			"main": [
+				"./main/index.ts"
+			],
+			"main/*": [
+				"./main/*"
+			],
+			"components": [
+				"./ui/components/index.ts"
+			],
+			"components/*": [
+				"./ui/components/*"
+			],
+			"typedux": [
+				"../libs/typedux/src/index.ts"
+			],
+			"typedux/*": [
+				"../libs/typedux/src/*"
+			],
+			"typemutant": [
+				"../libs/typemutant/src/index.ts"
+			],
+			"typemutant/*": [
+				"../libs/typemutant/src/*"
+			],
+			"typelogger": [
+				"../libs/typelogger/src/index.ts"
+			],
+			"typelogger/*": [
+				"../libs/typelogger/src/*"
+			],
+			"typestore": [
+				"../libs/typestore/packages/typestore/src/index.ts"
+			],
+			"typestore/*": [
+				"../libs/typestore/packages/typestore/src/*"
+			],
+			"typestore-mocks": [
+				"../libs/typestore/packages/typestore-mocks/src/index.ts"
+			],
+			"typestore-mocks/*": [
+				"../libs/typestore/packages/typestore-mocks/src/*"
+			],
+			"typestore-plugin-pouchdb": [
+				"../libs/typestore/packages/typestore-plugin-pouchdb/src/index.ts"
+			],
+			"typestore-plugin-pouchdb/*": [
+				"../libs/typestore/packages/typestore-plugin-pouchdb/src/*"
+			]
+		}
+	},
+	"exclude": [
+		"../libs/**/typings",
+		"../node_modules",
+		"../typings"
+	]
+}

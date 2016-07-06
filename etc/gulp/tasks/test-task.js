@@ -1,5 +1,5 @@
 
-const mocha = require('gulp-mocha')
+const electronMocha = require('gulp-electron-mocha')
 
 /**
  * Create a test task
@@ -27,7 +27,7 @@ function makeMochaTask(tests = null) {
 /**
  * Create 'test-all'
  */
-gulp.task('test',[],makeMochaTask())
+gulp.task('test-main',[],makeMochaTask())
 
 /**
  * Export task creator for individual test tasks

@@ -5,12 +5,12 @@ module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
 	const entries = {
-		"UIEntry": ['babel-polyfill', "./src/epictask/ui/UIEntry"]
+		"UIEntry": ['babel-polyfill', "./src/ui/UIEntry"]
 	}
 
 	// In DEV add the UIDevEntry
 	if (isDev) {
-		entries.UIDevEntry =  ['babel-polyfill', "./src/epictask/ui/UIDevEntry"]
+		entries.UIDevEntry =  ['babel-polyfill', "./src/ui/UIDevEntry"]
 	}
 
 	return Object.assign(config, {

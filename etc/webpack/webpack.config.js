@@ -42,21 +42,14 @@ module.exports = function (projectConfig) {
 
 			alias: _.assign({
 				assert: 'browser-assert',
-				epictask: path.resolve(baseDir,'src/epictask'),
-				styles: path.resolve(baseDir,'src/epictask/assets/styles'),
-				assets: path.resolve(baseDir,'src/epictask/assets'),
-				components: path.resolve(baseDir,'src/epictask/ui/components'),
-				ui: path.resolve(baseDir,'src/epictask/ui'),
-				shared: path.resolve(baseDir,'src/epictask/shared'),
-				//simplemde: path.resolve(baseDir,'node_modules/simplemde/src/js/simplemde.js'),
-				main: path.resolve(baseDir,'src/epictask/main'),
-				// "typedux": path.resolve(baseDir,"../typedux/src/index.ts"),
-				// "typemutant": path.resolve(baseDir,"../typemutant/src/index.ts"),
-				// "typelogger": path.resolve(baseDir,"../typelogger/src/index.ts"),
-				// "typestore": path.resolve(baseDir,"../typestore/packages/typestore/src/index.ts"),
-				// "typestore-mocks": path.resolve(baseDir,"../typestore/packages/typestore-plugin-mocks/src/index.ts"),
-				// "typestore-plugin-indexeddb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-indexeddb/src/index.ts"),
-				// "typestore-plugin-pouchdb": path.resolve(baseDir,"../typestore/packages/typestore-plugin-pouchdb/src/index.ts")
+				epictask: path.resolve(baseDir,'src'),
+				styles: path.resolve(baseDir,'src/assets/styles'),
+				assets: path.resolve(baseDir,'src/assets'),
+				components: path.resolve(baseDir,'src/ui/components'),
+				ui: path.resolve(baseDir,'src/ui'),
+				shared: path.resolve(baseDir,'src/shared'),
+				main: path.resolve(baseDir,'src/main'),
+
 			},
 				libAlias('typedux','typedux/src/index.ts'),
 				libAlias('typemutant','typemutant/src/index.ts'),
@@ -90,7 +83,7 @@ module.exports = function (projectConfig) {
 
 		// SASS/SCSS Loader Config
 		sassLoader: {
-			includePaths: [path.resolve(baseDir, "./src/epictask/assets")]
+			includePaths: [path.resolve(baseDir, "./src/assets")]
 		},
 
 		plugins: [

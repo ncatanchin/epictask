@@ -38,9 +38,6 @@ function makeTypeScriptConfig(project,isGlobalConfig = false) {
 	if (isGlobalConfig) {
 		const globalSrcs = tsConfig.filesGlob = makeSrcGlobs(null,null,true)
 
-		// tsConfig.files = globalSrcs.reduce((allFiles,pattern) => {
-		// 	return allFiles.concat(glob.sync(pattern))
-		// },[])
 
 		log.info('Global src list',globalSrcs,tsConfig.files)
 	}

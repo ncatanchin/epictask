@@ -1,0 +1,13 @@
+@import "vars.global";
+@import 'vendor-prefix.global';
+
+/**
+@param propertyType - single property or comma delimited and quoted
+*/
+@mixin make-default-transition($property-type: 'all', $time: $default-transition-time, $easing: $default-transition-easing) {
+	@if $time == "short" {
+		$time: 0.15s;
+	}
+	@include transition(none $time $easing);
+	@include transition-property(unquote($property-type));
+}

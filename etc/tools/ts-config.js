@@ -1,18 +1,26 @@
-
+const path = require('path')
 
 
 export function makeTsConfig(dest,typingMode,...extraOpts) {
-	const baseConfig = readJSONFileSync(`${baseDir}/tsconfig.json`)
+	const baseConfig = readJSONFileSync(`${baseDir}/src/tsconfig.json`)
+
+	Object.assign(baseConfig.compilerOptions,{
+		baseUrl: `./src`,
+		outDir: `../dist`
+	})
+
+	Object.assign(baseConfig,{
+		// exclude: baseConfig.exclude.map(excludePath => path
+		// 	.relative(
+		// 		baseDir,
+		// 		path.resolve(`${baseDir}/src`,excludePath)
+		// 	))
+		exclude: baseConfig.exclude.map(excludePath => {
+			return _.startsWith(excludePath,'../') ? excludePath.substring(3) : excludePath
+		})
+	})
 	const tsConfigJson = _.merge({},baseConfig,...extraOpts)
 
-	// tsConfigJson.exclude = tsConfigJson.exclude.concat(
-	// 	typingMode === 'main' ? [
-	// 		"typings/browser",
-	// 		"typings/browser.d.ts"
-	// 	] : [
-	// 		"typings/main",
-	// 		"typings/main.d.ts"
-	// 	])
 	writeJSONFileSync(dest,tsConfigJson)
 	return dest
 }

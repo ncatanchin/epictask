@@ -9,6 +9,54 @@ const rendererReady = new Deferred()
 const gutil = require('gulp-util')
 
 
+const projectElectronMain = {
+	targetType: TargetType.ElectronMain,
+	tsconfig: makeTsConfig(
+		`${baseDir}/.tsconfig.main.json`,
+		'main',
+		require('./awesome-typescript-loader-options')({
+			instanceName:'electron-main'
+		})
+	),
+	onCompileCallback(err,stats,watchMode = false) {
+		log.info('Compile callback main!!!',err,isDev,watchMode)
+		if (err) {
+			log.error(`electron main failed to compile, can not start`)
+			return
+		}
+
+		if (!watchMode && !isDev) {
+			log.info('we only autostart electron in dev or watch modes')
+		}
+
+		//rendererReady.promise.then(startElectron)
+	}
+}
+
+const projectElectronRenderer = {
+	targetType: TargetType.ElectronRenderer,
+	tsconfig: makeTsConfig(
+		`${baseDir}/.tsconfig.renderer.json`,
+		'browser',
+		require('./awesome-typescript-loader-options')({
+			instanceName:'electron-renderer'
+		}),
+		{
+			"compilerOptions": {
+				"jsx": "react"
+			},
+		}
+	),
+	port: 4444,
+	onCompileCallback(err,stats) {
+		if (err)
+			return
+
+		log.info('Renderer ready')
+		rendererReady.resolve(true)
+	}
+}
+
 
 function makeConfigs() {
 
@@ -17,57 +65,13 @@ function makeConfigs() {
 		/**
 		 * Configuring electron.main project/package
 		 */
-		"electron-main": {
-			targetType: TargetType.ElectronMain,
-			tsconfig: makeTsConfig(
-				`${baseDir}/.tsconfig.main.json`,
-				'main',
-				require('./awesome-typescript-loader-options')({
-				// instanceName:'electron-main'
-				})
-			),
-			onCompileCallback(err,stats,watchMode = false) {
-				log.info('Compile callback main!!!',err,isDev,watchMode)
-				if (err) {
-					log.error(`electron main failed to compile, can not start`)
-					return
-				}
-
-				if (!watchMode && !isDev) {
-					log.info('we only autostart electron in dev or watch modes')
-				}
-
-				//rendererReady.promise.then(startElectron)
-			}
-		},
+		"electron-main": projectElectronMain,
 
 
 		/**
 		 * Configuring electron renderer
 		 */
-		"electron-renderer": {
-			targetType: TargetType.ElectronRenderer,
-			tsconfig: makeTsConfig(
-				`${baseDir}/.tsconfig.renderer.json`,
-				'browser',
-				require('./awesome-typescript-loader-options')({
-					// instanceName:'electron-renderer'
-				}),
-				{
-					"compilerOptions": {
-						"jsx": "react"
-					},
-				}
-			),
-			port: 4444,
-			onCompileCallback(err,stats) {
-				if (err)
-					return
-
-				log.info('Renderer ready')
-				rendererReady.resolve(true)
-			}
-		}
+		"electron-renderer": projectElectronRenderer
 	}
 
 
