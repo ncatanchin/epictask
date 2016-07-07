@@ -1,16 +1,16 @@
-const log = getLogger(__filename)
 
 
 import windowStateKeeper = require('electron-window-state')
 import Electron = require('electron')
-const {BrowserWindow,Menu,ipcMain} = Electron
-
-import {makeMainTemplate} from './MainTemplates'
 import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu} from './MainMenu'
 
+const log = getLogger(__filename)
+const path = require('path')
+const {BrowserWindow,Menu,ipcMain} = Electron
 
+const templateURL = 'file://' + path.resolve(process.cwd(),'dist/main-entry.html')
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let menu
@@ -96,7 +96,6 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 
 			mainWindowState.manage(browserWindow)
 
-			const templateURL = makeMainTemplate()
 			log.info(`Template Path: ${templateURL}`)
 			browserWindow.loadURL(templateURL)
 
@@ -168,7 +167,6 @@ if (module.hot) {
 	module.hot.accept(['!!file!./MainEntry.jade'], (updates) => {
 		log.info("HMR update jade", updates)
 
-		const templateURL = makeMainTemplate()
 		log.info(`Template Path: ${templateURL}`)
 		browserWindow.loadURL(templateURL)
 	})

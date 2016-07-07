@@ -106,6 +106,18 @@ export default class DBService implements IService {
 		this._status = ServiceStatus.Initialized
 		this._storePlugin = new PouchDBPlugin(this.storeOptions())
 
+		// If DEV then add deleteDatabase function
+		if (Env.isDev) {
+			_.assignGlobal({
+				cleanDatabase: async () => {
+					await this._storePlugin.deleteDatabase()
+					await this.init()
+					return this.start()
+				}
+			})
+
+		}
+
 		return this
 	}
 

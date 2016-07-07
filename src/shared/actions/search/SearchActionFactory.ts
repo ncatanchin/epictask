@@ -130,12 +130,14 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 						return results
 					})
 					.then(async (repoResults) => {
-						if (query.split('/').length < 2) {
+						const queryParts = query.split('/')
+						if (queryParts.length < 2 && queryParts.every(part => part.length > 0)) {
 							return
 						}
 
 						try {
-							const repo = await createClient().repo(query)
+							const client = createClient()
+							const repo = await client.repo(query)
 							log.info('GH repo result', repo)
 							if (repo) {
 								const repoState = repoActions.state

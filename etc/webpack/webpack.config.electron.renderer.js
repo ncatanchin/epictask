@@ -1,5 +1,6 @@
 const webpack = require('webpack')
 const assert = require('assert')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
@@ -26,6 +27,7 @@ module.exports = (projectConfig) => {
 			new webpack.DefinePlugin({
 				'process.env.PROCESS_TYPE': JSON.stringify('renderer')
 			})
+
 		],
 
 		target: 'electron-renderer'

@@ -1,11 +1,11 @@
-import ReactGlobal = require('react')
+import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
 
 
 /**
  * Now the shared globals - this is required for propper logging config
  */
-require("shared/Globals")
+import "shared/Globals"
 
 function logErrorGlobal(err:Error|string) {
 	require('shared/Toaster').addErrorMessage(err)

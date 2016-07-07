@@ -16,6 +16,7 @@ logs
 src/tsconfig.json
 etc/tsconfig.*.json
 .tsconfig.*.json
+/tsconfig.json
 
 # Any log file
 *.log

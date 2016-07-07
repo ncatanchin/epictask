@@ -1,6 +1,6 @@
 require('source-map-support').install()
 
-console.log('starting epictask')
+console.log('starting epictask: ' + process.cwd())
 require('babel-polyfill')
 
 process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
@@ -26,4 +26,5 @@ require('babel-runtime/core-js/promise').default = Bluebird
 /**
  * No load the main entry
  */
+
 require('../dist/MainEntry')

@@ -2,7 +2,10 @@
 const {app,BrowserWindow} = require('electron')
 
 import windowStateKeeper = require('electron-window-state')
-import {makeMainDevToolsTemplate} from './MainTemplates'
+import * as path from 'path'
+
+const templateURL = 'file://' + path.resolve(process.cwd(),'dist/main-devtools-entry.html')
+
 
 let devWindowState = windowStateKeeper({
 	defaultWidth: 800,
@@ -20,6 +23,6 @@ const window = new BrowserWindow(Object.assign({}, devWindowState, {
 devWindowState.manage(window)
 
 //window.webContents.openDevTools()
-window.loadURL(makeMainDevToolsTemplate())
+window.loadURL(templateURL)
 
 export { window }

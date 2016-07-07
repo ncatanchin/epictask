@@ -10,12 +10,7 @@
             <path value="file://$PROJECT_DIR$/libs/typelogger/src" />
             <path value="file://$PROJECT_DIR$/libs/typedux/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-pouchdb/src" />
-            <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-indexeddb/src" />
-            <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-dynamodb/src" />
-            <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-cloudsearch/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-mocks/src" />
-            <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-example-webpack/src" />
-            <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-example-node/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore/src" />
             <path value="file://$PROJECT_DIR$/src" />
             <path value="file://$PROJECT_DIR$/src/epictask" />

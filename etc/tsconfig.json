@@ -1,7 +1,11 @@
 {
 	"compilerOptions": {
-		"target": "es6",
-		"lib": ["es2015","es5","es6","es7","dom"],
+		"target": "ES6",
+		"lib": [
+			"es6",
+			"es7",
+			"dom"
+		],
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"declaration": false,
@@ -11,7 +15,7 @@
 		"preserveConstEnums": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
-		"outDir": "../dist",
+		"outDir": "../dist/tsc",
 		"paths": {
 			"epictask/*": [
 				"./*"
@@ -76,11 +80,18 @@
 			"typestore-plugin-pouchdb/*": [
 				"../libs/typestore/packages/typestore-plugin-pouchdb/src/*"
 			]
+
 		}
 	},
 	"exclude": [
-		"../libs/**/typings",
-		"../node_modules",
-		"../typings"
+		"libs/**/typestore-example-node",
+		"libs/**/typestore-example-webpack",
+		"libs/**/typestore-plugin-cloudsearch",
+		"libs/**/typestore-plugin-dynamodb",
+		"libs/**/typings",
+		"libs/**/*.spec.ts",
+		"libs/**/tsconfig.json",
+		"libs/**/test",
+		"node_modules"
 	]
 }

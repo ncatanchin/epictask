@@ -1,12 +1,15 @@
+
+
 /**
  * Responsible for observing
  * and notifying store listeners
  * with provided paths
  */
 
-import {getLogger} from 'typelogger'
+
 import {isArray} from '../util'
 import {State} from '../reducers'
+import {getLogger} from 'typelogger'
 
 const log = getLogger(__filename)
 

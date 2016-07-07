@@ -168,8 +168,8 @@ export function initStore(devToolsMode = false) {
 	const debugMiddleware =
 		(devToolsMode) ? loadDevTools() :
 			(!Env.isDev) ? NullMiddleware :
-				(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
-					(window.devToolsExtension) ? window.devToolsExtension() :
+				(Env.isRenderer && window.devToolsExtension) ? window.devToolsExtension() :
+					(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
 						loadDevTools()
 
 	let reducers = (Env.isRenderer) ? [] : getReducers()

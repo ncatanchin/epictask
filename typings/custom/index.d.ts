@@ -13,3 +13,11 @@ declare namespace NodeJS {
 		MainBooted:boolean
 	}
 }
+
+// declare global {
+// 	import * as assertGlobal from 'assert'
+// 	import * as ImmutableGlobal from 'immutable'
+// 	import * as LodashGlobal from 'lodash'
+//
+// 	declare var
+// }

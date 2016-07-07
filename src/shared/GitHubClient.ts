@@ -86,7 +86,7 @@ export class GitHubClient {
 		let response =  await fetch(makeUrl(path,query),this.initRequest(HttpMethod.GET))
 
 		if (response.status >= 300) {
-			throw new Error(response.statusText)
+			throw new Error(response.statusText || 'GH Returned error: ' + response.status)
 		}
 
 		const headers = response.headers

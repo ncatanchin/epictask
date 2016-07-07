@@ -27,7 +27,7 @@ export function makeMainTemplate() {
 	const mainTemplate = pug.render(mainTemplateSrc,{
 		cssGlobal,
 		Env,
-		baseDir:path.resolve(__dirname,'../../..'),
+		baseDir:path.resolve(__dirname,'../..'),
 		Events
 	})
 	let templatePath = app.getPath('temp') + '/entry-' + uuid.v4() + '.html'
@@ -45,7 +45,7 @@ export function makeMainDevToolsTemplate() {
 	const pug = require('pug')
 	const mainTemplate = pug.render(mainTemplateSrc,{
 		Env,
-		baseDir:path.resolve(__dirname,'../../..'),
+		baseDir:path.resolve(__dirname,'../..'),
 		Events
 	})
 	let templatePath = app.getPath('temp') + '/dev-tools-entry-' + uuid.v4() + '.html'

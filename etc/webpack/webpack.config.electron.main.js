@@ -1,15 +1,11 @@
 
 require('../tools/global-env')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
-//const HtmlWebpackPlugin = require('html-webpack-plugin')
 const
 	webpack = require('webpack'),
-	//nodeExternals = require('webpack-node-externals'),
-	//JsonpTemplatePlugin = webpack.JsonpTemplatePlugin
-	//HotModuleReplacementPlugin = webpack.HotModuleReplacementPlugin,
 	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
 	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
-	//ExternalsPlugin = webpack.ExternalsPlugin,
 	fs = require('fs'),
 	baseConfig = require('./webpack.config')
 
@@ -45,6 +41,16 @@ module.exports = function(projectConfig) {
 			...config.plugins,
 			new webpack.DefinePlugin({
 				'process.env.PROCESS_TYPE': JSON.stringify('main')
+			}),
+			new HtmlWebpackPlugin({
+				filename: "main-entry.html",
+				template: 'src/main/MainEntry.jade',
+				inject: false
+			}),
+			new HtmlWebpackPlugin({
+				filename: "main-devtools-entry.html",
+				template: 'src/main/MainDevToolsWindow.jade',
+				inject: false
 			})
 		],
 

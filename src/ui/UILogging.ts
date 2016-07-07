@@ -32,3 +32,6 @@ Object.assign(global,{
 		return LoggerFactory(name)
 	}
 })
+
+export {
+}

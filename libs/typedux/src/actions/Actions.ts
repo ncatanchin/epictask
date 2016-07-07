@@ -1,9 +1,10 @@
 
-const log = getLogger(__filename)
+
 
 import {Store,Dispatch} from 'redux'
 import {State} from '../reducers'
-
+import {getLogger} from 'typelogger'
+const log = getLogger(__filename)
 
 // Internal type definition for
 // function that gets the store state
@@ -80,7 +81,9 @@ export function addActionInterceptor(interceptor:IActionInterceptor) {
 	actionInterceptors.push(interceptor)
 
 	return () => {
-		_.remove(actionInterceptors,o => interceptor === o)
+		const index = actionInterceptors.findIndex(o => interceptor === o)
+		if (index > -1)
+			actionInterceptors.splice(index,1)
 	}
 }
 

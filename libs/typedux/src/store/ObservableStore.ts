@@ -1,4 +1,5 @@
-import RootReducer from "../reducers/RootReducer";
+import {getLogger} from 'typelogger'
+import RootReducer from "../reducers/RootReducer"
 const log = getLogger(__filename)
 
 // Vendor

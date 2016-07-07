@@ -6,14 +6,24 @@ const tsConfigBaseFile = () => `${baseDir}/src/tsconfig.json`
 export function makeTsConfigBase() {
 	const templateConfig = require('../tsconfig.json')
 
+	Object.assign(templateConfig,{
+		exclude: templateConfig.exclude.reduce((excludedPaths,excludePath) => {
+			excludedPaths.push(excludePath,'../' + excludePath)
+			return excludedPaths
+		},[])
+	})
+
 	Object.assign(templateConfig.compilerOptions,{
 		baseUrl: path.resolve(baseDir,'src')
 	})
 
 	writeJSONFileSync(tsConfigBaseFile(),templateConfig)
+
 	const rootTsConfigFile = `${baseDir}/tsconfig.json`
-	fs.unlinkSync(rootTsConfigFile)
-	fs.linkSync(tsConfigBaseFile(),rootTsConfigFile)
+	if (fs.existsSync(rootTsConfigFile))
+		fs.unlinkSync(rootTsConfigFile)
+
+	fs.symlinkSync(tsConfigBaseFile(),rootTsConfigFile)
 }
 
 export function makeTsConfig(dest,typingMode,...extraOpts) {
@@ -27,11 +37,6 @@ export function makeTsConfig(dest,typingMode,...extraOpts) {
 	// })
 
 	Object.assign(baseConfig,{
-		// exclude: baseConfig.exclude.map(excludePath => path
-		// 	.relative(
-		// 		baseDir,
-		// 		path.resolve(`${baseDir}/src`,excludePath)
-		// 	))
 		exclude: baseConfig.exclude.map(excludePath => {
 			return _.startsWith(excludePath,'../') ? excludePath.substring(3) : excludePath
 		})

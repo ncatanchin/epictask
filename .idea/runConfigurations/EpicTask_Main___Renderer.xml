@@ -1,7 +1,5 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="EpicTask Main + Renderer" type="CompoundRunConfigurationType" factoryName="Compound Run Configuration">
-    <toRun type="ChromiumRemoteDebugType" name="EpicTask Renderer" />
-    <toRun type="NodeJSConfigurationType" name="EpicTask Remote" />
     <method />
   </configuration>
 </component>

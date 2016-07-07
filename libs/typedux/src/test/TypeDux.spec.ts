@@ -2,7 +2,7 @@ import {installMockStoreProvider,createMockStore} from './mocks/TestHelpers'
 import {RootReducer,ILeafReducer} from '../reducers'
 import {ActionMessage,ActionFactory,Action} from '../actions'
 import * as _ from 'lodash'
-
+import {getLogger} from 'typelogger'
 const log = getLogger(__filename)
 
 installMockStoreProvider()

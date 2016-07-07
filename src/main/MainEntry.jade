@@ -3,21 +3,26 @@ html.fill-width.fill-height(lang="en")
 
 	head
 		meta(charset='utf-8')
-		link(rel="stylesheet",type="text/css",href=baseDir + "/node_modules/splash-screen/dist/splash.min.css")
-		script(src=baseDir + "/node_modules/splash-screen/dist/splash.min.js")
-		link(rel="stylesheet",href=baseDir + "/node_modules/animate.css/animate.css")
-		link(rel="stylesheet",href=baseDir + "/node_modules/font-awesome/css/font-awesome.min.css")
-		link(rel="stylesheet",href=baseDir + "/node_modules/highlight.js/styles/dark.css")
-		link(rel="stylesheet",href=baseDir + "/node_modules/simplemde/dist/simplemde.min.css")
-		//link(rel="stylesheet",href=baseDir + "/node_modules/highlight.js/styles/default.css")
+
+		// Splash screen load
+		link(rel="stylesheet",type="text/css",href="../node_modules/splash-screen/dist/splash.min.css")
+		script(src="../node_modules/splash-screen/dist/splash.min.js")
+
+		link(rel="stylesheet",href="../node_modules/animate.css/animate.css")
+		link(rel="stylesheet",href="../node_modules/font-awesome/css/font-awesome.min.css")
+		link(rel="stylesheet",href="../node_modules/highlight.js/styles/dark.css")
+		link(rel="stylesheet",href="../node_modules/simplemde/dist/simplemde.min.css")
+		//link(rel="stylesheet",href="../node_modules/highlight.js/styles/default.css")
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 
-		title epic.ly
-		style=cssGlobal
+		title epictask
+		style=require('!!raw!sass!styles/MainEntry.global.scss')
+
 		script(id='et-loader').
 			var electron = require('electron'),
 					remote = electron.remote,
-					ipc = electron.ipcRenderer
+					ipc = electron.ipcRenderer,
+					Events = remote.getGlobal('Constants').Events
 
 			function checkBooted() {
 				window.booted = remote.getGlobal("MainBooted")
@@ -53,9 +58,9 @@ html.fill-width.fill-height(lang="en")
 					return styleObj
 				}
 			}
-			var baseDir = "#{baseDir}"
+			var baseDir = "."
 			var loaded = false
-			var isDev = "#{Env.isDev}" === 'true'
+			var isDev = remote.getGlobal('Env').isDev
 
 			// Add a script tag to load content
 			function addScript(scriptPath,asyncLoad,callback) {
@@ -113,22 +118,23 @@ html.fill-width.fill-height(lang="en")
 			}
 
 			function onUIReady(event,force) {
-				console.log('UI Ready Called, force=',force,
-						'event type =', (event && event.data) && event.data.type)
 
-				if (force || (event && event.data && event.data.type === "#{Events.UIReady}")) {
+
+				if (force || (event && event.data && event.data.type === Events.UIReady)) {
+					console.log('UI Ready Called, force=', force,
+							'event type =', (event && event.data) && event.data.type)
 					Splash.destroy()
 				}
 			}
 
-			window.onload = function() {
+			function onBodyLoad() {
 				console.log('on load event')
 				if (checkBooted()) {
 					console.log('window already booted, loading immediately')
 					loadEpicTask()
 				} else {
 					console.log('waiting for main ready event now')
-					ipc.on("#{Events.MainReady}", function () {
+					ipc.on(Events.MainReady, function () {
 						console.log('IPC Received load request')
 						loadEpicTask()
 					})
@@ -138,7 +144,7 @@ html.fill-width.fill-height(lang="en")
 			}
 
 
-	body.fill-width.fill-height
+	body.fill-width.fill-height(onload="onBodyLoad()")
 		script.
 			Splash.enable('windcatcher')
 

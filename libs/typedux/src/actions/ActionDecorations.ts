@@ -1,11 +1,12 @@
 
-const log = getLogger(__filename)
-
 import {isFunction} from '../util'
 import {ActionMessage} from './ActionTypes'
 import {Reducer} from '../reducers'
 import {ActionFactory} from './ActionFactory'
 import {executeActionChain,registerAction} from './Actions'
+
+import {getLogger} from 'typelogger'
+const log = getLogger(__filename)
 
 /**
  * Dispatch an action to the redux store

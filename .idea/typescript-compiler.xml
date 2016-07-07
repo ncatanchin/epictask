@@ -7,6 +7,7 @@
     <option name="trackFileSystemChanges" value="false" />
     <option name="hasOutDirectory" value="true" />
     <option name="outDirectory" value="$PROJECT_DIR$/dist/tsc" />
+    <option name="useConfig" value="true" />
     <option name="useService" value="true" />
     <option name="versionType" value="SERVICE_DIRECTORY" />
   </component>

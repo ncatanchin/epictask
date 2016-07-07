@@ -53,10 +53,11 @@ _.mixin({
 				(o as any).get(keyPath) :
 				_.get(o,keyPath)
 		}
-		return list.filter(item => {
+
+		return list.filter((item,index) => {
 			const key = getKey(item)
 			const otherItem = list
-				.find(itemFind => itemFind !== item &&
+				.find((itemFind,indexFind) => indexFind < index && itemFind !== item &&
 					key === getKey(itemFind))
 
 			return !otherItem

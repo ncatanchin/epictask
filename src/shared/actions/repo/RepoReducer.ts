@@ -31,8 +31,10 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 	 * @returns {RepoStateModel}
 	 */
 	setAvailableRepos(state:RepoState,availableRepos:AvailableRepo[]) {
+
+		const newAvailableRepoList = _.uniqueListBy(List(availableRepos),'repoId')
 		return state.merge({
-			availableRepos: List(availableRepos),
+			availableRepos:newAvailableRepoList,
 			issues: state.issues.filter(
 				issue => availableRepos.findIndex(
 					availRepo => issue.repoId === availRepo.repoId

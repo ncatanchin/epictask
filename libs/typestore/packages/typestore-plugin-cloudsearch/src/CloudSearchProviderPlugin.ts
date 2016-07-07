@@ -14,13 +14,14 @@ import {
 	ICoordinator,
 	ICoordinatorOptions,
 	PluginEventType,
+	IFinderPlugin,
 	repoAttachIfSupported
 } from 'typestore'
 
 import {CloudSearchDomain} from 'aws-sdk'
 import {ICloudSearchOptions} from "./CloudSearchTypes";
 import {CloudSearchDefaults, CloudSearchFinderKey} from "./CloudSearchConstants";
-import {IFinderPlugin} from "../../typestore/src/PluginTypes";
+
 import getMetadata = Reflect.getMetadata;
 
 

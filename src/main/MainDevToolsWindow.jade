@@ -1,8 +1,12 @@
 html
 	head
 		script.
+			var electron = require('electron'),
+					remote = electron.remote,
+					Env = remote.getGlobal('Env')
 
-			var isDev = "#{Env.isDev}" === 'true'
+			var isDev = Env.isDev,
+					baseDir = '.'
 
 			// Add a script tag to load content
 			function addScript(scriptPath, asyncLoad, callback) {

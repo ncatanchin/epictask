@@ -80,10 +80,14 @@ export class PouchDBPlugin implements IStorePlugin {
 		const {replication} = this.opts
 		if (replication && replication.to) {
 			const remoteDB = new PouchDB(replication.to)
-			this.syncHandler = db.sync(remoteDB,{
+			this.syncHandler = PouchDB.replicate(db,remoteDB,{
 				live: replication.live,
 				retry: replication.retry
 			})
+			// this.syncHandler = db.sync(remoteDB,{
+			// 	live: replication.live,
+			// 	retry: replication.retry
+			// })
 		}
 
 		this.internalDb = db
@@ -199,6 +203,10 @@ export class PouchDBPlugin implements IStorePlugin {
 
 
 
+	}
+
+	deleteDatabase():Promise<any> {
+		return this.internalDb.destroy()
 	}
 
 	async stop():Promise<ICoordinator> {

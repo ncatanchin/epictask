@@ -2,8 +2,10 @@ import 'reflect-metadata'
 import 'shared/ErrorHandling'
 import {Container} from 'typescript-ioc'
 import Electron = require('electron')
-const {app} = Electron
-import {RemoteDebuggingPort} from 'shared/Constants'
+import {RemoteDebuggingPort,Events} from 'shared/Constants'
+import * as path from 'path'
+
+const {app,BrowserWindow} = Electron
 
 // LOAD EVERYTHING
 import 'shared/Globals'
@@ -12,6 +14,9 @@ import {MainConfigurator as MainConfiguratorType} from './MainConfigurator'
 // LOGGING
 import './MainLogging'
 const log = getLogger(__filename)
+
+// ADD EVENTS TO GLOBAL
+_.assignGlobal({Constants:{Events}})
 
 // Main window ref
 let mainWindow:any
@@ -27,8 +32,8 @@ log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
 /**
  * In debug mode enable remote debugging
  */
-if (DEBUG) {
-	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort);
+if (Env.isDev) {
+	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort)
 }
 
 
@@ -43,6 +48,12 @@ function onAllClosed() {
 }
 
 async function boot() {
+	if (Env.isDev) {
+		//BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
+		BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
+		BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/redux-devtools'))
+	}
+
 	log.info("Boot start")
 	global.MainBooted = false
 
@@ -86,6 +97,7 @@ async function boot() {
  */
 function onStart() {
 	app.setName('EpicTask')
+
 	return boot()
 }
 

@@ -19,21 +19,18 @@ import './ErrorHandling'
 import './util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
 import * as TypeMutantGlobal from 'typemutant'
-import * as LodashGlobal from 'lodash'
 import * as ContextUtils from './util/ContextUtils'
 import * as path from 'path'
 import * as assertGlobal from 'assert'
-
+import * as LodashGlobal from 'lodash'
 
 // Export globals
-
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
 const isRenderer = process.type === 'renderer'
 
 const envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
-
 
 const EnvGlobal = {
 	envName,
@@ -44,7 +41,7 @@ const EnvGlobal = {
 	isRemote,
 	isRenderer,
 	isMain: !isRenderer,
-	baseDir: path.resolve(__dirname,'../../..')
+	baseDir: path.resolve(__dirname,'../..')
 }
 
 // Polyfill Fetch/FormData/etc
@@ -53,7 +50,7 @@ function installGlobals() {
 	if (!g.fetch) g.fetch = require('node-fetch')
 	if (!g.FormData) g.FormData = require('form-data')
 	if (!g.TextEncoder) {
-		const te = require("utf8-encoding");
+		const te = require("utf8-encoding/utf8-encoding.js");
 		g.TextEncoder = te.TextEncoder;
 		g.TextDecoder = te.TextDecoder;
 
@@ -102,6 +99,8 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
 }
+
+
 
 
 installGlobals()

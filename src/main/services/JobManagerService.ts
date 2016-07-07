@@ -14,8 +14,6 @@ const log = getLogger(__filename)
 
 export class SyncAllReposJob {
 
-
-
 	name = 'Sync-Enabled Repos'
 	schedule = '*/10 * * * *' // Every 10 minutes
 	repeat = true
@@ -64,9 +62,9 @@ export default class JobService implements IService {
 		this.updateJobs(state.jobs)
 		this.updateScheduledJobs(state.scheduledJobs)
 
-		// const syncAllReposJob = new SyncAllReposJob()
-		// this.jobActions.createJob(this.scheduledJobToRequest(syncAllReposJob))
-		// this.jobActions.scheduleJob(syncAllReposJob)
+		const syncAllReposJob = new SyncAllReposJob()
+		this.jobActions.createJob(this.scheduledJobToRequest(syncAllReposJob))
+		this.jobActions.scheduleJob(syncAllReposJob)
 
 		/**
 		 * Watch for job updates

@@ -189,11 +189,6 @@ export class RepoSyncJob implements IJobRequest {
 				this.syncCollaborators(stores,repo)
 			])
 
-			// Commit all text indexes
-			// log.debug(`Updating all indexes now`)
-			// await LunrIndex.persistAll()
-			// log.debug('Persisted all indexes')
-
 			// Track the execution for timing/update purposes
 			// As well as throttling management
 			const repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)

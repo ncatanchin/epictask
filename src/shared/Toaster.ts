@@ -1,4 +1,4 @@
-const log = getLogger(__filename)
+
 
 import * as uuid from 'node-uuid'
 import {AutoWired,Inject,Singleton,Container} from 'typescript-ioc'
@@ -7,10 +7,9 @@ import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {absoluteFilename} from 'shared/util/Files'
 
-
+const log = getLogger(__filename)
 const fs = require('fs')
 const path = require('path')
-
 
 
 @AutoWired

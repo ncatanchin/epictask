@@ -337,12 +337,6 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async(dispatch, getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
-			const availRepos = actions.state.availableRepos
-
-			if (availRepos.findIndex(availRepo => availRepo.repoId === repo.id) > -1) {
-				throw new Error('Repository is already selected: ' + repo.full_name)
-			}
-
 			const
 				repoStore = this.stores.repo,
 				availRepoStore = this.stores.availableRepo,
@@ -351,6 +345,13 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 					repoId: repo.id,
 					enabled: true
 				})
+
+
+			const existingAvailRepo = await availRepoStore.findByRepoId(repo.id)
+
+			if (!_.isNil(existingAvailRepo) || actions.state.availableRepos.findIndex(availRepo => availRepo.repoId === repo.id) > -1) {
+				throw new Error('Repository is already selected: ' + repo.full_name)
+			}
 
 			// Make sure the repo passed in exists in out
 			// local DB
