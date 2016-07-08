@@ -1,7 +1,7 @@
 const log = getLogger(__filename)
 
-import {RepoKey} from '../../Constants'
-import {registerModel} from '../../models/Registry'
+import {RepoKey} from 'shared/Constants'
+import {RegisterModel} from 'shared/models/Registry'
 import {Set,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Repo, AvailableRepo,Comment,Issue} from 'shared/models'
@@ -10,6 +10,7 @@ export const RepoStateRecord = Record({
 	selectedRepos: List<AvailableRepo>(),
 	availableRepos: List<AvailableRepo>(),
 	issues:List<Issue>(),
+	issue:null,
 	comments:List<Comment>(),
 	selectedIssues:List<Issue>(),
 	selectedIssue:null,
@@ -18,6 +19,7 @@ export const RepoStateRecord = Record({
 	error:null
 })
 
+@RegisterModel
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {
@@ -28,14 +30,15 @@ export class RepoState extends RepoStateRecord {
 			comments: List(o.comments),
 			issues: List(o.issues),
 			selectedIssues: List(o.selectedIssues)
-
 		}))
 	}
+	$$clazz = 'RepoState'
 
-	selectedRepos: List<AvailableRepo>
-	availableRepos: List<AvailableRepo>
-	editingIssue:Issue
+	availableRepos: Map<string,AvailableRepo>
+
+
 	issues:List<Issue>
+	issue:Issue
 	comments:List<Comment>
 	selectedIssues:Set<Issue>
 	selectedIssue:Issue
@@ -51,7 +54,3 @@ export type TRepoState = typeof RepoState
 export interface RepoMessage extends ActionMessage<RepoState> {
 
 }
-
-
-
-registerModel(RepoKey,RepoState)

@@ -9,6 +9,7 @@
 
 declare namespace __WebpackModuleApi {
 	interface RequireContext {
+		id:string;
 		keys(): string[];
 		<T>(id: string): T;
 		resolve(id: string): string;

@@ -1,7 +1,7 @@
 import {List,Record,Map} from 'immutable'
 import {DefaultLeafReducer} from 'typedux'
 import {SearchKey} from "../../Constants"
-import {SearchMessage, SearchState, SearchResult} from './SearchState'
+import {SearchMessage, SearchState, SearchResult, Search} from './SearchState'
 
 
 export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
@@ -10,25 +10,39 @@ export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
 		super(SearchKey,SearchState)
 	}
 
-
 	defaultState():any {
 		return new SearchState()
 	}
 
-	setSearching(state:SearchState,searching:boolean) {
-		return state.merge({searching})
+	private updateSearch(state:SearchState,searchId:string,updater:(search:Search) => any) {
+		return state.updateIn(['searches',searchId], new Search(), (search:Search) => {
+			return updater(search)
+		})
 	}
 
-	setQuery(state:SearchState,query:string) {
-		return state.merge({query})
+	setSearching(state:SearchState,searchId:string,searching:boolean) {
+		return this.updateSearch(state,searchId,(search) => {
+			return search.set('searching',searching)
+		})
 	}
 
-	setResults(state:SearchState,newResults:List<SearchResult<any>>) {
+	setQuery(state:SearchState,searchId:string,query:string) {
+		return this.updateSearch(state,searchId,(search) => {
+			return search.set('query',query)
+		})
 
-		return state.set('results',newResults)
 	}
 
-	setError(state:SearchState,err:Error) {
-		return state.merge({error:err})
+	setResults(state:SearchState,searchId:string,newResults:List<SearchResult<any>>) {
+		return this.updateSearch(state,searchId,(search) => {
+			return search.set('results',newResults)
+		})
+	}
+
+	setError(state:SearchState,searchId:string,err:Error) {
+		return this.updateSearch(state,searchId,(search) => {
+			return search.set('error',err)
+		})
+
 	}
 }

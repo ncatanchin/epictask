@@ -5,18 +5,25 @@ import {
 	DefaultModel,
 	Repo as TSRepo
 } from 'typestore'
+import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Issue} from './Issue'
-import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {registerModel} from './Registry'
+import {RegisterModel} from './Registry'
 
-export const CommentClassName = 'Comment'
 
+@RegisterModel
 @ModelDescriptor()
 export class Comment extends DefaultModel {
 
-	$$clazz = CommentClassName
+	$$clazz = 'Comment'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Comment(o)
 
 	static makeParentRefId(repoId,issueNumber) {
 		return `${repoId}-${issueNumber}`
@@ -87,6 +94,3 @@ export class CommentStore extends TSRepo<Comment> {
 		return null
 	}
 }
-
-
-registerModel(CommentClassName,Comment)

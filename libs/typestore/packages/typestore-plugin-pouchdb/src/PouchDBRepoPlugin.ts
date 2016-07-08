@@ -217,7 +217,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 		const id = model[this.primaryKeyAttr.name]
 		if (id && doc._id && !doc._rev) {
-			const rev = await this.getRev(id)
+			const rev = await this.getRev(doc._id)
 			if (rev) {
 				doc._rev = rev
 			}

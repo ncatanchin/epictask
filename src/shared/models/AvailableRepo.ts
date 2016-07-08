@@ -11,19 +11,25 @@ import {Label,LabelStore} from './Label'
 import {Milestone,MilestoneStore} from './Milestone'
 import {User,UserStore} from './User'
 import {Repo,RepoStore} from './Repo'
-import {registerModel} from './Registry'
-
-export const AvailableRepoClassName = 'AvailableRepo'
+import {RegisterModel} from './Registry'
 
 /**
  * Maps repos that have been configured for tasks
  * to real repos
  *
  */
+@RegisterModel
 @ModelDescriptor({transientAttrs: ['repo']})
 export class AvailableRepo extends DefaultModel {
 
-	$$clazz = AvailableRepoClassName
+	$$clazz = 'AvailableRepo'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new AvailableRepo(o)
 
 	@AttributeDescriptor({primaryKey:true})
 	id:string
@@ -105,9 +111,9 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 			filled.milestones = await milestoneRepo.findByRepoId(filled.repoId)
 		}
 
-		if (!availRepo.collaborators) {
-			filled.collaborators = await userRepo.findByRepoId(filled.repoId)
-		}
+		// if (!availRepo.collaborators) {
+		// 	filled.collaborators = await userRepo.findByRepoId(filled.repoId)
+		// }
 		return filled
 	}
 
@@ -125,5 +131,3 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 
 
 }
-
-registerModel(AvailableRepoClassName,AvailableRepo)

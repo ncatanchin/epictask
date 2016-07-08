@@ -1,37 +1,45 @@
 import {Container,AutoWired,Inject} from 'typescript-ioc'
-import {IJobRequest} from '../jobs/JobState'
-import {JobHandler} from '../jobs/JobHandler'
-import {RepoActionFactory} from './RepoActionFactory'
-import {AppActionFactory} from '../AppActionFactory'
-import ActivityManagerService from 'main/services/ActivityManagerService'
-
 import * as moment from 'moment'
+
+import ActivityManagerService from '../ActivityManagerService'
+
+import {JobHandler} from 'shared/actions/jobs/JobHandler'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import {Stores} from '../../../main/services/DBService'
-import {Settings} from '../../Settings'
-import Toaster from '../../Toaster'
+import {Stores} from '../DBService'
+import {Settings} from 'shared/Settings'
+import Toaster from 'shared/Toaster'
+import {BaseJob, IJob} from 'shared/actions/jobs/JobReducer'
+import {Benchmark} from 'shared/util/Decorations'
+import {Job} from 'main/services/JobService'
 
 const log = getLogger(__filename)
 
+const Benchmarker = Benchmark('RepoSyncJob')
 
-export class RepoSyncJob implements IJobRequest {
 
-	name:string
-	client:GitHubClient
+
+@Job
+export class RepoSyncJob extends BaseJob {
+
+
+	client:GitHubClient = Container.get(GitHubClient)
+
 	lastSyncParams:any
 	oneAtATime = true
+	availRepo:AvailableRepo
 
-	constructor(private availRepo:AvailableRepo) {
-		this.name = `syncing ${availRepo.repo.full_name}`
-		if (!Settings.token) {
-			log.info("Can not sync, not authenticated")
-			return
+	constructor(public job:IJob = null) {
+		super(job)
+
+		if (job) {
+			this.availRepo = job.args.availableRepo
+			this.description = `syncing ${this.availRepo.repo.full_name}`
 		}
-
-
 	}
 
 	/**
@@ -39,7 +47,11 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async initParams(activityManager,repo) {
+		assert(Settings.token,'Can not sync when not authenticated')
+
+
 		this.client = Container.get(GitHubClient)
 
 		const lastActivity = await activityManager.findLastActivity(ActivityType.RepoSync,repo.id)
@@ -58,6 +70,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async syncCollaborators(stores:Stores,repo:Repo) {
 		const userRepo = stores.user
 
@@ -65,18 +78,24 @@ export class RepoSyncJob implements IJobRequest {
 			this.client.repoCollaborators(repo) :
 			this.client.repoContributors(repo)
 
-		let collabs = await collabsPromise
-		collabs = await Promise.all(collabs.map(async (user:User) => {
 
+
+		// Make sure we have all the collaborators saved
+		const collabs = await collabsPromise
+
+		// Iterate all attahed users and make sure we
+		// update the repoIds on the user object if
+		// already exists
+		for (let user of collabs) {
 			const existingUser = await userRepo.findByLogin(user.login)
 			if (existingUser) {
 				user = new User(_.merge(user,existingUser))
-
 			}
 
 			user.addRepoId(repo.id)
-			return user
-		})) as any
+		}
+
+
 
 		//log.debug(`Loaded collabs/users, time to persist`, collabs)
 		await userRepo.bulkSave(...collabs)
@@ -87,10 +106,10 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async syncIssues(stores:Stores,repo) {
 		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
 		issues.forEach(issue => issue.repoId = repo.id)
-		//log.debug(`Loaded issues, time to persist`, issues)
 		await stores.issue.bulkSave(...issues)
 	}
 
@@ -99,6 +118,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async syncLabels(stores,repo) {
 		const labels = await this.client.repoLabels(repo)
 		labels.forEach(label => label.repoId = repo.id)
@@ -111,6 +131,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async syncMilestones(stores,repo) {
 		const milestones = await this.client.repoMilestones(repo)
 		milestones.forEach(milestone => milestone.repoId = repo.id)
@@ -123,6 +144,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param repo
 	 */
+	@Benchmarker
 	async syncComments(stores,repo) {
 		let comments = await this.client.repoComments(repo,{params:this.lastSyncParams})
 
@@ -151,6 +173,7 @@ export class RepoSyncJob implements IJobRequest {
 	 *
 	 * @param handler
 	 */
+	@Benchmarker
 	async executor(handler:JobHandler) {
 		const activityManager = Container.get(ActivityManagerService)
 		const stores = Container.get(Stores)

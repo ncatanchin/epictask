@@ -18,7 +18,7 @@ export function makeToastMessage(opts:any) {
 	})
 }
 
-export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppState>> {
+export class AppReducer extends DefaultLeafReducer<AppState,ActionMessage<AppState>> {
 
 	constructor() {
 		super(AppKey,AppState)
@@ -53,51 +53,13 @@ export class AppReducer extends DefaultLeafReducer<any,ActionMessage<typeof AppS
 	}
 
 
-	setDialogOpen(state:AppState,name:string,open:boolean) {
-		return state.set(
-			'dialogs',
-			state.dialogs.set(name,open)
-		)
-	}
 
 	setStateType(state:AppState,stateType:AppStateType) {
 		return state.merge({stateType})
 	}
 
-	setTheme(state:AppState,theme:any) {
-		return state.merge({theme})
-	}
 
 
-	setError(state:AppState,err:Error) {
-		return this.addErrorMessage(state,err)
-	}
-
-	addMessage(state:AppState,message:IToastMessage) {
-		const messageList = _.uniqueListBy(state.messages.push(message),'id')
-		return state.set('messages',messageList)
-	}
-
-	addErrorMessage(state:AppState,err:Error|string) {
-		err = ((_.isString(err)) ? new Error(err) : err) as Error
-		const message = makeToastMessage({
-			type: ToastMessageType.Error,
-			content: err.message || err.toString(),
-			stack: err.stack
-		})
-		return this.addMessage(state,message)
-	}
-
-	removeMessage(state:AppState,id:string) {
-		return state.set(
-			'messages',
-			state.messages.filter(msg => msg.id !== id)
-		)
-	}
-
-	clearMessages(state:AppState) {
-		return state.set('messages',List())
-	}
 
 	setMonitorState(state:AppState,monitorState:any) {
 		return state.merge({monitorState})

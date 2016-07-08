@@ -9,15 +9,16 @@ import * as Radium from 'radium'
 const {Style} = Radium
 
 import {AutoComplete,MenuItem} from 'material-ui'
-import * as Models from 'shared/models'
-import * as Constants from '../../../shared/Constants'
 import {PureRender} from 'components/common'
-import {AppActionFactory} from '../../../shared/actions/AppActionFactory'
+import {Toaster} from 'shared/Toaster'
+import {Container} from 'typescript-ioc'
+
 const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
 const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
 const TextFieldUnderline = require('material-ui/TextField/TextFieldUnderline').default
 
-const appActions = new AppActionFactory()
+const toaster = Container.get(Toaster)
+//const appActions = new AppActionFactory()
 
 // Constants
 const log = getLogger(__filename)
@@ -200,7 +201,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 		const {dataSource} = this.state
 		if (!dataSource || !dataSource.length) {
-			appActions.addErrorMessage('Come on - try and pick a real item ;)')
+			toaster.addErrorMessage('Come on - try and pick a real item ;)')
 			return
 		}
 

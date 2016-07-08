@@ -111,11 +111,11 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				repoActions.clearSelectedRepos()
 			}
 
-			repoActions.setRepoEnabled(availRepo.id, !availRepo.enabled)
+			repoActions.setRepoEnabled(availRepo.repoId, !availRepo.enabled)
 		}
 	}
 
-	onRemoveClicked = (e:React.MouseEvent,availRepoId:string) => {
+	onRemoveClicked = (e:React.MouseEvent,availRepoId) => {
 		const repoActions = new RepoActionFactory()
 
 		e.preventDefault()
@@ -133,13 +133,12 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 		return <div style={styles.list}>
 			{availableRepos && availableRepos
-				.filter(availRepo => _.isString(availRepo.id))
 				.map((availRepo,availRepoIndex) => {
-					const id = availRepo.id
+					const id = availRepo.repoId
 					const repo = availRepo.repo //_.find(repos,(it) => it.id === availRepo.repoId)
-					const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.id === availRepo.id)
+					const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.repoId === availRepo.repoId)
 					const isEnabled = availRepo.enabled
-					const isHovering = this.state.hoverId === availRepo.id
+					const isHovering = this.state.hoverId === availRepo.repoId
 
 					const onSyncClicked = (e) => {
 						e.preventDefault()
@@ -156,7 +155,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					)
 
 					return <div key={id}
-					           onMouseEnter={() => this.setState({hoverId:availRepo.id})}
+					           onMouseEnter={() => this.setState({hoverId:availRepo.repoId})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
 					           onClick={(event) => {
 									this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)

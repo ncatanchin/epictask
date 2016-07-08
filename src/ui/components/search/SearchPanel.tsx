@@ -6,16 +6,17 @@
 import * as React from 'react'
 import {Paper, TextField, AutoComplete, MenuItem} from 'material-ui'
 import {connect} from 'react-redux'
-import {SearchKey, AppKey} from '../../../shared/Constants'
-import {RepoActionFactory} from '../../../shared/actions/repo/RepoActionFactory'
-import {SearchActionFactory} from '../../../shared/actions/search/SearchActionFactory'
-import {SearchResult, SearchState} from '../../../shared/actions/search/SearchState'
+import {List,Map} from 'immutable'
+import {SearchKey, AppKey} from 'shared/Constants'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
+import {SearchResult, SearchState, Search} from 'shared/actions/search/SearchState'
 
 
 import {SearchResultsList} from './SearchResultsList'
 
 // Key mapping tools
-import * as KeyMaps from '../../../shared/KeyMaps'
+import * as KeyMaps from 'shared/KeyMaps'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
@@ -30,11 +31,13 @@ const searchActions = new SearchActionFactory()
  * ISearchPanelProps
  */
 export interface ISearchPanelProps {
+	searchId:string
 	inlineResults?:boolean,
 	expanded?:boolean,
-	results?:SearchResult<any>[],
+	results?:List<SearchResult<any>>,
 	query?:string
 	theme?:any
+
 	hidden?:boolean
 	mode:"repos"|"issues"
 	onResultSelected?:(result:SearchResult<any>) => void
@@ -43,11 +46,18 @@ export interface ISearchPanelProps {
 export interface ISearchPanelState {
 	focused?:boolean
 	selectedIndex?:number
+	query?:string
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state,props) {
 	const searchState = state.get(SearchKey) as SearchState
-	const {query, results} = searchState
+
+	const searchId = props.searchId
+	const searches = searchState.searches
+	let search = searches.get(searchId)
+	search = Map.isMap(search) ? search.toJS() : search
+
+	const {query, results} = search || new Search()
 	return {
 		theme:      getTheme(),
         query,
@@ -73,7 +83,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	constructor(props, context) {
 		super(props, context)
 
-		this.state = {selectedIndex: 0, focused: false}
+		this.state = {selectedIndex: 0, focused: false,query:props.query}
 	}
 
 
@@ -107,7 +117,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	onInputChange = (event) => {
 		const query = event.target.value
 		log.info('Search value: ' + query)
-		searchActions.setQuery(query)
+		searchActions.setQuery(this.props.searchId,query)
 	}
 
 
@@ -135,18 +145,19 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			const {selectedIndex} = this.state
 			const {results} = this.props
 			if (results) {
-				for (let r of results) {
-					if (r.index === selectedIndex) {
-						result = r
-						break
-					}
-				}
+				result = results.find(item => item.index === selectedIndex)
+				// for (let r of results) {
+				// 	if (r.index === selectedIndex) {
+				// 		result = r
+				// 		break
+				// 	}
+				// }
 			}
 
 			if (!result)
 				throw new Error('No result provided and no result matching index: ' + selectedIndex)
 		}
-		searchActions.select(result)
+		searchActions.select(this.props.searchId,result)
 		this.setState({focused: false})
 
 		if (this.props.onResultSelected)
@@ -194,10 +205,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	render() {
-		const {expanded, theme,query,results,hidden} = this.props
+		const {expanded, theme,query,hidden} = this.props,
+			results = this.props.results || List<SearchResult<any>>()
+
 		const {searchPanel:spTheme} = theme
 		const focused = this.state.focused
-		const resultsOpen = (results.length ||
+		const resultsOpen = (results && results.size > 0 ||
 			(query && query.length > 0)) &&
 				focused && !hidden
 
@@ -236,7 +249,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 					onChange={this.onInputChange}
 					inputStyle={inputStyle}
-					defaultValue={this.props.query}
+					defaultValue={this.state.query}
 				/>
 				<SearchResultsList ref="resultsList"
 				                   anchor={'#searchPanel'}

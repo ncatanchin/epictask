@@ -1,5 +1,9 @@
 import {JSONKey} from '../Constants'
 import {isNil} from './ObjectUtil'
+import * as moment from 'moment'
+
+const log = getLogger(__filename)
+
 /**
  * Keep track of annotated property values
  *
@@ -10,7 +14,7 @@ const propertyMap = new WeakMap()
 function getProps(target) {
 	let props = propertyMap.get(target)
 	if (!props) {
-		propertyMap.set(target,(props = {}))
+		propertyMap.set(target, (props = {}))
 	}
 
 	return props
@@ -20,7 +24,6 @@ function getProps(target) {
  * OnChange function type
  */
 export type OnChangeFn  = (propertyKey:string, newVal:any) => any
-
 
 
 export interface ConfigurePropertyOptions {
@@ -41,28 +44,71 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 	return function (target:any, propertyKey:string | symbol) {
 
 		// Get vals
-		const {jsonInclude,enumerable} = opts
+		const {jsonInclude, enumerable} = opts
 
 		// If a value for jsonInclude was provided, define
 		// it in the key's metadata
 		if (!isNil(jsonInclude))
-			Reflect.defineMetadata(JSONKey,{jsonInclude},target,propertyKey)
+			Reflect.defineMetadata(JSONKey, {jsonInclude}, target, propertyKey)
 
 
-		Object.defineProperty(target,propertyKey,{
+		Object.defineProperty(target, propertyKey, {
 			enumerable: isNil(enumerable) ? true : enumerable,
-			get: function() {
+			get: function () {
 				return getProps(this)[propertyKey] as any
 			},
-			set: function(newVal) {
+			set: function (newVal) {
 				if (getProps(this)[propertyKey] === newVal)
 					return
 
 				getProps(this)[propertyKey] = newVal
-				opts.onChange && opts.onChange.call(this,propertyKey,newVal)
+				opts.onChange && opts.onChange.call(this, propertyKey, newVal)
 			}
 
 		})
+	}
+}
+
+
+export function Benchmark(name:string = null) {
+
+	return (target:any,
+	        propertyKey:string,
+	        descriptor:TypedPropertyDescriptor<any>) => {
+		if (!Env.isDev)
+			return descriptor
+
+		// Wrap the function for timing purposes
+		const origFn = descriptor.value
+		descriptor.value = function (...args:any[]) {
+			const startTime = Date.now()
+			let returnVal = null
+			try {
+				returnVal = origFn.call(this,...args)
+			} finally {
+
+
+				function doReport() {
+					const duration = Date.now() - startTime
+
+					log.info(`${name ? `${name}.` : ''}${propertyKey} executed in ${duration}ms OR ${duration / 1000}s`)
+				}
+
+
+				// If a promised was returned then wait for it to resolve
+				if (returnVal && _.isFunction(returnVal.then)) {
+					log.debug('Got promiose result, attaching as thenable to report')
+					returnVal.then(doReport)
+				} else {
+					doReport()
+				}
+
+			}
+
+			return returnVal
+		}
+
+		//return descriptor
 	}
 }
 

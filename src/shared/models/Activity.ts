@@ -6,6 +6,7 @@ import {
 	Repo as TSRepo,
 	DefaultModel
 } from 'typestore'
+import {RegisterModel} from './Registry'
 
 
 export enum ActivityType {
@@ -13,9 +14,17 @@ export enum ActivityType {
 }
 
 @ModelDescriptor()
+@RegisterModel
 export class Activity extends DefaultModel {
 
+	$$clazz = 'Activity'
 
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Activity(o)
 
 	@AttributeDescriptor({primaryKey:true})
 	id:string

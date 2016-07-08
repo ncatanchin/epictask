@@ -4,10 +4,10 @@ import {AutoWired,Inject, Container} from 'typescript-ioc'
 
 import {SearchMessage,SearchState, SearchResult, TSearchResult,SearchResultType} from './SearchState'
 import {Repo, Issue, RepoStore, AvailableRepoStore, AvailableRepo} from 'shared/models'
-import {cloneObject} from '../../util/ObjectUtil'
-import {Stores} from '../../../main/services/DBService'
+import {cloneObject} from 'shared/util/ObjectUtil'
+import {Stores} from 'main/services/DBService'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
-import {createClient} from '../../GitHubClient'
+import {createClient} from 'GitHubClient'
 import {List} from 'immutable'
 
 const uuid = require('node-uuid')
@@ -19,7 +19,6 @@ async function findRepos<M extends AvailableRepo|Repo,R extends AvailableRepoSto
 	const tsRepo = stores.getStore(repoClazz) as AvailableRepoStore|RepoStore
 
 	return await tsRepo.findByName(query)
-
 
 }
 
@@ -47,7 +46,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 
 	@Action()
-	setSearching(searching:boolean) {
+	setSearching(searchId:string,searching:boolean) {
 	}
 
 	/**
@@ -56,11 +55,11 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	 * @param query
 	 */
 	@Action()
-	setQuery(query:string) {
+	setQuery(searchId:string,query:string) {
 	}
 
 	@Action()
-	setResults(newResults:List<SearchResult<any>>) {
+	setResults(searchId:string,newResults:List<SearchResult<any>>) {
 	}
 
 	/**
@@ -71,7 +70,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	 * @returns {function(any, any): undefined}
 	 */
 	@Action()
-	updateResults(type: SearchResultType, newItems:TSearchResult[]) {
+	updateResults(searchId:string,type: SearchResultType, newItems:TSearchResult[]) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
@@ -81,7 +80,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 				return item
 			})
 
-			actions.setResults(_.uniqueListBy(List(indexedItems),'value','id'))
+			actions.setResults(searchId,_.uniqueListBy(List(indexedItems),'value','id'))
 
 		}
 	}
@@ -89,7 +88,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 
 	@Action()
-	select(result:SearchResult<any>) {
+	select(searchId:string,result:SearchResult<any>) {
 		log.info('selected result',result)
 		return async (dispatch,getState) => {
 			const repoActions = this.repoActions.withDispatcher(dispatch,getState)
@@ -107,15 +106,16 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	}
 
 	@Action()
-	search() {
+	search(searchId:string) {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const repoActions = this.repoActions.withDispatcher(dispatch,getState)
-			actions.setSearching(true)
+			actions.setSearching(searchId,true)
 
 			const promises:Array<Promise<any>> = []
 
-			const {query} = actions.state
+			const search = actions.state.searches.get(searchId)
+			const {query} = search
 
 			if (query && query.length) {
 				promises.push(findRepos(query, RepoStore)
@@ -125,7 +125,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 						repoItems = repoItems.filter(item => availRepos.findIndex(availRepo => availRepo.repoId === item.id) === -1)
 						const results = repoItems.map(result => new SearchResult<Repo>(cloneObject(result)))
 
-						actions.updateResults(SearchResultType.Repo,results)
+						actions.updateResults(searchId,SearchResultType.Repo,results)
 
 						return results
 					})
@@ -145,7 +145,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 									await repoActions.persistRepos([repo])
 
 								repoResults.push(new SearchResult(repo))
-								actions.updateResults(SearchResultType.Repo, repoResults)
+								actions.updateResults(searchId,SearchResultType.Repo, repoResults)
 							}
 						} catch (err) {
 							log.info('Repo with explicity name not found',err)
@@ -156,14 +156,14 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 					.then(async (availRepoItems:AvailableRepo[]) => {
 						let results = availRepoItems.map(result => new SearchResult<AvailableRepo>(cloneObject(result)))
 
-						actions.updateResults(SearchResultType.AvailableRepo,results)
+						actions.updateResults(searchId,SearchResultType.AvailableRepo,results)
 					}))
 
 			} else {
-				actions.setResults(List<SearchResult<any>>())
+				actions.setResults(searchId,List<SearchResult<any>>())
 			}
 
-			const onFinish = () => actions.setSearching(false)
+			const onFinish = () => actions.setSearching(searchId,false)
 			Promise.all(promises).then(() => {
 				log.debug('search completed', query)
 				onFinish()

@@ -7,23 +7,22 @@
 // Imports
 import {Container} from 'typescript-ioc'
 import * as React from 'react'
-import {AppActionFactory} from '../../../shared/actions/AppActionFactory'
-import {RepoActionFactory} from '../../../shared/actions/repo/RepoActionFactory'
+import { connect } from 'react-redux'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {RepoList,Icon,Button} from 'components'
-import {Dialogs} from '../../../shared/Constants'
+import {Dialogs} from 'shared/Constants'
 import * as Radium from 'radium'
 
 // Key mapping tools
-import * as KeyMaps from '../../../shared/KeyMaps'
+import * as KeyMaps from 'shared/KeyMaps'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
 // Constants
 const log = getLogger(__filename)
-//const styles = require("./RepoPanel.css")
 
 
-import { connect } from 'react-redux'
 
 
 const styles = {
@@ -100,7 +99,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
-	appActions:AppActionFactory = Container.get(AppActionFactory)
+	uiActions = Container.get(UIActionFactory)
 
 	constructor(props, context) {
 		super(props, context)
@@ -109,7 +108,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 	onBlur = () => this.repoActions.clearSelectedRepos()
 
-	onAddRepoClicked = () => this.appActions.setDialogOpen(Dialogs.RepoAddDialog,true)
+	onAddRepoClicked = () => this.uiActions.setDialogOpen(Dialogs.RepoAddDialog,true)
 
 	keyHandlers = {
 

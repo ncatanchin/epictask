@@ -1,9 +1,10 @@
-import {List} from 'immutable'
+import {List,Map} from 'immutable'
 import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
 import {ObservableStore} from 'typedux'
 import {IService, ServiceStatus} from './IService'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
 import {Stores} from 'main/services/DBService'
+import {Search} from 'shared/actions/search/SearchState'
 
 const log = getLogger(__filename)
 
@@ -15,6 +16,7 @@ export default class SearchService implements IService {
 	private _status = ServiceStatus.Created
 
 	private lastQuery = null
+	private lastSearches = Map<string,Search>()
 	private pendingSearch = null
 
 	@Inject
@@ -37,8 +39,7 @@ export default class SearchService implements IService {
 
 		this.updateQuery()
 
-		this.store.observe([this.searchActions.leaf(),'query'],(newQuery) => {
-			log.debug('Got new query',newQuery,this.lastQuery)
+		this.store.observe([this.searchActions.leaf()],(newSearches) => {
 			this.updateQuery()
 		})
 
@@ -54,7 +55,7 @@ export default class SearchService implements IService {
 		return null
 	}
 
-	async doSearch(query:string) {
+	async doSearch(searchId:string,query:string) {
 
 		// NOTE - we dont actually pass query along
 		log.info('Searching with query',query)
@@ -62,9 +63,9 @@ export default class SearchService implements IService {
 		const results = await stores.repo.findByName(query)
 
 		if (this.pendingSearch) {
-			this.pendingSearch.then(() => this.searchActions.search())
+			this.pendingSearch.then(() => this.searchActions.search(searchId))
 		} else {
-			this.pendingSearch = this.searchActions.search()
+			this.pendingSearch = this.searchActions.search(searchId)
 		}
 
 		try {
@@ -78,15 +79,26 @@ export default class SearchService implements IService {
 	}
 
 	updateQuery() {
-		const searchState = this.searchActions.state
+		const searches = this.searchActions.state.searches
+		const searchIds = searches.keys()
+		// for (let search)
+		for (let searchId of searchIds) {
+			const lastSearch = this.lastSearches.get(searchId)
+			const search = searches.get(searchId)
+			const newQuery = search.query
+			if (lastSearch && (lastSearch.query === newQuery || lastSearch === search)) {
+				//Search has not changed
+				continue
+			}
 
-		const newQuery = searchState.query
-		if (newQuery === this.lastQuery) {
-			return
+			// First update the ref
+			this.lastSearches = this.lastSearches.set(searchId,search)
+
+			log.info('Updating search for ',searchId,'with query ', newQuery)
+			this.doSearch(searchId,newQuery)
 		}
 
-		this.lastQuery = newQuery
-		this.doSearch(newQuery)
+
 	}
 
 }

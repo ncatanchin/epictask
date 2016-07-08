@@ -1,21 +1,27 @@
 import {
 	ModelDescriptor,
 	AttributeDescriptor,
-	FinderDescriptor,
 	DefaultModel,
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {registerModel} from './Registry'
+import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {RegisterModel} from 'shared/models/Registry'
 
 
-export const LabelClassName = 'Label'
 
+@RegisterModel
 @ModelDescriptor()
 export class Label extends DefaultModel {
 
-	$$clazz = LabelClassName
+	$$clazz = 'Label'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Label(o)
 
 	@AttributeDescriptor({primaryKey:true})
 	url: string
@@ -60,5 +66,3 @@ export class LabelStore extends TSRepo<Label> {
 
 
 }
-
-registerModel(LabelClassName,Label)

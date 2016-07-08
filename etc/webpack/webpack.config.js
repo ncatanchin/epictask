@@ -8,19 +8,19 @@ const path = require('path')
 const nodeExternals = require('webpack-node-externals')
 
 const
-	baseDir = path.resolve(__dirname,'../..'),
+	baseDir = path.resolve(__dirname, '../..'),
 	distDir = `${baseDir}/dist`
 
-const {DefinePlugin,ExternalsPlugin,HotModuleReplacementPlugin} = webpack
+const {DefinePlugin, ExternalsPlugin, HotModuleReplacementPlugin} = webpack
 
 // Import globals - just for linting
-const {isDev,env} = global
+const {isDev, env} = global
 
-const libAlias = (name,libPath) => ({
-	[name]: path.resolve(baseDir,`libs/${libPath}`)
+const libAlias = (name, libPath) => ({
+	[name]: path.resolve(baseDir, `libs/${libPath}`)
 })
 
-const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir,dir))
+const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir, dir))
 
 module.exports = function (projectConfig) {
 	const config = {
@@ -40,24 +40,29 @@ module.exports = function (projectConfig) {
 		// Currently we need to add '.ts' to the resolve.extensions array.
 		resolve: {
 
-			alias: _.assign({
-				assert: 'browser-assert',
-				epictask: path.resolve(baseDir,'src'),
-				styles: path.resolve(baseDir,'src/assets/styles'),
-				assets: path.resolve(baseDir,'src/assets'),
-				components: path.resolve(baseDir,'src/ui/components'),
-				ui: path.resolve(baseDir,'src/ui'),
-				shared: path.resolve(baseDir,'src/shared'),
-				main: path.resolve(baseDir,'src/main'),
+			alias: _.assign(
+				{
+					assert: 'browser-assert',
+					epictask: path.resolve(baseDir, 'src'),
+					styles: path.resolve(baseDir, 'src/assets/styles'),
+					assets: path.resolve(baseDir, 'src/assets'),
+					components: path.resolve(baseDir, 'src/ui/components'),
+					ui: path.resolve(baseDir, 'src/ui'),
+					shared: path.resolve(baseDir, 'src/shared'),
+					actions: path.resolve(baseDir, 'src/shared/actions'),
+					GitHubClient: path.resolve(baseDir, 'src/shared/GitHubClient'),
+					Constants: path.resolve(baseDir, 'src/shared/Constants'),
+					Settings: path.resolve(baseDir, 'src/shared/Settings'),
+					models: path.resolve(baseDir, 'src/shared/models'),
+					main: path.resolve(baseDir, 'src/main'),
 
-			},
-				libAlias('typedux','typedux/src/index.ts'),
-				libAlias('typemutant','typemutant/src/index.ts'),
-				libAlias('typelogger','typelogger/src/index.ts'),
-				libAlias('typestore','typestore/packages/typestore/src/index.ts'),
-				libAlias('typestore-mocks','typestore/packages/typestore-mocks/src/index.ts'),
-				libAlias('typestore-plugin-pouchdb','typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
-
+				},
+				libAlias('typedux', 'typedux/src/index.ts'),
+				libAlias('typemutant', 'typemutant/src/index.ts'),
+				libAlias('typelogger', 'typelogger/src/index.ts'),
+				libAlias('typestore', 'typestore/packages/typestore/src/index.ts'),
+				libAlias('typestore-mocks', 'typestore/packages/typestore-mocks/src/index.ts'),
+				libAlias('typestore-plugin-pouchdb', 'typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
 			),
 			modules: resolveDirs(
 				'src',
@@ -77,7 +82,7 @@ module.exports = function (projectConfig) {
 		},
 
 		// Add the loader for .ts files.
-		module: Object.assign({},require('./parts/loaders')(projectConfig),{
+		module: Object.assign({}, require('./parts/loaders')(projectConfig), {
 			//noParse: [/simplemde\.min/]
 		}),
 
@@ -96,7 +101,7 @@ module.exports = function (projectConfig) {
 				DEBUG: isDev,
 				'process.env.__DEV__': isDev,
 				'process.env.NODE_ENV': JSON.stringify(env),
-				'process.env.BASEDIR': path.resolve(__dirname,'../..')
+				'process.env.BASEDIR': path.resolve(__dirname, '../..')
 			}),
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'
@@ -108,7 +113,7 @@ module.exports = function (projectConfig) {
 			__filename: true
 		},
 
-		externals:[
+		externals: [
 			nodeExternals({
 				whitelist: [
 					/webpack\/hot/,
@@ -127,18 +132,16 @@ module.exports = function (projectConfig) {
 	}
 
 	// Development specific updates
-	Object.assign(config,{
+	Object.assign(config, {
 
 		//In development, use inline source maps
 		devtool: isDev ? 'inline-source-map' : 'source-map',
 
 		// In development specify absolute path - better
 		// debugger support
-		output: Object.assign({},config.output, isDev ? {
+		output: Object.assign({}, config.output, isDev ? {
 			devtoolModuleFilenameTemplate: "[absolute-resource-path]"
 		} : {}),
-
-
 
 
 		debug: isDev,
@@ -147,7 +150,7 @@ module.exports = function (projectConfig) {
 
 	// In DEV environments make sure HMR is enabled
 	if (isDev)
-		config.plugins.splice(1,0,new HotModuleReplacementPlugin())
+		config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
 
 
 	return config

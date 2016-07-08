@@ -1,3 +1,4 @@
+import {Toaster} from 'shared/Toaster'
 const log = getLogger(__filename)
 
 import thunkMiddleware from 'redux-thunk'
@@ -6,11 +7,7 @@ import { StoreEnhancer,compose, applyMiddleware } from 'redux'
 import {Events, ReduxDebugSessionKey} from '../Constants'
 import {AppActionFactory as AppActionFactoryType} from '../actions/AppActionFactory'
 import {getReducers} from 'shared/store/Reducers'
-const electron = require('electron')
-const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
-
-
-
+import {Container} from 'typescript-ioc'
 import {
 	setStoreProvider,
 	ILeafReducer,
@@ -19,6 +16,14 @@ import {
 	addActionInterceptor,
 	IActionInterceptorNext
 } from 'typedux'
+
+
+const electron = require('electron')
+const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
+
+
+
+
 
 
 
@@ -148,10 +153,9 @@ function getDebugSessionKey() {
  * @param reducer
  */
 function onError(err:Error,reducer?:ILeafReducer<any,any>) {
-	const AppActionFactory:typeof AppActionFactoryType = require('shared/actions').AppActionFactory
+	const toaster = Container.get(Toaster)
 
-	const actions = new AppActionFactory()
-	actions.addErrorMessage(err)
+	toaster.addErrorMessage(err)
 }
 
 /**

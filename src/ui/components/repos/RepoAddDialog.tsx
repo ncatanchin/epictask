@@ -9,11 +9,8 @@ import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {AppState} from 'shared/actions/AppState'
-import {RepoState} from 'shared/actions/repo/RepoState'
-import {SearchState} from 'shared/actions/search/SearchState'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
 import {SearchPanel} from 'components'
 import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
@@ -21,12 +18,14 @@ import * as KeyMaps from 'shared/KeyMaps'
 import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
 
 import {MuiThemeProvider} from 'material-ui/styles'
+import {UIState} from 'shared/actions/ui/UIState'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 const {Style} = Radium
 const {HotKeys} = require('react-hotkeys')
 
 // Constants
 const log = getLogger(__filename)
-const appActions = new AppActionFactory()
+const uiActions = Container.get(UIActionFactory)
 
 const styles = createStyles({
 	root: [makeTransition(['opacity']),{
@@ -65,10 +64,10 @@ const styles = createStyles({
 
 
 function mapStateToProps(state) {
-	const appState = state.get(Constants.AppKey) as AppState
+	const uiState = state.get(Constants.UIKey) as UIState
 	//const repoState = state.get(Constants.RepoKey) as RepoState
 
-	const open = appState.dialogs.get(Dialogs.RepoAddDialog)
+	const open = uiState.dialogs.get(Dialogs.RepoAddDialog)
 
 	return {
 		theme: getTheme(),
@@ -123,7 +122,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,any> {
 		if (searchPanel)
 			searchPanel.blur()
 
-		appActions.setDialogOpen(Dialogs.RepoAddDialog,false)
+		uiActions.setDialogOpen(Dialogs.RepoAddDialog,false)
 	}
 
 	onResultSelected = (result) => this.hide()
@@ -166,7 +165,8 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,any> {
 			<MuiThemeProvider muiTheme={theme}>
 				<HotKeys handlers={this.keyHandlers}>
 					<div style={s.container}>
-						<SearchPanel inlineResults={true}
+						<SearchPanel searchId='repo-add-search'
+						             inlineResults={true}
 						             expanded={false}
 						             mode='repos'
 						             onResultSelected={this.onResultSelected}

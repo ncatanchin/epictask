@@ -8,24 +8,25 @@ import * as React from 'react'
 import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {AppState} from '../../../shared/actions/AppState'
-import {RepoState} from '../../../shared/actions/repo/RepoState'
-import {AppActionFactory} from '../../../shared/actions/AppActionFactory'
-import {RepoActionFactory} from '../../../shared/actions/repo/RepoActionFactory'
+import {AppState} from 'shared/actions/AppState'
+import {RepoState} from 'shared/actions/repo/RepoState'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Issue, AvailableRepo, Repo, Milestone, User, Label} from 'shared/models'
-import * as Constants from '../../../shared/Constants'
-import {Dialogs} from '../../../shared/Constants'
+import * as Constants from 'shared/Constants'
+import {Dialogs} from 'shared/Constants'
 import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
 import {MenuItem, SelectField, TextField, Dialog, AutoComplete} from 'material-ui'
 import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'
+import {UIState} from 'shared/actions/ui/UIState'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
 
 // Constants
 const log = getLogger(__filename)
-const appActions = new AppActionFactory()
+const uiActions = Container.get(UIActionFactory)
 
 const styles = createStyles({
 	root: [FlexColumn, FlexAuto],
@@ -128,22 +129,23 @@ const styles = createStyles({
 
 
 function mapStateToProps(state) {
+	const uiState = state.get(Constants.UIKey) as UIState
 	const appState = state.get(Constants.AppKey) as AppState
 	const repoState = state.get(Constants.RepoKey) as RepoState
 
 	const
-		open = appState.dialogs.get(Dialogs.IssueEditDialog),
-		availableRepos = repoState.availableRepos,
-		issue = repoState.editingIssue
+		open = uiState.dialogs.get(Dialogs.IssueEditDialog),
+		availableRepos = repoState.availableRepos
+		//issue = repoState.editingIssue
 
 
 	return {
 		theme: getTheme(),
 		user: appState.user,
-		issue,
+		//issue,
 		availableRepos,
-		availableRepo: (!issue) ? null :
-			availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
+		// availableRepo: (!issue) ? null :
+		// 	availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
 		open
 
 	}
@@ -184,7 +186,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	}
 
 
-	hide = () => appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+	hide = () => uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
 
 	onCancel = () => this.hide()
 

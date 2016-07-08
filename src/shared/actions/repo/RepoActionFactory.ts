@@ -3,6 +3,7 @@
 
 
 
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -27,8 +28,8 @@ import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {IssueStore,Issue} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
-import {RepoSyncJob} from './RepoSyncJob'
-import Toaster from '../../Toaster'
+import {RepoSyncJob} from 'main/services/jobs/RepoSyncJob'
+import Toaster from 'shared/Toaster'
 
 
 const uuid = require('node-uuid')
@@ -52,13 +53,8 @@ export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) 
 
 		const arStore = stores.availableRepo
 		availRepo = await arStore.findByRepoId(issue.repoId)
-		log.info(`Loaded available repo directly: ` + availRepo.repoId)
+		log.info(`Loaded available repo directly: ` + issue.repoId)
 	}
-
-
-	// assert(availRepo,"Available repo is null - but we loaded an issue that maps to it: " + issue.id)
-
-
 
 	const filledAvailRepo = await stores.availableRepo.load(availRepo)
 
@@ -85,6 +81,9 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 	@Inject
 	appActions:AppActionFactory
+
+	@Inject
+	uiActions:UIActionFactory
 
 	@Inject
 	jobActions:JobActionFactory
@@ -170,7 +169,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				actions.issuesChanged(savedIssue)
 
 
-				this.appActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+				this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
 				this.toaster.addMessage(`Saved issue #${savedIssue.number}`)
 
 			} catch (err) {
@@ -247,38 +246,21 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 */
 	@Action()
 	syncRepoDetails(availRepo:AvailableRepo) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const jobActions = this.jobActions
 				.withDispatcher(dispatch,getState)
 
-			this.stores.availableRepo
-				.load(availRepo)
-				.then(loadedAvailRepo => {
-					jobActions.createJob(new RepoSyncJob(loadedAvailRepo))
-				})
-
-
-		}
-	}
-
-	/**
-	 * Starts a synchronization for all repos that
-	 * have been marked as available by the user
-	 *
-	 * _note_: this includes repos that are not enabled
-	 */
-	@Action()
-	syncAllRepoDetails() {
-		return async(dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
-
-			log.debug('Getting avail repos from DB, not state')
-			const availRepos = await actions.getAvailableRepos()
-			availRepos.forEach(availRepo => {
-				actions.syncRepoDetails(availRepo)
+			const loadedAvailRepo = await this.stores.availableRepo.load(availRepo)
+			jobActions.triggerJob({
+				id: `reposyncjob-${loadedAvailRepo.repoId}`,
+				name: "RepoSyncJob",
+				args:{availableRepo:loadedAvailRepo}
 			})
+
+
 		}
 	}
+
 
 
 	@Action()
@@ -341,7 +323,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				repoStore = this.stores.repo,
 				availRepoStore = this.stores.availableRepo,
 				availRepo = new AvailableRepo({
-					id: uuid.v4(),
+					id: `available-repo-${repo.id}`,
 					repoId: repo.id,
 					enabled: true
 				})
@@ -361,7 +343,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				await repoStore.save(repo)
 			}
 
-			log.info('Saving new available repo as ',availRepo.id)
+			log.info('Saving new available repo as ',availRepo.repoId)
 			await availRepoStore.save(availRepo)
 
 			actions.getAvailableRepos()
@@ -370,7 +352,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	}
 
 	@Action()
-	removeAvailableRepo(availRepoId:string) {
+	removeAvailableRepo(availRepoId:number) {
 		return async(dispatch, getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
@@ -393,7 +375,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined|boolean>}
 	 */
 	@Action()
-	setRepoEnabled(availRepoId:string,enabled:boolean) {
+	setRepoEnabled(availRepoId:number,enabled:boolean) {
 		return async (dispatch,getState) => {
 			const {
 				repo:repoStore,
@@ -401,7 +383,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			} = this.stores
 
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepo = await availableRepoStore.get(availRepoId)
+			const availRepo = await availableRepoStore.findByRepoId(availRepoId)
 			if (enabled === availRepo.enabled) {
 				return
 			}
@@ -473,7 +455,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 			// const appActions = Container.get(AppActionFactory)
 
-			if (appActions.state.dialogs[dialogName]) {
+			if (this.uiActions.state.dialogs[dialogName]) {
 				log.info('Dialog is already open',dialogName)
 				return
 			}
@@ -494,7 +476,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 			actions.setEditingIssue(issue)
 
-			appActions.setDialogOpen(dialogName,true)
+			this.uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
@@ -515,7 +497,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			issue = await fillIssue(issue,availableRepos)
 
 			actions.setEditingIssue(issue)
-			this.appActions.setDialogOpen(dialogName,true)
+			this.uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 

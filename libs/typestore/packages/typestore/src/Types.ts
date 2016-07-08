@@ -83,6 +83,7 @@ export class DefaultModel implements IModel {
 
 		return type.name
 	}
+
 }
 
 /**

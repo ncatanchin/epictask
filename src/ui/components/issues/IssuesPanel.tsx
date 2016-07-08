@@ -13,10 +13,10 @@ import * as SplitPane from 'react-split-pane'
 import {PureRender, Renderers, Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
 import {IssueLabels} from './IssueLabels'
-import {RepoActionFactory} from '../../../shared/actions/repo/RepoActionFactory'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {Issue, Repo} from 'shared/models'
-import {RepoKey, AppKey} from '../../../shared/Constants'
+import {RepoKey, AppKey} from 'shared/Constants'
 import {List} from 'immutable'
 
 // Non-typed Components

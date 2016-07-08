@@ -10,10 +10,12 @@ import {List} from 'immutable'
 import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
-import {AppKey,IconDataUrl} from '../../shared/Constants'
-import {IToastMessage, ToastMessageType} from '../../shared/models/Toast'
+import {AppKey,IconDataUrl} from 'shared/Constants'
+import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {Icon, Button} from './common'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {Container} from 'typescript-ioc'
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
@@ -27,7 +29,7 @@ const log = getLogger(__filename)
 //endregion
 
 //region Constants
-const appActions = new AppActionFactory()
+const uiActions = Container.get(UIActionFactory)
 //endregion
 
 
@@ -144,7 +146,7 @@ function processNotifications(newMessages) {
 		.forEach(msg => {
 			msg = _.toJS(msg)
 
-			const clearMessage = () => appActions.removeMessage(msg.id)
+			const clearMessage = () => uiActions.removeMessage(msg.id)
 
 			// const buttons = msg.type === ToastMessageType.Error ?
 			// 	['Acknowledge'] : []
@@ -259,7 +261,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 				<span style={makeStyle(s.text,fg)}>{msg.content}</span>
 				{isError && <Button style={makeStyle(s.action,actionColors)}
-				                    onClick={() => appActions.removeMessage(msg.id)}>
+				                    onClick={() => uiActions.removeMessage(msg.id)}>
 					Acknowledge
 				</Button>}
 			</div>

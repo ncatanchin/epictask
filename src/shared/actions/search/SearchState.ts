@@ -4,8 +4,8 @@
 import {List,Record,Map} from 'immutable'
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {ActionMessage} from 'typedux'
-import {SearchKey} from 'shared/Constants'
-import {registerModel} from '../../models/Registry'
+import {RegisterModel} from 'shared/models/Registry'
+
 
 export type TSearchResult = SearchResult<Repo|AvailableRepo|Issue>
 
@@ -15,7 +15,10 @@ export enum SearchResultType {
 	AvailableRepo
 }
 
+@RegisterModel
 export class SearchResult<T extends Issue|Repo|AvailableRepo> {
+
+	static fromJS = (o:any) => new SearchResult(o)
 
 	$$clazz = 'SearchResult'
 
@@ -37,34 +40,60 @@ export class SearchResult<T extends Issue|Repo|AvailableRepo> {
 
 }
 
-registerModel('SearchResult',SearchResult)
 
-
-export const SearchStateRecord = Record({
+export const SearchRecord = Record({
 	results:List<SearchResult<any>>(),
 	error: null,
 	query: null,
 	searching: false,
-
+	types: []
 })
 
-export class SearchState extends SearchStateRecord {
-
+@RegisterModel
+export class Search extends SearchRecord {
 	static fromJS(o:any) {
-		return new SearchState(Object.assign({},o,{
+		return new Search(Object.assign({},o,{
 			results: List(o.results)
 		}))
 	}
 
-	results:List<any>
+	$$clazz = 'Search'
+
+	results:List<SearchResult<any>>
+
+	types: SearchResultType[]
 
 	error:Error
 
 	query:string
 
 	searching:boolean
+}
+
+export const SearchStateRecord = Record({
+	searches:Map<string,Search>()
+})
+
+@RegisterModel
+export class SearchState extends SearchStateRecord {
+
+	$$clazz = 'SearchState'
+
+	static fromJS(o:any) {
+
+		const searches = _.toJS(o.searches),
+			searchIds = Object.keys(searches)
 
 
+		return new SearchState(Object.assign({},o,{
+			searches: Map(searchIds.reduce((newSearches,searchId) => {
+				newSearches[searchId] = Search.fromJS(searches[searchId])
+				return newSearches
+			},{}))
+		}))
+	}
+
+	searches:Map<string,Search>
 
 }
 
@@ -75,5 +104,3 @@ export class SearchState extends SearchStateRecord {
 export interface SearchMessage extends ActionMessage<SearchState> {
 
 }
-
-registerModel(SearchKey,SearchState)

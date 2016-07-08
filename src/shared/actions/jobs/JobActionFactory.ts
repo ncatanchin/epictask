@@ -1,17 +1,19 @@
 
+
 /**
  * Created by jglanz on 5/29/16.
  */
 
+
 const log = getLogger(__filename)
 
 // IMPORTS
-import * as assert from 'assert'
-import * as uuid from 'node-uuid'
+
+
 import {AutoWired} from 'typescript-ioc'
-import {ActionFactory,Action} from 'typedux'
-import {JobKey} from "../..//Constants"
-import {JobState,JobMessage,IJob,IJobRequest,IScheduledJob} from './JobState'
+import {ActionFactory,Action,ActionMessage} from 'typedux'
+import {JobKey} from "shared/Constants"
+import {JobState, IJob, JobInfo, IJobInfo} from './JobReducer'
 import {JobHandler} from './JobHandler'
 import {List} from 'immutable'
 
@@ -23,7 +25,7 @@ import {List} from 'immutable'
  **/
 
 @AutoWired
-export class JobActionFactory extends ActionFactory<any,JobMessage> {
+export class JobActionFactory extends ActionFactory<any,ActionMessage<JobState>> {
 
 	constructor() {
 		super(JobState)
@@ -34,57 +36,20 @@ export class JobActionFactory extends ActionFactory<any,JobMessage> {
 	}
 
 	@Action()
-	createJob(request:IJobRequest) {
-	}
+	setJobsInfo(jobsInfo:List<IJobInfo>) {}
+
 
 	@Action()
-	updateJob(job:IJob) {}
+	cancelJob(job:IJob) {}
+
 
 	@Action()
-	removeJob(job:IJob) {}
+	triggerJob(job:IJob) {}
 
 	@Action()
-	setJobs(jobs:List<IJob>) {}
-
-	@Action()
-	addScheduledJob(scheduledJob:IScheduledJob) {}
-
-	/**
-	 * Schedules a job for execution one or more times
-	 *
-	 * @param request
-	 */
-	scheduleJob(request:IJobRequest) {
-		assert.ok(request && !_.isNil(request.schedule) && !_.isNil(request.repeat),
-			'Only jobs with a schedule and non-null (false is ok) value for repeat can be scheduled')
+	clearPendingJobs() {}
 
 
-		const {schedule} = request
-		const scheduler:Later.IScheduleData = (_.isString(schedule)) ? later.parse.cron(schedule) :
-			schedule()
-
-		const scheduledJob:IScheduledJob = Object.assign({},request,{
-			id: uuid.v4(),
-			scheduler
-		})
-
-		this.addScheduledJob(scheduledJob)
-	}
-
-	@Action()
-	processJob(job:IJob) {
-		return (dispatcher,getState) => {
-			const actions = this.withDispatcher(dispatcher,getState)
-			const handler = new JobHandler(actions,job)
-
-			log.info(`Starting job handler for job: (id=${job.id})`)
-			handler.execute()
-
-		}
-	}
-
-	@Action()
-	setScheduledJobs(scheduledJobs:List<IScheduledJob>) {}
 }
 
 export default JobActionFactory

@@ -2,8 +2,10 @@
 	"compilerOptions": {
 		"target": "ES6",
 		"lib": [
-			"es6",
 			"es7",
+			"es2015",
+			"es2016",
+			"es2017",
 			"dom"
 		],
 		"module": "commonjs",
@@ -25,6 +27,34 @@
 			],
 			"ui/*": [
 				"./ui/*"
+			],
+			"actions": [
+				"./shared/actions/index.ts"
+			],
+			"actions/*": [
+				"./shared/actions/*"
+			],
+			"util": [
+				"./shared/util/index.ts"
+			],
+			"util/*": [
+				"./shared/util/*"
+			],
+			"models": [
+				"./shared/models/index.ts"
+			],
+			"models/*": [
+				"./shared/models/*"
+			],
+			"GitHubClient": [
+				"./shared/GitHubClient.ts"
+			],
+			"Constants": [
+				"./shared/Constants.ts"
+			],
+
+			"Settings": [
+				"./shared/Settings.ts"
 			],
 			"shared": [
 				"./shared/index.ts"
@@ -89,6 +119,8 @@
 		"libs/**/typestore-plugin-cloudsearch",
 		"libs/**/typestore-plugin-dynamodb",
 		"libs/**/typings",
+		"libs/**/package.json",
+		"libs/**/jsconfig.json",
 		"libs/**/*.spec.ts",
 		"libs/**/tsconfig.json",
 		"libs/**/test",

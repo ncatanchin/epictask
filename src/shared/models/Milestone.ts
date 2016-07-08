@@ -9,16 +9,22 @@ import {
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {User} from './User'
-import {registerModel} from './Registry'
+import {RegisterModel} from './Registry'
 
-export const MilestoneClassName = 'Milestone'
 
-@ModelDescriptor({
-	//onPersistenceEvent:MilestoneIndex.onPersistenceEvent
-})
+@RegisterModel
+@ModelDescriptor()
 export class Milestone extends DefaultModel {
 
-	$$clazz = MilestoneClassName
+	$$clazz = 'Milestone'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Milestone(o)
+
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number
@@ -75,4 +81,3 @@ export class MilestoneStore extends TSRepo<Milestone> {
 }
 
 
-registerModel(MilestoneClassName,Milestone)

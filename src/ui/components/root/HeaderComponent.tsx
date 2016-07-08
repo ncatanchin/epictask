@@ -1,6 +1,6 @@
 import * as React from 'react'
 import {SearchPanel} from 'components'
-import {makeAbsolute} from '../../../shared/themes/styles/CommonStyles'
+import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 
 const log = getLogger(__filename)
 
@@ -165,7 +165,11 @@ export class Header extends React.Component<IHeaderProps,any> {
 		const controlStyle = makeStyle(theme.header.controlStyle,styles.controlButton)
 
 		return <div style={headerStyle} id='header'>
-			<SearchPanel inlineResults={expanded} expanded={expanded} mode={expanded ? 'repos' : 'issues'}/>
+			<SearchPanel
+				searchId='header-search'
+				inlineResults={expanded}
+				expanded={expanded}
+				mode={expanded ? 'repos' : 'issues'}/>
 			<div style={logoWrapperStyle}>
 				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
 				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}

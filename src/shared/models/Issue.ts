@@ -13,17 +13,24 @@ import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {registerModel} from './Registry'
+import {RegisterModel} from './Registry'
 
 
 export type IssueState = "open" | "closed"
 
-export const IssueClassName = 'Issue'
 
+@RegisterModel
 @ModelDescriptor()
 export class Issue extends DefaultModel {
 
-	$$clazz = IssueClassName
+	$$clazz = 'Issue'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Issue(o)
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -120,5 +127,3 @@ export class IssueStore extends TSRepo<Issue> {
 export function isIssue(o:any):o is Issue {
 	return o.title && o.id && o.labels
 }
-
-registerModel(IssueClassName,Issue)

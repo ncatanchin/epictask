@@ -1,27 +1,198 @@
-import {JobStatus} from './JobStatus'
-import {DefaultLeafReducer} from 'typedux'
-import {JobKey} from "../../Constants"
-import {JobMessage, JobState, IJob, IJobRequest, IScheduledJob} from './JobState'
-import {List} from 'immutable'
-const log = getLogger(__filename)
+// Register the state model
 import * as uuid from 'node-uuid'
+import {DefaultLeafReducer,ActionMessage} from 'typedux'
+import {List,Record,Map} from 'immutable'
+
+import {JobStatus} from './JobStatus'
+import {JobKey} from "shared/Constants"
+import {RegisterModel} from 'shared/models/Registry'
+import {JobHandler} from './JobHandler'
+
+
+const log = getLogger(__filename)
 
 /**
- * Find an existing job that matches the
- * current job request
- *
- * @param state
- * @param name
- * @returns {T|undefined}
+ * Standard job definition
  */
-export function findInProgressJob(state,{name}) {
-	return state.jobs
-		.find(job => job.status < JobStatus.Completed && job.name === name)
+export interface IJob {
+	id:string
+	name:string
+	args?:any
+
+
+	status?:JobStatus
+	progress?:number
+	message?:string
+	error?:Error
+	updatedAt?:number
+	immediate?:boolean
+	scheduled?:boolean
+
+	// One-at-atime execution (based on name)
+	oneAtATime?:boolean
+
+	// A schedule to use for executing this job
+	// repeatedly - cron format is support
+	schedule?:string
+
+	// Should the job repeat on the schedule
+	repeat?:boolean
+
+
+	description?:string
+}
+
+
+export abstract class BaseJob implements IJob {
+
+	id:string = uuid.v4()
+	status:JobStatus = JobStatus.Created
+	progress:number
+	args:any
+	immediate:boolean = false
+
+	// Status message
+	message:string
+
+	// Last error that occured
+	error:Error
+
+	// Last Updated
+	updatedAt:number = Date.now()
+
+	// Status details
+	description:string
+
+	// One-at-atime execution (based on name or id)
+	oneAtATime:boolean = false
+
+	// A schedule to use for executing this job
+	// repeatedly - cron format is support
+	schedule:string
+	scheduled:boolean = false
+
+	// Should the job repeat on the schedule
+	repeat:boolean = false
+
+	// Name of the job - may be used for uniqueness test
+	name:string
+
+
+
+	constructor(job:IJob = null) {
+
+		if (job)
+			Object.assign(this,job)
+
+		this.id = this.id || uuid.v4()
+	}
+
+	abstract executor(handler:JobHandler):Promise<any>
 }
 
 
 
-export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
+
+
+/**
+ * A formally scheduled job
+ */
+@RegisterModel
+export class JobInfo {
+
+	$$clazz = 'JobInfo'
+
+	static fromJS(o:any) {
+		return new JobInfo(o)
+	}
+
+	constructor(o:any = {}) {
+		Object.assign(this,o)
+	}
+
+	// Use for scheduling requests, one-time is not set
+	id:string
+
+	jobId:string
+
+	progress:number
+
+	status:JobStatus
+
+	error:Error
+	/**
+	 * is the job running now
+	 *
+	 * @type {boolean}
+	 */
+	running:boolean = false
+
+	/**
+	 * Status description if any
+	 */
+	description:string
+
+	/**
+	 * Next execution time in epoch - millis from 1970
+	 */
+	nextExecutionTime:number
+
+	/**
+	 * The current job schedule
+	 */
+	schedule:string
+
+	/**
+	 * Job type/name
+	 */
+	type:string
+}
+
+export interface IJobInfo extends JobInfo {
+
+}
+
+
+export const JobStateRecord = Record({
+	jobsInfo:List<IJobInfo>(),
+	pendingJobs:List<IJob>(),
+	error:null
+
+})
+
+
+/**
+ * Keeps track of ongoing job
+ * information status and scheduling
+ */
+@RegisterModel
+export class JobState extends JobStateRecord {
+
+	static fromJS(o:any) {
+		return new JobState(Object.assign({},o,{
+			jobs: List(o.jobs),
+			pendingJobs: List(o.pendingJobs)
+		}))
+	}
+
+	$$clazz = 'JobState'
+
+	pendingJobs:List<IJob>
+	jobsInfo:List<IJobInfo>
+	error:Error
+
+
+}
+
+
+
+
+/**
+ * Reducer
+ *
+ * Sets all values onto the state
+ */
+export class JobReducer extends DefaultLeafReducer<JobState,ActionMessage<JobState>> {
 
 	constructor() {
 		super(JobKey,JobState)
@@ -33,89 +204,28 @@ export class JobReducer extends DefaultLeafReducer<JobState,JobMessage> {
 	}
 
 
-	updateJob(state:JobState,updatedJob:IJob) {
-		const index = state.jobs.findIndex(job => job.id === updatedJob.id)
+	updateJob(state:JobState,updatedJob:IJobInfo) {
+		const index = state.jobsInfo.findIndex(job => job.id === updatedJob.id)
 
 		return state.merge({
-			jobs: (index === -1) ? state.jobs.push(updatedJob) :
-				state.jobs.set(index,updatedJob)
-		})
-
-
-	}
-
-	createJob(state:JobState,request:IJobRequest) {
-		if (request.oneAtATime) {
-			log.debug(`Job ${request.name} executed one at a time, looking for any current jobs`)
-			const existingJob = findInProgressJob(state,request)
-
-			if (existingJob) {
-				log.warn(`Job ${request.name} executes one at a time, found in progress job ${existingJob && existingJob.id}`)
-				return state
-			}
-		}
-
-		const job = {
-			id: uuid.v4(),
-			request,
-			name: request.name,
-			progress: 0,
-			status: JobStatus.Created
-		}
-		return this.updateJob(state,job)
-	}
-
-	removeJob(state:JobState,oldJob:IJob|string) {
-		return state.merge({
-			jobs: state.jobs
-				.filter(job => (typeof oldJob === 'string') ?
-					oldJob !== job.id : oldJob.id !== job.id)
-		})
-	}
-
-	setJobs(state:JobState,jobs:List<IJob>) {
-		return state.merge({jobs})
-	}
-
-	/**
-	 * Remove a scheduled job
-	 *
-	 * @param idOrName
-	 * @returns {JobStateModel}
-	 */
-	removeScheduledJob(state:JobState,idOrName:string) {
-		return state.merge({
-			scheduledJobs: state.scheduledJobs
-				.filter(job => ![job.id, job.name].includes(idOrName))
-		})
-	}
-
-	/**
-	 * Add a scheduled job to the
-	 * the state - the @see JobManager is
-	 * then responsible for scheduling etc
-	 *
-	 * @param scheduledJob
-	 * @returns {JobStateModel}
-	 */
-	addScheduledJob(state:JobState,scheduledJob:IScheduledJob) {
-		const existingJobs = state.scheduledJobs,
-			existingJob = existingJobs.find(job => job.name === scheduledJob.name ||
-				job.id === scheduledJob.id)
-
-		if (existingJob) {
-			log.warn(`Probably HMR: An existing job with a matching name (${scheduledJob.name}) or id (${scheduledJob.id}) already exists`)
-			return state
-		}
-
-		return state.merge({
-			scheduledJobs: existingJobs.push(scheduledJob)
+			jobs: (index === -1) ? state.jobsInfo.push(updatedJob) :
+				state.jobsInfo.set(index,updatedJob)
 		})
 
 	}
 
-	setScheduledJobs(state:JobState,scheduledJobs:List<IScheduledJob>) {
-		return state.merge({scheduledJobs})
+
+	triggerJob(state:JobState,job:IJob) {
+		return state.set('pendingJobs',state.pendingJobs.push(job))
+	}
+
+	clearPendingJobs(state:JobState) {
+		return state.set('pendingJobs',List())
+	}
+
+
+	setJobsInfo(state:JobState,jobsInfo:List<IJobInfo>) {
+		return state.merge({jobsInfo})
 	}
 
 	setError(state:JobState,err:Error) {

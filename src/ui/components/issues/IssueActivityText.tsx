@@ -130,7 +130,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,a
 
 			<div style={activityTypeStyle}>
 				<div style={activityTypeStyle.details}>
-					<div style={activityTypeStyle.details.username}>{user.login}</div>
+					<div style={activityTypeStyle.details.username}>{user && user.login}</div>
 					<div style={timeStyle}>{activityActionText} {moment(createdAt).fromNow()}</div>
 					{createdAt !== updatedAt &&
 						<div style={timeStyle}>updated {moment(updatedAt).fromNow()}</div>}

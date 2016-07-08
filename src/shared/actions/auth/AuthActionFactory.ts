@@ -1,11 +1,12 @@
 import {AutoWired, Inject} from 'typescript-ioc'
 import {ActionFactory,Action} from 'typedux'
-import {GitHubClient} from '../../GitHubClient'
-import {AuthKey,GitHubConfig} from "../../Constants"
-import {AppActionFactory} from '../AppActionFactory'
-import {AuthState,AuthMessage} from './AuthState'
-import {AppStateType} from '../../AppStateType'
-import {Settings} from '../../Settings'
+import {GitHubClient} from 'GitHubClient'
+import {AuthKey,GitHubConfig} from "Constants"
+import {AppActionFactory} from 'actions/AppActionFactory'
+import {AuthState,AuthMessage} from 'actions/auth/AuthReducer'
+import {AppStateType} from 'shared/AppStateType'
+import {Settings} from 'Settings'
+import {Toaster} from 'shared/Toaster'
 
 const log = getLogger(__filename)
 
@@ -14,6 +15,10 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 
 	@Inject
 	appActions:AppActionFactory
+
+	@Inject
+	toaster:Toaster
+
 
 	@Inject
 	client:GitHubClient
@@ -91,7 +96,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 
 					if (err) {
 						log.error('GH token received: ' + token,err)
-						appActions.addErrorMessage(err)
+						this.toaster.addErrorMessage(err)
 					} else {
 						log.info('GH token received: ' + token,err)
 					}

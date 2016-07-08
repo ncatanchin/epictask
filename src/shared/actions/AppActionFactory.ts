@@ -30,7 +30,7 @@ function updateIssueTransients(issue,availableRepos) {
 }
 
 @AutoWired
-export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof AppState>> {
+export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
 
 	constructor() {
 		super(AppState)
@@ -40,16 +40,9 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 		return AppKey;
 	}
 
-	@Action()
-	setTheme(theme:any) {}
 
 	@Action()
 	setReady(ready:boolean) {}
-
-	@Action()
-	setDialogOpen(name:string,open:boolean) {}
-
-
 
 
 	@Action()
@@ -57,21 +50,6 @@ export class AppActionFactory extends ActionFactory<any,ActionMessage<typeof App
 
 	@Action()
 	setStateType(stateType:AppStateType) {}
-
-	@Action()
-	setError(err:Error) {}
-
-	@Action()
-	addMessage(message:IToastMessage) {}
-
-	@Action()
-	addErrorMessage(err:Error|string) {}
-
-	@Action()
-	removeMessage(id:string) {}
-
-	@Action()
-	clearMessages() {}
 
 	@Action()
 	setMonitorState(monitorState:any) {}

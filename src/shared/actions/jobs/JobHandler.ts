@@ -1,5 +1,9 @@
-
+import {Container,AutoWired,Inject} from 'typescript-ioc'
 import {JobStatus} from './JobStatus'
+import JobService from 'main/services/JobService'
+import {JobInfo, BaseJob} from 'shared/actions/jobs/JobReducer'
+import * as Bluebird from 'bluebird'
+import * as uuid from 'node-uuid'
 //import {IJob} from './JobState'
 
 const log = getLogger(__filename)
@@ -7,42 +11,70 @@ const log = getLogger(__filename)
 /**
  * Handler for executing a job
  */
+@AutoWired
 export class JobHandler {
 
-	private _job
+	private executePromise
 
-	constructor(
-		private actions,
-		job
-	) {
-		this._job = job
+	scheduler:Later.IScheduleData
+	service = Container.get(JobService)
+	info:JobInfo
+	timer
+	constructor(public job:BaseJob) {
+		const {schedule} = job
+		if (schedule) {
+			this.scheduler = later.parse.cron(schedule)
+		}
+
 	}
 
-	get job() {
-		return this._job
+	start() {
+		this.reset()
+		if (this.scheduler && this.job.immediate) {
+			this.execute()
+		}
 	}
+
+	reset() {
+		this.info = new JobInfo()
+		this.info.id = uuid.v4()
+		this.info.jobId = this.job.id
+		this.info.description = this.job.description
+
+		if (this.scheduler)
+			this.schedule()
+		else
+			this.execute()
+	}
+
+	schedule() {
+		assert(this.scheduler,'Schedule must be set in order to schedule')
+
+		const executor = () => this.execute()
+
+		this.timer = (this.job.repeat) ? later.setInterval(executor, this.scheduler) :
+			later.setTimeout(executor, this.scheduler)
+	}
+
 
 	/**
 	 * Update the job status
 	 *
 	 * @param status
 	 * @param progress
-	 * @param err
+	 * @param error
 	 * @returns {IJob}
 	 */
-	async setStatus(status:JobStatus, progress = -1, err:Error = null) {
-		Object.assign(this.job,{status},
-			(progress > -1) ? {progress} : {},
-			(err) ? {error:err} : {})
+	async setStatus(status:JobStatus, progress = -1, error:Error = null) {
+		Object.assign(this.info,{
+			status,
+			progress,
+			error
+		})
 
-		const job = Object.assign(
-			{},
-			_.cloneDeep(this._job)
-		)
+		this.service.updateJobInfo()
 
-		this.actions.updateJob(job)
 
-		return this.job
 	}
 
 	/**
@@ -50,25 +82,45 @@ export class JobHandler {
 	 *
 	 * @returns {IJob}
 	 */
-	async execute() {
-		let job = this.job
+	execute() {
+		return (this.executePromise) ?
+			this.executePromise :
+			(this.executePromise = new Bluebird(async (resolve, reject) => {
+				let job = this.job
 
-		const {request} = job
+				try {
 
-		try {
+					// Set job in-progress
+					await this.setStatus(JobStatus.InProgress)
+					const result = await job.executor(this)
 
-			// Set job in-progress
-			await this.setStatus(JobStatus.InProgress)
+					resolve(result)
+				} catch (err) {
+					log.error(`Job failed (id=${job.id})`,err)
+					reject(err)
+				}
 
-			await request.executor(this)
+				return this.job
+			}).then(async (result) => {
+				await this.setStatus(JobStatus.Completed)
+				return result
+			}).catch((err) => {
+				// Set job failed
+				log.error('Failed job', err)
+				return this.setStatus(JobStatus.Failed,err)
+			}).finally(() => {
+				this.executePromise = null
 
-			// Set job completed
-			await this.setStatus(JobStatus.Completed)
-		} catch (err) {
-			log.error(`Job failed (id=${job.id})`,err)
-			await this.setStatus(JobStatus.Failed,err)
+				this.service.completedJob(this,this.info.status)
+			}))
+
+
+	}
+
+	cancel() {
+		if (this.executePromise) {
+			this.executePromise.cancel()
+			this.executePromise = null
 		}
-
-		return this.job
 	}
 }

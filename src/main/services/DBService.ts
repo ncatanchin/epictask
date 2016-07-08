@@ -51,7 +51,7 @@ export default class DBService implements IService {
 	private _storePlugin:PouchDBPlugin
 
 	coordinator:TSCoordinator
-	dbName = `epictask-${Env.envName}`
+	dbName = `epictask-${Env.envName}-2`
 	dbPath = getUserDataFilename(this.dbName + '.db')
 
 	/**

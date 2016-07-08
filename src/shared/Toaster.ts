@@ -4,8 +4,9 @@ import * as uuid from 'node-uuid'
 import {AutoWired,Inject,Singleton,Container} from 'typescript-ioc'
 
 import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {absoluteFilename} from 'shared/util/Files'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+
+
 
 const log = getLogger(__filename)
 const fs = require('fs')
@@ -14,10 +15,10 @@ const path = require('path')
 
 @AutoWired
 @Singleton
-export default class Toaster {
+export class Toaster {
 
 	@Inject
-	appActions:AppActionFactory
+	uiActions:UIActionFactory
 
 	addMessage(message:IToastMessage|string,type:ToastMessageType = ToastMessageType.Info) {
 		if (_.isString(message)) {
@@ -29,7 +30,7 @@ export default class Toaster {
 			}
 		}
 
-		this.appActions.addMessage(message)
+		this.uiActions.addMessage(message)
 	}
 
 	addErrorMessage(err:Error|string) {
@@ -38,7 +39,7 @@ export default class Toaster {
 		}
 		const payload = _.pick(err, 'message', 'code', 'stack', 'description') as any
 		//logError(err)
-		this.appActions.addErrorMessage(payload)
+		this.uiActions.addErrorMessage(payload)
 	}
 }
 
@@ -65,4 +66,4 @@ export function addErrorMessage(err:Error|string) {
 }
 
 
-
+export default Toaster

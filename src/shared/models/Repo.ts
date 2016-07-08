@@ -13,14 +13,23 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 
 import {User} from './User'
 import {Permission} from './Permission'
-import {registerModel} from './Registry'
+import {RegisterModel} from './Registry'
 
-export const RepoClassName = 'Repo'
 
+
+@RegisterModel
 @ModelDescriptor()
 export class Repo extends DefaultModel {
 
-	$$clazz = RepoClassName
+	$$clazz = 'Repo'
+
+	/**
+	 * Revive from JS/JSON
+	 *
+	 * @param o
+	 */
+	static fromJS = (o:any) => new Repo(o)
+
 
 	@AttributeDescriptor({primaryKey:true})
 	id: number;
@@ -131,4 +140,3 @@ export class RepoStore extends TSRepo<Repo> {
 	}
 }
 
-registerModel(RepoClassName,Repo)

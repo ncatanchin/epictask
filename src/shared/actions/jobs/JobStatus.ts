@@ -1,5 +1,7 @@
 export enum JobStatus {
-	Created = 1,
+	Unknown = 1,
+	Waiting,
+	Created,
 	InProgress,
 	Completed,
 	Failed

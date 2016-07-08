@@ -3,7 +3,7 @@ import {IService, ServiceStatus} from './IService'
 import {ObservableStore} from 'typedux'
 import {Stores} from './DBService'
 import {ToastMessageType} from 'shared/models/Toast'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
@@ -15,7 +15,7 @@ export default class ToastService implements IService {
 	pendingTimers = {}
 
 	@Inject
-	appActions:AppActionFactory
+	uiActions:UIActionFactory
 
 	@Inject
 	store:ObservableStore<any>
@@ -25,7 +25,7 @@ export default class ToastService implements IService {
 		_.toJS(newMessages).forEach(msg => {
 
 			const
-				clearMessage = () => this.appActions.removeMessage(msg.id),
+				clearMessage = () => this.uiActions.removeMessage(msg.id),
 				isError = msg.type === ToastMessageType.Error
 
 
@@ -46,7 +46,7 @@ export default class ToastService implements IService {
 	async start() {
 		this._status = ServiceStatus.Started
 		this.store.observe(
-			[this.appActions.leaf(), 'messages'],
+			[this.uiActions.leaf(), 'messages'],
 			this.onMessagesChanged
 		)
 
