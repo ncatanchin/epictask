@@ -13,7 +13,7 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 
 import {User} from './User'
 import {Permission} from './Permission'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from '../Registry'
 
 
 

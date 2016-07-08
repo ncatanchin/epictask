@@ -4,7 +4,7 @@
 import {List,Record,Map} from 'immutable'
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {ActionMessage} from 'typedux'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from 'shared/Registry'
 
 
 export type TSearchResult = SearchResult<Repo|AvailableRepo|Issue>

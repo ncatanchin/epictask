@@ -5,7 +5,7 @@ import {List,Record,Map} from 'immutable'
 
 import {JobStatus} from './JobStatus'
 import {JobKey} from "shared/Constants"
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from '../../Registry'
 import {JobHandler} from './JobHandler'
 
 

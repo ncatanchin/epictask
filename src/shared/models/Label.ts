@@ -6,7 +6,7 @@ import {
 } from 'typestore'
 
 import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from 'shared/Registry'
 
 
 

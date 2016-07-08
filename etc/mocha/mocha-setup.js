@@ -1,5 +1,5 @@
-require('source-map-support').install()
-require('../packages-path')
+//require('source-map-support').install()
+//require('../packages-path')
 require('bluebird').config({
 	cancellation: true,
 	longStackTraces: true,
@@ -10,10 +10,10 @@ require("babel-polyfill")
 require('expectations')
 require('reflect-metadata')
 
-var Log = require('typestore').Log
+// var Log = require('typestore').Log
 
-if (!process.env.DEBUG)
-	Log.setLogThreshold(Log.LogLevel.WARN)
+// if (!process.env.DEBUG)
+// 	Log.setLogThreshold(Log.LogLevel.WARN)
 
 global.getLogger = function(filename) {
 	return console

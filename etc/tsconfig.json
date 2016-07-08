@@ -22,6 +22,9 @@
 			"epictask/*": [
 				"./*"
 			],
+			"tests/*": [
+				"./tests/*"
+			],
 			"ui": [
 				"./ui/index.ts"
 			],

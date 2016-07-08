@@ -6,7 +6,7 @@ import {IToastMessage} from 'models/Toast'
 import {User} from 'models/User'
 import {AppStateType} from 'shared/AppStateType'
 import {ISettings,Settings} from '../Settings'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from '../Registry'
 
 
 

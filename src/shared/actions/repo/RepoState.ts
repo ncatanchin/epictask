@@ -1,7 +1,7 @@
 const log = getLogger(__filename)
 
 import {RepoKey} from 'shared/Constants'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from 'shared/Registry'
 import {Set,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Repo, AvailableRepo,Comment,Issue} from 'shared/models'

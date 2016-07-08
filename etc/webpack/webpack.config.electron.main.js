@@ -9,28 +9,37 @@ const
 	fs = require('fs'),
 	baseConfig = require('./webpack.config')
 
-// const nodeModules = fs.readdirSync('node_modules')
-// 	.filter((x) => ['.bin'].indexOf(x) === -1)
 
 module.exports = function(projectConfig) {
+
 	projectConfig = projectConfig || projectConfigs['electron-main']
+
 	const config = baseConfig(projectConfig)
 
+	// HMR
 	const hmrEntry = [
-		//'webpack/hot/only-dev-server',
-		'webpack/hot/poll.js?1000'
+		'webpack/hot/poll.js?1000' /// 'webpack/hot/only-dev-server',
+		//const hmrEntry = 'webpack/hot/signal.js'
 	]
-	//const hmrEntry = 'webpack/hot/signal.js'
+
+
 	let mainEntries = ["./src/main/MainEntry"]
 	if (isDev)
 		mainEntries.unshift(...hmrEntry)
 
+	const mainEntry = {
+		"MainEntry": mainEntries
+	}
+
+	if (isDev)
+		Object.assign(mainEntry,{
+			"MainTestEntry": ['./src/tests/main/MainTestEntry']
+		})
+
 	//console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
 	Object.assign(config, {
 
-		entry: {
-			"MainEntry": mainEntries
-		},
+		entry: mainEntry,
 
 		target: 'electron-main',
 		devtool: 'source-map',

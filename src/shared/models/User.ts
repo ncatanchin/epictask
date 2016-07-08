@@ -7,7 +7,7 @@ import {
 } from 'typestore'
 
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from '../Registry'
 
 @RegisterModel
 @ModelDescriptor()

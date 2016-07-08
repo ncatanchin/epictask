@@ -126,6 +126,7 @@
     "sinon": "^1.17.4",
     "source-map-loader": "^0.1.5",
     "style-loader": "^0.13.1",
+    "ts-node": "^0.9.3",
     "tslint": "^3.11.0",
     "typescript": "^2.0.0-dev.20160706",
     "url-loader": "^0.5.7",

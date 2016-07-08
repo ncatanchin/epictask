@@ -1,6 +1,6 @@
 import {List,Record,Map} from 'immutable'
 import {ActionMessage} from 'typedux'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from 'shared/Registry'
 
 import {DefaultLeafReducer} from 'typedux'
 import {AuthKey} from "Constants"

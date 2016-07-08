@@ -9,7 +9,7 @@ import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Issue} from './Issue'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from '../Registry'
 
 
 @RegisterModel

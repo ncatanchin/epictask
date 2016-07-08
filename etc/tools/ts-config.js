@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 
 const tsConfigBaseFile = () => `${baseDir}/src/tsconfig.json`
+const tsTestConfigBaseFile = () => `${baseDir}/tests/tsconfig.json`
 
 export function makeTsConfigBase() {
 	const templateConfig = require('../tsconfig.json')
@@ -18,8 +19,10 @@ export function makeTsConfigBase() {
 	})
 
 	writeJSONFileSync(tsConfigBaseFile(),templateConfig)
+	//writeJSONFileSync(tsTestConfigBaseFile(),templateConfig)
 
 	const rootTsConfigFile = `${baseDir}/tsconfig.json`
+
 	if (fs.existsSync(rootTsConfigFile))
 		fs.unlinkSync(rootTsConfigFile)
 

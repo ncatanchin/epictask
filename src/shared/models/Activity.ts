@@ -6,7 +6,7 @@ import {
 	Repo as TSRepo,
 	DefaultModel
 } from 'typestore'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from 'shared/Registry'
 
 
 export enum ActivityType {

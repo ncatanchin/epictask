@@ -11,7 +11,7 @@ import {Label,LabelStore} from './Label'
 import {Milestone,MilestoneStore} from './Milestone'
 import {User,UserStore} from './User'
 import {Repo,RepoStore} from './Repo'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from '../Registry'
 
 /**
  * Maps repos that have been configured for tasks

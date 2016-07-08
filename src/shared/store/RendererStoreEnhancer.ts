@@ -2,7 +2,7 @@ const log = getLogger(__filename)
 
 import {Events} from '../Constants'
 import {getReducers} from 'shared/store/Reducers'
-import {getModel} from '../models/Registry'
+import {getModel} from 'shared/Registry'
 //const nextTick = require('browser-next-tick')
 
 

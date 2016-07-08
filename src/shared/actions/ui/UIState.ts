@@ -3,7 +3,7 @@ import {List,Record,Map} from 'immutable'
 import {IToastMessage} from 'models/Toast'
 import {User} from 'models/User'
 import {AppStateType} from 'shared/AppStateType'
-import {RegisterModel} from 'shared/models/Registry'
+import {RegisterModel} from 'shared/Registry'
 
 
 /**

@@ -13,7 +13,7 @@ import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
-import {RegisterModel} from './Registry'
+import {RegisterModel} from '../Registry'
 
 
 export type IssueState = "open" | "closed"
