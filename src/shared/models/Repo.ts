@@ -4,7 +4,8 @@ import {
 	FinderDescriptor,
 	DefaultModel,
 	DefaultValue,
-	IFinderRequest,
+	FinderRequest,
+	FinderResultArray,
 	Repo as TSRepo
 } from 'typestore'
 
@@ -14,7 +15,6 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 import {User} from './User'
 import {Permission} from './Permission'
 import {RegisterModel} from '../Registry'
-
 
 
 @RegisterModel
@@ -124,9 +124,20 @@ export class RepoStore extends TSRepo<Repo> {
 	}
 
 	@PouchDBFullTextFinder({
+		includeDocs: false,
 		textFields: ['name','full_name','description']
 	})
-	findByName(name:string,opts:IFinderRequest = null):Promise<Repo[]> {
+	findWithText(request:FinderRequest, name:string):Promise<FinderResultArray<number>> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
+		single: true,
+		includeDocs: false,
+		indexFields: ['full_name'],
+		selector: (full_name) => ({full_name})
+	})
+	findByFullName(fullName:string):Promise<number> {
 		return null
 	}
 

@@ -14,6 +14,7 @@ export type PouchDBFilterFn = (doc,...args:any[]) => boolean
 export interface IPouchDBFinderOptions extends IFinderOptions {
 	limit?:number
 	offset?:number
+	includeDocs?:boolean
 }
 
 export interface IPouchDBFullTextFinderOptions extends IPouchDBFinderOptions {

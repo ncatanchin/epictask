@@ -7,48 +7,110 @@ import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'
 
 
-export type TSearchResult = SearchResult<Repo|AvailableRepo|Issue>
 
-export enum SearchResultType {
+
+export enum SearchType {
 	Issue = 1,
 	Repo,
 	AvailableRepo
 }
 
+
+export enum SearchSource {
+	Issue = 1,
+	Repo,
+	ExactRepo,
+	AvailableRepo
+}
+
+export const SearchTypeSourceMap = {
+	[SearchType.Issue]: [SearchSource.Issue],
+	[SearchType.Repo]: [SearchSource.Repo,SearchSource.ExactRepo],
+	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
+}
+
+export const SearchSourceTypeMap = {
+	[SearchSource.Issue]:SearchType.Issue,
+	[SearchSource.Repo]:SearchType.Repo,
+	[SearchSource.ExactRepo]:SearchType.Repo,
+	[SearchSource.AvailableRepo]:SearchType.AvailableRepo
+
+}
+
 @RegisterModel
-export class SearchResult<T extends Issue|Repo|AvailableRepo> {
+export class SearchItem {
 
 	static fromJS = (o:any) => new SearchResult(o)
 
-	$$clazz = 'SearchResult'
+	id:string|number
+	type:SearchType
 
-	index:number = -1
-	type:SearchResultType
+	constructor(id:string|number, type:SearchType)
+	constructor(obj:any)
+	constructor(idOrObject:any, type:SearchType = null) {
+		if (_.isNumber(idOrObject) || _.isString(idOrObject)) {
+			Object.assign(this, {
+				id: idOrObject,
+				type
+			})
+		} else {
+			Object.assign(this, idOrObject)
+		}
 
-	constructor(public value:T) {
+	}
+}
 
-		const vAny:any = value
-		if (vAny.type && vAny.value)
-			Object.assign(this,vAny)
-		else
-			//const repoState = getStore().getState().get(RepoKey)
+/**
+ * Search Result
+ */
+@RegisterModel
+export class SearchResult {
 
-			this.type = isIssue(value) ? SearchResultType.Issue :
-				(value instanceof Repo) ? SearchResultType.Repo :
-					SearchResultType.AvailableRepo
+	static fromJS = (o:any) => new SearchResult(o)
+
+	items:List<SearchItem>
+	type:SearchType
+	source:SearchSource
+
+	constructor(items:List<SearchItem>, type:SearchType, source:SearchSource,count:number,total:number)
+	constructor(obj:any)
+	constructor(
+		itemsOrObject:any,
+		type:SearchType = null,
+		source:SearchSource = null,
+		public count:number = -1,
+		public total:number = -1
+	) {
+		if (List.isList(itemsOrObject)) {
+			Object.assign(this,{
+				items:itemsOrObject,
+				type,
+				source
+			})
+		} else {
+			Object.assign(this,itemsOrObject)
+		}
 	}
 
 }
 
-
+/**
+ * immutable record for search
+ *
+ * @type {Record.Class}
+ */
 export const SearchRecord = Record({
-	results:List<SearchResult<any>>(),
+	id:null,
+	results:Map<SearchSource,SearchResult>(),
 	error: null,
 	query: null,
 	searching: false,
 	types: []
 })
 
+/**
+ * Represents a specific search panel
+ */
 @RegisterModel
 export class Search extends SearchRecord {
 	static fromJS(o:any) {
@@ -57,11 +119,11 @@ export class Search extends SearchRecord {
 		}))
 	}
 
-	$$clazz = 'Search'
+	id:string
 
-	results:List<SearchResult<any>>
+	results:Map<SearchSource,SearchResult>
 
-	types: SearchResultType[]
+	types: SearchType[]
 
 	error:Error
 
@@ -70,14 +132,20 @@ export class Search extends SearchRecord {
 	searching:boolean
 }
 
+/**
+ * Search state record
+ *
+ * @type {Record.Class}
+ */
 export const SearchStateRecord = Record({
 	searches:Map<string,Search>()
 })
 
+/**
+ * Search State class with some helpers
+ */
 @RegisterModel
 export class SearchState extends SearchStateRecord {
-
-	$$clazz = 'SearchState'
 
 	static fromJS(o:any) {
 

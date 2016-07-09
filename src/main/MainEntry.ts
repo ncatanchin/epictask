@@ -1,4 +1,6 @@
 import 'reflect-metadata'
+import 'shared/PromiseConfig'
+
 import 'shared/ErrorHandling'
 import {Container} from 'typescript-ioc'
 import Electron = require('electron')

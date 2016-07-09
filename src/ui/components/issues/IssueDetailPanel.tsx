@@ -139,7 +139,7 @@ function mapStateToProps(state) {
 
 	return {
 		theme:    getTheme(),
-		issues:   repoState.selectedIssues,
+		issues:   repoState.selectedIssues || List(),
 		issue:   repoState.selectedIssue,
 		repos:    repoState.stores,
 		comments: repoState.comments

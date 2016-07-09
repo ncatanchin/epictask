@@ -1,5 +1,6 @@
 module.exports = global.WebpackStatsConfig = {
-	//colors: process.env.COLORS !== '0',
+	colors: process.env.COLORS !== '0',
+	//colors: true,
 	errorDetails: true,
 	assets: false, //true - shows all output assets
 	chunks: true,

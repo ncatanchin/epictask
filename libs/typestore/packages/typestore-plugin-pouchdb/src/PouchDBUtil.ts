@@ -1,7 +1,7 @@
-import {IModelMapper,IModel,IModelType,getDefaultMapper,ModelMapper} from 'typestore'
+import {IModelMapper,IModel,IModelType,getDefaultMapper,isFunction,ModelMapper} from 'typestore'
 
 import {PouchDBAttributePrefix, PouchDBReservedFields, PouchDBOperators} from './PouchDBConstants'
-import {PouchDBKeyValue} from './PouchDBRepoPlugin'
+import {PouchDBKeyValue, PouchDBRepoPlugin} from './PouchDBRepoPlugin'
 
 const attrRegex = new RegExp(`^${PouchDBAttributePrefix}`,'g')
 
@@ -57,17 +57,37 @@ export function convertModelToDoc(
 	return doc
 }
 
-export function mapDocs<M extends IModel>(modelClazz:{new():M},result:any):M[] {
+export function mapDocs<M extends IModel>(pouchRepo:PouchDBRepoPlugin<any>,modelClazz:{new():M},result:any,includeDocs = true):M[]|number[]|string[] {
 
-	const mapper = getDefaultMapper(modelClazz)
+
 	//const mapper = new ModelMapper(modelClazz)
 
-		let docs = (result && Array.isArray(result)) ? result : result.docs
-		docs = docs || []
-		return docs.map(doc => mapper.fromObject(doc.attrs,(o, model) => {
-			(model as any).$$doc = doc
-			return model
-		}))
+	let docs = (result && Array.isArray(result)) ? result : result.docs
+	docs = docs || []
+
+	// if we only want the ids then return only the ids
+	if (!includeDocs) {
+		return docs.map(doc => {
+			let val = (doc && doc.attrs) ?
+				doc.attrs[pouchRepo.primaryKeyField] :
+				(doc && doc._id) ? doc._id :
+				(doc && doc.id) ? doc.id :
+				doc
+
+			let pkType = pouchRepo.primaryKeyType
+			if (isFunction(pkType)) {
+				val = new pkType(val)
+			}
+
+			return val
+		})
+	}
+
+	const mapper = getDefaultMapper(modelClazz)
+	return docs.map(doc => mapper.fromObject(doc.attrs,(o, model) => {
+		(model as any).$$doc = doc
+		return model
+	}))
 
 
 }

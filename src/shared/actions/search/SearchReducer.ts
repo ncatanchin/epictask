@@ -1,7 +1,7 @@
 import {List,Record,Map} from 'immutable'
 import {DefaultLeafReducer} from 'typedux'
 import {SearchKey} from "../../Constants"
-import {SearchMessage, SearchState, SearchResult, Search} from './SearchState'
+import {SearchMessage, SearchState, SearchResult, Search, SearchType, SearchSource} from './SearchState'
 
 
 export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
@@ -26,16 +26,16 @@ export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
 		})
 	}
 
-	setQuery(state:SearchState,searchId:string,query:string) {
+	setQuery(state:SearchState, searchId:string, types:SearchType[], query:string) {
 		return this.updateSearch(state,searchId,(search) => {
-			return search.set('query',query)
+			return search.merge({query,types,id:searchId})
 		})
 
 	}
 
-	setResults(state:SearchState,searchId:string,newResults:List<SearchResult<any>>) {
+	setResults(state:SearchState,searchId:string,source:SearchSource,newResults:SearchResult) {
 		return this.updateSearch(state,searchId,(search) => {
-			return search.set('results',newResults)
+			return search.set('results',search.results.set(source,newResults))
 		})
 	}
 

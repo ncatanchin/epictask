@@ -1,56 +1,48 @@
+import {User} from 'shared/models/User'
 const log = getLogger(__filename)
 
-import {RepoKey} from 'shared/Constants'
 import {RegisterModel} from 'shared/Registry'
-import {Set,List,Record} from 'immutable'
+import {Map,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Repo, AvailableRepo,Comment,Issue} from 'shared/models'
 
 export const RepoStateRecord = Record({
-	selectedRepos: List<AvailableRepo>(),
-	availableRepos: List<AvailableRepo>(),
-	issues:List<Issue>(),
-	issue:null,
-	comments:List<Comment>(),
-	selectedIssues:List<Issue>(),
-	selectedIssue:null,
-	editingIssue: null,
-	repos:List<Repo>(),
+	issues:Map<string,Issue>(),
+	comments:Map<string,Comment>(),
+	repos:Map<string,Repo>(),
+	users:Map<string,User>(),
 	error:null
 })
 
+/**
+ * Registry state
+ *
+ */
 @RegisterModel
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {
 		return new RepoState(Object.assign({},o,{
 			repos: List(o.stores),
-			selectedRepos: List(o.selectedRepos),
-			availableRepos: List(o.availableRepos),
-			comments: List(o.comments),
-			issues: List(o.issues),
-			selectedIssues: List(o.selectedIssues)
+			availableRepos: Map(o.availableRepos),
+			comments: Map(o.comments),
+			issues: Map(o.issues),
+			users: Map(o.users),
 		}))
 	}
-	$$clazz = 'RepoState'
+
 
 	availableRepos: Map<string,AvailableRepo>
-
-
-	issues:List<Issue>
-	issue:Issue
-	comments:List<Comment>
-	selectedIssues:Set<Issue>
-	selectedIssue:Issue
-	repos:List<Repo>
+	issues:Map<string,Issue>
+	comments:Map<string,Comment>
+	repos:Map<string,Repo>
 	error:Error
-
 
 }
 
-
-//export const RepoState = makeRecord(RepoStateModel,RepoStateDefaults)
-export type TRepoState = typeof RepoState
+/**
+ * RepoMessage
+ */
 export interface RepoMessage extends ActionMessage<RepoState> {
 
 }

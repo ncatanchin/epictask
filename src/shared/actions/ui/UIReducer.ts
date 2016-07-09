@@ -7,7 +7,7 @@ import {UIKey} from 'shared/Constants'
 
 
 export function makeToastMessage(opts:any) {
-	return Object.assign(opts,{
+	return Object.assign({},opts,{
 		id:uuid.v4(),
 		createdAt:Date.now(),
 		content: opts.content || 'No content provided - DANGER will robinson'
@@ -39,8 +39,11 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 	}
 
 	addMessage(state:UIState,message:IToastMessage) {
-		const messageList = _.uniqueListBy(state.messages.push(message),'id')
-		return state.set('messages',messageList)
+
+		return state.messages
+			.findIndex(item => _.toJS(item).id === message.id) > -1 ?
+				state :
+				state.set('messages',state.messages.push(message))
 	}
 
 	addErrorMessage(state:UIState,err:Error|string) {
@@ -56,7 +59,7 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 	removeMessage(state:UIState,id:string) {
 		return state.set(
 			'messages',
-			state.messages.filter(msg => msg.id !== id)
+			state.messages.filter(msg => _.toJS(msg).id !== id)
 		)
 	}
 

@@ -30,12 +30,6 @@ export class ObservableStore<S extends State> implements Store<S> {
 		this.rootReducerFn = this.rootReducer.makeGenericHandler()
 
 		return this.rootReducerFn
-		// <A extends ActionMessage<any>>(state:S,action:A):S => {
-		//
-		// 	return ((this.rootReducer) ?
-		// 		this.rootReducer.handle(state,action) :
-		// 		null) as S
-		// }
 	}
 
 	/**
@@ -90,19 +84,6 @@ export class ObservableStore<S extends State> implements Store<S> {
 		const rootReducerFn = this.createRootReducer(...leafReducers)
 		this.store.replaceReducer(rootReducerFn)
 	}
-
-	/**
-	 * Enable hot replace
-	 */
-	enableHot() {
-		// if (module.hot) {
-		// 	// Enable Webpack hot module replacement for reducers
-		// 	module.hot.accept('core/reducers/RootReducer', () => {
-		// 		this.replaceReducers()
-		// 	})
-		// }
-	}
-
 
 	subscribe(listener:()=>void):Unsubscribe {
 		return this.getReduxStore().subscribe(listener);

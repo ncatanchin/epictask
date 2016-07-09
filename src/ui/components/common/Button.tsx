@@ -74,10 +74,9 @@ export class Button extends React.Component<IButtonProps,any> {
 			{ripple,theme,mode,disabled,style,children} = this.props,
 			s = mergeStyles(styles,theme.button)
 
-		const rootStyle = [s.root,s[mode],(disabled) && s.disabled,style]
-
+		const rootStyle = mergeStyles(s.root,s[mode],(disabled) && s.disabled,style)
+		//{ripple && <Ink/>}
 		return <button {...this.props} style={rootStyle}>
-			{ripple && <Ink/>}
 			{children}
 		</button>
 	}

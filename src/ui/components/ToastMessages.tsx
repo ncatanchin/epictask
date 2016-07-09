@@ -10,12 +10,15 @@ import {List} from 'immutable'
 import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
-import {AppKey,IconDataUrl} from 'shared/Constants'
+import {AppKey, IconDataUrl, UIKey} from 'shared/Constants'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {Icon, Button} from './common'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
+import {UIState} from 'shared/actions/ui/UIState'
+import {cloneObject} from 'shared/util/ObjectUtil'
+import {PureRender} from 'ui/components/common/PureRender'
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
@@ -124,7 +127,7 @@ const messageNotifications = {}
  */
 //TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
 function processNotifications(newMessages) {
-	if (newMessages === lastMessages)
+	if (newMessages === lastMessages || Array.isEqual(newMessages,lastMessages,true))
 		return
 
 	Object.keys(messageNotifications)
@@ -144,7 +147,7 @@ function processNotifications(newMessages) {
 	newMessages
 		.filter(msg => !messageNotifications[msg.id])
 		.forEach(msg => {
-			msg = _.toJS(msg)
+
 
 			const clearMessage = () => uiActions.removeMessage(msg.id)
 
@@ -166,7 +169,6 @@ function processNotifications(newMessages) {
 			// Add Notification events
 			NotificationEvents
 				.forEach(event => {
-					//notification.on(event, clearMessage)
 					notification[`on${event}`] = clearMessage
 				})
 
@@ -184,8 +186,9 @@ function processNotifications(newMessages) {
  * @param state
  */
 function mapStateToProps(state) {
-	const {messages} = state.get(AppKey)
+	const uiState = state.get(UIKey) as UIState
 
+	const messages = uiState.messages.toArray().map(msg => _.toJS(msg))
 	processNotifications(messages)
 
 
@@ -208,8 +211,10 @@ function mapStateToProps(state) {
  **/
 
 
+
+
 @connect(mapStateToProps)
-@Radium
+@PureRender
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 	constructor(props,context) {
@@ -223,16 +228,13 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * @returns {any}
 	 * @param props
 	 */
-	renderMessageContent(msg) {
-		msg = msg.toJS ? msg.toJS() : msg
+	renderMessageContent(msg,theme,s) {
 
 		const
 			isError = msg.type === ToastMessageType.Error,
 			isInfo = msg.type === ToastMessageType.Info
 
-		const
-			{theme} = this.props,
-			s = mergeStyles(styles, theme.toast)
+
 
 
 		// Create an action callout if required
@@ -243,15 +245,16 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 		const iconStyle = makeStyle(s.icon,fg)
 
 
-		if (!msg.id) {
-			log.error(`msg id is null`,msg)
-			return null
-		}
+		// if (!msg.id) {
+		// 	log.error(`msg id is null`,msg)
+		// 	return null
+		// }
 
 		const icon = (isError || isInfo) ?
 			<Icon style={iconStyle}>{isError ? 'error_outline' : 'info_outline'}</Icon>
 			: null
 
+		log.info(`Toast message with id: ${msg.id}`)
 		return <div key={msg.id}
 		            className='toastMessage animated bounce'
 		            style={s.toast}>
@@ -275,15 +278,17 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 * @returns {any}
 	 */
 	render() {
-		const {messages, theme} = this.props,
+		log.info('new toast render')
+		let {messages, theme} = this.props,
 			{palette} = theme
 
+		messages = _.toJS(messages)
 		const s = mergeStyles(styles, theme.toast)
 
 
 		return <div style={s.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
-			       rules={_.merge({},s.transitionGroup,s.toastMessagesTransition)}/>
+			       rules={mergeStyles({},s.transitionGroup,s.toastMessagesTransition)}/>
 
 			<CSSTransitionGroup
 				className='toastMessageTransitionGroup'
@@ -293,10 +298,14 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 
-				{this.props.messages.map(msg => this.renderMessageContent(msg))}
+				{messages.filter(msg => !_.isNil(msg.id))
+					.map(msg => this.renderMessageContent(msg,theme,s))}
 			</CSSTransitionGroup>
+
+
 
 		</div>
 	}
+
 
 }

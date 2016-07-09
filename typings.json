@@ -9,12 +9,14 @@
     "react-router": "registry:npm/react-router#2.0.0+20160214194820"
   },
   "globalDependencies": {
+    "bluebird": "registry:dt/bluebird#2.0.0+20160701023356",
     "chai": "registry:dt/chai#3.4.0+20160317120654",
     "electron-window-state": "registry:dt/electron-window-state#2.0.0+20160212171354",
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "github-electron": "registry:dt/github-electron#1.2.5+20160624085047",
     "history": "registry:dt/history#1.8.0+20160316155526",
     "later": "registry:dt/later#0.0.0+20160317120654",
+    "lodash-decorators": "registry:dt/lodash-decorators#1.0.5+20160316155526",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
     "moment": "registry:dt/moment#2.8.0+20160316155526",

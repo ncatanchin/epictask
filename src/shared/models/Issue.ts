@@ -2,7 +2,9 @@ import {
 	ModelDescriptor,
 	AttributeDescriptor,
 	DefaultModel,
-	Repo as TSRepo
+	Repo as TSRepo,
+	FinderRequest,
+	FinderResultArray
 } from 'typestore'
 
 
@@ -87,6 +89,17 @@ export class IssueStore extends TSRepo<Issue> {
 	constructor() {
 		super(IssueStore,Issue)
 	}
+
+
+	@PouchDBFullTextFinder({
+		includeDocs:false,
+		textFields: ['title','body'],
+		limit: 200,
+	})
+	findWithText(request:FinderRequest,title:string):Promise<FinderResultArray<number>> {
+		return null
+	}
+
 
 	@PouchDBFullTextFinder({
 		textFields: ['title'],

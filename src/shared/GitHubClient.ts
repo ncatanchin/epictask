@@ -83,7 +83,8 @@ export class GitHubClient {
 			Object.keys(opts.params)
 				.forEach(key => query.append(key,opts.params[key]))
 
-		let response =  await fetch(makeUrl(path,query),this.initRequest(HttpMethod.GET))
+		const url = makeUrl(path,query)
+		let response =  await fetch(url,this.initRequest(HttpMethod.GET))
 
 		if (response.status >= 300) {
 			throw new Error(response.statusText || 'GH Returned error: ' + response.status)

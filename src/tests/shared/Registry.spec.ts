@@ -1,11 +1,11 @@
 
 
 
-import {RegisterModel} from '../../shared/Registry'
+import {RegisterModel} from 'shared/Registry'
 
 describe('Registry',() => {
 	describe('Decorations',() => {
-		it('Adds $$clazz to the obejct in the constructor',() => {
+		it('Adds $$clazz to the object in the constructor',() => {
 
 			@RegisterModel
 			class ModelTest {

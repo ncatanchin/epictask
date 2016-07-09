@@ -75,6 +75,6 @@ export default class RepoStateService extends BaseService {
 		// 	return
 
 		//this.refMap.enabledRepoIds = enabledRepoIds
-		this.repoActions.loadIssues()
+		//this.repoActions.loadIssues()
 	}
 }

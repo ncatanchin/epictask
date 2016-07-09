@@ -1,4 +1,8 @@
-const Bluebird = require('bluebird')
+import * as Bluebird from 'bluebird'// = require('bluebird')
+
+declare global {
+	var Promise:typeof Bluebird
+}
 
 Bluebird.config({
 	cancellation: true,
@@ -9,6 +13,10 @@ Bluebird.config({
 	monitoring: true
 })
 
-Promise = Bluebird
+Object.assign(global as any,{
+	Promise:Bluebird
+})
 
-export = Bluebird
+export {
+
+}

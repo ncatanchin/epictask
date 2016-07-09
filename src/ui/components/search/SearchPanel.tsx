@@ -10,7 +10,8 @@ import {List,Map} from 'immutable'
 import {SearchKey, AppKey} from 'shared/Constants'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResult, SearchState, Search} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchState, Search, SearchType} from 'shared/actions/search/SearchState'
+
 
 
 import {SearchResultsList} from './SearchResultsList'
@@ -32,15 +33,16 @@ const searchActions = new SearchActionFactory()
  */
 export interface ISearchPanelProps {
 	searchId:string
+	types: SearchType[]
+
 	inlineResults?:boolean,
 	expanded?:boolean,
-	results?:List<SearchResult<any>>,
+	results?:List<SearchResult>,
 	query?:string
 	theme?:any
-
 	hidden?:boolean
 	mode:"repos"|"issues"
-	onResultSelected?:(result:SearchResult<any>) => void
+	onResultSelected?:(result:SearchResult) => void
 }
 
 export interface ISearchPanelState {
@@ -117,7 +119,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	onInputChange = (event) => {
 		const query = event.target.value
 		log.info('Search value: ' + query)
-		searchActions.setQuery(this.props.searchId,query)
+		searchActions.setQuery(this.props.searchId,this.props.types,query)
 	}
 
 
@@ -140,22 +142,22 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param result
 	 */
-	onResultSelected = (result:SearchResult<any> = null) => {
+	onResultSelected = (result:SearchResult = null) => {
 		if (!result) {
 			const {selectedIndex} = this.state
 			const {results} = this.props
-			if (results) {
-				result = results.find(item => item.index === selectedIndex)
-				// for (let r of results) {
-				// 	if (r.index === selectedIndex) {
-				// 		result = r
-				// 		break
-				// 	}
-				// }
-			}
-
-			if (!result)
-				throw new Error('No result provided and no result matching index: ' + selectedIndex)
+			// if (results) {
+			// 	result = results.find(item => item.index === selectedIndex)
+			// 	// for (let r of results) {
+			// 	// 	if (r.index === selectedIndex) {
+			// 	// 		result = r
+			// 	// 		break
+			// 	// 	}
+			// 	// }
+			// }
+			//
+			// if (!result)
+			// 	throw new Error('No result provided and no result matching index: ' + selectedIndex)
 		}
 		searchActions.select(this.props.searchId,result)
 		this.setState({focused: false})
@@ -164,8 +166,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			this.props.onResultSelected(result)
 	}
 
-	onHover = (result:SearchResult<any>) => {
-		this.setSelectedIndex(result.index)
+	onHover = (result:SearchResult) => {
+		//this.setSelectedIndex(result.index)
 	}
 
 	resultsList = () => {
@@ -206,7 +208,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	render() {
 		const {expanded, theme,query,hidden} = this.props,
-			results = this.props.results || List<SearchResult<any>>()
+			results = this.props.results || List<SearchResult>()
 
 		const {searchPanel:spTheme} = theme
 		const focused = this.state.focused

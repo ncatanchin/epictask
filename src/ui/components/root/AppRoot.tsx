@@ -1,3 +1,4 @@
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 /**
  * Global CSS
  */
@@ -27,8 +28,11 @@ import {getPage} from 'components/pages'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AppStateType} from 'shared/AppStateType'
-import {Events,AppKey, RepoKey} from 'shared/Constants'
+import {Events, AppKey, RepoKey, UIKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
+import {RepoState} from 'shared/actions/repo/RepoState'
+import {AppState} from 'shared/actions/AppState'
+import {UIState} from 'shared/actions/ui/UIState'
 
 const {StyleRoot} = Radium
 const {HotKeys} = require('react-hotkeys')
@@ -51,6 +55,7 @@ const store = Container.get(ObservableStore)
 const DevTools = <div/>
 let devToolsRef = null
 let appElement = null
+let reduxStore = null
 //endregion
 
 
@@ -95,10 +100,11 @@ export interface IAppProps {
  */
 function mapStateToProps(state) {
 	const
-		appState = state.get(AppKey),
-		{availableRepos} = state.get(RepoKey)
+		appState = state.get(AppKey) as AppState,
+		uiState = state.get(UIKey) as UIState,
+		{availableRepos} = state.get(RepoKey) as RepoState
 
-	const dialogOpen = !_.isNil(appState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
+	const dialogOpen = !_.isNil(uiState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
 
 	return {
 		theme: getTheme(),//appState.theme,
@@ -112,22 +118,21 @@ function mapStateToProps(state) {
 /**
  * Root App Component
  */
-@AutoWired
 @connect(mapStateToProps)
 @PureRender
 class App extends React.Component<IAppProps,any> {
 
 
-	appActions:AppActionFactory
-	repoActions:RepoActionFactory
+	appActions = Container.get(AppActionFactory)
+	repoActions = Container.get(RepoActionFactory)
+	uiActions = Container.get(UIActionFactory)
 
 	pageBodyHolder
 
 	constructor(props, context) {
 		super(props, context)
 
-		this.appActions = Container.get(AppActionFactory)
-		this.repoActions = Container.get(RepoActionFactory)
+
 	}
 
 
@@ -184,7 +189,7 @@ class App extends React.Component<IAppProps,any> {
 		return (
 
 			<MuiThemeProvider muiTheme={theme}>
-				<Provider store={store.getReduxStore()}>
+				<Provider store={reduxStore}>
 					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
 						<IssueEditDialog />
 						<RepoAddDialog />
@@ -220,12 +225,13 @@ class App extends React.Component<IAppProps,any> {
 //let rendered = false
 
 function render() {
+	reduxStore = store.getReduxStore()
 	const state = store.getState()
 
 	// const appState = appActions.state
 	const props = mapStateToProps(state)
 	appElement = <App
-		store={store.getReduxStore()}
+		store={reduxStore}
 		{...props}
 	/>
 	ReactDOM.render(

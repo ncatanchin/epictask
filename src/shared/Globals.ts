@@ -14,7 +14,6 @@ import {getLogger as LoggerFactory} from 'typelogger'
 // Import everything else
 later = require('later/index-browserify')
 
-
 import './ErrorHandling'
 import './util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
@@ -29,6 +28,7 @@ const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
 const isRenderer = process.type === 'renderer'
+
 
 const envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
 

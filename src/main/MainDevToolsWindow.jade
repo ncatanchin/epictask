@@ -8,6 +8,8 @@ html
 			var isDev = Env.isDev,
 					baseDir = '.'
 
+			global.devToolsMode = true
+
 			// Add a script tag to load content
 			function addScript(scriptPath, asyncLoad, callback) {
 				const script = document.createElement('script');

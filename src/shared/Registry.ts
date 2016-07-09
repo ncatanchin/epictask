@@ -17,8 +17,15 @@ export interface ModelConstructor<T> {
  */
 const modelClasses = {} as RegistryType<any>
 
+/**
+ * Decorate a constructor - ripped from typescript-ioc - many thx ;)
+ *
+ * @param derived
+ * @param base
+ * @returns {Function}
+ */
 function decorateConstructor(derived: Function, base: Function) {
-	for (var p in base) {
+	for (let p of Object.getOwnPropertyNames(base)) {
 		if (base.hasOwnProperty(p) && !derived.hasOwnProperty(p)) {
 			derived[p] = base[p];
 		}

@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 import {Events} from '../Constants'
 import {getReducers} from 'shared/store/Reducers'
 import {getModel} from 'shared/Registry'
-//const nextTick = require('browser-next-tick')
+const nextTick = require('browser-next-tick')
 
 
 const patcher = require('immutablepatch')
@@ -11,6 +11,7 @@ const electron = require('electron')
 const {ipcRenderer} = electron
 
 const ipcListeners = []
+const patches = []
 const addIpcListener = (channel:string,listener) => {
 	ipcRenderer.on(channel,listener)
 	ipcListeners.push([channel,listener])
@@ -19,6 +20,7 @@ const addIpcListener = (channel:string,listener) => {
 let reducers = getReducers()
 let receivedState = null
 let lastPatchNumber = -1
+let outOfSync = false
 
 if (module.hot) {
 	module.hot.accept(['./Reducers'],(updates) => {
@@ -90,6 +92,17 @@ function rendererStoreEnhancer(storeCreator) {
 		ipcRenderer.send(Events.StoreRendererRegister,{clientId})
 
 		reducer = () => {
+			//const lastState = receivedState
+
+			if (outOfSync) {
+				receivedState = getMainProcessState()
+				outOfSync = false
+			} else {
+				while (patches.length) {
+					let patch = patches.shift()
+					receivedState = patcher(receivedState, patch)
+				}
+			}
 			return receivedState
 		}
 
@@ -103,23 +116,21 @@ function rendererStoreEnhancer(storeCreator) {
 			if (!patchJS) return
 
 			// Check if the patch numbers are in sync
-			const outOfSync = (patchNumber - 1 !== lastPatchNumber)
+			outOfSync = (patchNumber - 1 !== lastPatchNumber)
 
 			// Update the cached patch number
 			lastPatchNumber = patchNumber
 
 			if (outOfSync) {
-				receivedState = getMainProcessState()
+				patches.length = 0
 			} else {
 				// Model registry is used to revive classes
 				const patch = Immutable.fromJS(patchJS,stateReviver)
-
-				const lastState = receivedState
-				receivedState = patcher(lastState,patch)
+				patches.push(patch)
 			}
 
+			nextTick(() => store.dispatch(action))
 
-			store.dispatch(action)
 		})
 
 		store.getState = () => receivedState

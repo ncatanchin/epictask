@@ -2,7 +2,8 @@ import {Container,AutoWired,Inject} from 'typescript-ioc'
 import {JobStatus} from './JobStatus'
 import JobService from 'main/services/JobService'
 import {JobInfo, BaseJob} from 'shared/actions/jobs/JobReducer'
-import * as Bluebird from 'bluebird'
+import * as moment from 'moment'
+//import * as Bluebird from 'bluebird'
 import * as uuid from 'node-uuid'
 //import {IJob} from './JobState'
 
@@ -48,12 +49,23 @@ export class JobHandler {
 	}
 
 	schedule() {
-		assert(this.scheduler,'Schedule must be set in order to schedule')
+		if (!this.timer) {
+			assert(this.scheduler,'Schedule must be set in order to schedule')
 
-		const executor = () => this.execute()
+			const executor = () => this.execute()
 
-		this.timer = (this.job.repeat) ? later.setInterval(executor, this.scheduler) :
-			later.setTimeout(executor, this.scheduler)
+			this.timer = (this.job.repeat) ?
+				later.setInterval(executor, this.scheduler) :
+				later.setTimeout(executor, this.scheduler)
+
+		} else {
+			const nextOccurence = later.schedule(this.scheduler).next(1)
+			const nextText = moment(nextOccurence).fromNow()
+			log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
+		}
+
+
+
 	}
 
 
@@ -85,7 +97,7 @@ export class JobHandler {
 	execute() {
 		return (this.executePromise) ?
 			this.executePromise :
-			(this.executePromise = new Bluebird(async (resolve, reject) => {
+			(this.executePromise = new Promise(async (resolve, reject) => {
 				let job = this.job
 
 				try {
@@ -110,7 +122,6 @@ export class JobHandler {
 				return this.setStatus(JobStatus.Failed,err)
 			}).finally(() => {
 				this.executePromise = null
-
 				this.service.completedJob(this,this.info.status)
 			}))
 

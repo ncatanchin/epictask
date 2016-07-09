@@ -13,8 +13,8 @@ export enum ActivityType {
 	RepoSync = 1
 }
 
-@ModelDescriptor()
 @RegisterModel
+@ModelDescriptor()
 export class Activity extends DefaultModel {
 
 	$$clazz = 'Activity'

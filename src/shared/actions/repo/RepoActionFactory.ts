@@ -117,65 +117,65 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	setIssues(issues:Issue[]) {}
 
+	// @Action()
+	// issuesChanged(...updatedIssues:Issue[]) {
+	// 	return(dispatch,getState) => {
+	// 		const actions = this.withDispatcher(dispatch,getState)
+	// 		const repoState = actions.state
+	//
+	// 		for (let updatedIssue of updatedIssues) {
+	// 			let index = repoState.issues.findIndex(issue => issue.url === updatedIssue.url)
+	// 			if (index > -1) {
+	// 				const newIssues = [...repoState.issues]
+	// 				newIssues[index] = cloneObject(updatedIssue)
+	// 				actions.setIssues(newIssues)
+	// 			}
+	//
+	// 			index = repoState.selectedIssues.findIndex(issue => issue.url === updatedIssue.url)
+	// 			if (index > -1) {
+	// 				const newIssues = [...repoState.selectedIssues]
+	// 				newIssues[index] = cloneObject(updatedIssue)
+	// 				actions.setSelectedIssues(newIssues)
+	// 			}
+	//
+	// 			if (repoState.issue && repoState.issue.url === updatedIssue.url)
+	// 				actions.setIssue(updatedIssue)
+	// 		}
+	// 	}
+	// }
+
 	@Action()
-	issuesChanged(...updatedIssues:Issue[]) {
-		return(dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
-			const repoState = actions.state
-
-			for (let updatedIssue of updatedIssues) {
-				let index = repoState.issues.findIndex(issue => issue.url === updatedIssue.url)
-				if (index > -1) {
-					const newIssues = [...repoState.issues]
-					newIssues[index] = cloneObject(updatedIssue)
-					actions.setIssues(newIssues)
-				}
-
-				index = repoState.selectedIssues.findIndex(issue => issue.url === updatedIssue.url)
-				if (index > -1) {
-					const newIssues = [...repoState.selectedIssues]
-					newIssues[index] = cloneObject(updatedIssue)
-					actions.setSelectedIssues(newIssues)
-				}
-
-				if (repoState.issue && repoState.issue.url === updatedIssue.url)
-					actions.setIssue(updatedIssue)
-			}
-		}
-	}
-
-	@Action()
-	setAvailableRepos(repos:AvailableRepo[]) {
+	addAvailableRepos(...availableRepos:AvailableRepo[]) {
 	}
 
 	@Action()
 	issueSave(issue:Issue) {
 		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
-			const client = github.createClient()
-
-			const
-				repoState = this.state,
-				{repos} = repoState,
-				repo = issue.repo || repos.find(item => item.id === issue.repoId)
-
-
-
-			try {
-				const issueStore:IssueStore = this.stores.issue
-				let savedIssue:Issue = await client.issueSave(repo,issue)
-				savedIssue = await issueStore.save(savedIssue)
-
-				actions.issuesChanged(savedIssue)
-
-
-				this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-				this.toaster.addMessage(`Saved issue #${savedIssue.number}`)
-
-			} catch (err) {
-				log.error('failed to save issue', err)
-				this.toaster.addErrorMessage(err)
-			}
+			// const actions = this.withDispatcher(dispatch,getState)
+			// const client = github.createClient()
+			//
+			// const
+			// 	repoState = this.state,
+			// 	{repos} = repoState,
+			// 	repo = issue.repo || repos.find(item => item.id === issue.repoId)
+			//
+			//
+			//
+			// try {
+			// 	const issueStore:IssueStore = this.stores.issue
+			// 	let savedIssue:Issue = await client.issueSave(repo,issue)
+			// 	savedIssue = await issueStore.save(savedIssue)
+			//
+			// 	actions.issuesChanged(savedIssue)
+			//
+			//
+			// 	this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+			// 	this.toaster.addMessage(`Saved issue #${savedIssue.number}`)
+			//
+			// } catch (err) {
+			// 	log.error('failed to save issue', err)
+			// 	this.toaster.addErrorMessage(err)
+			// }
 		}
 	}
 
@@ -185,16 +185,17 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @param newRepos
 	 */
 	async persistRepos(newRepos:Repo[]):Promise<number> {
-		const repoStore =  this.stores.repo
-
-		log.debug(`Persisting ${newRepos.length} repos`)
-		const beforeCount = await repoStore.count()
-		await repoStore.bulkSave(...newRepos)
-		const afterCount = await repoStore.count()
-
-		log.debug(`After persistence there are ${afterCount} repos in the system, new count = ${afterCount - beforeCount}`)
-
-		return afterCount - beforeCount
+		// const repoStore =  this.stores.repo
+		//
+		// log.debug(`Persisting ${newRepos.length} repos`)
+		// const beforeCount = await repoStore.count()
+		// await repoStore.bulkSave(...newRepos)
+		// const afterCount = await repoStore.count()
+		//
+		// log.debug(`After persistence there are ${afterCount} repos in the system, new count = ${afterCount - beforeCount}`)
+		//
+		// return afterCount - beforeCount
+		return 0
 	}
 
 	@Action()
@@ -206,27 +207,29 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 			try {
 
-				let repos = await client.userRepos({traversePages:true})
-				log.debug(`Received repos`,repos,'persisting now')
-
-				const newRepoCount = await actions.persistRepos(repos)
-				log.debug('New repos',newRepoCount)
-
-				// Deep merge the new repo data into the existing
-				// TODO: update sync functionality to use all of "MY" repos +
-				//  repos i follow, star and ones i added explicitly
-				const updatedRepos = cloneObject(actions.state.repos)
-				// TODO: update immutably
-				// repos.forEach(repo => {
-				// 	const updatedRepo = updatedRepos.find(item => item.id === repo.id)
-				// 	if (updatedRepo) {
-				// 		_.merge(updatedRepo,repo)
-				// 	} else {
-				// 		updatedRepos.push(repo)
-				// 	}
-				// })
-
-				actions.setRepos(updatedRepos)
+				// let repos = await client.userRepos({traversePages:true})
+				// log.debug(`Received repos`,repos,'persisting now')
+				//
+				// const newRepoCount = await actions.persistRepos(repos)
+				// log.debug('New repos',newRepoCount)
+				//
+				// const updatedRepos = cloneObject(actions.state.repos)
+				//
+				// // Deep merge the new repo data into the existing
+				// // TODO: update sync functionality to use all of "MY" repos +
+				// //  repos i follow, star and ones i added explicitly
+				//
+				// // TODO: update immutably
+				// // repos.forEach(repo => {
+				// // 	const updatedRepo = updatedRepos.find(item => item.id === repo.id)
+				// // 	if (updatedRepo) {
+				// // 		_.merge(updatedRepo,repo)
+				// // 	} else {
+				// // 		updatedRepos.push(repo)
+				// // 	}
+				// // })
+				//
+				// actions.setRepos(updatedRepos)
 			} catch (err) {
 				log.error('Failed to get repos',err,err.stack)
 				actions.setError(err)
@@ -265,20 +268,21 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 	@Action()
 	getAvailableRepos():Promise<AvailableRepo[]> {
-		return (async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
-			const availRepos = await this.stores.availableRepo.loadAll()
-
-			const
-				repoState = actions.state,
-				{repos} = repoState
-
-
-			log.debug('Loaded available repos',availRepos)
-			actions.setAvailableRepos(availRepos)
-
-			return availRepos
-		}) as any
+		return null
+		// return (async (dispatch,getState) => {
+		// 	const actions = this.withDispatcher(dispatch,getState)
+		// 	const availRepos = await this.stores.availableRepo.loadAll()
+		//
+		// 	const
+		// 		repoState = actions.state,
+		// 		{repos} = repoState
+		//
+		//
+		// 	log.debug('Loaded available repos',availRepos)
+		// 	actions.setAvailableRepos(availRepos)
+		//
+		// 	return availRepos
+		// }) as any
 	}
 
 	@Action()
@@ -354,14 +358,14 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	removeAvailableRepo(availRepoId:number) {
 		return async(dispatch, getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
-
-
-			const availRepoRepo = this.stores.availableRepo
-			await availRepoRepo.remove(availRepoId)
-
-			const availRepos = actions.state.availableRepos
-			actions.setAvailableRepos(availRepos.filter(availRepo => availRepo.id !== availRepoId))
+			// const actions = this.withDispatcher(dispatch, getState)
+			//
+			//
+			// const availRepoRepo = this.stores.availableRepo
+			// await availRepoRepo.remove(availRepoId)
+			//
+			// const availRepos = actions.state.availableRepos
+			// actions.setAvailableRepos(availRepos.filter(availRepo => availRepo.id !== availRepoId))
 
 		}
 	}
@@ -530,32 +534,32 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	loadIssues() {
 		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
-
-			// Issue repo
-			const issueRepo = this.stores.issue
-
-			// All the currently selected repos
-			const {availableRepos} = actions.state
-			const repoIds = availableRepos
-				.filter(availRepo => availRepo.enabled === true)
-				.map(availRepo => availRepo.repoId)
-				.toArray()
-
-
-			log.info(`Loading issues for repos`,repoIds)
-			let issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
-
-			/**
-			 * 1. Clone issues first to avoid cached objects
-			 * 2. Make sure we have a valid repo
-			 * 3. Copy transient repo,milestones,collaborators,etc
-			 */
-			const issuePromises = issues.map(issue => fillIssue(issue,availableRepos))
-
-			const filledIssues = await Promise.all(issuePromises)
-
-			actions.setIssues(filledIssues)
+			// const actions = this.withDispatcher(dispatch, getState)
+			//
+			// // Issue repo
+			// const issueRepo = this.stores.issue
+			//
+			// // All the currently selected repos
+			// const {availableRepos} = actions.state
+			// const repoIds = availableRepos
+			// 	.filter(availRepo => availRepo.enabled === true)
+			// 	.map(availRepo => availRepo.repoId)
+			// 	.toArray()
+			//
+			//
+			// log.info(`Loading issues for repos`,repoIds)
+			// let issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
+			//
+			// /**
+			//  * 1. Clone issues first to avoid cached objects
+			//  * 2. Make sure we have a valid repo
+			//  * 3. Copy transient repo,milestones,collaborators,etc
+			//  */
+			// const issuePromises = issues.map(issue => fillIssue(issue,availableRepos))
+			//
+			// const filledIssues = await Promise.all(issuePromises)
+			//
+			// actions.setIssues(filledIssues)
 		}
 
 

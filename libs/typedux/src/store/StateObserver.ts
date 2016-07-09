@@ -39,8 +39,6 @@ export class StateObserver {
 		this.keyPath = path ? ((isArray(path)) ? path : path.split('.')) : []
 	}
 
-
-
 	onChange(state:State):boolean {
 		const newValue = getNewValue(state,this.keyPath)
 

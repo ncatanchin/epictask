@@ -38,7 +38,7 @@ export class RepoSyncJob extends BaseJob {
 
 		if (job) {
 			this.availRepo = job.args.availableRepo
-			this.description = `syncing ${this.availRepo.repo.full_name}`
+			this.description = `repo sync ${this.availRepo.repo.full_name}`
 		}
 	}
 
@@ -209,7 +209,7 @@ export class RepoSyncJob extends BaseJob {
 				this.syncLabels(stores,repo),
 				this.syncMilestones(stores,repo),
 				this.syncComments(stores,repo),
-				this.syncCollaborators(stores,repo)
+				//this.syncCollaborators(stores,repo)
 			])
 
 			// Track the execution for timing/update purposes

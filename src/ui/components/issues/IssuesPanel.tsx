@@ -249,7 +249,7 @@ function mapStateToProps(state) {
 		theme,
 		issues:         repoState.issues,
 		selectedIssue: repoState.selectedIssue,
-		selectedIssues: repoState.selectedIssues,
+		selectedIssues: repoState.selectedIssues || List(),
 		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
 	}
 }

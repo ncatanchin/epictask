@@ -3,7 +3,6 @@ import {Container} from 'typescript-ioc'
 import {Job, default as JobService} from 'main/services/JobService'
 import {BaseJob} from 'shared/actions/jobs/JobReducer'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Stores} from 'main/services/DBService'
 import {Benchmark} from 'shared/util/Decorations'
 

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import {SearchPanel} from 'components'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
+import {SearchType} from 'shared/actions/search/SearchState'
 
 const log = getLogger(__filename)
 
@@ -167,6 +168,7 @@ export class Header extends React.Component<IHeaderProps,any> {
 		return <div style={headerStyle} id='header'>
 			<SearchPanel
 				searchId='header-search'
+				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
 				inlineResults={expanded}
 				expanded={expanded}
 				mode={expanded ? 'repos' : 'issues'}/>

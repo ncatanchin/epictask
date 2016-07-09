@@ -1,5 +1,5 @@
 import {Singleton, AutoWired,Inject, Container, Scope} from 'typescript-ioc'
-import {IService, ServiceStatus} from './IService'
+import {IService, ServiceStatus, BaseService} from './IService'
 import {ObservableStore} from 'typedux'
 import {Stores} from './DBService'
 import {ToastMessageType} from 'shared/models/Toast'
@@ -9,9 +9,9 @@ const log = getLogger(__filename)
 
 @AutoWired
 @Singleton
-export default class ToastService implements IService {
+export default class ToastService extends BaseService {
 
-	private _status = ServiceStatus.Created
+
 	pendingTimers = {}
 
 	@Inject
@@ -22,7 +22,9 @@ export default class ToastService implements IService {
 
 	onMessagesChanged = (newMessages) => {
 
-		_.toJS(newMessages).forEach(msg => {
+		newMessages.forEach(msg => {
+
+			msg = _.toJS(msg)
 
 			const
 				clearMessage = () => this.uiActions.removeMessage(msg.id),
@@ -44,7 +46,7 @@ export default class ToastService implements IService {
 	}
 
 	async start() {
-		this._status = ServiceStatus.Started
+		await super.start()
 		this.store.observe(
 			[this.uiActions.leaf(), 'messages'],
 			this.onMessagesChanged
@@ -59,15 +61,7 @@ export default class ToastService implements IService {
 		return this._status
 	}
 
-	async init():Promise<this> {
-		this._status = ServiceStatus.Initialized
-		return this
-	}
 
-	async stop():Promise<this> {
-		this._status = ServiceStatus.Stopped
-		return this
-	}
 
 	destroy():this {
 		return this
@@ -77,7 +71,7 @@ export default class ToastService implements IService {
 
 
 
-function setupHMR(service) {
+function setupHMR(service:ToastService) {
 	if (module.hot) {
 		module.hot.dispose(() => {
 			log.info(`HMR - disposing toast timers/messages`)
@@ -86,7 +80,7 @@ function setupHMR(service) {
 					clearTimeout(service.pendingTimers[msgId])
 					delete service.pendingTimers[msgId]
 
-					service.appActions.clearMessages()
+					service.uiActions.clearMessages()
 				})
 		})
 	}

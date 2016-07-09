@@ -16,7 +16,8 @@ import {
 	assert,
 	Log,
 	isFunction,
-	IModelAttributeOptions
+	IModelAttributeOptions,
+	FinderRequest
 } from 'typestore'
 
 import {enableQuickSearch} from './PouchDBSetup'
@@ -34,6 +35,7 @@ import {
 
 import {mapDocs, mapAttrsToField, transformDocumentKeys, dbKeyFromObject, convertModelToDoc} from './PouchDBUtil'
 import {makeMangoFinder, makeFilterFinder, makeFnFinder, makeFullTextFinder, findWithSelector} from './PouchDBFinders'
+
 
 const log = Log.create(__filename)
 
@@ -62,8 +64,11 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	supportedModels:any[]
 
 	private coordinator
-	modelType
 	private primaryKeyAttr:IModelAttributeOptions
+	primaryKeyField:string
+	primaryKeyType:any
+	modelType
+
 
 	/**
 	 * Construct a new repo/store
@@ -72,13 +77,14 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	 * @param store
 	 * @param repo
 	 */
-	constructor(private store:PouchDBPlugin, public repo:Repo<M>) {
+	constructor(public store:PouchDBPlugin, public repo:Repo<M>) {
 		this.supportedModels = [repo.modelClazz]
 		this.modelType = this.repo.modelType
 		this.primaryKeyAttr = this.modelType.options.attrs
 			.find(attr => attr.primaryKey)
 
-
+		this.primaryKeyField = this.primaryKeyAttr.name
+		this.primaryKeyType = this.primaryKeyAttr.type
 
 		repo.attach(this)
 	}
@@ -120,7 +126,11 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 					makeFnFinder(this,finderKey,opts)
 
 		return async (...args) => {
-			const models = await finderFn(...args)
+			const request:FinderRequest = (args[0] instanceof FinderRequest) ? args[0] : null
+			if (request)
+				args.shift()
+
+			const models = await finderFn(request,...args)
 
 			log.debug('Got finder result for ' + finderKey,'args',args,'models',models)
 			return (single) ? models[0] : models
@@ -189,7 +199,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		if (result && result.docs.length > 1)
 			throw new Error(`More than one database object returned for key: ${key}`)
 
-		return mapDocs(this.repo.modelClazz,result)[0] as M
+		return mapDocs(this,this.repo.modelClazz,result)[0] as M
 	}
 
 
@@ -283,7 +293,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 			},[])
 			.filter(doc => doc.type === this.modelType.name)
 
-		return mapDocs(this.repo.modelClazz,docs)
+		return mapDocs(this,this.repo.modelClazz,docs)
 	}
 
 	/**

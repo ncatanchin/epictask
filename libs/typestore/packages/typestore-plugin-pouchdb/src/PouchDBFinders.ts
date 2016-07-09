@@ -1,14 +1,22 @@
-import {Log,Repo,isFunction} from 'typestore'
+import {Log,FinderRequest,FinderResultArray,isFunction} from 'typestore'
 import {enableQuickSearch} from './PouchDBSetup'
 
 import {
 	IPouchDBFullTextFinderOptions, IPouchDBFilterFinderOptions, IPouchDBFnFinderOptions,
 	IPouchDBMangoFinderOptions
 } from './PouchDBDecorations'
+import {PouchDBRepoPlugin} from './PouchDBRepoPlugin'
 import {getIndexByNameOrFields, makeMangoIndex} from './PouchDBIndexes'
 import {mapDocs, transformDocumentKeys, mapAttrsToField} from './PouchDBUtil'
 
+
 const log = Log.create(__filename)
+
+function makeFinderResults(pouchRepo,results,request,limit:number,offset:number,includeDocs:boolean) {
+	const items = mapDocs(pouchRepo,pouchRepo.repo.modelClazz,results,includeDocs)
+	const total = results.total_rows || items.length
+	return new FinderResultArray(items as any,total,request,results.metadata || [])
+}
 
 export async function findWithText(pouchRepo,text:string,fields:string[],limit = -1,offset = -1,includeDocs = true) {
 	enableQuickSearch()
@@ -36,13 +44,23 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
 	const result = await pouchRepo.db.search(opts)
 
 	log.debug(`Full-Text search result`,result)
-	return result.rows.map(row => row.doc)
+	return result.rows.reduce((finalResults,nextRow) => {
+		const val = (includeDocs) ? nextRow.doc : nextRow.id
+
+		finalResults.docs.push(val)
+		finalResults.metadata.push({score:nextRow.score})
+
+		return finalResults
+	},{
+		docs:[],
+		metadata:[]
+	})
 }
 
 
 
 
-export function findWithSelector(pouchRepo, selector,sort = null,limit = -1,offset = -1,includeDocs = true) {
+export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort = null,limit = -1,offset = -1,includeDocs = true) {
 
 	const opts = {
 		selector: Object.assign({
@@ -59,6 +77,9 @@ export function findWithSelector(pouchRepo, selector,sort = null,limit = -1,offs
 	if (offset > -1)
 		opts.offset = offset
 
+	if (!includeDocs)
+		opts.fields = mapAttrsToField([pouchRepo.primaryKeyField])
+
 	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
 
 	return pouchRepo.db.find(opts)
@@ -66,9 +87,9 @@ export function findWithSelector(pouchRepo, selector,sort = null,limit = -1,offs
 
 
 
-export function makeFullTextFinder(pouchRepo,finderKey:string,opts:IPouchDBFullTextFinderOptions) {
+export function makeFullTextFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFullTextFinderOptions) {
 	enableQuickSearch()
-	let {textFields,queryMapper,build,minimumMatch,limit,offset} = opts
+	let {textFields,queryMapper,build,minimumMatch,limit,offset,includeDocs} = opts
 
 	/**
 	 * Create full text index before hand
@@ -81,48 +102,57 @@ export function makeFullTextFinder(pouchRepo,finderKey:string,opts:IPouchDBFullT
 		build:true
 	}) : Promise.resolve(false)
 
-	return async (...args) => {
+	return async (request:FinderRequest,...args) => {
 		await buildIndexPromise
 
 		const query = (queryMapper) ?
 			queryMapper(...args) :
 			args[0]
 
-		const result = await findWithText(
-			pouchRepo,query,textFields,limit,offset,true
+		// Update params with the request if provided
+		if (request) {
+			offset = request.offset || offset
+			limit = request.limit || limit
+			includeDocs = (typeof request.includeModels === 'boolean') ?
+				request.includeModels :
+				includeDocs
+		}
+
+		const results = await findWithText(
+			pouchRepo,query,textFields,limit,offset,includeDocs
 		)
 
-		log.debug('Full text result for ' + finderKey ,result,'args',args)
+		log.debug('Full text result for ' + finderKey ,results,'args',args)
 
-		return mapDocs(pouchRepo.repo.modelClazz,result)
+		return makeFinderResults(pouchRepo,results,request,limit,offset,includeDocs)
 
 
 
 	}
 }
 
-export function makeFilterFinder(pouchRepo,finderKey:string,opts:IPouchDBFilterFinderOptions) {
+export function makeFilterFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFilterFinderOptions) {
 	log.warn(`Finder '${finderKey}' uses allDocs filter - THIS WILL BE SLOW`)
 
 	const {filter} = opts
 
-	return async (...args) => {
+	return async (request:FinderRequest,...args) => {
 		const allModels = await pouchRepo.all()
 		return allModels.filter((doc) => filter(doc,...args))
 	}
 }
 
-export function makeFnFinder(pouchRepo,finderKey:string,opts:IPouchDBFnFinderOptions) {
+export function makeFnFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFnFinderOptions) {
 	const {fn} = opts
 
-	return async (...args) => {
+	return async (request:FinderRequest,...args) => {
 		const result = await fn(pouchRepo, ...args)
-		return mapDocs(pouchRepo.repo.modelClazz,result)
+		return makeFinderResults(pouchRepo,result,request,opts.limit,opts.offset,opts.includeDocs)
 	}
 }
 
-export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFinderOptions) {
-	let {selector,sort,limit,all,indexName,indexDirection,indexFields} = opts
+export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBMangoFinderOptions) {
+	let {selector,sort,limit,offset,includeDocs,all,indexName,indexDirection,indexFields} = opts
 
 	let indexReady = all === true
 	let indexCreate = null
@@ -168,29 +198,39 @@ export function makeMangoFinder(pouchRepo,finderKey:string,opts:IPouchDBMangoFin
 
 	}
 
-	const finder = async (...args) => {
+	const finder = async (request:FinderRequest,...args) => {
 		const selectorResult =
 			isFunction(selector) ? selector(...args) : selector
+
+		if (request) {
+			offset = request.offset || offset
+			limit = request.limit || limit
+			includeDocs = (typeof request.includeModels === 'boolean') ?
+				request.includeModels :
+				includeDocs
+		}
 
 		const result = await findWithSelector(
 			pouchRepo,
 			selectorResult,
 			sort,
-			limit
-
+			limit,
+			offset,
+			includeDocs
 		)
-		return mapDocs(pouchRepo.repo.modelClazz,result)
+
+		return makeFinderResults(pouchRepo,result,request,limit,offset,includeDocs)
 
 	}
 
-	return async (...args) => {
+	return async (request:FinderRequest,...args) => {
 
 		if (!indexReady) {
 			log.debug(`Executing finder ${finderKey} with index ${indexName}`)
 			const idx = await indexCreate
 			log.debug('Index is Ready', idx)
 		}
-		return finder(...args)
+		return finder(request,...args)
 	}
 
 }

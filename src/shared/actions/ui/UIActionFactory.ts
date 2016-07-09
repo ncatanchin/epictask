@@ -1,9 +1,8 @@
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 import {ActionFactory,Action,ActionMessage} from 'typedux'
 
-import {AppKey, Dialogs, RepoKey, RepoTransientProps, UIKey} from "shared/Constants"
+import {UIKey} from "shared/Constants"
 import {IToastMessage} from 'shared/models/Toast'
-import {ISettings} from 'shared/Settings'
 import {UIState} from 'shared/actions/ui/UIState'
 
 
@@ -48,3 +47,5 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 
 
 }
+
+export default UIActionFactory

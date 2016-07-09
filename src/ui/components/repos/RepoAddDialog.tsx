@@ -20,6 +20,7 @@ import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'com
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {SearchType} from 'shared/actions/search/SearchState'
 const {Style} = Radium
 const {HotKeys} = require('react-hotkeys')
 
@@ -166,6 +167,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,any> {
 				<HotKeys handlers={this.keyHandlers}>
 					<div style={s.container}>
 						<SearchPanel searchId='repo-add-search'
+						             types={[SearchType.Repo]}
 						             inlineResults={true}
 						             expanded={false}
 						             mode='repos'

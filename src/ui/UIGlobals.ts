@@ -1,14 +1,17 @@
+import "shared/Globals"
 import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
-
+import {Toaster} from 'shared/Toaster'
+import {Container} from 'typescript-ioc'
 
 /**
  * Now the shared globals - this is required for propper logging config
  */
-import "shared/Globals"
+
 
 function logErrorGlobal(err:Error|string) {
-	require('shared/Toaster').addErrorMessage(err)
+	const toaster = Container.get(Toaster)
+	toaster.addErrorMessage(err)
 }
 
 

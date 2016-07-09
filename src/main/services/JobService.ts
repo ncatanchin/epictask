@@ -113,16 +113,6 @@ export default class JobService extends BaseService {
 		return new clazz(job)
 	}
 
-	/**
-	 * Initialize the job service
-	 *
-	 * @returns {JobService}
-	 */
-	async init():Promise<this> {
-		await super.init()
-		return this
-	}
-
 
 
 
@@ -134,8 +124,6 @@ export default class JobService extends BaseService {
 	 */
 	async start():Promise<this> {
 		await super.start()
-
-
 
 
 		// Now load everything
@@ -154,22 +142,6 @@ export default class JobService extends BaseService {
 		log.info("Finally load all jobs")
 		this.loadJobs()
 
-		return this
-	}
-
-	/**
-	 * Stops the service and all pending or inprogress
-	 * jobs
-	 *
-	 * @returns {JobService}
-	 */
-	async stop():Promise<this> {
-		await super.stop()
-
-		return this
-	}
-
-	destroy():this {
 		return this
 	}
 
@@ -237,18 +209,19 @@ export default class JobService extends BaseService {
 	}
 
 	completedJob(handler:JobHandler,status:JobStatus) {
+		const {job} = handler
 		switch (status) {
 			case JobStatus.Failed:
 				this.toaster.addErrorMessage(handler.info.error)
 				break
 			default:
-				this.toaster.addMessage('Completed: ' + handler.job.name)
+				this.toaster.addMessage('Completed: ' + (job.description || job.name))
 		}
 
-		if (handler.job.scheduled) {
+		if (job.scheduled) {
 			handler.reset()
 		} else {
-			this.removeJob(handler.job.id)
+			this.removeJob(job.id)
 		}
 	}
 

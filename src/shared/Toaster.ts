@@ -43,7 +43,9 @@ export class Toaster {
 	}
 }
 
-const toaster = Container.get(Toaster)
+let toaster = null
+if (!(global as any).devToolsMode)
+	toaster = Container.get(Toaster)
 
 /**
  * Report message to ui from anywhere

@@ -10,7 +10,7 @@ import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
 
-import {SearchResult, SearchResultType} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
@@ -131,9 +131,9 @@ export interface ISearchResultsListProps {
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	results:List<SearchResult<any>>
-	onResultSelected?:(result:SearchResult<any>) => void
-	onResultHover?:(result:SearchResult<any>) => void
+	results:List<SearchResult>
+	onResultSelected?:(result:SearchResult) => void
+	onResultHover?:(result:SearchResult) => void
 }
 
 function mapStateToProps(state) {
@@ -241,14 +241,14 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		</div>
 	}
 
-	renderRepo = (repoResult:SearchResult<Repo>,isSelected) => {
-		const repo = repoResult.value
-
-		return this.renderResult(
-			Renderers.repoName(repo),
-			`${repo.open_issues_count} open issues`,
-			'Add issue repo','repo',
-			isSelected)
+	renderRepo = (repoResult:SearchResult,isSelected) => {
+		// const repo = repoResult.value
+		//
+		// return this.renderResult(
+		// 	Renderers.repoName(repo),
+		// 	`${repo.open_issues_count} open issues`,
+		// 	'Add issue repo','repo',
+		// 	isSelected)
 	}
 
 	/**
@@ -258,22 +258,22 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 * @param isSelected
 	 * @returns {any}
 	 */
-	renderAvailableRepo = (availRepoResult:SearchResult<AvailableRepo>,isSelected) => {
-		const
-			// Get data
-			availRepo = availRepoResult.value,
-			availRepoSelected = availRepo.enabled,
-			repo = availRepo.repo || repoActions.state.stores.find(item => item.id === availRepo.repoId)
-
-		// The wrapper element with content inside
-		// Row 1: label
-		// Row 2: possible action
-		return this.renderResult(
-			Renderers.repoName(repo),
-			`${repo.open_issues_count} open issues`,
-			(availRepoSelected) ? 'Hide issues' : 'Show Issues',
-			'repo',
-			isSelected)
+	renderAvailableRepo = (availRepoResult:SearchResult,isSelected) => {
+		// const
+		// 	// Get data
+		// 	availRepo = availRepoResult.value,
+		// 	availRepoSelected = availRepo.enabled,
+		// 	repo = availRepo.repo || repoActions.state.stores.find(item => item.id === availRepo.repoId)
+		//
+		// // The wrapper element with content inside
+		// // Row 1: label
+		// // Row 2: possible action
+		// return this.renderResult(
+		// 	Renderers.repoName(repo),
+		// 	`${repo.open_issues_count} open issues`,
+		// 	(availRepoSelected) ? 'Hide issues' : 'Show Issues',
+		// 	'repo',
+		// 	isSelected)
 
 
 	}
@@ -289,62 +289,63 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 * @returns {any}
 	 */
 	prepareResults(props) {
-		const results = props.results || null
-		if (!results)
-			return undefined
-
-		const themeStyles = this.getThemeStyles()
-
-		// Props
-		const {onResultHover,onResultSelected,selectedIndex} = props
-
-		// Map Result types
-		const types = Object.keys(SearchResultType)
-			.filter(t => _.isFinite(_.toNumber(t)))
-			.map(t => SearchResultType[t])
-
-		let rows = List<any>()
-
-		log.info(`Selected index in results ${selectedIndex}`)
-
-		// Iterate result types and build sections
-		types.forEach(resultTypeStr => {
-			const resultType:SearchResultType = SearchResultType[resultTypeStr] as any
-			const resultRenderer:any = (resultType === SearchResultType.Repo) ?
-				this.renderRepo : (resultType === SearchResultType.AvailableRepo) ?
-				this.renderAvailableRepo :
-				this.renderIssue
-
-			// Filter only the results for this section
-			const sectionResults = results.filter(result => result.type === resultType)
-
-			// Concat the other sections
-			rows = rows.concat(sectionResults.map(result => {
-				const isSelected = selectedIndex === result.index
-				const resultContent = resultRenderer(result, isSelected)
-
-				// Make the row style
-				const resultStyle = makeStyle(
-					styles.result,
-					themeStyles.result.normal,
-					isSelected && themeStyles.result.selected
-				)
-
-				return (
-					<div key={result.index}
-					     className={isSelected && 'selected'}
-					     style={resultStyle}
-					     onMouseEnter={() => onResultHover && onResultHover(result)}
-					     onClick={() => onResultSelected && onResultSelected(result)}
-					>
-						{resultContent}
-					</div>
-				)
-			}))  as List<any>
-
-		})
-
-		return rows
+		// const results = props.results || null
+		// if (!results)
+		// 	return undefined
+		//
+		// const themeStyles = this.getThemeStyles()
+		//
+		// // Props
+		// const {onResultHover,onResultSelected,selectedIndex} = props
+		//
+		// // Map Result types
+		// const types = Object.keys(SearchType)
+		// 	.filter(t => _.isFinite(_.toNumber(t)))
+		// 	.map(t => SearchType[t])
+		//
+		// let rows = List<any>()
+		//
+		// log.info(`Selected index in results ${selectedIndex}`)
+		//
+		// // Iterate result types and build sections
+		// types.forEach(resultTypeStr => {
+		// 	const resultType:SearchType = SearchType[resultTypeStr] as any
+		// 	const resultRenderer:any = (resultType === SearchType.Repo) ?
+		// 		this.renderRepo : (resultType === SearchType.AvailableRepo) ?
+		// 		this.renderAvailableRepo :
+		// 		this.renderIssue
+		//
+		// 	// Filter only the results for this section
+		// 	const sectionResults = results.filter(result => result.type === resultType)
+		//
+		// 	// Concat the other sections
+		// 	rows = rows.concat(sectionResults.map(result => {
+		// 		const isSelected = selectedIndex === result.index
+		// 		const resultContent = resultRenderer(result, isSelected)
+		//
+		// 		// Make the row style
+		// 		const resultStyle = makeStyle(
+		// 			styles.result,
+		// 			themeStyles.result.normal,
+		// 			isSelected && themeStyles.result.selected
+		// 		)
+		//
+		// 		return (
+		// 			<div key={result.index}
+		// 			     className={isSelected && 'selected'}
+		// 			     style={resultStyle}
+		// 			     onMouseEnter={() => onResultHover && onResultHover(result)}
+		// 			     onClick={() => onResultSelected && onResultSelected(result)}
+		// 			>
+		// 				{resultContent}
+		// 			</div>
+		// 		)
+		// 	}))  as List<any>
+		//
+		// })
+		//
+		// return rows
+		return List()
 	}
 
 

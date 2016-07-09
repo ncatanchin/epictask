@@ -206,7 +206,12 @@ export function initStore(devToolsMode = false) {
 			.forEach(key => {
 				const mod:any = actionCtx(key)
 				const factory = mod.default
-				new factory()
+				try {
+					new factory()
+				} catch (err) {
+					log.error(`Failed to start action factory: ${key}`,err)
+					throw err
+				}
 			})
 	}
 	return store
