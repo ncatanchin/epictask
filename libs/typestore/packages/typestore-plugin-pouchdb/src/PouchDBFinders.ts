@@ -12,12 +12,36 @@ import {mapDocs, transformDocumentKeys, mapAttrsToField} from './PouchDBUtil'
 
 const log = Log.create(__filename)
 
+/**
+ * Map docs to results
+ *
+ * @param pouchRepo
+ * @param results
+ * @param request
+ * @param limit
+ * @param offset
+ * @param includeDocs
+ * @returns {FinderResultArray}
+ */
 function makeFinderResults(pouchRepo,results,request,limit:number,offset:number,includeDocs:boolean) {
 	const items = mapDocs(pouchRepo,pouchRepo.repo.modelClazz,results,includeDocs)
 	const total = results.total_rows || items.length
-	return new FinderResultArray(items as any,total,request,results.metadata || [])
+
+	const resultsArray = new FinderResultArray<any>(items,total,request,results.metadata || [])
+	return resultsArray
 }
 
+/**
+ * Execute pouchdb.search
+ *
+ * @param pouchRepo
+ * @param text
+ * @param fields
+ * @param limit
+ * @param offset
+ * @param includeDocs
+ * @returns {any}
+ */
 export async function findWithText(pouchRepo,text:string,fields:string[],limit = -1,offset = -1,includeDocs = true) {
 	enableQuickSearch()
 
@@ -58,8 +82,17 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
 }
 
 
-
-
+/**
+ * Execute pouchdb-find selector
+ *
+ * @param pouchRepo
+ * @param selector
+ * @param sort
+ * @param limit
+ * @param offset
+ * @param includeDocs
+ * @returns {any}
+ */
 export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort = null,limit = -1,offset = -1,includeDocs = true) {
 
 	const opts = {
@@ -77,7 +110,7 @@ export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort
 	if (offset > -1)
 		opts.offset = offset
 
-	if (!includeDocs)
+	if (includeDocs === false)
 		opts.fields = mapAttrsToField([pouchRepo.primaryKeyField])
 
 	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
@@ -86,7 +119,14 @@ export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort
 }
 
 
-
+/**
+ * Create a full text finder for Pouch
+ *
+ * @param pouchRepo
+ * @param finderKey
+ * @param opts
+ * @returns {(request:FinderRequest, args:...[any])=>Promise<FinderResultArray>}
+ */
 export function makeFullTextFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFullTextFinderOptions) {
 	enableQuickSearch()
 	let {textFields,queryMapper,build,minimumMatch,limit,offset,includeDocs} = opts
@@ -131,6 +171,14 @@ export function makeFullTextFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:st
 	}
 }
 
+/**
+ * Create an al docs filter finder
+ *
+ * @param pouchRepo
+ * @param finderKey
+ * @param opts
+ * @returns {(request:FinderRequest, args:...[any])=>Promise<any>}
+ */
 export function makeFilterFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFilterFinderOptions) {
 	log.warn(`Finder '${finderKey}' uses allDocs filter - THIS WILL BE SLOW`)
 
@@ -142,6 +190,14 @@ export function makeFilterFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:stri
 	}
 }
 
+/**
+ * Create a raw function finder
+ *
+ * @param pouchRepo
+ * @param finderKey
+ * @param opts
+ * @returns {(request:FinderRequest, args:...[any])=>Promise<FinderResultArray>}
+ */
 export function makeFnFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBFnFinderOptions) {
 	const {fn} = opts
 
@@ -151,12 +207,22 @@ export function makeFnFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,o
 	}
 }
 
+/**
+ * Create a mango selector based finder
+ * via pouchdb-find
+ *
+ * @param pouchRepo
+ * @param finderKey
+ * @param opts
+ * @returns {(request:FinderRequest, args:...[any])=>Promise<Promise<FinderResultArray>>}
+ */
 export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBMangoFinderOptions) {
 	let {selector,sort,limit,offset,includeDocs,all,indexName,indexDirection,indexFields} = opts
 
 	let indexReady = all === true
 	let indexCreate = null
 
+	// Create index promise
 	if (all) {
 		indexCreate = Promise.resolve(null)
 	} else {
@@ -193,14 +259,12 @@ export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:strin
 			return idx
 		})()
 
-
-
-
 	}
 
+	// Actual finder function
 	const finder = async (request:FinderRequest,...args) => {
 		const selectorResult =
-			isFunction(selector) ? selector(...args) : selector
+			isFunction(selector) ? (selector as any)(...args) : selector
 
 		if (request) {
 			offset = request.offset || offset
@@ -223,6 +287,7 @@ export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:strin
 
 	}
 
+	// Wrapped finder function, first make sure the index is ready
 	return async (request:FinderRequest,...args) => {
 
 		if (!indexReady) {

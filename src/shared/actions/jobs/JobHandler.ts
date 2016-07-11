@@ -1,27 +1,35 @@
-import {Container,AutoWired,Inject} from 'typescript-ioc'
-import {JobStatus} from './JobStatus'
-import JobService from 'main/services/JobService'
-import {JobInfo, BaseJob} from 'shared/actions/jobs/JobReducer'
-import * as moment from 'moment'
-//import * as Bluebird from 'bluebird'
-import * as uuid from 'node-uuid'
-//import {IJob} from './JobState'
-
+import {JobInfo, Job, JobStatus} from 'shared/actions/jobs/JobState'
 const log = getLogger(__filename)
+
+import * as moment from 'moment'
+import * as uuid from 'node-uuid'
+
+import JobService from 'main/services/JobService'
+import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
+
+
+export enum JobHandlerEventType {
+	OnStarted = 1,
+	OnChanged,
+	OnFinished
+}
 
 /**
  * Handler for executing a job
  */
-@AutoWired
-export class JobHandler {
+
+export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 	private executePromise
 
 	scheduler:Later.IScheduleData
-	service = Container.get(JobService)
+
 	info:JobInfo
-	timer
-	constructor(public job:BaseJob) {
+	timer:Later.ITimer
+
+	constructor(public service:JobService,public job:Job) {
+		super(JobHandlerEventType)
+
 		const {schedule} = job
 		if (schedule) {
 			this.scheduler = later.parse.cron(schedule)
@@ -29,13 +37,45 @@ export class JobHandler {
 
 	}
 
+	/**
+	 * When the internal state
+	 * is updated
+	 */
+	private notify(event:JobHandlerEventType) {
+		this.emit(event,this.job,this.info)
+	}
+
+	/**
+	 * Update job status
+	 *
+	 * @param message
+	 * @param details
+	 * @param error
+	 */
+	log(message:string,details:string,error:Error) {
+		this.info.log(message,details,error)
+		this.notify(JobHandlerEventType.OnChanged)
+	}
+
+	/**
+	 * Start the handler
+	 *
+	 * for a repeating scheduled job the
+	 * same handler is used.  `this.info`
+	 * is reset after each execution
+	 */
 	start() {
 		this.reset()
 		if (this.scheduler && this.job.immediate) {
 			this.execute()
 		}
+
+		this.notify(JobHandler.Events.OnStarted)
 	}
 
+	/**
+	 * Reset/Init the job info and schedule
+	 */
 	reset() {
 		this.info = new JobInfo()
 		this.info.id = uuid.v4()
@@ -48,6 +88,9 @@ export class JobHandler {
 			this.execute()
 	}
 
+	/**
+	 * Schedule the job for later execution
+	 */
 	schedule() {
 		if (!this.timer) {
 			assert(this.scheduler,'Schedule must be set in order to schedule')
@@ -58,13 +101,14 @@ export class JobHandler {
 				later.setInterval(executor, this.scheduler) :
 				later.setTimeout(executor, this.scheduler)
 
-		} else {
-			const nextOccurence = later.schedule(this.scheduler).next(1)
-			const nextText = moment(nextOccurence).fromNow()
-			log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
 		}
 
+		const nextOccurence =  later.schedule(this.scheduler).next(1)
 
+		this.info.nextScheduledTime = Array.isArray(nextOccurence) ? nextOccurence[0] : nextOccurence
+
+		const nextText = moment(nextOccurence).fromNow()
+		log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
 
 	}
 
@@ -83,8 +127,6 @@ export class JobHandler {
 			progress,
 			error
 		})
-
-		this.service.updateJobInfo()
 
 
 	}
@@ -122,7 +164,9 @@ export class JobHandler {
 				return this.setStatus(JobStatus.Failed,err)
 			}).finally(() => {
 				this.executePromise = null
+				this.notify(JobHandler.Events.OnFinished)
 				this.service.completedJob(this,this.info.status)
+
 			}))
 
 
@@ -134,4 +178,11 @@ export class JobHandler {
 			this.executePromise = null
 		}
 	}
+}
+
+/**
+ * Merge events enum onto handler
+ */
+export namespace JobHandler {
+	export const Events = JobHandlerEventType
 }

@@ -22,11 +22,7 @@ const electron = require('electron')
 const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
 
-
-
-
-
-
+// If renderer then add an action interceptor
 if (Env.isRenderer) {
 	const unregisterInterceptor = addActionInterceptor((leaf:string,name:string,next:IActionInterceptorNext,...args:any[]) => {
 		ipc.send(Events.StoreRendererDispatch,leaf,name,args)
@@ -34,7 +30,6 @@ if (Env.isRenderer) {
 	})
 
 	if (module.hot) {
-
 		module.hot.dispose(() => {
 			log.info(`HMR Removing action interceptor`)
 			unregisterInterceptor()
@@ -62,20 +57,28 @@ function hmrSetup() {
 }
 
 /**
+ * Create the appropriate middleware
+ *
+ * @returns {any}
+ */
+function createMiddleware() {
+	if (Env.isRenderer) {
+		//return (Env.isDev) ? [createLogger()] : []
+		return []
+	} else {
+		return [thunkMiddleware]
+	}
+
+}
+
+/**
  * Middleware includes thunk and in
  * DEBUG only + redux-logger + devtools
  *
  * @type {*[]}
  */
-const middleware = [
-	thunkMiddleware
-]
+const middleware = createMiddleware()
 
-// DEV + RENDERER - ADD LOGGER
-if (Env.isDev && Env.isRenderer) {
-	const reduxLogger = createLogger();
-	middleware.push(reduxLogger)
-}
 
 /**
  * Null middleware that can be used
@@ -154,7 +157,7 @@ function getDebugSessionKey() {
  */
 function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 	const toaster = Container.get(Toaster)
-
+	log.error('Reducer error occured',err,reducer)
 	toaster.addErrorMessage(err)
 }
 
@@ -163,29 +166,38 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
  */
 export function initStore(devToolsMode = false) {
 
+	const enhancers = [
+		applyMiddleware(...middleware),
+		storeEnhancer
+	]
+
+	if (Env.isDev && Env.isRenderer) {
+		enhancers.push(applyMiddleware(createLogger()))
+	}
 
 	/**
 	 * DevToolsMiddleware is configured in DEBUG mode anyway
 	 *
 	 * @type {function(): *}
 	 */
-	const debugMiddleware =
+	const debugEnhancer =
 		(devToolsMode) ? loadDevTools() :
 			(!Env.isDev) ? NullMiddleware :
 				(Env.isRenderer && window.devToolsExtension) ? window.devToolsExtension() :
 					(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
 						loadDevTools()
 
-	let reducers = (Env.isRenderer) ? [] : getReducers()
+
+	enhancers.push(debugEnhancer)
+
+
+
+	let reducers = getReducers()
 
 	// Create the store
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
-		compose(
-			applyMiddleware(...middleware),
-			storeEnhancer,
-			debugMiddleware
-		) as StoreEnhancer<any>
+		compose.call(null,...enhancers) as StoreEnhancer<any>
 	)
 
 	// If HMR enabled then prepare for it

@@ -10,7 +10,10 @@ import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
 
-import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
+import {
+	SearchResult, SearchType, SearchSource, SearchResultData, SearchItem,
+	SearchItemModel
+} from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
@@ -131,15 +134,14 @@ export interface ISearchResultsListProps {
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	results:List<SearchResult>
-	onResultSelected?:(result:SearchResult) => void
-	onResultHover?:(result:SearchResult) => void
+	results:SearchResultData[]
+	onResultSelected?:(result:SearchResult,itemModel:SearchItemModel) => void
+	onResultHover?:(result:SearchResult,itemModel:SearchItemModel) => void
 }
 
 function mapStateToProps(state) {
 	return {
 		theme: getTheme()
-
 	}
 }
 
@@ -241,27 +243,25 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		</div>
 	}
 
-	renderRepo = (repoResult:SearchResult,isSelected) => {
-		// const repo = repoResult.value
-		//
-		// return this.renderResult(
-		// 	Renderers.repoName(repo),
-		// 	`${repo.open_issues_count} open issues`,
-		// 	'Add issue repo','repo',
-		// 	isSelected)
+	renderRepo = (item:SearchItem,repo:Repo,isSelected) => {
+
+		return this.renderResult(
+			Renderers.repoName(repo),
+			`${repo.open_issues_count} open issues`,
+			'Add issue repo','repo',
+			isSelected)
 	}
 
 	/**
 	 * Render an available repo, once allready initialized
 	 *
-	 * @param availRepoResult
+	 * @param model
 	 * @param isSelected
 	 * @returns {any}
 	 */
-	renderAvailableRepo = (availRepoResult:SearchResult,isSelected) => {
+	renderAvailableRepo = (item:SearchItem,availRepo:AvailableRepo,isSelected) => {
 		// const
 		// 	// Get data
-		// 	availRepo = availRepoResult.value,
 		// 	availRepoSelected = availRepo.enabled,
 		// 	repo = availRepo.repo || repoActions.state.stores.find(item => item.id === availRepo.repoId)
 		//
@@ -274,11 +274,11 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		// 	(availRepoSelected) ? 'Hide issues' : 'Show Issues',
 		// 	'repo',
 		// 	isSelected)
-
+		return null
 
 	}
 
-	renderIssue = (repoResult:Issue,isSelected) => {
+	renderIssue = (item:SearchItem,repoResult:Issue,isSelected) => {
 		return []
 	}
 
@@ -288,64 +288,69 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 *
 	 * @returns {any}
 	 */
-	prepareResults(props) {
-		// const results = props.results || null
-		// if (!results)
-		// 	return undefined
-		//
-		// const themeStyles = this.getThemeStyles()
-		//
-		// // Props
-		// const {onResultHover,onResultSelected,selectedIndex} = props
-		//
-		// // Map Result types
-		// const types = Object.keys(SearchType)
-		// 	.filter(t => _.isFinite(_.toNumber(t)))
-		// 	.map(t => SearchType[t])
-		//
-		// let rows = List<any>()
-		//
-		// log.info(`Selected index in results ${selectedIndex}`)
-		//
-		// // Iterate result types and build sections
-		// types.forEach(resultTypeStr => {
-		// 	const resultType:SearchType = SearchType[resultTypeStr] as any
-		// 	const resultRenderer:any = (resultType === SearchType.Repo) ?
-		// 		this.renderRepo : (resultType === SearchType.AvailableRepo) ?
-		// 		this.renderAvailableRepo :
-		// 		this.renderIssue
-		//
-		// 	// Filter only the results for this section
-		// 	const sectionResults = results.filter(result => result.type === resultType)
-		//
-		// 	// Concat the other sections
-		// 	rows = rows.concat(sectionResults.map(result => {
-		// 		const isSelected = selectedIndex === result.index
-		// 		const resultContent = resultRenderer(result, isSelected)
-		//
-		// 		// Make the row style
-		// 		const resultStyle = makeStyle(
-		// 			styles.result,
-		// 			themeStyles.result.normal,
-		// 			isSelected && themeStyles.result.selected
-		// 		)
-		//
-		// 		return (
-		// 			<div key={result.index}
-		// 			     className={isSelected && 'selected'}
-		// 			     style={resultStyle}
-		// 			     onMouseEnter={() => onResultHover && onResultHover(result)}
-		// 			     onClick={() => onResultSelected && onResultSelected(result)}
-		// 			>
-		// 				{resultContent}
-		// 			</div>
-		// 		)
-		// 	}))  as List<any>
-		//
-		// })
-		//
-		// return rows
-		return List()
+	prepareResults() {
+		const {onResultHover,onResultSelected,selectedIndex,results} = this.props || null
+		if (!results)
+			return void 0
+
+		const themeStyles = this.getThemeStyles()
+
+		// Props
+
+
+		// Map Result types
+		let rows = List<any>()
+
+		log.info(`Selected index in results ${selectedIndex}`)
+
+		results.forEach((resultData:SearchResultData) => {
+			const {data,result} = resultData
+			if (!data || !data.fulfilled)
+				return
+
+			const
+				{source,type,items} = result,
+				{models} = data
+
+			const resultRenderer:any = (type === SearchType.Repo) ?
+				this.renderRepo : (type === SearchType.AvailableRepo) ?
+				this.renderAvailableRepo :
+				this.renderIssue
+
+			// Filter only the results for this section
+			const sectionRows = items.map((item,index) => {
+				const model = models[index]
+				if (!model) return null
+				
+				const isSelected = selectedIndex === model.id
+				const itemContent = resultRenderer(item,model,isSelected)
+
+				// Make the row style
+				const resultStyle = makeStyle(
+					styles.result,
+					themeStyles.result.normal,
+					isSelected && themeStyles.result.selected
+				)
+
+				return (
+					<div key={model.id}
+					     className={isSelected && 'selected'}
+					     style={resultStyle}
+					     onMouseEnter={() => onResultHover && onResultHover(result,{item,model})}
+					     onClick={() => onResultSelected && onResultSelected(result,{item,model})}
+					>
+						{itemContent}
+					</div>
+				)
+			})
+
+			// Concat the other sections
+			rows = rows.concat(sectionRows)  as List<any>
+
+		})
+
+		return rows
+
 	}
 
 
@@ -394,7 +399,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 					transitionEnterTimeout={250}
 					transitionLeaveTimeout={150}>
 
-					{props.open && this.prepareResults(props)}
+					{props.open && this.prepareResults()}
 
 				</CSSTransitionGroup>
 			</div>)
@@ -403,7 +408,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			ReactDOM.render(resultsElement, this.node)
 		} else {
 			return <div className={props.className} style={resultsStyle}>
-				{props.open && this.prepareResults(props)}
+				{props.open && this.prepareResults()}
 			</div>
 		}
 		//renderSubtreeIntoContainer(this,resultsElement,this.node)

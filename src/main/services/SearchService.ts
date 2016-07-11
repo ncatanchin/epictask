@@ -1,5 +1,4 @@
 import {FinderRequest, FinderResultArray} from 'typestore'
-Promise = require('bluebird')
 import {List,Map} from 'immutable'
 import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
 import {ObservableStore} from 'typedux'
@@ -13,8 +12,11 @@ import {
 import ValueCache from 'shared/util/ValueCache'
 import {debounce} from 'lodash-decorators'
 import {GitHubClient} from 'shared/GitHubClient'
-import {RepoStore} from 'shared/models/Repo'
-import {IssueStore} from 'shared/models/Issue'
+import {RepoStore, Repo} from 'shared/models/Repo'
+import {IssueStore, Issue} from 'shared/models/Issue'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {DataRequest} from 'shared/actions/data/DataState'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
 
 
 
@@ -42,6 +44,8 @@ export default class SearchService extends BaseService {
 	@Inject
 	searchActions:SearchActionFactory
 
+	@Inject
+	dataActions:DataActionFactory
 
 	private getQueryCache(searchId) {
 		let cache = this.queriesCache[searchId]
@@ -90,6 +94,16 @@ export default class SearchService extends BaseService {
 		}
 	}
 
+	mapResultsToSearchItems(results:FinderResultArray<number>) {
+		const md = results.itemMetadata
+		return results.map((id,index) => {
+			const score = (md && md.length > index && md[index]) ?
+				md[index].score : null
+
+			return new SearchItem(id,SearchType.Repo,score || 1)
+		})
+	}
+
 	async searchRepos(search:Search):Promise<SearchResult> {
 		const repoStore:RepoStore = this.stores.repo
 
@@ -97,7 +111,8 @@ export default class SearchService extends BaseService {
 			await repoStore.findWithText(new FinderRequest(10),search.query)
 
 		return new SearchResult(
-			List<SearchItem>(results),
+			search.id,
+			this.mapResultsToSearchItems(results),
 			SearchType.Repo,
 			SearchSource.Repo,
 			results.length,
@@ -116,8 +131,10 @@ export default class SearchService extends BaseService {
 				const repoStore:RepoStore = this.stores.repo
 
 				result = await repoStore.findByFullName(query)
-				if (result < 1) {
-					const client = Container.get(GitHubClient)
+				log.info('GitHub repo local id search',result,'for query',query)
+				if (!_.isNumber(result) || result < 1) {
+					log.info('Going to query GitHub')
+					const client:GitHubClient = Container.get(GitHubClient)
 					let repo = await client.repo(query)
 
 					log.info('GitHub exact repo result', repo)
@@ -128,10 +145,11 @@ export default class SearchService extends BaseService {
 						if (existingRepo)
 							log.warn(`Names dont match, but we already have a record of this repo???  going to overwrite it`)
 
-						repo = Object.assign(existingRepo,repo)
+						repo = Object.assign({},existingRepo,repo)
 						repo = await repoStore.save(repo)
 
 						result = repo.id
+
 					}
 				}
 
@@ -143,7 +161,8 @@ export default class SearchService extends BaseService {
 		const count = result && result > 0 ? 1 : 0
 
 		return new SearchResult(
-			List<SearchItem>(count ? [result] : []),
+			search.id,
+			(count) ? [new SearchItem(result,SearchType.Repo,1)] : [],
 			SearchType.Repo,
 			SearchSource.ExactRepo,
 			count,
@@ -158,7 +177,8 @@ export default class SearchService extends BaseService {
 			await issueStore.findWithText(new FinderRequest(10),search.query)
 
 		return new SearchResult(
-			List<SearchItem>(results),
+			search.id,
+			this.mapResultsToSearchItems(results),
 			SearchType.Issue,
 			SearchSource.Issue,
 			results.length,
@@ -172,7 +192,8 @@ export default class SearchService extends BaseService {
 		//TODO: Implement search for available repos
 
 		return new SearchResult(
-			List<SearchItem>(),
+			search.id,
+			[],
 			SearchType.AvailableRepo,
 			SearchSource.AvailableRepo,
 			0,
@@ -180,23 +201,45 @@ export default class SearchService extends BaseService {
 		)
 	}
 
+	private requestData(search:Search,source:SearchSource) {
+		return (result:SearchResult) => {
 
+			this.dataActions.submitRequest(new DataRequest({
+				id:result.dataId,
+				modelIds: result.items.map(item => item.id),
+				modelType: (([SearchSource.Repo,SearchSource.ExactRepo].includes(source)) ? Repo :
+					(source === SearchSource.AvailableRepo) ? AvailableRepo : Issue).$$clazz
+			}))
+
+			return result
+		}
+	}
 	async searchType(search:Search,source:SearchSource) {
-		const searchResult = await ((source === SearchSource.Repo) ?
+		const searchPromise = ((source === SearchSource.Repo) ?
 			this.searchRepos(search)  : (source === SearchSource.ExactRepo) ?
 			this.searchGithubRepos(search)  : (source === SearchSource.Issue) ?
 			this.searchIssues(search) :
 			this.searchAvailableRepos(search))
 
-		const type = SearchSourceTypeMap[source]
+		// Add the data request to the promise
+		searchPromise.then(this.requestData(search,source))
 
-		this.searchActions.setResults(search.id,source,searchResult)
+		// Now wait for results
+		const searchResult = await searchPromise
+
+		this.searchActions.setResults(
+			search.id,
+			source,
+			searchResult
+		)
+
+		await Promise.setImmediate()
 
 		return searchResult
 	}
 
 
-	@debounce(200)
+	@debounce(100)
 	scheduleSearch(searchId) {
 
 		const runningSearch = this.runningSearches[searchId]

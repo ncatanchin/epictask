@@ -25,6 +25,9 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 	setError(err:Error) {}
 
 	@Action()
+	setSelectedIssueIds(selectedIssueIds:number[]) {}
+
+	@Action()
 	addMessage(message:IToastMessage) {}
 
 	@Action()

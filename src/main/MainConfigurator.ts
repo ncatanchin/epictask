@@ -8,10 +8,12 @@ import {IService, ServiceStatus} from './services/IService'
 import DBService from './services/DBService'
 import * as ContextUtils from 'shared/util/ContextUtils'
 
+let hmrReady = false
+
 @AutoWired
 @Singleton
 export class MainConfigurator {
-	services:IService[] = []
+	services:{[key:string]:IService} = {}
 	servicesCtx = null
 
 	loadServices() {
@@ -52,6 +54,8 @@ export class MainConfigurator {
 				service = Container.get(service.default)
 			}
 
+			this.services[serviceKey] = service
+
 			if (service.status > ServiceStatus.Created) {
 				log.info(`${serviceKey} was already started, skipping`)
 				continue
@@ -75,9 +79,18 @@ export class MainConfigurator {
 
 
 		// HMR
-		if (module.hot) {
-			module.hot.accept([this.servicesCtx.id], updates => {
+		if (module.hot && !hmrReady) {
+			hmrReady = true
+			module.hot.accept([this.servicesCtx.id], async (updates) => {
 				log.info('HMR Services updated: ', updates)
+				await Promise.all(Object.values(this.services)
+					.map(service => (
+						(service.stop) ? service.stop() : Promise.resolve(service))
+					))
+
+				await this.startServices()
+
+				log.info('HMR services reloaded')
 			})
 		}
 
@@ -97,7 +110,7 @@ export class MainConfigurator {
 
 		// Just in case this is an HMR reload
 		await this.stop()
-		this.services = []
+
 
 
 
@@ -114,13 +127,15 @@ export class MainConfigurator {
 	}
 
 	stop() {
-		const stopPromises =
-			this.services.map(service => service.stop ?
+		const services = Object.values(this.services)
+
+		const stopPromises = services
+			.map(service => service.stop ?
 				service.stop() : Promise.resolve(service)
 			) as Promise<IService>[]
 
 		return Promise.all(stopPromises).then(() => {
-			if (this.services.length)
+			if (services.length)
 				log.info('All services are shutdown')
 
 		}).catch(err => {

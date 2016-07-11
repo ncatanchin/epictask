@@ -4,20 +4,27 @@ import {Singleton, AutoWired, Inject, Container, Scope} from 'typescript-ioc'
 import {ServiceStatus, BaseService} from './IService'
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {IJob, BaseJob} from 'shared/actions/jobs/JobReducer'
-import {JobStatus} from 'shared/actions/jobs/JobStatus'
-import {JobHandler} from 'shared/actions/jobs/JobHandler'
+import {JobHandler, JobHandlerEventType} from 'shared/actions/jobs/JobHandler'
 import * as assert from 'assert'
 import {Toaster} from 'shared/Toaster'
+import {IEnumEventRemover} from 'shared/util/EnumEventEmitter'
+import {Job, IJob, JobInfo, JobStatus} from 'shared/actions/jobs/JobState'
 
 const log = getLogger(__filename)
 
-export type TScheduledJobMap = {[name:string]:BaseJob}
+export type TScheduledJobMap = {[name:string]:Job}
 
-export type TJobClassType = typeof BaseJob
+export type TJobClassType = typeof Job
 export type TJobClassMap<J extends TJobClassType> = {[name:string]:J}
-export type TJobMap= {[name:string]:JobHandler}
 
+export interface IJobContainer {
+	eventRemovers:IEnumEventRemover[]
+	handler:JobHandler
+}
+
+export type TJobMap= {[name:string]:IJobContainer}
+
+const JobHandlerEvents = JobHandler.Events
 
 /**
  * Job executor shape
@@ -81,6 +88,8 @@ export default class JobService extends BaseService {
 	 * Register a job class
 	 *
 	 * @param jobClazz
+	 * @param name
+	 * @return {TJobClassMap<any>}
 	 */
 	registerJob<J extends TJobClassType>(name:string, jobClazz:J) {
 
@@ -97,7 +106,7 @@ export default class JobService extends BaseService {
 
 		this.jobClassMap[name] = jobClazz
 
-		const job:BaseJob = new (jobClazz as any)()
+		const job:Job = new (jobClazz as any)()
 		if (job.scheduled) {
 			this.createJob(job)
 		}
@@ -155,11 +164,22 @@ export default class JobService extends BaseService {
 		this.jobActions.clearPendingJobs()
 	}
 
+	/**
+	 * On a job event, handle it!
+	 *
+	 * @param event
+	 * @param handler
+	 * @param job
+	 * @param info
+	 */
+	onJobEvent = (event:JobHandlerEventType, handler:JobHandler, job:Job, info:JobInfo) => {
+		this.updateJobInfo()
+	}
 
 	createJob(newJob:IJob) {
 		if (newJob.oneAtATime) {
 			log.debug(`Job ${newJob.name} executed one at a time, looking for any current jobs`)
-			const existingJob = this.findInProgressJob(newJob)
+			const existingJob = this.findExistingJob(newJob)
 
 			if (existingJob) {
 				log.warn(`Job ${newJob.name} executes one at a time, found in progress job ${existingJob && existingJob.id}`)
@@ -168,8 +188,16 @@ export default class JobService extends BaseService {
 		}
 
 		const job = this.newJobInstance(newJob.name,newJob)
-		const handler = new JobHandler(job)
-		this.jobMap[job.id] = handler
+
+		// Create a new handler
+		const handler = new JobHandler(this,job)
+
+		// Attach to all events
+		const eventRemovers:IEnumEventRemover[] = Object.keys(JobHandlerEvents)
+			.filter(eventType => _.isNumber(eventType))
+			.map(eventType => handler.on(eventType as any,this.onJobEvent))
+
+		this.jobMap[job.id] = {eventRemovers,handler}
 
 		this.updateJobInfo()
 		handler.start()
@@ -180,7 +208,7 @@ export default class JobService extends BaseService {
 	updateJobInfo() {
 		const infos = Object
 			.values(this.jobMap)
-			.map(handler => handler.info)
+			.map(({handler}) => handler.info)
 
 		this.jobActions.setJobsInfo(List(infos))
 	}
@@ -190,17 +218,16 @@ export default class JobService extends BaseService {
 	 * Find an existing job that matches the
 	 * current job request
 	 *
-	 * @param state
-	 * @param name
-	 * @returns {T|undefined}
+	 * @returns {Job}
+	 * @param nameOrId
 	 */
-	findInProgressJob(nameOrId) {
+	findExistingJob(nameOrId) {
 		const workingJobs = this.jobMap
-		const handler = Object
+		const container = this.jobMap[nameOrId] || Object
 			.values(workingJobs)
-			.find(handler => handler.job.status < JobStatus.Completed && handler.job.name === name)
+			.find(({handler}) => handler.job.status < JobStatus.Completed && handler.job.name === nameOrId)
 
-		return handler ? handler.job : null
+		return container ? container.handler.job : null
 
 	}
 
@@ -228,13 +255,15 @@ export default class JobService extends BaseService {
 	/**
 	 * Clear a scheduled job
 	 *
-	 * @param job
+	 * @param jobOrString
 	 */
-	cancelJob = (jobOrString:BaseJob|string) => {
-		let handler = Object.values(this.jobMap)
-				.find(item => item.job.id ===  ((jobOrString instanceof BaseJob) ? jobOrString.id : jobOrString))
+	cancelJob = (jobOrString:Job|string) => {
+		let container = Object.values(this.jobMap)
+				.find(({handler}) => handler.job.id ===  ((jobOrString instanceof Job) ? jobOrString.id : jobOrString))
 
-		assert(handler,'No job found with argument: ' + jobOrString)
+
+		assert(container,'No job found with argument: ' + jobOrString)
+		const {handler} = container
 
 		try {
 			handler.cancel()
@@ -255,30 +284,4 @@ export default class JobService extends BaseService {
 
 }
 
-
-/**
- * Annotation to register a job
- * on compilation
- *
- * @param target
- * @constructor
- */
-export function Job(target:{new():IJob}) {
-	const service = Container.get(JobService)
-	service.registerJob(target.name,target)
-}
-
-/**
- * Keeps track of job scheduling
- */
-export class JobSchedule {
-
-
-
-	// Actual scheduling data
-	scheduler:Later.IScheduleData
-
-	// Cancel a job
-	timer?:Later.ITimer
-}
 

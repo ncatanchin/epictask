@@ -18,8 +18,8 @@ const addIpcListener = (channel:string,listener) => {
 }
 
 let reducers = getReducers()
-let receivedState = null
-let lastPatchNumber = -1
+let mainState = null
+let lastActionId = -1
 let outOfSync = false
 
 if (module.hot) {
@@ -77,9 +77,9 @@ function getMainProcessState() {
 
 
 function rendererStoreEnhancer(storeCreator) {
-	return (reducer) => {
+	return (rootReducer) => {
 
-		receivedState = getMainProcessState()
+		mainState = getMainProcessState()
 
 		const
 			{remote}= electron,
@@ -91,49 +91,54 @@ function rendererStoreEnhancer(storeCreator) {
 
 		ipcRenderer.send(Events.StoreRendererRegister,{clientId})
 
-		reducer = () => {
-			//const lastState = receivedState
-
-			if (outOfSync) {
-				receivedState = getMainProcessState()
-				outOfSync = false
-			} else {
-				while (patches.length) {
-					let patch = patches.shift()
-					receivedState = patcher(receivedState, patch)
-				}
-			}
-			return receivedState
+		/**
+		 * Sync the current state with the
+		 * main process
+		 *
+		 * @returns {any}
+		 */
+		const syncMainState = () => {
+			outOfSync = false
+			return (mainState = getMainProcessState())
 		}
 
-		let store = storeCreator(reducer, receivedState)
+		/**
+		 * Create an enahnced reducer that
+		 * checks the state sync status
+		 * and if out of sync gets the main state
+		 *
+		 * @param state
+		 * @param action
+		 * @returns {any}
+		 */
+		const enhancedReducer = (state,action) => {
+			return outOfSync ? syncMainState() : rootReducer(state,action)
+
+		}
+
+		// Create the redux store
+		let store = storeCreator(enhancedReducer, mainState)
 
 
 		addIpcListener(Events.StoreMainStateChanged,(event,payload) => {
-			const {action,patchNumber,patch:patchJS} = _.cloneDeep(payload)
+			const {action,actionId} = _.cloneDeep(payload)
 
 			// Patch JS to apply to state
-			if (!patchJS) return
+			if (!action) return
 
 			// Check if the patch numbers are in sync
-			outOfSync = (patchNumber - 1 !== lastPatchNumber)
+			outOfSync = (actionId - 1 !== lastActionId)
 
 			// Update the cached patch number
-			lastPatchNumber = patchNumber
+			lastActionId = actionId
 
-			if (outOfSync) {
-				patches.length = 0
-			} else {
-				// Model registry is used to revive classes
-				const patch = Immutable.fromJS(patchJS,stateReviver)
-				patches.push(patch)
-			}
-
-			nextTick(() => store.dispatch(action))
+			nextTick(() => {
+				store.dispatch(action)
+			})
 
 		})
 
-		store.getState = () => receivedState
+		// store.getState = () => receivedState
 
 		return store
 	}

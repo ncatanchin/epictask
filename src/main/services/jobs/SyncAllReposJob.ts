@@ -1,10 +1,12 @@
 
 import {Container} from 'typescript-ioc'
-import {Job, default as JobService} from 'main/services/JobService'
-import {BaseJob} from 'shared/actions/jobs/JobReducer'
+import JobService from 'main/services/JobService'
+
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'
-import {Benchmark} from 'shared/util/Decorations'
+import {Benchmark, RegisterJob} from 'shared/util/Decorations'
+import {Job} from 'shared/actions/jobs/JobState'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 const log = getLogger(__filename)
 
@@ -13,8 +15,8 @@ const Benchmarker = Benchmark('SyncAllReposJob')
 /**
  * Synchronize all enabled repos
  */
-@Job
-export class SyncAllReposJob extends BaseJob {
+@RegisterJob
+export class SyncAllReposJob extends Job {
 
 	constructor(o:any = {}) {
 		super(o)
@@ -24,11 +26,9 @@ export class SyncAllReposJob extends BaseJob {
 			repeat: true,
 			oneAtATime: true,
 			scheduled:true,
-			immediate:true
-
+			immediate:false
 		})
 	}
-
 
 	@Benchmarker
 	async executor(handler:JobHandler) {
@@ -37,17 +37,10 @@ export class SyncAllReposJob extends BaseJob {
 		const stores = Container.get(Stores)
 		const availRepos = await stores.availableRepo.loadAll()
 		const service = Container.get(JobService)
-
+		const repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 		log.debug('Getting avail repos from DB, not state')
 
-		availRepos.forEach(availRepo => {
-			service.createJob({
-				id: `Sync Repo ${availRepo.repo.full_name}`,
-				name: "RepoSyncJob",
-				args: {
-					availableRepo: availRepo
-				}
-			})
-		})
+		availRepos.forEach(availRepo => repoActions.syncRepo(availRepo.repoId))
+
 	}
 }

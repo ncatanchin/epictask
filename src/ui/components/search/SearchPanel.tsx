@@ -3,21 +3,26 @@
  */
 
 // Imports
+import {debounce} from 'lodash-decorators'
 import * as React from 'react'
 import {Paper, TextField, AutoComplete, MenuItem} from 'material-ui'
 import {connect} from 'react-redux'
 import {List,Map} from 'immutable'
 import {SearchKey, AppKey} from 'shared/Constants'
+import * as KeyMaps from 'shared/KeyMaps'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResult, SearchState, Search, SearchType} from 'shared/actions/search/SearchState'
+import {
+	SearchResult, SearchState, Search, SearchType, SearchResultData,
+	SearchData, SearchItem, SearchItemModel
+} from 'shared/actions/search/SearchState'
 
 
 
 import {SearchResultsList} from './SearchResultsList'
+import {createSearchSelector} from 'shared/actions/search/SearchSelectors'
 
 // Key mapping tools
-import * as KeyMaps from 'shared/KeyMaps'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
@@ -35,10 +40,9 @@ export interface ISearchPanelProps {
 	searchId:string
 	types: SearchType[]
 
-	inlineResults?:boolean,
-	expanded?:boolean,
-	results?:List<SearchResult>,
-	query?:string
+	inlineResults?:boolean
+	expanded?:boolean
+	data?:SearchData
 	theme?:any
 	hidden?:boolean
 	mode:"repos"|"issues"
@@ -51,20 +55,19 @@ export interface ISearchPanelState {
 	query?:string
 }
 
-function mapStateToProps(state,props) {
-	const searchState = state.get(SearchKey) as SearchState
+function makeMapStateToProps() {
+	const searchSelector = createSearchSelector()
 
-	const searchId = props.searchId
-	const searches = searchState.searches
-	let search = searches.get(searchId)
-	search = Map.isMap(search) ? search.toJS() : search
+	return (state:any,props:ISearchPanelProps) => {
+		const data = searchSelector(state,props)
 
-	const {query, results} = search || new Search()
-	return {
-		theme:      getTheme(),
-        query,
-        results
+		return {
+			theme:      getTheme(),
+			data
+		}
 	}
+
+
 }
 
 /**
@@ -73,7 +76,7 @@ function mapStateToProps(state,props) {
  * @class SearchPanel
  * @constructor
  **/
-@connect(mapStateToProps)
+@connect(makeMapStateToProps)
 @CSSModules(styles)
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 
@@ -116,7 +119,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param event
 	 */
-	onInputChange = (event) => {
+
+	onInputChange(event) {
 		const query = event.target.value
 		log.info('Search value: ' + query)
 		searchActions.setQuery(this.props.searchId,this.props.types,query)
@@ -142,10 +146,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param result
 	 */
-	onResultSelected = (result:SearchResult = null) => {
+	onResultSelected = (result:SearchResult,itemModel:SearchItemModel) => {
 		if (!result) {
 			const {selectedIndex} = this.state
-			const {results} = this.props
+			const {data} = this.props,
+				{search,results} = data
+
 			// if (results) {
 			// 	result = results.find(item => item.index === selectedIndex)
 			// 	// for (let r of results) {
@@ -159,14 +165,14 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			// if (!result)
 			// 	throw new Error('No result provided and no result matching index: ' + selectedIndex)
 		}
-		searchActions.select(this.props.searchId,result)
+		searchActions.select(this.props.searchId,result,itemModel)
 		this.setState({focused: false})
 
 		if (this.props.onResultSelected)
 			this.props.onResultSelected(result)
 	}
 
-	onHover = (result:SearchResult) => {
+	onHover = (result:SearchResult,itemModel:SearchItemModel) => {
 		//this.setSelectedIndex(result.index)
 	}
 
@@ -175,7 +181,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 
 	setSelectedIndex = (selectedIndex) => {
-		const {results} = this.props
+		const {results} = this.props.data
 		const endIndex = Math.max(results ? results.size - 1 : 0,0)
 
 
@@ -197,7 +203,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	keyHandlers = {
 		[Keys.MoveUp]: () => this.moveSelection(-1),
 		[Keys.MoveDown]:() => this.moveSelection(1),
-		[Keys.Enter]: () => this.onResultSelected()
+		[Keys.Enter]: () => this.onResultSelected(null,null)
 
 	}
 
@@ -207,12 +213,13 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	render() {
-		const {expanded, theme,query,hidden} = this.props,
-			results = this.props.results || List<SearchResult>()
+		const {expanded, theme,hidden} = this.props,
+			{search,results} = this.props.data,
+			{query} = search
 
 		const {searchPanel:spTheme} = theme
 		const focused = this.state.focused
-		const resultsOpen = (results && results.size > 0 ||
+		const resultsOpen = (results && results.length > 0 ||
 			(query && query.length > 0)) &&
 				focused && !hidden
 
@@ -249,7 +256,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
 				<TextField
 					hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
-					onChange={this.onInputChange}
+					onChange={(e) => this.onInputChange(e)}
 					inputStyle={inputStyle}
 					defaultValue={this.state.query}
 				/>

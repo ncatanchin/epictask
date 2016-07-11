@@ -1,6 +1,9 @@
+import {Container} from 'typescript-ioc'
 import {JSONKey} from '../Constants'
 import {isNil} from './ObjectUtil'
-import * as moment from 'moment'
+import JobService from 'main/services/JobService'
+import {IJob} from 'shared/actions/jobs/JobState'
+
 
 const log = getLogger(__filename)
 
@@ -110,5 +113,19 @@ export function Benchmark(name:string = null) {
 
 		//return descriptor
 	}
+}
+
+
+
+/**
+ * Annotation to register a job
+ * on compilation
+ *
+ * @param target
+ * @constructor
+ */
+export function RegisterJob(target:{new():IJob}) {
+	const service = Container.get(JobService)
+	service.registerJob(target.name,target)
 }
 

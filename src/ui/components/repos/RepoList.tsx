@@ -1,5 +1,6 @@
 
 
+import {createAvailableRepoSelector} from 'shared/actions/repo/RepoSelectors'
 /**
  * Displays a list of repos
  */
@@ -8,10 +9,11 @@ const log = getLogger(__filename)
 import * as React from 'react'
 import {Icon,Renderers} from '../common'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {RepoKey} from 'shared/Constants'
+import {RepoKey, UIKey} from 'shared/Constants'
 import {AvailableRepo,Repo} from 'shared/models'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
+import {UIState} from 'shared/actions/ui/UIState'
 // import {Button} from 'ui/components/common/Button'
 
 const repoActions = new RepoActionFactory()
@@ -24,7 +26,7 @@ export interface IRepoListProps {
 	styleName?:string
 	className?:string
 	style?:any
-	selectedRepos?:AvailableRepo[]
+	selectedRepoIds?:number[]
 	theme?: any
 }
 //endregion
@@ -75,23 +77,34 @@ const styles = {
 		fontWeight: 100
 	})
 }
+
 //endregion
 
-function mapToProps(state) {
-	const repoState = state.get(RepoKey)
+function makeMapStateToProps() {
+	const availableRepoSelector = createAvailableRepoSelector()
 
-	return {
-		availableRepos: repoState.availableRepos,
-		selectedRepos: repoState.selectedRepos,
-		theme: getTheme()
+	return (state:any,props:IRepoListProps):IRepoListProps => {
+		const uiState:UIState = state.get(UIKey)
+		const selectedRepoIds = uiState.selectedRepoIds
+
+		const availableRepos:AvailableRepo[] = availableRepoSelector(state,props)
+
+		return {
+			theme:      getTheme(),
+			availableRepos,
+			selectedRepoIds
+		}
 	}
+
+
 }
+
 
 
 /**
  * A list of repos
  */
-@connect(mapToProps)
+@connect(makeMapStateToProps)
 @Radium
 export class RepoList extends React.Component<IRepoListProps,any> {
 
@@ -107,7 +120,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo,!isSelected)
 		} else {
-			if (this.props.selectedRepos.length) {
+			if (this.props.selectedRepoIds.length) {
 				repoActions.clearSelectedRepos()
 			}
 
@@ -127,7 +140,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 	render() {
 
-		const {availableRepos,theme,selectedRepos = []} = this.props
+		const {availableRepos,theme,selectedRepoIds = []} = this.props
 
 		const themeStyles = theme.repoPanel
 
@@ -136,7 +149,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				.map((availRepo,availRepoIndex) => {
 					const id = availRepo.repoId
 					const repo = availRepo.repo //_.find(repos,(it) => it.id === availRepo.repoId)
-					const isSelected = !!selectedRepos.find(selectedAvailRepo => selectedAvailRepo.repoId === availRepo.repoId)
+					const isSelected = !!selectedRepoIds.includes(availRepo.repoId)
 					const isEnabled = availRepo.enabled
 					const isHovering = this.state.hoverId === availRepo.repoId
 
@@ -144,7 +157,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						e.preventDefault()
 						e.stopPropagation()
 
-						repoActions.syncRepoDetails(availRepo)
+						repoActions.syncRepo(availRepo.repoId)
 						return false
 					}
 

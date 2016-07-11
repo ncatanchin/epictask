@@ -38,8 +38,9 @@ html.fill-width.fill-height(lang="en")
 				window.$ = require('jquery')
 
 			// Make sure we have a global log function
-			if (!window.log)
-				window.log = remote.getGlobal('getLogger')('MainEntry.jade')
+			//if (!window.log)
+			//	window.log =
+			//var logger = remote.getGlobal('getLogger')('MainEntry.jade')
 
 
 			// Add getStyles - short for getComputedStyle
@@ -54,7 +55,7 @@ html.fill-width.fill-height(lang="en")
 							styleObj[prop] = val
 					}
 					console.log(styleObj)
-					log.info('styles',styleObj)
+					//log.info('styles',styleObj)
 					return styleObj
 				}
 			}
@@ -69,7 +70,7 @@ html.fill-width.fill-height(lang="en")
 
 				script.type = 'text/javascript'
 				if (asyncLoad) {
-					log.debug('Loading script async', scriptPath)
+					//logger.debug('Loading script async', scriptPath)
 					script.async = true
 					if (callback)
 						script.onload = callback
@@ -82,7 +83,7 @@ html.fill-width.fill-height(lang="en")
 
 			window.loadEpicTask = function() {
 
-				log.info('Loading UI')
+				//logger.info('Loading UI')
 
 				if (loaded) {
 					if (!isDev) {

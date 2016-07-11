@@ -23,6 +23,11 @@ Object.assign(global, {
 	Deferred: require('./deferred')
 }, require('./helpers'))
 
+process.argv.forEach(arg => {
+	if (arg === '--dev')
+		process.env.NODE_ENV = 'development'
+})
+
 const
 	semver     = require('semver'),
 	path       = require('path'),
@@ -30,7 +35,7 @@ const
 	processDir = path.resolve(__dirname, '../..'),
 	env        = process.env.NODE_ENV || 'development'
 
-
+console.log('env = ',env)
 const RunMode = {
 	DevServer: 'DevServer',
 	Watch: 'Watch'

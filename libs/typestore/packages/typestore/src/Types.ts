@@ -75,7 +75,8 @@ export class FinderResultArray<T> extends Array<T> {
 		public request:FinderRequest = null,
 	    public itemMetadata:IFinderItemMetadata[] = null
 	) {
-		super(...items)
+		super(items.length)
+		items.forEach((item,index) => this[index] = item)
 
 		if (request) {
 			this.pageCount = Math.ceil(total / request.limit)

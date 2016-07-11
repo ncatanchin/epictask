@@ -11,10 +11,14 @@ import {Style} from 'radium'
 import {connect} from 'react-redux'
 import {Avatar, Markdown, PureRender, Renderers} from 'components/common'
 import {Issue, Comment, Label, Milestone, Repo} from 'shared/models'
-import {AppKey, RepoKey} from 'shared/Constants'
+import {AppKey, RepoKey, UIKey, DataKey} from 'shared/Constants'
 import {IssueLabels} from './IssueLabels'
 import {IssueActivityText} from './IssueActivityText'
 import {List} from 'immutable'
+import {createStructuredSelector,createSelector} from 'reselect'
+import {UIState} from 'shared/actions/ui/UIState'
+import {DataState} from 'shared/actions/data/DataState'
+import {Themed} from 'shared/themes/ThemeManager'
 const {Textfit} = require('react-textfit')
 
 
@@ -134,29 +138,66 @@ const styles = {
 //endregion
 
 
-function mapStateToProps(state) {
-	const repoState = state.get(RepoKey)
-
-	return {
-		theme:    getTheme(),
-		issues:   repoState.selectedIssues || List(),
-		issue:   repoState.selectedIssue,
-		repos:    repoState.stores,
-		comments: repoState.comments
-	}
-}
-
 /**
  * IIssueDetailPanelProps
  */
 
 export interface IIssueDetailPanelProps {
-	issues?:List<Issue>
+	issues?:Issue[]
 	issue?:Issue
-	repos?:List<Repo>
 	comments?:Comment[]
 	theme?:any
 }
+
+
+/**
+ * Create a new issue item to state => props mapper
+ *
+ * @returns {any}
+ */
+const makeIssueItemStateToProps = () => {
+	const issuesSelector = createSelector(
+		(state:Map<any,any>):Issue[] => {
+			const uiState = state.get(UIKey) as UIState
+			const dataState = state.get(DataKey) as DataState
+			const issueModels = dataState.models.get(Issue.$$clazz)
+			const repoModels = dataState.models.get(Repo.$$clazz)
+			const labelModels = dataState.models.get(Label.$$clazz)
+			const milestoneModels = dataState.models.get(Milestone.$$clazz)
+
+			const issues = uiState.selectedIssueIds
+				.map(issueId => issueModels.get(`${issueId}`))
+				.filter(issue => !_.isNil(issue))
+				.map(issue => new Issue(Object.assign({},issue,{
+					repo: repoModels.get(`${issue.repoId}`),
+					labels: issue.labels.map(label => labelModels.get(label.url)),
+					milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
+				})))
+
+			return issues
+		},
+		(issues:Issue[]) => issues
+	)
+	return createStructuredSelector({
+		issues: issuesSelector,
+		issue: (state) => {
+			const issues = issuesSelector(state)
+			return issues && issues.length === 1 ? issues[0] : null
+		},
+		comments: (state) => []
+	})
+}
+
+// function mapStateToProps(state) {
+// 	const repoState = state.get(RepoKey)
+//
+// 	return {
+// 		issues:   repoState.selectedIssues || List(),
+// 		issue:   repoState.selectedIssue,
+// 		comments: repoState.comments
+// 	}
+// }
+
 
 
 /**
@@ -166,20 +207,26 @@ export interface IIssueDetailPanelProps {
  * @constructor
  **/
 
+
 @Radium
-@connect(mapStateToProps)
+
+@connect(makeIssueItemStateToProps)
+
 @PureRender
+@Themed
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
 
-	constructor(props:any) {
-		super(props)
-
+	static defaultProps = {
+		theme: getTheme()
 	}
 
+	constructor(props,context) {
+		super(props,context)
+	}
 
-	renderMulti(issues:List<Issue>, s) {
+	renderMulti(issues:Issue[], s) {
 		return <div>
 			{issues.size} selected issues
 		</div>
@@ -318,10 +365,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			s = mergeStyles(styles, theme.issueDetail)
 
 		return <div style={s.root}>
-			{issues.size === 0 ? <div/> :
-				issues.size > 1 ?
+			{issues.length === 0 ? <div/> :
+				issues.length > 1 ?
 					this.renderMulti(issues, s) :
-					this.renderIssue(issues.get(0), comments, s)
+					this.renderIssue(issues[0], comments, s)
 			}
 		</div>
 	}

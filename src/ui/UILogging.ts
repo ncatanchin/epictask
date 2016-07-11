@@ -12,7 +12,7 @@ const RemoteLoggerFactory = remote.getGlobal('LoggerFactory')
  * @param name
  * @returns {ILoggerFactory}
  */
-function LoggerFactory(name) {
+function RendererLoggerFactory(name) {
 
 	const remoteLogger = RemoteLoggerFactory(name)
 	const localLogger = TypeLogger.create(name)
@@ -29,7 +29,7 @@ function LoggerFactory(name) {
 
 Object.assign(global,{
 	getLogger(name) {
-		return LoggerFactory(name)
+		return RendererLoggerFactory(name)
 	}
 })
 

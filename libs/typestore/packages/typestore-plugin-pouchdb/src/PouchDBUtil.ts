@@ -66,7 +66,7 @@ export function mapDocs<M extends IModel>(pouchRepo:PouchDBRepoPlugin<any>,model
 	docs = docs || []
 
 	// if we only want the ids then return only the ids
-	if (!includeDocs) {
+	if (includeDocs === false) {
 		return docs.map(doc => {
 			let val = (doc && doc.attrs) ?
 				doc.attrs[pouchRepo.primaryKeyField] :
@@ -75,7 +75,9 @@ export function mapDocs<M extends IModel>(pouchRepo:PouchDBRepoPlugin<any>,model
 				doc
 
 			let pkType = pouchRepo.primaryKeyType
-			if (isFunction(pkType)) {
+			if (pkType === Number) {
+				val = parseInt(val,10)
+			} else if (isFunction(pkType)) {
 				val = new pkType(val)
 			}
 
@@ -92,6 +94,12 @@ export function mapDocs<M extends IModel>(pouchRepo:PouchDBRepoPlugin<any>,model
 
 }
 
+export function pick(obj:any,...props) {
+	return props.reduce((result,prop) => {
+		result[prop] = obj[prop]
+		return result
+	},{})
+}
 
 /**
  * Prepends all keys - DEEP
@@ -100,21 +108,22 @@ export function mapDocs<M extends IModel>(pouchRepo:PouchDBRepoPlugin<any>,model
  * @returns {{}}
  */
 export function transformDocumentKeys(o) {
-	return (Array.isArray(o)) ?
-		o.map(aVal => transformDocumentKeys(aVal)) :
-		(typeof o === "object") ?
-			Object
-				.keys(o)
-				.reduce((newObj,nextKey) => {
-					const nextVal = o[nextKey]
+	return (!o) ? o :
+		(Array.isArray(o)) ?
+			o.map(aVal => transformDocumentKeys(aVal)) :
+			(typeof o === "object") ?
+				Object
+					.keys(o)
+					.reduce((newObj,nextKey) => {
+						const nextVal = o[nextKey]
 
-					nextKey = PouchDBOperators.includes(nextKey) ?
-						nextKey : `${PouchDBAttributePrefix}${nextKey}`
+						nextKey = PouchDBOperators.includes(nextKey) ?
+							nextKey : `${PouchDBAttributePrefix}${nextKey}`
 
-					newObj[nextKey] = transformDocumentKeys(nextVal)
+						newObj[nextKey] = transformDocumentKeys(nextVal)
 
-					return newObj
-				},{}) :
-			o
+						return newObj
+					},{}) :
+				o
 
 }

@@ -50,6 +50,7 @@ export function RegisterModel<T>(target:any) {
 	log.info(`Registering model: ${clazzName}`)
 	registerModel(clazzName,target)
 
+	target.$$clazz = clazzName
 	const original = target
 
 	const newConstructor = decorateConstructor(function(...args:any[]) {

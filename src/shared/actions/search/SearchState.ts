@@ -5,6 +5,7 @@ import {List,Record,Map} from 'immutable'
 import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'
+import {DataResultsContainer} from 'shared/actions/data/DataState'
 
 
 
@@ -40,18 +41,22 @@ export const SearchSourceTypeMap = {
 @RegisterModel
 export class SearchItem {
 
-	static fromJS = (o:any) => new SearchResult(o)
+	static fromJS(o:any) {
+		return new SearchItem(o)
+	}
 
 	id:string|number
 	type:SearchType
+	score:number
 
-	constructor(id:string|number, type:SearchType)
+	constructor(id:string|number, type:SearchType,score:number)
 	constructor(obj:any)
-	constructor(idOrObject:any, type:SearchType = null) {
+	constructor(idOrObject:any, type:SearchType = null,score:number = 1) {
 		if (_.isNumber(idOrObject) || _.isString(idOrObject)) {
 			Object.assign(this, {
 				id: idOrObject,
-				type
+				type,
+				score
 			})
 		} else {
 			Object.assign(this, idOrObject)
@@ -60,38 +65,70 @@ export class SearchItem {
 	}
 }
 
+export interface SearchItemModel {
+	item: SearchItem,
+	model: any
+}
+
 /**
  * Search Result
  */
 @RegisterModel
 export class SearchResult {
 
-	static fromJS = (o:any) => new SearchResult(o)
+	static fromJS(o:any) {
+		return new SearchResult(o)
+	}
 
-	items:List<SearchItem>
+	items:SearchItem[]
 	type:SearchType
 	source:SearchSource
+	dataId:string
+	searchId:string
 
-	constructor(items:List<SearchItem>, type:SearchType, source:SearchSource,count:number,total:number)
+	constructor(searchId:string,items:SearchItem[],type:SearchType, source:SearchSource,count:number,total:number)
 	constructor(obj:any)
 	constructor(
-		itemsOrObject:any,
+		searchIdOrObject:any,
+		items:SearchItem[] = [],
 		type:SearchType = null,
 		source:SearchSource = null,
 		public count:number = -1,
 		public total:number = -1
 	) {
-		if (List.isList(itemsOrObject)) {
+		if (_.isString(searchIdOrObject)) {
 			Object.assign(this,{
-				items:itemsOrObject,
+				searchId: searchIdOrObject,
+				items,
 				type,
 				source
 			})
 		} else {
-			Object.assign(this,itemsOrObject)
+			const obj = searchIdOrObject,
+				baseItems = (obj.items && Array.isArray(obj.items) || List.isList(obj.items)) ?
+					_.toJS(obj.items) :
+					[]
+
+			const newItems = baseItems.map(item => SearchItem.fromJS(item))
+
+			Object.assign(this,obj,{items:newItems})
 		}
+
+		this.dataId = this.dataId || `${this.searchId}-${this.source}`
 	}
 
+}
+
+
+
+export interface SearchResultData {
+	result:SearchResult
+	data:DataResultsContainer
+}
+
+export interface SearchData {
+	search:Search
+	results:SearchResultData[]
 }
 
 /**
@@ -114,8 +151,15 @@ export const SearchRecord = Record({
 @RegisterModel
 export class Search extends SearchRecord {
 	static fromJS(o:any) {
+		const resultsObj = _.toJS(o.results),
+			results = Object
+				.keys(resultsObj)
+				.reduce((resultsMap,nextKey) => {
+					return resultsMap.set(parseInt(nextKey,10),resultsObj[nextKey])
+				},Map<SearchSource,SearchResult>())
+
 		return new Search(Object.assign({},o,{
-			results: List(o.results)
+			results
 		}))
 	}
 
@@ -149,15 +193,17 @@ export class SearchState extends SearchStateRecord {
 
 	static fromJS(o:any) {
 
-		const searches = _.toJS(o.searches),
-			searchIds = Object.keys(searches)
+		const searchesObj = _.toJS(o.searches),
+			searchIds = Object.keys(searchesObj)
+
+
+		const searches = searchIds.reduce((newSearches,searchId) => {
+			return newSearches.set(searchId, Search.fromJS(searchesObj[searchId]))
+		},Map<string,Search>())
 
 
 		return new SearchState(Object.assign({},o,{
-			searches: Map(searchIds.reduce((newSearches,searchId) => {
-				newSearches[searchId] = Search.fromJS(searches[searchId])
-				return newSearches
-			},{}))
+			searches
 		}))
 	}
 

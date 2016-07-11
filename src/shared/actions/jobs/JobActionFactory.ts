@@ -1,5 +1,6 @@
 
 
+import {JobState, IJobInfo, IJob} from 'shared/actions/jobs/JobState'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -13,7 +14,7 @@ const log = getLogger(__filename)
 import {AutoWired} from 'typescript-ioc'
 import {ActionFactory,Action,ActionMessage} from 'typedux'
 import {JobKey} from "shared/Constants"
-import {JobState, IJob, JobInfo, IJobInfo} from './JobReducer'
+
 import {JobHandler} from './JobHandler'
 import {List} from 'immutable'
 

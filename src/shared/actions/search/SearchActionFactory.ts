@@ -2,13 +2,17 @@ import {ActionFactory,Action} from 'typedux'
 import {SearchKey} from "shared/Constants"
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 
-import {SearchMessage, SearchState, SearchResult, SearchType, SearchSource} from './SearchState'
+import {
+	SearchMessage, SearchState, SearchResult, SearchType, SearchSource, SearchItem,
+	SearchItemModel
+} from './SearchState'
 import {Repo, Issue, RepoStore, AvailableRepoStore, AvailableRepo} from 'shared/models'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import {Stores} from 'main/services/DBService'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {createClient} from 'GitHubClient'
 import {List} from 'immutable'
+import {debounce} from 'lodash-decorators'
 
 const uuid = require('node-uuid')
 
@@ -26,7 +30,7 @@ const log = getLogger(__filename)
  * Search Action Factory
  */
 @AutoWired
-export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
+export class SearchActionFactory extends ActionFactory<SearchState,SearchMessage> {
 
 	@Inject
 	private repoActions:RepoActionFactory
@@ -54,6 +58,7 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 	 *
 	 * @param query
 	 */
+	@debounce(200)
 	@Action()
 	setQuery(searchId:string, types:SearchType[], query:string) {
 	}
@@ -88,19 +93,25 @@ export class SearchActionFactory extends ActionFactory<any,SearchMessage> {
 
 
 	@Action()
-	select(searchId:string,result:SearchResult) {
+
+	select(searchId:string,result:SearchResult,itemModel:SearchItemModel) {
 		log.info('selected result',result)
 		return async (dispatch,getState) => {
-			const repoActions = this.repoActions.withDispatcher(dispatch,getState)
+			const repoActions = this.repoActions.withDispatcher(dispatch,getState),
+				{model,item} = itemModel
 
-			// switch (result.type) {
-			// 	case SearchType.AvailableRepo:
-			// 		repoActions.setRepoEnabled(result.value,!result.value.enabled)
-			// 		break;
-			//
-			// 	case SearchType.Repo:
-			// 		repoActions.createAvailableRepo(result.value)
-			// }
+
+
+			switch (result.type) {
+				case SearchType.AvailableRepo:
+					assert(model.$$clazz === AvailableRepo.$$clazz)
+					repoActions.setRepoEnabled(model,!model.enabled)
+					break;
+
+				case SearchType.Repo:
+					assert(model.$$clazz === Repo.$$clazz)
+					repoActions.createAvailableRepo(model)
+			}
 		}
 
 	}

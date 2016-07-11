@@ -17,14 +17,12 @@ import {
 	Log,
 	isFunction,
 	IModelAttributeOptions,
-	FinderRequest
+	FinderRequest,
+	getDefaultMapper
 } from 'typestore'
 
-import {enableQuickSearch} from './PouchDBSetup'
-import {makeMangoIndex,getIndexByNameOrFields} from './PouchDBIndexes'
+import * as Bluebird from 'bluebird'
 import {PouchDBPlugin} from "./PouchDBPlugin";
-import {PouchDBAttributePrefix,PouchDBOperators}
-	from "./PouchDBConstants";
 
 import {
 	IPouchDBMangoFinderOptions,
@@ -186,6 +184,8 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 	private extractKeyValue(val:PouchDBKeyValue|any):any {
 		val = (val && val.pouchDBKey) ? val.args[0] : val
+		if (!_.isString(val))
+			val = `${val}`
 		return val
 	}
 
@@ -194,12 +194,31 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 			throw new Error('key can not be undefined or falsy')
 		key = this.extractKeyValue(key)
 
-		const result = await findWithSelector(this,{[this.primaryKeyAttr.name]: key})
+		//const result = await findWithSelector(this,{[this.primaryKeyAttr.name]: key})
+		const result = await Bluebird.resolve(this.db.get(key))
+			.then(doc => {
+				return doc
+			})
+			.catch(err => {
+				if (err.status === 404)
+					return null
 
-		if (result && result.docs.length > 1)
-			throw new Error(`More than one database object returned for key: ${key}`)
+				throw err
+			})
 
-		return mapDocs(this,this.repo.modelClazz,result)[0] as M
+		if (!result)
+			return null
+
+		const mapper = getDefaultMapper(this.repo.modelClazz)
+		return mapper.fromObject(result.attrs,(o, model:any) => {
+			const $$doc = Object.assign({},result)
+			delete $$doc['attrs']
+
+			model.$$doc = $$doc
+
+			return model
+		})
+
 	}
 
 
@@ -275,15 +294,16 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		return Promise.resolve(result);
 	}
 
-	//TODO: make count efficient
-	async count():Promise<number> {
-		const result = await this.all(false)
-		return !result ? 0 : result.length
-
+	/**
+	 * Get count using the type indexes in db open
+	 *
+	 * @returns {Promise<number>}
+	 */
+	count():Promise<number> {
+		return this.store.getModelCount(this.modelType.name)
 	}
 
 	async all(includeDocs = true) {
-		//return this.findWithSelector({},null,null,null,includeDocs)
 		const result = await this.db.allDocs({include_docs:true})
 
 		const docs = result.rows
@@ -327,17 +347,16 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		))
 
 		// Find all docs that have _id and not _rev
-		docs
-			.forEach(async (doc,index) => {
-				const id = models[index][this.primaryKeyAttr.name]
-				if (!id || !doc._id  || (doc._id && doc._rev))
-					return
+		docs.forEach(async (doc,index) => {
+			const id = models[index][this.primaryKeyAttr.name]
+			if (!id || !doc._id  || (doc._id && doc._rev))
+				return
 
-				const rev = await this.getRev(id)
-				if (rev) {
-					doc._rev = rev
-				}
-			})
+			const rev = await this.getRev(id)
+			if (rev) {
+				doc._rev = rev
+			}
+		})
 
 		// Do Save
 		const responses = await this.db.bulkDocs(docs)

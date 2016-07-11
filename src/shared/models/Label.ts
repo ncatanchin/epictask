@@ -54,9 +54,7 @@ export class LabelStore extends TSRepo<Label> {
 	@PouchDBMangoFinder({
 		indexFields: ['repoId'],
 		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({
-				$eq: repoId
-			}))
+			$or: repoIds.map(repoId => ({repoId}))
 		})
 	})
 	findByRepoId(...repoIds:number[]):Promise<Label[]> {

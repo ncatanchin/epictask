@@ -25,10 +25,6 @@ function stateTypeGuard(state:any):state is State {
  */
 export type RootReducerErrorHandler = (err:Error,reducer?:ILeafReducer<any,any>) => void
 
-export function toJS(o:any) {
-	return (o.toJS) ? o.toJS() : o
-}
-
 export class RootReducer {
 
 	private reducers:ILeafReducer<any,ActionMessage<any>>[] = []

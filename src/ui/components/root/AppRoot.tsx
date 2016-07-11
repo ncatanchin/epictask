@@ -33,6 +33,7 @@ import * as KeyMaps from 'shared/KeyMaps'
 import {RepoState} from 'shared/actions/repo/RepoState'
 import {AppState} from 'shared/actions/AppState'
 import {UIState} from 'shared/actions/ui/UIState'
+import {createAvailableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 
 const {StyleRoot} = Radium
 const {HotKeys} = require('react-hotkeys')
@@ -93,27 +94,49 @@ export interface IAppProps {
 }
 
 
-/**
- * Mape store state to props
- *
- * @param state
- */
-function mapStateToProps(state) {
+const availRepoCountSelector = createAvailableRepoCountSelector()
+
+function mapStateToProps(state:any,props:IAppProps = {} as any) {
 	const
 		appState = state.get(AppKey) as AppState,
-		uiState = state.get(UIKey) as UIState,
-		{availableRepos} = state.get(RepoKey) as RepoState
+		uiState = state.get(UIKey) as UIState
 
 	const dialogOpen = !_.isNil(uiState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
 
 	return {
-		theme: getTheme(),//appState.theme,
+		theme:      getTheme(),
+		hasAvailableRepos:availRepoCountSelector(state) > 0,
 		stateType: appState.stateType,
-		hasAvailableRepos: availableRepos && availableRepos.size > 0,
 		dialogOpen
-		//adjustedBodyStyle: getAdjustedBodyStyle(this)
 	}
+
+
+
 }
+
+//
+//
+// /**
+//  * Mape store state to props
+//  *
+//  * @param state
+//  */
+// function mapStateToProps(state) {
+// 	const
+// 		appState = state.get(AppKey) as AppState,
+// 		uiState = state.get(UIKey) as UIState,
+// 		{availableRepos} = state.get(RepoKey) as RepoState
+//
+// 	const dialogOpen = !_.isNil(uiState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
+//
+// 	return {
+// 		theme: getTheme(),//appState.theme,
+// 		stateType: appState.stateType,
+// 		hasAvailableRepos: availableRepos && availableRepos.size > 0,
+// 		dialogOpen
+// 		//adjustedBodyStyle: getAdjustedBodyStyle(this)
+// 	}
+// }
 
 /**
  * Root App Component

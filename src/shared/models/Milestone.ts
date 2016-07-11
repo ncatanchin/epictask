@@ -69,9 +69,7 @@ export class MilestoneStore extends TSRepo<Milestone> {
 	@PouchDBMangoFinder({
 		indexFields: ['repoId'],
 		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({
-				$eq: repoId
-			}))
+			$or: repoIds.map(repoId => ({repoId}))
 		})
 	})
 	findByRepoId(...repoIds:number[]):Promise<Milestone[]> {

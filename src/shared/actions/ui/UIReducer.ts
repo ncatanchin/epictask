@@ -25,7 +25,9 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 		return new UIState()
 	}
 
-
+	setSelectedIssueIds(state:UIState,selectedIssueIds:number[]) {
+		return state.set('selectedIssueIds',selectedIssueIds)
+	}
 
 	setDialogOpen(state:UIState,name:string,open:boolean) {
 		return state.set(
@@ -43,7 +45,13 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 		return state.messages
 			.findIndex(item => _.toJS(item).id === message.id) > -1 ?
 				state :
-				state.set('messages',state.messages.push(message))
+				state.update('messages',messages => {
+					messages = messages.push(message)
+					if (messages.size > 5)
+						messages = messages.splice(0,messages.size - 5)
+
+					return messages
+				})
 	}
 
 	addErrorMessage(state:UIState,err:Error|string) {

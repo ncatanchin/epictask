@@ -25,13 +25,6 @@ import StateObserver from './StateObserver'
  */
 export class ObservableStore<S extends State> implements Store<S> {
 
-	private createRootReducer(...leafReducers:ILeafReducer<any,any>[]) {
-		this.rootReducer = new RootReducer(...leafReducers)
-		this.rootReducerFn = this.rootReducer.makeGenericHandler()
-
-		return this.rootReducerFn
-	}
-
 	/**
 	 * Factory method for creating a new observable store
 	 *
@@ -43,6 +36,10 @@ export class ObservableStore<S extends State> implements Store<S> {
 
 		return new ObservableStore(leafReducers,enhancer,defaultState)
 	}
+
+
+
+
 
 	public rootReducer:RootReducer
 
@@ -64,6 +61,13 @@ export class ObservableStore<S extends State> implements Store<S> {
 			log.debug('State changed - SCHEDULE NOTIFY')
 			this.scheduleNotification()
 		})
+	}
+
+	private createRootReducer(...leafReducers:ILeafReducer<any,any>[]) {
+		this.rootReducer = new RootReducer(...leafReducers)
+		this.rootReducerFn = this.rootReducer.makeGenericHandler()
+
+		return this.rootReducerFn
 	}
 
 	/**

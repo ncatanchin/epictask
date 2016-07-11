@@ -80,6 +80,8 @@ function installGlobals() {
 
 declare global {
 
+
+
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
@@ -98,6 +100,10 @@ declare global {
 	var Env:typeof EnvGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
+
+	interface Object {
+		$$clazz?:string
+	}
 }
 
 

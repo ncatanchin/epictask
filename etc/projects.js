@@ -89,7 +89,7 @@ function makeConfigs() {
 		// Get target information
 		const {targetType} = projectConfig
 		const targetEnv = targetType.env[env]
-		gutil.log('target type',targetType,targetEnv)
+		gutil.log('env','target type',targetType,targetEnv)
 
 
 		projectConfig.webpackConfig = Object.assign({},{

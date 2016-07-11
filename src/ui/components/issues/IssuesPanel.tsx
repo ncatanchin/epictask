@@ -16,8 +16,14 @@ import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {Issue, Repo} from 'shared/models'
-import {RepoKey, AppKey} from 'shared/Constants'
+import {RepoKey, AppKey, DataKey, UIKey} from 'shared/Constants'
 import {List} from 'immutable'
+import {createIssuesSelector} from 'shared/actions/repo/RepoSelectors'
+import {RepoState} from 'shared/actions/repo/RepoState'
+import {createStructuredSelector} from 'reselect'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {Container} from 'typescript-ioc'
+import {UIState} from 'shared/actions/ui/UIState'
 
 // Non-typed Components
 const ReactList = require('react-list')
@@ -119,8 +125,10 @@ interface IIssueItemProps extends React.DOMAttributes {
 	index:number
 	s:any
 	onSelected:(event:any, issue:Issue) => void
-	issues:List<Issue>
-	selectedIssues:List<Issue>
+	issues:Issue[]
+	repoId?:number
+	repo?:Repo
+	selectedIssueIds?:number[]
 }
 
 interface IIssueState {
@@ -129,6 +137,28 @@ interface IIssueState {
 	selectedMulti?:boolean
 }
 
+const selectedIssueIdsSelector = (state) => (state.get(UIKey) as UIState).selectedIssueIds
+
+/**
+ * Create a new issue item to state => props mapper
+ *
+ * @returns {any}
+ */
+const makeIssueItemStateToProps = () => {
+	return createStructuredSelector({
+		repo: (state,{issues,index}) => {
+			let issue = null,repo = null
+			if (issues && (issue = issues[index])) {
+				const {repoId} = issue
+				repo = state.get(DataKey).models.get(Repo.$$clazz).get(`${repoId}`)
+			}
+			return repo
+		},
+		selectedIssueIds: selectedIssueIdsSelector
+	})
+}
+
+@connect(makeIssueItemStateToProps)
 @PureRender
 class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
@@ -136,18 +166,16 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		super(props,context)
 	}
 
-	getNewState(props) {
+	getNewState(props:IIssueItemProps) {
 		//const repoState = repoActions.state
 
 		const
-			{index,issues,selectedIssues} = props
-			// ,
-			// {issues,selectedIssues} = repoState
+			{index,issues,selectedIssueIds} = props
 
 		const
-			issue = issues.get(index),
-			selected = issue && selectedIssues.find(item => item.id === issue.id),
-			selectedMulti = selectedIssues.length > 1
+			issue = issues[index],
+			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
+			selectedMulti = selectedIssueIds.length > 1
 
 
 		return {
@@ -167,13 +195,13 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		const
 			{props,state} = this,
 			{issue, selectedMulti, selected} = state,
-			{s,onSelected} = props
+			{s,onSelected,repo} = props
 
 		if (!issue)
 			return <div/>
 
 		const
-			{repo, labels} = issue,
+			{labels} = issue,
 
 			issueStyles = makeStyle(
 				s.issue,
@@ -235,21 +263,24 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
  */
 export interface IIssuesPanelProps {
 	theme?:any
-	issues?:List<Issue>
-	selectedIssues?:List<Issue>
+	issues?:Issue[]
+	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	s?:any
 }
 
+const issuesSelector = createIssuesSelector()
+
 function mapStateToProps(state) {
-	const repoState = state.get(RepoKey)
-	const theme = getTheme()
+	const repoState:RepoState = state.get(RepoKey)
+	const theme = getTheme(),
+		issues = issuesSelector(state)
 
 	return {
 		theme,
-		issues:         repoState.issues,
-		selectedIssue: repoState.selectedIssue,
-		selectedIssues: repoState.selectedIssues || List(),
+		issues,
+		selectedIssue: null,
+		selectedIssueIds: selectedIssueIdsSelector(state),
 		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
 	}
 }
@@ -266,6 +297,8 @@ function mapStateToProps(state) {
 @Radium
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
+
+	uiActions:UIActionFactory = Container.get(UIActionFactory)
 
 	constructor(props) {
 		super(props)
@@ -290,16 +323,20 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 
 	onIssueSelected = (event, issue) => {
-		if (event.metaKey) {
-			let {selectedIssues,issues} = this.props
-			const wasSelected = !_.isNil(selectedIssues.find(selectedIssue => selectedIssue.id === issue.id))
-			selectedIssues = (wasSelected) ? selectedIssues.filter(selectedIssue => selectedIssue.id !== issue.id) :
-				selectedIssues.push(issue) as any
+		let {selectedIssueIds,issues} = this.props
 
-			repoActions.setSelectedIssues(selectedIssues.toArray())
+		if (event.metaKey) {
+
+			const wasSelected = selectedIssueIds.includes(issue.id)
+			selectedIssueIds = (wasSelected) ?
+				selectedIssueIds.filter(id => id !== issue.id) :
+				selectedIssueIds.concat([issue.id]) as any
+
+
 		} else {
-			repoActions.setSelectedIssues([issue])
+			selectedIssueIds = [issue.id]
 		}
+		this.uiActions.setSelectedIssueIds(selectedIssueIds)
 		log.info('Received issue select')
 	}
 
@@ -307,14 +344,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 	renderIssue = (index, key) => {
 		const
 			{props} = this,
-			{s,selectedIssues,issues} = props
+			{s,selectedIssueIds,issues} = props
 
 
 
 		return <IssueItem key={key}
 		                  s={s}
 		                  index={index}
-		                  selectedIssues={selectedIssues}
+		                  selectedIssueIds={selectedIssueIds}
 		                  issues={issues}
 		                  onSelected={this.onIssueSelected}/>
 
@@ -323,8 +360,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	render() {
 		const
-			{selectedIssues,s:themeStyles} = this.props,
-			allowResize = selectedIssues.size > 0,
+			{selectedIssueIds,s:themeStyles} = this.props,
+			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
@@ -341,12 +378,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 				<div style={themeStyles.listContainer}>
 					<ReactList ref={c => this.setState({issueList:c})}
 					           itemRenderer={this.renderIssue}
-					           itemsRenderer={(items, ref) => {
-					           	    return (
-					           	    	<div ref={ref}>{items}</div>
-					           	    )
-					           }}
-					           length={this.props.issues.size}
+					           itemsRenderer={(items, ref) => (
+									<div ref={ref}>{items}</div>
+								)}
+					           length={this.props.issues.length}
 					           type='simple'/>
 
 

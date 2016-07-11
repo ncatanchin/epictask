@@ -30,6 +30,10 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import {RepoSyncJob} from 'main/services/jobs/RepoSyncJob'
 import Toaster from 'shared/Toaster'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {DataRequest} from 'shared/actions/data/DataState'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
 
 
 const uuid = require('node-uuid')
@@ -46,7 +50,7 @@ export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) 
 	//issue = cloneObject(issue)
 
 	let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-	const stores = Container.get(Stores)
+	const stores:Stores = Container.get(Stores)
 
 	if (!availRepo) {
 		log.warn('Available repo not loaded', issue.repoId,'for issue',issue.title,'with id',issue.id,'going to load direct form db')
@@ -74,13 +78,10 @@ export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) 
  * @constructor
  **/
 @AutoWired
-export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
+export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 	@Inject
 	stores:Stores
-
-	@Inject
-	appActions:AppActionFactory
 
 	@Inject
 	uiActions:UIActionFactory
@@ -248,16 +249,18 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	 * @returns {function(any, any): Promise<undefined>}
 	 */
 	@Action()
-	syncRepoDetails(availRepo:AvailableRepo) {
+	syncRepo(repoId:number) {
 		return async (dispatch,getState) => {
 			const jobActions = this.jobActions
 				.withDispatcher(dispatch,getState)
 
-			const loadedAvailRepo = await this.stores.availableRepo.load(availRepo)
+			const availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
+				repo = await this.stores.repo.get(repoId)
+
 			jobActions.triggerJob({
-				id: `reposyncjob-${loadedAvailRepo.repoId}`,
+				id: `reposyncjob-${repo.id}`,
 				name: "RepoSyncJob",
-				args:{availableRepo:loadedAvailRepo}
+				args:{availableRepo,repo}
 			})
 
 
@@ -267,22 +270,48 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 
 	@Action()
-	getAvailableRepos():Promise<AvailableRepo[]> {
-		return null
-		// return (async (dispatch,getState) => {
-		// 	const actions = this.withDispatcher(dispatch,getState)
-		// 	const availRepos = await this.stores.availableRepo.loadAll()
-		//
-		// 	const
-		// 		repoState = actions.state,
-		// 		{repos} = repoState
-		//
-		//
-		// 	log.debug('Loaded available repos',availRepos)
-		// 	actions.setAvailableRepos(availRepos)
-		//
-		// 	return availRepos
-		// }) as any
+	loadAvailableRepos() {
+		return (async (dispatch,getState) => {
+
+			const stores = this.stores
+
+			const availRepos = await stores.availableRepo.findAll()
+			const availRepoMap = availRepos.reduce((map,nextAvailRepo) => {
+				map[nextAvailRepo.repoId] = nextAvailRepo
+				return map
+			},{})
+
+			const repoIds = availRepos.map(item => item.repoId)
+			const dataActions = Container.get(DataActionFactory)
+
+			const promises = [
+				stores.repo.bulkGet(...repoIds)
+					.then(models => models.reduce((modelMap,nextModel) => {
+						modelMap[nextModel.id] = nextModel
+						return modelMap
+					},{}))
+					.then(models => dataActions.updateModels(Repo.$$clazz,models)),
+				stores.label.findByRepoId(...repoIds)
+					.then(models => models.reduce((modelMap,nextModel) => {
+						modelMap[nextModel.url] = nextModel
+						return modelMap
+					},{}))
+					.then(models => dataActions.updateModels(Label.$$clazz,models)),
+				stores.milestone.findByRepoId(...repoIds)
+					.then(models => models.reduce((modelMap,nextModel) => {
+						modelMap[nextModel.id] = nextModel
+						return modelMap
+					},{}))
+					.then(models => dataActions.updateModels(Milestone.$$clazz,models))
+			]
+
+
+			await Promise.all(promises)
+			dataActions.updateModels(AvailableRepo.$$clazz,availRepoMap)
+			log.info('Loaded available repos and dependent models')
+
+			return availRepos
+		})
 	}
 
 	@Action()
@@ -333,14 +362,8 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				})
 
 
-			const existingAvailRepo = await availRepoStore.findByRepoId(repo.id)
+			const existingAvailRepo = await availRepoStore.get(availRepo.id)
 
-			if (!_.isNil(existingAvailRepo) || actions.state.availableRepos.findIndex(availRepo => availRepo.repoId === repo.id) > -1) {
-				throw new Error('Repository is already selected: ' + repo.full_name)
-			}
-
-			// Make sure the repo passed in exists in out
-			// local DB
 			let savedRepo = await repoStore.get(repo.id)
 			if (!savedRepo) {
 				log.info('Create available repo request with a repo that isnt in the db - probably direct query result from GitHUb, adding')
@@ -350,8 +373,10 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 			log.info('Saving new available repo as ',availRepo.repoId)
 			await availRepoStore.save(availRepo)
 
-			actions.getAvailableRepos()
-			actions.syncRepoDetails(availRepo)
+			actions.loadAvailableRepos()
+
+			await Promise.setImmediate()
+			actions.syncRepo(availRepo.repoId)
 		}
 	}
 
@@ -381,26 +406,26 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 	@Action()
 	setRepoEnabled(availRepoId:number,enabled:boolean) {
 		return async (dispatch,getState) => {
-			const {
-				repo:repoStore,
-				availableRepo:availableRepoStore
-			} = this.stores
+			const stores = this.stores
 
 			const actions = this.withDispatcher(dispatch,getState)
-			const availRepo = await availableRepoStore.findByRepoId(availRepoId)
+			const availRepo = await stores.availableRepo.findByRepoId(availRepoId)
 			if (enabled === availRepo.enabled) {
 				return
 			}
 
-			let newAvailRepo = Object.assign({},availRepo,{enabled})
+			let newAvailRepo:AvailableRepo = Object.assign({},availRepo,{enabled})
 
-			await availableRepoStore.save(newAvailRepo)
-			newAvailRepo = await availableRepoStore.load(newAvailRepo)
-			actions.updateAvailableRepo(newAvailRepo)
+			await stores.availableRepo.save(newAvailRepo)
+			newAvailRepo = await stores.availableRepo.load(newAvailRepo)
+
+			const dataActions:DataActionFactory = Container.get(DataActionFactory)
+			dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
+			//actions.updateAvailableRepo(newAvailRepo)
 
 			// Finally trigger a repo sync update
 			if (enabled)
-				this.syncRepoDetails(newAvailRepo)
+				this.syncRepo(newAvailRepo.repoId)
 
 			log.info('Saved avail repo, setting enabled to',enabled)
 
@@ -429,17 +454,17 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 
-			const {availableRepos,editingIssue:issue} = actions.state
-			if (!issue)
-				return
-
-
-			const updatedIssue = await fillIssue(
-					Object.assign(cloneObject(issue),props),
-					availableRepos
-				)
-
-			actions.setEditingIssue(updatedIssue)
+			// const {availableRepos,editingIssue:issue} = actions.state
+			// if (!issue)
+			// 	return
+			//
+			//
+			// const updatedIssue = await fillIssue(
+			// 		Object.assign(cloneObject(issue),props),
+			// 		availableRepos
+			// 	)
+			//
+			// actions.setEditingIssue(updatedIssue)
 		}
 	}
 
@@ -453,7 +478,7 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
-				{appActions} = actions,
+				appActions = Container.get(AppActionFactory),
 				dialogName = Dialogs.IssueEditDialog
 
 
@@ -492,16 +517,16 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 				dialogName = Dialogs.IssueEditDialog
 
 
-			const repoState = this.state,
-				{availableRepos} = repoState
+			// const repoState = this.state,
+			// 	{availableRepos} = repoState
 
-			issue = issue || repoState.selectedIssue
-			assert(issue,'You must have an issue selected in order to edit one ;)')
-
-			issue = await fillIssue(issue,availableRepos)
-
-			actions.setEditingIssue(issue)
-			this.uiActions.setDialogOpen(dialogName,true)
+			// issue = issue || repoState.selectedIssue
+			// assert(issue,'You must have an issue selected in order to edit one ;)')
+			//
+			// issue = await fillIssue(issue,availableRepos)
+			//
+			// actions.setEditingIssue(issue)
+			// this.uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
@@ -512,18 +537,18 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
-			const currentIssue = actions.state.issue
-			if (!force && currentIssue && currentIssue.id === issue.id) {
-				return
-			}
-
-			issue = cloneObject(issue)
-			actions.setIssue(issue)
-
-			const comments = await this.stores.comment
-				.findByIssue(issue)
-
-			actions.setComments(comments)
+			// const currentIssue = actions.state.issue
+			// if (!force && currentIssue && currentIssue.id === issue.id) {
+			// 	return
+			// }
+			//
+			// issue = cloneObject(issue)
+			// actions.setIssue(issue)
+			//
+			// const comments = await this.stores.comment
+			// 	.findByIssue(issue)
+			//
+			// actions.setComments(comments)
 
 
 		}
@@ -532,34 +557,21 @@ export class RepoActionFactory extends ActionFactory<any,RepoMessage> {
 
 
 	@Action()
-	loadIssues() {
+	loadIssues(...repoIds:number[]) {
 		return async (dispatch,getState) => {
-			// const actions = this.withDispatcher(dispatch, getState)
-			//
-			// // Issue repo
-			// const issueRepo = this.stores.issue
-			//
-			// // All the currently selected repos
-			// const {availableRepos} = actions.state
-			// const repoIds = availableRepos
-			// 	.filter(availRepo => availRepo.enabled === true)
-			// 	.map(availRepo => availRepo.repoId)
-			// 	.toArray()
-			//
-			//
-			// log.info(`Loading issues for repos`,repoIds)
-			// let issues = (!repoIds.length) ? [] : await issueRepo.findByRepoId(...repoIds)
-			//
-			// /**
-			//  * 1. Clone issues first to avoid cached objects
-			//  * 2. Make sure we have a valid repo
-			//  * 3. Copy transient repo,milestones,collaborators,etc
-			//  */
-			// const issuePromises = issues.map(issue => fillIssue(issue,availableRepos))
-			//
-			// const filledIssues = await Promise.all(issuePromises)
-			//
-			// actions.setIssues(filledIssues)
+			const actions = this.withDispatcher(dispatch, getState)
+
+			// Issue repo
+			const issueStore = this.stores.issue
+
+			log.info(`Loading issues for repos`,repoIds)
+			const issues = await issueStore.findByRepoId(...repoIds)
+
+			const dataActions = Container.get(DataActionFactory)
+			dataActions.updateModels(Issue.$$clazz,issues.reduce((issueMap,nextIssue) => {
+				issueMap[nextIssue.id] = nextIssue
+				return issueMap
+			},{}))
 		}
 
 

@@ -13,9 +13,9 @@ import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType} from 'shared/mo
 import {Stores} from '../DBService'
 import {Settings} from 'shared/Settings'
 import Toaster from 'shared/Toaster'
-import {BaseJob, IJob} from 'shared/actions/jobs/JobReducer'
-import {Benchmark} from 'shared/util/Decorations'
-import {Job} from 'main/services/JobService'
+import {Benchmark, RegisterJob} from 'shared/util/Decorations'
+import {Job, IJob} from 'shared/actions/jobs/JobState'
+
 
 const log = getLogger(__filename)
 
@@ -23,22 +23,25 @@ const Benchmarker = Benchmark('RepoSyncJob')
 
 
 
-@Job
-export class RepoSyncJob extends BaseJob {
+@RegisterJob
+export class RepoSyncJob extends Job {
 
 
 	client:GitHubClient = Container.get(GitHubClient)
 
 	lastSyncParams:any
 	oneAtATime = true
-	availRepo:AvailableRepo
+	availableRepo:AvailableRepo
+	repo:Repo
 
 	constructor(public job:IJob = null) {
 		super(job)
 
+
 		if (job) {
-			this.availRepo = job.args.availableRepo
-			this.description = `repo sync ${this.availRepo.repo.full_name}`
+			const {availableRepo,repo} = job.args
+			Object.assign(this,{availableRepo,repo})
+			this.description = `repo sync (${repo.full_name})`
 		}
 	}
 
@@ -181,7 +184,7 @@ export class RepoSyncJob extends BaseJob {
 		const repoActions =  Container.get(RepoActionFactory)
 		const appActions = Container.get(AppActionFactory)
 
-		const {availRepo} = this
+		const {availableRepo,repo} = this
 
 
 
@@ -196,8 +199,7 @@ export class RepoSyncJob extends BaseJob {
 		try {
 
 			// Grab the repo
-			let {repo, repoId} = availRepo
-			if (!repo) repo = await repoActions.getRepo(repoId)
+			let {repoId} = availableRepo
 
 			// Check the last updated activity
 			await this.initParams(activityManager,repo)
@@ -233,7 +235,7 @@ export class RepoSyncJob extends BaseJob {
 		} catch (err) {
 			log.error('failed to sync repo issues', err)
 			appActions.addErrorMessage(err)
-			repoActions.setSyncStatus(availRepo, SyncStatus.Failed, {error: err})
+			repoActions.setSyncStatus(availableRepo, SyncStatus.Failed, {error: err})
 		}
 	}
 }

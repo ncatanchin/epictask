@@ -34,6 +34,7 @@ process.on("unhandledRejection", function (reason, promise) {
 	const log = getErrorLogger()
 
 	//deepTrace(reason)
+	console.error('Unhandled rejection', reason)
 	log.error('Unhandled rejection', reason, promise)
 
 })

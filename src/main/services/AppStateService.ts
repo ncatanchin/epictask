@@ -88,7 +88,7 @@ export default class AppStateService implements IService {
 			this.authActions.verify()
 		} else if (this.stateType === AppStateType.Home) {
 			this.repoActions.getRepos()
-				.then(() => this.repoActions.getAvailableRepos())
+				.then(() => this.repoActions.loadAvailableRepos())
 				.then(() => this.repoActions.syncRepos())
 
 

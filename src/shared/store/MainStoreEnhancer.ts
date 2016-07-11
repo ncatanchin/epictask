@@ -107,7 +107,24 @@ function attachEvents(store) {
  * @param newState
  */
 let lastSentState = null
-let patchNumber = 0
+let actionId = 0
+
+function broadcastActionSender(action) {
+	return ({webContentsId,client}) => {
+		const {webContents} = client
+		try {
+			if (webContents.isDestroyed() || webContents.isCrashed()) {
+				unregisterRenderer(webContentsId)
+				return
+			}
+
+			webContents.send(Events.StoreMainStateChanged, {action, actionId})
+		} catch (err) {
+			log.error('Failed to send message to renderer, probably destroyed, removing',err)
+			unregisterRenderer(webContentsId)
+		}
+	}
+}
 
 function broadcastActionAndStateToClients(action,newState) {
 	if (!newState || !action)
@@ -116,40 +133,27 @@ function broadcastActionAndStateToClients(action,newState) {
 	if (newState === lastSentState)
 		return
 
-	function getStatePatch() {
-		// First check the last state we sent
-		lastSentState = lastSentState || Immutable.Map()
+	// function getStatePatch() {
+	// 	// First check the last state we sent
+	// 	lastSentState = lastSentState || Immutable.Map()
+	//
+	// 	// Create a patch
+	// 	statePatch = _.cloneDeep(diff(lastSentState,newState).toJS())
+	// 	lastSentState = newState
+	//
+	// 	return statePatch
+	//
+	// }
 
-		// Create a patch
-		statePatch = _.cloneDeep(diff(lastSentState,newState).toJS())
-		lastSentState = newState
-
-		return statePatch
-
-	}
-
-	let statePatch = getStatePatch()
-	patchNumber++
+	//let statePatch = getStatePatch()
+	actionId++
 	Object.keys(clients)
 		.map(key => ({
 			webContentsId:key,
 			client:clients[key]
 		}))
 		.filter(({client}) => client.active)
-		.forEach(({webContentsId,client}) => {
-			const {webContents} = client
-			try {
-				if (webContents.isDestroyed() || webContents.isCrashed()) {
-					unregisterRenderer(webContentsId)
-					return
-				}
-
-				webContents.send(Events.StoreMainStateChanged, {action, patchNumber, patch: statePatch})
-			} catch (err) {
-				log.error('Failed to send message to renderer, probably destroyed, removing',err)
-				unregisterRenderer(webContentsId)
-			}
-		})
+		.forEach(broadcastActionSender(action))
 }
 
 /**
@@ -173,11 +177,10 @@ function mainStoreEnhancer(storeCreator) {
 				storeDotDispatch(action)
 				const newState = store.getState()
 
-				if (state === newState)
-					return
-
-
+				// If the state changed then send the action
+				if (state !== newState) {
 					broadcastActionAndStateToClients(action,newState)
+				}
 
 			}
 
@@ -186,7 +189,7 @@ function mainStoreEnhancer(storeCreator) {
 
 }
 
-
+// HMR setup
 if (module.hot) {
 	module.hot.dispose(() => {
 		log.info('disposing')

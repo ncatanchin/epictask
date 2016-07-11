@@ -6,6 +6,9 @@ import {Map,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Repo, AvailableRepo,Comment,Issue} from 'shared/models'
 
+
+
+
 export const RepoStateRecord = Record({
 	issues:Map<string,Issue>(),
 	comments:Map<string,Comment>(),
