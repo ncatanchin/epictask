@@ -26,6 +26,7 @@ export default class AppStateService implements IService {
 	@Inject
 	store:ObservableStore<any>
 
+	private unsubscribe
 	private _status = ServiceStatus.Created
 	private stateType = null
 
@@ -41,7 +42,9 @@ export default class AppStateService implements IService {
 
 	async start():Promise<this> {
 		this._status = ServiceStatus.Started
-		this.store.observe([this.appActions.leaf(),'stateType'],this.checkStateType)
+		this.unsubscribe = this.store
+			.getReduxStore()
+			.subscribe(this.checkStateType)
 
 		// If the state type has not yet been set then set it
 		if (!this.appActions.state.stateType) {
@@ -49,21 +52,15 @@ export default class AppStateService implements IService {
 			this.appActions.setStateType(startingStateType)
 		}
 
-		if (module.hot) {
-			module.hot.accept([
-				'shared/actions/AppActionFactory',
-				'shared/actions/auth/AuthActionFactory',
-				'shared/actions/repo/RepoActionFactory'
-			],updates => {
-				this.start()
-			})
-		}
-
 		return this
 	}
 
 	async stop():Promise<this> {
 		this._status = ServiceStatus.Stopped
+
+		if (this.unsubscribe)
+			this.unsubscribe()
+
 		return this
 	}
 
@@ -87,11 +84,7 @@ export default class AppStateService implements IService {
 		if (this.stateType === AppStateType.AuthVerify) {
 			this.authActions.verify()
 		} else if (this.stateType === AppStateType.Home) {
-			this.repoActions.getRepos()
-				.then(() => this.repoActions.loadAvailableRepos())
-				.then(() => this.repoActions.syncRepos())
-
-
+			this.repoActions.loadAvailableRepos()
 		}
 	}
 }

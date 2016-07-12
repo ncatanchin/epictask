@@ -32,23 +32,30 @@ export interface IFinderOptions {
 	single?:boolean
 }
 
+
+
 /**
  * Finder request for paging, etc
  */
 export class FinderRequest {
-
+	extra:any
 	limit:number = -1
 	offset:number = 0
+	sort:string[]
+	sortDirection:'desc'|'asc'
 	includeModels:boolean = null
 
 	constructor(obj:any)
-	constructor(limit:number,offset:number,includeModels?:boolean)
-	constructor(limitOrObject,offset = 0,includeModels:boolean = null) {
+	constructor(limit:number,offset:number,includeModels?:boolean,sort?:string[],sortDirection?:'asc'|'desc',extra?:any)
+	constructor(limitOrObject,offset = 0,includeModels:boolean = null,sort:string[] = null,sortDirection:'asc'|'desc' = 'asc',extra:any = null) {
 		if (typeof limitOrObject === 'number') {
 			Object.assign(this,{
 				limit:limitOrObject,
 				offset,
-				includeModels
+				includeModels,
+				sort,
+				sortDirection,
+				extra
 			})
 		} else {
 			Object.assign(this,limitOrObject)

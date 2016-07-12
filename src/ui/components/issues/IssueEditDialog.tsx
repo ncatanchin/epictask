@@ -20,6 +20,9 @@ import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {createAvailableRepoSelector} from 'shared/actions/repo/RepoSelectors'
+import {IssueState} from 'shared/actions/issue/IssueState'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
@@ -128,27 +131,31 @@ const styles = createStyles({
 })
 
 
-function mapStateToProps(state) {
-	const uiState = state.get(Constants.UIKey) as UIState
-	const appState = state.get(Constants.AppKey) as AppState
-	const repoState = state.get(Constants.RepoKey) as RepoState
+function makeMapStateToProps() {
+	const availReposSelector = createAvailableRepoSelector()
+	return (state) => {
 
-	const
-		open = uiState.dialogs.get(Dialogs.IssueEditDialog),
-		availableRepos = repoState.availableRepos
-		//issue = repoState.editingIssue
+		const uiState = state.get(Constants.UIKey) as UIState
+		const appState = state.get(Constants.AppKey) as AppState
+		const issueState = state.get(Constants.IssueKey) as IssueState
+
+		const
+			open = uiState.dialogs.get(Dialogs.IssueEditDialog),
+			availableRepos = availReposSelector(state),
+			editingIssue = issueState.editingIssue
 
 
-	return {
-		theme: getTheme(),
-		user: appState.user,
-		//issue,
-		availableRepos,
-		// availableRepo: (!issue) ? null :
-		// 	availableRepos.find(availRepo => availRepo.repoId === issue.repoId),
-		open
 
+		return {
+			theme: getTheme(),
+			user: appState.user,
+			editingIssue,
+			availableRepos,
+			open
+
+		}
 	}
+
 
 }
 
@@ -157,7 +164,7 @@ function mapStateToProps(state) {
  */
 export interface IIssueEditDialogProps extends React.DOMAttributes {
 	theme?:any
-	issue?:Issue
+	editingIssue?:Issue
 	availableRepos?:List<AvailableRepo>
 	availableRepo?:AvailableRepo
 	open?:boolean
@@ -172,13 +179,16 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
  **/
 
 @AutoWired
-@connect(mapStateToProps)
+@connect(makeMapStateToProps)
 @Radium
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
 	@Inject
 	repoActions:RepoActionFactory
+
+	@Inject
+	issueActions:IssueActionFactory
 
 	constructor(props, context) {
 		super(props, context)
@@ -190,8 +200,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 	onCancel = () => this.hide()
 
-	onSave = (event) => this.repoActions.issueSave(
-		cloneObject(this.props.issue, this.textInputState()))
+	onSave = (event) => this.issueActions.issueSave(
+		cloneObject(this.props.editingIssue, this.textInputState()))
 
 
 	textInputState = () => ({
@@ -199,8 +209,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 		body: this.state.bodyValue
 	})
 
-	updateIssueState = (newIssueProps) => this.repoActions.updateEditingIssue(
-		Object.assign(this.textInputState(), newIssueProps)
+	updateIssueState = (newIssueProps) => this.issueActions.setEditingIssue(
+		new Issue(Object.assign(
+			{},
+			this.props.editingIssue,
+			this.textInputState(),
+			newIssueProps
+		))
 	)
 
 
@@ -218,31 +233,34 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	onTitleChange = (event, value) => this.setState({titleValue: value})
 
 	onRepoChange = (event, index, value) => {
-		this.repoActions.updateEditingIssue({repoId: value})
+		const editingIssue = new Issue(this.props.editingIssue)
+		editingIssue.repoId = value
+
+		this.issueActions.setEditingIssue(editingIssue)
 	}
 
 	onMilestoneChange = (event, index, value) => {
-		const {issue} = this.props
-		const milestone = !issue || !issue.milestones ? null :
-			issue.milestones.find(item => item.url === value)
+		const {editingIssue} = this.props
+		const milestone = !editingIssue || !editingIssue.milestones ? null :
+			editingIssue.milestones.find(item => item.url === value)
 
 		this.updateIssueState({milestone})
 
 	}
 
 	onAssigneeChange = (event, index, value) => {
-		const {issue} = this.props
-		const assignee = !issue || !issue.collaborators ? null :
-			issue.collaborators.find(item => item.login === value)
+		const {editingIssue} = this.props
+		const assignee = !editingIssue || !editingIssue.collaborators ? null :
+			editingIssue.collaborators.find(item => item.login === value)
 
 		this.updateIssueState({assignee})
 	}
 
 	onLabelsChanged = (newLabels:Label[]) => {
-		const {issue} = this.props
+		const {editingIssue} = this.props
 
 		log.debug('new labels', newLabels)
-		if (issue) {
+		if (editingIssue) {
 			this.updateIssueState({labels: newLabels})
 		}
 	}
@@ -358,10 +376,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 		const
 			{s} = this.state,
-			{issue,theme,availableRepo, open, user} = this.props,
+			{editingIssue,theme,availableRepo, open, user} = this.props,
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 
-		if (!issue || !open) {
+		if (!editingIssue || !open) {
 			if (open)
 				throw new Error('Open is true, but issue is null - invalid!!!!')
 
@@ -377,7 +395,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 		const title = <div style={s.title}>
 			<div style={s.title.label}>
-				{issue.id ? `editing ${issue.title}` : `creating ${issue.title || 'an issue'}`}
+				{editingIssue.id ? `editing ${editingIssue.title}` : `creating ${editingIssue.title || 'an issue'}`}
 			</div>
 			<div style={s.title.avatar}>
 				<Avatar user={user}
@@ -433,7 +451,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 
 						{/* Only show assignee drop down if push permission */}
 						{canPush && <SelectField
-							value={issue.assignee && issue.assignee.login}
+							value={editingIssue.assignee && editingIssue.assignee.login}
 							style={makeStyle(s.form.assignee,s.menu)}
 							inputStyle={s.input}
 							labelStyle={s.menu}
@@ -455,7 +473,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 						</SelectField>}
 
 						{/* MILESTONE */}
-						<SelectField value={issue.milestone && issue.milestone.url}
+						<SelectField value={editingIssue.milestone && editingIssue.milestone.url}
 						             style={makeStyle(s.form.milestone,s.menu)}
 						             inputStyle={s.input}
 						             labelStyle={s.menu}
@@ -478,7 +496,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 						</SelectField>
 
 						{/* REPO */}
-						<SelectField value={issue.repoId}
+						<SelectField value={editingIssue.repoId}
 						             style={makeStyle(s.form.repo,s.menu)}
 						             inputStyle={s.input}
 						             labelStyle={s.menu}
@@ -497,7 +515,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 						</SelectField>
 					</div>
 
-					<LabelFieldEditor labels={issue.labels || []}
+					<LabelFieldEditor labels={editingIssue.labels || []}
 					                  id="issueEditDialogLabels"
 					                  label="LABELS"
 					                  hint="Label me..."
@@ -517,7 +535,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 					           options={{
 				           	autoDownloadFontAwesome: false,
 				           	spellChecker: false,
-				           	initialValue: issue.body,
+				           	initialValue: editingIssue.body,
 				           	autofocus: false
 				           }}/>
 				</form>

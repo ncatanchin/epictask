@@ -63,18 +63,12 @@ export class CommentStore extends TSRepo<Comment> {
 	}
 
 	@PouchDBMangoFinder({
-		indexDirection: 'desc',
-		indexFields: ['parentRefId','created_at'],
-		selector: ({repoId,number:issueNumber}) => ({
-			parentRefId:  Comment.makeParentRefId(repoId,issueNumber),
-			created_at: { $gt: 0 }
-		}),
-		sort: [
-			{ parentRefId: 'desc' },
-			{ created_at: 'desc' }
-		]
+		indexFields: ['parentRefId'],
+		selector: (repoId,issueNumber) => ({
+			parentRefId:  Comment.makeParentRefId(repoId,issueNumber)
+		})
 	})
-	findByIssue(issue:Issue):Promise<Comment[]> {
+	findByIssueNumber(repoId:number,issueNumber:number):Promise<Comment[]> {
 		return null
 	}
 
@@ -85,10 +79,9 @@ export class CommentStore extends TSRepo<Comment> {
 			repoId: { $in: repoIds },
 			created_at: { $exists: true }
 		}),
-		sort: [
-			{ created_at: 'desc' },
-			{ repoId: 'desc' }
-		]
+		sort: ['created_at','repoId'],
+		sortDirection: 'desc'
+
 	})
 	findByRepoId(...repoIds:number[]):Promise<Comment[]> {
 		return null

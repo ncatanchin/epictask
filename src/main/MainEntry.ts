@@ -89,9 +89,10 @@ async function boot() {
 	log.info("Boot load window")
 	mainWindow = require('./MainWindow')
 
-	if (Env.isDev && !devWindow) {
-		devWindow = require('./MainDevToolWindow').window as Electron.BrowserWindow
-	}
+	// DEV Redux - no real need anymore
+	// if (Env.isDev && !devWindow) {
+	// 	devWindow = require('./MainDevToolWindow').window as Electron.BrowserWindow
+	// }
 
 
 	log.info("Boot start")
@@ -158,7 +159,7 @@ if (module.hot) {
 	console.info('Setting up HMR')
 
 	// When constants change - ignore
-	module.hot.accept(['shared/Constants'], () => {
+	module.hot.accept(['shared/Constants','shared/actions/AppActionFactory'], () => {
 		log.warn('Constants updated - maybe restart?? - up to you')
 	})
 

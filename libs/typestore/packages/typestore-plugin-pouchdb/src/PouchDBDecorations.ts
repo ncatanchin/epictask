@@ -35,7 +35,8 @@ export interface IPouchDBFilterFinderOptions extends IPouchDBFinderOptions {
 export interface IPouchDBMangoFinderOptions extends IPouchDBFinderOptions {
 	all?:boolean
 	selector?:PouchDBSelectorFn|Object
-	sort?:any
+	sort?:string[]
+	sortDirection?:'asc'|'desc'
 	indexName?:string
 	indexDirection?:string
 	indexFields?:string[]

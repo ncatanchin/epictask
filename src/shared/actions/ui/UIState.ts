@@ -31,10 +31,8 @@ export const UIStateRecord = Record({
 
 
 	dialogs: Map<string,boolean>(),
-	selectedRepoIds:[],
-	selectedIssueIds:[],
+
 	messages: List<IToastMessage>(),
-	monitorState: {},
 	ready: false,
 	user: null
 })
@@ -53,15 +51,10 @@ export class UIState extends UIStateRecord {
 
 
 	ready:boolean
-	status:IStatus
 	user:User
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
-	selectedRepoIds:number[]
-	selectedIssueIds:number[]
 
-	monitorState:any
-	error:Error
 
 
 }

@@ -7,6 +7,27 @@ import {ActionMessage} from 'typedux'
 
 @RegisterModel
 export class DataRequest {
+
+	/**
+	 * Simple creator
+	 *
+	 * @param id
+	 * @param fulfilled
+	 * @param modelIds
+	 * @param modelType
+	 * @returns {DataRequest}
+	 */
+	static create(id,fulfilled,modelIds,modelType):DataRequest {
+		return new DataRequest({
+			id,fulfilled,modelIds,modelType
+		})
+	}
+
+	/**
+	 * Map from JS to model
+	 *
+	 * @param o
+	 */
 	static fromJS = (o:any) => new DataRequest(o)
 
 	id:string

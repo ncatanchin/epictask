@@ -9,6 +9,7 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
+import {Checkbox} from 'material-ui'
 
 import {PureRender, Renderers, Avatar} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
@@ -16,14 +17,17 @@ import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {Issue, Repo} from 'shared/models'
-import {RepoKey, AppKey, DataKey, UIKey} from 'shared/Constants'
+import {RepoKey, AppKey, DataKey, UIKey, IssueKey} from 'shared/Constants'
 import {List} from 'immutable'
-import {createIssuesSelector} from 'shared/actions/repo/RepoSelectors'
+
 import {RepoState} from 'shared/actions/repo/RepoState'
 import {createStructuredSelector} from 'reselect'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {UIState} from 'shared/actions/ui/UIState'
+import {IssueState, IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
+import {createIssuesSelector} from 'shared/actions/issue/IssueSelectors'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 // Non-typed Components
 const ReactList = require('react-list')
@@ -37,10 +41,13 @@ const repoActions = new RepoActionFactory()
 const styles = {
 	panel:          makeStyle(Fill, {}),
 	panelSplitPane: makeStyle(Fill, {
-		' > .Pane2': makeStyle(OverflowHidden, {})
+		' > .Pane2': makeStyle(OverflowHidden,{})
 
 	}),
-	listContainer:  makeStyle(FlexColumn, FlexScale, FillWidth, FillHeight, {
+
+	listContent: makeStyle(FlexColumn, FlexScale, Fill,OverflowHidden),
+	listControls: makeStyle(FlexRow, FlexAuto, FillWidth),
+	listContainer:  makeStyle(FlexColumn, FlexScale, FillWidth, {
 		overflow: 'auto'
 	}),
 
@@ -137,7 +144,7 @@ interface IIssueState {
 	selectedMulti?:boolean
 }
 
-const selectedIssueIdsSelector = (state) => (state.get(UIKey) as UIState).selectedIssueIds
+const selectedIssueIdsSelector = (state) => (state.get(IssueKey) as IssueState).selectedIssueIds
 
 /**
  * Create a new issue item to state => props mapper
@@ -264,6 +271,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 export interface IIssuesPanelProps {
 	theme?:any
 	issues?:Issue[]
+	issueSort?:IIssueSort
+	issueFilter?:IIssueFilter
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	s?:any
@@ -272,13 +281,14 @@ export interface IIssuesPanelProps {
 const issuesSelector = createIssuesSelector()
 
 function mapStateToProps(state) {
-	const repoState:RepoState = state.get(RepoKey)
+	const issueState:IssueState = state.get(IssueKey)
 	const theme = getTheme(),
 		issues = issuesSelector(state)
 
 	return {
 		theme,
 		issues,
+		issueSort: issueState.issueSort,
 		selectedIssue: null,
 		selectedIssueIds: selectedIssueIdsSelector(state),
 		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
@@ -299,6 +309,7 @@ function mapStateToProps(state) {
 export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	uiActions:UIActionFactory = Container.get(UIActionFactory)
+	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
 	constructor(props) {
 		super(props)
@@ -336,11 +347,27 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		} else {
 			selectedIssueIds = [issue.id]
 		}
-		this.uiActions.setSelectedIssueIds(selectedIssueIds)
+		this.issueActions.setSelectedIssueIds(selectedIssueIds)
 		log.info('Received issue select')
 	}
 
+	/**
+	 * Event handlers
+	 *
+	 * @param event
+	 * @param checked
+	 */
+	onSortDirectionChanged = () => {
+		return (event, checked) => {
+			const issueSort = _.assign({},
+				_.cloneDeep(this.issueActions.state.issueSort),
+				{direction: (checked) ? 'desc' : 'asc'}
+			) as any
 
+			this.issueActions.setFilteringAndSorting(null, issueSort)
+		}
+
+	}
 	renderIssue = (index, key) => {
 		const
 			{props} = this,
@@ -358,9 +385,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	}
 
+
 	render() {
 		const
-			{selectedIssueIds,s:themeStyles} = this.props,
+			{selectedIssueIds,issueSort,s:themeStyles} = this.props,
 			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
@@ -375,18 +403,29 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			           maxSize={listMaxWidth}
 			           className='issuePanelSplitPane'>
 
-				<div style={themeStyles.listContainer}>
-					<ReactList ref={c => this.setState({issueList:c})}
-					           itemRenderer={this.renderIssue}
-					           itemsRenderer={(items, ref) => (
-									<div ref={ref}>{items}</div>
-								)}
-					           length={this.props.issues.length}
-					           type='simple'/>
+				{/* LIST CONTROLS FILTER/SORT */}
+				<div style={themeStyles.listContent}>
+					<div style={themeStyles.listControls}>
+						<Checkbox checked={issueSort.direction === 'desc'}
+						          onCheck={this.onSortDirectionChanged()} /> descending
+					</div>
+
+					<div style={themeStyles.listContainer}>
+						<ReactList ref={c => this.setState({issueList:c})}
+						           itemRenderer={this.renderIssue}
+						           itemsRenderer={(items, ref) => (
+										<div ref={ref}>{items}</div>
+									)}
+						           length={this.props.issues.length}
+						           type='simple'/>
 
 
+					</div>
 				</div>
+
+				{/* ISSUE DETAIL PANEL */}
 				<IssueDetailPanel />
+
 			</SplitPane>
 		</div>
 	}

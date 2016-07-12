@@ -1,9 +1,9 @@
-import {getAction} from 'typedux'
+import {getAction,ActionFactory} from 'typedux'
 
 import {Container} from 'typescript-ioc'
-const diff = require('immutablediff')
 import {Events} from '../Constants'
 import {transformValues} from '../util/ObjectUtil'
+
 
 
 const log = getLogger(__filename)
@@ -57,14 +57,23 @@ function attachEvents(store) {
 	 * @param args
 	 */
 	function rendererDispatch(event,leaf,name,args) {
-		const action = getAction(leaf,name)
-		if (!action)
+		const actionReg = getAction(leaf,name)
+		if (!actionReg)
 			throw new Error(`Could not find action ${leaf}:${name} on main process`)
 
 		log.info(`Executing action on main: ${leaf}:${name}`)
-		action((factory) => {
-			return Container.get(factory)
-		},...args)
+		if (actionReg.options.isReducer) {
+			const actions = Container.get(actionReg.actionFactory) as ActionFactory<any,any>
+			const msg = actions.newMessage(leaf,actionReg.type,[],args,{source:{
+				isReducer:true,
+				fromRenderer:true
+			}})
+			store.dispatch(msg)
+		} else {
+			actionReg.action((factory) => {
+				return Container.get(factory)
+			}, ...args)
+		}
 	}
 
 	addIpcListener(Events.StoreGetMainState,getMainState)
@@ -127,11 +136,11 @@ function broadcastActionSender(action) {
 }
 
 function broadcastActionAndStateToClients(action,newState) {
-	if (!newState || !action)
+	if (!newState || !action ||
+		newState === lastSentState ||
+		(action.source && action.source.isReducer && action.source.fromRenderer))
 		return
 
-	if (newState === lastSentState)
-		return
 
 	// function getStatePatch() {
 	// 	// First check the last state we sent

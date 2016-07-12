@@ -2,10 +2,12 @@ import {getLogger} from 'typelogger'
 import {Reducer as ReduxReducer,Action as ReduxAction} from 'redux'
 import * as Immutable from 'immutable'
 import {State} from './State'
-import {ActionMessage} from "../actions"
+import {getAction,ActionMessage} from "../actions"
 import {ILeafReducer} from './LeafReducer'
 import {makeMappedReducerFn} from '../util/ActionMapper'
 import {isFunction} from '../util/index'
+import {getStoreStateProvider} from '../actions/Actions'
+
 
 const log = getLogger(__filename)
 
@@ -57,6 +59,7 @@ export class RootReducer {
 		try {
 			let hasChanged = false
 
+
 			if (!state || !stateTypeGuard(state)) {
 				state = this.defaultState()
 				hasChanged = true
@@ -65,6 +68,10 @@ export class RootReducer {
 			let nextState = state.withMutations((tempState) => {
 				for (let reducer of this.reducers) {
 					const leaf = reducer.leaf()
+					if (action.leaf && action.leaf !== leaf)
+						continue
+
+					const actionReg = getAction(leaf,action.type)
 
 					// Get Current RAW state
 					const rawLeafState = tempState.get(leaf)
@@ -106,17 +113,28 @@ export class RootReducer {
 							})
 						}
 
+						if (actionReg && actionReg.options.isReducer) {
+							const reducerFn = actionReg.action(null,...action.args)
+							if (!reducerFn || !isFunction(reducerFn))
+								throw new Error(`Action reducer did not return a function: ${actionReg.type}`)
+
+							log.info('Calling action reducer: ',actionReg.type)
+							checkReducerStateChange(reducerFn(reducerState,getStoreStateProvider()))
+						}
+
 						if (isFunction(reducer[action.type])) {
 							checkReducerStateChange(reducer[action.type](reducerState,...action.args))
-						} else if (isFunction(reducerState[action.type])) {
-							log.debug('Called reducer directly on state function',action.type)
-							const reducerFn = makeMappedReducerFn(action.type,action.args)
-							checkReducerStateChange(reducerFn(reducerState,action))
-
-							// const
-							// log.debug('Creating mapped handler', propertyKey)
-							// finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
 						}
+						//NOTE: Removed in favor of new @ActionReducer
+						// else if (isFunction(reducerState[action.type])) {
+						// 	log.debug('Called reducer directly on state function',action.type)
+						// 	const reducerFn = makeMappedReducerFn(action.type,action.args)
+						// 	checkReducerStateChange(reducerFn(reducerState,action))
+						//
+						// 	// const
+						// 	// log.debug('Creating mapped handler', propertyKey)
+						// 	// finalReducers = [makeMappedReducerFn<S,M>(propertyKey,args)]
+						// }
 
 					} catch (err) {
 						log.error(`Error occurred on reducer leaf ${leaf}`, err)

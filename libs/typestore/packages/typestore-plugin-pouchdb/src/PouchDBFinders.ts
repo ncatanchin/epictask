@@ -92,8 +92,19 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
  * @param offset
  * @param includeDocs
  * @returns {any}
+ * @param sortDirection
+ * @param fields
  */
-export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort = null,limit = -1,offset = -1,includeDocs = true) {
+export function findWithSelector(
+	pouchRepo:PouchDBRepoPlugin<any>,
+	selector,
+	fields:string[] = null,
+	sort:string[] = null,
+	sortDirection:'asc'|'desc' = 'asc',
+	limit = -1,
+	offset = -1,
+	includeDocs = true
+) {
 
 	const opts = {
 		selector: Object.assign({
@@ -103,6 +114,7 @@ export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort
 
 	if (sort)
 		opts.sort = transformDocumentKeys(sort)
+			.map(sortField => ({[sortField]:sortDirection}))
 
 	if (limit > -1)
 		opts.limit = limit
@@ -111,7 +123,7 @@ export function findWithSelector(pouchRepo:PouchDBRepoPlugin<any>, selector,sort
 		opts.offset = offset
 
 	if (includeDocs === false)
-		opts.fields = mapAttrsToField([pouchRepo.primaryKeyField])
+		opts.fields = (fields) ? mapAttrsToField(fields) : mapAttrsToField([pouchRepo.primaryKeyField])
 
 	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
 
@@ -217,7 +229,10 @@ export function makeFnFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,o
  * @returns {(request:FinderRequest, args:...[any])=>Promise<Promise<FinderResultArray>>}
  */
 export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:string,opts:IPouchDBMangoFinderOptions) {
-	let {selector,sort,limit,offset,includeDocs,all,indexName,indexDirection,indexFields} = opts
+	/**
+	 *
+	 */
+	let {selector,sort,sortDirection,limit,offset,includeDocs,all,indexName,indexDirection,indexFields} = opts
 
 	let indexReady = all === true
 	let indexCreate = null
@@ -266,9 +281,12 @@ export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:strin
 		const selectorResult =
 			isFunction(selector) ? (selector as any)(...args) : selector
 
+
 		if (request) {
 			offset = request.offset || offset
 			limit = request.limit || limit
+			sort = request.sort || sort
+			sortDirection = request.sortDirection || sortDirection
 			includeDocs = (typeof request.includeModels === 'boolean') ?
 				request.includeModels :
 				includeDocs
@@ -277,7 +295,9 @@ export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:strin
 		const result = await findWithSelector(
 			pouchRepo,
 			selectorResult,
+			(request && request.extra) ? request.extra.fields : null,
 			sort,
+			sortDirection,
 			limit,
 			offset,
 			includeDocs

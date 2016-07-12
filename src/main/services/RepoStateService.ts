@@ -8,6 +8,8 @@ import {enabledRepoSelector} from 'shared/actions/repo/RepoSelectors'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {Stores} from 'main/services/DBService'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
 
 const log = getLogger(__filename)
 
@@ -26,6 +28,10 @@ export default class RepoStateService extends BaseService {
 
 	@Inject
 	repoActions:RepoActionFactory
+
+	@Inject
+	issueActions:IssueActionFactory
+
 
 	@Inject
 	dataActions:DataActionFactory
@@ -57,8 +63,15 @@ export default class RepoStateService extends BaseService {
 			this.enabledReposChanged
 		)
 
+		const selectedIssueIdsChangedSelector = createDeepEqualSelector(
+			selectedIssueIdsSelector,
+			this.selectedIssueIdsChanged
+		)
+
 		this.unsubscribe = this.store.getReduxStore().subscribe(() => {
-			enabledReposChangedSelector(this.store.getState())
+			const state = this.store.getState()
+			enabledReposChangedSelector(state)
+			selectedIssueIdsChangedSelector(state)
 		})
 
 		if (module.hot) {
@@ -76,11 +89,32 @@ export default class RepoStateService extends BaseService {
 	}
 
 
+	async stop():Promise<this> {
+		await super.stop()
+		if (this.unsubscribe) {
+			this.unsubscribe()
+			this.unsubscribe = null
+		}
+
+		return this
+	}
+
 	destroy():this {
-		return null
+		return this
 	}
 
 
+	selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
+		if (selectedIssueIds && selectedIssueIds.length === 1)
+			this.issueActions.loadActivityForIssue(selectedIssueIds[0])
+	}
+
+	/**
+	 * When enabled repos change,
+	 * load supporting data/models
+	 *
+	 * @param availableRepos
+	 */
 	enabledReposChanged = async (availableRepos = null) => {
 		if (!availableRepos)
 			availableRepos =  await Container.get(Stores).availableRepo.findAll()
@@ -89,6 +123,6 @@ export default class RepoStateService extends BaseService {
 			.map(availRepo => availRepo.repoId)
 
 
-		this.repoActions.loadIssues(...enabledRepoIds)
+		this.issueActions.loadIssues(...enabledRepoIds)
 	}
 }

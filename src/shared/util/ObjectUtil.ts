@@ -1,17 +1,6 @@
 import {List,Map} from 'immutable'
 
-//declare module 'lodash' {
-// declare module _ {
-// 	interface LoDashStatic {
-// 		isArrayEqualBy(arr1,arr2,prop):boolean
-// 	}
-// }
 
-// declare module _ {
-// 	interface LoDashStatic {
-// 		isArrayEqualBy(arr1,arr2,prop):boolean
-// 	}
-// }
 
 declare global {
 	interface LodashMixins {
@@ -20,12 +9,9 @@ declare global {
 		uniqueListBy<T>(list:List<T>,...keyPath:string[]):List<T>
 		toJS(o:any):any
 		assignGlobal(o:any):any
+		isPromise(o:any):boolean
+		modelArrayToMapBy(o:any[],prop:string):any
 	}
-
-
-	// interface List<T> extends Collection.Indexed<T> {
-	//
-	// }
 }
 
 const _ = require('lodash')
@@ -36,6 +22,15 @@ const _ = require('lodash')
  * isArrayEqual
  */
 _.mixin({
+	modelArrayToMapBy<M>(models:M[],prop:string):{[key:string]:M} {
+		return models.reduce((map,model) => {
+			map[`${model[prop]}`] = model
+			return map
+		},{})
+	},
+	isPromise(o:any) {
+		return o instanceof Promise || (o && _.isFunction(o.then))
+	},
 	isArrayEqualBy(arr1,arr2,prop) {
 		return arr1 === arr2 ||  _.isEqual(
 			!arr1 ? null : arr1.map(v => v[prop]).sort(),

@@ -5,6 +5,7 @@ import {ActionMessage} from './ActionTypes'
 import {Action} from './ActionDecorations'
 import {getStoreStateProvider,getStoreDispatchProvider} from './Actions'
 import {getLogger} from 'typelogger'
+import {Reducer} from '../reducers'
 const log = getLogger(__filename)
 
 /**
@@ -123,18 +124,18 @@ export abstract class ActionFactory<S extends any,M extends ActionMessage<S>> {
 	 * @param reducers
 	 * @param data
 	 * @param args
-	 * @returns {ActionMessage}
+	 * @returns {*|({leaf: string, type: string, reducers: Reducer<any, ActionMessage<any>>[], stateType: any}&{}&{args: Array})|any}
+	 * @param leaf
 	 */
-	newMessage(type:string, reducers = [],args = [], data = {}):M {
-		const messageObject = {
+	newMessage(leaf:string,type:string, reducers:Reducer<S,ActionMessage<S>>[] = [],args = [], data = {}):M {
+		return Object.assign({
+			leaf,
 			type,
 			reducers,
 			stateType: this.stateType
-		} as M
+		}, data,{args})
 
-		Object.assign(messageObject, data,{args})
 
-		return messageObject
 	}
 
 	/**

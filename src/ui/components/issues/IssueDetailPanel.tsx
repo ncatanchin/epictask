@@ -9,25 +9,25 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import {connect} from 'react-redux'
-import {Avatar, Markdown, PureRender, Renderers} from 'components/common'
-import {Issue, Comment, Label, Milestone, Repo} from 'shared/models'
-import {AppKey, RepoKey, UIKey, DataKey} from 'shared/Constants'
+import {Avatar, PureRender, Renderers} from 'components/common'
+import {Issue, Comment} from 'shared/models'
 import {IssueLabels} from './IssueLabels'
 import {IssueActivityText} from './IssueActivityText'
-import {List} from 'immutable'
-import {createStructuredSelector,createSelector} from 'reselect'
-import {UIState} from 'shared/actions/ui/UIState'
-import {DataState} from 'shared/actions/data/DataState'
+import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
-const {Textfit} = require('react-textfit')
+import {issuesDetailSelector, issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 
+
+// Non-typed Components
+const {Textfit} = require('react-textfit')
+const ReactList = require('react-list')
 
 // Constants
 const log = getLogger(__filename)
 
 //region Styles
 const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
-const styles = {
+const baseStyles = {
 	root: makeStyle(FlexColumn, Fill, OverflowHidden, {
 		minWidth: '36.5rem'
 	}),
@@ -146,7 +146,8 @@ export interface IIssueDetailPanelProps {
 	issues?:Issue[]
 	issue?:Issue
 	comments?:Comment[]
-	theme?:any
+	theme?:any,
+	styles?:any
 }
 
 
@@ -156,35 +157,23 @@ export interface IIssueDetailPanelProps {
  * @returns {any}
  */
 const makeIssueItemStateToProps = () => {
-	const issuesSelector = createSelector(
-		(state:Map<any,any>):Issue[] => {
-			const uiState = state.get(UIKey) as UIState
-			const dataState = state.get(DataKey) as DataState
-			const issueModels = dataState.models.get(Issue.$$clazz)
-			const repoModels = dataState.models.get(Repo.$$clazz)
-			const labelModels = dataState.models.get(Label.$$clazz)
-			const milestoneModels = dataState.models.get(Milestone.$$clazz)
 
-			const issues = uiState.selectedIssueIds
-				.map(issueId => issueModels.get(`${issueId}`))
-				.filter(issue => !_.isNil(issue))
-				.map(issue => new Issue(Object.assign({},issue,{
-					repo: repoModels.get(`${issue.repoId}`),
-					labels: issue.labels.map(label => labelModels.get(label.url)),
-					milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
-				})))
 
-			return issues
-		},
-		(issues:Issue[]) => issues
+
+
+
+	const themeSelector = () => getTheme()
+	const stylesSelector = createSelector(
+		() => getTheme(),
+		(theme:any) => mergeStyles(baseStyles, theme.issueDetail)
 	)
+
 	return createStructuredSelector({
-		issues: issuesSelector,
-		issue: (state) => {
-			const issues = issuesSelector(state)
-			return issues && issues.length === 1 ? issues[0] : null
-		},
-		comments: (state) => []
+		issues: issuesDetailSelector,
+		issue: issueSelector,
+		comments: commentsSelector,
+		theme: themeSelector,
+		styles: stylesSelector
 	})
 }
 
@@ -232,8 +221,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		</div>
 	}
 
-	renderHeader(issue, s) {
-		const {header} = s,
+	/**
+	 * Render the header
+	 *
+	 * @param issue
+	 * @param styles
+	 * @returns {any}
+	 */
+	renderHeader(issue, styles) {
+		const {header} = styles,
 			{row1, row2, row3} = header,
 			{repo} = issue
 
@@ -250,8 +246,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 				        prefix={issue.assignee ? 'assigned to' : null}
 				        prefixStyle={{padding: '0 0.5rem 0 0'}}
 				        labelPlacement='before'
-				        labelStyle={s.username}
-				        avatarStyle={s.avatar}/>
+				        labelStyle={styles.username}
+				        avatarStyle={styles.avatar}/>
 
 
 			</div>
@@ -259,7 +255,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 
 				<Textfit mode='multi' style={row2.title}>{issue.title}</Textfit>
 				{/* TIME */}
-				<div style={s.time}>{moment(issue.updated_at).fromNow()}</div>
+				<div style={styles.time}>{moment(issue.updated_at).fromNow()}</div>
 
 			</div>
 			<div style={row3}>
@@ -276,6 +272,12 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		</div>
 	}
 
+	/**
+	 * Render the footer (when comments go ;))
+	 * @param issue
+	 * @param s
+	 * @returns {any}
+	 */
 	renderFooter(issue, s) {
 		return <div style={s.footer}>
 			<div >
@@ -284,91 +286,110 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		</div>
 	}
 
-	renderBody(issue, s) {
+	/**
+	 * Render the issue body if it has one
+	 *
+	 * @param key
+	 * @param styles
+	 * @returns {any}
+	 */
+	renderBody = (key,styles) => {
 		const
-			{activity} = s.content.activities
+			{activity} = styles.content.activities
 
 		return <IssueActivityText
-			key={issue.id}
-			user={issue.user}
-			text={issue.body}
-			activityActionText='posted issue'
+			key={key}
+			commentIndex={-1}
 			activityType='post'
-			createdAt={issue.created_at}
-			updatedAt={issue.updated_at}
-			issue={issue}
+			activityActionText='posted issue'
 			activityStyle={activity}/>
 
 	}
 
 
-	// COMMENT
-	renderComment(issue, comment, s) {
+	/**
+	 * Render a comment
+	 *
+	 * @param key
+	 * @param index
+	 * @param styles
+	 * @returns {any}
+	 */
+	renderComment = (key,index,styles) => {
 		const
-			{activity} = s.content.activities
+			{activity} = styles.content.activities
 
 
 		return <IssueActivityText
-			key={comment.id}
-			user={comment.user}
-			text={comment.body}
+			key={key}
+			commentIndex={index}
 			activityActionText='commented'
 			activityType='comment'
-			createdAt={comment.created_at}
-			updatedAt={comment.updated_at}
-			issue={issue}
 			activityStyle={activity}/>
 
 	}
 
-	renderActivities(issue, comments, s) {
-		comments = comments || []
+	/**
+	 * Render an item for the activity list
+	 *
+	 * @param index
+	 * @param key
+	 * @returns {any}
+	 */
+	renderActivityListItem = (index,key) => {
+		const {issues,issue,theme, comments,styles} = this.props
 
-		const
-			{content} = s,
-			{activities} = content,
-			{activity} = activities
+		return (index === 0) ? this.renderBody(key,styles) :
+			this.renderComment(key,index,styles)
 
-		return <div style={activities}>
-			{comments.map(comment => this.renderComment(issue, comment, s))}
-		</div>
 	}
 
-	renderIssue(issue:Issue, comments:Comment[], s) {
-		const {content} = s
-
-		return <div style={s.issue}>
+	/**
+	 * Render issue
+	 *
+	 * @param issue
+	 * @param comments
+	 * @param styles
+	 * @returns {any}
+	 */
+	renderIssue(issue:Issue, comments:Comment[], styles) {
+		const {content} = styles
+		//comments ? comments.length : 0
+		return <div style={styles.issue}>
 			<Style
 				scopeSelector={`.markdown.issue-${issue.id}`}
-				rules={s.markdown}
+				rules={styles.markdown}
 			/>
 
-			{this.renderHeader(issue, s)}
+			{this.renderHeader(issue, styles)}
 
 			{/* Issue Detail Body */}
 			<div style={content}>
 				<div style={content.wrapper}>
-
-					{this.renderBody(issue, s)}
-					{this.renderActivities(issue, comments, s)}
+					<ReactList itemRenderer={this.renderActivityListItem}
+					           length={comments ? comments.length + 1 : 1}
+					           type='simple'/>
 				</div>
 			</div>
 
-			{this.renderFooter(issue, s)}
+			{this.renderFooter(issue, styles)}
 
 		</div>
 	}
 
+	/**
+	 * Component render method
+	 *
+	 * @returns {any}
+	 */
 	render() {
-		const
-			{issues, theme, comments} = this.props,
-			s = mergeStyles(styles, theme.issueDetail)
+		const {issues, theme, comments,styles} = this.props
 
-		return <div style={s.root}>
+		return <div style={styles.root}>
 			{issues.length === 0 ? <div/> :
 				issues.length > 1 ?
-					this.renderMulti(issues, s) :
-					this.renderIssue(issues[0], comments, s)
+					this.renderMulti(issues, styles) :
+					this.renderIssue(issues[0], comments, styles)
 			}
 		</div>
 	}

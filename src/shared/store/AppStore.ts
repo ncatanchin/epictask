@@ -5,7 +5,6 @@ import thunkMiddleware from 'redux-thunk'
 import * as createLogger from 'redux-logger'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
 import {Events, ReduxDebugSessionKey} from '../Constants'
-import {AppActionFactory as AppActionFactoryType} from '../actions/AppActionFactory'
 import {getReducers} from 'shared/store/Reducers'
 import {Container} from 'typescript-ioc'
 import {
@@ -14,7 +13,8 @@ import {
 	ObservableStore,
 	getAction,
 	addActionInterceptor,
-	IActionInterceptorNext
+	IActionInterceptorNext,
+	IActionRegistration
 } from 'typedux'
 
 
@@ -24,9 +24,14 @@ const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
 // If renderer then add an action interceptor
 if (Env.isRenderer) {
-	const unregisterInterceptor = addActionInterceptor((leaf:string,name:string,next:IActionInterceptorNext,...args:any[]) => {
-		ipc.send(Events.StoreRendererDispatch,leaf,name,args)
-		return
+	const browserNextTick = require('browser-next-tick')
+	const unregisterInterceptor = addActionInterceptor((reg:IActionRegistration,next:IActionInterceptorNext,...args:any[]) => {
+		const {leaf,type,options} = reg
+
+		browserNextTick(() => ipc.send(Events.StoreRendererDispatch,leaf,type,args))
+
+		return (options && options.isReducer) ? next() : null
+
 	})
 
 	if (module.hot) {

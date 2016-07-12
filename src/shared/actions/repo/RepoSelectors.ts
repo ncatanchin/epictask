@@ -9,22 +9,11 @@ import {Repo} from 'shared/models/Repo'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {Issue} from 'shared/models/Issue'
-
-const availReposSelector = (state):Map<string,AvailableRepo> => state.get(DataKey).models.get(AvailableRepo.$$clazz)
-const reposSelector = (state):Map<string,Repo> => state.get(DataKey).models.get(Repo.$$clazz)
-const milestonesSelector = (state):Map<string,Milestone> => state.get(DataKey).models.get(Milestone.$$clazz)
-const labelsSelector = (state):Map<string,Label> => state.get(DataKey).models.get(Label.$$clazz)
-const issuesSelector = (state):Map<string,Issue> => state.get(DataKey).models.get(Issue.$$clazz)
+import {availReposSelector, reposSelector, milestonesSelector, labelsSelector} from 'shared/actions/data/DataSelectors'
 
 
-const dataModelsSelector = (state,type) => state.get(DataKey)
-	.models
-	.get(AvailableRepo.$$clazz) || Map<string,any>()
 
-export const enabledRepoSelector = (state):AvailableRepo[] => dataModelsSelector(
-		state,
-		AvailableRepo.$$clazz
-	)
+export const enabledRepoSelector = (state):AvailableRepo[] => availReposSelector(state)
 	.valueSeq()
 	.filter(availRepo => availRepo.enabled)
 	.toArray()
@@ -36,24 +25,6 @@ export function createEnabledAvailRepoSelector() {
 	return createDeepEqualSelector(
 		enabledRepoSelector,
 		(availRepos:AvailableRepo[]) => availRepos
-	)
-}
-
-export function createIssuesSelector() {
-	return createSelector(
-		enabledRepoIdSelector,
-		issuesSelector,
-		(repoIds:number[],issueMap:Map<string,Issue>) => {
-			if (!issueMap)
-				return []
-
-			const issues = issueMap.valueSeq()
-
-			return repoIds.map(repoId => issues.filter(issue => issue.repoId === repoId))
-				.reduce((allIssues,nextIssues) => {
-					return allIssues.concat(nextIssues)
-				},List<Issue>()).toArray()
-		}
 	)
 }
 

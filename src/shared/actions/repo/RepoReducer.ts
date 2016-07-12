@@ -24,8 +24,4 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 		return new RepoState()
 	}
 
-
-	setError(state:RepoState,err:Error) {
-		return state.merge({error:err})
-	}
 }

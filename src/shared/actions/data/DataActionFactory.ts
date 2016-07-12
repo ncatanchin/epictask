@@ -1,5 +1,5 @@
 import {Repo as TSRepo} from 'typestore'
-import {ActionFactory,Action} from 'typedux'
+import {ActionFactory,ActionPromise,Action} from 'typedux'
 import {SearchKey, DataKey} from "shared/Constants"
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
@@ -7,6 +7,7 @@ import {DataMessage, DataState, DataRequest} from 'shared/actions/data/DataState
 import {Stores} from 'main/services/DBService'
 import {Map} from 'immutable'
 import {ModelConstructor} from 'shared/Registry'
+
 
 const uuid = require('node-uuid')
 
@@ -35,7 +36,7 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 	 * @returns {string}
 	 */
 	leaf():string {
-		return SearchKey;
+		return DataKey;
 	}
 
 	async getModels(modelType:string,...modelIds:Array<string|number>) {
@@ -75,8 +76,10 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 	removeModels(modelType:string,removedIds:Array<string|number>) {
 	}
 
-	@Action()
-	submitRequest(request:DataRequest) {
+
+
+	@ActionPromise()
+	submitRequest(request:DataRequest,withModelMap:{[id:string]:any} = {}) {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
@@ -87,7 +90,7 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
 			actions.updateRequest(request)
 
-			if (fulfilled)
+			if (request.fulfilled)
 				return
 
 			// Next tick
@@ -96,13 +99,15 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 			const state = getState().get(DataKey)
 			const models = state.models.get(modelType)
 
-			const newModelIds = modelIds
-				.filter(modelId => !models || !models.get(modelId))
-
-			const newModels = await this.getModels(modelType,...newModelIds)
+			let newModelIds = modelIds
+				.filter(modelId => !models || (!models.get(modelId) && !withModelMap[modelId]))
 
 
-			this.updateModels(modelType,newModels)
+			const newModelMap = await this.getModels(modelType,...newModelIds)
+
+
+			Object.assign(withModelMap,newModelMap)
+			this.updateModels(modelType,withModelMap)
 
 			await Promise.setImmediate()
 

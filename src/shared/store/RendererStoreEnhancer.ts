@@ -50,18 +50,6 @@ function hydrateState(state) {
 
 }
 
-function stateReviver(key,value:any) {
-	const clazzName = value.get('$$clazz')
-	if (clazzName) {
-		const modelClazz = getModel(clazzName)
-		if (modelClazz)
-			return new modelClazz(value.toJS())
-	}
-
-	const isIndexed = Immutable.Iterable.isIndexed(value);
-	return isIndexed ? value.toList() : value.toMap();
-}
-
 
 function getMainProcessState() {
 
@@ -132,13 +120,9 @@ function rendererStoreEnhancer(storeCreator) {
 			// Update the cached patch number
 			lastActionId = actionId
 
-			nextTick(() => {
-				store.dispatch(action)
-			})
+			nextTick(() => store.dispatch(action))
 
 		})
-
-		// store.getState = () => receivedState
 
 		return store
 	}

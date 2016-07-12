@@ -14,6 +14,7 @@ import {AvailableRepo,Repo} from 'shared/models'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {UIState} from 'shared/actions/ui/UIState'
+import {RepoState} from 'shared/actions/repo/RepoState'
 // import {Button} from 'ui/components/common/Button'
 
 const repoActions = new RepoActionFactory()
@@ -84,8 +85,9 @@ function makeMapStateToProps() {
 	const availableRepoSelector = createAvailableRepoSelector()
 
 	return (state:any,props:IRepoListProps):IRepoListProps => {
-		const uiState:UIState = state.get(UIKey)
-		const selectedRepoIds = uiState.selectedRepoIds
+		// const uiState:UIState = state.get(UIKey)
+		const repoState:RepoState = state.get(RepoKey)
+		const selectedRepoIds = repoState.selectedRepoIds
 
 		const availableRepos:AvailableRepo[] = availableRepoSelector(state,props)
 

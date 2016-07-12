@@ -6,15 +6,14 @@
 import * as moment from 'moment'
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {User,Issue} from 'shared/models'
-import * as Constants from 'shared/Constants'
-
-import {Avatar,Markdown,PureRender,Renderers} from 'components/common'
+import {User,Issue,Comment} from 'shared/models'
+import {createStructuredSelector} from 'reselect'
+import {Avatar,Markdown,PureRender} from 'components/common'
+import {issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 
 // Constants
 const log = getLogger(__filename)
-const styles = {
+const baseStyles = {
 	root: {},
 
 	activityContent: makeStyle(FlexColumn,FlexScale,OverflowHidden,{
@@ -48,26 +47,40 @@ const styles = {
 }
 
 
-/**
- * Map theme into props - very shorthand
- * @param state
- */
-const mapStateToProps = (state) => ({theme: getTheme()})
 
 /**
  * IIssueCommentProps
  */
 export interface IIssueActivityTextProps extends React.DOMAttributes {
 	theme?:any
-	user:User
-	text:string
-	activityActionText:string
-	issue:Issue
+	commentIndex?:number
+	comments?:Comment[]
+	activityActionText?:string
+	issue?:Issue
 	activityStyle:any
-	updatedAt:Date
-	createdAt:Date
 	activityType:'post'|'comment'
 }
+
+export interface IIssueActivityTextState {
+	comment?:Comment
+	user?:User
+	text?:string
+	updatedAt?:Date
+	createdAt?:Date
+	styles?:any
+}
+
+
+/**
+ * Map theme into props - very shorthand
+ * @param state
+ */
+const makeStateToProps = () => createStructuredSelector({
+	issue: issueSelector,
+	comments: commentsSelector,
+	theme: () => getTheme(),
+})
+
 
 /**
  * IssueComment
@@ -76,43 +89,92 @@ export interface IIssueActivityTextProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@connect(mapStateToProps)
-@Radium
+@connect(makeStateToProps)
 @PureRender
-export class IssueActivityText extends React.Component<IIssueActivityTextProps,any> {
+export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 
+	/**
+	 * Create a the component state
+	 *
+	 * @param props
+	 * @returns {{comment: null, user: null, text: null, createdAt: null, updatedAt: null}}
+	 */
+	getNewState = (props:IIssueActivityTextProps):IIssueActivityTextState => {
+		const {issue,comments,theme,commentIndex,activityStyle,activityType} = props
 
-	constructor(props, context) {
-		super(props, context)
+		// Get comment if available
+		const comment = (comments && commentIndex && commentIndex > -1) ?
+			comments[commentIndex] : null
+
+		// Determine model
+		const model:Comment|Issue = comment || issue
+
+		// Map model props
+		let user = null,text = null,createdAt = null, updatedAt = null
+		if (model) {
+			({user,body:text,created_at:createdAt,updated_at:updatedAt} = model)
+		}
+
+		// Merge styles
+		const styles = mergeStyles(
+			baseStyles,
+			{[activityType]: baseStyles.activityContent},
+			activityStyle,
+			theme.issueActivityText
+		)
+
+		return {
+			comment,
+			user,
+			text,
+			createdAt,
+			updatedAt,
+			styles
+		}
 	}
 
+	/**
+	 * When the component mounts, create the state
+	 */
+	componentWillMount = () => this.setState(this.getNewState(this.props))
 
+
+	/**
+	 * Update the state when new props arrive
+	 *
+	 * @param newProps
+	 */
+	componentWillReceiveProps = (newProps) =>this.setState(this.getNewState(newProps))
+
+	/**
+	 * Render the issue activity component
+	 *
+	 * @returns {any}
+	 */
 	render() {
 		const
 			{
 				theme,
 				activityStyle,
-				user,
-				text,
 				issue,
-				updatedAt,
-				createdAt,
 				activityType,
 				activityActionText
 			} = this.props,
+			{
+				user,
+				text,
+				updatedAt,
+				createdAt,
+				styles
+			} = this.state,
 
-			// Merge all styles for theming
-			s = mergeStyles(
-				styles,
-				{[activityType]: styles.activityContent},
-				activityStyle,
-				theme.issueActivityText),
+
 
 			// Grab the activity type style
-			activityTypeStyle = makeStyle(s[activityType]),
+			activityTypeStyle = makeStyle(styles[activityType]),
 
 			// Time styles
-			timeStyle = makeStyle(s.time,activityTypeStyle.details.time),
+			timeStyle = makeStyle(styles.time,activityTypeStyle.details.time),
 
 			// User/Avatar style
 			userStyle = makeStyle(
@@ -126,7 +188,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,a
 			<Avatar user={user}
 			        style={userStyle}
 			        labelPlacement='none'
-			        avatarStyle={makeStyle(s.avatar,activityStyle.avatar)} />
+			        avatarStyle={makeStyle(styles.avatar,activityStyle.avatar)} />
 
 			<div style={activityTypeStyle}>
 				<div style={activityTypeStyle.details}>

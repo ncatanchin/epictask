@@ -25,9 +25,6 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 		return new UIState()
 	}
 
-	setSelectedIssueIds(state:UIState,selectedIssueIds:number[]) {
-		return state.set('selectedIssueIds',selectedIssueIds)
-	}
 
 	setDialogOpen(state:UIState,name:string,open:boolean) {
 		return state.set(

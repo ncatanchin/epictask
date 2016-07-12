@@ -15,6 +15,10 @@ export function isFunction(o:any):o is Function {
 	return typeof o === 'function'
 }
 
+export function isPromise(o:any):o is Promise<any> {
+	return o instanceof Promise || (o && isFunction(o.then))
+}
+
 /**
  * Is array type guard
  *

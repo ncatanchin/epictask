@@ -219,9 +219,6 @@ export class RepoSyncJob extends Job {
 			const repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)
 			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
-			// Reload all the issues
-			repoActions.loadIssues()
-
 			// Reload current issue if loaded
 			const currentIssue = repoActions.state.issue
 			if (currentIssue) {
