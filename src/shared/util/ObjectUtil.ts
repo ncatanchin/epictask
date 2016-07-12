@@ -11,7 +11,10 @@ declare global {
 		assignGlobal(o:any):any
 		isPromise(o:any):boolean
 		modelArrayToMapBy(o:any[],prop:string):any
+
 	}
+
+
 }
 
 const _ = require('lodash')

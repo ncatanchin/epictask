@@ -50,7 +50,8 @@ export interface RequestOptions {
 
 export class GitHubClient {
 
-	constructor(private token:string) {
+	constructor(private token:string = Settings.token) {
+
 	}
 
 	initRequest(method:HttpMethod,body = null,headers:any = {}) {

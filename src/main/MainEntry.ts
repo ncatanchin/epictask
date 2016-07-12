@@ -11,7 +11,9 @@ const {app,BrowserWindow} = Electron
 
 // LOAD EVERYTHING
 import 'shared/Globals'
-import {MainConfigurator as MainConfiguratorType} from './MainConfigurator'
+import {MainConfigurator as MainConfiguratorConstructor} from './MainConfigurator'
+
+type MainConfiguratorType = typeof MainConfiguratorConstructor
 
 // LOGGING
 import './MainLogging'
@@ -20,7 +22,11 @@ const log = getLogger(__filename)
 // ADD EVENTS TO GLOBAL
 _.assignGlobal({Constants:{Events}})
 
+
+
+
 // Main window ref
+let persistedQuitState = false
 let mainWindow:any
 
 // HMR Configuration for development
@@ -40,15 +46,8 @@ if (Env.isDev) {
 
 
 /**
- * All windows closed
+ * Boot the app
  */
-function onAllClosed() {
-	log.debug('All windows closed')
-
-	if (process.platform !== 'darwin')
-		app.quit()
-}
-
 async function boot() {
 	if (Env.isDev) {
 		//BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
@@ -79,9 +78,9 @@ async function boot() {
 	log.info("Boot start")
 	global.MainBooted = false
 
-	const MainConfigurator = require('./MainConfigurator').default
+	const MainConfigurator:MainConfiguratorType = require('./MainConfigurator').default
 
-	const configurator:MainConfiguratorType = Container.get(MainConfigurator)
+	const configurator = Container.get(MainConfigurator)
 
 	log.info("Boot init")
 	await configurator.init()
@@ -115,6 +114,18 @@ async function boot() {
 	mainWindow.ready()
 }
 
+
+
+/**
+ * All windows closed
+ */
+function onAllClosed() {
+	log.debug('All windows closed')
+
+	if (process.platform !== 'darwin')
+		app.quit()
+}
+
 /**
  * App started
  */
@@ -124,6 +135,16 @@ function onStart() {
 	return boot()
 }
 
+
+
+function onWillQuit(e) {
+	// TODO: Compact and remove all models
+	require('shared/store/AppStore').persist()
+
+
+
+
+}
 
 /**
  * Make sure we are the only running instance
@@ -148,6 +169,7 @@ if (shouldQuit) {
 	if (!Env.isHot)
 		app.on('window-all-closed', onAllClosed)
 
+	app.on('will-quit',onWillQuit)
 	app.on('ready', onStart)
 }
 
@@ -159,8 +181,8 @@ if (module.hot) {
 	console.info('Setting up HMR')
 
 	// When constants change - ignore
-	module.hot.accept(['shared/Constants','shared/actions/AppActionFactory'], () => {
-		log.warn('Constants updated - maybe restart?? - up to you')
+	module.hot.accept(['shared/Constants','shared/actions/AppActionFactory','shared/store/AppStore'], () => {
+		log.warn('Constants/AppActionFactory/AppStore - ignored')
 	})
 
 	// Main window or configurator - reboot app

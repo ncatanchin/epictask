@@ -26,6 +26,12 @@ export type ActionOptions = {
 	mapped?:string[]
 }
 
+/**
+ * Decorate an action with options provided
+ *
+ * @param options
+ * @returns {(target:ActionFactory<S, M>, propertyKey:string, descriptor:TypedPropertyDescriptor<any>)=>TypedPropertyDescriptor<any>}
+ */
 function decorateAction(options:ActionOptions = {}) {
 	/**
 	 * Decoration used on each instance

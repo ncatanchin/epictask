@@ -58,3 +58,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	setUser(user:User) {}
 
 }
+
+export type AppActionFactoryType = typeof AppActionFactory
+export type AppActionFactoryConstructor = AppActionFactory
+export default AppActionFactory

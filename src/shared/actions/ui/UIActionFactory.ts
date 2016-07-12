@@ -1,9 +1,10 @@
 import {AutoWired,Inject, Container} from 'typescript-ioc'
-import {ActionFactory,Action,ActionMessage} from 'typedux'
+import {ActionFactory,ActionReducer,Action,ActionMessage} from 'typedux'
 
 import {UIKey} from "shared/Constants"
 import {IToastMessage} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
+
 
 
 @AutoWired
@@ -43,6 +44,10 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 	@Action()
 	setDialogOpen(name:string,open:boolean) {}
 
+	@ActionReducer()
+	closeAllDialogs() {
+		return (state:UIState) => state.update('dialogs',(dialogs) => dialogs.clear())
+	}
 
 
 

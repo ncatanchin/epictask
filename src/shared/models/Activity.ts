@@ -17,8 +17,6 @@ export enum ActivityType {
 @ModelDescriptor()
 export class Activity extends DefaultModel {
 
-	$$clazz = 'Activity'
-
 	/**
 	 * Revive from JS/JSON
 	 *

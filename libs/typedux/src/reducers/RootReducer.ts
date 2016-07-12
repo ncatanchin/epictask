@@ -17,45 +17,61 @@ const log = getLogger(__filename)
  *
  * @param state
  * @returns {boolean}
+ * @param rootStateType
  */
-function stateTypeGuard(state:any):state is State {
-	return (state instanceof Immutable.Map)
+function stateTypeGuard(state:any,rootStateType = null):state is State {
+	return (state instanceof Immutable.Map && (rootStateType == null || state instanceof rootStateType))
 }
+
 
 /**
  * Error handler type for root reducer
  */
 export type RootReducerErrorHandler = (err:Error,reducer?:ILeafReducer<any,any>) => void
 
-export class RootReducer {
+export class RootReducer<S extends State> {
 
 	private reducers:ILeafReducer<any,ActionMessage<any>>[] = []
 
 	public onError:RootReducerErrorHandler
 
-	constructor(...reducers:ILeafReducer<any,any>[]) {
+	constructor(private rootStateType:{new():S} = null,...reducers:ILeafReducer<any,any>[]) {
 		this.reducers.push(...reducers)
 	}
 
 
-	defaultState():State {
-		let state = Immutable.Map<string,any>({})
+	defaultState(defaultStateValue:any = null):S {
+		let state = this.rootStateType ? new (this.rootStateType as any)(defaultStateValue || {}) :
+			Immutable.Map<string,any>(defaultStateValue || {})
+
+		assert(Immutable.Map.isMap(state) || state instanceof Immutable.Record,
+			'Even custom rootStateTypes MUST extends ImmutableJS record or map')
+
 
 		this.reducers.forEach((reducer) => {
-			const defaultState = reducer.defaultState()
-			state = state.set(reducer.leaf(), defaultState)
+
+
+			const leafDefaultStateValue = defaultStateValue && defaultStateValue[reducer.leaf()]
+			const leafDefaultState = reducer.defaultState(leafDefaultStateValue || {})
+			// if (leafDefaultState.set && leafDefaultStateValue) {
+			// 	Object.keys(leafDefaultStateValue)
+			// 		.forEach(key => leafDefaultState.set(key,leafDefaultStateValue[key]))
+			// }
+			state = state.set(reducer.leaf(), leafDefaultState)
 		})
 
-		return state
+
+
+		return state as any
 	}
 
-	makeGenericHandler<S extends State>():ReduxReducer<S> {
+	makeGenericHandler():ReduxReducer<S> {
 		return (state:S,action:ReduxAction):S => {
 			return this.handle(state,action as ActionMessage<any>) as S
 		}
 	}
 
-	handle(state:State,action:ActionMessage<any>):State {
+	handle(state:State,action:ActionMessage<any>):S {
 		try {
 			let hasChanged = false
 
@@ -153,7 +169,7 @@ export class RootReducer {
 			})
 
 			log.debug('Has changed after all reducers', hasChanged, 'states equal', nextState === state)
-			return hasChanged ? nextState : state
+			return (hasChanged ? nextState : state) as S
 
 		} catch (err) {
 			log.error('Error bubbled to root reducer',err)
@@ -161,7 +177,7 @@ export class RootReducer {
 			// If error handler exists then use it
 			if (this.onError) {
 				this.onError && this.onError(err)
-				return state
+				return state as S
 			}
 
 			// Otherwise throw

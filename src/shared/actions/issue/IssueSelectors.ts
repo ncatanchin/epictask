@@ -5,7 +5,7 @@ import {createSelector} from 'reselect'
 import {IssueKey} from 'shared/Constants'
 import {Issue} from 'shared/models/Issue'
 import {
-	issuesSelector, createModelsSelector, commentModelsSelector
+	issueModelsSelector, createModelsSelector, commentModelsSelector
 } from 'shared/actions/data/DataSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
@@ -23,33 +23,40 @@ export const selectedIssueIdsSelector = createSelector(
 	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
-export function createIssuesSelector() {
-	return createSelector(
-		issueIdsSelector,
-		issuesSelector,
-		(issueIds:number[],issueMap:Map<string,Issue>) => {
-			if (!issueMap || !issueIds)
-				return []
-
-			return issueIds.map(issueId => issueMap.get(`${issueId}`))
-		}
-	)
-}
 
 
+export const issuesSelector = createSelector(
+	issueIdsSelector,
+	issueModelsSelector,
+	(issueIds:number[],issueMap:Map<string,Issue>) => {
 
+		// If data not avail then return empty
+		if (!issueMap || !issueIds)
+			return []
+
+		return issueIds.map(issueId => issueMap.get(`${issueId}`))
+	}
+)
+
+
+
+/**
+ * Selector for all current issues that are 'selected' or 'highlighted'
+ *
+ * @type {Reselect.Selector<TInput, number[]>|Reselect.Selector<Map<any, any>, Issue[]>|Reselect.Selector<Map<any, any>, TOutput>}
+ */
 export const issuesDetailSelector = createSelector(
 	createModelsSelector(),
 	(state:Map<any,any>):number[] => (state.get(IssueKey) as IssueState).selectedIssueIds,
 	(models,selectedIssueIds:number[]) => {
-		const {issueModels,repoModels,labelModels,milestoneModels} = models
+		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
 		const issues = selectedIssueIds
 			.map(issueId => issueModels.get(`${issueId}`))
 			.filter(issue => !_.isNil(issue))
 			.map(issue => new Issue(Object.assign({},issue,{
 				repo: repoModels.get(`${issue.repoId}`),
-				labels: issue.labels.map(label => labelModels.get(label.url)),
+				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
 				milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
 			})))
 

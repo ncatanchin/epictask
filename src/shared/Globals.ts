@@ -67,7 +67,8 @@ function installGlobals() {
 		TypeMutant: TypeMutantGlobal,
 		_: LodashGlobal,
 		assert: assertGlobal,
-		Env: EnvGlobal
+		Env: EnvGlobal,
+		assign: Object.assign.bind(Object)
 	}, ContextUtils)
 }
 
@@ -100,6 +101,8 @@ declare global {
 	var Env:typeof EnvGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
+
+	var assign:typeof Object.assign
 
 	interface Object {
 		$$clazz?:string

@@ -47,11 +47,11 @@ export function absoluteFilename(filename) {
 }
 
 export function cacheFilename(basename:string) {
-	return `${cachePath}${encodeURIComponent(basename)}-${uuid.v4()}.tmp`
+	return `${cachePath}/${encodeURIComponent(basename)}.cache`
 }
 
 export function tempFilename(basename:string) {
-	return `${tempPath}${encodeURIComponent(basename)}-${uuid.v4()}.tmp`
+	return `${tempPath}/${encodeURIComponent(basename)}-${uuid.v4()}.tmp`
 }
 
 /**

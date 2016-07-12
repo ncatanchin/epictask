@@ -182,7 +182,7 @@
     "lodash": "^4.12.0",
     "lodash-decorators": "^3.0.1",
     "lunr": "^0.7.1",
-    "material-ui": "^0.15.0",
+    "material-ui": "densebrain/material-ui",
     "mkdirp": "^0.5.1",
     "mocha-junit-reporter": "^1.11.1",
     "moment": "^2.13.0",

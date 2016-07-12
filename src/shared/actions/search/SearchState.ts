@@ -150,10 +150,10 @@ export const SearchRecord = Record({
  */
 @RegisterModel
 export class Search extends SearchRecord {
-	static fromJS(o:any) {
+	static fromJS(o:any = {}) {
 		const resultsObj = _.toJS(o.results),
 			results = Object
-				.keys(resultsObj)
+				.keys(resultsObj || {})
 				.reduce((resultsMap,nextKey) => {
 					return resultsMap.set(parseInt(nextKey,10),resultsObj[nextKey])
 				},Map<SearchSource,SearchResult>())
@@ -194,7 +194,7 @@ export class SearchState extends SearchStateRecord {
 	static fromJS(o:any) {
 
 		const searchesObj = _.toJS(o.searches),
-			searchIds = Object.keys(searchesObj)
+			searchIds = Object.keys(searchesObj || {})
 
 
 		const searches = searchIds.reduce((newSearches,searchId) => {

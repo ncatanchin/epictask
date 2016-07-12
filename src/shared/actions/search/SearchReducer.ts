@@ -10,8 +10,8 @@ export class SearchReducer extends DefaultLeafReducer<any,SearchMessage> {
 		super(SearchKey,SearchState)
 	}
 
-	defaultState():any {
-		return new SearchState()
+	defaultState(o = {}):any {
+		return SearchState.fromJS(o)
 	}
 
 	private updateSearch(state:SearchState,searchId:string,updater:(search:Search) => any) {

@@ -1,3 +1,4 @@
+import {RootState} from 'shared/store/RootState'
 const log = getLogger(__filename)
 
 import {Events} from '../Constants'
@@ -32,6 +33,7 @@ if (module.hot) {
 
 // Hydrate the state returned from the main process
 function hydrateState(state) {
+	//return RootState.fromJS(state)
 	const mappedState = Object
 		.keys(state)
 		.reduce((tempState,nextKey) => {
@@ -46,6 +48,7 @@ function hydrateState(state) {
 
 	//console.log('Revived state from main',state,revivedState,mappedState)
 	return Immutable.Map(mappedState)
+	//return new RootState(mappedState)
 
 
 }

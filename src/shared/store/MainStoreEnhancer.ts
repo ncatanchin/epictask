@@ -63,7 +63,7 @@ function attachEvents(store) {
 
 		log.info(`Executing action on main: ${leaf}:${name}`)
 		if (actionReg.options.isReducer) {
-			const actions = Container.get(actionReg.actionFactory) as ActionFactory<any,any>
+			const actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any
 			const msg = actions.newMessage(leaf,actionReg.type,[],args,{source:{
 				isReducer:true,
 				fromRenderer:true
@@ -76,8 +76,10 @@ function attachEvents(store) {
 		}
 	}
 
+	// List for main state requests
 	addIpcListener(Events.StoreGetMainState,getMainState)
 
+	//
 	addIpcListener(Events.StoreRendererDispatch,rendererDispatch)
 
 	addIpcListener(Events.StoreRendererRegister, (event, { filter, clientId }) => {

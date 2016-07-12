@@ -1,4 +1,32 @@
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {Container} from 'typescript-ioc'
+import {ObservableStore} from 'typedux'
+import * as Radium from 'radium'
+import * as injectTapEventPlugin from 'react-tap-event-plugin'
+import * as React from 'react'
+import * as ReactDOM from 'react-dom'
+import {Provider, connect} from 'react-redux'
+import {MuiThemeProvider} from 'material-ui/styles'
+import {PureRender} from '../common'
+import {IssueEditDialog} from '../issues/IssueEditDialog'
+import {RepoAddDialog} from '../repos/RepoAddDialog'
+import {Header, HeaderVisibility, ToastMessages} from 'components'
+import {getPage} from 'components/pages'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {AppStateType} from 'shared/AppStateType'
+import {Events, AppKey, UIKey} from 'shared/Constants'
+import * as KeyMaps from 'shared/KeyMaps'
+import {AppState} from 'shared/actions/AppState'
+import {UIState} from 'shared/actions/ui/UIState'
+import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {RootState} from 'shared/store/RootState'
+
+const {StyleRoot} = Radium
+const {HotKeys} = require('react-hotkeys')
+
+
 /**
  * Global CSS
  */
@@ -9,36 +37,6 @@ require('styles/split-pane.global.scss')
 // Logger
 const log = getLogger(__filename)
 
-import {AutoWired,Container} from 'typescript-ioc'
-
-//region Imports
-import {ObservableStore} from 'typedux'
-import * as Radium from 'radium'
-import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import {Provider, connect} from 'react-redux'
-import {MuiThemeProvider} from "material-ui/styles"
-
-import {PureRender} from '../common'
-import {IssueEditDialog} from '../issues/IssueEditDialog'
-import {RepoAddDialog} from '../repos/RepoAddDialog'
-import {Header, HeaderVisibility, ToastMessages} from 'components'
-import {getPage} from 'components/pages'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {AppStateType} from 'shared/AppStateType'
-import {Events, AppKey, RepoKey, UIKey} from 'shared/Constants'
-import * as KeyMaps from 'shared/KeyMaps'
-import {RepoState} from 'shared/actions/repo/RepoState'
-import {AppState} from 'shared/actions/AppState'
-import {UIState} from 'shared/actions/ui/UIState'
-import {createAvailableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
-
-const {StyleRoot} = Radium
-const {HotKeys} = require('react-hotkeys')
-//endregion
-
 try {
 	injectTapEventPlugin()
 } catch (err) {
@@ -47,7 +45,7 @@ try {
 
 
 // Build the container
-const store = Container.get(ObservableStore)
+const store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any
 
 
 //region DEBUG Components/Vars
@@ -94,18 +92,18 @@ export interface IAppProps {
 }
 
 
-const availRepoCountSelector = createAvailableRepoCountSelector()
+
 
 function mapStateToProps(state:any,props:IAppProps = {} as any) {
 	const
 		appState = state.get(AppKey) as AppState,
 		uiState = state.get(UIKey) as UIState
 
-	const dialogOpen = !_.isNil(uiState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
+	const dialogOpen = uiState.dialogs.valueSeq().includes(true)
 
 	return {
 		theme:      getTheme(),
-		hasAvailableRepos:availRepoCountSelector(state) > 0,
+		hasAvailableRepos:availableRepoCountSelector(state) > 0,
 		stateType: appState.stateType,
 		dialogOpen
 	}
@@ -114,29 +112,6 @@ function mapStateToProps(state:any,props:IAppProps = {} as any) {
 
 }
 
-//
-//
-// /**
-//  * Mape store state to props
-//  *
-//  * @param state
-//  */
-// function mapStateToProps(state) {
-// 	const
-// 		appState = state.get(AppKey) as AppState,
-// 		uiState = state.get(UIKey) as UIState,
-// 		{availableRepos} = state.get(RepoKey) as RepoState
-//
-// 	const dialogOpen = !_.isNil(uiState.dialogs.find(dialogIsOpen => dialogIsOpen === true))
-//
-// 	return {
-// 		theme: getTheme(),//appState.theme,
-// 		stateType: appState.stateType,
-// 		hasAvailableRepos: availableRepos && availableRepos.size > 0,
-// 		dialogOpen
-// 		//adjustedBodyStyle: getAdjustedBodyStyle(this)
-// 	}
-// }
 
 /**
  * Root App Component
@@ -148,16 +123,9 @@ class App extends React.Component<IAppProps,any> {
 
 	appActions = Container.get(AppActionFactory)
 	repoActions = Container.get(RepoActionFactory)
-	uiActions = Container.get(UIActionFactory)
-
+	issueActions = Container.get(IssueActionFactory) as IssueActionFactory
+	uiActions = Container.get(UIActionFactory) as UIActionFactory
 	pageBodyHolder
-
-	constructor(props, context) {
-		super(props, context)
-
-
-	}
-
 
 	/**
 	 * Map hot keys for the root
@@ -167,12 +135,12 @@ class App extends React.Component<IAppProps,any> {
 	keyHandlers = {
 		[KeyMaps.CommonKeys.New]: () => {
 			log.info('New issue keys pressed - making dialog visible')
-			this.repoActions.newIssue()
+			this.issueActions.newIssue()
 		},
 
 		[KeyMaps.CommonKeys.Edit]: () => {
 			log.info('Edit issue keys pressed - making dialog visible')
-			this.repoActions.editIssue()
+			this.issueActions.editIssue()
 		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')

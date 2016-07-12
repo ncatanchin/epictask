@@ -58,28 +58,6 @@ export function RegisterModel<T>(target:any) {
 		this.$$clazz = clazzName
 	},target)
 
-	// const f:any = function(...args) {
-	// 	// const args = [];
-	// 	// for (var i = 0; i < arguments.length; i++) {
-	// 	// 	args[i] = arguments[i];
-	// 	// }
-	//
-	//
-	// 	this.$$clazz = clazzName
-	// 	const o = new original(...args)
-	// 	Object.assign(this,o)
-	// 	return original.apply(this,args)
-	// 	// this.originalConstructor.call(this,...args)
-	// 	//
-	// }
-	//
-	// f.prototype = original.prototype
-
-	// const ModelClazz = class extends target<> {
-	//
-	// }
-
-	//return f
 	return newConstructor as any
 
 }

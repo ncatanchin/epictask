@@ -15,6 +15,12 @@ import {Settings} from 'shared/Settings'
 import Toaster from 'shared/Toaster'
 import {Benchmark, RegisterJob} from 'shared/util/Decorations'
 import {Job, IJob} from 'shared/actions/jobs/JobState'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
+import {getStoreState} from 'shared/store/AppStore'
+import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {issueSelector} from 'shared/actions/issue/IssueSelectors'
 
 
 const log = getLogger(__filename)
@@ -182,6 +188,8 @@ export class RepoSyncJob extends Job {
 		const stores = Container.get(Stores)
 		const toaster = Container.get(Toaster)
 		const repoActions =  Container.get(RepoActionFactory)
+		const issueActions =  Container.get(IssueActionFactory)
+		const dataActions =  Container.get(DataActionFactory)
 		const appActions = Container.get(AppActionFactory)
 
 		const {availableRepo,repo} = this
@@ -219,20 +227,36 @@ export class RepoSyncJob extends Job {
 			const repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)
 			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
+			// Now get the store state to check if updates are needed
+			const storeState = getStoreState()
+
+			// If the current repo is not enabled then return
+			const enabledRepoIds = enabledRepoIdsSelector(storeState)
+			if (!enabledRepoIds.includes(repo.id)) return
+
+			// Reload issues first
+			await issueActions.loadIssues(...enabledRepoIds)
+
 			// Reload current issue if loaded
-			const currentIssue = repoActions.state.issue
-			if (currentIssue) {
-				log.debug('Reloading current issue')
-				repoActions.loadIssue(currentIssue,true)
+			const currentIssueId = issueActions.state.selectedIssueId
+			if (currentIssueId) {
+
+				const issue = issueSelector(storeState)
+
+				log.debug('Checking if current issue is in this repo, if so then reload',
+					_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
+
+				// If the issue is loaded and in this repo then reload its activity
+				if (issue && issue.repoId === repo.id)
+					issueActions.loadActivityForIssue(issue.id)
 			}
 
 			// Notify of completion
-			toaster.addMessage(`Finished ${this.name}`)
+			//toaster.addMessage(`Finished ${this.name}`)
 
 		} catch (err) {
 			log.error('failed to sync repo issues', err)
-			appActions.addErrorMessage(err)
-			repoActions.setSyncStatus(availableRepo, SyncStatus.Failed, {error: err})
+			toaster.addErrorMessage(err)
 		}
 	}
 }

@@ -40,7 +40,7 @@ export const UIStateRecord = Record({
 @RegisterModel
 export class UIState extends UIStateRecord {
 
-	static fromJS(o:any) {
+	static fromJS(o:any = {}) {
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),

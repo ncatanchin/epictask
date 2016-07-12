@@ -12,6 +12,8 @@ import {Milestone,MilestoneStore} from './Milestone'
 import {User,UserStore} from './User'
 import {Repo,RepoStore} from './Repo'
 import {RegisterModel} from '../Registry'
+import {Container} from 'typescript-ioc'
+import {Stores} from 'main/services/DBService'
 
 /**
  * Maps repos that have been configured for tasks
@@ -90,25 +92,32 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 		return null
 	}
 
-	async load(availRepo:AvailableRepo):Promise<AvailableRepo> {
-		const
-			repoRepo = this.coordinator.getRepo(RepoStore),
-			labelRepo = this.coordinator.getRepo(LabelStore),
-			milestoneRepo = this.coordinator.getRepo(MilestoneStore),
-			userRepo = this.coordinator.getRepo(UserStore)
+	/**
+	 * Completely load an `AvailableRepo`
+	 * with all dependencies - this is for editing only
+	 * mostly convience
+	 *
+	 * @param repoId
+	 * @returns {({}&AvailableRepo)|any|*}
+	 */
+	async load(repoId:number):Promise<AvailableRepo> {
+		const stores = Container.get(Stores)
+
+		const availRepo = await stores.availableRepo.findByRepoId(repoId)
+		assert(availRepo,`No avail repo found for repo id ${repoId}`)
 
 		const filled = Object.assign({},availRepo)
 
 		if (!filled.repo) {
-			filled.repo = await repoRepo.get(filled.repoId)
+			filled.repo = await stores.repo.get(filled.repoId)
 		}
 
 		if (!filled.labels) {
-			filled.labels = await labelRepo.findByRepoId(filled.repoId)
+			filled.labels = await stores.label.findByRepoId(filled.repoId)
 		}
 
-		if (!availRepo.milestones) {
-			filled.milestones = await milestoneRepo.findByRepoId(filled.repoId)
+		if (!filled.milestones) {
+			filled.milestones = await stores.milestone.findByRepoId(filled.repoId)
 		}
 
 		// if (!availRepo.collaborators) {
@@ -122,7 +131,7 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 
 
 
-		const promises = all.map(availRepo => this.load(availRepo))
+		const promises = all.map(availRepo => this.load(availRepo.repoId))
 
 		return await Promise.all(promises)
 

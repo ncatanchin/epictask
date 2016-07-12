@@ -64,9 +64,9 @@ export const DataStateRecord = Record({
 @RegisterModel
 export class DataState extends DataStateRecord {
 
-	static fromJS(o:any) {
+	static fromJS(o:any = {}) {
 		const modelsMap = Object
-			.keys(o.models)
+			.keys(o.models || {})
 			.reduce((map,modelType) => {
 				map[modelType] = Map<string,any>(o.models[modelType])
 				return map

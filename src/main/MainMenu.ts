@@ -1,4 +1,8 @@
 import Electron = require('electron')
+import {Container} from 'typescript-ioc'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {getStoreState} from 'shared/store/AppStore'
+import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
 const log = getLogger(__filename)
 
@@ -86,8 +90,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				accelerator: 'Ctrl+S',
 				click() {
 					log.info('Sending sync all repos')
-					const {RepoActionFactory} = require('shared/actions/repo')
-					new RepoActionFactory().syncAllRepoDetails()
+					Container.get(RepoActionFactory).syncRepo(...enabledRepoIdsSelector(getStoreState()))
 				}
 			}]
 		}, {

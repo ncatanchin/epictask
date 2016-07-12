@@ -25,8 +25,8 @@ export class AppReducer extends DefaultLeafReducer<AppState,ActionMessage<AppSta
 	}
 
 
-	defaultState():any {
-		return new AppState()
+	defaultState(o = {}):any {
+		return AppState.fromJS(o)
 	}
 
 

@@ -100,7 +100,7 @@ export class MainConfigurator {
 	async init():Promise<this> {
 		// Load Redux-Store FIRST
 		log.info('Loading the REDUX store')
-		const store:ObservableStore<any> = require('shared/store').initStore()
+		const store:ObservableStore<any> = await require('shared/store').loadAndInitStore()
 		Container.bind(ObservableStore).provider({ get: () => store})
 
 		return this

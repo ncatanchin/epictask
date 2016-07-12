@@ -20,8 +20,8 @@ export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 	 *
 	 * @returns {RepoState}
 	 */
-	defaultState():any {
-		return new RepoState()
+	defaultState(o = {}):any {
+		return RepoState.fromJS(o)
 	}
 
 }

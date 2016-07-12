@@ -1,47 +1,52 @@
 import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
-import {IService, ServiceStatus} from './IService'
+import {IService, ServiceStatus, BaseService} from './IService'
 import {ObservableStore} from 'typedux'
 import {AppStateType} from 'shared/AppStateType'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {AppActionFactoryType, AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AuthActionFactoryType, AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
+import {RepoActionFactoryType, RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Settings} from 'shared/Settings'
 const electron = require('electron')
+
+
+
 
 const log = getLogger(__filename)
 
 @AutoWired
 @Singleton
-export default class AppStateService implements IService {
+export default class AppStateService extends BaseService {
 
-	@Inject
 	appActions:AppActionFactory
-
-	@Inject
 	authActions:AuthActionFactory
-
-	@Inject
 	repoActions:RepoActionFactory
-
-	@Inject
 	store:ObservableStore<any>
 
+
 	private unsubscribe
-	private _status = ServiceStatus.Created
 	private stateType = null
 
 
-	status():ServiceStatus {
-		return this._status
+
+	constructor() {
+		super()
+		this.loadDeps() // Implemented this way for HMR
 	}
 
-	async init():Promise<this> {
-		this._status = ServiceStatus.Initialized
-		return this
+	loadDep(mod):any {
+		return Container.get(mod.default)
+	}
+
+	loadDeps() {
+		this.appActions = this.loadDep((require as any)('shared/actions/AppActionFactory')) as AppActionFactory
+		this.repoActions = this.loadDep((require as any)('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
+		this.authActions = this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
+		this.store = Container.get(ObservableStore as any) as any
 	}
 
 	async start():Promise<this> {
-		this._status = ServiceStatus.Started
+		await super.start()
+
 		this.unsubscribe = this.store
 			.getReduxStore()
 			.subscribe(this.checkStateType)
@@ -87,6 +92,20 @@ export default class AppStateService implements IService {
 			this.repoActions.loadAvailableRepos()
 		}
 	}
+}
+
+
+
+if (module.hot) {
+	module.hot.accept([
+		'shared/actions/AppActionFactory',
+		'shared/actions/auth/AuthActionFactory',
+		'shared/actions/repo/RepoActionFactory'
+	],(updates) => {
+		Container.get(AppStateService).loadDeps()
+	})
+
+
 }
 
 

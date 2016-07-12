@@ -95,9 +95,14 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
-	menuItem: {
-		list: {
-			padding: 0
+	form: {
+		select: {
+			list: {
+				padding: 0,
+				paddingTop: 0,
+				paddingBottom: 0,
+				backgroundColor: 'transparent'
+			}
 		}
 	},
 

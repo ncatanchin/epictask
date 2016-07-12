@@ -2,7 +2,7 @@ import {Container} from 'typescript-ioc'
 import {JSONKey} from '../Constants'
 import {isNil} from './ObjectUtil'
 import JobService from 'main/services/JobService'
-import {IJob} from 'shared/actions/jobs/JobState'
+import {IJob, Job} from 'shared/actions/jobs/JobState'
 
 
 const log = getLogger(__filename)
@@ -124,7 +124,7 @@ export function Benchmark(name:string = null) {
  * @param target
  * @constructor
  */
-export function RegisterJob(target:{new():IJob}) {
+export function RegisterJob(target:{new():Job}) {
 	const service = Container.get(JobService)
 	service.registerJob(target.name,target)
 }

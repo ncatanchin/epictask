@@ -9,41 +9,47 @@ import {Repo} from 'shared/models/Repo'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {Issue} from 'shared/models/Issue'
-import {availReposSelector, reposSelector, milestonesSelector, labelsSelector} from 'shared/actions/data/DataSelectors'
+import {availRepoModelsSelector, repoModelsSelector, milestoneModelsSelector, labelModelsSelector} from 'shared/actions/data/DataSelectors'
 
+export const availReposSelector = _.memoize(
+	(state):AvailableRepo[] => availRepoModelsSelector(state)
+		.valueSeq()
+		.toArray()
+)
 
+export const availRepoIdsSelector = _.memoize(
+	(state):number[] => availReposSelector(state)
+		.map(availRepo => availRepo.repoId)
+)
 
-export const enabledRepoSelector = (state):AvailableRepo[] => availReposSelector(state)
-	.valueSeq()
+export const enabledReposSelector = (state):AvailableRepo[] => availReposSelector(state)
 	.filter(availRepo => availRepo.enabled)
-	.toArray()
 
-export const enabledRepoIdSelector = (state):number[] => enabledRepoSelector(state)
+
+export const enabledRepoIdsSelector = (state):number[] => enabledReposSelector(state)
 	.map((availRepo:AvailableRepo) => availRepo.repoId)
 
 export function createEnabledAvailRepoSelector() {
 	return createDeepEqualSelector(
-		enabledRepoSelector,
+		enabledReposSelector,
 		(availRepos:AvailableRepo[]) => availRepos
 	)
 }
 
-export function createAvailableRepoCountSelector() {
-	return createSelector(
-		availReposSelector,
-		(availRepoMap:Map<string,AvailableRepo>) => availRepoMap.size
-	)
-}
+export const availableRepoCountSelector = createSelector(
+	availRepoModelsSelector,
+	(availRepoMap:Map<string,AvailableRepo>) => availRepoMap.size
+)
 
 /**
  * Create a search results selector
  */
 export function createAvailableRepoSelector() {
 	return createSelector(
-		availReposSelector,
-		reposSelector,
-		milestonesSelector,
-		labelsSelector,
+		availRepoModelsSelector,
+		repoModelsSelector,
+		milestoneModelsSelector,
+		labelModelsSelector,
 
 		// Computed value, array of SearchResult
 		(

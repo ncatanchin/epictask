@@ -26,7 +26,7 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {UIState} from 'shared/actions/ui/UIState'
 import {IssueState, IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
-import {createIssuesSelector} from 'shared/actions/issue/IssueSelectors'
+import {issuesSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 // Non-typed Components
@@ -278,7 +278,7 @@ export interface IIssuesPanelProps {
 	s?:any
 }
 
-const issuesSelector = createIssuesSelector()
+
 
 function mapStateToProps(state) {
 	const issueState:IssueState = state.get(IssueKey)

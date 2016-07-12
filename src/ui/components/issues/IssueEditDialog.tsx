@@ -3,19 +3,19 @@
  */
 
 // Imports
-import {AutoWired,Inject, Container} from 'typescript-ioc'
+import {AutoWired, Inject, Container} from 'typescript-ioc'
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {AppState} from 'shared/actions/AppState'
-import {RepoState} from 'shared/actions/repo/RepoState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {Issue, AvailableRepo, Repo, Milestone, User, Label} from 'shared/models'
+import {Issue, AvailableRepo, Repo, User, Label} from 'shared/models'
 import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
-import {MenuItem, SelectField, TextField, Dialog, AutoComplete} from 'material-ui'
+import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
 import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
@@ -23,7 +23,9 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {createAvailableRepoSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-
+import {CommonKeys} from 'shared/KeyMaps'
+import {Milestone} from 'shared/models/Milestone'
+const {HotKeys} = require('react-hotkeys')
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
 
@@ -178,21 +180,27 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@AutoWired
+
 @connect(makeMapStateToProps)
 @Radium
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
-	@Inject
-	repoActions:RepoActionFactory
+	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
-	@Inject
-	issueActions:IssueActionFactory
+	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
-	constructor(props, context) {
-		super(props, context)
 
+	/**
+	 * Key handlers for the issue editor
+	 *
+	 * @type {{}}
+	 */
+	keyHandlers = {
+		[CommonKeys.Escape]: () => {
+			log.info('Escaping and moving focus')
+			this.hide()
+		}
 	}
 
 
@@ -281,10 +289,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			]
 		}
 
-		const makeMilestoneLabel = (milestone) => (
+		const makeMilestoneLabel = (milestone:Milestone) => (
 			<div style={s.form.milestone.item}>
 				<Icon iconSet='octicon' iconName='milestone'/>
-				<div style={s.form.milestone.item.label}>{milestone.name}</div>
+				<div style={s.form.milestone.item.label}>{milestone.title}</div>
 			</div>
 		)
 
@@ -346,31 +354,32 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 		))
 	}
 
-	getNewState(props) {
+	getNewState(props:IIssueEditDialogProps) {
 		const
-			{theme, availableRepos, issue} = props,
-			s = mergeStyles(styles, theme && theme.dialog, theme && theme.issueEditDialog)
+			{theme, availableRepos, editingIssue} = props,
+			s = mergeStyles(styles, theme && theme.dialog, theme && theme.issueEditDialog,theme.form)
 
-		const milestones = issue && issue.milestones ? issue.milestones : []
+
+		const milestones = editingIssue && editingIssue.milestones ? editingIssue.milestones : []
+
 		return {
 			s,
-			bodyValue: (issue) ? issue.body : '',
-			titleValue: (issue) ? issue.title : '',
+			bodyValue: _.get(editingIssue,'body',''),
+			titleValue: _.get(editingIssue,'title',''),
 			lastAvailableRepos: availableRepos || [],
 			repoMenuItems: !availableRepos ? [] : this.makeRepoMenuItems(availableRepos, s),
 			milestoneMenuItems: this.makeMilestoneItems(milestones, s),
-			assigneeMenuItems: this.makeAssigneeMenuItems((!issue || !issue.collaborators) ? [] : issue.collaborators, s)
+			assigneeMenuItems: this.makeAssigneeMenuItems((!editingIssue || !editingIssue.collaborators) ? [] : editingIssue.collaborators, s)
 		}
 	}
 
-	componentWillReceiveProps(nextProps) {
-		this.setState(this.getNewState(nextProps))
-	}
+	componentWillReceiveProps = (nextProps) => this.setState(this.getNewState(nextProps))
 
-	componentWillMount() {
-		this.setState(this.getNewState(this.props))
-	}
+	componentWillMount = () => this.setState(this.getNewState(this.props))
 
+	setMilestoneField = (c) => {
+
+	}
 
 	render() {
 
@@ -407,6 +416,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			</div>
 		</div>
 
+		const selectMenuStyle = makeStyle(s.menu,s.selectList,s.form.assignee.menu)
 
 		return <Dialog style={s.root}
 		               open={open}
@@ -427,118 +437,125 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			}}/>
 
 			<MuiThemeProvider muiTheme={theme}>
+				<HotKeys handlers={this.keyHandlers}>
+					<form name="" id="issueEditDialogForm">
+						<div style={s.form.row1}>
+							<TextField value={this.state.titleValue}
+							           onChange={this.onTitleChange}
+							           floatingLabelText="TITLE"
+							           floatingLabelStyle={s.input.floatingLabel}
+							           floatingLabelFocusStyle={s.input.floatingLabelFocus}
+							           floatingLabelFixed={false}
+							           hintText="I got 99 problems, but issues ain't 1!"
+							           hintStyle={s.input.hint}
+							           style={s.form.title}
+							           inputStyle={s.input}
+							           underlineStyle={s.input.underlineDisabled}
+							           underlineDisabledStyle={s.input.underlineDisabled}
+							           underlineFocusStyle={s.input.underlineFocus}
+							           underlineShow={true}
+							           fullWidth={true}
+							           autoFocus/>
+						</div>
+						<div style={s.form.row2}>
 
-				<form name="" id="issueEditDialogForm">
-					<div style={s.form.row1}>
-						<TextField value={this.state.titleValue}
-						           onChange={this.onTitleChange}
-						           floatingLabelText="TITLE"
-						           floatingLabelStyle={s.input.floatingLabel}
-						           floatingLabelFocusStyle={s.input.floatingLabelFocus}
-						           floatingLabelFixed={false}
-						           hintText="I got 99 problems, but issues ain't 1!"
-						           hintStyle={s.input.hint}
-						           style={s.form.title}
-						           inputStyle={s.input}
-						           underlineStyle={s.input.underlineDisabled}
-						           underlineDisabledStyle={s.input.underlineDisabled}
-						           underlineFocusStyle={s.input.underlineFocus}
-						           underlineShow={true}
-						           fullWidth={true}
-						           autoFocus/>
-					</div>
-					<div style={s.form.row2}>
+							{/* Only show assignee drop down if push permission */}
+							{canPush && <SelectField
+								value={editingIssue.assignee && editingIssue.assignee.login}
+								style={makeStyle(s.form.assignee,s.menu)}
+								inputStyle={s.input}
+								labelStyle={s.menu}
+								iconStyle={s.menu}
 
-						{/* Only show assignee drop down if push permission */}
-						{canPush && <SelectField
-							value={editingIssue.assignee && editingIssue.assignee.login}
-							style={makeStyle(s.form.assignee,s.menu)}
-							inputStyle={s.input}
-							labelStyle={s.menu}
-							iconStyle={s.menu}
-							floatingLabelText="ASSIGNED TO"
-							floatingLabelStyle={s.input.floatingLabel}
-							floatingLabelFocusStyle={s.input.floatingLabelFocus}
-							floatingLabelFixed={false}
-							onChange={this.onAssigneeChange}
-							listStyle={makeStyle(s.menu,s.form.assignee.list)}
-							underlineStyle={s.input.underlineDisabled}
-							underlineDisabledStyle={s.input.underlineDisabled}
-							underlineFocusStyle={s.input.underlineFocus}
-							menuStyle={makeStyle(s.menu,s.form.assignee.menu)}
-							underlineShow={true}
-							fullWidth={true}>
+								floatingLabelText="ASSIGNED TO"
+								floatingLabelStyle={s.input.floatingLabel}
+								floatingLabelFocusStyle={s.input.floatingLabelFocus}
+								floatingLabelFixed={false}
+								onChange={this.onAssigneeChange}
 
-							{this.state.assigneeMenuItems}
-						</SelectField>}
+								underlineStyle={s.input.underlineDisabled}
+								underlineDisabledStyle={s.input.underlineDisabled}
+								underlineFocusStyle={s.input.underlineFocus}
+								menuStyle={selectMenuStyle}
+								menuListStyle={s.select.list}
+								underlineShow={true}
+								fullWidth={true}>
 
-						{/* MILESTONE */}
-						<SelectField value={editingIssue.milestone && editingIssue.milestone.url}
-						             style={makeStyle(s.form.milestone,s.menu)}
-						             inputStyle={s.input}
-						             labelStyle={s.menu}
-						             iconStyle={s.menu}
-						             floatingLabelText="MILESTONE"
-						             floatingLabelStyle={s.input.floatingLabel}
-						             floatingLabelFocusStyle={s.input.floatingLabelFocus}
-						             floatingLabelFixed={false}
-						             onChange={this.onMilestoneChange}
-						             listStyle={makeStyle(s.menu,s.form.milestone.list)}
-						             underlineStyle={s.input.underlineDisabled}
-						             underlineDisabledStyle={s.input.underlineDisabled}
-						             underlineFocusStyle={s.input.underlineFocus}
-						             menuStyle={makeStyle(s.menu,s.form.milestone.menu)}
-						             underlineShow={true}
-						             fullWidth={true}
-						>
+								{this.state.assigneeMenuItems}
+							</SelectField>}
 
-							{this.state.milestoneMenuItems}
-						</SelectField>
+							{/* MILESTONE */}
+							<SelectField
+								ref={this.setMilestoneField}
+								value={editingIssue.milestone && editingIssue.milestone.url}
+							             style={makeStyle(s.form.milestone,s.menu,{listStyle:{padding:0}})}
+							             selectFieldRoot={s.selectMenu}
+							             inputStyle={s.input}
+							             labelStyle={s.menu}
+							             iconStyle={s.menu}
+							             floatingLabelText="MILESTONE"
+							             floatingLabelStyle={s.input.floatingLabel}
+							             floatingLabelFocusStyle={s.input.floatingLabelFocus}
+							             floatingLabelFixed={false}
+							             onChange={this.onMilestoneChange}
+										menuStyle={selectMenuStyle}
+										menuListStyle={s.select.list}
+							             underlineStyle={s.input.underlineDisabled}
+							             underlineDisabledStyle={s.input.underlineDisabled}
+							             underlineFocusStyle={s.input.underlineFocus}
 
-						{/* REPO */}
-						<SelectField value={editingIssue.repoId}
-						             style={makeStyle(s.form.repo,s.menu)}
-						             inputStyle={s.input}
-						             labelStyle={s.menu}
-						             iconStyle={s.menu}
-						             onChange={this.onRepoChange}
-						             listStyle={makeStyle(s.menu,s.form.repo.list)}
-						             underlineStyle={s.input.underlineDisabled}
-						             underlineDisabledStyle={s.input.underlineDisabled}
-						             underlineFocusStyle={s.input.underlineFocus}
-						             menuStyle={makeStyle(s.menu,s.form.repo.menu)}
-						             underlineShow={true}
-						             fullWidth={true}
-						>
+							             underlineShow={true}
+							             fullWidth={true}
+							>
 
-							{this.state.repoMenuItems}
-						</SelectField>
-					</div>
+								{this.state.milestoneMenuItems}
+							</SelectField>
 
-					<LabelFieldEditor labels={editingIssue.labels || []}
-					                  id="issueEditDialogLabels"
-					                  label="LABELS"
-					                  hint="Label me..."
-					                  inputStyle={s.input}
-					                  availableLabels={availableRepo ? availableRepo.labels : []}
-					                  onLabelsChanged={this.onLabelsChanged}
-					                  underlineStyle={s.input.underlineDisabled}
-					                  underlineFocusStyle={s.input.underlineFocus}
-					                  hintStyle={s.input.hint}
-					                  labelStyle={s.input.floatingLabel}
-					                  labelFocusStyle={s.input.floatingLabelFocus}/>
+							{/* REPO */}
+							<SelectField value={editingIssue.repoId}
+							             style={makeStyle(s.form.repo,s.menu)}
+							             inputStyle={s.input}
+							             labelStyle={s.menu}
+							             iconStyle={s.menu}
+							             onChange={this.onRepoChange}
+							             underlineStyle={s.input.underlineDisabled}
+							             underlineDisabledStyle={s.input.underlineDisabled}
+							             underlineFocusStyle={s.input.underlineFocus}
+							             menuListStyle={s.select.list}
+							             menuStyle={makeStyle(s.menu,s.form.repo.menu)}
+							             underlineShow={true}
+							             fullWidth={true}
+							>
+
+								{this.state.repoMenuItems}
+							</SelectField>
+						</div>
+
+						<LabelFieldEditor labels={editingIssue.labels || []}
+						                  id="issueEditDialogLabels"
+						                  label="LABELS"
+						                  hint="Label me..."
+						                  inputStyle={s.input}
+						                  availableLabels={availableRepo ? availableRepo.labels : []}
+						                  onLabelsChanged={this.onLabelsChanged}
+						                  underlineStyle={s.input.underlineDisabled}
+						                  underlineFocusStyle={s.input.underlineFocus}
+						                  hintStyle={s.input.hint}
+						                  labelStyle={s.input.floatingLabel}
+						                  labelFocusStyle={s.input.floatingLabelFocus}/>
 
 
-					<SimpleMDE onChange={this.onMarkdownChange}
-					           style={{maxHeight: 500}}
+						<SimpleMDE onChange={this.onMarkdownChange}
+						           style={{maxHeight: 500}}
 
-					           options={{
-				           	autoDownloadFontAwesome: false,
-				           	spellChecker: false,
-				           	initialValue: editingIssue.body,
-				           	autofocus: false
-				           }}/>
-				</form>
+						           options={{
+					            autoDownloadFontAwesome: false,
+					            spellChecker: false,
+					            initialValue: editingIssue.body,
+					            autofocus: false
+					           }}/>
+					</form>
+				</HotKeys>
 			</MuiThemeProvider>
 		</Dialog>
 	}

@@ -4,6 +4,23 @@
 
 
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {AutoWired, Inject, Container} from 'typescript-ioc'
+import {Stores} from 'main/services/DBService'
+import {ActionFactory, Action, ActionReducer} from 'typedux'
+import {Dialogs, IssueKey, DataKey, DataRequestIssueListId} from 'shared/Constants'
+import {cloneObject} from 'shared/util/ObjectUtil'
+import {Comment} from 'shared/models/Comment'
+import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
+import {Issue, IssueStore} from 'shared/models/Issue'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {JobActionFactory} from '../jobs/JobActionFactory'
+import Toaster from 'shared/Toaster'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {DataRequest, DataState} from 'shared/actions/data/DataState'
+import {enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {selectedIssueIdsSelector, issueSelector} from 'shared/actions/issue/IssueSelectors'
+import {issueModelsSelector, repoModelsSelector} from 'shared/actions/data/DataSelectors'
+import {GitHubClient} from 'shared/GitHubClient'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -11,34 +28,6 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 const log = getLogger(__filename)
 
 // IMPORTS
-import {AutoWired,Inject,Container} from 'typescript-ioc'
-import {Stores} from 'main/services/DBService'
-import {List} from 'immutable'
-import {ActionFactory,Action,ActionReducer} from 'typedux'
-import {Dialogs, IssueKey, RepoKey, DataKey} from "shared/Constants"
-import {cloneObject} from 'shared/util/ObjectUtil'
-
-
-import {SyncStatus,ISyncDetails} from 'shared/models/Sync'
-import {Comment} from 'shared/models/Comment'
-import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
-import {github} from 'shared'
-import {Repo} from 'shared/models/Repo'
-import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {IssueStore,Issue} from 'shared/models/Issue'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {JobActionFactory} from '../jobs/JobActionFactory'
-import {RepoSyncJob} from 'main/services/jobs/RepoSyncJob'
-import Toaster from 'shared/Toaster'
-import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
-import {DataRequest, DataState} from 'shared/actions/data/DataState'
-import {Label} from 'shared/models/Label'
-import {Milestone} from 'shared/models/Milestone'
-import {FinderRequest} from 'typestore'
-import {ActionPromise} from 'typedux'
-import {RepoState} from 'shared/actions/repo/RepoState'
-import {enabledRepoIdSelector} from 'shared/actions/repo/RepoSelectors'
-
 
 
 const uuid = require('node-uuid')
@@ -48,30 +37,21 @@ const uuid = require('node-uuid')
  * repo, milestones, collaborators
  *
  * @param issue
- * @param availableRepos
- * @returns {Issue}
+ * @returns {({}&Issue&{repo: Repo, milestones: Milestone[], collaborators: User[]})|any|*}
+ * @param repoId
  */
-// export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) {
-// 	let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-// 	const stores:Stores = Container.get(Stores)
-//
-// 	if (!availRepo) {
-// 		log.warn('Available repo not loaded', issue.repoId,'for issue',issue.title,'with id',issue.id,'going to load direct form db')
-//
-// 		const arStore = stores.availableRepo
-// 		availRepo = await arStore.findByRepoId(issue.repoId)
-// 		log.info(`Loaded available repo directly: ` + issue.repoId)
-// 	}
-//
-// 	const filledAvailRepo = await stores.availableRepo.load(availRepo)
-//
-// 	return cloneObject(Object.assign({},issue, {
-// 		repo: filledAvailRepo.repo,
-// 		milestones: filledAvailRepo.milestones,
-// 		collaborators: filledAvailRepo.collaborators
-// 	}))
-//
-// }
+export async function fillIssue(issue:Issue,repoId:number) {
+	const stores:Stores = Container.get(Stores)
+
+	const filledAvailRepo = await stores.availableRepo.load(repoId)
+
+	return cloneObject(Object.assign({},issue, {
+		repo: filledAvailRepo.repo,
+		milestones: filledAvailRepo.milestones,
+		collaborators: filledAvailRepo.collaborators
+	}))
+
+}
 
 
 /**
@@ -90,12 +70,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	uiActions:UIActionFactory
 
 	@Inject
-	jobActions:JobActionFactory
-
-	@Inject
 	toaster:Toaster
-
-
 
 	constructor() {
 		super(IssueState)
@@ -105,11 +80,40 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return IssueKey;
 	}
 
-	@ActionReducer()
-	setSelectedIssueId(selectedIssueId:number) {
-		return (state:IssueState) => state.merge({selectedIssueId})
+
+	/**
+	 * Internally change the issue list
+	 *
+	 * @param issues
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
+	@Action()
+	private setIssues(issues:Issue[]) {
+		return async (dispatch,getState) => {
+			const actions = this.withDispatcher(dispatch, getState)
+
+			const issueIds = issues.map(issue => `${issue.id}`)
+			const issueMap = _.modelArrayToMapBy(issues,'id')
+
+			// Now push the models into the data state for tracking
+			const dataActions = Container.get(DataActionFactory)
+			await dataActions.submitRequest(DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz),issueMap)
+
+			actions.setInternalIssues(issues)
+			actions.setFilteringAndSorting()
+
+		}
 	}
 
+
+	/**
+	 * The the selected issue ids
+	 *
+	 * (Highlighted issues in the main list)
+	 *
+	 * @param selectedIssueIds
+	 * @returns {(state:IssueState)=>Map<string, number[]>}
+	 */
 	@ActionReducer()
 	setSelectedIssueIds(selectedIssueIds:number[]) {
 		return (state:IssueState) => state.set('selectedIssueIds',selectedIssueIds)
@@ -117,70 +121,57 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 
 
-
-	// @Action()
-	// issuesChanged(...updatedIssues:Issue[]) {
-	// 	return(dispatch,getState) => {
-	// 		const actions = this.withDispatcher(dispatch,getState)
-	// 		const repoState = actions.state
-	//
-	// 		for (let updatedIssue of updatedIssues) {
-	// 			let index = repoState.issues.findIndex(issue => issue.url === updatedIssue.url)
-	// 			if (index > -1) {
-	// 				const newIssues = [...repoState.issues]
-	// 				newIssues[index] = cloneObject(updatedIssue)
-	// 				actions.setIssues(newIssues)
-	// 			}
-	//
-	// 			index = repoState.selectedIssues.findIndex(issue => issue.url === updatedIssue.url)
-	// 			if (index > -1) {
-	// 				const newIssues = [...repoState.selectedIssues]
-	// 				newIssues[index] = cloneObject(updatedIssue)
-	// 				actions.setSelectedIssues(newIssues)
-	// 			}
-	//
-	// 			if (repoState.issue && repoState.issue.url === updatedIssue.url)
-	// 				actions.setIssue(updatedIssue)
-	// 		}
-	// 	}
-	// }
-
-
 	@Action()
 	issueSave(issue:Issue) {
 		return async (dispatch,getState) => {
-			// const actions = this.withDispatcher(dispatch,getState)
-			// const client = github.createClient()
-			//
-			// const
-			// 	repoState = this.state,
-			// 	{repos} = repoState,
-			// 	repo = issue.repo || repos.find(item => item.id === issue.repoId)
-			//
-			//
-			//
-			// try {
-			// 	const issueStore:IssueStore = this.stores.issue
-			// 	let savedIssue:Issue = await client.issueSave(repo,issue)
-			// 	savedIssue = await issueStore.save(savedIssue)
-			//
-			// 	actions.issuesChanged(savedIssue)
-			//
-			//
-			// 	this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-			// 	this.toaster.addMessage(`Saved issue #${savedIssue.number}`)
-			//
-			// } catch (err) {
-			// 	log.error('failed to save issue', err)
-			// 	this.toaster.addErrorMessage(err)
-			// }
+			const actions = this.withDispatcher(dispatch,getState)
+			const client = Container.get(GitHubClient)
+
+			const repoModels = repoModelsSelector(getState())
+			const enabledRepoIds = enabledRepoIdsSelector(getState())
+			const repo = issue.repo || repoModels.get(`${issue.repoId}`)
+
+			try {
+				const issueStore:IssueStore = this.stores.issue
+
+				// First save to github
+				let savedIssue:Issue = await client.issueSave(repo,issue)
+
+				const persistedIssue = await issueStore.save(savedIssue)
+
+				const updatedIssue = _.cloneDeep(persistedIssue)
+
+				// If the issue belongs to an enabled repo then reload issues
+				if (enabledRepoIds.includes(updatedIssue.repoId)) {
+					let internalIssues = actions.state.internalIssues
+					if (!internalIssues)
+						actions.loadIssues(...enabledRepoIds)
+					else {
+						const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
+
+						internalIssues = internalIssues.filter(issueMatcher).concat([updatedIssue])
+
+						actions.setIssues(internalIssues)
+
+					}
+				}
+
+
+				this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+				this.toaster.addMessage(`Saved issue #${updatedIssue.number}`)
+
+			} catch (err) {
+				log.error('failed to save issue', err)
+				this.toaster.addErrorMessage(err)
+			}
 		}
 	}
 
 	/**
 	 * Set the current issue being edited
 	 *
-	 * @param issue
+	 * @param editingIssue
+	 * @return {(state:IssueState)=>Map<string, Issue>}
 	 */
 	@ActionReducer()
 	setEditingIssue(editingIssue:Issue) {
@@ -206,44 +197,49 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				return
 			}
 
-			// const {availableRepos,selectedIssues} = getState().get(RepoKey)
-			// const repoId = (selectedIssues && selectedIssues.size) ?
-			// 	selectedIssues.get(0).repoId :
-			// 	(availableRepos && availableRepos.size) ?
-			// 		availableRepos.get(0).repoId :
-			// 		null
-			//
-			// if (!repoId) {
-			// 	this.toaster.addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
-			// 	return
-			// }
-			//
-			// const issue = await fillIssue(new Issue({repoId}),availableRepos)
-			//
-			// actions.setEditingIssue(issue)
+			const state = getState()
+
+			const selectedIssueIds = selectedIssueIdsSelector(state) || []
+			const availRepoIds = availRepoIdsSelector(state)
+			const issueModels = issueModelsSelector(state)
+			const availRepos = _.sortBy(availReposSelector(state),'enabled')
+
+			const selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
+
+			const selectedIssue =
+				(selectedIssueId && issueModels.has(selectedIssueId)) ?
+					issueModels.get(selectedIssueId) : null
+
+			const repoId = (selectedIssue) ? selectedIssue.repoId :
+				(availRepos.length) ? availRepos[0].repoId : null
+
+			if (!repoId) {
+				this.toaster.addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
+				return
+			}
+
+			const issue = await fillIssue(new Issue({repoId}),repoId)
+
+			actions.setEditingIssue(issue)
 
 			this.uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
 	@Action()
-	editIssue(issue:Issue = null) {
+	editIssue() {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
-				dialogName = Dialogs.IssueEditDialog
+				dialogName = Dialogs.IssueEditDialog,
+				issue = issueSelector(getState())
 
+			assert(issue,'You must have an issue selected in order to edit one ;)')
 
-			// const repoState = this.state,
-			// 	{availableRepos} = repoState
+			const editingIssue = await fillIssue(_.cloneDeep(issue),issue.repoId)
 
-			// issue = issue || repoState.selectedIssue
-			// assert(issue,'You must have an issue selected in order to edit one ;)')
-			//
-			// issue = await fillIssue(issue,availableRepos)
-			//
-			// actions.setEditingIssue(issue)
-			// this.uiActions.setDialogOpen(dialogName,true)
+			actions.setEditingIssue(editingIssue)
+			this.uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
@@ -272,6 +268,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
+
+
+
 	@ActionReducer()
 	protected setInternalIssues(issues:Issue[]) {
 		return (issueState:IssueState) => issueState.set('internalIssues',issues)
@@ -286,7 +285,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	setFilteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
 		return (issueState:IssueState,getState) => {
 
-			const repoIds = enabledRepoIdSelector(getState())
+			const repoIds = enabledRepoIdsSelector(getState())
 
 			issueSort = issueSort || issueState.issueSort
 			issueFilter = issueFilter || issueState.issueFilter
@@ -358,15 +357,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			log.info(`Loading issues for repos`,repoIds)
 			const issues = await issueStore.findByRepoId(...repoIds)
-			const issueIds = issues.map(issue => `${issue.id}`)
-			const issueMap = _.modelArrayToMapBy(issues,'id')
 
-			// Now push the models into the data state for tracking
-			const dataActions = Container.get(DataActionFactory)
-			await dataActions.submitRequest(DataRequest.create('issues-list',false,issueIds,Issue.$$clazz),issueMap)
-
-			actions.setInternalIssues(issues)
-			actions.setFilteringAndSorting()
+			actions.setIssues(issues)
 
 		}
 
@@ -403,7 +395,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz),commentMap)
 
 			actions.setCommentIds(commentIds)
-			actions.setFilteringAndSorting()
+			//actions.setFilteringAndSorting()
 
 		}
 	}

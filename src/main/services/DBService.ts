@@ -20,7 +20,9 @@ import {CommentStore} from 'shared/models/Comment'
 
 export class Stores {
 
-	constructor(private dbService:DBService) {}
+	dbService:DBService
+
+	constructor() {}
 
 	issue:IssueStore
 	repo: RepoStore
@@ -64,7 +66,7 @@ export default class DBService implements IService {
 
 
 	constructor() {
-		this._stores = new Stores(this)
+		this._stores = assign(new Stores(),{dbService:this})
 		log.info('DB Path:',this.dbPath)
 	}
 

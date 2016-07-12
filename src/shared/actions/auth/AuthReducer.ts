@@ -1,60 +1,11 @@
-import {List,Record,Map} from 'immutable'
-import {ActionMessage} from 'typedux'
-import {RegisterModel} from 'shared/Registry'
 
 import {DefaultLeafReducer} from 'typedux'
 import {AuthKey} from "Constants"
 import {Settings} from 'Settings'
+import {AuthState, AuthMessage} from 'shared/actions/auth/AuthState'
 
 
-
-export interface IAuthState {
-	authenticated?:boolean
-	username?:string
-	email?:string
-	token?:string
-	authenticating?:boolean
-	error?:Error
-}
-
-export const AuthStateRecord = Record({
-	authenticating: false,
-	error: null,
-	authenticated: false,
-	username: null,
-	email: null,
-	token: null
-})
-
-@RegisterModel
-export class AuthState extends AuthStateRecord {
-
-	static fromJS(o:any) {
-		return new AuthState(o)
-	}
-
-	authenticating:boolean
-
-	error:Error
-
-	authenticated:boolean
-
-	username:string
-
-	email:string
-
-	token:string
-
-
-
-
-}
-
-
-export interface AuthMessage extends ActionMessage<AuthState> {
-	token?:string
-}
-
+export {AuthState,AuthMessage}
 
 
 export class AuthReducer extends DefaultLeafReducer<AuthState,AuthMessage> {
@@ -64,8 +15,8 @@ export class AuthReducer extends DefaultLeafReducer<AuthState,AuthMessage> {
 	}
 
 
-	defaultState():any {
-		return new AuthState()
+	defaultState(o = {}):any {
+		return AuthState.fromJS(o)
 	}
 
 	/**

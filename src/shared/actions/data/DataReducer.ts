@@ -11,8 +11,8 @@ export class DataReducer extends DefaultLeafReducer<DataState,DataMessage> {
 	}
 
 
-	defaultState():any {
-		return new DataState()
+	defaultState(o = {}):any {
+		return DataState.fromJS(o)
 	}
 
 	setRequestFulfilled(state:DataState,id:string,fulfilled:boolean) {

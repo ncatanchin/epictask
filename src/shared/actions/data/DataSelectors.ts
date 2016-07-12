@@ -9,6 +9,7 @@ import {Milestone} from 'shared/models/Milestone'
 import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
 import {createStructuredSelector} from 'reselect'
+import {Activity} from 'shared/models/Activity'
 
 
 
@@ -16,23 +17,28 @@ export const dataStateSelector = _.memoize(
 	(state):DataState => state.get(DataKey)
 )
 
-export const availReposSelector = _.memoize(
+export const activityModelsSelector = _.memoize(
+	(state):Map<string,Activity> => dataStateSelector(state).models
+		.get(Activity.$$clazz)  || Map<string,Activity>()
+)
+
+export const availRepoModelsSelector = _.memoize(
 	(state):Map<string,AvailableRepo> => dataStateSelector(state).models.get(AvailableRepo.$$clazz)  || Map<string,AvailableRepo>()
 )
 
-export const reposSelector = _.memoize(
+export const repoModelsSelector = _.memoize(
 	(state):Map<string,Repo> => dataStateSelector(state).models.get(Repo.$$clazz)  || Map<string,Repo>()
 )
 
-export const milestonesSelector = _.memoize(
+export const milestoneModelsSelector = _.memoize(
 	(state):Map<string,Milestone> => dataStateSelector(state).models.get(Milestone.$$clazz)  || Map<string,Milestone>()
 )
 
-export const labelsSelector = _.memoize(
+export const labelModelsSelector = _.memoize(
 	(state):Map<string,Label> => dataStateSelector(state).models.get(Label.$$clazz)  || Map<string,Label>()
 )
 
-export const issuesSelector = _.memoize(
+export const issueModelsSelector = _.memoize(
 	(state):Map<string,Issue> => dataStateSelector(state).models.get(Issue.$$clazz)  || Map<string,Issue>()
 )
 
@@ -41,10 +47,10 @@ export const commentModelsSelector = _.memoize(
 )
 
 export const createModelsSelector = () => createStructuredSelector({
-	availRepos: availReposSelector,
-	repoModels:reposSelector,
-	milestoneModels:milestonesSelector,
-	labelModels:labelsSelector,
-	issueModels:issuesSelector,
+	availRepos: availRepoModelsSelector,
+	repoModels:repoModelsSelector,
+	milestoneModels:milestoneModelsSelector,
+	labelModels:labelModelsSelector,
+	issueModels:issueModelsSelector,
 
 })

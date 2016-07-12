@@ -3,7 +3,19 @@
 
 
 
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {AutoWired, Inject, Container} from 'typescript-ioc'
+import {Stores} from 'main/services/DBService'
+import {ActionFactory, Action} from 'typedux'
+import {RepoKey} from 'shared/Constants'
+import {RepoMessage, RepoState} from './RepoState'
+import {Repo} from 'shared/models/Repo'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {JobActionFactory} from '../jobs/JobActionFactory'
+import {RepoSyncJob} from 'main/services/jobs/RepoSyncJob'
+import Toaster from 'shared/Toaster'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -11,64 +23,10 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 const log = getLogger(__filename)
 
 // IMPORTS
-import {AutoWired,Inject,Container} from 'typescript-ioc'
-import {Stores} from 'main/services/DBService'
-import {List} from 'immutable'
-import {ActionFactory,Action} from 'typedux'
-import {RepoKey,Dialogs} from "shared/Constants"
-import {cloneObject} from 'shared/util/ObjectUtil'
-
-
-import {SyncStatus,ISyncDetails} from 'shared/models/Sync'
-import {Comment} from 'shared/models/Comment'
-import {RepoMessage,RepoState} from './RepoState'
-import {github} from 'shared'
-import {Repo} from 'shared/models/Repo'
-import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {IssueStore,Issue} from 'shared/models/Issue'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {JobActionFactory} from '../jobs/JobActionFactory'
-import {RepoSyncJob} from 'main/services/jobs/RepoSyncJob'
-import Toaster from 'shared/Toaster'
-import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
-import {DataRequest} from 'shared/actions/data/DataState'
-import {Label} from 'shared/models/Label'
-import {Milestone} from 'shared/models/Milestone'
 
 
 const uuid = require('node-uuid')
 
-/**
- * Add transient properties to `Issue`
- * repo, milestones, collaborators
- *
- * @param issue
- * @param availableRepos
- * @returns {Issue}
- */
-export async function fillIssue(issue:Issue,availableRepos:List<AvailableRepo>) {
-	//issue = cloneObject(issue)
-
-	let availRepo = availableRepos.find(availRepo => availRepo.repoId === issue.repoId)
-	const stores:Stores = Container.get(Stores)
-
-	if (!availRepo) {
-		log.warn('Available repo not loaded', issue.repoId,'for issue',issue.title,'with id',issue.id,'going to load direct form db')
-
-		const arStore = stores.availableRepo
-		availRepo = await arStore.findByRepoId(issue.repoId)
-		log.info(`Loaded available repo directly: ` + issue.repoId)
-	}
-
-	const filledAvailRepo = await stores.availableRepo.load(availRepo)
-
-	return cloneObject(Object.assign({},issue, {
-		repo: filledAvailRepo.repo,
-		milestones: filledAvailRepo.milestones,
-		collaborators: filledAvailRepo.collaborators
-	}))
-
-}
 
 
 /**
@@ -82,9 +40,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 	@Inject
 	stores:Stores
-
-	@Inject
-	uiActions:UIActionFactory
 
 	@Inject
 	jobActions:JobActionFactory
@@ -104,23 +59,26 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 	/**
 	 * Sync issues
-	 * @param availRepo
-	 * @returns {function(any, any): Promise<undefined>}
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 * @param repoIds
 	 */
 	@Action()
-	syncRepo(repoId:number) {
+	syncRepo(...repoIds:number[]) {
 		return async (dispatch,getState) => {
 			const jobActions = this.jobActions
 				.withDispatcher(dispatch,getState)
 
-			const availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
-				repo = await this.stores.repo.get(repoId)
+			for (let repoId of repoIds) {
+				const availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
+					repo = await this.stores.repo.get(repoId)
 
-			jobActions.triggerJob({
-				id: `reposyncjob-${repo.id}`,
-				name: "RepoSyncJob",
-				args:{availableRepo,repo}
-			})
+				jobActions.triggerJob({
+					id: `reposyncjob-${repo.id}`,
+					name: "RepoSyncJob",
+					args:{availableRepo,repo}
+				})
+			}
+
 		}
 	}
 
@@ -248,7 +206,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			let newAvailRepo:AvailableRepo = Object.assign({},availRepo,{enabled})
 
 			await stores.availableRepo.save(newAvailRepo)
-			newAvailRepo = await stores.availableRepo.load(newAvailRepo)
+			//newAvailRepo = await stores.availableRepo.get(newAvailRepo.repoId)
 
 			const dataActions:DataActionFactory = Container.get(DataActionFactory)
 			dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
@@ -267,5 +225,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 }
 
+
+export type RepoActionFactoryType = typeof RepoActionFactory
 
 export default RepoActionFactory

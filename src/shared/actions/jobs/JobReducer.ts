@@ -20,8 +20,8 @@ export class JobReducer extends DefaultLeafReducer<JobState,ActionMessage<JobSta
 	}
 
 
-	defaultState():any {
-		return new JobState()
+	defaultState(o = {}):any {
+		return JobState.fromJS(o)
 	}
 
 

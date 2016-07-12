@@ -16,11 +16,15 @@ import {
 	IActionInterceptorNext,
 	IActionRegistration
 } from 'typedux'
+import {RootState} from 'shared/store/RootState'
+import {cacheFilename, readFile,writeJSONFileAsync, writeJSONFile, readFileAsync} from 'shared/util/Files'
+
 
 
 const electron = require('electron')
 const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
+const stateFilename = cacheFilename('store-state')
 
 // If renderer then add an action interceptor
 if (Env.isRenderer) {
@@ -169,7 +173,7 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 /**
  * Initialize/Create the store
  */
-export function initStore(devToolsMode = false) {
+export function initStore(devToolsMode = false,defaultState = null) {
 
 	const enhancers = [
 		applyMiddleware(...middleware),
@@ -195,14 +199,14 @@ export function initStore(devToolsMode = false) {
 
 	enhancers.push(debugEnhancer)
 
-
-
 	let reducers = getReducers()
 
 	// Create the store
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
-		compose.call(null,...enhancers) as StoreEnhancer<any>
+		compose.call(null,...enhancers) as StoreEnhancer<any>,
+		null,
+		defaultState
 	)
 
 	// If HMR enabled then prepare for it
@@ -217,21 +221,48 @@ export function initStore(devToolsMode = false) {
 
 	// Initialize all action factories
 	if (!devToolsMode) {
-		const actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
-		actionCtx.keys()
-			.filter(key => !/AppActionFactory/.test(key))
-			.forEach(key => {
-				const mod:any = actionCtx(key)
-				const factory = mod.default
-				try {
-					new factory()
-				} catch (err) {
-					log.error(`Failed to start action factory: ${key}`,err)
-					throw err
-				}
+		let actionCtx = null
+
+		const initActionFactory = (key,mod) => {
+			const factory = mod.default
+			try {
+				new factory()
+			} catch (err) {
+				log.error(`Failed to start action factory: ${key}`,err)
+				throw err
+			}
+		}
+
+		const loadActionFactories = () => {
+			actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
+			actionCtx.keys()
+				.filter(key => !/AppActionFactory/.test(key))
+				.forEach(key => {
+					const mod:any = actionCtx(key)
+					initActionFactory(key,mod)
+				})
+		}
+
+		loadActionFactories()
+
+
+		if (module.hot) {
+			module.hot.accept([actionCtx.id],(updates) => {
+				log.info('Reloading action factories')
+				loadActionFactories()
 			})
+		}
 	}
 	return store
+}
+
+
+export async function loadAndInitStore() {
+	const stateData = readFile(stateFilename)
+	//const defaultState = (stateData) ? RootState.fromJS(JSON.parse(stateData)) : null
+	const defaultStateValue = (stateData) ? JSON.parse(stateData) : null
+	return initStore(false,defaultStateValue)
+
 }
 
 /**
@@ -248,6 +279,19 @@ export function getStore() {
 
 export function getReduxStore() {
 	return getStore().getReduxStore()
+}
+
+export function getStoreState() {
+	return getStore().getState()
+}
+
+export function persist() {
+	log.info(`Writing current state to: ${stateFilename}`)
+	assert(Env.isMain,'Can only persist on main')
+	const stateJS = _.toJS(getStoreState())
+
+	writeJSONFile(stateFilename,stateJS)
+
 }
 
 //

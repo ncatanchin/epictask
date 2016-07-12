@@ -5,6 +5,7 @@ const ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 const webpack = require('webpack')
 const assert = require('assert')
 const path = require('path')
+const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
 
 const
@@ -21,7 +22,9 @@ const libAlias = (name, libPath) => ({
 })
 
 const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir, dir))
-
+const materialUiModule = (fs.existsSync(process.cwd(),'node_modules/material-ui-build')) ?
+	      'material-ui-build/src' : 'material-ui'
+console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
 	const config = {
 
@@ -43,6 +46,10 @@ module.exports = function (projectConfig) {
 			alias: _.assign(
 				{
 					assert: 'browser-assert',
+
+					// Map material-ui to build ver if available
+					"material-ui": materialUiModule,
+
 					epictask: path.resolve(baseDir, 'src'),
 					styles: path.resolve(baseDir, 'src/assets/styles'),
 					assets: path.resolve(baseDir, 'src/assets'),
@@ -116,6 +123,7 @@ module.exports = function (projectConfig) {
 		externals: [
 			nodeExternals({
 				whitelist: [
+					/material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,

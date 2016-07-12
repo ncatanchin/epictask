@@ -1,2 +1,2 @@
-require('../shared/Registry.spec')
+import '../shared/Registry.spec'
 

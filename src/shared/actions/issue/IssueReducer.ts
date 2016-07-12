@@ -17,8 +17,8 @@ export class IssueReducer extends DefaultLeafReducer<IssueState,IssueMessage> {
 	 *
 	 * @returns {RepoState}
 	 */
-	defaultState():any {
-		return new IssueState()
+	defaultState(o = {}):any {
+		return IssueState.fromJS(o)
 	}
 
 
