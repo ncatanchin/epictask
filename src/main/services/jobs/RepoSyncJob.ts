@@ -33,7 +33,7 @@ const Benchmarker = Benchmark('RepoSyncJob')
 export class RepoSyncJob extends Job {
 
 
-	client:GitHubClient = Container.get(GitHubClient)
+	client:GitHubClient
 
 	lastSyncParams:any
 	oneAtATime = true
@@ -61,8 +61,6 @@ export class RepoSyncJob extends Job {
 		assert(Settings.token,'Can not sync when not authenticated')
 
 
-		this.client = Container.get(GitHubClient)
-
 		const lastActivity = await activityManager.findLastActivity(ActivityType.RepoSync,repo.id)
 		const lastSyncTimestamp = new Date(lastActivity ? lastActivity.timestamp : 0)
 		const lastSyncTimestamp8601 = moment(lastSyncTimestamp.getTime()).format()
@@ -77,42 +75,67 @@ export class RepoSyncJob extends Job {
 	/**
 	 * Synchronize all issues
 	 *
+	 * @param stores
 	 * @param repo
 	 */
 	@Benchmarker
 	async syncCollaborators(stores:Stores,repo:Repo) {
 		const userRepo = stores.user
-
-		const collabsPromise = (repo.permissions.push) ?
-			this.client.repoCollaborators(repo) :
-			this.client.repoContributors(repo)
+		if (!(repo.permissions.push || repo.permissions.admin)) {
+			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
+			return
+		}
+		const users:User[] = await this.client.repoCollaborators(repo)
+		//this.client.repoContributors(repo)
 
 
 
 		// Make sure we have all the collaborators saved
-		const collabs = await collabsPromise
+		//const collabs = await collabsPromise
 
 		// Iterate all attahed users and make sure we
 		// update the repoIds on the user object if
 		// already exists
-		for (let user of collabs) {
-			const existingUser = await userRepo.findByLogin(user.login)
-			if (existingUser) {
-				user = new User(_.merge(user,existingUser))
-			}
+		const existingUserIds = await userRepo.findAll()
+		const updatePromises = []
+		users.forEach(user => {
+			if (existingUserIds.includes(user.id)) {
+				// Look for an existing user first
+				updatePromises.push(userRepo.get(user.id)
+					.then(existingUser => {
+						if (existingUser) {
+							assign(user,existingUser,_.cloneDeep(user))
+						}
+					}))
 
-			user.addRepoId(repo.id)
+			}
+		})
+
+		await Promise.all(updatePromises)
+
+		users.forEach(user => user.addRepoId(repo.id))
+
+
+		log.info(`Total collabs for ${repo.full_name} is ${users.length}`)
+		const userChunks = _.chunk(users,20)
+
+		for (let userChunk of userChunks) {
+			log.info(`Saving chunk for ${repo.full_name}`)
+			await userRepo.bulkSave(...userChunk)
 		}
 
 
+		log.info(`Updated ${users.length} for repo ${repo.full_name}`)
 
-		//log.debug(`Loaded collabs/users, time to persist`, collabs)
-		await userRepo.bulkSave(...collabs)
+
+
+
 	}
 
 	/**
 	 * Synchronize all issues
 	 *
+	 * @param stores
 	 * @param repo
 	 */
 	@Benchmarker
@@ -184,6 +207,13 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 	async executor(handler:JobHandler) {
+		if (!Settings.token) {
+			log.info(`User is not authenticated, can not sync`)
+			return
+		}
+
+		this.client = Container.get(GitHubClient)
+
 		const activityManager = Container.get(ActivityManagerService)
 		const stores = Container.get(Stores)
 		const toaster = Container.get(Toaster)
@@ -219,7 +249,7 @@ export class RepoSyncJob extends Job {
 				this.syncLabels(stores,repo),
 				this.syncMilestones(stores,repo),
 				this.syncComments(stores,repo),
-				//this.syncCollaborators(stores,repo)
+				this.syncCollaborators(stores,repo)
 			])
 
 			// Track the execution for timing/update purposes

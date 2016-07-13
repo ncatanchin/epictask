@@ -45,7 +45,9 @@ export interface IJob {
 	description?:string
 }
 
-
+/**
+ * Base class for all jobs to implement
+ */
 export abstract class Job implements IJob {
 
 	id:string = uuid.v4()

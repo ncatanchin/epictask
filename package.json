@@ -11,7 +11,8 @@
     "start-dev-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --enable-logging ./dist/MainEntry.js",
     "start-dev-debug": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
     "start-dev-debug-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
-    "postinstall": "./etc/scripts/post-install.sh"
+    "postinstall": "./etc/scripts/post-install.sh",
+    "clean-electron-storage": "rm -Rf ~/Library/Application\\ Support/Electron"
   },
   "packaging": {
     "destination": "./target/packages",

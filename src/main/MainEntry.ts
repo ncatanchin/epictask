@@ -73,6 +73,9 @@ async function boot() {
 
 		if (!isExtInstalled('redux'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/redux-devtools'))
+
+		if (!isExtInstalled('bigconsole'))
+			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/big-console'))
 	}
 
 	log.info("Boot start")

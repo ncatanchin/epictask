@@ -59,7 +59,7 @@ export type SearchDataSelector = (state:any, props?:any) => SearchData
 /**
  * Create a search results selector
  */
-export function createSearchSelector():SearchDataSelector {
+export function createSearchDataSelector():SearchDataSelector {
 	return createDeepEqualSelector(
 		searchSelector,
 		resultsSelector,

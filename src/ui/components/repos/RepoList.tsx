@@ -120,7 +120,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
 		const repoActions = new RepoActionFactory()
 		if (event.metaKey) {
-			repoActions.setRepoSelected(availRepo,!isSelected)
+			repoActions.setRepoSelected(availRepo.repoId,!isSelected)
 		} else {
 			if (this.props.selectedRepoIds.length) {
 				repoActions.clearSelectedRepos()

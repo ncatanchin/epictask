@@ -33,7 +33,7 @@ const styles = {
 /**
  * IButtonProps
  */
-export interface IButtonProps extends React.DOMAttributes {
+export interface IButtonProps extends React.HTMLAttributes {
 	theme?:any
 	style?:any
 	ripple?:boolean

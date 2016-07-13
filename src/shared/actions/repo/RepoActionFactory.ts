@@ -2,10 +2,10 @@
 
 
 
-
+import * as moment from 'moment'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'main/services/DBService'
-import {ActionFactory, Action} from 'typedux'
+import {ActionFactory, ActionReducer,Action} from 'typedux'
 import {RepoKey} from 'shared/Constants'
 import {RepoMessage, RepoState} from './RepoState'
 import {Repo} from 'shared/models/Repo'
@@ -16,6 +16,10 @@ import Toaster from 'shared/Toaster'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
+import ActivityManagerService from 'main/services/ActivityManagerService'
+import {ActivityType, Activity} from 'shared/models/Activity'
+import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
+
 /**
  * Created by jglanz on 5/29/16.
  */
@@ -56,26 +60,46 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return RepoKey;
 	}
 
+	/**
+	 * get the last repo sync time
+	 * @param repoId
+	 */
+	async getLastRepoSync(repoId:number) {
+		return await Container.get(ActivityManagerService).findLastActivity(ActivityType.RepoSync,repoId)
+	}
 
 	/**
 	 * Sync issues
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 * @param repoIds
+	 * @param force
 	 */
 	@Action()
-	syncRepo(...repoIds:number[]) {
+	syncRepo(repoIds:number|number[],force:boolean=false) {
 		return async (dispatch,getState) => {
 			const jobActions = this.jobActions
 				.withDispatcher(dispatch,getState)
 
-			for (let repoId of repoIds) {
-				const availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
-					repo = await this.stores.repo.get(repoId)
+			if (!Array.isArray(repoIds))
+				repoIds = [repoIds]
 
+			for (let repoId of repoIds) {
+				const
+					availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
+					repo = await this.stores.repo.get(repoId),
+					act = await this.getLastRepoSync(repoId)
+
+				// Check the last execution time
+				if (!force && act && moment().diff(act.timestamp,'minutes') < 5) {
+					log.info(`Repo sync for ${repo.full_name} was rung less than 5 minutes ago (${moment(act.timestamp).fromNow()}), not syncing`)
+					continue
+				}
+
+				log.info(`Triggering repo sync for ${repo.full_name}`)
 				jobActions.triggerJob({
 					id: `reposyncjob-${repo.id}`,
 					name: "RepoSyncJob",
-					args:{availableRepo,repo}
+					args:{availableRepo,repo,force}
 				})
 			}
 
@@ -130,11 +154,19 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 
-	@Action()
-	clearSelectedRepos() { }
+	@ActionReducer()
+	clearSelectedRepos() {
+		return (state:RepoState) => state.set('selectedRepoIds',[])
+	}
 
-	@Action()
-	setRepoSelected(selectedAvailableRepo:AvailableRepo,selected:boolean) { }
+	@ActionReducer()
+	setRepoSelected(selectedRepoId:number,selected:boolean) {
+		return (state:RepoState) => state.set(
+			'selectedRepoIds',
+			state.selectedRepoIds.filter(repoIdPredicate(selectedRepoId))
+				.concat(selected ? [selectedRepoId] : [])
+		)
+	}
 
 	@Action()
 	createAvailableRepo(repo:Repo) {
@@ -165,7 +197,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			actions.loadAvailableRepos()
 
 			await Promise.setImmediate()
-			actions.syncRepo(availRepo.repoId)
+			actions.syncRepo([availRepo.repoId],true)
 		}
 	}
 
@@ -214,7 +246,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 			// Finally trigger a repo sync update
 			if (enabled)
-				this.syncRepo(newAvailRepo.repoId)
+				this.syncRepo(newAvailRepo.repoId,true)
 
 			log.info('Saved avail repo, setting enabled to',enabled)
 

@@ -20,11 +20,12 @@ import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {createAvailableRepoSelector} from 'shared/actions/repo/RepoSelectors'
+import {createAvailableRepoSelector, repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
+import {Themed} from 'shared/themes/ThemeManager'
 const {HotKeys} = require('react-hotkeys')
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
@@ -149,16 +150,14 @@ function makeMapStateToProps() {
 
 
 		return {
-			theme: getTheme(),
 			user: appState.user,
 			editingIssue,
 			availableRepos,
+			availableRepo: editingIssue && availableRepos.find(repoIdPredicate(editingIssue)),
 			open
 
 		}
 	}
-
-
 }
 
 /**
@@ -167,7 +166,7 @@ function makeMapStateToProps() {
 export interface IIssueEditDialogProps extends React.DOMAttributes {
 	theme?:any
 	editingIssue?:Issue
-	availableRepos?:List<AvailableRepo>
+	availableRepos?:AvailableRepo[]
 	availableRepo?:AvailableRepo
 	open?:boolean
 	user?:User
@@ -181,8 +180,9 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
  **/
 
 
-@connect(makeMapStateToProps)
 @Radium
+@Themed
+@connect(makeMapStateToProps)
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> {
 
@@ -307,7 +307,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 	}
 
 
-	makeRepoMenuItems(availableRepos, s) {
+	makeRepoMenuItems(availableRepos:AvailableRepo[], s) {
 
 		const makeRepoLabel = (availRepoItem) => (
 			<div style={s.form.repo.item}>
@@ -367,8 +367,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			bodyValue: _.get(editingIssue,'body',''),
 			titleValue: _.get(editingIssue,'title',''),
 			lastAvailableRepos: availableRepos || [],
-			repoMenuItems: !availableRepos ? [] : this.makeRepoMenuItems(availableRepos, s),
-			milestoneMenuItems: this.makeMilestoneItems(milestones, s),
+			repoMenuItems: !availableRepos ? [] : this.makeRepoMenuItems(_.nilFilter(availableRepos), s),
+			milestoneMenuItems: this.makeMilestoneItems(_.nilFilter(milestones), s),
 			assigneeMenuItems: this.makeAssigneeMenuItems((!editingIssue || !editingIssue.collaborators) ? [] : editingIssue.collaborators, s)
 		}
 	}
@@ -389,9 +389,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 
 		if (!editingIssue || !open) {
-			if (open)
-				throw new Error('Open is true, but issue is null - invalid!!!!')
-
+			assert(!open,'Open is true, but issue is null - invalid!!!!')
 			return null
 		}
 
@@ -536,7 +534,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,any> 
 						                  label="LABELS"
 						                  hint="Label me..."
 						                  inputStyle={s.input}
-						                  availableLabels={availableRepo ? availableRepo.labels : []}
+						                  availableLabels={availableRepo ? _.nilFilter(availableRepo.labels) : []}
 						                  onLabelsChanged={this.onLabelsChanged}
 						                  underlineStyle={s.input.underlineDisabled}
 						                  underlineFocusStyle={s.input.underlineFocus}

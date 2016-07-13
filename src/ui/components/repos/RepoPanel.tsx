@@ -101,14 +101,24 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 	uiActions = Container.get(UIActionFactory)
 
-	constructor(props, context) {
-		super(props, context)
+	onAddRepoButtonFocus = (event:React.MouseEvent) => {
+		event.preventDefault()
+		event.stopPropagation()
 	}
 
+	onBlur = () => {
+		this.repoActions.clearSelectedRepos()
+	}
 
-	onBlur = () => this.repoActions.clearSelectedRepos()
+	onAddRepoClicked = (event:React.MouseEvent) => {
+		event.preventDefault()
+		event.stopPropagation()
 
-	onAddRepoClicked = () => this.uiActions.setDialogOpen(Dialogs.RepoAddDialog,true)
+		log.debug(`add repo click`,event)
+
+		this.uiActions.setDialogOpen(Dialogs.RepoAddDialog,true)
+
+	}
 
 	keyHandlers = {
 
@@ -127,11 +137,11 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 			})
 
 		return (
-			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper} onBlur={this.onBlur}>
+			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper}>
 				<div style={panelStyle}>
 					<div style={headerStyle}>
 						<div style={s.headerTitle}>Repositories</div>
-						<Button style={headerButtonStyle} onClick={this.onAddRepoClicked}>
+						<Button tabIndex={-1} style={headerButtonStyle} onFocus={this.onAddRepoButtonFocus} onClick={this.onAddRepoClicked}>
 							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
 						</Button>
 					</div>

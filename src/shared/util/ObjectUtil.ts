@@ -11,7 +11,7 @@ declare global {
 		assignGlobal(o:any):any
 		isPromise(o:any):boolean
 		modelArrayToMapBy(o:any[],prop:string):any
-
+		nilFilter<T>(o:T[]):T[]
 	}
 
 
@@ -25,6 +25,9 @@ const _ = require('lodash')
  * isArrayEqual
  */
 _.mixin({
+	nilFilter<T>(a:T[]):T[] {
+		return a.filter(item => !_.isNil(item))
+	},
 	modelArrayToMapBy<M>(models:M[],prop:string):{[key:string]:M} {
 		return models.reduce((map,model) => {
 			map[`${model[prop]}`] = model

@@ -21,6 +21,7 @@ export enum JobHandlerEventType {
 export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 	private executePromise
+	private killed = false
 
 	scheduler:Later.IScheduleData
 
@@ -57,6 +58,14 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		this.notify(JobHandlerEventType.OnChanged)
 	}
 
+	kill() {
+		this.killed = true
+		if (this.timer) {
+			this.timer.clear()
+			this.timer = null
+		}
+	}
+
 	/**
 	 * Start the handler
 	 *
@@ -77,6 +86,8 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * Reset/Init the job info and schedule
 	 */
 	reset() {
+		if (this.killed) return
+
 		this.info = new JobInfo()
 		this.info.id = uuid.v4()
 		this.info.jobId = this.job.id

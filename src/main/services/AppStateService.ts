@@ -52,7 +52,7 @@ export default class AppStateService extends BaseService {
 			.subscribe(this.checkStateType)
 
 		// If the state type has not yet been set then set it
-		if (!this.appActions.state.stateType) {
+		if (!this.appActions.state.stateType || !Settings.token) {
 			const startingStateType = ((Settings.token) ? AppStateType.AuthVerify : AppStateType.AuthLogin)
 			this.appActions.setStateType(startingStateType)
 		}

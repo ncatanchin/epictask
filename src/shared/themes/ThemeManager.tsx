@@ -59,6 +59,8 @@ export function getTheme() {
 }
 
 function loadThemes() {
+	log.info('Loading themes')
+
 	Themes = require('./index')
 	DefaultTheme = Themes[DefaultThemeName]
 	setTheme(Themes[themeName || DefaultThemeName])

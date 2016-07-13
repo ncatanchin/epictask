@@ -21,6 +21,7 @@ import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {SearchType} from 'shared/actions/search/SearchState'
+import {Themed} from 'shared/themes/ThemeManager'
 const {Style} = Radium
 const {HotKeys} = require('react-hotkeys')
 
@@ -28,7 +29,7 @@ const {HotKeys} = require('react-hotkeys')
 const log = getLogger(__filename)
 const uiActions = Container.get(UIActionFactory)
 
-const styles = createStyles({
+const baseStyles = createStyles({
 	root: [makeTransition(['opacity']),{
 		position: 'fixed',
 		left: 0,
@@ -84,6 +85,11 @@ export interface IRepoAddDialogProps extends React.DOMAttributes {
 	open?:boolean
 }
 
+export interface IRepoAddDialogState {
+	styles?:any
+	searchPanel?:any
+}
+
 /**
  * IssueEditDialog
  *
@@ -94,8 +100,9 @@ export interface IRepoAddDialogProps extends React.DOMAttributes {
 @AutoWired
 @connect(mapStateToProps)
 @Radium
+@Themed
 @PureRender
-export class RepoAddDialog extends React.Component<IRepoAddDialogProps,any> {
+export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddDialogState> {
 
 	@Inject
 	appActions:AppActionFactory
@@ -120,63 +127,77 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,any> {
 		const {state} = this
 		const {searchPanel} = state || {} as any
 
-		if (searchPanel)
-			searchPanel.blur()
+		// if (searchPanel)
+		// 	searchPanel.getWrapperInstance().blur()
 
 		uiActions.setDialogOpen(Dialogs.RepoAddDialog,false)
 	}
 
 	onResultSelected = (result) => this.hide()
 
-	getNewState(props) {
+	setSearchPanel = (searchPanel) => {
+		this.setState({searchPanel})
+		this.setFocused()
+	}
+
+	setFocused = () => {
+		const searchPanel = _.get(this,'state.searchPanel') as any
+		if (searchPanel && this.props.open) {
+			const elem = searchPanel.getWrappedInstance()
+			elem.updateFocus()
+		}
+	}
+
+	onFocus = (event) => {
+		this.setFocused()
+	}
+
+	getNewState(props:IRepoAddDialogProps) {
 		const
 			{theme,open} = props,
-			s = mergeStyles(
-				styles,
+			styles = mergeStyles(
+				baseStyles,
 				theme && theme.dialog,
 				theme && theme.repoAddDialog
 			)
 
-		return {
-			s
-		}
+		return {styles}
 
 	}
 
-	componentWillReceiveProps(nextProps) {
-		this.setState(this.getNewState(nextProps))
-	}
+	componentWillReceiveProps =(nextProps:IRepoAddDialogProps) =>
+		this.setState(this.getNewState(nextProps)) || this.setFocused()
 
-	componentWillMount() {
-		this.setState(this.getNewState(this.props))
-	}
+
+	componentWillMount = () =>
+		this.setState(this.getNewState(this.props)) || this.setFocused()
+
 
 
 	render() {
 
-		const
-			{s} = this.state,
-			{theme,open} = this.props,
-			rootStyles = mergeStyles(s.root,open && s.root.open)
+		const {styles} = this.state, {theme} = this.props
 
+		return <HotKeys handlers={this.keyHandlers} onFocus={this.onFocus} style={mergeStyles(styles.root,this.props.open && styles.root.open)}>
+			{this.props.open && <MuiThemeProvider muiTheme={theme}>
 
-
-		return <div style={rootStyles}>
-
-			<MuiThemeProvider muiTheme={theme}>
-				<HotKeys handlers={this.keyHandlers}>
-					<div style={s.container}>
-						<SearchPanel searchId='repo-add-search'
+					<div style={styles.container}>
+						<SearchPanel ref={this.setSearchPanel}
+						             autoFocus={true}
+						             modal={true}
+						             open={this.props.open}
+									searchId='repo-add-search'
 						             types={[SearchType.Repo]}
 						             inlineResults={true}
 						             expanded={false}
 						             mode='repos'
+
 						             onResultSelected={this.onResultSelected}
 									 hidden={!open}/>
 					</div>
-				</HotKeys>
-			</MuiThemeProvider>
-		</div>
+
+			</MuiThemeProvider>}
+		</HotKeys>
 	}
 
 }

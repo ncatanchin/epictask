@@ -22,7 +22,7 @@ export class SyncAllReposJob extends Job {
 		super(o)
 
 		Object.assign(this, {
-			schedule: '*/10 * * * *', // Every 10 minutes
+			schedule: '*/30 * * * *', // Every 10 minutes
 			repeat: true,
 			oneAtATime: true,
 			scheduled:true,
@@ -40,7 +40,7 @@ export class SyncAllReposJob extends Job {
 		const repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 		log.debug('Getting avail repos from DB, not state')
 
-		availRepos.forEach(availRepo => repoActions.syncRepo(availRepo.repoId))
+		repoActions.syncRepo(availRepos.map(availRepo => availRepo.repoId))
 
 	}
 }

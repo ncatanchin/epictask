@@ -37,11 +37,14 @@ export interface IJobExecutor {
 @Singleton
 export default class JobService extends BaseService {
 
+	private killed = false
+
 	/**
 	 * Keeps track of all Job Classes and Types
 	 * @type {TJobClassMap<any>}
 	 */
 	private jobClassMap:TJobClassMap<any> = {}
+
 
 	/**
 	 * Currently cowrking jobs
@@ -65,6 +68,8 @@ export default class JobService extends BaseService {
 	toaster:Toaster
 
 	private loadJobs() {
+		if (this.killed) return
+
 		const ctx = this.jobsCtx = require
 			.context('./jobs',true,/Job\.ts$/)
 
@@ -72,6 +77,8 @@ export default class JobService extends BaseService {
 
 		if (module.hot) {
 			module.hot.accept([ctx.id],(updated) => {
+				// TODO - unload old jobs
+
 				Object.keys(this.jobMap)
 					.forEach(key => delete this.jobMap[key])
 
@@ -92,6 +99,7 @@ export default class JobService extends BaseService {
 	 * @return {TJobClassMap<any>}
 	 */
 	registerJob<J extends TJobClassType>(name:string, jobClazz:J) {
+		if (this.killed) return null
 
 		// Add the name to the prototype
 		Object.defineProperty(jobClazz.prototype,'name',{
@@ -177,6 +185,8 @@ export default class JobService extends BaseService {
 	}
 
 	createJob(newJob:IJob) {
+		if (this.killed) return
+
 		if (newJob.oneAtATime) {
 			log.debug(`Job ${newJob.name} executed one at a time, looking for any current jobs`)
 			const existingJob = this.findExistingJob(newJob)
@@ -222,6 +232,8 @@ export default class JobService extends BaseService {
 	 * @param nameOrId
 	 */
 	findExistingJob(nameOrId) {
+		if (this.killed) return null
+
 		const workingJobs = this.jobMap
 		const container = this.jobMap[nameOrId] || Object
 			.values(workingJobs)
@@ -236,6 +248,8 @@ export default class JobService extends BaseService {
 	}
 
 	completedJob(handler:JobHandler,status:JobStatus) {
+		if (this.killed) return
+
 		const {job} = handler
 		switch (status) {
 			case JobStatus.Failed:
@@ -280,8 +294,29 @@ export default class JobService extends BaseService {
 	}
 
 
+	kill() {
+		assert(module.hot,'kill can only be called for hmr')
+		this.killed = true
+		Object.values(this.jobMap).forEach(jobContainer => {
+			try {
+				jobContainer.handler.kill()
+			} catch (err) {
+				log.error(`Failed to stop job - still clearing`,err,jobContainer.handler)
+			}
+		})
+		this.jobMap = {}
+	}
+}
 
-
+if (module.hot) {
+	module.hot.dispose(() => {
+		try {
+			const jobService = Container.get(JobService)
+			jobService.kill()
+		} catch (err) {
+			log.error(`hmr dispose of jobservice failed`, err)
+		}
+	})
 }
 
 

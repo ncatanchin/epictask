@@ -90,7 +90,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				accelerator: 'Ctrl+S',
 				click() {
 					log.info('Sending sync all repos')
-					Container.get(RepoActionFactory).syncRepo(...enabledRepoIdsSelector(getStoreState()))
+					Container.get(RepoActionFactory).syncRepo(enabledRepoIdsSelector(getStoreState()),true)
 				}
 			}]
 		}, {

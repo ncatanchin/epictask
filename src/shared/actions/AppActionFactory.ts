@@ -1,9 +1,8 @@
 import {AutoWired,Inject, Container} from 'typescript-ioc'
-import {ActionFactory,Action,ActionMessage} from 'typedux'
+import {ActionFactory,Action,ActionReducer,ActionMessage} from 'typedux'
 import {AppStateType} from '../AppStateType'
 
-import {AppKey, Dialogs, RepoKey,RepoTransientProps} from "../Constants"
-import {IToastMessage} from '../models/Toast'
+import {AppKey, RepoTransientProps} from "../Constants"
 import {ISettings} from '../Settings'
 import {AppState} from './AppState'
 import {User} from '../models/User'
@@ -40,22 +39,40 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return AppKey;
 	}
 
+	/**
+	 *
+	 * @param state
+	 * @param ready
+	 * @returns {Map<string, V>}
+	 */
+	@ActionReducer()
+	setReady(ready:boolean) {
+		return (state:AppState) => state.merge({ready})
+	}
 
-	@Action()
-	setReady(ready:boolean) {}
+	/**
+	 * Set the user
+	 *
+	 * @param state
+	 * @param user
+	 * @returns {Map<string, User>}
+	 */
+	@ActionReducer()
+	setUser(user:User) {
+		return (state:AppState) => state.set('user',user)
+	}
 
 
-	@Action()
-	updateSettings(newSettings:ISettings) {}
+	@ActionReducer()
+	updateSettings(newSettings:ISettings) {
+		return (state:AppState) => state.set('settings', newSettings)
+	}
 
-	@Action()
-	setStateType(stateType:AppStateType) {}
+	@ActionReducer()
+	setStateType(stateType:AppStateType) {
+		return (state:AppState) => state.merge({stateType})
+	}
 
-	@Action()
-	setMonitorState(monitorState:any) {}
-
-	@Action()
-	setUser(user:User) {}
 
 }
 

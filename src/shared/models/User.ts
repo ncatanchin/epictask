@@ -9,11 +9,12 @@ import {
 import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {RegisterModel} from '../Registry'
 
+/**
+ * User model from GitHub schema
+ */
 @RegisterModel
 @ModelDescriptor()
 export class User extends DefaultModel {
-
-	$$clazz = 'User'
 
 	/**
 	 * Revive from JS/JSON
@@ -89,7 +90,8 @@ export class UserStore extends TSRepo<User> {
 	}
 
 	/**
-	 * Find all issues in provided repo ids
+	 * Find all users who contribute to a repo
+	 *
 	 * @param repoIds
 	 * @returns {Promise<User[]>}
 	 */
@@ -97,11 +99,23 @@ export class UserStore extends TSRepo<User> {
 		indexFields: ['repoId'],
 		selector: (...repoIds:number[]) => ({
 			$or: repoIds.map(repoId => ({
-				$eq: repoId
+				repoIds: {
+					$elemMatch:{
+						$eq: repoId
+					}
+				}
 			}))
 		})
 	})
 	findByRepoId(...repoIds:number[]):Promise<User[]> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
+		all:true,
+		includeDocs:false
+	})
+	findAll():Promise<number[]> {
 		return null
 	}
 

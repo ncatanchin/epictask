@@ -4,7 +4,7 @@ import windowStateKeeper = require('electron-window-state')
 import Electron = require('electron')
 import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
-import {makeMainMenu} from './MainMenu'
+import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 
 const log = getLogger(__filename)
 const path = require('path')
@@ -68,7 +68,17 @@ export function getBrowserWindow() {
 	return browserWindow
 }
 
+/**
+ * Make menu function * HMR ready
+ */
+function makeMenu() {
+	// Make the menu
+	const makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	menu = makeMainMenu(browserWindow)
 
+	// Assign it based on OS
+	Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+}
 
 /**
  * Load the actual window
@@ -147,11 +157,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			}
 
 
-			// Make the menu
-			menu = makeMainMenu(browserWindow)
-
-			// Assign it based on OS
-			Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+			makeMenu()
 
 
 		} catch (err) {
@@ -164,6 +170,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
  * HMR Enabled -> on dispose remove mainWindow
  */
 if (module.hot) {
+	module.hot.accept(['./MainMenu'],() => makeMenu())
 	module.hot.accept(['!!file!./MainEntry.jade'], (updates) => {
 		log.info("HMR update jade", updates)
 

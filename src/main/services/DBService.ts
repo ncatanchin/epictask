@@ -115,7 +115,8 @@ export default class DBService implements IService {
 					await this._storePlugin.deleteDatabase()
 					await this.init()
 					return this.start()
-				}
+				},
+				dbService:this
 			})
 
 		}

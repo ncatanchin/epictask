@@ -8,16 +8,17 @@ import {Benchmark, RegisterJob} from 'shared/util/Decorations'
 import {GitHubClient} from 'shared/GitHubClient'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Job} from 'shared/actions/jobs/JobState'
+import {Settings} from 'shared/Settings'
 
 const log = getLogger(__filename)
 
-const Benchmarker = Benchmark('SyncAllReposJob')
+const Benchmarker = Benchmark('GetUserReposJob')
 
 /**
  * Synchronize all enabled repos
  */
 @RegisterJob
-export class SyncAllReposJob extends Job {
+export class GetUserReposJob extends Job {
 
 	constructor(o:any = {}) {
 		super(o)
@@ -35,6 +36,10 @@ export class SyncAllReposJob extends Job {
 	async executor(handler:JobHandler) {
 		const {service} = handler
 
+		if (!Settings.token) {
+			log.info(`User is not authenticated, can not sync`)
+			return
+		}
 		log.info(`Starting to sync all repos`)
 
 		const stores = Container.get(Stores)

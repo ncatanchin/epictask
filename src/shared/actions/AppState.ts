@@ -30,13 +30,10 @@ export class AppState extends AppStateRecord {
 		}))
 	}
 
-	$$clazz = 'AppState'
-
 	stateType:AppStateType
 	ready:boolean
 	settings:ISettings
 	user:User
-
 	messages:List<IToastMessage>
 	monitorState:any
 	error:Error

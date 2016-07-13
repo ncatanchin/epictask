@@ -25,15 +25,6 @@ export class AuthReducer extends DefaultLeafReducer<AuthState,AuthMessage> {
 	 * @param token
 	 * @returns {AuthStateModel}
 	 */
-	setToken(state:AuthState,token:string) {
-		return state.merge({
-			token: Settings.token = token,
-		authenticating:false,
-		authenticated: !_.isNil(token),
-			error:null
-		})
-
-	}
 
 
 	/**

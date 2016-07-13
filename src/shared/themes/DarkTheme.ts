@@ -164,7 +164,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		input: {
 			color: primary.hue1,
 
-			// backgroundColor: text.primary
 			hint:  {
 				color:           secondary.hue3,
 				backgroundColor: text.primary,

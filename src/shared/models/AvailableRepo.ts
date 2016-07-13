@@ -113,11 +113,12 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 		}
 
 		if (!filled.labels) {
-			filled.labels = await stores.label.findByRepoId(filled.repoId)
+			filled.labels = _.nilFilter(await stores.label.findByRepoId(filled.repoId))
 		}
 
 		if (!filled.milestones) {
-			filled.milestones = await stores.milestone.findByRepoId(filled.repoId)
+			filled.milestones = _.nilFilter(await stores.milestone.findByRepoId(filled.repoId))
+
 		}
 
 		// if (!availRepo.collaborators) {

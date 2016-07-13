@@ -2,14 +2,24 @@
 import {Map,List} from 'immutable'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createSelector} from 'reselect'
-import {DataState} from 'shared/actions/data/DataState'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {DataKey} from 'shared/Constants'
 import {Repo} from 'shared/models/Repo'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
-import {Issue} from 'shared/models/Issue'
 import {availRepoModelsSelector, repoModelsSelector, milestoneModelsSelector, labelModelsSelector} from 'shared/actions/data/DataSelectors'
+
+function getRepoId(o:any):number {
+	return !o ? null :
+		_.isNumber(o) ? o :
+			(_.isNumber(o.repoId)) ? o.repoId :
+				parseInt(o.repoId,10)
+}
+export const repoIdPredicate = (o:any) => {
+	const repoId = getRepoId(o)
+	assert(repoId > 0, 'Must provied a repoId or object with repo id')
+
+	return (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
+}
 
 export const availReposSelector = _.memoize(
 	(state):AvailableRepo[] => availRepoModelsSelector(state)

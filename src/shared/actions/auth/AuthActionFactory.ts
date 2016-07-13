@@ -1,5 +1,5 @@
-import {AutoWired, Inject} from 'typescript-ioc'
-import {ActionFactory,Action} from 'typedux'
+import {AutoWired, Inject,Container} from 'typescript-ioc'
+import {ActionFactory,ActionReducer,Action} from 'typedux'
 import {GitHubClient} from 'GitHubClient'
 import {AuthKey,GitHubConfig} from "Constants"
 import {AppActionFactory} from 'actions/AppActionFactory'
@@ -20,23 +20,54 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	toaster:Toaster
 
 
-	@Inject
-	client:GitHubClient
+	private _client:GitHubClient
 
 	constructor() {
 		super(AuthState)
+
+		this.makeClient()
 	}
 
+	private makeClient() {
+		return this._client = (Settings.token) ? Container.get(GitHubClient) : null
+	}
+
+	get client() {
+		return this._client || this.makeClient()
+	}
 
 	leaf():string {
 		return AuthKey;
 	}
 
-	@Action()
-	setToken(token:string) {}
+	@ActionReducer()
+	setToken(token:string) {
+		return (state:AuthState) => {
+			if (Env.isMain) {
+				Settings.token = token
 
-	@Action()
-	setAuthenticating(authenticating:boolean) {}
+				this.makeClient()
+			}
+
+			state = state.merge({
+				token,
+				authenticating:false,
+				authenticated: !_.isNil(token),
+				error:null
+			}) as any
+
+
+			return state
+
+		}
+
+
+	}
+
+	@ActionReducer()
+	setAuthenticating(authenticating:boolean) {
+		return (state:AuthState) => state.merge({authenticating})
+	}
 
 	@Action()
 	setError(err:Error) {}

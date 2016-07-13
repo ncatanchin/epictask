@@ -253,6 +253,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				              filter={AutoComplete.noFilter}
 				              listStyle={{
 								paddingTop: 0,
+								paddingBottom: 0,
 								backgroundColor: 'transparent !important'
 							  }}
 				              menuProps={{

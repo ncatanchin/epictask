@@ -12,12 +12,14 @@ import {Issue,Repo,AvailableRepo} from 'shared/models'
 
 import {
 	SearchResult, SearchType, SearchSource, SearchResultData, SearchItem,
-	SearchItemModel
+	SearchItemModel, SearchData
 } from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
-import {AppKey, SearchKey} from 'shared/Constants'
+import {PureRender} from 'ui/components/common/PureRender'
+import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
+
 
 // Constants
 const log = getLogger(__filename)
@@ -128,22 +130,37 @@ const styles = {
  */
 export interface ISearchResultsListProps {
 	anchor?: string | React.ReactElement<any>
+	searchId:string
 	containerStyle?:any
 	inline?: boolean
 	theme?:any
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	results:SearchResultData[]
+	searchData?:SearchData
+	results?:SearchResultData[]
 	onResultSelected?:(result:SearchResult,itemModel:SearchItemModel) => void
 	onResultHover?:(result:SearchResult,itemModel:SearchItemModel) => void
 }
 
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
+
+function makeMapStateToProps() {
+	const searchDataSelector = createSearchDataSelector()
+
+	return (state:any,props:ISearchResultsListProps) => {
+		const searchData = searchDataSelector(state,props)
+
+		return {
+			theme:      getTheme(),
+			searchData,
+			results: searchData && searchData.results
+		}
 	}
+
+
 }
+
+
 
 /**
  * SearchResults
@@ -151,8 +168,9 @@ function mapStateToProps(state) {
  * @class SearchResults
  * @constructor
  **/
-@connect(mapStateToProps)
+@connect(makeMapStateToProps)
 @Radium
+@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 
@@ -299,7 +317,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 
 		// Map Result types
-		let rows = List<any>()
+		const rows = []
 
 		log.info(`Selected index in results ${selectedIndex}`)
 
@@ -318,12 +336,15 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				this.renderIssue
 
 			// Filter only the results for this section
-			const sectionRows = items.map((item,index) => {
+			const sectionRows = _.nilFilter(items.map((item,index) => {
 				const model = models[index]
 				if (!model) return null
-				
+
 				const isSelected = selectedIndex === model.id
 				const itemContent = resultRenderer(item,model,isSelected)
+
+				if (!itemContent)
+					return null
 
 				// Make the row style
 				const resultStyle = makeStyle(
@@ -333,7 +354,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				)
 
 				return (
-					<div key={model.id}
+					<div key={`${type}-${model.id}`}
 					     className={isSelected && 'selected'}
 					     style={resultStyle}
 					     onMouseEnter={() => onResultHover && onResultHover(result,{item,model})}
@@ -342,13 +363,14 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 						{itemContent}
 					</div>
 				)
-			})
+			}))
 
 			// Concat the other sections
-			rows = rows.concat(sectionRows)  as List<any>
+			log.info(`Rendering section rows ${sectionRows.length}`,resultData)
+			rows.push(...sectionRows)
 
 		})
-
+		log.info(`Rendering rows`,rows.length,rows)
 		return rows
 
 	}

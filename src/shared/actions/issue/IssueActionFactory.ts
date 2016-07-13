@@ -92,6 +92,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
 
+			issues = issues.map(issue => {
+				issue.labels = issue.labels || []
+				return issue
+			})
 			const issueIds = issues.map(issue => `${issue.id}`)
 			const issueMap = _.modelArrayToMapBy(issues,'id')
 
@@ -100,7 +104,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			await dataActions.submitRequest(DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz),issueMap)
 
 			actions.setInternalIssues(issues)
-			actions.setFilteringAndSorting()
+
 
 		}
 	}
@@ -268,21 +272,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
-
-
-
-	@ActionReducer()
-	protected setInternalIssues(issues:Issue[]) {
-		return (issueState:IssueState) => issueState.set('internalIssues',issues)
-	}
-
-	@ActionReducer()
-	protected setCommentIds(commentIds:string[]) {
-		return (issueState:IssueState) => issueState.set('commentIds',commentIds)
-	}
-
-	@ActionReducer()
-	setFilteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
+	private filteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
 		return (issueState:IssueState,getState) => {
 
 			const repoIds = enabledRepoIdsSelector(getState())
@@ -342,6 +332,31 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				return newIssueState.set('issueIds',issueIds)
 			})
 		}
+
+
+	}
+
+
+	@ActionReducer()
+	protected setInternalIssues(issues:Issue[]) {
+		return (issueState:IssueState,getState) => {
+			issueState = issueState.set('internalIssues',issues) as IssueState
+
+			return this.filteringAndSorting(
+				issueState.issueFilter,
+				issueState.issueSort
+			)(issueState,getState)
+		}
+	}
+
+	@ActionReducer()
+	protected setCommentIds(commentIds:string[]) {
+		return (issueState:IssueState) => issueState.set('commentIds',commentIds)
+	}
+
+	@ActionReducer()
+	setFilteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
+		return this.filteringAndSorting(issueFilter,issueSort)
 	}
 
 

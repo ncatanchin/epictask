@@ -124,6 +124,9 @@ export class Header extends React.Component<IHeaderProps,any> {
 		log.info('window max')
 	}
 
+	setSearchPanel = (searchPanel) => {
+		this.setState({searchPanel})
+	}
 
 	render() {
 		const theme = getTheme()
@@ -167,6 +170,7 @@ export class Header extends React.Component<IHeaderProps,any> {
 
 		return <div style={headerStyle} id='header'>
 			<SearchPanel
+				ref={this.setSearchPanel}
 				searchId='header-search'
 				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
 				inlineResults={expanded}

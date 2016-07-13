@@ -347,16 +347,22 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		))
 
 		// Find all docs that have _id and not _rev
+		const revPromises = []
 		docs.forEach(async (doc,index) => {
 			const id = models[index][this.primaryKeyAttr.name]
 			if (!id || !doc._id  || (doc._id && doc._rev))
 				return
 
-			const rev = await this.getRev(id)
-			if (rev) {
-				doc._rev = rev
-			}
+			revPromises.push(
+				this.getRev(id)
+					.then(rev => {
+						if (rev)
+							doc._rev = rev
+					})
+			)
 		})
+
+		await Promise.all(revPromises)
 
 		// Do Save
 		const responses = await this.db.bulkDocs(docs)
