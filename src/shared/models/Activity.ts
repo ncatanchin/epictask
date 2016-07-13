@@ -8,6 +8,8 @@ import {
 } from 'typestore'
 import {RegisterModel} from 'shared/Registry'
 
+import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+
 
 export enum ActivityType {
 	RepoSync = 1
@@ -46,9 +48,20 @@ export class Activity extends DefaultModel {
 
 }
 
+
 export class ActivityStore extends TSRepo<Activity> {
 	constructor() {
 		super(ActivityStore, Activity)
 	}
 
+	@PouchDBMangoFinder({
+		indexFields: ['objectId'],
+		includeDocs:true,
+		selector: (objectId:any) => ({objectId:`${objectId}`})
+	})
+	findByObjectId(objectId:any):Promise<Activity[]> {
+		return null
+	}
+
 }
+

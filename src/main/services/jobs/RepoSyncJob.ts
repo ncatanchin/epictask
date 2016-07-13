@@ -10,10 +10,11 @@ import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {GitHubClient} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import {Stores} from '../DBService'
+import {Stores,chunkSave,chunkRemove} from '../DBService'
 import {Settings} from 'shared/Settings'
 import Toaster from 'shared/Toaster'
-import {Benchmark, RegisterJob} from 'shared/util/Decorations'
+import {Benchmark} from 'shared/util/Benchmark'
+import {RegisterJob} from 'shared/util/Decorations'
 import {Job, IJob} from 'shared/actions/jobs/JobState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
@@ -21,6 +22,7 @@ import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {issueSelector} from 'shared/actions/issue/IssueSelectors'
+
 
 
 const log = getLogger(__filename)
@@ -117,13 +119,7 @@ export class RepoSyncJob extends Job {
 
 
 		log.info(`Total collabs for ${repo.full_name} is ${users.length}`)
-		const userChunks = _.chunk(users,20)
-
-		for (let userChunk of userChunks) {
-			log.info(`Saving chunk for ${repo.full_name}`)
-			await userRepo.bulkSave(...userChunk)
-		}
-
+		await chunkSave(users,userRepo)
 
 		log.info(`Updated ${users.length} for repo ${repo.full_name}`)
 
@@ -142,7 +138,8 @@ export class RepoSyncJob extends Job {
 	async syncIssues(stores:Stores,repo) {
 		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
 		issues.forEach(issue => issue.repoId = repo.id)
-		await stores.issue.bulkSave(...issues)
+		await chunkSave(issues,stores.issue)
+
 	}
 
 	/**
@@ -155,7 +152,7 @@ export class RepoSyncJob extends Job {
 		const labels = await this.client.repoLabels(repo)
 		labels.forEach(label => label.repoId = repo.id)
 		//log.debug(`Loaded labels, time to persist`, labels)
-		await stores.label.bulkSave(...labels)
+		await chunkSave(labels,stores.label)
 	}
 
 	/**
@@ -168,7 +165,7 @@ export class RepoSyncJob extends Job {
 		const milestones = await this.client.repoMilestones(repo)
 		milestones.forEach(milestone => milestone.repoId = repo.id)
 		//log.debug(`Loaded milestones, time to persist`, milestones)
-		await stores.milestone.bulkSave(...milestones)
+		await chunkSave(milestones,stores.milestone)
 	}
 
 	/**
@@ -197,7 +194,7 @@ export class RepoSyncJob extends Job {
 		})
 
 		//log.debug(`Loaded comments, time to persist`, comments)
-		await stores.comment.bulkSave(...comments)
+		await chunkSave(comments,stores.comment)
 	}
 
 	/**
@@ -243,12 +240,11 @@ export class RepoSyncJob extends Job {
 			await this.initParams(activityManager,repo)
 
 			// Load the issues, eventually track progress
-			log.debug('waiting for all promises')
+			log.debug('waiting for all promises - we sync comments later ;)')
 			await Promise.all([
 				this.syncIssues(stores,repo),
 				this.syncLabels(stores,repo),
 				this.syncMilestones(stores,repo),
-				this.syncComments(stores,repo),
 				this.syncCollaborators(stores,repo)
 			])
 
@@ -267,8 +263,12 @@ export class RepoSyncJob extends Job {
 			// Reload issues first
 			await issueActions.loadIssues(...enabledRepoIds)
 
+			log.info('Now syncing comments')
+			await Promise.delay(2000)
+			await this.syncComments(stores,repo)
+
 			// Reload current issue if loaded
-			const currentIssueId = issueActions.state.selectedIssueId
+			let currentIssueId = issueActions.state.selectedIssueId
 			if (currentIssueId) {
 
 				const issue = issueSelector(storeState)
@@ -280,6 +280,8 @@ export class RepoSyncJob extends Job {
 				if (issue && issue.repoId === repo.id)
 					issueActions.loadActivityForIssue(issue.id)
 			}
+
+
 
 			// Notify of completion
 			//toaster.addMessage(`Finished ${this.name}`)

@@ -1,3 +1,0 @@
-<component name="DependencyValidationManager">
-  <scope name="TS Source" pattern="file[typemutant]:src//*||file[typemutant]:typings//*" />
-</component>

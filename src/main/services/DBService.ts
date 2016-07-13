@@ -18,6 +18,25 @@ import {RepoStore} from 'shared/models/Repo'
 import {IssueStore} from 'shared/models/Issue'
 import {CommentStore} from 'shared/models/Comment'
 
+export async function chunkSave(models,modelStore) {
+	const chunks = _.chunk(models,50)
+
+	for (let chunk of chunks) {
+		await modelStore.bulkSave(...chunk)
+	}
+}
+
+export async function chunkRemove(modelIds) {
+	const chunks = _.chunk(modelIds,50)
+	const dbService:DBService = Container.get(DBService)
+	const {db} = dbService
+	assert(db,'could not get database reference in chunkRemove')
+
+	for (let chunk of chunks) {
+		await db.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
+	}
+}
+
 export class Stores {
 
 	dbService:DBService
@@ -64,6 +83,10 @@ export default class DBService implements IService {
 		return this._stores
 	}
 
+	get db() {
+		return this._storePlugin ? this._storePlugin.db : null
+	}
+
 
 	constructor() {
 		this._stores = assign(new Stores(),{dbService:this})
@@ -76,7 +99,7 @@ export default class DBService implements IService {
 	 * @returns {{filename: string}}
 	 */
 	private storeOptions() {
-		let opts = {filename: this.dbPath}
+		let opts = {filename: this.dbPath,cacheSize:32 * 1024 * 1024}
 		if (Env.isDev) {
 			opts = Object.assign({},opts, {
 				replication: {

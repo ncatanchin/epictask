@@ -4,10 +4,12 @@ import JobService from 'main/services/JobService'
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'
-import {Benchmark, RegisterJob} from 'shared/util/Decorations'
+import {Benchmark} from 'shared/util/Benchmark'
+import {RegisterJob} from 'shared/util/Decorations'
 import {GitHubClient} from 'shared/GitHubClient'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Job} from 'shared/actions/jobs/JobState'
+import {Repo} from 'shared/models/Repo'
 import {Settings} from 'shared/Settings'
 
 const log = getLogger(__filename)
@@ -33,6 +35,16 @@ export class GetUserReposJob extends Job {
 	}
 
 	@Benchmarker
+	getReposFromGitHub():Promise<Repo[]> {
+		const client = Container.get(GitHubClient)
+
+		log.info('Getting all user repos')
+
+		return client.userRepos({traversePages:true})
+
+	}
+
+	@Benchmarker
 	async executor(handler:JobHandler) {
 		const {service} = handler
 
@@ -44,12 +56,7 @@ export class GetUserReposJob extends Job {
 
 		const stores = Container.get(Stores)
 		const repoStore = stores.repo
-		const client = Container.get(GitHubClient)
-
-		log.info('Getting all user repos')
-
-		let repos = await client.userRepos({traversePages:true})
-
+		const repos = await this.getReposFromGitHub()
 		log.info(`Persisting ${repos.length} repos`)
 		const beforeCount = await repoStore.count()
 		await repoStore.bulkSave(...repos)

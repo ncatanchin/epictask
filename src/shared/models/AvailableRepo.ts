@@ -42,6 +42,9 @@ export class AvailableRepo extends DefaultModel {
 	@AttributeDescriptor()
 	enabled:boolean
 
+	@AttributeDescriptor()
+	deleted:boolean
+
 	@AttributeDescriptor({transient:true})
 	repo:Repo
 

@@ -184,7 +184,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 	private extractKeyValue(val:PouchDBKeyValue|any):any {
 		val = (val && val.pouchDBKey) ? val.args[0] : val
-		if (!_.isString(val))
+		if (typeof val !== 'string')
 			val = `${val}`
 		return val
 	}
@@ -313,7 +313,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 			},[])
 			.filter(doc => doc.type === this.modelType.name)
 
-		return mapDocs(this,this.repo.modelClazz,docs)
+		return mapDocs(this,this.repo.modelClazz,docs,includeDocs)
 	}
 
 	/**
@@ -348,21 +348,35 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 
 		// Find all docs that have _id and not _rev
 		const revPromises = []
-		docs.forEach(async (doc,index) => {
-			const id = models[index][this.primaryKeyAttr.name]
-			if (!id || !doc._id  || (doc._id && doc._rev))
-				return
-
-			revPromises.push(
-				this.getRev(id)
-					.then(rev => {
-						if (rev)
-							doc._rev = rev
-					})
-			)
+		const missingRefs = await this.db.allDocs({
+			include_docs:false,
+			keys: docs.filter(doc => doc._id && !doc._rev)
+				.map(doc => doc._id)
 		})
 
-		await Promise.all(revPromises)
+		missingRefs.rows
+			.filter(row => !row.error && row.value && row.value.rev)
+			.forEach(row => {
+				const id = row.id, rev = row.value.rev
+				const doc = docs.find(doc => `${doc._id}` === `${id}`)
+				doc._rev = rev
+			})
+		//
+		// docs.forEach(async (doc,index) => {
+		// 	const id = models[index][this.primaryKeyAttr.name]
+		// 	if (!id || !doc._id  || (doc._id && doc._rev))
+		// 		return
+		//
+		// 	revPromises.push(
+		// 		this.getRev(id)
+		// 			.then(rev => {
+		// 				if (rev)
+		// 					doc._rev = rev
+		// 			})
+		// 	)
+		// })
+
+		//await Promise.all(revPromises)
 
 		// Do Save
 		const responses = await this.db.bulkDocs(docs)
@@ -396,11 +410,18 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 	 * @returns {PouchDBKeyValue[]}
 	 */
 	async bulkRemove(...keys:PouchDBKeyValue[]):Promise<any[]> {
-		const models = await this.bulkGet(...keys)
+		keys = keys.map(key => (key.pouchDBKey) ? key.args[0] : key)
 
-		await Promise.all(models.map((model:any) => this.db.remove(model.$$doc)))
-
+		let models = null
 		if (this.repo.supportPersistenceEvents())
+			models = await this.bulkGet(...keys)
+
+		await this.db.bulkDocs(keys.map(_id => ({_id,_deleted:true})))
+
+		//
+		// await Promise.all(models.map((model:any) => this.db.remove(model.$$doc)))
+		//
+		if (models)
 			this.repo.triggerPersistenceEvent(ModelPersistenceEventType.Remove,...models)
 
 		return keys

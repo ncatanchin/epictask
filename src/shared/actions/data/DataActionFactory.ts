@@ -1,5 +1,5 @@
 import {Repo as TSRepo} from 'typestore'
-import {ActionFactory,ActionPromise,Action} from 'typedux'
+import {ActionFactory,ActionReducer,ActionPromise,Action} from 'typedux'
 import {SearchKey, DataKey} from "shared/Constants"
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
@@ -61,19 +61,66 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
 	}
 
-	@Action()
-	updateRequest(request:DataRequest) {}
+	@ActionReducer()
+	updateRequest(request:DataRequest) {
+		return (state:DataState) => {
+			return state.setIn(['requests',request.id],request)
+		}
+	}
 
-	@Action()
+
+	@ActionReducer()
+	updateModels(modelType:string|ModelConstructor<any>,updatedModels:any,clear=false) {
+		assert(modelType, 'No model type provided')
+		if (!_.isString(modelType))
+			modelType = modelType.$$clazz
+
+		assert(modelType, 'A valid model type is required')
+
+		return (state:DataState) => {
+
+			return state.updateIn(['models',modelType],Map(),(models) => {
+
+
+				return models.withMutations(tempModels => {
+					const modelIds = Object.keys(updatedModels)
+					modelIds.forEach(key => tempModels = tempModels.set(`${key}`,updatedModels[key]))
+
+
+					if (clear) {
+						const removeIds = tempModels.keySeq()
+							.filter(modelId => !modelIds.includes(modelId))
+							.toArray()
+
+						removeIds.forEach(removeId => tempModels = tempModels.remove(removeId))
+					}
+					return tempModels
+				})
+			})
+		}
+
+	}
+
+	@ActionReducer()
 	setRequestFulfilled(id:string,fulfilled:boolean) {
+		return (state:DataState) => {
+			const request = state.requests.get(id)
+			return (!request) ? state :
+				state.setIn(['requests', request.id], Object.assign({}, request, {fulfilled}))
+		}
 	}
 
-	@Action()
-	updateModels(modelType:string|ModelConstructor<any>,updatedModels:any) {
-	}
-
-	@Action()
+	@ActionReducer()
 	removeModels(modelType:string,removedIds:Array<string|number>) {
+		return (state:DataState) => {
+			return state.updateIn(['models',modelType],models => {
+				return models.withMutation(tempModels => {
+					removedIds.forEach(removedId => tempModels = tempModels.delete(removedId))
+					return tempModels
+				})
+			})
+		}
+
 	}
 
 

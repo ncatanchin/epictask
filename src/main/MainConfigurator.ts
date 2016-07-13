@@ -17,8 +17,9 @@ export class MainConfigurator {
 	servicesCtx = null
 
 	loadServices() {
-		this.servicesCtx = require.context('main/services',true,/^(?!.*DBService|.*IService).*Service\.ts$/)
+		this.servicesCtx = require.context('main/services',true,/^((?!DBService|IService)[\S\s]).*Service\.ts$/)
 		log.info(`Services Context has keys: ${this.servicesCtx.keys().join(', ')}`)
+
 	}
 
 	/**

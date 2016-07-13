@@ -16,10 +16,11 @@ export class DataRequest {
 	 * @param modelIds
 	 * @param modelType
 	 * @returns {DataRequest}
+	 * @param clear
 	 */
-	static create(id,fulfilled,modelIds,modelType):DataRequest {
+	static create(id,fulfilled,modelIds,modelType,clear = false):DataRequest {
 		return new DataRequest({
-			id,fulfilled,modelIds,modelType
+			id,fulfilled,modelIds,modelType,clear
 		})
 	}
 
@@ -31,6 +32,7 @@ export class DataRequest {
 	static fromJS = (o:any) => new DataRequest(o)
 
 	id:string
+	clear:boolean = false
 	fulfilled:boolean = false
 	modelIds:Array<string|number> = []
 	modelType:string

@@ -3,6 +3,8 @@
 
 
 import * as moment from 'moment'
+import {chunkRemove} from 'main/services/DBService'
+import {Benchmark} from 'shared/util/Benchmark'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'main/services/DBService'
 import {ActionFactory, ActionReducer,Action} from 'typedux'
@@ -19,6 +21,9 @@ import {Milestone} from 'shared/models/Milestone'
 import ActivityManagerService from 'main/services/ActivityManagerService'
 import {ActivityType, Activity} from 'shared/models/Activity'
 import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
+import {Settings} from 'shared/Settings'
+import {selectedIssueIdsSelector, editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 /**
  * Created by jglanz on 5/29/16.
@@ -31,7 +36,7 @@ const log = getLogger(__filename)
 
 const uuid = require('node-uuid')
 
-
+const Benchmarker = Benchmark('RepoActionFactory')
 
 /**
  * RepoActionFactory.ts
@@ -60,12 +65,15 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return RepoKey;
 	}
 
+	get activityManager() {
+		return Container.get(ActivityManagerService)
+	}
 	/**
 	 * get the last repo sync time
 	 * @param repoId
 	 */
-	async getLastRepoSync(repoId:number) {
-		return await Container.get(ActivityManagerService).findLastActivity(ActivityType.RepoSync,repoId)
+	getLastRepoSync(repoId:number):Promise<Activity> {
+		return this.activityManager.findLastActivity(ActivityType.RepoSync,repoId)
 	}
 
 	/**
@@ -114,7 +122,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 			const stores = this.stores
 
-			const availRepos = await stores.availableRepo.findAll()
+			let availRepos = await stores.availableRepo.findAll()
+			availRepos = availRepos.filter(availRepo => !availRepo.deleted)
+
 			const availRepoMap = availRepos.reduce((map,nextAvailRepo) => {
 				map[nextAvailRepo.repoId] = nextAvailRepo
 				return map
@@ -146,7 +156,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 
 			await Promise.all(promises)
-			dataActions.updateModels(AvailableRepo.$$clazz,availRepoMap)
+			dataActions.updateModels(AvailableRepo.$$clazz,availRepoMap,true)
 			log.info('Loaded available repos and dependent models')
 
 			return availRepos
@@ -175,12 +185,15 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 			const
 				repoStore = this.stores.repo,
-				availRepoStore = this.stores.availableRepo,
-				availRepo = new AvailableRepo({
-					id: `available-repo-${repo.id}`,
-					repoId: repo.id,
-					enabled: true
-				})
+				availRepoStore = this.stores.availableRepo
+
+			let availRepo = new AvailableRepo({
+				id: `available-repo-${repo.id}`,
+				repoId: repo.id,
+				enabled: true,
+				deleted: false
+			})
+
 
 
 			const existingAvailRepo = await availRepoStore.get(availRepo.id)
@@ -192,28 +205,102 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			}
 
 			log.info('Saving new available repo as ',availRepo.repoId)
+			if (existingAvailRepo)
+				availRepo = assign({},existingAvailRepo,availRepo)
+
 			await availRepoStore.save(availRepo)
 
+			actions.syncRepo([availRepo.repoId],true)
 			actions.loadAvailableRepos()
 
-			await Promise.setImmediate()
-			actions.syncRepo([availRepo.repoId],true)
+
+
 		}
 	}
 
-	@Action()
-	removeAvailableRepo(availRepoId:number) {
-		return async(dispatch, getState) => {
-			// const actions = this.withDispatcher(dispatch, getState)
-			//
-			//
-			// const availRepoRepo = this.stores.availableRepo
-			// await availRepoRepo.remove(availRepoId)
-			//
-			// const availRepos = actions.state.availableRepos
-			// actions.setAvailableRepos(availRepos.filter(availRepo => availRepo.id !== availRepoId))
+	@Benchmarker
+	private async removeAvailableRepoAction(repoId,dispatch, getState) {
+		const actions = this.withDispatcher(dispatch, getState)
 
-		}
+		const {stores} = this
+		const myUserId = Settings.user.id
+
+		let availRepo = await stores.availableRepo.findByRepoId(repoId)
+		availRepo.deleted = true
+		availRepo = await stores.availableRepo.save(availRepo)
+
+		// FIRST - get everything out of the state
+		log.info(`Reloading avail repos`)
+		await actions.loadAvailableRepos()
+
+		log.info('Cleaning up issue selections')
+		const issueActions:IssueActionFactory = Container.get(IssueActionFactory)
+		issueActions.setSelectedIssueIds([])
+		issueActions.clearAndLoadIssues()
+
+		const editingIssue = editingIssueSelector(getState())
+		if (_.get(editingIssue,'repoId') === repoId)
+			issueActions.setEditingIssue(null)
+
+		log.info(`Going to delay for a second then delete everything`)
+		await Promise.delay(1000)
+
+
+		const labelUrls = await stores.label.findUrlsByRepoId(repoId)
+		const issueIds = await stores.issue.findIdsByRepoId(repoId)
+		const commentIds = await stores.comment.findIdsByRepoId(repoId)
+		const milestoneIds = await stores.milestone.findIdsByRepoId(repoId)
+		let users = await stores.user.findByRepoId(repoId)
+		users = users.filter(user => user.id !== myUserId)
+		const updateUsers = users.filter(user => user.repoIds && user.repoIds.length > 1)
+			.map(user => {
+				_.remove(user.repoIds,(userRepoId) => repoId === parseInt(userRepoId,10))
+				return user
+			})
+
+		const removeUsers = users.filter(user => !updateUsers.includes(user))
+
+		log.info(`Going to remove
+			availRepo: ${availRepo.id}
+			labels: ${labelUrls.length}
+			issues: ${issueIds.length}
+			comments: ${commentIds.length}
+			milestones: ${milestoneIds.length}
+			users (update): ${updateUsers.length}
+			users (update): ${removeUsers.length}
+		`)
+
+		log.info(`Removing avail repo`)
+
+		const removePromises = [
+			this.activityManager.removeByObjectId(repoId),
+			chunkRemove([]
+				.concat(commentIds)
+				.concat(issueIds)
+				.concat(labelUrls)
+				.concat(milestoneIds)
+				.concat(removeUsers.map(user => user.id))
+				.concat([availRepo.id])),
+			stores.user.bulkSave(...updateUsers),
+
+		]
+
+
+
+		await Promise.all(removePromises)
+
+		log.info(`Avail repo removed ${repoId}`)
+
+
+
+
+
+	}
+
+	@Action()
+	removeAvailableRepo(repoId:number) {
+
+		return (dispatch, getState) => this.removeAvailableRepoAction(repoId,dispatch,getState)
 	}
 
 
@@ -244,13 +331,8 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
 			//actions.updateAvailableRepo(newAvailRepo)
 
-			// Finally trigger a repo sync update
-			if (enabled)
-				this.syncRepo(newAvailRepo.repoId,true)
 
 			log.info('Saved avail repo, setting enabled to',enabled)
-
-
 			return true
 		}
 	}

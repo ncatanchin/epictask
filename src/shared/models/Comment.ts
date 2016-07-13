@@ -73,17 +73,23 @@ export class CommentStore extends TSRepo<Comment> {
 	}
 
 	@PouchDBMangoFinder({
-		indexDirection: 'desc',
-		indexFields: ['created_at','repoId'],
+		indexFields: ['repoId'],
 		selector: (...repoIds) => ({
-			repoId: { $in: repoIds },
-			created_at: { $exists: true }
-		}),
-		sort: ['created_at','repoId'],
-		sortDirection: 'desc'
-
+			$or: repoIds.map(repoId => ({repoId}))
+		})
 	})
 	findByRepoId(...repoIds:number[]):Promise<Comment[]> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
+		includeDocs: false,
+		indexFields: ['repoId'],
+		selector: (...repoIds) => ({
+			$or: repoIds.map(repoId => ({repoId}))
+		})
+	})
+	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {
 		return null
 	}
 }

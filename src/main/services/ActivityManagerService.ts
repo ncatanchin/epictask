@@ -50,6 +50,14 @@ export default class ActivityManagerService implements IService {
 		return this
 	}
 
+	async removeByObjectId(objectId:any) {
+		const activities = await this.findByObjectId(objectId)
+		return this._repos.activity.bulkRemove(...activities.map(activity => activity.id))
+	}
+
+	findByObjectId(objectId:any):Promise<Activity[]> {
+		return this._repos.activity.findByObjectId(objectId)
+	}
 
 	async findLastActivity(type:ActivityType,objectId:any) {
 		const activityRepo = this._repos.activity

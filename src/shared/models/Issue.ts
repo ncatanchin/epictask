@@ -125,6 +125,24 @@ export class IssueStore extends TSRepo<Issue> {
 	}
 
 	@PouchDBMangoFinder({
+		indexFields: ['repoId'],
+		selector: (...repoIds:number[]) => {
+			return {$or: repoIds.map(repoId => ({repoId}))}
+		}
+	})
+	findByRepoIdWithRequest(request:FinderRequest,...repoIds:number[]):Promise<Issue[]> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
+		all:true,
+		includeDocs:false
+	})
+	findAll():Promise<number[]> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
 		indexFields: ['id','repoId','milestone.id','assignee.id','user.id'],
 		includeDocs: false,
 		selector: (
@@ -154,6 +172,19 @@ export class IssueStore extends TSRepo<Issue> {
 	):Promise<Issue[]> {
 		return null
 	}
+
+	@PouchDBMangoFinder({
+		includeDocs: false,
+		indexFields: ['repoId'],
+		selector: (...repoIds) => ({
+			$or: repoIds.map(repoId => ({repoId}))
+		})
+	})
+	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {
+		return null
+	}
+
+
 
 
 

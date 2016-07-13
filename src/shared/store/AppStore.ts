@@ -11,20 +11,21 @@ import {
 	setStoreProvider,
 	ILeafReducer,
 	ObservableStore,
-	getAction,
 	addActionInterceptor,
 	IActionInterceptorNext,
 	IActionRegistration
 } from 'typedux'
-import {RootState} from 'shared/store/RootState'
-import {cacheFilename, readFile,writeJSONFileAsync, writeJSONFile, readFileAsync} from 'shared/util/Files'
 
+import {cacheFilename, readFile,writeJSONFile} from 'shared/util/Files'
+import {loadActionFactories} from 'shared/actions/ActionFactoryProxies'
 
 
 const electron = require('electron')
 const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
 const stateFilename = cacheFilename('store-state')
+
+
 
 // If renderer then add an action interceptor
 if (Env.isRenderer) {
@@ -190,11 +191,9 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	 * @type {function(): *}
 	 */
 	const debugEnhancer =
-		(devToolsMode) ? loadDevTools() :
-			(!Env.isDev) ? NullMiddleware :
-				(Env.isRenderer && window.devToolsExtension) ? window.devToolsExtension() :
-					(Env.isRemote || !Env.isRenderer) ? makeRemoteMiddleware() :
-						loadDevTools()
+		(!Env.isDev) ? NullMiddleware  :
+			(Env.isMain) ? makeRemoteMiddleware() :
+				loadDevTools()
 
 
 	enhancers.push(debugEnhancer)
@@ -223,35 +222,13 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	if (!devToolsMode) {
 		let actionCtx = null
 
-		const initActionFactory = (key,mod) => {
-			const factory = mod.default
-			try {
-				new factory()
-			} catch (err) {
-				log.error(`Failed to start action factory: ${key}`,err)
-				throw err
-			}
-		}
 
-		const loadActionFactories = () => {
-			actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
-			actionCtx.keys()
-				.filter(key => !/AppActionFactory/.test(key))
-				.forEach(key => {
-					const mod:any = actionCtx(key)
-					initActionFactory(key,mod)
-				})
-		}
+
 
 		loadActionFactories()
 
 
-		if (module.hot) {
-			module.hot.accept([actionCtx.id],(updates) => {
-				log.info('Reloading action factories')
-				loadActionFactories()
-			})
-		}
+
 	}
 	return store
 }

@@ -49,9 +49,9 @@ const store:ObservableStore<RootState> = Container.get(ObservableStore as any) a
 
 
 //region DEBUG Components/Vars
-//const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
-// const DevTools = getDevTools() || <div></div>
-const DevTools = <div/>
+const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
+const DevTools = AllDevTools.DevTools || <div></div>
+//const DevTools = <div/>
 let devToolsRef = null
 let appElement = null
 let reduxStore = null
@@ -198,7 +198,7 @@ class App extends React.Component<IAppProps,any> {
 									<page.component />
 								</div>
 
-								{/* DevTools */}
+								<DevTools/>
 								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 								<ToastMessages/>
 							</HotKeys>

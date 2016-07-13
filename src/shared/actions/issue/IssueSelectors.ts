@@ -9,6 +9,7 @@ import {
 } from 'shared/actions/data/DataSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
+import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 
 
 export const issueIdsSelector = _.memoize((state):number[] =>(state.get(IssueKey) as IssueState).issueIds)
@@ -46,14 +47,15 @@ export const issuesSelector = createSelector(
  * @type {Reselect.Selector<TInput, number[]>|Reselect.Selector<Map<any, any>, Issue[]>|Reselect.Selector<Map<any, any>, TOutput>}
  */
 export const issuesDetailSelector = createSelector(
+	enabledRepoIdsSelector,
 	createModelsSelector(),
 	(state:Map<any,any>):number[] => (state.get(IssueKey) as IssueState).selectedIssueIds,
-	(models,selectedIssueIds:number[]) => {
+	(enabledRepoIds:number[],models,selectedIssueIds:number[]) => {
 		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
 		const issues = selectedIssueIds
 			.map(issueId => issueModels.get(`${issueId}`))
-			.filter(issue => !_.isNil(issue))
+			.filter(issue => !_.isNil(issue) && enabledRepoIds.includes(issue.repoId))
 			.map(issue => new Issue(Object.assign({},issue,{
 				repo: repoModels.get(`${issue.repoId}`),
 				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
@@ -64,9 +66,12 @@ export const issuesDetailSelector = createSelector(
 	}
 )
 
+export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
 export const issueSelector = _.memoize((state):Issue => {
 	const issues = issuesDetailSelector(state)
-	return issues && issues.length === 1 ? issues[0] : null
+	const enabledRepoIds = enabledRepoIdsSelector(state)
+	const issue = issues && issues.length === 1 ? issues[0] : null
+	return (issue && enabledRepoIds.includes(issue.repoId)) ? issue : null
 })
 
 
@@ -77,7 +82,7 @@ export const commentsSelector = createSelector(
 	commentIdsSelector,
 	commentModelsSelector,
 	(issue:Issue,commentIds:string[],commentModels:Map<string,Comment>) => {
-		return commentIds
+		return (!issue) ? [] : commentIds
 			.map(commentId => commentModels.get(commentId))
 			.filter(comment => !_.isNil(comment) && comment.issueNumber === issue.number)
 	},

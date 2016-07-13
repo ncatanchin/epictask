@@ -5,7 +5,7 @@ import {toJSON} from "./util/JSONUtil";
 import {User} from 'shared/models'
 
 const log = getLogger(__filename)
-const settingsFilename = getUserDataFilename('settings.db')
+const settingsFilename = getUserDataFilename('epictask-settings.json')
 log.info(`Settings file: ${settingsFilename}`)
 
 // const low = require('lowdb')

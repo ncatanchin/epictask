@@ -2,7 +2,7 @@
 
 
 
-
+import {FinderRequest} from 'typestore'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'main/services/DBService'
@@ -80,6 +80,30 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return IssueKey;
 	}
 
+	setIssuesAction(issues:Issue[],clear:boolean,dispatch,getState)  {
+		const actions = this.withDispatcher(dispatch, getState)
+		const enabledRepoIds = enabledRepoIdsSelector(getState())
+
+		issues = issues
+			.filter(issue => enabledRepoIds.includes(issue.repoId))
+			.map(issue => {
+				issue.labels = issue.labels || []
+				return issue
+			})
+
+		const issueIds = issues.map(issue => `${issue.id}`)
+		const issueMap = _.modelArrayToMapBy(issues,'id')
+
+		// Now push the models into the data state for tracking
+		const dataActions = Container.get(DataActionFactory)
+		const dataRequest = DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz,clear)
+
+		dataActions.submitRequest(dataRequest,issueMap)
+		actions.setInternalIssues(issues)
+
+
+
+	}
 
 	/**
 	 * Internally change the issue list
@@ -88,25 +112,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	private setIssues(issues:Issue[]) {
-		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
-
-			issues = issues.map(issue => {
-				issue.labels = issue.labels || []
-				return issue
-			})
-			const issueIds = issues.map(issue => `${issue.id}`)
-			const issueMap = _.modelArrayToMapBy(issues,'id')
-
-			// Now push the models into the data state for tracking
-			const dataActions = Container.get(DataActionFactory)
-			await dataActions.submitRequest(DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz),issueMap)
-
-			actions.setInternalIssues(issues)
-
-
-		}
+	private setIssues(issues:Issue[],clear=true) {
+		return (dispatch,getState) => this.setIssuesAction(issues,clear,dispatch,getState)
 	}
 
 
@@ -360,23 +367,44 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
-	@Action()
-	loadIssues(...repoIds:number[]) {
-		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
+	private async loadIssuesAction(repoIds:number[],dispatch,getState) {
+		const actions = this.withDispatcher(dispatch, getState)
 
-			// Issue repo
-			const issueState = this.state
-			const issueStore = this.stores.issue
+		// Issue repo
+		const issueState = this.state
+		const issueStore = this.stores.issue
 
 
-			log.info(`Loading issues for repos`,repoIds)
-			const issues = await issueStore.findByRepoId(...repoIds)
+		log.info(`Loading issues for repos`,repoIds)
 
-			actions.setIssues(issues)
+		let offset = 0
+		const limit = 20
+		while (true) {
+			log.info(`Requesting issues page # ${(offset / limit) + 1}`)
+			const request = new FinderRequest(limit,offset)
+			const issues = await issueStore.findByRepoIdWithRequest(request,...repoIds)
+			actions.setIssues(issues,false)
+			if (issues.length === 0 || issues.length < limit)
+				break
+
+			offset += limit
 
 		}
 
+
+	}
+
+	@Action()
+	loadIssues(...repoIds:number[]) {
+		return (dispatch,getState) => this.loadIssuesAction(repoIds,dispatch,getState)
+	}
+
+	@Action()
+	clearAndLoadIssues(...repoIds:number[]) {
+		return (dispatch,getState) => {
+			this.setIssuesAction([],true,dispatch,getState)
+			this.loadIssuesAction(repoIds,dispatch,getState)
+		}
 	}
 
 	@Action()
@@ -407,7 +435,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			// Now push the models into the data state for tracking
 			const dataActions = Container.get(DataActionFactory)
-			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz),commentMap)
+			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz,true),commentMap)
 
 			actions.setCommentIds(commentIds)
 			//actions.setFilteringAndSorting()

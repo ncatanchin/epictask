@@ -4,7 +4,8 @@ import JobService from 'main/services/JobService'
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'
-import {Benchmark, RegisterJob} from 'shared/util/Decorations'
+import {Benchmark} from 'shared/util/Benchmark'
+import {RegisterJob} from 'shared/util/Decorations'
 import {Job} from 'shared/actions/jobs/JobState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 

@@ -183,7 +183,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				activityTypeStyle.user
 			)
 
-		return <div {...this.props} style={activityStyle}>
+
+		return (!issue) ? null : <div {...this.props} style={activityStyle}>
 			{/* COMMENTOR AVATAR*/}
 			<Avatar user={user}
 			        style={userStyle}

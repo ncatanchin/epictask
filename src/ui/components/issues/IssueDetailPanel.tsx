@@ -240,11 +240,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	render() {
 		const {issues, theme, comments,styles} = this.props
 
-		return <div style={styles.root}>
-			{issues.length === 0 ? <div/> :
-				issues.length > 1 ?
-					this.renderMulti(issues, styles) :
-					this.renderIssue(issues[0], comments, styles)
+		return (!issues || issues.length == 0) ? <div/> : <div style={styles.root}>
+			{ issues.length > 1 ?
+				this.renderMulti(issues, styles) :
+				this.renderIssue(issues[0], comments, styles)
 			}
 		</div>
 	}

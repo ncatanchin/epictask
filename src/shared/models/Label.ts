@@ -61,6 +61,17 @@ export class LabelStore extends TSRepo<Label> {
 		return null
 	}
 
+	@PouchDBMangoFinder({
+		includeDocs: false,
+		indexFields: ['repoId'],
+		selector: (...repoIds) => ({
+			$or: repoIds.map(repoId => ({repoId}))
+		})
+	})
+	findUrlsByRepoId(...repoIds:number[]):Promise<string[]> {
+		return null
+	}
+
 
 
 }
