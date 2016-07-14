@@ -196,7 +196,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 
 
-			const existingAvailRepo = await availRepoStore.get(availRepo.id)
+
 
 			let savedRepo = await repoStore.get(repo.id)
 			if (!savedRepo) {
@@ -204,14 +204,16 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				await repoStore.save(repo)
 			}
 
+
 			log.info('Saving new available repo as ',availRepo.repoId)
+			const existingAvailRepo = await availRepoStore.findByRepoId(repo.id)
 			if (existingAvailRepo)
-				availRepo = assign({},existingAvailRepo,availRepo)
+				availRepo = assign(existingAvailRepo,availRepo)
 
 			await availRepoStore.save(availRepo)
-
-			actions.syncRepo([availRepo.repoId],true)
 			actions.loadAvailableRepos()
+			actions.syncRepo([availRepo.repoId],true)
+
 
 
 

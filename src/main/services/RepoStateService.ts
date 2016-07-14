@@ -3,8 +3,10 @@ import {List} from 'immutable'
 import {Singleton, AutoWired, Inject,Container, Scope} from 'typescript-ioc'
 import {IService, ServiceStatus, BaseService} from './IService'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
+
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {enabledReposSelector,enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {Stores} from 'main/services/DBService'
@@ -115,14 +117,22 @@ export default class RepoStateService extends BaseService {
 	 *
 	 * @param availableRepos
 	 */
-	enabledReposChanged = async (availableRepos = null) => {
-		if (!availableRepos)
-			availableRepos =  await Container.get(Stores).availableRepo.findAll()
+	enabledReposChanged = async () => {
+		const enabledRepoIds = enabledRepoIdsSelector(this.store.getState())
+		const issueModels = issueModelsSelector(this.store.getState())
+		const selectedIssueIds = selectedIssueIdsSelector(this.store.getState())
+		let newSelectedIssueIds = await selectedIssueIds
+			.filter((issueId) => {
+				let issue = issueModels.get(`${issueId}`)
 
-		const enabledRepoIds = availableRepos
-			.map(availRepo => availRepo.repoId)
+				const issueExists = !_.isNil(issue)
+				const repoIdEnabled = issueExists && enabledRepoIds.includes(issue.repoId)
+				log.info('Selected issue id filter',issueExists,repoIdEnabled)
+				return issueExists && repoIdEnabled
+			})
 
-
-		this.issueActions.loadIssues(...enabledRepoIds)
+		if (!_.isEqual(selectedIssueIds,newSelectedIssueIds))
+			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+		this.issueActions.loadIssues()
 	}
 }

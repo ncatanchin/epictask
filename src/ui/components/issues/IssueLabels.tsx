@@ -6,12 +6,13 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Models from 'shared/models'
+import {Label} from 'shared/models/Label'
 import * as Constants from 'shared/Constants'
 const tinycolor = require('tinycolor2')
 
 // Constants
 const log = getLogger(__filename)
-const styles = {
+const baseStyles = {
 	root: makeStyle(FlexRow, FlexAuto, {}),
 	label: makeStyle({
 		display: 'inline-block',
@@ -29,7 +30,7 @@ const styles = {
  * Map theme into props - very shorthand
  * @param state
  */
-const mapStateToProps = (state) => ({theme: getTheme()})
+const mapStateToProps = _.memoize((state) => ({theme: getTheme()}))
 
 /**
  * IIssueLabelsProps
@@ -37,7 +38,7 @@ const mapStateToProps = (state) => ({theme: getTheme()})
 export interface IIssueLabelsProps extends React.DOMAttributes {
 	theme?:any
 	style?:any
-	labels?:Models.Label[]
+	labels?:Label[]
 	labelStyle?:any
 }
 
@@ -56,14 +57,26 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 		super(props)
 	}
 
+	updateState = (props = this.props) => {
+		const {theme} = props,
+			styles = mergeStyles(baseStyles, theme.labels)
 
-	renderLabels(props,theme,s) {
-		return props.labels.map(label => {
+		this.setState({styles})
 
+	}
+
+	componentWillMount = this.updateState
+	componentWillReceiveProps = this.updateState
+
+	renderLabels(props) {
+		const {theme} = this.props,
+			{styles} = this.state
+
+		return _.nilFilter(props.labels).map((label:Label) => {
 			const
 				p = theme.palette,
 				backgroundColor = '#' + label.color,
-				labelStyle = makeStyle(s.label, props.labelStyle, {
+				labelStyle = makeStyle(styles.label, props.labelStyle, {
 					backgroundColor,
 					color: tinycolor.mostReadable(backgroundColor,[
 						p.text.secondary,
@@ -76,14 +89,10 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 	}
 
 	render() {
-		const
-			{props} = this,
-			{theme} = props,
-			s = mergeStyles(styles, theme.labels)
-
-		return <div style={makeStyle(s.root,props.style)}>
-			{props.labels && this.renderLabels(props,theme,s)}
+		return <div style={makeStyle(this.state.styles.root,this.props.style)}>
+			{this.props.labels && this.renderLabels(this.props)}
 		</div>
 	}
+
 
 }

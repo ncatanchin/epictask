@@ -27,6 +27,9 @@ export async function chunkSave(models,modelStore) {
 }
 
 export async function chunkRemove(modelIds) {
+
+	modelIds = _.uniq(modelIds.map(modelId => `${modelId}`))
+
 	const chunks = _.chunk(modelIds,50)
 	const dbService:DBService = Container.get(DBService)
 	const {db} = dbService

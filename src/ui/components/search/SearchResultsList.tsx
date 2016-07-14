@@ -9,10 +9,10 @@ import * as ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
-
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {
 	SearchResult, SearchType, SearchSource, SearchResultData, SearchItem,
-	SearchItemModel, SearchData
+	ISearchItemModel, SearchData
 } from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
@@ -137,25 +137,27 @@ export interface ISearchResultsListProps {
 	open:boolean
 	selectedIndex?:number
 	className?:string
+	searchItems?:SearchItem[]
 	searchData?:SearchData
 	results?:SearchResultData[]
-	onResultSelected?:(result:SearchResult,itemModel:SearchItemModel) => void
-	onResultHover?:(result:SearchResult,itemModel:SearchItemModel) => void
+	onResultSelected?:(result:SearchResult,itemModel:ISearchItemModel) => void
+	onResultHover?:(result:SearchResult,itemModel:ISearchItemModel) => void
 }
 
 
 function makeMapStateToProps() {
 	const searchDataSelector = createSearchDataSelector()
 
-	return (state:any,props:ISearchResultsListProps) => {
-		const searchData = searchDataSelector(state,props)
-
-		return {
-			theme:      getTheme(),
-			searchData,
-			results: searchData && searchData.results
+	return createDeepEqualSelector(
+		searchDataSelector,
+		(searchData:SearchData) => {
+			return {
+				theme: getTheme(),
+				searchData,
+				results: searchData && searchData.results
+			}
 		}
-	}
+	)
 
 
 }
@@ -168,8 +170,8 @@ function makeMapStateToProps() {
  * @class SearchResults
  * @constructor
  **/
-@connect(makeMapStateToProps)
 @Radium
+@connect(makeMapStateToProps,null,null,{withRef:true})
 @PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
@@ -306,8 +308,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 *
 	 * @returns {any}
 	 */
-	prepareResults() {
-		const {onResultHover,onResultSelected,selectedIndex,results} = this.props || null
+	prepareResults(props:ISearchResultsListProps) {
+		const {onResultHover,onResultSelected,selectedIndex,results} = props || null
 		if (!results)
 			return void 0
 
@@ -318,13 +320,17 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 		// Map Result types
 		const rows = []
-
+		let itemCounter = -1
 		log.info(`Selected index in results ${selectedIndex}`)
 
 		results.forEach((resultData:SearchResultData) => {
-			const {data,result} = resultData
-			if (!data || !data.fulfilled)
+			const {data,result} = resultData,
+				{searchItems} = this.props
+
+			if (!data || !data.fulfilled) {
+				itemCounter += data.request.modelIds.length
 				return
+			}
 
 			const
 				{source,type,items} = result,
@@ -337,10 +343,17 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 			// Filter only the results for this section
 			const sectionRows = _.nilFilter(items.map((item,index) => {
+				itemCounter++
 				const model = models[index]
 				if (!model) return null
 
-				const isSelected = selectedIndex === model.id
+				const isSelected = selectedIndex === itemCounter
+				const itemModel:ISearchItemModel = {item,model}
+
+				// TODO: caclulate this in the SearchPanel - this is expensive
+				if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
+					this.setState({selectedItem:itemModel})
+
 				const itemContent = resultRenderer(item,model,isSelected)
 
 				if (!itemContent)
@@ -354,11 +367,11 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				)
 
 				return (
-					<div key={`${type}-${model.id}`}
+					<div key={`${source}-${model.id}`}
 					     className={isSelected && 'selected'}
 					     style={resultStyle}
-					     onMouseEnter={() => onResultHover && onResultHover(result,{item,model})}
-					     onClick={() => onResultSelected && onResultSelected(result,{item,model})}
+					     onMouseEnter={() => onResultHover && onResultHover(result,itemModel)}
+					     onClick={() => onResultSelected && onResultSelected(result,itemModel)}
 					>
 						{itemContent}
 					</div>
@@ -421,7 +434,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 					transitionEnterTimeout={250}
 					transitionLeaveTimeout={150}>
 
-					{props.open && this.prepareResults()}
+					{props.open && this.prepareResults(props)}
 
 				</CSSTransitionGroup>
 			</div>)
@@ -430,7 +443,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			ReactDOM.render(resultsElement, this.node)
 		} else {
 			return <div className={props.className} style={resultsStyle}>
-				{props.open && this.prepareResults()}
+				{props.open && this.prepareResults(props)}
 			</div>
 		}
 		//renderSubtreeIntoContainer(this,resultsElement,this.node)

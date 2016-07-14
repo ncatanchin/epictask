@@ -3,11 +3,10 @@ import {Container} from 'typescript-ioc'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
 const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
 const log = getLogger(__filename)
-
-const getAppActions = () => new (require('shared/actions/AppActionFactory').AppActionFactory)()
-const getAuthActions = () => new (require('shared/actions/auth/AuthActionFactory').AuthActionFactory)()
 
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
@@ -15,9 +14,9 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 
 	if (process.platform === 'darwin') {
 		template = [{
-			label: 'Super-Duper',
+			label: 'EpicTask',
 			submenu: [{
-				label: 'About ElectronReact',
+				label: 'About EpicTask',
 				selector: 'orderFrontStandardAboutPanel:'
 			},{
 				type: 'separator'
@@ -25,7 +24,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					getAuthActions().logout()
+					Container.get(AuthActionFactory).logout()
 				}
 			}, {
 				type: 'separator'
@@ -35,7 +34,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}, {
 				type: 'separator'
 			}, {
-				label: 'Hide ElectronReact',
+				label: 'Hide EpicTask',
 				accelerator: 'Command+H',
 				selector: 'hide:'
 			}, {
@@ -54,7 +53,26 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 					app.quit()
 				}
 			}]
-		}, {
+		},
+		/* Repos Menu */
+		{
+			label: 'Repos',
+			submenu: [{
+				label: 'Add a Repo',
+				accelerator: 'CmdOrCtrl+Shift+N',
+				click() {
+					log.debug('Sending add new repo')
+					Container.get(UIActionFactory).showAddRepoDialog()
+				}
+			},{
+				label: 'Synchronize All',
+				accelerator: 'Ctrl+S',
+				click() {
+					log.debug('Sending sync all repos')
+					Container.get(RepoActionFactory).syncRepo(enabledRepoIdsSelector(getStoreState()),true)
+				}
+			}]
+		},{
 			label: 'Edit',
 			submenu: [{
 				label: 'Undo',
@@ -82,16 +100,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Select All',
 				accelerator: 'Command+A',
 				selector: 'selectAll:'
-			}]
-		}, {
-			label: 'Repos',
-			submenu: [{
-				label: 'Synchronize All',
-				accelerator: 'Ctrl+S',
-				click() {
-					log.info('Sending sync all repos')
-					Container.get(RepoActionFactory).syncRepo(enabledRepoIdsSelector(getStoreState()),true)
-				}
 			}]
 		}, {
 			label: 'View',
@@ -145,29 +153,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Bring All to Front',
 				selector: 'arrangeInFront:'
 			}]
-		}, {
-			label: 'Help',
-			submenu: [{
-				label: 'Learn More',
-				click() {
-					shell.openExternal('http://electron.atom.io')
-				}
-			}, {
-				label: 'Documentation',
-				click() {
-					shell.openExternal('https://github.com/atom/electron/tree/master/docs#readme')
-				}
-			}, {
-				label: 'Community Discussions',
-				click() {
-					shell.openExternal('https://discuss.atom.io/c/electron')
-				}
-			}, {
-				label: 'Search Issues',
-				click() {
-					shell.openExternal('https://github.com/atom/electron/issues')
-				}
-			}]
 		}]
 
 		menu = Menu.buildFromTemplate(template)
@@ -179,20 +164,9 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					getAuthActions().logout()
+					Container.get(AuthActionFactory).logout()
 				}
-			}
-			// {
-			// 	label:       '&Open',
-			// 	accelerator: 'Ctrl+O'
-			// }, {
-			// 	label:       '&Close',
-			// 	accelerator: 'Ctrl+W',
-			// 	click() {
-			// 		mainWindow.close()
-			// 	}
-			// }
-			]
+			}]
 		}, {
 			label:   '&View',
 			submenu: (Env.isDev) ? [{
@@ -220,29 +194,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				accelerator: 'F11',
 				click() {
 					mainWindow.setFullScreen(!mainWindow.isFullScreen())
-				}
-			}]
-		}, {
-			label:   'Help',
-			submenu: [{
-				label: 'Learn More',
-				click() {
-					shell.openExternal('http://electron.atom.io')
-				}
-			}, {
-				label: 'Documentation',
-				click() {
-					shell.openExternal('https://github.com/atom/electron/tree/master/docs#readme')
-				}
-			}, {
-				label: 'Community Discussions',
-				click() {
-					shell.openExternal('https://discuss.atom.io/c/electron')
-				}
-			}, {
-				label: 'Search Issues',
-				click() {
-					shell.openExternal('https://github.com/atom/electron/issues')
 				}
 			}]
 		}]

@@ -61,7 +61,7 @@ export class IssueState extends IssueStateRecord {
 		// 	internalIssues: List(o.issues)
 		// }))
 	}
-	internalIssues:Issue[]
+	//internalIssues:Issue[]
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
 	selectedIssueId:number

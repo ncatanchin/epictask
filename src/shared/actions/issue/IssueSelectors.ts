@@ -10,9 +10,9 @@ import {
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
 
-
-export const issueIdsSelector = _.memoize((state):number[] =>(state.get(IssueKey) as IssueState).issueIds)
+export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
 
 
 /**
@@ -25,17 +25,62 @@ export const selectedIssueIdsSelector = createSelector(
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
 
+export const issueSortAndFilterSelector = _.memoize((state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
+	const issueState = state.get(IssueKey) as IssueState
+	return _.pick(issueState,'issueFilter','issueSort') as any
+})
+
+
 
 export const issuesSelector = createSelector(
+	enabledRepoIdsSelector,
 	issueIdsSelector,
 	issueModelsSelector,
-	(issueIds:number[],issueMap:Map<string,Issue>) => {
+	issueSortAndFilterSelector,
+	(repoIds,issueIds:number[],issueMap:Map<string,Issue>,{issueSort,issueFilter}) => {
 
 		// If data not avail then return empty
-		if (!issueMap || !issueIds)
+		if (!issueMap || !issueIds || !repoIds)
 			return []
 
-		return issueIds.map(issueId => issueMap.get(`${issueId}`))
+		const issues:Issue[] =
+			issueIds.map(id => issueMap.get(`${id}`))
+			.filter(issue => !_.isNil(issue) && repoIds.includes(issue.repoId))
+
+		let {text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
+			{fields:sortFields,direction:sortDirection} = issueSort
+
+		milestoneIds = milestoneIds || []
+		labelUrls = labelUrls || []
+		assigneeIds = assigneeIds || []
+
+		let filteredIssues = issues
+			.filter(issue => {
+				if (issueId)
+					return `${issue.id}` === `${issueId}`
+
+				let matches = repoIds.includes(issue.repoId)
+				if (matches && milestoneIds.length)
+					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
+
+				if (matches && labelUrls.length)
+					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
+
+				if (matches && assigneeIds.length)
+					matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
+
+				if (matches && text)
+					matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
+
+				return matches
+			})
+
+		filteredIssues = _.sortBy(filteredIssues,sortFields[0])
+
+		if (sortDirection === 'desc')
+			filteredIssues = filteredIssues.reverse()
+
+		return filteredIssues
 	}
 )
 
@@ -49,11 +94,12 @@ export const issuesSelector = createSelector(
 export const issuesDetailSelector = createSelector(
 	enabledRepoIdsSelector,
 	createModelsSelector(),
+	issuesSelector,
 	(state:Map<any,any>):number[] => (state.get(IssueKey) as IssueState).selectedIssueIds,
-	(enabledRepoIds:number[],models,selectedIssueIds:number[]) => {
+	(enabledRepoIds:number[],models,issues,selectedIssueIds:number[]) => {
 		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
-		const issues = selectedIssueIds
+		issues = selectedIssueIds
 			.map(issueId => issueModels.get(`${issueId}`))
 			.filter(issue => !_.isNil(issue) && enabledRepoIds.includes(issue.repoId))
 			.map(issue => new Issue(Object.assign({},issue,{

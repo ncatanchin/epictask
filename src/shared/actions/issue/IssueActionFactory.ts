@@ -1,7 +1,7 @@
 
 
 
-
+import {debounce} from 'lodash-decorators'
 import {FinderRequest} from 'typestore'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
@@ -16,16 +16,21 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {JobActionFactory} from '../jobs/JobActionFactory'
 import Toaster from 'shared/Toaster'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
-import {DataRequest, DataState} from 'shared/actions/data/DataState'
 import {enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {DataRequest, DataState} from 'shared/actions/data/DataState'
 import {selectedIssueIdsSelector, issueSelector} from 'shared/actions/issue/IssueSelectors'
 import {issueModelsSelector, repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
+
+
 /**
  * Created by jglanz on 5/29/16.
  */
 
 const log = getLogger(__filename)
+
+
+//const internalIssueSelector = _.memoize((state) => (state.get(IssueKey) as IssueState).internalIssues)
 
 // IMPORTS
 
@@ -80,30 +85,34 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return IssueKey;
 	}
 
-	setIssuesAction(issues:Issue[],clear:boolean,dispatch,getState)  {
+	@ActionReducer()
+	setIssueIds(issueIds:number[]) {
+		return (state:IssueState) => state.set('issueIds',issueIds)
+	}
+
+
+	requestIssueIdsAction(issueIds:number[], clear:boolean, dispatch, getState)  {
 		const actions = this.withDispatcher(dispatch, getState)
-		const enabledRepoIds = enabledRepoIdsSelector(getState())
+		//const enabledRepoIds = enabledRepoIdsSelector(getState())
 
-		issues = issues
-			.filter(issue => enabledRepoIds.includes(issue.repoId))
-			.map(issue => {
-				issue.labels = issue.labels || []
-				return issue
-			})
-
-		const issueIds = issues.map(issue => `${issue.id}`)
-		const issueMap = _.modelArrayToMapBy(issues,'id')
 
 		// Now push the models into the data state for tracking
 		const dataActions = Container.get(DataActionFactory)
 		const dataRequest = DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz,clear)
 
-		dataActions.submitRequest(dataRequest,issueMap)
-		actions.setInternalIssues(issues)
+		actions.setIssueIds(issueIds)
+		dataActions.submitRequest(dataRequest)
 
 
+		// if (!clear) {
+		// 	issues = _.uniqBy(issues.concat(internalIssueSelector(getState()) || []),'id')
+		// }
+		//
+		// actions.setInternalIssues(issues)
 
 	}
+
+
 
 	/**
 	 * Internally change the issue list
@@ -112,8 +121,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	private setIssues(issues:Issue[],clear=true) {
-		return (dispatch,getState) => this.setIssuesAction(issues,clear,dispatch,getState)
+	private requestIssueIds(issueIds:number[], clear=false) {
+		return (dispatch,getState) => this.requestIssueIdsAction(issueIds,clear,dispatch,getState)
 	}
 
 
@@ -154,15 +163,22 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 				// If the issue belongs to an enabled repo then reload issues
 				if (enabledRepoIds.includes(updatedIssue.repoId)) {
-					let internalIssues = actions.state.internalIssues
-					if (!internalIssues)
-						actions.loadIssues(...enabledRepoIds)
+					let issueIds:number[] = actions.state.issueIds
+					if (!issueIds)
+						actions.loadIssues()
 					else {
-						const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
+						const dataActions:DataActionFactory = Container.get(DataActionFactory)
+						if (!issueIds.includes(updatedIssue.id)) {
+							issueIds = issueIds.concat(updatedIssue.id)
+						}
 
-						internalIssues = internalIssues.filter(issueMatcher).concat([updatedIssue])
 
-						actions.setIssues(internalIssues)
+						dataActions.updateModels(Issue,{[`${updatedIssue.id}`]:updatedIssue})
+							const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
+
+						// internalIssues = internalIssues.filter(issueMatcher).concat([updatedIssue])
+
+						actions.requestIssueIds(issueIds)
 
 					}
 				}
@@ -282,50 +298,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	private filteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
 		return (issueState:IssueState,getState) => {
 
-			const repoIds = enabledRepoIdsSelector(getState())
-
-			issueSort = issueSort || issueState.issueSort
-			issueFilter = issueFilter || issueState.issueFilter
-
-			const {internalIssues} = issueState
-
-			let {text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
-				{fields:sortFields,direction:sortDirection} = issueSort
-
-			milestoneIds = milestoneIds || []
-			labelUrls = labelUrls || []
-			assigneeIds = assigneeIds || []
-
-			let filteredIssues = internalIssues
-				.filter(issue => {
-					if (issueId)
-						return `${issue.id}` === `${issueId}`
-
-					let matches = repoIds.includes(issue.repoId)
-					if (matches && milestoneIds.length)
-						matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
-
-					if (matches && labelUrls.length)
-						matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
-
-					if (matches && assigneeIds.length)
-						matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
-
-					if (matches && text)
-						matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
-
-					return matches
-				})
-
-			filteredIssues = _.sortBy(filteredIssues,sortFields[0])
-
-			if (sortDirection === 'desc')
-				filteredIssues = filteredIssues.reverse()
-
-			const issueIds = filteredIssues.map(issue => issue.id)
-
 			return issueState.withMutations((newIssueState:IssueState) => {
-
 
 				if (issueFilter)
 					newIssueState.set('issueFilter', issueFilter)
@@ -333,29 +306,14 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				if (issueSort)
 					newIssueState.set('issueSort', issueSort)
 
-
-
-
-				return newIssueState.set('issueIds',issueIds)
+				return newIssueState
 			})
 		}
 
 
 	}
 
-
-	@ActionReducer()
-	protected setInternalIssues(issues:Issue[]) {
-		return (issueState:IssueState,getState) => {
-			issueState = issueState.set('internalIssues',issues) as IssueState
-
-			return this.filteringAndSorting(
-				issueState.issueFilter,
-				issueState.issueSort
-			)(issueState,getState)
-		}
-	}
-
+	@debounce(200)
 	@ActionReducer()
 	protected setCommentIds(commentIds:string[]) {
 		return (issueState:IssueState) => issueState.set('commentIds',commentIds)
@@ -367,45 +325,50 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
-	private async loadIssuesAction(repoIds:number[],dispatch,getState) {
+	private async loadIssuesAction(dispatch,getState) {
 		const actions = this.withDispatcher(dispatch, getState)
 
 		// Issue repo
-		const issueState = this.state
-		const issueStore = this.stores.issue
+		const issueState = actions.state
+		const issueStore = actions.stores.issue
 
-
+		const repoIds = availRepoIdsSelector(getState())
 		log.info(`Loading issues for repos`,repoIds)
 
 		let offset = 0
-		const limit = 20
-		while (true) {
-			log.info(`Requesting issues page # ${(offset / limit) + 1}`)
-			const request = new FinderRequest(limit,offset)
-			const issues = await issueStore.findByRepoIdWithRequest(request,...repoIds)
-			actions.setIssues(issues,false)
-			if (issues.length === 0 || issues.length < limit)
-				break
+		const limit = 50
+		let issueIds:number[] = await issueStore.findIdsByRepoId(...repoIds)
 
-			offset += limit
+		// while (true) {
+		// 	log.info(`Requesting issues page # ${(offset / limit) + 1}`)
+		// 	const request = new FinderRequest(limit,offset)
+		// 	const moreIssueIds = await issueStore.findByRepoIdWithRequest(request,...repoIds)
+		// 	issueIds.push(...moreIssueIds)
+		// 	if (moreIssueIds.length === 0 || moreIssueIds.length < limit)
+		// 		break
+		//
+		// 	offset += limit
+		//
+		// }
 
-		}
+		actions.requestIssueIds(issueIds,false)
 
 
 	}
 
 	@Action()
-	loadIssues(...repoIds:number[]) {
-		return (dispatch,getState) => this.loadIssuesAction(repoIds,dispatch,getState)
+	loadIssues() {
+		return (dispatch,getState) => this.loadIssuesAction(dispatch,getState)
 	}
 
 	@Action()
 	clearAndLoadIssues(...repoIds:number[]) {
 		return (dispatch,getState) => {
-			this.setIssuesAction([],true,dispatch,getState)
-			this.loadIssuesAction(repoIds,dispatch,getState)
+			this.requestIssueIdsAction([],true,dispatch,getState)
+			this.loadIssuesAction(dispatch,getState)
 		}
 	}
+
 
 	@Action()
 	loadActivityForIssue(issueId:number) {
@@ -435,7 +398,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			// Now push the models into the data state for tracking
 			const dataActions = Container.get(DataActionFactory)
-			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz,true),commentMap)
+			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz),commentMap)
 
 			actions.setCommentIds(commentIds)
 			//actions.setFilteringAndSorting()

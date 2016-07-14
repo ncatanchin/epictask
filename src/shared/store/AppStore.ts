@@ -24,7 +24,7 @@ const electron = require('electron')
 const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
 
 const stateFilename = cacheFilename('store-state')
-
+const ActionLoggerEnabled = false
 
 
 // If renderer then add an action interceptor
@@ -181,7 +181,7 @@ export function initStore(devToolsMode = false,defaultState = null) {
 		storeEnhancer
 	]
 
-	if (Env.isDev && Env.isRenderer) {
+	if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
 		enhancers.push(applyMiddleware(createLogger()))
 	}
 

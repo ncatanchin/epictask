@@ -3,6 +3,12 @@ import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
+import * as Immutable from 'immutable'
+
+if (Env.isDev) {
+	const installImmutableDevTools = require('immutable-devtools')
+	installImmutableDevTools(Immutable)
+}
 
 /**
  * Now the shared globals - this is required for propper logging config

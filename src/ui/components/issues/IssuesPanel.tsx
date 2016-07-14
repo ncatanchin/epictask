@@ -21,12 +21,12 @@ import {RepoKey, AppKey, DataKey, UIKey, IssueKey} from 'shared/Constants'
 import {List} from 'immutable'
 
 import {RepoState} from 'shared/actions/repo/RepoState'
-import {createStructuredSelector} from 'reselect'
+import {createStructuredSelector,createSelector} from 'reselect'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {UIState} from 'shared/actions/ui/UIState'
 import {IssueState, IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
-import {issuesSelector} from 'shared/actions/issue/IssueSelectors'
+import {issuesSelector,issueSortAndFilterSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 // Non-typed Components
@@ -275,25 +275,20 @@ export interface IIssuesPanelProps {
 	issueFilter?:IIssueFilter
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
-	s?:any
+	styles?:any
 }
 
 
 
-function mapStateToProps(state) {
-	const issueState:IssueState = state.get(IssueKey)
-	const theme = getTheme(),
-		issues = issuesSelector(state)
+const mapStateToProps = createStructuredSelector({
+		theme: () => getTheme(),
+		issues: issuesSelector,
+		issueSort: createSelector(issueSortAndFilterSelector,({issueSort}) => issueSort),
+		issueFilter: createSelector(issueSortAndFilterSelector,({issueFilter}) => issueFilter),
+		selectedIssueIds: selectedIssueIdsSelector,
+		styles: () =>  mergeStyles(styles, (getTheme()) ? getTheme().issuesPanel : null)
 
-	return {
-		theme,
-		issues,
-		issueSort: issueState.issueSort,
-		selectedIssue: null,
-		selectedIssueIds: selectedIssueIdsSelector(state),
-		s: mergeStyles(styles, (theme) ? theme.issuesPanel : null)
-	}
-}
+})
 
 
 /**
@@ -371,12 +366,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 	renderIssue = (index, key) => {
 		const
 			{props} = this,
-			{s,selectedIssueIds,issues} = props
+			{styles,selectedIssueIds,issues} = props
 
 
 
 		return <IssueItem key={key}
-		                  s={s}
+		                  s={styles}
 		                  index={index}
 		                  selectedIssueIds={selectedIssueIds}
 		                  issues={issues}
@@ -388,7 +383,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	render() {
 		const
-			{selectedIssueIds,issueSort,s:themeStyles} = this.props,
+			{selectedIssueIds,issueSort,styles:themeStyles} = this.props,
 			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)

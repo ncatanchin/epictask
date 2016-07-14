@@ -254,14 +254,14 @@ export class RepoSyncJob extends Job {
 			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
 			// Now get the store state to check if updates are needed
-			const storeState = getStoreState()
+
 
 			// If the current repo is not enabled then return
-			const enabledRepoIds = enabledRepoIdsSelector(storeState)
+			const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
 			if (!enabledRepoIds.includes(repo.id)) return
 
 			// Reload issues first
-			await issueActions.loadIssues(...enabledRepoIds)
+			await issueActions.loadIssues()
 
 			log.info('Now syncing comments')
 			await Promise.delay(2000)
@@ -271,7 +271,7 @@ export class RepoSyncJob extends Job {
 			let currentIssueId = issueActions.state.selectedIssueId
 			if (currentIssueId) {
 
-				const issue = issueSelector(storeState)
+				const issue = issueSelector(getStoreState())
 
 				log.debug('Checking if current issue is in this repo, if so then reload',
 					_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))

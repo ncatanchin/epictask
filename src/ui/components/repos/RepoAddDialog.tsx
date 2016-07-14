@@ -122,7 +122,9 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 		}
 	}
 
-
+	/**
+	 * Hide the repo add panel
+	 */
 	hide = () => {
 		const {state} = this
 		const {searchPanel} = state || {} as any
@@ -133,8 +135,18 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 		uiActions.setDialogOpen(Dialogs.RepoAddDialog,false)
 	}
 
+	/**
+	 * When a result is selected
+	 *
+	 * @param result
+	 */
 	onResultSelected = (result) => this.hide()
 
+	/**
+	 * Sets a reference to the search panel
+	 *
+	 * @param searchPanel
+	 */
 	setSearchPanel = (searchPanel) => {
 		this.setState({searchPanel})
 		this.setFocused()
@@ -185,6 +197,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 						<SearchPanel ref={this.setSearchPanel}
 						             autoFocus={true}
 						             modal={true}
+						             onEscape={this.hide}
 						             open={this.props.open}
 									searchId='repo-add-search'
 						             types={[SearchType.Repo]}

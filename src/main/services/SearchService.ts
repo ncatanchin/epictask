@@ -17,7 +17,8 @@ import {IssueStore, Issue} from 'shared/models/Issue'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {DataRequest} from 'shared/actions/data/DataState'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
-
+import {getStoreStateProvider} from 'typedux'
+import {SearchKey} from 'shared/Constants'
 
 
 const log = getLogger(__filename)
@@ -239,48 +240,45 @@ export default class SearchService extends BaseService {
 	}
 
 
+	private async runSearch(searchId) {
+		const actions = Container.get(SearchActionFactory)
+		const state:SearchState = actions.state
+		const search = state.searches.get(searchId)
+		assert(search, 'Search is not defined???')
+		assert(search.types && search.types.size > 0, 'At least one search type is required')
+
+
+		try {
+			const sources = search.types
+				.reduce((sources,nextType) => sources
+					.concat(SearchTypeSourceMap[nextType]),[])
+
+			const searchPromises = sources.map(source => this.searchType(search, source))
+
+			log.info(`Waiting for all type searches to return: ${search}`)
+			await Promise.all(searchPromises)
+		} finally {
+			const currentSearch = (getStoreStateProvider()()).get(SearchKey).searches.get(searchId)
+			delete this.runningSearches[searchId]
+
+			if (currentSearch.query !== search.query) {
+				log.info('query changed while searching, schedule another search for the next tick')
+				process.nextTick(() => this.scheduleSearch(searchId))
+			}
+
+		}
+	}
+
 	@debounce(100)
 	scheduleSearch(searchId) {
 
 		const runningSearch = this.runningSearches[searchId]
 		if (runningSearch) {
-			if (!runningSearch.isFulfilled())
-				return runningSearch
-
-			delete this.runningSearches[searchId]
+			return runningSearch
 		}
 
-		// The actually search function
-		const runSearch = async () => {
-			const actions = Container.get(SearchActionFactory)
-			const state:SearchState = actions.state
-			const search = state.searches.get(searchId)
-			assert(search, 'Search is not defined???')
-			assert(search.types && search.types.size > 0, 'At least one search type is required')
 
-
-			try {
-				const sources = search.types
-					.reduce((sources,nextType) => sources
-						.concat(SearchTypeSourceMap[nextType]),[])
-
-				const searchPromises = sources.map(source => this.searchType(search, source))
-
-				log.info(`Waiting for all type searches to return: ${search}`)
-				await Promise.all(searchPromises)
-			} finally {
-				const currentSearch = actions.state.searches.get(searchId)
-				delete this.runningSearches[searchId]
-
-				if (currentSearch.query !== search.query) {
-					log.info('query changed while searching, schedule another search for the next tick')
-					process.nextTick(() => this.scheduleSearch(searchId))
-				}
-
-			}
-		}
-
-		return this.runningSearches[searchId] = runSearch()
+		return this.runningSearches[searchId] = this.runSearch(searchId)
 
 
 

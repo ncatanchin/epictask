@@ -116,7 +116,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 		log.debug(`add repo click`,event)
 
-		this.uiActions.setDialogOpen(Dialogs.RepoAddDialog,true)
+		this.uiActions.showAddRepoDialog()
 
 	}
 

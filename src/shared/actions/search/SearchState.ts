@@ -65,7 +65,7 @@ export class SearchItem {
 	}
 }
 
-export interface SearchItemModel {
+export interface ISearchItemModel {
 	item: SearchItem,
 	model: any
 }

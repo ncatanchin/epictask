@@ -23,7 +23,7 @@ const resultsSelector = (state:any,props:any) => {
 }
 
 
-const resultsDataSelector = (state:any,props:any):DataResultsContainer[] => {
+const createResultsDataSelector = () => (state:any,props:any):DataResultsContainer[] => {
 	const dataState:DataState = state.get(DataKey)
 	const searchId:string = props.searchId
 	const search = searchesSelector(state).get(searchId)
@@ -63,7 +63,7 @@ export function createSearchDataSelector():SearchDataSelector {
 	return createDeepEqualSelector(
 		searchSelector,
 		resultsSelector,
-		resultsDataSelector,
+		createResultsDataSelector(),
 
 		// Computed value, array of SearchResult
 		(search:Search,results:SearchResult[],resultsData:DataResultsContainer[]) => {

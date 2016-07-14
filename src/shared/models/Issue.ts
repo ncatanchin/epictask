@@ -115,24 +115,17 @@ export class IssueStore extends TSRepo<Issue> {
 	 * @returns {Promise<Issue[]>}
 	 */
 	@PouchDBMangoFinder({
+		includeDocs: false,
 		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => {
-			return {$or: repoIds.map(repoId => ({repoId}))}
-		}
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({repoId}))
+		})
 	})
-	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
+	findByRepoId(...repoIds:number[]):Promise<number[]> {
 		return null
 	}
 
-	@PouchDBMangoFinder({
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => {
-			return {$or: repoIds.map(repoId => ({repoId}))}
-		}
-	})
-	findByRepoIdWithRequest(request:FinderRequest,...repoIds:number[]):Promise<Issue[]> {
-		return null
-	}
+
 
 	@PouchDBMangoFinder({
 		all:true,
@@ -142,42 +135,12 @@ export class IssueStore extends TSRepo<Issue> {
 		return null
 	}
 
-	@PouchDBMangoFinder({
-		indexFields: ['id','repoId','milestone.id','assignee.id','user.id'],
-		includeDocs: false,
-		selector: (
-			issueId:number,
-			repoIds:number[],
-			milestoneIds:number[],
-			labelUrls:string[],
-			assigneeIds:number[]
-		) => {
-			if (issueId)
-				return {issueId}
-
-			const sel:any = {}
-
-			// return {$or: repoIds.map(repoId => ({repoId}))}
-
-			return sel
-		}
-	})
-	findForListView(
-		request:FinderRequest,
-		issueId:number,
-		repoIds:number[],
-	    milestoneIds:number[],
-	    labelUrls:string[],
-	    assigneeIds:number[]
-	):Promise<Issue[]> {
-		return null
-	}
 
 	@PouchDBMangoFinder({
 		includeDocs: false,
 		indexFields: ['repoId'],
 		selector: (...repoIds) => ({
-			$or: repoIds.map(repoId => ({repoId}))
+			$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
 		})
 	})
 	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {

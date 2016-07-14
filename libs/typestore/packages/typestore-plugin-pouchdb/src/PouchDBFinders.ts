@@ -95,7 +95,7 @@ export async function findWithText(pouchRepo,text:string,fields:string[],limit =
  * @param sortDirection
  * @param fields
  */
-export function findWithSelector(
+export async function findWithSelector(
 	pouchRepo:PouchDBRepoPlugin<any>,
 	selector,
 	fields:string[] = null,
@@ -120,14 +120,17 @@ export function findWithSelector(
 		opts.limit = limit
 
 	if (offset > -1)
-		opts.offset = offset
+		opts.skip = offset
 
 	if (includeDocs === false)
 		opts.fields = (fields) ? mapAttrsToField(fields) : mapAttrsToField([pouchRepo.primaryKeyField])
 
-	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
 
-	return pouchRepo.db.find(opts)
+	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
+	const results = await pouchRepo.db.find(opts)
+	log.info('RESULTS: findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4),'results',results)
+
+	return results
 }
 
 
