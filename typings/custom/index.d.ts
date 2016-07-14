@@ -4,6 +4,11 @@
 /// <reference path="./element-class.d.ts" />
 /// <reference path="./lodash-mixins.d.ts" />
 
+// UI MODS
+declare module 'react-hotkeys' {
+	export var HotKeys:any
+
+}
 
 
 interface Window {
@@ -54,6 +59,8 @@ declare namespace Reselect {
 
 	function createSelector<TInput, TOutput, T1>(selector1: Selector<TInput, T1>[], combiner: (...args:T1[]) => TOutput): Selector<TInput, TOutput>;
 }
+
+
 // declare global {
 // 	import * as assertGlobal from 'assert'
 // 	import * as ImmutableGlobal from 'immutable'

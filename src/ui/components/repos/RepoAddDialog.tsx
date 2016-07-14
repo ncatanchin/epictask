@@ -152,16 +152,15 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 		this.setFocused()
 	}
 
+	/**
+	 * When the panel is focused we focus on the search field
+	 */
 	setFocused = () => {
 		const searchPanel = _.get(this,'state.searchPanel') as any
 		if (searchPanel && this.props.open) {
 			const elem = searchPanel.getWrappedInstance()
 			elem.updateFocus()
 		}
-	}
-
-	onFocus = (event) => {
-		this.setFocused()
 	}
 
 	getNewState(props:IRepoAddDialogProps) {
@@ -177,12 +176,18 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 
 	}
 
-	componentWillReceiveProps =(nextProps:IRepoAddDialogProps) =>
-		this.setState(this.getNewState(nextProps)) || this.setFocused()
+	/**
+	 * On new props - update the state
+	 *
+	 * @param nextProps
+	 */
+	componentWillReceiveProps =(nextProps:IRepoAddDialogProps) => this.setState(this.getNewState(nextProps)) || this.setFocused()
 
 
-	componentWillMount = () =>
-		this.setState(this.getNewState(this.props)) || this.setFocused()
+	/**
+	 * on mount update state
+	 */
+	componentWillMount = () => this.setState(this.getNewState(this.props)) || this.setFocused()
 
 
 
@@ -190,7 +195,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 
 		const {styles} = this.state, {theme} = this.props
 
-		return <HotKeys handlers={this.keyHandlers} onFocus={this.onFocus} style={mergeStyles(styles.root,this.props.open && styles.root.open)}>
+		return <HotKeys handlers={this.keyHandlers} onFocus={this.setFocused} style={mergeStyles(styles.root,this.props.open && styles.root.open)}>
 			{this.props.open && <MuiThemeProvider muiTheme={theme}>
 
 					<div style={styles.container}>
@@ -199,6 +204,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 						             modal={true}
 						             onEscape={this.hide}
 						             open={this.props.open}
+						             resultsHidden={!this.props.open}
 									searchId='repo-add-search'
 						             types={[SearchType.Repo]}
 						             inlineResults={true}

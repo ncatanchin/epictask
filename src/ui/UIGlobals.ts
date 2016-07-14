@@ -5,6 +5,7 @@ import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import * as Immutable from 'immutable'
 
+
 if (Env.isDev) {
 	const installImmutableDevTools = require('immutable-devtools')
 	installImmutableDevTools(Immutable)
@@ -44,6 +45,9 @@ declare global {
 	var ReactDOM:typeof ReactDOMGlobal
 	var Notification:any
 	var logError:typeof logErrorGlobal
+
+
+
 }
 
 const g = global as any

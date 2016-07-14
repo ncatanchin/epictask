@@ -107,7 +107,12 @@ declare global {
 	interface Object {
 		$$clazz?:string
 	}
+
+
+
 }
+
+
 
 
 

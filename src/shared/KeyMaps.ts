@@ -9,7 +9,8 @@ export enum CommonKeys {
 	Escape,
 	Enter,
 	Delete,
-	Space
+	Space,
+	Find
 }
 
 export const Global = {
@@ -21,6 +22,7 @@ export const Global = {
 	[CommonKeys.MoveRight]: 'right',
 	[CommonKeys.Enter]: 'enter',
 	[CommonKeys.Escape]: 'esc',
+	[CommonKeys.Find]: 'command+f',
 	[CommonKeys.Space]: 'space',
 	[CommonKeys.Delete]: ['del','backspace']
 }

@@ -2,6 +2,10 @@ import * as React from 'react'
 import {SearchPanel} from 'components'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {SearchType} from 'shared/actions/search/SearchState'
+import {HotKeys} from 'ui/components/common/Other'
+import {CommonKeys} from 'shared/KeyMaps'
+import {TextField} from 'material-ui/TextField'
+
 
 const log = getLogger(__filename)
 
@@ -11,7 +15,7 @@ export enum HeaderVisibility {
 	Expanded
 }
 
-const styles = {
+const baseStyles = {
 	header: makeStyle(FlexRow, FlexAlignCenter, FlexAuto, PositionRelative, makeTransition(), {
 		WebkitUserSelect: 'none',
 		WebkitAppRegion:  'drag',
@@ -90,27 +94,40 @@ const styles = {
 }
 
 
+
 export interface IHeaderProps {
 	className?:string
 	visibility:HeaderVisibility
 	style?:any
 }
 
+export interface IHeaderState {
+	searchPanel?:SearchPanel
+	resultsHidden?:boolean
+	focused?:boolean
+}
+
 /**
  * The app header component, title/logo/settings
  */
 // @Themeable()
-export class Header extends React.Component<IHeaderProps,any> {
+export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
-	/**
-	 * Create a new header component
-	 *
-	 * @param props
-	 * @param context
-	 */
-	constructor(props, context) {
-		super(props, context)
+	get isExpanded():boolean {
+		return this.props.visibility === HeaderVisibility.Expanded
 	}
+
+	get searchPanel():SearchPanel {
+		const panel = _.get(this,'state.searchPanel') as any
+		return panel ? panel.getWrappedInstance() : null
+	}
+
+	get textField():TextField {
+		return _.get(this,'searchPanel.textField') as any
+	}
+
+	componentWillMount = () => !this.state && this.setState({})
+
 
 	windowClose = () => {
 		log.info('window close')
@@ -128,60 +145,94 @@ export class Header extends React.Component<IHeaderProps,any> {
 		this.setState({searchPanel})
 	}
 
+
+
+	onBlur = (event) => {
+		this.setState({resultsHidden:this.isExpanded,focused:false})
+
+		const textField:any = _.get(this,'searchPanel.textField')
+		//if (textField) textField.blur()
+		const doc = document as any
+		doc.activeElement.blur()
+	}
+
+	onFocus = (event) => {
+		this.setState({resultsHidden:false,focused:true})
+
+		const searchPanel = this.searchPanel
+		if (searchPanel) {
+			searchPanel.onFocus({})
+			searchPanel.select()
+		}
+
+		//this.textField && this.textField.focus()
+	}
+
+	keyHandlers = {}
+
+
 	render() {
 		const theme = getTheme()
 		const
 			{visibility, style} = this.props,
-			expanded = visibility === HeaderVisibility.Expanded
+			expanded = this.isExpanded,
+			{resultsHidden} = this.state
 
 		const themeHeight = theme.header.style.height
+
+		//noinspection JSSuspiciousNameCombination
 		const logoWrapperStyle = makeStyle(
-			styles.logoWrapper,
+			baseStyles.logoWrapper,
 			theme.header.logoWrapperStyle,
 			{
 				height: themeHeight,
 				width: themeHeight,
 				right: themeHeight / 2
 			},
-			expanded && styles.logoWrapperExpanded)
+			expanded && baseStyles.logoWrapperExpanded)
 
 		const logoStyle = makeStyle(
-			styles.logo,
+			baseStyles.logo,
 			theme.header.logo,
-			expanded && styles.logoExpanded
+			expanded && baseStyles.logoExpanded
 		)
 
-		let headerStyle = makeStyle(styles.header)
+		let headerStyle = makeStyle(baseStyles.header)
 
 		if ((visibility !== HeaderVisibility.Hidden)) {
 			headerStyle = makeStyle(
 				theme.header.style,
 				style,
-				styles.header,
-				styles.headerNormal,
-				expanded && styles.headerExpanded, {
+				baseStyles.header,
+				baseStyles.headerNormal,
+				expanded && baseStyles.headerExpanded, {
 					height: (visibility === HeaderVisibility.Expanded) ? '100%' : themeHeight,
 					WebkitAppRegion: 'drag'
 				}
 			)
 		}
 
-		const controlStyle = makeStyle(theme.header.controlStyle,styles.controlButton)
+		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
 
-		return <div style={headerStyle} id='header'>
+		return <HotKeys id="header" handlers={this.keyHandlers} onBlur={this.onBlur} onFocus={this.onFocus} style={headerStyle}>
 			<SearchPanel
 				ref={this.setSearchPanel}
 				searchId='header-search'
 				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
 				inlineResults={expanded}
+				resultsHidden={!_.get(this.state,'focused')}
 				expanded={expanded}
+				focused={_.get(this.state,'focused')}
+				open={!resultsHidden}
+				onEscape={this.onBlur}
 				mode={expanded ? 'repos' : 'issues'}/>
+
 			<div style={logoWrapperStyle}>
 				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
 				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}
 			</div>
 
-		</div>
+		</HotKeys>
 	}
 }
 

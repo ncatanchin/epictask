@@ -46,6 +46,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes {
 	searchData?:SearchData
 	searchItems?:SearchItem[]
 	theme?:any
+	focused?:boolean
 	hidden?:boolean
 	mode:"repos"|"issues"
 	onEscape?:() => void
@@ -103,19 +104,39 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 
 
-	isFocused = (props,onFocus=false) => (_.get(this,'state.focused') && !props.modal) ||
-		(props.open && props.modal) || (onFocus && !props.modal)
+	isFocused = (props) => (_.get(this,'state.focused') && !props.modal) ||
+		(props.open && props.modal)
 
-	updateFocus = (onFocus) => this.setState({focused: this.isFocused(this.props,onFocus)}) || this.focusTextField()
+	updateFocus = (onFocus = false) => this.setState({focused: onFocus || this.isFocused(this.props)}) || this.focusTextField()
 
 	getNewState = (props:ISearchPanelProps) => ({
-		focused: this.isFocused(props),
+		focused: props.focused,
 		totalItemCount: (!props.searchItems) ? 0 : props.searchItems.length,
 		selectedIndex: Math.min(_.get(this,'state.selectedIndex',0),Math.max(0,props.searchItems.length - 1))
 	})
 
-	componentWillMount = () => this.setState(this.getNewState(this.props))
-	componentWillReceiveProps = (nextProps:ISearchPanelProps) => this.setState(this.getNewState(nextProps))
+
+	updateState = (props:ISearchPanelProps) => {
+		this.setState(this.getNewState(props))
+
+		this.focusTextField(props.focused)
+	}
+
+	componentWillMount = () => this.updateState(this.props)
+	componentWillReceiveProps = (nextProps:ISearchPanelProps) => this.updateState(nextProps)
+
+	select = () => {
+		const textField = this.state.textField
+		if (!textField) return
+
+		const $ = require('jquery')
+		const textElement = ReactDOM.findDOMNode(textField)
+		const inputElement = $('input',textElement)[0]
+		if (inputElement)
+			inputElement.select()
+
+
+	}
 
 	onFocus = (event) => {
 		log.info('Search panel gained focus',this,event)
@@ -125,12 +146,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	}
 
-	focusTextField = () => {
+	focusTextField = (setFocus = true) => {
 		const textField = this.state.textField,
 			shouldFocus = this.props.open && textField
 
-		if (shouldFocus)
-		  this.state.textField.focus()
+		if (shouldFocus && setFocus) {
+			textField.focus()
+		} else if (textField) {
+			textField.blur()
+		}
 	}
 
 	/**
@@ -148,6 +172,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		} else {
 			log.info('Probably text box blur')
 		}
+
+
+
 	}
 
 	@debounce(150)

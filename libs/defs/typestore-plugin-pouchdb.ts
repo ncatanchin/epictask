@@ -1,1 +1,0 @@
-export * from '../typestore/packages/typestore-plugin-pouchdb/src/index'

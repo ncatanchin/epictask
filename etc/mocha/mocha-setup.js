@@ -16,7 +16,18 @@ require('reflect-metadata')
 // 	Log.setLogThreshold(Log.LogLevel.WARN)
 
 global.getLogger = function(filename) {
-	return console
+	return ['debug','info','error','warn','trace'].reduce((logger,nextLevel) => {
+		const fn = console[nextLevel] ?
+			console[nextLevel].bind(console) :
+			console.log.bind(console)
+
+		logger[nextLevel] = (...args) => {
+			fn(filename,...args)
+		}
+
+		return logger
+	},{})
+
 }
 
 

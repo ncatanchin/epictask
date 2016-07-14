@@ -13,6 +13,8 @@ let hmrReady = false
 @AutoWired
 @Singleton
 export class MainConfigurator {
+	private requestedServices:any[]
+
 	services:{[key:string]:IService} = {}
 	servicesCtx = null
 
@@ -20,6 +22,19 @@ export class MainConfigurator {
 		this.servicesCtx = require.context('main/services',true,/^((?!DBService|IService)[\S\s]).*Service\.ts$/)
 		log.info(`Services Context has keys: ${this.servicesCtx.keys().join(', ')}`)
 
+		return ContextUtils.requireContext(
+			this.servicesCtx,
+			[],
+			true
+		)
+
+	}
+
+	loadRequestedServices() {
+		return this.requestedServices.reduce((services,serviceClazz) => {
+			services[serviceClazz.name] = Container.get(serviceClazz)
+			return services
+		},)
 	}
 
 	/**
@@ -30,12 +45,12 @@ export class MainConfigurator {
 	async startServices() {
 		log.info('Starting services')
 
-		this.loadServices()
-		const Services = ContextUtils.requireContext(
-			this.servicesCtx,
-			[],
-			true
-		)
+
+		const Services = (this.requestedServices.length) ?
+			this.loadRequestedServices() :
+			this.loadServices()
+
+
 
 		const serviceKeys = Object.keys(Services)
 		log.info('Discovered available services:', serviceKeys)
@@ -98,7 +113,11 @@ export class MainConfigurator {
 		return Services
 	}
 
-	async init():Promise<this> {
+	async init(...requestedServices:any[]):Promise<this> {
+
+		// Set services
+		this.requestedServices = requestedServices
+
 		// Load Redux-Store FIRST
 		log.info('Loading the REDUX store')
 		const store:ObservableStore<any> = await require('shared/store').loadAndInitStore()

@@ -22,9 +22,6 @@ const {HotKeys} = require('react-hotkeys')
 // Constants
 const log = getLogger(__filename)
 
-
-
-
 const styles = {
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{
 
