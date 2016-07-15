@@ -127,6 +127,7 @@
 		"libs/**/*.spec.ts",
 		"libs/**/tsconfig.json",
 		"libs/**/test",
-		"node_modules"
+		"node_modules",
+		"node_modules.disk"
 	]
 }

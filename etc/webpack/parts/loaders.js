@@ -18,7 +18,7 @@ module.exports = (projectConfig) => {
 				loader: 'source-map-loader'
 			},
 			{
-				test: /\.js$/,
+				test: /\.jsx$/,
 				exclude: /node_modules/,
 				loader: 'source-map-loader'
 			}
@@ -53,7 +53,8 @@ module.exports = (projectConfig) => {
 			// BABEL/JS
 			{
 				test: /\.jsx?$/,
-				exclude: /node_modules/,
+				//exclude: /node_modules/,
+				exclude: /^((?!.*material-ui-build)[\S\s]).*node_modules/,
 				loaders: ['babel'],
 			},
 

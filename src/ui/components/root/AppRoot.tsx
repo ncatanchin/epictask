@@ -25,7 +25,7 @@ import {RootState} from 'shared/store/RootState'
 import {HotKeys} from 'react-hotkeys'
 
 const {StyleRoot} = Radium
-
+const $ = require('jquery')
 
 
 /**
@@ -149,7 +149,7 @@ class App extends React.Component<IAppProps,any> {
 		},
 		[KeyMaps.CommonKeys.Find]: () => {
 			log.info('Escaping and moving focus')
-			document.getElementById('header').focus()
+			$('#header input').focus()
 		}
 	}
 

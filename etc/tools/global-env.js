@@ -28,11 +28,16 @@ process.argv.forEach(arg => {
 		process.env.NODE_ENV = 'development'
 })
 
+/**
+ * Global modules and
+ * @type {SemVer}
+ */
 const
 	semver     = require('semver'),
 	path       = require('path'),
 	_          = require('lodash'),
 	processDir = path.resolve(__dirname, '../..'),
+	RamDiskPath = path.join(process.env.HOME,'DevelopmentRAM','epictask'),
 	env        = process.env.NODE_ENV || 'development'
 
 console.log('env = ',env)
@@ -71,6 +76,7 @@ Object.assign(global, {
 	baseDir: processDir,
 	basePackageJson: readJSONFileSync(`${processDir}/package.json`),
 	RunMode,
+	RamDiskPath,
 	TargetType,
 	Deferred: require('./deferred'),
 	assert: require('assert')

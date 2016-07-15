@@ -398,10 +398,13 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			color: p.alternateTextColor
 		})
 
-		if (!this.props.inline) {
+		log.info('rendering results inline:',props.inline,'open',props.open,'anchor',props.anchor)
+
+		if (!props.inline) {
 			const anchor = typeof props.anchor === 'string' ?
 				document.querySelector(props.anchor) :
 				props.anchor
+
 
 			const containerStyle = props.open && anchor ? (() => {
 				const rect =  anchor.getBoundingClientRect()
@@ -426,7 +429,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				height: 0
 			}
 
-
+			log.info('rendering results',{anchor,node:this.node,containerStyle})
 			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
 			const resultsElement = (<div className="searchResults" style={resultsStyle}>
 				<CSSTransitionGroup

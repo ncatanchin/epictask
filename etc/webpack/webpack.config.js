@@ -21,10 +21,36 @@ const libAlias = (name, libPath) => ({
 	[name]: path.resolve(baseDir, `libs/${libPath}`)
 })
 
-const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir, dir))
+/**
+ * Resolves directories and maps to ram disk
+ * if available
+ *
+ * @param dirs
+ */
+const resolveDirs = (...dirs) => dirs.map(dir => {
+	const ramDiskResolvePath = path.join(RamDiskPath,dir)
+	const resolvedPath =  fs.realpathSync(
+		fs.existsSync(ramDiskResolvePath) ?
+			ramDiskResolvePath :
+			path.resolve(baseDir, dir)
+	)
+
+	log.info(`Resolved "${dir}" = "${resolvedPath}"`)
+	return resolvedPath
+})
+
+/**
+ * Use npm|build version of material-ui
+ *
+ * @type {boolean}
+ */
 const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
-const materialUiModule = useMaterialUIBuild ?
-	      'material-ui-build/src' : 'material-ui'
+
+const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
+
+
+
+
 console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
 	const config = {

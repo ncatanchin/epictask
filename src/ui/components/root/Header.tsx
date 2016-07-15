@@ -5,7 +5,7 @@ import {SearchType} from 'shared/actions/search/SearchState'
 import {HotKeys} from 'ui/components/common/Other'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TextField} from 'material-ui/TextField'
-
+import {PureRender} from 'ui/components/common'
 
 const log = getLogger(__filename)
 
@@ -103,14 +103,16 @@ export interface IHeaderProps {
 
 export interface IHeaderState {
 	searchPanel?:SearchPanel
+	hotKeys?:any
 	resultsHidden?:boolean
+	forceBlur?:boolean
 	focused?:boolean
 }
 
 /**
  * The app header component, title/logo/settings
  */
-// @Themeable()
+@PureRender
 export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 	get isExpanded():boolean {
@@ -126,7 +128,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		return _.get(this,'searchPanel.textField') as any
 	}
 
-	componentWillMount = () => !this.state && this.setState({})
+
 
 
 	windowClose = () => {
@@ -141,36 +143,62 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		log.info('window max')
 	}
 
-	setSearchPanel = (searchPanel) => {
+	setSearchPanelRef = (searchPanel) => {
 		this.setState({searchPanel})
 	}
 
+	setHotKeysRef = (hotKeys) => {
+		this.setState({hotKeys})
+	}
 
+	/**
+	 * On escape sequence close the header unless expanded
+	 */
+	onEscape = () => {
+		if (this.isExpanded)
+			return
+
+		const textField:any = _.get(this,'searchPanel.textField')
+		if (textField) {
+			textField.blur()
+		} else {
+			const doc = document as any
+			doc.activeElement.blur()
+		}
+	}
+
+	/**
+	 * onBlur - exiting find
+	 *
+	 * @param event
+	 */
 
 	onBlur = (event) => {
 		this.setState({resultsHidden:this.isExpanded,focused:false})
-
-		const textField:any = _.get(this,'searchPanel.textField')
-		//if (textField) textField.blur()
-		const doc = document as any
-		doc.activeElement.blur()
 	}
 
+	/**
+	 * On focus - usually for find
+	 *
+	 * @param event
+	 */
 	onFocus = (event) => {
 		this.setState({resultsHidden:false,focused:true})
-
-		const searchPanel = this.searchPanel
-		if (searchPanel) {
-			// searchPanel.onFocus({})
-			searchPanel.select()
-		}
-
-		//this.textField && this.textField.focus()
 	}
 
 	keyHandlers = {}
 
 
+	/**
+	 * on mount clear the state
+	 */
+	componentWillMount = () => !this.state && this.setState({})
+
+	/**
+	 * Render component
+	 *
+	 * @returns {any}
+	 */
 	render() {
 		const theme = getTheme()
 		const
@@ -213,16 +241,21 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		}
 
 		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
-		//
-		return <HotKeys id="header" style={headerStyle} handlers={this.keyHandlers} onBlur={this.onBlur} onFocus={this.onFocus}>
+
+		return <HotKeys ref={this.setHotKeysRef}
+		                id="header"
+		                style={headerStyle}
+		                handlers={this.keyHandlers}
+		                onBlur={this.onBlur}
+		                onFocus={this.onFocus}>
 			<SearchPanel
-				ref={this.setSearchPanel}
+				ref={this.setSearchPanelRef}
 				searchId='header-search'
 				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
 				inlineResults={expanded}
 				expanded={expanded}
 
-				onEscape={this.onBlur}
+				onEscape={this.onEscape}
 				mode={expanded ? 'repos' : 'issues'}/>
 
 			<div style={logoWrapperStyle}>

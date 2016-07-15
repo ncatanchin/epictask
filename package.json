@@ -202,6 +202,7 @@
     "react": "^15.2.1",
     "react-addons-css-transition-group": "^15.2.1",
     "react-addons-pure-render-mixin": "^15.2.1",
+    "react-addons-shallow-compare": "^15.2.1",
     "react-animate.css": "0.0.4",
     "react-component-resizable": "1.0.0",
     "react-css-modules": "^3.7.6",
