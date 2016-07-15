@@ -22,7 +22,8 @@ const libAlias = (name, libPath) => ({
 })
 
 const resolveDirs = (...dirs) => dirs.map(dir => path.resolve(baseDir, dir))
-const materialUiModule = (fs.existsSync(process.cwd(),'node_modules/material-ui-build')) ?
+const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
+const materialUiModule = useMaterialUIBuild ?
 	      'material-ui-build/src' : 'material-ui'
 console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
@@ -138,6 +139,11 @@ module.exports = function (projectConfig) {
 		]
 
 	}
+
+	if (useMaterialUIBuild)
+		config.resolve.modules.push(path.resolve(processDir,'node_modules/material-ui-build/node_modules'))
+
+	//config.resolve.modules.push(path.resolve(processDir,'node_modules/react-hotkeys/node_modules'))
 
 	// Development specific updates
 	Object.assign(config, {

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import filterProps from 'react-valid-props'
 
 const log = getLogger(__filename)
 
@@ -21,7 +22,7 @@ export class Page extends React.Component<any,any> {
 		let {style} = this.props
 		const pageStyle = makeStyle(styles.page,style)
 
-		return <div {...this.props} style={pageStyle}>
+		return <div {...filterProps(this.props)} style={pageStyle}>
 			{this.props.children}
 		</div>
 	}

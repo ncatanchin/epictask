@@ -7,6 +7,7 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {FAIcons} from './IconFontAwesomeNames'
 import {GHIcons} from './IconOpticonNames'
+import filterProps from 'react-valid-props'
 // Constants
 const log = getLogger(__filename)
 
@@ -40,6 +41,7 @@ function iconCode(codeSet,iconName) {
  * @class Icon
  * @constructor
  **/
+
 @Radium
 export class Icon extends React.Component<IIconProps,any> {
 
@@ -65,7 +67,7 @@ export class Icon extends React.Component<IIconProps,any> {
 			iconCode(GHIcons,iconName) :
 			children
 
-		return <i {...this.props} className={className} style={style}>
+		return <i {...filterProps(this.props)} className={className} style={style}>
 			{iconContent}
 		</i>
 	}

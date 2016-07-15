@@ -104,8 +104,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 
 
-	isFocused = (props) => (_.get(this,'state.focused') && !props.modal) ||
-		(props.open && props.modal)
+	isFocused = (props) => (_.get(this,'state.focused') || props.modal)
+
 
 	updateFocus = (onFocus = false) => this.setState({focused: onFocus || this.isFocused(this.props)}) || this.focusTextField()
 
@@ -148,7 +148,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	focusTextField = (setFocus = true) => {
 		const textField = this.state.textField,
-			shouldFocus = this.props.open && textField
+			shouldFocus = this.isFocused(this.props) && textField
 
 		if (shouldFocus && setFocus) {
 			textField.focus()
@@ -168,12 +168,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const searchPanel = document.getElementById('searchPanel')
 		if (event.relatedTarget && !searchPanel.contains(event.relatedTarget)) {
 			log.info('Search panel blur')
-			this.updateFocus(true)
+			// this.updateFocus(true)
 		} else {
 			log.info('Probably text box blur')
 		}
 
-
+		this.updateFocus()
 
 	}
 
@@ -217,6 +217,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 		searchActions.select(this.props.searchId,itemModel)
 		this.setState({focused: false})
+		const $ = require('jquery')
+		const inputElement = $('input',ReactDOM.findDOMNode(this.state.textField))[0]
+		if (inputElement)
+			inputElement.blur()
 
 		if (this.props.onResultSelected)
 			this.props.onResultSelected(result)
@@ -274,10 +278,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	onTextFieldBlur = (event) => {
 		log.info('text field blur',this,event)
+		//this.onBlur({})
 	}
 
 	onTextFieldFocus = (event) => {
 		log.info('text field focused',this,event)
+		//this.onFocus({})
 	}
 
 	/**
@@ -286,15 +292,16 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	render() {
-		const {expanded, theme,searchId,hidden,modal} = this.props,
+		const {expanded, theme,searchId,searchItems,hidden,modal} = this.props,
 			{search,results} = this.props.searchData,
 			{query} = search
 
 		const {searchPanel:spTheme} = theme
 		const focused = modal || this.state.focused
-		const resultsOpen = (results && results.length > 0 ||
-			(query && query.length > 0)) &&
-			(focused || modal) && !hidden
+		const resultsOpen = focused
+			// (searchItems && searchItems.length > 0 ||
+			// (query && query.length > 0)) &&
+			// focused && !hidden
 
 		// Panel styles
 		const panelClazz = expanded ?
@@ -318,7 +325,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		// Focused Styles
 		const focusedClazz = focused ? ' ' + styles.focused : ''
 
-
+		const searchPanelId = `searchPanel-${searchId}`
 		log.info('Rendering with results',results,'focused',focused,'resultsOpen',resultsOpen)
 
 		//<HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
@@ -328,7 +335,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				       style={makeStyle(panelStyle)}
 				       zDepth={2}
 				       ref="panel"
-				       id="searchPanel">
+				       id={searchPanelId}>
 
 
 					<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
@@ -336,15 +343,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 							ref={this.setTextFieldRef}
 							autoFocus={this.props.autoFocus}
 							tabIndex={1}
-							onFocus={this.onTextFieldFocus}
-							onBlur={this.onTextFieldBlur}
 							hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 							onChange={(e) => this.onInputChange(e)}
+							onFocus={this.onTextFieldFocus}
+							onBlur={this.onTextFieldBlur}
 							inputStyle={inputStyle}
 							defaultValue={this.state.query || query}
 						/>
 						<SearchResultsList ref="resultsList"
-						                   anchor={'#searchPanel'}
+						                   anchor={'#' + searchPanelId}
 						                   selectedIndex={this.state.selectedIndex}
 						                   searchItems={this.props.searchItems || []}
 										searchId={searchId}

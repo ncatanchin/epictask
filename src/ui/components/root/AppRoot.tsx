@@ -22,9 +22,10 @@ import {UIState} from 'shared/actions/ui/UIState'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
+import {HotKeys} from 'react-hotkeys'
 
 const {StyleRoot} = Radium
-const {HotKeys} = require('react-hotkeys')
+
 
 
 /**

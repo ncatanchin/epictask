@@ -26,6 +26,10 @@ interface IHomeProps {
 
 }
 
+interface IHomeState {
+	width?:number
+}
+
 /**
  * Map theme into props - very shorthand
  * @param state
@@ -37,19 +41,28 @@ const mapStateToProps = (state) => ({theme: getTheme()})
  */
 @connect(mapStateToProps)
 @PureRender
-export class HomePage extends React.Component<IHomeProps,any> {
+export class HomePage extends React.Component<IHomeProps,IHomeState> {
 
 	constructor(props, context) {
 		super(props, context)
-		this.state = this.getNewState()
+
 	}
 
-	getNewState() {
+	getNewState(props) {
 		return {width:window.innerWidth}
 	}
 
-	onResize = () => {
-		this.setState(this.getNewState())
+	updateState = (props = this.props) => {
+		this.setState(this.getNewState(props))
+	}
+
+	componentWillMount() {
+		this.updateState()
+		window.addEventListener('resize',this.updateState)
+	}
+
+	componentWillUnmount() {
+		window.removeEventListener('resize',this.updateState)
 	}
 
 	handleClose = () => {
@@ -77,12 +90,13 @@ export class HomePage extends React.Component<IHomeProps,any> {
 
 		return (
 			<Page>
-				<Resizable onResize={this.onResize} style={styles.bodyWrapper}>
-					<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}>
-						<RepoPanel />
-						<IssuesPanel />
-					</SplitPane>
-				</Resizable>
+				<div style={styles.bodyWrapper}>
+				<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}  >
+					<RepoPanel />
+					<IssuesPanel />
+				</SplitPane>
+				</div>
+
 			</Page>
 		)
 	}

@@ -161,7 +161,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 		const searchPanel = this.searchPanel
 		if (searchPanel) {
-			searchPanel.onFocus({})
+			// searchPanel.onFocus({})
 			searchPanel.select()
 		}
 
@@ -213,17 +213,15 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		}
 
 		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
-
-		return <HotKeys id="header" handlers={this.keyHandlers} onBlur={this.onBlur} onFocus={this.onFocus} style={headerStyle}>
+		//
+		return <HotKeys id="header" style={headerStyle} handlers={this.keyHandlers} onBlur={this.onBlur} onFocus={this.onFocus}>
 			<SearchPanel
 				ref={this.setSearchPanel}
 				searchId='header-search'
 				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
 				inlineResults={expanded}
-				resultsHidden={!_.get(this.state,'focused')}
 				expanded={expanded}
-				focused={_.get(this.state,'focused')}
-				open={!resultsHidden}
+
 				onEscape={this.onBlur}
 				mode={expanded ? 'repos' : 'issues'}/>
 

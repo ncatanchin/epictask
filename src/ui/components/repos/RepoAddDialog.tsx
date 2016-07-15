@@ -193,30 +193,34 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 
 	render() {
 
-		const {styles} = this.state, {theme} = this.props
+		const {styles} = this.state,
+			{theme} = this.props,
+			rootStyles = mergeStyles(styles.root,this.props.open && styles.root.open)
 
-		return <HotKeys handlers={this.keyHandlers} onFocus={this.setFocused} style={mergeStyles(styles.root,this.props.open && styles.root.open)}>
-			{this.props.open && <MuiThemeProvider muiTheme={theme}>
+		return <div style={rootStyles}>
+			<HotKeys handlers={this.keyHandlers} onFocus={this.setFocused} style={rootStyles}>
+				{this.props.open && <MuiThemeProvider muiTheme={theme}>
 
-					<div style={styles.container}>
-						<SearchPanel ref={this.setSearchPanel}
-						             autoFocus={true}
-						             modal={true}
-						             onEscape={this.hide}
-						             open={this.props.open}
-						             resultsHidden={!this.props.open}
-									searchId='repo-add-search'
-						             types={[SearchType.Repo]}
-						             inlineResults={true}
-						             expanded={false}
-						             mode='repos'
+						<div style={styles.container}>
+							<SearchPanel ref={this.setSearchPanel}
+							             autoFocus={true}
+							             modal={true}
+							             onEscape={this.hide}
+							             open={this.props.open}
+							             resultsHidden={!this.props.open}
+										searchId='repo-add-search'
+							             types={[SearchType.Repo]}
+							             inlineResults={true}
+							             expanded={false}
+							             mode='repos'
 
-						             onResultSelected={this.onResultSelected}
-									 hidden={!open}/>
-					</div>
+							             onResultSelected={this.onResultSelected}
+										 hidden={!open}/>
+						</div>
 
-			</MuiThemeProvider>}
-		</HotKeys>
+				</MuiThemeProvider>}
+			</HotKeys>
+		</div>
 	}
 
 }

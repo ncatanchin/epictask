@@ -428,7 +428,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 
 			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
-			const resultsElement = (<div style={resultsStyle}>
+			const resultsElement = (<div className="searchResults" style={resultsStyle}>
 				<CSSTransitionGroup
 					transitionName="results"
 					transitionEnterTimeout={250}

@@ -6,6 +6,7 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 import {connect} from 'react-redux'
+import filterProps from 'react-valid-props'
 const Ink = require('react-ink')
 //endregion
 
@@ -56,8 +57,8 @@ function mapStateToProps(state) {
  * @class Button
  * @constructor
  **/
-@connect(mapStateToProps)
 @Radium
+@connect(mapStateToProps)
 export class Button extends React.Component<IButtonProps,any> {
 
 	static defaultProps = {
@@ -74,9 +75,10 @@ export class Button extends React.Component<IButtonProps,any> {
 			{ripple,theme,mode,disabled,style,children} = this.props,
 			s = mergeStyles(styles,theme.button)
 
+
 		const rootStyle = mergeStyles(s.root,s[mode],(disabled) && s.disabled,style)
 		//{ripple && <Ink/>}
-		return <button {...this.props} style={rootStyle}>
+		return <button {...filterProps(this.props)} style={rootStyle}>
 			{children}
 		</button>
 	}

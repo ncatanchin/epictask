@@ -91,7 +91,6 @@ function mapStateToProps(state) {
  **/
 
 @connect(mapStateToProps)
-@Radium
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 
@@ -133,21 +132,22 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 				':hover': themeStyle.headerButtonHover
 			})
 
-		return (
-			<HotKeys handlers={this.keyHandlers} style={styles.drawerWrapper}>
-				<div style={panelStyle}>
+		return <div style={styles.drawerWrapper}>
+			<HotKeys handlers={this.keyHandlers} style={panelStyle}>
+
 					<div style={headerStyle}>
 						<div style={s.headerTitle}>Repositories</div>
-						<Button tabIndex={-1} style={headerButtonStyle} onFocus={this.onAddRepoButtonFocus} onClick={this.onAddRepoClicked}>
+						<Button tabIndex={-1} style={headerButtonStyle} onClick={this.onAddRepoClicked}>
 							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
 						</Button>
 					</div>
 					<div style={styles.listContainer}>
 						<RepoList />
 					</div>
-				</div>
+
 			</HotKeys>
-		)
+		</div>
+
 
 	}
 

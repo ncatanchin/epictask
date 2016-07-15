@@ -72,7 +72,6 @@ export interface IMarkdownProps extends React.DOMAttributes {
  **/
 
 @connect(mapStateToProps)
-@Radium
 export class Markdown extends React.Component<IMarkdownProps,any> {
 
 
