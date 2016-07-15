@@ -216,7 +216,7 @@
     "react-split-pane": "^0.1.42",
     "react-tap-event-plugin": "^1.0.0",
     "react-textfit": "^0.1.8",
-    "react-valid-props": "1.0.0",
+    "react-valid-props": "^1.0.1",
     "redux": "^3.5.2",
     "redux-electron-store": "^0.3.10",
     "redux-logger": "^2.6.1",
