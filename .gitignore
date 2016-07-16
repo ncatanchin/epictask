@@ -121,3 +121,4 @@ _book
 *.epub
 *.mobi
 *.pdf
+.happypack

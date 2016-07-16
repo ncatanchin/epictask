@@ -38,6 +38,7 @@ module.exports = (projectConfig) => {
 
 			// TYPESCRIPT
 			{
+				happy: {id: 'ts'},
 				test: /\.tsx?$/,
 				exclude: /libs\/.*\/typings/,
 				loaders: (() => {
@@ -52,6 +53,7 @@ module.exports = (projectConfig) => {
 
 			// BABEL/JS
 			{
+				happy: {id: 'js'},
 				test: /\.jsx?$/,
 				//exclude: /node_modules/,
 				exclude: /^((?!.*material-ui-build)[\S\s]).*node_modules/,
@@ -60,6 +62,7 @@ module.exports = (projectConfig) => {
 
 			// JADE
 			{
+				happy: {id: 'jade'},
 				test: /\.(jade|pug)$/,
 				loader: 'jade-loader'
 			},
@@ -80,6 +83,7 @@ module.exports = (projectConfig) => {
 
 			// CSS
 			{
+				happy: {id: 'css-global'},
 				test: /\.global\.css$/,
 				loaders: [
 					'style-loader',
@@ -87,10 +91,12 @@ module.exports = (projectConfig) => {
 				]
 			},
 			{
+				happy: {id: 'css-mods'},
 				test: /node_modules.*\.css$/,
 				loader: 'file?name=assets/images/[name].[hash].[ext]'
 			},
 			{
+				happy: {id: 'css'},
 				test: /^((?!\.global).)*\.css$/,
 				exclude: /(node_modules)/,
 				loaders: [
@@ -101,6 +107,7 @@ module.exports = (projectConfig) => {
 
 			// SCSS
 			{
+				happy: {id: 'scss-global'},
 				test: /\.global\.scss$/,
 				loaders: [
 					'style-loader',
@@ -109,6 +116,7 @@ module.exports = (projectConfig) => {
 				]
 			},
 			{
+				happy: {id: 'scss'},
 				test: /^((?!\.global).)*\.scss$/,
 				exclude: /(node_modules)/,
 				loaders: [

@@ -4,5 +4,5 @@ windows:
     layout: even-horizontal
     panes:
       - npm run remotedev
-      - cd ~/Development/npm-local-repo-db/ && local-npm
+      - cd ~/Development/npm-local/ && local-npm
       - cd ~/Development/pouchdb-server-data/ && pouchdb-server

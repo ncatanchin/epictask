@@ -17,7 +17,7 @@ const projectElectronMain = {
 		`${baseDir}/.tsconfig.main.json`,
 		'main',
 		require('./awesome-typescript-loader-options')({
-			instanceName:'electron-main'
+			//instanceName:'electron-main'
 		})
 	),
 	onCompileCallback(err,stats,watchMode = false) {
@@ -41,7 +41,7 @@ const projectElectronRenderer = {
 		`${baseDir}/.tsconfig.renderer.json`,
 		'browser',
 		require('./awesome-typescript-loader-options')({
-			instanceName:'electron-renderer'
+			//instanceName:'electron-renderer'
 		}),
 		{
 			"compilerOptions": {

@@ -1,12 +1,17 @@
 require('../tools/global-env')
 
+const ATS = require('awesome-typescript-loader')
+const {TsConfigPathsPlugin,ForkCheckerPlugin} = ATS
 
-const ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 const webpack = require('webpack')
 const assert = require('assert')
 const path = require('path')
 const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
+
+const HappyPack = require('happypack');
+const happyThreadPool = HappyPack.ThreadPool({ size: 12 })
+
 
 const
 	baseDir = path.resolve(__dirname, '../..'),
@@ -48,11 +53,22 @@ const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-u
 
 const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
 
-
+const happy = false
 
 
 console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
+
+	const loaders = require('./parts/loaders')(projectConfig)
+
+	const happyPlugins = !happy ? [] : loaders.loaders
+		.filter(loader => loader.happy && loader.happy.id)
+		.map(loader => new HappyPack({
+				id: loader.happy.id,
+				threadPool: happyThreadPool
+			}))
+
+
 	const config = {
 
 		context: baseDir,
@@ -116,7 +132,7 @@ module.exports = function (projectConfig) {
 		},
 
 		// Add the loader for .ts files.
-		module: Object.assign({}, require('./parts/loaders')(projectConfig), {
+		module: Object.assign({}, loaders, {
 			//noParse: [/simplemde\.min/]
 		}),
 
@@ -125,7 +141,8 @@ module.exports = function (projectConfig) {
 			includePaths: [path.resolve(baseDir, "./src/assets")]
 		},
 
-		plugins: [
+		plugins: happyPlugins.concat([
+			new TsConfigPathsPlugin(),
 			new webpack.IgnorePlugin(/vertx/),
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			new webpack.NoErrorsPlugin(),
@@ -140,8 +157,9 @@ module.exports = function (projectConfig) {
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'
 				// 'Promise': 'bluebird'
-			})
-		],
+			}),
+
+		]),
 		node: {
 			__dirname: true,
 			__filename: true

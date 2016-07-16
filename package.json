@@ -41,7 +41,7 @@
   "license": "MIT",
   "devDependencies": {
     "asar": "^0.11.0",
-    "awesome-typescript-loader": "^2.0.0-rc.18",
+    "awesome-typescript-loader": "^2.0.1",
     "aws-sdk-typescript": "github:densebrain/aws-sdk-typescript#v0.0.4",
     "babel": "^6.5.2",
     "babel-core": "^6.8.0",
@@ -97,6 +97,7 @@
     "gulp-mocha": "^2.2.0",
     "gulp-sourcemaps": "^2.0.0-alpha",
     "gulp-util": "^3.0.7",
+    "happypack": "^2.1.1",
     "html-loader": "^0.4.3",
     "html-webpack-plugin": "^2.17.0",
     "immutable-devtools": "0.0.7",
