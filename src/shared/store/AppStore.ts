@@ -192,7 +192,7 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	 */
 	const debugEnhancer =
 		(!Env.isDev) ? NullMiddleware  :
-			(Env.isMain) ? makeRemoteMiddleware() :
+			(Env.isMain) ?  makeRemoteMiddleware() :
 				loadDevTools()
 
 
@@ -222,12 +222,7 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	if (!devToolsMode) {
 		let actionCtx = null
 
-
-
-
 		loadActionFactories()
-
-
 
 	}
 	return store

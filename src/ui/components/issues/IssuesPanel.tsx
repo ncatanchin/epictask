@@ -17,17 +17,16 @@ import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {Issue, Repo} from 'shared/models'
-import {RepoKey, AppKey, DataKey, UIKey, IssueKey} from 'shared/Constants'
-import {List} from 'immutable'
-
-import {RepoState} from 'shared/actions/repo/RepoState'
+import {DataKey, IssueKey} from 'shared/Constants'
 import {createStructuredSelector,createSelector} from 'reselect'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
-import {UIState} from 'shared/actions/ui/UIState'
 import {IssueState, IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
 import {issuesSelector,issueSortAndFilterSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import filterProps from 'react-valid-props'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 // Non-typed Components
 const ReactList = require('react-list')
@@ -130,7 +129,7 @@ const styles = {
 
 interface IIssueItemProps extends React.DOMAttributes {
 	index:number
-	s:any
+	styles:any
 	onSelected:(event:any, issue:Issue) => void
 	issues:Issue[]
 	repoId?:number
@@ -144,7 +143,7 @@ interface IIssueState {
 	selectedMulti?:boolean
 }
 
-const selectedIssueIdsSelector = (state) => (state.get(IssueKey) as IssueState).selectedIssueIds
+const selectedIssueIdsSelector = _.memoize((state) => (state.get(IssueKey) as IssueState).selectedIssueIds)
 
 /**
  * Create a new issue item to state => props mapper
@@ -169,9 +168,6 @@ const makeIssueItemStateToProps = () => {
 @PureRender
 class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
-	constructor(props,context) {
-		super(props,context)
-	}
 
 	getNewState(props:IIssueItemProps) {
 		//const repoState = repoActions.state
@@ -202,7 +198,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		const
 			{props,state} = this,
 			{issue, selectedMulti, selected} = state,
-			{s,onSelected,repo} = props
+			{styles,onSelected,repo} = props
 
 		if (!issue)
 			return <div/>
@@ -211,51 +207,51 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 			{labels} = issue,
 
 			issueStyles = makeStyle(
-				s.issue,
-				selected && s.issueSelected,
-				(selected && selectedMulti) && s.issueSelectedMulti
+				styles.issue,
+				selected && styles.issueSelected,
+				(selected && selectedMulti) && styles.issueSelectedMulti
 			),
 			issueTitleStyle = makeStyle(
-				s.issueTitle,
-				selected && s.issueTitleSelected,
-				selectedMulti && s.issueTitleSelectedMulti
+				styles.issueTitle,
+				selected && styles.issueTitleSelected,
+				selectedMulti && styles.issueTitleSelectedMulti
 			)
 
-		return <div {...props} style={issueStyles}
+		return <div {...filterProps(props)} style={issueStyles}
 		                       selected={selected}
 		                       className={'animated fadeIn ' + (selected ? 'selected' : '')}
 		                       onClick={(event) => onSelected(event,issue)}>
 
-			<div style={s.issueMarkers}></div>
-			<div style={s.issueDetails}>
+			<div style={styles.issueMarkers}></div>
+			<div style={styles.issueDetails}>
 
-				<div style={s.issueRepoRow}>
-					<div style={s.issueRepo}>
+				<div style={styles.issueRepoRow}>
+					<div style={styles.issueRepo}>
 						{Renderers.repoName(repo)}
 					</div>
 
 					{/* ASSIGNEE */}
 					<Avatar user={issue.assignee}
-					        style={s.issue.avatar}
+					        style={styles.issue.avatar}
 					        labelPlacement='before'
-					        labelStyle={s.username}
-					        avatarStyle={s.avatar}/>
+					        labelStyle={styles.username}
+					        avatarStyle={styles.avatar}/>
 
 				</div>
 
 
-				<div style={s.issueTitleRow}>
+				<div style={styles.issueTitleRow}>
 					<div style={issueTitleStyle}>{issue.title}</div>
-					<div style={s.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>
+					<div style={styles.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>
 				</div>
 
-				<div style={s.issueBottomRow}>
+				<div style={styles.issueBottomRow}>
 
 					{/* LABELS */}
-					<IssueLabels labels={labels} style={s.issueLabels}/>
+					<IssueLabels labels={labels} style={styles.issueLabels}/>
 
 					{/* MILESTONE */}
-					{issue.milestone && <div style={s.issueMilestone}>
+					{issue.milestone && <div style={styles.issueMilestone}>
 						{issue.milestone.title}
 					</div>}
 				</div>
@@ -279,8 +275,8 @@ export interface IIssuesPanelProps {
 }
 
 
-
-const mapStateToProps = createStructuredSelector({
+function makeMapStateToProps() {
+	return createStructuredSelector({
 		theme: () => getTheme(),
 		issues: issuesSelector,
 		issueSort: createSelector(issueSortAndFilterSelector,({issueSort}) => issueSort),
@@ -288,7 +284,9 @@ const mapStateToProps = createStructuredSelector({
 		selectedIssueIds: selectedIssueIdsSelector,
 		styles: () =>  mergeStyles(styles, (getTheme()) ? getTheme().issuesPanel : null)
 
-})
+	})
+}
+
 
 
 /**
@@ -298,9 +296,10 @@ const mapStateToProps = createStructuredSelector({
  * @constructor
  **/
 
-@connect(mapStateToProps)
 @Radium
+@connect(makeMapStateToProps)
 @PureRender
+@HotKeyContext
 export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	uiActions:UIActionFactory = Container.get(UIActionFactory)
@@ -371,7 +370,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 
 		return <IssueItem key={key}
-		                  s={styles}
+		                  styles={styles}
 		                  index={index}
 		                  selectedIssueIds={selectedIssueIds}
 		                  issues={issues}

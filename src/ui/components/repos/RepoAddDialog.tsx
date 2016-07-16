@@ -157,10 +157,10 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 	 */
 	setFocused = () => {
 		const searchPanel = _.get(this,'state.searchPanel') as any
-		if (searchPanel && this.props.open) {
-			const elem = searchPanel.getWrappedInstance()
-			elem.updateFocus()
-		}
+		// if (searchPanel && this.props.open) {
+		// 	const elem = searchPanel.getWrappedInstance()
+		// 	elem.updateFocus()
+		// }
 	}
 
 	getNewState(props:IRepoAddDialogProps) {

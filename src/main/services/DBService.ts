@@ -103,15 +103,15 @@ export default class DBService implements IService {
 	 */
 	private storeOptions() {
 		let opts = {filename: this.dbPath,cacheSize:32 * 1024 * 1024}
-		if (Env.isDev) {
-			opts = Object.assign({},opts, {
-				replication: {
-					to:   'http://127.0.0.1:5984/' + this.dbName,
-					live:  true,
-					retry: true
-				}
-			})
-		}
+		// if (Env.isDev) {
+		// 	opts = Object.assign({},opts, {
+		// 		replication: {
+		// 			to:   'http://127.0.0.1:5984/' + this.dbName,
+		// 			live:  true,
+		// 			retry: true
+		// 		}
+		// 	})
+		// }
 
 		return opts
 	}

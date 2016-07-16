@@ -16,6 +16,7 @@ import * as Radium from 'radium'
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
@@ -91,6 +92,7 @@ function mapStateToProps(state) {
  **/
 
 @connect(mapStateToProps)
+@HotKeyContext
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 

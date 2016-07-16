@@ -85,3 +85,15 @@ export function createSearchDataSelector():SearchDataSelector {
 
 
 }
+
+
+export function createSearchItemSelector() {
+	return createDeepEqualSelector(
+		createSearchDataSelector(),
+		(searchData:SearchData) => {
+			return (!searchData) ? [] : searchData.results.reduce((items,nextResult) => {
+				return items.concat(nextResult.result.items || [])
+			},[])
+		}
+	)
+}

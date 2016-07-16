@@ -19,8 +19,11 @@ const $ = require('jquery')
 
 
 import {SearchResultsList} from './SearchResultsList'
-import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
+import {createSearchDataSelector, createSearchItemSelector} from 'shared/actions/search/SearchSelectors'
 import {PureRender} from 'ui/components/common/PureRender'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import {createSelector,createStructuredSelector} from 'reselect'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 // Key mapping tools
 const {CommonKeys:Keys} = KeyMaps
@@ -62,19 +65,14 @@ export interface ISearchPanelState {
 }
 
 function makeMapStateToProps() {
-	const searchDataSelector = createSearchDataSelector()
+	const searchDataSelector = createSearchDataSelector(),
+		searchItemSelector = createSearchItemSelector()
 
-	return (state:any,props:ISearchPanelProps) => {
-		const searchData = searchDataSelector(state,props)
-
-		return {
-			theme:      getTheme(),
-			searchData,
-			searchItems: (!searchData) ? [] : searchData.results.reduce((items,nextResult) => {
-				return items.concat(nextResult.result.items || [])
-			},[])
-		}
-	}
+	return createStructuredSelector({
+		theme: () => getTheme(),
+		searchData: searchDataSelector,
+		searchItems: searchItemSelector
+	})
 
 
 }
@@ -85,9 +83,10 @@ function makeMapStateToProps() {
  * @class SearchPanel
  * @constructor
  **/
-@CSSModules(styles)
 @connect(makeMapStateToProps,null,null,{withRef:true})
+@CSSModules(styles)
 @PureRender
+@HotKeyContext
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 
 	static defaultProps = {
@@ -211,7 +210,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		if (this.query.length) {
 			this.select()
 		}
-		//this.focusTextField()
 
 	}
 
@@ -219,11 +217,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const textField = this.state.textField,
 			shouldFocus = textField && this.isFocused(this.props)
 
-		// if (shouldFocus && setFocus) {
-		// 	textField.focus()
-		// } else if (textField) {
-		// 	textField.blur()
-		// }
 	}
 
 	/**
@@ -387,7 +380,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	render() {
 		const {expanded, theme,searchId,searchItems,hidden,modal} = this.props,
-			{search,results} = this.props.searchData,
+			{searchData}= this.props,
+			{search,results} = searchData,
 			{query} = search
 
 		const {searchPanel:spTheme} = theme
@@ -448,6 +442,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 										searchId={searchId}
 										open={resultsOpen}
 						                   inline={expanded}
+						                   results={results ||  []}
 						                   onResultHover={this.onHover}
 						                   onResultSelected={this.onResultSelected}
 						                   containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}

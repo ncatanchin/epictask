@@ -17,6 +17,7 @@ import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
 import {issuesDetailSelector, issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import baseStyles from './IssueDetailPanelStyles'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
 // Non-typed Components
 const {Textfit} = require('react-textfit')
@@ -75,6 +76,7 @@ const makeIssueItemStateToProps = () => {
 @connect(makeIssueItemStateToProps)
 @PureRender
 @Themed
+@HotKeyContext
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}

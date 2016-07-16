@@ -23,6 +23,7 @@ import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
 import {HotKeys} from 'react-hotkeys'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -119,6 +120,7 @@ function mapStateToProps(state:any,props:IAppProps = {} as any) {
  */
 @connect(mapStateToProps)
 @PureRender
+@HotKeyContext
 class App extends React.Component<IAppProps,any> {
 
 

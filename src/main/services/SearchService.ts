@@ -19,10 +19,12 @@ import {DataRequest} from 'shared/actions/data/DataState'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {getStoreStateProvider} from 'typedux'
 import {SearchKey} from 'shared/Constants'
+import {Benchmark} from 'shared/util/Benchmark'
 
 
 const log = getLogger(__filename)
 
+const Benchmarker = Benchmark(__filename)
 
 @AutoWired
 @Singleton
@@ -105,23 +107,27 @@ export default class SearchService extends BaseService {
 		})
 	}
 
-	async searchRepos(search:Search):Promise<SearchResult> {
+	@Benchmarker
+	searchRepos(search:Search):Promise<SearchResult> {
 		const repoStore:RepoStore = this.stores.repo
 
-		const results:FinderResultArray<number> =
-			await repoStore.findWithText(new FinderRequest(10),search.query)
+		return repoStore.findWithText(new FinderRequest(10),search.query)
+			.then((results:FinderResultArray<number>) => {
+				return new SearchResult(
+					search.id,
+					this.mapResultsToSearchItems(results),
+					SearchType.Repo,
+					SearchSource.Repo,
+					results.length,
+					results.total
+				)
+			})
 
-		return new SearchResult(
-			search.id,
-			this.mapResultsToSearchItems(results),
-			SearchType.Repo,
-			SearchSource.Repo,
-			results.length,
-			results.total
-		)
+
 	}
 
 
+	@Benchmarker
 	async searchGithubRepos(search:Search):Promise<SearchResult> {
 		const {query} = search
 		const queryParts = query.split('/')
@@ -171,6 +177,7 @@ export default class SearchService extends BaseService {
 		)
 	}
 
+	@Benchmarker
 	async searchIssues(search:Search):Promise<SearchResult> {
 		const issueStore:IssueStore = this.stores.issue
 
@@ -188,6 +195,7 @@ export default class SearchService extends BaseService {
 
 	}
 
+	@Benchmarker
 	async searchAvailableRepos(search:Search):Promise<SearchResult> {
 
 		//TODO: Implement search for available repos
@@ -215,32 +223,29 @@ export default class SearchService extends BaseService {
 			return result
 		}
 	}
-	async searchType(search:Search,source:SearchSource) {
-		const searchPromise = ((source === SearchSource.Repo) ?
-			this.searchRepos(search)  : (source === SearchSource.ExactRepo) ?
-			this.searchGithubRepos(search)  : (source === SearchSource.Issue) ?
-			this.searchIssues(search) :
-			this.searchAvailableRepos(search))
+	searchType(search:Search,source:SearchSource) {
+		const searchPromise =
+			(source === SearchSource.Repo) ? this.searchRepos(search)  :
+			(source === SearchSource.ExactRepo) ? this.searchGithubRepos(search)  :
+				(source === SearchSource.Issue) ? this.searchIssues(search) :
+					this.searchAvailableRepos(search)
 
 		// Add the data request to the promise
-		searchPromise.then(this.requestData(search,source))
+		return searchPromise.then(this.requestData(search,source))
+			.then(searchResult => {
+				this.searchActions.setResults(
+					search.id,
+					source,
+					searchResult
+				)
 
-		// Now wait for results
-		const searchResult = await searchPromise
+				return searchResult
+			})
 
-		this.searchActions.setResults(
-			search.id,
-			source,
-			searchResult
-		)
-
-		await Promise.setImmediate()
-
-		return searchResult
 	}
 
 
-	private async runSearch(searchId) {
+	private runSearch(searchId) {
 		const actions = Container.get(SearchActionFactory)
 		const state:SearchState = actions.state
 		const search = state.searches.get(searchId)
@@ -248,16 +253,14 @@ export default class SearchService extends BaseService {
 		assert(search.types && search.types.size > 0, 'At least one search type is required')
 
 
-		try {
-			const sources = search.types
-				.reduce((sources,nextType) => sources
-					.concat(SearchTypeSourceMap[nextType]),[])
+		const sources = search.types
+			.reduce((sources,nextType) => sources
+				.concat(SearchTypeSourceMap[nextType]),[])
 
-			const searchPromises = sources.map(source => this.searchType(search, source))
+		const searchPromises = sources.map(source => this.searchType(search, source))
 
-			log.info(`Waiting for all type searches to return: ${search}`)
-			await Promise.all(searchPromises)
-		} finally {
+		log.info(`Waiting for all type searches to return: ${search}`)
+		return Promise.all(searchPromises).finally(() => {
 			const currentSearch = (getStoreStateProvider()()).get(SearchKey).searches.get(searchId)
 			delete this.runningSearches[searchId]
 
@@ -265,8 +268,8 @@ export default class SearchService extends BaseService {
 				log.info('query changed while searching, schedule another search for the next tick')
 				process.nextTick(() => this.scheduleSearch(searchId))
 			}
+		})
 
-		}
 	}
 
 	@debounce(100)

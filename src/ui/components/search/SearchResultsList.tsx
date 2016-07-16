@@ -19,6 +19,7 @@ import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
 import {PureRender} from 'ui/components/common/PureRender'
 import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
+import {Themed} from 'shared/themes/ThemeManager'
 
 
 // Constants
@@ -138,31 +139,10 @@ export interface ISearchResultsListProps {
 	selectedIndex?:number
 	className?:string
 	searchItems?:SearchItem[]
-	searchData?:SearchData
 	results?:SearchResultData[]
 	onResultSelected?:(result:SearchResult,itemModel:ISearchItemModel) => void
 	onResultHover?:(result:SearchResult,itemModel:ISearchItemModel) => void
 }
-
-
-function makeMapStateToProps() {
-	const searchDataSelector = createSearchDataSelector()
-
-	return createDeepEqualSelector(
-		searchDataSelector,
-		(searchData:SearchData) => {
-			return {
-				theme: getTheme(),
-				searchData,
-				results: searchData && searchData.results
-			}
-		}
-	)
-
-
-}
-
-
 
 /**
  * SearchResults
@@ -171,15 +151,14 @@ function makeMapStateToProps() {
  * @constructor
  **/
 @Radium
-@connect(makeMapStateToProps,null,null,{withRef:true})
-@PureRender
+@Themed
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 
 	/**
 	 * Mount node for search results
 	 */
-	node:HTMLElement
+	private node:HTMLElement
 
 	constructor(props,context) {
 		super(props,context)
@@ -196,7 +175,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	}
 
 	componentWillReceiveProps(nextProps:ISearchResultsListProps, nextContext:any):void {
-		if (!nextProps.inline)
+		if (!nextProps.inline && !_.isEqual(nextProps,this.props))
 			this.renderResults(nextProps)
 	}
 
@@ -205,6 +184,16 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		ReactDOM.unmountComponentAtNode(this.node)
 		body.removeChild(this.node)
 		// elementClass(body).remove(styleVisible)
+	}
+
+	shouldComponentUpdate(nextProps,nextState) {
+		return !_.isEqual(this.props,nextProps)
+		// if (updated && nextProps.inline) {
+		// 	this.renderResults(nextProps)
+		// }
+		//return updated
+
+
 	}
 
 	getThemeStyles() {
@@ -275,7 +264,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	/**
 	 * Render an available repo, once allready initialized
 	 *
-	 * @param model
+	 * @param item
+	 * @param availRepo
 	 * @param isSelected
 	 * @returns {any}
 	 */
@@ -310,8 +300,10 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 */
 	prepareResults(props:ISearchResultsListProps) {
 		const {onResultHover,onResultSelected,selectedIndex,results} = props || null
+
+
 		if (!results)
-			return void 0
+			return null
 
 		const themeStyles = this.getThemeStyles()
 
@@ -321,7 +313,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		// Map Result types
 		const rows = []
 		let itemCounter = -1
-		log.info(`Selected index in results ${selectedIndex}`)
+		log.debug(`Selected index in results ${selectedIndex}`)
 
 		results.forEach((resultData:SearchResultData) => {
 			const {data,result} = resultData,
@@ -383,7 +375,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			rows.push(...sectionRows)
 
 		})
-		log.info(`Rendering rows`,rows.length,rows)
+		log.debug(`Rendering rows`,rows.length,rows)
 		return rows
 
 	}
@@ -429,7 +421,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				height: 0
 			}
 
-			log.info('rendering results',{anchor,node:this.node,containerStyle})
+			log.debug('rendering results',{anchor,node:this.node,containerStyle})
 			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
 			const resultsElement = (<div className="searchResults" style={resultsStyle}>
 				<CSSTransitionGroup

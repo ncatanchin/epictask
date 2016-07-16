@@ -7,7 +7,10 @@ import {DataMessage, DataState, DataRequest} from 'shared/actions/data/DataState
 import {Stores} from 'main/services/DBService'
 import {Map} from 'immutable'
 import {ModelConstructor} from 'shared/Registry'
+import {Benchmark} from 'shared/util/Benchmark'
 
+
+const Benchmarker = Benchmark(__filename)
 
 const uuid = require('node-uuid')
 
@@ -127,7 +130,7 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
 	@ActionPromise()
 	submitRequest(request:DataRequest,withModelMap:{[id:string]:any} = {}) {
-		return async (dispatch,getState) => {
+		return (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
 				{modelType,modelIds,fulfilled} = request
@@ -138,10 +141,10 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 			actions.updateRequest(request)
 
 			if (request.fulfilled)
-				return
+				return Promise.resolve(request)
 
 			// Next tick
-			await Promise.setImmediate()
+			//await Promise.setImmediate()
 
 			const state = getState().get(DataKey)
 			const models = state.models.get(modelType)
@@ -150,15 +153,18 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 				.filter(modelId => !models || (!models.get(modelId) && !withModelMap[modelId]))
 
 
-			const newModelMap = await this.getModels(modelType,...newModelIds)
+			return this.getModels(modelType,...newModelIds)
+				.then(newModelMap => {
+					Object.assign(withModelMap,newModelMap)
+					this.updateModels(modelType,withModelMap)
+
+					//await Promise.setImmediate()
+
+					actions.setRequestFulfilled(request.id,true)
+					return request
+				})
 
 
-			Object.assign(withModelMap,newModelMap)
-			this.updateModels(modelType,withModelMap)
-
-			await Promise.setImmediate()
-
-			actions.setRequestFulfilled(request.id,true)
 
 		}
 	}

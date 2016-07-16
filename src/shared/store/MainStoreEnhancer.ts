@@ -3,6 +3,7 @@ import {getAction,ActionFactory} from 'typedux'
 import {Container} from 'typescript-ioc'
 import {Events} from '../Constants'
 import {transformValues} from '../util/ObjectUtil'
+const {nextTick} = process
 
 
 
@@ -62,18 +63,21 @@ function attachEvents(store) {
 			throw new Error(`Could not find action ${leaf}:${name} on main process`)
 
 		log.info(`Executing action on main: ${leaf}:${name}`)
-		if (actionReg.options.isReducer) {
-			const actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any
-			const msg = actions.newMessage(leaf,actionReg.type,[],args,{source:{
-				isReducer:true,
-				fromRenderer:true
-			}})
-			store.dispatch(msg)
-		} else {
-			actionReg.action((factory) => {
-				return Container.get(factory)
-			}, ...args)
-		}
+		nextTick(() => {
+			if (actionReg.options.isReducer) {
+				const actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any
+				const msg = actions.newMessage(leaf,actionReg.type,[],args,{source:{
+					isReducer:true,
+					fromRenderer:true
+				}})
+				store.dispatch(msg)
+			} else {
+				actionReg.action((factory) => {
+					return Container.get(factory)
+				}, ...args)
+			}
+		})
+
 	}
 
 	// List for main state requests
@@ -190,7 +194,7 @@ function mainStoreEnhancer(storeCreator) {
 
 				// If the state changed then send the action
 				if (state !== newState) {
-					broadcastActionAndStateToClients(action,newState)
+					nextTick(() => broadcastActionAndStateToClients(action,newState))
 				}
 
 			}

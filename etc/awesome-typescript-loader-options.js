@@ -12,7 +12,8 @@ module.exports = (opts) => {
 				],
 				"plugins":    [
 					"add-module-exports",
-					"transform-runtime"
+					"transform-runtime",
+					"transform-async-to-generator"
 				],
 				"sourceMaps": "both"
 			}

@@ -6,6 +6,7 @@ import {HotKeys} from 'ui/components/common/Other'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
 const log = getLogger(__filename)
 
@@ -113,7 +114,12 @@ export interface IHeaderState {
  * The app header component, title/logo/settings
  */
 @PureRender
+@HotKeyContext
 export class Header extends React.Component<IHeaderProps,IHeaderState> {
+
+	constructor(props,context) {
+		super(props,context)
+	}
 
 	get isExpanded():boolean {
 		return this.props.visibility === HeaderVisibility.Expanded

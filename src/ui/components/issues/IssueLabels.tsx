@@ -8,6 +8,7 @@ import {connect} from 'react-redux'
 import * as Models from 'shared/models'
 import {Label} from 'shared/models/Label'
 import * as Constants from 'shared/Constants'
+import {Themed} from 'shared/themes/ThemeManager'
 const tinycolor = require('tinycolor2')
 
 // Constants
@@ -27,12 +28,6 @@ const baseStyles = {
 
 
 /**
- * Map theme into props - very shorthand
- * @param state
- */
-const mapStateToProps = _.memoize((state) => ({theme: getTheme()}))
-
-/**
  * IIssueLabelsProps
  */
 export interface IIssueLabelsProps extends React.DOMAttributes {
@@ -49,7 +44,7 @@ export interface IIssueLabelsProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@connect(mapStateToProps)
+@Themed
 export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 
 

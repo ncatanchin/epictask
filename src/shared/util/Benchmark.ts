@@ -20,9 +20,11 @@ export function Benchmark(name:string = null) {
 
 
 				function doReport() {
-					const duration = Date.now() - startTime
+					const duration = Date.now() - startTime,
+						isPromise = _.isFunction(returnVal.then)
 
-					log.info(`${name ? `${name}.` : '[BENCHMARK]'}${propertyKey} executed in ${duration}ms OR ${duration / 1000}s`)
+
+					log.info(`${name ? `${name}.` : '[BENCHMARK]'}${propertyKey} ${isPromise ? 'PROMISE RESOLUTION' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
 				}
 
 
