@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:densebrain/material-ui.git
+	branch = master
+	commit = 6fc1df29ce44335c15a67f22b2bd643b70575403
+	parent = 6c96099ac5a6e36d6a8085bf9b91c098c1ec67b1
+	cmdver = 0.3.0
