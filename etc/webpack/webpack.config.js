@@ -10,7 +10,7 @@ const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
 
 const HappyPack = require('happypack');
-const happyThreadPool = HappyPack.ThreadPool({ size: 12 })
+const happyThreadPool = HappyPack.ThreadPool({ size: 6 })
 
 
 const
@@ -49,11 +49,12 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  *
  * @type {boolean}
  */
-const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
+//const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
 
-const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
+//const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
+const materialUiModule = 'libs/material-ui/src'
 
-const happy = false
+const happy = true
 
 
 console.log(`Using material ui version ${materialUiModule}`)
@@ -91,7 +92,6 @@ module.exports = function (projectConfig) {
 					assert: 'browser-assert',
 
 					// Map material-ui to build ver if available
-					"material-ui": materialUiModule,
 
 					epictask: path.resolve(baseDir, 'src'),
 					styles: path.resolve(baseDir, 'src/assets/styles'),
@@ -107,6 +107,7 @@ module.exports = function (projectConfig) {
 					main: path.resolve(baseDir, 'src/main'),
 
 				},
+				libAlias('material-ui', 'material-ui/src/'),
 				libAlias('typedux', 'typedux/src/index.ts'),
 				libAlias('typemutant', 'typemutant/src/index.ts'),
 				libAlias('typelogger', 'typelogger/src/index.ts'),
@@ -123,7 +124,8 @@ module.exports = function (projectConfig) {
 				'libs/typestore/packages/typestore-mocks/src',
 				'libs/typestore/packages/typestore-plugin-pouchdb/src',
 				'libs',
-				'node_modules'
+				'node_modules',
+				'libs/material-ui/node_modules'
 			),
 
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
@@ -142,7 +144,7 @@ module.exports = function (projectConfig) {
 		},
 
 		plugins: happyPlugins.concat([
-			new TsConfigPathsPlugin(),
+			//new TsConfigPathsPlugin(),
 			new webpack.IgnorePlugin(/vertx/),
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			new webpack.NoErrorsPlugin(),
@@ -184,8 +186,8 @@ module.exports = function (projectConfig) {
 
 	}
 
-	if (useMaterialUIBuild)
-		config.resolve.modules.push(path.resolve(processDir,'node_modules/material-ui-build/node_modules'))
+	// if (useMaterialUIBuild)
+	// 	config.resolve.modules.push(path.resolve(processDir,'node_modules/material-ui-build/node_modules'))
 
 	//config.resolve.modules.push(path.resolve(processDir,'node_modules/react-hotkeys/node_modules'))
 

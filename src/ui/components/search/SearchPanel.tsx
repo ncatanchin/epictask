@@ -19,7 +19,10 @@ const $ = require('jquery')
 
 
 import {SearchResultsList} from './SearchResultsList'
-import {createSearchDataSelector, createSearchItemSelector} from 'shared/actions/search/SearchSelectors'
+import {
+	createSearchDataSelector, createSearchItemSelector,
+	createSearchItemModelsSelector
+} from 'shared/actions/search/SearchSelectors'
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createSelector,createStructuredSelector} from 'reselect'
@@ -46,7 +49,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes {
 	inlineResults?:boolean
 	expanded?:boolean
 	searchData?:SearchData
-	searchItems?:SearchItem[]
+	searchItemModels?:ISearchItemModel[]
 	theme?:any
 	focused?:boolean
 	hidden?:boolean
@@ -66,12 +69,13 @@ export interface ISearchPanelState {
 
 function makeMapStateToProps() {
 	const searchDataSelector = createSearchDataSelector(),
-		searchItemSelector = createSearchItemSelector()
+		searchItemSelector = createSearchItemSelector(),
+		searchItemModelsSelector = createSearchItemModelsSelector()
 
 	return createStructuredSelector({
 		theme: () => getTheme(),
 		searchData: searchDataSelector,
-		searchItems: searchItemSelector
+		searchItemModels: searchItemModelsSelector
 	})
 
 
@@ -83,10 +87,11 @@ function makeMapStateToProps() {
  * @class SearchPanel
  * @constructor
  **/
-@connect(makeMapStateToProps,null,null,{withRef:true})
+
 @CSSModules(styles)
-@PureRender
+@connect(makeMapStateToProps,null,null,{withRef:true})
 @HotKeyContext
+@PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 
 	static defaultProps = {
@@ -137,7 +142,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {string}
 	 */
 	get query():string {
-		return _.get(this.state,'query',_.get(this.props,'searchData.search.query','')) as string
+		return _.get(this.state,'query',
+			_.get(this.props,'searchData.search.query')) as string || '' 
 	}
 
 
@@ -158,8 +164,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param focused
 	 */
 	getNewState = (props:ISearchPanelProps,focused:boolean = null) => (assign({
-		totalItemCount: (!props.searchItems) ? 0 : props.searchItems.length,
-		selectedIndex: Math.min(_.get(this,'state.selectedIndex',0),Math.max(0,props.searchItems.length - 1))
+		totalItemCount: (!props.searchItemModels) ? 0 : props.searchItemModels.length,
+		selectedIndex: Math.min(_.get(this,'state.selectedIndex',0),Math.max(0,props.searchItemModels.length - 1))
 	},_.isBoolean(focused) ?{focused} : {} ))
 
 
@@ -267,31 +273,44 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param result
 	 * @param itemModel
 	 */
-	onResultSelected = (result:SearchResult,itemModel:ISearchItemModel) => {
-		if (!result) {
-			const {selectedIndex} = this.state
-			const {searchData} = this.props,
-				{search,results} = searchData,
-				{resultsList} = this
+	onResultSelected = (itemModel:ISearchItemModel) => {
+		if (!itemModel && !(itemModel = _.get(this.resultsList,'state.selectedItem',null))) {
+			const {searchItemModels} = this.props,
+				{selectedIndex} = this.state || {} as any
+			if (searchItemModels && _.isNumber(selectedIndex)) {
+				itemModel = searchItemModels[selectedIndex]
+			}
 
-
-			if (!(itemModel = _.get(resultsList,'state.selectedItem',null)))
+			if (!itemModel) {
+				log.info(`no model item found, can not select`)
 				return
-
+			}
 		}
+
+		// if (!result) {
+		// 	const {selectedIndex} = this.state
+		// 	const {searchData} = this.props,
+		// 		{search,results} = searchData,
+		// 		{resultsList} = this
+		//
+		//
+		//
+		//
+		// }
 
 		searchActions.select(this.props.searchId,itemModel)
 		this.setState({focused: false})
+
 		const $ = require('jquery')
 		const inputElement = $('input',ReactDOM.findDOMNode(this.state.textField))[0]
 		if (inputElement)
 			inputElement.blur()
 
-		if (this.props.onResultSelected)
-			this.props.onResultSelected(result)
+		// if (this.props.onResultSelected)
+		// 	this.props.onResultSelected(result)
 	}
 
-	onHover = (result:SearchResult,itemModel:ISearchItemModel) => {
+	onHover = (itemModel:ISearchItemModel) => {
 		//this.setSelectedIndex(result.index)
 	}
 
@@ -321,6 +340,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 
 	moveSelection = (increment:number) => {
+		log.info('move selection trigger')
 		const {selectedIndex} = this.state
 		this.setSelectedIndex(selectedIndex + increment)
 	}
@@ -333,7 +353,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		},
 		[Keys.MoveUp]: () => this.moveSelection(-1),
 		[Keys.MoveDown]:() => this.moveSelection(1),
-		[Keys.Enter]: () => this.onResultSelected(null,null)
+		[Keys.Enter]: () => this.onResultSelected(null)
 
 	}
 
@@ -415,7 +435,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 		//<HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
 		//<div  className={panelClazz}  style={Fill} onFocus={this.onFocus}>
-		return <HotKeys handlers={this.keyHandlers} className={panelClazz}  style={Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
+		// {/*onFocus={this.onTextFieldFocus}*/}
+		// {/*onBlur={this.onTextFieldBlur}*/}
+		return <HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers} className={panelClazz}  style={Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
 				<Paper className={wrapperClazz + focusedClazz}
 				       style={makeStyle(panelStyle)}
 				       zDepth={2}
@@ -430,15 +452,14 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 							tabIndex={1}
 							hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 							onChange={(e) => this.onInputChange(e)}
-							onFocus={this.onTextFieldFocus}
-							onBlur={this.onTextFieldBlur}
+
 							inputStyle={inputStyle}
 							defaultValue={this.state.query || query}
 						/>
 						<SearchResultsList ref="resultsList"
 						                   anchor={'#' + searchPanelId}
 						                   selectedIndex={this.state.selectedIndex}
-						                   searchItems={this.props.searchItems || []}
+						                   searchItemModels={this.props.searchItemModels || []}
 										searchId={searchId}
 										open={resultsOpen}
 						                   inline={expanded}

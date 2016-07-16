@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.awcache" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/libs/material-ui/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typedux/src/test" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-node" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-webpack" />

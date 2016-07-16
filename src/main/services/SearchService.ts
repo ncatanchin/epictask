@@ -20,6 +20,8 @@ import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {getStoreStateProvider} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {Benchmark} from 'shared/util/Benchmark'
+import {getStoreState} from 'shared/store/AppStore'
+import {issuesDetailSelector, issuesSelector} from 'shared/actions/issue/IssueSelectors'
 
 
 const log = getLogger(__filename)
@@ -111,7 +113,7 @@ export default class SearchService extends BaseService {
 	searchRepos(search:Search):Promise<SearchResult> {
 		const repoStore:RepoStore = this.stores.repo
 
-		return repoStore.findWithText(new FinderRequest(10),search.query)
+		const repoTextResults = repoStore.findWithText(new FinderRequest(10),search.query)
 			.then((results:FinderResultArray<number>) => {
 				return new SearchResult(
 					search.id,
@@ -122,7 +124,7 @@ export default class SearchService extends BaseService {
 					results.total
 				)
 			})
-
+		return repoTextResults
 
 	}
 
@@ -179,18 +181,31 @@ export default class SearchService extends BaseService {
 
 	@Benchmarker
 	async searchIssues(search:Search):Promise<SearchResult> {
-		const issueStore:IssueStore = this.stores.issue
+		//const issueStore:IssueStore = this.stores.issue
 
-		const results:FinderResultArray<number> =
-			await issueStore.findWithText(new FinderRequest(10),search.query)
+		// const results:FinderResultArray<number> =
+		// 	await issueStore.findWithText(new FinderRequest(10),search.query)
+
+		const query = _.toLower(search.query)
+		const issues = issuesSelector(getStoreState())
+			.filter(issue => {
+
+				const text = _.toLower(
+					issue.title + ' ' + issue.body + ' ' +
+					(issue.assignee ? issue.assignee.login : '') + ' ' +
+					(issue.assignee ? issue.assignee.name : '')
+				)
+
+				return text.indexOf(query) > -1
+			})
 
 		return new SearchResult(
 			search.id,
-			this.mapResultsToSearchItems(results),
+			issues.map(issue => new SearchItem(issue.id,SearchType.Issue,1)),
 			SearchType.Issue,
 			SearchSource.Issue,
-			results.length,
-			results.total
+			issues.length,
+			issues.length
 		)
 
 	}

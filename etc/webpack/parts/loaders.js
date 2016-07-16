@@ -38,7 +38,7 @@ module.exports = (projectConfig) => {
 
 			// TYPESCRIPT
 			{
-				happy: {id: 'ts'},
+				// happy: {id: 'ts'},
 				test: /\.tsx?$/,
 				exclude: /libs\/.*\/typings/,
 				loaders: (() => {

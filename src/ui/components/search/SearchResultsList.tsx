@@ -9,6 +9,7 @@ import * as ReactDOM from 'react-dom'
 import {connect} from 'react-redux'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
+import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {
 	SearchResult, SearchType, SearchSource, SearchResultData, SearchItem,
@@ -20,6 +21,7 @@ import * as Radium from 'radium'
 import {PureRender} from 'ui/components/common/PureRender'
 import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
 import {Themed} from 'shared/themes/ThemeManager'
+import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
 
 
 // Constants
@@ -138,10 +140,11 @@ export interface ISearchResultsListProps {
 	open:boolean
 	selectedIndex?:number
 	className?:string
-	searchItems?:SearchItem[]
+	repoModels?:Map<string,Repo>
+	searchItemModels?:ISearchItemModel[]
 	results?:SearchResultData[]
-	onResultSelected?:(result:SearchResult,itemModel:ISearchItemModel) => void
-	onResultHover?:(result:SearchResult,itemModel:ISearchItemModel) => void
+	onResultSelected?:(itemModel:ISearchItemModel) => void
+	onResultHover?:(itemModel:ISearchItemModel) => void
 }
 
 /**
@@ -150,6 +153,9 @@ export interface ISearchResultsListProps {
  * @class SearchResults
  * @constructor
  **/
+@connect(createStructuredSelector({
+	repoModels:repoModelsSelector
+}),null,null,{withRef:true})
 @Radium
 @Themed
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
@@ -258,7 +264,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			Renderers.repoName(repo),
 			`${repo.open_issues_count} open issues`,
 			'Add issue repo','repo',
-			isSelected)
+			isSelected
+		)
 	}
 
 	/**
@@ -288,8 +295,15 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 	}
 
-	renderIssue = (item:SearchItem,repoResult:Issue,isSelected) => {
-		return []
+	renderIssue = (item:SearchItem,issue:Issue,isSelected) => {
+		const {repoModels} = this.props
+		const repo = repoModels && repoModels.get(`${issue.repoId}`)
+		return this.renderResult(
+			issue.title,
+			repo ? Renderers.repoName(repo) : '',
+			'Select issue','issue',
+			isSelected
+		)
 	}
 
 
@@ -299,7 +313,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 * @returns {any}
 	 */
 	prepareResults(props:ISearchResultsListProps) {
-		const {onResultHover,onResultSelected,selectedIndex,results} = props || null
+		const {onResultHover,onResultSelected,searchItemModels,selectedIndex,results} = props || null
 
 
 		if (!results)
@@ -307,74 +321,115 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 		const themeStyles = this.getThemeStyles()
 
-		// Props
-
-
-		// Map Result types
-		const rows = []
 		let itemCounter = -1
 		log.debug(`Selected index in results ${selectedIndex}`)
 
-		results.forEach((resultData:SearchResultData) => {
-			const {data,result} = resultData,
-				{searchItems} = this.props
-
-			if (!data || !data.fulfilled) {
-				itemCounter += data.request.modelIds.length
-				return
-			}
+		const rows = _.nilFilter(searchItemModels.map((itemModel,index) => {
+			itemCounter++
 
 			const
-				{source,type,items} = result,
-				{models} = data
+				{item,model} = itemModel,
+				{id,type} = item
 
-			const resultRenderer:any = (type === SearchType.Repo) ?
-				this.renderRepo : (type === SearchType.AvailableRepo) ?
+
+			const resultRenderer:any = (model.$$clazz === Repo.$$clazz) ?
+				this.renderRepo : (model.$$clazz === AvailableRepo.$$clazz) ?
 				this.renderAvailableRepo :
 				this.renderIssue
 
-			// Filter only the results for this section
-			const sectionRows = _.nilFilter(items.map((item,index) => {
-				itemCounter++
-				const model = models[index]
-				if (!model) return null
+			const isSelected = selectedIndex === itemCounter
 
-				const isSelected = selectedIndex === itemCounter
-				const itemModel:ISearchItemModel = {item,model}
 
-				// TODO: caclulate this in the SearchPanel - this is expensive
-				if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
-					this.setState({selectedItem:itemModel})
+			// TODO: caclulate this in the SearchPanel - this is expensive
+			if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
+				this.setState({selectedItem:itemModel})
 
-				const itemContent = resultRenderer(item,model,isSelected)
+			const itemContent = resultRenderer(item,model,isSelected)
 
-				if (!itemContent)
-					return null
+			if (!itemContent)
+				return null
 
-				// Make the row style
-				const resultStyle = makeStyle(
-					styles.result,
-					themeStyles.result.normal,
-					isSelected && themeStyles.result.selected
-				)
+			// Make the row style
+			const resultStyle = makeStyle(
+				styles.result,
+				themeStyles.result.normal,
+				isSelected && themeStyles.result.selected
+			)
 
-				return (
-					<div key={`${source}-${model.id}`}
-					     className={isSelected && 'selected'}
-					     style={resultStyle}
-					     onMouseEnter={() => onResultHover && onResultHover(result,itemModel)}
-					     onClick={() => onResultSelected && onResultSelected(result,itemModel)}
-					>
-						{itemContent}
-					</div>
-				)
-			}))
-
-			// Concat the other sections
-			log.info(`Rendering section rows ${sectionRows.length}`,resultData)
-			rows.push(...sectionRows)
-
-		})
+			return (
+				<div key={`${item.id}`}
+				     className={isSelected && 'selected'}
+				     style={resultStyle}
+				     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
+				     onClick={() => onResultSelected && onResultSelected(itemModel)}
+				>
+					{itemContent}
+				</div>
+			)
+		}))
+		//
+		// results.forEach((resultData:SearchResultData) => {
+		// 	const {data,result} = resultData,
+		// 		{searchItems} = this.props
+		//
+		// 	if (!data || !data.fulfilled) {
+		// 		itemCounter += data.request.modelIds.length
+		// 		return
+		// 	}
+		//
+		// 	const
+		// 		{source,type,items} = result,
+		// 		{models} = data
+		//
+		// 	const resultRenderer:any = (type === SearchType.Repo) ?
+		// 		this.renderRepo : (type === SearchType.AvailableRepo) ?
+		// 		this.renderAvailableRepo :
+		// 		this.renderIssue
+		//
+		// 	// Filter only the results for this section
+		// 	const sectionRows = _.nilFilter(items.map((item,index) => {
+		// 		itemCounter++
+		// 		const model = models[index]
+		//
+		// 		if (!model)
+		// 			return null
+		//
+		// 		const isSelected = selectedIndex === itemCounter
+		// 		const itemModel:ISearchItemModel = {item,model}
+		//
+		// 		// TODO: caclulate this in the SearchPanel - this is expensive
+		// 		if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
+		// 			this.setState({selectedItem:itemModel})
+		//
+		// 		const itemContent = resultRenderer(item,model,isSelected)
+		//
+		// 		if (!itemContent)
+		// 			return null
+		//
+		// 		// Make the row style
+		// 		const resultStyle = makeStyle(
+		// 			styles.result,
+		// 			themeStyles.result.normal,
+		// 			isSelected && themeStyles.result.selected
+		// 		)
+		//
+		// 		return (
+		// 			<div key={`${source}-${model.id}`}
+		// 			     className={isSelected && 'selected'}
+		// 			     style={resultStyle}
+		// 			     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
+		// 			     onClick={() => onResultSelected && onResultSelected(itemModel)}
+		// 			>
+		// 				{itemContent}
+		// 			</div>
+		// 		)
+		// 	}))
+		//
+		// 	// Concat the other sections
+		// 	log.info(`Rendering section rows ${sectionRows.length}`,resultData)
+		// 	rows.push(...sectionRows)
+		//
+		// })
 		log.debug(`Rendering rows`,rows.length,rows)
 		return rows
 

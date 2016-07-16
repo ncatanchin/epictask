@@ -119,8 +119,8 @@ function mapStateToProps(state:any,props:IAppProps = {} as any) {
  * Root App Component
  */
 @connect(mapStateToProps)
-@PureRender
 @HotKeyContext
+@PureRender
 class App extends React.Component<IAppProps,any> {
 
 
@@ -140,6 +140,9 @@ class App extends React.Component<IAppProps,any> {
 			log.info('New issue keys pressed - making dialog visible')
 			this.issueActions.newIssue()
 		},
+
+		[KeyMaps.CommonKeys.MoveUp]: () => log.info('key up'),
+		[KeyMaps.CommonKeys.MoveDown]:() => log.info('key down'),
 
 		[KeyMaps.CommonKeys.Edit]: () => {
 			log.info('Edit issue keys pressed - making dialog visible')

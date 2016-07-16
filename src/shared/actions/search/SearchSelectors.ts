@@ -1,9 +1,14 @@
 
 import {Map} from 'immutable'
+import {createSelector} from 'reselect'
 import {SearchKey, DataKey} from 'shared/Constants'
-import {Search, SearchResult, SearchSource, SearchData} from 'shared/actions/search/SearchState'
+import {
+	Search, SearchResult, SearchSource, SearchData, SearchItem, SearchType,
+	SearchResultData, ISearchItemModel
+} from 'shared/actions/search/SearchState'
 import {DataState, DataResultsContainer} from 'shared/actions/data/DataState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
 
 
 const searchesSelector = (state:any):Map<string,Search> => state.get(SearchKey).searches
@@ -86,14 +91,60 @@ export function createSearchDataSelector():SearchDataSelector {
 
 }
 
-
+/**
+ * Aggregate all search items
+ *
+ * @returns {any}
+ */
 export function createSearchItemSelector() {
 	return createDeepEqualSelector(
 		createSearchDataSelector(),
 		(searchData:SearchData) => {
-			return (!searchData) ? [] : searchData.results.reduce((items,nextResult) => {
+			let allItems = (!searchData) ? [] : searchData.results.reduce((items,nextResult) => {
 				return items.concat(nextResult.result.items || [])
 			},[])
+
+			// Filter out non `Repo` first
+			const allModels = searchData.results.reduce((map,nextResultData:SearchResultData) => {
+				nextResultData.result.items.forEach((item,index) => {
+					map[item.id] = nextResultData.data.models[index]
+				})
+				return map
+			},{})
+
+			allItems = allItems
+				.filter((item:SearchItem,index) => {
+					if (!allModels[item.id]) {
+						return false
+					}
+
+					if (item.type === SearchType.Repo)
+						return true
+
+					const otherItem = allItems.find((item2,item2Index:number) => item2.id === item.id && index !== item2Index)
+					return (otherItem && otherItem.type === SearchType.Repo) ? false : true
+				})
+
+			// Unique filter by id
+			return _.uniqBy(allItems,'id')
+		}
+	)
+}
+
+export function createSearchItemModelsSelector() {
+	return createSelector(
+		createSearchDataSelector(),
+		createSearchItemSelector(),
+		(searchData,searchItems:SearchItem[]):ISearchItemModel[] => {
+			// Filter out non `Repo` first
+			const allModels = searchData.results.reduce((map,nextResultData:SearchResultData) => {
+				nextResultData.result.items.forEach((item,index) => {
+					map[item.id] = nextResultData.data.models[index]
+				})
+				return map
+			},{})
+
+			return searchItems.map(item => ({item,model:allModels[item.id]}))
 		}
 	)
 }

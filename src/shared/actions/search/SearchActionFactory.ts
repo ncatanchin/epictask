@@ -13,6 +13,7 @@ import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {createClient} from 'GitHubClient'
 import {List} from 'immutable'
 import {debounce} from 'lodash-decorators'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 const uuid = require('node-uuid')
 
@@ -34,6 +35,9 @@ export class SearchActionFactory extends ActionFactory<SearchState,SearchMessage
 
 	@Inject
 	private repoActions:RepoActionFactory
+
+	@Inject
+	private issueActions:IssueActionFactory
 
 	constructor() {
 		super(SearchState)
@@ -122,15 +126,20 @@ export class SearchActionFactory extends ActionFactory<SearchState,SearchMessage
 
 
 
-		switch (item.type) {
-			case SearchType.AvailableRepo:
+		switch (model.$$clazz) {
+			case AvailableRepo.$$clazz:
 				assert(model.$$clazz === AvailableRepo.$$clazz)
 				repoActions.setRepoEnabled(model,!model.enabled)
 				break;
 
-			case SearchType.Repo:
+			case Repo.$$clazz:
 				assert(model.$$clazz === Repo.$$clazz)
 				repoActions.createAvailableRepo(model)
+
+				break
+			case Issue.$$clazz:
+				this.issueActions.setSelectedIssueIds([model.id])
+				break
 		}
 
 

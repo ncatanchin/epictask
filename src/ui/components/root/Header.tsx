@@ -113,8 +113,8 @@ export interface IHeaderState {
 /**
  * The app header component, title/logo/settings
  */
-@PureRender
 @HotKeyContext
+@PureRender
 export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 	constructor(props,context) {
