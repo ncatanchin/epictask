@@ -110,21 +110,20 @@ export default class SearchService extends BaseService {
 	}
 
 	@Benchmarker
-	searchRepos(search:Search):Promise<SearchResult> {
+	async searchRepos(search:Search):Promise<SearchResult> {
 		const repoStore:RepoStore = this.stores.repo
 
-		const repoTextResults = repoStore.findWithText(new FinderRequest(4),search.query)
-			.then((results:FinderResultArray<number>) => {
-				return new SearchResult(
-					search.id,
-					this.mapResultsToSearchItems(results),
-					SearchType.Repo,
-					SearchSource.Repo,
-					results.length,
-					results.total
-				)
-			})
-		return repoTextResults
+		const results = await repoStore.findWithText(new FinderRequest(4),search.query)
+		log.info(`Found repos`,results)
+		return new SearchResult(
+			search.id,
+			this.mapResultsToSearchItems(results),
+			SearchType.Repo,
+			SearchSource.Repo,
+			results.length,
+			results.total
+		)
+
 
 	}
 
@@ -205,6 +204,8 @@ export default class SearchService extends BaseService {
 
 				return match
 			})
+
+
 
 		return new SearchResult(
 			search.id,

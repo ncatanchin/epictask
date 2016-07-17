@@ -192,15 +192,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		// elementClass(body).remove(styleVisible)
 	}
 
-	shouldComponentUpdate(nextProps,nextState) {
-		return !_.isEqual(this.props,nextProps)
-		// if (updated && nextProps.inline) {
-		// 	this.renderResults(nextProps)
-		// }
-		//return updated
 
-
-	}
 
 	getThemeStyles() {
 		const {theme} = this.props
@@ -341,8 +333,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 
 			// TODO: caclulate this in the SearchPanel - this is expensive
-			if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
-				this.setState({selectedItem:itemModel})
+			// if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
+			// 	this.setState({selectedItem:itemModel})
 
 			const itemContent = resultRenderer(item,model,isSelected)
 

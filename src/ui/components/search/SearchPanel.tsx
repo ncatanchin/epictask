@@ -73,7 +73,7 @@ function makeMapStateToProps() {
 	return createStructuredSelector({
 		searchData: searchDataSelector,
 		searchItemModels: searchItemModelsSelector
-	},createDeepEqualSelector)
+	})
 
 
 }
@@ -87,8 +87,8 @@ function makeMapStateToProps() {
 
 @CSSModules(styles)
 
-@connect(makeMapStateToProps,null,null,{withRef:true})
 @Themed
+@connect(makeMapStateToProps,null,null,{withRef:true})
 @HotKeyContext
 @PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {

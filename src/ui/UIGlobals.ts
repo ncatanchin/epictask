@@ -6,10 +6,7 @@ import {Container} from 'typescript-ioc'
 import * as Immutable from 'immutable'
 
 
-if (Env.isDev) {
-	const installImmutableDevTools = require('immutable-devtools')
-	installImmutableDevTools(Immutable)
-}
+
 
 /**
  * Now the shared globals - this is required for propper logging config
@@ -45,9 +42,6 @@ declare global {
 	var ReactDOM:typeof ReactDOMGlobal
 	var Notification:any
 	var logError:typeof logErrorGlobal
-
-
-
 }
 
 const g = global as any
@@ -58,6 +52,17 @@ Object.assign(g,{
 	ReactDOM: ReactDOMGlobal,
 	logError: logErrorGlobal
 })
+
+
+
+if (Env.isDev) {
+	// const installImmutableDevTools = require('immutable-devtools')
+	// installImmutableDevTools(Immutable)
+
+	_.assignGlobal({Perf:require('react-addons-perf')})
+
+
+}
 
 
 export {

@@ -8,6 +8,56 @@ import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
 const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
 const log = getLogger(__filename)
 
+
+function makeDevMenu(mainWindow) {
+	return {
+		label: 'Dev',
+		submenu: [
+			{
+				label: 'Start Perf',
+				accelerator: 'Ctrl+P',
+				click() {
+					mainWindow.webContents.executeJavaScript('Perf.start()')
+					//mainWindow.reload()
+				}
+			},{
+				label: 'Stop Perf',
+				accelerator: 'Ctrl+Shift+P',
+				click() {
+					mainWindow.webContents.executeJavaScript(`
+						Perf.stop();
+						measurements = Perf.getLastMeasurements();
+						Perf.printInclusive(measurements);
+						Perf.printWasted(measurements);
+					`)
+					//mainWindow.reload()
+				}
+			},{
+				label: 'Reload',
+				accelerator: 'Command+Shift+R',
+				click() {
+					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
+					mainWindow.reload()
+				}
+			},{
+				label: 'Break',
+				accelerator: 'Command+F8',
+				click() {
+					//mainWindow.debugger.attach()
+					mainWindow.webContents.executeJavaScript('debugger;')
+				}
+			}, {
+				label: 'Toggle Developer Tools',
+				accelerator: 'Alt+Command+I',
+				click() {
+
+					(mainWindow as any).toggleDevTools()
+				}
+			}
+		]
+	}
+}
+
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
 	let menu
@@ -103,34 +153,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}]
 		}, {
 			label: 'View',
-			submenu: (Env.isDebug) ? [{
-				label: 'Reload',
-				accelerator: 'Command+Shift+R',
-				click() {
-					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
-					mainWindow.reload()
-				}
-			},{
-				label: 'Break',
-				accelerator: 'Command+F8',
-				click() {
-					//mainWindow.debugger.attach()
-					mainWindow.webContents.executeJavaScript('debugger;')
-				}
-			}, {
-				label: 'Toggle Full Screen',
-				accelerator: 'Ctrl+Command+F',
-				click() {
-					mainWindow.setFullScreen(!mainWindow.isFullScreen())
-				}
-			}, {
-				label: 'Toggle Developer Tools',
-				accelerator: 'Alt+Command+I',
-				click() {
-
-					(mainWindow as any).toggleDevTools()
-				}
-			}] : [{
+			submenu: [{
 				label: 'Toggle Full Screen',
 				accelerator: 'Ctrl+Command+F',
 				click() {
@@ -198,6 +221,8 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}]
 		}]
 
+		if (Env.isDev)
+			template.push(makeDevMenu(mainWindow))
 		menu = Menu.buildFromTemplate(template)
 	}
 

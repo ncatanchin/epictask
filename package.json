@@ -2,7 +2,7 @@
   "name": "epictask",
   "version": "0.1.0",
   "description": "AN electron app for dealing with those darn git issues",
-  "main": "dist/MainEntry.js",
+  "main": "bin/epictask-start.js",
   "scripts": {
     "clean": "gulp compile clean",
     "test": "gulp compile test",

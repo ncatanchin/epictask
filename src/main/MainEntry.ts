@@ -58,15 +58,18 @@ async function boot() {
 		const isExtInstalled = (extName) => extNames
 			.findIndex(name => _.includes(_.toLower(name),_.toLower(extName))) > -1
 
+		//
+		// extNames.forEach((name:string) => {
+		// 	log.info('Dev Tool Extension name',name)
+		//
+		// 	// Remove pouch extension
+		// 	if (_.includes(_.toLower(name),'pouch')) {
+		// 		BrowserWindow.removeDevToolsExtension(name)
+		// 	}
+		// })
 
-		extNames.forEach((name:string) => {
-			log.info('Dev Tool Extension name',name)
-
-			// Remove pouch extension
-			if (_.includes(_.toLower(name),'pouch')) {
-				BrowserWindow.removeDevToolsExtension(name)
-			}
-		})
+		if (!isExtInstalled('pouchdb'))
+			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
 
 		if (!isExtInstalled('react'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))

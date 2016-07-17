@@ -281,6 +281,7 @@ export function makeMangoFinder(pouchRepo:PouchDBRepoPlugin<any>,finderKey:strin
 
 	// Actual finder function
 	const finder = async (request:FinderRequest,...args) => {
+
 		const selectorResult =
 			isFunction(selector) ? (selector as any)(...args) : selector
 

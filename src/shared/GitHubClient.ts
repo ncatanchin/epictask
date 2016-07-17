@@ -119,6 +119,8 @@ export class GitHubClient {
 				while (nextPageNumber < lastLink.pageNumber) {
 					nextPageNumber++
 
+
+					await Promise.resolve(true).delay(1000)
 					const nextOpts = Object.assign({},opts,{page:nextPageNumber})
 					let nextResult = await this.get<T>(path,modelType,nextOpts) as T
 

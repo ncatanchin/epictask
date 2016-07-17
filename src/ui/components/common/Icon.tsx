@@ -17,7 +17,7 @@ const Octicons = 'octicon'
 /**
  * IMIconProps
  */
-export interface IIconProps extends React.DOMAttributes {
+export interface IIconProps extends React.HTMLAttributes {
 	className?:string
 	style?:any
 	iconSet?:'material-icons'|'fa'|'octicon'
@@ -67,7 +67,7 @@ export class Icon extends React.Component<IIconProps,any> {
 			iconCode(GHIcons,iconName) :
 			children
 
-		return <i {...filterProps(this.props)} className={className} style={style}>
+		return <i {...filterProps(this.props)} {..._.pick(this.props,'onClick')} className={className} style={style}>
 			{iconContent}
 		</i>
 	}

@@ -16,6 +16,7 @@ import {Stores} from 'shared/Stores'
 import {DatabaseEvents} from 'main/db/DatabaseEvents'
 import {IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
 import {getUserDataFilename} from 'shared/util/Files'
+import {FinderRequest} from 'typestore'
 
 // Logger
 const log = getLogger(__filename)
@@ -24,7 +25,7 @@ const log = getLogger(__filename)
 const {ipcRenderer} = Electron
 
 // Database name and path
-const dbName = `epictask-${Env.envName}-2`
+const dbName = `epictask-${Env.envName}-new`
 const dbPath = getUserDataFilename(dbName + '.db')
 
 log.info('DB Path:',dbPath)
@@ -126,6 +127,7 @@ async function start() {
 }
 
 function respond(request:IDatabaseRequest,result,error:Error = null) {
+	log.info('Sending response',result,error)
 	ipcRenderer.send(DatabaseEvents.Response,{requestId:request.id,result,error})
 }
 
@@ -138,22 +140,36 @@ async function executeRequest(request:IDatabaseRequest) {
 	try {
 		const {id:requestId,store:storeName,fn:fnName,args} = request
 
+		let result
 
 		if (storeName) {
+
 			const storeName2 = _.camelCase(storeName.replace(/Store$/i,''))
 
 			let store = stores[storeName] || stores[storeName2]
 			assert(store, `Unable to find store for ${storeName} (requestId: ${requestId})`)
 
-			let result = store[fnName](...args)
-			assert(result,`Result can never be nil ${requestId}`)
+
+			if (args[0] && _.isNumber(args[0].limit))
+				args[0] = new FinderRequest(args[0])
+
+			result = store[fnName](...args)
+
 
 			// If its a promise then wait - and it should be a promise
-			if (_.isFunction(result.then))
-				result = await result
 
-			respond(request,result)
+
+
+		} else {
+			result = await storePlugin.db[fnName](...args)
+
 		}
+
+		assert(result,`Result can never be nil ${requestId}`)
+		if (_.isFunction(result.then))
+			result = await result
+
+		respond(request,result)
 	} catch (err) {
 		log.error('Request failed',err,request)
 		respond(request,null,err)
@@ -163,7 +179,7 @@ async function executeRequest(request:IDatabaseRequest) {
 function onRequest(event,request:IDatabaseRequest) {
 
 
-	log.info(`Processing database request`,event)
+	log.info(`Processing database request`,request)
 
 	return executeRequest(request)
 
@@ -193,6 +209,7 @@ function stop() {
 		coordinator = null
 	}
 }
+
 
 
 

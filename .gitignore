@@ -7,10 +7,12 @@ src/**/*.map
 src/**/*.d.ts
 dist
 logs
-.sass-cache
+
 
 # Webpack Example - ignore loader cache
 .awcache
+.sass-cache
+.happy*
 
 # Config is auto generated
 src/tsconfig.json
@@ -19,6 +21,7 @@ etc/tsconfig.*.json
 /tsconfig.json
 
 # Any log file
+
 *.log
 target
 

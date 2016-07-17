@@ -10,4 +10,4 @@ exec > >(tee -i logs/compile.log)
 # adding his answer to mine.
 exec 2>&1
 
-gulp compile-watch
+node --max-old-space-size=4000 ./node_modules/.bin/gulp compile-watch
