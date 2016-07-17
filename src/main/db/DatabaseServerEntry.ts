@@ -117,7 +117,7 @@ function stop() {
 }
 
 
-export {}
+
 
 /**
  * HMR - accept self - on dispose, close DB
@@ -130,3 +130,8 @@ if (module.hot) {
 
 	})
 }
+
+/**
+ * Exports
+ */
+export {}

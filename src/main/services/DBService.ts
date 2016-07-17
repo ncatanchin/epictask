@@ -34,11 +34,11 @@ export async function chunkRemove(modelIds) {
 
 	const chunks = _.chunk(modelIds,50)
 	const dbService:DBService = Container.get(DBService)
-	const {db} = dbService
-	assert(db,'could not get database reference in chunkRemove')
+	const {dbProxy} = dbService
+	assert(dbProxy,'could not get database reference in chunkRemove')
 
 	for (let chunk of chunks) {
-		await db.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
+		await dbProxy.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
 	}
 }
 
@@ -62,9 +62,12 @@ export class Stores {
 	}
 }
 
-class DBStoreProxy {
+/**
+ * Database Client proxy
+ */
+class DBProxy {
 
-	constructor(private repoClazz) {
+	constructor(private repoClazz = null) {
 
 	}
 
@@ -101,6 +104,7 @@ export class DBService extends BaseService {
 
 	dbName = `epictask-${Env.envName}-2`
 	dbPath = getUserDataFilename(this.dbName + '.db')
+	dbProxy
 
 	/**
 	 * All global repositories
@@ -110,9 +114,9 @@ export class DBService extends BaseService {
 		return this._stores
 	}
 
-	get db() {
-		return this._storePlugin ? this._storePlugin.db : null
-	}
+	// get db() {
+	// 	return this._storePlugin ? this._storePlugin.db : null
+	// }
 
 
 	constructor() {
@@ -186,7 +190,7 @@ export class DBService extends BaseService {
 
 
 		// In DEBUG mode expose repos on global
-		if (DEBUG) {
+		if (Env.isDev) {
 			_.assignGlobal({Repos:this._stores})
 		}
 
@@ -218,7 +222,7 @@ export class DBService extends BaseService {
 	 */
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return new Proxy({},new DBStoreProxy(repoClazz)) as any
+		return new Proxy({},new DBProxy(repoClazz)) as any
 	}
 }
 
