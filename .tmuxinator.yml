@@ -1,0 +1,11 @@
+
+name: epictaskdev
+root: ~/Development/densebrain/epictask
+
+windows:
+  - epictaskdev:
+      layout: even-horizontal
+      panes:
+        - npm run remotedev
+        - cd ~/Development/npm-local/ && local-npm
+        - cd ~/Development/pouchdb-server-data/ && pouchdb-server
