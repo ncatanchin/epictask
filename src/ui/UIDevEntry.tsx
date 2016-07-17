@@ -7,7 +7,7 @@ const log = require('typelogger').create(__filename)
 
 // Config
 require('shared/LogConfig')
-require('./UILogging')
+require('./../shared/RendererLogging')
 require('./UIGlobals')
 
 // Import Store & Dev Tools getter

@@ -1,7 +1,6 @@
 import 'reflect-metadata'
 require('shared/LogConfig')
-import './UILogging'
-
+import 'shared/RendererLogging'
 import 'shared/PromiseConfig'
 
 // Load all global/env stuff first
