@@ -4,9 +4,8 @@ const log = getLogger(__filename)
 
 import {Singleton, AutoWired, Container, Scope} from 'typescript-ioc'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
-import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 
-import {IService, ServiceStatus} from './IService'
+import {IService, ServiceStatus, BaseService} from './IService'
 
 import {getUserDataFilename} from 'shared/util/Files'
 import {ActivityStore} from 'shared/models/Activity'
@@ -17,6 +16,9 @@ import {AvailableRepoStore} from 'shared/models/AvailableRepo'
 import {RepoStore} from 'shared/models/Repo'
 import {IssueStore} from 'shared/models/Issue'
 import {CommentStore} from 'shared/models/Comment'
+
+import Electron = require('electron')
+const {app,BrowserWindow,ipcMain} = Electron
 
 export async function chunkSave(models,modelStore) {
 	const chunks = _.chunk(models,50)
@@ -60,21 +62,43 @@ export class Stores {
 	}
 }
 
+class DBStoreProxy {
+
+	constructor(private repoClazz) {
+
+	}
+
+	get(target,name) {
+
+	}
+
+}
+
+export function loadModelClasses() {
+	const allModelsAndRepos = require('shared/models')
+	const names = Object.keys(allModelsAndRepos)
+
+	return names
+		.filter(name => {
+			const val = allModelsAndRepos[name]
+			return !_.endsWith(name,'Store') && _.isFunction(val)
+		})
+		.map(name => {
+			log.info(`Loading model class: ${name}`)
+			return allModelsAndRepos[name]
+		})
+}
 
 /**
  * References to coordinator and plugins
  */
 
-
 @AutoWired
 @Singleton
-export default class DBService implements IService {
+export class DBService extends BaseService {
 
-	private _status = ServiceStatus.Created
 	private _stores:Stores
-	private _storePlugin:PouchDBPlugin
 
-	coordinator:TSCoordinator
 	dbName = `epictask-${Env.envName}-2`
 	dbPath = getUserDataFilename(this.dbName + '.db')
 
@@ -92,38 +116,12 @@ export default class DBService implements IService {
 
 
 	constructor() {
+		super()
 		this._stores = assign(new Stores(),{dbService:this})
 		log.info('DB Path:',this.dbPath)
 	}
 
-	/**
-	 * Create PouchDB store options
-	 *
-	 * @returns {{filename: string}}
-	 */
-	private storeOptions() {
-		let opts = {filename: this.dbPath,cacheSize:32 * 1024 * 1024}
-		// if (Env.isDev) {
-		// 	opts = Object.assign({},opts, {
-		// 		replication: {
-		// 			to:   'http://127.0.0.1:5984/' + this.dbName,
-		// 			live:  true,
-		// 			retry: true
-		// 		}
-		// 	})
-		// }
 
-		return opts
-	}
-
-	/**
-	 * Service status
-	 *
-	 * @returns {ServiceStatus}
-	 */
-	status():ServiceStatus {
-		return this._status
-	}
 
 
 	/**
@@ -131,21 +129,22 @@ export default class DBService implements IService {
 	 * @returns {DBService}
 	 */
 	async init():Promise<this> {
-		this._status = ServiceStatus.Initialized
-		this._storePlugin = new PouchDBPlugin(this.storeOptions())
+		await super.init()
+
+
 
 		// If DEV then add deleteDatabase function
-		if (Env.isDev) {
-			_.assignGlobal({
-				cleanDatabase: async () => {
-					await this._storePlugin.deleteDatabase()
-					await this.init()
-					return this.start()
-				},
-				dbService:this
-			})
-
-		}
+		// if (Env.isDev) {
+		// 	_.assignGlobal({
+		// 		cleanDatabase: async () => {
+		// 			await this._storePlugin.deleteDatabase()
+		// 			await this.init()
+		// 			return this.start()
+		// 		},
+		// 		dbService:this
+		// 	})
+		//
+		// }
 
 		return this
 	}
@@ -157,37 +156,20 @@ export default class DBService implements IService {
 	 * @returns {DBService}
 	 */
 	async start():Promise<this> {
-		assert(this._status < ServiceStatus.Started,'Service is already started')
-		assert(this._storePlugin,'StorePlugin is not initialized')
+		assert(this.status() < ServiceStatus.Started,'Service is already started')
+
+		await super.start()
 
 
-		this._status = ServiceStatus.Started
 
-		/**
-		 * init the coordinator
-		 */
-		this.coordinator = new TSCoordinator()
-		await this.coordinator.init({}, this._storePlugin)
+		const modelClazzes = loadModelClasses()
 
-		const allModelsAndRepos = require('shared/models')
-		const names = Object.keys(allModelsAndRepos)
 
-		const modelClazzes = names
-			.filter(name => {
-				const val = allModelsAndRepos[name]
-				return !_.endsWith(name,'Store') && _.isFunction(val)
-			})
-			.map(name => {
-				log.info(`Loading model class: ${name}`)
-				return allModelsAndRepos[name]
-			})
-
-		await this.coordinator.start(...modelClazzes)
 
 		log.info('Coordinator started, loading repos')
 
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
-			LabelStore,ActivityStore,MilestoneStore,UserStore} = allModelsAndRepos
+			LabelStore,ActivityStore,MilestoneStore,UserStore} = require('shared/models')
 
 		Object.assign(this._stores, {
 			repo:          this.getStore(RepoStore),
@@ -217,11 +199,13 @@ export default class DBService implements IService {
 
 
 	async stop():Promise<this> {
+		await super.stop()
 		this._status = ServiceStatus.Stopped
 		return this
 	}
 
 	destroy():this {
+		super.destroy()
 		return this
 	}
 
@@ -234,8 +218,9 @@ export default class DBService implements IService {
 	 */
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return this.coordinator.getRepo(repoClazz)
+		return new Proxy({},new DBStoreProxy(repoClazz)) as any
 	}
 }
 
 
+export default DBService

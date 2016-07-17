@@ -5,28 +5,24 @@
 // Imports
 import {debounce} from 'lodash-decorators'
 import * as React from 'react'
-import {Paper, TextField, AutoComplete, MenuItem} from 'material-ui'
+import {Paper, TextField} from 'material-ui'
 import {connect} from 'react-redux'
 import * as KeyMaps from 'shared/KeyMaps'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {
-	SearchResult, SearchState, Search, SearchType, SearchResultData,
-	SearchData, SearchItem, ISearchItemModel
-} from 'shared/actions/search/SearchState'
-
-const $ = require('jquery')
-
-
+import {SearchResult, SearchType, SearchData, ISearchItemModel} from 'shared/actions/search/SearchState'
 import {SearchResultsList} from './SearchResultsList'
 import {
-	createSearchDataSelector, createSearchItemSelector,
+	createSearchDataSelector,
+	createSearchItemSelector,
 	createSearchItemModelsSelector
 } from 'shared/actions/search/SearchSelectors'
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {createSelector,createStructuredSelector} from 'reselect'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {createStructuredSelector} from 'reselect'
+
+const $ = require('jquery')
+
 
 // Key mapping tools
 const {CommonKeys:Keys} = KeyMaps
@@ -143,7 +139,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	get query():string {
 		return _.get(this.state,'query',
-			_.get(this.props,'searchData.search.query')) as string || '' 
+			_.get(this.props,'searchData.search.query')) as string || ''
 	}
 
 

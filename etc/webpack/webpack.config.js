@@ -62,10 +62,12 @@ module.exports = function (projectConfig) {
 
 	const loaders = require('./parts/loaders')(projectConfig)
 
-	const happyPlugins = !happy ? [] : loaders.loaders
+	const happyPlugins = (!happy || projectConfig.targetType === TargetType.ElectronMain) ? [] :
+		loaders.loaders
 		.filter(loader => loader.happy && loader.happy.id)
 		.map(loader => new HappyPack({
-				id: loader.happy.id,
+				id: `${loader.happy.id}`,
+				tempDir: `.happypack-${projectConfig.name}`,
 				threadPool: happyThreadPool
 			}))
 

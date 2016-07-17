@@ -5,10 +5,15 @@ import {Singleton, AutoWired, Container} from 'typescript-ioc'
 import {IService, ServiceStatus} from './services/IService'
 
 // Get the DBService starter
-import DBService from './services/DBService'
+import {DBService as DBServiceType} from './services/DBService'
 import * as ContextUtils from 'shared/util/ContextUtils'
 
 let hmrReady = false
+
+// SERVICES WE CAN NOT LOAD
+const IllegalServices = [/DBService/,/IService$/]
+
+export type TServiceMap = {[key:string]:IService}
 
 @AutoWired
 @Singleton
@@ -17,24 +22,55 @@ export class MainConfigurator {
 
 	services:{[key:string]:IService} = {}
 	servicesCtx = null
+	dbService:DBServiceType = null
 
-	loadServices() {
-		this.servicesCtx = require.context('main/services',true,/^((?!DBService|IService)[\S\s]).*Service\.ts$/)
+	/**
+	 * Load services context
+	 *
+	 * @returns {{}}
+	 */
+	private loadServices():TServiceMap {
+		this.servicesCtx = require.context('main/services',true,/^((?!.*(DBService|IService).*)[\S\s]).*Service\.ts$/)
 		log.info(`Services Context has keys: ${this.servicesCtx.keys().join(', ')}`)
 
-		return ContextUtils.requireContext(
+		const ctx =  ContextUtils.requireContext(
 			this.servicesCtx,
 			[],
 			true
 		)
 
+		const serviceKeys = Object.keys(ctx)
+		log.info('Discovered available services:', serviceKeys)
+
+
+		// Test valid keys
+		IllegalServices.forEach(illegal => {
+			serviceKeys.forEach(key => {
+				assert(!illegal.test(key),`Illegal service (${key}).  This service can not be loaded automatically 
+					and regex tests should be updated - ${illegal.source}`)
+			})
+		})
+
+		return serviceKeys
+			.reduce((services,key) => {
+				let service = ctx[key]
+				services[key] = Container.get(service.default || service)
+				return services
+			},{})
+
 	}
 
-	loadRequestedServices() {
+	/**
+	 * Load specific services provided, if none are
+	 * provided then all services are loaded
+	 *
+	 * @returns {any|{}}
+	 */
+	private loadRequestedServices():TServiceMap {
 		return this.requestedServices.reduce((services,serviceClazz) => {
 			services[serviceClazz.name] = Container.get(serviceClazz)
 			return services
-		},)
+		},{})
 	}
 
 	/**
@@ -46,39 +82,35 @@ export class MainConfigurator {
 		log.info('Starting services')
 
 
-		const Services = (this.requestedServices.length) ?
+		const services = (this.requestedServices.length) ?
 			this.loadRequestedServices() :
 			this.loadServices()
 
 
 
-		const serviceKeys = Object.keys(Services)
-		log.info('Discovered available services:', serviceKeys)
+
 
 		/**
 		 * Load all available services
 		 */
 		log.info('Waiting for all services to load')
-		for (let serviceKey of serviceKeys) {
-			if (['DBService','IService'].includes(serviceKey))
-				continue
+		for (let serviceKey of Object.keys(services)) {
+
 
 			log.info(`Starting service: ${serviceKey}`)
-			let service = Services[serviceKey]
-
-			if (service.default) {
-				service = Container.get(service.default)
-			}
+			let service = services[serviceKey]
 
 			this.services[serviceKey] = service
 
-			if (service.status > ServiceStatus.Created) {
+			if (service.status() > ServiceStatus.Created) {
 				log.info(`${serviceKey} was already started, skipping`)
 				continue
 			}
 
 			const isService = !!service.status && !!service.start
-			assert(isService,"Services does not appear to implement IService")
+
+
+			assert(isService,"Services does not appear to implement IService: " + service.status + '/' + typeof service.start)
 
 			if (service.init) {
 				log.info(`Init Service ${serviceKey}`)
@@ -95,24 +127,35 @@ export class MainConfigurator {
 
 
 		// HMR
-		if (module.hot && !hmrReady) {
-			hmrReady = true
-			module.hot.accept([this.servicesCtx.id], async (updates) => {
-				log.info('HMR Services updated: ', updates)
-				await Promise.all(Object.values(this.services)
-					.map(service => (
-						(service.stop) ? service.stop() : Promise.resolve(service))
-					))
+		this.hmrSetup()
 
-				await this.startServices()
-
-				log.info('HMR services reloaded')
-			})
-		}
-
-		return Services
+		return this.services
 	}
 
+	private async startDatabase() {
+		if (this.dbService) {
+			log.info('Stopping DB first')
+			await this.dbService.stop()
+			this.dbService.destroy()
+			this.dbService = null
+		}
+
+		const DBService:typeof DBServiceType = require('./services/DBService').default
+
+		// Load the database first
+		log.info('Starting Database')
+		this.dbService = Container.get(DBService)
+		await this.dbService.init()
+		await this.dbService.start()
+		log.info('Database started')
+	}
+
+	/**
+	 * Initialize the main config
+	 *
+	 * @param requestedServices
+	 * @returns {MainConfigurator}
+	 */
 	async init(...requestedServices:any[]):Promise<this> {
 
 		// Set services
@@ -126,6 +169,12 @@ export class MainConfigurator {
 		return this
 	}
 
+
+	/**
+	 * Start all the services
+	 *
+	 * @returns {any}
+	 */
 	async start():Promise<any> {
 
 		// Just in case this is an HMR reload
@@ -134,18 +183,18 @@ export class MainConfigurator {
 
 
 
-		// Load the database first
-		log.info('Starting Database')
-		const dbService = Container.get(DBService)
-		await dbService.init()
-		await dbService.start()
-
+		await this.startDatabase()
 
 
 		log.info('DB loaded, now services')
 		return await this.startServices()
 	}
 
+	/**
+	 * Stop all the services
+	 *
+	 * @returns {Promise<T>|Promise<T|U>}
+	 */
 	stop() {
 		const services = Object.values(this.services)
 
@@ -161,6 +210,30 @@ export class MainConfigurator {
 		}).catch(err => {
 			log.error('service shutdowns failed', err)
 		})
+	}
+
+	private hmrSetup() {
+		if (module.hot && !hmrReady) {
+			hmrReady = true
+
+			module.hot.accept(['./services/DBService'],() => {
+				return this.startDatabase()
+			})
+
+			if (this.servicesCtx) {
+				module.hot.accept([this.servicesCtx.id], async(updates) => {
+					log.info('HMR Services updated: ', updates)
+					await Promise.all(Object.values(this.services)
+						.map(service => (
+							(service.stop) ? service.stop() : Promise.resolve(service))
+						))
+
+					await this.startServices()
+
+					log.info('HMR services reloaded')
+				})
+			}
+		}
 	}
 
 }

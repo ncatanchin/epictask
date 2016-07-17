@@ -18,10 +18,10 @@ export async function shutdownMain() {
 	log.info(`Shutdown completed`)
 }
 
-export async function  configureMain(...serviceClazzes) {
+export async function configureMain(...serviceClazzes) {
 	try {
-		if (configurator) await shutdownMain()
-
+		if (configurator)
+			await shutdownMain()
 
 		log.info(`Loading services: ${serviceClazzes.map(clazz => clazz.name).join(', ')}`)
 		configurator = Container.get(MainConfigurator)

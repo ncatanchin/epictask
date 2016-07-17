@@ -11,6 +11,8 @@ pushd electron-prebuilt
 rm -Rf dist/EpicTask.app
 cp -R dist/Electron.app dist/EpicTask.app
 cp $ROOT/src/assets/images/icons/icon-darwin.icns dist/EpicTask.app/Contents/Resources/electron.icns
+cp $ROOT/src/assets/images/icons/icon-darwin.icns dist/EpicTask.app/Contents/Resources/epictask.icns
+cp $ROOT/src/assets/images/icons/icon-darwin.icns dist/EpicTask.app/Contents/Resources/EpicTask.icns
 echo "dist/EpicTask.app/Contents/MacOS/Electron" > path.txt
 popd
 popd

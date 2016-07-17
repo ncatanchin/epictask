@@ -15,12 +15,12 @@ module.exports = (projectConfig) => {
 			{
 				test: /\.tsx?$/,
 				exclude: /node_modules/,
-				loader: 'source-map-loader'
+				loaders: ['source-map-loader']
 			},
 			{
 				test: /\.jsx$/,
 				exclude: /node_modules/,
-				loader: 'source-map-loader'
+				loaders: ['source-map-loader']
 			}
 		],
 		loaders: [{
@@ -64,7 +64,7 @@ module.exports = (projectConfig) => {
 			{
 				happy: {id: 'jade'},
 				test: /\.(jade|pug)$/,
-				loader: 'jade-loader'
+				loaders: ['jade-loader']
 			},
 
 			// ASSETS
@@ -93,7 +93,7 @@ module.exports = (projectConfig) => {
 			{
 				happy: {id: 'css-mods'},
 				test: /node_modules.*\.css$/,
-				loader: 'file?name=assets/images/[name].[hash].[ext]'
+				loaders: ['file?name=assets/images/[name].[hash].[ext]']
 			},
 			{
 				happy: {id: 'css'},

@@ -6,7 +6,8 @@ module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
 	const entries = {
-		"UIEntry": ['babel-polyfill', "./src/ui/UIEntry"]
+		"UIEntry": ['babel-polyfill', "./src/ui/UIEntry"],
+		"DatabaseServerEntry": ['babel-polyfill','./src/main/db/DatabaseServerEntry.ts']
 	}
 
 	// In DEV add the UIDevEntry
