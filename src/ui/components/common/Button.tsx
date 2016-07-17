@@ -7,6 +7,7 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {connect} from 'react-redux'
 import filterProps from 'react-valid-props'
+import {Themed} from 'shared/themes/ThemeManager'
 const Ink = require('react-ink')
 //endregion
 
@@ -58,7 +59,7 @@ function mapStateToProps(state) {
  * @constructor
  **/
 @Radium
-@connect(mapStateToProps)
+@Themed
 export class Button extends React.Component<IButtonProps,any> {
 
 	static defaultProps = {

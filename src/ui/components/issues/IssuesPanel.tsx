@@ -161,7 +161,7 @@ const makeIssueItemStateToProps = () => {
 			return repo
 		},
 		selectedIssueIds: selectedIssueIdsSelector
-	})
+	},createDeepEqualSelector)
 }
 
 @connect(makeIssueItemStateToProps)

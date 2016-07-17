@@ -20,6 +20,8 @@ import {
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createStructuredSelector} from 'reselect'
+import {Themed} from 'shared/themes/ThemeManager'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 const $ = require('jquery')
 
@@ -69,10 +71,9 @@ function makeMapStateToProps() {
 		searchItemModelsSelector = createSearchItemModelsSelector()
 
 	return createStructuredSelector({
-		theme: () => getTheme(),
 		searchData: searchDataSelector,
 		searchItemModels: searchItemModelsSelector
-	})
+	},createDeepEqualSelector)
 
 
 }
@@ -85,7 +86,9 @@ function makeMapStateToProps() {
  **/
 
 @CSSModules(styles)
+
 @connect(makeMapStateToProps,null,null,{withRef:true})
+@Themed
 @HotKeyContext
 @PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {

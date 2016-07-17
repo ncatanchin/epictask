@@ -3,7 +3,7 @@ html
 	script.
 		var electron = require('electron')
 		var remote = electron.remote
-		var log = remote.require('typelogger').create('DatabaseServer')
+		var log = remote.getGlobal('getLogger')('DatabaseServer')
 		var baseDir = "."
 		var loaded = false
 		var isDev = remote.getGlobal('Env').isDev

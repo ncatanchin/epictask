@@ -6,7 +6,8 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import {User} from 'shared/models'
-import {AppKey} from '../../../shared/Constants'
+import {AppKey} from 'shared/Constants'
+import {Themed} from 'shared/themes/ThemeManager'
 
 // Constants
 const log = getLogger(__filename)
@@ -54,11 +55,7 @@ export interface IAvatarProps extends React.DOMAttributes {
 }
 
 
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
-	}
-}
+
 
 /**
  * Avatar
@@ -66,7 +63,7 @@ function mapStateToProps(state) {
  * @class Avatar
  * @constructor
  **/
-@connect(mapStateToProps)
+@Themed
 export class Avatar extends React.Component<IAvatarProps,any> {
 
 

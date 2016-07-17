@@ -1,38 +1,49 @@
 
+import {Singleton, AutoWired, Container, Scope} from 'typescript-ioc'
+import {Repo as TSRepo, IModel} from 'typestore'
+import {ServiceStatus, BaseService} from './IService'
+import {getUserDataFilename} from 'shared/util/Files'
+import Electron = require('electron')
+import {Stores} from 'shared/Stores'
+import {loadModelClasses} from 'main/db/DBTool'
+import {DatabaseServerWindow as DatabaseServerWindowType} from 'main/db/DatabaseServerWindow'
+
+const CHUNK_SIZE = 50
 
 const log = getLogger(__filename)
 
-import {Singleton, AutoWired, Container, Scope} from 'typescript-ioc'
-import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
-
-import {IService, ServiceStatus, BaseService} from './IService'
-
-import {getUserDataFilename} from 'shared/util/Files'
-import {ActivityStore} from 'shared/models/Activity'
-import {UserStore} from 'shared/models/User'
-import {LabelStore} from 'shared/models/Label'
-import {MilestoneStore} from 'shared/models/Milestone'
-import {AvailableRepoStore} from 'shared/models/AvailableRepo'
-import {RepoStore} from 'shared/models/Repo'
-import {IssueStore} from 'shared/models/Issue'
-import {CommentStore} from 'shared/models/Comment'
-
-import Electron = require('electron')
 const {app,BrowserWindow,ipcMain} = Electron
 
+
+// Re-export stores
+export {
+	Stores
+}
+
+/**
+ * Bulk save models
+ *
+ * @param models
+ * @param modelStore
+ */
 export async function chunkSave(models,modelStore) {
-	const chunks = _.chunk(models,50)
+	const chunks = _.chunk(models,CHUNK_SIZE)
 
 	for (let chunk of chunks) {
 		await modelStore.bulkSave(...chunk)
 	}
 }
 
+/**
+ * Bulk remove models
+ *
+ * @param modelIds
+ */
 export async function chunkRemove(modelIds) {
 
 	modelIds = _.uniq(modelIds.map(modelId => `${modelId}`))
 
-	const chunks = _.chunk(modelIds,50)
+	const chunks = _.chunk(modelIds,CHUNK_SIZE)
 	const dbService:DBService = Container.get(DBService)
 	const {dbProxy} = dbService
 	assert(dbProxy,'could not get database reference in chunkRemove')
@@ -42,55 +53,44 @@ export async function chunkRemove(modelIds) {
 	}
 }
 
-export class Stores {
 
-	dbService:DBService
-
-	constructor() {}
-
-	issue:IssueStore
-	repo: RepoStore
-	availableRepo: AvailableRepoStore
-	milestone: MilestoneStore
-	comment: CommentStore
-	label: LabelStore
-	activity: ActivityStore
-	user: UserStore
-
-	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return this.dbService.getStore(repoClazz)
-	}
-}
 
 /**
  * Database Client proxy
  */
 class DBProxy {
 
-	constructor(private repoClazz = null) {
+	private fnMap = {}
+	private store:string
 
+	constructor(private dbService,private repoClazz = null) {
+		this.store = (!repoClazz) ? null :
+			(repoClazz.name || _.get(repoClazz,'prototype.constructor.name'))
 	}
 
+	/**
+	 * Proxy function, first attempts to use map
+	 *
+	 * @param target
+	 * @param name
+	 * @returns {any|((args:...[any])=>undefined)}
+	 */
 	get(target,name) {
 
+		const proxyFn = this.fnMap[name] || (
+			this.fnMap[name] = (...args) => {
+				log.info(`Proxy request for ${name}`)
+				return this.dbService.dbWindow.request(this.store,name,args)
+			}
+		)
+
+		log.info(`Getting proxy for ${name}`)
+		return proxyFn
 	}
 
 }
 
-export function loadModelClasses() {
-	const allModelsAndRepos = require('shared/models')
-	const names = Object.keys(allModelsAndRepos)
 
-	return names
-		.filter(name => {
-			const val = allModelsAndRepos[name]
-			return !_.endsWith(name,'Store') && _.isFunction(val)
-		})
-		.map(name => {
-			log.info(`Loading model class: ${name}`)
-			return allModelsAndRepos[name]
-		})
-}
 
 /**
  * References to coordinator and plugins
@@ -102,8 +102,7 @@ export class DBService extends BaseService {
 
 	private _stores:Stores
 
-	dbName = `epictask-${Env.envName}-2`
-	dbPath = getUserDataFilename(this.dbName + '.db')
+	dbWindow:DatabaseServerWindowType
 	dbProxy
 
 	/**
@@ -122,10 +121,18 @@ export class DBService extends BaseService {
 	constructor() {
 		super()
 		this._stores = assign(new Stores(),{dbService:this})
-		log.info('DB Path:',this.dbPath)
+
 	}
 
 
+	private loadDatabaseServerWindow() {
+		log.info('Getting DB Window')
+		const DatabaseServerWindow:typeof DatabaseServerWindowType = require('main/db/DatabaseServerWindow').default
+		this.dbWindow = new DatabaseServerWindow()
+
+		log.info('Starting db window')
+		return this.dbWindow.start()
+	}
 
 
 	/**
@@ -134,6 +141,7 @@ export class DBService extends BaseService {
 	 */
 	async init():Promise<this> {
 		await super.init()
+
 
 
 
@@ -150,7 +158,7 @@ export class DBService extends BaseService {
 		//
 		// }
 
-		return this
+		return this.loadDatabaseServerWindow()
 	}
 
 
@@ -164,14 +172,11 @@ export class DBService extends BaseService {
 
 		await super.start()
 
-
-
+		// Load all model classes
 		const modelClazzes = loadModelClasses()
 
 
-
-		log.info('Coordinator started, loading repos')
-
+		// Load all
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
 			LabelStore,ActivityStore,MilestoneStore,UserStore} = require('shared/models')
 
@@ -202,14 +207,28 @@ export class DBService extends BaseService {
 	}
 
 
+	/**
+	 * Stop the database service,
+	 * internally it stops the db window too
+	 *
+	 * @returns {DBService}
+	 */
 	async stop():Promise<this> {
 		await super.stop()
-		this._status = ServiceStatus.Stopped
+		if (this.dbWindow) {
+			await this.dbWindow.stop()
+			this.dbWindow = null
+		}
+
 		return this
 	}
 
 	destroy():this {
 		super.destroy()
+		if (this.dbWindow) {
+			this.dbWindow.stop()
+			this.dbWindow = null
+		}
 		return this
 	}
 
@@ -222,7 +241,7 @@ export class DBService extends BaseService {
 	 */
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return new Proxy({},new DBProxy(repoClazz)) as any
+		return new Proxy({},new DBProxy(this,repoClazz)) as any
 	}
 }
 

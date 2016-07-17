@@ -52,6 +52,11 @@ module.exports = function(projectConfig) {
 				'process.env.PROCESS_TYPE': JSON.stringify('main')
 			}),
 			new HtmlWebpackPlugin({
+				filename: "main-db-entry.html",
+				template: 'src/main/db/DatabaseServerEntry.jade',
+				inject: false
+			}),
+			new HtmlWebpackPlugin({
 				filename: "main-entry.html",
 				template: 'src/main/MainEntry.jade',
 				inject: false

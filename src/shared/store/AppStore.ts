@@ -191,9 +191,10 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	 * @type {function(): *}
 	 */
 	const debugEnhancer =
-		(!Env.isDev) ? NullMiddleware  :
-			(Env.isMain) ?  makeRemoteMiddleware() :
-				loadDevTools()
+		(!Env.isDev || Env.isRenderer) ? NullMiddleware  :
+			makeRemoteMiddleware()
+			// (Env.isMain) ?  makeRemoteMiddleware() :
+			// 	loadDevTools()
 
 
 	enhancers.push(debugEnhancer)

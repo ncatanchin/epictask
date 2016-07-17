@@ -18,6 +18,7 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {issuesDetailSelector, issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import baseStyles from './IssueDetailPanelStyles'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 // Non-typed Components
 const {Textfit} = require('react-textfit')
@@ -52,13 +53,14 @@ const makeIssueItemStateToProps = () => {
 		(theme:any) => mergeStyles(baseStyles, theme.issueDetail)
 	)
 
+
 	return createStructuredSelector({
 		issues: issuesDetailSelector,
 		issue: issueSelector,
 		comments: commentsSelector,
 		theme: themeSelector,
 		styles: stylesSelector
-	})
+	},createDeepEqualSelector)
 }
 
 
@@ -72,10 +74,10 @@ const makeIssueItemStateToProps = () => {
  **/
 
 
-@Radium
 @connect(makeIssueItemStateToProps)
-@PureRender
+@Radium
 @Themed
+@PureRender
 @HotKeyContext
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 

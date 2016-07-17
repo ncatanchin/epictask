@@ -6,8 +6,26 @@ import {MainConfigurator} from 'main/MainConfigurator'
 
 const log = getLogger(__filename)
 
+
+
+process.on("unhandledRejection", function (reason, promise) {
+	//deepTrace(reason)
+	console.error('Unhandled rejection', reason)
+	log.error('Unhandled rejection', reason, promise)
+
+})
+
+
+process.on("uncaughtException", function (err) {
+	console.error('Unhandled exception', err)
+	log.error('Unhandled exception', err)
+})
+
+
 let loadedServices = {}
 let configurator:MainConfigurator = null
+
+
 
 export async function shutdownMain() {
 	if (!configurator) return

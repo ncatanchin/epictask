@@ -5,3 +5,4 @@ export const createDeepEqualSelector = createSelectorCreator(
 	defaultMemoize,
 	_.isEqual
 )
+

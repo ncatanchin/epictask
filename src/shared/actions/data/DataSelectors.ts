@@ -46,7 +46,7 @@ export const commentModelsSelector = _.memoize(
 	(state):Map<string,Comment> => dataStateSelector(state).models.get(Comment.$$clazz)  || Map<string,Comment>()
 )
 
-export const createModelsSelector = () => createStructuredSelector({
+export const modelsSelector = createStructuredSelector({
 	availRepos: availRepoModelsSelector,
 	repoModels:repoModelsSelector,
 	milestoneModels:milestoneModelsSelector,

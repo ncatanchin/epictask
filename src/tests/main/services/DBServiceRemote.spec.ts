@@ -1,17 +1,24 @@
 
 
 import * as TestSetup from '../MainTestSetup'
+const log = getLogger(__filename)
+
+
 import DBService from 'main/services/DBService'
 import {Container} from 'typescript-ioc'
 import {User, UserStore} from 'shared/models/User'
-const dataUrl = require('dataurl')
+
+log.info('User loaded')
+
 import Electron = require('electron')
+
+log.info('electron loaded')
 import {toDataUrl} from 'main/MainTemplates'
 
 const {app,BrowserWindow,ipcMain} = Electron
-app.commandLine.appendSwitch('enable-logging')
+//app.commandLine.appendSwitch('enable-logging')
 
-const log = getLogger(__filename)
+
 
 let dbService:DBService
 
@@ -21,9 +28,9 @@ let dbService:DBService
 describe.only('Database Remote (IPC) Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		await TestSetup.configureMain(DBService)
-
-		dbService = Container.get(DBService)
+		// await TestSetup.configureMain(DBService)
+		//
+		// dbService = Container.get(DBService)
 	})
 
 	after(async () => {

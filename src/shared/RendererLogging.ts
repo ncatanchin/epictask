@@ -3,7 +3,7 @@
  */
 const TypeLogger = require('typelogger')
 const remote = require('electron').remote
-const RemoteLoggerFactory = remote.getGlobal('LoggerFactory')
+const RemoteLoggerFactory = remote.getGlobal('getLogger')
 
 
 /**

@@ -24,6 +24,9 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
 import {HotKeys} from 'react-hotkeys'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import {Themed} from 'shared/themes/ThemeManager'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {createStructuredSelector} from 'reselect'
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -51,9 +54,9 @@ const store:ObservableStore<RootState> = Container.get(ObservableStore as any) a
 
 
 //region DEBUG Components/Vars
-const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
-const DevTools = AllDevTools.DevTools || <div></div>
-//const DevTools = <div/>
+//const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
+//const DevTools = AllDevTools.DevTools || <div></div>
+const DevTools = <div/>
 let devToolsRef = null
 let appElement = null
 let reduxStore = null
@@ -96,29 +99,20 @@ export interface IAppProps {
 
 
 
-function mapStateToProps(state:any,props:IAppProps = {} as any) {
-	const
-		appState = state.get(AppKey) as AppState,
-		uiState = state.get(UIKey) as UIState
+const mapStateToProps = createStructuredSelector({
+	hasAvailableRepos: (state) => availableRepoCountSelector(state) > 0,
+	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
+	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
 
-	const dialogOpen = uiState.dialogs.valueSeq().includes(true)
+},createDeepEqualSelector)
 
-	return {
-		theme:      getTheme(),
-		hasAvailableRepos:availableRepoCountSelector(state) > 0,
-		stateType: appState.stateType,
-		dialogOpen
-	}
-
-
-
-}
 
 
 /**
  * Root App Component
  */
 @connect(mapStateToProps)
+@Themed
 @HotKeyContext
 @PureRender
 class App extends React.Component<IAppProps,any> {
@@ -208,7 +202,7 @@ class App extends React.Component<IAppProps,any> {
 									<page.component />
 								</div>
 
-								<DevTools/>
+								{/*<DevTools/>*/}
 								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 								<ToastMessages/>
 							</HotKeys>

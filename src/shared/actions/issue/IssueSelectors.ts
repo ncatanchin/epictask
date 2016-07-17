@@ -5,12 +5,13 @@ import {createSelector} from 'reselect'
 import {IssueKey} from 'shared/Constants'
 import {Issue} from 'shared/models/Issue'
 import {
-	issueModelsSelector, createModelsSelector, commentModelsSelector
+	issueModelsSelector, modelsSelector, commentModelsSelector
 } from 'shared/actions/data/DataSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
 
@@ -20,7 +21,7 @@ export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as Issue
  *
  * @type {Reselect.Selector<Map<string, any>, number[]>|Reselect.Selector<TInput, TOutput>}
  */
-export const selectedIssueIdsSelector = createSelector(
+export const selectedIssueIdsSelector = createDeepEqualSelector(
 	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
@@ -32,7 +33,7 @@ export const issueSortAndFilterSelector = _.memoize((state):{issueSort:IIssueSor
 
 
 
-export const issuesSelector = createSelector(
+export const issuesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	issueIdsSelector,
 	issueModelsSelector,
@@ -91,12 +92,12 @@ export const issuesSelector = createSelector(
  *
  * @type {Reselect.Selector<TInput, number[]>|Reselect.Selector<Map<any, any>, Issue[]>|Reselect.Selector<Map<any, any>, TOutput>}
  */
-export const issuesDetailSelector = createSelector(
+export const issuesDetailSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
-	createModelsSelector(),
 	issuesSelector,
-	(state:Map<any,any>):number[] => (state.get(IssueKey) as IssueState).selectedIssueIds,
-	(enabledRepoIds:number[],models,issues,selectedIssueIds:number[]) => {
+	modelsSelector,
+	selectedIssueIdsSelector,
+	(enabledRepoIds:number[],issues,models,selectedIssueIds:number[]) => {
 		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
 		issues = selectedIssueIds
@@ -123,7 +124,7 @@ export const issueSelector = _.memoize((state):Issue => {
 
 export const commentIdsSelector = _.memoize((state):string[] => (state.get(IssueKey) as IssueState).commentIds)
 
-export const commentsSelector = createSelector(
+export const commentsSelector = createDeepEqualSelector(
 	issueSelector,
 	commentIdsSelector,
 	commentModelsSelector,

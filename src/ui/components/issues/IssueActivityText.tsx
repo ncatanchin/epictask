@@ -10,6 +10,8 @@ import {User,Issue,Comment} from 'shared/models'
 import {createStructuredSelector} from 'reselect'
 import {Avatar,Markdown,PureRender} from 'components/common'
 import {issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
+import {Themed} from 'shared/themes/ThemeManager'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 // Constants
 const log = getLogger(__filename)
@@ -77,9 +79,8 @@ export interface IIssueActivityTextState {
  */
 const makeStateToProps = () => createStructuredSelector({
 	issue: issueSelector,
-	comments: commentsSelector,
-	theme: () => getTheme(),
-})
+	comments: commentsSelector
+},createDeepEqualSelector)
 
 
 /**
@@ -90,6 +91,7 @@ const makeStateToProps = () => createStructuredSelector({
  **/
 
 @connect(makeStateToProps)
+@Themed
 @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 

@@ -11,6 +11,7 @@ import * as Constants from '../../../shared/Constants'
 import {PureRender,Icon} from 'components/common'
 import {ChipsField} from './ChipsField'
 import {MenuItem} from 'material-ui'
+import {Themed} from 'shared/themes/ThemeManager'
 
 const tinycolor = require('tinycolor2')
 
@@ -58,15 +59,11 @@ const styles = {
 }
 
 
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
-	}
-}
 
 /**
  * ILabelFieldEditorProps
  */
+
 export interface ILabelFieldEditorProps extends React.DOMAttributes {
 	theme?:any
 	style?:any
@@ -94,8 +91,8 @@ export interface ILabelFieldEditorProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@connect(mapStateToProps)
 @Radium
+@Themed
 @PureRender
 export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any> {
 

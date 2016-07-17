@@ -7,6 +7,7 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import * as Constants from '../../../shared/Constants'
+import {Themed} from 'shared/themes/ThemeManager'
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')
@@ -23,7 +24,6 @@ const styles = {
  * Map theme into props - very shorthand
  * @param state
  */
-const mapStateToProps = (state) => ({theme: getTheme()})
 
 const CodeBlock = React.createClass({
 	displayName: 'CodeBlock',
@@ -71,7 +71,7 @@ export interface IMarkdownProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@connect(mapStateToProps)
+@Themed
 export class Markdown extends React.Component<IMarkdownProps,any> {
 
 

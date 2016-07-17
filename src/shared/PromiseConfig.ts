@@ -5,6 +5,7 @@ declare global {
 
 	interface PromiseConstructor {
 		setImmediate():Promise<void>
+		defer():Promise.Resolver<any>
 	}
 }
 
@@ -17,6 +18,21 @@ Bluebird.config({
 		wForgottenReturn: false
 	},
 	monitoring: true
+})
+
+Object.assign(Bluebird as any, {
+	defer() {
+		let resolve, reject;
+		const promise = new Promise(function () {
+			resolve = arguments[0];
+			reject = arguments[1];
+		});
+		return {
+			resolve: resolve,
+			reject: reject,
+			promise: promise
+		};
+	}
 })
 
 Object.assign(global as any,{

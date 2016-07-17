@@ -113,7 +113,7 @@ export default class SearchService extends BaseService {
 	searchRepos(search:Search):Promise<SearchResult> {
 		const repoStore:RepoStore = this.stores.repo
 
-		const repoTextResults = repoStore.findWithText(new FinderRequest(10),search.query)
+		const repoTextResults = repoStore.findWithText(new FinderRequest(4),search.query)
 			.then((results:FinderResultArray<number>) => {
 				return new SearchResult(
 					search.id,
@@ -187,8 +187,11 @@ export default class SearchService extends BaseService {
 		// 	await issueStore.findWithText(new FinderRequest(10),search.query)
 
 		const query = _.toLower(search.query)
+		let matchCount = 0
 		const issues = issuesSelector(getStoreState())
 			.filter(issue => {
+				if (matchCount > 3)
+					return false
 
 				const text = _.toLower(
 					issue.title + ' ' + issue.body + ' ' +
@@ -196,7 +199,11 @@ export default class SearchService extends BaseService {
 					(issue.assignee ? issue.assignee.name : '')
 				)
 
-				return text.indexOf(query) > -1
+				const match = text.indexOf(query) > -1
+				if (match)
+					matchCount++
+
+				return match
 			})
 
 		return new SearchResult(
