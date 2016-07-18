@@ -3,12 +3,17 @@ import {SearchPanel} from 'components'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {SearchType} from 'shared/actions/search/SearchState'
 import {HotKeys} from 'ui/components/common/Other'
-import {CommonKeys} from 'shared/KeyMaps'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
 const log = getLogger(__filename)
+
+const HeaderSearchTypes = [
+	SearchType.Repo,
+	SearchType.AvailableRepo,
+	SearchType.Issue
+]
 
 export enum HeaderVisibility {
 	Hidden,
@@ -113,7 +118,7 @@ export interface IHeaderState {
 /**
  * The app header component, title/logo/settings
  */
-@HotKeyContext
+@HotKeyContext()
 @PureRender
 export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
@@ -257,7 +262,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 			<SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='header-search'
-				types={[SearchType.Repo,SearchType.AvailableRepo,SearchType.Issue]}
+				types={HeaderSearchTypes}
 				inlineResults={expanded}
 				expanded={expanded}
 

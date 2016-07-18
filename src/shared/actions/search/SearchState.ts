@@ -13,7 +13,9 @@ import {DataResultsContainer} from 'shared/actions/data/DataState'
 export enum SearchType {
 	Issue = 1,
 	Repo,
-	AvailableRepo
+	AvailableRepo,
+	Milestone,
+	Label
 }
 
 
@@ -21,20 +23,26 @@ export enum SearchSource {
 	Issue = 1,
 	Repo,
 	ExactRepo,
-	AvailableRepo
+	AvailableRepo,
+	Milestone,
+	Label
 }
 
 export const SearchTypeSourceMap = {
 	[SearchType.Issue]: [SearchSource.Issue],
 	[SearchType.Repo]: [SearchSource.Repo,SearchSource.ExactRepo],
 	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
+	[SearchType.Label]: [SearchSource.Label],
+	[SearchType.Milestone]: [SearchSource.Milestone]
 }
 
 export const SearchSourceTypeMap = {
 	[SearchSource.Issue]:SearchType.Issue,
 	[SearchSource.Repo]:SearchType.Repo,
 	[SearchSource.ExactRepo]:SearchType.Repo,
-	[SearchSource.AvailableRepo]:SearchType.AvailableRepo
+	[SearchSource.AvailableRepo]:SearchType.AvailableRepo,
+	[SearchSource.Milestone]:SearchType.Milestone,
+	[SearchSource.Label]:SearchType.Label
 
 }
 

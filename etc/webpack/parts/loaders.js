@@ -19,7 +19,7 @@ module.exports = (projectConfig) => {
 			},
 			{
 				test: /\.jsx$/,
-				exclude: /node_modules/,
+				exclude: /node_modules|material-ui/,
 				loaders: ['source-map-loader']
 			}
 		],
@@ -56,7 +56,7 @@ module.exports = (projectConfig) => {
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
 				//exclude: /node_modules/,
-				exclude: /^((?!.*material-ui-build)[\S\s]).*node_modules/,
+				exclude: /node_modules|material-ui/,
 				loaders: ['babel'],
 			},
 

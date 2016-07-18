@@ -16,8 +16,6 @@ import {RegisterModel} from '../Registry'
 @ModelDescriptor()
 export class Milestone extends DefaultModel {
 
-	$$clazz = 'Milestone'
-
 	/**
 	 * Revive from JS/JSON
 	 *

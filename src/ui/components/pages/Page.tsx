@@ -9,13 +9,22 @@ const styles = {
 	})
 }
 
-export class Page extends React.Component<any,any> {
+export interface IPageProps extends React.HTMLAttributes {
+	onResize?:Function
+}
 
-	constructor(props, context) {
-		super(props, context)
+export class Page extends React.Component<IPageProps,any> {
+
+
+	onResize = (event) => (this.props.onResize && this.props.onResize(event))
+
+	componentWillMount() {
+		window.addEventListener('resize',this.onResize)
 	}
 
-
+	componentWillUnmount() {
+		window.removeEventListener('resize',this.onResize)
+	}
 
 	render() {
 

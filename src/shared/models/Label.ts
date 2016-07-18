@@ -14,7 +14,6 @@ import {RegisterModel} from 'shared/Registry'
 @ModelDescriptor()
 export class Label extends DefaultModel {
 
-	$$clazz = 'Label'
 
 	/**
 	 * Revive from JS/JSON

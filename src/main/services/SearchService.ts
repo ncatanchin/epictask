@@ -21,12 +21,32 @@ import {getStoreStateProvider} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {Benchmark} from 'shared/util/Benchmark'
 import {getStoreState} from 'shared/store/AppStore'
-import {issuesDetailSelector, issuesSelector} from 'shared/actions/issue/IssueSelectors'
+import {issuesDetailSelector, issuesSelector, milestonesSelector} from 'shared/actions/issue/IssueSelectors'
 
 
 const log = getLogger(__filename)
 
 const Benchmarker = Benchmark(__filename)
+
+
+function textSearchFilter(query:string,items:any[],props:string[], limit:number = 4) {
+
+	query = _.toLower(query)
+
+	let matchCount = 0
+	return items.filter(item => {
+		if (limit !== -1 && matchCount > limit)
+			return false
+
+		const text = _.toLower(props.map(prop => _.get(item,prop,'')).join(' '))
+
+		const match = text.indexOf(query) > -1
+		if (match)
+			matchCount++
+
+		return match
+	})
+}
 
 @AutoWired
 @Singleton
@@ -180,31 +200,11 @@ export default class SearchService extends BaseService {
 
 	@Benchmarker
 	async searchIssues(search:Search):Promise<SearchResult> {
-		//const issueStore:IssueStore = this.stores.issue
-
-		// const results:FinderResultArray<number> =
-		// 	await issueStore.findWithText(new FinderRequest(10),search.query)
-
-		const query = _.toLower(search.query)
-		let matchCount = 0
-		const issues = issuesSelector(getStoreState())
-			.filter(issue => {
-				if (matchCount > 3)
-					return false
-
-				const text = _.toLower(
-					issue.title + ' ' + issue.body + ' ' +
-					(issue.assignee ? issue.assignee.login : '') + ' ' +
-					(issue.assignee ? issue.assignee.name : '')
-				)
-
-				const match = text.indexOf(query) > -1
-				if (match)
-					matchCount++
-
-				return match
-			})
-
+		const issues = textSearchFilter(
+			search.query,
+			issuesSelector(getStoreState()),
+			['title','body','user.name','user.login','assignee.name','assignee.login']
+		)
 
 
 		return new SearchResult(
@@ -216,6 +216,44 @@ export default class SearchService extends BaseService {
 			issues.length
 		)
 
+	}
+
+	@Benchmarker
+	async searchMilestones(search:Search):Promise<SearchResult> {
+		const items = textSearchFilter(
+			search.query,
+			milestonesSelector(getStoreState()),
+			['title','description','creator.name','creator.login']
+		)
+
+
+		return new SearchResult(
+			search.id,
+			items.map(item => new SearchItem(item.id,SearchType.Milestone,1)),
+			SearchType.Milestone,
+			SearchSource.Milestone,
+			items.length,
+			items.length
+		)
+	}
+
+	@Benchmarker
+	async searchLabels(search:Search):Promise<SearchResult> {
+		const items = textSearchFilter(
+			search.query,
+			issuesSelector(getStoreState()),
+			['name']
+		)
+
+
+		return new SearchResult(
+			search.id,
+			items.map(item => new SearchItem(item.url,SearchType.Label,1)),
+			SearchType.Label,
+			SearchSource.Label,
+			items.length,
+			items.length
+		)
 	}
 
 	@Benchmarker
@@ -246,12 +284,30 @@ export default class SearchService extends BaseService {
 			return result
 		}
 	}
+
 	searchType(search:Search,source:SearchSource) {
 		const searchPromise =
-			(source === SearchSource.Repo) ? this.searchRepos(search)  :
-			(source === SearchSource.ExactRepo) ? this.searchGithubRepos(search)  :
-				(source === SearchSource.Issue) ? this.searchIssues(search) :
-					this.searchAvailableRepos(search)
+			(source === SearchSource.Repo) ?
+				// Repos
+				this.searchRepos(search)  :
+
+				// Github Repos
+				(source === SearchSource.ExactRepo) ?
+					this.searchGithubRepos(search)  :
+
+					// Issues
+					(source === SearchSource.Issue) ?
+						this.searchIssues(search) :
+
+						// Milestones
+						(source === SearchSource.Milestone) ?
+							this.searchMilestones(search) :
+
+							// Labels
+							(source === SearchSource.Label) ?
+								this.searchLabels(search) :
+
+								this.searchAvailableRepos(search)
 
 		// Add the data request to the promise
 		return searchPromise.then(this.requestData(search,source))

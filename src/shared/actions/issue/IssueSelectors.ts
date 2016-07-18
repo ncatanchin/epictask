@@ -5,13 +5,16 @@ import {createSelector} from 'reselect'
 import {IssueKey} from 'shared/Constants'
 import {Issue} from 'shared/models/Issue'
 import {
-	issueModelsSelector, modelsSelector, commentModelsSelector
+	issueModelsSelector, modelsSelector, commentModelsSelector, milestoneModelsSelector, labelModelsSelector
 } from 'shared/actions/data/DataSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {Milestone} from 'shared/models/Milestone'
+import {Label} from 'shared/models/Label'
+
 
 export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
 
@@ -31,6 +34,26 @@ export const issueSortAndFilterSelector = _.memoize((state):{issueSort:IIssueSor
 	return _.pick(issueState,'issueFilter','issueSort') as any
 })
 
+export const milestonesSelector = createDeepEqualSelector(
+	enabledRepoIdsSelector,
+	milestoneModelsSelector,
+	(repoIds:number[],models:Map<string,Milestone>):Milestone[] => {
+		return models.valueSeq()
+			.filter(item => repoIds.includes(item.repoId))
+			.toArray()
+	}
+)
+
+export const labelSelector = createDeepEqualSelector(
+	enabledRepoIdsSelector,
+	labelModelsSelector,
+	(repoIds:number[],models:Map<string,Label>):Label[] => {
+
+		return models.valueSeq()
+			.filter(item => repoIds.includes(item.repoId))
+			.toArray()
+	}
+)
 
 
 export const issuesSelector = createDeepEqualSelector(

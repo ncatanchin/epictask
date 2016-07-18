@@ -10,7 +10,7 @@ const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
 
 const HappyPack = require('happypack');
-const happyThreadPool = HappyPack.ThreadPool({ size: 6 })
+const happyThreadPool = HappyPack.ThreadPool({ size: 4 })
 
 
 const
@@ -49,10 +49,10 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  *
  * @type {boolean}
  */
-//const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
+      //const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
 
-//const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
-const materialUiModule = 'libs/material-ui/src'
+      //const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
+const materialUiModule = 'libs/material-ui/build'
 
 const happy = true
 
@@ -64,8 +64,8 @@ module.exports = function (projectConfig) {
 
 	const happyPlugins = (!happy || projectConfig.targetType === TargetType.ElectronMain) ? [] :
 		loaders.loaders
-		.filter(loader => loader.happy && loader.happy.id)
-		.map(loader => new HappyPack({
+			.filter(loader => loader.happy && loader.happy.id)
+			.map(loader => new HappyPack({
 				id: `${loader.happy.id}`,
 				tempDir: `.happypack-${projectConfig.name}`,
 				threadPool: happyThreadPool
@@ -109,7 +109,7 @@ module.exports = function (projectConfig) {
 					main: path.resolve(baseDir, 'src/main'),
 
 				},
-				libAlias('material-ui', 'material-ui/src/'),
+				//libAlias('material-ui', 'material-ui/build/'),
 				libAlias('typedux', 'typedux/src/index.ts'),
 				libAlias('typemutant', 'typemutant/src/index.ts'),
 				libAlias('typelogger', 'typelogger/src/index.ts'),
@@ -172,7 +172,7 @@ module.exports = function (projectConfig) {
 		externals: [
 			nodeExternals({
 				whitelist: [
-					/material-ui/,
+					//	/material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,

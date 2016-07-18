@@ -120,7 +120,7 @@ const mapStateToProps = createStructuredSelector({
 
 @connect(mapStateToProps)
 @Themed
-@HotKeyContext
+@HotKeyContext()
 @PureRender
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 

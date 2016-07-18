@@ -3,30 +3,30 @@
  */
 
 // Imports
-import * as moment from 'moment'
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
 import {Checkbox} from 'material-ui'
-
-import {PureRender, Renderers, Avatar} from '../common'
+import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
-import {IssueLabels} from './IssueLabels'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-
-import {Issue, Repo} from 'shared/models'
-import {DataKey, IssueKey} from 'shared/Constants'
-import {createStructuredSelector,createSelector} from 'reselect'
+import {Issue} from 'shared/models'
+import {createStructuredSelector, createSelector} from 'reselect'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
-import {IssueState, IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
-import {issuesSelector,issueSortAndFilterSelector} from 'shared/actions/issue/IssueSelectors'
+import {IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
+import {issuesSelector, issueSortAndFilterSelector, selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import filterProps from 'react-valid-props'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {CommonKeys} from 'shared/KeyMaps'
+import {Themed} from 'shared/themes/ThemeManager'
+import IssueItem from 'ui/components/issues/IssueItem'
+import {HotKeys} from 'react-hotkeys'
+
+import * as KeyMaps from 'shared/KeyMaps'
 
 // Non-typed Components
 const ReactList = require('react-list')
@@ -126,141 +126,6 @@ const styles = {
 }
 
 
-
-interface IIssueItemProps extends React.DOMAttributes {
-	index:number
-	styles:any
-	onSelected:(event:any, issue:Issue) => void
-	issues:Issue[]
-	repoId?:number
-	repo?:Repo
-	selectedIssueIds?:number[]
-}
-
-interface IIssueState {
-	issue?:Issue
-	selected?:boolean
-	selectedMulti?:boolean
-}
-
-const selectedIssueIdsSelector = _.memoize((state) => (state.get(IssueKey) as IssueState).selectedIssueIds)
-
-/**
- * Create a new issue item to state => props mapper
- *
- * @returns {any}
- */
-const makeIssueItemStateToProps = () => {
-	return createStructuredSelector({
-		repo: (state,{issues,index}) => {
-			let issue = null,repo = null
-			if (issues && (issue = issues[index])) {
-				const {repoId} = issue
-				repo = state.get(DataKey).models.get(Repo.$$clazz).get(`${repoId}`)
-			}
-			return repo
-		},
-		selectedIssueIds: selectedIssueIdsSelector
-	},createDeepEqualSelector)
-}
-
-@connect(makeIssueItemStateToProps)
-@PureRender
-class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
-
-
-	getNewState(props:IIssueItemProps) {
-		//const repoState = repoActions.state
-
-		const
-			{index,issues,selectedIssueIds} = props
-
-		const
-			issue = issues[index],
-			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
-			selectedMulti = selectedIssueIds.length > 1
-
-
-		return {
-			issue,selected,selectedMulti
-		}
-	}
-
-	componentWillMount() {
-		this.setState(this.getNewState(this.props))
-	}
-
-	componentWillReceiveProps(nextProps) {
-		this.setState(this.getNewState(nextProps))
-	}
-
-	render() {
-		const
-			{props,state} = this,
-			{issue, selectedMulti, selected} = state,
-			{styles,onSelected,repo} = props
-
-		if (!issue)
-			return <div/>
-
-		const
-			{labels} = issue,
-
-			issueStyles = makeStyle(
-				styles.issue,
-				selected && styles.issueSelected,
-				(selected && selectedMulti) && styles.issueSelectedMulti
-			),
-			issueTitleStyle = makeStyle(
-				styles.issueTitle,
-				selected && styles.issueTitleSelected,
-				selectedMulti && styles.issueTitleSelectedMulti
-			)
-
-		return <div {...filterProps(props)} style={issueStyles}
-		                       selected={selected}
-		                       className={'animated fadeIn ' + (selected ? 'selected' : '')}
-		                       onClick={(event) => onSelected(event,issue)}>
-
-			<div style={styles.issueMarkers}></div>
-			<div style={styles.issueDetails}>
-
-				<div style={styles.issueRepoRow}>
-					<div style={styles.issueRepo}>
-						{Renderers.repoName(repo)}
-					</div>
-
-					{/* ASSIGNEE */}
-					<Avatar user={issue.assignee}
-					        style={styles.issue.avatar}
-					        labelPlacement='before'
-					        labelStyle={styles.username}
-					        avatarStyle={styles.avatar}/>
-
-				</div>
-
-
-				<div style={styles.issueTitleRow}>
-					<div style={issueTitleStyle}>{issue.title}</div>
-					<div style={styles.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>
-				</div>
-
-				<div style={styles.issueBottomRow}>
-
-					{/* LABELS */}
-					<IssueLabels labels={labels} style={styles.issueLabels}/>
-
-					{/* MILESTONE */}
-					{issue.milestone && <div style={styles.issueMilestone}>
-						{issue.milestone.title}
-					</div>}
-				</div>
-			</div>
-		</div>
-
-	}
-}
-
 /**
  * IIssuesPanelProps
  */
@@ -274,17 +139,20 @@ export interface IIssuesPanelProps {
 	styles?:any
 }
 
+export interface IIssuesPanelState {
+	firstSelectedIndex?:number
+	issueList?:any
+}
 
 function makeMapStateToProps() {
 	return createStructuredSelector({
-		theme: () => getTheme(),
 		issues: issuesSelector,
 		issueSort: createSelector(issueSortAndFilterSelector,({issueSort}) => issueSort),
 		issueFilter: createSelector(issueSortAndFilterSelector,({issueFilter}) => issueFilter),
 		selectedIssueIds: selectedIssueIdsSelector,
 		styles: () =>  mergeStyles(styles, (getTheme()) ? getTheme().issuesPanel : null)
 
-	})
+	},createDeepEqualSelector)
 }
 
 
@@ -298,39 +166,168 @@ function makeMapStateToProps() {
 
 @Radium
 @connect(makeMapStateToProps)
+@Themed
+@HotKeyContext()
 @PureRender
-@HotKeyContext
-export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
+export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
 
 	uiActions:UIActionFactory = Container.get(UIActionFactory)
 	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
-	constructor(props) {
-		super(props)
 
 
+
+	moveUp = this.makeMoveSelector(-1)
+	moveDown = this.makeMoveSelector(1)
+	/**
+	 * Key handlers for Issue Panel
+	 */
+	keyHandlers = {
+		[CommonKeys.MoveUp]: this.moveUp,
+		[CommonKeys.MoveDown]: this.moveDown,
+		[CommonKeys.MoveUpSelect]: this.moveUp,
+		[CommonKeys.MoveDownSelect]: this.moveDown,
+		//[Keys.Enter]: () => this.onResultSelected(null)
 	}
 
-	componentWillMount() {
-		this.setState({lastIssues:this.props.issues})
-	}
 
-	componentWillReceiveProps(nextProps) {
-		const state = this.state || {},
-			{issueList,lastIssues} = state,
-			{issues} = nextProps.issues
+	/**
+	 * Create a move selector for key handlers
+	 *
+	 * @param increment
+	 * @returns {(event:any)=>undefined}
+	 */
+	makeMoveSelector(increment:number) {
 
-		if (issueList && lastIssues && lastIssues !== issues) {
-			this.setState({lastIssues:issues})
-			issueList.forceUpdate()
+		return (event:React.KeyboardEvent) => {
+
+			const
+				{issues,selectedIssueIds} = this.props,
+				{firstSelectedIndex} = this.state,
+				issueCount = issues.length
+
+			let index =
+				((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
+
+			// If more than one issue is selected then use
+			// bounds to determine new selection index
+			if (selectedIssueIds && selectedIssueIds.length > 1) {
+				const {startIndex,endIndex} = this.getSelectionBounds()
+
+				if (startIndex < firstSelectedIndex) {
+					index = startIndex + increment
+				} else {
+					index = endIndex + increment
+				}
+
+			}
+
+
+			const adjustedIndex = Math.max(0,Math.min(issues.length - 1,index))
+
+			let newSelectedIssueIds = (event.shiftKey) ?
+				this.calculateSelectedIssueIds(adjustedIndex,firstSelectedIndex) : // YOU ARE HERE - just map array of ids
+				[issues[index].id]
+
+			if (!event.shiftKey)
+				this.setState({firstSelectedIndex:index})
+
+
+			log.info('Keyed move',{
+				increment,
+				index,
+				firstSelectedIndex,
+				selectedIssueIds,
+				newSelectedIssueIds,
+			})
+
+
+			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+
 		}
+
 	}
 
 
-	onIssueSelected = (event, issue) => {
+	/**
+	 * Retrieves the start and end index
+	 * of the current issue list selection
+	 *
+	 * endIndex is INCLUSIVE
+	 *
+	 * @returns {{startIndex: number, endIndex: number}}
+	 */
+	getSelectionBounds() {
+		const {selectedIssueIds,issues} = this.props
+
+		let startIndex = -1, endIndex = -1
+		for (let issueId of selectedIssueIds) {
+			const index = issues.findIndex(item => item.id === issueId)
+			if (index === -1)
+				continue
+
+			if (startIndex === -1 || index < startIndex)
+				startIndex = index
+
+			if (endIndex === -1 || index > endIndex)
+				endIndex = index
+		}
+
+		return {startIndex,endIndex}
+	}
+
+
+	calculateSelectedIssueIds(issueIndex, firstSelectedIndex) {
+		const
+			{issues} = this.props
+		// 	bounds = this.getSelectionBounds()
+		//
+		// let {startIndex,endIndex} = bounds
+		//
+		// if (issueIndex >= startIndex) {
+		// 	endIndex = issueIndex
+		// } else if (issue)
+		//
+		let startIndex = Math.max(0,Math.min(issueIndex,firstSelectedIndex))
+		let endIndex = Math.min(issues.length - 1,Math.max(issueIndex,firstSelectedIndex))
+
+		return issues
+			.slice(startIndex,endIndex + 1)
+			.map(issue => issue.id)
+	}
+
+	/**
+	 * On issue selection, updated selected issues
+	 *
+	 * @param event
+	 * @param issue
+	 */
+	onIssueSelected = (event:MouseEvent, issue) => {
 		let {selectedIssueIds,issues} = this.props
 
-		if (event.metaKey) {
+		// Get the issue index for track of "last index"
+		const
+			issueIndex = issues.findIndex(item => item.id === issue.id),
+			{firstSelectedIndex} = this.state
+
+		// Set the 'first' selected index if not set
+		// or no modifier
+		if (
+			issueIndex > -1 && (
+				selectedIssueIds.length == 0 ||
+				(!event.shiftKey && !event.metaKey)
+			)
+		) {
+			this.setState({firstSelectedIndex:issueIndex})
+		}
+
+		// Recalculate the selection block with shift
+		if (event.shiftKey) {
+			selectedIssueIds = this.calculateSelectedIssueIds(issueIndex,firstSelectedIndex)
+		}
+
+		// Toggle the issue selection if meta key used
+		else if (event.metaKey) {
 
 			const wasSelected = selectedIssueIds.includes(issue.id)
 			selectedIssueIds = (wasSelected) ?
@@ -341,6 +338,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		} else {
 			selectedIssueIds = [issue.id]
 		}
+
+
 		this.issueActions.setSelectedIssueIds(selectedIssueIds)
 		log.info('Received issue select')
 	}
@@ -362,6 +361,21 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 		}
 
 	}
+
+
+	/**
+	 * on mount set default state
+	 */
+	componentWillMount = () => this.setState({firstSelectedIndex: -1})
+
+
+	/**
+	 * Render issue item
+	 *
+	 * @param index
+	 * @param key
+	 * @returns {any}
+	 */
 	renderIssue = (index, key) => {
 		const
 			{props} = this,
@@ -379,7 +393,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 
 	}
 
-
+	/**
+	 * Render the component
+	 */
 	render() {
 		const
 			{selectedIssueIds,issueSort,styles:themeStyles} = this.props,
@@ -387,7 +403,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
-		return <div style={themeStyles.panel}>
+		return <HotKeys  keyMap={KeyMaps.App} handlers={this.keyHandlers} style={themeStyles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
 
@@ -421,7 +437,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,any> {
 				<IssueDetailPanel />
 
 			</SplitPane>
-		</div>
+		</HotKeys>
 	}
 
 }

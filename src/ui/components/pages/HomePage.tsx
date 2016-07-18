@@ -58,33 +58,17 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	constructor(props, context) {
 		super(props, context)
 
+		this.state = this.getNewState()
 	}
 
-	getNewState(props) {
-		return {width:window.innerWidth}
-	}
+	getNewState = () => ({width:window.innerWidth})
 
-	updateState = (props = this.props) => {
-		this.setState(this.getNewState(props))
-	}
-
-	componentWillMount() {
-		this.updateState()
-		window.addEventListener('resize',this.updateState)
-	}
-
-	componentWillUnmount() {
-		window.removeEventListener('resize',this.updateState)
-	}
-
-	handleClose = () => {
-		appActions.setStateType(AppStateType.Home)
-	}
+	updateState = () => this.setState(this.getNewState())
 
 	render() {
 		const {repoPanelOpen} = this.props
 
-		return <Page id="homePage">
+		return <Page onResize={this.updateState} id="homePage">
 			<Radium.Style scopeSelector="#homePage"
 			              rules={styles.page}
 			/>

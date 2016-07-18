@@ -113,7 +113,7 @@ const mapStateToProps = createStructuredSelector({
  */
 @connect(mapStateToProps)
 @Themed
-@HotKeyContext
+@HotKeyContext()
 @PureRender
 class App extends React.Component<IAppProps,any> {
 
