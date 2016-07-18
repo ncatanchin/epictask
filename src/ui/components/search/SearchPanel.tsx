@@ -286,16 +286,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			}
 		}
 
-		// if (!result) {
-		// 	const {selectedIndex} = this.state
-		// 	const {searchData} = this.props,
-		// 		{search,results} = searchData,
-		// 		{resultsList} = this
-		//
-		//
-		//
-		//
-		// }
 
 		searchActions.select(this.props.searchId,itemModel)
 		this.setState({focused: false})
@@ -305,8 +295,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		if (inputElement)
 			inputElement.blur()
 
-		// if (this.props.onResultSelected)
-		// 	this.props.onResultSelected(result)
 	}
 
 	onHover = (itemModel:ISearchItemModel) => {

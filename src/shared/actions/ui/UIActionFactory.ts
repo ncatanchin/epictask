@@ -19,7 +19,7 @@ export function makeToastMessage(opts:any) {
 
 
 @AutoWired
-export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
+export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
 
 	constructor() {
 		super(UIState)
@@ -29,6 +29,17 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 		return UIKey;
 	}
 
+
+	/**
+	 * Set the repo panel open/closed
+	 *
+	 * @param open
+	 * @returns {(state:UIState)=>Map<string, boolean>}
+	 */
+	@ActionReducer()
+	setRepoPanelOpen(open:boolean) {
+		return (state:UIState) => state.set('repoPanelOpen',open)
+	}
 
 	@ActionReducer()
 	clearMessages() {
@@ -70,9 +81,7 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 	}
 
 
-	showAddRepoDialog() {
-		return this.setDialogOpen(Dialogs.RepoAddDialog,true)
-	}
+
 
 
 	@ActionReducer()
@@ -93,6 +102,16 @@ export class UIActionFactory extends ActionFactory<any,ActionMessage<UIState>> {
 		return (state:UIState) => state.update('dialogs',(dialogs) => dialogs.clear())
 	}
 
+
+
+
+	showAddRepoDialog() {
+		return this.setDialogOpen(Dialogs.RepoAddDialog,true)
+	}
+
+	toggleRepoPanelOpen() {
+		return this.setRepoPanelOpen(!this.state.repoPanelOpen)
+	}
 
 
 

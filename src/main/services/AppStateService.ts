@@ -2,9 +2,9 @@ import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
 import {IService, ServiceStatus, BaseService} from './IService'
 import {ObservableStore} from 'typedux'
 import {AppStateType} from 'shared/AppStateType'
-import {AppActionFactoryType, AppActionFactory} from 'shared/actions/AppActionFactory'
-import {AuthActionFactoryType, AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
-import {RepoActionFactoryType, RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Settings} from 'shared/Settings'
 const electron = require('electron')
 

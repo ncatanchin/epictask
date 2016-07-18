@@ -70,6 +70,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 	/**
 	 * get the last repo sync time
+	 *
 	 * @param repoId
 	 */
 	getLastRepoSync(repoId:number):Promise<Activity> {
@@ -77,7 +78,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 	/**
-	 * Sync issues
+	 * Sync repo including issues, comments, milestones,
+	 * labels, collaborators, etc, etc
+	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 * @param repoIds
 	 * @param force
@@ -111,6 +114,25 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				})
 			}
 
+		}
+	}
+
+	/**
+	 * Sync user repos
+	 *
+	 * @returns {(dispatch:any, getState:any)=>Promise<AvailableRepo[]>}
+	 */
+	@Action()
+	syncUserRepos() {
+		return (dispatch,getState) => {
+			log.info('Triggering user repo sync')
+
+			const jobActions = Container.get(JobActionFactory)
+			jobActions.triggerJob({
+				id: `syncuserrepos`,
+				name: "GetUserReposJob",
+				args:{}
+			})
 		}
 	}
 
@@ -341,7 +363,5 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 }
 
-
-export type RepoActionFactoryType = typeof RepoActionFactory
 
 export default RepoActionFactory

@@ -5,37 +5,65 @@
  */
 
 // Imports
+import {createStructuredSelector} from 'reselect'
 import {Container} from 'typescript-ioc'
 import * as React from 'react'
 import { connect } from 'react-redux'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {RepoList,Icon,Button} from 'components'
-import {Dialogs} from 'shared/Constants'
-import * as Radium from 'radium'
+
 
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import {Themed} from 'shared/themes/ThemeManager'
+import {uiStateSelector} from 'shared/actions/ui/UISelectors'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {PureRender} from 'ui/components/common/PureRender'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
 // Constants
 const log = getLogger(__filename)
 
-const styles = {
+const styles:any = createStyles({
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{
 
 	}),
 
-	panel: makeStyle(FlexColumn,FlexScale,Fill,{
+	panel: [makeTransition(['opacity']),FlexColumn,FlexScale,Fill,{
+		opacity: 1,
 
-	}),
+		closed: {
+			opacity: 0
+		}
+	}],
 
-	drawerWrapper: makeStyle(FlexColumn,FlexScale,Fill,{
+	drawerControl: [makeTransition(['opacity']),FlexColumnCenter,PositionAbsolute,{
+		opacity: 0,
+		pointerEvents: 'none',
+		textAlign: 'center',
+		width: 20,
+		height: 20,
+		padding: 0,
+
+		visible: {
+			opacity: 1,
+			pointerEvents: 'auto',
+			zIndex: 9999
+		}
+	}],
+
+	drawerWrapper: [makeTransition(['width','minWidth','maxWidth']), FlexColumn,FlexScale,Fill,{
 		minWidth: 200,
-		position: 'relative'
-	}),
+		position: 'relative',
+
+		closed: {
+			minWidth: 20,
+			maxWidth: 20
+		}
+	}],
 
 	drawer: makeStyle(FlexColumn,FlexScale,FillWidth,{
 		minWidth: 200,
@@ -67,20 +95,19 @@ const styles = {
 
 
 
-}
+})
 
 /**
  * IRepoDrawerProps
  */
 export interface IRepoPanelProps {
 	theme?:any
+	repoPanelOpen?:boolean
 }
 
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
-	}
-}
+const mapStateToProps = createStructuredSelector({
+	repoPanelOpen: (state) => uiStateSelector(state).repoPanelOpen
+},createDeepEqualSelector)
 
 
 
@@ -92,17 +119,20 @@ function mapStateToProps(state) {
  **/
 
 @connect(mapStateToProps)
+@Themed
 @HotKeyContext
+@PureRender
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 	uiActions = Container.get(UIActionFactory)
 
-	onAddRepoButtonFocus = (event:React.MouseEvent) => {
-		event.preventDefault()
-		event.stopPropagation()
+	setRepoPanelOpen = (event, open:boolean) => {
+		this.uiActions.setRepoPanelOpen(open)
 	}
+
+
 
 	onBlur = () => {
 		this.repoActions.clearSelectedRepos()
@@ -124,28 +154,58 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 	render() {
 		const
-			{theme} = this.props,
+			{theme,repoPanelOpen} = this.props,
 			{repoPanel:themeStyle} = theme,
 			s = mergeStyles(styles,themeStyle),
-			panelStyle = makeStyle(styles.panel,themeStyle.root),
+
+			panelStyle = makeStyle(
+				styles.panel,
+				themeStyle.root,
+				!repoPanelOpen ? styles.panel.closed : {}
+			),
+
+			drawerControlStyle = makeStyle(
+				styles.drawerControl,
+				themeStyle.drawerControl,
+				!repoPanelOpen && styles.drawerControl.visible
+			),
+
+			drawerWrapperStyle = makeStyle(
+				styles.drawerWrapper,
+				!repoPanelOpen && styles.drawerWrapper.closed
+			),
+
 			drawerStyle = makeStyle(styles.drawer,themeStyle.root),
+
 			headerStyle = makeStyle(styles.header,themeStyle.header),
+
 			headerButtonStyle = makeStyle(styles.headerButton,themeStyle.headerButton,{
 				':hover': themeStyle.headerButtonHover
 			})
 
-		return <div style={styles.drawerWrapper}>
+
+		return <div style={drawerWrapperStyle}>
+			<Button tabIndex={-1} style={drawerControlStyle} onClick={(e) => this.setRepoPanelOpen(e,true)}>
+				<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='chevron-right'/>
+			</Button>
+
 			<HotKeys handlers={this.keyHandlers} style={panelStyle}>
 
-					<div style={headerStyle}>
-						<div style={s.headerTitle}>Repositories</div>
-						<Button tabIndex={-1} style={headerButtonStyle} onClick={this.onAddRepoClicked}>
-							<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
-						</Button>
-					</div>
-					<div style={styles.listContainer}>
-						<RepoList />
-					</div>
+				{/* Header controls */}
+				<div style={headerStyle}>
+					<div style={s.headerTitle}>Repositories</div>
+					<Button tabIndex={-1} style={headerButtonStyle} onClick={this.onAddRepoClicked}>
+						<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
+					</Button>
+					<Button tabIndex={-1} style={headerButtonStyle} onClick={(e) => this.setRepoPanelOpen(e,false)}>
+						<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='chevron-left'/>
+					</Button>
+				</div>
+
+				{/* List */}
+				<div style={styles.listContainer}>
+					<RepoList />
+				</div>
 
 			</HotKeys>
 		</div>

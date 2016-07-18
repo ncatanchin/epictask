@@ -7,6 +7,7 @@ import {AuthState,AuthMessage} from 'actions/auth/AuthReducer'
 import {AppStateType} from 'shared/AppStateType'
 import {Settings} from 'Settings'
 import {Toaster} from 'shared/Toaster'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 const log = getLogger(__filename)
 
@@ -140,6 +141,8 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 						reject(err)
 					} else {
 						actions.setToken(token)
+						const repoActions = Container.get(RepoActionFactory)
+						repoActions.syncUserRepos()
 						appActions.setStateType(AppStateType.AuthVerify)
 						resolve(token)
 					}

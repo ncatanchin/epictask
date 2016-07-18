@@ -359,69 +359,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				</div>
 			)
 		}))
-		//
-		// results.forEach((resultData:SearchResultData) => {
-		// 	const {data,result} = resultData,
-		// 		{searchItems} = this.props
-		//
-		// 	if (!data || !data.fulfilled) {
-		// 		itemCounter += data.request.modelIds.length
-		// 		return
-		// 	}
-		//
-		// 	const
-		// 		{source,type,items} = result,
-		// 		{models} = data
-		//
-		// 	const resultRenderer:any = (type === SearchType.Repo) ?
-		// 		this.renderRepo : (type === SearchType.AvailableRepo) ?
-		// 		this.renderAvailableRepo :
-		// 		this.renderIssue
-		//
-		// 	// Filter only the results for this section
-		// 	const sectionRows = _.nilFilter(items.map((item,index) => {
-		// 		itemCounter++
-		// 		const model = models[index]
-		//
-		// 		if (!model)
-		// 			return null
-		//
-		// 		const isSelected = selectedIndex === itemCounter
-		// 		const itemModel:ISearchItemModel = {item,model}
-		//
-		// 		// TODO: caclulate this in the SearchPanel - this is expensive
-		// 		if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
-		// 			this.setState({selectedItem:itemModel})
-		//
-		// 		const itemContent = resultRenderer(item,model,isSelected)
-		//
-		// 		if (!itemContent)
-		// 			return null
-		//
-		// 		// Make the row style
-		// 		const resultStyle = makeStyle(
-		// 			styles.result,
-		// 			themeStyles.result.normal,
-		// 			isSelected && themeStyles.result.selected
-		// 		)
-		//
-		// 		return (
-		// 			<div key={`${source}-${model.id}`}
-		// 			     className={isSelected && 'selected'}
-		// 			     style={resultStyle}
-		// 			     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
-		// 			     onClick={() => onResultSelected && onResultSelected(itemModel)}
-		// 			>
-		// 				{itemContent}
-		// 			</div>
-		// 		)
-		// 	}))
-		//
-		// 	// Concat the other sections
-		// 	log.info(`Rendering section rows ${sectionRows.length}`,resultData)
-		// 	rows.push(...sectionRows)
-		//
-		// })
+
 		log.debug(`Rendering rows`,rows.length,rows)
 		return rows
 

@@ -1,29 +1,38 @@
 import * as React from 'react'
-import {Dialog,AutoComplete,FlatButton} from 'material-ui'
 
-
-import {RepoPanel,IssuesPanel,IssueDetailPanel} from 'components'
-import {Repo} from 'shared/models'
+import * as Radium from 'radium'
+import {createStructuredSelector} from 'reselect'
+import {RepoPanel,IssuesPanel} from 'components'
 import {Page} from './Page'
-import {AppActionFactory} from '../../../shared/actions/AppActionFactory'
-import {AppStateType} from '../../../shared/AppStateType'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
-import {Icon,PureRender} from '../common'
-import {RepoKey} from '../../../shared/Constants'
+import {PureRender} from 'components/common'
+import {Themed} from 'shared/themes/ThemeManager'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 
 const Resizable = require('react-component-resizable')
 
 const log = getLogger(__filename)
 const appActions = new AppActionFactory()
 
+const transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow'])
 
-const styles = {
+const styles:any = createStyles({
+
+	page:[{
+		'.homePageSplitPane > .Pane1,': [transition],
+		'.homePageSplitPane > .Pane2,': [transition],
+	}],
 	bodyWrapper: makeStyle(FlexScale,Fill)
-}
+
+
+})
 
 interface IHomeProps {
-
+	repoPanelOpen?:boolean
 }
 
 interface IHomeState {
@@ -34,12 +43,15 @@ interface IHomeState {
  * Map theme into props - very shorthand
  * @param state
  */
-const mapStateToProps = (state) => ({theme: getTheme()})
+const mapStateToProps = createStructuredSelector({
+	repoPanelOpen: (state) => uiStateSelector(state).repoPanelOpen
+},createDeepEqualSelector)
 
 /**
  * The root container for the app
  */
 @connect(mapStateToProps)
+@Themed
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 
@@ -70,34 +82,21 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	}
 
 	render() {
-		//const repos = repoActions.state.repos || []
+		const {repoPanelOpen} = this.props
 
-		const addRepoActions = [
-			<FlatButton
-				label="Cancel"
-				primary={true}
-				onTouchTap={this.handleClose}
-			/>,
-			<FlatButton
-				label="Submit"
-				primary={true}
-				disabled={true}
-				onTouchTap={this.handleClose}
-			/>,
-		]
-
-
-
-		return (
-			<Page>
-				<div style={styles.bodyWrapper}>
-				<SplitPane split="vertical" minSize={200} maxSize={this.state.width / 2}  >
+		return <Page id="homePage">
+			<Radium.Style scopeSelector="#homePage"
+			              rules={styles.page}
+			/>
+			<div style={styles.bodyWrapper}>
+				<SplitPane className="homePageSplitPane"
+							split="vertical"
+				           minSize={repoPanelOpen ? 200 : 20}
+				           maxSize={repoPanelOpen ? this.state.width / 2 : 20}  >
 					<RepoPanel />
 					<IssuesPanel />
 				</SplitPane>
-				</div>
-
-			</Page>
-		)
+			</div>
+		</Page>
 	}
 }

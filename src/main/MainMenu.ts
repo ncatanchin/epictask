@@ -58,9 +58,55 @@ function makeDevMenu(mainWindow) {
 	}
 }
 
+/* Repos Menu */
+const reposMenu = {
+	label: 'Repos',
+	submenu: [{
+		label: 'Add a Repo',
+		accelerator: 'CmdOrCtrl+Shift+N',
+		click() {
+			log.debug('Sending add new repo')
+			Container.get(UIActionFactory).showAddRepoDialog()
+		}
+	},{
+		label: 'Synchronize All',
+		accelerator: 'Ctrl+S',
+		click() {
+			log.debug('Sending sync all repos')
+			Container.get(RepoActionFactory)
+				.syncRepo(
+					enabledRepoIdsSelector(getStoreState()),
+					true
+				)
+		}
+	}]
+}
+
+function makeViewMenu(mainWindow) {
+	return {
+		label: 'View',
+		submenu: [{
+			label: 'Toggle Repo Panel',
+			accelerator: 'Command+`',
+			click() {
+				Container.get(UIActionFactory)
+					.toggleRepoPanelOpen()
+			}
+		},{
+			label: 'Toggle Full Screen',
+			accelerator: 'Ctrl+Command+F',
+			click() {
+				mainWindow.setFullScreen(!mainWindow.isFullScreen())
+			}
+		}]
+	}
+}
+
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
 	let menu
+
+	const viewMenu = makeViewMenu(mainWindow)
 
 	if (process.platform === 'darwin') {
 		template = [{
@@ -103,25 +149,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 					app.quit()
 				}
 			}]
-		},
-		/* Repos Menu */
-		{
-			label: 'Repos',
-			submenu: [{
-				label: 'Add a Repo',
-				accelerator: 'CmdOrCtrl+Shift+N',
-				click() {
-					log.debug('Sending add new repo')
-					Container.get(UIActionFactory).showAddRepoDialog()
-				}
-			},{
-				label: 'Synchronize All',
-				accelerator: 'Ctrl+S',
-				click() {
-					log.debug('Sending sync all repos')
-					Container.get(RepoActionFactory).syncRepo(enabledRepoIdsSelector(getStoreState()),true)
-				}
-			}]
 		},{
 			label: 'Edit',
 			submenu: [{
@@ -151,16 +178,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				accelerator: 'Command+A',
 				selector: 'selectAll:'
 			}]
-		}, {
-			label: 'View',
-			submenu: [{
-				label: 'Toggle Full Screen',
-				accelerator: 'Ctrl+Command+F',
-				click() {
-					mainWindow.setFullScreen(!mainWindow.isFullScreen())
-				}
-			}]
-		}, {
+		},reposMenu, viewMenu, {
 			label: 'Window',
 			submenu: [{
 				label: 'Minimize',

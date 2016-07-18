@@ -34,6 +34,7 @@ export const UIStateRecord = Record({
 
 	messages: List<IToastMessage>(),
 	ready: false,
+	repoPanelOpen: true,
 	user: null
 })
 
@@ -55,6 +56,7 @@ export class UIState extends UIStateRecord {
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
 
+	repoPanelOpen:boolean
 
 
 }

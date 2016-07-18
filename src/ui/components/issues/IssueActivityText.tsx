@@ -12,6 +12,7 @@ import {Avatar,Markdown,PureRender} from 'components/common'
 import {issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import filterProps from 'react-valid-props'
 
 // Constants
 const log = getLogger(__filename)
@@ -186,7 +187,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			)
 
 
-		return (!issue) ? null : <div {...this.props} style={activityStyle}>
+		return (!issue) ? null : <div {...filterProps(this.props)} style={activityStyle}>
 			{/* COMMENTOR AVATAR*/}
 			<Avatar user={user}
 			        style={userStyle}
