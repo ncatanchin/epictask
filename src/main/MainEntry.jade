@@ -72,9 +72,11 @@ html.fill-width.fill-height(lang="en")
 				if (asyncLoad) {
 					//logger.debug('Loading script async', scriptPath)
 					script.async = true
-					if (callback)
-						script.onload = callback
+
 				}
+
+				if (callback)
+					script.onload = callback
 
 				script.src = basePath + scriptPath
 
@@ -91,10 +93,7 @@ html.fill-width.fill-height(lang="en")
 						return
 					}
 
-					console.log('Reloading content in dev mode')
-
-					var sElem = document.getElementById('et-loader')
-					var nextElem = sElem
+					var nextElem = document.getElementById('et-loader')
 					while (nextElem = nextElem.nextSibling) {
 						nextElem.parentNode.removeChild(nextElem)
 					}
@@ -111,10 +110,16 @@ html.fill-width.fill-height(lang="en")
 				}
 
 				// Load the entry script
-				addScript('/UIEntry.js', true, function() {
-					if (checkBooted())
-						onUIReady(null,true)
+
+				addScript('/MaterialUIEntry.js',false,function() {
+					addScript('/UIEntry.js', false, function () {
+						if (checkBooted())
+							onUIReady(null, true)
+					})
 				})
+
+
+
 
 			}
 

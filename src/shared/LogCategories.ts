@@ -1,4 +1,4 @@
-var LogLevel = {
+const LogLevel = {
 	TRACE: 1,
 	DEBUG: 2,
 	INFO: 3,
@@ -6,7 +6,7 @@ var LogLevel = {
 	ERROR: 5
 }
 
-module.exports = {
+exports = {
 	ObservableStore: LogLevel.INFO,
 	AppStore: LogLevel.INFO,
 	RootReducer: LogLevel.INFO,

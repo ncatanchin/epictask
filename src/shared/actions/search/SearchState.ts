@@ -22,7 +22,7 @@ export enum SearchType {
 export enum SearchSource {
 	Issue = 1,
 	Repo,
-	ExactRepo,
+	GitHub,
 	AvailableRepo,
 	Milestone,
 	Label
@@ -30,7 +30,7 @@ export enum SearchSource {
 
 export const SearchTypeSourceMap = {
 	[SearchType.Issue]: [SearchSource.Issue],
-	[SearchType.Repo]: [SearchSource.Repo,SearchSource.ExactRepo],
+	[SearchType.Repo]: [SearchSource.Repo,SearchSource.GitHub],
 	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
 	[SearchType.Label]: [SearchSource.Label],
 	[SearchType.Milestone]: [SearchSource.Milestone]
@@ -39,7 +39,7 @@ export const SearchTypeSourceMap = {
 export const SearchSourceTypeMap = {
 	[SearchSource.Issue]:SearchType.Issue,
 	[SearchSource.Repo]:SearchType.Repo,
-	[SearchSource.ExactRepo]:SearchType.Repo,
+	[SearchSource.GitHub]:SearchType.Repo,
 	[SearchSource.AvailableRepo]:SearchType.AvailableRepo,
 	[SearchSource.Milestone]:SearchType.Milestone,
 	[SearchSource.Label]:SearchType.Label

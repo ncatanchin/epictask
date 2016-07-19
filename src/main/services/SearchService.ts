@@ -21,7 +21,11 @@ import {getStoreStateProvider} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {Benchmark} from 'shared/util/Benchmark'
 import {getStoreState} from 'shared/store/AppStore'
-import {issuesDetailSelector, issuesSelector, milestonesSelector} from 'shared/actions/issue/IssueSelectors'
+import {
+	issuesDetailSelector, issuesSelector, milestonesSelector,
+	labelsSelector
+} from 'shared/actions/issue/IssueSelectors'
+
 
 
 const log = getLogger(__filename)
@@ -149,7 +153,7 @@ export default class SearchService extends BaseService {
 
 
 	@Benchmarker
-	async searchGithubRepos(search:Search):Promise<SearchResult> {
+	async searchGitHub(search:Search):Promise<SearchResult> {
 		const {query} = search
 		const queryParts = query.split('/')
 
@@ -192,7 +196,7 @@ export default class SearchService extends BaseService {
 			search.id,
 			(count) ? [new SearchItem(result,SearchType.Repo,1)] : [],
 			SearchType.Repo,
-			SearchSource.ExactRepo,
+			SearchSource.GitHub,
 			count,
 			count
 		)
@@ -239,9 +243,10 @@ export default class SearchService extends BaseService {
 
 	@Benchmarker
 	async searchLabels(search:Search):Promise<SearchResult> {
+		const labels = labelsSelector(getStoreState())
 		const items = textSearchFilter(
 			search.query,
-			issuesSelector(getStoreState()),
+			labels,
 			['name']
 		)
 
@@ -277,7 +282,7 @@ export default class SearchService extends BaseService {
 			this.dataActions.submitRequest(new DataRequest({
 				id:result.dataId,
 				modelIds: result.items.map(item => item.id),
-				modelType: (([SearchSource.Repo,SearchSource.ExactRepo].includes(source)) ? Repo :
+				modelType: (([SearchSource.Repo,SearchSource.GitHub].includes(source)) ? Repo :
 					(source === SearchSource.AvailableRepo) ? AvailableRepo : Issue).$$clazz
 			}))
 
@@ -285,29 +290,30 @@ export default class SearchService extends BaseService {
 		}
 	}
 
-	searchType(search:Search,source:SearchSource) {
-		const searchPromise =
-			(source === SearchSource.Repo) ?
-				// Repos
-				this.searchRepos(search)  :
 
-				// Github Repos
-				(source === SearchSource.ExactRepo) ?
-					this.searchGithubRepos(search)  :
+	/**
+	 * All Search functions mapped
+	 * by source type
+	 *
+	 */
+	private searchFns:{[key:number]:(search:Search) => SearchResult} = {
+		[SearchSource.GitHub]: this.searchGitHub,
+		[SearchSource.Repo]: this.searchRepos,
+		[SearchSource.Issue]: this.searchIssues,
+		[SearchSource.AvailableRepo]: this.searchAvailableRepos,
+		[SearchSource.Label]: this.searchLabels,
+		[SearchSource.Milestone]: this.searchMilestones
+	} as any
 
-					// Issues
-					(source === SearchSource.Issue) ?
-						this.searchIssues(search) :
-
-						// Milestones
-						(source === SearchSource.Milestone) ?
-							this.searchMilestones(search) :
-
-							// Labels
-							(source === SearchSource.Label) ?
-								this.searchLabels(search) :
-
-								this.searchAvailableRepos(search)
+	/**
+	 * Execute a specific search type
+	 *
+	 * @param search
+	 * @param source
+	 * @returns {Promise<SearchResult>}
+	 */
+	searchType(search:Search,source:SearchSource):Promise<SearchResult> {
+		const searchPromise = this.searchFns[source].call(this,search)
 
 		// Add the data request to the promise
 		return searchPromise.then(this.requestData(search,source))

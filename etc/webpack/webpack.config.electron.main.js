@@ -61,11 +61,11 @@ module.exports = function(projectConfig) {
 				template: 'src/main/MainEntry.jade',
 				inject: false
 			}),
-			new HtmlWebpackPlugin({
-				filename: "main-devtools-entry.html",
-				template: 'src/main/MainDevToolsWindow.jade',
-				inject: false
-			})
+			// new HtmlWebpackPlugin({
+			// 	filename: "main-devtools-entry.html",
+			// 	template: 'src/main/MainDevToolsWindow.jade',
+			// 	inject: false
+			// })
 		],
 
 		node: {

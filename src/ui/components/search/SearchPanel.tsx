@@ -87,8 +87,9 @@ function makeMapStateToProps() {
 
 @CSSModules(styles)
 
-@Themed
+
 @connect(makeMapStateToProps,null,null,{withRef:true})
+@Themed
 @HotKeyContext()
 @PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
@@ -242,8 +243,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		// 	log.info('Probably text box blur')
 		// }
 
+
 		this.updateState(this.props)
-		this.setState({selected:false})
+		this.setState({selected:false,focused:false})
 
 	}
 
@@ -269,13 +271,13 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Search result is selected
 	 *
-	 * @param result
 	 * @param itemModel
 	 */
 	onResultSelected = (itemModel:ISearchItemModel) => {
 		if (!itemModel && !(itemModel = _.get(this.resultsList,'state.selectedItem',null))) {
 			const {searchItemModels} = this.props,
 				{selectedIndex} = this.state || {} as any
+
 			if (searchItemModels && _.isNumber(selectedIndex)) {
 				itemModel = searchItemModels[selectedIndex]
 			}
@@ -297,8 +299,20 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	}
 
+	/**
+	 * On search item hover
+	 *
+	 * @param itemModel
+	 */
 	onHover = (itemModel:ISearchItemModel) => {
-		//this.setSelectedIndex(result.index)
+		const itemModels = this.props.searchItemModels || []
+		const index = Math.max(
+			itemModels.findIndex(findItem => findItem.item.id === itemModel.item.id),
+			0
+		)
+
+		if (this.state.selectedIndex !== index)
+			this.setSelectedIndex(index)
 	}
 
 	/**
@@ -377,7 +391,24 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param nextProps
 	 */
-	componentWillReceiveProps = (nextProps:ISearchPanelProps) => this.updateState(nextProps)
+	componentWillReceiveProps = (nextProps:ISearchPanelProps) => {
+		const selectedIndex = _.get(this.state,'selectedIndex',0)
+		let newSelectedIndex = 0
+		if (selectedIndex !== 0) {
+			const selectedItem = (this.props.searchItemModels || [])[selectedIndex]
+			if (selectedItem) {
+				newSelectedIndex = (nextProps.searchItemModels || [])
+					.findIndex(newItem => newItem.item.id === selectedItem.item.id)
+			}
+
+
+		}
+
+		this.updateState(nextProps)
+
+		if (selectedIndex)
+			this.setState({selectedIndex:newSelectedIndex})
+	}
 
 
 	/**

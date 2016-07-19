@@ -22,6 +22,9 @@ import {PureRender} from 'ui/components/common/PureRender'
 import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
 import {Themed} from 'shared/themes/ThemeManager'
 import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
+import {Icon} from 'ui/components/common/Icon'
 
 
 // Constants
@@ -233,6 +236,10 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			)
 
 		return <div style={resultStyle}>
+			<div style={makeStyle(typeStyle,styles.padded)}>
+				<Icon iconSet='octicon' iconName={typeLabel}/>
+				{/*{typeLabel}*/}
+			</div>
 			<div style={makeStyle(styles.resultInfo,styles.padded)}>
 				<div style={labelStyle}>
 					{label}
@@ -244,9 +251,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			<div style={makeStyle(labelStyle,styles.resultLabelSecond,styles.padded)}>
 				{labelSecond}
 			</div>
-			<div style={makeStyle(typeStyle,styles.padded)}>
-				{typeLabel}
-			</div>
+
 		</div>
 	}
 
@@ -255,7 +260,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		return this.renderResult(
 			Renderers.repoName(repo),
 			`${repo.open_issues_count} open issues`,
-			'Add issue repo','repo',
+			'Add issue repo',
+			'repo',
 			isSelected
 		)
 	}
@@ -293,11 +299,43 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		return this.renderResult(
 			issue.title,
 			repo ? Renderers.repoName(repo) : '',
-			'Select issue','issue',
+			'Select issue',
+			'issue-opened',
 			isSelected
 		)
 	}
 
+	renderMilestone = (item:SearchItem,milestone:Milestone,isSelected) => {
+		const {repoModels} = this.props
+		const repo = repoModels && repoModels.get(`${milestone.repoId}`)
+		return this.renderResult(
+			milestone.title,
+			repo ? Renderers.repoName(repo) : '',
+			'Filter milestone',
+			'milestone',
+			isSelected
+		)
+	}
+
+	renderLabel = (item:SearchItem,label:Label,isSelected) => {
+		const {repoModels} = this.props
+		const repo = repoModels && repoModels.get(`${label.repoId}`)
+		return this.renderResult(
+			label.name,
+			repo ? Renderers.repoName(repo) : '',
+			'Filter label',
+			'tag',
+			isSelected
+		)
+	}
+
+	private renderFns = {
+		[SearchType.Repo]: this.renderRepo,
+		[SearchType.AvailableRepo]: this.renderAvailableRepo,
+		[SearchType.Issue]: this.renderIssue,
+		[SearchType.Milestone]: this.renderMilestone,
+		[SearchType.Label]: this.renderLabel
+	}
 
 	/**
 	 * Generate the result sections
@@ -324,10 +362,9 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				{id,type} = item
 
 
-			const resultRenderer:any = (model.$$clazz === Repo.$$clazz) ?
-				this.renderRepo : (model.$$clazz === AvailableRepo.$$clazz) ?
-				this.renderAvailableRepo :
-				this.renderIssue
+			log.info('Item',model.$$clazz,item.type,item)
+			const resultRenderer:any = this.renderFns[item.type]
+
 
 			const isSelected = selectedIndex === itemCounter
 
@@ -353,7 +390,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				     className={isSelected && 'selected'}
 				     style={resultStyle}
 				     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
-				     onClick={() => onResultSelected && onResultSelected(itemModel)}
+				     onMouseDown={() => onResultSelected && onResultSelected(itemModel)}
+
 				>
 					{itemContent}
 				</div>

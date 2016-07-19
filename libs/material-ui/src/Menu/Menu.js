@@ -46,8 +46,8 @@ function getStyles(props, context) {
     },
     list: {
       display: 'table-cell',
-      paddingBottom: desktop ? 16 : 8,
-      paddingTop: desktop ? 16 : 8,
+      paddingBottom: 0,//desktop ? 16 : 8,
+      paddingTop: 0,//desktop ? 16 : 8,
       userSelect: 'none',
       width: width,
     },

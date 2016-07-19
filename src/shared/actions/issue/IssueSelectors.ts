@@ -29,11 +29,17 @@ export const selectedIssueIdsSelector = createDeepEqualSelector(
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
 
-export const issueSortAndFilterSelector = _.memoize((state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
+
+export type TIssueSortAndFilter = {issueFilter:IIssueFilter,issueSort:IIssueSort}
+
+export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = _.memoize((state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
 	const issueState = state.get(IssueKey) as IssueState
 	return _.pick(issueState,'issueFilter','issueSort') as any
-})
+}) as any
 
+/**
+ * Milestones for enabled repos
+ */
 export const milestonesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	milestoneModelsSelector,
@@ -44,7 +50,10 @@ export const milestonesSelector = createDeepEqualSelector(
 	}
 )
 
-export const labelSelector = createDeepEqualSelector(
+/**
+ * Labels for enabled repos
+ */
+export const labelsSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	labelModelsSelector,
 	(repoIds:number[],models:Map<string,Label>):Label[] => {
@@ -55,6 +64,29 @@ export const labelSelector = createDeepEqualSelector(
 	}
 )
 
+export const issueFilterLabelsSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	labelModelsSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,models:Map<string,Label>) => {
+		const
+			{issueFilter} = issueSortAndFilter,
+			labelUrls = issueFilter.labelUrls || []
+
+		return labelUrls.map(url => models.get(url))
+	}
+)
+
+export const issueFilterMilestonesSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	milestoneModelsSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,models:Map<string,Milestone>) => {
+		const
+			{issueFilter} = issueSortAndFilter,
+			milestoneIds = issueFilter.milestoneIds || []
+
+		return milestoneIds.map(id => models.get(`${id}`))
+	}
+)
 
 export const issuesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,

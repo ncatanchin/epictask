@@ -9,23 +9,38 @@ import * as Models from 'shared/models'
 import {Label} from 'shared/models/Label'
 import * as Constants from 'shared/Constants'
 import {Themed} from 'shared/themes/ThemeManager'
+import {Icon} from 'ui/components/common/Icon'
 const tinycolor = require('tinycolor2')
 
 // Constants
 const log = getLogger(__filename)
-const baseStyles = {
+const baseStyles = createStyles({
 	root: makeStyle(FlexRow, FlexAuto, {}),
-	label: makeStyle({
-		display: 'inline-block',
+	label: [FlexRowCenter,{
 		padding: '0.6rem 1rem',
 		borderRadius: '0.3rem',
-		fontSize: themeFontSize(1),
-		fontWeight: 700,
 		margin: '0 1rem 0 0',
 		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
-	})
-}
+	}],
+	icon: [FlexAuto,{
+		fontSize: themeFontSize(1),
+		padding: '0 0.5rem 0 0'
+	}],
+	text: [FlexAuto,{
+		fontSize: themeFontSize(1.1),
+		fontWeight: 700,
+		lineHeight: 1
+	}],
+	remove: [FlexAuto,{
+		fontSize: themeFontSize(1),
+		padding: '0 0 0 0.5rem',
+		cursor: 'pointer'
+	}]
 
+})
+
+
+export type TOnLabelRemove = (label:Label,index:number) => void
 
 /**
  * IIssueLabelsProps
@@ -35,6 +50,8 @@ export interface IIssueLabelsProps extends React.DOMAttributes {
 	style?:any
 	labels?:Label[]
 	labelStyle?:any
+	showIcon?:boolean
+	onRemove?:TOnLabelRemove
 }
 
 /**
@@ -64,10 +81,11 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 	componentWillReceiveProps = this.updateState
 
 	renderLabels(props) {
-		const {theme} = this.props,
+
+		const {theme,onRemove,showIcon} = this.props,
 			{styles} = this.state
 
-		return _.nilFilter(props.labels).map((label:Label) => {
+		return _.nilFilter(props.labels).map((label:Label,index:number) => {
 			const
 				p = theme.palette,
 				backgroundColor = '#' + label.color,
@@ -78,7 +96,19 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 						p.alternateText.secondary
 					])
 				})
-			return <div key={label.url} style={labelStyle}>{label.name}</div>
+			return <div key={label.url} style={labelStyle}>
+				{showIcon &&
+					<Icon style={styles.icon}
+					      iconSet='octicon'
+					      iconName='tag'/>}
+				<div style={styles.text}>{label.name}</div>
+				{onRemove &&
+					<Icon
+						style={styles.remove}
+						onClick={() => onRemove(label,index)}
+						iconSet='fa'
+						iconName='times'/>}
+			</div>
 
 		})
 	}

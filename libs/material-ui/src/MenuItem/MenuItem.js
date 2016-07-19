@@ -119,6 +119,12 @@ class MenuItem extends Component {
      * Can be used to render secondary text within the menu item.
      */
     secondaryText: PropTypes.node,
+
+    /**
+     * Override the inline-styles of the root element.
+     */
+    listStyle: PropTypes.object,
+
     /**
      * Override the inline-styles of the root element.
      */
@@ -226,6 +232,7 @@ class MenuItem extends Component {
       leftIcon,
       menuItems,
       rightIcon,
+      listStyle,
       secondaryText,
       style,
       value, // eslint-disable-line no-unused-vars
@@ -274,7 +281,7 @@ class MenuItem extends Component {
           useLayerForClickAway={false}
           onRequestClose={this.handleRequestClose}
         >
-          <Menu desktop={desktop} disabled={disabled} style={nestedMenuStyle}>
+          <Menu desktop={desktop} listStyle={listStyle} disabled={disabled} style={nestedMenuStyle}>
             {React.Children.map(menuItems, this.cloneMenuItem)}
           </Menu>
         </Popover>

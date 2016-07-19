@@ -8,7 +8,11 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
-import {Checkbox} from 'material-ui'
+import {Checkbox,MenuItem,IconMenu,IconButton} from 'material-ui'
+import {NavigationArrowDropRight as SvgArrowRight,ContentFilterList as SvgFilterIcon} from 'material-ui/svg-icons'
+import * as moment from 'moment'
+
+
 import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
@@ -17,18 +21,31 @@ import {createStructuredSelector, createSelector} from 'reselect'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {IIssueFilter, IIssueSort} from 'shared/actions/issue/IssueState'
-import {issuesSelector, issueSortAndFilterSelector, selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
+import {
+	issuesSelector,
+	issueSortAndFilterSelector,
+	issueFilterLabelsSelector,
+	issueFilterMilestonesSelector,
+	labelsSelector,
+	milestonesSelector,
+	selectedIssueIdsSelector
+} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import * as KeyMaps from 'shared/KeyMaps'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Themed} from 'shared/themes/ThemeManager'
 import IssueItem from 'ui/components/issues/IssueItem'
 import {HotKeys} from 'react-hotkeys'
-
-import * as KeyMaps from 'shared/KeyMaps'
+import {IssueLabels} from 'ui/components/issues/IssueLabels'
+import {Milestone} from 'shared/models/Milestone'
+import {Label} from 'shared/models/Label'
+import {Icon} from 'ui/components/common/Icon'
+import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
 
 // Non-typed Components
+const tinycolor = require('tinycolor2')
 const ReactList = require('react-list')
 
 // Constants
@@ -37,15 +54,31 @@ const repoActions = new RepoActionFactory()
 
 
 
-const styles = {
+const styles = createStyles({
 	panel:          makeStyle(Fill, {}),
 	panelSplitPane: makeStyle(Fill, {
 		' > .Pane2': makeStyle(OverflowHidden,{})
 
 	}),
 
+	listHeader: [FlexRow, FlexAuto, FillWidth,{
+		padding: '0.5rem 1rem',
+		filters: [FlexRowCenter,FlexAuto,{
+			none: {
+				fontWeight: 100,
+				// fontStyle: 'italic',
+				fontSize:themeFontSize(1.2)
+			},
+			itemValueLabel: {
+				fontWeight:700
+			}
+		}]
+	}],
+
+	list: {
+		width: 400
+	},
 	listContent: makeStyle(FlexColumn, FlexScale, Fill,OverflowHidden),
-	listControls: makeStyle(FlexRow, FlexAuto, FillWidth),
 	listContainer:  makeStyle(FlexColumn, FlexScale, FillWidth, {
 		overflow: 'auto'
 	}),
@@ -123,7 +156,7 @@ const styles = {
 	})
 
 
-}
+})
 
 
 /**
@@ -134,6 +167,10 @@ export interface IIssuesPanelProps {
 	issues?:Issue[]
 	issueSort?:IIssueSort
 	issueFilter?:IIssueFilter
+	issueFilterLabels?:Label[]
+	issueFilterMilestones?:Milestone[]
+	labels?:Label[]
+	milestones?:Milestone[]
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	styles?:any
@@ -149,6 +186,10 @@ function makeMapStateToProps() {
 		issues: issuesSelector,
 		issueSort: createSelector(issueSortAndFilterSelector,({issueSort}) => issueSort),
 		issueFilter: createSelector(issueSortAndFilterSelector,({issueFilter}) => issueFilter),
+		issueFilterLabels: issueFilterLabelsSelector,
+		issueFilterMilestones: issueFilterMilestonesSelector,
+		labels: labelsSelector,
+		milestones: milestonesSelector,
 		selectedIssueIds: selectedIssueIdsSelector,
 		styles: () =>  mergeStyles(styles, (getTheme()) ? getTheme().issuesPanel : null)
 
@@ -346,9 +387,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 	/**
 	 * Event handlers
-	 *
-	 * @param event
-	 * @param checked
 	 */
 	onSortDirectionChanged = () => {
 		return (event, checked) => {
@@ -361,6 +399,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		}
 
 	}
+
+	onRemoveLabelFromFilter = (label:Label,index:number) => {
+		this.issueActions.toggleIssueFilterLabel(label)
+	}
+
 
 
 	/**
@@ -393,12 +436,40 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 	}
 
+
+	makeOnMilestoneSelected(milestone:Milestone) {
+		return (event) => {
+			log.info('Milestone toggled',event)
+			this.issueActions.toggleIssueFilterMilestone(milestone)
+		}
+	}
+
+	makeOnLabelSelected(label:Label) {
+		return (event) => {
+			log.info('Label selected',event)
+			this.issueActions.toggleIssueFilterLabel(label)
+		}
+	}
+
+
 	/**
 	 * Render the component
 	 */
 	render() {
 		const
-			{selectedIssueIds,issueSort,styles:themeStyles} = this.props,
+			{
+				selectedIssueIds,
+				issueSort,
+				issueFilterLabels,
+				issueFilterMilestones,
+				labels,
+				milestones,
+				theme,
+				styles:themeStyles
+			} = this.props,
+			{itemValueLabel} = themeStyles.listHeader.filters,
+			{palette} = theme,
+			hasFilters = _.size(issueFilterLabels || []) + _.size(issueFilterMilestones || []) > 0,
 			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
@@ -415,9 +486,99 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 				{/* LIST CONTROLS FILTER/SORT */}
 				<div style={themeStyles.listContent}>
-					<div style={themeStyles.listControls}>
-						<Checkbox checked={issueSort.direction === 'desc'}
-						          onCheck={this.onSortDirectionChanged()} /> descending
+					<div style={themeStyles.listHeader}>
+						<div style={themeStyles.listHeader.filters}>
+							<Icon iconSet="fa"
+							      iconName="filter"
+							      style={{paddingRight:'1rem'}}
+							/>
+
+							{!hasFilters ?
+								<div style={themeStyles.listHeader.filters.none}>no filters{/*selected*/}</div> :
+								<IssueLabels onRemove={this.onRemoveLabelFromFilter}
+								             showIcon={true}
+								             labels={this.props.issueFilterLabels}
+					             />
+							}
+						</div>
+
+						{/* SPACER to fill empty if any */}
+						<div style={FlexScale}></div>
+
+
+						{/* Filter menu */}
+						<IconMenu iconButtonElement={<IconButton><SvgFilterIcon/></IconButton>}
+						          listStyle={theme.list} >
+
+							<MenuItem primaryText='Labels'
+							          listStyle={theme.list}
+							          leftIcon={<Icon iconSet='octicon' iconName='tag'/>}
+							          rightIcon={<SvgArrowRight />}
+
+							          menuItems={(labels  || []).map(label => {
+							          	const
+							          	    backgroundColor = `#${label.color}`,
+							          	    color = tinycolor.mostReadable(backgroundColor,[
+												palette.text.primary,
+												palette.alternateText.primary
+											]).toString(),
+											labelStyle = {
+												cursor: 'pointer',
+												backgroundColor,
+												color
+											},
+											selected = issueFilterLabels.find(item => item.url === label.url)
+
+										const primaryText = <div>
+											<Icon
+												style={{
+													opacity: selected ? 1 : 0,
+													padding: '0 1rem 0 0'
+												}}
+							          	        iconSet='fa'
+							          	        iconName='check-circle' />
+											<span style={makeStyle(itemValueLabel,{color:labelStyle.color})}>
+							                    {label.name}
+						                    </span>
+					                    </div>
+
+
+							          	return <MenuItem
+							          	    onTouchTap={this.makeOnLabelSelected(label)}
+							          	    style={labelStyle}
+							          	    primaryText={primaryText}
+							                />
+							          })} />
+
+							<MenuItem primaryText='Milestones'
+							          leftIcon={<Icon iconSet='octicon' iconName='milestone'/>}
+							          rightIcon={<SvgArrowRight />}
+							          menuItems={(milestones || []).map(milestone => {
+
+							          	const selected = issueFilterMilestones.find(item => item.id === milestone.id)
+
+										const primaryText = <div>
+											<Icon
+												style={{
+													opacity: selected ? 1 : 0,
+													padding: '0 1rem 0 0'
+												}}
+						                        iconSet='fa'
+						                        iconName='check-circle' />
+							          	     <span style={itemValueLabel}>{milestone.title}</span>
+							          	     <span style={themeStyles.listHeader.filters.itemInfoLabel}>
+							          	        {milestone.due_on ? moment(milestone.due_on).fromNow() : 'Not Scheduled'}
+						                    </span>
+			                            </div>
+
+							          	return <MenuItem
+							          	    onTouchTap={this.makeOnMilestoneSelected(milestone)}
+							          	    style={{width: 400}}
+							                primaryText={primaryText} />
+
+							          })} />
+						</IconMenu>
+
 					</div>
 
 					<div style={themeStyles.listContainer}>

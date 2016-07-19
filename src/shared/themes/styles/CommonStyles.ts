@@ -3,7 +3,7 @@ export function rem(val:number) {
 	return `${val}rem`
 }
 
-export function createStyles(styles:any,topStyles:any = null) {
+export function createStyles(styles:any,topStyles:any = null):any {
 	topStyles = topStyles || styles
 
 	return Object.keys(styles).reduce((expandedStyles,nextKey) => {

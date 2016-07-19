@@ -106,6 +106,15 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
+	/**
+	 * This styling is for material-ui Lists
+	 */
+	list: {
+		paddingTop:0,
+		paddingBottom:0
+	},
+
+
 	dialog: {
 		titleFontSize: fontSize * 2,
 		bodyFontSize:  fontSize * 1.5,
@@ -345,6 +354,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		panel: {
 			backgroundColor: primary.hue2
+		},
+
+		listHeader: {
+			color: text.primary
 		},
 
 		issue: {

@@ -2,7 +2,6 @@
 
 
 import {debounce} from 'lodash-decorators'
-import {FinderRequest} from 'typestore'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'main/services/DBService'
@@ -13,7 +12,6 @@ import {Comment} from 'shared/models/Comment'
 import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
 import {Issue, IssueStore} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {JobActionFactory} from '../jobs/JobActionFactory'
 import Toaster from 'shared/Toaster'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector} from 'shared/actions/repo/RepoSelectors'
@@ -21,6 +19,8 @@ import {DataRequest, DataState} from 'shared/actions/data/DataState'
 import {selectedIssueIdsSelector, issueSelector} from 'shared/actions/issue/IssueSelectors'
 import {issueModelsSelector, repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
 
 
 /**
@@ -205,6 +205,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (state:IssueState) => state.set('editingIssue',editingIssue)
 	}
 
+
+
 	/**
 	 * Create a new issue
 	 *
@@ -311,6 +313,53 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 
 
+	}
+
+	toggleIssueFilterMilestone(milestone:Milestone) {
+		const {issueFilter} = this.state
+		const
+			newIssueFilter = _.cloneDeep(issueFilter),
+			{milestoneIds} = newIssueFilter,
+			index = (milestoneIds || []).indexOf(milestone.id)
+
+		if (index == -1) {
+			milestoneIds.push(milestone.id)
+		} else {
+			milestoneIds.splice(index,1)
+		}
+
+
+		this.setFilteringAndSorting(newIssueFilter)
+	}
+
+	toggleIssueFilterLabel(label:Label) {
+		const {issueFilter} = this.state
+		const
+			newIssueFilter = _.cloneDeep(issueFilter),
+			{labelUrls} = newIssueFilter,
+			index = (labelUrls || []).indexOf(label.url)
+
+		if (index == -1) {
+			labelUrls.push(label.url)
+		} else {
+			labelUrls.splice(index,1)
+		}
+
+		this.setFilteringAndSorting(newIssueFilter)
+	}
+
+	removeMilestoneFromFilter(milestone:Milestone) {
+		const {issueFilter} = this.state
+		const
+			newIssueFilter = _.cloneDeep(issueFilter),
+			{milestoneIds} = newIssueFilter,
+			index = (milestoneIds || []).indexOf(milestone.id)
+
+		if (index == -1) return
+
+		milestoneIds.splice(index,1)
+
+		this.setFilteringAndSorting(newIssueFilter)
 	}
 
 	@debounce(200)

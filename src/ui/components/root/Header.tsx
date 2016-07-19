@@ -12,7 +12,9 @@ const log = getLogger(__filename)
 const HeaderSearchTypes = [
 	SearchType.Repo,
 	SearchType.AvailableRepo,
-	SearchType.Issue
+	SearchType.Issue,
+	SearchType.Milestone,
+	SearchType.Label
 ]
 
 export enum HeaderVisibility {
@@ -169,12 +171,16 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		if (this.isExpanded)
 			return
 
-		const textField:any = _.get(this,'searchPanel.textField')
-		if (textField) {
-			textField.blur()
-		} else {
-			const doc = document as any
-			doc.activeElement.blur()
+		const {searchPanel} = this
+
+		if (searchPanel) {
+			const textField:any = searchPanel.textField
+			if (textField) {
+				textField.blur()
+			} else {
+				const doc = document as any
+				doc.activeElement.blur()
+			}
 		}
 	}
 

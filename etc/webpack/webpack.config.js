@@ -49,10 +49,9 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  *
  * @type {boolean}
  */
-      //const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
-
-      //const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
-const materialUiModule = 'libs/material-ui/build'
+//const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
+//const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
+const materialUiModule = 'libs/material-ui/src'
 
 const happy = true
 
@@ -109,7 +108,7 @@ module.exports = function (projectConfig) {
 					main: path.resolve(baseDir, 'src/main'),
 
 				},
-				//libAlias('material-ui', 'material-ui/build/'),
+				libAlias('material-ui', 'material-ui/src/'),
 				libAlias('typedux', 'typedux/src/index.ts'),
 				libAlias('typemutant', 'typemutant/src/index.ts'),
 				libAlias('typelogger', 'typelogger/src/index.ts'),
@@ -117,6 +116,9 @@ module.exports = function (projectConfig) {
 				libAlias('typestore-mocks', 'typestore/packages/typestore-mocks/src/index.ts'),
 				libAlias('typestore-plugin-pouchdb', 'typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
 			),
+
+			// root: 'src',
+
 			modules: resolveDirs(
 				'src',
 				'libs/typedux/src',
@@ -172,7 +174,7 @@ module.exports = function (projectConfig) {
 		externals: [
 			nodeExternals({
 				whitelist: [
-					//	/material-ui/,
+					/material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,

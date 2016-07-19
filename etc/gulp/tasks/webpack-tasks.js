@@ -2,6 +2,7 @@ require ('./../../webpack/parts/stats.js')
 const path = require('path')
 const fs = require('fs')
 const gutil = require('gulp-util')
+const babel = require('gulp-babel')
 const webpack = require('webpack')
 const express = require('express')
 const makeSrcGlobs = require('../../tools/project-srcs')
@@ -241,6 +242,23 @@ _.each(projectConfigs,projectConfig => {
 //
 // 		done(err)
 // 	}))
+// })
+
+//const materialUiSrcs = ['./libs/material-ui/src/**/*.*','!./libs/material-ui/src/**/*.spec.js']
+//
+// gulp.task('compile-material-ui',() => {
+// 	log.info('Starting compile material-ui')
+// 	return gulp.src(materialUiSrcs)
+// 		.pipe(babel(JSON.parse(fs.readFileSync('./libs/material-ui/.babelrc'))))
+// 		.pipe(gulp.dest('./libs/material-ui/build/'))
+// })
+//
+// gulp.task('compile-material-ui-watch',['compile-material-ui'],(done) => {
+// 	log.info('Starting watch material-ui')
+// 	const watcher = gulp.watch(materialUiSrcs, ['compile-material-ui'])
+// 	watcher.on('change',(event) => {
+// 		log.info('Files changed in material-ui, compiling',event)
+// 	})
 // })
 
 gulp.task('dev',[],(done) => {

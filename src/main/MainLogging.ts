@@ -31,8 +31,7 @@ logger.add(winston.transports.Console,{
 Object.assign(global as any,{MainLogger:logger,LoggerFactory})
 
 setLoggerOutput(logger)
-setCategoryLevels(require('shared' +
-	'/LogCategories'))
+setCategoryLevels(require('shared/LogCategories'))
 
 declare global {
 	var getLogger:typeof LoggerFactory
