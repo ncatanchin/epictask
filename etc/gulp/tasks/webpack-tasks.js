@@ -162,6 +162,7 @@ function runDevServer(port,projectConfig,wpConfig) {
  * @returns {Function}
  */
 function makeWebpackDevServer(projectConfig) {
+	log.info('Making dev server task for',projectConfig.name,projectConfig)
 	return (done) => {
 
 		const wpConfig = projectConfig.webpackConfigFn()
@@ -180,8 +181,10 @@ function makeWebpackDevServer(projectConfig) {
 		}
 
 		if (wpConfig.dev) {
-			Object.keys(wpConfig.entry)
-				.forEach(name => addHotClient(wpConfig.entry[name]))
+			Object.keys(wpConfig.entry).forEach(name => {
+				addHotClient(wpConfig.entry[name])
+			})
+
 		}
 
 		runDevServer(projectConfig.port,projectConfig,wpConfig)
@@ -190,12 +193,14 @@ function makeWebpackDevServer(projectConfig) {
 }
 
 function makeCompileTask(projectConfig) {
+	log.info('Making compile task for',projectConfig.name,projectConfig)
 	return (done) => {
 		return makeWebpackCompile(projectConfig, false)(done)
 	}
 }
 
 function makeDevTask(projectConfig) {
+	log.info('Making dev task for',projectConfig.name,projectConfig)
 	return (done) => {
 		switch (projectConfig.runMode) {
 			case RunMode.DevServer:
@@ -226,7 +231,7 @@ _.each(projectConfigs,projectConfig => {
 	assert(projectConfig.runMode, `Project runmode is required ${projectConfig.name}`)
 
 	const taskNames = makeTaskNames(projectConfig)
-	//log.info(`Making tasks: ${taskNames}`)
+	log.info(`Making tasks for project ${projectConfig.name}: ${taskNames}`)
 	gulp.task(taskNames.dev,[],makeDevTask(projectConfig))
 	gulp.task(taskNames.compile,[],makeCompileTask(projectConfig))
 })

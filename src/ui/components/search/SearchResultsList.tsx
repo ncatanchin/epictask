@@ -413,7 +413,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			color: p.alternateTextColor
 		})
 
-		log.info('rendering results inline:',props.inline,'open',props.open,'anchor',props.anchor)
+		log.debug('rendering results inline:',props.inline,'open',props.open,'anchor',props.anchor)
 
 		if (!props.inline) {
 			const anchor = typeof props.anchor === 'string' ?

@@ -63,7 +63,9 @@ html.fill-width.fill-height(lang="en")
 			var loaded = false
 			var isDev = remote.getGlobal('Env').isDev
 
-			// Add a script tag to load content
+			/*
+			*	Add a script tag to load content
+			*/
 			function addScript(scriptPath,asyncLoad,callback) {
 				const script = document.createElement('script');
 				const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
@@ -83,6 +85,10 @@ html.fill-width.fill-height(lang="en")
 				document.body.appendChild(script)
 			}
 
+
+			/*
+			*	Load the UI
+			*/
 			window.loadEpicTask = function() {
 
 				//logger.info('Loading UI')
@@ -109,14 +115,27 @@ html.fill-width.fill-height(lang="en")
 					document.write(link.outerHTML);
 				}
 
-				// Load the entry script
+				// SCRIPTS
+				var materialLoaded = false, libsLoaded = true
 
-				addScript('/MaterialUIEntry.js',false,function() {
+				function loadEntry() {
+					if (!materialLoaded || !libsLoaded) return
+
 					addScript('/UIEntry.js', false, function () {
 						if (checkBooted())
 							onUIReady(null, true)
 					})
+				}
+
+				addScript('/UIMaterialEntry.js',false,function() {
+					materialLoaded = true
+					loadEntry()
 				})
+
+				//addScript('/UILibsEntry.js', false, function () {
+				//	libsLoaded = true
+				//	loadEntry()
+				//})
 
 
 

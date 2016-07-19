@@ -14,6 +14,9 @@ import {RegisterModel} from 'shared/Registry'
 @ModelDescriptor()
 export class Label extends DefaultModel {
 
+	static isLabel(o:any):o is Label {
+		return o.url && o.name
+	}
 
 	/**
 	 * Revive from JS/JSON
@@ -74,3 +77,5 @@ export class LabelStore extends TSRepo<Label> {
 
 
 }
+
+

@@ -10,12 +10,16 @@ import {Label} from 'shared/models/Label'
 import * as Constants from 'shared/Constants'
 import {Themed} from 'shared/themes/ThemeManager'
 import {Icon} from 'ui/components/common/Icon'
+import {Milestone} from 'shared/models/Milestone'
 const tinycolor = require('tinycolor2')
+
 
 // Constants
 const log = getLogger(__filename)
 const baseStyles = createStyles({
-	root: makeStyle(FlexRow, FlexAuto, {}),
+	root: makeStyle(FlexRow, FlexAuto, {
+		overflow: 'auto'
+	}),
 	label: [FlexRowCenter,{
 		padding: '0.6rem 1rem',
 		borderRadius: '0.3rem',
@@ -40,18 +44,19 @@ const baseStyles = createStyles({
 })
 
 
-export type TOnLabelRemove = (label:Label,index:number) => void
+export type TOnLabelOrMilestoneRemove = (item:Label|Milestone,index:number) => void
 
 /**
  * IIssueLabelsProps
  */
-export interface IIssueLabelsProps extends React.DOMAttributes {
+export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
 	theme?:any
 	style?:any
+	milestones?:Milestone[]
 	labels?:Label[]
 	labelStyle?:any
 	showIcon?:boolean
-	onRemove?:TOnLabelRemove
+	onRemove?:TOnLabelOrMilestoneRemove
 }
 
 /**
@@ -62,7 +67,7 @@ export interface IIssueLabelsProps extends React.DOMAttributes {
  **/
 
 @Themed
-export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
+export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,any> {
 
 
 	constructor(props = {}) {
@@ -80,23 +85,58 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 	componentWillMount = this.updateState
 	componentWillReceiveProps = this.updateState
 
-	renderLabels(props) {
+	renderLabels() {
 
-		const {theme,onRemove,showIcon} = this.props,
+		const
+			{
+				theme,
+				onRemove,
+				showIcon,
+				milestones,
+				labelStyle,
+				labels
+
+			} = this.props,
+			{palette} = theme,
 			{styles} = this.state
 
-		return _.nilFilter(props.labels).map((label:Label,index:number) => {
+
+
+		return _.nilFilter(milestones || []).map((milestone:Milestone,index:number) => {
 			const
-				p = theme.palette,
+				finalLabelStyle = makeStyle(styles.label, labelStyle, {
+					backgroundColor: 'black',
+					color: 'white'
+				})
+
+			return <div key={milestone.id} style={finalLabelStyle}>
+				{showIcon &&
+				<Icon style={styles.icon}
+				      iconSet='octicon'
+				      iconName='milestone'/>}
+				<div style={styles.text}>{milestone.title}</div>
+				{onRemove &&
+				<Icon
+					style={styles.remove}
+					onClick={() => onRemove(milestone,index)}
+					iconSet='fa'
+					iconName='times'/>}
+			</div>
+
+		}).concat(_.nilFilter(labels || []).map((label:Label,index:number) => {
+
+
+			const
+
 				backgroundColor = '#' + label.color,
-				labelStyle = makeStyle(styles.label, props.labelStyle, {
+				finalLabelStyle = makeStyle(styles.label, labelStyle, {
 					backgroundColor,
 					color: tinycolor.mostReadable(backgroundColor,[
-						p.text.secondary,
-						p.alternateText.secondary
+						palette.text.secondary,
+						palette.alternateText.secondary
 					])
 				})
-			return <div key={label.url} style={labelStyle}>
+			return <div key={label.url} style={finalLabelStyle}>
 				{showIcon &&
 					<Icon style={styles.icon}
 					      iconSet='octicon'
@@ -110,12 +150,12 @@ export class IssueLabels extends React.Component<IIssueLabelsProps,any> {
 						iconName='times'/>}
 			</div>
 
-		})
+		}) as any)
 	}
 
 	render() {
 		return <div style={makeStyle(this.state.styles.root,this.props.style)}>
-			{this.props.labels && this.renderLabels(this.props)}
+			{this.props.labels && this.renderLabels()}
 		</div>
 	}
 

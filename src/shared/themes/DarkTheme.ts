@@ -346,6 +346,20 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		}
 	},
 
+
+	/**
+	 * Issue filters
+	 */
+	issueFilters: {
+		root: {
+			color: text.secondary
+		},
+
+		hasFiltersColor: accent.hue1
+
+	},
+
+
 	/**
 	 * Issues Panel
 	 */
@@ -356,9 +370,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 			backgroundColor: primary.hue2
 		},
 
-		listHeader: {
-			color: text.primary
-		},
+
 
 		issue: {
 			backgroundColor: primary.hue1,

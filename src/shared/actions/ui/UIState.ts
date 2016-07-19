@@ -27,6 +27,8 @@ export interface IStatus {
 
 export type TDialogMap = Map<string,boolean>
 
+
+
 export const UIStateRecord = Record({
 
 
@@ -35,6 +37,7 @@ export const UIStateRecord = Record({
 	messages: List<IToastMessage>(),
 	ready: false,
 	repoPanelOpen: true,
+
 	user: null
 })
 

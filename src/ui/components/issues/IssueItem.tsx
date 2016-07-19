@@ -7,7 +7,7 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 
 import {PureRender, Renderers, Avatar} from '../common'
-import {IssueLabels} from './IssueLabels'
+import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 
 import {Issue, Repo} from 'shared/models'
 import {DataKey} from 'shared/Constants'
@@ -113,7 +113,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		                                    className={'animated fadeIn ' + (selected ? 'selected' : '')}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
-			<div style={styles.issueMarkers}></div>
+			{/*<div style={styles.issueMarkers}></div>*/}
 			<div style={styles.issueDetails}>
 
 				<div style={styles.issueRepoRow}>
@@ -139,12 +139,18 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 				<div style={styles.issueBottomRow}>
 
 					{/* LABELS */}
-					<IssueLabels labels={labels} style={styles.issueLabels}/>
+					<IssueLabelsAndMilestones
+						showIcon={true}
+						labels={labels}
+						milestones={issue.milestone ? [issue.milestone] : []}
+						style={styles.issueLabels}
+					    labelStyle={styles.issueLabels.label}
+					/>
 
-					{/* MILESTONE */}
-					{issue.milestone && <div style={styles.issueMilestone}>
-						{issue.milestone.title}
-					</div>}
+					{/*/!* MILESTONE *!/*/}
+					{/*{issue.milestone && <div style={styles.issueMilestone}>*/}
+						{/*{issue.milestone.title}*/}
+					{/*</div>}*/}
 				</div>
 			</div>
 		</div>

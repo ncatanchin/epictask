@@ -8,7 +8,6 @@ import 'shared/Globals'
 import 'shared/PromiseConfig'
 
 import Electron = require('electron')
-
 import {Container, Scope} from 'typescript-ioc'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {PouchDBPlugin} from 'typestore-plugin-pouchdb'

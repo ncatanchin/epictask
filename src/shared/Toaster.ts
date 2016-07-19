@@ -44,8 +44,9 @@ export class Toaster {
 }
 
 let toaster = null
-if (!(global as any).devToolsMode)
-	toaster = Container.get(Toaster)
+function getToaster() {
+	return Container.get(Toaster)
+}
 
 /**
  * Report message to ui from anywhere
@@ -54,7 +55,7 @@ if (!(global as any).devToolsMode)
  * @param type
  */
 export function addMessage(message:IToastMessage|string,type:ToastMessageType = ToastMessageType.Info) {
-	toaster.addMessage(message,type)
+	getToaster().addMessage(message,type)
 }
 
 
@@ -64,7 +65,7 @@ export function addMessage(message:IToastMessage|string,type:ToastMessageType = 
  * @param err
  */
 export function addErrorMessage(err:Error|string) {
-	toaster.addErrorMessage(err)
+	getToaster().addErrorMessage(err)
 }
 
 

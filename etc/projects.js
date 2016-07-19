@@ -35,13 +35,16 @@ const projectElectronMain = {
 	}
 }
 
-const projectElectronRenderer = {
+
+
+const rendererDefaultConfig = (name) => ({
 	targetType: TargetType.ElectronRenderer,
 	tsconfig: makeTsConfig(
-		`${baseDir}/.tsconfig.renderer.json`,
+		`${baseDir}/.tsconfig.renderer.${name}.json`,
 		'browser',
 		require('./awesome-typescript-loader-options')({
-			instanceName:'electron-renderer'
+			instanceName:`electron-${name}-renderer`,
+			cacheDirectory: `.awcache.renderer.${name}`
 		}),
 		{
 			"compilerOptions": {
@@ -49,16 +52,29 @@ const projectElectronRenderer = {
 			},
 		}
 	),
-	port: 4444,
 	onCompileCallback(err,stats) {
 		if (err)
 			return
 
-		log.info('Renderer ready')
+		log.info(`Renderer ${name} ready`)
 		rendererReady.resolve(true)
 	}
-}
 
+})
+
+/**
+ * UI Renderer
+ */
+const projectElectronUIRenderer = _.assign(rendererDefaultConfig('ui'),{
+	port: 4444
+})
+
+/**
+ * Database Renderer
+ */
+const projectElectronDBRenderer = _.assign(rendererDefaultConfig('db'),{
+	port: 4445
+})
 
 function makeConfigs() {
 
@@ -73,7 +89,9 @@ function makeConfigs() {
 		/**
 		 * Configuring electron renderer
 		 */
-		"electron-renderer": projectElectronRenderer
+		"electron-renderer-ui": projectElectronUIRenderer,
+
+		"electron-renderer-db": projectElectronDBRenderer
 	}
 
 
@@ -103,7 +121,7 @@ function makeConfigs() {
 			runMode: targetEnv.runMode,
 			webpackConfigFn() {
 				// Get webpackconfig
-				const normalizedName = projectName.replace('-','.')
+				const normalizedName = projectName.replace(/-/g,'.')
 				const webpackConfigFilename = path.resolve(__dirname,`webpack/webpack.config.${normalizedName}`)
 				//console.log(`Prepared project: ${webpackConfigFilename}`,targetEnv,targetType)
 

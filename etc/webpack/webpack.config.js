@@ -10,7 +10,7 @@ const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
 
 const HappyPack = require('happypack');
-const happyThreadPool = HappyPack.ThreadPool({ size: 4 })
+
 
 
 const
@@ -59,9 +59,13 @@ const happy = true
 console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
 
+	const happyThreadPool = HappyPack.ThreadPool({ size: 5 })
+
+	const isMain = projectConfig.targetType === TargetType.ElectronMain
+
 	const loaders = require('./parts/loaders')(projectConfig)
 
-	const happyPlugins = (!happy || projectConfig.targetType === TargetType.ElectronMain) ? [] :
+	const happyPlugins = (!happy || isMain) ? [] :
 		loaders.loaders
 			.filter(loader => loader.happy && loader.happy.id)
 			.map(loader => new HappyPack({
@@ -158,7 +162,9 @@ module.exports = function (projectConfig) {
 				DEBUG: isDev,
 				'process.env.__DEV__': isDev,
 				'process.env.NODE_ENV': JSON.stringify(env),
-				'process.env.BASEDIR': path.resolve(__dirname, '../..')
+				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
+				'process.env.PROCESS_NAME': projectConfig.name,
+				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer')
 			}),
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'
@@ -199,7 +205,8 @@ module.exports = function (projectConfig) {
 	Object.assign(config, {
 
 		//In development, use inline source maps
-		devtool: isDev ? 'inline-source-map' : 'source-map',
+		//devtool: isDev ? 'inline-source-map' : 'source-map',
+		devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
 
 		// In development specify absolute path - better
 		// debugger support

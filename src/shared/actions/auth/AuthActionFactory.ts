@@ -156,7 +156,4 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	}
 }
 
-export type AuthActionFactoryType = typeof AuthActionFactory
-export type AuthActionFactoryConstructor = AuthActionFactory
-
 export default AuthActionFactory

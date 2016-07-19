@@ -20,7 +20,8 @@ function RendererLoggerFactory(name) {
 	return ['debug','warn','info','error','trace'].reduce((newLogger,nextLevel) => {
 		newLogger[nextLevel] = function(...args) {
 			localLogger[nextLevel](...args)
-			remoteLogger[nextLevel](...args)
+			if (['warn','error'].includes(nextLevel))
+				remoteLogger[nextLevel](...args)
 		}
 
 		return newLogger

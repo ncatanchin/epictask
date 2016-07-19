@@ -315,12 +315,47 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 	}
 
+
+	setSortByField(field:string) {
+		const
+			issueSort = this.state.issueSort,
+			newIssueSort:IIssueSort = assign(
+				_.cloneDeep(issueSort),
+				{fields: [field]}
+			)
+
+		this.setFilteringAndSorting(null, newIssueSort)
+	}
+
+	/**
+	 * Toggle ascending and descending sort
+	 */
+	toggleSortDirection() {
+		const
+			issueSort = this.state.issueSort,
+			newIssueSort:IIssueSort = _.assign(
+				_.cloneDeep(issueSort),
+				{
+					direction: (issueSort.direction === 'asc') ?
+						'desc' :
+						'asc'
+				}
+			) as any
+
+		this.setFilteringAndSorting(null, newIssueSort)
+	}
+
+	/**
+	 * Toggle milestone on issue filter
+	 *
+	 * @param milestone
+	 */
 	toggleIssueFilterMilestone(milestone:Milestone) {
 		const {issueFilter} = this.state
 		const
 			newIssueFilter = _.cloneDeep(issueFilter),
-			{milestoneIds} = newIssueFilter,
-			index = (milestoneIds || []).indexOf(milestone.id)
+			milestoneIds = newIssueFilter.milestoneIds || (newIssueFilter.milestoneIds = []),
+			index = milestoneIds.indexOf(milestone.id)
 
 		if (index == -1) {
 			milestoneIds.push(milestone.id)
@@ -332,12 +367,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.setFilteringAndSorting(newIssueFilter)
 	}
 
+	/**
+	 * Toggle a label on the issue filter
+	 *
+	 * @param label
+	 */
 	toggleIssueFilterLabel(label:Label) {
 		const {issueFilter} = this.state
 		const
 			newIssueFilter = _.cloneDeep(issueFilter),
-			{labelUrls} = newIssueFilter,
-			index = (labelUrls || []).indexOf(label.url)
+			labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
+			index = labelUrls.indexOf(label.url)
 
 		if (index == -1) {
 			labelUrls.push(label.url)
@@ -348,19 +388,20 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.setFilteringAndSorting(newIssueFilter)
 	}
 
-	removeMilestoneFromFilter(milestone:Milestone) {
-		const {issueFilter} = this.state
-		const
-			newIssueFilter = _.cloneDeep(issueFilter),
-			{milestoneIds} = newIssueFilter,
-			index = (milestoneIds || []).indexOf(milestone.id)
-
-		if (index == -1) return
-
-		milestoneIds.splice(index,1)
-
-		this.setFilteringAndSorting(newIssueFilter)
-	}
+	//
+	// removeMilestoneFromFilter(milestone:Milestone) {
+	// 	const {issueFilter} = this.state
+	// 	const
+	// 		newIssueFilter = _.cloneDeep(issueFilter),
+	// 		{milestoneIds} = newIssueFilter,
+	// 		index = (milestoneIds || []).indexOf(milestone.id)
+	//
+	// 	if (index == -1) return
+	//
+	// 	milestoneIds.splice(index,1)
+	//
+	// 	this.setFilteringAndSorting(newIssueFilter)
+	// }
 
 	@debounce(200)
 	@ActionReducer()

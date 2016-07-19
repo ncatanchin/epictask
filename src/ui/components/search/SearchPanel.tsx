@@ -86,8 +86,6 @@ function makeMapStateToProps() {
  **/
 
 @CSSModules(styles)
-
-
 @connect(makeMapStateToProps,null,null,{withRef:true})
 @Themed
 @HotKeyContext()
@@ -449,7 +447,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const focusedClazz = focused ? ' ' + styles.focused : ''
 
 		const searchPanelId = `searchPanel-${searchId}`
-		log.info('Rendering with results',{results,props:this.props,state:this.state,resultsOpen})
+		//log.info('Rendering with results',{results,props:this.props,state:this.state,resultsOpen})
 
 		//<HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
 		//<div  className={panelClazz}  style={Fill} onFocus={this.onFocus}>

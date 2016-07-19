@@ -32,13 +32,12 @@ process.argv.forEach(arg => {
  * Global modules and
  * @type {SemVer}
  */
-const
-	semver     = require('semver'),
-	path       = require('path'),
-	_          = require('lodash'),
-	processDir = path.resolve(__dirname, '../..'),
-	RamDiskPath = path.join(process.env.HOME,'DevelopmentRAM','epictask'),
-	env        = process.env.NODE_ENV || 'development'
+const semver     = require('semver')
+const path       = require('path')
+const _          = require('lodash')
+const processDir = path.resolve(__dirname, '../..')
+const RamDiskPath = path.join(process.env.HOME,'DevelopmentRAM','epictask')
+const env        = process.env.NODE_ENV || 'development'
 
 console.log('env = ',env)
 const RunMode = {

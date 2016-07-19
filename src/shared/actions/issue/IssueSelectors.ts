@@ -106,9 +106,9 @@ export const issuesSelector = createDeepEqualSelector(
 		let {text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
 			{fields:sortFields,direction:sortDirection} = issueSort
 
-		milestoneIds = milestoneIds || []
-		labelUrls = labelUrls || []
-		assigneeIds = assigneeIds || []
+		milestoneIds = _.nilFilter(milestoneIds || [])
+		labelUrls = _.nilFilter(labelUrls || [])
+		assigneeIds = _.nilFilter(assigneeIds || [])
 
 		let filteredIssues = issues
 			.filter(issue => {

@@ -7,6 +7,8 @@
       <excludeFolder url="file://$MODULE_DIR$/.awcache" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer" />
+      <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-db" />
+      <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-ui" />
       <excludeFolder url="file://$MODULE_DIR$/.itermocil" />
       <excludeFolder url="file://$MODULE_DIR$/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
@@ -19,12 +21,10 @@
       <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-plugin-indexeddb" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/node_modules" />
-      <excludeFolder url="file://$MODULE_DIR$/node_modules.disk" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="epictask node_modules" level="project" />
     <orderEntry type="library" name="tsconfig$roots" level="project" />
     <orderEntry type="library" name="node_modules" level="project" />
   </component>

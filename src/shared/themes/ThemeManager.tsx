@@ -83,24 +83,56 @@ export function makeThemeFontSize(multiplier:number) {
 	return getTheme().fontSize * multiplier
 }
 
-export interface IThemedProps {
+export interface IThemedState {
 	theme?:any
+	styles?:any
 }
 
+/**
+ * Create a wrapped themed component
+ *
+ * @param Component
+ * @param baseStyles
+ * @param themeKey
+ * @returns {any}
+ */
+export function makeThemedComponent(Component,baseStyles = null,themeKey:string = null) {
+	return class extends React.Component<any, IThemedState> {
 
-export const getThemeState = () => ({theme:getTheme()})
-
-// export function Themed<T extends React.Component<any,any>>(component:T):T {
-export function Themed(Component) {
-	return class extends React.Component<any, IThemedProps> {
+		// Used to unsubscribe from theme updates on unmount
 		private unsubscribe
 
-		constructor(props:any = {},context:any = {}) {
-			super(props,context)
-			this.state = getThemeState()
+		/**
+		 * Create a new new theme state
+		 */
+		getNewState = () => {
+			const newState = {
+				theme: getTheme()
+			}
+
+			if (baseStyles) {
+				assign(newState,{
+					styles: mergeStyles(
+						baseStyles,
+						themeKey ? _.get(getTheme(),themeKey) : getTheme()
+					)
+				})
+			}
+
+			return newState
 		}
 
-		updateTheme = () => this.setState(getThemeState())
+		/**
+		 * Used as the subscriber for theme updates
+		 * as well as by componentWillMount to
+		 * create initial styles
+		 */
+		updateTheme = () => {
+			if (this.state && this.state.theme === getTheme())
+				return
+
+			this.setState(this.getNewState())
+		}
 
 		componentWillMount() {
 			this.updateTheme()
@@ -116,10 +148,39 @@ export function Themed(Component) {
 
 		render() {
 			const ThemedComponent = Component as any
-			return <ThemedComponent {...this.props} theme={this.state.theme}/>
+			return <ThemedComponent {...this.props} {...this.state} />
 		}
 	} as any
 }
+
+/**
+ * Themed HOC
+ *
+ * @param Component
+ * @returns {any}
+ * @constructor
+ */
+export function Themed(Component) {
+	return makeThemedComponent(Component)
+}
+
+/**
+ * Same as Themed, but merges styles
+ *
+ * @param baseStyles
+ * @param themeKey
+ * @returns {(Component:any)=>any}
+ * @constructor
+ */
+export function ThemedStyles(baseStyles:any = {},themeKey:string = null) {
+	return (Component) => {
+		return makeThemedComponent(Component,baseStyles,themeKey)
+	}
+}
+
+
+
+
 //
 // export function Themed2<T>(component:ComponentClass<T>): ComponentClass<T> {
 // 	return class extends Component<T,any> {

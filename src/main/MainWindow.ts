@@ -165,16 +165,3 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 		}
 	})
 }
-
-/**
- * HMR Enabled -> on dispose remove mainWindow
- */
-if (module.hot) {
-	module.hot.accept(['./MainMenu'],() => makeMenu())
-	module.hot.accept(['!!file!./MainEntry.jade'], (updates) => {
-		log.info("HMR update jade", updates)
-
-		log.info(`Template Path: ${templateURL}`)
-		browserWindow.loadURL(templateURL)
-	})
-}

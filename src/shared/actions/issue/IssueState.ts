@@ -6,6 +6,8 @@ import {Map,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Comment,Issue} from 'shared/models'
 
+export const IssueSortableFields = ['updated_at','created_at','repoId','title','assignee']
+export const IssueSortableFieldNames = ['Last Updated','Created At','Repository','Alphabetically','Assignee']
 export type TIssueFieldsSortable = 'updated_at'|'created_at'|'repoId'|'title'|'assignee'
 
 export interface IIssueSort {

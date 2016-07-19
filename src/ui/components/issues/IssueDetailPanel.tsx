@@ -11,7 +11,7 @@ import {Style} from 'radium'
 import {connect} from 'react-redux'
 import {Avatar, PureRender, Renderers} from 'components/common'
 import {Issue, Comment} from 'shared/models'
-import {IssueLabels} from './IssueLabels'
+import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {IssueActivityText} from './IssueActivityText'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
@@ -137,7 +137,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		{/* ROW 3 */}
 		<div style={styles.header.row3}>
 			{/* LABELS */}
-			<IssueLabels labels={issue.labels} style={styles.header.row3.labels}/>
+			<IssueLabelsAndMilestones labels={issue.labels} style={styles.header.row3.labels}/>
 
 			{/* MILESTONE */}
 			{issue.milestone && <div style={styles.header.row3.milestone}>

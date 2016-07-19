@@ -17,12 +17,12 @@ module.exports = (projectConfig) => {
 				exclude: /node_modules/,
 				loaders: ['source-map-loader']
 			},
-			{
-				test: /\.jsx$/,
-				exclude: /node_modules/,
-				//exclude: /(node_modules|material-ui)/,
-				loaders: ['source-map-loader']
-			}
+			// {
+			// 	test: /\.jsx$/,
+			// 	//exclude: /node_modules/,
+			// 	exclude: /(node_modules|material-ui)/,
+			// 	loaders: ['source-map-loader']
+			// }
 		],
 		loaders: [{
 			test: /\.json$/,
@@ -40,7 +40,14 @@ module.exports = (projectConfig) => {
 			// TYPESCRIPT
 			{
 				// happy: {id: 'ts'},
-				test: /\.tsx?$/,
+				test: /\.ts$/,
+				exclude: /libs\/.*\/typings/,
+				loaders: [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
+			},
+
+			{
+				// happy: {id: 'ts'},
+				test: /\.tsx$/,
 				exclude: /libs\/.*\/typings/,
 				loaders: (() => {
 					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
@@ -58,8 +65,9 @@ module.exports = (projectConfig) => {
 				test: /\.jsx?$/,
 				//exclude: /node_modules/,
 				exclude: /node_modules/,
-				loaders: ['babel'],
+				loaders: ['babel']
 			},
+
 
 			// JADE
 			{

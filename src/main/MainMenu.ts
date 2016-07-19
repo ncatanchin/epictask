@@ -192,7 +192,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}]
 		}]
 
-		menu = Menu.buildFromTemplate(template)
 
 	} else {
 		template = [{
@@ -235,10 +234,13 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}]
 		}]
 
-		if (Env.isDev)
-			template.push(makeDevMenu(mainWindow))
-		menu = Menu.buildFromTemplate(template)
+
 	}
+
+	if (Env.isDev)
+		template.push(makeDevMenu(mainWindow))
+
+	menu = Menu.buildFromTemplate(template)
 
 	return menu
 }

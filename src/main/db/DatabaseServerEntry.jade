@@ -11,7 +11,7 @@ html
 		// Add a script tag to load content
 		function addScript(scriptPath, asyncLoad, callback) {
 			const script = document.createElement('script');
-			const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
+			const basePath = (isDev) ? 'http://localhost:4445/dist' : baseDir + '/dist';
 
 			script.type = 'text/javascript'
 			if (asyncLoad) {
