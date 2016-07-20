@@ -102,7 +102,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
 			issueStyles = makeStyle(
 				styles.issue,
-				selected && styles.issueSelected,
+				selected && styles.issue.selected,
 				(selected && selectedMulti) && styles.issueSelectedMulti
 			),
 			issueTitleStyle = makeStyle(
@@ -121,7 +121,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
 				<div style={styles.issueRepoRow}>
 					<div style={styles.issueRepo}>
-						{Renderers.repoName(repo)}
+						{Renderers.repoName(issue.repo)}
 					</div>
 
 					{/* ASSIGNEE */}

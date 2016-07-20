@@ -14,7 +14,7 @@ import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
-import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
+import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 
 
 export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
@@ -134,7 +134,13 @@ export const issuesSelector = createDeepEqualSelector(
 				return matches
 			})
 
-		filteredIssues = _.sortBy(filteredIssues,sortFields[0])
+		filteredIssues = _.sortBy(filteredIssues,(o) => {
+			let val = o[sortFields[0]]
+			if (_.isString(val))
+				val = _.toLower(val)
+
+			return val
+		})
 
 		if (sortDirection === 'desc')
 			filteredIssues = filteredIssues.reverse()
@@ -184,7 +190,14 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 
 
 		function newGroup(groupByItem) {
-			return (allGroups[allGroups.length] = {issues: [], index: allGroups.length, size: 0, groupBy, groupByItem})
+			return (allGroups[allGroups.length] = {
+				id: getIssueGroupId({groupBy,groupByItem}),
+				issues: [],
+				index: allGroups.length,
+				size: 0,
+				groupBy,
+				groupByItem
+			})
 		}
 
 		/**

@@ -3,7 +3,7 @@
 		"class-name": true,
 
 		"indent": [
-			true,
+			false,
 			"tabs"
 		],
 		"no-reference": true,

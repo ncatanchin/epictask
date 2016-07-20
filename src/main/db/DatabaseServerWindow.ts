@@ -6,7 +6,7 @@ import * as uuid from 'node-uuid'
 import {default as Events} from './DatabaseEvents'
 import {IDatabaseResponse, IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
 
-const TIMEOUT = 30000
+const TIMEOUT = 120000
 
 const log = getLogger(__filename)
 
@@ -136,11 +136,11 @@ export class DatabaseServerWindow {
 	 * @param resp
 	 */
 	private onResponse = (event,resp:IDatabaseResponse) => {
-		log.info('Response Received',resp.requestId,resp)
+		log.debug('Response Received',resp.requestId)
 
 		const pendingRequest = this.pendingRequests[resp.requestId]
 		if (!pendingRequest) {
-			log.error(`Response received, but no request found with provided id: ${resp.requestId}`,resp)
+			log.error(`Response received, but no request found with provided id: ${resp.requestId}`,resp.error)
 
 
 

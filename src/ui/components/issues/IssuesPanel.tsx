@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {Map} from 'immutable'
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
@@ -37,7 +38,7 @@ import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
 import {IssueFilters} from 'ui/components/issues/IssueFilters'
-import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
+import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {Button} from 'ui/components/common/Button'
@@ -87,27 +88,40 @@ const baseStyles = createStyles({
 		control: {
 			padding: '0 1rem',
 			backgroundColor: 'transparent'
+		},
+		stats: {
+			number: {
+				fontWeight: 700
+			},
+			fontWeight: 100,
+			padding: '0 1rem',
+			textTransform: 'uppercase'
 		}
 	}],
 
+	issue: [
+		FlexRow,
+		FlexAuto,
+		FillWidth,
+		FlexAlignStart,
+		makeTransition(['background-color']), {
 
-
-
-	issue: makeStyle(FlexRow, FlexAuto,
-		FillWidth, FlexAlignStart, makeTransition(['background-color']), {
-
-			padding:   '1.5rem 1rem 1.5rem 1rem',
-			cursor:    'pointer',
+			padding: '1.5rem 1rem 1.5rem 1rem',
+			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 
+			// Issue selected
+			selected: [],
+
 			// Avatar component
-			avatar: makeStyle({
+			avatar: [{
 				padding: '0'
-			})
-		}),
+			}]
+		}
+	],
 
 
-	issueSelected: makeStyle({}),
+
 
 	issueMarkers: makeStyle(FlexColumn, FlexAuto, {
 		minWidth:      '1rem',
@@ -182,9 +196,9 @@ const baseStyles = createStyles({
  * Issue group header component
  *
  */
-function IssueGroupHeader({styles,issueGroup = {} as IIssueGroup}) {
+function IssueGroupHeader({styles,onClick,issueGroup = {} as IIssueGroup}) {
 	const {groupByItem,groupBy} = issueGroup
-	return <div style={styles.issueGroupHeader}>
+	return <div style={styles.issueGroupHeader} onClick={onClick}>
 		<Icon iconSet='material-icons' style={styles.issueGroupHeader.control}>apps</Icon>
 		{/*<Button style={styles.issueGroupHeader.control}>*/}
 			{/*/!*<Icon iconSet='fa' iconName='chevron-right'/>*!/*/}
@@ -197,18 +211,24 @@ function IssueGroupHeader({styles,issueGroup = {} as IIssueGroup}) {
 			<IssueLabelsAndMilestones
 				showIcon={true}
 				labels={[]}
-				milestones={[!groupByItem ? 'No Milestone' : groupByItem]}/> :
+				milestones={[!groupByItem ? {title:'No Milestone'} : groupByItem]}/> :
 
 			// GROUP BY LABELS
 			(groupBy === 'labels') ?
 				<IssueLabelsAndMilestones
 					showIcon={true}
-					labels={[groupByItem]}/> :
+					labels={Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
 
 				// GROUP BY ASSIGNEE
 				<div>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
 		}
 		<div style={styles.issueGroupHeader.spacer} />
+		<div style={styles.issueGroupHeader.stats} >
+			<span style={styles.issueGroupHeader.stats.number}>
+				{issueGroup.issues.length}
+			</span>
+			{/*&nbsp;Issues*/}
+		</div>
 		{/*<Icon iconSet='material-icons'>apps</Icon>*/}
 	</div>
 }
@@ -232,6 +252,7 @@ export interface IIssuesPanelProps {
 export interface IIssuesPanelState {
 	firstSelectedIndex?:number
 	issueList?:any
+	issueGroupsVisibility?:Map<string,boolean>
 }
 
 function makeMapStateToProps() {
@@ -404,7 +425,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		// or no modifier
 		if (
 			issueIndex > -1 && (
-				selectedIssueIds.length == 0 ||
+				selectedIssueIds.length === 0 ||
 				(!event.shiftKey && !event.metaKey)
 			)
 		) {
@@ -435,11 +456,40 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 
 
+	/**
+	 * Is an issue group visible
+	 *
+	 * @param groupId
+	 */
+	isIssueGroupVisible(groupId:string) {
+		return [null,undefined,true].includes(this.state.issueGroupsVisibility.get(groupId))
+	}
+
+
+	/**
+	 * Toggle issue group collapsed/expanded
+	 *
+	 * @param group
+	 */
+	toggleGroupVisible(group:IIssueGroup) {
+
+		const groupId = getIssueGroupId(group),
+			isVisible = this.isIssueGroupVisible(groupId)
+
+		this.setState({
+			issueGroupsVisibility: this.state
+				.issueGroupsVisibility.set(groupId,!isVisible)
+		})
+	}
+
 
 	/**
 	 * on mount set default state
 	 */
-	componentWillMount = () => this.setState({firstSelectedIndex: -1})
+	componentWillMount = () => this.setState({
+		issueGroupsVisibility: Map<string,boolean>(),
+		firstSelectedIndex: -1
+	})
 
 
 	/**
@@ -490,18 +540,24 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 		const {groupBy} = issueSortAndFilter.issueSort
 
-		const issueGroup = issuesGrouped[index]
-		const groupByItem = issueGroup.groupByItem
+		const group = issuesGrouped[index],
+			groupByItem = group.groupByItem,
+			isVisible = this.isIssueGroupVisible(getIssueGroupId(group))
 
-		return <ReactList itemRenderer={this.makeRenderIssue(issueGroup)}
+		return <ReactList itemRenderer={this.makeRenderIssue(group)}
 		                  itemsRenderer={(items, ref) => (
-								<div ref={ref}>
-									<IssueGroupHeader styles={styles} issueGroup={issueGroup}/>
+								<div>
+									<IssueGroupHeader
+										onClick={() => this.toggleGroupVisible(group)}
+										styles={styles}
+										issueGroup={group}/>
 
-									{items}
+									<div ref={ref} style={{overflow: 'hidden'}}>
+										{items}
+									</div>
 								</div>
 							)}
-		                  length={issueGroup.size}
+		                  length={isVisible ? group.size : 0}
 		                  type='simple'/>
 
 
@@ -528,7 +584,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
-		const itemCount = (groupBy === 'none') ? issues.length : issuesGrouped.length
+		const itemCount = (groupBy === 'none') ? issues.length :
+			issuesGrouped.length
 			// issuesGrouped.reduce((count,nextGroup) => {
 			// 	count = count + nextGroup.issues.length + 1
 			// 	return count

@@ -356,9 +356,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		},
 
 		filters: {
-			groupBy: {
-				color: text.primary,
-				backgroundColor: accent.hue1
+			controls: {
+				groupBy: {
+					color: text.primary,
+					backgroundColor: accent.hue1
+				}
 			}
 		},
 
@@ -387,13 +389,15 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 		issue: {
 			backgroundColor: primary.hue1,
-			color:           text.primary
+			color:           text.primary,
+			
+			selected: {
+				backgroundColor: accent.hue1,
+
+			}
 		},
 
-		issueSelected: {
-			backgroundColor: accent.hue1,
 
-		},
 
 		issueSelectedMulti: {
 			backgroundColor: accent.hue1,
