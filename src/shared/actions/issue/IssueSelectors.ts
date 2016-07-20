@@ -14,6 +14,7 @@ import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
+import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
 
 
 export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
@@ -92,8 +93,10 @@ export const issuesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	issueIdsSelector,
 	issueModelsSelector,
+	modelsSelector,
 	issueSortAndFilterSelector,
-	(repoIds,issueIds:number[],issueMap:Map<string,Issue>,{issueSort,issueFilter}) => {
+	(repoIds,issueIds:number[],issueMap:Map<string,Issue>,models,{issueSort,issueFilter}):Issue[] => {
+		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
 		// If data not avail then return empty
 		if (!issueMap || !issueIds || !repoIds)
@@ -137,10 +140,13 @@ export const issuesSelector = createDeepEqualSelector(
 			filteredIssues = filteredIssues.reverse()
 
 		return filteredIssues
+			.map(issue => new Issue(Object.assign({},issue,{
+				repo: issue.repo || repoModels.get(`${issue.repoId}`) || repoModels.get(issue.repoId),
+				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
+				milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
+			})))
 	}
 )
-
-
 
 /**
  * Selector for all current issues that are 'selected' or 'highlighted'
@@ -150,23 +156,75 @@ export const issuesSelector = createDeepEqualSelector(
 export const issuesDetailSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	issuesSelector,
-	modelsSelector,
 	selectedIssueIdsSelector,
-	(enabledRepoIds:number[],issues,models,selectedIssueIds:number[]) => {
-		const {repoModels,labelModels,milestoneModels,issueModels} = models
+	(enabledRepoIds:number[],issues,selectedIssueIds:number[]) => {
 
-		issues = selectedIssueIds
-			.map(issueId => issueModels.get(`${issueId}`))
+
+		issues =
+			issues.filter(issue => selectedIssueIds.includes(issue.id))
 			.filter(issue => !_.isNil(issue) && enabledRepoIds.includes(issue.repoId))
-			.map(issue => new Issue(Object.assign({},issue,{
-				repo: repoModels.get(`${issue.repoId}`),
-				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
-				milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
-			})))
+
 
 		return issues
 	}
 )
+
+
+export const issuesGroupedSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	issuesSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,issues:Issue[]):IIssueGroup[] => {
+		const {issueSort} = issueSortAndFilter
+		if (issueSort.groupBy === 'none')
+			return []
+
+		const
+			{groupBy,groupByDirection} = issueSort,
+			allGroups = Array<IIssueGroup>()
+
+
+		function newGroup(groupByItem) {
+			return (allGroups[allGroups.length] = {issues: [], index: allGroups.length, size: 0, groupBy, groupByItem})
+		}
+
+		/**
+		 *
+		 * @param groupByItem
+		 * @returns {{issueIds: Array, size: number, groupBy, groupByItem: any}}
+		 */
+		function getGroups(groupByItem):IIssueGroup[] {
+			if (Array.isArray(groupByItem)) {
+				return groupByItem.reduce((groups,nextGroupByItem) => {
+					groups = groups.concat(getGroups(nextGroupByItem))
+					return groups
+				},[])
+			} else {
+				const group = allGroups.find(item => item.groupByItem === groupByItem)
+				return [group || newGroup(groupByItem)]
+			}
+		}
+
+		for (let issue of issues) {
+			const {milestone,labels,assignee} = issue
+			const groupByItem = (groupBy === 'milestone') ? milestone :
+				(groupBy === 'assignee') ? assignee :
+					labels
+
+
+			const groups = getGroups(groupByItem)
+			groups.forEach(group => {
+				group.size++
+				group.issues.push(_.cloneDeep(issue))
+			})
+
+		}
+
+
+		return allGroups
+	}
+)
+
+
 
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
 export const issueSelector = _.memoize((state):Issue => {

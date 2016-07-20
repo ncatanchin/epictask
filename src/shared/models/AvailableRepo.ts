@@ -112,7 +112,9 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 		const filled = Object.assign({},availRepo)
 
 		if (!filled.repo) {
-			filled.repo = await stores.repo.get(filled.repoId)
+			filled.repo = await stores.repo.get(repoId)
+			if (!filled.repo)
+				filled.repo= await stores.repo.get(`${repoId}`)
 		}
 
 		if (!filled.labels) {

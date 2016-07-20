@@ -70,10 +70,6 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
 export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,any> {
 
 
-	constructor(props = {}) {
-		super(props)
-	}
-
 	updateState = (props = this.props) => {
 		const {theme} = props,
 			styles = mergeStyles(baseStyles, theme.labels)

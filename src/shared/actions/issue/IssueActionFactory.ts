@@ -316,6 +316,46 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
+	/**
+	 * Set the group by mode
+	 *
+	 * @param groupBy
+	 */
+	setGroupBy(groupBy:string) {
+		const
+			issueSort = this.state.issueSort,
+			newIssueSort:IIssueSort = assign(
+				_.cloneDeep(issueSort),
+				{groupBy}
+			)
+
+		this.setFilteringAndSorting(null, newIssueSort)
+	}
+
+	/**
+	 * Toggle ascending and descending grouping
+	 */
+	toggleGroupByDirection() {
+		const
+			issueSort = this.state.issueSort,
+			newIssueSort:IIssueSort = _.assign(
+				_.cloneDeep(issueSort),
+				{
+					groupByDirection: (issueSort.groupByDirection === 'asc') ?
+						'desc' :
+						'asc'
+				}
+			) as any
+
+		this.setFilteringAndSorting(null, newIssueSort)
+	}
+
+
+	/**
+	 * Set the sorting field
+	 *
+	 * @param field
+	 */
 	setSortByField(field:string) {
 		const
 			issueSort = this.state.issueSort,
@@ -330,7 +370,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	/**
 	 * Toggle ascending and descending sort
 	 */
-	toggleSortDirection() {
+	toggleSortByDirection() {
 		const
 			issueSort = this.state.issueSort,
 			newIssueSort:IIssueSort = _.assign(

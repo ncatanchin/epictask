@@ -15,7 +15,7 @@ import {createStructuredSelector} from 'reselect'
 import filterProps from 'react-valid-props'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
-
+import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
 
 
 interface IIssueItemProps extends React.DOMAttributes {
@@ -23,8 +23,10 @@ interface IIssueItemProps extends React.DOMAttributes {
 	styles:any
 	onSelected:(event:any, issue:Issue) => void
 	issues:Issue[]
+	issuesGrouped?:IIssueGroup[]
 	repoId?:number
 	repo?:Repo
+	groupBy:string
 	selectedIssueIds?:number[]
 }
 
@@ -55,7 +57,7 @@ const makeIssueItemStateToProps = () => {
 	},createDeepEqualSelector)
 }
 
-@connect(makeIssueItemStateToProps)
+//@connect(makeIssueItemStateToProps)
 @PureRender
 class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
@@ -64,7 +66,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		//const repoState = repoActions.state
 
 		const
-			{index,issues,selectedIssueIds} = props
+			{index,issues,issuesGrouped,groupBy,selectedIssueIds} = props
+
 
 		const
 			issue = issues[index],

@@ -23,7 +23,7 @@ import {
 	issueSortAndFilterSelector,
 	labelsSelector,
 	milestonesSelector,
-	selectedIssueIdsSelector
+	selectedIssueIdsSelector, issuesGroupedSelector, TIssueSortAndFilter
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -37,6 +37,10 @@ import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
 import {IssueFilters} from 'ui/components/issues/IssueFilters'
+import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
+import {Icon} from 'ui/components/common/Icon'
+import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
+import {Button} from 'ui/components/common/Button'
 
 // Non-typed Components
 const tinycolor = require('tinycolor2')
@@ -60,6 +64,7 @@ const baseStyles = createStyles({
 
 	}],
 
+
 	list: {
 		width: 400
 	},
@@ -67,6 +72,26 @@ const baseStyles = createStyles({
 	listContainer:  makeStyle(FlexColumn, FlexScale, FillWidth, {
 		overflow: 'auto'
 	}),
+
+
+	/**
+	 * Issue group header
+	 */
+	issueGroupHeader: [FlexRowCenter,FlexAuto,FillWidth,{
+		padding: '1rem 0.5rem',
+		boxShadow: 'inset 0.1rem 0.1rem 0.5rem rgba(0,0,0,0.4)',
+		// color: rgba(255,255,255,0.4)"
+		//boxShadow: "0 -2px  rgba(0,0,0,0.6)",
+
+		spacer: [FlexScale],
+		control: {
+			padding: '0 1rem',
+			backgroundColor: 'transparent'
+		}
+	}],
+
+
+
 
 	issue: makeStyle(FlexRow, FlexAuto,
 		FillWidth, FlexAlignStart, makeTransition(['background-color']), {
@@ -154,12 +179,49 @@ const baseStyles = createStyles({
 
 
 /**
+ * Issue group header component
+ *
+ */
+function IssueGroupHeader({styles,issueGroup = {} as IIssueGroup}) {
+	const {groupByItem,groupBy} = issueGroup
+	return <div style={styles.issueGroupHeader}>
+		<Icon iconSet='material-icons' style={styles.issueGroupHeader.control}>apps</Icon>
+		{/*<Button style={styles.issueGroupHeader.control}>*/}
+			{/*/!*<Icon iconSet='fa' iconName='chevron-right'/>*!/*/}
+			{/*<Icon iconSet='material-icons'>apps</Icon>*/}
+		{/*</Button>*/}
+
+
+		{//GROUP BY MILESTONES
+		(groupBy === 'milestone') ?
+			<IssueLabelsAndMilestones
+				showIcon={true}
+				labels={[]}
+				milestones={[!groupByItem ? 'No Milestone' : groupByItem]}/> :
+
+			// GROUP BY LABELS
+			(groupBy === 'labels') ?
+				<IssueLabelsAndMilestones
+					showIcon={true}
+					labels={[groupByItem]}/> :
+
+				// GROUP BY ASSIGNEE
+				<div>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
+		}
+		<div style={styles.issueGroupHeader.spacer} />
+		{/*<Icon iconSet='material-icons'>apps</Icon>*/}
+	</div>
+}
+
+/**
  * IIssuesPanelProps
  */
 export interface IIssuesPanelProps {
 	theme?:any
 	styles?:any
 	issues?:Issue[]
+	issuesGrouped?:IIssueGroup[]
+	issueSortAndFilter?:TIssueSortAndFilter
 	labels?:Label[]
 	milestones?:Milestone[]
 	selectedIssueIds?:number[]
@@ -175,13 +237,14 @@ export interface IIssuesPanelState {
 function makeMapStateToProps() {
 	return createStructuredSelector({
 		issues: issuesSelector,
+		issuesGrouped: issuesGroupedSelector,
+		issueSortAndFilter: issueSortAndFilterSelector,
 		labels: labelsSelector,
 		milestones: milestonesSelector,
 		selectedIssueIds: selectedIssueIdsSelector
 
 	},createDeepEqualSelector)
 }
-
 
 
 /**
@@ -380,25 +443,66 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 	/**
-	 * Render issue item
+	 * Make issue render
 	 *
-	 * @param index
-	 * @param key
-	 * @returns {any}
+	 * @param issueGroup
 	 */
-	renderIssue = (index, key) => {
-		const
-			{props} = this,
-			{styles,selectedIssueIds,issues} = props
+	makeRenderIssue(issueGroup:IIssueGroup = null) {
+		/**
+		 * Render issue item
+		 *
+		 * @param index
+		 * @param key
+		 * @returns {any}
+		 */
+		return (index, key) => {
+			const {
+				styles,
+				selectedIssueIds,
+				issues,
+				issuesGrouped,
+				issueSortAndFilter
+			} = this.props
+
+			const {groupBy} = issueSortAndFilter.issueSort
 
 
+			return <IssueItem key={key}
+			                  styles={styles}
+			                  index={index}
+			                  selectedIssueIds={selectedIssueIds}
+			                  issues={issueGroup ? issueGroup.issues : issues}
+			                  groupBy={groupBy}
+			                  onSelected={this.onIssueSelected}/>
 
-		return <IssueItem key={key}
-		                  styles={styles}
-		                  index={index}
-		                  selectedIssueIds={selectedIssueIds}
-		                  issues={issues}
-		                  onSelected={this.onIssueSelected}/>
+		}
+	}
+
+
+	renderGroup = (index, key) => {
+		const {
+			styles,
+			selectedIssueIds,
+			issues,
+			issuesGrouped,
+			issueSortAndFilter
+		} = this.props
+
+		const {groupBy} = issueSortAndFilter.issueSort
+
+		const issueGroup = issuesGrouped[index]
+		const groupByItem = issueGroup.groupByItem
+
+		return <ReactList itemRenderer={this.makeRenderIssue(issueGroup)}
+		                  itemsRenderer={(items, ref) => (
+								<div ref={ref}>
+									<IssueGroupHeader styles={styles} issueGroup={issueGroup}/>
+
+									{items}
+								</div>
+							)}
+		                  length={issueGroup.size}
+		                  type='simple'/>
 
 
 	}
@@ -413,12 +517,22 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				labels,
 				milestones,
 				theme,
-				styles
+				styles,
+				issues,
+				issuesGrouped,
+				issueSortAndFilter
 			} = this.props,
 			{palette} = theme,
+			{groupBy} = issueSortAndFilter.issueSort,
 			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
+
+		const itemCount = (groupBy === 'none') ? issues.length : issuesGrouped.length
+			// issuesGrouped.reduce((count,nextGroup) => {
+			// 	count = count + nextGroup.issues.length + 1
+			// 	return count
+			// },0)
 
 		return <HotKeys  keyMap={KeyMaps.App} handlers={this.keyHandlers} style={styles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
@@ -436,11 +550,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 					<div style={styles.listContainer}>
 						<ReactList ref={c => this.setState({issueList:c})}
-						           itemRenderer={this.renderIssue}
+						           itemRenderer={groupBy === 'none' ? this.makeRenderIssue() : this.renderGroup}
 						           itemsRenderer={(items, ref) => (
 										<div ref={ref}>{items}</div>
 									)}
-						           length={this.props.issues.length}
+						           length={itemCount}
 						           type='simple'/>
 
 

@@ -5,38 +5,11 @@ import {RegisterModel} from 'shared/Registry'
 import {Map,List,Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Comment,Issue} from 'shared/models'
+import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
+import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 
-export const IssueSortableFields = ['updated_at','created_at','repoId','title','assignee']
-export const IssueSortableFieldNames = ['Last Updated','Created At','Repository','Alphabetically','Assignee']
-export type TIssueFieldsSortable = 'updated_at'|'created_at'|'repoId'|'title'|'assignee'
-
-export interface IIssueSort {
-	// fields to sort by
-	fields:TIssueFieldsSortable[]
-
-	// Label Urls
-	direction:'asc'|'desc'
-}
-
-export interface IIssueFilter {
-	// Milestone Ids
-	milestoneIds?:number[]
-
-	// Label Urls
-	labelUrls?:string[]
-
-	// User ids
-	assigneeIds?:number[]
-
-	// Specific issue id
-	issueId?:number
-
-	text?:string
-
-	offset:number
-
-	limit:number
-}
+export * from './IIssueFilter'
+export * from './IIssueSort'
 
 export const IssueStateRecord = Record({
 	issueIds:[],
@@ -45,7 +18,14 @@ export const IssueStateRecord = Record({
 	selectedIssueIds:[],
 	selectedIssueId:null,
 	editingIssue:null,
-	issueSort:{fields:['updated_at'],direction:'desc'},
+
+	issueSort:{
+		fields:['updated_at'],
+		direction:'desc',
+		groupBy: 'none',
+		groupByDirection: 'asc'
+	} as IIssueSort,
+
 	issueFilter:{offset:0,limit:100} as IIssueFilter
 
 })

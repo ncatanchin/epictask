@@ -9,7 +9,9 @@ import * as Radium from 'radium'
 import {PureRender} from 'components/common'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
-import {IIssueFilter, IIssueSort, IssueSortableFields, IssueSortableFieldNames} from 'shared/actions/issue/IssueState'
+import {IIssueFilter, IIssueSort, IssueSortableFields,
+	IssueGroupByFields, IssueGroupByNames,
+	IssueSortableFieldNames} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector,createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
@@ -28,6 +30,7 @@ import {MenuItem} from 'material-ui'
 import {NavigationArrowDropRight as SvgArrowRight,ContentFilterList as SvgFilterIcon} from 'material-ui/svg-icons'
 import * as moment from 'moment'
 import {Divider} from 'material-ui'
+
 
 
 const log = getLogger(__filename)
@@ -50,6 +53,12 @@ const baseStyles = createStyles({
 			label: [{
 				margin: '0.5rem 1rem 0.5rem 0'
 			}]
+		}],
+		groupBy: [FlexAuto,FlexRowCenter,{
+			padding: '0.2rem 0 0.2rem 1.4rem',
+			borderRadius: '0.3rem',
+			margin: '0 0.2rem 0 0',
+			boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
 		}]
 	}],
 
@@ -125,7 +134,9 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	/**
 	 * Event handlers
 	 */
-	onSortDirectionChanged = () => this.issueActions.toggleSortDirection()
+	onSortDirectionChanged = () => this.issueActions.toggleSortByDirection()
+
+	onGroupByDirectionChanged = () => this.issueActions.toggleGroupByDirection()
 
 	onRemoveItemFromFilter = (item:Label|Milestone, index:number) => {
 		if (Label.isLabel(item))
@@ -152,6 +163,13 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		return (event) => {
 			log.info('Sort by selected',event)
 			this.issueActions.setSortByField(field)
+		}
+	}
+
+	makeOnGroupBySelected(field:string) {
+		return (event) => {
+			log.info('Group by selected',event)
+			this.issueActions.setGroupBy(field)
 		}
 	}
 
@@ -319,6 +337,56 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		})
 	}
 
+
+	/**
+	 * Group By Menu Items
+	 */
+	renderGroupByItems() {
+		const {
+			theme,
+			styles,
+			issueSort
+		} = this.props
+
+		const fields = IssueGroupByFields
+		const fieldNames = IssueGroupByNames
+		const groupBy = issueSort.groupBy
+		const {palette} = theme
+
+		return (fields).map((field,index) => {
+
+			const
+				selected = field === groupBy,
+				fieldName = fieldNames[index]
+
+			const primaryText = <div style={makeStyle(
+					styles.list.item.text,
+					styles.list.item.text.value
+				)}>
+				<div>
+					<Icon
+						style={{
+							opacity: selected ? 1 : 0
+						}}
+						iconSet='fa'
+						iconName='check-circle' />
+				</div>
+				<div style={styles.list.item.text.primary}>
+					{fieldName}
+				</div>
+
+				<div style={styles.list.item.text.spacer} />
+
+			</div>
+
+			return <MenuItem
+				onTouchTap={this.makeOnGroupBySelected(field)}
+				style={styles.list.item}
+				primaryText={primaryText} />
+
+		})
+	}
+
 	/**
 	 * Render filters
 	 *
@@ -337,11 +405,13 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				milestones,
 			} = this.props,
 			{palette} = theme,
+			isGrouped = issueSort.groupBy !== 'none',
 			hasFilters =
 				_.size(_.nilFilter(issueFilterLabels || [])) +
 				_.size(_.nilFilter(issueFilterMilestones || [])) > 0
 
 
+		// LABEL
 		const labelMenuItemText = <div style={styles.list.item.text}>
 			<div>
 				<Icon style={styles.list.item.text.icon}
@@ -357,7 +427,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 		</div>
 
-
+		// MILESTONE
 		const milestoneMenuItemText = <div style={styles.list.item.text}>
 			<div>
 				<Icon style={styles.list.item.text.icon}
@@ -374,7 +444,10 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		</div>
 
 
-		const isAscending = issueSort.direction === 'asc'
+
+
+		// SORT ORDER
+		let isAscending = issueSort.direction === 'asc'
 		const sortOrderMenuItemText = <div style={styles.list.item.text}>
 			<div>
 				<Icon style={makeStyle(styles.list.item.text.icon,{
@@ -387,6 +460,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			<div style={styles.list.item.text.spacer} />
 		</div>
 
+		// SORT BY
 		const sortByMenuItemText = <div style={styles.list.item.text}>
 			<div>
 				<Icon style={styles.list.item.text.icon} iconSet='fa' iconName='sort'/>
@@ -400,9 +474,27 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 		</div>
 
+
+		// GROUP BY DIRECTION
+		isAscending = issueSort.groupByDirection === 'asc'
+		const groupByDirectionMenuItemText = <div style={styles.list.item.text}>
+			<div>
+				<Icon style={makeStyle(styles.list.item.text.icon,{
+					fontSize: 12
+				})} iconSet='fa' iconName={isAscending ? 'chevron-up' : 'chevron-down'}/>
+			</div>
+			<div style={styles.list.item.text.primary}>
+				Group by {isAscending ? 'Ascending' : 'Descending'} Order
+			</div>
+			<div style={styles.list.item.text.spacer} />
+		</div>
+
+		// GROUP BY
 		const groupByMenuItemText = <div style={styles.list.item.text}>
 			<div>
-				<Icon style={styles.list.item.text.icon} iconSet='fa' iconName='sort'/>
+				<Icon style={styles.list.item.text.icon}
+				      iconSet='fa'
+				      iconName='group'/>
 			</div>
 			<div style={styles.list.item.text.primary}>
 				Group by
@@ -414,10 +506,54 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		</div>
 
 		const filterIconStyle:any = {height:24,padding:0}
-		if (hasFilters)
+		if (hasFilters && !isGrouped)
 			filterIconStyle.color = theme.issueFilters.hasFiltersColor
 
 
+
+		{/* Filter menu */}
+		const filterMenu = <IconMenu iconButtonElement={<IconButton style={filterIconStyle} iconStyle={filterIconStyle}><SvgFilterIcon /></IconButton>}
+		          style={filterIconStyle}
+		          listStyle={theme.list} >
+
+			{/* SORT ORDER */}
+			<MenuItem primaryText={sortOrderMenuItemText}
+			          listStyle={theme.list}
+			          onTouchTap={this.onSortDirectionChanged} />
+
+			{/* SORT BY */}
+			<MenuItem primaryText={sortByMenuItemText}
+			          listStyle={theme.list}
+			          menuItems={this.renderSortByItems()} />
+
+			<Divider />
+
+			{/* SORT ORDER */}
+			{ issueSort.groupBy !== 'none' &&
+			<MenuItem primaryText={groupByDirectionMenuItemText}
+			          listStyle={theme.list}
+			          onTouchTap={this.onGroupByDirectionChanged}/>
+			}
+
+			{/* GROUP BY */}
+			<MenuItem primaryText={groupByMenuItemText}
+			          listStyle={theme.list}
+			          menuItems={this.renderGroupByItems()}
+			/>
+
+			<Divider />
+
+			{/* LABELS */}
+			<MenuItem primaryText={labelMenuItemText}
+			          listStyle={theme.list}
+			          menuItems={this.renderLabelItems()} />
+
+			{/* MILESTONES */}
+			<MenuItem primaryText={milestoneMenuItemText}
+			          menuItems={this.renderMilestoneItems()} />
+		</IconMenu>
+
+		// ASSEMBLE
 		return <div style={styles.root}>
 			<div style={styles.filters}>
 
@@ -428,7 +564,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				{/*/>*/}
 
 				{!hasFilters ?
-					<div style={styles.filters.none}>no filters{/*selected*/}</div> :
+					<div style={styles.filters.none}>no filters</div> :
 					<IssueLabelsAndMilestones
 						style={styles.filters.labels}
 						labelStyle={styles.filters.labels.label}
@@ -441,42 +577,12 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 
 				{/* SPACER to fill empty if any */}
 				{/*<div style={FlexScale}></div>*/}
+				{isGrouped ? <div style={styles.filters.groupBy}>
+					{issueSort.groupBy}
+					{filterMenu}
+				</div> : filterMenu}
 
 
-				{/* Filter menu */}
-				<IconMenu iconButtonElement={<IconButton style={filterIconStyle} iconStyle={filterIconStyle}><SvgFilterIcon /></IconButton>}
-				          style={filterIconStyle}
-				          listStyle={theme.list} >
-
-					{/* SORT ORDER */}
-					<MenuItem primaryText={sortOrderMenuItemText}
-					          listStyle={theme.list}
-					          onTouchTap={this.onSortDirectionChanged} />
-
-					{/* SORT BY */}
-					<MenuItem primaryText={sortByMenuItemText}
-					          listStyle={theme.list}
-					          menuItems={this.renderSortByItems()} />
-
-					<Divider />
-
-					{/* GROUP BY */}
-					<MenuItem primaryText={groupByMenuItemText}
-					          listStyle={theme.list}
-					           />
-					{/*menuItems={this.renderSortByItems()}*/}
-
-					<Divider />
-
-					{/* LABELS */}
-					<MenuItem primaryText={labelMenuItemText}
-					          listStyle={theme.list}
-					          menuItems={this.renderLabelItems()} />
-
-					{/* MILESTONES */}
-					<MenuItem primaryText={milestoneMenuItemText}
-					          menuItems={this.renderMilestoneItems()} />
-				</IconMenu>
 			</div>
 
 
