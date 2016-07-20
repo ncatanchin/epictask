@@ -6,7 +6,7 @@ module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
 	const entries = {
-		"UIMaterialEntry": ['babel-polyfill','material-ui','material-ui/svg-icons'],
+		//"UIMaterialEntry": ['babel-polyfill','material-ui','material-ui/svg-icons'],
 		// "UILibsEntry": [
 		// 	'babel-polyfill',
 		// 	'typedux',
@@ -23,22 +23,10 @@ module.exports = (projectConfig) => {
 	// }
 
 	return _.assign(config, {
-
 		entry: entries,
-
 		output: Object.assign(config.output, isDev ? {
 			publicPath: `http://localhost:${projectConfig.port}/dist/`
 		} : {}),
-
-		plugins: [
-			new webpack.optimize.CommonsChunkPlugin({
-				name: "UIMaterialEntry",
-				chunks:["UIEntry"]
-			}),
-
-			...config.plugins
-
-		],
 
 		target: 'electron-renderer'
 	})

@@ -6,7 +6,7 @@ module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
 	const entries = {
-		"DatabaseServerEntry": ['babel-polyfill','./src/main/db/DatabaseServerEntry.ts']
+		"DatabaseServerEntry": ['./src/main/db/DatabaseServerEntry.ts']
 	}
 
 	return _.assign(config, {

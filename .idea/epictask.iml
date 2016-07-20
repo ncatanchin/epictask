@@ -9,6 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-db" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-ui" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.itermocil" />
       <excludeFolder url="file://$MODULE_DIR$/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />

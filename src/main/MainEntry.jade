@@ -18,7 +18,9 @@ html.fill-width.fill-height(lang="en")
 		title epictask
 		style=require('!!raw!sass!styles/MainEntry.global.scss')
 
+
 		script(id='et-loader').
+			require('babel-polyfill')
 			var electron = require('electron'),
 					remote = electron.remote,
 					ipc = electron.ipcRenderer,
@@ -116,22 +118,24 @@ html.fill-width.fill-height(lang="en")
 				}
 
 				// SCRIPTS
+				addScript('/UIEntry.js', false, function () {
+					if (checkBooted())
+						onUIReady(null, true)
+				})
+				/*
 				var materialLoaded = false, libsLoaded = true
 
 				function loadEntry() {
 					if (!materialLoaded || !libsLoaded) return
 
-					addScript('/UIEntry.js', false, function () {
-						if (checkBooted())
-							onUIReady(null, true)
-					})
+
 				}
 
 				addScript('/UIMaterialEntry.js',false,function() {
 					materialLoaded = true
 					loadEntry()
 				})
-
+				*/
 				//addScript('/UILibsEntry.js', false, function () {
 				//	libsLoaded = true
 				//	loadEntry()

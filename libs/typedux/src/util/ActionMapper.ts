@@ -1,6 +1,5 @@
 
 
-import {isRecordObject} from 'typemutant'
 
 /**
  * Create a simple mapped reducer fn
@@ -10,13 +9,15 @@ import {isRecordObject} from 'typemutant'
  * @returns {function(S, M): S}
  */
 
-export function makeMappedReducerFn<S,M>(propertyKey:string,args) {
+
+
+export function makeMappedReducerFn<S extends any,M>(propertyKey:string,args) {
 	return (state:S, message:M):S => {
 		let stateFn = state[propertyKey]
 		if (!stateFn)
 			throw new Error(`Unable to find mapped reduce function on state ${propertyKey}`)
 
-		if (isRecordObject(state)) {
+		if (state && typeof state.withMutation === 'function') {
 			const newState = state.withMutation(tempState => {
 				tempState = tempState[propertyKey](...args)
 				return tempState

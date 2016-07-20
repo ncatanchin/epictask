@@ -400,6 +400,19 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 		</div>
 
+		const groupByMenuItemText = <div style={styles.list.item.text}>
+			<div>
+				<Icon style={styles.list.item.text.icon} iconSet='fa' iconName='sort'/>
+			</div>
+			<div style={styles.list.item.text.primary}>
+				Group by
+			</div>
+			<div style={styles.list.item.text.spacer} />
+			<div style={styles.list.item.text.icon}>
+				<SvgArrowRight style={{display:'block'}} />
+			</div>
+		</div>
+
 		const filterIconStyle:any = {height:24,padding:0}
 		if (hasFilters)
 			filterIconStyle.color = theme.issueFilters.hasFiltersColor
@@ -440,10 +453,18 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 					          listStyle={theme.list}
 					          onTouchTap={this.onSortDirectionChanged} />
 
-					{/* SORT ORDER */}
+					{/* SORT BY */}
 					<MenuItem primaryText={sortByMenuItemText}
 					          listStyle={theme.list}
 					          menuItems={this.renderSortByItems()} />
+
+					<Divider />
+
+					{/* GROUP BY */}
+					<MenuItem primaryText={groupByMenuItemText}
+					          listStyle={theme.list}
+					           />
+					{/*menuItems={this.renderSortByItems()}*/}
 
 					<Divider />
 

@@ -51,12 +51,12 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  */
 //const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
 //const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
-const materialUiModule = 'libs/material-ui/src'
+//const materialUiModule = 'libs/material-ui/src'
 
 const happy = true
 
 
-console.log(`Using material ui version ${materialUiModule}`)
+//console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
 
 	const happyThreadPool = HappyPack.ThreadPool({ size: 5 })
@@ -112,7 +112,7 @@ module.exports = function (projectConfig) {
 					main: path.resolve(baseDir, 'src/main'),
 
 				},
-				libAlias('material-ui', 'material-ui/src/'),
+				// libAlias('material-ui', 'material-ui/src/'),
 				libAlias('typedux', 'typedux/src/index.ts'),
 				libAlias('typemutant', 'typemutant/src/index.ts'),
 				libAlias('typelogger', 'typelogger/src/index.ts'),
@@ -126,14 +126,10 @@ module.exports = function (projectConfig) {
 			modules: resolveDirs(
 				'src',
 				'libs/typedux/src',
-				'libs/typemutant/src',
-				'libs/typelogger/src',
 				'libs/typestore/packages/typestore/src',
 				'libs/typestore/packages/typestore-mocks/src',
 				'libs/typestore/packages/typestore-plugin-pouchdb/src',
-				'libs',
-				'node_modules',
-				'libs/material-ui/node_modules'
+				'node_modules'
 			),
 
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
@@ -180,15 +176,12 @@ module.exports = function (projectConfig) {
 		externals: [
 			nodeExternals({
 				whitelist: [
-					/material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,
 					/typestore\//,
 					/typestore-plugin-pouchdb/,
 					/typestore-mocks/,
-					/typelogger/,
-					/typemutant/,
 					/typedux/
 				]
 			})

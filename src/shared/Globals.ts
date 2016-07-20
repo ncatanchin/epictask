@@ -17,7 +17,6 @@ later = require('later/index-browserify')
 import './ErrorHandling'
 import './util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
-import * as TypeMutantGlobal from 'typemutant'
 import * as ContextUtils from './util/ContextUtils'
 import * as path from 'path'
 import * as assertGlobal from 'assert'
@@ -64,7 +63,6 @@ function installGlobals() {
 	// Assign all of our internal globals
 	Object.assign(g, {
 		Immutable: ImmutableGlobal,
-		TypeMutant: TypeMutantGlobal,
 		_: LodashGlobal,
 		assert: assertGlobal,
 		Env: EnvGlobal,
@@ -89,8 +87,6 @@ declare global {
 	var getLogger:typeof LoggerFactory
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Immutable:typeof ImmutableGlobal
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var TypeMutant:typeof TypeMutantGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var requireContext:typeof ContextUtils.requireContext
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst

@@ -83,18 +83,6 @@
 			"typedux/*": [
 				"../libs/typedux/src/*"
 			],
-			"typemutant": [
-				"../libs/typemutant/src/index.ts"
-			],
-			"typemutant/*": [
-				"../libs/typemutant/src/*"
-			],
-			"typelogger": [
-				"../libs/typelogger/src/index.ts"
-			],
-			"typelogger/*": [
-				"../libs/typelogger/src/*"
-			],
 			"typestore": [
 				"../libs/typestore/packages/typestore/src/index.ts"
 			],
