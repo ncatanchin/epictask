@@ -26,7 +26,7 @@ const _ = require('lodash')
  */
 _.mixin({
 	nilFilter<T>(a:T[]):T[] {
-		return a.filter(item => !_.isNil(item))
+		return !a ? [] : a.filter(item => !_.isNil(item))
 	},
 	modelArrayToMapBy<M>(models:M[],prop:string):{[key:string]:M} {
 		return models.reduce((map,model) => {

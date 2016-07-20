@@ -51,6 +51,7 @@ const ReactList = require('react-list')
 const log = getLogger(__filename)
 const repoActions = new RepoActionFactory()
 
+const NO_LABELS_ITEM = {name: 'No Labels',color: 'ffffff'}
 
 
 const baseStyles = createStyles({
@@ -89,6 +90,7 @@ const baseStyles = createStyles({
 			padding: '0 1rem',
 			backgroundColor: 'transparent'
 		},
+		labels: [FlexScale,{overflow: 'auto'}],
 		stats: {
 			number: {
 				fontWeight: 700
@@ -206,9 +208,11 @@ function IssueGroupHeader({styles,onClick,issueGroup = {} as IIssueGroup}) {
 		{/*</Button>*/}
 
 
+
 		{//GROUP BY MILESTONES
 		(groupBy === 'milestone') ?
 			<IssueLabelsAndMilestones
+				style={styles.issueGroupHeader.labels}
 				showIcon={true}
 				labels={[]}
 				milestones={[!groupByItem ? {title:'No Milestone'} : groupByItem]}/> :
@@ -216,13 +220,16 @@ function IssueGroupHeader({styles,onClick,issueGroup = {} as IIssueGroup}) {
 			// GROUP BY LABELS
 			(groupBy === 'labels') ?
 				<IssueLabelsAndMilestones
+					style={styles.issueGroupHeader.labels}
 					showIcon={true}
-					labels={Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
+					labels={(!groupByItem || groupByItem.length === 0) ?
+						[NO_LABELS_ITEM] :
+						Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
 
 				// GROUP BY ASSIGNEE
-				<div>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
+				<div style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
 		}
-		<div style={styles.issueGroupHeader.spacer} />
+		{/*<div style={styles.issueGroupHeader.spacer} />*/}
 		<div style={styles.issueGroupHeader.stats} >
 			<span style={styles.issueGroupHeader.stats.number}>
 				{issueGroup.issues.length}
@@ -584,12 +591,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
-		const itemCount = (groupBy === 'none') ? issues.length :
+		const itemCount = (groupBy === 'none') ?
+			issues.length :
 			issuesGrouped.length
-			// issuesGrouped.reduce((count,nextGroup) => {
-			// 	count = count + nextGroup.issues.length + 1
-			// 	return count
-			// },0)
 
 		return <HotKeys  keyMap={KeyMaps.App} handlers={this.keyHandlers} style={styles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"

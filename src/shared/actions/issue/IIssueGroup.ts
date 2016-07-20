@@ -13,16 +13,17 @@ export interface IIssueGroup {
 
 export function getIssueGroupId({groupBy,groupByItem}) {
 
-	const objectId = !groupByItem ? 'none' :
+	const objectId = (!groupByItem || groupByItem.length === 0) ?
+		'' :
 		(Array.isArray(groupByItem)) ?
-			groupByItem.map(item => _.toLower(item.url))
+			groupByItem.map(item => _.toLower(item.name))
 				.sort()
 				.join('-') :
-			(groupByItem.id || groupByItem.url)
+			(groupByItem.title || groupByItem.name)
 
 
 
-	return `${groupBy}-${objectId}`
+	return _.toLower(`${groupBy}-${objectId}`)
 }
 
 export default IIssueGroup

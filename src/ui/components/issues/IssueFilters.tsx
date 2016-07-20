@@ -469,7 +469,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				})} iconSet='fa' iconName={isAscending ? 'chevron-up' : 'chevron-down'}/>
 			</div>
 			<div style={styles.list.item.text.primary}>
-				Sorted in {isAscending ? 'Ascending' : 'Descending'} Order
+				Issues in {isAscending ? 'Ascending' : 'Descending'} Order
 			</div>
 			<div style={styles.list.item.text.spacer}/>
 		</div>
@@ -498,7 +498,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				})} iconSet='fa' iconName={isAscending ? 'chevron-up' : 'chevron-down'}/>
 			</div>
 			<div style={styles.list.item.text.primary}>
-				Group by {isAscending ? 'Ascending' : 'Descending'} Order
+				Group are in {isAscending ? 'Ascending' : 'Descending'} Order
 			</div>
 			<div style={styles.list.item.text.spacer}/>
 		</div>

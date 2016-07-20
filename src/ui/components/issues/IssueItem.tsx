@@ -38,26 +38,6 @@ interface IIssueState {
 
 
 
-/**
- * Create a new issue item to state => props mapper
- *
- * @returns {any}
- */
-const makeIssueItemStateToProps = () => {
-	return createStructuredSelector({
-		repo: (state,{issues,index}) => {
-			let issue,repo = null
-			if (issues && (issue = issues[index])) {
-				const {repoId} = issue
-				repo = state.get(DataKey).models.get(Repo.$$clazz).get(`${repoId}`)
-			}
-			return repo
-		},
-		selectedIssueIds: selectedIssueIdsSelector
-	},createDeepEqualSelector)
-}
-
-//@connect(makeIssueItemStateToProps)
 @PureRender
 class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 

@@ -15,6 +15,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
+import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
 
 
 export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
@@ -184,9 +185,9 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 		if (issueSort.groupBy === 'none')
 			return []
 
-		const
-			{groupBy,groupByDirection} = issueSort,
-			allGroups = Array<IIssueGroup>()
+		const {groupBy,groupByDirection} = issueSort
+
+		let allGroups = Array<IIssueGroup>()
 
 
 		function newGroup(groupByItem) {
@@ -206,15 +207,20 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 		 * @returns {{issueIds: Array, size: number, groupBy, groupByItem: any}}
 		 */
 		function getGroups(groupByItem):IIssueGroup[] {
-			if (Array.isArray(groupByItem)) {
-				return groupByItem.reduce((groups,nextGroupByItem) => {
-					groups = groups.concat(getGroups(nextGroupByItem))
-					return groups
-				},[])
-			} else {
-				const group = allGroups.find(item => item.groupByItem === groupByItem)
-				return [group || newGroup(groupByItem)]
-			}
+			const groupId = getIssueGroupId({groupBy,groupByItem})
+
+			const group = allGroups.find(item => item.id === groupId)
+			return [group || newGroup(groupByItem)]
+
+			// if (Array.isArray(groupByItem)) {
+			// 	return groupByItem.reduce((groups,nextGroupByItem) => {
+			// 		groups = groups.concat(getGroups(nextGroupByItem))
+			// 		return groups
+			// 	},[])
+			// } else {
+			// 	const group = allGroups.find(item => item.groupByItem === groupByItem)
+			// 	return [group || newGroup(groupByItem)]
+			// }
 		}
 
 		for (let issue of issues) {
@@ -232,6 +238,21 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 
 		}
 
+		// const sorters:{[key:string]:Function} = {
+		// 	milestone: (o) => !o ? '' : _.toLower(o.title),
+		// 	assignee: (o) => _.toLower(o.login),
+		// 	labels: (o) => _.toLower(Array.isArray(o) ?
+		// 		o.map(item => _.toLower(item.name))
+		// 			.sort()
+		// 			.join(',') :
+		// 		o.name
+		// 	),
+		// }
+
+		allGroups = _.sortBy(allGroups,'id')
+
+		if (groupByDirection === 'desc')
+			allGroups = allGroups.reverse()
 
 		return allGroups
 	}
