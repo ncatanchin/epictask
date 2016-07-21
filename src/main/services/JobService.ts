@@ -33,8 +33,8 @@ export interface IJobExecutor {
 	(handler:JobHandler):void
 }
 
-@AutoWired
-@Singleton
+// @AutoWired
+// @Singleton
 export default class JobService extends BaseService {
 
 	private killed = false
@@ -55,17 +55,17 @@ export default class JobService extends BaseService {
 
 	private jobsCtx
 
-	@Inject
-	store:ObservableStore<any>
+	//@Inject
+	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
 
-	@Inject
-	jobActions:JobActionFactory
+	//@Inject
+	jobActions:JobActionFactory = Container.get(JobActionFactory)
 
-	@Inject
-	repoActions:RepoActionFactory
+	//@Inject
+	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
-	@Inject
-	toaster:Toaster
+	//@Inject
+	toaster:Toaster = Container.get(Toaster)
 
 	private loadJobs() {
 		if (this.killed) return

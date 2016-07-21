@@ -7,18 +7,15 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
-@AutoWired
-@Singleton
+
 export default class ToastService extends BaseService {
 
 
 	pendingTimers = {}
 
-	@Inject
-	uiActions:UIActionFactory
+	uiActions:UIActionFactory = Container.get(UIActionFactory)
 
-	@Inject
-	store:ObservableStore<any>
+	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
 
 	onMessagesChanged = (newMessages) => {
 

@@ -1631,7 +1631,7 @@
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * 
+	 *
 	 */
 
 	function makeEmptyFunction(arg) {
@@ -11918,7 +11918,7 @@
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * 
+	 *
 	 * @typechecks static-only
 	 */
 
@@ -16065,7 +16065,7 @@
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
 	 * @typechecks
-	 * 
+	 *
 	 */
 
 	/*eslint-disable no-self-compare */
@@ -17889,7 +17889,7 @@
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * 
+	 *
 	 */
 
 	var isTextNode = __webpack_require__(157);
@@ -33220,7 +33220,7 @@
 	$export.B = 16;  // bind
 	$export.W = 32;  // wrap
 	$export.U = 64;  // safe
-	$export.R = 128; // real proto method for `library` 
+	$export.R = 128; // real proto method for `library`
 	module.exports = $export;
 
 /***/ },
@@ -34510,7 +34510,7 @@
 /* 627 */
 /***/ function(module, exports) {
 
-	
+
 
 /***/ },
 /* 628 */
@@ -38262,7 +38262,7 @@
 	}
 
 	function createMonitorState(props, monitorState) {
-	  var supportImmutable = props.supportImmutable;
+	  var supportImmutable = true;//props.supportImmutable;
 	  var computedStates = props.computedStates;
 	  var stagedActionIds = props.stagedActionIds;
 	  var actions = props.actionsById;
@@ -38518,7 +38518,7 @@
 	  select: function select(state) {
 	    return state;
 	  },
-	  supportImmutable: false,
+	  supportImmutable: true,
 	  theme: 'inspector',
 	  isLightTheme: true,
 	  shouldPersistState: true
@@ -42628,28 +42628,28 @@
 	      var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZWN]|'[^']*'|'[^']*'/g;
 	      var timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[-+]\d{4})?)\b/g;
 	      var timezoneClip = /[^-+\dA-Z]/g;
-	  
+
 	      // Regexes and supporting functions are cached through closure
 	      return function (date, mask, utc, gmt) {
-	  
+
 	        // You can't provide utc if you skip other args (use the 'UTC:' mask prefix)
 	        if (arguments.length === 1 && kindOf(date) === 'string' && !/\d/.test(date)) {
 	          mask = date;
 	          date = undefined;
 	        }
-	  
+
 	        date = date || new Date;
-	  
+
 	        if(!(date instanceof Date)) {
 	          date = new Date(date);
 	        }
-	  
+
 	        if (isNaN(date)) {
 	          throw TypeError('Invalid date');
 	        }
-	  
+
 	        mask = String(dateFormat.masks[mask] || mask || dateFormat.masks['default']);
-	  
+
 	        // Allow setting the utc/gmt argument via the mask
 	        var maskSlice = mask.slice(0, 4);
 	        if (maskSlice === 'UTC:' || maskSlice === 'GMT:') {
@@ -42659,7 +42659,7 @@
 	            gmt = true;
 	          }
 	        }
-	  
+
 	        var _ = utc ? 'getUTC' : 'get';
 	        var d = date[_ + 'Date']();
 	        var D = date[_ + 'Day']();
@@ -42703,7 +42703,7 @@
 	          W:    W,
 	          N:    N
 	        };
-	  
+
 	        return mask.replace(token, function (match) {
 	          if (match in flags) {
 	            return flags[match];
@@ -42783,7 +42783,7 @@
 	/**
 	 * Get ISO-8601 numeric representation of the day of the week
 	 * 1 (for Monday) through 7 (for Sunday)
-	 * 
+	 *
 	 * @param  {Object} `date`
 	 * @return {Number}
 	 */
@@ -47298,7 +47298,7 @@
 	      var array = this._array;
 	      var maxIndex = array.length - 1;
 	      var ii = 0;
-	      return new Iterator(function() 
+	      return new Iterator(function()
 	        {return ii > maxIndex ?
 	          iteratorDone() :
 	          iteratorValue(type, ii, array[reverse ? maxIndex - ii++ : ii++])}
@@ -47769,7 +47769,7 @@
 
 	    Repeat.prototype.__iterator = function(type, reverse) {var this$0 = this;
 	      var ii = 0;
-	      return new Iterator(function() 
+	      return new Iterator(function()
 	        {return ii < this$0.size ? iteratorValue(type, ii++, this$0._value) : iteratorDone()}
 	      );
 	    };
@@ -49967,7 +49967,7 @@
 	        return flipSequence;
 	      };
 	    }
-	    reversedSequence.get = function(key, notSetValue) 
+	    reversedSequence.get = function(key, notSetValue)
 	      {return iterable.get(useKeys ? key : -1 - key, notSetValue)};
 	    reversedSequence.has = function(key )
 	      {return iterable.has(useKeys ? key : -1 - key)};
@@ -50166,7 +50166,7 @@
 	        return this.cacheResult().__iterate(fn, reverse);
 	      }
 	      var iterations = 0;
-	      iterable.__iterate(function(v, k, c) 
+	      iterable.__iterate(function(v, k, c)
 	        {return predicate.call(context, v, k, c) && ++iterations && fn(v, k, this$0)}
 	      );
 	      return iterations;
@@ -50357,7 +50357,7 @@
 	    interposedSequence.size = iterable.size && iterable.size * 2 -1;
 	    interposedSequence.__iterateUncached = function(fn, reverse) {var this$0 = this;
 	      var iterations = 0;
-	      iterable.__iterate(function(v, k) 
+	      iterable.__iterate(function(v, k)
 	        {return (!iterations || fn(separator, iterations++, this$0) !== false) &&
 	        fn(v, iterations++, this$0) !== false},
 	        reverse
@@ -52099,7 +52099,7 @@
 /* 756 */
 /***/ function(module, exports) {
 
-	
+
 	var Processor = function Processor(options){
 	  this.selfOptions = options || {};
 	  this.pipes = {};
@@ -52317,7 +52317,7 @@
 /* 759 */
 /***/ function(module, exports, __webpack_require__) {
 
-	
+
 	var Pipe = __webpack_require__(757).Pipe;
 
 	var Context = function Context(){
@@ -58046,7 +58046,7 @@
 	          svg.remove();
 	        }
 	      }
-	      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX, 
+	      if (d3_mouse_bug44083) point.x = e.pageX, point.y = e.pageY; else point.x = e.clientX,
 	      point.y = e.clientY;
 	      point = point.matrixTransform(container.getScreenCTM().inverse());
 	      return [ point.x, point.y ];
@@ -58421,7 +58421,7 @@
 	    }
 	    function mousewheeled() {
 	      var dispatch = event.of(this, arguments);
-	      if (mousewheelTimer) clearTimeout(mousewheelTimer); else d3_selection_interrupt.call(this), 
+	      if (mousewheelTimer) clearTimeout(mousewheelTimer); else d3_selection_interrupt.call(this),
 	      translate0 = location(center0 = center || d3.mouse(this)), zoomstarted(dispatch);
 	      mousewheelTimer = setTimeout(function() {
 	        mousewheelTimer = null;
@@ -58790,7 +58790,7 @@
 	  d3.xhr = d3_xhrType(d3_identity);
 	  function d3_xhrType(response) {
 	    return function(url, mimeType, callback) {
-	      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType, 
+	      if (arguments.length === 2 && typeof mimeType === "function") callback = mimeType,
 	      mimeType = null;
 	      return d3_xhr(url, mimeType, response, callback);
 	    };
@@ -59631,7 +59631,7 @@
 	    return n ? (date.y = d3_time_expandYear(+n[0]), i + n[0].length) : -1;
 	  }
 	  function d3_time_parseZone(date, string, i) {
-	    return /^[+-]\d{4}$/.test(string = string.slice(i, i + 5)) ? (date.Z = -string, 
+	    return /^[+-]\d{4}$/.test(string = string.slice(i, i + 5)) ? (date.Z = -string,
 	    i + 5) : -1;
 	  }
 	  function d3_time_expandYear(d) {
@@ -59824,7 +59824,7 @@
 	    var λ00, φ00, λ0, cosφ0, sinφ0;
 	    d3_geo_area.point = function(λ, φ) {
 	      d3_geo_area.point = nextPoint;
-	      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4), 
+	      λ0 = (λ00 = λ) * d3_radians, cosφ0 = Math.cos(φ = (φ00 = φ) * d3_radians / 2 + π / 4),
 	      sinφ0 = Math.sin(φ);
 	    };
 	    function nextPoint(λ, φ) {
@@ -61653,7 +61653,7 @@
 	      return _ ? center([ -_[1], _[0] ]) : (_ = center(), [ _[1], -_[0] ]);
 	    };
 	    projection.rotate = function(_) {
-	      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(), 
+	      return _ ? rotate([ _[0], _[1], _.length > 2 ? _[2] + 90 : 90 ]) : (_ = rotate(),
 	      [ _[0], _[1], _[2] - 90 ]);
 	    };
 	    return rotate([ 0, 0, 90 ]);
@@ -62507,7 +62507,7 @@
 	    };
 	    quadtree.extent = function(_) {
 	      if (!arguments.length) return x1 == null ? null : [ [ x1, y1 ], [ x2, y2 ] ];
-	      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0], 
+	      if (_ == null) x1 = y1 = x2 = y2 = null; else x1 = +_[0][0], y1 = +_[0][1], x2 = +_[1][0],
 	      y2 = +_[1][1];
 	      return quadtree;
 	    };
@@ -64232,7 +64232,7 @@
 	        return d3_layout_treemapPad(node, x);
 	      }
 	      var type;
-	      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ], 
+	      pad = (padding = x) == null ? d3_layout_treemapPadNull : (type = typeof x) === "function" ? padFunction : type === "number" ? (x = [ x, x, x, x ],
 	      padConstant) : padConstant;
 	      return treemap;
 	    };
@@ -64635,7 +64635,7 @@
 	    };
 	    scale.rangePoints = function(x, padding) {
 	      if (arguments.length < 2) padding = 0;
-	      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = (start + stop) / 2, 
+	      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = (start + stop) / 2,
 	      0) : (stop - start) / (domain.length - 1 + padding);
 	      range = steps(start + step * padding / 2, step);
 	      rangeBand = 0;
@@ -64647,7 +64647,7 @@
 	    };
 	    scale.rangeRoundPoints = function(x, padding) {
 	      if (arguments.length < 2) padding = 0;
-	      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = stop = Math.round((start + stop) / 2), 
+	      var start = x[0], stop = x[1], step = domain.length < 2 ? (start = stop = Math.round((start + stop) / 2),
 	      0) : (stop - start) / (domain.length - 1 + padding) | 0;
 	      range = steps(start + Math.round(step * padding / 2 + (stop - start - (domain.length - 1 + padding) * step) / 2), step);
 	      rangeBand = 0;
@@ -65075,7 +65075,7 @@
 	    return points.length < 4 ? d3_svg_lineLinear(points) : points[1] + d3_svg_lineHermite(points.slice(1, -1), d3_svg_lineCardinalTangents(points, tension));
 	  }
 	  function d3_svg_lineCardinalClosed(points, tension) {
-	    return points.length < 3 ? d3_svg_lineLinearClosed(points) : points[0] + d3_svg_lineHermite((points.push(points[0]), 
+	    return points.length < 3 ? d3_svg_lineLinearClosed(points) : points[0] + d3_svg_lineHermite((points.push(points[0]),
 	    points), d3_svg_lineCardinalTangents([ points[points.length - 2] ].concat(points, [ points[1] ]), tension));
 	  }
 	  function d3_svg_lineCardinal(points, tension) {
@@ -65848,7 +65848,7 @@
 	        var g = d3.select(this);
 	        var scale0 = this.__chart__ || scale, scale1 = this.__chart__ = scale.copy();
 	        var ticks = tickValues == null ? scale1.ticks ? scale1.ticks.apply(scale1, tickArguments_) : scale1.domain() : tickValues, tickFormat = tickFormat_ == null ? scale1.tickFormat ? scale1.tickFormat.apply(scale1, tickArguments_) : d3_identity : tickFormat_, tick = g.selectAll(".tick").data(ticks, scale1), tickEnter = tick.enter().insert("g", ".domain").attr("class", "tick").style("opacity", ε), tickExit = d3.transition(tick.exit()).style("opacity", ε).remove(), tickUpdate = d3.transition(tick.order()).style("opacity", 1), tickSpacing = Math.max(innerTickSize, 0) + tickPadding, tickTransform;
-	        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"), 
+	        var range = d3_scaleRange(scale1), path = g.selectAll(".domain").data([ 0 ]), pathUpdate = (path.enter().append("path").attr("class", "domain"),
 	        d3.transition(path));
 	        tickEnter.append("line");
 	        tickEnter.append("text");
@@ -77161,22 +77161,22 @@
 
 	module.exports = function isPlainObject(o) {
 	  var ctor,prot;
-	  
+
 	  if (isObjectObject(o) === false) return false;
-	  
+
 	  // If has modified constructor
 	  ctor = o.constructor;
 	  if (typeof ctor !== 'function') return false;
-	  
+
 	  // If has modified prototype
 	  prot = ctor.prototype;
 	  if (isObjectObject(prot) === false) return false;
-	  
+
 	  // If constructor does not have an Object-specific method
 	  if (prot.hasOwnProperty('isPrototypeOf') === false) {
 	    return false;
 	  }
-	  
+
 	  // Most likely a plain Object
 	  return true;
 	};
@@ -98221,7 +98221,7 @@
 /* 987 */
 /***/ function(module, exports) {
 
-	
+
 	/**
 	 * An Array.prototype.slice.call(arguments) alternative
 	 *
@@ -99956,14 +99956,14 @@
 	  storage.removeItem = function(key) {
 	    chrome.storage.local.remove(key);
 	  };
-	  
+
 	  storage.getAllKeys = function (callback) {
 	    chrome.storage.local.get(null, function (obj) {
 	      callback(null, Object.keys(obj));
 	    });
 	  };
 	}
-	else storage = window.localStorage; 
+	else storage = window.localStorage;
 
 	module.exports = storage;
 
@@ -101472,9 +101472,9 @@
 	  if (event == 'error' && this.domain) {
 	    // Emit the error on the domain if it has one.
 	    // See https://github.com/joyent/node/blob/ef4344311e19a4f73c031508252b21712b22fe8a/lib/events.js#L78-85
-	    
+
 	    var err = arguments[1];
-	    
+
 	    if (!err) {
 	      err = new Error('Uncaught, unspecified "error" event.');
 	    }
@@ -101493,7 +101493,7 @@
 /* 1029 */
 /***/ function(module, exports) {
 
-	
+
 	/**
 	 * Expose `Emitter`.
 	 */
@@ -102276,7 +102276,7 @@
 	  try {
 	    // Some browsers will throw an error here if localStorage is disabled.
 	    global.localStorage;
-	    
+
 	    // Safari, in Private Browsing Mode, looks like it supports localStorage but all calls to setItem
 	    // throw QuotaExceededError. We're going to detect this and avoid hard to debug edge cases.
 	    global.localStorage.setItem('__scLocalStorageTest', 1);
@@ -102924,7 +102924,7 @@
 /* 1041 */
 /***/ function(module, exports) {
 
-	
+
 	/**
 	 * Module dependencies.
 	 */

@@ -9,7 +9,7 @@ import {connect} from 'react-redux'
 import {User,Issue,Comment} from 'shared/models'
 import {createStructuredSelector} from 'reselect'
 import {Avatar,Markdown,PureRender} from 'components/common'
-import {issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
+import {selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import filterProps from 'react-valid-props'
@@ -79,7 +79,7 @@ export interface IIssueActivityTextState {
  * @param state
  */
 const makeStateToProps = () => createStructuredSelector({
-	issue: issueSelector,
+	issue: selectedIssueSelector,
 	comments: commentsSelector
 },createDeepEqualSelector)
 

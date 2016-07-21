@@ -5,6 +5,7 @@
 /// <reference path="globals/expectations/index.d.ts" />
 /// <reference path="globals/github-electron/index.d.ts" />
 /// <reference path="globals/history/index.d.ts" />
+/// <reference path="globals/jquery/index.d.ts" />
 /// <reference path="globals/later/index.d.ts" />
 /// <reference path="globals/lodash-decorators/index.d.ts" />
 /// <reference path="globals/lunr/index.d.ts" />
@@ -36,4 +37,3 @@
 /// <reference path="modules/node-uuid/index.d.ts" />
 /// <reference path="modules/react-redux/index.d.ts" />
 /// <reference path="modules/react-router/index.d.ts" />
-

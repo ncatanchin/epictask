@@ -96,8 +96,8 @@ class DBProxy {
  * References to coordinator and plugins
  */
 
-@AutoWired
-@Singleton
+//@AutoWired
+//@Singleton
 export class DBService extends BaseService {
 
 	private _stores:Stores
@@ -135,6 +135,15 @@ export class DBService extends BaseService {
 	}
 
 
+	private stopDatabaseServerWindow(isHot = false) {
+		log.info("Closing database server window")
+		if (this.dbWindow) {
+
+			this.dbWindow.stop(isHot)
+
+			this.dbWindow = null
+		}
+	}
 	/**
 	 * Initialize the service before anything is started
 	 * @returns {DBService}
@@ -213,22 +222,15 @@ export class DBService extends BaseService {
 	 *
 	 * @returns {DBService}
 	 */
-	async stop():Promise<this> {
+	async stop(isHot = false):Promise<this> {
 		await super.stop()
-		if (this.dbWindow) {
-			await this.dbWindow.stop()
-			this.dbWindow = null
-		}
-
+		this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
-	destroy():this {
+	destroy(isHot = false):this {
 		super.destroy()
-		if (this.dbWindow) {
-			this.dbWindow.stop()
-			this.dbWindow = null
-		}
+		this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
@@ -237,8 +239,8 @@ export class DBService extends BaseService {
 	 * Get a repo instance for the local database
 	 *
 	 * @param repoClazz
-	 * @returns {T}
-	 */
+	 * @returns {T}Í
+	 */Í
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
 		return new Proxy({},new DBProxy(this,repoClazz)) as any

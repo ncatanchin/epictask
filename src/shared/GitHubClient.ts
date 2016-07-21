@@ -32,6 +32,32 @@ enum HttpMethod {
 	DELETE
 }
 
+export interface IGithubValidationError {
+	resource:string
+	field:string
+	code:string
+}
+
+export const GithubErrorCodes = {
+	missing: 'Resource can not be found',
+	missing_field: 'Field is required',
+	invalid: 'Invalid format',
+	already_exists: 'Duplicate resource'
+}
+
+/**
+ * GitHub CLient Error
+ */
+export class GithubError extends Error {
+	constructor(
+		public message:string,
+		public statusCode:number,
+		public errors:IGithubValidationError[] = []
+	) {
+		super(message)
+	}
+}
+
 export type OnPageCallback<M> = (pageNumber:number,totalPages:number,pageItems:M[]) => void
 
 export interface RequestOptions {
@@ -143,6 +169,13 @@ export class GitHubClient {
 	}
 
 
+	/**
+	 * Save issue
+	 *
+	 * @param repo
+	 * @param issue
+	 * @returns {any}
+	 */
 	async issueSave(repo:Repo,issue:Issue):Promise<Issue> {
 		let issueJson = _.pick(issue,'title','body','state') as any
 		if (!issueJson.state)
@@ -172,14 +205,18 @@ export class GitHubClient {
 
 		if (response.status >= 300) {
 			let result = null
+
 			try {
 				result = await response.json()
 			} catch (err) {
 				log.error('Unable to get json error body',err)
-				throw new Error(response.statusText)
 			}
 
-			throw new Error(result.message)
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors
+			)
 
 		}
 

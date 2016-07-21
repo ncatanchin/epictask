@@ -18,7 +18,8 @@ export const IssueStateRecord = Record({
 	selectedIssueIds:[],
 	selectedIssueId:null,
 	editingIssue:null,
-
+	issueSaveError: null,
+	issueSaving: false,
 	issueSort:{
 		fields:['updated_at'],
 		direction:'desc',
@@ -46,6 +47,8 @@ export class IssueState extends IssueStateRecord {
 	//internalIssues:Issue[]
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
+	issueSaving:boolean
+	issueSaveError: Error
 	selectedIssueId:number
 	selectedIssueIds:Array<number>
 	issueIds:number[]

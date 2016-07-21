@@ -13,8 +13,7 @@ const electron = require('electron')
 
 const log = getLogger(__filename)
 
-@AutoWired
-@Singleton
+
 export default class AppStateService extends BaseService {
 
 	appActions:AppActionFactory

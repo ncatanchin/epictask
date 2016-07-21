@@ -15,6 +15,7 @@
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "github-electron": "registry:dt/github-electron#1.2.5+20160624085047",
     "history": "registry:dt/history#1.8.0+20160316155526",
+    "jquery": "registry:dt/jquery#1.10.0+20160704162008",
     "later": "registry:dt/later#0.0.0+20160317120654",
     "lodash-decorators": "registry:dt/lodash-decorators#1.0.5+20160316155526",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",

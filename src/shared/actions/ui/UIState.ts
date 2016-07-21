@@ -36,6 +36,7 @@ export const UIStateRecord = Record({
 
 	messages: List<IToastMessage>(),
 	ready: false,
+
 	repoPanelOpen: true,
 
 	user: null

@@ -73,7 +73,7 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
 
 	@ActionReducer()
-	updateModels(modelType:string|ModelConstructor<any>,updatedModels:any,clear=false) {
+	updateModels(modelType:string,updatedModels:any,clear=false) {
 		assert(modelType, 'No model type provided')
 		if (!_.isString(modelType))
 			modelType = modelType.$$clazz

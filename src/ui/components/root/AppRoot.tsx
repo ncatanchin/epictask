@@ -124,6 +124,15 @@ class App extends React.Component<IAppProps,any> {
 	uiActions = Container.get(UIActionFactory) as UIActionFactory
 	pageBodyHolder
 
+
+	onFocus = () => {
+		log.info('Focused')
+	}
+
+	onBlur = () => {
+		log.info('Blur')
+	}
+
 	/**
 	 * Map hot keys for the root
 	 *
@@ -148,7 +157,7 @@ class App extends React.Component<IAppProps,any> {
 		},
 		[KeyMaps.CommonKeys.Find]: () => {
 			log.info('Escaping and moving focus')
-			$('#header input').focus()
+			$('#header').find('input').focus()
 		}
 	}
 
@@ -185,7 +194,12 @@ class App extends React.Component<IAppProps,any> {
 
 			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={reduxStore}>
-					<HotKeys keyMap={KeyMaps.App} handlers={this.keyHandlers}>
+					<HotKeys keyMap={KeyMaps.App}
+					         handlers={this.keyHandlers}
+					         onFocus={this.onFocus}
+					         onBlur={this.onBlur}
+					         id="appRoot"
+					>
 						<IssueEditDialog />
 						<RepoAddDialog />
 
@@ -195,7 +209,7 @@ class App extends React.Component<IAppProps,any> {
 
 							<Header visibility={headerVisibility}/>
 
-							<HotKeys ref={(c) => this.pageBodyHolder = c}
+							<div ref={(c) => this.pageBodyHolder = c}
 							         style={makeStyle(FlexScale,FlexColumn)}>
 
 								<div style={contentStyles}>
@@ -205,7 +219,7 @@ class App extends React.Component<IAppProps,any> {
 								{/*<DevTools/>*/}
 								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 								<ToastMessages/>
-							</HotKeys>
+							</div>
 
 						</div>
 					</HotKeys>
@@ -235,6 +249,7 @@ function render() {
 		() => {
 			log.info('Rendered, hiding splash screen')
 			window.postMessage({type:Events.UIReady},"*")
+			Container.get(UIActionFactory).focusAppRoot()
 		}
 	)
 }

@@ -17,8 +17,14 @@ import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
 
+export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
-export const issueIdsSelector = (state):number[] =>(state.get(IssueKey) as IssueState).issueIds
+/**
+ * All issue ids - unfiltered
+ *
+ * @param state
+ */
+export const issueIdsSelector = (state):number[] => issueStateSelector(state).issueIds
 
 
 /**
@@ -261,18 +267,26 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 
 
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
-export const issueSelector = _.memoize((state):Issue => {
-	const issues = issuesDetailSelector(state)
-	const enabledRepoIds = enabledRepoIdsSelector(state)
-	const issue = issues && issues.length === 1 ? issues[0] : null
-	return (issue && enabledRepoIds.includes(issue.repoId)) ? issue : null
-})
+
+/**
+ * Selected issue selector
+ */
+export const selectedIssueSelector = createDeepEqualSelector(
+	enabledRepoIdsSelector,
+	selectedIssueIdsSelector,
+	issuesDetailSelector,
+	(enabledRepoIds:number[],issueIds:number[],issues:Issue[]):Issue => {
+		const issue = issueIds && issueIds.length === 1 ? issues.find(item => item.id === issueIds[0]) : null
+		return (issue && enabledRepoIds.includes(issue.repoId)) ? issue : null
+	}
+)
+
 
 
 export const commentIdsSelector = _.memoize((state):string[] => (state.get(IssueKey) as IssueState).commentIds)
 
 export const commentsSelector = createDeepEqualSelector(
-	issueSelector,
+	selectedIssueSelector,
 	commentIdsSelector,
 	commentModelsSelector,
 	(issue:Issue,commentIds:string[],commentModels:Map<string,Comment>) => {

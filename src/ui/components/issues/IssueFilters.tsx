@@ -20,7 +20,7 @@ import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {
 	milestonesSelector, selectedIssueIdsSelector, labelsSelector,
 	issueFilterMilestonesSelector, issuesSelector, issueSortAndFilterSelector, issueFilterLabelsSelector,
-	issuesGroupedSelector
+	issuesGroupedSelector, issueIdsSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
@@ -108,6 +108,7 @@ const baseStyles = createStyles({
 export interface IIssueFiltersProps extends React.DOMAttributes {
 	theme?:any
 	styles?:any
+	unfilteredIssueIds?:number[]
 	issues?:Issue[],
 	issuesGrouped?:IIssueGroup[],
 	issueSort?:IIssueSort
@@ -127,6 +128,7 @@ export interface IIssueFiltersProps extends React.DOMAttributes {
  **/
 
 @connect(createStructuredSelector({
+	unfilteredIssueIds: issueIdsSelector,
 	issues: issuesSelector,
 	issuesGrouped: issuesGroupedSelector,
 	issueSort: createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
@@ -413,6 +415,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				theme,
 				styles,
 				issues,
+				unfilteredIssueIds,
 				issuesGrouped,
 				issueSort,
 				issueFilterLabels,
@@ -597,7 +600,9 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 					<div style={styles.filters.controls.stats}>
 						{isGrouped && `${issuesGrouped.length} Groups with `}
 						{issues.length} Issues
+						{hasFilters && ` of ${unfilteredIssueIds.length} Issues`}
 					</div>
+
 				</div>
 
 			</div>

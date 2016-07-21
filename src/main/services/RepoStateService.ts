@@ -17,27 +17,17 @@ const log = getLogger(__filename)
 
 
 
-@AutoWired
-@Singleton
+// @AutoWired
+// @Singleton
 export default class RepoStateService extends BaseService {
 
 	private unsubscribe:Function
 
-	selectedIssuesChanged
+	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
 
-	@Inject
-	store:ObservableStore<any>
+	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
-	@Inject
-	repoActions:RepoActionFactory
-
-	@Inject
-	issueActions:IssueActionFactory
-
-
-	@Inject
-	dataActions:DataActionFactory
-
+	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
 	async init():Promise<this> {
 		await super.init()

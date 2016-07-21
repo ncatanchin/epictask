@@ -10,15 +10,15 @@ import {List} from 'immutable'
 import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
-import {AppKey, IconDataUrl, UIKey} from 'shared/Constants'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {Icon, Button} from './common'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
-import {UIState} from 'shared/actions/ui/UIState'
-import {cloneObject} from 'shared/util/ObjectUtil'
 import {PureRender} from 'ui/components/common/PureRender'
+import {Themed} from 'shared/themes/ThemeManager'
+import {createStructuredSelector} from 'reselect'
+import {uiStateSelector} from 'shared/actions/ui/UISelectors'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
@@ -179,29 +179,6 @@ function processNotifications(newMessages) {
 
 }
 
-//region Redux State -> Props Mapper
-/**
- * Map redux state to props
- *
- * @param state
- */
-function mapStateToProps(state) {
-	const uiState = state.get(UIKey) as UIState
-
-	const messages = uiState.messages.toArray().map(msg => _.toJS(msg))
-	processNotifications(messages)
-
-
-	return {
-		theme: getTheme(),
-		messages
-	}
-}
-//endregion
-
-
-
-
 
 /**
  * ToastMessages
@@ -210,15 +187,19 @@ function mapStateToProps(state) {
  * @constructor
  **/
 
-
-
-
-@connect(mapStateToProps)
+@connect(createStructuredSelector({
+	messages: (state) => uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg))
+},createDeepEqualSelector))
+@Themed
 @PureRender
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 	constructor(props,context) {
 		super(props,context)
+	}
+
+	componentWillReceiveProps(newProps) {
+		processNotifications(newProps.messages)
 	}
 
 	/**

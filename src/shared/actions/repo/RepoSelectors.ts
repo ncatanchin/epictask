@@ -32,9 +32,20 @@ export const availRepoIdsSelector = _.memoize(
 		.map(availRepo => availRepo.repoId)
 )
 
-export const enabledReposSelector = (state):AvailableRepo[] => availReposSelector(state)
-	.filter(availRepo => availRepo.enabled)
-
+export const enabledReposSelector:(state) => AvailableRepo[] = createDeepEqualSelector(
+	repoModelsSelector,
+	(state):AvailableRepo[] => availReposSelector(state)
+		.filter(availRepo => availRepo.enabled),
+	(repoModels,enabledRepos):AvailableRepo[] => {
+		return enabledRepos.map(availRepo => {
+			return (availRepo.repo) ?
+				availRepo :
+				assign(_.cloneDeep(availRepo),{
+					repo:repoModels.get(`${availRepo.repoId}`)
+				})
+		})
+	}
+)
 
 export const enabledRepoIdsSelector = (state):number[] => enabledReposSelector(state)
 	.map((availRepo:AvailableRepo) => availRepo.repoId)

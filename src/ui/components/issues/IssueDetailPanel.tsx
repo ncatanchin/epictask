@@ -15,7 +15,7 @@ import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {IssueActivityText} from './IssueActivityText'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
-import {issuesDetailSelector, issueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
+import {issuesDetailSelector, selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import baseStyles from './IssueDetailPanelStyles'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -56,7 +56,7 @@ const makeIssueItemStateToProps = () => {
 
 	return createStructuredSelector({
 		issues: issuesDetailSelector,
-		issue: issueSelector,
+		issue: selectedIssueSelector,
 		comments: commentsSelector,
 		theme: themeSelector,
 		styles: stylesSelector

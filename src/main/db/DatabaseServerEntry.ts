@@ -2,8 +2,6 @@
 import 'reflect-metadata'
 import 'shared/LogConfig'
 import 'shared/RendererLogging'
-
-
 import 'shared/Globals'
 import 'shared/PromiseConfig'
 
@@ -49,7 +47,10 @@ function storeOptions() {
 	return opts
 }
 
+// PouchDB Plugin
 let storePlugin:PouchDBPlugin
+
+// TypeStore coordinator
 let coordinator:TSCoordinator
 let startPromise:Promise<any>
 let stores:Stores = new Stores()
@@ -62,9 +63,6 @@ async function start() {
 
 	try {
 		storePlugin = new PouchDBPlugin(storeOptions())
-		/**
-		 * init the coordinator
-		 */
 		coordinator = new TSCoordinator()
 		await coordinator.init({}, storePlugin)
 
@@ -125,8 +123,15 @@ async function start() {
 	}
 }
 
+/**
+ * Send response to request
+ *
+ * @param request
+ * @param result
+ * @param error
+ */
 function respond(request:IDatabaseRequest,result,error:Error = null) {
-	log.info('Sending response',result,error)
+	log.debug('Sending response',result,error)
 	ipcRenderer.send(DatabaseEvents.Response,{requestId:request.id,result,error})
 }
 
@@ -178,7 +183,7 @@ async function executeRequest(request:IDatabaseRequest) {
 function onRequest(event,request:IDatabaseRequest) {
 
 
-	log.info(`Processing database request`,request)
+	log.debug(`Processing database request`,request)
 
 	return executeRequest(request)
 
@@ -217,12 +222,13 @@ function stop() {
  * HMR - accept self - on dispose, close DB
  */
 if (module.hot) {
-	module.hot.accept()
 	module.hot.dispose(() => {
 		log.info('disposing database server')
 		stop()
 
 	})
+
+	module.hot.accept()
 }
 
 /**

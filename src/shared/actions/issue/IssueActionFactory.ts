@@ -14,13 +14,18 @@ import {Issue, IssueStore} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import Toaster from 'shared/Toaster'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
-import {enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {
+	enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector,
+	enabledReposSelector
+} from 'shared/actions/repo/RepoSelectors'
 import {DataRequest, DataState} from 'shared/actions/data/DataState'
-import {selectedIssueIdsSelector, issueSelector} from 'shared/actions/issue/IssueSelectors'
+import {selectedIssueIdsSelector, selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {issueModelsSelector, repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
+import {addErrorMessage} from 'shared/Toaster'
+import {addMessage} from 'shared/Toaster'
 
 
 /**
@@ -74,8 +79,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	@Inject
 	uiActions:UIActionFactory
 
-	@Inject
-	toaster:Toaster
+
 
 	constructor() {
 		super(IssueState)
@@ -117,7 +121,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	/**
 	 * Internally change the issue list
 	 *
-	 * @param issues
+	 * @param issueIds
+	 * @param clear
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
@@ -139,10 +144,16 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (state:IssueState) => state.set('selectedIssueIds',selectedIssueIds)
 	}
 
+	/**
+	 * Start editing an i
+	 * @param fromIssue
+	 */
+	createIssueInline(fromIssue:Issue) {
 
+	}
 
 	@Action()
-	issueSave(issue:Issue) {
+	private doIssueSave(issue:Issue) {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const client = Container.get(GitHubClient)
@@ -173,8 +184,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 						}
 
 
-						dataActions.updateModels(Issue,{[`${updatedIssue.id}`]:updatedIssue})
-							const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
+						dataActions.updateModels(Issue.$$clazz,{[`${updatedIssue.id}`]:updatedIssue})
+						const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
 
 						// internalIssues = internalIssues.filter(issueMatcher).concat([updatedIssue])
 
@@ -184,14 +195,46 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}
 
 
-				this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-				this.toaster.addMessage(`Saved issue #${updatedIssue.number}`)
+				this.uiActions.closeAllDialogs()
+
+				addMessage(`Saved issue #${updatedIssue.number}`)
+				actions.setIssueSaving(false)
+				actions.setEditingIssue(null)
 
 			} catch (err) {
 				log.error('failed to save issue', err)
-				this.toaster.addErrorMessage(err)
+				actions.setIssueSaving(false,err)
+
+				//addErrorMessage(err)
 			}
 		}
+	}
+
+
+	/**
+	 * Set issue saving to true/false
+	 *
+	 * @param saving
+	 * @param error
+	 * @returns {(state:IssueState)=>Map<string, boolean>}
+	 */
+	@ActionReducer()
+	setIssueSaving(saving:boolean,error:Error = null) {
+		return (state:IssueState) => state
+			.set('issueSaving',saving)
+			.set('issueSaveError',error)
+	}
+
+	/**
+	 * Save an issue, update or create
+	 *
+	 * @param issue
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
+
+	issueSave(issue:Issue) {
+		this.setIssueSaving(true)
+		this.doIssueSave(issue)
 	}
 
 	/**
@@ -217,6 +260,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
+				uiActions = Container.get(UIActionFactory),
 				appActions = Container.get(AppActionFactory),
 				dialogName = Dialogs.IssueEditDialog
 
@@ -229,9 +273,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const state = getState()
 
 			const selectedIssueIds = selectedIssueIdsSelector(state) || []
-			const availRepoIds = availRepoIdsSelector(state)
+			//const availRepoIds = availRepoIdsSelector(state)
 			const issueModels = issueModelsSelector(state)
-			const availRepos = _.sortBy(availReposSelector(state),'enabled')
+			const availRepos = _.sortBy(enabledReposSelector(state),'name')
 
 			const selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
 
@@ -239,19 +283,23 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				(selectedIssueId && issueModels.has(selectedIssueId)) ?
 					issueModels.get(selectedIssueId) : null
 
-			const repoId = (selectedIssue) ? selectedIssue.repoId :
-				(availRepos.length) ? availRepos[0].repoId : null
+		    let repoId:number = _.get(selectedIssue,'repoId') as any
+			if (!availRepos.find(item => item.repoId === repoId))
+				repoId = (availRepos.length) ? availRepos[0].repoId : null
 
 			if (!repoId) {
-				this.toaster.addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
+				addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
 				return
 			}
 
 			const issue = await fillIssue(new Issue({repoId}),repoId)
 
-			actions.setEditingIssue(issue)
+			if (selectedIssue)
+				assign(issue,_.cloneDeep(_.pick('milestone','labels')))
 
-			this.uiActions.setDialogOpen(dialogName,true)
+			actions.setIssueSaving(false)
+			actions.setEditingIssue(issue)
+			uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
@@ -260,41 +308,20 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
+				uiActions = Container.get(UIActionFactory),
 				dialogName = Dialogs.IssueEditDialog,
-				issue = issueSelector(getState())
+				issue = selectedIssueSelector(getState())
 
 			assert(issue,'You must have an issue selected in order to edit one ;)')
 
 			const editingIssue = await fillIssue(_.cloneDeep(issue),issue.repoId)
 
+			actions.setIssueSaving(false)
 			actions.setEditingIssue(editingIssue)
-			this.uiActions.setDialogOpen(dialogName,true)
+			uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 
-
-
-	@Action()
-	loadIssue(issue:Issue,force:boolean = false) {
-		return async (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
-
-			// const currentIssue = actions.state.issue
-			// if (!force && currentIssue && currentIssue.id === issue.id) {
-			// 	return
-			// }
-			//
-			// issue = cloneObject(issue)
-			// actions.setIssue(issue)
-			//
-			// const comments = await this.stores.comment
-			// 	.findByIssue(issue)
-			//
-			// actions.setComments(comments)
-
-
-		}
-	}
 
 
 	private filteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
@@ -397,7 +424,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			milestoneIds = newIssueFilter.milestoneIds || (newIssueFilter.milestoneIds = []),
 			index = milestoneIds.indexOf(milestone.id)
 
-		if (index == -1) {
+		if (index === -1) {
 			milestoneIds.push(milestone.id)
 		} else {
 			milestoneIds.splice(index,1)
@@ -419,7 +446,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
 			index = labelUrls.indexOf(label.url)
 
-		if (index == -1) {
+		if (index === -1) {
 			labelUrls.push(label.url)
 		} else {
 			labelUrls.splice(index,1)
@@ -428,27 +455,25 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.setFilteringAndSorting(newIssueFilter)
 	}
 
-	//
-	// removeMilestoneFromFilter(milestone:Milestone) {
-	// 	const {issueFilter} = this.state
-	// 	const
-	// 		newIssueFilter = _.cloneDeep(issueFilter),
-	// 		{milestoneIds} = newIssueFilter,
-	// 		index = (milestoneIds || []).indexOf(milestone.id)
-	//
-	// 	if (index == -1) return
-	//
-	// 	milestoneIds.splice(index,1)
-	//
-	// 	this.setFilteringAndSorting(newIssueFilter)
-	// }
-
-	@debounce(200)
+	/**
+	 * Set the current comment ids
+	 *
+	 * @param commentIds
+	 * @returns {(issueState:IssueState)=>Map<string, string[]>}
+	 */
+	@debounce(100)
 	@ActionReducer()
 	protected setCommentIds(commentIds:string[]) {
 		return (issueState:IssueState) => issueState.set('commentIds',commentIds)
 	}
 
+	/**
+	 * Set filtering and sorting
+	 *
+	 * @param issueFilter
+	 * @param issueSort
+	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
+	 */
 	@ActionReducer()
 	setFilteringAndSorting(issueFilter:IIssueFilter = null,issueSort:IIssueSort = null) {
 		return this.filteringAndSorting(issueFilter,issueSort)

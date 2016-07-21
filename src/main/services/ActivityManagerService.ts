@@ -1,4 +1,4 @@
-import {Singleton, AutoWired,Inject} from 'typescript-ioc'
+import {Container,Singleton, AutoWired,Inject} from 'typescript-ioc'
 
 import {IService, ServiceStatus} from './IService'
 //import DBService from './DBService'
@@ -9,6 +9,7 @@ import {
 } from 'shared/models/Activity'
 
 
+
 const log = getLogger(__filename)
 
 
@@ -17,12 +18,12 @@ function makeRefId(type:ActivityType,objectId:any) {
 }
 
 
-@AutoWired
-@Singleton
+//@AutoWired
+//@Singleton
 export default class ActivityManagerService implements IService {
 
-	@Inject
-	private _repos:Stores
+
+	private _repos:Stores = Container.get(Stores)
 	private _status:ServiceStatus
 
 	status():ServiceStatus {

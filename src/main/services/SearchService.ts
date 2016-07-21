@@ -52,8 +52,6 @@ function textSearchFilter(query:string,items:any[],props:string[], limit:number 
 	})
 }
 
-@AutoWired
-@Singleton
 export default class SearchService extends BaseService {
 
 	private queriesCache:{[searchId:string]:ValueCache} = {}
@@ -64,17 +62,13 @@ export default class SearchService extends BaseService {
 	private searches:Map<string,Search>
 	private removeListener
 
-	@Inject
-	store:ObservableStore<any>
+	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
 
-	@Inject
-	stores:Stores
+	stores:Stores = Container.get(Stores)
 
-	@Inject
-	searchActions:SearchActionFactory
+	searchActions:SearchActionFactory = Container.get(SearchActionFactory)
 
-	@Inject
-	dataActions:DataActionFactory
+	dataActions:DataActionFactory = Container.get(DataActionFactory)
 
 	private getQueryCache(searchId) {
 		let cache = this.queriesCache[searchId]

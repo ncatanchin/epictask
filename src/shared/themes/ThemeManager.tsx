@@ -93,10 +93,10 @@ export interface IThemedState {
  *
  * @param Component
  * @param baseStyles
- * @param themeKey
+ * @param themeKeys
  * @returns {any}
  */
-export function makeThemedComponent(Component,baseStyles = null,themeKey:string = null) {
+export function makeThemedComponent(Component,baseStyles = null,...themeKeys:string[]) {
 	return class extends React.Component<any, IThemedState> {
 
 		// Used to unsubscribe from theme updates on unmount
@@ -110,13 +110,13 @@ export function makeThemedComponent(Component,baseStyles = null,themeKey:string 
 				theme: getTheme()
 			}
 
+			const themeParts = themeKeys
+				.map(themeKey => _.get(getTheme(),themeKey,{}))
+
+			const styles = mergeStyles(baseStyles,...themeParts)
+
 			if (baseStyles) {
-				assign(newState,{
-					styles: mergeStyles(
-						baseStyles,
-						themeKey ? _.get(getTheme(),themeKey) : getTheme()
-					)
-				})
+				assign(newState,{styles})
 			}
 
 			return newState
@@ -168,13 +168,13 @@ export function Themed(Component) {
  * Same as Themed, but merges styles
  *
  * @param baseStyles
- * @param themeKey
+ * @param themeKeys
  * @returns {(Component:any)=>any}
  * @constructor
  */
-export function ThemedStyles(baseStyles:any = {},themeKey:string = null) {
+export function ThemedStyles(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,baseStyles,themeKey)
+		return makeThemedComponent(Component,baseStyles,...themeKeys)
 	}
 }
 

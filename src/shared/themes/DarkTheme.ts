@@ -51,6 +51,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	textColor: text.primary,
 	alternateTextColor: alternateText.primary,
 
+	progressIndicatorColor: secondary.hue1,
+
 	app: {
 		fontFamily,
 		fontWeight
@@ -157,7 +159,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		menu: {
 			color: primary.hue1,
 			fill: primary.hue3,
-			backgroundColor: text.primary
+			backgroundColor: 'transparent'//,text.primary
 		},
 
 		menuItem: {
@@ -175,7 +177,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 			hint:  {
 				color:           secondary.hue3,
-				backgroundColor: text.primary,
+				backgroundColor: 'transparent',//text.primary,
 				fontStyle:   'italic',
 				fontWeight: 100
 
@@ -184,12 +186,12 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 
 			floatingLabel: {
 				color:           primary.hue3,
-				backgroundColor: text.secondary
+				backgroundColor: 'transparent',//backgroundColor: text.secondary
 			},
 
 			floatingLabelFocus: {
 				color:           secondary.hue2,
-				backgroundColor: text.secondary
+				backgroundColor: 'transparent',//backgroundColor: text.secondary
 			},
 			underlineDisabled: {
 				borderColor: secondary.hue3,
@@ -390,7 +392,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		issue: {
 			backgroundColor: primary.hue1,
 			color:           text.primary,
-			
+
 			selected: {
 				backgroundColor: accent.hue1,
 

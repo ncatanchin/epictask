@@ -1,12 +1,11 @@
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 import * as uuid from 'node-uuid'
 import {ActionFactory,ActionReducer,Action,ActionMessage} from 'typedux'
-import {List} from 'immutable'
+import {Map,List} from 'immutable'
 import {UIKey} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
 import {Dialogs} from 'shared/Constants'
-
 
 
 export function makeToastMessage(opts:any) {
@@ -92,17 +91,24 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	@ActionReducer()
 	setDialogOpen(name:string,open:boolean) {
 		return (state:UIState) => state.set(
-			'dialogs',
-			state.dialogs.set(name,open)
+			'dialogs', state.dialogs.clear().set(name,open)
 		)
 	}
 
 	@ActionReducer()
 	closeAllDialogs() {
-		return (state:UIState) => state.update('dialogs',(dialogs) => dialogs.clear())
+		return (state:UIState) => state.set(
+			'dialogs',state.dialogs.clear()
+		)
 	}
 
 
+	/**
+	 * Focus on app root
+	 */
+	focusAppRoot() {
+		$('#appRoot').focus()
+	}
 
 
 	showAddRepoDialog() {

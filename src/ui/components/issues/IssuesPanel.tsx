@@ -24,7 +24,7 @@ import {
 	issueSortAndFilterSelector,
 	labelsSelector,
 	milestonesSelector,
-	selectedIssueIdsSelector, issuesGroupedSelector, TIssueSortAndFilter
+	selectedIssueIdsSelector, issuesGroupedSelector, TIssueSortAndFilter, selectedIssueSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -262,18 +262,6 @@ export interface IIssuesPanelState {
 	issueGroupsVisibility?:Map<string,boolean>
 }
 
-function makeMapStateToProps() {
-	return createStructuredSelector({
-		issues: issuesSelector,
-		issuesGrouped: issuesGroupedSelector,
-		issueSortAndFilter: issueSortAndFilterSelector,
-		labels: labelsSelector,
-		milestones: milestonesSelector,
-		selectedIssueIds: selectedIssueIdsSelector
-
-	},createDeepEqualSelector)
-}
-
 
 /**
  * IssuesPanel
@@ -283,7 +271,15 @@ function makeMapStateToProps() {
  **/
 
 @Radium
-@connect(makeMapStateToProps)
+@connect(createStructuredSelector({
+	issues: issuesSelector,
+	issuesGrouped: issuesGroupedSelector,
+	issueSortAndFilter: issueSortAndFilterSelector,
+	labels: labelsSelector,
+	milestones: milestonesSelector,
+	selectedIssueIds: selectedIssueIdsSelector,
+	selectedIssue: selectedIssueSelector
+},createDeepEqualSelector))
 @ThemedStyles(baseStyles,'issuesPanel')
 @HotKeyContext()
 @PureRender
@@ -293,10 +289,35 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
 
+	/**
+	 * Move selection up
+	 */
+	private moveUp = this.makeMoveSelector(-1)
+
+	/**
+	 * Move selection down
+	 */
+	private moveDown = this.makeMoveSelector(1)
+
+	/**
+	 * On enter, clear selection if more than
+	 * 1 issue selected, nothing if 0
+	 * or add new if 1
+	 */
+	private showEditIssueInline = () => {
+		const {selectedIssue,selectedIssueIds} = this.props
+
+		log.info('Enter pressed',selectedIssueIds)
+
+		if (selectedIssue) {
+			this.issueActions.createIssueInline(selectedIssue)
+		} else if (selectedIssueIds.length) {
+			this.issueActions.setSelectedIssueIds([])
+		}
 
 
-	moveUp = this.makeMoveSelector(-1)
-	moveDown = this.makeMoveSelector(1)
+	}
+
 	/**
 	 * Key handlers for Issue Panel
 	 */
@@ -305,8 +326,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDown]: this.moveDown,
 		[CommonKeys.MoveUpSelect]: this.moveUp,
 		[CommonKeys.MoveDownSelect]: this.moveDown,
-		//[Keys.Enter]: () => this.onResultSelected(null)
+		[CommonKeys.Enter]: this.showEditIssueInline
 	}
+
+
+
 
 
 	/**
@@ -586,8 +610,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				issueSortAndFilter
 			} = this.props,
 			{palette} = theme,
-			{groupBy} = issueSortAndFilter.issueSort,
-			allowResize = selectedIssueIds && selectedIssueIds.length > 0,
+			{groupBy} = issueSortAndFilter.issueSort
+
+		const validSelectedIssueIds = selectedIssueIds
+			.filter(issueId => !_.isNil(issues.find(item => item.id === issueId)))
+
+		const
+			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 

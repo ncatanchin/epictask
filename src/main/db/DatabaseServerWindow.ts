@@ -158,9 +158,9 @@ export class DatabaseServerWindow {
 	/**
 	 * onReady window callback
 	 */
-	private onReady = (event) => {
+	private onReady = (event, isExisting = false) => {
 
-		log.info('DatabaseServer is ready ')
+		log.info('DatabaseServer is ready. Using existing window=',isExisting)
 
 		this.setStatus(DatabaseStatus.Started)
 		this.startDeferred.resolve()
@@ -219,8 +219,14 @@ export class DatabaseServerWindow {
 			[null,storeOrFn,fnOrArgs]
 		)
 
+
 		assert(fn && args,'Both args and fn MUST be defined')
-		assert(this.window && this.status !== DatabaseStatus.Shutdown,'Can not make a request until the database is ready')
+
+		if (!this.window || this.status === DatabaseStatus.Shutdown) {
+			//assert(this.window && this.status !== DatabaseStatus.Shutdown,'Can not make a request until the database is ready')
+			log.warn('Can not make a request until the database is ready, status = ',this.status)
+		}
+
 
 		// Create the request
 		const request = {
@@ -256,23 +262,56 @@ export class DatabaseServerWindow {
 	}
 
 	/**
+	 * Remove all event listeners
+	 */
+	private unbindEvents() {
+		// CLEAR ALL FIRST
+		ipcMain.removeAllListeners(Events.Ready)
+		ipcMain.removeAllListeners(Events.Shutdown)
+		ipcMain.removeAllListeners(Events.Response)
+	}
+
+	/**
+	 * Bind events listeners
+	 */
+	private bindEvents() {
+		this.unbindEvents()
+
+		// On Ready - Database can serve requests
+		ipcMain.on(Events.Ready,this.onReady)
+
+		// Attach shutdown request
+		ipcMain.on(Events.Shutdown,this.onShutdown)
+
+		// Attach Response listener
+		ipcMain.on(Events.Response,this.onResponse)
+	}
+
+	/**
 	 * Start the database server
 	 *
 	 * @returns {Promise<any>}
 	 */
 	start():Promise<any> {
+		log.info('Creating deferred')
+		const deferred = this.startDeferred = Promise.defer(),
+			{promise} = deferred
+
 		log.info('Checking existing windows first')
 		BrowserWindow.getAllWindows().forEach(window => {
 			const url = window.webContents.getURL()
 			if (url === templateURL) {
-				log.warn(`Found existing database window with url ${url} - destroying`)
-				window.destroy()
+				this.window = window
+				log.warn('existing open window - binding and using it')
+				this.bindEvents()
+				this.onReady(null,true)
+				return promise
+				// log.warn(`Found existing database window with url ${url} - destroying`)
+				// window.destroy()
 			}
 		})
 
-		log.info('Creating deferred')
-		const deferred = this.startDeferred = Promise.defer(),
-			{promise} = deferred
+
 
 		log.info(`Setting timeout on start promise`)
 		promise.timeout(10000)
@@ -286,12 +325,7 @@ export class DatabaseServerWindow {
 			})
 
 			log.info('Subscriptions')
-			// On Ready - Database can serve requests
-			ipcMain.on(Events.Ready,this.onReady)
-
-			// Attach shutdown request
-			ipcMain.on(Events.Shutdown,this.onShutdown)
-			ipcMain.on(Events.Response,this.onResponse)
+			this.bindEvents()
 
 
 			dbWindow.webContents.on('did-fail-load',(event,code,desc,url,mainFrame) => {
@@ -329,9 +363,15 @@ export class DatabaseServerWindow {
 	 *
 	 * @returns {any}
 	 */
-	stop():Promise<any> {
+	stop(isHot = false):Promise<any> {
+		if (isHot) {
+			this.unbindEvents()
+			return Promise.resolve(true)
+		}
+
 		if (this.internalStatus > DatabaseStatus.Started || !this.window)
 			return Promise.resolve(true)
+
 
 		const promise = (this.stopDeferred = Promise.defer()).promise
 		promise.timeout(5000).catch((err) => {

@@ -58,18 +58,24 @@ async function boot() {
 		const isExtInstalled = (extName) => extNames
 			.findIndex(name => _.includes(_.toLower(name),_.toLower(extName))) > -1
 
-		//
-		// extNames.forEach((name:string) => {
-		// 	log.info('Dev Tool Extension name',name)
-		//
-		// 	// Remove pouch extension
-		// 	if (_.includes(_.toLower(name),'pouch')) {
-		// 		BrowserWindow.removeDevToolsExtension(name)
-		// 	}
-		// })
 
-		if (!isExtInstalled('pouchdb'))
-			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
+		function removeDevTool(removeName:string) {
+			extNames.forEach((name:string) => {
+				log.info('Dev Tool Extension name',name)
+
+				//Remove pouch extension
+				if (_.includes(_.toLower(name),_.toLower(removeName))) {
+					BrowserWindow.removeDevToolsExtension(name)
+				}
+			})
+		}
+
+		removeDevTool('pouch')
+		removeDevTool('bigconsole')
+		//removeDevTool('redux')
+
+		// if (!isExtInstalled('pouchdb'))
+		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
 
 		if (!isExtInstalled('react'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
@@ -77,8 +83,9 @@ async function boot() {
 		if (!isExtInstalled('redux'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/redux-devtools'))
 
-		if (!isExtInstalled('bigconsole'))
-			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/big-console'))
+
+		// if (!isExtInstalled('bigconsole'))
+		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/big-console'))
 	}
 
 	log.info("Boot start")

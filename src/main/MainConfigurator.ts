@@ -16,7 +16,7 @@ const IllegalServices = [/DBService/,/IService$/]
 export type TServiceMap = {[key:string]:IService}
 
 @AutoWired
-@Singleton
+//@Singleton
 export class MainConfigurator {
 	private requestedServices:any[]
 
@@ -24,6 +24,9 @@ export class MainConfigurator {
 	servicesCtx = null
 	dbService:DBServiceType = null
 
+	constructor() {
+
+	}
 	/**
 	 * Load services context
 	 *
@@ -53,8 +56,20 @@ export class MainConfigurator {
 
 		return serviceKeys
 			.reduce((services,key) => {
-				let service = ctx[key]
-				services[key] = Container.get(service.default || service)
+				const
+					serviceMod = ctx[key],
+					serviceClazz = serviceMod.default || serviceMod,
+					serviceInstance = new serviceClazz()
+
+				Container.bind(serviceClazz).provider({
+					get: () => serviceInstance
+				})
+
+				assert(
+					serviceClazz.name,
+					'Service MUST have name'
+				)
+				services[serviceClazz.name] = serviceInstance
 				return services
 			},{})
 
@@ -68,7 +83,9 @@ export class MainConfigurator {
 	 */
 	private loadRequestedServices():TServiceMap {
 		return this.requestedServices.reduce((services,serviceClazz) => {
-			services[serviceClazz.name] = Container.get(serviceClazz)
+			const serviceInstance = new serviceClazz()
+			Container.bind(serviceClazz).provider({get: () => serviceInstance})
+			services[serviceClazz.name] = serviceInstance
 			return services
 		},{})
 	}
@@ -103,7 +120,7 @@ export class MainConfigurator {
 			this.services[serviceKey] = service
 
 			if (service.status() > ServiceStatus.Created) {
-				log.info(`${serviceKey} was already started, skipping`)
+				log.warn(`${serviceKey} was already started, skipping`)
 				continue
 			}
 
@@ -132,19 +149,22 @@ export class MainConfigurator {
 		return this.services
 	}
 
-	private async startDatabase() {
+	private async startDatabase(isHot = false) {
 		if (this.dbService) {
 			log.info('Stopping DB first')
-			await this.dbService.stop()
-			this.dbService.destroy()
+			await this.dbService.stop(isHot)
+			this.dbService.destroy(isHot)
 			this.dbService = null
 		}
 
 		const DBService:typeof DBServiceType = require('./services/DBService').default
+		Container.bind(DBService).provider({get: () => this.dbService})
 
 		// Load the database first
 		log.info('Starting Database')
-		this.dbService = Container.get(DBService)
+
+		this.dbService = new DBService()
+
 		await this.dbService.init()
 		await this.dbService.start()
 		log.info('Database started')
@@ -217,7 +237,7 @@ export class MainConfigurator {
 			hmrReady = true
 
 			module.hot.accept(['./services/DBService'],() => {
-				return this.startDatabase()
+				return this.startDatabase(true)
 			})
 
 			if (this.servicesCtx) {

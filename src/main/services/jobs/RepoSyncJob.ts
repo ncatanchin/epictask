@@ -21,7 +21,7 @@ import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
-import {issueSelector} from 'shared/actions/issue/IssueSelectors'
+import {selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
 
 
 
@@ -271,7 +271,7 @@ export class RepoSyncJob extends Job {
 			let currentIssueId = issueActions.state.selectedIssueId
 			if (currentIssueId) {
 
-				const issue = issueSelector(getStoreState())
+				const issue = selectedIssueSelector(getStoreState())
 
 				log.debug('Checking if current issue is in this repo, if so then reload',
 					_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
