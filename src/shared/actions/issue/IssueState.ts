@@ -11,6 +11,12 @@ import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 export * from './IIssueFilter'
 export * from './IIssueSort'
 
+export type TIssueEditInlineConfig = {
+	groupIndex:number,
+	issueIndex:number,
+	issue:Issue
+}
+
 export const IssueStateRecord = Record({
 	issueIds:[],
 	internalIssues:[],
@@ -18,6 +24,7 @@ export const IssueStateRecord = Record({
 	selectedIssueIds:[],
 	selectedIssueId:null,
 	editingInline:false,
+	editInlineConfig:null,
 	editingIssue:null,
 	issueSaveError: null,
 	issueSaving: false,
@@ -27,7 +34,6 @@ export const IssueStateRecord = Record({
 		groupBy: 'none',
 		groupByDirection: 'asc'
 	} as IIssueSort,
-
 	issueFilter:{offset:0,limit:100} as IIssueFilter
 
 })
@@ -50,6 +56,7 @@ export class IssueState extends IssueStateRecord {
 	issueFilter:IIssueFilter
 	issueSaving:boolean
 	issueSaveError: Error
+	editInlineConfig:TIssueEditInlineConfig
 	selectedIssueId:number
 	selectedIssueIds:Array<number>
 	issueIds:number[]

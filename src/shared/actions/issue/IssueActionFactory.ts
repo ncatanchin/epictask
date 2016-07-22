@@ -260,6 +260,18 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (state:IssueState) => state.set('editingInline',inline)
 	}
 
+	@ActionReducer()
+	editInline(groupIndex:number,issueIndex:number,issue:Issue) {
+		return (state:IssueState) => state
+			.set('editingInline',true)
+			.set('editInlineConfig',{
+				groupIndex,
+				issueIndex,
+				issue
+			})
+
+	}
+
 
 
 	/**
@@ -318,8 +330,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			actions.setIssueSaving(false)
 			actions.setEditingIssue(issue,inline)
 
-			if (inline)
-				uiActions.setDialogOpen(dialogName,true)
+			uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 

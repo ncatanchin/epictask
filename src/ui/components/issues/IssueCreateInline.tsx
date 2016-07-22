@@ -4,7 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {PureRender, Avatar, LabelFieldEditor} from 'components/common'
+import {PureRender, Avatar, LabelFieldEditor, Icon} from 'components/common'
 import {Issue} from 'models/Issue'
 import {Label} from 'models/Label'
 import {Milestone} from 'models/Milestone'
@@ -19,10 +19,27 @@ import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
+import {
+	editingIssueSelector, labelsSelector, milestonesSelector,
+	issueStateSelector
+} from 'actions/issue/IssueSelectors'
+import {HotKeyContext} from 'components/common/HotKeyContext'
+import {HotKeys} from 'react-hotkeys'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {Container} from 'typescript-ioc'
+import {CommonKeys} from 'shared/KeyMaps'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import Radium = require('radium')
+import {AvailableRepo} from 'models/AvailableRepo'
+import {MenuItem} from 'material-ui'
+import {SelectField} from 'material-ui'
+import {enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
 
 // Constants
 const log = getLogger(__filename)
+const ReactTimeout = require('react-timeout')
 
+//region Styles
 const baseStyles = createStyles({
 	root: [FlexColumn, FlexAuto, {}],
 	savingIndicator: [PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
@@ -36,13 +53,13 @@ const baseStyles = createStyles({
 	}),
 
 	issue: [
-		FlexRow,
+		FlexColumn,
 		FlexAuto,
 		FillWidth,
 		FlexAlignStart,
 		makeTransition(['background-color']), {
 
-			padding: '1.5rem 1rem 1.5rem 1rem',
+			padding: '0.5rem 1rem',
 			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 
@@ -64,8 +81,8 @@ const baseStyles = createStyles({
 				}
 
 			}],
-			repo: [FlexRow, makeFlexAlign('stretch', 'center'), {
-				pointerEvents: 'none',
+			repo: [FlexRow, makeFlexAlign('flex-start', 'flex-start'), {
+				//pointerEvents: 'none',
 
 				text: [{
 
@@ -75,19 +92,31 @@ const baseStyles = createStyles({
 	],
 
 	input: {
-		fontWeight: 700
+		height: 38,
+		fontWeight: 700,
+		padding: '0.5rem 1rem',
+		margin: '0.5rem 0',
+
+		hint: {
+			zIndex: 10,
+			paddingLeft: rem(1)
+		}
+
 	},
 
 	form: makeStyle({
 
 		title: [{
 			flex: '1 0 50%',
-			padding: "1rem 0",
+			padding: "0",
 		}],
 
 		repo: [FlexScale, {
-			height: 72,
-			padding: "1rem 0",
+			//height: 30,
+			width: 'auto',
+			lineHeight: rem(3),
+			padding: "0 0",
+			margin: '0 0 1rem 0',
 			menu: [{
 				transform: 'translate(0,25%)'
 			}],
@@ -95,8 +124,12 @@ const baseStyles = createStyles({
 				padding: '0 0 0 0 !important'
 			}],
 			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
+				lineHeight: "3rem",
+				fontSize: rem(1),
+				fontWeight: 400,
 				label: [FlexScale, Ellipsis, {
-					padding: '0 0 0 1rem'
+					padding: '0 0 0 1rem',
+
 				}]
 			}]
 		}],
@@ -145,12 +178,13 @@ const baseStyles = createStyles({
 			})
 		}],
 
-		row1: [FlexRow, FlexAlignStart, FillWidth, {overflow:'visible'}],
+		row1: [FlexRow, FlexAlignStart, FillWidth, {}],
 		row2: [FlexRow, FlexAlignStart, FillWidth, {}],
 		row3: [FlexRow, FlexAlignStart, FillWidth, {}]
 	}),
 
 })
+//endregion
 
 
 /**
@@ -159,12 +193,16 @@ const baseStyles = createStyles({
 export interface IIssueCreateInlineProps extends React.HTMLAttributes {
 	styles?: any
 	theme?: any
-	saveError:Error
-	saving:boolean
-	fromIssue:Issue
-	labels:Label[],
+	saveError?:Error
+	saving?:boolean
+	fromIssue?:Issue
+	labels?:Label[]
 	repoModels?:Map<string,Repo>
-	milestones:Milestone[]
+	milestones?:Milestone[]
+	setTimeout?:Function
+	clearTimeout?:Function
+	availableRepos?:AvailableRepo[]
+
 }
 
 /**
@@ -173,6 +211,10 @@ export interface IIssueCreateInlineProps extends React.HTMLAttributes {
 export interface IIssueCreateInlineState {
 	issue?:Issue
 	repo?:Repo
+	textField?:any
+	focused?:boolean
+	hideTimer?:any
+
 }
 
 /**
@@ -183,12 +225,23 @@ export interface IIssueCreateInlineState {
  **/
 
 @connect(createStructuredSelector({
-	repoModels: repoModelsSelector
+	repoModels: repoModelsSelector,
+	fromIssue: editingIssueSelector,
+	availableRepos: enabledReposSelector,
+	labels: labelsSelector,
+	milestones: milestonesSelector,
+	saving: (state) => issueStateSelector(state).issueSaving,
+	saveError: (state) => issueStateSelector(state).issueSaveError
 },createDeepEqualSelector))
-@ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
+@ThemedStyles(baseStyles,'inline','issueEditDialog','form')
+@HotKeyContext()
 @PureRender
+@Radium
+@ReactTimeout
 export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,IIssueCreateInlineState> {
 
+	issueActions = Container.get(IssueActionFactory)
+	uiActions = Container.get(UIActionFactory)
 
 	private getNewState = (props) => {
 		const issue = _.get(this, 'state.issue', props.fromIssue)
@@ -214,6 +267,7 @@ export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,I
 	 */
 	componentWillReceiveProps = (newProps) => this.updateState(newProps)
 
+
 	/**
 	 * Title input changed
 	 *
@@ -223,6 +277,17 @@ export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,I
 			title
 		})
 	})
+
+
+	/**
+	 * Key handlers
+	 */
+	keyHandlers = {
+		[CommonKeys.Escape]: () => {
+			this.hide()
+			this.uiActions.focusIssuesPanel()
+		}
+	}
 
 	onRepoChange = (event, index, repoId) => {
 		const
@@ -256,12 +321,76 @@ export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,I
 		//this.updateIssueState({assignee})
 	}
 
+	hide = () => {
+		this.issueActions.setEditingInline(false)
+	}
+
+	onBlur = (event) => {
+		log.info('Inline edit blurred',document.activeElement)
+
+		if (ReactDOM.findDOMNode(this).contains(document.activeElement) || document.activeElement === document.body) {
+			log.info('we still have focus, probably clicked another window')
+			return
+		}
+
+		this.setState({
+			focused:false,
+			hideTimer: this.props.setTimeout(this.hide,500)
+		})
+
+	}
+
+	onFocus = (event) => {
+		log.info('inline edit focused')
+
+		const hideTimer = _.get(this,'state.hideTimer')
+		if (hideTimer)
+			this.props.clearTimeout(hideTimer)
+
+		this.setState({focused:true,hideTimer:void 0})
+
+
+	}
+
+
+
 	onLabelsChanged = (labels:Label[]) => {
 		const {issue} = this.state
 
 		this.setState({issue:assign(_.clone(issue),{labels})})
 
 
+	}
+
+	setTextField = (textField) => {
+		if (textField)
+			textField.focus()
+
+		this.setState({textField})
+	}
+
+
+	makeRepoMenuItems() {
+		const
+			{props,state} = this,
+			{styles,availableRepos,theme,fromIssue,saveError,labels,saving} = props,
+			{issue,repo} = state
+
+		const makeRepoLabel = (availRepoItem) => (
+			<div style={styles.form.repo.item}>
+				<Icon iconSet='octicon' iconName='repo'/>
+				{repoName(availRepoItem.repo, styles.form.repo.item.label)}
+			</div>
+		)
+
+		return availableRepos.map(availRepoItem => (
+			<MenuItem key={availRepoItem.repoId}
+			          className='issueEditDialogFormMenuItem'
+			          value={availRepoItem.repoId}
+			          style={styles.menuItem}
+			          primaryText={makeRepoLabel(availRepoItem)}
+			/>
+		))
 	}
 
 	render() {
@@ -285,46 +414,59 @@ export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,I
 				styles.issueTitleSelected
 			)
 
-		return <div {...filterProps(props)} style={issueStyles}
-		                                    className={'animated fadeIn selected'}>
+		return <HotKeys
+					{...filterProps(props)}
+					style={issueStyles}
+					handlers={this.keyHandlers}
+					onBlur={this.onBlur}
+					onFocus={this.onFocus}
+		            className={'animated fadeIn selected'}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}
-			<div style={styles.issueDetails}>
+			{/*<div style={styles.root}>*/}
+
+
 
 				<div style={styles.issue.repo}>
-					<div style={makeStyle(styles.issueRepo,theme.issuesPanel.issueRepo)}>
-						{repoName(repo)}
-					</div>
+					{/* REPO */}
+					<SelectField value={issue.repoId}
+					             style={makeStyle(styles.form.repo,styles.menu)}
 
-					{/* ASSIGNEE */}
-					<Avatar user={issue.assignee}
-					        style={styles.issue.avatar}
-					        labelPlacement='before'
-					        labelStyle={styles.username}
-					        avatarStyle={styles.avatar}/>
+					             inputStyle={makeStyle(styles.input,{height:30})}
+					             labelStyle={makeStyle(styles.menu,{paddingRight:34})}
+					             iconStyle={makeStyle(styles.menu,{top: 0})}
+					             onChange={this.onRepoChange}
+					             underlineStyle={styles.input.underlineDisabled}
+					             underlineDisabledStyle={styles.input.underlineDisabled}
+					             underlineFocusStyle={styles.input.underlineFocus}
+					             menuListStyle={makeStyle(styles.select.list)}
+					             menuStyle={makeStyle(styles.menu,styles.form.repo.menu)}
+					             underlineShow={false}
+					             autoWidth={true}
+					             fullWidth={false}>
 
+						{this.makeRepoMenuItems()}
+					</SelectField>
+
+					{/*<div style={makeStyle(styles.issueRepo,theme.issuesPanel.issueRepo)}>*/}
+						{/*{repoName(repo)}*/}
+					{/*</div>*/}
 				</div>
 
 
 				<div style={styles.issueTitleRow}>
 					{/*<div style={issueTitleStyle}>{issue.title}</div>*/}
 					{/*<div style={styles.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>*/}
-					<TextField value={issue.title}
+					<TextField ref={this.setTextField}
+					           value={issue.title}
 					           onChange={this.onTitleChange}
-					           floatingLabelText="TITLE"
-					           floatingLabelStyle={styles.input.floatingLabel}
-					           floatingLabelFocusStyle={styles.input.floatingLabelFocus}
-					           floatingLabelFixed={false}
 					           errorStyle={{transform: 'translate(0,1rem)'}}
 					           errorText={getGithubErrorText(saveError,'title')}
-					           hintText="I got 99 problems, but issues ain't 1!"
+					           hintText="title..."
 					           hintStyle={styles.input.hint}
 					           style={styles.form.title}
 					           inputStyle={styles.input}
-					           underlineStyle={styles.input.underlineDisabled}
-					           underlineDisabledStyle={styles.input.underlineDisabled}
-					           underlineFocusStyle={styles.input.underlineFocus}
-					           underlineShow={true}
+					           underlineShow={false}
 					           fullWidth={true}
 					           autoFocus/>
 				</div>
@@ -339,22 +481,27 @@ export class IssueCreateInline extends React.Component<IIssueCreateInlineProps,I
 						{/*style={styles.issueLabels}*/}
 						{/*labelStyle={styles.issue.labels.label}*/}
 					{/*/>*/}
+					{/*style={{backgroundColor:styles.input.backgroundColor}}*/}
 					<LabelFieldEditor labels={issue.labels || []}
-					                  id="issueEditDialogLabels"
-					                  label="LABELS"
-					                  hint="Label me..."
-					                  inputStyle={styles.input}
+					                  id="issueEditInlineLabels"
+					                  hint="Labels..."
+					                  hintAlways={true}
+					                  inputStyle={makeStyle(styles.input,{
+					                  	//backgroundColor:'transparent',
+					                  	//padding: 0,
+					                  	margin: "2rem 0 0 0",
+					                  	height: "3.8rem"
+					                  })}
+
+					                  underlineShow={false}
 					                  availableLabels={labels}
 					                  onLabelsChanged={this.onLabelsChanged}
-					                  underlineStyle={styles.input.underlineDisabled}
-					                  underlineFocusStyle={styles.input.underlineFocus}
 					                  hintStyle={styles.input.hint}
-					                  labelStyle={styles.input.floatingLabel}
-					                  labelFocusStyle={styles.input.floatingLabelFocus}/>
+					                  />
 
 				</div>
-			</div>
-		</div>
+			{/*</div>*/}
+		</HotKeys>
 	}
 
 }

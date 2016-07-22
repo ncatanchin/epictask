@@ -8,7 +8,7 @@ const assert = require('assert')
 const path = require('path')
 const fs = require('fs')
 const nodeExternals = require('webpack-node-externals')
-
+//const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
 const HappyPack = require('happypack');
 
 

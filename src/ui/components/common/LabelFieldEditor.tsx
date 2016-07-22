@@ -74,10 +74,12 @@ export interface ILabelFieldEditorProps extends React.DOMAttributes {
 
 	inputStyle?:any
 	hintStyle?:any
+	hintAlways?:boolean
 	underlineStyle?:any
 	underlineFocusStyle?:any
 	labelStyle?:any
 	labelFocusStyle?:any
+	underlineShow?:boolean
 
 	labels:Label[]
 	availableLabels:Label[]
@@ -200,7 +202,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	render() {
 		let
 			{props,state} = this,
-			{theme,labels} = props,
+			{theme,labels,label,inputStyle,hintAlways,underlineShow} = props,
 			{availableLabels} = state,
 			s = mergeStyles(styles, theme.component)
 
@@ -218,6 +220,10 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 							renderChipSearchItem={this.renderChipSearchItem}
 		                    allChips={availableLabels}
 		                    selectedChips={labels}
+							inputStyle={inputStyle}
+							hintStyle={hintStyle2}
+							hintAlways={hintAlways}
+							underlineShow={underlineShow !== false}
 		                    onChipSelected={this.onChipSelected}
 		                    keySource={(item:Label) => item.url}>
 		</ChipsField>

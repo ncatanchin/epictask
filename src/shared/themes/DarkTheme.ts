@@ -116,6 +116,29 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		paddingBottom:0
 	},
 
+	/**
+	 * Inline editing
+	 */
+	inline: {
+		input: {
+			color: text.primary,
+			backgroundColor: primary.hue3,
+			focused: {
+				backgroundColor: secondary.hue1,
+			},
+
+			hint: {
+				//color: accent.hue2,
+				color: tinycolor(primary.hue4).lighten(20).toString(),
+				backgroundColor: 'transparent',//text.primary,
+				//fontStyle: 'italic',
+				fontWeight: 400
+			},
+
+		}
+
+	},
+
 
 	dialog: {
 		titleFontSize: fontSize * 2,
@@ -202,6 +225,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 				borderColor: secondary.hue2,
 				borderBottomWidth: `0.1rem`
 			}
+
+
 		},
 
 

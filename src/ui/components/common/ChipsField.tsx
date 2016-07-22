@@ -12,6 +12,9 @@ import {AutoComplete,MenuItem} from 'material-ui'
 import {PureRender} from 'components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
+import {Themed} from 'shared/themes/ThemeManager'
+import {HotKeys} from 'react-hotkeys'
+import {CommonKeys} from 'shared/KeyMaps'
 
 const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
 const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
@@ -25,9 +28,13 @@ const log = getLogger(__filename)
 const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, PositionRelative, {
 		minHeight: 72,
-		padding: '10px 0',
-		boxSizing: 'border-box'
+		padding: '1rem 0',
+		boxSizing: 'border-box',
 
+		noLabel: {
+			minHeight: 30,
+			padding: 0
+		}
 	}),
 	chips: makeStyle(makeTransition(['padding-top']),FlexRow, FlexAuto, PositionRelative, makeFlexAlign('center','flex-start'), {
 		flexWrap: 'wrap',
@@ -57,6 +64,10 @@ const styles = {
 		' div.chipAutoComplete': {
 			flex: '1 0 20rem !important',
 		},
+		' div.chipAutoComplete.hasValue': {
+			flex: '1 0 20rem !important',
+
+		},
 		'> div:first-child > div:first-child': makeStyle({
 			boxSizing: 'border-box'
 		}),
@@ -74,12 +85,6 @@ const styles = {
 
 }
 
-
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
-	}
-}
 
 /**
  * IChipsFieldProps
@@ -100,8 +105,10 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
 	renderChipSearchItem:(chipProps:any,item:M) => any
 	keySource: (item:M) => string|number
 
+	underlineShow?:boolean
 	inputStyle?:any
 	hintStyle?:any
+	hintAlways?:boolean
 	style?:any
 	underlineStyle?:any
 	underlineFocusStyle?:any
@@ -117,7 +124,7 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
  * @constructor
  **/
 
-@connect(mapStateToProps)
+@Themed
 @Radium
 @PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
@@ -211,21 +218,49 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 		this.onChipSelected(item)
 	}
 
+	/**
+	 * Key handlers
+	 */
+	keyHandlers = {
+		[CommonKeys.Escape]: () => {
+			(ReactDOM.findDOMNode(this) as any).blur()
+		}
+	}
 
 	render() {
+		log.info('render args',arguments)
 		const
 			{state,props} =this,
 			{isFocused,dataSource,query} = state,
-			{theme,selectedChips,renderChip,id,label,hint,inputStyle,labelStyle,labelFocusStyle,hintStyle} = props,
+			{
+				theme,
+				selectedChips,
+				renderChip,
+				id,
+				label,
+				inputStyle,
+				labelStyle,
+				labelFocusStyle,
+				hint,
+				hintStyle,
+				hintAlways,
+				underlineShow
+			} = props,
 			s = mergeStyles(styles, theme.component),
-			hasValue = (query && query !== '') || selectedChips.length > 0
+			hasValue = (query && query !== '') || selectedChips.length > 0,
+
+			finalInputStyle = makeStyle(
+				inputStyle,
+				_.mapValues(inputStyle,value => value + ' !important')
+			)
 
 
 
-		return <div {...props}
-		                       style={[s.root,props.style]}
-		                       onFocus={this.onSetFocus(true)}
-		                       onBlur={this.onSetFocus(false)}>
+		return <HotKeys {...props}
+					handlers={this.keyHandlers}
+                   style={makeStyle(s.root,props.style,!label && s.root.noLabel)}
+                   onFocus={this.onSetFocus(true)}
+                   onBlur={this.onSetFocus(false)}>
 
 			{label && <TextFieldLabel
 				muiTheme={theme}
@@ -238,18 +273,17 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 			<Style scopeSelector={`#${id}`}
 			       rules={_.assign({},s.inputRules,{
-						'input': {
-							color: inputStyle.color + ' !important',
-							backgroundColor: inputStyle.backgroundColor + ' !important',
-						}
+						'input': finalInputStyle
 			       }) as any} />
 
-			<div style={[s.chips,hasValue && s.chips.hasValue]} id={id}>
+			<div style={[s.chips,(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
 				{selectedChips.map(item => renderChip(item))}
-				<AutoComplete className='chipAutoComplete' hintText={hint}
-				              hintStyle={makeStyle(hintStyle,{bottom: -2,opacity: !hasValue && isFocused ? 1 : 0})}
-				              style={makeStyle(s.input,inputStyle)}
+				<AutoComplete
+								className='chipAutoComplete' hintText={hint}
+				              hintStyle={makeStyle(hintStyle,{bottom: -2,opacity: !hasValue && (hintAlways || isFocused) ? 1 : 0})}
+				              style={makeStyle(s.input,((hasValue || isFocused) && label) && {marginTop:'1rem'})}
 				              underlineShow={false}
+
 				              filter={AutoComplete.noFilter}
 				              listStyle={{
 								paddingTop: 0,
@@ -276,7 +310,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				{/*text={hint}*/}
 			{/*/>}*/}
 
-			<TextFieldUnderline
+			{underlineShow && <TextFieldUnderline
 				error={false}
 				errorStyle={{}}
 				disabled={false}
@@ -285,8 +319,8 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				focusStyle={props.underlineFocusStyle}
 				muiTheme={theme}
 				style={props.underlineStyle}
-			/>
-		</div>
+			/>}
+		</HotKeys>
 	}
 
 }

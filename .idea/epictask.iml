@@ -5,15 +5,11 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/.awcache" />
-      <excludeFolder url="file://$MODULE_DIR$/.happypack" />
-      <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-db" />
       <excludeFolder url="file://$MODULE_DIR$/.happypack-electron-renderer-ui" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
-      <excludeFolder url="file://$MODULE_DIR$/.itermocil" />
       <excludeFolder url="file://$MODULE_DIR$/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/material-ui/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typedux/src/test" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-node" />
       <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-webpack" />

@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 
+RAMDISK=${HOME}/RAMDISK
+RAMDISK_EPICPATH=${HOME}/RAMDISK/epictask
+COMPILE_DIRS="dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui"
+if [ -e "${RAMDISK}" ]; then
+	echo "RAM DISK EXISTS"
+	if [ ! -e "${RAMDISK_EPICPATH}" ]; then
+		echo "RAM DISK ECPI PATH DOS NOT EXIST"
+		#rm -Rf ${COMPILE_DIRS}
+		#dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui
+		for compileDir in ${COMPILE_DIRS}
+		do
+			echo "Going to setup path: ${compileDir}"
+			rm -Rf ${compileDir}
+			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
+			mkdir -p ${NEW_DIR}
+			echo "New path ${NEW_DIR}"
+			ln -s "${NEW_DIR}" "${PWD}/${compileDir}"
+		done
+	fi
+fi
+
+#./etc/scripts/notify-on-error.sh
+
 # Redirect stdout ( > ) into a named pipe ( >() ) running "tee"
 exec > >(tee -i logs/compile.log)
 

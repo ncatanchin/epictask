@@ -43,6 +43,7 @@ import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {Button} from 'ui/components/common/Button'
 import {IssueCreateInline} from 'ui/components/issues/IssueCreateInline'
+import {TIssueEditInlineConfig} from 'shared/actions/issue'
 
 // Non-typed Components
 const tinycolor = require('tinycolor2')
@@ -256,13 +257,14 @@ export interface IIssuesPanelProps {
 	saving?:boolean
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
+	editingInline?:boolean
+	editInlineConfig?:TIssueEditInlineConfig
 
 }
 
 export interface IIssuesPanelState {
 	firstSelectedIndex?:number
-	createInline?:boolean
-	createInlineConfig?:{groupIndex:number,issueIndex:number,issue:Issue}
+
 	issueList?:any
 	issueGroupsVisibility?:Map<string,boolean>
 }
@@ -284,6 +286,8 @@ export interface IIssuesPanelState {
 	milestones: milestonesSelector,
 	selectedIssueIds: selectedIssueIdsSelector,
 	selectedIssue: selectedIssueSelector,
+	editingInline: (state) => issueStateSelector(state).editingInline,
+	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError
 },createDeepEqualSelector))
@@ -311,7 +315,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * 1 issue selected, nothing if 0
 	 * or add new if 1
 	 */
-	private showEditIssueInline = () => {
+	private onEnterPressed = () => {
 		const
 			{
 				issueSortAndFilter,
@@ -335,8 +339,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					const index = group.issues.findIndex(item => item.id === selectedIssue.id)
 					if (index === -1)
 						continue
-
-					issueIndex = index + 1
+					issueIndex = index
 					groupIndex = i
 					break
 
@@ -345,7 +348,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				assert(groupIndex > -1,'Issue not in group')
 			}
 
+
 			assert(issueIndex > -1,'Issue index not found')
+
+			// Increment here to show the create below the current issue
+			issueIndex++
 			const issue = new Issue(_.cloneDeep(_.pick(
 				selectedIssue,
 				'repoId',
@@ -354,14 +361,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			)))
 
 			// this.issueActions.createIssueInline(selectedIssue)
-			this.setState({
-				createInline:true,
-				createInlineConfig:{
-					groupIndex,
-					issueIndex,
-					issue
-				}
-			})
+			this.issueActions.editInline(
+				groupIndex,
+				issueIndex,
+				issue
+			)
+
 		} else if (selectedIssueIds.length) {
 			this.issueActions.setSelectedIssueIds([])
 		}
@@ -377,7 +382,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDown]: this.moveDown,
 		[CommonKeys.MoveUpSelect]: this.moveUp,
 		[CommonKeys.MoveDownSelect]: this.moveDown,
-		[CommonKeys.Enter]: this.showEditIssueInline
+		[CommonKeys.Enter]: this.onEnterPressed
 	}
 
 
@@ -571,6 +576,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Make issue render
 	 *
 	 * @param issueGroup
+	 * @param issueGroupIndex
 	 */
 	makeRenderIssue(issueGroup:IIssueGroup = null,issueGroupIndex:number = null) {
 		/**
@@ -590,20 +596,18 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				saveError,
 				saving,
 				labels,
-				milestones
+				milestones,
+				editingInline,
+				editInlineConfig
 			} = this.props
 
-			const {
-				createInline,
-				createInlineConfig
-			} = this.state
 
 			const {groupBy} = issueSortAndFilter.issueSort
 
 			let showInline = false
 
-			if (createInline) {
-				const {groupIndex,issueIndex} = createInlineConfig
+			if (editingInline) {
+				const {groupIndex,issueIndex} = editInlineConfig
 				if ((issueGroup && groupIndex === issueGroupIndex) || !issueGroup) {
 					if (index > issueIndex) {
 						index--
@@ -616,11 +620,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			return showInline ?
 				<IssueCreateInline
 					key={key}
-				    fromIssue={createInlineConfig.issue}
-					saving={saving}
-					saveError={saveError}
-				    labels={labels}
-					milestones={milestones}
 
 				>
 					inline create here
@@ -628,7 +627,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				<IssueItem key={key}
 			                  styles={styles}
 			                  index={index}
-			                  selectedIssueIds={selectedIssueIds}
+			                  selectedIssueIds={editingInline ?
+			                    [] :
+			                    selectedIssueIds}
 			                  issues={issueGroup ? issueGroup.issues : issues}
 			                  groupBy={groupBy}
 			                  onSelected={this.onIssueSelected}/>
@@ -643,10 +644,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			selectedIssueIds,
 			issues,
 			issuesGrouped,
-			issueSortAndFilter
+			issueSortAndFilter,
+			editingInline,
+			editInlineConfig
 		} = this.props
 
-		const {createInline,createInlineConfig} = this.state
+
 
 		const {groupBy} = issueSortAndFilter.issueSort
 
@@ -656,8 +659,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 		let itemCount = !isVisible ? 0 : group.size +
-			(createInline &&
-				_.get(createInlineConfig,'groupIndex',-1) === index ?
+			(editingInline &&
+				_.get(editInlineConfig,'groupIndex',-1) === index ?
 					1 : 0)
 
 		const groupListRenderer = (items, ref) => <div>
@@ -693,9 +696,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				styles,
 				issues,
 				issuesGrouped,
-				issueSortAndFilter
+				issueSortAndFilter,
+				editingInline,
+				editInlineConfig
 			} = this.props,
-			{createInline} = this.state,
 			{palette} = theme,
 			{groupBy} = issueSortAndFilter.issueSort
 
@@ -708,12 +712,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 
 		const itemCount = (groupBy === 'none') ?
-			issues.length + (createInline ? 1 : 0):
+			issues.length + (editingInline ? 1 : 0):
 			issuesGrouped.length
 
 
 
-		return <HotKeys  keyMap={KeyMaps.App} handlers={this.keyHandlers} style={styles.panel}>
+		return <HotKeys
+				keyMap={KeyMaps.App}
+				id="issuesPanel"
+				handlers={this.keyHandlers}
+				style={styles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
 

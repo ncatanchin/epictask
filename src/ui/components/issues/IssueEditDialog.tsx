@@ -196,7 +196,6 @@ export interface IIssueEditDialogState {
 },createDeepEqualSelector))
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
 @PureRender
-//@HotKeyContext()
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
 
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
@@ -595,12 +594,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						<LabelFieldEditor labels={editingIssue.labels || []}
 						                  id="issueEditDialogLabels"
 						                  label="LABELS"
-						                  hint="Label me..."
-						                  inputStyle={styles.input}
+						                  inputStyle={makeStyle(styles.input,{
+						                  	//marginTop: '0.5rem'
+						                  })}
 						                  availableLabels={labels}
 						                  onLabelsChanged={this.onLabelsChanged}
 						                  underlineStyle={styles.input.underlineDisabled}
 						                  underlineFocusStyle={styles.input.underlineFocus}
+						                  underlineShow={true}
 						                  hintStyle={styles.input.hint}
 						                  labelStyle={styles.input.floatingLabel}
 						                  labelFocusStyle={styles.input.floatingLabelFocus}/>

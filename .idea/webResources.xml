@@ -7,8 +7,6 @@
           <resourceRoots>
             <path value="file://$PROJECT_DIR$/src" />
             <path value="file://$PROJECT_DIR$/src/assets" />
-            <path value="file://$PROJECT_DIR$/libs/typemutant/src" />
-            <path value="file://$PROJECT_DIR$/libs/typelogger/src" />
             <path value="file://$PROJECT_DIR$/libs/typedux/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-pouchdb/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-mocks/src" />
