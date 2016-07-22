@@ -91,8 +91,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 				selectedMulti && styles.issueTitleSelectedMulti
 			)
 
+		//selected={selected}
 		return <div {...filterProps(props)} style={issueStyles}
-		                                    selected={selected}
 		                                    className={'animated fadeIn ' + (selected ? 'selected' : '')}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
@@ -123,7 +123,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
 					{/* LABELS */}
 					<IssueLabelsAndMilestones
-						showIcon={true}
+						showIcon
 						labels={labels}
 						milestones={issue.milestone ? [issue.milestone] : []}
 						style={styles.issueLabels}

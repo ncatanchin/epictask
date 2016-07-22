@@ -210,6 +210,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	issueEditDialog: {
 
 	},
+	issueCreateInline: {
+
+	},
 
 	repoAddDialog: {
 		container: {

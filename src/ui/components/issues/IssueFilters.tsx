@@ -582,7 +582,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 						style={styles.filters.labels}
 						labelStyle={styles.filters.labels.label}
 						onRemove={this.onRemoveItemFromFilter}
-						showIcon={true}
+						showIcon
 						labels={issueFilterLabels}
 						milestones={issueFilterMilestones}
 					/>

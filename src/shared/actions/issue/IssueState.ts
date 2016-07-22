@@ -17,6 +17,7 @@ export const IssueStateRecord = Record({
 	commentIds:[],
 	selectedIssueIds:[],
 	selectedIssueId:null,
+	editingInline:false,
 	editingIssue:null,
 	issueSaveError: null,
 	issueSaving: false,
@@ -54,6 +55,7 @@ export class IssueState extends IssueStateRecord {
 	issueIds:number[]
 	commentIds:string[]
 	editingIssue:Issue
+	editingInline:boolean
 
 }
 

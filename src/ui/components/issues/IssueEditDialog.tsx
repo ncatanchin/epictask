@@ -35,6 +35,7 @@ import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {CircularProgress} from 'material-ui'
 import {GithubErrorCodes, IGithubValidationError} from 'shared/GitHubClient'
 import {labelModelsSelector} from 'shared/actions/data/DataSelectors'
+import {getGithubErrorText} from 'ui/components/common/Renderers'
 const {HotKeys} = require('react-hotkeys')
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
@@ -149,23 +150,6 @@ const baseStyles = createStyles({
 })
 
 
-function makeMapStateToProps() {
-	const availReposSelector = createAvailableRepoSelector()
-
-	return createStructuredSelector({
-		user: appUserSelector,
-		editingIssue: editingIssueSelector,
-		availableRepos: enabledReposSelector,
-		labelModels: labelModelsSelector,
-		saving: (state) => issueStateSelector(state).issueSaving,
-		saveError: (state) => issueStateSelector(state).issueSaveError,
-		open: (state) => uiStateSelector(state).dialogs
-			.get(Dialogs.IssueEditDialog) === true
-
-	},createDeepEqualSelector)
-
-}
-
 /**
  * IIssueEditDialogProps
  */
@@ -199,8 +183,18 @@ export interface IIssueEditDialogState {
  * @constructor
  **/
 @Radium
+@connect(createStructuredSelector({
+	user: appUserSelector,
+	editingIssue: editingIssueSelector,
+	availableRepos: enabledReposSelector,
+	labelModels: labelModelsSelector,
+	saving: (state) => issueStateSelector(state).issueSaving,
+	saveError: (state) => issueStateSelector(state).issueSaveError,
+	open: (state) => uiStateSelector(state).dialogs
+		.get(Dialogs.IssueEditDialog) === true
+
+},createDeepEqualSelector))
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
-@connect(makeMapStateToProps)
 @PureRender
 //@HotKeyContext()
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
@@ -442,19 +436,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 	}
 
-	getErrorText(field:string) {
-		const {saveError } = this.props,
-			validationErr:IGithubValidationError =
-				!saveError ? null : saveError.errors
-					.find(err => err.field === 'title')
 
-		return !validationErr ? null : GithubErrorCodes[validationErr.code]
-	}
 
 	render() {
 
 		const
-			{styles,editingIssue,theme, open, user,saving} = this.props,
+			{styles,editingIssue,theme, open, user,saveError,saving} = this.props,
 			{labels,availableRepo} = this.state,
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 
@@ -519,7 +506,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 							           floatingLabelFocusStyle={styles.input.floatingLabelFocus}
 							           floatingLabelFixed={false}
 							           errorStyle={{transform: 'translate(0,1rem)'}}
-							           errorText={this.getErrorText('title')}
+							           errorText={getGithubErrorText(saveError,'title')}
 							           hintText="I got 99 problems, but issues ain't 1!"
 							           hintStyle={styles.input.hint}
 							           style={styles.form.title}

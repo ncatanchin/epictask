@@ -149,7 +149,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param fromIssue
 	 */
 	createIssueInline(fromIssue:Issue) {
-
+		this.newIssue(fromIssue,true)
 	}
 
 	@Action()
@@ -241,11 +241,23 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Set the current issue being edited
 	 *
 	 * @param editingIssue
+	 * @param inline
 	 * @return {(state:IssueState)=>Map<string, Issue>}
 	 */
 	@ActionReducer()
-	setEditingIssue(editingIssue:Issue) {
-		return (state:IssueState) => state.set('editingIssue',editingIssue)
+	setEditingIssue(editingIssue:Issue,inline:boolean = false) {
+		return (state:IssueState) => state.set('editingIssue',editingIssue).set('editingInline',inline)
+	}
+
+	/**
+	 * Set whether or not inline editing is taking place
+	 *
+	 * @param inline
+	 * @returns {(state:IssueState)=>Map<string, boolean>}
+	 */
+	@ActionReducer()
+	setEditingInline(inline:boolean) {
+		return (state:IssueState) => state.set('editingInline',inline)
 	}
 
 
@@ -256,7 +268,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	newIssue() {
+	newIssue(fromIssue:Issue = null, inline:boolean = false) {
 		return async (dispatch,getState) => {
 			const
 				actions = this.withDispatcher(dispatch,getState),
@@ -271,19 +283,25 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			}
 
 			const state = getState()
+			const availRepos = _.sortBy(enabledReposSelector(state), 'name')
 
-			const selectedIssueIds = selectedIssueIdsSelector(state) || []
-			//const availRepoIds = availRepoIdsSelector(state)
-			const issueModels = issueModelsSelector(state)
-			const availRepos = _.sortBy(enabledReposSelector(state),'name')
+			// If no from issue was provided then use the selected
+			// issue if available - otherewise totally empty
+			if (!fromIssue) {
+				const selectedIssueIds = selectedIssueIdsSelector(state) || []
+				//const availRepoIds = availRepoIdsSelector(state)
+				const issueModels = issueModelsSelector(state)
 
-			const selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
+				const selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
 
-			const selectedIssue =
-				(selectedIssueId && issueModels.has(selectedIssueId)) ?
-					issueModels.get(selectedIssueId) : null
+				fromIssue =
+					(selectedIssueId && issueModels.has(selectedIssueId)) ?
+						issueModels.get(selectedIssueId) : null
 
-		    let repoId:number = _.get(selectedIssue,'repoId') as any
+
+			}
+
+			let repoId: number = _.get(fromIssue, 'repoId') as any
 			if (!availRepos.find(item => item.repoId === repoId))
 				repoId = (availRepos.length) ? availRepos[0].repoId : null
 
@@ -294,12 +312,14 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			const issue = await fillIssue(new Issue({repoId}),repoId)
 
-			if (selectedIssue)
-				assign(issue,_.cloneDeep(_.pick('milestone','labels')))
+			if (fromIssue)
+				assign(issue,_.cloneDeep(_.pick(fromIssue,'milestone','labels')))
 
 			actions.setIssueSaving(false)
-			actions.setEditingIssue(issue)
-			uiActions.setDialogOpen(dialogName,true)
+			actions.setEditingIssue(issue,inline)
+
+			if (inline)
+				uiActions.setDialogOpen(dialogName,true)
 		}
 	}
 

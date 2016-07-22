@@ -6,6 +6,7 @@
 			false,
 			"tabs"
 		],
+
 		"no-reference": true,
 		"no-duplicate-variable": true,
 		"no-eval": true,
