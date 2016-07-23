@@ -112,8 +112,13 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 	focusIssuesPanel() {
 		$('#issuesPanel').focus()
+
 	}
 
+	focusIssueDetailPanel() {
+		$('#issueDetailPanel').focus()
+
+	}
 
 	showAddRepoDialog() {
 		return this.setDialogOpen(Dialogs.RepoAddDialog,true)

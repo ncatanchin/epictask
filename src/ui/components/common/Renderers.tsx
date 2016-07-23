@@ -17,9 +17,9 @@ export function repoName(repo,style = {}) {
 
 export function getGithubErrorText(saveError,field:string) {
 	const
-		validationErr:IGithubValidationError =
-			!saveError ? null : saveError.errors
-				.find(err => err.field === 'title')
+		errors = _.get(saveError,'errors',[]),
+		validationErr:IGithubValidationError = errors
+			.find(err => err.field === 'title')
 
 	return !validationErr ? null : GithubErrorCodes[validationErr.code]
 }

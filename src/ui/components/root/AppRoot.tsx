@@ -155,6 +155,14 @@ class App extends React.Component<IAppProps,any> {
 			log.info('Escaping and moving focus')
 			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
 		},
+		[KeyMaps.CommonKeys.View1]: () => {
+			log.info('Escaping and moving focus')
+			Container.get(UIActionFactory).focusIssuesPanel()
+		},
+		[KeyMaps.CommonKeys.View2]: () => {
+			log.info('Escaping and moving focus')
+			Container.get(UIActionFactory).focusIssueDetailPanel()
+		},
 		[KeyMaps.CommonKeys.Find]: () => {
 			log.info('Escaping and moving focus')
 			$('#header').find('input').focus()

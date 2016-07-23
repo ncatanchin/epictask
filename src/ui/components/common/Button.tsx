@@ -5,10 +5,10 @@
 //region Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import {connect} from 'react-redux'
 import filterProps from 'react-valid-props'
-import {Themed} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 const Ink = require('react-ink')
+const tinycolor = require('tinycolor2')
 //endregion
 
 //region Logger
@@ -16,8 +16,8 @@ const log = getLogger(__filename)
 //endregion
 
 //region Styles
-const styles = {
-	root: makeStyle(PositionRelative,{
+const baseStyles = createStyles({
+	root: [PositionRelative,makeTransition('background-color'),{
 		cursor: 'pointer',
 		border: 0,
 		padding: '0.5rem 1rem',
@@ -26,8 +26,8 @@ const styles = {
 		width: 'auto',
 		textTransform: 'uppercase',
 		fontSize: themeFontSize(1.3)
-	})
-}
+	}]
+})
 //endrgion
 
 
@@ -37,18 +37,10 @@ const styles = {
  */
 export interface IButtonProps extends React.HTMLAttributes {
 	theme?:any
-	style?:any
+	styles?:any
 	ripple?:boolean
 	mode?:'flat'|'raised'|'fab'
 	disabled?:boolean
-}
-//endregion
-
-//region Redux State -> Props Mapper
-function mapStateToProps(state) {
-	return {
-		theme: getTheme()
-	}
 }
 //endregion
 
@@ -58,8 +50,8 @@ function mapStateToProps(state) {
  * @class Button
  * @constructor
  **/
+@ThemedStyles(baseStyles,'button')
 @Radium
-@Themed
 export class Button extends React.Component<IButtonProps,any> {
 
 	static defaultProps = {
@@ -73,13 +65,20 @@ export class Button extends React.Component<IButtonProps,any> {
 
 	render() {
 		const
-			{ripple,theme,mode,disabled,style,children} = this.props,
-			s = mergeStyles(styles,theme.button)
+			{ripple,theme,mode,disabled,style,styles,children} = this.props
 
+		const rootStyle = mergeStyles(
+			styles.root,
+			styles[mode],
+			(disabled) && styles.disabled,style
+		)
 
-		const rootStyle = mergeStyles(s.root,s[mode],(disabled) && s.disabled,style)
-		//{ripple && <Ink/>}
+		rootStyle[':hover'] = {
+			backgroundColor: tinycolor(rootStyle.backgroundColor).lighten(20).toString()
+		}
+
 		return <button {...filterProps(this.props)} style={rootStyle}>
+			{ripple && <Ink/>}
 			{children}
 		</button>
 	}

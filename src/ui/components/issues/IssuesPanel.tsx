@@ -42,7 +42,7 @@ import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {Button} from 'ui/components/common/Button'
-import {IssueCreateInline} from 'ui/components/issues/IssueCreateInline'
+import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import {TIssueEditInlineConfig} from 'shared/actions/issue'
 
 // Non-typed Components
@@ -327,7 +327,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{groupBy} = issueSortAndFilter.issueSort
 
 
-		log.info('Enter pressed',selectedIssueIds)
+		log.debug('Enter pressed',selectedIssueIds,selectedIssue)
 
 		if (selectedIssue) {
 			let groupIndex = -1, issueIndex = -1
@@ -400,7 +400,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		return (event:React.KeyboardEvent) => {
 
 			const
-				{issues,selectedIssueIds} = this.props,
+				{issues,selectedIssueIds,editingInline} = this.props,
 				{firstSelectedIndex} = this.state,
 				issueCount = issues.length
 
@@ -423,6 +423,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 			const adjustedIndex = Math.max(0,Math.min(issues.length - 1,index))
 
+			if (!issues[index]) {
+				log.info('No issue at index ' + index)
+				return
+			}
+
+
 			let newSelectedIssueIds = (event.shiftKey) ?
 				this.calculateSelectedIssueIds(adjustedIndex,firstSelectedIndex) : // YOU ARE HERE - just map array of ids
 				[issues[index].id]
@@ -431,13 +437,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				this.setState({firstSelectedIndex:index})
 
 
-			log.info('Keyed move',{
+			log.debug('Keyed move',{
 				increment,
 				index,
 				firstSelectedIndex,
 				selectedIssueIds,
 				newSelectedIssueIds,
 			})
+
 
 
 			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
@@ -532,7 +539,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 		this.issueActions.setSelectedIssueIds(selectedIssueIds)
-		log.info('Received issue select')
+		log.debug('Received issue select')
 	}
 
 
@@ -618,12 +625,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			}
 
 			return showInline ?
-				<IssueCreateInline
-					key={key}
-
-				>
+				// Inline issue editor
+				<IssueEditInline key={key}>
 					inline create here
-				</IssueCreateInline> :
+				</IssueEditInline> :
+
+				// Issue item
 				<IssueItem key={key}
 			                  styles={styles}
 			                  index={index}

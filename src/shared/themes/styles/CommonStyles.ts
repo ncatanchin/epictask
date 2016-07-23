@@ -38,7 +38,10 @@ export function makeFlexAlign(alignItems,justifyContent = null) {
 	return {justifyContent,alignItems}
 }
 
-export function makeTransition(props:string[] = null,duration = 0.25,easing = 'ease-out') {
+export function makeTransition(props:string[]|string = null,duration = 0.25,easing = 'ease-out') {
+	if (_.isString(props))
+		props = [props]
+
 	props = props || ['all']
 	return {
 		transition: props

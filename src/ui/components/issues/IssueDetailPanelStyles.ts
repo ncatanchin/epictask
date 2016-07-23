@@ -46,10 +46,15 @@ const baseStyles = createStyles({
 		}),
 
 		// Row 3 - Labels + title
-		row3: makeStyle(flexTransition, FlexRowCenter, FlexAuto, {
-			labels:    makeStyle(FlexScale, FlexAlignStart, {}),
+		row3: [flexTransition, FlexRowCenter, FlexAuto, {
+			labels:    [FlexScale, FlexAlignStart, {
+				flexWrap: 'wrap',
+				label: {
+					marginTop: rem(0.5)
+				}
+			}],
 			milestone: makeStyle({})
-		})
+		}]
 
 	}],
 

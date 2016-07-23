@@ -5,7 +5,7 @@ const tsConfigBaseFile = () => `${baseDir}/src/tsconfig.json`
 const tsTestConfigBaseFile = () => `${baseDir}/tests/tsconfig.json`
 
 export function makeTsConfigBase() {
-	const templateConfig = require('../tsconfig.json')
+	const templateConfig = require('../tsconfig.base.json')
 
 	Object.assign(templateConfig,{
 		exclude: templateConfig.exclude.reduce((excludedPaths,excludePath) => {

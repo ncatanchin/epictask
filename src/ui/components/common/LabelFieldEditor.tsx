@@ -23,6 +23,7 @@ const styles = {
 		// display: 'flex',
 		// padding: '0.4rem 2rem',
 		// borderRadius: '1.5rem',
+		cursor: 'pointer',
 		height: '3.4rem',
 		padding: '1rem 1rem 0 0',
 		// fontWeight: 700
@@ -64,7 +65,7 @@ const styles = {
  * ILabelFieldEditorProps
  */
 
-export interface ILabelFieldEditorProps extends React.DOMAttributes {
+export interface ILabelFieldEditorProps extends React.HTMLAttributes {
 	theme?:any
 	style?:any
 	id:string
@@ -107,11 +108,11 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 
 	getNewState(props) {
 		const {availableLabels,labels} = props
-		const filteredAvailableLabels = availableLabels
-			.filter(availLabel => !labels.find(label => label.url === availLabel.url))
+		const filteredAvailableLabels = _.nilFilter(availableLabels)
+			.filter((availLabel:Label) => !labels.find(label => label.url === availLabel.url))
 
-		const newState = {availableLabels: filteredAvailableLabels}
-		return newState
+
+		return {availableLabels: filteredAvailableLabels}
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -136,7 +137,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 
 
 		const results = availableLabels.filter(testAvailRepo)
-		log.info('return available labels', results)
+		log.debug('return available labels', results)
 		return results
 
 	}
@@ -165,6 +166,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			]).toRgbString()
 
 		return {
+			cursor: 'pointer',
 			backgroundColor,
 			color
 		}
@@ -180,7 +182,9 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		return <div key={item.url} className='chip' style={s.chip}>
 			<div style={chipContentStyle}>
 				<Icon style={s.chipContent.control}
-				      onClick={() => this.onChipRemoved(item)}>clear</Icon>
+				      onClick={() => this.onChipRemoved(item)}>
+					clear
+				</Icon>
 				<div style={s.chipContent.label}>
 					{item.name}
 				</div>
@@ -202,13 +206,21 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	render() {
 		let
 			{props,state} = this,
-			{theme,labels,label,inputStyle,hintAlways,underlineShow} = props,
+			{
+				theme,
+				labels,
+				label,
+				inputStyle,
+				labelStyle,
+				hintStyle,
+				hintAlways,
+				underlineShow
+			} = props,
 			{availableLabels} = state,
 			s = mergeStyles(styles, theme.component)
 
 		availableLabels =  availableLabels || []
 		labels = labels || []
-
 
 
 		return <ChipsField {...props}
@@ -221,7 +233,8 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		                    allChips={availableLabels}
 		                    selectedChips={labels}
 							inputStyle={inputStyle}
-							hintStyle={hintStyle2}
+							labelStyle={labelStyle}
+							hintStyle={hintStyle}
 							hintAlways={hintAlways}
 							underlineShow={underlineShow !== false}
 		                    onChipSelected={this.onChipSelected}

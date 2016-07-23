@@ -168,7 +168,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 			}
 		})
 
-		log.info('new data source =',newDataSource)
+		log.debug('new data source =',newDataSource)
 		return newDataSource
 	}
 
@@ -186,7 +186,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	handleUpdateInput = (newQuery) => {
-		log.info('QUery updated',newQuery)
+		log.debug('QUery updated',newQuery)
 		const newChipModels = this.props.allChips
 			.filter(item => this.props.filterChip(item,newQuery))
 
@@ -204,7 +204,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
-		log.info('Selected / Enter', chosenRequest,index)
+		log.debug('Selected / Enter', chosenRequest,index)
 
 		const {dataSource} = this.state
 		if (!dataSource || !dataSource.length) {
@@ -228,7 +228,6 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	render() {
-		log.info('render args',arguments)
 		const
 			{state,props} =this,
 			{isFocused,dataSource,query} = state,
@@ -247,7 +246,9 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				underlineShow
 			} = props,
 			s = mergeStyles(styles, theme.component),
-			hasValue = (query && query !== '') || selectedChips.length > 0,
+
+
+			hasValue = (query && query.length > 0) || selectedChips.length > 0,
 
 			finalInputStyle = makeStyle(
 				inputStyle,
@@ -278,8 +279,8 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 			<div style={[s.chips,(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
 				{selectedChips.map(item => renderChip(item))}
-				<AutoComplete
-								className='chipAutoComplete' hintText={hint}
+				<AutoComplete onKeyDown={props.onKeyDown}
+							 className='chipAutoComplete' hintText={hint}
 				              hintStyle={makeStyle(hintStyle,{bottom: -2,opacity: !hasValue && (hintAlways || isFocused) ? 1 : 0})}
 				              style={makeStyle(s.input,((hasValue || isFocused) && label) && {marginTop:'1rem'})}
 				              underlineShow={false}

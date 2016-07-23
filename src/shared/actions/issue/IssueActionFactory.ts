@@ -7,7 +7,7 @@ import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'main/services/DBService'
 import {ActionFactory, Action, ActionReducer} from 'typedux'
 import {Dialogs, IssueKey, DataKey, DataRequestIssueListId} from 'shared/Constants'
-import {cloneObject} from 'shared/util/ObjectUtil'
+import {cloneObject, extractError} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
 import {Issue, IssueStore} from 'shared/models/Issue'
@@ -141,7 +141,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@ActionReducer()
 	setSelectedIssueIds(selectedIssueIds:number[]) {
-		return (state:IssueState) => state.set('selectedIssueIds',selectedIssueIds)
+		return (state:IssueState) => state
+			.set('selectedIssueIds',selectedIssueIds)
+			.set('editingInline',false)
 	}
 
 	/**
@@ -156,6 +158,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	private doIssueSave(issue:Issue) {
 		return async (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
+			const dataActions:DataActionFactory = Container.get(DataActionFactory)
 			const client = Container.get(GitHubClient)
 
 			const repoModels = repoModelsSelector(getState())
@@ -178,19 +181,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					if (!issueIds)
 						actions.loadIssues()
 					else {
-						const dataActions:DataActionFactory = Container.get(DataActionFactory)
+
 						if (!issueIds.includes(updatedIssue.id)) {
 							issueIds = issueIds.concat(updatedIssue.id)
 						}
 
-
 						dataActions.updateModels(Issue.$$clazz,{[`${updatedIssue.id}`]:updatedIssue})
 						const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
 
-						// internalIssues = internalIssues.filter(issueMatcher).concat([updatedIssue])
-
 						actions.requestIssueIds(issueIds)
-
 					}
 				}
 
@@ -198,12 +197,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				this.uiActions.closeAllDialogs()
 
 				addMessage(`Saved issue #${updatedIssue.number}`)
+				actions.setSelectedIssueIds([updatedIssue.id])
 				actions.setIssueSaving(false)
 				actions.setEditingIssue(null)
 
+
 			} catch (err) {
 				log.error('failed to save issue', err)
-				actions.setIssueSaving(false,err)
+
+				actions.setIssueSaving(false,extractError(err))
 
 				//addErrorMessage(err)
 			}
@@ -220,9 +222,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@ActionReducer()
 	setIssueSaving(saving:boolean,error:Error = null) {
-		return (state:IssueState) => state
-			.set('issueSaving',saving)
-			.set('issueSaveError',error)
+		return (state:IssueState) => {
+			return state
+				.set('issueSaving',saving)
+				.set('issueSaveError',error)
+		}
 	}
 
 	/**
@@ -264,6 +268,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	editInline(groupIndex:number,issueIndex:number,issue:Issue) {
 		return (state:IssueState) => state
 			.set('editingInline',true)
+			.set('editingIssue',issue)
 			.set('editInlineConfig',{
 				groupIndex,
 				issueIndex,

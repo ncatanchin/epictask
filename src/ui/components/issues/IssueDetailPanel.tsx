@@ -19,6 +19,7 @@ import {issuesDetailSelector, selectedIssueSelector, commentsSelector} from 'sha
 import baseStyles from './IssueDetailPanelStyles'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {HotKeys} from 'react-hotkeys'
 
 // Non-typed Components
 const {Textfit} = require('react-textfit')
@@ -83,10 +84,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 
 	refs:{[name:string]:any}
 
-	constructor(props,context) {
-		super(props,context)
-	}
-
 	/**
 	 * Render when multiple styles are selected
 	 *
@@ -116,7 +113,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			<Avatar user={issue.assignee}
 			        labelPlacement='before'
 			        prefix={issue.assignee ? 'assigned to' : null}
-
 			        prefixStyle={{padding: '0 0.5rem 0 0'}}
 			        style={styles.header.row1.assignee}
 			        labelStyle={styles.username}
@@ -136,13 +132,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 
 		{/* ROW 3 */}
 		<div style={styles.header.row3}>
-			{/* LABELS */}
-			<IssueLabelsAndMilestones labels={issue.labels} style={styles.header.row3.labels}/>
+			{/* LABELS & MILESTONES */}
+			<IssueLabelsAndMilestones labels={issue.labels}
+			                          showIcon={true}
+			                          milestones={issue.milestone && [issue.milestone]}
+			                          labelStyle={styles.header.row3.labels.label}
+			                          style={styles.header.row3.labels}/>
 
-			{/* MILESTONE */}
-			{issue.milestone && <div style={styles.header.row3.milestone}>
-				{issue.milestone.title}
-			</div>}
+
+
 		</div>
 	</div>
 
@@ -244,12 +242,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	render() {
 		const {issues, theme, comments,styles} = this.props
 
-		return (!issues || issues.length == 0) ? <div/> : <div style={styles.root}>
-			{ issues.length > 1 ?
-				this.renderMulti(issues, styles) :
-				this.renderIssue(issues[0], comments, styles)
-			}
-		</div>
+		return (!issues || !issues.length) ? <div/> :
+			<HotKeys id='issueDetailPanel'
+			         style={styles.root}>
+				{ issues.length > 1 ?
+					this.renderMulti(issues, styles) :
+					this.renderIssue(issues[0], comments, styles)
+				}
+			</HotKeys>
 	}
 
 }

@@ -37,7 +37,7 @@ const fontFamily = fontFamilyRegular
 const fontWeight = 400
 const fontSize = 10
 
-export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
+export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	name: 'DarkTheme',
 
 	/**
@@ -80,6 +80,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		root: {
 			fontFamily: fontFamilyRegular,
 			fontWeight: 500,
+			borderRadius: 2
 		},
 		flat: {
 			backgroundColor: primary.hue1,
@@ -98,13 +99,20 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 	},
 
 	form: {
+		menuItem: [{
+			cursor: 'pointer'
+		}],
 		select: {
+
 			list: {
 				padding: 0,
 				paddingTop: 0,
 				paddingBottom: 0,
 				backgroundColor: 'transparent'
-			}
+			},
+			item: [{
+				cursor: 'pointer'
+			}]
 		}
 	},
 
@@ -610,4 +618,4 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, {
 		highlightColor:   accent.hue1,
 		errorColor:       warn.hue1
 	}
-}))
+})))

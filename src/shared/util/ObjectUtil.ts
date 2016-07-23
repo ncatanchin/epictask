@@ -120,6 +120,16 @@ export function transformValues(o,fn:IValueTransformer) {
 
 }
 
+export function extractError(error:Error) {
+	let newError:Error = null
+	if (error) {
+		newError = _.cloneDeep(_.pick(error, ['message', 'statusCode', 'errors']))
+		if (!newError.message)
+			newError.message = error.message || error.toString() || 'Save failed'
+	}
+	return newError
+}
+
 export function convertEnumValuesToString(obj) {
 	Object.keys(obj).forEach((key) => {
 		if (isNaN(+key)) {
