@@ -57,7 +57,7 @@ export function createEnabledAvailRepoSelector() {
 	)
 }
 
-export const availableRepoCountSelector = createSelector(
+export const availableRepoCountSelector = createDeepEqualSelector(
 	availRepoModelsSelector,
 	(availRepoMap:Map<string,AvailableRepo>) => availRepoMap.size
 )

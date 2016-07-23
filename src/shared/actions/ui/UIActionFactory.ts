@@ -8,6 +8,7 @@ import {UIState} from 'shared/actions/ui/UIState'
 import {Dialogs} from 'shared/Constants'
 
 
+
 export function makeToastMessage(opts:any) {
 	return Object.assign({},opts,{
 		id:uuid.v4(),
@@ -106,23 +107,38 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Focus on app root
 	 */
+	@ActionReducer()
 	focusAppRoot() {
-		$('#appRoot').focus()
+		return (state) => {
+			if (Env.isRenderer)
+				setTimeout(() => $('#appRoot').focus())
+			return state
+		}
 	}
-
+	@ActionReducer()
 	focusIssuesPanel() {
-		$('#issuesPanel').focus()
+		return (state) => {
+			if (Env.isRenderer)
+				setTimeout(() => $('#issuesPanel').focus())
+			return state
+		}
 
 	}
 
+	@ActionReducer()
 	focusIssueDetailPanel() {
-		$('#issueDetailPanel').focus()
-
+		return (state) => {
+			if (Env.isRenderer)
+				setTimeout(() => $('#issueDetailPanel').focus())
+			return state
+		}
 	}
+
 
 	showAddRepoDialog() {
 		return this.setDialogOpen(Dialogs.RepoAddDialog,true)
 	}
+
 
 	toggleRepoPanelOpen() {
 		return this.setRepoPanelOpen(!this.state.repoPanelOpen)

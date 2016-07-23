@@ -16,7 +16,7 @@ export function PureRender(Component) {
 		const diff = shallowCompare(this,nextProps, nextState)
 
 		let compDiff = false
-		if (shouldComponentUpdateFn) {
+		if (!diff && shouldComponentUpdateFn) {
 			compDiff = shouldComponentUpdateFn.call(this,nextProps,nextState)
 		}
 

@@ -9,6 +9,8 @@ export interface IIssueFilter {
 	// User ids
 	assigneeIds?:number[]
 
+	includeClosed:boolean
+
 	// Specific issue id
 	issueId?:number
 

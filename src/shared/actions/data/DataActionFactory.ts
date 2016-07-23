@@ -4,7 +4,7 @@ import {SearchKey, DataKey} from "shared/Constants"
 import {AutoWired,Inject, Container} from 'typescript-ioc'
 import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {DataMessage, DataState, DataRequest} from 'shared/actions/data/DataState'
-import {Stores} from 'main/services/DBService'
+import {Stores} from 'shared/Stores'
 import {Map} from 'immutable'
 import {ModelConstructor} from 'shared/Registry'
 import {Benchmark} from 'shared/util/Benchmark'
@@ -17,6 +17,7 @@ const uuid = require('node-uuid')
 const modelPromises:{[key:string]:Promise<any>} = {}
 
 const log = getLogger(__filename)
+
 
 /**
  * Search Action Factory
@@ -126,47 +127,49 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
 	}
 
+	submitRequestAction(request,withModelMap,dispatch,getState) {
+		const
+			actions = this.withDispatcher(dispatch,getState),
+			{modelType,modelIds,fulfilled} = request
 
+		if (modelIds.length === 0)
+			request.fulfilled = true
+
+		actions.updateRequest(request)
+
+		if (request.fulfilled)
+			return Promise.resolve(request)
+
+		// Next tick
+		//await Promise.setImmediate()
+
+		const state = getState().get(DataKey)
+		const models = state.models.get(modelType)
+
+		let newModelIds = modelIds
+			.filter(modelId => !models || (!models.get(modelId) && !withModelMap[modelId]))
+
+
+		return this.getModels(modelType,...newModelIds)
+			.then(newModelMap => {
+				Object.assign(withModelMap,newModelMap)
+				this.updateModels(modelType,withModelMap)
+
+				//await Promise.setImmediate()
+
+				actions.setRequestFulfilled(request.id,true)
+				return request
+			})
+
+
+
+	}
 
 	@ActionPromise()
 	submitRequest(request:DataRequest,withModelMap:{[id:string]:any} = {}) {
-		return (dispatch,getState) => {
-			const
-				actions = this.withDispatcher(dispatch,getState),
-				{modelType,modelIds,fulfilled} = request
-
-			if (modelIds.length === 0)
-				request.fulfilled = true
-
-			actions.updateRequest(request)
-
-			if (request.fulfilled)
-				return Promise.resolve(request)
-
-			// Next tick
-			//await Promise.setImmediate()
-
-			const state = getState().get(DataKey)
-			const models = state.models.get(modelType)
-
-			let newModelIds = modelIds
-				.filter(modelId => !models || (!models.get(modelId) && !withModelMap[modelId]))
-
-
-			return this.getModels(modelType,...newModelIds)
-				.then(newModelMap => {
-					Object.assign(withModelMap,newModelMap)
-					this.updateModels(modelType,withModelMap)
-
-					//await Promise.setImmediate()
-
-					actions.setRequestFulfilled(request.id,true)
-					return request
-				})
-
-
-
-		}
+		return (dispatch,getState) => this.submitRequestAction(
+			request,withModelMap,dispatch,getState
+		)
 	}
 
 }

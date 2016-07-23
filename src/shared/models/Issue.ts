@@ -18,14 +18,12 @@ import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchd
 import {RegisterModel} from '../Registry'
 
 
-export type IssueState = "open" | "closed"
+export type TIssueState = "open" | "closed"
 
 
 @RegisterModel
 @ModelDescriptor()
 export class Issue extends DefaultModel {
-
-	$$clazz = 'Issue'
 
 	/**
 	 * Revive from JS/JSON
@@ -40,18 +38,43 @@ export class Issue extends DefaultModel {
 	@AttributeDescriptor()
 	repoId:number
 
+	/**
+	 * Globally unique url to view the issue
+	 */
 	@AttributeDescriptor()
 	url: string;
 
 
+	/**
+	 * Associated repo
+	 *
+	 * @transient
+	 */
 	@AttributeDescriptor({transient:true})
 	repo:Repo
 
+
+	/**
+	 * Milestones
+	 *
+	 * @transient
+	 */
 	@AttributeDescriptor({transient:true})
 	milestones:Milestone[]
 
+	/**
+	 * Collaborators
+	 *
+	 * @transient
+	 */
 	@AttributeDescriptor({transient:true})
 	collaborators:User[]
+
+	/**
+	 * State open/closed
+	 */
+	@AttributeDescriptor()
+	state: TIssueState;
 
 	repository_url: string;
 	labels_url: string;
@@ -59,7 +82,7 @@ export class Issue extends DefaultModel {
 	events_url: string;
 	html_url: string;
 	number: number;
-	state: IssueState;
+
 	title: string;
 	body: string;
 	user: User;
@@ -144,6 +167,23 @@ export class IssueStore extends TSRepo<Issue> {
 		})
 	})
 	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {
+		return null
+	}
+
+	@PouchDBMangoFinder({
+		includeDocs: false,
+		indexFields: ['repoId','state'],
+		selector: (state:TIssueState,...repoIds) => ({
+			$and: [{
+				state: {
+					$eq: state
+				}
+			},{
+				$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
+			}]
+		})
+	})
+	findIdsByStateAndRepoId(state:TIssueState,...repoIds:number[]):Promise<number[]> {
 		return null
 	}
 

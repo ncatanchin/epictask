@@ -110,7 +110,7 @@ const styles = {
  */
 export interface IToastMessagesProps {
 	theme?:any
-	messages?:List<IToastMessage>
+	messages?:IToastMessage[]
 }
 //endregion
 
@@ -126,8 +126,8 @@ const messageNotifications = {}
  * @param newMessages
  */
 //TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
-function processNotifications(newMessages) {
-	if (newMessages === lastMessages || Array.isEqual(newMessages,lastMessages,true))
+function processNotifications(newMessages:IToastMessage[]) {
+	if (_.isEqual(newMessages, lastMessages))
 		return
 
 	Object.keys(messageNotifications)
@@ -145,24 +145,16 @@ function processNotifications(newMessages) {
 
 	lastMessages = newMessages
 	newMessages
-		.filter(msg => !messageNotifications[msg.id])
+		.filter(msg => !messageNotifications[msg.id] && msg.notify === true)
 		.forEach(msg => {
 
-
 			const clearMessage = () => uiActions.removeMessage(msg.id)
-
-			// const buttons = msg.type === ToastMessageType.Error ?
-			// 	['Acknowledge'] : []
-
 
 			// TODO: add 'tag' and 'sticky' for error
 			const notification = new Notification('epictask',{
 				title: 'epictask',
 				body: msg.content,
-				tag: msg.id,
-				//icon: IconDataUrl,
-				//sticky: true,
-
+				tag: msg.id
 			})
 
 
@@ -188,7 +180,7 @@ function processNotifications(newMessages) {
  **/
 
 @connect(createStructuredSelector({
-	messages: (state) => uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg))
+	messages: (state):IToastMessage[] => uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg))
 },createDeepEqualSelector))
 @Themed
 @PureRender

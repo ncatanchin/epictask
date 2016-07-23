@@ -18,7 +18,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {
-	milestonesSelector, selectedIssueIdsSelector, labelsSelector,
+	milestonesSelector, labelsSelector,
 	issueFilterMilestonesSelector, issuesSelector, issueSortAndFilterSelector, issueFilterLabelsSelector,
 	issuesGroupedSelector, issueIdsSelector
 } from 'shared/actions/issue/IssueSelectors'
@@ -136,8 +136,7 @@ export interface IIssueFiltersProps extends React.DOMAttributes {
 	issueFilterLabels: issueFilterLabelsSelector,
 	issueFilterMilestones: issueFilterMilestonesSelector,
 	labels: labelsSelector,
-	milestones: milestonesSelector,
-	selectedIssueIds: selectedIssueIdsSelector
+	milestones: milestonesSelector
 }, createDeepEqualSelector))
 
 @ThemedStyles(baseStyles, 'issueFilters')
@@ -152,14 +151,31 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	 */
 	onSortDirectionChanged = () => this.issueActions.toggleSortByDirection()
 
+	/**
+	 * Group by direction change
+	 */
 	onGroupByDirectionChanged = () => this.issueActions.toggleGroupByDirection()
 
+	/**
+	 * Remove a label/milestone filter
+	 *
+	 * @param item
+	 * @param index
+	 */
 	onRemoveItemFromFilter = (item:Label|Milestone, index:number) => {
 		if (Label.isLabel(item))
 			this.issueActions.toggleIssueFilterLabel(item)
 		else
 			this.issueActions.toggleIssueFilterMilestone(item)
 	}
+
+
+	/**
+	 * Toggle the inclusion of closed issues
+	 */
+	onToggleIncludeClosed = () => this.issueActions.includeClosedIssues(
+		!this.props.issueFilter.includeClosed
+	)
 
 	makeOnMilestoneSelected(milestone:Milestone) {
 		return (event) => {
@@ -418,6 +434,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				unfilteredIssueIds,
 				issuesGrouped,
 				issueSort,
+				issueFilter,
 				issueFilterLabels,
 				issueFilterMilestones,
 				labels,
@@ -522,6 +539,21 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 		</div>
 
+		// INCLUDE CLOSED
+
+		const includeClosedMenuItemText = <div style={styles.list.item.text}>
+			<div>
+				<Icon style={makeStyle(styles.list.item.text.icon,{
+					fontSize: 12
+				})} iconSet='fa' iconName={issueFilter.includeClosed ? 'check-circle-o' : 'circle-thin'}/>
+			</div>
+			<div style={styles.list.item.text.primary}>
+				Issues Closed Issues
+			</div>
+			<div style={styles.list.item.text.spacer}/>
+		</div>
+
+
 		const filterIconStyle:any = {height: 24, padding: 0}
 		if (hasFilters && !isGrouped)
 			filterIconStyle.color = theme.issueFilters.hasFiltersColor
@@ -569,6 +601,11 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			{/* MILESTONES */}
 			<MenuItem primaryText={milestoneMenuItemText}
 			          menuItems={this.renderMilestoneItems()}/>
+
+			{/* TOGGLE INCLUDE CLOSED */}
+			<MenuItem primaryText={includeClosedMenuItemText}
+			          listStyle={theme.list}
+			          onTouchTap={this.onToggleIncludeClosed}/>
 		</IconMenu>
 
 

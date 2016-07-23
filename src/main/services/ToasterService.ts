@@ -1,21 +1,32 @@
-import {Singleton, AutoWired,Inject, Container, Scope} from 'typescript-ioc'
-import {IService, ServiceStatus, BaseService} from './IService'
+import {Container} from 'typescript-ioc'
+import {BaseService} from './IService'
 import {ObservableStore} from 'typedux'
-import {Stores} from './DBService'
 import {ToastMessageType} from 'shared/models/Toast'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
 
-export default class ToastService extends BaseService {
+export class ToastService extends BaseService {
 
-
-	pendingTimers = {}
+	private unsubscribe:Function
+	private pendingTimers = {}
 
 	uiActions:UIActionFactory = Container.get(UIActionFactory)
-
 	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
+
+
+	private clear() {
+		if (this.unsubscribe) {
+			this.unsubscribe()
+			this.unsubscribe = null
+		}
+
+		Object.keys(this.pendingTimers)
+			.forEach(timerId => clearTimeout(this[timerId]))
+
+		this.uiActions.clearMessages()
+	}
 
 	onMessagesChanged = (newMessages) => {
 
@@ -24,7 +35,10 @@ export default class ToastService extends BaseService {
 			msg = _.toJS(msg)
 
 			const
-				clearMessage = () => this.uiActions.removeMessage(msg.id),
+				clearMessage = () => {
+					this.uiActions.removeMessage(msg.id)
+					delete this.pendingTimers[msg.id]
+				},
 				isError = msg.type === ToastMessageType.Error
 
 
@@ -38,47 +52,34 @@ export default class ToastService extends BaseService {
 			}
 
 			// Add the remove timer
-			this.pendingTimers[msg.id] = setTimeout(clearMessage, isError ? 20000 : 5000)
+			this.pendingTimers[msg.id] = setTimeout(clearMessage, isError ? 60000 : 5000)
 		})
 	}
 
+	/**
+	 * Start the toast manager
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	async start() {
-		await super.start()
-		this.store.observe(
+		this.unsubscribe = this.store.observe(
 			[this.uiActions.leaf(), 'messages'],
 			this.onMessagesChanged
 		)
 
-		setupHMR(this)
-		return this
+		if (module.hot)
+			module.hot.dispose(() => this.clear())
+
+		return super.start()
+	}
+
+	async stop() {
+		this.clear()
+		return super.stop()
 	}
 
 
-	status():ServiceStatus {
-		return this._status
-	}
-
-
-
-	destroy():this {
-		return this
-	}
 }
 
 
-
-
-function setupHMR(service:ToastService) {
-	if (module.hot) {
-		module.hot.dispose(() => {
-			log.info(`HMR - disposing toast timers/messages`)
-			Object.keys(service.pendingTimers)
-				.forEach(msgId => {
-					clearTimeout(service.pendingTimers[msgId])
-					delete service.pendingTimers[msgId]
-
-					service.uiActions.clearMessages()
-				})
-		})
-	}
-}
+export default ToastService

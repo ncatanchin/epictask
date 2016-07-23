@@ -53,6 +53,20 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 	progressIndicatorColor: secondary.hue1,
 
+
+	issueStateIcon: {
+		open: {
+			backgroundColor: 'rgba(101,181,73,1)',
+			color: text.primary
+			// color: 'rgba(101,181,73,1)',
+			// backgroundColor: 'transparent'
+		},
+		closed: {
+			color: text.primary,
+			backgroundColor: warn.hue1
+		}
+	},
+
 	app: {
 		fontFamily,
 		fontWeight
@@ -444,6 +458,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		issueMilestone: {
 			color: text.secondary
+		},
+
+		issueNumber: {
+			color:      text.primary
 		},
 
 		issueRepo: {

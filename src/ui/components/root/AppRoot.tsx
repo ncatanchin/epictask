@@ -100,7 +100,7 @@ export interface IAppProps {
 
 
 const mapStateToProps = createStructuredSelector({
-	hasAvailableRepos: (state) => availableRepoCountSelector(state) > 0,
+	hasAvailableRepos: availableRepoCountSelector,
 	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
 	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
 

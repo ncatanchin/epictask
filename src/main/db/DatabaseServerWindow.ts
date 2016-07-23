@@ -2,11 +2,13 @@
 import Electron = require('electron')
 import path = require('path')
 import * as uuid from 'node-uuid'
-
+import windowStateKeeper = require('electron-window-state')
 import {default as Events} from './DatabaseEvents'
 import {IDatabaseResponse, IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
-
-const TIMEOUT = 120000
+import {Container} from 'typescript-ioc'
+const
+	TIMEOUT = 120000,
+	SHOW_WINDOW = true
 
 const log = getLogger(__filename)
 
@@ -70,7 +72,6 @@ export class DatabaseServerWindow {
 	private stopDeferred:Promise.Resolver<any>
 	private startDeferred:Promise.Resolver<any>
 
-
 	/**
 	 * Database status
 	 *
@@ -90,6 +91,24 @@ export class DatabaseServerWindow {
 		this.internalStatus = status
 	}
 
+	private stopListeners() {
+		ipcMain.removeListener(Events.Ready,this.onReady)
+		ipcMain.removeListener(Events.Response,this.onResponse)
+		ipcMain.removeListener(Events.Shutdown,this.onShutdown)
+	}
+
+
+	private restart() {
+		this.stopListeners()
+		this.setStatus(DatabaseStatus.Created)
+		assign(this,{
+			window: null,
+			stopDeferred: null,
+			startDeferred: null
+		})
+
+		return this.start()
+	}
 
 
 	/**
@@ -100,7 +119,7 @@ export class DatabaseServerWindow {
 	private onShutdown = (event) => {
 		log.info('shutdown started')
 		this.setStatus(DatabaseStatus.Shutdown)
-		this.window && this.window.close()
+		//this.window && this.window.close()
 
 	}
 
@@ -118,7 +137,7 @@ export class DatabaseServerWindow {
 			this.stopDeferred = null
 		}
 
-		this.window && this.window.destroy()
+		//this.window && this.window.destroy()
 		this.window = null
 	}
 
@@ -183,17 +202,18 @@ export class DatabaseServerWindow {
 	}
 
 
-
-
+	/**
+	 * HMR - Hot Module Replacement setup
+	 */
 	private hmrSetup() {
 		if (module.hot) {
 			module.hot.dispose(() => {
-				ipcMain.removeListener(Events.Ready,this.onReady)
-				ipcMain.removeListener(Events.Response,this.onResponse)
-				ipcMain.removeListener(Events.Shutdown,this.onShutdown)
+				this.stopListeners()
 			})
 		}
 	}
+
+
 
 
 	/**
@@ -213,6 +233,16 @@ export class DatabaseServerWindow {
 	request(store:string,fn:string,args:any[])
 	request(storeOrFn:string,fnOrArgs:string|any[],finalArgs:any[] = null) {
 
+		if (!_.get(this.window,'webContents') || this.status === DatabaseStatus.Shutdown) {
+			if (module.hot)
+				return this.restart()
+					.then(() => {
+						this.request(storeOrFn,fnOrArgs as any,finalArgs)
+					})
+
+			throw new Error('Can not make a request until the database is ready, status = ' + this.status)
+		}
+
 		// Map the correct overload
 		const [store,fn,args] = ((_.isString(fnOrArgs)) ?
 			[storeOrFn,fnOrArgs,finalArgs] :
@@ -222,10 +252,6 @@ export class DatabaseServerWindow {
 
 		assert(fn && args,'Both args and fn MUST be defined')
 
-		if (!this.window || this.status === DatabaseStatus.Shutdown) {
-			//assert(this.window && this.status !== DatabaseStatus.Shutdown,'Can not make a request until the database is ready')
-			log.warn('Can not make a request until the database is ready, status = ',this.status)
-		}
 
 
 		// Create the request
@@ -293,6 +319,16 @@ export class DatabaseServerWindow {
 	 * @returns {Promise<any>}
 	 */
 	start():Promise<any> {
+		if (this.startDeferred) {
+			if (module.hot && !_.get(this,'window.webContents')) {
+				log.warn(`In hot - start called, second time, window bad so reseting`)
+				return this.restart()
+			}
+
+			log.info('Started already, returning existing promise')
+			return this.startDeferred.promise
+		}
+
 		log.info('Creating deferred')
 		const deferred = this.startDeferred = Promise.defer(),
 			{promise} = deferred
@@ -301,11 +337,12 @@ export class DatabaseServerWindow {
 		BrowserWindow.getAllWindows().forEach(window => {
 			const url = window.webContents.getURL()
 			if (url === templateURL) {
-				this.window = window
-				log.warn('existing open window - binding and using it')
-				this.bindEvents()
-				this.onReady(null,true)
-				return promise
+				window.destroy()
+				//this.window = window
+				//log.warn('existing open window - binding and using it')
+				//this.bindEvents()
+				//this.onReady(null,true)
+				//return promise
 				// log.warn(`Found existing database window with url ${url} - destroying`)
 				// window.destroy()
 			}
@@ -314,17 +351,37 @@ export class DatabaseServerWindow {
 
 
 		log.info(`Setting timeout on start promise`)
-		promise.timeout(10000)
+		promise.timeout(30000)
 
 
 		try {
 
-			log.info('Creating window')
-			const dbWindow = this.window = new BrowserWindow({
-				show: false
-			})
+			const show = Env.isDev && SHOW_WINDOW
 
-			log.info('Subscriptions')
+			const windowOptions = {show}
+
+			// If we are going to show the window
+			// for dev then add window manager
+			let dbWindowState = null
+			if (show) {
+				dbWindowState = windowStateKeeper({
+					defaultWidth: 800,
+					defaultHeight: 600,
+					file: 'db-window-state.json'
+				})
+				assign(windowOptions, dbWindowState)
+			}
+
+
+			// Create the window
+			log.info('Creating window')
+			const dbWindow = this.window = new BrowserWindow(windowOptions)
+
+			// If we are managing state then attach it
+			if (dbWindowState)
+				dbWindowState.manage(dbWindow)
+
+
 			this.bindEvents()
 
 
@@ -364,10 +421,10 @@ export class DatabaseServerWindow {
 	 * @returns {any}
 	 */
 	stop(isHot = false):Promise<any> {
-		if (isHot) {
-			this.unbindEvents()
-			return Promise.resolve(true)
-		}
+		// if (isHot) {
+		// 	this.unbindEvents()
+		// 	return Promise.resolve(true)
+		// }
 
 		if (this.internalStatus > DatabaseStatus.Started || !this.window)
 			return Promise.resolve(true)
@@ -386,4 +443,27 @@ export class DatabaseServerWindow {
 
 }
 
+const dbWindowInstance = new DatabaseServerWindow()
+dbWindowInstance.start()
+Container.bind(DatabaseServerWindow).provider({get: () => dbWindowInstance})
+
+
+export function getDatabaseServerWindow():DatabaseServerWindow {
+	return dbWindowInstance
+}
+
+
+/**
+ * Export the class
+ */
 export default DatabaseServerWindow
+
+
+if (module.hot) {
+	module.hot.dispose(() => {
+		try {
+			dbWindowInstance.stop()
+		} catch (err) {}
+	})
+	module.hot.accept()
+}

@@ -4,13 +4,13 @@
 import {debounce} from 'lodash-decorators'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
-import {Stores} from 'main/services/DBService'
+import {Stores} from 'shared/Stores'
 import {ActionFactory, Action, ActionReducer} from 'typedux'
 import {Dialogs, IssueKey, DataKey, DataRequestIssueListId} from 'shared/Constants'
 import {cloneObject, extractError} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
-import {Issue, IssueStore} from 'shared/models/Issue'
+import {Issue, IssueStore,TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import Toaster from 'shared/Toaster'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
@@ -26,11 +26,12 @@ import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
-
+import Settings from 'shared/Settings'
 
 /**
  * Created by jglanz on 5/29/16.
  */
+
 
 const log = getLogger(__filename)
 
@@ -64,6 +65,17 @@ export async function fillIssue(issue:Issue,repoId:number) {
 }
 
 
+
+
+function hasEditPermission(issue:Issue) {
+	const {repo} = issue
+
+	assert(repo,'can not test permission without repo set on issue')
+
+	return (!issue.user || issue.user.id === Settings.user.id || repo.permissions.push)
+}
+
+
 /**
  * RepoActionFactory.ts
  *
@@ -91,7 +103,25 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 	@ActionReducer()
 	setIssueIds(issueIds:number[]) {
-		return (state:IssueState) => state.set('issueIds',issueIds)
+		return (state:IssueState) => {
+			let selectedIssueIds = state.selectedIssueIds
+			if (selectedIssueIds.length) {
+				selectedIssueIds = selectedIssueIds
+					.filter(selectedIssueId => (
+						issueIds.includes(selectedIssueId)
+					))
+
+				// if (!selectedIssueIds.length && issueIds.length)
+				// 	selectedIssueIds = [issueIds[0]]
+			}
+
+			let newState = state.set('issueIds',issueIds)
+			if (!_.isEqual(selectedIssueIds,state.selectedIssueIds))
+				newState = newState.set('selectedIssueIds',selectedIssueIds)
+
+			return newState
+		}
+
 	}
 
 
@@ -103,6 +133,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		// Now push the models into the data state for tracking
 		const dataActions = Container.get(DataActionFactory)
 		const dataRequest = DataRequest.create(DataRequestIssueListId,false,issueIds,Issue.$$clazz,clear)
+
 
 		actions.setIssueIds(issueIds)
 		dataActions.submitRequest(dataRequest)
@@ -169,10 +200,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				const issueStore:IssueStore = this.stores.issue
 
 				// First save to github
-				let savedIssue:Issue = await client.issueSave(repo,issue)
+				const savedIssue:Issue = await client.issueSave(repo,issue)
+				const mergedIssue = _.merge({},issue,savedIssue)
 
-				const persistedIssue = await issueStore.save(savedIssue)
-
+				const persistedIssue = await issueStore.save(mergedIssue)
 				const updatedIssue = _.cloneDeep(persistedIssue)
 
 				// If the issue belongs to an enabled repo then reload issues
@@ -193,13 +224,18 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					}
 				}
 
-
+				const wasInline = this.state.editingInline
 				this.uiActions.closeAllDialogs()
 
 				addMessage(`Saved issue #${updatedIssue.number}`)
+
+
 				actions.setSelectedIssueIds([updatedIssue.id])
 				actions.setIssueSaving(false)
 				actions.setEditingIssue(null)
+
+				if (wasInline)
+					this.uiActions.focusIssuesPanel()
 
 
 			} catch (err) {
@@ -497,7 +533,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param commentIds
 	 * @returns {(issueState:IssueState)=>Map<string, string[]>}
 	 */
-	@debounce(100)
+
 	@ActionReducer()
 	protected setCommentIds(commentIds:string[]) {
 		return (issueState:IssueState) => issueState.set('commentIds',commentIds)
@@ -520,15 +556,19 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const actions = this.withDispatcher(dispatch, getState)
 
 		// Issue repo
-		const issueState = actions.state
-		const issueStore = actions.stores.issue
+		const
+			issueState = actions.state,
+			issueStore = actions.stores.issue,
+			issueFilter = issueState.issueFilter
 
-		const repoIds = availRepoIdsSelector(getState())
+		const repoIds = enabledRepoIdsSelector(getState())
 		log.info(`Loading issues for repos`,repoIds)
 
 		let offset = 0
 		const limit = 50
-		let issueIds:number[] = await issueStore.findIdsByRepoId(...repoIds)
+		let issueIds:number[] = await (issueFilter.includeClosed ?
+			issueStore.findIdsByRepoId(...repoIds) :
+			issueStore.findIdsByStateAndRepoId('open',...repoIds))
 
 		// while (true) {
 		// 	log.info(`Requesting issues page # ${(offset / limit) + 1}`)
@@ -589,7 +629,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			// Now push the models into the data state for tracking
 			const dataActions = Container.get(DataActionFactory)
-			await dataActions.submitRequest(DataRequest.create('comments-list',false,commentIds,Comment.$$clazz),commentMap)
+			await dataActions.submitRequestAction(
+				DataRequest.create(
+					'comments-list',
+					false,
+					commentIds,
+					Comment.$$clazz
+				),
+				commentMap,
+				dispatch,
+				getState
+			)
 
 			actions.setCommentIds(commentIds)
 			//actions.setFilteringAndSorting()
@@ -597,6 +647,84 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 	}
 
+	/**
+	 * Update the filter to include closed and reload
+	 *
+	 * @param includeClosed
+	 */
+	includeClosedIssues(includeClosed:boolean) {
+		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter),{includeClosed})
+		this.setFilteringAndSorting(updatedFilter)
+		this.loadIssues()
+
+	}
+
+
+
+	@Action()
+	setIssueState(newState:TIssueState,...issueIds:number[]) {
+		return async (dispatch,getState) => {
+			let issues = await this.stores.issue.bulkGet(...issueIds)
+			log.info(`Going to delete ${issues.length} issues`)
+
+			const
+				dataActions = Container.get(DataActionFactory),
+				client = Container.get(GitHubClient)
+
+
+			issues = _.cloneDeep(issues)
+			const closeIssues = []
+
+			for (let issue of issues) {
+				if (!issue.repo)
+					issue.repo = await this.stores.repo.get(issue.repoId)
+
+				if (!hasEditPermission(issue))
+					addErrorMessage(`You don't have permission to close this issue: ${issue.number}`)
+				else
+					closeIssues.push(issue)
+			}
+
+			const promises = closeIssues
+				// .filter((issue:Issue) => issue.state !== newState)
+				.map(async (issue:Issue) => {
+					issue.state = newState
+					let mergedIssue = null,
+						persistedIssue = null,
+						resultIssue = null
+					try {
+						assert(issue.repo, 'repo not found for issue: ' + issue.repoId)
+
+
+						resultIssue = await client.issueSave(issue.repo, issue)
+						log.info(`Got result issue from github, new state is ${resultIssue.state}`)
+
+						// Get the issue in case it changed along the way
+						issue = await this.stores.issue.get(issue.id)
+						mergedIssue = _.merge({}, issue, resultIssue)
+
+						await Promise.delay(1)
+						persistedIssue = await this.stores.issue.save(mergedIssue)
+
+						// Update in data models (memory/state)
+						dataActions.updateModels(Issue.$$clazz, {[`${persistedIssue.id}`]: persistedIssue})
+
+						// Remove from selected if selected
+						return mergedIssue
+					} catch (err) {
+						log.error('set issue state failed',err)
+						addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
+					}
+				})
+
+			const results = await Promise.all(promises)
+
+			addMessage(`Closed ${results.length} issues successfully`)
+
+			this.loadIssuesAction(dispatch,getState)
+
+		}
+	}
 }
 
 

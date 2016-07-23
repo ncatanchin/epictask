@@ -1,5 +1,6 @@
 
 
+import {PureRender} from 'components/common/PureRender'
 const log = getLogger(__filename)
 import {AppActionFactory as AppActionFactoryType} from '../actions/AppActionFactory'
 import * as React from 'react'
@@ -88,6 +89,7 @@ export interface IThemedState {
 	styles?:any
 }
 
+
 /**
  * Create a wrapped themed component
  *
@@ -97,7 +99,9 @@ export interface IThemedState {
  * @returns {any}
  */
 export function makeThemedComponent(Component,baseStyles = null,...themeKeys:string[]) {
-	return class extends React.Component<any, IThemedState> {
+
+
+	const ThemedWrapper = class extends React.Component<any, IThemedState> {
 
 		// Used to unsubscribe from theme updates on unmount
 		private unsubscribe
@@ -151,6 +155,8 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 			return <ThemedComponent {...this.props} {...this.state} />
 		}
 	} as any
+
+	return PureRender(ThemedWrapper)
 }
 
 /**

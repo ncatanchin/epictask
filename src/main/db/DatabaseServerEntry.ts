@@ -118,6 +118,7 @@ async function start() {
 		ipcRenderer.send(DatabaseEvents.Ready)
 
 	} catch (err) {
+
 		log.error('start failed',err)
 		throw err
 	}

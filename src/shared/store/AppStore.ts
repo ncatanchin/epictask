@@ -144,6 +144,7 @@ const storeEnhancer = (Env.isRenderer) ?
  */
 function onChange() {
 	log.debug(`Store state changed`)
+	persistStoreState(getStoreState())
 }
 
 /**
@@ -231,14 +232,47 @@ export function initStore(devToolsMode = false,defaultState = null) {
 	return store
 }
 
-
+/**
+ * Load existing state from disk
+ *
+ * @returns {ObservableStore<any>}
+ */
 export async function loadAndInitStore() {
 	const stateData = readFile(stateFilename)
-	//const defaultState = (stateData) ? RootState.fromJS(JSON.parse(stateData)) : null
 	const defaultStateValue = (stateData) ? JSON.parse(stateData) : null
 	return initStore(false,defaultStateValue)
-
 }
+
+
+let persistingState = false
+
+/**
+ * Write the actual state async
+ */
+async function writeStoreState() {
+	const fs = require('fs')
+	await fs.writeFile(stateFilename,_.toJS(getStoreState()))
+}
+
+/**
+ * Debounced persist store state call
+ */
+const persistStoreState = _.debounce((state) => {
+	log.info(`Writing current state to: ${stateFilename}`)
+	if (persistingState) {
+		log.info('Persisting, can not persist until completion')
+		return
+	}
+
+	persistingState = true
+	Promise
+		.resolve(writeStoreState())
+		.catch(err => {
+			log.error('state persistence failed',err)
+		})
+		.finally(() => persistingState = false)
+
+},10000,{maxWait:30000})
 
 /**
  * Get the observable store
@@ -261,7 +295,11 @@ export function getStoreState() {
 }
 
 export function persist() {
-	log.info(`Writing current state to: ${stateFilename}`)
+	log.info(`Writing current state (shutdown) to: ${stateFilename}`)
+	if (persistingState) {
+		log.info('Persisting, can not persist until completion')
+		return
+	}
 	assert(Env.isMain,'Can only persist on main')
 	const stateJS = _.toJS(getStoreState())
 

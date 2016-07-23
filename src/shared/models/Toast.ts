@@ -14,6 +14,7 @@ export interface IToastMessage {
 	id:string,
 	createdAt:number,
 	type:ToastMessageType,
+	notify?:boolean,
 	content:any,
 	actions?:IToastMessageAction[]
 }

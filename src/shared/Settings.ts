@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import {getUserDataFilename, readFile} from './util/Files'
 import {Property} from "./util/Decorations";
 import {toJSON} from "./util/JSONUtil";
-import {User} from 'shared/models'
+import {User} from 'shared/models/User'
 
 const log = getLogger(__filename)
 const settingsFilename = getUserDataFilename('epictask-settings.json')

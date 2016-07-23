@@ -8,6 +8,7 @@ const baseStyles = createStyles({
 	}],
 
 	time: [FlexAuto, {
+		paddingLeft: 5,
 		fontSize:   themeFontSize(1),
 		fontWeight: 100
 	}],
@@ -19,31 +20,31 @@ const baseStyles = createStyles({
 	header: [flexTransition, FlexAuto, FlexColumn, {
 		padding: "1rem",
 
-		row1: makeStyle(FlexRowCenter, FlexAuto, {
-			repo:     makeStyle(FlexScale, {
+		row1: [FlexRowCenter, FlexAuto, {
+			repo:     [FlexScale, {
 				fontSize:            themeFontSize(1.4),
 				padding:             '0 0 0.5rem 0',
 				fontWeight:          500,
 				fontSmooth:          'always',
 				WebkitFontSmoothing: 'antialiased'
-			}),
-			assignee: makeStyle({
+			}],
+			assignee: [{
 				padding: '0 0 0 1rem'
-			})
-		}),
+			}]
+		}],
 
-		row2: makeStyle(FlexRowCenter, FlexAuto, PositionRelative, {
+		row2: [FlexRowCenter, FlexAuto, PositionRelative, {
 			padding: '0.5rem 0 1rem 0',
-			title:   makeStyle(OverflowHidden, PositionRelative, FlexScale, {
+			title:   [OverflowHidden, PositionRelative, FlexScale, {
 				fontSize:     themeFontSize(2),
 				textOverflow: 'clip ellipsis',
 				lineHeight:   '2.2rem',
 				maxHeight:    '4.4rem',
 				maxWidth:     '100%'
-			}),
+			}],
 
 
-		}),
+		}],
 
 		// Row 3 - Labels + title
 		row3: [flexTransition, FlexRowCenter, FlexAuto, {

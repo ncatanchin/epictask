@@ -87,7 +87,7 @@ function makeViewMenu(mainWindow) {
 		label: 'View',
 		submenu: [{
 			label: 'Toggle Repo Panel',
-			accelerator: 'Command+`',
+			accelerator: 'Command+3',
 			click() {
 				Container.get(UIActionFactory)
 					.toggleRepoPanelOpen()

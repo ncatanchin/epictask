@@ -16,6 +16,7 @@ import filterProps from 'react-valid-props'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
 import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
+import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
 
 interface IIssueItemProps extends React.DOMAttributes {
@@ -92,7 +93,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 			)
 
 		//selected={selected}
-		return <div {...filterProps(props)} style={issueStyles}
+		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
+		                                    style={issueStyles}
 		                                    className={'animated fadeIn ' + (selected ? 'selected' : '')}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
@@ -101,7 +103,10 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 
 				<div style={styles.issueRepoRow}>
 					<div style={styles.issueRepo}>
-						{Renderers.repoName(issue.repo)}
+						<span style={styles.issueNumber}>
+							#{issue.number}&nbsp;&nbsp;
+						</span>
+						{Renderers.repoName(issue.repo,styles.issueRepo)}
 					</div>
 
 					{/* ASSIGNEE */}
@@ -130,6 +135,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 					    labelStyle={styles.issueLabels.label}
 					/>
 
+
+					<IssueStateIcon state={issue.state}/>
 					{/*/!* MILESTONE *!/*/}
 					{/*{issue.milestone && <div style={styles.issueMilestone}>*/}
 						{/*{issue.milestone.title}*/}

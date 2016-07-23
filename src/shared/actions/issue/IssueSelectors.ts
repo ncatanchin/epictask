@@ -125,7 +125,10 @@ export const issuesSelector = createDeepEqualSelector(
 				if (issueId)
 					return `${issue.id}` === `${issueId}`
 
-				let matches = repoIds.includes(issue.repoId)
+				let matches = repoIds.includes(issue.repoId) &&
+					(issue.state === 'open' ||
+						issueFilter.includeClosed)
+
 				if (matches && milestoneIds.length)
 					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
 

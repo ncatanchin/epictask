@@ -126,7 +126,7 @@ export async function findWithSelector(
 		opts.fields = (fields) ? mapAttrsToField(fields) : mapAttrsToField([pouchRepo.primaryKeyField])
 
 
-	log.debug('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
+	log.info('findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4))
 	const results = await pouchRepo.db.find(opts)
 	log.info('RESULTS: findWithSelector, selector',selector,'opts',JSON.stringify(opts,null,4),'results',results)
 

@@ -11,6 +11,7 @@ import * as Constants from 'shared/Constants'
 import {Themed} from 'shared/themes/ThemeManager'
 import {Icon} from 'ui/components/common/Icon'
 import {Milestone} from 'shared/models/Milestone'
+import {PureRender} from 'components/common'
 const tinycolor = require('tinycolor2')
 
 
@@ -67,6 +68,7 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
  **/
 
 @Themed
+@PureRender
 export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,any> {
 
 

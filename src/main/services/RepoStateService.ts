@@ -12,6 +12,7 @@ import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {Stores} from 'main/services/DBService'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
+import ValueCache from 'shared/util/ValueCache'
 
 const log = getLogger(__filename)
 
@@ -19,7 +20,7 @@ const log = getLogger(__filename)
 
 // @AutoWired
 // @Singleton
-export default class RepoStateService extends BaseService {
+export class RepoStateService extends BaseService {
 
 	private unsubscribe:Function
 
@@ -28,6 +29,14 @@ export default class RepoStateService extends BaseService {
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
 	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
+
+	private clean() {
+		if (this.unsubscribe) {
+			this.unsubscribe()
+			this.unsubscribe = null
+		}
+	}
+
 
 	async init():Promise<this> {
 		await super.init()
@@ -67,7 +76,7 @@ export default class RepoStateService extends BaseService {
 		})
 
 		if (module.hot) {
-			module.hot.dispose(() => this.unsubscribe && this.unsubscribe())
+			module.hot.dispose(() => this.clean())
 		}
 
 		//
@@ -82,24 +91,27 @@ export default class RepoStateService extends BaseService {
 
 
 	async stop():Promise<this> {
-		await super.stop()
-		if (this.unsubscribe) {
-			this.unsubscribe()
-			this.unsubscribe = null
-		}
+		this.clean()
+		return super.stop()
 
-		return this
 	}
 
 	destroy():this {
+		this.clean()
 		return this
 	}
 
 
-	selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
+	selectedIssueIdsValue = new ValueCache((selectedIssueIds:number[]) => {
 		if (selectedIssueIds && selectedIssueIds.length === 1)
 			this.issueActions.loadActivityForIssue(selectedIssueIds[0])
-	}
+	})
+	/**
+	 * When selected issues change - update the activity
+	 */
+	selectedIssueIdsChanged = _.debounce((selectedIssueIds) => {
+		this.selectedIssueIdsValue.set(selectedIssueIds)
+	},250)
 
 	/**
 	 * When enabled repos change,
@@ -126,3 +138,5 @@ export default class RepoStateService extends BaseService {
 		this.issueActions.loadIssues()
 	}
 }
+
+export default RepoStateService

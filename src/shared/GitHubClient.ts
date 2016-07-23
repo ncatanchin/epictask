@@ -245,11 +245,21 @@ export class GitHubClient {
 	 *
 	 * @param modelType
 	 * @param urlTemplate
+	 * @param defaultRequestOptions
 	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
 	 */
-	private makePagedRepoGetter<M>(modelType:{new():M;},urlTemplate:string) {
+	private makePagedRepoGetter<M>(
+		modelType:{new():M;},
+		urlTemplate:string,
+		defaultRequestOptions:RequestOptions = null
+	) {
 		return async (repo:Repo,opts:RequestOptions = null) => {
 			const url = urlTemplate.replace(/<repoName>/g,repo.full_name)
+
+			if (defaultRequestOptions) {
+				opts = _.merge({},_.cloneDeep(defaultRequestOptions),opts)
+			}
+
 			return await this.get<PagedArray<M>>(url,modelType,opts)
 		}
 	}

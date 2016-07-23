@@ -136,21 +136,37 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 	async syncIssues(stores:Stores,repo) {
-		const issues = await this.client.repoIssues(repo,{params:this.lastSyncParams})
-		issues.forEach(issue => issue.repoId = repo.id)
-		await chunkSave(issues,stores.issue)
+		const issues = await this.client.repoIssues(repo,{
+			params: assign({state: 'all'},this.lastSyncParams)
+		})
+
+		for (let issue of issues) {
+			issue.repoId = repo.id
+			const existing = await stores.issue.get(issue.id)
+			assign(issue,existing)
+		}
+
+		if (issues.length)
+			await chunkSave(issues,stores.issue)
 
 	}
 
 	/**
 	 * Synchronize all labels
 	 *
+	 * @param stores
 	 * @param repo
 	 */
 	@Benchmarker
 	async syncLabels(stores,repo) {
 		const labels = await this.client.repoLabels(repo)
-		labels.forEach(label => label.repoId = repo.id)
+		for (let label of labels) {
+			label.repoId = repo.id
+			const existing = await stores.label.get(label.url)
+			assign(label,existing)
+		}
+
+
 		//log.debug(`Loaded labels, time to persist`, labels)
 		await chunkSave(labels,stores.label)
 	}
@@ -158,12 +174,20 @@ export class RepoSyncJob extends Job {
 	/**
 	 * Synchronize all milestones in the repository
 	 *
+	 * @param stores
 	 * @param repo
 	 */
 	@Benchmarker
+
 	async syncMilestones(stores,repo) {
 		const milestones = await this.client.repoMilestones(repo)
-		milestones.forEach(milestone => milestone.repoId = repo.id)
+
+		for (let milestone of milestones) {
+			milestone.repoId = repo.id
+			const existing = await stores.milestone.get(milestone.id)
+			assign(milestone,existing)
+		}
+
 		//log.debug(`Loaded milestones, time to persist`, milestones)
 		await chunkSave(milestones,stores.milestone)
 	}
@@ -173,7 +197,10 @@ export class RepoSyncJob extends Job {
 	 *
 	 * @param repo
 	 */
-	@Benchmarker
+	@Benchmarker /**
+	 * @param stores
+	 */
+
 	async syncComments(stores,repo) {
 		let comments = await this.client.repoComments(repo,{params:this.lastSyncParams})
 
@@ -181,17 +208,23 @@ export class RepoSyncJob extends Job {
 		//comments = comments.filter(comment => comment.issue_url)
 
 		// Fill in the fields we tack directly
-		comments.forEach(comment => {
+		for (let comment of comments) {
 			if (!comment.issue_url) {
 				log.error(`Comment is missing issue url`, comment)
 				return
 			}
+			const existing = await stores.milestone.get(comment.id)
+			assign(comment,existing)
+
 			comment.repoId = repo.id
 
 			const issueIdStr = comment.issue_url.split('/').pop()
+
 			comment.issueNumber = parseInt(issueIdStr,10)
 			comment.parentRefId = Comment.makeParentRefId(repo.id,comment.issueNumber)
-		})
+
+
+		}
 
 		//log.debug(`Loaded comments, time to persist`, comments)
 		await chunkSave(comments,stores.comment)

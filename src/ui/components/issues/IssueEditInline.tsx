@@ -42,7 +42,7 @@ const ReactTimeout = require('react-timeout')
 
 //region Styles
 const baseStyles = createStyles({
-	root: [FlexColumn, FlexAuto,makeTransition('opacity')],
+	root: [FlexColumn,FillWidth,FlexAuto,makeTransition('opacity')],
 	savingIndicator: [makeTransition('opacity'),PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
 		opacity: 0,
 		pointerEvents: 'none'
@@ -279,6 +279,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			this.hide()
 			this.uiActions.focusIssuesPanel()
 		},
+		[CommonKeys.Delete]: () => {},
 		[CommonKeys.Enter]: () => {
 			log.info('Consuming enter pressed')
 		}
@@ -481,7 +482,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 
 	makeMilestoneItems() {
-		const {issue,milestones,styles} = this.props
+		let {issue,milestones,styles} = this.props
 
 		const items = [<MenuItem key='empty-milestones'
 		                         className='issueEditDialogFormMenuItem'
@@ -505,6 +506,8 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			</div>
 		)
 
+		milestones = _.uniqBy(milestones,'id')
+		log.info('using milestones',milestones)
 		return items.concat(milestones
 			.filter(milestone => milestone.repoId === issue.repoId)
 			.map(milestone => <MenuItem key={milestone.url}

@@ -44,6 +44,8 @@ import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMiles
 import {Button} from 'ui/components/common/Button'
 import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import {TIssueEditInlineConfig} from 'shared/actions/issue'
+import {debounce} from 'lodash-decorators'
+import ValueCache from 'shared/util/ValueCache'
 
 // Non-typed Components
 const tinycolor = require('tinycolor2')
@@ -78,6 +80,7 @@ const baseStyles = createStyles({
 	}),
 
 
+
 	/**
 	 * Issue group header
 	 */
@@ -108,9 +111,10 @@ const baseStyles = createStyles({
 		FlexAuto,
 		FillWidth,
 		FlexAlignStart,
-		makeTransition(['background-color']), {
+		//makeTransition(['background-color']),
+		{
 
-			padding: '1.5rem 1rem 1.5rem 1rem',
+			padding: '1.5rem 1rem 0rem 1rem',
 			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 
@@ -138,13 +142,19 @@ const baseStyles = createStyles({
 		//pointerEvents: 'none'
 	}),
 
-	issueRepoRow: makeStyle(FlexRow, makeFlexAlign('stretch', 'center'), {
-		pointerEvents: 'none'
+	issueRepoRow: makeStyle(FlexRow, makeFlexAlign('center', 'center'), {
+		pointerEvents: 'none',
+		padding:  '0 0 0.5rem 0rem'
 	}),
 
+	issueNumber: [{
+		fontSize: themeFontSize(1.1),
+		fontWeight: 500
+	}],
+
 	issueRepo: makeStyle(Ellipsis, FlexRow, FlexScale, {
-		fontSize: themeFontSize(1),
-		padding:  '0 0 0.5rem 0rem'
+		fontSize: themeFontSize(1.1),
+
 	}),
 
 	issueTitleRow: makeStyle(FlexRowCenter, FillWidth, OverflowHidden, {
@@ -153,7 +163,6 @@ const baseStyles = createStyles({
 	}),
 
 	issueTitleTime: makeStyle(FlexAuto, {
-		// alignSelf: 'flex-end',
 		fontSize:   themeFontSize(1),
 		fontWeight: 100,
 	}),
@@ -187,7 +196,7 @@ const baseStyles = createStyles({
 		flexWrap: 'wrap',
 
 		label: {
-			margin: '0.5rem 0.7rem 0rem 0',
+			margin: '0 0.7rem 0.5rem 0'
 		}
 
 	})
@@ -253,7 +262,6 @@ export interface IIssuesPanelProps {
 	issueSortAndFilter?:TIssueSortAndFilter
 	labels?:Label[]
 	milestones?:Milestone[]
-	saveError?:Error
 	saving?:boolean
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
@@ -267,6 +275,7 @@ export interface IIssuesPanelState {
 
 	issueList?:any
 	issueGroupsVisibility?:Map<string,boolean>
+	internalSelectedIssueIds?:number[]
 }
 
 
@@ -288,8 +297,7 @@ export interface IIssuesPanelState {
 	selectedIssue: selectedIssueSelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
-	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError
+	saving: (state) => issueStateSelector(state).issueSaving
 },createDeepEqualSelector))
 @ThemedStyles(baseStyles,'issuesPanel')
 @HotKeyContext()
@@ -299,6 +307,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	uiActions:UIActionFactory = Container.get(UIActionFactory)
 	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
+
+	private get selectedIssueIds():number[] {
+		return _.get(this,'state.internalSelectedIssueIds',[])
+	}
 
 	/**
 	 * Move selection up
@@ -315,17 +327,17 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * 1 issue selected, nothing if 0
 	 * or add new if 1
 	 */
-	private onEnterPressed = () => {
+	private onEnter = () => {
 		const
 			{
 				issueSortAndFilter,
 				issuesGrouped,
 				issues,
-				selectedIssue,
-				selectedIssueIds
+				selectedIssue
 			} = this.props,
 			{groupBy} = issueSortAndFilter.issueSort
 
+		const {selectedIssueIds} = this
 
 		log.debug('Enter pressed',selectedIssueIds,selectedIssue)
 
@@ -368,10 +380,20 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			)
 
 		} else if (selectedIssueIds.length) {
-			this.issueActions.setSelectedIssueIds([])
+			this.moveDown()
+			//this.updateSelectedIssueIds([])
 		}
+	}
 
-
+	/**
+	 * On delete pressed
+	 *
+	 * @param event
+	 */
+	private onDelete = (event) => {
+		const {selectedIssueIds} = this
+		log.info(`OnDelete - going to remove`,selectedIssueIds)
+		this.issueActions.setIssueState('closed',...selectedIssueIds)
 	}
 
 	/**
@@ -382,7 +404,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDown]: this.moveDown,
 		[CommonKeys.MoveUpSelect]: this.moveUp,
 		[CommonKeys.MoveDownSelect]: this.moveDown,
-		[CommonKeys.Enter]: this.onEnterPressed
+		[CommonKeys.Enter]: this.onEnter,
+		[CommonKeys.Delete]: this.onDelete
 	}
 
 
@@ -397,12 +420,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	makeMoveSelector(increment:number) {
 
-		return (event:React.KeyboardEvent) => {
+		return (event:React.KeyboardEvent = null) => {
 
 			const
-				{issues,selectedIssueIds,editingInline} = this.props,
+				{issues,editingInline} = this.props,
 				{firstSelectedIndex} = this.state,
 				issueCount = issues.length
+
+			const {selectedIssueIds} = this
 
 			let index =
 				((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
@@ -429,11 +454,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			}
 
 
-			let newSelectedIssueIds = (event.shiftKey) ?
+			let newSelectedIssueIds = (event && event.shiftKey) ?
 				this.calculateSelectedIssueIds(adjustedIndex,firstSelectedIndex) : // YOU ARE HERE - just map array of ids
 				[issues[index].id]
 
-			if (!event.shiftKey)
+			if (!event || !event.shiftKey)
 				this.setState({firstSelectedIndex:index})
 
 
@@ -446,13 +471,51 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			})
 
 
-
-			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+			this.updateSelectedIssueIds(newSelectedIssueIds)
 
 		}
 
 	}
 
+	adjustScroll(newSelectedIssueIds) {
+		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds[newSelectedIssueIds.length - 1]
+		if (lastIssueId) {
+			const elem = $(`#issue-item-${lastIssueId}`)[0] as any
+			if (elem) {
+				log.info('scrolling into view',elem)
+				//elem.scrollIntoView({block: "start", behavior: "smooth"})
+				elem.scrollIntoViewIfNeeded()
+			}
+		}
+	}
+
+	private selectedIssueIdsHistory = []
+
+	private doPushSelectedIssueIds(newSelectedIssueIds) {
+		this.selectedIssueIdsHistory.unshift(newSelectedIssueIds)
+		this.selectedIssueIdsHistory.length =
+			Math.min(3,this.selectedIssueIdsHistory.length)
+
+		this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+
+	}
+
+	updateSelectedIssueIds(newSelectedIssueIds:number[],force = false) {
+		this.setState({internalSelectedIssueIds:newSelectedIssueIds})
+		this.adjustScroll(newSelectedIssueIds)
+
+		if (force) {
+			this.doPushSelectedIssueIds(newSelectedIssueIds)
+			this.pushUpdatedSelectedIssueIds.cancel()
+		} else {
+			this.pushUpdatedSelectedIssueIds(newSelectedIssueIds)
+		}
+	}
+
+
+	pushUpdatedSelectedIssueIds = _.debounce((newSelectedIssueIds) => {
+		this.doPushSelectedIssueIds(newSelectedIssueIds)
+	},350)
 
 	/**
 	 * Retrieves the start and end index
@@ -463,7 +526,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @returns {{startIndex: number, endIndex: number}}
 	 */
 	getSelectionBounds() {
-		const {selectedIssueIds,issues} = this.props
+		const {issues} = this.props
+		const {selectedIssueIds} = this
 
 		let startIndex = -1, endIndex = -1
 		for (let issueId of selectedIssueIds) {
@@ -501,7 +565,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param issue
 	 */
 	onIssueSelected = (event:MouseEvent, issue) => {
-		let {selectedIssueIds,issues} = this.props
+		let {selectedIssueIds} = this
+		let {issues} = this.props
 
 		// Get the issue index for track of "last index"
 		const
@@ -538,7 +603,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		}
 
 
-		this.issueActions.setSelectedIssueIds(selectedIssueIds)
+		this.updateSelectedIssueIds(selectedIssueIds,true)
 		log.debug('Received issue select')
 	}
 
@@ -571,6 +636,28 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 	/**
+	 * Tracks inbound selected issue ids and only updates
+	 * when explicitly changed
+	 *
+	 * @type {ValueCache}
+	 */
+	selectedIssueIdsCache = new ValueCache((newSelectedIssueIds:number[]) => {
+
+		const isDiff  = (!_.isEqual(newSelectedIssueIds,_.get(this,'state.internalSelectedIssueIds')))
+		if (isDiff) {
+			// Check history too
+			for (let item of this.selectedIssueIdsHistory) {
+				if (_.isEqual(item, newSelectedIssueIds))
+					return
+			}
+		}
+		this.setState({internalSelectedIssueIds:newSelectedIssueIds})
+		this.adjustScroll(newSelectedIssueIds)
+
+	})
+
+
+	/**
 	 * on mount set default state
 	 */
 	componentWillMount = () => this.setState({
@@ -578,6 +665,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		firstSelectedIndex: -1
 	})
 
+	componentWillReceiveProps(newProps:IIssuesPanelProps) {
+		this.selectedIssueIdsCache.set(newProps.selectedIssueIds)
+	}
 
 	/**
 	 * Make issue render
@@ -596,11 +686,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		return (index, key) => {
 			const {
 				styles,
-				selectedIssueIds,
 				issues,
 				issuesGrouped,
 				issueSortAndFilter,
-				saveError,
 				saving,
 				labels,
 				milestones,
@@ -608,6 +696,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				editInlineConfig
 			} = this.props
 
+			const {selectedIssueIds} = this
 
 			const {groupBy} = issueSortAndFilter.issueSort
 
@@ -648,13 +737,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	renderGroup = (index, key) => {
 		const {
 			styles,
-			selectedIssueIds,
 			issues,
 			issuesGrouped,
 			issueSortAndFilter,
 			editingInline,
 			editInlineConfig
 		} = this.props
+
 
 
 
@@ -696,7 +785,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	render() {
 		const
 			{
-				selectedIssueIds,
 				labels,
 				milestones,
 				theme,
@@ -709,6 +797,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			} = this.props,
 			{palette} = theme,
 			{groupBy} = issueSortAndFilter.issueSort
+
+		const {selectedIssueIds} = this
 
 		const validSelectedIssueIds = selectedIssueIds
 			.filter(issueId => !_.isNil(issues.find(item => item.id === issueId)))
@@ -724,10 +814,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 
-		return <HotKeys
-				keyMap={KeyMaps.App}
-				id="issuesPanel"
-				handlers={this.keyHandlers}
+		return <div
 				style={styles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
@@ -739,7 +826,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			           className='issuePanelSplitPane'>
 
 				{/* LIST CONTROLS FILTER/SORT */}
-				<div style={styles.listContent}>
+				<HotKeys style={styles.listContent}
+				         keyMap={KeyMaps.App}
+				         id="issuesPanel"
+				         handlers={this.keyHandlers}
+				>
 					<IssueFilters />
 
 					<div style={styles.listContainer}>
@@ -753,13 +844,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 					</div>
-				</div>
+				</HotKeys>
 
 				{/* ISSUE DETAIL PANEL */}
 				<IssueDetailPanel />
 
 			</SplitPane>
-		</HotKeys>
+		</div>
 	}
 
 }

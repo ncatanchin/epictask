@@ -13,7 +13,7 @@ import {User,UserStore} from './User'
 import {Repo,RepoStore} from './Repo'
 import {RegisterModel} from '../Registry'
 import {Container} from 'typescript-ioc'
-import {Stores} from 'main/services/DBService'
+import {Stores} from 'shared/Stores'
 
 /**
  * Maps repos that have been configured for tasks

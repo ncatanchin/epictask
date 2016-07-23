@@ -2,11 +2,10 @@
 import {Singleton, AutoWired, Container, Scope} from 'typescript-ioc'
 import {Repo as TSRepo, IModel} from 'typestore'
 import {ServiceStatus, BaseService} from './IService'
-import {getUserDataFilename} from 'shared/util/Files'
 import Electron = require('electron')
 import {Stores} from 'shared/Stores'
 import {loadModelClasses} from 'main/db/DBTool'
-import {DatabaseServerWindow as DatabaseServerWindowType} from 'main/db/DatabaseServerWindow'
+
 
 const CHUNK_SIZE = 50
 
@@ -14,6 +13,10 @@ const log = getLogger(__filename)
 
 const {app,BrowserWindow,ipcMain} = Electron
 
+
+function getDatabaseServerWindow() {
+	return require('main/db/DatabaseServerWindow').getDatabaseServerWindow()
+}
 
 // Re-export stores
 export {
@@ -80,7 +83,9 @@ class DBProxy {
 		const proxyFn = this.fnMap[name] || (
 			this.fnMap[name] = (...args) => {
 				log.info(`Proxy request for ${name}`)
-				return this.dbService.dbWindow.request(this.store,name,args)
+
+				const dbWindow = getDatabaseServerWindow()
+				return dbWindow.request(this.store,name,args)
 			}
 		)
 
@@ -102,7 +107,7 @@ export class DBService extends BaseService {
 
 	private _stores:Stores
 
-	dbWindow:DatabaseServerWindowType
+	dbWindow
 	dbProxy
 
 	/**
@@ -127,8 +132,8 @@ export class DBService extends BaseService {
 
 	private loadDatabaseServerWindow() {
 		log.info('Getting DB Window')
-		const DatabaseServerWindow:typeof DatabaseServerWindowType = require('main/db/DatabaseServerWindow').default
-		this.dbWindow = new DatabaseServerWindow()
+
+		this.dbWindow = getDatabaseServerWindow()
 
 		log.info('Starting db window')
 		return this.dbWindow.start()
@@ -137,12 +142,8 @@ export class DBService extends BaseService {
 
 	private stopDatabaseServerWindow(isHot = false) {
 		log.info("Closing database server window")
-		if (this.dbWindow) {
 
-			this.dbWindow.stop(isHot)
-
-			this.dbWindow = null
-		}
+		this.dbWindow = null
 	}
 	/**
 	 * Initialize the service before anything is started
@@ -224,13 +225,13 @@ export class DBService extends BaseService {
 	 */
 	async stop(isHot = false):Promise<this> {
 		await super.stop()
-		this.stopDatabaseServerWindow(isHot)
+		//this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
 	destroy(isHot = false):this {
 		super.destroy()
-		this.stopDatabaseServerWindow(isHot)
+		//this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
