@@ -16,7 +16,7 @@ logs
 
 # Config is auto generated
 src/tsconfig.json
-etc/tsconfig.*.json
+#etc/tsconfig.*.json
 .tsconfig.*.json
 /tsconfig.json
 
