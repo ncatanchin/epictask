@@ -81,21 +81,15 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncCollaborators(stores:Stores,repo:Repo) {
+	async syncAssignees(stores:Stores, repo:Repo) {
 		const userRepo = stores.user
 		if (!(repo.permissions.push || repo.permissions.admin)) {
 			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
 			return
 		}
-		const users:User[] = await this.client.repoCollaborators(repo)
-		//this.client.repoContributors(repo)
+		const users:User[] = await this.client.repoAssignees(repo)
 
-
-
-		// Make sure we have all the collaborators saved
-		//const collabs = await collabsPromise
-
-		// Iterate all attahed users and make sure we
+		// Iterate all attached users and make sure we
 		// update the repoIds on the user object if
 		// already exists
 		const existingUserIds = await userRepo.findAll()
@@ -114,7 +108,6 @@ export class RepoSyncJob extends Job {
 		})
 
 		await Promise.all(updatePromises)
-
 		users.forEach(user => user.addRepoId(repo.id))
 
 
@@ -148,7 +141,7 @@ export class RepoSyncJob extends Job {
 		for (let issue of issues) {
 			issue.repoId = repo.id
 			const existing = await stores.issue.get(issue.id)
-			assign(issue,existing)
+			assign(existing,issue)
 		}
 
 		if (issues.length)
@@ -168,7 +161,7 @@ export class RepoSyncJob extends Job {
 		for (let label of labels) {
 			label.repoId = repo.id
 			const existing = await stores.label.get(label.url)
-			assign(label,existing)
+			assign(existing,label)
 		}
 
 
@@ -191,7 +184,7 @@ export class RepoSyncJob extends Job {
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
 			const existing = await stores.milestone.get(milestone.id)
-			assign(milestone,existing)
+			assign(existing,milestone)
 		}
 
 		//log.debug(`Loaded milestones, time to persist`, milestones)
@@ -221,7 +214,7 @@ export class RepoSyncJob extends Job {
 				return
 			}
 			const existing = await stores.milestone.get(comment.id)
-			assign(comment,existing)
+			assign(existing,comment)
 
 			comment.repoId = repo.id
 
@@ -285,7 +278,7 @@ export class RepoSyncJob extends Job {
 				this.syncIssues(stores,repo),
 				this.syncLabels(stores,repo),
 				this.syncMilestones(stores,repo),
-				this.syncCollaborators(stores,repo)
+				this.syncAssignees(stores,repo)
 			])
 
 			// Track the execution for timing/update purposes

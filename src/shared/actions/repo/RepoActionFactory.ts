@@ -287,9 +287,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		users = users.filter(user => user.id !== myUserId)
 		const updateUsers = users.filter(user => user.repoIds && user.repoIds.length > 1)
 			.map(user => {
-				_.remove(user.repoIds,(userRepoId) => repoId === parseInt(userRepoId,10))
+				_.remove(user.repoIds,(userRepoId) => repoId === userRepoId)
 				return user
 			})
+
 
 		const removeUsers = users.filter(user => !updateUsers.includes(user))
 

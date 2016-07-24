@@ -26,7 +26,7 @@ import {IssueState} from 'shared/actions/issue/IssueState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
-import {Themed, ThemedStyles} from 'shared/themes/ThemeManager'
+import {Themed, ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 import {appUserSelector} from 'shared/actions/AppSelectors'
 import {editingIssueSelector, issueStateSelector} from 'shared/actions/issue/IssueSelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -112,6 +112,7 @@ const baseStyles = createStyles({
 			}],
 			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
 				label: [FlexScale, Ellipsis, {
+					fontSize: makeThemeFontSize(1.2),
 					padding: '0 0 0 1rem'
 				}]
 			}]
@@ -130,6 +131,7 @@ const baseStyles = createStyles({
 			}],
 			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
 				label: [FlexScale, Ellipsis, {
+					fontSize: makeThemeFontSize(1.2),
 					padding: '0 0 0 1rem'
 				}]
 			}]
@@ -295,7 +297,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	onMilestoneChange = (event, index, value) => {
 		const {editingIssue} = this.props
 		const milestone = !editingIssue || !editingIssue.milestones ? null :
-			editingIssue.milestones.find(item => item.url === value)
+			editingIssue.milestones.find(item => item.id === value)
 
 		this.updateIssueState({milestone})
 
@@ -304,7 +306,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	onAssigneeChange = (event, index, value) => {
 		const {editingIssue} = this.props
 		const assignee = !editingIssue || !editingIssue.collaborators ? null :
-			editingIssue.collaborators.find(item => item.login === value)
+			editingIssue.collaborators.find(item => item.id === value)
 
 		this.updateIssueState({assignee})
 	}
@@ -312,27 +314,33 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	onLabelsChanged = (newLabels:Label[]) => {
 		const {editingIssue} = this.props
 
-		log.debug('new labels', newLabels)
 		if (editingIssue) {
 			this.updateIssueState({labels: newLabels})
 		}
 	}
 
 
+	/**
+	 * Create milestone items
+	 *
+	 * @param milestones
+	 * @param s
+	 * @returns {any[]}
+	 */
 	makeMilestoneItems(milestones, s) {
 
-		if (!milestones.length) {
-			return [
-				<MenuItem key='empty-milestones'
-				          className='issueEditDialogFormMenuItem'
-				          style={s.menuItem}
-				          value={''}
-				          primaryText={<div style={s.form.milestone.item}>
-								<Icon iconSet='octicon' iconName='milestone'/>
-								<div style={s.form.milestone.item.label}>No milestones</div>
-							</div>}/>
-			]
-		}
+
+		const items = [
+			<MenuItem key='empty-milestones'
+			          className='issueEditDialogFormMenuItem'
+			          style={s.menuItem}
+			          value={''}
+			          primaryText={<div style={s.form.milestone.item}>
+							<Icon iconSet='octicon' iconName='milestone'/>
+							<div style={s.form.milestone.item.label}>No milestone</div>
+						</div>}/>
+		]
+
 
 		const makeMilestoneLabel = (milestone:Milestone) => (
 			<div style={s.form.milestone.item}>
@@ -341,17 +349,24 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			</div>
 		)
 
-		return milestones.map(milestone => (
+		return items.concat(milestones.map(milestone => (
 			<MenuItem key={milestone.url}
 			          className='issueEditDialogFormMenuItem'
-			          value={milestone.url}
+			          value={milestone.id}
 			          style={s.menuItem}
 			          primaryText={makeMilestoneLabel(milestone)}
 			/>
-		))
+		)))
 	}
 
 
+	/**
+	 * Create repo menu items
+	 *
+	 * @param availableRepos
+	 * @param s
+	 * @returns {any[]}
+	 */
 	makeRepoMenuItems(availableRepos:AvailableRepo[], s) {
 
 		const makeRepoLabel = (availRepoItem) => (
@@ -371,13 +386,24 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		))
 	}
 
-	// <div style={s.form.repo.item}>
-	// <Icon iconSet='octicon' iconName='person'/>
-	// <div style={s.form.assignee.item.label}>
-	// {collab.login}
-	// </div>
-	// </div>
+	/**
+	 * Create assignee menu items
+	 *
+	 * @param collabs
+	 * @param s
+	 * @returns {any[]}
+	 */
 	makeAssigneeMenuItems(collabs, s) {
+		const items = [
+			<MenuItem key='empty-milestones'
+			          className='issueEditDialogFormMenuItem'
+			          style={s.menuItem}
+			          value={''}
+			          primaryText={<div style={s.form.milestone.item}>
+								<Icon iconSet='octicon' iconName='person'/>
+								<div style={s.form.milestone.item.label}>Not assigned</div>
+							</div>}/>
+		]
 
 		const makeCollabLabel = (collab:User) => (
 			<Avatar user={collab}
@@ -389,14 +415,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 		)
 
-		return collabs.map(collab => (
-			<MenuItem key={collab.login}
+		return items.concat(collabs.map(collab => (
+			<MenuItem key={collab.id}
 			          className='issueEditDialogFormMenuItem'
-			          value={collab.login}
+			          value={collab.id}
 			          style={s.menuItem}
 			          primaryText={makeCollabLabel(collab)}
 			/>
-		))
+		)))
 	}
 
 	/**
@@ -427,7 +453,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 		if (editingIssue.repoId) {
 			milestones = milestones.filter(item => item.repoId === repoId)
-			collaborators = collaborators.filter(item => item.repoIds.includes('' + repoId))
+
+			collaborators = collaborators.filter(item => item.repoIds.includes(repoId))
 
 			const repo = repos.find(item => '' + item.repoId === '' + repoId)
 			labels = labelModels
@@ -463,8 +490,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 
 		if (!editingIssue || !open) {
-			assert(!open,'Open is true, but issue is null - invalid!!!!')
-			return null
+			if (open)
+				log.warn('Open is true, but issue is null - invalid!!!!')
+			return <div/>
 		}
 
 		const canPush = repo.permissions && repo.permissions.push
@@ -541,7 +569,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 								{/* Only show assignee drop down if push permission */}
 								{canPush && <SelectField
-									value={editingIssue.assignee && editingIssue.assignee.login}
+									value={editingIssue.assignee ? editingIssue.assignee.id : ''}
 									style={makeStyle(styles.form.assignee,styles.menu)}
 									inputStyle={styles.input}
 									labelStyle={styles.form.assignee.item.label}
@@ -562,9 +590,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 								{/* MILESTONE */}
 								<SelectField
-									value={editingIssue.milestone && editingIssue.milestone.url}
+									value={editingIssue.milestone ? editingIssue.milestone.id : ''}
 									style={makeStyle(styles.form.milestone,styles.menu)}
-									selectFieldRoot={styles.selectMenu}
 									inputStyle={styles.input}
 									labelStyle={styles.form.milestone.item.label}
 									iconStyle={styles.menu}

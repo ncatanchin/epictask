@@ -225,7 +225,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}
 
 				const wasInline = this.state.editingInline
-				this.uiActions.closeAllDialogs()
+
 
 				addMessage(`Saved issue #${updatedIssue.number}`)
 
@@ -233,6 +233,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				actions.setSelectedIssueIds([updatedIssue.id])
 				actions.setIssueSaving(false)
 				actions.setEditingIssue(null)
+
+				this.uiActions.closeAllDialogs()
 
 				if (wasInline)
 					this.uiActions.focusIssuesPanel()

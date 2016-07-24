@@ -141,7 +141,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 
 	componentWillMount() {
-		this.setState({dataSource:this.makeDataSource(this.props.allChips)})
+		this.setState({dataSource:this.makeDataSource(null,this.props.allChips)})
 	}
 
 	componentWillReceiveProps(nextProps) {
@@ -150,16 +150,19 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 		this.setState({
 			allChips:nextProps.allChips,
-			dataSource:this.makeDataSource(nextProps.allChips)
+			dataSource:this.makeDataSource(null, nextProps.allChips)
 		})
 	}
 
-	makeDataSource(items) {
+	makeDataSource(newQuery,items) {
+
+		const chipProps = {
+			query: newQuery || ''
+		}
+
 		const newDataSource = items.map(item => {
 
-			const chipProps = {
-				//onClick: () => this.onChipSelected(item)
-			}
+
 
 			return {
 				item,
@@ -191,7 +194,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 			.filter(item => this.props.filterChip(item,newQuery))
 
 		this.setState({
-			dataSource:this.makeDataSource(newChipModels),
+			dataSource:this.makeDataSource(newQuery,newChipModels),
 			query:newQuery
 		})
 	}

@@ -16,13 +16,7 @@ module.exports = (projectConfig) => {
 				test: /\.tsx?$/,
 				exclude: /node_modules/,
 				loaders: ['source-map-loader']
-			},
-			// {
-			// 	test: /\.jsx$/,
-			// 	//exclude: /node_modules/,
-			// 	exclude: /(node_modules|material-ui)/,
-			// 	loaders: ['source-map-loader']
-			// }
+			}
 		],
 		loaders: [{
 			test: /\.json$/,
@@ -39,14 +33,13 @@ module.exports = (projectConfig) => {
 
 			// TYPESCRIPT
 			{
-				// happy: {id: 'ts'},
 				test: /\.ts$/,
 				exclude: /libs\/.*\/typings/,
 				loaders: [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 			},
 
+			// TSX
 			{
-				// happy: {id: 'ts'},
 				test: /\.tsx$/,
 				exclude: /libs\/.*\/typings/,
 				loaders: (() => {
@@ -100,7 +93,7 @@ module.exports = (projectConfig) => {
 				]
 			},
 			{
-				happy: {id: 'css-mods'},
+				happy: {id: 'css-node-modules'},
 				test: /node_modules.*\.css$/,
 				loaders: ['file?name=assets/images/[name].[hash].[ext]']
 			},
@@ -131,6 +124,8 @@ module.exports = (projectConfig) => {
 				loaders: [
 					'style-loader',
 					'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
+					// 'css-loader',
+					// 'postcss-loader?parser=postcss-js',
 					'sass'
 					// ,
 					// sassContentLoader + '?path=' + themesJs

@@ -1,9 +1,11 @@
 @import "styles/mixins.global";
 
 //Global Container in normal mode
-.searchPanel {
+.searchPanel  {
+	@include flex-column-center();
+	@include flex-scale();
 	//@include make-default-transition();
-	composes: flex-column-center flex-scale from 'styles/flex.css';
+	//composes: flex-column-center flex-scale from 'styles/flex.css';
 	position: relative;
 	background-color: transparent !important;
 	flex: 1 1 50%;
@@ -12,9 +14,10 @@
 }
 
 
-// Expanded mode
+// Expanded modenpm
 .searchPanelExpanded {
-	composes: searchPanel;
+	@extend .searchPanel;
+	//composes: searchPanel;
 	position: absolute;
 	left: 0;
 	top: 50%;
@@ -31,7 +34,9 @@
 	position: relative;
 	width: 100%;
 
-	composes: flex-column flex-scale from 'styles/flex.css';
+	@include flex-column();
+	@include flex-scale();
+	//composes: flex-column flex-scale from 'styles/flex.css';
 
 	> div:not(.results) {
 		flex: 0 0 auto;
@@ -102,7 +107,8 @@
 
 .searchWrapperExpanded {
 
-	composes: searchWrapper;
+	@extend .searchWrapper;
+	//composes: searchWrapper;
 	display: flex;
 	position: absolute;
 	//composes: flex-column from 'styles/flex.css';

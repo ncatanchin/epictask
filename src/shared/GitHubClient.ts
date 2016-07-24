@@ -278,6 +278,11 @@ export class GitHubClient {
 	/**
 	 * Get all collaborators for repo
 	 */
+	repoAssignees = this.makePagedRepoGetter(User,'/repos/<repoName>/assignees')
+
+	/**
+	 * Get all collaborators for repo
+	 */
 	repoContributors = this.makePagedRepoGetter(User,'/repos/<repoName>/contributors')
 
 	/**

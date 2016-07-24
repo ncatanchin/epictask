@@ -208,8 +208,11 @@ class App extends React.Component<IAppProps,any> {
 					         onBlur={this.onBlur}
 					         id="appRoot"
 					>
+
+						{/* DIALOGS */}
 						<IssueEditDialog />
 						<RepoAddDialog />
+						{/*<IssueEditFieldDialog />*/}
 
 						{/* Global flex box */}
 						<div className={rootClasses}

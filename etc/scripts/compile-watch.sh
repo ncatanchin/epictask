@@ -16,7 +16,7 @@ if [ -e "${RAMDISK}" ]; then
 			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
 			mkdir -p ${NEW_DIR}
 			echo "New path ${NEW_DIR}"
-			ln -s "${NEW_DIR}" "${PWD}/${compileDir}"
+			ln -fs "${NEW_DIR}" "${PWD}/${compileDir}"
 		done
 	fi
 fi

@@ -147,6 +147,14 @@ module.exports = function (projectConfig) {
 			includePaths: [path.resolve(baseDir, "./src/assets")]
 		},
 
+		postcss() {
+			return [
+				require('postcss-modules'),
+				require('autoprefixer'),
+				require('postcss-js')
+			]
+		},
+
 		plugins: happyPlugins.concat([
 			//new TsConfigPathsPlugin(),
 			new webpack.IgnorePlugin(/vertx/),

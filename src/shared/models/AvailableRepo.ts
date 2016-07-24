@@ -126,9 +126,9 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 
 		}
 
-		// if (!availRepo.collaborators) {
-		// 	filled.collaborators = await userRepo.findByRepoId(filled.repoId)
-		// }
+		if (!availRepo.collaborators) {
+			filled.collaborators = await stores.user.findByRepoId(filled.repoId)
+		}
 		return filled
 	}
 

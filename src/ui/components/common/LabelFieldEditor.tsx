@@ -109,8 +109,12 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 
 	getNewState(props) {
 		const {availableLabels,labels} = props
-		const filteredAvailableLabels = _.nilFilter(availableLabels)
-			.filter((availLabel:Label) => !labels.find(label => label.url === availLabel.url))
+		const filteredAvailableLabels = _.sortBy(
+			_.nilFilter(availableLabels)
+				.filter((availLabel:Label) => !labels
+					.find(label => label.url === availLabel.url)),
+			(label:Label) => _.toLower(label.name)
+		)
 
 
 		return {availableLabels: filteredAvailableLabels}
@@ -154,7 +158,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	}
 
 	chipFilter = (item:Label,query:string):boolean =>  {
-		return _(item.name).toLower().startsWith(_.toLower(query))
+		return _(item.name).toLower().includes(_.toLower(query))
 	}
 
 	labelColorStyle(item:Label) {
@@ -177,8 +181,16 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	renderChip = (item:Label) => {
 		const
 			{theme,chipStyle} = this.props,
-			s = mergeStyles(styles, theme.labelFieldEditor,theme.chipsField,{chip:chipStyle}),
-			chipContentStyle = makeStyle(s.chipContent,this.labelColorStyle(item))
+			s = mergeStyles(
+				styles,
+				theme.labelFieldEditor,
+				theme.chipsField,
+				{chip:chipStyle}
+			),
+			chipContentStyle = makeStyle(
+				s.chipContent,
+				this.labelColorStyle(item)
+			)
 
 		return <div key={item.url} className='chip' style={s.chip}>
 			<div style={chipContentStyle}>
@@ -194,14 +206,19 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	}
 
 	renderChipSearchItem = (chipProps:any,item:Label) => {
-		const {theme} = this.props,
+		const
+			{theme} = this.props,
+			{query} = chipProps,
 			itemStyle = this.labelColorStyle(item)
 
 
+		const text = query && query.length ?
+			item.name.replace(new RegExp(`(${query})`,'i'),'<strong style="color:yellow;">$1</strong>') :
+			item.name
 
 		return <MenuItem {...chipProps}
 						 style={itemStyle}
-		                 primaryText={item.name}/>
+		                 primaryText={<span dangerouslySetInnerHTML={{__html:text}}/>}/>
 	}
 
 	render() {

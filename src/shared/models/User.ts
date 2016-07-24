@@ -35,7 +35,7 @@ export class User extends DefaultModel {
 	login: string;
 
 	@AttributeDescriptor()
-	repoIds: string[]
+	repoIds: number[]
 
 
 
