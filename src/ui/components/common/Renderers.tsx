@@ -3,7 +3,13 @@
 import {FontBlack} from 'shared/themes/styles/CommonStyles'
 import {IGithubValidationError, GithubErrorCodes} from 'shared/GitHubClient'
 
-
+/**
+ * Format repo name
+ *
+ * @param repo
+ * @param style
+ * @returns {any}
+ */
 export function repoName(repo,style = {}) {
 	if (!repo || !repo.full_name)
 		return <div>No repo</div>
@@ -15,6 +21,13 @@ export function repoName(repo,style = {}) {
 	</div>
 }
 
+/**
+ * Get git hub error text
+ *
+ * @param saveError
+ * @param field
+ * @returns {null}
+ */
 export function getGithubErrorText(saveError,field:string) {
 	const
 		errors = _.get(saveError,'errors',[]),

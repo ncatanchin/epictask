@@ -75,6 +75,7 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes {
 
 	inputStyle?:any
 	hintStyle?:any
+	chipStyle?:any
 	hintAlways?:boolean
 	underlineStyle?:any
 	underlineFocusStyle?:any
@@ -175,8 +176,8 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 
 	renderChip = (item:Label) => {
 		const
-			{theme} = this.props,
-			s = mergeStyles(styles, theme.labelFieldEditor,theme.chipsField),
+			{theme,chipStyle} = this.props,
+			s = mergeStyles(styles, theme.labelFieldEditor,theme.chipsField,{chip:chipStyle}),
 			chipContentStyle = makeStyle(s.chipContent,this.labelColorStyle(item))
 
 		return <div key={item.url} className='chip' style={s.chip}>

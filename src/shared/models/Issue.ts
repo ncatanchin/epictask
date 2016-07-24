@@ -174,13 +174,10 @@ export class IssueStore extends TSRepo<Issue> {
 		includeDocs: false,
 		indexFields: ['repoId','state'],
 		selector: (state:TIssueState,...repoIds) => ({
-			$and: [{
-				state: {
-					$eq: state
-				}
-			},{
-				$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
-			}]
+			state: {
+				$eq: state
+			},
+			$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
 		})
 	})
 	findIdsByStateAndRepoId(state:TIssueState,...repoIds:number[]):Promise<number[]> {

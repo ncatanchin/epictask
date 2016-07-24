@@ -99,18 +99,17 @@ export const issueFilterMilestonesSelector = createDeepEqualSelector(
 export const issuesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
 	issueIdsSelector,
-	issueModelsSelector,
 	modelsSelector,
 	issueSortAndFilterSelector,
-	(repoIds,issueIds:number[],issueMap:Map<string,Issue>,models,{issueSort,issueFilter}):Issue[] => {
+	(repoIds,issueIds:number[],models,{issueSort,issueFilter}):Issue[] => {
 		const {repoModels,labelModels,milestoneModels,issueModels} = models
 
 		// If data not avail then return empty
-		if (!issueMap || !issueIds || !repoIds)
+		if (!issueModels || !issueIds || !repoIds)
 			return []
 
 		const issues:Issue[] =
-			issueIds.map(id => issueMap.get(`${id}`))
+			issueIds.map(id => issueModels.get(`${id}`))
 			.filter(issue => !_.isNil(issue) && repoIds.includes(issue.repoId))
 
 		let {text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
@@ -156,7 +155,7 @@ export const issuesSelector = createDeepEqualSelector(
 			filteredIssues = filteredIssues.reverse()
 
 		return filteredIssues
-			.map(issue => new Issue(Object.assign({},issue,{
+			.map(issue => new Issue(assign({},issue,{
 				repo: issue.repo || repoModels.get(`${issue.repoId}`) || repoModels.get(issue.repoId),
 				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
 				milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)

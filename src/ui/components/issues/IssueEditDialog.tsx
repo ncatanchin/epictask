@@ -50,9 +50,26 @@ const baseStyles = createStyles({
 
 	action: {},
 
-	input: {
-		fontWeight: 700
-	},
+	input: [{
+		padding: '0.3rem 1rem',
+		fontWeight: 700,
+
+		floatingLabel: [{
+			left: rem(1)
+		}],
+
+		floatingLabelFocus: [{
+			transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
+		}],
+
+		underlineFocus: [{
+			width: 'auto',
+			left: 10,
+			right: 10
+		}]
+
+
+	}],
 
 	title: makeStyle(FlexRowCenter, FillWidth, {
 		label: makeStyle(FlexScale),
@@ -74,18 +91,21 @@ const baseStyles = createStyles({
 		pointerEvents: 'none'
 	}],
 
+
 	form: makeStyle({
 
 		title: [{
 			flex: '1 0 50%',
 			padding: "1rem 0",
+			height: 72
 		}],
 
 		repo: [FlexScale, {
-			height: 72,
+			height: 50,
+			margin: "1.1rem 0 1.1rem 0.5rem",
 			padding: "1rem 0",
 			menu: [{
-				transform: 'translate(0,25%)'
+				transform: 'translate(0,-30%)'
 			}],
 			list: [{
 				padding: '0 0 0 0 !important'
@@ -99,10 +119,11 @@ const baseStyles = createStyles({
 
 
 		milestone: [FlexScale, {
-			height: 72,
-			padding: "1rem 1rem 1rem 0",
+			height: 50,
+			margin: "1.1rem 0 1.1rem 0.5rem",
+			padding: "1rem 0",
 			menu: [{
-				transform: 'translate(0,-8px)'
+				transform: 'translate(0,-30%)'
 			}],
 			list: [{
 				padding: '0 0 0 0 !important'
@@ -115,10 +136,11 @@ const baseStyles = createStyles({
 		}],
 
 		assignee: [FlexScale, {
-			height: 72,
-			padding: "1rem 1rem 1rem 0",
+			height: 50,
+			margin: "1.1rem 0 1.1rem 0rem",
+			padding: "1rem 0",
 			menu: [{
-				transform: 'translate(0,-8px)'
+				transform: 'translate(0,-30%)'
 			}],
 			list: [{
 				padding: '0 0 0 0 !important'
@@ -142,7 +164,7 @@ const baseStyles = createStyles({
 		}],
 
 		row1: [FlexRow, FlexAlignStart, FillWidth, {overflow:'visible'}],
-		row2: [FlexRow, FlexAlignStart, FillWidth, {}],
+		row2: [FlexRow, FlexAlignStart, FillWidth, {marginBottom:rem(0.8)}],
 		row3: [FlexRow, FlexAlignStart, FillWidth, {}]
 	}),
 
@@ -473,6 +495,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				'.CodeMirror': {
 					height: '30vh'
 				},
+				'.editor-toolbar': {
+					backgroundColor: 'white',
+					opacity: 1
+				},
 				'.issueEditDialogFormMenuItem:hover':styles.menuItem.hover
 			}}/>
 			<Dialog style={styles.root}
@@ -498,20 +524,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 							<div style={styles.form.row1}>
 								<TextField value={this.state.titleValue}
 								           onChange={this.onTitleChange}
-								           floatingLabelText="TITLE"
-								           floatingLabelStyle={styles.input.floatingLabel}
-								           floatingLabelFocusStyle={styles.input.floatingLabelFocus}
-								           floatingLabelFixed={false}
 								           errorStyle={{transform: 'translate(0,1rem)'}}
 								           errorText={getGithubErrorText(saveError,'title')}
-								           hintText="I got 99 problems, but issues ain't 1!"
-								           hintStyle={styles.input.hint}
+								           hintText="TITLE"
+								           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
 								           style={styles.form.title}
 								           inputStyle={styles.input}
 								           underlineStyle={styles.input.underlineDisabled}
 								           underlineDisabledStyle={styles.input.underlineDisabled}
 								           underlineFocusStyle={styles.input.underlineFocus}
-								           underlineShow={true}
+								           underlineShow={false}
 								           fullWidth={true}
 								           autoFocus/>
 							</div>
@@ -522,13 +544,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 									value={editingIssue.assignee && editingIssue.assignee.login}
 									style={makeStyle(styles.form.assignee,styles.menu)}
 									inputStyle={styles.input}
-									labelStyle={styles.menu}
+									labelStyle={styles.form.assignee.item.label}
 									iconStyle={styles.menu}
 
-									floatingLabelText="ASSIGNED TO"
-									floatingLabelStyle={styles.input.floatingLabel}
-									floatingLabelFocusStyle={styles.input.floatingLabelFocus}
-									floatingLabelFixed={false}
 									onChange={this.onAssigneeChange}
 
 									underlineStyle={styles.input.underlineDisabled}
@@ -536,7 +554,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 									underlineFocusStyle={styles.input.underlineFocus}
 									menuStyle={selectMenuStyle}
 									menuListStyle={styles.select.list}
-									underlineShow={true}
+									underlineShow={false}
 									fullWidth={true}>
 
 									{this.state.assigneeMenuItems}
@@ -545,15 +563,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								{/* MILESTONE */}
 								<SelectField
 									value={editingIssue.milestone && editingIssue.milestone.url}
-									style={makeStyle(styles.form.milestone,styles.menu,{listStyle:{padding:0}})}
+									style={makeStyle(styles.form.milestone,styles.menu)}
 									selectFieldRoot={styles.selectMenu}
 									inputStyle={styles.input}
-									labelStyle={styles.menu}
+									labelStyle={styles.form.milestone.item.label}
 									iconStyle={styles.menu}
-									floatingLabelText="MILESTONE"
-									floatingLabelStyle={styles.input.floatingLabel}
-									floatingLabelFocusStyle={styles.input.floatingLabelFocus}
-									floatingLabelFixed={false}
+
 									onChange={this.onMilestoneChange}
 									menuStyle={selectMenuStyle}
 									menuListStyle={styles.select.list}
@@ -572,13 +587,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								<SelectField value={editingIssue.repoId}
 								             style={makeStyle(styles.form.repo,styles.menu)}
 								             inputStyle={styles.input}
-								             labelStyle={styles.menu}
+								             labelStyle={styles.form.repo.item.label}
 								             iconStyle={styles.menu}
 								             onChange={this.onRepoChange}
 								             underlineStyle={styles.input.underlineDisabled}
 								             underlineDisabledStyle={styles.input.underlineDisabled}
 								             underlineFocusStyle={styles.input.underlineFocus}
-								             menuListStyle={styles.select.list}
+								             menuListStyle={makeStyle(styles.select.list)}
 								             menuStyle={makeStyle(styles.menu,styles.form.repo.menu)}
 								             underlineShow={true}
 								             fullWidth={true}
@@ -590,29 +605,32 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 							<LabelFieldEditor labels={editingIssue.labels || []}
 							                  id="issueEditDialogLabels"
-							                  label="LABELS"
+							                  hint="Labels"
+							                  hintAlways={true}
+							                  style={{marginBottom: rem(1.5)}}
 							                  inputStyle={makeStyle(styles.input,{
-							                    //marginTop: '0.5rem'
+							                    //marginTop: '0.5rem',
+
 							                  })}
 							                  availableLabels={labels}
 							                  onLabelsChanged={this.onLabelsChanged}
 							                  underlineStyle={styles.input.underlineDisabled}
 							                  underlineFocusStyle={styles.input.underlineFocus}
 							                  underlineShow={true}
-							                  hintStyle={styles.input.hint}
-							                  labelStyle={styles.input.floatingLabel}
+							                  hintStyle={makeStyle(styles.input.hint,{left:10,bottom: 8})}
+							                  chipStyle={{margin: "1rem 0.5rem"}}
+							                  labelStyle={makeStyle(styles.input.floatingLabel,{})}
 							                  labelFocusStyle={styles.input.floatingLabelFocus}/>
 
 
 							<SimpleMDE onChange={this.onMarkdownChange}
 							           style={{maxHeight: 500}}
-
 							           options={{
-						            autoDownloadFontAwesome: false,
-						            spellChecker: false,
-						            initialValue: editingIssue.body,
-						            autofocus: false
-						           }}/>
+								            autoDownloadFontAwesome: false,
+								            spellChecker: false,
+								            initialValue: editingIssue.body,
+								            autofocus: false
+								           }}/>
 						</form>
 
 						{/* Saving progress indicator */}

@@ -137,9 +137,14 @@ export class RepoSyncJob extends Job {
 	@Benchmarker
 	async syncIssues(stores:Stores,repo) {
 		const issues = await this.client.repoIssues(repo,{
-			params: assign({state: 'all'},this.lastSyncParams)
+			params: assign({
+				state: 'all',
+				sort: 'updated',
+				filter: 'all'
+			},this.lastSyncParams)
 		})
 
+		log.info('Got issues', issues)
 		for (let issue of issues) {
 			issue.repoId = repo.id
 			const existing = await stores.issue.get(issue.id)
@@ -180,8 +185,9 @@ export class RepoSyncJob extends Job {
 	@Benchmarker
 
 	async syncMilestones(stores,repo) {
-		const milestones = await this.client.repoMilestones(repo)
+		const milestones = await this.client.repoMilestones(repo,{params: {state: 'all'}})
 
+		log.info('Got milestones',milestones)
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
 			const existing = await stores.milestone.get(milestone.id)
@@ -195,14 +201,15 @@ export class RepoSyncJob extends Job {
 	/**
 	 * Synchronize all comments in the repository
 	 *
+	 * @param stores
 	 * @param repo
 	 */
-	@Benchmarker /**
-	 * @param stores
-	 */
+	@Benchmarker
 
 	async syncComments(stores,repo) {
-		let comments = await this.client.repoComments(repo,{params:this.lastSyncParams})
+		let comments = await this.client.repoComments(repo, {
+			params: assign({sort: 'updated'}, this.lastSyncParams)
+		})
 
 		// Filter JUST in case there are some missing issue urls
 		//comments = comments.filter(comment => comment.issue_url)
@@ -297,7 +304,7 @@ export class RepoSyncJob extends Job {
 			await issueActions.loadIssues()
 
 			log.info('Now syncing comments')
-			await Promise.delay(2000)
+			await Promise.delay(1)
 			await this.syncComments(stores,repo)
 
 			// Reload current issue if loaded

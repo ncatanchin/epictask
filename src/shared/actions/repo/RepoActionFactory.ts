@@ -157,23 +157,32 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 			const promises = [
 				stores.repo.bulkGet(...repoIds)
-					.then(models => models.reduce((modelMap,nextModel) => {
-						modelMap[nextModel.id] = nextModel
-						return modelMap
-					},{}))
-					.then(models => dataActions.updateModels(Repo.$$clazz,models)),
+					.then(async (models) => {
+						const modelMap = models.reduce((modelMap,nextModel) => {
+							modelMap[nextModel.id] = nextModel
+							return modelMap
+						},{})
+						dataActions.updateModels(Repo.$$clazz,modelMap)
+					}),
+
 				stores.label.findByRepoId(...repoIds)
-					.then(models => models.reduce((modelMap,nextModel) => {
-						modelMap[nextModel.url] = nextModel
-						return modelMap
-					},{}))
-					.then(models => dataActions.updateModels(Label.$$clazz,models)),
+					.then(async(models) => {
+						const modelMap = models.reduce((modelMap,nextModel) => {
+							modelMap[nextModel.url] = nextModel
+							return modelMap
+						},{})
+						dataActions.updateModels(Label.$$clazz,modelMap)
+					}),
+
 				stores.milestone.findByRepoId(...repoIds)
-					.then(models => models.reduce((modelMap,nextModel) => {
-						modelMap[nextModel.id] = nextModel
-						return modelMap
-					},{}))
-					.then(models => dataActions.updateModels(Milestone.$$clazz,models))
+					.then(async(models) => {
+						const modelMap = models.reduce((modelMap,nextModel) => {
+							modelMap[nextModel.id] = nextModel
+							return modelMap
+						},{})
+						dataActions.updateModels(Milestone.$$clazz,modelMap)
+					})
+
 			]
 
 

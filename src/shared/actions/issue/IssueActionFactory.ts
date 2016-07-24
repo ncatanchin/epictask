@@ -553,7 +553,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 
 	private async loadIssuesAction(dispatch,getState) {
-		const actions = this.withDispatcher(dispatch, getState)
+		const
+			actions = this.withDispatcher(dispatch, getState),
+			dataActions = Container.get(DataActionFactory)
 
 		// Issue repo
 		const
@@ -566,6 +568,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 		let offset = 0
 		const limit = 50
+		let labels = await actions.stores.label.findByRepoId(...repoIds)
+		let milestones = await actions.stores.milestone.findByRepoId(...repoIds)
+
 		let issueIds:number[] = await (issueFilter.includeClosed ?
 			issueStore.findIdsByRepoId(...repoIds) :
 			issueStore.findIdsByStateAndRepoId('open',...repoIds))
@@ -582,9 +587,27 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		//
 		// }
 
+		const milestoneMap = milestones.reduce((map,nextMilestone) => {
+			map['' + nextMilestone.id] = nextMilestone
+			return map
+		},{})
+
+		const labelMap = labels.reduce((map,nextLabel) => {
+			map[nextLabel.url] = nextLabel
+			return map
+		},{})
+
+		dataActions.updateModels(
+			Milestone.$$clazz,
+			milestoneMap
+		)
+
+		dataActions.updateModels(
+			Label.$$clazz,
+			labelMap
+		)
+
 		actions.requestIssueIds(issueIds,false)
-
-
 	}
 
 	@Action()

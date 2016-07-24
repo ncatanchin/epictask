@@ -77,6 +77,9 @@ async function boot() {
 		// if (!isExtInstalled('pouchdb'))
 		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
 
+		if (!isExtInstalled('scratch'))
+			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/scratch'))
+
 		if (!isExtInstalled('react'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
 

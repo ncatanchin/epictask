@@ -107,7 +107,7 @@ async function start() {
 
 		// In DEBUG mode expose repos on global
 		if (DEBUG) {
-			_.assignGlobal({Stores: stores})
+			_.assignGlobal({Stores: stores,db:storePlugin.db})
 		}
 
 		// Now bind repos to the IOC

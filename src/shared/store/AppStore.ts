@@ -21,7 +21,9 @@ import {loadActionFactories} from 'shared/actions/ActionFactoryProxies'
 
 
 const electron = require('electron')
-const ipc = (Env.isRenderer) ? electron.ipcRenderer : electron.ipcMain as any
+const ipc = (Env.isRenderer) ?
+	electron.ipcRenderer :
+	electron.ipcMain as any
 
 const stateFilename = cacheFilename('store-state')
 const ActionLoggerEnabled = false
@@ -239,7 +241,13 @@ export function initStore(devToolsMode = false,defaultState = null) {
  */
 export async function loadAndInitStore() {
 	const stateData = readFile(stateFilename)
-	const defaultStateValue = (stateData) ? JSON.parse(stateData) : null
+	let defaultStateValue = null
+	try {
+		if (stateData)
+			defaultStateValue = JSON.parse(stateData)
+	} catch (err) {
+		log.error('unable to load previous state data, starting fresh',err)
+	}
 	return initStore(false,defaultStateValue)
 }
 
@@ -254,10 +262,14 @@ async function writeStoreState() {
 	await fs.writeFile(stateFilename,_.toJS(getStoreState()))
 }
 
+
 /**
  * Debounced persist store state call
  */
 const persistStoreState = _.debounce((state) => {
+	if (!Env.isMain)
+		return
+
 	log.info(`Writing current state to: ${stateFilename}`)
 	if (persistingState) {
 		log.info('Persisting, can not persist until completion')
@@ -292,6 +304,13 @@ export function getReduxStore() {
 
 export function getStoreState() {
 	return getStore().getState()
+}
+
+if (Env.isDev) {
+	_.assignGlobal({
+		getStore,
+		getStoreState
+	})
 }
 
 export function persist() {

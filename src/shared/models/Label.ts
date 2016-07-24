@@ -15,7 +15,7 @@ import {RegisterModel} from 'shared/Registry'
 export class Label extends DefaultModel {
 
 	static isLabel(o:any):o is Label {
-		return o.url && o.name
+		return o.url && o.name && !o.id
 	}
 
 	/**

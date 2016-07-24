@@ -36,6 +36,8 @@ export class Milestone extends DefaultModel {
 
 
 	number: number
+
+	@AttributeDescriptor()
 	state: string
 	title: string
 	description: string

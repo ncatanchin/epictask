@@ -161,7 +161,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 	},
 
-
 	dialog: {
 		titleFontSize: fontSize * 2,
 		bodyFontSize:  fontSize * 1.5,
@@ -172,8 +171,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		actions: {
-			color:           primary.hue1,
-			backgroundColor: text.primary
+			backgroundColor:           primary.hue1,
+			color: text.primary
 		},
 		action: {
 			titleFontSize: fontSize * 1.3,
@@ -182,8 +181,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		body: {
-			color:           primary.hue1,
-			backgroundColor: text.primary
+			backgroundColor:           primary.hue1,
+			color: text.primary
 		},
 
 		title: {
@@ -202,14 +201,14 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		menu: {
-			color: primary.hue1,
-			fill: primary.hue3,
-			backgroundColor: 'transparent'//,text.primary
+			color: text.primary,
+			fill: text.secondary,
+			backgroundColor: primary.hue2 //primary.hue2//,text.primary
 		},
 
 		menuItem: {
-			color: primary.hue1,
-			backgroundColor: text.primary,
+			backgroundColor: primary.hue2,
+			color: text.primary,
 			hover: {
 				color: text.primary + ' !important',
 				backgroundColor: accent.hue1 + ' !important'
@@ -218,33 +217,36 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		input: {
-			color: primary.hue1,
+			color: text.primary,
+			backgroundColor: primary.hue2,
 
 			hint:  {
-				color:           secondary.hue3,
+				zIndex: 5,
+				textTransform: 'uppercase',
+				color:           primary.hue4,
 				backgroundColor: 'transparent',//text.primary,
-				fontStyle:   'italic',
-				fontWeight: 100
+				// fontStyle:   'italic',
+				// fontWeight: 100
 
 			},
 
 
 			floatingLabel: {
-				color:           primary.hue3,
+				color:           primary.hue4,
 				backgroundColor: 'transparent',//backgroundColor: text.secondary
 			},
 
 			floatingLabelFocus: {
-				color:           secondary.hue2,
+				color:           text.secondary,
 				backgroundColor: 'transparent',//backgroundColor: text.secondary
 			},
 			underlineDisabled: {
-				borderColor: secondary.hue3,
+				borderColor: 'transparent',
 				borderBottomWidth: `0.1rem`,
 				transform: 'scaleX(1)'
 			},
 			underlineFocus: {
-				borderColor: secondary.hue2,
+				borderColor: primary.hue3,
 				borderBottomWidth: `0.1rem`
 			}
 
@@ -253,6 +255,98 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 
 	},
+
+	// dialog: {
+	// 	titleFontSize: fontSize * 2,
+	// 	bodyFontSize:  fontSize * 1.5,
+	// 	bodyColor:     text.primary,
+	//
+	// 	root: {
+	//
+	// 	},
+	//
+	// 	actions: {
+	// 		color:           primary.hue1,
+	// 		backgroundColor: text.primary
+	// 	},
+	// 	action: {
+	// 		titleFontSize: fontSize * 1.3,
+	// 		padding: '1rem 2rem',
+	// 		margin: '0 0 0 1rem'
+	// 	},
+	//
+	// 	body: {
+	// 		color:           primary.hue1,
+	// 		backgroundColor: text.primary
+	// 	},
+	//
+	// 	title: {
+	// 		color:           text.primary,
+	// 		backgroundColor: secondary.hue1,
+	//
+	// 		label: {
+	// 			textTransform: 'uppercase'
+	// 		},
+	//
+	// 		avatar: {
+	// 			avatar: {
+	// 				borderColor: accent.hue1
+	// 			}
+	// 		}
+	// 	},
+	//
+	// 	menu: {
+	// 		color: primary.hue1,
+	// 		fill: primary.hue3,
+	// 		backgroundColor: 'transparent'//,text.primary
+	// 	},
+	//
+	// 	menuItem: {
+	// 		color: primary.hue1,
+	// 		backgroundColor: text.primary,
+	// 		hover: {
+	// 			color: text.primary + ' !important',
+	// 			backgroundColor: accent.hue1 + ' !important'
+	// 		}
+	//
+	// 	},
+	//
+	// 	input: {
+	// 		color: primary.hue1,
+	//
+	// 		hint:  {
+	// 			color:           secondary.hue3,
+	// 			backgroundColor: 'transparent',//text.primary,
+	// 			fontStyle:   'italic',
+	// 			fontWeight: 100
+	//
+	// 		},
+	//
+	//
+	// 		floatingLabel: {
+	// 			color:           primary.hue3,
+	// 			backgroundColor: 'transparent',//backgroundColor: text.secondary
+	// 		},
+	//
+	// 		floatingLabelFocus: {
+	// 			color:           secondary.hue2,
+	// 			backgroundColor: 'transparent',//backgroundColor: text.secondary
+	// 		},
+	// 		underlineDisabled: {
+	// 			borderColor: secondary.hue3,
+	// 			borderBottomWidth: `0.1rem`,
+	// 			transform: 'scaleX(1)'
+	// 		},
+	// 		underlineFocus: {
+	// 			borderColor: secondary.hue2,
+	// 			borderBottomWidth: `0.1rem`
+	// 		}
+	//
+	//
+	// 	},
+	//
+	//
+	// },
 
 	issueEditDialog: {
 

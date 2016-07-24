@@ -4,17 +4,15 @@
 
 // Imports
 import * as React from 'react'
-import {PureRender, Avatar, LabelFieldEditor, Icon, Button} from 'components/common'
+import {PureRender, LabelFieldEditor, Icon, Button} from 'components/common'
 import {Issue} from 'models/Issue'
 import {Label} from 'models/Label'
 import {Milestone} from 'models/Milestone'
 import filterProps from 'react-valid-props'
 import {repoName, getGithubErrorText} from 'ui/components/common/Renderers'
-import {IssueLabelsAndMilestones} from 'components/issues'
 import {TextField} from 'material-ui'
 import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 import {Repo} from 'models/Repo'
-import {Map} from 'Immutable'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -75,17 +73,13 @@ const baseStyles = createStyles({
 
 			labels: [FlexScale, {
 				padding: '0 0 0 0',
-				//overflow: 'auto',
 				flexWrap: 'wrap',
-
 				label: {
 					margin: '0.5rem 0.7rem 0rem 0',
 				}
 
 			}],
 			repo: [FlexRow, makeFlexAlign('flex-start', 'flex-start'), {
-				//pointerEvents: 'none',
-
 				text: [{
 
 				}]
@@ -118,9 +112,8 @@ const baseStyles = createStyles({
 			padding: "0",
 		}],
 
-		repo: [FlexScale, {
-			//height: 30,
-
+		repo: [{
+			flexShrink: 1,
 			padding: "0 0",
 			margin: '0 0 1rem 0',
 			menu: [{
@@ -578,15 +571,21 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 						{this.makeRepoMenuItems()}
 					</SelectField>
 
-					{/*<div style={makeStyle(styles.issueRepo,theme.issuesPanel.issueRepo)}>*/}
-						{/*{repoName(repo)}*/}
-					{/*</div>*/}
+					<div style={styles.row.spacer} />
+
+					<Button style={styles.row.action}
+					        mode='flat'
+					        onClick={this.hide}>
+						<Icon style={[styles.row.action.icon,{padding: rem(0.3)}]}
+						      iconSet='material-icons'>
+							close
+						</Icon>
+					</Button>
+
 				</div>
 
 
 				<div style={styles.row}>
-					{/*<div style={issueTitleStyle}>{issue.title}</div>*/}
-					{/*<div style={styles.issueTitleTime}>{moment(issue.updated_at).fromNow()}</div>*/}
 					<TextField ref={this.setTextField}
 					           defaultValue={issue.title}
 					           onChange={this.onTitleChange}
@@ -610,24 +609,14 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 				<div>
 
-					{/* LABELS */}
-					{/*<IssueLabelsAndMilestones*/}
-						{/*showIcon*/}
-						{/*labels={labels}*/}
-						{/*milestones={issue.milestone ? [issue.milestone] : []}*/}
-						{/*style={styles.issueLabels}*/}
-						{/*labelStyle={styles.issue.labels.label}*/}
-					{/*/>*/}
-					{/*style={{backgroundColor:styles.input.backgroundColor}}*/}
+
 					<LabelFieldEditor labels={issue.labels || []}
 					                  ref={this.setLabelFieldRef}
 					                  onKeyDown={this.onKeyDown}
 					                  id="issueEditInlineLabels"
 					                  hint="labels..."
 					                  hintAlways={true}
-					                  hintStyle={makeStyle(styles.input.hint,{
-					                  	bottom: 5
-					                  })}
+					                  hintStyle={makeStyle(styles.input.hint,{bottom: 5})}
 					                  inputStyle={makeStyle(styles.input,{
 					                  	margin: "2rem 0 0 0",
 					                  	height: "3.8rem"

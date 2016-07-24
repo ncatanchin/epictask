@@ -14,6 +14,6 @@ popd
 #popd
 
 
-echo "Creating Electron EpicTask.app for DEV"
-./etc/scripts/electron-package-dev.sh
-./etc/scripts/build-material-ui.sh
+#echo "Creating Electron EpicTask.app for DEV"
+#./etc/scripts/electron-package-dev.sh
+#./etc/scripts/build-material-ui.sh
