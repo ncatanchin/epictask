@@ -206,6 +206,7 @@ class App extends React.Component<IAppProps,any> {
 					         handlers={this.keyHandlers}
 					         onFocus={this.onFocus}
 					         onBlur={this.onBlur}
+					         focused={true}
 					         id="appRoot"
 					>
 

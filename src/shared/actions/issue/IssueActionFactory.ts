@@ -27,6 +27,7 @@ import {Milestone} from 'shared/models/Milestone'
 import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
 import Settings from 'shared/Settings'
+import {TIssuePatchMode} from 'shared/actions/issue'
 
 /**
  * Created by jglanz on 5/29/16.
@@ -162,6 +163,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 
 
+	@ActionReducer()
+	private setPatchIssues(issues:Issue[],mode:TIssuePatchMode = null) {
+		return (state:IssueState) => state
+			.set('patchIssues',issues)
+			.set('patchMode',mode || state.patchMode)
+	}
+
 	/**
 	 * The the selected issue ids
 	 *
@@ -183,6 +191,70 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	createIssueInline(fromIssue:Issue) {
 		this.newIssue(fromIssue,true)
+	}
+
+
+	/**
+	 * Open issue patch dialog
+	 *
+	 * @param mode
+	 * @param issues
+	 */
+	patchIssues(mode:TIssuePatchMode,...issues:Issue[]) {
+		this.setPatchIssues(issues,mode)
+		this.uiActions.setDialogOpen(Dialogs.IssuePatchDialog,true)
+	}
+
+	/**
+	 * Apply patches to issues
+	 *
+	 * @param patch
+	 * @param issues
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
+	@Action()
+	applyPatchToIssues(patch:any,...issues:Issue[]) {
+		return async(dispatch, getState) => {
+			if (!issues.length)
+				return
+
+			const originalIssues = issues
+			const actions = this.withDispatcher(dispatch,getState)
+			const dataActions:DataActionFactory = Container.get(DataActionFactory)
+			const repoModels = repoModelsSelector(getState())
+			const client = Container.get(GitHubClient)
+
+			try {
+				// Get the latest issues with revision info etc
+				issues = await Promise.all(
+					issues.map(issue => this.stores.issue.get(issue.id))
+				)
+
+				// Now apply the patch to clones
+				issues = issues.map(issue => _.merge(cloneObject(issue),patch))
+
+				// One by one update the issues on GitHub
+				for (let issue of issues) {
+					const repo = issue.repo || repoModels.get(`${issue.repoId}`)
+					assert(repo, `Unable to find repo for issue patching: ${issue.repoId}`)
+
+					issue = await client.issueSave(repo, issue)
+
+					// Update each model as it happens as an individual issue can fail
+					dataActions.updateModels(Issue.$$clazz,{[`${issue.id}`]:issue})
+
+				}
+
+				actions.setIssueSaving(false)
+				actions.setPatchIssues(null)
+
+				this.uiActions.closeAllDialogs()
+
+			} catch (err) {
+				log.error('issue patching failed',patch,issues,originalIssues)
+				actions.setIssueSaving(false,extractError(err))
+			}
+		}
 	}
 
 	@Action()

@@ -7,9 +7,20 @@ import {ActionMessage} from 'typedux'
 import {Comment,Issue} from 'shared/models'
 import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
 import {IIssueSort} from 'shared/actions/issue/IIssueSort'
+import {Label} from 'models/Label'
+import {Milestone} from 'models/Milestone'
 
 export * from './IIssueFilter'
 export * from './IIssueSort'
+
+export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
+
+export const IssuePatchModes = {
+	Label:Label.$$clazz,
+	Milestone:Milestone.$$clazz,
+	Assignee:'Assignee',
+}
+
 
 export type TIssueEditInlineConfig = {
 	groupIndex:number,
@@ -26,6 +37,8 @@ export const IssueStateRecord = Record({
 	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,
+	patchIssues:null,
+	patchMode:null,
 	issueSaveError: null,
 	issueSaving: false,
 	issueSort:{
@@ -65,6 +78,8 @@ export class IssueState extends IssueStateRecord {
 	selectedIssueIds:Array<number>
 	issueIds:number[]
 	commentIds:string[]
+	patchIssues:Issue[]
+	patchMode:TIssuePatchMode
 	editingIssue:Issue
 	editingInline:boolean
 

@@ -62,6 +62,10 @@ export const OverflowHidden = {
 	overflow: 'hidden'
 }
 
+export const OverflowAuto = {
+	overflow: 'auto'
+}
+
 //region Positioning
 export const PositionRelative = {
 	position: 'relative'

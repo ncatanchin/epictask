@@ -8,13 +8,14 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 const {Style} = Radium
 
-import {AutoComplete,MenuItem} from 'material-ui'
+import {AutoComplete, MenuItem} from 'material-ui'
 import {PureRender} from 'components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {Themed} from 'shared/themes/ThemeManager'
 import {HotKeys} from 'react-hotkeys'
 import {CommonKeys} from 'shared/KeyMaps'
+import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 
 const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
 const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
@@ -36,7 +37,7 @@ const styles = {
 			padding: 0
 		}
 	}),
-	chips: makeStyle(makeTransition(['padding-top']),FlexRow, FlexAuto, PositionRelative, makeFlexAlign('center','flex-start'), {
+	chips: makeStyle(makeTransition(['padding-top']), FlexRow, FlexAuto, PositionRelative, makeFlexAlign('center', 'flex-start'), {
 		flexWrap: 'wrap',
 		boxSizing: 'border-box',
 
@@ -44,7 +45,6 @@ const styles = {
 			paddingTop: 25
 		}
 	}),
-
 
 
 	input: makeStyle({
@@ -82,7 +82,6 @@ const styles = {
 	})
 
 
-
 }
 
 
@@ -90,31 +89,31 @@ const styles = {
  * IChipsFieldProps
  */
 export interface IChipsFieldProps<M> extends React.DOMAttributes {
-	theme?:any
-	id:string
+	theme?: any
+	id: string
 
-	label?:string
-	hint?:string
+	label?: string
+	hint?: string
 
-	modelType:{new():M}
+	modelType: {new(): M}
 	allChips: M[]
-	filterChip: (item:M, query:string) => boolean
+	filterChip: (item: M, query: string) => boolean
 	selectedChips: M[]
-	onChipSelected: (item:M) => any
-	renderChip:(item:M) => any
-	renderChipSearchItem:(chipProps:any,item:M) => any
-	keySource: (item:M) => string|number
+	onChipSelected: (item: M) => any
+	renderChip: (item: M) => any
+	renderChipSearchItem: (chipProps: any, item: M) => any
+	keySource: (item: M) => string|number
 
-	underlineShow?:boolean
-	inputStyle?:any
-	hintStyle?:any
-	hintAlways?:boolean
-	style?:any
-	underlineStyle?:any
-	underlineFocusStyle?:any
-	labelStyle?:any
-	labelFocusStyle?:any
-	maxSearchResults?:number
+	underlineShow?: boolean
+	inputStyle?: any
+	hintStyle?: any
+	hintAlways?: boolean
+	style?: any
+	underlineStyle?: any
+	underlineFocusStyle?: any
+	labelStyle?: any
+	labelFocusStyle?: any
+	maxSearchResults?: number
 }
 
 /**
@@ -130,72 +129,67 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 
 		this.state = {
-			isFocused:false,
+			isFocused: false,
 			query: null
 		}
 	}
 
 
 	componentWillMount() {
-		this.setState({dataSource:this.makeDataSource(null,this.props.allChips)})
+		this.setState({dataSource: this.makeDataSource(null, this.props.allChips)})
 	}
 
 	componentWillReceiveProps(nextProps) {
-		if (this.state && _.isEqual(this.state.allChips,nextProps.allChips))
+		if (this.state && _.isEqual(this.state.allChips, nextProps.allChips))
 			return
 
 		this.setState({
-			allChips:nextProps.allChips,
-			dataSource:this.makeDataSource(null, nextProps.allChips)
+			allChips: nextProps.allChips,
+			dataSource: this.makeDataSource(null, nextProps.allChips)
 		})
 	}
 
-	makeDataSource(newQuery,items) {
+	makeDataSource(newQuery, items) {
 
 		const chipProps = {
 			query: newQuery || ''
 		}
 
-		const newDataSource = items.map(item => {
+		const newDataSource = items.map(item => ({
+			item,
+			text: '',//this.props.keySource(item),
+			value: this.props.renderChipSearchItem(chipProps, item)
+		}))
 
-
-
-			return {
-				item,
-				text:  '',//this.props.keySource(item),
-				value: this.props.renderChipSearchItem(chipProps,item)
-			}
-		})
-
-		log.debug('new data source =',newDataSource)
+		log.debug('new data source =', newDataSource)
 		return newDataSource
 	}
 
 
 	onChipSelected = (item) => {
 		this.props.onChipSelected(item)
-		this.setState({query:null})
+		this.setState({query: null})
 	}
 
-	dataSourceFilter = (query,index) => {
+	dataSourceFilter = (query, index) => {
 		const {allChips, filterChip} = this.props
 		const item = allChips[index]
 
-		return item && filterChip(item,query)
+		return item && filterChip(item, query)
 	}
 
 	handleUpdateInput = (newQuery) => {
-		log.debug('QUery updated',newQuery)
+		log.debug('QUery updated', newQuery)
 		const newChipModels = this.props.allChips
-			.filter(item => this.props.filterChip(item,newQuery))
+			.filter(item => this.props.filterChip(item, newQuery))
 
 		this.setState({
-			dataSource:this.makeDataSource(newQuery,newChipModels),
-			query:newQuery
+			dataSource: this.makeDataSource(newQuery, newChipModels),
+			query: newQuery
 		})
 	}
 
@@ -207,7 +201,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
-		log.debug('Selected / Enter', chosenRequest,index)
+		log.debug('Selected / Enter', chosenRequest, index)
 
 		const {dataSource} = this.state
 		if (!dataSource || !dataSource.length) {
@@ -232,8 +226,8 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 	render() {
 		const
-			{state,props} =this,
-			{isFocused,dataSource} = state,
+			{state, props} =this,
+			{isFocused, dataSource} = state,
 			{
 				theme,
 				selectedChips,
@@ -256,75 +250,66 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 			finalInputStyle = makeStyle(
 				inputStyle,
-				_.mapValues(inputStyle,value => value + ' !important')
+				_.mapValues(inputStyle, value => value + ' !important')
 			)
-
 
 
 		// && {marginTop:'1rem'}
 		return <HotKeys {...props}
-					handlers={this.keyHandlers}
-                   style={makeStyle(s.root,props.style,!label && s.root.noLabel)}
-                   onFocus={this.onSetFocus(true)}
-                   onBlur={this.onSetFocus(false)}>
+			handlers={this.keyHandlers}
+			style={makeStyle(s.root,props.style,!label && s.root.noLabel)}
+			onFocus={this.onSetFocus(true)}
+			onBlur={this.onSetFocus(false)}>
 
 			{/*{label && <TextFieldLabel*/}
-				{/*muiTheme={theme}*/}
-				{/*style={labelStyle}*/}
-				{/*shrinkStyle={labelFocusStyle}*/}
-				{/*htmlFor={id}*/}
-				{/*shrink={hasValue || isFocused}>*/}
-				{/*{label}*/}
+			{/*muiTheme={theme}*/}
+			{/*style={labelStyle}*/}
+			{/*shrinkStyle={labelFocusStyle}*/}
+			{/*htmlFor={id}*/}
+			{/*shrink={hasValue || isFocused}>*/}
+			{/*{label}*/}
 			{/*</TextFieldLabel>}*/}
 
 			<Style scopeSelector={`#${id}`}
 			       rules={_.assign({},s.inputRules,{
 						'input': finalInputStyle
-			       }) as any} />
+			       }) as any}/>
 
 			<div style={[s.chips,(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
 				{selectedChips.map(item => renderChip(item))}
-				<AutoComplete onKeyDown={props.onKeyDown}
-							  className='chipAutoComplete'
-							  hintText={hint}
-				              hintStyle={makeStyle({zIndex: 3,bottom: 5,opacity: !query.length ? 1 : 0},hintStyle)}
-				              style={makeStyle(s.input,((hasValue || isFocused) && label))}
-				              underlineShow={false}
-
-				              filter={AutoComplete.noFilter}
-				              listStyle={{
-								paddingTop: 0,
-								paddingBottom: 0,
-								backgroundColor: 'transparent !important'
-							  }}
-				              menuProps={{maxHeight:300}}
-				              onNewRequest={this.onItemSelectedOrEnterPressed}
-				              dataSource={this.state.dataSource}
-				              searchText={query}
-				              onUpdateInput={this.handleUpdateInput}
-				              openOnFocus={true}/>
+				<TypeAheadSelect
+					onKeyDown={props.onKeyDown}
+					className='chipAutoComplete'
+					hintText={hint}
+					underlineShow={false}
+					menuProps={{maxHeight:300}}
+					onItemSelected={this.onItemSelectedOrEnterPressed}
+					onInputChanged={this.handleUpdateInput}
+					dataSource={this.state.dataSource}
+					query={query}
+					openOnFocus={true}/>
 
 
 			</div>
 
 
 			{/*{hint && <TextFieldHint*/}
-				{/*muiTheme={theme}*/}
-				{/*show={!query.length}*/}
-				{/*style={hintStyle}*/}
-				{/*text={hint}*/}
+			{/*muiTheme={theme}*/}
+			{/*show={!query.length}*/}
+			{/*style={hintStyle}*/}
+			{/*text={hint}*/}
 			{/*/>}*/}
 			{/*
-			{underlineShow && <TextFieldUnderline
-				error={false}
-				errorStyle={{}}
-				disabled={false}
-				disabledStyle={{}}
-				focus={isFocused}
-				focusStyle={props.underlineFocusStyle}
-				muiTheme={theme}
-				style={props.underlineStyle}
-			/>}
+			 {underlineShow && <TextFieldUnderline
+			 error={false}
+			 errorStyle={{}}
+			 disabled={false}
+			 disabledStyle={{}}
+			 focus={isFocused}
+			 focusStyle={props.underlineFocusStyle}
+			 muiTheme={theme}
+			 style={props.underlineStyle}
+			 />}
 			 */}
 		</HotKeys>
 	}

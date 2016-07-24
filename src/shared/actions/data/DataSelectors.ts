@@ -10,6 +10,7 @@ import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
 import {createStructuredSelector} from 'reselect'
 import {Activity} from 'shared/models/Activity'
+import {User} from 'models/User'
 
 
 
@@ -40,6 +41,10 @@ export const labelModelsSelector = _.memoize(
 
 export const issueModelsSelector = _.memoize(
 	(state):Map<string,Issue> => dataStateSelector(state).models.get(Issue.$$clazz)  || Map<string,Issue>()
+)
+
+export const userModelsSelector = _.memoize(
+	(state):Map<string,User> => dataStateSelector(state).models.get(User.$$clazz)  || Map<string,Issue>()
 )
 
 export const commentModelsSelector = _.memoize(

@@ -43,7 +43,6 @@ const {Style} = Radium
 
 // Constants
 const log = getLogger(__filename)
-const uiActions = Container.get(UIActionFactory)
 
 const baseStyles = createStyles({
 	root: [FlexColumn, FlexAuto],
@@ -241,15 +240,15 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 
 	hide = () => {
-		uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-		this.uiActions.focusAppRoot()
+		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+		this.uiActions.focusIssuesPanel()
 	}
 
 	onBlur = () => {
 		log.debug('Blurred')
 	}
 
-	onCancel = () => this.hide()
+	onCancel = this.hide
 
 	onSave = (event) => {
 		!this.props.saving &&

@@ -37,6 +37,20 @@ const fontFamily = fontFamilyRegular
 const fontWeight = 400
 const fontSize = 10
 
+const InputStyle = {
+	color: text.primary,
+	backgroundColor: primary.hue2,
+
+	hint: {
+		zIndex: 5,
+		textTransform: 'uppercase',
+		color: primary.hue4,
+		backgroundColor: 'transparent'
+	}
+}
+
+
+
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	name: 'DarkTheme',
 
@@ -52,6 +66,14 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	alternateTextColor: alternateText.primary,
 
 	progressIndicatorColor: secondary.hue1,
+
+
+	/**
+	 * TypeAheadSelect styling
+	 */
+	TypeAheadSelect: [InputStyle,{
+
+	}],
 
 
 	issueStateIcon: {

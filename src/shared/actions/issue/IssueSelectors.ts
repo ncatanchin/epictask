@@ -266,7 +266,7 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 	}
 )
 
-
+export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues)
 
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
 
