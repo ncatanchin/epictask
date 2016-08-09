@@ -213,7 +213,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	applyPatchToIssues(patch:any,...issues:Issue[]) {
+	applyPatchToIssues(patch:any,useAssign,...issues:Issue[]) {
 		return async(dispatch, getState) => {
 			if (!issues.length)
 				return
@@ -231,7 +231,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				)
 
 				// Now apply the patch to clones
-				issues = issues.map(issue => _.merge(cloneObject(issue),patch))
+				issues = issues.map(issue => (useAssign) ?
+					_.assign(cloneObject(issue),patch) :
+					_.merge(cloneObject(issue),patch))
 
 				// One by one update the issues on GitHub
 				for (let issue of issues) {

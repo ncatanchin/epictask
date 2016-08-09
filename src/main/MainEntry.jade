@@ -26,6 +26,8 @@ html.fill-width.fill-height(lang="en")
 					ipc = electron.ipcRenderer,
 					Events = remote.getGlobal('Constants').Events
 
+
+
 			function checkBooted() {
 				window.booted = remote.getGlobal("MainBooted")
 				return window.booted
@@ -65,6 +67,8 @@ html.fill-width.fill-height(lang="en")
 			var loaded = false
 			var isDev = remote.getGlobal('Env').isDev
 
+			if (isDev)
+				require('debug-menu').install()
 			/*
 			*	Add a script tag to load content
 			*/

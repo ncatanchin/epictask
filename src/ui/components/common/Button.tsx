@@ -50,17 +50,13 @@ export interface IButtonProps extends React.HTMLAttributes {
  * @class Button
  * @constructor
  **/
-@ThemedStyles(baseStyles,'button')
 @Radium
-export class Button extends React.Component<IButtonProps,any> {
+@ThemedStyles(baseStyles,'button')
+export class Button extends React.Component<IButtonProps,void> {
 
 	static defaultProps = {
 		ripple: true,
 		mode: 'flat'
-	}
-
-	constructor(props,context) {
-		super(props,context)
 	}
 
 	render() {
@@ -70,10 +66,11 @@ export class Button extends React.Component<IButtonProps,any> {
 		const rootStyle = mergeStyles(
 			styles.root,
 			styles[mode],
-			(disabled) && styles.disabled,style
+			(disabled) && styles.disabled,
+			style
 		)
 
-		rootStyle[':hover'] = {
+		rootStyle[':hover'] = rootStyle[':hover'] || {
 			backgroundColor: tinycolor(rootStyle.backgroundColor).lighten(20).toString()
 		}
 

@@ -11,7 +11,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {Milestone} from 'models/Milestone'
-import {baseStyles} from './LabelChip'
+import LabelChip from './LabelChip'
 import {Icon} from 'epictask/ui/components'
 
 // Constants
@@ -25,8 +25,6 @@ export type TMilestoneCallback = (milestone:Milestone) => void
  * IMilestoneChipProps
  */
 export interface IMilestoneChipProps extends React.HTMLAttributes {
-	theme?: any
-	styles?: any
 	milestone:Milestone
 	milestoneStyle?:any
 	showIcon?:boolean
@@ -45,10 +43,8 @@ export interface IMilestoneChipProps extends React.HTMLAttributes {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'labels')
-@Radium
 @PureRender
-export default class MilestoneChip extends React.Component<IMilestoneChipProps,void> {
+export default class MilestoneChip extends React.Component<IMilestoneChipProps,any> {
 
 	static defaultProps = {
 		showIcon: true,
@@ -66,28 +62,23 @@ export default class MilestoneChip extends React.Component<IMilestoneChipProps,v
 			showIcon
 		} = this.props
 
-		const
-			finalLabelStyle = makeStyle(styles.label,milestoneStyle, {
-				backgroundColor: 'black',
-				color: 'white'
-			})
-
-		return <div key={milestone.id} style={finalLabelStyle}>
-			{showIcon &&
-				<Icon style={styles.icon}
-				      iconSet='octicon'
-				      iconName='milestone'/>
-			}
-
-			<div style={styles.text}>{milestone.title}</div>
-
-			{onRemove &&
-				<Icon
-					style={styles.remove}
-					onClick={() => onRemove(milestone)}
-					iconSet='fa'
-					iconName='times'/>}
-		</div>
+		return <div></div>
+		// return <LabelChip labelStyle={finalLabelStyle}>
+		// 	{showIcon &&
+		// 		<Icon style={styles.icon}
+		// 		      iconSet='octicon'
+		// 		      iconName='milestone'/>
+		// 	}
+		//
+		// 	<div style={styles.text}>{milestone.title}</div>
+		//
+		// 	{onRemove &&
+		// 		<Icon
+		// 			style={styles.remove}
+		// 			onClick={() => onRemove(milestone)}
+		// 			iconSet='fa'
+		// 			iconName='times'/>}
+		// </div>
 	}
 
 }

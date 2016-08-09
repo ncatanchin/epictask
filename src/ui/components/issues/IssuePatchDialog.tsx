@@ -37,7 +37,7 @@ import {getGithubErrorText} from 'ui/components/common/Renderers'
 import {CircularProgress} from 'material-ui'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import {MenuItem} from 'material-ui'
-import MilestoneChip from 'epictask/ui/components/common/MilestoneChip'
+
 import {enabledRepoIdsSelector} from 'epictask/shared/actions/repo/RepoSelectors'
 import LabelChip from 'epictask/ui/components/common/LabelChip'
 
@@ -188,7 +188,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			item,
 			text: '',
 			value: <MenuItem primaryText={
-						<MilestoneChip milestone={item}
+						<LabelChip label={item}
 									   showRemove={false}
 									   showIcon={true}
 					    />

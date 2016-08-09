@@ -12,7 +12,6 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {Icon} from 'ui/components/common/Icon'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'components/common'
-import MilestoneChip from 'epictask/ui/components/common/MilestoneChip'
 import LabelChip from 'epictask/ui/components/common/LabelChip'
 const tinycolor = require('tinycolor2')
 
@@ -23,7 +22,8 @@ const log = getLogger(__filename)
 
 const baseStyles = createStyles({
 	root: makeStyle(FlexRow, FlexAuto, {
-		overflow: 'auto'
+		// overflowX: 'auto',
+		// overflowY: 'visible'
 	})
 })
 
@@ -42,6 +42,7 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
 	labelStyle?:any
 	showIcon?:boolean
 	onRemove?:TOnLabelOrMilestoneRemove
+	afterAllNode?:React.ReactNode
 }
 
 /**
@@ -77,7 +78,6 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 				milestones,
 				labelStyle,
 				labels
-
 			} = this.props,
 			{palette} = theme,
 			{styles} = this.state
@@ -85,19 +85,19 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 
 
 		return _.nilFilter(milestones || []).map((milestone:Milestone,index:number) =>
-			<MilestoneChip key={milestone.id}
-			               milestone={milestone}
+			<LabelChip key={milestone.id}
+			               label={milestone}
 			               showIcon={true}
-			               showRemove={true}
-			               onRemove={(milestone) => onRemove(milestone,index)}
-			               milestoneStyle={labelStyle}
+			               showRemove={!!onRemove}
+			               onRemove={!!onRemove && ((milestone) => onRemove(milestone,index))}
+			               labelStyle={labelStyle}
 			/>
 		).concat(_.nilFilter(labels || []).map((label:Label,index:number) =>
 			<LabelChip  key={label.url}
 			            label={label}
-			            showRemove={true}
+			            showRemove={!!onRemove}
 			            showIcon={true}
-			            onRemove={(label) => onRemove(label,index)}
+			            onRemove={!!onRemove && ((label) => onRemove(label,index))}
 			            labelStyle={labelStyle}
             />
 		) as any)
@@ -105,7 +105,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 
 	render() {
 		return <div style={makeStyle(this.state.styles.root,this.props.style)}>
-			{this.props.labels && this.renderLabels()}
+			{this.props.labels && this.renderLabels()}{this.props.afterAllNode}
 		</div>
 	}
 

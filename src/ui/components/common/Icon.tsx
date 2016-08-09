@@ -8,6 +8,7 @@ import * as Radium from 'radium'
 import {FAIcons} from './IconFontAwesomeNames'
 import {GHIcons} from './IconOpticonNames'
 import filterProps from 'react-valid-props'
+import {PureRender} from 'epictask/ui/components'
 // Constants
 const log = getLogger(__filename)
 
@@ -23,7 +24,6 @@ export interface IIconProps extends React.HTMLAttributes {
 	iconSet?:'material-icons'|'fa'|'octicon'
 	iconName?: string,
 	fontSize?:any
-
 }
 
 function iconCode(codeSet,iconName) {
@@ -43,11 +43,16 @@ function iconCode(codeSet,iconName) {
  **/
 
 @Radium
+//@PureRender
 export class Icon extends React.Component<IIconProps,any> {
 
-	constructor(props = {}) {
-		super(props)
-	}
+	// constructor(props,context) {
+	// 	super(props,context)
+	// }
+	//
+	// componentWillMount() {
+	// 	this.state = {}
+	// }
 
 	render() {
 		let {className = '',style,iconName,children,fontSize} = this.props
@@ -67,7 +72,7 @@ export class Icon extends React.Component<IIconProps,any> {
 			iconCode(GHIcons,iconName) :
 			children
 
-		return <i {...filterProps(this.props)} {..._.pick(this.props,'onClick')} className={className} style={style}>
+		return <i {...filterProps(this.props)} {..._.pick(this.props,'onClick')}  style={style} className={className}>
 			{iconContent}
 		</i>
 	}

@@ -38,6 +38,16 @@ export function makeFlexAlign(alignItems,justifyContent = null) {
 	return {justifyContent,alignItems}
 }
 
+/**
+ * Create a transition property with default config
+ *
+ * @global
+ *
+ * @param props
+ * @param duration
+ * @param easing
+ * @returns {{transition: any}}
+ */
 export function makeTransition(props:string[]|string = null,duration = 0.25,easing = 'ease-out') {
 	if (_.isString(props))
 		props = [props]

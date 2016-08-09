@@ -1,4 +1,6 @@
 
+import {baseStyles as labelBaseStyles} from 'ui/components/common/LabelChip'
+
 const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
 
 const baseStyles = createStyles({
@@ -52,9 +54,28 @@ const baseStyles = createStyles({
 				flexWrap: 'wrap',
 				label: {
 					marginTop: rem(0.5)
-				}
+				},
+				add: [labelBaseStyles.label,FlexRowCenter,FlexAuto,makeTransition(['transform','font-size','font-weight','opacity']),{
+					margin: "0.5rem 0 0 0",
+					padding: 0,
+					height: rem(2.4),
+					width: rem(2.4),
+					position: 'relative',
+					fontSize: rem(1.2),
+					opacity: 0.5,
+					fontWeight: 900,
+					cursor: 'pointer',
+
+					':hover': {
+						opacity: 1,
+						transform: 'scale(1.1)'
+					}
+
+				}]
 			}],
 			milestone: makeStyle({})
+
+
 		}]
 
 	}],

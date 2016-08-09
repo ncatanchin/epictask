@@ -153,6 +153,7 @@ class App extends React.Component<IAppProps,any> {
 		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
+			this.uiActions.closeAllDialogs()
 			//ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
 		},
 		[KeyMaps.CommonKeys.View1]: () => {

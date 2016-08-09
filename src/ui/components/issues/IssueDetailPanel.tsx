@@ -16,10 +16,16 @@ import {IssueActivityText} from './IssueActivityText'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
 import {issuesDetailSelector, selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
-import baseStyles from './IssueDetailPanel.styles'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {HotKeys} from 'react-hotkeys'
+import {Milestone} from 'models/Milestone'
+import {Label} from 'epictask/shared'
+import {IssueActionFactory} from 'epictask/shared/actions/issue/IssueActionFactory'
+import {Container} from 'typescript-ioc'
+//import {Button, Icon} from 'epictask/ui/components/common'
+
+import baseStyles from './IssueDetailPanel.styles'
 
 // Non-typed Components
 const {Textfit} = require('react-textfit')
@@ -75,13 +81,40 @@ const makeIssueItemStateToProps = () => {
 
 
 @connect(makeIssueItemStateToProps)
-@Radium
 @Themed
 @HotKeyContext()
 @PureRender
+@Radium
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
+
+
+	/**
+	 * Add label
+	 */
+
+	addLabel = (...issues:Issue[]) => Container.get(IssueActionFactory).patchIssues("Label",...issues)
+
+	/**
+	 * Callback for label or milestone remove
+	 *
+	 * @param issue
+	 * @param item
+	 */
+	removeItem = (issue:Issue,item:Label|Milestone) => {
+		const actions = Container.get(IssueActionFactory)
+
+		if (!(item as any).id) {
+			const
+				label:Label = item as any,
+				labels = issue.labels.filter(it => it.url !== label.url)
+
+			actions.applyPatchToIssues({labels},true,issue)
+		} else {
+			actions.applyPatchToIssues({milestone:null},true,issue)
+		}
+	}
 
 	/**
 	 * Render when multiple styles are selected
@@ -101,7 +134,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderHeader = (issue, styles) => <div style={styles.header}>
+	renderHeader = (issue, styles,palette) => <div style={styles.header}>
 		{/* ROW 1 */}
 		<div style={styles.header.row1}>
 			<div style={styles.header.row1.repo}>
@@ -134,8 +167,21 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			{/* LABELS & MILESTONES */}
 			<IssueLabelsAndMilestones labels={issue.labels}
 			                          showIcon={true}
+			                          onRemove={(item) => this.removeItem(issue,item)}
 			                          milestones={issue.milestone && [issue.milestone]}
 			                          labelStyle={styles.header.row3.labels.label}
+			                          afterAllNode={
+
+		                                <i onClick={() => this.addLabel(issue)}
+		                                   style={[
+		                                   	    styles.header.row3.labels.add, {
+		                                   	    	backgroundColor: palette.canvasColor,
+		                                   	    	color: palette.textColor
+		                                   	    }
+	                                        ]}
+		                                   className='material-icons'>add</i>
+
+			                          }
 			                          style={styles.header.row3.labels}/>
 
 
@@ -211,13 +257,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderIssue = (issue:Issue, comments:Comment[], styles) => <div style={styles.issue}>
+	renderIssue = (issue:Issue, comments:Comment[], styles,palette) => <div style={styles.issue}>
 		<Style
 			scopeSelector={`.markdown.issue-${issue.id}`}
 			rules={styles.markdown}
 		/>
 
-		{this.renderHeader(issue, styles)}
+		{this.renderHeader(issue, styles,palette)}
 
 		{/* Issue Detail Body */}
 		<div style={styles.content}>
@@ -246,7 +292,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			         style={styles.root}>
 				{ issues.length > 1 ?
 					this.renderMulti(issues, styles) :
-					this.renderIssue(issues[0], comments, styles)
+					this.renderIssue(issues[0], comments, styles,theme.palette)
 				}
 			</HotKeys>
 	}
