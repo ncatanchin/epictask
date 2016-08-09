@@ -16,7 +16,7 @@ import {
 	issueModelsSelector, milestoneModelsSelector, userModelsSelector,
 	labelModelsSelector, availRepoModelsSelector, repoModelsSelector
 } from 'shared/actions/data/DataSelectors'
-import {patchIssuesSelector} from 'shared/actions/issue/IssueSelectors'
+import {patchIssuesSelector, patchModeSelector} from 'shared/actions/issue/IssueSelectors'
 import {User} from 'models/User'
 import {Label} from 'models/Label'
 import {Milestone} from 'models/Milestone'
@@ -29,11 +29,8 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {AutoWired} from 'typescript-ioc'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Inject} from 'typescript-ioc'
-import {TextField} from 'material-ui'
-import {cloneObject} from 'util/ObjectUtil'
+import {cloneObject} from 'shared/util/ObjectUtil'
 import {IssuePatchModes, TIssuePatchMode} from 'shared/actions/issue'
-import {Avatar} from 'material-ui'
-import {getGithubErrorText} from 'ui/components/common/Renderers'
 import {CircularProgress} from 'material-ui'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import {MenuItem} from 'material-ui'
@@ -74,8 +71,8 @@ export interface IIssuePatchDialogProps extends React.HTMLAttributes {
 	open?:boolean
 	saving?:boolean
 	savingError?:Error
-	mode:TIssuePatchMode
-	repoIds:number[]
+	mode?:TIssuePatchMode
+	repoIds?:number[]
 	issues?:Issue[]
 	userModels?:Map<string,User>
 	milestoneModels?:Map<string,Milestone>
@@ -107,8 +104,9 @@ export interface IIssuePatchDialogState {
 	userModels: userModelsSelector,
 	repoIds: enabledRepoIdsSelector,
 	issues:patchIssuesSelector,
+	mode: patchModeSelector,
 	open: (state) => uiStateSelector(state).dialogs
-		.get(Dialogs.IssueEditDialog) === true
+		.get(Dialogs.IssuePatchDialog) === true
 }, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
@@ -269,6 +267,9 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param props
 	 */
 	updateState(props:IIssuePatchDialogProps) {
+		if (!props.open)
+			return
+
 		const
 			{
 				mode,
@@ -319,6 +320,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			theme,
 			issues,
 			mode,
+			open,
 			styles,
 			saving,
 			saveError
@@ -329,7 +331,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
 		]
 
-		const title = <div style={styles.title}>
+		const makeTitle = () => <div style={styles.title}>
 			<div style={styles.title.action}>{mode === IssuePatchModes.Label ? 'Add Label to' :
 				mode === IssuePatchModes.Assignee ? 'Assign to' :
 					'Set Milestone'}
@@ -338,14 +340,6 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				{issues.map(issue => `${issue.number} ${issue.title}`).join(', ')}
 			</div>
 
-			{/*<div style={styles.title.avatar}>*/}
-				{/*<Avatar user={user}*/}
-				        {/*prefix='issue being created by'*/}
-				        {/*prefixStyle={{padding: '0 0.5rem 0 0'}}*/}
-				        {/*labelPlacement='before'*/}
-				        {/*labelStyle={styles.title.avatar.label}*/}
-				        {/*avatarStyle={styles.title.avatar.avatar}/>*/}
-			{/*</div>*/}
 		</div>
 
 		return <div>
@@ -358,7 +352,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			        autoScrollBodyContent={true}
 			        bodyStyle={styles.body}
 			        titleStyle={styles.title}
-			        title={title}
+			        title={open && makeTitle()}
 			        onBlur={this.onBlur}>
 
 
@@ -396,3 +390,5 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	}
 
 }
+
+export default IssuePatchDialog

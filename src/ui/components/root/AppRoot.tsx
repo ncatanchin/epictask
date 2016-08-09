@@ -27,6 +27,7 @@ import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
+import {IssuePatchDialog} from 'epictask/ui/components/issues/IssuePatchDialog'
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -216,6 +217,8 @@ class App extends React.Component<IAppProps,any> {
 
 						<IssueEditDialog />
 						<RepoAddDialog />
+						<IssuePatchDialog />
+
 						{/*<IssueEditFieldDialog />*/}
 
 						{/* Global flex box */}

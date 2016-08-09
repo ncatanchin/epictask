@@ -16,6 +16,7 @@ import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
+import {TIssuePatchMode} from 'epictask/shared/actions/issue'
 
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
@@ -267,6 +268,7 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 )
 
 export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues)
+export const patchModeSelector = _.memoize((state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode)
 
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
 
