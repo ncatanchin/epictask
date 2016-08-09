@@ -101,7 +101,6 @@ const baseStyles = createStyles({
 	}
 })
 
-
 /**
  * IIssueFiltersProps
  */
@@ -137,7 +136,7 @@ export interface IIssueFiltersProps extends React.DOMAttributes {
 	issueFilterMilestones: issueFilterMilestonesSelector,
 	labels: labelsSelector,
 	milestones: milestonesSelector
-}, createDeepEqualSelector))
+}, createDeepEqualSelector),null,null,{withRef:true})
 
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender
@@ -559,8 +558,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			filterIconStyle.color = theme.issueFilters.hasFiltersColor
 
 
-		{/* Filter menu */
-		}
+		/* Filter menu */
 		const filterMenu = <IconMenu
 			iconButtonElement={<IconButton style={filterIconStyle} iconStyle={filterIconStyle}><SvgFilterIcon /></IconButton>}
 			style={filterIconStyle}

@@ -46,6 +46,7 @@ import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import {TIssueEditInlineConfig} from 'shared/actions/issue'
 import {debounce} from 'lodash-decorators'
 import ValueCache from 'shared/util/ValueCache'
+import {availableRepoCountSelector} from 'epictask/shared/actions/repo/RepoSelectors'
 
 // Non-typed Components
 const tinycolor = require('tinycolor2')
@@ -255,6 +256,7 @@ export interface IIssuesPanelProps {
 	theme?: any
 	styles?: any
 	issues?: Issue[]
+	hasAvailableRepos?:boolean
 	issuesGrouped?: IIssueGroup[]
 	issueSortAndFilter?: TIssueSortAndFilter
 	labels?: Label[]
@@ -269,7 +271,6 @@ export interface IIssuesPanelProps {
 
 export interface IIssuesPanelState {
 	firstSelectedIndex?: number
-
 	issueList?: any
 	issueGroupsVisibility?: Map<string,boolean>
 	internalSelectedIssueIds?: number[]
@@ -283,8 +284,9 @@ export interface IIssuesPanelState {
  * @constructor
  **/
 
-@Radium
+
 @connect(createStructuredSelector({
+	hasAvailableRepos: availableRepoCountSelector,
 	issues: issuesSelector,
 	issuesGrouped: issuesGroupedSelector,
 	issueSortAndFilter: issueSortAndFilterSelector,
@@ -785,7 +787,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				issuesGrouped,
 				issueSortAndFilter,
 				editingInline,
-				editInlineConfig
+				editInlineConfig,
+				hasAvailableRepos
 			} = this.props,
 			{palette} = theme,
 			{groupBy} = issueSortAndFilter.issueSort
@@ -805,12 +808,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			issuesGrouped.length
 
 
-		return <div
-			style={styles.panel}>
+		return <div style={styles.panel}>
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
-
-			<SplitPane split="vertical"
+			{hasAvailableRepos &&
+				<SplitPane split="vertical"
 			           allowResize={allowResize}
 			           minSize={listMinWidth}
 			           maxSize={listMaxWidth}
@@ -841,6 +843,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				<IssueDetailPanel />
 
 			</SplitPane>
+			}
 		</div>
 	}
 

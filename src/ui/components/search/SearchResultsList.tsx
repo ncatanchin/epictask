@@ -470,7 +470,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	render() {
 		return (this.props.inline) ?
 			this.renderResults(this.props) :
-			React.DOM.noscript()
+			<div></div>
+			// React.DOM.noscript()
 	}
 
 }

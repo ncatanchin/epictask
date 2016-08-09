@@ -258,15 +258,16 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		}
 
 		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
-
-		return <HotKeys ref={this.setHotKeysRef}
+		//ref={this.setSearchPanelRef}
+		// ref={this.setHotKeysRef}
+		return <HotKeys
 		                id="header"
 		                style={headerStyle}
 		                handlers={this.keyHandlers}
 		                onBlur={this.onBlur}
 		                onFocus={this.onFocus}>
 			<SearchPanel
-				ref={this.setSearchPanelRef}
+
 				searchId='header-search'
 				types={HeaderSearchTypes}
 				inlineResults={expanded}

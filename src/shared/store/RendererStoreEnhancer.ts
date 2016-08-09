@@ -1,4 +1,4 @@
-import {RootState} from 'shared/store/RootState'
+//import {RootState} from 'shared/store/RootState'
 const log = getLogger(__filename)
 
 import {Events} from '../Constants'
@@ -7,12 +7,11 @@ import {getModel} from 'shared/Registry'
 const nextTick = require('browser-next-tick')
 
 
-const patcher = require('immutablepatch')
 const electron = require('electron')
 const {ipcRenderer} = electron
 
 const ipcListeners = []
-const patches = []
+
 const addIpcListener = (channel:string,listener) => {
 	ipcRenderer.on(channel,listener)
 	ipcListeners.push([channel,listener])

@@ -122,7 +122,7 @@ class App extends React.Component<IAppProps,any> {
 	repoActions = Container.get(RepoActionFactory)
 	issueActions = Container.get(IssueActionFactory) as IssueActionFactory
 	uiActions = Container.get(UIActionFactory) as UIActionFactory
-	pageBodyHolder
+
 
 
 	onFocus = () => {
@@ -153,7 +153,7 @@ class App extends React.Component<IAppProps,any> {
 		},
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
-			ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
+			//ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
 		},
 		[KeyMaps.CommonKeys.View1]: () => {
 			log.info('Escaping and moving focus')
@@ -198,6 +198,7 @@ class App extends React.Component<IAppProps,any> {
 		if (dialogOpen)
 			rootClasses += ' dialog-open'
 
+
 		return (
 
 			<MuiThemeProvider muiTheme={theme}>
@@ -211,6 +212,7 @@ class App extends React.Component<IAppProps,any> {
 					>
 
 						{/* DIALOGS */}
+
 						<IssueEditDialog />
 						<RepoAddDialog />
 						{/*<IssueEditFieldDialog />*/}
@@ -218,11 +220,10 @@ class App extends React.Component<IAppProps,any> {
 						{/* Global flex box */}
 						<div className={rootClasses}
 						     style={makeStyle(styles.content,theme.app)}>
-
 							<Header visibility={headerVisibility}/>
 
-							<div ref={(c) => this.pageBodyHolder = c}
-							         style={makeStyle(FlexScale,FlexColumn)}>
+							{hasAvailableRepos &&
+							<div style={makeStyle(FlexScale,FlexColumn)}>
 
 								<div style={contentStyles}>
 									<page.component />
@@ -232,8 +233,9 @@ class App extends React.Component<IAppProps,any> {
 								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 								<ToastMessages/>
 							</div>
-
+							}
 						</div>
+
 					</HotKeys>
 				</Provider>
 			</MuiThemeProvider>

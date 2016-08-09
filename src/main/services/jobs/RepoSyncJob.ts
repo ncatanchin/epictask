@@ -141,7 +141,8 @@ export class RepoSyncJob extends Job {
 		for (let issue of issues) {
 			issue.repoId = repo.id
 			const existing = await stores.issue.get(issue.id)
-			assign(existing,issue)
+			if (existing)
+				assign(issue,existing,issue)
 		}
 
 		if (issues.length)
@@ -161,7 +162,8 @@ export class RepoSyncJob extends Job {
 		for (let label of labels) {
 			label.repoId = repo.id
 			const existing = await stores.label.get(label.url)
-			assign(existing,label)
+			if (existing)
+				assign(label,existing,label)
 		}
 
 
@@ -184,7 +186,8 @@ export class RepoSyncJob extends Job {
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
 			const existing = await stores.milestone.get(milestone.id)
-			assign(existing,milestone)
+			if (existing)
+				assign(milestone,existing,milestone)
 		}
 
 		//log.debug(`Loaded milestones, time to persist`, milestones)
@@ -214,7 +217,8 @@ export class RepoSyncJob extends Job {
 				return
 			}
 			const existing = await stores.milestone.get(comment.id)
-			assign(existing,comment)
+			if (existing)
+				assign(comment,existing,comment)
 
 			comment.repoId = repo.id
 

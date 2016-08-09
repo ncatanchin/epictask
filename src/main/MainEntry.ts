@@ -70,6 +70,7 @@ async function boot() {
 			})
 		}
 
+		removeDevTool('react')
 		removeDevTool('pouch')
 		removeDevTool('bigconsole')
 		//removeDevTool('redux')
@@ -80,8 +81,8 @@ async function boot() {
 		if (!isExtInstalled('scratch'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/scratch'))
 
-		if (!isExtInstalled('react'))
-			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
+		// if (!isExtInstalled('react'))
+		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
 
 		if (!isExtInstalled('redux'))
 			BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/redux-devtools'))

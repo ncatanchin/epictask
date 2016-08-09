@@ -6,14 +6,16 @@ module.exports = (opts) => {
 			"useCache":     true,
 			"babelOptions": {
 				"presets":    [
-					"es2015-native-modules",
+					//"es2015-native-modules",
+					"modern/webpack2",
 					"stage-0",
-					"react"
+					"react",
+					"async-to-bluebird"
 				],
 				"plugins":    [
-					"add-module-exports",
+					//"add-module-exports",
 					"transform-runtime",
-					"transform-async-to-generator"
+					//"transform-async-to-generator"
 				],
 				"sourceMaps": "both"
 			}

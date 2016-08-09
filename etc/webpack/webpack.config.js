@@ -49,7 +49,8 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  *
  * @type {boolean}
  */
-//const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui-build'))
+const useMaterialUIBuild = (fs.existsSync(process.cwd(),'node_modules/material-ui/build')),
+      materialUiModule = useMaterialUIBuild ? 'material-ui/build' : 'material-ui'
 //const materialUiModule = useMaterialUIBuild ? 'material-ui-build/src' : 'material-ui'
 //const materialUiModule = 'libs/material-ui/src'
 
@@ -59,20 +60,18 @@ const happy = true
 //console.log(`Using material ui version ${materialUiModule}`)
 module.exports = function (projectConfig) {
 
-	const happyThreadPool = HappyPack.ThreadPool({ size: 5 })
-
-	const isMain = projectConfig.targetType === TargetType.ElectronMain
-
-	const loaders = require('./parts/loaders')(projectConfig)
-
-	const happyPlugins = (!happy || isMain) ? [] :
-		loaders.loaders
-			.filter(loader => loader.happy && loader.happy.id)
-			.map(loader => new HappyPack({
-				id: `${loader.happy.id}`,
-				tempDir: `.happypack-${projectConfig.name}`,
-				threadPool: happyThreadPool
-			}))
+	const
+		happyThreadPool = HappyPack.ThreadPool({ size: 5 }),
+	    isMain = projectConfig.targetType === TargetType.ElectronMain,
+		loaders = require('./parts/loaders')(projectConfig),
+		happyPlugins = (!happy || isMain) ? [] :
+			loaders.loaders
+				.filter(loader => loader.happy && loader.happy.id)
+				.map(loader => new HappyPack({
+					id: `${loader.happy.id}`,
+					tempDir: `.happypack-${projectConfig.name}`,
+					threadPool: happyThreadPool
+				}))
 
 
 	const config = {
@@ -110,6 +109,7 @@ module.exports = function (projectConfig) {
 					Settings: path.resolve(baseDir, 'src/shared/Settings'),
 					models: path.resolve(baseDir, 'src/shared/models'),
 					main: path.resolve(baseDir, 'src/main'),
+					// "material-ui": path.resolve(baseDir, 'node_modules',materialUiModule)
 
 				},
 				// libAlias('material-ui', 'material-ui/src/'),
@@ -184,6 +184,7 @@ module.exports = function (projectConfig) {
 		externals: [
 			nodeExternals({
 				whitelist: [
+					// /material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,

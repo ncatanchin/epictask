@@ -65,6 +65,7 @@ export interface ISearchPanelState {
 	selected?: boolean
 	query?: string
 	textField?: any
+	resultsListRef?:any
 }
 
 function makeMapStateToProps() {
@@ -319,7 +320,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {SearchResultsList}
 	 */
 	get resultsList(): SearchResultsList {
-		const listWrapper = (this.refs as any).resultsList
+		const listWrapper = this.state.resultsListRef
 		return (listWrapper && listWrapper.getWrappedInstance) ?
 			listWrapper.getWrappedInstance() as any :
 			null
@@ -461,7 +462,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			<Paper className={wrapperClazz + focusedClazz}
 			       style={makeStyle(panelStyle)}
 			       zDepth={2}
-			       ref="panel"
 			       id={searchPanelId}>
 
 
@@ -476,7 +476,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 						inputStyle={inputStyle}
 						defaultValue={this.state.query || query}
 					/>
-					<SearchResultsList ref="resultsList"
+					<SearchResultsList ref={(resultsListRef) => this.setState({resultsListRef})}
 					                   anchor={'#' + searchPanelId}
 					                   selectedIndex={this.state.selectedIndex}
 					                   searchItemModels={this.props.searchItemModels || []}

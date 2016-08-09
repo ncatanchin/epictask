@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 
+#MUIPATH="${HOME}/Development/oss/material-ui/build"
+#
+#if [ -e "${MUIPATH}" ]; then
+#	rm -Rf ${PWD}/node_modules/material-ui
+#	ln -s ${MUIPATH} ${PWD}/node_modules/material-ui
+#fi
+
+if [ -e "${PWD}/node_modules/material-ui" ]; then
+	./etc/scripts/build-material-ui.sh
+fi
+
 RAMDISK=${HOME}/RAMDISK
 RAMDISK_EPICPATH=${HOME}/RAMDISK/epictask
 COMPILE_DIRS="dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui"
+
+
 if [ -e "${RAMDISK}" ]; then
 	echo "RAM DISK EXISTS"
 	if [ ! -e "${RAMDISK_EPICPATH}" ]; then
 		echo "RAM DISK ECPI PATH DOS NOT EXIST"
-		#rm -Rf ${COMPILE_DIRS}
-		#dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui
+
 		for compileDir in ${COMPILE_DIRS}
 		do
 			echo "Going to setup path: ${compileDir}"
@@ -33,4 +45,4 @@ exec > >(tee -i logs/compile.log)
 # adding his answer to mine.
 exec 2>&1
 
-node --max-old-space-size=4000 ./node_modules/.bin/gulp compile-watch
+node --max-old-space-size=6000 ./node_modules/.bin/gulp compile-watch

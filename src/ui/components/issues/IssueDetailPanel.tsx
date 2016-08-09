@@ -16,7 +16,7 @@ import {IssueActivityText} from './IssueActivityText'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {Themed} from 'shared/themes/ThemeManager'
 import {issuesDetailSelector, selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
-import baseStyles from './IssueDetailPanelStyles'
+import baseStyles from './IssueDetailPanel.styles'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {HotKeys} from 'react-hotkeys'
@@ -59,7 +59,6 @@ const makeIssueItemStateToProps = () => {
 		issues: issuesDetailSelector,
 		issue: selectedIssueSelector,
 		comments: commentsSelector,
-		theme: themeSelector,
 		styles: stylesSelector
 	},createDeepEqualSelector)
 }
