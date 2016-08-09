@@ -261,15 +261,6 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 			onFocus={this.onSetFocus(true)}
 			onBlur={this.onSetFocus(false)}>
 
-			{/*{label && <TextFieldLabel*/}
-			{/*muiTheme={theme}*/}
-			{/*style={labelStyle}*/}
-			{/*shrinkStyle={labelFocusStyle}*/}
-			{/*htmlFor={id}*/}
-			{/*shrink={hasValue || isFocused}>*/}
-			{/*{label}*/}
-			{/*</TextFieldLabel>}*/}
-
 			<Style scopeSelector={`#${id}`}
 			       rules={_.assign({},s.inputRules,{
 						'input': finalInputStyle

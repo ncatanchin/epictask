@@ -6,12 +6,16 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
+import {Map} from 'immutable'
 import {PureRender, Button} from 'components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {Issue} from 'models/Issue'
-import {issueModelsSelector, milestoneModelsSelector, userModelsSelector} from 'shared/actions/data/DataSelectors'
+import {
+	issueModelsSelector, milestoneModelsSelector, userModelsSelector,
+	labelModelsSelector, availRepoModelsSelector, repoModelsSelector
+} from 'shared/actions/data/DataSelectors'
 import {patchIssuesSelector} from 'shared/actions/issue/IssueSelectors'
 import {User} from 'models/User'
 import {Label} from 'models/Label'
@@ -32,6 +36,10 @@ import {Avatar} from 'material-ui'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
 import {CircularProgress} from 'material-ui'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
+import {MenuItem} from 'material-ui'
+import MilestoneChip from 'epictask/ui/components/common/MilestoneChip'
+import {enabledRepoIdsSelector} from 'epictask/shared/actions/repo/RepoSelectors'
+import LabelChip from 'epictask/ui/components/common/LabelChip'
 
 // Constants
 const log = getLogger(__filename)
@@ -67,7 +75,7 @@ export interface IIssuePatchDialogProps extends React.HTMLAttributes {
 	saving?:boolean
 	savingError?:Error
 	mode:TIssuePatchMode
-
+	repoIds:number[]
 	issues?:Issue[]
 	userModels?:Map<string,User>
 	milestoneModels?:Map<string,Milestone>
@@ -92,8 +100,12 @@ export interface IIssuePatchDialogState {
 
 @connect(createStructuredSelector({
 	milestoneModels: milestoneModelsSelector,
+	labelModels: labelModelsSelector,
+	repoModels: repoModelsSelector,
+	availRepoModels: availRepoModelsSelector,
 	issueModels: issueModelsSelector,
 	userModels: userModelsSelector,
+	repoIds: enabledRepoIdsSelector,
 	issues:patchIssuesSelector,
 	open: (state) => uiStateSelector(state).dialogs
 		.get(Dialogs.IssueEditDialog) === true
@@ -139,29 +151,160 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			)
 	}
 
+	/**
+	 * On item selected
+	 *
+	 * @param selectedItem
+	 */
 	onItemSelected = (selectedItem) => {
 		this.setState({selectedItem})
 	}
 
+	/**
+	 * On input changed
+	 *
+	 * @param newQuery
+	 */
 	onInputChanged = (newQuery) => {
 		log.info('Query updated',newQuery)
 	}
 
-	makeDataSource(newQuery, items) {
+	makeMilestoneDataSource(props:IIssuePatchDialogProps,repoIds) {
 
-		const chipProps = {
-			query: newQuery || ''
-		}
+		const {milestoneModels,issues} = props
+
+
+
+		const items = milestoneModels
+			.valueSeq()
+
+			// Filter out repos that dont apply to these issues
+			.filter((item:Milestone) => repoIds.includes(item.repoId) &&
+				!issues.every((issue:Issue) => _.get(issue,'milestone.id') === item.id))
+
+			// Convert to JS Array
+			.toArray()
+		const newDataSource = items.map(item => ({
+			item,
+			text: '',
+			value: <MenuItem primaryText={
+						<MilestoneChip milestone={item}
+									   showRemove={false}
+									   showIcon={true}
+					    />
+					}/>
+		}))
+
+		log.info('new milestone data source =', newDataSource)
+		return newDataSource
+	}
+
+	makeLabelDataSource(props:IIssuePatchDialogProps,repoIds) {
+
+		const
+			{labelModels,issues} = props,
+			items = labelModels
+				.valueSeq()
+
+				// Filter out repos that dont apply to these issues
+				.filter((item:Label) =>
+					repoIds.includes(item.repoId) &&
+						!issues.every((issue:Issue) => !_.isNil((issue.labels || []).find(it => it.url === item.url))))
+
+				// Convert to JS Array
+				.toArray()
 
 		const newDataSource = items.map(item => ({
 			item,
-			text: '',//this.props.keySource(item),
-			value: this.props.renderChipSearchItem(chipProps, item)
+			text: '',
+			value: <MenuItem primaryText={
+						<LabelChip label={item}
+								   showRemove={false}
+								   showIcon={true}
+					    />
+					}/>
 		}))
 
-		log.debug('new data source =', newDataSource)
+		log.info('new milestone data source =', newDataSource)
 		return newDataSource
 	}
+
+	makeAssigneeDataSource(props:IIssuePatchDialogProps,repoIds) {
+
+		const
+			{
+				mode,
+				milestoneModels,
+				availRepoModels,
+				userModels,
+				issues
+			} = props
+
+		const items = milestoneModels
+			.valueSeq()
+			// Filter out repos that dont apply to these issues
+			.filter((item:Milestone) => repoIds.includes(item.repoId) &&
+			!issues.every((issue:Issue) => _.get(issue,'milestone.id') === item.id))
+
+		const newDataSource = []
+		// items.map(item => ({
+		// 	item,
+		// 	text: '',
+		// 	value: <MenuItem primaryText={
+		// 				<MilestoneChip milestone={item}
+		// 							   showRemove={false}
+		// 							   showIcon={true}
+		// 			    />
+		// 			}/>
+		// }))
+		//
+		// log.info('new milestone data source =', newDataSource)
+		return newDataSource
+	}
+
+	/**
+	 * Update the component state, create data source,
+	 * options, etc
+	 *
+	 * @param props
+	 */
+	updateState(props:IIssuePatchDialogProps) {
+		const
+			{
+				mode,
+				milestoneModels,
+				labelModels,
+				repoModels,
+				issueModels,
+				userModels,
+				issues
+			} = props,
+
+			// Get the repo ids for the selected issues only
+			repoIds = _.nilFilter(_.uniq(issues.map(issue => issue.repoId))),
+
+			// Now get the datasource
+			dataSource = (mode === 'Milestone') ?
+				this.makeMilestoneDataSource(props,repoIds) : (mode === 'Label') ?
+				this.makeLabelDataSource(props,repoIds) :
+				this.makeAssigneeDataSource(props,repoIds)
+
+		this.setState({dataSource})
+
+	}
+
+	/**
+	 * Before mount update the state
+	 */
+	componentWillMount = () => this.updateState(this.props)
+
+
+	/**
+	 * Update state with new props
+	 *
+	 * @param newProps
+	 */
+	componentWillReceiveProps = (newProps) => this.updateState(newProps)
 
 	/**
 	 * Hot key handlers
@@ -191,9 +334,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				mode === IssuePatchModes.Assignee ? 'Assign to' :
 					'Set Milestone'}
 			</div>
-			<div style={styles.title.issues}>{mode === IssuePatchModes.Label ? 'Add Label to' :
-				mode === IssuePatchModes.Assignee ? 'Assign to' :
-					'Set Milestone'}
+			<div style={styles.title.issues}>
+				{issues.map(issue => `${issue.number} ${issue.title}`).join(', ')}
 			</div>
 
 			{/*<div style={styles.title.avatar}>*/}
@@ -224,13 +366,13 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				{ open &&
 				<MuiThemeProvider muiTheme={theme}>
 					<HotKeys handlers={this.keyHandlers} style={PositionRelative}>
-						<form name="issueEditDialogForm"
-						      id="issueEditDialogForm"
+						<form name="issuePatchDialogForm"
+						      id="issuePatchDialogForm"
 						      style={makeStyle(saving && {opacity: 0,pointerEvents: 'none'})}>
 
 
 							<TypeAheadSelect
-								hintText={mode + '...'}
+								hintText={`${mode}...`}
 								menuProps={{maxHeight:300}}
 								onItemSelected={this.onItemSelected}
 								onInputChanged={this.onInputChanged}

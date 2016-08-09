@@ -12,37 +12,21 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {Icon} from 'ui/components/common/Icon'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'components/common'
+import MilestoneChip from 'epictask/ui/components/common/MilestoneChip'
+import LabelChip from 'epictask/ui/components/common/LabelChip'
 const tinycolor = require('tinycolor2')
 
 
 // Constants
 const log = getLogger(__filename)
+
+
 const baseStyles = createStyles({
 	root: makeStyle(FlexRow, FlexAuto, {
 		overflow: 'auto'
-	}),
-	label: [FlexRowCenter,{
-		padding: '0.6rem 1rem',
-		borderRadius: '0.3rem',
-		margin: '0 1rem 0 0',
-		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
-	}],
-	icon: [FlexAuto,{
-		fontSize: themeFontSize(1),
-		padding: '0 0.5rem 0 0'
-	}],
-	text: [FlexAuto,{
-		fontSize: themeFontSize(1.1),
-		fontWeight: 700,
-		lineHeight: 1
-	}],
-	remove: [FlexAuto,{
-		fontSize: themeFontSize(1),
-		padding: '0 0 0 0.5rem',
-		cursor: 'pointer'
-	}]
-
+	})
 })
+
 
 
 export type TOnLabelOrMilestoneRemove = (item:Label|Milestone,index:number) => void
@@ -100,55 +84,23 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 
 
 
-		return _.nilFilter(milestones || []).map((milestone:Milestone,index:number) => {
-			const
-				finalLabelStyle = makeStyle(styles.label, labelStyle, {
-					backgroundColor: 'black',
-					color: 'white'
-				})
-
-			return <div key={milestone.id} style={finalLabelStyle}>
-				{showIcon &&
-				<Icon style={styles.icon}
-				      iconSet='octicon'
-				      iconName='milestone'/>}
-				<div style={styles.text}>{milestone.title}</div>
-				{onRemove &&
-				<Icon
-					style={styles.remove}
-					onClick={() => onRemove(milestone,index)}
-					iconSet='fa'
-					iconName='times'/>}
-			</div>
-
-		}).concat(_.nilFilter(labels || []).map((label:Label,index:number) => {
-
-
-			const
-
-				backgroundColor = '#' + label.color,
-				finalLabelStyle = makeStyle(styles.label, labelStyle, {
-					backgroundColor,
-					color: tinycolor.mostReadable(backgroundColor,[
-						palette.text.secondary,
-						palette.alternateText.secondary
-					])
-				})
-			return <div key={label.url} style={finalLabelStyle}>
-				{showIcon &&
-					<Icon style={styles.icon}
-					      iconSet='octicon'
-					      iconName='tag'/>}
-				<div style={styles.text}>{label.name}</div>
-				{onRemove &&
-					<Icon
-						style={styles.remove}
-						onClick={() => onRemove(label,index)}
-						iconSet='fa'
-						iconName='times'/>}
-			</div>
-
-		}) as any)
+		return _.nilFilter(milestones || []).map((milestone:Milestone,index:number) =>
+			<MilestoneChip key={milestone.id}
+			               milestone={milestone}
+			               showIcon={true}
+			               showRemove={true}
+			               onRemove={(milestone) => onRemove(milestone,index)}
+			               milestoneStyle={labelStyle}
+			/>
+		).concat(_.nilFilter(labels || []).map((label:Label,index:number) =>
+			<LabelChip  key={label.url}
+			            label={label}
+			            showRemove={true}
+			            showIcon={true}
+			            onRemove={(label) => onRemove(label,index)}
+			            labelStyle={labelStyle}
+            />
+		) as any)
 	}
 
 	render() {
