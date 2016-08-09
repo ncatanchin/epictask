@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 
-#MUIPATH="${HOME}/Development/oss/material-ui/build"
-#
-#if [ -e "${MUIPATH}" ]; then
-#	rm -Rf ${PWD}/node_modules/material-ui
-#	ln -s ${MUIPATH} ${PWD}/node_modules/material-ui
-#fi
+echo "Ensuring material-ui is available"
 
-if [ -e "${PWD}/node_modules/material-ui" ]; then
+if [ ! -e "${PWD}/node_modules/material-ui" ]; then
+	echo "Building material-ui local"
 	./etc/scripts/build-material-ui.sh
 fi
 
@@ -16,22 +12,22 @@ RAMDISK_EPICPATH=${HOME}/RAMDISK/epictask
 COMPILE_DIRS="dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui"
 
 
-if [ -e "${RAMDISK}" ]; then
-	echo "RAM DISK EXISTS"
-	if [ ! -e "${RAMDISK_EPICPATH}" ]; then
-		echo "RAM DISK ECPI PATH DOS NOT EXIST"
-
-		for compileDir in ${COMPILE_DIRS}
-		do
-			echo "Going to setup path: ${compileDir}"
-			rm -Rf ${compileDir}
-			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
-			mkdir -p ${NEW_DIR}
-			echo "New path ${NEW_DIR}"
-			ln -fs "${NEW_DIR}" "${PWD}/${compileDir}"
-		done
-	fi
-fi
+#if [ -e "${RAMDISK}" ]; then
+#	echo "RAM DISK EXISTS"
+#	if [ ! -e "${RAMDISK_EPICPATH}" ]; then
+#		echo "RAM DISK ECPI PATH DOS NOT EXIST"
+#
+#		for compileDir in ${COMPILE_DIRS}
+#		do
+#			echo "Going to setup path: ${compileDir}"
+#			rm -Rf ${compileDir}
+#			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
+#			mkdir -p ${NEW_DIR}
+#			echo "New path ${NEW_DIR}"
+#			ln -fs "${NEW_DIR}" "${PWD}/${compileDir}"
+#		done
+#	fi
+#fi
 
 #./etc/scripts/notify-on-error.sh
 

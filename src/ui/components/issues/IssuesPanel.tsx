@@ -793,24 +793,27 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{palette} = theme,
 			{groupBy} = issueSortAndFilter.issueSort
 
-		const {selectedIssueIds} = this
-
-		const validSelectedIssueIds = selectedIssueIds
-			.filter(issueId => !_.isNil(issues.find(item => item.id === issueId)))
-
 		const
+			{selectedIssueIds} = this,
+			validSelectedIssueIds = selectedIssueIds
+				.filter(issueId => !_.isNil(issues.find(item => item.id === issueId))),
+
 			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
-			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
+			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
 
-		const itemCount = (groupBy === 'none') ?
-		issues.length + (editingInline ? 1 : 0) :
-			issuesGrouped.length
+			// Item count - groups or issues
+			itemCount = (groupBy === 'none') ?
+				issues.length + (editingInline ? 1 : 0) :
+					issuesGrouped.length
 
 
 		return <div style={styles.panel}>
+
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
+
+
 			{hasAvailableRepos &&
 				<SplitPane split="vertical"
 			           allowResize={allowResize}
@@ -824,9 +827,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				         id="issuesPanel"
 				         handlers={this.keyHandlers}
 				>
+					{/* ISSUE FILTERS */}
 					<IssueFilters />
 
+					{/* ROOT LIST - groups or issues */}
 					<div style={styles.listContainer}>
+
 						<ReactList ref={c => this.setState({issueList:c})}
 						           itemRenderer={groupBy === 'none' ? this.makeRenderIssue() : this.renderGroup}
 						           itemsRenderer={(items, ref) => (

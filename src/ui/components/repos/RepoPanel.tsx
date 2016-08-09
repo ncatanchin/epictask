@@ -21,6 +21,7 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {PureRender} from 'ui/components/common/PureRender'
+import * as Radium from 'radium'
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
@@ -34,7 +35,6 @@ const styles:any = createStyles({
 
 	panel: [makeTransition(['opacity']),FlexColumn,FlexScale,Fill,{
 		opacity: 1,
-
 		closed: {
 			opacity: 0
 		}
@@ -44,24 +44,39 @@ const styles:any = createStyles({
 		opacity: 0,
 		pointerEvents: 'none',
 		textAlign: 'center',
-		width: 20,
-		height: 20,
+		width: rem(2),
 		padding: 0,
 
 		visible: {
 			opacity: 1,
 			pointerEvents: 'auto',
 			zIndex: 9999
+		},
+
+		// Arrow Button
+		button: {
+			padding: "0.5rem 0.3rem",
+			width: rem(2),
+			height: rem(2)
+		},
+
+		// "Repo" label
+		label: {
+			textOrientation: "sideways-right",
+			writingMode: "vertical-lr",
+			transform: "rotate(0.5turn)",
+			padding: "0.5rem 0.3rem",
+			fontSize: rem(0.9)
 		}
 	}],
 
 	drawerWrapper: [makeTransition(['width','minWidth','maxWidth']), FlexColumn,FlexScale,Fill,{
-		minWidth: 200,
+		minWidth: rem(20),
 		position: 'relative',
 
 		closed: {
-			minWidth: 20,
-			maxWidth: 20
+			minWidth: rem(2.8),
+			maxWidth: rem(2.8)
 		}
 	}],
 
@@ -117,7 +132,7 @@ const mapStateToProps = createStructuredSelector({
  * @class RepoPanel
  * @constructor
  **/
-
+@Radium
 @connect(mapStateToProps)
 @Themed
 @HotKeyContext()
@@ -186,7 +201,10 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 		return <div style={drawerWrapperStyle}>
 			<Button tabIndex={-1} style={drawerControlStyle} onClick={(e) => this.setRepoPanelOpen(e,true)}>
-				<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='chevron-right'/>
+				<Icon style={makeStyle(styles.headerButtonIcon,styles.drawerControl.button)} iconSet='fa' iconName='chevron-right'/>
+				<div style={styles.drawerControl.label}>
+					Repos
+				</div>
 			</Button>
 
 			<HotKeys handlers={this.keyHandlers} style={panelStyle}>
