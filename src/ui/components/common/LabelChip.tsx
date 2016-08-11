@@ -53,8 +53,7 @@ export const baseStyles = createStyles({
 				width: rem(1.2),
 				maxWidth: rem(1.2),
 				opacity: 1,
-				padding: '0 0 0 0.5rem',
-
+				padding: '0 0 0 0.5rem'
 			}]
 		}]
 
@@ -62,11 +61,13 @@ export const baseStyles = createStyles({
 	}],
 
 	text: [FlexAuto,FlexRowCenter,{
+		flexGrow: 1,
 		padding: '0 0.5rem',
 		height: 12,
 		fontSize: themeFontSize(1.1),
 		fontWeight: 700,
-		lineHeight: 1
+		lineHeight: 1,
+		justifyContent: 'flex-start'
 	}]
 
 })

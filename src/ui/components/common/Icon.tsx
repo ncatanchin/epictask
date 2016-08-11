@@ -28,7 +28,8 @@ export interface IIconProps extends React.HTMLAttributes {
 
 function iconCode(codeSet,iconName) {
 	let code = codeSet[iconName]
-	if (!code) return ''
+	if (!code)
+		return ''
 
 	code = (_.isNumber(code)) ? code : parseInt(code,16)
 

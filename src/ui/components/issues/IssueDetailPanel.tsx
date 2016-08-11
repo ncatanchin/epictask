@@ -133,6 +133,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param issue
 	 * @param styles
 	 * @returns {any}
+	 * @param palette
 	 */
 	renderHeader = (issue, styles,palette) => <div style={styles.header}>
 		{/* ROW 1 */}

@@ -3,6 +3,7 @@ import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
+import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
 import * as Immutable from 'immutable'
 
 
@@ -37,6 +38,7 @@ process.on("unhandledRejection", function (reason, promise) {
 })
 
 declare global {
+	var CreateGlobalThemedStyles:typeof CreateGlobalThemedStylesGlobal
 	var CSSModules:any
 	var React:typeof ReactGlobal
 	var ReactDOM:typeof ReactDOMGlobal

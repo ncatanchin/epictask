@@ -4,19 +4,16 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {PureRender} from 'components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {AutoComplete} from 'material-ui'
 import filterProps from 'react-valid-props'
-
 import baseStyles from './TypeAheadSelect.styles'
 
 // Constants
 const log = getLogger(__filename)
+
 
 
 
@@ -37,15 +34,18 @@ export interface ITypeAheadSelectProps extends React.HTMLAttributes {
 
 	onItemSelected?: TTypeAheadItemSelected
 	onInputChanged?: TTypeAheadInputChanged
-
+	onEscKeyDown?: () => void
 	dataSource: any
 	query?: string
+
+	openAlways?:boolean
 
 	underlineShow?: boolean
 	openOnFocus?: boolean
 
 	maxSearchResults?: number
 
+	fullWidth?:boolean
 	menuProps?:any
 }
 
@@ -54,6 +54,7 @@ export interface ITypeAheadSelectProps extends React.HTMLAttributes {
  */
 export interface ITypeAheadSelectState {
 	internalQuery?: string
+	autoCompleteRef?:any
 }
 
 /**
@@ -69,20 +70,42 @@ export interface ITypeAheadSelectState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles, 'TypeAheadSelect')
+@ThemedStyles(baseStyles, 'typeAheadSelect')
 @Radium
 @PureRender
 export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,ITypeAheadSelectState> {
 
-	onItemSelected = (chosenRequest: string, index: number) => {
-		this.props.onItemSelected && this.props.onItemSelected(chosenRequest, index)
+	static defaultProps = {
+		fullWidth: false,
+		openOnFocus: false
 	}
 
-	onInputChanged = (newQuery) => {
+	get autoCompleteRef() {
+		return _.get(this.state,'autoCompleteRef')
+	}
+
+	setAutoCompleteRef = (autoCompleteRef) => this.setState({autoCompleteRef})
+
+	setQuery = (newQuery) => {
 		this.setState({internalQuery: newQuery})
 
 		this.props.onInputChanged && this.props.onInputChanged(newQuery)
 	}
+
+
+	onItemSelected = (chosenRequest: string, index: number) => {
+		log.info(`item selected @ index ${index}`,chosenRequest,index)
+		this.props.onItemSelected && this.props.onItemSelected(chosenRequest, index)
+
+		this.onInputChanged("")
+
+	}
+
+	onEscKeyDown = () => {
+		this.props.onEscKeyDown && this.props.onEscKeyDown()
+	}
+
+	onInputChanged = this.setQuery
 
 	updateState(props:ITypeAheadSelectProps) {
 		this.setState(props.query ? {
@@ -103,7 +126,10 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 				hintText,
 				underlineShow,
 				dataSource,
-				menuProps
+				menuProps,
+				fullWidth,
+				openOnFocus,
+				openAlways
 			} = this.props,
 			{
 				internalQuery:query
@@ -119,25 +145,34 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 				this.props.hintStyle
 			)
 
+		const otherProps = {} as any
+
 
 		return <AutoComplete
 			{...filterProps(_.omit(this.props, 'style'))}
+			{...otherProps}
+			ref={this.setAutoCompleteRef}
 			style={makeStyle(styles.root,this.props.style)}
-
+			className={styles.className}
 			value={_.get(this,'state.internalQuery','')}
 			hintText={hintText}
 			hintStyle={hintStyle}
+			listStyle={styles.list}
+			fullWidth={fullWidth}
 
 			underlineShow={underlineShow}
 			filter={AutoComplete.noFilter}
-			listStyle={styles.list}
-			menuProps={assign({},{maxHeight:300})}
+
+			menuProps={{
+				maxHeight:300
+			}}
+			onEscKeyDown={this.onEscKeyDown}
 			onNewRequest={this.onItemSelected}
 			onUpdateInput={this.onInputChanged}
 
 			dataSource={dataSource}
 			searchText={query}
-			openOnFocus={true}/>
+			openOnFocus={openOnFocus}/>
 	}
 
 }

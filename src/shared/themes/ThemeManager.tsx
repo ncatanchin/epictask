@@ -1,10 +1,13 @@
 
 
 import {PureRender} from 'components/common/PureRender'
-const log = getLogger(__filename)
 import {AppActionFactory as AppActionFactoryType} from '../actions/AppActionFactory'
 import * as React from 'react'
+import * as $ from 'jquery'
 
+const log = getLogger(__filename)
+const shortId = require('short-id')
+import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 
 /**
  * Define our dark palette
@@ -33,6 +36,8 @@ export function addThemeListener(listener) {
 			themeListeners.splice(index,1)
 	}
 }
+
+
 
 /**
  * Set the current theme
@@ -84,6 +89,70 @@ export function makeThemeFontSize(multiplier:number) {
 	return getTheme().fontSize * multiplier
 }
 
+
+const globalStyleConfigs = [] as any
+
+
+export interface IGlobalThemedStyle {
+	id:string
+	fn:(theme:any,Style:FreeStyle) => any
+	remove:() => void
+	create: () => void
+	element: typeof $
+	clean:() => void
+}
+
+export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):IGlobalThemedStyle {
+
+	const
+		id = `themedStyle${shortId.generate()}`,
+		config = {} as any,
+		remove = () => $(`#${id}`).remove(),
+		create = () => {
+			remove()
+			const
+				Style = FreeStyleCreate(),
+				newStyles = fn(getTheme(),Style)
+
+
+			Object
+				.keys(newStyles)
+				.forEach(selector => Style.registerRule(selector,newStyles[selector]))
+
+
+			return $(`<style id="${id}" type="text/css">
+				${Style.getStyles()}
+			</style>`).appendTo($('head'))
+		}
+
+	_.assign(config, {
+		id,
+		fn,
+		remove,
+		create,
+		element: create(),
+		removeListener: addThemeListener(() => {
+			config.create()
+		}),
+		clean() {
+			if (!config.removeListener)
+				throw new Error(`ThemeStyle has already been remove ${id}`)
+
+			config.removeListener()
+			config.removeListener = null
+			config.remove()
+		}
+	})
+
+	globalStyleConfigs.push(config)
+
+	return config
+
+}
+
+/**
+ * Theme State interface for themed components
+ */
 export interface IThemedState {
 	theme?:any
 	styles?:any
@@ -106,6 +175,10 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 		// Used to unsubscribe from theme updates on unmount
 		private unsubscribe
 
+		get wrappedComponent() {
+			return Component
+		}
+
 		/**
 		 * Create a new new theme state
 		 */
@@ -125,6 +198,8 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 
 			return newState
 		}
+
+
 
 		/**
 		 * Used as the subscriber for theme updates
@@ -237,7 +312,8 @@ declare global {
 // Export globals
 Object.assign(global as any,{
 	getTheme,
-	themeFontSize:makeThemeFontSize
+	themeFontSize:makeThemeFontSize,
+	CreateGlobalThemedStyles
 })
 
 

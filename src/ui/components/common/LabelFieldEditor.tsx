@@ -20,13 +20,9 @@ const log = getLogger(__filename)
 const styles = {
 	root: makeStyle(FlexColumn, FlexAuto, {}),
 	chip: makeStyle(PositionRelative,{
-		// display: 'flex',
-		// padding: '0.4rem 2rem',
-		// borderRadius: '1.5rem',
 		cursor: 'pointer',
 		height: '3.4rem',
 		padding: '1rem 1rem 0 0',
-		// fontWeight: 700
 	}),
 	chipContent: makeStyle(FlexAuto,FlexRowCenter,{
 		display: 'flex',

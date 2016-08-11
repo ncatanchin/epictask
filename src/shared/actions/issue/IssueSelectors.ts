@@ -1,11 +1,10 @@
 
-import {Map,List} from 'immutable'
-import {createSelector} from 'reselect'
+import {Map} from 'immutable'
 
 import {IssueKey} from 'shared/Constants'
 import {Issue} from 'shared/models/Issue'
 import {
-	issueModelsSelector, modelsSelector, commentModelsSelector, milestoneModelsSelector, labelModelsSelector
+	modelsSelector, commentModelsSelector, milestoneModelsSelector, labelModelsSelector
 } from 'shared/actions/data/DataSelectors'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
@@ -15,7 +14,6 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
-import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
 import {TIssuePatchMode} from 'epictask/shared/actions/issue'
 
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
@@ -24,6 +22,7 @@ export const issueStateSelector = (state):IssueState => state.get(IssueKey) as I
  * All issue ids - unfiltered
  *
  * @param state
+ * @return number[]
  */
 export const issueIdsSelector = (state):number[] => issueStateSelector(state).issueIds
 
@@ -31,7 +30,8 @@ export const issueIdsSelector = (state):number[] => issueStateSelector(state).is
 /**
  * Global selector for selectedIssues changed
  *
- * @type {Reselect.Selector<Map<string, any>, number[]>|Reselect.Selector<TInput, TOutput>}
+ * @param state
+ * @return Map<string,any>
  */
 export const selectedIssueIdsSelector = createDeepEqualSelector(
 	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
@@ -39,8 +39,17 @@ export const selectedIssueIdsSelector = createDeepEqualSelector(
 )
 
 
+/**
+ * Issue sort and filter type
+ */
 export type TIssueSortAndFilter = {issueFilter:IIssueFilter,issueSort:IIssueSort}
 
+/**
+ * Issue sort and filter selector
+ *
+ * @param state
+ * @return TIssueSortAndFilter
+ */
 export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = _.memoize((state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
 	const issueState = state.get(IssueKey) as IssueState
 	return _.pick(issueState,'issueFilter','issueSort') as any
@@ -48,6 +57,9 @@ export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = _.memoi
 
 /**
  * Milestones for enabled repos
+ *
+ * @param state
+ * @return Milestone[]
  */
 export const milestonesSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,
@@ -61,6 +73,8 @@ export const milestonesSelector = createDeepEqualSelector(
 
 /**
  * Labels for enabled repos
+ *
+ * @return Label[]
  */
 export const labelsSelector = createDeepEqualSelector(
 	enabledRepoIdsSelector,

@@ -3,39 +3,36 @@
  */
 
 // Imports
-import {AutoWired, Inject, Container} from 'typescript-ioc'
+import {Container} from 'typescript-ioc'
 import * as React from 'react'
 import {createStructuredSelector} from 'reselect'
-import * as ReactDOM from 'react-dom'
-import {List,Map} from 'immutable'
+import {Map} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {AppState} from 'shared/actions/AppState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Issue, AvailableRepo, Repo, User, Label} from 'shared/models'
-import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
 import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
 import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'
-import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {createAvailableRepoSelector, repoIdPredicate, enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
-import {IssueState} from 'shared/actions/issue/IssueState'
+import {repoIdPredicate, enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
-import {Themed, ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
+import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 import {appUserSelector} from 'shared/actions/AppSelectors'
 import {editingIssueSelector, issueStateSelector} from 'shared/actions/issue/IssueSelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {CircularProgress} from 'material-ui'
-import {GithubErrorCodes, IGithubValidationError} from 'shared/GitHubClient'
 import {labelModelsSelector} from 'shared/actions/data/DataSelectors'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
+
+// import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+// import {GithubErrorCodes, IGithubValidationError} from 'shared/GitHubClient'
+
 const {HotKeys} = require('react-hotkeys')
 const SimpleMDE = require('react-simplemde-editor')
 const {Style} = Radium
@@ -213,8 +210,8 @@ export interface IIssueEditDialogState {
 	labelModels: labelModelsSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError,
-	open: (state) => uiStateSelector(state).dialogs
-		.get(Dialogs.IssueEditDialog) === true
+	open: (state) => uiStateSelector(state)
+		.dialogs.get(Dialogs.IssueEditDialog) === true
 
 },createDeepEqualSelector))
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
@@ -432,20 +429,22 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	getNewState(props:IIssueEditDialogProps) {
 		const
-			{theme,availableRepos,labelModels,editingIssue} = props
+			{styles,theme,availableRepos,labelModels,editingIssue,open} = props,
+			repoId = editingIssue &&editingIssue.repoId
 
-		const
-			{styles} = this.props
+		if (!open)
+			return {}
 
 		if (!editingIssue)
 			return {} as any
 
-		let repos = _.nilFilter(availableRepos)
-		let milestones = _.nilFilter(editingIssue.milestones)
-		let collaborators = _.nilFilter(editingIssue.collaborators)
-		let labels = []
+		let
+			repos = _.nilFilter(availableRepos),
+			milestones = _.nilFilter(editingIssue.milestones),
+			collaborators = _.nilFilter(editingIssue.collaborators),
+			labels = []
 
-		const repoId = editingIssue.repoId
+
 		if (editingIssue.id > 0) {
 			repos = repos.filter(item => '' + item.repoId === '' + repoId)
 		}
@@ -543,130 +542,128 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 
 				{ open &&
-				<MuiThemeProvider muiTheme={theme}>
-					<HotKeys handlers={this.keyHandlers} style={PositionRelative}>
-						<form name="issueEditDialogForm"
-						      id="issueEditDialogForm"
-						      style={makeStyle(saving && {opacity: 0,pointerEvents: 'none'})}>
-							<div style={styles.form.row1}>
-								<TextField value={this.state.titleValue}
-								           onChange={this.onTitleChange}
-								           errorStyle={{transform: 'translate(0,1rem)'}}
-								           errorText={getGithubErrorText(saveError,'title')}
-								           hintText="TITLE"
-								           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
-								           style={styles.form.title}
-								           inputStyle={styles.input}
-								           underlineStyle={styles.input.underlineDisabled}
-								           underlineDisabledStyle={styles.input.underlineDisabled}
-								           underlineFocusStyle={styles.input.underlineFocus}
-								           underlineShow={false}
-								           fullWidth={true}
-								           autoFocus/>
-							</div>
-							<div style={styles.form.row2}>
+					<MuiThemeProvider muiTheme={theme}>
+						<HotKeys handlers={this.keyHandlers} style={PositionRelative}>
+							<form name="issueEditDialogForm"
+							      id="issueEditDialogForm"
+							      style={makeStyle(saving && {opacity: 0,pointerEvents: 'none'})}>
 
-								{/* Only show assignee drop down if push permission */}
-								{canPush && <SelectField
-									value={editingIssue.assignee ? editingIssue.assignee.id : ''}
-									style={makeStyle(styles.form.assignee,styles.menu)}
-									inputStyle={styles.input}
-									labelStyle={styles.form.assignee.item.label}
-									iconStyle={styles.menu}
+								<div style={styles.form.row1}>
+									<TextField value={this.state.titleValue}
+									           onChange={this.onTitleChange}
+									           errorStyle={{transform: 'translate(0,1rem)'}}
+									           errorText={getGithubErrorText(saveError,'title')}
+									           hintText="TITLE"
+									           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
+									           style={styles.form.title}
+									           inputStyle={styles.input}
+									           underlineStyle={styles.input.underlineDisabled}
+									           underlineDisabledStyle={styles.input.underlineDisabled}
+									           underlineFocusStyle={styles.input.underlineFocus}
+									           underlineShow={false}
+									           fullWidth={true}
+									           autoFocus/>
+								</div>
+								<div style={styles.form.row2}>
 
-									onChange={this.onAssigneeChange}
+									{/* Only show assignee drop down if push permission */}
+									{canPush && <SelectField
+										value={editingIssue.assignee ? editingIssue.assignee.id : ''}
+										style={makeStyle(styles.form.assignee,styles.menu)}
+										inputStyle={styles.input}
+										labelStyle={styles.form.assignee.item.label}
+										iconStyle={styles.menu}
 
-									underlineStyle={styles.input.underlineDisabled}
-									underlineDisabledStyle={styles.input.underlineDisabled}
-									underlineFocusStyle={styles.input.underlineFocus}
-									menuStyle={selectMenuStyle}
-									menuListStyle={styles.select.list}
-									underlineShow={false}
-									fullWidth={true}>
+										onChange={this.onAssigneeChange}
 
-									{this.state.assigneeMenuItems}
-								</SelectField>}
+										underlineStyle={styles.input.underlineDisabled}
+										underlineDisabledStyle={styles.input.underlineDisabled}
+										underlineFocusStyle={styles.input.underlineFocus}
+										menuStyle={selectMenuStyle}
+										menuListStyle={styles.select.list}
+										underlineShow={false}
+										fullWidth={true}>
 
-								{/* MILESTONE */}
-								<SelectField
-									value={editingIssue.milestone ? editingIssue.milestone.id : ''}
-									style={makeStyle(styles.form.milestone,styles.menu)}
-									inputStyle={styles.input}
-									labelStyle={styles.form.milestone.item.label}
-									iconStyle={styles.menu}
+										{this.state.assigneeMenuItems}
+									</SelectField>}
 
-									onChange={this.onMilestoneChange}
-									menuStyle={selectMenuStyle}
-									menuListStyle={styles.select.list}
-									underlineStyle={styles.input.underlineDisabled}
-									underlineDisabledStyle={styles.input.underlineDisabled}
-									underlineFocusStyle={styles.input.underlineFocus}
+									{/* MILESTONE */}
+									<SelectField
+										value={editingIssue.milestone ? editingIssue.milestone.id : ''}
+										style={makeStyle(styles.form.milestone,styles.menu)}
+										inputStyle={styles.input}
+										labelStyle={styles.form.milestone.item.label}
+										iconStyle={styles.menu}
 
-									underlineShow={true}
-									fullWidth={true}
-								>
+										onChange={this.onMilestoneChange}
+										menuStyle={selectMenuStyle}
+										menuListStyle={styles.select.list}
+										underlineStyle={styles.input.underlineDisabled}
+										underlineDisabledStyle={styles.input.underlineDisabled}
+										underlineFocusStyle={styles.input.underlineFocus}
 
-									{this.state.milestoneMenuItems}
-								</SelectField>
+										underlineShow={true}
+										fullWidth={true}
+									>
 
-								{/* REPO */}
-								<SelectField value={editingIssue.repoId}
-								             style={makeStyle(styles.form.repo,styles.menu)}
-								             inputStyle={styles.input}
-								             labelStyle={styles.form.repo.item.label}
-								             iconStyle={styles.menu}
-								             onChange={this.onRepoChange}
-								             underlineStyle={styles.input.underlineDisabled}
-								             underlineDisabledStyle={styles.input.underlineDisabled}
-								             underlineFocusStyle={styles.input.underlineFocus}
-								             menuListStyle={makeStyle(styles.select.list)}
-								             menuStyle={makeStyle(styles.menu,styles.form.repo.menu)}
-								             underlineShow={true}
-								             fullWidth={true}
-								>
+										{this.state.milestoneMenuItems}
+									</SelectField>
 
-									{this.state.repoMenuItems}
-								</SelectField>
-							</div>
+									{/* REPO */}
+									<SelectField value={editingIssue.repoId}
+									             style={makeStyle(styles.form.repo,styles.menu)}
+									             inputStyle={styles.input}
+									             labelStyle={styles.form.repo.item.label}
+									             iconStyle={styles.menu}
+									             onChange={this.onRepoChange}
+									             underlineStyle={styles.input.underlineDisabled}
+									             underlineDisabledStyle={styles.input.underlineDisabled}
+									             underlineFocusStyle={styles.input.underlineFocus}
+									             menuListStyle={makeStyle(styles.select.list)}
+									             menuStyle={makeStyle(styles.menu,styles.form.repo.menu)}
+									             underlineShow={true}
+									             fullWidth={true}
+									>
 
-							<LabelFieldEditor labels={editingIssue.labels || []}
-							                  id="issueEditDialogLabels"
-							                  hint="Labels"
-							                  hintAlways={true}
-							                  style={{marginBottom: rem(1.5)}}
-							                  inputStyle={makeStyle(styles.input,{
-							                    //marginTop: '0.5rem',
+										{this.state.repoMenuItems}
+									</SelectField>
+								</div>
 
-							                  })}
-							                  availableLabels={labels}
-							                  onLabelsChanged={this.onLabelsChanged}
-							                  underlineStyle={styles.input.underlineDisabled}
-							                  underlineFocusStyle={styles.input.underlineFocus}
-							                  underlineShow={true}
-							                  hintStyle={makeStyle(styles.input.hint,{left:10,bottom: 8})}
-							                  chipStyle={{margin: "1rem 0.5rem"}}
-							                  labelStyle={makeStyle(styles.input.floatingLabel,{})}
-							                  labelFocusStyle={styles.input.floatingLabelFocus}/>
+								<LabelFieldEditor labels={editingIssue.labels || []}
+								                  id="issueEditDialogLabels"
+								                  hint="Labels"
+								                  hintAlways={true}
+								                  style={{marginBottom: rem(1.5)}}
+								                  inputStyle={makeStyle(_.omit(styles.input,'width'))}
+								                  availableLabels={labels}
+								                  onLabelsChanged={this.onLabelsChanged}
+								                  underlineStyle={styles.input.underlineDisabled}
+								                  underlineFocusStyle={styles.input.underlineFocus}
+								                  underlineShow={true}
+								                  hintStyle={makeStyle(styles.input.hint,{left:10,bottom: 8})}
+								                  chipStyle={{margin: "1rem 0.5rem"}}
+								                  labelStyle={makeStyle(styles.input.floatingLabel,{})}
+								                  labelFocusStyle={styles.input.floatingLabelFocus}/>
 
 
-							<SimpleMDE onChange={this.onMarkdownChange}
-							           style={{maxHeight: 500}}
-							           options={{
-								            autoDownloadFontAwesome: false,
-								            spellChecker: false,
-								            initialValue: editingIssue.body,
-								            autofocus: false
-								           }}/>
-						</form>
+								<SimpleMDE onChange={this.onMarkdownChange}
+								           style={{maxHeight: 500}}
+								           options={{
+									            autoDownloadFontAwesome: false,
+									            spellChecker: false,
+									            initialValue: editingIssue.body,
+									            autoFocus: false
+									           }}/>
+							</form>
 
-						{/* Saving progress indicator */}
-						<div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-							<CircularProgress
-								color={theme.progressIndicatorColor}
-								size={1} />
-						</div>
-					</HotKeys>
-				</MuiThemeProvider>
+							{/* Saving progress indicator */}
+							{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
+								<CircularProgress
+									color={theme.progressIndicatorColor}
+									size={1} />
+							</div>}
+						</HotKeys>
+					</MuiThemeProvider>
 				}
 			</Dialog>
 		</div>

@@ -72,7 +72,7 @@ const styles = {
 			boxSizing: 'border-box'
 		}),
 		' input': {
-			width: 'auto !important',
+			//width: 'auto !important',
 			flex: '1 0 20rem !important',
 			boxSizing: 'border-box',
 			marginTop: '14px !important',
@@ -268,16 +268,18 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
 			<div style={[s.chips,(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
 				{selectedChips.map(item => renderChip(item))}
+
 				<TypeAheadSelect
 					onKeyDown={props.onKeyDown}
 					className='chipAutoComplete'
-					hintText={hint}
+					hintText={hint.toUpperCase()}
 					underlineShow={false}
 					menuProps={{maxHeight:300}}
 					onItemSelected={this.onItemSelectedOrEnterPressed}
 					onInputChanged={this.handleUpdateInput}
 					dataSource={this.state.dataSource}
 					query={query}
+					fullWidth={true}
 					openOnFocus={true}/>
 
 

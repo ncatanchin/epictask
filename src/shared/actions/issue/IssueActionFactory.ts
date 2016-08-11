@@ -211,9 +211,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param patch
 	 * @param issues
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 * @param useAssign
 	 */
 	@Action()
-	applyPatchToIssues(patch:any,useAssign,...issues:Issue[]) {
+	applyPatchToIssues(patch:any,useAssign:boolean,...issues:Issue[]) {
 		return async(dispatch, getState) => {
 			if (!issues.length)
 				return
@@ -230,10 +231,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					issues.map(issue => this.stores.issue.get(issue.id))
 				)
 
+				// Filter out issues that the milestone/assignee does not have access to
+				if (patch.hasOwnProperty('milestone') && patch.milestone) {
+					issues = issues.filter(issue => issue.repoId === patch.milestone.repoId)
+				} else if (patch.hasOwnProperty('assignee') && patch.assignee) {
+					issues = issues.filter(issue => patch.assignee.repoIds && patch.assignee.repoIds.includes(issue.repoId))
+				}
+
 				// Now apply the patch to clones
-				issues = issues.map(issue => (useAssign) ?
-					_.assign(cloneObject(issue),patch) :
-					_.merge(cloneObject(issue),patch))
+				issues = issues.map(issue => {
+					const patchCopy = cloneObject(patch)
+					if (patchCopy.hasOwnProperty('labels')) {
+						patchCopy.labels = patchCopy.labels && patchCopy.labels.filter(label => label.repoId === issue.repoId)
+					}
+
+					return (useAssign) ?
+						_.assign(cloneObject(issue),patchCopy) :
+						_.merge(cloneObject(issue),patchCopy)
+				})
 
 				// One by one update the issues on GitHub
 				for (let issue of issues) {
@@ -247,10 +262,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 				}
 
+				this.uiActions.closeAllDialogs()
 				actions.setIssueSaving(false)
 				actions.setPatchIssues(null)
-
-				this.uiActions.closeAllDialogs()
 
 			} catch (err) {
 				log.error('issue patching failed',patch,issues,originalIssues)

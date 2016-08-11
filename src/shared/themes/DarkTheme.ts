@@ -1,12 +1,12 @@
 import * as Styles from 'material-ui/styles'
 import {makeTheme, Palettes} from './material/MaterialTools'
 
-//import * as _ from 'lodash'
 
-const tinycolor = require('tinycolor2')
+
 /**
  * Get colors ref
  */
+const tinycolor = require('tinycolor2')
 const {colors:c} = Styles
 const baseTheme = _.cloneDeep(Styles.darkBaseTheme)
 
@@ -71,9 +71,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	/**
 	 * TypeAheadSelect styling
 	 */
-	TypeAheadSelect: [InputStyle,{
-
-	}],
+	typeAheadSelect: {
+		root: InputStyle
+	},
 
 
 	issueStateIcon: {
@@ -172,10 +172,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			},
 
 			hint: {
-				//color: accent.hue2,
 				color: tinycolor(primary.hue4).lighten(20).toString(),
-				backgroundColor: 'transparent',//text.primary,
-				//fontStyle: 'italic',
+				backgroundColor: 'transparent',
 				fontWeight: 400
 			},
 
@@ -246,27 +244,26 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 				zIndex: 5,
 				textTransform: 'uppercase',
 				color:           primary.hue4,
-				backgroundColor: 'transparent',//text.primary,
-				// fontStyle:   'italic',
-				// fontWeight: 100
-
+				backgroundColor: 'transparent'
 			},
 
 
 			floatingLabel: {
 				color:           primary.hue4,
-				backgroundColor: 'transparent',//backgroundColor: text.secondary
+				backgroundColor: 'transparent'
 			},
 
 			floatingLabelFocus: {
 				color:           text.secondary,
-				backgroundColor: 'transparent',//backgroundColor: text.secondary
+				backgroundColor: 'transparent'
 			},
+
 			underlineDisabled: {
 				borderColor: 'transparent',
 				borderBottomWidth: `0.1rem`,
 				transform: 'scaleX(1)'
 			},
+
 			underlineFocus: {
 				borderColor: primary.hue3,
 				borderBottomWidth: `0.1rem`
@@ -750,6 +747,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		accent3Color:     accent.hue3,
 		accent3ColorText: text.primary,
 		highlightColor:   accent.hue1,
-		errorColor:       warn.hue1
+		errorColor:       warn.hue1,
+		secondary,
+		primary,
+		accent,
+		background
 	}
 })))
