@@ -68,12 +68,17 @@ export default class ActivityManagerService implements IService {
 
 	async createActivity(type: ActivityType,objectId:number) {
 		const activityRepo = this._repos.activity
-		const activity = new Activity({
+		let activity = new Activity({
 			id: makeRefId(type,objectId),
 			type: type,
 			timestamp: Date.now(),
 			objectId: '' + objectId
 		})
+
+		const existingActivity = await activityRepo.get(activity.id)
+
+		if (existingActivity)
+			activity = _.assign({},existingActivity,activity) as Activity
 
 		return await activityRepo.save(activity)
 	}

@@ -29,6 +29,7 @@ import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {CircularProgress} from 'material-ui'
 import {labelModelsSelector} from 'shared/actions/data/DataSelectors'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
+import {canAssignIssue} from 'shared/Permission'
 
 // import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 // import {GithubErrorCodes, IGithubValidationError} from 'shared/GitHubClient'
@@ -493,7 +494,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			return <div/>
 		}
 
-		const canPush = repo.permissions && repo.permissions.push
+		const canAssign = canAssignIssue(repo)
 
 		const actions = [
 			<Button onClick={this.onCancel} style={styles.action}>Cancel</Button>,
@@ -567,7 +568,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								<div style={styles.form.row2}>
 
 									{/* Only show assignee drop down if push permission */}
-									{canPush && <SelectField
+									{canAssign && <SelectField
 										value={editingIssue.assignee ? editingIssue.assignee.id : ''}
 										style={makeStyle(styles.form.assignee,styles.menu)}
 										inputStyle={styles.input}

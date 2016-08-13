@@ -12,7 +12,7 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {Icon} from 'ui/components/common/Icon'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'components/common'
-import LabelChip from 'epictask/ui/components/common/LabelChip'
+import LabelChip from 'ui/components/common/LabelChip'
 const tinycolor = require('tinycolor2')
 
 
@@ -29,7 +29,7 @@ const baseStyles = createStyles({
 
 
 
-export type TOnLabelOrMilestoneRemove = (item:Label|Milestone,index:number) => void
+export type TOnLabelOrMilestoneCallback = (item:Label|Milestone,index:number) => void
 
 /**
  * IIssueLabelsProps
@@ -41,7 +41,9 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
 	labels?:Label[]
 	labelStyle?:any
 	showIcon?:boolean
-	onRemove?:TOnLabelOrMilestoneRemove
+	onMilestoneClick?:TOnLabelOrMilestoneCallback
+	onLabelClick?:TOnLabelOrMilestoneCallback
+	onRemove?:TOnLabelOrMilestoneCallback
 	afterAllNode?:React.ReactNode
 }
 
@@ -77,6 +79,8 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 				showIcon,
 				milestones,
 				labelStyle,
+				onMilestoneClick,
+				onLabelClick,
 				labels
 			} = this.props,
 			{palette} = theme,
@@ -89,6 +93,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 			               label={milestone}
 			               showIcon={true}
 			               showRemove={!!onRemove}
+			               onClick={(event) => (onMilestoneClick && onMilestoneClick(milestone,index))}
 			               onRemove={!!onRemove && ((milestone) => onRemove(milestone,index))}
 			               labelStyle={labelStyle}
 			/>
@@ -97,6 +102,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 			            label={label}
 			            showRemove={!!onRemove}
 			            showIcon={true}
+			            onClick={(event) => (onLabelClick && onLabelClick(label,index))}
 			            onRemove={!!onRemove && ((label) => onRemove(label,index))}
 			            labelStyle={labelStyle}
             />
@@ -105,7 +111,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 
 	render() {
 		return <div style={makeStyle(this.state.styles.root,this.props.style)}>
-			{this.props.labels && this.renderLabels()}{this.props.afterAllNode}
+			{(this.props.labels || this.props.milestones) && this.renderLabels()}{this.props.afterAllNode}
 		</div>
 	}
 

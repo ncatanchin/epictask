@@ -7,8 +7,9 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {PureRender} from 'components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Issue, Label} from 'epictask/shared'
-import {Icon} from 'epictask/ui/components'
+import {Issue} from 'shared/models/Issue'
+import {Label} from 'shared/models/Label'
+import {Icon} from 'ui/components'
 import {Milestone} from 'models/Milestone'
 
 const tinycolor = require('tinycolor2')
@@ -17,10 +18,12 @@ const tinycolor = require('tinycolor2')
 const log = getLogger(__filename)
 
 export const baseStyles = createStyles({
-	label: [FlexRowCenter,{
-		padding: '0.6rem 1rem',
+	label: [PositionRelative,FlexRowCenter,{
 		borderRadius: '0.3rem',
-		margin: '0 1rem 0 0',
+		marginTop: 0,
+		marginRight: rem(1),
+		marginBottom: 0,
+		marginLeft: 0,
 		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
 		':hover': {}
 	}],
@@ -28,18 +31,30 @@ export const baseStyles = createStyles({
 
 	// Accessories
 	accessory: [FlexAuto,FlexRowCenter,{
-		height: 12,
+		height: "100%",
+
 
 		// icon decoration
 		icon: [{
+			padding: "0.6rem",
 			fontSize: themeFontSize(1),
-			padding: '0 0.5rem 0 0',
 			lineHeight: 1
 		}],
 
+		right: [PositionAbsolute,{
+			right: 0,
+			top:0,
+			bottom: 0
+		}],
+
+		left: [PositionAbsolute,{
+			left: 0,
+			top:0,
+			bottom: 0
+		}],
 
 		// remove control
-		remove: [makeTransition(['opacity','width','padding','color']), OverflowHidden,{
+		remove: [makeTransition(['opacity','width','padding','background-color','color']), OverflowHidden,{
 			fontSize: themeFontSize(1),
 			padding: 0,
 			cursor: 'pointer',
@@ -50,10 +65,10 @@ export const baseStyles = createStyles({
 			maxWidth: 0,
 
 			hover: [{
-				width: rem(1.2),
-				maxWidth: rem(1.2),
+				width: 'auto',
+				maxWidth: 'none',
 				opacity: 1,
-				padding: '0 0 0 0.5rem'
+				padding: '0.6rem'
 			}]
 		}]
 
@@ -62,7 +77,7 @@ export const baseStyles = createStyles({
 
 	text: [FlexAuto,FlexRowCenter,{
 		flexGrow: 1,
-		padding: '0 0.5rem',
+		padding: '0.6rem 0.5rem',
 		height: 12,
 		fontSize: themeFontSize(1.1),
 		fontWeight: 700,
@@ -85,6 +100,7 @@ export type TLabelCallback = (label:Label|Milestone) => void
 export interface ILabelChipProps {
 	theme?: any
 	styles?: any
+	onClick?:Function
 	label:Label|Milestone
 	labelStyle?:any
 	showIcon?:boolean
@@ -126,6 +142,7 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 				theme,
 				styles,
 				showIcon,
+				onClick,
 				onRemove,
 				showRemove,
 				label,
@@ -167,7 +184,7 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			hovering = Radium.getState(this.state,'label',':hover')
 
 
-		return <div ref='label' style={finalLabelStyle}>
+		return <div ref='label' style={finalLabelStyle} onClick={onClick}>
 			{showIcon &&
 				<div style={styles.accessory}>
 					<Icon style={styles.accessory.icon}
@@ -176,20 +193,20 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			      </div>
 			}
 
-	        <div style={styles.text}>
+	        <div style={styles.text} >
 		        <span>{isLabel(label) ? label.name : label.title}</span>
 	        </div>
 
 
 			{onRemove &&
-				<div style={styles.accessory} className="removeControl">
+				<div style={[styles.accessory,styles.accessory.left]} className="removeControl">
 					<Icon
 						style={[
 							styles.accessory.remove,
 							hovering && styles.accessory.remove.hover,
-							hovering && {color: palette.errorColor}
+							hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
 						]}
-						onClick={() => onRemove(label)}
+						onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}
 						iconSet='fa'
 						iconName='times'/>
 				</div>}

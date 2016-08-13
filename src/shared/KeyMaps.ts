@@ -15,6 +15,9 @@ export enum CommonKeys {
 	Find,
 	View1,
 	View2,
+	SetAssignee,
+	SetMilestone,
+	AddLabels
 }
 
 export const Global = {
@@ -32,7 +35,11 @@ export const Global = {
 	[CommonKeys.View1]: 'command+1',
 	[CommonKeys.View2]: 'command+2',
 	[CommonKeys.Space]: 'space',
-	[CommonKeys.Delete]: ['del','backspace']
+	[CommonKeys.Delete]: ['del','backspace'],
+	[CommonKeys.SetAssignee]: 'alt+a',
+	[CommonKeys.SetMilestone]: 'alt+m',
+	[CommonKeys.AddLabels]: 'alt+t'
+
 }
 
 export const App = Object.assign({},Global,{

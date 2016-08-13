@@ -46,7 +46,7 @@ import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import {TIssueEditInlineConfig} from 'shared/actions/issue'
 import {debounce} from 'lodash-decorators'
 import ValueCache from 'shared/util/ValueCache'
-import {availableRepoCountSelector} from 'epictask/shared/actions/repo/RepoSelectors'
+import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 
 // Non-typed Components
 const tinycolor = require('tinycolor2')
@@ -194,7 +194,10 @@ const baseStyles = createStyles({
 		flexWrap: 'wrap',
 
 		label: {
-			margin: '0 0.7rem 0.5rem 0'
+			marginTop: 0,
+			marginRight: '0.7rem',
+			marginBottom: '0.5rem',
+			marginLeft: 0
 		}
 
 	})

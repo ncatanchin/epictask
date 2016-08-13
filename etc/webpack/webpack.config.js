@@ -85,6 +85,7 @@ module.exports = function (projectConfig) {
 			filename: '[name].js',
 			libraryTarget: 'commonjs2'
 		},
+		cache: true,
 
 		recordsPath: `${distDir}/_records`,
 
@@ -120,6 +121,7 @@ module.exports = function (projectConfig) {
 				libAlias('typestore-mocks', 'typestore/packages/typestore-mocks/src/index.ts'),
 				libAlias('typestore-plugin-pouchdb', 'typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
 			),
+
 
 			// root: 'src',
 
@@ -164,6 +166,7 @@ module.exports = function (projectConfig) {
 			new DefinePlugin({
 				__DEV__: isDev,
 				DEBUG: isDev,
+				'Env.isDev': isDev,
 				'process.env.__DEV__': isDev,
 				'process.env.NODE_ENV': JSON.stringify(env),
 				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
@@ -193,7 +196,10 @@ module.exports = function (projectConfig) {
 					/typestore-mocks/,
 					/typedux/
 				]
-			})
+			}),
+			{
+				electron: true
+			}
 		]
 
 	}
@@ -207,13 +213,16 @@ module.exports = function (projectConfig) {
 	Object.assign(config, {
 
 		//In development, use inline source maps
-		//devtool: isDev ? 'inline-source-map' : 'source-map',
-		devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
+		devtool: isDev ? 'inline-source-map' : 'source-map',
+		//
+		//devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
 
 		// In development specify absolute path - better
 		// debugger support
 		output: Object.assign({}, config.output, isDev ? {
-			devtoolModuleFilenameTemplate: "[absolute-resource-path]"
+			devtoolModuleFilenameTemplate: "[absolute-resource-path]",
+			devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
+
 		} : {}),
 
 

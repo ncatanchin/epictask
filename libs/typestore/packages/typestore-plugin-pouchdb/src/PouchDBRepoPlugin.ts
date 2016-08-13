@@ -256,8 +256,7 @@ export class PouchDBRepoPlugin<M extends IModel> implements IRepoPlugin<M>, IFin
 		try {
 			const res:any = await this.db[doc._id ? 'put' : 'post'](doc)
 
-			const savedModel = mapper.fromObject(json)
-			Object.assign(savedModel as any,{$$doc: {_id: res.id, '_rev': res.rev,attrs:json}})
+			const savedModel = Object.assign({},model,{$$doc: {_id: res.id, '_rev': res.rev,attrs:json}})
 
 			this.repo.triggerPersistenceEvent(ModelPersistenceEventType.Save, savedModel)
 

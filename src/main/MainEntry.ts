@@ -1,12 +1,19 @@
+//region PROCESS_SETUP
+require('source-map-support').install()
+require('babel-polyfill')
+process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+//endregion
+
 import 'reflect-metadata'
 import 'shared/PromiseConfig'
 import 'shared/ErrorHandling'
 import {Container} from 'typescript-ioc'
-import Electron = require('electron')
+
 import {RemoteDebuggingPort,Events} from 'shared/Constants'
 import * as path from 'path'
 
-const {app,BrowserWindow} = Electron
+const {app,BrowserWindow} = require('electron')
+
 
 // LOAD EVERYTHING
 import 'shared/Globals'
@@ -20,8 +27,6 @@ const log = getLogger(__filename)
 
 // ADD EVENTS TO GLOBAL
 _.assignGlobal({Constants:{Events}})
-
-
 
 
 // Main window ref
@@ -49,70 +54,8 @@ if (Env.isDev) {
  */
 async function boot() {
 
-	if (Env.isDev) {
-		const {
-			"default": installExtension,
-			REACT_DEVELOPER_TOOLS,
-			JQUERY_DEBUGGER,
-			REDUX_DEVTOOLS,
-			REACT_PERF
-		} = require('electron-devtools-installer')
-
-		const
-			ScratchDevToolId = "alploljligeomonipppgaahpkenfnfkn",
-			ExtendedJsConsoleId = "ieoofkiofkkmikbdnmaoaemncamdnhnd",
-			ImmutableObjectFormat = "hgldghadipiblonfkkicmgcbbijnpeog"
-
-		installExtension(REACT_DEVELOPER_TOOLS)
-		installExtension(REACT_PERF)
-		installExtension(JQUERY_DEBUGGER)
-		installExtension(REDUX_DEVTOOLS)
-		installExtension(ScratchDevToolId)
-		installExtension(ExtendedJsConsoleId)
-		installExtension(ImmutableObjectFormat)
-
-
-		//BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
-		// const exts = BrowserWindow.getDevToolsExtensions()
-		// const extNames = Object.keys(exts)
-		//
-		// // Check for tool installation
-		// const isExtInstalled = (extName) => extNames
-		// 	.findIndex(name => _.includes(_.toLower(name),_.toLower(extName))) > -1
-		//
-		//
-		// function removeDevTool(removeName:string) {
-		// 	extNames.forEach((name:string) => {
-		// 		log.info('Dev Tool Extension name',name)
-		//
-		// 		//Remove pouch extension
-		// 		if (_.includes(_.toLower(name),_.toLower(removeName))) {
-		// 			BrowserWindow.removeDevToolsExtension(name)
-		// 		}
-		// 	})
-		// }
-		//
-		// removeDevTool('react')
-		// removeDevTool('pouch')
-		// removeDevTool('bigconsole')
-		//removeDevTool('redux')
-
-		// if (!isExtInstalled('pouchdb'))
-		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/pouchdb-inspector'))
-
-		// if (!isExtInstalled('scratch'))
-		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/scratch'))
-
-		// if (!isExtInstalled('react'))
-		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/react-devtools'))
-
-		// if (!isExtInstalled('redux'))
-		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/redux-devtools'))
-
-
-		// if (!isExtInstalled('bigconsole'))
-		// 	BrowserWindow.addDevToolsExtension(path.resolve(__dirname,'../../libs/devtools/big-console'))
-	}
+	if (Env.isDev)
+		require('./MainDevTools')
 
 	log.info("Boot start")
 	global.MainBooted = false

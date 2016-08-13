@@ -3,7 +3,7 @@ import Electron = require('electron')
 import path = require('path')
 import * as uuid from 'node-uuid'
 import windowStateKeeper = require('electron-window-state')
-import {default as Events} from './DatabaseEvents'
+import {DatabaseEvents as Events} from './DatabaseEvents'
 import {IDatabaseResponse, IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
 import {Container} from 'typescript-ioc'
 const
@@ -178,7 +178,6 @@ export class DatabaseServerWindow {
 	 * onReady window callback
 	 */
 	private onReady = (event, isExisting = false) => {
-
 		log.info('DatabaseServer is ready. Using existing window=',isExisting)
 
 		this.setStatus(DatabaseStatus.Started)

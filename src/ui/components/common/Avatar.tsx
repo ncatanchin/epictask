@@ -4,26 +4,78 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
 import {User} from 'shared/models'
-import {AppKey} from 'shared/Constants'
-import {Themed} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
+import * as Radium from 'radium'
+import {Icon} from 'components/common'
 
 // Constants
 const log = getLogger(__filename)
-const styles = {
-	root: makeStyle(FlexAuto,FlexRowCenter,Ellipsis,{
-		fontSize: themeFontSize(1)
+const baseStyles = createStyles({
+	root: [FlexAuto,FlexRowCenter,Ellipsis,PositionRelative,{
+		fontSize: themeFontSize(1),
+		clickable: [makeTransition('background-color'),CursorPointer,{
+			borderRadius: rem(0.2),
+			padding: '0.3rem 0.5rem'
+		}],
+		':hover': {}
+	}],
 
-	}),
 
-	avatar: makeStyle({
+	// Accessories
+	accessory: [FlexAuto,FlexRowCenter,{
+		height: "100%",
+
+		// icon decoration
+		icon: [{
+			padding: "0.6rem",
+			fontSize: themeFontSize(1),
+			lineHeight: 1
+		}],
+
+		right: [PositionAbsolute,{
+			right: 0,
+			top:0,
+			bottom: 0
+		}],
+
+		left: [PositionAbsolute,{
+			left: 0,
+			top:0,
+			bottom: 0
+		}],
+
+		// remove control
+		remove: [makeTransition(['opacity','width','padding','background-color','color']), OverflowHidden,{
+			fontSize: themeFontSize(1),
+			padding: 0,
+			cursor: 'pointer',
+			lineHeight: 1,
+			display: 'block',
+			opacity: 0,
+			width: 0,
+			maxWidth: 0,
+
+			hover: [{
+				width: 'auto',
+				maxWidth: 'none',
+				opacity: 1,
+				padding: '0.6rem'
+			}]
+		}]
+
+
+	}],
+
+	avatar: [{
 		backgroundRepeat: 'no-repeat',
 		backgroundSize: '100%',
 		width: 25,
 		height: 25,
 		borderRadius: '10%',
-		border: '0.2rem solid transparent',
+		borderWidth: '0.2rem',
+		borderStyle: 'solid',
+		borderColor: 'transparent',
 		margin: '0 0 0 0',
 
 		labelBefore: {
@@ -32,23 +84,26 @@ const styles = {
 		labelAfter: {
 			margin: '0 1rem 0 0',
 		}
-	}),
+	}],
 
 
-	label: makeStyle({
+	label: [{
 		padding: '0 0 0 0'
-	})
-}
+	}]
+})
 
 /**
  * IAvatarProps
  */
-export interface IAvatarProps extends React.DOMAttributes {
+export interface IAvatarProps extends React.HTMLAttributes {
 	user:User
+	onRemove?:(user?:User) => void
 	labelPlacement?:'none'|'before'|'after'
 	labelStyle?:any
+	labelTextFn?:(user?:User) => string|any
 	avatarStyle?:any
 	style?:any
+	styles?:any
 	theme?:any
 	prefix?:string
 	prefixStyle?:any
@@ -63,44 +118,67 @@ export interface IAvatarProps extends React.DOMAttributes {
  * @class Avatar
  * @constructor
  **/
-@Themed
+@ThemedStyles(baseStyles,'avatar')
+@Radium
 export class Avatar extends React.Component<IAvatarProps,any> {
-
-
-	constructor(props) {
-		super(props)
-	}
-
 
 	render() {
 		const
 			{props} = this,
-			{theme,user,labelPlacement} = props,
-			s = mergeStyles(styles,theme.avatar),
+			{styles,labelTextFn,theme,onRemove,onClick,user,labelPlacement} = props,
+			{palette} = theme,
+
 			isBefore = labelPlacement === 'before',
 			isAfter = labelPlacement === 'after',
-			isNone = labelPlacement === 'none'
+			isNone = labelPlacement === 'none',
+			hovering = Radium.getState(this.state,'avatar',':hover')
 
-		const prefix = <div style={makeStyle(s.prefix,props.prefixStyle)}>{(props.prefix) ? ' ' + props.prefix : ''}</div>
-		const usernameLabel = <div style={makeStyle(s.label,props.labelStyle)}>
-			{user ? (user.name ? `${user.name} <${user.login}>` : user.login) :
+		const prefix = <div style={makeStyle(styles.prefix,props.prefixStyle)}>{(props.prefix) ? ' ' + props.prefix : ''}</div>
+
+		const usernameLabel = <div style={makeStyle(styles.label,props.labelStyle)}>
+			{user ?
+				(labelTextFn ? labelTextFn(user) :
+					user.name ? `${user.name} <${user.login}>` :
+						user.login) :
 				'unassigned'}
-			</div>
+		</div>
 
-		const avatarStyle = makeStyle(
-			s.avatar,
-			props.avatarStyle,
-			user && {backgroundImage: `url(${user.avatar_url})`},
-			(isBefore) ? s.avatar.labelBefore :
-				(isAfter) ? s.avatar.labelAfter :
-				{}
-		)
+		const
+			avatarStyle = makeStyle(
+				styles.avatar,
+				props.avatarStyle,
+				user && {backgroundImage: `url(${user.avatar_url})`},
+				(isBefore) ? styles.avatar.labelBefore :
+					(isAfter) ? styles.avatar.labelAfter :
+					{}
+			)
 
-		return <div style={makeStyle(s.root,props.style)}>
+		return <div ref='avatar'
+		            style={[
+						styles.root,props.style,
+						onClick && styles.root.clickable
+					]}
+		            onClick={onClick}>
 			{prefix}
 			{isBefore && usernameLabel}
 			{user && <div style={avatarStyle}></div>}
 			{isAfter && usernameLabel}
+			{onRemove &&
+				<div style={[
+					styles.accessory,styles.accessory.left,
+					hovering && {backgroundColor: palette.errorColor}
+				]} className="removeControl">
+					<Icon
+						style={[
+								styles.accessory.remove,
+								hovering && styles.accessory.remove.hover,
+								hovering && {color:palette.textColor}
+							]}
+						onClick={(event) => (onRemove(user),
+							event.stopPropagation(),event.preventDefault())}
+						iconSet='fa'
+						iconName='times'/>
+				</div>}
 		</div>
 	}
 

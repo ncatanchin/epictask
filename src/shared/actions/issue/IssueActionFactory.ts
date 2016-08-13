@@ -19,8 +19,14 @@ import {
 	enabledReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 import {DataRequest, DataState} from 'shared/actions/data/DataState'
-import {selectedIssueIdsSelector, selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
-import {issueModelsSelector, repoModelsSelector} from 'shared/actions/data/DataSelectors'
+import {
+	selectedIssueIdsSelector, selectedIssueSelector,
+	selectedIssuesSelector
+} from 'shared/actions/issue/IssueSelectors'
+import {
+	issueModelsSelector, repoModelsSelector, labelModelsSelector,
+	milestoneModelsSelector, userModelsSelector
+} from 'shared/actions/data/DataSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
@@ -28,6 +34,7 @@ import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
 import Settings from 'shared/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue'
+import {Repo} from 'shared/models/Repo'
 
 /**
  * Created by jglanz on 5/29/16.
@@ -49,18 +56,32 @@ const uuid = require('node-uuid')
  * repo, milestones, collaborators
  *
  * @param issue
- * @returns {({}&Issue&{repo: Repo, milestones: Milestone[], collaborators: User[]})|any|*}
+ * @returns {({}&Issue&{repo: any, milestones: Iterable<number, any>, collaborators: Iterable<number, any>})|any|*}
  * @param repoId
+ * @param getState
  */
-export async function fillIssue(issue:Issue,repoId:number) {
+export async function fillIssue(getState:Function,issue:Issue,repoId:number) {
 	const stores:Stores = Container.get(Stores)
 
-	const filledAvailRepo = await stores.availableRepo.load(repoId)
+	const
+		state = getState(),
+		labelModels = labelModelsSelector(state),
+		milestoneModels = milestoneModelsSelector(state),
+		repoModels = repoModelsSelector(state),
+		userModels = userModelsSelector(state)
+		//filledAvailRepo = await stores.availableRepo.load(repoId)
 
 	return cloneObject(Object.assign({},issue, {
-		repo: filledAvailRepo.repo,
-		milestones: filledAvailRepo.milestones,
-		collaborators: filledAvailRepo.collaborators
+		repo: repoModels.valueSeq().find(repo => repo.id === repoId),
+		milestones: milestoneModels
+			.valueSeq()
+			.filter(milestone => milestone.repoId === repoId)
+			.toArray(),
+
+		collaborators: userModels
+			.valueSeq()
+			.filter(user => user.repoIds.includes(repoId))
+			.toArray()
 	}))
 
 }
@@ -91,8 +112,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 	@Inject
 	uiActions:UIActionFactory
-
-
 
 	constructor() {
 		super(IssueState)
@@ -193,6 +212,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.newIssue(fromIssue,true)
 	}
 
+	patchIssuesLabel() {
+		this.patchIssues('Label')
+	}
+
+	patchIssuesMilestone() {
+		this.patchIssues('Milestone')
+	}
+
+	patchIssuesAssignee() {
+		this.patchIssues('Assignee')
+	}
 
 	/**
 	 * Open issue patch dialog
@@ -200,9 +230,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param mode
 	 * @param issues
 	 */
+	@Action()
 	patchIssues(mode:TIssuePatchMode,...issues:Issue[]) {
-		this.setPatchIssues(issues,mode)
-		this.uiActions.setDialogOpen(Dialogs.IssuePatchDialog,true)
+		return async (state:IssueState,getState) => {
+			if (!issues || !issues.length)
+				issues = selectedIssuesSelector(getState())
+
+			if (!issues.length) {
+				log.warn('Must have at least 1 issue selected to open patch editor', issues)
+				return state
+			}
+
+			const filledIssues = await Promise.all(
+				issues.map(issue => fillIssue(getState,issue,issue.repoId))
+			)
+
+			this.setPatchIssues(filledIssues, mode)
+			this.uiActions.setDialogOpen(Dialogs.IssuePatchDialog, true)
+		}
 	}
 
 	/**
@@ -215,21 +260,19 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@Action()
 	applyPatchToIssues(patch:any,useAssign:boolean,...issues:Issue[]) {
+		issues = cloneObject(issues)
+
 		return async(dispatch, getState) => {
 			if (!issues.length)
 				return
 
-			const originalIssues = issues
+
+			const originalIssues = cloneObject(issues)
+
 			const actions = this.withDispatcher(dispatch,getState)
-			const dataActions:DataActionFactory = Container.get(DataActionFactory)
 			const repoModels = repoModelsSelector(getState())
 			const client = Container.get(GitHubClient)
-
 			try {
-				// Get the latest issues with revision info etc
-				issues = await Promise.all(
-					issues.map(issue => this.stores.issue.get(issue.id))
-				)
 
 				// Filter out issues that the milestone/assignee does not have access to
 				if (patch.hasOwnProperty('milestone') && patch.milestone) {
@@ -239,38 +282,81 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}
 
 				// Now apply the patch to clones
-				issues = issues.map(issue => {
+				issues.forEach(issue => {
 					const patchCopy = cloneObject(patch)
-					if (patchCopy.hasOwnProperty('labels')) {
-						patchCopy.labels = patchCopy.labels && patchCopy.labels.filter(label => label.repoId === issue.repoId)
-					}
 
-					return (useAssign) ?
-						_.assign(cloneObject(issue),patchCopy) :
-						_.merge(cloneObject(issue),patchCopy)
+					Object.entries(patch).forEach(([key,val]) => {
+						log.info(`Patching key ${key}`)
+
+						switch (key) {
+							case 'labels':
+								issue.labels = !patchCopy.labels ? [] :
+									_.uniqBy((issue.labels || [])
+										.concat(patchCopy.labels
+											.filter(label => label.repoId === issue.repoId)
+										)
+										,'url'
+									)
+								break
+							case 'milestone':
+								if (!patchCopy.milestone)
+									delete issue['milestone']
+								else
+									issue.milestone = patchCopy.milestone
+								break
+							case 'assignee':
+								if (!patchCopy.assignee)
+									delete issue['assignee']
+								else
+									issue.assignee = patchCopy.assignee
+								break
+						}
+					})
+
+					if(!issue.id)
+						throw new Error('issue id CANNOT be null')
+
 				})
 
+				// const issueStore:IssueStore = this.stores.issue
 				// One by one update the issues on GitHub
-				for (let issue of issues) {
+				await Promise.all(issues.map(async (issue:Issue,index) => {
 					const repo = issue.repo || repoModels.get(`${issue.repoId}`)
 					assert(repo, `Unable to find repo for issue patching: ${issue.repoId}`)
 
-					issue = await client.issueSave(repo, issue)
+					await actions.saveAndUpdateIssueModel(client,repo,issue)
+				}))
 
-					// Update each model as it happens as an individual issue can fail
-					dataActions.updateModels(Issue.$$clazz,{[`${issue.id}`]:issue})
 
-				}
-
-				this.uiActions.closeAllDialogs()
 				actions.setIssueSaving(false)
+				this.uiActions.closeAllDialogs()
 				actions.setPatchIssues(null)
 
 			} catch (err) {
-				log.error('issue patching failed',patch,issues,originalIssues)
+				log.error('issue patching failed',err,patch,issues,originalIssues)
 				actions.setIssueSaving(false,extractError(err))
 			}
 		}
+	}
+
+	private async saveAndUpdateIssueModel(client:GitHubClient,repo:Repo,issue:Issue) {
+
+		const dataActions:DataActionFactory = Container.get(DataActionFactory)
+
+		const issueStore:IssueStore = this.stores.issue
+
+		// First save to github
+		const
+			savedIssue:Issue = await client.issueSave(repo,issue),
+			mergedIssue = _.merge({},issue,savedIssue),
+			persistedIssue = await issueStore.save(mergedIssue),
+			updatedIssue = _.cloneDeep(persistedIssue),
+			reloadedIssue = await issueStore.get(issue.id)
+
+		dataActions.updateModels(Issue.$$clazz,{[`${updatedIssue.id}`]:reloadedIssue})
+
+		return reloadedIssue
+
 	}
 
 	@Action()
@@ -288,11 +374,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				const issueStore:IssueStore = this.stores.issue
 
 				// First save to github
-				const savedIssue:Issue = await client.issueSave(repo,issue)
-				const mergedIssue = _.merge({},issue,savedIssue)
-
-				const persistedIssue = await issueStore.save(mergedIssue)
-				const updatedIssue = _.cloneDeep(persistedIssue)
+				// const savedIssue:Issue = await client.issueSave(repo,issue)
+				// const mergedIssue = _.merge({},issue,savedIssue)
+				//
+				// const persistedIssue = await issueStore.save(mergedIssue)
+				const updatedIssue = await actions.saveAndUpdateIssueModel(client,repo,issue)
 
 				// If the issue belongs to an enabled repo then reload issues
 				if (enabledRepoIds.includes(updatedIssue.repoId)) {
@@ -305,10 +391,12 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 							issueIds = issueIds.concat(updatedIssue.id)
 						}
 
-						dataActions.updateModels(Issue.$$clazz,{[`${updatedIssue.id}`]:updatedIssue})
-						const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
-
+						//dataActions.updateModels(Issue.$$clazz,{[`${updatedIssue.id}`]:updatedIssue})
 						actions.requestIssueIds(issueIds)
+
+						//const issueMatcher = item => item.id !== updatedIssue.id && !(item.repoId !== updatedIssue.repoId && item.number !== updatedIssue.number)
+
+
 					}
 				}
 
@@ -453,7 +541,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				return
 			}
 
-			const issue = await fillIssue(new Issue({repoId}),repoId)
+			const issue = await fillIssue(getState,new Issue({repoId}),repoId)
 
 			if (fromIssue)
 				assign(issue,_.cloneDeep(_.pick(fromIssue,'milestone','labels')))
@@ -476,7 +564,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 
 			assert(issue,'You must have an issue selected in order to edit one ;)')
 
-			const editingIssue = await fillIssue(_.cloneDeep(issue),issue.repoId)
+			const editingIssue = await fillIssue(getState,_.cloneDeep(issue),issue.repoId)
 
 			actions.setIssueSaving(false)
 			actions.setEditingIssue(editingIssue)

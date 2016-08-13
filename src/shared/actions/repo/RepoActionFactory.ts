@@ -24,6 +24,7 @@ import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
 import {Settings} from 'shared/Settings'
 import {selectedIssueIdsSelector, editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {User} from 'shared/models/User'
 
 /**
  * Created by jglanz on 5/29/16.
@@ -181,6 +182,15 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 							return modelMap
 						},{})
 						dataActions.updateModels(Milestone.$$clazz,modelMap)
+					}),
+
+				stores.user.findByRepoId(...repoIds)
+					.then(async(models) => {
+						const modelMap = models.reduce((modelMap,nextModel) => {
+							modelMap[nextModel.id] = nextModel
+							return modelMap
+						},{})
+						dataActions.updateModels(User.$$clazz,modelMap)
 					})
 
 			]
@@ -315,6 +325,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				.concat(milestoneIds)
 				.concat(removeUsers.map(user => user.id))
 				.concat([availRepo.id])),
+
 			stores.user.bulkSave(...updateUsers),
 
 		]

@@ -8,7 +8,7 @@ import * as Radium from 'radium'
 import {FAIcons} from './IconFontAwesomeNames'
 import {GHIcons} from './IconOpticonNames'
 import filterProps from 'react-valid-props'
-import {PureRender} from 'epictask/ui/components'
+import {PureRender} from 'ui/components'
 // Constants
 const log = getLogger(__filename)
 

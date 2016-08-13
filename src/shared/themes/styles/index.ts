@@ -26,6 +26,7 @@ declare global {
 		OverflowHidden:any,
 		OverflowAuto:any,
 		rem: typeof CommonStyles.rem,
+		makeMarginRem: typeof CommonStyles.makeMarginRem,
 		createStyles: typeof CommonStyles.createStyles,
 		convertRem: typeof CommonStyles.convertRem,
 		makeTransition:typeof CommonStyles.makeTransition,
@@ -33,6 +34,7 @@ declare global {
 		makeStyle:typeof CommonStyles.makeStyle,
 		mergeStyles: typeof CommonStyles.mergeStyles,
 		makeFlexAlign:typeof CommonStyles.makeFlexAlign,
+		CursorPointer: typeof CommonStyles.CursorPointer,
 		Styles:typeof CommonStyles
 }
 

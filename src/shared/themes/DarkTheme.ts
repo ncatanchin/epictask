@@ -105,7 +105,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	},
 
 	avatar: {
-		root:   {},
+		root:   {
+			clickable: {
+				':hover': {
+					backgroundColor: accent.hue1
+				}
+			}
+		},
 		avatar: {
 			borderColor: secondary.hue1,
 			backgroundColor: accent.hue1

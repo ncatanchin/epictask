@@ -14,7 +14,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
-import {TIssuePatchMode} from 'epictask/shared/actions/issue'
+import {TIssuePatchMode} from 'shared/actions/issue'
 
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
@@ -26,17 +26,6 @@ export const issueStateSelector = (state):IssueState => state.get(IssueKey) as I
  */
 export const issueIdsSelector = (state):number[] => issueStateSelector(state).issueIds
 
-
-/**
- * Global selector for selectedIssues changed
- *
- * @param state
- * @return Map<string,any>
- */
-export const selectedIssueIdsSelector = createDeepEqualSelector(
-	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
-	(selectedIssueIds:number[]) => selectedIssueIds
-)
 
 
 /**
@@ -178,6 +167,20 @@ export const issuesSelector = createDeepEqualSelector(
 	}
 )
 
+
+
+
+/**
+ * Global selector for selectedIssues changed
+ *
+ * @param state
+ * @return Map<string,any>
+ */
+export const selectedIssueIdsSelector = createDeepEqualSelector(
+	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
+	(selectedIssueIds:number[]) => selectedIssueIds
+)
+
 /**
  * Selector for all current issues that are 'selected' or 'highlighted'
  *
@@ -190,9 +193,9 @@ export const issuesDetailSelector = createDeepEqualSelector(
 	(enabledRepoIds:number[],issues,selectedIssueIds:number[]) => {
 
 
-		issues =
-			issues.filter(issue => selectedIssueIds.includes(issue.id))
-			.filter(issue => !_.isNil(issue) && enabledRepoIds.includes(issue.repoId))
+		issues = issues
+			.filter(issue => !_.isNil(issue) && selectedIssueIds.includes(issue.id) &&
+				enabledRepoIds.includes(issue.repoId))
 
 
 		return issues
@@ -285,6 +288,11 @@ export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(Issue
 export const patchModeSelector = _.memoize((state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode)
 
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
+
+
+
+export const selectedIssuesSelector = issuesDetailSelector
+
 
 /**
  * Selected issue selector

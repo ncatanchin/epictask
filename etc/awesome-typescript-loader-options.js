@@ -7,14 +7,14 @@ module.exports = (opts) => {
 			"babelOptions": {
 				"presets":    [
 					//"es2015-native-modules",
-					"modern/webpack2",
+					"es2016-node5",
 					"stage-0",
 					"react",
 					"async-to-bluebird"
 				],
 				"plugins":    [
 					//"add-module-exports",
-					"transform-runtime",
+					//"transform-runtime",
 					//"transform-async-to-generator"
 				],
 				"sourceMaps": "both"

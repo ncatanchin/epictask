@@ -4,15 +4,9 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
 import {PureRender} from 'components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector, createSelector} from 'reselect'
-import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {Milestone} from 'models/Milestone'
-import LabelChip from './LabelChip'
-import {Icon} from 'epictask/ui/components'
+
 
 // Constants
 const log = getLogger(__filename)

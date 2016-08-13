@@ -64,6 +64,15 @@ export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
 
+export function makeMarginRem(top = 0, right = 0, bottom = 0, left = 0) {
+	return {
+		marginTop: rem(top),
+		marginRight: rem(right),
+		marginBottom: rem(bottom),
+		marginLeft: rem(left)
+	}
+}
+
 export const CSSHoverState = ':hover'
 export const CSSActiveState = ':active'
 export const CSSFocusState = ':active'
@@ -75,6 +84,12 @@ export const OverflowHidden = {
 export const OverflowAuto = {
 	overflow: 'auto'
 }
+
+//region Cursors
+export const CursorPointer = {
+	cursor: 'pointer'
+}
+//endregion
 
 //region Positioning
 export const PositionRelative = {

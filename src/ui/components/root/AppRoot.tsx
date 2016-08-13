@@ -27,7 +27,7 @@ import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
-import {IssuePatchDialog} from 'epictask/ui/components/issues/IssuePatchDialog'
+import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -168,6 +168,18 @@ class App extends React.Component<IAppProps,any> {
 		[KeyMaps.CommonKeys.Find]: () => {
 			log.info('Escaping and moving focus')
 			$('#header').find('input').focus()
+		},
+		[KeyMaps.CommonKeys.SetAssignee]: () => {
+			log.info('Patch assignee')
+			Container.get(IssueActionFactory).patchIssuesAssignee()
+		},
+		[KeyMaps.CommonKeys.SetMilestone]: () => {
+			log.info('Patch milestone')
+			Container.get(IssueActionFactory).patchIssuesMilestone()
+		},
+		[KeyMaps.CommonKeys.AddLabels]: () => {
+			log.info('Patch labels')
+			Container.get(IssueActionFactory).patchIssuesLabel()
 		}
 	}
 
@@ -224,20 +236,27 @@ class App extends React.Component<IAppProps,any> {
 						{/* Global flex box */}
 						<div className={rootClasses}
 						     style={makeStyle(styles.content,theme.app)}>
+
 							<Header visibility={headerVisibility}/>
 
-							{hasAvailableRepos &&
-							<div style={makeStyle(FlexScale,FlexColumn)}>
+							{(stateType === AppStateType.AuthLogin || hasAvailableRepos) &&
+								<div style={makeStyle(FlexScale,FlexColumn)}>
+									<div style={contentStyles}>
+										<page.component />
+									</div>
 
-								<div style={contentStyles}>
-									<page.component />
+									{/*<DevTools/>*/}
+									{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
+									<ToastMessages/>
 								</div>
-
-								{/*<DevTools/>*/}
-								{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
-								<ToastMessages/>
-							</div>
 							}
+
+
+
+
+
+
+
 						</div>
 
 					</HotKeys>

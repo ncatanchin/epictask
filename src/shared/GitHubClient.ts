@@ -182,7 +182,9 @@ export class GitHubClient {
 			issueJson.state = 'open'
 
 		if (issue.assignee)
-			issueJson.assignee = issue.assignee.login
+			issueJson.assignees = [issue.assignee.login]
+		else
+			issueJson.assignees = []
 
 		if (issue.labels && issue.labels.length) {
 			issueJson.labels = issue.labels.map(label => label.name)
@@ -190,6 +192,8 @@ export class GitHubClient {
 
 		if (issue.milestone && issue.milestone.number) {
 			issueJson.milestone = issue.milestone.number
+		} else {
+			issueJson.milestone = null
 		}
 
 		const issueNumber = issue.number
@@ -197,7 +201,9 @@ export class GitHubClient {
 			[`/repos/${repo.full_name}/issues/${issueNumber}`,HttpMethod.PATCH] :
 			[`/repos/${repo.full_name}/issues`,HttpMethod.POST]
 
-		const response = await fetch(makeUrl(uri), this.initRequest(method,JSON.stringify(issueJson),{
+		const issuePayload = JSON.stringify(issueJson)
+
+		const response = await fetch(makeUrl(uri), this.initRequest(method,issuePayload,{
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}))

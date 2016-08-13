@@ -11,13 +11,11 @@ module.exports = (projectConfig) => {
 
 
 	const loaders = {
-		preLoaders: [
-			{
-				test: /\.tsx?$/,
+		preLoaders: [{
+				test: /\.(tsx?|jsx?)$/,
 				exclude: /node_modules/,
 				loaders: ['source-map-loader']
-			}
-		],
+		}],
 		loaders: [{
 			test: /\.json$/,
 			loader: 'json'

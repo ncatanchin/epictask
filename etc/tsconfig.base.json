@@ -19,9 +19,6 @@
 		"sourceMap": true,
 		"outDir": "../dist/tsc",
 		"paths": {
-			"epictask/*": [
-				"./*"
-			],
 			"tests/*": [
 				"./tests/*"
 			],

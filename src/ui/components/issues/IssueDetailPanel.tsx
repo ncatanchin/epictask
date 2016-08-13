@@ -20,12 +20,14 @@ import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {HotKeys} from 'react-hotkeys'
 import {Milestone} from 'models/Milestone'
-import {Label} from 'epictask/shared'
-import {IssueActionFactory} from 'epictask/shared/actions/issue/IssueActionFactory'
+import {Label} from 'shared/models/Label'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {Container} from 'typescript-ioc'
+import {canEditIssue,canAssignIssue} from 'shared/Permission'
 //import {Button, Icon} from 'epictask/ui/components/common'
 
 import baseStyles from './IssueDetailPanel.styles'
+
 
 // Non-typed Components
 const {Textfit} = require('react-textfit')
@@ -97,6 +99,23 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	addLabel = (...issues:Issue[]) => Container.get(IssueActionFactory).patchIssues("Label",...issues)
 
 	/**
+	 * Change the assigned milestone
+	 *
+	 * @param issues
+	 */
+	editMilestone = (...issues:Issue[]) =>
+		Container.get(IssueActionFactory)
+			.patchIssues("Milestone",...issues)
+
+	assignIssue = (...issues:Issue[]) =>
+		Container.get(IssueActionFactory)
+			.patchIssues("Assignee",...issues)
+
+	unassignIssue = (...issues:Issue[]) =>
+		Container.get(IssueActionFactory)
+			.applyPatchToIssues({assignee: null},true,...issues)
+
+	/**
 	 * Callback for label or milestone remove
 	 *
 	 * @param issue
@@ -104,6 +123,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	removeItem = (issue:Issue,item:Label|Milestone) => {
 		const actions = Container.get(IssueActionFactory)
+
+		log.info(`Removing item from issue`,item)
 
 		if (!(item as any).id) {
 			const
@@ -138,6 +159,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	renderHeader = (issue, styles,palette) => <div style={styles.header}>
 		{/* ROW 1 */}
 		<div style={styles.header.row1}>
+
 			<div style={styles.header.row1.repo}>
 				{Renderers.repoName(issue.repo)}
 			</div>
@@ -145,8 +167,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			{/* ASSIGNEE */}
 			<Avatar user={issue.assignee}
 			        labelPlacement='before'
+			        onRemove={
+			        	issue.assignee &&
+				            canAssignIssue(issue.repo) &&
+				                (() => this.unassignIssue(issue))
+			        }
+			        onClick={canAssignIssue(issue.repo) && (() => this.assignIssue(issue))}
 			        prefix={issue.assignee ? 'assigned to' : null}
-			        prefixStyle={{padding: '0 0.5rem 0 0'}}
+			        prefixStyle={issue.assignee && {padding: '0 0.5rem 0 0'}}
 			        style={styles.header.row1.assignee}
 			        labelStyle={styles.username}
 			        avatarStyle={styles.avatar}/>
@@ -156,10 +184,11 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 
 		{/* ROW 2 */}
 		<div style={styles.header.row2}>
-
+			{}
 			<Textfit mode='multi' style={styles.header.row2.title}>{issue.title}</Textfit>
+
 			{/* TIME */}
-			<div style={styles.time}>{moment(issue.updated_at).fromNow()}</div>
+			<div style={[styles.time,canAssignIssue(issue.repo) && {marginRight:rem(0.5)}]}>{moment(issue.updated_at).fromNow()}</div>
 
 		</div>
 
@@ -168,19 +197,35 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 			{/* LABELS & MILESTONES */}
 			<IssueLabelsAndMilestones labels={issue.labels}
 			                          showIcon={true}
-			                          onRemove={(item) => this.removeItem(issue,item)}
+			                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
 			                          milestones={issue.milestone && [issue.milestone]}
+			                          onMilestoneClick={canEditIssue(issue.repo,issue) && (() => this.editMilestone(issue))}
 			                          labelStyle={styles.header.row3.labels.label}
 			                          afterAllNode={
+										canEditIssue(issue.repo,issue) &&
+			                                <div style={FlexRowCenter}>
+												{/* Add a tag/label */}
+												<i key={`${issue.id}LabelEditIcon`} onClick={() => this.addLabel(issue)}
+				                                   style={[
+				                                        styles.header.row3.labels.add, {
+				                                            backgroundColor: palette.canvasColor,
+				                                            color: palette.textColor
+				                                        }
+			                                        ]}
+				                                   className='material-icons'>add</i>
 
-		                                <i onClick={() => this.addLabel(issue)}
-		                                   style={[
-		                                   	    styles.header.row3.labels.add, {
-		                                   	    	backgroundColor: palette.canvasColor,
-		                                   	    	color: palette.textColor
-		                                   	    }
-	                                        ]}
-		                                   className='material-icons'>add</i>
+				                                {/* Add/change milestone */}
+				                                {!issue.milestone &&
+					                                <i key={`${issue.id}MilestoneEditIcon`} onClick={() => this.editMilestone(issue)}
+					                                   style={[
+					                                        styles.header.row3.labels.add, {
+					                                            backgroundColor: palette.canvasColor,
+					                                            color: palette.textColor
+					                                        }
+				                                        ]}
+					                                   className='octicon octicon-milestone'/>
+				                                }
+		                                    </div>
 
 			                          }
 			                          style={styles.header.row3.labels}/>

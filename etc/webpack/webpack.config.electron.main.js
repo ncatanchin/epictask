@@ -41,8 +41,12 @@ module.exports = function(projectConfig) {
 
 		entry: mainEntry,
 
-		target: 'electron-main',
-		devtool: 'source-map',
+		target: 'electron',
+		//target: 'node',
+		debug: true,
+		devtool: 'inline-source-map',
+		//devtool: '#cheap-module-eval-source-map',
+		//devtool: '@#source-map',
 		watch: isDev,
 		//hot:isDev,
 
@@ -76,8 +80,10 @@ module.exports = function(projectConfig) {
 		}
 	})
 
+	config.output.devtoolFallbackModuleFilenameTemplate =
+		config.output.devtoolModuleFilenameTemplate = "[absolute-resource-path]"
 
-	//console.log(config)
+	//console.error("MAIN CONFIG",config)
 
 	return config
 }

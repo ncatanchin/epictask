@@ -31,7 +31,7 @@ const baseStyles = createStyles({
 				WebkitFontSmoothing: 'antialiased'
 			}],
 			assignee: [{
-				padding: '0 0 0 1rem'
+				margin: '0 0 0 1rem'
 			}]
 		}],
 
@@ -55,23 +55,30 @@ const baseStyles = createStyles({
 				label: {
 					marginTop: rem(0.5)
 				},
-				add: [labelBaseStyles.label,FlexRowCenter,FlexAuto,makeTransition(['transform','font-size','font-weight','opacity']),{
-					margin: "0.5rem 0 0 0",
-					padding: 0,
-					height: rem(2.4),
-					width: rem(2.4),
-					position: 'relative',
-					fontSize: rem(1.2),
-					opacity: 0.5,
-					fontWeight: 900,
-					cursor: 'pointer',
+				add: [
+					labelBaseStyles.label,
+					FlexRowCenter,
+					FlexAuto,
+					makeTransition(['transform','font-size','font-weight','opacity']),
+					makeMarginRem(0.5,0.5,0,0),
+					{
+						//margin: makeMarginRem(0.5,0.5,0,0),//"0.5rem 0.5rem 0 0",
+						padding: 0,
+						height: rem(2.4),
+						width: rem(2.4),
+						position: 'relative',
+						fontSize: rem(1.2),
+						opacity: 0.5,
+						fontWeight: 900,
+						cursor: 'pointer',
 
-					':hover': {
-						opacity: 1,
-						transform: 'scale(1.1)'
+						':hover': {
+							opacity: 1,
+							transform: 'scale(1.1)'
+						}
+
 					}
-
-				}]
+					]
 			}],
 			milestone: makeStyle({})
 

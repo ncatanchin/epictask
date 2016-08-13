@@ -137,7 +137,7 @@ export class RepoSyncJob extends Job {
 			},this.lastSyncParams)
 		})
 
-		log.info('Got issues', issues)
+		log.info(`Got ${issues.length} issues`)
 		for (let issue of issues) {
 			issue.repoId = repo.id
 			const existing = await stores.issue.get(issue.id)
@@ -182,7 +182,7 @@ export class RepoSyncJob extends Job {
 	async syncMilestones(stores,repo) {
 		const milestones = await this.client.repoMilestones(repo,{params: {state: 'all'}})
 
-		log.info('Got milestones',milestones)
+		log.info(`Got ${milestones.length} milestones`)
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
 			const existing = await stores.milestone.get(milestone.id)

@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-ELECTRON_VERSION=$(cat package.json| grep electron-prebuilt | awk '{ print substr($2,2,length($2) - 3) }')
+#ELECTRON_VERSION=$( cat package.json| grep -v node | grep '\"electron\"' | awk '{ print substr($2,2,length($2) - 3) }' )
+ELECTRON_VERSION=$( cat package.json| grep -v node | grep '\"electron-prebuilt\"' | awk '{ print substr($2,2,length($2) - 3) }' )
 
 HOME=~/.electron-gyp
 pushd node_modules/leveldown

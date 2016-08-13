@@ -82,14 +82,14 @@ class DBProxy {
 
 		const proxyFn = this.fnMap[name] || (
 			this.fnMap[name] = (...args) => {
-				log.info(`Proxy request for ${name}`)
+				log.debug(`Proxy request for ${name}`)
 
 				const dbWindow = getDatabaseServerWindow()
 				return dbWindow.request(this.store,name,args)
 			}
 		)
 
-		log.info(`Getting proxy for ${name}`)
+		log.debug(`Getting proxy for ${name}`)
 		return proxyFn
 	}
 
