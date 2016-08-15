@@ -64,6 +64,16 @@ export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
 
+export function makePaddingRem(top = 0, right = 0, bottom = 0, left = 0) {
+	return {
+		paddingTop: rem(top),
+		paddingRight: rem(right),
+		paddingBottom: rem(bottom),
+		paddingLeft: rem(left)
+	}
+}
+
+
 export function makeMarginRem(top = 0, right = 0, bottom = 0, left = 0) {
 	return {
 		marginTop: rem(top),

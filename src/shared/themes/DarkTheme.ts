@@ -91,8 +91,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		open: {
 			backgroundColor: 'rgba(101,181,73,1)',
 			color: text.primary
-			// color: 'rgba(101,181,73,1)',
-			// backgroundColor: 'transparent'
 		},
 		closed: {
 			color: text.primary,
@@ -650,7 +648,24 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 			activities: {
 				activity: {
-
+					
+					all: {
+						details: {
+							control: {
+								button: {
+									background: 'transparent',
+									color: tinycolor(text.primary).setAlpha(0.8).toRgbString(),
+									':hover': {
+										color: tinycolor(text.primary).setAlpha(1).toRgbString(),
+									}
+								},
+								
+								icon: {
+									fontSize: themeFontSize(1.3)
+								}
+							}
+						}
+					},
 
 					post: {
 						backgroundColor: primary.hue2,
@@ -663,7 +678,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 						details: {
 							backgroundColor: accent.hue1,
-							color:           text.primary
+							color:           text.primary,
+							
+							
 						}
 					},
 

@@ -26,6 +26,7 @@ declare global {
 		OverflowHidden:any,
 		OverflowAuto:any,
 		rem: typeof CommonStyles.rem,
+		makePaddingRem: typeof CommonStyles.makePaddingRem,
 		makeMarginRem: typeof CommonStyles.makeMarginRem,
 		createStyles: typeof CommonStyles.createStyles,
 		convertRem: typeof CommonStyles.convertRem,

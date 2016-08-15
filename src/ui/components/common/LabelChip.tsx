@@ -39,6 +39,7 @@ export const baseStyles = createStyles({
 			padding: "0.6rem",
 			fontSize: themeFontSize(1),
 			lineHeight: 1
+			
 		}],
 
 		right: [PositionAbsolute,{
@@ -77,10 +78,12 @@ export const baseStyles = createStyles({
 
 	text: [FlexAuto,FlexRowCenter,{
 		flexGrow: 1,
-		padding: '0.6rem 0.5rem',
-		height: 12,
-		lineHeight: 1,
-		justifyContent: 'flex-start'
+		padding: makePaddingRem(0,0.8,0,8),
+		height: '100%',
+		textAlign: 'baseline',
+		//justifyContent: '',
+		
+		withLeftIcon: [makePaddingRem(0,0.8,0,0)]
 	}]
 
 })
@@ -191,7 +194,7 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			      </div>
 			}
 
-	        <div style={styles.text} >
+	        <div style={[styles.text, showIcon && styles.text.withLeftIcon]} >
 		        <span>{isLabel(label) ? label.name : label.title}</span>
 	        </div>
 

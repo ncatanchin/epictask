@@ -413,10 +413,57 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 	}
 	
+	
 	/**
 	 * Save an issue and update it in GitHub
 	 *
-	 * @param issue
+	 * @param comment
+	 */
+	
+	@Action()
+	commentDelete(comment: Comment) {
+		return async(dispatch, getState) => {
+			assert(comment.issueNumber && comment.repoId, 'Comment issue number and repo id MUST be set')
+			
+			const
+				actions = this.withDispatcher(dispatch, getState),
+				dataActions: DataActionFactory = Container.get(DataActionFactory),
+				client = Container.get(GitHubClient),
+				repoModels = repoModelsSelector(getState()),
+				repo = repoModels.get(`${comment.repoId}`),
+				commentStore = actions.stores.comment
+				
+			actions.setIssueSaving(true)
+			
+			try {
+				await client.commentDelete(repo,comment)
+				
+				// Persist
+				await commentStore.remove(comment.id)
+				
+				// // Update the comment model
+				// dataActions.updateModels(Comment.$$clazz,{[`${comment.id}`]:loadedComment})
+				
+				// Update the comment ids
+				const newCommentIds = _.uniq(actions.state.commentIds.filter(commentId => commentId !== `${comment.id}`))
+				actions.setCommentIds(newCommentIds)
+				
+				addMessage(`Removed comment from issue #${comment.issueNumber}`)
+				actions.setIssueSaving(false)
+				actions.setEditingComment(null)
+				
+			} catch (err) {
+				log.error(`Failed to delete comment`,err)
+				actions.setIssueSaving(false,err)
+				addErrorMessage(err)
+			}
+		}
+	}
+			
+			
+	/**
+	 * Save an issue and update it in GitHub
+	 *
 	 * @param comment
 	 */
 	@Action()
@@ -637,12 +684,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	editIssue() {
+	editIssue(issue:Issue = null) {
 		const
 			uiActions = Container.get(UIActionFactory),
 			dialogName = Dialogs.IssueEditDialog,
-			getState = getStoreState,
-			issue = selectedIssueSelector(getState())
+			getState = getStoreState
+			
+		issue = issue || selectedIssueSelector(getState())
 		
 		assert(issue, 'You must have an issue selected in order to edit one ;)')
 		

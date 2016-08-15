@@ -110,7 +110,7 @@ const baseStyles = createStyles({
 				FlexAuto, {
 
 					title: [flexTransition, FlexColumn, FlexAuto, {}],
-
+					
 					margin: '1rem 1rem 1rem 0.5rem',
 
 					avatar: {
@@ -123,7 +123,9 @@ const baseStyles = createStyles({
 						// borderWidth: '0.1rem',
 						// borderStyle: 'solid',
 						borderRadius: '50% 0 0 50%'
-					}
+					},
+					
+					':hover': {}
 				}
 			]
 		}],

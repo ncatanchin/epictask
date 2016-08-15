@@ -73,9 +73,9 @@ export class Icon extends React.Component<IIconProps,any> {
 			iconCode(GHIcons,iconName) :
 			children
 
-		return <i {...filterProps(this.props)} {..._.pick(this.props,'onClick')}  style={style} className={className}>
+		return <span {...filterProps(this.props)} {..._.pick(this.props,'onClick')}  style={style} className={className}>
 			{iconContent}
-		</i>
+		</span>
 	}
 
 }

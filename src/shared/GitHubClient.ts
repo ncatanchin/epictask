@@ -218,6 +218,48 @@ export class GitHubClient {
 		return _.merge(cloneObject(comment),result)
 
 	}
+	
+	
+	/**
+	 * Delete comment
+	 *
+	 * @param repo
+	 * @param issue
+	 * @param comment
+	 * @returns {any}
+	 */
+	async commentDelete(repo:Repo,comment:Comment):Promise<void> {
+		let json = _.pick(comment,'body') as any
+		
+		
+		const
+			commentId = comment.id,
+			[uri,method] = [`/repos/${repo.full_name}/issues/comments/${comment.id}`,HttpMethod.DELETE]
+		
+		const
+			response = await fetch(makeUrl(uri), this.initRequest(method,null,{
+				'Accept': 'application/json'
+			}))
+		
+		
+		if (response.status >= 300) {
+			let result = null
+			
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+			}
+			
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors
+			)
+			
+		}
+		
+	}
 
 	/**
 	 * Save issue

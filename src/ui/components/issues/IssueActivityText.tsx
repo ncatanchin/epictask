@@ -8,37 +8,63 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 import {User,Issue,Comment} from 'shared/models'
 import {createStructuredSelector} from 'reselect'
-import {Avatar, Markdown, PureRender, Icon} from 'components/common'
+import {Avatar, Markdown, PureRender, Icon, Button} from 'components/common'
 import {selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
-import {Themed} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import filterProps from 'react-valid-props'
-import {canEditComment} from "shared/Permission"
+import {canEditComment,canEditIssue} from "shared/Permission"
 import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {Container} from "typescript-ioc"
+import * as Radium from "radium"
 
 // Constants
 const log = getLogger(__filename)
-const baseStyles = {
+
+const baseStyles = createStyles({
 	root: {},
 
-	activityContent: makeStyle(FlexColumn,FlexScale,OverflowHidden,{
+	activityContent: [FlexColumn,FlexScale,OverflowHidden,{
 		borderWidth: '0.1rem',
 		borderStyle: 'solid',
 		borderRadius: '0 0.2rem 0.2rem 0.2rem',
 
-		details: makeStyle(FlexRow,makeFlexAlign('center','flex-start'),FlexAuto,PositionRelative,{
+		details: [makeTransition(['opacity','flex-basis','width','max-width']),FlexRow,makeFlexAlign('center','flex-start'),FlexAuto,PositionRelative,{
 			padding: '0.3rem 1rem',
 			height: 40,
 			fontSize: themeFontSize(1.1),
-			username: {
+			username: [{
 				fontWeight: 700
-			},
-			time: {
+			}],
+			time: [FlexColumn,FlexScale,{
 				fontSize: themeFontSize(1.1),
-				padding: '0rem 0 0 0.5rem'
-			}
-		}),
+				padding: '0rem 0 0 0.5rem',
+				
+				createdAt: [],
+				updatedAt: []
+			}],
+			
+			
+			control: [FlexRow,makeTransition(['opacity','flex','padding','flex-basis','width','max-width']),OverflowHidden,{
+				maxWidth: 0,
+				width: 0,
+				opacity: 0,
+				flex: '0 0 0',
+				padding: 0,
+				
+				
+				hover: [{
+					flex: '0 0 auto',
+					opacity: 1,
+					maxWidth: rem(2.8),
+					width: rem(2.8),
+					padding: makePaddingRem(0.2,0,0.2,0.5)
+				}],
+				
+				
+				icon: [makeTransition('color')]
+			}]
+		}],
 
 
 		body: makeStyle(FlexColumn,FlexAuto,{
@@ -46,11 +72,11 @@ const baseStyles = {
 
 		}),
 
-		commentor: makeStyle({
+		commenter: [{
 			padding: '0rem'
-		})
-	})
-}
+		}]
+	}]
+})
 
 
 
@@ -59,6 +85,7 @@ const baseStyles = {
  */
 export interface IIssueActivityTextProps extends React.DOMAttributes {
 	theme?:any
+	styles?:any
 	commentIndex?:number
 	comments?:Comment[]
 	activityActionText?:string
@@ -73,13 +100,11 @@ export interface IIssueActivityTextState {
 	text?:string
 	updatedAt?:Date
 	createdAt?:Date
-	styles?:any
 }
 
 
 /**
  * Map theme into props - very shorthand
- * @param state
  */
 const makeStateToProps = () => createStructuredSelector({
 	issue: selectedIssueSelector,
@@ -95,7 +120,8 @@ const makeStateToProps = () => createStructuredSelector({
  **/
 
 @connect(makeStateToProps)
-@Themed
+@ThemedStyles(baseStyles,'issueActivityText')
+@Radium
 @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 
@@ -121,27 +147,42 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			({user,body:text,created_at:createdAt,updated_at:updatedAt} = model)
 		}
 
-		// Merge styles
-		const styles = mergeStyles(
-			baseStyles,
-			{[activityType]: baseStyles.activityContent},
-			activityStyle,
-			theme.issueActivityText
-		)
+		
 
 		return {
 			comment,
 			user,
 			text,
 			createdAt,
-			updatedAt,
-			styles
+			updatedAt
 		}
 	}
 	
-	makeOnCommentClick = (issue,comment) => event =>
+	
+	makeOnIssueEditClick = (issue) => event =>
+		Container.get(IssueActionFactory).editIssue(issue)
+	
+	/**
+	 * Create an onclick handler for a comment
+	 *
+	 * @param issue
+	 * @param comment
+	 */
+	makeOnCommentEditClick = (issue,comment) => event =>
 		Container.get(IssueActionFactory).editComment(issue,comment)
-
+	
+	
+	/**
+	 * Create an onclick handler for a comment
+	 *
+	 * @param issue
+	 * @param comment
+	 */
+	makeOnCommentDeleteClick = (issue,comment) => event =>
+		Container.get(IssueActionFactory).commentDelete(comment)
+	
+	
+	
 	/**
 	 * When the component mounts, create the state
 	 */
@@ -164,58 +205,106 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 		const
 			{
 				theme,
+				styles,
 				activityStyle,
 				issue,
 				activityType,
 				activityActionText
+				
 			} = this.props,
 			{
 				user,
 				text,
 				comment,
 				updatedAt,
-				createdAt,
-				styles
+				createdAt
 			} = this.state,
 
-
+			// Hovering header
+			hovering = Radium.getState(this.state,'activity',':hover'),
 
 			// Grab the activity type style
-			activityTypeStyle = makeStyle(styles[activityType]),
+			rootStyle = _.merge({},baseStyles.activityContent,activityStyle.all,activityStyle[activityType],styles[activityType]),
 
 			// Time styles
-			timeStyle = makeStyle(styles.time,activityTypeStyle.details.time),
+			timeStyle = rootStyle.details.time,
 
 			// User/Avatar style
-			userStyle = makeStyle(
+			userStyle = [
 				activityStyle.user,
 				activityStyle[activityType].user,
-				activityTypeStyle.user
+				rootStyle.user
+			],
+			
+			controlStyle = makeStyle(
+				rootStyle.details.control,
+				hovering && rootStyle.details.control.hover
 			)
 
 
-		return (!issue) ? null : <div {...filterProps(this.props)} style={activityStyle}>
+		return (!issue) ? null : <div {...filterProps(this.props)} key='activity' style={[activityStyle,{':hover': {}}]}>
 			
-			{/* COMMENTOR AVATAR*/}
-			
+			{/* COMMENTER AVATAR*/}
 			<Avatar user={user}
 			        style={userStyle}
 			        labelPlacement='none'
 			        avatarStyle={makeStyle(styles.avatar,activityStyle.avatar)} />
 
-			<div style={activityTypeStyle}>
-				<div style={activityTypeStyle.details}>
-					<div style={activityTypeStyle.details.username}>{user && user.login}</div>
-					<div style={timeStyle}>{activityActionText} {moment(createdAt).fromNow()}</div>
-					{createdAt !== updatedAt &&
-						<div style={timeStyle}>updated {moment(updatedAt).fromNow()}</div>}
+			{/* HEADER FOR ACTIVITY */}
+			<div style={rootStyle}>
+				<div key="header" style={rootStyle.details}>
 					
-						{comment && canEditComment(issue.repo,comment) &&
-						<Icon onClick={this.makeOnCommentClick(issue,comment)} >edit</Icon>
+					{/* Username/Login */}
+					<div style={rootStyle.details.username}>
+						{user && user.login}
+					</div>
+					
+					{/* Created At Timestamp*/}
+					<div style={timeStyle}>
+						<div style={timeStyle.createdAt}>
+							{activityActionText} {moment(createdAt).fromNow()}
+						</div>
+						
+						{/* If there has been a subsequent update */}
+						{createdAt !== updatedAt &&
+							<div style={timeStyle.updatedAt}>
+								updated {moment(updatedAt).fromNow()}
+							</div>
+						}
+					
+					</div>
+					
+										
+					{/* If i have permission to edit the com*/}
+					{((!comment && canEditIssue(issue.repo,issue)) || (comment && canEditComment(issue.repo, comment))) &&
+						<div style={controlStyle}>
+							<Button onClick={
+										comment ?
+											this.makeOnCommentEditClick(issue,comment) :
+										    this.makeOnIssueEditClick(issue)
+									}
+							        style={controlStyle.button}>
+								<Icon style={controlStyle.icon}>edit</Icon>
+							</Button>
+						</div>
+							
+						
+					}
+					
+					{comment && canEditComment(issue.repo,comment) &&
+						<div style={controlStyle}>
+							<Button onClick={this.makeOnCommentDeleteClick(issue,comment)} style={controlStyle.button}>
+								<Icon style={controlStyle.icon}>delete</Icon>
+							</Button>
+						</div>
 					}
 				</div>
+				
+				
+				{/* Markdown of body */}
 				<Markdown className={`markdown issue-${issue.id}`}
-				          style={activityTypeStyle.body} source={text || 'No Body'}/>
+				          style={rootStyle.body}
+				          source={text || 'No Body'} />
 
 			</div>
 		</div>
