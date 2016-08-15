@@ -37,6 +37,7 @@ const initActionFactory = (key,mod) => {
 		new factory()
 		if (Env.isDev)
 			Container.bind(factory).provider(getActionFactoryProxyProvider(name,factory))
+		
 	} catch (err) {
 		log.error(`Failed to start action factory: ${key}`,err)
 		throw err

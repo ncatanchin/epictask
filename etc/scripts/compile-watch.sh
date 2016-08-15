@@ -12,22 +12,28 @@ RAMDISK_EPICPATH=${HOME}/RAMDISK/epictask
 COMPILE_DIRS="dist .awcache .happypack-electron-renderer-db .happypack-electron-renderer-ui"
 
 
-#if [ -e "${RAMDISK}" ]; then
-#	echo "RAM DISK EXISTS"
-#	if [ ! -e "${RAMDISK_EPICPATH}" ]; then
-#		echo "RAM DISK ECPI PATH DOS NOT EXIST"
-#
-#		for compileDir in ${COMPILE_DIRS}
-#		do
-#			echo "Going to setup path: ${compileDir}"
-#			rm -Rf ${compileDir}
-#			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
-#			mkdir -p ${NEW_DIR}
-#			echo "New path ${NEW_DIR}"
-#			ln -fs "${NEW_DIR}" "${PWD}/${compileDir}"
-#		done
-#	fi
-#fi
+if [ -e "${RAMDISK}" ]; then
+	echo "RAM DISK EXISTS"
+	mkdir -p ${RAMDISK_EPICPATH}
+	if [ ! -h "${RAMDISK_EPICPATH}/node_modules" ]; then
+		echo "linking node modules"
+		ln -sf $PWD/node_modules "${RAMDISK_EPICPATH}/node_modules"
+	fi
+
+	for compileDir in ${COMPILE_DIRS}
+		do
+		compilePath="${PWD}/${compileDir}"
+		if [ ! -h "${compilePath}" ]; then
+			echo "RAM DISK Exists and Epic Path ${compilePath} is not a link"
+
+			rm -Rf ${compileDir}
+			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
+			mkdir -p ${NEW_DIR}
+			echo "New path ${NEW_DIR}"
+			ln -fs "${NEW_DIR}" "${compilePath}"
+		fi
+	done
+fi
 
 #./etc/scripts/notify-on-error.sh
 
@@ -37,7 +43,7 @@ exec > >(tee -i logs/compile.log)
 # Without this, only stdout would be captured - i.e. your
 # log file would not contain any error messages.
 # SEE (and upvote) the answer by Adam Spiers, which keeps STDERR
-# as a seperate stream - I did not want to steal from him by simply
+# as a separate stream - I did not want to steal from him by simply
 # adding his answer to mine.
 exec 2>&1
 

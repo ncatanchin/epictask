@@ -522,10 +522,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				'.CodeMirror': {
 					height: '30vh'
 				},
-				'.editor-toolbar': {
-					backgroundColor: 'white',
-					opacity: 1
-				},
 				'.issueEditDialogFormMenuItem:hover':styles.menuItem.hover
 			}}/>
 			<Dialog style={styles.root}

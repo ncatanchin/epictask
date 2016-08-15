@@ -34,12 +34,6 @@
 			"actions/*": [
 				"./shared/actions/*"
 			],
-			"util": [
-				"./shared/util/index.ts"
-			],
-			"util/*": [
-				"./shared/util/*"
-			],
 			"models": [
 				"./shared/models/index.ts"
 			],

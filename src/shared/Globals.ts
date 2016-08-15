@@ -14,8 +14,8 @@ import {getLogger as LoggerFactory} from 'typelogger'
 // Import everything else
 later = require('later/index-browserify')
 
-import './ErrorHandling'
-import './util/ObjectUtil'
+import 'shared/ErrorHandling'
+import 'shared/util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
 import * as ContextUtils from './util/ContextUtils'
 import * as path from 'path'

@@ -28,6 +28,7 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
+import {IssueCommentDialog} from 'ui/components/issues/IssueCommentDialog'
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -180,6 +181,10 @@ class App extends React.Component<IAppProps,any> {
 		[KeyMaps.CommonKeys.AddLabels]: () => {
 			log.info('Patch labels')
 			Container.get(IssueActionFactory).patchIssuesLabel()
+		},
+		[KeyMaps.CommonKeys.CreateComment]: () => {
+			log.info('Create Comment')
+			Container.get(IssueActionFactory).newComment()
 		}
 	}
 
@@ -228,6 +233,7 @@ class App extends React.Component<IAppProps,any> {
 						{/* DIALOGS */}
 
 						<IssueEditDialog />
+						<IssueCommentDialog />
 						<RepoAddDialog />
 						<IssuePatchDialog />
 

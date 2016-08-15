@@ -2,7 +2,7 @@ import {User} from 'shared/models/User'
 const log = getLogger(__filename)
 
 import {RegisterModel} from 'shared/Registry'
-import {Map,List,Record} from 'immutable'
+import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {Comment,Issue} from 'shared/models'
 import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
@@ -37,6 +37,7 @@ export const IssueStateRecord = Record({
 	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,
+	editingComment:null,
 	patchIssues:null,
 	patchMode:null,
 	issueSaveError: null,
@@ -80,6 +81,7 @@ export class IssueState extends IssueStateRecord {
 	commentIds:string[]
 	patchIssues:Issue[]
 	patchMode:TIssuePatchMode
+	editingComment:Comment
 	editingIssue:Issue
 	editingInline:boolean
 

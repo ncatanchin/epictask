@@ -5,7 +5,7 @@ import {State} from './State'
 import {getAction,ActionMessage} from "../actions"
 import {ILeafReducer} from './LeafReducer'
 import {makeMappedReducerFn} from '../util/ActionMapper'
-import {isFunction} from '../util/index'
+import {isFunction} from '../util'
 import {getStoreStateProvider} from '../actions/Actions'
 
 

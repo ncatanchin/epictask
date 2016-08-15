@@ -1,6 +1,6 @@
 import {Container} from 'typescript-ioc'
-import {JSONKey} from '../Constants'
-import {isNil} from './ObjectUtil'
+import {JSONKey} from 'shared/Constants'
+import {isNil} from 'shared/util/ObjectUtil'
 import JobService from 'main/services/JobService'
 import {IJob, Job} from 'shared/actions/jobs/JobState'
 

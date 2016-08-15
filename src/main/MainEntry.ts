@@ -10,7 +10,6 @@ import 'shared/ErrorHandling'
 import {Container} from 'typescript-ioc'
 
 import {RemoteDebuggingPort,Events} from 'shared/Constants'
-import * as path from 'path'
 
 const {app,BrowserWindow} = require('electron')
 

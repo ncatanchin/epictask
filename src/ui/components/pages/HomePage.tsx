@@ -55,11 +55,7 @@ const mapStateToProps = createStructuredSelector({
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 
-	constructor(props, context) {
-		super(props, context)
-
-		this.state = this.getNewState()
-	}
+	componentWillMount = () => this.setState(this.getNewState())
 
 	getNewState = () => ({width:window.innerWidth})
 

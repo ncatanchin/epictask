@@ -275,7 +275,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderComment = (key,index,styles) => <IssueActivityText
 			key={key}
-			commentIndex={index}
+			commentIndex={index }
 			activityActionText='commented'
 			activityType='comment'
 			activityStyle={styles.content.activities.activity}/>
@@ -291,7 +291,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderActivityListItem = (index,key) => (index === 0) ?
 		this.renderBody(key,this.props.styles) :
-		this.renderComment(key,index,this.props.styles)
+		this.renderComment(key,index - 1,this.props.styles)
 
 
 

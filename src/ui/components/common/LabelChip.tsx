@@ -79,8 +79,6 @@ export const baseStyles = createStyles({
 		flexGrow: 1,
 		padding: '0.6rem 0.5rem',
 		height: 12,
-		fontSize: themeFontSize(1.1),
-		fontWeight: 700,
 		lineHeight: 1,
 		justifyContent: 'flex-start'
 	}]
@@ -118,7 +116,7 @@ export interface ILabelChipProps {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'labels')
+@ThemedStyles(baseStyles,'labelChip')
 @Radium
 @PureRender
 export default class LabelChip extends React.Component<ILabelChipProps,any> {

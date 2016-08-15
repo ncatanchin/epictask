@@ -41,10 +41,8 @@ import {IssueFilters} from 'ui/components/issues/IssueFilters'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
-import {Button} from 'ui/components/common/Button'
 import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import {TIssueEditInlineConfig} from 'shared/actions/issue'
-import {debounce} from 'lodash-decorators'
 import ValueCache from 'shared/util/ValueCache'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 
@@ -107,13 +105,12 @@ const baseStyles = createStyles({
 	}],
 
 	issue: [
+		makeTransition(['height','flex-grow','flex-shrink','flex-basis']),
 		FlexRow,
 		FlexAuto,
 		FillWidth,
 		FlexAlignStart,
-		//makeTransition(['background-color']),
 		{
-
 			padding: '1.5rem 1rem 0rem 1rem',
 			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
@@ -155,7 +152,7 @@ const baseStyles = createStyles({
 
 	}),
 
-	issueTitleRow: makeStyle(FlexRowCenter, FillWidth, OverflowHidden, {
+	issueTitleRow: makeStyle(makeTransition(['height']),FlexRowCenter, FillWidth, OverflowHidden, {
 		padding: '0 0 1rem 0',
 		pointerEvents: 'none'
 	}),
@@ -165,16 +162,16 @@ const baseStyles = createStyles({
 		fontWeight: 100,
 	}),
 
-	issueTitle: makeStyle(Ellipsis, FlexScale, {
+	
+	// TODO: Fonts configured in theme, ones that aren't should be moved
+	issueTitle: makeStyle(makeTransition(['font-size','font-weight']),Ellipsis, FlexScale, {
 		display: 'block',
-		fontWeight: 300,
-		fontSize: themeFontSize(1.4),
 		padding: '0 1rem 0 0'
 	}),
 
 
 	issueTitleSelected: makeStyle({
-		fontWeight: 500
+		
 	}),
 
 	issueBottomRow: makeStyle(FlexRowCenter, {
@@ -310,6 +307,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	issueActions: IssueActionFactory = Container.get(IssueActionFactory)
 
 
+	/**
+	 * Selected issue ids
+	 */
 	private get selectedIssueIds(): number[] {
 		return _.get(this, 'state.internalSelectedIssueIds', [])
 	}

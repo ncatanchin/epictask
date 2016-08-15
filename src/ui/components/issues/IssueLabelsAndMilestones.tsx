@@ -4,12 +4,8 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Models from 'shared/models'
 import {Label} from 'shared/models/Label'
-import * as Constants from 'shared/Constants'
 import {Themed} from 'shared/themes/ThemeManager'
-import {Icon} from 'ui/components/common/Icon'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'components/common'
 import LabelChip from 'ui/components/common/LabelChip'

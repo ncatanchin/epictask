@@ -17,7 +17,8 @@ export enum CommonKeys {
 	View2,
 	SetAssignee,
 	SetMilestone,
-	AddLabels
+	AddLabels,
+	CreateComment
 }
 
 export const Global = {
@@ -36,9 +37,10 @@ export const Global = {
 	[CommonKeys.View2]: 'command+2',
 	[CommonKeys.Space]: 'space',
 	[CommonKeys.Delete]: ['del','backspace'],
-	[CommonKeys.SetAssignee]: 'alt+a',
-	[CommonKeys.SetMilestone]: 'alt+m',
-	[CommonKeys.AddLabels]: 'alt+t'
+	[CommonKeys.SetAssignee]: ['alt+a','a'],
+	[CommonKeys.SetMilestone]: ['alt+m','m'],
+	[CommonKeys.AddLabels]: ['alt+t','t'],
+	[CommonKeys.CreateComment]: ['alt+c','c']
 
 }
 

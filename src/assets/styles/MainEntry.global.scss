@@ -95,3 +95,6 @@ body {
 ::-webkit-scrollbar {
 	display: none;
 }
+
+// Import global styles
+@import "MarkdownEditor.SimpleMDE.global";

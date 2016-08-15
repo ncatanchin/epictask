@@ -16,8 +16,17 @@ import {
 	IActionRegistration
 } from 'typedux'
 
-import {cacheFilename, readFile,writeJSONFile} from 'shared/util/Files'
-import {loadActionFactories} from 'shared/actions/ActionFactoryProxies'
+import {
+	writeJSONFileAsync,
+	cacheFilename,
+	readFile,
+	writeJSONFile
+} from 'shared/util/Files'
+
+import {
+	loadActionFactories
+} from 'shared/actions/ActionFactoryProvider'
+
 
 
 const electron = require('electron')
@@ -226,10 +235,7 @@ export function initStore(devToolsMode = false,defaultState = null) {
 
 	// Initialize all action factories
 	if (!devToolsMode) {
-		let actionCtx = null
-
 		loadActionFactories()
-
 	}
 	return store
 }
@@ -313,7 +319,7 @@ if (Env.isDev) {
 	})
 }
 
-export function persist() {
+export function persist(doAsync = false) {
 	log.info(`Writing current state (shutdown) to: ${stateFilename}`)
 	if (persistingState) {
 		log.info('Persisting, can not persist until completion')
@@ -321,15 +327,10 @@ export function persist() {
 	}
 	assert(Env.isMain,'Can only persist on main')
 	const stateJS = _.toJS(getStoreState())
-
-	writeJSONFile(stateFilename,stateJS)
+	if (doAsync)
+		writeJSONFileAsync(stateFilename,stateJS)
+	else
+		writeJSONFile(stateFilename,stateJS)
 
 }
 
-//
-// if (module.hot) {
-// 	module.hot.accept(['./MainStoreEnhancer','./RenderStoreEnhancer'],(updates) => {
-// 		log.info('enhancer changed',updates)
-//
-// 	})
-// }

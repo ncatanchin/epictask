@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import {getUserDataFilename, readFile} from './util/Files'
-import {Property} from "./util/Decorations";
-import {toJSON} from "./util/JSONUtil";
+import {getUserDataFilename, readFile} from 'shared/util/Files'
+import {Property} from "shared/util/Decorations";
+import {toJSON} from "shared/util/JSONUtil";
 import {User} from 'shared/models/User'
 
 const log = getLogger(__filename)

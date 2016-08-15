@@ -4,17 +4,13 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import {connect} from 'react-redux'
 
 import {PureRender, Renderers, Avatar} from '../common'
 import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 
 import {Issue, Repo} from 'shared/models'
-import {DataKey} from 'shared/Constants'
-import {createStructuredSelector} from 'reselect'
 import filterProps from 'react-valid-props'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
+
 import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 

@@ -8,11 +8,14 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 import {User,Issue,Comment} from 'shared/models'
 import {createStructuredSelector} from 'reselect'
-import {Avatar,Markdown,PureRender} from 'components/common'
+import {Avatar, Markdown, PureRender, Icon} from 'components/common'
 import {selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import filterProps from 'react-valid-props'
+import {canEditComment} from "shared/Permission"
+import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
+import {Container} from "typescript-ioc"
 
 // Constants
 const log = getLogger(__filename)
@@ -106,7 +109,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 		const {issue,comments,theme,commentIndex,activityStyle,activityType} = props
 
 		// Get comment if available
-		const comment = (comments && commentIndex && commentIndex > -1) ?
+		const comment = (comments && _.isNumber(commentIndex) && commentIndex > -1) ?
 			comments[commentIndex] : null
 
 		// Determine model
@@ -135,6 +138,9 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			styles
 		}
 	}
+	
+	makeOnCommentClick = (issue,comment) => event =>
+		Container.get(IssueActionFactory).editComment(issue,comment)
 
 	/**
 	 * When the component mounts, create the state
@@ -166,6 +172,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			{
 				user,
 				text,
+				comment,
 				updatedAt,
 				createdAt,
 				styles
@@ -188,7 +195,9 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 
 
 		return (!issue) ? null : <div {...filterProps(this.props)} style={activityStyle}>
+			
 			{/* COMMENTOR AVATAR*/}
+			
 			<Avatar user={user}
 			        style={userStyle}
 			        labelPlacement='none'
@@ -200,6 +209,10 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 					<div style={timeStyle}>{activityActionText} {moment(createdAt).fromNow()}</div>
 					{createdAt !== updatedAt &&
 						<div style={timeStyle}>updated {moment(updatedAt).fromNow()}</div>}
+					
+						{comment && canEditComment(issue.repo,comment) &&
+						<Icon onClick={this.makeOnCommentClick(issue,comment)} >edit</Icon>
+					}
 				</div>
 				<Markdown className={`markdown issue-${issue.id}`}
 				          style={activityTypeStyle.body} source={text || 'No Body'}/>

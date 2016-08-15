@@ -1,16 +1,21 @@
 
 import {Map} from 'immutable'
-
 import {IssueKey} from 'shared/Constants'
-import {Issue} from 'shared/models/Issue'
+
 import {
-	modelsSelector, commentModelsSelector, milestoneModelsSelector, labelModelsSelector
+	modelsSelector,
+	commentModelsSelector,
+	milestoneModelsSelector,
+	labelModelsSelector
 } from 'shared/actions/data/DataSelectors'
-import {IssueState} from 'shared/actions/issue/IssueState'
-import {Comment} from 'shared/models/Comment'
+
+import {Issue} from 'shared/models/Issue'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {IIssueFilter,IIssueSort} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+
+import {IssueState} from 'shared/actions/issue/IssueState'
+import {Comment} from 'shared/models/Comment'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
@@ -287,10 +292,20 @@ export const issuesGroupedSelector = createDeepEqualSelector(
 export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues)
 export const patchModeSelector = _.memoize((state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode)
 
+/**
+ * Issue currently being edited
+ */
 export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
 
+/**
+ * Comment currently being edited
+ */
+export const editingCommentSelector = _.memoize((state):Comment => (state.get(IssueKey) as IssueState).editingComment)
 
 
+/**
+ * Selected issues
+ */
 export const selectedIssuesSelector = issuesDetailSelector
 
 
@@ -309,16 +324,22 @@ export const selectedIssueSelector = createDeepEqualSelector(
 
 
 
-export const commentIdsSelector = _.memoize((state):string[] => (state.get(IssueKey) as IssueState).commentIds)
+export const commentIdsSelector = _.memoize((state):string[] => _.uniq((state.get(IssueKey) as IssueState).commentIds))
 
 export const commentsSelector = createDeepEqualSelector(
 	selectedIssueSelector,
 	commentIdsSelector,
 	commentModelsSelector,
 	(issue:Issue,commentIds:string[],commentModels:Map<string,Comment>) => {
-		return (!issue) ? [] : commentIds
-			.map(commentId => commentModels.get(commentId))
-			.filter(comment => !_.isNil(comment) && comment.issueNumber === issue.number)
+		return (!issue) ? [] : _.orderBy(
+			_.uniqBy(
+				commentIds
+					.map(commentId => commentModels.get(commentId))
+					.filter(comment => !_.isNil(comment) && comment.issueNumber === issue.number)
+			,'id'),
+			['created_at'],
+			['desc']
+		)
 	},
 
 )

@@ -49,7 +49,9 @@ const InputStyle = {
 	}
 }
 
-
+function themeFontSize(multiplier:number) {
+	return fontSize * multiplier
+}
 
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	name: 'DarkTheme',
@@ -66,7 +68,16 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	alternateTextColor: alternateText.primary,
 
 	progressIndicatorColor: secondary.hue1,
-
+	
+	/**
+	 * Label Chip Styles
+	 */
+	labelChip: {
+		text: {
+			fontSize: themeFontSize(1),
+			fontWeight: 500
+		}
+	},
 
 	/**
 	 * TypeAheadSelect styling
@@ -594,14 +605,16 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		issueTitle: {
-			color:      text.hintOrDisabledOrIcon,
+			color:      text.primary,
 			fontFamily: fontFamilyRegular,
-			fontWeight: 500
+			fontWeight: 300,
+			fontSize: themeFontSize(1.2)
 		},
 
 		issueTitleSelected: {
 			color:      text.primary,
-			fontWeight: 500
+			fontWeight: 400,
+			fontSize: themeFontSize(1.4)
 		},
 
 		issueLabel: {

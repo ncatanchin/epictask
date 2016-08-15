@@ -168,6 +168,56 @@ export class GitHubClient {
 		}
 	}
 
+	/**
+	 * Save comment
+	 *
+	 * @param repo
+	 * @param issue
+	 * @param comment
+	 * @returns {any}
+	 */
+	async commentSave(repo:Repo,issue:Issue,comment:Comment):Promise<Comment> {
+		let json = _.pick(comment,'body') as any
+
+
+		const
+			commentId = comment.id,
+			issueNumber = issue.number,
+			[uri,method] = commentId ?
+				[`/repos/${repo.full_name}/issues/comments/${comment.id}`,HttpMethod.PATCH] :
+				[`/repos/${repo.full_name}/issues/${issueNumber}/comments`,HttpMethod.POST]
+
+		const
+			payload = JSON.stringify(json),
+			response = await fetch(makeUrl(uri), this.initRequest(method,payload,{
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			}))
+
+
+		if (response.status >= 300) {
+			let result = null
+
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+			}
+
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors
+			)
+
+		}
+
+
+		let result = await response.json()
+
+		return _.merge(cloneObject(comment),result)
+
+	}
 
 	/**
 	 * Save issue
@@ -196,10 +246,11 @@ export class GitHubClient {
 			issueJson.milestone = null
 		}
 
-		const issueNumber = issue.number
-		const [uri,method] = issueNumber ?
-			[`/repos/${repo.full_name}/issues/${issueNumber}`,HttpMethod.PATCH] :
-			[`/repos/${repo.full_name}/issues`,HttpMethod.POST]
+		const
+			issueNumber = issue.number,
+			[uri,method] = issueNumber ?
+				[`/repos/${repo.full_name}/issues/${issueNumber}`,HttpMethod.PATCH] :
+				[`/repos/${repo.full_name}/issues`,HttpMethod.POST]
 
 		const issuePayload = JSON.stringify(issueJson)
 

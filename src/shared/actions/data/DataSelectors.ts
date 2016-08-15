@@ -15,7 +15,7 @@ import {User} from 'models/User'
 
 
 export const dataStateSelector = _.memoize(
-	(state):DataState => state.get(DataKey)
+	(state):DataState => state && state.get(DataKey)
 )
 
 export const activityModelsSelector = _.memoize(
