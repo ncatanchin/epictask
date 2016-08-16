@@ -395,7 +395,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					!issues.every((issue: Issue) => _.get(issue, 'milestone.id') === item.id)
 				))
 
-				// Convert to JS Array
+				// Convert to JS Arraytyp
 				.toArray()
 
 		const newDataSource = items.map(item => ({

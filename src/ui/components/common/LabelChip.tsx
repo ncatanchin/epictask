@@ -32,7 +32,7 @@ export const baseStyles = createStyles({
 	// Accessories
 	accessory: [FlexAuto,FlexRowCenter,{
 		height: "100%",
-
+		
 
 		// icon decoration
 		icon: [{
@@ -53,6 +53,7 @@ export const baseStyles = createStyles({
 			top:0,
 			bottom: 0
 		}],
+		
 
 		// remove control
 		remove: [makeTransition(['opacity','width','padding','background-color','color']), OverflowHidden,{
@@ -76,9 +77,8 @@ export const baseStyles = createStyles({
 
 	}],
 
-	text: [FlexAuto,FlexRowCenter,{
+	text: [makePaddingRem(0,0.8,0,8),FlexAuto,FlexRowCenter,{
 		flexGrow: 1,
-		padding: makePaddingRem(0,0.8,0,8),
 		height: '100%',
 		textAlign: 'baseline',
 		//justifyContent: '',

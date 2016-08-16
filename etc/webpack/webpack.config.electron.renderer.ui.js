@@ -6,14 +6,6 @@ module.exports = (projectConfig) => {
 	const config = require('./webpack.config')(projectConfig)
 
 	const entries = {
-		//"UIMaterialEntry": ['babel-polyfill','material-ui','material-ui/svg-icons'],
-		// "UILibsEntry": [
-		// 	'babel-polyfill',
-		// 	'typedux',
-		// 	'typemutant',
-		// 	'typestore',
-		// 	'typestore-plugin-pouchdb'
-		// ],
 		"UIEntry": ["./src/ui/UIEntry"]
 	}
 

@@ -7,15 +7,24 @@ const path = require('path')
 // const themesJs = path.resolve(baseDir,'src/epictask/app/themes/Palettes.js')
 
 
-module.exports = (projectConfig) => {
+export default function (projectConfig) {
 
 
 	const loaders = {
+		
+		/**
+		 * All preloaders, for
+		 * hot loading, source-maps, etc
+		 */
 		preLoaders: [{
 				test: /\.(tsx?|jsx?)$/,
 				exclude: /node_modules/,
 				loaders: ['source-map-loader']
 		}],
+		
+		/**
+		 * Baseline for all loaders
+		 */
 		loaders: [{
 			test: /\.json$/,
 			loader: 'json'
@@ -24,10 +33,12 @@ module.exports = (projectConfig) => {
 
 	// If we got a project config then add normal loaders
 	if (projectConfig) {
+		
 		const tsconfigFile = projectConfig.tsconfig
 		assert(fs.existsSync(tsconfigFile), `tsconfig must exists: ${tsconfigFile}`)
 
-		loaders.loaders = loaders.loaders.concat([
+		// Create all required loaders
+		const newLoaders = [
 
 			// TYPESCRIPT
 			{
@@ -129,7 +140,9 @@ module.exports = (projectConfig) => {
 					// sassContentLoader + '?path=' + themesJs
 				]
 			}
-		])
+		]
+		
+		loaders.loaders.push(...newLoaders)
 
 	}
 

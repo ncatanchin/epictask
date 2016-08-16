@@ -1,20 +1,28 @@
 
+
+
 require('../tools/global-env')
+
+import baseConfigFn from './webpack.config'
+
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+
+
 
 const
 	webpack = require('webpack'),
 	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
 	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
-	fs = require('fs'),
-	baseConfig = require('./webpack.config')
+	fs = require('fs')
+	
 
 
 module.exports = function(projectConfig) {
 
 	projectConfig = projectConfig || projectConfigs['electron-main']
 
-	const config = baseConfig(projectConfig)
+	const config = baseConfigFn(projectConfig)
 
 	// HMR
 	const hmrEntry = [
@@ -23,17 +31,25 @@ module.exports = function(projectConfig) {
 	]
 
 
-	let mainEntries = ["./src/main/MainEntry"]
-	if (isDev)
-		mainEntries.unshift(...hmrEntry)
-
+	// Base entries
 	const mainEntry = {
-		"MainEntry": mainEntries
+		"MainEntry": ["./src/main/MainEntry"],
+		"JobsEntry": ["./src/jobs/JobsEntry"]
 	}
+	
+	// In development env add hmr to all base entries
+	if (isDev)
+		Object
+				.values(mainEntry)
+				.forEach(files => files.unshift(...hmrEntry))
+		
+
+	
 
 	if (isDev)
 		Object.assign(mainEntry,{
 			"MainTestEntry": ['./src/tests/main/MainTestEntry']
+			
 		})
 
 	//console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
@@ -42,13 +58,9 @@ module.exports = function(projectConfig) {
 		entry: mainEntry,
 
 		target: 'electron',
-		//target: 'node',
 		debug: true,
-		devtool: 'inline-source-map',
-		//devtool: '#cheap-module-eval-source-map',
-		//devtool: '@#source-map',
+		devtool: isDev ? 'inline-source-map' : 'source-map',
 		watch: isDev,
-		//hot:isDev,
 
 		plugins: [
 			...config.plugins,
