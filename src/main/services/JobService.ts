@@ -1,7 +1,7 @@
 import {ObservableStore} from 'typedux'
 import {List} from 'immutable'
-import {Singleton, AutoWired, Inject, Container, Scope} from 'typescript-ioc'
-import {ServiceStatus, BaseService} from './IService'
+import {Container} from 'typescript-ioc'
+import {BaseService} from './IService'
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {JobHandler, JobHandlerEventType} from 'shared/actions/jobs/JobHandler'
@@ -24,6 +24,11 @@ export interface IJobContainer {
 
 export type TJobMap= {[name:string]:IJobContainer}
 
+/**
+ * Job handler events
+ *
+ * @type {JobHandlerEventType}
+ */
 const JobHandlerEvents = JobHandler.Events
 
 /**
@@ -33,8 +38,10 @@ export interface IJobExecutor {
 	(handler:JobHandler):void
 }
 
-// @AutoWired
-// @Singleton
+
+/**
+ * Job Service for managing all operations
+ */
 export default class JobService extends BaseService {
 
 	private killed = false
@@ -47,7 +54,7 @@ export default class JobService extends BaseService {
 
 
 	/**
-	 * Currently cowrking jobs
+	 * Currently coworking jobs
 	 *
 	 * @type {TJobMap}
 	 */

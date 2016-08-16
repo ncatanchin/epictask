@@ -10,16 +10,16 @@ module.exports = (opts) => {
 					// recognize when spreads are being used inside of object
 					// destructuring (ES7).
 					//require("babel-plugin-transform-es2015-destructuring"),
-					//"es2016-node5",
-					"es2015-native-modules",
+					"es2016-node5",
+					// "es2015-native-modules",
 					"stage-0",
 					"react",
 					"async-to-bluebird"
 				],
 				"plugins":    [
 					//'transform-es2015-modules-commonjs'
-					"add-module-exports",
-					"transform-runtime",
+					//"add-module-exports",
+					//"transform-runtime",
 					//"transform-async-to-generator"
 				],
 				"sourceMaps": "both"

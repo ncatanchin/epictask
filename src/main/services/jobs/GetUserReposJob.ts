@@ -5,12 +5,13 @@ import JobService from 'main/services/JobService'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'shared/util/Decorations'
+import {RegisterJob} from 'jobs/JobDecorations'
 import {GitHubClient} from 'shared/GitHubClient'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Job} from 'shared/actions/jobs/JobState'
 import {Repo} from 'shared/models/Repo'
 import {Settings} from 'shared/Settings'
+
 
 const log = getLogger(__filename)
 

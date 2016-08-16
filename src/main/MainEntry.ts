@@ -121,10 +121,6 @@ function onStart() {
 function onWillQuit(e) {
 	// TODO: Compact and remove all models
 	require('shared/store/AppStore').persist()
-
-
-
-
 }
 
 /**

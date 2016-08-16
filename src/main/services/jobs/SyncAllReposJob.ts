@@ -5,9 +5,10 @@ import JobService from 'main/services/JobService'
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'shared/util/Decorations'
+import {RegisterJob} from 'jobs/JobDecorations'
 import {Job} from 'shared/actions/jobs/JobState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+
 
 const log = getLogger(__filename)
 

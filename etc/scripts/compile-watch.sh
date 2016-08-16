@@ -23,12 +23,15 @@ if [ -e "${RAMDISK}" ]; then
 	for compileDir in ${COMPILE_DIRS}
 		do
 		compilePath="${PWD}/${compileDir}"
+		NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
+		if [ ! -e "${NEW_DIR}" ];then
+			mkdir -p ${NEW_DIR}
+		fi
+
 		if [ ! -h "${compilePath}" ]; then
 			echo "RAM DISK Exists and Epic Path ${compilePath} is not a link"
 
 			rm -Rf ${compileDir}
-			NEW_DIR="${RAMDISK_EPICPATH}/${compileDir}"
-			mkdir -p ${NEW_DIR}
 			echo "New path ${NEW_DIR}"
 			ln -fs "${NEW_DIR}" "${compilePath}"
 		fi
