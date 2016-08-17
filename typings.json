@@ -42,5 +42,8 @@
     "redux-thunk": "registry:dt/redux-thunk#2.0.1+20160317120654",
     "sinon": "registry:dt/sinon#1.16.0+20160517064723",
     "whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160524142046"
+  },
+  "globalDevDependencies": {
+    "mocha": "registry:env/mocha#2.2.5+20160723033700"
   }
 }

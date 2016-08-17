@@ -1,6 +1,6 @@
 
 
-import * as TestSetup from '../MainTestSetup'
+
 const log = getLogger(__filename)
 
 
@@ -28,14 +28,14 @@ let dbService:DBService
 describe.only('Database Remote (IPC) Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		// await TestSetup.configureMain(DBService)
+		// await MainTestSetup.configureMain(DBService)
 		//
 		// dbService = Container.get(DBService)
 	})
 
 	after(async () => {
 		log.info(`Shutting down database service`)
-		await TestSetup.shutdownMain()
+		//await MainTestSetup.shutdownMain()
 	})
 
 	it('Can open an close a background window',(done) => {

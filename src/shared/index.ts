@@ -5,7 +5,7 @@ import * as Constants from './Constants'
 import * as github from './GitHubClient'
 
 export * from './AppStateType'
-export * from './models'
+//export * from './models'
 
 export {
 	Settings,

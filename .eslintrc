@@ -9,8 +9,22 @@
             "impliedStrict":true
         }
     },
+    "env": {
+        "browser": true,
+        "node": true,
+        "commonjs": true,
+        "es6": true,
+        "shared-node-browser": true
+    },
     "rules": {
-        "jsx-boolean-value":"always",
-        "semi": [2,"never"]
+        "jsx-boolean-value":0,
+        "semi": [2,"never"],
+				"no-undef": 1,
+				"no-invalid-regexp": 2
+    },
+    "globals": {
+        "isDev": true,
+				"projectConfigs": true,
+				"_": true
     }
 }

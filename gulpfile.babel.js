@@ -1,3 +1,6 @@
+require('source-map-support').install()
+require('./etc/tools/global-env')
+
 const path = require('path')
 
 

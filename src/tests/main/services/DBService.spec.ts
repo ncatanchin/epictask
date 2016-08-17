@@ -1,6 +1,6 @@
 
 
-import * as TestSetup from '../MainTestSetup'
+
 import DBService from 'main/services/DBService'
 import {Container} from 'typescript-ioc'
 import {User} from 'shared/models/User'
@@ -12,14 +12,14 @@ let dbService:DBService
 describe('Database Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		await TestSetup.configureMain(DBService)
+		await MainTestSetup.configureMain(DBService)
 
 		dbService = Container.get(DBService)
 	})
 
 	after(async () => {
 		log.info(`Shutting down database service`)
-		await TestSetup.shutdownMain()
+		await MainTestSetup.shutdownMain()
 	})
 
 	it(`creates user`,async () => {

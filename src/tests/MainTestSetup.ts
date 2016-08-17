@@ -6,8 +6,6 @@ import {MainConfigurator} from 'main/MainConfigurator'
 
 const log = getLogger(__filename)
 
-
-
 process.on("unhandledRejection", function (reason, promise) {
 	//deepTrace(reason)
 	console.error('Unhandled rejection', reason)
@@ -60,5 +58,19 @@ export async function configureMain(...serviceClazzes) {
 	}
 }
 
+
+declare global {
+	const MainTestSetup: {
+		configureMain: typeof configureMain,
+		shutdownMain: typeof shutdownMain
+	}
+}
+
+Object.assign(global,{
+	MainTestSetup: {
+		configureMain,
+		shutdownMain
+	}
+})
 
 

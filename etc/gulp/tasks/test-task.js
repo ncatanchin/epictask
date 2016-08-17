@@ -11,7 +11,7 @@ function makeMochaTask(tests = null) {
 	return () => {
 		require('../../mocha/mocha-setup')
 		if (!tests) {
-			tests = ['dist/test/**/*.spec.js']
+			tests = ['dist/*TestEntry.js']
 		}
 
 		const reporter = (process.env.CIRCLE) ?
@@ -20,7 +20,6 @@ function makeMochaTask(tests = null) {
 
 		return gulp.src(tests)
 			.pipe(mocha({reporter}))
-
 	}
 }
 

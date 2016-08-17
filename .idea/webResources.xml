@@ -11,8 +11,6 @@
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-plugin-pouchdb/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore-mocks/src" />
             <path value="file://$PROJECT_DIR$/libs/typestore/packages/typestore/src" />
-
-
           </resourceRoots>
         </entryData>
       </entry>

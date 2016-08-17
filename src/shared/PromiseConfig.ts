@@ -7,8 +7,8 @@ declare global {
 		setImmediate():Promise<void>
 		defer():Promise.Resolver<any>
 	}
+	
 }
-
 
 
 Bluebird.config({

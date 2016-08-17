@@ -54,7 +54,7 @@ if (Env.isDev) {
 async function boot() {
 
 	if (Env.isDev)
-		require('./MainDevTools')
+		require('./ChromeDevTools')
 
 	log.info("Boot start")
 	global.MainBooted = false
