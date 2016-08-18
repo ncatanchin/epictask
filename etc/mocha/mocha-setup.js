@@ -1,4 +1,4 @@
-//require('source-map-support').install()
+require('source-map-support').install()
 //require('../packages-path')
 
 global.Promise = require('bluebird')

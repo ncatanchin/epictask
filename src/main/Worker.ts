@@ -226,10 +226,18 @@ export default class Worker {
 			
 			// Create the process
 			log.info(`Electron path = ${ELECTRON_PATH}`)
-			log.info('Main args are',process.argv,'execArgs',process.execArgv)
-			//this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
-			debugger
-			this.child = childProcess.fork(this.startFile,[],opts)
+			const
+				args = process.argv,
+				execArgs = process.execArgv
+				
+			let newArgs = args.slice(1).filter(arg => arg.indexOf('debug') > -1)
+			
+			
+			log.info('Main args are',args,'newArgs',newArgs)
+			//debugger
+			//this.child = childProcess.fork(this.startFile,['--debug'],opts)
+			this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
+			
 			
 			// Assign handlers
 			this.child.on('error',this.handleError)

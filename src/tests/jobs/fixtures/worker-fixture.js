@@ -1,6 +1,5 @@
 
 
-
 const
 	electron = require('electron'),
 	{app,ipcMain} = electron,
