@@ -1,4 +1,14 @@
 require('source-map-support').install()
+
+
+// const Module = require('module')
+// if (Module.globalPaths)
+// 	Module.globalPaths.push(process.cwd() + '/target/ts/src')
+//
+// global.DEBUG = true
+// process.env.NODE_ENV = process.env.NODE_ENV || 'development'
+// process.env.NODE_PATH += `:${process.cwd()}/target/ts/src:${process.cwd()}/target/ts/libs`
+
 //require('../packages-path')
 
 global.Promise = require('bluebird')

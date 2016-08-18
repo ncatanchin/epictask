@@ -72,38 +72,20 @@
 			"components/*": [
 				"./ui/components/*"
 			],
-			"typedux": [
-				"../libs/typedux/src/index.ts"
-			],
-			"typedux/*": [
-				"../libs/typedux/src/*"
-			],
 			"typestore": [
-				"../libs/typestore/packages/typestore/src/index.ts"
-			],
-			"typestore/*": [
-				"../libs/typestore/packages/typestore/src/*"
-			],
-			"typestore-mocks": [
-				"../libs/typestore/packages/typestore-mocks/src/index.ts"
-			],
-			"typestore-mocks/*": [
-				"../libs/typestore/packages/typestore-mocks/src/*"
+				"../node_modules/typestore/src/index.ts"
 			],
 			"typestore-plugin-pouchdb": [
-				"../libs/typestore/packages/typestore-plugin-pouchdb/src/index.ts"
+				"../node_modules/typestore-plugin-pouchdb/src/index.ts"
 			],
-			"typestore-plugin-pouchdb/*": [
-				"../libs/typestore/packages/typestore-plugin-pouchdb/src/*"
+			"typestore-mocks": [
+				"../node_modules/typestore-mocks/src/index.ts"
 			]
+			
 
 		}
 	},
 	"exclude": [
-		"libs/**/typestore-example-node",
-		"libs/**/typestore-example-webpack",
-		"libs/**/typestore-plugin-cloudsearch",
-		"libs/**/typestore-plugin-dynamodb",
 		"libs/**/typings",
 		"libs/**/package.json",
 		"libs/**/jsconfig.json",

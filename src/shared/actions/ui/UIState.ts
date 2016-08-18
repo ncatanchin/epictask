@@ -4,6 +4,7 @@ import {IToastMessage} from 'models/Toast'
 import {User} from 'models/User'
 import {AppStateType} from 'shared/AppStateType'
 import {RegisterModel} from 'shared/Registry'
+import {State} from "typedux"
 
 
 /**
@@ -13,7 +14,6 @@ export enum StatusType {
 	Ready,
 	Loading
 }
-
 
 /**
  * Simple status management for the app overall
@@ -43,7 +43,7 @@ export const UIStateRecord = Record({
 })
 
 @RegisterModel
-export class UIState extends UIStateRecord {
+export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {
 		return new UIState(Object.assign({},o,{

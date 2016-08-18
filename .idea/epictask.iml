@@ -11,12 +11,6 @@
       <excludeFolder url="file://$MODULE_DIR$/.vscode" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/libs/devtools" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typedux/src/test" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-node" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-example-webpack" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-plugin-cloudsearch" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-plugin-dynamodb" />
-      <excludeFolder url="file://$MODULE_DIR$/libs/typestore/packages/typestore-plugin-indexeddb" />
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/node_modules" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
@@ -29,5 +23,6 @@
     <orderEntry type="library" name="lodash-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="mocha-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="EpicTaskTypings" level="project" />
+    <orderEntry type="library" name="tsconfig$roots" level="project" />
   </component>
 </module>

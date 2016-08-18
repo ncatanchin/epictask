@@ -234,7 +234,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const getState = getStoreState
 		
 		if (!issues || !issues.length)
-			issues = selectedIssuesSelector(getState)
+			issues = selectedIssuesSelector(getState())
 		
 		if (!issues.length) {
 			log.warn('Must have at least 1 issue selected to open patch editor', issues)

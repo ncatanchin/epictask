@@ -13,11 +13,10 @@ import ValueCache from 'shared/util/ValueCache'
 import {debounce} from 'lodash-decorators'
 import {GitHubClient} from 'shared/GitHubClient'
 import {RepoStore, Repo} from 'shared/models/Repo'
-import {IssueStore, Issue} from 'shared/models/Issue'
+import {Issue} from 'shared/models/Issue'
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {DataRequest} from 'shared/actions/data/DataState'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {getStoreStateProvider} from 'typedux'
 import {SearchKey} from 'shared/Constants'
 import {Benchmark} from 'shared/util/Benchmark'
 import {getStoreState} from 'shared/store/AppStore'
@@ -340,7 +339,7 @@ export default class SearchService extends BaseService {
 
 		log.info(`Waiting for all type searches to return: ${search}`)
 		return Promise.all(searchPromises).finally(() => {
-			const currentSearch = (getStoreStateProvider()()).get(SearchKey).searches.get(searchId)
+			const currentSearch:Search = (getStoreState()).get(SearchKey).searches.get(searchId)
 			delete this.runningSearches[searchId]
 
 			if (currentSearch.query !== search.query) {

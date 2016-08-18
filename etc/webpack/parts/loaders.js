@@ -66,7 +66,7 @@ export default function (projectConfig) {
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
 				//exclude: /node_modules/,
-				exclude: /(node_modules|material-ui)/,
+				exclude: /(node_modules|material-ui|typestore)/,
 				loaders: ['babel']
 			},
 

@@ -14,30 +14,30 @@ const fs = require('fs')
 
 
 const
-		baseDir = path.resolve(__dirname, '../..'),
-		distDir = `${baseDir}/dist`,
-		
-		// Import non-typed plugins
-		{
-				DefinePlugin,
-				ExternalsPlugin,
-				HotModuleReplacementPlugin
-		} = webpack,
-		
-		// Import HappyPack
-		HappyPack = require('happypack'),
-		
-		// Enable flag for using happy pack
-		happyEnabled = true,
-		
-		// Generates externals config
-		nodeExternals = require('webpack-node-externals'),
-		
-		// Import globals
-		{
-				isDev,
-				env
-		} = global
+	baseDir = path.resolve(__dirname, '../..'),
+	distDir = `${baseDir}/dist`,
+	
+	// Import non-typed plugins
+	{
+		DefinePlugin,
+		ExternalsPlugin,
+		HotModuleReplacementPlugin
+	} = webpack,
+	
+	// Import HappyPack
+	HappyPack = require('happypack'),
+	
+	// Enable flag for using happy pack
+	happyEnabled = true,
+	
+	// Generates externals config
+	nodeExternals = require('webpack-node-externals'),
+	
+	// Import globals
+	{
+		isDev,
+		env
+	} = global
 
 
 /**
@@ -62,9 +62,9 @@ function libAlias(name, libPath) {
 const resolveDirs = (...dirs) => dirs.map(dir => {
 	const ramDiskResolvePath = path.join(RamDiskPath, dir)
 	const resolvedPath = fs.realpathSync(
-			fs.existsSync(ramDiskResolvePath) ?
-					ramDiskResolvePath :
-					path.resolve(baseDir, dir)
+		fs.existsSync(ramDiskResolvePath) ?
+			ramDiskResolvePath :
+			path.resolve(baseDir, dir)
 	)
 	
 	log.info(`Resolved "${dir}" = "${resolvedPath}"`)
@@ -81,21 +81,21 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
 export default function (projectConfig) {
 	
 	const
-			happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 5}),
-			
-			// Renderer or Main
-			isMain = projectConfig.targetType === TargetType.ElectronMain,
-			
-			// Create loaders
-			loaders = loadersConfigFn(projectConfig),
-			happyPlugins = (!happyEnabled || isMain) ? [] :
-					loaders.loaders
-							.filter(loader => loader.happy && loader.happy.id)
-							.map(loader => new HappyPack({
-								id: `${loader.happy.id}`,
-								tempDir: `.happypack-${projectConfig.name}`,
-								threadPool: happyThreadPool
-							}))
+		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 5}),
+		
+		// Renderer or Main
+		isMain = projectConfig.targetType === TargetType.ElectronMain,
+		
+		// Create loaders
+		loaders = loadersConfigFn(projectConfig),
+		happyPlugins = (!happyEnabled || isMain) ? [] :
+			loaders.loaders
+				.filter(loader => loader.happy && loader.happy.id)
+				.map(loader => new HappyPack({
+					id: `${loader.happy.id}`,
+					tempDir: `.happypack-${projectConfig.name}`,
+					threadPool: happyThreadPool
+				}))
 	
 	
 	const config = {
@@ -117,45 +117,35 @@ export default function (projectConfig) {
 		resolve: {
 			
 			alias: _.assign(
-					{
-						assert: 'browser-assert',
-						
-						// Map material-ui to build ver if available
-						
-						epictask: path.resolve(baseDir, 'src'),
-						styles: path.resolve(baseDir, 'src/assets/styles'),
-						assets: path.resolve(baseDir, 'src/assets'),
-						components: path.resolve(baseDir, 'src/ui/components'),
-						ui: path.resolve(baseDir, 'src/ui'),
-						shared: path.resolve(baseDir, 'src/shared'),
-						actions: path.resolve(baseDir, 'src/shared/actions'),
-						GitHubClient: path.resolve(baseDir, 'src/shared/GitHubClient'),
-						Constants: path.resolve(baseDir, 'src/shared/Constants'),
-						Settings: path.resolve(baseDir, 'src/shared/Settings'),
-						models: path.resolve(baseDir, 'src/shared/models'),
-						main: path.resolve(baseDir, 'src/main'),
-						// "material-ui": path.resolve(baseDir, 'node_modules',materialUiModule)
-						
-					},
-					// libAlias('material-ui', 'material-ui/src/'),
-					libAlias('typedux', 'typedux/src/index.ts'),
-					libAlias('typemutant', 'typemutant/src/index.ts'),
-					libAlias('typelogger', 'typelogger/src/index.ts'),
-					libAlias('typestore', 'typestore/packages/typestore/src/index.ts'),
-					libAlias('typestore-mocks', 'typestore/packages/typestore-mocks/src/index.ts'),
-					libAlias('typestore-plugin-pouchdb', 'typestore/packages/typestore-plugin-pouchdb/src/index.ts'),
+				{
+					assert: 'browser-assert',
+					
+					// Map material-ui to build ver if available
+					
+					epictask: path.resolve(baseDir, 'src'),
+					styles: path.resolve(baseDir, 'src/assets/styles'),
+					assets: path.resolve(baseDir, 'src/assets'),
+					components: path.resolve(baseDir, 'src/ui/components'),
+					ui: path.resolve(baseDir, 'src/ui'),
+					shared: path.resolve(baseDir, 'src/shared'),
+					actions: path.resolve(baseDir, 'src/shared/actions'),
+					GitHubClient: path.resolve(baseDir, 'src/shared/GitHubClient'),
+					Constants: path.resolve(baseDir, 'src/shared/Constants'),
+					Settings: path.resolve(baseDir, 'src/shared/Settings'),
+					models: path.resolve(baseDir, 'src/shared/models'),
+					main: path.resolve(baseDir, 'src/main')
+				}
 			),
 			
 			
 			// root: 'src',
 			
 			modules: resolveDirs(
-					'src',
-					'libs/typedux/src',
-					'libs/typestore/packages/typestore/src',
-					'libs/typestore/packages/typestore-mocks/src',
-					'libs/typestore/packages/typestore-plugin-pouchdb/src',
-					'node_modules'
+				'src',
+				'node_modules',
+				'node_modules/typestore/src',
+				'node_modules/typestore-mocks/src',
+				'node_modules/typestore-plugin-pouchdb/src'
 			),
 			
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
@@ -217,8 +207,7 @@ export default function (projectConfig) {
 					/urlsearchparams/,
 					/typestore\//,
 					/typestore-plugin-pouchdb/,
-					/typestore-mocks/,
-					/typedux/
+					/typestore-mocks/
 				]
 			}),
 			{

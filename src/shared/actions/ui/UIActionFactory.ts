@@ -18,6 +18,7 @@ export function makeToastMessage(opts:any) {
 }
 
 
+
 @AutoWired
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
 

@@ -1,8 +1,8 @@
 
-const electron = require('electron')
-const proc = require('child_process')
-
-proc.spawn(electron)
+// const electron = require('electron')
+// const proc = require('child_process')
+//
+// proc.spawn(electron)
 //require('source-map-support').install()
 //require('source-map-support/register')
 
@@ -33,4 +33,5 @@ proc.spawn(electron)
  * No load the main entry
  */
 
-//require('../dist/MainEntry')
+//process.env.NODE_PATH = `${process.cwd()}/node_modules:${process.env.NODE_PATH}`
+require('../dist/MainEntry')

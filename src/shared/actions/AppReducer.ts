@@ -3,9 +3,10 @@ import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "../Constants"
 import {AppState} from './AppState'
 
-import * as uuid from 'node-uuid'
 
-
+/**
+ * Global App State Reducer
+ */
 export class AppReducer extends DefaultLeafReducer<AppState,ActionMessage<AppState>> {
 
 	constructor() {
@@ -16,6 +17,4 @@ export class AppReducer extends DefaultLeafReducer<AppState,ActionMessage<AppSta
 	defaultState(o = {}):any {
 		return AppState.fromJS(o)
 	}
-
-
 }
