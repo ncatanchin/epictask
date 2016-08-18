@@ -218,14 +218,18 @@ export default class Worker {
 			 * @type {{stdio: (string|string)[]}}
 			 */
 			const opts = {
-					stdio: ['inherit', 'inherit', 'inherit', 'ipc']
+				stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+				env: {
+					//ELECTRON_RUN_AS_NODE: 0
+				}
 			}
 			
 			// Create the process
 			log.info(`Electron path = ${ELECTRON_PATH}`)
-			//log.info('Main args are',process.argv,'execArgs',process.execArgv)
-			this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
-			//this.child = childProcess.fork(ELECTRON_PATH,this.startFile,opts)
+			log.info('Main args are',process.argv,'execArgs',process.execArgv)
+			//this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
+			debugger
+			this.child = childProcess.fork(this.startFile,[],opts)
 			
 			// Assign handlers
 			this.child.on('error',this.handleError)

@@ -92,7 +92,7 @@ describe('Main & Job can communicate', function () {
 	/**
 	 * Browser <> Worker Tests
 	 */
-	describe('BrowserWindow <> Worker (via ipcMain)', function() {
+	xdescribe('BrowserWindow <> Worker (via ipcMain)', function() {
 		
 		it('can start subscript and communicate over ipcMain with a browser window',function (done) {
 			
