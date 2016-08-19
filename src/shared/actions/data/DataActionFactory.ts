@@ -77,7 +77,7 @@ export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 	updateModels(modelType:string,updatedModels:any,clear=false) {
 		assert(modelType, 'No model type provided')
 		if (!_.isString(modelType))
-			modelType = modelType.$$clazz
+			modelType = (modelType as any).$$clazz
 
 		assert(modelType, 'A valid model type is required')
 

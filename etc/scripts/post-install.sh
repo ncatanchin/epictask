@@ -4,17 +4,22 @@
 ELECTRON_VERSION=$( cat package.json| grep -v node | grep '\"electron-prebuilt\"' | awk '{ print substr($2,2,length($2) - 3) }' )
 
 HOME=~/.electron-gyp
-pushd node_modules/leveldown
-node-gyp rebuild --target=${ELECTRON_VERSION} --arch=x64 --dist-url=https://atom.io/download/atom-shell
-popd
+DIRS="node_modules/leveldown node_modules/typestore-plugin-pouchdb/node_modules/leveldown"
+BUILT=""
+for dir in ${DIRS}
+do
+	if [ -e "${dir}" ]; then
+		echo "Using ${dir} for leveldown"
+		pushd ${dir}
+		node-gyp rebuild --target=${ELECTRON_VERSION} --arch=x64 --dist-url=https://atom.io/download/atom-shell
+		popd
+		BUILT=1
+		break
+	fi
+done
 
+if [ "${BUILT}" != "1" ]; then
+	echo "No leveldown found"
+	exit 1
+fi
 
-
-#pushd node_modules/sqlite3
-#node-gyp rebuild --target=1.2.3 --arch=x64 --dist-url=https://atom.io/download/atom-shell
-#popd
-
-
-#echo "Creating Electron EpicTask.app for DEV"
-#./etc/scripts/electron-package-dev.sh
-#./etc/scripts/build-material-ui.sh

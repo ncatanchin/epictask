@@ -143,9 +143,10 @@ export default function (projectConfig) {
 			modules: resolveDirs(
 				'src',
 				'node_modules',
-				'node_modules/typestore/src',
-				'node_modules/typestore-mocks/src',
-				'node_modules/typestore-plugin-pouchdb/src'
+				'node_modules/typestore/node_modules',
+				'node_modules/typestore-plugin-pouchdb/node_modules',
+				// 'node_modules/typestore/src',
+				// 'node_modules/typestore-mocks/src'
 			),
 			
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
@@ -205,9 +206,9 @@ export default function (projectConfig) {
 					/webpack\/hot/,
 					/webpack-hot/,
 					/urlsearchparams/,
-					/typestore\//,
-					/typestore-plugin-pouchdb/,
-					/typestore-mocks/
+					// /typestore\//,
+					// /typestore-plugin-pouchdb/,
+					// /typestore-mocks/
 				]
 			}),
 			{
