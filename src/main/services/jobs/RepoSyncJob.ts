@@ -8,7 +8,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
-import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType} from 'shared/models'
+import {SyncStatus,User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
 import {Stores,chunkSave,chunkRemove} from '../DBService'
 import {Settings} from 'shared/Settings'
@@ -95,7 +95,7 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncAssignees(stores:Stores, repo:Repo,onPageCallback:OnPageCallback = null) {
+	async syncAssignees(stores:Stores, repo:Repo,onPageCallback:OnPageCallback<User> = null) {
 		/*
 		if (!(repo.permissions.push || repo.permissions.admin)) {
 			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
@@ -147,7 +147,7 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncIssues(stores:Stores,repo:Repo,onPageCallback:OnPageCallback = null) {
+	async syncIssues(stores:Stores,repo:Repo,onPageCallback:OnPageCallback<Issue> = null) {
 		const issues = await this.client.repoIssues(repo,{
 			onPageCallback,
 			params: assign({
@@ -181,7 +181,7 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncLabels(stores,repo,onPageCallback:OnPageCallback = null) {
+	async syncLabels(stores,repo,onPageCallback:OnPageCallback<Label> = null) {
 		const labels = await this.client.repoLabels(repo,{onPageCallback})
 		
 		if (this.isDryRun())
@@ -206,7 +206,7 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncMilestones(stores,repo,onPageCallback:OnPageCallback = null) {
+	async syncMilestones(stores,repo,onPageCallback:OnPageCallback<Milestone> = null) {
 		const milestones = await this.client.repoMilestones(repo,{params: {state: 'all'}})
 		
 		if (this.isDryRun())
@@ -233,7 +233,7 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 
-	async syncComments(stores,repo,onPageCallback:OnPageCallback = null) {
+	async syncComments(stores,repo,onPageCallback:OnPageCallback<Comment> = null) {
 		let comments = await this.client.repoComments(repo, {
 			params: assign({sort: 'updated'}, this.lastSyncParams)
 		})

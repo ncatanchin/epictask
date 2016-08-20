@@ -21,7 +21,7 @@ process.on("uncaughtException", function (err) {
 })
 
 
-let loadedServices = {}
+//let loadedServices = {}
 let configurator:MainConfigurator = null
 
 
@@ -61,8 +61,10 @@ export async function configureMain(...serviceClazzes) {
 
 
 declare global {
+	//noinspection JSUnusedLocalSymbols
 	const nock:typeof nockGlobal
-	
+
+	//noinspection JSUnusedLocalSymbols
 	const MainTestSetup: {
 		configureMain: typeof configureMain,
 		shutdownMain: typeof shutdownMain
