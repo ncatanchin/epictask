@@ -5,14 +5,15 @@
 // Imports
 import * as React from 'react'
 import {PureRender, LabelFieldEditor, Icon, Button} from 'components/common'
-import {Issue} from 'models/Issue'
-import {Label} from 'models/Label'
-import {Milestone} from 'models/Milestone'
+import {Issue} from 'shared/models/Issue'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
+import {Repo} from 'shared/models/Repo'
 import filterProps from 'react-valid-props'
 import {repoName, getGithubErrorText} from 'ui/components/common/Renderers'
 import {TextField} from 'material-ui'
 import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
-import {Repo} from 'models/Repo'
+
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -20,7 +21,7 @@ import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {
 	editingIssueSelector, labelsSelector, milestonesSelector,
 	issueStateSelector
-} from 'actions/issue/IssueSelectors'
+} from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
 import {HotKeyContext} from 'components/common/HotKeyContext'
 import {HotKeys} from 'react-hotkeys'
@@ -29,7 +30,7 @@ import {Container} from 'typescript-ioc'
 import {CommonKeys} from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import Radium = require('radium')
-import {AvailableRepo} from 'models/AvailableRepo'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {MenuItem} from 'material-ui'
 import {SelectField} from 'material-ui'
 import {enabledReposSelector} from 'shared/actions/repo/RepoSelectors'

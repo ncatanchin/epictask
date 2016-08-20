@@ -47,7 +47,7 @@ function decorateConstructor(derived: Function, base: Function) {
 //export function RegisterModel<T extends any>(target:ModelConstructor<T>) {
 export function RegisterModel<T>(target:any) {
 	const clazzName = target.name
-	log.info(`Registering model: ${clazzName}`)
+	log.debug(`Registering model: ${clazzName}`)
 	registerModel(clazzName,target)
 
 	target.$$clazz = clazzName
@@ -69,14 +69,8 @@ export function RegisterModel<T>(target:any) {
  * @param clazz
  */
 function registerModel<T>(name,clazz:ModelConstructor<T>) {
-	log.info(`Adding $$clazz to prototype of ${name}`)
-
-	//const origConstructor = clazz.prototype.contructor
-
-
+	log.debug(`Adding $$clazz to prototype of ${name}`)
 	modelClasses[name] = {name,clazz}
-
-
 }
 
 
@@ -90,5 +84,6 @@ export function getModel(name):ModelConstructor<any> {
 	const model = modelClasses[name]
 	if (!model)
 		throw new Error(`Model not found for ${name}`)
+	
 	return model.clazz
 }

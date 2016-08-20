@@ -10,7 +10,7 @@ import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
 import {createStructuredSelector} from 'reselect'
 import {Activity} from 'shared/models/Activity'
-import {User} from 'models/User'
+import {User} from 'shared/models/User'
 
 
 

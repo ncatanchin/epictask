@@ -227,7 +227,7 @@ export default class JobService extends BaseService {
 			.values(this.jobMap)
 			.map(({handler}) => handler.info)
 
-		this.jobActions.setJobsInfo(List(infos))
+		infos.forEach(info => this.jobActions.setJobInfo(info))
 	}
 
 

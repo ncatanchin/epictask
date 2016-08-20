@@ -7,7 +7,7 @@ import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
-import {GitHubClient} from 'shared/GitHubClient'
+import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
 import {SyncStatus,User,Repo,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
 import {Stores,chunkSave,chunkRemove} from '../DBService'
@@ -49,14 +49,27 @@ export class RepoSyncJob extends Job {
 
 		if (job) {
 			const {availableRepo,repo} = job.args
-			Object.assign(this,{availableRepo,repo})
+			
+			Object.assign(this,{
+				availableRepo,
+				repo
+			})
+			
 			this.description = `repo sync (${repo.full_name})`
 		}
 	}
+	
+	/**
+	 * if dryRun argument was passed as true,
+	 * prohibts persistence, etc
+	 */
+	isDryRun = () => _.get(this.job,'args.dryRun',false) === true
+		
 
 	/**
 	 * Init params
 	 *
+	 * @param activityManager
 	 * @param repo
 	 */
 	@Benchmarker
@@ -82,17 +95,22 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncAssignees(stores:Stores, repo:Repo) {
-		const userRepo = stores.user
+	async syncAssignees(stores:Stores, repo:Repo,onPageCallback:OnPageCallback = null) {
+		/*
 		if (!(repo.permissions.push || repo.permissions.admin)) {
 			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
 			return
 		}
-		const users:User[] = await this.client.repoAssignees(repo)
-
+		*/
+		const users:User[] = await this.client.repoAssignees(repo,{onPageCallback})
+		
+		if (this.isDryRun())
+			return users
+		
 		// Iterate all attached users and make sure we
 		// update the repoIds on the user object if
 		// already exists
+		const userRepo = stores.user
 		const existingUserIds = await userRepo.findAll()
 		const updatePromises = []
 		users.forEach(user => {
@@ -117,7 +135,7 @@ export class RepoSyncJob extends Job {
 
 		log.info(`Updated ${users.length} for repo ${repo.full_name}`)
 
-
+		return users
 
 
 	}
@@ -129,8 +147,9 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncIssues(stores:Stores,repo) {
+	async syncIssues(stores:Stores,repo:Repo,onPageCallback:OnPageCallback = null) {
 		const issues = await this.client.repoIssues(repo,{
+			onPageCallback,
 			params: assign({
 				state: 'all',
 				sort: 'updated',
@@ -139,6 +158,9 @@ export class RepoSyncJob extends Job {
 		})
 
 		log.info(`Got ${issues.length} issues`)
+		if (this.isDryRun())
+			return issues
+		
 		for (let issue of issues) {
 			issue.repoId = repo.id
 			const existing = await stores.issue.get(issue.id)
@@ -149,6 +171,7 @@ export class RepoSyncJob extends Job {
 		if (issues.length)
 			await chunkSave(issues,stores.issue)
 
+		return issues
 	}
 
 	/**
@@ -158,8 +181,12 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncLabels(stores,repo) {
-		const labels = await this.client.repoLabels(repo)
+	async syncLabels(stores,repo,onPageCallback:OnPageCallback = null) {
+		const labels = await this.client.repoLabels(repo,{onPageCallback})
+		
+		if (this.isDryRun())
+			return labels
+		
 		for (let label of labels) {
 			label.repoId = repo.id
 			const existing = await stores.label.get(label.url)
@@ -168,8 +195,8 @@ export class RepoSyncJob extends Job {
 		}
 
 
-		//log.debug(`Loaded labels, time to persist`, labels)
 		await chunkSave(labels,stores.label)
+		return labels
 	}
 
 	/**
@@ -179,10 +206,12 @@ export class RepoSyncJob extends Job {
 	 * @param repo
 	 */
 	@Benchmarker
-
-	async syncMilestones(stores,repo) {
+	async syncMilestones(stores,repo,onPageCallback:OnPageCallback = null) {
 		const milestones = await this.client.repoMilestones(repo,{params: {state: 'all'}})
-
+		
+		if (this.isDryRun())
+			return milestones
+		
 		log.info(`Got ${milestones.length} milestones`)
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
@@ -193,6 +222,7 @@ export class RepoSyncJob extends Job {
 
 		//log.debug(`Loaded milestones, time to persist`, milestones)
 		await chunkSave(milestones,stores.milestone)
+		return milestones
 	}
 
 	/**
@@ -203,13 +233,13 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 
-	async syncComments(stores,repo) {
+	async syncComments(stores,repo,onPageCallback:OnPageCallback = null) {
 		let comments = await this.client.repoComments(repo, {
 			params: assign({sort: 'updated'}, this.lastSyncParams)
 		})
-
-		// Filter JUST in case there are some missing issue urls
-		//comments = comments.filter(comment => comment.issue_url)
+		
+		if (this.isDryRun())
+			return comments
 
 		// Fill in the fields we tack directly
 		for (let comment of comments) {
@@ -231,8 +261,8 @@ export class RepoSyncJob extends Job {
 
 		}
 
-		//log.debug(`Loaded comments, time to persist`, comments)
 		await chunkSave(comments,stores.comment)
+		return comments
 	}
 
 	/**
@@ -252,14 +282,9 @@ export class RepoSyncJob extends Job {
 		const activityManager = Container.get(ActivityManagerService)
 		const stores = Container.get(Stores)
 		const toaster = Container.get(Toaster)
-		const repoActions =  Container.get(RepoActionFactory)
 		const issueActions =  Container.get(IssueActionFactory)
-		const dataActions =  Container.get(DataActionFactory)
-		const appActions = Container.get(AppActionFactory)
 
 		const {availableRepo,repo} = this
-
-
 
 		if (!Settings.token) {
 			log.info("Can not sync, not authenticated")
@@ -318,11 +343,6 @@ export class RepoSyncJob extends Job {
 				if (issue && issue.repoId === repo.id)
 					issueActions.loadActivityForIssue(issue.id)
 			}
-
-
-
-			// Notify of completion
-			//toaster.addMessage(`Finished ${this.name}`)
 
 		} catch (err) {
 			log.error('failed to sync repo issues', err)

@@ -28,22 +28,10 @@
 			"ui/*": [
 				"./ui/*"
 			],
-			"actions": [
-				"./shared/actions/index.ts"
-			],
-			"actions/*": [
-				"./shared/actions/*"
-			],
 			"jobs/*": [
 				"./jobs/*"
 			],
 
-			"models": [
-				"./shared/models/index.ts"
-			],
-			"models/*": [
-				"./shared/models/*"
-			],
 			"GitHubClient": [
 				"./shared/GitHubClient.ts"
 			],
@@ -72,14 +60,20 @@
 			"components/*": [
 				"./ui/components/*"
 			],
+			"typelogger": [
+				"../../typelogger/src/index.ts"
+			],
+			"typedux": [
+				"../../typedux/src/index.ts"
+			],
 			"typestore": [
-				"../node_modules/typestore/src/index.ts"
+				"../../typestore/packages/typestore/src/index.ts"
 			],
 			"typestore-plugin-pouchdb": [
-				"../node_modules/typestore-plugin-pouchdb/src/index.ts"
+				"../../typestore/packages/typestore-plugin-pouchdb/src/index.ts"
 			],
 			"typestore-mocks": [
-				"../node_modules/typestore-mocks/src/index.ts"
+				"../../typestore/packages/typestore-mocks/src/index.ts"
 			]
 			
 

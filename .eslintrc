@@ -31,6 +31,17 @@
 		"_": true,
 		"writeJSONFileSync": true,
 		"readJSONFileSync": true,
-		"baseDir": true
+		"baseDir": true,
+		"log": true,
+		"compileTasks":true,
+		"allWatchConfigs":true,
+		"nextMinorVersion":true,
+		"releaseFiles":true,
+		"releaseDir":true,
+		"projectNames":true,
+		"basePackageJson": true,
+		"tsc": true,
+		"processDir": true,
+		"console": true
 	}
 }

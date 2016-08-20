@@ -142,11 +142,7 @@ export default function (projectConfig) {
 			
 			modules: resolveDirs(
 				'src',
-				'node_modules',
-				'node_modules/typestore/node_modules',
-				'node_modules/typestore-plugin-pouchdb/node_modules',
-				// 'node_modules/typestore/src',
-				// 'node_modules/typestore-mocks/src'
+				'node_modules'
 			),
 			
 			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],

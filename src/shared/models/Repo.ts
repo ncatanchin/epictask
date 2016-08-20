@@ -32,9 +32,17 @@ export class Repo extends DefaultModel {
 
 
 	@AttributeDescriptor({primaryKey:true})
-	id: number;
-
-	owner: User;
+	id: number
+	
+	/**
+	 * Organization owner if not individual
+	 */
+	organization: User
+	
+	/**
+	 * Individual owner
+	 */
+	owner: User
 
 	@AttributeDescriptor()
 	name: string;

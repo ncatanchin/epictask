@@ -1,3 +1,6 @@
 import './MainTestSetup'
 
-import './jobs/JobMessaging.spec'
+
+import "./jobs/RepoSyncJob.spec"
+
+

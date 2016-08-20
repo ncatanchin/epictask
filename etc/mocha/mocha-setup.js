@@ -1,16 +1,6 @@
 require('source-map-support').install()
 
 
-// const Module = require('module')
-// if (Module.globalPaths)
-// 	Module.globalPaths.push(process.cwd() + '/target/ts/src')
-//
-// global.DEBUG = true
-// process.env.NODE_ENV = process.env.NODE_ENV || 'development'
-// process.env.NODE_PATH += `:${process.cwd()}/target/ts/src:${process.cwd()}/target/ts/libs`
-
-//require('../packages-path')
-
 global.Promise = require('bluebird')
 
 Promise.config({
@@ -25,10 +15,10 @@ require("babel-polyfill")
 require('expectations')
 require('reflect-metadata')
 
-// var Log = require('typestore').Log
+// Put lodash on the global scope
+global._ = require('lodash')
 
-// if (!process.env.DEBUG)
-//  	Log.setLogThreshold(Log.LogLevel.DEBUG)
+const isDebug = !_.isNil(process.env.DEBUG)
 
 global.getLogger = function(filename) {
 	return ['debug','info','error','warn','trace'].reduce((logger,nextLevel) => {
@@ -37,6 +27,8 @@ global.getLogger = function(filename) {
 			console.log.bind(console)
 
 		logger[nextLevel] = (...args) => {
+			if (nextLevel === 'debug' && !isDebug)
+				return
 			fn(filename,...args)
 		}
 
@@ -45,6 +37,3 @@ global.getLogger = function(filename) {
 
 }
 
-
-//global.Promise = global.BBPromise = require('../../packages/typestore/dist/Promise')
-//global.assert = require('assert')

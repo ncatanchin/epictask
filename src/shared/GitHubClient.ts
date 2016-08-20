@@ -5,6 +5,8 @@ import {Settings} from './Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
 import {cloneObject} from 'shared/util'
+
+
 const {URLSearchParams} = require('urlsearchparams')
 
 const log = getLogger(__filename)
@@ -46,7 +48,7 @@ export const GithubErrorCodes = {
 }
 
 /**
- * GitHub CLient Error
+ * GitHub Client Error
  */
 export class GithubError extends Error {
 	constructor(
@@ -60,6 +62,9 @@ export class GithubError extends Error {
 
 export type OnPageCallback<M> = (pageNumber:number,totalPages:number,pageItems:M[]) => void
 
+/**
+ * Request options for any/all API Requests
+ */
 export interface RequestOptions {
 	traversePages?:boolean
 	perPage?:number
@@ -73,7 +78,6 @@ export interface RequestOptions {
  * GitHubClient for remote
  * API access
  */
-
 export class GitHubClient {
 
 	constructor(private token:string = Settings.token) {
@@ -136,15 +140,16 @@ export class GitHubClient {
 
 			const lastLink = pageLinks[PageLinkType.last]
 			if (opts.traversePages && result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
-				log.debug('Going to traverse pages',opts,pageLinks,result)
+				log.debug('Going to traverse pages',opts,pageLinks)
 
 				// Because we are going to traverse, we should do a page callback first
 				this.doPageCallback(opts,result.pageNumber,lastLink.pageNumber,result)
 
-				let nextPageNumber = 0 //opts.page
+				let nextPageNumber = 1 //opts.page
 				while (nextPageNumber < lastLink.pageNumber) {
 					nextPageNumber++
-
+					
+					log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
 
 					await Promise.resolve(true).delay(1000)
 					const nextOpts = Object.assign({},opts,{page:nextPageNumber})
@@ -417,10 +422,14 @@ export class GitHubClient {
 
 }
 
+// Create a new GitHubClient
 export function createClient(token:string = null) {
 	if (!token)
 		token = Settings.token
 
+	// If not set and env var exists then use it
+	token = token ||	process.env.GITHUB_API_TOKEN
+		
 	if (!token)
 		throw new Error('No valid token available')
 

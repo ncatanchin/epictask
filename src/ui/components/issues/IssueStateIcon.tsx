@@ -10,7 +10,7 @@ import {PureRender, Icon} from 'components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {TIssueState} from 'models/Issue'
+import {TIssueState} from 'shared/models/Issue'
 
 // Constants
 const log = getLogger(__filename)

@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Test Sources" pattern="file[epictask]:src/tests//*" />
+</component>

@@ -3,6 +3,7 @@ import 'shared/PromiseConfig'
 import 'shared/Globals'
 import {Container} from 'typescript-ioc'
 import {MainConfigurator} from 'main/MainConfigurator'
+import * as nockGlobal from 'nock'
 
 const log = getLogger(__filename)
 
@@ -60,6 +61,8 @@ export async function configureMain(...serviceClazzes) {
 
 
 declare global {
+	const nock:typeof nockGlobal
+	
 	const MainTestSetup: {
 		configureMain: typeof configureMain,
 		shutdownMain: typeof shutdownMain
@@ -67,6 +70,7 @@ declare global {
 }
 
 Object.assign(global,{
+	nock:nockGlobal,
 	MainTestSetup: {
 		configureMain,
 		shutdownMain

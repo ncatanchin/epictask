@@ -3,42 +3,44 @@
  */
 
 // Imports
-import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {Map} from 'immutable'
-import {PureRender, Button} from 'components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector} from 'reselect'
-import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Issue} from 'models/Issue'
+import * as React from "react"
+import {connect} from "react-redux"
+import {createStructuredSelector} from "reselect"
+import * as Radium from "radium"
+import {Map} from "immutable"
+import {Dialog, CircularProgress, MenuItem} from "material-ui"
+import {HotKeys} from "react-hotkeys"
+import {MuiThemeProvider} from "material-ui/styles"
+import {Container} from "typescript-ioc"
+
+import {PureRender, Button} from "components/common"
+import {createDeepEqualSelector} from "shared/util/SelectorUtil"
+
+import {ThemedStyles} from "shared/themes/ThemeManager"
+import {Issue} from "shared/models/Issue"
 import {
-	issueModelsSelector, milestoneModelsSelector, userModelsSelector,
-	labelModelsSelector, availRepoModelsSelector, repoModelsSelector
-} from 'shared/actions/data/DataSelectors'
-import {patchIssuesSelector, patchModeSelector, issueStateSelector} from 'shared/actions/issue/IssueSelectors'
-import {User} from 'models/User'
-import {Label} from 'models/Label'
-import {Milestone} from 'models/Milestone'
-import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {Dialogs} from 'shared/Constants'
-import {Dialog} from 'material-ui'
-import {HotKeys} from 'react-hotkeys'
-import {MuiThemeProvider} from 'material-ui/styles'
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+	issueModelsSelector,
+	milestoneModelsSelector,
+	userModelsSelector,
+	labelModelsSelector,
+	availRepoModelsSelector,
+	repoModelsSelector
+} from "shared/actions/data/DataSelectors"
+import {patchIssuesSelector, patchModeSelector, issueStateSelector} from "shared/actions/issue/IssueSelectors"
+import {User} from "shared/models/User"
+import {Label} from "shared/models/Label"
+import {Milestone} from "shared/models/Milestone"
+import {uiStateSelector} from "shared/actions/ui/UISelectors"
+import {Dialogs} from "shared/Constants"
+import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
+import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
+import {IssuePatchModes, TIssuePatchMode} from "shared/actions/issue"
+import {TypeAheadSelect} from "ui/components/common/TypeAheadSelect"
+import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import LabelChip from "ui/components/common/LabelChip"
+import {IssueLabelsAndMilestones, Avatar} from "ui/components"
+import {CommonKeys} from "shared/KeyMaps"
 
-import {cloneObject} from 'shared/util/ObjectUtil'
-import {IssuePatchModes, TIssuePatchMode} from 'shared/actions/issue'
-import {CircularProgress} from 'material-ui'
-import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
-import {MenuItem} from 'material-ui'
-
-import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
-import LabelChip from 'ui/components/common/LabelChip'
-import {IssueLabelsAndMilestones, Avatar} from 'ui/components'
-import {CommonKeys} from 'shared/KeyMaps'
-import {Container} from 'typescript-ioc'
 
 // Constants
 const log = getLogger(__filename)

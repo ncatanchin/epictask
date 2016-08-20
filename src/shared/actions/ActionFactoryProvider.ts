@@ -13,15 +13,6 @@ let actionCtx = null
 export function getActionFactoryProxyProvider<T extends ActionFactory<any,any>>(name,factory:{new():T}) {
 	factoryMap[name] = factory
 
-	// const instances = proxyMap[name] || []
-	// if (!)
-	//
-	// let proxy = proxyMap[name]
-	// if (proxy)
-	// 	proxy.changeTarget(new factory())
-	// else
-	// 	proxyMap[name] = new VariableProxy<any>(new factory())
-
 	return {
 		get: () => new (factoryMap[name])()
 	}
@@ -33,7 +24,7 @@ const initActionFactory = (key,mod) => {
 	const factory = mod.default
 	try {
 		const name = key.split('/').pop().split('\.').shift()
-		log.info(`Creating and registing action factory '${name}': (isDev=${Env.isDev}) - in dev we return a proxy`)
+		log.info(`Creating and registering action factory '${name}': (isDev=${Env.isDev}) - in dev we return a proxy`)
 		new factory()
 		if (Env.isDev)
 			Container.bind(factory).provider(getActionFactoryProxyProvider(name,factory))
@@ -55,7 +46,7 @@ export function loadActionFactories() {
 
 	if (module.hot) {
 		module.hot.accept([actionCtx.id],(updates) => {
-			log.info('Reloading action factories')
+			log.info('Reloading action factories',updates)
 			loadActionFactories()
 		})
 	}

@@ -5,16 +5,16 @@
 // Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Issue} from 'shared/models/Issue'
 import {Label} from 'shared/models/Label'
 import {Icon} from 'ui/components'
-import {Milestone} from 'models/Milestone'
+import {Milestone} from 'shared/models/Milestone'
 
 const tinycolor = require('tinycolor2')
 
 // Constants
+//noinspection JSUnusedLocalSymbols
 const log = getLogger(__filename)
 
 export const baseStyles = createStyles({

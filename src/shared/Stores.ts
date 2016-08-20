@@ -1,21 +1,15 @@
-// import {Repo as TSRepo, IModel} from 'typestore'
-
-import {ActivityStore} from 'models/Activity'
-import {UserStore} from 'models/User'
-import {LabelStore} from 'models/Label'
-import {MilestoneStore} from 'models/Milestone'
-import {AvailableRepoStore} from 'models/AvailableRepo'
-import {RepoStore} from 'models/Repo'
-import {IssueStore} from 'models/Issue'
-import {CommentStore} from 'models/Comment'
+import {ActivityStore} from 'shared/models/Activity'
+import {UserStore} from 'shared/models/User'
+import {LabelStore} from 'shared/models/Label'
+import {MilestoneStore} from 'shared/models/Milestone'
+import {AvailableRepoStore} from 'shared/models/AvailableRepo'
+import {RepoStore} from 'shared/models/Repo'
+import {IssueStore} from 'shared/models/Issue'
+import {CommentStore} from 'shared/models/Comment'
 
 
 
 export class Stores {
-
-	//dbService
-
-	constructor() {}
 
 	issue:IssueStore
 	repo: RepoStore
@@ -25,8 +19,5 @@ export class Stores {
 	label: LabelStore
 	activity: ActivityStore
 	user: UserStore
-
-	// getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-	// 	return this.dbService.getStore(repoClazz)
-	// }
+	
 }

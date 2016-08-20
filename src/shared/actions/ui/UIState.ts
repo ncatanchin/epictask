@@ -1,7 +1,7 @@
 import {List,Record,Map} from 'immutable'
 
-import {IToastMessage} from 'models/Toast'
-import {User} from 'models/User'
+import {IToastMessage} from 'shared/models/Toast'
+import {User} from 'shared/models/User'
 import {AppStateType} from 'shared/AppStateType'
 import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"

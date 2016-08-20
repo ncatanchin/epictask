@@ -4,38 +4,20 @@
 const log = getLogger(__filename)
 
 
-import DBService from 'main/services/DBService'
-import {Container} from 'typescript-ioc'
-import {User, UserStore} from 'shared/models/User'
-
-log.info('User loaded')
-
+import {UserStore} from 'shared/models/User'
 import Electron = require('electron')
-
-log.info('electron loaded')
 import {toDataUrl} from 'main/MainTemplates'
 
-const {app,BrowserWindow,ipcMain} = Electron
-//app.commandLine.appendSwitch('enable-logging')
+const {BrowserWindow,ipcMain} = Electron
 
 
-
-let dbService:DBService
-
-
-
-
-describe.only('Database Remote (IPC) Service',() => {
+describe('Database Remote (IPC) Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		// await MainTestSetup.configureMain(DBService)
-		//
-		// dbService = Container.get(DBService)
 	})
 
 	after(async () => {
 		log.info(`Shutting down database service`)
-		//await MainTestSetup.shutdownMain()
 	})
 
 	it('Can open an close a background window',(done) => {

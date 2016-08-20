@@ -18,8 +18,8 @@ import {Container} from 'typescript-ioc'
 
 
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Comment} from 'models/Comment'
-import {Issue} from 'models/Issue'
+import {Comment} from 'shared/models/Comment'
+import {Issue} from 'shared/models/Issue'
 
 import {selectedIssueSelector, issueStateSelector, editingCommentSelector} from 'shared/actions/issue/IssueSelectors'
 

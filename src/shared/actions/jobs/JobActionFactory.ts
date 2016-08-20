@@ -1,22 +1,15 @@
 
 
-import {JobState, IJobInfo, IJob} from 'shared/actions/jobs/JobState'
-/**
- * Created by jglanz on 5/29/16.
- */
+import {AutoWired} from 'typescript-ioc'
+import {ActionFactory, Action, ActionMessage, ActionReducer} from 'typedux'
+import {Map} from 'immutable'
 
-
-const log = getLogger(__filename)
 
 // IMPORTS
-
-
-import {AutoWired} from 'typescript-ioc'
-import {ActionFactory,Action,ActionMessage} from 'typedux'
+import {JobState, IJobInfo, IJob} from 'shared/actions/jobs/JobState'
 import {JobKey} from "shared/Constants"
 
-import {JobHandler} from './JobHandler'
-import {List} from 'immutable'
+const log = getLogger(__filename)
 
 /**
  * RepoActionFactory.ts
@@ -36,8 +29,12 @@ export class JobActionFactory extends ActionFactory<any,ActionMessage<JobState>>
 		return JobKey;
 	}
 
-	@Action()
-	setJobsInfo(jobsInfo:List<IJobInfo>) {}
+	@ActionReducer()
+	setJobInfo(jobInfo:IJobInfo) {
+		return (jobState:JobState) => jobState.update('info', (infoMap:Map<string,any>) => {
+			return infoMap.set(jobInfo.jobId,jobInfo)
+		})
+	}
 
 
 	@Action()

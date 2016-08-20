@@ -23,6 +23,6 @@ export function getReducers():ILeafReducer<any,any>[] {
 		}
 	})
 
-	log.debug('Returning reducers',reducers)
+	//log.debug('Returning reducers',reducers)
 	return reducers
 }

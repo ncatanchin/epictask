@@ -45,5 +45,8 @@
   },
   "globalDevDependencies": {
     "mocha": "registry:env/mocha#2.2.5+20160723033700"
+  },
+  "devDependencies": {
+    "nock": "registry:npm/nock#0.7.0+20160723033700"
   }
 }
