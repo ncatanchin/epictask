@@ -1,8 +1,5 @@
-import {Container} from 'typescript-ioc'
 import {JSONKey} from 'shared/Constants'
 import {isNil} from 'shared/util/ObjectUtil'
-import JobService from 'main/services/JobService'
-import {IJob, Job} from 'shared/actions/jobs/JobState'
 
 
 const log = getLogger(__filename)

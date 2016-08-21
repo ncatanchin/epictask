@@ -1,7 +1,7 @@
 import {ObservableStore} from 'typedux'
 import {List} from 'immutable'
 import {Container} from 'typescript-ioc'
-import {BaseService} from './IService'
+
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {JobHandler, JobHandlerEventType} from 'shared/actions/jobs/JobHandler'
@@ -42,7 +42,7 @@ export interface IJobExecutor {
 /**
  * Job Service for managing all operations
  */
-export default class JobService extends BaseService {
+export default class JobService {
 
 	private killed = false
 
@@ -59,19 +59,25 @@ export default class JobService extends BaseService {
 	 * @type {TJobMap}
 	 */
 	private jobMap:TJobMap = {}
-
+	
+	
+	/**
+	 * Unsubscribe from store updates
+	 */
+	private unsubscriber:Function
+	
 	private jobsCtx
 
-	//@Inject
+	
 	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
 
-	//@Inject
+	
 	jobActions:JobActionFactory = Container.get(JobActionFactory)
 
-	//@Inject
+	
 	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
-	//@Inject
+	
 	toaster:Toaster = Container.get(Toaster)
 
 	private loadJobs() {
@@ -147,17 +153,14 @@ export default class JobService extends BaseService {
 	 * @returns {JobService}
 	 */
 	async start():Promise<this> {
-		await super.start()
-
-
+		
 		// Now load everything
-		const {state} = this.jobActions
 		this.updateJobInfo()
 
 		/**
 		 * Watch for job updates
 		 */
-		this.store.observe([this.jobActions.leaf(), 'pendingJobs'], (pendingJobs) => {
+		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'pendingJobs'], (pendingJobs) => {
 			log.debug('Check new jobs for anything that need to be worked')
 			this.checkPendingJobs(pendingJobs)
 		})
@@ -178,6 +181,7 @@ export default class JobService extends BaseService {
 
 		this.jobActions.clearPendingJobs()
 	}
+	
 
 	/**
 	 * On a job event, handle it!
@@ -302,8 +306,13 @@ export default class JobService extends BaseService {
 
 
 	kill() {
-		assert(module.hot,'kill can only be called for hmr')
+		//assert(module.hot,'kill can only be called for hmr')
 		this.killed = true
+		
+		if (this.unsubscriber)
+			this.unsubscriber()
+		
+		
 		Object.values(this.jobMap).forEach(jobContainer => {
 			try {
 				jobContainer.handler.kill()
@@ -314,16 +323,16 @@ export default class JobService extends BaseService {
 		this.jobMap = {}
 	}
 }
-
-if (module.hot) {
-	module.hot.dispose(() => {
-		try {
-			const jobService = Container.get(JobService)
-			jobService.kill()
-		} catch (err) {
-			log.error(`hmr dispose of jobservice failed`, err)
-		}
-	})
-}
+//
+// if (module.hot) {
+// 	module.hot.dispose(() => {
+// 		try {
+// 			const jobService = Container.get(JobService)
+// 			jobService.kill()
+// 		} catch (err) {
+// 			log.error(`hmr dispose of jobservice failed`, err)
+// 		}
+// 	})
+// }
 
 

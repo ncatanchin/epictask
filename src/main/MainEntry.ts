@@ -1,24 +1,12 @@
-//region PROCESS_SETUP
-require('source-map-support').install()
-require('babel-polyfill')
-process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
-//endregion
-
-import 'reflect-metadata'
-import 'shared/PromiseConfig'
-import 'shared/ErrorHandling'
-import {Container} from 'typescript-ioc'
+require('shared/NodeEntryInit')
 
 import {RemoteDebuggingPort,Events} from 'shared/Constants'
-
-const {app,BrowserWindow} = require('electron')
-
-
-// LOAD EVERYTHING
-import 'shared/Globals'
 import {MainConfigurator as MainConfiguratorConstructor} from './MainConfigurator'
-
 type MainConfiguratorType = typeof MainConfiguratorConstructor
+
+const {app} = require('electron')
+
+
 
 // LOGGING
 import './MainLogging'
@@ -157,11 +145,7 @@ if (shouldQuit) {
 if (module.hot) {
 	console.info('Setting up HMR')
 
-	// When constants change - ignore
-	module.hot.accept(['shared/Constants','shared/actions/AppActionFactory','shared/store/AppStore'], () => {
-		log.warn('Constants/AppActionFactory/AppStore - ignored')
-	})
-
+	
 	// Main window or configurator - reboot app
 	module.hot.accept(['./MainWindow','./MainConfigurator'], (mods) => {
 		log.info("Rebooting main, updated dependencies",mods)

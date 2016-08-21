@@ -1,12 +1,13 @@
-import {Toaster} from 'shared/Toaster'
-const log = getLogger(__filename)
 
 import thunkMiddleware from 'redux-thunk'
 import * as createLogger from 'redux-logger'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
-import {Events, ReduxDebugSessionKey} from '../Constants'
-import {getReducers} from 'shared/store/Reducers'
 import {Container} from 'typescript-ioc'
+import {ReduxDebugSessionKey} from 'shared/Constants'
+import {Toaster} from 'shared/Toaster'
+import {getReducers} from 'shared/store/Reducers'
+
+import * as ServerStateClient from "shared/actions/ServerClient"
 import {
 	setStoreProvider,
 	ILeafReducer,
@@ -28,6 +29,7 @@ import {
 } from 'shared/actions/ActionFactoryProvider'
 
 
+const log = getLogger(__filename)
 
 const electron = require('electron')
 const ipc = (Env.isRenderer) ?
@@ -39,16 +41,23 @@ const ActionLoggerEnabled = false
 
 
 // If renderer then add an action interceptor
-if (Env.isRenderer) {
-	const browserNextTick = require('browser-next-tick')
-	const unregisterInterceptor = addActionInterceptor((reg:IActionRegistration,next:IActionInterceptorNext,...args:any[]) => {
-		const {leaf,type,options} = reg
+if (isStateServer) {
+	//const browserNextTick = require('browser-next-tick')
+	
+	// Ad the interceptor and keep track of the
+	// unregister fn
+	const unregisterInterceptor = addActionInterceptor(
+		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
+			
+			// Push it to the server
+			ServerStateClient.sendAction(leaf,type,...args)
+			
+			// If it's a reducer then process it, otherwise - wait for server
+			// to process the action and send data
+			return (options && options.isReducer) ? next() : null
 
-		browserNextTick(() => ipc.send(Events.StoreRendererDispatch,leaf,type,args))
-
-		return (options && options.isReducer) ? next() : null
-
-	})
+		}
+	)
 
 	if (module.hot) {
 		module.hot.dispose(() => {
@@ -145,9 +154,7 @@ export function loadDevTools() {
 
 let store:ObservableStore<any>
 
-const storeEnhancer = (Env.isRenderer) ?
-	require('./RendererStoreEnhancer').default :
-	require('./MainStoreEnhancer').default
+	
 
 
 /**
@@ -186,11 +193,11 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 /**
  * Initialize/Create the store
  */
-export function initStore(devToolsMode = false,defaultState = null) {
+export function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null) {
 
 	const enhancers = [
 		applyMiddleware(...middleware),
-		storeEnhancer
+		storeEnhancer || require('./ClientStoreEnhancer').default
 	]
 
 	if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
@@ -245,16 +252,27 @@ export function initStore(devToolsMode = false,defaultState = null) {
  *
  * @returns {ObservableStore<any>}
  */
-export async function loadAndInitStore() {
-	const stateData = readFile(stateFilename)
+export async function loadAndInitStore(storeEnhancer = null) {
+	
 	let defaultStateValue = null
-	try {
-		if (stateData)
-			defaultStateValue = JSON.parse(stateData)
-	} catch (err) {
-		log.error('unable to load previous state data, starting fresh',err)
+	
+	// If state server then try and load from disk
+	if (isStateServer) {
+		const stateData = readFile(stateFilename)
+		try {
+			if (stateData)
+				defaultStateValue = JSON.parse(stateData)
+		} catch (err) {
+			log.error('unable to load previous state data, starting fresh', err)
+		}
 	}
-	return initStore(false,defaultStateValue)
+	
+	// Otherwise load from server
+	else {
+		defaultStateValue = await ServerStateClient.getState()
+	}
+	
+	return initStore(false,defaultStateValue,storeEnhancer)
 }
 
 

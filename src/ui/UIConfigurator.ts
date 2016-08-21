@@ -1,19 +1,12 @@
-import {ObservableStore} from 'typedux'
-import {Container} from 'typescript-ioc'
 import {getLogger} from 'typelogger'
+import storeBuilder from 'shared/store/AppStoreBuilder'
 
 const log = getLogger(__filename)
 
 async function boot() {
 
 	// Load Redux-Store FIRST
-
-	const store:ObservableStore<any> = require('shared/store').initStore()
-	Container.bind(ObservableStore).provider({ get: () => store})
-
-
-	// Load logger
-
+	await storeBuilder()
 
 	// Load Styles
 	require('shared/themes/styles')

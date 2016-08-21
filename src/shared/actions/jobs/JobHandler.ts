@@ -4,7 +4,7 @@ const log = getLogger(__filename)
 import * as moment from 'moment'
 import * as uuid from 'node-uuid'
 
-import JobService from 'main/services/JobService'
+import JobService from "jobs/JobService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
 
 

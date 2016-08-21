@@ -1,6 +1,6 @@
 
 import {Container} from 'typescript-ioc'
-import JobService from 'main/services/JobService'
+import JobService from "jobs/JobService"
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
 import {Stores} from 'main/services/DBService'

@@ -4,13 +4,11 @@ import * as moment from 'moment'
 import ActivityManagerService from '../ActivityManagerService'
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
 import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
-import {SyncStatus,User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
+import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import {Stores,chunkSave,chunkRemove} from '../DBService'
+import {Stores,chunkSave} from '../DBService'
 import {Settings} from 'shared/Settings'
 import Toaster from 'shared/Toaster'
 import {Benchmark} from 'shared/util/Benchmark'
@@ -18,7 +16,6 @@ import {RegisterJob} from 'jobs/JobDecorations'
 
 import {Job, IJob} from 'shared/actions/jobs/JobState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'

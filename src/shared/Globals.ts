@@ -1,5 +1,7 @@
 ///<reference path="../../typings/index.d.ts"/>
 
+import {Container as ContainerGlobal} from 'typescript-ioc'
+
 /**
  * Grab a ref to global marked as any for augmentation
  *
@@ -66,6 +68,8 @@ function installGlobals() {
 		_: LodashGlobal,
 		assert: assertGlobal,
 		Env: EnvGlobal,
+		isStateServer: false,
+		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object)
 	}, ContextUtils)
 }
@@ -78,8 +82,8 @@ function installGlobals() {
  */
 
 declare global {
-
-
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var Container:typeof ContainerGlobal
 
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal

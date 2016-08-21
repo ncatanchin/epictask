@@ -7,6 +7,7 @@ import {IService, ServiceStatus} from './services/IService'
 // Get the DBService starter
 import {DBService as DBServiceType} from './services/DBService'
 import * as ContextUtils from 'shared/util/ContextUtils'
+import storeBuilder from 'shared/store/AppStoreBuilder'
 
 let hmrReady = false
 
@@ -183,8 +184,7 @@ export class MainConfigurator {
 
 		// Load Redux-Store FIRST
 		log.info('Loading the REDUX store')
-		const store:ObservableStore<any> = await require('shared/store').loadAndInitStore()
-		Container.bind(ObservableStore).provider({ get: () => store})
+		await storeBuilder()
 
 		return this
 	}
@@ -199,9 +199,6 @@ export class MainConfigurator {
 
 		// Just in case this is an HMR reload
 		await this.stop()
-
-
-
 
 		await this.startDatabase()
 

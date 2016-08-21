@@ -193,6 +193,7 @@
     "mocha-junit-reporter": "^1.11.1",
     "moment": "^2.13.0",
     "node-fetch": "^1.5.3",
+    "node-ipc": "^8.1.0",
     "node-notifier": "^4.6.0",
     "node-uuid": "^1.4.7",
     "pug": "^2.0.0-beta2",

@@ -62,6 +62,7 @@ declare namespace Reselect {
 	function createSelector<TInput, TOutput, T1>(selector1: Selector<TInput, T1>[], combiner: (...args:T1[]) => TOutput): Selector<TInput, TOutput>;
 }
 
+declare var isStateServer:boolean
 declare var isDev:boolean
 
 
