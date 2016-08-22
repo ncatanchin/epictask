@@ -1,12 +1,9 @@
 
-import * as Electron from 'electron'
 import * as path from 'path'
-import Worker from 'main/Worker'
-import {IWorkerEventListener} from "main/Worker"
-import {IWorkerMessage} from "main/Worker"
-const
-	log = getLogger(__filename),
-	{BrowserWindow,app,ipcMain} = Electron
+
+import Worker,{IWorkerMessage,IWorkerEventListener} from "shared/Worker"
+
+const log = getLogger(__filename)
 
 
 /**
@@ -19,7 +16,7 @@ describe('Worker can communicate', function () {
 	let worker:Worker = null, workersStarted = false
 	
 	before(async () => {
-		worker = new Worker(workerScriptFile,{
+		worker = new Worker(workerScriptFile,{},{
 			onError(worker:Worker,err) {
 				log.error('worker error occurred',err)
 			},

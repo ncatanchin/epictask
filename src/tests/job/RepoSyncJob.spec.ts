@@ -1,6 +1,6 @@
 
-import DBService from '../../services/DatabaseService'
-import ActivityManagerService from '../../services/ActivityManagerService'
+import DBService from '../../shared/services/DatabaseService'
+import ActivityManagerService from '../../shared/services/ActivityManagerService'
 import {Container} from 'typescript-ioc'
 import {User} from 'shared/models/User'
 import {Issue} from 'shared/models/Issue'

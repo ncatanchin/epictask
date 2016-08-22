@@ -102,13 +102,27 @@ function listen() {
 /**
  * Connect to state server
  */
-function connect() {
+export function connect() {
 	ipc.connectTo('StateServer',listen)
 }
 
 // Connect on load
 connect()
 
+/**
+ * Disconnect ipc client
+ */
+export function disconnect() {
+	ipc.disconnect('StateServer')
+}
+
+/**
+ * Send request to state server
+ *
+ * @param type
+ * @param data
+ * @returns {IStateServerResponse}
+ */
 async function request(type:string,data:any = null) {
 	
 	// Ensure connection is established

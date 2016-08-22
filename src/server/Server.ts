@@ -4,21 +4,40 @@ import {getStoreState} from "shared/store"
 import {transformValues} from "shared/util"
 import {IStateServerResponse} from "shared/actions/ServerClient"
 import storeBuilder from 'shared/store/AppStoreBuilder'
+import Worker from 'shared/Worker'
+import * as path from 'path'
 
-import {DatabaseService as DatabaseServiceType} from '../services/DatabaseService'
+// Augment global with database server worker
+// Allows for HMR
+declare global {
+	
+	//noinspection JSUnusedLocalSymbols
+	var databaseServerWorker:Worker
+}
+
+
 
 const
 	log = getLogger(__filename),
+	workerPath = path.resolve(process.cwd(),'dist/DatabaseServerEntry.js'),
 	actionEmitter = new EventEmitter(),
 	ipc = require('node-ipc')
+
+// Create worker if it does not exist or it isnt running
+if (!databaseServerWorker || !databaseServerWorker.running) {
+	assignGlobal({
+		databaseServerWorker: new Worker(workerPath)
+	})
+}
+
 
 ipc.config.id = 'StateServer'
 ipc.config.retry = 1500
 
 /**
- * IPC mesage handlers
+ * IPC message handlers
  *
- * @type {{getState: (()=>any)}}
+ * @type {any}
  */
 const handlers = {
 	getState() {
@@ -67,12 +86,21 @@ export async function broadcastAction(action) {
  * Start the server and register handlers, etc
  */
 export async function start() {
+	log.info('Starting Server')
+	
+	// Database Server first
+	if (databaseServerWorker.running) {
+		log.info(`Database Server is already running - HMR?`)
+	} else {
+		log.info('Start the Database Server first')
+		await databaseServerWorker.start()
+	}
 	
 	// First create the store
 	await storeBuilder(require('./ServerStoreEnhancer').default)
 	
-	// Then start the ipc server
-	ipc.server(() => {
+	// Configure IPC Server
+	ipc.serve(() => {
 		ipc.server.on('request',(request,socket) => {
 			const
 				{id, clientId,type} = request,
@@ -98,6 +126,21 @@ export async function start() {
 			actionEmitter.emit('action',clientId,leaf,name,args)
 		})
 	})
+	
+	//Start IPC Server
+	ipc.server.start()
+	
+	// Notify the main process that we are ready
+	WorkerClient.ready()
+	
+}
+
+/**
+ * Stop the Server
+ */
+export function stop() {
+	log.info('Stopping Server')
+	ipc.server.stop()
 }
 
 
@@ -122,3 +165,17 @@ export function addActionListener(listener:TServerActionListener) {
 export function removeActionListener(listener:TServerActionListener) {
 	actionEmitter.removeListener('action',listener)
 }
+
+
+
+
+// Immediately start
+start()
+
+/**
+ * In HMR add dispose handler to stop current server
+ */
+if (module.hot) {
+	module.hot.dispose(() => stop())
+}
+

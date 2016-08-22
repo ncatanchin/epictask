@@ -3,17 +3,12 @@
 /// <reference path="./webpack-env.d.ts" />
 /// <reference path="./element-class.d.ts" />
 /// <reference path="./lodash-mixins.d.ts" />
+/// <reference path="./react-hotkeys.d.ts" />
+/// <reference path="./short-id.d.ts" />
+/// <reference path="./typescript-ioc.d.ts" />
+/// <reference path="./reselect.d.ts" />
 
 // UI MODS
-declare module 'react-hotkeys' {
-	export var HotKeys:any
-
-}
-
-declare module 'react-valid-props' {
-	export default function filterProps(o:{[name:string]:any}):{[name:string]:any}
-}
-
 interface Window {
 	devToolsExtension:any
 }
@@ -24,52 +19,22 @@ declare namespace NodeJS {
 	}
 }
 
-declare module 'typescript-ioc' {
-	export class Container {
-		static bind(source: Function): Config;
-		//static get<T>(source:{new():T}&Function|any):T&Function|any;
-		static get<T>(source:{new():T}&Function):T&Function;
-	}
+// Import the ProcessType enum
+import ProcessType from 'shared/ProcessType'
 
-	export function Singleton(target: Function): void;
-	export function Scoped(scope: Scope): (target: Function) => void;
-	export function Provided(provider: Provider): (target: Function) => void;
-	export function Provides(target: Function): (to: Function) => void;
-	export function AutoWired(target: Function): any;
-	export function Inject(...args: any[]): any;
+/**
+ * Process type of the currently running process
+ */
+declare var processType:ProcessType
 
-	export interface Config {
-		to(target: Object): Config;
-		provider(provider: Provider): Config;
-		scope(scope: Scope): Config;
-	}
-	export interface Provider {
-		get(): Object;
-	}
-	export abstract class Scope {
-		static Local: Scope;
-		static Singleton: Scope;
-		abstract resolve(provider: Provider, source: Function): any;
-		reset(source: Function): void;
-	}
-
-}
-
-declare namespace Reselect {
-
-	type Selector<TInput, TOutput> = (state: TInput, props?: any) => TOutput;
-
-	function createSelector<TInput, TOutput, T1>(selector1: Selector<TInput, T1>[], combiner: (...args:T1[]) => TOutput): Selector<TInput, TOutput>;
-}
-
+/**
+ * Is the current process the state server
+ */
 declare var isStateServer:boolean
+
+/**
+ * Is in development mode
+ */
 declare var isDev:boolean
 
 
-// declare global {
-// 	import * as assertGlobal from 'assert'
-// 	import * as ImmutableGlobal from 'immutable'
-// 	import * as LodashGlobal from 'lodash'
-//
-// 	declare var
-// }

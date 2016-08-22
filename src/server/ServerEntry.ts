@@ -1,4 +1,4 @@
-require('shared/NodeEntryInit')
+require('shared/WorkerEntryInit')
 
 // Set State Server
 assign(global as any,{
@@ -6,14 +6,11 @@ assign(global as any,{
 })
 
 // Start it up
-import Electron from 'electron'
-import * as Server from './Server'
+import './Server'
 
 
 const log = getLogger(__filename)
 
-Electron.app.on('ready',Server.start)
-
 if (module.hot) {
-	module.hot.accept(() => log.info('Hot reloaded'))
+	module.hot.accept(() => log.info('Hot reloaded',__filename))
 }

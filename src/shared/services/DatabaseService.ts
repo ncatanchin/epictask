@@ -8,8 +8,12 @@ import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/
 
 
 // Global ref to database services
-let databaseService:DatabaseService = null
+let databaseService:DatabaseClientService = null
 
+
+/**
+ * Start the database service
+ */
 export async function start() {
 	if (databaseService) {
 		log.info('Stopping DB first')
@@ -18,12 +22,12 @@ export async function start() {
 		databaseService = null
 	}
 	
-	Container.bind(DatabaseService).provider({get: () => databaseService})
+	Container.bind(DatabaseClientService).provider({get: () => databaseService})
 	
 	// Load the database first
 	log.info('Starting Database')
 	
-	databaseService = new DatabaseService()
+	databaseService = new DatabaseClientService()
 	
 	await databaseService.init()
 	await databaseService.start()
@@ -32,16 +36,8 @@ export async function start() {
 
 const log = getLogger(__filename)
 
-/**
- * Get the database worker
- *
- * @returns {any}
- */
-function getDatabaseServerWindow() {
-	return require('db/DatabaseServerWindow').getDatabaseServerWindow()
-}
 
-
+export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
 
 /**
  * Database Client proxy
@@ -57,25 +53,26 @@ class DatabaseProxy {
 	}
 
 	/**
-	 * Proxy function, first attempts to use map
+	 * Get proxy Function
 	 *
 	 * @param target
 	 * @param name
-	 * @returns {any|((args:...[any])=>undefined)}
+	 * @returns {TDatabaseProxyFunction}
 	 */
-	get(target,name) {
-
-		const proxyFn = this.fnMap[name] || (
+	get(target,name):TDatabaseProxyFunction {
+		
+		log.debug(`Getting proxy for ${name}`)
+		
+		return this.fnMap[name] || (
 			this.fnMap[name] = (...args) => {
 				log.debug(`Proxy request for ${name}`)
 
+				// TODO: Use new client
 				const dbWindow = getDatabaseServerWindow()
 				return dbWindow.request(this.store,name,args)
 			}
 		)
-
-		log.debug(`Getting proxy for ${name}`)
-		return proxyFn
+		
 	}
 
 }
@@ -86,14 +83,9 @@ class DatabaseProxy {
  * References to coordinator and plugins
  */
 
-//@AutoWired
-//@Singleton
-export class DatabaseService extends BaseService {
+export class DatabaseClientService extends BaseService {
 
 	private _stores:Stores
-
-	dbWindow
-	dbProxy
 
 	/**
 	 * All global repositories
@@ -103,48 +95,19 @@ export class DatabaseService extends BaseService {
 		return this._stores
 	}
 
-	// get db() {
-	// 	return this._storePlugin ? this._storePlugin.db : null
-	// }
-
-
 	constructor() {
 		super()
-		this._stores = assign(new Stores(),{databaseService:this})
-
-	}
-
-
-	private loadDatabaseServerWindow() {
-		log.info('Getting DB Window')
-
-		this.dbWindow = getDatabaseServerWindow()
-
-		log.info('Starting db window')
-		return this.dbWindow.start()
-	}
-
-
-	private stopDatabaseServerWindow(isHot = false) {
-		log.info("Closing database server window")
-
-		this.dbWindow = null
-	}
-	/**
-	 * Initialize the service before anything is started
-	 * @returns {DatabaseService}
-	 */
-	async init():Promise<this> {
-		await super.init()
-
-		return this.loadDatabaseServerWindow()
+		
+		this._stores = assign(new Stores(),{
+			databaseService:this
+		})
 	}
 
 
 	/**
 	 * Start the service
 	 *
-	 * @returns {DatabaseService}
+	 * @returns {DatabaseClientService}
 	 */
 	async start():Promise<this> {
 		assert(this.status() < ServiceStatus.Started,'Service is already started')
@@ -159,7 +122,7 @@ export class DatabaseService extends BaseService {
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
 			LabelStore,ActivityStore,MilestoneStore,UserStore} = require('shared/models')
 
-		Object.assign(this._stores, {
+		assign(this._stores, {
 			repo:          this.getStore(RepoStore),
 			issue:         this.getStore(IssueStore),
 			availableRepo: this.getStore(AvailableRepoStore),
@@ -175,12 +138,13 @@ export class DatabaseService extends BaseService {
 
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {
-			_.assignGlobal({Repos:this._stores})
+			assignGlobal({Repos:this._stores})
 		}
 
 		// Now bind repos to the IOC
-		Container.bind(Stores)
-			.provider({ get: () => this.stores })
+		Container.bind(Stores).provider({
+			get: () => this.stores
+		})
 
 		return this
 	}
@@ -190,7 +154,7 @@ export class DatabaseService extends BaseService {
 	 * Stop the database service,
 	 * internally it stops the db window too
 	 *
-	 * @returns {DatabaseService}
+	 * @returns {DatabaseClientService}
 	 */
 	async stop(isHot = false):Promise<this> {
 		await super.stop()
@@ -235,4 +199,4 @@ export {
 }
 
 
-export default DatabaseService
+export default DatabaseClientService

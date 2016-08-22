@@ -1,11 +1,11 @@
 
 import {Container} from 'typescript-ioc'
-import JobService from "jobs/JobService"
+import JobService from "job/JobManager"
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {Stores} from '../services/DatabaseService'
+import {Stores} from 'shared/services/DatabaseService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'jobs/JobDecorations'
+import {RegisterJob} from 'job/JobDecorations'
 import {Job} from 'shared/actions/jobs/JobState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 

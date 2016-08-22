@@ -1,9 +1,6 @@
 
 
-const
-	electron = require('electron'),
-	{app,ipcMain} = electron,
-	workerId = process.env.ELECTRON_WORKER_ID
+const workerId = process.env.WORKER_ID
 
 const log = (...args) => console.log('WORKER',...args)
 

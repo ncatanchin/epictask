@@ -1,10 +1,8 @@
-import Electron from 'electron'
-import JobService from './JobService'
 import storeBuilder from 'shared/store/AppStoreBuilder'
+import JobService from './JobManager'
 
-const
-	{app} = Electron,
-	log = getLogger(__filename)
+
+const log = getLogger(__filename)
 
 let service: JobService = null
 
@@ -14,7 +12,7 @@ async function start() {
 	await storeBuilder()
 	
 	log.info('Creating job service')
-	service = new (require('./JobService').default as typeof JobService)()
+	service = new (require('./JobManager').default as typeof JobService)()
 	
 	log.info('Starting job service')
 	service.start()
@@ -22,8 +20,6 @@ async function start() {
 	
 }
 
-//On App Ready - Start!!
-app.on('ready', start)
 
 
 function destroyService() {
@@ -38,6 +34,7 @@ function destroyService() {
 	
 }
 
+// If hot is enabled
 if (module.hot) {
 	
 	// On dispose, clean up
@@ -46,10 +43,12 @@ if (module.hot) {
 	})
 	
 	// Job service update - restart it
-	module.hot.accept(['./JobService'], () => {
+	module.hot.accept(['./JobManager'], () => {
 		destroyService()
 		start()
 	})
 	
 	module.hot.accept()
 }
+
+start()

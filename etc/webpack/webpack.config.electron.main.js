@@ -23,7 +23,7 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 	// Base entries
 	const mainEntries = {
 		"MainEntry": ["./src/main/MainEntry"],
-		"JobsEntry": ["./src/jobs/JobsEntry"]
+		"JobsEntry": ["./src/job/JobsEntry"]
 	}
 	
 	// In development env add hmr to all base entries

@@ -1,41 +1,10 @@
-import * as os from 'os'
-import { EventEmitter } from 'events'
 import * as childProcess from 'child_process'
+import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
 
-const
-	which = require('which'),
-	log = getLogger(__filename)
+const HEARTBEAT_TIMEOUT = 1000
 
-/**
- * Find the Filesystem path to electron
- *
- * @returns {string}
- */
-function getElectronPath():string {
-	
-	let electron:string = null
-	
-	try {
-		// first try to find the electron executable if it is installed from electron-prebuilt..
-		log.info('trying to get electron path from electron-prebuilt module..')
-		
-		// eslint-disable-next-line global-require
-		electron = require('electron-prebuilt')
-	} catch (err) {
-		if (err.code === 'MODULE_NOT_FOUND') {
-			// ..if electron-prebuilt was not used try using which module
-			log.info('trying to get electron path from $PATH..')
-			electron = which.sync('electron')
-		} else {
-			throw err
-		}
-	}
-	
-	return electron
-}
+const log = getLogger(__filename)
 
-
-const ELECTRON_PATH = getElectronPath()
 
 
 export interface IWorkerMessage {
@@ -55,6 +24,10 @@ export interface IWorkerEventListener {
 }
 
 
+export interface IWorkerOptons {
+	startTimeoutMillis?:number
+}
+
 export default class Worker {
 	
 	// All Listeners
@@ -72,12 +45,67 @@ export default class Worker {
 	// Running flag
 	private runningFlag = Promise.defer()
 	
-	// Running status
+	// Last heartbeat
+	private heartbeatTimestamp = 0
+	
+	// Heartbeat timeout id
+	private heartbeatTimeoutId = null
+	
+	/**
+	 * Clear pending heartbeat request
+	 */
+	private clearHeartbeatTimeout() {
+		if (this.heartbeatTimeoutId) {
+			clearTimeout(this.heartbeatTimeoutId)
+			this.heartbeatTimeoutId = null
+		}
+	}
+	
+	/**
+	 * Schedule next heartbeat
+	 */
+	private scheduleHeartbeat() {
+		this.clearHeartbeatTimeout()
+		
+		if (this.running) {
+			this.heartbeatTimeoutId = setTimeout(this.sendHeartbeat.bind(this),HEARTBEAT_TIMEOUT)
+		}
+	}
+	
+	/**
+	 * Update heartbeat and schedule next
+	 */
+	private heartbeat() {
+		log.debug('Updating heartbeat')
+		this.clearHeartbeatTimeout()
+		this.heartbeatTimestamp = Date.now()
+		this.scheduleHeartbeat()
+	}
+	
+	/**
+	 * Send heartbeat message
+	 */
+	private sendHeartbeat() {
+		this.sendMessage('ping')
+		this.scheduleHeartbeat()
+	}
+	
+	/**
+	 * Is the worker currently running
+	 *
+	 * @returns {boolean}
+	 */
 	get running():boolean {
 		return !this.killed && this.runningFlag.promise.isResolved()
 	}
 	
-	constructor(private startFile:string, ...listeners:IWorkerEventListener[]) {
+	/**
+	 * Worker constructor
+	 *
+	 * @param startFile
+	 * @param listeners
+	 */
+	constructor(private startFile:string, private opts:IWorkerOptions = {}, ...listeners:IWorkerEventListener[]) {
 		this.listeners = listeners
 	}
 	
@@ -93,7 +121,7 @@ export default class Worker {
 	}
 	
 	/**
-	 * Remove event lsitener
+	 * Remove event listener
 	 *
 	 * @param listener
 	 */
@@ -132,11 +160,20 @@ export default class Worker {
 		
 		// First handle message internally
 		switch (message.type) {
+			
+			
+			// Ping <> Pong
 			case 'pong':
-				if (!this.runningFlag.promise.isResolved())
+				// If not marked running yet then mark it
+				if (!this.runningFlag.promise.isResolved()) {
 					this.runningFlag.resolve(true)
+				}
 				
+				// Update the heartbeat and schedule next
+				this.heartbeat()
 				break
+			
+			// Registered handlers
 			default:
 				this.listeners.forEach(listener =>
 					listener.onMessage && listener.onMessage(this,message))
@@ -235,8 +272,8 @@ export default class Worker {
 			
 			log.info('Main args are',args,'newArgs',newArgs)
 			//debugger
-			//this.child = childProcess.fork(this.startFile,['--debug'],opts)
-			this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
+			this.child = childProcess.fork(this.startFile,[],opts)
+			//this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
 			
 			
 			// Assign handlers
@@ -290,10 +327,17 @@ export default class Worker {
 			tryConnection()
 			
 			// Wait for the 'pong'
-			await Promise
-				.resolve(this.runningFlag.promise)
-				.timeout(5000)
+			try {
+				await Promise
+					.resolve(this.runningFlag.promise)
+					.timeout(this.startTimeoutMillis)
 				
+				this.heartbeat()
+			} finally {
+				if (tryTimeoutId) {
+					clearTimeout(tryTimeoutId)
+				}
+			}
 			
 		} catch (err) {
 			log.error('Failed to start process',err)

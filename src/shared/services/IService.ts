@@ -23,6 +23,13 @@ export enum ServiceStatus {
 const statusString = (status:ServiceStatus) => ServiceStatus[status]
 
 /**
+ * IService Constructor interface
+ */
+export interface IServiceConstructor {
+	new ():IService
+}
+
+/**
  * IServices
  *
  * @class IServices
@@ -31,12 +38,29 @@ const statusString = (status:ServiceStatus) => ServiceStatus[status]
 export interface IService {
 
 	status():ServiceStatus
-
-	init?():Promise<this>
+	
+	dependencies():IServiceConstructor[]
+	
+	/**
+	 * Initialize the service, called before dependency analysis
+	 */
+	init():Promise<this>
+	
+	/**
+	 * Start the service
+	 */
 	start():Promise<this>
-	stop?():Promise<this>
-	destroy?():this
-
+	
+	/**
+	 * Stop the service
+	 */
+	stop():Promise<this>
+	
+	/**
+	 * Destroy the service
+	 */
+	destroy():this
+	
 }
 
 
@@ -60,11 +84,9 @@ export abstract class BaseService implements IService {
 	 * @param status
 	 */
 	protected confirmStatus(status:ServiceStatus) {
-		// assert(status >= this._status,`Current status is further than requested status:
-		// 	${statusString(status)} / current status is ${statusString(this._status)}`)
-
 		this.status(status)
 	}
+	
 	/**
 	 * Base service management
 	 *
@@ -76,6 +98,15 @@ export abstract class BaseService implements IService {
 			return this._status
 
 		return this._status = newStatus
+	}
+	
+	/**
+	 * All services that this service depends on
+	 *
+	 * @returns {IServiceConstructor[]}
+	 */
+	dependencies():IServiceConstructor[] {
+		return []
 	}
 
 	async init():Promise<this> {

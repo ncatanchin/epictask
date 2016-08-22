@@ -70,7 +70,8 @@ function installGlobals() {
 		Env: EnvGlobal,
 		isStateServer: false,
 		Container: ContainerGlobal,
-		assign: Object.assign.bind(Object)
+		assign: Object.assign.bind(Object),
+		assignGlobal: _.assignGlobal.bind(_)
 	}, ContextUtils)
 }
 
@@ -101,8 +102,12 @@ declare global {
 	var Env:typeof EnvGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
-
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assign:typeof Object.assign
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var assignGlobal:typeof _.assignGlobal
 
 	interface Object {
 		$$clazz?:string

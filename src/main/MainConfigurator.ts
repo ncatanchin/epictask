@@ -1,7 +1,7 @@
 const log = getLogger(__filename)
 
 import {AutoWired} from 'typescript-ioc'
-import {IService, ServiceStatus} from 'services/IService'
+import {IService, ServiceStatus} from '../shared/services/IService'
 
 // Get the DBService starter
 

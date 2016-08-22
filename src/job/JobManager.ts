@@ -42,7 +42,7 @@ export interface IJobExecutor {
 /**
  * Job Service for managing all operations
  */
-export default class JobService {
+export default class JobManager {
 
 	private killed = false
 
@@ -79,19 +79,22 @@ export default class JobService {
 
 	
 	toaster:Toaster = Container.get(Toaster)
-
+	
+	/**
+	 * Find & load all jobs in the current tree
+	 */
 	private loadJobs() {
 		if (this.killed) return
 
 		const ctx = this.jobsCtx = require
-			.context('./jobs',true,/Job\.ts$/)
+			.context('./executors',true,/Job\.ts$/)
 
 		ctx.keys().forEach(ctx)
 
+		// TODO: Make job reloading work
 		if (module.hot) {
 			module.hot.accept([ctx.id],(updated) => {
 				// TODO - unload old jobs
-
 				Object.keys(this.jobMap)
 					.forEach(key => delete this.jobMap[key])
 
@@ -150,7 +153,7 @@ export default class JobService {
 	 * Start the Job Service,
 	 * load all schedules, etc, etc
 	 *
-	 * @returns {JobService}
+	 * @returns {JobManager}
 	 */
 	async start():Promise<this> {
 		

@@ -2,7 +2,7 @@
 
 
 import {Container} from "typescript-ioc"
-import JobService from "jobs/JobService"
+import JobManager from "./JobManager"
 import {Job} from "shared/actions/jobs/JobState"
 
 
