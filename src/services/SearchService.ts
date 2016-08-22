@@ -3,27 +3,27 @@ import {List,Map} from 'immutable'
 import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
 import {ObservableStore} from 'typedux'
 import {IService, ServiceStatus, BaseService} from './IService'
-import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {Stores} from 'main/services/DBService'
+import {SearchActionFactory} from '../shared/actions/search/SearchActionFactory'
+import {Stores} from './DatabaseService'
 import {
 	Search, SearchState, SearchType, SearchSource, SearchTypeSourceMap,
 	SearchSourceTypeMap, SearchResult, SearchItem
-} from 'shared/actions/search/SearchState'
-import ValueCache from 'shared/util/ValueCache'
+} from '../shared/actions/search/SearchState'
+import ValueCache from '../shared/util/ValueCache'
 import {debounce} from 'lodash-decorators'
-import {GitHubClient} from 'shared/GitHubClient'
-import {RepoStore, Repo} from 'shared/models/Repo'
-import {Issue} from 'shared/models/Issue'
-import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
-import {DataRequest} from 'shared/actions/data/DataState'
-import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {SearchKey} from 'shared/Constants'
-import {Benchmark} from 'shared/util/Benchmark'
-import {getStoreState} from 'shared/store/AppStore'
+import {GitHubClient} from '../shared/GitHubClient'
+import {RepoStore, Repo} from '../shared/models/Repo'
+import {Issue} from '../shared/models/Issue'
+import {DataActionFactory} from '../shared/actions/data/DataActionFactory'
+import {DataRequest} from '../shared/actions/data/DataState'
+import {AvailableRepo} from '../shared/models/AvailableRepo'
+import {SearchKey} from '../shared/Constants'
+import {Benchmark} from '../shared/util/Benchmark'
+import {getStoreState} from '../shared/store/AppStore'
 import {
 	issuesDetailSelector, issuesSelector, milestonesSelector,
 	labelsSelector
-} from 'shared/actions/issue/IssueSelectors'
+} from '../shared/actions/issue/IssueSelectors'
 
 
 

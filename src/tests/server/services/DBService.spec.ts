@@ -1,7 +1,7 @@
 
 
 
-import DBService from 'main/services/DBService'
+import DBService from '../../../services/DatabaseService'
 import {Container} from 'typescript-ioc'
 import {User} from 'shared/models/User'
 

@@ -1,8 +1,8 @@
 import {Container} from 'typescript-ioc'
 import {BaseService} from './IService'
 import {ObservableStore} from 'typedux'
-import {ToastMessageType} from 'shared/models/Toast'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {ToastMessageType} from '../shared/models/Toast'
+import {UIActionFactory} from '../shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 

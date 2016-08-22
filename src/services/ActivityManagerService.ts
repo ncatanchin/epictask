@@ -2,11 +2,11 @@ import {Container,Singleton, AutoWired,Inject} from 'typescript-ioc'
 
 import {IService, ServiceStatus} from './IService'
 //import DBService from './DBService'
-import {Stores} from './DBService'
+import {Stores} from './DatabaseService'
 import {
 	Activity,
 	ActivityType
-} from 'shared/models/Activity'
+} from '../shared/models/Activity'
 
 
 

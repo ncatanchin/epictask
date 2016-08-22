@@ -1,11 +1,10 @@
 const log = getLogger(__filename)
 
-import {ObservableStore} from 'typedux'
-import {Singleton, AutoWired, Container} from 'typescript-ioc'
-import {IService, ServiceStatus} from './services/IService'
+import {AutoWired} from 'typescript-ioc'
+import {IService, ServiceStatus} from 'services/IService'
 
 // Get the DBService starter
-import {DBService as DBServiceType} from './services/DBService'
+
 import * as ContextUtils from 'shared/util/ContextUtils'
 import storeBuilder from 'shared/store/AppStoreBuilder'
 
@@ -17,13 +16,12 @@ const IllegalServices = [/DBService/,/IService$/]
 export type TServiceMap = {[key:string]:IService}
 
 @AutoWired
-//@Singleton
 export class MainConfigurator {
 	private requestedServices:any[]
 
 	services:{[key:string]:IService} = {}
 	servicesCtx = null
-	dbService:DBServiceType = null
+	
 
 	constructor() {
 
@@ -150,26 +148,7 @@ export class MainConfigurator {
 		return this.services
 	}
 
-	private async startDatabase(isHot = false) {
-		if (this.dbService) {
-			log.info('Stopping DB first')
-			await this.dbService.stop(isHot)
-			this.dbService.destroy(isHot)
-			this.dbService = null
-		}
-
-		const DBService:typeof DBServiceType = require('./services/DBService').default
-		Container.bind(DBService).provider({get: () => this.dbService})
-
-		// Load the database first
-		log.info('Starting Database')
-
-		this.dbService = new DBService()
-
-		await this.dbService.init()
-		await this.dbService.start()
-		log.info('Database started')
-	}
+	
 
 	/**
 	 * Initialize the main config
@@ -200,9 +179,7 @@ export class MainConfigurator {
 		// Just in case this is an HMR reload
 		await this.stop()
 
-		await this.startDatabase()
-
-
+		
 		log.info('DB loaded, now services')
 		return await this.startServices()
 	}
@@ -233,9 +210,6 @@ export class MainConfigurator {
 		if (module.hot && !hmrReady) {
 			hmrReady = true
 
-			module.hot.accept(['./services/DBService'],() => {
-				return this.startDatabase(true)
-			})
 
 			if (this.servicesCtx) {
 				module.hot.accept([this.servicesCtx.id], async(updates) => {

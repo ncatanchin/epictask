@@ -3,7 +3,7 @@ import {Container} from 'typescript-ioc'
 import JobService from "jobs/JobService"
 
 import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {Stores} from 'main/services/DBService'
+import {Stores} from '../services/DatabaseService'
 import {Benchmark} from 'shared/util/Benchmark'
 import {RegisterJob} from 'jobs/JobDecorations'
 import {Job} from 'shared/actions/jobs/JobState'

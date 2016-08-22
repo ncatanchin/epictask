@@ -1,6 +1,6 @@
 
 import 'reflect-metadata'
-import 'shared/LogConfig'
+import '../shared/LogConfig'
 import 'shared/RendererLogging'
 import 'shared/Globals'
 import 'shared/PromiseConfig'
@@ -10,8 +10,8 @@ import {Container, Scope} from 'typescript-ioc'
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {Stores} from 'shared/Stores'
-import {DatabaseEvents} from 'main/db/DatabaseEvents'
-import {IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
+import {DatabaseEvents} from '../../shared/DatabaseEvents'
+import {IDatabaseRequest} from '../../shared/DatabaseRequestResponse'
 import {getUserDataFilename} from 'shared/util/Files'
 import {FinderRequest} from 'typestore'
 

@@ -3,8 +3,8 @@ import Electron = require('electron')
 import path = require('path')
 import * as uuid from 'node-uuid'
 import windowStateKeeper = require('electron-window-state')
-import {DatabaseEvents as Events} from './DatabaseEvents'
-import {IDatabaseResponse, IDatabaseRequest} from 'main/db/DatabaseRequestResponse'
+import {DatabaseEvents as Events} from '../shared/DatabaseEvents'
+import {IDatabaseResponse, IDatabaseRequest} from '../shared/DatabaseRequestResponse'
 import {Container} from 'typescript-ioc'
 const
 	TIMEOUT = 120000,

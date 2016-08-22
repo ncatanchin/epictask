@@ -1,59 +1,44 @@
 
-import {Singleton, AutoWired, Container, Scope} from 'typescript-ioc'
+
 import {Repo as TSRepo, IModel} from 'typestore'
 import {ServiceStatus, BaseService} from './IService'
 import Electron = require('electron')
 import {Stores} from 'shared/Stores'
-import {loadModelClasses} from 'main/db/DBTool'
+import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/util/DatabaseUtil'
 
 
-const CHUNK_SIZE = 50
+// Global ref to database services
+let databaseService:DatabaseService = null
+
+export async function start() {
+	if (databaseService) {
+		log.info('Stopping DB first')
+		await databaseService.stop()
+		databaseService.destroy()
+		databaseService = null
+	}
+	
+	Container.bind(DatabaseService).provider({get: () => databaseService})
+	
+	// Load the database first
+	log.info('Starting Database')
+	
+	databaseService = new DatabaseService()
+	
+	await databaseService.init()
+	await databaseService.start()
+	log.info('Database started')
+}
 
 const log = getLogger(__filename)
 
-const {app,BrowserWindow,ipcMain} = Electron
-
-
+/**
+ * Get the database worker
+ *
+ * @returns {any}
+ */
 function getDatabaseServerWindow() {
-	return require('main/db/DatabaseServerWindow').getDatabaseServerWindow()
-}
-
-// Re-export stores
-export {
-	Stores
-}
-
-/**
- * Bulk save models
- *
- * @param models
- * @param modelStore
- */
-export async function chunkSave(models,modelStore) {
-	const chunks = _.chunk(models,CHUNK_SIZE)
-
-	for (let chunk of chunks) {
-		await modelStore.bulkSave(...chunk)
-	}
-}
-
-/**
- * Bulk remove models
- *
- * @param modelIds
- */
-export async function chunkRemove(modelIds) {
-
-	modelIds = _.uniq(modelIds.map(modelId => `${modelId}`))
-
-	const chunks = _.chunk(modelIds,CHUNK_SIZE)
-	const dbService:DBService = Container.get(DBService)
-	const {dbProxy} = dbService
-	assert(dbProxy,'could not get database reference in chunkRemove')
-
-	for (let chunk of chunks) {
-		await dbProxy.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
-	}
+	return require('db/DatabaseServerWindow').getDatabaseServerWindow()
 }
 
 
@@ -61,12 +46,12 @@ export async function chunkRemove(modelIds) {
 /**
  * Database Client proxy
  */
-class DBProxy {
+class DatabaseProxy {
 
 	private fnMap = {}
 	private store:string
 
-	constructor(private dbService,private repoClazz = null) {
+	constructor(private databaseService,private repoClazz = null) {
 		this.store = (!repoClazz) ? null :
 			(repoClazz.name || _.get(repoClazz,'prototype.constructor.name'))
 	}
@@ -103,7 +88,7 @@ class DBProxy {
 
 //@AutoWired
 //@Singleton
-export class DBService extends BaseService {
+export class DatabaseService extends BaseService {
 
 	private _stores:Stores
 
@@ -125,7 +110,7 @@ export class DBService extends BaseService {
 
 	constructor() {
 		super()
-		this._stores = assign(new Stores(),{dbService:this})
+		this._stores = assign(new Stores(),{databaseService:this})
 
 	}
 
@@ -147,26 +132,10 @@ export class DBService extends BaseService {
 	}
 	/**
 	 * Initialize the service before anything is started
-	 * @returns {DBService}
+	 * @returns {DatabaseService}
 	 */
 	async init():Promise<this> {
 		await super.init()
-
-
-
-
-		// If DEV then add deleteDatabase function
-		// if (Env.isDev) {
-		// 	_.assignGlobal({
-		// 		cleanDatabase: async () => {
-		// 			await this._storePlugin.deleteDatabase()
-		// 			await this.init()
-		// 			return this.start()
-		// 		},
-		// 		dbService:this
-		// 	})
-		//
-		// }
 
 		return this.loadDatabaseServerWindow()
 	}
@@ -175,7 +144,7 @@ export class DBService extends BaseService {
 	/**
 	 * Start the service
 	 *
-	 * @returns {DBService}
+	 * @returns {DatabaseService}
 	 */
 	async start():Promise<this> {
 		assert(this.status() < ServiceStatus.Started,'Service is already started')
@@ -183,7 +152,7 @@ export class DBService extends BaseService {
 		await super.start()
 
 		// Load all model classes
-		const modelClazzes = loadModelClasses()
+		loadModelClasses()
 
 
 		// Load all
@@ -221,17 +190,15 @@ export class DBService extends BaseService {
 	 * Stop the database service,
 	 * internally it stops the db window too
 	 *
-	 * @returns {DBService}
+	 * @returns {DatabaseService}
 	 */
 	async stop(isHot = false):Promise<this> {
 		await super.stop()
-		//this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
 	destroy(isHot = false):this {
 		super.destroy()
-		//this.stopDatabaseServerWindow(isHot)
 		return this
 	}
 
@@ -244,9 +211,28 @@ export class DBService extends BaseService {
 	 */Í
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return new Proxy({},new DBProxy(this,repoClazz)) as any
+		return new Proxy({},new DatabaseProxy(this,repoClazz)) as any
 	}
 }
 
 
-export default DBService
+
+
+/**
+ * Chunk remove utility
+ *
+ * @param modelIds
+ * @returns {Promise<undefined>}
+ */
+export async function chunkRemove(modelIds) {
+	return chunkRemoveUtil(databaseService,modelIds)
+}
+
+// Re-export stores & utils
+export {
+	Stores,
+	chunkSave
+}
+
+
+export default DatabaseService

@@ -1,13 +1,13 @@
 
-import DBService from 'main/services/DBService'
-import ActivityManagerService from 'main/services/ActivityManagerService'
+import DBService from '../../services/DatabaseService'
+import ActivityManagerService from '../../services/ActivityManagerService'
 import {Container} from 'typescript-ioc'
 import {User} from 'shared/models/User'
 import {Issue} from 'shared/models/Issue'
 import {Repo} from 'shared/models/Repo'
 
 import {createClient} from "shared/GitHubClient"
-import {RepoSyncJob as RepoSyncJobType} from "main/services/jobs/RepoSyncJob"
+import {RepoSyncJob as RepoSyncJobType} from "../../server/services/jobs/RepoSyncJob"
 
 const log = getLogger(__filename)
 

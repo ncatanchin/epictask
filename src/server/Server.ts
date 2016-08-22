@@ -5,6 +5,8 @@ import {transformValues} from "shared/util"
 import {IStateServerResponse} from "shared/actions/ServerClient"
 import storeBuilder from 'shared/store/AppStoreBuilder'
 
+import {DatabaseService as DatabaseServiceType} from '../services/DatabaseService'
+
 const
 	log = getLogger(__filename),
 	actionEmitter = new EventEmitter(),
