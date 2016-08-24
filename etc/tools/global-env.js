@@ -87,7 +87,7 @@ Object.assign(global, {
  * Project configuration
  */
 const projectConfigs = require('../projects')
-
+console.log('Project names',Object.keys(projectConfigs))
 //noinspection JSUnresolvedVariable
 Object.assign(global, {
 	nextMinorVersion: semver.inc(basePackageJson.version, 'patch'),

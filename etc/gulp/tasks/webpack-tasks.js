@@ -164,7 +164,7 @@ function makeWebpackDevServer(projectConfig) {
 	log.info('Making dev server task for',projectConfig.name,projectConfig)
 	return (done) => {
 
-		const wpConfig = projectConfig.webpackConfigFn()
+		const wpConfig = projectConfig.webpackConfigFn(projectConfig)
 		//const wpConfig = projectConfig.webpackConfig
 		let {hostname,port,https} = Object.assign({},DevDefaults,projectConfig)
 

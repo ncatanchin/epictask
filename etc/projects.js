@@ -83,23 +83,25 @@ function makeConfigs() {
 	return Object.entries({
 		"electron-main": projectElectronMain,
 		"electron-renderer-ui": projectElectronRenderer
-	}).reduce((configs, [name,config]) =>
-		Object.assign(configs, {
-			[name]: {
+	}).reduce((configs, [name,config]) => {
+		configs[name] = {
+			
 				...config,
 				name,
 				target: config.targetType.target,
 				runMode: config.targetType.env[env].runMode,
 				
 				// Webpack Config Builder
-				webpackConfigFn: (config) =>
+				webpackConfigFn: (finalConfig) =>
 					require(
 						path.resolve(__dirname, `webpack/webpack.config.${name.replace(/-/g, '.')}`)
-					).default(config)
+					).default(finalConfig)
 				
-			}
-		})
-	,{})
+			
+		}
+		
+		return configs
+	},{})
 	//
 	//
 	// /**
@@ -134,4 +136,4 @@ function makeConfigs() {
 }
 
 
-exports = makeConfigs()
+module.exports = makeConfigs()
