@@ -1,7 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 
-const tsConfigBaseFile = () => `${baseDir}/src/tsconfig.json`
+const tsConfigBaseFile = () => `${baseDir}/tsconfig.json`
 
 /**
  * Create base TypeScript Configuration
@@ -20,7 +20,7 @@ export function makeTsConfigBase() {
 			compilerOptions: {
 				...baseConfig.compilerOptions,
 				baseUrl: path.resolve(baseDir, 'src'),
-				outDir: path.resolve(baseDir, 'target/ts')
+				outDir: path.resolve(baseDir, 'dist/out')
 			},
 			
 			// Map exclusions to include parents
@@ -34,16 +34,16 @@ export function makeTsConfigBase() {
 	writeJSONFileSync(tsConfigBaseFile(), templateConfig)
 	
 	// Link the root config
-	const rootTsConfigFile = `${baseDir}/tsconfig.json`
+	//const rootTsConfigFile = `${baseDir}/tsconfig.json`
 	
 	// if (fs.existsSync(rootTsConfigFile)) {
 	//
 	// 	fs.
 	// }
-	try {
-		fs.unlinkSync(rootTsConfigFile)
-	} catch (err) {}
-	fs.symlinkSync(tsConfigBaseFile(), rootTsConfigFile)
+	// try {
+	// 	fs.unlinkSync(rootTsConfigFile)
+	// } catch (err) {}
+	// fs.symlinkSync(tsConfigBaseFile(), rootTsConfigFile)
 }
 
 
@@ -55,7 +55,7 @@ export function makeTsConfigBase() {
  * @param extraOpts
  * @returns {*}
  */
-export function makeTsConfig(dest, typingMode, ...extraOpts) {
+export function makeTsConfig(dest,...extraOpts) {
 	
 	// Load the default configuration
 	const baseConfig = readJSONFileSync(tsConfigBaseFile())

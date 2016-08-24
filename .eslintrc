@@ -42,6 +42,7 @@
 		"basePackageJson": true,
 		"tsc": true,
 		"processDir": true,
-		"console": true
+		"console": true,
+		"process": false
 	}
 }

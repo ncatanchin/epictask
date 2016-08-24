@@ -1,13 +1,13 @@
 require ('./../../webpack/parts/stats.js')
-const path = require('path')
-const fs = require('fs')
-const gutil = require('gulp-util')
-const babel = require('gulp-babel')
-const webpack = require('webpack')
-const express = require('express')
-const makeSrcGlobs = require('../../tools/project-srcs')
-
-const srcs = makeSrcGlobs()
+const
+	path = require('path'),
+	fs = require('fs'),
+	gutil = require('gulp-util'),
+	babel = require('gulp-babel'),
+	webpack = require('webpack'),
+	express = require('express'),
+	makeSrcGlobs = require('../../tools/project-srcs'),
+	srcGlobs = makeSrcGlobs()
 
 
 
@@ -17,8 +17,9 @@ const srcs = makeSrcGlobs()
 function makeWebpackCompile(projectConfig,watch = false) {
 	return (done) => {
 
-		const wpConfig = projectConfig.webpackConfigFn()
-		const compiler = webpack(wpConfig)
+		const
+			webpackConfig = projectConfig.webpackConfigFn(projectConfig),
+			compiler = webpack(webpackConfig)
 
 		function doCallback(err,stats) {
 			if (projectConfig.onCompileCallback)
@@ -31,21 +32,19 @@ function makeWebpackCompile(projectConfig,watch = false) {
 					log.error('an error occurred', err)
 					return
 				}
-				log.info(`Compilation completed for ${wpConfig.name} - in watch mode`)
+				log.info(`Compilation completed for ${webpackConfig.name} - in watch mode`)
 
 				doCallback(err,stats)
 			}))
 		} else {
 			// Execute single build
 			compiler.run(webpackComplete((err,stats) => {
-				log.info(`Compilation completed for ${wpConfig.name}`)
+				log.info(`Compilation completed for ${webpackConfig.name}`)
 
 				 doCallback(err,stats)
 				 done(err)
 			}))
 		}
-
-
 	}
 }
 
@@ -265,6 +264,10 @@ _.each(projectConfigs,projectConfig => {
 // 		log.info('Files changed in material-ui, compiling',event)
 // 	})
 // })
+
+gulp.task('tsconfig',() => {
+	log.info('Configs complete')
+})
 
 gulp.task('dev',[],(done) => {
 	log.info("Starting all dev tasks: " + allTaskNames.dev.join(', '))
