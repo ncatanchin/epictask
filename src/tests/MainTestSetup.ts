@@ -1,27 +1,32 @@
-import 'reflect-metadata'
-import 'shared/PromiseConfig'
-import 'shared/Globals'
-import {Container} from 'typescript-ioc'
+import 'shared/NodeEntryInit'
 import {MainConfigurator} from 'main/MainConfigurator'
 import * as nockGlobal from 'nock'
 
 const log = getLogger(__filename)
 
+log.info('setting up test environment')
+
+/**
+ * Unhandled rejections
+ */
 process.on("unhandledRejection", function (reason, promise) {
-	//deepTrace(reason)
 	console.error('Unhandled rejection', reason)
 	log.error('Unhandled rejection', reason, promise)
 
 })
 
-
+/**
+ * Uncaught exceptions
+ */
 process.on("uncaughtException", function (err) {
 	console.error('Unhandled exception', err)
 	log.error('Unhandled exception', err)
 })
 
+// Configure ENV
+ProcessConfig.setType(ProcessType.Test)
+process.env.EPIC_TEST = 1
 
-//let loadedServices = {}
 let configurator:MainConfigurator = null
 
 
@@ -59,11 +64,34 @@ export async function configureMain(...serviceClazzes) {
 	}
 }
 
+//
+function clearRequireCacheGlobal(name = null) {
+	const clearMod = (modId) => {
+		delete require.cache[modId]
+	}
+
+	if (name) {
+		try {
+			const id = __non_webpack_require__.resolve(name)
+			if (id) {
+				clearMod(id)
+				return
+			}
+		} catch (err) {
+			log.warn('Unable to resolve',name,'going to clear all')
+		}
+	}
+	
+	Object.keys(require.cache).forEach(clearMod)
+}
 
 declare global {
 	//noinspection JSUnusedLocalSymbols
 	const nock:typeof nockGlobal
-
+	
+	//noinspection JSUnusedLocalSymbols
+	const clearRequireCache:typeof clearRequireCacheGlobal
+	
 	//noinspection JSUnusedLocalSymbols
 	const MainTestSetup: {
 		configureMain: typeof configureMain,
@@ -73,6 +101,7 @@ declare global {
 
 Object.assign(global,{
 	nock:nockGlobal,
+	clearRequireCache:clearRequireCacheGlobal,
 	MainTestSetup: {
 		configureMain,
 		shutdownMain

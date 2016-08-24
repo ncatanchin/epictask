@@ -11,7 +11,7 @@ import {toDataUrl} from 'main/MainTemplates'
 const {BrowserWindow,ipcMain} = Electron
 
 
-describe('Database Remote (IPC) Service',() => {
+xdescribe('Database Remote (IPC) Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
 	})

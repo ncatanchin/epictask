@@ -69,12 +69,6 @@ const projectElectronUIRenderer = _.assign(rendererDefaultConfig('ui'),{
 	port: 4444
 })
 
-/**
- * Database Renderer
- */
-const projectElectronDBRenderer = _.assign(rendererDefaultConfig('db'),{
-	port: 4445
-})
 
 function makeConfigs() {
 
@@ -89,9 +83,8 @@ function makeConfigs() {
 		/**
 		 * Configuring electron renderer
 		 */
-		"electron-renderer-ui": projectElectronUIRenderer,
+		"electron-renderer-ui": projectElectronUIRenderer
 
-		"electron-renderer-db": projectElectronDBRenderer
 	}
 
 

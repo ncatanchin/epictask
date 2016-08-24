@@ -1,20 +1,19 @@
 
 
 
-import DBService from '../../../shared/services/DatabaseService'
-import {Container} from 'typescript-ioc'
+import {DatabaseClientService} from 'shared/services/DatabaseClientService'
 import {User} from 'shared/models/User'
 
 const log = getLogger(__filename)
 
-let dbService:DBService
+let dbService:DatabaseClientService
 
-describe('Database Service',() => {
+xdescribe('Database Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		await MainTestSetup.configureMain(DBService)
+		await MainTestSetup.configureMain(DatabaseClientService)
 
-		dbService = Container.get(DBService)
+		dbService = Container.get(DatabaseClientService)
 	})
 
 	after(async () => {

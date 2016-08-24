@@ -5,6 +5,7 @@ const
 	webpack = require('webpack'),
 	FunctionModulePlugin = require('webpack/lib/FunctionModulePlugin'),
 	NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin'),
+	CommonsChunkPlugin = new require("webpack/lib/optimize/CommonsChunkPlugin"),
 	fs = require('fs')
 
 
@@ -22,8 +23,7 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 	
 	// Base entries
 	const mainEntries = {
-		"MainEntry": ["./src/main/MainEntry"],
-		"JobsEntry": ["./src/job/JobsEntry"]
+		"AppEntry": ["./src/AppEntry"]
 	}
 	
 	// In development env add hmr to all base entries
@@ -32,10 +32,9 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 			.values(mainEntries)
 			.forEach(files => files.unshift(...hmrEntry))
 		
-		Object.assign(mainEntries, {
-			"MainTestEntry": ['./src/tests/MainTestEntry'],
-			"JobsTestEntry": ['./src/tests/JobsTestEntry']
-		})
+		// Object.assign(mainEntries, {
+		// 	"TestEntry": ['./src/tests/MainTestEntry']
+		// })
 	}
 	
 	//console.log('isDev',isDev,'env',process.env.NODE_ENV,env)
@@ -45,6 +44,7 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 		entry: mainEntries,
 		output: {
 			...config.output,
+			
 			devtoolModuleFilenameTemplate: "[absolute-resource-path]",
 			devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
 		},
@@ -55,13 +55,9 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 		
 		plugins: [
 			...config.plugins,
+			//
 			new webpack.DefinePlugin({
 				'process.env.PROCESS_TYPE': JSON.stringify('main')
-			}),
-			new HtmlWebpackPlugin({
-				filename: "main-db-entry.html",
-				template: 'src/main/db/DatabaseServerEntry.jade',
-				inject: false
 			}),
 			new HtmlWebpackPlugin({
 				filename: "main-entry.html",

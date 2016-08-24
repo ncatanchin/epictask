@@ -9,10 +9,10 @@ import {Comment} from 'shared/models/Comment'
 import {IssueMessage, IssueState, IIssueSort, IIssueFilter} from './IssueState'
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import Toaster from 'shared/Toaster'
+
 import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
 import {
-	enabledRepoIdsSelector, availRepoIdsSelector, availReposSelector,
+	enabledRepoIdsSelector,
 	enabledReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 import {DataRequest, DataState} from 'shared/actions/data/DataState'

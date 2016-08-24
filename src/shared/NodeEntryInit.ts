@@ -4,7 +4,7 @@ require('babel-polyfill')
 process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
 
 import 'reflect-metadata'
-import 'PromiseConfig'
+import 'shared/PromiseConfig'
 import 'shared/ErrorHandling'
 import 'shared/Globals'
 //endregion

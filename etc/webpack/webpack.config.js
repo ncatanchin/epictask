@@ -182,7 +182,8 @@ export default function (projectConfig) {
 				'process.env.NODE_ENV': JSON.stringify(env),
 				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
 				'process.env.PROCESS_NAME': projectConfig.name,
-				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer')
+				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer'),
+				'process.env.DefaultTransportScheme': JSON.stringify('IPC')
 			}),
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'

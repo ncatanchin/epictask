@@ -1,13 +1,12 @@
 
-import DBService from '../../shared/services/DatabaseService'
-import ActivityManagerService from '../../shared/services/ActivityManagerService'
-import {Container} from 'typescript-ioc'
+import DBService from '../../shared/services/DatabaseClientService'
+import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {User} from 'shared/models/User'
 import {Issue} from 'shared/models/Issue'
 import {Repo} from 'shared/models/Repo'
 
 import {createClient} from "shared/GitHubClient"
-import {RepoSyncJob as RepoSyncJobType} from "../../server/services/jobs/RepoSyncJob"
+import {RepoSyncJob as RepoSyncJobType} from "job/executors/RepoSyncJob"
 
 const log = getLogger(__filename)
 
@@ -56,7 +55,7 @@ describe('RepoSyncJob tests',() => {
 	 */
 	xit('Sync.Assignees',async() => {
 		const angularRepo = await getAngular()
-		const {RepoSyncJob} = require('main/services/jobs/RepoSyncJob')
+		const {RepoSyncJob} = require('job/executors/RepoSyncJob')
 		const job = new RepoSyncJob({
 			id: 'job-1',
 			name: 'sync-assignee-test',
@@ -81,7 +80,7 @@ describe('RepoSyncJob tests',() => {
 	 */
 	xit('Sync.Issues', async() => {
 		const angularRepo = await getAngular()
-		const {RepoSyncJob} = require('main/services/jobs/RepoSyncJob')
+		const {RepoSyncJob} = require('job/executors/RepoSyncJob')
 		const job = new RepoSyncJob({
 			id: 'job-2',
 			name: 'sync-issues-test',

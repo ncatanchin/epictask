@@ -42,7 +42,7 @@ export interface IJobExecutor {
 /**
  * Job Service for managing all operations
  */
-export default class JobManager {
+export class JobManager {
 
 	private killed = false
 
@@ -326,6 +326,9 @@ export default class JobManager {
 		this.jobMap = {}
 	}
 }
+
+export default JobManager
+
 //
 // if (module.hot) {
 // 	module.hot.dispose(() => {

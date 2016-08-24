@@ -1,7 +1,8 @@
 import * as childProcess from 'child_process'
-import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
+//import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
 
 const HEARTBEAT_TIMEOUT = 1000
+const START_TIMEOUT_DEFAULT = 5000
 
 const log = getLogger(__filename)
 
@@ -23,32 +24,67 @@ export interface IWorkerEventListener {
 	onStop?:TWorkerEventCallback
 }
 
-
-export interface IWorkerOptons {
+/**
+ * Options that can be passed into a new worker
+ */
+export interface IWorkerOptions {
 	startTimeoutMillis?:number
+	env?:any
 }
 
+/**
+ * Worker - manages spawned and forked processes
+ */
 export default class Worker {
 	
-	// All Listeners
+	/**
+	 * All worker event listeners
+	 */
 	private listeners:IWorkerEventListener[]
 	
-	// Ref to the created child
+	
+	/**
+	 * Reference to child process
+	 */
 	private child:childProcess.ChildProcess
 	
-	// Created flag
+	
+	/**
+	 * Process is created
+	 *
+	 * @type {boolean}
+	 */
 	private created = false
 	
-	// Killed flag
+	/**
+	 * Process is killed
+	 *
+	 * @type {boolean}
+	 */
 	private killed = false
 	
-	// Running flag
+	/**
+	 * Internal flag to resolve running
+	 */
 	private runningFlag = Promise.defer()
 	
-	// Last heartbeat
+	/**
+	 * Last heartbeat timestamp
+	 *
+	 * @type {number}
+	 */
 	private heartbeatTimestamp = 0
 	
-	// Heartbeat timeout id
+	/**
+	 * Number of heartbeats received (pongs)
+	 *
+	 * @type {number}
+	 */
+	public heartbeatCount = 0
+	
+	/**
+	 * Heartbeat timeout id
+	 */
 	private heartbeatTimeoutId = null
 	
 	/**
@@ -76,7 +112,8 @@ export default class Worker {
 	 * Update heartbeat and schedule next
 	 */
 	private heartbeat() {
-		log.debug('Updating heartbeat')
+		this.heartbeatCount++
+		log.debug('Updating heartbeat',this.heartbeatCount)
 		this.clearHeartbeatTimeout()
 		this.heartbeatTimestamp = Date.now()
 		this.scheduleHeartbeat()
@@ -86,6 +123,9 @@ export default class Worker {
 	 * Send heartbeat message
 	 */
 	private sendHeartbeat() {
+		if (this.killed || !this.child || !this.running)
+			return
+		
 		this.sendMessage('ping')
 		this.scheduleHeartbeat()
 	}
@@ -103,6 +143,7 @@ export default class Worker {
 	 * Worker constructor
 	 *
 	 * @param startFile
+	 * @param opts
 	 * @param listeners
 	 */
 	constructor(private startFile:string, private opts:IWorkerOptions = {}, ...listeners:IWorkerEventListener[]) {
@@ -248,7 +289,15 @@ export default class Worker {
 			throw new Error(`Worker already started (created=${this.created})`)
 	
 		try {
-				
+			
+			
+			// Create the process
+			const
+				args = process.argv,
+				execArgs = process.execArgv
+			
+			let debugArgs = args.slice(1).filter(arg => arg.indexOf('debug') > -1)
+			
 			/**
 			 * Child options
 			 *
@@ -256,30 +305,28 @@ export default class Worker {
 			 */
 			const opts = {
 				stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-				env: {
-					//ELECTRON_RUN_AS_NODE: 0
-				}
+				env: Object.assign({},process.env,this.opts.env || {})
 			}
 			
-			// Create the process
-			log.info(`Electron path = ${ELECTRON_PATH}`)
-			const
-				args = process.argv,
-				execArgs = process.execArgv
-				
-			let newArgs = args.slice(1).filter(arg => arg.indexOf('debug') > -1)
 			
+			log.info('Main args are',args,'debugArgs',debugArgs,'execArgs',execArgs)
+			const child = this.child = childProcess.fork(this.startFile,[],opts)
 			
-			log.info('Main args are',args,'newArgs',newArgs)
-			//debugger
-			this.child = childProcess.fork(this.startFile,[],opts)
+			// Immediately attach kill on death
+			process.on('exit', (code) => {
+				try {
+					child.kill()
+				} catch (err) {
+				}
+			})
 			//this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
 			
 			
 			// Assign handlers
-			this.child.on('error',this.handleError)
-			this.child.on('exit',this.handleExit)
-			this.child.on('message',this.handleMessage)
+			child
+				.on('error',this.handleError)
+				.on('exit',this.handleExit)
+				.on('message',this.handleMessage)
 			
 			
 			// 1-tick
@@ -330,7 +377,8 @@ export default class Worker {
 			try {
 				await Promise
 					.resolve(this.runningFlag.promise)
-					.timeout(this.startTimeoutMillis)
+					.timeout(this.opts.startTimeoutMillis || START_TIMEOUT_DEFAULT)
+				
 				
 				this.heartbeat()
 			} finally {

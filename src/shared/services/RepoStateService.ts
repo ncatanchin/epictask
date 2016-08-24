@@ -1,35 +1,39 @@
 import {ObservableStore} from 'typedux'
-import {List} from 'immutable'
-import {Singleton, AutoWired, Inject,Container, Scope} from 'typescript-ioc'
-import {IService, ServiceStatus, BaseService} from './IService'
-import {RepoActionFactory} from '../shared/actions/repo/RepoActionFactory'
-import {issueModelsSelector} from '../shared/actions/data/DataSelectors'
+import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
 
-import {createDeepEqualSelector} from '../shared/util/SelectorUtil'
-import {enabledReposSelector,enabledRepoIdsSelector} from '../shared/actions/repo/RepoSelectors'
-import {AvailableRepo} from '../shared/models/AvailableRepo'
-import {DataActionFactory} from '../shared/actions/data/DataActionFactory'
-import {Stores} from './DatabaseService'
-import {IssueActionFactory} from '../shared/actions/issue/IssueActionFactory'
-import {selectedIssueIdsSelector} from '../shared/actions/issue/IssueSelectors'
-import ValueCache from '../shared/util/ValueCache'
+import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {enabledReposSelector,enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
+import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
+import ValueCache from 'shared/util/ValueCache'
+import {ProcessType} from "shared/ProcessType"
+import {DatabaseClientService} from "shared/services/DatabaseClientService"
 
 const log = getLogger(__filename)
 
-
-
-// @AutoWired
-// @Singleton
+@RegisterService(ProcessType.Server)
 export class RepoStateService extends BaseService {
 
 	private unsubscribe:Function
 
-	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
-
-	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
-
-	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
-
+	store:ObservableStore<any>
+	repoActions:RepoActionFactory
+	issueActions:IssueActionFactory
+	
+	/**
+	 * DatabaseClientService must be loaded first
+	 *
+	 * @returns {DatabaseClientService[]}
+	 */
+	dependencies(): IServiceConstructor[] {
+		return [DatabaseClientService]
+	}
+	
+	
+	
 	private clean() {
 		if (this.unsubscribe) {
 			this.unsubscribe()
@@ -39,8 +43,10 @@ export class RepoStateService extends BaseService {
 
 
 	async init():Promise<this> {
-		await super.init()
-		return this
+		this.store = Container.get(ObservableStore as any) as any
+		this.repoActions = Container.get(RepoActionFactory)
+		this.issueActions = Container.get(IssueActionFactory)
+		return super.init()
 	}
 
 	async start():Promise<this> {

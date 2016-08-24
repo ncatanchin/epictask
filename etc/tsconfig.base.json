@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "ES6",
 		"lib": [
+			"es6",
 			"es7",
 			"es2015",
 			"es2016",
@@ -37,9 +38,6 @@
 			"server/*": [
 				"./server/*"
 			],
-			"services/*": [
-				"./services/*"
-			],
 			"GitHubClient": [
 				"./shared/GitHubClient.ts"
 			],
@@ -50,9 +48,7 @@
 			"Settings": [
 				"./shared/Settings.ts"
 			],
-			"shared": [
-				"./shared/index.ts"
-			],
+			
 			"shared/*": [
 				"./shared/*"
 			],

@@ -36,9 +36,13 @@ export function makeTsConfigBase() {
 	// Link the root config
 	const rootTsConfigFile = `${baseDir}/tsconfig.json`
 	
-	if (fs.existsSync(rootTsConfigFile))
+	// if (fs.existsSync(rootTsConfigFile)) {
+	//
+	// 	fs.
+	// }
+	try {
 		fs.unlinkSync(rootTsConfigFile)
-	
+	} catch (err) {}
 	fs.symlinkSync(tsConfigBaseFile(), rootTsConfigFile)
 }
 

@@ -59,3 +59,9 @@ export function mergeContext(modMap) {
 		return exportMap
 	},{})
 }
+
+
+export default {
+	mergeContext,
+	requireContext
+}

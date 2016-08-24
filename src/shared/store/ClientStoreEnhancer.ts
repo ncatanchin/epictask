@@ -1,7 +1,7 @@
 
 const log = getLogger(__filename)
 
-import * as ServerClient from "shared/actions/ServerClient"
+import serverClient from "shared/server/ServerClient"
 import {getReducers} from 'shared/store/Reducers'
 
 let reducers = getReducers()
@@ -42,9 +42,9 @@ function clientStoreEnhancer(storeCreator) {
 			setImmediate(() => store.dispatch(action))
 		}
 		
-		ServerClient.addActionListener(clientActionHandler)
+		serverClient.addActionListener(clientActionHandler)
 		if (module.hot)
-			module.hot.dispose(() => ServerClient.removeActionListener(clientActionHandler))
+			module.hot.dispose(() => serverClient.removeActionListener(clientActionHandler))
 		
 		return store
 	}

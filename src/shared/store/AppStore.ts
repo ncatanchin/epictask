@@ -7,7 +7,8 @@ import {ReduxDebugSessionKey} from 'shared/Constants'
 import {Toaster} from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 
-import * as ServerStateClient from "shared/actions/ServerClient"
+import {ServerClient} from "shared/server/ServerClient"
+
 import {
 	setStoreProvider,
 	ILeafReducer,
@@ -31,17 +32,27 @@ import {
 
 const log = getLogger(__filename)
 
-const electron = require('electron')
-const ipc = (Env.isRenderer) ?
-	electron.ipcRenderer :
-	electron.ipcMain as any
-
 const stateFilename = cacheFilename('store-state')
 const ActionLoggerEnabled = false
 
 
+/**
+ * Reference to server client when loaded
+ *
+ * @type {ServerClient}
+ */
+let serverClient:ServerClient = null
+
+function getServerClient() {
+	if (!serverClient)
+		serverClient = require('shared/server/ServerClient').default as ServerClient
+	
+	return serverClient
+}
+
+
 // If renderer then add an action interceptor
-if (isStateServer) {
+if (ProcessConfig.isType(ProcessConfig.Type.Server)) {
 	//const browserNextTick = require('browser-next-tick')
 	
 	// Ad the interceptor and keep track of the
@@ -50,7 +61,7 @@ if (isStateServer) {
 		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
 			
 			// Push it to the server
-			ServerStateClient.sendAction(leaf,type,...args)
+			getServerClient().sendAction(leaf,type,...args)
 			
 			// If it's a reducer then process it, otherwise - wait for server
 			// to process the action and send data
@@ -124,7 +135,7 @@ const NullMiddleware = f => f
 /**
  * Make remote middleware
  *
- * @returns {Array<Middlware>}
+ * @returns {Array<Middleware>}
  */
 function makeRemoteMiddleware(name:string = null) {
 	const remoteDevTools = require('remote-redux-devtools')
@@ -154,9 +165,6 @@ export function loadDevTools() {
 
 let store:ObservableStore<any>
 
-	
-
-
 /**
  * onChange event of store
  */
@@ -165,6 +173,7 @@ function onChange() {
 	persistStoreState(getStoreState())
 }
 
+//noinspection JSUnusedLocalSymbols
 /**
  * Debug session key
  *
@@ -257,7 +266,7 @@ export async function loadAndInitStore(storeEnhancer = null) {
 	let defaultStateValue = null
 	
 	// If state server then try and load from disk
-	if (isStateServer) {
+	if (ProcessConfig.isType(ProcessConfig.Type.Server)) {
 		const stateData = readFile(stateFilename)
 		try {
 			if (stateData)
@@ -269,7 +278,7 @@ export async function loadAndInitStore(storeEnhancer = null) {
 	
 	// Otherwise load from server
 	else {
-		defaultStateValue = await ServerStateClient.getState()
+		defaultStateValue = await getServerClient().getState()
 	}
 	
 	return initStore(false,defaultStateValue,storeEnhancer)

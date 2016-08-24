@@ -1,11 +1,14 @@
 // Initialize
 import 'shared/WorkerEntryInit'
 
+// Set process type
+ProcessConfig.setType(ProcessConfig.Type.DatabaseServer)
+
 // Logger
 const log = getLogger(__filename)
 
 // Start
-import 'DatabaseServer'
+import './DatabaseServer'
 
 
 if (module.hot) {

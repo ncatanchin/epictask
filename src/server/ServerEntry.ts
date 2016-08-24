@@ -1,9 +1,7 @@
 require('shared/WorkerEntryInit')
 
-// Set State Server
-assign(global as any,{
-	isStateServer: true
-})
+// Set process type
+ProcessConfig.setType(ProcessConfig.Type.Server)
 
 // Start it up
 import './Server'

@@ -1,6 +1,9 @@
 ///<reference path="../../typings/index.d.ts"/>
 
 import {Container as ContainerGlobal} from 'typescript-ioc'
+import 'shared/ProcessConfig'
+
+const _ = require('lodash')
 
 /**
  * Grab a ref to global marked as any for augmentation
@@ -66,9 +69,9 @@ function installGlobals() {
 	Object.assign(g, {
 		Immutable: ImmutableGlobal,
 		_: LodashGlobal,
+		getLogger: LoggerFactory,
 		assert: assertGlobal,
 		Env: EnvGlobal,
-		isStateServer: false,
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_)

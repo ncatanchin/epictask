@@ -1,20 +1,19 @@
 
 import path = require('path')
 import * as uuid from 'node-uuid'
-import {DatabaseEvents} from 'shared/DatabaseEvents'
-import {IDatabaseResponse, IDatabaseRequest} from 'shared/DatabaseRequestResponse'
-import {Container} from 'typescript-ioc'
-
+import {DatabaseEvents} from './DatabaseEvents'
+import {IDatabaseResponse, IDatabaseRequest} from './DatabaseRequestResponse'
+import {Transport} from "shared/net/Transport"
+import {ProcessType, ProcessNames} from "shared/ProcessType"
+import VariableProxy from 'shared/util/VariableProxy'
 const TIMEOUT = 120000
-	
 
 const
-	log = getLogger(__filename),
-	ipc = require('node-ipc')
+	DatabaseServerType = ProcessType.DatabaseServer,
+	DatabaseServerName = ProcessNames.DatabaseServer
 
-
-
-
+const log = getLogger(__filename)
+	
 /**
  * Database entry template
  *
@@ -46,7 +45,20 @@ interface IDatabasePendingRequest {
 	deferred:Promise.Resolver<any>
 }
 
+/**
+ * Create a singleton instance
+ *
+ * @type {DatabaseClient}
+ */
+let databaseClient:DatabaseClient = null
 
+
+/**
+ * Perm proxy to database client
+ *
+ * @type {VariableProxy<DatabaseClient>}
+ */
+let databaseClientProxy:VariableProxy<DatabaseClient> = _.get(module,'hot.data.proxy',null)
 
 /**
  * DatabaseWindow wraps the background
@@ -56,11 +68,66 @@ interface IDatabasePendingRequest {
  */
 
 export class DatabaseClient {
-
+	
+	/**
+	 * Get Singleton
+	 *
+	 * @returns {DatabaseClient}
+	 */
+	static getInstance():DatabaseClient {
+		if (!databaseClient)
+			databaseClient = new DatabaseClient()
+		
+		if (!databaseClientProxy)
+			databaseClientProxy = new VariableProxy(DatabaseClient as any,databaseClient)
+		else
+			databaseClientProxy.setTargets(DatabaseClient,databaseClient)
+		
+		return databaseClientProxy.handler
+	}
+	
+	/**
+	 * Pending Request Map
+	 *
+	 * @type {{}}
+	 */
 	private pendingRequests:{[id:string]:IDatabasePendingRequest} = {}
 	
+	/**
+	 * Underlying transport - probably IPC
+	 */
+	private transport: Transport
 	
-	private connected:boolean
+	
+	/**
+	 * Check if running on database server
+	 *
+	 * @returns {boolean}
+	 */
+	get runningOnDatabaseServer() {
+		return !ProcessConfig.isType(DatabaseServerType)
+	}
+	
+	
+	private constructor() {
+		this.transport = Transport.getDefault({hostname: DatabaseServerName})
+	}
+	
+	/**
+	 * Connect to the database server
+	 */
+	async connect() {
+		// Connect the transport if not the DB server
+		if (this.runningOnDatabaseServer) {
+			await this.transport.connect()
+			
+			this.transport.on(DatabaseEvents.Response,this.onResponse)
+		}
+	}
+	
+	async disconnect() {
+		
+	}
 	
 	/**
 	 * Check if the IPC client is connected
@@ -68,36 +135,16 @@ export class DatabaseClient {
 	 * @throws if not connected
 	 */
 	private checkConnected() {
-		assert(this.connected,`Database Client is not connected`)
-	}
-	
-	/**
-	 * Get the IPC Database Server
-	 *
-	 * @returns {any}
-	 */
-	private getDatabaseServer() {
-		return ipc.of.DatabaseServer
+		assert(this.transport.connected,`Database Client is not connected`)
 	}
 	
 	/**
 	 * Remove all IPC listeners
 	 */
 	private removeListeners() {
-		this.getDatabaseServer().removeListener(DatabaseEvents.Response,this.onResponse)
+		this.transport.removeListener(DatabaseEvents.Response,this.onResponse)
 	}
 	
-	
-	/**
-	 * Restart the client
-	 *
-	 * @returns {Promise<this>}
-	 */
-	private restart() {
-		this.removeListeners()
-		
-		return this.start()
-	}
 	
 	
 	/**
@@ -161,7 +208,7 @@ export class DatabaseClient {
 		if (module.hot) {
 			module.hot.dispose(() => {
 				log.info(`Disposing`,__filename)
-				this.stop()
+				this.kill()
 			})
 		}
 	}
@@ -230,126 +277,21 @@ export class DatabaseClient {
 			}
 
 		// Send the request
-		this.getDatabaseServer().emit(DatabaseEvents.Request,request)
+		this.transport.emit(DatabaseEvents.Request,request)
 
 		// Return the promise
 		return pendingRequest.deferred.promise
 	}
 
 
-	/**
-	 * Bind events listeners
-	 */
-	private bindListeners() {
-		this.removeListeners()
-
-		// // On Ready - Database can serve requests
-		// ipcMain.on(Events.Ready,this.onReady)
-		//
-		// // Attach shutdown request
-		// ipcMain.on(Events.Shutdown,this.onShutdown)
-
-		// Attach Response listener
-		this.getDatabaseServer().on(DatabaseEvents.Response,this.onResponse)
-	}
-
-	/**
-	 * Start the database server
-	 *
-	 * @returns {Promise<any>}
-	 */
-	start():Promise<any> {
-		
-		
-		// TODO - CREATE IPC CLIENT
-		
-		if (this.startDeferred) {
-			if (module.hot && !_.get(this,'window.webContents')) {
-				log.warn(`In hot - start called, second time, window bad so reseting`)
-				return this.restart()
-			}
-
-			log.info('Started already, returning existing promise')
-			return this.startDeferred.promise
-		}
-
-		log.info('Creating deferred')
-		const deferred = this.startDeferred = Promise.defer(),
-			{promise} = deferred
-
-		
-
-		log.info(`Setting timeout on start promise`)
-		promise.timeout(30000)
-
-
-		try {
-
-			const show = Env.isDev && SHOW_WINDOW
-
-			const windowOptions = {show}
-
-			// If we are going to show the window
-			// for dev then add window manager
-			let dbWindowState = null
-			if (show) {
-				dbWindowState = windowStateKeeper({
-					defaultWidth: 800,
-					defaultHeight: 600,
-					file: 'db-window-state.json'
-				})
-				assign(windowOptions, dbWindowState)
-			}
-
-
-			// Create the window
-			log.info('Creating window')
-			const dbWindow = this.window = new BrowserWindow(windowOptions)
-
-			// If we are managing state then attach it
-			if (dbWindowState)
-				dbWindowState.manage(dbWindow)
-
-
-			this.bindListeners()
-
-
-			dbWindow.webContents.on('did-fail-load',(event,code,desc,url,mainFrame) => {
-				log.error('database content failed to load',event,code,desc,url)
-
-				deferred.reject(new DatabaseError(code,desc,url))
-			})
-
-			if (Env.isDev)
-				dbWindow.webContents.openDevTools()
-
-			dbWindow.webContents.on('did-finish-load',() => {
-				log.info('DatabaseWindow is loaded')
-			})
-
-			dbWindow.on('closed',this.onClosed)
-
-			log.info('Load')
-			dbWindow.loadURL(templateURL)
-
-			log.info('HMR')
-			this.hmrSetup()
-
-
-		} catch (err) {
-			log.error('failed to start', err)
-			deferred.reject(err)
-		}
-
-		return this.startDeferred.promise
-	}
+	
 
 	/**
 	 * Stop the database
 	 *
 	 * @returns {any}
 	 */
-	stop(isHot = false):Promise<any> {
+	kill():Promise<any> {
 		// if (isHot) {
 		// 	this.unbindEvents()
 		// 	return Promise.resolve(true)
@@ -365,7 +307,8 @@ export class DatabaseClient {
 		// })
 		//
 		// this.window.close()
-		ipc.disconnect('DatabaseServer')
+		this.transport.disconnect()
+		this.removeListeners()
 		return Promise.resolve(true)
 
 	}
@@ -373,34 +316,27 @@ export class DatabaseClient {
 }
 
 /**
- * Create a singleton instance
- *
- * @type {DatabaseClient}
+ * Export the singleton by default
  */
-const databaseClient = new DatabaseClient()
-
-// Start it
-databaseClient.start()
-
-// Set container provider
-Container.bind(DatabaseClient).provider({get: () => databaseClient})
-
-
-export function getDatabaseClient():DatabaseClient {
-	return databaseClient
-}
-
+export default databaseClient
 
 /**
- * Export the class
+ * Helper to get singleton
+ * @returns {DatabaseClient}
  */
-export default DatabaseClient
+export function getDatabaseClient():DatabaseClient {
+	return DatabaseClient.getInstance()
+}
+
+// Set container provider
+Container.bind(DatabaseClient).provider({get: getDatabaseClient})
 
 
 if (module.hot) {
-	module.hot.dispose(() => {
+	module.hot.dispose((data:any) => {
+		assign(data,{proxy:databaseClientProxy})
 		try {
-			databaseClient.stop()
+			databaseClient.kill()
 		} catch (err) {}
 	})
 	module.hot.accept()

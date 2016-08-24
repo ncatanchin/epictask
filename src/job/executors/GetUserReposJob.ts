@@ -1,14 +1,14 @@
 
 import {Container} from 'typescript-ioc'
 
-import {JobHandler} from '../../shared/actions/jobs/JobHandler'
-import {Stores} from '../../shared/services/DatabaseService'
-import {Benchmark} from '../../shared/util/Benchmark'
-import {RegisterJob} from 'jobs/JobDecorations'
-import {GitHubClient} from '../../shared/GitHubClient'
-import {Job} from '../../shared/actions/jobs/JobState'
-import {Repo} from '../../shared/models/Repo'
-import {Settings} from '../../shared/Settings'
+import {JobHandler} from 'shared/actions/jobs/JobHandler'
+import {Stores} from '../../shared/services/DatabaseClientService'
+import {Benchmark} from 'shared/util/Benchmark'
+import {RegisterJob} from 'job/JobDecorations'
+import {GitHubClient} from 'shared/GitHubClient'
+import {Job} from 'shared/actions/jobs/JobState'
+import {Repo} from 'shared/models/Repo'
+import {Settings} from 'shared/Settings'
 
 
 const log = getLogger(__filename)

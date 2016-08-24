@@ -4,7 +4,7 @@ const log = getLogger(__filename)
 import * as moment from 'moment'
 import * as uuid from 'node-uuid'
 
-import JobService from "../../../jobs/JobManager"
+import JobManager from "job/JobManager"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
 
 
@@ -28,7 +28,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	info:JobInfo
 	timer:Later.ITimer
 
-	constructor(public service:JobService,public job:Job) {
+	constructor(public service:JobManager,public job:Job) {
 		super(JobHandlerEventType)
 
 		const {schedule} = job

@@ -1,8 +1,5 @@
 
-import {getLogger} from 'typelogger'
-const log = getLogger(__filename)
-
-//const hasRealProxy = ((typeof global !== 'undefined' && global.Proxy) || (typeof window !== 'undefined' && window.Proxy))
+//const log = getLogger(__filename)
 
 /**
  * A reloadable proxy between a target object
@@ -11,59 +8,36 @@ const log = getLogger(__filename)
  * Implemented specifically for hot loading
  */
 export class VariableProxy<T> {
-	target:any;
-	proxy:T = {} as T
+	private _handler:T
 
-	constructor(target:T,private ignoredProps = []) {
-		this.changeTarget(target);
+	
+	get handler():T {
+		return this._handler
 	}
-
-	private addProxies(o) {
-		if (!o) return
-
-		let keys = Object.getOwnPropertyNames(o);
-		log.info("Creating proxy for",keys)
-
-		keys.forEach((prop) => {
-			if (!/(constructor|prototype|__proto__)/.test(prop) &&
-				!this.proxy[prop] &&
-				this.ignoredProps.indexOf(prop) < 0) {
-				if (_.isFunction(this.target[prop])) {
-					this.proxy[prop] = (...args) => {
-						return this.target[prop].apply(this.target,args);
-					};
-				} else {
-					Object.defineProperty(this.proxy, prop, {
-						get: () => {
-							return this.target[prop]
-						},
-						set: (newVal) => {
-							return this.target[prop] = newVal
-						}
-					})
-				}
-
-
+	
+	get target() {
+		return this._target
+	}
+	
+	get targetConstructor() {
+		return this._targetConstructor
+	}
+	
+	constructor(private _targetConstructor:{new():T},private _target:T) {
+		this._handler = new Proxy({},{
+			get: (noopTarget,prop) => {
+				return this.target[prop]
 			}
-		});
+		}) as T
 	}
-	changeTarget(target) {
-		this.target = target
 
-		// Update the proxy to ensure all methods are available
-
-		// this.addProxies(_.get(this,'target'))
-		let proto = _.get(this,'target.constructor.prototype')
-		while (proto) {
-			this.addProxies(proto)
-			proto = _.get(proto,'__proto__')
-		}
-
-		// this.addProxies(_.get(this,'target.__proto__'))
-
-
+	setTargets(targetConstructor,target):this {
+		this._targetConstructor = targetConstructor
+		this._target = target
+		
+		return this
 	}
 }
 
 
-
+export default VariableProxy

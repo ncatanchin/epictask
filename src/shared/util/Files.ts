@@ -1,8 +1,6 @@
 const log = getLogger(__filename)
 
 const uuid = require('node-uuid')
-const  electron = require('electron')
-const app = electron.app || electron.remote.app
 const mkdirp = require('mkdirp')
 
 const fs = require('fs')
@@ -15,9 +13,32 @@ const httpsProto = 'https://'
 const protos = [fileProto,httpProto,httpProto]
 
 
-const userDataPath = app.getPath('userData')
-const cachePath = `${userDataPath}/Cache`
-const tempPath = app.getPath('temp')
+
+function getPaths() {
+	const ensureDir = (dir) => {
+		if (!fs.existsSync(dir))
+			fs.mkdirSync(dir)
+		
+		return dir
+	}
+	
+	try {
+		const  electron = require('electron')
+		const app = electron.app || electron.remote.app
+		const userDataPath = app.getPath('userData')
+		
+		return [userDataPath,`${userDataPath}/Cache`,app.getPath('temp')].map(ensureDir)
+	} catch (err) {
+		const
+			userDataPath = `${process.env.HOME}/.epictask`,
+			cachePath = `${userDataPath}/cache`,
+			tempPath = `${userDataPath}/temp`
+		
+		return [userDataPath,cachePath,tempPath].map(ensureDir)
+	}
+}
+
+const [userDataPath,cachePath,tempPath] = getPaths()
 
 log.info(`Using cache path: ${cachePath}`)
 mkdirp.sync(cachePath)

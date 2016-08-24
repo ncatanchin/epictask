@@ -3,7 +3,7 @@
 
 
 import * as moment from 'moment'
-import {chunkRemove} from 'shared/services/DatabaseService'
+import {chunkRemove} from '../../services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'shared/Stores'

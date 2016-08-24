@@ -1,5 +1,12 @@
 require('shared/NodeEntryInit')
 
+
+
+
+// Set process type
+ProcessConfig.setType(ProcessConfig.Type.Main)
+
+
 import {RemoteDebuggingPort,Events} from 'shared/Constants'
 import {MainConfigurator as MainConfiguratorConstructor} from './MainConfigurator'
 type MainConfiguratorType = typeof MainConfiguratorConstructor

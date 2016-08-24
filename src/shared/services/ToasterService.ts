@@ -1,21 +1,37 @@
-import {Container} from 'typescript-ioc'
-import {BaseService} from './IService'
+import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
+import ProcessType from 'shared/ProcessType'
+import DatabaseClientService from './DatabaseClientService'
 import {ObservableStore} from 'typedux'
-import {ToastMessageType} from '../shared/models/Toast'
-import {UIActionFactory} from '../shared/actions/ui/UIActionFactory'
+import {ToastMessageType} from 'shared/models/Toast'
+import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
-
+@RegisterService(ProcessType.Server)
 export class ToastService extends BaseService {
 
 	private unsubscribe:Function
 	private pendingTimers = {}
 
-	uiActions:UIActionFactory = Container.get(UIActionFactory)
-	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
-
-
+	private uiActions:UIActionFactory
+	private store:ObservableStore<any>
+	
+	/**
+	 * DatabaseClientService must be loaded first
+	 *
+	 * @returns {DatabaseClientService[]}
+	 */
+	dependencies(): IServiceConstructor[] {
+		return [DatabaseClientService]
+	}
+	
+	
+	init(): Promise<this> {
+		this.uiActions = Container.get(UIActionFactory)
+		this.store = Container.get(ObservableStore as any) as any
+		return super.init()
+	}
+	
 	private clear() {
 		if (this.unsubscribe) {
 			this.unsubscribe()

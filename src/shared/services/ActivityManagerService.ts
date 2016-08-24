@@ -1,12 +1,11 @@
-import {Container,Singleton, AutoWired,Inject} from 'typescript-ioc'
 
-import {IService, ServiceStatus} from './IService'
-//import DBService from './DBService'
-import {Stores} from './DatabaseService'
+import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
+import {Stores, DatabaseClientService} from './DatabaseClientService'
 import {
 	Activity,
 	ActivityType
-} from '../shared/models/Activity'
+} from 'shared/models/Activity'
+import {ProcessType} from "shared/ProcessType"
 
 
 
@@ -18,37 +17,39 @@ function makeRefId(type:ActivityType,objectId:any) {
 }
 
 
-//@AutoWired
-//@Singleton
-export default class ActivityManagerService implements IService {
+@RegisterService(ProcessType.Server)
+export default class ActivityManagerService extends BaseService {
 
 
-	private _repos:Stores = Container.get(Stores)
-	private _status:ServiceStatus
-
-	status():ServiceStatus {
-		return this._status
+	private _repos:Stores
+	
+	/**
+	 * DatabaseClientService must be loaded first
+	 *
+	 * @returns {DatabaseClientService[]}
+	 */
+	dependencies(): IServiceConstructor[] {
+		return [DatabaseClientService]
 	}
-
+	
 
 	async init():Promise<this> {
-		this._status = ServiceStatus.Initialized
-		return this
+		this._repos = Container.get(Stores)
+		
+		return super.init()
 	}
 
 	async start():Promise<this> {
-		this._status = ServiceStatus.Started
-		return this
+		return super.start()
 	}
 
 
 	async stop():Promise<this> {
-		this._status = ServiceStatus.Stopped
-		return this
+		return super.stop()
 	}
 
 	destroy():this {
-		return this
+		return super.destroy()
 	}
 
 	async removeByObjectId(objectId:any) {

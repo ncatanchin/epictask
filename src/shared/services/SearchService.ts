@@ -1,29 +1,29 @@
 import {FinderRequest, FinderResultArray} from 'typestore'
-import {List,Map} from 'immutable'
-import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
+import {Map} from 'immutable'
 import {ObservableStore} from 'typedux'
-import {IService, ServiceStatus, BaseService} from './IService'
-import {SearchActionFactory} from '../shared/actions/search/SearchActionFactory'
-import {Stores} from './DatabaseService'
+import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
+import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
+import {Stores, DatabaseClientService} from './DatabaseClientService'
 import {
 	Search, SearchState, SearchType, SearchSource, SearchTypeSourceMap,
 	SearchSourceTypeMap, SearchResult, SearchItem
-} from '../shared/actions/search/SearchState'
-import ValueCache from '../shared/util/ValueCache'
+} from 'shared/actions/search/SearchState'
+import ValueCache from 'shared/util/ValueCache'
 import {debounce} from 'lodash-decorators'
-import {GitHubClient} from '../shared/GitHubClient'
-import {RepoStore, Repo} from '../shared/models/Repo'
-import {Issue} from '../shared/models/Issue'
-import {DataActionFactory} from '../shared/actions/data/DataActionFactory'
-import {DataRequest} from '../shared/actions/data/DataState'
-import {AvailableRepo} from '../shared/models/AvailableRepo'
-import {SearchKey} from '../shared/Constants'
-import {Benchmark} from '../shared/util/Benchmark'
-import {getStoreState} from '../shared/store/AppStore'
+import {GitHubClient} from 'shared/GitHubClient'
+import {RepoStore, Repo} from 'shared/models/Repo'
+import {Issue} from 'shared/models/Issue'
+import {DataActionFactory} from 'shared/actions/data/DataActionFactory'
+import {DataRequest} from 'shared/actions/data/DataState'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {SearchKey} from 'shared/Constants'
+import {Benchmark} from 'shared/util/Benchmark'
+import {getStoreState} from 'shared/store/AppStore'
 import {
 	issuesDetailSelector, issuesSelector, milestonesSelector,
 	labelsSelector
-} from '../shared/actions/issue/IssueSelectors'
+} from 'shared/actions/issue/IssueSelectors'
+import {ProcessType} from "shared/ProcessType"
 
 
 
@@ -51,6 +51,7 @@ function textSearchFilter(query:string,items:any[],props:string[], limit:number 
 	})
 }
 
+@RegisterService(ProcessType.Server)
 export default class SearchService extends BaseService {
 
 	private queriesCache:{[searchId:string]:ValueCache} = {}
@@ -61,13 +62,10 @@ export default class SearchService extends BaseService {
 	private searches:Map<string,Search>
 	private removeListener
 
-	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
-
-	stores:Stores = Container.get(Stores)
-
-	searchActions:SearchActionFactory = Container.get(SearchActionFactory)
-
-	dataActions:DataActionFactory = Container.get(DataActionFactory)
+	store:ObservableStore<any>
+	stores:Stores
+	searchActions:SearchActionFactory
+	dataActions:DataActionFactory
 
 	private getQueryCache(searchId) {
 		let cache = this.queriesCache[searchId]
@@ -79,7 +77,40 @@ export default class SearchService extends BaseService {
 
 		return cache
 	}
-
+	
+	/**
+	 * DatabaseClientService must be loaded first
+	 *
+	 * @returns {DatabaseClientService[]}
+	 */
+	dependencies(): IServiceConstructor[] {
+		return [DatabaseClientService]
+	}
+	
+	/**
+	 * Only run on server
+	 *
+	 * @returns {ProcessType[]}
+	 */
+	processTypes(): ProcessType[] {
+		return [
+			ProcessType.Server
+		]
+	}
+	
+	/**
+	 * Initialize the service
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
+	init(): Promise<this> {
+		this.store = Container.get(ObservableStore as any) as any
+		this.stores = Container.get(Stores)
+		this.searchActions = Container.get(SearchActionFactory)
+		this.dataActions = Container.get(DataActionFactory)
+		return super.init()
+	}
+	
 	async start():Promise<this> {
 		await super.start()
 

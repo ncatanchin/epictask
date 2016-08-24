@@ -2,36 +2,38 @@ import {EventEmitter} from "events"
 
 import {getStoreState} from "shared/store"
 import {transformValues} from "shared/util"
-import {IStateServerResponse} from "shared/actions/ServerClient"
+import {IStateServerResponse} from "shared/server/ServerClient"
 import storeBuilder from 'shared/store/AppStoreBuilder'
 import Worker from 'shared/Worker'
 import * as path from 'path'
-
-// Augment global with database server worker
-// Allows for HMR
-declare global {
-	
-	//noinspection JSUnusedLocalSymbols
-	var databaseServerWorker:Worker
-}
-
-
+import {ProcessNames} from "shared/ProcessType"
 
 const
 	log = getLogger(__filename),
-	workerPath = path.resolve(process.cwd(),'dist/DatabaseServerEntry.js'),
+	workerPath = path.resolve(process.cwd(),'dist/AppEntry.js'),
 	actionEmitter = new EventEmitter(),
 	ipc = require('node-ipc')
+	
 
-// Create worker if it does not exist or it isnt running
-if (!databaseServerWorker || !databaseServerWorker.running) {
-	assignGlobal({
-		databaseServerWorker: new Worker(workerPath)
-	})
+function ensureDatabaseServerWorker() {
+	let worker = _.get(module,'hot.data.databaseServerWorker') as Worker
+		// Create worker if it does not exist or it isnt running
+	if (!worker || !worker.running)
+			worker = new Worker(workerPath,{
+				env: {
+					EPIC_ENTRY: ProcessNames.DatabaseServer
+				}
+			})
+	
+	return worker
 }
 
 
-ipc.config.id = 'StateServer'
+const databaseServerWorker:Worker = ensureDatabaseServerWorker()
+
+let startDeferred:Promise.Resolver<any> = null
+
+ipc.config.id = ProcessNames.Server
 ipc.config.retry = 1500
 
 /**
@@ -86,6 +88,10 @@ export async function broadcastAction(action) {
  * Start the server and register handlers, etc
  */
 export async function start() {
+	if (startDeferred)
+		return startDeferred.promise
+	
+	startDeferred = Promise.defer()
 	log.info('Starting Server')
 	
 	// Database Server first
@@ -125,22 +131,32 @@ export async function start() {
 		ipc.server.on('action',({clientId,leaf,name,args},socket) => {
 			actionEmitter.emit('action',clientId,leaf,name,args)
 		})
+		
+		// Notify the main process that we are ready
+		WorkerClient.ready()
+		
+		startDeferred.resolve()
 	})
 	
 	//Start IPC Server
 	ipc.server.start()
 	
-	// Notify the main process that we are ready
-	WorkerClient.ready()
+	
 	
 }
 
 /**
  * Stop the Server
  */
-export function stop() {
+export function stop(isHot = false) {
 	log.info('Stopping Server')
-	ipc.server.stop()
+	if (ipc.server && ipc.server.stop)
+		ipc.server.stop()
+	
+	ipc.disconnect()
+	
+	if (!isHot)
+		databaseServerWorker.kill()
 }
 
 
@@ -176,6 +192,9 @@ start()
  * In HMR add dispose handler to stop current server
  */
 if (module.hot) {
-	module.hot.dispose(() => stop())
+	module.hot.dispose((data:any) => {
+		assign(data,{databaseServerWorker})
+		stop(true)
+	})
 }
 

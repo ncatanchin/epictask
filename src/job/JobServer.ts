@@ -1,10 +1,9 @@
 import storeBuilder from 'shared/store/AppStoreBuilder'
-import JobService from './JobManager'
-
+import {JobManager as JobManagerType} from './JobManager'
 
 const log = getLogger(__filename)
 
-let service: JobService = null
+let service: JobManagerType = null
 
 async function start() {
 	
@@ -12,7 +11,8 @@ async function start() {
 	await storeBuilder()
 	
 	log.info('Creating job service')
-	service = new (require('./JobManager').default as typeof JobService)()
+	const JobManager = require('./JobManager').default as typeof JobManagerType
+	service = new JobManager()
 	
 	log.info('Starting job service')
 	service.start()

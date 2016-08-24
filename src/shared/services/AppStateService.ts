@@ -1,19 +1,16 @@
-import {Singleton, AutoWired,Inject, Container} from 'typescript-ioc'
-import {IService, ServiceStatus, BaseService} from './IService'
+import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
 import {ObservableStore} from 'typedux'
-import {AppStateType} from '../shared/AppStateType'
-import {AppActionFactory} from '../shared/actions/AppActionFactory'
-import {AuthActionFactory} from '../shared/actions/auth/AuthActionFactory'
-import {RepoActionFactory} from '../shared/actions/repo/RepoActionFactory'
-import {Settings} from '../shared/Settings'
-const electron = require('electron')
-
-
-
+import {AppStateType} from 'shared/AppStateType'
+import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {Settings} from 'shared/Settings'
+import {DatabaseClientService} from "shared/services/DatabaseClientService"
+import {ProcessType} from "shared/ProcessType"
 
 const log = getLogger(__filename)
 
-
+@RegisterService(ProcessType.Server)
 export default class AppStateService extends BaseService {
 
 	appActions:AppActionFactory
@@ -24,14 +21,30 @@ export default class AppStateService extends BaseService {
 
 	private unsubscribe
 	private stateType = null
-
+	
+	/**
+	 * DatabaseClientService must be loaded first
+	 *
+	 * @returns {DatabaseClientService[]}
+	 */
+	dependencies(): IServiceConstructor[] {
+		return [DatabaseClientService]
+	}
+	
 
 
 	constructor() {
 		super()
-		this.loadDeps() // Implemented this way for HMR
+		
 	}
-
+	
+	
+	init(): Promise<this> {
+		this.loadDeps() // Implemented this way for HMR
+		
+		return super.init()
+	}
+	
 	loadDep(mod):any {
 		return Container.get(mod.default)
 	}
@@ -44,8 +57,6 @@ export default class AppStateService extends BaseService {
 	}
 
 	async start():Promise<this> {
-		await super.start()
-
 		this.unsubscribe = this.store
 			.getReduxStore()
 			.subscribe(this.checkStateType)
@@ -56,16 +67,14 @@ export default class AppStateService extends BaseService {
 			this.appActions.setStateType(startingStateType)
 		}
 
-		return this
+		return super.start()
 	}
 
 	async stop():Promise<this> {
-		this._status = ServiceStatus.Stopped
-
 		if (this.unsubscribe)
 			this.unsubscribe()
-
-		return this
+		
+		return super.stop()
 	}
 
 	destroy():this {
@@ -93,18 +102,5 @@ export default class AppStateService extends BaseService {
 	}
 }
 
-
-
-if (module.hot) {
-	module.hot.accept([
-		'shared/actions/AppActionFactory',
-		'shared/actions/auth/AuthActionFactory',
-		'shared/actions/repo/RepoActionFactory'
-	],(updates) => {
-		Container.get(AppStateService).loadDeps()
-	})
-
-
-}
 
 

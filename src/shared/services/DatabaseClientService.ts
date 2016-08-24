@@ -1,40 +1,18 @@
 
-
 import {Repo as TSRepo, IModel} from 'typestore'
-import {ServiceStatus, BaseService} from './IService'
-import Electron = require('electron')
+import ProcessType from "shared/ProcessType"
 import {Stores} from 'shared/Stores'
-import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/util/DatabaseUtil'
+import {ServiceStatus, BaseService, RegisterService} from 'shared/services'
+import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/db/DatabaseUtil'
+import {getDatabaseClient} from "shared/db/DatabaseClient"
+
+const log = getLogger(__filename)
 
 
 // Global ref to database services
 let databaseService:DatabaseClientService = null
 
 
-/**
- * Start the database service
- */
-export async function start() {
-	if (databaseService) {
-		log.info('Stopping DB first')
-		await databaseService.stop()
-		databaseService.destroy()
-		databaseService = null
-	}
-	
-	Container.bind(DatabaseClientService).provider({get: () => databaseService})
-	
-	// Load the database first
-	log.info('Starting Database')
-	
-	databaseService = new DatabaseClientService()
-	
-	await databaseService.init()
-	await databaseService.start()
-	log.info('Database started')
-}
-
-const log = getLogger(__filename)
 
 
 export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
@@ -42,12 +20,14 @@ export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
 /**
  * Database Client proxy
  */
+
+
 class DatabaseProxy {
 
 	private fnMap = {}
 	private store:string
 
-	constructor(private databaseService,private repoClazz = null) {
+	constructor(private repoClazz = null) {
 		this.store = (!repoClazz) ? null :
 			(repoClazz.name || _.get(repoClazz,'prototype.constructor.name'))
 	}
@@ -67,9 +47,7 @@ class DatabaseProxy {
 			this.fnMap[name] = (...args) => {
 				log.debug(`Proxy request for ${name}`)
 
-				// TODO: Use new client
-				const dbWindow = getDatabaseServerWindow()
-				return dbWindow.request(this.store,name,args)
+				return getDatabaseClient().request(this.store,name,args)
 			}
 		)
 		
@@ -82,11 +60,19 @@ class DatabaseProxy {
 /**
  * References to coordinator and plugins
  */
-
+@RegisterService(
+	ProcessType.Server,
+	ProcessType.JobServer,
+	ProcessType.JobWorker,
+	ProcessType.Main,
+	ProcessType.UI
+)
 export class DatabaseClientService extends BaseService {
 
 	private _stores:Stores
-
+	
+	
+	
 	/**
 	 * All global repositories
 	 */
@@ -110,11 +96,15 @@ export class DatabaseClientService extends BaseService {
 	 * @returns {DatabaseClientService}
 	 */
 	async start():Promise<this> {
-		assert(this.status() < ServiceStatus.Started,'Service is already started')
-
-		await super.start()
-
+		// assert(this.status() < ServiceStatus.Started,'Service is already started')
+		
+		log.info('Connecting to db first')
+		const client = getDatabaseClient()
+		await client.connect()
+		
+		
 		// Load all model classes
+		log.info('Loading models and creating store')
 		loadModelClasses()
 
 
@@ -146,7 +136,7 @@ export class DatabaseClientService extends BaseService {
 			get: () => this.stores
 		})
 
-		return this
+		return super.start()
 	}
 
 
@@ -157,8 +147,7 @@ export class DatabaseClientService extends BaseService {
 	 * @returns {DatabaseClientService}
 	 */
 	async stop(isHot = false):Promise<this> {
-		await super.stop()
-		return this
+		return super.stop()
 	}
 
 	destroy(isHot = false):this {
@@ -175,7 +164,7 @@ export class DatabaseClientService extends BaseService {
 	 */Í
 
 	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return new Proxy({},new DatabaseProxy(this,repoClazz)) as any
+		return new Proxy({},new DatabaseProxy(repoClazz)) as any
 	}
 }
 

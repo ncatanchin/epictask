@@ -1,25 +1,25 @@
 import {Container,AutoWired,Inject} from 'typescript-ioc'
 import * as moment from 'moment'
 
-import ActivityManagerService from '../ActivityManagerService'
+import ActivityManagerService from 'shared/services/ActivityManagerService'
 
-import {JobHandler} from '../../shared/actions/jobs/JobHandler'
+import {JobHandler} from 'shared/actions/jobs/JobHandler'
 
-import {GitHubClient, OnPageCallback} from '../../shared/GitHubClient'
-import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from '../.'
+import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
+import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import {Stores,chunkSave} from '../DBService'
-import {Settings} from '../../shared/Settings'
-import Toaster from '../../shared/Toaster'
-import {Benchmark} from '../../shared/util/Benchmark'
-import {RegisterJob} from 'jobs/JobDecorations'
+import {Stores,chunkSave} from 'shared/services/DatabaseClientService'
+import {Settings} from 'shared/Settings'
+import Toaster from 'shared/Toaster'
+import {Benchmark} from 'shared/util/Benchmark'
+import {RegisterJob} from 'job/JobDecorations'
 
-import {Job, IJob} from '../../shared/actions/jobs/JobState'
-import {IssueActionFactory} from '../../shared/actions/issue/IssueActionFactory'
+import {Job, IJob} from 'shared/actions/jobs/JobState'
+import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
-import {getStoreState} from '../../shared/store/AppStore'
-import {enabledRepoIdsSelector} from '../../shared/actions/repo/RepoSelectors'
-import {selectedIssueSelector} from '../../shared/actions/issue/IssueSelectors'
+import {getStoreState} from 'shared/store/AppStore'
+import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
 
 
 

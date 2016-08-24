@@ -7,6 +7,11 @@ import 'shared/PromiseConfig'
 // Load all global/env stuff first
 // LOGGING CONFIG FIRST
 import './UIGlobals'
+
+// Set process type
+ProcessConfig.setType(ProcessConfig.Type.UI)
+
+
 import './UIConfigurator'
 
 

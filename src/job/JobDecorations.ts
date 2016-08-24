@@ -1,7 +1,4 @@
 
-
-
-import {Container} from "typescript-ioc"
 import JobManager from "./JobManager"
 import {Job} from "shared/actions/jobs/JobState"
 
@@ -14,7 +11,7 @@ import {Job} from "shared/actions/jobs/JobState"
  * @constructor
  */
 export function RegisterJob(target:{new():Job}) {
-	const service = Container.get(JobService)
+	const service = Container.get(JobManager)
 	service.registerJob(target.name,target)
 }
 

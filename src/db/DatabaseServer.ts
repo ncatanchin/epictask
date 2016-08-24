@@ -3,10 +3,11 @@ import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {FinderRequest} from 'typestore'
 
 import {Stores} from 'shared/Stores'
-import {DatabaseEvents} from 'shared/DatabaseEvents'
-import {IDatabaseRequest} from 'shared/DatabaseRequestResponse'
+import {DatabaseEvents} from 'shared/db/DatabaseEvents'
+import {IDatabaseRequest} from 'shared/db/DatabaseRequestResponse'
 import {getUserDataFilename} from 'shared/util/Files'
 import storeBuilder from 'shared/store/AppStoreBuilder'
+import {ProcessNames} from "shared/ProcessType"
 
 // Logger
 const log = getLogger(__filename)
@@ -14,7 +15,7 @@ const log = getLogger(__filename)
 // IPC
 const ipc = require('node-ipc')
 
-ipc.config.id = 'DatabaseServer'
+ipc.config.id = ProcessNames.DatabaseServer
 ipc.config.retry = 1500
 
 // Database name and path
@@ -60,7 +61,7 @@ async function start() {
 	log.info('Starting Database Server')
 	
 	// First create the store
-	await storeBuilder()
+	//await storeBuilder()
 	
 	try {
 		storePlugin = new PouchDBPlugin(storeOptions())
@@ -122,16 +123,18 @@ async function start() {
 			ipc.server.on('request',(request,socket) => {
 				this.executeRequest(socket,request)
 			})
+			
+			// Notify StateServer
+			log.info('DatabaseServer is ready - notifying worker owner')
+			WorkerClient.ready()
+			//ipcRenderer.send(DatabaseEvents.Ready)
 		})
 		
 		//Start IPC Server
 		ipc.server.start()
 		
 		
-		// Notify StateServer
-		log.info('DatabaseServer is ready - notifying worker owner')
-		WorkerClient.ready()
-		//ipcRenderer.send(DatabaseEvents.Ready)
+		
 		
 	} catch (err) {
 		
@@ -223,7 +226,7 @@ function stop() {
 }
 
 
-start()
+
 
 
 /**

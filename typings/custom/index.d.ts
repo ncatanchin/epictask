@@ -19,18 +19,7 @@ declare namespace NodeJS {
 	}
 }
 
-// Import the ProcessType enum
-import ProcessType from 'shared/ProcessType'
 
-/**
- * Process type of the currently running process
- */
-declare var processType:ProcessType
-
-/**
- * Is the current process the state server
- */
-declare var isStateServer:boolean
 
 /**
  * Is in development mode
