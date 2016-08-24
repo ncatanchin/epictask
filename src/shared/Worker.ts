@@ -48,6 +48,10 @@ export default class Worker {
 	 */
 	private child:childProcess.ChildProcess
 	
+	/**
+	 * Deferred stop flag
+	 */
+	private stopDeferred:Promise.Resolver<any>
 	
 	/**
 	 * Process is created
@@ -55,6 +59,13 @@ export default class Worker {
 	 * @type {boolean}
 	 */
 	private created = false
+	
+	/**
+	 * Process sent exit
+	 *
+	 * @type {boolean}
+	 */
+	private exited = false
 	
 	/**
 	 * Process is killed
@@ -178,8 +189,13 @@ export default class Worker {
 	 * @param err
 	 */
 	private handleError = (err:Error) => {
-		this.listeners.forEach(listener =>
-			listener.onError && listener.onError(this,err))
+		this.listeners.forEach(listener => {
+			try {
+				listener.onError && listener.onError(this, err)
+			} catch (err2) {
+				log.error(`On error listener had an error - kind of funny`,err2)
+			}
+		})
 	}
 	
 	/**
@@ -188,8 +204,72 @@ export default class Worker {
 	 * @param err
 	 */
 	private handleExit = (err:Error) => {
-		this.listeners.forEach(listener =>
-			listener.onStop && listener.onStop(this,err))
+		this.exited = true
+		
+		this.listeners.forEach(listener => {
+			try {
+				listener.onStop && listener.onStop(this, err)
+			} catch (err2) {
+				log.error('On exit error in listener', err2)
+			}
+		})
+		
+		if (this.stopDeferred && !this.stopDeferred.promise.isResolved())
+			this.stopDeferred.resolve()
+		
+		this.cleanup()
+	}
+	
+	
+	
+	
+	private cleanup() {
+		if (this.killed)
+			return
+		
+		this.killed = true
+		
+		// Grab the ref
+		const {child} = this
+		
+		
+		
+		// If already killed or never started!
+		if (!child) {
+			log.warn('not running, can not kill',this.startFile)
+		} else {
+			
+			// We should be connected
+			if (child.connected) {
+				log.info('closing ipc')
+				child.disconnect()
+			} else {
+				log.warn('We are not connected to the child - weird')
+			}
+			
+			
+			// Remove listeners
+			try {
+				child.removeAllListeners()
+			} catch (err) {
+				log.warn('Failed to remove all listeners', err.message)
+			}
+			
+			// Send kill
+			try {
+				if (!this.exited)
+					child.kill()
+			} catch (err) {
+				log.error('Child kill failed', err)
+			}
+			
+			// Clear ref
+			this.child = null
+		}
+		
+		// Make sure we complete the stop
+		if (this.stopDeferred && !this.stopDeferred.promise.isResolved())
+			this.stopDeferred.resolve()
 	}
 	
 	/**
@@ -227,36 +307,7 @@ export default class Worker {
 	 * Kill the worker
 	 */
 	kill() {
-		this.killed = true
-		
-		// Grab the ref
-		const {child} = this
-		
-		// If already killed or never started!
-		if (!child) {
-			log.warn('not running, can not kill',this.startFile)
-			return
-		}
-		
-		// We should be connected
-		if (child.connected) {
-			log.info('closing ipc')
-			child.disconnect()
-		} else {
-			log.warn('We are not connected to the child - weird')
-		}
-		
-		
-		// Remove listeners
-		child.removeListener('error',this.handleError)
-		child.removeListener('exit',this.handleExit)
-		child.removeListener('message',this.handleMessage)
-		
-		// Send kill
-		child.kill()
-		
-		// Clear ref
-		this.child = null
+		this.cleanup()
 		
 	}
 	
@@ -277,6 +328,19 @@ export default class Worker {
 		// Send the actual message
 		const child = this.child as any
 		child.send({type, body},null,callback)
+	}
+	
+	/**
+	 * Stop the worker
+	 */
+	stop(exitCode = 0):Promise<any> {
+		if (this.exited || this.killed || this.stopDeferred || !this.child)
+			return
+		
+		this.stopDeferred = Promise.defer()
+		this.child.kill()
+		
+		return this.stopDeferred.promise
 	}
 	
 	/**

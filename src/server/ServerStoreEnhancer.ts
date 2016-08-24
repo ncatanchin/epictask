@@ -1,11 +1,8 @@
 import {getAction,ActionFactory} from 'typedux'
 import {Container} from 'typescript-ioc'
-import * as Server from './Server'
-
+import * as Server from './ServerEntry'
 
 const log = getLogger(__filename)
-
-
 
 /**
  * Make render dispatch handler

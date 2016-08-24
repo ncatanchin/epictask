@@ -46,6 +46,11 @@ process.on("uncaughtException", function (err) {
 	log.error('Unhandled exception', err)
 })
 
+process.on("warning", function (warning) {
+	const log = getErrorLogger()
+	log.warn('WARNING', warning)
+})
+
 // process.on("rejectionHandled", function (reason, promise) {
 // 	const log = getErrorLogger()
 //

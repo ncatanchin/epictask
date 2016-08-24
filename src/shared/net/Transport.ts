@@ -14,7 +14,8 @@ export enum TransportScheme {
  */
 export const TransportEvents = {
 	Connect:  'connect',
-	Disconnect: 'disconnect'
+	Disconnect: 'disconnect',
+	Error: 'error'
 }
 
 /**

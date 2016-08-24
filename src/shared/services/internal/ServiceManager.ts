@@ -1,5 +1,3 @@
-import ProcessType from  'shared/ProcessType'
-
 import {VariableProxy} from "shared/util/VariableProxy"
 import {IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
 import {IService} from "shared/services"

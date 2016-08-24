@@ -1,4 +1,5 @@
 import ProcessType from 'shared/ProcessType'
+import 'shared/ProcessConfig'
 
 const Entries = {
 	[ProcessType.Main]: () => require("main/MainEntry"),
@@ -11,10 +12,12 @@ if (DEBUG) {
 	Entries[ProcessType.Test] = () => require("tests/AppTestEntry")
 }
 
-const entryType = ProcessType[process.env.EPIC_ENTRY] || ProcessType.Main
+const processType = (ProcessType[process.env.EPIC_ENTRY] || ProcessType.Main) as ProcessType
 
-const entryFn = Entries[entryType]
+const entryFn = Entries[processType]
 if (!entryFn)
-	throw new Error('No valid entry type found for ' + ProcessType[entryType])
+	throw new Error('No valid entry type found for ' + processType + '/' + ProcessType[processType])
+
+ProcessConfig.setType(processType)
 
 entryFn()

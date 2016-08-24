@@ -104,6 +104,7 @@ export class IPCTransport extends Transport {
 	 * Connect to IPC Server
 	 */
 	async connect():Promise<void> {
+		log.info(`Client ${clientId} connecting to ${this.serverName}`)
 		if (this.connectDeferred)
 			return this.connectDeferred.promise
 		
@@ -112,6 +113,12 @@ export class IPCTransport extends Transport {
 		
 		// Attach to the IPC server
 		this.ipc.connectTo(this.serverName,() => {
+			
+			// Connect
+			this.on(TransportEvents.Error,(err) => {
+				log.error(`Error ${clientId}`,err)
+				this.connectDeferred.resolve(true)
+			})
 			
 			// Connect
 			this.on(TransportEvents.Connect,() => {

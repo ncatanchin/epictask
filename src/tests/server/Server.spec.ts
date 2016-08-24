@@ -1,4 +1,4 @@
-import * as ServerType from 'server/Server'
+import {ServerEntry} from 'server/ServerEntry'
 import {ServerClient} from 'shared/server/ServerClient'
 import {ProcessType} from "shared/ProcessType"
 
@@ -12,18 +12,24 @@ function getClient() {
  * Test the server entry, boot, etc
  */
 describe('Server Entry',() => {
-	let server:typeof ServerType = null
+	let server:ServerEntry = null
 	
 	// Before the suite we load the server entry
 	before( async () => {
-		require('server/ServerEntry')
-		server = require('server/Server')
+		clearRequireCache()
+		ProcessConfig.setType(ProcessType.Server)
 		
-		await server.start()
+		const {WorkerClient} = require('shared/WorkerEntry')
+		WorkerClient.setNoKill(true)
+		
+		server = require('server/ServerEntry').default
+		log.info('Starting to wait for server ready')
+		await server.waitForStart()
+		log.info('Server Started, testing begins')
 	})
 	
 	after(async() => {
-		await server.stop()
+		await server.kill()
 	})
 	
 	it('Server is running',async () => {

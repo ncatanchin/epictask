@@ -261,12 +261,12 @@ export function initStore(devToolsMode = false,defaultState = null,storeEnhancer
  *
  * @returns {ObservableStore<any>}
  */
-export async function loadAndInitStore(storeEnhancer = null) {
+export async function loadAndInitStore(serverStoreEnhancer = null) {
 	
 	let defaultStateValue = null
 	
 	// If state server then try and load from disk
-	if (ProcessConfig.isType(ProcessConfig.Type.Server)) {
+	if (serverStoreEnhancer) {
 		const stateData = readFile(stateFilename)
 		try {
 			if (stateData)
@@ -281,7 +281,7 @@ export async function loadAndInitStore(storeEnhancer = null) {
 		defaultStateValue = await getServerClient().getState()
 	}
 	
-	return initStore(false,defaultStateValue,storeEnhancer)
+	return initStore(false,defaultStateValue,serverStoreEnhancer)
 }
 
 
