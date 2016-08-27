@@ -1,46 +1,45 @@
+import ProcessType from 'shared/ProcessType'
 import WorkerEntry from "shared/WorkerEntry"
-import storeBuilder from 'shared/store/AppStoreBuilder'
-import {JobManager as JobManagerType} from './JobManager'
+// import {getJobManager as getJobManagerType,JobManager as JobManagerType} from './JobManager'
 
 
 const log = getLogger(__filename)
 
-let service: JobManagerType = null
 
 export class JobServerEntry extends WorkerEntry {
 	
 	constructor() {
 		super(ProcessType.JobServer)
+		require('./JobManagerService')
 	}
 	
 	
 	protected async start() {
-		
-		log.info('Creating store')
-		await storeBuilder()
-		
-		log.info('Creating job service')
-		const JobManager = require('./JobManager').default as typeof JobManagerType
-		service = new JobManager()
-		
-		log.info('Starting job service')
-		service.start()
-		log.info('Booted job service')
+		log.info('Starting JobServerEntry')
+		// const getJobManager = require('./JobManagerService').default as typeof getJobManagerType
+		// service = getJobManager()
+		//
+		// log.info('Starting job service')
+		// service.start()
+		// log.info('Booted job service')
 		
 	}
 	
 	protected async stop() {
-		try {
-			if (service)
-				service.kill()
-			
-			service = null
-		} catch (err) {
-			log.error('Failed to stop service', err)
-		}
+		log.info(`Stopping JobServerEntry`)
+		// try {
+		//
+		// } catch (err) {
+		// 	log.error('Failed to stop service', err)
+		// }
 	}
 }
 
+/**
+ * Singleton instance
+ * 
+ * @type {JobServerEntry}
+ */
 const jobServerEntry = new JobServerEntry()
 
 export default jobServerEntry
@@ -54,6 +53,6 @@ if (module.hot) {
 		jobServerEntry.kill()
 	})
 	
-	module.hot.accept()
+	module.hot.accept(() => log.info(`Hot Reload`,__filename))
 }
 

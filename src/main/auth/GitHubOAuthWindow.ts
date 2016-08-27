@@ -18,16 +18,24 @@ export default class GitHubOAuthWindow {
 	BrowserWindow
 
 	constructor(obj:any) {
-		const { id, secret, remote = false,scopes = [], waitForApp = false } = obj
+		const {
+			id,
+			secret,
+			remote = false,
+			scopes = [],
+			waitForApp = false
+		} = obj
+		
 		assert.ok(id, 'Client ID is needed!')
 		assert.ok(secret, 'Client Secret is needed!')
+		
 		this.scopeQuery = scopes.length > 0 ? '&scope=' + scopes.join('%2C') : ''
 		this.clientId = id
 		this.clientSecret = secret
 		this.waitForApp = waitForApp
 		this.remote = remote === true
 		this.window = null
-		this.electron = (this.remote) ? electron.remote : electron
+		this.electron = (this.remote || electron.remote) ? electron.remote : electron
 		this.app = this.electron.app
 		this.BrowserWindow = this.electron.BrowserWindow
 

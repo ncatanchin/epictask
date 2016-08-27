@@ -48,8 +48,8 @@ export namespace ProcessConfigGlobal {
 	 *
 	 * @returns {string}
 	 */
-	export function getTypeName():string {
-		return ProcessType[getType()]
+	export function getTypeName(processType:ProcessType = getType()):string {
+		return ProcessType[processType]
 	}
 	
 }

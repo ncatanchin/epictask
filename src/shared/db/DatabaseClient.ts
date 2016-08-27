@@ -41,6 +41,7 @@ export class DatabaseError extends Error {
  * Pending database request - internal
  */
 interface IDatabasePendingRequest {
+	id:string
 	request:IDatabaseRequest
 	deferred:Promise.Resolver<any>
 }
@@ -75,6 +76,8 @@ export class DatabaseClient {
 	 * @returns {DatabaseClient}
 	 */
 	static getInstance():DatabaseClient {
+		assert(!ProcessConfig.isType(ProcessType.DatabaseServer),'DatabaseClient can NOT be started on the DatabaseServer')
+			
 		if (!databaseClient)
 			databaseClient = new DatabaseClient()
 		
@@ -91,12 +94,13 @@ export class DatabaseClient {
 	 *
 	 * @type {{}}
 	 */
+	// private pendingRequests = new WeakMap<string,IDatabasePendingRequest>()
 	private pendingRequests:{[id:string]:IDatabasePendingRequest} = {}
 	
 	/**
 	 * Underlying transport - probably IPC
 	 */
-	private transport: Transport
+	public transport: Transport
 	
 	
 	/**
@@ -156,6 +160,7 @@ export class DatabaseClient {
 	private onRequestFinished(request:IDatabaseRequest):() => void {
 		return () => {
 			delete this.pendingRequests[request.id]
+			//this.pendingRequests.delete(request.id)
 		}
 	}
 
@@ -163,18 +168,15 @@ export class DatabaseClient {
 	 * onResponse received from window,
 	 * map it back to request and resolve
 	 *
-	 * @param event
 	 * @param resp
 	 */
-	private onResponse = (event,resp:IDatabaseResponse) => {
+	private onResponse = (resp:IDatabaseResponse) => {
 		log.debug('Response Received',resp.requestId)
 
 		const pendingRequest = this.pendingRequests[resp.requestId]
+		//const pendingRequest = this.pendingRequests.get(resp.requestId)
 		if (!pendingRequest) {
 			log.error(`Response received, but no request found with provided id: ${resp.requestId}`,resp.error)
-
-
-
 			return
 		}
 
@@ -270,11 +272,14 @@ export class DatabaseClient {
 			.finally(this.onRequestFinished(request))
 
 		// Map the pending request
-		const pendingRequest:IDatabasePendingRequest =
-			this.pendingRequests[request.id] = {
-				request,
-				deferred
-			}
+		const pendingRequest:IDatabasePendingRequest = {
+			id:request.id,
+			request,
+			deferred
+		}
+		
+		//this.pendingRequests.set(request.id, pendingRequest)
+		this.pendingRequests[request.id] = pendingRequest
 
 		// Send the request
 		this.transport.emit(DatabaseEvents.Request,request)
@@ -308,17 +313,13 @@ export class DatabaseClient {
 		//
 		// this.window.close()
 		this.transport.disconnect()
-		this.removeListeners()
+		//this.removeListeners()
 		return Promise.resolve(true)
 
 	}
 
 }
 
-/**
- * Export the singleton by default
- */
-export default databaseClient
 
 /**
  * Helper to get singleton
@@ -330,6 +331,13 @@ export function getDatabaseClient():DatabaseClient {
 
 // Set container provider
 Container.bind(DatabaseClient).provider({get: getDatabaseClient})
+
+/**
+ * Export the singleton by default
+ */
+export default new Proxy({}, {
+	get: (target,prop) => getDatabaseClient()[prop]
+}) as DatabaseClient
 
 
 if (module.hot) {

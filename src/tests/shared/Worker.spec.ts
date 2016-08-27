@@ -10,13 +10,13 @@ const log = getLogger(__filename)
  * Main worker tests
  */
 describe('Worker can communicate', function () {
-	const workerScriptFile = path.resolve(__dirname,'fixtures/worker-fixture.js')
+	const workerScriptFile = 'src/tests/shared/fixtures/worker-fixture.js'
 	log.info(`Using worker script @ ${workerScriptFile}`)
 	
 	let worker:Worker = null, workersStarted = false
 	
 	before(async () => {
-		worker = new Worker(workerScriptFile,{},{
+		worker = new Worker(workerScriptFile,'test-fixture',{},{
 			onError(worker:Worker,err) {
 				log.error('worker error occurred',err)
 			},

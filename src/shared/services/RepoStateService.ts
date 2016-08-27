@@ -14,7 +14,7 @@ import {DatabaseClientService} from "shared/services/DatabaseClientService"
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.Server)
+@RegisterService(ProcessType.StateServer)
 export class RepoStateService extends BaseService {
 
 	private unsubscribe:Function
@@ -146,3 +146,7 @@ export class RepoStateService extends BaseService {
 }
 
 export default RepoStateService
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}

@@ -15,6 +15,8 @@ export async function storeBuilder(storeEnhancer = null) {
 		store:ObservableStore<any> = await loadAndInitStore(storeEnhancer)
 	
 	Container.bind(ObservableStore).provider({ get: () => store})
+	
+	return store
 }
 
 export default storeBuilder

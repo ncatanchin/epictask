@@ -1,6 +1,3 @@
-
-
-import {ProcessType} from "shared/ProcessType"
 import {VariableProxy} from "shared/util/VariableProxy"
 
 /**
@@ -22,6 +19,7 @@ export enum ServiceStatus {
  */
 export interface IServiceConstructor {
 	new ():IService
+	getInstance?:() => IService
 }
 
 /**

@@ -85,6 +85,9 @@ export interface ISearchItemModel {
 export class SearchResult {
 
 	static fromJS(o:any) {
+		if (o && o instanceof SearchResult)
+			return o
+		
 		return new SearchResult(o)
 	}
 
@@ -159,6 +162,10 @@ export const SearchRecord = Record({
 @RegisterModel
 export class Search extends SearchRecord {
 	static fromJS(o:any = {}) {
+		if (o && o instanceof Search)
+			return o
+		
+		
 		const resultsObj = _.toJS(o.results),
 			results = Object
 				.keys(resultsObj || {})
@@ -200,7 +207,9 @@ export const SearchStateRecord = Record({
 export class SearchState extends SearchStateRecord {
 
 	static fromJS(o:any) {
-
+		if (o && o instanceof SearchState)
+			return o
+		
 		const searchesObj = _.toJS(o.searches),
 			searchIds = Object.keys(searchesObj || {})
 

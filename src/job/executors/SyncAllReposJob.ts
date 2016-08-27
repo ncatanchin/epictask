@@ -1,11 +1,11 @@
 
 import {Container} from 'typescript-ioc'
-import JobService from "job/JobManager"
+import getJobManager from "../JobManagerService"
 
-import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {Stores} from '../../shared/services/DatabaseClientService'
+import {JobHandler} from 'job/JobHandler'
+import {Stores} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'job/JobDecorations'
+import {JobExecutor} from 'job/JobDecorations'
 import {Job} from 'shared/actions/jobs/JobState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 
@@ -17,7 +17,7 @@ const Benchmarker = Benchmark('SyncAllReposJob')
 /**
  * Synchronize all enabled repos
  */
-@RegisterJob
+@JobExecutor
 export class SyncAllReposJob extends Job {
 
 	constructor(o:any = {}) {
@@ -38,7 +38,7 @@ export class SyncAllReposJob extends Job {
 
 		const stores = Container.get(Stores)
 		const availRepos = await stores.availableRepo.loadAll()
-		const service = Container.get(JobService)
+		const service = getJobManager()
 		const repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 		log.debug('Getting avail repos from DB, not state')
 

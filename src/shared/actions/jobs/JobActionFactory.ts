@@ -18,8 +18,7 @@ const log = getLogger(__filename)
  * @constructor
  **/
 
-@AutoWired
-export class JobActionFactory extends ActionFactory<any,ActionMessage<JobState>> {
+export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobState>> {
 
 	constructor() {
 		super(JobState)
@@ -31,8 +30,11 @@ export class JobActionFactory extends ActionFactory<any,ActionMessage<JobState>>
 
 	@ActionReducer()
 	setJobInfo(jobInfo:IJobInfo) {
-		return (jobState:JobState) => jobState.update('info', (infoMap:Map<string,any>) => {
-			return infoMap.set(jobInfo.jobId,jobInfo)
+		return (jobState:JobState) => jobState.update('jobsInfo', (infoMap:Map<string,any>) => {
+			if (!infoMap || !infoMap.set)
+				infoMap = Map<string,any>()
+			
+			return !jobInfo ? infoMap : infoMap.set(jobInfo.jobId,jobInfo)
 		})
 	}
 

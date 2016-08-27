@@ -64,6 +64,9 @@ export const IssueStateRecord = Record({
 export class IssueState extends IssueStateRecord {
 
 	static fromJS(o:any) {
+		if (o && o instanceof IssueState)
+			return o
+		
 		return new IssueState(o)
 		// return new IssueState(Object.assign({},o,{
 		// 	internalIssues: List(o.issues)

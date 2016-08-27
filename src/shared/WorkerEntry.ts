@@ -1,20 +1,24 @@
 import 'shared/NodeEntryInit'
 import * as shortId from 'short-id'
 import {ProcessType} from "shared/ProcessType"
+import {getServiceManager} from "shared/services"
+import Bluebird from 'shared/PromiseConfig'
 
 const
 	log = getLogger(__filename),
 	ipc = require('node-ipc')
-	
+
+
+
 
 //region WorkerClient
 const defaultMessageHandlers:{[messageType:string]:WorkerClient.TWorkerMessageHandler} = {
 	ping(workerEntry:WorkerEntry,messageType:string,data:any) {
 		if (workerEntry.running) {
 			WorkerClient.sendMessage('pong')
+		} else {
+			log.info(`Worker is not yet ready`)
 		}
-		
-		log.info(`Worker is not yet ready`)
 	}
 }
 
@@ -22,17 +26,10 @@ const
 	workerId = process.env.WORKER_ID || `${__filename}-${shortId.generate()}`,
 	messageHandlers = {}
 
-	
-let noKill = false
-	
 /**
  * WorkerClient global access
  */
 export namespace WorkerClient {
-	
-	export function setNoKill(newNoKill) {
-		noKill = newNoKill
-	}
 	
 	/**
 	 * Worker Message handler shape
@@ -121,13 +118,11 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
 		return stopDeferred.promise
 	}
 	
-	stopDeferred = Promise.defer()
+	stopDeferred = Bluebird.defer()
 	
 
 	stopDeferred.promise
-		.finally(() => {
-			!noKill && process.exit(exitCode)
-		})
+		.finally(() => process.env.EPIC_CHILD && process.exit(exitCode))
 	
 	if (workerEntry.running) {
 		log.info(`Stopping worker with exit code: ${exitCode}`)
@@ -165,7 +160,7 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 		return startDeferred.promise
 	
 	// Create the resolver
-	startDeferred = Promise.defer()
+	startDeferred = Bluebird.defer()
 	
 	// Add the default handlers first
 	Object
@@ -176,12 +171,6 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 				messageType,
 				defaultMessageHandlers[messageType]))
 	
-	// process.on('disconnect',(exitCode) => stopWorker(workerEntry,exitCode))
-	// process.on('beforeExit',(exitCode) => stopWorker(workerEntry,exitCode))
-	//
-	// process.on('exit',(exitCode) => {
-	// 	workerEntry.kill(exitCode)
-	// })
 	
 	// Now bind to all the process events
 	process.on('message', ({type,body}) => {
@@ -193,7 +182,15 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 	
 	log.info(`Starting Worker Entry`)
 	try {
+		if (workerEntry.servicesEnabled()) {
+			log.info('Starting all services')
+			await Promise.resolve(getServiceManager().start()).timeout(10000)
+		}
+		
 		await workerStart()
+		
+		
+		
 		startDeferred.resolve(true)
 	} catch (err) {
 		log.error('Failed to start worker',err)
@@ -219,6 +216,10 @@ export abstract class WorkerEntry {
 	 */
 	constructor(private processType:ProcessType) {
 		startWorker(processType,this, () => this.start())
+	}
+	
+	servicesEnabled() {
+		return true
 	}
 	
 	/**

@@ -4,13 +4,13 @@ import {AppStateType} from 'shared/AppStateType'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {Settings} from 'shared/Settings'
+import {getSettings} from 'shared/Settings'
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {ProcessType} from "shared/ProcessType"
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.Server)
+@RegisterService(ProcessType.StateServer)
 export default class AppStateService extends BaseService {
 
 	appActions:AppActionFactory
@@ -54,6 +54,7 @@ export default class AppStateService extends BaseService {
 		this.repoActions = this.loadDep((require as any)('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
 		this.authActions = this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
 		this.store = Container.get(ObservableStore as any) as any
+		
 	}
 
 	async start():Promise<this> {
@@ -62,8 +63,8 @@ export default class AppStateService extends BaseService {
 			.subscribe(this.checkStateType)
 
 		// If the state type has not yet been set then set it
-		if (!this.appActions.state.stateType || !Settings.token) {
-			const startingStateType = ((Settings.token) ? AppStateType.AuthVerify : AppStateType.AuthLogin)
+		if (!this.appActions.state.stateType || !getSettings().token) {
+			const startingStateType = ((getSettings().token) ? AppStateType.AuthVerify : AppStateType.AuthLogin)
 			this.appActions.setStateType(startingStateType)
 		}
 
@@ -104,3 +105,6 @@ export default class AppStateService extends BaseService {
 
 
 
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}

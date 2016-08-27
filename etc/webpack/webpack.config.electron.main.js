@@ -15,8 +15,8 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 	
 	// HMR
 	const hmrEntry = [
-		'webpack/hot/signal.js'
-		//'webpack/hot/poll.js?1000' /// 'webpack/hot/only-dev-server',
+		//'webpack/hot/signal.js'
+		'webpack/hot/poll.js?1000' /// 'webpack/hot/only-dev-server',
 		//const hmrEntry = 'webpack/hot/signal.js'
 	]
 	

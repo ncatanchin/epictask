@@ -2,7 +2,6 @@
 
 import {IService,IServiceConstructor, ServiceStatus} from "./Types"
 
-import {ProcessType} from "shared/ProcessType"
 /**
  * Base service implementation
  */

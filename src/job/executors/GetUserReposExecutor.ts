@@ -1,14 +1,14 @@
 
 import {Container} from 'typescript-ioc'
 
-import {JobHandler} from 'shared/actions/jobs/JobHandler'
-import {Stores} from '../../shared/services/DatabaseClientService'
+import {JobHandler} from 'job/JobHandler'
+import {Stores} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'job/JobDecorations'
+import {JobExecutor} from 'job/JobDecorations'
 import {GitHubClient} from 'shared/GitHubClient'
-import {Job} from 'shared/actions/jobs/JobState'
 import {Repo} from 'shared/models/Repo'
-import {Settings} from 'shared/Settings'
+import {getSettings} from 'shared/Settings'
+import {IJobExecutor} from "job/executors/JobExecutor"
 
 
 const log = getLogger(__filename)
@@ -18,8 +18,8 @@ const Benchmarker = Benchmark('GetUserReposJob')
 /**
  * Synchronize all enabled repos
  */
-@RegisterJob
-export class GetUserReposJob extends Job {
+@JobExecutor
+export class GetUserReposExecutor implements IJobExecutor {
 
 	constructor(o:any = {}) {
 		super(o)
@@ -47,7 +47,7 @@ export class GetUserReposJob extends Job {
 	async executor(handler:JobHandler) {
 		const {service} = handler
 
-		if (!Settings.token) {
+		if (!getSettings().token) {
 			log.info(`User is not authenticated, can not sync`)
 			return
 		}

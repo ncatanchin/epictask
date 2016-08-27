@@ -1,18 +1,16 @@
-import {Container,AutoWired,Inject} from 'typescript-ioc'
 import * as moment from 'moment'
 
 import ActivityManagerService from 'shared/services/ActivityManagerService'
 
-import {JobHandler} from 'shared/actions/jobs/JobHandler'
-
+import {JobHandler} from 'job/JobHandler'
 import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import {Stores,chunkSave} from 'shared/services/DatabaseClientService'
-import {Settings} from 'shared/Settings'
 import Toaster from 'shared/Toaster'
+import {Stores,chunkSave} from 'shared/services/DatabaseClientService'
+import {getSettings} from 'shared/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
-import {RegisterJob} from 'job/JobDecorations'
+import {JobExecutor} from 'job/JobDecorations'
 
 import {Job, IJob} from 'shared/actions/jobs/JobState'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
@@ -29,7 +27,7 @@ const Benchmarker = Benchmark('RepoSyncJob')
 
 
 
-@RegisterJob
+@JobExecutor
 export class RepoSyncJob extends Job {
 
 
@@ -71,7 +69,7 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 	async initParams(activityManager,repo) {
-		assert(Settings.token,'Can not sync when not authenticated')
+		assert(getSettings().token,'Can not sync when not authenticated')
 
 
 		const lastActivity = await activityManager.findLastActivity(ActivityType.RepoSync,repo.id)
@@ -269,7 +267,7 @@ export class RepoSyncJob extends Job {
 	 */
 	@Benchmarker
 	async executor(handler:JobHandler) {
-		if (!Settings.token) {
+		if (!getSettings().token) {
 			log.info(`User is not authenticated, can not sync`)
 			return
 		}
@@ -283,7 +281,7 @@ export class RepoSyncJob extends Job {
 
 		const {availableRepo,repo} = this
 
-		if (!Settings.token) {
+		if (!getSettings().token) {
 			log.info("Can not sync, not authenticated")
 			return
 		}

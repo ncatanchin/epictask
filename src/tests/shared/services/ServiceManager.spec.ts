@@ -46,7 +46,7 @@ describe('Services',() => {
 		
 		log.info('Removing all and going to type Server')
 		serviceManager = getServiceManager(true)
-		ProcessConfig.setType(ProcessType.Server)
+		ProcessConfig.setType(ProcessType.StateServer)
 		log.info('Loading service context in type main - only DatabaseClientService should load')
 		serviceManager.loadContext()
 		countRegistered(6)

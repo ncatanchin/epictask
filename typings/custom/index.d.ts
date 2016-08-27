@@ -7,6 +7,7 @@
 /// <reference path="./short-id.d.ts" />
 /// <reference path="./typescript-ioc.d.ts" />
 /// <reference path="./reselect.d.ts" />
+/// <reference path="./reactotron.d.ts"/>
 
 // UI MODS
 interface Window {

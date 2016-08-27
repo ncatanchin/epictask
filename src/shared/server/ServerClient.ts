@@ -3,7 +3,7 @@ import {EventEmitter} from "events"
 
 import {getModel} from 'shared/Registry'
 import {Transport} from "shared/net/Transport"
-import {ProcessNames} from "shared/ProcessType"
+import {ProcessNames, ProcessType} from "shared/ProcessType"
 import {VariableProxy} from "shared/util/VariableProxy"
 
 // Configure IPC client first
@@ -18,7 +18,7 @@ export interface IStateServerResponse {
 	clientId?: string
 	type: string
 	error?: Error
-	result?: any
+	data?: any
 	
 }
 
@@ -46,9 +46,11 @@ let serverClient:ServerClient = null
 let serverClientProxy:VariableProxy<ServerClient> = _.get(module,'hot.data.proxy',null)
 
 export class ServerClient {
-	pendingRequests = {} as {[id: string]: IStateServerRequest}
+	//pendingRequests = new WeakMap<string,IStateServerRequest>()
+	pendingRequests = {} as {[id:string]:IStateServerRequest}
 	
 	clientActionEmitter = new EventEmitter()
+	
 	
 	
 	static getInstance():ServerClient {
@@ -80,23 +82,27 @@ export class ServerClient {
 		
 		// Handle 'response'
 		response: (result) => {
+			result = _.cloneDeep(result)
 			const request = this.pendingRequests[result.id]
 			
-			if (!request)
-				throw new Error(`Unknown request id ${result.id}`)
+			if (!request) {
+				log.error(`Unknown request id ${result.id}`)
+				return
+			}
 			
-			// Delete the pending request
-			delete this.pendingRequests[result.id]
+			
 			
 			const {error, data} = result
 			if (error)
 				request.resolver.reject(error instanceof Error ? error : new Error(error))
-			else
-				request.resolver.resolve(data)
+			else {
+				request.resolver.resolve(_.cloneDeep(data))
+			}
 		},
 		
 		// Handle 'action'
 		action: (action) => {
+			log.info(`Received action ${action.leaf}.${action.type}`)
 			if (action.source && action.source.clientId === this.transport.clientId) {
 				log.debug('I sent this message, ignoring', this.transport.clientId)
 				return
@@ -125,17 +131,17 @@ export class ServerClient {
 	 *
 	 * @returns {Promise<void>|Promise<boolean>}
 	 */
-	kill() {
-		this.transport.disconnect()
-		return Promise.resolve(true)
-	}
+		kill() {
+			this.transport.disconnect()
+			return Promise.resolve(true)
+		}
 	
 	
 	/**
 	 * Connect to the server
 	 */
 	async connect() {
-		if (ProcessConfig.isType(ProcessConfig.Type.Server)) {
+		if (ProcessConfig.isType(ProcessType.StateServer)) {
 			log.info(`This is the state server and it does not connect the transport - obviously`)
 		} else {
 			await this.transport.connect()
@@ -158,15 +164,17 @@ export class ServerClient {
 		await this.transport.waitForConnection()
 		
 		// Create the request
-		const request: IStateServerRequest = {
-			id: uuid.v4(),
-			clientId: this.transport.clientId,
-			resolver: Promise.defer(),
-			type,
-			data
-		}
+		const
+			request: IStateServerRequest = {
+				id: `${uuid.v4()}`,
+				clientId: this.transport.clientId,
+				resolver: Promise.defer(),
+				type,
+				data
+			}
 		
 		// Add the request to the pending map
+		log.info(`Request id = ${request.id}`)
 		this.pendingRequests[request.id] = request
 		
 		// Send the request
@@ -178,7 +186,17 @@ export class ServerClient {
 		})
 		
 		// Wait for the result
-		return await request.resolver.promise
+		// return request.resolver.promise.then((resultData) => {
+		// 	log.info('Result Received', resultData)
+		// 	return resultData
+		// })
+		
+		const result = await request.resolver.promise//_.cloneDeep(await request.resolver.promise)
+		
+		// Delete the pending request
+		//this.pendingRequests.delete(request.id)
+		delete this.pendingRequests[request.id]
+		return result
 	}
 	
 	
@@ -192,27 +210,21 @@ export class ServerClient {
 		
 		
 		// Hydrate the state returned from the main process
-		const hydrateState = (state) => {
-			//return RootState.fromJS(state)
-			const mappedState = Object
-				.keys(state)
-				.reduce((tempState, nextKey) => {
-					const modelClazz = getModel(nextKey)
-					const value = state[nextKey]
-					tempState[nextKey] = modelClazz ?
-						modelClazz.fromJS(value) :
-						value
-					return tempState
-				}, {})
+		const hydrateState = (state) => Object
+			.keys(state)
+			.reduce((tempState, nextKey) => {
+				const modelClazz = getModel(nextKey)
+				const value = state[nextKey]
+				return tempState.set(nextKey, modelClazz ?
+					modelClazz.fromJS(value) :
+					value)
+			}, Immutable.Map())
+		
 			
-			return Immutable.Map(mappedState)
-			
-			
-		}
+		
 		
 		// Send request and wait for result
 		const rawState = await this.request('getState')
-		
 		return hydrateState(rawState)
 	}
 	
@@ -223,6 +235,7 @@ export class ServerClient {
 	 * @param args
 	 */
 	sendAction(leaf: string, name: string, ...args: any[]) {
+		log.info(`Sending action ${leaf}.${name}`)
 		this.transport.emit('action', {
 			clientId: this.clientId,
 			leaf,
@@ -259,8 +272,10 @@ export function getServerClient() {
 // Register the singleton client
 Container.bind(ServerClient).provider({get: getServerClient})
 
-// Export the singleton client
-export default getServerClient()
+// Export the singleton client, proxied so that it doesnt load until requested
+export default new Proxy({},{
+	get: (target, prop) => getServerClient()[prop]
+}) as ServerClient
 
 
 module.hot.dispose((data:any) => {

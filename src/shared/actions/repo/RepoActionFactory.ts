@@ -21,7 +21,7 @@ import {Milestone} from 'shared/models/Milestone'
 import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {ActivityType, Activity} from 'shared/models/Activity'
 import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
-import {Settings} from 'shared/Settings'
+import {getSettings} from 'shared/Settings'
 import {selectedIssueIdsSelector, editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
@@ -88,7 +88,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 */
 	@Action()
 	syncRepo(repoIds:number|number[],force:boolean=false) {
+		
+		
 		return async (dispatch,getState) => {
+			
 			const jobActions = this.jobActions
 				.withDispatcher(dispatch,getState)
 
@@ -263,11 +266,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 	@Benchmarker
 	private async removeAvailableRepoAction(repoId,dispatch, getState) {
-		const actions = this.withDispatcher(dispatch, getState)
+		
+		const
+			actions = this.withDispatcher(dispatch, getState),
+			{stores} = this,
+			myUserId = _.get(getSettings(),'user.id')
 
-		const {stores} = this
-		const myUserId = Settings.user.id
-
+		// Get the repo
 		let availRepo = await stores.availableRepo.findByRepoId(repoId)
 		availRepo.deleted = true
 		availRepo = await stores.availableRepo.save(availRepo)
@@ -277,11 +282,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		await actions.loadAvailableRepos()
 
 		log.info('Cleaning up issue selections')
-		const issueActions:IssueActionFactory = Container.get(IssueActionFactory)
+		const
+			issueActions:IssueActionFactory = Container.get(IssueActionFactory),
+			editingIssue = editingIssueSelector(getState())
+		
 		issueActions.setSelectedIssueIds([])
 		issueActions.clearAndLoadIssues()
-
-		const editingIssue = editingIssueSelector(getState())
+		
 		if (_.get(editingIssue,'repoId') === repoId)
 			issueActions.setEditingIssue(null)
 
@@ -289,20 +296,21 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		await Promise.delay(1000)
 
 
-		const labelUrls = await stores.label.findUrlsByRepoId(repoId)
-		const issueIds = await stores.issue.findIdsByRepoId(repoId)
-		const commentIds = await stores.comment.findIdsByRepoId(repoId)
-		const milestoneIds = await stores.milestone.findIdsByRepoId(repoId)
-		let users = await stores.user.findByRepoId(repoId)
-		users = users.filter(user => user.id !== myUserId)
-		const updateUsers = users.filter(user => user.repoIds && user.repoIds.length > 1)
-			.map(user => {
-				_.remove(user.repoIds,(userRepoId) => repoId === userRepoId)
-				return user
-			})
-
-
-		const removeUsers = users.filter(user => !updateUsers.includes(user))
+		// Retrieve every entity for the repo
+		const
+			labelUrls = await stores.label.findUrlsByRepoId(repoId),
+			issueIds = await stores.issue.findIdsByRepoId(repoId),
+			commentIds = await stores.comment.findIdsByRepoId(repoId),
+			milestoneIds = await stores.milestone.findIdsByRepoId(repoId),
+			users = (await stores.user.findByRepoId(repoId))
+				.filter(user => user.id !== myUserId),
+			
+			removeUsers = users
+				.filter(user => user.repoIds && user.repoIds.length === 1)
+				.map(user => {
+					_.remove(user.repoIds,(userRepoId) => repoId === userRepoId)
+					return user
+				})
 
 		log.info(`Going to remove
 			availRepo: ${availRepo.id}
@@ -310,38 +318,41 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			issues: ${issueIds.length}
 			comments: ${commentIds.length}
 			milestones: ${milestoneIds.length}
-			users (update): ${updateUsers.length}
 			users (update): ${removeUsers.length}
 		`)
 
 		log.info(`Removing avail repo`)
 
-		const removePromises = [
-			this.activityManager.removeByObjectId(repoId),
-			chunkRemove([]
+		const
+			// Concat all ids to remove
+			allRemoveIds = []
 				.concat(commentIds)
 				.concat(issueIds)
 				.concat(labelUrls)
 				.concat(milestoneIds)
 				.concat(removeUsers.map(user => user.id))
-				.concat([availRepo.id])),
+				.concat([availRepo.id]),
+			
+			// Create a promise to remove everything
+			removePromise = Promise.all([
+				this.activityManager.removeByObjectId(repoId),
+				chunkRemove(allRemoveIds)
+			])
 
-			stores.user.bulkSave(...updateUsers),
 
-		]
-
-
-
-		await Promise.all(removePromises)
+		// Wait for the all-clear
+		await removePromise
 
 		log.info(`Avail repo removed ${repoId}`)
 
-
-
-
-
 	}
-
+	
+	/**
+	 * Remove an available repo
+	 *
+	 * @param repoId
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
 	@Action()
 	removeAvailableRepo(repoId:number) {
 

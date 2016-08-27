@@ -3,6 +3,7 @@
 
 import {DatabaseClientService} from 'shared/services/DatabaseClientService'
 import {User} from 'shared/models/User'
+import {getServiceManager} from "shared/services"
 
 const log = getLogger(__filename)
 
@@ -11,14 +12,14 @@ let dbService:DatabaseClientService
 xdescribe('Database Service',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		await MainTestSetup.configureMain(DatabaseClientService)
+		await getServiceManager().start(DatabaseClientService)
 
 		dbService = Container.get(DatabaseClientService)
 	})
 
 	after(async () => {
 		log.info(`Shutting down database service`)
-		await MainTestSetup.shutdownMain()
+		await getServiceManager().stop()
 	})
 
 	it(`creates user`,async () => {

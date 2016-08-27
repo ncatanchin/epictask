@@ -1,7 +1,7 @@
 import {Container} from 'typescript-ioc'
 
 import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
-import {Settings} from './Settings'
+import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
 import {cloneObject} from 'shared/util'
@@ -80,7 +80,7 @@ export interface RequestOptions {
  */
 export class GitHubClient {
 
-	constructor(private token:string = Settings.token) {
+	constructor(private token:string = getSettings().token) {
 
 	}
 
@@ -425,7 +425,7 @@ export class GitHubClient {
 // Create a new GitHubClient
 export function createClient(token:string = null) {
 	if (!token)
-		token = Settings.token
+		token = getSettings().token
 
 	// If not set and env var exists then use it
 	token = token ||	process.env.GITHUB_API_TOKEN

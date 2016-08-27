@@ -119,7 +119,7 @@ export class ServiceManager {
 	/**
 	 * Load and start all modules
 	 */
-	async start() {
+	async start(...specificServices:IServiceConstructor[]) {
 		if (this.started) {
 			log.warn('Already running')
 			return
@@ -128,7 +128,12 @@ export class ServiceManager {
 		this.stopped = false
 		this.started = true
 		try {
-			await this.loadModules()
+			if (specificServices.length) {
+				specificServices.forEach(serviceConstructor => this.register(serviceConstructor))
+				await this.processPendingServices()
+			} else {
+				await this.loadModules()
+			}
 		} catch (err) {
 			log.error(`Failed to start services`,err)
 			this.started = false
@@ -154,6 +159,8 @@ export class ServiceManager {
 			log.info(`Stopping ${reg.name}`)
 			try {
 				await reg.service.stop()
+				reg.loaded = false
+				
 			} catch (err) {
 				log.error(`Failed to shutdown: ${reg.name}`,err)
 			}
@@ -208,11 +215,15 @@ export class ServiceManager {
 	/**
 	 * Register a service
 	 *
-	 * @param name
 	 * @param serviceConstructor
 	 */
-	register(name:string,serviceConstructor:IServiceConstructor) {
-		let reg = this.registrations[name]
+	register(serviceConstructor:IServiceConstructor) {
+		
+		const {name} = serviceConstructor
+		
+		// Check for existing reg
+		const reg:IServiceRegistration = this.registrations[name]
+		
 		if (reg && reg.serviceConstructor === serviceConstructor) {
 			log.info(`Re-registering service with same constructor: ${name} - IGNORED`,serviceConstructor)
 			return
@@ -234,22 +245,26 @@ export class ServiceManager {
 		}
 		
 		const
-			service:IService = new serviceConstructor(),
+			service:IService = serviceConstructor.getInstance ?
+				serviceConstructor.getInstance() :
+				new serviceConstructor(),
 			proxy = (reg) ?
 				reg.proxy.setTargets(serviceConstructor,service) :
 				new VariableProxy(serviceConstructor,service)
 		
-		reg = this.registrations[name] = {
+		
+		
+		// Push the reg to the pile as pending
+		_.remove(this.pendingServices,it => it.name === name)
+		
+		// Add the new reg to the pending list
+		this.pendingServices.push(this.registrations[name] = {
 			name,
 			proxy,
 			service,
 			serviceConstructor,
 			loaded: false
-		}
-		
-		// Push the reg to the pile as pending
-		_.remove(this.pendingServices,it => it.name === name)
-		this.pendingServices.push(reg)
+		})
 	}
 	
 	
@@ -327,9 +342,11 @@ export class ServiceManager {
 			
 			const allLoaded = () => pendingServices.every(it => it.loaded)
 			
-			while (!allLoaded) {
+			log.info(`Loading Services ${pendingServices.map(service => service.name).join(', ')}`,allLoaded())
+			
+			while (!allLoaded()) {
 				nextReg = pendingServices.find(it => {
-					return it.service.dependencies().every(reg =>
+					return it.service.dependencies().length === 0 || it.service.dependencies().every(reg =>
 						this.registrations[reg.name].loaded)
 				})
 				
@@ -349,9 +366,16 @@ export class ServiceManager {
 				log.info(`Starting ${nextReg.name}`)
 				await nextReg.service.start()
 				
+				log.info(`Loaded successfully ${nextReg.name}`)
+				nextReg.loaded = true
+				
+				_.remove(pendingServices,it => it === nextReg)
+				nextReg = null
+				
+				
 			}
 		} catch (err) {
-			log.error('Failed to loaded pendingServices',pendingServices.map(it => it.name).join(','),'failed on',nextReg,err)
+			log.error(`Failed to loaded ${nextReg && nextReg.name}, all pending (${pendingServices.map(it => it.name).join(',')}) `,err)
 		} finally {
 			this.pendingProcess.resolve()
 			this.pendingProcess = null

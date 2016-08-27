@@ -1,14 +1,46 @@
-import {ActionFactory} from 'typedux'
+import {ActionFactory, addActionInterceptor, IActionInterceptorNext} from 'typedux'
 import {Container} from 'typescript-ioc'
 import {VariableProxy} from 'shared/util/VariableProxy'
+import {ProcessType} from "shared/ProcessType"
+import {getServerClient} from "shared/server/ServerClient"
 
 
-const log = getLogger(__filename)
-
-const factoryMap:{[key:string]:any} = {}
-const proxyMap:any = {}
+const
+	log = getLogger(__filename),
+	factoryMap:{[key:string]:any} = {},
+	proxyMap:any = {}
 
 let actionCtx = null
+
+
+// If renderer then add an action interceptor
+if (!ProcessConfig.isType(ProcessType.StateServer)) {
+	//const browserNextTick = require('browser-next-tick')
+	
+	// Ad the interceptor and keep track of the
+	// unregister fn
+	const unregisterInterceptor = addActionInterceptor(
+		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
+			
+			// Push it to the server
+			getServerClient().sendAction(leaf,type,...args)
+			
+			// If it's a reducer then process it, otherwise - wait for server
+			// to process the action and send data
+			return (options && options.isReducer) ? next() : null
+			
+		}
+	)
+	
+	if (module.hot) {
+		module.hot.dispose(() => {
+			log.info(`HMR Removing action interceptor`)
+			unregisterInterceptor()
+		})
+	}
+}
+
+
 
 export function getActionFactoryProxyProvider<T extends ActionFactory<any,any>>(name,factory:{new():T}) {
 	factoryMap[name] = factory

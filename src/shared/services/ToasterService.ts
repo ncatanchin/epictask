@@ -7,7 +7,7 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.Server)
+@RegisterService(ProcessType.StateServer)
 export class ToastService extends BaseService {
 
 	private unsubscribe:Function
@@ -58,7 +58,7 @@ export class ToastService extends BaseService {
 				isError = msg.type === ToastMessageType.Error
 
 
-			// Dont add a remove timer for Error messages
+			// Don't add a remove timer for Error messages
 			// if (msg.type === ToastMessageType.Error)
 			// 	return
 
@@ -99,3 +99,7 @@ export class ToastService extends BaseService {
 
 
 export default ToastService
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}

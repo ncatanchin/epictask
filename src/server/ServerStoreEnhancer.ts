@@ -1,6 +1,6 @@
 import {getAction,ActionFactory} from 'typedux'
 import {Container} from 'typescript-ioc'
-import * as Server from './ServerEntry'
+import * as Server from './StateServerEntry'
 
 const log = getLogger(__filename)
 

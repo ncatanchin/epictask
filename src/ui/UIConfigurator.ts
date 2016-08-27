@@ -1,13 +1,13 @@
 import {getLogger} from 'typelogger'
-import storeBuilder from 'shared/store/AppStoreBuilder'
+import {getServiceManager} from "shared/services"
 
 const log = getLogger(__filename)
 
 async function boot() {
-
-	// Load Redux-Store FIRST
-	await storeBuilder()
-
+	
+	log.info('Starting all services')
+	await getServiceManager().start()
+	
 	// Load Styles
 	require('shared/themes/styles')
 

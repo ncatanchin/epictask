@@ -4,6 +4,7 @@ const log = getLogger(__filename)
 import {RaisedButton,FlatButton,FontIcon} from 'material-ui'
 import {AuthActionFactory} from '../../../shared/actions/auth/AuthActionFactory'
 import {Page} from './Page'
+import {GitHubConfig} from "shared/Constants"
 
 const styles = {
 	page: makeStyle(FlexColumnCenter,FlexScale,{
@@ -32,7 +33,7 @@ const styles = {
 	})
 }
 
-const authActions = new AuthActionFactory()
+
 
 /**
  * The root container for the app
@@ -44,6 +45,22 @@ export class LoginPage extends React.Component<any,any> {
 	}
 
 
+	startAuth = () => {
+		const authActions = Container.get(AuthActionFactory)
+		
+		authActions.setAuthenticating(true)
+		
+		const GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default
+		
+		// Create a new auth request/window
+		const authRequest = new GitHubOAuthWindow(GitHubConfig)
+		
+		// Start authentication
+		authRequest.startRequest(function(err,token) {
+			authActions.setAuthResult(err,token)
+		})
+	}
+	
 	render() {
 		const theme = getTheme()
 		const {palette} = theme
@@ -73,7 +90,7 @@ export class LoginPage extends React.Component<any,any> {
 					<FlatButton
 						style={buttonStyle}
 						hoverColor={palette.accent3Color}
-						onClick={() => authActions.authenticate()}>
+						onClick={this.startAuth}>
 
 						<div style={makeStyle(FlexRowCenter)}>
 							<span className='fa' style={styles.icon}>{'\uf09b'}</span>

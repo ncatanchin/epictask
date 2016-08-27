@@ -67,10 +67,30 @@ export const DataStateRecord = Record({
 export class DataState extends DataStateRecord {
 
 	static fromJS(o:any = {}) {
-		const modelsMap = Object
-			.keys(o.models || {})
+		if (o && o instanceof DataState)
+			return o
+		
+		const keys = o.get ?
+			(o.get('models').keySeq().toArray()) :
+			Object.keys(o.models || {})
+		
+		const modelsMap = keys
 			.reduce((map,modelType) => {
-				map[modelType] = Map<string,any>(o.models[modelType])
+				const modelMap = o.get ? o.get('models') : o.models
+				
+				map[modelType] = Map<string,any>()
+				
+				if (modelMap) {
+					const models = modelMap.get ? modelMap.get(modelType) : modelMap[modelType]
+					if (models) {
+						Object
+							.keys(models)
+							.forEach(key =>
+								map[modelType] = map[modelType]
+									.set(key,models.get ? models.get(key) : models[key]))
+					}
+				}
+				
 				return map
 			},{})
 

@@ -1,4 +1,5 @@
 import * as childProcess from 'child_process'
+import {getAppConfig} from "shared/AppConfig"
 //import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
 
 const HEARTBEAT_TIMEOUT = 1000
@@ -154,10 +155,11 @@ export default class Worker {
 	 * Worker constructor
 	 *
 	 * @param startFile
+	 * @param name
 	 * @param opts
 	 * @param listeners
 	 */
-	constructor(private startFile:string, private opts:IWorkerOptions = {}, ...listeners:IWorkerEventListener[]) {
+	constructor(private startFile:string, public name:string, private opts:IWorkerOptions = {}, ...listeners:IWorkerEventListener[]) {
 		this.listeners = listeners
 	}
 	
@@ -202,8 +204,10 @@ export default class Worker {
 	 * Handle process exit/stop
 	 *
 	 * @param err
+	 * @param isDisconnect
 	 */
-	private handleExit = (err:Error) => {
+	private handleExit = (err:Error, isDisconnect = false) => {
+		log.info(`Exit called - isDisconnect(${isDisconnect})`,err)
 		this.exited = true
 		
 		this.listeners.forEach(listener => {
@@ -214,13 +218,82 @@ export default class Worker {
 			}
 		})
 		
-		if (this.stopDeferred && !this.stopDeferred.promise.isResolved())
+		// If not set, then set it
+		if (!this.stopDeferred) {
+			
+			// If this is a disconnect, and not killed, then kill
+			if (isDisconnect && !this.killed && this.child) {
+				log.warn('Unexpected disconnect, killing manually')
+				try {
+					this.child.kill()
+				} catch (err2) {
+					log.error('Manual kill failed', err2)
+				}
+			}
+			this.cleanup()
+			this.killed = true
+			
+			this.stopDeferred = Promise.defer()
+			this.stopDeferred.resolve()
+			
+		} else if (!this.stopDeferred.promise.isResolved())
 			this.stopDeferred.resolve()
 		
 		this.cleanup()
 	}
 	
 	
+	
+	
+	/**
+	 * Basically a curried handleExit call
+	 *
+	 * @param err
+	 */
+	private handleDisconnect = (err:Error) => {
+		log.info('Disconnect received',err)
+		//this.handleExit(err,true)
+	}
+	
+	/**
+	 * Basically a curried handleExit call
+	 *
+	 * @param err
+	 */
+	private handleClosed = (err:Error) => {
+		log.info('Closed received',err)
+		this.handleExit(err,true)
+	}
+	
+	/**
+	 * Handle message
+	 *
+	 * @param message
+	 */
+	private handleMessage = (message:IWorkerMessage) => {
+		// First handle message internally
+		switch (message.type) {
+			
+			
+			// Ping <> Pong
+			case 'pong':
+				// If not marked running yet then mark it
+				if (!this.runningFlag.promise.isResolved()) {
+					this.runningFlag.resolve(true)
+				}
+				
+				// Update the heartbeat and schedule next
+				this.heartbeat()
+				break
+			
+			// Registered handlers
+			default:
+				this.listeners.forEach(listener =>
+				listener.onMessage && listener.onMessage(this,message))
+		}
+		
+		
+	}
 	
 	
 	private cleanup() {
@@ -272,43 +345,27 @@ export default class Worker {
 			this.stopDeferred.resolve()
 	}
 	
-	/**
-	 * Handle message
-	 *
-	 * @param message
-	 */
-	private handleMessage = (message:IWorkerMessage) => {
-		
-		// First handle message internally
-		switch (message.type) {
-			
-			
-			// Ping <> Pong
-			case 'pong':
-				// If not marked running yet then mark it
-				if (!this.runningFlag.promise.isResolved()) {
-					this.runningFlag.resolve(true)
-				}
-				
-				// Update the heartbeat and schedule next
-				this.heartbeat()
-				break
-			
-			// Registered handlers
-			default:
-				this.listeners.forEach(listener =>
-					listener.onMessage && listener.onMessage(this,message))
-		}
-		
-		
-	}
+	
 	
 	/**
 	 * Kill the worker
 	 */
 	kill() {
-		this.cleanup()
-		
+		if (!this.killed) {
+			this.killed = true
+			
+			const child = this.child
+			
+			if (child) {
+				try {
+					child.kill()
+				} catch (err) {
+					log.warn(`Failed to send kill to child`,err)
+				}
+			}
+			
+			this.cleanup()
+		}
 	}
 	
 	/**
@@ -323,7 +380,7 @@ export default class Worker {
 			throw new Error(`Process is not ready for messages (killed=${this.killed})`)
 		}
 		
-		log.info(`Sending Message (${type})`)
+		log.debug(`Sending Message (${type})`)
 		
 		// Send the actual message
 		const child = this.child as any
@@ -338,7 +395,7 @@ export default class Worker {
 			return
 		
 		this.stopDeferred = Promise.defer()
-		this.child.kill()
+		this.kill()
 		
 		return this.stopDeferred.promise
 	}
@@ -369,7 +426,15 @@ export default class Worker {
 			 */
 			const opts = {
 				stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-				env: Object.assign({},process.env,this.opts.env || {})
+				env: Object.assign(
+					{},
+					process.env,
+					this.opts.env || {},
+					{
+						EPIC_CHILD: true,
+						EPIC_CONFIG: JSON.stringify(getAppConfig())
+					}
+				)
 			}
 			
 			
@@ -379,7 +444,7 @@ export default class Worker {
 			// Immediately attach kill on death
 			process.on('exit', (code) => {
 				try {
-					child.kill()
+					this.kill()
 				} catch (err) {
 				}
 			})
@@ -388,6 +453,7 @@ export default class Worker {
 			
 			// Assign handlers
 			child
+				.on('disconnect',this.handleDisconnect)
 				.on('error',this.handleError)
 				.on('exit',this.handleExit)
 				.on('message',this.handleMessage)
@@ -443,6 +509,7 @@ export default class Worker {
 					.resolve(this.runningFlag.promise)
 					.timeout(this.opts.startTimeoutMillis || START_TIMEOUT_DEFAULT)
 				
+				log.info('Worker is RUNNING')
 				
 				this.heartbeat()
 			} finally {

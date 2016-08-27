@@ -1,5 +1,8 @@
 
 import {EventEmitter} from 'events'
+import {enumKeys} from "shared/util/EnumUtil"
+
+
 
 export interface IEnumEventHandler<E> {
 	(event:E,...args:any[]):void
@@ -29,30 +32,73 @@ export class EnumEventEmitter<E> {
 	 *
 	 * @param enumValues
 	 */
-	constructor(private enumValues:any) {}
-
+	constructor(private enumValues:any) {
+	}
+	
 	/**
 	 * Map an enum value to the string value
 	 *
 	 * @param event
 	 */
 	private eventName = (event:E):string => this.enumValues[event as any]
-
+	
+	private makeListener = (event:E,listener:IEnumEventHandler<E>) =>
+		(...args:any[]) => listener(event,...args)
+	
+	
+	private makeRemover = (event:E,wrappedListener:Function) =>
+		() => this.removeListener(event,wrappedListener)
+	
+	
+	onAll(listener:IEnumEventHandler<E>):IEnumEventRemover[] {
+			return this.addAllListener(listener)
+	}
+	
+	addAllListener(listener:IEnumEventHandler<E>):IEnumEventRemover[] {
+			return enumKeys(this.enumValues).map((event:any) => this.addListener(event,listener))
+	}
+	
+	addListener(event: E,listener:IEnumEventHandler<E>): IEnumEventRemover {
+		return this.on(event,listener)
+	}
+	
+	once(event: E,listener:IEnumEventHandler<E>): IEnumEventRemover {
+		return this.on(event,listener,true)
+	}
+	
+	removeListener(event: E, listener: Function): this {
+		this.emitter.removeListener(this.eventName(event), listener)
+		return this
+	}
+	
+	removeAllListeners(event?: E): this {
+		this.emitter.removeAllListeners(this.eventName(event))
+		return this
+	}
+	
+	listeners(event: E): Function[] {
+		return this.emitter.listeners(this.eventName(event))
+	}
+	
 	/**
 	 * On event, trigger handler
 	 * @param event
-	 * @param handler
+	 * @param listener
+	 * @param once
 	 * @returns {IEnumEventRemover}
 	 */
-	on(event:E,handler:IEnumEventHandler<E>):IEnumEventRemover {
-		const eventName = this.eventName(event)
+	on(event:E,listener:IEnumEventHandler<E>,once = false):IEnumEventRemover {
+		const
+			eventName = this.eventName(event),
+			wrappedListener = this.makeListener(event,listener),
+			remover = this.makeRemover(event,wrappedListener)
+		
+		this.emitter[once ? 'once' : 'on'](eventName,wrappedListener)
 
-		const wrappedHandler = (...args:any[]) => handler(event,...args)
-
-		this.emitter.on(eventName,wrappedHandler)
-
-		return () => this.emitter.removeListener(eventName,wrappedHandler)
+		return remover
 	}
+	
+	
 
 	/**
 	 * Emit an event
@@ -61,9 +107,7 @@ export class EnumEventEmitter<E> {
 	 * @param args
 	 */
 	emit(event:E,...args:any[]) {
-		const eventName = this.eventName(event)
-
-		this.emitter.emit(eventName,...args)
+		this.emitter.emit(this.eventName(event),...args)
 	}
 
 }

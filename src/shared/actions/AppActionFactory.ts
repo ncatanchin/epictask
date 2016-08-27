@@ -1,8 +1,8 @@
-import {AutoWired,Inject, Container} from 'typescript-ioc'
-import {ActionFactory,Action,ActionReducer,ActionMessage} from 'typedux'
+
+import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
 import {AppStateType} from '../AppStateType'
 
-import {AppKey, RepoTransientProps} from "../Constants"
+import {AppKey} from "../Constants"
 import {ISettings} from '../Settings'
 import {AppState} from './AppState'
 import {User} from '../models/User'
@@ -10,25 +10,28 @@ import {User} from '../models/User'
 
 const log = getLogger(__filename)
 
+// /**
+//  * Update the transient values on an issue
+//  *
+//  * @param issue
+//  * @param availableRepos
+//  */
+// function updateIssueTransients(issue,availableRepos) {
+//
+// 	const
+// 		{repoId} = issue,
+// 		availRepo = availableRepos.find(availRepo => availRepo.repoId === repoId)
+//
+// 	assert.ok(availRepo,'Unable to find repo with id: ' + repoId)
+//
+// 	// Assign all transient props
+// 	Object.assign(issue,_.pick(availRepo.repo,RepoTransientProps))
+// }
+
+
 /**
- * Update the transient values on an issue
- *
- * @param issue
- * @param availableRepos
+ * Core EpicTask actions
  */
-function updateIssueTransients(issue,availableRepos) {
-
-	const
-		{repoId} = issue,
-		availRepo = availableRepos.find(availRepo => availRepo.repoId === repoId)
-
-	assert.ok(availRepo,'Unable to find repo with id: ' + repoId)
-
-	// Assign all transient props
-	Object.assign(issue,_.pick(availRepo.repo,RepoTransientProps))
-}
-
-@AutoWired
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
 
 	constructor() {
@@ -41,7 +44,6 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 
 	/**
 	 *
-	 * @param state
 	 * @param ready
 	 * @returns {Map<string, V>}
 	 */
@@ -53,7 +55,6 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	/**
 	 * Set the user
 	 *
-	 * @param state
 	 * @param user
 	 * @returns {Map<string, User>}
 	 */
@@ -61,13 +62,25 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	setUser(user:User) {
 		return (state:AppState) => state.set('user',user)
 	}
-
-
+	
+	
+	/**
+	 * Update app settings
+	 *
+	 * @param newSettings
+	 * @returns {(state:AppState)=>Map<string, ISettings>}
+	 */
 	@ActionReducer()
 	updateSettings(newSettings:ISettings) {
 		return (state:AppState) => state.set('settings', newSettings)
 	}
-
+	
+	/**
+	 * Set the current global state of the app
+	 *
+	 * @param stateType
+	 * @returns {(state:AppState)=>Map<string, V>}
+	 */
 	@ActionReducer()
 	setStateType(stateType:AppStateType) {
 		return (state:AppState) => state.merge({stateType})
@@ -76,6 +89,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 
 }
 
+/**
+ * Export the type of the action factory for lazy loading
+ */
 export type AppActionFactoryType = typeof AppActionFactory
-export type AppActionFactoryConstructor = AppActionFactory
+
+/**
+ * Export the action factory as the default
+ */
 export default AppActionFactory

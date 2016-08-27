@@ -124,7 +124,7 @@ export abstract class Transport extends EventEmitter {
 		return this
 	}
 	removeListener(event: string, listener: Function){
-		this.eventEmitter.removeListener(event,listener)
+		this.eventEmitter.removeListener && this.eventEmitter.removeListener(event,listener)
 		return this
 	}
 	removeAllListeners(event?: string){

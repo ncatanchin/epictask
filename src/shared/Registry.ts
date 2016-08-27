@@ -47,7 +47,7 @@ function decorateConstructor(derived: Function, base: Function) {
 //export function RegisterModel<T extends any>(target:ModelConstructor<T>) {
 export function RegisterModel<T>(target:any) {
 	const clazzName = target.name
-	log.debug(`Registering model: ${clazzName}`)
+	log.info(`Registering model: ${clazzName}`)
 	registerModel(clazzName,target)
 
 	target.$$clazz = clazzName

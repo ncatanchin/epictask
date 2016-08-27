@@ -65,8 +65,7 @@ export default function (projectConfig) {
 			{
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
-				//exclude: /node_modules/,
-				exclude: /(node_modules|material-ui|typestore|typedux)/,
+				exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
 				loaders: ['babel']
 			},
 
@@ -78,13 +77,15 @@ export default function (projectConfig) {
 				loaders: ['jade-loader']
 			},
 
-			// ASSETS
+			// ASSETS / FONTS
 			{
 				type: 'fonts',
 				test: /\.(eot|svg|ttf|woff|woff2)\w*/,
 				loader: 'file?name=assets/fonts/[name].[hash].[ext]'
 
 			},
+			
+			// ASSETS / IMAGES & ICONS
 			{
 				test: /\.(png|jpg|gif|ico)$/,
 				loader: 'file?name=assets/images/[name].[hash].[ext]',

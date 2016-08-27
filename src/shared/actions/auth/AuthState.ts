@@ -15,6 +15,9 @@ export const AuthStateRecord = Record({
 export class AuthState extends AuthStateRecord {
 
 	static fromJS(o:any) {
+		if (o && o instanceof AuthState)
+			return o
+		
 		return new AuthState(o)
 	}
 

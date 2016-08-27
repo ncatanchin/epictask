@@ -3,11 +3,12 @@ import {ActionFactory,ActionReducer,Action} from 'typedux'
 import {GitHubClient} from 'GitHubClient'
 import {AuthKey,GitHubConfig} from "Constants"
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {AuthState,AuthMessage} from 'shared/actions/auth/AuthReducer'
+import {AuthState,AuthMessage} from 'shared/actions/auth/AuthState'
 import {AppStateType} from 'shared/AppStateType'
-import {Settings} from 'Settings'
+import {getSettings,getSettingsFile} from 'shared/Settings'
 import {Toaster} from 'shared/Toaster'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {ProcessType} from "shared/ProcessType"
 
 const log = getLogger(__filename)
 
@@ -30,7 +31,7 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	}
 
 	private makeClient() {
-		return this._client = (Settings.token) ? Container.get(GitHubClient) : null
+		return this._client = (getSettings().token) ? Container.get(GitHubClient) : null
 	}
 
 	get client() {
@@ -44,9 +45,8 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	@ActionReducer()
 	setToken(token:string) {
 		return (state:AuthState) => {
-			if (Env.isMain) {
-				Settings.token = token
-
+			if (ProcessConfig.isType(ProcessType.StateServer)) {
+				getSettings().token = token
 				this.makeClient()
 			}
 
@@ -80,7 +80,11 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 			const user = await this.client.user()
 
 			log.info(`Verified user as`,user)
-			const invalidUser = !user || !user.login
+			const
+				Settings = getSettingsFile(),
+				invalidUser = !user || !user.login
+			
+			
 			if (invalidUser) {
 				log.error(`Invalid token, set login state`,user)
 				Settings.token = null
@@ -107,50 +111,35 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	}
 
 	@Action()
-	authenticate() {
+	setAuthResult(err:Error,token:string) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)
 			const appActions = this.appActions.withDispatcher(dispatch,getState)
-			actions.setAuthenticating(true)
-
-			return new Promise((resolve,reject) => {
-				//log.info('Got auth request',event)
-
-				//const OAuthGithub = require('electron-oauth-github')
-				const GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default
-
-				// Create a new auth request/window
-				const authRequest = new GitHubOAuthWindow(GitHubConfig)
-
-				// Start authentication
-				authRequest.startRequest(function(err,token) {
-
-
-					if (err) {
-						log.error('GH token received: ' + token,err)
-						this.toaster.addErrorMessage(err)
-					} else {
-						log.info('GH token received: ' + token,err)
-					}
-
-					Settings.token = err ? null : token
-
-					if (err) {
-						actions.setError(err)
-						appActions.setStateType(AppStateType.AuthLogin)
-						reject(err)
-					} else {
-						actions.setToken(token)
-						const repoActions = Container.get(RepoActionFactory)
-						repoActions.syncUserRepos()
-						appActions.setStateType(AppStateType.AuthVerify)
-						resolve(token)
-					}
-
-
-				})
-			})
-
+			
+			
+			
+			if (err) {
+				actions.setError(err)
+				appActions.setStateType(AppStateType.AuthLogin)
+				
+			} else {
+				actions.setToken(token)
+				const repoActions = Container.get(RepoActionFactory)
+				repoActions.syncUserRepos()
+				appActions.setStateType(AppStateType.AuthVerify)
+				
+			}
+			
+			if (err) {
+				log.error('GH token received: ' + token,err)
+				this.toaster.addErrorMessage(err)
+			} else {
+				
+				log.info('GH token received: ' + token,err)
+			}
+			
+			getSettingsFile().token = err ? null : token
+			
 
 		}
 	}

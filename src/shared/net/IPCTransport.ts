@@ -1,9 +1,11 @@
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "shared/net/Transport"
+import Counter from "shared/Counter"
 
 const
 	log = getLogger(__filename),
 	IPC = require('node-ipc').IPC,
-	clientId = `client-${process.pid}`
+	processClientId = `epic-ipc-${ProcessConfig.getTypeName()}-${process.pid}`,
+	instanceCounter = new Counter()
 
 
 
@@ -20,6 +22,12 @@ export class IPCTransport extends Transport {
 	 * IPC instance ref
 	 */
 	private ipc
+	
+	
+	/**
+	 * Client id for this instance
+	 */
+	private instanceClientId:string
 	
 	/**
 	 * Connection resolver
@@ -44,8 +52,13 @@ export class IPCTransport extends Transport {
 		
 	}
 	
+	/**
+	 * Get the client id for this instance
+	 *
+	 * @returns {string}
+	 */
 	get clientId() {
-		return clientId
+		return this.instanceClientId
 	}
 	
 	/**
@@ -91,11 +104,15 @@ export class IPCTransport extends Transport {
 	constructor(opts:ITransportOptions) {
 		super(opts)
 		
+		
+		this.instanceClientId = `${processClientId}-${instanceCounter.increment()}`
 		this.ipc = new IPC
 		
+		
 		assign(this.ipc.config, {
-			id: clientId,
-			retry: 1500
+			id: this.instanceClientId,
+			retry: 1500,
+			silent: true
 		})
 		
 	}
@@ -104,7 +121,7 @@ export class IPCTransport extends Transport {
 	 * Connect to IPC Server
 	 */
 	async connect():Promise<void> {
-		log.info(`Client ${clientId} connecting to ${this.serverName}`)
+		log.info(`Client ${processClientId} connecting to ${this.serverName}`)
 		if (this.connectDeferred)
 			return this.connectDeferred.promise
 		
@@ -116,20 +133,20 @@ export class IPCTransport extends Transport {
 			
 			// Connect
 			this.on(TransportEvents.Error,(err) => {
-				log.error(`Error ${clientId}`,err)
+				log.error(`Error ${processClientId}`,err)
 				this.connectDeferred.resolve(true)
 			})
 			
 			// Connect
 			this.on(TransportEvents.Connect,() => {
-				log.info(`Connected ${clientId}`)
+				log.info(`Connected ${processClientId}`)
 				this.disconnected = false
 				this.connectDeferred.resolve(true)
 			})
 			
 			// Disconnect
 			this.on(TransportEvents.Disconnect,() => {
-				log.info(`Disconnected ${clientId}`)
+				log.info(`Disconnected ${processClientId}`)
 				// if (!this.connectDeferred.promise.isResolved())
 				// 	this.connectDeferred.reject(new Error('Connection failed'))
 				this.disconnected = true
@@ -143,7 +160,7 @@ export class IPCTransport extends Transport {
 		} catch (err) {
 			log.error('Failed to connect',err)
 			try {
-				this.ipc.disconnect()
+				this.ipc.disconnect(this.serverName)
 			} catch (err2) {}
 			
 			throw err
@@ -163,7 +180,22 @@ export class IPCTransport extends Transport {
 	 * Disconnect from the IPC server
 	 */
 	disconnect() {
-		this.ipc.disconnect(this.serverName)
+		try {
+			this.ipc.disconnect(this.serverName)
+		} catch (err) {
+			
+			const sock = _.get(this.ipc.of[this.serverName],'socket') as any
+			//log.warn('Disconnect failed, going to hard disconnect',sock ? 'got socket, so trying this': 'no socket - forget it')
+			
+			if (sock) {
+				try {
+					sock.destroy()
+				} catch (err2) {
+					log.warn('Socket destroy failed', err2)
+				}
+			}
+			
+		}
 	}
 	
 }

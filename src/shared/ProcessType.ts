@@ -2,7 +2,7 @@
  * All possible process types in EpicTask
  */
 export enum ProcessType {
-	Server = 1,
+	StateServer = 1,
 	JobServer,
 	JobWorker,
 	Main,
@@ -11,6 +11,15 @@ export enum ProcessType {
 	Test
 }
 
+/**
+ * All Process Types
+ */
+export const AllProcessTypes:ProcessType[] =
+	Object.keys(ProcessType).filter(key => typeof key === 'number') as any
+
+/**
+ * String types
+ */
 export type TProcessType =
 	'Server' | 'JobServer' | 'JobWorker' | 'Main' |
 		'DatabaseServer' | 'UI' | 'Test'
@@ -32,7 +41,7 @@ export function getProcessTypeName(processType:ProcessType):TProcessType {
  * All Process Name Mappings
  */
 const Names = {
-	Server: getProcessTypeName(ProcessType.Server),
+	Server: getProcessTypeName(ProcessType.StateServer),
 	JobServer: getProcessTypeName(ProcessType.JobServer),
 	JobWorker: getProcessTypeName(ProcessType.JobWorker),
 	Main: getProcessTypeName(ProcessType.Main),
@@ -40,6 +49,12 @@ const Names = {
 	UI: getProcessTypeName(ProcessType.UI),
 	Test: getProcessTypeName(ProcessType.Test)
 }
+
+// Map the numerical values to strings as well
+Object
+	.keys(ProcessType)
+	.filter(key => typeof key !== 'string')
+	.forEach(key => Names[key] = ProcessType[key])
 
 /**
  * Proxy to process names that throws

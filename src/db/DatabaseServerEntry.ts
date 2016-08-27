@@ -6,9 +6,9 @@ import {FinderRequest} from 'typestore'
 import {Stores} from 'shared/Stores'
 import {DatabaseEvents} from 'shared/db/DatabaseEvents'
 import {IDatabaseRequest} from 'shared/db/DatabaseRequestResponse'
-import {getUserDataFilename} from 'shared/util/Files'
+import {tempFilename,getUserDataFilename} from 'shared/util/Files'
 import {ProcessNames} from "shared/ProcessType"
-
+import * as uuid from 'node-uuid'
 
 // Logger
 const log = getLogger(__filename)
@@ -16,12 +16,20 @@ const log = getLogger(__filename)
 // IPC
 const ipc = require('node-ipc')
 
+let startDeferred:Promise.Resolver<any> = null
+
 ipc.config.id = ProcessNames.DatabaseServer
 ipc.config.retry = 1500
+ipc.config.silent = true
 
 // Database name and path
-const dbName = `epictask-${Env.envName}`
-const dbPath = getUserDataFilename(dbName + '.db')
+const
+	dbName = Env.isTest ?
+		`epictask-test-${uuid.v4()}` :
+		`epictask-${Env.envName}`,
+	dbPath = Env.isTest ?
+		tempFilename(dbName + '.db') :
+		getUserDataFilename(dbName + '.db')
 
 log.info('DB Path:',dbPath)
 
@@ -32,7 +40,7 @@ log.info('DB Path:',dbPath)
  */
 function storeOptions() {
 	let opts = {filename: dbPath,cacheSize:32 * 1024 * 1024}
-	if (Env.isDev) {
+	if (Env.isDev && !Env.isTest) {
 		opts = Object.assign({},opts, {
 			replication: {
 				to:   'http://127.0.0.1:5984/' + dbName,
@@ -63,11 +71,28 @@ export class DatabaseServerEntry extends WorkerEntry {
 		super(ProcessType.DatabaseServer)
 	}
 	
+	/**
+	 * Services are disabled on the database server
+	 *
+	 * @returns {boolean}
+	 */
+	servicesEnabled() {
+		return false
+	}
+	
+	/**
+	 * Start the database server
+	 *
+	 * @returns {Promise<any>}
+	 */
 	protected async start() {
+		if (startDeferred)
+			return startDeferred.promise
+		
+		startDeferred = Promise.defer()
+		
 		log.info('Starting Database Server')
 		
-		// First create the store
-		//await storeBuilder()
 		
 		try {
 			storePlugin = new PouchDBPlugin(storeOptions())
@@ -126,23 +151,27 @@ export class DatabaseServerEntry extends WorkerEntry {
 			
 			// Configure IPC Server
 			ipc.serve(() => {
-				ipc.server.on('request', (request, socket) => {
-					executeRequest(socket, request)
+				ipc.server.on(DatabaseEvents.Request,async (request, socket) => {
+					await executeRequest(socket, request)
 				})
 				
 				// Notify StateServer
 				log.info('DatabaseServer is ready - notifying worker owner')
+				startDeferred.resolve()
 			})
 			
 			//Start IPC Server
 			ipc.server.start()
 			
 			
-		} catch (err) {
 			
+		} catch (err) {
 			log.error('start failed', err)
+			startDeferred.reject(err)
 			throw err
 		}
+		
+		await startDeferred.promise.timeout(10000,"Database server took too long")
 	}
 	
 	/**
@@ -170,8 +199,14 @@ export class DatabaseServerEntry extends WorkerEntry {
  * @param error
  */
 function respond(socket,request:IDatabaseRequest,result,error:Error = null) {
-	log.debug('Sending response',result,error)
-	ipc.server.emit(socket,DatabaseEvents.Response,{requestId:request.id,result,error})
+	const response = {
+		requestId:request.id,
+		result,
+		error
+	}
+	
+	log.debug('Sending response',response)
+	ipc.server.emit(socket,DatabaseEvents.Response,response)
 	//ipcRenderer.send(DatabaseEvents.Response,{requestId:request.id,result,error})
 }
 
@@ -185,49 +220,53 @@ async function executeRequest(socket,request:IDatabaseRequest) {
 	try {
 		const {id:requestId,store:storeName,fn:fnName,args} = request
 		
+		// Final Result
 		let result
 		
 		if (storeName) {
 			
+			// Cleanup the store name
 			const storeName2 = _.camelCase(storeName.replace(/Store$/i,''))
 			
+			// Find the store
 			let store = stores[storeName] || stores[storeName2]
 			assert(store, `Unable to find store for ${storeName} (requestId: ${requestId})`)
 			
-			
+			// Check finder options for limit
 			if (args[0] && _.isNumber(args[0].limit))
 				args[0] = new FinderRequest(args[0])
 			
+			// Get the results
 			result = store[fnName](...args)
 			
-			
-			// If its a promise then wait - and it should be a promise
 			
 		} else {
 			result = await storePlugin.db[fnName](...args)
 			
 		}
 		
+		// Ensure someone set a result
 		assert(result,`Result can never be nil ${requestId}`)
+		
+		// If the result is a promise then wait
 		if (_.isFunction(result.then))
 			result = await result
 		
 		respond(socket,request,result)
 	} catch (err) {
 		log.error('Request failed',err,request)
-		respond(request,null,err)
+		respond(socket, request,null,err)
 	}
 }
 
 
-/**
- * Start promise
- *
- * @type {Promise<any>}
- */
-log.info('Calling start')
+// Singleton
 const databaseServerEntry = new DatabaseServerEntry()
 
+
+/**
+ * Export the singleton
+ */
 export default databaseServerEntry
 
 
@@ -237,7 +276,7 @@ export default databaseServerEntry
  */
 if (module.hot) {
 	
-	module.hot.accept()
+	module.hot.accept(() => log.info('Hot reloaded',__filename))
 	module.hot.dispose(() => {
 		log.info('disposing database server')
 		databaseServerEntry.kill()

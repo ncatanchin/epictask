@@ -1,6 +1,6 @@
 
-import JobManager from "./JobManager"
-import {Job} from "shared/actions/jobs/JobState"
+import getJobManager from "JobManagerService"
+import {IJobExecutorConstructor} from "job/JobExecutors"
 
 
 /**
@@ -10,8 +10,13 @@ import {Job} from "shared/actions/jobs/JobState"
  * @param target
  * @constructor
  */
-export function RegisterJob(target:{new():Job}) {
-	const service = Container.get(JobManager)
-	service.registerJob(target.name,target)
+export function JobExecutor(target:IJobExecutorConstructor) {
+	
+	// Only register the job on the job server
+	if (!ProcessConfig.isType(ProcessType.JobServer))
+		return
+	
+	// Load the getJobManager function and register
+	getJobManager().registerExecutor(target)
 }
 

@@ -1,47 +1,50 @@
 import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
 
-const mkdirp = require('mkdirp')
+const mkdir = require('mkdirp')
 const winston = require('winston')
-const processType = process.env.PROCESS_TYPE
+const processType = ProcessConfig.getTypeName() // process.env.PROCESS_TYPE
 const logFilename = `${process.cwd()}/logs/${processType || 'unknown'}.log`
 const logDir = path.dirname(logFilename)
-mkdirp.sync(logDir)
 
+// Create the log file root
+mkdir.sync(logDir)
 console.info('Using log file @', logFilename)
-var logger = new (winston.Logger)()
 
-logger.add(winston.transports.File,{
+// Create the Winston Logger
+const MainLogger = new (winston.Logger)()
+
+// Add file transport
+MainLogger.add(winston.transports.File,{
 	name: 'electron-file-log',
 	filename: logFilename,
-	//level: 'debug',
 	tailable: true,
 	colorize: true,
-	//showLevel: false,
 	json: false
 })
-//winston.level = 'debug'
-//winston.remove(winston.transports.Console)
-logger.add(winston.transports.Console,{
+
+// Add console transport
+MainLogger.add(winston.transports.Console,{
 	colorize:true,
-	//level: 'debug',
 	showLevel: true
 })
 
-Object.assign(global as any,{MainLogger:logger,LoggerFactory})
+// Expose the main logger - really so the UI/Renderer can attach if needed
+Object.assign(global as any,{
+	MainLogger,
+	LoggerFactory,
+	getLogger: LoggerFactory
+})
 
-setLoggerOutput(logger)
+// Set the MainLogger as the output for TypeLogger
+setLoggerOutput(MainLogger)
+
+// Configure log levels
 setCategoryLevels(require('shared/LogCategories'))
 
 declare global {
 	var getLogger:typeof LoggerFactory
 }
-
-
-// Export globals
-Object.assign(global as any,{
-	getLogger: LoggerFactory
-})
 
 export {
 

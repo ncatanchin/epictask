@@ -29,7 +29,7 @@ import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
-import Settings from 'shared/Settings'
+import {getSettings} from 'shared/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
@@ -90,7 +90,7 @@ function hasEditPermission(issue: Issue) {
 	
 	assert(repo, 'can not test permission without repo set on issue')
 	
-	return (!issue.user || issue.user.id === Settings.user.id || repo.permissions.push)
+	return (!issue.user || issue.user.id === getSettings().user.id || repo.permissions.push)
 }
 
 

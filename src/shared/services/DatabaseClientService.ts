@@ -2,17 +2,16 @@
 import {Repo as TSRepo, IModel} from 'typestore'
 import ProcessType from "shared/ProcessType"
 import {Stores} from 'shared/Stores'
-import {ServiceStatus, BaseService, RegisterService} from 'shared/services'
+import {ServiceStatus, BaseService, RegisterService, IServiceConstructor} from 'shared/services'
 import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
+import AppStoreService from "shared/services/AppStoreService"
 
 const log = getLogger(__filename)
 
 
 // Global ref to database services
 let databaseService:DatabaseClientService = null
-
-
 
 
 export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
@@ -61,7 +60,7 @@ class DatabaseProxy {
  * References to coordinator and plugins
  */
 @RegisterService(
-	ProcessType.Server,
+	ProcessType.StateServer,
 	ProcessType.JobServer,
 	ProcessType.JobWorker,
 	ProcessType.Main,
@@ -88,8 +87,12 @@ export class DatabaseClientService extends BaseService {
 			databaseService:this
 		})
 	}
-
-
+	
+	
+	dependencies(): IServiceConstructor[] {
+		return [AppStoreService]
+	}
+	
 	/**
 	 * Start the service
 	 *
@@ -189,3 +192,7 @@ export {
 
 
 export default DatabaseClientService
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}

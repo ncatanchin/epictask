@@ -1,15 +1,7 @@
 require('shared/NodeEntryInit')
 
-
-
-
-// Set process type
-ProcessConfig.setType(ProcessConfig.Type.Main)
-
-
 import {RemoteDebuggingPort,Events} from 'shared/Constants'
-import {MainConfigurator as MainConfiguratorConstructor} from './MainConfigurator'
-type MainConfiguratorType = typeof MainConfiguratorConstructor
+import MainConfigurator from './MainConfigurator'
 
 const {app} = require('electron')
 
@@ -50,21 +42,15 @@ if (Env.isDev) {
 async function boot() {
 
 	if (Env.isDev)
-		require('./ChromeDevTools')
+		require('./MainDevConfig')
 
 	log.info("Boot start")
 	global.MainBooted = false
 
-	const MainConfigurator:MainConfiguratorType = require('./MainConfigurator').default
-
-	const configurator = Container.get(MainConfigurator)
-
-	log.info("Boot init")
-	await configurator.init()
-
+	
 	log.info("Boot load window")
 	mainWindow = require('./MainWindow')
-
+	
 	// DEV Redux - no real need anymore
 	// if (Env.isDev && !devWindow) {
 	// 	devWindow = require('./MainDevToolWindow').window as Electron.BrowserWindow
@@ -73,25 +59,26 @@ async function boot() {
 
 	log.info("Boot start")
 	await mainWindow.start(async () => {
-		log.debug('Boot callback')
-
-		const Services = await configurator.start()
-		log.info(`Boot Completed, services include`, Object.keys(Services))
-
-		return Services
+		log.debug('Main window loaded and waiting for backend')
+		
+		await MainConfigurator.start()
+		
+		log.info('Main Configurator Completed')
 	})
 
-
 	log.info("Boot complete, call ready")
+	
 	// Notifying the main window that we are ready
 	global.MainBooted = true
-	const {AppActionFactory} = require('shared/actions/AppActionFactory')
-	const appActions = new AppActionFactory()
+	
+	const
+		{AppActionFactory} = require('shared/actions/AppActionFactory'),
+		appActions = new AppActionFactory()
+	
 	appActions.setReady(true)
-	mainWindow.ready()
+	
+	setTimeout(() => mainWindow.ready(),300)
 }
-
-
 
 /**
  * All windows closed
@@ -108,28 +95,22 @@ function onAllClosed() {
  */
 function onStart() {
 	app.setName('EpicTask')
-
 	return boot()
-}
-
-
-
-function onWillQuit(e) {
-	// TODO: Compact and remove all models
-	require('shared/store/AppStore').persist()
 }
 
 /**
  * Make sure we are the only running instance
  */
 const shouldQuit = app.makeSingleInstance(() => {
+	
 	// Someone tried to run a second instance, we should focus our window.
-	if (mainWindow) {
-		const win = mainWindow.getBrowserWindow()
-		if (win.isMinimized())
-			win.restore()
+	const win = mainWindow && mainWindow.getBrowserWindow()
+	
+	if (win) {
+		win && win.isMinimized() && win.restore()
 		win.focus()
 	}
+	
 })
 
 /**
@@ -142,7 +123,7 @@ if (shouldQuit) {
 	if (!Env.isHot)
 		app.on('window-all-closed', onAllClosed)
 
-	app.on('will-quit',onWillQuit)
+	// app.on('will-quit',onWillQuit)
 	app.on('ready', onStart)
 }
 

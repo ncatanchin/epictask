@@ -7,15 +7,12 @@ import {ReduxDebugSessionKey} from 'shared/Constants'
 import {Toaster} from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 
-import {ServerClient} from "shared/server/ServerClient"
+import {getServerClient} from "shared/server/ServerClient"
 
 import {
 	setStoreProvider,
 	ILeafReducer,
-	ObservableStore,
-	addActionInterceptor,
-	IActionInterceptorNext,
-	IActionRegistration
+	ObservableStore
 } from 'typedux'
 
 import {
@@ -28,6 +25,7 @@ import {
 import {
 	loadActionFactories
 } from 'shared/actions/ActionFactoryProvider'
+import {ProcessType} from "shared/ProcessType"
 
 
 const log = getLogger(__filename)
@@ -36,47 +34,19 @@ const stateFilename = cacheFilename('store-state')
 const ActionLoggerEnabled = false
 
 
-/**
- * Reference to server client when loaded
- *
- * @type {ServerClient}
- */
-let serverClient:ServerClient = null
+// /**
+//  * Reference to server client when loaded
+//  *
+//  * @type {ServerClient}
+//  */
+//let serverClient:ServerClient = null
 
-function getServerClient() {
-	if (!serverClient)
-		serverClient = require('shared/server/ServerClient').default as ServerClient
-	
-	return serverClient
-}
-
-
-// If renderer then add an action interceptor
-if (ProcessConfig.isType(ProcessConfig.Type.Server)) {
-	//const browserNextTick = require('browser-next-tick')
-	
-	// Ad the interceptor and keep track of the
-	// unregister fn
-	const unregisterInterceptor = addActionInterceptor(
-		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
-			
-			// Push it to the server
-			getServerClient().sendAction(leaf,type,...args)
-			
-			// If it's a reducer then process it, otherwise - wait for server
-			// to process the action and send data
-			return (options && options.isReducer) ? next() : null
-
-		}
-	)
-
-	if (module.hot) {
-		module.hot.dispose(() => {
-			log.info(`HMR Removing action interceptor`)
-			unregisterInterceptor()
-		})
-	}
-}
+// function getServerClient() {
+// 	if (!serverClient)
+// 		serverClient = require('shared/server/ServerClient').getServerClient() as ServerClient
+//
+// 	return serverClient
+// }
 
 
 // HMR - setup
@@ -121,48 +91,6 @@ function createMiddleware() {
 const middleware = createMiddleware()
 
 
-/**
- * Null middleware that can be used
- * wherever a passthru is required
- *
- * @param f
- * @constructor
- */
-const NullMiddleware = f => f
-
-
-
-/**
- * Make remote middleware
- *
- * @returns {Array<Middleware>}
- */
-function makeRemoteMiddleware(name:string = null) {
-	const remoteDevTools = require('remote-redux-devtools')
-	return remoteDevTools({
-		name: 'EpicTask - ' + (name || ((Env.isRenderer) ? 'RENDERER' : 'MAIN')),
-		realtime: true,
-		hostname: 'localhost', port: 8787
-	})
-}
-
-let DevTools = null, DevToolsMiddleware = null
-
-export function getDevTools() {
-	return DevTools
-}
-
-export function loadDevTools() {
-	if (DevToolsMiddleware)
-		return DevToolsMiddleware
-
-	DevTools = require('ui/components/debug/DevTools.tsx').DevTools
-	DevToolsMiddleware = DevTools.instrument()
-
-	return DevToolsMiddleware
-}
-
-
 let store:ObservableStore<any>
 
 /**
@@ -170,7 +98,7 @@ let store:ObservableStore<any>
  */
 function onChange() {
 	log.debug(`Store state changed`)
-	persistStoreState(getStoreState())
+	//persistStoreState(getStoreState())
 }
 
 //noinspection JSUnusedLocalSymbols
@@ -196,7 +124,10 @@ function getDebugSessionKey() {
 function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 	const toaster = Container.get(Toaster)
 	log.error('Reducer error occurred',err,reducer)
-	toaster.addErrorMessage(err)
+	setImmediate(() => {
+		toaster.addErrorMessage(err)
+	})
+	
 }
 
 /**
@@ -214,20 +145,17 @@ export function initStore(devToolsMode = false,defaultState = null,storeEnhancer
 	}
 
 	/**
-	 * DevToolsMiddleware is configured in DEBUG mode anyway
+	 * Redux Dev Tooling
 	 *
 	 * @type {function(): *}
 	 */
-	const debugEnhancer =
-		(!Env.isDev) ? NullMiddleware  :
-			(Env.isRenderer && window.devToolsExtension) ?
-				window.devToolsExtension() :
-				makeRemoteMiddleware()
-			// (Env.isMain) ?  makeRemoteMiddleware() :
-			// 	loadDevTools()
+	if (Env.isDev && !Env.isTest) {
+		require('./AppStoreDevConfig').default(enhancers)
+	}
+			
 
 
-	enhancers.push(debugEnhancer)
+	
 
 	let reducers = getReducers()
 
@@ -262,10 +190,12 @@ export function initStore(devToolsMode = false,defaultState = null,storeEnhancer
  * @returns {ObservableStore<any>}
  */
 export async function loadAndInitStore(serverStoreEnhancer = null) {
+	loadActionFactories()
 	
 	let defaultStateValue = null
 	
 	// If state server then try and load from disk
+	
 	if (serverStoreEnhancer) {
 		const stateData = readFile(stateFilename)
 		try {
@@ -326,17 +256,18 @@ const persistStoreState = _.debounce((state) => {
  */
 export function getStore() {
 	if (!store) {
-		initStore()
+		// initStore()
+		return null
 	}
 	return store
 }
 
 export function getReduxStore() {
-	return getStore().getReduxStore()
+	return getStore() && getStore().getReduxStore()
 }
 
 export function getStoreState() {
-	return getStore().getState()
+	return getStore() ? getStore().getState() : Immutable.Map()
 }
 
 if (Env.isDev) {
@@ -352,12 +283,15 @@ export function persist(doAsync = false) {
 		log.info('Persisting, can not persist until completion')
 		return
 	}
-	assert(Env.isMain,'Can only persist on main')
-	const stateJS = _.toJS(getStoreState())
+	//assert(Env.isMain,'Can only persist on main')
+	const
+		stateJS = _.toJS(getStoreState()),
+		stateJson = JSON.stringify(stateJS)
+	
 	if (doAsync)
-		writeJSONFileAsync(stateFilename,stateJS)
+		writeJSONFileAsync(stateFilename,stateJson)
 	else
-		writeJSONFile(stateFilename,stateJS)
+		writeJSONFile(stateFilename,stateJson)
 
 }
 

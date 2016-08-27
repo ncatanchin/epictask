@@ -5,8 +5,10 @@ import {EventEmitter} from "events"
 import {getStoreState} from "shared/store"
 import {transformValues} from "shared/util"
 import {IStateServerResponse} from "shared/server/ServerClient"
-import storeBuilder from 'shared/store/AppStoreBuilder'
+
 import {ProcessNames} from "shared/ProcessType"
+import {AppActionFactoryType} from 'shared/actions/AppActionFactory'
+import {SettingsFile} from './SettingsFile'
 
 const
 	log = getLogger(__filename),
@@ -18,6 +20,7 @@ let startDeferred:Promise.Resolver<any> = null
 
 ipc.config.id = ProcessNames.Server
 ipc.config.retry = 1500
+ipc.config.silent = true
 
 /**
  * IPC message handlers
@@ -46,14 +49,14 @@ const handlers = {
  * @param id of the request
  * @param type of the request
  * @param socket the originating socket
- * @param result the result - null if error
+ * @param data the result - null if error
  * @param error if error occurred then error
  */
-function emitResponse(id,type,socket,result,error = null) {
+function emitResponse(id,type,socket,data,error = null) {
 	ipc.server.emit(socket, 'response', {
 		id,
 		type,
-		result,
+		data: _.cloneDeep(data),
 		error
 	} as IStateServerResponse)
 }
@@ -67,10 +70,14 @@ export async function broadcastAction(action) {
 	ipc.server.broadcast('action',action)
 }
 
-export class ServerEntry extends WorkerEntry {
+
+/**
+ * The App State server
+ */
+export class StateServerEntry extends WorkerEntry {
 	
 	constructor() {
-		super(ProcessType.Server)
+		super(ProcessType.StateServer)
 	}
 	
 	/**
@@ -83,12 +90,20 @@ export class ServerEntry extends WorkerEntry {
 		startDeferred = Promise.defer()
 		log.info('Starting Server')
 		
-		// First create the store
-		await storeBuilder(require('./ServerStoreEnhancer').default)
+		
+		// Now get the app action factory and load the settings
+		const
+			AppActionFactory = require('shared/actions/AppActionFactory').AppActionFactory as AppActionFactoryType,
+			appActions = Container.get(AppActionFactory),
+			Settings = require('server/SettingsFile').Settings as SettingsFile
+		
+		appActions.updateSettings(Settings.toJSON())
+		appActions.setUser(Settings.user)
 		
 		// Configure IPC Server
 		ipc.serve(() => {
 			ipc.server.on('request', (request, socket) => {
+				request = _.cloneDeep(request)
 				const
 					{id, clientId, type} = request,
 					handler = handlers[type]
@@ -102,7 +117,7 @@ export class ServerEntry extends WorkerEntry {
 				try {
 					const result = handler(request)
 					
-					emitResponse(id, type, socket, result)
+					emitResponse(id, type, socket, _.cloneDeep(result))
 					
 				} catch (err) {
 					emitResponse(id, type, socket, null, err)
@@ -161,7 +176,7 @@ export function removeActionListener(listener:TServerActionListener) {
 
 
 // Create the server
-const serverEntry = new ServerEntry()
+const serverEntry = new StateServerEntry()
 
 // Start
 export default serverEntry

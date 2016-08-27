@@ -1,5 +1,4 @@
 import 'shared/NodeEntryInit'
-import {MainConfigurator} from 'main/MainConfigurator'
 import * as nockGlobal from 'nock'
 
 const log = getLogger(__filename)
@@ -27,42 +26,41 @@ process.on("uncaughtException", function (err) {
 ProcessConfig.setType(ProcessType.Test)
 process.env.EPIC_TEST = 1
 
-let configurator:MainConfigurator = null
 
 
 
-export async function shutdownMain() {
-	if (!configurator) return
-
-	log.info(`Shutting down services`)
-	await configurator.stop()
-	configurator = null
-	log.info(`Shutdown completed`)
-}
-
-export async function configureMain(...serviceClazzes) {
-	try {
-		if (configurator)
-			await shutdownMain()
-
-		log.info(`Loading services: ${serviceClazzes.map(clazz => clazz.name).join(', ')}`)
-		configurator = Container.get(MainConfigurator)
-
-		log.info(`Initializing services`)
-		await configurator.init(...serviceClazzes)
-
-		log.info(`Starting services`)
-		await configurator.start()
-	} catch (err) {
-
-		log.error('Failed to config',err)
-		try {
-			await shutdownMain()
-		} catch (err2) {}
-
-		throw err
-	}
-}
+// export async function shutdownMain() {
+// 	if (!configurator) return
+//
+// 	log.info(`Shutting down services`)
+// 	await configurator.stop()
+// 	configurator = null
+// 	log.info(`Shutdown completed`)
+// }
+//
+// export async function configureMain(...serviceClazzes) {
+// 	try {
+// 		if (configurator)
+// 			await shutdownMain()
+//
+// 		log.info(`Loading services: ${serviceClazzes.map(clazz => clazz.name).join(', ')}`)
+// 		configurator = Container.get(MainConfigurator)
+//
+// 		log.info(`Initializing services`)
+// 		await configurator.init(...serviceClazzes)
+//
+// 		log.info(`Starting services`)
+// 		await configurator.start()
+// 	} catch (err) {
+//
+// 		log.error('Failed to config',err)
+// 		try {
+// 			await shutdownMain()
+// 		} catch (err2) {}
+//
+// 		throw err
+// 	}
+// }
 
 //
 function clearRequireCacheGlobal(name = null) {
@@ -93,19 +91,19 @@ declare global {
 	const clearRequireCache:typeof clearRequireCacheGlobal
 	
 	//noinspection JSUnusedLocalSymbols
-	const MainTestSetup: {
-		configureMain: typeof configureMain,
-		shutdownMain: typeof shutdownMain
-	}
+	// const MainTestSetup: {
+	// 	configureMain: typeof configureMain,
+	// 	shutdownMain: typeof shutdownMain
+	// }
 }
 
 Object.assign(global,{
 	nock:nockGlobal,
-	clearRequireCache:clearRequireCacheGlobal,
-	MainTestSetup: {
-		configureMain,
-		shutdownMain
-	}
+	clearRequireCache:clearRequireCacheGlobal
+	// MainTestSetup: {
+	// 	configureMain,
+	// 	shutdownMain
+	// }
 })
 
 

@@ -51,7 +51,7 @@ function textSearchFilter(query:string,items:any[],props:string[], limit:number 
 	})
 }
 
-@RegisterService(ProcessType.Server)
+@RegisterService(ProcessType.StateServer)
 export default class SearchService extends BaseService {
 
 	private queriesCache:{[searchId:string]:ValueCache} = {}
@@ -94,7 +94,7 @@ export default class SearchService extends BaseService {
 	 */
 	processTypes(): ProcessType[] {
 		return [
-			ProcessType.Server
+			ProcessType.StateServer
 		]
 	}
 	
@@ -398,3 +398,7 @@ export default class SearchService extends BaseService {
 
 }
 
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}

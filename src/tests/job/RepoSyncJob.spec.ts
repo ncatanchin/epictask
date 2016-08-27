@@ -1,5 +1,5 @@
 
-import DBService from '../../shared/services/DatabaseClientService'
+import DatabaseClientService from 'shared/services/DatabaseClientService'
 import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {User} from 'shared/models/User'
 import {Issue} from 'shared/models/Issue'
@@ -7,6 +7,7 @@ import {Repo} from 'shared/models/Repo'
 
 import {createClient} from "shared/GitHubClient"
 import {RepoSyncJob as RepoSyncJobType} from "job/executors/RepoSyncJob"
+import {getServiceManager} from "shared/services"
 
 const log = getLogger(__filename)
 
@@ -18,20 +19,22 @@ const getAngular = ():Promise<Repo> => {
 	return client.repo('angular/angular')
 }
 
-let dbService:DBService
+let dbService:DatabaseClientService
 
 // RepoSync Test Suite
 describe('RepoSyncJob tests',() => {
 	before(async () => {
 		log.info(`Loading database service`)
-		await MainTestSetup.configureMain(DBService,ActivityManagerService)
+		//await MainTestSetup.configureMain(DBService,ActivityManagerService)
+		await getServiceManager().start(DatabaseClientService,ActivityManagerService)
 
-		dbService = Container.get(DBService)
+		dbService = Container.get(DatabaseClientService)
 	})
 	
 	after(async () => {
 		log.info(`Shutting down database service`)
-		await MainTestSetup.shutdownMain()
+		//await MainTestSetup.shutdownMain()
+		await getServiceManager().stop()
 	})
 	
 	/**
@@ -40,7 +43,7 @@ describe('RepoSyncJob tests',() => {
 	it('Get Repo', async () => {
 		nock(/github/)
 			.get(/\/repos\/angular\/angular/)
-			.reply(200,require('./fixtures/getRepoResponse.json'))
+			.reply(200,require('./fixtures/angular-repo-response.json'))
 	
 		const angularRepo = await getAngular()
 		log.info('Angular repo', angularRepo)

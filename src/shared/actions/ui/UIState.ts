@@ -46,6 +46,9 @@ export const UIStateRecord = Record({
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {
+		if (o && o instanceof UIState)
+			return o
+		
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),

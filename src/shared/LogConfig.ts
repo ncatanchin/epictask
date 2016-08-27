@@ -1,5 +1,7 @@
 
+const categoryLevels = require('shared/LogCategories')
+
 Object.assign(global as any, {
-	TypeLoggerCategories: require('shared/LogCategories'),
+	TypeLoggerCategories: categoryLevels,
 	TypeLoggerDefaultLevel: 3
 })

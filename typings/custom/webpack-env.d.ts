@@ -7,13 +7,15 @@
  * Webpack module API - variables and global functions available inside modules
  */
 
+interface RequireContext {
+	id:string;
+	keys(): string[];
+	<T>(id: string): T;
+	resolve(id: string): string;
+}
+
 declare namespace __WebpackModuleApi {
-	interface RequireContext {
-		id:string;
-		keys(): string[];
-		<T>(id: string): T;
-		resolve(id: string): string;
-	}
+	
 
 	interface RequireFunction {
 		/**

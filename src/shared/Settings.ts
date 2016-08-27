@@ -1,126 +1,67 @@
-import * as fs from 'fs'
-import {getUserDataFilename, readFile} from 'shared/util/Files'
-import {Property} from "shared/util/Decorations";
-import {toJSON} from "shared/util/JSONUtil";
-import {User} from 'shared/models/User'
 
-const log = getLogger(__filename)
-const settingsFilename = getUserDataFilename('epictask-settings.json')
-log.info(`Settings file: ${settingsFilename}`)
 
-// const low = require('lowdb')
-// const storage = require('lowdb/file-sync')
-// const db = low(settingsFilename,{storage})
+import {getStoreState} from "shared/store"
+import {AppKey} from "shared/Constants"
+import {User} from "shared/models"
+import {SettingsFile} from "server/SettingsFile"
 
 /**
- * Create default settings
+ * Settings interface
  */
-function defaultSettings() {
-	return {
-
-	}
-}
-
-/**
- * Setting change listener listener
- *
- * @param propertyKey
- * @param newVal
- */
-function onChange(propertyKey:string, newVal:any) {
-	this.isLoaded && this.save()
-}
-
-const visiblePropOpts = {onChange,jsonInclude:true}
-
-
 export interface ISettings {
-	isLoaded?:boolean
+	/**
+	 * Settings have been loaded from file
+	 */
+	isLoaded:boolean
+	
+	/**
+	 * GitHub token
+	 */
 	token?:string
+	
+	/**
+	 * Disable auto sync
+	 */
 	disableAutoSync?:boolean
+	
+	/**
+	 * The current authenticated user
+	 */
+	user?:User
+}
+
+
+function getSettingsFromState() {
+	const
+		storeState = getStoreState(),
+		appState = storeState && storeState.get(AppKey),
+		settings = _.get(appState,'settings') as ISettings
+	
+	return settings || {isLoaded:false}
 }
 
 /**
- * Application settings object
+ * Get the current settings from the AppState
+ *
+ * @returns {ISettings}
  */
-class SettingsFile implements ISettings {
-
-	constructor() {
-		this.load()
-	}
-
-
-	@Property({enumerable:false,jsonInclude:true})
-	isLoaded:boolean
-
-	@Property(visiblePropOpts)
-	token:string
-
-	@Property(visiblePropOpts)
-	disableAutoSync:boolean
-
-	@Property(visiblePropOpts)
-	user:User
-
-
-	/**
-	 * Save the current settings to disk
-	 *
-	 * @returns {SettingsFile}
-	 */
-	save() {
-		const settingsToSave = JSON.stringify(this,(k,v) => {
-			return (k === 'isLoaded') ? undefined : v
-		},4)
-
-		log.debug('Saving', settingsToSave)
-		fs.writeFileSync(settingsFilename,settingsToSave)
-
-		return this
-	}
-
-	/**
-	 * Load settings from disk
-	 *
-	 * @returns {SettingsFile}
-	 */
-	load() {
-		let newSettings = null
-		try {
-			if (fs.existsSync(settingsFilename)) {
-				newSettings = JSON.parse(readFile(settingsFilename),(k, v) => {
-					return (k === 'isLoaded') ? undefined : v
-				})
-			}
-		} catch (err) {
-			log.warn(`failed to read settings: ${settingsFilename}`,err)
-		} finally {
-			if (!newSettings) {
-				newSettings = defaultSettings()
-			}
-		}
-
-		Object.assign(this,newSettings)
-
-		if (this.user)
-			this.user = new User(this.user)
-
-		this.isLoaded = true
-
-		log.debug(`Loaded github token: ${this.token}`)
-
-		return this
-	}
-
-	toJSON() {
-		return toJSON(this)
-	}
+export function getSettings():ISettings {
+	const settings = (ProcessConfig.isType(ProcessType.StateServer)) ?
+		require('server/SettingsFile').Settings :
+		getSettingsFromState()
+	
+	return settings || {}
+	
 }
 
-export const Settings = new SettingsFile()
-export default Settings
-
-
-if (module.hot) {
-	module.hot.accept()
+/**
+ * Get the mutable Settings file
+ *
+ * @returns {SettingsFile}
+ */
+export function getSettingsFile():ISettings {
+	if (!ProcessConfig.isType(ProcessType.StateServer))
+		throw new Error('Settings file is ONLY available on the state server')
+	
+	return require('server/SettingsFile').Settings as SettingsFile
 }

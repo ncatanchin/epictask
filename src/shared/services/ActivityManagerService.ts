@@ -16,13 +16,18 @@ function makeRefId(type:ActivityType,objectId:any) {
 	return `${ActivityType[type]}-${objectId}`
 }
 
+/**
+ * Get stores
+ *
+ * @returns {any}
+ */
+function getStores() {
+	return Container.get(Stores)
+}
 
-@RegisterService(ProcessType.Server)
+@RegisterService(ProcessType.StateServer)
 export default class ActivityManagerService extends BaseService {
 
-
-	private _repos:Stores
-	
 	/**
 	 * DatabaseClientService must be loaded first
 	 *
@@ -32,12 +37,6 @@ export default class ActivityManagerService extends BaseService {
 		return [DatabaseClientService]
 	}
 	
-
-	async init():Promise<this> {
-		this._repos = Container.get(Stores)
-		
-		return super.init()
-	}
 
 	async start():Promise<this> {
 		return super.start()
@@ -54,21 +53,21 @@ export default class ActivityManagerService extends BaseService {
 
 	async removeByObjectId(objectId:any) {
 		const activities = await this.findByObjectId(objectId)
-		return this._repos.activity.bulkRemove(...activities.map(activity => activity.id))
+		return getStores().activity.bulkRemove(...activities.map(activity => activity.id))
 	}
 
 	findByObjectId(objectId:any):Promise<Activity[]> {
-		return this._repos.activity.findByObjectId(objectId)
+		return getStores().activity.findByObjectId(objectId)
 	}
 
 	async findLastActivity(type:ActivityType,objectId:any) {
-		const activityRepo = this._repos.activity
+		const activityRepo = getStores().activity
 		const refId = makeRefId(type,objectId)
 		return await activityRepo.get(refId)
 	}
 
 	async createActivity(type: ActivityType,objectId:number) {
-		const activityRepo = this._repos.activity
+		const activityRepo = getStores().activity
 		let activity = new Activity({
 			id: makeRefId(type,objectId),
 			type: type,
@@ -84,4 +83,8 @@ export default class ActivityManagerService extends BaseService {
 		return await activityRepo.save(activity)
 	}
 
+}
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
 }

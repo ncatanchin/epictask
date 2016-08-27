@@ -42,6 +42,7 @@ const EnvGlobal = {
 	isDev,
 	isDebug: DEBUG && isDev,
 	isHot: !LodashGlobal.isNil(process.env.HOT),
+	isTest: !_.isNil(process.env.EPIC_TEST),
 	isRemote,
 	isRenderer,
 	isMain: !isRenderer,

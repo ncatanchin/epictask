@@ -5,7 +5,17 @@ import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
-const { app, BrowserWindow, Menu, shell,ipcMain,dialog } = Electron
+
+const
+	{
+		app,
+		BrowserWindow,
+		Menu,
+		shell,
+		ipcMain,
+		dialog
+	} = Electron
+
 const log = getLogger(__filename)
 
 
@@ -13,46 +23,45 @@ function makeDevMenu(mainWindow) {
 	return {
 		label: 'Dev',
 		submenu: [
+			
+			// Start Perf
 			{
 				label: 'Start Perf',
 				accelerator: 'Ctrl+P',
-				click() {
-					mainWindow.webContents.executeJavaScript('Perf.start()')
-					//mainWindow.reload()
-				}
-			},{
+				click: () => mainWindow.webContents.executeJavaScript('Perf.start()')
+			},
+			
+			// Stop Perf
+			{
 				label: 'Stop Perf',
 				accelerator: 'Ctrl+Shift+P',
-				click() {
-					mainWindow.webContents.executeJavaScript(`
-						Perf.stop();
-						measurements = Perf.getLastMeasurements();
-						Perf.printInclusive(measurements);
-						Perf.printWasted(measurements);
-					`)
-					//mainWindow.reload()
-				}
-			},{
+				click: () => mainWindow.webContents.executeJavaScript(`
+					Perf.stop();
+					measurements = Perf.getLastMeasurements();
+					Perf.printInclusive(measurements);
+					Perf.printWasted(measurements);
+				`)
+			},
+			
+			// Reload
+			{
 				label: 'Reload',
 				accelerator: 'Command+Shift+R',
-				click() {
-					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
-					mainWindow.reload()
-				}
-			},{
+				click: () => mainWindow.reload()
+			},
+			
+			// Break
+			{
 				label: 'Break',
 				accelerator: 'Command+F8',
-				click() {
-					//mainWindow.debugger.attach()
-					mainWindow.webContents.executeJavaScript('debugger;')
-				}
-			}, {
+				click: () => mainWindow.webContents.executeJavaScript('debugger;')
+			},
+			
+			// Toggle developer tools
+			{
 				label: 'Toggle Developer Tools',
 				accelerator: 'Alt+Command+I',
-				click() {
-
-					(mainWindow as any).toggleDevTools()
-				}
+				click: () => (mainWindow as any).toggleDevTools()
 			}
 		]
 	}
@@ -73,11 +82,15 @@ const reposMenu = {
 		accelerator: 'Ctrl+S',
 		click() {
 			log.debug('Sending sync all repos')
-			Container.get(RepoActionFactory)
-				.syncRepo(
-					enabledRepoIdsSelector(getStoreState()),
-					true
-				)
+			const repoActions = Container.get(RepoActionFactory)
+			
+			repoActions.syncUserRepos()
+			
+			repoActions.syncRepo(
+				enabledRepoIdsSelector(getStoreState()),
+				true
+			)
+			
 		}
 	}]
 }

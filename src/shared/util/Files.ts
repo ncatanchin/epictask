@@ -1,3 +1,4 @@
+import {getAppConfig} from "shared/AppConfig"
 const log = getLogger(__filename)
 
 const uuid = require('node-uuid')
@@ -22,20 +23,9 @@ function getPaths() {
 		return dir
 	}
 	
-	try {
-		const  electron = require('electron')
-		const app = electron.app || electron.remote.app
-		const userDataPath = app.getPath('userData')
-		
-		return [userDataPath,`${userDataPath}/Cache`,app.getPath('temp')].map(ensureDir)
-	} catch (err) {
-		const
-			userDataPath = `${process.env.HOME}/.epictask`,
-			cachePath = `${userDataPath}/cache`,
-			tempPath = `${userDataPath}/temp`
-		
-		return [userDataPath,cachePath,tempPath].map(ensureDir)
-	}
+	const {userDataPath,cachePath,tempPath} = getAppConfig().paths
+	return [userDataPath,cachePath,tempPath].map(ensureDir)
+	
 }
 
 const [userDataPath,cachePath,tempPath] = getPaths()

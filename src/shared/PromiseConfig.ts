@@ -10,6 +10,7 @@ declare global {
 	
 }
 
+require('babel-runtime/core-js/promise').default = Bluebird
 
 Bluebird.config({
 	cancellation: true,
@@ -47,6 +48,4 @@ Promise.setImmediate = function() {
 
 
 
-export {
-
-}
+export default Promise

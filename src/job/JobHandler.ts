@@ -1,40 +1,50 @@
-import {JobInfo, Job, JobStatus} from 'shared/actions/jobs/JobState'
-const log = getLogger(__filename)
-
 import * as moment from 'moment'
 import * as uuid from 'node-uuid'
 
-import JobManager from "job/JobManager"
+
+import {JobManager} from "JobManagerService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
+import {JobStatusDetails, JobStatus} from 'shared/actions/jobs/JobState'
+import {IJob} from "shared/actions/jobs/JobTypes"
+const log = getLogger(__filename)
+
+
 
 
 export enum JobHandlerEventType {
-	OnStarted = 1,
-	OnChanged,
-	OnFinished
+	Started = 1,
+	Changed,
+	Finished
 }
+
+/**
+ * Job Event names
+ *
+ * @type {string}
+ */
+export type TJobHandlerEventType = 'Started' | 'Changed' | 'Finished'
 
 /**
  * Handler for executing a job
  */
-
 export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 	private executePromise
 	private killed = false
 
+	private executor:IJobExecutor
+	
 	scheduler:Later.IScheduleData
 
-	info:JobInfo
+	info:JobStatusDetails
 	timer:Later.ITimer
 
-	constructor(public service:JobManager,public job:Job) {
+	constructor(public service:JobManager,public job:IJob) {
 		super(JobHandlerEventType)
 
-		const {schedule} = job
-		if (schedule) {
-			this.scheduler = later.parse.cron(schedule)
-		}
+		this.executor = service.newExecutor(job)
+		
+		
 
 	}
 
@@ -88,7 +98,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	reset() {
 		if (this.killed) return
 
-		this.info = new JobInfo()
+		this.info = new JobStatusDetails()
 		this.info.id = uuid.v4()
 		this.info.jobId = this.job.id
 		this.info.description = this.job.description
@@ -114,11 +124,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 		}
 
-		const nextOccurence =  later.schedule(this.scheduler).next(1)
+		const nextOccurrence =  later.schedule(this.scheduler).next(1)
 
-		this.info.nextScheduledTime = Array.isArray(nextOccurence) ? nextOccurence[0] : nextOccurence
+		this.info.nextScheduledTime = Array.isArray(nextOccurrence) ? nextOccurrence[0] : nextOccurrence
 
-		const nextText = moment(nextOccurence).fromNow()
+		const nextText = moment(nextOccurrence).fromNow()
 		log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
 
 	}
@@ -157,9 +167,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 					// Set job in-progress
 					await this.setStatus(JobStatus.InProgress)
-					const result = await job.executor(this)
-
-					resolve(result)
+					
+					// TODO: Fix Job Resolve
+					//const result = await job.executor(this)
+					//resolve(result)
+					resolve(true)
 				} catch (err) {
 					log.error(`Job failed (id=${job.id})`,err)
 					reject(err)
@@ -189,11 +201,4 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			this.executePromise = null
 		}
 	}
-}
-
-/**
- * Merge events enum onto handler
- */
-export namespace JobHandler {
-	export const Events = JobHandlerEventType
 }

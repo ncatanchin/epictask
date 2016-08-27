@@ -21,9 +21,10 @@ export const RepoStateRecord = Record({
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {
-		return new RepoState(Object.assign({},o,{
-
-		}))
+		if (o && o instanceof RepoState)
+			return o
+		
+		return new RepoState(Object.assign({},o,))
 	}
 
 

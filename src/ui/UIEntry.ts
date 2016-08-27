@@ -11,6 +11,9 @@ import './UIGlobals'
 // Set process type
 ProcessConfig.setType(ProcessConfig.Type.UI)
 
+if (Env.isDev && !Env.isTest) {
+	require('./UIDevConfig')
+}
 
 import './UIConfigurator'
 
