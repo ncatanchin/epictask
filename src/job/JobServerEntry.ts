@@ -1,37 +1,37 @@
 import ProcessType from 'shared/ProcessType'
 import WorkerEntry from "shared/WorkerEntry"
-// import {getJobManager as getJobManagerType,JobManager as JobManagerType} from './JobManager'
-
 
 const log = getLogger(__filename)
 
 
+/**
+ * Creates and is responsible for the JobServer process
+ *
+ * Simply registers the job manager service on create
+ */
 export class JobServerEntry extends WorkerEntry {
 	
+	/**
+	 * Register the job manager service
+	 */
 	constructor() {
 		super(ProcessType.JobServer)
 		require('./JobManagerService')
 	}
 	
 	
+	/**
+	 * Start the server
+	 */
 	protected async start() {
 		log.info('Starting JobServerEntry')
-		// const getJobManager = require('./JobManagerService').default as typeof getJobManagerType
-		// service = getJobManager()
-		//
-		// log.info('Starting job service')
-		// service.start()
-		// log.info('Booted job service')
-		
 	}
 	
+	/**
+	 * Stop the server
+	 */
 	protected async stop() {
 		log.info(`Stopping JobServerEntry`)
-		// try {
-		//
-		// } catch (err) {
-		// 	log.error('Failed to stop service', err)
-		// }
 	}
 }
 
@@ -42,6 +42,9 @@ export class JobServerEntry extends WorkerEntry {
  */
 const jobServerEntry = new JobServerEntry()
 
+/**
+ * Singleton instance
+ */
 export default jobServerEntry
 
 

@@ -34,4 +34,4 @@
  */
 
 //process.env.NODE_PATH = `${process.cwd()}/node_modules:${process.env.NODE_PATH}`
-require('../dist/MainEntry')
+require('../dist/AppEntry')

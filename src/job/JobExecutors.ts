@@ -10,7 +10,7 @@ const log = getLogger(__filename)
 export interface IJobExecutorConstructor {
 	new (job:IJob): IJobExecutor
 	
-	supportedTypes:JobType[]
+	supportedTypes():JobType[]
 }
 
 
@@ -28,7 +28,7 @@ export interface IJobExecutor {
 	 * @param handler
 	 * @param job
 	 */
-	execute(handler:JobHandler, job:IJob)
+	execute(handler:JobHandler, job:IJob):Promise<any>
 }
 
 /**

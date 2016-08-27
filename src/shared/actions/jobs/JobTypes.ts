@@ -4,7 +4,7 @@
 export enum JobType {
 	RepoSync,
 	GetUserRepos,
-	SyncAllRepos
+	SyncEnabledRepos
 }
 
 
@@ -18,7 +18,9 @@ export enum JobStatus {
 	Created,
 	InProgress,
 	Completed,
-	Failed
+	Failed,
+	PendingCancel,
+	Cancelled
 }
 
 
@@ -32,7 +34,17 @@ export interface IJobSchedule {
 	description?:string
 	lastExecuted?:Date
 	nextExecution?:Date
+	
+	// Actual scheduling data
+	scheduler?:Later.IScheduleData
+	
+	// Cancel a job
+	timer?:Later.ITimer
+	
+	
 }
+
+
 
 /**
  * Standard job definition
@@ -42,6 +54,7 @@ export interface IJob {
 	type:JobType
 	name:string
 	status:JobStatus
+	result?:any
 	scheduleId?:string
 	description?:string
 	args?:any

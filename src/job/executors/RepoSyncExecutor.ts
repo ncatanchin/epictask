@@ -12,51 +12,40 @@ import {getSettings} from 'shared/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
 
-import {Job, IJob} from 'shared/actions/jobs/JobState'
+import {JobType, IJob} from 'shared/actions/jobs/JobTypes'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
+import {IJobExecutor} from "job/JobExecutors"
 
 
 
-const log = getLogger(__filename)
-
-const Benchmarker = Benchmark('RepoSyncJob')
+const
+	log = getLogger(__filename),
+	Benchmarker = Benchmark(__filename)
 
 
 
 @JobExecutor
-export class RepoSyncJob extends Job {
+export class RepoSyncExecutor implements IJobExecutor {
 
 
-	client:GitHubClient
-
-	lastSyncParams:any
-	oneAtATime = true
-	availableRepo:AvailableRepo
-	repo:Repo
-
-	constructor(public job:IJob = null) {
-		super(job)
-
-
-		if (job) {
-			const {availableRepo,repo} = job.args
-			
-			Object.assign(this,{
-				availableRepo,
-				repo
-			})
-			
-			this.description = `repo sync (${repo.full_name})`
-		}
+	static supportedTypes() {
+		return [JobType.RepoSync]
 	}
+	
+	private client:GitHubClient
+	private lastSyncParams:any
+	private availableRepo:AvailableRepo
+	private repo:Repo
+	private job:IJob
+
 	
 	/**
 	 * if dryRun argument was passed as true,
-	 * prohibts persistence, etc
+	 * prohibits persistence, etc
 	 */
 	isDryRun = () => _.get(this.job,'args.dryRun',false) === true
 		
@@ -264,12 +253,24 @@ export class RepoSyncJob extends Job {
 	 * Job executor
 	 *
 	 * @param handler
+	 * @param job
 	 */
 	@Benchmarker
-	async executor(handler:JobHandler) {
+	async execute(handler:JobHandler, job:IJob) {
 		if (!getSettings().token) {
-			log.info(`User is not authenticated, can not sync`)
+			log.warn(`User is not authenticated, can not sync`)
 			return
+		}
+		
+		if (job) {
+			const {availableRepo,repo} = job.args
+			
+			Object.assign(this,{
+				availableRepo,
+				repo,
+				job
+			})
+			
 		}
 
 		this.client = Container.get(GitHubClient)
@@ -285,8 +286,6 @@ export class RepoSyncJob extends Job {
 			log.info("Can not sync, not authenticated")
 			return
 		}
-
-		const {job} = handler
 
 		log.debug(`Starting repo sync job: `, job.id)
 		try {

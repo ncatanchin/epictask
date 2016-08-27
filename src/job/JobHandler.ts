@@ -1,15 +1,12 @@
-import * as moment from 'moment'
-import * as uuid from 'node-uuid'
 
-
-import {JobManager} from "JobManagerService"
+import {JobManagerService} from "job/JobManagerService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
-import {JobStatusDetails, JobStatus} from 'shared/actions/jobs/JobState'
-import {IJob} from "shared/actions/jobs/JobTypes"
+import {JobType,JobStatus, IJob} from "shared/actions/jobs/JobTypes"
+import {IJobStatusDetail, JobLogLevel, IJobLogger, JobLogLevelNames} from 'shared/actions/jobs/JobState'
+import {IJobExecutor} from "job/JobExecutors"
+import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
+
 const log = getLogger(__filename)
-
-
-
 
 export enum JobHandlerEventType {
 	Started = 1,
@@ -29,52 +26,55 @@ export type TJobHandlerEventType = 'Started' | 'Changed' | 'Finished'
  */
 export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
-	private executePromise
 	private killed = false
-
+	private started = false
 	private executor:IJobExecutor
+	private logger:IJobLogger
+	private actions:JobActionFactory
 	
-	scheduler:Later.IScheduleData
+	public detail:IJobStatusDetail
+	
 
-	info:JobStatusDetails
-	timer:Later.ITimer
-
-	constructor(public service:JobManager,public job:IJob) {
+	constructor(public service:JobManagerService,public job:IJob) {
 		super(JobHandlerEventType)
-
+		this.actions = Container.get(JobActionFactory)
 		this.executor = service.newExecutor(job)
-		
-		
-
+		this.logger = JobLogLevelNames.reduce((logger,level) => {
+			logger[level.toLowerCase()] = (message:string,error:Error = null,...details:any[]) => {
+				this.log(JobLogLevel[level],message,error,...details)
+			}
+			return logger
+		},{}) as IJobLogger
 	}
 
 	/**
 	 * When the internal state
 	 * is updated
 	 */
-	private notify(event:JobHandlerEventType) {
-		this.emit(event,this.job,this.info)
+	private fireEvent(event:JobHandlerEventType) {
+		this.emit(event,this,this.job,this.detail)
 	}
 
 	/**
 	 * Update job status
 	 *
+	 * @param level
 	 * @param message
 	 * @param details
 	 * @param error
 	 */
-	log(message:string,details:string,error:Error) {
-		this.info.log(message,details,error)
-		this.notify(JobHandlerEventType.OnChanged)
+	log(level:JobLogLevel,message:string,error:Error,...details:any[]) {
+		log[JobLogLevel[level].toLowerCase()](
+			`Job > ${this.job.name} > ${this.job.id}`,
+			message,
+			error,
+			...details
+		)
+		
+		this.actions.log(this.job.id,level,message,error,...details)
+		this.fireEvent(JobHandlerEventType.Changed)
 	}
 
-	kill() {
-		this.killed = true
-		if (this.timer) {
-			this.timer.clear()
-			this.timer = null
-		}
-	}
 
 	/**
 	 * Start the handler
@@ -84,54 +84,9 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * is reset after each execution
 	 */
 	start() {
-		this.reset()
-		if (this.scheduler && this.job.immediate) {
-			this.execute()
-		}
-
-		this.notify(JobHandler.Events.OnStarted)
+		this.fireEvent(JobHandlerEventType.Started)
 	}
 
-	/**
-	 * Reset/Init the job info and schedule
-	 */
-	reset() {
-		if (this.killed) return
-
-		this.info = new JobStatusDetails()
-		this.info.id = uuid.v4()
-		this.info.jobId = this.job.id
-		this.info.description = this.job.description
-
-		if (this.scheduler)
-			this.schedule()
-		else
-			this.execute()
-	}
-
-	/**
-	 * Schedule the job for later execution
-	 */
-	schedule() {
-		if (!this.timer) {
-			assert(this.scheduler,'Schedule must be set in order to schedule')
-
-			const executor = () => this.execute()
-
-			this.timer = (this.job.repeat) ?
-				later.setInterval(executor, this.scheduler) :
-				later.setTimeout(executor, this.scheduler)
-
-		}
-
-		const nextOccurrence =  later.schedule(this.scheduler).next(1)
-
-		this.info.nextScheduledTime = Array.isArray(nextOccurrence) ? nextOccurrence[0] : nextOccurrence
-
-		const nextText = moment(nextOccurrence).fromNow()
-		log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
-
-	}
 
 
 	/**
@@ -142,13 +97,14 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param error
 	 * @returns {IJob}
 	 */
-	async setStatus(status:JobStatus, progress = -1, error:Error = null) {
-		Object.assign(this.info,{
+	async setStatus(status:JobStatus, error:Error = null, progress = -1) {
+		Object.assign(this.detail, {
 			status,
 			progress,
 			error
 		})
-
+		
+		this.actions.setDetail(this.detail)
 
 	}
 
@@ -157,48 +113,27 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 *
 	 * @returns {IJob}
 	 */
-	execute() {
-		return (this.executePromise) ?
-			this.executePromise :
-			(this.executePromise = new Promise(async (resolve, reject) => {
-				let job = this.job
-
-				try {
-
-					// Set job in-progress
-					await this.setStatus(JobStatus.InProgress)
-					
-					// TODO: Fix Job Resolve
-					//const result = await job.executor(this)
-					//resolve(result)
-					resolve(true)
-				} catch (err) {
-					log.error(`Job failed (id=${job.id})`,err)
-					reject(err)
-				}
-
-				return this.job
-			}).then(async (result) => {
-				await this.setStatus(JobStatus.Completed)
-				return result
-			}).catch((err) => {
-				// Set job failed
-				log.error('Failed job', err)
-				return this.setStatus(JobStatus.Failed,err)
-			}).finally(() => {
-				this.executePromise = null
-				this.notify(JobHandler.Events.OnFinished)
-				this.service.completedJob(this,this.info.status)
-
-			}))
-
-
-	}
-
-	cancel() {
-		if (this.executePromise) {
-			this.executePromise.cancel()
-			this.executePromise = null
+	async execute() {
+		
+		const {job, started, killed} = this
+		assert(!started && !killed && job.status === JobStatus.Created,
+			'Job Status must be CREATED and the handler can not be started or killed in order to execute')
+		
+		this.started = true
+		
+		try {
+			// First mark in progress
+			await this.setStatus(JobStatus.InProgress)
+			
+			// Get the result
+			job.result = await this.executor.execute(this, job)
+			
+			await this.setStatus(JobStatus.Completed)
+		} catch (err) {
+			log.error(`Job failed: ${job.name}(${job.id}) - ${job.description}`, err)
+			
+			await this.setStatus(JobStatus.Failed, err)
 		}
+		
 	}
 }

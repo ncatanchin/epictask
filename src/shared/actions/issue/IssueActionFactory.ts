@@ -30,7 +30,7 @@ import {Milestone} from 'shared/models/Milestone'
 import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
 import {getSettings} from 'shared/Settings'
-import {TIssuePatchMode} from 'shared/actions/issue'
+import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
 

@@ -6,7 +6,7 @@ import {Issue} from 'shared/models/Issue'
 import {Repo} from 'shared/models/Repo'
 
 import {createClient} from "shared/GitHubClient"
-import {RepoSyncJob as RepoSyncJobType} from "job/executors/RepoSyncJob"
+import {RepoSyncJob as RepoSyncJobType} from "executors/RepoSyncExecutor"
 import {getServiceManager} from "shared/services"
 
 const log = getLogger(__filename)

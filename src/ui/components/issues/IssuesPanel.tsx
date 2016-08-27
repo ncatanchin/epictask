@@ -42,7 +42,7 @@ import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
-import {TIssueEditInlineConfig} from 'shared/actions/issue'
+import {TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
 import ValueCache from 'shared/util/ValueCache'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 

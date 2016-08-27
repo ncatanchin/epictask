@@ -16,5 +16,7 @@ export class JobSchedule {
 
 	// Cancel a job
 	timer?:Later.ITimer
+	
+	
 }
 

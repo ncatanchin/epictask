@@ -3,7 +3,7 @@
 
 
 import * as moment from 'moment'
-import {chunkRemove} from '../../services/DatabaseClientService'
+import {chunkRemove} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'shared/Stores'
@@ -22,9 +22,10 @@ import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {ActivityType, Activity} from 'shared/models/Activity'
 import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
 import {getSettings} from 'shared/Settings'
-import {selectedIssueIdsSelector, editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
+import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
+import {JobType} from "shared/actions/jobs/JobTypes"
 
 /**
  * Created by jglanz on 5/29/16.
@@ -110,11 +111,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					continue
 				}
 
+				// Create RepoSync Job
 				log.info(`Triggering repo sync for ${repo.full_name}`)
-				jobActions.triggerJob({
-					id: `reposyncjob-${repo.id}`,
-					name: "RepoSyncJob",
-					args:{availableRepo,repo,force}
+				jobActions.create(JobType.RepoSync,null,{
+					availableRepo,
+					repo,
+					force
 				})
 			}
 
@@ -132,11 +134,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			log.info('Triggering user repo sync')
 
 			const jobActions = Container.get(JobActionFactory)
-			jobActions.triggerJob({
-				id: `syncuserrepos`,
-				name: "GetUserReposJob",
-				args:{}
-			})
+			jobActions.create(JobType.GetUserRepos)
 		}
 	}
 

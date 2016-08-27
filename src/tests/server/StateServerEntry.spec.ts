@@ -3,7 +3,7 @@ import {ProcessType} from "shared/ProcessType"
 import {Map} from 'immutable'
 import WorkerManager from 'shared/WorkerManager'
 import storeBuilder from 'shared/store/AppStoreBuilder'
-import {AppActionFactory} from "shared/actions"
+import {AppActionFactory} from "shared/actions/AppActionFactory"
 import {AppStateType} from "shared/AppStateType"
 
 const log = getLogger(__filename)

@@ -1,101 +1,67 @@
 
-import {List,Record} from 'immutable'
+import {List,Map,Record} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
-import {JobStatus, IJob} from "shared/actions/jobs/JobTypes"
+import {JobType,JobStatus, IJob} from "shared/actions/jobs/JobTypes"
 
+const log = getLogger(__filename)
 
+export type TJobLogLevel = 'DEBUG'|'INFO'|'WARN'|'ERROR'
 
+export enum JobLogLevel {
+	DEBUG = 1,
+	INFO,
+	WARN,
+	ERROR
+}
 
-@RegisterModel
-export class JobLog {
+export const JobLogLevelNames = [
+	'DEBUG',
+	'INFO',
+	'WARN',
+	'ERROR'
+]
 
-	static fromJS(o:any) {
-		return new JobLog(o)
-	}
-
+export interface IJobLog {
+	level:TJobLogLevel
 	message:string
-	details:string
 	error:Error
+	details:any[]
+}
 
-
-	constructor(o:any = {}) {
-		Object.assign(this,o)
-	}
+export interface IJobLogger {
+	debug(message:string,error?:Error,...details:any[])
+	info(message:string,error?:Error,...details:any[])
+	warn(message:string,error?:Error,...details:any[])
+	error(message:string,error?:Error,...details:any[])
 }
 
 /**
  * A formally scheduled job
  */
-@RegisterModel
-export class JobStatusDetail {
+export interface IJobStatusDetail {
 
-	static fromJS(o:any) {
-		return new JobStatusDetail(o)
-	}
-
-	constructor(o:any = {}) {
-		Object.assign(this,o,{
-			logs: List<JobLog>(o.logs)
-		})
-
-	}
-
-	/**
-	 * Push a new log message
-	 *
-	 * @param message
-	 * @param details
-	 * @param error
-	 */
-	log(message:string,details:string = null, error:Error = null) {
-		this.logs = this.logs.push(new JobLog({message,details,error}))
-	}
-
-	// Use for scheduling requests, one-time is not set
+	
 	id:string
-
-	jobId:string
-
-	progress:number
-
+	
+	type:JobType
+	
+	progress?:number
+	
 	status:JobStatus
 
-	error:Error
+	error?:Error
 
-	logs: List<JobLog>
-
-	/**
-	 * is the job running now
-	 *
-	 * @type {boolean}
-	 */
-	running:boolean = false
-
-	/**
-	 * Status description if any
-	 */
-	description:string
-
-	/**
-	 * Next execution time in epoch - millis from 1970
-	 */
-	nextScheduledTime:Date
-
-	/**
-	 * The current job schedule
-	 */
-	schedule:string
-
-	/**
-	 * Job type/name
-	 */
-	type:string
+	logs: IJobLog[]
 }
 
-
+/**
+ * JobStateRecord, holds available properties
+ *
+ * @type {Immutable.Record.Class|any}
+ */
 export const JobStateRecord = Record({
-	jobsInfo:List<JobStatusDetail>(),
-	pendingJobs:List<IJob>(),
+	details:List<IJobStatusDetail>(),
+	all:Map<string,IJob>(),
 	error:null
 
 })
@@ -113,15 +79,13 @@ export class JobState extends JobStateRecord {
 			return o
 		
 		return new JobState(Object.assign({},o,{
-			jobs: List(o.jobs),
-			pendingJobs: List(o.pendingJobs)
+			all: Map(o.all),
+			details: List(o.details)
 		}))
 	}
-
-	$$clazz = 'JobState'
-
-	pending:List<IJob>
-	details:List<JobStatusDetail>
+	
+	all:Map<string,IJob>
+	details:List<IJobStatusDetail>
 	error:Error
 
 

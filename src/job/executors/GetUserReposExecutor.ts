@@ -8,7 +8,9 @@ import {JobExecutor} from 'job/JobDecorations'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Repo} from 'shared/models/Repo'
 import {getSettings} from 'shared/Settings'
-import {IJobExecutor} from "job/executors/JobExecutor"
+import {IJobExecutor} from "job/JobExecutors"
+import {JobType} from "shared/actions/jobs/JobTypes"
+import {IJob} from "shared/actions/jobs/JobTypes"
 
 
 const log = getLogger(__filename)
@@ -20,19 +22,16 @@ const Benchmarker = Benchmark('GetUserReposJob')
  */
 @JobExecutor
 export class GetUserReposExecutor implements IJobExecutor {
-
-	constructor(o:any = {}) {
-		super(o)
-
-		Object.assign(this, {
-			schedule: '*/20 * * * *', // Every 20 minutes
-			repeat: true,
-			oneAtATime: true,
-			scheduled:true,
-			immediate:true
-		})
+	
+	/**
+	 * Supported Job Types
+	 *
+	 * @returns {JobType[]}
+	 */
+	static supportedTypes() {
+		return [JobType.GetUserRepos]
 	}
-
+	
 	@Benchmarker
 	getReposFromGitHub():Promise<Repo[]> {
 		const client = Container.get(GitHubClient)
@@ -44,7 +43,7 @@ export class GetUserReposExecutor implements IJobExecutor {
 	}
 
 	@Benchmarker
-	async executor(handler:JobHandler) {
+	async execute(handler:JobHandler,job:IJob) {
 		const {service} = handler
 
 		if (!getSettings().token) {

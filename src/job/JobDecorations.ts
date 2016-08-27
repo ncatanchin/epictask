@@ -1,5 +1,5 @@
 
-import getJobManager from "JobManagerService"
+import getJobManager from "./JobManagerService"
 import {IJobExecutorConstructor} from "job/JobExecutors"
 
 

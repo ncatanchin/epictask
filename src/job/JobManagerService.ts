@@ -1,18 +1,19 @@
 import {ObservableStore} from 'typedux'
-import {List} from 'immutable'
-import {Container} from 'typescript-ioc'
+import {Map} from 'immutable'
 
+import DefaultJobSchedules from './JobSchedules'
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {JobHandler, JobHandlerEventType} from 'job/JobHandler'
 import * as assert from 'assert'
 import {Toaster} from 'shared/Toaster'
 import {IEnumEventRemover} from 'shared/util/EnumEventEmitter'
-import {IJob, JobStatus, JobType} from 'shared/actions/jobs/JobTypes'
+import {IJob, JobStatus, JobType, IJobSchedule} from 'shared/actions/jobs/JobTypes'
 import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "job/JobExecutors"
 import {BaseService, RegisterService, IServiceConstructor} from "shared/services"
 import {AppStoreService} from "shared/services/AppStoreService"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
+import {IJobStatusDetail} from "shared/actions/jobs/JobState"
 
 const log = getLogger(__filename)
 
@@ -23,13 +24,14 @@ export type TJobExecutorClassMap = {[name:string]:IJobExecutorConstructor}
 export interface IJobContainer {
 	eventRemovers:IEnumEventRemover[]
 	handler:JobHandler
+	job:IJob
 }
 
 export type TJobMap= {[name:string]:IJobContainer}
 
 
 // Singleton ref
-let jobManager:JobManager
+let jobManager:JobManagerService
 
 
 /**
@@ -46,11 +48,11 @@ function isJob(jobOrString:IJob|string):jobOrString is IJob {
  * Job Service for managing all operations
  */
 @RegisterService(ProcessType.JobServer)
-export class JobManager extends BaseService {
+export class JobManagerService extends BaseService {
 
 	static getInstance() {
 		if (!jobManager) {
-			jobManager = new JobManager()
+			jobManager = new JobManagerService()
 		}
 		
 		return jobManager
@@ -72,7 +74,12 @@ export class JobManager extends BaseService {
 	 *
 	 * @type {TJobMap}
 	 */
-	private jobMap:TJobMap = {}
+	private workingJobs:TJobMap = {}
+	
+	/**
+	 * All Scheduler config
+	 */
+	private scheduler:Later.IScheduleData
 	
 	
 	/**
@@ -86,6 +93,7 @@ export class JobManager extends BaseService {
 	private repoActions:RepoActionFactory
 	private toaster:Toaster
 	
+	private schedules:{[id:string]:IJobSchedule} = {}
 	
 	dependencies(): IServiceConstructor[] {
 		return [DatabaseClientService,AppStoreService]
@@ -97,6 +105,23 @@ export class JobManager extends BaseService {
 		assert(!jobManager,`Job Manager can only be instantiated once`)
 	}
 	
+	
+	/**
+	 * Load a schedule and configure it
+	 * @param schedule
+	 */
+	private loadSchedule = (schedule) => {
+		this.schedules[schedule.id] = schedule
+		
+		// TODO: schedule executions
+	}
+	
+	/**
+	 * Load and configure job schedules
+	 */
+	private loadSchedules() {
+		DefaultJobSchedules.forEach(this.loadSchedule)
+	}
 	
 	
 	getJobTypes() {
@@ -154,46 +179,44 @@ export class JobManager extends BaseService {
 	 * Start the Job Service,
 	 * load all schedules, etc, etc
 	 *
-	 * @returns {JobManager}
+	 * @returns {JobManagerService}
 	 */
 	async start():Promise<this> {
 		
-		// Now load everything
-		this.updateJobInfo()
 
 		// Watch for job updates
-		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'pendingJobs'], (pendingJobs) => {
-			log.debug('Check new jobs for anything that need to be worked')
-			this.checkPendingJobs(pendingJobs)
-		})
+		log.info('Subscribe for state updates')
+		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'all'], this.onJobsUpdated)
 		
-		log.info("Finally load all job executors")
-		
+		log.info("Load executors")
 		loadAllExecutors()
 		
+		log.info('Load schedules')
+		this.loadSchedules()
+		
+		log.info('Ready to work some jobs...')
 		return super.start()
 	}
 	
 	
 	/**
-	 * Check the pending jobs
+	 * Check for new jobs, cancelled jobs, etc
 	 *
-	 * @param pendingJobs
+	 * @param jobs
 	 */
-	checkPendingJobs(pendingJobs:List<IJob>) {
-		pendingJobs
-			.filter(job => !this.jobMap[job.id]) // filter out existing jobs
-			.forEach(job => this.execute(job))
-
-		this.jobActions.clearPendingJobs()
-	}
-	
-	
-	updateSchedules() {
-		// const {schedule} = job
-		// if (schedule) {
-		// 	this.scheduler = later.parse.cron(schedule)
-		// }
+	onJobsUpdated = (jobs:Map<string,IJob>) => {
+		
+		const newJobs = jobs
+			.valueSeq()
+			.filter(job =>
+				job.status === JobStatus.Created &&
+				!this.workingJobs[job.id])
+			.toArray()
+			
+		
+		log.debug(`Found ${newJobs.length} new jobs, executing now`)
+		
+		newJobs.forEach(this.execute)
 	}
 	
 
@@ -203,45 +226,42 @@ export class JobManager extends BaseService {
 	 * @param event
 	 * @param handler
 	 * @param job
-	 * @param info
+	 * @param detail
 	 */
-	onJobEvent = (event:JobHandlerEventType, handler:JobHandler) => {
-		this.updateJobInfo()
+	onJobEvent = (event:JobHandlerEventType, handler:JobHandler, job:IJob, detail:IJobStatusDetail) => {
+		
 	}
-
-	execute(job:IJob) {
+	
+	/**
+	 * Execute a job
+	 *
+	 * @param job
+	 * @returns {JobHandler}
+	 */
+	execute = (job:IJob) => {
 		if (this.killed) return
 		
 		
 		// Create a new executor
 		const
-			executor = this.newExecutor(job),
 			handler = new JobHandler(this,job),
 
 			// Attach to all events
 			eventRemovers:IEnumEventRemover[] = handler.onAll(this.onJobEvent)
 
-		this.jobMap[job.id] = {
+		this.workingJobs[job.id] = {
 			eventRemovers,
-			handler
+			handler,
+			job
 		}
 		
-		this.updateJobInfo()
 		handler.start()
 		
 		return handler
 
 	}
 
-	updateJobInfo() {
-		const infos = Object
-			.values(this.jobMap)
-			.map(({handler}) => handler.info)
-
-		infos.forEach(info => this.jobActions.setJobInfo(info))
-	}
-
-
+	
 	/**
 	 * Find an existing job that matches the
 	 * current job request
@@ -249,65 +269,17 @@ export class JobManager extends BaseService {
 	 * @returns {Job}
 	 * @param nameOrId
 	 */
-	findExistingJob(nameOrId) {
+	findJob(nameOrId) {
 		if (this.killed) return null
 
-		const workingJobs = this.jobMap
-		const container = this.jobMap[nameOrId] || Object
+		const workingJobs = this.workingJobs
+		const container = this.workingJobs[nameOrId] || Object
 			.values(workingJobs)
-			.find(({handler}) => handler.job.status < JobStatus.Completed && handler.job.name === nameOrId)
+			.find(({handler}) =>
+				handler.job.status < JobStatus.Completed &&
+				handler.job.name === nameOrId)
 
 		return container ? container.handler.job : null
-
-	}
-
-	removeJob(id:string) {
-		delete this.jobMap[id]
-	}
-
-	completedJob(handler:JobHandler,status:JobStatus) {
-		if (this.killed) return
-
-		const {job} = handler
-		switch (status) {
-			case JobStatus.Failed:
-				this.toaster.addErrorMessage(handler.info.error)
-				break
-			default:
-				this.toaster.addMessage('Completed: ' + (job.description || job.name))
-		}
-
-		// if (job.scheduled) {
-		// 	handler.reset()
-		// } else {
-		// 	this.removeJob(job.id)
-		// }
-	}
-
-	/**
-	 * Clear a scheduled job
-	 *
-	 * @param jobOrString
-	 */
-	cancelJob = (jobOrString:IJob|string) => {
-		let container = Object.values(this.jobMap)
-				.find(({handler}) => handler.job.id ===  ((isJob(jobOrString)) ? jobOrString.id : jobOrString))
-
-
-		assert(container,'No job found with argument: ' + jobOrString)
-		const {handler} = container
-
-		try {
-			handler.cancel()
-		} catch (err) {
-			log.error('failed to cancel job, removing ref anyway',err)
-		}
-
-		// if (handler.job.schedule) {
-		// 	handler.reset()
-		// } else {
-		// 	delete this.jobMap[handler.job.id]
-		// }
 
 	}
 
@@ -319,15 +291,50 @@ export class JobManager extends BaseService {
 		if (this.unsubscriber)
 			this.unsubscriber()
 		
-		
-		Object.values(this.jobMap).forEach(jobContainer => {
-			try {
-				jobContainer.handler.kill()
-			} catch (err) {
-				log.error(`Failed to stop job - still clearing`,err,jobContainer.handler)
-			}
-		})
-		this.jobMap = {}
+		this.workingJobs = {}
+	}
+	
+	
+	
+	/**
+	 * Reset/Init the job info and schedule
+	 */
+	reset() {
+		// if (this.killed) return
+		//
+		// this.info = new JobStatusDetails()
+		// this.info.id = uuid.v4()
+		// this.info.jobId = this.job.id
+		// this.info.description = this.job.description
+		//
+		// if (this.scheduler)
+		// 	this.schedule()
+		// else
+		// 	this.execute()
+	}
+	
+	/**
+	 * Schedule the job for later execution
+	 */
+	schedule() {
+	// 	if (!this.timer) {
+	// 		assert(this.scheduler,'Schedule must be set in order to schedule')
+	//
+	// 		const executor = () => this.execute()
+	//
+	// 		this.timer = (this.job.repeat) ?
+	// 			later.setInterval(executor, this.scheduler) :
+	// 			later.setTimeout(executor, this.scheduler)
+	//
+	// 	}
+	//
+	// 	const nextOccurrence =  later.schedule(this.scheduler).next(1)
+	//
+	// 	this.info.nextScheduledTime = Array.isArray(nextOccurrence) ? nextOccurrence[0] : nextOccurrence
+	//
+	// 	const nextText = moment(nextOccurrence).fromNow()
+	// 	log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
+	//
 	}
 }
 
@@ -338,10 +345,10 @@ export class JobManager extends BaseService {
  * @return {JobManager}
  */
 export function getJobManager() {
-	return JobManager.getInstance()
+	return JobManagerService.getInstance()
 }
 
-Container.bind(JobManager).provider({get: getJobManager})
+Container.bind(JobManagerService).provider({get: getJobManager})
 
 export default getJobManager
 

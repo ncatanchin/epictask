@@ -19,7 +19,7 @@ import {Comment} from 'shared/models/Comment'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
-import {TIssuePatchMode} from 'shared/actions/issue'
+import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
