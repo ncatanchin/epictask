@@ -7,6 +7,7 @@ const Schedules:IJobSchedule[] = [
 	// Sync User Repos w/Github every 20m
 	{
 		id: "GetUserRepos",
+		name: JobType[JobType.GetUserRepos],
 		description: "Synchronize User Repos",
 		type: JobType.GetUserRepos,
 		cron: '*/20 * * * *', // Every 20 minutes
@@ -16,6 +17,7 @@ const Schedules:IJobSchedule[] = [
 	// TODO: implement notifications to trigger when needed
 	{
 		id: "SyncEnabledRepos",
+		name: JobType[JobType.SyncEnabledRepos],
 		description: "Synchronize Enabled Repositories",
 		type: JobType.SyncEnabledRepos,
 		cron: '*/30 * * * *'

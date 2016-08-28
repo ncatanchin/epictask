@@ -1,3 +1,5 @@
+import 'shared/NamespaceConfig'
+
 import ProcessType from 'shared/ProcessType'
 import 'shared/ProcessConfig'
 import 'shared/LogConfig'

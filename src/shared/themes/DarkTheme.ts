@@ -6,36 +6,49 @@ import {makeTheme, Palettes} from './material/MaterialTools'
 /**
  * Get colors ref
  */
-const tinycolor = require('tinycolor2')
-const {colors:c} = Styles
-const baseTheme = _.cloneDeep(Styles.darkBaseTheme)
+const
+	tinycolor = require('tinycolor2'),
+	{colors:c} = Styles,
+	baseTheme = _.cloneDeep(Styles.darkBaseTheme)
 
-const navBarHeight = 50
-const windowControlDim = navBarHeight / 5
+const
+	navBarHeight = 50,
+	windowControlDim = navBarHeight / 5,
 
 
-const theme = makeTheme(
-	Palettes.grey,
-	['l900', '#303030', 'l800', 'l700'],
-	Palettes.purple,
-	['l400', 'l300', 'l200', 'l100'],
-	Palettes.teal,
-	['l400', 'l200', 'l100', 'l50'],
-	Palettes.red,
-	['l400', 'l200', 'l100', 'l50'],
-	Palettes.black,
-	true
-)
+	theme = makeTheme(
+		Palettes.grey,
+		['l900', '#303030', 'l800', 'l700'],
+		Palettes.purple,
+		['l400', 'l300', 'l200', 'l100'],
+		Palettes.teal,
+		['l400', 'l200', 'l100', 'l50'],
+		Palettes.red,
+		['l400', 'l200', 'l100', 'l50'],
+		Palettes.black,
+		true
+	),
+	
+	
 
-const {primary, secondary, accent, warn, background, text, alternateText} = theme
-
-const fontFamilyRegular = 'AvenirNext'
-const fontFamilyDetail = 'fira-code'
-
-//const fontFamily = 'Roboto,sans-serif'
-const fontFamily = fontFamilyRegular
-const fontWeight = 400
-const fontSize = 10
+	{
+		primary,
+		secondary,
+		accent,
+		warn,
+		background,
+		text,
+		alternateText
+	} = theme,
+	
+	// FONT STYLES
+	fontFamilyRegular = 'AvenirNext',
+	fontFamilyDetail = 'fira-code',
+	
+	//const fontFamily = 'Roboto,sans-serif'
+	fontFamily = fontFamilyRegular,
+	fontWeight = 400,
+	fontSize = 10
 
 const InputStyle = {
 	color: text.primary,
@@ -68,6 +81,29 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	alternateTextColor: alternateText.primary,
 
 	progressIndicatorColor: secondary.hue1,
+	
+	
+	/**
+	 * Style the status bar, for jobs, saving, info, etc
+	 */
+	statusBar: {
+		
+		// Root Colors
+		root: {
+			backgroundColor: primary.hue3,
+			color: text.primary,
+			':hover': {
+				backgroundColor: primary.hue2
+			},
+			
+			
+		},
+		
+		status: {
+			borderColor: background
+		}
+		 
+	},
 	
 	/**
 	 * Label Chip Styles

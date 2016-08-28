@@ -21,6 +21,13 @@ import {Label} from 'shared/models/Label'
 import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 
+
+/**
+ * Get the current IssueState
+ *
+ * @param state
+ * @return {IssueState}
+ */
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
 /**

@@ -8,7 +8,7 @@ const {app} = require('electron')
 
 
 // LOGGING
-import './MainLogging'
+
 const log = getLogger(__filename)
 
 // ADD EVENTS TO GLOBAL
@@ -143,7 +143,7 @@ if (module.hot) {
 		return boot().then(() => {
 			const newWindow = mainWindow.getBrowserWindow()
 
-			Electron.BrowserWindow.getAllWindows()
+			require('electron').BrowserWindow.getAllWindows()
 				.filter(win => win !== newWindow && win !== devWindow)
 				.forEach(oldWindow => oldWindow.close())
 

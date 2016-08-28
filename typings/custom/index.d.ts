@@ -21,7 +21,6 @@ declare namespace NodeJS {
 }
 
 
-
 /**
  * Is in development mode
  */

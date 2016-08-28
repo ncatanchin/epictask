@@ -1,58 +1,18 @@
 
+/**
+ * Re-export all job types
+ */
+export * from "shared/actions/jobs/JobTypes"
+
+// Imports
 import {List,Map,Record} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
-import {JobType,JobStatus, IJob} from "shared/actions/jobs/JobTypes"
+import {IJob, IJobSchedule, IJobStatusDetail} from "shared/actions/jobs/JobTypes"
 
+
+// Logger
 const log = getLogger(__filename)
 
-export type TJobLogLevel = 'DEBUG'|'INFO'|'WARN'|'ERROR'
-
-export enum JobLogLevel {
-	DEBUG = 1,
-	INFO,
-	WARN,
-	ERROR
-}
-
-export const JobLogLevelNames = [
-	'DEBUG',
-	'INFO',
-	'WARN',
-	'ERROR'
-]
-
-export interface IJobLog {
-	level:TJobLogLevel
-	message:string
-	error:Error
-	details:any[]
-}
-
-export interface IJobLogger {
-	debug(message:string,error?:Error,...details:any[])
-	info(message:string,error?:Error,...details:any[])
-	warn(message:string,error?:Error,...details:any[])
-	error(message:string,error?:Error,...details:any[])
-}
-
-/**
- * A formally scheduled job
- */
-export interface IJobStatusDetail {
-
-	
-	id:string
-	
-	type:JobType
-	
-	progress?:number
-	
-	status:JobStatus
-
-	error?:Error
-
-	logs: IJobLog[]
-}
 
 /**
  * JobStateRecord, holds available properties
@@ -62,7 +22,8 @@ export interface IJobStatusDetail {
 export const JobStateRecord = Record({
 	details:List<IJobStatusDetail>(),
 	all:Map<string,IJob>(),
-	error:null
+	error:null,
+	schedules:Map<string,IJobSchedule>()
 
 })
 
@@ -80,12 +41,24 @@ export class JobState extends JobStateRecord {
 		
 		return new JobState(Object.assign({},o,{
 			all: Map(o.all),
-			details: List(o.details)
+			details: List(o.details),
+			schedules: Map(o.schedules)
 		}))
+	}
+	
+	/**
+	 * Find a job status detail record for a job
+	 *
+	 * @param jobId
+	 * @returns {IJobStatusDetail}
+	 */
+	getDetail(jobId:string):IJobStatusDetail {
+		return this.details.find(detail => detail.id === jobId)
 	}
 	
 	all:Map<string,IJob>
 	details:List<IJobStatusDetail>
+	schedules:Map<string,IJobSchedule>
 	error:Error
 
 

@@ -24,6 +24,7 @@ export function RegisterService(...processTypes:ProcessType[]) {
 			log.info(`Service (${target.name}) does not load in process type ${ProcessConfig.getTypeName()}`)
 			return
 		}
+		log.info(`REGISTERING Service (${target.name}) for process type ${ProcessConfig.getTypeName()}`)
 		
 		const manager = ServiceManager.getInstance()
 		

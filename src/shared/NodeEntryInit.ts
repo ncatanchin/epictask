@@ -7,9 +7,11 @@ import 'reflect-metadata'
 import 'shared/PromiseConfig'
 import 'shared/ErrorHandling'
 import 'shared/Globals'
+import 'main/MainLogging'
 //endregion
 
 export {}
+
 
 
 // Reload is SUPER easy

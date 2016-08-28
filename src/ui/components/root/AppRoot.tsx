@@ -29,6 +29,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
 import {IssueCommentDialog} from 'ui/components/issues/IssueCommentDialog'
+import {StatusBar} from "ui/components/root/StatusBar"
 
 const {StyleRoot} = Radium
 const $ = require('jquery')
@@ -256,15 +257,10 @@ class App extends React.Component<IAppProps,any> {
 									<ToastMessages/>
 								</div>
 							}
-
-
-
-
-
-
-
+							
+							<StatusBar/>
 						</div>
-
+						
 					</HotKeys>
 				</Provider>
 			</MuiThemeProvider>

@@ -1,13 +1,16 @@
 // IMPORTS
+import * as uuid from 'node-uuid'
 import {ActionFactory, ActionMessage, ActionReducer} from 'typedux'
 import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
-import {IJob, JobType, JobStatus} from 'shared/actions/jobs/JobTypes'
+import {IJob, JobType, JobStatus, IJobSchedule} from 'shared/actions/jobs/JobTypes'
 import {JobKey} from "shared/Constants"
-import * as uuid from 'node-uuid'
+
 import {cloneObject} from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
+
+export type TJobIMap = Map<string,IJob>
 
 /**
  * RepoActionFactory.ts
@@ -26,15 +29,49 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		return JobKey;
 	}
 	
-	@ActionReducer()
-	setDetail(detail: IJobStatusDetail) {
-		return (jobState: JobState) => jobState.update('details', (details: List<IJobStatusDetail>) => {
+	private updateDetail = (jobState:JobState,detail:IJobStatusDetail) => jobState
+		.update('details', (details: List<IJobStatusDetail>) => {
 			if (!details || !details.push)
 				details = List<IJobStatusDetail>()
 			
-			details = details.filter(it => it.id !== detail.id).toList()
-			return details.push(detail)
+			// Set the updated timestamp
+			detail.updatedAt = Date.now()
+			
+			const
+				index = details.findIndex(it => it.id === detail.id),
+				existingDetail = (index > -1) && details.get(index)
+			
+			if (existingDetail)
+				detail.logs = _.sortBy(_.uniqBy([...detail.logs,...existingDetail.logs],'id'),'timestamp')
+			
+			//details = details.filter(it => it.id !== detail.id).toList()
+			return index === -1 ?
+				details.push(detail) :
+				details.set(index, detail)
 		})
+	
+	
+	/**
+	 * Set job status detail
+	 * @param detail
+	 */
+	@ActionReducer()
+	setDetail(detail: IJobStatusDetail) {
+		return (jobState:JobState) => this.updateDetail(jobState,detail)
+	}
+	
+	/**
+	 * Set all the current job schedules
+	 *
+	 * @param schedules
+	 * @returns {(jobState:JobState)=>Map<string, any>}
+	 */
+	@ActionReducer()
+	setSchedules(...schedules:IJobSchedule[]) {
+		return (jobState:JobState) =>  jobState.set('schedules',
+			schedules.reduce((map:Map<string,IJobSchedule>,schedule) => {
+				return map.set(schedule.id,schedule)
+			},Map<string,IJobSchedule>()))
 	}
 	
 	
@@ -63,19 +100,24 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * exist then the provided job will be inserted
 	 *
 	 * @param job
-	 * @returns {(jobState:JobState)=>Map<string, Map<string, IJob>>}
+	 * @param detail
 	 */
 	@ActionReducer()
-	update(job: IJob) {
-		return (jobState: JobState) => jobState.update('all', (all: Map<string,IJob>) => {
-			const existingJob = all.valueSeq().find(it => it.id === job.id)
-			if (existingJob) {
-				all = all.set(job.id, cloneObject(existingJob, job))
-			} else {
-				all = all.set(job.id, cloneObject(job))
-			}
+	update(job: IJob, detail:IJobStatusDetail) {
+		return (jobStateIM: JobState) => jobStateIM.withMutations((jobState:JobState) => {
+			// Update Job first
+			const allJobs:TJobIMap = jobState.all
 			
-			return all
+			const
+				existingJob = allJobs.valueSeq().find(it => it.id === job.id),
+				newJob = existingJob ?
+					cloneObject(existingJob, job) :
+					cloneObject(job)
+			
+			jobState = jobState.set('all',allJobs.set(job.id, newJob)) as any
+			
+			return this.updateDetail(jobState,detail)
+			
 		})
 	}
 	
@@ -87,37 +129,48 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @param args
 	 * @returns {(jobState:JobState)=>Map<string, Map<string, IJob>>}
 	 */
-	@ActionReducer()
+	
 	create(type: JobType,
 	       description: string = JobType[type],
 	       args: any = {}) {
 		
-		// Create new job and details
-		return (jobState: JobState) => jobState.update('all', (all: Map<string,IJob>) => {
-			
-			// Create Job
-			const job:IJob = {
-				id: uuid.v4(),
-				type,
-				status: JobStatus.Created,
-				name: JobType[type],
-				description
-			}
-			
-			// Create details
-			const detail = assign(_.pick('id','status','type'), {
-				progress: 0,
-				logs: []
-			})
-			
-			return jobState
-				.update('all',(all:Map<string,IJob>) => all.set(job.id,job))
-				.update('details',(details:List<IJobStatusDetail>) => details.push(detail))
+		
+		// Create Job
+		const job:IJob = {
+			id: uuid.v4(),
+			type,
+			status: JobStatus.Created,
+			name: JobType[type],
+			description,
+			args
+		}
+		
+		// Create details
+		const detail = assign(_.pick(job,'id','status','type'), {
+			createdAt: Date.now(),
+			updatedAt: Date.now(),
+			progress: 0,
+			logs: []
 		})
+		
+		return this.update(job,detail)
+			
+		
 	}
 	
+	/**
+	 * Add a log record to job status detail
+	 *
+	 * @param jobId
+	 * @param id - unique log id
+	 * @param level
+	 * @param message
+	 * @param timestamp
+	 * @param error
+	 * @param details
+	 */
 	@ActionReducer()
-	log(jobId:string,level:JobLogLevel,message:string,error:Error = null,...details:any[]) {
+	log(jobId:string,id:string,level:JobLogLevel,message:string,timestamp:number,error:Error = null,...details:any[]) {
 		return (jobState: JobState) => jobState.update('details', (details: List<IJobStatusDetail>) => {
 			const detailIndex = details.findIndex(detail => detail.id === jobId)
 			
@@ -128,6 +181,7 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 					// Update the detail object ref and add the log
 					return assign({},detail,{
 						logs:[...(detail.logs || []), {
+							id,
 							level: JobLogLevel[level] as TJobLogLevel,
 							message,
 							error,

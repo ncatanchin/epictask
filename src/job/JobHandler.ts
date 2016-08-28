@@ -1,15 +1,18 @@
 
+import * as uuid from 'node-uuid'
 import {JobManagerService} from "job/JobManagerService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
-import {JobType,JobStatus, IJob} from "shared/actions/jobs/JobTypes"
+import {JobType, JobStatus, IJob, JobCancelledStatuses} from "shared/actions/jobs/JobTypes"
 import {IJobStatusDetail, JobLogLevel, IJobLogger, JobLogLevelNames} from 'shared/actions/jobs/JobState'
 import {IJobExecutor} from "job/JobExecutors"
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 
 const log = getLogger(__filename)
 
+
 export enum JobHandlerEventType {
-	Started = 1,
+	Log = 1,
+	Started,
 	Changed,
 	Finished
 }
@@ -37,7 +40,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 
 	constructor(public service:JobManagerService,public job:IJob) {
 		super(JobHandlerEventType)
+		
+		
 		this.actions = Container.get(JobActionFactory)
+		
+		this.detail = this.actions.state.getDetail(this.job.id)
 		this.executor = service.newExecutor(job)
 		this.logger = JobLogLevelNames.reduce((logger,level) => {
 			logger[level.toLowerCase()] = (message:string,error:Error = null,...details:any[]) => {
@@ -54,6 +61,24 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	private fireEvent(event:JobHandlerEventType) {
 		this.emit(event,this,this.job,this.detail)
 	}
+	
+	/**
+	 * Has the job been cancelled
+	 *
+	 * @returns {any|IJob}
+	 */
+	isCancelled() {
+		const stateJob = this.actions
+			.state
+			.all
+			.valueSeq()
+			.find(job => job.id === this.job.id)
+		
+		
+		return JobCancelledStatuses.includes(this.job.status) ||
+			(stateJob && JobCancelledStatuses.includes(stateJob.status))
+			
+	}
 
 	/**
 	 * Update job status
@@ -64,6 +89,8 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param error
 	 */
 	log(level:JobLogLevel,message:string,error:Error,...details:any[]) {
+		
+		// Log locally
 		log[JobLogLevel[level].toLowerCase()](
 			`Job > ${this.job.name} > ${this.job.id}`,
 			message,
@@ -71,8 +98,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			...details
 		)
 		
-		this.actions.log(this.job.id,level,message,error,...details)
-		this.fireEvent(JobHandlerEventType.Changed)
+		// Then log to actions to update everywhere
+		this.actions.log(this.job.id,uuid.v4(),level,message,Date.now(), error,...details)
+		
+		// Finally fire changed event
+		this.fireEvent(JobHandlerEventType.Log)
 	}
 
 
@@ -98,14 +128,15 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @returns {IJob}
 	 */
 	async setStatus(status:JobStatus, error:Error = null, progress = -1) {
-		Object.assign(this.detail, {
+		assign(this.job, {status})
+		assign(this.detail, {
 			status,
 			progress,
 			error
 		})
 		
-		this.actions.setDetail(this.detail)
-
+		this.actions.update(this.job,this.detail)
+		this.fireEvent(JobHandlerEventType.Changed)
 	}
 
 	/**

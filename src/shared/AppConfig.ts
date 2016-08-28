@@ -19,8 +19,14 @@ let appConfig:AppConfig
  */
 export function getAppConfig() {
 	if (!appConfig) {
+		let electronResolved = false
+		try {
+			const electron = require('electron')
+			electronResolved = !!electron.app || !!electron.remote
+		} catch (err) {}
 		
-		if (ProcessConfig.isType(ProcessType.UI,ProcessType.Main, ProcessType.Test)) {
+		
+		if (electronResolved || ProcessConfig.isType(ProcessType.UI,ProcessType.Main, ProcessType.Test)) {
 			const electron = require('electron')
 			const app = electron.app || electron.remote.app
 			const userDataPath = app.getPath('userData')

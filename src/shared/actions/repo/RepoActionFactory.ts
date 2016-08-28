@@ -99,7 +99,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			if (!Array.isArray(repoIds))
 				repoIds = [repoIds]
 
-			for (let repoId of repoIds) {
+			for (let repoId of _.uniq(repoIds)) {
 				const
 					availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
 					repo = await this.stores.repo.get(repoId),

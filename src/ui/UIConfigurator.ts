@@ -24,7 +24,6 @@ async function boot() {
 			loadAppRoot()
 		})
 
-		module.hot.accept()
 		module.hot.dispose(() => {
 			log.info('HMR AppEntry Update')
 		})

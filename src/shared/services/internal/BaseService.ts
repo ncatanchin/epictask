@@ -15,6 +15,14 @@ export abstract class BaseService implements IService {
 	 */
 	protected _status:ServiceStatus = ServiceStatus.Created
 	
+	/**
+	 * is the service running
+	 *
+	 * @returns {boolean}
+	 */
+	get isRunning() {
+		return this._status < ServiceStatus.Stopped
+	}
 	
 	/**
 	 * Confirm the status is both not the desired status and is younger then

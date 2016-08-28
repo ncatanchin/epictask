@@ -1,7 +1,7 @@
 import {ObservableStore} from 'typedux'
 import {Map} from 'immutable'
 
-import DefaultJobSchedules from './JobSchedules'
+
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {JobHandler, JobHandlerEventType} from 'job/JobHandler'
@@ -17,7 +17,7 @@ import {IJobStatusDetail} from "shared/actions/jobs/JobState"
 
 const log = getLogger(__filename)
 
-export type TScheduledJobMap = {[name:string]:IJob}
+
 
 export type TJobExecutorClassMap = {[name:string]:IJobExecutorConstructor}
 
@@ -72,14 +72,10 @@ export class JobManagerService extends BaseService {
 	/**
 	 * Currently working jobs
 	 *
-	 * @type {TJobMap}
+	 * @type {TJobIMap}
 	 */
 	private workingJobs:TJobMap = {}
 	
-	/**
-	 * All Scheduler config
-	 */
-	private scheduler:Later.IScheduleData
 	
 	
 	/**
@@ -93,7 +89,6 @@ export class JobManagerService extends BaseService {
 	private repoActions:RepoActionFactory
 	private toaster:Toaster
 	
-	private schedules:{[id:string]:IJobSchedule} = {}
 	
 	dependencies(): IServiceConstructor[] {
 		return [DatabaseClientService,AppStoreService]
@@ -106,22 +101,6 @@ export class JobManagerService extends BaseService {
 	}
 	
 	
-	/**
-	 * Load a schedule and configure it
-	 * @param schedule
-	 */
-	private loadSchedule = (schedule) => {
-		this.schedules[schedule.id] = schedule
-		
-		// TODO: schedule executions
-	}
-	
-	/**
-	 * Load and configure job schedules
-	 */
-	private loadSchedules() {
-		DefaultJobSchedules.forEach(this.loadSchedule)
-	}
 	
 	
 	getJobTypes() {
@@ -136,13 +115,19 @@ export class JobManagerService extends BaseService {
 	 */
 	registerExecutor(executorConstructor:IJobExecutorConstructor) {
 		
+		const name = executorConstructor.name
+		
 		log.info(`Registering Job: ${name}`)
 		if (this.killed) {
 			log.warn(`Job Process is killed, can not load ${name}`)
 			return null
 		}
 		
-		this.executorClassMap[executorConstructor.name] = executorConstructor
+		executorConstructor
+			.supportedTypes()
+			.forEach((type:JobType) =>
+				this.executorClassMap[JobType[type]] = executorConstructor)
+				
 		
 		return this.executorClassMap
 	}
@@ -157,7 +142,7 @@ export class JobManagerService extends BaseService {
 			{type} = job,
 			name = JobType[type]
 		
-		log.info(`Looking for job ${name}`)
+		log.info(`Looking for job executor that can handle job type ${name}`)
 		
 		const executorClazz = this.executorClassMap[name]
 		assert(executorClazz,`Unable to find class for job named ${name}, available classes are: ${Object.keys(this.executorClassMap)}`)
@@ -167,11 +152,6 @@ export class JobManagerService extends BaseService {
 	
 	
 	async init():Promise<any> {
-		this.store = Container.get(ObservableStore as any) as any
-		this.jobActions = Container.get(JobActionFactory)
-		this.repoActions = Container.get(RepoActionFactory)
-		this.toaster = Container.get(Toaster)
-		
 		return super.init()
 	}
 	
@@ -183,16 +163,21 @@ export class JobManagerService extends BaseService {
 	 */
 	async start():Promise<this> {
 		
-
-		// Watch for job updates
-		log.info('Subscribe for state updates')
-		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'all'], this.onJobsUpdated)
+		this.store = Container.get(ObservableStore as any) as any
+		this.jobActions = Container.get(JobActionFactory)
+		this.repoActions = Container.get(RepoActionFactory)
+		this.toaster = Container.get(Toaster)
 		
 		log.info("Load executors")
 		loadAllExecutors()
 		
-		log.info('Load schedules')
-		this.loadSchedules()
+		
+		// Watch for job updates
+		log.info('Subscribe for state updates')
+		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'all'], this.onJobsUpdated)
+		
+		// Execute default jobs
+		this.onJobsUpdated(this.jobActions.state.all)
 		
 		log.info('Ready to work some jobs...')
 		return super.start()
@@ -209,12 +194,13 @@ export class JobManagerService extends BaseService {
 		const newJobs = jobs
 			.valueSeq()
 			.filter(job =>
+				job &&
 				job.status === JobStatus.Created &&
 				!this.workingJobs[job.id])
 			.toArray()
 			
 		
-		log.debug(`Found ${newJobs.length} new jobs, executing now`)
+		log.info(`Found ${newJobs.length} new jobs, executing now`)
 		
 		newJobs.forEach(this.execute)
 	}
@@ -229,7 +215,13 @@ export class JobManagerService extends BaseService {
 	 * @param detail
 	 */
 	onJobEvent = (event:JobHandlerEventType, handler:JobHandler, job:IJob, detail:IJobStatusDetail) => {
+		const workingJob = this.workingJobs[job.id]
 		
+		if (workingJob && [JobStatus.Failed,JobStatus.Completed].includes(job.status)) {
+			log.info(`Removing ${job.name} (${job.id}) from working job list`)
+			delete this.workingJobs[job.id]
+		}
+			
 	}
 	
 	/**
@@ -239,7 +231,8 @@ export class JobManagerService extends BaseService {
 	 * @returns {JobHandler}
 	 */
 	execute = (job:IJob) => {
-		if (this.killed) return
+		// if (this.killed)
+		// 	return
 		
 		
 		// Create a new executor
@@ -255,9 +248,10 @@ export class JobManagerService extends BaseService {
 			job
 		}
 		
-		handler.start()
+		log.info(`Executing Job ${job.name} (${job.id})`)
+		handler.execute()
 		
-		return handler
+		
 
 	}
 
@@ -266,7 +260,7 @@ export class JobManagerService extends BaseService {
 	 * Find an existing job that matches the
 	 * current job request
 	 *
-	 * @returns {Job}
+	 * @returns {nameOrId}
 	 * @param nameOrId
 	 */
 	findJob(nameOrId) {
@@ -342,7 +336,7 @@ export class JobManagerService extends BaseService {
 /**
  * Get the JobManager singleton
  *
- * @return {JobManager}
+ * @return {JobManagerService}
  */
 export function getJobManager() {
 	return JobManagerService.getInstance()
@@ -351,6 +345,10 @@ export function getJobManager() {
 Container.bind(JobManagerService).provider({get: getJobManager})
 
 export default getJobManager
+
+if (module.hot) {
+	module.hot.accept(() => log.info('hot reload',__filename))
+}
 
 //
 // if (module.hot) {

@@ -24,13 +24,13 @@ export function Benchmark(name:string = null) {
 						isPromise = _.isFunction(returnVal.then)
 
 
-					log.info(`${name ? `${name}.` : '[BENCHMARK]'}${propertyKey} ${isPromise ? 'PROMISE RESOLUTION' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
+					log.info(`${name ? `${name}.` : '[BENCHMARK]'}${propertyKey} ${isPromise ? 'PromiseResolve' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
 				}
 
 
 				// If a promised was returned then wait for it to resolve
 				if (returnVal && _.isFunction(returnVal.then)) {
-					log.debug('Got promiose result, attaching as thenable to report')
+					log.debug('Got promise result, attaching as then-able to report')
 					returnVal.then(doReport)
 				} else {
 					doReport()

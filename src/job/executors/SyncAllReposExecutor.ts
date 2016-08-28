@@ -34,7 +34,9 @@ export class SyncAllReposExecutor implements IJobExecutor {
 		const repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 		log.debug('Getting avail repos from DB, not state')
 
-		repoActions.syncRepo(availRepos.map(availRepo => availRepo.repoId))
+		repoActions.syncRepo(
+			_.uniq(availRepos.map(availRepo => availRepo.repoId))
+		)
 
 	}
 }

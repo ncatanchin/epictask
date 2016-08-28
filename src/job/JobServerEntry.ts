@@ -3,6 +3,8 @@ import WorkerEntry from "shared/WorkerEntry"
 
 const log = getLogger(__filename)
 
+require('./JobManagerService')
+require('./JobSchedulerService')
 
 /**
  * Creates and is responsible for the JobServer process
@@ -16,7 +18,6 @@ export class JobServerEntry extends WorkerEntry {
 	 */
 	constructor() {
 		super(ProcessType.JobServer)
-		require('./JobManagerService')
 	}
 	
 	

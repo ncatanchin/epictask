@@ -1,4 +1,10 @@
 
+declare global {
+	interface IStyle {
+		
+	}
+}
+
 export function rem(val:number) {
 	return `${val}rem`
 }
@@ -237,3 +243,5 @@ function measureContentHeight(
 	return result
 
 }
+
+

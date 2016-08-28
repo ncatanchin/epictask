@@ -42,14 +42,14 @@ describe('Services',() => {
 		ProcessConfig.setType(ProcessType.Main)
 		log.info('Loading service context in type main - only DatabaseClientService should load')
 		serviceManager.loadContext()
-		countRegistered(1)
+		countRegistered(2)
 		
 		log.info('Removing all and going to type Server')
 		serviceManager = getServiceManager(true)
 		ProcessConfig.setType(ProcessType.StateServer)
 		log.info('Loading service context in type main - only DatabaseClientService should load')
 		serviceManager.loadContext()
-		countRegistered(6)
+		countRegistered(7)
 		
 		
 		log.info('Removing all and going to type DatabaseServer')
@@ -57,7 +57,7 @@ describe('Services',() => {
 		ProcessConfig.setType(ProcessType.DatabaseServer)
 		log.info('Loading service context in type main - only DatabaseClientService should load')
 		serviceManager.loadContext()
-		countRegistered(0)
+		countRegistered(1)
 		
 	})
 	
