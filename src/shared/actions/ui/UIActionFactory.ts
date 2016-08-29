@@ -6,7 +6,7 @@ import {UIKey} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
 import {Dialogs} from 'shared/Constants'
-
+import {Provided} from 'shared/util/Decorations'
 
 
 export function makeToastMessage(opts:any) {
@@ -18,8 +18,7 @@ export function makeToastMessage(opts:any) {
 }
 
 
-
-@AutoWired
+@Provided
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
 
 	constructor() {

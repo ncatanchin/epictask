@@ -26,18 +26,13 @@ import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
-
+import {Provided} from 'shared/util/Decorations'
 /**
  * Created by jglanz on 5/29/16.
  */
 
 const log = getLogger(__filename)
-
-// IMPORTS
-
-
 const uuid = require('node-uuid')
-
 const Benchmarker = Benchmark('RepoActionFactory')
 
 /**
@@ -46,6 +41,7 @@ const Benchmarker = Benchmark('RepoActionFactory')
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@Provided
 @AutoWired
 export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 

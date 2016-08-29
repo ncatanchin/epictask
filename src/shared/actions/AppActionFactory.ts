@@ -1,12 +1,12 @@
 
 import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
-import {AppStateType} from '../AppStateType'
+import {AppStateType} from 'shared/AppStateType'
 
-import {AppKey} from "../Constants"
-import {ISettings} from '../Settings'
-import {AppState} from './AppState'
-import {User} from '../models/User'
-
+import {AppKey} from "shared/Constants"
+import {ISettings} from 'shared/Settings'
+import {AppState} from 'shared/actions/AppState'
+import {User} from 'shared/models/User'
+import {Provided} from 'shared/util/Decorations'
 
 const log = getLogger(__filename)
 
@@ -32,6 +32,7 @@ const log = getLogger(__filename)
 /**
  * Core EpicTask actions
  */
+@Provided
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
 
 	constructor() {

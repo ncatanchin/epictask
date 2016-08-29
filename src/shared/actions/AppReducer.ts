@@ -2,11 +2,12 @@
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "../Constants"
 import {AppState} from './AppState'
-
+import {Provided} from 'shared/util/Decorations'
 
 /**
  * Global App State Reducer
  */
+@Provided
 export class AppReducer extends DefaultLeafReducer<AppState,ActionMessage<AppState>> {
 
 	constructor() {

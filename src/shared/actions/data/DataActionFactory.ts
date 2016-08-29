@@ -8,6 +8,7 @@ import {Stores} from 'shared/Stores'
 import {Map} from 'immutable'
 import {ModelConstructor} from 'shared/Registry'
 import {Benchmark} from 'shared/util/Benchmark'
+import {Provided} from 'shared/util/Decorations'
 
 
 const Benchmarker = Benchmark(__filename)
@@ -22,6 +23,7 @@ const log = getLogger(__filename)
 /**
  * Search Action Factory
  */
+@Provided
 @AutoWired
 export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 

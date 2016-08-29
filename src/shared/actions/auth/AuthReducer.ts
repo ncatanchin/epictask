@@ -2,8 +2,9 @@
 import {DefaultLeafReducer} from 'typedux'
 import {AuthKey} from "Constants"
 import {AuthState, AuthMessage} from 'shared/actions/auth/AuthState'
+import {Provided} from 'shared/util/Decorations'
 
-
+@Provided
 export class AuthReducer extends DefaultLeafReducer<AuthState,AuthMessage> {
 
 	constructor() {

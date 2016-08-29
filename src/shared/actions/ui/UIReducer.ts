@@ -2,9 +2,10 @@ import {DefaultLeafReducer,ActionMessage} from 'typedux'
 import * as uuid from 'node-uuid'
 import {UIState} from 'shared/actions/ui/UIState'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
-
 import {UIKey} from 'shared/Constants'
+import {Provided} from 'shared/util/Decorations'
 
+@Provided
 export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>> {
 
 	constructor() {

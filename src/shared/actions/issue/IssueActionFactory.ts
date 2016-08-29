@@ -33,11 +33,11 @@ import {getSettings} from 'shared/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
+import {Provided} from 'shared/util/Decorations'
 
 /**
  * Created by jglanz on 5/29/16.
  */
-
 
 const log = getLogger(__filename)
 
@@ -45,8 +45,6 @@ const log = getLogger(__filename)
 //const internalIssueSelector = _.memoize((state) => (state.get(IssueKey) as IssueState).internalIssues)
 
 // IMPORTS
-
-
 const uuid = require('node-uuid')
 
 /**
@@ -58,6 +56,7 @@ const uuid = require('node-uuid')
  * @param repoId
  * @param getState
  */
+
 export function fillIssue(getState: Function, issue: Issue, repoId: number) {
 	const stores: Stores = Container.get(Stores)
 	
@@ -100,6 +99,7 @@ function hasEditPermission(issue: Issue) {
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@Provided
 @AutoWired
 export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	

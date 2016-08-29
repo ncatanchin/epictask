@@ -5,10 +5,11 @@ import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
 import {IJob, JobType, JobStatus, IJobSchedule} from 'shared/actions/jobs/JobTypes'
 import {JobKey} from "shared/Constants"
-
+import {Provided} from 'shared/util/Decorations'
 import {cloneObject} from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
+
 
 export type TJobIMap = Map<string,IJob>
 
@@ -18,7 +19,7 @@ export type TJobIMap = Map<string,IJob>
  * @class RepoActionFactory.ts
  * @constructor
  **/
-
+@Provided
 export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobState>> {
 	
 	constructor() {

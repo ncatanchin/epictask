@@ -69,4 +69,97 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 	}
 }
 
+/**
+ * Primarily for dev - create a proxy to a class
+ * allowing hot reloading 
+ */
+interface ProxyProvider {
+	name:string
+	newInstance:(...args:any[]) => any
+	target:any
 
+}
+
+/**
+ * All existing proxy providers
+ */
+const proxiedProviders:{[name:string]:ProxyProvider} = {}
+
+/**
+ * Provided registers the class when
+ * loaded with the built in container and
+ * wraps it in a proxy when used in development 
+ * environment 
+ */
+export function Provided<T>(newTarget:T):T {
+	
+	// Get the name first
+	const {name} = newTarget as any
+
+	let constructor = newTarget as any
+	
+	/**
+	 * Bind the target clazz to the provider
+	 */
+	function setupProvider() {
+		Container.bind(constructor).provider({
+			get() {
+				return new constructor()
+			}
+		})
+	}
+
+	if (Env.isDev) {
+		log.info(`Checking proxy provider for ${name}`)
+		
+		/**
+		 * Get provider if exists
+		 */
+		const getProvider = () => proxiedProviders[name]
+		
+		// Try and find existing
+		let provider = getProvider()
+
+		// Create if first load
+		if (provider) {
+			log.info(`Updating existing provider for ${name}`)
+			provider.target = newTarget
+		} else {
+			log.info(`Creating provider for ${name}`)
+			provider = proxiedProviders[name] = {
+				name,
+				target:newTarget,
+				newInstance: function(...args) {
+					let baseInstance = new (getProvider().target)(...args)
+					
+					const getInstance = () => {
+						if (baseInstance.prototype !== getProvider().target.prototype) {
+							log.info(`Updating instance prototype for ${name}`)
+							
+							// TODO: Maybe copy own props??
+							baseInstance = new (getProvider().target)(...args)
+						}
+
+						return baseInstance
+					}
+
+					return new Proxy({},{
+						has: function(fooTarget,prop) {
+							return getInstance()[prop]			
+						},
+						get: function(fooTarget,prop) {
+							return getInstance()[prop]			
+						},
+						set: function(fooTraget,prop,val) {
+							return getInstance()[prop] = val
+						}
+					}) 
+				}
+			}
+		}
+
+		constructor = provider.newInstance
+	}
+	
+	return constructor
+}

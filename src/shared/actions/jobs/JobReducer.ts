@@ -2,6 +2,7 @@
 import {DefaultLeafReducer,ActionMessage} from 'typedux'
 import {JobKey} from "shared/Constants"
 import {JobState} from 'shared/actions/jobs/JobState'
+import {Provided} from 'shared/util/Decorations'
 
 const log = getLogger(__filename)
 
@@ -12,6 +13,7 @@ const log = getLogger(__filename)
  *
  * Sets all values onto the state
  */
+@Provided
 export class JobReducer extends DefaultLeafReducer<JobState,ActionMessage<JobState>> {
 
 	constructor() {

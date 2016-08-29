@@ -16,9 +16,8 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
-
-
-const uuid = require('node-uuid')
+import {Provided} from 'shared/util/Decorations'
+import * as uuid from 'node-uuid'
 
 const log = getLogger(__filename)
 
@@ -33,14 +32,11 @@ const log = getLogger(__filename)
 /**
  * Search Action Factory
  */
-@AutoWired
+@Provided
 export class SearchActionFactory extends ActionFactory<SearchState,SearchMessage> {
 
-	@Inject
-	private repoActions:RepoActionFactory
-
-	@Inject
-	private issueActions:IssueActionFactory
+	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
+	private issueActions:IssueActionFactory = Container.get(IssueActionFactory)
 
 	constructor() {
 		super(SearchState)

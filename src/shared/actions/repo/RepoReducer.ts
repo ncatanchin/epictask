@@ -7,8 +7,9 @@ import {RepoKey} from "Constants"
 import {RepoState,RepoMessage} from './RepoState'
 
 import {SyncStatus, ISyncDetails,Repo, AvailableRepo,Comment,Issue,Label} from 'shared/models'
+import {Provided} from 'shared/util/Decorations'
 
-
+@Provided
 export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {
 
 	constructor() {
