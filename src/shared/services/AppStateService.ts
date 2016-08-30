@@ -53,6 +53,9 @@ export default class AppStateService extends BaseService {
 		this.appActions = this.loadDep((require as any)('shared/actions/AppActionFactory')) as AppActionFactory
 		this.repoActions = this.loadDep((require as any)('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
 		this.authActions = this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
+		this.appActions = Container.get(AppActionFactory)// this.loadDep((require as any)('shared/actions/AppActionFactory')) as AppActionFactory
+		this.repoActions = Container.get(RepoActionFactory) //this.loadDep((require as any)//('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
+		this.authActions = Container.get(AuthActionFactory)//this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
 		this.store = Container.get(ObservableStore as any) as any
 		
 	}

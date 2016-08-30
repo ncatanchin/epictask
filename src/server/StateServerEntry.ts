@@ -7,7 +7,7 @@ import {transformValues} from "shared/util"
 import {IStateServerResponse} from "shared/server/ServerClient"
 
 import {ProcessNames} from "shared/ProcessType"
-import {AppActionFactoryType} from 'shared/actions/AppActionFactory'
+import {AppActionFactory as AppActionFactoryType} from 'shared/actions/AppActionFactory'
 import {SettingsFile} from './SettingsFile'
 
 const
@@ -93,7 +93,7 @@ export class StateServerEntry extends WorkerEntry {
 		
 		// Now get the app action factory and load the settings
 		const
-			AppActionFactory = require('shared/actions/AppActionFactory').AppActionFactory as AppActionFactoryType,
+			AppActionFactory = require('shared/actions/AppActionFactory').AppActionFactory as typeof AppActionFactoryType,
 			appActions = Container.get(AppActionFactory),
 			Settings = require('server/SettingsFile').Settings as SettingsFile
 		

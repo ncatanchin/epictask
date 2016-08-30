@@ -2,7 +2,8 @@
 
 import {ServiceManager} from "shared/services"
 import * as TestServicesType from './fixtures/TestService.fixture'
-
+import {AppStoreService as AppStoreServiceType} from "shared/services/AppStoreService"
+import {AppActionFactory as AppActionFactoryType} from 'shared/actions/AppActionFactory'
 //let getServiceManager:typeof getServiceManagerType = null
 let serviceManagerRef = null
 function getServiceManager(clear = false):ServiceManager {
@@ -75,4 +76,23 @@ describe('Services',() => {
 		expect(regs[1].serviceConstructor).toBe(TestServices.TestService1)
 		
 	})
+	
+	// it('Can access app state', async () => {
+	// 	const AppStoreService = require("shared/services/AppStoreService").AppStoreService as typeof AppStoreServiceType
+	//
+	// 	let serviceManager = getServiceManager(true)
+	// 	ProcessConfig.setType(ProcessType.StateServer)
+	// 	await serviceManager.start(AppStoreService)
+	//
+	// 	const AppActionFactory = require('shared/actions/AppActionFactory').default as typeof AppActionFactoryType
+	// 	const test1 = new AppActionFactory()
+	// 	expect(test1.state).not.toBeNull()
+	//
+	// 	const test2 = Container.get(AppActionFactory)
+	// 	expect(test2.state).not.toBeNull()
+	// 	// log.info('Loading service context in type main - only DatabaseClientService should load')
+	// 	// serviceManager.loadContext()
+	//
+	//
+	// })
 })

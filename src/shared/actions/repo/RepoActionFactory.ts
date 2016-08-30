@@ -42,21 +42,21 @@ const Benchmarker = Benchmark('RepoActionFactory')
  * @constructor
  **/
 @Provided
-@AutoWired
 export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
-	@Inject
 	stores:Stores
 
-	@Inject
 	jobActions:JobActionFactory
 
-	@Inject
 	toaster:Toaster
 
 
 	constructor() {
 		super(RepoState)
+		
+		this.stores = Container.get(Stores)
+		this.jobActions = Container.get(JobActionFactory)
+		this.toaster = Container.get(Toaster)
 	}
 
 	leaf():string {

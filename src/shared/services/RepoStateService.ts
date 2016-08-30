@@ -141,6 +141,8 @@ export class RepoStateService extends BaseService {
 
 		if (!_.isEqual(selectedIssueIds,newSelectedIssueIds))
 			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+		
+		
 		this.issueActions.loadIssues()
 	}
 }

@@ -1,6 +1,7 @@
-const assert = require('assert')
-const fs = require('fs')
-const path = require('path')
+const
+	assert = require('assert'),
+	fs = require('fs'),
+	path = require('path')
 
 //const baseDir = path.resolve(__dirname,'../../..')
 // const sassContentLoader = path.resolve(baseDir,'src/epictask/tools/sass-constants-preloader')
@@ -9,6 +10,9 @@ const path = require('path')
 
 export default function (projectConfig) {
 
+	// Resolve the absolute path to the proxy provided loader
+	const proxyProvidedLoaderPath =
+		path.resolve(process.cwd(),'src/tools/provided-proxy-loader.js')
 
 	const loaders = {
 		
@@ -16,11 +20,17 @@ export default function (projectConfig) {
 		 * All preloaders, for
 		 * hot loading, source-maps, etc
 		 */
-		preLoaders: [{
-				test: /\.(tsx?|jsx?)$/,
+		preLoaders: [
+			{
+				test: /\.tsx?$/,
+				exclude: /node_modules/,
+				loaders: [proxyProvidedLoaderPath,'source-map-loader']
+			},{
+				test: /\.jsx?$/,
 				exclude: /node_modules/,
 				loaders: ['source-map-loader']
-		}],
+			}
+		],
 		
 		/**
 		 * Baseline for all loaders

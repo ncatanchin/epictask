@@ -75,9 +75,9 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
  */
 interface ProxyProvider {
 	name:string
-	newInstance:(...args:any[]) => any
+	newConstructor:(...args:any[]) => any
 	target:any
-
+	rev:number
 }
 
 /**
@@ -85,81 +85,103 @@ interface ProxyProvider {
  */
 const proxiedProviders:{[name:string]:ProxyProvider} = {}
 
+
 /**
  * Provided registers the class when
  * loaded with the built in container and
  * wraps it in a proxy when used in development 
- * environment 
+ * environment
+ *
+ * @param newTarget
  */
 export function Provided<T>(newTarget:T):T {
 	
 	// Get the name first
 	const {name} = newTarget as any
 
-	let constructor = newTarget as any
-	
-	/**
-	 * Bind the target clazz to the provider
-	 */
-	function setupProvider() {
-		Container.bind(constructor).provider({
+	// Not dev then just bind it
+	if (!Env.isDev) {
+		Container.bind(newTarget as any).provider({
 			get() {
-				return new constructor()
+				return new (newTarget as any)()
 			}
 		})
-	}
-
-	if (Env.isDev) {
-		log.info(`Checking proxy provider for ${name}`)
 		
-		/**
-		 * Get provider if exists
-		 */
-		const getProvider = () => proxiedProviders[name]
-		
-		// Try and find existing
-		let provider = getProvider()
-
-		// Create if first load
-		if (provider) {
-			log.info(`Updating existing provider for ${name}`)
-			provider.target = newTarget
-		} else {
-			log.info(`Creating provider for ${name}`)
-			provider = proxiedProviders[name] = {
-				name,
-				target:newTarget,
-				newInstance: function(...args) {
-					let baseInstance = new (getProvider().target)(...args)
-					
-					const getInstance = () => {
-						if (baseInstance.prototype !== getProvider().target.prototype) {
-							log.info(`Updating instance prototype for ${name}`)
-							
-							// TODO: Maybe copy own props??
-							baseInstance = new (getProvider().target)(...args)
-						}
-
-						return baseInstance
-					}
-
-					return new Proxy({},{
-						has: function(fooTarget,prop) {
-							return getInstance()[prop]			
-						},
-						get: function(fooTarget,prop) {
-							return getInstance()[prop]			
-						},
-						set: function(fooTraget,prop,val) {
-							return getInstance()[prop] = val
-						}
-					}) 
-				}
-			}
-		}
-
-		constructor = provider.newInstance
+		return newTarget
 	}
 	
-	return constructor
+	
+
+	log.info(`Checking proxy provider for ${name}`)
+	
+	/**
+	 * Get provider if exists
+	 */
+	const getProvider = () => proxiedProviders[name]
+	
+	
+	// Try and find existing
+	let provider = getProvider()
+
+	
+	// Create if first load
+	if (provider) {
+		log.info(`Updating existing provider for ${name}`)
+		provider.target = newTarget
+		provider.rev++
+		provider.newConstructor.prototype = (newTarget as any).prototype
+	} else {
+		log.info(`Creating provider for ${name}`)
+		provider = proxiedProviders[name] = {
+			name,
+			target: newTarget,
+			rev: 1,
+			newConstructor: null
+		}
+		
+		
+		const realConstructor = function (...constructArgs) {
+			let baseInstance
+			
+			const makeInstance = () => {
+				baseInstance = new (provider.target)(...constructArgs)
+				baseInstance.$$rev = provider.rev //updateInstance(null,...constructArgs)
+				return baseInstance
+			}
+			
+			baseInstance = makeInstance()
+			
+			return new Proxy(baseInstance, {
+				get: function (fooTarget, prop) {
+					//log.info('intercepted',prop)
+					
+					if (baseInstance.$$rev !== provider.rev) {
+						makeInstance()
+					}
+					return baseInstance[prop]
+				}
+			})
+		}
+		
+		
+		// Used to name the function - revisit at some-point
+		let newConstructor:any = {}
+		eval(`newConstructor = function ${name}(...newArgs) { return realConstructor(...newArgs) }`)
+		
+		provider.newConstructor = newConstructor
+		newConstructor.prototype = (newTarget as any).prototype
+		
+		Container
+			.bind(newConstructor)
+			.provider({
+				get: () => {
+					return new newConstructor()
+				}
+			})
+	}
+	
+	return provider.newConstructor as any
+	
+	
+	
 }

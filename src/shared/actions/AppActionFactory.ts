@@ -91,11 +91,6 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 }
 
 /**
- * Export the type of the action factory for lazy loading
- */
-export type AppActionFactoryType = typeof AppActionFactory
-
-/**
  * Export the action factory as the default
  */
 export default AppActionFactory

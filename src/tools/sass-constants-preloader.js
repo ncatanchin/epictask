@@ -10,7 +10,7 @@ module.exports = function (content) {
 		varPath = queryString.replace(/["']/g, ''),
 		contentPath = path.resolve(varPath)
 
-	// Mark plugin as cachable
+	// Mark plugin as cache-able
 	this.cacheable()
 
 	// Add dependency

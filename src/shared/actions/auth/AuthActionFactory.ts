@@ -9,24 +9,23 @@ import {getSettings,getSettingsFile} from 'shared/Settings'
 import {Toaster} from 'shared/Toaster'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {ProcessType} from "shared/ProcessType"
+import {Provided} from "shared/util/Decorations"
 
 const log = getLogger(__filename)
 
-@AutoWired
+@Provided
 export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 
-	@Inject
 	appActions:AppActionFactory
-
-	@Inject
 	toaster:Toaster
-
 
 	private _client:GitHubClient
 
 	constructor() {
 		super(AuthState)
 
+		this.appActions = Container.get(AppActionFactory)
+		this.toaster = Container.get(Toaster)
 		this.makeClient()
 	}
 

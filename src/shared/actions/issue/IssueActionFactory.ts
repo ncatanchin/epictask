@@ -100,17 +100,17 @@ function hasEditPermission(issue: Issue) {
  * @constructor
  **/
 @Provided
-@AutoWired
 export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
-	@Inject
 	stores: Stores
 	
-	@Inject
 	uiActions: UIActionFactory
 	
 	constructor() {
 		super(IssueState)
+		
+		this.stores = Container.get(Stores)
+		this.uiActions = Container.get(UIActionFactory)
 	}
 	
 	leaf(): string {
@@ -143,8 +143,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	requestIssueIdsAction(issueIds: number[], clear: boolean, dispatch, getState) {
 		const actions = this.withDispatcher(dispatch, getState)
-		//const enabledRepoIds = enabledRepoIdsSelector(getState())
-		
 		
 		// Now push the models into the data state for tracking
 		const dataActions = Container.get(DataActionFactory)

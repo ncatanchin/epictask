@@ -24,13 +24,9 @@ const log = getLogger(__filename)
  * Search Action Factory
  */
 @Provided
-@AutoWired
 export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
 
-	@Inject
-	private repoActions:RepoActionFactory
-
-
+	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
 	constructor() {
 		super(DataState)
