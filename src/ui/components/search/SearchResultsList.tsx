@@ -258,7 +258,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	renderRepo = (item:SearchItem,repo:Repo,isSelected) => {
 
 		return this.renderResult(
-			Renderers.repoName(repo),
+			<Renderers.RepoName repo={repo}/>,
 			`${repo.open_issues_count} open issues`,
 			'Add issue repo',
 			'repo',
@@ -298,7 +298,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${issue.repoId}`)
 		return this.renderResult(
 			issue.title,
-			repo ? Renderers.repoName(repo) : '',
+			repo ? Renderers.RepoName({repo}) : '',
 			'Select issue',
 			'issue-opened',
 			isSelected
@@ -310,7 +310,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${milestone.repoId}`)
 		return this.renderResult(
 			milestone.title,
-			repo ? Renderers.repoName(repo) : '',
+			repo ? Renderers.RepoName({repo}) : '',
 			'Filter milestone',
 			'milestone',
 			isSelected
@@ -322,7 +322,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${label.repoId}`)
 		return this.renderResult(
 			label.name,
-			repo ? Renderers.repoName(repo) : '',
+			repo ? Renderers.RepoName({repo}) : '',
 			'Filter label',
 			'tag',
 			isSelected

@@ -1,6 +1,5 @@
-
-//import * as PureRenderMixin from 'react-addons-pure-render-mixin'
 import shallowCompare = require('react-addons-shallow-compare')
+
 /**
  * Pure render mixin as a decorator
  *

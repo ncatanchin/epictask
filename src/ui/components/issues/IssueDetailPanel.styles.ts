@@ -114,15 +114,20 @@ const baseStyles = createStyles({
 					margin: '1rem 1rem 1rem 0.5rem',
 
 					avatar: {
-						width:        41,
-						height:       41,
+						width:        40,
+						height:       40,
 						borderRadius: '50%'
 					},
 
 					user: {
 						// borderWidth: '0.1rem',
 						// borderStyle: 'solid',
-						borderRadius: '50% 0 0 50%'
+						borderRadius: '50% 0 0 50%',
+						borderTopWidth: rem(0.1),
+						borderBottomWidth: rem(0.1),
+						borderLeftWidth: rem(0.1),
+						borderRightWidth: 0,
+						borderStyle: 'solid'
 					},
 					
 					':hover': {}

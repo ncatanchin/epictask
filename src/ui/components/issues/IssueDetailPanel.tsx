@@ -57,18 +57,13 @@ export interface IIssueDetailPanelProps {
  */
 const makeIssueItemStateToProps = () => {
 
-	const themeSelector = () => getTheme()
-	const stylesSelector = createSelector(
-		() => getTheme(),
-		(theme:any) => mergeStyles(baseStyles, theme.issueDetail)
-	)
 
 
 	return createStructuredSelector({
 		issues: issuesDetailSelector,
 		issue: selectedIssueSelector,
 		comments: commentsSelector,
-		styles: stylesSelector
+		styles: (state,props) => mergeStyles(baseStyles, props.theme.issueDetail)
 	},createDeepEqualSelector)
 }
 
@@ -82,9 +77,8 @@ const makeIssueItemStateToProps = () => {
  * @constructor
  **/
 
-
-@connect(makeIssueItemStateToProps)
 @Themed
+@connect(makeIssueItemStateToProps)
 @HotKeyContext()
 @PureRender
 @Radium
@@ -161,8 +155,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		{/* ROW 1 */}
 		<div style={styles.header.row1}>
 
-			<div style={styles.header.row1.repo}>
-				{Renderers.repoName(issue.repo)}
+			<div style={[styles.header.row1.repo]}>
+				<Renderers.RepoName repo={issue.repo}/>
 			</div>
 
 			{/* ASSIGNEE */}
@@ -302,6 +296,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param issue
 	 * @param comments
 	 * @param styles
+	 * @param palette
 	 * @returns {any}
 	 */
 	renderIssue = (issue:Issue, comments:Comment[], styles,palette) => <div style={styles.issue}>

@@ -57,12 +57,9 @@ const store:ObservableStore<RootState> = Container.get(ObservableStore as any) a
 
 
 //region DEBUG Components/Vars
-//const AllDevTools = (DEBUG) ? require('components/debug/DevTools.tsx') : {}
-//const DevTools = AllDevTools.DevTools || <div></div>
-const DevTools = <div/>
-let devToolsRef = null
-let appElement = null
-let reduxStore = null
+let
+	appElement = null,
+	reduxStore = null
 //endregion
 
 
@@ -100,16 +97,14 @@ export interface IAppProps {
 }
 
 
-
-
+/**
+ * State selector for AppRoot
+ */
 const mapStateToProps = createStructuredSelector({
 	hasAvailableRepos: availableRepoCountSelector,
 	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
 	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
-
 },createDeepEqualSelector)
-
-
 
 /**
  * Root App Component
@@ -123,8 +118,8 @@ class App extends React.Component<IAppProps,any> {
 
 	appActions = Container.get(AppActionFactory)
 	repoActions = Container.get(RepoActionFactory)
-	issueActions = Container.get(IssueActionFactory) as IssueActionFactory
-	uiActions = Container.get(UIActionFactory) as UIActionFactory
+	issueActions = Container.get(IssueActionFactory)
+	uiActions = Container.get(UIActionFactory)
 
 
 

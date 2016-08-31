@@ -3,16 +3,13 @@ import {ProcessType} from "shared/ProcessType"
 import {getServerClient} from "shared/server/ServerClient"
 
 
-const
-	log = getLogger(__filename),
-	factoryMap:{[key:string]:any} = {},
-	proxyMap:any = {}
+const log = getLogger(__filename)
 
 let actionCtx = null
 
 
 // If renderer then add an action interceptor
-if (!ProcessConfig.isType(ProcessType.StateServer)) {
+if (!ProcessConfig.isType(ProcessType.StateServer,ProcessType.Storybook)) {
 	const unregisterInterceptor = addActionInterceptor(
 		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
 			
@@ -33,33 +30,10 @@ if (!ProcessConfig.isType(ProcessType.StateServer)) {
 	}
 }
 
-
-
-const initActionFactory = (key,mod) => {
-	// const factory = mod.default
-	// try {
-	// 	const name = key.split('/').pop().split('\.').shift()
-	// 	log.info(`Creating and registering action factory '${name}': (isDev=${Env.isDev}) - in dev we return a proxy`)
-	// 	new factory()
-	// 	// if (Env.isDev)
-	// 	// 	Container.bind(factory).provider(getActionFactoryProxyProvider(name,factory))
-	// 	//
-	// } catch (err) {
-	// 	log.error(`Failed to start action factory: ${key}`,err)
-	// 	throw err
-	// }
-}
-
+/**
+ * Load all the action factories
+ */
 export function loadActionFactories() {
 	actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
-	actionCtx.keys()
-		//.filter(key => key.indexOf('AppActionFactory') === -1)
-		.forEach(actionCtx)
-
-	// if (module.hot) {
-	// 	module.hot.accept([actionCtx.id],(updates) => {
-	// 		log.info('Reloading action factories',updates)
-	// 		loadActionFactories()
-	// 	})
-	// }
+	actionCtx.keys().forEach(actionCtx)
 }

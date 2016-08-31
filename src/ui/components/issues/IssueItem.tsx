@@ -43,10 +43,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 		//const repoState = repoActions.state
 
 		const
-			{index,issues,issuesGrouped,groupBy,selectedIssueIds} = props
-
-
-		const
+			{index,issues,issuesGrouped,groupBy,selectedIssueIds} = props,
 			issue = issues[index],
 			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
 			selectedMulti = selectedIssueIds.length > 1
@@ -80,7 +77,7 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 			issueStyles = makeStyle(
 				styles.issue,
 				selected && styles.issue.selected,
-				(selected && selectedMulti) && styles.issueSelectedMulti
+				(selected && selectedMulti) && styles.issue.multi
 			),
 			issueTitleStyle = makeStyle(
 				styles.issueTitle,
@@ -102,7 +99,8 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 						<span style={styles.issueNumber}>
 							#{issue.number}&nbsp;&nbsp;
 						</span>
-						{Renderers.repoName(issue.repo,styles.issueRepo)}
+						<Renderers.RepoName repo={issue.repo} style={styles.issueRepo}/>
+						
 					</div>
 
 					{/* ASSIGNEE */}

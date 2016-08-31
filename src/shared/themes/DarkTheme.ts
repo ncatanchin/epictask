@@ -602,23 +602,28 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 
-
+		// Issue item in list
 		issue: {
-			backgroundColor: primary.hue1,
-			color:           text.primary,
+			backgroundColor: background,
+			color:           text.secondary,
 
+			// Selected state
 			selected: {
-				backgroundColor: accent.hue1,
+				backgroundColor: primary.hue3,
+				color:           text.primary,
 
+			},
+			
+			// multi selected state
+			multi:  {
+				backgroundColor: primary.hue2,
+					color:           text.primary
 			}
 		},
 
 
 
-		issueSelectedMulti: {
-			backgroundColor: accent.hue1,
-			color:           text.primary
-		},
+		
 
 		issueMilestone: {
 			color: text.secondary
@@ -668,12 +673,15 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		header: {
 			//backgroundColor: accent.hue1,
-			backgroundColor: tinycolor(primary.hue2).setAlpha(0.5),
+			backgroundColor: tinycolor(primary.hue2).setAlpha(0.5).toRgbString(),
 			color:           text.primary,
 
 			row1: {
 				repo: {
-					color: accent.hue2
+					color: tinycolor(text.secondary).setAlpha(0.7).toRgbString(),
+					':hover': {
+						color: secondary.hue1
+					}
 				}
 			}
 		},
@@ -705,15 +713,16 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 					post: {
 						backgroundColor: primary.hue2,
-						borderColor:     tinycolor(accent.hue1),
+						borderColor:     accent.hue1,
 
 						user: {
-							backgroundColor: accent.hue1,
-							borderColor:     primary.hue1,
+							backgroundColor: primary.hue3,
+							borderColor: accent.hue1,
+							transform: 'translate(0.2rem,0)'
 						},
 
 						details: {
-							backgroundColor: accent.hue1,
+							backgroundColor: primary.hue3,
 							color:           text.primary,
 							
 							
@@ -722,15 +731,17 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 					comment: {
 						backgroundColor: primary.hue2,
-						borderColor:     tinycolor(secondary.hue1),
+						borderColor:     secondary.hue1,
 
 						user: {
-							backgroundColor: secondary.hue1,
-							borderColor:     primary.hue1,
+							backgroundColor: primary.hue3,
+							borderColor:     secondary.hue1,
+							transform: 'translate(0.2rem,0)'
 						},
 
 						details: {
-							backgroundColor: secondary.hue1,
+							//backgroundColor: secondary.hue1,
+							backgroundColor: primary.hue3,
 							color:           text.primary
 						}
 					}

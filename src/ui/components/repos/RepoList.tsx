@@ -186,7 +186,10 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				                )}>
 						<Icon style={styles.itemIcon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
 
-						<div style={styles.itemLabel}>{Renderers.repoName(repo)}</div>
+						{/* Repo */}
+						<div style={styles.itemLabel}>
+							<Renderers.RepoName repo={repo}/>
+						</div>
 
 						<Icon style={itemRemoveStyle}
 						      onClick={(e) => this.onRemoveClicked(e,id)}>

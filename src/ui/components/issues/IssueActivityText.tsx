@@ -33,10 +33,12 @@ const baseStyles = createStyles({
 			padding: '0.3rem 1rem',
 			height: 40,
 			fontSize: themeFontSize(1.1),
-			username: [{
+			
+			username: [FlexScale,{
 				fontWeight: 700
 			}],
-			time: [FlexColumn,FlexScale,{
+			
+			time: [FlexColumn,{
 				fontSize: themeFontSize(1.1),
 				padding: '0rem 0 0 0.5rem',
 				
@@ -51,18 +53,20 @@ const baseStyles = createStyles({
 				opacity: 0,
 				flex: '0 0 0',
 				padding: 0,
-				
+				alignItems: 'flex-end',
+				justifyContent: 'flex-end',
+				textAlign: 'right',
 				
 				hover: [{
 					flex: '0 0 auto',
 					opacity: 1,
-					maxWidth: rem(2.8),
-					width: rem(2.8),
-					padding: makePaddingRem(0.2,0,0.2,0.5)
+					maxWidth: rem(4),
+					width: rem(4),
+					padding: makePaddingRem(0.2,0,0.2,1)
 				}],
 				
 				
-				icon: [makeTransition('color')]
+				icon: [FlexAuto,makeTransition('color')]
 			}]
 		}],
 
@@ -266,11 +270,11 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 						</div>
 						
 						{/* If there has been a subsequent update */}
-						{createdAt !== updatedAt &&
-							<div style={timeStyle.updatedAt}>
-								updated {moment(updatedAt).fromNow()}
-							</div>
-						}
+						{/*{createdAt !== updatedAt &&*/}
+							{/*<div style={timeStyle.updatedAt}>*/}
+								{/*updated {moment(updatedAt).fromNow()}*/}
+							{/*</div>*/}
+						{/*}*/}
 					
 					</div>
 					

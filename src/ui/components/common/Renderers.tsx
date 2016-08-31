@@ -2,6 +2,7 @@
 
 import {FontBlack} from 'shared/themes/styles/CommonStyles'
 import {IGithubValidationError, GithubErrorCodes} from 'shared/GitHubClient'
+import * as Radium from "radium"
 
 /**
  * Format repo name
@@ -10,16 +11,16 @@ import {IGithubValidationError, GithubErrorCodes} from 'shared/GitHubClient'
  * @param style
  * @returns {any}
  */
-export function repoName(repo,style = {}) {
+export const RepoName = Radium(({repo,style = {}}) => {
 	if (!repo || !repo.full_name)
 		return <div>No repo</div>
 
 	const parts = repo.full_name.split('/')
-	return <div style={makeStyle(Ellipsis,style)}>
+	return <div style={[Ellipsis,style]}>
 		<span>{parts[0]}/</span>
 		<span style={FontBlack}>{parts[1]}</span>
 	</div>
-}
+})
 
 /**
  * Get git hub error text

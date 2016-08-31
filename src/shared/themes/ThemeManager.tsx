@@ -1,7 +1,6 @@
 
 
 import {PureRender} from 'components/common/PureRender'
-import {AppActionFactory as AppActionFactoryType} from '../actions/AppActionFactory'
 import * as React from 'react'
 import * as $ from 'jquery'
 
@@ -22,11 +21,21 @@ export let DefaultTheme = null
 // Internal ref to the current theme
 let theme = null
 let themeName = DefaultThemeName
-let appActions:AppActionFactoryType
-let firstLoad = true
 
-const themeListeners = []
+/**
+ * Theme listener type, eventually will be typed
+ */
+export type TThemeListener = (theme:any) => void
 
+// Internal listener list
+const themeListeners = _.get(module,'hot.data.themeListeners',[]) as TThemeListener[]
+
+/**
+ * Add a theme listener
+ *
+ * @param listener
+ * @returns {()=>undefined}
+ */
 export function addThemeListener(listener) {
 	themeListeners.push(listener)
 
@@ -37,6 +46,13 @@ export function addThemeListener(listener) {
 	}
 }
 
+/**
+ * Notify all listeners of update
+ */
+function notifyListeners() {
+	const listenersCopy = [...themeListeners]
+	listenersCopy.forEach(listener => listener(theme))
+}
 
 
 /**
@@ -48,16 +64,8 @@ export function setTheme(newTheme) {
 	themeName = newTheme.name
 	theme = newTheme
 
-	const listenersCopy = [...themeListeners]
-	listenersCopy.forEach(listener => listener(theme))
+	notifyListeners()
 
-	// if (!firstLoad) {
-	// 	if (!appActions) {
-	// 		const AppActionFactory:typeof AppActionFactoryType = require('shared/actions/AppActionFactory')
-	// 		appActions = new AppActionFactory()
-	// 	}
-	// 	//appActions.setTheme(newTheme)
-	// }
 }
 
 export function getTheme() {
@@ -68,12 +76,17 @@ function loadThemes() {
 	log.info('Loading themes')
 
 	Themes = require('./index')
+	
+	// Set the default theme
 	DefaultTheme = Themes[DefaultThemeName]
+	
+	// If this is a reload then grab the theme name from the hot data
+	themeName = (_.get(module,'hot.data.themeName') || DefaultThemeName) as string
+	
 	setTheme(Themes[themeName || DefaultThemeName])
 }
 
 loadThemes()
-firstLoad = false
 
 /**
  * Create a font size based on the themes font size
@@ -210,7 +223,7 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 			if (this.state && this.state.theme === getTheme())
 				return
 
-			this.setState(this.getNewState())
+			this.setState(this.getNewState(), () => this.forceUpdate())
 		}
 
 		componentWillMount() {
@@ -260,41 +273,6 @@ export function ThemedStyles(baseStyles:any = {},...themeKeys:string[]) {
 }
 
 
-
-
-//
-// export function Themed2<T>(component:ComponentClass<T>): ComponentClass<T> {
-// 	return class extends Component<T,any> {
-//
-// 		private unsubscribe
-//
-// 		constructor(props:any = {}) {
-// 			super(props)
-//
-// 			this.state = getThemeState()
-// 		}
-//
-// 		updateTheme = () => this.setState(getThemeState())
-//
-// 		componentWillMount() {
-// 			this.unsubscribe = addThemeListener(this.updateTheme)
-// 		}
-//
-// 		componentWillUnmount() {
-// 			if (this.unsubscribe) {
-// 				this.unsubscribe()
-// 				this.unsubscribe = null
-// 			}
-// 		}
-//
-// 		render() {
-// 			const ThemedComponent = component as any
-// 			return <ThemedComponent {...this.props} theme={this.state.theme}/>
-// 		}
-//
-// 	}
-// }
-
 /**
  * Export getTheme globally
  *
@@ -318,6 +296,12 @@ Object.assign(global as any,{
 
 
 if (module.hot) {
+	module.hot.dispose((data:any) => {
+		Object.assign(data,{
+			themeName,
+			themeListeners
+		})
+	})
 	module.hot.accept(['./index'],(updates) => {
 		log.info(`Theme Updates, HMR`,updates)
 		loadThemes()

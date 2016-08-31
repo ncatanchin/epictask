@@ -8,7 +8,8 @@ export enum ProcessType {
 	Main,
 	DatabaseServer,
 	UI,
-	Test
+	Test,
+	Storybook
 }
 
 /**

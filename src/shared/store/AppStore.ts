@@ -25,8 +25,6 @@ import {
 import {
 	loadActionFactories
 } from 'shared/actions/ActionFactoryProvider'
-import {ProcessType} from "shared/ProcessType"
-
 
 const log = getLogger(__filename)
 
@@ -52,20 +50,7 @@ const ActionLoggerEnabled = false
 // HMR - setup
 let hmrReady = false
 
-/**
- * Attach to reducers, etc
- */
-function hmrSetup() {
-	if (!Env.isRenderer && module.hot && !hmrReady) {
-		hmrReady = true
 
-		module.hot.accept(['./Reducers'],(updates) => {
-			log.info(`Reducer Updates received, reloading reducers`, updates)
-
-			getStore().replaceReducers(...getReducers())
-		})
-	}
-}
 
 /**
  * Create the appropriate middleware
@@ -130,10 +115,26 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 	
 }
 
+
+/**
+ * Setup HMR for the store
+ */
+function hmrSetup() {
+	if (!Env.isRenderer && module.hot && !hmrReady) {
+		hmrReady = true
+		
+		module.hot.accept(['./Reducers'],(updates) => {
+			log.info(`Reducer Updates received, reloading reducers`, updates)
+			
+			getStore().replaceReducers(...getReducers())
+		})
+	}
+}
+
 /**
  * Initialize/Create the store
  */
-export function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null) {
+function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null) {
 
 	const enhancers = [
 		applyMiddleware(...middleware),
@@ -152,9 +153,6 @@ export function initStore(devToolsMode = false,defaultState = null,storeEnhancer
 	if (Env.isDev && !Env.isTest) {
 		require('./AppStoreDevConfig').default(enhancers)
 	}
-			
-
-
 	
 
 	let reducers = getReducers()
@@ -185,10 +183,41 @@ export function initStore(devToolsMode = false,defaultState = null,storeEnhancer
 }
 
 /**
+ * A store specifically for testing & storybook
+ */
+export function loadAndInitStorybookStore() {
+	const enhancers = [applyMiddleware(...middleware)]
+	
+	enhancers.push(applyMiddleware(createLogger()))
+	
+	require('./AppStoreDevConfig').default(enhancers)
+	
+	// Create the store
+	const newStore = ObservableStore.createObservableStore(
+		getReducers(),
+		compose.call(null,...enhancers) as StoreEnhancer<any>,
+		null
+	)
+	
+	// If HMR enabled then prepare for it
+	hmrSetup()
+	
+	newStore.rootReducer.onError = onError
+	newStore.subscribe(onChange)
+	
+	store = newStore
+	setStoreProvider(newStore)
+	loadActionFactories()
+	
+	return store
+}
+
+/**
  * Load existing state from disk
  *
  * @returns {ObservableStore<any>}
  */
+
 export async function loadAndInitStore(serverStoreEnhancer = null) {
 	loadActionFactories()
 	

@@ -374,7 +374,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const makeRepoLabel = (availRepoItem) => (
 			<div style={s.form.repo.item}>
 				<Icon iconSet='octicon' iconName='repo'/>
-				{Renderers.repoName(availRepoItem.repo, s.form.repo.item.label)}
+				<Renderers.RepoName repo={availRepoItem.repo} style={s.form.repo.item.label}/>
+				
 			</div>
 		)
 

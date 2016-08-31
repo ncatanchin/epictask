@@ -10,7 +10,7 @@ import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {Repo} from 'shared/models/Repo'
 import filterProps from 'react-valid-props'
-import {repoName, getGithubErrorText} from 'ui/components/common/Renderers'
+import {RepoName, getGithubErrorText} from 'ui/components/common/Renderers'
 import {TextField} from 'material-ui'
 import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 
@@ -459,7 +459,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 		const makeRepoLabel = (availRepoItem) => (
 			<div style={styles.form.repo.item}>
 				<Icon iconSet='octicon' iconName='repo'/>
-				{repoName(availRepoItem.repo, styles.form.repo.item.label)}
+				<RepoName repo={availRepoItem.repo} style={styles.form.repo.item.label}/>
 			</div>
 		)
 
