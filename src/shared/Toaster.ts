@@ -1,24 +1,21 @@
 
 
 import * as uuid from 'node-uuid'
-import {AutoWired,Inject,Singleton,Container} from 'typescript-ioc'
 
 import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 
-
-const log = getLogger(__filename)
-const fs = require('fs')
-const path = require('path')
+const
+	log = getLogger(__filename)
 
 
-@AutoWired
-@Singleton
+/**
+ * Toaster functions for use globally
+ */
 export class Toaster {
 
-	@Inject
-	uiActions:UIActionFactory
+	private uiActions:UIActionFactory = Container.get(UIActionFactory)
 
 	addMessage(message:IToastMessage|string,type:ToastMessageType = ToastMessageType.Info) {
 		if (_.isString(message)) {
@@ -26,11 +23,21 @@ export class Toaster {
 				id: uuid.v4(),
 				createdAt: Date.now(),
 				type: type,
-				content: message
+				content: message,
+				floatVisible: true
 			}
+		} else {
+			message.type = type
 		}
-
 		this.uiActions.addMessage(message)
+	}
+	
+	addDebugMessage(message:IToastMessage|string) {
+		this.addMessage(message,ToastMessageType.Debug)
+	}
+	
+	addSuccessMessage(message:IToastMessage|string) {
+		this.addMessage(message,ToastMessageType.Success)
 	}
 
 	addErrorMessage(err:Error|string) {
@@ -43,9 +50,28 @@ export class Toaster {
 	}
 }
 
-let toaster = null
-function getToaster() {
-	return Container.get(Toaster)
+let toaster:Toaster = null
+
+/**
+ * get the current toaster
+ *
+ * @returns {Toaster}
+ */
+export function getToaster() {
+	if (!toaster)
+		toaster = new Toaster()
+	
+	return toaster
+}
+
+/**
+ * Bind singleton accessor to the container
+ */
+Container.bind(Toaster).provider({get: getToaster})
+
+
+export function clearMessages() {
+	Container.get(UIActionFactory).clearMessages()
 }
 
 /**
@@ -58,6 +84,13 @@ export function addMessage(message:IToastMessage|string,type:ToastMessageType = 
 	getToaster().addMessage(message,type)
 }
 
+export function addSuccessMessage(message:IToastMessage|string) {
+	getToaster().addSuccessMessage(message)
+}
+
+export function addDebugMessage(message:IToastMessage|string) {
+	getToaster().addDebugMessage(message)
+}
 
 /**
  * Report an error to the UI from anywhere

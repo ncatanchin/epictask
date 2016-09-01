@@ -192,9 +192,11 @@ export function loadAndInitStorybookStore() {
 	
 	require('./AppStoreDevConfig').default(enhancers)
 	
+	const reducers = getReducers()
+	log.info(`Creating story book with reducers`, reducers)
 	// Create the store
 	const newStore = ObservableStore.createObservableStore(
-		getReducers(),
+		reducers,
 		compose.call(null,...enhancers) as StoreEnhancer<any>,
 		null
 	)
@@ -208,7 +210,7 @@ export function loadAndInitStorybookStore() {
 	store = newStore
 	setStoreProvider(newStore)
 	loadActionFactories()
-	
+	newStore.dispatch({type: "@INIT"})
 	return store
 }
 
@@ -250,6 +252,7 @@ let persistingState = false
  * Write the actual state async
  */
 async function writeStoreState() {
+	
 	const fs = require('fs')
 	await fs.writeFile(stateFilename,_.toJS(getStoreState()))
 }

@@ -168,6 +168,8 @@ export default function (projectConfig) {
 			]
 		},
 		
+		other: {happyPlugins},
+		
 		plugins: happyPlugins.concat([
 			//new TsConfigPathsPlugin(),
 			new webpack.IgnorePlugin(/vertx/),

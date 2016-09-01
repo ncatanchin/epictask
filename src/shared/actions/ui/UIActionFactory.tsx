@@ -1,7 +1,6 @@
-import {AutoWired,Inject, Container} from 'typescript-ioc'
 import * as uuid from 'node-uuid'
-import {ActionFactory,ActionReducer,Action,ActionMessage} from 'typedux'
-import {Map,List} from 'immutable'
+import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
+import {List} from 'immutable'
 import {UIKey} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
@@ -9,10 +8,16 @@ import {Dialogs} from 'shared/Constants'
 import {Provided} from 'shared/util/Decorations'
 
 
+// Import only as type - in case we are not on Renderer
+const
+	log = getLogger(__filename),
+	dataUrl = require('dataurl')
+
 export function makeToastMessage(opts:any) {
 	return Object.assign({},opts,{
 		id:uuid.v4(),
 		createdAt:Date.now(),
+		floatVisible: true,
 		content: opts.content || 'No content provided - DANGER will robinson'
 	})
 }
@@ -28,7 +33,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	leaf():string {
 		return UIKey;
 	}
-
+	
+	
 
 	/**
 	 * Set the repo panel open/closed
@@ -71,12 +77,20 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		})
 		return this.addMessage(message)
 	}
+	
+	@ActionReducer()
+	updateMessage(message:IToastMessage) {
+		return (state:UIState) => state.update(
+			'messages',
+			(messages) => messages.set(message.id,message)
+		)
+	}
 
 	@ActionReducer()
 	removeMessage(id:string) {
 		return (state:UIState) => state.set(
 			'messages',
-			state.messages.filter(msg => _.toJS(msg).id !== id)
+			state.messages.filter(msg => msg.id !== id)
 		)
 	}
 

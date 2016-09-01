@@ -36,6 +36,14 @@ export function makeStyle(...styles) {
 }
 
 export function mergeStyles(...styles):any {
+	styles = styles.reduce((allStyles,style) => {
+		if (Array.isArray(style))
+			allStyles.push(...style)
+		else
+			allStyles.push(style)
+		
+		return allStyles
+	},[])
 	return _.merge({},...styles)
 }
 
@@ -89,6 +97,8 @@ export function makeMarginRem(top = 0, right = 0, bottom = 0, left = 0) {
 	}
 }
 
+
+
 export const CSSHoverState = ':hover'
 export const CSSActiveState = ':active'
 export const CSSFocusState = ':active'
@@ -132,6 +142,7 @@ export const FillWidth = {
 
 
 export const Fill = makeStyle(FillHeight,FillWidth)
+export const FillNoSpacing = makeStyle(Fill,{margin:0,padding:0,border:0,outline:0})
 //endregion
 
 

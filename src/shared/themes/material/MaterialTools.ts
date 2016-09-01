@@ -98,10 +98,8 @@ export function makePalette(hex:string):MaterialColorPalette {
 
 /**
  * Export the base palettes
- *
- * @type {T}
  */
-export const Palettes = _.clone(BasePalettes)
+export const Palettes = _.cloneDeep(BasePalettes) as typeof BasePalettes
 
 export interface MaterialColorSet {
 	hue1?:string
@@ -122,6 +120,7 @@ export interface MaterialTheme {
 	secondary: MaterialColorSet
 	accent: MaterialColorSet
 	warn:MaterialColorSet
+	success:MaterialColorSet
 	background: string
 	text: MaterialTextColors
 	alternateText: MaterialTextColors
@@ -131,7 +130,7 @@ export interface MaterialTheme {
 export function makeHues(palette,colorSet) {
 
 	function colorSetValue(index) {
-		const hue = colorSet[index]
+		const hue = colorSet[index].toLowerCase()
 		return  (['l','a'].includes(hue.charAt(0))) ?
 			palette[hue] :
 			hue
@@ -154,6 +153,25 @@ export function makeTextColors(textColor:string,opacities:ThemeTextOpacity) {
 	},{}) as any
 }
 
+/**
+ * Create a palette theme
+ *
+ * @param primary
+ * @param primaryHues
+ * @param secondary
+ * @param secondaryHues
+ * @param accent
+ * @param accentHues
+ * @param warn
+ * @param warnHues
+ * @param background
+ * @param dark
+ * @param textColor
+ * @param textOpacities
+ * @returns {{palettes: {primary: MaterialColorPalette, secondary: MaterialColorPalette, accent: MaterialColorPalette, warn: MaterialColorPalette, background: string}, primary: {hue1: any, hue2: any, hue3: any, hue4: any}, secondary: {hue1: any, hue2: any, hue3: any, hue4: any}, accent: {hue1: any, hue2: any, hue3: any, hue4: any}, warn: {hue1: any, hue2: any, hue3: any, hue4: any}, background: string, text: any, alternateText: any}}
+ * @param success
+ * @param successHues
+ */
 export function makeTheme(
 	primary:MaterialColorPalette,
 	primaryHues:string[],
@@ -163,6 +181,8 @@ export function makeTheme(
 	accentHues:string[],
 	warn:MaterialColorPalette,
 	warnHues:string[],
+	success:MaterialColorPalette,
+	successHues:string[],
 	background:string,
 
 	dark:boolean,
@@ -182,6 +202,7 @@ export function makeTheme(
 		secondary: makeHues(secondary,secondaryHues),
 		accent: makeHues(accent,accentHues),
 		warn: makeHues(warn,warnHues),
+		success: makeHues(success,successHues),
 		background,
 		text: makeTextColors(textColor,textOpacities),
 		alternateText: makeTextColors(

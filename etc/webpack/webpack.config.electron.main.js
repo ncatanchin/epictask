@@ -57,7 +57,8 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 			...config.plugins,
 			//
 			new webpack.DefinePlugin({
-				'process.env.PROCESS_TYPE': JSON.stringify('main')
+				'process.env.PROCESS_TYPE': JSON.stringify('main'),
+				'Env.isMain': true
 			}),
 			new HtmlWebpackPlugin({
 				filename: "main-entry.html",

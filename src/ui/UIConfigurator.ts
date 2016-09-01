@@ -12,7 +12,7 @@ async function boot() {
 	require('shared/themes/styles')
 
 	// Now the theme manager
-	require("shared/themes/ThemeManager.tsx")
+	require("shared/themes/ThemeManager")
 
 	log.info('Loading app root')
 	const loadAppRoot = () => require('ui/components/root/AppRoot.tsx')

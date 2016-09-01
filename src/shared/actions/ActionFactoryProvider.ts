@@ -34,6 +34,7 @@ if (!ProcessConfig.isType(ProcessType.StateServer,ProcessType.Storybook)) {
  * Load all the action factories
  */
 export function loadActionFactories() {
-	actionCtx = require.context('shared/actions', true, /ActionFactory\.ts$/)
+	actionCtx = require.context('shared/actions/', true, /ActionFactory/)
+	log.info(`Loaded Action Factories`,actionCtx.keys())
 	actionCtx.keys().forEach(actionCtx)
 }

@@ -38,6 +38,14 @@ export function getAppConfig() {
 					tempPath: app.getPath('temp')
 				}
 			}
+		} else if (ProcessConfig.isStorybook()) {
+			appConfig = {
+				paths: {
+					userDataPath: "/tmp",
+					cachePath: "/tmp",
+					tempPath: "/tmp"
+				}
+			}
 		} else {
 			if (!process.env.EPIC_CONFIG)
 				throw new Error('EPIC_CONFIG env var must be specified for all processes except UI,Main and Test')

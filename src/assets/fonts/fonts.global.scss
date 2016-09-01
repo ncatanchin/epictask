@@ -41,7 +41,7 @@ $font-weight-map: (
 	}
 }
 
-@include makeFontFace('AvenirNext','Heavy','Bold','Demibold','UltraLight','Medium','Regular')
+@include makeFontFace('AvenirNext','Heavy','Bold','DemiBold','UltraLight','Medium','Regular')
 @include makeFontFace('Roboto','Black','Bold','Light','Medium','Regular','Thin')
 @include makeFontFace('Orbitron','Black','Bold','Medium','Regular')
 @include makeFontFace('Hind','Bold','Light','Medium','Regular','Semibold')

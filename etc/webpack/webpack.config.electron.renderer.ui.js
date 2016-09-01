@@ -16,6 +16,12 @@ export default function (projectConfig) {
 		output: Object.assign(config.output, isDev ? {
 			publicPath: `http://localhost:${projectConfig.port}/dist/`
 		} : {}),
+		plugins: [
+			...config.plugins,
+			new webpack.DefinePlugin({
+				'Env.isMain': true
+			})
+		],
 
 		target: 'electron-renderer'
 	}

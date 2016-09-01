@@ -53,7 +53,7 @@ export default function (projectConfig) {
 			// TYPESCRIPT
 			{
 				test: /\.ts$/,
-				exclude: [/libs\/.*\/typings/,/typelogger/],
+				exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
 				loaders: [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 			},
 

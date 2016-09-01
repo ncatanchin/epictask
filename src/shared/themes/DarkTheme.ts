@@ -7,7 +7,7 @@ import {makeTheme, Palettes} from './material/MaterialTools'
  * Get colors ref
  */
 const
-	tinycolor = require('tinycolor2'),
+	tc = require('tinycolor2'),
 	{colors:c} = Styles,
 	baseTheme = _.cloneDeep(Styles.darkBaseTheme)
 
@@ -21,11 +21,16 @@ const
 		['l900', '#303030', 'l800', 'l700'],
 		Palettes.purple,
 		['l400', 'l300', 'l200', 'l100'],
-		Palettes.teal,
-		['l400', 'l200', 'l100', 'l50'],
+		// Palettes.teal,
+		// ['l400', 'l200', 'l100', 'l50'],
+		Palettes.lightBlue,
+		['A700', 'A400', 'A200', 'A100'],
 		Palettes.red,
 		['l400', 'l200', 'l100', 'l50'],
+		Palettes.green,
+		['A700', 'A400', 'A200', 'A100'],
 		Palettes.black,
+		
 		true
 	),
 	
@@ -36,6 +41,7 @@ const
 		secondary,
 		accent,
 		warn,
+		success,
 		background,
 		text,
 		alternateText
@@ -82,6 +88,41 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 	progressIndicatorColor: secondary.hue1,
 	
+	/**
+	 * Job Monitor widget
+	 */
+	jobMonitor: {
+		root: {
+			backgroundColor: background,
+			color: text.primary
+		},
+		
+		header: {
+			backgroundColor: primary.hue2,
+			color: text.secondary
+			
+		},
+		
+		logs: {
+			backgroundColor: background,
+			
+			levels: {
+				info: {
+					color: accent.hue1
+				},
+				success: {
+					color: success.hue1
+				},
+				error: {
+					color: warn.hue1
+				}
+			},
+			
+			entry: {
+				
+			}
+		}
+	},
 	
 	/**
 	 * Style the status bar, for jobs, saving, info, etc
@@ -93,14 +134,36 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			backgroundColor: primary.hue3,
 			color: text.primary,
 			':hover': {
-				backgroundColor: primary.hue2
+				backgroundColor: tc(primary.hue3).lighten(5).toRgbString()
 			},
 			
 			
 		},
 		
 		status: {
-			borderColor: background
+			item: {
+				backgroundColor: background
+			}
+		},
+		
+		jobs: {
+			summary: {
+				inProgress: {
+					color: accent.hue1
+				},
+				
+				success: {
+					color: success.hue1
+				},
+				
+				failed: {
+					color: warn.hue1
+				},
+				
+				label: {
+				}
+				
+			}
 		}
 		 
 	},
@@ -223,7 +286,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			},
 
 			hint: {
-				color: tinycolor(primary.hue4).lighten(20).toString(),
+				color: tc(primary.hue4).lighten(20).toString(),
 				backgroundColor: 'transparent',
 				fontWeight: 400
 			},
@@ -322,101 +385,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 
 		},
-
-
 	},
-
-	// dialog: {
-	// 	titleFontSize: fontSize * 2,
-	// 	bodyFontSize:  fontSize * 1.5,
-	// 	bodyColor:     text.primary,
-	//
-	// 	root: {
-	//
-	// 	},
-	//
-	// 	actions: {
-	// 		color:           primary.hue1,
-	// 		backgroundColor: text.primary
-	// 	},
-	// 	action: {
-	// 		titleFontSize: fontSize * 1.3,
-	// 		padding: '1rem 2rem',
-	// 		margin: '0 0 0 1rem'
-	// 	},
-	//
-	// 	body: {
-	// 		color:           primary.hue1,
-	// 		backgroundColor: text.primary
-	// 	},
-	//
-	// 	title: {
-	// 		color:           text.primary,
-	// 		backgroundColor: secondary.hue1,
-	//
-	// 		label: {
-	// 			textTransform: 'uppercase'
-	// 		},
-	//
-	// 		avatar: {
-	// 			avatar: {
-	// 				borderColor: accent.hue1
-	// 			}
-	// 		}
-	// 	},
-	//
-	// 	menu: {
-	// 		color: primary.hue1,
-	// 		fill: primary.hue3,
-	// 		backgroundColor: 'transparent'//,text.primary
-	// 	},
-	//
-	// 	menuItem: {
-	// 		color: primary.hue1,
-	// 		backgroundColor: text.primary,
-	// 		hover: {
-	// 			color: text.primary + ' !important',
-	// 			backgroundColor: accent.hue1 + ' !important'
-	// 		}
-	//
-	// 	},
-	//
-	// 	input: {
-	// 		color: primary.hue1,
-	//
-	// 		hint:  {
-	// 			color:           secondary.hue3,
-	// 			backgroundColor: 'transparent',//text.primary,
-	// 			fontStyle:   'italic',
-	// 			fontWeight: 100
-	//
-	// 		},
-	//
-	//
-	// 		floatingLabel: {
-	// 			color:           primary.hue3,
-	// 			backgroundColor: 'transparent',//backgroundColor: text.secondary
-	// 		},
-	//
-	// 		floatingLabelFocus: {
-	// 			color:           secondary.hue2,
-	// 			backgroundColor: 'transparent',//backgroundColor: text.secondary
-	// 		},
-	// 		underlineDisabled: {
-	// 			borderColor: secondary.hue3,
-	// 			borderBottomWidth: `0.1rem`,
-	// 			transform: 'scaleX(1)'
-	// 		},
-	// 		underlineFocus: {
-	// 			borderColor: secondary.hue2,
-	// 			borderBottomWidth: `0.1rem`
-	// 		}
-	//
-	//
-	// 	},
-	//
-	//
-	// },
 
 	issueEditDialog: {
 
@@ -673,12 +642,12 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		header: {
 			//backgroundColor: accent.hue1,
-			backgroundColor: tinycolor(primary.hue2).setAlpha(0.5).toRgbString(),
+			backgroundColor: tc(primary.hue2).setAlpha(0.5).toRgbString(),
 			color:           text.primary,
 
 			row1: {
 				repo: {
-					color: tinycolor(text.secondary).setAlpha(0.7).toRgbString(),
+					color: tc(text.secondary).setAlpha(0.7).toRgbString(),
 					':hover': {
 						color: secondary.hue1
 					}
@@ -698,9 +667,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 							control: {
 								button: {
 									background: 'transparent',
-									color: tinycolor(text.primary).setAlpha(0.8).toRgbString(),
+									color: tc(text.primary).setAlpha(0.8).toRgbString(),
 									':hover': {
-										color: tinycolor(text.primary).setAlpha(1).toRgbString(),
+										color: tc(text.primary).setAlpha(1).toRgbString(),
 									}
 								},
 								
@@ -761,9 +730,15 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 	toast:       {
 		bgInfo:  {
-			backgroundColor: secondary.hue1
+			backgroundColor: accent.hue1
 		},
 		fgInfo:  {
+			color: text.primary
+		},
+		bgSuccess:  {
+			backgroundColor: success.hue1
+		},
+		fgSuccess:  {
 			color: text.primary
 		},
 		bgError: {
@@ -772,10 +747,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		fgError: {
 			color: text.primary
 		},
-
+		
 		root: {
 			fontFamily: fontFamily,
-
+			
 		},
 
 		body: {
@@ -786,29 +761,41 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			fontFamily: fontFamily
 		},
 
-		toastContent: {
-			height: 48
+		content: {
+			backgroundColor: primary.hue2
 		},
 
 		action: {
-			height: 48,
-		},
-
-		actionInfo: {
-			backgroundColor: secondary.hue1,
-			color:           text.primary,
-			':hover':        {
-				backgroundColor: secondary.hue2
+			
+			
+			info: {
+				backgroundColor: secondary.hue1,
+				color:           text.primary,
+				':hover':        {
+					backgroundColor: secondary.hue2
+				}
+			},
+			
+			success: {
+				backgroundColor: secondary.hue1,
+				color:           success.hue1,
+				':hover':        {
+					color:           secondary.hue2,
+					backgroundColor: success.hue1
+				}
+			},
+			
+			error: {
+				backgroundColor: primary.hue1,
+				color:           text.secondary,
+				':hover':        {
+					color:           text.primary,
+					backgroundColor: warn.hue1
+				}
 			}
 		},
 
-		actionError: {
-			backgroundColor: warn.hue1,
-			color:           text.primary,
-			':hover':        {
-				backgroundColor: warn.hue2
-			}
-		}
+		
 	},
 
 	palette: {

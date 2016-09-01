@@ -8,6 +8,25 @@ export enum JobType {
 }
 
 
+const JobDescriptions = {
+	[JobType.GetUserRepos]: (job:IJob) => "Getting user repositories",
+	[JobType.SyncEnabledRepos]: (job:IJob) => "Synchronizing activated repo activity",
+	[JobType.RepoSync]: (job:IJob) => `Synchronized repo ${job.args.repo.full_name}`
+}
+
+/**
+ * Get a job description
+ *
+ * @param job
+ *
+ * @return {string} describing the job
+ */
+export function getJobDescription(job:IJob):string {
+	const descFn = JobDescriptions[job.type]
+	assert(descFn,`Unable to find job description function for type: ${job.type}`)
+	
+	return descFn(job)
+}
 
 /**
  * Job Statuses
@@ -114,6 +133,10 @@ export interface IJobStatusDetail {
 	
 	progress?:number
 	
+	/**
+	 * Completion ETA in millis since EPOCH
+	 */
+	epochETA?:number
 	status:JobStatus
 	
 	updatedAt:number

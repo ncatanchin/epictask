@@ -63,7 +63,11 @@ function notifyListeners() {
 export function setTheme(newTheme) {
 	themeName = newTheme.name
 	theme = newTheme
-
+	
+	// Assign app props to the body & to html
+	Object.assign(document.getElementsByTagName('html')[0].style,theme.app)
+	Object.assign(document.getElementsByTagName('body')[0].style,theme.app)
+	
 	notifyListeners()
 
 }
@@ -195,15 +199,15 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 		/**
 		 * Create a new new theme state
 		 */
-		getNewState = () => {
+		getNewState = (props) => {
 			const newState = {
 				theme: getTheme()
 			}
 
-			const themeParts = themeKeys
-				.map(themeKey => _.get(getTheme(),themeKey,{}))
-
-			const styles = mergeStyles(baseStyles,...themeParts)
+			const
+				themeParts = themeKeys
+					.map(themeKey => _.get(getTheme(),themeKey,{})),
+				styles = mergeStyles(baseStyles,...themeParts,props.styles)
 
 			if (baseStyles) {
 				assign(newState,{styles})
@@ -219,18 +223,35 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 		 * as well as by componentWillMount to
 		 * create initial styles
 		 */
-		updateTheme = () => {
+		updateTheme = (props = this.props) => {
 			if (this.state && this.state.theme === getTheme())
 				return
 
-			this.setState(this.getNewState(), () => this.forceUpdate())
+			this.setState(this.getNewState(props), () => this.forceUpdate())
 		}
-
+		
+		/**
+		 * Update the theme on mount and subscribe
+		 */
 		componentWillMount() {
 			this.updateTheme()
 			this.unsubscribe = addThemeListener(this.updateTheme)
 		}
-
+		
+		/**
+		 * If styles prop is passed and it has changed
+		 * then update state
+		 *
+		 * @param nextProps
+		 */
+		componentWillReceiveProps(nextProps) {
+			if (this.props.styles !== nextProps.styles)
+				this.updateTheme(nextProps)
+		}
+		
+		/**
+		 * Unsubscribe from theme updates
+		 */
 		componentWillUnmount() {
 			if (this.unsubscribe) {
 				this.unsubscribe()
@@ -240,7 +261,7 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 
 		render() {
 			const ThemedComponent = Component as any
-			return <ThemedComponent {...this.props} {...this.state} />
+			return <ThemedComponent {..._.omit(this.props,'styles')} {...this.state} />
 		}
 	} as any
 

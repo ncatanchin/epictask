@@ -4,6 +4,7 @@ import * as ReactDOMGlobal from 'react-dom'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
+import * as JQueryGlobal from 'jquery'
 import * as Immutable from 'immutable'
 
 
@@ -44,6 +45,11 @@ declare global {
 	var ReactDOM:typeof ReactDOMGlobal
 	var Notification:any
 	var logError:typeof logErrorGlobal
+	var $:typeof JQueryGlobal
+	
+	interface Window {
+		$:typeof JQueryGlobal
+	}
 }
 
 const g = global as any
@@ -52,7 +58,8 @@ Object.assign(g,{
 	CSSModules: require('react-css-modules'),
 	React: ReactGlobal,
 	ReactDOM: ReactDOMGlobal,
-	logError: logErrorGlobal
+	logError: logErrorGlobal,
+	$: window.$ || JQueryGlobal
 })
 
 

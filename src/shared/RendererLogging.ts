@@ -2,25 +2,24 @@
  * Configure the local logger
  */
 const TypeLogger = require('typelogger')
-const remote = require('electron').remote
-const RemoteLoggerFactory = remote.getGlobal('getLogger')
+const remote = !ProcessConfig.isStorybook() && require('electron').remote
+const RemoteLoggerFactory = !ProcessConfig.isStorybook() && remote.getGlobal('getLogger')
 
 
 /**
  * Local log factory that creates both local and remote loggers
  *
  * @param name
- * @returns {ILoggerFactory}
  */
 function RendererLoggerFactory(name) {
 
-	const remoteLogger = RemoteLoggerFactory(name)
+	const remoteLogger = RemoteLoggerFactory && RemoteLoggerFactory(name)
 	const localLogger = TypeLogger.create(name)
 
 	return ['debug','warn','info','error','trace'].reduce((newLogger,nextLevel) => {
 		newLogger[nextLevel] = function(...args) {
 			localLogger[nextLevel](...args)
-			if (['warn','error'].includes(nextLevel))
+			if (remoteLogger && ['warn','error'].includes(nextLevel))
 				remoteLogger[nextLevel](...args)
 		}
 

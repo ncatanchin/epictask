@@ -38,12 +38,18 @@ export class ToastService extends BaseService {
 			this.unsubscribe = null
 		}
 
-		Object.keys(this.pendingTimers)
+		Object
+			.keys(this.pendingTimers)
 			.forEach(timerId => clearTimeout(this[timerId]))
 
 		this.uiActions.clearMessages()
 	}
-
+	
+	/**
+	 * Handles changes triggered by observing
+	 *
+	 * @param newMessages
+	 */
 	onMessagesChanged = (newMessages) => {
 
 		newMessages.forEach(msg => {
@@ -51,8 +57,9 @@ export class ToastService extends BaseService {
 			msg = _.toJS(msg)
 
 			const
-				clearMessage = () => {
-					this.uiActions.removeMessage(msg.id)
+				stopFloating = () => {
+					msg.floatVisible = false
+					this.uiActions.updateMessage(msg)
 					delete this.pendingTimers[msg.id]
 				},
 				isError = msg.type === ToastMessageType.Error
@@ -68,7 +75,7 @@ export class ToastService extends BaseService {
 			}
 
 			// Add the remove timer
-			this.pendingTimers[msg.id] = setTimeout(clearMessage, isError ? 60000 : 5000)
+			this.pendingTimers[msg.id] = setTimeout(stopFloating, isError ? 60000 : 5000)
 		})
 	}
 

@@ -25,7 +25,7 @@ const baseStyles = createStyles({
 		outline: 0,
 		width: 'auto',
 		textTransform: 'uppercase',
-		fontSize: themeFontSize(1.3)
+		// fontSize: themeFontSize(1.3)
 	}]
 })
 //endrgion
@@ -50,8 +50,8 @@ export interface IButtonProps extends React.HTMLAttributes {
  * @class Button
  * @constructor
  **/
-@Radium
 @ThemedStyles(baseStyles,'button')
+@Radium
 export class Button extends React.Component<IButtonProps,void> {
 
 	static defaultProps = {

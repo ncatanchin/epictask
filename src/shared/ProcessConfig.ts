@@ -52,6 +52,14 @@ export namespace ProcessConfigGlobal {
 		return ProcessType[processType]
 	}
 	
+	/**
+	 * Is the current process type storybook
+	 * @returns {boolean}
+	 */
+	export function isStorybook() {
+		return isType(ProcessType.Storybook)
+	}
+	
 }
 
 

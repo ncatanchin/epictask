@@ -31,7 +31,7 @@ import * as LodashGlobal from 'lodash'
 const isDev = process.env.NODE_ENV === 'development'
 const isRemote = typeof process.env.REMOTE !== 'undefined'
 const isOSX = process.platform === 'darwin'
-const isRenderer = process.type === 'renderer'
+const isRenderer = typeof window !== 'undefined' || process.type === 'renderer'
 
 
 const envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))

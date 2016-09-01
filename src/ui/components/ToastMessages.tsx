@@ -1,12 +1,7 @@
-/**
- * Created by jglanz on 6/7/16.
- */
 
 //region Imports
 import * as React from 'react'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-
-import {List} from 'immutable'
 import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
@@ -15,10 +10,11 @@ import {Icon, Button} from './common'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {PureRender} from 'ui/components/common/PureRender'
-import {Themed} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createStructuredSelector} from 'reselect'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {ToastMessage} from "ui/components/ToastMessage"
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
@@ -37,17 +33,17 @@ const uiActions = Container.get(UIActionFactory)
 
 
 //region Styles
-const styles = {
-	root:            makeStyle(makeTransition(), PositionAbsolute, {
+const baseStyles = createStyles({
+	root:            [makeTransition(), PositionAbsolute, {
 		backgroundColor: 'transparent',
 		right:           0,
 		bottom:          0,
 		left:            'auto',
 		padding:         '2rem',
 		zIndex: 99999
-	}),
-	transitionGroup: makeStyle(makeTransition(), FlexColumn, FlexAlignEnd, {}),
-	toastMessagesTransition: {
+	}],
+	transitionGroup: [makeTransition(), FlexColumn, FlexAlignEnd, {}],
+	toastMessagesTransition: [{
 		'.toastMessages-enter': {
 			height: 0,
 			opacity: .01
@@ -64,43 +60,17 @@ const styles = {
 			height: 0,
 			opacity: .01
 		}
-	},
-	body:         makeStyle(OverflowHidden, Ellipsis, PositionRelative, {
+	}],
+	
+	body:         [OverflowHidden, Ellipsis, PositionRelative, {
 		backgroundColor: 'transparent',
 		display:         'block'
-	}),
+	}],
 
-	toast:        makeStyle(makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd, {
-		backgroundColor: 'transparent',
-		margin:          '0.5rem',
-		width:           '100%',
-		maxWidth:        '100%',
-		maxHeight:       '100%',
-		animationDuration: '1s',
-		animationIterationCount: '2'
+	
+	
 
-	}),
-	toastContent: makeStyle(FlexRowCenter, {
-		borderRadius: '0.2rem',
-		maxWidth:     '100%',
-		maxHeight:    '100%',
-		padding:      '0 0 0',
-
-	}),
-	icon:         makeStyle({
-		display: 'block',
-		padding: '0 1rem'
-	}),
-	text:         makeStyle(FlexScale, Ellipsis, {
-		display: 'block',
-		padding: '0 1rem 0 0'
-	}),
-	action:       makeStyle(FlexRowCenter, FlexAuto, {
-		textTransform: 'uppercase',
-		padding:       '0 1rem'
-	})
-
-}
+})
 //endregion
 
 
@@ -110,6 +80,7 @@ const styles = {
  */
 export interface IToastMessagesProps {
 	theme?:any
+	styles?:any
 	messages?:IToastMessage[]
 }
 //endregion
@@ -180,9 +151,14 @@ function processNotifications(newMessages:IToastMessage[]) {
  **/
 
 @connect(createStructuredSelector({
-	messages: (state):IToastMessage[] => uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg))
+	messages: (state):IToastMessage[] => uiStateSelector(state)
+		.messages
+		.filter(it => it.floatVisible)
+		.map(msg => _.toJS(msg))
+		.toArray()
 },createDeepEqualSelector))
-@Themed
+@ThemedStyles(baseStyles,'toast')
+@Radium
 @PureRender
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
@@ -195,56 +171,6 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	}
 
 	/**
-	 * Render an individual message
-	 *
-	 * @param msg
-	 * @returns {any}
-	 * @param props
-	 */
-	renderMessageContent(msg,theme,s) {
-
-		const
-			isError = msg.type === ToastMessageType.Error,
-			isInfo = msg.type === ToastMessageType.Info
-
-
-
-
-		// Create an action callout if required
-		const [bg,fg,actionColors] = (isError) ?
-			[s.bgError, s.fgError, s.actionError] :
-			[s.bgInfo, s.fgInfo, s.actionInfo]
-
-		const iconStyle = makeStyle(s.icon,fg)
-
-
-		// if (!msg.id) {
-		// 	log.error(`msg id is null`,msg)
-		// 	return null
-		// }
-
-		const icon = (isError || isInfo) ?
-			<Icon style={iconStyle}>{isError ? 'error_outline' : 'info_outline'}</Icon>
-			: null
-
-		log.info(`Toast message with id: ${msg.id}`)
-		return <div key={msg.id}
-		            className='toastMessage animated bounce'
-		            style={s.toast}>
-
-			<div style={makeStyle(s.toastContent,bg)}>
-				{icon}
-
-				<span style={makeStyle(s.text,fg)}>{msg.content}</span>
-				{isError && <Button style={makeStyle(s.action,actionColors)}
-				                    onClick={() => uiActions.removeMessage(msg.id)}>
-					Acknowledge
-				</Button>}
-			</div>
-		</div>
-	}
-
-	/**
 	 * Render the snackbar container
 	 * and child messages
 	 *
@@ -252,16 +178,20 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	 */
 	render() {
 		log.info('new toast render')
-		let {messages, theme} = this.props,
-			{palette} = theme
+		let
+			{messages, styles,theme} = this.props
+			
 
 		messages = _.toJS(messages)
-		const s = mergeStyles(styles, theme.toast)
 
 
-		return <div style={s.root}>
+
+		return <div style={styles.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
-			       rules={mergeStyles({},s.transitionGroup,s.toastMessagesTransition)}/>
+			       rules={_.merge(
+			       	styles.transitionGroup,
+			       	styles.toastMessagesTransition)}
+			/>
 
 			<CSSTransitionGroup
 				className='toastMessageTransitionGroup'
@@ -271,8 +201,9 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 
-				{messages.filter(msg => !_.isNil(msg.id))
-					.map(msg => this.renderMessageContent(msg,theme,s))}
+				{messages
+					.filter(msg => !_.isNil(msg.id))
+					.map(msg => <ToastMessage msg={msg} animate/>)}
 			</CSSTransitionGroup>
 
 

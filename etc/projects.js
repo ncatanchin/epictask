@@ -1,9 +1,11 @@
-import {makeTsConfigBase,makeTsConfig} from './tools/ts-config'
-import makeAwesomeOptions from './awesome-typescript-loader-options'
+require('./tools/global-env')
+
+const
+	{makeTsConfigBase,makeTsConfig} = require('./tools/ts-config'),
+	makeAwesomeOptions = require('./awesome-typescript-loader-options').default
 
 const
 	{
-		Deferred,
 		TargetType,
 		env
 	} = global,

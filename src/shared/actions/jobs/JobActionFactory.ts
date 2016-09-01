@@ -4,7 +4,7 @@ import {ActionFactory, ActionMessage, ActionReducer} from 'typedux'
 import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
 import {IJob, JobType, JobStatus, IJobSchedule} from 'shared/actions/jobs/JobTypes'
-import {JobKey} from "shared/Constants"
+import {JobKey, JobsMaxCompleted} from "shared/Constants"
 import {Provided} from 'shared/util/Decorations'
 import {cloneObject} from "shared/util/ObjectUtil"
 
@@ -30,12 +30,56 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		return JobKey;
 	}
 	
-	private updateDetail = (jobState:JobState,detail:IJobStatusDetail) => jobState
+	/**
+	 * Internal prune to use in multiple places
+	 *
+	 * @param jobState
+	 * @returns {Map<string, List<any>>}
+	 */
+	private pruneMutating = (jobState:JobState) => {
+		let details = _.orderBy(jobState.details.toArray(),['updatedAt'],['desc'])
+		
+		let index:number
+		
+		while ((index = details.findIndex(it => it.status >= JobStatus.Completed)) > -1 &&
+		details.length > JobsMaxCompleted) {
+			
+			details.splice(index,1)
+		}
+		
+		
+		let allJobs = jobState.all
+		
+		const
+			jobIds = details.map(it => it.id),
+			allJobIds = allJobs.keySeq().toArray()
+		
+		// filter removed or missing jobs
+		allJobIds
+			.filter(it => !jobIds.includes(it))
+			.forEach(it => allJobs = allJobs.remove(it))
+		
+		
+		return jobState.set('details',List().push(...details)).set('all', allJobs)
+		
+	}
+	
+	/**
+	 * Prune the jobs list
+	 */
+	@ActionReducer()
+	prune() {
+		return (jobStateIM:JobState) => jobStateIM
+			.withMutations(this.pruneMutating)
+	}
+	
+	private updateDetail = (jobState:JobState,detail:IJobStatusDetail) => this.pruneMutating(jobState
 		.update('details', (details: List<IJobStatusDetail>) => {
 			if (!details || !details.push)
 				details = List<IJobStatusDetail>()
 			
 			// Set the updated timestamp
+			detail = _.cloneDeep(detail)
 			detail.updatedAt = Date.now()
 			
 			const
@@ -49,8 +93,19 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 			return index === -1 ?
 				details.push(detail) :
 				details.set(index, detail)
-		})
+		}) as any)
 	
+	
+	/**
+	 * Clear all job info - really for testing only
+	 */
+	@ActionReducer()
+	clear() {
+		return (jobStateIM:JobState) => jobStateIM
+			.withMutations(jobState => jobState
+				.update('all', all => all.clear())
+				.update('details', details => details.clear()))
+	}
 	
 	/**
 	 * Set job status detail
@@ -105,7 +160,7 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 */
 	@ActionReducer()
 	update(job: IJob, detail:IJobStatusDetail) {
-		return (jobStateIM: JobState) => jobStateIM.withMutations((jobState:JobState) => {
+		return (jobStateIM: JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
 			// Update Job first
 			const allJobs:TJobIMap = jobState.all
 			
@@ -119,8 +174,35 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 			
 			return this.updateDetail(jobState,detail)
 			
-		})
+		}) as any)
 	}
+	
+	/**
+	 * Remove an existing job and its status detail from the state
+	 *
+	 * @param jobId
+	 */
+	@ActionReducer()
+	remove(jobId:string) {
+		return (jobStateIM: JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
+			
+			// Remove job first
+			jobState = jobState.update('all',(allJobs:Map<string,IJob>) => allJobs.remove(jobId)) as any
+			
+			// Now remove detail
+			jobState = jobState.update('details',(details:List<IJobStatusDetail>) => {
+				const index = details.findIndex(detail => detail.id === jobId)
+				if (index > -1)
+					details = details.delete(index)
+				
+				return details
+			}) as any
+			
+			return jobState
+		}) as any)
+	}
+	
+	
 	
 	/**
 	 * Create a new job
@@ -152,9 +234,11 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 			updatedAt: Date.now(),
 			progress: 0,
 			logs: []
-		})
+		}) as IJobStatusDetail
 		
-		return this.update(job,detail)
+		this.update(job,detail)
+		
+		return {job,detail}
 			
 		
 	}

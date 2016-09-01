@@ -9,14 +9,15 @@ export function getReducers():ILeafReducer<any,any>[] {
 		return reducers
 
 	// TODO - LOAD FROM SERVICE REGISTRY
-	ctx = require.context('shared/actions',true,/Reducer\.ts$/)
-
+	//ctx = require.context('../actions/',true,/Reducer/)
+	ctx = require.context('../actions/',true,/(Reducer\.ts$|Reducer$)/)
+	log.info(`Loaded Reducers`,ctx.keys())
 	const mods = ctx.keys().map(ctx)
 
 	reducers = []
 	mods.forEach(mod => {
 		for (let key of Object.keys(mod)) {
-			if (_.endsWith(key,'Reducer')) {
+			if (key.indexOf('Reducer') > -1) {
 				const reducerClazz = mod[key]
 				reducers.push(new reducerClazz())
 			}

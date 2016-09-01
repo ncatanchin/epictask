@@ -31,6 +31,7 @@ function makeClientDispatchHandler(store) {
 			if (actionReg.options.isReducer) {
 				const actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any
 				
+				
 				// Create duplicated message
 				const msg = actions.newMessage(leaf,actionReg.type,[],args,{
 					source:{

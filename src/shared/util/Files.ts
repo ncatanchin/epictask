@@ -1,8 +1,8 @@
 import {getAppConfig} from "shared/AppConfig"
 const log = getLogger(__filename)
 
-const uuid = require('node-uuid')
-const mkdirp = require('mkdirp')
+const uuid = !ProcessConfig.isStorybook() && require('node-uuid')
+const mkdirp = !ProcessConfig.isStorybook() && require('mkdirp')
 
 const fs = require('fs')
 const path = require('path')
@@ -24,14 +24,18 @@ function getPaths() {
 	}
 	
 	const {userDataPath,cachePath,tempPath} = getAppConfig().paths
-	return [userDataPath,cachePath,tempPath].map(ensureDir)
+	
+	return (ProcessConfig.isStorybook()) ?
+		[userDataPath,cachePath,tempPath] :
+		[userDataPath,cachePath,tempPath].map(ensureDir)
 	
 }
 
 const [userDataPath,cachePath,tempPath] = getPaths()
 
 log.info(`Using cache path: ${cachePath}`)
-mkdirp.sync(cachePath)
+if (!ProcessConfig.isStorybook())
+	mkdirp.sync(cachePath)
 
 
 export function isUrl(testUrl:string) {
