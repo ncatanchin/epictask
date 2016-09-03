@@ -78,7 +78,8 @@ export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
 
-export function makePaddingRem(top = 0, right = 0, bottom = 0, left = 0) {
+//noinspection JSSuspiciousNameCombination
+export function makePaddingRem(top = 0, right = top, bottom = top, left = right) {
 	return {
 		paddingTop: rem(top),
 		paddingRight: rem(right),

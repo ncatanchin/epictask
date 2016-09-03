@@ -7,6 +7,7 @@ import * as $ from 'jquery'
 const log = getLogger(__filename)
 const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
+import {mergeStyles} from "shared/themes/styles/CommonStyles"
 
 /**
  * Define our dark palette

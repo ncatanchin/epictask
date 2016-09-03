@@ -50,17 +50,10 @@ export default function (projectConfig) {
 		// Create all required loaders
 		const newLoaders = [
 
-			// TYPESCRIPT
+			// TypeScript
 			{
-				test: /\.ts$/,
+				test: /\.tsx?$/,
 				exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-				loaders: [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
-			},
-
-			// TSX
-			{
-				test: /\.tsx$/,
-				exclude: /libs\/.*\/typings/,
 				loaders: (() => {
 					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 					if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)

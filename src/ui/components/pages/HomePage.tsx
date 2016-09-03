@@ -5,7 +5,6 @@ import {createStructuredSelector} from 'reselect'
 import {RepoPanel,IssuesPanel} from 'components'
 import {Page} from './Page'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
-import {AppStateType} from 'shared/AppStateType'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
 import {PureRender} from 'components/common'
@@ -13,10 +12,11 @@ import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 
-const Resizable = require('react-component-resizable')
+const
+	Resizable = require('react-component-resizable'),
 
-const log = getLogger(__filename)
-const appActions = new AppActionFactory()
+	log = getLogger(__filename)
+
 
 const transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow'])
 
@@ -54,7 +54,9 @@ const mapStateToProps = createStructuredSelector({
 @Themed
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
-
+	
+	appActions = Container.get(AppActionFactory)
+	
 	componentWillMount = () => this.setState(this.getNewState())
 
 	getNewState = () => ({width:window.innerWidth})

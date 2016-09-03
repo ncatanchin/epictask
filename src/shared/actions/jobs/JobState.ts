@@ -14,6 +14,7 @@ import {IJob, IJobSchedule, IJobStatusDetail} from "shared/actions/jobs/JobTypes
 const log = getLogger(__filename)
 
 
+
 /**
  * JobStateRecord, holds available properties
  *
@@ -23,8 +24,9 @@ export const JobStateRecord = Record({
 	details:List<IJobStatusDetail>(),
 	all:Map<string,IJob>(),
 	error:null,
-	schedules:Map<string,IJobSchedule>()
-
+	schedules:Map<string,IJobSchedule>(),
+	selectedId: null
+	
 })
 
 
@@ -60,7 +62,10 @@ export class JobState extends JobStateRecord {
 	details:List<IJobStatusDetail>
 	schedules:Map<string,IJobSchedule>
 	error:Error
-
-
+	
+	/**
+	 * Selected Job Id
+	 */
+	selectedId:string
 }
 

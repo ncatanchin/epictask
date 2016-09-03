@@ -17,7 +17,7 @@
     "compile-watch": "./etc/scripts/compile-watch.sh",
     "clean-electron": "./etc/scripts/clean-electron.sh",
     "build-material-ui": "./etc/scripts/build-material-ui.sh",
-    "storybook": "start-storybook -s ./ -p 6006",
+    "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
     "build-storybook": "build-storybook"
   },
   "packaging": {
@@ -143,6 +143,7 @@
     "remotedev-server": "^0.1.2",
     "run-sequence": "^1.1.5",
     "sass-loader": "^4.0.0",
+    "script-loader": "^0.7.0",
     "semver": "^5.1.0",
     "shelljs": "^0.7.0",
     "simple-assign": "^0.1.0",
@@ -186,6 +187,7 @@
     "form-data": "^1.0.0-rc4",
     "free-style": "^1.2.2",
     "glob": "^7.0.3",
+    "gsap": "^1.19.0",
     "highlight.js": "^9.4.0",
     "immutable": "^3.8.1",
     "inline-style-prefixer": "^2.0.1",
@@ -228,7 +230,6 @@
     "react-valid-props": "^1.0.2",
     "recompose": "^0.20.2",
     "redux": "^3.5.2",
-    "redux-electron-store": "^0.3.10",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.1.0",
     "reflect-metadata": "^0.1.3",

@@ -2,7 +2,6 @@ import {List,Record,Map} from 'immutable'
 
 import {IToastMessage} from 'shared/models/Toast'
 import {User} from 'shared/models/User'
-import {AppStateType} from 'shared/AppStateType'
 import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
 
@@ -30,15 +29,12 @@ export type TDialogMap = Map<string,boolean>
 
 
 export const UIStateRecord = Record({
-
-
 	dialogs: Map<string,boolean>(),
 
 	messages: List<IToastMessage>(),
 	ready: false,
 
 	repoPanelOpen: true,
-
 	user: null
 })
 
@@ -64,6 +60,8 @@ export class UIState extends UIStateRecord implements State {
 	messages:List<IToastMessage>
 
 	repoPanelOpen:boolean
+	
+	
 
 
 }

@@ -1,17 +1,28 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {StatusBar} from 'ui/components/root/StatusBar'
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
-import {JobType, IJob, JobStatus} from "shared/actions/jobs/JobTypes"
+import {JobType, IJob, JobStatus, JobLogLevel} from "shared/actions/jobs/JobTypes"
 import {Button} from "components/common"
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
-import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "shared/Toaster"
-import {JobMonitor} from "ui/components/root/JobMonitor"
+import {JobMonitor} from "ui/components/jobs/JobMonitor"
+import * as uuid from 'node-uuid'
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
+
+function makeJobWithStatus(type:JobType,status:JobStatus = JobStatus.Created,args:any = null,progress = 0) {
+	const
+		jobActions = Container.get(JobActionFactory),
+		{job,detail} = jobActions.create(type,null,args)
+	
+	job.status = detail.status = status
+	detail.progress = progress
+	jobActions.update(job,detail)
+	
+	return {job,detail}
+}
 
 // logger
 const log = getLogger(__filename)
@@ -21,25 +32,47 @@ storiesOf('Job Monitor',module)
 	
 	// JobMonitor - no logs
 	.add('Without logs', () => {
-		const
-			jobActions = Container.get(JobActionFactory),
-			{job:{id}} = jobActions.create(JobType.GetUserRepos)
 		
-		return <JobMonitor id={id} />
+		const jobActions = Container.get(JobActionFactory)
+		
+		// Clear existing jobs first
+		jobActions.clear()
+		
+		for (let i = 0; i < 4;i++) {
+			makeJobWithStatus(JobType.GetUserRepos, JobStatus.Completed)
+			makeJobWithStatus(JobType.SyncEnabledRepos, JobStatus.Failed)
+			makeJobWithStatus(JobType.RepoSync, JobStatus.InProgress, {
+				repo: {
+					full_name: 'fake-repo/pringles'
+				}
+			}, 0.35)
+			makeJobWithStatus(JobType.GetUserRepos)
+		}
+		return <JobMonitor />
 	})
 	
 	// JobMonitor - logs
 	.add('With logs', () => {
-		const
-			jobActions = Container.get(JobActionFactory),
-			{job,detail} = jobActions.create(JobType.GetUserRepos)
+		const jobActions = Container.get(JobActionFactory)
 		
+		// Clear existing jobs first
+		jobActions.clear()
 		
-		job.status = detail.status = JobStatus.Completed
-		detail.progress = 1
-		jobActions.update(job,detail)
+		const {job} = makeJobWithStatus(JobType.RepoSync, JobStatus.InProgress, {
+			repo: {
+				full_name: 'fake-repo/pringles'
+			}
+		}, 0.35)
 		
-		return <JobMonitor id={job.id} />
+		for (let i = 0; i < 25;i++) {
+			jobActions.log(job.id, uuid.v4(), JobLogLevel.INFO, 'Message #1', Date.now())
+			jobActions.log(job.id, uuid.v4(), JobLogLevel.WARN, 'Be scared - very very scared', Date.now())
+			jobActions.log(job.id, uuid.v4(), JobLogLevel.ERROR, 'Bad bad things are happening', Date.now(), new Error('World exploded'))
+		}
+		
+		jobActions.setSelectedId(job.id)
+		
+		return <JobMonitor />
 	})
 	
 	

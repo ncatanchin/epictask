@@ -10,7 +10,9 @@ import {cloneObject} from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
 
-
+/**
+ * Immutable job map
+ */
 export type TJobIMap = Map<string,IJob>
 
 /**
@@ -241,6 +243,17 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		return {job,detail}
 			
 		
+	}
+	
+	/**
+	 * Set the selected job id
+	 *
+	 * @param id
+	 * @returns {(jobState:JobState)=>Map<string, string>}
+	 */
+	@ActionReducer()
+	setSelectedId(id:string) {
+		return (jobState:JobState) => jobState.set('selectedId',id)
 	}
 	
 	/**

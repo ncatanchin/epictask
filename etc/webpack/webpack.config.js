@@ -145,7 +145,7 @@ export default function (projectConfig) {
 				'node_modules'
 			),
 			
-			extensions: ['', '.ts', '.tsx', '.webpack.js', '.web.js', '.js'],
+			extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
 			
 		},

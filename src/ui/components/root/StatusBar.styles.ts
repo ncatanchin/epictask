@@ -106,64 +106,7 @@ export default createStyles({
 	
 	// Jobs Status Item
 	jobs: [{
-		summary: [
-			makeTransition(['height','width','flex-grow','flex-shrink','flex-basis']),
-			FlexColumnCenter,
-			Ellipsis,
-			{
-				minWidth: rem(24),
-				padding: '0 0.5rem',
-				
-				
-				// Job Description
-				label: [makeTransition(['height','width','flex-grow','flex-shrink','flex-basis']),FlexRowCenter,FillWidth,{
-					text: [Ellipsis,{
-						flex: '1 1 auto'
-					}],
-					time: [FlexAuto],
-					icon: [{
-						
-					}],
-					progress: [FlexAuto, {
-						completed: {
-							fontSize: rem(1.1),
-						},
-						paddingLeft: rem(1)
-					}]
-					
-				}],
-				
-				// Job Progress Bar
-				progressBar: [
-					//makeTransition(['opacity','padding-right','padding-left','min-height','max-height','height','width','flex-grow','flex-shrink','flex-basis']),
-					makeTransition(),
-					OverflowHidden,
-					makePaddingRem(0.3,0,0.3,0),
-					{
-						flexGrow: 1,
-						flexShrink: 0,
-						flexBasis: rem(5),
-						minHeight: 'auto',
-						maxHeight: 'auto',
-						minWidth: rem(5),
-						height: rem(0.4),
-						opacity: 1,
-						
-						hidden: [makePaddingRem(),{
-							minWidth: 0,
-							flexGrow: 0,
-							flexShrink: 0,
-							flexBasis: 0,
-							margin: 0,
-							opacity: 0,
-							height: 0,
-							maxHeight: 0,
-							minHeight: 0
-						}]
-					}
-				]
-			}
-		]
+		
 	}]
 	
 }) //as IStatusBarStyles

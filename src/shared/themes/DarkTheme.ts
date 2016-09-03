@@ -91,10 +91,44 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	/**
 	 * Job Monitor widget
 	 */
-	jobMonitor: {
+	jobs: {
 		root: {
-			backgroundColor: background,
+			backgroundColor: primary.hue1,
 			color: text.primary
+		},
+		
+		list: {
+			backgroundColor: primary.hue2,
+			
+			item: {
+				selected: {
+					backgroundColor: primary.hue3,
+				}
+			},
+			
+			divider: {
+				borderBottomColor: primary.hue3
+			}
+		},
+		
+		item: {
+			inProgress: {
+				color: accent.hue1
+			},
+			
+			success: {
+				color: success.hue1
+			},
+			
+			failed: {
+				color: warn.hue1
+			},
+			
+			label: {
+				time: {
+					color: text.secondary
+				}
+			}
 		},
 		
 		header: {
@@ -108,6 +142,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			
 			levels: {
 				info: {
+					color: success.hue1
+				},
+				warn: {
 					color: accent.hue1
 				},
 				success: {
@@ -119,7 +156,17 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			},
 			
 			entry: {
+				':hover': {
+					backgroundColor: primary.hue1,
+				},
 				
+				time: {
+					color: text.secondary
+				},
+				
+				divider: {
+					borderBottomColor: primary.hue1
+				}
 			}
 		}
 	},
@@ -146,25 +193,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			}
 		},
 		
-		jobs: {
-			summary: {
-				inProgress: {
-					color: accent.hue1
-				},
-				
-				success: {
-					color: success.hue1
-				},
-				
-				failed: {
-					color: warn.hue1
-				},
-				
-				label: {
-				}
-				
-			}
-		}
+		
 		 
 	},
 	

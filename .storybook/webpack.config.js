@@ -34,7 +34,7 @@ module.exports = function (storybookBaseConfig, configType) {
 	// Resolve config - Alias & Extensions are easy
 	Object.assign(resolveConfig.alias = resolveConfig.alias || {}, epicConfig.resolve.alias)
 	resolveConfig.extensions = resolveConfig.extensions || []
-	resolveConfig.extensions.push(...epicConfig.resolve.extensions)// = _.uniq(epicConfig.resolve.extensions.concat(resolveConfig.extensions))
+	resolveConfig.extensions.splice(0,0,...epicConfig.resolve.extensions)// = _.uniq(epicConfig.resolve.extensions.concat(resolveConfig.extensions))
 	
 	console.log('Existing root',resolveConfig.root)
 	resolveConfig.modules = resolveConfig.moduleDirectories =
@@ -55,17 +55,17 @@ module.exports = function (storybookBaseConfig, configType) {
 			loader: 'json'
 		},
 		// TYPESCRIPT
-		{
-			test: /\.ts$/,
-			exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-			loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`]
-		},
+		// {
+		// 	test: /\.ts$/,
+		// 	exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
+		// 	loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`]
+		// },
 		
 		// TSX
 		{
-			test: /\.tsx$/,
+			test: /\.tsx?$/,
 			exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-			loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`],
+			loaders: ['react-hot-loader/webpack',`awesome-typescript-loader?tsconfig=${tsConfigFile}`],
 		},
 		
 		// JADE
@@ -155,10 +155,48 @@ module.exports = function (storybookBaseConfig, configType) {
 			'process.env.NODE_ENV': JSON.stringify(env),
 			'process.env.BASEDIR': path.resolve(__dirname, '..'),
 			'process.env.PROCESS_TYPE': 'renderer',
+			'process.env.GITHUB_API_TOKEN': process.env.GITHUB_API_TOKEN && JSON.stringify(process.env.GITHUB_API_TOKEN),
 			'ProcessConfig.isStorybook()': true,
 			'process.env.DefaultTransportScheme': JSON.stringify('IPC')
+		}),
+		new webpack.optimize.CommonsChunkPlugin({
+			name: 'vendor',
+			chunks: ['preview']
 		})
+		
+		//new webpack.HotModuleReplacementPlugin()
 	)
+	
+	
+	storybookBaseConfig.entry.vendor = [
+		'react',
+		'react-dom',
+		'radium',
+		'autoprefixer',
+		'material-ui',
+		'redux',
+		'redux-logger',
+		'redux-thunk',
+		'react-redux',
+		'react-markdown',
+		'reactotron-redux',
+		'bluebird',
+		'babel-polyfill',
+		'core-js',
+		'highlight.js',
+		'react-split-pane',
+		'react-hotkeys',
+		'remote-redux-devtools',
+		'reselect',
+		'lodash',
+		'typescript-ioc',
+		'reflect-metadata',
+		'immutable',
+		'react-tap-event-plugin',
+		'source-map-support',
+		'short-id',
+		'tinycolor2'
+	]
 	
 	
 	_.merge(storybookBaseConfig, _.pick(epicConfig,['sassLoader']), {
@@ -190,6 +228,10 @@ module.exports = function (storybookBaseConfig, configType) {
 			net: 'empty',
 			tls: 'empty'
 			
+		},
+		devServer: {
+			inline: true,
+			hot: true
 		}
 	})
 	//storybookBaseConfig.target = 'electron-renderer'

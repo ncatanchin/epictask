@@ -17,8 +17,9 @@ import {IToastMessage} from "shared/models/Toast"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
 import {ToastMessage} from "components/ToastMessage"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {JobMonitor} from "ui/components/root/JobMonitor"
+import {JobMonitor} from "ui/components/jobs/JobMonitor"
 import {openChildWindow} from "shared/util/WindowUtil"
+import {JobItem} from "ui/components/jobs/JobItem"
 
 // Constants
 const log = getLogger(__filename)
@@ -93,7 +94,6 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 				open,
 				details,
 				messages,
-				theme,
 				styles
 			} = this.props,
 			//inProgress = details.some(it => it.status < JobStatus.Completed),
@@ -125,59 +125,7 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			
 			{/* Job Status */}
 			{detail && <div style={[styles.status]}>
-				<div
-					style={[styles.status.item,styles.jobs.summary]}
-				  onClick={this.makeOpenJobMonitor(job)}
-				>
-				
-				{/* Job Status */}
-				<div style={[styles.jobs.summary.label]}>
-					
-					{/*[{JobStatus[recentJob.status]}]&nbsp;*/}
-					{/* Text */}
-					<div style={[styles.jobs.summary.label.text]}>
-						<Icon iconSet="fa" iconName="building"/>&nbsp;
-						{JobStatus[job.status]} - {getJobDescription(job)}
-					</div>
-					
-					<div style={[styles.jobs.summary.label.time]}>
-						{Math.ceil((Date.now() - detail.createdAt) / 1000)}s
-					</div>
-					
-					<div
-						style={[
-							styles.jobs.summary.label.progress,
-							styles.jobs.summary.inProgress,
-							job.status >= JobStatus.Completed && styles.jobs.summary.label.progress.completed,
-							job.status === JobStatus.Completed && styles.jobs.summary.success,
-							job.status === JobStatus.Failed && styles.jobs.summary.failed,
-						]}>
-						{detail.status < JobStatus.Completed ?
-							// In-Progress
-							<div style={[styles.jobs.summary.progressBar, detail.status >= JobStatus.Completed && styles.jobs.summary.progressBar.hidden]}>
-								<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-								                value={detail.progress * 100}
-								                color={theme.palette.accent1Color}
-								/>
-							</div> : //`${Math.round(detail.progress * 100)}%` :
-							
-							// Completed / Failed
-							<Icon
-								style={[styles.jobs.summary.label.icon]}
-								iconSet="fa"
-								iconName={detail.status === JobStatus.Completed ? 'check' : 'exclamation-circle'} />
-							 
-						}
-					</div>
-					
-					
-					{/*<TimeAgo timestamp={recentDetail.updatedAt} />*/}
-				</div>
-				
-				
-				{/* If a description is available then show it */}
-				{/*{recentJob.description && <div>{recentJob.description}</div>}*/}
-				</div>
+				<JobItem styles={{root:styles.status.item}} job={job} detail={detail} />
 			</div>}
 				
 			

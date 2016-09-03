@@ -141,9 +141,9 @@ function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null
 		storeEnhancer || require('./ClientStoreEnhancer').default
 	]
 
-	if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
-		enhancers.push(applyMiddleware(createLogger()))
-	}
+	// if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
+	// 	enhancers.push(applyMiddleware(createLogger()))
+	// }
 
 	/**
 	 * Redux Dev Tooling
@@ -188,7 +188,7 @@ function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null
 export function loadAndInitStorybookStore() {
 	const enhancers = [applyMiddleware(...middleware)]
 	
-	enhancers.push(applyMiddleware(createLogger()))
+	//enhancers.push(applyMiddleware(createLogger()))
 	
 	require('./AppStoreDevConfig').default(enhancers)
 	

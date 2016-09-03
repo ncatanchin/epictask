@@ -147,6 +147,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			return state
 		}
 	}
+	
+	
 
 
 	showAddRepoDialog() {
