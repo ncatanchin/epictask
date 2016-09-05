@@ -124,8 +124,8 @@ export class StateServerEntry extends WorkerEntry {
 				}
 			})
 			
-			ipc.server.on('action', ({clientId, leaf, name, args}, socket) => {
-				actionEmitter.emit('action', clientId, leaf, name, args)
+			ipc.server.on('action', ({clientId, id,leaf, name, args}, socket) => {
+				actionEmitter.emit('action', clientId, id,leaf, name, args)
 			})
 			
 			log.info('Server Started')
@@ -155,7 +155,7 @@ export class StateServerEntry extends WorkerEntry {
 /**
  * Action listener signature
  */
-export type TServerActionListener = (clientId:string,leaf:string,name:string,args:any[]) => void
+export type TServerActionListener = (clientId:string,id:string,leaf:string,name:string,args:any[]) => void
 
 /**
  * Add an action listener

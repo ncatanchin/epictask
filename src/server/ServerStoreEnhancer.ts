@@ -17,7 +17,7 @@ const log = getLogger(__filename)
  */
 function makeClientDispatchHandler(store) {
 	
-	return (clientId:string,leaf:string,name:string,args:any[]) => {
+	return (clientId:string,id:string,leaf:string,name:string,args:any[]) => {
 		const actionReg = getAction(leaf,name)
 		if (!actionReg)
 			throw new Error(`Could not find action ${leaf}:${name} on main process`)
@@ -33,12 +33,21 @@ function makeClientDispatchHandler(store) {
 				
 				
 				// Create duplicated message
-				const msg = actions.newMessage(leaf,actionReg.type,[],args,{
-					source:{
-						clientId,
-						isReducer:true,
-						fromRenderer:true
-					}})
+				const msg = actions.newMessage(
+					null,
+					leaf,
+					actionReg.type,
+					[],
+					args,{
+						source:{
+							clientId,
+							isReducer:true,
+							fromRenderer:true
+						}
+					})
+				
+				if (id)
+					msg.id = id
 				
 				// dispatch
 				store.dispatch(msg)

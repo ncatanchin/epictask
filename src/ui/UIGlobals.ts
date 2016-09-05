@@ -5,9 +5,6 @@ import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
 import * as JQueryGlobal from 'jquery'
-import * as Immutable from 'immutable'
-
-
 
 
 /**

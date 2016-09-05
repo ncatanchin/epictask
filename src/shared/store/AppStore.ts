@@ -25,6 +25,7 @@ import {
 import {
 	loadActionFactories
 } from 'shared/actions/ActionFactoryProvider'
+import {makeReactotronEnhancer} from "shared/store/AppStoreDevConfig"
 
 const log = getLogger(__filename)
 
@@ -186,7 +187,7 @@ function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null
  * A store specifically for testing & storybook
  */
 export function loadAndInitStorybookStore() {
-	const enhancers = [applyMiddleware(...middleware)]
+	const enhancers = [makeReactotronEnhancer(),applyMiddleware(...middleware)]
 	
 	//enhancers.push(applyMiddleware(createLogger()))
 	

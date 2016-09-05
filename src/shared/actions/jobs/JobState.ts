@@ -25,7 +25,8 @@ export const JobStateRecord = Record({
 	all:Map<string,IJob>(),
 	error:null,
 	schedules:Map<string,IJobSchedule>(),
-	selectedId: null
+	selectedId: null,
+	selectedLogId: null
 	
 })
 
@@ -67,5 +68,10 @@ export class JobState extends JobStateRecord {
 	 * Selected Job Id
 	 */
 	selectedId:string
+	
+	/**
+	 * Selected log id
+	 */
+	selectedLogId:string
 }
 

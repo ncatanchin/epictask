@@ -1,3 +1,5 @@
+ProcessConfig.setType(ProcessType.Storybook)
+
 import 'shared/NamespaceConfig'
 import 'reflect-metadata'
 import 'shared/LogConfig'
@@ -18,7 +20,7 @@ import {loadAndInitStorybookStore,getReduxStore} from 'shared/store/AppStore'
 
 
 // Setup the store for storybook
-loadAndInitStorybookStore()
+const store = loadAndInitStorybookStore()
 
 // Expose get state to window
 const win = (window as any)

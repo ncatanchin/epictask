@@ -86,7 +86,8 @@ export class JobList extends React.Component<IJobListProps,void> {
 						job = jobs.get(detail.id),
 						lastItem = index >= jobs.size - 1
 							
-					return <div onClick={() => this.onSelect(job)}
+					return <div key={job.id}
+					            onClick={() => this.onSelect(job)}
 					            style={[
 												styles.list.item,
 												selectedId === job.id && styles.list.item.selected,

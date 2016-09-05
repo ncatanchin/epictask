@@ -18,8 +18,13 @@ export function getReducers():ILeafReducer<any,any>[] {
 	mods.forEach(mod => {
 		for (let key of Object.keys(mod)) {
 			if (key.indexOf('Reducer') > -1) {
-				const reducerClazz = mod[key]
-				reducers.push(new reducerClazz())
+				const
+					reducerClazz = mod[key],
+					reducer = new reducerClazz()
+				if (_.isFunction(reducer.leaf) && !reducers.find(it => it.leaf() === reducer.leaf())) {
+					reducers.push(new reducerClazz())
+				}
+				
 			}
 		}
 	})

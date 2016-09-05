@@ -15,6 +15,7 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {UIState} from 'shared/actions/ui/UIState'
 import {RepoState} from 'shared/actions/repo/RepoState'
+import {ThemedStyles} from "shared/themes/ThemeManager"
 // import {Button} from 'ui/components/common/Button'
 
 const repoActions = new RepoActionFactory()
@@ -29,55 +30,56 @@ export interface IRepoListProps {
 	style?:any
 	selectedRepoIds?:number[]
 	theme?: any
+	styles?:any
 }
 //endregion
 
 //region Styles
-const styles = {
-	list: makeStyle(FlexColumn,FlexScale,FlexAlignStart,FillWidth,{
+const baseStyles = createStyles({
+	list: [FlexColumn,FlexScale,FlexAlignStart,FillWidth,{
 		overflowY: 'auto',
 		margin: 0,
 		padding: 0,
-		border: 0
-	}),
-
-	item: makeStyle(makeTransition(null,0.15),FlexRowCenter,FlexAuto,FillWidth,{
-		listStyle: 'none',
-		margin: 0,
-		padding: '0.5rem 0.5rem',
 		border: 0,
-		cursor: 'pointer',
-		alignItems: 'center',
-		fontSize: themeFontSize(1.1)
-	}),
-
-	itemEnabled: {
-		fontSize: themeFontSize(1.3)
-	},
-
-	itemIcon: makeStyle(FlexAuto,{
-		padding: '0 0.2rem',
-		fontSize: rem(1.3)
-	}),
-
-	itemIconRemove: makeStyle(FlexAuto,{
-		padding: '0 0.2rem',
-		fontSize: rem(1.3),
-		opacity: 0,
-		':hover': {
-			opacity: 1
-		}
-	}),
-
-
-
-	itemLabel: makeStyle(FlexColumn,FlexScale,{
-		padding: '0.2rem 0.2rem 0 0.5rem',
-		justifyContent: 'center',
-		// fontSize: themeFontSize(1.1),
-		fontWeight: 100
-	})
-}
+		
+		item: [makeTransition(null,0.15),FlexRowCenter,FlexAuto,FillWidth,{
+			listStyle: 'none',
+			margin: 0,
+			padding: '0.5rem 0.5rem',
+			border: 0,
+			cursor: 'pointer',
+			alignItems: 'center',
+			fontSize: themeFontSize(1.1),
+			borderStyle: 'solid',
+			borderWidth: '0.1rem',
+			borderColor: 'transparent',
+			enabled: {
+				fontSize: themeFontSize(1.3)
+			},
+			
+			label: [FlexColumn,FlexScale,{
+				padding: '0.2rem 0.2rem 0 0.5rem',
+				justifyContent: 'center',
+				// fontSize: themeFontSize(1.1),
+				fontWeight: 100
+			}],
+			
+			icon: [FlexAuto,{
+				padding: '0 0.2rem',
+				fontSize: rem(1.3),
+				
+				remove: [FlexAuto,{
+					padding: '0 0.2rem',
+					fontSize: rem(1.3),
+					opacity: 0,
+					':hover': {
+						opacity: 1
+					}
+				}]
+			}]
+		}]
+	}]
+})
 
 //endregion
 
@@ -107,6 +109,7 @@ function makeMapStateToProps() {
  * A list of repos
  */
 @connect(makeMapStateToProps)
+@ThemedStyles(baseStyles,'repoPanel')
 @Radium
 export class RepoList extends React.Component<IRepoListProps,any> {
 
@@ -142,9 +145,9 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 	render() {
 
-		const {availableRepos,theme,selectedRepoIds = []} = this.props
+		const {availableRepos,theme,styles,selectedRepoIds = []} = this.props
 
-		const themeStyles = theme.repoPanel
+		
 
 		return <div style={styles.list}>
 			{availableRepos && availableRepos
@@ -163,36 +166,35 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						return false
 					}
 
-					const itemRemoveStyle = makeStyle(
-						styles.itemIcon,
-						styles.itemIconRemove,
-						isHovering && {opacity:1}
-					)
-
+					
 					return <div key={id}
 					           onMouseEnter={() => this.setState({hoverId:availRepo.repoId})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
 					           onClick={(event) => {
 									this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
 					           }}
-					           style={makeStyle(
-					                styles.item,
-					                themeStyles.list.item,
-					                isEnabled && styles.itemEnabled,
-					                isEnabled && themeStyles.list.itemEnabled,
-					                isHovering && themeStyles.list.itemHover,
-					                isSelected && themeStyles.list.itemSelected,
-					                (isSelected && isHovering) && themeStyles.list.itemSelectedHover
-				                )}>
-						<Icon style={styles.itemIcon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
+					           style={[
+					                styles.list.item,
+					                isEnabled && styles.list.item.enabled,
+					                isHovering && styles.list.item.hover,
+					                isSelected && styles.list.item.selected,
+					                (isSelected && isHovering) && styles.list.item.selected.hover
+				                ]}>
+						<Icon style={styles.list.item.icon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
 
 						{/* Repo */}
-						<div style={styles.itemLabel}>
+						<div style={styles.list.item.label}>
 							<Renderers.RepoName repo={repo}/>
 						</div>
 
-						<Icon style={itemRemoveStyle}
-						      onClick={(e) => this.onRemoveClicked(e,id)}>
+						<Icon
+							style={[
+								styles.list.item.icon,
+								styles.list.item.icon.remove,
+								isHovering && {opacity:1}
+							]}
+						  onClick={(e) => this.onRemoveClicked(e,id)}
+						>
 							remove_circle
 						</Icon>
 						{/*<Button style={styles.itemIcon}>*/}

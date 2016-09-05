@@ -255,7 +255,6 @@ class App extends React.Component<IAppProps,any> {
 							
 							<StatusBar/>
 						</div>
-						
 					</HotKeys>
 				</Provider>
 			</MuiThemeProvider>

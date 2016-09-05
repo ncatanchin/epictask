@@ -1,4 +1,3 @@
-import {Map,List} from 'immutable'
 import {JobKey} from 'shared/Constants'
 
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -35,6 +34,9 @@ export const jobsSelector:TSelector<IJob> = createDeepEqualSelector(
 	(state:JobState) => state.all.toJS()
 )
 
+export const jobLogIdSelector:TSelector<string> = _.memoize(
+	(state) => jobStateSelector(state).selectedLogId
+)
 
 /**
  * Get all job details

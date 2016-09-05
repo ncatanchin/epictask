@@ -1,5 +1,4 @@
 import {addActionInterceptor, IActionInterceptorNext} from 'typedux'
-import {ProcessType} from "shared/ProcessType"
 import {getServerClient} from "shared/server/ServerClient"
 
 
@@ -9,10 +8,13 @@ let actionCtx = null
 
 
 // If renderer then add an action interceptor
-if (!ProcessConfig.isType(ProcessType.StateServer,ProcessType.Storybook)) {
+if (!ProcessConfig.isStorybook() && !ProcessConfig.isStateServer()) {
+	
+	// Setting up action interceptor
 	const unregisterInterceptor = addActionInterceptor(
 		({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
 			
+			log.info(`${ProcessConfig.getTypeName()} Action Intercepting and forwarding ${type}`)
 			// Push it to the server
 			getServerClient().sendAction(leaf,type,...args)
 			
@@ -36,5 +38,6 @@ if (!ProcessConfig.isType(ProcessType.StateServer,ProcessType.Storybook)) {
 export function loadActionFactories() {
 	actionCtx = require.context('shared/actions/', true, /ActionFactory/)
 	log.info(`Loaded Action Factories`,actionCtx.keys())
+	
 	actionCtx.keys().forEach(actionCtx)
 }

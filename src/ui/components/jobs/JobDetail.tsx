@@ -1,14 +1,12 @@
-/**
- * Created by jglanz on 9/2/16.
- */
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {PureRender} from 'components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {LinearProgress} from "material-ui"
+
+import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import {getJobDescription, IJobStatusDetail, IJob, IJobLog} from "shared/actions/jobs/JobTypes"
 import {TimeAgo} from "ui/components/common/TimeAgo"
 import {FlexColumnCenter, FlexScale, makePaddingRem} from "shared/themes"
@@ -40,9 +38,25 @@ const baseStyles = createStyles({
 			}
 		}],
 		
-		entry: [FlexRowCenter,FlexAuto,makeTransition('background-color'),{
+		entry: [FlexColumn,FlexAuto,makeTransition('background-color'),{
 			cursor: 'pointer',
-			margin: '0 0.3rem',
+			
+			
+			row: [
+				FlexRowCenter,
+				FlexAuto,
+				OverflowHidden,
+				makeTransition(['background-color','height','max-height','min-height','flex-basis','flex-grow','flex-shrink']),
+				{
+					margin: '0 0.3rem',
+					flexGrow: 0,
+					flexShrink: 0,
+					flexBasis: 'auto',
+					hidden: [{
+						flexBasis: 0
+					}]
+				}
+			],
 			
 			// Hovered style - applied to kids when hovering
 			hovered: {
@@ -67,6 +81,8 @@ const baseStyles = createStyles({
 				transformOrigin: 'right center'
 			}],
 			
+			details: [FlexScale,{overflowX: 'auto'}],
+			
 			divider: [{
 				borderBottomWidth: rem(0.2),
 				borderBottomStyle: 'solid'
@@ -82,15 +98,11 @@ const baseStyles = createStyles({
 export interface IJobDetailProps extends React.HTMLAttributes {
 	theme?:any
 	styles?:any
+	job:IJob
+	detail:IJobStatusDetail
+	selectedLogId:string
 }
 
-/**
- * IJobDetailState
- */
-export interface IJobDetailState {
-	job?:IJob
-	detail?:IJobStatusDetail
-}
 
 /**
  * JobDetail
@@ -104,7 +116,7 @@ export interface IJobDetailState {
 @ThemedStyles(baseStyles,'jobs')
 @Radium
 @PureRender
-export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> {
+export class JobDetail extends React.Component<IJobDetailProps,any> {
 	
 	/**
 	 * Render job details
@@ -114,7 +126,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 	render() {
 		
 		const
-			{theme, styles, job, detail} = this.props,
+			{theme, styles, job, detail,selectedLogId} = this.props,
 			logs = detail && detail.logs
 		
 		const levelStyle = (log:IJobLog) =>
@@ -149,26 +161,60 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				{/* LOGS */}
 				<div style={styles.logs}>
 					
-					{logs && logs.map((log,index) => {
+					{logs && logs.map((log:IJobLog,index) => { //_.uniqBy(logs,'id').map((log:IJobLog,index) => {
 						const
-							errorStyle = log.level === 'ERROR' && levelStyle(log),
-							hoverStyle = Radium.getState(this.state,log.id,':hover') && styles.logs.entry.hovered
+							isError = log.level === 'ERROR',
+							errorDetails = log.errorDetails,
+							errorStyle = isError && levelStyle(log),
+							logKey = log.id,
+							selected = selectedLogId === log.id,
+							hoverStyle =
+								(selected || Radium.getState(this.state,logKey,':hover')) &&
+								styles.logs.entry.hovered
+							
+						
 						
 						//Log Entry Row
-						return <div key={log.id} style={[
-							styles.logs.entry,
-							// If not last entry then add divider border
-							index < logs.size - 1 && styles.logs.entry.divider
-						]}>
-							<div style={[styles.logs.entry.level,hoverStyle,levelStyle(log)]}>
-								{log.level}
+						return <div key={logKey}
+						            onClick={() => !selected && Container.get(JobActionFactory).setSelectedLogId(log.id)}
+						            style={[
+													styles.logs.entry,
+													index < logs.size - 1 && styles.logs.entry.divider
+												]}>
+							<div style={[styles.logs.entry.row]}>
+								<div style={[styles.logs.entry.level,hoverStyle,levelStyle(log)]}>
+									{log.level}
+								</div>
+								<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
+									{log.message}
+								</div>
+								<div style={[styles.logs.entry.time,errorStyle]}>
+									<TimeAgo timestamp={log.timestamp}/>
+								</div>
 							</div>
-							<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
-								{log.message}
-							</div>
-							<div style={[styles.logs.entry.time,errorStyle]}>
-								<TimeAgo timestamp={log.timestamp}/>
-							</div>
+							
+							{/* Error stack details */}
+							{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
+								<div style={[styles.logs.entry.level]}>
+									{/* Empty spacing place holder */}
+								</div>
+								<pre style={[styles.logs.entry.details]}>
+									<div>Error details: </div>
+									<div>{errorDetails.message}</div>
+									<div>{errorDetails.stack}</div>
+									{/*{errorDetails.stack.map(frame => <div>*/}
+										{/*<span>*/}
+											{/*<span>{frame.functionName}</span>*/}
+											{/*at*/}
+											{/*<span>{frame.fileName}</span>*/}
+											{/*:(*/}
+											{/*<span>{frame.lineNumber}</span>:*/}
+											{/*<span>{frame.columnNumber}</span>*/}
+											{/*)*/}
+										{/*</span>*/}
+									{/*</div>)}*/}
+								</pre>
+							</div>}
 						</div>
 					})}
 				</div>

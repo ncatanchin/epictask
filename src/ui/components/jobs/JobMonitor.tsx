@@ -12,7 +12,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {IJob, IJobStatusDetail, IJobLog, getJobDescription} from "shared/actions/jobs/JobTypes"
-import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
+import {jobStateSelector, jobLogIdSelector} from "shared/actions/jobs/JobSelectors"
 import {TimeAgo} from "ui/components/common/TimeAgo"
 import {
 	makePaddingRem, FlexRowCenter, FlexColumnCenter, FlexScale, FillHeight, FillWidth,
@@ -33,6 +33,7 @@ const baseStyles = createStyles({
 })
 
 
+
 /**
  * IJobMonitorProps
  */
@@ -42,6 +43,7 @@ export interface IJobMonitorProps extends React.HTMLAttributes {
 	jobs?: TJobIMap
 	details?: List<IJobStatusDetail>
 	selectedId?:string
+	selectedLogId?:string
 }
 
 /**
@@ -61,7 +63,8 @@ export interface IJobMonitorState {
 @connect(createStructuredSelector({
 	jobs: (state) => jobStateSelector(state).all,
 	details:(state) => jobStateSelector(state).details,
-	selectedId:(state) => jobStateSelector(state).selectedId
+	selectedId:(state) => jobStateSelector(state).selectedId,
+	selectedLogId: jobLogIdSelector,
 }, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
@@ -73,7 +76,7 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 	
 	render() {
 		const
-			{styles,jobs,details,selectedId} = this.props
+			{styles,jobs,details,selectedId,selectedLogId} = this.props
 			
 		
 		
@@ -92,7 +95,9 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 				
 				{/* Currently selected job details */}
 				<JobDetail job={jobs.get(selectedId)}
-				           detail={selectedId && details.find(it => it.id === selectedId)} />
+				           detail={selectedId && details.find(it => it.id === selectedId)}
+				           selectedLogId={selectedLogId}
+				/>
 				
 			</SplitPane>
 			

@@ -2,12 +2,13 @@
 import {getDecorator} from "./StoryHelper"
 
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
-import {JobType, IJob, JobStatus, JobLogLevel} from "shared/actions/jobs/JobTypes"
+import {JobType, IJob, JobStatus, JobLogLevel, JobLogLevelNames, TJobLogLevel} from "shared/actions/jobs/JobTypes"
 import {Button} from "components/common"
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
 import {JobMonitor} from "ui/components/jobs/JobMonitor"
 import * as uuid from 'node-uuid'
+import * as faker from 'faker'
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
@@ -64,10 +65,32 @@ storiesOf('Job Monitor',module)
 			}
 		}, 0.35)
 		
-		for (let i = 0; i < 25;i++) {
-			jobActions.log(job.id, uuid.v4(), JobLogLevel.INFO, 'Message #1', Date.now())
-			jobActions.log(job.id, uuid.v4(), JobLogLevel.WARN, 'Be scared - very very scared', Date.now())
-			jobActions.log(job.id, uuid.v4(), JobLogLevel.ERROR, 'Bad bad things are happening', Date.now(), new Error('World exploded'))
+		const
+			makeId = (index) => `${uuid.v4()}-${index}-${Math.round((Math.random() * 100))}`,
+			COUNT = 20
+		
+		let
+			time = Date.now(),
+			startTime =  time - (60 * 60 * 10000),
+			timeRange = time - startTime,
+			increment = timeRange / COUNT
+		
+		for (let i = 0; i < COUNT;i++) {
+		 	const level = faker.random.arrayElement(JobLogLevelNames.slice(1))
+			
+			const error =  (level !== 'ERROR') ?
+				null :
+		 		new Error(faker.lorem.sentence(10))
+			
+			jobActions.log(
+		 		job.id,
+			  makeId(i),
+			  JobLogLevel[level],
+			  faker.lorem.sentence(faker.random.number(20)),
+			  startTime + (i * increment),
+				error
+			)
+				
 		}
 		
 		jobActions.setSelectedId(job.id)

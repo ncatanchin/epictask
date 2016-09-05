@@ -45,6 +45,7 @@
   "license": "MIT",
   "devDependencies": {
     "@kadira/storybook": "^2.5.2",
+    "@types/faker": "0.0.29",
     "asar": "^0.12.1",
     "autoprefixer": "^6.3.7",
     "awesome-typescript-loader": "^2.1.1",
@@ -243,7 +244,7 @@
     "sinon": "^1.17.4",
     "source-map-support": "^0.4.0",
     "splash-screen": "^3.0.0",
-    "stacktrace-js": "^1.3.0",
+    "stacktrace-js": "^1.3.6",
     "through2": "^2.0.1",
     "tinycolor2": "^1.3.0",
     "typedux": ">=0.1.5",

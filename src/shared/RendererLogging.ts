@@ -1,3 +1,5 @@
+import 'shared/ProcessConfig'
+
 /**
  * Configure the local logger
  */

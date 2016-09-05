@@ -479,31 +479,36 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		list:              {
 			item: {
 				backgroundColor: primary.hue3,
-				opacity:         0.6
-			},
-
-			itemHover: {
-				backgroundColor: accent.hue2,
-				color:           text.primary,
-				opacity:         1
-			},
-
-			itemEnabled: {
-				backgroundColor: secondary.hue1,
-				color:           text.primary,
-				opacity:         1
-			},
-
-			itemSelected:      {
-				backgroundColor: accent.hue1,
-				color:           text.primary,
-				opacity:         1
-			},
-			itemSelectedHover: {
-				backgroundColor: accent.hue2,
-				color:           text.primary,
-				opacity:         1
+				opacity:         0.6,
+				
+				hover: {
+					backgroundColor: accent.hue2,
+					color:           text.primary,
+					opacity:         1
+				},
+				
+				enabled: {
+					borderColor: accent.hue1,
+					color:           text.primary,
+					opacity:         1
+				},
+				
+				selected:      {
+					backgroundColor: accent.hue1,
+					color:           text.primary,
+					opacity:         1,
+					
+					hover: {
+						backgroundColor: accent.hue2,
+						color:           text.primary,
+						opacity:         1
+					}
+				}
+				
 			}
+			
+
+			
 
 
 		}

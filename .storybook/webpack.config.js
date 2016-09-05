@@ -1,4 +1,6 @@
 require('babel-register')
+
+
 // you can use this file to add your custom webpack plugins, loaders and anything you like.
 // This is just the basic way to add additional webpack configurations.
 // For more information refer the docs: https://goo.gl/qPbSyX
@@ -10,6 +12,9 @@ require('babel-register')
 module.exports = function (storybookBaseConfig, configType) {
 	
 	const
+		HappyPack = require('happypack'),
+		happyEnabled = true,
+		
 		// Generates externals config
 		nodeExternals = require('webpack-node-externals'),
 		
@@ -143,9 +148,20 @@ module.exports = function (storybookBaseConfig, configType) {
 	
 	const
 		isDev = true,
-		webpack = require('../node_modules/@kadira/storybook/node_modules/webpack')
+		webpack = require('../node_modules/@kadira/storybook/node_modules/webpack'),
+		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 5}),
+		happyPlugins = (!happyEnabled) ? [] :
+			moduleConfig.loaders
+				.filter(loader => loader.happy && loader.happy.id)
+				.map(loader => new HappyPack({
+					id: `${loader.happy.id}`,
+					tempDir: `.happypack-storybook`,
+					threadPool: happyThreadPool
+				}))
+	
 	
 	pluginConfig.push(
+		...happyPlugins,
 		new ForkCheckerPlugin(),
 		new webpack.DefinePlugin({
 			__DEV__: isDev,
@@ -193,14 +209,16 @@ module.exports = function (storybookBaseConfig, configType) {
 		'reflect-metadata',
 		'immutable',
 		'react-tap-event-plugin',
-		'source-map-support',
 		'short-id',
 		'tinycolor2'
 	]
 	
 	
 	_.merge(storybookBaseConfig, _.pick(epicConfig,['sassLoader']), {
-		devtool:'eval',
+		//devtool:'inline-source-map',
+		//devtool:'cheap-module-eval-source-map',
+		//devtool:'cheap-module-eval-inline-source-map',
+		devtool: 'eval',
 		output: {
 			devtoolModuleFilenameTemplate: "file://[absolute-resource-path]"
 		},

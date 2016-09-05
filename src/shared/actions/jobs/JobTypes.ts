@@ -8,6 +8,9 @@ export enum JobType {
 }
 
 
+/**
+ * Job Description functions, eventually i18n if this thing takes off
+ */
 const JobDescriptions = {
 	[JobType.GetUserRepos]: (job:IJob) => "Getting user repositories",
 	[JobType.SyncEnabledRepos]: (job:IJob) => "Synchronizing activated repo activity",
@@ -86,10 +89,20 @@ export interface IJob {
 	updatedAt?:Date
 }
 
-export type TJobLogLevel = 'DEBUG'|'INFO'|'WARN'|'ERROR'
-
+/**
+ * Type for ref map to jobs
+ */
 export type TJobMap = {[id:string]:IJob}
 
+/**
+ * Job level string literals
+ */
+export type TJobLogLevel = 'DEBUG'|'INFO'|'WARN'|'ERROR'
+
+
+/**
+ * Log Level Enum
+ */
 export enum JobLogLevel {
 	DEBUG = 1,
 	INFO,
@@ -97,23 +110,46 @@ export enum JobLogLevel {
 	ERROR
 }
 
-export const JobLogLevelNames = [
+/**
+ * Level names constants - must adhere to {TJobLogLevel}
+ */
+export const JobLogLevelNames:TJobLogLevel[] = [
 	'DEBUG',
 	'INFO',
 	'WARN',
 	'ERROR'
 ]
 
+export interface IErrorStackFrame {
+	functionName?: string
+	args?: any[]
+	fileName?: string
+	lineNumber?: number
+	columnNumber?: number
+	source?: string
+}
+
+/**
+ * Log record interface
+ */
 export interface IJobLog {
 	id: string
 	level:TJobLogLevel
 	message:string
-	error:Error
-	details:any[]
+	error?:Error
+	errorDetails?: {
+		message?:string
+		frames?:IErrorStackFrame[]
+		stack?:string
+	}
+	details?:any[]
 	timestamp:number
 	
 }
 
+/**
+ * Shape of a job logger (probably could extend TypeLogger ILogger in the future
+ */
 export interface IJobLogger {
 	debug(message:string,error?:Error,...details:any[])
 	info(message:string,error?:Error,...details:any[])
@@ -126,24 +162,49 @@ export interface IJobLogger {
  */
 export interface IJobStatusDetail {
 	
-	
+	/**
+	 * Unique ID
+	 */
 	id:string
 	
+	/**
+	 * Job Type
+	 */
 	type:JobType
 	
+	/**
+	 * Progress, must be >= 0 & <= 1, 0.35 = 35%
+	 */
 	progress?:number
 	
 	/**
 	 * Completion ETA in millis since EPOCH
 	 */
 	epochETA?:number
+	
+	/**
+	 * Status
+	 */
 	status:JobStatus
 	
+	/**
+	 * Updated at, last update
+	 */
 	updatedAt:number
+	
+	/**
+	 * Created at timestamp
+	 */
 	createdAt:number
 	
+	/**
+	 * Resulting error if status = failed
+	 */
 	error?:Error
 	
+	/**
+	 * Execution logs
+	 */
 	logs: IJobLog[]
 }
 

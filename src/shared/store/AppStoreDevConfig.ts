@@ -42,7 +42,7 @@ export function loadDevTools() {
 }
 
 
-function makeReactotronEnhancer() {
+export function makeReactotronEnhancer() {
 	const Reactotron = require('reactotron-react-js').default
 	
 	const createReactotronEnhancer = require('reactotron-redux')

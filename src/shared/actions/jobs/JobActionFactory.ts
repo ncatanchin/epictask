@@ -3,12 +3,32 @@ import * as uuid from 'node-uuid'
 import {ActionFactory, ActionMessage, ActionReducer} from 'typedux'
 import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
-import {IJob, JobType, JobStatus, IJobSchedule} from 'shared/actions/jobs/JobTypes'
+import {IJob, JobType, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTypes'
 import {JobKey, JobsMaxCompleted} from "shared/Constants"
 import {Provided} from 'shared/util/Decorations'
 import {cloneObject} from "shared/util/ObjectUtil"
 
-const log = getLogger(__filename)
+
+const
+	log = getLogger(__filename)
+
+
+function makeErrorDetails(error:Error) {
+	let frames = []
+	
+	return {
+		message: error.message,
+			frames,
+			stack: (() => {
+				try {
+					return error.stack
+				} catch (err) {
+					log.warn(`Unable to get stack trace`, err)
+					return "Unable to get stack trace"
+				}
+			})()
+	}
+}
 
 /**
  * Immutable job map
@@ -28,7 +48,7 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		super(JobState)
 	}
 	
-	leaf(): string {
+	leaf():string {
 		return JobKey;
 	}
 	
@@ -39,14 +59,14 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @returns {Map<string, List<any>>}
 	 */
 	private pruneMutating = (jobState:JobState) => {
-		let details = _.orderBy(jobState.details.toArray(),['updatedAt'],['desc'])
+		let details = _.orderBy(jobState.details.toArray(), ['updatedAt'], ['desc'])
 		
 		let index:number
 		
 		while ((index = details.findIndex(it => it.status >= JobStatus.Completed)) > -1 &&
 		details.length > JobsMaxCompleted) {
 			
-			details.splice(index,1)
+			details.splice(index, 1)
 		}
 		
 		
@@ -62,7 +82,7 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 			.forEach(it => allJobs = allJobs.remove(it))
 		
 		
-		return jobState.set('details',List().push(...details)).set('all', allJobs)
+		return jobState.set('details', List().push(...details)).set('all', allJobs)
 		
 	}
 	
@@ -75,8 +95,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 			.withMutations(this.pruneMutating)
 	}
 	
-	private updateDetail = (jobState:JobState,detail:IJobStatusDetail) => this.pruneMutating(jobState
-		.update('details', (details: List<IJobStatusDetail>) => {
+	private updateDetail = (jobState:JobState, detail:IJobStatusDetail) => this.pruneMutating(jobState
+		.update('details', (details:List<IJobStatusDetail>) => {
 			if (!details || !details.push)
 				details = List<IJobStatusDetail>()
 			
@@ -89,7 +109,7 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 				existingDetail = (index > -1) && details.get(index)
 			
 			if (existingDetail)
-				detail.logs = _.sortBy(_.uniqBy([...detail.logs,...existingDetail.logs],'id'),'timestamp')
+				detail.logs = _.sortBy(_.uniqBy([...detail.logs, ...existingDetail.logs], 'id'), 'timestamp')
 			
 			//details = details.filter(it => it.id !== detail.id).toList()
 			return index === -1 ?
@@ -114,8 +134,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @param detail
 	 */
 	@ActionReducer()
-	setDetail(detail: IJobStatusDetail) {
-		return (jobState:JobState) => this.updateDetail(jobState,detail)
+	setDetail(detail:IJobStatusDetail) {
+		return (jobState:JobState) => this.updateDetail(jobState, detail)
 	}
 	
 	/**
@@ -126,10 +146,10 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 */
 	@ActionReducer()
 	setSchedules(...schedules:IJobSchedule[]) {
-		return (jobState:JobState) =>  jobState.set('schedules',
-			schedules.reduce((map:Map<string,IJobSchedule>,schedule) => {
-				return map.set(schedule.id,schedule)
-			},Map<string,IJobSchedule>()))
+		return (jobState:JobState) => jobState.set('schedules',
+			schedules.reduce((map:Map<string,IJobSchedule>, schedule) => {
+				return map.set(schedule.id, schedule)
+			}, Map<string,IJobSchedule>()))
 	}
 	
 	
@@ -140,8 +160,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @returns {(jobState:JobState)=>Map<string, Map<string, IJob>>}
 	 */
 	@ActionReducer()
-	cancel(jobId: string) {
-		return (jobState: JobState) => jobState.update('all', (all: Map<string,IJob>) => {
+	cancel(jobId:string) {
+		return (jobState:JobState) => jobState.update('all', (all:Map<string,IJob>) => {
 			const job = all.valueSeq().find(it => it.id === jobId)
 			if (job) {
 				job.status = JobStatus.PendingCancel
@@ -161,8 +181,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @param detail
 	 */
 	@ActionReducer()
-	update(job: IJob, detail:IJobStatusDetail) {
-		return (jobStateIM: JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
+	update(job:IJob, detail:IJobStatusDetail) {
+		return (jobStateIM:JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
 			// Update Job first
 			const allJobs:TJobIMap = jobState.all
 			
@@ -172,9 +192,9 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 					cloneObject(existingJob, job) :
 					cloneObject(job)
 			
-			jobState = jobState.set('all',allJobs.set(job.id, newJob)) as any
+			jobState = jobState.set('all', allJobs.set(job.id, newJob)) as any
 			
-			return this.updateDetail(jobState,detail)
+			return this.updateDetail(jobState, detail)
 			
 		}) as any)
 	}
@@ -186,13 +206,13 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 */
 	@ActionReducer()
 	remove(jobId:string) {
-		return (jobStateIM: JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
+		return (jobStateIM:JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
 			
 			// Remove job first
-			jobState = jobState.update('all',(allJobs:Map<string,IJob>) => allJobs.remove(jobId)) as any
+			jobState = jobState.update('all', (allJobs:Map<string,IJob>) => allJobs.remove(jobId)) as any
 			
 			// Now remove detail
-			jobState = jobState.update('details',(details:List<IJobStatusDetail>) => {
+			jobState = jobState.update('details', (details:List<IJobStatusDetail>) => {
 				const index = details.findIndex(detail => detail.id === jobId)
 				if (index > -1)
 					details = details.delete(index)
@@ -205,7 +225,6 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	}
 	
 	
-	
 	/**
 	 * Create a new job
 	 *
@@ -215,9 +234,9 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @returns {(jobState:JobState)=>Map<string, Map<string, IJob>>}
 	 */
 	
-	create(type: JobType,
-	       description: string = JobType[type],
-	       args: any = {}) {
+	create(type:JobType,
+	       description:string = JobType[type],
+	       args:any = {}) {
 		
 		
 		// Create Job
@@ -231,17 +250,17 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		}
 		
 		// Create details
-		const detail = assign(_.pick(job,'id','status','type'), {
+		const detail = assign(_.pick(job, 'id', 'status', 'type'), {
 			createdAt: Date.now(),
 			updatedAt: Date.now(),
 			progress: 0,
 			logs: []
 		}) as IJobStatusDetail
 		
-		this.update(job,detail)
+		this.update(job, detail)
 		
-		return {job,detail}
-			
+		return {job, detail}
+		
 		
 	}
 	
@@ -253,8 +272,46 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 */
 	@ActionReducer()
 	setSelectedId(id:string) {
-		return (jobState:JobState) => jobState.set('selectedId',id)
+		return (jobState:JobState) => jobState.set('selectedId', id).set('selectedLogId',null)
 	}
+	
+	
+	/**
+	 * Select a log record
+	 *
+	 * @param id
+	 */
+	@ActionReducer()
+	setSelectedLogId(id:string) {
+		return (jobState:JobState) => jobState.set('selectedLogId',id)
+	}
+	
+	/**
+	 * Add a job log record
+	 *
+	 * @param jobId
+	 * @param jobLog
+	 */
+	@ActionReducer()
+	addLog(jobId:string,jobLog:IJobLog) {
+		return (jobState:JobState) => jobState.update('details', (details:List<IJobStatusDetail>) => {
+			const detailIndex = details.findIndex(detail => detail.id === jobId)
+			
+			if (detailIndex === -1) {
+				log.warn(`Unable to add log to job ${jobId} - not in detail list`)
+			} else {
+				details = details.update(detailIndex, (detail) => {
+					// Update the detail object ref and add the log
+					return assign({}, detail, {
+						logs: _.orderBy([...(detail.logs || []), jobLog],['timestamp'],['desc'])
+					})
+				})
+			}
+			
+			return details
+		})
+	}
+	
 	
 	/**
 	 * Add a log record to job status detail
@@ -267,29 +324,20 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	 * @param error
 	 * @param details
 	 */
-	@ActionReducer()
-	log(jobId:string,id:string,level:JobLogLevel,message:string,timestamp:number,error:Error = null,...details:any[]) {
-		return (jobState: JobState) => jobState.update('details', (details: List<IJobStatusDetail>) => {
-			const detailIndex = details.findIndex(detail => detail.id === jobId)
-			
-			if (detailIndex === -1) {
-				log.warn(`Unable to add log to job ${jobId} - not in detail list`)
-			} else {
-				details = details.update(detailIndex,(detail) => {
-					// Update the detail object ref and add the log
-					return assign({},detail,{
-						logs:[...(detail.logs || []), {
-							id,
-							level: JobLogLevel[level] as TJobLogLevel,
-							message,
-							error,
-							details
-						}]
-					})
-				})
-			}
-			
-			return details
+	
+	log(jobId:string, id:string, level:JobLogLevel, message:string, timestamp:number, error:Error = null, ...details:any[]) {
+		let errorDetails = null
+		if (error) {
+			errorDetails = makeErrorDetails(error)
+		}
+		this.addLog(jobId,{
+			id,
+			level: JobLogLevel[level] as TJobLogLevel,
+			message,
+			timestamp,
+			error,
+			errorDetails,
+			details
 		})
 	}
 }

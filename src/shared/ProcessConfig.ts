@@ -53,6 +53,14 @@ export namespace ProcessConfigGlobal {
 	}
 	
 	/**
+	 * Is the state server - most common check
+	 * @returns {boolean}
+	 */
+	export function isStateServer() {
+		return isType(ProcessType.StateServer)
+	}
+	
+	/**
 	 * Is the current process type storybook
 	 * @returns {boolean}
 	 */

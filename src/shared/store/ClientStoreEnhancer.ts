@@ -18,7 +18,7 @@ if (module.hot) {
 
 
 function clientStoreEnhancer(storeCreator) {
-	
+	log.info(`Adding client store enhancer`)
 	return (rootReducer,initialState) => {
 		
 		/**

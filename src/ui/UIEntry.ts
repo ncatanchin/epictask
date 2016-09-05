@@ -1,3 +1,4 @@
+import 'shared/ProcessConfig'
 import 'shared/NamespaceConfig'
 import 'reflect-metadata'
 import 'shared/LogConfig'
