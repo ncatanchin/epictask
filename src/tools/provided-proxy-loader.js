@@ -21,7 +21,8 @@ module.exports = function(content) {
 					
 				}
 				
-				module.hot.accept(() => hotLog('HMR Updating Provided',typeof __filename !== 'undefined' ? __filename : '${resourcePath}'))	
+				module.hot.accept(() => hotLog('HMR Updating Provided',typeof __filename !== 'undefined' ? __filename : '${resourcePath}'))
+				module.hot.accept()
 			}	
 		`
 	}

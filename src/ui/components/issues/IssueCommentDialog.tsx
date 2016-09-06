@@ -155,7 +155,6 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 			this.issueActions.commentSave(comment)
 	}
 	
-	
 	/**
 	 * On body change, just update the state
 	 *

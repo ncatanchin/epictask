@@ -164,6 +164,10 @@ export const FlexRow = makeStyle(Flex,{
 	flexDirection: 'row'
 })
 
+export const FlexRowReverse = makeStyle(Flex,{
+	flexDirection: 'row-reverse'
+})
+
 export const FlexRowCenter = makeStyle(FlexRow,{
 	justifyContent: 'center',
 	alignItems: 'center'
@@ -172,6 +176,10 @@ export const FlexRowCenter = makeStyle(FlexRow,{
 
 export const FlexColumn = makeStyle(Flex,{
 	flexDirection: 'column'
+})
+
+export const FlexColumnReverse = makeStyle(Flex,{
+	flexDirection: 'column-reverse'
 })
 
 export const FlexColumnCenter = makeStyle(FlexColumn,FlexScale,{

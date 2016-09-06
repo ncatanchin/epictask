@@ -101,7 +101,7 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var mergeContext:typeof ContextUtils.mergeContext
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var _:typeof LodashGlobal & LodashMixins
+	var _:typeof LodashGlobal// & LodashMixins
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Env:typeof EnvGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst

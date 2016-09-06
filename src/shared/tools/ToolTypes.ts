@@ -11,7 +11,10 @@ export enum ToolPanelLocation {
 	Window = 4
 }
 
-
+/**
+ * Map of tools by id
+ */
+export type TToolMap = {[id:string]:ITool}
 
 /**
  * Denotes an available tool in the system
@@ -23,14 +26,9 @@ export interface IToolConfig {
 	readonly id:string
 	
 	/**
-	 * Name of the tool for label & tracking purposes
-	 */
-	readonly name:string
-	
-	/**
 	 * Optional label value
 	 */
-	readonly label?:string
+	readonly label:string
 	
 	/**
 	 * Default tool location
@@ -58,7 +56,7 @@ export interface ITool extends IToolConfig {
 export interface IToolPanel {
 	id:string
 	location:ToolPanelLocation
-	tools:ITool[]
+	tools:{[toolId:string]:ITool}
 	open:boolean
 	isDefault?:boolean
 	data?:any

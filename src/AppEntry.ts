@@ -30,3 +30,8 @@ ProcessConfig.setType(processType)
 TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
 
 entryFn()
+
+
+if (module.hot) {
+	module.hot.accept()
+}

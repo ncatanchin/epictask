@@ -24,6 +24,7 @@ export default function (projectConfig) {
 			{
 				test: /\.tsx?$/,
 				exclude: /node_modules/,
+				//,'source-map-loader'
 				loaders: [proxyProvidedLoaderPath,'source-map-loader']
 			},{
 				test: /\.jsx?$/,
@@ -53,7 +54,7 @@ export default function (projectConfig) {
 			// TypeScript
 			{
 				test: /\.tsx?$/,
-				exclude: [/typelogger/,/typedux/,/typestore/],
+				exclude: /node_modules/,
 				loaders: (() => {
 					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 					if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)
@@ -65,12 +66,12 @@ export default function (projectConfig) {
 
 
 			// BABEL/JS
-			{
-				happy: {id: 'js'},
-				test: /\.jsx?$/,
-				exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
-				loaders: ['babel']
-			},
+			// {
+			// 	happy: {id: 'js'},
+			// 	test: /\.jsx?$/,
+			// 	exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
+			// 	loaders: ['babel']
+			// },
 
 
 			// JADE

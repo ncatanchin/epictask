@@ -1,18 +1,33 @@
 
 import {List,Map} from 'immutable'
 
-
-
+//
+// declare module _ {
+// 	interface LoDashStatic {
+// 		isArrayEqualBy(arr1, arr2, prop):boolean
+// 		inline<R>(fn:()=>R):R
+// 		uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
+// 		toJS(o:any):any
+// 		assignGlobal(o:any):any
+// 		isPromise(o:any):boolean
+// 		modelArrayToMapBy(o:any[], prop:string):any
+// 		nilFilter<T>(o:T[]):T[]
+// 	}
+// }
 declare global {
-	interface LodashMixins {
-		isArrayEqualBy(arr1,arr2,prop):boolean
-		inline<R>(fn:()=>R):R
-		uniqueListBy<T>(list:List<T>,...keyPath:string[]):List<T>
-		toJS(o:any):any
-		assignGlobal(o:any):any
-		isPromise(o:any):boolean
-		modelArrayToMapBy(o:any[],prop:string):any
-		nilFilter<T>(o:T[]):T[]
+	//interface LoDashMixins {
+	module _ {
+		interface LoDashStatic {
+			isArrayEqualBy(arr1, arr2, prop):boolean
+			inline<R>(fn:()=>R):R
+			uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
+			toJS(o:any):any
+			assignGlobal(o:any):any
+			isPromise(o:any):boolean
+			modelArrayToMapBy(o:any[], prop:string):any
+			nilFilter<T>(o:T[]):T[]
+			nilListFilter<T extends any>(a:List<T>):List<T>
+		}
 	}
 }
 
@@ -24,6 +39,9 @@ const _ = require('lodash')
  * isArrayEqual
  */
 _.mixin({
+	nilListFilter<T extends any>(a:List<T>):List<T> {
+		return !a ? List<T>() : a.filter(item => !_.isNil(item)) as any
+	},
 	nilFilter<T>(a:T[]):T[] {
 		return !a ? [] : a.filter(item => !_.isNil(item))
 	},

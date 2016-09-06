@@ -208,7 +208,7 @@ export interface IIssueEditDialogState {
  * @class IssueEditDialog
  * @constructor
  **/
-@Radium
+
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	editingIssue: editingIssueSelector,
@@ -220,6 +220,7 @@ export interface IIssueEditDialogState {
 		.dialogs.get(Dialogs.IssueEditDialog) === true
 
 },createDeepEqualSelector))
+@Radium
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {

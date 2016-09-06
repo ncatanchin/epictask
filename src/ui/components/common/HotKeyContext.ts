@@ -47,46 +47,47 @@ export function HotKeyContext(hotKeyMap = {}) {
 
 		// Original mount fn
 		const componentWillMountFn = Component.prototype.componentWillMount
-
+		//Object.defineProperty(Component,'prototype',{writable:true})
 		assign(Component, {
 			contextTypes: assign(Component.contextTypes || {}, {
 				hotKeyMap: React.PropTypes.object
 			}),
 			childContextTypes: assign(Component.childContextTypes || {}, {
 				hotKeyMap: React.PropTypes.object
-			}),
-			prototype: assign(Component.prototype, {
-				getChildContext,
-				componentWillMount() {
-					this.updateMap()
-					if (componentWillMountFn)
-						componentWillMountFn.call(this)
-				},
-
-				updateMap() {
-					const newMap = this.buildMap();
-
-					if (!_.isEqual(newMap, this.__hotKeyMap__)) {
-						this.__hotKeyMap__ = newMap;
-						return true;
-					}
-
-					return false;
-				},
-
-				buildMap() {
-					const parentMap = this.context.hotKeyMap || {};
-					const thisMap = this.props.keyMap || {};
-
-					return assign({}, parentMap, hotKeyMap, thisMap);
-				},
-
-				getMap() {
-					return this.__hotKeyMap__;
-				}
 			})
-
 		})
+		assign(Component.prototype,{
+			getChildContext,
+			componentWillMount() {
+				this.updateMap()
+				if (componentWillMountFn)
+					componentWillMountFn.call(this)
+			},
+
+			updateMap() {
+				const newMap = this.buildMap();
+
+				if (!_.isEqual(newMap, this.__hotKeyMap__)) {
+					this.__hotKeyMap__ = newMap;
+					return true;
+				}
+
+				return false;
+			},
+
+			buildMap() {
+				const parentMap = this.context.hotKeyMap || {};
+				const thisMap = this.props.keyMap || {};
+
+				return assign({}, parentMap, hotKeyMap, thisMap);
+			},
+
+			getMap() {
+				return this.__hotKeyMap__;
+			}
+		})
+
+	
 
 	}
 }

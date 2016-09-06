@@ -32,7 +32,7 @@ module.exports = function (storybookBaseConfig, configType) {
 		resolveConfig = (storybookBaseConfig.resolve = storybookBaseConfig.resolve || {}),
 		moduleConfig = (storybookBaseConfig.module = storybookBaseConfig.module || {}),
 		pluginConfig = (storybookBaseConfig.plugins = storybookBaseConfig.plugins || {}),
-		tsConfigFile = `${process.cwd()}/.tsconfig.renderer.ui.json`
+		tsConfigFile = `${process.cwd()}/.tsconfig.renderer.json`
 	
 	console.log(`Using tsconfig file @ ${tsConfigFile}`)
 	

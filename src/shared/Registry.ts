@@ -1,5 +1,7 @@
 import {ToolPanelLocation, ITool, IToolProps,IToolConfig} from "shared/tools/ToolTypes"
 import React from 'react'
+import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
+
 const log = getLogger(__filename)
 
 /**
@@ -30,7 +32,7 @@ export interface IModelConstructor<T> {
 	fromJS(o:any):T
 }
 
-export interface IToolConstructor extends IToolConfig, React.Component<IToolProps,any> {
+export interface IToolConstructor extends IToolConfig {
 	new (...args:any[]):any
 	
 	
@@ -91,10 +93,22 @@ export function RegisterModel<T extends IModelConstructor<any>>(target:T) {
 
 	target.$$clazz = clazzName
 	
-	return decorateConstructor(function(...args:any[]) {
-		target.apply(this,args)
-		this.$$clazz = clazzName
-	},target) as T
+	let clazzVal = clazzName
+	
+	Object.defineProperty(target.prototype,'$$clazz',{
+		get: function() {
+			return clazzVal
+		},
+		set: function(newVal) {
+			if (newVal)
+				clazzVal = newVal
+		}
+	})
+	// return decorateConstructor(function(...args:any[]) {
+	// 	//target.apply(this,args)
+	// 	//super(...args)
+	// 	this.$$clazz = clazzName
+	// },target) as T
 }
 
 /**
@@ -147,6 +161,8 @@ export function RegisterTool() {
  */
 function registerTool(name,clazz:IToolConstructor) {
 	getRegistry(RegistryType.Tools)[name] = {name,clazz}
+	const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
+	Container.get(UIActionFactory).registerTool(clazz as any)
 }
 
 

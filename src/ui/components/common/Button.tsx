@@ -67,7 +67,7 @@ export class Button extends React.Component<IButtonProps,void> {
 			styles.root,
 			styles[mode],
 			(disabled) && styles.disabled,
-			style
+			...(Array.isArray(style) ? style : [style])
 		)
 
 		rootStyle[':hover'] = rootStyle[':hover'] || {

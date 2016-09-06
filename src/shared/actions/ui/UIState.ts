@@ -15,22 +15,32 @@ export enum StatusType {
 	Loading
 }
 
-function makeDefaultToolPanels(basePanels = []) {
+function makeDefaultToolPanels(basePanels = {}):Map<string,IToolPanel> {
 	const defaultLocations = [
 		ToolPanelLocation.Right,
 		ToolPanelLocation.Left,
 		ToolPanelLocation.Bottom
 	]
 	
-	return defaultLocations.map(location => basePanels.find(it => it.location === location) ||{
-		id: ToolPanelLocation[location],
-		location,
-		tools:[],
-	}).concat(
-		basePanels.filter(it => !defaultLocations.includes(it.location))
-	).reduce((panels:List<IToolPanel>, panelState:IToolPanel) => {
-		return panels.push(panelState)
-	},List<IToolPanel>())
+	const panels = defaultLocations
+		.map(location => ({id:ToolPanelLocation[location],location}))
+		.map(({id,location}) => basePanels[id] ||
+			{
+				id,
+				location,
+				tools:{},
+			})
+	
+	Object
+		.keys(basePanels)
+		.filter(id => !Object.keys(panels).includes(id))
+		.forEach(id => panels[id] = basePanels[id])
+	
+	return panels
+		.reduce((panels:Map<string,IToolPanel>, panel:IToolPanel) => {
+			return panels.set(panel.id,panel)
+		},Map<string,IToolPanel>())
+		
 }
 
 
@@ -75,7 +85,7 @@ export class UIState extends UIStateRecord implements State {
 	user:User
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
-	toolPanels:List<IToolPanel>
+	toolPanels:Map<string,IToolPanel>
 	
 
 

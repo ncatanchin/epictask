@@ -460,7 +460,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	 * Tool Panel Container
 	 */
 	toolPanel: {
-		
+		gutter: {
+			backgroundColor: primary.hue1
+		}
 	},
 	
 	/**

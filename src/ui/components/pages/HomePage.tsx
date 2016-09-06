@@ -36,25 +36,20 @@ const styles:any = createStyles({
 })
 
 interface IHomeProps {
-	toolPanels:List<IToolPanel>
+	toolPanels:Map<string,IToolPanel>
 }
 
 interface IHomeState {
 	width?:number
 }
 
-/**
- * Map theme into props - very shorthand
- * @param state
- */
-const mapStateToProps = createStructuredSelector({
-	toolPanelStates: (state) => uiStateSelector(state).toolPanels
-},createDeepEqualSelector)
 
 /**
  * The root container for the app
  */
-@connect(mapStateToProps)
+@connect(createStructuredSelector({
+	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
+}, createDeepEqualSelector))
 @Themed
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
@@ -70,14 +65,16 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	render() {
 		const
 			{toolPanels} = this.props,
-			getPanel = (location) => toolPanels.find(it => it.location === location) || {} as IToolPanel,
+			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
+			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
+			toolCount = (panel:IToolPanel) => Object.keys(getTools(panel)).length,
 			rightPanel = getPanel(ToolPanelLocation.Right),
 			leftPanel = getPanel(ToolPanelLocation.Left),
 			bottomPanel = getPanel(ToolPanelLocation.Bottom),
 			[panelMinOpen,panelMinClosed] = [convertRem(20), convertRem(2)],
 			
-			panelMinSize = (panel:IToolPanel) => panel.open ? panelMinOpen : panelMinClosed,
-			panelMaxSize = (panel:IToolPanel) => panel.open ? this.state.width / 2 : panelMinClosed
+			panelMinSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? panelMinOpen : panelMinClosed,
+			panelMaxSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? this.state.width / 2 : panelMinClosed
 
 		return <Page onResize={this.updateState} id="homePage">
 			<Radium.Style scopeSelector="#homePage"
@@ -101,8 +98,9 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 						{/* PRIMARY CONTENT + Tool Panel Right Split */}
 						<SplitPane className="toolPanelSplitPane"
 						           split="vertical"
-					             minSize={panelMinSize(leftPanel)}
-											 maxSize={panelMaxSize(leftPanel)}>
+						           primary="second"
+					             minSize={panelMinSize(rightPanel)}
+											 maxSize={panelMaxSize(rightPanel)}>
 							<IssuesPanel />
 							<ToolPanel location={ToolPanelLocation.Right}/>
 						</SplitPane>

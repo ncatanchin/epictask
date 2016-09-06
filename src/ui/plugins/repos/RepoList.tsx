@@ -2,7 +2,7 @@
 
 
 import * as React from 'react'
-import {Icon,Renderers} from '../common'
+import {Icon,Renderers} from 'ui/components/common'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AvailableRepo,Repo} from 'shared/models'
 import {connect} from 'react-redux'

@@ -6,7 +6,7 @@ export default (opts) => {
 			"useCache":     true,
 			"babelOptions": {
 				"presets":    [
-					"es2016-node5",
+					"es6-node6",
 					"stage-0",
 					"react",
 					"async-to-bluebird"

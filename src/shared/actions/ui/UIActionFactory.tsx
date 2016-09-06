@@ -1,6 +1,6 @@
 import * as uuid from 'node-uuid'
 import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
-import {List} from 'immutable'
+import {List,Map} from 'immutable'
 import {UIKey, DefaultTools} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
@@ -13,8 +13,7 @@ import {cloneObject} from "shared/util/ObjectUtil"
 
 // Import only as type - in case we are not on Renderer
 const
-	log = getLogger(__filename),
-	dataUrl = require('dataurl')
+	log = getLogger(__filename)
 
 export function makeToastMessage(opts:any) {
 	return Object.assign({},opts,{
@@ -25,7 +24,7 @@ export function makeToastMessage(opts:any) {
 	})
 }
 
-export type TToolIndexTuple = [number,number]
+
 
 @Provided
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
@@ -36,37 +35,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			(it.location !== ToolPanelLocation.Window || it.id === id)
 	
 	
-	private makeToolFinder(returnIndicies:boolean) {
-		return (toolId:string, state:UIState = this.state) => {
-			const
-				panels = this.state.toolPanels,
-				toolPredicate = tool => tool.id === toolId,
-				
-				// Find the panel first
-				panelIndex = panels.findIndex(panel =>
-					panel.tools.findIndex(toolPredicate) > -1)
-			
-			if (panelIndex === -1)
-				return [-1, -1]
-			
-			const
-				tools = panels.get(panelIndex).tools,
-				toolIndex = tools.findIndex(toolPredicate)
-			
-			return returnIndicies ? [panelIndex, toolIndex] : tools[toolIndex]
-			
-		}
+	getToolParentPanel(toolId:string, state:UIState = this.state):IToolPanel {
+		return state.toolPanels.valueSeq().find(it => !!it.tools[toolId])
 	}
 	
-	/**
-	 * Get indices for tool
-	 *
-	 * @param toolId
-	 * @param state
-	 * @returns {any}
-	 */
-	
-	private getToolIndices = this.makeToolFinder(true) as (toolId:string,state?:UIState) => TToolIndexTuple
 	
 	/**
 	 * Get tool by id
@@ -75,7 +47,20 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param state
 	 * @returns {any}
 	 */
-	private getTool = this.makeToolFinder(false) as (toolId:string,state?:UIState) => ITool
+	getTool(toolId:string, state:UIState = this.state):ITool {
+		const panels = state.toolPanels.valueSeq().toArray()
+		
+		let tool:ITool
+		
+		for (let panel of panels) {
+			tool = panel.tools[toolId]
+			
+			if (tool)
+				break
+		}
+		
+		return tool
+	}
 	
 	constructor() {
 		super(UIState)
@@ -90,13 +75,32 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * Open a specific tool
 	 *
 	 * @param toolId
+	 * @param forceState
 	 */
-	openTool(toolId:string) {
+	toggleTool(toolId:string,forceState:boolean = null) {
 		const tool = this.getTool(toolId)
 		assert(tool,`Unable to find tool with id ${toolId}`)
 		
 		
-		this.updateTool(cloneObject(tool,{visible:true}))
+		this.updateTool(cloneObject(tool,{
+			active:!_.isNil(forceState) ? forceState : !tool.active
+		}))
+	}
+	
+	getToolPanels(state:UIState = this.state) {
+		return state.toolPanels || Map<string,IToolPanel>()
+	}
+	
+	/**
+	 * Internal method used a few times to update panel
+	 * @param state
+	 * @param panel
+	 * @returns {Map<string, Map<string, IToolPanel>>}
+	 */
+	private doPanelUpdate(state:UIState,panel:IToolPanel) {
+		
+		
+		return state.set('toolPanels',this.getToolPanels(state).set(panel.id,panel))
 	}
 	
 	/**
@@ -107,40 +111,27 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	@ActionReducer()
 	updateTool(tool:ITool) {
-		return (state:UIState) => state.update('toolPanels',(panels:List<IToolPanel>) => {
+		return (state:UIState) => {
 			
 			// Find the panel first
-			const [panelIndex,toolIndex] = this.getToolIndices(tool.id,state)
+			const parentPanel = this.getToolParentPanel(tool.id,state) || this.getToolPanelState(tool.defaultLocation)
 			
-			// This is a new tool
+			assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
 			
-			const srcPanel = panelIndex === -1 ?
-				this.getToolPanelState(tool.defaultLocation) :
-				panels.get(panelIndex)
+			const panel = cloneObject(parentPanel)
 			
-			assert(srcPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
+			panel.tools[tool.id] = tool
+			panel.open = Object.values(panel.tools).some(it => it.active)
 			
-			const panel = cloneObject(srcPanel)
-			panel.tools[toolIndex > -1 ? toolIndex : panel.tools.length] = tool
+			return this.doPanelUpdate(state,panel)
 			
-			return panels.set(panelIndex, panel)
-			
-			
-		})
+		}
 	}
 	
 	
 	@ActionReducer()
-	updateToolPanel(toolPanel:IToolPanel) {
-		return (state:UIState) => state.update('toolPanels',(toolPanels:List<IToolPanel>) => {
-			const index = toolPanels.findIndex(
-				this.toolPanelPredicate(toolPanel.id,toolPanel.location))
-			
-			return (index > -1) ?
-				toolPanels.set(index,toolPanel) :
-				toolPanels.push(toolPanel)
-			
-		})
+	updateToolPanel(panel:IToolPanel) {
+		return (state:UIState) => this.doPanelUpdate(state,panel)
 	}
 	
 	/**
@@ -153,22 +144,15 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Get tool panel state
 	 *
-	 * @param id
-	 * @param location
+	 * @param idOrLocation
 	 * @returns {IToolPanel}
 	 */
-	getToolPanelState(id:string,location:ToolPanelLocation):IToolPanel
-	getToolPanelState(idOrLocation:string|ToolPanelLocation,location:ToolPanelLocation = null):IToolPanel {
-		let id:string = null
+	
+	getToolPanelState(idOrLocation:string|ToolPanelLocation):IToolPanel {
+		const id:string = (isNumber(idOrLocation)) ? ToolPanelLocation[idOrLocation] : idOrLocation
 		
-		if (isNumber(idOrLocation)) {
-			location = idOrLocation
-		} else {
-			id = idOrLocation
-		}
-		
-		assert(location,'Location can not be nil')
-		return this.state.toolPanels.find(this.toolPanelPredicate(id,location))
+		assert(id,'Location can not be nil')
+		return this.state.toolPanels.get(id)
 	}
 	
 	/**
@@ -199,27 +183,26 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			location = idOrLocation
 		}
 		
-		const
-			panels = this.state.toolPanels,
-			panelStateIndex = panels.findIndex(it =>
-				it.location === location && (it.location !== ToolPanelLocation.Window || it.id === id))
+		const panels = this.state.toolPanels
 			
-		let panelState = panelStateIndex === -1 ? null : panels.get(panelStateIndex)
-		if (panelState)
-			id = panelState.id
+		let panel = panels.get(id)
+		if (panel)
+			id = panel.id
 		else {
-			panelState = {
+			panel = {
 				id,
 				location,
 				open: [ToolPanelLocation.Window,ToolPanelLocation.Left].includes(location),
 				isDefault: ToolPanelLocation.Left === location,
-				tools:[]
+				tools:{}
 			}
+			this.updateToolPanel(panel)
 		}
-		this.updateToolPanel(panelState)
+		
 		
 		return id
 	}
+	
 	
 	/**
 	 * Register a tool in the app
@@ -227,8 +210,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param tool
 	 */
 	registerTool(tool:ITool) {
-		const existingTool = this.getTool(tool.id)
+		const
+			existingTool = this.getTool(tool.id),
+			completeTool = cloneObject(tool,_.pick(existingTool || {},'data','active')) as ITool
 		
+		completeTool.active = _.isNil(completeTool.active) ? false : completeTool.active
+		completeTool.data = _.isNil(completeTool.data) ? {} : completeTool.data
+		
+		this.updateTool(completeTool)
 		
 	}
 
@@ -355,7 +344,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 
 	toggleRepoPanelOpen() {
-		return this.openTool(DefaultTools.RepoPanel)
+		return this.toggleTool(DefaultTools.RepoPanel,true)
 	}
 
 

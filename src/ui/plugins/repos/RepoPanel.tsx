@@ -96,9 +96,10 @@ export interface IRepoPanelProps extends IToolProps {
  * @constructor
  **/
 
+
+@HotKeyContext()
 @ThemedStyles(baseStyles,'repoPanel')
 @Radium
-@HotKeyContext()
 @PureRender
 @RegisterTool()
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
@@ -108,11 +109,11 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	 *
 	 * @type {ToolPanelLocation}
 	 */
-	static readonly defaultLocation = ToolPanelLocation.Left
+	static defaultLocation = ToolPanelLocation.Left
 	
-	static readonly id = DefaultTools.RepoPanel
+	static id = DefaultTools.RepoPanel
 	
-	static readonly name = "Repos"
+	static label = "Repos"
 	
 	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 	
