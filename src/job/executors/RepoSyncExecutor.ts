@@ -3,7 +3,7 @@ import * as moment from 'moment'
 import ActivityManagerService from 'shared/services/ActivityManagerService'
 
 import {JobHandler} from 'job/JobHandler'
-import {GitHubClient, OnPageCallback} from 'shared/GitHubClient'
+import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
 import Toaster from 'shared/Toaster'
@@ -12,7 +12,7 @@ import {getSettings} from 'shared/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
 
-import {JobType, IJob} from 'shared/actions/jobs/JobTypes'
+import {JobType, IJob, IJobLogger} from 'shared/actions/jobs/JobTypes'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 import {getStoreState} from 'shared/store/AppStore'
@@ -41,7 +41,36 @@ export class RepoSyncExecutor implements IJobExecutor {
 	private availableRepo:AvailableRepo
 	private repo:Repo
 	private job:IJob
+	private logger:IJobLogger
 
+	
+	async reloadIssues() {
+		// Reload issues first
+		await Container.get(IssueActionFactory).loadIssues()
+	}
+	
+	checkReloadActivity = (comment:Comment) => {
+		// Reload current issue if loaded
+		const issue = selectedIssueSelector(getStoreState())
+		if (
+			!issue ||
+			!comment ||
+			comment.issueNumber !== issue.number ||
+			comment.repoId !== issue.repoId
+		)
+			return
+		
+		const
+			{repo} = this,
+			issueActions = Container.get(IssueActionFactory)
+		
+		log.debug('Checking if current issue is in this repo, if so then reload',
+			_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
+		
+		// If the issue is loaded and in this repo then reload its activity
+		issueActions.loadActivityForIssue(issue.id)
+		
+	}
 	
 	/**
 	 * if dryRun argument was passed as true,
@@ -79,14 +108,16 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * @param repo
 	 */
 	@Benchmarker
-	async syncAssignees(stores:Stores, repo:Repo,onPageCallback:OnPageCallback<User> = null) {
+	async syncAssignees(stores:Stores, repo:Repo,onDataCallback:OnDataCallback<User> = null) {
 		/*
 		if (!(repo.permissions.push || repo.permissions.admin)) {
 			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
 			return
 		}
 		*/
-		const users:User[] = await this.client.repoAssignees(repo,{onPageCallback})
+		const users:User[] = await this.client.repoAssignees(repo,{
+			onDataCallback
+		})
 		
 		if (this.isDryRun())
 			return users
@@ -94,9 +125,11 @@ export class RepoSyncExecutor implements IJobExecutor {
 		// Iterate all attached users and make sure we
 		// update the repoIds on the user object if
 		// already exists
-		const userRepo = stores.user
-		const existingUserIds = await userRepo.findAll()
-		const updatePromises = []
+		const
+			userRepo = stores.user,
+			existingUserIds = await userRepo.findAll(),
+			updatePromises = []
+		
 		users.forEach(user => {
 			if (existingUserIds.includes(user.id)) {
 				// Look for an existing user first
@@ -129,31 +162,51 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param stores
 	 * @param repo
+	 * @param onDataCallback
 	 */
 	@Benchmarker
-	async syncIssues(stores:Stores,repo:Repo,onPageCallback:OnPageCallback<Issue> = null) {
-		const issues = await this.client.repoIssues(repo,{
-			onPageCallback,
-			params: assign({
-				state: 'all',
-				sort: 'updated',
-				filter: 'all'
-			},this.lastSyncParams)
-		})
+	async syncIssues(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Issue> = null) {
+		const
+			issueSavePromises:Promise<any>[] = [],
+			
+			// Save a batch of images
+			saveIssues = async (issues:Issue[],pageNumber:number,totalPages:number) => {
+				for (let issue of issues) {
+					issue.repoId = repo.id
+					const existing = await stores.issue.get(issue.id)
+					if (existing)
+						assign(issue,existing,issue)
+				}
+				
+				if (issues.length)
+					await chunkSave(issues,stores.issue)
+			},
+			
+			// Get all issues
+			issues = await this.client.repoIssues(repo,{
+				
+				// On each data call back add a promise to the list
+				onDataCallback: (pageNumber:number,totalPages:number,items:Issue[]) => {
+					this.logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
+					if (this.isDryRun()) {
+						log.info(`In dry run, skipping save`)
+						return
+					}
+					
+					
+					issueSavePromises.push(saveIssues(items,pageNumber,totalPages))
+					if (onDataCallback)
+						onDataCallback(pageNumber,totalPages,items)
+				},
+				params: assign({
+					state: 'all',
+					sort: 'updated',
+					filter: 'all'
+				},this.lastSyncParams)
+			})
 
-		log.info(`Got ${issues.length} issues`)
-		if (this.isDryRun())
-			return issues
-		
-		for (let issue of issues) {
-			issue.repoId = repo.id
-			const existing = await stores.issue.get(issue.id)
-			if (existing)
-				assign(issue,existing,issue)
-		}
-
-		if (issues.length)
-			await chunkSave(issues,stores.issue)
+		await Promise.all(issueSavePromises)
+		this.logger.info(`Received & processed ${issues.length} issues`)
 
 		return issues
 	}
@@ -163,10 +216,13 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param stores
 	 * @param repo
+	 * @param onDataCallback
 	 */
 	@Benchmarker
-	async syncLabels(stores,repo,onPageCallback:OnPageCallback<Label> = null) {
-		const labels = await this.client.repoLabels(repo,{onPageCallback})
+	async syncLabels(stores,repo,onDataCallback:OnDataCallback<Label> = null) {
+		const labels = await this.client.repoLabels(repo,{
+			onDataCallback
+		})
 		
 		if (this.isDryRun())
 			return labels
@@ -188,10 +244,16 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param stores
 	 * @param repo
+	 * @param onDataCallback
 	 */
 	@Benchmarker
-	async syncMilestones(stores,repo,onPageCallback:OnPageCallback<Milestone> = null) {
-		const milestones = await this.client.repoMilestones(repo,{params: {state: 'all'}})
+	async syncMilestones(stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
+		const milestones = await this.client.repoMilestones(repo,{
+			onDataCallback,
+			params: {
+				state: 'all'
+			}
+		})
 		
 		if (this.isDryRun())
 			return milestones
@@ -214,73 +276,104 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param stores
 	 * @param repo
+	 * @param onDataCallback
 	 */
+	
 	@Benchmarker
-
-	async syncComments(stores,repo,onPageCallback:OnPageCallback<Comment> = null) {
-		let comments = await this.client.repoComments(repo, {
-			params: assign({sort: 'updated'}, this.lastSyncParams)
-		})
+	async syncComments(stores,repo,onDataCallback:OnDataCallback<Comment> = null) {
+		const
+			commentSavePromises = [],
+			
+			// Save a batch of images
+			saveComments = async (comments:Comment[],pageNumber:number,totalPages:number) => {
+				
+				this.logger.info(`Received comments page ${pageNumber} or ${totalPages}`)
+				
+				for (let comment of comments) {
+					if (!comment.issue_url) {
+						this.logger.error(`Comment is missing issue url: ${comment.id}`)
+						log.error(`Comment is missing issue url`, comment)
+						return
+					}
+					
+					const existing = await stores.milestone.get(comment.id)
+					
+					if (existing)
+						assign(comment,existing,comment)
+					
+					assign(comment,{
+						repoId: repo.id,
+						issueNumber:parseInt(comment.issue_url.split('/').pop(),10),
+						parentRefId: Comment.makeParentRefId(repo.id,comment.issueNumber)
+					})
+					
+					this.checkReloadActivity(comment)
+				}
+				
+				if (comments.length)
+					await chunkSave(comments,stores.comment)
+			},
+			comments = await this.client.repoComments(repo, {
+					// On each data call back add a promise to the list
+					onDataCallback: (pageNumber:number,totalPages:number,items:Comment[]) => {
+						this.logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
+						if (this.isDryRun()) {
+							log.info(`In dry run, skipping save`)
+							return
+						}
+						
+						
+						commentSavePromises.push(saveComments(items,pageNumber,totalPages))
+						if (onDataCallback)
+							onDataCallback(pageNumber,totalPages,items)
+					},
+				params: assign({sort: 'updated'}, this.lastSyncParams)
+			})
+		
+		this.logger.info(`Received ${comments.length} comments since last sync`)
 		
 		if (this.isDryRun())
 			return comments
-
-		// Fill in the fields we tack directly
-		for (let comment of comments) {
-			if (!comment.issue_url) {
-				log.error(`Comment is missing issue url`, comment)
-				return
-			}
-			const existing = await stores.milestone.get(comment.id)
-			if (existing)
-				assign(comment,existing,comment)
-
-			comment.repoId = repo.id
-
-			const issueIdStr = comment.issue_url.split('/').pop()
-
-			comment.issueNumber = parseInt(issueIdStr,10)
-			comment.parentRefId = Comment.makeParentRefId(repo.id,comment.issueNumber)
-
-
-		}
-
-		await chunkSave(comments,stores.comment)
+		
+		this.logger.info(`Saving ${comments.length} comments`)
+		await Promise.all(commentSavePromises)
+		this.logger.info(`Saved ${comments.length} comments`)
+		
 		return comments
 	}
 
+	
+	
 	/**
 	 * Job executor
 	 *
 	 * @param handler
+	 * @param logger
 	 * @param job
 	 */
 	@Benchmarker
-	async execute(handler:JobHandler, job:IJob) {
+	async execute(handler:JobHandler,logger:IJobLogger,job:IJob) {
+		this.logger = logger
+		
 		if (!getSettings().token) {
 			log.warn(`User is not authenticated, can not sync`)
 			return
 		}
 		
+		// Assign job & props
 		if (job) {
-			const {availableRepo,repo} = job.args
-			
-			Object.assign(this,{
-				availableRepo,
-				repo,
-				job
-			})
-			
+			Object.assign(this,
+				_.pick(job.args,'availableRepo','repo'),
+				{job})
 		}
 
 		this.client = Container.get(GitHubClient)
 
-		const activityManager = Container.get(ActivityManagerService)
-		const stores = Container.get(Stores)
-		const toaster = Container.get(Toaster)
-		const issueActions =  Container.get(IssueActionFactory)
-
-		const {availableRepo,repo} = this
+		const
+			activityManager = Container.get(ActivityManagerService),
+			stores = Container.get(Stores),
+			toaster = Container.get(Toaster),
+			{availableRepo,repo} = this
 
 		if (!getSettings().token) {
 			log.info("Can not sync, not authenticated")
@@ -308,39 +401,33 @@ export class RepoSyncExecutor implements IJobExecutor {
 			// Track the execution for timing/update purposes
 			// As well as throttling management
 			const repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)
-			log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
+			this.logger.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
+			//log.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
 
 			// Now get the store state to check if updates are needed
 
 
 			// If the current repo is not enabled then return
 			const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
+			
 			if (!enabledRepoIds.includes(repo.id)) return
-
-			// Reload issues first
-			await issueActions.loadIssues()
+			
+			await this.reloadIssues()
 
 			log.info('Now syncing comments')
 			await Promise.delay(1)
 			await this.syncComments(stores,repo)
 
-			// Reload current issue if loaded
-			let currentIssueId = issueActions.state.selectedIssueId
-			if (currentIssueId) {
-
-				const issue = selectedIssueSelector(getStoreState())
-
-				log.debug('Checking if current issue is in this repo, if so then reload',
-					_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
-
-				// If the issue is loaded and in this repo then reload its activity
-				if (issue && issue.repoId === repo.id)
-					issueActions.loadActivityForIssue(issue.id)
-			}
+			
 
 		} catch (err) {
 			log.error('failed to sync repo issues', err)
 			toaster.addErrorMessage(err)
 		}
 	}
+}
+
+
+if (module.hot) {
+	module.hot.accept(() => log.info(`HMR update - job classes just re-register/2`))
 }

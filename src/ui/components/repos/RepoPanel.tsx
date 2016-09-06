@@ -17,11 +17,10 @@ import {RepoList,Icon,Button} from 'components'
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {Themed} from 'shared/themes/ThemeManager'
-import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {PureRender} from 'ui/components/common/PureRender'
 import * as Radium from 'radium'
+import {IToolProps} from "ui/components/ToolPanel"
 const {CommonKeys:Keys} = KeyMaps
 const {HotKeys} = require('react-hotkeys')
 
@@ -29,7 +28,7 @@ const {HotKeys} = require('react-hotkeys')
 // Constants
 const log = getLogger(__filename)
 
-const styles:any = createStyles({
+const baseStyles:any = createStyles({
 	cover: makeStyle(FlexColumn,FlexScale,Fill,{
 
 	}),
@@ -116,15 +115,10 @@ const styles:any = createStyles({
 /**
  * IRepoDrawerProps
  */
-export interface IRepoPanelProps {
+export interface IRepoPanelProps extends IToolProps {
 	theme?:any
-	repoPanelOpen?:boolean
+	styles?:any
 }
-
-const mapStateToProps = createStructuredSelector({
-	repoPanelOpen: (state) => uiStateSelector(state).repoPanelOpen
-},createDeepEqualSelector)
-
 
 
 /**
@@ -133,9 +127,9 @@ const mapStateToProps = createStructuredSelector({
  * @class RepoPanel
  * @constructor
  **/
+
+@ThemedStyles(baseStyles,'repoPanel')
 @Radium
-@connect(mapStateToProps)
-@Themed
 @HotKeyContext()
 @PureRender
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
@@ -170,34 +164,29 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 	render() {
 		const
-			{theme,repoPanelOpen} = this.props,
-			{repoPanel:themeStyle} = theme,
-			s = mergeStyles(styles,themeStyle),
-
-			panelStyle = makeStyle(
+			{theme,toolState,styles,open} = this.props,
+			
+			panelStyle = [
 				styles.panel,
-				themeStyle.root,
-				!repoPanelOpen ? styles.panel.closed : {}
-			),
+				styles.root,
+				!open ? styles.panel.closed : {}
+			],
 
 			drawerControlStyle = makeStyle(
 				styles.drawerControl,
-				themeStyle.drawerControl,
-				!repoPanelOpen && styles.drawerControl.visible
+				!open && styles.drawerControl.visible
 			),
 
-			drawerWrapperStyle = makeStyle(
+			drawerWrapperStyle = [
 				styles.drawerWrapper,
-				!repoPanelOpen && styles.drawerWrapper.closed
-			),
+				!open && styles.drawerWrapper.closed
+			],
 
-			drawerStyle = makeStyle(styles.drawer,themeStyle.root),
+			drawerStyle = [styles.drawer,styles.root],
 
-			headerStyle = makeStyle(styles.header,themeStyle.header),
+			headerStyle = [styles.header],
 
-			headerButtonStyle = makeStyle(styles.headerButton,themeStyle.headerButton,{
-				':hover': themeStyle.headerButtonHover
-			})
+			headerButtonStyle = [styles.headerButton]
 
 
 		return <div style={drawerWrapperStyle}>
@@ -212,7 +201,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 				{/* Header controls */}
 				<div style={headerStyle}>
-					<div style={s.headerTitle}>Repositories</div>
+					<div style={styles.headerTitle}>Repositories</div>
 					<Button tabIndex={-1} style={headerButtonStyle} onClick={this.onAddRepoClicked}>
 						<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
 					</Button>

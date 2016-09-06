@@ -7,7 +7,22 @@ import {Repo} from 'shared/models/Repo'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {availRepoModelsSelector, repoModelsSelector, milestoneModelsSelector, labelModelsSelector} from 'shared/actions/data/DataSelectors'
+import {RepoState} from "shared/actions/repo/RepoState"
+import {RepoKey} from "shared/Constants"
 
+/**
+ * Get the current repo state
+ * @param state
+ * @return {RepoState}
+ */
+export const repoStateSelector:(state) => RepoState = _.memoize((state) => state.get(RepoKey))
+
+/**
+ * Get repo id from object
+ *
+ * @param o
+ * @returns {number}
+ */
 function getRepoId(o:any):number {
 	return !o ? null :
 		_.isNumber(o) ? o :
@@ -16,7 +31,7 @@ function getRepoId(o:any):number {
 }
 export const repoIdPredicate = (o:any) => {
 	const repoId = getRepoId(o)
-	assert(repoId > 0, 'Must provied a repoId or object with repo id')
+	assert(repoId > 0, 'Must provided a repoId or object with repo id')
 
 	return (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
 }
@@ -47,7 +62,20 @@ export const enabledReposSelector:(state) => AvailableRepo[] = createDeepEqualSe
 	}
 )
 
+/**
+ * Available Repos that are enabled
+ *
+ * @param state
+ */
 export const enabledRepoIdsSelector = (state):number[] => enabledReposSelector(state)
+	.map((availRepo:AvailableRepo) => availRepo.repoId)
+
+/**
+ * Repo Ids that are currently selected in the UI
+ *
+ * @param state
+ */
+export const selectedRepoIdsSelector = (state):number[] => (state)
 	.map((availRepo:AvailableRepo) => availRepo.repoId)
 
 export function createEnabledAvailRepoSelector() {

@@ -24,8 +24,13 @@ export class AppStoreService extends BaseService {
 		super()
 	}
 	
+	/**
+	 * Create and start the AppStore
+	 */
 	async start():Promise<this> {
-		log.info(`BUILDING APP STORE`)
+		
+		log.info(`Starting/Creating AppStore`)
+		
 		// If state server, then use the server enhancer
 		const enhancer = ProcessConfig.isType(ProcessType.StateServer) ?
 			require('server/ServerStoreEnhancer').default :

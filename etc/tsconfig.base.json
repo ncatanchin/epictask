@@ -18,7 +18,7 @@
 		"preserveConstEnums": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
-		"outDir": "../dist/out",
+		"outDir": "../dist/out/ts",
 		"paths": {
 			"tests/*": [
 				"./tests/*"

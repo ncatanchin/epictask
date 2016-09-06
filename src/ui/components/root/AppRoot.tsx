@@ -227,7 +227,6 @@ class App extends React.Component<IAppProps,any> {
 					>
 
 						{/* DIALOGS */}
-
 						<IssueEditDialog />
 						<IssueCommentDialog />
 						<RepoAddDialog />

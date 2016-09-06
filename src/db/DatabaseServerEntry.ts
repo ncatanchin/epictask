@@ -53,11 +53,16 @@ function storeOptions() {
 	return opts
 }
 
-// PouchDB Plugin
-let storePlugin:PouchDBPlugin
 
-// TypeStore coordinator
+
+
+
 let
+	
+	// PouchDB Plugin
+	storePlugin:PouchDBPlugin,
+	
+	// TypeStore coordinator
 	coordinator:TSCoordinator,
 	stores:Stores = new Stores()
 
@@ -280,5 +285,21 @@ if (module.hot) {
 	module.hot.dispose(() => {
 		log.info('disposing database server')
 		databaseServerEntry.kill()
+		
+		if (coordinator) {
+			try {
+				coordinator.stop()
+			} catch (err) {
+				log.warn(`HMR dispose, failed to stop TS coordinator`,err)
+			}
+		}
+		
+		if (storePlugin) {
+			try {
+				storePlugin.db.close()
+			} catch (err) {
+				log.warn(`HMR dispose, failed to stop TS coordinator`,err)
+			}
+		}
 	})
 }

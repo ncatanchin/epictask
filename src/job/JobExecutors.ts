@@ -1,4 +1,4 @@
-import {JobType, IJob} from "shared/actions/jobs/JobTypes"
+import {JobType, IJob, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {JobHandler} from "job/JobHandler"
 
 
@@ -28,7 +28,7 @@ export interface IJobExecutor {
 	 * @param handler
 	 * @param job
 	 */
-	execute(handler:JobHandler, job:IJob):Promise<any>
+	execute(handler:JobHandler,logger:IJobLogger,job:IJob):Promise<any>
 }
 
 /**
@@ -36,11 +36,8 @@ export interface IJobExecutor {
  */
 export function loadAllExecutors() {
 	log.info(`Loading Job Types`)
-	if (this.killed) {
-		return
-	}
 	
-	const ctx = this.jobsCtx =
+	const ctx =
 		require.context('job/executors/',true)
 	
 	// Get the filenames

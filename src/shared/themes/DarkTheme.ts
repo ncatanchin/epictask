@@ -471,11 +471,12 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 		headerButton:      {
 			backgroundColor: primary.hue2,
-			color:           text.secondary
+			color:           text.secondary,
+			':hover': {
+				backgroundColor: accent.hue1
+			}
 		},
-		headerButtonHover: {
-			backgroundColor: accent.hue1,
-		},
+		
 		list:              {
 			item: {
 				backgroundColor: primary.hue3,
@@ -700,7 +701,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 						details: {
 							control: {
 								button: {
-									background: 'transparent',
+									backgroundColor: 'transparent',
 									color: tc(text.primary).setAlpha(0.8).toRgbString(),
 									':hover': {
 										color: tc(text.primary).setAlpha(1).toRgbString(),

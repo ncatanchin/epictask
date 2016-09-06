@@ -14,10 +14,13 @@ import {TweenLite,TimelineLite} from 'ui/util/gsap'
 // Constants
 const
 	sliceTag = require('!!raw!assets/images/logo/slice.svg'),
+	fontSize = rem(4),
 	log = getLogger(__filename),
 
 	baseStyles = createStyles({
-		root: [FillWidth,FillHeight,FlexScale,PositionRelative, {}]
+		root: [FillWidth,FillHeight,FlexScale,PositionRelative, {
+			backgroundColor: getTheme().palette.background
+		}]
 	})
 	
 
@@ -74,19 +77,20 @@ function makeSlice(fill:string) {
 }
 
 function makeText() {
-	return $(`<div>epictask</div>`).css({
+	return $(`<div></div>`).css({
 		fontFamily: 'AvenirNext',
-		fontWeight: 100,
+		fontWeight: 300,
+		fontSize,
+		color: getTheme().palette.text.secondary,
 		position: 'absolute',
 		left: '50%',
 		top: '50%',
 		width: '50%',
+		zIndex: 5,
 		textAlign: 'center',
-		fontSize: '6rem',
 		transform: 'translate(0,-50%)',
-		opacity: 0,
-		color: 'black'
-	})
+		opacity: 0
+	}).html(`loading`)
 }
 
 /**
@@ -117,54 +121,55 @@ export class Loader extends React.Component<ILoaderProps,ILoaderState> {
 		
 		
 		const
+			// Re-animate duration
+			duration = 1.2,
+			
+			// Create slice elements first
 			slices = sliceConfigs.map((config,index) => {
 				const slice = makeSlice(config.fill).css({
 					// marginTop: '5%',
-					height: '40%',
+					height: '30%',
 					position: 'absolute',
 					top: '50%',
-					left: '50%',
+					left: '25%',
 					opacity: 0,
+					zIndex: index,
 					transform: 'translate(-50%,0)',
 					transformOrigin: 'top center'
 				})
 				
+				//noinspection JSPrimitiveTypeWrapperUsage
 				const angle = config.angle = 220 + (index * 13.75)
 				
 				timeline.to(slice,1,{
 					rotation: angle,
 					opacity: 1
-					//transform: `translate(-50%,0) rotate(${360 + 210 + (index * 15)}deg)`
 				},0)
 				
 				element.append(slice)
 				
 				return slice
 			}),
+			
+			// Text element
 			text = makeText().appendTo(element)
 		
-		timeline
-			.to(text,0.6,{opacity: 1},.75)
-			.delay(1)
-			.to(text,0.6,{opacity:0})
-			.addLabel('normal')
 		
-		const duration = 1.2
+		timeline.to(text,0.3,{opacity: 1,fontSize},.6)
+		timeline.addLabel('normal')
 		
 		slices.forEach((slice,index) => {
 			const
 				config = sliceConfigs[index],
 				timeOffset = .3,
 				sliceOffset = (timeOffset / slices.length) * index
-			
+
 			timeline.to(slice,duration - sliceOffset,{
 				rotation: 360 + config.angle
 			},`normal+=${sliceOffset}`)//2 + sliceOffset)
 		})
+
 		
-		timeline.to(text,duration,{opacity: 1},`normal+=${duration * .75}`)
-		timeline.delay(1)
-		timeline.to(text,duration / 3,{opacity: 0})
 		timeline.call(() => {
 				timeline.seek('normal')
 		})

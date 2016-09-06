@@ -187,9 +187,10 @@ export default function (projectConfig) {
 				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer'),
 				'process.env.DefaultTransportScheme': JSON.stringify('IPC')
 			}),
+			new webpack.NamedModulesPlugin(),
 			new webpack.ProvidePlugin({
 				//simplemde: 'simplemde/src/js/simplemde.js'
-				// 'Promise': 'bluebird'
+				'Promise': 'bluebird'
 			}),
 		
 		]),

@@ -9,14 +9,13 @@ import * as Radium from 'radium'
 import {List} from 'immutable'
 import {PureRender} from 'components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector, createSelector} from 'reselect'
+import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {IJob, IJobStatusDetail, IJobLog, getJobDescription} from "shared/actions/jobs/JobTypes"
+import {IJobStatusDetail} from "shared/actions/jobs/JobTypes"
 import {jobStateSelector, jobLogIdSelector} from "shared/actions/jobs/JobSelectors"
-import {TimeAgo} from "ui/components/common/TimeAgo"
 import {
-	makePaddingRem, FlexRowCenter, FlexColumnCenter, FlexScale, FillHeight, FillWidth,
-	FlexColumn, OverflowAuto, convertRem
+	FlexColumnCenter, FlexScale, FillHeight, FillWidth,
+	convertRem
 } from "shared/themes"
 import * as SplitPane from 'react-split-pane'
 import {LinearProgress} from "material-ui"

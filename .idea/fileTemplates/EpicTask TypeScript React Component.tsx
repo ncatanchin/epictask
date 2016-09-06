@@ -1,11 +1,6 @@
 #set ( $PropsName = "I${NAME}Props" )
 #set ( $StateName = "I${NAME}State" )
 
-
-/**
- * Created by ${USER} on ${DATE}.
- */
-
 // Imports
 import * as React from 'react'
 import {connect} from 'react-redux'

@@ -1,38 +1,24 @@
 
 
-import {createAvailableRepoSelector} from 'shared/actions/repo/RepoSelectors'
+
+import * as React from 'react'
+import {Icon,Renderers} from '../common'
+import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+import {AvailableRepo,Repo} from 'shared/models'
+import {connect} from 'react-redux'
+import * as Radium from 'radium'
+import {ThemedStyles} from "shared/themes/ThemeManager"
+import {createDeepEqualSelector} from "shared/util/SelectorUtil"
+import {createStructuredSelector} from 'reselect'
+import {createAvailableRepoSelector, selectedRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+
 /**
  * Displays a list of repos
  */
 const log = getLogger(__filename)
 
-import * as React from 'react'
-import {Icon,Renderers} from '../common'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {RepoKey, UIKey} from 'shared/Constants'
-import {AvailableRepo,Repo} from 'shared/models'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {UIState} from 'shared/actions/ui/UIState'
-import {RepoState} from 'shared/actions/repo/RepoState'
-import {ThemedStyles} from "shared/themes/ThemeManager"
-// import {Button} from 'ui/components/common/Button'
 
-const repoActions = new RepoActionFactory()
 
-//region Props
-export interface IRepoListProps {
-	availableRepos?:AvailableRepo[]
-	repos?:Repo[]
-	selectedRepo?:Repo
-	styleName?:string
-	className?:string
-	style?:any
-	selectedRepoIds?:number[]
-	theme?: any
-	styles?:any
-}
-//endregion
 
 //region Styles
 const baseStyles = createStyles({
@@ -46,12 +32,12 @@ const baseStyles = createStyles({
 			listStyle: 'none',
 			margin: 0,
 			padding: '0.5rem 0.5rem',
-			border: 0,
 			cursor: 'pointer',
 			alignItems: 'center',
 			fontSize: themeFontSize(1.1),
 			borderStyle: 'solid',
-			borderWidth: '0.1rem',
+			borderWidth: 0,
+			borderBottomWidth: '0.1rem',
 			borderColor: 'transparent',
 			enabled: {
 				fontSize: themeFontSize(1.3)
@@ -79,36 +65,33 @@ const baseStyles = createStyles({
 			}]
 		}]
 	}]
+
 })
 
 //endregion
 
-function makeMapStateToProps() {
-	const availableRepoSelector = createAvailableRepoSelector()
 
-	return (state:any,props:IRepoListProps):IRepoListProps => {
-		// const uiState:UIState = state.get(UIKey)
-		const repoState:RepoState = state.get(RepoKey)
-		const selectedRepoIds = repoState.selectedRepoIds
-
-		const availableRepos:AvailableRepo[] = availableRepoSelector(state,props)
-
-		return {
-			theme:      getTheme(),
-			availableRepos,
-			selectedRepoIds
-		}
-	}
-
-
+//region Props
+export interface IRepoListProps {
+	availableRepos?:AvailableRepo[]
+	repos?:Repo[]
+	selectedRepo?:Repo
+	styleName?:string
+	className?:string
+	style?:any
+	selectedRepoIds?:number[]
+	theme?: any
+	styles?:any
 }
-
-
+//endregion
 
 /**
  * A list of repos
  */
-@connect(makeMapStateToProps)
+@connect(createStructuredSelector({
+	availableRepos: createAvailableRepoSelector(),
+	selectedRepoIds: selectedRepoIdsSelector
+}, createDeepEqualSelector))
 @ThemedStyles(baseStyles,'repoPanel')
 @Radium
 export class RepoList extends React.Component<IRepoListProps,any> {
@@ -121,7 +104,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
-		const repoActions = new RepoActionFactory()
+		const repoActions = Container.get(RepoActionFactory)
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo.repoId,!isSelected)
 		} else {
@@ -142,10 +125,10 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 		repoActions.removeAvailableRepo(availRepoId)
 
 	}
-
+	
 	render() {
 
-		const {availableRepos,theme,styles,selectedRepoIds = []} = this.props
+		const {availableRepos,styles,selectedRepoIds = []} = this.props
 
 		
 
@@ -158,13 +141,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					const isEnabled = availRepo.enabled
 					const isHovering = this.state.hoverId === availRepo.repoId
 
-					const onSyncClicked = (e) => {
-						e.preventDefault()
-						e.stopPropagation()
-
-						repoActions.syncRepo(availRepo.repoId)
-						return false
-					}
+					
 
 					
 					return <div key={id}

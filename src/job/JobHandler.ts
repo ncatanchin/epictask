@@ -157,7 +157,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			await this.setStatus(JobStatus.InProgress)
 			
 			// Get the result
-			job.result = await this.executor.execute(this, job)
+			job.result = await this.executor.execute(this,this.logger,job)
 			
 			await this.setStatus(JobStatus.Completed)
 		} catch (err) {

@@ -298,7 +298,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${issue.repoId}`)
 		return this.renderResult(
 			issue.title,
-			repo ? Renderers.RepoName({repo}) : '',
+			repo ? <Renderers.RepoName repo={repo}/> : '',
 			'Select issue',
 			'issue-opened',
 			isSelected
@@ -310,7 +310,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${milestone.repoId}`)
 		return this.renderResult(
 			milestone.title,
-			repo ? Renderers.RepoName({repo}) : '',
+			repo ? <Renderers.RepoName repo={repo}/> : '',
 			'Filter milestone',
 			'milestone',
 			isSelected
@@ -322,7 +322,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		const repo = repoModels && repoModels.get(`${label.repoId}`)
 		return this.renderResult(
 			label.name,
-			repo ? Renderers.RepoName({repo}) : '',
+			repo ? <Renderers.RepoName repo={repo}/> : '',
 			'Filter label',
 			'tag',
 			isSelected

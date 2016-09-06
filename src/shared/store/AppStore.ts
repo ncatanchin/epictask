@@ -240,7 +240,9 @@ export async function loadAndInitStore(serverStoreEnhancer = null) {
 	
 	// Otherwise load from server
 	else {
+		log.info(`Loading state from server`)
 		defaultStateValue = await getServerClient().getState()
+		//log.info(`Got state`,defaultStateValue)
 	}
 	
 	return initStore(false,defaultStateValue,serverStoreEnhancer)

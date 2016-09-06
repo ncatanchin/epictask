@@ -10,7 +10,7 @@
   },
   "globalDependencies": {
     "bluebird": "registry:dt/bluebird#2.0.0+20160701023356",
-    "chai": "registry:dt/chai#3.4.0+20160317120654",
+    
     "electron-window-state": "registry:dt/electron-window-state#2.0.0+20160212171354",
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "github-electron": "registry:dt/github-electron#1.2.5+20160624085047",
@@ -19,7 +19,6 @@
     "later": "registry:dt/later#0.0.0+20160317120654",
     "lodash-decorators": "registry:dt/lodash-decorators#1.0.5+20160316155526",
     "lunr": "registry:dt/lunr#0.5.4+20160326120315",
-    "mocha": "registry:dt/mocha#2.2.5+20160317120654",
     "moment": "registry:dt/moment#2.8.0+20160316155526",
     "moment-node": "registry:dt/moment-node#2.11.1+20160511043338",
     "node": "registry:dt/node#6.0.0+20160524002506",
@@ -40,11 +39,14 @@
     "redux-devtools-dock-monitor": "registry:dt/redux-devtools-dock-monitor#1.0.1+20151216103641",
     "redux-logger": "registry:dt/redux-logger#2.6.0+20160316155526",
     "redux-thunk": "registry:dt/redux-thunk#2.0.1+20160317120654",
-    "sinon": "registry:dt/sinon#1.16.0+20160517064723",
+    
     "whatwg-fetch": "registry:dt/whatwg-fetch#0.0.0+20160524142046"
   },
   "globalDevDependencies": {
+    "chai": "registry:dt/chai#3.4.0+20160317120654",
+    "sinon": "registry:dt/sinon#1.16.0+20160517064723",
     "mocha": "registry:env/mocha#2.2.5+20160723033700"
+    
   },
   "devDependencies": {
     "nock": "registry:npm/nock#0.7.0+20160723033700"

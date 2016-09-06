@@ -1,10 +1,31 @@
 import 'shared/NamespaceConfig'
 import './LoDashMixins'
+import {generate as generateShortId} from 'short-id'
 
 const _ = require('lodash')
 
 export function isNil(o:any) {
 	return _.isNil(o)
+}
+
+export function isString(o:any):o is string {
+	return _.isString(o)
+}
+
+export function isNumber(o:any):o is number {
+	return _.isNumber(o)
+}
+
+export function isFunction(o:any):o is Function {
+	return _.isFunction(o)
+}
+
+export function shortId():string {
+	return generateShortId()
+}
+
+export function uuid():string {
+	return require('node-uuid').v4()
 }
 
 export function cloneObject<T>(o:T,...newSources:any[]):T {

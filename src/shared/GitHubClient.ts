@@ -60,7 +60,7 @@ export class GithubError extends Error {
 	}
 }
 
-export type OnPageCallback<M> = (pageNumber:number,totalPages:number,pageItems:M[]) => void
+export type OnDataCallback<M> = (pageNumber:number, totalPages:number, items:M[]) => void
 
 /**
  * Request options for any/all API Requests
@@ -70,7 +70,7 @@ export interface RequestOptions {
 	perPage?:number
 	page?:number
 	params?:any
-	onPageCallback?:OnPageCallback<any>
+	onDataCallback?:OnDataCallback<any>
 }
 
 
@@ -139,37 +139,55 @@ export class GitHubClient {
 			)
 
 			const lastLink = pageLinks[PageLinkType.last]
+			
+			// Because we are going to traverse, we should do a page callback first
+			this.doDataCallback(opts,result.pageNumber,lastLink ? lastLink.pageNumber : result.pageNumber,result)
+			
 			if (opts.traversePages && result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
 				log.debug('Going to traverse pages',opts,pageLinks)
 
-				// Because we are going to traverse, we should do a page callback first
-				this.doPageCallback(opts,result.pageNumber,lastLink.pageNumber,result)
-
-				let nextPageNumber = 1 //opts.page
+				
+				// Page counter / opts.page
+				let nextPageNumber = 1
+				
+				// Iterate all pages
 				while (nextPageNumber < lastLink.pageNumber) {
 					nextPageNumber++
 					
 					log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
 
-					await Promise.resolve(true).delay(1000)
-					const nextOpts = Object.assign({},opts,{page:nextPageNumber})
-					let nextResult = await this.get<T>(path,modelType,nextOpts) as T
+					await Promise.resolve(true).delay(500)
+					
+					const
+						nextOpts = Object.assign({},opts,{page:nextPageNumber}),
+						nextResult = await this.get<T>(path,modelType,nextOpts) as T
 
-					this.doPageCallback(opts,nextPageNumber,lastLink.pageNumber,nextResult)
+					this.doDataCallback(opts,nextPageNumber,lastLink.pageNumber,nextResult)
 
 					result.push(...(nextResult as any))
 				}
 			}
 		} else {
 			result = new (modelType)(result)
+			
+			// Do data callback no matter what
+			this.doDataCallback(opts,0,1,[result])
 		}
 
 		return result as any
 	}
-
-	private doPageCallback(opts:RequestOptions,pageNumber,totalPages,results) {
-		if (opts.onPageCallback) {
-			opts.onPageCallback(pageNumber,totalPages,results)
+	
+	/**
+	 * Do data callback if provided
+	 *
+	 * @param opts
+	 * @param pageNumber
+	 * @param totalPages
+	 * @param results
+	 */
+	private doDataCallback(opts:RequestOptions, pageNumber, totalPages, results) {
+		if (opts.onDataCallback) {
+			opts.onDataCallback(pageNumber,totalPages,results)
 		}
 	}
 

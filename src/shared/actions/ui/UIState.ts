@@ -4,6 +4,7 @@ import {IToastMessage} from 'shared/models/Toast'
 import {User} from 'shared/models/User'
 import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
+import {IToolPanel,ToolPanelLocation} from "shared/tools/ToolTypes"
 
 
 /**
@@ -13,6 +14,25 @@ export enum StatusType {
 	Ready,
 	Loading
 }
+
+function makeDefaultToolPanels(basePanels = []) {
+	const defaultLocations = [
+		ToolPanelLocation.Right,
+		ToolPanelLocation.Left,
+		ToolPanelLocation.Bottom
+	]
+	
+	return defaultLocations.map(location => basePanels.find(it => it.location === location) ||{
+		id: ToolPanelLocation[location],
+		location,
+		tools:[],
+	}).concat(
+		basePanels.filter(it => !defaultLocations.includes(it.location))
+	).reduce((panels:List<IToolPanel>, panelState:IToolPanel) => {
+		return panels.push(panelState)
+	},List<IToolPanel>())
+}
+
 
 /**
  * Simple status management for the app overall
@@ -34,8 +54,8 @@ export const UIStateRecord = Record({
 	messages: List<IToastMessage>(),
 	ready: false,
 
-	repoPanelOpen: true,
-	user: null
+	user: null,
+	toolPanels: makeDefaultToolPanels()
 })
 
 @RegisterModel
@@ -48,19 +68,15 @@ export class UIState extends UIStateRecord implements State {
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
+			toolPanels: makeDefaultToolPanels(o.toolPanels)
 		}))
 	}
-
-	$$clazz = 'UIState'
-
 
 	ready:boolean
 	user:User
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
-
-	repoPanelOpen:boolean
-	
+	toolPanels:List<IToolPanel>
 	
 
 

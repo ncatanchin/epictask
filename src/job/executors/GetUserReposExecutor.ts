@@ -9,7 +9,7 @@ import {GitHubClient} from 'shared/GitHubClient'
 import {Repo} from 'shared/models/Repo'
 import {getSettings} from 'shared/Settings'
 import {IJobExecutor} from "job/JobExecutors"
-import {JobType} from "shared/actions/jobs/JobTypes"
+import {JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJob} from "shared/actions/jobs/JobTypes"
 
 
@@ -43,24 +43,27 @@ export class GetUserReposExecutor implements IJobExecutor {
 	}
 
 	@Benchmarker
-	async execute(handler:JobHandler,job:IJob) {
-		const {service} = handler
-
+	async execute(handler:JobHandler,logger:IJobLogger,job:IJob) {
+		
 		if (!getSettings().token) {
 			log.info(`User is not authenticated, can not sync`)
 			return
 		}
-		log.info(`Starting to sync all repos`)
+		
+		logger.info(`Starting to sync all repos`)
 
-		const stores = Container.get(Stores)
-		const repoStore = stores.repo
-		const repos = await this.getReposFromGitHub()
-		log.info(`Persisting ${repos.length} repos`)
+		const
+			stores = Container.get(Stores),
+			repoStore = stores.repo,
+			repos = await this.getReposFromGitHub()
+			
+		logger.info(`Persisting ${repos.length} repos`)
+		
 		const beforeCount = await repoStore.count()
 		await repoStore.bulkSave(...repos)
 		const afterCount = await repoStore.count()
 
-		log.info(`Completed user repo sync, counts before=${beforeCount} and after=${afterCount}`)
+		logger.info(`Completed user repo sync, counts before=${beforeCount} and after=${afterCount}`)
 
 		//TODO: when data provider/cache is implemented - invalidate repos here
 		// const repoActions = Container.get(RepoActionFactory)
