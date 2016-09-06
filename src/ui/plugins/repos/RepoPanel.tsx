@@ -1,28 +1,25 @@
 
 
-/**
- * Created by jglanz on 5/30/16.
- */
-
 // Imports
-import {createStructuredSelector} from 'reselect'
 import {Container} from 'typescript-ioc'
 import * as React from 'react'
-import { connect } from 'react-redux'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {RepoList,Icon,Button} from 'components'
-
+import {Icon,Button,PureRender} from 'ui/components/common'
+import {RepoList} from './RepoList'
 
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {PureRender} from 'ui/components/common/PureRender'
 import * as Radium from 'radium'
-import {IToolProps} from "ui/components/ToolPanel"
-const {CommonKeys:Keys} = KeyMaps
-const {HotKeys} = require('react-hotkeys')
+
+import {RegisterTool} from "shared/Registry"
+import {DefaultTools} from "shared/Constants"
+import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
+const
+	{CommonKeys:Keys} = KeyMaps,
+	{HotKeys} = require('react-hotkeys')
 
 
 // Constants
@@ -40,36 +37,7 @@ const baseStyles:any = createStyles({
 		}
 	}],
 
-	drawerControl: [makeTransition(['opacity']),FlexColumnCenter,PositionAbsolute,{
-		opacity: 0,
-		pointerEvents: 'none',
-		textAlign: 'center',
-		width: rem(2),
-		padding: 0,
-
-		visible: {
-			opacity: 1,
-			pointerEvents: 'auto',
-			zIndex: 9999
-		},
-
-		// Arrow Button
-		button: {
-			padding: "0.5rem 0.3rem",
-			width: rem(2),
-			height: rem(2)
-		},
-
-		// "Repo" label
-		label: {
-			textOrientation: "sideways-right",
-			writingMode: "vertical-lr",
-			transform: "rotate(0.5turn)",
-			padding: "0.5rem 0.3rem",
-			fontSize: rem(0.9)
-		}
-	}],
-
+	
 	drawerWrapper: [makeTransition(['width','minWidth','maxWidth']), FlexColumn,FlexScale,Fill,{
 		minWidth: rem(20),
 		position: 'relative',
@@ -132,11 +100,23 @@ export interface IRepoPanelProps extends IToolProps {
 @Radium
 @HotKeyContext()
 @PureRender
+@RegisterTool()
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
-
-
-	repoActions:RepoActionFactory = Container.get(RepoActionFactory)
-	uiActions = Container.get(UIActionFactory)
+	
+	/**
+	 * Default location for the tool
+	 *
+	 * @type {ToolPanelLocation}
+	 */
+	static readonly defaultLocation = ToolPanelLocation.Left
+	
+	static readonly id = DefaultTools.RepoPanel
+	
+	static readonly name = "Repos"
+	
+	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
+	
+	private uiActions = Container.get(UIActionFactory)
 
 	setRepoPanelOpen = (event, open:boolean) => {
 		this.uiActions.setRepoPanelOpen(open)
@@ -164,7 +144,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 	render() {
 		const
-			{theme,toolState,styles,open} = this.props,
+			{theme,config,styles,visible} = this.props,
 			
 			panelStyle = [
 				styles.panel,
@@ -174,12 +154,12 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 			drawerControlStyle = makeStyle(
 				styles.drawerControl,
-				!open && styles.drawerControl.visible
+				!visible && styles.drawerControl.visible
 			),
 
 			drawerWrapperStyle = [
 				styles.drawerWrapper,
-				!open && styles.drawerWrapper.closed
+				!visible && styles.drawerWrapper.closed
 			],
 
 			drawerStyle = [styles.drawer,styles.root],
@@ -190,13 +170,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 
 
 		return <div style={drawerWrapperStyle}>
-			<Button tabIndex={-1} style={drawerControlStyle} onClick={(e) => this.setRepoPanelOpen(e,true)}>
-				<Icon style={makeStyle(styles.headerButtonIcon,styles.drawerControl.button)} iconSet='fa' iconName='chevron-right'/>
-				<div style={styles.drawerControl.label}>
-					Repos
-				</div>
-			</Button>
-
+			
 			<HotKeys handlers={this.keyHandlers} style={panelStyle}>
 
 				{/* Header controls */}

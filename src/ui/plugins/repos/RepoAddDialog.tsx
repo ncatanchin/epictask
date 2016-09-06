@@ -1,21 +1,15 @@
-/**
- * Created by jglanz on 6/14/16.
- */
-
 // Imports
 import {AutoWired,Inject,Container} from 'typescript-ioc'
 import * as React from 'react'
-import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {AppState} from 'shared/actions/AppState'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {SearchPanel} from 'components'
+import {SearchPanel} from 'ui/components/search'
 import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
-import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
+import {PureRender} from 'components'
 
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'

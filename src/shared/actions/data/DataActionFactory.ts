@@ -6,7 +6,7 @@ import {RepoActionFactory} from '../repo/RepoActionFactory'
 import {DataMessage, DataState, DataRequest} from 'shared/actions/data/DataState'
 import {Stores} from 'shared/Stores'
 import {Map} from 'immutable'
-import {ModelConstructor} from 'shared/Registry'
+import {IModelConstructor} from 'shared/Registry'
 import {Benchmark} from 'shared/util/Benchmark'
 import {Provided} from 'shared/util/Decorations'
 

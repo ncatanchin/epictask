@@ -1,5 +1,5 @@
 import * as React from 'react'
-import {SearchPanel} from 'components'
+import {SearchPanel} from 'ui/components/search'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {SearchType} from 'shared/actions/search/SearchState'
 import {HotKeys} from 'ui/components/common/Other'

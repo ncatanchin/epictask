@@ -3,7 +3,7 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {List} from 'immutable'
 import {createStructuredSelector} from 'reselect'
-import {RepoPanel,IssuesPanel} from 'components'
+import {IssuesPanel} from 'ui/components/issues'
 import {Page} from './Page'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
@@ -14,6 +14,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
 import {ToolPanel} from "ui/components/ToolPanel"
+
 
 const
 	Resizable = require('react-component-resizable'),

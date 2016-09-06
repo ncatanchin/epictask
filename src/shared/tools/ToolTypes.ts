@@ -1,3 +1,6 @@
+
+import React from 'react'
+
 /**
  * Tool panel location
  */
@@ -8,31 +11,40 @@ export enum ToolPanelLocation {
 	Window = 4
 }
 
+
+
 /**
  * Denotes an available tool in the system
  */
-export interface ITool {
+export interface IToolConfig {
 	/**
 	 * Unique string identifying tool
 	 */
-	id:string
+	readonly id:string
 	
 	/**
 	 * Name of the tool for label & tracking purposes
 	 */
-	name:string
+	readonly name:string
 	
 	/**
 	 * Optional label value
 	 */
-	label?:string
+	readonly label?:string
+	
+	/**
+	 * Default tool location
+	 */
+	readonly defaultLocation?:ToolPanelLocation
+}
+
+
+export interface ITool extends IToolConfig {
 	
 	/**
 	 * Set/Get active status
 	 */
 	active:boolean
-	
-	
 	
 	/**
 	 * Any extra data
@@ -50,4 +62,12 @@ export interface IToolPanel {
 	open:boolean
 	isDefault?:boolean
 	data?:any
+}
+
+/**
+ * Base props for Tool Component
+ */
+export interface IToolProps extends React.HTMLAttributes {
+	config:IToolConfig
+	visible:boolean
 }

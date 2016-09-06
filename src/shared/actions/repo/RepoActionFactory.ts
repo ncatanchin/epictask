@@ -27,9 +27,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/Decorations'
-/**
- * Created by jglanz on 5/29/16.
- */
+
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')

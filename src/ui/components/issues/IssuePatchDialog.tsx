@@ -38,7 +38,8 @@ import {IssuePatchModes, TIssuePatchMode} from "shared/actions/issue/IssueState"
 import {TypeAheadSelect} from "ui/components/common/TypeAheadSelect"
 import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
 import LabelChip from "ui/components/common/LabelChip"
-import {IssueLabelsAndMilestones, Avatar} from "ui/components"
+import {IssueLabelsAndMilestones} from "ui/components/issues"
+import {Avatar} from 'ui/components/common'
 import {CommonKeys} from "shared/KeyMaps"
 
 

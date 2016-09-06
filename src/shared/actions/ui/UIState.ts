@@ -49,12 +49,11 @@ export type TDialogMap = Map<string,boolean>
 
 
 export const UIStateRecord = Record({
-	dialogs: Map<string,boolean>(),
-
-	messages: List<IToastMessage>(),
 	ready: false,
-
 	user: null,
+	
+	dialogs: Map<string,boolean>(),
+	messages: List<IToastMessage>(),
 	toolPanels: makeDefaultToolPanels()
 })
 

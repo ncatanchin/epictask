@@ -96,7 +96,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		assert(tool,`Unable to find tool with id ${toolId}`)
 		
 		
-		this.updateTool(cloneObject(tool,{open:true}))
+		this.updateTool(cloneObject(tool,{visible:true}))
 	}
 	
 	/**
@@ -112,12 +112,19 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			// Find the panel first
 			const [panelIndex,toolIndex] = this.getToolIndices(tool.id,state)
 			
-			assert(panelIndex > -1,`Unable to find tool with id: ${tool.id}`)
+			// This is a new tool
 			
-			const panel = cloneObject(panels.get(panelIndex))
+			const srcPanel = panelIndex === -1 ?
+				this.getToolPanelState(tool.defaultLocation) :
+				panels.get(panelIndex)
+			
+			assert(srcPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
+			
+			const panel = cloneObject(srcPanel)
 			panel.tools[toolIndex > -1 ? toolIndex : panel.tools.length] = tool
 			
-			return panels.set(panelIndex,panel)
+			return panels.set(panelIndex, panel)
+			
 			
 		})
 	}
@@ -139,11 +146,28 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Get tool panel state
 	 *
+	 * @param location
+	 * @returns {IToolPanel}
+	 */
+	getToolPanelState(location:ToolPanelLocation):IToolPanel
+	/**
+	 * Get tool panel state
+	 *
 	 * @param id
 	 * @param location
 	 * @returns {IToolPanel}
 	 */
-	getToolPanelState(id:string,location:ToolPanelLocation):IToolPanel {
+	getToolPanelState(id:string,location:ToolPanelLocation):IToolPanel
+	getToolPanelState(idOrLocation:string|ToolPanelLocation,location:ToolPanelLocation = null):IToolPanel {
+		let id:string = null
+		
+		if (isNumber(idOrLocation)) {
+			location = idOrLocation
+		} else {
+			id = idOrLocation
+		}
+		
+		assert(location,'Location can not be nil')
 		return this.state.toolPanels.find(this.toolPanelPredicate(id,location))
 	}
 	
@@ -195,6 +219,17 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		this.updateToolPanel(panelState)
 		
 		return id
+	}
+	
+	/**
+	 * Register a tool in the app
+	 *
+	 * @param tool
+	 */
+	registerTool(tool:ITool) {
+		const existingTool = this.getTool(tool.id)
+		
+		
 	}
 
 	/**
