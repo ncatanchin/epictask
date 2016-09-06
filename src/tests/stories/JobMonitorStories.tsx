@@ -3,7 +3,7 @@ import {getDecorator} from "./StoryHelper"
 
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {JobType, IJob, JobStatus, JobLogLevel, JobLogLevelNames, TJobLogLevel} from "shared/actions/jobs/JobTypes"
-import {Button} from "components/common"
+import {Button} from 'ui/components/common"
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
 import {JobMonitor} from "ui/components/jobs/JobMonitor"

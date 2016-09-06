@@ -2,7 +2,7 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 import {List} from 'immutable'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {IJobStatusDetail, IJob} from "shared/actions/jobs/JobTypes"

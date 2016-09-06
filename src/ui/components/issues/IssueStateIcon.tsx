@@ -6,7 +6,7 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {PureRender, Icon} from 'components/common'
+import {PureRender, Icon} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'

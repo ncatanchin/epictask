@@ -2,7 +2,7 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 import filterProps from 'react-valid-props'
-import {PureRender, Icon} from 'components/common'
+import {PureRender, Icon} from 'ui/components/common'
 
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {IJobStatusDetail, IJob, JobStatus, getJobDescription} from "shared/actions/jobs/JobTypes"

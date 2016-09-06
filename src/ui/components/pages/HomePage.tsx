@@ -8,12 +8,12 @@ import {Page} from './Page'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {Themed} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
-import {ToolPanel} from "ui/components/ToolPanel"
+import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
 
 
 const

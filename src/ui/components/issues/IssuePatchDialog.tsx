@@ -13,7 +13,7 @@ import {HotKeys} from "react-hotkeys"
 import {MuiThemeProvider} from "material-ui/styles"
 import {Container} from "typescript-ioc"
 
-import {PureRender, Button} from "components/common"
+import {PureRender, Button} from 'ui/components/common'
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 
 import {ThemedStyles} from "shared/themes/ThemeManager"

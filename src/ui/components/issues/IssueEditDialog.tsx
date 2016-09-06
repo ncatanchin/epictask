@@ -17,7 +17,7 @@ import {User} from 'shared/models/User'
 import {Label} from 'shared/models/Label'
 
 import {Dialogs} from 'shared/Constants'
-import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'components'
+import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'ui/components'
 import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
 import {cloneObject} from 'shared/util'
 import {MuiThemeProvider} from 'material-ui/styles'

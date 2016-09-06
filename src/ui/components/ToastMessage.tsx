@@ -1,7 +1,7 @@
 // Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import {PureRender, Icon, Button} from 'components/common'
+import {PureRender, Icon, Button} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {IToastMessage, ToastMessageType} from "shared/models/Toast"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"

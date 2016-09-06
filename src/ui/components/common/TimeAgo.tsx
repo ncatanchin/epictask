@@ -2,7 +2,7 @@
 import * as moment from 'moment'
 import * as React from 'react'
 import * as Radium from 'radium'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 
 
 // Constants

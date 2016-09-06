@@ -1,7 +1,7 @@
 const log = getLogger(__filename)
 
 import {DefaultLeafReducer} from 'typedux'
-import {IssueKey} from "Constants"
+import {IssueKey} from 'shared/Constants'
 import {IssueState,IssueMessage} from './IssueState'
 import {Provided} from 'shared/util/Decorations'
 

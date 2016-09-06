@@ -1,7 +1,7 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {Button} from "components/common"
+import {Button} from 'ui/components/common"
 import {getStoreState} from "shared/store"
 import * as uuid from 'node-uuid'
 import {Loader} from "ui/components/common/Loader"

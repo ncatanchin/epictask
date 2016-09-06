@@ -1,7 +1,6 @@
-import {AutoWired, Inject,Container} from 'typescript-ioc'
 import {ActionFactory,ActionReducer,Action} from 'typedux'
-import {GitHubClient} from 'GitHubClient'
-import {AuthKey,GitHubConfig} from "Constants"
+import {GitHubClient} from 'shared/GitHubClient'
+import {AuthKey} from "shared/Constants"
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {AuthState,AuthMessage} from 'shared/actions/auth/AuthState'
 import {AppStateType} from 'shared/AppStateType'

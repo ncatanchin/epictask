@@ -7,7 +7,7 @@ import * as React from 'react'
 import {Label} from 'shared/models/Label'
 import {Themed} from 'shared/themes/ThemeManager'
 import {Milestone} from 'shared/models/Milestone'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import LabelChip from 'ui/components/common/LabelChip'
 const tinycolor = require('tinycolor2')
 

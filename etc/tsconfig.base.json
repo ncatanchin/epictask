@@ -38,16 +38,7 @@
 			"server/*": [
 				"./server/*"
 			],
-			"GitHubClient": [
-				"./shared/GitHubClient.ts"
-			],
-			"Constants": [
-				"./shared/Constants.ts"
-			],
-
-			"Settings": [
-				"./shared/Settings.ts"
-			],
+			
 			
 			"shared/*": [
 				"./shared/*"
@@ -57,13 +48,8 @@
 			],
 			"main/*": [
 				"./main/*"
-			],
-			"components": [
-				"./ui/components/index.ts"
-			],
-			"components/*": [
-				"./ui/components/*"
 			]
+			
 		}
 	},
 	"exclude": [

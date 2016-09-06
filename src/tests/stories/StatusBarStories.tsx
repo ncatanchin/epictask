@@ -4,7 +4,7 @@ import {getDecorator} from "./StoryHelper"
 import {StatusBar} from 'ui/components/root/StatusBar'
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {JobType, IJob, JobStatus} from "shared/actions/jobs/JobTypes"
-import {Button} from "components/common"
+import {Button} from 'ui/components/common"
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
 import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "shared/Toaster"

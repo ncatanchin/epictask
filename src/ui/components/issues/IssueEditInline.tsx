@@ -4,7 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {PureRender, LabelFieldEditor, Icon, Button} from 'components/common'
+import {PureRender, LabelFieldEditor, Icon, Button} from 'ui/components/common'
 import {Issue} from 'shared/models/Issue'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
@@ -23,7 +23,7 @@ import {
 	issueStateSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
-import {HotKeyContext} from 'components/common/HotKeyContext'
+import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {HotKeys} from 'react-hotkeys'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {Container} from 'typescript-ioc'

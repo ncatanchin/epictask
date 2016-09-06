@@ -4,7 +4,7 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'

@@ -9,7 +9,7 @@ import * as Radium from 'radium'
 const {Style} = Radium
 
 import {AutoComplete, MenuItem} from 'material-ui'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {Themed} from 'shared/themes/ThemeManager'

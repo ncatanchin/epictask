@@ -1,6 +1,6 @@
 
 
-import {PureRender} from 'components/common/PureRender'
+import {PureRender} from 'ui/components/common/PureRender'
 import * as React from 'react'
 import * as $ from 'jquery'
 

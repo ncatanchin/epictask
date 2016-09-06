@@ -4,7 +4,7 @@ import * as moment from 'moment'
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {PureRender, Icon} from 'components/common'
+import {PureRender, Icon} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
@@ -15,7 +15,7 @@ import {TimeAgo} from "ui/components/common/TimeAgo"
 import {LinearProgress} from "material-ui"
 import {IToastMessage} from "shared/models/Toast"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
-import {ToastMessage} from "components/ToastMessage"
+import {ToastMessage} from 'ui/components/ToastMessage'
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 import {JobMonitor} from "ui/components/jobs/JobMonitor"
 import {openChildWindow} from "shared/util/WindowUtil"

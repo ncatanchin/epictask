@@ -7,7 +7,7 @@ import * as React from 'react'
 import {User} from 'shared/models'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import * as Radium from 'radium'
-import {Icon} from 'components/common'
+import {Icon} from 'ui/components/common'
 
 // Constants
 const log = getLogger(__filename)

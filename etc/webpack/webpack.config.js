@@ -175,6 +175,7 @@ export default function (projectConfig) {
 			new webpack.IgnorePlugin(/vertx/),
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			new webpack.NoErrorsPlugin(),
+			new TsConfigPathsPlugin(),
 			new ForkCheckerPlugin(),
 			new DefinePlugin({
 				__DEV__: isDev,
@@ -240,7 +241,7 @@ export default function (projectConfig) {
 		} : {}),
 		
 		
-		debug: isDev,
+		//debug: isDev,
 		dev: isDev
 	})
 	

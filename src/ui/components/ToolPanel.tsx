@@ -2,7 +2,7 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {PureRender} from 'components/common'
+import {PureRender, Button, Icon,filterProps} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
@@ -114,7 +114,7 @@ export interface IToolPanelProps extends React.HTMLAttributes {
 function ToolToggleButton(props) {
 	return <Button tabIndex={-1} {...filterProps(props)}>
 		<Icon style={props.iconStyle} iconSet='fa' iconName='chevron-right'/>
-		<div style={styles.drawerControl.label}>
+		<div style={props.labelStyle}>
 			Repos
 		</div>
 	</Button>

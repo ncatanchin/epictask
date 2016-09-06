@@ -53,7 +53,7 @@ export default function (projectConfig) {
 			// TypeScript
 			{
 				test: /\.tsx?$/,
-				exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
+				exclude: [/typelogger/,/typedux/,/typestore/],
 				loaders: (() => {
 					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
 					if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)

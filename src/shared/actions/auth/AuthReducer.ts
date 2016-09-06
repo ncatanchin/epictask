@@ -1,6 +1,6 @@
 
 import {DefaultLeafReducer} from 'typedux'
-import {AuthKey} from "Constants"
+import {AuthKey} from "shared/Constants"
 import {AuthState, AuthMessage} from 'shared/actions/auth/AuthState'
 import {Provided} from 'shared/util/Decorations'
 

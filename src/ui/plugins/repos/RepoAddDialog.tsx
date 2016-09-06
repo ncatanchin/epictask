@@ -9,7 +9,7 @@ import {SearchPanel} from 'ui/components/search'
 import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
-import {PureRender} from 'components'
+import {PureRender} from 'ui/components'
 
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'

@@ -4,7 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {PureRender} from 'components/common'
+import {PureRender} from 'ui/components/common'
 import {Milestone} from 'models/Milestone'
 
 
