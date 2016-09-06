@@ -24,7 +24,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
 import {HotKeys} from 'react-hotkeys'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
@@ -109,9 +109,9 @@ const mapStateToProps = createStructuredSelector({
 /**
  * Root App Component
  */
+
 @connect(mapStateToProps)
-@Themed
-@HotKeyContext()
+@ThemedNoRadium
 @PureRender
 class App extends React.Component<IAppProps,any> {
 
@@ -232,8 +232,6 @@ class App extends React.Component<IAppProps,any> {
 						<RepoAddDialog />
 						<IssuePatchDialog />
 
-						{/*<IssueEditFieldDialog />*/}
-
 						{/* Global flex box */}
 						<div className={rootClasses}
 						     style={makeStyle(styles.content,theme.app)}>
@@ -246,8 +244,6 @@ class App extends React.Component<IAppProps,any> {
 										<page.component />
 									</div>
 
-									{/*<DevTools/>*/}
-									{/*<DevTools ref={(c) => devToolsRef = c}/>*/}
 									<ToastMessages/>
 								</div>
 							}

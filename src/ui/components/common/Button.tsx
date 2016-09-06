@@ -51,7 +51,7 @@ export interface IButtonProps extends React.HTMLAttributes {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'button')
-@Radium
+
 export class Button extends React.Component<IButtonProps,void> {
 
 	static defaultProps = {

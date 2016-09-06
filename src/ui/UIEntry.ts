@@ -1,4 +1,4 @@
-require('source-map-support').install()
+//require('source-map-support').install()
 import 'shared/ProcessConfig'
 import 'shared/NamespaceConfig'
 import 'reflect-metadata'

@@ -125,7 +125,7 @@ const makeStateToProps = () => createStructuredSelector({
 
 @connect(makeStateToProps)
 @ThemedStyles(baseStyles,'issueActivityText')
-@Radium
+
 @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 

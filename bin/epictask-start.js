@@ -9,7 +9,7 @@
 // console.log('starting epictask: ' + process.cwd())
 // require('babel-polyfill')
 //
-// process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+
 //
 // /**
 //  * Replace es6-promise with bluebird
@@ -34,4 +34,15 @@
  */
 
 //process.env.NODE_PATH = `${process.cwd()}/node_modules:${process.env.NODE_PATH}`
+process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+const Bluebird = require('bluebird')
+Bluebird.config({
+	cancellation: true,
+	longStackTraces: true,
+	warnings: {
+		wForgottenReturn: false
+	},
+	monitoring: true
+})
+
 require('../dist/AppEntry')

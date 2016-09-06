@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
 
-MODS="react-valid-props redux react react-dom react-tap-event-plugin material-ui typelogger typedux typestore typestore-mocks typestore-plugin-pouchdb"
+MODS="react-valid-props redux react react-dom react-tap-event-plugin react-addons-create-fragment react-addons-transition-group material-ui typelogger typedux typestore typestore-mocks typestore-plugin-pouchdb"
 
 if [ ! -h "node_modules/material-ui" ]; then
-	npm i -g redux@3.5.2 react@15.3.0 react-dom@15.3.0 react-tap-event-plugin@1.0.0
+	npm i -g redux@3.5.2 react@15.3.0 react-dom@15.3.0 react-tap-event-plugin@1.0.0 react-addons-create-fragment@15.3.0 react-addons-transition-group@15.3.0
 	rm -Rf node_modules
 
 	echo "Material UI needs to be build and setup"
@@ -13,11 +13,11 @@ if [ ! -h "node_modules/material-ui" ]; then
 		echo "Building material-ui"
 		pushd ../material-ui
 		rm -Rf node_modules build
-		npm link react react-dom react-tap-event-plugin
+		npm link react react-dom react-tap-event-plugin react-addons-create-fragment react-addons-transition-group
 		npm i
 		npm run build
 		pushd build
-		npm link react react-dom react-tap-event-plugin
+		npm link react react-dom react-tap-event-plugin react-addons-create-fragment react-addons-transition-group
 		npm link
 		popd
 		popd

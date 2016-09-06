@@ -101,7 +101,7 @@ export interface IJobItemProps extends React.HTMLAttributes {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs.item')
-@Radium
+
 @PureRender
 export class JobItem extends React.Component<IJobItemProps,void> {
 	

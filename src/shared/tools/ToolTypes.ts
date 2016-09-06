@@ -8,7 +8,7 @@ export enum ToolPanelLocation {
 	Left = 1,
 	Right = 2,
 	Bottom = 3,
-	Window = 4
+	Popup = 4
 }
 
 /**
@@ -66,6 +66,6 @@ export interface IToolPanel {
  * Base props for Tool Component
  */
 export interface IToolProps extends React.HTMLAttributes {
-	config:IToolConfig
+	tool:ITool
 	visible:boolean
 }

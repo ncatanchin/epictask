@@ -109,7 +109,7 @@ function getDebugSessionKey() {
  */
 function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 	const toaster = Container.get(Toaster)
-	log.error('Reducer error occurred',err,reducer)
+	log.error('Reducer error occurred',reducer,err,err.stack)
 	setImmediate(() => {
 		toaster.addErrorMessage(err)
 	})

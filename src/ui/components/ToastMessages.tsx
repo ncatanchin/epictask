@@ -158,7 +158,7 @@ function processNotifications(newMessages:IToastMessage[]) {
 		.toArray()
 },createDeepEqualSelector))
 @ThemedStyles(baseStyles,'toast')
-@Radium
+
 @PureRender
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
@@ -203,7 +203,7 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
 				{messages
 					.filter(msg => !_.isNil(msg.id))
-					.map(msg => <ToastMessage msg={msg} animate/>)}
+					.map(msg => <ToastMessage key={'toaster' + msg.id} msg={msg} animate/>)}
 			</CSSTransitionGroup>
 
 

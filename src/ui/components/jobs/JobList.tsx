@@ -55,7 +55,7 @@ export interface IJobListProps extends React.HTMLAttributes {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'jobs')
-@Radium
+
 @PureRender
 export class JobList extends React.Component<IJobListProps,void> {
 	

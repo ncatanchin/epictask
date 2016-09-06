@@ -238,6 +238,7 @@ export interface IIssueEditInlineState {
  * @constructor
  **/
 
+@HotKeyContext()
 @connect(createStructuredSelector({
 	repoModels: repoModelsSelector,
 	repo: (state,props) => repoModelsSelector(state)
@@ -251,9 +252,6 @@ export interface IIssueEditInlineState {
 	saveError: (state) => issueStateSelector(state).issueSaveError
 },createDeepEqualSelector))
 @ThemedStyles(baseStyles,'inline','issueEditDialog','form')
-@HotKeyContext()
-@PureRender
-@Radium
 @ReactTimeout
 export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> {
 

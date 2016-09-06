@@ -12,14 +12,14 @@ import {AutoComplete, MenuItem} from 'material-ui'
 import {PureRender} from 'ui/components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {HotKeys} from 'react-hotkeys'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 
-const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
-const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
-const TextFieldUnderline = require('material-ui/TextField/TextFieldUnderline').default
+// const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
+// const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
+// const TextFieldUnderline = require('material-ui/TextField/TextFieldUnderline').default
 
 const toaster = Container.get(Toaster)
 //const appActions = new AppActionFactory()
@@ -123,8 +123,7 @@ export interface IChipsFieldProps<M> extends React.DOMAttributes {
  * @constructor
  **/
 
-@Themed
-@Radium
+@ThemedNoRadium
 @PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 

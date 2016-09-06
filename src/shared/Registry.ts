@@ -32,8 +32,8 @@ export interface IModelConstructor<T> {
 	fromJS(o:any):T
 }
 
-export interface IToolConstructor extends IToolConfig {
-	new (...args:any[]):any
+export interface IToolConstructor extends IToolConfig, React.ComponentClass<IToolProps> {
+	//new (...args:any[]):any
 	
 	
 }
@@ -137,17 +137,16 @@ export function getModel(name):IModelConstructor<any> {
 }
 
 
-
 /**
  * Auto register a tool
  *
- * @param id
+ * @param config
  */
-export function RegisterTool() {
+export function RegisterTool(config:IToolConfig) {
 	return (target:IToolConstructor) => {
 		const id = target.id || target.name
 		log.info(`Registering tool: ${id}`)
-		registerTool(id, target)
+		registerTool(config, target)
 	}
 }
 
@@ -156,13 +155,13 @@ export function RegisterTool() {
 /**
  * Manual register a clazz
  *
- * @param name
+ * @param config
  * @param clazz
  */
-function registerTool(name,clazz:IToolConstructor) {
-	getRegistry(RegistryType.Tools)[name] = {name,clazz}
+function registerTool(config:IToolConfig,clazz:IToolConstructor) {
+	getRegistry(RegistryType.Tools)[config.id] = {name:config.id,clazz}
 	const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
-	Container.get(UIActionFactory).registerTool(clazz as any)
+	Container.get(UIActionFactory).registerTool(config as any)
 }
 
 
@@ -172,7 +171,7 @@ function registerTool(name,clazz:IToolConstructor) {
  * @param id
  * @returns {any}
  */
-export function getTool(id:string):IToolConstructor {
+export function getToolComponent(id:string):IToolConstructor {
 	const tool = getRegistry(RegistryType.Tools)[id]
 	assert(tool,`Tool not found for ${id}`)
 	

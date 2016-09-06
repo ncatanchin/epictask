@@ -97,11 +97,9 @@ export interface IRepoPanelProps extends IToolProps {
  **/
 
 
+@RegisterTool({id:DefaultTools.RepoPanel,defaultLocation: ToolPanelLocation.Left,label:'Repos'})
 @HotKeyContext()
 @ThemedStyles(baseStyles,'repoPanel')
-@Radium
-@PureRender
-@RegisterTool()
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	
 	/**
@@ -149,30 +147,16 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 			
 			panelStyle = [
 				styles.panel,
-				styles.root,
-				!open ? styles.panel.closed : {}
+				styles.root
 			],
 
-			drawerControlStyle = makeStyle(
-				styles.drawerControl,
-				!visible && styles.drawerControl.visible
-			),
-
-			drawerWrapperStyle = [
-				styles.drawerWrapper,
-				!visible && styles.drawerWrapper.closed
-			],
-
-			drawerStyle = [styles.drawer,styles.root],
 
 			headerStyle = [styles.header],
 
 			headerButtonStyle = [styles.headerButton]
 
 
-		return <div style={drawerWrapperStyle}>
-			
-			<HotKeys handlers={this.keyHandlers} style={panelStyle}>
+		return <HotKeys handlers={this.keyHandlers} style={panelStyle}>
 
 				{/* Header controls */}
 				<div style={headerStyle}>
@@ -191,7 +175,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 				</div>
 
 			</HotKeys>
-		</div>
+		
 
 
 	}

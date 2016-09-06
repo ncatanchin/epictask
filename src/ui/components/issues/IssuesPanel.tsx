@@ -285,7 +285,7 @@ export interface IIssuesPanelState {
  * @constructor
  **/
 
-
+@HotKeyContext()
 @connect(createStructuredSelector({
 	hasAvailableRepos: availableRepoCountSelector,
 	issues: issuesSelector,
@@ -300,7 +300,7 @@ export interface IIssuesPanelState {
 	saving: (state) => issueStateSelector(state).issueSaving
 }, createDeepEqualSelector))
 @ThemedStyles(baseStyles, 'issuesPanel')
-@HotKeyContext()
+
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
 	

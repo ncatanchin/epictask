@@ -8,16 +8,26 @@ import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {ToolPanelLocation, IToolPanel, ITool, TToolMap} from "shared/tools/ToolTypes"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
-import {FlexRow, FlexColumnReverse} from "shared/themes"
+import {
+	FlexRow, FlexColumnReverse, FlexColumn, FlexScale, makeFlexAlign, FillHeight, FillWidth,
+	FlexAlignCenter, FlexAuto, makeTransition, FlexColumnCenter, OverflowHidden, makeFlex, makePaddingRem, FlexRowCenter,
+	rem, Ellipsis
+} from "shared/themes"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
+import {getToolComponent} from "shared/Registry"
 
 // Constants
-const log = getLogger(__filename)
+const
+	{Left,Right,Bottom,Popup} = ToolPanelLocation,
+	log = getLogger(__filename)
 
 // Styles
 
 const
+	// Gutter min dimension with content
 	gutterDim = rem(2),
+	
+	// Vertical Gutter Style
 	gutterVertical = [
 		FlexColumn,
 		FlexAuto,
@@ -35,27 +45,40 @@ const
 		}
 	],
 	baseStyles = createStyles({
-		root: [FlexColumn, FlexAuto, {
+		root: [FlexAuto, {
 		
-			[ToolPanelLocation.Left]: [FlexRow,FillHeight],
-			[ToolPanelLocation.Right]: [FlexRow,makeFlexAlign('center','flex-start'),FillHeight],
-			[ToolPanelLocation.Bottom]: [FlexColumn,makeFlexAlign('center','flex-start'),FillWidth],
-			[ToolPanelLocation.Window]: [FlexColumn,makeFlexAlign('center','flex-start'),FillWidth]
+			[Left]: [FlexRow,FillHeight],
+			[Right]: [FlexRow,FillHeight],
+			[Bottom]: [FlexColumn,FillWidth],
+			[Popup]: [FlexColumn,FillWidth]
 		
 		}],
 		
 		tools: [FlexScale,{
-			[ToolPanelLocation.Left]: [FlexColumn],
-			[ToolPanelLocation.Right]: [FlexColumn],
-			[ToolPanelLocation.Window]: [FlexRow],
-			[ToolPanelLocation.Bottom]: [FlexColumn],
+			[Left]: [FlexColumn],
+			[Right]: [FlexColumn],
+			[Popup]: [FlexRow],
+			[Bottom]: [FlexRow],
+		}],
+		
+		tool: [FlexColumn,FlexScale,{
+			[Left]: [FillWidth],
+			[Right]: [FillWidth],
+			[Bottom]: [FillHeight],
+			[Popup]: [FillHeight],
+			
+			header: [FlexRowCenter,makeFlex(0,0,rem(2)),makePaddingRem(0.3,0.5),{
+				label: [FlexScale,Ellipsis,{
+					fontWeight: 500
+				}]
+			}]
 		}],
 		
 		gutter: [{
-			[ToolPanelLocation.Left]: [...gutterVertical],
-			[ToolPanelLocation.Right]: [...gutterVertical],
-			[ToolPanelLocation.Window]: [...gutterHorizontal],
-			[ToolPanelLocation.Bottom]: [...gutterHorizontal],
+			[Left]: [...gutterVertical],
+			[Right]: [...gutterVertical],
+			[Popup]: [...gutterHorizontal],
+			[Bottom]: [...gutterHorizontal],
 			
 			/**
 			 * Toggle button for opening/focusing tool
@@ -66,34 +89,35 @@ const
 				textAlign: 'center',
 				padding: 0,
 				
-				[ToolPanelLocation.Left]: [{width: gutterDim}],
-				[ToolPanelLocation.Right]: [{width: gutterDim}],
-				[ToolPanelLocation.Bottom]: [{height: gutterDim}],
-				button: [FlexAlignCenter,FlexAuto,{
+				[Left]: [{width: gutterDim}],
+				[Right]: [{width: gutterDim}],
+				[Bottom]: [{height: gutterDim}],
+				
+				button: [FlexAlignCenter,makeFlex(0,1,'auto'),{
 					padding: "0.5rem 0.3rem",
-					[ToolPanelLocation.Left]: [FlexColumnReverse,{
+					[Left]: [FlexColumnReverse,{
 						width: gutterDim
 					}],
-					[ToolPanelLocation.Right]: [FlexColumn,{
+					[Right]: [FlexColumn,{
 						width: gutterDim,
 					}],
-					[ToolPanelLocation.Bottom]: [FlexRow,{
+					[Bottom]: [FlexRow,{
 						height: gutterDim
 					}]
 				}],
 				
 				// Label
-				label: [{
+				label: [makeFlex(0,1,'auto'),Ellipsis,{
 					padding: "0.5rem 0.3rem",
 					fontSize: rem(0.9),
 					
-					[ToolPanelLocation.Left]: [{
+					[Left]: [{
 						textOrientation: "sideways-right",
 						writingMode: "vertical-lr",
 						transform: "rotate(0.5turn)"
 					}],
 					
-					[ToolPanelLocation.Right]: [{
+					[Right]: [{
 						textOrientation: "sideways-left",
 						writingMode: "vertical-lr",
 						transform: "rotate(-0.5turn)"
@@ -152,6 +176,28 @@ const ToggleButton = Radium((props) => {
 	
 })
 
+
+const ToolWrapper = Radium((props:{styles:any,tool:ITool,panel:IToolPanel}) => {
+	const
+		{styles,tool,panel} = props,
+		{location} = panel,
+		toolStyles = styles.tool,
+		ToolComponent = getToolComponent(tool.id)
+	
+	return <div style={[toolStyles,toolStyles[location]]}>
+		<div style={[toolStyles.header,toolStyles.header[location]]}>
+			<div style={[toolStyles.header.label]}>{tool.label}</div>
+			
+		</div>
+		<ToolComponent style={[FlexScale]} tool={tool} visible={panel.open && tool.active} />
+	</div>
+})
+
+/**
+ * Gutter component
+ *
+ * @type {((props)=>any)|((component?:TElement)=>TElement)}
+ */
 const Gutter = Radium((props) => {
 	const
 		{panel,styles} = props,
@@ -186,7 +232,6 @@ const Gutter = Radium((props) => {
 	)
 )
 @ThemedStyles(baseStyles,'toolPanel')
-@Radium
 @PureRender
 export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 	
@@ -194,15 +239,22 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 	
 	render() {
 		const
-			{theme, styles,panel,location} = this.props,
+			{styles,panel,location} = this.props,
 			tools:ITool[] = Object.values(_.get(panel,'tools',{})) as any
 		
 		return <div style={[styles.root,styles.root[location]]}>
+			{/* The Gutter of toggle controls and decorations */}
+			
 			<Gutter panel={panel}
 			        styles={styles}/>
-			{tools.filter(it => it.active).map(tool => {
-				return <div style={[styles.tools,styles.tools[location]]}>{tool.id} / {tool.label}</div>
-			})}
+			
+			<div style={[styles.tools,styles.tools[location]]}>
+				{tools.filter(it => it.active).map(tool => {
+					return <ToolWrapper styles={styles}
+					                      panel={panel}
+					                      tool={tool}/>
+				})}
+			</div>
 		</div>
 	}
 	

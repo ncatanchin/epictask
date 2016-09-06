@@ -58,13 +58,13 @@ export function HotKeyContext(hotKeyMap = {}) {
 		})
 		assign(Component.prototype,{
 			getChildContext,
-			componentWillMount() {
+			componentWillMount: function() {
 				this.updateMap()
 				if (componentWillMountFn)
 					componentWillMountFn.call(this)
 			},
 
-			updateMap() {
+			updateMap: function() {
 				const newMap = this.buildMap();
 
 				if (!_.isEqual(newMap, this.__hotKeyMap__)) {
@@ -75,14 +75,14 @@ export function HotKeyContext(hotKeyMap = {}) {
 				return false;
 			},
 
-			buildMap() {
+			buildMap: function() {
 				const parentMap = this.context.hotKeyMap || {};
 				const thisMap = this.props.keyMap || {};
 
 				return assign({}, parentMap, hotKeyMap, thisMap);
 			},
 
-			getMap() {
+			getMap: function() {
 				return this.__hotKeyMap__;
 			}
 		})

@@ -45,6 +45,16 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 
 }
 
+export function interceptFn(o,key,interceptor = null) {
+	if (!isString(key)) {
+		Object.keys(key).forEach(prop => interceptFn(o,prop,key[prop]))
+	} else {
+		const origFn = o[key]
+		o[key] = function (...args:any[]) {
+			return interceptor.apply(this, [origFn && origFn.bind(this), ...args])
+		}
+	}
+}
 
 export interface IValueTransformer {
 	(key:string,val:any):any

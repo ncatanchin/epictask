@@ -1,6 +1,6 @@
 
 
-import {PureRender} from 'ui/components/common/PureRender'
+import * as Radium from 'radium'
 import * as React from 'react'
 import * as $ from 'jquery'
 
@@ -8,6 +8,8 @@ const log = getLogger(__filename)
 const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import {mergeStyles} from "shared/themes/styles/CommonStyles"
+import {interceptFn} from "shared/util/ObjectUtil"
+import {PureRender} from "ui/components/common/PureRender"
 
 /**
  * Define our dark palette
@@ -176,27 +178,112 @@ export interface IThemedState {
 	styles?:any
 }
 
+const ThemeComponentWrapper = React.createClass({
+
+
+	// Used to unsubscribe from theme updates on unmount
+
+
+	/**
+	 * Create a new new theme state
+	 */
+	getNewState: function(props) {
+		const newState = {
+			theme: getTheme()
+		}
+
+		const
+			{themeKeys,themeBaseStyles} = this.props,
+			themeParts = themeKeys
+				.map(themeKey => _.get(getTheme(),themeKey,{})),
+			styles = mergeStyles(themeBaseStyles,...themeParts,props.styles)
+
+		if (themeBaseStyles) {
+			assign(newState,{styles})
+		}
+
+		return newState
+	},
+
+
+
+	/**
+	 * Used as the subscriber for theme updates
+	 * as well as by componentWillMount to
+	 * create initial styles
+	 */
+	updateTheme: function(props) {
+		props = props || this.props
+		if (this.state && this.state.theme === getTheme())
+			return
+
+		this.setState(this.getNewState(props), () => this.forceUpdate())
+	},
+
+	/**
+	 * Update the theme on mount and subscribe
+	 */
+	componentWillMount: function() {
+		this.updateTheme()
+		this.unsubscribe = addThemeListener(this.updateTheme)
+	},
+
+	/**
+	 * If styles prop is passed and it has changed
+	 * then update state
+	 *
+	 * @param nextProps
+	 */
+	componentWillReceiveProps: function(nextProps:any) {
+		if (this.props.styles !== nextProps.styles)
+			this.updateTheme(nextProps)
+	},
+
+	/**
+	 * Unsubscribe from theme updates
+	 */
+	componentWillUnmount: function() {
+		if (this.unsubscribe) {
+			this.unsubscribe()
+			this.unsubscribe = null
+		}
+	},
+
+	render: function() {
+		const ThemedComponent = this.props.themeComponent as any
+		return <ThemedComponent
+			{..._.omit(this.props,'styles','themeKeys','themeComponent','themeBaseStyles')}
+			{...this.state} />
+	}
+} as any)
 
 /**
  * Create a wrapped themed component
  *
  * @param Component
+ * @param skipRadium
  * @param baseStyles
  * @param themeKeys
  * @returns {any}
  */
-export function makeThemedComponent(Component,baseStyles = null,...themeKeys:string[]) {
-
-
-	const ThemedWrapper = class extends React.Component<any, IThemedState> {
-
+export function makeThemedComponent(Component,skipRadium = false,baseStyles = null,...themeKeys:string[]) {
+	let FinalComponent = null
+	
+	const WrappedComponent = class extends React.Component<any, IThemedState> {
+		
+		constructor(props,context) {
+			super(props,context)
+			
+			this.state = this.getNewState(this.props)
+		}
+		
 		// Used to unsubscribe from theme updates on unmount
 		private unsubscribe
-
+		
 		get wrappedComponent() {
 			return Component
 		}
-
+		
 		/**
 		 * Create a new new theme state
 		 */
@@ -204,21 +291,21 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 			const newState = {
 				theme: getTheme()
 			}
-
+			
 			const
 				themeParts = themeKeys
 					.map(themeKey => _.get(getTheme(),themeKey,{})),
 				styles = mergeStyles(baseStyles,...themeParts,props.styles)
-
+			
 			if (baseStyles) {
 				assign(newState,{styles})
 			}
-
+			
 			return newState
 		}
-
-
-
+		
+		
+		
 		/**
 		 * Used as the subscriber for theme updates
 		 * as well as by componentWillMount to
@@ -227,7 +314,7 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 		updateTheme = (props = this.props) => {
 			if (this.state && this.state.theme === getTheme())
 				return
-
+			
 			this.setState(this.getNewState(props), () => this.forceUpdate())
 		}
 		
@@ -259,14 +346,18 @@ export function makeThemedComponent(Component,baseStyles = null,...themeKeys:str
 				this.unsubscribe = null
 			}
 		}
-
+		
 		render() {
-			const ThemedComponent = Component as any
-			return <ThemedComponent {..._.omit(this.props,'styles')} {...this.state} />
+			if (!FinalComponent)
+				FinalComponent = skipRadium ? Component : Radium(Component)
+			//const ThemedComponent = Component as any
+			//return <ThemedComponent {..._.omit(this.props,'styles')} {...this.state} />
+			return <FinalComponent {..._.omit(this.props,'styles')} {...this.state} />
 		}
-	} as any
-
-	return PureRender(ThemedWrapper)
+	}
+	
+	return PureRender(WrappedComponent)
+	
 }
 
 /**
@@ -280,6 +371,10 @@ export function Themed(Component) {
 	return makeThemedComponent(Component)
 }
 
+export function ThemedNoRadium(Component) {
+	return makeThemedComponent(Component,true)
+}
+
 /**
  * Same as Themed, but merges styles
  *
@@ -290,7 +385,13 @@ export function Themed(Component) {
  */
 export function ThemedStyles(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,baseStyles,...themeKeys)
+		return makeThemedComponent(Component,false,baseStyles,...themeKeys)
+	}
+}
+
+export function ThemedStylesNoRadium(baseStyles:any = {},...themeKeys:string[]) {
+	return (Component) => {
+		return makeThemedComponent(Component,true,baseStyles,...themeKeys)
 	}
 }
 

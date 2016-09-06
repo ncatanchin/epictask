@@ -15,7 +15,7 @@ import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {SearchType} from 'shared/actions/search/SearchState'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 const {Style} = Radium
 const {HotKeys} = require('react-hotkeys')
 
@@ -93,8 +93,7 @@ export interface IRepoAddDialogState {
 
 @AutoWired
 @connect(mapStateToProps)
-@Radium
-@Themed
+@ThemedNoRadium
 @PureRender
 export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddDialogState> {
 

@@ -248,7 +248,7 @@ export interface IIssuePatchDialogState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'dialog')
-@Radium
+
 @PureRender
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
 

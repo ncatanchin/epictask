@@ -9,7 +9,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
 import {PureRender} from 'ui/components/common'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
@@ -50,7 +50,7 @@ interface IHomeState {
 @connect(createStructuredSelector({
 	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
 }, createDeepEqualSelector))
-@Themed
+@ThemedNoRadium
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	

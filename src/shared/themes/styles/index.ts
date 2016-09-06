@@ -36,6 +36,7 @@ declare global {
 		makeAbsolute:typeof CommonStyles.makeAbsolute,
 		makeStyle:typeof CommonStyles.makeStyle,
 		mergeStyles: typeof CommonStyles.mergeStyles,
+		makeFlex:typeof CommonStyles.makeFlex,
 		makeFlexAlign:typeof CommonStyles.makeFlexAlign,
 		CursorPointer: typeof CommonStyles.CursorPointer,
 		Styles:typeof CommonStyles

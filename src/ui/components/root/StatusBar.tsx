@@ -64,7 +64,7 @@ export interface IStatusBarState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'statusBar')
-@Radium
+
 @PureRender
 export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> {
 	

@@ -62,7 +62,7 @@ export interface IMilestoneSelectFieldState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
-@Radium
+
 @PureRender
 export class MilestoneSelectField extends React.Component<IMilestoneSelectFieldProps,IMilestoneSelectFieldState> {
 

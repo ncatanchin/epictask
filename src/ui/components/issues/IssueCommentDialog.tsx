@@ -112,8 +112,6 @@ export interface IIssueCommentDialogState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'dialog')
-@Radium
-@PureRender
 export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps,IIssueCommentDialogState> {
 
 
@@ -189,7 +187,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 			// commentId = _.get(comment,'id'),
 			currentComment = _.get(this.state,'comment') as Comment
 		
-		if (!comment || (currentComment && currentComment.issueNumber === comment.issueNumber))
+		if (this.state && (!comment || (currentComment && currentComment.issueNumber === comment.issueNumber)))
 			return
 			
 		this.setState({comment})
@@ -199,16 +197,19 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	/**
 	 * Before mount update the state
 	 */
-	componentWillMount = () => this.updateState(this.props)
+	componentWillMount() {
+		this.updateState(this.props)
+	}
 
 	/**
 	 * Update state with new props
 	 *
 	 * @param newProps
 	 */
-	componentWillReceiveProps = (newProps) => this.updateState(newProps)
-
-
+	componentWillReceiveProps(newProps) {
+		this.updateState(newProps)
+	}
+	
 	render() {
 		const
 			{

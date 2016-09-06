@@ -32,7 +32,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	private toolPanelPredicate = (id:string,location:ToolPanelLocation) =>
 		(it:IToolPanel) =>
 			it.location === location &&
-			(it.location !== ToolPanelLocation.Window || it.id === id)
+			(it.location !== ToolPanelLocation.Popup || it.id === id)
 	
 	
 	getToolParentPanel(toolId:string, state:UIState = this.state):IToolPanel {
@@ -192,7 +192,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			panel = {
 				id,
 				location,
-				open: [ToolPanelLocation.Window,ToolPanelLocation.Left].includes(location),
+				open: [ToolPanelLocation.Popup,ToolPanelLocation.Left].includes(location),
 				isDefault: ToolPanelLocation.Left === location,
 				tools:{}
 			}

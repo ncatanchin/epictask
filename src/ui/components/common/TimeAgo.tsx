@@ -29,7 +29,7 @@ export interface ITimeAgoState {
  * @constructor
  **/
 
-@Radium
+
 @PureRender
 export class TimeAgo extends React.Component <ITimeAgoProps, ITimeAgoState> {
 	

@@ -20,7 +20,7 @@ import {Renderers} from 'ui/components/common'
 import * as Radium from 'radium'
 import {PureRender} from 'ui/components/common/PureRender'
 import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
@@ -159,8 +159,8 @@ export interface ISearchResultsListProps {
 @connect(createStructuredSelector({
 	repoModels:repoModelsSelector
 }),null,null,{withRef:true})
-@Radium
-@Themed
+@ThemedNoRadium
+
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 

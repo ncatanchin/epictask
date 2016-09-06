@@ -119,7 +119,7 @@ export interface IAvatarProps extends React.HTMLAttributes {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'avatar')
-@Radium
+
 export class Avatar extends React.Component<IAvatarProps,any> {
 
 	render() {

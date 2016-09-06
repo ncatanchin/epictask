@@ -54,7 +54,7 @@ export function makeReactotronEnhancer() {
 
 export default function (enhancers) {
 	if (typeof window !== 'undefined') {
-		enhancers.push(makeReactotronEnhancer())
+	// 	enhancers.push(makeReactotronEnhancer())
 		
 		if (window.devToolsExtension)
 			enhancers.push(window.devToolsExtension())

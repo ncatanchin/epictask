@@ -5,7 +5,7 @@
 // Imports
 import * as React from 'react'
 import {Label} from 'shared/models/Label'
-import {Themed} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'ui/components/common'
 import LabelChip from 'ui/components/common/LabelChip'
@@ -50,7 +50,7 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@Themed
+@ThemedNoRadium
 @PureRender
 export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,any> {
 

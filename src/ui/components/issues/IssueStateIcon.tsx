@@ -53,7 +53,7 @@ export interface IIssueStateIconState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'issueStateIcon')
-@Radium
+
 @PureRender
 export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueStateIconState> {
 

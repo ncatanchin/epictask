@@ -66,12 +66,12 @@ export default function (projectConfig) {
 
 
 			// BABEL/JS
-			// {
-			// 	happy: {id: 'js'},
-			// 	test: /\.jsx?$/,
-			// 	exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
-			// 	loaders: ['babel']
-			// },
+			{
+				happy: {id: 'js'},
+				test: /\.jsx?$/,
+				exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
+				loaders: ['babel']
+			},
 
 
 			// JADE

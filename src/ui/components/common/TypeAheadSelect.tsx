@@ -71,7 +71,6 @@ export interface ITypeAheadSelectState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'typeAheadSelect')
-@Radium
 @PureRender
 export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,ITypeAheadSelectState> {
 

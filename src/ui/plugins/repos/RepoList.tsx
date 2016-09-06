@@ -11,6 +11,7 @@ import {ThemedStyles} from "shared/themes/ThemeManager"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 import {createStructuredSelector} from 'reselect'
 import {createAvailableRepoSelector, selectedRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {PureRender} from "ui/components"
 
 /**
  * Displays a list of repos
@@ -93,7 +94,7 @@ export interface IRepoListProps {
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
 @ThemedStyles(baseStyles,'repoPanel')
-@Radium
+@PureRender
 export class RepoList extends React.Component<IRepoListProps,any> {
 
 

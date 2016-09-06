@@ -91,7 +91,6 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes {
  * @constructor
  **/
 
-@Radium
 @Themed
 @PureRender
 export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any> {

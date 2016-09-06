@@ -69,7 +69,7 @@ export interface IJobMonitorState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs')
-@Radium
+
 @PureRender
 export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorState> {
 	

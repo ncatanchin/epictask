@@ -70,7 +70,7 @@ export interface IToastMessageProps extends React.HTMLAttributes {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'toast')
-@Radium
+
 @PureRender
 export class ToastMessage extends React.Component<IToastMessageProps,void> {
 	

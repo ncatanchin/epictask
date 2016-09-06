@@ -107,7 +107,7 @@ function makeText() {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
-@Radium
+
 @PureRender
 export class Loader extends React.Component<ILoaderProps,ILoaderState> {
 	

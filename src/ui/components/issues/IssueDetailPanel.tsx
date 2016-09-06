@@ -77,11 +77,12 @@ const makeIssueItemStateToProps = () => {
  * @constructor
  **/
 
+
+@HotKeyContext()
 @Themed
 @connect(makeIssueItemStateToProps)
-@HotKeyContext()
 @PureRender
-@Radium
+
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
