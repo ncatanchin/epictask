@@ -93,7 +93,7 @@ describe('DatabaseServerEntry',() => {
 	 */
 	it('CRUD',async () => {
 		const
-			angularRepo = new Repo(require('../job/fixtures/angular-repo-response.json')),
+			angularRepo = new Repo(require('tests/job/fixtures/angular-repo-response.json')),
 			stores = Container.get(Stores)
 		
 		log.info('Clearing existing repo just in case')

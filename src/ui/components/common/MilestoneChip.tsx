@@ -5,7 +5,7 @@
 // Imports
 import * as React from 'react'
 import {PureRender} from 'ui/components/common'
-import {Milestone} from 'models/Milestone'
+import {Milestone} from 'shared/models/Milestone'
 
 
 // Constants

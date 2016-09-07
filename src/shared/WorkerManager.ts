@@ -6,7 +6,7 @@ const log = getLogger(__filename)
 
 // All existing workers
 const
-	workerPath = path.resolve(process.cwd(),'dist/AppEntry.js'),
+	workerPath = path.resolve(process.cwd(),'dist/app/AppEntry.js'),
 	workers:Worker[] = []
 
 /**

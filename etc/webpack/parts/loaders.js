@@ -22,13 +22,8 @@ export default function (projectConfig) {
 		 */
 		preLoaders: [
 			{
-				test: /\.tsx?$/,
-				exclude: /node_modules/,
-				//,'source-map-loader'
-				loaders: [proxyProvidedLoaderPath,'source-map-loader']
-			},{
 				test: /\.jsx?$/,
-				exclude: /node_modules/,
+				exclude: [/node_modules/,/src\//],
 				loaders: ['source-map-loader']
 			}
 		],
@@ -37,6 +32,7 @@ export default function (projectConfig) {
 		 * Baseline for all loaders
 		 */
 		loaders: [{
+			happy: {id: 'json'},
 			test: /\.json$/,
 			loader: 'json'
 		}]
@@ -51,26 +47,40 @@ export default function (projectConfig) {
 		// Create all required loaders
 		const newLoaders = [
 
-			// TypeScript
-			{
-				test: /\.tsx?$/,
-				exclude: /node_modules/,
-				loaders: (() => {
-					const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
-					if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)
-						loaders.splice(0, 0, 'react-hot-loader/webpack')
-
-					return loaders
-				})(),
-			},
+			
 
 
 			// BABEL/JS
 			{
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
-				exclude: /(node_modules|material-ui|typestore|typedux|typelogger)/,
-				loaders: ['babel']
+				exclude: /(node_modules)/,
+				loader: 'babel',
+				query: {
+					presets: [
+						"es2016-node5",
+						"stage-0",
+						"react",
+						"async-to-bluebird"
+					],
+					plugins: [
+						// "babel-plugin-add-module-exports",
+						"transform-es2015-classes",
+						"transform-runtime"
+					],
+					
+					env: {
+						development: {
+							plugins: ["react-hot-loader/babel"]
+							
+						}
+					}
+				}
+				// 	(() => {
+				// 	const rc = readJSONFileSync(`${process.cwd()}/.babelrc`)
+				// 	rc.presets.splice(0,1,'es2015-native-modules')
+				// 	return rc
+				// })()
 			},
 
 
@@ -83,6 +93,7 @@ export default function (projectConfig) {
 
 			// ASSETS / FONTS
 			{
+				happy: {id: 'fonts'},
 				type: 'fonts',
 				test: /\.(eot|svg|ttf|woff|woff2)\w*/,
 				loader: 'file?name=assets/fonts/[name].[hash].[ext]'
@@ -91,6 +102,7 @@ export default function (projectConfig) {
 			
 			// ASSETS / IMAGES & ICONS
 			{
+				happy: {id: 'images-icons'},
 				test: /\.(png|jpg|gif|ico)$/,
 				loader: 'file?name=assets/images/[name].[hash].[ext]',
 				type: 'images'
@@ -146,6 +158,37 @@ export default function (projectConfig) {
 				]
 			}
 		]
+		
+		// TypeScript
+		console.log(`TypeScript enabled: ${(global.TypeScriptEnabled + '').toUpperCase()}`)
+		
+		if (global.TypeScriptEnabled) {
+			loaders.preLoaders.unshift(
+				// {
+				// 	test: /\.jsx?$/,
+				// 	exclude: /node_modules/,
+				// 	loaders: ['source-map-loader']
+				// },
+				{
+					test: /\.tsx?$/,
+					exclude: /node_modules/,
+					//,'source-map-loader'
+					loaders: [proxyProvidedLoaderPath,'source-map-loader']
+				}
+			)
+			
+			newLoaders.unshift({
+				test: /\.tsx?$/,
+				exclude: /node_modules/,
+				loaders: (() => {
+					//const loaders = [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
+					//if (isDev && projectConfig.targetType === TargetType.ElectronRenderer)
+						//loaders.splice(0, 0, 'react-hot-loader/webpack')
+					
+					return [`awesome-typescript-loader?tsconfig=${tsconfigFile}`]
+				})(),
+			})
+		}
 		
 		loaders.loaders.push(...newLoaders)
 

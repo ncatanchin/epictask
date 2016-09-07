@@ -1,8 +1,8 @@
 
 module.exports = function() {
 	return [
-		`${processDir}/typings/browser.d.ts`,
-		`${processDir}/typings/gitop.d.ts`,
+		`${processDir}/node_modules/@types/**/*.d.ts`,
+		`${processDir}/typings/**/*.d.ts`,
 		`${processDir}/src/**/*.ts`
 	]
 }

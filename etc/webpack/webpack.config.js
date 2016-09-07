@@ -11,11 +11,32 @@ const path = require('path')
 const fs = require('fs')
 
 //const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
-
+const {baseDir,TypeScriptEnabled} = global
+/**
+ * Resolves directories and maps to ram disk
+ * if available
+ *
+ * @param dirs
+ */
+const resolveDirs = (...dirs) => dirs.map(dir => {
+	// const ramDiskResolvePath = path.join(RamDiskPath, dir)
+	// const resolvedPath = fs.realpathSync(
+	// 	fs.existsSync(ramDiskResolvePath) ?
+	// 		ramDiskResolvePath :
+	// 		path.resolve(baseDir, dir)
+	// )
+	const resolvedPath = path.join(baseDir, dir)
+	log.info(`Resolved "${dir}" = "${resolvedPath}"`)
+	return resolvedPath
+})
 
 const
-	baseDir = path.resolve(__dirname, '../..'),
-	distDir = `${baseDir}/dist`,
+	//baseDir = path.resolve(__dirname, '../..'),
+	tsDir = (TypeScriptEnabled) ? 'src' : 'build/js',
+	moduleDirs = resolveDirs(...(global.TypeScriptEnabled ?
+		['src','node_modules'] :
+		[tsDir,'src','node_modules'])),
+	distDir = `${baseDir}/dist/app`,
 	
 	// Import non-typed plugins
 	{
@@ -39,7 +60,8 @@ const
 		env
 	} = global
 
-
+log.info(`MODULE DIRS = ${moduleDirs.join(', ')}`)
+//process.exit(1)
 /**
  * Create an alias to the libs folder
  *
@@ -53,23 +75,10 @@ function libAlias(name, libPath) {
 	}
 }
 
-/**
- * Resolves directories and maps to ram disk
- * if available
- *
- * @param dirs
- */
-const resolveDirs = (...dirs) => dirs.map(dir => {
-	const ramDiskResolvePath = path.join(RamDiskPath, dir)
-	const resolvedPath = fs.realpathSync(
-		fs.existsSync(ramDiskResolvePath) ?
-			ramDiskResolvePath :
-			path.resolve(baseDir, dir)
-	)
-	
-	log.info(`Resolved "${dir}" = "${resolvedPath}"`)
-	return resolvedPath
-})
+function tsAlias(tsFilename) {
+	return path.resolve(tsDir, tsFilename)
+}
+
 
 /**
  * Use npm|build version of material-ui
@@ -78,16 +87,21 @@ const resolveDirs = (...dirs) => dirs.map(dir => {
  */
 
 
+
+
 export default function (projectConfig) {
 	
+	
 	const
-		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 5}),
+		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
 		
 		// Renderer or Main
 		isMain = projectConfig.targetType === TargetType.ElectronMain,
 		
 		// Create loaders
 		loaders = loadersConfigFn(projectConfig),
+		
+		// Add HappyPack plugins if enabled
 		happyPlugins = (!happyEnabled || isMain) ? [] :
 			loaders.loaders
 				.filter(loader => loader.happy && loader.happy.id)
@@ -105,7 +119,7 @@ export default function (projectConfig) {
 		stats: WebpackStatsConfig,
 		output: {
 			path: `${distDir}/`,
-			publicPath: `dist/`,
+			publicPath: `${path.relative('.',distDir)}/`,
 			filename: '[name].js',
 			libraryTarget: 'commonjs2'
 		},
@@ -122,30 +136,34 @@ export default function (projectConfig) {
 					
 					// Map material-ui to build ver if available
 					
-					epictask: path.resolve(baseDir, 'src'),
+					//epictask: path.resolve(baseDir, 'src'),
 					styles: path.resolve(baseDir, 'src/assets/styles'),
 					assets: path.resolve(baseDir, 'src/assets'),
-					components: path.resolve(baseDir, 'src/ui/components'),
-					ui: path.resolve(baseDir, 'src/ui'),
-					shared: path.resolve(baseDir, 'src/shared'),
-					actions: path.resolve(baseDir, 'src/shared/actions'),
-					GitHubClient: path.resolve(baseDir, 'src/shared/GitHubClient'),
-					Constants: path.resolve(baseDir, 'src/shared/Constants'),
-					Settings: path.resolve(baseDir, 'src/shared/Settings'),
-					models: path.resolve(baseDir, 'src/shared/models'),
-					main: path.resolve(baseDir, 'src/main')
+					// components: tsAlias('ui/components'),
+					// ui: tsAlias('ui'),
+					// shared: tsAlias('shared'),
+					// actions: tsAlias('shared/actions'),
+					GitHubClient: tsAlias('shared/GitHubClient'),
+					Constants: tsAlias('shared/Constants'),
+					Settings: tsAlias('shared/Settings'),
+					// models: tsAlias('shared/models'),
+					// main: tsAlias('main'),
+					// server: tsAlias('server'),
+					// tests: tsAlias('tests'),
+					// job: tsAlias('job'),
+					// db: tsAlias('db'),
+					react: path.resolve(baseDir, 'node_modules/react')
 				}
 			),
 			
 			
-			// root: 'src',
 			
-			modules: resolveDirs(
-				'src',
-				'node_modules'
-			),
+			modules: moduleDirs,
 			
-			extensions: ['', '.ts', '.tsx', '.js', '.jsx'],
+			extensions: global.TypeScriptEnabled ?
+				['', '.ts', '.tsx', '.js', '.jsx'] :
+				['', '.js', '.jsx'],
+			
 			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
 			
 		},
@@ -160,6 +178,7 @@ export default function (projectConfig) {
 			includePaths: [path.resolve(baseDir, "./src/assets")]
 		},
 		
+		// Post CSS Config (Not Used currently)
 		postcss() {
 			return [
 				require('postcss-modules'),
@@ -168,15 +187,16 @@ export default function (projectConfig) {
 			]
 		},
 		
-		other: {happyPlugins},
+		// Attach any random data we need to use later
+		other: {
+			happyPlugins
+		},
 		
+		// Create final list of plugins
 		plugins: happyPlugins.concat([
-			//new TsConfigPathsPlugin(),
 			new webpack.IgnorePlugin(/vertx/),
 			new webpack.optimize.OccurrenceOrderPlugin(),
 			new webpack.NoErrorsPlugin(),
-			new TsConfigPathsPlugin(),
-			new ForkCheckerPlugin(),
 			new DefinePlugin({
 				__DEV__: isDev,
 				DEBUG: isDev,
@@ -186,27 +206,30 @@ export default function (projectConfig) {
 				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
 				'process.env.PROCESS_NAME': projectConfig.name,
 				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer'),
-				'process.env.DefaultTransportScheme': JSON.stringify('IPC')
+				'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
+				'process.env.BLUEBIRD_LONG_STACK_TRACES': 1
 			}),
 			new webpack.NamedModulesPlugin(),
 			new webpack.ProvidePlugin({
-				//simplemde: 'simplemde/src/js/simplemde.js'
 				'Promise': 'bluebird'
-			}),
+			})
 		
 		]),
+		
+		// Shim node mods
 		node: {
 			__dirname: true,
 			__filename: true
 		},
 		
+		// Configure all node_modules as external if in electron
 		externals: [
 			nodeExternals({
 				whitelist: [
 					// /material-ui/,
 					/webpack\/hot/,
 					/webpack-hot/,
-					/urlsearchparams/,
+					// /urlsearchparams/,
 					// /typestore\//,
 					// /typestore-plugin-pouchdb/,
 					// /typestore-mocks/
@@ -219,21 +242,17 @@ export default function (projectConfig) {
 		
 	}
 	
-	// if (useMaterialUIBuild)
-	// 	config.resolve.modules.push(path.resolve(processDir,'node_modules/material-ui-build/node_modules'))
-	
-	//config.resolve.modules.push(path.resolve(processDir,'node_modules/react-hotkeys/node_modules'))
+	if (TypeScriptEnabled)
+		config.plugins.splice(0,0,new TsConfigPathsPlugin(),new ForkCheckerPlugin())
 	
 	// Development specific updates
 	Object.assign(config, {
 		
 		//In development, use inline source maps
 		devtool: isDev ? 'inline-source-map' : 'source-map',
-		//
 		//devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
 		
-		// In development specify absolute path - better
-		// debugger support
+		// In development specify absolute path - better debugger support
 		output: Object.assign({}, config.output, isDev ? {
 			devtoolModuleFilenameTemplate: "[absolute-resource-path]",
 			devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"

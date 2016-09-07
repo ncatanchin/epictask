@@ -1,4 +1,5 @@
 .vscode/.*
+build/
 #libs/**/*.*
 
 # Typestore Files

@@ -1,16 +1,18 @@
 {
 	"presets": [
-		"es2015",
+		"es2016-node5",
 		"stage-0",
-		"react"
+		"react",
+		"async-to-bluebird"
 	],
-	"sourceMaps": "both",
+	"sourceMaps": "inline",
 	"plugins": [
 		"transform-runtime"
 	],
 	"env": {
 		"development": {
-
+			"plugins": ["react-hot-loader/babel"]
+			
 		}
 	}
 

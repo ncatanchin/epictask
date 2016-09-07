@@ -30,6 +30,7 @@ const projectElectronMain = {
 		
 		// Output to base path
 		`${baseDir}/.tsconfig.main.json`,
+		//`${baseDir}/tsconfig.json`,
 		
 		// Awesome typescript loader options
 		makeAwesomeOptions({
@@ -59,6 +60,7 @@ const projectElectronRenderer = {
 	// TypeScript Config
 	tsconfig: makeTsConfig(
 		`${baseDir}/.tsconfig.renderer.json`,
+		//`${baseDir}/tsconfig.json`,
 		
 		makeAwesomeOptions({
 			instanceName:`electron-renderer`,
@@ -104,37 +106,6 @@ function makeConfigs() {
 		
 		return configs
 	},{})
-	//
-	//
-	// /**
-	//  * Iterator projects completing configuration
-	//  */
-	// Object.keys(configs).forEach((projectName) => {
-	//
-	//
-	// 	const projectConfig = configs[projectName]
-	// 	projectConfig.name = projectName
-	//
-	// 	// Get target information
-	// 	const {targetType} = projectConfig
-	// 	const targetEnv = targetType.env[env]
-	// 	gutil.log('env','target type',targetType,targetEnv)
-	//
-	//
-	// 	projectConfig.webpackConfig = Object.assign({},{
-	// 		projectName,
-	// 		name: projectName,
-	// 		target: targetType.target
-	// 	})
-	//
-	//
-	// 	Object.assign(projectConfig,{
-	// 		runMode: targetEnv.runMode,
-	//
-	// 	})
-	// })
-	//
-	// return configs
 }
 
 

@@ -19,7 +19,7 @@ async function boot() {
 	
 	
 	
-	const loadAppRoot = () => require('ui/components/root/AppRoot.tsx')
+	const loadAppRoot = () => require('ui/components/root/AppRoot')
 	loadAppRoot()
 	
 	
@@ -40,7 +40,7 @@ async function boot() {
 	
 	
 	if (module.hot) {
-		module.hot.accept(['ui/components/root/AppRoot.tsx'], (updates) => {
+		module.hot.accept(['ui/components/root/AppRoot'], (updates) => {
 			log.info('HMR Updates, reloading app content',updates)
 			loadAppRoot()
 		})

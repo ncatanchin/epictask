@@ -5,14 +5,14 @@ html.fill-width.fill-height(lang="en")
         meta(charset='utf-8')
 
         // Splash screen load
-        link(rel="stylesheet",type="text/css",href="../node_modules/splash-screen/dist/splash.min.css")
-        script(src="../node_modules/splash-screen/dist/splash.min.js")
+        link(rel="stylesheet",type="text/css",href="../../node_modules/splash-screen/dist/splash.min.css")
+        script(src="../../node_modules/splash-screen/dist/splash.min.js")
 
-        link(rel="stylesheet",href="../node_modules/animate.css/animate.css")
-        link(rel="stylesheet",href="../node_modules/font-awesome/css/font-awesome.min.css")
-        link(rel="stylesheet",href="../node_modules/highlight.js/styles/dark.css")
-        link(rel="stylesheet",href="../node_modules/simplemde/dist/simplemde.min.css")
-        //link(rel="stylesheet",href="../node_modules/highlight.js/styles/default.css")
+        link(rel="stylesheet",href="../../node_modules/animate.css/animate.css")
+        link(rel="stylesheet",href="../../node_modules/font-awesome/css/font-awesome.min.css")
+        link(rel="stylesheet",href="../../node_modules/highlight.js/styles/dark.css")
+        link(rel="stylesheet",href="../../node_modules/simplemde/dist/simplemde.min.css")
+        //link(rel="stylesheet",href="../../node_modules/highlight.js/styles/default.css")
         meta(name="viewport",content="width=device-width, initial-scale=1")
 
         title epictask
@@ -74,7 +74,7 @@ html.fill-width.fill-height(lang="en")
              */
             function addScript(scriptPath, asyncLoad, callback) {
                 const script = document.createElement('script');
-                const basePath = (isDev) ? 'http://localhost:4444/dist' : baseDir + '/dist';
+                const basePath = (isDev) ? 'http://localhost:4444/dist/app' : baseDir + '/dist/app';
 
                 script.type = 'text/javascript'
                 if (asyncLoad) {
@@ -117,7 +117,7 @@ html.fill-width.fill-height(lang="en")
                 if (!isDev) {
                     const link = document.createElement('link');
                     link.rel = 'stylesheet';
-                    link.href = baseDir + '/dist/style.css';
+                    link.href = baseDir + '/dist/app/style.css';
                     document.write(link.outerHTML);
                 }
 

@@ -17,8 +17,9 @@
 		"experimentalDecorators": true,
 		"preserveConstEnums": true,
 		"allowSyntheticDefaultImports": true,
-		"sourceMap": true,
-		"outDir": "../dist/out/ts",
+		"inlineSourceMap":true,
+		
+		"outDir": "../build/js",
 		"paths": {
 			"tests/*": [
 				"./tests/*"
@@ -38,8 +39,6 @@
 			"server/*": [
 				"./server/*"
 			],
-			
-			
 			"shared/*": [
 				"./shared/*"
 			],

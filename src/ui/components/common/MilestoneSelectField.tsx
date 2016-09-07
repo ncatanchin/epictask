@@ -1,6 +1,3 @@
-/**
- * Created by jglanz on 7/22/16.
- */
 
 // Imports
 import * as React from 'react'
@@ -11,7 +8,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
-import {Milestone} from 'models/Milestone'
+import {Milestone} from 'shared/models/Milestone'
 import {Map,List} from 'immutable'
 import {Repo} from 'shared/models/Repo'
 

@@ -16,14 +16,15 @@ export default function (projectConfig = projectConfigs['electron-main']) {
 	// HMR
 	const hmrEntry = [
 		//'webpack/hot/signal.js'
-		'webpack/hot/poll.js?1000' /// 'webpack/hot/only-dev-server',
+		`webpack/hot/poll.js?1000` /// 'webpack/hot/only-dev-server',
 		//const hmrEntry = 'webpack/hot/signal.js'
 	]
 	
 	
 	// Base entries
 	const mainEntries = {
-		"AppEntry": ["./src/AppEntry"]
+		"AppEntry": [`${srcRootDir}/AppEntry`]
+		// "AppEntry": ["./src/AppEntry"]
 	}
 	
 	// In development env add hmr to all base entries

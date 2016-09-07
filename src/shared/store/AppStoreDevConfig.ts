@@ -35,8 +35,9 @@ export function loadDevTools() {
 	if (DevToolsMiddleware)
 		return DevToolsMiddleware
 	
-	DevTools = require('ui/components/debug/DevTools.tsx').DevTools
-	DevToolsMiddleware = DevTools.instrument()
+	// DevTools = require('ui/components/debug/DevTools.tsx').DevTools
+	// DevToolsMiddleware = DevTools.instrument()
+	
 	
 	return DevToolsMiddleware
 }

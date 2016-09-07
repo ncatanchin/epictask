@@ -5,14 +5,23 @@ export default (opts) => {
 			"forkChecker":  true,
 			"useCache":     true,
 			"babelOptions": {
-				"presets":    [
+				presets: [
 					"es2016-node5",
 					"stage-0",
 					"react",
 					"async-to-bluebird"
 				],
-				"plugins":    [],
-				"sourceMaps": "both"
+				plugins: [
+					"transform-es2015-classes",
+					"transform-runtime"
+				],
+				sourceMaps: "inline",
+				env: {
+					development: {
+						plugins: ["react-hot-loader/babel"]
+						
+					}
+				}
 			}
 		}
 	}, opts)

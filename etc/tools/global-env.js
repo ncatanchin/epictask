@@ -9,7 +9,8 @@ const
 	git         = require('gulp-git'),
 	ghRelease   = require('gulp-github-release'),
 	tsc         = require('typescript'),
-	babel       = require('gulp-babel')
+	babel       = require('gulp-babel'),
+	fs          = require('fs')
 
 
 Object.assign(global, {
@@ -20,6 +21,7 @@ Object.assign(global, {
 	del,
 	git,
 	ghRelease,
+	TypeScriptEnabled: !process.env.NO_TYPESCRIPT,
 	Deferred: require('./deferred')
 }, require('./helpers'))
 
@@ -28,16 +30,18 @@ process.argv.forEach(arg => {
 		process.env.NODE_ENV = 'development'
 })
 
+function checkFileExists(filename) {
+	return (fs.existsSync(filename)) ? filename : null
+}
 /**
  * Global modules and
- * @type {SemVer}
  */
 const
 	semver     = require('semver'),
 	path       = require('path'),
 	_          = require('lodash'),
 	processDir = path.resolve(__dirname, '../..'),
-	RamDiskPath = path.join(process.env.HOME,'DevelopmentRAM','epictask'),
+	RamDiskPath = checkFileExists(path.join(process.env.HOME,'DevelopmentRAM','epictask') || `${processDir}`),
 	env        = process.env.NODE_ENV || 'development'
 
 const RunMode = {
@@ -70,10 +74,11 @@ Object.assign(global, {
 	_,
 	log: console,
 	env,
-	isDev: env == 'development',
+	isDev: env === 'development',
 	processDir,
 	baseDir: processDir,
 	basePackageJson: readJSONFileSync(`${processDir}/package.json`),
+	srcRootDir: path.resolve(processDir,global.TypeScriptEnabled ? 'src' : 'build/js'),
 	RunMode,
 	RamDiskPath,
 	TargetType,

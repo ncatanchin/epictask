@@ -1,6 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 
+
 const tsConfigBaseFile = () => `${baseDir}/tsconfig.json`
 
 /**
@@ -10,7 +11,7 @@ export function makeTsConfigBase() {
 	
 	const
 		// Load the base configuration
-		baseConfig = require('../tsconfig.base.json'),
+		baseConfig = require(`${baseDir}/etc/tsconfig.base.json`),
 		
 		// Tweaks
 		templateConfig = {
@@ -19,31 +20,21 @@ export function makeTsConfigBase() {
 			// Set absolute baseUrl
 			compilerOptions: {
 				...baseConfig.compilerOptions,
-				baseUrl: path.resolve(baseDir, 'src'),
-				outDir: path.resolve(baseDir, 'dist/out')
+				baseUrl: './src',//path.resolve(baseDir, 'src'),
+				//sourceRoot: path.resolve(baseDir,'src'),
+				outDir: './build/js'// path.resolve(baseDir,'etc',baseConfig.outDir || '../build/js')
 			},
 			
 			// Map exclusions to include parents
-			exclude: baseConfig.exclude.reduce((excludedPaths, excludePath) => {
-				excludedPaths.push(excludePath, '../' + excludePath)
-				return excludedPaths
-			}, [])
+			exclude: baseConfig.exclude.reduce((excludedPaths, excludePath) =>
+				excludedPaths.concat([excludePath])
+			, [])
 		}
 	
 	// Write the updated config
+	log.info(`Writing base ts config to ${tsConfigBaseFile()}`)
 	writeJSONFileSync(tsConfigBaseFile(), templateConfig)
 	
-	// Link the root config
-	//const rootTsConfigFile = `${baseDir}/tsconfig.json`
-	
-	// if (fs.existsSync(rootTsConfigFile)) {
-	//
-	// 	fs.
-	// }
-	// try {
-	// 	fs.unlinkSync(rootTsConfigFile)
-	// } catch (err) {}
-	// fs.symlinkSync(tsConfigBaseFile(), rootTsConfigFile)
 }
 
 
@@ -51,7 +42,6 @@ export function makeTsConfigBase() {
  * Create project configs for Awesome-TypeScript-Loader
  *
  * @param dest
- * @param typingMode
  * @param extraOpts
  * @returns {*}
  */
@@ -66,7 +56,7 @@ export function makeTsConfig(dest,...extraOpts) {
 		
 		exclude: baseConfig.exclude
 			.map(excludePath =>
-				_.startsWith(excludePath, '../') ? excludePath.substring(3) : excludePath
+				excludePath.startsWith('../') ? excludePath.substring(3) : excludePath
 			)
 	}
 	

@@ -133,10 +133,10 @@ function runDevServer(port,projectConfig,wpConfig) {
 	serverApp.use(hotMiddleware)
 
 	// Now server any static assets
-	serverApp.use('/dist',express.static(path.resolve(baseDir,'dist')))
+	serverApp.use('/dist/app',express.static(path.resolve(baseDir,'dist/app')))
 
 	// Add node specifically for source mappings
-	serverApp.use('/dist',express.static('/Users/jglanz/Development/oss/node-6.1.0/lib'))
+	//serverApp.use('/dist/app',express.static('/Users/jglanz/Development/oss/node-6.1.0/lib'))
 	// serverApp.use('/react-devtools',express.static('/Users/jglanz/Downloads/0.14.10_0'))
 	//electron.BrowserWindow.addDevToolsExtension("/Users/jglanz/Downloads/0.14.10_0")
 

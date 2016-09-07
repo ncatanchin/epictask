@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="TypeScript Source" pattern="file[epictask]:src//*||file[epictask]:src/tests//*||file[epictask]:libs/typemutant/src//*||file[epictask]:libs/typelogger/src//*||file[epictask]:libs/typedux/src//*||file[epictask]:libs/typestore/packages/typestore-mocks/src//*||file[epictask]:libs/typestore/packages/typestore/src//*||file[epictask]:libs/typestore/packages/typestore-plugin-pouchdb/src//*||file[epictask]:src//*||file[epictask]:typings//*" />
+  <scope name="TypeScript Source" pattern="file[epictask]:src//*||file[epictask]:typings//*||file:package.json||file:tsconfig.json||file:tslint.json||file:typings.json" />
 </component>

@@ -6,7 +6,7 @@ import {Issue} from 'shared/models/Issue'
 import {Repo} from 'shared/models/Repo'
 
 import {createClient} from "shared/GitHubClient"
-import {RepoSyncJob as RepoSyncJobType} from "executors/RepoSyncExecutor"
+import {RepoSyncExecutor as RepoSyncJobType} from "job/executors/RepoSyncExecutor"
 import {getServiceManager} from "shared/services"
 
 const log = getLogger(__filename)
@@ -43,7 +43,7 @@ describe('RepoSyncJob tests',() => {
 	it('Get Repo', async () => {
 		nock(/github/)
 			.get(/\/repos\/angular\/angular/)
-			.reply(200,require('./fixtures/angular-repo-response.json'))
+			.reply(200,require('tests/job/fixtures/angular-repo-response.json'))
 	
 		const angularRepo = await getAngular()
 		log.info('Angular repo', angularRepo)
@@ -69,7 +69,7 @@ describe('RepoSyncJob tests',() => {
 		}) as RepoSyncJobType
 		
 		// Set the client to use
-		job.client = client
+		//job.client = client
 		
 		// Sync Assignees
 		const users:User[] = await job.syncAssignees(null,angularRepo)
@@ -94,7 +94,7 @@ describe('RepoSyncJob tests',() => {
 		}) as RepoSyncJobType
 		
 		// Set the client to use
-		job.client = client
+		//job.client = client
 		
 		// Sync Assignees
 		const issues:Issue[] = await job.syncIssues(null,angularRepo)

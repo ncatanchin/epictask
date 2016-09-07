@@ -275,7 +275,7 @@ export class ServiceManager {
 	 */
 	loadContext() {
 		const
-			ctx = this.ctxRef = require.context('shared/services',false,/^((?!internal).*)Service\.ts$/),
+			ctx = this.ctxRef = require.context('shared/services',false,/^((?!internal).*)Service\.(ts|js)$/),
 			serviceFiles = ctx.keys()
 		
 		// Log all the files in the context
