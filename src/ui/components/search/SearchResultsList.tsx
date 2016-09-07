@@ -156,11 +156,10 @@ export interface ISearchResultsListProps {
  * @class SearchResults
  * @constructor
  **/
+@ThemedNoRadium
 @connect(createStructuredSelector({
 	repoModels:repoModelsSelector
 }),null,null,{withRef:true})
-@ThemedNoRadium
-
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 
