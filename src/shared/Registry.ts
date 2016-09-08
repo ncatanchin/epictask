@@ -1,8 +1,13 @@
-import {ToolPanelLocation, ITool, IToolProps,IToolConfig} from "shared/tools/ToolTypes"
+import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} from "shared/tools/ToolTypes"
+import createReactProxy from 'react-proxy'
 import React from 'react'
 import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
 
-const log = getLogger(__filename)
+
+const
+	log = getLogger(__filename)
+		
+//forceReactUpdate = getReactForceUpdate(React);
 
 /**
  * Types of Registry
@@ -19,6 +24,12 @@ export enum RegistryType {
 export interface RegistryEntry<T> {
 	name:string,
 	clazz:T
+	react?:{
+		proxyComponent:any
+		proxy:any
+		getHeaderControls():React.ReactElement<any>[]
+	}
+	
 }
 
 
@@ -36,21 +47,31 @@ export interface IToolConstructor extends IToolConfig, React.ComponentClass<IToo
 	//new (...args:any[]):any
 	
 	
+	
+	
 }
 
 export interface IViewConstructor {
 	new (...args:any[]):any
 }
 
+const emptyRegistries = {
+	[RegistryType.Models]: {} as TRegistry<IModelConstructor<any>>,
+	[RegistryType.Tools]: {} as TRegistry<IToolConstructor>,
+	[RegistryType.Views]: {} as TRegistry<IViewConstructor>
+}
 /**
  * Internal map of all registries
  *
  * @type {{[type:number]:RegistryType}
  */
-const registries = {
-	[RegistryType.Models]: {} as TRegistry<IModelConstructor<any>>,
-	[RegistryType.Tools]: {} as TRegistry<IToolConstructor>,
-	[RegistryType.Views]: {} as TRegistry<IViewConstructor>
+const registries:typeof emptyRegistries = _.get(module,'hot.data.registries',emptyRegistries)
+
+if (module.hot) {
+	module.hot.dispose((data:any) => {
+		data.registries = registries
+	})
+	module.hot.accept(() => log.info(`HMR update`))
 }
 
 export function getRegistry(type:RegistryType):TRegistry<any> {
@@ -86,29 +107,18 @@ function decorateConstructor(derived: Function, base: Function) {
  *
  * @param target
  */
-export function RegisterModel<T extends IModelConstructor<any>>(target:T) {
+export function RegisterModel<T extends IModelConstructor<any>>(target:T):T {
 	const clazzName = target.name
 	log.info(`Registering model: ${clazzName}`)
 	registerModel(clazzName,target)
 
 	target.$$clazz = clazzName
 	
-	let clazzVal = clazzName
-	
-	Object.defineProperty(target.prototype,'$$clazz',{
-		get: function() {
-			return clazzVal
-		},
-		set: function(newVal) {
-			if (newVal)
-				clazzVal = newVal
-		}
-	})
-	// return decorateConstructor(function(...args:any[]) {
-	// 	//target.apply(this,args)
-	// 	//super(...args)
-	// 	this.$$clazz = clazzName
-	// },target) as T
+	return decorateConstructor(function(...args:any[]) {
+		target.apply(this,args)
+		//super(...args)
+		this.$$clazz = clazzName
+	},target) as T
 }
 
 /**
@@ -140,13 +150,13 @@ export function getModel(name):IModelConstructor<any> {
 /**
  * Auto register a tool
  *
- * @param config
+ * @param reg
  */
-export function RegisterTool(config:IToolConfig) {
+export function RegisterTool(reg:IToolRegistration) {
 	return (target:IToolConstructor) => {
-		const id = target.id || target.name
+		const id = reg.id || target.name
 		log.info(`Registering tool: ${id}`)
-		registerTool(config, target)
+		registerTool(reg, target)
 	}
 }
 
@@ -155,13 +165,53 @@ export function RegisterTool(config:IToolConfig) {
 /**
  * Manual register a clazz
  *
- * @param config
+ * @param reg
  * @param clazz
  */
-function registerTool(config:IToolConfig,clazz:IToolConstructor) {
-	getRegistry(RegistryType.Tools)[config.id] = {name:config.id,clazz}
-	const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
-	Container.get(UIActionFactory).registerTool(config as any)
+function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
+	try {
+		let config = getRegistry(RegistryType.Tools)[reg.id]
+		
+		if (config) {
+			//log.warn(`HMR is updating mounted instances`)
+			config.clazz = clazz
+			config.react.getHeaderControls = reg.getHeaderControls
+			config.react.proxy.update(clazz)
+			
+			
+			
+			//mountedInstances.forEach(forceReactUpdate)
+			
+		} else {
+			const proxy = createReactProxy(clazz)
+			getRegistry(RegistryType.Tools)[reg.id] = {
+				name: reg.id,
+				clazz,
+				react: {
+					proxy,
+					proxyComponent: proxy.get(),
+					getHeaderControls: reg.getHeaderControls
+				}
+			}
+		}
+		
+		const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
+		Container.get(UIActionFactory).registerTool(reg as any)
+	
+		if (config) {
+			const
+				AppRoot = require('ui/components/root/AppRoot'),
+				appInstance = AppRoot.getAppInstance()
+			
+			if (appInstance)
+				require('react-deep-force-update')(appInstance)
+		}
+	} catch (err) {
+		log.error(`Failed to register tool`,err)
+		require('shared/Toaster').addErrorMessage(err)
+	}
+		
+	
 }
 
 
@@ -175,9 +225,22 @@ export function getToolComponent(id:string):IToolConstructor {
 	const tool = getRegistry(RegistryType.Tools)[id]
 	assert(tool,`Tool not found for ${id}`)
 	
+	return tool.react.proxyComponent
+}
+
+export function getToolComponentClass(id:string):IToolConstructor {
+	const tool = getRegistry(RegistryType.Tools)[id]
+	assert(tool,`Tool not found for ${id}`)
+	
 	return tool.clazz
 }
 
+export function getToolHeaderControls(id:string):React.ReactElement<any>[] {
+	const tool = getRegistry(RegistryType.Tools)[id]
+	assert(tool,`Tool not found for ${id}`)
+	
+	return tool.react.getHeaderControls ? tool.react.getHeaderControls() : []
+}
 
 /**
  * Auto register a view

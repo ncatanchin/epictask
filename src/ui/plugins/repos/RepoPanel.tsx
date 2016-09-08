@@ -11,7 +11,7 @@ import {RepoList} from './RepoList'
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {ThemedStyles} from 'shared/themes/ThemeManager'
+import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
 import * as Radium from 'radium'
 
 import {RegisterTool} from "shared/Registry"
@@ -31,10 +31,7 @@ const baseStyles:any = createStyles({
 	}),
 
 	panel: [makeTransition(['opacity']),FlexColumn,FlexScale,Fill,{
-		opacity: 1,
-		closed: {
-			opacity: 0
-		}
+		opacity: 1
 	}],
 
 	
@@ -42,10 +39,7 @@ const baseStyles:any = createStyles({
 		minWidth: rem(20),
 		position: 'relative',
 
-		closed: {
-			minWidth: rem(2.8),
-			maxWidth: rem(2.8)
-		}
+		
 	}],
 
 	drawer: makeStyle(FlexColumn,FlexScale,FillWidth,{
@@ -53,28 +47,29 @@ const baseStyles:any = createStyles({
 		position: 'relative'
 	}),
 
-	header: makeStyle(Ellipsis,FlexRowCenter,FlexAuto),
-	headerTitle: makeStyle(Ellipsis,FlexScale,{
-		fontSize: themeFontSize(1.2),
-		padding: '0.4rem 0.5rem'
-	}),
+	header: [Ellipsis,FlexRowCenter,FlexAuto, {
+		title: [Ellipsis,FlexScale,{
+			fontSize: themeFontSize(1.2),
+			padding: '0.4rem 0.5rem'
+		}],
+		
+		button: [FlexRowCenter,{
+			height: rem(2),
+			borderRadius: 0,
+			
+			label: {
+				fontSize: rem(0.9),
+				padding: '0 0.5rem 0 0'
+			},
+			icon: {
+				fontSize: rem(1)
+			},
+		}]
+	}],
 
-	headerButton: makeStyle(FlexRowCenter,{
-		height: rem(2)
-	}),
-
-	headerButtonLabel: {
-		fontSize: rem(0.9),
-		padding: '0 0.5rem 0 0'
-	},
-
-	headerButtonIcon: {
-		fontSize: rem(1)
-	},
-
-	listContainer: makeStyle(FlexColumn,FlexScale, {
+	listContainer: [FlexColumn,FlexScale, {
 		overflow: 'hidden'
-	})
+	}]
 
 
 
@@ -88,6 +83,26 @@ export interface IRepoPanelProps extends IToolProps {
 	styles?:any
 }
 
+function getHeaderControls() {
+	const styles = createThemedStyles(baseStyles,['repoPanel'])
+	return [
+		<Button tabIndex={-1}
+		        style={styles.header.button}
+		        onClick={(event:React.MouseEvent) => {
+								event.preventDefault()
+								event.stopPropagation()
+						
+								log.debug(`add repo click`,event)
+						
+								Container.get(UIActionFactory).showAddRepoDialog()
+						
+							}}>
+			<Icon style={styles.header.button.icon} iconSet='fa' iconName='plus'/>
+		</Button>
+	]
+}
+
+
 
 /**
  * RepoPanel
@@ -97,7 +112,7 @@ export interface IRepoPanelProps extends IToolProps {
  **/
 
 
-@RegisterTool({id:DefaultTools.RepoPanel,defaultLocation: ToolPanelLocation.Left,label:'Repos'})
+@RegisterTool({id:DefaultTools.RepoPanel,defaultLocation: ToolPanelLocation.Left,label:'Repositories',getHeaderControls})
 @HotKeyContext()
 @ThemedStyles(baseStyles,'repoPanel')
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
@@ -116,7 +131,9 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 	
 	private uiActions = Container.get(UIActionFactory)
-
+	
+	
+	
 	setRepoPanelOpen = (event, open:boolean) => {
 		this.uiActions.setRepoPanelOpen(open)
 	}
@@ -127,54 +144,42 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 		this.repoActions.clearSelectedRepos()
 	}
 
-	onAddRepoClicked = (event:React.MouseEvent) => {
-		event.preventDefault()
-		event.stopPropagation()
-
-		log.debug(`add repo click`,event)
-
-		this.uiActions.showAddRepoDialog()
-
-	}
+	
 
 	keyHandlers = {
 
 	}
-
+	
+	
+	
+	
+	
+	
+	
 	render() {
 		const
-			{theme,config,styles,visible} = this.props,
+			{theme,config,styles,style,visible} = this.props,
 			
 			panelStyle = [
 				styles.panel,
-				styles.root
+				styles.root,
+				style
 			],
 
-
 			headerStyle = [styles.header],
+			headerButtonStyle = [styles.header.button]
 
-			headerButtonStyle = [styles.headerButton]
+//handlers={this.keyHandlers}
+		return <div style={panelStyle}>
 
-
-		return <HotKeys handlers={this.keyHandlers} style={panelStyle}>
-
-				{/* Header controls */}
-				<div style={headerStyle}>
-					<div style={styles.headerTitle}>Repositories</div>
-					<Button tabIndex={-1} style={headerButtonStyle} onClick={this.onAddRepoClicked}>
-						<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='plus'/>
-					</Button>
-					<Button tabIndex={-1} style={headerButtonStyle} onClick={(e) => this.setRepoPanelOpen(e,false)}>
-						<Icon style={styles.headerButtonIcon} iconSet='fa' iconName='chevron-left'/>
-					</Button>
-				</div>
+				
 
 				{/* List */}
-				<div style={styles.listContainer}>
+				<div style={styles.listContainer} className="listContainer">
 					<RepoList />
 				</div>
 
-			</HotKeys>
+			</div>
 		
 
 

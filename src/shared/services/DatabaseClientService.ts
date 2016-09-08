@@ -83,9 +83,9 @@ export class DatabaseClientService extends BaseService {
 	constructor() {
 		super()
 		
-		this._stores = assign(new Stores(),{
-			databaseService:this
-		})
+		databaseService = this
+		
+		this._stores = assign(new Stores(),{databaseService})
 	}
 	
 	

@@ -257,6 +257,13 @@ const ThemeComponentWrapper = React.createClass({
 	}
 } as any)
 
+export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any = {}) {
+	
+	const themeParts = themeKeys.map(themeKey => _.get(getTheme(),themeKey,{}))
+	
+	return mergeStyles(baseStyles,...themeParts,props.styles)
+}
+
 /**
  * Create a wrapped themed component
  *
@@ -292,10 +299,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				theme: getTheme()
 			}
 			
-			const
-				themeParts = themeKeys
-					.map(themeKey => _.get(getTheme(),themeKey,{})),
-				styles = mergeStyles(baseStyles,...themeParts,props.styles)
+			const styles = createThemedStyles(baseStyles,themeKeys,props)
 			
 			if (baseStyles) {
 				assign(newState,{styles})

@@ -45,4 +45,4 @@ Bluebird.config({
 	monitoring: true
 })
 
-require('../dist/app/AppEntry')
+require('../dist/app/AppEntry.bundle')

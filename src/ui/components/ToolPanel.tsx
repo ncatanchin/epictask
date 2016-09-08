@@ -14,7 +14,7 @@ import {
 	rem, Ellipsis
 } from "shared/themes"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {getToolComponent} from "shared/Registry"
+import {getToolComponent, getToolComponentClass, getToolHeaderControls} from "shared/Registry"
 
 // Constants
 const
@@ -45,8 +45,7 @@ const
 		}
 	],
 	baseStyles = createStyles({
-		root: [FlexAuto, {
-		
+		root: [FlexScale, OverflowHidden, {
 			[Left]: [FlexRow,FillHeight],
 			[Right]: [FlexRow,FillHeight],
 			[Bottom]: [FlexColumn,FillWidth],
@@ -54,11 +53,13 @@ const
 		
 		}],
 		
-		tools: [FlexScale,{
-			[Left]: [FlexColumn],
-			[Right]: [FlexColumn],
-			[Popup]: [FlexRow],
-			[Bottom]: [FlexRow],
+		tools: [FlexScale,OverflowHidden,{
+			
+		
+			[Left]: [FlexColumn,FillHeight, {borderLeftStyle: 'solid',borderLeftWidth: rem(0.1)}],
+			[Right]: [FlexColumn,FillHeight, {borderRightStyle: 'solid',borderRightWidth: rem(0.1)}],
+			[Popup]: [FlexRow,FillWidth, {borderTopStyle: 'solid',borderBottomWidth: rem(0.1)}],
+			[Bottom]: [FlexRow,FillWidth, {borderBottomStyle: 'solid',borderTopWidth: rem(0.1)}],
 		}],
 		
 		tool: [FlexColumn,FlexScale,{
@@ -67,9 +68,10 @@ const
 			[Bottom]: [FillHeight],
 			[Popup]: [FillHeight],
 			
-			header: [FlexRowCenter,makeFlex(0,0,rem(2)),makePaddingRem(0.3,0.5),{
+			header: [FlexRowCenter,makeFlex(0,0,rem(2)),{
 				label: [FlexScale,Ellipsis,{
-					fontWeight: 500
+					fontSize: themeFontSize(1.2),
+					padding: '0.4rem 0.5rem'
 				}]
 			}]
 		}],
@@ -182,12 +184,14 @@ const ToolWrapper = Radium((props:{styles:any,tool:ITool,panel:IToolPanel}) => {
 		{styles,tool,panel} = props,
 		{location} = panel,
 		toolStyles = styles.tool,
-		ToolComponent = getToolComponent(tool.id)
+		ToolComponent = getToolComponent(tool.id),
+		ToolHeaderControls = getToolHeaderControls(tool.id)
 	
-	return <div style={[toolStyles,toolStyles[location]]}>
+	return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
 		<div style={[toolStyles.header,toolStyles.header[location]]}>
 			<div style={[toolStyles.header.label]}>{tool.label}</div>
-			
+			{/*{ToolComponent.getHeaderControls().map(HeaderControl => <HeaderControl />)*/}
+			{ToolHeaderControls}
 		</div>
 		<ToolComponent style={[FlexScale]} tool={tool} visible={panel.open && tool.active} />
 	</div>
@@ -250,9 +254,10 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 			
 			<div style={[styles.tools,styles.tools[location]]}>
 				{tools.filter(it => it.active).map(tool => {
-					return <ToolWrapper styles={styles}
-					                      panel={panel}
-					                      tool={tool}/>
+					return <ToolWrapper key={tool.id}
+					                    styles={styles}
+					                    panel={panel}
+					                    tool={tool}/>
 				})}
 			</div>
 		</div>

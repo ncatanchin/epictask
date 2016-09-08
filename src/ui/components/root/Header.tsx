@@ -278,7 +278,6 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 			<div style={logoWrapperStyle}>
 				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
-				{/*<img style={imgStyle} src={require('assets/images/epictask-logo.png')}/>*/}
 			</div>
 
 		</HotKeys>

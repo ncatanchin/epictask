@@ -27,8 +27,8 @@ const transition = makeTransition(['width','minWidth','maxWidth','flex','flexBas
 const styles:any = createStyles({
 
 	page:[{
-		'.toolPanelSplitPane > .Pane1,': [transition],
-		'.toolPanelSplitPane > .Pane2,': [transition],
+		//'.toolPanelSplitPane > .Pane1,': [transition],
+		//'.toolPanelSplitPane > .Pane2,': [transition],
 	}],
 	bodyWrapper: makeStyle(FlexScale,Fill)
 

@@ -7,13 +7,12 @@
 	],
 	"sourceMaps": "inline",
 	"plugins": [
+		"transform-es2015-classes",
 		"transform-runtime"
 	],
 	"env": {
 		"development": {
 			"plugins": ["react-hot-loader/babel"]
-			
 		}
 	}
-
 }

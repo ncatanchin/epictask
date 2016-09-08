@@ -44,9 +44,11 @@ const baseStyles = createStyles({
 				fontSize: themeFontSize(1.3)
 			},
 			
-			label: [FlexColumn,FlexScale,{
+			
+			
+			label: [FlexScale,Ellipsis,{
 				padding: '0.2rem 0.2rem 0 0.5rem',
-				justifyContent: 'center',
+				justifyContent: 'flex-start',
 				// fontSize: themeFontSize(1.1),
 				fontWeight: 100
 			}],
@@ -161,9 +163,8 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						<Icon style={styles.list.item.icon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
 
 						{/* Repo */}
-						<div style={styles.list.item.label}>
-							<Renderers.RepoName repo={repo}/>
-						</div>
+						<Renderers.RepoName repo={repo} style={styles.list.item.label}/>
+						
 
 						<Icon
 							style={[

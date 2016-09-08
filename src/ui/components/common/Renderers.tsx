@@ -16,7 +16,7 @@ export const RepoName = Radium(({repo,style = {}}) => {
 		return <div>No repo</div>
 
 	const parts = repo.full_name.split('/')
-	return <div style={[Ellipsis,style]}>
+	return <div style={style}>
 		<span>{parts[0]}/</span>
 		<span style={FontBlack}>{parts[1]}</span>
 	</div>

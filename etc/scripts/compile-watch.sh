@@ -2,16 +2,18 @@
 
 ./etc/scripts/configure-dev-env.sh
 
+
+
 #./etc/scripts/notify-on-error.sh
 
 # Redirect stdout ( > ) into a named pipe ( >() ) running "tee"
-exec > >(tee -i logs/compile.log)
+#exec > >(tee -i logs/compile.log)
+#exec 2>&1
 
-# Without this, only stdout would be captured - i.e. your
-# log file would not contain any error messages.
-# SEE (and upvote) the answer by Adam Spiers, which keeps STDERR
-# as a separate stream - I did not want to steal from him by simply
-# adding his answer to mine.
-exec 2>&1
+if [ "${NODE_ENV}" == "" ];then
+	export NODE_ENV=development
+	export HOT=1
+	export DEBUG=1
+fi
 
-node --max-old-space-size=6000 ./node_modules/.bin/gulp compile-watch
+node --max-old-space-size=4000 ./node_modules/.bin/gulp compile-watch

@@ -36,6 +36,11 @@ export interface IToolConfig {
 	readonly defaultLocation?:ToolPanelLocation
 }
 
+export interface IToolRegistration extends IToolConfig {
+	getHeaderControls?: () => React.ReactElement<any>[]
+}
+
+
 
 export interface ITool extends IToolConfig {
 	

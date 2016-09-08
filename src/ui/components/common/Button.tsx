@@ -1,10 +1,5 @@
-/**
- * Created by jglanz on 6/7/16.
- */
-
 //region Imports
 import * as React from 'react'
-import * as Radium from 'radium'
 import filterProps from 'react-valid-props'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 const Ink = require('react-ink')
@@ -61,7 +56,7 @@ export class Button extends React.Component<IButtonProps,void> {
 
 	render() {
 		const
-			{ripple,theme,mode,disabled,style,styles,children} = this.props
+			{ripple,mode,disabled,style,styles,children} = this.props
 
 		const rootStyle = mergeStyles(
 			styles.root,
@@ -70,9 +65,9 @@ export class Button extends React.Component<IButtonProps,void> {
 			...(Array.isArray(style) ? style : [style])
 		)
 
-		rootStyle[':hover'] = rootStyle[':hover'] || {
-			backgroundColor: tinycolor(rootStyle.backgroundColor).lighten(20).toString()
-		}
+		// rootStyle[':hover'] = rootStyle[':hover'] || {
+		// 	backgroundColor: tinycolor(rootStyle.backgroundColor).lighten(20).toString()
+		// }
 
 		return <button {...filterProps(this.props)} style={rootStyle}>
 			{ripple && <Ink/>}

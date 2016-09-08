@@ -41,7 +41,6 @@ const
 	// Import non-typed plugins
 	{
 		DefinePlugin,
-		ExternalsPlugin,
 		HotModuleReplacementPlugin
 	} = webpack,
 	
@@ -49,7 +48,7 @@ const
 	HappyPack = require('happypack'),
 	
 	// Enable flag for using happy pack
-	happyEnabled = true,
+	happyEnabled = false,
 	
 	// Generates externals config
 	nodeExternals = require('webpack-node-externals'),
@@ -120,10 +119,10 @@ export default function (projectConfig) {
 		output: {
 			path: `${distDir}/`,
 			publicPath: `${path.relative('.',distDir)}/`,
-			filename: '[name].js',
+			filename: '[name].bundle.js',
 			libraryTarget: 'commonjs2'
 		},
-		cache: true,
+		//cache: true,
 		
 		recordsPath: `${distDir}/_records`,
 		

@@ -133,7 +133,10 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 	 *
 	 * @param result
 	 */
-	onResultSelected = (result) => this.hide()
+	onResultSelected = (result) => {
+		log.info(`Repo add result was selected`,result)
+		this.hide()
+	}
 
 	/**
 	 * Sets a reference to the search panel
@@ -201,12 +204,11 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 							             onEscape={this.hide}
 							             open={this.props.open}
 							             resultsHidden={!this.props.open}
-										searchId='repo-add-search'
+							             searchId='repo-add-search'
 							             types={[SearchType.Repo]}
 							             inlineResults={true}
 							             expanded={false}
 							             mode='repos'
-
 							             onResultSelected={this.onResultSelected}
 										 hidden={!open}/>
 						</div>

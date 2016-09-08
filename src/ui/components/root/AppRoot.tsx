@@ -113,7 +113,7 @@ const mapStateToProps = createStructuredSelector({
 @connect(mapStateToProps)
 @ThemedNoRadium
 @PureRender
-class App extends React.Component<IAppProps,any> {
+export class App extends React.Component<IAppProps,any> {
 
 
 	appActions = Container.get(AppActionFactory)
@@ -261,22 +261,30 @@ class App extends React.Component<IAppProps,any> {
 
 //let rendered = false
 
+let appInstance = null
+
+export function getAppInstance() {
+	return appInstance
+}
+
 function render() {
 	reduxStore = store.getReduxStore()
 	const state = store.getState()
 
 	// const appState = appActions.state
 	const props = mapStateToProps(state)
-	appElement = <App
-		store={reduxStore}
-		{...props}
-	/>
-	ReactDOM.render(
-		appElement,
+	 
+	appInstance = ReactDOM.render(
+		<App
+			store={reduxStore}
+			{...props}
+		/>,
 		document.getElementById('root'),
-		() => {
+		(ref) => {
 			log.info('Rendered, hiding splash screen')
 			window.postMessage({type:Events.UIReady},"*")
+			
+			//appInstance = ref as any
 			Container.get(UIActionFactory).focusAppRoot()
 		}
 	)

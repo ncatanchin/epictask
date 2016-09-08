@@ -122,28 +122,11 @@ html.fill-width.fill-height(lang="en")
                 }
 
                 // SCRIPTS
-                addScript('/UIEntry.js', false, function () {
+                addScript('/UIEntry.bundle.js', false, function () {
                     if (checkBooted())
                         onUIReady(null, true)
                 })
-                /*
-                 var materialLoaded = false, libsLoaded = true
 
-                 function loadEntry() {
-                 if (!materialLoaded || !libsLoaded) return
-
-
-                 }
-
-                 addScript('/UIMaterialEntry.js',false,function() {
-                 materialLoaded = true
-                 loadEntry()
-                 })
-                 */
-                //addScript('/UILibsEntry.js', false, function () {
-                //	libsLoaded = true
-                //	loadEntry()
-                //})
 
 
             }

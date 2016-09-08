@@ -156,10 +156,11 @@ export interface ISearchResultsListProps {
  * @class SearchResults
  * @constructor
  **/
-@ThemedNoRadium
+
 @connect(createStructuredSelector({
 	repoModels:repoModelsSelector
 }),null,null,{withRef:true})
+@ThemedNoRadium
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 
@@ -327,7 +328,22 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			isSelected
 		)
 	}
-
+	
+	
+	onClick = (itemModel:ISearchItemModel) => {
+		log.info(`Created mouse down for `,itemModel)
+		
+		return (event) => {
+			const
+				{onResultSelected} = this.props,
+				isFn = _.isFunction(onResultSelected)
+			
+			if (isFn) {
+				onResultSelected(itemModel)
+			}
+		}
+	}
+	
 	private renderFns = {
 		[SearchType.Repo]: this.renderRepo,
 		[SearchType.AvailableRepo]: this.renderAvailableRepo,
@@ -389,8 +405,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				     className={isSelected && 'selected'}
 				     style={resultStyle}
 				     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
-				     onMouseDown={() => onResultSelected && onResultSelected(itemModel)}
-
+				     onClick={this.onClick(itemModel)}
 				>
 					{itemContent}
 				</div>

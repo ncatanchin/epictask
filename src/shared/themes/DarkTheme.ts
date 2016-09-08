@@ -264,6 +264,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		flat: {
 			backgroundColor: primary.hue1,
 			color:           text.secondary,
+			':hover': {
+				backgroundColor: accent.hue1
+			}
 		},
 
 		raised: {
@@ -468,13 +471,18 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		tool: {
 			header: {
 				color: text.primary,
-				backgroundColor: background,
+				backgroundColor: primary.hue2,
 				borderColor: primary.hue3,
 				
 				label: {
 					color: text.secondary,
 				}
 			},
+		},
+
+		tools: {
+			borderLeftColor: background
+			
 		}
 	},
 	

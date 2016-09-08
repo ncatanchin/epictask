@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="compile-watch (NO TYPESCRIPT COMPILE)" type="js.build_tools.npm" factoryName="npm">
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run-script" />
+    <scripts>
+      <script value="compile-watch" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs>
+      <env name="NO_TYPESCRIPT" value="true" />
+      <env name="NODE_ENV" value="development" />
+      <env name="HOT" value="1" />
+      <env name="DEBUG" value="1" />
+    </envs>
+    <method />
+  </configuration>
+</component>

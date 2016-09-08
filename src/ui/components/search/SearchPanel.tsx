@@ -22,6 +22,7 @@ import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createStructuredSelector} from 'reselect'
 import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {isNumber} from "shared/util"
 
 const $ = require('jquery')
 
@@ -39,6 +40,7 @@ const styles = require("ui/components/search/SearchPanel.scss")
 const repoActions = new RepoActionFactory()
 const searchActions = new SearchActionFactory()
 
+
 /**
  * ISearchPanelProps
  */
@@ -55,7 +57,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes {
 	hidden?: boolean
 	mode: "repos"|"issues"
 	onEscape?: () => void
-	onResultSelected?: (result: SearchResult) => void
+	onResultSelected?: (result: ISearchItemModel) => void
 }
 
 export interface ISearchPanelState {
@@ -153,9 +155,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param props
 	 */
-	isFocused = (props): boolean => (
-	props.modal === true ||
-	_.get(this, 'state.focused', false) as boolean)
+	isFocused = (props): boolean =>
+		props.modal === true ||
+		_.get(this, 'state.focused', false) as boolean
 
 
 	/**
@@ -219,7 +221,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 
 	focusTextField = (setFocus = true) => {
-		const textField = this.state.textField,
+		const
+			textField = this.state.textField,
 			shouldFocus = textField && this.isFocused(this.props)
 
 	}
@@ -232,16 +235,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	onBlur = (event) => {
 		log.info('search panel blur', this, event)
-
-
-		//const searchPanel = document.getElementById('searchPanel')
-		// if (event.relatedTarget && !searchPanel.contains(event.relatedTarget)) {
-		// 	log.info('Search panel blur')
-		// 	// this.updateFocus(true)
-		// } else {
-		// 	log.info('Probably text box blur')
-		// }
-
 
 		this.updateState(this.props)
 		this.setState({selected: false, focused: false})
@@ -273,11 +266,14 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param itemModel
 	 */
 	onResultSelected = (itemModel: ISearchItemModel) => {
-		if (!itemModel && !(itemModel = _.get(this.resultsList, 'state.selectedItem', null))) {
+		
+		itemModel = itemModel || _.get(this.resultsList, 'state.selectedItem', null)
+		
+		if (!itemModel) {
 			const {searchItemModels} = this.props,
 				{selectedIndex} = this.state || {} as any
 
-			if (searchItemModels && _.isNumber(selectedIndex)) {
+			if (searchItemModels && isNumber(selectedIndex)) {
 				itemModel = searchItemModels[selectedIndex]
 			}
 
@@ -287,14 +283,26 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			}
 		}
 
-
+	
 		searchActions.select(this.props.searchId, itemModel)
 		this.setState({focused: false})
-
-		const $ = require('jquery')
-		const inputElement = $('input', ReactDOM.findDOMNode(this.state.textField))[0]
-		if (inputElement)
-			inputElement.blur()
+		
+		const {onResultSelected} = this.props
+		log.info(`Calling panel owner`, onResultSelected)
+		if (onResultSelected) {
+			
+			onResultSelected(itemModel)
+		} else {
+			const
+				$ = require('jquery'),
+				inputElement = $('input', ReactDOM.findDOMNode(this.state.textField))[0]
+			
+			if (inputElement)
+				inputElement.blur()
+		}
+		
+	
+		
 
 	}
 

@@ -55,32 +55,7 @@ export default function (projectConfig) {
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
 				exclude: /(node_modules)/,
-				loader: 'babel',
-				query: {
-					presets: [
-						"es2016-node5",
-						"stage-0",
-						"react",
-						"async-to-bluebird"
-					],
-					plugins: [
-						// "babel-plugin-add-module-exports",
-						"transform-es2015-classes",
-						"transform-runtime"
-					],
-					
-					env: {
-						development: {
-							plugins: ["react-hot-loader/babel"]
-							
-						}
-					}
-				}
-				// 	(() => {
-				// 	const rc = readJSONFileSync(`${process.cwd()}/.babelrc`)
-				// 	rc.presets.splice(0,1,'es2015-native-modules')
-				// 	return rc
-				// })()
+				loader: 'babel'
 			},
 
 
@@ -93,18 +68,18 @@ export default function (projectConfig) {
 
 			// ASSETS / FONTS
 			{
-				happy: {id: 'fonts'},
+				//happy: {id: 'fonts'},
 				type: 'fonts',
 				test: /\.(eot|svg|ttf|woff|woff2)\w*/,
-				loader: 'file?name=assets/fonts/[name].[hash].[ext]'
+				loaders: ['file?name=assets/fonts/[name].[hash].[ext]']
 
 			},
 			
 			// ASSETS / IMAGES & ICONS
 			{
-				happy: {id: 'images-icons'},
+				//happy: {id: 'images'},
 				test: /\.(png|jpg|gif|ico)$/,
-				loader: 'file?name=assets/images/[name].[hash].[ext]',
+				loaders: ['file?name=assets/images/[name].[hash].[ext]'],
 				type: 'images'
 			},
 
