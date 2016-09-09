@@ -103,8 +103,18 @@ export function makePaddingRem(top = 0, right = top, bottom = top, left = right)
 	}
 }
 
+//noinspection JSSuspiciousNameCombination
+export function makeBorderRem(top = 0, right = top, bottom = top, left = right) {
+	return {
+		borderTop: rem(top),
+		borderRight: rem(right),
+		borderBottom: rem(bottom),
+		borderLeft: rem(left)
+	}
+}
 
-export function makeMarginRem(top = 0, right = 0, bottom = 0, left = 0) {
+//noinspection JSSuspiciousNameCombination
+export function makeMarginRem(top = 0, right = top, bottom = top, left = right) {
 	return {
 		marginTop: rem(top),
 		marginRight: rem(right),

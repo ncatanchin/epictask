@@ -6,9 +6,11 @@ import {JobType, IJob, JobStatus, JobLogLevel, JobLogLevelNames, TJobLogLevel} f
 import {Button} from 'ui/components/common'
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
-import {JobMonitor} from "ui/components/jobs/JobMonitor"
+import {JobMonitor} from "ui/plugins/jobs/JobMonitor"
 import * as uuid from 'node-uuid'
 import * as faker from 'faker'
+import {makeDefaultToolPanel, ToolPanelLocation, makeDefaultTool} from "shared/tools/ToolTypes"
+import {BuiltInTools, getBuiltInToolId} from "shared/Constants"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
@@ -49,7 +51,10 @@ storiesOf('Job Monitor',module)
 			}, 0.35)
 			makeJobWithStatus(JobType.GetUserRepos)
 		}
-		return <JobMonitor />
+		const
+			panel = makeDefaultToolPanel(ToolPanelLocation.Bottom,true),
+			tool = makeDefaultTool(getBuiltInToolId(BuiltInTools.JobMonitor))
+		return <JobMonitor tool={tool} panel={panel} visible={true} />
 	})
 	
 	// JobMonitor - logs
@@ -94,8 +99,10 @@ storiesOf('Job Monitor',module)
 		}
 		
 		jobActions.setSelectedId(job.id)
-		
-		return <JobMonitor />
+		const
+			panel = makeDefaultToolPanel(ToolPanelLocation.Bottom,true),
+			tool = makeDefaultTool(getBuiltInToolId(BuiltInTools.JobMonitor))
+		return <JobMonitor tool={tool} panel={panel} visible={true} />
 	})
 	
 	
@@ -174,9 +181,12 @@ storiesOf('Job Monitor',module)
 			}
 		
 		
+		const
+			panel = makeDefaultToolPanel(ToolPanelLocation.Bottom,true),
+			tool = makeDefaultTool(getBuiltInToolId(BuiltInTools.JobMonitor))
 		
 		return <div>
 			<Button onClick={onReset}>Reset</Button>
-			<JobMonitor id={job.id} />
+			<JobMonitor id={job.id} tool={tool} panel={panel} visible={true} />
 		</div>
 	})

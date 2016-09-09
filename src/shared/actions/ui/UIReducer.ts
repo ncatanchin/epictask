@@ -13,8 +13,8 @@ export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>
 	}
 
 
-	defaultState():UIState {
-		return new UIState()
+	defaultState(o = {}):UIState {
+		return UIState.fromJS(o)
 	}
 
 

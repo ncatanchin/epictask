@@ -20,10 +20,10 @@ export async function storeBuilder(storeEnhancer = null) {
 }
 
 export default storeBuilder
-
-if (module.hot) {
-	module.hot.accept(['shared/store/AppStore'], () => {
-		log.warn('AppStore - ignored')
-		storeBuilder(storeEnhancerRef)
-	})
-}
+//
+// if (module.hot) {
+// 	module.hot.accept(['shared/store/AppStore'], () => {
+// 		log.warn('AppStore - ignored')
+// 		storeBuilder(storeEnhancerRef)
+// 	})
+// }

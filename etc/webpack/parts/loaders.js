@@ -3,16 +3,20 @@ const
 	fs = require('fs'),
 	path = require('path')
 
-//const baseDir = path.resolve(__dirname,'../../..')
-// const sassContentLoader = path.resolve(baseDir,'src/epictask/tools/sass-constants-preloader')
-// const themesJs = path.resolve(baseDir,'src/epictask/app/themes/Palettes.js')
-
-
+/**
+ * Loader Configuration function for a project
+ *
+ * @param projectConfig
+ * @returns {{preLoaders: *[], loaders: *[]}}
+ */
 export default function (projectConfig) {
-
+	
 	// Resolve the absolute path to the proxy provided loader
-	const proxyProvidedLoaderPath =
-		path.resolve(process.cwd(),'src/tools/provided-proxy-loader.js')
+	const
+		proxyProvidedLoaderPath = path.resolve(
+			process.cwd(),
+			'src/tools/provided-proxy-loader.js'),
+		isRenderer = projectConfig.targetType === TargetType.ElectronRenderer
 
 	const loaders = {
 		
@@ -55,7 +59,11 @@ export default function (projectConfig) {
 				happy: {id: 'js'},
 				test: /\.jsx?$/,
 				exclude: /(node_modules)/,
-				loader: 'babel'
+				loader: 'babel',
+				query: {
+					cacheDirectory: true,
+					cacheIdentifier: isRenderer ? 'renderer' : 'main'
+				}
 			},
 
 

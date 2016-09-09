@@ -9,7 +9,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
 import * as SplitPane from 'react-split-pane'
 import {PureRender} from 'ui/components/common'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
+import {Themed, ThemedNoRadium, ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
@@ -22,20 +22,36 @@ const
 	log = getLogger(__filename)
 
 
-const transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow'])
+const
+	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
+	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
 
-const styles:any = createStyles({
+const baseStyles:any = createStyles({
 
 	page:[{
-		//'.toolPanelSplitPane > .Pane1,': [transition],
-		//'.toolPanelSplitPane > .Pane2,': [transition],
+		'.toolPanelSplitPane > .Pane1,': [paneTransition],
+		'.toolPanelSplitPane > .Resizer': [{
+			background: 'transparent'
+		}],
+		'.toolPanelSplitPane > .Resizer.horizontal': [{
+			height: 10
+		}],
+		'.toolPanelSplitPane > .Resizer.vertical': [{
+			width: 10
+		}],
+		'.toolPanelSplitPane > .Pane2,': [paneTransition],
 	}],
-	bodyWrapper: makeStyle(FlexScale,Fill)
-
+	bodyWrapper: [FlexScale,Fill],
+	viewWrapper:[FlexScale,Fill,{
+		borderStyle: 'solid',
+		borderWidth: rem(0.1)
+	}]
 
 })
 
 interface IHomeProps {
+	theme?:any
+	styles?:any
 	toolPanels:Map<string,IToolPanel>
 }
 
@@ -50,8 +66,8 @@ interface IHomeState {
 @connect(createStructuredSelector({
 	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
 }, createDeepEqualSelector))
-@ThemedNoRadium
-@PureRender
+@ThemedStyles(baseStyles,'homePage')
+//@PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	
 	appActions = Container.get(AppActionFactory)
@@ -64,17 +80,27 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 
 	render() {
 		const
-			{toolPanels} = this.props,
+			{theme,styles,toolPanels} = this.props,
 			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
 			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
 			toolCount = (panel:IToolPanel) => Object.keys(getTools(panel)).length,
 			rightPanel = getPanel(ToolPanelLocation.Right),
 			leftPanel = getPanel(ToolPanelLocation.Left),
 			bottomPanel = getPanel(ToolPanelLocation.Bottom),
-			[panelMinOpen,panelMinClosed] = [convertRem(20), convertRem(2)],
+			[panelMinOpen] = [convertRem(20)],
 			
-			panelMinSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? panelMinOpen : panelMinClosed,
-			panelMaxSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? this.state.width / 2 : panelMinClosed
+			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[panel.location].minDim),
+			panelMinSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),
+			panelMaxSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel),
+			constraintNames = (panel:IToolPanel) => [ToolPanelLocation.Popup,ToolPanelLocation.Bottom].includes(panel.location) ?
+				['minHeight','maxHeight'] : ['minWidth','maxWidth'],
+			makePanelConstraint = (panel:IToolPanel) => {
+				const [min,max] = constraintNames(panel)
+				return {
+					[min]: panelMinSize(panel),
+					[max]: panelMaxSize(panel)
+				}
+			}
 
 		return <Page onResize={this.updateState} id="homePage">
 			<Radium.Style scopeSelector="#homePage"
@@ -86,13 +112,16 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 				           split="horizontal"
 				           primary="second"
 				           minSize={panelMinSize(bottomPanel)}
-				           maxSize={panelMaxSize(bottomPanel)}>
+				           maxSize={panelMaxSize(bottomPanel)}
+				           pane2Style={makePanelConstraint(bottomPanel)}>
 					
 					{/* Tool Panel Left Split*/}
 					<SplitPane className="toolPanelSplitPane"
 					           split="vertical"
 					           minSize={panelMinSize(leftPanel)}
-					           maxSize={panelMaxSize(leftPanel)}>
+					           maxSize={panelMaxSize(leftPanel)}
+										 pane1Style={makePanelConstraint(leftPanel)}>
+						
 						<ToolPanel location={ToolPanelLocation.Left}/>
 						
 						{/* PRIMARY CONTENT + Tool Panel Right Split */}
@@ -100,8 +129,11 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 						           split="vertical"
 						           primary="second"
 					             minSize={panelMinSize(rightPanel)}
-											 maxSize={panelMaxSize(rightPanel)}>
-							<IssuesPanel />
+											 maxSize={panelMaxSize(rightPanel)}
+											 pane2Style={makePanelConstraint(rightPanel)}>
+							<div style={styles.viewWrapper}>
+								<IssuesPanel />
+							</div>
 							<ToolPanel location={ToolPanelLocation.Right}/>
 						</SplitPane>
 					</SplitPane>

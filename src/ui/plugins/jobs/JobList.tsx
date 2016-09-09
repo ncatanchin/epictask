@@ -1,14 +1,13 @@
 // Imports
 import * as React from 'react'
-import * as Radium from 'radium'
 import {List} from 'immutable'
 import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {IJobStatusDetail, IJob} from "shared/actions/jobs/JobTypes"
-import {JobItem} from "ui/components/jobs/JobItem"
+import {JobItem} from "./JobItem"
 import {makePaddingRem} from "shared/themes"
-import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
+
 
 // Constants
 const log = getLogger(__filename)
@@ -55,7 +54,6 @@ export interface IJobListProps extends React.HTMLAttributes {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'jobs')
-
 @PureRender
 export class JobList extends React.Component<IJobListProps,void> {
 	
@@ -93,7 +91,7 @@ export class JobList extends React.Component<IJobListProps,void> {
 												selectedId === job.id && styles.list.item.selected,
 												!lastItem && styles.list.divider
 											]}>
-						<JobItem job={job} detail={detail} />
+						<JobItem job={job} labelStyle={{fontWeight:100}} detail={detail} />
 					</div>
 				})}
 			</div>

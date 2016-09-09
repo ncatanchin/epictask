@@ -15,7 +15,7 @@ import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
 import * as Radium from 'radium'
 
 import {RegisterTool} from "shared/Registry"
-import {DefaultTools} from "shared/Constants"
+import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
 const
 	{CommonKeys:Keys} = KeyMaps,
@@ -71,8 +71,6 @@ const baseStyles:any = createStyles({
 		overflow: 'hidden'
 	}]
 
-
-
 })
 
 /**
@@ -86,17 +84,18 @@ export interface IRepoPanelProps extends IToolProps {
 function getHeaderControls() {
 	const styles = createThemedStyles(baseStyles,['repoPanel'])
 	return [
-		<Button tabIndex={-1}
+		<Button key="AddRepoButton"
+						tabIndex={-1}
 		        style={styles.header.button}
 		        onClick={(event:React.MouseEvent) => {
-								event.preventDefault()
-								event.stopPropagation()
-						
-								log.debug(`add repo click`,event)
-						
-								Container.get(UIActionFactory).showAddRepoDialog()
-						
-							}}>
+							event.preventDefault()
+							event.stopPropagation()
+					
+							log.debug(`add repo click`,event)
+					
+							Container.get(UIActionFactory).showAddRepoDialog()
+					
+						}}>
 			<Icon style={styles.header.button.icon} iconSet='fa' iconName='plus'/>
 		</Button>
 	]
@@ -110,9 +109,12 @@ function getHeaderControls() {
  * @class RepoPanel
  * @constructor
  **/
-
-
-@RegisterTool({id:DefaultTools.RepoPanel,defaultLocation: ToolPanelLocation.Left,label:'Repositories',getHeaderControls})
+@RegisterTool({
+	id:getBuiltInToolId(BuiltInTools.RepoPanel),
+	defaultLocation: ToolPanelLocation.Left,
+	label:'Repositories',getHeaderControls,
+	buttonLabel: 'Repos'
+})
 @HotKeyContext()
 @ThemedStyles(baseStyles,'repoPanel')
 export class RepoPanel extends React.Component<IRepoPanelProps,any> {
@@ -122,11 +124,6 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	 *
 	 * @type {ToolPanelLocation}
 	 */
-	static defaultLocation = ToolPanelLocation.Left
-	
-	static id = DefaultTools.RepoPanel
-	
-	static label = "Repos"
 	
 	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 	
@@ -151,11 +148,6 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	}
 	
 	
-	
-	
-	
-	
-	
 	render() {
 		const
 			{theme,config,styles,style,visible} = this.props,
@@ -169,7 +161,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 			headerStyle = [styles.header],
 			headerButtonStyle = [styles.header.button]
 
-//handlers={this.keyHandlers}
+		//handlers={this.keyHandlers}
 		return <div style={panelStyle}>
 
 				

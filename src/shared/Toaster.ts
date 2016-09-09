@@ -15,7 +15,9 @@ const
  */
 export class Toaster {
 
-	private uiActions:UIActionFactory = Container.get(UIActionFactory)
+	get uiActions():UIActionFactory {
+		return Container.get(require('shared/actions/ui/UIActionFactory').default as typeof UIActionFactory)
+	}
 
 	addMessage(message:IToastMessage|string,type:ToastMessageType = ToastMessageType.Info) {
 		if (_.isString(message)) {

@@ -61,6 +61,14 @@ export namespace ProcessConfigGlobal {
 	}
 	
 	/**
+	 * Is the main electron instance
+	 * @returns {boolean}
+	 */
+	export function isMain() {
+		return isType(ProcessType.Main)
+	}
+	
+	/**
 	 * Is the current process type storybook
 	 * @returns {boolean}
 	 */

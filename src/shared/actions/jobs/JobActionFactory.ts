@@ -118,15 +118,20 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		}) as any)
 	
 	
+	
 	/**
 	 * Clear all job info - really for testing only
 	 */
 	@ActionReducer()
-	clear() {
+	clear(includeRunning = false) {
 		return (jobStateIM:JobState) => jobStateIM
 			.withMutations(jobState => jobState
-				.update('all', all => all.clear())
-				.update('details', details => details.clear()))
+				.update('all', all => includeRunning ?
+					all.clear() :
+					all.filter((jobId,job:IJob) => job.status < JobStatus.Completed))
+				.update('details', details => includeRunning ?
+					details.clear() :
+					details.filter(detail => !includeRunning && detail.status < JobStatus.Completed)))
 	}
 	
 	/**

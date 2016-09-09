@@ -1,9 +1,11 @@
 
 import thunkMiddleware from 'redux-thunk'
 import * as createLogger from 'redux-logger'
+import {Store as ReduxStore} from 'redux'
+import {Map} from 'immutable'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
 import {Container} from 'typescript-ioc'
-import {ReduxDebugSessionKey} from 'shared/Constants'
+import {ReduxDebugSessionKey, UIKey} from 'shared/Constants'
 import {Toaster} from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 
@@ -19,39 +21,26 @@ import {
 	writeJSONFileAsync,
 	cacheFilename,
 	readFile,
-	writeJSONFile
+	writeJSONFile, writeFile, writeFileAsync
 } from 'shared/util/Files'
 
 import {
 	loadActionFactories
 } from 'shared/actions/ActionFactoryProvider'
 import {makeReactotronEnhancer} from "shared/store/AppStoreDevConfig"
+import {OnlyIf, OnlyIfFn, If} from "shared/util/Decorations"
+import {isString} from "shared/util"
 
-const log = getLogger(__filename)
-
-const stateFilename = cacheFilename('store-state')
-const ActionLoggerEnabled = false
-
-
-// /**
-//  * Reference to server client when loaded
-//  *
-//  * @type {ServerClient}
-//  */
-//let serverClient:ServerClient = null
-
-// function getServerClient() {
-// 	if (!serverClient)
-// 		serverClient = require('shared/server/ServerClient').getServerClient() as ServerClient
-//
-// 	return serverClient
-// }
+const
+	log = getLogger(__filename),
+	stateFilename = cacheFilename('store-state'),
+	ActionLoggerEnabled = false
 
 
 // HMR - setup
-let hmrReady = false
-
-
+let
+	hmrReady = false,
+	hmrDisposed = false
 
 /**
  * Create the appropriate middleware
@@ -59,12 +48,12 @@ let hmrReady = false
  * @returns {any}
  */
 function createMiddleware() {
-	if (Env.isRenderer) {
-		//return (Env.isDev) ? [createLogger()] : []
-		return []
-	} else {
-		return [thunkMiddleware]
-	}
+	return If(
+		Env.isRenderer,
+		() => [],
+		() => [thunkMiddleware]
+	)
+	
 
 }
 
@@ -74,17 +63,25 @@ function createMiddleware() {
  *
  * @type {*[]}
  */
-const middleware = createMiddleware()
+const middleware = _.get(module,'module.hot.data.middleware',createMiddleware())
 
 
-let store:ObservableStore<any>
+let store:ObservableStore<any> = _.get(module.hot,'data.store') as any
+
+// Check for hot reload
+If(store,() => {
+	hmrSetup()
+	updateReducers()
+})
+
+
 
 /**
  * onChange event of store
  */
 function onChange() {
 	log.debug(`Store state changed`)
-	//persistStoreState(getStoreState())
+	persistStoreState(getStoreState())
 }
 
 //noinspection JSUnusedLocalSymbols
@@ -117,6 +114,10 @@ function onError(err:Error,reducer?:ILeafReducer<any,any>) {
 }
 
 
+function updateReducers() {
+	getStore().replaceReducers(...getReducers())
+}
+
 /**
  * Setup HMR for the store
  */
@@ -127,7 +128,7 @@ function hmrSetup() {
 		module.hot.accept(['./Reducers'],(updates) => {
 			log.info(`Reducer Updates received, reloading reducers`, updates)
 			
-			getStore().replaceReducers(...getReducers())
+			updateReducers()
 		})
 	}
 }
@@ -229,10 +230,19 @@ export async function loadAndInitStore(serverStoreEnhancer = null) {
 	// If state server then try and load from disk
 	
 	if (serverStoreEnhancer) {
-		const stateData = readFile(stateFilename)
+		const stateJson = readFile(stateFilename)
 		try {
-			if (stateData)
-				defaultStateValue = JSON.parse(stateData)
+			let stateData
+			if (stateJson) {
+				let count = 0
+				let stateData = stateJson
+				while (isString(stateData) && count < 3) {
+					stateData = JSON.parse(stateData)
+				}
+				
+				defaultStateValue = stateData
+				log.info(`Read state from file`,JSON.stringify(defaultStateValue[UIKey],null,4))
+			}
 		} catch (err) {
 			log.error('unable to load previous state data, starting fresh', err)
 		}
@@ -242,10 +252,15 @@ export async function loadAndInitStore(serverStoreEnhancer = null) {
 	else {
 		log.info(`Loading state from server`)
 		defaultStateValue = await getServerClient().getState()
-		//log.info(`Got state`,defaultStateValue)
+		log.info(`Got state from server`,defaultStateValue.get(UIKey).toolPanels.toJS())
 	}
 	
-	return initStore(false,defaultStateValue,serverStoreEnhancer)
+	const newStore = initStore(false,defaultStateValue,serverStoreEnhancer)
+	
+	const newState = newStore.getState()
+	log.info(`Store Created with tool panels`,JSON.stringify(newState.get(UIKey).toolPanels.toJS(),null,4))
+	
+	return newStore
 }
 
 
@@ -254,35 +269,47 @@ let persistingState = false
 /**
  * Write the actual state async
  */
-async function writeStoreState() {
-	
-	const fs = require('fs')
-	await fs.writeFile(stateFilename,_.toJS(getStoreState()))
-}
-
-
-/**
- * Debounced persist store state call
- */
-const persistStoreState = _.debounce((state) => {
-	if (!Env.isMain)
-		return
-
+function writeStoreState(state = getStoreState(),doAsync = false) {
 	log.info(`Writing current state to: ${stateFilename}`)
 	if (persistingState) {
 		log.info('Persisting, can not persist until completion')
 		return
 	}
-
+	
 	persistingState = true
-	Promise
-		.resolve(writeStoreState())
-		.catch(err => {
-			log.error('state persistence failed',err)
-		})
-		.finally(() => persistingState = false)
+	
+	if (doAsync)
+		return Promise
+			.resolve(writeFileAsync(stateFilename,serializeState(state)))
+			.catch(err => {
+				log.error('state persistence failed',err)
+			})
+			.finally(() => persistingState = false)
+	
+	try {
+		writeFile(stateFilename, serializeState(state))
+	} catch (err) {
+		log.error(`Failed to persist store state`,err)
+	}
+	persistingState = false
+	return Promise.resolve()
+}
 
-},10000,{maxWait:30000})
+
+function canPersistState() {
+	const canPersist = ProcessConfig.isMain() && !hmrDisposed
+	if (!canPersist)
+		log.debug(`Can not persist state isMain=${ProcessConfig.isMain()} hmrDisposed=${hmrDisposed}`)
+	return canPersist
+		
+}
+
+/**
+ * Debounced persist store state call
+ */
+const persistStoreState = OnlyIfFn(canPersistState,_.debounce((state) => {
+	writeStoreState(state,true)
+},10000,{maxWait:30000}))
 
 /**
  * Get the observable store
@@ -297,36 +324,58 @@ export function getStore() {
 	return store
 }
 
-export function getReduxStore() {
+/**
+ * Retrieve underlying redux store
+ *
+ * @returns {ReduxStore}
+ */
+export function getReduxStore():ReduxStore<Map<string,any>> {
 	return getStore() && getStore().getReduxStore()
 }
 
-export function getStoreState() {
+/**
+ * Get the current state
+ *
+ * @returns {Map<string,any>}
+ */
+export function getStoreState():Map<string,any> {
 	return getStore() ? getStore().getState() : Immutable.Map()
 }
 
-if (Env.isDev) {
+// In Development Environment, expose getStore/getStoreState
+If(Env.isDev,() => {
 	_.assignGlobal({
 		getStore,
 		getStoreState
 	})
+})
+
+/**
+ * Serialize the current state as a string
+ *
+ * @returns {string}
+ */
+export function serializeState(state = getStoreState()) {
+	return JSON.stringify(_.toJS(state))
 }
 
-export function persist(doAsync = false) {
-	log.info(`Writing current state (shutdown) to: ${stateFilename}`)
-	if (persistingState) {
-		log.info('Persisting, can not persist until completion')
-		return
-	}
-	//assert(Env.isMain,'Can only persist on main')
-	const
-		stateJS = _.toJS(getStoreState()),
-		stateJson = JSON.stringify(stateJS)
+// Add shutdown hook on main
+If(ProcessConfig.isMain,() => {
+	log.info(`Main is shutting down, going to persist state`)
 	
-	if (doAsync)
-		writeJSONFileAsync(stateFilename,stateJson)
-	else
-		writeJSONFile(stateFilename,stateJson)
+	const {app} = require('electron')
+	app.on('before-quit',() => {
+		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
+		writeStoreState()
+	})
+})
 
+
+if (module.hot) {
+	module.hot.dispose((data:any) => {
+		assign(data,{store,middleware})
+		hmrDisposed = true
+	})
+	
+	module.hot.accept()
 }
-

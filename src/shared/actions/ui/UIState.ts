@@ -4,8 +4,9 @@ import {IToastMessage} from 'shared/models/Toast'
 import {User} from 'shared/models/User'
 import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
-import {IToolPanel,ToolPanelLocation} from "shared/tools/ToolTypes"
+import {IToolPanel, ToolPanelLocation, makeToolPanels} from "shared/tools/ToolTypes"
 
+const log = getLogger(__filename)
 
 /**
  * Enumeration describing app status type
@@ -15,33 +16,7 @@ export enum StatusType {
 	Loading
 }
 
-function makeDefaultToolPanels(basePanels = {}):Map<string,IToolPanel> {
-	const defaultLocations = [
-		ToolPanelLocation.Right,
-		ToolPanelLocation.Left,
-		ToolPanelLocation.Bottom
-	]
-	
-	const panels = defaultLocations
-		.map(location => ({id:ToolPanelLocation[location],location}))
-		.map(({id,location}) => basePanels[id] ||
-			{
-				id,
-				location,
-				tools:{},
-			})
-	
-	Object
-		.keys(basePanels)
-		.filter(id => !Object.keys(panels).includes(id))
-		.forEach(id => panels[id] = basePanels[id])
-	
-	return panels
-		.reduce((panels:Map<string,IToolPanel>, panel:IToolPanel) => {
-			return panels.set(panel.id,panel)
-		},Map<string,IToolPanel>())
-		
-}
+
 
 
 /**
@@ -57,27 +32,37 @@ export interface IStatus {
 export type TDialogMap = Map<string,boolean>
 
 
-
+/**
+ * UIState base record
+ */
 export const UIStateRecord = Record({
 	ready: false,
 	user: null,
-	
+	statusBar: {
+		visible: true
+	},
 	dialogs: Map<string,boolean>(),
 	messages: List<IToastMessage>(),
-	toolPanels: makeDefaultToolPanels()
+	toolPanels: makeToolPanels()
 })
 
+/**
+ * UIState class
+ */
 @RegisterModel
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {
+		if (ProcessConfig.isStateServer())
+			log.info(`Inflating UIState from`,JSON.stringify(o,null,4))
+		
 		if (o && o instanceof UIState)
 			return o
 		
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
-			toolPanels: makeDefaultToolPanels(o.toolPanels)
+			toolPanels: makeToolPanels(o.toolPanels)
 		}))
 	}
 
@@ -86,7 +71,9 @@ export class UIState extends UIStateRecord implements State {
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
 	toolPanels:Map<string,IToolPanel>
-	
+	statusBar:{
+		visible:boolean
+	}
 
 
 }

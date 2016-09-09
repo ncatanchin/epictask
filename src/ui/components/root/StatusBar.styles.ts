@@ -32,32 +32,26 @@ export interface IStatusBarStyles {
 	
 }
 
-const openStyle = {
-	// height: rem(3.6),
-	// fontSize: rem(1.2)
-}
 
 /**
  * Create the styles
  */
 export default createStyles({
 	root: [
-		makeTransition(['height','font-size','font-weight','background-color','color']),
+		//['flex-basis','flex-shrink','height','font-size','font-weight','background-color','color']
+		makeTransition(),
 		FlexRowCenter,
 		FlexAuto,
+		FillWidth,
 		OverflowHidden,
 		{
+			minHeight: rem(2.6),
 			height: rem(2.6),
 			fontSize: rem(0.8),
-			
-			position: 'fixed',
-			right: 0,
-			left: 0,
-			bottom: 0,
+			borderTopStyle: 'solid',
+			borderTopWidth:rem(0.1),
 			padding: makePaddingRem(0.5,0.5),
 			
-			// Mouse Hover
-			':hover': [openStyle],
 			
 			// Jobs are InProgress
 			inProgress: [{
@@ -65,12 +59,15 @@ export default createStyles({
 				fontSize: rem(1)
 			}],
 			
-			// User opened
-			open: [openStyle],
 			
 			// User hidden
 			hidden: [makePaddingRem(),{
-				height: 0
+				flexBasis: 0,
+				flexShrink: 1,
+				minHeight: 0,
+				maxHeight: 0,
+				height: 0,
+				borderTopWidth: 0
 			}]
 		}
 	],

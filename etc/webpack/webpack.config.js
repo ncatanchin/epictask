@@ -97,6 +97,8 @@ export default function (projectConfig) {
 		// Renderer or Main
 		isMain = projectConfig.targetType === TargetType.ElectronMain,
 		
+		processTypeName = JSON.stringify(isMain ? 'main' : 'renderer'),
+		
 		// Create loaders
 		loaders = loadersConfigFn(projectConfig),
 		
@@ -106,7 +108,7 @@ export default function (projectConfig) {
 				.filter(loader => loader.happy && loader.happy.id)
 				.map(loader => new HappyPack({
 					id: `${loader.happy.id}`,
-					tempDir: `.happypack-${projectConfig.name}`,
+					tempDir: `.happypack-${processTypeName}`,
 					threadPool: happyThreadPool
 				}))
 	
@@ -124,7 +126,7 @@ export default function (projectConfig) {
 		},
 		//cache: true,
 		
-		recordsPath: `${distDir}/_records`,
+		recordsPath: `${distDir}/_records_${processTypeName}`,
 		
 		// Currently we need to add '.ts' to the resolve.extensions array.
 		resolve: {
@@ -204,8 +206,9 @@ export default function (projectConfig) {
 				'process.env.NODE_ENV': JSON.stringify(env),
 				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
 				'process.env.PROCESS_NAME': projectConfig.name,
-				'process.env.PROCESS_TYPE': JSON.stringify(isMain ? 'main' : 'renderer'),
+				'process.env.PROCESS_TYPE': processTypeName,
 				'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
+				'ProcessConfig.isStorybook()': false,
 				'process.env.BLUEBIRD_LONG_STACK_TRACES': 1
 			}),
 			new webpack.NamedModulesPlugin(),

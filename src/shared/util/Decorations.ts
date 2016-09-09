@@ -1,5 +1,6 @@
 import {JSONKey} from 'shared/Constants'
 import {isNil} from 'shared/util/ObjectUtil'
+import {isFunction} from "shared/util"
 
 
 const log = getLogger(__filename)
@@ -24,6 +25,59 @@ function getProps(target) {
  * OnChange function type
  */
 export type OnChangeFn  = (propertyKey:string, newVal:any) => any
+
+/**
+ * Boolean test types, function or primitive
+ */
+export type TBooleanTestFn = ()=>boolean
+export type TBooleanTestTruthy = boolean | any
+export type TBooleanTest =  TBooleanTestFn | TBooleanTestTruthy
+
+
+/**
+ * If then function call
+ *
+ * @param tests
+ * @param fn
+ * @param elseFn
+ * @returns {any}
+ */
+export function If(tests:TBooleanTest[]|TBooleanTest,fn:Function,elseFn?:Function) {
+	tests = (Array.isArray(tests) ? tests : [tests])
+	
+	for (let test of tests) {
+		if ((isFunction(test) && !test()) || !test) {
+			return elseFn ? elseFn() : false
+		}
+	}
+	
+	return fn()
+}
+
+/**
+ * OnlyIf - decorate a function to only occur if n functions or
+ * boolean values are true
+ */
+export function OnlyIf(...tests:TBooleanTest[]) {
+	return (target:Function) => {
+		return function(...args:any[]) {
+			return If(tests,function() {
+				return target.apply(this,args)
+			})
+		}
+	}
+}
+
+/**
+ * Shortcut for OnlyIf Decoration
+ *
+ * @param tests
+ * @param fn
+ */
+export function OnlyIfFn(tests:TBooleanTest[]|TBooleanTest,fn:Function) {
+	tests = (Array.isArray(tests) ? tests : [tests])
+	return OnlyIf(...tests)(fn)
+}
 
 
 export interface ConfigurePropertyOptions {

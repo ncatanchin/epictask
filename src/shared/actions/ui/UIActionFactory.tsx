@@ -1,7 +1,7 @@
 import * as uuid from 'node-uuid'
 import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
 import {List,Map} from 'immutable'
-import {UIKey, DefaultTools} from "shared/Constants"
+import {UIKey, getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
 import {Dialogs} from 'shared/Constants'
@@ -9,11 +9,13 @@ import {Provided} from 'shared/util/Decorations'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
 import {isNumber, shortId, isString} from "shared/util"
 import {cloneObject} from "shared/util/ObjectUtil"
+import * as assert from "assert"
 
 
 // Import only as type - in case we are not on Renderer
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	{Left,Right,Bottom,Popup} = ToolPanelLocation
 
 export function makeToastMessage(opts:any) {
 	return Object.assign({},opts,{
@@ -32,7 +34,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	private toolPanelPredicate = (id:string,location:ToolPanelLocation) =>
 		(it:IToolPanel) =>
 			it.location === location &&
-			(it.location !== ToolPanelLocation.Popup || it.id === id)
+			(it.location !== Popup || it.id === id)
 	
 	
 	getToolParentPanel(toolId:string, state:UIState = this.state):IToolPanel {
@@ -114,7 +116,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return (state:UIState) => {
 			
 			// Find the panel first
-			const parentPanel = this.getToolParentPanel(tool.id,state) || this.getToolPanelState(tool.defaultLocation)
+			const parentPanel = this.getToolParentPanel(tool.id,state) || this.getToolPanel(tool.defaultLocation)
 			
 			assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
 			
@@ -140,15 +142,16 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param location
 	 * @returns {IToolPanel}
 	 */
-	getToolPanelState(location:ToolPanelLocation):IToolPanel
+	getToolPanel(location:ToolPanelLocation):IToolPanel
+	
 	/**
 	 * Get tool panel state
 	 *
-	 * @param idOrLocation
+	 * @param id
 	 * @returns {IToolPanel}
 	 */
-	
-	getToolPanelState(idOrLocation:string|ToolPanelLocation):IToolPanel {
+	getToolPanel(id:string):IToolPanel
+	getToolPanel(idOrLocation:string|ToolPanelLocation):IToolPanel {
 		const id:string = (isNumber(idOrLocation)) ? ToolPanelLocation[idOrLocation] : idOrLocation
 		
 		assert(id,'Location can not be nil')
@@ -173,6 +176,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		location:ToolPanelLocation = null
 	) {
 		
+		
 		let id:string
 		
 		if (isString(idOrLocation)) {
@@ -183,17 +187,17 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			location = idOrLocation
 		}
 		
-		const panels = this.state.toolPanels
-			
-		let panel = panels.get(id)
+		let panel = this.getToolPanel(id)
+		//debugger
+		
 		if (panel)
 			id = panel.id
 		else {
 			panel = {
 				id,
 				location,
-				open: [ToolPanelLocation.Popup,ToolPanelLocation.Left].includes(location),
-				isDefault: ToolPanelLocation.Left === location,
+				open: [Popup,Left].includes(location),
+				isDefault: Left === location,
 				tools:{}
 			}
 			this.updateToolPanel(panel)
@@ -213,6 +217,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		const
 			existingTool = this.getTool(tool.id),
 			completeTool = cloneObject(tool,_.pick(existingTool || {},'data','active')) as ITool
+		
 		
 		completeTool.active = _.isNil(completeTool.active) ? false : completeTool.active
 		completeTool.data = _.isNil(completeTool.data) ? {} : completeTool.data
@@ -335,6 +340,17 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
+	@ActionReducer()
+	toggleStatusBar() {
+		return (state:UIState) =>
+			state.set(
+				'statusBar',
+				cloneObject(state.statusBar,{
+					visible:!state.statusBar.visible
+				})
+			)
+	}
+	
 	
 
 
@@ -344,7 +360,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 
 	toggleRepoPanelOpen() {
-		return this.toggleTool(DefaultTools.RepoPanel,true)
+		return this.toggleTool(getBuiltInToolId(BuiltInTools.RepoPanel),true)
 	}
 
 

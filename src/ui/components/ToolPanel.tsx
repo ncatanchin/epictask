@@ -4,7 +4,6 @@ import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {PureRender, Button, Icon,filterProps} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {ToolPanelLocation, IToolPanel, ITool, TToolMap} from "shared/tools/ToolTypes"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
@@ -14,7 +13,9 @@ import {
 	rem, Ellipsis
 } from "shared/themes"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {getToolComponent, getToolComponentClass, getToolHeaderControls} from "shared/Registry"
+import {getToolComponent, getToolHeaderControls, loadPlugins, addRegistryListener, RegistryEvent} from "shared/Registry"
+
+loadPlugins()
 
 // Constants
 const
@@ -25,7 +26,8 @@ const
 
 const
 	// Gutter min dimension with content
-	gutterDim = rem(2),
+	gutterHorizDim = rem(2),
+	gutterVertDim = rem(2.4),
 	
 	// Vertical Gutter Style
 	gutterVertical = [
@@ -34,45 +36,55 @@ const
 		FillHeight,
 		OverflowHidden,
 		makeFlexAlign('flex-start','flex-start'),{
-		minWidth: gutterDim
+		minWidth: gutterHorizDim
 	}],
 	gutterHorizontal = [
 		FlexRow,
 		FlexAuto,
 		FillWidth,
 		OverflowHidden,{
-			minHeight: gutterDim
+			minHeight: gutterVertDim
 		}
 	],
 	baseStyles = createStyles({
 		root: [FlexScale, OverflowHidden, {
+			border: 0,
+			
 			[Left]: [FlexRow,FillHeight],
 			[Right]: [FlexRow,FillHeight],
-			[Bottom]: [FlexColumn,FillWidth],
+			[Bottom]: [FlexColumnReverse,FillWidth],
 			[Popup]: [FlexColumn,FillWidth]
 		
 		}],
 		
-		tools: [FlexScale,OverflowHidden,{
+		tools: [FlexScale,OverflowHidden,makeBorderRem(),{
 			
 		
 			[Left]: [FlexColumn,FillHeight, {borderLeftStyle: 'solid',borderLeftWidth: rem(0.1)}],
 			[Right]: [FlexColumn,FillHeight, {borderRightStyle: 'solid',borderRightWidth: rem(0.1)}],
-			[Popup]: [FlexRow,FillWidth, {borderTopStyle: 'solid',borderBottomWidth: rem(0.1)}],
-			[Bottom]: [FlexRow,FillWidth, {borderBottomStyle: 'solid',borderTopWidth: rem(0.1)}],
+			[Popup]: [FlexRow,FillWidth, {borderTopStyle: 'solid',borderTopWidth: rem(0.1)}],
+			[Bottom]: [FlexRow,FillWidth, {borderBottomStyle: 'solid',borderBottomWidth: rem(0.1)}],
 		}],
 		
-		tool: [FlexColumn,FlexScale,{
+		tool: [FlexColumn,FlexScale,OverflowHidden,{
 			[Left]: [FillWidth],
 			[Right]: [FillWidth],
 			[Bottom]: [FillHeight],
 			[Popup]: [FillHeight],
 			
 			header: [FlexRowCenter,makeFlex(0,0,rem(2)),{
+				// borderBottomStyle: 'solid',
+				// borderBottomWidth: rem(0.1),
+				
 				label: [FlexScale,Ellipsis,{
 					fontSize: themeFontSize(1.2),
 					padding: '0.4rem 0.5rem'
 				}]
+			}],
+			
+			container: [OverflowHidden,PositionRelative,FlexScale,{
+				borderStyle: 'solid',
+				borderWidth: rem(0.1)
 			}]
 		}],
 		
@@ -85,26 +97,33 @@ const
 			/**
 			 * Toggle button for opening/focusing tool
 			 */
-			toggle: [makeTransition(['opacity']),FlexColumnCenter,FlexAuto,{
+			toggle: [makeTransition(['opacity']),PositionRelative,FlexColumnCenter,FlexAuto,{
 				opacity: 1,
 				pointerEvents: 'auto',
 				textAlign: 'center',
 				padding: 0,
 				
-				[Left]: [{width: gutterDim}],
-				[Right]: [{width: gutterDim}],
-				[Bottom]: [{height: gutterDim}],
+				[Left]: [{width: gutterHorizDim}],
+				[Right]: [{width: gutterHorizDim}],
+				[Bottom]: [{height: gutterVertDim}],
+				[Popup]: [{height: gutterVertDim}],
 				
 				button: [FlexAlignCenter,makeFlex(0,1,'auto'),{
 					padding: "0.5rem 0.3rem",
-					[Left]: [FlexColumnReverse,{
-						width: gutterDim
+					
+					[Left]: [FillWidth,FlexColumnReverse,{
+						width: gutterHorizDim
 					}],
-					[Right]: [FlexColumn,{
-						width: gutterDim,
+					[Right]: [FillWidth,FlexColumn,{
+						width: gutterHorizDim,
 					}],
-					[Bottom]: [FlexRow,{
-						height: gutterDim
+					[Popup]: [FillHeight,FlexRow,{
+						height: gutterHorizDim,
+						padding: "0.2rem 0.5rem",
+					}],
+					[Bottom]: [FillHeight,FlexRow,{
+						height: gutterHorizDim,
+						padding: "0.2rem 0.5rem",
 					}]
 				}],
 				
@@ -153,13 +172,13 @@ export interface IToolPanelProps extends React.HTMLAttributes {
 }
 
 /**
- * Tool toggle button
+ * Tool toggle button, used to activate button from Gutter
  *
  * @param props
  * @returns {any}
  * @constructor
  */
-const ToggleButton = Radium((props) => {
+const GutterButton = Radium((props) => {
 	const
 		{styles,tool,panel} = props,
 		{location} = panel,
@@ -171,7 +190,8 @@ const ToggleButton = Radium((props) => {
 		        style={[toggleStyles.button,toggleStyles.button[location]]} >
 			<Icon style={[toggleStyles.icon]} iconSet='octicon' iconName='repo'/>
 			<div style={[toggleStyles.label,toggleStyles.label[location]]}>
-				{tool.label}
+				{/* Default to 'buttonLabel' / if null then use 'label' */}
+				{tool.buttonLabel || tool.label}
 			</div>
 		</Button>
 	</div>
@@ -193,7 +213,9 @@ const ToolWrapper = Radium((props:{styles:any,tool:ITool,panel:IToolPanel}) => {
 			{/*{ToolComponent.getHeaderControls().map(HeaderControl => <HeaderControl />)*/}
 			{ToolHeaderControls}
 		</div>
-		<ToolComponent style={[FlexScale]} tool={tool} visible={panel.open && tool.active} />
+		<div style={[toolStyles.container]}>
+			<ToolComponent tool={tool} panel={panel} visible={panel.open && tool.active} />
+		</div>
 	</div>
 })
 
@@ -209,7 +231,7 @@ const Gutter = Radium((props) => {
 	
 	return <div {...filterProps(props)} style={[styles.gutter,styles.gutter[panel.location]]}>
 		{Object.values(tools).map(tool =>
-			<ToggleButton key={tool.id} styles={styles} tool={tool} panel={panel}/>
+			<GutterButton key={tool.id} styles={styles} tool={tool} panel={panel}/>
 		)}
 	</div>
 })
@@ -241,12 +263,28 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 	
 	static displayName = 'ToolPanel'
 	
+	private unsubscribe = null
+	
+	componentWillMount() {
+		this.unsubscribe = addRegistryListener((event,...args) => {
+			log.info(`Registry event received: ${RegistryEvent[event]}`,args)
+			this.forceUpdate()
+		})
+	}
+	
+	componentWillUnmount() {
+		if (this.unsubscribe) {
+			this.unsubscribe()
+			this.unsubscribe = null
+		}
+	}
+	
 	render() {
 		const
-			{styles,panel,location} = this.props,
+			{styles,style,panel,location} = this.props,
 			tools:ITool[] = Object.values(_.get(panel,'tools',{})) as any
 		
-		return <div style={[styles.root,styles.root[location]]}>
+		return <div style={[styles.root,styles.root[location],style]}>
 			{/* The Gutter of toggle controls and decorations */}
 			
 			<Gutter panel={panel}

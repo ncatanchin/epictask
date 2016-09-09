@@ -1,5 +1,6 @@
 import * as Styles from 'material-ui/styles'
 import {makeTheme, Palettes} from './material/MaterialTools'
+import {ToolPanelLocation} from "shared/tools/ToolTypes"
 
 
 
@@ -72,6 +73,8 @@ function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
 }
 
+const statusBarHeight = 2.6
+
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	name: 'DarkTheme',
 
@@ -82,7 +85,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	fontFamily,
 	fontWeight,
 	fontSize,
-
+	
+	
+	
 	textColor: text.primary,
 	alternateTextColor: alternateText.primary,
 
@@ -98,7 +103,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 		
 		list: {
-			backgroundColor: primary.hue2,
+			backgroundColor: primary.hue1,
 			
 			item: {
 				selected: {
@@ -107,7 +112,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			},
 			
 			divider: {
-				borderBottomColor: primary.hue3
+				borderBottomColor: primary.hue2
 			}
 		},
 		
@@ -132,9 +137,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 		
 		header: {
-			backgroundColor: primary.hue2,
+			backgroundColor: primary.hue3,
 			color: text.secondary
-			
 		},
 		
 		logs: {
@@ -174,22 +178,28 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	/**
 	 * Style the status bar, for jobs, saving, info, etc
 	 */
+	// Height is needed for calculating layouts
+	statusBarHeight,
+	
 	statusBar: {
 		
 		// Root Colors
 		root: {
-			backgroundColor: primary.hue3,
+			height: statusBarHeight,
+			backgroundColor: background,//primary.hue3,
+			borderTopColor: primary.hue3,
 			color: text.primary,
-			':hover': {
-				backgroundColor: tc(primary.hue3).lighten(5).toRgbString()
-			},
+			
 			
 			
 		},
 		
 		status: {
 			item: {
-				backgroundColor: background
+				backgroundColor: primary.hue1,//background,
+				':hover': {
+					backgroundColor: tc(primary.hue2).lighten(5).toRgbString()
+				},
 			}
 		},
 		
@@ -459,12 +469,24 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		}
 	},
 	
+	homePage: {
+		viewWrapper: {
+			borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
+		}
+	},
+	
 	/**
 	 * Tool Panel Container
 	 */
 	toolPanel: {
+		
+		[ToolPanelLocation.Left]: { minDim: 2 },
+		[ToolPanelLocation.Right]: { minDim: 2 },
+		[ToolPanelLocation.Bottom]: { minDim: 2.4 },
+		[ToolPanelLocation.Popup]: { minDim: 2.4 },
+		
 		gutter: {
-			backgroundColor: primary.hue1
+			backgroundColor: primary.hue1,
 		},
 		
 		
@@ -472,16 +494,26 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			header: {
 				color: text.primary,
 				backgroundColor: primary.hue2,
-				borderColor: primary.hue3,
+				//borderColor: primary.hue3,
 				
 				label: {
 					color: text.secondary,
 				}
 			},
+			
+			container: {
+				
+				borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
+				
+			}
 		},
 
 		tools: {
-			borderLeftColor: background
+			// borderColor: primary.hue3
+			[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
 			
 		}
 	},
@@ -645,9 +677,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 			// Selected state
 			selected: {
-				backgroundColor: primary.hue3,
+				backgroundColor: primary.hue2,
 				color:           text.primary,
-
 			},
 			
 			// multi selected state
@@ -656,10 +687,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 					color:           text.primary
 			}
 		},
-
-
-
-		
 
 		issueMilestone: {
 			color: text.secondary

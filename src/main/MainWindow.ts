@@ -110,7 +110,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			browserWindow.loadURL(templateURL)
 
 			// On PageLoaded - show and focus
-			browserWindow.webContents.on('did-finish-load',async () => {
+			browserWindow.webContents.once('did-finish-load',async () => {
 
 				// If HMR event occured - only for dev
 				if (!browserWindow)

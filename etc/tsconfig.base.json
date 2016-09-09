@@ -53,20 +53,16 @@
 		}
 	},
 	"exclude": [
-		"libs/**/typings",
-		"libs/**/package.json",
-		"libs/**/jsconfig.json",
-		"libs/**/*.spec.ts",
-		"libs/**/tsconfig.json",
-		"libs/**/test",
-		"libs/**/node_modules",
+		"libs/**/*.*",
 		"dist",
+		"build",
 		"target",
 		"etc",
 		"bin",
 		".awcache",
 		".happy**/*.*",
 		"node_modules",
+		"node_modules/**.*",
 		"node_modules.disk"
 	]
 }

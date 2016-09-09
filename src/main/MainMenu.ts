@@ -98,20 +98,30 @@ const reposMenu = {
 function makeViewMenu(mainWindow) {
 	return {
 		label: 'View',
-		submenu: [{
-			label: 'Toggle Repo Panel',
-			accelerator: 'Command+3',
-			click() {
-				Container.get(UIActionFactory)
-					.toggleRepoPanelOpen()
+		submenu: [
+			{
+				label: 'Toggle StatusBar',
+				//accelerator: 'Command+3',
+				click() {
+					Container.get(UIActionFactory)
+						.toggleStatusBar()
+				}
+			},
+			{
+				label: 'Toggle Repo Panel',
+				accelerator: 'Command+3',
+				click() {
+					Container.get(UIActionFactory)
+						.toggleRepoPanelOpen()
+				}
+			},{
+				label: 'Toggle Full Screen',
+				accelerator: 'Ctrl+Command+F',
+				click() {
+					mainWindow.setFullScreen(!mainWindow.isFullScreen())
+				}
 			}
-		},{
-			label: 'Toggle Full Screen',
-			accelerator: 'Ctrl+Command+F',
-			click() {
-				mainWindow.setFullScreen(!mainWindow.isFullScreen())
-			}
-		}]
+		]
 	}
 }
 

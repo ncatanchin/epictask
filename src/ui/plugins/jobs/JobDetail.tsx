@@ -7,9 +7,11 @@ import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {LinearProgress} from "material-ui"
 
 import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
-import {getJobDescription, IJobStatusDetail, IJob, IJobLog} from "shared/actions/jobs/JobTypes"
+import {getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus} from "shared/actions/jobs/JobTypes"
 import {TimeAgo} from "ui/components/common/TimeAgo"
 import {FlexColumnCenter, FlexScale, makePaddingRem} from "shared/themes"
+import {Icon} from "ui/components"
+import {getJobStatusIcon, getJobStatusColors} from "ui/plugins/jobs/JobItem"
 
 // Constants
 const log = getLogger(__filename)
@@ -24,7 +26,8 @@ const baseStyles = createStyles({
 		time: [FlexAuto, {
 			fontStyle: 'italic',
 			fontWeight: 300
-		}]
+		}],
+		icon: [FlexAuto,makePaddingRem(0,1,0,1)]
 	}],
 	logs: [FlexScale,FillWidth,OverflowAuto,{
 		
@@ -113,8 +116,7 @@ export interface IJobDetailProps extends React.HTMLAttributes {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'jobs')
-
+@ThemedStyles(baseStyles,'jobs','jobs.item')
 @PureRender
 export class JobDetail extends React.Component<IJobDetailProps,any> {
 	
@@ -127,7 +129,8 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 		
 		const
 			{theme, styles, job, detail,selectedLogId} = this.props,
-			logs = detail && detail.logs
+			logs = detail && detail.logs,
+			statusColors = getJobStatusColors(detail,styles)
 		
 		const levelStyle = (log:IJobLog) =>
 			styles.logs.levels['WARN' === log.level ? 'warn' : 'ERROR' === log.level ? 'error' : 'DEBUG' === log.level ? 'success' : 'info']
@@ -144,18 +147,36 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 			{job && <div style={styles.root}>
 				
 				{/* HEADER */}
-				<div style={styles.header}>
-					<div style={styles.header.description}>{getJobDescription(job)}</div>
+				<div style={[styles.header]}>
 					
-					<div style={styles.header.progress}>
-						<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-						                value={detail.progress * 100}
-						                color={theme.palette.accent1Color}
-						/>
-					</div>
+					<Icon
+						style={[
+								styles.header.icon,
+								...statusColors
+							]}
+						iconSet="fa"
+						iconName={getJobStatusIcon(detail)} />
+					
+					<div style={styles.header.description}>{getJobDescription(job)}</div>
+				
+					{detail.status < JobStatus.Completed &&
+						<div style={styles.header.progress}>
+							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
+							                value={detail.progress * 100}
+							                color={theme.palette.accent1Color}
+							/>
+						</div>
+						
+						
+						
+					}
+						
+					
 					<div style={styles.header.time}>
 						{Math.ceil((Date.now() - detail.createdAt) / 1000)}s
 					</div>
+					
+					
 				</div>
 				
 				{/* LOGS */}

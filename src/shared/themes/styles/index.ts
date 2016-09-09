@@ -3,7 +3,8 @@ import * as CommonStyles from './CommonStyles'
 export * from './CommonStyles'
 
 declare global {
-	var CSSHoverState:string,
+	export const
+		CSSHoverState:string,
 		CSSActiveState:string,
 		CSSFocusState:string,
 		Fill:any,
@@ -28,6 +29,7 @@ declare global {
 		OverflowHidden:any,
 		OverflowAuto:any,
 		rem: typeof CommonStyles.rem,
+		makeBorderRem:typeof CommonStyles.makeBorderRem,
 		makePaddingRem: typeof CommonStyles.makePaddingRem,
 		makeMarginRem: typeof CommonStyles.makeMarginRem,
 		createStyles: typeof CommonStyles.createStyles,

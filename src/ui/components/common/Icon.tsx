@@ -9,6 +9,7 @@ import {FAIcons} from './IconFontAwesomeNames'
 import {GHIcons} from './IconOpticonNames'
 import filterProps from 'react-valid-props'
 import {PureRender} from 'ui/components'
+import {Themed} from "shared/themes/ThemeManager"
 // Constants
 const log = getLogger(__filename)
 
@@ -21,6 +22,7 @@ const Octicons = 'octicon'
 export interface IIconProps extends React.HTMLAttributes {
 	className?:string
 	style?:any
+	theme?:any
 	iconSet?:'material-icons'|'fa'|'octicon'
 	iconName?: string,
 	fontSize?:any
@@ -45,6 +47,7 @@ function iconCode(codeSet,iconName) {
 
 
 //@PureRender
+@Themed
 export class Icon extends React.Component<IIconProps,any> {
 
 	// constructor(props,context) {

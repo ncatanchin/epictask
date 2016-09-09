@@ -1,6 +1,5 @@
 // Imports
 import * as React from 'react'
-import * as Radium from 'radium'
 import filterProps from 'react-valid-props'
 import {PureRender, Icon} from 'ui/components/common'
 
@@ -85,11 +84,34 @@ const baseStyles = createStyles({
 export interface IJobItemProps extends React.HTMLAttributes {
 	theme?:any
 	styles?:any
+	labelStyle?:any
 	
 	job:IJob
 	detail:IJobStatusDetail
 }
 
+
+export function getJobStatusColors(detail:IJobStatusDetail,styles):any[] {
+	return !detail ? [] : [
+		detail.status === JobStatus.Completed && styles.success,
+		detail.status === JobStatus.Failed && styles.failed
+	]
+}
+
+/**
+ * Get the correct icon name for the status
+ *
+ * @param detail
+ * @returns {string}
+ */
+export function getJobStatusIcon(detail:IJobStatusDetail):string {
+	return !detail ? '' : detail.status < JobStatus.Completed ?
+		'play' :
+		detail.status === JobStatus.Completed ?
+			'check' :
+			'exclamation-circle'
+	
+}
 
 /**
  * JobItem
@@ -101,28 +123,38 @@ export interface IJobItemProps extends React.HTMLAttributes {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs.item')
-
 @PureRender
 export class JobItem extends React.Component<IJobItemProps,void> {
 	
 	render() {
-		const {theme, styles,job,detail} = this.props
+		const
+			{theme, styles,job,detail,labelStyle} = this.props,
+			statusColors = getJobStatusColors(detail,styles)
 		
 		return <div {...filterProps(this.props)} style={styles.root}>
 		
 			
 			{/* Job Status */}
-			<div style={[styles.label]}>
+			<div style={[styles.label,labelStyle]}>
 				
 				{/*[{JobStatus[recentJob.status]}]&nbsp;*/}
 				{/* Icon */}
 				<div style={[styles.label.icon]}>
-					<Icon iconSet="fa" iconName="building"/>
+					
+					<Icon
+						style={[
+							styles.label.icon,
+							...statusColors
+						]}
+						iconSet="fa"
+						iconName={getJobStatusIcon(detail)} />
+					
 				</div>
 				
 				{/* Text */}
 				<div style={[styles.label.text]}>
-					{JobStatus[job.status]} - {getJobDescription(job)}
+					{/*{JobStatus[job.status]} - */}
+					22 {getJobDescription(job)}
 				</div>
 				
 				
@@ -135,26 +167,18 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 						job.status === JobStatus.Completed && styles.success,
 						job.status === JobStatus.Failed && styles.failed,
 					]}>
-					{detail.status < JobStatus.Completed ?
-						// In-Progress
+					{detail.status < JobStatus.Completed &&
 						<div style={[
 							styles.progressBar,
 							
 							// If the job is finished then hide the progress bar
-							detail.status >= JobStatus.Completed && styles.progressBar.hidden
+							//detail.status >= JobStatus.Completed && styles.progressBar.hidden
 						]}>
 							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
 							                value={detail.progress * 100}
 							                color={theme.palette.accent1Color}
 							/>
-						</div> : //`${Math.round(detail.progress * 100)}%` :
-						
-						// Completed / Failed
-						<Icon
-							style={[styles.label.icon]}
-							iconSet="fa"
-							iconName={detail.status === JobStatus.Completed ? 'check' : 'exclamation-circle'} />
-						
+						</div>
 					}
 				</div>
 				<div style={[styles.label.time]}>

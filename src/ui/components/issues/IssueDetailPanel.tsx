@@ -239,9 +239,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @returns {any}
 	 */
 	renderFooter = (issue, styles) => <div style={styles.footer}>
-		<div>
-			add comment here
-		</div>
+		
 	</div>
 
 

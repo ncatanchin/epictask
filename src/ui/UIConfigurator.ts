@@ -24,21 +24,6 @@ async function boot() {
 	
 	
 	
-	const loadPlugins = () => {
-		const ctx = require.context('./plugins', true)
-		ctx.keys().forEach(ctx)
-		
-		if (module.hot) {
-			module.hot.accept([ctx.id], (updates) => {
-				log.info('HMR Updates for plugins, reloading plugins', updates)
-				loadPlugins()
-			})
-		}
-	}
-	
-	loadPlugins()
-	
-	
 	if (module.hot) {
 		module.hot.accept(['ui/components/root/AppRoot'], (updates) => {
 			log.info('HMR Updates, reloading app content',updates)

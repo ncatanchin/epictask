@@ -14,12 +14,8 @@ module.exports = function (storybookBaseConfig, configType) {
 	const
 		HappyPack = require('happypack'),
 		happyEnabled = true,
-		
-		// Generates externals config
-		nodeExternals = require('webpack-node-externals'),
-		
 		ATS = require('awesome-typescript-loader'),
-		{TsConfigPathsPlugin, ForkCheckerPlugin} = ATS,
+		{ForkCheckerPlugin} = ATS,
 		_ = require('lodash'),
 		path = require('path'),
 		projects = require('../etc/projects'),
@@ -36,115 +32,116 @@ module.exports = function (storybookBaseConfig, configType) {
 	
 	console.log(`Using tsconfig file @ ${tsConfigFile}`)
 	
-	// Resolve config - Alias & Extensions are easy
+	// ALIAS
 	Object.assign(resolveConfig.alias = resolveConfig.alias || {}, epicConfig.resolve.alias)
-	resolveConfig.extensions = resolveConfig.extensions || []
-	resolveConfig.extensions.splice(0,0,...epicConfig.resolve.extensions)// = _.uniq(epicConfig.resolve.extensions.concat(resolveConfig.extensions))
 	
+	// EXTENSIONS
+	resolveConfig.extensions = resolveConfig.extensions || []
+	resolveConfig.extensions.splice(0,0,...epicConfig.resolve.extensions)
+	resolveConfig.extensions = _.uniq(resolveConfig.extensions)
+	
+	// ROOTS
 	console.log('Existing root',resolveConfig.root)
 	resolveConfig.modules = resolveConfig.moduleDirectories =
 		(resolveConfig.modules || resolveConfig.moduleDirectories || []).concat(epicConfig.resolve.modules)
 	resolveConfig.root = [...resolveConfig.modules]
 	
-	// Add all module dirs - but resolve first to filter for unique
-	
-	// resolveConfig.modules = _.uniq(resolveConfig.modules.map(dir => path.resolve(dir)))
-	// Now loaders
-	//moduleConfig.loaders.push(...epicConfig.module.loaders)
+	// LOADERS
+	moduleConfig.loaders.push(...epicConfig.module.loaders)
 	moduleConfig.preLoaders = (moduleConfig.preLoaders || []).concat(epicConfig.module.preLoaders)
 	//module
 	
-	moduleConfig.loaders.push(...[
-		{
-			test: /\.json$/,
-			loader: 'json'
-		},
-		// TYPESCRIPT
-		// {
-		// 	test: /\.ts$/,
-		// 	exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-		// 	loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`]
-		// },
-		
-		// TSX
-		{
-			test: /\.tsx?$/,
-			exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-			loaders: ['react-hot-loader/webpack',`awesome-typescript-loader?tsconfig=${tsConfigFile}`],
-		},
-		
-		// JADE
-		{
-			happy: {id: 'jade'},
-			test: /\.(jade|pug)$/,
-			loaders: ['jade-loader']
-		},
-		
-		// ASSETS / FONTS
-		{
-			type: 'fonts',
-			test: /\.(eot|svg|ttf|woff|woff2)\w*/,
-			loader: 'file?name=assets/fonts/[name].[hash].[ext]'
-			
-		},
-		
-		// ASSETS / IMAGES & ICONS
-		{
-			test: /\.(png|jpg|gif|ico)$/,
-			loader: 'file?name=assets/images/[name].[hash].[ext]',
-			type: 'images'
-		},
-		
-		
-		// CSS
-		{
-			happy: {id: 'css-global'},
-			test: /\.global\.css$/,
-			loaders: [
-				'style-loader',
-				'css-loader?sourceMap'
-			]
-		},
-		{
-			happy: {id: 'css-node-modules'},
-			test: /node_modules.*\.css$/,
-			loaders: ['file?name=assets/images/[name].[hash].[ext]']
-		},
-		{
-			happy: {id: 'css'},
-			test: /^((?!\.global).)*\.css$/,
-			exclude: /(node_modules)/,
-			loaders: [
-				'style-loader',
-				'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'
-			]
-		},
-		
-		// SCSS
-		{
-			happy: {id: 'scss-global'},
-			test: /\.global\.scss$/,
-			loaders: [
-				'style-loader',
-				'css-loader',
-				'sass'
-			]
-		},
-		{
-			happy: {id: 'scss'},
-			test: /^((?!\.global).)*\.scss$/,
-			exclude: /(node_modules)/,
-			loaders: [
-				'style-loader',
-				'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
-				// 'css-loader',
-				// 'postcss-loader?parser=postcss-js',
-				'sass'
-				// ,
-				// sassContentLoader + '?path=' + themesJs
-			]
-		}
-	])
+	// moduleConfig.loaders.push(...[
+	// 	{
+	// 		test: /\.json$/,
+	// 		loader: 'json'
+	// 	},
+	// 	// TYPESCRIPT
+	// 	// {
+	// 	// 	test: /\.ts$/,
+	// 	// 	exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
+	// 	// 	loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`]
+	// 	// },
+	//
+	// 	// TSX
+	// 	{
+	// 		test: /\.tsx?$/,
+	// 		exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
+	// 		loaders: ['react-hot-loader/webpack',`awesome-typescript-loader?tsconfig=${tsConfigFile}`],
+	// 	},
+	//
+	// 	// JADE
+	// 	{
+	// 		happy: {id: 'jade'},
+	// 		test: /\.(jade|pug)$/,
+	// 		loaders: ['jade-loader']
+	// 	},
+	//
+	// 	// ASSETS / FONTS
+	// 	{
+	// 		type: 'fonts',
+	// 		test: /\.(eot|svg|ttf|woff|woff2)\w*/,
+	// 		loader: 'file?name=assets/fonts/[name].[hash].[ext]'
+	//
+	// 	},
+	//
+	// 	// ASSETS / IMAGES & ICONS
+	// 	{
+	// 		test: /\.(png|jpg|gif|ico)$/,
+	// 		loader: 'file?name=assets/images/[name].[hash].[ext]',
+	// 		type: 'images'
+	// 	},
+	//
+	//
+	// 	// CSS
+	// 	{
+	// 		happy: {id: 'css-global'},
+	// 		test: /\.global\.css$/,
+	// 		loaders: [
+	// 			'style-loader',
+	// 			'css-loader?sourceMap'
+	// 		]
+	// 	},
+	// 	{
+	// 		happy: {id: 'css-node-modules'},
+	// 		test: /node_modules.*\.css$/,
+	// 		loaders: ['file?name=assets/images/[name].[hash].[ext]']
+	// 	},
+	// 	{
+	// 		happy: {id: 'css'},
+	// 		test: /^((?!\.global).)*\.css$/,
+	// 		exclude: /(node_modules)/,
+	// 		loaders: [
+	// 			'style-loader',
+	// 			'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'
+	// 		]
+	// 	},
+	//
+	// 	// SCSS
+	// 	{
+	// 		happy: {id: 'scss-global'},
+	// 		test: /\.global\.scss$/,
+	// 		loaders: [
+	// 			'style-loader',
+	// 			'css-loader',
+	// 			'sass'
+	// 		]
+	// 	},
+	// 	{
+	// 		happy: {id: 'scss'},
+	// 		test: /^((?!\.global).)*\.scss$/,
+	// 		exclude: /(node_modules)/,
+	// 		loaders: [
+	// 			'style-loader',
+	// 			'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
+	// 			// 'css-loader',
+	// 			// 'postcss-loader?parser=postcss-js',
+	// 			'sass'
+	// 			// ,
+	// 			// sassContentLoader + '?path=' + themesJs
+	// 		]
+	// 	}
+	// ])
 	
 	const
 		isDev = true,
@@ -252,17 +249,7 @@ module.exports = function (storybookBaseConfig, configType) {
 			hot: true
 		}
 	})
-	//storybookBaseConfig.target = 'electron-renderer'
+	
 	return storybookBaseConfig
-	//
-	// return {
-	// 	plugins: [
-	// 		// your custom plugins
-	// 	],
-	// 	module: {
-	// 		loaders: [
-	// 			// add your custom loaders.
-	// 		],
-	// 	}
-	// }
+	
 };

@@ -19,7 +19,7 @@ export default function (projectConfig) {
 		plugins: [
 			...config.plugins,
 			new webpack.DefinePlugin({
-				'Env.isMain': true
+				'Env.isMain': false
 			})
 		],
 

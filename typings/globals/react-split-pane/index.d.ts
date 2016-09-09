@@ -20,6 +20,9 @@ declare namespace ReactSplitPane {
         onDragFinished?: Function;
         onDragStarted?: Function;
         primary?: string;
+        pane1Style?:any
+        pane2Style?:any
+        paneStyle?:any
         /**
          * Either a number (in pixels) or string (percentage)
          */

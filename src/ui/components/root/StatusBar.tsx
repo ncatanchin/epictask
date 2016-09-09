@@ -1,25 +1,19 @@
 
 // Imports
-import * as moment from 'moment'
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
 import {PureRender, Icon} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector, createSelector} from 'reselect'
+import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import baseStyles,{IStatusBarStyles} from './StatusBar.styles'
+import baseStyles from './StatusBar.styles'
 import {jobsSelector, jobDetailsSelector} from "shared/actions/jobs/JobSelectors"
-import {TJobMap, IJobStatusDetail, JobStatus, getJobDescription} from "shared/actions/jobs/JobTypes"
-import {TimeAgo} from "ui/components/common/TimeAgo"
-import {LinearProgress} from "material-ui"
+import {TJobMap, IJobStatusDetail} from "shared/actions/jobs/JobTypes"
 import {IToastMessage} from "shared/models/Toast"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
 import {ToastMessage} from 'ui/components/ToastMessage'
-import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {JobMonitor} from "ui/components/jobs/JobMonitor"
-import {openChildWindow} from "shared/util/WindowUtil"
-import {JobItem} from "ui/components/jobs/JobItem"
+//import {JobMonitor} from "ui/plugins/jobs/JobMonitor"
+import {JobItem} from "../../plugins/jobs/JobItem"
 
 // Constants
 const log = getLogger(__filename)
@@ -55,6 +49,7 @@ export interface IStatusBarState {
 @connect(createStructuredSelector({
 	jobs: jobsSelector,
 	details: jobDetailsSelector,
+	open: (state) => uiStateSelector(state).statusBar.visible,
 	messages: (state):IToastMessage[] => _.orderBy(
 		uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg)) || [],
 		['createdAt'],
@@ -81,7 +76,7 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 		// const monitorWin = window.open()
 		// log.info('Job monitor window',monitorWin)
 		
-		openChildWindow(`job-monitor-${job.id}`,<JobMonitor id={job.id}/>)
+		//openChildWindow(`job-monitor-${job.id}`,<JobMonitor id={job.id}/>)
 	}
 	
 	/**
@@ -108,10 +103,11 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			
 		
 		return <div
+			key="statusBar"
 			style={[
 				styles.root,
 				//inProgress && styles.root.inProgress,
-				open && styles.root.open
+				!open && styles.root.hidden
 			]}>
 			
 			<div style={[styles.spacer]}></div>

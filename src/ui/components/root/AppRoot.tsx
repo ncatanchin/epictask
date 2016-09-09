@@ -111,7 +111,7 @@ const mapStateToProps = createStructuredSelector({
  */
 
 @connect(mapStateToProps)
-@ThemedNoRadium
+@Themed
 @PureRender
 export class App extends React.Component<IAppProps,any> {
 
@@ -234,7 +234,7 @@ export class App extends React.Component<IAppProps,any> {
 
 						{/* Global flex box */}
 						<div className={rootClasses}
-						     style={makeStyle(styles.content,theme.app)}>
+						     style={[styles.content,theme.app]}>
 
 							<Header visibility={headerVisibility}/>
 
@@ -250,6 +250,7 @@ export class App extends React.Component<IAppProps,any> {
 							
 							<StatusBar/>
 						</div>
+						
 					</HotKeys>
 				</Provider>
 			</MuiThemeProvider>

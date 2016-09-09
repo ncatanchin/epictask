@@ -1,5 +1,5 @@
 
-
+import './styles'
 import * as Radium from 'radium'
 import * as React from 'react'
 import * as $ from 'jquery'
@@ -32,6 +32,7 @@ export type TThemeListener = (theme:any) => void
 
 // Internal listener list
 const themeListeners = _.get(module,'hot.data.themeListeners',[]) as TThemeListener[]
+
 
 /**
  * Add a theme listener
@@ -178,85 +179,6 @@ export interface IThemedState {
 	styles?:any
 }
 
-const ThemeComponentWrapper = React.createClass({
-
-
-	// Used to unsubscribe from theme updates on unmount
-
-
-	/**
-	 * Create a new new theme state
-	 */
-	getNewState: function(props) {
-		const newState = {
-			theme: getTheme()
-		}
-
-		const
-			{themeKeys,themeBaseStyles} = this.props,
-			themeParts = themeKeys
-				.map(themeKey => _.get(getTheme(),themeKey,{})),
-			styles = mergeStyles(themeBaseStyles,...themeParts,props.styles)
-
-		if (themeBaseStyles) {
-			assign(newState,{styles})
-		}
-
-		return newState
-	},
-
-
-
-	/**
-	 * Used as the subscriber for theme updates
-	 * as well as by componentWillMount to
-	 * create initial styles
-	 */
-	updateTheme: function(props) {
-		props = props || this.props
-		if (this.state && this.state.theme === getTheme())
-			return
-
-		this.setState(this.getNewState(props), () => this.forceUpdate())
-	},
-
-	/**
-	 * Update the theme on mount and subscribe
-	 */
-	componentWillMount: function() {
-		this.updateTheme()
-		this.unsubscribe = addThemeListener(this.updateTheme)
-	},
-
-	/**
-	 * If styles prop is passed and it has changed
-	 * then update state
-	 *
-	 * @param nextProps
-	 */
-	componentWillReceiveProps: function(nextProps:any) {
-		if (this.props.styles !== nextProps.styles)
-			this.updateTheme(nextProps)
-	},
-
-	/**
-	 * Unsubscribe from theme updates
-	 */
-	componentWillUnmount: function() {
-		if (this.unsubscribe) {
-			this.unsubscribe()
-			this.unsubscribe = null
-		}
-	},
-
-	render: function() {
-		const ThemedComponent = this.props.themeComponent as any
-		return <ThemedComponent
-			{..._.omit(this.props,'styles','themeKeys','themeComponent','themeBaseStyles')}
-			{...this.state} />
-	}
-} as any)
-
 export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any = {}) {
 	
 	const themeParts = themeKeys.map(themeKey => _.get(getTheme(),themeKey,{}))
@@ -315,8 +237,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		 * as well as by componentWillMount to
 		 * create initial styles
 		 */
-		updateTheme = (props = this.props) => {
-			if (this.state && this.state.theme === getTheme())
+		updateTheme(props = this.props, force = false) {
+			if (!force && this.state && this.state.theme === getTheme())
 				return
 			
 			this.setState(this.getNewState(props), () => this.forceUpdate())
@@ -327,7 +249,12 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		 */
 		componentWillMount() {
 			this.updateTheme()
-			this.unsubscribe = addThemeListener(this.updateTheme)
+			this.unsubscribe = addThemeListener(() => this.updateTheme(this.props,true))
+		}
+		
+		forceUpdate(callback?:() => any) {
+			this.updateTheme(this.props,true)
+			super.forceUpdate(callback)
 		}
 		
 		/**
@@ -360,7 +287,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		}
 	}
 	
-	return PureRender(WrappedComponent)
+	//return PureRender(WrappedComponent)
+	return WrappedComponent as any
 	
 }
 
@@ -429,8 +357,10 @@ if (module.hot) {
 			themeListeners
 		})
 	})
-	module.hot.accept(['./index'],(updates) => {
-		log.info(`Theme Updates, HMR`,updates)
-		loadThemes()
-	})
+	
+	module.hot.accept(() => log.info(`HMR Update`))
+	// module.hot.accept(['./index'],(updates) => {
+	// 	log.info(`Theme Updates, HMR`,updates)
+	// 	loadThemes()
+	// })
 }
