@@ -3,7 +3,6 @@
  */
 
 // Imports
-import {Container} from 'typescript-ioc'
 import * as React from 'react'
 import {createStructuredSelector} from 'reselect'
 import {Map} from 'immutable'
@@ -17,9 +16,15 @@ import {User} from 'shared/models/User'
 import {Label} from 'shared/models/Label'
 
 import {Dialogs} from 'shared/Constants'
-import {PureRender, Renderers, Icon, Button, Avatar, LabelFieldEditor} from 'ui/components'
+import {PureRender} from 'ui/components/common/PureRender'
+import * as Renderers from 'ui/components/common/Renderers'
+import {Icon} from 'ui/components/common/Icon'
+import {Button} from 'ui/components/common/Button'
+import {Avatar} from 'ui/components/common/Avatar'
+import {LabelFieldEditor} from 'ui/components/common/LabelFieldEditor'
+
 import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
-import {cloneObject} from 'shared/util'
+import {cloneObject} from 'shared/util/ObjectUtil'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {repoIdPredicate, enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
@@ -209,7 +214,7 @@ export interface IIssueEditDialogState {
  * @constructor
  **/
 
-@ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
+
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	editingIssue: editingIssueSelector,
@@ -221,6 +226,7 @@ export interface IIssueEditDialogState {
 		.dialogs.get(Dialogs.IssueEditDialog) === true
 
 },createDeepEqualSelector))
+@ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
 

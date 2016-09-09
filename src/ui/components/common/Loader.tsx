@@ -2,11 +2,7 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {PureRender} from 'ui/components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector} from 'reselect'
+import {PureRender} from 'ui/components/common/PureRender'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import * as shortId from 'short-id'
 import {TweenLite,TimelineLite} from 'ui/util/gsap'
@@ -15,7 +11,7 @@ import {TweenLite,TimelineLite} from 'ui/util/gsap'
 const
 	sliceTag = require('!!raw!assets/images/logo/slice.svg'),
 	fontSize = rem(4),
-	log = getLogger(__filename),
+	log = console,
 
 	baseStyles = createStyles({
 		root: [FillWidth,FillHeight,FlexScale,PositionRelative, {
@@ -31,6 +27,7 @@ const
 export interface ILoaderProps extends React.HTMLAttributes {
 	theme?:any
 	styles?:any
+	animate:boolean
 }
 
 /**
@@ -100,17 +97,16 @@ function makeText() {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	// Props mapping go here, use selectors
-}, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
-
 @PureRender
 export class Loader extends React.Component<ILoaderProps,ILoaderState> {
 	
+	static defaultProps = {
+		animate: true
+	}
 	
 	startAnimating() {
 		const

@@ -2,16 +2,18 @@
 
 
 import * as React from 'react'
-import {Icon,Renderers} from 'ui/components/common'
+import {Icon} from 'ui/components/common/Icon'
+import * as Renderers from 'ui/components/common/Renderers'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {AvailableRepo,Repo} from 'shared/models'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {Repo} from 'shared/models/Repo'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {ThemedStyles} from "shared/themes/ThemeManager"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 import {createStructuredSelector} from 'reselect'
 import {createAvailableRepoSelector, selectedRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
-import {PureRender} from "ui/components"
+import {PureRender} from "ui/components/common/PureRender"
 
 /**
  * Displays a list of repos

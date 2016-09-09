@@ -136,43 +136,52 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			}
 		},
 		
-		header: {
-			backgroundColor: primary.hue3,
-			color: text.secondary
-		},
-		
-		logs: {
-			backgroundColor: background,
+		detail: {
 			
-			levels: {
-				info: {
-					color: success.hue1
-				},
-				warn: {
-					color: accent.hue1
-				},
-				success: {
-					color: success.hue1
-				},
-				error: {
-					color: warn.hue1
-				}
+			root: {
+				borderLeftColor: primary.hue2,
+			},
+			header: {
+				backgroundColor: primary.hue3,
+				color: text.secondary
 			},
 			
-			entry: {
-				':hover': {
-					backgroundColor: primary.hue1,
+			logs: {
+				backgroundColor: background,
+				
+				levels: {
+					info: {
+						color: success.hue1
+					},
+					warn: {
+						color: accent.hue1
+					},
+					success: {
+						color: success.hue1
+					},
+					error: {
+						color: warn.hue1
+					}
 				},
 				
-				time: {
-					color: text.secondary
-				},
-				
-				divider: {
-					borderBottomColor: primary.hue1
+				entry: {
+					':hover': {
+						backgroundColor: primary.hue1,
+					},
+					
+					time: {
+						color: text.secondary
+					},
+					
+					divider: {
+						borderBottomColor: primary.hue1
+					}
 				}
 			}
-		}
+			
+		},
+		
+		
 	},
 	
 	/**
@@ -486,7 +495,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		[ToolPanelLocation.Popup]: { minDim: 2.4 },
 		
 		gutter: {
-			backgroundColor: primary.hue1,
+			backgroundColor: tc(primary.hue2).lighten(5).toRgbString(),
 		},
 		
 		
@@ -510,10 +519,10 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		tools: {
 			// borderColor: primary.hue3
-			[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
-			[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
-			[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
-			[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue2).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+			[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue3).setAlpha(1).toRgbString() },
+			[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
 			
 		}
 	},

@@ -6,7 +6,8 @@ import 'shared/ProcessConfig'
 
 
 
-const req = require.context('../src/tests/stories',true)
+const req = require.context('../dist/out/tests/stories',true)
+
 function loadStories() {
 	ProcessConfig.setType(ProcessType.Storybook)
 	//require('../src/tests/stories/StatusBarStories')

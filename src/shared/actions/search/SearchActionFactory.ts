@@ -16,7 +16,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 import * as uuid from 'node-uuid'
 
 const log = getLogger(__filename)

@@ -2,11 +2,15 @@
 import * as CommonStyles from './CommonStyles'
 export * from './CommonStyles'
 
+
+
 declare global {
 	export const
+		TinyColor:any,
 		CSSHoverState:string,
 		CSSActiveState:string,
 		CSSFocusState:string,
+		Transparent:string,
 		Fill:any,
 		FillWidth:any,
 		FillHeight:any,
@@ -29,6 +33,7 @@ declare global {
 		OverflowHidden:any,
 		OverflowAuto:any,
 		rem: typeof CommonStyles.rem,
+		makeLinearGradient:typeof CommonStyles.makeLinearGradient,
 		makeBorderRem:typeof CommonStyles.makeBorderRem,
 		makePaddingRem: typeof CommonStyles.makePaddingRem,
 		makeMarginRem: typeof CommonStyles.makeMarginRem,

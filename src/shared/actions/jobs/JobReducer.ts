@@ -2,7 +2,7 @@
 import {DefaultLeafReducer,ActionMessage} from 'typedux'
 import {JobKey} from "shared/Constants"
 import {JobState} from 'shared/actions/jobs/JobState'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 const log = getLogger(__filename)
 

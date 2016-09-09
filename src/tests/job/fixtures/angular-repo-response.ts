@@ -1,4 +1,4 @@
-{
+export default {
 	"id": 24195339,
 	"name": "angular",
 	"full_name": "angular/angular",

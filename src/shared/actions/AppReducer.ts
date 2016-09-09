@@ -2,8 +2,7 @@
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "../Constants"
 import {AppState} from './AppState'
-import {Provided} from 'shared/util/Decorations'
-
+import {Provided} from 'shared/util/ProxyProvided'
 /**
  * Global App State Reducer
  */

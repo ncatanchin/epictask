@@ -9,6 +9,8 @@ import {createClient} from "shared/GitHubClient"
 import {RepoSyncExecutor as RepoSyncJobType} from "job/executors/RepoSyncExecutor"
 import {getServiceManager} from "shared/services"
 
+import angularRepoFixture from 'tests/job/fixtures/angular-repo-response'
+
 const log = getLogger(__filename)
 
 // Github client
@@ -43,7 +45,7 @@ describe('RepoSyncJob tests',() => {
 	it('Get Repo', async () => {
 		nock(/github/)
 			.get(/\/repos\/angular\/angular/)
-			.reply(200,require('tests/job/fixtures/angular-repo-response.json'))
+			.reply(200,angularRepoFixture)
 	
 		const angularRepo = await getAngular()
 		log.info('Angular repo', angularRepo)

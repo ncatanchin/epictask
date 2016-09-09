@@ -3,14 +3,38 @@ require('shelljs/global')
 require('../webpack/parts/stats')
 
 const
-	del         = require('del'),
-	gulp        = require('gulp'),
+	del = require('del'),
+	gulp = require('gulp'),
 	runSequence = require('run-sequence'),
-	git         = require('gulp-git'),
-	ghRelease   = require('gulp-github-release'),
-	tsc         = require('typescript'),
-	babel       = require('gulp-babel'),
-	fs          = require('fs')
+	git = require('gulp-git'),
+	ghRelease = require('gulp-github-release'),
+	tsc = require('typescript'),
+	babel = require('gulp-babel'),
+	fs = require('fs'),
+	chalk = require('chalk'),
+	assert = require('assert'),
+	path = require('path'),
+	semver = require('semver'),
+	_ = require('lodash')
+
+global.baseDir = global.baseDir || path.resolve(__dirname, '../..')
+const
+	log = global.log = console,
+	{readJSONFileSync} = require('./helpers')
+
+log.info(chalk.green(`Base Directory: ${baseDir}`))
+
+process.argv.forEach(arg => {
+	if (arg == '--dev')
+		process.env.NODE_ENV = 'development'
+})
+
+/**
+ * Global modules and
+ */
+const
+	processDir = baseDir,
+	env = process.env.NODE_ENV || 'development'
 
 
 Object.assign(global, {
@@ -20,83 +44,22 @@ Object.assign(global, {
 	runSequence,
 	del,
 	git,
+	chalk,
 	ghRelease,
-	TypeScriptEnabled: !process.env.NO_TYPESCRIPT,
-	Deferred: require('./deferred')
-}, require('./helpers'))
-
-process.argv.forEach(arg => {
-	if (arg == '--dev')
-		process.env.NODE_ENV = 'development'
-})
-
-function checkFileExists(filename) {
-	return (fs.existsSync(filename)) ? filename : null
-}
-/**
- * Global modules and
- */
-const
-	semver     = require('semver'),
-	path       = require('path'),
-	_          = require('lodash'),
-	processDir = path.resolve(__dirname, '../..'),
-	RamDiskPath = checkFileExists(path.join(process.env.HOME,'DevelopmentRAM','epictask') || `${processDir}`),
-	env        = process.env.NODE_ENV || 'development'
-
-const RunMode = {
-	DevServer: 'DevServer',
-	Watch: 'Watch'
-}
-
-const TargetType = {
-	ElectronMain: {
-		target: 'electron-main',
-		env: {
-			development: {
-				runMode: RunMode.Watch
-			}
-		}
-	},
-	ElectronRenderer: {
-		target: 'electron-renderer',
-		env: {
-			development: {
-				runMode: RunMode.DevServer
-			}
-		}
-	}
-}
-
-
-//noinspection JSUnresolvedFunction
-Object.assign(global, {
 	_,
-	log: console,
 	env,
 	isDev: env === 'development',
 	processDir,
-	baseDir: processDir,
-	basePackageJson: readJSONFileSync(`${processDir}/package.json`),
-	srcRootDir: path.resolve(processDir,global.TypeScriptEnabled ? 'src' : 'build/js'),
-	RunMode,
-	RamDiskPath,
-	TargetType,
+	basePackageJson: readJSONFileSync(`${baseDir}/package.json`),
+	srcRootDir: path.resolve(baseDir, 'dist/out'),
 	Deferred: require('./deferred'),
-	assert: require('assert')
-})
+	assert
+}, require('./helpers'))
 
 
 // Config for release and versioning
-/**
- * Project configuration
- */
-const projectConfigs = require('../projects')
-console.log('Project names',Object.keys(projectConfigs))
-//noinspection JSUnresolvedVariable
 Object.assign(global, {
 	nextMinorVersion: semver.inc(basePackageJson.version, 'patch'),
 	releaseFiles: [],
-	releaseDir: `${process.cwd()}/target/releases`,
-	projectConfigs
+	releaseDir: `${baseDir}/target/releases`
 })

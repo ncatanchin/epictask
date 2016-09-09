@@ -200,28 +200,19 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 	try {
 		log.info(`Registering ${reg.id}`)
 		let config = getRegistry(RegistryType.Tools)[reg.id]
+		let update = false
 		
 		if (config) {
-			//log.warn(`HMR is updating mounted instances`)
+			update = true
 			config.clazz = clazz
 			config.react.getHeaderControls = reg.getHeaderControls
-			//config.react.proxyComponent = clazz
-			//config.react.proxy.update(clazz)
 			config.react.proxy.update(clazz)
-			
-			
-			
-			
-			//mountedInstances.forEach(forceReactUpdate)
-			
 		} else {
 			const proxy = createReactProxy(clazz)
-			getRegistry(RegistryType.Tools)[reg.id] = {
+			config = getRegistry(RegistryType.Tools)[reg.id] = {
 				name: reg.id,
 				clazz,
 				react: {
-					//proxy:null,
-					//proxyComponent: clazz,//proxy.get(),
 					proxy,
 					proxyComponent: proxy.get(),
 					getHeaderControls: reg.getHeaderControls
@@ -233,22 +224,22 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 		Container.get(UIActionFactory).registerTool(reg as any)
 	
 		
-		
-		Promise
-			.delay(500)
-			.then(() => {
-				fireEvent(RegistryEvent.ToolRegistered,reg)
-				log.info(`Events fired for ${reg.id}`)
-				if (config) {
-					const
-						AppRoot = require('ui/components/root/AppRoot'),
-						appInstance = AppRoot.getAppInstance()
-					
-					if (appInstance)
-						require('react-deep-force-update')(appInstance)
-				}
-			})
-		
+		if (update) {
+			Promise
+				.delay(100)
+				.then(() => {
+					fireEvent(RegistryEvent.ToolRegistered, reg)
+					log.info(`Events fired for ${reg.id}`)
+					// if (config) {
+					// 	const
+					// 		AppRoot = require('ui/components/root/AppRoot'),
+					// 		appInstance = AppRoot.getAppInstance()
+					//
+					// 	if (appInstance)
+					// 		require('react-deep-force-update')(appInstance)
+					// }
+				})
+		}
 		return config.react.proxyComponent
 	} catch (err) {
 		log.error(`Failed to register tool`,err)
@@ -277,7 +268,7 @@ export function getToolComponent(id:string):IToolConstructor {
 	const tool = getToolConfig(id)
 	assert(tool,`Tool not found for ${id}`)
 	
-	return tool.react.proxyComponent
+	return tool.clazz// tool.react.proxyComponent
 }
 
 export function getToolComponentClass(id:string):IToolConstructor {

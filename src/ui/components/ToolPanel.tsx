@@ -198,26 +198,35 @@ const GutterButton = Radium((props) => {
 	
 })
 
+interface IToolWrapperProps {
+	styles:any
+	tool:ITool
+	panel:IToolPanel
+}
 
-const ToolWrapper = Radium((props:{styles:any,tool:ITool,panel:IToolPanel}) => {
-	const
-		{styles,tool,panel} = props,
-		{location} = panel,
-		toolStyles = styles.tool,
-		ToolComponent = getToolComponent(tool.id),
-		ToolHeaderControls = getToolHeaderControls(tool.id)
+@Radium
+class ToolWrapper extends React.Component<IToolWrapperProps,any> {
 	
-	return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
-		<div style={[toolStyles.header,toolStyles.header[location]]}>
-			<div style={[toolStyles.header.label]}>{tool.label}</div>
-			{/*{ToolComponent.getHeaderControls().map(HeaderControl => <HeaderControl />)*/}
-			{ToolHeaderControls}
+	render() {
+		const
+			{styles,tool,panel} = this.props,
+			{location} = panel,
+			toolStyles = styles.tool,
+			ToolComponent = getToolComponent(tool.id),
+			ToolHeaderControls = getToolHeaderControls(tool.id)
+		
+		return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
+			<div style={[toolStyles.header,toolStyles.header[location]]}>
+				<div style={[toolStyles.header.label]}>{tool.label}</div>
+				{ToolHeaderControls}
+			</div>
+			<div style={[toolStyles.container]}>
+				<ToolComponent tool={tool} panel={panel} visible={panel.open && tool.active} />
+			</div>
 		</div>
-		<div style={[toolStyles.container]}>
-			<ToolComponent tool={tool} panel={panel} visible={panel.open && tool.active} />
-		</div>
-	</div>
-})
+	}
+}
+
 
 /**
  * Gutter component

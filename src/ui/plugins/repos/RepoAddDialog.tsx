@@ -1,5 +1,4 @@
 // Imports
-import {AutoWired,Inject,Container} from 'typescript-ioc'
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
@@ -9,14 +8,14 @@ import {SearchPanel} from 'ui/components/search'
 import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
-import {PureRender} from 'ui/components'
+import {PureRender} from 'ui/components/common/PureRender'
 
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {SearchType} from 'shared/actions/search/SearchState'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
-const {Style} = Radium
+import {ThemedNoRadium} from 'shared/themes/ThemeManager'
+
 const {HotKeys} = require('react-hotkeys')
 
 // Constants
@@ -91,17 +90,20 @@ export interface IRepoAddDialogState {
  * @constructor
  **/
 
-@AutoWired
+
 @connect(mapStateToProps)
 @ThemedNoRadium
 @PureRender
 export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddDialogState> {
 
-	@Inject
-	appActions:AppActionFactory
-
-	@Inject
-	repoActions:RepoActionFactory
+	get appActions() {
+		return Container.get(AppActionFactory)
+	}
+	
+	get repoActions() {
+		return Container.get(RepoActionFactory)
+	}
+	
 
 	constructor(props, context) {
 		super(props, context)

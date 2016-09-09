@@ -8,7 +8,7 @@ import {Stores} from 'shared/Stores'
 import {Map} from 'immutable'
 import {IModelConstructor} from 'shared/Registry'
 import {Benchmark} from 'shared/util/Benchmark'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 
 const Benchmarker = Benchmark(__filename)

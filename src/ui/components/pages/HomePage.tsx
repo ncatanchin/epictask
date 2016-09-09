@@ -14,6 +14,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
 import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
+import {makeLinearGradient, Transparent} from "shared/themes"
 
 
 const
@@ -28,19 +29,7 @@ const
 
 const baseStyles:any = createStyles({
 
-	page:[{
-		'.toolPanelSplitPane > .Pane1,': [paneTransition],
-		'.toolPanelSplitPane > .Resizer': [{
-			background: 'transparent'
-		}],
-		'.toolPanelSplitPane > .Resizer.horizontal': [{
-			height: 10
-		}],
-		'.toolPanelSplitPane > .Resizer.vertical': [{
-			width: 10
-		}],
-		'.toolPanelSplitPane > .Pane2,': [paneTransition],
-	}],
+	page:[],
 	bodyWrapper: [FlexScale,Fill],
 	viewWrapper:[FlexScale,Fill,{
 		borderStyle: 'solid',
@@ -81,6 +70,8 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	render() {
 		const
 			{theme,styles,toolPanels} = this.props,
+			{palette} = theme,
+			{accent} = palette,
 			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
 			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
 			toolCount = (panel:IToolPanel) => Object.keys(getTools(panel)).length,
@@ -100,11 +91,25 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 					[min]: panelMinSize(panel),
 					[max]: panelMaxSize(panel)
 				}
-			}
-
+			},
+			borderGradientColorCap = TinyColor(accent.hue2).setAlpha(0.2).toRgbString(),
+			borderGradientColor = TinyColor(accent.hue2).setAlpha(0.7).toRgbString()
+		
+			
 		return <Page onResize={this.updateState} id="homePage">
-			<Radium.Style scopeSelector="#homePage"
-			              rules={styles.page}
+			<Radium.Style scopeSelector=".SplitPane"
+			              rules={createStyles({
+														' > .Pane': [paneTransition],
+														' > .Resizer.vertical::after': [{
+															background: makeLinearGradient('to right',borderGradientColorCap,borderGradientColor,borderGradientColorCap),
+															
+														}],
+														' > .Resizer.horizontal::after': [{
+															background: makeLinearGradient(borderGradientColorCap,borderGradientColor,borderGradientColorCap),
+														}],
+														
+														
+						              })}
 			/>
 			<div style={styles.bodyWrapper}>
 				{/* Tool Panel bottom Split */}

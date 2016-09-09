@@ -3,7 +3,7 @@ import WorkerManager from 'shared/WorkerManager'
 import {DatabaseClientService as DatabaseClientServiceType} from "shared/services/DatabaseClientService"
 import {Repo, User} from "shared/models"
 import {Stores} from "shared/Stores"
-
+import angularRepoFixture from 'tests/job/fixtures/angular-repo-response'
 const log = getLogger(__filename)
 
 
@@ -93,7 +93,7 @@ describe('DatabaseServerEntry',() => {
 	 */
 	it('CRUD',async () => {
 		const
-			angularRepo = new Repo(require('tests/job/fixtures/angular-repo-response.json')),
+			angularRepo = new Repo(angularRepoFixture),
 			stores = Container.get(Stores)
 		
 		log.info('Clearing existing repo just in case')

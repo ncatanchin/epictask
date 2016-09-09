@@ -1,42 +1,66 @@
 require('../tools/global-env')
 
-import loadersConfigFn from './parts/loaders'
 
-const ATS = require('awesome-typescript-loader')
-const {TsConfigPathsPlugin, ForkCheckerPlugin} = ATS
 
-const webpack = require('webpack')
-const assert = require('assert')
-const path = require('path')
-const fs = require('fs')
+const
+	webpack = require('webpack'),
+	assert = require('assert'),
+	path = require('path'),
+	fs = require('fs'),
+	HtmlWebpackPlugin = require('html-webpack-plugin')
 
-//const WebpackBuildNotifierPlugin = require('webpack-build-notifier')
-const {baseDir,TypeScriptEnabled} = global
+// Import globals
+const {
+	isDev,
+	env,
+	baseDir,
+	srcRootDir,
+	chalk
+} = global
+
+
 /**
  * Resolves directories and maps to ram disk
  * if available
  *
  * @param dirs
  */
-const resolveDirs = (...dirs) => dirs.map(dir => {
-	// const ramDiskResolvePath = path.join(RamDiskPath, dir)
-	// const resolvedPath = fs.realpathSync(
-	// 	fs.existsSync(ramDiskResolvePath) ?
-	// 		ramDiskResolvePath :
-	// 		path.resolve(baseDir, dir)
-	// )
-	const resolvedPath = path.join(baseDir, dir)
-	log.info(`Resolved "${dir}" = "${resolvedPath}"`)
-	return resolvedPath
-})
+function resolveDirs(...dirs) {
+	return dirs.map(dir => {
+		const resolvedPath =
+			['/','.'].includes(dir.charAt(0)) ?
+				path.resolve(dir) :
+				path.join(baseDir, dir)
+		
+		log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
+		return resolvedPath
+	})
+}
+
+
+
+assert(fs.existsSync(srcRootDir),`TypeScript must be compiled to ${path.resolve(srcRootDir)}`)
 
 const
-	//baseDir = path.resolve(__dirname, '../..'),
-	tsDir = (TypeScriptEnabled) ? 'src' : 'build/js',
-	moduleDirs = resolveDirs(...(global.TypeScriptEnabled ?
-		['src','node_modules'] :
-		[tsDir,'src','node_modules'])),
+	
+	// Module Directories
+	moduleDirs = resolveDirs(srcRootDir,'node_modules'),
+	
+	// Output Directory
 	distDir = `${baseDir}/dist/app`,
+	
+	// Env
+	DefinedEnv = {
+		__DEV__: isDev,
+		DEBUG: isDev,
+		'Env.isDev': isDev,
+		'process.env.__DEV__': isDev,
+		'process.env.NODE_ENV': JSON.stringify(env),
+		'process.env.BASEDIR': baseDir,
+		'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
+		'ProcessConfig.isStorybook()': false,
+		'Env.isElectron': true
+	},
 	
 	// Import non-typed plugins
 	{
@@ -51,16 +75,12 @@ const
 	happyEnabled = false,
 	
 	// Generates externals config
-	nodeExternals = require('webpack-node-externals'),
+	nodeExternals = require('webpack-node-externals')
 	
-	// Import globals
-	{
-		isDev,
-		env
-	} = global
+	
 
-log.info(`MODULE DIRS = ${moduleDirs.join(', ')}`)
-//process.exit(1)
+log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
+
 /**
  * Create an alias to the libs folder
  *
@@ -75,203 +95,183 @@ function libAlias(name, libPath) {
 }
 
 function tsAlias(tsFilename) {
-	return path.resolve(tsDir, tsFilename)
+	return path.resolve(srcRootDir, tsFilename)
 }
 
 
-/**
- * Use npm|build version of material-ui
- *
- * @type {boolean}
- */
 
+const
+	happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
+	
+	// Create loaders
+	loaders = require('./parts/loaders'),
+	
+	// Entries
+	entries = {
+		"AppEntry": [`./AppEntry`],
+		"LoaderEntry": [`./LoaderEntry`]
+	},
+	
+	// Add HappyPack plugins if enabled
+	happyPlugins = (!happyEnabled || isMain) ? [] :
+		loaders.loaders
+			.filter(loader => loader.happy && loader.happy.id)
+			.map(loader => new HappyPack({
+				id: `${loader.happy.id}`,
+				threadPool: happyThreadPool
+			}))
 
-
-
-export default function (projectConfig) {
+// In dev add signal hot processor
+if (isDev) {
+	entries.AppEntry.unshift('webpack/hot/poll.js?500')
+	// Object
+	// 	.values(entries)
+	// 	.forEach(entry => entry.unshift('webpack/hot/poll.js?500'))
+		//.forEach(entry => entry.unshift('webpack/hot/signal'))
+	
+	//`webpack/hot/poll.js?1000`
+}
+// Webpack Config
+const config = {
+	
+	// Target
+	target: 'electron',
+	//watch: isDev,
+	// Compile callback
+	onCompileCallback(err,stats,watchMode = false) {
+		if (err)
+			log(`Compile Failed`, err)
+	},
+	
+	entry: entries,
+	context: srcRootDir,
+	stats: WebpackStatsConfig,
+	output: {
+		path: `${distDir}/`,
+		//publicPath: `${path.relative(process.cwd(),distDir)}/`,
+		publicPath: "./",
+		filename: '[name].bundle.js',
+		libraryTarget: 'commonjs2'
+	},
 	
 	
-	const
-		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
-		
-		// Renderer or Main
-		isMain = projectConfig.targetType === TargetType.ElectronMain,
-		
-		processTypeName = JSON.stringify(isMain ? 'main' : 'renderer'),
-		
-		// Create loaders
-		loaders = loadersConfigFn(projectConfig),
-		
-		// Add HappyPack plugins if enabled
-		happyPlugins = (!happyEnabled || isMain) ? [] :
-			loaders.loaders
-				.filter(loader => loader.happy && loader.happy.id)
-				.map(loader => new HappyPack({
-					id: `${loader.happy.id}`,
-					tempDir: `.happypack-${processTypeName}`,
-					threadPool: happyThreadPool
-				}))
 	
-	
-	const config = {
+	cache: true,
+	recordsPath: `${distDir}/_records`,
+	devtool: 'source-map',
+
+	// Currently we need to add '.ts' to the resolve.extensions array.
+	resolve: {
 		
-		context: baseDir,
-		
-		stats: WebpackStatsConfig,
-		output: {
-			path: `${distDir}/`,
-			publicPath: `${path.relative('.',distDir)}/`,
-			filename: '[name].bundle.js',
-			libraryTarget: 'commonjs2'
-		},
-		//cache: true,
-		
-		recordsPath: `${distDir}/_records_${processTypeName}`,
-		
-		// Currently we need to add '.ts' to the resolve.extensions array.
-		resolve: {
-			
-			alias: _.assign(
-				{
-					assert: 'browser-assert',
-					
-					// Map material-ui to build ver if available
-					
-					//epictask: path.resolve(baseDir, 'src'),
-					styles: path.resolve(baseDir, 'src/assets/styles'),
-					assets: path.resolve(baseDir, 'src/assets'),
-					// components: tsAlias('ui/components'),
-					// ui: tsAlias('ui'),
-					// shared: tsAlias('shared'),
-					// actions: tsAlias('shared/actions'),
-					GitHubClient: tsAlias('shared/GitHubClient'),
-					Constants: tsAlias('shared/Constants'),
-					Settings: tsAlias('shared/Settings'),
-					// models: tsAlias('shared/models'),
-					// main: tsAlias('main'),
-					// server: tsAlias('server'),
-					// tests: tsAlias('tests'),
-					// job: tsAlias('job'),
-					// db: tsAlias('db'),
-					react: path.resolve(baseDir, 'node_modules/react')
-				}
-			),
-			
-			
-			
-			modules: moduleDirs,
-			
-			extensions: global.TypeScriptEnabled ?
-				['', '.ts', '.tsx', '.js', '.jsx'] :
-				['', '.js', '.jsx'],
-			
-			packageMains: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main']
-			
-		},
-		
-		// Add the loader for .ts files.
-		module: Object.assign({}, loaders, {
-			//noParse: [/simplemde\.min/]
-		}),
-		
-		// SASS/SCSS Loader Config
-		sassLoader: {
-			includePaths: [path.resolve(baseDir, "./src/assets")]
-		},
-		
-		// Post CSS Config (Not Used currently)
-		postcss() {
-			return [
-				require('postcss-modules'),
-				require('autoprefixer'),
-				require('postcss-js')
-			]
-		},
-		
-		// Attach any random data we need to use later
-		other: {
-			happyPlugins
-		},
-		
-		// Create final list of plugins
-		plugins: happyPlugins.concat([
-			new webpack.IgnorePlugin(/vertx/),
-			new webpack.optimize.OccurrenceOrderPlugin(),
-			new webpack.NoErrorsPlugin(),
-			new DefinePlugin({
-				__DEV__: isDev,
-				DEBUG: isDev,
-				'Env.isDev': isDev,
-				'process.env.__DEV__': isDev,
-				'process.env.NODE_ENV': JSON.stringify(env),
-				'process.env.BASEDIR': path.resolve(__dirname, '../..'),
-				'process.env.PROCESS_NAME': projectConfig.name,
-				'process.env.PROCESS_TYPE': processTypeName,
-				'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
-				'ProcessConfig.isStorybook()': false,
-				'process.env.BLUEBIRD_LONG_STACK_TRACES': 1
-			}),
-			new webpack.NamedModulesPlugin(),
-			new webpack.ProvidePlugin({
-				'Promise': 'bluebird'
-			})
-		
-		]),
-		
-		// Shim node mods
-		node: {
-			__dirname: true,
-			__filename: true
-		},
-		
-		// Configure all node_modules as external if in electron
-		externals: [
-			nodeExternals({
-				whitelist: [
-					// /material-ui/,
-					/webpack\/hot/,
-					/webpack-hot/,
-					// /urlsearchparams/,
-					// /typestore\//,
-					// /typestore-plugin-pouchdb/,
-					// /typestore-mocks/
-				]
-			}),
+		alias: _.assign(
 			{
-				electron: true
+				styles: path.resolve(baseDir, 'src/assets/styles'),
+				assets: path.resolve(baseDir, 'src/assets'),
+				libs: path.resolve(baseDir, 'libs'),
+				GitHubClient: tsAlias('shared/GitHubClient'),
+				Constants: tsAlias('shared/Constants'),
+				Settings: tsAlias('shared/Settings')
+				
 			}
-		]
+		),
 		
-	}
+		
+		
+		modules: moduleDirs,
+		fallback: [path.resolve(baseDir,'src')],
+		
+		extensions: ['', '.js', '.jsx'],
+		
+		packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
+		
+	},
 	
-	if (TypeScriptEnabled)
-		config.plugins.splice(0,0,new TsConfigPathsPlugin(),new ForkCheckerPlugin())
+	// Add the loader for .ts files.
+	module:  loaders,
 	
-	// Development specific updates
-	Object.assign(config, {
+	// SASS/SCSS Loader Config
+	sassLoader: {
+		includePaths: [path.resolve(baseDir, "./src/assets")]
+	},
+	
+	// Post CSS Config (Not Used currently)
+	postcss() {
+		return [
+			require('postcss-modules'),
+			require('autoprefixer'),
+			require('postcss-js')
+		]
+	},
+	
+	// Attach any random data we need to use later
+	other: {
+		happyPlugins
+	},
+	
+	// Create final list of plugins
+	plugins: happyPlugins.concat([
+		new webpack.IgnorePlugin(/vertx/),
+		new webpack.optimize.OccurrenceOrderPlugin(),
+		new webpack.NoErrorsPlugin(),
+		new HtmlWebpackPlugin({
+			filename: "main-entry.html",
+			template: `${baseDir}/src/main/MainEntry.jade`,
+			inject: false
+		}),
+		new DefinePlugin(DefinedEnv),
+		new webpack.NamedModulesPlugin(),
+		new webpack.ProvidePlugin({
+			'Promise': 'bluebird'
+		})
+	
+	]),
+	
+	// Shim node mods
+	node: {
+		__dirname: true,
+		__filename: true,
+		global: true,
+		process: true
+	},
+	
+	// Configure all node_modules as external if in electron
+	externals: [
+		nodeExternals({
+			whitelist: [
+				/webpack\/hot/,
+				/webpack-hot/
+			]
+		}),
+		{
+			electron: true
+		}
+	]
+}
+	
+// Development specific updates
+if (isDev) {
+	_.merge(config, {
 		
 		//In development, use inline source maps
-		devtool: isDev ? 'inline-source-map' : 'source-map',
+		devtool: 'inline-source-map',
 		//devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
 		
 		// In development specify absolute path - better debugger support
-		output: Object.assign({}, config.output, isDev ? {
+		output:  {
 			devtoolModuleFilenameTemplate: "[absolute-resource-path]",
 			devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
-			
-		} : {}),
+		},
 		
-		
-		//debug: isDev,
-		dev: isDev
+		//debug: true,
+		dev: true
 	})
 	
-	// In DEV environments make sure HMR is enabled
-	if (isDev)
-		config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
-	
-	
-	return config
-	
+	// Add HMR
+	config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
 }
+
+
+module.exports = config
+	
+
 

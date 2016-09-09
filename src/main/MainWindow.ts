@@ -102,29 +102,34 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				title: 'epictask',
 				// darkTheme:true,
 			}))
+			
+			const {webContents} = browserWindow
 
 
 			mainWindowState.manage(browserWindow)
 
-			log.info(`Template Path: ${templateURL}`)
-			browserWindow.loadURL(templateURL)
+			
 
 			// On PageLoaded - show and focus
-			browserWindow.webContents.once('did-finish-load',async () => {
-
-				// If HMR event occured - only for dev
+			
+			webContents
+				.once('did-finish-load', () => {
+					if (Env.isDev)
+						browserWindow.show()
+					log.info(`MainWindow loaded, waiting for loader started`)
+					
+					
+				})
+			ipcMain.once('epictask-loader-ready',async () => {
+				log.info(`Received READY from loader`)
+				// If HMR event occurred - only for dev
 				if (!browserWindow)
 					return
-
+				
 				browserWindow.setTitle('EpicTask')
 				browserWindow.show()
-
-				if (firstLoad)
-					browserWindow.focus()
-
-				firstLoad = false
-
-
+				browserWindow.focus()
+				
 				if (onFinishLoadCallback) {
 					const result:any = onFinishLoadCallback()
 					if (result && result.then) {
@@ -132,19 +137,20 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 						await result
 					}
 				}
-
+				
 				return resolve(browserWindow)
 			})
-
 			browserWindow.webContents.on('did-fail-load',(event,code) => {
+				log.error('Failed to load content',event,code)
 				if (code === 3)
 					return
 
-				log.error('Failed to load content',event,code)
+				
 				reject(new Error(`ui code did not load ${code}`))
 
 			})
-
+			log.info(`Template Path: ${templateURL}`)
+			browserWindow.loadURL(templateURL)
 			browserWindow.on('closed', () => {
 				browserWindow = null
 			})

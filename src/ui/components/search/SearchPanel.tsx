@@ -33,7 +33,7 @@ const {HotKeys} = require('react-hotkeys')
 
 // Constants
 const log = getLogger(__filename)
-const styles = require("ui/components/search/SearchPanel.scss")
+const styles = require("styles/SearchPanel.scss")
 
 //log.info('read styles as', styles)
 

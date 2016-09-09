@@ -12,10 +12,12 @@ const log = getLogger(__filename)
 
 const baseStyles = createStyles({
 	root: [
+		CursorPointer,
 		FillWidth,
 		makeTransition(['height','width','flex-grow','flex-shrink','flex-basis']),
 		FlexColumnCenter,
 		Ellipsis,
+		
 		{
 			minWidth: rem(24),
 			padding: '0 0.5rem',
@@ -154,7 +156,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 				{/* Text */}
 				<div style={[styles.label.text]}>
 					{/*{JobStatus[job.status]} - */}
-					22 {getJobDescription(job)}
+					{getJobDescription(job)}
 				</div>
 				
 				

@@ -1,165 +1,153 @@
+-
+    var
+        fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss')),
+        mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss')),
+        webFontLoaderUrl = require('!!file!libs/webfont-loader/webfont-loader.js')
+
 doctype html
 html.fill-width.fill-height(lang="en")
 
     head
         meta(charset='utf-8')
+        style!=fontStyles
+        style!=mainStyles
+
+        link(rel='stylesheet',href=fontUrl)
 
         // Splash screen load
-        link(rel="stylesheet",type="text/css",href="../../node_modules/splash-screen/dist/splash.min.css")
-        script(src="../../node_modules/splash-screen/dist/splash.min.js")
-
-        link(rel="stylesheet",href="../../node_modules/animate.css/animate.css")
-        link(rel="stylesheet",href="../../node_modules/font-awesome/css/font-awesome.min.css")
-        link(rel="stylesheet",href="../../node_modules/highlight.js/styles/dark.css")
-        link(rel="stylesheet",href="../../node_modules/simplemde/dist/simplemde.min.css")
-        //link(rel="stylesheet",href="../../node_modules/highlight.js/styles/default.css")
-        meta(name="viewport",content="width=device-width, initial-scale=1")
-
-        title epictask
-        style=require('!!raw!sass!styles/MainEntry.global.scss')
-
-
-        script(id='et-loader').
+        script.
+            process.env.EPIC_ENTRY = 'UI'
             require('babel-polyfill')
             var electron = require('electron'),
-                    remote = electron.remote,
-                    ipc = electron.ipcRenderer,
-                    Events = remote.getGlobal('Constants').Events
+                log = console,
+                loaded = false,
+                remote = electron.remote,
+                isDev = remote.getGlobal('Env').isDev,
+                baseDir = "./",
+                loaderReady = false,
+                docReady = false,
+                fontsReady = false,
+                rootDir = isDev ? baseDir + "../../" : baseDir,
+                Events = remote.getGlobal('Constants').Events,
+                _ = require('lodash')
 
-
-
-            function checkBooted() {
-                window.booted = remote.getGlobal("MainBooted")
-                return window.booted
-            }
-
-            console.log('Main has booted = ', checkBooted())
-
-            var Splash = window.Splash
-
-            // Load jQuery to help with debugging more than anything else
-            if (!window.$)
-                window.$ = require('jquery')
-
-            // Make sure we have a global log function
-            //if (!window.log)
-            //	window.log =
-            //var logger = remote.getGlobal('getLogger')('MainEntry.jade')
-
-
-            // Add getStyles - short for getComputedStyle
-            if (!$.fn.getStyles) {
-                $.fn.getStyles = function () {
-                    var styles = window.getComputedStyle(this[0])
-                    var styleObj = {}
-                    for (var i = 0; i < styles.length; i++) {
-                        var prop = styles[i]
-                        var val = styles[prop]
-                        if (val)
-                            styleObj[prop] = val
-                    }
-                    console.log(styleObj)
-                    //log.info('styles',styleObj)
-                    return styleObj
+            if (isDev) {
+                require('source-map-support').install()
+                try {
+                    require('devtron').install()
+                } catch (err) {
+                    log.info(`Dev tron is prob already loaded`)
                 }
             }
-            var baseDir = "."
-            var loaded = false
-            var isDev = remote.getGlobal('Env').isDev
+            _.assign(global, {
+                _: _,
+                $: require('jquery'),
+                React: require('react'),
+                ReactDOM: require('react-dom'),
+                getLogger: function(loggerName) { return console }
+            })
 
-            if (isDev)
-                require('debug-menu').install()
+            function makeRootPath(filename) {
+                return rootDir + filename
+            }
+
+            function makeBasePath(filename) {
+                return baseDir + filename
+            }
+
+            function getHead() {
+                return document.getElementsByTagName('head')[0]
+            }
+
             /*
              *	Add a script tag to load content
              */
             function addScript(scriptPath, asyncLoad, callback) {
                 const script = document.createElement('script');
-                const basePath = (isDev) ? 'http://localhost:4444/dist/app' : baseDir + '/dist/app';
 
                 script.type = 'text/javascript'
                 if (asyncLoad) {
-                    //logger.debug('Loading script async', scriptPath)
                     script.async = true
-
                 }
 
                 if (callback)
                     script.onload = callback
 
-                script.src = basePath + scriptPath
+                script.src = scriptPath
+                getHead().appendChild(script)
+            }
 
-                document.body.appendChild(script)
+            function addCSS(cssPath) {
+                const link = document.createElement('link')
+                link.setAttribute('rel', 'stylesheet')
+                link.href = cssPath
+                getHead().appendChild(link)
+            }
+
+            const cssPaths = [
+                "node_modules/animate.css/animate.css",
+                "node_modules/font-awesome/css/font-awesome.min.css",
+                "node_modules/highlight.js/styles/dark.css",
+                "node_modules/simplemde/dist/simplemde.min.css"
+            ]
+
+            cssPaths.forEach(function(cssFile) { addCSS(makeRootPath(cssFile))})
+            function showLoader() {
+                log.info('Template Ready state',fontsReady,docReady,loaderReady)
+                if (fontsReady && docReady && loaderReady)
+                        window.startLoaderEntry()
             }
 
 
-            /*
-             *	Load the UI
-             */
-            window.loadEpicTask = function () {
+        meta(name="viewport",content="width=device-width, initial-scale=1")
+        title epictask
 
-                //logger.info('Loading UI')
+        script(id='epictask-loader').
 
-                if (loaded) {
-                    if (!isDev) {
-                        console.warn('loadEpicTask is disabled in non dev mode')
-                        return
-                    }
-
-                    var nextElem = document.getElementById('et-loader')
-                    while (nextElem = nextElem.nextSibling) {
-                        nextElem.parentNode.removeChild(nextElem)
-                    }
+            WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
+            WebFont.load({
+                loading: function () {
+                    log.info('WebFonts loading')
+                },
+                active: function () {
+                    log.info('WebFonts active')
+                    fontsReady = true
+                    showLoader()
+                },
+                inactive: function () {
+                    log.error('WebFonts inactive')
+                },
+                fontinactive: function (familyName, fvd) {
+                    log.error('font failed', familyName)
+                },
+                custom: {
+                    families: ['AvenirNext'],
+                    //urls: [makeBasePath("#{fontUrl}")]
                 }
+            })
+            if (isDev)
+                require('debug-menu').install()
 
-                loaded = true
-                document.body.innerHTML = "<div id='root' class='fill-width fill-height'></div>"
-
-                if (!isDev) {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = baseDir + '/dist/app/style.css';
-                    document.write(link.outerHTML);
-                }
-
-                // SCRIPTS
-                addScript('/UIEntry.bundle.js', false, function () {
-                    if (checkBooted())
-                        onUIReady(null, true)
-                })
-
-
-
+            if (!isDev) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = baseDir + 'style.css';
+                document.write(link.outerHTML);
             }
 
-            function onUIReady(event, force) {
-
-
-                if (force || (event && event.data && event.data.type === Events.UIReady)) {
-                    console.log('UI Ready Called, force=', force,
-                            'event type =', (event && event.data) && event.data.type)
-                    Splash.destroy()
-                }
+            addScript('LoaderEntry.bundle.js', false, function () {
+                log.info(`Loader - loaded`)
+                loaderReady = true
+                showLoader()
+            })
+            function winReady() {
+                docReady = true
+                showLoader()
             }
-
-            function onBodyLoad() {
-                console.log('on load event')
-                if (checkBooted()) {
-                    console.log('window already booted, loading immediately')
-                    loadEpicTask()
-                } else {
-                    console.log('waiting for main ready event now')
-                    ipc.on(Events.MainReady, function () {
-                        console.log('IPC Received load request')
-                        loadEpicTask()
-                    })
-                }
-
-                window.addEventListener('message', onUIReady)
-            }
+    body.fill-width.fill-height(onload="winReady()")
+        #root
+        #loader-root
 
 
-    body.fill-width.fill-height(onload="onBodyLoad()")
-        script.
-            Splash.enable('windcatcher')
 
 

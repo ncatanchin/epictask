@@ -6,19 +6,31 @@ import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {LinearProgress} from "material-ui"
 
-import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
+import {JobActionFactory, TJobIMap} from 'shared/actions/jobs/JobActionFactory'
 import {getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus} from "shared/actions/jobs/JobTypes"
 import {TimeAgo} from "ui/components/common/TimeAgo"
-import {FlexColumnCenter, FlexScale, makePaddingRem} from "shared/themes"
-import {Icon} from "ui/components"
+import {
+	FlexColumnCenter, FlexScale, makePaddingRem, rem, FillHeight, createStyles, FillWidth,
+	FlexRowCenter, Ellipsis
+} from "shared/themes"
+import {Icon} from "ui/components/common/Icon"
 import {getJobStatusIcon, getJobStatusColors} from "ui/plugins/jobs/JobItem"
 
 // Constants
 const log = getLogger(__filename)
 
 const baseStyles = createStyles({
-	root: [FlexColumnCenter, FillHeight, FillWidth, FlexScale, {}],
+	root: [FlexColumnCenter, FillHeight, FillWidth, FlexScale, {
+		hasJobs: {
+			borderLeftStyle: 'solid',
+			borderLeftWidth: rem(0.1)
+		}
+	}],
 	header: [FlexRowCenter,FillWidth,makePaddingRem(1,1,1,1),{
+		status: [makePaddingRem(0,0,0,1),{
+			fontWeight:500,
+			textTransform: 'uppercase'
+		}],
 		description: [Ellipsis,FlexScale],
 		progress: [FlexScale,makePaddingRem(0,1.5),{
 			flex: '0 0 25rem'
@@ -102,6 +114,7 @@ export interface IJobDetailProps extends React.HTMLAttributes {
 	theme?:any
 	styles?:any
 	job:IJob
+	jobs?: TJobIMap
 	detail:IJobStatusDetail
 	selectedLogId:string
 }
@@ -116,7 +129,7 @@ export interface IJobDetailProps extends React.HTMLAttributes {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'jobs','jobs.item')
+@ThemedStyles(baseStyles,'jobs','jobs.item','jobs.detail')
 @PureRender
 export class JobDetail extends React.Component<IJobDetailProps,any> {
 	
@@ -128,7 +141,7 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 	render() {
 		
 		const
-			{theme, styles, job, detail,selectedLogId} = this.props,
+			{theme, styles, job, jobs,detail,selectedLogId} = this.props,
 			logs = detail && detail.logs,
 			statusColors = getJobStatusColors(detail,styles)
 		
@@ -136,7 +149,7 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 			styles.logs.levels['WARN' === log.level ? 'warn' : 'ERROR' === log.level ? 'error' : 'DEBUG' === log.level ? 'success' : 'info']
 		
 		
-		return <div style={styles.root}>
+		return <div style={[styles.root, jobs && jobs.size && styles.root.hasJobs ]}>
 			
 			{/* No Job Selected */}
 			{!job && <div style={styles.root}>
@@ -149,13 +162,13 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 				{/* HEADER */}
 				<div style={[styles.header]}>
 					
-					<Icon
-						style={[
-								styles.header.icon,
-								...statusColors
-							]}
-						iconSet="fa"
-						iconName={getJobStatusIcon(detail)} />
+					{/*<Icon*/}
+						{/*style={[*/}
+								{/*styles.header.icon,*/}
+								{/*...statusColors*/}
+							{/*]}*/}
+						{/*iconSet="fa"*/}
+						{/*iconName={getJobStatusIcon(detail)} />*/}
 					
 					<div style={styles.header.description}>{getJobDescription(job)}</div>
 				
@@ -174,6 +187,9 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 					
 					<div style={styles.header.time}>
 						{Math.ceil((Date.now() - detail.createdAt) / 1000)}s
+					</div>
+					<div style={[styles.header.status,...statusColors]}>
+						{JobStatus[job.status]}
 					</div>
 					
 					

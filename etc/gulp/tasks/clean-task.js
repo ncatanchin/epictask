@@ -7,7 +7,10 @@ function clean() {
 	return del([
 		'target',
 		'dist',
-		'.awcache'
+		'.awcache*',
+		'.happy*',
+		'.sass*',
+		'build'
 	])
 }
 

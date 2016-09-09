@@ -23,6 +23,33 @@
 	max-width: 100vw;
 }
 
+.fixed-fill {
+	@extend .fill-height, .fill-width;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+#root {
+	@extend .fixed-fill;
+	z-index: 0;
+}
+
+#loader-root {
+	@extend .fixed-fill;
+	z-index: 1;
+	transition: opacity 0.3s ease-out;
+	opacity: 0;
+	pointer-events: none;
+	
+	&.visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
+
 html,body {
 	margin: 0;
 	padding: 0;

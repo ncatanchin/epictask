@@ -6,7 +6,7 @@ import {AppKey} from "shared/Constants"
 import {ISettings} from 'shared/Settings'
 import {AppState} from 'shared/actions/AppState'
 import {User} from 'shared/models/User'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 const log = getLogger(__filename)
 

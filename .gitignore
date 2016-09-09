@@ -3,7 +3,7 @@ build/
 #libs/**/*.*
 
 # Typestore Files
-#src/**/*.js
+src/**/*.js
 src/**/*.map
 src/**/*.d.ts
 dist
@@ -19,7 +19,7 @@ logs
 src/tsconfig.json
 #etc/tsconfig.*.json
 .tsconfig.*.json
-/tsconfig.json
+
 
 # Any log file
 

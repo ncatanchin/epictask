@@ -26,7 +26,7 @@ import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 
 const log = getLogger(__filename)

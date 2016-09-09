@@ -33,7 +33,7 @@ import {getSettings} from 'shared/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 /**
  * Created by jglanz on 5/29/16.

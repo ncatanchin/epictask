@@ -36,6 +36,7 @@ const baseStyles = createStyles({
 				fontSize: rem(0.9),
 				padding: '0 0.5rem 0 0'
 			},
+			
 			icon: {
 				fontSize: rem(1)
 			},
@@ -115,7 +116,8 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 		
 		const
 			{styles,jobs,details,selectedId,selectedLogId,panel} = this.props,
-			splitOrientation = panel.location === ToolPanelLocation.Bottom ? 'vertical' : 'horizontal'
+			splitOrientation = panel.location === ToolPanelLocation.Bottom ? 'vertical' : 'horizontal',
+			jobCount = jobs ? jobs.size : 0
 			
 		
 		
@@ -123,8 +125,9 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 			
 			
 			<SplitPane className="jobMonitorSplitPane"
-			           minSize={convertRem(24)}
-			           defaultSize="35%"
+			           minSize={!jobCount ? 0 : '15%'}
+			           defaultSize={!jobCount ? 0 : '25%'}
+			           maxSize={!jobCount ? 0 : '50%'}
 			           split={splitOrientation}>
 				
 				{/* List of all current Jobs */}
@@ -134,6 +137,7 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 				
 				{/* Currently selected job details */}
 				<JobDetail job={jobs.get(selectedId)}
+				           jobs={jobs}
 				           detail={selectedId && details.find(it => it.id === selectedId)}
 				           selectedLogId={selectedLogId}
 				/>
@@ -144,4 +148,10 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 		</div>
 	}
 	
+}
+
+if (module.hot) {
+	log.info(`Setting up hmr`)
+	module.hot.dispose(() => log.info(`Disposing`))
+	module.hot.accept(() => log.info(`HMR Update`))
 }

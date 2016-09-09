@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 import {DefaultLeafReducer} from 'typedux'
 import {IssueKey} from 'shared/Constants'
 import {IssueState,IssueMessage} from './IssueState'
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 
 @Provided
 export class IssueReducer extends DefaultLeafReducer<IssueState,IssueMessage> {

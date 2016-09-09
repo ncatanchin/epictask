@@ -5,7 +5,7 @@ import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
 import {IJob, JobType, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTypes'
 import {JobKey, JobsMaxCompleted} from "shared/Constants"
-import {Provided} from 'shared/util/Decorations'
+import {Provided} from 'shared/util/ProxyProvided'
 import {cloneObject} from "shared/util/ObjectUtil"
 
 

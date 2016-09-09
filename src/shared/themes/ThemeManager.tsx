@@ -8,8 +8,9 @@ const log = getLogger(__filename)
 const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import {mergeStyles} from "shared/themes/styles/CommonStyles"
-import {interceptFn} from "shared/util/ObjectUtil"
 import {PureRender} from "ui/components/common/PureRender"
+//import {interceptFn} from "shared/util/ObjectUtil"
+//import {PureRender} from "ui/components/common/PureRender"
 
 /**
  * Define our dark palette
@@ -145,8 +146,8 @@ export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):
 				${Style.getStyles()}
 			</style>`).appendTo($('head'))
 		}
-
-	_.assign(config, {
+	
+	Object.assign(config, {
 		id,
 		fn,
 		remove,
@@ -224,7 +225,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			const styles = createThemedStyles(baseStyles,themeKeys,props)
 			
 			if (baseStyles) {
-				assign(newState,{styles})
+				Object.assign(newState,{styles})
 			}
 			
 			return newState
@@ -238,7 +239,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		 * create initial styles
 		 */
 		updateTheme(props = this.props, force = false) {
-			if (!force && this.state && this.state.theme === getTheme())
+			if (this.state && _.isEqual(this.state.theme, getTheme()))
 				return
 			
 			this.setState(this.getNewState(props), () => this.forceUpdate())
@@ -288,7 +289,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 	}
 	
 	//return PureRender(WrappedComponent)
-	return WrappedComponent as any
+	return PureRender(WrappedComponent) as any
 	
 }
 

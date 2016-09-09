@@ -12,14 +12,18 @@
 // UI MODS
 interface Window {
 	devToolsExtension:any
+	
 }
 
 declare namespace NodeJS {
 	interface Global {
 		MainBooted:boolean
+		gsapRequire:any
 	}
 }
 
+
+declare var gsapRequire:any
 
 /**
  * Is in development mode

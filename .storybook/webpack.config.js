@@ -12,25 +12,16 @@ require('babel-register')
 module.exports = function (storybookBaseConfig, configType) {
 	
 	const
-		HappyPack = require('happypack'),
-		happyEnabled = true,
-		ATS = require('awesome-typescript-loader'),
-		{ForkCheckerPlugin} = ATS,
 		_ = require('lodash'),
 		path = require('path'),
-		projects = require('../etc/projects'),
-		rendererProject = projects['electron-renderer-ui'],
-		epicConfig = rendererProject.webpackConfigFn(rendererProject)
+		epicConfig = require('../etc/webpack/webpack.config')
 	
 	//return _.merge({},webpackConfig,storybookBaseConfig)
 	
 	const
 		resolveConfig = (storybookBaseConfig.resolve = storybookBaseConfig.resolve || {}),
 		moduleConfig = (storybookBaseConfig.module = storybookBaseConfig.module || {}),
-		pluginConfig = (storybookBaseConfig.plugins = storybookBaseConfig.plugins || {}),
-		tsConfigFile = `${process.cwd()}/.tsconfig.renderer.json`
-	
-	console.log(`Using tsconfig file @ ${tsConfigFile}`)
+		pluginConfig = (storybookBaseConfig.plugins = storybookBaseConfig.plugins || {})
 	
 	// ALIAS
 	Object.assign(resolveConfig.alias = resolveConfig.alias || {}, epicConfig.resolve.alias)
@@ -51,115 +42,12 @@ module.exports = function (storybookBaseConfig, configType) {
 	moduleConfig.preLoaders = (moduleConfig.preLoaders || []).concat(epicConfig.module.preLoaders)
 	//module
 	
-	// moduleConfig.loaders.push(...[
-	// 	{
-	// 		test: /\.json$/,
-	// 		loader: 'json'
-	// 	},
-	// 	// TYPESCRIPT
-	// 	// {
-	// 	// 	test: /\.ts$/,
-	// 	// 	exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-	// 	// 	loaders: [`awesome-typescript-loader?tsconfig=${tsConfigFile}`]
-	// 	// },
-	//
-	// 	// TSX
-	// 	{
-	// 		test: /\.tsx?$/,
-	// 		exclude: [/libs\/.*\/typings/,/typelogger/,/typedux/,/typestore/],
-	// 		loaders: ['react-hot-loader/webpack',`awesome-typescript-loader?tsconfig=${tsConfigFile}`],
-	// 	},
-	//
-	// 	// JADE
-	// 	{
-	// 		happy: {id: 'jade'},
-	// 		test: /\.(jade|pug)$/,
-	// 		loaders: ['jade-loader']
-	// 	},
-	//
-	// 	// ASSETS / FONTS
-	// 	{
-	// 		type: 'fonts',
-	// 		test: /\.(eot|svg|ttf|woff|woff2)\w*/,
-	// 		loader: 'file?name=assets/fonts/[name].[hash].[ext]'
-	//
-	// 	},
-	//
-	// 	// ASSETS / IMAGES & ICONS
-	// 	{
-	// 		test: /\.(png|jpg|gif|ico)$/,
-	// 		loader: 'file?name=assets/images/[name].[hash].[ext]',
-	// 		type: 'images'
-	// 	},
-	//
-	//
-	// 	// CSS
-	// 	{
-	// 		happy: {id: 'css-global'},
-	// 		test: /\.global\.css$/,
-	// 		loaders: [
-	// 			'style-loader',
-	// 			'css-loader?sourceMap'
-	// 		]
-	// 	},
-	// 	{
-	// 		happy: {id: 'css-node-modules'},
-	// 		test: /node_modules.*\.css$/,
-	// 		loaders: ['file?name=assets/images/[name].[hash].[ext]']
-	// 	},
-	// 	{
-	// 		happy: {id: 'css'},
-	// 		test: /^((?!\.global).)*\.css$/,
-	// 		exclude: /(node_modules)/,
-	// 		loaders: [
-	// 			'style-loader',
-	// 			'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]'
-	// 		]
-	// 	},
-	//
-	// 	// SCSS
-	// 	{
-	// 		happy: {id: 'scss-global'},
-	// 		test: /\.global\.scss$/,
-	// 		loaders: [
-	// 			'style-loader',
-	// 			'css-loader',
-	// 			'sass'
-	// 		]
-	// 	},
-	// 	{
-	// 		happy: {id: 'scss'},
-	// 		test: /^((?!\.global).)*\.scss$/,
-	// 		exclude: /(node_modules)/,
-	// 		loaders: [
-	// 			'style-loader',
-	// 			'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
-	// 			// 'css-loader',
-	// 			// 'postcss-loader?parser=postcss-js',
-	// 			'sass'
-	// 			// ,
-	// 			// sassContentLoader + '?path=' + themesJs
-	// 		]
-	// 	}
-	// ])
-	
 	const
 		isDev = true,
-		webpack = require('../node_modules/@kadira/storybook/node_modules/webpack'),
-		happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 5}),
-		happyPlugins = (!happyEnabled) ? [] :
-			moduleConfig.loaders
-				.filter(loader => loader.happy && loader.happy.id)
-				.map(loader => new HappyPack({
-					id: `${loader.happy.id}`,
-					tempDir: `.happypack-storybook`,
-					threadPool: happyThreadPool
-				}))
+		webpack = require('../node_modules/@kadira/storybook/node_modules/webpack')
 	
 	
 	pluginConfig.push(
-		...happyPlugins,
-		new ForkCheckerPlugin(),
 		new webpack.DefinePlugin({
 			__DEV__: isDev,
 			DEBUG: isDev,
@@ -167,10 +55,10 @@ module.exports = function (storybookBaseConfig, configType) {
 			'process.env.__DEV__': isDev,
 			'process.env.NODE_ENV': JSON.stringify(env),
 			'process.env.BASEDIR': path.resolve(__dirname, '..'),
-			'process.env.PROCESS_TYPE': 'renderer',
 			'process.env.GITHUB_API_TOKEN': process.env.GITHUB_API_TOKEN && JSON.stringify(process.env.GITHUB_API_TOKEN),
 			'ProcessConfig.isStorybook()': true,
-			'process.env.DefaultTransportScheme': JSON.stringify('IPC')
+			'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
+			'Env.isElectron': false
 		}),
 		new webpack.optimize.CommonsChunkPlugin({
 			name: 'vendor',
@@ -202,8 +90,6 @@ module.exports = function (storybookBaseConfig, configType) {
 		'remote-redux-devtools',
 		'reselect',
 		'lodash',
-		'typescript-ioc',
-		'reflect-metadata',
 		'immutable',
 		'react-tap-event-plugin',
 		'short-id',
@@ -212,9 +98,6 @@ module.exports = function (storybookBaseConfig, configType) {
 	
 	
 	_.merge(storybookBaseConfig, _.pick(epicConfig,['sassLoader']), {
-		//devtool:'inline-source-map',
-		//devtool:'cheap-module-eval-source-map',
-		//devtool:'cheap-module-eval-inline-source-map',
 		devtool: 'eval',
 		output: {
 			devtoolModuleFilenameTemplate: "file://[absolute-resource-path]"

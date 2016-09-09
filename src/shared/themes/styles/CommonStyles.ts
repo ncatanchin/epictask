@@ -5,6 +5,9 @@ declare global {
 	}
 }
 
+const tinycolor = require('tinycolor2')
+export const TinyColor = tinycolor
+
 export function rem(val:number) {
 	return `${val}rem`
 }
@@ -89,6 +92,11 @@ export function makeTransition(props:string[]|string = null,duration = 0.25,easi
 	}
 }
 
+export function makeLinearGradient(...colorStops:string[]) {
+	//return `-webkit-linear-gradient(${colorStops.join(',')})`
+	return `linear-gradient(${colorStops.join(',')})`
+}
+
 export function makeAbsolute(top:number = 0, left:number = 0) {
 	return makeStyle(PositionAbsolute,{top,left})
 }
@@ -128,6 +136,8 @@ export function makeMarginRem(top = 0, right = top, bottom = top, left = right) 
 export const CSSHoverState = ':hover'
 export const CSSActiveState = ':active'
 export const CSSFocusState = ':active'
+
+export const Transparent = 'transparent'
 
 export const OverflowHidden = {
 	overflow: 'hidden'

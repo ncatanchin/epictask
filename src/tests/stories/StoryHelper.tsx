@@ -1,3 +1,4 @@
+require('source-map-support').install()
 ProcessConfig.setType(ProcessType.Storybook)
 
 import 'shared/NamespaceConfig'

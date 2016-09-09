@@ -20,7 +20,7 @@ const baseStyles = createStyles({
 	}],
 	
 	list: [FlexScale, OverflowAuto, {
-		item: [FillWidth,makePaddingRem(1.5,1), {
+		item: [CursorPointer,FillWidth,makePaddingRem(1.5,1), {
 			
 			selected: [{
 				
@@ -79,7 +79,9 @@ export class JobList extends React.Component<IJobListProps,void> {
 			<div style={styles.list}>
 				
 				{/* Map Items */}
-				{details.map((detail,index) => {
+				{details
+					.filter((detail) => jobs.get(detail.id))
+					.map((detail,index) => {
 					const
 						job = jobs.get(detail.id),
 						lastItem = index >= jobs.size - 1

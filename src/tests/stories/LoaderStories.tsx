@@ -16,6 +16,6 @@ storiesOf('Loader Animation',module)
 	.add('Responsive loader', () => {
 		
 		
-		return <Loader />
+		return <Loader animate/>
 	})
 	

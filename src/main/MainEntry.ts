@@ -1,8 +1,8 @@
 require('shared/NodeEntryInit')
 
-import {RemoteDebuggingPort,Events} from 'shared/Constants'
+import {RemoteDebuggingPort, Events, MainBooted} from 'shared/Constants'
 import MainConfigurator from './MainConfigurator'
-
+import * as MainWindowType from './MainWindow'
 const {app} = require('electron')
 
 
@@ -16,7 +16,6 @@ _.assignGlobal({Constants:{Events}})
 
 
 // Main window ref
-let persistedQuitState = false
 let mainWindow:any
 
 // HMR Configuration for development
@@ -49,17 +48,11 @@ async function boot() {
 
 	
 	log.info("Boot load window")
-	mainWindow = require('./MainWindow')
-	
-	// DEV Redux - no real need anymore
-	// if (Env.isDev && !devWindow) {
-	// 	devWindow = require('./MainDevToolWindow').window as Electron.BrowserWindow
-	// }
-
+	mainWindow = require('./MainWindow') as typeof MainWindowType
 
 	log.info("Boot start")
 	await mainWindow.start(async () => {
-		log.debug('Main window loaded and waiting for backend')
+		log.info('Main window loaded and waiting for backend')
 		
 		await MainConfigurator.start()
 		
@@ -69,7 +62,7 @@ async function boot() {
 	log.info("Boot complete, call ready")
 	
 	// Notifying the main window that we are ready
-	global.MainBooted = true
+	global[MainBooted] = true
 	
 	const
 		{AppActionFactory} = require('shared/actions/AppActionFactory'),
@@ -77,7 +70,11 @@ async function boot() {
 	
 	appActions.setReady(true)
 	
-	setTimeout(() => mainWindow.ready(),300)
+	setImmediate(() => {
+		mainWindow.ready()
+	})
+	
+	
 }
 
 /**

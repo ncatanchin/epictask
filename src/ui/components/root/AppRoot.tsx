@@ -10,7 +10,7 @@ import {MuiThemeProvider} from 'material-ui/styles'
 import {PureRender} from 'ui/components/common'
 import {IssueEditDialog} from 'ui/components/issues/IssueEditDialog'
 import {RepoAddDialog} from 'ui/plugins/repos/RepoAddDialog'
-import {Header, HeaderVisibility, ToastMessages} from 'ui/components'
+import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
 import {getPage} from 'ui/components/pages'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
@@ -38,7 +38,7 @@ const $ = require('jquery')
 /**
  * Global CSS
  */
-require('assets/fonts/fonts.global.scss')
+
 require('styles/split-pane.global.scss')
 
 
@@ -59,7 +59,8 @@ const store:ObservableStore<RootState> = Container.get(ObservableStore as any) a
 //region DEBUG Components/Vars
 let
 	appElement = null,
-	reduxStore = null
+	reduxStore = null,
+	win = window as any
 //endregion
 
 
@@ -103,6 +104,7 @@ export interface IAppProps {
 const mapStateToProps = createStructuredSelector({
 	hasAvailableRepos: availableRepoCountSelector,
 	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
+	theme: () => getTheme(),
 	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
 },createDeepEqualSelector)
 
@@ -111,7 +113,7 @@ const mapStateToProps = createStructuredSelector({
  */
 
 @connect(mapStateToProps)
-@Themed
+@Radium
 @PureRender
 export class App extends React.Component<IAppProps,any> {
 
@@ -286,6 +288,7 @@ function render() {
 			window.postMessage({type:Events.UIReady},"*")
 			
 			//appInstance = ref as any
+			win.stopLoader()
 			Container.get(UIActionFactory).focusAppRoot()
 		}
 	)

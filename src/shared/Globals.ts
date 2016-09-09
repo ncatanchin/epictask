@@ -46,6 +46,7 @@ const EnvGlobal = {
 	isRemote,
 	isRenderer,
 	isMain: !isRenderer,
+	isElectron: ['browser','renderer'].includes(process.type),
 	baseDir: path.resolve(__dirname,'../..')
 }
 
