@@ -71,6 +71,7 @@ export class DatabaseClientService extends BaseService {
 	private _stores:Stores
 	
 	
+	dbProxy
 	
 	/**
 	 * All global repositories
@@ -110,11 +111,11 @@ export class DatabaseClientService extends BaseService {
 		log.info('Loading models and creating store')
 		loadModelClasses()
 
-
+		
 		// Load all
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
 			LabelStore,ActivityStore,MilestoneStore,UserStore} = require('shared/models')
-
+		
 		assign(this._stores, {
 			repo:          this.getStore(RepoStore),
 			issue:         this.getStore(IssueStore),
@@ -127,8 +128,12 @@ export class DatabaseClientService extends BaseService {
 		})
 
 		log.info('Repos Loaded')
-
-
+		
+		// Direct proxy
+		this.dbProxy = new Proxy({},new DatabaseProxy())
+		
+		
+		
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {
 			assignGlobal({Repos:this._stores})

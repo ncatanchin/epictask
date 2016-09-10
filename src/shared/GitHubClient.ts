@@ -156,7 +156,7 @@ export class GitHubClient {
 					
 					log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
 
-					await Promise.resolve(true).delay(500)
+					await Promise.resolve(true).delay(1000)
 					
 					const
 						nextOpts = Object.assign({},opts,{page:nextPageNumber}),

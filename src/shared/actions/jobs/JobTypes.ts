@@ -183,6 +183,11 @@ export interface IJobStatusDetail {
 	epochETA?:number
 	
 	/**
+	 * Millis remaining to complete job
+	 */
+	timeRemaining?:number
+	
+	/**
 	 * Status
 	 */
 	status:JobStatus

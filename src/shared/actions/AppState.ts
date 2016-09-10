@@ -30,13 +30,21 @@ export const AppStateRecord:Record.Class = Record({
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
-		if (o && o instanceof AppState)
-			return o
+		const checkSettings = (state) => {
+			if (ProcessConfig.isStateServer())
+				state = state.set('settings',require('server/SettingsFile').Settings.toJSON())
+			
+			return state
+		}
 		
-		return new AppState(Object.assign({},o,{
+		if (o && o instanceof AppState) {
+			o = checkSettings(o)
+			return o
+		}
+		return checkSettings(new AppState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs)
-		}))
+		})))
 		
 	}
 

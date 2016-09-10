@@ -6,6 +6,7 @@ import {JobType, JobStatus, IJob, JobCancelledStatuses} from "shared/actions/job
 import {IJobStatusDetail, JobLogLevel, IJobLogger, JobLogLevelNames} from 'shared/actions/jobs/JobState'
 import {IJobExecutor} from "job/JobExecutors"
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
+import JobProgressTracker from "job/JobProgressTracker"
 
 const log = getLogger(__filename)
 
@@ -34,16 +35,20 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	private executor:IJobExecutor
 	private logger:IJobLogger
 	private actions:JobActionFactory
-	
 	public detail:IJobStatusDetail
 	
+	/**
+	 * The progress tracker for the job, used to calculate progress, etc
+	 *
+	 * @type {JobProgressTracker}
+	 */
+	private progressTracker:JobProgressTracker
 
 	constructor(public service:JobManagerService,public job:IJob) {
 		super(JobHandlerEventType)
 		
-		
+		this.progressTracker = new JobProgressTracker(this)
 		this.actions = Container.get(JobActionFactory)
-		
 		this.detail = this.actions.state.getDetail(this.job.id)
 		this.executor = service.newExecutor(job)
 		this.logger = JobLogLevelNames.reduce((logger,level) => {
@@ -68,6 +73,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @returns {any|IJob}
 	 */
 	isCancelled() {
+		
 		const stateJob = this.actions
 			.state
 			.all
@@ -104,8 +110,24 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		// Finally fire changed event
 		this.fireEvent(JobHandlerEventType.Log)
 	}
-
-
+	
+	/**
+	 * Updates the progress and completion estimates
+	 *
+	 * @param progress
+	 * @param timeRemaining
+	 * @param epochETA
+	 */
+	setProgress(progress:number,timeRemaining:number,epochETA:number) {
+		assign(this.detail, {
+			progress,
+			timeRemaining,
+			epochETA
+		})
+		
+		this.actions.update(this.job,this.detail)
+	}
+	
 	/**
 	 * Start the handler
 	 *
@@ -127,13 +149,14 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param error
 	 * @returns {IJob}
 	 */
-	async setStatus(status:JobStatus, error:Error = null, progress = -1) {
+	async setStatus(status:JobStatus, error:Error = null) {
 		assign(this.job, {status})
 		assign(this.detail, {
 			status,
-			progress,
 			error
 		})
+		
+		
 		
 		this.actions.update(this.job,this.detail)
 		this.fireEvent(JobHandlerEventType.Changed)
@@ -157,7 +180,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			await this.setStatus(JobStatus.InProgress)
 			
 			// Get the result
-			job.result = await this.executor.execute(this,this.logger,job)
+			job.result = await this.executor.execute(this,this.logger,this.progressTracker,job)
 			
 			await this.setStatus(JobStatus.Completed)
 		} catch (err) {

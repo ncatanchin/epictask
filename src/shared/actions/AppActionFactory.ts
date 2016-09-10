@@ -73,7 +73,9 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 */
 	@ActionReducer()
 	updateSettings(newSettings:ISettings) {
-		return (state:AppState) => state.set('settings', newSettings)
+		return (state:AppState) => {
+			return state.set('settings', newSettings).set('user',newSettings.user)
+		}
 	}
 	
 	/**
@@ -84,7 +86,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 */
 	@ActionReducer()
 	setStateType(stateType:AppStateType) {
-		return (state:AppState) => state.merge({stateType})
+		return (state:AppState) => state.set('stateType',stateType)
 	}
 
 

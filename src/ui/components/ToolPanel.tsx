@@ -27,7 +27,7 @@ const
 const
 	// Gutter min dimension with content
 	gutterHorizDim = rem(2),
-	gutterVertDim = rem(2.4),
+	gutterVertDim = rem(2),
 	
 	// Vertical Gutter Style
 	gutterVertical = [
@@ -102,6 +102,7 @@ const
 				pointerEvents: 'auto',
 				textAlign: 'center',
 				padding: 0,
+				margin: 0,
 				
 				[Left]: [{width: gutterHorizDim}],
 				[Right]: [{width: gutterHorizDim}],
@@ -109,40 +110,44 @@ const
 				[Popup]: [{height: gutterVertDim}],
 				
 				button: [FlexAlignCenter,makeFlex(0,1,'auto'),{
-					padding: "0.5rem 0.3rem",
+					padding: 0,//"0.5rem 0.3rem",
 					
 					[Left]: [FillWidth,FlexColumnReverse,{
 						width: gutterHorizDim
 					}],
 					[Right]: [FillWidth,FlexColumn,{
 						width: gutterHorizDim,
+						padding: "0.5rem 0 0.5rem 0"
 					}],
 					[Popup]: [FillHeight,FlexRow,{
 						height: gutterHorizDim,
-						padding: "0.2rem 0.5rem",
+						padding: "0rem 0.5rem 0 0.5rem"
 					}],
 					[Bottom]: [FillHeight,FlexRow,{
 						height: gutterHorizDim,
-						padding: "0.2rem 0.5rem",
+						padding: "0rem 0.5rem 0 0.5rem"
 					}]
 				}],
 				
 				// Label
 				label: [makeFlex(0,1,'auto'),Ellipsis,{
-					padding: "0.5rem 0.3rem",
+					
 					fontSize: rem(0.9),
 					
 					[Left]: [{
+						padding: "0.5rem 0.3rem",
 						textOrientation: "sideways-right",
 						writingMode: "vertical-lr",
 						transform: "rotate(0.5turn)"
 					}],
 					
 					[Right]: [{
+						padding: "0.5rem 0.3rem",
 						textOrientation: "sideways-left",
 						writingMode: "vertical-lr",
 						transform: "rotate(-0.5turn)"
 					}],
+					[Bottom]: [{padding: "0rem 0.5rem",}]
 				}],
 				
 				// Icon

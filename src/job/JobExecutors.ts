@@ -1,5 +1,6 @@
 import {JobType, IJob, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {JobHandler} from "job/JobHandler"
+import JobProgressTracker from "job/JobProgressTracker"
 
 
 const log = getLogger(__filename)
@@ -28,7 +29,7 @@ export interface IJobExecutor {
 	 * @param handler
 	 * @param job
 	 */
-	execute(handler:JobHandler,logger:IJobLogger,job:IJob):Promise<any>
+	execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob):Promise<any>
 }
 
 /**

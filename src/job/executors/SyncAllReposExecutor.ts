@@ -6,6 +6,7 @@ import {JobExecutor} from 'job/JobDecorations'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {IJob, JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJobExecutor} from "job/JobExecutors"
+import JobProgressTracker from "job/JobProgressTracker"
 
 
 
@@ -25,7 +26,7 @@ export class SyncAllReposExecutor implements IJobExecutor {
 	
 	
 	@Benchmarker
-	async execute(handler:JobHandler,logger:IJobLogger, job:IJob) {
+	async execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker, job:IJob) {
 		log.info(`Starting to sync all repos`)
 
 		const stores = Container.get(Stores)

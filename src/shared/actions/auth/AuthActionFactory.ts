@@ -13,7 +13,7 @@ import {Provided} from 'shared/util/ProxyProvided'
 const log = getLogger(__filename)
 
 @Provided
-export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
+export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 
 	appActions:AppActionFactory
 	toaster:Toaster
@@ -41,22 +41,29 @@ export class AuthActionFactory extends ActionFactory<any,AuthMessage> {
 	}
 
 	@ActionReducer()
-	setToken(token:string) {
+	private setTokenInternal(token) {
 		return (state:AuthState) => {
-			if (ProcessConfig.isType(ProcessType.StateServer)) {
-				getSettings().token = token
-				this.makeClient()
-			}
-
 			state = state.merge({
 				token,
 				authenticating:false,
 				authenticated: !_.isNil(token),
 				error:null
 			}) as any
-
-
+			
+			
 			return state
+		}
+	}
+	
+	@Action()
+	setToken(token:string) {
+		return (dispatch,getState) => {
+			
+			
+			getSettings().token = token
+			this.makeClient()
+		
+			this.setToken(token)
 
 		}
 

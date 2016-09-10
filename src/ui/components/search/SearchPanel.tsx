@@ -91,9 +91,9 @@ function makeMapStateToProps() {
  * @constructor
  **/
 
+@HotKeyContext()
 @CSSModules(styles)
 @connect(makeMapStateToProps, null, null, {withRef: true})
-@HotKeyContext()
 @PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 

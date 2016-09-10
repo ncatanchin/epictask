@@ -19,6 +19,7 @@ import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IJobExecutor} from "job/JobExecutors"
+import JobProgressTracker from "job/JobProgressTracker"
 
 
 
@@ -42,7 +43,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	private repo:Repo
 	private job:IJob
 	private logger:IJobLogger
-
+	private progressTracker:JobProgressTracker
 	
 	async reloadIssues() {
 		// Reload issues first
@@ -115,9 +116,14 @@ export class RepoSyncExecutor implements IJobExecutor {
 			return
 		}
 		*/
+		
+		this.progressTracker.increment(3)
+		
 		const users:User[] = await this.client.repoAssignees(repo,{
 			onDataCallback
 		})
+		
+		this.progressTracker.completed()
 		
 		if (this.isDryRun())
 			return users
@@ -144,12 +150,13 @@ export class RepoSyncExecutor implements IJobExecutor {
 		})
 
 		await Promise.all(updatePromises)
+		this.progressTracker.completed()
 		users.forEach(user => user.addRepoId(repo.id))
 
 
 		log.info(`Total collabs for ${repo.full_name} is ${users.length}`)
 		await chunkSave(users,userRepo)
-
+		this.progressTracker.completed()
 		log.info(`Updated ${users.length} for repo ${repo.full_name}`)
 
 		return users
@@ -166,6 +173,11 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncIssues(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Issue> = null) {
+		
+		this.progressTracker.increment(1)
+		
+		let pagesSet = false
+		
 		const
 			issueSavePromises:Promise<any>[] = [],
 			
@@ -180,6 +192,8 @@ export class RepoSyncExecutor implements IJobExecutor {
 				
 				if (issues.length)
 					await chunkSave(issues,stores.issue)
+				
+				this.progressTracker.completed()
 			},
 			
 			// Get all issues
@@ -187,7 +201,17 @@ export class RepoSyncExecutor implements IJobExecutor {
 				
 				// On each data call back add a promise to the list
 				onDataCallback: (pageNumber:number,totalPages:number,items:Issue[]) => {
-					this.logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
+					
+					// Update Progress
+					if (!pagesSet) {
+						this.progressTracker.increment((totalPages * 2))
+						this.logger.info(`Getting ${totalPages} issue pages`)
+					}
+					pagesSet = true
+					this.progressTracker.completed()
+					
+					// Now handle
+					log.info(`Received issues, page ${pageNumber} of ${totalPages}`)
 					if (this.isDryRun()) {
 						log.info(`In dry run, skipping save`)
 						return
@@ -220,9 +244,12 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncLabels(stores,repo,onDataCallback:OnDataCallback<Label> = null) {
+		this.progressTracker.increment(2)
 		const labels = await this.client.repoLabels(repo,{
 			onDataCallback
 		})
+		
+		this.progressTracker.completed()
 		
 		if (this.isDryRun())
 			return labels
@@ -233,9 +260,10 @@ export class RepoSyncExecutor implements IJobExecutor {
 			if (existing)
 				assign(label,existing,label)
 		}
-
+		
 
 		await chunkSave(labels,stores.label)
+		this.progressTracker.completed()
 		return labels
 	}
 
@@ -248,6 +276,9 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncMilestones(stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
+		
+		this.progressTracker.increment(2)
+		
 		const milestones = await this.client.repoMilestones(repo,{
 			onDataCallback,
 			params: {
@@ -255,6 +286,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 			}
 		})
 		
+		this.progressTracker.completed()
 		if (this.isDryRun())
 			return milestones
 		
@@ -268,6 +300,9 @@ export class RepoSyncExecutor implements IJobExecutor {
 
 		//log.debug(`Loaded milestones, time to persist`, milestones)
 		await chunkSave(milestones,stores.milestone)
+		
+		this.progressTracker.completed()
+		
 		return milestones
 	}
 
@@ -281,19 +316,23 @@ export class RepoSyncExecutor implements IJobExecutor {
 	
 	@Benchmarker
 	async syncComments(stores,repo,onDataCallback:OnDataCallback<Comment> = null) {
+		this.progressTracker.increment(1)
+		
+		let pagesSet = false
 		const
 			commentSavePromises = [],
 			
 			// Save a batch of images
 			saveComments = async (comments:Comment[],pageNumber:number,totalPages:number) => {
 				
-				this.logger.info(`Received comments page ${pageNumber} or ${totalPages}`)
+				
+				//this.logger.info(`Received comments page ${pageNumber} or ${totalPages}`)
 				
 				for (let comment of comments) {
 					if (!comment.issue_url) {
 						this.logger.error(`Comment is missing issue url: ${comment.id}`)
 						log.error(`Comment is missing issue url`, comment)
-						return
+						continue
 					}
 					
 					const existing = await stores.milestone.get(comment.id)
@@ -308,15 +347,25 @@ export class RepoSyncExecutor implements IJobExecutor {
 					})
 					
 					this.checkReloadActivity(comment)
+					
 				}
 				
 				if (comments.length)
 					await chunkSave(comments,stores.comment)
+				
+				this.progressTracker.completed()
 			},
 			comments = await this.client.repoComments(repo, {
 					// On each data call back add a promise to the list
 					onDataCallback: (pageNumber:number,totalPages:number,items:Comment[]) => {
-						this.logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
+						if (!pagesSet) {
+							log.info(`Getting ${totalPages} comment pages`)
+							this.progressTracker.increment(totalPages * 2)
+						}
+						pagesSet = true
+						this.progressTracker.completed()
+						
+						log.info(`Received comments, page ${pageNumber} of ${totalPages}`)
 						if (this.isDryRun()) {
 							log.info(`In dry run, skipping save`)
 							return
@@ -335,7 +384,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 		if (this.isDryRun())
 			return comments
 		
-		this.logger.info(`Saving ${comments.length} comments`)
+		log.info(`Saving ${comments.length} comments`)
 		await Promise.all(commentSavePromises)
 		this.logger.info(`Saved ${comments.length} comments`)
 		
@@ -349,15 +398,17 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param handler
 	 * @param logger
+	 * @param progressTracker
 	 * @param job
 	 */
 	@Benchmarker
-	async execute(handler:JobHandler,logger:IJobLogger,job:IJob) {
+	async execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob) {
 		this.logger = logger
+		this.progressTracker = progressTracker
 		
 		if (!getSettings().token) {
-			log.warn(`User is not authenticated, can not sync`)
-			return
+			this.logger.error(`User is not authenticated, can not sync`)
+			throw new Error(`You are not authenticated, can not sync`)
 		}
 		
 		// Assign job & props
@@ -410,12 +461,13 @@ export class RepoSyncExecutor implements IJobExecutor {
 			// If the current repo is not enabled then return
 			const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
 			
-			if (!enabledRepoIds.includes(repo.id)) return
+			if (enabledRepoIds.includes(repo.id)) {
+				// TODO: Work this out
+				await this.reloadIssues()
+			}
 			
-			await this.reloadIssues()
-
 			log.info('Now syncing comments')
-			await Promise.delay(1)
+			await Promise.delay(1000)
 			await this.syncComments(stores,repo)
 
 			

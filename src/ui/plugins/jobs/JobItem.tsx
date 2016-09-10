@@ -1,5 +1,6 @@
 // Imports
 import * as React from 'react'
+import * as moment from 'moment'
 import filterProps from 'react-valid-props'
 import {PureRender, Icon} from 'ui/components/common'
 
@@ -184,7 +185,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 					}
 				</div>
 				<div style={[styles.label.time]}>
-					{Math.ceil((Date.now() - detail.createdAt) / 1000)}s
+					{!detail.epochETA ? 'N/A' : moment(detail.epochETA).fromNow()}
 				</div>
 				
 				{/*<TimeAgo timestamp={recentDetail.updatedAt} />*/}

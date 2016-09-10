@@ -1,4 +1,5 @@
-const {List,Record,Map} = Immutable
+
+const {Record} = Immutable
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'
 
@@ -18,7 +19,7 @@ export class AuthState extends AuthStateRecord {
 		if (o && o instanceof AuthState)
 			return o
 		
-		return new AuthState(o)
+		return new AuthState(assign({},o))
 	}
 
 	authenticating:boolean

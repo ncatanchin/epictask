@@ -11,6 +11,7 @@ import {getSettings} from 'shared/Settings'
 import {IJobExecutor} from "job/JobExecutors"
 import {JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJob} from "shared/actions/jobs/JobTypes"
+import JobProgressTracker from "job/JobProgressTracker"
 
 
 const log = getLogger(__filename)
@@ -43,7 +44,7 @@ export class GetUserReposExecutor implements IJobExecutor {
 	}
 
 	@Benchmarker
-	async execute(handler:JobHandler,logger:IJobLogger,job:IJob) {
+	async execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob) {
 		
 		if (!getSettings().token) {
 			log.info(`User is not authenticated, can not sync`)

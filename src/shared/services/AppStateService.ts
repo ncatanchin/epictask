@@ -7,6 +7,7 @@ import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {getSettings} from 'shared/Settings'
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {ProcessType} from "shared/ProcessType"
+import {AppStoreService} from "shared/services/AppStoreService"
 
 const log = getLogger(__filename)
 
@@ -28,7 +29,7 @@ export default class AppStateService extends BaseService {
 	 * @returns {DatabaseClientService[]}
 	 */
 	dependencies(): IServiceConstructor[] {
-		return [DatabaseClientService]
+		return [DatabaseClientService,AppStoreService]
 	}
 	
 
@@ -61,13 +62,17 @@ export default class AppStateService extends BaseService {
 	}
 
 	async start():Promise<this> {
+		
 		this.unsubscribe = this.store
 			.getReduxStore()
 			.subscribe(this.checkStateType)
 
 		// If the state type has not yet been set then set it
-		if (!this.appActions.state.stateType || !getSettings().token) {
-			const startingStateType = ((getSettings().token) ? AppStateType.AuthVerify : AppStateType.AuthLogin)
+		const token = _.get(this.appActions.state,'settings.token',getSettings().token)
+		if (!this.appActions.state.stateType || !token) {
+			
+			const startingStateType = ((token) ? AppStateType.AuthVerify : AppStateType.AuthLogin)
+			log.info(`Starting app state based on token (${token})`,startingStateType)
 			this.appActions.setStateType(startingStateType)
 		}
 
@@ -91,7 +96,15 @@ export default class AppStateService extends BaseService {
 	checkStateType = async () => {
 
 		const newStateType = this.appActions.state.stateType
-
+		
+		const token = _.get(this.appActions.state,'settings.token',getSettings().token)
+		log.info(`Checking auth token: (${token},${this.appActions.state.stateType})`)
+		if (!token && newStateType !== AppStateType.AuthLogin) {
+			log.info(`Sending to LOGIN`)
+			return this.appActions.setStateType(AppStateType.AuthLogin)
+		} else if (token && newStateType === AppStateType.AuthLogin) {
+			return this.appActions.setStateType(AppStateType.AuthVerify)
+		}
 		if (!newStateType || this.stateType === newStateType)
 			return
 

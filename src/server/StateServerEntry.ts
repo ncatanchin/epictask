@@ -97,7 +97,7 @@ export class StateServerEntry extends WorkerEntry {
 			appActions = Container.get(AppActionFactory),
 			Settings = require('server/SettingsFile').Settings as SettingsFile
 		
-		//appActions.updateSettings(Settings.toJSON())
+		appActions.updateSettings(Settings.toJSON())
 		//appActions.setUser(Settings.user)
 		
 		// Configure IPC Server
@@ -129,6 +129,8 @@ export class StateServerEntry extends WorkerEntry {
 			})
 			
 			log.info('Server Started')
+			
+			
 			startDeferred.resolve()
 		})
 		
