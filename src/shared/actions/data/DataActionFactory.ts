@@ -11,22 +11,20 @@ import {Benchmark} from 'shared/util/Benchmark'
 import {Provided} from 'shared/util/ProxyProvided'
 
 
-const Benchmarker = Benchmark(__filename)
+const
+	log = getLogger(__filename),
+	Benchmarker = Benchmark(__filename),
+	uuid = require('node-uuid'),
+	modelPromises:{[key:string]:Promise<any>} = {}
 
-const uuid = require('node-uuid')
-
-const modelPromises:{[key:string]:Promise<any>} = {}
-
-const log = getLogger(__filename)
 
 
 /**
  * Search Action Factory
  */
+
 @Provided
 export class DataActionFactory extends ActionFactory<DataState,DataMessage> {
-
-	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 
 	constructor() {
 		super(DataState)

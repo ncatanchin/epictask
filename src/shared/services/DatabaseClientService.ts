@@ -63,8 +63,8 @@ class DatabaseProxy {
 	ProcessType.StateServer,
 	ProcessType.JobServer,
 	ProcessType.JobWorker,
-	ProcessType.Main,
-	ProcessType.UI
+	ProcessType.Main//,
+	//ProcessType.UI
 )
 export class DatabaseClientService extends BaseService {
 

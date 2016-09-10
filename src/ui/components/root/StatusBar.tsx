@@ -14,6 +14,8 @@ import {uiStateSelector} from "shared/actions/ui/UISelectors"
 import {ToastMessage} from 'ui/components/ToastMessage'
 //import {JobMonitor} from "ui/plugins/jobs/JobMonitor"
 import {JobItem} from "../../plugins/jobs/JobItem"
+import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
+import {BuiltInTools, getBuiltInToolId} from "shared/Constants"
 
 // Constants
 const log = getLogger(__filename)
@@ -121,7 +123,11 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			
 			{/* Job Status */}
 			{detail && <div style={[styles.status]}>
-				<JobItem styles={{root:styles.status.item}} job={job} detail={detail} />
+				<JobItem onClick={() => Container.get(UIActionFactory)
+									.toggleTool(getBuiltInToolId(BuiltInTools.JobMonitor))}
+				         styles={{root:styles.status.item}}
+				         job={job}
+				         detail={detail} />
 			</div>}
 				
 			

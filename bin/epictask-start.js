@@ -1,4 +1,5 @@
-
+// require('v8-debug')
+// require('v8-profiler')
 // const electron = require('electron')
 // const proc = require('child_process')
 //

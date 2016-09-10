@@ -18,6 +18,10 @@ do
 	fi
 done
 
+#
+#node_modules/.bin/node-pre-gyp --target=${ELECTRON_VERSION} --runtime=electron --fallback-to-build --directory node_modules/v8-debug/ --dist-url=https://atom.io/download/atom-shell reinstall
+#node_modules/.bin/node-pre-gyp --target=${ELECTRON_VERSION} --runtime=electron --fallback-to-build --directory node_modules/v8-profiler/ --dist-url=https://atom.io/download/atom-shell reinstall
+
 if [ "${BUILT}" != "1" ]; then
 	echo "No leveldown found"
 	exit 1

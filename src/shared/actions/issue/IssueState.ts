@@ -30,7 +30,6 @@ export type TIssueEditInlineConfig = {
 
 export const IssueStateRecord = Record({
 	issueIds:[],
-	internalIssues:[],
 	commentIds:[],
 	selectedIssueIds:[],
 	selectedIssueId:null,
@@ -68,11 +67,8 @@ export class IssueState extends IssueStateRecord {
 			return o
 		
 		return new IssueState(o)
-		// return new IssueState(Object.assign({},o,{
-		// 	internalIssues: List(o.issues)
-		// }))
 	}
-	//internalIssues:Issue[]
+	
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
 	issueSaving:boolean

@@ -253,8 +253,8 @@ if (isDev) {
 	_.merge(config, {
 		
 		//In development, use inline source maps
-		devtool: 'inline-source-map',
-		//devtool: isDev ? 'eval-cheap-module-source-map' : 'source-map',
+		//devtool: '@inline-source-map',
+		//devtool: 'cheap-module-inline-source-map',
 		
 		// In development specify absolute path - better debugger support
 		output:  {
