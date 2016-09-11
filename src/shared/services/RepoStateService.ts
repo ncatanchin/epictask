@@ -1,16 +1,14 @@
 import {ObservableStore} from 'typedux'
 import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {issueModelsSelector} from 'shared/actions/data/DataSelectors'
-
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {enabledReposSelector,enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {selectedIssueIdsSelector} from 'shared/actions/issue/IssueSelectors'
 import ValueCache from 'shared/util/ValueCache'
 import {ProcessType} from "shared/ProcessType"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
+import {AppStoreService} from "shared/services/AppStoreService"
+import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 
 const log = getLogger(__filename)
 
@@ -29,7 +27,7 @@ export class RepoStateService extends BaseService {
 	 * @returns {DatabaseClientService[]}
 	 */
 	dependencies(): IServiceConstructor[] {
-		return [DatabaseClientService]
+		return [DatabaseClientService,AppStoreService]
 	}
 	
 	
@@ -51,6 +49,8 @@ export class RepoStateService extends BaseService {
 
 	async start():Promise<this> {
 		await super.start()
+		
+		this.repoActions.loadAvailableRepoIds()
 		// Issue selected handler
 		// this.selectedIssuesChanged = _.debounce((selectedIssues) => {
 		// 	if (selectedIssues && selectedIssues.size === 1) {
@@ -66,19 +66,19 @@ export class RepoStateService extends BaseService {
 		// // Setup watches for both
 
 		const enabledReposChangedSelector = createDeepEqualSelector(
-			enabledReposSelector,
+			enabledRepoIdsSelector,
 			this.enabledReposChanged
 		)
-
-		const selectedIssueIdsChangedSelector = createDeepEqualSelector(
-			selectedIssueIdsSelector,
-			this.selectedIssueIdsChanged
-		)
-
+		//
+		// const selectedIssueIdsChangedSelector = createDeepEqualSelector(
+		// 	selectedIssueIdsSelector,
+		// 	this.selectedIssueIdsChanged
+		// )
+		//
 		this.unsubscribe = this.store.getReduxStore().subscribe(() => {
 			const state = this.store.getState()
 			enabledReposChangedSelector(state)
-			selectedIssueIdsChangedSelector(state)
+			//selectedIssueIdsChangedSelector(state)
 		})
 
 		if (module.hot) {
@@ -126,24 +126,26 @@ export class RepoStateService extends BaseService {
 	 * @param availableRepos
 	 */
 	enabledReposChanged = async () => {
-		const enabledRepoIds = enabledRepoIdsSelector(this.store.getState())
-		const issueModels = issueModelsSelector(this.store.getState())
-		const selectedIssueIds = selectedIssueIdsSelector(this.store.getState())
-		let newSelectedIssueIds = await selectedIssueIds
-			.filter((issueId) => {
-				let issue = issueModels.get(`${issueId}`)
-
-				const issueExists = !_.isNil(issue)
-				const repoIdEnabled = issueExists && enabledRepoIds.includes(issue.repoId)
-				log.info('Selected issue id filter',issueExists,repoIdEnabled)
-				return issueExists && repoIdEnabled
-			})
-
-		if (!_.isEqual(selectedIssueIds,newSelectedIssueIds))
-			this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+		//const enabledRepoIds = enabledRepoIdsSelector(this.store.getState())
 		
-		
-		this.issueActions.loadIssues()
+		// Container.get(IssueActionFactory).loadIssueIds()
+		//const issueModels = issueModelsSelector(this.store.getState())
+		// const selectedIssueIds = selectedIssueIdsSelector(this.store.getState())
+		// let newSelectedIssueIds = await selectedIssueIds
+		// 	.filter((issueId) => {
+		// 		let issue = issueModels.get(`${issueId}`)
+		//
+		// 		const issueExists = !_.isNil(issue)
+		// 		const repoIdEnabled = issueExists && enabledRepoIds.includes(issue.repoId)
+		// 		log.info('Selected issue id filter',issueExists,repoIdEnabled)
+		// 		return issueExists && repoIdEnabled
+		// 	})
+		//
+		// if (!_.isEqual(selectedIssueIds,newSelectedIssueIds))
+		// 	this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+		//
+		//
+		//this.issueActions.loadIssues()
 	}
 }
 

@@ -16,8 +16,21 @@ const deepTrace = (reason) => {
 
 	if (reason instanceof Error || reason.stack) {
 		StackTrace.fromError(reason)
-			.then(updatedErrorStack => {
-				log.error('error deep trace', updatedErrorStack)
+			.then((updatedErrorStack) => {
+				log.error(
+					'Deep trace for',
+					reason,
+					'\n',
+					updatedErrorStack.map(frame => {
+						if (frame.fileName.startsWith('/'))
+							frame.setFileName(`file://${frame.fileName}`)
+						
+						return `\t at ${frame.toString()}`
+					}).join('\n')
+				)
+				// updatedErrorStack.forEach(frame => {
+				// 	log.error(frame)
+				// })
 			})
 	} else {
 		StackTrace.get()

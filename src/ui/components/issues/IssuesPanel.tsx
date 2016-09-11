@@ -6,32 +6,27 @@
 import {Map} from 'immutable'
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
+import {createStructuredSelector} from 'reselect'
 import {Style} from 'radium'
 import * as SplitPane from 'react-split-pane'
-import {Checkbox, MenuItem, IconMenu, IconButton} from 'material-ui'
-
 
 import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Issue} from 'shared/models'
-import {createStructuredSelector, createSelector} from 'reselect'
+
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {
-		issuesSelector,
-		issueSortAndFilterSelector,
-		labelsSelector,
-		milestonesSelector,
-		selectedIssueIdsSelector, issuesGroupedSelector, TIssueSortAndFilter, selectedIssueSelector, issueStateSelector
+	issueSortAndFilterSelector,
+	selectedIssueIdsSelector,
+	issueStateSelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import * as KeyMaps from 'shared/KeyMaps'
 import {CommonKeys} from 'shared/KeyMaps'
-import {Themed, ThemedStyles} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 import IssueItem from 'ui/components/issues/IssueItem'
 import {HotKeys} from 'react-hotkeys'
 import {Milestone} from 'shared/models/Milestone'
@@ -42,22 +37,21 @@ import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
-import {TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
+import { TIssueEditInlineConfig, TIssueSortAndFilter } from 'shared/actions/issue/IssueState'
 import ValueCache from 'shared/util/ValueCache'
-import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
+import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
+import { DataComponent, MapProvider } from "ui/components/data/DataComponent"
+import { addErrorMessage } from "shared/Toaster"
 
 
-// Non-typed Components
-const tinycolor = require('tinycolor2')
-const ReactList = require('react-list')
-
-// Constants
-const log = getLogger(__filename)
-const repoActions = new RepoActionFactory()
-
-const NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
+// Constants & Non-typed Components
+const
+	ReactList = require('react-list'),
+	log = getLogger(__filename),
+	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
 
+//region STYLES
 const baseStyles = createStyles({
 	panel: [Fill, {}],
 	panelSplitPane: [Fill, {
@@ -86,9 +80,6 @@ const baseStyles = createStyles({
 	issueGroupHeader: [FlexRowCenter, FlexAuto, FillWidth, {
 		padding: '1rem 0.5rem',
 		boxShadow: 'inset 0.1rem 0.1rem 0.5rem rgba(0,0,0,0.4)',
-		// color: rgba(255,255,255,0.4)"
-		//boxShadow: "0 -2px  rgba(0,0,0,0.6)",
-		
 		spacer: [FlexScale],
 		control: {
 			padding: '0 1rem',
@@ -202,6 +193,7 @@ const baseStyles = createStyles({
 	
 	
 })
+//endregion
 
 
 /**
@@ -256,6 +248,7 @@ function IssueGroupHeader({styles, onClick, issueGroup = {} as IIssueGroup}) {
 export interface IIssuesPanelProps {
 	theme?: any
 	styles?: any
+	issueIds?: number
 	issues?: Issue[]
 	hasAvailableRepos?: boolean
 	issuesGrouped?: IIssueGroup[]
@@ -285,24 +278,29 @@ export interface IIssuesPanelState {
  * @constructor
  **/
 
-@HotKeyContext()
 @connect(createStructuredSelector({
-	hasAvailableRepos: availableRepoCountSelector,
-	issues: issuesSelector,
-	issuesGrouped: issuesGroupedSelector,
+	enabledRepoIds: enabledRepoIdsSelector,
 	issueSortAndFilter: issueSortAndFilterSelector,
-	labels: labelsSelector,
-	milestones: milestonesSelector,
-	selectedIssueIds: selectedIssueIdsSelector,
-	selectedIssue: selectedIssueSelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
 	saving: (state) => issueStateSelector(state).issueSaving
 }, createDeepEqualSelector))
-@ThemedStyles(baseStyles, 'issuesPanel')
 
+
+// Map a custom provider to enabledRepoId and filter/sort changes
+@DataComponent(
+	MapProvider(['issueSortAndFilter','enabledRepoIds'],async (props) =>
+		Container.get(IssueActionFactory).getIssues(props.issueSortAndFilter,props.enabledRepoIds)
+	,Issue,'id',[])
+)
+@HotKeyContext()
+@ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
+	
+	static defaultProps = {
+		issues: []
+	}
 	
 	uiActions: UIActionFactory = Container.get(UIActionFactory)
 	issueActions: IssueActionFactory = Container.get(IssueActionFactory)
@@ -408,7 +406,25 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveUpSelect]: this.moveUp,
 		[CommonKeys.MoveDownSelect]: this.moveDown,
 		[CommonKeys.Enter]: this.onEnter,
-		[CommonKeys.Delete]: this.onDelete
+		[CommonKeys.Delete]: this.onDelete,
+		[CommonKeys.SetAssignee]: () => {
+			log.info('Patch assignee')
+			Container.get(IssueActionFactory).patchIssuesAssignee()
+		},
+		[CommonKeys.SetMilestone]: () => {
+			log.info('Patch milestone')
+			Container.get(IssueActionFactory).patchIssuesMilestone()
+		},
+		[CommonKeys.AddLabels]: () => {
+			log.info('Patch labels')
+			Container.get(IssueActionFactory).patchIssuesLabel()
+		},
+		[CommonKeys.CreateComment]: () => {
+			log.info('Create Comment')
+			
+			
+			Container.get(IssueActionFactory).newComment(this.selectedIssueIds,this.props.issues)
+		}
 	}
 	
 	
@@ -696,9 +712,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					editInlineConfig
 			} = this.props
 			
-			const {selectedIssueIds} = this
-			
-			const {groupBy} = issueSortAndFilter.issueSort
+			const
+				{selectedIssueIds} = this,
+				{groupBy} = issueSortAndFilter.issueSort
 			
 			let showInline = false
 			
@@ -722,11 +738,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					// Issue item
 					<IssueItem key={key}
 					           styles={styles}
+					           issues={issues}
 					           index={index}
-					           selectedIssueIds={editingInline ?
-			                    [] :
-			                    selectedIssueIds}
-					           issues={issueGroup ? issueGroup.issues : issues}
 					           groupBy={groupBy}
 					           onSelected={this.onIssueSelected}/>
 			
@@ -783,22 +796,17 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	render() {
 		const
 				{
-						labels,
-						milestones,
 						theme,
 						styles,
-						issues,
+						issues = [],
 						issuesGrouped,
 						issueSortAndFilter,
-						editingInline,
-						editInlineConfig,
-						hasAvailableRepos
+						editingInline
 				} = this.props,
 				{palette} = theme,
-				{groupBy} = issueSortAndFilter.issueSort
-		
-		const
+				{groupBy} = issueSortAndFilter.issueSort,
 				{selectedIssueIds} = this,
+			
 				validSelectedIssueIds = selectedIssueIds
 						.filter(issueId => !_.isNil(issues.find(item => item.id === issueId))),
 				
@@ -818,7 +826,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			       rules={styles.panelSplitPane}/>
 			
 			
-			{hasAvailableRepos &&
+			{issues && issues.length &&
 			<SplitPane split="vertical"
 			           allowResize={allowResize}
 			           minSize={listMinWidth}
@@ -850,7 +858,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				</HotKeys>
 				
 				{/* ISSUE DETAIL PANEL */}
-				<IssueDetailPanel />
+				<IssueDetailPanel issues={issues}/>
 			
 			</SplitPane>
 			}

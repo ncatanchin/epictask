@@ -17,7 +17,6 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 import {getStoreState} from 'shared/store/AppStore'
 import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
-import {selectedIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
 
@@ -47,12 +46,14 @@ export class RepoSyncExecutor implements IJobExecutor {
 	
 	async reloadIssues() {
 		// Reload issues first
-		await Container.get(IssueActionFactory).loadIssues()
+		await Container.get(IssueActionFactory).loadIssueIds()
 	}
 	
-	checkReloadActivity = (comment:Comment) => {
+	checkReloadActivity = async (comment:Comment) => {
 		// Reload current issue if loaded
-		const issue = selectedIssueSelector(getStoreState())
+		const
+			issue = await Container.get(IssueActionFactory).getSelectedIssue()
+		
 		if (
 			!issue ||
 			!comment ||
@@ -346,7 +347,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 						parentRefId: Comment.makeParentRefId(repo.id,comment.issueNumber)
 					})
 					
-					this.checkReloadActivity(comment)
+					await this.checkReloadActivity(comment)
 					
 				}
 				

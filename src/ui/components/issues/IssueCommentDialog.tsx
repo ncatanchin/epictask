@@ -5,8 +5,7 @@
 // Imports
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {PureRender, Button} from 'ui/components/common'
+import {Button} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 
@@ -21,7 +20,10 @@ import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {Comment} from 'shared/models/Comment'
 import {Issue} from 'shared/models/Issue'
 
-import {selectedIssueSelector, issueStateSelector, editingCommentSelector} from 'shared/actions/issue/IssueSelectors'
+import {
+	issueStateSelector,
+	editCommentRequestSelector
+} from 'shared/actions/issue/IssueSelectors'
 
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {Dialogs} from 'shared/Constants'
@@ -30,6 +32,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {cloneObject} from 'shared/util/ObjectUtil'
+import { TEditCommentRequest } from "shared/actions/issue/IssueState"
 
 
 // Constants
@@ -83,8 +86,7 @@ export interface IIssueCommentDialogProps extends React.HTMLAttributes {
 	open?: boolean
 	saving?: boolean
 	savingError?: Error
-	issue?: Issue
-	editingComment?:Comment
+	editCommentRequest?:TEditCommentRequest
 }
 
 /**
@@ -101,8 +103,7 @@ export interface IIssueCommentDialogState {
  * @constructor
  **/
 @connect(createStructuredSelector({
-	issue: selectedIssueSelector,
-	editingComment: editingCommentSelector,
+	editCommentRequest: editCommentRequestSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError,
 	open: (state) => uiStateSelector(state).dialogs
@@ -144,13 +145,13 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	onSave = (event = null) => {
 
 		const
-			{issue} = this.props,
+			issue = _.get(this.props.editCommentRequest,'issue') as Issue,
 			{comment} = this.state
 		
 		log.info('Adding comment to issue', comment,issue)
 
 		!this.props.saving &&
-			this.issueActions.commentSave(comment)
+			this.issueActions.commentSave({issue,comment})
 	}
 	
 	/**
@@ -181,10 +182,11 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 * @param props
 	 */
 	updateState(props:IIssueCommentDialogProps) {
+		if (!props.editCommentRequest)
+			return
 		
 		const
-			comment = props.editingComment,
-			// commentId = _.get(comment,'id'),
+			{comment} = props.editCommentRequest,
 			currentComment = _.get(this.state,'comment') as Comment
 		
 		if (this.state && (!comment || (currentComment && currentComment.issueNumber === comment.issueNumber)))
@@ -211,18 +213,19 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	}
 	
 	render() {
+		if (!this.props.editCommentRequest)
+			return React.DOM.noscript()
+		
 		const
 			{
 				theme,
-				issue,
+				editCommentRequest,
 				open,
 				styles,
-				saving,
-				saveError
+				saving
 			} = this.props,
-			{
-				comment
-			} = this.state
+			{	issue } = editCommentRequest,
+			{ comment } = this.state
 			
 
 		
@@ -274,7 +277,9 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 						      ]}>
 							
 							<SimpleMDE onChange={this.onMarkdownChange}
-							           style={{maxHeight: 500}}
+							           style={{
+							           	maxHeight: 500
+							           }}
 							           options={{
 									            autoDownloadFontAwesome: false,
 									            spellChecker: false,
@@ -285,9 +290,9 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 
 						{/* Saving progress indicator */}
 						{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-							<CircularProgress
-								color={theme.progressIndicatorColor}
-								size={1}/>
+							{/*<CircularProgress*/}
+								{/*color={theme.progressIndicatorColor}*/}
+								{/*size={1}/>*/}
 						</div>}
 					</HotKeys>
 				</MuiThemeProvider>

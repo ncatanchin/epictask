@@ -10,12 +10,15 @@ const log = getLogger(__filename)
 const path = require('path')
 const {BrowserWindow,Menu,ipcMain} = Electron
 
+
+//const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app',require('!!file!pug-html!assets/templates/MainEntry.jade'))
 const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app/main-entry.html')
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
-let menu
-let browserWindow:Electron.BrowserWindow = null
-let firstLoad = true
+let
+	menu,
+	browserWindow:Electron.BrowserWindow = null,
+	firstLoad = true
 
 ipcMain.on(AuthKey,(event,arg) => {
 	log.info('Got auth request',event,arg)

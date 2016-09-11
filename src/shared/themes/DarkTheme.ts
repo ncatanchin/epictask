@@ -10,9 +10,8 @@ import {ToolPanelLocation} from "shared/tools/ToolTypes"
 const
 	tc = require('tinycolor2'),
 	{colors:c} = Styles,
-	baseTheme = _.cloneDeep(Styles.darkBaseTheme)
-
-const
+	baseTheme = _.cloneDeep(Styles.darkBaseTheme),
+	
 	navBarHeight = 50,
 	windowControlDim = navBarHeight / 5,
 
@@ -31,12 +30,10 @@ const
 		Palettes.green,
 		['A700', 'A400', 'A200', 'A100'],
 		Palettes.black,
-		
 		true
 	),
 	
-	
-
+	// PALETTE
 	{
 		primary,
 		secondary,
@@ -48,32 +45,34 @@ const
 		alternateText
 	} = theme,
 	
-	// FONT STYLES
+	// FONTS
 	fontFamilyRegular = 'AvenirNext',
 	fontFamilyDetail = 'fira-code',
 	
 	//const fontFamily = 'Roboto,sans-serif'
 	fontFamily = fontFamilyRegular,
 	fontWeight = 400,
-	fontSize = 10
-
-const InputStyle = {
-	color: text.primary,
-	backgroundColor: primary.hue2,
-
-	hint: {
-		zIndex: 5,
-		textTransform: 'uppercase',
-		color: primary.hue4,
-		backgroundColor: 'transparent'
-	}
-}
+	fontSize = 10,
+	
+	// INPUT
+	InputStyle = {
+		color: text.primary,
+		backgroundColor: primary.hue2,
+	
+		hint: {
+			zIndex: 5,
+			textTransform: 'uppercase',
+			color: primary.hue4,
+			backgroundColor: 'transparent'
+		}
+	},
+	
+	// STATUS BAR HEIGHT
+	statusBarHeight = 2.6
 
 function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
 }
-
-const statusBarHeight = 2.6
 
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	name: 'DarkTheme',

@@ -68,32 +68,19 @@ const
 		HotModuleReplacementPlugin
 	} = webpack,
 	
-	// Import HappyPack
-	HappyPack = require('happypack'),
+	
 	
 	// Enable flag for using happy pack
 	happyEnabled = false,
 	
-	// Generates externals config
+	// EXTERNALS / makes all node_modules external
 	nodeExternals = require('webpack-node-externals')
 	
 	
 
 log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
 
-/**
- * Create an alias to the libs folder
- *
- * @param name
- * @param libPath
- * @returns {{}}
- */
-function libAlias(name, libPath) {
-	return {
-		[name]: path.resolve(baseDir, `libs/${libPath}`)
-	}
-}
-
+// TypeScript SRC ALIAS
 function tsAlias(tsFilename) {
 	return path.resolve(srcRootDir, tsFilename)
 }
@@ -101,7 +88,7 @@ function tsAlias(tsFilename) {
 
 
 const
-	happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
+	
 	
 	// Create loaders
 	loaders = require('./parts/loaders'),
@@ -112,7 +99,13 @@ const
 		"LoaderEntry": [`./LoaderEntry`]
 	},
 	
-	// Add HappyPack plugins if enabled
+	// Import HappyPack
+	HappyPack = require('happypack'),
+	
+	// HAPPY THREAD POOL
+	happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
+	
+	// HAPPY LOAD PLUGINS
 	happyPlugins = (!happyEnabled || isMain) ? [] :
 		loaders.loaders
 			.filter(loader => loader.happy && loader.happy.id)
@@ -121,16 +114,13 @@ const
 				threadPool: happyThreadPool
 			}))
 
-// In dev add signal hot processor
+// HMR ENTRY ADDITION
 if (isDev) {
 	entries.AppEntry.unshift('webpack/hot/poll.js?500')
-	// Object
-	// 	.values(entries)
-	// 	.forEach(entry => entry.unshift('webpack/hot/poll.js?500'))
-		//.forEach(entry => entry.unshift('webpack/hot/signal'))
-	
+	//.forEach(entry => entry.unshift('webpack/hot/signal'))
 	//`webpack/hot/poll.js?1000`
 }
+
 // Webpack Config
 const config = {
 	
@@ -158,35 +148,37 @@ const config = {
 	
 	cache: true,
 	recordsPath: `${distDir}/_records`,
-	devtool: 'source-map',
+	devtool: '#source-map',
 
 	// Currently we need to add '.ts' to the resolve.extensions array.
 	resolve: {
 		
-		alias: _.assign(
-			{
-				styles: path.resolve(baseDir, 'src/assets/styles'),
-				assets: path.resolve(baseDir, 'src/assets'),
-				libs: path.resolve(baseDir, 'libs'),
-				GitHubClient: tsAlias('shared/GitHubClient'),
-				Constants: tsAlias('shared/Constants'),
-				Settings: tsAlias('shared/Settings')
-				
-			}
-		),
+		// ALIAS
+		alias: {
+			styles: path.resolve(baseDir, 'src/assets/styles'),
+			assets: path.resolve(baseDir, 'src/assets'),
+			libs: path.resolve(baseDir, 'libs'),
+			GitHubClient: tsAlias('shared/GitHubClient'),
+			Constants: tsAlias('shared/Constants'),
+			Settings: tsAlias('shared/Settings')
+		},
 		
 		
-		
+		// MODULE PATHS
 		modules: moduleDirs,
+		
+		// FALLBACK PATHS
 		fallback: [path.resolve(baseDir,'src')],
 		
+		// EXTENSIONS
 		extensions: ['', '.js', '.jsx'],
 		
+		// PACKAGE MAIN
 		packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
 		
 	},
 	
-	// Add the loader for .ts files.
+	// LOADERS
 	module:  loaders,
 	
 	// SASS/SCSS Loader Config
@@ -194,7 +186,7 @@ const config = {
 		includePaths: [path.resolve(baseDir, "./src/assets")]
 	},
 	
-	// Post CSS Config (Not Used currently)
+	// POSTCSS (NOT USED CURRENTLY)
 	postcss() {
 		return [
 			require('postcss-modules'),
@@ -203,19 +195,30 @@ const config = {
 		]
 	},
 	
-	// Attach any random data we need to use later
+	// HAPPY PACK
 	other: {
 		happyPlugins
 	},
 	
-	// Create final list of plugins
-	plugins: happyPlugins.concat([
+	// PLUGINS
+	plugins: [
+		// HAPPY PACK PLUGINS
+		...happyPlugins,
+		
+		
+		// SPLIT FOR PARALLEL LOADING
+		// new webpack.optimize.AggressiveSplittingPlugin({
+		// 	maxSize: 50000
+		// }),
+		
+		// BASICS
+		new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/]),
 		new webpack.IgnorePlugin(/vertx/),
 		new webpack.optimize.OccurrenceOrderPlugin(),
 		new webpack.NoErrorsPlugin(),
 		new HtmlWebpackPlugin({
 			filename: "main-entry.html",
-			template: `${baseDir}/src/main/MainEntry.jade`,
+			template: `${baseDir}/src/assets/templates/MainEntry.jade`,
 			inject: false
 		}),
 		new DefinePlugin(DefinedEnv),
@@ -223,10 +226,9 @@ const config = {
 		new webpack.ProvidePlugin({
 			'Promise': 'bluebird'
 		})
+	],
 	
-	]),
-	
-	// Shim node mods
+	// NODE SHIMS
 	node: {
 		__dirname: true,
 		__filename: true,

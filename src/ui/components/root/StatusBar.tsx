@@ -74,13 +74,6 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 		autoHide: false
 	}
 	
-	makeOpenJobMonitor = job => event => {
-		// const monitorWin = window.open()
-		// log.info('Job monitor window',monitorWin)
-		
-		//openChildWindow(`job-monitor-${job.id}`,<JobMonitor id={job.id}/>)
-	}
-	
 	/**
 	 * Render the complete status bar
 	 */

@@ -1,16 +1,14 @@
-import {User} from 'shared/models/User'
+import {RegisterModel} from 'shared/Registry'
+import {Record} from 'immutable'
+import {ActionMessage} from 'typedux'
+
 const log = getLogger(__filename)
 
-import {RegisterModel} from 'shared/Registry'
-import {Map,Record} from 'immutable'
-import {ActionMessage} from 'typedux'
-import {Repo, AvailableRepo,Comment,Issue} from 'shared/models'
-
-
 export const RepoStateRecord = Record({
-	repos:Map<string,Repo>(),
-	users:Map<string,User>(),
-	selectedRepoIds:[]
+	reposIds:[],
+	enabledRepoIds:[],
+	selectedRepoIds:[],
+	availableRepoIds:[]
 })
 
 /**
@@ -24,10 +22,12 @@ export class RepoState extends RepoStateRecord {
 		if (o && o instanceof RepoState)
 			return o
 		
-		return new RepoState(Object.assign({},o,))
+		return new RepoState(Object.assign({},o))
 	}
 
-
+	repoIds:number[]
+	availableRepoIds:string[]
+	enabledRepoIds:number[]
 	selectedRepoIds:number[]
 
 }

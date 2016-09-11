@@ -18,14 +18,7 @@ import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 
 import {ThemedStyles} from "shared/themes/ThemeManager"
 import {Issue} from "shared/models/Issue"
-import {
-	issueModelsSelector,
-	milestoneModelsSelector,
-	userModelsSelector,
-	labelModelsSelector,
-	availRepoModelsSelector,
-	repoModelsSelector
-} from "shared/actions/data/DataSelectors"
+
 import {patchIssuesSelector, patchModeSelector, issueStateSelector} from "shared/actions/issue/IssueSelectors"
 import {User} from "shared/models/User"
 import {Label} from "shared/models/Label"
@@ -206,6 +199,7 @@ export interface IIssuePatchDialogProps extends React.HTMLAttributes {
 	savingError?: Error
 	mode?: TIssuePatchMode
 	repoIds?: number[]
+	issuesIds?: number[]
 	issues?: Issue[]
 	userModels?: Map<string,User>
 	milestoneModels?: Map<string,Milestone>
@@ -230,12 +224,12 @@ export interface IIssuePatchDialogState {
  * @constructor
  **/
 @connect(createStructuredSelector({
-	milestoneModels: milestoneModelsSelector,
-	labelModels: labelModelsSelector,
-	repoModels: repoModelsSelector,
-	availRepoModels: availRepoModelsSelector,
-	issueModels: issueModelsSelector,
-	userModels: userModelsSelector,
+	// milestoneModels: milestoneModelsSelector,
+	// labelModels: labelModelsSelector,
+	// repoModels: repoModelsSelector,
+	// availRepoModels: availRepoModelsSelector,
+	// issueModels: issueModelsSelector,
+	// userModels: userModelsSelector,
 	repoIds: enabledRepoIdsSelector,
 	issues: patchIssuesSelector,
 	mode: patchModeSelector,

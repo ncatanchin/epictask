@@ -18,9 +18,8 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {
-	milestonesSelector, labelsSelector,
-	issueFilterMilestonesSelector, issuesSelector, issueSortAndFilterSelector, issueFilterLabelsSelector,
-	issuesGroupedSelector, issueIdsSelector
+	issueSortAndFilterSelector,
+	issuesGroupedSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
@@ -127,15 +126,13 @@ export interface IIssueFiltersProps extends React.DOMAttributes {
  **/
 
 @connect(createStructuredSelector({
-	unfilteredIssueIds: issueIdsSelector,
-	issues: issuesSelector,
-	issuesGrouped: issuesGroupedSelector,
+	//unfilteredIssueIds: issueIdsSelector,
+	//issues: issuesSelector,
+	//issuesGrouped: issuesGroupedSelector,
 	issueSort: createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
 	issueFilter: createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
-	issueFilterLabels: issueFilterLabelsSelector,
-	issueFilterMilestones: issueFilterMilestonesSelector,
-	labels: labelsSelector,
-	milestones: milestonesSelector
+	//issueFilterLabels: issueFilterLabelsSelector,
+	//issueFilterMilestones: issueFilterMilestonesSelector,
 }, createDeepEqualSelector),null,null,{withRef:true})
 
 @ThemedStyles(baseStyles, 'issueFilters')
@@ -284,28 +281,28 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 
 		return (milestones || []).map(milestone => {
 
-			const selected = issueFilterMilestones.find(item => item && item.id === milestone.id)
-
-			const primaryText = <div style={makeStyle(
+			const
+				selected = issueFilterMilestones.find(item => item && item.id === milestone.id),
+				primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
 				)}>
-				<div>
-					<Icon
-						style={{
-							opacity: selected ? 1 : 0
-						}}
-						iconSet='fa'
-						iconName='check-circle'/>
+					<div>
+						<Icon
+							style={{
+								opacity: selected ? 1 : 0
+							}}
+							iconSet='fa'
+							iconName='check-circle'/>
+					</div>
+					<div style={styles.list.item.text.primary}>
+						{milestone.title}
+					</div>
+	
+					<div style={styles.list.item.text.secondary}>
+						{milestone.due_on ? moment(milestone.due_on).fromNow() : 'No Due Date'}
+					</div>
 				</div>
-				<div style={styles.list.item.text.primary}>
-					{milestone.title}
-				</div>
-
-				<div style={styles.list.item.text.secondary}>
-					{milestone.due_on ? moment(milestone.due_on).fromNow() : 'No Due Date'}
-				</div>
-			</div>
 
 			return <MenuItem
 				onTouchTap={this.makeOnMilestoneSelected(milestone)}
@@ -429,9 +426,9 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			{
 				theme,
 				styles,
-				issues,
-				unfilteredIssueIds,
-				issuesGrouped,
+				issues = [],
+				unfilteredIssueIds = [],
+				issuesGrouped = [],
 				issueSort,
 				issueFilter,
 				issueFilterLabels,

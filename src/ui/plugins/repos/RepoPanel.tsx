@@ -12,11 +12,12 @@ import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
-import * as Radium from 'radium'
+
 
 import {RegisterTool} from "shared/Registry"
 import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
+import {DataComponent, MapData} from "ui/components/data/DataComponent"
 const
 	{CommonKeys:Keys} = KeyMaps,
 	{HotKeys} = require('react-hotkeys')

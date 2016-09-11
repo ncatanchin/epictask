@@ -17,9 +17,8 @@ import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
 import {
-	editingIssueSelector, labelsSelector, milestonesSelector,
+	editingIssueSelector,
 	issueStateSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
@@ -33,7 +32,7 @@ import Radium = require('radium')
 import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {MenuItem} from 'material-ui'
 import {SelectField} from 'material-ui'
-import {enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
 
 // Constants
 const log = getLogger(__filename)
@@ -240,14 +239,9 @@ export interface IIssueEditInlineState {
 
 @HotKeyContext()
 @connect(createStructuredSelector({
-	repoModels: repoModelsSelector,
-	repo: (state,props) => repoModelsSelector(state)
-		.get(`${_.get(editingIssueSelector(state),'repoId')}`),
-
+	repo: (state,props) => _.get(editingIssueSelector(state),'repo'),
 	issue: editingIssueSelector,
-	availableRepos: enabledReposSelector,
-	labels: labelsSelector,
-	milestones: milestonesSelector,
+	availableRepoIds: enabledRepoIdsSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError
 },createDeepEqualSelector))

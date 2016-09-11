@@ -21,4 +21,8 @@ export default class ValueCache {
 			return this.onValueChanged(newValue,oldValue)
 		}
 	}
+	
+	get() {
+		return this.value
+	}
 }

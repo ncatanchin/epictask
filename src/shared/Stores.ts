@@ -6,6 +6,10 @@ import {AvailableRepoStore} from 'shared/models/AvailableRepo'
 import {RepoStore} from 'shared/models/Repo'
 import {IssueStore} from 'shared/models/Issue'
 import {CommentStore} from 'shared/models/Comment'
+import {
+	IModel,
+	Repo as TSRepo
+} from 'typestore'
 
 
 
@@ -19,5 +23,14 @@ export class Stores {
 	label: LabelStore
 	activity: ActivityStore
 	user: UserStore
+	
+	getModelStore<T extends IModel>(clazz:{new ():T}):TSRepo<T> {
+		const name = clazz.name && clazz.name.length ?
+			clazz.name :
+			clazz.$$clazz
+		
+		return this[name] || this[_.lowerFirst(name)]
+		
+	}
 	
 }

@@ -132,10 +132,10 @@ export class RepoStore extends TSRepo<Repo> {
 	}
 
 	@PouchDBFullTextFinder({
-		includeDocs: false,
+		includeDocs: true,
 		textFields: ['name','full_name','description']
 	})
-	findWithText(request:FinderRequest, name:string):Promise<FinderResultArray<number>> {
+	findWithText(request:FinderRequest, name:string):Promise<FinderResultArray<Repo>> {
 		return null
 	}
 

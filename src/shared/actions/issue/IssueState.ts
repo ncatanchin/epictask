@@ -15,6 +15,17 @@ export * from './IIssueSort'
 
 export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
 
+export type TEditCommentRequest = {
+	issue:Issue,
+	comment:Comment
+}
+
+/**
+ * Issue sort and filter type
+ */
+export type TIssueSortAndFilter = {issueFilter:IIssueFilter,issueSort:IIssueSort}
+
+
 export const IssuePatchModes = {
 	Label:Label.$$clazz,
 	Milestone:Milestone.$$clazz,
@@ -29,14 +40,11 @@ export type TIssueEditInlineConfig = {
 }
 
 export const IssueStateRecord = Record({
-	issueIds:[],
-	commentIds:[],
 	selectedIssueIds:[],
-	selectedIssueId:null,
 	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,
-	editingComment:null,
+	editCommentRequest:null,
 	patchIssues:null,
 	patchMode:null,
 	issueSaveError: null,
@@ -74,13 +82,10 @@ export class IssueState extends IssueStateRecord {
 	issueSaving:boolean
 	issueSaveError: Error
 	editInlineConfig:TIssueEditInlineConfig
-	selectedIssueId:number
 	selectedIssueIds:Array<number>
-	issueIds:number[]
-	commentIds:string[]
 	patchIssues:Issue[]
 	patchMode:TIssuePatchMode
-	editingComment:Comment
+	editCommentRequest:TEditCommentRequest
 	editingIssue:Issue
 	editingInline:boolean
 

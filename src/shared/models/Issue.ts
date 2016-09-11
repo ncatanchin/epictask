@@ -115,11 +115,10 @@ export class IssueStore extends TSRepo<Issue> {
 
 
 	@PouchDBFullTextFinder({
-		includeDocs:false,
 		textFields: ['title','body'],
 		limit: 200,
 	})
-	findWithText(request:FinderRequest,title:string):Promise<FinderResultArray<number>> {
+	findWithText(request:FinderRequest,title:string):Promise<FinderResultArray<Issue>> {
 		return null
 	}
 
@@ -181,6 +180,22 @@ export class IssueStore extends TSRepo<Issue> {
 		})
 	})
 	findIdsByStateAndRepoId(state:TIssueState,...repoIds:number[]):Promise<number[]> {
+		return null
+	}
+	
+	@PouchDBMangoFinder({
+		includeDocs: false,
+		indexFields: ['repoId','number'],
+		selector: (repoId,issueNumber) => ({
+			repoId:{
+				$eq:repoId
+			},
+			number:{
+				$eq:issueNumber
+			}
+		})
+	})
+	findByRepoIdAndIssueNumber(repoId:number,issueNumber:number):Promise<Issue> {
 		return null
 	}
 

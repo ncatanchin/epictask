@@ -19,6 +19,14 @@ function makeWebpackCompile(watch = false) {
 			webpackConfig = require(`${baseDir}/etc/webpack/webpack.config`),
 			compiler = webpack(webpackConfig)
 		
+		if (process.env.DASHBOARD) {
+			const DashboardPlugin = require('webpack-dashboard/plugin')
+			
+			compiler.apply(new DashboardPlugin({
+				port: 4001
+			}))
+		}
+		
 		function doCallback(err,stats) {
 			if (err) {
 				log.error('an error occurred', err)

@@ -27,7 +27,7 @@ import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {repoIdPredicate, enabledReposSelector} from 'shared/actions/repo/RepoSelectors'
+import {repoIdPredicate, enabledRepoIdsSelector, availableRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
@@ -37,7 +37,6 @@ import {editingIssueSelector, issueStateSelector} from 'shared/actions/issue/Iss
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {CircularProgress} from 'material-ui'
-import {labelModelsSelector} from 'shared/actions/data/DataSelectors'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
 import {canAssignIssue} from 'shared/Permission'
 
@@ -189,9 +188,9 @@ export interface IIssueEditDialogProps extends React.DOMAttributes {
 	styles?:any
 	saveError?:any
 	editingIssue?:Issue
+	availableRepoIds?:number[]
 	availableRepos?:AvailableRepo[]
-	repoModels?:Map<string,Repo>
-	labelModels?:Map<string,Label>
+	
 	open?:boolean
 	user?:User
 	saving?:boolean
@@ -218,8 +217,7 @@ export interface IIssueEditDialogState {
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	editingIssue: editingIssueSelector,
-	availableRepos: enabledReposSelector,
-	labelModels: labelModelsSelector,
+	availableRepoIds: availableRepoIdsSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError,
 	open: (state) => uiStateSelector(state)
@@ -442,7 +440,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	getNewState(props:IIssueEditDialogProps) {
 		const
-			{styles,theme,availableRepos,labelModels,editingIssue,open} = props,
+			{styles,theme,availableRepos,editingIssue,open} = props,
 			repoId = editingIssue &&editingIssue.repoId
 
 		if (!open)
@@ -461,17 +459,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		if (editingIssue.id > 0) {
 			repos = repos.filter(item => '' + item.repoId === '' + repoId)
 		}
-
+		
+		// If repo is selected then get milestones,labels,collabs
 		if (editingIssue.repoId) {
 			milestones = milestones.filter(item => item.repoId === repoId)
 
 			collaborators = collaborators.filter(item => item.repoIds.includes(repoId))
 
-			const repo = repos.find(item => '' + item.repoId === '' + repoId)
-			labels = labelModels
-				.valueSeq()
-				.filter(item => item.repoId === repoId)
-				.toArray()
+			labels =  labels.filter(item => item.repoIds.includes(repoId))
 		}
 
 

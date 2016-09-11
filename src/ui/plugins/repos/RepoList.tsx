@@ -12,8 +12,9 @@ import * as Radium from 'radium'
 import {ThemedStyles} from "shared/themes/ThemeManager"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 import {createStructuredSelector} from 'reselect'
-import {createAvailableRepoSelector, selectedRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {selectedRepoIdsSelector, availableRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {PureRender} from "ui/components/common/PureRender"
+import {DataComponent, MapData} from "ui/components/data/DataComponent"
 
 /**
  * Displays a list of repos
@@ -79,8 +80,7 @@ const baseStyles = createStyles({
 //region Props
 export interface IRepoListProps {
 	availableRepos?:AvailableRepo[]
-	repos?:Repo[]
-	selectedRepo?:Repo
+	availableRepoIds?:number[]
 	styleName?:string
 	className?:string
 	style?:any
@@ -94,16 +94,25 @@ export interface IRepoListProps {
  * A list of repos
  */
 @connect(createStructuredSelector({
-	availableRepos: createAvailableRepoSelector(),
+	availableRepoIds: availableRepoIdsSelector,
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
+@DataComponent(
+	MapData(
+		AvailableRepo,
+		'availableRepoIds',
+		'id',
+		'availableRepos',
+		[]
+	)
+)
 @ThemedStyles(baseStyles,'repoPanel')
 @PureRender
 export class RepoList extends React.Component<IRepoListProps,any> {
 
 
-	constructor(props) {
-		super(props)
+	constructor(props = {},context = {}) {
+		super(props,context)
 
 		this.state = {hoverId:null}
 	}
@@ -133,18 +142,24 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	
 	render() {
 
-		const {availableRepos,styles,selectedRepoIds = []} = this.props
+		const {
+			availableRepos,
+			styles,
+			selectedRepoIds = []
+		} = this.props
 
 		
 
 		return <div style={styles.list}>
 			{availableRepos && availableRepos
 				.map((availRepo,availRepoIndex) => {
-					const id = availRepo.repoId
-					const repo = availRepo.repo //_.find(repos,(it) => it.id === availRepo.repoId)
-					const isSelected = !!selectedRepoIds.includes(availRepo.repoId)
-					const isEnabled = availRepo.enabled
-					const isHovering = this.state.hoverId === availRepo.repoId
+					const
+						id = availRepo.repoId,
+						{repo} = availRepo, //_.find(repos,(it) => it.id === availRepo.repoId)
+						isSelected = !!selectedRepoIds.includes(availRepo.repoId),
+						isEnabled = availRepo.enabled,
+						isHovering = this.state.hoverId === availRepo.repoId
+						
 
 					
 
@@ -153,7 +168,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					           onMouseEnter={() => this.setState({hoverId:availRepo.repoId})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
 					           onClick={(event) => {
-									this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
+												this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
 					           }}
 					           style={[
 					                styles.list.item,

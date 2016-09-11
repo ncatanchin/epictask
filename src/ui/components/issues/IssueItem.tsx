@@ -7,69 +7,48 @@ import * as React from 'react'
 
 import {PureRender, Renderers, Avatar} from '../common'
 import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
-
-import {Issue, Repo} from 'shared/models'
+import {connect} from 'react-redux'
+import {createStructuredSelector} from 'reselect'
+import {Issue} from 'shared/models'
 import filterProps from 'react-valid-props'
 
 import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
+import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 
 
 interface IIssueItemProps extends React.DOMAttributes {
-	index:number
 	styles:any
 	onSelected:(event:any, issue:Issue) => void
+	//issue?:Issue
+	index:number
 	issues:Issue[]
 	issuesGrouped?:IIssueGroup[]
-	repoId?:number
-	repo?:Repo
 	groupBy:string
 	selectedIssueIds?:number[]
 }
 
-interface IIssueState {
-	issue?:Issue
-	selected?:boolean
-	selectedMulti?:boolean
-}
 
-
-
+@connect(createStructuredSelector({
+	selectedIssueIds: selectedIssueIdsSelector
+},createDeepEqualSelector))
 @PureRender
-class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
+class IssueItem extends React.Component<IIssueItemProps,void> {
 
 
-	getNewState(props:IIssueItemProps) {
-		//const repoState = repoActions.state
-
-		const
-			{index,issues,issuesGrouped,groupBy,selectedIssueIds} = props,
-			issue = issues[index],
-			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
-			selectedMulti = selectedIssueIds.length > 1
-
-
-		return {
-			issue,selected,selectedMulti
-		}
-	}
-
-	componentWillMount() {
-		this.setState(this.getNewState(this.props))
-	}
-
-	componentWillReceiveProps(nextProps) {
-		this.setState(this.getNewState(nextProps))
-	}
-
+	
 	render() {
 		const
-			{props,state} = this,
-			{issue, selectedMulti, selected} = state,
-			{styles,onSelected,repo} = props
-
+			{props} = this,
+			{styles,onSelected,issues,index,selectedIssueIds} = props,
+			issue = issues && issues[index],
+			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
+			selectedMulti = selectedIssueIds.length > 1
+			
+			
 		if (!issue)
-			return <div/>
+			return React.DOM.noscript()
 
 		const
 			{labels} = issue,
@@ -85,7 +64,6 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueState> {
 				selectedMulti && styles.issueTitleSelectedMulti
 			)
 
-		//selected={selected}
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
 		                                    className={'animated fadeIn ' + (selected ? 'selected' : '')}

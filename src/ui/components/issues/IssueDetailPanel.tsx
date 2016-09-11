@@ -6,19 +6,20 @@
 
 import * as moment from 'moment'
 import * as React from 'react'
-import * as Radium from 'radium'
 import {Style} from 'radium'
 import {connect} from 'react-redux'
+import {createStructuredSelector} from 'reselect'
 import {Avatar, PureRender, Renderers} from 'ui/components/common'
 import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
 import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {IssueActivityText} from './IssueActivityText'
-import {createStructuredSelector, createSelector} from 'reselect'
-import {Themed} from 'shared/themes/ThemeManager'
-import {issuesDetailSelector, selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
+import { ThemedStyles } from 'shared/themes/ThemeManager'
+import {
+	selectedIssueIdsSelector
+} from 'shared/actions/issue/IssueSelectors'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+
 import {HotKeys} from 'react-hotkeys'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
@@ -28,6 +29,8 @@ import {canEditIssue,canAssignIssue} from 'shared/Permission'
 //import {Button, Icon} from 'epictask/ui/components/common'
 
 import baseStyles from './IssueDetailPanel.styles'
+import { DataComponent, MapProvider } from "ui/components/data/DataComponent"
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 
 
 // Non-typed Components
@@ -42,29 +45,11 @@ const log = getLogger(__filename)
  */
 
 export interface IIssueDetailPanelProps {
-	issues?:Issue[]
-	issue?:Issue
+	selectedIssueIds?:number[]
+	issues:Issue[]
 	comments?:Comment[]
 	theme?:any,
 	styles?:any
-}
-
-
-/**
- * Create a new issue item to state => props mapper
- *
- * @returns {any}
- */
-const makeIssueItemStateToProps = () => {
-
-
-
-	return createStructuredSelector({
-		issues: issuesDetailSelector,
-		issue: selectedIssueSelector,
-		comments: commentsSelector,
-		styles: (state,props) => mergeStyles(baseStyles, props.theme.issueDetail)
-	},createDeepEqualSelector)
 }
 
 
@@ -77,12 +62,22 @@ const makeIssueItemStateToProps = () => {
  * @constructor
  **/
 
-
+@connect(createStructuredSelector({
+	selectedIssueIds:selectedIssueIdsSelector
+},createDeepEqualSelector))
+@DataComponent(
+	MapProvider(['issues'],async ({issues}) => {
+		if (!issues || issues.length !== 1)
+			return {
+				comments: []
+			}
+		
+		return Container.get(IssueActionFactory).getActivity(issues[0])
+	},Comment,'id',[])
+)
 @HotKeyContext()
-@Themed
-@connect(makeIssueItemStateToProps)
+@ThemedStyles(baseStyles,'issueDetail')
 @PureRender
-
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
@@ -252,7 +247,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderBody = (key,styles) => <IssueActivityText
 			key={key}
-			commentIndex={-1}
+			issue={this.props.issues[0]}
 			activityType='post'
 			activityActionText='posted issue'
 			activityStyle={styles.content.activities.activity}/>
@@ -269,7 +264,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderComment = (key,index,styles) => <IssueActivityText
 			key={key}
-			commentIndex={index }
+			issue={this.props.issues[0]}
+			comment={this.props.comments[index]}
 			activityActionText='commented'
 			activityType='comment'
 			activityStyle={styles.content.activities.activity}/>
@@ -326,14 +322,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @returns {any}
 	 */
 	render() {
-		const {issues, theme, comments,styles} = this.props
+		const {selectedIssueIds,issues, theme, comments,styles} = this.props
 
-		return (!issues || !issues.length) ? <div/> :
+		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
 			<HotKeys id='issueDetailPanel'
 			         style={styles.root}>
-				{ issues.length > 1 ?
-					this.renderMulti(issues, styles) :
-					this.renderIssue(issues[0], comments, styles,theme.palette)
+				{ selectedIssueIds.length > 1 ?
+					this.renderMulti(issues.filter(it => selectedIssueIds.includes(it.id)), styles) :
+					this.renderIssue(issues.find(it => selectedIssueIds[0] === it.id), comments, styles,theme.palette)
 				}
 			</HotKeys>
 	}

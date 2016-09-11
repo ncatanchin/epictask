@@ -5,13 +5,9 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import {connect} from 'react-redux'
 import {User,Issue,Comment} from 'shared/models'
-import {createStructuredSelector} from 'reselect'
 import {Avatar, Markdown, PureRender, Icon, Button} from 'ui/components/common'
-import {selectedIssueSelector, commentsSelector} from 'shared/actions/issue/IssueSelectors'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import filterProps from 'react-valid-props'
 import {canEditComment,canEditIssue} from "shared/Permission"
 import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
@@ -90,10 +86,9 @@ const baseStyles = createStyles({
 export interface IIssueActivityTextProps extends React.DOMAttributes {
 	theme?:any
 	styles?:any
-	commentIndex?:number
-	comments?:Comment[]
+	comment?:Comment
+	issue:Issue
 	activityActionText?:string
-	issue?:Issue
 	activityStyle:any
 	activityType:'post'|'comment'
 }
@@ -106,16 +101,6 @@ export interface IIssueActivityTextState {
 	createdAt?:Date
 }
 
-
-/**
- * Map theme into props - very shorthand
- */
-const makeStateToProps = () => createStructuredSelector({
-	issue: selectedIssueSelector,
-	comments: commentsSelector
-},createDeepEqualSelector)
-
-
 /**
  * IssueComment
  *
@@ -123,7 +108,6 @@ const makeStateToProps = () => createStructuredSelector({
  * @constructor
  **/
 
-@connect(makeStateToProps)
 @ThemedStyles(baseStyles,'issueActivityText')
 
 @PureRender
@@ -136,23 +120,24 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @returns {{comment: null, user: null, text: null, createdAt: null, updatedAt: null}}
 	 */
 	getNewState = (props:IIssueActivityTextProps):IIssueActivityTextState => {
-		const {issue,comments,theme,commentIndex,activityStyle,activityType} = props
+		const
+			{issue,theme,comment,activityStyle,activityType} = props,
 
-		// Get comment if available
-		const comment = (comments && _.isNumber(commentIndex) && commentIndex > -1) ?
-			comments[commentIndex] : null
-
-		// Determine model
-		const model:Comment|Issue = comment || issue
+		
+			// Determine model
+			model:Comment|Issue = comment || issue
 
 		// Map model props
-		let user = null,text = null,createdAt = null, updatedAt = null
+		let
+			user = null,
+			text = null,
+			createdAt = null,
+			updatedAt = null
+		
 		if (model) {
 			({user,body:text,created_at:createdAt,updated_at:updatedAt} = model)
 		}
-
 		
-
 		return {
 			comment,
 			user,
@@ -246,7 +231,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			)
 
 
-		return (!issue) ? null : <div {...filterProps(this.props)} key='activity' style={[activityStyle,{':hover': {}}]}>
+		return (!issue) ? React.DOM.noscript() : <div {...filterProps(this.props)} key='activity' style={[activityStyle,{':hover': {}}]}>
 			
 			{/* COMMENTER AVATAR*/}
 			<Avatar user={user}

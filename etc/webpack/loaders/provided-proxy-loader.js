@@ -1,5 +1,4 @@
 const
-	loaderUtils = require("loader-utils"),
 	fs          = require('fs'),
 	path        = require("path")
 
@@ -14,7 +13,7 @@ module.exports = function(content) {
 	let hotStuff = ""
 	if (/(@Provided|shared\/util\/ProxyProvided)/.test(content)) {
 		
-		console.log(`Adding @Provided hot loading for ${resourcePath}`)
+		//console.log(`Adding @Provided hot loading for ${resourcePath}`)
 		
 		hotStuff = `
 			if (module.hot) {
@@ -24,7 +23,6 @@ module.exports = function(content) {
 				}
 				
 				module.hot.accept(() => hotLog('HMR Updating ProxyProvided',typeof __filename !== 'undefined' ? __filename : '${resourcePath}'))
-				//module.hot.accept()
 			}	
 		`
 	}

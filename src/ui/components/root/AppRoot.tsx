@@ -167,23 +167,8 @@ export class App extends React.Component<IAppProps,any> {
 		[KeyMaps.CommonKeys.Find]: () => {
 			log.info('Escaping and moving focus')
 			$('#header').find('input').focus()
-		},
-		[KeyMaps.CommonKeys.SetAssignee]: () => {
-			log.info('Patch assignee')
-			Container.get(IssueActionFactory).patchIssuesAssignee()
-		},
-		[KeyMaps.CommonKeys.SetMilestone]: () => {
-			log.info('Patch milestone')
-			Container.get(IssueActionFactory).patchIssuesMilestone()
-		},
-		[KeyMaps.CommonKeys.AddLabels]: () => {
-			log.info('Patch labels')
-			Container.get(IssueActionFactory).patchIssuesLabel()
-		},
-		[KeyMaps.CommonKeys.CreateComment]: () => {
-			log.info('Create Comment')
-			Container.get(IssueActionFactory).newComment()
 		}
+		
 	}
 
 

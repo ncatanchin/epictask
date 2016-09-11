@@ -3,29 +3,25 @@
  */
 
 // Imports
-import {debounce} from 'lodash-decorators'
+import * as ReactDOM from 'react-dom'
 import * as React from 'react'
 import {Paper, TextField} from 'material-ui'
 import {connect} from 'react-redux'
 import * as KeyMaps from 'shared/KeyMaps'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {SearchActionFactory} from 'shared/actions/search/SearchActionFactory'
-import {SearchResult, SearchType, SearchData, ISearchItemModel} from 'shared/actions/search/SearchState'
+import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResultsList} from './SearchResultsList'
-import {
-	createSearchDataSelector,
-	createSearchItemSelector,
-	createSearchItemModelsSelector
-} from 'shared/actions/search/SearchSelectors'
+
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {createStructuredSelector} from 'reselect'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {isNumber} from "shared/util"
+import SearchProvider from "shared/actions/search/SearchProvider"
+import {SearchItem} from "shared/actions/search"
+import {SearchEvent} from "shared/actions/search/SearchProvider"
+import {Themed} from "shared/themes/ThemeManager"
 
 const $ = require('jquery')
-
 
 // Key mapping tools
 const {CommonKeys:Keys} = KeyMaps
@@ -34,12 +30,6 @@ const {HotKeys} = require('react-hotkeys')
 // Constants
 const log = getLogger(__filename)
 const styles = require("styles/SearchPanel.scss")
-
-//log.info('read styles as', styles)
-
-const repoActions = new RepoActionFactory()
-const searchActions = new SearchActionFactory()
-
 
 /**
  * ISearchPanelProps
@@ -50,14 +40,12 @@ export interface ISearchPanelProps extends React.HTMLAttributes {
 	modal?: boolean
 	inlineResults?: boolean
 	expanded?: boolean
-	searchData?: SearchData
-	searchItemModels?: ISearchItemModel[]
 	theme?: any
 	focused?: boolean
 	hidden?: boolean
 	mode: "repos"|"issues"
 	onEscape?: () => void
-	onResultSelected?: (result: ISearchItemModel) => void
+	onResultSelected?: (item: SearchItem) => void
 }
 
 export interface ISearchPanelState {
@@ -68,21 +56,12 @@ export interface ISearchPanelState {
 	query?: string
 	textField?: any
 	resultsListRef?:any
+	provider?:SearchProvider
+	results?:SearchResult[]
+	items?:SearchItem[]
+	unsubscribe?:Function
 }
 
-function makeMapStateToProps() {
-	const searchDataSelector = createSearchDataSelector(),
-		searchItemSelector = createSearchItemSelector(),
-		searchItemModelsSelector = createSearchItemModelsSelector()
-
-	return createStructuredSelector({
-		searchData: searchDataSelector,
-		searchItemModels: searchItemModelsSelector,
-		theme: () => getTheme()
-	})
-
-
-}
 
 /**
  * SearchPanel
@@ -93,7 +72,7 @@ function makeMapStateToProps() {
 
 @HotKeyContext()
 @CSSModules(styles)
-@connect(makeMapStateToProps, null, null, {withRef: true})
+@Themed
 @PureRender
 export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
 
@@ -158,18 +137,65 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	isFocused = (props): boolean =>
 		props.modal === true ||
 		_.get(this, 'state.focused', false) as boolean
-
-
+	
+	
+	/**
+	 * Flatten all items in a result set
+	 *
+	 * @param results
+	 * @returns {SearchItem[]}
+	 */
+	getItems(results:SearchResult[] = []):SearchItem[] {
+		return results.reduce((items,result) => {
+			items.push(...result.items)
+			return items
+		},[])
+	}
+	
 	/**
 	 * Calculate a new state
 	 *
 	 * @param props
 	 * @param focused
 	 */
-	getNewState = (props: ISearchPanelProps, focused: boolean = null) => (assign({
-		totalItemCount: (!props.searchItemModels) ? 0 : props.searchItemModels.length,
-		selectedIndex: props.searchItemModels && Math.min(_.get(this, 'state.selectedIndex', 0), Math.max(0, props.searchItemModels.length - 1))
-	}, _.isBoolean(focused) ? {focused} : {}))
+	getNewState = (props: ISearchPanelProps, focused: boolean = null) => {
+		
+		const newState:any = {}
+		
+		let provider:SearchProvider = _.get(this,'state.provider') as any
+		
+		if (!provider) {
+			provider = SearchProvider.getInstance(this.props.searchId)
+			newState.unsubscribe = provider.addListener(
+				SearchEvent.ResultsUpdated,
+				(newResults:SearchResult[]) => {
+					log.info(`New Results received`,newResults)
+					this.setState({
+						results:newResults
+					},this.updateState as any)
+				})
+		}
+		
+		
+		
+		
+		const
+			results:SearchResult[] = _.get(this,'state.results',[]),
+			items = this.getItems(results),
+			totalItemCount = items.length
+		
+		
+		return (assign(newState,{
+			provider,
+			results,
+			items,
+			totalItemCount,
+			selectedIndex: totalItemCount &&
+				Math.min(
+					_.get(this, 'state.selectedIndex', 0),
+					Math.max(0, totalItemCount - 1))
+		}, _.isBoolean(focused) ? {focused} : {}))
+	}
 
 
 	/**
@@ -179,8 +205,11 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param props
 	 * @param focused
 	 */
-	updateState = (props: ISearchPanelProps, focused: boolean = null) => {
-		this.setState(this.getNewState(props, focused))
+	updateState = (props: ISearchPanelProps = null, focused: boolean = null) => {
+		const newState = this.getNewState(props, focused)
+		this.setState(newState)
+		
+		return newState
 	}
 
 
@@ -191,22 +220,19 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const textField = this.state.textField
 		if (!textField) return
 
-		const $ = require('jquery')
-		const textElement = ReactDOM.findDOMNode(textField)
-		const inputElement = $('input', textElement)[0]
+		const
+			$ = require('jquery'),
+			textElement = ReactDOM.findDOMNode(textField),
+			inputElement = $('input', textElement)[0]
 
 		if (inputElement) {
-			const selectStart = _.get(inputElement.selectionStart, 0),
+			const
+				selectStart = _.get(inputElement.selectionStart, 0),
 				selectEnd = _.get(inputElement.selectionEnd, 0)
 
 			if (selectStart === selectEnd)
-			// && !_.get(this,'state.selectedText')
-			//this.setState({selected:true})
 				inputElement.select()
-
 		}
-
-
 	}
 
 
@@ -241,9 +267,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	}
 
-	@debounce(150)
+	
 	updateSearchResults(query) {
-		searchActions.setQuery(this.props.searchId, this.props.types, query)
+		const {provider} = this.state
+		
+		provider.setTypes(...this.props.types)
+		provider.setQuery(query)
 	}
 
 	/**
@@ -263,35 +292,34 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Search result is selected
 	 *
-	 * @param itemModel
+	 * @param item
 	 */
-	onResultSelected = (itemModel: ISearchItemModel) => {
+	onResultSelected = (item:SearchItem) => {
 		
-		itemModel = itemModel || _.get(this.resultsList, 'state.selectedItem', null)
+		item = item || _.get(this, 'state.selectedItem', null)
 		
-		if (!itemModel) {
-			const {searchItemModels} = this.props,
-				{selectedIndex} = this.state || {} as any
-
-			if (searchItemModels && isNumber(selectedIndex)) {
-				itemModel = searchItemModels[selectedIndex]
+		const
+			{provider,items,selectedIndex} = this.state,
+			{onResultSelected} = this.props
+		
+		if (!item) {
+			if (items && isNumber(selectedIndex)) {
+				item = items[selectedIndex]
 			}
 
-			if (!itemModel) {
+			if (!item) {
 				log.info(`no model item found, can not select`)
 				return
 			}
 		}
-
-	
-		searchActions.select(this.props.searchId, itemModel)
+		
+		provider.select(this.props.searchId, item)
 		this.setState({focused: false})
 		
-		const {onResultSelected} = this.props
+		
 		log.info(`Calling panel owner`, onResultSelected)
 		if (onResultSelected) {
-			
-			onResultSelected(itemModel)
+			onResultSelected(item)
 		} else {
 			const
 				$ = require('jquery'),
@@ -309,14 +337,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * On search item hover
 	 *
-	 * @param itemModel
+	 * @param item
 	 */
-	onHover = (itemModel: ISearchItemModel) => {
-		const itemModels = this.props.searchItemModels || []
-		const index = Math.max(
-			itemModels.findIndex(findItem => findItem.item.id === itemModel.item.id),
-			0
-		)
+	onHover = (item: SearchItem) => {
+		const
+			{items} = this.state,
+			index = Math.max(
+				items.findIndex(findItem => findItem.id === item.id),
+				0
+			)
 
 		if (this.state.selectedIndex !== index)
 			this.setSelectedIndex(index)
@@ -393,27 +422,32 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	componentWillMount = () => this.updateState(this.props)
 
+	
+	componentWillUnmount = () => {
+		const unsubscribe:any = _.get(this,'state.unsubscribe')
+		if (unsubscribe) {
+			unsubscribe()
+			this.setState({unsubscribe:null})
+		}
+	}
 	/**
 	 * On props
 	 *
 	 * @param nextProps
 	 */
 	componentWillReceiveProps = (nextProps: ISearchPanelProps) => {
-		const selectedIndex = _.get(this.state, 'selectedIndex', 0)
+		const
+			selectedIndex = _.get(this.state, 'selectedIndex', 0),
+			selectedItem = isNumber(selectedIndex) && selectedIndex > -1 && this.state.items[selectedIndex],
+			newState = this.updateState(nextProps)
+		
 		let newSelectedIndex = 0
-		if (selectedIndex !== 0) {
-			const selectedItem = (this.props.searchItemModels || [])[selectedIndex]
-			if (selectedItem) {
-				newSelectedIndex = (nextProps.searchItemModels || [])
-					.findIndex(newItem => newItem.item.id === selectedItem.item.id)
-			}
-
-
+		if (selectedItem) {
+				newSelectedIndex = (newState.items || [])
+					.findIndex(newItem => newItem.id === selectedItem.id)
 		}
 
-		this.updateState(nextProps)
-
-		if (selectedIndex)
+		if (isNumber(selectedIndex))
 			this.setState({selectedIndex: newSelectedIndex})
 	}
 
@@ -424,36 +458,39 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	render() {
-		const {expanded, theme, searchId, searchItems, hidden, modal} = this.props,
-			{searchData}= this.props,
-			{search, results} = searchData,
-			{query} = search
+		const
+			{expanded, theme, autoFocus,searchId, searchItems, hidden, modal} = this.props,
+			{items,results,query,selectedIndex} = this.state
+		
+		
+		const
+			{searchPanel:spTheme} = theme,
+			focused = modal || this.isFocused(this.props),
+			resultsOpen = focused,
 
-		const {searchPanel:spTheme} = theme
-		const focused = modal || this.isFocused(this.props)
-		const resultsOpen = focused
-
-		// Panel styles
-		const panelClazz = expanded ?
-			styles.searchPanelExpanded :
-			styles.searchPanel
-
-		const panelStyle = Object.assign({}, spTheme.wrapperStyle, expanded ? spTheme.wrapperExpandedStyle : {})
-
-		if (focused)
-			Object.assign(panelStyle, spTheme.focusedStyle)
-
-		// Wrapper Styles
-		const wrapperClazz = expanded ? styles.searchWrapperExpanded :
-			styles.searchWrapper
-
-		// Input Styles
-		const inputStyle = Object.assign({}, spTheme.style, focused ? spTheme.focusedStyle : {}, {})
-
-		// Focused Styles
-		const focusedClazz = focused ? ' ' + styles.focused : ''
-
-		const searchPanelId = `searchPanel-${searchId}`
+			// Panel styles
+			panelClazz = expanded ?
+				styles.searchPanelExpanded :
+				styles.searchPanel,
+			
+			// Wrapper Styles
+			wrapperClazz = expanded ? styles.searchWrapperExpanded :
+				styles.searchWrapper,
+			
+			// Focused Styles
+			focusedClazz = focused ? ' ' + styles.focused : '',
+		
+			panelStyle = [
+				spTheme.wrapperStyle,
+				expanded && spTheme.wrapperExpandedStyle,
+				focused && spTheme.focusedStyle
+			],
+			
+			// Input Styles
+			inputStyle = [spTheme.style, focused && spTheme.focusedStyle],
+			
+			searchPanelId = `searchPanel-${searchId}`
+		
 		//log.info('Rendering with results',{results,props:this.props,state:this.state,resultsOpen})
 
 		//<HotKeys handlers={this.keyHandlers} style={expanded ? FillWidth : Fill} onFocus={this.onFocus} onBlur={this.onBlur}>
@@ -476,22 +513,21 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
 					<TextField
 						ref={this.setTextFieldRef}
-						autoFocus={this.props.autoFocus}
+						autoFocus={autoFocus}
 						tabIndex={1}
 						hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 						onChange={(e) => this.onInputChange(e)}
 
 						inputStyle={inputStyle}
-						defaultValue={this.state.query || query}
+						defaultValue={query || ''}
 					/>
 					<SearchResultsList ref={(resultsListRef) => this.setState({resultsListRef})}
 					                   anchor={'#' + searchPanelId}
-					                   selectedIndex={this.state.selectedIndex}
-					                   searchItemModels={this.props.searchItemModels || []}
+					                   selectedIndex={selectedIndex}
+					                   searchItems={items || []}
 					                   searchId={searchId}
 					                   open={resultsOpen}
 					                   inline={expanded}
-					                   results={results ||  []}
 					                   onResultHover={this.onHover}
 					                   onResultSelected={this.onResultSelected}
 					                   containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}

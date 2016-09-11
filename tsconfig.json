@@ -63,5 +63,11 @@
         "node_modules",
         "node_modules/**.*",
         "node_modules.disk"
+    ],
+    "include": [
+        "node_modules/@types/**/*.d.ts",
+        "typings/**/*.d.ts",
+        "src/**/*.ts",
+        "src/**/*.tsx"
     ]
 }

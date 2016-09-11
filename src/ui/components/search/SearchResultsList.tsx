@@ -3,25 +3,18 @@
  */
 
 // Imports
-import {List} from 'immutable'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import {connect} from 'react-redux'
+
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
-import {createStructuredSelector} from 'reselect'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {
-	SearchResult, SearchType, SearchSource, SearchResultData, SearchItem,
-	ISearchItemModel, SearchData
+	SearchResult, SearchType, SearchSource,SearchItem
 } from 'shared/actions/search/SearchState'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
-import * as Radium from 'radium'
-import {PureRender} from 'ui/components/common/PureRender'
-import {createSearchDataSelector} from 'shared/actions/search/SearchSelectors'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
-import {repoModelsSelector} from 'shared/actions/data/DataSelectors'
+
+import {ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {Icon} from 'ui/components/common/Icon'
@@ -141,13 +134,11 @@ export interface ISearchResultsListProps {
 	inline?: boolean
 	theme?:any
 	open:boolean
+	searchItems:SearchItem[]
 	selectedIndex?:number
 	className?:string
-	repoModels?:Map<string,Repo>
-	searchItemModels?:ISearchItemModel[]
-	results?:SearchResultData[]
-	onResultSelected?:(itemModel:ISearchItemModel) => void
-	onResultHover?:(itemModel:ISearchItemModel) => void
+	onResultSelected?:(item:SearchItem) => void
+	onResultHover?:(item:SearchItem) => void
 }
 
 /**
@@ -157,9 +148,6 @@ export interface ISearchResultsListProps {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	repoModels:repoModelsSelector
-}),null,null,{withRef:true})
 @ThemedNoRadium
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
@@ -294,8 +282,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	}
 
 	renderIssue = (item:SearchItem,issue:Issue,isSelected) => {
-		const {repoModels} = this.props
-		const repo = repoModels && repoModels.get(`${issue.repoId}`)
+		const repo = null//repoModels && repoModels.get(`${issue.repoId}`)
 		return this.renderResult(
 			issue.title,
 			repo ? <Renderers.RepoName repo={repo}/> : '',
@@ -306,8 +293,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	}
 
 	renderMilestone = (item:SearchItem,milestone:Milestone,isSelected) => {
-		const {repoModels} = this.props
-		const repo = repoModels && repoModels.get(`${milestone.repoId}`)
+		
+		const repo = null//repoModels && repoModels.get(`${milestone.repoId}`)
 		return this.renderResult(
 			milestone.title,
 			repo ? <Renderers.RepoName repo={repo}/> : '',
@@ -318,8 +305,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	}
 
 	renderLabel = (item:SearchItem,label:Label,isSelected) => {
-		const {repoModels} = this.props
-		const repo = repoModels && repoModels.get(`${label.repoId}`)
+		
+		const repo = null//repoModels && repoModels.get(`${label.repoId}`)
 		return this.renderResult(
 			label.name,
 			repo ? <Renderers.RepoName repo={repo}/> : '',
@@ -330,8 +317,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	}
 	
 	
-	onClick = (itemModel:ISearchItemModel) => {
-		log.info(`Created mouse down for `,itemModel)
+	onClick = (item:SearchItem) => {
+		log.info(`Created mouse down for `,item)
 		
 		return (event) => {
 			const
@@ -339,7 +326,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				isFn = _.isFunction(onResultSelected)
 			
 			if (isFn) {
-				onResultSelected(itemModel)
+				onResultSelected(item)
 			}
 		}
 	}
@@ -358,37 +345,30 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 * @returns {any}
 	 */
 	prepareResults(props:ISearchResultsListProps) {
-		const {onResultHover,onResultSelected,searchItemModels,selectedIndex,results} = props || null
+		const
+			{onResultHover,onResultSelected,searchItems,selectedIndex} = props,
+			themeStyles = this.getThemeStyles()
 
 
-		if (!results)
+		if (!searchItems)
 			return null
-
-		const themeStyles = this.getThemeStyles()
-
-		let itemCounter = -1
+		
 		log.debug(`Selected index in results ${selectedIndex}`)
 
-		const rows = _.nilFilter(searchItemModels.map((itemModel,index) => {
-			itemCounter++
+		const rows = _.nilFilter(searchItems.map((item,index) => {
+			
 
 			const
-				{item,model} = itemModel,
-				{id,type} = item
-
-
-			log.info('Item',model.$$clazz,item.type,item)
-			const resultRenderer:any = this.renderFns[item.type]
-
-
-			const isSelected = selectedIndex === itemCounter
+				{id,type,value} = item,
+				resultRenderer:any = this.renderFns[type],
+				isSelected = selectedIndex === index
 
 
 			// TODO: caclulate this in the SearchPanel - this is expensive
 			// if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
 			// 	this.setState({selectedItem:itemModel})
 
-			const itemContent = resultRenderer(item,model,isSelected)
+			const itemContent = resultRenderer(item,value,isSelected)
 
 			if (!itemContent)
 				return null
@@ -404,8 +384,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				<div key={`${item.id}`}
 				     className={isSelected && 'selected'}
 				     style={resultStyle}
-				     onMouseEnter={() => onResultHover && onResultHover(itemModel)}
-				     onClick={this.onClick(itemModel)}
+				     onMouseEnter={() => onResultHover && onResultHover(item)}
+				     onClick={this.onClick(item)}
 				>
 					{itemContent}
 				</div>

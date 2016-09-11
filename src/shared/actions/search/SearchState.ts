@@ -2,10 +2,9 @@
  * State Holder
  */
 import {List,Record,Map} from 'immutable'
-import {Issue, isIssue, Repo, AvailableRepo} from 'shared/models'
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'
-import {DataResultsContainer} from 'shared/actions/data/DataState'
+
 
 
 
@@ -56,26 +55,24 @@ export class SearchItem {
 	id:string|number
 	type:SearchType
 	score:number
-
-	constructor(id:string|number, type:SearchType,score:number)
+	value:any
+	
+	
+	constructor(id:string|number,type:SearchType,value,score:number)
 	constructor(obj:any)
-	constructor(idOrObject:any, type:SearchType = null,score:number = 1) {
+	constructor(idOrObject:any, type:SearchType = null,value = null,score:number = 1) {
 		if (_.isNumber(idOrObject) || _.isString(idOrObject)) {
 			Object.assign(this, {
 				id: idOrObject,
 				type,
-				score
+				score,
+				value
 			})
 		} else {
 			Object.assign(this, idOrObject)
 		}
 
 	}
-}
-
-export interface ISearchItemModel {
-	item: SearchItem,
-	model: any
 }
 
 /**
@@ -130,108 +127,3 @@ export class SearchResult {
 
 }
 
-
-
-export interface SearchResultData {
-	result:SearchResult
-	data:DataResultsContainer
-}
-
-export interface SearchData {
-	search:Search
-	results:SearchResultData[]
-}
-
-/**
- * immutable record for search
- *
- * @type {Record.Class}
- */
-export const SearchRecord = Record({
-	id:null,
-	results:Map<SearchSource,SearchResult>(),
-	error: null,
-	query: null,
-	searching: false,
-	types: []
-})
-
-/**
- * Represents a specific search panel
- */
-@RegisterModel
-export class Search extends SearchRecord {
-	static fromJS(o:any = {}) {
-		if (o && o instanceof Search)
-			return o
-		
-		
-		const resultsObj = _.toJS(o.results),
-			results = Object
-				.keys(resultsObj || {})
-				.reduce((resultsMap,nextKey) => {
-					return resultsMap.set(parseInt(nextKey,10),resultsObj[nextKey])
-				},Map<SearchSource,SearchResult>())
-
-		return new Search(Object.assign({},o,{
-			results
-		}))
-	}
-
-	id:string
-
-	results:Map<SearchSource,SearchResult>
-
-	types: SearchType[]
-
-	error:Error
-
-	query:string
-
-	searching:boolean
-}
-
-/**
- * Search state record
- *
- * @type {Record.Class}
- */
-export const SearchStateRecord = Record({
-	searches:Map<string,Search>()
-})
-
-/**
- * Search State class with some helpers
- */
-@RegisterModel
-export class SearchState extends SearchStateRecord {
-
-	static fromJS(o:any) {
-		if (o && o instanceof SearchState)
-			return o
-		
-		const searchesObj = _.toJS(o.searches),
-			searchIds = Object.keys(searchesObj || {})
-
-
-		const searches = searchIds.reduce((newSearches,searchId) => {
-			return newSearches.set(searchId, Search.fromJS(searchesObj[searchId]))
-		},Map<string,Search>())
-
-
-		return new SearchState(Object.assign({},o,{
-			searches
-		}))
-	}
-
-	searches:Map<string,Search>
-
-}
-
-
-/**
- * The action message for search
- */
-export interface SearchMessage extends ActionMessage<SearchState> {
-
-}

@@ -7,10 +7,10 @@ import {
 
 import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
 
-import {Label,LabelStore} from './Label'
-import {Milestone,MilestoneStore} from './Milestone'
-import {User,UserStore} from './User'
-import {Repo,RepoStore} from './Repo'
+import {Label} from './Label'
+import {Milestone} from './Milestone'
+import {User} from './User'
+import {Repo} from './Repo'
 import {RegisterModel} from '../Registry'
 import {Container} from 'typescript-ioc'
 import {Stores} from 'shared/Stores'
@@ -79,16 +79,25 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 	findByName(name:string):Promise<AvailableRepo[]> {
 		return null
 	}
-
-
+	
 	@PouchDBMangoFinder({
-		single: true,
 		indexFields: ['repoId'],
-		selector: (repoId) => ({repoId})
+		selector: (...repoIds:number[]) => ({
+			$or: repoIds.map(repoId => ({repoId}))
+		})
 	})
-	findByRepoId(repoId:number):Promise<AvailableRepo> {
+	findByRepoId(...repoIds:number[]):Promise<AvailableRepo[]> {
 		return null
 	}
+
+	// @PouchDBMangoFinder({
+	// 	single: true,
+	// 	indexFields: ['repoId'],
+	// 	selector: (repoId) => ({repoId})
+	// })
+	// findByRepoId(repoId:number):Promise<AvailableRepo> {
+	// 	return null
+	// }
 
 	@PouchDBMangoFinder({all:true})
 	findAll():Promise<AvailableRepo[]> {
@@ -106,7 +115,7 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 	async load(repoId:number):Promise<AvailableRepo> {
 		const stores = Container.get(Stores)
 
-		const availRepo = await stores.availableRepo.findByRepoId(repoId)
+		const availRepo = await stores.availableRepo.findByRepoId(repoId)[0]
 		assert(availRepo,`No avail repo found for repo id ${repoId}`)
 
 		const filled = Object.assign({},availRepo)
