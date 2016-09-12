@@ -16,12 +16,12 @@ const
  * @type {ProcessType[][]}
  */
 const WorkerBootOrder = [
+	[ProcessType.UI],
 	[ProcessType.DatabaseServer],
-	[ProcessType.StateServer],
 	[ProcessType.JobServer]
 ]
 
-export namespace WorkerManager {
+export namespace ProcessManager {
 	
 	/**
 	 * Start a worker for a specific process type
@@ -106,4 +106,4 @@ export namespace WorkerManager {
 }
 
 
-export default WorkerManager
+export default ProcessManager

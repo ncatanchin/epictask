@@ -60,7 +60,6 @@ class DatabaseProxy {
  * References to coordinator and plugins
  */
 @RegisterService(
-	ProcessType.StateServer,
 	ProcessType.JobServer,
 	ProcessType.JobWorker,
 	ProcessType.Main,

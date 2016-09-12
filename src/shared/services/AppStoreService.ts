@@ -5,7 +5,7 @@ import {ProcessType,AllProcessTypes} from "shared/ProcessType"
 
 const log = getLogger(__filename)
 
-@RegisterService(...AllProcessTypes)
+@RegisterService(ProcessType.UI)
 export class AppStoreService extends BaseService {
 	
 	store:ObservableStore<any>

@@ -1,0 +1,180 @@
+-
+	var fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss'))
+	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
+	var webFontLoaderUrl = require('!!file!libs/webfont-loader/webfont-loader.js')
+
+doctype html
+html.fill-width.fill-height(lang="en")
+
+	head
+		meta(charset='utf-8')
+
+		// Splash screen load
+		script.
+
+
+			require('babel-polyfill')
+			var
+							electron = require('electron'),
+							_ = require('lodash'),
+							pairs = hash.substr(1).split('&'),
+							params = pairs.reduce(function (map, nextPair) {
+								const parts = nextPair.split('=')
+								if (parts.length === 2)
+									map[parts[0]] = parts[1]
+								return map
+							}, {}),
+							log = console,
+							loaded = false,
+							remote = electron.remote,
+							isDev = remote.getGlobal('Env').isDev,
+							baseDir = "./",
+							loaderReady = false,
+							docReady = false,
+							fontsReady = false,
+							rootDir = isDev ? baseDir + "../../" : baseDir,
+							Events = remote.getGlobal('Constants').Events,
+							_ = require('lodash')
+
+			process.env.EPIC_ENTRY = params.processType || 'UI'
+
+			_.assign(global, {
+				_: _,
+				$: require('jquery'),
+				React: require('react'),
+				ReactDOM: require('react-dom'),
+				getLogger: function (loggerName) {
+					return console
+				}
+			})
+
+			if (isDev) {
+				//require('source-map-support').install()
+				try {
+					require('devtron').install()
+				} catch (err) {
+					log.info(`Dev tron is prob already loaded`)
+				}
+			}
+
+
+			function makeRootPath(filename) {
+				return rootDir + filename
+			}
+
+			function makeBasePath(filename) {
+				return baseDir + filename
+			}
+
+			function getHead() {
+				return document.getElementsByTagName('head')[0]
+			}
+
+			//Add a script tag to load content
+			function addScript(scriptPath, asyncLoad, callback) {
+				const script = document.createElement('script');
+
+				script.type = 'text/javascript'
+				if (asyncLoad) {
+					script.async = true
+				}
+
+				if (callback)
+					script.onload = callback
+
+				script.src = scriptPath
+				getHead().appendChild(script)
+			}
+
+			function addCSS(cssPath) {
+				const link = document.createElement('link')
+				link.setAttribute('rel', 'stylesheet')
+				link.href = cssPath
+				getHead().appendChild(link)
+			}
+
+			window.addStyleSheet = function(styleSheet) {
+				$(getHead()).append(`<style>${styleSheet}</style>`)
+			}
+
+		meta(name="viewport",content="width=device-width, initial-scale=1")
+		title epictask
+
+		script.
+
+			function loadUI() {
+				addStyleSheet(fontStyles)
+				addStyleSheet(mainStyles)
+
+				const cssPaths = [
+					"node_modules/animate.css/animate.css",
+					"node_modules/font-awesome/css/font-awesome.min.css",
+					"node_modules/highlight.js/styles/dark.css",
+					"node_modules/simplemde/dist/simplemde.min.css"
+				]
+
+				cssPaths.forEach(function (cssFile) {
+					addCSS(makeRootPath(cssFile))
+				})
+				function showLoader() {
+					log.info('Template Ready state', fontsReady, docReady, loaderReady)
+					if (fontsReady && docReady && loaderReady)
+						window.startLoaderEntry()
+				}
+
+				WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
+				WebFont.load({
+					loading: function () {
+						log.info('WebFonts loading')
+					},
+					active: function () {
+						log.info('WebFonts active')
+						fontsReady = true
+						showLoader()
+					},
+					inactive: function () {
+						log.error('WebFonts inactive')
+					},
+					fontinactive: function (familyName, fvd) {
+						log.error('font failed', familyName)
+					},
+					custom: {
+						families: ['AvenirNext'],
+						//urls: [makeBasePath("
+						#{fontUrl}
+					}
+				})
+
+				if (isDev) {
+					require('debug-menu').install()
+				}
+
+				addScript('LoaderEntry.bundle.js', false, function () {
+					log.info(`Loader - loaded`)
+					loaderReady = true
+					showLoader()
+				})
+
+				$(document).ready(function () {
+					docReady = true
+					showLoader()
+				})
+			}
+
+			function loadApp() {
+				$.getScript('./AppEntry.bundle.js')
+			}
+
+			if (processType === 'UI') {
+				loadUI()
+			} else {
+				loadApp()
+			}
+
+	body.fill-width.fill-height()
+		#root
+		#loader-root
+
+
+
+

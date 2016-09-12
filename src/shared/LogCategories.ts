@@ -6,7 +6,7 @@ const LogLevel = {
 	ERROR: 5
 }
 
-exports = {
+const categoryLevels = {
 	ObservableStore: LogLevel.INFO,
 	AppStore: LogLevel.INFO,
 	RootReducer: LogLevel.INFO,
@@ -15,4 +15,14 @@ exports = {
 	RepoActionFactory: LogLevel.INFO,
 	LunrIndex: LogLevel.DEBUG,
 	Files: LogLevel.INFO
+}
+
+Object.assign(global as any, {
+	TypeLoggerCategories: categoryLevels,
+	TypeLoggerDefaultLevel: 3
+})
+
+
+export {
+	
 }

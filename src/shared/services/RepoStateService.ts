@@ -12,7 +12,7 @@ import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.StateServer)
+@RegisterService(ProcessType.UI)
 export class RepoStateService extends BaseService {
 
 	private unsubscribe:Function

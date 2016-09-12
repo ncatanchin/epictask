@@ -25,7 +25,7 @@ function getStores() {
 	return Container.get(Stores)
 }
 
-@RegisterService(ProcessType.StateServer)
+@RegisterService(ProcessType.UI)
 export default class ActivityManagerService extends BaseService {
 
 	/**

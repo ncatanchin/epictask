@@ -1,9 +1,8 @@
 
-import "shared/Globals"
+
 import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
 import {Toaster} from 'shared/Toaster'
-import {Container} from 'typescript-ioc'
 import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
 import * as JQueryGlobal from 'jquery'
 

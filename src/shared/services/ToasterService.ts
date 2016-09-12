@@ -7,7 +7,7 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.StateServer)
+@RegisterService(ProcessType.UI)
 export class ToastService extends BaseService {
 
 	private unsubscribe:Function

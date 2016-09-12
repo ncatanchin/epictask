@@ -3,14 +3,6 @@
 import {Container as ContainerGlobal} from 'typescript-ioc'
 import 'shared/ProcessConfig'
 
-const _ = require('lodash')
-
-/**
- * Grab a ref to global marked as any for augmentation
- *
- * @type {any}
- */
-const g = global as any
 
 // LOGGING CONFIG FIRST
 require('shared/LogConfig')
@@ -28,13 +20,14 @@ import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 
 // Export globals
-const isDev = process.env.NODE_ENV === 'development'
-const isRemote = typeof process.env.REMOTE !== 'undefined'
-const isOSX = process.platform === 'darwin'
-const isRenderer = typeof window !== 'undefined' || process.type === 'renderer'
-
-
-const envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
+const
+	_ = require('lodash'),
+	g = global as any,
+	isDev = process.env.NODE_ENV === 'development',
+	isRemote = typeof process.env.REMOTE !== 'undefined',
+	isOSX = process.platform === 'darwin',
+	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
+	envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
 
 const EnvGlobal = {
 	envName,
@@ -117,17 +110,8 @@ declare global {
 	interface Object {
 		$$clazz?:string
 	}
-
-
-
 }
 
-
-
-
-
-
 installGlobals()
-
 
 export {}

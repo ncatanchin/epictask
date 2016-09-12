@@ -2,8 +2,7 @@
  * All possible process types in EpicTask
  */
 export enum ProcessType {
-	StateServer = 1,
-	JobServer,
+	JobServer = 1,
 	JobWorker,
 	Main,
 	DatabaseServer,
@@ -42,7 +41,6 @@ export function getProcessTypeName(processType:ProcessType):TProcessType {
  * All Process Name Mappings
  */
 const Names = {
-	Server: getProcessTypeName(ProcessType.StateServer),
 	JobServer: getProcessTypeName(ProcessType.JobServer),
 	JobWorker: getProcessTypeName(ProcessType.JobWorker),
 	Main: getProcessTypeName(ProcessType.Main),

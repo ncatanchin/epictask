@@ -1,4 +1,3 @@
-import * as ReactDOM from 'react-dom'
 import * as assert from 'assert'
 import {Loader} from "ui/components/common/Loader"
 import * as Constants from 'shared/Constants'
@@ -8,7 +7,7 @@ import Electron = require('electron')
 
 // Set the process type
 // @see AppEntry.ts
-process.env.EPIC_ENTRY = 'UI'
+//process.env.EPIC_ENTRY = 'UI'
 
 function startLoaderEntry() {
 	const
@@ -17,8 +16,6 @@ function startLoaderEntry() {
 		loaderElem = $(loaderRoot)
 	
 	assert(loaderRoot,`Unable to find element #loader-root`)
-	
-	
 	
 	ReactDOM.render(<Loader animate />,loaderRoot,() => {
 		log.info(`Rendered loader`)
@@ -53,7 +50,8 @@ function startLoaderEntry() {
 		log.info(`Loading AppEntry`)
 		loaded = true
 		
-		win.addScript('./AppEntry.bundle.js',true)
+		//win.addScript('./AppEntry.bundle.js',true)
+		win.loadApp()
 		
 	}
 	

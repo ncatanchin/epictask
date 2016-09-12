@@ -1,12 +1,18 @@
+require('source-map-support').install()
+require('babel-polyfill')
+
+import 'reflect-metadata'
 import 'shared/NamespaceConfig'
 import ProcessType from 'shared/ProcessType'
 import 'shared/ProcessConfig'
+import 'shared/PromiseConfig'
 import 'shared/LogConfig'
+import "shared/Globals"
+
 import * as TypeLogger from 'typelogger'
 
 const Entries = {
 	[ProcessType.Main]: () => require("main/MainEntry"),
-	[ProcessType.StateServer]: () => require("server/StateServerEntry"),
 	[ProcessType.DatabaseServer]: () => require("db/DatabaseServerEntry"),
 	[ProcessType.JobServer]: () => require("job/JobServerEntry"),
 	[ProcessType.UI]: () => require("ui/UIEntry")

@@ -13,8 +13,8 @@ const log = getLogger(__filename)
  */
 export function PureRender(Component) {
 	interceptFn(Component.prototype,'shouldComponentUpdate',function(origFn,nextProps,nextState) {
-		//log.info(`Checking pure render`,this.displayName)
-		const diff = shallowCompare(this,nextProps, nextState)
+		const
+			diff = shallowCompare(this,nextProps, nextState)
 		
 		let compDiff = false
 		if (!diff && origFn) {

@@ -1,5 +1,8 @@
 import * as childProcess from 'child_process'
 import {getAppConfig} from "shared/AppConfig"
+import WebViewElement = Electron.WebViewElement
+import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
+import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
 //import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
 
 const HEARTBEAT_TIMEOUT = 1000
@@ -47,7 +50,7 @@ export default class Worker {
 	/**
 	 * Reference to child process
 	 */
-	private child:childProcess.ChildProcess
+	private webView:WebViewElement
 	
 	/**
 	 * Deferred stop flag
@@ -135,7 +138,7 @@ export default class Worker {
 	 * Send heartbeat message
 	 */
 	private sendHeartbeat() {
-		if (this.killed || !this.child || !this.running)
+		if (this.killed || !this.webView || !this.running)
 			return
 		
 		this.sendMessage('ping')
@@ -188,31 +191,35 @@ export default class Worker {
 	/**
 	 * Handle worker errors
 	 *
-	 * @param err
+	 * @param event
 	 */
-	private handleError = (err:Error) => {
+	private handleError = (event:DidFailLoadEvent) => {
 		this.listeners.forEach(listener => {
 			try {
-				listener.onError && listener.onError(this, err)
+				listener.onError && listener.onError(this, new Error(event.errorDescription))
 			} catch (err2) {
 				log.error(`On error listener had an error - kind of funny`,err2)
 			}
 		})
 	}
 	
+	private handleCrash = (event) => {
+		log.error(`Worker crashed`,event)
+		this.handleExit(event)
+	}
+	
 	/**
 	 * Handle process exit/stop
 	 *
-	 * @param err
-	 * @param isDisconnect
+	 * @param event
 	 */
-	private handleExit = (err:Error, isDisconnect = false) => {
-		log.info(`Exit called - isDisconnect(${isDisconnect})`,err)
+	private handleExit = (event = null) => {
+		//const err:Error, isDisconnect = false
 		this.exited = true
 		
 		this.listeners.forEach(listener => {
 			try {
-				listener.onStop && listener.onStop(this, err)
+				listener.onStop && listener.onStop(this, null)
 			} catch (err2) {
 				log.error('On exit error in listener', err2)
 			}
@@ -222,10 +229,11 @@ export default class Worker {
 		if (!this.stopDeferred) {
 			
 			// If this is a disconnect, and not killed, then kill
-			if (isDisconnect && !this.killed && this.child) {
+			if ( !this.killed && this.webView) {
 				log.warn('Unexpected disconnect, killing manually')
 				try {
-					this.child.kill()
+					this.webView.delete()
+					this.webView = null
 				} catch (err2) {
 					log.error('Manual kill failed', err2)
 				}
@@ -242,35 +250,15 @@ export default class Worker {
 		this.cleanup()
 	}
 	
-	
-	
-	
-	/**
-	 * Basically a curried handleExit call
-	 *
-	 * @param err
-	 */
-	private handleDisconnect = (err:Error) => {
-		log.info('Disconnect received',err)
-		//this.handleExit(err,true)
-	}
-	
-	/**
-	 * Basically a curried handleExit call
-	 *
-	 * @param err
-	 */
-	private handleClosed = (err:Error) => {
-		log.info('Closed received',err)
-		this.handleExit(err,true)
-	}
-	
+
 	/**
 	 * Handle message
 	 *
-	 * @param message
+	 * @param event
 	 */
-	private handleMessage = (message:IWorkerMessage) => {
+	private handleMessage = (event:IpcMessageEvent) => {
+		const message:IWorkerMessage = event.args[0]
+		
 		// First handle message internally
 		switch (message.type) {
 			
@@ -303,41 +291,43 @@ export default class Worker {
 		this.killed = true
 		
 		// Grab the ref
-		const {child} = this
+		const {webView} = this
 		
 		
 		
 		// If already killed or never started!
-		if (!child) {
+		if (!webView) {
 			log.warn('not running, can not kill',this.startFile)
 		} else {
 			
 			// We should be connected
-			if (child.connected) {
-				log.info('closing ipc')
-				child.disconnect()
-			} else {
-				log.warn('We are not connected to the child - weird')
-			}
+			// if (webView.isconnected) {
+			// 	log.info('closing ipc')
+			// 	child.disconnect()
+			// } else {
+			// 	log.warn('We are not connected to the child - weird')
+			// }
 			
 			
 			// Remove listeners
-			try {
-				child.removeAllListeners()
-			} catch (err) {
-				log.warn('Failed to remove all listeners', err.message)
-			}
+			// try {
+			// 	webView.remove
+			// } catch (err) {
+			// 	log.warn('Failed to remove all listeners', err.message)
+			// }
 			
 			// Send kill
 			try {
-				if (!this.exited)
-					child.kill()
+				if (!this.exited) {
+					webView.delete()
+					//child.kill()
+				}
 			} catch (err) {
 				log.error('Child kill failed', err)
 			}
 			
 			// Clear ref
-			this.child = null
+			this.webView = null
 		}
 		
 		// Make sure we complete the stop
@@ -354,11 +344,12 @@ export default class Worker {
 		if (!this.killed) {
 			this.killed = true
 			
-			const child = this.child
+			const {webView} = this
 			
-			if (child) {
+			if (webView) {
 				try {
-					child.kill()
+					webView.delete()
+					this.webView = null
 				} catch (err) {
 					log.warn(`Failed to send kill to child`,err)
 				}
@@ -376,26 +367,27 @@ export default class Worker {
 	 * @param callback
 	 */
 	sendMessage(type:string, body:any = {}, callback?:(err:Error) => void) {
-		if (this.killed || !this.child) {
+		if (this.killed || !this.webView) {
 			throw new Error(`Process is not ready for messages (killed=${this.killed})`)
 		}
 		
 		log.debug(`Sending Message (${type})`)
 		
 		// Send the actual message
-		const child = this.child as any
-		child.send({type, body},null,callback)
+		const {webView}= this
+		webView.send(type,{type,body})
 	}
 	
 	/**
 	 * Stop the worker
 	 */
 	stop(exitCode = 0):Promise<any> {
-		if (this.exited || this.killed || this.stopDeferred || !this.child)
+		if (this.exited || this.killed || this.stopDeferred || !this.webView)
 			return
 		
 		this.stopDeferred = Promise.defer()
-		this.kill()
+		this.webView.delete()
+		this.webView = null
 		
 		return this.stopDeferred.promise
 	}
@@ -406,59 +398,22 @@ export default class Worker {
 	 * @returns {Promise<T>|Promise}
 	 */
 	async start() {
-		if (this.child || this.created)
+		if (this.webView || this.created)
 			throw new Error(`Worker already started (created=${this.created})`)
 	
 		try {
 			
 			
-			// Create the process
-			const
-				args = process.argv,
-				execArgs = process.execArgv
-			
-			let debugArgs = args.slice(1).filter(arg => arg.indexOf('debug') > -1)
-			
-			/**
-			 * Child options
-			 *
-			 * @type {{stdio: (string|string)[]}}
-			 */
-			const opts = {
-				stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
-				execArgv: ['--debug'],
-				env: Object.assign(
-					{},
-					process.env,
-					this.opts.env || {},
-					{
-						EPIC_CHILD: true,
-						EPIC_CONFIG: JSON.stringify(getAppConfig())
-					}
-				)
-			}
-			
-			
-			log.info('Main args are',args,'debugArgs',debugArgs,'execArgs',execArgs)
-			const child = this.child = childProcess.fork(this.startFile,[],opts)
-			
-			// Immediately attach kill on death
-			process.on('exit', (code) => {
-				try {
-					this.kill()
-				} catch (err) {
-				}
-			})
-			//this.child = childProcess.spawn(ELECTRON_PATH,[this.startFile],opts)
-			
 			
 			// Assign handlers
-			child
-				.on('disconnect',this.handleDisconnect)
-				.on('error',this.handleError)
-				.on('exit',this.handleExit)
-				.on('message',this.handleMessage)
-			
+			this.webView.addEventListener('did-fail-load',this.handleError)
+			this.webView.addEventListener('destroyed',this.handleExit)
+			this.webView.addEventListener('close',this.handleExit)
+			this.webView.addEventListener('ipc-message',this.handleMessage)
+			this.webView.addEventListener('did-finish-load',() => {
+				log.info(``)
+			})
+				
 			
 			// 1-tick
 			await Promise.setImmediate()

@@ -50,6 +50,7 @@
     "@kadira/storybook": "^2.5.2",
     "@types/faker": "0.0.29",
     "@types/lodash": "^4.14.34",
+    "@types/source-map-support": "^0.2.27",
     "asar": "^0.12.1",
     "autoprefixer": "^6.3.7",
     "awesome-typescript-loader": "2.1.1",

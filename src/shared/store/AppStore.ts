@@ -360,15 +360,12 @@ export function serializeState(state = getStoreState()) {
 }
 
 // Add shutdown hook on main
-If(ProcessConfig.isMain,() => {
-	log.info(`Main is shutting down, going to persist state`)
-	
-	const {app} = require('electron')
-	app.on('before-quit',() => {
-		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
-		writeStoreState()
-	})
+const {app} = require('electron')
+app.on('before-quit',() => {
+	log.info(`Writing current state (shutdown) to: ${stateFilename}`)
+	writeStoreState()
 })
+
 
 
 if (module.hot) {

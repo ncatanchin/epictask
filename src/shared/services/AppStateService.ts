@@ -11,7 +11,7 @@ import {AppStoreService} from "shared/services/AppStoreService"
 
 const log = getLogger(__filename)
 
-@RegisterService(ProcessType.StateServer)
+@RegisterService(ProcessType.UI)
 export default class AppStateService extends BaseService {
 
 	appActions:AppActionFactory

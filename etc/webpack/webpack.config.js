@@ -217,8 +217,8 @@ const config = {
 		new webpack.optimize.OccurrenceOrderPlugin(),
 		new webpack.NoErrorsPlugin(),
 		new HtmlWebpackPlugin({
-			filename: "main-entry.html",
-			template: `${baseDir}/src/assets/templates/MainEntry.jade`,
+			filename: "app-entry.html",
+			template: `${baseDir}/src/assets/templates/AppEntry.jade`,
 			inject: false
 		}),
 		new DefinePlugin(DefinedEnv),

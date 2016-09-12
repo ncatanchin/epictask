@@ -18,12 +18,8 @@ interface Window {
 declare namespace NodeJS {
 	interface Global {
 		MainBooted:boolean
-		gsapRequire:any
 	}
 }
-
-
-declare var gsapRequire:any
 
 /**
  * Is in development mode
@@ -31,3 +27,8 @@ declare var gsapRequire:any
 declare var isDev:boolean
 
 
+import {install} from 'source-map-support'
+
+interface NodeRequireFunction {
+	(moduleName: 'source-map-support'): typeof install;
+}

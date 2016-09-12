@@ -12,7 +12,7 @@ const {BrowserWindow,Menu,ipcMain} = Electron
 
 
 //const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app',require('!!file!pug-html!assets/templates/MainEntry.jade'))
-const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app/main-entry.html')
+const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app/app-entry.html')
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let

@@ -18,40 +18,40 @@ let appConfig:AppConfig
  * @returns {AppConfig}
  */
 export function getAppConfig() {
-	if (!appConfig) {
-		let electronResolved = false
-		try {
-			const electron = require('electron')
-			electronResolved = !!electron.app || !!electron.remote
-		} catch (err) {}
-		
-		
-		if (electronResolved || ProcessConfig.isType(ProcessType.UI,ProcessType.Main, ProcessType.Test)) {
-			const electron = require('electron')
-			const app = electron.app || electron.remote.app
-			const userDataPath = app.getPath('userData')
-			
-			appConfig = {
-				paths: {
-					userDataPath,
-					cachePath: `${userDataPath}/Cache`,
-					tempPath: app.getPath('temp')
-				}
+	const log = getLogger(__filename)
+	
+	if (ProcessConfig.isStorybook()) {
+		return {
+			paths: {
+				userDataPath: "/tmp",
+				cachePath: "/tmp",
+				tempPath: "/tmp"
 			}
-		} else if (ProcessConfig.isStorybook()) {
-			appConfig = {
-				paths: {
-					userDataPath: "/tmp",
-					cachePath: "/tmp",
-					tempPath: "/tmp"
-				}
-			}
-		} else {
-			if (!process.env.EPIC_CONFIG)
-				throw new Error('EPIC_CONFIG env var must be specified for all processes except UI,Main and Test')
-			
-			appConfig = JSON.parse(process.env.EPIC_CONFIG)
 		}
+	}
+	
+	if (!appConfig) {
+		try {
+			require('electron')
+		} catch (err) {
+			log.error(`Failed to resolve electron`, err)
+			throw err
+		}
+		
+		
+		const
+			electron = require('electron'),
+			app = electron.app || electron.remote.app,
+			userDataPath = app.getPath('userData')
+		
+		appConfig = {
+			paths: {
+				userDataPath,
+				cachePath: `${userDataPath}/Cache`,
+				tempPath: app.getPath('temp')
+			}
+		}
+		
 	}
 	return appConfig
 }

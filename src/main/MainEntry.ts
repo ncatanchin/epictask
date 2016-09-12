@@ -1,14 +1,15 @@
+
 require('shared/NodeEntryInit')
 
+import checkSingleInstance from "main/CheckSingleInstance"
 import {RemoteDebuggingPort, Events, MainBooted} from 'shared/Constants'
-import MainConfigurator from './MainConfigurator'
 import * as MainWindowType from './MainWindow'
+import {getServiceManager as getServiceManagerType} from "shared/services"
 const {app} = require('electron')
 
 
 
 // LOGGING
-
 const log = getLogger(__filename)
 
 // ADD EVENTS TO GLOBAL
@@ -34,6 +35,44 @@ if (Env.isDev) {
 }
 
 
+function getServiceManager() {
+	return (require('shared/services').getServiceManager as typeof getServiceManagerType)()
+}
+
+/**
+ * Start all the services
+ *
+ * @returns {any}
+ */
+async function start(): Promise<any> {
+	await getServiceManager().start()
+}
+
+/**
+ * Stop everything
+ *
+ * @returns {Promise<T>|Promise<T|U>}
+ */
+async function stop() {
+	await getServiceManager().stop()
+}
+
+
+/**
+ * Callback from open if already running
+ */
+function onFocus() {
+	
+	// Someone tried to run a second instance, we should focus our window.
+	const win = mainWindow && mainWindow.getBrowserWindow()
+	
+	if (win) {
+		win && win.isMinimized() && win.restore()
+		win.focus()
+	}
+	
+	
+}
 
 /**
  * Boot the app
@@ -44,37 +83,24 @@ async function boot() {
 		require('./MainDevConfig')
 
 	log.info("Boot start")
-	global.MainBooted = false
-
+	global[MainBooted] = false
 	
-	log.info("Boot load window")
+	log.info("Load Main Window")
 	mainWindow = require('./MainWindow') as typeof MainWindowType
-
-	log.info("Boot start")
+	
+	// Load the main window & start the loader animation
 	await mainWindow.start(async () => {
-		log.info('Main window loaded and waiting for backend')
-		
-		await MainConfigurator.start()
-		
-		log.info('Main Configurator Completed')
+		log.info('Starting Services')
+		await start()
+		log.info('Services started')
 	})
 
-	log.info("Boot complete, call ready")
-	
 	// Notifying the main window that we are ready
 	global[MainBooted] = true
-	
-	const
-		{AppActionFactory} = require('shared/actions/AppActionFactory'),
-		appActions = new AppActionFactory()
-	
-	appActions.setReady(true)
 	
 	setImmediate(() => {
 		mainWindow.ready()
 	})
-	
-	
 }
 
 /**
@@ -95,35 +121,13 @@ function onStart() {
 	return boot()
 }
 
-/**
- * Make sure we are the only running instance
- */
-const shouldQuit = app.makeSingleInstance(() => {
-	
-	// Someone tried to run a second instance, we should focus our window.
-	const win = mainWindow && mainWindow.getBrowserWindow()
-	
-	if (win) {
-		win && win.isMinimized() && win.restore()
-		win.focus()
-	}
-	
-})
-
-/**
- * Bind events
- */
-if (shouldQuit) {
-	log.warn('*** Another instance is running, we will exit')
-	app.quit()
-} else {
+if (checkSingleInstance(app,onFocus)) {
 	if (!Env.isHot)
 		app.on('window-all-closed', onAllClosed)
-
+	
 	// app.on('will-quit',onWillQuit)
 	app.on('ready', onStart)
 }
-
 
 /**
  * Enable HMR

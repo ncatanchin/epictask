@@ -1,6 +1,6 @@
 //region PROCESS_SETUP
-require('source-map-support').install()
-require('babel-polyfill')
+//require('source-map-support').install()
+
 process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
 
 import 'reflect-metadata'

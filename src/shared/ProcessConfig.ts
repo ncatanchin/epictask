@@ -53,14 +53,6 @@ export namespace ProcessConfigGlobal {
 	}
 	
 	/**
-	 * Is the state server - most common check
-	 * @returns {boolean}
-	 */
-	export function isStateServer() {
-		return isType(ProcessType.StateServer)
-	}
-	
-	/**
 	 * Is the main electron instance
 	 * @returns {boolean}
 	 */
@@ -87,10 +79,10 @@ declare global {
 	/**
 	 * Process type of the currently running process
 	 */
-	var ProcessConfig:typeof ProcessConfigGlobal
+	const ProcessConfig:typeof ProcessConfigGlobal
 	
 	//noinspection JSUnusedLocalSymbols
-	var ProcessType:typeof ProcessConfigGlobal.Type
+	const ProcessType:typeof ProcessConfigGlobal.Type
 }
 
 // Assign to global
