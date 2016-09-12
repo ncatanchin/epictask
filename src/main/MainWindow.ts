@@ -110,8 +110,8 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 
 
 			mainWindowState.manage(browserWindow)
-
 			
+			browserWindow.show()
 
 			// On PageLoaded - show and focus
 			

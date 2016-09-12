@@ -471,7 +471,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 		style:        {
 			color:           text.primary,
-			backgroundColor: background,//primary.hue1,
+			backgroundColor: background,
 			height:          navBarHeight
 
 		}

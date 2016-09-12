@@ -45,6 +45,22 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 
 }
 
+
+export function postConstructorDecorate<T>(name:string, clazz:{new():T}, decorator:(instance:T,args:any[],data:any) => T,data:any = null) {
+	const makeDecorator =  new Function('name','clazz','decorator','data',`
+		function ${name}() {
+			clazz.apply(this,arguments);
+			decorator(this,arguments,data);
+		}
+		
+		${name}.prototype = clazz.prototype;
+		return ${name};
+	`)
+	
+	return makeDecorator(name,clazz,decorator,data)
+}
+
+
 export function interceptFn(o,key,interceptor = null) {
 	if (!isString(key)) {
 		Object.keys(key).forEach(prop => interceptFn(o,prop,key[prop]))

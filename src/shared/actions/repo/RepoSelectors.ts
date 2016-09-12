@@ -33,7 +33,7 @@ export const repoIdPredicate = (o:any) => {
 }
 
 export const availableRepoIdsSelector = _.memoize(
-	(state):string[] => repoStateSelector(state).availableRepoIds
+	(state):string[] => _.nilFilter(repoStateSelector(state).availableRepoIds)
 )
 
 export const enabledRepoIdsSelector = _.memoize(

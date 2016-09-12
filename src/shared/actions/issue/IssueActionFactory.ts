@@ -79,28 +79,28 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return IssueKey;
 	}
 	
-	@ActionReducer()
-	setIssueIds(issueIds: number[]) {
-		return (state: IssueState) => {
-			let selectedIssueIds = state.selectedIssueIds
-			if (selectedIssueIds.length) {
-				selectedIssueIds = selectedIssueIds
-					.filter(selectedIssueId => (
-						issueIds.includes(selectedIssueId)
-					))
-				
-				// if (!selectedIssueIds.length && issueIds.length)
-				// 	selectedIssueIds = [issueIds[0]]
-			}
-			
-			let newState = state.set('issueIds', issueIds)
-			if (!_.isEqual(selectedIssueIds, state.selectedIssueIds))
-				newState = newState.set('selectedIssueIds', selectedIssueIds)
-			
-			return newState
-		}
-		
-	}
+	// @ActionReducer()
+	// setIssueIds(issueIds: number[]) {
+	// 	return (state: IssueState) => {
+	// 		let selectedIssueIds = state.selectedIssueIds
+	// 		if (selectedIssueIds.length) {
+	// 			selectedIssueIds = selectedIssueIds
+	// 				.filter(selectedIssueId => (
+	// 					issueIds.includes(selectedIssueId)
+	// 				))
+	//
+	// 			// if (!selectedIssueIds.length && issueIds.length)
+	// 			// 	selectedIssueIds = [issueIds[0]]
+	// 		}
+	//
+	// 		let newState = state.set('issueIds', issueIds)
+	// 		if (!_.isEqual(selectedIssueIds, state.selectedIssueIds))
+	// 			newState = newState.set('selectedIssueIds', selectedIssueIds)
+	//
+	// 		return newState
+	// 	}
+	//
+	// }
 	
 	
 	
@@ -868,7 +868,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		// )
 		//
 		// actions.requestIssueIds(issueIds, false)
-		this.setIssueIds(issueIds)
+		// this.setIssueIds(issueIds)
 		return issueIds
 	}
 	

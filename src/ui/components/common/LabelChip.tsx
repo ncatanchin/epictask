@@ -120,7 +120,6 @@ export interface ILabelChipProps {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'labelChip')
-
 @PureRender
 export default class LabelChip extends React.Component<ILabelChipProps,any> {
 

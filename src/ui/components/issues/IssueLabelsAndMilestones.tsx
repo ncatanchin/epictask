@@ -5,7 +5,7 @@
 // Imports
 import * as React from 'react'
 import {Label} from 'shared/models/Label'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
+import { Themed, ThemedNoRadium, ThemedStylesNoRadium } from 'shared/themes/ThemeManager'
 import {Milestone} from 'shared/models/Milestone'
 import {PureRender} from 'ui/components/common'
 import LabelChip from 'ui/components/common/LabelChip'
@@ -30,9 +30,9 @@ export type TOnLabelOrMilestoneCallback = (item:Label|Milestone,index:number) =>
 /**
  * IIssueLabelsProps
  */
-export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
+export interface IIssueLabelsAndMilestonesProps extends React.HTMLAttributes {
 	theme?:any
-	style?:any
+	styles?:any
 	milestones?:Milestone[]
 	labels?:Label[]
 	labelStyle?:any
@@ -50,21 +50,21 @@ export interface IIssueLabelsAndMilestonesProps extends React.DOMAttributes {
  * @constructor
  **/
 
-@ThemedNoRadium
+@ThemedStylesNoRadium(baseStyles,'labels')
 @PureRender
-export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,any> {
+export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,void> {
 
 
-	updateState = (props = this.props) => {
-		const {theme} = props,
-			styles = mergeStyles(baseStyles, theme.labels)
-
-		this.setState({styles})
-
-	}
-
-	componentWillMount = this.updateState
-	componentWillReceiveProps = this.updateState
+	// updateState = (props = this.props) => {
+	// 	const {theme} = props,
+	// 		styles = mergeStyles(baseStyles, theme.labels)
+	//
+	// 	this.setState({styles})
+	//
+	// }
+	//
+	// componentWillMount = this.updateState
+	// componentWillReceiveProps = this.updateState
 
 	renderLabels() {
 
@@ -77,10 +77,10 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 				labelStyle,
 				onMilestoneClick,
 				onLabelClick,
-				labels
+				labels,
+				styles
 			} = this.props,
-			{palette} = theme,
-			{styles} = this.state
+			{palette} = theme
 
 
 
@@ -106,7 +106,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 	}
 
 	render() {
-		return <div style={makeStyle(this.state.styles.root,this.props.style)}>
+		return <div style={makeStyle(this.props.styles.root,this.props.style)}>
 			{(this.props.labels || this.props.milestones) && this.renderLabels()}{this.props.afterAllNode}
 		</div>
 	}

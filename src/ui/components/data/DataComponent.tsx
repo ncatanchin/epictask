@@ -6,6 +6,7 @@ import {
 } from "ui/components/data/DataManager"
 import {isFunction, isString} from "shared/util"
 import './DataProviders'
+import { PureRender } from "ui/components"
 
 
 // Constants
@@ -140,7 +141,7 @@ export function DataComponent<P,T extends TDataComponent<P>>
 	
 	return (target:{new():T}) => {
 				
-		return class extends React.Component<any,any> {
+		const newDataComponent = class extends React.Component<any,any> {
 			
 			constructor(props,context) {
 				super(props,context)
@@ -153,7 +154,10 @@ export function DataComponent<P,T extends TDataComponent<P>>
 					dataComponent={target}
 				/>
 			}
-		} as any
+		}
+		
+		PureRender(newDataComponent)
+		return newDataComponent as any
 	}
 }
 
@@ -465,8 +469,7 @@ class DataComponentWrapper extends React.Component<IDataComponentProps<any>,IDat
 			Wrapped
 		}
 		
-		return <Comps.Wrapped {...cleanProps} {...mappedProps}>
-		</Comps.Wrapped> as any
+		return <Comps.Wrapped {...cleanProps} {...mappedProps}/> as any
 	}
 	
 }

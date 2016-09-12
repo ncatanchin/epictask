@@ -256,7 +256,6 @@ export interface IIssuesPanelProps {
 	labels?: Label[]
 	milestones?: Milestone[]
 	saving?: boolean
-	selectedIssueIds?: number[]
 	selectedIssue?: Issue
 	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
@@ -267,7 +266,7 @@ export interface IIssuesPanelState {
 	firstSelectedIndex?: number
 	issueList?: any
 	issueGroupsVisibility?: Map<string,boolean>
-	internalSelectedIssueIds?: number[]
+	
 }
 
 
@@ -277,7 +276,7 @@ export interface IIssuesPanelState {
  * @class IssuesPanel
  * @constructor
  **/
-
+@HotKeyContext()
 @connect(createStructuredSelector({
 	enabledRepoIds: enabledRepoIdsSelector,
 	issueSortAndFilter: issueSortAndFilterSelector,
@@ -293,7 +292,7 @@ export interface IIssuesPanelState {
 		Container.get(IssueActionFactory).getIssues(props.issueSortAndFilter,props.enabledRepoIds)
 	,Issue,'id',[])
 )
-@HotKeyContext()
+
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
@@ -310,7 +309,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Selected issue ids
 	 */
 	private get selectedIssueIds(): number[] {
-		return _.get(this, 'state.internalSelectedIssueIds', [])
+		return Container.get(IssueActionFactory).state.selectedIssueIds
 	}
 	
 	/**
@@ -330,15 +329,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private onEnter = () => {
 		const
-				{
-						issueSortAndFilter,
-						issuesGrouped,
-						issues,
-						selectedIssue
-				} = this.props,
-				{groupBy} = issueSortAndFilter.issueSort
-		
-		const {selectedIssueIds} = this
+			{
+					issueSortAndFilter,
+					issuesGrouped,
+					issues,
+					selectedIssue
+			} = this.props,
+			{groupBy} = issueSortAndFilter.issueSort,
+			{selectedIssueIds} = this
 		
 		log.debug('Enter pressed', selectedIssueIds, selectedIssue)
 		
@@ -517,21 +515,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	updateSelectedIssueIds(newSelectedIssueIds: number[], force = false) {
-		this.setState({internalSelectedIssueIds: newSelectedIssueIds})
 		this.adjustScroll(newSelectedIssueIds)
-		
-		if (force) {
-			this.doPushSelectedIssueIds(newSelectedIssueIds)
-			this.pushUpdatedSelectedIssueIds.cancel()
-		} else {
-			this.pushUpdatedSelectedIssueIds(newSelectedIssueIds)
-		}
+		this.pushUpdatedSelectedIssueIds(newSelectedIssueIds)
 	}
 	
 	
-	pushUpdatedSelectedIssueIds = _.debounce((newSelectedIssueIds) => {
+	pushUpdatedSelectedIssueIds = (newSelectedIssueIds) => {
 		this.doPushSelectedIssueIds(newSelectedIssueIds)
-	}, 350)
+	}
 	
 	/**
 	 * Retrieves the start and end index
@@ -651,28 +642,28 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	
-	/**
-	 * Tracks inbound selected issue ids and only updates
-	 * when explicitly changed
-	 *
-	 * @type {ValueCache}
-	 */
-	selectedIssueIdsCache = new ValueCache((newSelectedIssueIds: number[]) => {
-		
-		const isDiff = (!_.isEqual(newSelectedIssueIds, _.get(this, 'state.internalSelectedIssueIds')))
-		if (isDiff) {
-			// Check history too
-			for (let item of this.selectedIssueIdsHistory) {
-				if (_.isEqual(item, newSelectedIssueIds))
-					return
-			}
-		}
-		this.setState({internalSelectedIssueIds: newSelectedIssueIds})
-		this.adjustScroll(newSelectedIssueIds)
-		
-	})
-	
-	
+	// /**
+	//  * Tracks inbound selected issue ids and only updates
+	//  * when explicitly changed
+	//  *
+	//  * @type {ValueCache}
+	//  */
+	// selectedIssueIdsCache = new ValueCache((newSelectedIssueIds: number[]) => {
+	//
+	// 	const isDiff = (!_.isEqual(newSelectedIssueIds, _.get(this, 'state.internalSelectedIssueIds')))
+	// 	if (isDiff) {
+	// 		// Check history too
+	// 		for (let item of this.selectedIssueIdsHistory) {
+	// 			if (_.isEqual(item, newSelectedIssueIds))
+	// 				return
+	// 		}
+	// 	}
+	//
+	// 	this.adjustScroll(newSelectedIssueIds)
+	//
+	// })
+	//
+	//
 	/**
 	 * on mount set default state
 	 */
@@ -681,9 +672,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		firstSelectedIndex: -1
 	})
 	
-	componentWillReceiveProps(newProps: IIssuesPanelProps) {
-		this.selectedIssueIdsCache.set(newProps.selectedIssueIds)
-	}
+	
 	
 	/**
 	 * Make issue render

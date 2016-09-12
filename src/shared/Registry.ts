@@ -2,6 +2,7 @@ import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} fr
 import createReactProxy from 'react-proxy'
 import React from 'react'
 import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
+import { postConstructorDecorate } from "shared/util"
 
 
 const
@@ -127,6 +128,7 @@ function decorateConstructor(derived: Function, base: Function) {
 	return derived;
 }
 
+
 /**
  * Auto register a class
  * so it can be dynamically recreated in revivers etc
@@ -136,8 +138,9 @@ function decorateConstructor(derived: Function, base: Function) {
 export function RegisterModel<T extends IModelConstructor<any>>(target:T):T {
 	const clazzName = target.name
 	log.info(`Registering model: ${clazzName}`)
+	
 	registerModel(clazzName,target)
-
+	
 	target.$$clazz = clazzName
 	
 	return decorateConstructor(function(...args:any[]) {
@@ -145,6 +148,15 @@ export function RegisterModel<T extends IModelConstructor<any>>(target:T):T {
 		//super(...args)
 		this.$$clazz = clazzName
 	},target) as T
+	
+	// const newTarget = postConstructorDecorate(clazzName,target,function(instance:T,args:any[]) {
+	// 	instance.$$clazz = clazzName
+	// 	return instance
+	// })
+	//
+	// newTarget.$$clazz = target.$$clazz = clazzName
+	// registerModel(clazzName,newTarget)
+	// return newTarget
 }
 
 /**

@@ -426,6 +426,7 @@ export default class Worker {
 			 */
 			const opts = {
 				stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+				execArgv: ['--debug'],
 				env: Object.assign(
 					{},
 					process.env,

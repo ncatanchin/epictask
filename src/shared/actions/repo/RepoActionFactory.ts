@@ -118,6 +118,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	
 	async getReposWithValues(...repoIds) {
 		
+		
 		const
 			stores = Container.get(Stores),
 			promises = [
@@ -148,7 +149,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		const stores = Container.get(Stores)
 		
 		let availRepos = await stores.availableRepo.findAll()
-		
+		log.info(`Loaded avail repos`,JSON.stringify(availRepos,null,4))
 		// Filter Deleted
 		availRepos = availRepos.filter(availRepo => !availRepo.deleted)
 		
@@ -258,7 +259,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				repoStore = this.stores.repo,
 				availRepoStore = this.stores.availableRepo
 
-			let availRepo = new AvailableRepo({
+			let availRepo:AvailableRepo = new AvailableRepo({
 				id: `available-repo-${repo.id}`,
 				repoId: repo.id,
 				enabled: true,
@@ -276,11 +277,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			}
 
 
-			log.info('Saving new available repo as ',availRepo.repoId)
-			const existingAvailRepo = await availRepoStore.findByRepoId(repo.id)
+			
+			const existingAvailRepo:AvailableRepo = await availRepoStore.findByRepoId(repo.id)[0]
+			log.info('Saving new available repo as ',availRepo.repoId,'existing',existingAvailRepo && JSON.stringify(existingAvailRepo,null,4))
 			if (existingAvailRepo)
 				availRepo = assign(existingAvailRepo,availRepo)
-
+		
 			await availRepoStore.save(availRepo)
 			actions.loadAvailableRepoIds()
 			actions.syncRepo([availRepo.repoId],true)

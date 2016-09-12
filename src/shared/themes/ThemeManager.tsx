@@ -9,6 +9,7 @@ const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import {mergeStyles} from "shared/themes/styles/CommonStyles"
 import {PureRender} from "ui/components/common/PureRender"
+import { postConstructorDecorate, interceptFn } from "shared/util"
 //import {interceptFn} from "shared/util/ObjectUtil"
 //import {PureRender} from "ui/components/common/PureRender"
 
@@ -197,23 +198,104 @@ export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any =
  * @returns {any}
  */
 export function makeThemedComponent(Component,skipRadium = false,baseStyles = null,...themeKeys:string[]) {
-	let FinalComponent = null
+	
+	// const WrappedComponent = postConstructorDecorate(Component.name + "Themed",Component,(instance:typeof Component,args:any[]) => {
+	//
+	// 	/**
+	// 	 * Create a new state Object
+	// 	 *
+	// 	 * @param props
+	// 	 * @returns {{theme: null}}
+	// 	 */
+	// 	function makeState(props) {
+	// 		const
+	// 			newState = {
+	// 				theme: getTheme()
+	// 			},
+	// 			styles = createThemedStyles(baseStyles,themeKeys,props)
+	//
+	// 		if (baseStyles) {
+	// 			Object.assign(newState,{styles})
+	// 		}
+	//
+	// 		return newState
+	// 	}
+	//
+	// 	/**
+	// 	 * Update the theme
+	// 	 *
+	// 	 * @param props
+	// 	 * @param force
+	// 	 */
+	// 	function updateTheme(props = instance.props, force = false) {
+	// 		if (instance.state && _.isEqual(instance.state.theme, getTheme()))
+	// 			return
+	//
+	// 		instance.setState(makeState(props), () => instance.forceUpdate())
+	// 	}
+	//
+	// 	let unsubscribe = null
+	//
+	// 	interceptFn(instance,{
+	//
+	// 		componentWillMount: function(origFn) {
+	// 			updateTheme()
+	// 			unsubscribe = addThemeListener(() => updateTheme(instance.props,true))
+	// 			origFn()
+	// 		},
+	//
+	// 		forceUpdate(origFn,callback?:() => any) {
+	// 			updateTheme(instance.props,true)
+	// 			origFn(callback)
+	// 		},
+	//
+	// 		/**
+	// 		 * If styles prop is passed and it has changed
+	// 		 * then update state
+	// 		 *
+	// 		 * @param origFn
+	// 		 * @param nextProps
+	// 		 */
+	// 		componentWillReceiveProps(origFn,nextProps) {
+	// 			if (instance.props.styles !== nextProps.styles)
+	// 				updateTheme(nextProps)
+	//
+	// 			origFn(nextProps)
+	// 		},
+	//
+	// 		/**
+	// 		 * Unsubscribe from theme updates
+	// 		 */
+	// 		componentWillUnmount(origFn) {
+	// 			if (unsubscribe) {
+	// 				unsubscribe()
+	// 				unsubscribe = null
+	// 			}
+	//
+	// 			origFn()
+	// 		}
+	// 	})
+	//
+	// 	return instance
+	// })
+	
+	const FinalComponent = skipRadium ? Component : Radium(Component)
 	
 	const WrappedComponent = class extends React.Component<any, IThemedState> {
-		
+
 		constructor(props,context) {
 			super(props,context)
-			
+
 			this.state = this.getNewState(this.props)
 		}
-		
+
 		// Used to unsubscribe from theme updates on unmount
 		private unsubscribe
-		
+
 		get wrappedComponent() {
 			return Component
 		}
-		
+
 		/**
 		 * Create a new new theme state
 		 */
@@ -221,30 +303,30 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			const newState = {
 				theme: getTheme()
 			}
-			
+
 			const styles = createThemedStyles(baseStyles,themeKeys,props)
-			
+
 			if (baseStyles) {
 				Object.assign(newState,{styles})
 			}
-			
+
 			return newState
 		}
-		
-		
-		
+
+
+
 		/**
 		 * Used as the subscriber for theme updates
 		 * as well as by componentWillMount to
 		 * create initial styles
 		 */
 		updateTheme(props = this.props, force = false) {
-			if (this.state && _.isEqual(this.state.theme, getTheme()))
+			if (this.state && (_.isEqual(this.state.theme, getTheme()) || this.state.theme === getTheme()))
 				return
-			
+
 			this.setState(this.getNewState(props), () => this.forceUpdate())
 		}
-		
+
 		/**
 		 * Update the theme on mount and subscribe
 		 */
@@ -252,12 +334,12 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			this.updateTheme()
 			this.unsubscribe = addThemeListener(() => this.updateTheme(this.props,true))
 		}
-		
+
 		forceUpdate(callback?:() => any) {
 			this.updateTheme(this.props,true)
 			super.forceUpdate(callback)
 		}
-		
+
 		/**
 		 * If styles prop is passed and it has changed
 		 * then update state
@@ -268,7 +350,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			if (this.props.styles !== nextProps.styles)
 				this.updateTheme(nextProps)
 		}
-		
+
 		/**
 		 * Unsubscribe from theme updates
 		 */
@@ -278,18 +360,20 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				this.unsubscribe = null
 			}
 		}
-		
+
 		render() {
-			if (!FinalComponent)
-				FinalComponent = skipRadium ? Component : Radium(Component)
+			
+				
 			//const ThemedComponent = Component as any
 			//return <ThemedComponent {..._.omit(this.props,'styles')} {...this.state} />
 			return <FinalComponent {..._.omit(this.props,'styles')} {...this.state} />
 		}
 	}
 	
-	//return PureRender(WrappedComponent)
-	return PureRender(WrappedComponent) as any
+	PureRender(WrappedComponent)
+	
+	return WrappedComponent as any
+	//return PureRender(skipRadium ? WrappedComponent : Radium(WrappedComponent)) as any
 	
 }
 
