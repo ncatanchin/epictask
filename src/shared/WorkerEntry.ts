@@ -3,10 +3,11 @@ import * as shortId from 'short-id'
 import {ProcessType} from "shared/ProcessType"
 import {getServiceManager} from "shared/services"
 import Bluebird from 'shared/PromiseConfig'
+import {ipcRenderer} from 'electron'
 
 const
-	log = getLogger(__filename),
-	ipc = require('node-ipc')
+	log = getLogger(__filename)
+	//ipc = require('node-ipc')
 
 
 
@@ -96,7 +97,8 @@ export namespace WorkerClient {
 	 */
 	export function sendMessage(type:string, body:any = {}) {
 		log.debug(`Sending message of type ${type}`)
-		process.send({workerId,type, body})
+		ipcRenderer.sendToHost(type,{workerId,type,body})
+		//process.send({workerId,type, body})
 	}
 	
 	
@@ -122,7 +124,7 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
 	
 
 	stopDeferred.promise
-		.finally(() => process.env.EPIC_CHILD && process.exit(exitCode))
+		.finally(() => window.close())// process.env.EPIC_CHILD && process.exit(exitCode))
 	
 	if (workerEntry.running) {
 		log.info(`Stopping worker with exit code: ${exitCode}`)
@@ -173,7 +175,7 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 	
 	
 	// Now bind to all the process events
-	process.on('message', ({type,body}) => {
+	ipcRenderer.on('message',(event,{type,body}) => {
 		const handler = WorkerClient.getMessageHandler(type)
 		assert(handler,`No handler defined for ${type}`)
 		
@@ -184,7 +186,9 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 	try {
 		if (workerEntry.servicesEnabled()) {
 			log.info('Starting all services')
-			await Promise.resolve(getServiceManager().start()).timeout(10000)
+			await Promise
+				.resolve(getServiceManager().start())
+				.timeout(10000)
 		}
 		
 		await workerStart()
@@ -228,7 +232,9 @@ export abstract class WorkerEntry {
 	 * @returns {boolean|Promise.Resolver<any>}
 	 */
 	get running() {
-		return (!stopDeferred || !stopDeferred.promise.isResolved()) && startDeferred && startDeferred.promise.isResolved()
+		return (!stopDeferred || !stopDeferred.promise.isResolved()) &&
+			startDeferred &&
+			startDeferred.promise.isResolved()
 	}
 	
 	/**

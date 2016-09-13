@@ -374,8 +374,7 @@ export default class Worker {
 		log.debug(`Sending Message (${type})`)
 		
 		// Send the actual message
-		const {webView}= this
-		webView.send(type,{type,body})
+		this.webView.send('message',{type,body})
 	}
 	
 	/**
