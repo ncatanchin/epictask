@@ -8,6 +8,7 @@ import {ProcessType} from "shared/ProcessType"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
+import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 
@@ -49,7 +50,7 @@ export class RepoStateService extends BaseService {
 	async start():Promise<this> {
 		await super.start()
 		
-		this.repoActions.loadAvailableRepoIds()
+		this.repoActions.loadAvailableRepos()
 		// Issue selected handler
 		// this.selectedIssuesChanged = _.debounce((selectedIssues) => {
 		// 	if (selectedIssues && selectedIssues.size === 1) {
@@ -127,7 +128,7 @@ export class RepoStateService extends BaseService {
 	enabledReposChanged = async () => {
 		//const enabledRepoIds = enabledRepoIdsSelector(this.store.getState())
 		
-		// Container.get(IssueActionFactory).loadIssueIds()
+		getIssueActions().loadIssues()
 		//const issueModels = issueModelsSelector(this.store.getState())
 		// const selectedIssueIds = selectedIssueIdsSelector(this.store.getState())
 		// let newSelectedIssueIds = await selectedIssueIds

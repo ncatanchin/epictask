@@ -13,8 +13,10 @@ import {
 	FlexColumnCenter, FlexScale, makePaddingRem, rem, FillHeight, createStyles, FillWidth,
 	FlexRowCenter, Ellipsis
 } from "shared/themes"
-import {Icon} from "ui/components/common/Icon"
-import {getJobStatusIcon, getJobStatusColors} from "ui/plugins/jobs/JobItem"
+
+import {getJobStatusColors} from "ui/plugins/jobs/JobItem"
+import { LogWatcher, LogWatcherEvent } from "shared/util/LogWatcher"
+import { IEnumEventRemover } from "shared/util/EnumEventEmitter"
 
 // Constants
 const log = getLogger(__filename)
@@ -119,6 +121,11 @@ export interface IJobDetailProps extends React.HTMLAttributes<any> {
 	selectedLogId:string
 }
 
+export interface IJobDetailState {
+	watcher?:LogWatcher
+	watcherEventRemovers:IEnumEventRemover[]
+}
+
 
 /**
  * JobDetail
@@ -131,7 +138,82 @@ export interface IJobDetailProps extends React.HTMLAttributes<any> {
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs','jobs.item','jobs.detail')
 @PureRender
-export class JobDetail extends React.Component<IJobDetailProps,any> {
+export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> {
+	
+	constructor (props,context) {
+		super(props,context)
+	
+	}
+
+	
+	get watcher():LogWatcher {
+		return _.get(this,'state.watcher',null)
+	}
+	
+	get watcherEventRemovers():IEnumEventRemover[] {
+		return _.get(this,'state.watcherEventRemovers',null)
+	}
+
+
+	
+	private updateState = (props = this.props) => {
+		let
+			watcher:LogWatcher = this.watcher,
+			{job,detail} = props,
+			jobFilename:string = _.get(job,'logJSONFilename',null)
+			
+		
+		if (watcher && watcher.filename === jobFilename) {
+			log.info(`Job changed, closing previous watcher`)
+			return
+		}
+		
+		if (watcher && watcher.filename !== jobFilename) {
+			watcher.stop()
+		}
+	
+	
+		
+		if (!job || !detail) {
+			log.info(`No job or detail - cant start tailing yet`, job,detail)
+			return
+		}
+		
+		watcher = LogWatcher.getInstance(job.logJSONFilename,true)
+		log.info(`Got watcher`,watcher)
+		this.setState({
+			watcher,
+			watcherEventRemovers: watcher.addAllListener((event:LogWatcherEvent,watcher:LogWatcher,...args) => {
+				log.info(`Received watcher event ${LogWatcherEvent[event]}`,watcher,...args)
+			})
+		},() => {
+			log.info(`State set, starting log watcher for ${watcher.filename}`)
+			watcher.start()
+		})
+	}
+	
+	componentWillMount() {
+		this.updateState()
+	}
+	
+	componentWillReceiveProps(nextProps) {
+		this.updateState(nextProps)
+	}
+
+	
+	componentWillUnmount() {
+		const {watcher,watcherEventRemovers} = this
+		
+		if (watcher) {
+			log.info(`Stopping watcher`,watcher)
+			watcher.stop()
+		}
+		
+		if (watcherEventRemovers) {
+			log.info(`Removing all listeners`)
+			watcherEventRemovers.forEach(it => it())
+		}
+	}
 	
 	/**
 	 * Render job details
@@ -142,7 +224,8 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 		
 		const
 			{theme, styles, job, jobs,detail,selectedLogId} = this.props,
-			logs = [],//detail && detail.logs,
+			watcher:LogWatcher = _.get(this,'state.watcher',null),
+			logs = watcher && watcher.allJsons,//detail && detail.logs,
 			statusColors = getJobStatusColors(detail,styles)
 		
 		const levelStyle = (log:IJobLog) =>

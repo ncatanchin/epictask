@@ -18,7 +18,7 @@ import {Container} from 'typescript-ioc'
 import {
 	issueSortAndFilterSelector,
 	selectedIssueIdsSelector,
-	issueStateSelector,
+	issueStateSelector, issueIdsSelector, issuesSelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -42,12 +42,14 @@ import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
 import { DataComponent, MapProvider } from "ui/components/data/DataComponent"
 import { addErrorMessage } from "shared/Toaster"
 import { HotKeys } from "ui/components/common/Other"
+import { VisibleList } from "ui/components/common/VisibleList"
 
 
 // Constants & Non-typed Components
 const
 	SplitPane = require('react-split-pane'),
 	ReactList = require('react-list'),
+	Resizable = require('react-component-resizable'),
 	log = getLogger(__filename),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
@@ -281,18 +283,14 @@ export interface IIssuesPanelState {
 @connect(createStructuredSelector({
 	enabledRepoIds: enabledRepoIdsSelector,
 	issueSortAndFilter: issueSortAndFilterSelector,
+	issueIds: issueIdsSelector,
+	issues: issuesSelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
 	saving: (state) => issueStateSelector(state).issueSaving
 }, createDeepEqualSelector))
 
 
-// Map a custom provider to enabledRepoId and filter/sort changes
-@DataComponent(
-	MapProvider(['issueSortAndFilter','enabledRepoIds'],async (props) =>
-		Container.get(IssueActionFactory).getIssues(props.issueSortAndFilter,props.enabledRepoIds)
-	,Issue,'id',[])
-)
 
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
@@ -681,7 +679,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param issueGroup
 	 * @param issueGroupIndex
 	 */
-	makeRenderIssue(issueGroup: IIssueGroup = null, issueGroupIndex: number = null) {
+	makeRenderIssueListItem(issueGroup: IIssueGroup = null, issueGroupIndex: number = null) {
 		/**
 		 * Render issue item
 		 *
@@ -772,10 +770,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		</div>
 		
 		
-		return <ReactList itemRenderer={this.makeRenderIssue(group,index)}
-		                  itemsRenderer={groupListRenderer}
-		                  length={itemCount}
-		                  type='simple'/>
+		// return <ReactList itemRenderer={this.makeRenderIssue(group,index)}
+		//                   itemsRenderer={groupListRenderer}
+		//                   length={itemCount}
+		//                   type='simple'/>
 		
 		
 	}
@@ -833,14 +831,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					
 					{/* ROOT LIST - groups or issues */}
 					<div style={styles.listContainer}>
-						
-						<ReactList ref={c => this.setState({issueList:c})}
-						           itemRenderer={groupBy === 'none' ? this.makeRenderIssue() : this.renderGroup}
-						           itemsRenderer={(items, ref) => (
-										<div ref={ref}>{items}</div>
-									)}
-						           length={itemCount}
-						           type='simple'/>
+						<VisibleList items={issues}
+						             itemRenderer={this.makeRenderIssueListItem()}
+						             initialItemsPerPage={50}
+						             bufferPages={3}
+						/>
+						                
+						{/*<ReactList ref={c => this.setState({issueList:c})}*/}
+						           {/*itemRenderer={groupBy === 'none' ? this.makeRenderIssue() : this.renderGroup}*/}
+						           {/*itemsRenderer={(items, ref) => (*/}
+										{/*<div ref={ref}>{items}</div>*/}
+									{/*)}*/}
+						           {/*length={itemCount}*/}
+						           {/*type='simple'/>*/}
 					
 					
 					</div>

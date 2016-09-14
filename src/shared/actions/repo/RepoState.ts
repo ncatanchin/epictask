@@ -1,6 +1,7 @@
 import {RegisterModel} from 'shared/Registry'
 import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
+import { AvailableRepo } from "shared/models"
 
 const log = getLogger(__filename)
 
@@ -8,7 +9,8 @@ export const RepoStateRecord = Record({
 	reposIds:[],
 	enabledRepoIds:[],
 	selectedRepoIds:[],
-	availableRepoIds:[]
+	availableRepoIds:[],
+	availableRepos:[]
 })
 
 /**
@@ -29,6 +31,7 @@ export class RepoState extends RepoStateRecord {
 	availableRepoIds:string[]
 	enabledRepoIds:number[]
 	selectedRepoIds:number[]
+	availableRepos:AvailableRepo[]
 
 }
 

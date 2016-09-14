@@ -113,7 +113,7 @@ export default class AppStateService extends BaseService {
 		if (this.stateType === AppStateType.AuthVerify) {
 			this.authActions.verify()
 		} else if (this.stateType === AppStateType.Home) {
-			this.repoActions.loadAvailableRepoIds()
+			this.repoActions.loadAvailableRepos()
 		}
 	}
 }

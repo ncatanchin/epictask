@@ -8,14 +8,14 @@ import * as JQueryGlobal from 'jquery'
 
 
 /**
- * Now the shared globals - this is required for propper logging config
+ * Now the shared globals - this is required for proper logging config
  */
 
 
 function logErrorGlobal(err:Error|string) {
 	
 	const
-		Toaster = require('shared/Toaster') as typeof ToasterType,
+		Toaster = require('shared/Toaster').default as typeof ToasterType,
 		toaster = Container.get(Toaster)
 	toaster.addErrorMessage(err)
 }

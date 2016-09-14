@@ -1,6 +1,7 @@
 
 import {EventEmitter} from 'events'
 import {enumKeys} from "shared/util/EnumUtil"
+import { isNumber } from "shared/util"
 
 
 
@@ -23,17 +24,22 @@ export class EnumEventEmitter<E> {
 	/**
 	 * Internal reference to Node EventEmitter
 	 *
-	 * @type {"events".EventEmitter}
 	 */
 	private emitter = new EventEmitter()
-
+	
+	private enumConstants
+	
 	/**
 	 * Create a new emitter
 	 *
 	 * @param enumValues
 	 */
 	constructor(private enumValues:any) {
+		this.enumConstants = Object.keys(enumValues).filter(it => isNumber(it))
 	}
+	
+	
+	
 	
 	/**
 	 * Map an enum value to the string value
@@ -55,8 +61,11 @@ export class EnumEventEmitter<E> {
 	}
 	
 	addAllListener(listener:IEnumEventHandler<E>):IEnumEventRemover[] {
-			return enumKeys(this.enumValues).map((event:any) => this.addListener(event,listener))
+		return enumKeys(this.enumValues).map((event:any) => {
+				return this.addListener(event,listener)
+			})
 	}
+	
 	
 	addListener(event: E,listener:IEnumEventHandler<E>): IEnumEventRemover {
 		return this.on(event,listener)
@@ -93,7 +102,7 @@ export class EnumEventEmitter<E> {
 			wrappedListener = this.makeListener(event,listener),
 			remover = this.makeRemover(event,wrappedListener)
 		
-		this.emitter[once ? 'once' : 'on'](eventName,wrappedListener)
+		this.emitter[once ? 'once' : 'on'].apply(this.emitter,[eventName,wrappedListener])
 
 		return remover
 	}
@@ -111,3 +120,4 @@ export class EnumEventEmitter<E> {
 	}
 
 }
+

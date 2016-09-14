@@ -75,11 +75,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionReducer()
 	updateAvailableRepos(...availableRepos:AvailableRepo[]) {
 		return (state:RepoState) => state
+			.set('availableRepos',availableRepos.map(it => it.id))
 			.set('availableRepoIds',availableRepos.map(it => it.id))
 			.set('enabledRepoIds',availableRepos.filter(it => it.enabled).map(it => it.repoId))
 	}
 	
 	async getAvailableRepos(...ids:any[]) {
+		
 		const
 			stores = Container.get(Stores),
 			availRepos = await stores.availableRepo.bulkGet(...ids),
@@ -149,13 +151,17 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	async internalLoadAvailableRepoIds() {
-		const stores = Container.get(Stores)
+	async internalLoadAvailableRepos() {
+		const
+			stores = Container.get(Stores)
 		
-		let availRepos = await stores.availableRepo.findAll()
-		log.info(`Loaded avail repos`,JSON.stringify(availRepos,null,4))
+		let
+			availRepos = await stores.availableRepo.findAll(),
+			availRepoIds = availRepos.filter(availRepo => !availRepo.deleted).map(it => it.id)
+		
 		// Filter Deleted
-		availRepos = availRepos.filter(availRepo => !availRepo.deleted)
+		
+		availRepos = await this.getAvailableRepos(...availRepoIds)
 		
 		this.updateAvailableRepos(...availRepos)
 		return availRepos
@@ -243,10 +249,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 	@Action()
-	loadAvailableRepoIds() {
+	loadAvailableRepos() {
 		return (dispatch,getState) => {
 			log.info(`Getting available repos`)
-			return this.internalLoadAvailableRepoIds()
+			return this.internalLoadAvailableRepos()
 		}
 	}
 
@@ -293,13 +299,16 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 
 			
-			const existingAvailRepo:AvailableRepo = await availRepoStore.findByRepoId(repo.id)[0]
+			const
+				existingAvailRepos:AvailableRepo[] = await availRepoStore.findByRepoId(repo.id),
+				existingAvailRepo = existingAvailRepos[0]
+			
 			log.info('Saving new available repo as ',availRepo.repoId,'existing',existingAvailRepo && JSON.stringify(existingAvailRepo,null,4))
 			if (existingAvailRepo)
 				availRepo = assign(existingAvailRepo,availRepo)
 		
 			await availRepoStore.save(availRepo)
-			actions.loadAvailableRepoIds()
+			actions.loadAvailableRepos()
 			actions.syncRepo([availRepo.repoId],true)
 			
 		}
@@ -314,13 +323,17 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			myUserId = _.get(getSettings(),'user.id')
 
 		// Get the repo
-		let availRepo = await stores.availableRepo.findByRepoId(repoId)[0]
+		let
+			availRepos = await stores.availableRepo.findByRepoId(repoId),
+			availRepo = availRepos[0]
+		
+		assert(availRepo,`Available repo not found for id ${repoId}`)
 		availRepo.deleted = true
 		availRepo = await stores.availableRepo.save(availRepo)
 
 		// FIRST - get everything out of the state
 		log.info(`Reloading avail repos`)
-		await actions.loadAvailableRepoIds()
+		await actions.loadAvailableRepos()
 
 		log.info('Cleaning up issue selections')
 		const
@@ -429,7 +442,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			// dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
 			//actions.updateAvailableRepo(newAvailRepo)
 
-			await this.internalLoadAvailableRepoIds()
+			await this.internalLoadAvailableRepos()
 			log.info('Saved avail repo, setting enabled to',enabled)
 			return true
 		}

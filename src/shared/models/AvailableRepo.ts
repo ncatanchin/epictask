@@ -14,6 +14,10 @@ import {Repo} from './Repo'
 import {RegisterModel} from '../Registry'
 import {Container} from 'typescript-ioc'
 import {Stores} from 'shared/Stores'
+import { isNumber } from "shared/util"
+
+
+const log = getLogger(__filename)
 
 /**
  * Maps repos that have been configured for tasks
@@ -81,6 +85,7 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 	}
 	
 	@PouchDBMangoFinder({
+		includeDocs: true,
 		indexFields: ['repoId'],
 		selector: (...repoIds:number[]) => ({
 			$or: repoIds.map(repoId => ({repoId}))
@@ -109,15 +114,45 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 	 * with all dependencies - this is for editing only
 	 * mostly convience
 	 *
-	 * @param repoId
-	 * @returns {({}&AvailableRepo)|any|*}
+	 * @param availRepo
 	 */
-	async load(repoId:number):Promise<AvailableRepo> {
-		const stores = Container.get(Stores)
-
-		const availRepo = await stores.availableRepo.findByRepoId(repoId)[0]
-		assert(availRepo,`No avail repo found for repo id ${repoId}`)
-
+	async load(availRepo:AvailableRepo):Promise<AvailableRepo>
+	/**
+	 * Completely load an `AvailableRepo`
+	 * with all dependencies - this is for editing only
+	 * mostly convience
+	 *
+	 * @param repoId
+	 */
+	async load(repoId:number):Promise<AvailableRepo>
+	async load(repoIdOrAvailRepo:number|AvailableRepo):Promise<AvailableRepo>{
+		if (!repoIdOrAvailRepo) {
+			log.error(`No valid provided to load, must be repoId/number or available repo`,repoIdOrAvailRepo)
+			return null
+		}
+			
+		const
+			stores = Container.get(Stores)
+		
+		let
+			repoId:number = null,
+			availRepo:AvailableRepo = null
+			
+		// Assign or get the basics
+		if (isNumber(repoIdOrAvailRepo)) {
+			repoId = repoIdOrAvailRepo
+			availRepo = await stores.availableRepo.findByRepoId(repoId)[0]
+		} else {
+			availRepo = repoIdOrAvailRepo
+			
+			if (!_.get(availRepo,'repoId')) {
+				log.error(`Avail repo provided to load, but no repoId`,availRepo)
+				return null
+			}
+			
+			repoId = availRepo.repoId
+		}
+		
 		const filled = Object.assign({},availRepo)
 
 		if (!filled.repo) {
@@ -140,13 +175,16 @@ export class AvailableRepoStore extends TSRepo<AvailableRepo> {
 		}
 		return filled
 	}
-
+	
+	/**
+	 * Load all available repos
+	 *
+	 * @returns {AvailableRepo[]}
+	 */
 	async loadAll():Promise<AvailableRepo[]> {
-		const all = await this.findAll()
-
-
-
-		const promises = all.map(availRepo => this.load(availRepo.repoId))
+		const
+			all = await this.findAll(),
+			promises = all.map(availRepo => this.load(availRepo))
 
 		return await Promise.all(promises)
 

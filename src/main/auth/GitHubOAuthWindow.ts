@@ -11,20 +11,21 @@ export default class GitHubOAuthWindow {
 	clientId
 	clientSecret
 	waitForApp
-	remote
+	remote:boolean
 	window
 	electron
 	app
 	BrowserWindow
 
 	constructor(obj:any) {
-		const {
-			id,
-			secret,
-			remote = false,
-			scopes = [],
-			waitForApp = false
-		} = obj
+		const
+			{
+				id,
+				secret,
+				remote,
+				scopes = [],
+				waitForApp = false
+			} = obj
 		
 		assert.ok(id, 'Client ID is needed!')
 		assert.ok(secret, 'Client Secret is needed!')
@@ -55,22 +56,26 @@ export default class GitHubOAuthWindow {
 			})
 
 
-			var authURL = 'https://github.com/login/oauth/authorize?client_id=' + this.clientId + this.scopeQuery
-			this.window.webContents.enableDeviceEmulation({fitToView:true})
-			this.window.webContents.on('did-finish-load', () => {
+			const
+				authURL = 'https://github.com/login/oauth/authorize?client_id=' + this.clientId + this.scopeQuery,
+				{webContents} = this.window
+			
+			
+			webContents.enableDeviceEmulation({fitToView:true})
+			webContents.on('did-finish-load', () => {
 				this.window.show()
 				this.window.focus()
 			})
 
-			this.window.webContents.on('did-fail-load',(event,errorCode,errorDescription,validatedURL,isMainFrame) => {
+			webContents.on('did-fail-load',(event,errorCode,errorDescription,validatedURL,isMainFrame) => {
 				console.error('LOAD FAILED',event,errorCode,errorDescription,validatedURL,isMainFrame)
 				callback({errorCode,errorDescription,validatedURL,isMainFrame})
 			})
 
-			this.window.webContents.on('will-navigate', (event, url) => {
+			webContents.on('will-navigate', (event, url) => {
 				this.handleCallback(url, callback)
 			})
-			this.window.webContents.on('did-get-redirect-request', (event, oldUrl, newUrl) => {
+			webContents.on('did-get-redirect-request', (event, oldUrl, newUrl) => {
 				this.handleCallback(newUrl, callback)
 			})
 			this.window.on('close', () => {

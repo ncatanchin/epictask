@@ -32,6 +32,10 @@ export const repoIdPredicate = (o:any) => {
 	return (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
 }
 
+export const availableReposSelector = _.memoize(
+	(state):AvailableRepo[] => _.nilFilter(repoStateSelector(state).availableRepos)
+)
+
 export const availableRepoIdsSelector = _.memoize(
 	(state):string[] => _.nilFilter(repoStateSelector(state).availableRepoIds)
 )

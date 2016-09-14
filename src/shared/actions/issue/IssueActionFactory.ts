@@ -16,7 +16,7 @@ import {
 } from 'shared/actions/repo/RepoSelectors'
 
 import {
-	selectedIssueIdsSelector
+	selectedIssueIdsSelector, issueSortAndFilterSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
@@ -123,6 +123,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.editComment(issue)
 	}
 	
+	
+	@ActionReducer()
+	private setIssues(issues:Issue[]) {
+		return (issueState:IssueState) => issueState.set('issues',issues)
+	}
+	
+	@Action()
+	loadIssues() {
+		return async (dispatch,getState) => {
+			const
+				enabledRepoIds = enabledRepoIdsSelector(getState()),
+				issues = await this.getIssues(enabledRepoIds)
+			
+			
+			
+			
+		}
+	}
 	
 	@ActionReducer()
 	private setPatchIssues(issues: Issue[], mode: TIssuePatchMode = null) {
@@ -875,13 +893,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return issueIds
 	}
 	
-	async getIssues(sortAndFilter:TIssueSortAndFilter,repoIds) {
+	async getIssues(repoIds) {
 		const
-			{
-				issueFilter,
-				issueSort
- 			} = sortAndFilter,
-			
 			stores = Container.get(Stores),
 			
 			promises = [
@@ -889,9 +902,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				stores.label.findByRepoId(...repoIds),
 				stores.milestone.findByRepoId(...repoIds),
 				stores.user.findByRepoId(...repoIds),
-				(issueFilter.includeClosed ?
-					stores.issue.findIdsByRepoId(...repoIds) :
-					stores.issue.findIdsByStateAndRepoId('open', ...repoIds))
+				// (issueFilter.includeClosed ?
+				stores.issue.findIdsByRepoId(...repoIds)
+					//stores.issue.findIdsByStateAndRepoId('open', ...repoIds))
 			],
 			[repos,labels,milestones,users,issueIds]:[Repo[],Label[],Milestone[],User[],number[]] =
 				await Promise.all(promises) as any

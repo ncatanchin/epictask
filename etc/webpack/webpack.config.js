@@ -149,7 +149,8 @@ const config = {
 	cache: true,
 	recordsPath: `${distDir}/_records`,
 	devtool: '#source-map',
-
+	debug: true,
+	
 	// Currently we need to add '.ts' to the resolve.extensions array.
 	resolve: {
 		

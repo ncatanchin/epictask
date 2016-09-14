@@ -12,9 +12,13 @@ import * as Radium from 'radium'
 import {ThemedStyles} from "shared/themes/ThemeManager"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 import {createStructuredSelector} from 'reselect'
-import {selectedRepoIdsSelector, availableRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {
+	selectedRepoIdsSelector, availableRepoIdsSelector,
+	availableReposSelector
+} from 'shared/actions/repo/RepoSelectors'
 import {PureRender} from "ui/components/common/PureRender"
 import {DataComponent, MapData} from "ui/components/data/DataComponent"
+import { getRepoActions } from "shared/actions/ActionFactoryProvider"
 
 /**
  * Displays a list of repos
@@ -95,17 +99,9 @@ export interface IRepoListProps {
  */
 @connect(createStructuredSelector({
 	availableRepoIds: availableRepoIdsSelector,
+	availableRepos: availableReposSelector,
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
-@DataComponent(
-	MapData(
-		AvailableRepo,
-		'availableRepoIds',
-		'id',
-		'availableRepos',
-		[]
-	)
-)
 @ThemedStyles(baseStyles,'repoPanel')
 @PureRender
 export class RepoList extends React.Component<IRepoListProps,any> {
@@ -131,7 +127,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	onRemoveClicked = (e:React.MouseEvent<any>,availRepoId) => {
-		const repoActions = new RepoActionFactory()
+		const repoActions = getRepoActions()
 
 		e.preventDefault()
 		e.stopPropagation()

@@ -40,6 +40,7 @@ export type TIssueEditInlineConfig = {
 }
 
 export const IssueStateRecord = Record({
+	issues: [],
 	selectedIssueIds:[],
 	editingInline:false,
 	editInlineConfig:null,
@@ -47,6 +48,7 @@ export const IssueStateRecord = Record({
 	editCommentRequest:null,
 	patchIssues:null,
 	patchMode:null,
+	
 	issueSaveError: null,
 	issueSaving: false,
 	issueSort:{
@@ -77,6 +79,7 @@ export class IssueState extends IssueStateRecord {
 		return new IssueState(o)
 	}
 	
+	issues:Issue[]
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
 	issueSaving:boolean

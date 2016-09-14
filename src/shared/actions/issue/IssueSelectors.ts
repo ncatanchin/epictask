@@ -21,7 +21,9 @@ import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
 
+export const issuesSelector:(state) => Issue[] = _.memoize((state):Issue[] => issueStateSelector(state).issues)
 
+export const issueIdsSelector:(state) => number[] = _.memoize((state):number[] => issueStateSelector(state).issues.map(issue => issue.id))
 
 /**
  * Issue sort and filter selector
