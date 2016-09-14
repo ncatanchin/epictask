@@ -6,7 +6,6 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import ValueCache from 'shared/util/ValueCache'
 import {ProcessType} from "shared/ProcessType"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
-import {AppStoreService} from "shared/services/AppStoreService"
 import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 
@@ -27,7 +26,7 @@ export class RepoStateService extends BaseService {
 	 * @returns {DatabaseClientService[]}
 	 */
 	dependencies(): IServiceConstructor[] {
-		return [DatabaseClientService,AppStoreService]
+		return [DatabaseClientService]
 	}
 	
 	

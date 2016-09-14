@@ -101,7 +101,7 @@ export type TLabelCallback = (label:Label|Milestone) => void
 export interface ILabelChipProps {
 	theme?: any
 	styles?: any
-	onClick?:React.MouseEventHandler
+	onClick?:React.MouseEventHandler<any>
 	label:Label|Milestone
 	labelStyle?:any
 	showIcon?:boolean

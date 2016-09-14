@@ -54,13 +54,19 @@ export function makeReactotronEnhancer() {
 }
 
 export default function (enhancers) {
-	if (typeof window !== 'undefined') {
+	if (typeof window !== 'undefined' && window.devToolsExtension) {
 	// 	enhancers.push(makeReactotronEnhancer())
 		
-		if (window.devToolsExtension)
-			enhancers.push(window.devToolsExtension())
+		
+		enhancers.push(window.devToolsExtension())
 	} else {
 		enhancers.push(makeRemoteMiddleware())
 	}
 	
+}
+
+declare global{
+	interface Window {
+		devToolsExtension:any
+	}
 }

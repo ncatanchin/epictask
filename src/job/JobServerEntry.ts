@@ -1,5 +1,5 @@
 import ProcessType from 'shared/ProcessType'
-import WorkerEntry from "shared/WorkerEntry"
+import WorkerEntry from "../shared/ChildProcessEntry"
 
 const log = getLogger(__filename)
 

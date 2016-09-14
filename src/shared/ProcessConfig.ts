@@ -2,6 +2,12 @@ import ProcessType from './ProcessType'
 
 export namespace ProcessConfigGlobal {
 	
+	const ChildDevTools = {
+		[ProcessType.DatabaseServer]: true,
+		[ProcessType.JobServer]: true
+		//[ProcessType.DatabaseServer]: true,
+	}
+	
 	/**
 	 * All possible process types in EpicTask
 	 */
@@ -66,6 +72,16 @@ export namespace ProcessConfigGlobal {
 	 */
 	export function isStorybook() {
 		return isType(ProcessType.Storybook)
+	}
+	
+	/**
+	 * Whether or not to show child dev tools
+	 *
+	 * @param processType
+	 * @returns {any|boolean}
+	 */
+	export function showChildDevTools(processType:ProcessType) {
+		return ChildDevTools[processType] && DEBUG
 	}
 	
 }

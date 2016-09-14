@@ -1,6 +1,4 @@
 
-import {Container} from 'typescript-ioc'
-
 import {JobHandler} from 'job/JobHandler'
 import {Stores} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
@@ -65,9 +63,5 @@ export class GetUserReposExecutor implements IJobExecutor {
 		const afterCount = await repoStore.count()
 
 		logger.info(`Completed user repo sync, counts before=${beforeCount} and after=${afterCount}`)
-
-		//TODO: when data provider/cache is implemented - invalidate repos here
-		// const repoActions = Container.get(RepoActionFactory)
-		// repoActions.updateR
 	}
 }

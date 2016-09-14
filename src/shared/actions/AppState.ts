@@ -31,10 +31,7 @@ export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
 		const checkSettings = (state) => {
-			if (ProcessConfig.isStateServer())
-				state = state.set('settings',require('server/SettingsFile').Settings.toJSON())
-			
-			return state
+			return state.set('settings',require('shared/SettingsFile').Settings.toJSON())
 		}
 		
 		if (o && o instanceof AppState) {

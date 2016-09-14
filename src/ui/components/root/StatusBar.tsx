@@ -24,7 +24,7 @@ const log = getLogger(__filename)
 /**
  * IStatusBarProps
  */
-export interface IStatusBarProps extends React.HTMLAttributes {
+export interface IStatusBarProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	open?:boolean

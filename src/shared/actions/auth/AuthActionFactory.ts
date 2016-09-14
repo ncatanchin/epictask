@@ -9,12 +9,16 @@ import {Toaster} from 'shared/Toaster'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {ProcessType} from "shared/ProcessType"
 import {Provided} from 'shared/util/ProxyProvided'
+import { RegisterActionFactory } from "shared/Registry"
 
 const log = getLogger(__filename)
 
+@RegisterActionFactory
 @Provided
 export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
-
+	
+	static leaf = AuthKey
+	
 	appActions:AppActionFactory
 	toaster:Toaster
 

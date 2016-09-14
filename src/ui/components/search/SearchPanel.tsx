@@ -6,15 +6,12 @@
 import * as ReactDOM from 'react-dom'
 import * as React from 'react'
 import {Paper, TextField} from 'material-ui'
-import {connect} from 'react-redux'
 import * as KeyMaps from 'shared/KeyMaps'
 import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResultsList} from './SearchResultsList'
 
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {createStructuredSelector} from 'reselect'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {isNumber} from "shared/util"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import {SearchItem} from "shared/actions/search"
@@ -34,7 +31,7 @@ const styles = require("styles/SearchPanel.scss")
 /**
  * ISearchPanelProps
  */
-export interface ISearchPanelProps extends React.HTMLAttributes {
+export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	searchId: string
 	types: SearchType[]
 	modal?: boolean
@@ -42,6 +39,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes {
 	expanded?: boolean
 	theme?: any
 	focused?: boolean
+	resultsHidden?: boolean
 	hidden?: boolean
 	mode: "repos"|"issues"
 	onEscape?: () => void
@@ -237,7 +235,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 
 	onFocus = (event) => {
-		log.info('Search panel gained focus', this, event, 'query = ', this.query)
+		log.info('Search panel gained focus query = ', this.query)
 		//this.focusTextField()
 		this.updateState(this.props, true)
 		if (this.query.length) {
@@ -260,7 +258,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param event
 	 */
 	onBlur = (event) => {
-		log.info('search panel blur', this, event)
+		log.info('search panel blur')
 
 		this.updateState(this.props)
 		this.setState({selected: false, focused: false})
@@ -437,7 +435,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	componentWillReceiveProps = (nextProps: ISearchPanelProps) => {
 		const
-			selectedIndex = _.get(this.state, 'selectedIndex', 0),
+			selectedIndex:number = _.get(this.state, 'selectedIndex', 0),
 			selectedItem = isNumber(selectedIndex) && selectedIndex > -1 && this.state.items[selectedIndex],
 			newState = this.updateState(nextProps)
 		
@@ -459,7 +457,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	render() {
 		const
-			{expanded, theme, autoFocus,searchId, searchItems, hidden, modal} = this.props,
+			{expanded, theme, autoFocus,searchId, modal} = this.props,
 			{items,results,query,selectedIndex} = this.state
 		
 		

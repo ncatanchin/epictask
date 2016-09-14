@@ -126,11 +126,11 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				repoActions.clearSelectedRepos()
 			}
 
-			repoActions.setRepoEnabled(availRepo.repoId, !availRepo.enabled)
+			repoActions.setRepoEnabled(availRepo.id, !availRepo.enabled)
 		}
 	}
 
-	onRemoveClicked = (e:React.MouseEvent,availRepoId) => {
+	onRemoveClicked = (e:React.MouseEvent<any>,availRepoId) => {
 		const repoActions = new RepoActionFactory()
 
 		e.preventDefault()

@@ -1,7 +1,7 @@
 
 import * as path from 'path'
 
-import Worker,{IWorkerMessage,IWorkerEventListener} from "shared/Worker"
+import ChildProcessWebView,{IChildProcessMessage,IChildProcessEventListener} from "shared/ChildProcessWebView"
 
 const log = getLogger(__filename)
 
@@ -13,30 +13,30 @@ describe('Worker can communicate', function () {
 	const workerScriptFile = 'src/tests/shared/fixtures/worker-fixture.js'
 	log.info(`Using worker script @ ${workerScriptFile}`)
 	
-	let worker:Worker = null, workersStarted = false
+	let childWebView:ChildProcessWebView = null, workersStarted = false
 	
 	before(async () => {
-		worker = new Worker(workerScriptFile,'test-fixture',{},{
-			onError(worker:Worker,err) {
+		childWebView = new ChildProcessWebView('test-fixture',ProcessType.Test,{},{
+			onError(worker:ChildProcessWebView,err) {
 				log.error('worker error occurred',err)
 			},
-			onStart(worker:Worker,err) {
+			onStart(worker:ChildProcessWebView,err) {
 				log.info('worker started',err)
 			},
-			onStop(worker:Worker,err) {
+			onStop(worker:ChildProcessWebView,err) {
 				log.info('worker exited',err)
 			},
-			onMessage(worker:Worker,message:IWorkerMessage) {
+			onMessage(worker:ChildProcessWebView,message:IChildProcessMessage) {
 				log.info('worker message',message)
 			}
-		} as IWorkerEventListener)
+		} as IChildProcessEventListener)
 		
-		await worker.start()
+		await childWebView.start()
 		log.info('worker started')
 	})
 	
 	after(() => {
-		worker.kill()
+		childWebView.kill()
 		log.info('worker killed')
 	})
 	
@@ -55,11 +55,11 @@ describe('Worker can communicate', function () {
 			const deferred = Promise.defer()
 			
 			// The listener
-			const listener:IWorkerEventListener = {
-				onError(worker:Worker,err) {
+			const listener = {
+				onError(worker:ChildProcessWebView,err) {
 					deferred.reject(err)
 				},
-				onMessage(worker:Worker,message) {
+				onMessage(worker:ChildProcessWebView,message) {
 					log.info('Got message',message)
 					if (message && message.type === 'there') {
 						deferred.resolve(message.body)
@@ -68,10 +68,10 @@ describe('Worker can communicate', function () {
 			}
 			
 			// Add the listener
-			worker.addListener(listener)
+			childWebView.addListener(listener)
 			
 			try {
-				worker.sendMessage('who',{who})
+				childWebView.sendMessage('who',{who})
 				
 				const {there} = await Promise.resolve(deferred.promise).timeout(3000)
 				
@@ -79,7 +79,7 @@ describe('Worker can communicate', function () {
 				expect(there).toBe(`who ${who}`)
 				
 			} finally {
-				worker.removeListener(listener)
+				childWebView.removeListener(listener)
 			}
 			
 		})

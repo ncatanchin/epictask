@@ -83,7 +83,7 @@ const baseStyles = createStyles({
 /**
  * IIssueCommentProps
  */
-export interface IIssueActivityTextProps extends React.DOMAttributes {
+export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	comment?:Comment

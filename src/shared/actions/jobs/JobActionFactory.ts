@@ -1,34 +1,16 @@
 // IMPORTS
-import * as uuid from 'node-uuid'
 import {ActionFactory, ActionMessage, ActionReducer} from 'typedux'
 import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
-import {IJob, JobType, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTypes'
+import {IJob, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTypes'
 import {JobKey, JobsMaxCompleted} from "shared/Constants"
 import {Provided} from 'shared/util/ProxyProvided'
 import {cloneObject} from "shared/util/ObjectUtil"
+import { RegisterActionFactory } from "shared/Registry"
 
 
 const
 	log = getLogger(__filename)
-
-
-function makeErrorDetails(error:Error) {
-	let frames = []
-	
-	return {
-		message: error.message,
-			frames,
-			stack: (() => {
-				try {
-					return error.stack
-				} catch (err) {
-					log.warn(`Unable to get stack trace`, err)
-					return "Unable to get stack trace"
-				}
-			})()
-	}
-}
 
 /**
  * Immutable job map
@@ -41,8 +23,11 @@ export type TJobIMap = Map<string,IJob>
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@RegisterActionFactory
 @Provided
 export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobState>> {
+	
+	static leaf = JobKey
 	
 	constructor() {
 		super(JobState)
@@ -108,8 +93,6 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 				index = details.findIndex(it => it.id === detail.id),
 				existingDetail = (index > -1) && details.get(index)
 			
-			if (existingDetail)
-				detail.logs = _.sortBy(_.uniqBy([...detail.logs, ...existingDetail.logs], 'id'), 'timestamp')
 			
 			//details = details.filter(it => it.id !== detail.id).toList()
 			return index === -1 ?
@@ -189,9 +172,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	update(job:IJob, detail:IJobStatusDetail) {
 		return (jobStateIM:JobState) => this.pruneMutating(jobStateIM.withMutations((jobState:JobState) => {
 			// Update Job first
-			const allJobs:TJobIMap = jobState.all
-			
 			const
+				allJobs:TJobIMap = jobState.all,
 				existingJob = allJobs.valueSeq().find(it => it.id === job.id),
 				newJob = existingJob ?
 					cloneObject(existingJob, job) :
@@ -230,44 +212,6 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 	}
 	
 	
-	/**
-	 * Create a new job
-	 *
-	 * @param type
-	 * @param description
-	 * @param args
-	 * @returns {(jobState:JobState)=>Map<string, Map<string, IJob>>}
-	 */
-	
-	create(type:JobType,
-	       description:string = JobType[type],
-	       args:any = {}) {
-		
-		
-		// Create Job
-		const job:IJob = {
-			id: uuid.v4(),
-			type,
-			status: JobStatus.Created,
-			name: JobType[type],
-			description,
-			args
-		}
-		
-		// Create details
-		const detail = assign(_.pick(job, 'id', 'status', 'type'), {
-			createdAt: Date.now(),
-			updatedAt: Date.now(),
-			progress: 0,
-			logs: []
-		}) as IJobStatusDetail
-		
-		this.update(job, detail)
-		
-		return {job, detail}
-		
-		
-	}
 	
 	/**
 	 * Set the selected job id
@@ -291,60 +235,9 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 		return (jobState:JobState) => jobState.set('selectedLogId',id)
 	}
 	
-	/**
-	 * Add a job log record
-	 *
-	 * @param jobId
-	 * @param jobLog
-	 */
-	@ActionReducer()
-	addLog(jobId:string,jobLog:IJobLog) {
-		return (jobState:JobState) => jobState.update('details', (details:List<IJobStatusDetail>) => {
-			const detailIndex = details.findIndex(detail => detail.id === jobId)
-			
-			if (detailIndex === -1) {
-				log.warn(`Unable to add log to job ${jobId} - not in detail list`)
-			} else {
-				details = details.update(detailIndex, (detail) => {
-					// Update the detail object ref and add the log
-					return assign({}, detail, {
-						logs: _.orderBy([...(detail.logs || []), jobLog],['timestamp'],['desc'])
-					})
-				})
-			}
-			
-			return details
-		})
-	}
 	
 	
-	/**
-	 * Add a log record to job status detail
-	 *
-	 * @param jobId
-	 * @param id - unique log id
-	 * @param level
-	 * @param message
-	 * @param timestamp
-	 * @param error
-	 * @param details
-	 */
 	
-	log(jobId:string, id:string, level:JobLogLevel, message:string, timestamp:number, error:Error = null, ...details:any[]) {
-		let errorDetails = null
-		if (error) {
-			errorDetails = makeErrorDetails(error)
-		}
-		this.addLog(jobId,{
-			id,
-			level: JobLogLevel[level] as TJobLogLevel,
-			message,
-			timestamp,
-			error,
-			errorDetails,
-			details
-		})
-	}
 }
 
 export default JobActionFactory

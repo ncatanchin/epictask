@@ -103,15 +103,17 @@ export function Provided<T>(newTarget:T):T {
 		provider.newConstructor = newConstructor
 		newConstructor.prototype = (newTarget as any).prototype
 		
-		Container
-			.bind(newConstructor)
-			.provider({
-				get: () => {
-					return new newConstructor()
-				}
-			})
+		
+		
+		
 	}
 	
+	Object
+		.keys(newTarget)
+		.filter(it => !['prototype','__proto__','name','constructor'].includes(it))
+		.forEach(it => provider.newConstructor[it] = newTarget[it])
+	
+	//log.info(`Object keys`, Object.keys(newTarget).join(', '))
 	return provider.newConstructor as any
 	
 	

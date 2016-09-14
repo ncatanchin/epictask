@@ -6,33 +6,48 @@ import * as moment from 'moment'
 import * as React from 'react'
 
 import {PureRender, Renderers, Avatar} from '../common'
-import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {connect} from 'react-redux'
-import {createStructuredSelector} from 'reselect'
-import {Issue} from 'shared/models'
 import filterProps from 'react-valid-props'
+import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
+import {Issue} from 'shared/models'
 
 import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
-import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
 
-interface IIssueItemProps extends React.DOMAttributes {
+interface IIssueItemProps extends React.HTMLAttributes<any> {
 	styles:any
-	onSelected:(event:any, issue:Issue) => void
-	//issue?:Issue
 	index:number
 	issues:Issue[]
+	issue?:Issue
 	issuesGrouped?:IIssueGroup[]
 	groupBy:string
-	selectedIssueIds?:number[]
+	onSelected:(event:any, issue:Issue) => void
+	isSelected?:boolean
+	isSelectedMulti?:boolean
 }
 
-
-@connect(createStructuredSelector({
-	selectedIssueIds: selectedIssueIdsSelector
-},createDeepEqualSelector))
+// State is connected at the item level to minimize redraws for the whole issue list
+@connect(createDeepEqualSelector(
+	[
+		selectedIssueIdsSelector,
+		(state,props:IIssueItemProps):Issue[] => props.issues,
+		(state,props:IIssueItemProps):number => props.index
+	],
+	(selectedIssueIds:number[],issues:Issue[],index:number) => {
+		const
+			issue = issues && issues[index],
+			isSelected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id)
+		
+		return {
+			isSelected,
+			issue,
+			isSelectedMulti: isSelected && selectedIssueIds.length > 1
+		}
+	}
+))
 @PureRender
 class IssueItem extends React.Component<IIssueItemProps,void> {
 
@@ -41,10 +56,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		const
 			{props} = this,
-			{styles,onSelected,issues,index,selectedIssueIds} = props,
-			issue = issues && issues[index],
-			selected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
-			selectedMulti = selectedIssueIds.length > 1
+			{styles,onSelected,issue,index,isSelected,isSelectedMulti} = props
 			
 			
 		if (!issue)
@@ -55,18 +67,18 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 
 			issueStyles = makeStyle(
 				styles.issue,
-				selected && styles.issue.selected,
-				(selected && selectedMulti) && styles.issue.multi
+				isSelected && styles.issue.selected,
+				(isSelectedMulti) && styles.issue.multi
 			),
 			issueTitleStyle = makeStyle(
 				styles.issueTitle,
-				selected && styles.issueTitleSelected,
-				selectedMulti && styles.issueTitleSelectedMulti
+				isSelected && styles.issueTitleSelected,
+				isSelectedMulti && styles.issueTitleSelectedMulti
 			)
 
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
-		                                    className={'animated fadeIn ' + (selected ? 'selected' : '')}
+		                                    className={'animated fadeIn ' + (isSelected ? 'selected' : '')}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}

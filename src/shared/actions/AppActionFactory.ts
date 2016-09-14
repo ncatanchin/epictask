@@ -7,6 +7,7 @@ import {ISettings} from 'shared/Settings'
 import {AppState} from 'shared/actions/AppState'
 import {User} from 'shared/models/User'
 import {Provided} from 'shared/util/ProxyProvided'
+import { RegisterActionFactory } from "shared/Registry"
 
 const log = getLogger(__filename)
 
@@ -32,9 +33,12 @@ const log = getLogger(__filename)
 /**
  * Core EpicTask actions
  */
+@RegisterActionFactory
 @Provided
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
-
+	
+	static leaf = AppKey
+	
 	constructor() {
 		super(AppState)
 	}

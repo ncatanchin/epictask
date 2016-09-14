@@ -11,7 +11,7 @@ const log = getLogger(__filename)
 /**
  * ITimeAgo.tsxProps
  */
-export interface ITimeAgoProps extends React.HTMLAttributes {
+export interface ITimeAgoProps extends React.HTMLAttributes<any> {
 	timestamp:number
 }
 

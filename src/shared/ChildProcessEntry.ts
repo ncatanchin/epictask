@@ -13,10 +13,10 @@ const
 
 
 //region WorkerClient
-const defaultMessageHandlers:{[messageType:string]:WorkerClient.TWorkerMessageHandler} = {
-	ping(workerEntry:WorkerEntry,messageType:string,data:any) {
+const defaultMessageHandlers:{[messageType:string]:ChildClient.TWorkerMessageHandler} = {
+	ping(workerEntry:ChildProcessEntry, messageType:string, data:any) {
 		if (workerEntry.running) {
-			WorkerClient.sendMessage('pong')
+			ChildClient.sendMessage('pong')
 		} else {
 			log.info(`Worker is not yet ready`)
 		}
@@ -30,12 +30,12 @@ const
 /**
  * WorkerClient global access
  */
-export namespace WorkerClient {
+export namespace ChildClient {
 	
 	/**
 	 * Worker Message handler shape
 	 */
-	export type TWorkerMessageHandler = (workerEntry:WorkerEntry,messageType:string,data?:any) => void
+	export type TWorkerMessageHandler = (workerEntry:ChildProcessEntry, messageType:string, data?:any) => void
 	
 	/**
 	 * Raw process message handler
@@ -61,7 +61,7 @@ export namespace WorkerClient {
 		return getMessageHandlers()[type]
 	}
 	
-	export function makeMessageHandler(workerEntry:WorkerEntry,messageType:string,messageHandler:TWorkerMessageHandler) {
+	export function makeMessageHandler(workerEntry:ChildProcessEntry, messageType:string, messageHandler:TWorkerMessageHandler) {
 		addMessageHandler(messageType,(messageType:string,data:any) => {
 			messageHandler(workerEntry,messageType,data)
 		})
@@ -101,8 +101,8 @@ export namespace WorkerClient {
 		//process.send({workerId,type, body})
 	}
 	
-	
 }
+
 //endregion
 
 let startDeferred:Promise.Resolver<any> = null
@@ -155,7 +155,7 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
  * @param workerEntry
  * @param workerStart
  */
-async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,workerStart:() => Promise<any>) {
+async function startChildProcess(processType:ProcessType, workerEntry:ChildProcessEntry, workerStart:() => Promise<any>) {
 	
 	// If already initialized then return
 	if (startDeferred)
@@ -168,7 +168,7 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 	Object
 		.keys(defaultMessageHandlers)
 		.forEach(messageType =>
-			WorkerClient.makeMessageHandler(
+			ChildClient.makeMessageHandler(
 				workerEntry,
 				messageType,
 				defaultMessageHandlers[messageType]))
@@ -176,7 +176,7 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
 	
 	// Now bind to all the process events
 	ipcRenderer.on('message',(event,{type,body}) => {
-		const handler = WorkerClient.getMessageHandler(type)
+		const handler = ChildClient.getMessageHandler(type)
 		assert(handler,`No handler defined for ${type}`)
 		
 		handler(type,body)
@@ -210,7 +210,7 @@ async function startWorker(processType:ProcessType,workerEntry:WorkerEntry,worke
  * Base worker entry implementation which includes
  * all process management
  */
-export abstract class WorkerEntry {
+export abstract class ChildProcessEntry {
 	
 	
 	/**
@@ -219,7 +219,7 @@ export abstract class WorkerEntry {
 	 * @param processType
 	 */
 	constructor(private processType:ProcessType) {
-		startWorker(processType,this, () => this.start())
+		startChildProcess(processType,this, () => this.start())
 	}
 	
 	servicesEnabled() {
@@ -275,4 +275,4 @@ export abstract class WorkerEntry {
 	
 }
 
-export default WorkerEntry
+export default ChildProcessEntry

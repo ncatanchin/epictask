@@ -1,9 +1,12 @@
-import * as lunr from 'lunr'
+// import * as lunr from 'lunr'
 import {ModelPersistenceEventType} from 'typestore'
 import {getUserDataFilename, readFile, writeFile, readJSONFile, writeJSONFile} from './util/Files'
 
 
-const log = getLogger(__filename)
+
+const
+	lunr = require('lunr'),
+	log = getLogger(__filename)
 
 export interface ILunrSchema<M> {
 	ref:string

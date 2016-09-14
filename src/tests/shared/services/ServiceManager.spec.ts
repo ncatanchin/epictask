@@ -2,7 +2,6 @@
 
 import {ServiceManager} from "shared/services"
 import * as TestServicesType from './fixtures/TestService.fixture'
-import {AppStoreService as AppStoreServiceType} from "shared/services/AppStoreService"
 import {AppActionFactory as AppActionFactoryType} from 'shared/actions/AppActionFactory'
 //let getServiceManager:typeof getServiceManagerType = null
 let serviceManagerRef = null
@@ -44,13 +43,6 @@ describe('Services',() => {
 		log.info('Loading service context in type main - only DatabaseClientService should load')
 		serviceManager.loadContext()
 		countRegistered(2)
-		
-		log.info('Removing all and going to type Server')
-		serviceManager = getServiceManager(true)
-		ProcessConfig.setType(ProcessType.StateServer)
-		log.info('Loading service context in type main - only DatabaseClientService should load')
-		serviceManager.loadContext()
-		countRegistered(7)
 		
 		
 		log.info('Removing all and going to type DatabaseServer')

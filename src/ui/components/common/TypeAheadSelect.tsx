@@ -25,7 +25,7 @@ export type TTypeAheadInputChanged = (query: string) => void
 /**
  * ITypeAheadSelectProps
  */
-export interface ITypeAheadSelectProps extends React.HTMLAttributes {
+export interface ITypeAheadSelectProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 

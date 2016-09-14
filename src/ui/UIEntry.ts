@@ -1,7 +1,6 @@
 // IMPORTS
 import './UIGlobals'
-import {getServiceManager as getServiceManagerType} from "shared/services"
-import {ProcessManager as ProcessManagerType} from 'shared/ProcessManager'
+
 
 const log = getLogger(__filename)
 
@@ -14,9 +13,14 @@ if (Env.isDev && !Env.isTest) {
  */
 async function boot() {
 	
+	const storeBuilder = require('shared/store/AppStoreBuilder').default
+	await storeBuilder()
+	
 	const
-		ProcessManager = require('shared/ProcessManager').ProcessManager as typeof ProcessManagerType,
-		getServiceManager = require('shared/services').getServiceManager as typeof getServiceManagerType
+		ProcessManager = require('shared/ChildProcessManager').ChildProcessManager,
+		getServiceManager = require('shared/services').getServiceManager
+	
+	
 	
 	// HMR STOP PROCESSES
 	if (module.hot) {

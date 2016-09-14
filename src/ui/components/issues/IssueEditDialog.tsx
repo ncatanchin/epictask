@@ -183,7 +183,7 @@ const baseStyles = createStyles({
 /**
  * IIssueEditDialogProps
  */
-export interface IIssueEditDialogProps extends React.DOMAttributes {
+export interface IIssueEditDialogProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	saveError?:any

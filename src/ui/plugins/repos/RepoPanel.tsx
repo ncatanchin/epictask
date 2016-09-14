@@ -88,7 +88,7 @@ function getHeaderControls() {
 		<Button key="AddRepoButton"
 						tabIndex={-1}
 		        style={styles.header.button}
-		        onClick={(event:React.MouseEvent) => {
+		        onClick={(event:React.MouseEvent<any>) => {
 							event.preventDefault()
 							event.stopPropagation()
 					
@@ -151,7 +151,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 	
 	render() {
 		const
-			{theme,config,styles,style,visible} = this.props,
+			{theme,styles,style,visible} = this.props,
 			
 			panelStyle = [
 				styles.panel,

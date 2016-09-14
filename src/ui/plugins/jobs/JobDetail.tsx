@@ -110,7 +110,7 @@ const baseStyles = createStyles({
 /**
  * IJobDetailProps
  */
-export interface IJobDetailProps extends React.HTMLAttributes {
+export interface IJobDetailProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	job:IJob
@@ -142,7 +142,7 @@ export class JobDetail extends React.Component<IJobDetailProps,any> {
 		
 		const
 			{theme, styles, job, jobs,detail,selectedLogId} = this.props,
-			logs = detail && detail.logs,
+			logs = [],//detail && detail.logs,
 			statusColors = getJobStatusColors(detail,styles)
 		
 		const levelStyle = (log:IJobLog) =>

@@ -11,14 +11,14 @@ import * as uuid from 'node-uuid'
 import * as faker from 'faker'
 import {makeDefaultToolPanel, ToolPanelLocation, makeDefaultTool} from "shared/tools/ToolTypes"
 import {BuiltInTools, getBuiltInToolId} from "shared/Constants"
-
+import JobDAO from "shared/actions/jobs/JobDAO"
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
 
 function makeJobWithStatus(type:JobType,status:JobStatus = JobStatus.Created,args:any = null,progress = 0) {
 	const
 		jobActions = Container.get(JobActionFactory),
-		{job,detail} = jobActions.create(type,null,args)
+		{job,detail} = JobDAO.create(type,null,args)
 	
 	job.status = detail.status = status
 	detail.progress = progress
@@ -87,14 +87,14 @@ storiesOf('Job Monitor',module)
 				null :
 		 		new Error(faker.lorem.sentence(10))
 			
-			jobActions.log(
-		 		job.id,
-			  makeId(i),
-			  JobLogLevel[level],
-			  faker.lorem.sentence(faker.random.number(20)),
-			  startTime + (i * increment),
-				error
-			)
+			// JobDAO.logRecord(
+		 	// 	job.id,
+			//   makeId(i),
+			//   JobLogLevel[level],
+			//   faker.lorem.sentence(faker.random.number(20)),
+			//   startTime + (i * increment),
+			// 	error
+			// )
 				
 		}
 		
@@ -116,7 +116,7 @@ storiesOf('Job Monitor',module)
 				if (existingJob)
 					jobActions.remove(existingJob.id)
 				
-				return jobActions.create(JobType.GetUserRepos)
+				return JobDAO.create(JobType.GetUserRepos)
 			},
 			jobActions = Container.get(JobActionFactory)
 		

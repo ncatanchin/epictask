@@ -1,39 +1,40 @@
 
 import thunkMiddleware from 'redux-thunk'
-import * as createLogger from 'redux-logger'
 import {Store as ReduxStore} from 'redux'
 import {Map} from 'immutable'
 import { StoreEnhancer,compose, applyMiddleware } from 'redux'
-import {Container} from 'typescript-ioc'
 import {ReduxDebugSessionKey, UIKey} from 'shared/Constants'
 import {Toaster} from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
-
-import {getServerClient} from "shared/server/ServerClient"
+import {ipcRenderer} from 'electron'
 
 import {
+	getAction,
+	getAllActions,
 	setStoreProvider,
 	ILeafReducer,
 	ObservableStore
 } from 'typedux'
 
 import {
-	writeJSONFileAsync,
 	cacheFilename,
 	readFile,
-	writeJSONFile, writeFile, writeFileAsync
+	writeFile,
+	writeFileAsync, getUserDataFilename
 } from 'shared/util/Files'
 
 import {
-	loadActionFactories
+	loadActionFactories, ActionFactoryProviders
 } from 'shared/actions/ActionFactoryProvider'
 import {makeReactotronEnhancer} from "shared/store/AppStoreDevConfig"
-import {OnlyIf, OnlyIfFn, If} from "shared/util/Decorations"
+import {OnlyIfFn, If} from "shared/util/Decorations"
 import {isString} from "shared/util"
+import { addGlobalListener, default as ChildProcessWebView } from "shared/ChildProcessWebView"
+import { getHot, setDataOnDispose } from "shared/util/HotUtils"
 
 const
 	log = getLogger(__filename),
-	stateFilename = cacheFilename('store-state'),
+	stateFilename = getUserDataFilename('store-state'),
 	ActionLoggerEnabled = false
 
 
@@ -48,13 +49,7 @@ let
  * @returns {any}
  */
 function createMiddleware() {
-	return If(
-		Env.isRenderer,
-		() => [],
-		() => [thunkMiddleware]
-	)
-	
-
+	return [thunkMiddleware]
 }
 
 /**
@@ -66,7 +61,9 @@ function createMiddleware() {
 const middleware = _.get(module,'module.hot.data.middleware',createMiddleware())
 
 
-let store:ObservableStore<any> = _.get(module.hot,'data.store') as any
+let
+	store:ObservableStore<any> = _.get(module.hot,'data.store') as any,
+	persistingState = false
 
 // Check for hot reload
 If(store,() => {
@@ -136,11 +133,10 @@ function hmrSetup() {
 /**
  * Initialize/Create the store
  */
-function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null) {
+function initStore(devToolsMode = false,defaultState = null) {
 
 	const enhancers = [
-		applyMiddleware(...middleware),
-		storeEnhancer || require('./ClientStoreEnhancer').default
+		applyMiddleware(...middleware)
 	]
 
 	// if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
@@ -159,7 +155,7 @@ function initStore(devToolsMode = false,defaultState = null,storeEnhancer = null
 
 	let reducers = getReducers()
 
-	// Create the store
+	// Create the store/*
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
 		compose.call(null,...enhancers) as StoreEnhancer<any>,
@@ -222,49 +218,36 @@ export function loadAndInitStorybookStore() {
  * @returns {ObservableStore<any>}
  */
 
-export async function loadAndInitStore(serverStoreEnhancer = null) {
+export async function loadAndInitStore() {
 	loadActionFactories()
 	
 	let defaultStateValue = null
 	
-	// If state server then try and load from disk
 	
-	if (serverStoreEnhancer) {
+	try {
+		// If state server then try and load from disk
 		const stateJson = readFile(stateFilename)
-		try {
-			let stateData
-			if (stateJson) {
-				let count = 0
-				let stateData = stateJson
-				while (isString(stateData) && count < 3) {
-					stateData = JSON.parse(stateData)
-				}
-				
-				defaultStateValue = stateData
-				log.info(`Read state from file`,JSON.stringify(defaultStateValue[UIKey],null,4))
+		
+		if (stateJson) {
+			let
+				count = 0,
+				stateData = stateJson
+			
+			while (isString(stateData) && count < 3) {
+				stateData = JSON.parse(stateData)
 			}
-		} catch (err) {
-			log.error('unable to load previous state data, starting fresh', err)
+			
+			defaultStateValue = stateData
+			log.info(`Read state from file`,JSON.stringify(defaultStateValue[UIKey],null,4))
 		}
+	} catch (err) {
+		log.error('unable to load previous state data, starting fresh', err)
 	}
-	
-	// Otherwise load from server
-	else {
-		log.info(`Loading state from server`)
-		defaultStateValue = await getServerClient().getState()
-		log.info(`Got state from server`,defaultStateValue.get(UIKey).toolPanels.toJS())
-	}
-	
-	const newStore = initStore(false,defaultStateValue,serverStoreEnhancer)
-	
-	const newState = newStore.getState()
-	log.info(`Store Created with tool panels`,JSON.stringify(newState.get(UIKey).toolPanels.toJS(),null,4))
-	
-	return newStore
+
+	return initStore(false,defaultStateValue)
 }
 
 
-let persistingState = false
 
 /**
  * Write the actual state async
@@ -309,7 +292,9 @@ function canPersistState() {
  */
 const persistStoreState = OnlyIfFn(canPersistState,_.debounce((state) => {
 	writeStoreState(state,true)
-},10000,{maxWait:30000}))
+},10000,{
+	maxWait:30000
+}))
 
 /**
  * Get the observable store
@@ -317,10 +302,6 @@ const persistStoreState = OnlyIfFn(canPersistState,_.debounce((state) => {
  * @returns {ObservableStore<any>}
  */
 export function getStore() {
-	if (!store) {
-		// initStore()
-		return null
-	}
 	return store
 }
 
@@ -361,18 +342,204 @@ export function serializeState(state = getStoreState()) {
 
 // Add shutdown hook on main
 const {app} = require('electron')
-app.on('before-quit',() => {
-	log.info(`Writing current state (shutdown) to: ${stateFilename}`)
-	writeStoreState()
+
+// Just in case its an hmr request
+const existingRemoveListener = getHot(module,'removeListener')
+if (existingRemoveListener)
+	existingRemoveListener()
+
+
+/**
+ * Map of existing observers
+ *
+ * @type {any}
+ */
+const clientObservers = getHot(module,'clientObservers',{})
+
+
+function getStateValue(...keyPath) {
+	let val = getStoreState()
+	
+	for(let key of keyPath) {
+		if (!val)
+			break
+		
+		let nextVal = _.isFunction(val.get) && val.get(key)
+		if (!nextVal)
+			nextVal = val[key]
+		
+		val = nextVal
+	}
+	
+	return val
+}
+
+interface IMessageSender {
+	sendMessage(type:string,body)
+}
+
+/**
+ * All message handlers
+ */
+const clientMessageHandlers = {
+	
+	stateRequest(childProcess:IMessageSender,{id,keyPath}) {
+		const
+			state = getStoreState(),
+			rawValue = getStateValue(...keyPath),
+			value = _.toJS(rawValue)
+		
+		log.info(`Getting state value`,id,keyPath,rawValue,value)
+		
+		childProcess.sendMessage('stateResponse',{
+			id,
+			value
+		})
+	},
+	
+	/**
+	 * Handle observer request
+	 *
+	 * @param childProcess
+	 * @param id
+	 * @param keyPath
+	 */
+	observeStateRequest(childProcess:IMessageSender,{id,keyPath}) {
+		
+		let
+			lastValue = null
+		
+		const
+			handler = (newValue,oldValue) => {
+				if (lastValue) {
+					oldValue = lastValue
+				}
+				
+				lastValue = newValue = _.toJS(newValue)
+				childProcess.sendMessage('observeStateChange',{id,newValue,oldValue})
+			}
+		
+		try {
+			clientObservers[ id ] = {
+				id,
+				childProcess,
+				keyPath,
+				remover: getStore().observe(keyPath, handler)
+			}
+			
+			childProcess.sendMessage('observeStateResponse',{id})
+		} catch (err) {
+			log.error(`Unable to create observer`,err)
+			childProcess.sendMessage('observeStateResponse',{id,err})
+		}
+	},
+	
+	/**
+	 * Stop watching state changes
+	 *
+	 * @param childProcess
+	 * @param id
+	 * @returns {any|{fontWeight}|{color}|void}
+	 */
+	observeStateRemove(childProcess:IMessageSender,{id}) {
+		const observer = clientObservers[id]
+		
+		if (!observer)
+			return log.warn(`Unable to find observer with id ${id}, can not remove`)
+		
+		observer.remover()
+		delete clientObservers[id]
+	},
+	
+	
+	/**
+	 * Action request from client server (db/job)
+	 *
+	 * @param childProcess
+	 * @param type
+	 * @param leaf
+	 * @param args
+	 */
+	actionRequest(childProcess:IMessageSender,{type,leaf,args}) {
+		log.info(`Received action request: `, leaf,type,args)
+		const actions = ActionFactoryProviders[leaf]
+		// const actionReg = getAction(leaf,type)
+		if (!actions || !actions[type]) {
+			const msg = `Unable to find action ${leaf}.${type} in ${Object.keys(getAllActions()).join(', ')}`
+			log.warn(msg,getAllActions())
+			throw new Error(msg)
+		}
+		
+		actions[type].apply(actions,args)
+		//
+		// //if (actionReg.options.isReducer)
+		// actionReg.action(null,...args)
+	}
+}
+
+// Subscribe for remote client action requests
+const removeListener = addGlobalListener({
+	
+	/**
+	 * On client message
+	 *
+	 * @param childProcess
+	 * @param type
+	 * @param body
+	 */
+	onMessage(childProcess:ChildProcessWebView,{type,body}) {
+		
+		const
+			handler = clientMessageHandlers[type]
+		
+		if (!handler) {
+			log.error(`Unknown message type ${type}`)
+			return
+		}
+		
+		handler(childProcess,body)
+	}
 })
 
+Object
+	.keys(clientMessageHandlers)
+	.forEach(type => {
+		if (ipcRenderer)
+			ipcRenderer.on(type,(event,body) => {
+				clientMessageHandlers[type]({
+					sendMessage(type,body) {
+						ipcRenderer.send(type,body)
+					}
+				},body)
+			})
+	})
 
+// On unload write the state
+if (typeof window !== 'undefined') {
+	window.addEventListener('beforeunload', () => {
+		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
+		writeStoreState()
+		//removeListener()
+	})
+}
+// app.on('before-quit',() => {
+//
+// })
+
+
+setDataOnDispose(module,() => ({
+	store,
+	middleware,
+	removeListener,
+	clientObservers
+}))
 
 if (module.hot) {
-	module.hot.dispose((data:any) => {
-		assign(data,{store,middleware})
+	// On dispose, save current middleware and store
+	module.hot.addDisposeHandler(() => {
 		hmrDisposed = true
 	})
+		
 	
-	module.hot.accept()
+	module.hot.accept(() => log.info(`HMR update`,__filename))
 }

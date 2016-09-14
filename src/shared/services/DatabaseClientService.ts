@@ -2,10 +2,10 @@
 import {Repo as TSRepo, IModel} from 'typestore'
 import ProcessType from "shared/ProcessType"
 import {Stores} from 'shared/Stores'
-import {ServiceStatus, BaseService, RegisterService, IServiceConstructor} from 'shared/services'
+import {BaseService, RegisterService, IServiceConstructor} from 'shared/services'
 import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
-import AppStoreService from "shared/services/AppStoreService"
+import { canProxyProperty } from "shared/util"
 
 const log = getLogger(__filename)
 
@@ -39,6 +39,8 @@ class DatabaseProxy {
 	 * @returns {TDatabaseProxyFunction}
 	 */
 	get(target,name):TDatabaseProxyFunction {
+		if (canProxyProperty(name))
+			return null
 		
 		log.debug(`Getting proxy for ${name}`)
 		
@@ -90,7 +92,7 @@ export class DatabaseClientService extends BaseService {
 	
 	
 	dependencies(): IServiceConstructor[] {
-		return [AppStoreService]
+		return []
 	}
 	
 	/**

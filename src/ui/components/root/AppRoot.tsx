@@ -22,7 +22,7 @@ import {UIState} from 'shared/actions/ui/UIState'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
-import {HotKeys} from 'react-hotkeys'
+import { HotKeys } from "ui/components/common/Other"
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -144,8 +144,8 @@ export class App extends React.Component<IAppProps,any> {
 			this.issueActions.newIssue()
 		},
 
-		[KeyMaps.CommonKeys.MoveUp]: () => log.info('key up'),
-		[KeyMaps.CommonKeys.MoveDown]:() => log.info('key down'),
+		[KeyMaps.CommonKeys.MoveUp]: (event) => log.info('key up',event),
+		[KeyMaps.CommonKeys.MoveDown]:(event) => log.info('key down',event),
 
 		[KeyMaps.CommonKeys.Edit]: () => {
 			log.info('Edit issue keys pressed - making dialog visible')

@@ -8,7 +8,6 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {Style} from 'radium'
-import * as SplitPane from 'react-split-pane'
 
 import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
@@ -28,7 +27,7 @@ import * as KeyMaps from 'shared/KeyMaps'
 import {CommonKeys} from 'shared/KeyMaps'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import IssueItem from 'ui/components/issues/IssueItem'
-import {HotKeys} from 'react-hotkeys'
+
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
@@ -42,10 +41,12 @@ import ValueCache from 'shared/util/ValueCache'
 import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
 import { DataComponent, MapProvider } from "ui/components/data/DataComponent"
 import { addErrorMessage } from "shared/Toaster"
+import { HotKeys } from "ui/components/common/Other"
 
 
 // Constants & Non-typed Components
 const
+	SplitPane = require('react-split-pane'),
 	ReactList = require('react-list'),
 	log = getLogger(__filename),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
@@ -434,8 +435,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	makeMoveSelector(increment: number) {
 		
-		return (event: React.KeyboardEvent = null) => {
-			
+		return (event: React.KeyboardEvent<any> = null) => {
+			log.info(`Move selector`,event)
 			const
 					{issues, editingInline} = this.props,
 					{firstSelectedIndex} = this.state,
@@ -747,11 +748,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		} = this.props
 		
 		
-		const {groupBy} = issueSortAndFilter.issueSort
-		
-		const group = issuesGrouped[index],
-				groupByItem = group.groupByItem,
-				isVisible = this.isIssueGroupVisible(getIssueGroupId(group))
+		const
+			{groupBy} = issueSortAndFilter.issueSort,
+			group = issuesGrouped[index],
+			groupByItem = group.groupByItem,
+			isVisible = this.isIssueGroupVisible(getIssueGroupId(group))
 		
 		
 		let itemCount = !isVisible ? 0 : group.size +
@@ -809,7 +810,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						issuesGrouped.length
 		
 		
-		return <div style={styles.panel}>
+		return <HotKeys style={styles.panel}
+		                keyMap={KeyMaps.App}
+		                handlers={this.keyHandlers}
+										id="issuesPanel">
 			
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
@@ -823,11 +827,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			           className='issuePanelSplitPane'>
 				
 				{/* LIST CONTROLS FILTER/SORT */}
-				<HotKeys style={styles.listContent}
-				         keyMap={KeyMaps.App}
-				         id="issuesPanel"
-				         handlers={this.keyHandlers}
-				>
+				<div style={styles.listContent}>
 					{/* ISSUE FILTERS */}
 					<IssueFilters />
 					
@@ -844,14 +844,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					
 					
 					</div>
-				</HotKeys>
+				</div>
 				
 				{/* ISSUE DETAIL PANEL */}
 				<IssueDetailPanel issues={issues}/>
 			
 			</SplitPane>
 			}
-		</div>
+		</HotKeys>
 	}
 	
 }

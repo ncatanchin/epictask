@@ -6,7 +6,7 @@ import {JobHandler} from 'job/JobHandler'
 import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
 
-import Toaster from 'shared/Toaster'
+// import Toaster from 'shared/Toaster'
 import {Stores,chunkSave} from 'shared/services/DatabaseClientService'
 import {getSettings} from 'shared/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
@@ -16,9 +16,10 @@ import {JobType, IJob, IJobLogger} from 'shared/actions/jobs/JobTypes'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 
 import {getStoreState} from 'shared/store/AppStore'
-import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
+import { getStateClient } from "shared/ChildStoreClient"
 
 
 
@@ -51,26 +52,28 @@ export class RepoSyncExecutor implements IJobExecutor {
 	
 	checkReloadActivity = async (comment:Comment) => {
 		// Reload current issue if loaded
-		const
-			issue = await Container.get(IssueActionFactory).getSelectedIssue()
+		// const
+		// 	issue = await getActionFactory<IssueActionFactory>(IssueKey).getSelectedIssue()
 		
-		if (
-			!issue ||
-			!comment ||
-			comment.issueNumber !== issue.number ||
-			comment.repoId !== issue.repoId
-		)
-			return
-		
-		const
-			{repo} = this,
-			issueActions = Container.get(IssueActionFactory)
-		
-		log.debug('Checking if current issue is in this repo, if so then reload',
-			_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
-		
-		// If the issue is loaded and in this repo then reload its activity
-		issueActions.loadActivityForIssue(issue.id)
+		// const issue = await getStateClient(IssueKey,'selectedIssue')
+		//
+		// if (
+		// 	!issue ||
+		// 	!comment ||
+		// 	comment.issueNumber !== issue.number ||
+		// 	comment.repoId !== issue.repoId
+		// )
+		// 	return
+		//
+		// const
+		// 	{repo} = this,
+		// 	issueActions = Container.get(IssueActionFactory)
+		//
+		// log.debug('Checking if current issue is in this repo, if so then reload',
+		// 	_.get(issue,'id'),'repoId = ',repo.id,'issue repo id =', _.get(issue,'repoId'))
+		//
+		// // If the issue is loaded and in this repo then reload its activity
+		// issueActions.loadActivityForIssue(issue.id)
 		
 	}
 	
@@ -78,7 +81,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * if dryRun argument was passed as true,
 	 * prohibits persistence, etc
 	 */
-	isDryRun = () => _.get(this.job,'args.dryRun',false) === true
+	isDryRun = () => _.get(this.job,'args.dryRun',false) as boolean === true
 		
 
 	/**
@@ -108,6 +111,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 *
 	 * @param stores
 	 * @param repo
+	 * @param onDataCallback
 	 */
 	@Benchmarker
 	async syncAssignees(stores:Stores, repo:Repo,onDataCallback:OnDataCallback<User> = null) {
@@ -424,7 +428,6 @@ export class RepoSyncExecutor implements IJobExecutor {
 		const
 			activityManager = Container.get(ActivityManagerService),
 			stores = Container.get(Stores),
-			toaster = Container.get(Toaster),
 			{availableRepo,repo} = this
 
 		if (!getSettings().token) {
@@ -460,12 +463,12 @@ export class RepoSyncExecutor implements IJobExecutor {
 
 
 			// If the current repo is not enabled then return
-			const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
-			
-			if (enabledRepoIds.includes(repo.id)) {
-				// TODO: Work this out
-				await this.reloadIssues()
-			}
+			// const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
+			//
+			// if (enabledRepoIds.includes(repo.id)) {
+			// 	// TODO: Work this out
+			// 	await this.reloadIssues()
+			// }
 			
 			log.info('Now syncing comments')
 			await Promise.delay(1000)
@@ -475,7 +478,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 
 		} catch (err) {
 			log.error('failed to sync repo issues', err)
-			toaster.addErrorMessage(err)
+			throw err
 		}
 	}
 }

@@ -73,7 +73,7 @@ function mapStateToProps(state) {
 /**
  * IIssueEditDialogProps
  */
-export interface IRepoAddDialogProps extends React.DOMAttributes {
+export interface IRepoAddDialogProps extends React.HTMLAttributes<any> {
 	theme?:any
 	open?:boolean
 }

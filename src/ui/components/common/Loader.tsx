@@ -24,7 +24,7 @@ const
 /**
  * ILoaderProps
  */
-export interface ILoaderProps extends React.HTMLAttributes {
+export interface ILoaderProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	animate:boolean

@@ -87,6 +87,8 @@ function makeMenu() {
  * Load the actual window
  */
 function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
+	makeMenu()
+	
 	return new Promise((resolve,reject) => {
 
 		try {
@@ -106,13 +108,18 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				// darkTheme:true,
 			}))
 			
-			const {webContents} = browserWindow
+			
+			
+			
+			const
+				{webContents} = browserWindow
 
 
 			mainWindowState.manage(browserWindow)
 			
 			browserWindow.show()
-
+			
+			
 			// On PageLoaded - show and focus
 			
 			webContents
@@ -128,6 +135,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				// If HMR event occurred - only for dev
 				if (!browserWindow)
 					return
+				
 				
 				browserWindow.setTitle('EpicTask')
 				browserWindow.show()
@@ -166,7 +174,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			}
 
 
-			makeMenu()
+			
 
 
 		} catch (err) {

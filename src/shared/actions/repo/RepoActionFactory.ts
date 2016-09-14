@@ -19,7 +19,7 @@ import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {ActivityType, Activity} from 'shared/models/Activity'
-import {repoIdPredicate} from 'shared/actions/repo/RepoSelectors'
+import { repoIdPredicate, enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
 import {getSettings} from 'shared/Settings'
 import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
@@ -27,7 +27,8 @@ import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
 import { cloneObject } from "shared/util"
-
+import JobDAO from "shared/actions/jobs/JobDAO"
+import { RegisterActionFactory } from "shared/Registry"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -39,9 +40,12 @@ const Benchmarker = Benchmark('RepoActionFactory')
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@RegisterActionFactory
 @Provided
 export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
-
+	
+	static leaf = RepoKey
+	
 	stores:Stores
 
 	jobActions:JobActionFactory
@@ -180,8 +184,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		return async (dispatch,getState) => {
 			
-			const jobActions = this.jobActions
-				.withDispatcher(dispatch,getState)
+			const
+				jobActions = this.jobActions
+					.withDispatcher(dispatch,getState)
 
 			if (!Array.isArray(repoIds))
 				repoIds = [repoIds]
@@ -200,7 +205,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 				// Create RepoSync Job
 				log.info(`Triggering repo sync for ${repo.full_name}`)
-				jobActions.create(JobType.RepoSync,null,{
+				JobDAO.create(JobType.RepoSync,null,{
 					availableRepo,
 					repo,
 					force
@@ -219,18 +224,28 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	syncUserRepos() {
 		return (dispatch,getState) => {
 			log.info('Triggering user repo sync')
-
-			const jobActions = Container.get(JobActionFactory)
-			jobActions.create(JobType.GetUserRepos)
+			
+			JobDAO.create(JobType.GetUserRepos)
 		}
 	}
 
-
+	@Action()
+	syncAll() {
+		return (dispatch,getState) => {
+			
+			this.syncUserRepos()
+			this.syncRepo(
+				enabledRepoIdsSelector(getState()),
+				true
+			)
+		}
+		
+	}
 
 	@Action()
 	loadAvailableRepoIds() {
 		return (dispatch,getState) => {
-			log.info(`Gettomg available repos`)
+			log.info(`Getting available repos`)
 			return this.internalLoadAvailableRepoIds()
 		}
 	}
@@ -394,12 +409,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined|boolean>}
 	 */
 	@Action()
-	setRepoEnabled(availRepoId:number,enabled:boolean) {
+	setRepoEnabled(availRepoId,enabled:boolean) {
 		return async (dispatch,getState) => {
-			const stores = this.stores
-
-			const actions = this.withDispatcher(dispatch,getState)
-			const availRepo = await stores.availableRepo.findByRepoId(availRepoId)[0]
+			const
+				stores = this.stores,
+				availRepo = await stores.availableRepo.get(availRepoId)
+			
 			if (enabled === availRepo.enabled) {
 				return
 			}
@@ -414,7 +429,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			// dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
 			//actions.updateAvailableRepo(newAvailRepo)
 
-			await actions.internalLoadAvailableRepoIds()
+			await this.internalLoadAvailableRepoIds()
 			log.info('Saved avail repo, setting enabled to',enabled)
 			return true
 		}

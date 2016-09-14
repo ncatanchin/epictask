@@ -103,7 +103,7 @@ const baseStyles = createStyles({
 /**
  * IIssueFiltersProps
  */
-export interface IIssueFiltersProps extends React.DOMAttributes {
+export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	unfilteredIssueIds?:number[]

@@ -10,7 +10,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 
 import {Dialog} from 'material-ui'
-import {HotKeys} from 'react-hotkeys'
+import { HotKeys } from "ui/components/common/Other"
 import {MuiThemeProvider} from 'material-ui/styles'
 import {CircularProgress} from 'material-ui'
 import {Container} from 'typescript-ioc'
@@ -80,7 +80,7 @@ const baseStyles = createStyles({
 /**
  * IIssueCommentDialogProps
  */
-export interface IIssueCommentDialogProps extends React.HTMLAttributes {
+export interface IIssueCommentDialogProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	open?: boolean

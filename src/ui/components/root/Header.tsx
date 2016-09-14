@@ -6,6 +6,8 @@ import {HotKeys} from 'ui/components/common/Other'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+import { ImageLogoFile, UIKey } from "shared/Constants"
+import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 
@@ -134,7 +136,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 	get searchPanel():SearchPanel {
 		const panel = _.get(this,'state.searchPanel') as any
-		return panel ? panel.getWrappedInstance() : null
+		return panel && panel.getWrappedInstance ? panel.getWrappedInstance() : panel
 	}
 
 	get textField():TextField {
@@ -168,9 +170,14 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 	 * On escape sequence close the header unless expanded
 	 */
 	onEscape = () => {
+		
+		log.info(`Header on escape`)
+		
 		if (this.isExpanded)
 			return
-
+		
+		
+		
 		const {searchPanel} = this
 
 		if (searchPanel) {
@@ -182,6 +189,8 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 				doc.activeElement.blur()
 			}
 		}
+		
+		ActionFactoryProviders[UIKey].focusIssuesPanel()
 	}
 
 	/**
@@ -244,6 +253,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 
 		let headerStyle = makeStyle(baseStyles.header)
 
+		
 		if ((visibility !== HeaderVisibility.Hidden)) {
 			headerStyle = makeStyle(
 				theme.header.style,
@@ -267,7 +277,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		                onBlur={this.onBlur}
 		                onFocus={this.onFocus}>
 			<SearchPanel
-
+				ref={this.setSearchPanelRef}
 				searchId='header-search'
 				types={HeaderSearchTypes}
 				inlineResults={expanded}
@@ -277,7 +287,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 				mode={expanded ? 'repos' : 'issues'}/>
 
 			<div style={logoWrapperStyle}>
-				<img style={logoStyle} src={require('assets/images/epictask-logo-rainbow.png')}/>
+				<img style={logoStyle} src={ImageLogoFile}/>
 			</div>
 
 		</HotKeys>

@@ -65,8 +65,8 @@ export function cacheFilename(basename:string) {
 	return `${cachePath}/${encodeURIComponent(basename)}.cache`
 }
 
-export function tempFilename(basename:string) {
-	return `${tempPath}/${encodeURIComponent(basename)}-${uuid.v4()}.tmp`
+export function tempFilename(basename:string,ext = 'tmp') {
+	return `${tempPath}/${encodeURIComponent(basename)}-${uuid.v4()}.${ext}`
 }
 
 /**

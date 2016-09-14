@@ -55,31 +55,32 @@ function startLoaderEntry() {
 		
 	}
 	
+	loadApp()
 	
-	
-	/**
-	 * On main ready complete boot
-	 */
-	Electron.ipcRenderer.once(Constants.Events.MainReady,(event) => {
-		log.info(`Received MainReady`)
-		loadApp()
-	})
-	
-	/**
-	 * Check if the Main process has already booted
-	 */
-	function checkIfMainIsReady() {
-		if (loaded)
-			return
-		if (Electron.remote.getGlobal(Constants.MainBooted)) {
-			log.info(`Main is booted, load UI`)
-			loadApp()
-		} else {
-			checkTimer = setTimeout(checkIfMainIsReady,300)
-		}
-	}
-	
-	checkIfMainIsReady()
+	//
+	// /**
+	//  * On main ready complete boot
+	//  */
+	// Electron.ipcRenderer.once(Constants.Events.MainReady,(event) => {
+	// 	log.info(`Received MainReady`)
+	//
+	// })
+	//
+	// /**
+	//  * Check if the Main process has already booted
+	//  */
+	// function checkIfMainIsReady() {
+	// 	if (loaded)
+	// 		return
+	// 	if (Electron.remote.getGlobal(Constants.MainBooted)) {
+	// 		log.info(`Main is booted, load UI`)
+	// 		loadApp()
+	// 	} else {
+	// 		checkTimer = setTimeout(checkIfMainIsReady,300)
+	// 	}
+	// }
+	//
+	// checkIfMainIsReady()
 	
 }
 

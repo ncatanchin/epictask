@@ -7,7 +7,6 @@ import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {getSettings} from 'shared/Settings'
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {ProcessType} from "shared/ProcessType"
-import {AppStoreService} from "shared/services/AppStoreService"
 
 const log = getLogger(__filename)
 
@@ -29,7 +28,7 @@ export default class AppStateService extends BaseService {
 	 * @returns {DatabaseClientService[]}
 	 */
 	dependencies(): IServiceConstructor[] {
-		return [DatabaseClientService,AppStoreService]
+		return [DatabaseClientService]
 	}
 	
 

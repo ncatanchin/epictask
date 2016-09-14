@@ -1,31 +1,54 @@
-import * as childProcess from 'child_process'
-import {getAppConfig} from "shared/AppConfig"
 import WebViewElement = Electron.WebViewElement
 import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
 import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
-//import {ELECTRON_PATH} from 'shared/util/ElectronUtil'
+import { ProcessType } from "shared/ProcessType"
 
 const HEARTBEAT_TIMEOUT = 1000
-const START_TIMEOUT_DEFAULT = 5000
+const START_TIMEOUT_DEFAULT = 30000
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	globalListeners:IChildProcessEventListener[] = []
 
+/**
+ * Add a listener to the worker
+ *
+ * @param listener
+ */
+export function addGlobalListener(listener:IChildProcessEventListener) {
+	if (!globalListeners.includes(listener))
+		globalListeners.push(listener)
+	
+	return function() {
+		removeGlobalListener(listener)
+	}
+}
 
+/**
+ * Remove event listener
+ *
+ * @param listener
+ */
+export function removeGlobalListener(listener:IChildProcessEventListener) {
+	const index = this.listeners.indexOf(listener)
+	if (index > -1)
+		this.listeners.splice(index,1)
+}
 
-export interface IWorkerMessage {
+export interface IChildProcessMessage {
 	type:string
 	body?:any
 }
 
-export type TWorkerMessageEventCallback = (worker:Worker,message:IWorkerMessage) => void
+export type TChildProcessMessageEventCallback = (childProcess:ChildProcessWebView, message:IChildProcessMessage) => void
 
-export type TWorkerEventCallback = (worker:Worker,err:Error,data?:any) => void
+export type TChildProcessEventCallback = (childProcess:ChildProcessWebView, err:Error, data?:any) => void
 
-export interface IWorkerEventListener {
-	onError?:TWorkerEventCallback
-	onMessage?:TWorkerMessageEventCallback
-	onStart?:TWorkerEventCallback
-	onStop?:TWorkerEventCallback
+export interface IChildProcessEventListener {
+	onError?:TChildProcessEventCallback
+	onMessage?:TChildProcessMessageEventCallback
+	onStart?:TChildProcessEventCallback
+	onStop?:TChildProcessEventCallback
 }
 
 /**
@@ -39,18 +62,23 @@ export interface IWorkerOptions {
 /**
  * Worker - manages spawned and forked processes
  */
-export default class Worker {
+export default class ChildProcessWebView {
 	
 	/**
 	 * All worker event listeners
 	 */
-	private listeners:IWorkerEventListener[]
+	private listeners:IChildProcessEventListener[]
 	
 	
 	/**
 	 * Reference to child process
 	 */
 	private webView:WebViewElement
+	
+	/**
+	 * Jquery WebView wrapper
+	 */
+	private webViewElem:JQuery
 	
 	/**
 	 * Deferred stop flag
@@ -82,6 +110,11 @@ export default class Worker {
 	 * Internal flag to resolve running
 	 */
 	private runningFlag = Promise.defer()
+	
+	/**
+	 * Ref to current timeout
+	 */
+	private tryTimeoutId
 	
 	/**
 	 * Last heartbeat timestamp
@@ -159,10 +192,16 @@ export default class Worker {
 	 *
 	 * @param startFile
 	 * @param name
+	 * @param processType
 	 * @param opts
 	 * @param listeners
 	 */
-	constructor(private startFile:string, public name:string, private opts:IWorkerOptions = {}, ...listeners:IWorkerEventListener[]) {
+	constructor(
+		public name:string,
+		private processType:ProcessType,
+		private opts:IWorkerOptions = {},
+		...listeners:IChildProcessEventListener[]
+	) {
 		this.listeners = listeners
 	}
 	
@@ -172,7 +211,7 @@ export default class Worker {
 	 *
 	 * @param listener
 	 */
-	addListener(listener:IWorkerEventListener) {
+	addListener(listener:IChildProcessEventListener) {
 		if (!this.listeners.includes(listener))
 			this.listeners.push(listener)
 	}
@@ -182,7 +221,7 @@ export default class Worker {
 	 *
 	 * @param listener
 	 */
-	removeListener(listener:IWorkerEventListener) {
+	removeListener(listener:IChildProcessEventListener) {
 		const index = this.listeners.indexOf(listener)
 		if (index > -1)
 			this.listeners.splice(index,1)
@@ -194,6 +233,7 @@ export default class Worker {
 	 * @param event
 	 */
 	private handleError = (event:DidFailLoadEvent) => {
+		log.error(`Error received ${this.name}`,event)
 		this.listeners.forEach(listener => {
 			try {
 				listener.onError && listener.onError(this, new Error(event.errorDescription))
@@ -204,7 +244,12 @@ export default class Worker {
 	}
 	
 	private handleCrash = (event) => {
-		log.error(`Worker crashed`,event)
+		log.error(`Child crashed`,event)
+		this.handleExit(event)
+	}
+	
+	private handleClose = (event) => {
+		log.error(`Child close`,event)
 		this.handleExit(event)
 	}
 	
@@ -257,7 +302,7 @@ export default class Worker {
 	 * @param event
 	 */
 	private handleMessage = (event:IpcMessageEvent) => {
-		const message:IWorkerMessage = event.args[0]
+		const message:IChildProcessMessage = event.args[0]
 		
 		// First handle message internally
 		switch (message.type) {
@@ -276,8 +321,10 @@ export default class Worker {
 			
 			// Registered handlers
 			default:
-				this.listeners.forEach(listener =>
-				listener.onMessage && listener.onMessage(this,message))
+				[...this.listeners,...globalListeners].forEach(listener =>
+					listener.onMessage && listener.onMessage(this,message))
+				
+				
 		}
 		
 		
@@ -297,24 +344,8 @@ export default class Worker {
 		
 		// If already killed or never started!
 		if (!webView) {
-			log.warn('not running, can not kill',this.startFile)
+			log.warn('not running, can not kill',this.name,this.processType)
 		} else {
-			
-			// We should be connected
-			// if (webView.isconnected) {
-			// 	log.info('closing ipc')
-			// 	child.disconnect()
-			// } else {
-			// 	log.warn('We are not connected to the child - weird')
-			// }
-			
-			
-			// Remove listeners
-			// try {
-			// 	webView.remove
-			// } catch (err) {
-			// 	log.warn('Failed to remove all listeners', err.message)
-			// }
 			
 			// Send kill
 			try {
@@ -391,10 +422,58 @@ export default class Worker {
 		return this.stopDeferred.promise
 	}
 	
+	
+	/**
+	 * Completes connection to client webview
+	 */
+	private connectToChild = () => {
+		if (ProcessConfig.showChildDevTools(this.processType)) {
+			log.info(`Opening dev tools for child process`,this.name)
+			this.webView.openDevTools()
+		}
+		
+		// Setup communications verification
+		let
+			tryCount = 0
+			
+		this.tryTimeoutId = null
+		
+		const tryConnection = () => {
+			tryCount++
+			
+			log.info(`Communication attempt #${tryCount}`)
+			
+			const retry = () => {
+				// Try again in a sec
+				if (this.tryTimeoutId)
+					clearTimeout(this.tryTimeoutId)
+				
+				// Wrap retry to clear id
+				this.tryTimeoutId = setTimeout(() => {
+					this.tryTimeoutId = null
+					tryConnection()
+				},100)
+			}
+			
+			if (!this.tryTimeoutId && !this.running && !this.killed) {
+				
+				this.sendMessage('ping', null, (err) => {
+					if (err) {
+						log.info('Can not send message to worker',err)
+					}
+				})
+			}
+			
+			retry()
+		}
+		
+		tryConnection()
+	}
+	
 	/**
 	 * Start the worker
 	 *
-	 * @returns {Promise<T>|Promise}
+	 * @returns {Promise}
 	 */
 	async start() {
 		if (this.webView || this.created)
@@ -402,17 +481,37 @@ export default class Worker {
 	
 		try {
 			
+			const
+				hasWindow = typeof window !== 'undefined',
+				win = hasWindow && window as any,
+				{href,hash} = win || {} as any,
+				url = href.replace(new RegExp(_.escapeRegExp(hash),'g'),'') +
+					`#processType=${ProcessConfig.getTypeName(this.processType) || 'unknown'}`
 			
+			this.webViewElem = $(`
+				<webview src="${url}" 
+								 width="0" 
+								 height="0" 
+								 style="max-width:0;max-height:0;overflow:hidden; position: absolute;" 
+								 nodeintegration>
+								 
+				</webview>`).appendTo($('body'))
+			
+			this.webView = this.webViewElem[0] as any
 			
 			// Assign handlers
 			this.webView.addEventListener('did-fail-load',this.handleError)
 			this.webView.addEventListener('destroyed',this.handleExit)
-			this.webView.addEventListener('close',this.handleExit)
+			this.webView.addEventListener('close',this.handleClose)
 			this.webView.addEventListener('ipc-message',this.handleMessage)
 			this.webView.addEventListener('did-finish-load',() => {
-				log.info(``)
+				log.info(`Web page loaded and is ready`)
 			})
-				
+			// this.webView.addEventListener('console-message',(...args) => {
+			// 	log.info(`Child message from type ${this.name}`,...args)
+			// })
+			this.webView.addEventListener('dom-ready', this.connectToChild)
+			
 			
 			// 1-tick
 			await Promise.setImmediate()
@@ -423,40 +522,7 @@ export default class Worker {
 				return true
 			}
 			
-			// Setup communications verification
-			let tryCount = 0
-			let tryTimeoutId = null
 			
-			const tryConnection = () => {
-				tryCount++
-				
-				log.info(`Communication attempt #${tryCount}`)
-				
-				function retry() {
-					// Try again in a sec
-					if (tryTimeoutId)
-						clearTimeout(tryTimeoutId)
-					
-					// Wrap retry to clear id
-					tryTimeoutId = setTimeout(() => {
-						tryTimeoutId = null
-						tryConnection()
-					},100)
-				}
-				
-				if (!tryTimeoutId && !this.running && !this.killed) {
-					this.sendMessage('ping', null, (err) => {
-						if (err) {
-							log.info('Can not send message to worker',err)
-						}
-					})
-				}
-				
-				retry()
-				
-			}
-			
-			tryConnection()
 			
 			// Wait for the 'pong'
 			try {
@@ -464,12 +530,14 @@ export default class Worker {
 					.resolve(this.runningFlag.promise)
 					.timeout(this.opts.startTimeoutMillis || START_TIMEOUT_DEFAULT)
 				
-				log.info('Worker is RUNNING')
+				log.info(`Child is RUNNING / ${this.name}`)
+				
+				
 				
 				this.heartbeat()
 			} finally {
-				if (tryTimeoutId) {
-					clearTimeout(tryTimeoutId)
+				if (this.tryTimeoutId) {
+					clearTimeout(this.tryTimeoutId)
 				}
 			}
 			

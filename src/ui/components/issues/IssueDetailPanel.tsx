@@ -20,7 +20,7 @@ import {
 } from 'shared/actions/issue/IssueSelectors'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
-import {HotKeys} from 'react-hotkeys'
+import { HotKeys } from "ui/components/common/Other"
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'

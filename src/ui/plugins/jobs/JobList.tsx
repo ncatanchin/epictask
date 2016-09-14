@@ -38,7 +38,7 @@ const baseStyles = createStyles({
 /**
  * IJobListProps
  */
-export interface IJobListProps extends React.HTMLAttributes {
+export interface IJobListProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	

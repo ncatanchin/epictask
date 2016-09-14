@@ -1,4 +1,3 @@
-///<reference path="../../typings/index.d.ts"/>
 
 import {Container as ContainerGlobal} from 'typescript-ioc'
 import 'shared/ProcessConfig'

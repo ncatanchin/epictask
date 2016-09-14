@@ -85,7 +85,7 @@ export interface IToolPanel {
 /**
  * Base props for Tool Component
  */
-export interface IToolProps extends React.HTMLAttributes {
+export interface IToolProps extends React.HTMLAttributes<any> {
 	tool:ITool
 	visible:boolean
 	panel:IToolPanel

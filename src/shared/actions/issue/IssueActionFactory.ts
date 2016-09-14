@@ -1,9 +1,8 @@
-import {debounce} from 'lodash-decorators'
+
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {AutoWired, Inject, Container} from 'typescript-ioc'
 import {Stores} from 'shared/Stores'
 import {ActionFactory, Action, ActionReducer} from 'typedux'
-import {Dialogs, IssueKey, DataKey, DataRequestIssueListId} from 'shared/Constants'
+import {Dialogs, IssueKey} from 'shared/Constants'
 import {cloneObject, extractError} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
@@ -30,6 +29,7 @@ import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
 import {Provided} from 'shared/util/ProxyProvided'
 import { User } from "shared/models"
+import { RegisterActionFactory } from "shared/Registry"
 
 /**
  * Created by jglanz on 5/29/16.
@@ -61,8 +61,11 @@ function hasEditPermission(issue: Issue) {
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@RegisterActionFactory
 @Provided
 export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
+	
+	static leaf = IssueKey
 	
 	stores: Stores
 	
@@ -899,8 +902,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		issues = issues.map(issue => cloneObject(issue,{
 			repo: repos.find(it => it.id === issue.repoId),
 			collaborators: users.filter(it => it.repoIds.includes(issue.repoId)),
-			labels: issue.labels.map(label => labels.find(it => it.url === label.url)),
-			milestone: milestones.find(it => it.id === issue.milestone.id)
+			labels: !issue.labels ? [] : issue.labels.map(label => labels.find(it => it.url === label.url)),
+			milestone: issue.milestone && milestones.find(it => it.id === issue.milestone.id)
 		}))
 		
 		return {

@@ -1,10 +1,9 @@
 import Electron = require('electron')
 import {Container} from 'typescript-ioc'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {getStoreState} from 'shared/store/AppStore'
-import {enabledRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {AuthActionFactory} from 'shared/actions/auth/AuthActionFactory'
+import { getActionClient, getStateClient } from "shared/ChildStoreClient"
+import { UIKey, RepoKey, AuthKey } from "shared/Constants"
+import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
 
 const
 	{
@@ -75,21 +74,17 @@ const reposMenu = {
 		accelerator: 'CmdOrCtrl+Shift+N',
 		click() {
 			log.debug('Sending add new repo')
-			Container.get(UIActionFactory).showAddRepoDialog()
+			const actions = getActionClient(UIKey) as UIActionFactory
+			actions.showAddRepoDialog()
 		}
 	},{
 		label: 'Synchronize All',
 		accelerator: 'Ctrl+S',
-		click() {
+		click: () => {
 			log.debug('Sending sync all repos')
-			const repoActions = Container.get(RepoActionFactory)
+			const actions = ActionFactoryProviders[RepoKey]
+			actions.syncAll()
 			
-			repoActions.syncUserRepos()
-			
-			repoActions.syncRepo(
-				enabledRepoIdsSelector(getStoreState()),
-				true
-			)
 			
 		}
 	}]
@@ -143,7 +138,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					Container.get(AuthActionFactory).logout()
+					ActionFactoryProviders[AuthKey].logout()
 				}
 			}, {
 				type: 'separator'
@@ -223,7 +218,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					Container.get(AuthActionFactory).logout()
+					ActionFactoryProviders[AuthKey].logout()
 				}
 			}]
 		}, {

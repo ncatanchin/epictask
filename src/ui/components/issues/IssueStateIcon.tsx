@@ -26,7 +26,7 @@ const baseStyles = createStyles({
 /**
  * IIssueStateIconProps
  */
-export interface IIssueStateIconProps extends React.HTMLAttributes {
+export interface IIssueStateIconProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	state:TIssueState

@@ -1,4 +1,4 @@
-import WorkerEntry from "shared/WorkerEntry"
+import WorkerEntry from "../shared/ChildProcessEntry"
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
 import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {FinderRequest} from 'typestore'

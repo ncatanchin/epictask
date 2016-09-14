@@ -9,7 +9,7 @@ import {createStructuredSelector} from "reselect"
 import * as Radium from "radium"
 import {Map} from "immutable"
 import {Dialog, CircularProgress, MenuItem} from "material-ui"
-import {HotKeys} from "react-hotkeys"
+import { HotKeys } from "ui/components/common/Other"
 import {MuiThemeProvider} from "material-ui/styles"
 import {Container} from "typescript-ioc"
 
@@ -191,12 +191,12 @@ export const IssuePatchFns = {
 /**
  * IIssuePatchDialogProps
  */
-export interface IIssuePatchDialogProps extends React.HTMLAttributes {
+export interface IIssuePatchDialogProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	open?: boolean
 	saving?: boolean
-	savingError?: Error
+	saveError?: Error
 	mode?: TIssuePatchMode
 	repoIds?: number[]
 	issuesIds?: number[]
@@ -529,8 +529,6 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				mode,
 				milestoneModels,
 				labelModels,
-				repoModels,
-				issueModels,
 				userModels,
 				issues
 			} = props,

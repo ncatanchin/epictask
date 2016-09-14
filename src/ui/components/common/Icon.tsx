@@ -19,7 +19,7 @@ const Octicons = 'octicon'
 /**
  * IMIconProps
  */
-export interface IIconProps extends React.HTMLAttributes {
+export interface IIconProps extends React.HTMLAttributes<any> {
 	className?:string
 	style?:any
 	theme?:any

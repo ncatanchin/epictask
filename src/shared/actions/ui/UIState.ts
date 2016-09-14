@@ -53,8 +53,7 @@ export const UIStateRecord = Record({
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {
-		if (ProcessConfig.isStateServer())
-			log.info(`Inflating UIState from`,JSON.stringify(o,null,4))
+		//log.info(`Inflating UIState from`,JSON.stringify(o,null,4))
 		
 		if (o && o instanceof UIState)
 			return o

@@ -1,9 +1,11 @@
 
 
-import {getStoreState} from "shared/store"
-import {AppKey} from "shared/Constants"
+// import {getStoreState as getStoreStateType} from "shared/store/AppStore"
+// import {AppKey} from "shared/Constants"
 import {User} from "shared/models"
-import {SettingsFile} from "server/SettingsFile"
+import {SettingsFile} from "shared/SettingsFile"
+import { getStateClient } from "shared/ChildStoreClient"
+import { AppKey } from "shared/Constants"
 
 /**
  * Settings interface
@@ -31,13 +33,20 @@ export interface ISettings {
 }
 
 
-function getSettingsFromState() {
-	const
-		storeState = getStoreState(),
-		appState = storeState && storeState.get(AppKey),
-		settings = _.get(appState,'settings') as ISettings
+export async function getSettingsFromState():Promise<ISettings> {
+	if (ProcessConfig.isType(ProcessType.UI)) {
+		return getSettingsFile()
+	} else {
+		return await getStateClient(AppKey, 'settings')
+	}
+	// if
+	// const
+	// 	storeState = getStoreState(),
+	// 	appState = storeState && storeState.get(AppKey),
+	// 	settings = _.get(appState,'settings') as ISettings
+	//
+	// return settings || {isLoaded:false}
 	
-	return settings || {isLoaded:false}
 }
 
 /**
@@ -46,11 +55,7 @@ function getSettingsFromState() {
  * @returns {ISettings}
  */
 export function getSettings():ISettings {
-	const settings = (ProcessConfig.isType(ProcessType.StateServer)) ?
-		require('server/SettingsFile').Settings :
-		getSettingsFromState()
-	
-	return settings || {}
+	return require('shared/SettingsFile').Settings
 	
 }
 
@@ -60,8 +65,5 @@ export function getSettings():ISettings {
  * @returns {SettingsFile}
  */
 export function getSettingsFile():ISettings {
-	if (!ProcessConfig.isType(ProcessType.StateServer))
-		throw new Error('Settings file is ONLY available on the state server')
-	
-	return require('server/SettingsFile').Settings as SettingsFile
+	return require('shared/SettingsFile').Settings as SettingsFile
 }

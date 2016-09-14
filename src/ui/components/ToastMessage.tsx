@@ -52,7 +52,7 @@ const baseStyles = createStyles({
 /**
  * IToastMessageProps
  */
-export interface IToastMessageProps extends React.HTMLAttributes {
+export interface IToastMessageProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	msg: IToastMessage

@@ -30,7 +30,7 @@ const baseStyles = createStyles({
 /**
  * IButtonProps
  */
-export interface IButtonProps extends React.HTMLAttributes {
+export interface IButtonProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	ripple?:boolean

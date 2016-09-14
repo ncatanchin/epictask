@@ -7,7 +7,7 @@ import {IssuesPanel} from 'ui/components/issues'
 import {Page} from './Page'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
-import * as SplitPane from 'react-split-pane'
+
 import {PureRender} from 'ui/components/common'
 import {Themed, ThemedNoRadium, ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
@@ -18,8 +18,8 @@ import {makeLinearGradient, Transparent} from "shared/themes"
 
 
 const
+	SplitPane = require('react-split-pane'),
 	Resizable = require('react-component-resizable'),
-
 	log = getLogger(__filename)
 
 

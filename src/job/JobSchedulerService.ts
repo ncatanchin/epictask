@@ -2,10 +2,12 @@
 import DefaultJobSchedules from './JobSchedules'
 import {IJobSchedule} from "shared/actions/jobs/JobTypes"
 import {BaseService, RegisterService, IServiceConstructor} from "shared/services"
-import {AppStoreService} from "shared/services/AppStoreService"
 import {JobManagerService} from "job/JobManagerService"
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import * as moment from 'moment'
+import { JobKey } from "shared/Constants"
+import { getActionClient } from "shared/ChildStoreClient"
+import JobDAO from "shared/actions/jobs/JobDAO"
 const log = getLogger(__filename)
 
 
@@ -52,11 +54,12 @@ export class JobSchedulerService extends BaseService {
 	constructor() {
 		super()
 		
+		this.actions = getActionClient(JobKey)
 		assert(!jobScheduler,`Job Scheduler can only be instantiated once`)
 	}
 	
 	dependencies(): IServiceConstructor[] {
-		return [AppStoreService,JobManagerService]
+		return [JobManagerService]
 	}
 	
 	/**
@@ -68,7 +71,7 @@ export class JobSchedulerService extends BaseService {
 	private makeExecutor(wrapper:IJobScheduleWrapper) {
 		return () => {
 			const {schedule} = wrapper
-			this.actions.create(schedule.type,schedule.description,schedule.args)
+			JobDAO.create(schedule.type,schedule.description,schedule.args)
 			schedule.lastTimestamp = new Date()
 			
 			this.schedule(wrapper)
@@ -134,7 +137,7 @@ export class JobSchedulerService extends BaseService {
 	
 	start(): Promise<this> {
 		log.info(`Starting Job Scheduler`)
-		this.actions = Container.get(JobActionFactory)
+		//this.actions = Container.get(JobActionFactory)
 		this.loadSchedules()
 		
 		return super.start()

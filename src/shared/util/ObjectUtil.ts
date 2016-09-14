@@ -1,11 +1,16 @@
 import 'shared/NamespaceConfig'
 import './LoDashMixins'
 import {generate as generateShortId} from 'short-id'
+import { InvalidProxyNames } from "shared/Constants"
 
 const _ = require('lodash')
 
 export function isNil(o:any) {
 	return _.isNil(o)
+}
+
+export function isObject(o:any):o is Object {
+	return _.isObject(o)
 }
 
 export function isString(o:any):o is string {
@@ -18,6 +23,14 @@ export function isNumber(o:any):o is number {
 
 export function isFunction(o:any):o is Function {
 	return _.isFunction(o)
+}
+
+export function isSymbol(o:any):o is Symbol {
+	return typeof o === 'symbol'
+}
+
+export function canProxyProperty(name:any) {
+	return InvalidProxyNames.includes(name) || isSymbol(name)
 }
 
 export function shortId():string {

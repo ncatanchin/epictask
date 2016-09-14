@@ -1,5 +1,5 @@
 import {DatabaseClient} from "shared/db/DatabaseClient"
-import WorkerManager from '../../shared/ProcessManager'
+import WorkerManager from '../../shared/ChildProcessManager'
 import {DatabaseClientService as DatabaseClientServiceType} from "shared/services/DatabaseClientService"
 import {Repo, User} from "shared/models"
 import {Stores} from "shared/Stores"

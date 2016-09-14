@@ -23,7 +23,7 @@ import {
 } from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {HotKeys} from 'react-hotkeys'
+import { HotKeys } from "ui/components/common/Other"
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {Container} from 'typescript-ioc'
 import {CommonKeys} from 'shared/KeyMaps'
@@ -205,12 +205,13 @@ const baseStyles = createStyles({
 /**
  * IIssueEditInlineProps
  */
-export interface IIssueEditInlineProps extends React.HTMLAttributes {
+export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
 	styles?: any
 	theme?: any
 	saveError?:Error
 	saving?:boolean
 	issue?:Issue
+	fromIssue?:Issue
 	labels?:Label[]
 	repo?:Repo
 	milestones?:Milestone[]
@@ -406,7 +407,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 	}
 
-	onKeyDown = (event:React.KeyboardEvent) => {
+	onKeyDown = (event:React.KeyboardEvent<any>) => {
 		if (event.keyCode === 13) {
 			const {labelField,textField} = this.state,
 				labelFieldInputElem = $('input',ReactDOM.findDOMNode(labelField)),

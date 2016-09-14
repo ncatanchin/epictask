@@ -8,15 +8,16 @@ html.fill-width.fill-height(lang="en")
 
 	head
 		meta(charset='utf-8')
-
+		style!=fontStyles
+		style!=mainStyles
 		// Splash screen load
 		script.
-
 
 			require('babel-polyfill')
 			var
 							electron = require('electron'),
 							_ = require('lodash'),
+							{hash,href} = window.location,
 							pairs = hash.substr(1).split('&'),
 							params = pairs.reduce(function (map, nextPair) {
 								const parts = nextPair.split('=')
@@ -34,9 +35,10 @@ html.fill-width.fill-height(lang="en")
 							fontsReady = false,
 							rootDir = isDev ? baseDir + "../../" : baseDir,
 							Events = remote.getGlobal('Constants').Events,
-							_ = require('lodash')
+							_ = require('lodash'),
+							processType = params.processType || 'UI'
 
-			process.env.EPIC_ENTRY = params.processType || 'UI'
+			process.env.EPIC_ENTRY = processType
 
 			_.assign(global, {
 				_: _,
@@ -57,7 +59,6 @@ html.fill-width.fill-height(lang="en")
 				}
 			}
 
-
 			function makeRootPath(filename) {
 				return rootDir + filename
 			}
@@ -73,7 +74,6 @@ html.fill-width.fill-height(lang="en")
 			//Add a script tag to load content
 			function addScript(scriptPath, asyncLoad, callback) {
 				const script = document.createElement('script');
-
 				script.type = 'text/javascript'
 				if (asyncLoad) {
 					script.async = true
@@ -85,26 +85,22 @@ html.fill-width.fill-height(lang="en")
 				script.src = scriptPath
 				getHead().appendChild(script)
 			}
-
 			function addCSS(cssPath) {
 				const link = document.createElement('link')
 				link.setAttribute('rel', 'stylesheet')
 				link.href = cssPath
 				getHead().appendChild(link)
 			}
-
-			window.addStyleSheet = function(styleSheet) {
-				$(getHead()).append(`<style>${styleSheet}</style>`)
+			function addStyleSheet(styleSheet) {
+				$(getHead()).append('<style>' + styleSheet + '</style>')
 			}
-
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 		title epictask
-
 		script.
 
 			function loadUI() {
-				addStyleSheet(fontStyles)
-				addStyleSheet(mainStyles)
+				//addStyleSheet("#{JSON.stringify(fontStyles)}")
+				//addStyleSheet("#{JSON.stringify(mainStyles)}")
 
 				const cssPaths = [
 					"node_modules/animate.css/animate.css",
@@ -162,7 +158,7 @@ html.fill-width.fill-height(lang="en")
 			}
 
 			function loadApp() {
-				$.getScript('./AppEntry.bundle.js')
+				addScript('./AppEntry.bundle.js')
 			}
 
 			if (processType === 'UI') {

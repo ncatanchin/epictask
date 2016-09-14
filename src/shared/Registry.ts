@@ -2,7 +2,7 @@ import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} fr
 import createReactProxy from 'react-proxy'
 import React from 'react'
 import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
-import { postConstructorDecorate } from "shared/util"
+import {ActionFactory} from 'typedux'
 
 
 const
@@ -16,7 +16,8 @@ const
 export enum RegistryType {
 	Models = 1,
 	Tools,
-	Views
+	Views,
+	ActionFactory
 }
 
 /**
@@ -87,10 +88,16 @@ export interface IViewConstructor {
 	new (...args:any[]):any
 }
 
+export interface IActionFactoryConstructor {
+	new (...args:any[]):ActionFactory<any,any>
+	leaf: string
+}
+
 const emptyRegistries = {
 	[RegistryType.Models]: {} as TRegistry<IModelConstructor<any>>,
 	[RegistryType.Tools]: {} as TRegistry<IToolConstructor>,
-	[RegistryType.Views]: {} as TRegistry<IViewConstructor>
+	[RegistryType.Views]: {} as TRegistry<IViewConstructor>,
+	[RegistryType.ActionFactory]: {} as TRegistry<IActionFactoryConstructor>
 }
 /**
  * Internal map of all registries
@@ -106,6 +113,13 @@ export function getRegistry(type:RegistryType):TRegistry<any> {
 	const registry = registries[type]
 	assert(registry,`Unknown registry type: ${type}`)
 	return registry
+}
+
+export function RegisterActionFactory(target:IActionFactoryConstructor) {
+	getRegistry(RegistryType.ActionFactory)[target.leaf] = {
+		name:target.leaf,
+		clazz:target
+	}
 }
 
 /**

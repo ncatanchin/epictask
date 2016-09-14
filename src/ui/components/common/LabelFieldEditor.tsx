@@ -61,7 +61,7 @@ const styles = {
  * ILabelFieldEditorProps
  */
 
-export interface ILabelFieldEditorProps extends React.HTMLAttributes {
+export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
 	theme?:any
 	style?:any
 	id:string

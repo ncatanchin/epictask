@@ -10,6 +10,8 @@ import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
 import {isNumber, shortId, isString} from "shared/util"
 import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
+import { RegisterActionFactory } from "shared/Registry"
+import { focusElementById } from "shared/util/UIUtil"
 
 
 // Import only as type - in case we are not on Renderer
@@ -27,10 +29,12 @@ export function makeToastMessage(opts:any) {
 }
 
 
-
+@RegisterActionFactory
 @Provided
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
-
+	
+	static leaf = UIKey
+	
 	private toolPanelPredicate = (id:string,location:ToolPanelLocation) =>
 		(it:IToolPanel) =>
 			it.location === location &&
@@ -316,16 +320,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	@ActionReducer()
 	focusAppRoot() {
 		return (state) => {
-			if (Env.isRenderer)
-				setTimeout(() => $('#appRoot').focus())
+			focusElementById('appRoot')
 			return state
 		}
 	}
 	@ActionReducer()
 	focusIssuesPanel() {
 		return (state) => {
-			if (Env.isRenderer)
-				setTimeout(() => $('#issuesPanel').focus())
+			focusElementById('issuesPanel')
 			return state
 		}
 
@@ -334,8 +336,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	@ActionReducer()
 	focusIssueDetailPanel() {
 		return (state) => {
-			if (Env.isRenderer)
-				setTimeout(() => $('#issueDetailPanel').focus())
+			focusElementById('issueDetailPanel')
 			return state
 		}
 	}

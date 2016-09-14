@@ -385,11 +385,11 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
  * @constructor
  */
 export function Themed(Component) {
-	return makeThemedComponent(Component)
+	return makeThemedComponent(Component) as any
 }
 
 export function ThemedNoRadium(Component) {
-	return makeThemedComponent(Component,true)
+	return makeThemedComponent(Component,true) as any
 }
 
 /**
@@ -402,13 +402,13 @@ export function ThemedNoRadium(Component) {
  */
 export function ThemedStyles(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,false,baseStyles,...themeKeys)
+		return makeThemedComponent(Component,false,baseStyles,...themeKeys) as any
 	}
 }
 
 export function ThemedStylesNoRadium(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,true,baseStyles,...themeKeys)
+		return makeThemedComponent(Component,true,baseStyles,...themeKeys) as any
 	}
 }
 

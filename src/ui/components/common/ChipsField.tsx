@@ -13,7 +13,7 @@ import {PureRender} from 'ui/components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
-import {HotKeys} from 'react-hotkeys'
+import { HotKeys } from "ui/components/common/Other"
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 
@@ -88,7 +88,7 @@ const styles = {
 /**
  * IChipsFieldProps
  */
-export interface IChipsFieldProps<M> extends React.DOMAttributes {
+export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 	theme?: any
 	id: string
 

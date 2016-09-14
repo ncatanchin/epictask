@@ -2,11 +2,18 @@
 import * as uuid from 'node-uuid'
 import {JobManagerService} from "job/JobManagerService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
-import {JobType, JobStatus, IJob, JobCancelledStatuses} from "shared/actions/jobs/JobTypes"
-import {IJobStatusDetail, JobLogLevel, IJobLogger, JobLogLevelNames} from 'shared/actions/jobs/JobState'
+import {JobDAO} from 'shared/actions/jobs/JobDAO'
+import {
+	JobStatus, IJob, JobCancelledStatuses, IJobLogger,
+	IJobStatusDetail, JobLogLevelNames, JobLogLevel
+} from "shared/actions/jobs/JobTypes"
+
 import {IJobExecutor} from "job/JobExecutors"
-import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import JobProgressTracker from "job/JobProgressTracker"
+import { JobActionFactory } from "shared/actions/jobs/JobActionFactory"
+import * as fs from 'fs'
+import { debounce } from "lodash-decorators"
+import { getJobActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 
@@ -35,7 +42,9 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	private executor:IJobExecutor
 	private logger:IJobLogger
 	private actions:JobActionFactory
-	public detail:IJobStatusDetail
+	private logFile
+	private logJSONFile
+	
 	
 	/**
 	 * The progress tracker for the job, used to calculate progress, etc
@@ -44,19 +53,14 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 */
 	private progressTracker:JobProgressTracker
 
-	constructor(public service:JobManagerService,public job:IJob) {
+	constructor(public service:JobManagerService,public job:IJob,private detail:IJobStatusDetail) {
 		super(JobHandlerEventType)
 		
+		this.actions = getJobActions()
 		this.progressTracker = new JobProgressTracker(this)
-		this.actions = Container.get(JobActionFactory)
-		this.detail = this.actions.state.getDetail(this.job.id)
+		
 		this.executor = service.newExecutor(job)
-		this.logger = JobLogLevelNames.reduce((logger,level) => {
-			logger[level.toLowerCase()] = (message:string,error:Error = null,...details:any[]) => {
-				this.log(JobLogLevel[level],message,error,...details)
-			}
-			return logger
-		},{}) as IJobLogger
+		
 	}
 
 	/**
@@ -73,17 +77,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @returns {any|IJob}
 	 */
 	isCancelled() {
-		
-		const stateJob = this.actions
-			.state
-			.all
-			.valueSeq()
-			.find(job => job.id === this.job.id)
-		
-		
-		return JobCancelledStatuses.includes(this.job.status) ||
-			(stateJob && JobCancelledStatuses.includes(stateJob.status))
-			
+		return JobCancelledStatuses.includes(this.job.status)
 	}
 
 	/**
@@ -105,7 +99,29 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		)
 		
 		// Then log to actions to update everywhere
-		this.actions.log(this.job.id,uuid.v4(),level,message,Date.now(), error,...details)
+		try {
+			let msg = `[${JobLogLevel[level]}] \t> ${this.job.name} \t > ${message}\n`
+			details.forEach((detail,index) => {
+				msg += `\t\tDetail[${index}] >> ${detail}\n`
+			})
+			if (error) {
+				msg += `\t\tError ${error.message} > ${error.stack}\n`
+			}
+			
+			fs.writeSync(this.logFile,msg)
+			fs.writeSync(this.logJSONFile,JSON.stringify({
+				level: JobLogLevel[level],
+				timestamp: Date.now(),
+				message,
+				details,
+				error,
+				id: uuid.v4()
+			}) + '\n')
+			//JobDAO.logRecord(this.job.id,uuid.v4(),level,message,Date.now(), error,...details)
+		} catch (err) {
+			log.error(`Failed to log to job file`,err)
+		}
+		
 		
 		// Finally fire changed event
 		this.fireEvent(JobHandlerEventType.Log)
@@ -118,6 +134,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param timeRemaining
 	 * @param epochETA
 	 */
+	@debounce(500)
 	setProgress(progress:number,timeRemaining:number,epochETA:number) {
 		assign(this.detail, {
 			progress,
@@ -145,7 +162,6 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * Update the job status
 	 *
 	 * @param status
-	 * @param progress
 	 * @param error
 	 * @returns {IJob}
 	 */
@@ -173,9 +189,26 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		assert(!started && !killed && job.status === JobStatus.Created,
 			'Job Status must be CREATED and the handler can not be started or killed in order to execute')
 		
-		this.started = true
+		
 		
 		try {
+			
+			this.logFile = fs.openSync(job.logFilename,'w')
+			this.logJSONFile = fs.openSync(job.logJSONFilename,'w')
+			
+			log.info(`Log file @`,job.logFilename)
+			log.info(`Log JSON file @`,job.logJSONFilename)
+			
+			// Make the logger
+			this.logger = JobLogLevelNames.reduce((logger,level) => {
+				logger[level.toLowerCase()] = (message:string,error:Error = null,...details:any[]) => {
+					this.log(JobLogLevel[level],message,error,...details)
+				}
+				return logger
+			},{}) as IJobLogger
+			
+			this.started = true
+			
 			// First mark in progress
 			await this.setStatus(JobStatus.InProgress)
 			
@@ -187,6 +220,18 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			log.error(`Job failed: ${job.name}(${job.id}) - ${job.description}`, err)
 			
 			await this.setStatus(JobStatus.Failed, err)
+		} finally {
+			try {
+				fs.closeSync(this.logFile)
+			} catch (err) {
+				log.error(`Failed to close file`)
+			}
+			
+			try {
+				fs.closeSync(this.logJSONFile)
+			} catch (err) {
+				log.error(`Failed to close file`)
+			}
 		}
 		
 	}

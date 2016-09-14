@@ -8,6 +8,7 @@ import {Button} from 'ui/components/common/Button'
 import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
 import {getStoreState} from "shared/store"
 import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "shared/Toaster"
+import JobDAO from "shared/actions/jobs/JobDAO"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
@@ -45,8 +46,7 @@ storiesOf('StatusBar',module)
 	// Single Job - no updates
 	.add('With Job', () => {
 		
-		const jobActions = Container.get(JobActionFactory)
-		jobActions.create(JobType.GetUserRepos)
+		JobDAO.create(JobType.GetUserRepos)
 		
 		return <StatusBar />
 	})
@@ -56,8 +56,7 @@ storiesOf('StatusBar',module)
 		clearMessages()
 		addSuccessMessage('This is good')
 		
-		const jobActions = Container.get(JobActionFactory)
-		jobActions.create(JobType.GetUserRepos)
+		JobDAO.create(JobType.GetUserRepos)
 		
 		return <StatusBar />
 	})
@@ -67,7 +66,7 @@ storiesOf('StatusBar',module)
 		const jobActions = Container.get(JobActionFactory)
 		jobActions.clear()
 		
-		const {job,detail} = jobActions.create(JobType.GetUserRepos)
+		const {job,detail} = JobDAO.create(JobType.GetUserRepos)
 		
 		job.status = detail.status = JobStatus.Completed
 		detail.progress = 1
@@ -81,7 +80,7 @@ storiesOf('StatusBar',module)
 		const jobActions = Container.get(JobActionFactory)
 		jobActions.clear()
 		
-		const {job,detail} = jobActions.create(JobType.GetUserRepos)
+		const {job,detail} = JobDAO.create(JobType.GetUserRepos)
 		
 		job.status = detail.status = JobStatus.Failed
 		detail.progress = 1
@@ -100,7 +99,7 @@ storiesOf('StatusBar',module)
 				if (existingJob)
 					jobActions.remove(existingJob.id)
 				
-				return jobActions.create(JobType.GetUserRepos)
+				return JobDAO.create(JobType.GetUserRepos)
 			},
 			jobActions = Container.get(JobActionFactory)
 			

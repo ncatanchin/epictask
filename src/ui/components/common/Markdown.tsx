@@ -57,7 +57,7 @@ const CodeBlock = React.createClass({
 /**
  * IMarkdownProps
  */
-export interface IMarkdownProps extends React.DOMAttributes {
+export interface IMarkdownProps extends React.HTMLAttributes<any> {
 	theme?:any
 	source?:any
 	className?:string

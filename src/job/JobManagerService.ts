@@ -1,19 +1,15 @@
-import {ObservableStore} from 'typedux'
 import {Map} from 'immutable'
 
-
-import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {JobHandler, JobHandlerEventType} from 'job/JobHandler'
 import * as assert from 'assert'
-import {Toaster} from 'shared/Toaster'
 import {IEnumEventRemover} from 'shared/util/EnumEventEmitter'
-import {IJob, JobStatus, JobType, IJobSchedule} from 'shared/actions/jobs/JobTypes'
+import {IJob, JobStatus, JobType} from 'shared/actions/jobs/JobTypes'
 import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "job/JobExecutors"
 import {BaseService, RegisterService, IServiceConstructor} from "shared/services"
-import {AppStoreService} from "shared/services/AppStoreService"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {IJobStatusDetail} from "shared/actions/jobs/JobState"
+import { JobKey } from "shared/Constants"
+import { clientObserveState, getStateClient } from "shared/ChildStoreClient"
 
 const log = getLogger(__filename)
 
@@ -83,15 +79,8 @@ export class JobManagerService extends BaseService {
 	 */
 	private unsubscriber:Function
 	
-	
-	private store:ObservableStore<any>
-	private jobActions:JobActionFactory
-	private repoActions:RepoActionFactory
-	private toaster:Toaster
-	
-	
 	dependencies(): IServiceConstructor[] {
-		return [DatabaseClientService,AppStoreService]
+		return [DatabaseClientService]
 	}
 	
 	constructor() {
@@ -162,24 +151,21 @@ export class JobManagerService extends BaseService {
 	 * @returns {JobManagerService}
 	 */
 	async start():Promise<this> {
-		
-		this.store = Container.get(ObservableStore as any) as any
-		this.jobActions = Container.get(JobActionFactory)
-		this.repoActions = Container.get(RepoActionFactory)
-		this.toaster = Container.get(Toaster)
-		
 		log.info("Load executors")
 		loadAllExecutors()
 		
 		
-		// Watch for job updates
-		log.info('Subscribe for state updates')
-		this.unsubscriber = this.store.observe([this.jobActions.leaf(), 'all'], this.onJobsUpdated)
+		this.unsubscriber = await clientObserveState([JobKey, 'all'], this.onJobsUpdated)
+		
 		
 		// Execute default jobs
-		this.onJobsUpdated(this.jobActions.state.all)
+		const allJobs = await getStateClient(JobKey,'all')
+		await this.onJobsUpdated(allJobs)
 		
-		log.info('Ready to work some jobs...')
+		
+		
+		// Watch for job updates
+		log.info('Subscribe for state updates')
 		return super.start()
 	}
 	
@@ -189,20 +175,22 @@ export class JobManagerService extends BaseService {
 	 *
 	 * @param jobs
 	 */
-	onJobsUpdated = (jobs:Map<string,IJob>) => {
-		
-		const newJobs = jobs
-			.valueSeq()
+	onJobsUpdated = async (jobs:{[id:string]:IJob}) => {
+		log.info(`Checking jobs`,jobs)
+		const newJobs = Object
+			.values(jobs)
 			.filter(job =>
 				job &&
 				job.status === JobStatus.Created &&
 				!this.workingJobs[job.id])
-			.toArray()
-			
+		
+		const details = await getStateClient(JobKey,'details')
 		
 		log.info(`Found ${newJobs.length} new jobs, executing now`)
 		
-		newJobs.forEach(this.execute)
+		newJobs.forEach(job => {
+			this.execute(job,details.find(detail => detail.id === job.id))
+		})
 	}
 	
 
@@ -228,16 +216,13 @@ export class JobManagerService extends BaseService {
 	 * Execute a job
 	 *
 	 * @param job
+	 * @param detail
 	 * @returns {JobHandler}
 	 */
-	execute = (job:IJob) => {
-		// if (this.killed)
-		// 	return
-		
-		
+	execute = (job:IJob,detail:IJobStatusDetail) => {
 		// Create a new executor
 		const
-			handler = new JobHandler(this,job),
+			handler = new JobHandler(this,job,detail),
 
 			// Attach to all events
 			eventRemovers:IEnumEventRemover[] = handler.onAll(this.onJobEvent)
@@ -251,8 +236,6 @@ export class JobManagerService extends BaseService {
 		log.info(`Executing Job ${job.name} (${job.id})`)
 		handler.execute()
 		
-		
-
 	}
 
 	
@@ -260,7 +243,7 @@ export class JobManagerService extends BaseService {
 	 * Find an existing job that matches the
 	 * current job request
 	 *
-	 * @returns {nameOrId}
+	 *
 	 * @param nameOrId
 	 */
 	findJob(nameOrId) {
@@ -290,46 +273,7 @@ export class JobManagerService extends BaseService {
 	
 	
 	
-	/**
-	 * Reset/Init the job info and schedule
-	 */
-	reset() {
-		// if (this.killed) return
-		//
-		// this.info = new JobStatusDetails()
-		// this.info.id = uuid.v4()
-		// this.info.jobId = this.job.id
-		// this.info.description = this.job.description
-		//
-		// if (this.scheduler)
-		// 	this.schedule()
-		// else
-		// 	this.execute()
-	}
 	
-	/**
-	 * Schedule the job for later execution
-	 */
-	schedule() {
-	// 	if (!this.timer) {
-	// 		assert(this.scheduler,'Schedule must be set in order to schedule')
-	//
-	// 		const executor = () => this.execute()
-	//
-	// 		this.timer = (this.job.repeat) ?
-	// 			later.setInterval(executor, this.scheduler) :
-	// 			later.setTimeout(executor, this.scheduler)
-	//
-	// 	}
-	//
-	// 	const nextOccurrence =  later.schedule(this.scheduler).next(1)
-	//
-	// 	this.info.nextScheduledTime = Array.isArray(nextOccurrence) ? nextOccurrence[0] : nextOccurrence
-	//
-	// 	const nextText = moment(nextOccurrence).fromNow()
-	// 	log.info(`Scheduled Job ${this.job.name} occurs next ${nextText}`)
-	//
-	}
 }
 
 
@@ -349,17 +293,5 @@ export default getJobManager
 if (module.hot) {
 	module.hot.accept(() => log.info('hot reload',__filename))
 }
-
-//
-// if (module.hot) {
-// 	module.hot.dispose(() => {
-// 		try {
-// 			const jobService = Container.get(JobService)
-// 			jobService.kill()
-// 		} catch (err) {
-// 			log.error(`hmr dispose of jobservice failed`, err)
-// 		}
-// 	})
-// }
 
 

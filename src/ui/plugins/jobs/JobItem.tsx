@@ -84,7 +84,7 @@ const baseStyles = createStyles({
 /**
  * IJobItemProps
  */
-export interface IJobItemProps extends React.HTMLAttributes {
+export interface IJobItemProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	labelStyle?:any
@@ -185,7 +185,8 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 					}
 				</div>
 				<div style={[styles.label.time]}>
-					{!detail.epochETA ? 'N/A' : moment(detail.epochETA).fromNow()}
+					{Math.round(detail.progress * 100)}%
+					{/*{!detail.epochETA ? 'N/A' : moment(detail.epochETA).fromNow()}*/}
 				</div>
 				
 				{/*<TimeAgo timestamp={recentDetail.updatedAt} />*/}

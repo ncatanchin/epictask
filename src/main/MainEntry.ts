@@ -137,7 +137,7 @@ if (module.hot) {
 
 	
 	// Main window or configurator - reboot app
-	module.hot.accept(['./MainWindow','./MainConfigurator'], (mods) => {
+	module.hot.accept(['./MainWindow'], (mods) => {
 		log.info("Rebooting main, updated dependencies",mods)
 
 		// We get a reference to the new window here

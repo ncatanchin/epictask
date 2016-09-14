@@ -95,7 +95,7 @@ const baseStyles = createStyles({
 /**
  * IAvatarProps
  */
-export interface IAvatarProps extends React.HTMLAttributes {
+export interface IAvatarProps extends React.HTMLAttributes<any> {
 	user:User
 	onRemove?:(user?:User) => void
 	labelPlacement?:'none'|'before'|'after'

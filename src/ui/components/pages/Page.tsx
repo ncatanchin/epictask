@@ -9,7 +9,7 @@ const styles = {
 	})
 }
 
-export interface IPageProps extends React.HTMLAttributes {
+export interface IPageProps extends React.HTMLAttributes<any> {
 	onResize?:Function
 }
 

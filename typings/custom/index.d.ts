@@ -9,11 +9,7 @@
 /// <reference path="./reselect.d.ts" />
 /// <reference path="./reactotron.d.ts"/>
 
-// UI MODS
-interface Window {
-	devToolsExtension:any
-	
-}
+
 
 declare namespace NodeJS {
 	interface Global {

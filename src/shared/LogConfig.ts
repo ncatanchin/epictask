@@ -3,12 +3,14 @@ import 'shared/LogCategories'
 
 import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
+import { isObject } from "shared/util"
 
-const mkdir = require('mkdirp')
-const winston = require('winston')
-const processType = ProcessConfig.getTypeName() // process.env.PROCESS_TYPE
-const logFilename = `${process.cwd()}/logs/${processType || 'unknown'}.log`
-const logDir = path.dirname(logFilename)
+const
+	mkdir = require('mkdirp'),
+	winston = require('winston'),
+	processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
+	logFilename = `${process.cwd()}/logs/${processType || 'unknown'}.log`,
+	logDir = path.dirname(logFilename)
 
 // Create the log file root
 mkdir.sync(logDir)
@@ -26,21 +28,26 @@ MainLogger.add(winston.transports.File,{
 	json: false
 })
 
-// Add console transport
-MainLogger.add(winston.transports.Console,{
-	colorize:true,
-	showLevel: true
-})
-
 // Expose the main logger - really so the UI/Renderer can attach if needed
 Object.assign(global as any,{
 	MainLogger,
 	LoggerFactory,
 	getLogger: LoggerFactory
 })
+	
+const wrappedLogger = ['trace','debug','info','warn','error'].reduce((newLogger,levelName) => {
+	newLogger[levelName] = function(...args) {
+		MainLogger[levelName](...args.filter(it => !isObject(it)))
+		if (typeof console !== 'undefined') {
+			const fn = console[levelName] || console.log
+			fn.apply(console,args)
+		}
+	}
+	return newLogger
+},{})
 
 // Set the MainLogger as the output for TypeLogger
-setLoggerOutput(MainLogger)
+setLoggerOutput(wrappedLogger as any)
 
 // Configure log levels
 setCategoryLevels(require('shared/LogCategories'))

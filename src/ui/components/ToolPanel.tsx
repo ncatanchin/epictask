@@ -168,7 +168,7 @@ const
 /**
  * IToolPanelProps
  */
-export interface IToolPanelProps extends React.HTMLAttributes {
+export interface IToolPanelProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	id?:string

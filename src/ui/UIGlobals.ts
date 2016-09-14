@@ -2,7 +2,7 @@
 
 import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
-import {Toaster} from 'shared/Toaster'
+import {Toaster as ToasterType} from 'shared/Toaster'
 import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
 import * as JQueryGlobal from 'jquery'
 
@@ -13,7 +13,10 @@ import * as JQueryGlobal from 'jquery'
 
 
 function logErrorGlobal(err:Error|string) {
-	const toaster = Container.get(Toaster)
+	
+	const
+		Toaster = require('shared/Toaster') as typeof ToasterType,
+		toaster = Container.get(Toaster)
 	toaster.addErrorMessage(err)
 }
 

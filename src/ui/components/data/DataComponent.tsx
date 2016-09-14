@@ -151,7 +151,7 @@ export function DataComponent<P,T extends TDataComponent<P>>
 				return <DataComponentWrapper
 					{...this.props}
 					dataConfigs={dataConfigs}
-					dataComponent={target}
+					dataComponent={target as any}
 				/>
 			}
 		}
@@ -165,7 +165,7 @@ export function DataComponent<P,T extends TDataComponent<P>>
 /**
  * Data component wrapper props
  */
-export interface IDataComponentProps<P> extends React.HTMLAttributes {
+export interface IDataComponentProps<P> extends React.HTMLAttributes<any> {
 	dataConfigs:TDataConfigType<P>[]
 	dataComponent:TDataComponent<P>
 }

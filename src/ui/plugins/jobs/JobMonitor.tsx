@@ -12,7 +12,7 @@ import {
 	FlexColumnCenter, FlexScale, FillHeight, FillWidth,
 	convertRem, FlexColumn
 } from "shared/themes"
-import * as SplitPane from 'react-split-pane'
+
 import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {JobList} from "./JobList"
 import {JobDetail} from "./JobDetail"
@@ -22,7 +22,9 @@ import {ToolPanelLocation, IToolProps} from "shared/tools/ToolTypes"
 import {Button, Icon} from "ui/components"
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	SplitPane = require('react-split-pane')
 
 //region STYLES
 const baseStyles = createStyles({
@@ -49,7 +51,7 @@ const baseStyles = createStyles({
 /**
  * IJobMonitorProps
  */
-export interface IJobMonitorProps extends IToolProps, React.HTMLAttributes {
+export interface IJobMonitorProps extends IToolProps, React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
 	jobs?: TJobIMap
@@ -71,7 +73,7 @@ function getHeaderControls() {
 		<Button key="ClearJobsButton"
 		        tabIndex={-1}
 		        style={styles.header.button}
-		        onClick={(event:React.MouseEvent) => {
+		        onClick={(event:React.MouseEvent<any>) => {
 							event.preventDefault()
 							event.stopPropagation()
 					

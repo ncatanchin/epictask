@@ -30,7 +30,7 @@ export type TOnLabelOrMilestoneCallback = (item:Label|Milestone,index:number) =>
 /**
  * IIssueLabelsProps
  */
-export interface IIssueLabelsAndMilestonesProps extends React.HTMLAttributes {
+export interface IIssueLabelsAndMilestonesProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	milestones?:Milestone[]

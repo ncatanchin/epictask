@@ -79,6 +79,8 @@ export interface IJob {
 	type:JobType
 	name:string
 	status:JobStatus
+	logFilename:string
+	logJSONFilename:string
 	result?:any
 	scheduleId?:string
 	description?:string
@@ -207,10 +209,6 @@ export interface IJobStatusDetail {
 	 */
 	error?:Error
 	
-	/**
-	 * Execution logs
-	 */
-	logs: IJobLog[]
 }
 
 
