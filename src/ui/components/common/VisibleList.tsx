@@ -199,7 +199,9 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 		                  ref={this.setRootRef}
 		                  onResize={this.onResize}>
 			<div style={[styles.list]} ref={this.setListRef} onScroll={this.onScroll}>
-				<div style={[styles.list.content,{height:items.length * itemHeight}]}>
+				<div style={[styles.list.content,{
+					height:items.length * itemHeight
+				}]}>
 					{currentItems}
 				</div>
 			</div>
