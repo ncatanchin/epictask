@@ -136,7 +136,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	@ActionReducer()
 	private setIssues(issues:Issue[]) {
-		return (issueState:IssueState) => issueState.set('issues',issues)
+		return (issueState:IssueState) => issueState.set('issues',cloneObject(issues))
 	}
 	
 	@Action()
@@ -159,22 +159,33 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	async getIssues(availRepos:AvailableRepo[]) {
 		
+		availRepos = _.nilFilter(availRepos)
+		
 		let
 			issues = await Container.get(Stores)
 				.issue
 				.findByRepoId(...availRepos.map(availRepo => availRepo.repoId))
 		
-		issues = issues.map(issue => {
-			const
-				repo = availRepos.find(availRepo => availRepo.repoId === issue.repoId)
-			
-			return cloneObject(issue,{
-				repo,
-				collaborators: repo.collaborators,
-				labels: !issue.labels ? [] : issue.labels.map(label => repo.labels.find(it => it.url === label.url)),
-				milestone: issue.milestone && repo.milestones.find(it => it.id === issue.milestone.id)
+		issues = issues
+			.filter(issue => {
+				const
+					availRepo = availRepos.find(availRepo => availRepo.repoId === issue.repoId)
+				
+				return availRepo && availRepo.repoId
 			})
-		})
+			.map(issue => {
+				const
+					availRepo = availRepos.find(availRepo => availRepo.repoId === issue.repoId),
+					repo = availRepo.repo
+					
+				
+				return cloneObject(issue,{
+					repo,
+					collaborators: availRepo.collaborators,
+					labels: !issue.labels ? [] : issue.labels.map(label => availRepo.labels.find(it => it.url === label.url)),
+					milestone: issue.milestone && availRepo.milestones.find(it => it.id === issue.milestone.id)
+				})
+			})
 		
 		
 		return issues
@@ -939,6 +950,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			// Issue repo
 			let
 				issues:Issue[] = issuesSelector(getState())
+			
+			//log.info(`Loading issue activity`,issues,issueId)
 			if (!Array.isArray(issues))
 				return
 			
@@ -952,11 +965,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			}
 			
 			
-			log.info(`Loading activity for issue `, issueId)
+			
 			const
 				{comments} = await this.getActivity(issue)
-				
 			
+			log.info(`Loading activity for issue `, issueId,comments)
 			this.setActivity(comments)
 			// TODO: Activity load
 			// Now push the models into the data state for tracking

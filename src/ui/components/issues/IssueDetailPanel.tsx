@@ -31,6 +31,7 @@ import {canEditIssue,canAssignIssue} from 'shared/Permission'
 import baseStyles from './IssueDetailPanel.styles'
 import { DataComponent, MapProvider } from "ui/components/data/DataComponent"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import { VisibleList } from "ui/components/common/VisibleList"
 
 
 // Non-typed Components
@@ -66,7 +67,7 @@ export interface IIssueDetailPanelProps {
 	selectedIssueIds:selectedIssueIdsSelector,
 	issues:issuesSelector,
 	comments:commentsSelector
-},createDeepEqualSelector))
+}))
 
 @HotKeyContext()
 @ThemedStyles(baseStyles,'issueDetail')
@@ -74,8 +75,7 @@ export interface IIssueDetailPanelProps {
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
 
 	refs:{[name:string]:any}
-
-
+	
 	/**
 	 * Add label
 	 */
@@ -238,8 +238,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderBody = (key,styles) => <IssueActivityText
-			key={key}
+	renderBody = (comments,index,styles) => <IssueActivityText
+			key={'issue-body'}
 			issue={this.props.issues[0]}
 			activityType='post'
 			activityActionText='posted issue'
@@ -250,15 +250,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	/**
 	 * Render a comment
 	 *
-	 * @param key
+	 * @param comments
 	 * @param index
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderComment = (key,index,styles) => <IssueActivityText
-			key={key}
+	renderComment = (comments,index,styles) => <IssueActivityText
+			key={comments[index].id}
 			issue={this.props.issues[0]}
-			comment={this.props.comments[index]}
+			comment={comments[index]}
 			activityActionText='commented'
 			activityType='comment'
 			activityStyle={styles.content.activities.activity}/>
@@ -268,13 +268,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	/**
 	 * Render an item for the activity list
 	 *
+	 * @param comments
 	 * @param index
-	 * @param key
 	 * @returns {any}
 	 */
-	renderActivityListItem = (index,key) => (index === 0) ?
-		this.renderBody(key,this.props.styles) :
-		this.renderComment(key,index - 1,this.props.styles)
+	renderActivityListItem = (comments:Comment[],index) => (index === 0) ?
+		this.renderBody(comments,index,this.props.styles) :
+		this.renderComment(comments,index - 1,this.props.styles)
 
 
 
@@ -298,9 +298,11 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		{/* Issue Detail Body */}
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
-				<ReactList itemRenderer={this.renderActivityListItem}
-				           length={comments ? comments.length + 1 : 1}
-				           type='simple'/>
+				<VisibleList
+					items={comments}
+					itemRenderer={this.renderActivityListItem}
+				  
+				             />
 			</div>
 		</div>
 

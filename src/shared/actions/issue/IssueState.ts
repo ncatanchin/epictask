@@ -78,6 +78,11 @@ export class IssueState extends IssueStateRecord {
 		return new IssueState(o)
 	}
 	
+	toJS() {
+		return {}
+	}
+	
+	
 	issues:Issue[]
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter

@@ -1,5 +1,7 @@
 
 
+const log = getLogger(__filename)
+
 /**
  * Null middleware that can be used
  * wherever a passthru is required
@@ -43,20 +45,30 @@ export function loadDevTools() {
 }
 
 
-export function makeReactotronEnhancer() {
-	const Reactotron = require('reactotron-react-js').default
-	
-	const createReactotronEnhancer = require('reactotron-redux')
-	//createReactotronEnhancer = createReactotronEnhancer.default || createReactotronEnhancer
-	//import createReactotronEnhancer from 'reactotron-redux'
-	
-	return createReactotronEnhancer(Reactotron)
+export function makeReactotronEnhancer(enhancers) {
+	try {
+		const
+			Reactotron = require('reactotron-react-js').default
+		
+		let
+			createReactotronEnhancer = require('reactotron-redux')
+		
+		createReactotronEnhancer = createReactotronEnhancer.default || createReactotronEnhancer
+		
+		enhancers.push(createReactotronEnhancer(Reactotron))
+	} catch (err) {
+		log.error(`Failed to add reactotron`,err)
+	}
 }
 
-export default function (enhancers) {
+/**
+ * Add dev middleware to enhancers list
+ *
+ * @param enhancers
+ */
+export default function addDevMiddleware(enhancers) {
 	if (typeof window !== 'undefined' && window.devToolsExtension) {
-	// 	enhancers.push(makeReactotronEnhancer())
-		
+		//makeReactotronEnhancer(enhancers)
 		
 		enhancers.push(window.devToolsExtension())
 	} else {
@@ -65,6 +77,9 @@ export default function (enhancers) {
 	
 }
 
+/**
+ * Declare dev tools extensions
+ */
 declare global{
 	interface Window {
 		devToolsExtension:any

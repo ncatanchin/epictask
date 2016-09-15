@@ -17,17 +17,21 @@ const deepTrace = (reason) => {
 	if (reason instanceof Error || reason.stack) {
 		StackTrace.fromError(reason)
 			.then((updatedErrorStack) => {
-				log.error(
-					'Deep trace for',
-					reason,
-					'\n',
-					updatedErrorStack.map(frame => {
-						if (frame.fileName.startsWith('/'))
-							frame.setFileName(`file://${frame.fileName}`)
-						
-						return `\t at ${frame.toString()}`
-					}).join('\n')
-				)
+				try {
+					log.error(
+						'Deep trace for',
+						reason,
+						'\n',
+						updatedErrorStack.map(frame => {
+							if (frame.fileName && frame.fileName.startsWith('/'))
+								frame.setFileName(`file://${frame.fileName}`)
+							
+							return `\t at ${frame.toString()}`
+						}).join('\n')
+					)
+				} catch (err) {
+					log.error(`Failed to map deep trace`,err,updatedErrorStack,reason)
+				}
 				// updatedErrorStack.forEach(frame => {
 				// 	log.error(frame)
 				// })

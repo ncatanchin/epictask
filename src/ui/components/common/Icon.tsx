@@ -59,10 +59,16 @@ export class Icon extends React.Component<IIconProps,any> {
 	// }
 
 	render() {
-		let {className = '',style,iconName,children,fontSize} = this.props
-
-		const iconSet = this.props.iconSet || MaterialIcons
-		const declaredIconSet = [MaterialIcons,FontAwesome,Octicons]
+		let
+			{className = '',style,iconName,children,fontSize} = this.props
+			
+		if (Array.isArray(style)) {
+			style = mergeStyles(...style)
+		}
+		
+		const
+			iconSet = this.props.iconSet || MaterialIcons,
+			declaredIconSet = [MaterialIcons,FontAwesome,Octicons]
 				.filter(name => className.indexOf(name) > -1).length > 0
 
 

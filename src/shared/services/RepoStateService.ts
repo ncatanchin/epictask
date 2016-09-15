@@ -6,6 +6,7 @@ import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
 import { getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
+import { RepoKey, IssueKey } from "shared/Constants"
 
 const log = getLogger(__filename)
 
@@ -14,7 +15,9 @@ export class RepoStateService extends BaseService {
 
 	private unsubscribe:Function
 
-	store:ObservableStore<any>
+	private unsubscribers = []
+	
+	private store:ObservableStore<any>
 	
 	
 	/**
@@ -29,10 +32,8 @@ export class RepoStateService extends BaseService {
 	
 	
 	private clean() {
-		if (this.unsubscribe) {
-			this.unsubscribe()
-			this.unsubscribe = null
-		}
+		this.unsubscribers.forEach(it => it())
+		this.unsubscribers.length = 0
 	}
 
 
@@ -46,19 +47,25 @@ export class RepoStateService extends BaseService {
 		await super.start()
 		
 		const
-			enabledRepoIdsValue = new ValueCache(this.enabledReposChanged),
-			selectedIssueIdsValue = new ValueCache(this.selectedIssueIdsChanged)
+			repoActions = getRepoActions()
 		
-		const repoActions = getRepoActions()
 		repoActions.loadAvailableRepos()
 		
+		
+		
+		
+		this.unsubscribers.push(
+			this.store.observe([RepoKey,'enabledRepoIds'],this.enabledReposChanged),
+			this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
+		)
+		
 		// Subscribe for changes
-		this.unsubscribe = this.store.getReduxStore().subscribe(() => {
-			const state = this.store.getState()
-			
-			enabledRepoIdsValue.set(enabledRepoIdsSelector(state))
-			selectedIssueIdsValue.set(selectedIssueIdsSelector(state))
-		})
+		// this.unsubscribe = this.store.getReduxStore().subscribe(() => {
+		// 	//const state = this.store.getState()
+		//
+		// 	enabledRepoIdsValue.set(enabledRepoIdsSelector(state))
+		// 	selectedIssueIdsValue.set(selectedIssueIdsSelector(state))
+		// })
 		
 		
 		
@@ -80,10 +87,15 @@ export class RepoStateService extends BaseService {
 		this.clean()
 		return this
 	}
-
 	
+	
+	/**
+	 * Watches for changes to selected issue ids
+	 */
 	private selectedIssueIdsChanged = _.debounce((selectedIssueIds:number[]) => {
-		if (selectedIssueIds && selectedIssueIds.size === 1) {
+		log.info(`Selected issue ids updated`,selectedIssueIds)
+		if (selectedIssueIds && selectedIssueIds.length === 1) {
+			log.info(`Loading activity`)
 			getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
 	},150)

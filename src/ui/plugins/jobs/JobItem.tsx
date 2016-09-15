@@ -178,7 +178,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 							//detail.status >= JobStatus.Completed && styles.progressBar.hidden
 						]}>
 							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-							                value={detail.progress * 100}
+							                value={Math.min(100,detail.progress * 100)}
 							                color={theme.palette.accent1Color}
 							/>
 						</div>

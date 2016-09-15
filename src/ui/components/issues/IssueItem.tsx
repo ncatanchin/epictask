@@ -14,6 +14,7 @@ import {Issue} from 'shared/models'
 import { IIssueGroup, IIssueListItem } from 'shared/actions/issue/IIssueListItems'
 import { selectedIssueIdsSelector, filteredAndSortedIssueItemsSelector } from "shared/actions/issue/IssueSelectors"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
 
@@ -27,11 +28,9 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 }
 
 // State is connected at the item level to minimize redraws for the whole issue list
-@connect(createDeepEqualSelector(
-	[
-		selectedIssueIdsSelector,
-		(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item
-	],
+@connect(createSelector(
+	selectedIssueIdsSelector,
+	(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item,
 	(selectedIssueIds:number[],item:IIssueListItem<Issue>) => {
 		const
 			isSelected =
@@ -109,16 +108,19 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 				<div style={styles.issueBottomRow}>
 
 					{/* LABELS */}
-					<IssueLabelsAndMilestones
-						showIcon
-						labels={labels}
-						milestones={issue.milestone ? [issue.milestone] : []}
-						style={styles.issueLabels}
-					    labelStyle={styles.issueLabels.label}
-					/>
+					<div style={styles.issueLabels.wrapper}>
+						<IssueLabelsAndMilestones
+							showIcon
+							labels={labels}
+							milestones={issue.milestone ? [issue.milestone] : []}
+							style={styles.issueLabels}
+							labelStyle={styles.issueLabels.label}
+						/>
+					</div>
+					
 
 
-					<IssueStateIcon state={issue.state}/>
+					<IssueStateIcon styles={[{root:{marginLeft:rem(0.5)}}]} state={issue.state}/>
 					{/*/!* MILESTONE *!/*/}
 					{/*{issue.milestone && <div style={styles.issueMilestone}>*/}
 						{/*{issue.milestone.title}*/}

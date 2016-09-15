@@ -49,7 +49,7 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 			acloned.id = o[index].id
 			_.assign(acloned,...newSources)
 		})
-	} else {
+	} else if (_.isObject(cloned)) {
 		cloned.id = (o as any)['id']
 		_.assign(cloned,...newSources)
 	}

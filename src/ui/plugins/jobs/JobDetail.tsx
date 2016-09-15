@@ -265,7 +265,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 					{detail.status < JobStatus.Completed &&
 						<div style={styles.header.progress}>
 							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-							                value={detail.progress * 100}
+							                value={Math.min(100,detail.progress * 100)}
 							                color={theme.palette.accent1Color}
 							/>
 						</div>

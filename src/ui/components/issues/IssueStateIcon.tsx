@@ -4,11 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
 import {PureRender, Icon} from 'ui/components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {TIssueState} from 'shared/models/Issue'
 
@@ -53,7 +49,6 @@ export interface IIssueStateIconState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'issueStateIcon')
-
 @PureRender
 export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueStateIconState> {
 

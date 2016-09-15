@@ -11,11 +11,13 @@ import {Comment} from 'shared/models/Comment'
 import { IIssueGroup, getIssueGroupId, IssueListItemType, IIssueListItem } from './IIssueListItems'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {
-	enabledRepoIdsSelector, enabledAvailReposSelector,
+	enabledRepoIdsSelector,
 	enabledMilestonesSelector, enabledLabelsSelector, enabledAssigneesSelector
 } from "shared/actions/repo/RepoSelectors"
-import { AvailableRepo, Label, Milestone, User } from "shared/models"
+import { Label, Milestone, User } from "shared/models"
+import {createSelector} from 'reselect'
 
+const log = getLogger(__filename)
 
 /**
  * Get the current IssueState
@@ -28,19 +30,19 @@ export const issueStateSelector = (state):IssueState => state.get(IssueKey) as I
 /**
  * Select all current issues
  */
-export const issuesSelector:(state) => Issue[] = _.memoize((state):Issue[] => issueStateSelector(state).issues)
+export const issuesSelector:(state) => Issue[] = (state):Issue[] => issueStateSelector(state).issues
 
 /**
  * Select all current issue ids
  */
-export const issueIdsSelector:(state) => number[] = _.memoize((state):number[] => issueStateSelector(state).issues.map(issue => issue.id))
+export const issueIdsSelector:(state) => number[] = (state):number[] => issueStateSelector(state).issues.map(issue => issue.id)
 
 
 /**
  * Comments
  */
-export const commentsSelector:(state) => Comment[] = _.memoize(
-	(state):Comment[] => issueStateSelector(state).comments)
+export const commentsSelector:(state) => Comment[] =
+	(state):Comment[] => issueStateSelector(state).comments
 
 /**
  * Issue sort and filter selector
@@ -48,10 +50,10 @@ export const commentsSelector:(state) => Comment[] = _.memoize(
  * @param state
  * @return TIssueSortAndFilter
  */
-export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = _.memoize((state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
+export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = (state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
 	const issueState = state.get(IssueKey) as IssueState
 	return _.pick(issueState,'issueFilter','issueSort') as any
-}) as any
+}
 
 
 
@@ -62,7 +64,7 @@ export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = _.memoi
  * @param state
  * @return Map<string,any>
  */
-export const selectedIssueIdsSelector = createDeepEqualSelector(
+export const selectedIssueIdsSelector = createSelector(
 	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
@@ -79,7 +81,7 @@ export const selectedIssueIdSelector = createDeepEqualSelector(
 /**
  * If a single issue is selected then get the id
  */
-export const selectedIssueSelector = createDeepEqualSelector(
+export const selectedIssueSelector = createSelector(
 	selectedIssueIdSelector,
 	issuesSelector,
 	(selectedIssueId:number,issues:Issue[]) =>
@@ -92,22 +94,22 @@ export const selectedIssueSelector = createDeepEqualSelector(
 /**
  * All issues currently being patched
  */
-export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues)
+export const patchIssuesSelector = (state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues
 
 /**
  * Current patch mode
  */
-export const patchModeSelector = _.memoize((state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode)
+export const patchModeSelector = (state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode
 
 /**
  * Issue currently being edited
  */
-export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueKey) as IssueState).editingIssue)
+export const editingIssueSelector = (state):Issue => (state.get(IssueKey) as IssueState).editingIssue
 
 /**
  * Comment currently being edited
  */
-export const editCommentRequestSelector = _.memoize((state):TEditCommentRequest => (state.get(IssueKey) as IssueState).editCommentRequest)
+export const editCommentRequestSelector = (state):TEditCommentRequest => (state.get(IssueKey) as IssueState).editCommentRequest
 
 
 /**
@@ -162,11 +164,13 @@ export const issueFilterAssigneeSelector = createDeepEqualSelector(
 /**
  * Filtered Issues
  */
-export const filteredAndSortedIssueItemsSelector = createDeepEqualSelector(
+export const filteredAndSortedIssueItemsSelector = createSelector(
 	enabledRepoIdsSelector,
 	issuesSelector,
 	issueSortAndFilterSelector,
 	(repoIds,issues:Issue[],{issueSort,issueFilter}):IIssueListItem<Issue>[] => {
+		
+		//log.info(`Filtering with issue items`, issues,issueSort,issueFilter)
 		
 		// If data not avail then return empty
 		if (!issues || !Array.isArray(issues))
@@ -192,7 +196,7 @@ export const filteredAndSortedIssueItemsSelector = createDeepEqualSelector(
 			.filter(issue => {
 				
 				// Repo & nil
-				if (_.isNil(issue) || repoIds.includes(issue.repoId))
+				if (_.isNil(issue) || !repoIds.includes(issue.repoId))
 					return false
 				
 				// Exact match
@@ -244,14 +248,18 @@ export const filteredAndSortedIssueItemsSelector = createDeepEqualSelector(
 /**
  * List items
  */
-export const issueItemsSelector = createDeepEqualSelector(
+export const issueItemsSelector = createSelector(
 	issueSortAndFilterSelector,
 	filteredAndSortedIssueItemsSelector,
 	(issueSortAndFilter:TIssueSortAndFilter,issueItems:IIssueListItem<Issue>[]):IIssueListItem<any>[] => {
 		
+		
+		
 		const
 			{issueSort} = issueSortAndFilter,
 			{groupBy,groupByDirection} = issueSort
+		
+		//log.info(`Got issue items`, issueItems,groupBy)
 		
 		if (groupBy === 'none')
 			return issueItems

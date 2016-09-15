@@ -29,7 +29,11 @@ export class RepoState extends RepoStateRecord {
 		
 		return new RepoState(Object.assign({},o))
 	}
-
+	
+	toJS() {
+		return {}
+	}
+	
 	repoIds:number[]
 	availableRepoIds:string[]
 	enabledRepoIds:number[]
