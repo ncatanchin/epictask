@@ -85,8 +85,10 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	@Action()
 	verify() {
 		return async (dispatch,getState) => {
-			const appActions = this.appActions.withDispatcher(dispatch,getState)
-			const user = await this.client.user()
+			log.info(`Verifying user`)
+			const
+				appActions = this.appActions.withDispatcher(dispatch,getState),
+				user = await this.client.user()
 
 			log.info(`Verified user as`,user)
 			const

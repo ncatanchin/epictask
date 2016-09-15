@@ -4,7 +4,7 @@ import {Issue} from 'shared/models/Issue'
 
 export interface IIssueGroup {
 	id:string
-	issues:Issue[]
+	items:IIssueListItem<Issue>[]
 	size:number
 	index:number
 	groupBy: TIssueFieldsGroupable
@@ -26,4 +26,24 @@ export function getIssueGroupId({groupBy,groupByItem}) {
 	return _.toLower(`${groupBy}-${objectId}`)
 }
 
-export default IIssueGroup
+/**
+ * List item types
+ */
+export enum IssueListItemType {
+	Issue = 1,
+	Group
+}
+
+/**
+ * All items for issue list,
+ * created by selector
+ */
+export interface IIssueListItem<T extends Issue|IIssueGroup> {
+	type:IssueListItemType
+	id:string
+	item:T
+}
+
+export function isGroupListItem(item:IIssueListItem<any>):item is IIssueListItem<IIssueGroup> {
+	return item.type === IssueListItemType.Group// !!_.get(item,'item.items')
+}

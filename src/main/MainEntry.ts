@@ -74,6 +74,29 @@ function onFocus() {
 	
 }
 
+
+async function startProcesses() {
+	
+	const
+		ProcessManager = require('shared/ChildProcessManager').ChildProcessManager
+	
+	// HMR STOP PROCESSES
+	if (module.hot) {
+		
+		module.hot.addDisposeHandler(() => {
+			try {
+				ProcessManager.stopAll()
+			} catch (err) {
+				log.error(`Failed to stop sub-processes`,err)
+			}
+		})
+	}
+	
+	
+	log.info(`Starting all processes`)
+	await ProcessManager.startAll()
+}
+
 /**
  * Boot the app
  */
@@ -91,7 +114,9 @@ async function boot() {
 	// Load the main window & start the loader animation
 	await mainWindow.start(async () => {
 		log.info('Starting Services')
+		await startProcesses()
 		await start()
+		
 		log.info('Services started')
 	})
 

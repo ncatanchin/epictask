@@ -60,6 +60,8 @@ export function start(cb = null) {
  */
 export function ready() {
 	browserWindow.webContents.send(Events.MainReady)
+	browserWindow.webContents.send('epictask-children-ready')
+	
 }
 
 /**
@@ -141,6 +143,10 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				browserWindow.show()
 				browserWindow.focus()
 				
+				
+			})
+			
+			ipcMain.once('epictask-start-children',async () => {
 				if (onFinishLoadCallback) {
 					const result:any = onFinishLoadCallback()
 					if (result && result.then) {

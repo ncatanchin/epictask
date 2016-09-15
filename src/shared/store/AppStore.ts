@@ -9,8 +9,6 @@ import {getReducers} from 'shared/store/Reducers'
 
 
 import {
-	getAction,
-	getAllActions,
 	setStoreProvider,
 	ILeafReducer,
 	ObservableStore
@@ -29,7 +27,7 @@ import {
 import {makeReactotronEnhancer} from "shared/store/AppStoreDevConfig"
 import {OnlyIfFn, If} from "shared/util/Decorations"
 import {isString} from "shared/util"
-import { addGlobalListener, default as ChildProcessWebView } from "shared/ChildProcessWebView"
+import { addGlobalListener, default as ChildProcessRenderer } from "shared/ChildProcessRenderer"
 import { getHot, setDataOnDispose } from "shared/util/HotUtils"
 
 const
@@ -347,178 +345,12 @@ if (existingRemoveListener)
 	existingRemoveListener()
 
 
-/**
- * Map of existing observers
- *
- * @type {any}
- */
-const clientObservers = getHot(module,'clientObservers',{})
 
 
-function getStateValue(...keyPath) {
-	let val = getStoreState()
-	
-	for(let key of keyPath) {
-		if (!val)
-			break
-		
-		let nextVal = _.isFunction(val.get) && val.get(key)
-		if (!nextVal)
-			nextVal = val[key]
-		
-		val = nextVal
-	}
-	
-	return val
-}
-
-interface IMessageSender {
-	sendMessage(type:string,body)
-}
-
-/**
- * All message handlers
- */
-const clientMessageHandlers = {
-	
-	stateRequest(childProcess:IMessageSender,{id,keyPath}) {
-		const
-			state = getStoreState(),
-			rawValue = getStateValue(...keyPath),
-			value = _.toJS(rawValue)
-		
-		log.info(`Getting state value`,id,keyPath,rawValue,value)
-		
-		childProcess.sendMessage('stateResponse',{
-			id,
-			value
-		})
-	},
-	
-	/**
-	 * Handle observer request
-	 *
-	 * @param childProcess
-	 * @param id
-	 * @param keyPath
-	 */
-	observeStateRequest(childProcess:IMessageSender,{id,keyPath}) {
-		
-		let
-			lastValue = null
-		
-		const
-			handler = (newValue,oldValue) => {
-				if (lastValue) {
-					oldValue = lastValue
-				}
-				
-				lastValue = newValue = _.toJS(newValue)
-				childProcess.sendMessage('observeStateChange',{id,newValue,oldValue})
-			}
-		
-		try {
-			clientObservers[ id ] = {
-				id,
-				childProcess,
-				keyPath,
-				remover: getStore().observe(keyPath, handler)
-			}
-			
-			childProcess.sendMessage('observeStateResponse',{id})
-		} catch (err) {
-			log.error(`Unable to create observer`,err)
-			childProcess.sendMessage('observeStateResponse',{id,err})
-		}
-	},
-	
-	/**
-	 * Stop watching state changes
-	 *
-	 * @param childProcess
-	 * @param id
-	 * @returns {any|{fontWeight}|{color}|void}
-	 */
-	observeStateRemove(childProcess:IMessageSender,{id}) {
-		const observer = clientObservers[id]
-		
-		if (!observer)
-			return log.warn(`Unable to find observer with id ${id}, can not remove`)
-		
-		observer.remover()
-		delete clientObservers[id]
-	},
-	
-	
-	/**
-	 * Action request from client server (db/job)
-	 *
-	 * @param childProcess
-	 * @param type
-	 * @param leaf
-	 * @param args
-	 */
-	actionRequest(childProcess:IMessageSender,{type,leaf,args}) {
-		log.info(`Received action request: `, leaf,type,args)
-		const actions = ActionFactoryProviders[leaf]
-		// const actionReg = getAction(leaf,type)
-		if (!actions || !actions[type]) {
-			const msg = `Unable to find action ${leaf}.${type} in ${Object.keys(getAllActions()).join(', ')}`
-			log.warn(msg,getAllActions())
-			throw new Error(msg)
-		}
-		
-		actions[type].apply(actions,args)
-		//
-		// //if (actionReg.options.isReducer)
-		// actionReg.action(null,...args)
-	}
-}
-
-// Subscribe for remote client action requests
-const removeListener = addGlobalListener({
-	
-	/**
-	 * On client message
-	 *
-	 * @param childProcess
-	 * @param type
-	 * @param body
-	 */
-	onMessage(childProcess:ChildProcessWebView,{type,body}) {
-		
-		const
-			handler = clientMessageHandlers[type]
-		
-		if (!handler) {
-			log.error(`Unknown message type ${type}`)
-			return
-		}
-		
-		handler(childProcess,body)
-	}
-})
 
 
-if (!ProcessConfig.isStorybook()) {
-	try {
-		const { ipcRenderer } = require('electron')
-		Object
-			.keys(clientMessageHandlers)
-			.forEach(type => {
-				if (ipcRenderer)
-					ipcRenderer.on(type, (event, body) => {
-						clientMessageHandlers[ type ]({
-							sendMessage(type, body) {
-								ipcRenderer.send(type, body)
-							}
-						}, body)
-					})
-			})
-	} catch (err) {
-		log.error(`Failed to start app store listener, process type is ${ProcessConfig.getTypeName()}`,err)
-	}
-}
+
+
 // On unload write the state
 if (typeof window !== 'undefined') {
 	window.addEventListener('beforeunload', () => {
@@ -527,6 +359,7 @@ if (typeof window !== 'undefined') {
 		//removeListener()
 	})
 }
+
 // app.on('before-quit',() => {
 //
 // })
@@ -534,9 +367,7 @@ if (typeof window !== 'undefined') {
 
 setDataOnDispose(module,() => ({
 	store,
-	middleware,
-	removeListener,
-	clientObservers
+	middleware
 }))
 
 if (module.hot) {

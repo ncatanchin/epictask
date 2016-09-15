@@ -1,7 +1,7 @@
 
 import * as path from 'path'
 
-import ChildProcessWebView,{IChildProcessMessage,IChildProcessEventListener} from "shared/ChildProcessWebView"
+import ChildProcessRenderer,{IChildProcessMessage,IChildProcessEventListener} from "shared/ChildProcessRenderer"
 
 const log = getLogger(__filename)
 
@@ -13,20 +13,20 @@ describe('Worker can communicate', function () {
 	const workerScriptFile = 'src/tests/shared/fixtures/worker-fixture.js'
 	log.info(`Using worker script @ ${workerScriptFile}`)
 	
-	let childWebView:ChildProcessWebView = null, workersStarted = false
+	let childWebView:ChildProcessRenderer = null, workersStarted = false
 	
 	before(async () => {
-		childWebView = new ChildProcessWebView('test-fixture',ProcessType.Test,{},{
-			onError(worker:ChildProcessWebView,err) {
+		childWebView = new ChildProcessRenderer('test-fixture',ProcessType.Test,{},{
+			onError(worker:ChildProcessRenderer,err) {
 				log.error('worker error occurred',err)
 			},
-			onStart(worker:ChildProcessWebView,err) {
+			onStart(worker:ChildProcessRenderer,err) {
 				log.info('worker started',err)
 			},
-			onStop(worker:ChildProcessWebView,err) {
+			onStop(worker:ChildProcessRenderer,err) {
 				log.info('worker exited',err)
 			},
-			onMessage(worker:ChildProcessWebView,message:IChildProcessMessage) {
+			onMessage(worker:ChildProcessRenderer,message:IChildProcessMessage) {
 				log.info('worker message',message)
 			}
 		} as IChildProcessEventListener)
@@ -56,10 +56,10 @@ describe('Worker can communicate', function () {
 			
 			// The listener
 			const listener = {
-				onError(worker:ChildProcessWebView,err) {
+				onError(worker:ChildProcessRenderer,err) {
 					deferred.reject(err)
 				},
-				onMessage(worker:ChildProcessWebView,message) {
+				onMessage(worker:ChildProcessRenderer,message) {
 					log.info('Got message',message)
 					if (message && message.type === 'there') {
 						deferred.resolve(message.body)

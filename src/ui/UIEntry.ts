@@ -16,26 +16,31 @@ async function boot() {
 	const storeBuilder = require('shared/store/AppStoreBuilder').default
 	await storeBuilder()
 	
+	// Start the app store server
 	const
-		ProcessManager = require('shared/ChildProcessManager').ChildProcessManager,
-		getServiceManager = require('shared/services').getServiceManager
+		startAppStoreServer = ProcessConfig.isStorybook() ? async () => () => null :
+			require('shared/store/AppStoreServer').start,
+		
+		stopAppStoreServer = await startAppStoreServer()
 	
 	
-	
-	// HMR STOP PROCESSES
-	if (module.hot) {
-		module.hot.addDisposeHandler(() => {
-			try {
-				ProcessManager.stopAll()
-			} catch (err) {
-				log.error(`Failed to stop sub-processes`,err)
-			}
-		})
-	}
+	log.info(`App store server is up`)
+	const
+		getServiceManager = require('shared/services').getServiceManager,
+		{ipcRenderer} = require('electron')
 	
 	
-	log.info(`Starting all processes`)
-	await ProcessManager.startAll()
+	ipcRenderer.send('epictask-start-children')
+	
+	log.info(`Going to wait for epictask-children-ready`)
+	
+	const childrenDeferred = Promise.defer()
+	ipcRenderer.on('epictask-children-ready',() => {
+		log.info(`Got notification from main - kids are ready`)
+		childrenDeferred.resolve()
+	})
+	
+	await childrenDeferred.promise
 	
 	// HMR STOP SERVICES
 	if (module.hot) {

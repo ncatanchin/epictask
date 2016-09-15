@@ -41,7 +41,7 @@ export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 		if (ProcessConfig.isType(ProcessType.UI,ProcessType.Storybook) && actionFactoryClazzMap[leafKey]) {
 			return new actionFactoryClazzMap[leafKey]()
 		} else {
-			return require("shared/ChildStoreClient").getActionClient(leafKey)
+			return require("shared/AppStoreClient").getActionClient(leafKey)
 		}
 	}
 }) as any

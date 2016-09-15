@@ -12,7 +12,9 @@ import {
 } from 'typestore'
 
 
-
+/**
+ * All repo stores container
+ */
 export class Stores {
 
 	issue:IssueStore
@@ -33,4 +35,13 @@ export class Stores {
 		
 	}
 	
+}
+
+/**
+ * Get stores from container
+ *
+ * @returns {Stores}
+ */
+export function getStores():Stores {
+	return Container.get(Stores)
 }

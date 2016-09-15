@@ -1,7 +1,7 @@
 import Electron = require('electron')
 import {Container} from 'typescript-ioc'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import { getActionClient, getStateClient } from "shared/ChildStoreClient"
+import { getActionClient, getStateValue } from "shared/AppStoreClient"
 import { UIKey, RepoKey, AuthKey } from "shared/Constants"
 import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
 

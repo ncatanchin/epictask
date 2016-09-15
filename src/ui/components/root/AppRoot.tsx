@@ -180,7 +180,8 @@ export class App extends React.Component<IAppProps,any> {
 		const {hasAvailableRepos, stateType,dialogOpen, theme} = this.props,
 			{palette} = theme
 
-		const page = {component: getPage(stateType)},
+		const
+			page = {component: getPage(stateType)},
 			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos
 
 		const headerVisibility = (stateType < AppStateType.Home) ?

@@ -156,7 +156,7 @@ export class IPCTransport extends Transport {
 		try {
 			await this.connectDeferred
 				.promise
-				.timeout(5000)
+				.timeout(15000)
 		} catch (err) {
 			log.error('Failed to connect',err)
 			try {
@@ -180,6 +180,7 @@ export class IPCTransport extends Transport {
 	 * Disconnect from the IPC server
 	 */
 	disconnect() {
+		log.warn(`Disconnecting from ${this.serverName}`)
 		try {
 			this.ipc.disconnect(this.serverName)
 		} catch (err) {

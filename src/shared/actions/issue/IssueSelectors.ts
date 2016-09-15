@@ -8,8 +8,13 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
-import {IIssueGroup, getIssueGroupId} from 'shared/actions/issue/IIssueGroup'
+import { IIssueGroup, getIssueGroupId, IssueListItemType, IIssueListItem } from './IIssueListItems'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
+import {
+	enabledRepoIdsSelector, enabledAvailReposSelector,
+	enabledMilestonesSelector, enabledLabelsSelector, enabledAssigneesSelector
+} from "shared/actions/repo/RepoSelectors"
+import { AvailableRepo, Label, Milestone, User } from "shared/models"
 
 
 /**
@@ -20,10 +25,22 @@ import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
  */
 export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
 
-
+/**
+ * Select all current issues
+ */
 export const issuesSelector:(state) => Issue[] = _.memoize((state):Issue[] => issueStateSelector(state).issues)
 
+/**
+ * Select all current issue ids
+ */
 export const issueIdsSelector:(state) => number[] = _.memoize((state):number[] => issueStateSelector(state).issues.map(issue => issue.id))
+
+
+/**
+ * Comments
+ */
+export const commentsSelector:(state) => Comment[] = _.memoize(
+	(state):Comment[] => issueStateSelector(state).comments)
 
 /**
  * Issue sort and filter selector
@@ -50,90 +67,36 @@ export const selectedIssueIdsSelector = createDeepEqualSelector(
 	(selectedIssueIds:number[]) => selectedIssueIds
 )
 
-
-export const issuesGroupedSelector = createDeepEqualSelector(
-	issueSortAndFilterSelector,
-	
-	(issueSortAndFilter:TIssueSortAndFilter):IIssueGroup[] => {
-		return []
-		// const {issueSort} = issueSortAndFilter
-		// if (issueSort.groupBy === 'none')
-		// 	return []
-		//
-		// const {groupBy,groupByDirection} = issueSort
-		//
-		// let allGroups = Array<IIssueGroup>()
-		//
-		//
-		// function newGroup(groupByItem) {
-		// 	return (allGroups[allGroups.length] = {
-		// 		id: getIssueGroupId({groupBy,groupByItem}),
-		// 		issues: [],
-		// 		index: allGroups.length,
-		// 		size: 0,
-		// 		groupBy,
-		// 		groupByItem
-		// 	})
-		// }
-		//
-		// /**
-		//  *
-		//  * @param groupByItem
-		//  * @returns {{issueIds: Array, size: number, groupBy, groupByItem: any}}
-		//  */
-		// function getGroups(groupByItem):IIssueGroup[] {
-		// 	const groupId = getIssueGroupId({groupBy,groupByItem})
-		//
-		// 	const group = allGroups.find(item => item.id === groupId)
-		// 	return [group || newGroup(groupByItem)]
-		//
-		// 	// if (Array.isArray(groupByItem)) {
-		// 	// 	return groupByItem.reduce((groups,nextGroupByItem) => {
-		// 	// 		groups = groups.concat(getGroups(nextGroupByItem))
-		// 	// 		return groups
-		// 	// 	},[])
-		// 	// } else {
-		// 	// 	const group = allGroups.find(item => item.groupByItem === groupByItem)
-		// 	// 	return [group || newGroup(groupByItem)]
-		// 	// }
-		// }
-		//
-		// for (let issue of issues) {
-		// 	const {milestone,labels,assignee} = issue
-		// 	const groupByItem = (groupBy === 'milestone') ? milestone :
-		// 		(groupBy === 'assignee') ? assignee :
-		// 			labels
-		//
-		//
-		// 	const groups = getGroups(groupByItem)
-		// 	groups.forEach(group => {
-		// 		group.size++
-		// 		group.issues.push(_.cloneDeep(issue))
-		// 	})
-		//
-		// }
-		//
-		// // const sorters:{[key:string]:Function} = {
-		// // 	milestone: (o) => !o ? '' : _.toLower(o.title),
-		// // 	assignee: (o) => _.toLower(o.login),
-		// // 	labels: (o) => _.toLower(Array.isArray(o) ?
-		// // 		o.map(item => _.toLower(item.name))
-		// // 			.sort()
-		// // 			.join(',') :
-		// // 		o.name
-		// // 	),
-		// // }
-		//
-		// allGroups = _.sortBy(allGroups,'id')
-		//
-		// if (groupByDirection === 'desc')
-		// 	allGroups = allGroups.reverse()
-		//
-		// return allGroups
-	}
+/**
+ * If a single issue is selected then get the id
+ */
+export const selectedIssueIdSelector = createDeepEqualSelector(
+	selectedIssueIdsSelector,
+	(selectedIssueIds:number[]) =>
+		selectedIssueIds && selectedIssueIds.length === 1 && selectedIssueIds[0]
 )
 
+/**
+ * If a single issue is selected then get the id
+ */
+export const selectedIssueSelector = createDeepEqualSelector(
+	selectedIssueIdSelector,
+	issuesSelector,
+	(selectedIssueId:number,issues:Issue[]) =>
+	selectedIssueId && issues && issues.find(it => it.id === selectedIssueId)
+)
+
+
+
+
+/**
+ * All issues currently being patched
+ */
 export const patchIssuesSelector = _.memoize((state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues)
+
+/**
+ * Current patch mode
+ */
 export const patchModeSelector = _.memoize((state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode)
 
 /**
@@ -147,112 +110,237 @@ export const editingIssueSelector = _.memoize((state):Issue => (state.get(IssueK
 export const editCommentRequestSelector = _.memoize((state):TEditCommentRequest => (state.get(IssueKey) as IssueState).editCommentRequest)
 
 
+/**
+ * Label filters
+ */
+export const issueFilterLabelsSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	enabledLabelsSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,labels:Label[]) => {
+		const
+			{issueFilter} = issueSortAndFilter,
+			labelUrls = issueFilter.labelUrls || []
 
-//
-// /**
-//  * Labels for enabled repos
-//  *
-//  * @return Label[]
-//  */
-// export const labelsSelector = createDeepEqualSelector(
-// 	enabledRepoIdsSelector,
-// 	labelModelsSelector,
-// 	(repoIds:number[],models:Map<string,Label>):Label[] => {
-//
-// 		return models.valueSeq()
-// 			.filter(item => repoIds.includes(item.repoId))
-// 			.toArray()
-// 	}
-// )
-//
-// export const issueFilterLabelsSelector = createDeepEqualSelector(
-// 	issueSortAndFilterSelector,
-// 	labelModelsSelector,
-// 	(issueSortAndFilter:TIssueSortAndFilter,models:Map<string,Label>) => {
-// 		const
-// 			{issueFilter} = issueSortAndFilter,
-// 			labelUrls = issueFilter.labelUrls || []
-//
-// 		return labelUrls.map(url => models.get(url))
-// 	}
-// )
-//
-// export const issueFilterMilestonesSelector = createDeepEqualSelector(
-// 	issueSortAndFilterSelector,
-// 	milestoneModelsSelector,
-// 	(issueSortAndFilter:TIssueSortAndFilter,models:Map<string,Milestone>) => {
-// 		const
-// 			{issueFilter} = issueSortAndFilter,
-// 			milestoneIds = issueFilter.milestoneIds || []
-//
-// 		return milestoneIds.map(id => models.get(`${id}`))
-// 	}
-// )
-//
-// export const issuesSelector = createDeepEqualSelector(
-// 	enabledRepoIdsSelector,
-// 	issueIdsSelector,
-// 	modelsSelector,
-// 	issueSortAndFilterSelector,
-// 	(repoIds,issueIds:number[],models,{issueSort,issueFilter}):Issue[] => {
-// 		const {repoModels,labelModels,milestoneModels,issueModels} = models
-//
-// 		// If data not avail then return empty
-// 		if (!issueModels || !issueIds || !repoIds)
-// 			return []
-//
-// 		const issues:Issue[] =
-// 			issueIds.map(id => issueModels.get(`${id}`))
-// 				.filter(issue => !_.isNil(issue) && repoIds.includes(issue.repoId))
-//
-// 		let {text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
-// 			{fields:sortFields,direction:sortDirection} = issueSort
-//
-// 		milestoneIds = _.nilFilter(milestoneIds || [])
-// 		labelUrls = _.nilFilter(labelUrls || [])
-// 		assigneeIds = _.nilFilter(assigneeIds || [])
-//
-// 		let filteredIssues = issues
-// 			.filter(issue => {
-// 				if (issueId)
-// 					return `${issue.id}` === `${issueId}`
-//
-// 				let matches = repoIds.includes(issue.repoId) &&
-// 					(issue.state === 'open' ||
-// 					issueFilter.includeClosed)
-//
-// 				if (matches && milestoneIds.length)
-// 					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
-//
-// 				if (matches && labelUrls.length)
-// 					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
-//
-// 				if (matches && assigneeIds.length)
-// 					matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
-//
-// 				if (matches && text)
-// 					matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
-//
-// 				return matches
-// 			})
-//
-// 		filteredIssues = _.sortBy(filteredIssues,(o) => {
-// 			let val = o[sortFields[0]]
-// 			if (_.isString(val))
-// 				val = _.toLower(val)
-//
-// 			return val
-// 		})
-//
-// 		if (sortDirection === 'desc')
-// 			filteredIssues = filteredIssues.reverse()
-//
-// 		return filteredIssues
-// 			.map(issue => new Issue(assign({},issue,{
-// 				repo: issue.repo || repoModels.get(`${issue.repoId}`) || repoModels.get(issue.repoId),
-// 				labels: (!issue.labels) ? [] : issue.labels.map(label => labelModels.get(label.url)),
-// 				milestone: (!issue.milestone) ? null : milestoneModels.get(`${issue.milestone.id}`)
-// 			})))
-// 	}
-// )
-//
+		return _.nilFilter(labelUrls.map(url => labels.find(label => label.url === url)))
+	}
+)
+
+/**
+ * Milestone filters
+ */
+export const issueFilterMilestonesSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	enabledMilestonesSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,milestones:Milestone[]) => {
+		const
+			{issueFilter} = issueSortAndFilter,
+			milestoneIds = issueFilter.milestoneIds || []
+		
+		
+		return _.nilFilter(
+			milestoneIds.map(id => milestones.find(it => it.id === id)))
+	}
+)
+
+/**
+ * All currently selected assignee filters
+ */
+export const issueFilterAssigneeSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	enabledAssigneesSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,assignees:User[]) => {
+		const
+			{issueFilter} = issueSortAndFilter,
+			assigneeIds = issueFilter.assigneeIds || []
+		
+		
+		return _.nilFilter(
+			assigneeIds.map(id => assignees.find(it => it.id === id)))
+	}
+)
+
+/**
+ * Filtered Issues
+ */
+export const filteredAndSortedIssueItemsSelector = createDeepEqualSelector(
+	enabledRepoIdsSelector,
+	issuesSelector,
+	issueSortAndFilterSelector,
+	(repoIds,issues:Issue[],{issueSort,issueFilter}):IIssueListItem<Issue>[] => {
+		
+		// If data not avail then return empty
+		if (!issues || !Array.isArray(issues))
+			return []
+
+		
+
+		// Get all the filters & sort criteria
+		let
+			{text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
+			{fields:sortFields,direction:sortDirection} = issueSort
+
+		milestoneIds = _.nilFilter(milestoneIds || [])
+		labelUrls = _.nilFilter(labelUrls || [])
+		assigneeIds = _.nilFilter(assigneeIds || [])
+
+		let filteredIssues = issues
+			
+			// Filter by enabled repos (should already be filtered)
+			
+			
+			// Filters
+			.filter(issue => {
+				
+				// Repo & nil
+				if (_.isNil(issue) || repoIds.includes(issue.repoId))
+					return false
+				
+				// Exact match
+				if (issueId)
+					return `${issue.id}` === `${issueId}`
+				
+				// Include Closed
+				let matches = repoIds.includes(issue.repoId) &&
+					(issue.state === 'open' || issueFilter.includeClosed)
+
+				// Milestones
+				if (matches && milestoneIds.length)
+					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
+
+				// Labels
+				if (matches && labelUrls.length)
+					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
+
+				// Assignee
+				if (matches && assigneeIds.length)
+					matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
+			
+				// Text
+				if (matches && text)
+					matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
+
+				return matches
+			})
+
+		filteredIssues = _.sortBy(filteredIssues,(o) => {
+			let val = o[sortFields[0]]
+			if (_.isString(val))
+				val = _.toLower(val)
+
+			return val
+		})
+
+		if (sortDirection === 'desc')
+			filteredIssues = filteredIssues.reverse()
+
+		return filteredIssues.map(issue => ({
+			id: `issue-${issue.id}`,
+			type: IssueListItemType.Issue,
+			item: issue
+		}))
+	}
+)
+
+/**
+ * List items
+ */
+export const issueItemsSelector = createDeepEqualSelector(
+	issueSortAndFilterSelector,
+	filteredAndSortedIssueItemsSelector,
+	(issueSortAndFilter:TIssueSortAndFilter,issueItems:IIssueListItem<Issue>[]):IIssueListItem<any>[] => {
+		
+		const
+			{issueSort} = issueSortAndFilter,
+			{groupBy,groupByDirection} = issueSort
+		
+		if (groupBy === 'none')
+			return issueItems
+		
+		let
+			allGroups = Array<IIssueGroup>()
+		
+		
+		function newGroup(groupByItem) {
+			return (allGroups[allGroups.length] = {
+				id: getIssueGroupId({groupBy,groupByItem}),
+				items: [],
+				index: allGroups.length,
+				size: 0,
+				groupBy,
+				groupByItem
+			})
+		}
+		
+		/**
+		 *
+		 * @param groupByItem
+		 * @returns {{issueIds: Array, size: number, groupBy, groupByItem: any}}
+		 */
+		function getGroups(groupByItem):IIssueGroup[] {
+			const groupId = getIssueGroupId({groupBy,groupByItem})
+			
+			const group = allGroups.find(item => item.id === groupId)
+			return [group || newGroup(groupByItem)]
+			
+			// if (Array.isArray(groupByItem)) {
+			// 	return groupByItem.reduce((groups,nextGroupByItem) => {
+			// 		groups = groups.concat(getGroups(nextGroupByItem))
+			// 		return groups
+			// 	},[])
+			// } else {
+			// 	const group = allGroups.find(item => item.groupByItem === groupByItem)
+			// 	return [group || newGroup(groupByItem)]
+			// }
+		}
+		
+		for (let item of issueItems) {
+			const
+				issue = item.item as Issue,
+				{milestone,labels,assignee} = issue,
+				groupByItem = (groupBy === 'milestone') ? milestone :
+					(groupBy === 'assignee') ? assignee :
+						labels,
+				
+				
+				groups = getGroups(groupByItem)
+			
+			groups.forEach(group => {
+				group.size++
+				group.items.push(item)
+			})
+			
+		}
+		
+		// const sorters:{[key:string]:Function} = {
+		// 	milestone: (o) => !o ? '' : _.toLower(o.title),
+		// 	assignee: (o) => _.toLower(o.login),
+		// 	labels: (o) => _.toLower(Array.isArray(o) ?
+		// 		o.map(item => _.toLower(item.name))
+		// 			.sort()
+		// 			.join(',') :
+		// 		o.name
+		// 	),
+		// }
+		
+		allGroups = _.sortBy(allGroups,'id')
+		
+		if (groupByDirection === 'desc')
+			allGroups = allGroups.reverse()
+		
+		const allItems:IIssueListItem<any>[] = []
+		
+		// Iterate all groups and push group and group items to list
+		allGroups.forEach(group => {
+			
+			allItems.push({
+				id: group.id,
+				type: IssueListItemType.Group,
+				item: group
+			},...issueItems)
+			
+		})
+		
+		return allItems
+	}
+)
+

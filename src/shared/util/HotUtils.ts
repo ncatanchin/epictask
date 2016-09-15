@@ -13,3 +13,9 @@ export function setDataOnDispose(mod,dataFn:() => any) {
 		})
 	}
 }
+
+export function acceptHot(mod,logger) {
+	if (mod.hot) {
+		mod.hot.accept(() => logger.info(`Self accepting HMR`))
+	}
+}

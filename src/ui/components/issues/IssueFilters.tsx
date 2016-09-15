@@ -18,8 +18,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {
-	issueSortAndFilterSelector,
-	issuesGroupedSelector
+	issueSortAndFilterSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
@@ -32,7 +31,7 @@ import {MenuItem} from 'material-ui'
 import {NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon} from 'material-ui/svg-icons'
 import * as moment from 'moment'
 import {Divider} from 'material-ui'
-import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
+import {IIssueGroup} from 'shared/actions/issue/IIssueListItems'
 import {Issue} from 'shared/models/Issue'
 
 

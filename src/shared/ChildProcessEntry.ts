@@ -97,7 +97,8 @@ export namespace ChildClient {
 	 */
 	export function sendMessage(type:string, body:any = {}) {
 		log.debug(`Sending message of type ${type}`)
-		ipcRenderer.sendToHost(type,{workerId,type,body})
+		//ipcRenderer.sendToHost(type,{workerId,type,body})
+		ipcRenderer.send('child-message',{processTypeName:ProcessConfig.getTypeName(),workerId,type,body})
 		//process.send({workerId,type, body})
 	}
 	

@@ -1,4 +1,3 @@
-import {User} from 'shared/models/User'
 const log = getLogger(__filename)
 
 import {RegisterModel} from 'shared/Registry'
@@ -34,13 +33,13 @@ export const IssuePatchModes = {
 
 
 export type TIssueEditInlineConfig = {
-	groupIndex:number,
 	issueIndex:number,
 	issue:Issue
 }
 
 export const IssueStateRecord = Record({
 	issues: [],
+	comments:[],
 	selectedIssueIds:[],
 	editingInline:false,
 	editInlineConfig:null,
@@ -84,6 +83,7 @@ export class IssueState extends IssueStateRecord {
 	issueFilter:IIssueFilter
 	issueSaving:boolean
 	issueSaveError: Error
+	comments:Comment[]
 	editInlineConfig:TIssueEditInlineConfig
 	selectedIssueIds:Array<number>
 	patchIssues:Issue[]

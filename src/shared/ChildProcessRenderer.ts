@@ -8,7 +8,8 @@ const START_TIMEOUT_DEFAULT = 30000
 
 const
 	log = getLogger(__filename),
-	globalListeners:IChildProcessEventListener[] = []
+	globalListeners:IChildProcessEventListener[] = [],
+	{ipcRenderer,BrowserWindow} = require('electron')
 
 /**
  * Add a listener to the worker
@@ -40,9 +41,9 @@ export interface IChildProcessMessage {
 	body?:any
 }
 
-export type TChildProcessMessageEventCallback = (childProcess:ChildProcessWebView, message:IChildProcessMessage) => void
+export type TChildProcessMessageEventCallback = (childProcess:ChildProcessRenderer, message:IChildProcessMessage) => void
 
-export type TChildProcessEventCallback = (childProcess:ChildProcessWebView, err:Error, data?:any) => void
+export type TChildProcessEventCallback = (childProcess:ChildProcessRenderer, err:Error, data?:any) => void
 
 export interface IChildProcessEventListener {
 	onError?:TChildProcessEventCallback
@@ -62,7 +63,7 @@ export interface IWorkerOptions {
 /**
  * Worker - manages spawned and forked processes
  */
-export default class ChildProcessWebView {
+export default class ChildProcessRenderer {
 	
 	/**
 	 * All worker event listeners
@@ -73,12 +74,13 @@ export default class ChildProcessWebView {
 	/**
 	 * Reference to child process
 	 */
-	private webView:WebViewElement
+	//private webView:WebViewElement
+	private browserWindow:Electron.BrowserWindow
 	
 	/**
 	 * Jquery WebView wrapper
 	 */
-	private webViewElem:JQuery
+	//private webViewElem:JQuery
 	
 	/**
 	 * Deferred stop flag
@@ -171,7 +173,7 @@ export default class ChildProcessWebView {
 	 * Send heartbeat message
 	 */
 	private sendHeartbeat() {
-		if (this.killed || !this.webView || !this.running)
+		if (this.killed || !this.browserWindow || !this.running)
 			return
 		
 		this.sendMessage('ping')
@@ -198,7 +200,7 @@ export default class ChildProcessWebView {
 	 */
 	constructor(
 		public name:string,
-		private processType:ProcessType,
+		public processType:ProcessType,
 		private opts:IWorkerOptions = {},
 		...listeners:IChildProcessEventListener[]
 	) {
@@ -274,11 +276,12 @@ export default class ChildProcessWebView {
 		if (!this.stopDeferred) {
 			
 			// If this is a disconnect, and not killed, then kill
-			if ( !this.killed && this.webView) {
+			if ( !this.killed && this.browserWindow) {
 				log.warn('Unexpected disconnect, killing manually')
 				try {
-					this.webView.delete()
-					this.webView = null
+					//this.webView.delete()
+					this.browserWindow.close()
+					this.browserWindow = null
 				} catch (err2) {
 					log.error('Manual kill failed', err2)
 				}
@@ -299,13 +302,14 @@ export default class ChildProcessWebView {
 	/**
 	 * Handle message
 	 *
-	 * @param event
+	 * @param type
+	 * @param body
 	 */
-	private handleMessage = (event:IpcMessageEvent) => {
-		const message:IChildProcessMessage = event.args[0]
+	handleMessage = (type,body) => {
+		//const message:IChildProcessMessage = event.args[0]
 		
 		// First handle message internally
-		switch (message.type) {
+		switch (type) {
 			
 			
 			// Ping <> Pong
@@ -322,7 +326,7 @@ export default class ChildProcessWebView {
 			// Registered handlers
 			default:
 				[...this.listeners,...globalListeners].forEach(listener =>
-					listener.onMessage && listener.onMessage(this,message))
+					listener.onMessage && listener.onMessage(this,body))
 				
 				
 		}
@@ -338,19 +342,20 @@ export default class ChildProcessWebView {
 		this.killed = true
 		
 		// Grab the ref
-		const {webView} = this
+		const {browserWindow} = this
 		
 		
 		
 		// If already killed or never started!
-		if (!webView) {
+		if (!browserWindow) {
 			log.warn('not running, can not kill',this.name,this.processType)
 		} else {
 			
 			// Send kill
 			try {
 				if (!this.exited) {
-					webView.delete()
+					//webView.delete()
+					browserWindow.close()
 					//child.kill()
 				}
 			} catch (err) {
@@ -358,7 +363,7 @@ export default class ChildProcessWebView {
 			}
 			
 			// Clear ref
-			this.webView = null
+			this.browserWindow = null
 		}
 		
 		// Make sure we complete the stop
@@ -375,12 +380,13 @@ export default class ChildProcessWebView {
 		if (!this.killed) {
 			this.killed = true
 			
-			const {webView} = this
+			const {browserWindow} = this
 			
-			if (webView) {
+			if (browserWindow) {
 				try {
-					webView.delete()
-					this.webView = null
+					//browserWindow.delete()
+					browserWindow.close()
+					this.browserWindow = null
 				} catch (err) {
 					log.warn(`Failed to send kill to child`,err)
 				}
@@ -398,26 +404,27 @@ export default class ChildProcessWebView {
 	 * @param callback
 	 */
 	sendMessage(type:string, body:any = {}, callback?:(err:Error) => void) {
-		if (this.killed || !this.webView) {
+		if (this.killed || !this.browserWindow) {
 			throw new Error(`Process is not ready for messages (killed=${this.killed})`)
 		}
 		
 		log.debug(`Sending Message (${type})`)
 		
 		// Send the actual message
-		this.webView.send('message',{type,body})
+		//this.browserWindow.send('message',{type,body})
+		this.browserWindow.webContents.send('message',{type,body})
 	}
 	
 	/**
 	 * Stop the worker
 	 */
 	stop(exitCode = 0):Promise<any> {
-		if (this.exited || this.killed || this.stopDeferred || !this.webView)
+		if (this.exited || this.killed || this.stopDeferred || !this.browserWindow)
 			return
 		
 		this.stopDeferred = Promise.defer()
-		this.webView.delete()
-		this.webView = null
+		this.browserWindow.close()
+		this.browserWindow = null
 		
 		return this.stopDeferred.promise
 	}
@@ -429,7 +436,7 @@ export default class ChildProcessWebView {
 	private connectToChild = () => {
 		if (ProcessConfig.showChildDevTools(this.processType)) {
 			log.info(`Opening dev tools for child process`,this.name)
-			this.webView.openDevTools()
+			this.browserWindow.webContents.openDevTools()
 		}
 		
 		// Setup communications verification
@@ -476,41 +483,51 @@ export default class ChildProcessWebView {
 	 * @returns {Promise}
 	 */
 	async start() {
-		if (this.webView || this.created)
+		if (this.browserWindow || this.created)
 			throw new Error(`Worker already started (created=${this.created})`)
 	
 		try {
 			
 			const
-				hasWindow = typeof window !== 'undefined',
-				win = hasWindow && window as any,
-				{href,hash} = win || {} as any,
-				url = href.replace(new RegExp(_.escapeRegExp(hash),'g'),'') +
-					`#processType=${ProcessConfig.getTypeName(this.processType) || 'unknown'}`
+				//hasWindow = typeof window !== 'undefined',
+				//win = hasWindow && window as any,
+				//{href,hash} = win || {} as any,
+				processTypeName = ProcessConfig.getTypeName(this.processType) || 'unknown',
+				templateURL = require('path').resolve(process.cwd(),'dist/app/app-entry.html'),
+				url = `file://${templateURL}#processType=${processTypeName}`
+			// href.replace(new RegExp(_.escapeRegExp(hash),'g'),'') +
+			// 		`#processType=${ProcessConfig.getTypeName(this.processType) || 'unknown'}`
 			
-			this.webViewElem = $(`
-				<webview src="${url}" 
-								 width="0" 
-								 height="0" 
-								 style="max-width:0;max-height:0;overflow:hidden; position: absolute;" 
-								 nodeintegration>
-								 
-				</webview>`).appendTo($('body'))
+			// this.webViewElem = $(`
+			// 	<webview src="${url}"
+			// 					 width="0"
+			// 					 height="0"
+			// 					 style="max-width:0;max-height:0;overflow:hidden; position: absolute;"
+			// 					 nodeintegration>
+			//
+			// 	</webview>`).appendTo($('body'))
+			//
+			// this.webView = this.webViewElem[0] as any
 			
-			this.webView = this.webViewElem[0] as any
+			this.browserWindow = new BrowserWindow({})
 			
 			// Assign handlers
-			this.webView.addEventListener('did-fail-load',this.handleError)
-			this.webView.addEventListener('destroyed',this.handleExit)
-			this.webView.addEventListener('close',this.handleClose)
-			this.webView.addEventListener('ipc-message',this.handleMessage)
-			this.webView.addEventListener('did-finish-load',() => {
-				log.info(`Web page loaded and is ready`)
-			})
+			this.browserWindow
+				.on('close',this.handleClose)
+				.webContents
+				.on('did-fail-load',this.handleError)
+				.on('did-finish-load',() => {
+					log.info(`Web page loaded and is ready`)
+				})
+				.on('destroyed',this.handleExit)
+				.on('dom-ready', this.connectToChild)
+				.on('ipc-message',this.handleMessage)
+			
+			this.browserWindow.loadURL(url)
 			// this.webView.addEventListener('console-message',(...args) => {
 			// 	log.info(`Child message from type ${this.name}`,...args)
 			// })
-			this.webView.addEventListener('dom-ready', this.connectToChild)
+			//this.browserWindow.webContents
 			
 			
 			// 1-tick

@@ -1,4 +1,4 @@
-import ChildProcessWebView from './ChildProcessWebView'
+import ChildProcessRenderer from './ChildProcessRenderer'
 import ProcessType from "shared/ProcessType"
 import { getHot, setDataOnDispose } from "shared/util/HotUtils"
 
@@ -6,7 +6,8 @@ const log = getLogger(__filename)
 
 // Check HMR first
 const
-	children:ChildProcessWebView[] = getHot(module,'children',[])
+	children:ChildProcessRenderer[] = getHot(module,'children',[]),
+	{ipcMain} = require('electron')
 
 
 // Add handler to set on dispose
@@ -25,8 +26,16 @@ const ChildProcessBootOrder = [
 	[ProcessType.JobServer]
 ]
 
+
+
 export namespace ChildProcessManager {
 	
+	ipcMain.on('child-message',(event,{processTypeName,workerId,type,body}) => {
+		const child = children.find(it => it.processType === ProcessType[processTypeName] as any)
+		assert(child,`Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
+		
+		child.handleMessage(type,body)
+	})
 	
 	/**
 	 * Start a worker for a specific process type
@@ -45,6 +54,8 @@ export namespace ChildProcessManager {
 	export function start(processType:ProcessType,id:string)
 	export function start(processType:ProcessType,id:string = null):Promise<any> {
 		
+		
+		
 		const
 			processName = `${ProcessConfig.getTypeName(processType)}-${id || 0}`
 		
@@ -58,7 +69,7 @@ export namespace ChildProcessManager {
 		
 		
 		const
-			worker:ChildProcessWebView = new ChildProcessWebView(processName,processType,{
+			worker:ChildProcessRenderer = new ChildProcessRenderer(processName,processType,{
 				// Env really isn't need with the webView model
 				env: {
 					EPIC_ENTRY: processName
@@ -96,7 +107,7 @@ export namespace ChildProcessManager {
 	 * @param worker
 	 * @returns {any}
 	 */
-	export function stop(worker:ChildProcessWebView) {
+	export function stop(worker:ChildProcessRenderer) {
 		const workerIndex = children.indexOf(worker)
 		if (workerIndex === -1) {
 			throw new Error(`This worker manager does not manage ${worker.name}`)

@@ -137,13 +137,13 @@ export class IssueStore extends TSRepo<Issue> {
 	 * @returns {Promise<Issue[]>}
 	 */
 	@PouchDBMangoFinder({
-		includeDocs: false,
+		includeDocs: true,
 		indexFields: ['repoId'],
 		selector: (...repoIds:number[]) => ({
 			$or: repoIds.map(repoId => ({repoId}))
 		})
 	})
-	findByRepoId(...repoIds:number[]):Promise<number[]> {
+	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
 		return null
 	}
 

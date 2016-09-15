@@ -73,43 +73,58 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	
 	
 	@ActionReducer()
-	updateAvailableRepos(...availableRepos:AvailableRepo[]) {
+	updateAvailableRepos(availableRepos:AvailableRepo[],milestones:Milestone[],labels:Label[],assignees:User[]) {
 		return (state:RepoState) => state
-			.set('availableRepos',availableRepos.map(it => it.id))
-			.set('availableRepoIds',availableRepos.map(it => it.id))
-			.set('enabledRepoIds',availableRepos.filter(it => it.enabled).map(it => it.repoId))
+			.withMutations((nextState) => {
+				nextState
+					.set('availableRepos',availableRepos)
+					.set('availableRepoIds',availableRepos.map(it => it.id))
+					.set('enabledRepoIds',availableRepos.filter(it => it.enabled).map(it => it.repoId))
+					.set('enabledMilestones',milestones)
+					.set('enabledLabels',labels)
+					.set('enabledAssignees',assignees)
+				
+				return nextState
+			})
+			
 	}
 	
 	async getAvailableRepos(...ids:any[]) {
 		
 		const
 			stores = Container.get(Stores),
-			availRepos = await stores.availableRepo.bulkGet(...ids),
-			repoIds = availRepos.map(item => item.repoId)
+			availableRepos = await stores.availableRepo.bulkGet(...ids),
+			repoIds = availableRepos.map(item => item.repoId),
+			milestones = [],
+			labels = [],
+			assignees = []
 		
 		const
 			promises = [
 				stores.repo.bulkGet(...repoIds)
 					.then(models => {
-						availRepos.forEach(it =>
+						availableRepos.forEach(it =>
 							it.repo = models.find(repo => repo.id ===  it.repoId))
 					}),
 	
 				stores.label.findByRepoId(...repoIds)
 					.then(models => {
-						availRepos.forEach(it =>
+						labels.push(...models)
+						availableRepos.forEach(it =>
 							it.labels = models.filter(label =>  label.repoId ===  it.repoId))
 					}),
 	
 				stores.milestone.findByRepoId(...repoIds)
 					.then(models => {
-						availRepos.forEach(it =>
+						milestones.push(...models)
+						availableRepos.forEach(it =>
 							it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
 					}),
 	
 				stores.user.findByRepoId(...repoIds)
 					.then(models => {
-						availRepos.forEach(it =>
+						assignees.push(...models)
+						availableRepos.forEach(it =>
 							it.collaborators = models.filter(user => user.repoIds.includes(it.repoId)))
 					})
 
@@ -118,7 +133,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		await Promise.all(promises)
 		
-		return availRepos
+		return {availableRepos,milestones,labels,assignees}
 	}
 	
 	
@@ -161,10 +176,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		// Filter Deleted
 		
-		availRepos = await this.getAvailableRepos(...availRepoIds)
+		const {availableRepos,milestones,labels,assignees} = await this.getAvailableRepos(...availRepoIds)
 		
-		this.updateAvailableRepos(...availRepos)
-		return availRepos
+		this.updateAvailableRepos(availableRepos,milestones,labels,assignees)
+		return availableRepos
 	}
 	
 	/**
@@ -315,7 +330,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 	@Benchmarker
-	private async removeAvailableRepoAction(repoId,dispatch, getState) {
+	private async removeAvailableRepoAction(availRepoId,dispatch, getState) {
 		
 		const
 			actions = this.withDispatcher(dispatch, getState),
@@ -324,10 +339,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 		// Get the repo
 		let
-			availRepos = await stores.availableRepo.findByRepoId(repoId),
+			availRepos = await stores.availableRepo.get(availRepoId),
 			availRepo = availRepos[0]
 		
-		assert(availRepo,`Available repo not found for id ${repoId}`)
+		assert(availRepo,`Available repo not found for id ${availRepoId}`)
+		const
+			{repoId} = availRepo
+		
 		availRepo.deleted = true
 		availRepo = await stores.availableRepo.save(availRepo)
 
@@ -404,13 +422,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	/**
 	 * Remove an available repo
 	 *
-	 * @param repoId
+	 * @param availRepoId
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	removeAvailableRepo(repoId:number) {
+	removeAvailableRepo(availRepoId:number) {
 
-		return (dispatch, getState) => this.removeAvailableRepoAction(repoId,dispatch,getState)
+		return (dispatch, getState) => this.removeAvailableRepoAction(availRepoId,dispatch,getState)
 	}
 
 
@@ -429,6 +447,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				availRepo = await stores.availableRepo.get(availRepoId)
 			
 			if (enabled === availRepo.enabled) {
+				log.warn(`No change in avail repo enabled state`,availRepo,enabled)
 				return
 			}
 

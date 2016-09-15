@@ -11,19 +11,16 @@ import filterProps from 'react-valid-props'
 import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {Issue} from 'shared/models'
 
-import {IIssueGroup} from 'shared/actions/issue/IIssueGroup'
-import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
+import { IIssueGroup, IIssueListItem } from 'shared/actions/issue/IIssueListItems'
+import { selectedIssueIdsSelector, filteredAndSortedIssueItemsSelector } from "shared/actions/issue/IssueSelectors"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
 
 interface IIssueItemProps extends React.HTMLAttributes<any> {
 	styles:any
-	index:number
-	issues:Issue[]
-	issue?:Issue
-	issuesGrouped?:IIssueGroup[]
 	groupBy:string
+	item:IIssueListItem<Issue>
 	onSelected:(event:any, issue:Issue) => void
 	isSelected?:boolean
 	isSelectedMulti?:boolean
@@ -33,17 +30,18 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 @connect(createDeepEqualSelector(
 	[
 		selectedIssueIdsSelector,
-		(state,props:IIssueItemProps):Issue[] => props.issues,
-		(state,props:IIssueItemProps):number => props.index
+		(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item
 	],
-	(selectedIssueIds:number[],issues:Issue[],index:number) => {
+	(selectedIssueIds:number[],item:IIssueListItem<Issue>) => {
 		const
-			issue = issues && issues[index],
-			isSelected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id)
+			isSelected =
+				item &&
+				selectedIssueIds &&
+				selectedIssueIds.includes((item.item as Issue).id)
 		
 		return {
 			isSelected,
-			issue,
+			item,
 			isSelectedMulti: isSelected && selectedIssueIds.length > 1
 		}
 	}
@@ -56,15 +54,15 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		const
 			{props} = this,
-			{styles,onSelected,issue,index,isSelected,isSelectedMulti} = props
+			{styles,onSelected,item,isSelected,isSelectedMulti} = props
 			
 			
-		if (!issue)
+		if (!item)
 			return React.DOM.noscript()
 
 		const
+			issue = item.item,
 			{labels} = issue,
-
 			issueStyles = makeStyle(
 				styles.issue,
 				isSelected && styles.issue.selected,

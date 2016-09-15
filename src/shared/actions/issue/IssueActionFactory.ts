@@ -1,6 +1,6 @@
 
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {Stores} from 'shared/Stores'
+import { Stores, getStores } from 'shared/Stores'
 import {ActionFactory, Action, ActionReducer} from 'typedux'
 import {Dialogs, IssueKey} from 'shared/Constants'
 import {cloneObject, extractError} from 'shared/util/ObjectUtil'
@@ -12,11 +12,11 @@ import {
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {
-	enabledRepoIdsSelector, availableRepoIdsSelector
+	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 
 import {
-	selectedIssueIdsSelector, issueSortAndFilterSelector
+	selectedIssueIdsSelector, issueSortAndFilterSelector, issuesSelector, selectedIssueIdSelector, selectedIssueSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
@@ -28,30 +28,42 @@ import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
 import {Provided} from 'shared/util/ProxyProvided'
-import { User } from "shared/models"
+import { User, AvailableRepo } from "shared/models"
 import { RegisterActionFactory } from "shared/Registry"
 
 /**
  * Created by jglanz on 5/29/16.
  */
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 
-//const internalIssueSelector = _.memoize((state) => (state.get(IssueKey) as IssueState).internalIssues)
-
-// IMPORTS
-const uuid = require('node-uuid')
-
-
-
-
-function hasEditPermission(issue: Issue) {
+/**
+ * User has permission to edit issue
+ *
+ * @param issue
+ * @returns {boolean}
+ */
+export function hasEditPermission(issue: Issue) {
 	const {repo} = issue
 	
 	assert(repo, 'can not test permission without repo set on issue')
 	
 	return (!issue.user || issue.user.id === getSettings().user.id || repo.permissions.push)
+}
+
+
+/**
+ * Issue data update shape
+ *
+ */
+
+export interface IIssueDataUpdate {
+	issueIds?:number[]
+	commentIds?:number[]
+	labelUrls?:string[]
+	milestoneIds?:number[]
 }
 
 
@@ -110,11 +122,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	/**
 	 * Create a new comment
 	 */
-	newComment(selectedIssueIds,issues:Issue[]) {
+	newComment() {
 		const
-			issue = issues && selectedIssueIds &&
-				selectedIssueIds.length === 1 &&
-				issues.find(it => it.id === selectedIssueIds[0])
+			issue = selectedIssueSelector(getStoreState())
 		
 		if (!issue) {
 			return addErrorMessage('You can only add a comment when exactly one issue is selected')
@@ -133,13 +143,42 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	loadIssues() {
 		return async (dispatch,getState) => {
 			const
-				enabledRepoIds = enabledRepoIdsSelector(getState()),
-				issues = await this.getIssues(enabledRepoIds)
+				enabledRepos = enabledAvailReposSelector(getState()),
+				issues = await this.getIssues(enabledRepos)
 			
-			
-			
-			
+			this.setIssues(issues)
 		}
+	}
+	
+	/**
+	 * Get issues for a set of available repos
+	 *
+	 * @param availRepos
+	 * @returns {Promise<Issue[]>}
+	 */
+	
+	async getIssues(availRepos:AvailableRepo[]) {
+		
+		let
+			issues = await Container.get(Stores)
+				.issue
+				.findByRepoId(...availRepos.map(availRepo => availRepo.repoId))
+		
+		issues = issues.map(issue => {
+			const
+				repo = availRepos.find(availRepo => availRepo.repoId === issue.repoId)
+			
+			return cloneObject(issue,{
+				repo,
+				collaborators: repo.collaborators,
+				labels: !issue.labels ? [] : issue.labels.map(label => repo.labels.find(it => it.url === label.url)),
+				milestone: issue.milestone && repo.milestones.find(it => it.id === issue.milestone.id)
+			})
+		})
+		
+		
+		return issues
+		
 	}
 	
 	@ActionReducer()
@@ -552,12 +591,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	@ActionReducer()
-	editInline(groupIndex: number, issueIndex: number, issue: Issue) {
+	editInline(issueIndex: number, issue: Issue) {
 		return (state: IssueState) => state
 			.set('editingInline', true)
 			.set('editingIssue', issue)
 			.set('editInlineConfig', {
-				groupIndex,
 				issueIndex,
 				issue
 			})
@@ -628,15 +666,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 	}
 	
-	
-	getIssue(issueId:number):Promise<Issue> {
-		return Container.get(Stores).issue.get(issueId)
-	}
-	
-	async getSelectedIssue():Promise<Issue> {
-		const selectedIssueId = this.state.selectedIssueIds[0]
-		
-		return selectedIssueId && await this.getIssue(selectedIssueId)
+	getSelectedIssue():Issue {
+		return selectedIssueSelector(getStoreState())
 	}
 	
 	/**
@@ -833,6 +864,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	
+	/**
+	 * Load all issues for enabled repos
+	 *
+	 * @param dispatch
+	 * @param getState
+	 * @returns {number[]}
+	 */
 	async loadIssuesAction(dispatch, getState) {
 		const
 			actions = this.withDispatcher(dispatch, getState)
@@ -841,94 +879,16 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const
 			issueState = actions.state,
 			issueStore = actions.stores.issue,
-			issueFilter = issueState.issueFilter
+			issueFilter = issueState.issueFilter,
+			availRepos = enabledAvailReposSelector(getState),
+			repoIds = availRepos.map(availRepo => availRepo.repoId)
 		
-		const repoIds = enabledRepoIdsSelector(getState())
 		log.info(`Loading issues for repos`, repoIds)
 		
-		let offset = 0
-		const limit = 50
-		let labels = await actions.stores.label.findByRepoId(...repoIds)
-		let milestones = await actions.stores.milestone.findByRepoId(...repoIds)
+		this.setIssues(await this.getIssues(enabledAvailReposSelector(getState())))
 		
-		let issueIds: number[] = await (issueFilter.includeClosed ?
-			issueStore.findIdsByRepoId(...repoIds) :
-			issueStore.findIdsByStateAndRepoId('open', ...repoIds))
-		
-		// while (true) {
-		// 	log.info(`Requesting issues page # ${(offset / limit) + 1}`)
-		// 	const request = new FinderRequest(limit,offset)
-		// 	const moreIssueIds = await issueStore.findByRepoIdWithRequest(request,...repoIds)
-		// 	issueIds.push(...moreIssueIds)
-		// 	if (moreIssueIds.length === 0 || moreIssueIds.length < limit)
-		// 		break
-		//
-		// 	offset += limit
-		//
-		// }
-		
-		// const milestoneMap = milestones.reduce((map, nextMilestone) => {
-		// 	map['' + nextMilestone.id] = nextMilestone
-		// 	return map
-		// }, {})
-		//
-		// const labelMap = labels.reduce((map, nextLabel) => {
-		// 	map[nextLabel.url] = nextLabel
-		// 	return map
-		// }, {})
-		
-		// TODO: Notify of data update
-		// dataActions.updateModels(
-		// 	Milestone.$$clazz,
-		// 	milestoneMap
-		// )
-		//
-		// dataActions.updateModels(
-		// 	Label.$$clazz,
-		// 	labelMap
-		// )
-		//
-		// actions.requestIssueIds(issueIds, false)
-		// this.setIssueIds(issueIds)
-		return issueIds
 	}
 	
-	async getIssues(repoIds) {
-		const
-			stores = Container.get(Stores),
-			
-			promises = [
-				stores.repo.bulkGet(...repoIds),
-				stores.label.findByRepoId(...repoIds),
-				stores.milestone.findByRepoId(...repoIds),
-				stores.user.findByRepoId(...repoIds),
-				// (issueFilter.includeClosed ?
-				stores.issue.findIdsByRepoId(...repoIds)
-					//stores.issue.findIdsByStateAndRepoId('open', ...repoIds))
-			],
-			[repos,labels,milestones,users,issueIds]:[Repo[],Label[],Milestone[],User[],number[]] =
-				await Promise.all(promises) as any
-			
-		let
-			issues = await stores.issue.bulkGet(...issueIds)
-		
-		issues = issues.map(issue => cloneObject(issue,{
-			repo: repos.find(it => it.id === issue.repoId),
-			collaborators: users.filter(it => it.repoIds.includes(issue.repoId)),
-			labels: !issue.labels ? [] : issue.labels.map(label => labels.find(it => it.url === label.url)),
-			milestone: issue.milestone && milestones.find(it => it.id === issue.milestone.id)
-		}))
-		
-		return {
- 				issueIds,
- 				issues
-		}
-	}
-	
-	@Action()
-	loadIssueIds() {
-		return (dispatch, getState) => this.loadIssuesAction(dispatch, getState)
-	}
 	//
 	// @Action()
 	// loadIssues() {
@@ -944,9 +904,26 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	
+	/**
+	 * Set all activity - add pull requests, etc
+	 *
+	 * @param comments
+	 */
+	@ActionReducer()
+	private setActivity(comments:Comment[]) {
+		return (state:IssueState) =>
+			state.set('comments',comments)
+	}
+	
+	/**
+	 * Get all activity for an issue
+	 *
+	 * @param issue
+	 * @returns {{comments: any}}
+	 */
 	async getActivity(issue:Issue) {
 		const
-			comments = await this.stores.comment.findByIssueNumber(issue.repoId, issue.number)
+			comments = await getStores().comment.findByIssueNumber(issue.repoId, issue.number)
 		
 		
 		return {
@@ -958,26 +935,29 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	@Action()
 	loadActivityForIssue(issueId: number) {
 		return async(dispatch, getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
 			
 			// Issue repo
-			// TODO: Fill issue
-			let issue: Issue = await this.getIssue(issueId)// dataState.models.get(Issue.$$clazz).get(`${issueId}`)
+			let
+				issues:Issue[] = issuesSelector(getState())
+			if (!Array.isArray(issues))
+				return
+			
+			let
+				issue: Issue = issues.find(issue => issue.id === issueId)
+			
 			if (!issue) {
-				log.warn(`Issue not found in data state: ${issueId}`)
-				issue = await this.stores.issue.get(issueId)
-				assert(issue, `Issue still not found ${issueId}`)
+				log.error(`Issue not found in state: ${issueId}`)
+				//assert(issue, `Issue still not found in state ${issueId}`)
+				return
 			}
 			
 			
 			log.info(`Loading activity for issue `, issueId)
 			const
-				comments = await this.stores.comment.findByIssueNumber(issue.repoId, issue.number),
-				commentIds = comments.map(comment => `${comment.id}`),
-				commentMap = _.modelArrayToMapBy(comments, 'id')
+				{comments} = await this.getActivity(issue)
+				
 			
-			log.info(`Loaded ${comments.length} comments`)
-			
+			this.setActivity(comments)
 			// TODO: Activity load
 			// Now push the models into the data state for tracking
 			// const dataActions = Container.get(DataActionFactory)
@@ -1007,8 +987,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	includeClosedIssues(includeClosed: boolean) {
 		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter), {includeClosed})
 		this.setFilteringAndSorting(updatedFilter)
-		this.loadIssueIds()
-		
 	}
 	
 	

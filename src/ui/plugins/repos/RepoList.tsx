@@ -114,7 +114,9 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
-		const repoActions = Container.get(RepoActionFactory)
+		log.info(`Avail repo clicked`,availRepo)
+		const repoActions = getRepoActions()
+		
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo.repoId,!isSelected)
 		} else {
@@ -150,7 +152,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 			{availableRepos && availableRepos
 				.map((availRepo,availRepoIndex) => {
 					const
-						id = availRepo.repoId,
+						id = availRepo.id,
 						{repo} = availRepo, //_.find(repos,(it) => it.id === availRepo.repoId)
 						isSelected = !!selectedRepoIds.includes(availRepo.repoId),
 						isEnabled = availRepo.enabled,

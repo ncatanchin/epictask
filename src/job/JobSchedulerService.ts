@@ -6,7 +6,7 @@ import {JobManagerService} from "job/JobManagerService"
 import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import * as moment from 'moment'
 import { JobKey } from "shared/Constants"
-import { getActionClient } from "shared/ChildStoreClient"
+import { getActionClient } from "shared/AppStoreClient"
 import JobDAO from "shared/actions/jobs/JobDAO"
 const log = getLogger(__filename)
 

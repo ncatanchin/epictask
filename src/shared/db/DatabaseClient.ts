@@ -4,13 +4,14 @@ import * as uuid from 'node-uuid'
 import {DatabaseEvents} from './DatabaseEvents'
 import {IDatabaseResponse, IDatabaseRequest} from './DatabaseRequestResponse'
 import {Transport} from "shared/net/Transport"
-import {ProcessType, ProcessNames} from "shared/ProcessType"
+import {ProcessType} from "shared/ProcessType"
 import VariableProxy from 'shared/util/VariableProxy'
+import { DatabaseServerName } from "shared/Constants"
 const TIMEOUT = 120000
 
 const
-	DatabaseServerType = ProcessType.DatabaseServer,
-	DatabaseServerName = ProcessNames.DatabaseServer
+	DatabaseServerType = ProcessType.DatabaseServer
+	
 
 const log = getLogger(__filename)
 	
@@ -24,7 +25,7 @@ const log = getLogger(__filename)
 
 
 /**
- * A database error occured
+ * A database error occurred
  */
 export class DatabaseError extends Error {
 

@@ -16,7 +16,7 @@ import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {IssueActivityText} from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
-	selectedIssueIdsSelector
+	selectedIssueIdsSelector, issuesSelector, commentsSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 
@@ -46,7 +46,7 @@ const log = getLogger(__filename)
 
 export interface IIssueDetailPanelProps {
 	selectedIssueIds?:number[]
-	issues:Issue[]
+	issues?:Issue[]
 	comments?:Comment[]
 	theme?:any,
 	styles?:any
@@ -63,18 +63,11 @@ export interface IIssueDetailPanelProps {
  **/
 
 @connect(createStructuredSelector({
-	selectedIssueIds:selectedIssueIdsSelector
+	selectedIssueIds:selectedIssueIdsSelector,
+	issues:issuesSelector,
+	comments:commentsSelector
 },createDeepEqualSelector))
-@DataComponent(
-	MapProvider(['issues'],async ({issues}) => {
-		if (!issues || issues.length !== 1)
-			return {
-				comments: []
-			}
-		
-		return Container.get(IssueActionFactory).getActivity(issues[0])
-	},Comment,'id',[])
-)
+
 @HotKeyContext()
 @ThemedStyles(baseStyles,'issueDetail')
 @PureRender
@@ -322,8 +315,12 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @returns {any}
 	 */
 	render() {
-		const {selectedIssueIds,issues, theme, comments,styles} = this.props
+		const
+			{selectedIssueIds,issues, theme, comments,styles} = this.props
 
+		if (!Array.isArray(issues))
+			return React.DOM.noscript()
+		
 		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
 			<HotKeys id='issueDetailPanel'
 			         style={styles.root}>

@@ -3,16 +3,33 @@ const log = getLogger(__filename)
 
 export type OnValueChanged = (newValue,oldValue) => any
 
+/**
+ * Creates a value cache, when changed
+ * the onValueChange listener is triggered
+ */
 export default class ValueCache {
 
 	private value:any
-
-	constructor(private onValueChanged:OnValueChanged) {
+	
+	/**
+	 * New value cache
+	 *
+	 * @param onValueChanged
+	 * @param shallow - use === - defaults to false
+	 * @param initialValue
+	 */
+	constructor(
+		private onValueChanged:OnValueChanged,
+		private shallow:boolean = false,
+		initialValue = null
+	) {
 		assert(onValueChanged,'An onValueChanged handler is required')
+		
+		this.value = initialValue
 	}
 
 	set(newValue:any) {
-		if (newValue === this.value || _.isEqual(newValue,this.value)) {
+		if ((this.shallow && newValue === this.value) || (!this.shallow && _.isEqual(newValue,this.value))) {
 			log.debug('no change')
 			return false
 		} else {

@@ -9,7 +9,7 @@ import {BaseService, RegisterService, IServiceConstructor} from "shared/services
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {IJobStatusDetail} from "shared/actions/jobs/JobState"
 import { JobKey } from "shared/Constants"
-import { clientObserveState, getStateClient } from "shared/ChildStoreClient"
+import { clientObserveState, getStateValue } from "shared/AppStoreClient"
 
 const log = getLogger(__filename)
 
@@ -159,7 +159,7 @@ export class JobManagerService extends BaseService {
 		
 		
 		// Execute default jobs
-		const allJobs = await getStateClient(JobKey,'all')
+		const allJobs = await getStateValue(JobKey,'all')
 		await this.onJobsUpdated(allJobs)
 		
 		
@@ -184,7 +184,7 @@ export class JobManagerService extends BaseService {
 				job.status === JobStatus.Created &&
 				!this.workingJobs[job.id])
 		
-		const details = await getStateClient(JobKey,'details')
+		const details = await getStateValue(JobKey,'details')
 		
 		log.info(`Found ${newJobs.length} new jobs, executing now`)
 		

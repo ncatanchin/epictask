@@ -104,8 +104,9 @@ export class DatabaseServerEntry extends WorkerEntry {
 			coordinator = new TSCoordinator()
 			await coordinator.init({}, storePlugin)
 			
-			const allModelsAndRepos = require('shared/models')
-			const names = Object.keys(allModelsAndRepos)
+			const
+				allModelsAndRepos = require('shared/models'),
+				names = Object.keys(allModelsAndRepos)
 			
 			const modelClazzes = names
 				.filter(name => {

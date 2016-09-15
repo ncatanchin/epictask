@@ -5,6 +5,7 @@ import {AvailableRepo} from 'shared/models/AvailableRepo'
 
 import {RepoState} from "shared/actions/repo/RepoState"
 import {RepoKey} from "shared/Constants"
+import { Milestone, Label, User } from "shared/models"
 
 /**
  * Get the current repo state
@@ -32,18 +33,56 @@ export const repoIdPredicate = (o:any) => {
 	return (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
 }
 
+/**
+ * All enabled milestones
+ */
+export const enabledMilestonesSelector = _.memoize(
+	(state):Milestone[] => _.nilFilter(repoStateSelector(state).enabledMilestones)
+)
+
+
+/**
+ * All enabled milestones
+ */
+export const enabledLabelsSelector = _.memoize(
+	(state):Label[] => _.nilFilter(repoStateSelector(state).enabledLabels)
+)
+
+/**
+ * All enabled milestones
+ */
+export const enabledAssigneesSelector = _.memoize(
+	(state):User[] => _.nilFilter(repoStateSelector(state).enabledAssignees)
+)
+
+
+/**
+ * All available repos that have been added (excluding deleted)
+ */
 export const availableReposSelector = _.memoize(
 	(state):AvailableRepo[] => _.nilFilter(repoStateSelector(state).availableRepos)
 )
 
+/**
+ * Available repos - only ids
+ */
 export const availableRepoIdsSelector = _.memoize(
 	(state):string[] => _.nilFilter(repoStateSelector(state).availableRepoIds)
 )
 
+/**
+ * Only available repo ids
+ */
 export const enabledRepoIdsSelector = _.memoize(
 	(state):number[] => repoStateSelector(state).enabledRepoIds
 )
 
+/**
+ * Only enabled avail repos
+ */
+export const enabledAvailReposSelector = _.memoize(
+	(state):AvailableRepo[] => repoStateSelector(state).availableRepos.filter(availRepo => availRepo.enabled)
+)
 
 /**
  * Repo Ids that are currently selected in the UI
@@ -54,6 +93,9 @@ export const selectedRepoIdsSelector = (state):number[] => (state)
 	.map((availRepo:AvailableRepo) => availRepo.repoId)
 
 
+/**
+ * Number of available repos
+ */
 export const availableRepoCountSelector = createDeepEqualSelector(
 	availableRepoIdsSelector,
 	(availRepoIds:number[]) => availRepoIds.length

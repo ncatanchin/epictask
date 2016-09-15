@@ -19,7 +19,7 @@ import {getStoreState} from 'shared/store/AppStore'
 
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
-import { getStateClient } from "shared/ChildStoreClient"
+import { getStateValue } from "shared/AppStoreClient"
 
 
 
@@ -47,7 +47,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	
 	async reloadIssues() {
 		// Reload issues first
-		await Container.get(IssueActionFactory).loadIssueIds()
+		await Container.get(IssueActionFactory).loadIssues()
 	}
 	
 	checkReloadActivity = async (comment:Comment) => {
