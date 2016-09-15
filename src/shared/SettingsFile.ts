@@ -84,7 +84,9 @@ export class SettingsFile implements ISettings {
 	load() {
 		let newSettings = null
 		try {
-			if (fs.existsSync(settingsFilename)) {
+			if (ProcessConfig.isStorybook()) {
+				newSettings = {}
+			} else if (fs.existsSync(settingsFilename)) {
 				newSettings = JSON.parse(readFile(settingsFilename),(k, v) => {
 					return (k === 'isLoaded') ? undefined : v
 				})

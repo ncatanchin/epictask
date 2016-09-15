@@ -153,10 +153,17 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 	get watcherEventRemovers():IEnumEventRemover[] {
 		return _.get(this,'state.watcherEventRemovers',null)
 	}
-
-
 	
+	
+	/**
+	 * Update the job detail component state
+	 *
+	 * @param props
+	 */
 	private updateState = (props = this.props) => {
+		if (ProcessConfig.isStorybook())
+			return
+		
 		let
 			watcher:LogWatcher = this.watcher,
 			{job,detail} = props,

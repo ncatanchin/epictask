@@ -66,7 +66,7 @@ export function cacheFilename(basename:string) {
 }
 
 export function tempFilename(basename:string,ext = 'tmp') {
-	return `${tempPath}/${encodeURIComponent(basename)}-${uuid.v4()}.${ext}`
+	return `${tempPath}/${encodeURIComponent(basename)}-${uuid ? uuid.v4() : Date.now()}.${ext}`
 }
 
 /**
@@ -105,6 +105,7 @@ export function readJSONFile(filename:string) {
  * or any ENOENT exception occurs a `null` is returned
  *
  * @param filename
+ * @param encoding
  * @returns {any}
  */
 export function readFile(filename:string,encoding = 'utf-8') {

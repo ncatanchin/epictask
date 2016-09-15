@@ -6,7 +6,7 @@ import { StoreEnhancer,compose, applyMiddleware } from 'redux'
 import {ReduxDebugSessionKey, UIKey} from 'shared/Constants'
 import {Toaster} from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
-import {ipcRenderer} from 'electron'
+
 
 import {
 	getAction,
@@ -340,8 +340,6 @@ export function serializeState(state = getStoreState()) {
 	return JSON.stringify(_.toJS(state))
 }
 
-// Add shutdown hook on main
-const {app} = require('electron')
 
 // Just in case its an hmr request
 const existingRemoveListener = getHot(module,'removeListener')
@@ -501,19 +499,26 @@ const removeListener = addGlobalListener({
 	}
 })
 
-Object
-	.keys(clientMessageHandlers)
-	.forEach(type => {
-		if (ipcRenderer)
-			ipcRenderer.on(type,(event,body) => {
-				clientMessageHandlers[type]({
-					sendMessage(type,body) {
-						ipcRenderer.send(type,body)
-					}
-				},body)
-			})
-	})
 
+if (!ProcessConfig.isStorybook()) {
+	try {
+		const { ipcRenderer } = require('electron')
+		Object
+			.keys(clientMessageHandlers)
+			.forEach(type => {
+				if (ipcRenderer)
+					ipcRenderer.on(type, (event, body) => {
+						clientMessageHandlers[ type ]({
+							sendMessage(type, body) {
+								ipcRenderer.send(type, body)
+							}
+						}, body)
+					})
+			})
+	} catch (err) {
+		log.error(`Failed to start app store listener, process type is ${ProcessConfig.getTypeName()}`,err)
+	}
+}
 // On unload write the state
 if (typeof window !== 'undefined') {
 	window.addEventListener('beforeunload', () => {

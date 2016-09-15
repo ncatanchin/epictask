@@ -100,7 +100,7 @@ module.exports = function (storybookBaseConfig, configType) {
 	_.merge(storybookBaseConfig, _.pick(epicConfig,['sassLoader']), {
 		devtool: 'eval',
 		output: {
-			devtoolModuleFilenameTemplate: "file://[absolute-resource-path]"
+			devtoolModuleFilenameTemplate: "http://localhost:6006/[absolute-resource-path]"
 		},
 		externals: [
 			//externals,

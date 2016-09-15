@@ -182,8 +182,8 @@ const baseStyles = createStyles({
 	 * Issue labels styling
 	 */
 	issueLabels: [makePaddingRem(), FlexScale, {
-		//overflow: 'auto',
-		flexWrap: 'wrap',
+		overflowX: 'auto',
+		//flexWrap: 'wrap',
 		
 		label: {
 			marginTop: 0,
@@ -834,6 +834,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						<VisibleList items={issues}
 						             itemRenderer={this.makeRenderIssueListItem()}
 						             initialItemsPerPage={50}
+						             itemHeight={100}
 						             bufferPages={3}
 						/>
 						                

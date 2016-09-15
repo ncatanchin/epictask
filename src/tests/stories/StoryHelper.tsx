@@ -1,12 +1,14 @@
-require('source-map-support').install()
+//require('source-map-support').install()
+import 'reflect-metadata'
 ProcessConfig.setType(ProcessType.Storybook)
 
 import 'shared/NamespaceConfig'
-import 'reflect-metadata'
 import 'shared/LogConfig'
 
-import 'shared/RendererLogging'
+
+//import 'shared/RendererLogging'
 import 'shared/PromiseConfig'
+import "shared/Globals"
 import "ui/UIGlobals"
 
 // Load Styles

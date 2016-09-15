@@ -1,3 +1,4 @@
+require('babel-polyfill')
 import { configure } from '@kadira/storybook'
 import {ProcessType} from "shared/ProcessType"
 import 'shared/ProcessConfig'

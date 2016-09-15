@@ -4,7 +4,7 @@
 // import {AppKey} from "shared/Constants"
 import {User} from "shared/models"
 import {SettingsFile} from "shared/SettingsFile"
-import { getStateClient } from "shared/ChildStoreClient"
+import { getStateClient as getStateClientType } from "shared/ChildStoreClient"
 import { AppKey } from "shared/Constants"
 
 /**
@@ -37,6 +37,7 @@ export async function getSettingsFromState():Promise<ISettings> {
 	if (ProcessConfig.isType(ProcessType.UI)) {
 		return getSettingsFile()
 	} else {
+		const getStateClient = require("shared/ChildStoreClient").getStateClient as typeof getStateClientType
 		return await getStateClient(AppKey, 'settings')
 	}
 	// if
