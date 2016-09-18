@@ -146,7 +146,7 @@ export class DatabaseServerEntry extends WorkerEntry {
 			
 			// In DEBUG mode expose repos on global
 			if (DEBUG) {
-				assignGlobal({Stores: stores, db: storePlugin.db})
+				assignGlobal({Stores: stores})
 			}
 			
 			// Now bind repos to the IOC
@@ -247,7 +247,7 @@ async function executeRequest(socket,request:IDatabaseRequest) {
 			
 			
 		} else {
-			result = await storePlugin.db[fnName](...args)
+			result = await storePlugin.getDB(null)[fnName](...args)
 			
 		}
 		
@@ -297,7 +297,7 @@ if (module.hot) {
 		
 		if (storePlugin) {
 			try {
-				storePlugin.db.close()
+				storePlugin.getDB(null).close()
 			} catch (err) {
 				log.warn(`HMR dispose, failed to stop TS coordinator`,err)
 			}
