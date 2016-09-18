@@ -36,7 +36,7 @@ export interface IVisibleListProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	items:any[]
-	itemHeight:number
+	itemHeight?:number
 	itemRenderer:(items:any[], index:number) => React.ReactElement<any>
 	initialItemsPerPage?:number
 	bufferPages?:number
@@ -65,9 +65,6 @@ export interface IVisibleListState {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	// Props mapping go here, use selectors
-}, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
@@ -93,7 +90,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	private updateState = (props = this.props) => {
 		const
 			{state = {}} = this,
-			{bufferPages,itemHeight,items,itemRenderer} = props,
+			{bufferPages,items,itemRenderer} = props,
 			{height,width,rootElement,scrollTop} = state
 		
 		if (!height || !width || !rootElement) {
@@ -102,26 +99,44 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 		}
 		
 		let
-			itemsPerPage = state.itemsPerPage || props.initialItemsPerPage
-			
-		itemsPerPage = Math.ceil(height / itemHeight)
+			itemsPerPage = state.itemsPerPage || props.initialItemsPerPage,
+			{itemHeight} = props,
+			{currentItems} = state,
+			startIndex = 0,
+			endIndex = items.length
 		
-		const
-			visibleIndex = Math.max(0,Math.floor(scrollTop / itemHeight)) || 0,
-			startIndex = Math.max(0, visibleIndex - (bufferPages * itemsPerPage)),
-			endIndex = visibleIndex + itemsPerPage + (itemsPerPage * bufferPages),
+		// If item height is omitted then eventually everything is rendered / simply hidden when not in viewport
+		if (itemHeight) {
+			itemsPerPage = Math.ceil(height / itemHeight)
+			
+			const
+				visibleIndex = Math.max(0,Math.floor(scrollTop / itemHeight)) || 0
+			
+			startIndex = Math.max(0, visibleIndex - (bufferPages * itemsPerPage))
+			endIndex = visibleIndex + itemsPerPage + (itemsPerPage * bufferPages)
+			
 			currentItems = items
-				.slice(startIndex,endIndex)
-				.map((item,index) => {
+				.slice(startIndex, endIndex)
+				.map((item, index) => {
 					index += startIndex
-					return <div key={index} style={{
-						position: 'absolute',
-						top: (itemHeight * index) || 0,
-						height:itemHeight
-					}}>
+					return <div key={index} style={makeStyle(FillWidth,{
+							position: 'absolute',
+							top: (itemHeight * index) || 0,
+							height:itemHeight
+							
+						})}>
 						{itemRenderer(items, index)}
 					</div>
 				})
+		} else {
+			currentItems = items.map((item, index) => {
+				return <div key={index} style={makeStyle(FillWidth,{
+							position: 'relative'
+						})}>
+					{itemRenderer(items, index)}
+				</div>
+			})
+		}
 		
 		log.info(`Start`,startIndex,'end',endIndex)
 		
@@ -140,8 +155,6 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	private onScroll = _.debounce((event) => {
 		const
 			{scrollTop} = this.state.listElement
-		
-		//log.info(`Scroll event`,event,'scroll top =',scrollTop)
 		
 		this.setState({scrollTop},this.updateState)
 	},150,{
@@ -199,7 +212,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 		                  ref={this.setRootRef}
 		                  onResize={this.onResize}>
 			<div style={[styles.list]} ref={this.setListRef} onScroll={this.onScroll}>
-				<div style={[styles.list.content,{
+				<div style={[styles.list.content,itemHeight && {
 					height:items.length * itemHeight
 				}]}>
 					{currentItems}

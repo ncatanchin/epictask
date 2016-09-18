@@ -1,5 +1,6 @@
 // IMPORTS
 import './UIGlobals'
+import { MainBooted } from "shared/Constants"
 
 
 const log = getLogger(__filename)
@@ -30,17 +31,20 @@ async function boot() {
 		{ipcRenderer} = require('electron')
 	
 	
-	ipcRenderer.send('epictask-start-children')
-	
-	log.info(`Going to wait for epictask-children-ready`)
-	
-	const childrenDeferred = Promise.defer()
-	ipcRenderer.on('epictask-children-ready',() => {
-		log.info(`Got notification from main - kids are ready`)
-		childrenDeferred.resolve()
-	})
-	
-	await childrenDeferred.promise
+	// Check if the main process is completely loaded - if not then wait
+	if (!require('electron').remote.getGlobal(MainBooted)) {
+		ipcRenderer.send('epictask-start-children')
+		
+		log.info(`Going to wait for epictask-children-ready`)
+		
+		const childrenDeferred = Promise.defer()
+		ipcRenderer.on('epictask-children-ready', () => {
+			log.info(`Got notification from main - kids are ready`)
+			childrenDeferred.resolve()
+		})
+		
+		await childrenDeferred.promise
+	}
 	
 	// HMR STOP SERVICES
 	if (module.hot) {

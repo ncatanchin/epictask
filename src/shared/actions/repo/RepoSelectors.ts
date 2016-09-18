@@ -12,7 +12,7 @@ import { Milestone, Label, User } from "shared/models"
  * @param state
  * @return {RepoState}
  */
-export const repoStateSelector:(state) => RepoState = _.memoize((state) => state.get(RepoKey))
+export const repoStateSelector:(state) => RepoState = (state) => state.get(RepoKey)
 
 /**
  * Get repo id from object
@@ -36,53 +36,53 @@ export const repoIdPredicate = (o:any) => {
 /**
  * All enabled milestones
  */
-export const enabledMilestonesSelector = _.memoize(
+export const enabledMilestonesSelector =
 	(state):Milestone[] => _.nilFilter(repoStateSelector(state).enabledMilestones)
-)
+
 
 
 /**
  * All enabled milestones
  */
-export const enabledLabelsSelector = _.memoize(
+export const enabledLabelsSelector =
 	(state):Label[] => _.nilFilter(repoStateSelector(state).enabledLabels)
-)
+
 
 /**
  * All enabled milestones
  */
-export const enabledAssigneesSelector = _.memoize(
+export const enabledAssigneesSelector =
 	(state):User[] => _.nilFilter(repoStateSelector(state).enabledAssignees)
-)
+
 
 
 /**
  * All available repos that have been added (excluding deleted)
  */
-export const availableReposSelector = _.memoize(
+export const availableReposSelector =
 	(state):AvailableRepo[] => _.nilFilter(repoStateSelector(state).availableRepos)
-)
+
 
 /**
  * Available repos - only ids
  */
-export const availableRepoIdsSelector = _.memoize(
+export const availableRepoIdsSelector =
 	(state):string[] => _.nilFilter(repoStateSelector(state).availableRepoIds)
-)
+
 
 /**
  * Only available repo ids
  */
-export const enabledRepoIdsSelector = _.memoize(
+export const enabledRepoIdsSelector =
 	(state):number[] => repoStateSelector(state).enabledRepoIds
-)
+
 
 /**
  * Only enabled avail repos
  */
-export const enabledAvailReposSelector = _.memoize(
+export const enabledAvailReposSelector =
 	(state):AvailableRepo[] => repoStateSelector(state).availableRepos.filter(availRepo => availRepo.enabled)
-)
+
 
 /**
  * Repo Ids that are currently selected in the UI

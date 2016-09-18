@@ -5,7 +5,7 @@ import checkSingleInstance from "main/CheckSingleInstance"
 import {RemoteDebuggingPort, Events, MainBooted} from 'shared/Constants'
 import * as MainWindowType from './MainWindow'
 import {getServiceManager as getServiceManagerType} from "shared/services"
-const {app} = require('electron')
+const {app,BrowserWindow} = require('electron')
 
 
 
@@ -23,7 +23,10 @@ let mainWindow:any
 const hotReloadEnabled = Env.isHot
 
 // Reference for dev monitor window (redux, etc)
-let devWindow = null
+let
+	devWindow = null,
+	ProcessManager = null,
+	processesRunning = false
 
 log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
 
@@ -75,10 +78,53 @@ function onFocus() {
 }
 
 
+/**
+ * On shutdown intercepts quit requests and makes sure
+ * all children are properly shutdown/killed
+ *
+ * @param event
+ */
+function onShutdown(event) {
+	if (ProcessManager && processesRunning) {
+		processesRunning = false
+		
+		event.preventDefault()
+		
+		const killAll = async () => {
+			try {
+				await ProcessManager.stopAll()
+			} catch (err) {
+				log.warn(`Failed to cleanly shutdown processes`)
+				
+				
+			}
+			
+			BrowserWindow.getAllWindows().forEach(win => {
+				try {
+					win.destroy()
+				} catch (err) {
+					log.warn(`Failed to destroy window`,err)
+				}
+			})
+			
+			app.quit()
+		}
+		
+		killAll()
+	}
+}
+
+app.on('will-quit',onShutdown)
+
+/**
+ * Start all child processes
+ *
+ * JobServer
+ * DatabaseServer
+ */
 async function startProcesses() {
-	
-	const
-		ProcessManager = require('shared/ChildProcessManager').ChildProcessManager
+		
+	ProcessManager = require('shared/ChildProcessManager').ChildProcessManager
 	
 	// HMR STOP PROCESSES
 	if (module.hot) {
@@ -95,6 +141,8 @@ async function startProcesses() {
 	
 	log.info(`Starting all processes`)
 	await ProcessManager.startAll()
+	processesRunning = true
+	
 }
 
 /**

@@ -89,52 +89,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 	}
 	
-	async getAvailableRepos(...ids:any[]) {
-		
-		const
-			stores = Container.get(Stores),
-			availableRepos = await stores.availableRepo.bulkGet(...ids),
-			repoIds = availableRepos.map(item => item.repoId),
-			milestones = [],
-			labels = [],
-			assignees = []
-		
-		const
-			promises = [
-				stores.repo.bulkGet(...repoIds)
-					.then(models => {
-						availableRepos.forEach(it =>
-							it.repo = models.find(repo => repo.id ===  it.repoId))
-					}),
-	
-				stores.label.findByRepoId(...repoIds)
-					.then(models => {
-						labels.push(...models)
-						availableRepos.forEach(it =>
-							it.labels = models.filter(label =>  label.repoId ===  it.repoId))
-					}),
-	
-				stores.milestone.findByRepoId(...repoIds)
-					.then(models => {
-						milestones.push(...models)
-						availableRepos.forEach(it =>
-							it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
-					}),
-	
-				stores.user.findByRepoId(...repoIds)
-					.then(models => {
-						assignees.push(...models)
-						availableRepos.forEach(it =>
-							it.collaborators = models.filter(user => user.repoIds.includes(it.repoId)))
-					})
-
-		]
-		
-		
-		await Promise.all(promises)
-		
-		return {availableRepos,milestones,labels,assignees}
-	}
 	
 	
 	async getReposWithValues(...repoIds) {
@@ -166,21 +120,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	async internalLoadAvailableRepos() {
-		const
-			stores = Container.get(Stores)
-		
-		let
-			availRepos = await stores.availableRepo.findAll(),
-			availRepoIds = availRepos.filter(availRepo => !availRepo.deleted).map(it => it.id)
-		
-		// Filter Deleted
-		
-		const {availableRepos,milestones,labels,assignees} = await this.getAvailableRepos(...availRepoIds)
-		
-		this.updateAvailableRepos(availableRepos,milestones,labels,assignees)
-		return availableRepos
-	}
 	
 	/**
 	 * get the last repo sync time
@@ -265,9 +204,63 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 	@Action()
 	loadAvailableRepos() {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			log.info(`Getting available repos`)
-			return this.internalLoadAvailableRepos()
+			
+			const
+				stores = Container.get(Stores),
+				actions = this.withDispatcher(dispatch,getState)
+			
+			let
+				availRepos = await stores.availableRepo.findAll(),
+				availRepoIds = availRepos.filter(availRepo => !availRepo.deleted).map(it => it.id)
+			
+			log.info(`Got available repos `, availRepos,availRepoIds)
+			// Filter Deleted
+			
+			const
+				repoIds = availRepos.map(item => item.repoId),
+				milestones = [],
+				labels = [],
+				assignees = []
+			
+			const
+				promises = [
+					stores.repo.bulkGet(...repoIds)
+						.then(models => {
+							availRepos.forEach(it =>
+								it.repo = models.find(repo => repo.id ===  it.repoId))
+						}),
+					
+					stores.label.findByRepoId(...repoIds)
+						.then(models => {
+							labels.push(...models)
+							availRepos.forEach(it =>
+								it.labels = models.filter(label =>  label.repoId ===  it.repoId))
+						}),
+					
+					stores.milestone.findByRepoId(...repoIds)
+						.then(models => {
+							milestones.push(...models)
+							availRepos.forEach(it =>
+								it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
+						}),
+					
+					stores.user.findByRepoId(...repoIds)
+						.then(models => {
+							assignees.push(...models)
+							availRepos.forEach(it =>
+								it.collaborators = models.filter(user => user.repoIds.includes(it.repoId)))
+						})
+				
+				]
+			
+			
+			await Promise.all(promises)
+			
+			log.info(`Got all avail repo parts`,availRepos,milestones,labels,assignees)
+			this.updateAvailableRepos(availRepos,milestones,labels,assignees)
+			
 		}
 	}
 
@@ -281,7 +274,8 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	setRepoSelected(selectedRepoId:number,selected:boolean) {
 		return (state:RepoState) => state.set(
 			'selectedRepoIds',
-			state.selectedRepoIds.filter(repoIdPredicate(selectedRepoId))
+			state
+				.selectedRepoIds.filter(repoIdPredicate(selectedRepoId))
 				.concat(selected ? [selectedRepoId] : [])
 		)
 	}
@@ -461,9 +455,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			// dataActions.updateModels(AvailableRepo.$$clazz,{[`${availRepoId}`]:newAvailRepo})
 			//actions.updateAvailableRepo(newAvailRepo)
 
-			await this.internalLoadAvailableRepos()
+			this.loadAvailableRepos()
 			log.info('Saved avail repo, setting enabled to',enabled)
-			return true
+			
 		}
 	}
 

@@ -7,6 +7,7 @@ import {Transport} from "shared/net/Transport"
 import {ProcessType} from "shared/ProcessType"
 import VariableProxy from 'shared/util/VariableProxy'
 import { DatabaseServerName } from "shared/Constants"
+import { cloneObject } from "shared/util"
 const TIMEOUT = 120000
 
 const
@@ -174,7 +175,9 @@ export class DatabaseClient {
 	private onResponse = (resp:IDatabaseResponse) => {
 		log.debug('Response Received',resp.requestId)
 
-		const pendingRequest = this.pendingRequests[resp.requestId]
+		const
+			pendingRequest = this.pendingRequests[resp.requestId]
+		
 		//const pendingRequest = this.pendingRequests.get(resp.requestId)
 		if (!pendingRequest) {
 			log.error(`Response received, but no request found with provided id: ${resp.requestId}`,resp.error)
@@ -184,7 +187,7 @@ export class DatabaseClient {
 		if (resp.error)
 			pendingRequest.deferred.reject(_.isError(resp.error) ? resp.error : new Error(resp.error as any))
 		else
-			pendingRequest.deferred.resolve(resp.result)
+			pendingRequest.deferred.resolve(cloneObject(resp.result))
 
 	}
 

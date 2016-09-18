@@ -251,8 +251,9 @@ export default class ChildProcessRenderer {
 	}
 	
 	private handleClose = (event) => {
-		log.error(`Child close`,event)
-		this.handleExit(event)
+		log.info(`Child closed ${this.processType}`)
+		this.browserWindow = null
+		
 	}
 	
 	/**
@@ -423,7 +424,14 @@ export default class ChildProcessRenderer {
 			return
 		
 		this.stopDeferred = Promise.defer()
-		this.browserWindow.close()
+		try {
+			if (this.browserWindow.isClosable())
+				this.browserWindow.close()
+			else
+				this.browserWindow.destroy()
+		} catch (err) {
+			log.error(`Failed to cleanly stop window`, err)
+		}
 		this.browserWindow = null
 		
 		return this.stopDeferred.promise
@@ -518,6 +526,8 @@ export default class ChildProcessRenderer {
 				.on('did-fail-load',this.handleError)
 				.on('did-finish-load',() => {
 					log.info(`Web page loaded and is ready`)
+					if (!this.runningFlag.promise.isResolved())
+						this.runningFlag.resolve()
 				})
 				.on('destroyed',this.handleExit)
 				.on('dom-ready', this.connectToChild)
@@ -529,6 +539,13 @@ export default class ChildProcessRenderer {
 			// })
 			//this.browserWindow.webContents
 			
+			
+			process.on('beforeExit',() => {
+				try {
+					this.browserWindow.close()
+				} catch (err) {}
+			})
+				
 			
 			// 1-tick
 			await Promise.setImmediate()

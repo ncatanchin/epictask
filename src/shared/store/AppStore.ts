@@ -182,7 +182,7 @@ function initStore(devToolsMode = false,defaultState = null) {
  * A store specifically for testing & storybook
  */
 export function loadAndInitStorybookStore() {
-	const enhancers = [makeReactotronEnhancer(),applyMiddleware(...middleware)]
+	const enhancers = [applyMiddleware(...middleware)]
 	
 	//enhancers.push(applyMiddleware(createLogger()))
 	

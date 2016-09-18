@@ -18,7 +18,7 @@ import {Container} from 'typescript-ioc'
 import {
 	issueSortAndFilterSelector,
 	selectedIssueIdsSelector,
-	issueStateSelector, issueIdsSelector, issuesSelector, issueItemsSelector,
+	issueStateSelector, issueIdsSelector, issuesSelector, issueItemsSelector, selectedIssueIdSelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -44,6 +44,7 @@ import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
 import { HotKeys } from "ui/components/common/Other"
 import { VisibleList } from "ui/components/common/VisibleList"
 import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getStoreState } from "shared/store"
 
 
 // Constants & Non-typed Components
@@ -107,6 +108,7 @@ const baseStyles = createStyles({
 		FillWidth,
 		FlexAlignStart,
 		{
+			height: rem(9.1),
 			padding: '1.5rem 1rem 0rem 1rem',
 			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
@@ -184,6 +186,11 @@ const baseStyles = createStyles({
 	 */
 	issueLabels: [makePaddingRem(), FlexScale, {
 		overflowX: 'auto',
+		
+		wrapper: [FlexScale,{
+			overflow: 'hidden',
+			marginRight: rem(1)
+		}],
 		//flexWrap: 'wrap',
 		
 		label: {
@@ -259,8 +266,6 @@ export interface IIssuesPanelProps {
 	milestones?: Milestone[]
 	assignees?:User[]
 	saving?: boolean
-	selectedIssue?: Issue
-	selectedIssueIds?:number[]
 	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
 	
@@ -269,6 +274,8 @@ export interface IIssuesPanelProps {
 export interface IIssuesPanelState {
 	firstSelectedIndex?: number
 	issueList?: any
+	srcItems?: IIssueListItem<any>[]
+	groups?:IIssueListItem<IIssueGroup>[]
 	items?: IIssueListItem<any>[]
 	issueGroupsVisibility?: Map<string,boolean>
 	
@@ -281,32 +288,20 @@ export interface IIssuesPanelState {
  * @class IssuesPanel
  * @constructor
  **/
-@HotKeyContext()
+
 @connect(createStructuredSelector({
 	enabledRepoIds: enabledRepoIdsSelector,
-	selectedIssueIds: selectedIssueIdsSelector,
 	issueSortAndFilter: issueSortAndFilterSelector,
-	items: issueItemsSelector,
+	allItems: issueItemsSelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
 	saving: (state) => issueStateSelector(state).issueSaving
-}, createDeepEqualSelector))
-
-
-
+}))
 @ThemedStyles(baseStyles, 'issuesPanel')
+@HotKeyContext()
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
 	
-	static defaultProps = {
-		allItems: []
-	}
-	
-	constructor(props,context) {
-		super(props,context)
-		
-		
-	}
 	
 	
 	uiActions: UIActionFactory = getUIActions()
@@ -316,36 +311,49 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	private updateState = (props = this.props) => {
 		const
 			{allItems} = props,
-			firstSelectedIndex = _.get(this.state,'firstSelectedIndex',-1),
-			allGroups:IIssueListItem<IIssueGroup>[] = allItems.filter(item => isGroupListItem(item))
-		
+			firstSelectedIndex = _.get(this.state,'firstSelectedIndex',-1)
+			
 		let
+			srcItems = _.get(this.state,'srcItems',[]),
+			items = _.get(this.state,'items',null),
+			groups = _.get(this.state,'groups',[]),
 			issueGroupsVisibility = _.get(this.state,'issueGroupsVisibility',Map<string,boolean>())
 		
+		if (!items || srcItems !== allItems) {
+			srcItems = allItems
+			groups = allItems.filter(item => isGroupListItem(item))
+			// Create default group visibility map
+			groups
+				.filter(item => !issueGroupsVisibility.has(item.item.id))
+				.forEach(itemGroup => {
+					issueGroupsVisibility = issueGroupsVisibility.set(itemGroup.id,true)
+				})
+			
+			const excludedIssueIds = groups
+				.filter(itemGroup => !issueGroupsVisibility.get(itemGroup.id))
+				.reduce((issueIds,nextItemGroup) => {
+					
+					const
+						groupIssueIds = nextItemGroup.item.items.map(issueItem => issueItem.item.id)
+					
+					issueIds.push(...groupIssueIds)
+					return issueIds
+				},[])
+			
+			items = srcItems.filter(item => isGroupListItem(item) || !excludedIssueIds.includes(item.item.id))
+		}
 		
-		// Create default group visibility map
-		allGroups
-			.filter(item => !issueGroupsVisibility.has(item.item.id))
-			.forEach(itemGroup => {
-				issueGroupsVisibility = issueGroupsVisibility.set(itemGroup.id,true)
-			})
+		//log.info(`using all items`,allItems.length,allItems)
+		
+		
 		
 		// Based on group visibility, determine excluded issue ids
-		const excludedIssueIds = allGroups
-			.filter(itemGroup => !issueGroupsVisibility.get(itemGroup.id))
-			.reduce((issueIds,nextItemGroup) => {
-				
-			const
-					groupIssueIds = nextItemGroup.item.items.map(issueItem => issueItem.item.id)
-				
-				issueIds.push(...groupIssueIds)
-				return issueIds
-			},[])
 		
+			
 		this.setState({
-			issueGroupsVisibility,
-			items: allItems.filter(item => isGroupListItem(item) || !excludedIssueIds.includes(item.item.id)),
-			firstSelectedIndex
+				issueGroupsVisibility,
+				items,
+				firstSelectedIndex
 		})
 	}
 	
@@ -367,13 +375,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	private onEnter = () => {
 		const
 			{
-				issueSortAndFilter,
-				selectedIssue,
-				selectedIssueIds
+				issueSortAndFilter
 			} = this.props,
 			{items} = this.state,
 			{groupBy} = issueSortAndFilter.issueSort
 			
+		const
+			selectedIssueIds = selectedIssueIdSelector(getStoreState()),
+			selectedIssue = selectedIssueIds && selectedIssueIds.length === 1 &&
+				items.find(item => !isGroupListItem(item) && item.item.id === selectedIssueIds[0])
 		
 		log.debug('Enter pressed', selectedIssueIds, selectedIssue)
 		
@@ -410,7 +420,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param event
 	 */
 	private onDelete = (event) => {
-		const {selectedIssueIds} = this.props
+		const
+			selectedIssueIds = selectedIssueIdSelector(getStoreState())
+		
 		log.info(`OnDelete - going to remove`, selectedIssueIds)
 		this.issueActions.setIssueState('closed', ...selectedIssueIds)
 	}
@@ -457,11 +469,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		return (event: React.KeyboardEvent<any> = null) => {
 			log.info(`Move selector`,event)
 			const
-				{editingInline,selectedIssueIds} = this.props,
+				{editingInline} = this.props,
 				{items,firstSelectedIndex} = this.state,
 				issueItems = items.filter(it => it.type === IssueListItemType.Issue),
 				issueCount = issueItems.length
-				
+			
+			const
+				selectedIssueIds = selectedIssueIdSelector(getStoreState())
 			
 			let
 				index = ((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
@@ -572,7 +586,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	getSelectionBounds() {
 		const
 			{items} = this.state,
-			{selectedIssueIds} = this.props
+			selectedIssueIds = selectedIssueIdSelector(getStoreState())
 		
 		let
 			startIndex = -1,
@@ -614,7 +628,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	onIssueSelected = (event: MouseEvent, issue) => {
 		let
-			{selectedIssueIds} = this.props,
+			selectedIssueIds = selectedIssueIdSelector(getStoreState()),
 			{items} = this.state
 		
 		// Get the issue index for track of "last index"
@@ -687,9 +701,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	/**
 	 * on mount set default state
 	 */
-	componentWillMount = () => this.updateState()
+	componentWillMount() {
+		this.updateState()
+	}
 	
-	componentWillReceiveProps = (nextProps) => this.updateState(nextProps)
+	componentWillReceiveProps(nextProps) {
+		log.info(`Got new props`)
+		this.updateState(nextProps)
+	}
 	
 	/**
 	 * Make issue render
@@ -702,7 +721,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		 * @param key
 		 * @returns {any}
 		 */
-		return (index, key) => {
+		return (items:IIssueListItem<any>[],index:number) => {
 			const
 				{
 					styles,
@@ -713,7 +732,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					editingInline,
 					editInlineConfig
 				} = this.props,
-				{items,issueGroupsVisibility} = this.state,
+				{issueGroupsVisibility} = this.state,
 				item = items[index]
 			
 			const
@@ -726,7 +745,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				
 				if (index === inlineIssueIndex) {
 					// Inline issue editor
-					return <IssueEditInline key={key}>
+					return <IssueEditInline key={'edit-inline'}>
 						inline create here
 					</IssueEditInline>
 				}
@@ -737,6 +756,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				
 				// GROUP
 				<IssueGroupHeader
+					key={item.id}
 					onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
 					styles={styles}
 					expanded={issueGroupsVisibility.get(item.item.id)}
@@ -744,7 +764,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				
 				// ISSUE
 				<IssueItem
-					key={key}
+					key={item.id}
 	        styles={styles}
 	        item={item}
 					groupBy={groupBy}
@@ -765,19 +785,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				styles,
 				issueSortAndFilter,
 				editingInline,
-				selectedIssueIds,
 			} = this.props,
 			{items} = this.state,
 			{palette} = theme,
 			{groupBy} = issueSortAndFilter.issueSort,
 			
 		
-			validSelectedIssueIds = selectedIssueIds
-					.filter(issueId =>
-						!_.isNil(items.find(item =>
-							!isGroupListItem(item) && item.item.id === issueId))),
-			
-			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
+			// validSelectedIssueIds = selectedIssueIds
+			// 		.filter(issueId =>
+			// 			!_.isNil(items.find(item =>
+			// 				!isGroupListItem(item) && item.item.id === issueId))),
+			//
+			// allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
+			allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
 			
@@ -811,7 +831,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 							<VisibleList items={items}
 							             itemRenderer={this.makeRenderIssueListItem()}
 							             initialItemsPerPage={50}
-							             itemHeight={100}
+							             itemHeight={convertRem(9.1)}
 							             bufferPages={3}
 							/>
 							                
