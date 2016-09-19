@@ -3,20 +3,24 @@ require('../tools/global-env')
 
 
 const
+	{
+		isDev,
+		env,
+		baseDir,
+		srcRootDir,
+		chalk,
+		TypeScriptEnabled
+	} = global,
 	webpack = require('webpack'),
 	assert = require('assert'),
 	path = require('path'),
 	fs = require('fs'),
-	HtmlWebpackPlugin = require('html-webpack-plugin')
+	HtmlWebpackPlugin = require('html-webpack-plugin'),
+	ForkCheckerPlugin = (TypeScriptEnabled) ? require('awesome-typescript-loader').ForkCheckerPlugin : null
+	
 
 // Import globals
-const {
-	isDev,
-	env,
-	baseDir,
-	srcRootDir,
-	chalk
-} = global
+
 
 
 /**
@@ -172,7 +176,7 @@ const config = {
 		fallback: [path.resolve(baseDir,'src')],
 		
 		// EXTENSIONS
-		extensions: ['', '.js', '.jsx'],
+		extensions: TypeScriptEnabled ? ['', '.ts','.tsx','.js', '.jsx'] : ['', '.js', '.jsx'],
 		
 		// PACKAGE MAIN
 		packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
@@ -203,6 +207,11 @@ const config = {
 	
 	// PLUGINS
 	plugins: [
+		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+		...(ForkCheckerPlugin ?
+			[new ForkCheckerPlugin()] :
+			[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
+		
 		// HAPPY PACK PLUGINS
 		...happyPlugins,
 		
@@ -213,7 +222,6 @@ const config = {
 		// }),
 		
 		// BASICS
-		new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/]),
 		new webpack.IgnorePlugin(/vertx/),
 		new webpack.optimize.OccurrenceOrderPlugin(),
 		new webpack.NoErrorsPlugin(),
@@ -256,8 +264,8 @@ if (isDev) {
 	_.merge(config, {
 		
 		//In development, use inline source maps
-		//devtool: '@inline-source-map',
-		//devtool: 'cheap-module-inline-source-map',
+		//devtool: '#inline-source-map',
+		devtool: '#cheap-module-inline-source-map',
 		
 		// In development specify absolute path - better debugger support
 		output:  {

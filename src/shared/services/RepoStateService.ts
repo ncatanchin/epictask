@@ -3,10 +3,11 @@ import {BaseService, IServiceConstructor, RegisterService} from 'shared/services
 import ValueCache from 'shared/util/ValueCache'
 import {ProcessType} from "shared/ProcessType"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
-import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import { enabledRepoIdsSelector, enabledAvailableReposSelector } from "shared/actions/repo/RepoSelectors"
 import { getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
 import { RepoKey, IssueKey } from "shared/Constants"
+import { getStoreState } from "shared/store"
 
 const log = getLogger(__filename)
 
@@ -52,10 +53,19 @@ export class RepoStateService extends BaseService {
 		repoActions.loadAvailableRepos()
 		
 		
-		
+		let enabledReposValueCache = new ValueCache(_.debounce((enabledRepos) => {
+			log.info(`CHANGED: Enabled repo`,enabledRepos)
+			getIssueActions().loadIssues()
+		},150),true)
 		
 		this.unsubscribers.push(
-			this.store.observe([RepoKey,'enabledRepoIds'],this.enabledReposChanged),
+			this.store.observe([RepoKey,'availableRepos'],(newValue) => {
+				const
+					enabledRepos = enabledAvailableReposSelector(getStoreState())
+				
+				log.info(`Enabled repo`,enabledRepos)
+				enabledReposValueCache.set(enabledRepos)
+			}),
 			this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
 		)
 		
@@ -102,15 +112,17 @@ export class RepoStateService extends BaseService {
 	
 	
 	
-	/**
-	 * When enabled repos change,
-	 * load supporting data/models
-	 */
-	private enabledReposChanged = (newValue,oldValue) => {
-		log.info(`Old repo ids`,oldValue, `New Repo Ids`,newValue)
-		getIssueActions().loadIssues()
-		
-	}
+	
+	// /**
+	//  * When enabled repos change,
+	//  * load supporting data/models
+	//  */
+	// private checkEnabledRepos = _.debounce(() => {
+	//
+	// 	log.info(`Old repo ids`,oldValue, `New Repo Ids`,newValue)
+	// 	getIssueActions().loadIssues()
+	//
+	// },150)
 }
 
 export default RepoStateService

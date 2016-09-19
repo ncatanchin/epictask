@@ -1,18 +1,21 @@
 
+import {FinderRequest} from 'typestore'
+import {ActionFactory, Action, ActionReducer} from 'typedux'
+import {List} from 'immutable'
+
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
-import {ActionFactory, Action, ActionReducer} from 'typedux'
-import {Dialogs, IssueKey} from 'shared/Constants'
+import { Dialogs, IssueKey, FinderItemsPerPage } from 'shared/Constants'
 import {cloneObject, extractError} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
-	IssueMessage, IssueState, IIssueSort, IIssueFilter, TIssueSortAndFilter,
+	IssueMessage, IssueState, TIssueSortAndFilter,
 	TEditCommentRequest
 } from './IssueState'
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {
-	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailReposSelector
+	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 
 import {
@@ -28,8 +31,13 @@ import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
 import {Provided} from 'shared/util/ProxyProvided'
-import { User, AvailableRepo } from "shared/models"
+import { User, AvailableRepo, CommentStore } from "shared/models"
 import { RegisterActionFactory } from "shared/Registry"
+import { pagedFinder } from "shared/util/RepoUtils"
+import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
+import { IIssueSort } from "shared/actions/issue/IIssueSort"
+import { isListType } from "shared/util"
+
 
 /**
  * Created by jglanz on 5/29/16.
@@ -135,17 +143,28 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	
 	@ActionReducer()
-	private setIssues(issues:Issue[]) {
-		return (issueState:IssueState) => issueState.set('issues',cloneObject(issues))
+	private setIssues(issues:List<Issue>) {
+		return (issueState:IssueState) =>
+			issueState
+				.set('issues',issues)
+				.set('issueIndexes',issues.map((issue,index) => index))
 	}
 	
 	@Action()
 	loadIssues() {
 		return async (dispatch,getState) => {
 			const
-				enabledRepos = enabledAvailReposSelector(getState()),
-				issues = await this.getIssues(enabledRepos)
+				enabledRepos = enabledAvailableReposSelector(getState())
 			
+			let issues
+			if (!enabledRepos || enabledRepos.size === 0) {
+				log.warn(`No enabled repos found, can not load issues`)
+				issues = List<Issue>()
+			} else {
+				issues = await this.getIssues(enabledRepos.toArray())
+				log.info(`Loaded issues`,issues)
+			}
+				
 			this.setIssues(issues)
 		}
 	}
@@ -157,25 +176,46 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {Promise<Issue[]>}
 	 */
 	
-	async getIssues(availRepos:AvailableRepo[]) {
+	async getIssues(availRepos:List<AvailableRepo>|AvailableRepo[]) {
 		
-		availRepos = _.nilFilter(availRepos)
+		if (isListType(availRepos,AvailableRepo))
+			availRepos = availRepos.toArray()
+		
+		log.info(`Getting issues for avail repos`,availRepos)
+		
+		availRepos = _.nilFilter(availRepos) as AvailableRepo[]
 		
 		let
-			issues = await Container.get(Stores)
-				.issue
-				.findByRepoId(...availRepos.map(availRepo => availRepo.repoId))
+			issues = List<Issue>()
+		
+		await Promise.all(availRepos.map(async (availRepo) => {
+			const repoIssues:List<Issue> = await pagedFinder(
+				Issue,
+				FinderItemsPerPage,
+				getStores().issue,
+				(issueStore:IssueStore,nextRequest:FinderRequest) =>
+					issueStore.findByIssuePrefix(nextRequest,availRepo.repoId)
+			)
+			
+			
+			issues = issues.concat(repoIssues) as List<Issue>
+		}))
+				
 		
 		issues = issues
 			.filter(issue => {
-				const
-					availRepo = availRepos.find(availRepo => availRepo.repoId === issue.repoId)
+				const hasRepoId = issue && !!issue.repoId
 				
-				return availRepo && availRepo.repoId
+				if (!hasRepoId) {
+					log.warn(`Issue does not have repoId`,issue)
+				}
+				
+				return hasRepoId
 			})
 			.map(issue => {
 				const
-					availRepo = availRepos.find(availRepo => availRepo.repoId === issue.repoId),
+					availRepo = (availRepos as AvailableRepo[])
+						.find(availRepo => availRepo.repoId === issue.repoId),
 					repo = availRepo.repo
 					
 				
@@ -185,7 +225,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					labels: !issue.labels ? [] : issue.labels.map(label => availRepo.labels.find(it => it.url === label.url)),
 					milestone: issue.milestone && availRepo.milestones.find(it => it.id === issue.milestone.id)
 				})
-			})
+			}) as List<Issue>
 		
 		
 		return issues
@@ -635,16 +675,16 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				return
 			}
 			
-			const state = getState()
+			
 			const
-				availRepoIds = availableRepoIdsSelector(state),
-				availRepos = _.sortBy(await availRepoStore.bulkGet(...availRepoIds), 'name')
+				availRepoIds = availableRepoIdsSelector(getState()),
+				availRepos = _.sortBy(await availRepoStore.bulkGet(...availRepoIds.toArray()), 'name')
 			
 			// If no from issue was provided then use the selected
 			// issue if available - otherwise totally empty
 			if (!fromIssue) {
 				const
-					selectedIssueIds = selectedIssueIdsSelector(state) || [],
+					selectedIssueIds = selectedIssueIdsSelector(getState()) || [],
 					selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
 				
 				if (selectedIssueId)
@@ -735,8 +775,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	
+	@ActionReducer()
 	private filteringAndSorting(issueFilter: IIssueFilter = null, issueSort: IIssueSort = null) {
-		return (issueState: IssueState, getState) => issueState.withMutations((newIssueState: IssueState) => {
+		return (issueState: IssueState) => issueState.withMutations((newIssueState: IssueState) => {
 			
 			if (issueFilter)
 				newIssueState.set('issueFilter', issueFilter)
@@ -869,7 +910,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issueSort
 	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
 	 */
-	@ActionReducer()
+	
 	setFilteringAndSorting(issueFilter: IIssueFilter = null, issueSort: IIssueSort = null) {
 		return this.filteringAndSorting(issueFilter, issueSort)
 	}
@@ -891,12 +932,12 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			issueState = actions.state,
 			issueStore = actions.stores.issue,
 			issueFilter = issueState.issueFilter,
-			availRepos = enabledAvailReposSelector(getState),
+			availRepos = enabledAvailableReposSelector(getState),
 			repoIds = availRepos.map(availRepo => availRepo.repoId)
 		
 		log.info(`Loading issues for repos`, repoIds)
 		
-		this.setIssues(await this.getIssues(enabledAvailReposSelector(getState())))
+		this.setIssues(await this.getIssues(availRepos))
 		
 	}
 	
@@ -921,7 +962,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param comments
 	 */
 	@ActionReducer()
-	private setActivity(comments:Comment[]) {
+	private setActivity(comments:List<Comment>) {
 		return (state:IssueState) =>
 			state.set('comments',comments)
 	}
@@ -933,12 +974,20 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {{comments: any}}
 	 */
 	async getActivity(issue:Issue) {
-		const
-			comments = await getStores().comment.findByIssueNumber(issue.repoId, issue.number)
 		
+		
+		
+		const
+			comments:List<Comment> = await pagedFinder(
+				Comment,
+				FinderItemsPerPage,
+				getStores().comment,
+				(commentStore:CommentStore,nextRequest:FinderRequest) =>
+					commentStore.findByCommentPrefix(nextRequest,issue.repoId, issue.number)
+			)
 		
 		return {
-			comments: _.orderBy(_.uniqBy(comments,['id']),['created_at'],['desc'])
+			comments
 		}
 		
 	}
@@ -949,10 +998,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			// Issue repo
 			let
-				issues:Issue[] = issuesSelector(getState())
+				issues:List<Issue> = issuesSelector(getState())
 			
 			//log.info(`Loading issue activity`,issues,issueId)
-			if (!Array.isArray(issues))
+			if (!isListType(issues,Issue))
 				return
 			
 			let

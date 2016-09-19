@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {List} from 'immutable'
 import * as ReactDOM from 'react-dom'
 import * as React from 'react'
 import {Paper, TextField} from 'material-ui'
@@ -56,7 +57,7 @@ export interface ISearchPanelState {
 	resultsListRef?:any
 	provider?:SearchProvider
 	results?:SearchResult[]
-	items?:SearchItem[]
+	items?:List<SearchItem>
 	unsubscribe?:Function
 }
 
@@ -143,11 +144,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param results
 	 * @returns {SearchItem[]}
 	 */
-	getItems(results:SearchResult[] = []):SearchItem[] {
-		return results.reduce((items,result) => {
-			items.push(...result.items)
-			return items
-		},[])
+	getItems(results:SearchResult[] = []):List<SearchItem> {
+		return results.reduce((items,result) =>
+			items.concat(result.items) as List<SearchItem>
+		,List<SearchItem>())
 	}
 	
 	/**
@@ -180,7 +180,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const
 			results:SearchResult[] = _.get(this,'state.results',[]),
 			items = this.getItems(results),
-			totalItemCount = items.length
+			totalItemCount = items.size
 		
 		
 		return (assign(newState,{
@@ -302,7 +302,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		
 		if (!item) {
 			if (items && isNumber(selectedIndex)) {
-				item = items[selectedIndex]
+				item = items.get(selectedIndex)
 			}
 
 			if (!item) {
@@ -522,7 +522,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					<SearchResultsList ref={(resultsListRef) => this.setState({resultsListRef})}
 					                   anchor={'#' + searchPanelId}
 					                   selectedIndex={selectedIndex}
-					                   searchItems={items || []}
+					                   searchItems={items}
 					                   searchId={searchId}
 					                   open={resultsOpen}
 					                   inline={expanded}

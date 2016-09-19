@@ -3,7 +3,7 @@ import {Repo as TSRepo, IModel} from 'typestore'
 import ProcessType from "shared/ProcessType"
 import {Stores} from 'shared/Stores'
 import {BaseService, RegisterService, IServiceConstructor} from 'shared/services'
-import {loadModelClasses,chunkSave,chunkRemove as chunkRemoveUtil} from 'shared/db/DatabaseUtil'
+import {loadModelClasses,chunkSave} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
 import { canProxyProperty } from "shared/util"
 
@@ -184,10 +184,11 @@ export class DatabaseClientService extends BaseService {
  * Chunk remove utility
  *
  * @param modelIds
+ * @param repo
  * @returns {Promise<undefined>}
  */
-export async function chunkRemove(modelIds) {
-	return chunkRemoveUtil(databaseService,modelIds)
+export async function chunkRemove(modelIds,repo:TSRepo<any>) {
+	return repo.bulkRemove(...modelIds)
 }
 
 // Re-export stores & utils

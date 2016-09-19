@@ -1,10 +1,9 @@
-
 import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
 import {Issue} from 'shared/models/Issue'
 
 export interface IIssueGroup {
 	id:string
-	items:IIssueListItem<Issue>[]
+	issueIndexes:number[]
 	size:number
 	index:number
 	groupBy: TIssueFieldsGroupable
@@ -40,7 +39,7 @@ export enum IssueListItemType {
  */
 export interface IIssueListItem<T extends Issue|IIssueGroup> {
 	type:IssueListItemType
-	id:string
+	id:string|number
 	item:T
 }
 

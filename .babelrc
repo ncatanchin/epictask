@@ -5,7 +5,7 @@
 		"react",
 		"async-to-bluebird"
 	],
-	"sourceMaps": "inline",
+	"sourceMaps": "both",
 	"plugins": [
 		"transform-es2015-classes",
 		"transform-runtime"

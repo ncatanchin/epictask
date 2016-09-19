@@ -18,7 +18,8 @@
         "experimentalDecorators": true,
         "preserveConstEnums": true,
         "allowSyntheticDefaultImports": true,
-        "inlineSourceMap": true,
+        "sourceMap": true,
+        "pretty": true,
         "outDir": "./dist/out",
         "paths": {
             "tests/*": [
@@ -72,6 +73,29 @@
         ".happy**/*.*",
         "node_modules",
         "node_modules.disk"
-    ]
+    ],
+    "awesomeTypescriptLoaderOptions": {
+        "useBabel": true,
+        "forkChecker": true,
+        "useCache": true,
+        "babelOptions": {
+            "presets": [
+                "es2016-node5",
+                "stage-0",
+                "react",
+                "async-to-bluebird"
+            ],
+            "sourceMaps": "both",
+            "plugins": [
+                "transform-es2015-classes",
+                "transform-runtime"
+            ],
+            "env": {
+                "development": {
+                    "plugins": ["react-hot-loader/babel"]
+                }
+            }
+        }
+    }
     
 }

@@ -38,22 +38,22 @@ export async function chunkSave(models,modelStore) {
 	}
 }
 
-/**
- * Bulk remove models
- *
- * @param databaseService
- * @param modelIds
- */
-export async function chunkRemove(databaseService,modelIds) {
-	
-	modelIds = _.uniq(modelIds.map(modelId => `${modelId}`))
-	
-	const chunks = _.chunk(modelIds,CHUNK_SIZE)
-	const {dbProxy} = databaseService
-	assert(dbProxy,'could not get database reference in chunkRemove')
-	
-	for (let chunk of chunks) {
-		await dbProxy.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
-	}
-}
+// /**
+//  * Bulk remove models
+//  *
+//  * @param databaseService
+//  * @param modelIds
+//  */
+// export async function chunkRemove(databaseService,modelIds) {
+//
+// 	modelIds = _.uniq(modelIds.map(modelId => `${modelId}`))
+//
+// 	const chunks = _.chunk(modelIds,CHUNK_SIZE)
+// 	const {dbProxy} = databaseService
+// 	assert(dbProxy,'could not get database reference in chunkRemove')
+//
+// 	for (let chunk of chunks) {
+// 		await dbProxy.bulkDocs(chunk.map(_id => ({_id,_deleted:true})))
+// 	}
+// }
 

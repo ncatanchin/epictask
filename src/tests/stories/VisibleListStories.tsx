@@ -34,8 +34,9 @@ storiesOf('Visible List',module)
 		
 		return <VisibleList styles={{root:Fill}}
 		                    items={items}
+		                    itemCount={items.length}
 		                    itemHeight={100}
 		                    itemRenderer={itemRenderer}
 		                    initialItemsPerPage={30}
-		                    bufferPages={2}/>
+		                    />
 	})

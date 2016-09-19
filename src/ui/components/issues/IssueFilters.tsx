@@ -10,10 +10,13 @@ import {PureRender} from 'ui/components/common'
 import {Milestone} from 'shared/models/Milestone'
 import {Label} from 'shared/models/Label'
 import {
-	IIssueFilter, IIssueSort, IssueSortableFields,
+	IIssueSort, IssueSortableFields,
 	IssueGroupByFields, IssueGroupByNames,
 	IssueSortableFieldNames
-} from 'shared/actions/issue/IssueState'
+} from 'shared/actions/issue/IIssueSort'
+import {
+	IIssueFilter
+} from 'shared/actions/issue/IIssueFilter'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'

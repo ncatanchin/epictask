@@ -6,7 +6,7 @@ import {
 	FinderRequest,
 	FinderResultArray
 } from 'typestore'
-
+import {PouchDBFullTextFinder, PouchDBMangoFinder,PouchDBPrefixFinder,PouchDBModel,makePrefixEndKey} from 'typestore-plugin-pouchdb'
 
 //import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
@@ -14,17 +14,50 @@ import {Label} from './Label'
 import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
-import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+
 import {RegisterModel} from '../Registry'
+import { isNumber, isObjectType, isObject } from "shared/util"
 
 
 export type TIssueState = "open" | "closed"
 
 
+export function makeIssuePrefix(repoOrRepoId:number|Repo) {
+	const
+		repoId = (isNumber(repoOrRepoId)) ? repoOrRepoId : repoOrRepoId.id
+	
+	return `${repoId}-`
+}
+
+export function makeIssueId(issue:Issue)
+export function makeIssueId(repo:Repo,issue:Issue)
+export function makeIssueId(repoId:number,issueNumber:number)
+export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNumber:Issue|number = null) {
+	let repoId = -1, issueNumber = -1
+	if (isObject(issueOrRepoOrRepoId) && _.get(issueOrRepoOrRepoId,'repoId')) {
+		({repoId,number:issueNumber} = issueOrRepoOrRepoId as Issue)
+	} else if (isObjectType(issueOrRepoOrRepoId,Repo) && isObjectType(issueOrIssueNumber,Issue)) {
+		repoId = issueOrRepoOrRepoId.id
+		issueNumber = issueOrIssueNumber.number
+	} else if (isNumber(issueOrIssueNumber) && isNumber(issueOrRepoOrRepoId)) {
+		repoId = issueOrRepoOrRepoId
+		issueNumber = issueOrIssueNumber
+	}
+
+
+	return `${makeIssuePrefix(repoId)}${issueNumber}`
+}
+
 @RegisterModel
-@ModelDescriptor()
+@PouchDBModel({
+	keyMapper: makeIssueId
+})
 export class Issue extends DefaultModel {
 
+	static makeIssuePrefix = makeIssuePrefix
+	
+	static makeIssueId = makeIssueId
+	
 	/**
 	 * Revive from JS/JSON
 	 *
@@ -81,20 +114,47 @@ export class Issue extends DefaultModel {
 	comments_url: string;
 	events_url: string;
 	html_url: string;
+	
+	@AttributeDescriptor()
 	number: number;
-
+	
+	@AttributeDescriptor()
 	title: string;
+	
+	@AttributeDescriptor()
 	body: string;
+	
+	@AttributeDescriptor()
 	user: User;
+	
+	@AttributeDescriptor()
 	labels: Label[];
+	
+	@AttributeDescriptor()
 	assignee: User;
+	
+	@AttributeDescriptor()
 	milestone: Milestone;
+	
+	@AttributeDescriptor()
 	locked: boolean;
+	
+	@AttributeDescriptor()
 	comments: number;
+	
+	@AttributeDescriptor()
 	pull_request: PullRequest;
+	
+	@AttributeDescriptor()
 	closed_at: any;
+	
+	@AttributeDescriptor()
 	created_at: Date;
+	
+	@AttributeDescriptor()
 	updated_at: Date;
+	
+	@AttributeDescriptor()
 	closed_by: User;
 
 
@@ -114,95 +174,51 @@ export class IssueStore extends TSRepo<Issue> {
 	}
 
 
-	@PouchDBFullTextFinder({
-		textFields: ['title','body'],
-		limit: 200,
-	})
-	findWithText(request:FinderRequest,title:string):Promise<FinderResultArray<Issue>> {
-		return null
-	}
-
-
-	@PouchDBFullTextFinder({
-		textFields: ['title'],
-		limit: 200,
-	})
-	findByTitle(title:string):Promise<Issue[]> {
-		return null
-	}
-
+	
 	/**
-	 * Find all issues in provided repo ids
-	 * @param repoIds
+	 * Find all issues in provided repo id
+	 *
+	 * @param request
+	 * @param repoId
 	 * @returns {Promise<Issue[]>}
 	 */
-	@PouchDBMangoFinder({
-		includeDocs: true,
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
+	@PouchDBPrefixFinder({
+		keyProvider: (repoId:number) => {
+			const
+				startKey = makeIssuePrefix(repoId)
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
 	})
-	findByRepoId(...repoIds:number[]):Promise<Issue[]> {
-		return null
-	}
-
-
-
-	@PouchDBMangoFinder({
-		all:true,
-		includeDocs:false
-	})
-	findAll():Promise<number[]> {
-		return null
-	}
-
-
-	@PouchDBMangoFinder({
-		includeDocs: false,
-		indexFields: ['repoId'],
-		selector: (...repoIds) => ({
-			$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
-		})
-	})
-	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {
-		return null
-	}
-
-	@PouchDBMangoFinder({
-		includeDocs: false,
-		indexFields: ['repoId','state'],
-		selector: (state:TIssueState,...repoIds) => ({
-			state: {
-				$eq: state
-			},
-			$or: repoIds.map(repoId => ({repoId:{$eq:repoId}}))
-		})
-	})
-	findIdsByStateAndRepoId(state:TIssueState,...repoIds:number[]):Promise<number[]> {
+	findByIssuePrefix(request:FinderRequest,repoId:number):Promise<Issue[]> {
 		return null
 	}
 	
-	@PouchDBMangoFinder({
+	/**
+	 * Find all issues in provided repo id
+	 *
+	 * @param request
+	 * @param repoId
+	 * @returns {Promise<Issue[]>}
+	 */
+	@PouchDBPrefixFinder({
 		includeDocs: false,
-		indexFields: ['repoId','number'],
-		selector: (repoId,issueNumber) => ({
-			repoId:{
-				$eq:repoId
-			},
-			number:{
-				$eq:issueNumber
+		keyProvider: (repoId:number) => {
+			const
+				startKey = makeIssuePrefix(repoId)
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
 			}
-		})
+		}
 	})
-	findByRepoIdAndIssueNumber(repoId:number,issueNumber:number):Promise<Issue> {
+	findIdsByIssuePrefix(request:FinderRequest,repoId:number):Promise<string[]> {
 		return null
 	}
-
-
-
-
-
 }
 
 /**

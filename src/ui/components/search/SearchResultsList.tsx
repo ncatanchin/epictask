@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {List} from 'immutable'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
@@ -134,7 +135,7 @@ export interface ISearchResultsListProps {
 	inline?: boolean
 	theme?:any
 	open:boolean
-	searchItems:SearchItem[]
+	searchItems:List<SearchItem>
 	selectedIndex?:number
 	className?:string
 	onResultSelected?:(item:SearchItem) => void
@@ -355,7 +356,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		
 		log.debug(`Selected index in results ${selectedIndex}`)
 
-		const rows = _.nilFilter(searchItems.map((item,index) => {
+		const rows = searchItems.map((item,index) => {
 			
 
 			const
@@ -390,17 +391,18 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 					{itemContent}
 				</div>
 			)
-		}))
+		})
 
-		log.debug(`Rendering rows`,rows.length,rows)
+		log.debug(`Rendering rows`,rows.size,rows)
 		return rows
 
 	}
 
 
 	renderResults(props) {
-		const t = getTheme()
-		const {palette:p} = t
+		const
+			t = getTheme(),
+			{palette:p} = t
 
 		let resultsStyle = makeStyle(styles.results,{
 			backgroundColor: p.alternateBgColor,

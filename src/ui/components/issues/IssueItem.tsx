@@ -12,7 +12,7 @@ import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {Issue} from 'shared/models'
 
 import { IIssueGroup, IIssueListItem } from 'shared/actions/issue/IIssueListItems'
-import { selectedIssueIdsSelector, filteredAndSortedIssueItemsSelector } from "shared/actions/issue/IssueSelectors"
+import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
@@ -20,7 +20,6 @@ import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
 interface IIssueItemProps extends React.HTMLAttributes<any> {
 	styles:any
-	groupBy:string
 	item:IIssueListItem<Issue>
 	onSelected:(event:any, issue:Issue) => void
 	isSelected?:boolean
@@ -45,10 +44,16 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 		}
 	}
 ))
-@PureRender
+
 class IssueItem extends React.Component<IIssueItemProps,void> {
-
-
+	
+	shouldComponentUpdate(nextProps:IIssueItemProps) {
+		return (
+			this.props.isSelected !== nextProps.isSelected ||
+			this.props.isSelectedMulti !== nextProps.isSelectedMulti ||
+			_.get(this.props.item,'id',null) !== _.get(nextProps.item,'id',null)
+		)
+	}
 	
 	render() {
 		const
@@ -65,7 +70,8 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 			issueStyles = makeStyle(
 				styles.issue,
 				isSelected && styles.issue.selected,
-				(isSelectedMulti) && styles.issue.multi
+				(isSelectedMulti) && styles.issue.multi,
+				props.style
 			),
 			issueTitleStyle = makeStyle(
 				styles.issueTitle,

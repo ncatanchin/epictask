@@ -1,5 +1,5 @@
 import {RegisterModel} from 'shared/Registry'
-import {Record} from 'immutable'
+import {Record,List} from 'immutable'
 import {ActionMessage} from 'typedux'
 import { AvailableRepo, Milestone, User, Label } from "shared/models"
 
@@ -7,13 +7,9 @@ const log = getLogger(__filename)
 
 export const RepoStateRecord = Record({
 	reposIds:[],
-	enabledRepoIds:[],
-	selectedRepoIds:[],
-	availableRepoIds:[],
-	availableRepos:[],
-	enabledMilestones:[],
-	enabledAssignees:[],
-	enabledLabels:[]
+	availableRepos:List<AvailableRepo>(),
+	selectedRepoIds:[]
+	
 })
 
 /**
@@ -34,15 +30,8 @@ export class RepoState extends RepoStateRecord {
 		return {}
 	}
 	
-	repoIds:number[]
-	availableRepoIds:string[]
-	enabledRepoIds:number[]
 	selectedRepoIds:number[]
-	availableRepos:AvailableRepo[]
-	
-	enabledMilestones:Milestone[]
-	enabledAssignees:User[]
-	enabledLabels:Label[]
+	availableRepos:List<AvailableRepo>
 
 }
 

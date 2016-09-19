@@ -4,16 +4,25 @@ import {
 	FinderDescriptor,
 	DefaultModel,
 	DefaultValue,
+	
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey,PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import {User} from './User'
 import {RegisterModel} from '../Registry'
+import { Repo } from "shared/models"
+import { isNumber } from "shared/util"
 
+
+export function makeMilestoneId(milestone:Milestone) {
+	return `${milestone.repoId}-${milestone.id}`
+}
 
 @RegisterModel
-@ModelDescriptor()
+@PouchDBModel({
+	keyMapper: makeMilestoneId
+})
 export class Milestone extends DefaultModel {
 
 	/**
@@ -61,29 +70,47 @@ export class MilestoneStore extends TSRepo<Milestone> {
 		super(MilestoneStore,Milestone)
 	}
 
+	
 	/**
-	 * Find all issues in provided repo ids
-	 * @param repoIds
-	 * @returns {Promise<Milestone[]>}
+	 * Find all milestone ids for a repo
+	 *
+	 * @param repoId
+	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBMangoFinder({
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
+	@PouchDBPrefixFinder({
+		keyProvider: (repoIdOrRepo:number|Repo) => {
+			const
+				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
 	})
-	findByRepoId(...repoIds:number[]):Promise<Milestone[]> {
+	findByRepo(repoId:number|Repo):Promise<Milestone[]> {
 		return null
 	}
-
-	@PouchDBMangoFinder({
+	
+	/**
+	 * Find all milestone ids for a repo
+	 *
+	 * @param repoId
+	 * @returns {Promise<Comment[]>}
+	 */
+	@PouchDBPrefixFinder({
 		includeDocs: false,
-		indexFields: ['repoId'],
-		selector: (...repoIds) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
+		keyProvider: (repoIdOrRepo:number|Repo) => {
+			const
+				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
 	})
-	findIdsByRepoId(...repoIds:number[]):Promise<number[]> {
+	findIdsByRepo(repoId:number|Repo):Promise<string[]> {
 		return null
 	}
 

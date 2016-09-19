@@ -31,7 +31,7 @@ export class SyncAllReposExecutor implements IJobExecutor {
 
 		const
 			stores = Container.get(Stores),
-			availRepos = await stores.availableRepo.loadAll(),
+			availRepos = await stores.availableRepo.findAll(),
 			repoActions:RepoActionFactory = Container.get(RepoActionFactory)
 		
 		log.debug('Getting avail repos from DB, not state')

@@ -1,9 +1,9 @@
 
-import {Map} from 'immutable'
+import {Map,List} from 'immutable'
 import {IssueKey} from 'shared/Constants'
 
 import {Issue} from 'shared/models/Issue'
-import { IIssueFilter, IIssueSort, TIssueSortAndFilter, TEditCommentRequest } from 'shared/actions/issue/IssueState'
+import { TIssueSortAndFilter, TEditCommentRequest } from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 import {IssueState} from 'shared/actions/issue/IssueState'
@@ -16,6 +16,9 @@ import {
 } from "shared/actions/repo/RepoSelectors"
 import { Label, Milestone, User } from "shared/models"
 import {createSelector} from 'reselect'
+import { IIssueSort, TIssueSortDirection, TIssueFieldsGroupable } from "shared/actions/issue/IIssueSort"
+import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
+import { isListType } from "shared/util"
 
 const log = getLogger(__filename)
 
@@ -30,19 +33,36 @@ export const issueStateSelector = (state):IssueState => state.get(IssueKey) as I
 /**
  * Select all current issues
  */
-export const issuesSelector:(state) => Issue[] = (state):Issue[] => issueStateSelector(state).issues
+export const issuesSelector:(state) => List<Issue> = createSelector(
+	issueStateSelector,
+	(state) => state.issues
+)
+	
+
+/**
+ * Select all current issues
+ */
+export const issueIndexesSelector:(state) => List<number> = createSelector(
+	issueStateSelector,
+	(state) => state.issueIndexes
+)
 
 /**
  * Select all current issue ids
  */
-export const issueIdsSelector:(state) => number[] = (state):number[] => issueStateSelector(state).issues.map(issue => issue.id)
+export const issueIdsSelector:(state) => number[] =
+	createSelector(
+		issuesSelector,
+		(issues:List<Issue>) =>
+			issues.map(issue => issue.id).toArray()
+	)
 
 
 /**
  * Comments
  */
-export const commentsSelector:(state) => Comment[] =
-	(state):Comment[] => issueStateSelector(state).comments
+export const commentsSelector:(state) => List<Comment> =
+	(state) => issueStateSelector(state).comments
 
 /**
  * Issue sort and filter selector
@@ -84,7 +104,7 @@ export const selectedIssueIdSelector = createDeepEqualSelector(
 export const selectedIssueSelector = createSelector(
 	selectedIssueIdSelector,
 	issuesSelector,
-	(selectedIssueId:number,issues:Issue[]) =>
+	(selectedIssueId:number,issues:List<Issue>):Issue =>
 	selectedIssueId && issues && issues.find(it => it.id === selectedIssueId)
 )
 
@@ -161,194 +181,228 @@ export const issueFilterAssigneeSelector = createDeepEqualSelector(
 	}
 )
 
+
+export const groupBySelector = createSelector(
+	(state):TIssueFieldsGroupable => issueStateSelector(state).issueSort.groupBy,
+	(groupBy:TIssueFieldsGroupable) => groupBy
+)
+
+
+
 /**
  * Filtered Issues
  */
-export const filteredAndSortedIssueItemsSelector = createSelector(
-	enabledRepoIdsSelector,
+export const orderedIssueIndexesSelector = createSelector(
 	issuesSelector,
+	issueIndexesSelector,
 	issueSortAndFilterSelector,
-	(repoIds,issues:Issue[],{issueSort,issueFilter}):IIssueListItem<Issue>[] => {
+	enabledAssigneesSelector,
+	(issues:List<Issue>, issueIndexes, {issueSort,issueFilter}):List<number> => {
 		
-		//log.info(`Filtering with issue items`, issues,issueSort,issueFilter)
+		const
+			{groupBy} = issueSort,
+			{fields:sortFields,direction:sortDirection} = issueSort,
+			isReverse = sortDirection === 'desc'
 		
 		// If data not avail then return empty
-		if (!issues || !Array.isArray(issues))
-			return []
-
+		if (!issues || !isListType(issues,Issue))
+			return List<number>()
 		
-
 		// Get all the filters & sort criteria
 		let
-			{text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
-			{fields:sortFields,direction:sortDirection} = issueSort
-
+			{text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter
+			
+		
 		milestoneIds = _.nilFilter(milestoneIds || [])
 		labelUrls = _.nilFilter(labelUrls || [])
 		assigneeIds = _.nilFilter(assigneeIds || [])
-
-		let filteredIssues = issues
-			
-			// Filter by enabled repos (should already be filtered)
-			
-			
-			// Filters
-			.filter(issue => {
+		
+		const
+			filteredIndexes = issueIndexes
+				.filter(issueIndex => {
 				
-				// Repo & nil
-				if (_.isNil(issue) || !repoIds.includes(issue.repoId))
-					return false
+				const
+					issue = issues.get(issueIndex)
 				
 				// Exact match
 				if (issueId)
 					return `${issue.id}` === `${issueId}`
 				
 				// Include Closed
-				let matches = repoIds.includes(issue.repoId) &&
+				let matches =
 					(issue.state === 'open' || issueFilter.includeClosed)
-
+				
 				// Milestones
 				if (matches && milestoneIds.length)
 					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
-
+				
 				// Labels
 				if (matches && labelUrls.length)
 					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
-
+				
 				// Assignee
 				if (matches && assigneeIds.length)
 					matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
-			
+				
 				// Text
 				if (matches && text)
 					matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
-
+				
 				return matches
 			})
-
-		filteredIssues = _.sortBy(filteredIssues,(o) => {
-			let val = o[sortFields[0]]
-			if (_.isString(val))
-				val = _.toLower(val)
-
-			return val
-		})
-
-		if (sortDirection === 'desc')
-			filteredIssues = filteredIssues.reverse()
-
-		return filteredIssues.map(issue => ({
-			id: `issue-${issue.id}`,
-			type: IssueListItemType.Issue,
-			item: issue
-		}))
+		
+		
+		let
+			sortedIssueIndexes = filteredIndexes
+				.sortBy((issueIndex) => {
+					const
+						issue = issues.get(issueIndex)
+						
+					let
+						val = _.get(issue,sortFields[ 0 ])
+					
+					if (_.isString(val))
+						val = _.toLower(val)
+					
+					return val
+				})
+		
+		if (isReverse)
+			sortedIssueIndexes = sortedIssueIndexes.reverse()
+		
+		return sortedIssueIndexes
+		
+		
 	}
 )
+
 
 /**
  * List items
  */
-export const issueItemsSelector = createSelector(
-	issueSortAndFilterSelector,
-	filteredAndSortedIssueItemsSelector,
-	(issueSortAndFilter:TIssueSortAndFilter,issueItems:IIssueListItem<Issue>[]):IIssueListItem<any>[] => {
+export const issueGroupsSelector = createSelector(
+	groupBySelector,
+	issuesSelector,
+	orderedIssueIndexesSelector,
+	(groupBy:TIssueFieldsGroupable,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
 		
 		
-		
-		const
-			{issueSort} = issueSortAndFilter,
-			{groupBy,groupByDirection} = issueSort
 		
 		//log.info(`Got issue items`, issueItems,groupBy)
 		
 		if (groupBy === 'none')
-			return issueItems
+			return List<IIssueGroup>()
 		
-		let
-			allGroups = Array<IIssueGroup>()
-		
-		
-		function newGroup(groupByItem) {
-			return (allGroups[allGroups.length] = {
-				id: getIssueGroupId({groupBy,groupByItem}),
-				items: [],
-				index: allGroups.length,
-				size: 0,
-				groupBy,
-				groupByItem
-			})
-		}
-		
-		/**
-		 *
-		 * @param groupByItem
-		 * @returns {{issueIds: Array, size: number, groupBy, groupByItem: any}}
-		 */
-		function getGroups(groupByItem):IIssueGroup[] {
-			const groupId = getIssueGroupId({groupBy,groupByItem})
+		return List<IIssueGroup>().withMutations(allGroups => {
 			
-			const group = allGroups.find(item => item.id === groupId)
-			return [group || newGroup(groupByItem)]
-			
-			// if (Array.isArray(groupByItem)) {
-			// 	return groupByItem.reduce((groups,nextGroupByItem) => {
-			// 		groups = groups.concat(getGroups(nextGroupByItem))
-			// 		return groups
-			// 	},[])
-			// } else {
-			// 	const group = allGroups.find(item => item.groupByItem === groupByItem)
-			// 	return [group || newGroup(groupByItem)]
-			// }
-		}
-		
-		for (let item of issueItems) {
-			const
-				issue = item.item as Issue,
-				{milestone,labels,assignee} = issue,
-				groupByItem = (groupBy === 'milestone') ? milestone :
-					(groupBy === 'assignee') ? assignee :
-						labels,
+			/**
+			 * Create a new group
+			 * @param groupByItem
+			 */
+			function newGroup(groupByItem) {
 				
+				const group = {
+					id: getIssueGroupId({groupBy,groupByItem}),
+					issueIndexes: [],
+					index: allGroups.size,
+					size: 0,
+					groupBy: groupBy as TIssueFieldsGroupable,
+					groupByItem
+				}
 				
-				groups = getGroups(groupByItem)
+				allGroups.push(group)
+				
+				return group
+			}
 			
-			groups.forEach(group => {
-				group.size++
-				group.items.push(item)
+			/**
+			 * Get groups for a group by item
+			 *
+			 * @param groupByItem
+			 */
+			function getGroups(groupByItem):IIssueGroup[] {
+				const
+					groupId = getIssueGroupId({groupBy,groupByItem}),
+					group = allGroups.find(item => item.id === groupId)
+				
+				return [group || newGroup(groupByItem)]
+				
+				// if (Array.isArray(groupByItem)) {
+				// 	return groupByItem.reduce((groups,nextGroupByItem) => {
+				// 		groups = groups.concat(getGroups(nextGroupByItem))
+				// 		return groups
+				// 	},[])
+				// } else {
+				// 	const group = allGroups.find(item => item.groupByItem === groupByItem)
+				// 	return [group || newGroup(groupByItem)]
+				// }
+			}
+			
+			
+			issueIndexes.forEach((issueIndex) => {
+				const
+					issue = issues.get(issueIndex),
+					{ milestone, labels, assignee } = issue,
+					groupByItem = (groupBy === 'milestone') ? milestone :
+						(groupBy === 'assignee') ? assignee :
+							labels,
+					
+					
+					groups = getGroups(groupByItem)
+				
+				groups.forEach(group => {
+					group.size++
+					group.issueIndexes.push(issueIndex)
+				})
 			})
 			
-		}
-		
-		// const sorters:{[key:string]:Function} = {
-		// 	milestone: (o) => !o ? '' : _.toLower(o.title),
-		// 	assignee: (o) => _.toLower(o.login),
-		// 	labels: (o) => _.toLower(Array.isArray(o) ?
-		// 		o.map(item => _.toLower(item.name))
-		// 			.sort()
-		// 			.join(',') :
-		// 		o.name
-		// 	),
-		// }
-		
-		allGroups = _.sortBy(allGroups,'id')
-		
-		if (groupByDirection === 'desc')
-			allGroups = allGroups.reverse()
-		
-		const allItems:IIssueListItem<any>[] = []
-		
-		// Iterate all groups and push group and group items to list
-		allGroups.forEach(group => {
-			
-			allItems.push({
-				id: group.id,
-				type: IssueListItemType.Group,
-				item: group
-			},...issueItems)
-			
+			// Iterate all groups and push group and group items to list
+			return allGroups
 		})
 		
-		return allItems
+		
+		
 	}
 )
 
+
+/**
+ * Make an issue list item
+ *
+ * @param item
+ */
+function makeIssueListItem(item:Issue|IIssueGroup):IIssueListItem<any> {
+	return {
+		id: item.id,
+		type: (item as Issue).url ? IssueListItemType.Issue : IssueListItemType.Group,
+		item
+	}
+}
+
+export const issueItemsSelector = createSelector(
+	issuesSelector,
+	orderedIssueIndexesSelector,
+	issueGroupsSelector,
+	(issues:List<Issue>,issueIndexes:List<number>,groups:List<IIssueGroup>):List<IIssueListItem<any>> =>  {
+		
+		
+		
+		if (!groups || groups.size === 0) {
+			return issueIndexes.map(issueIndex => makeIssueListItem(issues.get(issueIndex))) as List<IIssueListItem<any>>
+		} else {
+			return List<IIssueListItem<any>>()
+				.withMutations(allItems => {
+					groups.forEach(group => {
+						allItems.push(makeIssueListItem(group))
+						
+						group.issueIndexes.forEach((issueIndex) => makeIssueListItem(issues.get(issueIndex)))
+					})
+					
+					return allItems
+				})
+		
+		}
+		
+		
+	}
+)

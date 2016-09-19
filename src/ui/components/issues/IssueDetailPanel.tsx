@@ -3,7 +3,7 @@
  */
 
 // Imports
-
+import {List} from 'immutable'
 import * as moment from 'moment'
 import * as React from 'react'
 import {Style} from 'radium'
@@ -47,8 +47,8 @@ const log = getLogger(__filename)
 
 export interface IIssueDetailPanelProps {
 	selectedIssueIds?:number[]
-	issues?:Issue[]
-	comments?:Comment[]
+	issues?:List<Issue>
+	comments?:List<Comment>
 	theme?:any,
 	styles?:any
 }
@@ -80,24 +80,24 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * Add label
 	 */
 
-	addLabel = (...issues:Issue[]) => Container.get(IssueActionFactory).patchIssues("Label",...issues)
+	addLabel = (issues:List<Issue>) => Container.get(IssueActionFactory).patchIssues("Label",...issues.toArray())
 
 	/**
 	 * Change the assigned milestone
 	 *
 	 * @param issues
 	 */
-	editMilestone = (...issues:Issue[]) =>
+	editMilestone = (issues:List<Issue>) =>
 		Container.get(IssueActionFactory)
-			.patchIssues("Milestone",...issues)
+			.patchIssues("Milestone",...issues.toArray())
 
-	assignIssue = (...issues:Issue[]) =>
+	assignIssue = (issues:List<Issue>) =>
 		Container.get(IssueActionFactory)
-			.patchIssues("Assignee",...issues)
+			.patchIssues("Assignee",...issues.toArray())
 
-	unassignIssue = (...issues:Issue[]) =>
+	unassignIssue = (issues:List<Issue>) =>
 		Container.get(IssueActionFactory)
-			.applyPatchToIssues({assignee: null},true,...issues)
+			.applyPatchToIssues({assignee: null},true,...issues.toArray())
 
 	/**
 	 * Callback for label or milestone remove
@@ -127,7 +127,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param issues
 	 * @param styles
 	 */
-	renderMulti = (issues:Issue[], styles) => <div>
+	renderMulti = (issues:List<Issue>, styles) => <div>
 		{issues.size} selected issues
 	</div>
 
@@ -223,24 +223,21 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	/**
 	 * Render the footer (when comments go ;))
 	 * @param issue
-	 * @param s
-	 * @returns {any}
+	 * @param styles
 	 */
-	renderFooter = (issue, styles) => <div style={styles.footer}>
-		
-	</div>
+	renderFooter = (issue, styles) => <div style={styles.footer}/>
 
 
 	/**
 	 * Render the issue body if it has one
 	 *
-	 * @param key
+	 * @param comments
+	 * @param index
 	 * @param styles
-	 * @returns {any}
 	 */
-	renderBody = (comments,index,styles) => <IssueActivityText
+	renderBody = (comments:List<Comment>,index,styles) => <IssueActivityText
 			key={'issue-body'}
-			issue={this.props.issues[0]}
+			issue={this.props.issues.get(0)}
 			activityType='post'
 			activityActionText='posted issue'
 			activityStyle={styles.content.activities.activity}/>
@@ -255,10 +252,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderComment = (comments,index,styles) => <IssueActivityText
-			key={comments[index].id}
-			issue={this.props.issues[0]}
-			comment={comments[index]}
+	renderComment = (comments:List<Comment>,index,styles) => <IssueActivityText
+			key={comments.get(index).id}
+			issue={this.props.issues.get(0)}
+			comment={comments.get(index)}
 			activityActionText='commented'
 			activityType='comment'
 			activityStyle={styles.content.activities.activity}/>
@@ -272,7 +269,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param index
 	 * @returns {any}
 	 */
-	renderActivityListItem = (comments:Comment[],index) => (index === 0) ?
+	renderActivityListItem = (comments:List<Comment>,index) => (index === 0) ?
 		this.renderBody(comments,index,this.props.styles) :
 		this.renderComment(comments,index - 1,this.props.styles)
 
@@ -287,7 +284,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * @param palette
 	 * @returns {any}
 	 */
-	renderIssue = (issue:Issue, comments:Comment[], styles,palette) => <div style={styles.issue}>
+	renderIssue = (issue:Issue, comments:List<Comment>, styles,palette) => issue && <div style={styles.issue}>
+		
 		<Style
 			scopeSelector={`.markdown.issue-${issue.id}`}
 			rules={styles.markdown}
@@ -299,7 +297,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
 				<VisibleList
-					items={comments}
+					items={List(comments).push(null)}
+					itemCount={comments.size + 1}
 					itemRenderer={this.renderActivityListItem}
 				  
 				             />
@@ -320,15 +319,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		const
 			{selectedIssueIds,issues, theme, comments,styles} = this.props
 
-		if (!Array.isArray(issues))
+		if (!List.isList(issues))
 			return React.DOM.noscript()
 		
 		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
 			<HotKeys id='issueDetailPanel'
 			         style={styles.root}>
 				{ selectedIssueIds.length > 1 ?
-					this.renderMulti(issues.filter(it => selectedIssueIds.includes(it.id)), styles) :
-					this.renderIssue(issues.find(it => selectedIssueIds[0] === it.id), comments, styles,theme.palette)
+					this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
+					this.renderIssue(issues.find(it => it && selectedIssueIds[0] === it.id), comments, styles,theme.palette)
 				}
 			</HotKeys>
 	}

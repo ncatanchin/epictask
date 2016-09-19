@@ -5,13 +5,19 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
 import {RegisterModel} from 'shared/Registry'
+import { Repo } from "shared/models"
+import { isNumber } from "shared/util"
 
-
+export function makeLabelId(label:Label) {
+	return `${label.repoId}-${label.url}`
+}
 
 @RegisterModel
-@ModelDescriptor()
+@PouchDBModel({
+	keyMapper: makeLabelId
+})
 export class Label extends DefaultModel {
 
 	static isLabel(o:any):o is Label {
@@ -47,30 +53,47 @@ export class LabelStore extends TSRepo<Label> {
 	constructor() {
 		super(LabelStore,Label)
 	}
-
+	
 	/**
-	 * Find all labels in provided repo ids
-	 * @param repoIds
-	 * @returns {Label[]}
+	 * Find all milestone ids for a repo
+	 *
+	 * @param repoId
+	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBMangoFinder({
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
+	@PouchDBPrefixFinder({
+		keyProvider: (repoIdOrRepo:number|Repo) => {
+			const
+				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
 	})
-	findByRepoId(...repoIds:number[]):Promise<Label[]> {
+	findByRepo(repoId:number|Repo):Promise<Label[]> {
 		return null
 	}
-
-	@PouchDBMangoFinder({
+	
+	/**
+	 * Find all milestone ids for a repo
+	 *
+	 * @param repoId
+	 * @returns {Promise<Comment[]>}
+	 */
+	@PouchDBPrefixFinder({
 		includeDocs: false,
-		indexFields: ['repoId'],
-		selector: (...repoIds) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
+		keyProvider: (repoIdOrRepo:number|Repo) => {
+			const
+				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
 	})
-	findUrlsByRepoId(...repoIds:number[]):Promise<string[]> {
+	findIdsByRepo(repoId:number|Repo):Promise<string[]> {
 		return null
 	}
 

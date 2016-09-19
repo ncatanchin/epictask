@@ -49,6 +49,10 @@ export class JobState extends JobStateRecord {
 		}))
 	}
 	
+	toJS() {
+		return {}
+	}
+	
 	/**
 	 * Find a job status detail record for a job
 	 *

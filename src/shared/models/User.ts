@@ -3,6 +3,7 @@ import {
 	AttributeDescriptor,
 	FinderDescriptor,
 	DefaultModel,
+	FinderRequest,
 	Repo as TSRepo
 } from 'typestore'
 
@@ -92,6 +93,7 @@ export class UserStore extends TSRepo<User> {
 	/**
 	 * Find all users who contribute to a repo
 	 *
+	 * @param request
 	 * @param repoIds
 	 * @returns {Promise<User[]>}
 	 */
@@ -107,7 +109,7 @@ export class UserStore extends TSRepo<User> {
 			}))
 		})
 	})
-	findByRepoId(...repoIds:number[]):Promise<User[]> {
+	findByRepoId(request:FinderRequest,...repoIds:number[]):Promise<User[]> {
 		return null
 	}
 

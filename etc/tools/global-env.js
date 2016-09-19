@@ -34,6 +34,7 @@ process.argv.forEach(arg => {
  */
 const
 	processDir = baseDir,
+	TypeScriptEnabled = true,
 	env = process.env.NODE_ENV || 'development'
 
 
@@ -50,8 +51,9 @@ Object.assign(global, {
 	env,
 	isDev: env === 'development',
 	processDir,
+	TypeScriptEnabled,
 	basePackageJson: readJSONFileSync(`${baseDir}/package.json`),
-	srcRootDir: path.resolve(baseDir, 'dist/out'),
+	srcRootDir: path.resolve(baseDir, TypeScriptEnabled ? 'src' : 'dist/out'),
 	Deferred: require('./deferred'),
 	assert
 }, require('./helpers'))

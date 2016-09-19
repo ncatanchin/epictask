@@ -167,7 +167,13 @@ export class Loader extends React.Component<ILoaderProps,ILoaderState> {
 
 		
 		timeline.call(() => {
-				timeline.seek('normal')
+				if ($('#loader-root').hasClass('visible'))
+					timeline.seek('normal')
+				else {
+					//this.setState({running:false})
+					timeline.kill()
+					//this.stopAnimating()
+				}
 		})
 		
 	}

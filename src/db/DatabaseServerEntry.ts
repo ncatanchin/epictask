@@ -1,6 +1,6 @@
 import WorkerEntry from "../shared/ChildProcessEntry"
 import {Coordinator as TSCoordinator,Repo as TSRepo, IModel} from 'typestore'
-import {PouchDBPlugin} from 'typestore-plugin-pouchdb'
+import {IPouchDBOptions,PouchDBPlugin} from 'typestore-plugin-pouchdb'
 import {FinderRequest} from 'typestore'
 
 import {Stores} from 'shared/Stores'
@@ -39,7 +39,11 @@ log.info('DB Path:',dbPath)
  * @returns {{filename: string}}
  */
 function storeOptions() {
-	let opts = {filename: dbPath,cacheSize:32 * 1024 * 1024}
+	let opts:IPouchDBOptions = {
+		filename: dbPath,
+		cacheSize:32 * 1024 * 1024,
+		databasePerRepo: true
+	}
 	if (Env.isDev && !Env.isTest) {
 		opts = Object.assign({},opts, {
 			replication: {
@@ -54,11 +58,7 @@ function storeOptions() {
 }
 
 
-
-
-
 let
-	
 	// PouchDB Plugin
 	storePlugin:PouchDBPlugin,
 	

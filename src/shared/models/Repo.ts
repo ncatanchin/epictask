@@ -10,7 +10,7 @@ import {
 } from 'typestore'
 
 
-import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {PouchDBFullTextFinder, PouchDBModel,PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Permission} from './Permission'
@@ -18,7 +18,9 @@ import {RegisterModel} from '../Registry'
 
 
 @RegisterModel
-@ModelDescriptor()
+@PouchDBModel({
+	keyMapper: (repo:Repo) => `${repo.id}`
+})
 export class Repo extends DefaultModel {
 
 	$$clazz = 'Repo'

@@ -88,17 +88,17 @@ export class SearchResult {
 		return new SearchResult(o)
 	}
 
-	items:SearchItem[]
+	items:List<SearchItem>
 	type:SearchType
 	source:SearchSource
 	dataId:string
 	searchId:string
 
-	constructor(searchId:string,items:SearchItem[],type:SearchType, source:SearchSource,count:number,total:number)
+	constructor(searchId:string,items:List<SearchItem>,type:SearchType, source:SearchSource,count:number,total:number)
 	constructor(obj:any)
 	constructor(
 		searchIdOrObject:any,
-		items:SearchItem[] = [],
+		items:List<SearchItem> = List<SearchItem>(),
 		type:SearchType = null,
 		source:SearchSource = null,
 		public count:number = -1,

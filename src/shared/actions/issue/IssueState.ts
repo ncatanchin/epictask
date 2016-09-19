@@ -1,7 +1,8 @@
-const log = getLogger(__filename)
 
+
+import {List,Record} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
-import {Record} from 'immutable'
+
 import {ActionMessage} from 'typedux'
 import {Comment,Issue} from 'shared/models'
 import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
@@ -9,8 +10,8 @@ import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 
-export * from './IIssueFilter'
-export * from './IIssueSort'
+
+const log = getLogger(__filename)
 
 export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
 
@@ -38,8 +39,9 @@ export type TIssueEditInlineConfig = {
 }
 
 export const IssueStateRecord = Record({
-	issues: [],
-	comments:[],
+	issues: List<Issue>(),
+	issueIndexes: List<number>(),
+	comments:List<Comment>(),
 	selectedIssueIds:[],
 	editingInline:false,
 	editInlineConfig:null,
@@ -79,16 +81,17 @@ export class IssueState extends IssueStateRecord {
 	}
 	
 	toJS() {
-		return {}
+		return _.pick(this,'issueFilter','issueSort','selectedIssueIds')
 	}
 	
 	
-	issues:Issue[]
+	issues:List<Issue>
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
+	issueIndexes:List<number>
 	issueSaving:boolean
 	issueSaveError: Error
-	comments:Comment[]
+	comments:List<Comment>
 	editInlineConfig:TIssueEditInlineConfig
 	selectedIssueIds:Array<number>
 	patchIssues:Issue[]

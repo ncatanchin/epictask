@@ -1,6 +1,6 @@
 
 
-
+import {List} from 'immutable'
 import * as React from 'react'
 import {Icon} from 'ui/components/common/Icon'
 import * as Renderers from 'ui/components/common/Renderers'
@@ -83,7 +83,7 @@ const baseStyles = createStyles({
 
 //region Props
 export interface IRepoListProps {
-	availableRepos?:AvailableRepo[]
+	availableRepos?:List<AvailableRepo>
 	availableRepoIds?:number[]
 	styleName?:string
 	className?:string
@@ -98,7 +98,6 @@ export interface IRepoListProps {
  * A list of repos
  */
 @connect(createStructuredSelector({
-	availableRepoIds: availableRepoIdsSelector,
 	availableRepos: availableReposSelector,
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
@@ -115,7 +114,9 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
 		log.info(`Avail repo clicked`,availRepo)
-		const repoActions = getRepoActions()
+		
+		const
+			repoActions = getRepoActions()
 		
 		if (event.metaKey) {
 			repoActions.setRepoSelected(availRepo.repoId,!isSelected)
@@ -162,7 +163,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					
 
 					
-					return <div key={id}
+					return <div key={'repoList-' + id}
 					           onMouseEnter={() => this.setState({hoverId:availRepo.repoId})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
 					           onClick={(event) => {

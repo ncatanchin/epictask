@@ -1,3 +1,5 @@
+import {List} from 'immutable'
+
 import 'shared/NamespaceConfig'
 import './LoDashMixins'
 import {generate as generateShortId} from 'short-id'
@@ -9,8 +11,16 @@ export function isNil(o:any) {
 	return _.isNil(o)
 }
 
+export function isListType<T>(o:any,type:{new():T}):o is List<T> {
+	return (List.isList(o))
+}
+
 export function isObject(o:any):o is Object {
 	return _.isObject(o)
+}
+
+export function isObjectType<T>(o:any,type:{new():T}):o is T {
+	return o instanceof type || o.$$clazz === type.name
 }
 
 export function isString(o:any):o is string {
@@ -18,7 +28,7 @@ export function isString(o:any):o is string {
 }
 
 export function isNumber(o:any):o is number {
-	return _.isNumber(o)
+	return _.isNumber(o) && !isNaN(o)
 }
 
 export function isFunction(o:any):o is Function {
@@ -43,17 +53,22 @@ export function uuid():string {
 
 export function cloneObject<T>(o:T,...newSources:any[]):T {
 	const cloned = _.cloneDeep(o)
-
-	if (Array.isArray(cloned)) {
-		cloned.forEach((acloned,index) => {
-			acloned.id = o[index].id
-			_.assign(acloned,...newSources)
-		})
-	} else if (_.isObject(cloned)) {
-		cloned.id = (o as any)['id']
-		_.assign(cloned,...newSources)
+	
+	if (cloned) {
+		if (Array.isArray(cloned)) {
+			cloned.forEach((acloned,index) => {
+				if (o[index] && isObject(o[index]))
+					acloned.id = o[index].id
+				
+				_.assign(acloned,...newSources)
+			})
+		} else if (_.isObject(cloned)) {
+			cloned.id = (o as any)['id']
+			_.assign(cloned,...newSources)
+		}
+		
 	}
-
+	
 	return cloned
 
 }

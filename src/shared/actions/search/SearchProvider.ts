@@ -1,3 +1,4 @@
+import {List} from 'immutable'
 import {FinderRequest, FinderResultArray} from 'typestore'
 import {Stores} from 'shared/services/DatabaseClientService'
 import {
@@ -13,11 +14,15 @@ import {Benchmark} from 'shared/util/Benchmark'
 import {getStoreState} from 'shared/store/AppStore'
 
 import {VariableProxy} from "shared/util/VariableProxy"
-import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import {
+	enabledRepoIdsSelector, enabledLabelsSelector,
+	enabledMilestonesSelector
+} from "shared/actions/repo/RepoSelectors"
 import {RepoActionFactory} from "shared/actions/repo/RepoActionFactory"
 import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {IssueState} from "shared/actions/issue/IssueState"
 import {AvailableRepo, Repo, Issue, Label, Milestone} from "shared/models"
+import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 
 
 
@@ -36,13 +41,13 @@ const
  * @param limit
  * @returns {any[]}
  */
-function textSearchFilter(query:string,items:any[],props:string[], limit:number = 4) {
+function textSearchFilter(query:string,items:List<any>,props:string[], limit:number = 4) {
 
 	query = _.toLower(query)
 
 	let matchCount = 0
 	
-	return items.filter(item => {
+	return List(items.filter(item => {
 		if (limit !== -1 && matchCount > limit)
 			return false
 
@@ -54,7 +59,7 @@ function textSearchFilter(query:string,items:any[],props:string[], limit:number 
 			matchCount++
 
 		return match
-	})
+	}))
 }
 
 export enum SearchEvent {
@@ -82,19 +87,28 @@ export default class SearchProvider {
 		return instance
 	}
 	
+	private pendingSearch:Promise<void>
+	
+	private stores:Stores
+	
+	
+	private searchTypes:SearchType[] = []
+	
+	
 	/**
 	 * Query string cache change listener
 	 */
 	
-	
 	queryCache:ValueCache
-
-	private pendingSearch:Promise<void>
 	
-	private stores:Stores
-	private searchTypes:SearchType[] = []
-	
+	/**
+	 * Current result lists
+	 */
 	results:SearchResult[] = []
+	
+	/**
+	 * Listener map
+	 */
 	listenerMap:{[eventType:string]:TSearchListener[]} = {}
 	
 	
@@ -194,12 +208,12 @@ export default class SearchProvider {
 
 	mapResultsToSearchItems(idProperty:string,results:FinderResultArray<any>) {
 		const md = results.itemMetadata
-		return results.map((item,index) => {
+		return List<SearchItem>(results.map((item,index) => {
 			const score = (md && md.length > index && md[index]) ?
 				md[index].score : null
 
 			return new SearchItem(item[idProperty],SearchType.Repo,item,score || 1)
-		})
+		}))
 	}
 
 	@Benchmarker
@@ -225,7 +239,8 @@ export default class SearchProvider {
 	@Benchmarker
 	async searchGitHub(query:string):Promise<SearchResult> {
 		
-		const queryParts = query.split('/')
+		const
+			queryParts = query.split('/')
 
 		let result = -1
 		
@@ -269,32 +284,41 @@ export default class SearchProvider {
 
 		return new SearchResult(
 			this.searchId,
-			(count) ? [new SearchItem(result,SearchType.Repo,result,1)] : [],
+			List((count) ? [new SearchItem(result,SearchType.Repo,result,1)] : []),
 			SearchType.Repo,
 			SearchSource.GitHub,
 			count,
 			count
 		)
 	}
-
+	
+	
+	/**
+	 * Search issues
+	 *
+	 * @param query
+	 * @returns {SearchResult}
+	 */
 	@Benchmarker
 	async searchIssues(query:string):Promise<SearchResult> {
 		
-		const issues = await this.stores
-			.issue
-			.findWithText(new FinderRequest({
-				includeDocs: true,
-				limit: 10
-			}),query)
+		const
+			issueState = getIssueActions().state,
+			issues = issueState.issues
+				.filter(issue =>
+					[issue.title,issue.body,issue.user.login,issue.user.name]
+							.join(' ').toLowerCase().indexOf(query.toLowerCase()) > -1
+				)
+				
 
 
 		return new SearchResult(
 			this.searchId,
-			issues.map(issue => new SearchItem(issue.id,SearchType.Issue,issue,1)),
+			issues.map(issue => new SearchItem(issue.id,SearchType.Issue,issue,1)) as List<SearchItem>,
 			SearchType.Issue,
 			SearchSource.Issue,
-			issues.length,
-			issues.length
+			issues.size,
+			issues.size
 		)
 
 	}
@@ -302,29 +326,28 @@ export default class SearchProvider {
 	@Benchmarker
 	async searchMilestones(query:string):Promise<SearchResult> {
 		const
-			repoIds = enabledRepoIdsSelector(getStoreState()),
+			milestones = enabledMilestonesSelector(getStoreState()),
 			items = textSearchFilter(
 				query,
-				await this.stores.milestone.findByRepoId(...repoIds),//milestonesSelector(getStoreState()),
+				milestones,
 				['title','description','creator.name','creator.login']
 			)
 
 
 		return new SearchResult(
 			this.searchId,
-			items.map(item => new SearchItem(item.id,SearchType.Milestone,item,1)),
+			items.map(item => new SearchItem(item.id,SearchType.Milestone,item,1)) as List<SearchItem>,
 			SearchType.Milestone,
 			SearchSource.Milestone,
-			items.length,
-			items.length
+			items.size,
+			items.size
 		)
 	}
 	
 	@Benchmarker
 	async searchLabels(query:string):Promise<SearchResult> {
 		const
-			repoIds = enabledRepoIdsSelector(getStoreState()),
-			labels = await this.stores.label.findByRepoId(...repoIds),
+			labels = enabledLabelsSelector(getStoreState()),
 			items = textSearchFilter(
 				query,
 				labels,
@@ -334,22 +357,22 @@ export default class SearchProvider {
 
 		return new SearchResult(
 			this.searchId,
-			items.map(item => new SearchItem(item.url,SearchType.Label,item,1)),
+			items.map(item => new SearchItem(item.url,SearchType.Label,item,1)) as List<SearchItem>,
 			SearchType.Label,
 			SearchSource.Label,
-			items.length,
-			items.length
+			items.size,
+			items.size
 		)
 	}
 
 	@Benchmarker
 	async searchAvailableRepos(query:string):Promise<SearchResult> {
-
+		
 		//TODO: Implement search for available repos
 
 		return new SearchResult(
 			this.searchId,
-			[],
+			List<SearchItem>(),
 			SearchType.AvailableRepo,
 			SearchSource.AvailableRepo,
 			0,
@@ -434,7 +457,8 @@ export default class SearchProvider {
 	 */
 	select(searchId:string,item:SearchItem) {
 		
-		const model = item.value
+		const
+			model = item.value
 		
 		log.info('selected item',model)
 		
@@ -442,7 +466,10 @@ export default class SearchProvider {
 			repoActions = Container.get(RepoActionFactory),
 			issueActions = Container.get(IssueActionFactory),
 			issueState:IssueState = issueActions.state,
-			{issueFilter,issueSort} = issueState
+			{
+				issueFilter,
+				issueSort
+			} = issueState
 		
 		const newIssueFilter = _.cloneDeep(issueFilter)
 		

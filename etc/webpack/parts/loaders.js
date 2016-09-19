@@ -2,20 +2,22 @@ const
 	assert = require('assert'),
 	fs = require('fs'),
 	path = require('path'),
-	proxyProvidedLoaderPath = require.resolve('../loaders/provided-proxy-loader')
+	proxyProvidedLoaderPath = require.resolve('../loaders/provided-proxy-loader'),
+	{TypeScriptEnabled} = global,
+	srcTest = TypeScriptEnabled ? /\.tsx?$/ :  /\.jsx?$/
 
 log.info(`Resolved provided proxy pre-loader to ${proxyProvidedLoaderPath}`)
 
 module.exports = {
 	/**
-	 * All preloaders, for
+	 * All pre-loaders, for
 	 * hot loading, source-maps, etc
 	 */
 	preLoaders: [
 		{
 			happy: {id: 'js-pre'},
-			test: /\.jsx?$/,
-			exclude: [/node_modules/],//,/src\//],
+			test: srcTest,
+			exclude: [/node_modules/],
 			loaders: ['source-map-loader',proxyProvidedLoaderPath]
 		}
 	],
@@ -28,16 +30,19 @@ module.exports = {
 			loader: 'json'
 		},
 		
-		// BABEL/JS
+		// SourceCode
 		{
-			happy: {id: 'js'},
-			test: /\.jsx?$/,
-			// exclude: [/(node_modules)/,/ui\/plugins/],
+			happy: {id: 'source'},
+			test: srcTest,
 			exclude: [/(node_modules|typedux|typelogger|typestore)/],
-			loader: 'babel',
-			query: {
-				cacheDirectory: true
-			}
+			loader: TypeScriptEnabled ? 'awesome-typescript' : 'babel',
+			
+			// Add the query object for babel
+			...(TypeScriptEnabled ? {} : {
+				query:  {
+					cacheDirectory: true
+				}
+			})
 		},
 		
 		// JADE

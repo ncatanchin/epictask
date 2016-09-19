@@ -8,8 +8,10 @@ export const IssueGroupByFields = ['none','milestone','assignee','labels']
 export const IssueGroupByNames = ['No Grouping','Milestone','Assignee','Labels']
 
 export type TIssueSortDirection = 'asc'|'desc'
+
 export type TIssueFieldsGroupable = 'none'|'milestone'|'assignee'|'labels'
-export type TIssueFieldsSortable = 'updated_at'|'created_at'|'repoId'|'title'|'assignee'
+
+export type TIssueFieldsSortable = 'updated_at'|'created_at'|'repoId'|'title'|'assignee.login'
 
 
 
