@@ -1,6 +1,6 @@
 
 
-import {List,Record} from 'immutable'
+import {List,Map,Record} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
 
 import {ActionMessage} from 'typedux'
@@ -40,8 +40,8 @@ export type TIssueEditInlineConfig = {
 
 export const IssueStateRecord = Record({
 	issues: List<Issue>(),
-	issueIndexes: List<number>(),
 	comments:List<Comment>(),
+	groupVisibility:Map<string,boolean>(),
 	selectedIssueIds:[],
 	editingInline:false,
 	editInlineConfig:null,
@@ -86,9 +86,10 @@ export class IssueState extends IssueStateRecord {
 	
 	
 	issues:List<Issue>
+	groupVisibility:Map<string,boolean>
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
-	issueIndexes:List<number>
+	
 	issueSaving:boolean
 	issueSaveError: Error
 	comments:List<Comment>

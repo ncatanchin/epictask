@@ -1,6 +1,6 @@
 import {JSONKey} from 'shared/Constants'
-import {isNil} from 'shared/util/ObjectUtil'
-import {isFunction} from "shared/util"
+import {isFunction,isNil} from 'shared/util/ObjectUtil'
+
 
 
 const log = getLogger(__filename)
@@ -95,16 +95,18 @@ export interface ConfigurePropertyOptions {
  * @param opts
  */
 export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
+	
+	const {jsonInclude, enumerable} = opts
+	
 	return function (target:any, propertyKey:string | symbol) {
-
-		// Get vals
-		const {jsonInclude, enumerable} = opts
-
+		
+		
 		// If a value for jsonInclude was provided, define
 		// it in the key's metadata
-		if (!isNil(jsonInclude))
-			Reflect.defineMetadata(JSONKey, {jsonInclude}, target, propertyKey)
-
+		if (!isNil(jsonInclude)) {
+			Reflect.defineMetadata(JSONKey, { jsonInclude }, target, propertyKey)
+		}
+		
 
 		Object.defineProperty(target, propertyKey, {
 			enumerable: isNil(enumerable) ? true : enumerable,
@@ -112,13 +114,17 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 				return getProps(this)[propertyKey] as any
 			},
 			set: function (newVal) {
-				if (getProps(this)[propertyKey] === newVal)
+				let props = getProps(this)
+				if (props[propertyKey] === newVal) {
 					return
-
-				getProps(this)[propertyKey] = newVal
+				}
+				
+				props[propertyKey] = newVal
 				opts.onChange && opts.onChange.call(this, propertyKey, newVal)
 			}
 
 		})
+		
+		
 	}
 }

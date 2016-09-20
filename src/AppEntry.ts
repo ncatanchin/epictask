@@ -2,8 +2,8 @@
 
 require('source-map-support').install()
 require('babel-polyfill')
-
 import 'reflect-metadata'
+
 import 'shared/NamespaceConfig'
 import ProcessType from 'shared/ProcessType'
 import 'shared/ProcessConfig'

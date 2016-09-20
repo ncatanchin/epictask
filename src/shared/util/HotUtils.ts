@@ -1,9 +1,10 @@
 
 const log = getLogger(__filename)
 
-export function getHot(mod,key,defaultValue = null):any {
+export function getHot<T extends any>(mod,key,defaultValue:T = null):T {
 	return _.get(mod,`hot.data.${key}`,defaultValue) as any
 }
+
 
 export function setDataOnDispose(mod,dataFn:() => any) {
 	if (mod.hot) {

@@ -1,4 +1,5 @@
 
+import { getSettingsFile } from "shared/Settings"
 const {Record} = Immutable
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'
@@ -9,8 +10,9 @@ export const AuthStateRecord = Record({
 	authenticated: false,
 	username: null,
 	email: null,
-	token: null
+	token: getSettingsFile().token
 })
+
 
 @RegisterModel
 export class AuthState extends AuthStateRecord {

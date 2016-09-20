@@ -10,6 +10,7 @@ import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {ProcessType} from "shared/ProcessType"
 import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
+import { Settings } from "shared/SettingsFile"
 
 const log = getLogger(__filename)
 
@@ -63,12 +64,13 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	setToken(token:string) {
 		return (dispatch,getState) => {
 			
+			log.info('Setting token',token)
+			Settings.token = token
 			
-			getSettings().token = token
 			this.makeClient()
-		
-			this.setToken(token)
-
+			this.setTokenInternal(token)
+			
+			//settings.save()
 		}
 
 
@@ -149,7 +151,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				log.info('GH token received: ' + token,err)
 			}
 			
-			getSettingsFile().token = err ? null : token
+			
 			
 
 		}

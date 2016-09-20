@@ -70,6 +70,11 @@ export function makeFlex(flexGrow = 1, flexShrink = 1, flexBasis:number|string =
 	}
 }
 
+
+export const TransitionDurationDefault = 0.25
+
+export const TransitionDurationLong = 0.5
+
 /**
  * Create a transition property with default config
  *
@@ -80,7 +85,7 @@ export function makeFlex(flexGrow = 1, flexShrink = 1, flexBasis:number|string =
  * @param easing
  * @returns {{transition: any}}
  */
-export function makeTransition(props:string[]|string = null,duration = 0.25,easing = 'ease-out') {
+export function makeTransition(props:string[]|string = null,duration = TransitionDurationDefault,easing = 'ease-out') {
 	if (_.isString(props))
 		props = [props]
 

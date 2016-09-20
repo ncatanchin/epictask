@@ -26,14 +26,23 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
-import { cloneObject } from "shared/util"
+import { cloneObject } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
+import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
 const Benchmarker = Benchmark('RepoActionFactory')
+
+
+export interface ISyncChanges {
+	repoId:number
+	repoChanged:boolean
+	issueNumbersNew:number[]
+	issueNumbersChanged:number[]
+}
 
 /**
  * RepoActionFactory.ts
@@ -71,13 +80,20 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 	
 	
+	
+	@Action()
+	onSyncChanges(changes:ISyncChanges) {
+		return (dispatch,getState) => {
+			log.info(`Received repo sync changes`,changes)
+			if (changes.repoChanged)
+				this.loadAvailableRepos()
+		}
+	}
+	
 	/**
 	 * Updated available repo resources
 	 *
 	 * @param availableRepos
-	 * @param milestones
-	 * @param labels
-	 * @param assignees
 	 * @returns {(state:RepoState)=>Map<K, V>}
 	 */
 	@ActionReducer()
@@ -289,7 +305,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		await Promise.all(promises)
 		
-		return List<AvailableRepo>(availRepos)
+		return List<AvailableRepo>().push(...availRepos)
 	}
 	
 	/**
@@ -298,7 +314,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	@Action()
-	loadAvailableRepos() {
+	loadAvailableRepos(syncChanges:ISyncChanges = null) {
 		return async (dispatch,getState) => {
 			log.info(`Getting available repos`)
 			
@@ -307,6 +323,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			log.info(`Got all avail repo parts`,availableRepos)
 			this.updateAvailableRepos(availableRepos)
+			
+			if (syncChanges) {
+				log.info(`Now checking issue sync changes`,syncChanges)
+				
+				getIssueActions().onSyncChanges(syncChanges)
+			}
 			
 		}
 	}

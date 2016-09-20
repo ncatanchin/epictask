@@ -26,7 +26,7 @@ import {
 } from 'shared/actions/ActionFactoryProvider'
 import {makeReactotronEnhancer} from "shared/store/AppStoreDevConfig"
 import {OnlyIfFn, If} from "shared/util/Decorations"
-import {isString} from "shared/util"
+import {isString} from "shared/util/ObjectUtil"
 import { addGlobalListener, default as ChildProcessRenderer } from "shared/ChildProcessRenderer"
 import { getHot, setDataOnDispose } from "shared/util/HotUtils"
 
@@ -340,7 +340,7 @@ export function serializeState(state = getStoreState()) {
 
 
 // Just in case its an hmr request
-const existingRemoveListener = getHot(module,'removeListener')
+const existingRemoveListener = getHot(module,'removeListener') as Function
 if (existingRemoveListener)
 	existingRemoveListener()
 

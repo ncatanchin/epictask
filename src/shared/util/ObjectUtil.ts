@@ -74,6 +74,34 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 }
 
 
+export function shallowEqualsProp(o1,o2,key) {
+	const
+		val1 = _.get(o1,key),
+		val2 = _.get(o2,key)
+	
+	return val1 === val2 ||
+		(val1 && val2 &&
+		Array.isArray(val1) && Array.isArray(val2) &&
+		val1.length === val2.length &&
+		val1.every((testVal,index) => testVal === val2[index]))
+}
+
+export function shallowEquals(o1,o2,...props:string[]) {
+	if (o1 === o2)
+		return true
+	
+	const
+		o1Props = o1 && Object.keys(o1),
+		o2Props = o2 && Object.keys(o2)
+	
+	
+	
+	return (o1Props && o2Props &&
+		(props.length || o1Props.length === o2Props.length) &&
+			(props.length ? props : o1Props)
+				.every(key => shallowEqualsProp(o1,o2,key)))
+}
+
 export function postConstructorDecorate<T>(name:string, clazz:{new():T}, decorator:(instance:T,args:any[],data:any) => T,data:any = null) {
 	const makeDecorator =  new Function('name','clazz','decorator','data',`
 		function ${name}() {

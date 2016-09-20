@@ -7,7 +7,7 @@ import {UIState} from 'shared/actions/ui/UIState'
 import {Dialogs} from 'shared/Constants'
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
-import {isNumber, shortId, isString} from "shared/util"
+import {isNumber, shortId, isString} from "shared/util/ObjectUtil"
 import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"

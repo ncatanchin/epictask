@@ -18,7 +18,7 @@ const tinycolor = require('tinycolor2')
 const log = getLogger(__filename)
 
 export const baseStyles = createStyles({
-	label: [PositionRelative,FlexRowCenter,{
+	label: [PositionRelative,FlexAuto,FlexRowCenter,{
 		borderRadius: '0.3rem',
 		marginTop: 0,
 		marginRight: rem(1),

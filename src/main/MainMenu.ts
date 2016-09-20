@@ -164,6 +164,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Quit',
 				accelerator: 'Command+Q',
 				click() {
+
 					app.quit()
 				}
 			}]

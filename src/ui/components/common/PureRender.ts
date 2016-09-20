@@ -24,5 +24,4 @@ export function PureRender(Component) {
 		return compDiff || diff
 	})
 	
-	//return Component
 }

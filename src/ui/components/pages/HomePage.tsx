@@ -9,7 +9,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {connect} from 'react-redux'
 
 import {PureRender} from 'ui/components/common'
-import {Themed, ThemedNoRadium, ThemedStyles} from 'shared/themes/ThemeManager'
+import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
@@ -56,7 +56,7 @@ interface IHomeState {
 	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
 }, createDeepEqualSelector))
 @ThemedStyles(baseStyles,'homePage')
-//@PureRender
+@PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	
 	appActions = Container.get(AppActionFactory)

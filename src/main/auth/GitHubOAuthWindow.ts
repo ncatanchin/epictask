@@ -12,7 +12,7 @@ export default class GitHubOAuthWindow {
 	clientSecret
 	waitForApp
 	remote:boolean
-	window
+	window:Electron.BrowserWindow
 	electron
 	app
 	BrowserWindow
@@ -60,11 +60,16 @@ export default class GitHubOAuthWindow {
 				authURL = 'https://github.com/login/oauth/authorize?client_id=' + this.clientId + this.scopeQuery,
 				{webContents} = this.window
 			
-			
-			webContents.enableDeviceEmulation({fitToView:true})
+			webContents.enableDeviceEmulation({fitToView:true} as any)
 			webContents.on('did-finish-load', () => {
-				this.window.show()
-				this.window.focus()
+				try {
+					if (this.window && !this.window.isDestroyed() && this.window.isClosable()) {
+						this.window.show()
+						this.window.focus()
+					}
+				} catch (err) {
+					log.warn(`Failed to focus window`,err)
+				}
 			})
 
 			webContents.on('did-fail-load',(event,errorCode,errorDescription,validatedURL,isMainFrame) => {
@@ -78,9 +83,9 @@ export default class GitHubOAuthWindow {
 			webContents.on('did-get-redirect-request', (event, oldUrl, newUrl) => {
 				this.handleCallback(newUrl, callback)
 			})
-			this.window.on('close', () => {
+			this.window.on('closed', () => {
 				this.window = null
-			}, false)
+			})
 
 			this.window.loadURL(authURL)
 		}

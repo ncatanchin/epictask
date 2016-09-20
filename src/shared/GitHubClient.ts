@@ -4,7 +4,7 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import {cloneObject} from 'shared/util'
+import {cloneObject} from 'shared/util/ObjectUtil'
 
 
 const {URLSearchParams} = require('urlsearchparams')

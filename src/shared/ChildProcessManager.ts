@@ -30,12 +30,21 @@ const ChildProcessBootOrder = [
 
 export namespace ChildProcessManager {
 	
+	let running = false
+	
 	ipcMain.on('child-message',(event,{processTypeName,workerId,type,body}) => {
 		const child = children.find(it => it.processType === ProcessType[processTypeName] as any)
 		assert(child,`Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
 		
 		child.handleMessage(type,body)
 	})
+	
+	/**
+	 * isRunning - processes are running
+	 */
+	export function isRunning() {
+		return running
+	}
 	
 	/**
 	 * Start a worker for a specific process type
@@ -54,22 +63,20 @@ export namespace ChildProcessManager {
 	export function start(processType:ProcessType,id:string)
 	export function start(processType:ProcessType,id:string = null):Promise<any> {
 		
-		
-		
 		const
-			processName = `${ProcessConfig.getTypeName(processType)}-${id || 0}`
+			processName = `${ProcessConfig.getTypeName(processType)}-${id || 0}`,
+			
+			// Check to see if the process is already running
+			existingChild = children.find(it => it.name === processName)
 		
-		
-		// Check to see if the process is already running
-		const existingChild = children.find(it => it.name === processName)
 		if (existingChild) {
 			log.warn(`Process id is already running`,existingChild)
 			return Promise.resolve(existingChild)
 		}
 		
-		
 		const
-			worker:ChildProcessRenderer = new ChildProcessRenderer(processName,processType,{
+			worker:ChildProcessRenderer = new ChildProcessRenderer(ChildProcessManager,processName,processType,{
+				
 				// Env really isn't need with the webView model
 				env: {
 					EPIC_ENTRY: processName
@@ -91,6 +98,8 @@ export namespace ChildProcessManager {
 	 *  all are launched
 	 */
 	export async function startAll(...processTypes:ProcessType[]) {
+		running = true
+		
 		if (processTypes.length) {
 			await Promise.all(processTypes.map(start))
 		} else {
@@ -108,7 +117,9 @@ export namespace ChildProcessManager {
 	 * @returns {any}
 	 */
 	export function stop(worker:ChildProcessRenderer) {
-		const workerIndex = children.indexOf(worker)
+		const
+			workerIndex = children.indexOf(worker)
+		
 		if (workerIndex === -1) {
 			throw new Error(`This worker manager does not manage ${worker.name}`)
 		}
@@ -130,6 +141,7 @@ export namespace ChildProcessManager {
 	 * @param exitCode
 	 */
 	export function stopAll(exitCode = 0):Promise<any> {
+		running = false
 		return Promise.all(children.reverse().map(worker => worker.stop(exitCode)))
 	}
 	

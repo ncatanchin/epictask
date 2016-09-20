@@ -15,7 +15,7 @@ import {
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {
-	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailableReposSelector
+	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 
 import {
@@ -36,7 +36,8 @@ import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
-import { isListType } from "shared/util"
+import { isListType } from "shared/util/ObjectUtil"
+import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 
 
 /**
@@ -147,7 +148,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (issueState:IssueState) =>
 			issueState
 				.set('issues',issues)
-				.set('issueIndexes',issues.map((issue,index) => index))
 	}
 	
 	@Action()
@@ -173,10 +173,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Get issues for a set of available repos
 	 *
 	 * @param availRepos
+	 * @param fromIssues
 	 * @returns {Promise<Issue[]>}
 	 */
 	
-	async getIssues(availRepos:List<AvailableRepo>|AvailableRepo[]) {
+	async getIssues(availRepos:List<AvailableRepo>|AvailableRepo[],fromIssues:Issue[] = null):Promise<List<Issue>> {
 		
 		if (isListType(availRepos,AvailableRepo))
 			availRepos = availRepos.toArray()
@@ -188,20 +189,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		let
 			issues = List<Issue>()
 		
-		await Promise.all(availRepos.map(async (availRepo) => {
-			const repoIssues:List<Issue> = await pagedFinder(
-				Issue,
-				FinderItemsPerPage,
-				getStores().issue,
-				(issueStore:IssueStore,nextRequest:FinderRequest) =>
-					issueStore.findByIssuePrefix(nextRequest,availRepo.repoId)
-			)
+		if (fromIssues && fromIssues.length) {
+			issues = issues.push(...fromIssues)
+		} else {
 			
-			
-			issues = issues.concat(repoIssues) as List<Issue>
-		}))
+			await Promise.all(availRepos.map(async(availRepo) => {
+				const repoIssues:List<Issue> = await pagedFinder(
+					Issue,
+					FinderItemsPerPage,
+					getStores().issue,
+					(issueStore:IssueStore, nextRequest:FinderRequest) =>
+						issueStore.findByIssuePrefix(nextRequest, availRepo.repoId)
+				)
 				
-		
+				
+				issues = issues.concat(repoIssues) as List<Issue>
+			}))
+		}
+			
 		issues = issues
 			.filter(issue => {
 				const hasRepoId = issue && !!issue.repoId
@@ -222,8 +227,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				return cloneObject(issue,{
 					repo,
 					collaborators: availRepo.collaborators,
-					labels: !issue.labels ? [] : issue.labels.map(label => availRepo.labels.find(it => it.url === label.url)),
-					milestone: issue.milestone && availRepo.milestones.find(it => it.id === issue.milestone.id)
+					
+					// Find labels
+					labels: !issue.labels ? [] :
+						issue.labels.map(label =>
+							availRepo.labels.find(it => it.url === label.url) || label),
+					
+					// Find milestones
+					milestone: (issue.milestone &&
+						availRepo.milestones.find(it => it.id === issue.milestone.id)) || issue.milestone
 				})
 			}) as List<Issue>
 		
@@ -902,6 +914,116 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.setFilteringAndSorting(newIssueFilter)
 	}
 	
+	@Action()
+	onSyncChanges(changes:ISyncChanges) {
+		return async (dispatch,getState) => {
+			log.info(`Received repo sync changes`,changes)
+			
+			const issueNumbers = _.nilFilter([...(changes.issueNumbersChanged),...(changes.issueNumbersNew)])
+			if (issueNumbers.length) {
+				log.info(`Issues have been updated during sync `,...issueNumbers)
+				
+				const
+					issueIds = issueNumbers.map(issueNumber => Issue.makeIssueId(changes.repoId,issueNumber))
+				log.info(`Mapped numbers to ids`,issueIds)
+				
+				const
+					fromIssues = await getStores().issue.bulkGet(...issueIds),
+					issues = await this.getIssues(availableReposSelector(getState()),fromIssues)
+				
+				
+				this.updateIssuesInState(issues)
+				
+			}
+				
+		}
+	}
+	
+	/**
+	 * Update a list of issues in the current state
+	 *
+	 * @param updatedIssues
+	 * @returns {(state:IssueState)=>Map<K, V>}
+	 */
+	@ActionReducer()
+	private updateIssuesInState(updatedIssues:List<Issue>) {
+		return (state:IssueState) => state.withMutations((newState:IssueState) => {
+			let
+				{issues} = newState
+			
+			updatedIssues.forEach(updatedIssue => {
+				const
+					issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
+				
+				issues = (issueIndex > -1) ?
+					issues.set(issueIndex,updatedIssue) :
+					issues.push(updatedIssue)
+			})
+			
+			return newState.set('issues',issues)
+		})
+	}
+	
+	@ActionReducer()
+	private updateCommentsInState(updatedComments:List<Comment>) {
+		return (state:IssueState) => {
+			let
+				{comments} = state
+			
+			updatedComments.forEach(updatedComment => {
+				const
+					commentIndex = 	comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
+				
+				if (commentIndex > -1)
+					comments = comments.set(commentIndex,updatedComment)
+				else {
+					
+					// CHECK TO SEE IF A NEW ISSUE WAS ADDED TO THE CURRENT ISSUE
+					const
+						selectedIssue = selectedIssueSelector(getStoreState())
+					
+					// COMMENT ADD TO CURRENT SELECTED ISSUE
+					if (
+						selectedIssue &&
+						selectedIssue.number === updatedComment.issueNumber &&
+						updatedComment.repoId === selectedIssue.repoId
+					)
+						comments = comments.push(updatedComment)
+				}
+			})
+			 
+			return (comments === state.comments) ?
+				state :
+				state.set('comments',comments)
+				
+		}
+	}
+	@Action()
+	commentsChanged(...comments:Comment[]) {
+		return async (dispatch,getState) => {
+			this.updateCommentsInState(List<Comment>().push(...comments))
+			//
+			// let
+			// 	{comments} = this.state
+			//
+			// for (let commentId of commentIds) {
+			//
+			// }
+			// commentIds.forEach(commentId => {
+			// 	const
+			// 		commentIndex = comments.findIndex(comment => comment && comment.id === commentId)
+			//
+			//
+			// })
+			//
+			// state.set
+		}
+	}
+	
+	@ActionReducer()
+	toggleGroupVisibility(id:string,visible:boolean) {
+		return (state:IssueState) => state.set('groupVisibility',state.groupVisibility.set(id,visible))
+	}
 	
 	/**
 	 * Set filtering and sorting

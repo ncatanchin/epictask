@@ -1,5 +1,5 @@
 
-import { cloneObject } from "shared/util"
+import { cloneObject } from "shared/util/ObjectUtil"
 const
 	log = getLogger(__filename),
 	IPC = require('node-ipc').IPC

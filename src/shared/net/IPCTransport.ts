@@ -149,7 +149,7 @@ export class IPCTransport extends Transport {
 				log.info(`Disconnected ${processClientId}`)
 				// if (!this.connectDeferred.promise.isResolved())
 				// 	this.connectDeferred.reject(new Error('Connection failed'))
-				this.disconnected = true
+				//this.disconnected = true
 			})
 		})
 		

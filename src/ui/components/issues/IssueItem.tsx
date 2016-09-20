@@ -11,11 +11,13 @@ import filterProps from 'react-valid-props'
 import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {Issue} from 'shared/models'
 
-import { IIssueGroup, IIssueListItem } from 'shared/actions/issue/IIssueListItems'
+import { IIssueListItem } from 'shared/actions/issue/IIssueListItems'
 import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
-import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
+
+import { IssuesPanel } from "ui/components/issues/IssuesPanel"
+import { shallowEquals } from "shared/util/ObjectUtil"
 
 
 interface IIssueItemProps extends React.HTMLAttributes<any> {
@@ -27,33 +29,67 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 }
 
 // State is connected at the item level to minimize redraws for the whole issue list
-@connect(createSelector(
-	selectedIssueIdsSelector,
-	(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item,
-	(selectedIssueIds:number[],item:IIssueListItem<Issue>) => {
-		const
+@connect(() => {
+	
+	const
+		selector = createSelector(
+			//(state,props:IIssueItemProps):number[] => _.get(props,'issuesPanel.updatedSelectedIssueIds',[]),
+			selectedIssueIdsSelector,
+			(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item,
+			(selectedIssueIds:number[],item:IIssueListItem<Issue>) => {
+				const
+					isSelected =
+						item &&
+						selectedIssueIds &&
+						selectedIssueIds.includes((item.item as Issue).id)
+				
+				return {
+					isSelected,
+					item,
+					isSelectedMulti: isSelected && selectedIssueIds.length > 1
+				}
+			}
+		)
+	
+	let previousData = null
+	
+	return (state,props) => {
+		let
+			selectedIssueIds = selectedIssueIdsSelector(state),
+			{item} = props,
 			isSelected =
 				item &&
 				selectedIssueIds &&
-				selectedIssueIds.includes((item.item as Issue).id)
+				selectedIssueIds.includes((item.item as Issue).id),
+			newData = {
+				item,
+				isSelected,
+				isSelectedMulti: isSelected && selectedIssueIds.length > 1
+			}
 		
-		return {
-			isSelected,
-			item,
-			isSelectedMulti: isSelected && selectedIssueIds.length > 1
+		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','item.id')) {
+			return previousData
 		}
+		
+		previousData = newData
+		
+		return newData
 	}
-))
+})
 
+@PureRender
 class IssueItem extends React.Component<IIssueItemProps,void> {
 	
-	shouldComponentUpdate(nextProps:IIssueItemProps) {
-		return (
-			this.props.isSelected !== nextProps.isSelected ||
-			this.props.isSelectedMulti !== nextProps.isSelectedMulti ||
-			_.get(this.props.item,'id',null) !== _.get(nextProps.item,'id',null)
-		)
-	}
+	/**
+	 * Checks whether the item should update comparing
+	 * selected, selectedMulti and item ref
+	 *
+	 * @param nextProps
+	 * @returns {boolean}
+	 */
+	// shouldComponentUpdate(nextProps:IIssueItemProps) {
+	// 	return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','item')
+	// }
 	
 	render() {
 		const

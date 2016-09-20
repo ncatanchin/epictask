@@ -7,10 +7,11 @@ import {Transport} from "shared/net/Transport"
 import {ProcessType} from "shared/ProcessType"
 import VariableProxy from 'shared/util/VariableProxy'
 import { DatabaseServerName } from "shared/Constants"
-import { cloneObject } from "shared/util"
-const TIMEOUT = 120000
+import { cloneObject } from "shared/util/ObjectUtil"
+import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
 
 const
+	TIMEOUT = 120000,
 	DatabaseServerType = ProcessType.DatabaseServer
 	
 
@@ -61,7 +62,7 @@ let databaseClient:DatabaseClient = null
  *
  * @type {VariableProxy<DatabaseClient>}
  */
-let databaseClientProxy:VariableProxy<DatabaseClient> = _.get(module,'hot.data.proxy',null)
+let databaseClientProxy:VariableProxy<DatabaseClient> = getHot(module,'databaseClientProxy',null)
 
 /**
  * DatabaseWindow wraps the background
@@ -208,24 +209,6 @@ export class DatabaseClient {
 
 
 	/**
-	 * HMR - Hot Module Replacement setup
-	 */
-	private hmrSetup() {
-		if (module.hot) {
-			module.hot.dispose(() => {
-				log.info(`Disposing`,__filename)
-				this.kill()
-			})
-		}
-	}
-	
-	
-	
-
-
-
-
-	/**
 	 * Direct database request
 	 *
 	 * @param fn
@@ -344,12 +327,8 @@ export default new Proxy({}, {
 }) as DatabaseClient
 
 
-if (module.hot) {
-	module.hot.dispose((data:any) => {
-		assign(data,{proxy:databaseClientProxy})
-		try {
-			databaseClient.kill()
-		} catch (err) {}
-	})
-	module.hot.accept()
-}
+setDataOnDispose(module,() => ({
+	databaseClientProxy
+}))
+
+acceptHot(module,log)

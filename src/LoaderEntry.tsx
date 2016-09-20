@@ -1,5 +1,7 @@
 import * as assert from 'assert'
 import {Loader} from "ui/components/common/Loader"
+import * as ReactDOM from 'react-dom'
+import * as React from 'react'
 import * as Constants from 'shared/Constants'
 import Electron = require('electron')
 

@@ -30,7 +30,7 @@ export default class JobProgressTracker {
 	}
 	
 	get percentComplete() {
-		return !this.totalCount ? 0 : this.completedCount / this.totalCount
+		return Math.max(1,Math.min(0,!this.totalCount ? 0 : this.completedCount / this.totalCount))
 	}
 	
 	get isComplete() {

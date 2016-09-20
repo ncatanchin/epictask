@@ -9,9 +9,10 @@ const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import {mergeStyles} from "shared/themes/styles/CommonStyles"
 import {PureRender} from "ui/components/common/PureRender"
-import { postConstructorDecorate, interceptFn } from "shared/util"
-//import {interceptFn} from "shared/util/ObjectUtil"
-//import {PureRender} from "ui/components/common/PureRender"
+import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
+import { TTheme } from "shared/themes/Theme"
+
+
 
 /**
  * Define our dark palette
@@ -20,12 +21,16 @@ import { postConstructorDecorate, interceptFn } from "shared/util"
 export const DefaultThemeName = 'DarkTheme'
 
 // ONLY LET FOR HMR
-export let Themes = null
+export let Themes:{[ThemeName:string]:TTheme} = null
 export let DefaultTheme = null
 
 // Internal ref to the current theme
-let theme = null
-let themeName = DefaultThemeName
+const ThemeState = getHot(module,'ThemeState',{
+	themeName: null as any,
+	theme:null as any
+})
+// let theme = null
+// let themeName = DefaultThemeName
 
 /**
  * Theme listener type, eventually will be typed
@@ -33,8 +38,10 @@ let themeName = DefaultThemeName
 export type TThemeListener = (theme:any) => void
 
 // Internal listener list
-const themeListeners = _.get(module,'hot.data.themeListeners',[]) as TThemeListener[]
+const
+	themeListeners = getHot(module,'themeListeners',[]) as TThemeListener[]
 
+log.info(`Using theme listeners at start`,themeListeners)
 
 /**
  * Add a theme listener
@@ -55,9 +62,10 @@ export function addThemeListener(listener) {
 /**
  * Notify all listeners of update
  */
-function notifyListeners() {
+function notifyListeners(newTheme:TTheme) {
 	const listenersCopy = [...themeListeners]
-	listenersCopy.forEach(listener => listener(theme))
+	log.info(`Notifying listeners`,listenersCopy,'of new theme',newTheme)
+	listenersCopy.forEach(listener => listener(newTheme))
 }
 
 
@@ -66,34 +74,65 @@ function notifyListeners() {
  *
  * @param newTheme
  */
-export function setTheme(newTheme) {
-	themeName = newTheme.name
-	theme = newTheme
+export function setTheme(newTheme:TTheme) {
+	if (!newTheme) {
+		log.error(`Null theme, requiring dark theme directly`,newTheme)
+		newTheme = require('./available/DarkTheme').default
+	}
+	Object.assign(ThemeState,{
+		themeName: newTheme.ThemeName,
+		theme: newTheme
+	})
 	
 	// Assign app props to the body & to html
-	Object.assign(document.getElementsByTagName('html')[0].style,theme.app)
-	Object.assign(document.getElementsByTagName('body')[0].style,theme.app)
+	Object.assign(document.getElementsByTagName('html')[0].style,ThemeState.theme.app)
+	Object.assign(document.getElementsByTagName('body')[0].style,ThemeState.theme.app)
 	
-	notifyListeners()
+	notifyListeners(newTheme)
 
 }
 
 export function getTheme() {
-	return theme
+	return ThemeState.theme
 }
 
 function loadThemes() {
 	log.info('Loading themes')
 
-	Themes = require('./index')
+	const
+		ctx = require.context('./available',true,/(Theme$|Theme\.(js)sx?$)/)
+	
+	Themes = ctx.keys()
+		.map(key => {
+			const
+				themeMod = ctx(key) as any,
+				mod = themeMod.default || themeMod
+			
+			log.info(`Loaded`,key,'got',mod)
+			return mod
+		})
+		.filter(themeMod => themeMod.ThemeName)
+		.reduce((themeMap,themeMod) => {
+			themeMap[ themeMod.ThemeName ] = themeMod
+			return themeMap
+		},{})
+	
+	log.info(`Loaded themes`,Themes)
 	
 	// Set the default theme
 	DefaultTheme = Themes[DefaultThemeName]
 	
 	// If this is a reload then grab the theme name from the hot data
-	themeName = (_.get(module,'hot.data.themeName') || DefaultThemeName) as string
+	ThemeState.themeName = getHot(module,'themeName',DefaultThemeName)
 	
-	setTheme(Themes[themeName || DefaultThemeName])
+	setTheme(Themes[ThemeState.themeName] || DefaultTheme)
+	
+	if (module.hot) {
+		module.hot.accept([ctx.id],(updates) => {
+			log.info(`HMR Theme Update`)
+			loadThemes()
+		})
+	}
 }
 
 loadThemes()
@@ -179,9 +218,10 @@ export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):
 export interface IThemedState {
 	theme?:any
 	styles?:any
+	wrappedInstance?:any
 }
 
-export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any = {}) {
+export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any = {},theme = getTheme()) {
 	
 	const themeParts = themeKeys.map(themeKey => _.get(getTheme(),themeKey,{}))
 	
@@ -199,85 +239,6 @@ export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any =
  */
 export function makeThemedComponent(Component,skipRadium = false,baseStyles = null,...themeKeys:string[]) {
 	
-	// const WrappedComponent = postConstructorDecorate(Component.name + "Themed",Component,(instance:typeof Component,args:any[]) => {
-	//
-	// 	/**
-	// 	 * Create a new state Object
-	// 	 *
-	// 	 * @param props
-	// 	 * @returns {{theme: null}}
-	// 	 */
-	// 	function makeState(props) {
-	// 		const
-	// 			newState = {
-	// 				theme: getTheme()
-	// 			},
-	// 			styles = createThemedStyles(baseStyles,themeKeys,props)
-	//
-	// 		if (baseStyles) {
-	// 			Object.assign(newState,{styles})
-	// 		}
-	//
-	// 		return newState
-	// 	}
-	//
-	// 	/**
-	// 	 * Update the theme
-	// 	 *
-	// 	 * @param props
-	// 	 * @param force
-	// 	 */
-	// 	function updateTheme(props = instance.props, force = false) {
-	// 		if (instance.state && _.isEqual(instance.state.theme, getTheme()))
-	// 			return
-	//
-	// 		instance.setState(makeState(props), () => instance.forceUpdate())
-	// 	}
-	//
-	// 	let unsubscribe = null
-	//
-	// 	interceptFn(instance,{
-	//
-	// 		componentWillMount: function(origFn) {
-	// 			updateTheme()
-	// 			unsubscribe = addThemeListener(() => updateTheme(instance.props,true))
-	// 			origFn()
-	// 		},
-	//
-	// 		forceUpdate(origFn,callback?:() => any) {
-	// 			updateTheme(instance.props,true)
-	// 			origFn(callback)
-	// 		},
-	//
-	// 		/**
-	// 		 * If styles prop is passed and it has changed
-	// 		 * then update state
-	// 		 *
-	// 		 * @param origFn
-	// 		 * @param nextProps
-	// 		 */
-	// 		componentWillReceiveProps(origFn,nextProps) {
-	// 			if (instance.props.styles !== nextProps.styles)
-	// 				updateTheme(nextProps)
-	//
-	// 			origFn(nextProps)
-	// 		},
-	//
-	// 		/**
-	// 		 * Unsubscribe from theme updates
-	// 		 */
-	// 		componentWillUnmount(origFn) {
-	// 			if (unsubscribe) {
-	// 				unsubscribe()
-	// 				unsubscribe = null
-	// 			}
-	//
-	// 			origFn()
-	// 		}
-	// 	})
-	//
-	// 	return instance
-	// })
 	
 	const FinalComponent = skipRadium ? Component : Radium(Component)
 	
@@ -299,14 +260,17 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		/**
 		 * Create a new new theme state
 		 */
-		getNewState = (props) => {
+		getNewState = (props, theme = getTheme()) => {
 			const newState = {
-				theme: getTheme()
+				theme
 			}
 
-			const styles = createThemedStyles(baseStyles,themeKeys,props)
+			
 
 			if (baseStyles) {
+				const
+					styles = createThemedStyles(baseStyles,themeKeys,props,theme)
+				
 				Object.assign(newState,{styles})
 			}
 
@@ -320,11 +284,17 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		 * as well as by componentWillMount to
 		 * create initial styles
 		 */
-		updateTheme(props = this.props, force = false) {
-			if (this.state && (_.isEqual(this.state.theme, getTheme()) || this.state.theme === getTheme()))
-				return
-
-			this.setState(this.getNewState(props), () => this.forceUpdate())
+		updateTheme(props = this.props, newTheme = getTheme()) {
+			if (
+				// Check for theme changes
+				_.get(this.state,'theme') !== newTheme ||
+				// Check for style changes
+				!_.isEqual(_.pick(props,'styles','style'),_.pick(this.props,'styles','style'))
+			) {
+				log.info(`Updating state`)
+				this.setState(this.getNewState(props,newTheme), () => this.forceUpdate())
+			}
+			
 		}
 
 		/**
@@ -332,13 +302,9 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		 */
 		componentWillMount() {
 			this.updateTheme()
-			this.unsubscribe = addThemeListener(() => this.updateTheme(this.props,true))
+			this.unsubscribe = addThemeListener((newTheme) => this.updateTheme(this.props,newTheme))
 		}
 
-		forceUpdate(callback?:() => any) {
-			this.updateTheme(this.props,true)
-			super.forceUpdate(callback)
-		}
 
 		/**
 		 * If styles prop is passed and it has changed
@@ -360,13 +326,16 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				this.unsubscribe = null
 			}
 		}
+		
+		getWrappedInstance() {
+			return _.get(this.state,'wrappedInstance',null) as any
+		}
+		
+		setWrappedInstanceRef = (wrappedInstance) => this.setState({wrappedInstance})
 
 		render() {
 			
-				
-			//const ThemedComponent = Component as any
-			//return <ThemedComponent {..._.omit(this.props,'styles')} {...this.state} />
-			return <FinalComponent {..._.omit(this.props,'styles')} {...this.state} />
+			return <FinalComponent {..._.omit(this.props,'styles')} {...this.state} ref={this.setWrappedInstanceRef} />
 		}
 	}
 	
@@ -435,17 +404,10 @@ Object.assign(global as any,{
 })
 
 
-if (module.hot) {
-	module.hot.dispose((data:any) => {
-		Object.assign(data,{
-			themeName,
-			themeListeners
-		})
-	})
-	
-	module.hot.accept(() => log.info(`HMR Update`))
-	// module.hot.accept(['./index'],(updates) => {
-	// 	log.info(`Theme Updates, HMR`,updates)
-	// 	loadThemes()
-	// })
-}
+// HMR CONFIG
+setDataOnDispose(module,() => ({
+	ThemeState,
+	themeListeners
+}))
+
+acceptHot(module,log)

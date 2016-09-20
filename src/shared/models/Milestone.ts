@@ -12,7 +12,7 @@ import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey,PouchDBFullTextFinder,
 import {User} from './User'
 import {RegisterModel} from '../Registry'
 import { Repo } from "shared/models"
-import { isNumber } from "shared/util"
+import { isNumber } from "shared/util/ObjectUtil"
 
 
 export function makeMilestoneId(milestone:Milestone) {
@@ -25,6 +25,13 @@ export function makeMilestoneId(milestone:Milestone) {
 })
 export class Milestone extends DefaultModel {
 
+	static EmptyMilestone = new Milestone({
+		id: -1,
+		repoId: 0,
+		title: "No Milestone",
+		description: "No Milestone"
+	})
+	
 	/**
 	 * Revive from JS/JSON
 	 *

@@ -67,8 +67,10 @@ async function boot() {
 	require("shared/themes/ThemeManager")
 	
 	// Finally load the AppRoot
+	// require.ensure(['ui/components/root/AppRoot'],function(require) {
+	// 	require('ui/components/root/AppRoot')
+	// })
 	require('ui/components/root/AppRoot')
-	
 }
 
 // Kick it off

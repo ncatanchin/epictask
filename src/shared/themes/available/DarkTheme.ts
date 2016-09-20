@@ -1,5 +1,5 @@
 import * as Styles from 'material-ui/styles'
-import {makeTheme, Palettes} from './material/MaterialTools'
+import {makeTheme, Palettes} from '../material/MaterialTools'
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
 
 
@@ -75,7 +75,7 @@ function themeFontSize(multiplier:number) {
 }
 
 export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
-	name: 'DarkTheme',
+	ThemeName: 'DarkTheme',
 
 	/**
 	 * Global
@@ -179,8 +179,6 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			}
 			
 		},
-		
-		
 	},
 	
 	/**
@@ -674,7 +672,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		issueGroupHeader: {
 			color: text.primary,
-			backgroundColor: secondary.hue1
+			boxShadow: 'inset 0rem -0.5rem 0.3rem 0rem ' + tc(accent.hue2).darken(20).setAlpha(0.8).toRgbString(),
+			backgroundColor: tc(accent.hue2).darken(50).setAlpha(0.6).toRgbString(),
+			
+			expanded: {
+				backgroundColor: accent.hue2,
+				boxShadow: 'inset 0.1rem 0.1rem 0.5rem rgba(0,0,0,0.4)'
+			}
 		},
 
 
@@ -682,11 +686,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		issue: {
 			backgroundColor: background,
 			color:           text.secondary,
+			boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(text.secondary).setAlpha(0.3).toRgbString(),
 
 			// Selected state
 			selected: {
 				backgroundColor: primary.hue2,
 				color:           text.primary,
+				boxShadow: 'none',
 			},
 			
 			// multi selected state
@@ -724,7 +730,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		issueTitleSelected: {
 			color:      text.primary,
 			fontWeight: 400,
-			fontSize: themeFontSize(1.4)
+			fontSize: themeFontSize(1.2)
 		},
 
 		issueLabel: {
@@ -926,3 +932,5 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		background
 	}
 })))
+
+export default DarkTheme

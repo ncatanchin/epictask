@@ -5,15 +5,17 @@
 // Imports
 import * as React from 'react'
 import {Label} from 'shared/models/Label'
-import { Themed, ThemedNoRadium, ThemedStylesNoRadium } from 'shared/themes/ThemeManager'
+import {ThemedStylesNoRadium } from 'shared/themes/ThemeManager'
 import {Milestone} from 'shared/models/Milestone'
-import {PureRender} from 'ui/components/common'
 import LabelChip from 'ui/components/common/LabelChip'
-const tinycolor = require('tinycolor2')
+import { shallowEquals } from "shared/util/ObjectUtil"
+
 
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	tinycolor = require('tinycolor2')
 
 
 const baseStyles = createStyles({
@@ -51,11 +53,15 @@ export interface IIssueLabelsAndMilestonesProps extends React.HTMLAttributes<any
  **/
 
 @ThemedStylesNoRadium(baseStyles,'labels')
-@PureRender
+
 export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMilestonesProps,void> {
+	
+	
+	shouldComponentUpdate(nextProps:IIssueLabelsAndMilestonesProps, nextState:void, nextContext:any):boolean {
+		return !shallowEquals(this.props,nextProps,'labels','milestones','showIcon')
+	}
 
-
-	// updateState = (props = this.props) => {
+// updateState = (props = this.props) => {
 	// 	const {theme} = props,
 	// 		styles = mergeStyles(baseStyles, theme.labels)
 	//

@@ -8,45 +8,38 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
-import {Style} from 'radium'
-
-import {PureRender} from '../common'
-import {IssueDetailPanel} from './IssueDetailPanel'
-import { Issue, User } from 'shared/models'
-
+import {PureRender} from 'ui/components/common/PureRender'
+import { Issue, Milestone } from 'shared/models'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {Container} from 'typescript-ioc'
+
 import {
-	issueSortAndFilterSelector,
-	selectedIssueIdsSelector,
-	issueStateSelector, issueIdsSelector, issuesSelector, selectedIssueIdSelector, orderedIssueIndexesSelector,
-	issueGroupsSelector, issueItemsSelector,
+	issueStateSelector, issuesSelector,
+	issueGroupsSelector, issueItemsSelector, groupVisibilitySelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import * as KeyMaps from 'shared/KeyMaps'
-import {CommonKeys} from 'shared/KeyMaps'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import IssueItem from 'ui/components/issues/IssueItem'
 
-import {Milestone} from 'shared/models/Milestone'
-import {Label} from 'shared/models/Label'
+
 import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
 import {IssueFilters} from 'ui/components/issues/IssueFilters'
 import {
-	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType,
-	isGroupListItem
+	IIssueGroup, getIssueGroupId, IIssueListItem,
+	isGroupListItem, isGroupVisible, IssueListItemType
 } from 'shared/actions/issue/IIssueListItems'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
 import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
-import { TIssueEditInlineConfig, TIssueSortAndFilter } from 'shared/actions/issue/IssueState'
-import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
-import { HotKeys } from "ui/components/common/Other"
+import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
+
 import { VisibleList } from "ui/components/common/VisibleList"
 import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
-import { getStoreState } from "shared/store"
+
+import {createSelector} from 'reselect'
+import { TransitionDurationLong } from "shared/themes/styles/CommonStyles"
+import { IssuesPanel } from "ui/components/issues/IssuesPanel"
+import { shallowEquals } from "shared/util/ObjectUtil"
+
 
 
 // Constants & Non-typed Components
@@ -84,15 +77,32 @@ const baseStyles = createStyles({
 	/**
 	 * Issue group header
 	 */
-	issueGroupHeader: [FlexRowCenter, FlexAuto, FillWidth, {
+	issueGroupHeader: [FlexRowCenter, FlexAuto, FillWidth, makeTransition('background-color',TransitionDurationLong),{
 		padding: '1rem 0.5rem',
-		boxShadow: 'inset 0.1rem 0.1rem 0.5rem rgba(0,0,0,0.4)',
+		
 		spacer: [FlexScale],
-		control: {
+		
+		middle: [FlexColumnCenter,FlexScale,{
+			top: [FlexRow,FillWidth,makePaddingRem(0,0,1,0)],
+			bottom: [FlexRow,FillWidth],
+		}],
+		
+		text: [FlexScale,{
+			fontWeight: 700,
+			fontSize: rem(1.3)
+		}],
+		
+		// Header Controls
+		control: [makeTransition(['transform'],TransitionDurationLong),{
+			width: rem(3),
 			padding: '0 1rem',
-			backgroundColor: 'transparent'
-		},
-		labels: [FlexScale, {overflow: 'auto'}],
+			backgroundColor: 'transparent',
+			transform: 'rotate(0deg)',
+			expanded: [{
+				transform: 'rotate(90deg)'
+			}]
+		}],
+		labels: [FlexScale, OverflowAuto],
 		stats: {
 			number: {
 				fontWeight: 700
@@ -104,14 +114,14 @@ const baseStyles = createStyles({
 	}],
 	
 	issue: [
-		makeTransition(['height', 'flex-grow', 'flex-shrink', 'flex-basis']),
+		makeTransition(['height', 'flex-grow', 'flex-shrink', 'flex-basis','box-shadow']),
 		FlexRow,
 		FlexAuto,
 		FillWidth,
 		FlexAlignStart,
 		{
-			height: rem(9.1),
-			padding: '1.5rem 1rem 0rem 1rem',
+			height: rem(9.4),
+			padding: '1rem 1rem 0rem 1rem',
 			cursor: 'pointer',
 			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 			
@@ -164,10 +174,10 @@ const baseStyles = createStyles({
 	
 	
 	// TODO: Fonts configured in theme, ones that aren't should be moved
-	issueTitle: makeStyle(makeTransition(['font-size', 'font-weight']), Ellipsis, FlexScale, {
+	issueTitle: [makeTransition(['font-size', 'font-weight']), Ellipsis, FlexScale, {
 		display: 'block',
 		padding: '0 1rem 0 0'
-	}),
+	}],
 	
 	
 	issueTitleSelected: makeStyle({}),
@@ -208,61 +218,95 @@ const baseStyles = createStyles({
 })
 //endregion
 
-interface IIssueGroupHeaderProps extends React.HTMLAttributes<any> {
-	expanded:boolean
-	styles:any
-	issueGroup:IIssueGroup
+
+function setGroupVisible(id:string,visible:boolean) {
+	getIssueActions().toggleGroupVisibility(id,visible)
 }
+
+
+interface IIssueGroupHeaderProps extends React.HTMLAttributes<any> {
+	expanded?:boolean
+	styles:any
+	group:IIssueGroup
+}
+
+
 
 /**
  * Issue group header component
  *
  */
+@connect(createStructuredSelector({
+	expanded: createSelector(
+		groupVisibilitySelector,
+		(state, props:IIssueGroupHeaderProps) => props.group && props.group.id,
+		(groupVisibility:Map<string,boolean>, groupId) =>
+			groupVisibility.has(groupId) ? groupVisibility.get(groupId) : true
+	)
+}))
 @Radium
 @PureRender
 class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,void> {
 	render() {
 		const
-			{expanded,style,styles,onClick,issueGroup} = this.props,
-			{ groupByItem, groupBy } = issueGroup
+			{expanded,style,styles,onClick,group} = this.props,
+			{ groupByItem, groupBy } = group,
+			headerStyles = styles.issueGroupHeader,
+			issueCount = group.issueIndexes.length
 		
-		return <div style={[styles.issueGroupHeader,style]} onClick={onClick}>
-			<Icon iconSet='material-icons' style={styles.issueGroupHeader.control}>apps</Icon>
+		log.info(`Group by`,groupBy,`item`,groupByItem)
+		
+		return <div style={[headerStyles,expanded && headerStyles.expanded,style]} onClick={onClick}>
+			<Icon style={[headerStyles.control,expanded && headerStyles.control.expanded]}
+						iconSet='fa'
+			      iconName={'chevron-right'}/>
+			{/*<Icon iconSet='material-icons' style={styles.issueGroupHeader.control}>apps</Icon>*/}
 			{/*<Button style={styles.issueGroupHeader.control}>*/}
 			{/*/!*<Icon iconSet='fa' iconName='chevron-right'/>*!/*/}
 			{/*<Icon iconSet='material-icons'>apps</Icon>*/}
 			{/*</Button>*/}
 			
+			<div style={[headerStyles.middle]}>
+				
+				{/* Top label line: Label Group with 5 issues (example) */}
+				<div style={[headerStyles.middle.top]}>
+					<div style={[headerStyles.text]}>Group</div>
+					<div style={[headerStyles.stats]}>
+						<span style={headerStyles.stats.number}>
+							{issueCount}
+						</span>
+						&nbsp;Issue{issueCount !== 1 ? 's' : ''}
+					</div>
+				</div>
+				
+				<div style={[headerStyles.middle.bottom]}>
+					{//GROUP BY MILESTONES
+						(groupBy === 'milestone') ?
+							<IssueLabelsAndMilestones
+								style={headerStyles.labels}
+								showIcon
+								labels={[]}
+								milestones={[!groupByItem ? Milestone.EmptyMilestone : groupByItem]}/> :
+							
+							// GROUP BY LABELS
+							(groupBy === 'labels') ?
+								<IssueLabelsAndMilestones
+									style={styles.issueGroupHeader.labels}
+									showIcon
+									labels={(!groupByItem || groupByItem.length === 0) ?
+									[NO_LABELS_ITEM] :
+									Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
+								
+								// GROUP BY ASSIGNEE
+								<div
+									style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
+					}
+				</div>
 			
-			{//GROUP BY MILESTONES
-				(groupBy === 'milestone') ?
-					<IssueLabelsAndMilestones
-						style={styles.issueGroupHeader.labels}
-						showIcon
-						labels={[]}
-						milestones={[!groupByItem ? {title:'No Milestone'} : groupByItem]}/> :
-					
-					// GROUP BY LABELS
-					(groupBy === 'labels') ?
-						<IssueLabelsAndMilestones
-							style={styles.issueGroupHeader.labels}
-							showIcon
-							labels={(!groupByItem || groupByItem.length === 0) ?
-							[NO_LABELS_ITEM] :
-							Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
-						
-						// GROUP BY ASSIGNEE
-						<div
-							style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
-			}
-			{/*<div style={styles.issueGroupHeader.spacer} />*/}
-			<div style={styles.issueGroupHeader.stats}>
-				<span style={styles.issueGroupHeader.stats.number}>
-					{issueGroup.issueIndexes.length}
-				</span>
-				{/*&nbsp;Issues*/}
-			</div>
+				
+				
 			{/*<Icon iconSet='material-icons'>apps</Icon>*/}
+			</div>
 		</div>
 	}
 }
@@ -276,9 +320,8 @@ export interface IIssuesListProps {
 	issues?:List<Issue>
 	items?: List<IIssueListItem<any>>
 	groups?:List<IIssueGroup>
+	groupVisibility?:Map<string,boolean>
 	onIssueSelected:(event: MouseEvent, issue:Issue) => any
-	hasAvailableRepos?: boolean
-	saving?: boolean
 	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
 	
@@ -286,9 +329,7 @@ export interface IIssuesListProps {
 
 export interface IIssuesListState {
 	firstSelectedIndex?: number
-	listItems?: any
 	srcItems?: List<IIssueListItem<any>>
-	groupsVisibility?:Map<string,boolean>
 	itemIndexes?:List<number>
 }
 
@@ -305,29 +346,48 @@ export interface IIssuesListState {
 	issues: issuesSelector,
 	items: issueItemsSelector,
 	groups: issueGroupsSelector,
+	groupVisibility: groupVisibilitySelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
-	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
-	saving: (state) => issueStateSelector(state).issueSaving
+	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig
 }),null,null,{withRef:true})
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
-	
+		
 	
 	uiActions: UIActionFactory = getUIActions()
 	issueActions: IssueActionFactory = getIssueActions()
 	
 	constructor(props,context) {
 		super(props,context)
+		
 		this.state = {
 			itemIndexes: List<number>()
 		}
 	}
 	
-	private filterExcludedItems(items:List<IIssueListItem<any>>,itemIndexes:List<number>,issues:List<Issue>,groups:List<IIssueGroup>,groupsVisibility:Map<string,boolean>) {
+	
+	
+	
+	/**
+	 * Filter any collapsed groups, etc
+	 *
+	 * @param items
+	 * @param itemIndexes
+	 * @param issues
+	 * @param groups
+	 * @param groupVisibility
+	 */
+	private filterExcludedItems(
+		items:List<IIssueListItem<any>>,
+		itemIndexes:List<number>,
+		issues:List<Issue>,
+		groups:List<IIssueGroup>,
+		groupVisibility:Map<string,boolean>
+	):List<number> {
 		const excludedIssueIds = groups
-			.filter(itemGroup => !groupsVisibility.get(itemGroup.id))
+			.filter(itemGroup => !isGroupVisible(groupVisibility,itemGroup.id))
 			.reduce((issueIds, nextItemGroup) => {
 				
 				const
@@ -337,56 +397,76 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				return issueIds
 			}, [])
 		
-		return itemIndexes.filter(itemIndex => excludedIssueIds.includes(items.get(itemIndex).id))
+		return itemIndexes.filter(itemIndex => !excludedIssueIds.includes(items.get(itemIndex).id)) as List<number>
 		
 	}
 	
+	private updateGroupFilteredIndexes(props = this.props) {
+		if (props.groupVisibility !== this.props.groupVisibility) {
+			log.info(`Group visibility changed - updating exclusions`)
+			const
+				{items,groups,issues} = props,
+				{itemIndexes} = this.state
+			
+			this.setState({
+				itemIndexes: this.filterExcludedItems(
+					items,
+					itemIndexes,
+					issues,
+					groups,
+					props.groupVisibility)
+			})
+		}
+	}
+	
+	/**
+	 * Updates the scope when items change
+	 *
+	 * @param props
+	 * @returns {boolean} - true if changed, false otherwise
+	 */
 	private updateState = (props = this.props) => {
 		const
-			{items,issues,groups} = props
-		
+			{groupVisibility,items,issues,groups} = props
+			
 		let
 			srcItems = _.get(this.state,'srcItems',List<IIssueListItem<any>>()),
-			groupsVisibility = _.get(this.state,'groupsVisibility',Map<string,boolean>()),
-			itemIndexes = _.get(this.state,'itemIndexes',List<number>()),
-			listItems = _.get(this.state,'listItems',{})
+			itemIndexes = _.get(this.state,'itemIndexes',List<number>())
 		
+		const
+			itemsChanged = items !== this.props.items
 		
-		if (srcItems !== items) {
+		log.info(`ITEMS CHANGED`,itemsChanged)
+		
+		if (itemsChanged) {
+				
 			srcItems = items
 			
 			// Recreate index list
-			itemIndexes = srcItems.map((item,index) => index) as List<number>
-			
-			// Remove any cached list items
-			listItems = {}
-			// if (listItems) {
-			// 	Object.keys(listItems).forEach(listItemId => {
-			// 		if (items.findIndex(it => it.id === listItemId) === -1)
-			// 			delete listItems[ listItemId ]
-			//
-			// 	})
-			// }
+			itemIndexes = items.map((item,index) => index) as List<number>
 			
 			// Update groups if specified
 			if (groups.size) {
-				groups
-					.filter(item => !groupsVisibility.has(item.id))
-					.forEach(itemGroup => {
-						groupsVisibility = groupsVisibility.set(itemGroup.id, true)
-					})
-				
-				
-				itemIndexes = this.filterExcludedItems(items,itemIndexes,issues,groups,groupsVisibility) as List<number>
+				itemIndexes = this.filterExcludedItems(
+					items,
+					itemIndexes,
+					issues,
+					groups,
+					groupVisibility)
 			}
 			
 			this.setState({
 				itemIndexes,
-				groupsVisibility,
-				srcItems,
-				listItems
+				srcItems
 			})
+			
+			return true
 		}
+		
+		
+		this.updateGroupFilteredIndexes(props)
+		
+		return false
 	}
 	
 	
@@ -404,15 +484,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	}
 	
 	
-	/**
-	 * Is an issue group visible
-	 *
-	 * @param groupId
-	 */
-	isIssueGroupVisible(groupId: string) {
-		return [null, undefined, true].includes(this.state.groupsVisibility.get(groupId))
-	}
-	
 	
 	/**
 	 * Toggle issue group collapsed/expanded
@@ -421,14 +492,13 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 */
 	toggleGroupVisible(group: IIssueGroup) {
 		
+		log.info(`Toggling group`,group)
+		
 		const
 			groupId = getIssueGroupId(group),
-			isVisible = this.isIssueGroupVisible(groupId)
+			isVisible = isGroupVisible(this.props.groupVisibility,groupId)
 		
-		this.setState({
-			groupsVisibility: this.state
-				.groupsVisibility.set(groupId, !isVisible)
-		})
+		setGroupVisible(groupId,!isVisible)
 	}
 	
 	/**
@@ -438,100 +508,77 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		this.updateState()
 	}
 	
-	componentWillReceiveProps(nextProps) {
-		log.info(`Got new props`)
+	componentWillReceiveProps(nextProps:IIssuesListProps) {
 		this.updateState(nextProps)
 	}
 	
+	
+	
+	
 	/**
-	 * Make issue render
+	 * Render issue item
+	 *
+	 * @param itemIndexes
+	 * @param index
+	 * @param style
+	 * @param key
+	 * @returns {string|number}
 	 */
-	makeRenderIssueListItem() {
-		/**
-		 * Render issue item
-		 *
-		 * @param index
-		 * @param key
-		 * @returns {any}
-		 */
-		return (itemIndexes:List<number>,index:number,style,key) => {
-			const
-				{
-					styles,
-					editingInline,
-					editInlineConfig,
-					items,
-					onIssueSelected
-				} = this.props,
-				{groupsVisibility, listItems} = this.state,
-				item = items.get(itemIndexes.get(index))
+	renderItem = (itemIndexes:List<number>,index:number,style,key) => {
+		const
+			{
+				styles,
+				items,
+				onIssueSelected
+			} = this.props,
 			
+			item = items.get(itemIndexes.get(index))
+		
+		
+		// if (editingInline) {
+		// 	const
+		// 		{issueIndex:inlineIssueIndex} = editInlineConfig
+		//
+		// 	if (index === inlineIssueIndex) {
+		// 		// Inline issue editor
+		// 		return <IssueEditInline key={'edit-inline'}>
+		// 			inline create here
+		// 		</IssueEditInline>
+		// 	}
+		// }
+		
+		return isGroupListItem(item) ?
 			
-			if (editingInline) {
-				const
-					{issueIndex:inlineIssueIndex} = editInlineConfig
-				
-				if (index === inlineIssueIndex) {
-					// Inline issue editor
-					return <IssueEditInline key={'edit-inline'}>
-						inline create here
-					</IssueEditInline>
-				}
-			}
+			// GROUP
+			<IssueGroupHeader
+				key={key}
+				onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
+				styles={styles}
+				style={style}
+				group={item.item as IIssueGroup}/> :
 			
-			return isGroupListItem(item) ?
-				
-				// GROUP
-				<IssueGroupHeader
-					key={key}
-					onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
-					styles={styles}
-					style={style}
-					expanded={groupsVisibility.get(item.item.id)}
-					issueGroup={item.item as IIssueGroup}/> :
-				
-				// ISSUE
-				<IssueItem
-					key={key}
-					styles={styles}
-					style={style}
-					item={item}
-					onSelected={onIssueSelected}/>
-			
-			
-			// let
-			// 	listItem = listItems[item.id]
-			//
-			// if (!listItem) {
-			// 	listItem = listItems[item.id] = isGroupListItem(item) ?
-			//
-			// 		// GROUP
-			// 		<IssueGroupHeader
-			// 			key={key}
-			// 			onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
-			// 			styles={styles}
-			// 			style={style}
-			// 			expanded={groupsVisibility.get(item.item.id)}
-			// 			issueGroup={item.item as IIssueGroup}/> :
-			//
-			// 		// ISSUE
-			// 		<IssueItem
-			// 			key={key}
-			// 			styles={styles}
-			// 			style={style}
-			// 			item={item}
-			// 			onSelected={this.onIssueSelected}/>
-			//
-			//
-			// }
-			//
-			// // Issue item
-			// return listItem
-			
-		}
+			// ISSUE
+			<IssueItem
+				key={key}
+				styles={styles}
+				style={style}
+				item={item}
+				onSelected={onIssueSelected}/>
+		
 	}
+
 	
-	
+	getItemHeight = (listItems,listItem,index) => {
+		const
+			{items} = this.props,
+			item = items.get(listItems.get(index))
+		
+		
+		return !item ? 0 :
+			item.type === IssueListItemType.Group ?
+				convertRem(4) :
+				convertRem(9.6)
+	}
 	
 	/**
 	 * Render the component
@@ -541,6 +588,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{
 				theme,
 				styles,
+				items,
 				editingInline
 			} = this.props,
 			{itemIndexes} = this.state,
@@ -557,9 +605,10 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			<div style={styles.listContainer}>
 				<VisibleList items={itemIndexes}
 				             itemCount={itemCount}
-				             itemRenderer={this.makeRenderIssueListItem()}
+				             itemRenderer={this.renderItem}
+				             itemKeyFn={(listItems,item,index) => `${_.get(items.get(item),'id',index)}`}
 				             initialItemsPerPage={50}
-				             itemHeight={convertRem(9.1)}
+				             itemHeight={this.getItemHeight}
 				             className="show-scrollbar"
 				             
 				/>

@@ -16,7 +16,7 @@ import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 
 import {RegisterModel} from '../Registry'
-import { isNumber, isObjectType, isObject } from "shared/util"
+import { isNumber, isObjectType, isObject } from "shared/util/ObjectUtil"
 
 
 export type TIssueState = "open" | "closed"

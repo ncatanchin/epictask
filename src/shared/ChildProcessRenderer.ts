@@ -2,12 +2,15 @@ import WebViewElement = Electron.WebViewElement
 import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
 import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
 import { ProcessType } from "shared/ProcessType"
+import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
 
-const HEARTBEAT_TIMEOUT = 1000
-const START_TIMEOUT_DEFAULT = 30000
 
 const
+	HEARTBEAT_TIMEOUT = 1000,
+	START_TIMEOUT_DEFAULT = 30000,
+
 	log = getLogger(__filename),
+	
 	globalListeners:IChildProcessEventListener[] = [],
 	{ipcRenderer,BrowserWindow} = require('electron')
 
@@ -147,6 +150,13 @@ export default class ChildProcessRenderer {
 		}
 	}
 	
+	private clearTryTimeout() {
+		if (this.tryTimeoutId) {
+			clearTimeout(this.tryTimeoutId)
+			this.tryTimeoutId = null
+		}
+	}
+	
 	/**
 	 * Schedule next heartbeat
 	 */
@@ -192,13 +202,14 @@ export default class ChildProcessRenderer {
 	/**
 	 * Worker constructor
 	 *
-	 * @param startFile
+	 * @param manager
 	 * @param name
 	 * @param processType
 	 * @param opts
 	 * @param listeners
 	 */
 	constructor(
+		public manager:typeof ChildProcessManagerType,
 		public name:string,
 		public processType:ProcessType,
 		private opts:IWorkerOptions = {},
@@ -230,6 +241,38 @@ export default class ChildProcessRenderer {
 	}
 	
 	/**
+	 * Check to see if we should restart
+	 */
+	checkRestart() {
+		const
+			shouldRestart = false//this.manager.isRunning()
+		
+		if (!shouldRestart)
+			return
+		
+		log.info(`Preparing to restarting child process`,this)
+		
+		// this.clearHeartbeatTimeout()
+		// this.clearTryTimeout()
+		//
+		// Object.assign(this,{
+		// 	startDeferred: null,
+		// 	stopDeferred:null,
+		// 	killed: false,
+		// 	created: false,
+		// 	exited: false,
+		// 	browserWindow: null,
+		// 	heartbeatCount: 0,
+		// 	heartbeatTimestamp: 0,
+		// 	runningFlag: Promise.defer()
+		// })
+		//
+		// log.info(`Restarting child process`,this)
+		// this.start()
+	}
+	
+	
+	/**
 	 * Handle worker errors
 	 *
 	 * @param event
@@ -254,6 +297,10 @@ export default class ChildProcessRenderer {
 		log.info(`Child closed ${this.processType}`)
 		this.browserWindow = null
 		
+		this.handleExit(event)
+		// this.cleanup()
+		// this.checkRestart()
+		
 	}
 	
 	/**
@@ -263,40 +310,46 @@ export default class ChildProcessRenderer {
 	 */
 	private handleExit = (event = null) => {
 		//const err:Error, isDisconnect = false
-		this.exited = true
-		
-		this.listeners.forEach(listener => {
-			try {
-				listener.onStop && listener.onStop(this, null)
-			} catch (err2) {
-				log.error('On exit error in listener', err2)
-			}
-		})
-		
-		// If not set, then set it
-		if (!this.stopDeferred) {
+		try {
+			this.exited = true
 			
-			// If this is a disconnect, and not killed, then kill
-			if ( !this.killed && this.browserWindow) {
-				log.warn('Unexpected disconnect, killing manually')
+			this.listeners.forEach(listener => {
 				try {
-					//this.webView.delete()
-					this.browserWindow.close()
-					this.browserWindow = null
+					listener.onStop && listener.onStop(this, null)
 				} catch (err2) {
-					log.error('Manual kill failed', err2)
+					log.error('On exit error in listener', err2)
 				}
-			}
+			})
+			
+			// If not set, then set it
+			if (!this.stopDeferred) {
+				
+				// If this is a disconnect, and not killed, then kill
+				if (!this.killed && this.browserWindow) {
+					log.warn('Unexpected disconnect, killing manually')
+					try {
+						//this.webView.delete()
+						this.browserWindow.close()
+						this.browserWindow = null
+					} catch (err2) {
+						log.error('Manual kill failed', err2)
+					}
+				}
+				this.cleanup()
+				this.killed = true
+				
+				this.stopDeferred = Promise.defer()
+				this.stopDeferred.resolve()
+				
+			} else if (!this.stopDeferred.promise.isResolved())
+				this.stopDeferred.resolve()
+			
 			this.cleanup()
-			this.killed = true
-			
-			this.stopDeferred = Promise.defer()
-			this.stopDeferred.resolve()
-			
-		} else if (!this.stopDeferred.promise.isResolved())
-			this.stopDeferred.resolve()
+		} catch (err) {
+			log.error(`Failed to stop cleanly`)
+		}
 		
-		this.cleanup()
+		this.checkRestart()
 	}
 	
 
@@ -337,6 +390,8 @@ export default class ChildProcessRenderer {
 	
 	
 	private cleanup() {
+		this.clearHeartbeatTimeout()
+		
 		if (this.killed)
 			return
 		

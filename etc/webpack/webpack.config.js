@@ -223,7 +223,7 @@ const config = {
 		
 		// BASICS
 		new webpack.IgnorePlugin(/vertx/),
-		new webpack.optimize.OccurrenceOrderPlugin(),
+		//new webpack.optimize.OccurrenceOrderPlugin(),
 		new webpack.NoErrorsPlugin(),
 		new HtmlWebpackPlugin({
 			filename: "app-entry.html",

@@ -66,13 +66,9 @@ export class SettingsFile implements ISettings {
 	 * @returns {SettingsFile}
 	 */
 	save() {
-		const settingsToSave = JSON.stringify(this,(k,v) => {
-			return (k === 'isLoaded') ? undefined : v
-		},4)
 		
-		log.debug('Saving', settingsToSave)
+		const settingsToSave = JSON.stringify(_.pick(this,'disableAutoSync','token','user'),null,4)
 		fs.writeFileSync(settingsFilename,settingsToSave)
-		
 		return this
 	}
 	
@@ -119,6 +115,7 @@ export class SettingsFile implements ISettings {
 export const Settings = new SettingsFile()
 export default Settings
 
+_.assignGlobal({Settings,SettingsFile})
 
 if (module.hot) {
 	module.hot.accept()

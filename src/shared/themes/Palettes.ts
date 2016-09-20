@@ -1,6 +1,6 @@
 //const Styles = require('material-ui/styles')
 //import * as c from './material/MaterialColorPalettes'
-const c = require('./Colors')
+import * as c from './material/Colors'
 
 function makeDarkPalette() {
 	const textColor = 'white'

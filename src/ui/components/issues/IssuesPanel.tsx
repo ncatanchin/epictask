@@ -48,6 +48,7 @@ import { VisibleList } from "ui/components/common/VisibleList"
 import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
+import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
 
 
 // Constants & Non-typed Components
@@ -77,7 +78,7 @@ export interface IIssuesPanelProps {
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
 	items?: List<IIssueListItem<any>>
-	selectedIssueIds?:number[]
+	//selectedIssueIds?:number[]
 	hasAvailableRepos?: boolean
 	saving?: boolean
 	editingInline?: boolean
@@ -91,6 +92,7 @@ export interface IIssuesPanelState {
 	srcItems?: List<IIssueListItem<any>>
 	groupsVisibility?:Map<string,boolean>
 	listRef?:any
+	
 }
 
 
@@ -100,18 +102,16 @@ export interface IIssuesPanelState {
  * @class IssuesPanel
  * @constructor
  **/
-
+@HotKeyContext()
 @connect(createStructuredSelector({
 	issues: issuesSelector,
 	items: issueItemsSelector,
-	selectedIssueIds: selectedIssueIdsSelector,
 	groups: issueGroupsSelector,
 	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
 	saving: (state) => issueStateSelector(state).issueSaving
 }))
 @ThemedStyles(baseStyles, 'issuesPanel')
-@HotKeyContext()
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
 	
@@ -120,14 +120,20 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	uiActions: UIActionFactory = getUIActions()
 	issueActions: IssueActionFactory = getIssueActions()
 	
+	
+	get selectedIssueIds():number[] {
+		return selectedIssueIdsSelector(getStoreState()) || []
+	}
+	
 	private get itemIndexes():List<number> {
 		let
 			listRef = _.get(this.state,'listRef',null)
 		
-		if (listRef && listRef.getWrappedInstance)
-			listRef = listRef.getWrappedInstance()
 		
-		log.info('list ref', listRef)
+		while(listRef && listRef.getWrappedInstance) {
+			listRef = listRef.getWrappedInstance()
+		}
+		
 		return _.get(listRef,'state.itemIndexes',List<number>()) as any
 	}
 	
@@ -167,12 +173,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			// Increment here to show the create below the current issue
 			issueIndex++
-			const issue = new Issue(_.cloneDeep(_.pick(
-					selectedIssue,
-					'repoId',
-					'milestone',
-					'labels'
-			)))
+			const
+				issue = new Issue(_.cloneDeep(_.pick(
+						selectedIssue,
+						'repoId',
+						'milestone',
+						'labels'
+				)))
 			
 			// this.issueActions.createIssueInline(selectedIssue)
 			this.issueActions.editInline(
@@ -193,7 +200,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private onDelete = (event) => {
 		const
-			{selectedIssueIds} = this.props
+			selectedIssueIds = this.selectedIssueIds
 		
 		log.info(`OnDelete - going to remove`, selectedIssueIds)
 		this.issueActions.setIssueState('closed', ...selectedIssueIds)
@@ -229,6 +236,34 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		}
 	}
 	
+	// Helper for sorting
+	getItemAtIndex = (itemIndex) => {
+		const
+			{items} = this.props,
+			{itemIndexes} = this
+		
+		if (!items || !itemIndexes)
+			return null
+		
+		return items.get(itemIndexes.get(itemIndex))
+	}
+	
+	getIssueIndex = (issueOrIssueId:Issue|number) => {
+		const
+			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id,
+			{items} = this.props,
+			{itemIndexes} = this
+		
+		if (!items || !itemIndexes)
+			return null
+		
+		return itemIndexes.findIndex(itemIndex => {
+			const
+				item = items.get(itemIndex)
+			
+			return item.id as number === issueId
+		})
+	}
 	
 	/**
 	 * Create a move selector for key handlers
@@ -240,18 +275,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		
 		return (event: React.KeyboardEvent<any> = null) => {
 			log.info(`Move selector`,event)
+			
 			const
 				{items,groups,editingInline} = this.props,
-				{firstSelectedIndex} = this.state,
+				selectedIssueIds = this.selectedIssueIds,
 				{itemIndexes} = this,
 				itemCount = itemIndexes.size,
 				issueCount = itemCount - groups.size
 			
-			const
-				selectedIssueIds = selectedIssueIdSelector(getStoreState())
-			
 			let
+				{firstSelectedIndex = -1} = this.state,
 				index = ((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
+			
+			
 			
 			// If more than one issue is selected then use
 			// bounds to determine new selection index
@@ -269,7 +305,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			// Make sure we don't keyboard select a group
 			const isNewItemAGroup = (newIndex) => {
-				return newIndex >= 0 && items[newIndex] && items[newIndex].type === IssueListItemType.Group
+				const
+					item = newIndex > -1 && this.getItemAtIndex(newIndex)
+				
+				return item && item.type === IssueListItemType.Group
 			}
 			
 			while (isNewItemAGroup(index)) {
@@ -278,9 +317,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			
 			const
-				adjustedIndex = Math.max(0, Math.min(itemCount - 1, index))
+				adjustedIndex = Math.max(0, Math.min(itemCount - 1, index)),
+				item = this.getItemAtIndex(index)
 			
-			if (!items[index]) {
+			if (!item) {
 				log.info('No issue at index ' + index)
 				return
 			}
@@ -292,11 +332,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				// Select block continuation
 				this.calculateSelectedIssueIds(adjustedIndex, firstSelectedIndex) : // YOU ARE HERE - just map array of ids
 				
-				// Group or Null item
-				!items[index] || isGroupListItem(items[index]) ? [] :
+				// Issue item
+				!item ? [] : [item.id as number]
 				
-					// Issue item
-					[items[index].item.id]
+					
+					
 			
 			if (!event || !event.shiftKey)
 				this.setState({firstSelectedIndex: index})
@@ -329,26 +369,48 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		}
 	}
 	
+	/**
+	 * SelectedIssue id history
+	 *
+	 * MIGHT NOT BE NEEDED NOW
+	 */
 	private selectedIssueIdsHistory = []
 	
+	
+	/**
+	 * Push the most current selected issue ids
+	 */
 	private doPushSelectedIssueIds(newSelectedIssueIds) {
-		this.selectedIssueIdsHistory.unshift(newSelectedIssueIds)
-		this.selectedIssueIdsHistory.length =
-				Math.min(3, this.selectedIssueIdsHistory.length)
+		getIssueActions().setSelectedIssueIds(newSelectedIssueIds)
 		
-		this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
+		// this.selectedIssueIdsHistory.unshift(newSelectedIssueIds)
+		// this.selectedIssueIdsHistory.length =
+		// 		Math.min(3, this.selectedIssueIdsHistory.length)
+		//
+		// this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
 		
 	}
 	
+	/**
+	 * Update the internal selected issue ids & push to state
+	 *
+	 * @param newSelectedIssueIds
+	 * @param force
+	 */
 	updateSelectedIssueIds(newSelectedIssueIds: number[], force = false) {
 		this.adjustScroll(newSelectedIssueIds)
-		this.pushUpdatedSelectedIssueIds(newSelectedIssueIds)
-	}
-	
-	
-	pushUpdatedSelectedIssueIds = (newSelectedIssueIds) => {
+		
+		//this.pushUpdatedSelectedIssueIds()
 		this.doPushSelectedIssueIds(newSelectedIssueIds)
 	}
+	
+	
+	/**
+	 * Push updates to the state
+	 */
+	pushUpdatedSelectedIssueIds = _.debounce((newSelectedIssueIds) => {
+		this.doPushSelectedIssueIds(newSelectedIssueIds)
+	},150)
 	
 	/**
 	 * Retrieves the start and end index
@@ -360,9 +422,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	getSelectionBounds() {
 		const
-			{items} = this.props,
-			{itemIndexes} = this,
-			selectedIssueIds = selectedIssueIdSelector(getStoreState())
+			selectedIssueIds = this.selectedIssueIds
 		
 		let
 			startIndex = -1,
@@ -370,12 +430,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		
 		for (let issueId of selectedIssueIds) {
 			const
-				index = itemIndexes.findIndex(itemIndex => {
-					const
-						item = items.get(itemIndex)
-					
-					return item && item.id === issueId
-				})
+				index = this.getIssueIndex(issueId)
 			
 			if (index === -1)
 				continue
@@ -390,7 +445,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		return {startIndex, endIndex}
 	}
 	
-	
+	/**
+	 * Based on start and end index - calculate selected issue ids
+	 *
+	 * @param issueIndex
+	 * @param firstSelectedIndex
+	 * @returns {number[]}
+	 */
 	calculateSelectedIssueIds(issueIndex, firstSelectedIndex):number[] {
 		const
 			{itemIndexes} = this,
@@ -413,25 +474,22 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @param event
 	 * @param issue
+	 * @param index
 	 */
-	onIssueSelected = (event: MouseEvent,  issue) => {
+	onIssueSelected = (event: MouseEvent, issue) => {
 		let
-			selectedIssueIds = selectedIssueIdsSelector(getStoreState()),
+			selectedIssueIds = this.selectedIssueIds,
 			{items} = this.props,
 			{itemIndexes} = this
 		
 		// Get the issue index for track of "last index"
 		const
-				issueIndex = itemIndexes.findIndex(itemIndex => {
-					const
-						item = items.get(itemIndex)
-					
-					return item && item.id === issue.id
-				}),
+				issueIndex = this.getIssueIndex(issue),
 				{firstSelectedIndex} = this.state
 		
 		// Set the 'first' selected index if not set
 		// or no modifier
+		log.info(`Issue selected`,issue,'at index',issueIndex)
 		if (
 				issueIndex > -1 && (
 						selectedIssueIds.length === 0 ||
@@ -501,9 +559,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				theme,
 				styles,
 				issues,
-				editingInline,
-				selectedIssueIds
+				editingInline
 			} = this.props,
+			selectedIssueIds = this.selectedIssueIds,
 			{items} = this.props,
 			{palette} = theme,
 			
@@ -538,7 +596,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				           className='issuePanelSplitPane'>
 					
 					{/* LIST CONTROLS FILTER/SORT */}
-					<IssuesList ref={(listRef) => this.setState({listRef})} onIssueSelected={this.onIssueSelected} />
+					<IssuesList
+						ref={(listRef) => this.setState({listRef})}
+						onIssueSelected={this.onIssueSelected} />
 					
 					{/* ISSUE DETAIL PANEL */}
 					<IssueDetailPanel />

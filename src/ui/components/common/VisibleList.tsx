@@ -3,8 +3,8 @@ import * as React from 'react'
 import {List} from 'immutable'
 import * as Radium from 'radium'
 import { PureRender } from 'ui/components/common/PureRender'
-import { ThemedStyles } from 'shared/themes/ThemeManager'
-import { isNumber } from "shared/util"
+import { ThemedStyles, createThemedStyles, getTheme } from 'shared/themes/ThemeManager'
+import { isNumber, isNil, isFunction, shallowEquals } from "shared/util/ObjectUtil"
 
 // Constants
 const
@@ -27,17 +27,21 @@ const baseStyles = createStyles({
 })
 
 
+
 export type TItems = Array<any>|List<any>
+
+export type TItemHeightFn = (items:TItems,item:any,index:number) => number
 
 /**
  * IVisibleListProps
  */
 export interface IVisibleListProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+	
 	items:TItems
+	itemKeyProperty?:string
+	itemKeyFn?:(items:TItems, item, index:number) => string
 	itemCount:number
-	itemHeight?:number
+	itemHeight?:number|TItemHeightFn
 	itemRenderer:(items:any, index:number,style:any,key:any) => React.ReactElement<any>
 	initialItemsPerPage?:number
 }
@@ -46,6 +50,8 @@ export interface IVisibleListProps extends React.HTMLAttributes<any> {
  * IVisibleListState
  */
 export interface IVisibleListState {
+	theme?:any
+	styles?:any
 	width?:number
 	height?:number
 	lastItems?:TItems
@@ -57,6 +63,10 @@ export interface IVisibleListState {
 	scrollTop?:number
 	currentItems?:any
 	itemCache?:any
+	itemHeights?:List<number>
+	itemHeightMin?:number
+	itemHeightTotal?:number
+	itemOffsets?:List<number>
 }
 
 /**
@@ -69,9 +79,8 @@ export interface IVisibleListState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles)
+
 @Radium
-@PureRender
 export class VisibleList extends React.Component<IVisibleListProps,IVisibleListState> {
 	
 	static defaultProps = {
@@ -81,6 +90,22 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	constructor(props,context) {
 		super(props,context)
 		this.state = {scrollTop: 0}
+	}
+	
+	private getItemHeight = (items,item,index) => {
+		const
+			{itemHeight} = this.props
+		
+		return isFunction(itemHeight) ?
+			itemHeight(items,item,index) :
+			itemHeight
+	}
+	
+	private getItemHeights(items) {
+		const heights =
+			items.map((item,index) => this.getItemHeight(items,item,index))
+		
+		return Array.isArray(heights) ? List<number>(heights) : heights
 	}
 	
 	/**
@@ -95,51 +120,86 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	private updateState = (props = this.props) => {
 		const
 			{state = {}} = this,
-			{items} = props,
-			{lastItems} = state,
-			itemsChanged = lastItems !== items
+			{items,itemHeight} = props,
+			itemsChanged = items !== this.props.items
 		
-		// Reset the item cache if the src items have changed
+		log.info(`ITEMS CHANGED changed`,itemsChanged)
+		
+			
+		
+		// ITEM HEIGHTS
+		const
+			heightState = {} as any
+		
 		let
-			itemCache = (state.itemCache && !itemsChanged) ? state.itemCache : {}
+			itemCache = (!itemsChanged && state.itemCache) ? state.itemCache : {}
 		
-		this.setState({
-			itemCache,
-			lastItems: items
-		},this.updateItems)
+		if (itemHeight && (itemsChanged || !state.itemOffsets || !state.itemHeightTotal)) {
+			// Reset the item cache if the src items have changed
+			
+				
+			
+			let
+				itemHeights = this.getItemHeights(items),
+				itemHeightMin = -1,
+				itemHeightTotal = 0,
+				itemOffsets = Array(itemHeights.size)
+				
+			itemHeights.forEach((nextHeight, index) => {
+				if (nextHeight > -1 && (itemHeightMin === -1 || nextHeight < itemHeightMin))
+					itemHeightMin = nextHeight
+				
+				itemOffsets[index] = itemHeightTotal
+				itemHeightTotal += nextHeight
+			})
+			
+			assign(heightState,{
+				itemOffsets: List<number>(itemOffsets),
+				itemHeightMin,
+				itemHeightTotal,
+				itemHeights,
+				startIndex: 0,
+				endIndex: 0
+			})
+		}
+			
+		this.setState(assign({
+			styles: createThemedStyles(baseStyles,[]),
+			theme: getTheme(),
+			itemCache
+		},heightState),() => this.updateItems(props))
 	}
 	
 	
-	updateItems = () => {
+	updateItems = (props = this.props) => {
 		const
-			{state = {},props} = this,
-			{itemCount} = props,
-			{height,width,rootElement} = state
+			{state = {}} = this,
+			{itemCount,itemHeight} = props,
+			{height,width,rootElement,itemOffsets,itemHeightMin} = state
 
 		if (!height || !width || !rootElement) {
-			log.warn(`Height/width not set yet `,height,width,rootElement)
+			log.debug(`Height/width not set yet `,height,width,rootElement)
 			return
 		}
 
 		let
 			scrollTop = state.scrollTop || 0,
 			itemsPerPage = state.itemsPerPage || props.initialItemsPerPage,
-			{itemHeight} = props,
 			startIndex = 0,
 			endIndex = itemCount
 
 		// If item height is omitted then eventually everything is rendered / simply hidden when not in viewport
-		if (itemHeight) {
-			itemsPerPage = Math.ceil(height / itemHeight)
+		if (itemHeight && itemHeightMin > 0) {
+			itemsPerPage = Math.ceil(height / itemHeightMin)
 
 			const
-				visibleIndex = Math.max(0, Math.floor(scrollTop / itemHeight)) || 0
+				visibleIndex = Math.max(0, itemOffsets.findIndex(offset => offset + itemHeightMin >= scrollTop) || 0)
 
-			startIndex = Math.max(0, visibleIndex - 1)
-			endIndex = Math.min(itemCount, visibleIndex + itemsPerPage + 1)
+			startIndex = Math.max(0, visibleIndex - itemsPerPage)
+			endIndex = Math.min(itemCount, visibleIndex + itemsPerPage + itemsPerPage)
 		}
 			
-		log.info(`Start`,startIndex,'end',endIndex)
+		log.debug(`Start`,startIndex,'end',endIndex)
 
 		this.setState({
 			startIndex,
@@ -154,17 +214,16 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	private onScroll = _.debounce((event) => {
 		const
 			{scrollTop} = this.state.listElement,
-			{itemHeight} = this.props,
-			{height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
+			{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
 
 		if (isNumber(currentScrollTop)) {
 
-			if (!height || !itemHeight)
+			if (!height || !itemHeightMin)
 				return
 
 			const
-				firstVisibleIndex = Math.max(0, Math.floor(scrollTop / itemHeight)),
-				lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeight))
+				firstVisibleIndex = Math.max(0, Math.floor(scrollTop / itemHeightMin)),
+				lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeightMin))
 
 			if (firstVisibleIndex >= startIndex && lastVisibleIndex <= endIndex) {
 				log.info(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
@@ -172,10 +231,15 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 			}
 		}
 
-			this.setState({scrollTop},this.updateItems)
+		this.setState({scrollTop},this.updateItems)
 
 		
 	},150)
+	
+	
+	shouldComponentUpdate(nextProps:IVisibleListProps, nextState:IVisibleListState, nextContext:any):boolean {
+		return !shallowEquals(this.props,nextProps,'items') || !shallowEquals(this.state,nextState,'startIndex','endIndex','height','scrollTop')
+	}
 	
 	/**
 	 * On resize
@@ -213,6 +277,29 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 		this.updateState(nextProps)
 	}
 	
+	
+	/**
+	 * Extract an item key from an item
+	 *
+	 * @param items
+	 * @param index
+	 * @returns {number|string}
+	 */
+	getItemKey(items:TItems,index:number) {
+		const
+			{itemKeyProperty,itemKeyFn} = this.props,
+			item = !items ? null : Array.isArray(items) ? items[index] : items.get(index)
+		
+		const itemId =
+			itemKeyProperty ?
+				_.get(item,itemKeyProperty,index) :
+				itemKeyFn ?
+					itemKeyFn(items,item,index) :
+					index
+		
+		return isNil(itemId) ? index : itemId
+	}
+	
 	/**
 	 * On render
 	 *
@@ -221,20 +308,22 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	render() {
 		const
 			{props,state = {}} = this,
-			{styles,itemRenderer,itemHeight,className} = props,
+			{itemRenderer,itemHeight,className} = props,
 			items = props.items as any,
-			{startIndex,endIndex,itemCache,scrollTop} = state
+			{styles,startIndex,endIndex,itemCache,scrollTop,itemOffsets,itemHeights,itemHeightTotal,itemHeightMin} = state
 		
-		let
-			contentHeight = ((items as any).size || (items as any).length) * itemHeight
+		// let
+		// 	contentHeight = itemHeightTotal//((items as any).size || (items as any).length) * itemHeightMin
+		
+		
 		
 		return <Resizable style={styles.root}
 		                  ref={this.setRootRef}
 		                  onResize={this.onResize}>
 			<div style={[styles.list]} ref={this.setListRef} onScroll={this.onScroll} className={`visible-list ${className || ''}`} data-visible-list="true">
-				<div style={[styles.list.content,itemHeight && {
-					height: isNaN(contentHeight) ? 0 : contentHeight
-				}]}>
+				
+				{/* SCROLL ITEMS CONTAINER - total item height */}
+				<div style={[styles.list.content,itemHeight && {height:isNaN(itemHeightTotal) ? 0 : itemHeightTotal}]}>
 					
 					{/*{items.map((item,index) => itemRenderer(items, index,{},index))}*/}
 					{
@@ -244,14 +333,16 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 						.slice(startIndex, endIndex)
 						.map((item, index) => {
 							index += startIndex
+							
 							const
+								offset = itemOffsets.get(index),
 								style = makeStyle(FillWidth,{
 									position: 'absolute',
-									top: (itemHeight * index) || 0,
-									height: itemHeight
+									top: !offset || isNaN(offset) ? 0 : offset,
+									height: itemHeights.get(index)
 								}),
 								indexId = `${index}`,
-								key = indexId
+								key = this.getItemKey(items,index)
 							
 							return itemCache[indexId] || (itemCache[indexId] = itemRenderer(items, index,style,key))
 							//return itemRenderer(items, index,style,key)
@@ -261,8 +352,11 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 							style = makeStyle(FillWidth,{
 								position: 'relative'
 							}),
-							key = index
-						return itemCache[index] || (itemCache[index] = itemRenderer(items, index,style,key))
+							indexId = `${index}`,
+							key = this.getItemKey(items,index)
+						
+							return itemCache[indexId] || (itemCache[indexId] = itemRenderer(items, index,style,key))
+							//return itemRenderer(items, index,style,key)
 					}))}
 				</div>
 			</div>

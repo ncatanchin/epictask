@@ -3,6 +3,7 @@
  */
 
 // Imports
+import {List} from 'immutable'
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
@@ -36,6 +37,11 @@ import * as moment from 'moment'
 import {Divider} from 'material-ui'
 import {IIssueGroup} from 'shared/actions/issue/IIssueListItems'
 import {Issue} from 'shared/models/Issue'
+import {
+	enabledAssigneesSelector, enabledMilestonesSelector,
+	enabledLabelsSelector
+} from "shared/actions/repo/RepoSelectors"
+import { User } from "shared/models"
 
 
 const log = getLogger(__filename)
@@ -115,8 +121,9 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	issueFilter?:IIssueFilter
 	issueFilterLabels?:Label[]
 	issueFilterMilestones?:Milestone[]
-	labels?:Label[]
-	milestones?:Milestone[]
+	labels?:List<Label>
+	milestones?:List<Milestone>
+	assignees?:List<User>
 }
 
 
@@ -135,6 +142,9 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	issueFilter: createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
 	//issueFilterLabels: issueFilterLabelsSelector,
 	//issueFilterMilestones: issueFilterMilestonesSelector,
+	labels: enabledLabelsSelector,
+	milestones: enabledMilestonesSelector,
+	assignees: enabledAssigneesSelector
 }, createDeepEqualSelector),null,null,{withRef:true})
 
 @ThemedStyles(baseStyles, 'issueFilters')
@@ -216,12 +226,12 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				theme,
 				styles,
 				issueSort,
-				issueFilterLabels,
+				issueFilter,
 				labels,
 			} = this.props,
 			{palette} = theme
 
-		return (labels || []).map(label => {
+		return labels.map(label => {
 			const
 				backgroundColor = `#${label.color}`,
 				color = tinycolor.mostReadable(backgroundColor, [
@@ -233,7 +243,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 					backgroundColor,
 					color
 				}),
-				selected = issueFilterLabels.find(item => item.url === label.url)
+				selected = issueFilter.labelUrls && issueFilter.labelUrls.includes(label.url)
 
 			const primaryText = <div style={makeStyle(
 					styles.list.item.text,
@@ -275,16 +285,16 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			theme,
 			styles,
 			issueSort,
-			issueFilterMilestones,
+			issueFilter,
 			milestones,
 		} = this.props
 
 		const {palette} = theme
 
-		return (milestones || []).map(milestone => {
+		return milestones.map(milestone => {
 
 			const
-				selected = issueFilterMilestones.find(item => item && item.id === milestone.id),
+				selected = issueFilter.milestoneIds && issueFilter.milestoneIds.includes(milestone.id),
 				primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
@@ -322,16 +332,18 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	renderSortByItems() {
 
 
-		const {
-			theme,
-			styles,
-			issueSort
-		} = this.props
+		const
+			{
+				theme,
+				styles,
+				issueSort
+			} = this.props,
 
-		const fields = IssueSortableFields
-		const fieldNames = IssueSortableFieldNames
-		const sortedField = issueSort.fields[0]
-		const {palette} = theme
+			fields = IssueSortableFields,
+			
+			fieldNames = IssueSortableFieldNames,
+			sortedField = issueSort.fields[0],
+			{palette} = theme
 
 		return (fields).map((field, index) => {
 

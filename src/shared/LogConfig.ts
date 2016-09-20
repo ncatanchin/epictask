@@ -3,7 +3,7 @@ import 'shared/LogCategories'
 
 import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
-import { isObject } from "shared/util"
+import { isObject } from "shared/util/ObjectUtil"
  
 
 if (ProcessConfig.isStorybook()) {
@@ -16,7 +16,7 @@ if (ProcessConfig.isStorybook()) {
 		mkdir = require('mkdirp'),
 		winston = require('winston'),
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
-		logFilename = `${process.cwd()}/logs/${processType || 'unknown'}.log`,
+		logFilename = `${process.cwd()}/logs/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`,
 		logDir = path.dirname(logFilename)
 	
 	// Create the log file root

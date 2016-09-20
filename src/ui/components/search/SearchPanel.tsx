@@ -13,7 +13,7 @@ import {SearchResultsList} from './SearchResultsList'
 
 import {PureRender} from 'ui/components/common/PureRender'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {isNumber} from "shared/util"
+import {isNumber} from "shared/util/ObjectUtil"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import {SearchItem} from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"

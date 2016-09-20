@@ -18,7 +18,7 @@ import { Label, Milestone, User } from "shared/models"
 import {createSelector} from 'reselect'
 import { IIssueSort, TIssueSortDirection, TIssueFieldsGroupable } from "shared/actions/issue/IIssueSort"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
-import { isListType } from "shared/util"
+import { isListType } from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
 
@@ -39,13 +39,6 @@ export const issuesSelector:(state) => List<Issue> = createSelector(
 )
 	
 
-/**
- * Select all current issues
- */
-export const issueIndexesSelector:(state) => List<number> = createSelector(
-	issueStateSelector,
-	(state) => state.issueIndexes
-)
 
 /**
  * Select all current issue ids
@@ -57,6 +50,13 @@ export const issueIdsSelector:(state) => number[] =
 			issues.map(issue => issue.id).toArray()
 	)
 
+/**
+ * Group visibility
+ */
+export const groupVisibilitySelector:(state) => Map<string,boolean> = createSelector(
+	issueStateSelector,
+	(state) => state.groupVisibility
+)
 
 /**
  * Comments
@@ -64,17 +64,32 @@ export const issueIdsSelector:(state) => number[] =
 export const commentsSelector:(state) => List<Comment> =
 	(state) => issueStateSelector(state).comments
 
+
+export const issueSortSelector = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.issueSort
+)
+
+
+export const issueFilterSelector = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.issueFilter
+)
+
 /**
  * Issue sort and filter selector
  *
  * @param state
  * @return TIssueSortAndFilter
  */
-export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = (state):{issueSort:IIssueSort,issueFilter:IIssueFilter} => {
-	const issueState = state.get(IssueKey) as IssueState
-	return _.pick(issueState,'issueFilter','issueSort') as any
-}
-
+export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = createSelector(
+	issueSortSelector,
+	issueFilterSelector,
+	(issueSort:IIssueSort,issueFilter:IIssueFilter) => ({
+		issueSort,
+		issueFilter
+	})
+)
 
 
 
@@ -85,8 +100,8 @@ export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = (state)
  * @return Map<string,any>
  */
 export const selectedIssueIdsSelector = createSelector(
-	(state:Map<string,any>) => (state.get(IssueKey) as IssueState).selectedIssueIds,
-	(selectedIssueIds:number[]) => selectedIssueIds
+	issueStateSelector,
+	(issueState:IssueState) => issueState.selectedIssueIds
 )
 
 /**
@@ -114,22 +129,34 @@ export const selectedIssueSelector = createSelector(
 /**
  * All issues currently being patched
  */
-export const patchIssuesSelector = (state):Issue[] => (state.get(IssueKey) as IssueState).patchIssues
+export const patchIssuesSelector:(state) => Issue[] = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.patchIssues
+)
 
 /**
  * Current patch mode
  */
-export const patchModeSelector = (state):TIssuePatchMode => (state.get(IssueKey) as IssueState).patchMode
+export const patchModeSelector:(state) => TIssuePatchMode = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.patchMode
+)
 
 /**
  * Issue currently being edited
  */
-export const editingIssueSelector = (state):Issue => (state.get(IssueKey) as IssueState).editingIssue
+export const editingIssueSelector:(state) => Issue = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.editingIssue
+)
 
 /**
  * Comment currently being edited
  */
-export const editCommentRequestSelector = (state):TEditCommentRequest => (state.get(IssueKey) as IssueState).editCommentRequest
+export const editCommentRequestSelector:(state) => TEditCommentRequest = createSelector(
+	issueStateSelector,
+	(issueState:IssueState) => issueState.editCommentRequest
+)
 
 
 /**
@@ -194,10 +221,9 @@ export const groupBySelector = createSelector(
  */
 export const orderedIssueIndexesSelector = createSelector(
 	issuesSelector,
-	issueIndexesSelector,
 	issueSortAndFilterSelector,
 	enabledAssigneesSelector,
-	(issues:List<Issue>, issueIndexes, {issueSort,issueFilter}):List<number> => {
+	(issues:List<Issue>, {issueSort,issueFilter},assignees:List<User>):List<number> => {
 		
 		const
 			{groupBy} = issueSort,
@@ -218,7 +244,8 @@ export const orderedIssueIndexesSelector = createSelector(
 		assigneeIds = _.nilFilter(assigneeIds || [])
 		
 		const
-			filteredIndexes = issueIndexes
+			filteredIndexes = issues
+				.map((issue,index) => index)
 				.filter(issueIndex => {
 				
 				const
@@ -238,7 +265,7 @@ export const orderedIssueIndexesSelector = createSelector(
 				
 				// Labels
 				if (matches && labelUrls.length)
-					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label.url === url) > -1)
+					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label && label.url === url) > -1)
 				
 				// Assignee
 				if (matches && assigneeIds.length)
@@ -270,7 +297,7 @@ export const orderedIssueIndexesSelector = createSelector(
 		if (isReverse)
 			sortedIssueIndexes = sortedIssueIndexes.reverse()
 		
-		return sortedIssueIndexes
+		return sortedIssueIndexes as List<number>
 		
 		
 	}
@@ -281,11 +308,13 @@ export const orderedIssueIndexesSelector = createSelector(
  * List items
  */
 export const issueGroupsSelector = createSelector(
-	groupBySelector,
+	issueSortAndFilterSelector,
 	issuesSelector,
 	orderedIssueIndexesSelector,
-	(groupBy:TIssueFieldsGroupable,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
+	({issueSort},issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
 		
+		const
+			groupBy = issueSort.groupBy
 		
 		
 		//log.info(`Got issue items`, issueItems,groupBy)
@@ -341,16 +370,20 @@ export const issueGroupsSelector = createSelector(
 			
 			issueIndexes.forEach((issueIndex) => {
 				const
-					issue = issues.get(issueIndex),
+					issue = issues.get(issueIndex)
+				
+				if (!issue) {
+					log.warn(`No issue found at index ${issueIndex}`)
+					return
+				}
+				
+				const
 					{ milestone, labels, assignee } = issue,
 					groupByItem = (groupBy === 'milestone') ? milestone :
 						(groupBy === 'assignee') ? assignee :
-							labels,
+							_.nilFilter(labels)
 					
-					
-					groups = getGroups(groupByItem)
-				
-				groups.forEach(group => {
+				getGroups(groupByItem).forEach(group => {
 					group.size++
 					group.issueIndexes.push(issueIndex)
 				})
@@ -359,9 +392,6 @@ export const issueGroupsSelector = createSelector(
 			// Iterate all groups and push group and group items to list
 			return allGroups
 		})
-		
-		
-		
 	}
 )
 
@@ -395,7 +425,8 @@ export const issueItemsSelector = createSelector(
 					groups.forEach(group => {
 						allItems.push(makeIssueListItem(group))
 						
-						group.issueIndexes.forEach((issueIndex) => makeIssueListItem(issues.get(issueIndex)))
+						group.issueIndexes.forEach((issueIndex) =>
+							allItems.push(makeIssueListItem(issues.get(issueIndex))))
 					})
 					
 					return allItems

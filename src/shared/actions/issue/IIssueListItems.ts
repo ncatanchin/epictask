@@ -1,5 +1,7 @@
+import {Map} from 'immutable'
 import {TIssueFieldsGroupable} from 'shared/actions/issue/IIssueSort'
 import {Issue} from 'shared/models/Issue'
+
 
 export interface IIssueGroup {
 	id:string
@@ -44,5 +46,11 @@ export interface IIssueListItem<T extends Issue|IIssueGroup> {
 }
 
 export function isGroupListItem(item:IIssueListItem<any>):item is IIssueListItem<IIssueGroup> {
-	return item.type === IssueListItemType.Group// !!_.get(item,'item.items')
+	return item.type === IssueListItemType.Group
 }
+
+
+export function isGroupVisible(groupVisibility:Map<string,boolean>, id:string) {
+	return groupVisibility.has(id) ? groupVisibility.get(id) : true
+}
+
