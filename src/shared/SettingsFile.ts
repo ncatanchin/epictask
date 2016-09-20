@@ -115,7 +115,8 @@ export class SettingsFile implements ISettings {
 export const Settings = new SettingsFile()
 export default Settings
 
-_.assignGlobal({Settings,SettingsFile})
+if (DEBUG)
+	_.assignGlobal({Settings,SettingsFile})
 
 if (module.hot) {
 	module.hot.accept()

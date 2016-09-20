@@ -10,13 +10,11 @@ import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {PureRender} from 'ui/components/common/PureRender'
 import { Issue, Milestone } from 'shared/models'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 
 import {
 	issueStateSelector, issuesSelector,
-	issueGroupsSelector, issueItemsSelector, groupVisibilitySelector,
+	issueGroupsSelector, issueItemsSelector, groupVisibilitySelector, makeIssueGroupExpandedSelector,
 } from 'shared/actions/issue/IssueSelectors'
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import IssueItem from 'ui/components/issues/IssueItem'
 
@@ -25,7 +23,7 @@ import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
 import {IssueFilters} from 'ui/components/issues/IssueFilters'
 import {
 	IIssueGroup, getIssueGroupId, IIssueListItem,
-	isGroupListItem, isGroupVisible, IssueListItemType
+	isGroupListItem, isGroupVisible, IssueListItemType, IIssueItemGroupProps, EditIssueInlineIndex, isEditInlineListItem
 } from 'shared/actions/issue/IIssueListItems'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
@@ -44,9 +42,6 @@ import { shallowEquals } from "shared/util/ObjectUtil"
 
 // Constants & Non-typed Components
 const
-	SplitPane = require('react-split-pane'),
-	ReactList = require('react-list'),
-	Resizable = require('react-component-resizable'),
 	log = getLogger(__filename),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
@@ -224,10 +219,9 @@ function setGroupVisible(id:string,visible:boolean) {
 }
 
 
-interface IIssueGroupHeaderProps extends React.HTMLAttributes<any> {
+interface IIssueGroupHeaderProps extends React.HTMLAttributes<any>,IIssueItemGroupProps {
 	expanded?:boolean
 	styles:any
-	group:IIssueGroup
 }
 
 
@@ -237,12 +231,7 @@ interface IIssueGroupHeaderProps extends React.HTMLAttributes<any> {
  *
  */
 @connect(createStructuredSelector({
-	expanded: createSelector(
-		groupVisibilitySelector,
-		(state, props:IIssueGroupHeaderProps) => props.group && props.group.id,
-		(groupVisibility:Map<string,boolean>, groupId) =>
-			groupVisibility.has(groupId) ? groupVisibility.get(groupId) : true
-	)
+	expanded: makeIssueGroupExpandedSelector()
 }))
 @Radium
 @PureRender
@@ -347,18 +336,19 @@ export interface IIssuesListState {
 	items: issueItemsSelector,
 	groups: issueGroupsSelector,
 	groupVisibility: groupVisibilitySelector,
-	editingInline: (state) => issueStateSelector(state).editingInline,
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig
 }),null,null,{withRef:true})
 @ThemedStyles(baseStyles, 'issuesPanel')
-@PureRender
+
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
-		
 	
-	uiActions: UIActionFactory = getUIActions()
-	issueActions: IssueActionFactory = getIssueActions()
-	
+	/**
+	 * Component constructor
+	 *
+	 * @param props
+	 * @param context
+	 */
 	constructor(props,context) {
 		super(props,context)
 		
@@ -368,6 +358,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	}
 	
 	
+		
 	
 	
 	/**
@@ -378,34 +369,61 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @param issues
 	 * @param groups
 	 * @param groupVisibility
+	 * @param editInlineConfig
 	 */
 	private filterExcludedItems(
 		items:List<IIssueListItem<any>>,
 		itemIndexes:List<number>,
 		issues:List<Issue>,
 		groups:List<IIssueGroup>,
-		groupVisibility:Map<string,boolean>
+		groupVisibility:Map<string,boolean>,
+		editInlineConfig:TIssueEditInlineConfig
 	):List<number> {
-		const excludedIssueIds = groups
-			.filter(itemGroup => !isGroupVisible(groupVisibility,itemGroup.id))
-			.reduce((issueIds, nextItemGroup) => {
-				
-				const
-					groupIssueIds = nextItemGroup.issueIndexes.map(issueIndex => issues.get(issueIndex).id)
-				
-				issueIds.push(...groupIssueIds)
-				return issueIds
-			}, [])
 		
-		return itemIndexes.filter(itemIndex => !excludedIssueIds.includes(items.get(itemIndex).id)) as List<number>
+		let
+			excludeEditInline = false
+		
+		const
+			excludedIssueIds = groups
+				.filter(itemGroup => !isGroupVisible(groupVisibility,itemGroup.id))
+				.reduce((issueIds, nextItemGroup) => {
+					
+					const
+						groupIssueIds = _.nilFilter(
+							nextItemGroup.issueIndexes.map(issueIndex => {
+								const
+									issue = issues.get(issueIndex)
+								
+								// CHECK IF THIS ISSUE MATCHES THE EDIT FROM - IF SO THEN EXCLUDE IT
+								if (editInlineConfig && issue && issue.id === editInlineConfig.fromIssueId)
+									excludeEditInline = true
+								
+								return issue && issueIndex > -1 && issue.id
+							})
+						)
+					
+					issueIds.push(...groupIssueIds)
+					return issueIds
+				}, [])
+		
+		return itemIndexes.filter(itemIndex => {
+			return (itemIndex === EditIssueInlineIndex) ?
+				!excludeEditInline :
+				!excludedIssueIds.includes(_.get(items.get(itemIndex),'id'))
+		}) as List<number>
 		
 	}
 	
+	/**
+	 * Filter any collapsed groups
+	 *
+	 * @param props
+	 */
 	private updateGroupFilteredIndexes(props = this.props) {
 		if (props.groupVisibility !== this.props.groupVisibility) {
 			log.info(`Group visibility changed - updating exclusions`)
 			const
-				{items,groups,issues} = props,
+				{items,groups,issues,editInlineConfig} = props,
 				{itemIndexes} = this.state
 			
 			this.setState({
@@ -414,10 +432,12 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 					itemIndexes,
 					issues,
 					groups,
-					props.groupVisibility)
+					props.groupVisibility,
+					editInlineConfig)
 			})
 		}
 	}
+	
 	
 	/**
 	 * Updates the scope when items change
@@ -427,14 +447,14 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 */
 	private updateState = (props = this.props) => {
 		const
-			{groupVisibility,items,issues,groups} = props
+			{groupVisibility,items,issues,groups,editInlineConfig} = props
 			
 		let
 			srcItems = _.get(this.state,'srcItems',List<IIssueListItem<any>>()),
 			itemIndexes = _.get(this.state,'itemIndexes',List<number>())
 		
 		const
-			itemsChanged = items !== this.props.items
+			itemsChanged = items !== this.props.items || items !== srcItems
 		
 		log.info(`ITEMS CHANGED`,itemsChanged)
 		
@@ -452,7 +472,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 					itemIndexes,
 					issues,
 					groups,
-					groupVisibility)
+					groupVisibility,
+					editInlineConfig)
 			}
 			
 			this.setState({
@@ -470,14 +491,17 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	}
 	
 	
-	
-	adjustScroll(newSelectedIssueIds) {
+	/**
+	 * Adjusted the scroll for selected items
+	 *
+	 * @param newSelectedIssueIds
+	 */
+	private adjustScroll(newSelectedIssueIds) {
 		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds[newSelectedIssueIds.length - 1]
 		if (lastIssueId) {
 			const elem = $(`#issue-item-${lastIssueId}`)[0] as any
 			if (elem) {
 				log.info('scrolling into view', elem)
-				//elem.scrollIntoView({block: "start", behavior: "smooth"})
 				elem.scrollIntoViewIfNeeded()
 			}
 		}
@@ -508,12 +532,26 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		this.updateState()
 	}
 	
+	/**
+	 * Update internal state with new props
+	 *
+	 * @param nextProps
+	 */
 	componentWillReceiveProps(nextProps:IIssuesListProps) {
 		this.updateState(nextProps)
 	}
 	
-	
-	
+	/**
+	 * ONLY update when props.items or state.itemIndexes changes
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @param nextContext
+	 * @returns {boolean}
+	 */
+	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
+		return !shallowEquals(nextProps,this.props,'items','editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes')
+	}
 	
 	/**
 	 * Render issue item
@@ -535,18 +573,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			item = items.get(itemIndexes.get(index))
 		
 		
-		// if (editingInline) {
-		// 	const
-		// 		{issueIndex:inlineIssueIndex} = editInlineConfig
-		//
-		// 	if (index === inlineIssueIndex) {
-		// 		// Inline issue editor
-		// 		return <IssueEditInline key={'edit-inline'}>
-		// 			inline create here
-		// 		</IssueEditInline>
-		// 	}
-		// }
-		
 		return isGroupListItem(item) ?
 			
 			// GROUP
@@ -556,6 +582,9 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				styles={styles}
 				style={style}
 				group={item.item as IIssueGroup}/> :
+			
+			isEditInlineListItem(item) ?
+				<IssueEditInline style={style} key={key}/> :
 			
 			// ISSUE
 			<IssueItem
@@ -577,6 +606,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		return !item ? 0 :
 			item.type === IssueListItemType.Group ?
 				convertRem(4) :
+			item.type === IssueListItemType.EditIssueInline ?
+				convertRem(21.2) :
 				convertRem(9.6)
 	}
 	
@@ -613,15 +644,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				             
 				/>
 				
-				{/*<ReactList ref={c => this.setState({issueList:c})}*/}
-				{/*itemRenderer={groupBy === 'none' ? this.makeRenderIssue() : this.renderGroup}*/}
-				{/*itemsRenderer={(items, ref) => (*/}
-				{/*<div ref={ref}>{items}</div>*/}
-				{/*)}*/}
-				{/*length={itemCount}*/}
-				{/*type='simple'/>*/}
-			
-			
 			</div>
 		</div>
 		

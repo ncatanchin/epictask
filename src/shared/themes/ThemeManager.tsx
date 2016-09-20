@@ -11,6 +11,7 @@ import {mergeStyles} from "shared/themes/styles/CommonStyles"
 import {PureRender} from "ui/components/common/PureRender"
 import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
+import { shallowEquals } from "shared/util/ObjectUtil"
 
 
 
@@ -289,13 +290,14 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				// Check for theme changes
 				_.get(this.state,'theme') !== newTheme ||
 				// Check for style changes
-				!_.isEqual(_.pick(props,'styles','style'),_.pick(this.props,'styles','style'))
+				!_.isEqual(_.pick(props,'styles'),_.pick(this.props,'styles'))
 			) {
 				log.info(`Updating state`)
 				this.setState(this.getNewState(props,newTheme), () => this.forceUpdate())
 			}
 			
 		}
+		
 
 		/**
 		 * Update the theme on mount and subscribe
@@ -304,8 +306,12 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			this.updateTheme()
 			this.unsubscribe = addThemeListener((newTheme) => this.updateTheme(this.props,newTheme))
 		}
-
-
+		
+		
+		shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
+			return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state,nextState,'theme','styles')
+		}
+		
 		/**
 		 * If styles prop is passed and it has changed
 		 * then update state
@@ -339,7 +345,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 		}
 	}
 	
-	PureRender(WrappedComponent)
+	//PureRender(WrappedComponent)
 	
 	return WrappedComponent as any
 	//return PureRender(skipRadium ? WrappedComponent : Radium(WrappedComponent)) as any

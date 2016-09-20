@@ -7,7 +7,7 @@ import * as React from "react"
 import {connect} from "react-redux"
 import {createStructuredSelector} from "reselect"
 import * as Radium from "radium"
-import {Map} from "immutable"
+import {List} from "immutable"
 import {Dialog, CircularProgress, MenuItem} from "material-ui"
 import { HotKeys } from "ui/components/common/Other"
 import {MuiThemeProvider} from "material-ui/styles"
@@ -29,7 +29,10 @@ import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 import {IssuePatchModes, TIssuePatchMode} from "shared/actions/issue/IssueState"
 import {TypeAheadSelect} from "ui/components/common/TypeAheadSelect"
-import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import {
+	enabledRepoIdsSelector, enabledAssigneesSelector,
+	enabledLabelsSelector, enabledMilestonesSelector
+} from "shared/actions/repo/RepoSelectors"
 import LabelChip from "ui/components/common/LabelChip"
 import {IssueLabelsAndMilestones} from "ui/components/issues"
 import {Avatar} from 'ui/components/common'
@@ -183,7 +186,7 @@ const baseStyles = createStyles({
  */
 
 export const IssuePatchFns = {
-	[IssuePatchModes.Label]: (labels) => ({labels}),
+	[IssuePatchModes.Label]: (labels) => labels.map(label => ({action:'add',label})),
 	[IssuePatchModes.Milestone]: (milestones /* always length 1 */) => ({milestone: milestones[0]}),
 	[IssuePatchModes.Assignee]: (assignees /* always length 1 */) => ({assignee: assignees[0]})
 }
@@ -201,9 +204,9 @@ export interface IIssuePatchDialogProps extends React.HTMLAttributes<any> {
 	repoIds?: number[]
 	issuesIds?: number[]
 	issues?: Issue[]
-	userModels?: Map<string,User>
-	milestoneModels?: Map<string,Milestone>
-	labelModels?: Map<string,Label>
+	availableAssignees?: List<User>
+	availableMilestones?: List<Milestone>
+	availableLabels?: List<Label>
 
 }
 
@@ -230,6 +233,9 @@ export interface IIssuePatchDialogState {
 	// availRepoModels: availRepoModelsSelector,
 	// issueModels: issueModelsSelector,
 	// userModels: userModelsSelector,
+	availableAssignees: enabledAssigneesSelector,
+	availableLabels: enabledLabelsSelector,
+	availableMilestones: enabledMilestonesSelector,
 	repoIds: enabledRepoIdsSelector,
 	issues: patchIssuesSelector,
 	mode: patchModeSelector,
@@ -301,7 +307,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		const patch = IssuePatchFns[this.props.mode](this.state.newItems || [])
 
 		log.info('Applying patch to issue', patch)
-
+		
 		!this.props.saving &&
 			this.issueActions.applyPatchToIssues(
 				patch,
@@ -375,12 +381,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeMilestoneDataSource(props: IIssuePatchDialogProps, repoIds) {
 
 		const
-			{milestoneModels,issues} = props,
+			{availableMilestones,issues} = props,
 			{query, newItems} = this,
-			items = milestoneModels
-				.valueSeq()
-
-				// Filter out repos that dont apply to these issues
+			items = availableMilestones
+				
+			// Filter out repos that don't apply to these issues
 				.filter((item: Milestone) => (
 					// In current repo and not selected
 					repoIds.includes(item.repoId) && !newItems.includes(item) &&
@@ -420,10 +425,10 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeLabelDataSource(props: IIssuePatchDialogProps, repoIds) {
 
 		const
-			{labelModels,issues} = props,
+			{availableLabels,issues} = props,
 			{query, newItems} = this,
 
-			items = labelModels.valueSeq()
+			items = availableLabels
 
 				// Filter out repos that dont apply to these issues
 				.filter((item: Label) => (
@@ -466,21 +471,37 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		log.info('new label data source =', newDataSource)
 		return newDataSource
 	}
-
+	
+	
+	/**
+	 * Crate assignee data source for issues
+	 *
+	 * @param props
+	 * @param repoIds
+	 * @returns {any}
+	 */
 	makeAssigneeDataSource(props: IIssuePatchDialogProps, repoIds) {
 
 		const
-			{userModels,issues} = props
+			{issues} = props
 
-		const items = Object.values(issues
-			.reduce((allUsers,issue:Issue) => {
-				issue.collaborators.forEach(user => allUsers[user.id] = user)
-				return allUsers
-			},{} as {[id:string]:User}))
-
-			// Filter out repos that don't apply to these issues
-			.filter((item:User) => !issues.every((issue: Issue) => _.get(issue, 'assignee.id') === item.id))
-
+		const
+			collaborators = issues
+				.reduce((allUsers,issue:Issue) => {
+					
+					issue.collaborators.forEach(user => allUsers[user.id] = user)
+					return allUsers
+				},{} as {[id:string]:User}),
+		
+		
+			// Convert to array
+			items = Object
+				.values(collaborators)
+				
+				// Filter out repos that don't apply to these issues
+				.filter((item:User) => !issues.every((issue: Issue) => _.get(issue, 'assignee.id') === item.id))
+	
+		log.info(`Assignee data source`,items,'from',collaborators,'for issues',issues)
 
 		/*
 		 style={s.form.assignee.avatar}
@@ -527,9 +548,6 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		const
 			{
 				mode,
-				milestoneModels,
-				labelModels,
-				userModels,
 				issues
 			} = props,
 

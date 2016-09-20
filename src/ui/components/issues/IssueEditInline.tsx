@@ -5,6 +5,7 @@
 // Imports
 import * as React from 'react'
 import {PureRender, LabelFieldEditor, Icon, Button} from 'ui/components/common'
+import {List} from 'immutable'
 import {Issue} from 'shared/models/Issue'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
@@ -19,7 +20,7 @@ import {createStructuredSelector} from 'reselect'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {
 	editingIssueSelector,
-	issueStateSelector
+	issueStateSelector, issueSaveErrorSelector, issueSavingSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -32,7 +33,12 @@ import Radium = require('radium')
 import {AvailableRepo} from 'shared/models/AvailableRepo'
 import {MenuItem} from 'material-ui'
 import {SelectField} from 'material-ui'
-import {enabledRepoIdsSelector} from "shared/actions/repo/RepoSelectors"
+import {
+	enabledRepoIdsSelector, availableReposSelector,
+	enabledAssigneesSelector, enabledLabelsSelector, enabledMilestonesSelector
+} from "shared/actions/repo/RepoSelectors"
+import { User } from "shared/models"
+import { cloneObject } from "shared/util/ObjectUtil"
 
 // Constants
 const log = getLogger(__filename)
@@ -210,14 +216,13 @@ export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
 	theme?: any
 	saveError?:Error
 	saving?:boolean
-	issue?:Issue
-	fromIssue?:Issue
-	labels?:Label[]
-	repo?:Repo
-	milestones?:Milestone[]
+	editingIssue?:Issue
 	setTimeout?:Function
 	clearTimeout?:Function
-	availableRepos?:AvailableRepo[]
+	availableRepos?:List<AvailableRepo>
+	milestones?:List<Milestone>
+	labels?:List<Label>
+	assignees?:List<User>
 
 }
 
@@ -240,12 +245,14 @@ export interface IIssueEditInlineState {
 
 @HotKeyContext()
 @connect(createStructuredSelector({
-	repo: (state,props) => _.get(editingIssueSelector(state),'repo'),
-	issue: editingIssueSelector,
-	availableRepoIds: enabledRepoIdsSelector,
-	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError
-},createDeepEqualSelector))
+	editingIssue: editingIssueSelector,
+	availableRepos: availableReposSelector,
+	milestones: enabledMilestonesSelector,
+	labels: enabledLabelsSelector,
+	assignees: enabledAssigneesSelector,
+	saving: issueSavingSelector,
+	saveError: issueSaveErrorSelector
+}))
 @ThemedStyles(baseStyles,'inline','issueEditDialog','form')
 @ReactTimeout
 export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> {
@@ -254,7 +261,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	uiActions = Container.get(UIActionFactory)
 
 	private get issue():Issue {
-		return _.get(this.props,'issue') as any
+		return this.props.editingIssue
 	}
 
 
@@ -291,14 +298,15 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * @param repoId
 	 */
 	onRepoChange = (event, index, repoId) => {
-		const {issue} = this.props
+		const
+			{editingIssue} = this.props
 
 
-		this.issueActions.setEditingIssue(_.cloneDeep(assign({},issue,{
+		this.issueActions.setEditingIssue(cloneObject(editingIssue,{
 			milestone:null,
 			labels:[],
 			repoId
-		})),true)
+		}),true)
 	}
 
 	/**
@@ -310,24 +318,28 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 	onMilestoneChange = (event, index, value) => {
 
-		const {issue,milestones} = this.props
+		const
+			{milestones,editingIssue} = this.props,
 
-		const milestone = milestones.find(item => item.url === value)
-		const newIssue = _.cloneDeep(assign({},issue,{
-			milestone
-		}))
-		log.info('Milestone set issue=',issue,'milestone',milestone,'value',value,'milestones',milestones,'newIssue',newIssue)
-		// this.setState({
-		// 	issue:newIssue
-		// })
+			milestone = milestones.find(item => item.id === value),
+			newIssue = cloneObject(editingIssue,{
+				milestone
+			})
+		
+		log.info('Milestone set issue=',editingIssue,'milestone',milestone,'value',value,'milestones',milestones,'newIssue',newIssue)
+		
 		this.issueActions.setEditingIssue(newIssue,true)
-		//this.updateIssueState({milestone})
+		
 
 	}
 
 
 	onAssigneeChange = (event, index, value) => {
-		// const {editingIssue} = this.props
+		const
+			{assignees,editingIssue} = this.props,
+			assignee = assignees.find(it => it.id === value)
+			
+		this.issueActions.setEditingIssue(cloneObject(editingIssue,{assignee}))
 		// const assignee = !editingIssue || !editingIssue.collaborators ? null :
 		// 	editingIssue.collaborators.find(item => item.login === value)
 
@@ -335,9 +347,10 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	}
 
 	onLabelsChanged = (labels:Label[]) => {
-		const {issue} = this
-
-		const newIssue = _.cloneDeep(assign({},issue,{labels}))
+		const
+			{issue} = this,
+			newIssue = cloneObject(issue,{labels})
+		
 		this.issueActions.setEditingIssue(newIssue,true)
 
 	}
@@ -365,7 +378,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * Save the issue
 	 */
 	save = () => {
-		this.issueActions.issueSave(_.cloneDeep(this.props.issue))
+		this.issueActions.issueSave(cloneObject(this.issue))
 	}
 
 	/**
@@ -435,17 +448,14 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 	makeRepoMenuItems() {
 		const
-			{props,state} = this,
+			{props,state,issue} = this,
 			{
-				issue,
 				styles,
 				availableRepos,
 				theme,
-				fromIssue,
 				saveError,
 				labels,
-				saving,
-				repo
+				saving
 			} = props
 
 
@@ -469,18 +479,23 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 
 	makeMilestoneItems() {
-		let {issue,milestones,styles} = this.props
+		let
+			{issue} = this,
+			{milestones,styles} = this.props
 
-		const items = [<MenuItem key='empty-milestones'
-		                         className='issueEditDialogFormMenuItem'
-		                         style={styles.menuItem}
-		                         value={null}
-		                         primaryText={<div style={styles.form.milestone.item}>
-								<Icon iconSet='octicon' iconName='milestone'/>
-								<div style={styles.form.milestone.item.label}>No milestones</div>
-							</div>}/>]
+		const
+			items = [
+				<MenuItem key='empty-milestones'
+                       className='issueEditDialogFormMenuItem'
+                       style={styles.menuItem}
+                       value={null}
+                       primaryText={<div style={styles.form.milestone.item}>
+					<Icon iconSet='octicon' iconName='milestone'/>
+					<div style={styles.form.milestone.item.label}>No milestones</div>
+				</div>}/>
+			]
 
-		if (!milestones.length) {
+		if (!milestones.size) {
 			return items
 		}
 
@@ -493,23 +508,27 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			</div>
 		)
 
-		milestones = _.uniqBy(milestones,'id')
+		//milestones = _.uniqBy(milestones,'id')
 		log.info('using milestones',milestones)
-		return items.concat(milestones
-			.filter(milestone => milestone.repoId === issue.repoId)
-			.map(milestone => <MenuItem key={milestone.url}
-			          className='issueEditDialogFormMenuItem'
-			          value={milestone.url}
-			          style={styles.menuItem}
-			          primaryText={makeMilestoneLabel(milestone)}/>
-			))
+		
+		const
+			milestoneItems = milestones
+				.filter(milestone => milestone.repoId === issue.repoId)
+				.map(milestone => <MenuItem key={milestone.url}
+				                            className='issueEditDialogFormMenuItem'
+				                            value={milestone.url}
+				                            style={styles.menuItem}
+				                            primaryText={makeMilestoneLabel(milestone)}/>
+				).toArray()
+		
+		return items.concat(milestoneItems)
 	}
 
 
 	render() {
 		const
-			{props,state} = this,
-			{repo,issue,styles,theme,fromIssue,saveError,labels,saving} = props
+			{issue,props,state} = this,
+			{styles,theme,style,saveError,labels,saving} = props
 
 
 		if (!issue)
@@ -544,11 +563,11 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 		return <HotKeys
 					{...filterProps(props)}
-					style={issueStyles}
+					style={makeStyle(issueStyles,style)}
 					handlers={this.keyHandlers}
 					onBlur={this.onBlur}
 					onFocus={this.onFocus}
-		            className={'animated fadeIn selected'}>
+          className={'selected'}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}
 			<div style={makeStyle(styles.root,saving && {opacity:0,pointerEvents:'none'})}>
@@ -608,6 +627,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					                  ref={this.setLabelFieldRef}
 					                  onKeyDown={this.onKeyDown}
 					                  id="issueEditInlineLabels"
+					                  mode="fixed-scroll-x"
 					                  hint="labels..."
 					                  hintAlways={true}
 					                  hintStyle={makeStyle(styles.input.hint,{bottom: 5})}
@@ -617,7 +637,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					                  })}
 					                  tabIndex={2}
 					                  underlineShow={false}
-					                  availableLabels={labels}
+					                  availableLabels={labels.filter(label => label.repoId === issue.repoId).toArray()}
 					                  onLabelsChanged={this.onLabelsChanged}
 					                  />
 

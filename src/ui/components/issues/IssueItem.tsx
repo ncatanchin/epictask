@@ -67,7 +67,7 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 				isSelectedMulti: isSelected && selectedIssueIds.length > 1
 			}
 		
-		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','item.id')) {
+		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','item')) {
 			return previousData
 		}
 		
@@ -77,7 +77,7 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 	}
 })
 
-@PureRender
+
 class IssueItem extends React.Component<IIssueItemProps,void> {
 	
 	/**
@@ -87,9 +87,9 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * @param nextProps
 	 * @returns {boolean}
 	 */
-	// shouldComponentUpdate(nextProps:IIssueItemProps) {
-	// 	return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','item')
-	// }
+	shouldComponentUpdate(nextProps:IIssueItemProps) {
+		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','item')
+	}
 	
 	render() {
 		const

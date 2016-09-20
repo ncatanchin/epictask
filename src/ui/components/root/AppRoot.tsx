@@ -147,10 +147,7 @@ export class App extends React.Component<IAppProps,any> {
 		[KeyMaps.CommonKeys.MoveUp]: (event) => log.info('key up',event),
 		[KeyMaps.CommonKeys.MoveDown]:(event) => log.info('key down',event),
 
-		[KeyMaps.CommonKeys.Edit]: () => {
-			log.info('Edit issue keys pressed - making dialog visible')
-			this.issueActions.editIssue()
-		},
+		
 		[KeyMaps.CommonKeys.Escape]: () => {
 			log.info('Escaping and moving focus')
 			this.uiActions.closeAllDialogs()

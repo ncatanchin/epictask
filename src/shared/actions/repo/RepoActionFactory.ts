@@ -273,7 +273,8 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					
 					assignees.push(...models)
 					availRepos.forEach(it =>
-						it.collaborators = models.filter(user => user.repoIds.includes(it.repoId)))
+						(it.collaborators = it.collaborators || [])
+							.push(...models.filter(user => user.repoIds.includes(it.repoId))))
 				})
 			
 			
@@ -305,7 +306,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		await Promise.all(promises)
 		
-		return List<AvailableRepo>().push(...availRepos)
+		return List<AvailableRepo>(availRepos)
 	}
 	
 	/**
@@ -420,7 +421,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			editingIssue = editingIssueSelector(getState())
 		
 		issueActions.setSelectedIssueIds([])
-		issueActions.clearAndLoadIssues()
+		// issueActions.clearAndLoadIssues()
 		
 		if (_.get(editingIssue,'repoId') === repoId)
 			issueActions.setEditingIssue(null)

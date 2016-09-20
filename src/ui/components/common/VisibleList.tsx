@@ -344,7 +344,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 								indexId = `${index}`,
 								key = this.getItemKey(items,index)
 							
-							return itemCache[indexId] || (itemCache[indexId] = itemRenderer(items, index,style,key))
+							return itemCache[key] || (itemCache[key] = itemRenderer(items, index,style,key))
 							//return itemRenderer(items, index,style,key)
 							
 						}) : items.map((item, index) => {
@@ -355,7 +355,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 							indexId = `${index}`,
 							key = this.getItemKey(items,index)
 						
-							return itemCache[indexId] || (itemCache[indexId] = itemRenderer(items, index,style,key))
+							return itemCache[key] || (itemCache[key] = itemRenderer(items, index,style,key))
 							//return itemRenderer(items, index,style,key)
 					}))}
 				</div>

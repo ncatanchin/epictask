@@ -12,7 +12,6 @@ import {createStructuredSelector} from 'reselect'
 import {Dialog} from 'material-ui'
 import { HotKeys } from "ui/components/common/Other"
 import {MuiThemeProvider} from 'material-ui/styles'
-import {CircularProgress} from 'material-ui'
 import {Container} from 'typescript-ioc'
 
 
@@ -30,15 +29,15 @@ import {Dialogs} from 'shared/Constants'
 
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {CommonKeys} from 'shared/KeyMaps'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
 
 
 // Constants
-const log = getLogger(__filename)
-const tinycolor = require('tinycolor2')
-const SimpleMDE = require('react-simplemde-editor')
+const
+	log = getLogger(__filename),
+	tinycolor = require('tinycolor2'),
+	SimpleMDE = require('react-simplemde-editor')
 
 
 /**
@@ -54,8 +53,8 @@ const baseStyles = createStyles({
 
 		}],
 		issueNumber: [{
-			fonStyle: 'italic',
-			fontWeight: 900
+			//fontStyle: 'italic',
+			fontWeight: 500
 		}],
 		issueTitle: [{
 			fontWeight: 300

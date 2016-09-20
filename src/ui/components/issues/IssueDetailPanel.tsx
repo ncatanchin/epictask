@@ -16,7 +16,7 @@ import { IssueLabelsAndMilestones } from './IssueLabelsAndMilestones'
 import { IssueActivityText } from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
-	selectedIssueIdsSelector, issuesSelector, commentsSelector
+	selectedIssueIdsSelector, issuesSelector, commentsSelector, selectedIssueSelector
 } from 'shared/actions/issue/IssueSelectors'
 import { HotKeyContext } from 'ui/components/common/HotKeyContext'
 
@@ -43,12 +43,16 @@ const
 
 export interface IIssueDetailPanelProps {
 	selectedIssueIds?:number[]
+	selectedIssue?:Issue
 	issues?:List<Issue>
 	comments?:List<Comment>
 	theme?:any,
 	styles?:any
 }
 
+export interface IIssueDetailPanelState {
+
+}
 
 /**
  * IssueDetailPanel
@@ -60,12 +64,13 @@ export interface IIssueDetailPanelProps {
 @HotKeyContext()
 @connect(createStructuredSelector({
 	selectedIssueIds: selectedIssueIdsSelector,
+	selectedIssue: selectedIssueSelector,
 	issues: issuesSelector,
 	comments: commentsSelector
 }))
 @ThemedStyles(baseStyles, 'issueDetail')
 @PureRender
-export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any> {
+export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> {
 	
 	refs:{[name:string]:any}
 	
@@ -73,24 +78,36 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 * Add label
 	 */
 	
-	addLabel = (issues:List<Issue>) => Container.get(IssueActionFactory).patchIssues("Label", ...issues.toArray())
+	addLabel = (...issues:Issue[]) =>
+		Container.get(IssueActionFactory).patchIssues("Label", ...issues)
 	
 	/**
 	 * Change the assigned milestone
 	 *
 	 * @param issues
 	 */
-	editMilestone = (issues:List<Issue>) =>
+	editMilestone = (...issues:Issue[]) =>
 		Container.get(IssueActionFactory)
-			.patchIssues("Milestone", ...issues.toArray())
+			.patchIssues("Milestone", ...issues)
 	
-	assignIssue = (issues:List<Issue>) =>
+	/**
+	 * Assign the issue
+	 *
+	 * @param issues
+	 */
+	assignIssue = (...issues:Issue[]) =>
 		Container.get(IssueActionFactory)
-			.patchIssues("Assignee", ...issues.toArray())
+			.patchIssues("Assignee", ...issues)
 	
-	unassignIssue = (issues:List<Issue>) =>
+	
+	/**
+	 * Unassign the issues
+	 *
+	 * @param issues
+	 */
+	unassignIssue = (...issues:Issue[]) =>
 		Container.get(IssueActionFactory)
-			.applyPatchToIssues({ assignee: null }, true, ...issues.toArray())
+			.applyPatchToIssues({ assignee: null }, true, ...issues)
 	
 	/**
 	 * Callback for label or milestone remove
@@ -106,7 +123,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 		if (!(item as any).id) {
 			const
 				label:Label = item as any,
-				labels = issue.labels.filter(it => it.url !== label.url)
+				labels = [{action:'remove',label}] //issue.labels.filter(it => it.url !== label.url)
 			
 			actions.applyPatchToIssues({ labels }, true, issue)
 		} else {
@@ -232,7 +249,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderBody = (comments:List<Comment>, index, styles) => <IssueActivityText
 		key={'issue-body'}
-		issue={this.props.issues.get(0)}
+		issue={this.props.selectedIssue}
 		activityType='post'
 		activityActionText='posted issue'
 		activityStyle={styles.content.activities.activity}/>
@@ -248,7 +265,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,any
 	 */
 	renderComment = (comments:List<Comment>, index, styles) => <IssueActivityText
 		key={comments.get(index).id}
-		issue={this.props.issues.get(0)}
+		issue={this.props.selectedIssue}
 		comment={comments.get(index)}
 		activityActionText='commented'
 		activityType='comment'

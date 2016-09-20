@@ -9,11 +9,22 @@ import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
 import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
+import {TIssueEditInlineConfig} from './IIssueListItems'
+
+// Refactor - so we export here too
+export {TIssueEditInlineConfig} from './IIssueListItems'
 
 
 const log = getLogger(__filename)
 
+ 
+
 export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
+
+export interface IIssuePatchLabel {
+	action:'add'|'remove'
+	label:Label
+}
 
 export type TEditCommentRequest = {
 	issue:Issue,
@@ -33,10 +44,6 @@ export const IssuePatchModes = {
 }
 
 
-export type TIssueEditInlineConfig = {
-	issueIndex:number,
-	issue:Issue
-}
 
 export const IssueStateRecord = Record({
 	issues: List<Issue>(),

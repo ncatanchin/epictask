@@ -6,11 +6,11 @@ import {List} from 'immutable'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
 import { Dialogs, IssueKey, FinderItemsPerPage } from 'shared/Constants'
-import {cloneObject, extractError} from 'shared/util/ObjectUtil'
+import { cloneObject, extractError, isNil, nilFilter, isNumber } from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
-	TEditCommentRequest
+	TEditCommentRequest, IIssuePatchLabel
 } from './IssueState'
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
 import {AppActionFactory} from 'shared/actions/AppActionFactory'
@@ -19,7 +19,8 @@ import {
 } from 'shared/actions/repo/RepoSelectors'
 
 import {
-	selectedIssueIdsSelector, issueSortAndFilterSelector, issuesSelector, selectedIssueIdSelector, selectedIssueSelector
+	selectedIssueIdsSelector, issueSortAndFilterSelector, issuesSelector, selectedIssueIdSelector, selectedIssueSelector,
+	selectedIssuesSelector, issueItemsSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
@@ -296,19 +297,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const getState = getStoreState
 		
 		if (!issues || !issues.length) {
-			issues = await Container.get(Stores).issue
-				.bulkGet(...selectedIssueIdsSelector(getState()))
+			log.info(`no issues passed to patch, going to use the selected issues`)
+			issues = selectedIssuesSelector(getState())
 		}
+		
 		
 		if (!issues.length) {
 			log.warn('Must have at least 1 issue selected to open patch editor', issues)
 			return
 		}
 		
-		// TODO: issues.map(issue => fillIssue(getState, issue, issue.repoId))
-		const filledIssues = issues
-		
-		this.setPatchIssues(filledIssues, mode)
+		this.setPatchIssues(issues, mode)
 		this.uiActions.setDialogOpen(Dialogs.IssuePatchDialog, true)
 	}
 	
@@ -334,6 +333,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				stores = Container.get(Stores),
 				actions = this.withDispatcher(dispatch, getState),
 				client = Container.get(GitHubClient)
+			
 			try {
 				
 				// Filter out issues that the milestone/assignee does not have access to
@@ -345,20 +345,37 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 				// Now apply the patch to clones
 				issues.forEach(issue => {
-					const patchCopy = cloneObject(patch)
+					const
+						patchCopy = cloneObject(patch)
 					
 					Object.entries(patch).forEach(([key,val]) => {
-						log.info(`Patching key ${key}`)
+						log.info(`Patching key ${key}`,patch[key])
 						
 						switch (key) {
 							case 'labels':
-								issue.labels = !patchCopy.labels ? [] :
-									_.uniqBy((issue.labels || [])
-										.concat(patchCopy.labels
+								if (!patchCopy.labels || !patchCopy.labels.length) {
+									issue.labels = []
+									break
+								}
+								const
+									addLabels = patchCopy.labels
+										.filter(({action}:IIssuePatchLabel) => action === 'add')
+										.map(({label}:IIssuePatchLabel) => label),
+									
+									removeLabelUrls = patchCopy.labels
+										.filter(({action}:IIssuePatchLabel) => action === 'remove')
+										.map(({label}:IIssuePatchLabel) => label.url)
+								
+								
+								// Add new labels and filter out old ones
+								issue.labels = _.uniqBy((issue.labels || [])
+										.concat(addLabels
 											.filter(label => label.repoId === issue.repoId)
 										)
 										, 'url'
-									)
+									).filter(label => !removeLabelUrls.includes(label.url))
+								
+								log.info(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
 								break
 							case 'milestone':
 								if (!patchCopy.milestone)
@@ -383,14 +400,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				// const issueStore:IssueStore = this.stores.issue
 				// One by one update the issues on GitHub
 				await Promise.all(issues.map(async(issue: Issue, index) => {
-					const repo = issue.repo || await stores.repo.get(issue.repoId)
+					const
+						repo = issue.repo || await stores.repo.get(issue.repoId)
+					
 					assert(repo, `Unable to find repo for issue patching: ${issue.repoId}`)
 					
 					await actions.saveAndUpdateIssueModel(client, repo, issue)
 				}))
-				
-				//const issueNumbers = issues.map(issue => '#' + issue.number).join(', ')
-				//addMessage(`Saved issues ${issueNumbers}`)
 				
 				actions.setIssueSaving(false)
 				this.uiActions.closeAllDialogs()
@@ -403,22 +419,51 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 	}
 	
+	/**
+	 * Persist issue to github
+	 *
+	 * @param client
+	 * @param repo
+	 * @param issue
+	 * @returns {Issue}
+	 */
 	private async saveAndUpdateIssueModel(client: GitHubClient, repo: Repo, issue: Issue) {
 		
-		const issueStore: IssueStore = this.stores.issue
+		issue = cloneObject(issue)
+		
+		const
+			issueStore: IssueStore = this.stores.issue
+			
+		// Because our object could be
+		// behind the persistent rev,
+		// lets update it first
+		// TODO: HACKISH - investigate
+		if (issue['$$doc']) {
+			delete issue['$$doc']
+			
+			const
+				existingIssue = await issueStore.get(Issue.makeIssueId(issue))
+			
+			if (existingIssue)
+				issue['$$doc'] = existingIssue['$$doc']
+		}
 		
 		// First save to github
 		const
-			savedIssue: Issue = await client.issueSave(repo, issue),
-			mergedIssue = _.merge({}, issue, savedIssue),
-			persistedIssue = await issueStore.save(mergedIssue),
-			updatedIssue = _.cloneDeep(persistedIssue),
-			reloadedIssue = await issueStore.get(issue.id)
+			savedIssue:Issue = await client.issueSave(repo, issue),
+			mergedIssue = _.merge({}, issue, savedIssue)
 		
-		// TODO: Notify of data update
-		//dataActions.updateModels(Issue.$$clazz, {[`${updatedIssue.id}`]: reloadedIssue})
+		log.info(`Issue save, our version`,issue,'github version',savedIssue,'merged version',mergedIssue)
 		
-		return reloadedIssue
+		await issueStore.save(mergedIssue)
+		
+		const
+			loadedIssue = await issueStore.get(Issue.makeIssueId(mergedIssue))
+		
+		log.info(`Updating issue in state`,loadedIssue)
+		this.reloadIssues(loadedIssue)
+			
+		return  loadedIssue
 		
 	}
 	
@@ -432,28 +477,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	private doIssueSave(issue: Issue) {
 		return async(dispatch, getState) => {
 			const
-				actions = this.withDispatcher(dispatch, getState),
 				client = Container.get(GitHubClient),
 				stores = Container.get(Stores),
 				enabledRepoIds = enabledRepoIdsSelector(getState()),
 				repo = issue.repo || await stores.repo.get(issue.repoId)
 			
 			try {
-				const updatedIssue = await actions.saveAndUpdateIssueModel(client, repo, issue)
+				const
+					updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue)
 				
-				// If the issue belongs to an enabled repo then reload issues
-				if (enabledRepoIds.includes(updatedIssue.repoId)) {
-					//TODO: Notify issue update
-				}
 				
-				const wasInline = this.state.editingInline
+				const
+					wasInline = this.state.editingInline
 				
 				addMessage(`Saved issue #${updatedIssue.number}`)
 				
-				actions.setSelectedIssueIds([updatedIssue.id])
-				actions.setIssueSaving(false)
-				actions.setEditingIssue(null)
-				
+				this.setSelectedIssueIds([updatedIssue.id])
+				this.setIssueSaving(false)
+				this.setEditingIssue(null)
 				this.uiActions.closeAllDialogs()
 				
 				if (wasInline)
@@ -461,7 +502,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 			} catch (err) {
 				log.error('failed to save issue', err)
-				actions.setIssueSaving(false, extractError(err))
+				this.setIssueSaving(false, extractError(err))
 			}
 		}
 	}
@@ -488,15 +529,22 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			actions.setIssueSaving(true)
 			
 			try {
-				await client.commentDelete(repo,comment)
+				try {
+					await client.commentDelete(repo,comment)
+				} catch (err) {
+					if (_.get(err,'statusCode') !== 404)
+						throw err
+					
+					log.warn(`Issue was already removed from GitHub`)
+				}
 				
-				// Persist
-				await commentStore.remove(comment.id)
+				// PERSIST
+				await commentStore.remove(Comment.makeCommentId(comment))
 				
-				// // Update the comment model
-				// dataActions.updateModels(Comment.$$clazz,{[`${comment.id}`]:loadedComment})
+				// REMOVE FROM STATE IF IN CURRENT COMMENTS
+				this.updateCommentsInState(List<Comment>([comment]),true)
 				
-				// Update the comment ids
+				
 				addMessage(`Removed comment from issue #${comment.issueNumber}`)
 				actions.setIssueSaving(false)
 				actions.setEditingComment(null)
@@ -508,7 +556,57 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			}
 		}
 	}
+	
+	/**
+	 * Update / create the comment in GitHub, persist and update state
+	 *
+	 * @param client
+	 * @param repo
+	 * @param issue
+	 * @param comment
+	 */
+	private async saveAndUpdateComment(client,repo:Repo,issue:Issue,comment:Comment) {
+		comment = cloneObject(comment)
+		
+		const
+			commentStore = getStores().comment,
+			ghComment = await client.commentSave(repo, issue, comment),
+			commentId = Comment.makeCommentId(repo.id,issue.number,comment.id || ghComment.id)
+		
+		// Assign all the updated from github to the comment
+		Object.assign(comment, ghComment, {
+			issueNumber: issue.number,
+			repoId: repo.id,
+			parentRefId: Comment.makeParentRefId(repo.id, issue.number)
+		})
+		
+		// Persist
+		await commentStore.save(comment)
+		
+		// Reload to make sure we're good
+		comment = await commentStore.get(commentId)
+		assert(comment,`Persist was successful, but query for ${commentId} failed - ???`)
+		
+		const
+			currentComments = this.state.comments,
+			selectedIssue = selectedIssueSelector(getStoreState())
+		
+		// UPDATE STATE IF THE COMMENT SHOULD BE VISIBLE
+		if (currentComments && currentComments.find(it => it && it.id === comment.id) ||
+			(selectedIssue && selectedIssue.id) === issue.id) {
 			
+			const
+				commentIndex = currentComments.findIndex(it => it && it.id === comment.id)
+			
+			this.updateCommentsInState(commentIndex > -1 ?
+				currentComments.set(commentIndex,comment) :
+				currentComments.push(comment)
+			)
+		}
+		return comment
+		
+		
+	}
 			
 	/**
 	 * Save an issue and update it in GitHub
@@ -531,35 +629,21 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				const
 					client = Container.get(GitHubClient),
 					stores = Container.get(Stores),
-					{issue:issueStore,repo:repoStore} = stores
+					{issue:issueStore} = stores
 				
 				assert(issue, `Unable to find issue with repoId = ${comment.repoId} and issueNumber ${comment.issueNumber}`)
 				
 				const
-					repo = issue.repo || await repoStore.get(issue.repoId),
-					commentStore = actions.stores.comment
+					availRepo = availableReposSelector(getState()).find(it => it.repoId === issue.repoId),
+					repo = availRepo && availRepo.repo
+				
+				
+				log.info(`Got repo`,repo,`for issue`,issue,`for comment`,comment)
+				assert(repo,`Unable to get repo from repoId on issue: ${issue.repoId}`)
 				
 				// Clone the comment to not affect UI state and
 				// ensure no mutations
-				comment = cloneObject(comment)
-				
-				const
-					ghComment = await client.commentSave(repo, issue, comment)
-				
-				// Assign all the updated from github to the comment
-				Object.assign(comment, ghComment, {
-					issueNumber: issue.number,
-					repoId: repo.id,
-					parentRefId: Comment.makeParentRefId(repo.id, issue.number)
-				})
-				
-				// Persist
-				await commentStore.save(comment)
-				//const loadedComment = await commentStore.get(comment.id)
-				
-				// Update the comment model
-				//TODO: Notify issue update
-				//dataActions.updateModels(Comment.$$clazz,{[`${comment.id}`]:loadedComment})
+				comment = await this.saveAndUpdateComment(client,repo,issue,comment)
 				
 				
 				// Tell the user we are good to go!
@@ -650,18 +734,60 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@ActionReducer()
 	setEditingInline(inline: boolean) {
-		return (state: IssueState) => state.set('editingInline', inline)
+		return (state: IssueState) => {
+			state = state.set('editingInline', inline) as any
+			
+			return (inline) ?
+				state :
+				state
+					.set('editInlineConfig', null)
+					.set('editingIssue',null)
+			
+				
+		}
 	}
 	
+	
 	@ActionReducer()
-	editInline(issueIndex: number, issue: Issue) {
-		return (state: IssueState) => state
+	private startEditInline(issue:Issue,fromIssueId,index:number) {
+		return (state:IssueState) => state
 			.set('editingInline', true)
 			.set('editingIssue', issue)
 			.set('editInlineConfig', {
-				issueIndex,
-				issue
+				index,
+				fromIssueId
 			})
+	}
+	
+	@Action()
+	editInline() {
+		return (dispatch,getState) => {
+			let
+				items = issueItemsSelector(getState()),
+				selectedIssue = selectedIssueSelector(getState()),
+				index = selectedIssue && items.findIndex(item => item.id === selectedIssue.id)
+			
+			
+			if (!selectedIssue || isNil(index) || index === -1) {
+				log.warn('Issue index not found',index)
+				return
+			}
+			
+			// Increment here to show the create below the current issue
+			index++
+			
+			const
+				newIssue = new Issue(_.cloneDeep(_.pick(
+					selectedIssue,
+					'repoId',
+					'milestone',
+					'labels',
+					'assignee',
+					'collaborators'
+				)))
+			
+			this.startEditInline(newIssue,selectedIssue.id,index)
+		}
 		
 	}
 	
@@ -965,30 +1091,42 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	@ActionReducer()
-	private updateCommentsInState(updatedComments:List<Comment>) {
+	private updateCommentsInState(updatedComments:List<Comment>,remove = false) {
 		return (state:IssueState) => {
 			let
 				{comments} = state
 			
 			updatedComments.forEach(updatedComment => {
 				const
-					commentIndex = 	comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
+					commentIndex = comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
 				
-				if (commentIndex > -1)
-					comments = comments.set(commentIndex,updatedComment)
+				// REMOVE COMMENT
+				if (remove) {
+					if (commentIndex === -1) {
+						log.info(`Comment is not in state, can not remove`, updatedComment)
+					} else {
+						comments = comments.remove(commentIndex)
+					}
+				}
+				
+				// UPDATE & ADD COMMENT
 				else {
-					
-					// CHECK TO SEE IF A NEW ISSUE WAS ADDED TO THE CURRENT ISSUE
-					const
-						selectedIssue = selectedIssueSelector(getStoreState())
-					
-					// COMMENT ADD TO CURRENT SELECTED ISSUE
-					if (
-						selectedIssue &&
-						selectedIssue.number === updatedComment.issueNumber &&
-						updatedComment.repoId === selectedIssue.repoId
-					)
-						comments = comments.push(updatedComment)
+					if (commentIndex > -1)
+						comments = comments.set(commentIndex, updatedComment)
+					else {
+						
+						// CHECK TO SEE IF A NEW ISSUE WAS ADDED TO THE CURRENT ISSUE
+						const
+							selectedIssue = selectedIssueSelector(getStoreState())
+						
+						// COMMENT ADD TO CURRENT SELECTED ISSUE
+						if (
+							selectedIssue &&
+							selectedIssue.number === updatedComment.issueNumber &&
+							updatedComment.repoId === selectedIssue.repoId
+						)
+							comments = comments.push(updatedComment)
+					}
 				}
 			})
 			 
@@ -1063,21 +1201,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 	}
 	
-	//
-	// @Action()
-	// loadIssues() {
-	// 	return (dispatch, getState) => this.loadIssuesAction(dispatch, getState)
-	// }
-	
-	@Action()
-	clearAndLoadIssues(...repoIds: number[]) {
-		return (dispatch, getState) => {
-			// this.requestIssueIdsAction([], true, dispatch, getState)
-			// this.loadIssuesAction(dispatch, getState)
-		}
-	}
-	
-	
 	/**
 	 * Set all activity - add pull requests, etc
 	 *
@@ -1114,6 +1237,12 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 	}
 	
+	/**
+	 * Load comments (and should be all activity, pull requests etc)
+	 * for an issue
+	 *
+	 * @param issueId
+	 */
 	@Action()
 	loadActivityForIssue(issueId: number) {
 		return async(dispatch, getState) => {
@@ -1174,67 +1303,120 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	
+	/**
+	 * Gets issue list from state, if no ids are provided
+	 * then it uses the selected ids
+	 * @param issueIds
+	 */
+	getSelectedIssuesFromState(...issueIds:number[]) {
+		
+		issueIds = issueIds.length ?
+			issueIds :
+			this.state.selectedIssueIds
+		
+		const
+			{issues} = this.state
+		
+		return issueIds
+			.map(id => issues.find(it => it.id === id))
+			.filter(issue => !isNil(issue))
+	}
+	
+	//export type TIssueIdOrIssue = Array<number|Issue>
+	
+	/**
+	 * Reload all issues in the passed list
+	 * that are currently in the state
+	 *
+	 * @param issues
+	 */
+	reloadIssues(issues:List<Issue>|Issue[])
+	
+	/**
+	 * Same as above - but with rest args of ids or issues
+	 *
+	 * @param issuesOrIssueIds
+	 */
+	reloadIssues(...issuesOrIssueIds:Array<number|Issue>)
+	
 	@Action()
-	setIssueState(newState: TIssueState, ...issueIds: number[]) {
+	reloadIssues(...args:any[]) {
+		return async (dispatch,getState) => {
+			let
+				issues:Issue[] = (Array.isArray(args[0])) ?
+					args[0] : isListType(args[0],Issue) ?
+					args[0].toArray() :
+					isNumber(args[0]) ? nilFilter(args.filter(id => this.state.issues.find(it => it.id === id)))
+						: args
+						
+			
+			log.info(`Going to reload issues`, issues, 'from args', args)
+			if (!issues.length) {
+				log.warn(`No issues found in state to update from `, args)
+				return
+			}
+			
+			const
+				updatedIssues = await this.getIssues(availableReposSelector(getStoreState()),issues)
+			
+			this.updateIssuesInState(List<Issue>(updatedIssues))
+		
+		}
+	}
+	
+	
+	/**
+	 * This is actually 'state' in github - but gets confusing since
+	 * our system is in redux
+	 *
+	 * @param newState
+	 * @param issueIds
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
+	@Action()
+	setIssueStatus(newState: TIssueState, ...issueIds: number[]) {
 		return async(dispatch, getState) => {
-			let issues = await this.stores.issue.bulkGet(...issueIds)
+			let
+				issues = this.getSelectedIssuesFromState(...issueIds)
+			
 			log.info(`Going to delete ${issues.length} issues`)
 			
 			const
-				client = Container.get(GitHubClient)
+				client = Container.get(GitHubClient),
+				closeIssues = _.cloneDeep(issues)
 			
 			
-			issues = _.cloneDeep(issues)
-			const closeIssues = []
-			
-			for (let issue of issues) {
-				if (!issue.repo)
-					issue.repo = await this.stores.repo.get(issue.repoId)
-				
-				if (!hasEditPermission(issue))
+			for (let issue of closeIssues) {
+				if (!hasEditPermission(issue)) {
 					addErrorMessage(`You don't have permission to close this issue: ${issue.number}`)
-				else
-					closeIssues.push(issue)
+					return
+				}
 			}
 			
-			const promises = closeIssues
-			// .filter((issue:Issue) => issue.state !== newState)
-				.map(async(issue: Issue) => {
-					issue.state = newState
-					let mergedIssue = null,
-						persistedIssue = null,
-						resultIssue = null
-					try {
-						assert(issue.repo, 'repo not found for issue: ' + issue.repoId)
+			const
+				promises = closeIssues
+					.map(async(issue: Issue) => {
+						issue.state = newState
 						
-						
-						resultIssue = await client.issueSave(issue.repo, issue)
-						log.info(`Got result issue from github, new state is ${resultIssue.state}`)
-						
-						// Get the issue in case it changed along the way
-						issue = await this.stores.issue.get(issue.id)
-						mergedIssue = _.merge({}, issue, resultIssue)
-						
-						await Promise.delay(1)
-						persistedIssue = await this.stores.issue.save(mergedIssue)
-						
-						// Update in data models (memory/state)
-						// TODO: Notify update
-						//dataActions.updateModels(Issue.$$clazz, {[`${persistedIssue.id}`]: persistedIssue})
-						
-						// Remove from selected if selected
-						return mergedIssue
-					} catch (err) {
-						log.error('set issue state failed', err)
-						addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
-					}
-				})
+						try {
+							assert(issue.repo, 'repo not found for issue: ' + issue.repoId)
+							
+							return await this.saveAndUpdateIssueModel(client,issue.repo,issue)
+							
+						} catch (err) {
+							log.error('set issue state failed', err)
+							addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
+						}
+					}),
+				
+				// WAIT FOR ALL RESPONSES
+				results = await Promise.all(promises)
 			
-			const results = await Promise.all(promises)
 			
 			addMessage(`Closed ${results.length} issues successfully`)
 			
-			this.loadIssuesAction(dispatch, getState)
+			// Now we simply update the state - remvoed
+			//this.loadIssuesAction(dispatch, getState)
 			
 		}
 		

@@ -26,7 +26,7 @@ const toaster = Container.get(Toaster)
 
 // Constants
 const log = getLogger(__filename)
-const styles = {
+const styles = createStyles({
 	root: makeStyle(FlexColumn, FlexAuto, PositionRelative, {
 		minHeight: 72,
 		padding: '1rem 0',
@@ -43,6 +43,13 @@ const styles = {
 
 		hasValue: {
 			paddingTop: 25
+		},
+		
+		
+		// Fixed scroll mode
+		'fixed-scroll-x': {
+			flexWrap: 'nowrap',
+			overflowX: 'auto'
 		}
 	}),
 
@@ -82,7 +89,7 @@ const styles = {
 	})
 
 
-}
+})
 
 
 /**
@@ -103,6 +110,7 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 	renderChip: (item: M) => any
 	renderChipSearchItem: (chipProps: any, item: M) => any
 	keySource: (item: M) => string|number
+	mode?:'fixed-scroll-x'|'normal'
 
 	underlineShow?: boolean
 	inputStyle?: any
@@ -123,7 +131,7 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
  * @constructor
  **/
 
-@ThemedNoRadium
+@Themed
 @PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 
@@ -182,7 +190,6 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 	handleUpdateInput = (newQuery) => {
-		log.debug('QUery updated', newQuery)
 		const newChipModels = this.props.allChips
 			.filter(item => this.props.filterChip(item, newQuery))
 
@@ -251,7 +258,20 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				inputStyle,
 				_.mapValues(inputStyle, value => value + ' !important')
 			)
-
+		
+		const
+			inputField = <TypeAheadSelect
+				onKeyDown={props.onKeyDown}
+				className='chipAutoComplete'
+				hintText={hint.toUpperCase()}
+				underlineShow={false}
+				menuProps={{maxHeight:300}}
+				onItemSelected={this.onItemSelectedOrEnterPressed}
+				onInputChanged={this.handleUpdateInput}
+				dataSource={this.state.dataSource}
+				query={query}
+				fullWidth={true}
+				openOnFocus={true}/>
 
 		// && {marginTop:'1rem'}
 		return <HotKeys {...props}
@@ -265,25 +285,14 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 						'input': finalInputStyle
 			       }) as any}/>
 
-			<div style={[s.chips,(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
+			<div style={[s.chips,s.chips[props.mode || 'normal'],(label && (isFocused || hasValue)) && s.chips.hasValue]} id={id}>
 				{selectedChips.map(item => renderChip(item))}
-
-				<TypeAheadSelect
-					onKeyDown={props.onKeyDown}
-					className='chipAutoComplete'
-					hintText={hint.toUpperCase()}
-					underlineShow={false}
-					menuProps={{maxHeight:300}}
-					onItemSelected={this.onItemSelectedOrEnterPressed}
-					onInputChanged={this.handleUpdateInput}
-					dataSource={this.state.dataSource}
-					query={query}
-					fullWidth={true}
-					openOnFocus={true}/>
-
+				
+				{props.mode === 'normal' && inputField}
 
 			</div>
-
+			
+			{props.mode === 'fixed-scroll-x' && inputField}
 
 			{/*{hint && <TextFieldHint*/}
 			{/*muiTheme={theme}*/}

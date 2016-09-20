@@ -1,6 +1,7 @@
 import {VariableProxy} from "shared/util/VariableProxy"
 import {IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
 import {IService} from "shared/services"
+import { setDataOnDispose, getHot, acceptHot } from "shared/util/HotUtils"
 
 const log = getLogger(__filename)
 
@@ -15,7 +16,7 @@ let serviceManager:ServiceManager = null
 /**
  * Persistent Proxy Object
  */
-let serviceManagerProxy:VariableProxy<ServiceManager> = _.get(module,'hot.data.serviceManagerProxy') as any
+let serviceManagerProxy:VariableProxy<ServiceManager> = getHot(module,'serviceManagerProxy') as any
 
 
 export type TServiceRegistrationMap = {[name:string]:IServiceRegistration}
@@ -286,6 +287,8 @@ export class ServiceManager {
 		// With decorations accordingly
 		ctx.keys().forEach(ctx)
 		
+		
+		
 		return ctx
 	}
 	
@@ -387,9 +390,8 @@ export class ServiceManager {
 
 
 // HMR
-if (module.hot) {
-	module.hot.dispose((data:any) => {
-		data.serviceManagerProxy = serviceManagerProxy
-	})
-}
+setDataOnDispose(module,() => ({
+	serviceManagerProxy
+}))
 
+acceptHot(module,log)

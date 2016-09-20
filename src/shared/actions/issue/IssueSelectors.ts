@@ -3,12 +3,15 @@ import {Map,List} from 'immutable'
 import {IssueKey} from 'shared/Constants'
 
 import {Issue} from 'shared/models/Issue'
-import { TIssueSortAndFilter, TEditCommentRequest } from 'shared/actions/issue/IssueState'
+import { TIssueSortAndFilter, TEditCommentRequest, TIssueEditInlineConfig } from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 import {IssueState} from 'shared/actions/issue/IssueState'
 import {Comment} from 'shared/models/Comment'
-import { IIssueGroup, getIssueGroupId, IssueListItemType, IIssueListItem } from './IIssueListItems'
+import {
+	IIssueGroup, getIssueGroupId, IssueListItemType, IIssueListItem,
+	IIssueItemGroupProps, EditIssueInlineIndex
+} from './IIssueListItems'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {
 	enabledRepoIdsSelector,
@@ -18,7 +21,7 @@ import { Label, Milestone, User } from "shared/models"
 import {createSelector} from 'reselect'
 import { IIssueSort, TIssueSortDirection, TIssueFieldsGroupable } from "shared/actions/issue/IIssueSort"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
-import { isListType } from "shared/util/ObjectUtil"
+import { isListType, nilFilterList, nilFilter, isNumber } from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
 
@@ -124,6 +127,20 @@ export const selectedIssueSelector = createSelector(
 )
 
 
+/**
+ * If a single issue is selected then get the id
+ */
+export const selectedIssuesSelector:(state) => Issue[] = createSelector(
+	selectedIssueIdsSelector,
+	issuesSelector,
+	(selectedIssueIds:number[],issues:List<Issue>):Issue[] =>
+	selectedIssueIds && issues ?
+		nilFilter(selectedIssueIds.map(id => issues.find(it => it.id === id))) :
+		[]
+)
+
+
+
 
 
 /**
@@ -145,10 +162,33 @@ export const patchModeSelector:(state) => TIssuePatchMode = createSelector(
 /**
  * Issue currently being edited
  */
+
 export const editingIssueSelector:(state) => Issue = createSelector(
 	issueStateSelector,
-	(issueState:IssueState) => issueState.editingIssue
+	(state:IssueState) => state.editingIssue
 )
+
+
+export const editingInlineIssueSelector: (state) => boolean = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.editingIssue && state.editingInline
+)
+
+export const editInlineConfigIssueSelector:(state) => TIssueEditInlineConfig = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.editInlineConfig && state.editingIssue && state.editInlineConfig
+)
+
+export const issueSavingSelector:(state) => boolean = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.issueSaving
+)
+
+export const issueSaveErrorSelector:(state) => Error = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.issueSaveError
+)
+
 
 /**
  * Comment currently being edited
@@ -223,7 +263,8 @@ export const orderedIssueIndexesSelector = createSelector(
 	issuesSelector,
 	issueSortAndFilterSelector,
 	enabledAssigneesSelector,
-	(issues:List<Issue>, {issueSort,issueFilter},assignees:List<User>):List<number> => {
+	editInlineConfigIssueSelector,
+	(issues:List<Issue>, {issueSort,issueFilter},assignees:List<User>,editInlineConfig:TIssueEditInlineConfig):List<number> => {
 		
 		const
 			{groupBy} = issueSort,
@@ -236,48 +277,50 @@ export const orderedIssueIndexesSelector = createSelector(
 		
 		// Get all the filters & sort criteria
 		let
-			{text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter
+			{text,issueId,milestoneIds,labelUrls,assigneeIds} = issueFilter,
+			inlineEditIndex = -1
 			
 		
 		milestoneIds = _.nilFilter(milestoneIds || [])
 		labelUrls = _.nilFilter(labelUrls || [])
 		assigneeIds = _.nilFilter(assigneeIds || [])
 		
+		
 		const
 			filteredIndexes = issues
 				.map((issue,index) => index)
 				.filter(issueIndex => {
-				
-				const
-					issue = issues.get(issueIndex)
-				
-				// Exact match
-				if (issueId)
-					return `${issue.id}` === `${issueId}`
-				
-				// Include Closed
-				let matches =
-					(issue.state === 'open' || issueFilter.includeClosed)
-				
-				// Milestones
-				if (matches && milestoneIds.length)
-					matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
-				
-				// Labels
-				if (matches && labelUrls.length)
-					matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label && label.url === url) > -1)
-				
-				// Assignee
-				if (matches && assigneeIds.length)
-					matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
-				
-				// Text
-				if (matches && text)
-					matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
-				
-				return matches
-			})
-		
+					
+					const
+						issue = issues.get(issueIndex)
+					
+					// Exact match
+					if (issueId)
+						return `${issue.id}` === `${issueId}`
+					
+					// Include Closed
+					let matches =
+						(issue.state === 'open' || issueFilter.includeClosed)
+					
+					// Milestones
+					if (matches && milestoneIds.length)
+						matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
+					
+					// Labels
+					if (matches && labelUrls.length)
+						matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label && label.url === url) > -1)
+					
+					// Assignee
+					if (matches && assigneeIds.length)
+						matches = issue.assignee && assigneeIds.includes(issue.assignee.id)
+					
+					// Text
+					if (matches && text)
+						matches = _.toLower(issue.title + issue.body + _.get(issue.assignee,'login')).indexOf(_.toLower(text)) > -1
+					
+					return matches
+				})
+			
 		
 		let
 			sortedIssueIndexes = filteredIndexes
@@ -292,10 +335,25 @@ export const orderedIssueIndexesSelector = createSelector(
 						val = _.toLower(val)
 					
 					return val
-				})
+				}) as List<number>
 		
 		if (isReverse)
-			sortedIssueIndexes = sortedIssueIndexes.reverse()
+			sortedIssueIndexes = sortedIssueIndexes.reverse() as List<number>
+		
+		// CHECK INLINE EDIT INDEX
+		if (editInlineConfig) {
+			const
+				inlineIndex = sortedIssueIndexes.findIndex(issueIndex => issues.get(issueIndex).id === editInlineConfig.fromIssueId)
+			
+			if (inlineIndex === -1) {
+				log.warn(`Unable to find inline issue index`,editInlineConfig)
+			}
+			
+			// PUSH THE EDIT INLINE PLACEHOLDER INDEX
+			else {
+				sortedIssueIndexes = sortedIssueIndexes.insert(inlineIndex + 1, EditIssueInlineIndex)
+			}
+		}
 		
 		return sortedIssueIndexes as List<number>
 		
@@ -397,6 +455,28 @@ export const issueGroupsSelector = createSelector(
 
 
 /**
+ * Create issue group id selector (from props)
+ */
+export function makeIssueGroupIdSelector():(state,props) => string {
+	return createSelector(
+		(state, props:IIssueItemGroupProps) => props.group && props.group.id,
+		(groupId) => groupId
+	)
+}
+
+/**
+ * Return a selector that determines whether a group is expanded or closed
+ */
+export function makeIssueGroupExpandedSelector() {
+	return createSelector(
+		groupVisibilitySelector,
+		makeIssueGroupIdSelector(),
+		(groupVisibility:Map<string,boolean>, groupId) =>
+			groupVisibility.has(groupId) ? groupVisibility.get(groupId) : true
+	)
+}
+
+/**
  * Make an issue list item
  *
  * @param item
@@ -409,24 +489,58 @@ function makeIssueListItem(item:Issue|IIssueGroup):IIssueListItem<any> {
 	}
 }
 
+/**
+ * All issue items selector - fully sorted with groups
+ */
 export const issueItemsSelector = createSelector(
 	issuesSelector,
 	orderedIssueIndexesSelector,
 	issueGroupsSelector,
-	(issues:List<Issue>,issueIndexes:List<number>,groups:List<IIssueGroup>):List<IIssueListItem<any>> =>  {
+	editInlineConfigIssueSelector,
+	(issues:List<Issue>,issueIndexes:List<number>,groups:List<IIssueGroup>,editInlineConfig:TIssueEditInlineConfig):List<IIssueListItem<any>> =>  {
 		
-		
-		
+		// IF EDIT INLINE THEN CREATE ITEM, THE PLACEHOLDER WILL BE IN THE INDEXES
+		function makeEditInlineItem():IIssueListItem<TIssueEditInlineConfig> {
+			return {
+				type:IssueListItemType.EditIssueInline,
+				id: EditIssueInlineIndex,
+				item: editInlineConfig
+			}
+		}
+			
+		// GET ISSUE/EDIT/GROUP ITEM
+		function getIssueListItem(issueIndex:number|Issue) {
+			return (issueIndex === EditIssueInlineIndex && editInlineConfig) ?
+				makeEditInlineItem() :
+				makeIssueListItem(isNumber(issueIndex) ? issues.get(issueIndex) : issueIndex)
+		}
+			
+			
 		if (!groups || groups.size === 0) {
-			return issueIndexes.map(issueIndex => makeIssueListItem(issues.get(issueIndex))) as List<IIssueListItem<any>>
+			return issueIndexes.map(issueIndex => getIssueListItem(issueIndex)) as List<IIssueListItem<any>>
 		} else {
 			return List<IIssueListItem<any>>()
 				.withMutations(allItems => {
 					groups.forEach(group => {
 						allItems.push(makeIssueListItem(group))
 						
-						group.issueIndexes.forEach((issueIndex) =>
-							allItems.push(makeIssueListItem(issues.get(issueIndex))))
+						// Iterate all issues in group and add to all items in order
+						// Also if editing inline then add extra item after matched fromIssueId
+						group.issueIndexes.forEach((issueIndex) => {
+							if (issueIndex === EditIssueInlineIndex)
+								return
+							
+							const
+								issue = issues.get(issueIndex)
+							
+							allItems.push(getIssueListItem(issue))
+							
+							// IF THIS IS THE ISSUE WE ARE CREATING FROM - INSERT THE EDIT INLINE PLACE HOLDER
+							if (editInlineConfig && editInlineConfig.fromIssueId === issue.id) {
+								log.info(`Adding edit inline place holder at `,issueIndex)
+								allItems.push(getIssueListItem(EditIssueInlineIndex))
+							}
+						})
 					})
 					
 					return allItems

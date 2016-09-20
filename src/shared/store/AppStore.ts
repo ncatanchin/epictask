@@ -322,7 +322,7 @@ export function getStoreState():Map<string,any> {
 }
 
 // In Development Environment, expose getStore/getStoreState
-If(Env.isDev,() => {
+If(DEBUG,() => {
 	_.assignGlobal({
 		getStore,
 		getStoreState

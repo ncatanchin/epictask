@@ -46,7 +46,6 @@ export interface IButtonProps extends React.HTMLAttributes<any> {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'button')
-
 export class Button extends React.Component<IButtonProps,void> {
 
 	static defaultProps = {

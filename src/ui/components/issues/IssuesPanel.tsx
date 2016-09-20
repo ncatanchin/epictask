@@ -20,7 +20,7 @@ import {
 	issueSortAndFilterSelector,
 	selectedIssueIdsSelector,
 	issueStateSelector, issueIdsSelector, issuesSelector, selectedIssueIdSelector, orderedIssueIndexesSelector,
-	issueGroupsSelector, issueItemsSelector,
+	issueGroupsSelector, issueItemsSelector, selectedIssueSelector, editInlineConfigIssueSelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -81,7 +81,6 @@ export interface IIssuesPanelProps {
 	//selectedIssueIds?:number[]
 	hasAvailableRepos?: boolean
 	saving?: boolean
-	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
 	
 }
@@ -107,8 +106,7 @@ export interface IIssuesPanelState {
 	issues: issuesSelector,
 	items: issueItemsSelector,
 	groups: issueGroupsSelector,
-	editingInline: (state) => issueStateSelector(state).editingInline,
-	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig,
+	editInlineConfig: editInlineConfigIssueSelector,
 	saving: (state) => issueStateSelector(state).issueSaving
 }))
 @ThemedStyles(baseStyles, 'issuesPanel')
@@ -120,11 +118,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	uiActions: UIActionFactory = getUIActions()
 	issueActions: IssueActionFactory = getIssueActions()
 	
-	
-	get selectedIssueIds():number[] {
+	/**
+	 * Helper to get the current selected issue ids
+	 *
+	 * @returns {Array<number>|Array}
+	 */
+	private get selectedIssueIds():number[] {
 		return selectedIssueIdsSelector(getStoreState()) || []
 	}
 	
+	
+	/**
+	 * Get item indexes from the embedded list
+	 */
 	private get itemIndexes():List<number> {
 		let
 			listRef = _.get(this.state,'listRef',null)
@@ -154,42 +160,23 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private onEnter = () => {
 		const
-			{issues,items} = this.props
+			{items} = this.props
 			
 			
 		const
-			selectedIssueIds = selectedIssueIdSelector(getStoreState()),
-			selectedIssue = selectedIssueIds && selectedIssueIds.length === 1 &&
-				issues.find(issue => issue.id === selectedIssueIds[0])
+			{selectedIssueIds} = this,
+			selectedIssue = selectedIssueSelector(getStoreState())
 		
 		log.debug('Enter pressed', selectedIssueIds, selectedIssue)
 		
+		
+		// One issue selected
 		if (selectedIssue) {
-				
-			let issueIndex = items.findIndex(item => item.id === selectedIssue.id)
-			
-			
-			assert(issueIndex > -1, 'Issue index not found')
-			
-			// Increment here to show the create below the current issue
-			issueIndex++
-			const
-				issue = new Issue(_.cloneDeep(_.pick(
-						selectedIssue,
-						'repoId',
-						'milestone',
-						'labels'
-				)))
-			
-			// this.issueActions.createIssueInline(selectedIssue)
-			this.issueActions.editInline(
-					issueIndex,
-					issue
-			)
-			
-		} else if (selectedIssueIds.length) {
+			this.issueActions.editInline()
+		}
+		// Otherwise move down and clear selection
+		else if (selectedIssueIds.length) {
 			this.moveDown()
-			//this.updateSelectedIssueIds([])
 		}
 	}
 	
@@ -203,7 +190,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			selectedIssueIds = this.selectedIssueIds
 		
 		log.info(`OnDelete - going to remove`, selectedIssueIds)
-		this.issueActions.setIssueState('closed', ...selectedIssueIds)
+		this.issueActions.setIssueStatus('closed', ...selectedIssueIds)
 	}
 	
 	/**
@@ -216,24 +203,32 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDownSelect]: this.moveDown,
 		[CommonKeys.Enter]: this.onEnter,
 		[CommonKeys.Delete]: this.onDelete,
-		[CommonKeys.SetAssignee]: () => {
+		
+		[CommonKeys.SetAssignee]: (event) => {
 			log.info('Patch assignee')
-			Container.get(IssueActionFactory).patchIssuesAssignee()
+			getIssueActions().patchIssuesAssignee()
+			event.preventDefault()
 		},
-		[CommonKeys.SetMilestone]: () => {
+		[CommonKeys.SetMilestone]: (event) => {
 			log.info('Patch milestone')
-			Container.get(IssueActionFactory).patchIssuesMilestone()
+			getIssueActions().patchIssuesMilestone()
+			event.preventDefault()
 		},
-		[CommonKeys.AddLabels]: () => {
+		[CommonKeys.AddLabels]: (event) => {
 			log.info('Patch labels')
-			Container.get(IssueActionFactory).patchIssuesLabel()
+			getIssueActions().patchIssuesLabel()
+			event.preventDefault()
 		},
-		[CommonKeys.CreateComment]: () => {
+		[CommonKeys.CreateComment]: (event) => {
 			log.info('Create Comment')
 			
-			
-			Container.get(IssueActionFactory).newComment()
-		}
+			getIssueActions().newComment()
+			event.preventDefault()
+		},
+		[CommonKeys.Edit]: () => {
+			log.info('Edit issue keys pressed - making dialog visible')
+			getIssueActions().editIssue()
+		},
 	}
 	
 	// Helper for sorting
@@ -277,7 +272,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			log.info(`Move selector`,event)
 			
 			const
-				{items,groups,editingInline} = this.props,
+				{groups} = this.props,
 				selectedIssueIds = this.selectedIssueIds,
 				{itemIndexes} = this,
 				itemCount = itemIndexes.size,
@@ -369,12 +364,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		}
 	}
 	
-	/**
-	 * SelectedIssue id history
-	 *
-	 * MIGHT NOT BE NEEDED NOW
-	 */
-	private selectedIssueIdsHistory = []
 	
 	
 	/**
@@ -400,17 +389,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	updateSelectedIssueIds(newSelectedIssueIds: number[], force = false) {
 		this.adjustScroll(newSelectedIssueIds)
 		
-		//this.pushUpdatedSelectedIssueIds()
 		this.doPushSelectedIssueIds(newSelectedIssueIds)
 	}
-	
-	
-	/**
-	 * Push updates to the state
-	 */
-	pushUpdatedSelectedIssueIds = _.debounce((newSelectedIssueIds) => {
-		this.doPushSelectedIssueIds(newSelectedIssueIds)
-	},150)
 	
 	/**
 	 * Retrieves the start and end index
@@ -559,7 +539,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				theme,
 				styles,
 				issues,
-				editingInline
+				editInlineConfig
 			} = this.props,
 			selectedIssueIds = this.selectedIssueIds,
 			{items} = this.props,
@@ -576,7 +556,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
 			
 			// Item count - groups or issues
-			itemCount = items.size + (editingInline ? 1 : 0)
+			itemCount = items.size
 		
 		
 		return <HotKeys style={styles.panel}

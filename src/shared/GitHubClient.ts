@@ -4,7 +4,7 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import {cloneObject} from 'shared/util/ObjectUtil'
+import { cloneObject, isString, isNumber } from 'shared/util/ObjectUtil'
 
 
 const {URLSearchParams} = require('urlsearchparams')
@@ -301,7 +301,7 @@ export class GitHubClient {
 		else
 			issueJson.assignees = []
 
-		if (issue.labels && issue.labels.length) {
+		if (issue.labels) {
 			issueJson.labels = issue.labels.map(label => label.name)
 		}
 
@@ -361,7 +361,12 @@ export class GitHubClient {
 	async repo(repoName:string,opts:RequestOptions = null):Promise<GitHubSchema.Repo> {
 		return await this.get<Repo>(`/repos/${repoName}`,Repo,opts)
 	}
-
+	
+	async issue(repoName:string,issueNumber:number,opts:RequestOptions = null):Promise<GitHubSchema.Issue> {
+		return await this.get<Issue>(`/repos/${repoName}/issues/${issueNumber}`,Issue,opts)
+	}
+	
+	
 	/**
 	 * Helper function for building paged gets with repo param
 	 *
@@ -375,8 +380,11 @@ export class GitHubClient {
 		urlTemplate:string,
 		defaultRequestOptions:RequestOptions = null
 	) {
-		return async (repo:Repo,opts:RequestOptions = null) => {
-			const url = urlTemplate.replace(/<repoName>/g,repo.full_name)
+		return async (repo:Repo|string,opts:RequestOptions = null) => {
+			
+			const
+				repoName = isString(repo) ? repo : repo.full_name,
+				url = urlTemplate.replace(/<repoName>/g,repoName)
 
 			if (defaultRequestOptions) {
 				opts = _.merge({},_.cloneDeep(defaultRequestOptions),opts)
@@ -410,8 +418,12 @@ export class GitHubClient {
 	/**
 	 * Get all comments on an issue in a repo
 	 */
-	issueComments = async (repo:Repo,issue:Issue,opts:RequestOptions = null) => {
-		const url = `/repos/${repo.full_name}/issues/${issue.id}/comments`
+	issueComments = async (repo:Repo|string,issue:Issue|number,opts:RequestOptions = null) => {
+		const
+			repoName = isString(repo) ? repo : repo.full_name,
+			issueNumber = isNumber(issue) ? issue : issue.number,
+			url = `/repos/${repoName}/issues/${issueNumber}/comments`
+		
 		return await this.get<PagedArray<Comment>>(url,Comment,opts)
 	}
 
@@ -452,6 +464,17 @@ export function createClient(token:string = null) {
 		throw new Error('No valid token available')
 
 	return new GitHubClient(token)
+}
+
+if (DEBUG) {
+	assignGlobal({
+		getGithubClient() {
+			log.info(`You should be in DEBUG mode`)
+			
+			return createClient()
+		},
+		GitHubClient
+	})
 }
 
 

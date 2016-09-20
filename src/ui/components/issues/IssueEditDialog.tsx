@@ -5,7 +5,7 @@
 // Imports
 import * as React from 'react'
 import {createStructuredSelector} from 'reselect'
-import {Map} from 'immutable'
+import {List} from 'immutable'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
@@ -27,18 +27,25 @@ import {MenuItem, SelectField, TextField, Dialog} from 'material-ui'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {repoIdPredicate, enabledRepoIdsSelector, availableRepoIdsSelector} from 'shared/actions/repo/RepoSelectors'
+import {
+	repoIdPredicate, enabledRepoIdsSelector, availableRepoIdsSelector,
+	availableReposSelector
+} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
 import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
 import {appUserSelector} from 'shared/actions/AppSelectors'
-import {editingIssueSelector, issueStateSelector} from 'shared/actions/issue/IssueSelectors'
+import {
+	editingIssueSelector, issueStateSelector, issueSaveErrorSelector,
+	issueSavingSelector
+} from 'shared/actions/issue/IssueSelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {CircularProgress} from 'material-ui'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
-import {canAssignIssue} from 'shared/Permission'
+import { canAssignIssue, canCreateIssue } from 'shared/Permission'
+
 
 // import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 // import {GithubErrorCodes, IGithubValidationError} from 'shared/GitHubClient'
@@ -77,20 +84,24 @@ const baseStyles = createStyles({
 
 	}],
 
-	title: makeStyle(FlexRowCenter, FillWidth, {
-		label: makeStyle(FlexScale),
-		avatar: makeStyle(FlexAuto, {
+	title: [FlexRowCenter, FillWidth, {
+		height: 30,
+		
+		label: [FlexScale,{
+			fontWeight: 500
+		}],
+		avatar: [FlexAuto, {
 			label: {
 				fontWeight: 500,
 			},
 			avatar: {
-				height: 40,
-				width: 40,
+				height: 30,
+				width: 30,
 			}
-		})
-	}),
+		}]
+	}],
 
-	body: makeStyle({}),
+	body: [{}],
 
 	savingIndicator: [PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
 		opacity: 0,
@@ -188,8 +199,7 @@ export interface IIssueEditDialogProps extends React.HTMLAttributes<any> {
 	styles?:any
 	saveError?:any
 	editingIssue?:Issue
-	availableRepoIds?:number[]
-	availableRepos?:AvailableRepo[]
+	availableRepos?:List<AvailableRepo>
 	
 	open?:boolean
 	user?:User
@@ -217,13 +227,13 @@ export interface IIssueEditDialogState {
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	editingIssue: editingIssueSelector,
-	availableRepoIds: availableRepoIdsSelector,
-	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError,
+	availableRepos: availableReposSelector,
+	saving: issueSavingSelector,
+	saveError: issueSaveErrorSelector,
 	open: (state) => uiStateSelector(state)
 		.dialogs.get(Dialogs.IssueEditDialog) === true
 
-},createDeepEqualSelector))
+}))
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
@@ -373,7 +383,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param s
 	 * @returns {any[]}
 	 */
-	makeRepoMenuItems(availableRepos:AvailableRepo[], s) {
+	makeRepoMenuItems(availableRepos:List<AvailableRepo>, s) {
 
 		const makeRepoLabel = (availRepoItem) => (
 			<div style={s.form.repo.item}>
@@ -440,33 +450,37 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	getNewState(props:IIssueEditDialogProps) {
 		const
-			{styles,theme,availableRepos,editingIssue,open} = props,
-			repoId = editingIssue &&editingIssue.repoId
+			{styles,theme,editingIssue,open} = props,
+			repoId = editingIssue && editingIssue.repoId
 
-		if (!open)
-			return {}
-
-		if (!editingIssue)
+		if (!open || !editingIssue)
 			return {} as any
 
+		
 		let
-			repos = _.nilFilter(availableRepos),
-			milestones = _.nilFilter(editingIssue.milestones),
-			collaborators = _.nilFilter(editingIssue.collaborators),
-			labels = []
+			{availableRepos} = props,
+			repos = availableRepos.map(it => it.repo),
+			milestones = Array<Milestone>(),
+			collaborators = Array<User>(),
+			labels = Array<Label>()
 
-
+		
 		if (editingIssue.id > 0) {
-			repos = repos.filter(item => '' + item.repoId === '' + repoId)
+			availableRepos = availableRepos.filter(item => item.repoId === repoId) as List<AvailableRepo>
+		} else {
+			availableRepos = availableRepos.filter(it => canCreateIssue(it.repo)) as List<AvailableRepo>
 		}
 		
-		// If repo is selected then get milestones,labels,collabs
+		
+		
+		// SET REPO LABELS, MILESTONES, COLLABS
 		if (editingIssue.repoId) {
-			milestones = milestones.filter(item => item.repoId === repoId)
-
-			collaborators = collaborators.filter(item => item.repoIds.includes(repoId))
-
-			labels =  labels.filter(item => item.repoIds.includes(repoId))
+			let
+				availRepo = availableRepos.find(it => it.id === editingIssue.repoId)
+			
+			milestones = availRepo.milestones
+			collaborators = availRepo.collaborators
+			labels =  availRepo.labels
 		}
 
 
@@ -476,7 +490,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			bodyValue: _.get(editingIssue,'body',''),
 			titleValue: _.get(editingIssue,'title',''),
 			labels,
-			repoMenuItems: this.makeRepoMenuItems(repos, styles),
+			repoMenuItems: this.makeRepoMenuItems(availableRepos, styles),
 			milestoneMenuItems: this.makeMilestoneItems(milestones, styles),
 			assigneeMenuItems: this.makeAssigneeMenuItems(collaborators, styles)
 		}
@@ -505,12 +519,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 		const actions = [
 			<Button onClick={this.onCancel} style={styles.action}>Cancel</Button>,
-			<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
+			<Button onClick={this.onSave} style={makeStyle(styles.action,styles.action.save)} mode='raised'>Save</Button>
 		]
 
 		const title = <div style={styles.title}>
 			<div style={styles.title.label}>
-				{editingIssue.id ? `editing ${editingIssue.title}` : `creating ${editingIssue.title || 'an issue'}`}
+				{editingIssue.id ? `EDIT #${editingIssue.number}` : `CREATE`}
 			</div>
 			<div style={styles.title.avatar}>
 				<Avatar user={user}
@@ -522,7 +536,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			</div>
 		</div>
 
-		const selectMenuStyle = makeStyle(styles.menu,styles.selectList,styles.form.assignee.menu)
+		const
+			selectMenuStyle = makeStyle(styles.menu,styles.selectList,styles.form.assignee.menu)
 
 		return <div>
 				<Style rules={{

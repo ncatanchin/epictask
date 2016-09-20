@@ -11,6 +11,15 @@ export function isNil(o:any) {
 	return _.isNil(o)
 }
 
+export function nilFilterList<L extends List<any>>(list:L):L {
+	return _.nilListFilter(list)
+}
+
+export function nilFilter<T>(a:T[]):T[] {
+	return _.nilFilter(a)
+}
+
+
 export function isListType<T>(o:any,type:{new():T}):o is List<T> {
 	return (List.isList(o))
 }

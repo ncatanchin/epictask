@@ -1,6 +1,7 @@
 import * as Styles from 'material-ui/styles'
 import {makeTheme, Palettes} from '../material/MaterialTools'
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
+import { makeLinearGradient } from "shared/themes"
 
 
 
@@ -287,7 +288,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		raised: {
 			color:           text.primary,
-			backgroundColor: secondary.hue1
+			//backgroundColor: secondary.hue1
+			backgroundColor: tc(accent.hue1).setAlpha(0.2).toRgbString(),
+			[CSSHoverState]: {
+				backgroundColor: accent.hue1
+			}
 		},
 
 		disabled: {
@@ -342,9 +347,12 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		}
 
 	},
-
+	
+	/**
+	 * Dialog
+	 */
 	dialog: {
-		titleFontSize: fontSize * 2,
+		titleFontSize: fontSize * 1.9,
 		bodyFontSize:  fontSize * 1.5,
 		bodyColor:     text.primary,
 
@@ -359,7 +367,11 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		action: {
 			titleFontSize: fontSize * 1.3,
 			padding: '1rem 2rem',
-			margin: '0 0 0 1rem'
+			margin: '0 0 0 1rem',
+			
+			save: {
+				
+			}
 		},
 
 		body: {
@@ -368,16 +380,19 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		},
 
 		title: {
-			color:           text.primary,
-			backgroundColor: secondary.hue1,
-
+			color:           accent.hue1,//text.primary,
+			backgroundColor: background,//secondary.hue1,
+			backgroundImage: makeLinearGradient('to bottom',primary.hue1,primary.hue2),
+			boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
+			
 			label: {
 				textTransform: 'uppercase'
 			},
 
 			avatar: {
+				color: text.secondary,
 				avatar: {
-					borderColor: accent.hue1
+					borderColor: Transparent
 				}
 			}
 		},
