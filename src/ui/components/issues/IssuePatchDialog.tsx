@@ -634,7 +634,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				mode === IssuePatchModes.Assignee ? 'Assign Issues' :
 					'Set Milestone'}
 			</div>
-			<div style={styles.title.issues}>
+			<div style={styles.title.Issues}>
 				{issues.map((issue:Issue,index:number) =>
 					<span key={issue.id} style={styles.title.issue}>
 						{index > 0 && <span>,&nbsp;</span>}

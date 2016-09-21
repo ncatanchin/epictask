@@ -6,8 +6,10 @@ import {HotKeys} from 'ui/components/common/Other'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import { ImageLogoFile, UIKey } from "shared/Constants"
+import { UIKey } from "shared/Constants"
 import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
+
+export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
 const log = getLogger(__filename)
 

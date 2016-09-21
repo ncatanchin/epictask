@@ -16,16 +16,14 @@ import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import { HotKeys } from "ui/components/common/Other"
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
+import { shallowEquals } from "shared/util/ObjectUtil"
 
-// const TextFieldHint = require('material-ui/TextField/TextFieldHint').default
-// const TextFieldLabel = require('material-ui/TextField/TextFieldLabel').default
-// const TextFieldUnderline = require('material-ui/TextField/TextFieldUnderline').default
+export type TChipsFieldMode = 'fixed-scroll-x'|'normal'
 
-const toaster = Container.get(Toaster)
-//const appActions = new AppActionFactory()
+const
+	toaster = Container.get(Toaster),
+	log = getLogger(__filename)
 
-// Constants
-const log = getLogger(__filename)
 const styles = createStyles({
 	root: makeStyle(FlexColumn, FlexAuto, PositionRelative, {
 		minHeight: 72,
@@ -110,7 +108,7 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 	renderChip: (item: M) => any
 	renderChipSearchItem: (chipProps: any, item: M) => any
 	keySource: (item: M) => string|number
-	mode?:'fixed-scroll-x'|'normal'
+	mode?:TChipsFieldMode
 
 	underlineShow?: boolean
 	inputStyle?: any
@@ -124,6 +122,7 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 	maxSearchResults?: number
 }
 
+
 /**
  * ChipsField
  *
@@ -134,62 +133,82 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 @Themed
 @PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
-
-
-	constructor(props, context) {
-		super(props, context)
-
-		this.state = {
-			isFocused: false,
-			query: null
-		}
-	}
-
-
-	componentWillMount() {
-		this.setState({dataSource: this.makeDataSource(null, this.props.allChips)})
-	}
-
-	componentWillReceiveProps(nextProps) {
-		if (this.state && _.isEqual(this.state.allChips, nextProps.allChips))
-			return
-
-		this.setState({
-			allChips: nextProps.allChips,
-			dataSource: this.makeDataSource(null, nextProps.allChips)
-		})
-	}
-
-	makeDataSource(newQuery, items) {
-
+	
+	
+	/**
+	 * Create a new datasource
+	 *
+	 * @param newQuery
+	 * @param items
+	 * @returns {any}
+	 */
+	private makeDataSource(newQuery, items) {
+		
 		const chipProps = {
 			query: newQuery || ''
 		}
-
+		
 		const newDataSource = items.map(item => ({
 			item,
 			text: '',//this.props.keySource(item),
 			value: this.props.renderChipSearchItem(chipProps, item)
 		}))
-
+		
 		log.debug('new data source =', newDataSource)
 		return newDataSource
 	}
+	
+	/**
+	 * Make sure the state is up to date
+	 *
+	 * @param props
+	 */
+	private updateState = (props = this.props) => {
+		if (shallowEquals(this.state,props,'allChips'))
+			return
+		
+		
+		const
+			stateUpdate = this.state ? {} : {
+				isFocused: false,
+				query: null
+			} as any
+		
+		// UPDATE DATASOURCE ON STATE
+		this.setState(assign(stateUpdate,{
+			allChips: props.allChips,
+			dataSource: this.makeDataSource(null, props.allChips)
+		}))
+	}
+	
+	/**
+	 * Update state on mount
+	 */
+	componentWillMount = this.updateState
+	
+	
+	/**
+	 * Update state on new props if chips changed
+	 */
+	componentWillReceiveProps = this.updateState
+		
+
+	
 
 
-	onChipSelected = (item) => {
+	private onChipSelected = (item) => {
 		this.props.onChipSelected(item)
 		this.setState({query: null})
 	}
 
-	dataSourceFilter = (query, index) => {
+	private dataSourceFilter = (query, index) => {
 		const {allChips, filterChip} = this.props
 		const item = allChips[index]
 
 		return item && filterChip(item, query)
 	}
 
-	handleUpdateInput = (newQuery) => {
+	private handleUpdateInput = (newQuery) => {
 		const newChipModels = this.props.allChips
 			.filter(item => this.props.filterChip(item, newQuery))
 
@@ -200,13 +219,13 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	}
 
 
-	onSetFocus = (isFocused) => {
+	private onSetFocus = (isFocused) => {
 		return () => {
 			this.setState({isFocused})
 		}
 	}
 
-	onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
+	private onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
 		log.debug('Selected / Enter', chosenRequest, index)
 
 		const {dataSource} = this.state
@@ -224,7 +243,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 	/**
 	 * Key handlers
 	 */
-	keyHandlers = {
+	private keyHandlers = {
 		[CommonKeys.Escape]: () => {
 			(ReactDOM.findDOMNode(this) as any).blur()
 		}

@@ -1,12 +1,15 @@
 import * as fs from 'fs'
 import {getUserDataFilename, readFile} from 'shared/util/Files'
 import {Property} from "shared/util/Decorations";
-import {toJSON} from "shared/util/JSONUtil";
+import {toJSONObject} from "shared/util/JSONUtil";
 import {User} from 'shared/models/User'
 import {ISettings} from "shared/Settings"
 
-const log = getLogger(__filename)
-const settingsFilename = getUserDataFilename('epictask-settings.json')
+
+const
+	log = getLogger(__filename),
+	settingsFilename = getUserDataFilename('settings.json')
+
 log.info(`Settings file: ${settingsFilename}`)
 
 // const low = require('lowdb')
@@ -108,11 +111,17 @@ export class SettingsFile implements ISettings {
 	}
 	
 	toJSON() {
-		return toJSON(this) as ISettings
+		return toJSONObject(this) as ISettings
 	}
 }
 
+/**
+ * Create the settings file instance
+ *
+ * @type {SettingsFile}
+ */
 export const Settings = new SettingsFile()
+
 export default Settings
 
 if (DEBUG)

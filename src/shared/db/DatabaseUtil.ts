@@ -1,6 +1,9 @@
-const log = getLogger(__filename)
+import {Repo as TSRepo,IModel} from 'typestore'
 
-const CHUNK_SIZE = 50
+const
+	CHUNK_SIZE = 50,
+	log = getLogger(__filename)
+
 
 /**
  * Load all model classes
@@ -30,8 +33,12 @@ export function loadModelClasses() {
  * @param models
  * @param modelStore
  */
-export async function chunkSave(models,modelStore) {
-	const chunks = _.chunk(models,CHUNK_SIZE)
+export async function chunkSave<T extends IModel>(models:T[],modelStore:TSRepo<T>) {
+	if (!models.length)
+		return
+	
+	const
+		chunks = _.chunk(models,CHUNK_SIZE)
 	
 	for (let chunk of chunks) {
 		await modelStore.bulkSave(...chunk)

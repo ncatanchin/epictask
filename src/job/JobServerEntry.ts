@@ -5,6 +5,8 @@ const log = getLogger(__filename)
 
 require('./JobManagerService')
 require('./JobSchedulerService')
+require('./GithubEventMonitorService')
+
 
 /**
  * Creates and is responsible for the JobServer process

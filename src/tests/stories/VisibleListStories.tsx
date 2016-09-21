@@ -32,7 +32,7 @@ storiesOf('Visible List',module)
 				}))
 			
 		
-		return <VisibleList styles={{root:Fill}}
+		return <VisibleList style={{root:Fill}}
 		                    items={items}
 		                    itemCount={items.length}
 		                    itemHeight={100}

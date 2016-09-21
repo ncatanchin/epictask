@@ -4,12 +4,9 @@
 
 // Imports
 import * as React from 'react'
-import { connect } from 'react-redux'
-import * as Radium from 'radium'
-import { Issue, Label, AvailableRepo } from 'shared/models'
-import * as Constants from '../../../shared/Constants'
+import { Label } from 'shared/models'
 import { PureRender, Icon } from 'ui/components/common'
-import { ChipsField } from './ChipsField'
+import { ChipsField,TChipsFieldMode } from './ChipsField'
 import { MenuItem } from 'material-ui'
 import { Themed } from 'shared/themes/ThemeManager'
 
@@ -64,7 +61,7 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
 	theme?:any
 	style?:any
 	id:string
-	mode?:'fixed-scroll-x'|'normal'
+	mode?:TChipsFieldMode
 	label?:string
 	hint?:string
 	

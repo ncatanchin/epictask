@@ -17,6 +17,7 @@ import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
 import { getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
+import { shallowEquals } from "shared/util/ObjectUtil"
 
 
 
@@ -52,12 +53,47 @@ export class RepoSyncExecutor implements IJobExecutor {
 	/**
 	 * Notify the UI that a comment was updated
 	 *
-	 * @param comment
+	 * @param comments
 	 */
-	checkReloadActivity = (comment:Comment) => {
+	checkReloadActivity = (comments:Comment[]) => {
 		// Reload current issue if loaded
-		getIssueActions().commentsChanged(comment)
+		getIssueActions().commentsChanged(...comments)
 		
+	}
+	
+	
+	/**
+	 * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided
+	 *
+	 * @param id
+	 * @param newModel
+	 * @param existingModel
+	 * @param props
+	 * @returns {any}
+	 */
+	private checkUpdatedAndAssign(id:string|number,newModel,existingModel,...props:string[]):any {
+		if (existingModel) {
+			if (!props.length) {
+				const
+					existingTime = existingModel.updated_at && existingModel.updated_at.getTime(),
+					newTime = newModel.updated_at.getTime()
+				
+				assert(existingTime && newTime, `Found null updated_at field for model on update check (clazz=${newModel.$$clazz}) ${id}`)
+				
+				if (existingTime >= newTime) {
+					this.logger.warn(`No change in comment ${id}, ${newModel.updated_at} vs existing updated time ${existingModel.updated_at}`)
+					return false
+				}
+			} else if(shallowEquals(newModel,existingModel,...props)) {
+				this.logger.info(`No changes detected for ${newModel.$$clazz} ${id} with props ${props.join(', ')}`)
+				return false
+			}
+			
+			// CHANGES WERE MADE - MERGE AND RETURN
+			assign(newModel, existingModel, newModel)
+		}
+		
+		return newModel
 	}
 	
 	/**
@@ -182,21 +218,30 @@ export class RepoSyncExecutor implements IJobExecutor {
 			
 			// Save a batch of images
 			saveIssues = async (issues:Issue[],pageNumber:number,totalPages:number) => {
+				
+				const
+					pending = []
+				
 				for (let issue of issues) {
 					issue.repoId = repo.id
 					const
 						existing = await stores.issue.get(issue.id)
 					
-					if (existing) {
-						assign(issue, existing, issue)
-						this.syncChanges.issueNumbersChanged.push(issue.number)
-					} else {
+					
+					// IF NO UPDATE THEN RETURN
+					if (!(issue = this.checkUpdatedAndAssign(issue.id,issue,existing)))
+						continue
+					
+					existing ?
+						this.syncChanges.issueNumbersChanged.push(issue.number) :
 						this.syncChanges.issueNumbersNew.push(issue.number)
-					}
+					
+					pending.push(issue)
+					
 				}
 				
-				if (issues.length)
-					await chunkSave(issues,stores.issue)
+				if (pending.length)
+					await chunkSave(pending,stores.issue)
 				
 				this.progressTracker.completed()
 			},
@@ -248,7 +293,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * @param onDataCallback
 	 */
 	@Benchmarker
-	async syncLabels(stores,repo,onDataCallback:OnDataCallback<Label> = null) {
+	async syncLabels(stores:Stores,repo,onDataCallback:OnDataCallback<Label> = null) {
 		this.progressTracker.increment(2)
 		const labels = await this.client.repoLabels(repo,{
 			onDataCallback
@@ -259,23 +304,25 @@ export class RepoSyncExecutor implements IJobExecutor {
 		if (this.isDryRun())
 			return labels
 		
+		const
+			pending = []
+		
 		for (let label of labels) {
 			label.repoId = repo.id
 			const
 				existing = await stores.label.get(label.url)
 			
-			if (existing) {
-				if (['color','url','name'].some(prop => !_.isEqual(existing[prop],label[prop])))
-					this.syncChanges.repoChanged = true
-				
-				assign(label, existing, label)
-			} else {
-				this.syncChanges.repoChanged = true
-			}
+			// IF NO UPDATE THEN RETURN
+			if (!(label = this.checkUpdatedAndAssign(label.url,label,existing,'color','url','name')))
+				continue
+			
+			this.syncChanges.repoChanged = true
+			pending.push(label)
+			
 		}
 		
 
-		await chunkSave(labels,stores.label)
+		await chunkSave(pending,stores.label)
 		this.progressTracker.completed()
 		return labels
 	}
@@ -288,7 +335,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * @param onDataCallback
 	 */
 	@Benchmarker
-	async syncMilestones(stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
+	async syncMilestones(stores:Stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
 		
 		this.progressTracker.increment(2)
 		
@@ -305,28 +352,32 @@ export class RepoSyncExecutor implements IJobExecutor {
 		
 		log.info(`Got ${milestones.length} milestones`)
 		
+		const
+			pending = []
+		
 		for (let milestone of milestones) {
 			milestone.repoId = repo.id
 			const
 				existing = await stores.milestone.get(milestone.id)
 			
-			if (existing) {
-				if (['updated_at'].some(prop => !_.isEqual(existing[prop],milestone[prop])))
-					this.syncChanges.repoChanged = true
-				
-				assign(milestone, existing, milestone)
-			} else {
-				this.syncChanges.repoChanged = true
-			}
+			
+			// IF NO UPDATE THEN RETURN
+			if (!(milestone = this.checkUpdatedAndAssign(milestone.id,milestone,existing)))
+				continue
+			
+			this.syncChanges.repoChanged = true
+			pending.push(milestone)
 		}
 
-		//log.debug(`Loaded milestones, time to persist`, milestones)
-		await chunkSave(milestones,stores.milestone)
+		await chunkSave(pending,stores.milestone)
 		
 		this.progressTracker.completed()
 		
 		return milestones
+
 	}
+	
+	
 
 	/**
 	 * Synchronize all comments in the repository
@@ -337,7 +388,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	
 	@Benchmarker
-	async syncComments(stores,repo,onDataCallback:OnDataCallback<Comment> = null) {
+	async syncComments(stores:Stores,repo,onDataCallback:OnDataCallback<Comment> = null) {
 		
 		
 		let pagesSet = false
@@ -349,6 +400,8 @@ export class RepoSyncExecutor implements IJobExecutor {
 				
 				
 				//this.logger.info(`Received comments page ${pageNumber} or ${totalPages}`)
+				const
+					pending = []
 				
 				for (let comment of comments) {
 					if (!comment.issue_url) {
@@ -357,10 +410,15 @@ export class RepoSyncExecutor implements IJobExecutor {
 						continue
 					}
 					
-					const existing = await stores.milestone.get(comment.id)
+					const
+						existing:Comment = await stores.comment.get(comment.id)
 					
-					if (existing)
-						assign(comment,existing,comment)
+					// IF NO UPDATE THEN RETURN
+					if (!(comment = this.checkUpdatedAndAssign(comment.id,comment,existing)))
+						continue
+					
+					pending.push(comment)
+						
 					
 					assign(comment,{
 						repoId: repo.id,
@@ -368,12 +426,13 @@ export class RepoSyncExecutor implements IJobExecutor {
 						parentRefId: Comment.makeParentRefId(repo.id,comment.issueNumber)
 					})
 					
-					this.checkReloadActivity(comment)
-					
 				}
 				
-				if (comments.length)
-					await chunkSave(comments,stores.comment)
+				if (pending.length)
+					await chunkSave(pending,stores.comment)
+				
+				// Push updates to STATE
+				this.checkReloadActivity(pending)
 				
 				this.progressTracker.completed()
 			},

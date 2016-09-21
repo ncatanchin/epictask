@@ -1,4 +1,4 @@
-///<reference path="../typings/custom/index.d.ts"/>
+
 
 require('source-map-support').install()
 require('babel-polyfill')

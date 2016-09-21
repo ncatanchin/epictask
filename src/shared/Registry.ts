@@ -1,11 +1,12 @@
 import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} from "shared/tools/ToolTypes"
-import createReactProxy from 'react-proxy'
+
 import React from 'react'
 import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
 import {ActionFactory} from 'typedux'
 
 
 const
+	createReactProxy = require('react-proxy').default,
 	log = getLogger(__filename)
 		
 //forceReactUpdate = getReactForceUpdate(React);

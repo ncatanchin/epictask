@@ -5,12 +5,16 @@ import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
 import { cloneObject, isString, isNumber } from 'shared/util/ObjectUtil'
+import GithubEvents from 'shared/models/GitHubEvents'
 
+ 
 
 const {URLSearchParams} = require('urlsearchparams')
 
-const log = getLogger(__filename)
-const hostname = 'https://api.github.com'
+const
+	PageIntervalDelay = 500,
+	log = getLogger(__filename),
+	hostname = 'https://api.github.com'
 
 function makeUrl(path:string,query:any = null) {
 	let url = `${hostname}${path}`
@@ -60,7 +64,10 @@ export class GithubError extends Error {
 	}
 }
 
-export type OnDataCallback<M> = (pageNumber:number, totalPages:number, items:M[]) => void
+/**
+ * If a callback returns FALSE - Nil/Null is ignored - then paging stops
+ */
+export type OnDataCallback<M> = (pageNumber:number, totalPages:number, items:M[], responseHeaders?:{[headerName:string]:any}) => any
 
 /**
  * Request options for any/all API Requests
@@ -70,6 +77,7 @@ export interface RequestOptions {
 	perPage?:number
 	page?:number
 	params?:any
+	eTag?:string
 	onDataCallback?:OnDataCallback<any>
 }
 
@@ -80,21 +88,47 @@ export interface RequestOptions {
  */
 export class GitHubClient {
 
-	constructor(private token:string = getSettings().token) {
-
-	}
-
-	initRequest(method:HttpMethod,body = null,headers:any = {}) {
-		const request:RequestInit = {
-			method: HttpMethod[method],
-			cache: "no-cache" as RequestCache,
-			headers: Object.assign({
-				Authorization: `token ${this.token}`
-			},headers),
-			mode: "cors" as RequestMode
+	constructor(private token:string = null) {
+		if (!token) {
+			//this.token = require('shared/Settings').getSettings().token
+			this.token = getSettings().token
 		}
+	}
+	
+	
+	private makeGetHeaders(opts:RequestOptions) {
+		const
+			headers = {}
+			
+		if (opts.eTag) {
+			headers['If-None-Match'] = opts.eTag
+		}
+		
+		return headers
+	}
+	
+	
+	/**
+	 * Initialize request
+	 *
+	 * @param method
+	 * @param body
+	 * @param headers
+	 * @returns {RequestInit}
+	 */
+	private initRequest(method:HttpMethod,body = null,headers:any = {}) {
+		const
+			request:RequestInit = {
+				method: HttpMethod[method],
+				cache: "no-cache" as RequestCache,
+				headers: Object.assign({
+					Authorization: `token ${this.token}`
+				},headers),
+				mode: "cors" as RequestMode
+			}
 
-		if (body) request.body = body
+		if (body)
+			request.body = body
 
 		return request
 	}
@@ -104,76 +138,115 @@ export class GitHubClient {
 		opts = _.merge({},DefaultGetOpts,opts)
 
 		// Built search query
-		const query = new URLSearchParams()
-		const page = opts.page || 0
-		const perPage = opts.perPage || 50
+		const
+			query = new URLSearchParams(),
+			page = opts.page || 0,
+			perPage = opts.perPage || 50
+			
+		
 		query.append('page',page)
 		query.append('per_page',perPage)
 
+		
 		if (opts.params)
 			Object.keys(opts.params)
 				.forEach(key => query.append(key,opts.params[key]))
-
-		const url = makeUrl(path,query)
-		let response =  await fetch(url,this.initRequest(HttpMethod.GET))
+		
+		let
+			url = makeUrl(path,query),
+			response =  await fetch(url,this.initRequest(HttpMethod.GET,null,this.makeGetHeaders(opts)))
 
 		if (response.status >= 300) {
-			throw new Error(response.statusText || 'GH Returned error: ' + response.status)
+			throw new GithubError(
+				response.statusText,
+				response.status
+			)
 		}
 
-		const headers = response.headers
+		const
+			headers = response.headers
+		
 		headers.forEach((value,name) => {
 			log.debug(`Header (${name}): ${value}`)
 		})
 
-		let result = await response.json()
+		let
+			result = await response.json()
 
 		if (Array.isArray(result)) {
 			result = result.map(json => new (modelType)(json))
-			const pageLinks = PageLink.parseLinkHeader(headers.get('link'))
+			
+			const
+				pageLinks = PageLink.parseLinkHeader(headers.get('link'))
+			
 			result = new PagedArray(
 				result,
 				page,
 				pageLinks,
 				headers.get('etag')
 			)
-
-			const lastLink = pageLinks[PageLinkType.last]
 			
-			// Because we are going to traverse, we should do a page callback first
-			this.doDataCallback(opts,result.pageNumber,lastLink ? lastLink.pageNumber : result.pageNumber,result)
+			const
+				// FINAL PAGE LINK
+				lastLink = pageLinks[ PageLinkType.last ],
 			
+				// CHECK RESULT IS TYPE BOOLEAN === false TO STOP TRAVERSING
+				checkDataCallback = (dataCallbackResult) => {
+					if (dataCallbackResult === false) {
+						log.info(`Data callback returned false - not going to page`)
+						return false
+					}
+					
+					return true
+				}
+			
+			
+			// TRAVERSE PAGES -or- RETURN SINGLE RESULT
 			if (opts.traversePages && result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
-				log.debug('Going to traverse pages',opts,pageLinks)
-
+				log.debug('Going to traverse pages', opts, pageLinks)
 				
-				// Page counter / opts.page
-				let nextPageNumber = 1
-				
-				// Iterate all pages
-				while (nextPageNumber < lastLink.pageNumber) {
-					nextPageNumber++
+				// CHECK CALLBACK RESULT / false=skip
+				if (checkDataCallback(
+					this.doDataCallback(
+						opts,
+						result.pageNumber,
+						lastLink ? lastLink.pageNumber : result.pageNumber,
+						result,
+						headers
+					))
+				) {
+						
+						// Page counter / opts.page
+					let nextPageNumber = 1
 					
-					log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
-
-					await Promise.resolve(true).delay(1000)
-					
-					const
-						nextOpts = Object.assign({},opts,{page:nextPageNumber}),
-						nextResult = await this.get<T>(path,modelType,nextOpts) as T
-
-					this.doDataCallback(opts,nextPageNumber,lastLink.pageNumber,nextResult)
-
-					result.push(...(nextResult as any))
+					// Iterate all pages
+					while (nextPageNumber < lastLink.pageNumber) {
+						nextPageNumber++
+						
+						log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
+						
+						// Delay by 1s in-between page requests
+						await Promise.resolve(true).delay(PageIntervalDelay)
+						
+						const
+							nextOpts = Object.assign({}, opts, { page: nextPageNumber }),
+							nextResult = await this.get<T>(path, modelType, nextOpts) as T
+						
+						
+						result.push(...(nextResult as any))
+						
+						// CHECK CALLBACK RESULT / false=break
+						if (!this.doDataCallback(opts, nextPageNumber, lastLink.pageNumber, nextResult,headers))
+							break
+					}
 				}
 			}
 		} else {
 			result = new (modelType)(result)
 			
 			// Do data callback no matter what
-			this.doDataCallback(opts,0,1,[result])
+			this.doDataCallback(opts, 0, 1, [ result ],headers)
 		}
-
 		return result as any
 	}
 	
@@ -185,10 +258,12 @@ export class GitHubClient {
 	 * @param totalPages
 	 * @param results
 	 */
-	private doDataCallback(opts:RequestOptions, pageNumber, totalPages, results) {
+	private doDataCallback(opts:RequestOptions, pageNumber:number, totalPages:number, results,headers) {
 		if (opts.onDataCallback) {
-			opts.onDataCallback(pageNumber,totalPages,results)
+			 return opts.onDataCallback(pageNumber,totalPages,results,headers)
 		}
+		
+		return null
 	}
 
 	/**
@@ -349,6 +424,8 @@ export class GitHubClient {
 
 	}
 
+	
+	
 	async user():Promise<User> {
 		return await this.get<GitHubSchema.User>('/user',User)
 	}
@@ -393,7 +470,23 @@ export class GitHubClient {
 			return await this.get<PagedArray<M>>(url,modelType,opts)
 		}
 	}
-
+	
+	
+	// async repoEvents(repoName:Repo|string,eTag:string = null):Promise<PagedArray<GithubEvents.RepoEvent>> {
+	// 	return await this.get<PagedArray<GithubEvents.RepoEvent>>(`/repos/${isString(repoName) ? repoName : repoName.full_name}/events`,Repo,opts)
+	// }
+	
+	
+	/**
+	 * Get issue events
+	 */
+	issuesEvents = this.makePagedRepoGetter(GithubEvents.IssuesEvent,'/repos/<repoName>/issues/events')
+	
+	/**
+	 * Get repo events, you should pass an eTag
+	 */
+	repoEvents = this.makePagedRepoGetter(GithubEvents.RepoEvent,'/repos/<repoName>/events')
+	
 	/**
 	 * Get all issues in repo
 	 */
@@ -454,11 +547,15 @@ export class GitHubClient {
 
 // Create a new GitHubClient
 export function createClient(token:string = null) {
+	if (process.env.EPIC_CLI && !token) {
+		token = (DEBUG && process.env.GITHUB_API_TOKEN)
+	}
+	
 	if (!token)
 		token = getSettings().token
 
 	// If not set and env var exists then use it
-	token = token ||	process.env.GITHUB_API_TOKEN
+	//token = token ||	process.env.GITHUB_API_TOKEN
 		
 	if (!token)
 		throw new Error('No valid token available')

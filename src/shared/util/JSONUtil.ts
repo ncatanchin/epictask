@@ -1,17 +1,49 @@
 import {JSONKey} from "../Constants"
 
-export function toJSON(o) {
-	const names =
-		Object.getOwnPropertyNames(o)
-			.concat(Object.getOwnPropertyNames(o.__proto__))
-
-	const json = {}
-	names.forEach(name => {
-		const md = Reflect.getMetadata(JSONKey,o,name)
-		if (md && md.jsonInclude) {
+export function toJSONObject(o) {
+	const
+		names =
+			Object.getOwnPropertyNames(o)
+				.concat(Object.getOwnPropertyNames(o.__proto__)),
+		json = {}
+	
+	
+		names.forEach(name => {
+		const
+			md = Reflect.getMetadata(JSONKey,o,name)
+		if (!md || md && md.jsonInclude) {
 			json[name] = o[name]
 		}
 	})
 
 	return json
+}
+
+
+export function toJSON(o) {
+	o = toJSONObject(o)
+	
+	return JSON.stringify(o)
+}
+
+const
+	DATE_FORMAT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/
+
+/**
+ * JSON reviver with date support
+ *
+ * @see https://blog.mariusschulz.com/2016/04/28/deserializing-json-strings-as-javascript-date-objects
+ * @param jsonString
+ */
+export function parseJSON(jsonString:string) {
+	
+	function reviver(key, value) {
+		if (typeof value === "string" && DATE_FORMAT.test(value)) {
+			return new Date(value)
+		}
+		
+		return value
+	}
+	
+	return JSON.parse(jsonString, reviver)
 }

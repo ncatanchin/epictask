@@ -53,9 +53,7 @@
         "typeRoots": [
             "./node_modules/@types",
             "./typings/globals",
-            "./typings/modules",
-            "./typings/custom",
-            "./typings"
+            "./typings/modules"
         ],
         "types": [
             "../typings/custom/index"
@@ -63,6 +61,7 @@
     },
     "exclude": [
         "libs/**/*.*",
+        "typings/custom",
         "dist",
         "build",
         "target",

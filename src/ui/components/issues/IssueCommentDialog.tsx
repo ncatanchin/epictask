@@ -238,7 +238,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 			<div style={styles.title.action}>
 				{comment.id ? 'Edit Comment' : 'Create Comment'}
 			</div>
-			<div style={styles.title.issues}>
+			<div style={styles.title.Issues}>
 				<span key={issue.id} style={styles.title.issue}>
 					<span style={styles.title.issueNumber}>
 						#{issue.number}&nbsp;

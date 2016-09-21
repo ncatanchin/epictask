@@ -37,24 +37,52 @@ export class User extends DefaultModel {
 
 	@AttributeDescriptor()
 	repoIds: number[]
-
-
-
+	
+	
+	@AttributeDescriptor()
 	name:string
+	
+	@AttributeDescriptor()
 	avatar_url: string;
+	
+	@AttributeDescriptor()
 	gravatar_id: string;
+	
+	@AttributeDescriptor()
 	url: string;
 	html_url: string;
+	
+	@AttributeDescriptor()
 	followers_url: string;
+	
+	@AttributeDescriptor()
 	following_url: string;
+	
+	@AttributeDescriptor()
 	gists_url: string;
+	
+	@AttributeDescriptor()
 	starred_url: string;
+	
+	@AttributeDescriptor()
 	subscriptions_url: string;
+	
+	@AttributeDescriptor()
 	organizations_url: string;
+	
+	@AttributeDescriptor()
 	repos_url: string;
+	
+	@AttributeDescriptor()
 	events_url: string;
+	
+	@AttributeDescriptor()
 	received_events_url: string;
+	
+	@AttributeDescriptor()
 	type: string;
+	
+	@AttributeDescriptor()
 	site_admin: boolean;
 
 	constructor(props = {}) {

@@ -629,19 +629,19 @@ export default Subheader
 
 declare module "material-ui/SvgIcon" {
 
-export interface SvgIcon {
-
-muiName:any;
-
-propTypes:any;
-
-defaultProps:any;
-
-contextTypes:any;
-
-}
-
-export default SvgIcon
+	export interface SvgIcon {
+	
+	muiName:any;
+	
+	propTypes:any;
+	
+	defaultProps:any;
+	
+	contextTypes:any;
+	
+	}
+	
+	export default SvgIcon
 }
 
 
