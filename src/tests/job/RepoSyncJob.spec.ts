@@ -74,10 +74,10 @@ describe('RepoSyncJob tests',() => {
 		//job.client = client
 		
 		// Sync Assignees
-		const users:User[] = await job.syncAssignees(null,angularRepo)
-		
-		log.info(`Collaborator count ${users.length}`)
-		expect(users.length).toBeGreaterThan(159)
+		// const users:User[] = await job.syncAssignees(null,angularRepo)
+		//
+		// log.info(`Collaborator count ${users.length}`)
+		// expect(users.length).toBeGreaterThan(159)
 	})
 	
 	/**

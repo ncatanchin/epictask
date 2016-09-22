@@ -1,10 +1,10 @@
 import * as assert from 'assert'
 import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
 
-import GithubEvents from 'shared/models/GitHubEvents'
+import {RepoEvent,IssuesEvent} from 'shared/models/GitHubEvents'
 import { createClient, GithubError } from "shared/GitHubClient"
 import { PagedArray } from "shared/PagedArray"
-import { isString } from "shared/util/ObjectUtil"
+import { isString, toNumber } from "shared/util/ObjectUtil"
 
 const
 	log = getLogger(__filename),
@@ -21,8 +21,8 @@ const
  * Receives either or both repo events and issue events
  */
 export interface IGithubEventListener {
-	repoEventsReceived?:(eTag:string,...events:GithubEvents.RepoEvent<any>[]) => any
-	issuesEventsReceived?:(eTag:string,...events:GithubEvents.IssuesEvent[]) => any
+	repoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
+	issuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
 }
 
 
@@ -83,6 +83,8 @@ export class GithubEventMonitor {
 		return instanceContainer.instance
 	}
 	
+	
+	
 	/**
 	 * Killed flag
 	 */
@@ -97,9 +99,17 @@ export class GithubEventMonitor {
 	 * Create a new monitor
 	 */
 	constructor() {
-		assert(!instanceContainer.instance,`GithubSyncManager can only be instantiated once`)
+		//assert(!instanceContainer.instance,`GithubSyncManager can only be instantiated once`)
 	}
 	
+	/**
+	 * Get all current repo ids
+	 *
+	 * @returns {number[]}
+	 */
+	getMonitoredRepoIds() {
+		return Object.keys(this.monitoredRepos).map(repoIdStr => parseInt(repoIdStr,10))
+	}
 	
 	/**
 	 * Execute a poll on issues
@@ -107,9 +117,9 @@ export class GithubEventMonitor {
 	 * @param config
 	 */
 	private pollIssues(config:IGithubMonitorConfig) {
-		log.info(`Polling issues config`,config)
+		log.info(`Polling issues config: ${config.fullName}`)
 		if (config.issuesConfig && config.issuesConfig.running) {
-			log.warn(`Already polling issue events for repo ${config.fullName}`,config)
+			log.warn(`Already polling issue events for repo ${config.fullName}`)
 			return
 		}
 		
@@ -136,7 +146,7 @@ export class GithubEventMonitor {
 					eTag: issuesConfig.eTag,
 					
 					// CALLED AFTER EACH PAGE
-					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<GithubEvents.IssuesEvent>, headers) => {
+					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers) => {
 						
 						let
 							listenersWantToContinue = true,
@@ -176,7 +186,7 @@ export class GithubEventMonitor {
 						
 						if (!newestTimestamp || (firstItemTimestamp > newestTimestamp)) {
 							newestTimestamp = lastItemTimestamp
-							log.debug(`Set oldest timestamp to `)
+							log.debug(`Set newest timestamp to newestTimestamp`)
 						}
 						
 						log.info(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
@@ -186,7 +196,7 @@ export class GithubEventMonitor {
 				})
 				log.info(`All issues events - count ${allEvents.length}`)
 			} catch (err) {
-				if (err instanceof GithubError && err.statusCode === 304) {
+				if (err && err.statusCode === 304) {
 					log.info(`Content has not been updated based on the previous eTag ${issuesConfig.eTag}`)
 					return
 				}
@@ -220,13 +230,13 @@ export class GithubEventMonitor {
 	 * @param config
 	 */
 	private pollRepo(config:IGithubMonitorConfig) {
-		log.info(`Polling repo config`,config)
+		log.info(`Polling repo config: ${config.fullName}`)
 		if (this.killed) {
 			return log.warn(`Can not poll, we have been killed`)
 		}
 		
 		if (config.repoConfig && config.repoConfig.running) {
-			log.warn(`Already polling repo events for repo ${config.fullName}`,config)
+			log.warn(`Already polling repo events for repo ${config.fullName}`)
 			return
 		}
 		
@@ -253,7 +263,7 @@ export class GithubEventMonitor {
 					eTag: repoConfig.eTag,
 					
 					// CALLED AFTER EACH PAGE
-					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<GithubEvents.RepoEvent<any>>, headers) => {
+					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers) => {
 						
 						let
 							listenersWantToContinue = true,
@@ -293,7 +303,7 @@ export class GithubEventMonitor {
 						
 						if (!newestTimestamp || (firstItemTimestamp > newestTimestamp)) {
 							newestTimestamp = lastItemTimestamp
-							log.debug(`Set oldest timestamp to `)
+							log.debug(`Set oldest timestamp to ${newestTimestamp}`)
 						}
 						
 						log.info(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
@@ -303,7 +313,7 @@ export class GithubEventMonitor {
 				})
 				log.info(`All repo events - count ${allEvents.length}`)
 			} catch (err) {
-				if (err instanceof GithubError && err.statusCode === 304) {
+				if (err && err.statusCode === 304) {
 					log.info(`Content has not been updated based on the previous eTag ${repoConfig.eTag}`)
 					return
 				}
@@ -329,6 +339,22 @@ export class GithubEventMonitor {
 			log.info(`Scheduling next poll in ${pollIntervalMillis / 1000}s`)
 			repoConfig.pollTimer = setTimeout(() => this.pollRepo(config),pollIntervalMillis) as any
 		})
+	}
+	
+	/**
+	 * Override function to force polling now for all monitored repos
+	 */
+	forcePolling() {
+		Object
+			.keys(this.monitoredRepos)
+			.map(toNumber)
+			.forEach(repoId => {
+				const
+					config = this.monitoredRepos[repoId]
+				
+				this.pollRepo(config)
+				this.pollIssues(config)
+			})
 	}
 	
 	/**
@@ -461,7 +487,7 @@ export class GithubEventMonitor {
 /**
  * Get the GithubEventMonitorService singleton
  *
- * @return {GithubEventMonitorService}
+ * @return {getGithubEventMonitor}
  */
 export const getGithubEventMonitor = getHot(module,'getGithubEventMonitor',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {
@@ -476,10 +502,30 @@ Container.bind(GithubEventMonitor).provider({get: getGithubEventMonitor})
 
 export default getGithubEventMonitor
 
+if (DEBUG)
+	_.assignGlobal({
+		getGithubEventMonitor
+	})
+
+
 // HMR - SETUP
-if (instanceContainer.instance) {
-	// TODO: HMR / Do state update stuff here
-	log.info(`Reloaded from HMR`)
+if (instanceContainer.hotInstance) {
+	log.info(`Reloaded from HMR, we simply replace the prototype and force an update here`)
+	
+	const
+		fromInstance = instanceContainer.hotInstance,
+		fromProto = fromInstance && Object.getPrototypeOf(fromInstance)
+	
+	let
+		newProto
+	
+	if (fromInstance) {
+		Object.setPrototypeOf(fromInstance,GithubEventMonitor.prototype)
+		newProto = Object.getPrototypeOf(fromInstance)
+		fromInstance.forcePolling()
+	}
+	
+	log.debug(`hot reloading`,fromInstance,fromProto,newProto,'Are protos equal?',newProto === fromProto)
 }
 setDataOnDispose(module,() => ({
 	// Tack on a ref to the hot instance so we know it's there

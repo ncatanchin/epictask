@@ -10,6 +10,7 @@ import {
 	IModel,
 	Repo as TSRepo
 } from 'typestore'
+import { IssuesEventStore, RepoEventStore } from "shared/models/GitHubEvents"
 
 
 /**
@@ -18,7 +19,9 @@ import {
 export class Stores {
 
 	issue:IssueStore
+	issuesEvent:IssuesEventStore
 	repo: RepoStore
+	repoEvent:RepoEventStore
 	availableRepo: AvailableRepoStore
 	milestone: MilestoneStore
 	comment: CommentStore

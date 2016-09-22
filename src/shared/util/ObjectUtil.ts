@@ -48,6 +48,11 @@ export function isSymbol(o:any):o is Symbol {
 	return typeof o === 'symbol'
 }
 
+
+export function toNumber(str:string):number {
+	return parseInt(str,10)
+}
+
 export function canProxyProperty(name:any) {
 	return InvalidProxyNames.includes(name) || isSymbol(name)
 }

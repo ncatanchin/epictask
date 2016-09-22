@@ -5,7 +5,7 @@ import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
 import { cloneObject, isString, isNumber } from 'shared/util/ObjectUtil'
-import GithubEvents from 'shared/models/GitHubEvents'
+import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
 
  
 
@@ -202,7 +202,7 @@ export class GitHubClient {
 			
 			
 			// TRAVERSE PAGES -or- RETURN SINGLE RESULT
-			if (opts.traversePages && result.length && !result.isLastPage && result.pageNumber === 0 && lastLink) {
+			if (opts.traversePages && result.length) {
 				log.debug('Going to traverse pages', opts, pageLinks)
 				
 				// CHECK CALLBACK RESULT / false=skip
@@ -217,10 +217,10 @@ export class GitHubClient {
 				) {
 						
 						// Page counter / opts.page
-					let nextPageNumber = 1
+					let nextPageNumber = result.pageNumber + 1
 					
 					// Iterate all pages
-					while (nextPageNumber < lastLink.pageNumber) {
+					while (lastLink && nextPageNumber < lastLink.pageNumber && !result.isLastPage) {
 						nextPageNumber++
 						
 						log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
@@ -236,7 +236,14 @@ export class GitHubClient {
 						result.push(...(nextResult as any))
 						
 						// CHECK CALLBACK RESULT / false=break
-						if (!this.doDataCallback(opts, nextPageNumber, lastLink.pageNumber, nextResult,headers))
+						if (checkDataCallback(
+							this.doDataCallback(
+								opts,
+								nextPageNumber,
+								lastLink.pageNumber,
+								nextResult,headers
+							))
+						)
 							break
 					}
 				}
@@ -480,12 +487,12 @@ export class GitHubClient {
 	/**
 	 * Get issue events
 	 */
-	issuesEvents = this.makePagedRepoGetter(GithubEvents.IssuesEvent,'/repos/<repoName>/issues/events')
+	issuesEvents = this.makePagedRepoGetter(IssuesEvent,'/repos/<repoName>/issues/events')
 	
 	/**
 	 * Get repo events, you should pass an eTag
 	 */
-	repoEvents = this.makePagedRepoGetter(GithubEvents.RepoEvent,'/repos/<repoName>/events')
+	repoEvents = this.makePagedRepoGetter(RepoEvent,'/repos/<repoName>/events')
 	
 	/**
 	 * Get all issues in repo

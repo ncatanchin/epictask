@@ -219,6 +219,20 @@ export class IssueStore extends TSRepo<Issue> {
 	findIdsByIssuePrefix(request:FinderRequest,repoId:number):Promise<string[]> {
 		return null
 	}
+	
+	
+}
+
+/**
+ * Apply an update to an issue
+ *
+ * @param issue
+ * @param newIssue
+ * @param sources - any additional objects to assign
+ * @returns {any}
+ */
+export function applyIssueUpdate(issue:Issue,newIssue:Issue,...sources:any[]) {
+	return assign(newIssue, issue || {}, newIssue,...sources)
 }
 
 /**

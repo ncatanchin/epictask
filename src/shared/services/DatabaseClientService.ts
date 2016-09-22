@@ -7,19 +7,23 @@ import {loadModelClasses,chunkSave} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
 import { canProxyProperty } from "shared/util/ObjectUtil"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 
 // Global ref to database services
-let databaseService:DatabaseClientService = null
+let
+	databaseService:DatabaseClientService = null
 
 
+/**
+ * Database proxy function shape
+ */
 export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
 
 /**
- * Database Client proxy
+ * Database Client proxy - maps to a single store or no store
  */
-
 
 class DatabaseProxy {
 
@@ -115,7 +119,7 @@ export class DatabaseClientService extends BaseService {
 		
 		// Load all
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
-			LabelStore,ActivityStore,MilestoneStore,UserStore} = require('shared/models')
+			LabelStore,ActivityStore,MilestoneStore,UserStore,IssuesEventStore,RepoEventStore} = require('shared/models')
 		
 		assign(this._stores, {
 			repo:          this.getStore(RepoStore),
@@ -125,7 +129,9 @@ export class DatabaseClientService extends BaseService {
 			comment:       this.getStore(CommentStore),
 			label:         this.getStore(LabelStore),
 			activity:      this.getStore(ActivityStore),
-			user:          this.getStore(UserStore)
+			user:          this.getStore(UserStore),
+			issuesEvent:  this.getStore(IssuesEventStore),
+			repoEvent: this.getStore(RepoEventStore)
 		})
 
 		log.info('Repos Loaded')

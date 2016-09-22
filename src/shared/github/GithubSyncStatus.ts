@@ -1,5 +1,6 @@
-import { getUserDataFilename } from "shared/util/Files"
 import * as fs from 'fs'
+import * as moment from 'moment'
+import { getUserDataFilename } from "shared/util/Files"
 import { toJSON, parseJSON } from "shared/util/JSONUtil"
 
 const
@@ -10,7 +11,7 @@ log.info(`SyncStatusFilename file: ${syncStatusFilename}`)
 
 interface IGithubSyncStatus {
 	eTags:{[url:string]:string}
-	timestamps:{[url:string]:Date}
+	timestamps:{[url:string]:number}
 }
 
 
@@ -136,9 +137,10 @@ export namespace GithubSyncStatus {
 	 * @param url
 	 * @param timestamp
 	 */
-	export function setTimestamp(url:string,timestamp:Date) {
+	export function setTimestamp(url:string,timestamp:number|Date) {
 		checkLoaded()
-		status.timestamps[url] = timestamp
+		
+		status.timestamps[url] = timestamp instanceof Date ? timestamp.getTime() : timestamp
 		
 		save()
 	}
@@ -153,6 +155,53 @@ export namespace GithubSyncStatus {
 	export function getTimestamp(url) {
 		checkLoaded()
 		return status.timestamps[url]
+	}
+	
+	
+	/**
+	 * Get a set of params, github style {since:timestamp8601}
+	 *
+	 * @param url
+	 * @returns {{}|{since: string}}
+	 */
+	export function getSinceTimestampParams(url:string) {
+		const
+			timestamp = getTimestamp(url)
+		
+		return !timestamp ? {} : {
+			since: moment(timestamp).format()
+		}
+	}
+	
+	
+	/**
+	 * Find the most recent timestamp and update the status store
+	 * based on specified property fields on the models provided
+	 *
+	 * @param url
+	 * @param models
+	 * @param props
+	 */
+	export function setMostRecentTimestamp(url:string,models:any[],...props:string[]) {
+		const
+			maxTimestamp = models.reduce((maxTimestamp,nextModel) => {
+				const modelTimestamp = props
+					.map(prop => nextModel[prop])
+					.filter(val => (['number','string'].includes(typeof val) || val instanceof Date))
+					.map(val => moment(val))
+					.filter(val => val.isValid())
+					.reduce((maxVal,nextVal) =>
+						Math.max(nextVal.valueOf(),maxVal)
+					,0),
+					newMax = Math.max(modelTimestamp,maxTimestamp)
+				
+				return isNaN(newMax) ? maxTimestamp : newMax
+				
+			},0),
+			currentMaxTimestamp = getTimestamp(url)
+		
+		if (maxTimestamp > 0 && typeof maxTimestamp === 'number' && (!currentMaxTimestamp || maxTimestamp > currentMaxTimestamp))
+			setTimestamp(url,maxTimestamp)
 	}
 	
 	

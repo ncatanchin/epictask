@@ -189,3 +189,14 @@ export class CommentStore extends TSRepo<Comment> {
 
 	
 }
+
+/**
+ * Apply update to comment
+ *
+ * @param comment
+ * @param newComment
+ * @returns {any}
+ */
+export function applyCommentUpdate(comment:Comment,newComment:Comment) {
+	return assign(newComment, comment || {}, newComment)
+}

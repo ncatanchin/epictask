@@ -4,7 +4,8 @@ process.env.EPIC_CLI = true
 
 const
 	path = require('path'),
-	srcRoot = '../dist/out'
+	srcRoot = '../dist/out',
+	moment = require('moment')
 
 process.env.NODE_PATH = `${process.env.NODE_PATH || ''}:../dist/out:./node_modules`
 
@@ -31,10 +32,20 @@ eventMonitor.addRepoListener({
 }, {
 	repoEventsReceived(eTag, ...events) {
 		//log.info(`Received repo events`, events)
-		events.forEach(event => log.info(`Received Repo Event (eTag: ${eTag}) ${event.created_at}: ${event.type}`))
+		events.forEach(event => log.info(`Received Repo Event (eTag: ${eTag}) ${moment(event.created_at).fromNow()}: ${event.type}`))
 	},
 	issuesEventsReceived(eTag, ...events) {
 		//log.info(`Received issues events`, events)
-		events.forEach(event => log.info(`Received Issues Event (eTag: ${eTag}) ${event.created_at}: ${event.event}`))
+		events.forEach(event => {
+			const
+				{issue} = event,
+				{created_at,updated_at} = issue || {}
+				
+			log.info(`Received Issues Event (eTag: ${eTag}) ${moment(event.created_at).fromNow()}: ${event.event}
+				\tIssue (${issue && issue.id}): ${issue && issue.title}
+				\t\tcreated at ${!created_at ? 'N/A' : moment(created_at).fromNow()}
+				\t\tupdated at ${!updated_at ? 'N/A' : moment(updated_at).fromNow()}
+			`)
+		})
 	}
 })

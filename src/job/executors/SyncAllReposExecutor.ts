@@ -3,10 +3,10 @@ import {JobHandler} from 'job/JobHandler'
 import {Stores} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {IJob, JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
+import { getRepoActions } from "shared/actions/ActionFactoryProvider"
 
 
 
@@ -31,12 +31,12 @@ export class SyncAllReposExecutor implements IJobExecutor {
 
 		const
 			stores = Container.get(Stores),
-			availRepos = await stores.availableRepo.findAll(),
-			repoActions:RepoActionFactory = Container.get(RepoActionFactory)
+			availRepos = await stores.availableRepo.findAll()
+			
 		
 		log.debug('Getting avail repos from DB, not state')
 
-		repoActions.syncRepo(
+		getRepoActions().syncRepo(
 			_.uniq(availRepos.map(availRepo => availRepo.repoId))
 		)
 

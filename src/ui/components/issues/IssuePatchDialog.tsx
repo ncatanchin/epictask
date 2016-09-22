@@ -186,7 +186,7 @@ const baseStyles = createStyles({
  */
 
 export const IssuePatchFns = {
-	[IssuePatchModes.Label]: (labels) => labels.map(label => ({action:'add',label})),
+	[IssuePatchModes.Label]: (labels) => ({labels: labels.map(label => ({action:'add',label}))}),
 	[IssuePatchModes.Milestone]: (milestones /* always length 1 */) => ({milestone: milestones[0]}),
 	[IssuePatchModes.Assignee]: (assignees /* always length 1 */) => ({assignee: assignees[0]})
 }
@@ -227,12 +227,6 @@ export interface IIssuePatchDialogState {
  * @constructor
  **/
 @connect(createStructuredSelector({
-	// milestoneModels: milestoneModelsSelector,
-	// labelModels: labelModelsSelector,
-	// repoModels: repoModelsSelector,
-	// availRepoModels: availRepoModelsSelector,
-	// issueModels: issueModelsSelector,
-	// userModels: userModelsSelector,
 	availableAssignees: enabledAssigneesSelector,
 	availableLabels: enabledLabelsSelector,
 	availableMilestones: enabledMilestonesSelector,
@@ -303,8 +297,9 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param event
 	 */
 	onSave = (event = null) => {
-		const selectedItem = _.get(this.state, 'selectedItem')
-		const patch = IssuePatchFns[this.props.mode](this.state.newItems || [])
+		const
+			selectedItem = _.get(this.state, 'selectedItem'),
+			patch = IssuePatchFns[this.props.mode](this.state.newItems || [])
 
 		log.info('Applying patch to issue', patch)
 		

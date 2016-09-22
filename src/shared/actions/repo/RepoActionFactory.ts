@@ -39,9 +39,9 @@ const Benchmarker = Benchmark('RepoActionFactory')
 
 export interface ISyncChanges {
 	repoId:number
-	repoChanged:boolean
-	issueNumbersNew:number[]
-	issueNumbersChanged:number[]
+	repoChanged?:boolean
+	issueNumbersNew?:number[]
+	issueNumbersChanged?:number[]
 }
 
 /**

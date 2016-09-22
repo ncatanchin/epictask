@@ -1045,20 +1045,30 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async (dispatch,getState) => {
 			log.info(`Received repo sync changes`,changes)
 			
-			const issueNumbers = _.nilFilter([...(changes.issueNumbersChanged),...(changes.issueNumbersNew)])
+			const
+				issueNumbers = _.nilFilter([...(changes.issueNumbersChanged || []),...(changes.issueNumbersNew || [])])
+			
 			if (issueNumbers.length) {
 				log.info(`Issues have been updated during sync `,...issueNumbers)
 				
 				const
 					issueIds = issueNumbers.map(issueNumber => Issue.makeIssueId(changes.repoId,issueNumber))
+				
 				log.info(`Mapped numbers to ids`,issueIds)
 				
 				const
+					issueSort = this.state.issueSort,
 					fromIssues = await getStores().issue.bulkGet(...issueIds),
-					issues = await this.getIssues(availableReposSelector(getState()),fromIssues)
+					issues = await this.getIssues(availableReposSelector(getState()),fromIssues),
+					selectedIssueId = selectedIssueIdSelector(getState())
 				
 				
 				this.updateIssuesInState(issues)
+				
+				if (selectedIssueId && issueIds.includes(selectedIssueId)) {
+					log.info(`Selected issue has been updated - reloading it's activity`)
+					this.loadActivityForIssue(selectedIssueId)
+				}
 				
 			}
 				

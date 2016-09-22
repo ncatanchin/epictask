@@ -110,8 +110,10 @@ export class DatabaseServerEntry extends WorkerEntry {
 			
 			const modelClazzes = names
 				.filter(name => {
-					const val = allModelsAndRepos[name]
-					return !_.endsWith(name, 'Store') && _.isFunction(val)
+					const
+						val = allModelsAndRepos[name]
+					
+					return !_.endsWith(name, 'Store') && _.isFunction(val) && val.$$clazz
 				})
 				.map(name => {
 					log.info(`Loading model class: ${name}`)
@@ -125,7 +127,8 @@ export class DatabaseServerEntry extends WorkerEntry {
 			
 			const {
 				RepoStore, IssueStore, AvailableRepoStore, CommentStore,
-				LabelStore, ActivityStore, MilestoneStore, UserStore
+				LabelStore, ActivityStore, MilestoneStore, UserStore,
+				IssuesEventStore, RepoEventStore
 			} = allModelsAndRepos
 			
 			log.info('Got all model stores')
@@ -138,7 +141,9 @@ export class DatabaseServerEntry extends WorkerEntry {
 				comment: getStore(CommentStore),
 				label: getStore(LabelStore),
 				activity: getStore(ActivityStore),
-				user: getStore(UserStore)
+				user: getStore(UserStore),
+				issuesEvent: getStore(IssuesEventStore),
+				repoEvent: getStore(RepoEventStore)
 			})
 			
 			log.info('Repos Loaded')

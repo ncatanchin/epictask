@@ -5,7 +5,7 @@ const log = getLogger(__filename)
 
 require('./JobManagerService')
 require('./JobSchedulerService')
-require('./GithubEventMonitorService')
+require('shared/github/GithubEventMonitorService')
 
 
 /**

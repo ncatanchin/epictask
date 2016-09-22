@@ -18,6 +18,10 @@ import JobProgressTracker from "job/JobProgressTracker"
 import { getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 import { shallowEquals } from "shared/util/ObjectUtil"
+import { checkUpdatedAndAssign } from "shared/util/ModelUtil"
+
+import SyncStatus from 'shared/github/GithubSyncStatus'
+import { syncComments, syncAssignees, syncMilestones,syncIssues,syncLabels } from "shared/github/GithubEventHandlers"
 
 
 
@@ -36,7 +40,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	}
 	
 	private client:GitHubClient
-	private lastSyncParams:any
+	//private lastSyncParams:any
 	private availableRepo:AvailableRepo
 	private repo:Repo
 	private job:IJob
@@ -50,51 +54,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 		await Container.get(IssueActionFactory).loadIssues()
 	}
 	
-	/**
-	 * Notify the UI that a comment was updated
-	 *
-	 * @param comments
-	 */
-	checkReloadActivity = (comments:Comment[]) => {
-		// Reload current issue if loaded
-		getIssueActions().commentsChanged(...comments)
-		
-	}
 	
-	
-	/**
-	 * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided
-	 *
-	 * @param id
-	 * @param newModel
-	 * @param existingModel
-	 * @param props
-	 * @returns {any}
-	 */
-	private checkUpdatedAndAssign(id:string|number,newModel,existingModel,...props:string[]):any {
-		if (existingModel) {
-			if (!props.length) {
-				const
-					existingTime = existingModel.updated_at && existingModel.updated_at.getTime(),
-					newTime = newModel.updated_at.getTime()
-				
-				assert(existingTime && newTime, `Found null updated_at field for model on update check (clazz=${newModel.$$clazz}) ${id}`)
-				
-				if (existingTime >= newTime) {
-					this.logger.warn(`No change in comment ${id}, ${newModel.updated_at} vs existing updated time ${existingModel.updated_at}`)
-					return false
-				}
-			} else if(shallowEquals(newModel,existingModel,...props)) {
-				this.logger.info(`No changes detected for ${newModel.$$clazz} ${id} with props ${props.join(', ')}`)
-				return false
-			}
-			
-			// CHANGES WERE MADE - MERGE AND RETURN
-			assign(newModel, existingModel, newModel)
-		}
-		
-		return newModel
-	}
 	
 	/**
 	 * if dryRun argument was passed as true,
@@ -110,7 +70,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * @param repo
 	 */
 	@Benchmarker
-	async initParams(activityManager,repo) {
+	async initParams(repo) {
 		assert(getSettings().token,'Can not sync when not authenticated')
 
 
@@ -133,69 +93,9 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncAssignees(stores:Stores, repo:Repo,onDataCallback:OnDataCallback<User> = null) {
-		/*
-		if (!(repo.permissions.push || repo.permissions.admin)) {
-			log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
-			return
-		}
-		*/
+		if (await syncAssignees(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
+			this.syncChanges.repoChanged = true
 		
-		this.progressTracker.increment(3)
-		
-		// GET ALL ASSIGNEES
-		const users:User[] = await this.client.repoAssignees(repo,{
-			onDataCallback
-		})
-		
-		this.progressTracker.completed()
-		
-		if (this.isDryRun())
-			return users
-		
-		// Iterate all attached users and make sure we
-		// update the repoIds on the user object if
-		// already exists
-		const
-			userRepo = stores.user,
-			existingUserIds = await userRepo.findAll(),
-			updatePromises = []
-		
-		users.forEach(user => {
-			if (existingUserIds.includes(user.id)) {
-				// Look for an existing user first
-				updatePromises.push(userRepo.get(user.id)
-					.then(existingUser => {
-						if (existingUser) {
-							const
-								compareProps = ['login','name','avatar_url']
-							
-							if (!_.isEqual(_.pick(existingUser,compareProps),_.pick(user,compareProps)))
-								this.syncChanges.repoChanged = true
-									
-							
-							assign(user,existingUser,_.cloneDeep(user))
-						} else {
-							
-							// New Assignee
-							this.syncChanges.repoChanged = true
-						}
-					}))
-
-			}
-		})
-
-		await Promise.all(updatePromises)
-		this.progressTracker.completed()
-		users.forEach(user => user.addRepoId(repo.id))
-
-
-		log.info(`Total collabs for ${repo.full_name} is ${users.length}`)
-		await chunkSave(users,userRepo)
-		this.progressTracker.completed()
-		log.info(`Updated ${users.length} for repo ${repo.full_name}`)
-
-		return users
-
 
 	}
 
@@ -208,81 +108,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncIssues(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Issue> = null) {
-		
-		//this.progressTracker.increment(1)
-		
-		let pagesSet = false
-		
-		const
-			issueSavePromises:Promise<any>[] = [],
-			
-			// Save a batch of images
-			saveIssues = async (issues:Issue[],pageNumber:number,totalPages:number) => {
-				
-				const
-					pending = []
-				
-				for (let issue of issues) {
-					issue.repoId = repo.id
-					const
-						existing = await stores.issue.get(issue.id)
-					
-					
-					// IF NO UPDATE THEN RETURN
-					if (!(issue = this.checkUpdatedAndAssign(issue.id,issue,existing)))
-						continue
-					
-					existing ?
-						this.syncChanges.issueNumbersChanged.push(issue.number) :
-						this.syncChanges.issueNumbersNew.push(issue.number)
-					
-					pending.push(issue)
-					
-				}
-				
-				if (pending.length)
-					await chunkSave(pending,stores.issue)
-				
-				this.progressTracker.completed()
-			},
-			
-			// Get all issues
-			issues = await this.client.repoIssues(repo,{
-				
-				// On each data call back add a promise to the list
-				onDataCallback: (pageNumber:number,totalPages:number,items:Issue[]) => {
-					
-					// Update Progress
-					if (!pagesSet) {
-						this.progressTracker.increment((totalPages * 2))
-						this.logger.info(`Getting ${totalPages} issue pages`)
-					}
-					pagesSet = true
-					this.progressTracker.completed()
-					
-					// Now handle
-					this.logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
-					if (this.isDryRun()) {
-						log.info(`In dry run, skipping save`)
-						return
-					}
-					
-					
-					issueSavePromises.push(saveIssues(items,pageNumber,totalPages))
-					if (onDataCallback)
-						onDataCallback(pageNumber,totalPages,items)
-				},
-				params: assign({
-					state: 'all',
-					sort: 'updated',
-					filter: 'all'
-				},this.lastSyncParams)
-			})
-
-		await Promise.all(issueSavePromises)
-		this.logger.info(`Received & processed ${issues.length} issues`)
-
-		return issues
+		return syncIssues(stores,repo,this.logger,this.progressTracker,this.syncChanges,onDataCallback,this.isDryRun())
 	}
 
 	/**
@@ -294,37 +120,11 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncLabels(stores:Stores,repo,onDataCallback:OnDataCallback<Label> = null) {
-		this.progressTracker.increment(2)
-		const labels = await this.client.repoLabels(repo,{
-			onDataCallback
-		})
-		
-		this.progressTracker.completed()
-		
-		if (this.isDryRun())
-			return labels
-		
-		const
-			pending = []
-		
-		for (let label of labels) {
-			label.repoId = repo.id
-			const
-				existing = await stores.label.get(label.url)
-			
-			// IF NO UPDATE THEN RETURN
-			if (!(label = this.checkUpdatedAndAssign(label.url,label,existing,'color','url','name')))
-				continue
-			
+		if (await syncLabels(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
-			pending.push(label)
 			
-		}
+			
 		
-
-		await chunkSave(pending,stores.label)
-		this.progressTracker.completed()
-		return labels
 	}
 
 	/**
@@ -337,44 +137,10 @@ export class RepoSyncExecutor implements IJobExecutor {
 	@Benchmarker
 	async syncMilestones(stores:Stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
 		
-		this.progressTracker.increment(2)
-		
-		const milestones = await this.client.repoMilestones(repo,{
-			onDataCallback,
-			params: {
-				state: 'all'
-			}
-		})
-		
-		this.progressTracker.completed()
-		if (this.isDryRun())
-			return milestones
-		
-		log.info(`Got ${milestones.length} milestones`)
-		
-		const
-			pending = []
-		
-		for (let milestone of milestones) {
-			milestone.repoId = repo.id
-			const
-				existing = await stores.milestone.get(milestone.id)
-			
-			
-			// IF NO UPDATE THEN RETURN
-			if (!(milestone = this.checkUpdatedAndAssign(milestone.id,milestone,existing)))
-				continue
-			
+		if (await syncMilestones(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
-			pending.push(milestone)
-		}
-
-		await chunkSave(pending,stores.milestone)
 		
-		this.progressTracker.completed()
 		
-		return milestones
-
 	}
 	
 	
@@ -388,88 +154,8 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	
 	@Benchmarker
-	async syncComments(stores:Stores,repo,onDataCallback:OnDataCallback<Comment> = null) {
-		
-		
-		let pagesSet = false
-		const
-			commentSavePromises = [],
-			
-			// Save a batch of images
-			saveComments = async (comments:Comment[],pageNumber:number,totalPages:number) => {
-				
-				
-				//this.logger.info(`Received comments page ${pageNumber} or ${totalPages}`)
-				const
-					pending = []
-				
-				for (let comment of comments) {
-					if (!comment.issue_url) {
-						this.logger.error(`Comment is missing issue url: ${comment.id}`)
-						log.error(`Comment is missing issue url`, comment)
-						continue
-					}
-					
-					const
-						existing:Comment = await stores.comment.get(comment.id)
-					
-					// IF NO UPDATE THEN RETURN
-					if (!(comment = this.checkUpdatedAndAssign(comment.id,comment,existing)))
-						continue
-					
-					pending.push(comment)
-						
-					
-					assign(comment,{
-						repoId: repo.id,
-						issueNumber:parseInt(comment.issue_url.split('/').pop(),10),
-						parentRefId: Comment.makeParentRefId(repo.id,comment.issueNumber)
-					})
-					
-				}
-				
-				if (pending.length)
-					await chunkSave(pending,stores.comment)
-				
-				// Push updates to STATE
-				this.checkReloadActivity(pending)
-				
-				this.progressTracker.completed()
-			},
-			comments = await this.client.repoComments(repo, {
-					// On each data call back add a promise to the list
-					onDataCallback: (pageNumber:number,totalPages:number,items:Comment[]) => {
-						if (!pagesSet) {
-							log.info(`Getting ${totalPages} comment pages`)
-							this.progressTracker.increment(totalPages * 2)
-						}
-						pagesSet = true
-						this.progressTracker.completed()
-						
-						log.info(`Received comments, page ${pageNumber} of ${totalPages}`)
-						if (this.isDryRun()) {
-							log.info(`In dry run, skipping save`)
-							return
-						}
-						
-						
-						commentSavePromises.push(saveComments(items,pageNumber,totalPages))
-						if (onDataCallback)
-							onDataCallback(pageNumber,totalPages,items)
-					},
-				params: assign({sort: 'updated'}, this.lastSyncParams)
-			})
-		
-		this.logger.info(`Received ${comments.length} comments since last sync`)
-		
-		if (this.isDryRun())
-			return comments
-		
-		log.info(`Saving ${comments.length} comments`)
-		await Promise.all(commentSavePromises)
-		this.logger.info(`Saved ${comments.length} comments`)
-		
-		return comments
+	async syncComments(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Comment> = null) {
+		return await syncComments(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun())
 	}
 
 	
@@ -506,20 +192,9 @@ export class RepoSyncExecutor implements IJobExecutor {
 		this.client = Container.get(GitHubClient)
 
 		const
-			activityManager = Container.get(ActivityManagerService),
 			stores = Container.get(Stores),
 			{availableRepo,repo} = this
 		
-		const
-			lastActivity = await activityManager.findLastActivity(ActivityType.RepoSync,repo.id),
-			lastSyncTimestamp = new Date(lastActivity ? lastActivity.timestamp : 0),
-			lastSyncTimestamp8601 = moment(lastSyncTimestamp.getTime()).format()
-		
-		this.lastSyncParams = {since: lastSyncTimestamp8601}
-		
-		if (lastActivity) {
-			this.logger.info(`Last repo sync for ${repo.full_name} was ${moment(lastActivity.timestamp).fromNow()}`)
-		}
 		
 		if (!getSettings().token) {
 			this.logger.error("Can not sync, not authenticated")
@@ -534,7 +209,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 			let {repoId} = availableRepo
 
 			// Check the last updated activity
-			await this.initParams(activityManager,repo)
+			await this.initParams(repo)
 
 			// Load Labels, milestones and assignees first
 			await Promise.all([
@@ -551,25 +226,10 @@ export class RepoSyncExecutor implements IJobExecutor {
 			// Now get the store state to check if updates are needed
 			getRepoActions().onSyncChanges(this.syncChanges)
 			
-			// If the current repo is not enabled then return
-			// const enabledRepoIds = enabledRepoIdsSelector(getStoreState())
-			//
-			// if (enabledRepoIds.includes(repo.id)) {
-			// 	// TODO: Work this out
-			// 	await this.reloadIssues()
-			// }
 			
 			log.info('Now syncing comments')
 			await Promise.delay(1000)
 			await this.syncComments(stores,repo)
-			
-			// Track the execution for timing/update purposes
-			// As well as throttling management
-			const
-				repoSyncActivity = await activityManager.createActivity(ActivityType.RepoSync,repoId)
-			
-			this.logger.info(`Creating repo sync activity ${repo.full_name}: ${repoSyncActivity.id} with timestamp ${new Date(repoSyncActivity.timestamp)}`)
-			
 			
 			
 			
