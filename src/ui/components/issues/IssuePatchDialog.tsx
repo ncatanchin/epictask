@@ -452,11 +452,10 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			                 primaryText={
 
 	                    <LabelChip label={item}
-								   labelStyle={{
-								   	margin: 0,
+								   labelStyle={makeStyle(makeMarginRem(0,0,0,0),{
 								   	borderRadius: 0,
 								   	padding:'1rem 1rem'
-								   }}
+								   })}
 								   showRemove={false}
 								   showIcon={true}
 					    />

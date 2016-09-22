@@ -4,27 +4,31 @@
 // 	.configure() // we can use plugins here -- more on this later
 // 	.connect()
 
-const {
-	"default": installExtension,
-	REACT_DEVELOPER_TOOLS,
-	JQUERY_DEBUGGER,
-	REDUX_DEVTOOLS,
-	REACT_PERF
-} = require('electron-devtools-installer')
+import { acceptHot } from "shared/util/HotUtils"
+const
+	log = getLogger(__filename),
+	{
+		"default": installExtension,
+		REACT_DEVELOPER_TOOLS,
+		JQUERY_DEBUGGER,
+		REDUX_DEVTOOLS,
+		REACT_PERF
+	} = require('electron-devtools-installer')
 
 const
 	ScratchDevToolId = "alploljligeomonipppgaahpkenfnfkn",
 	ExtendedJsConsoleId = "ieoofkiofkkmikbdnmaoaemncamdnhnd",
-	ImmutableObjectFormat = "hgldghadipiblonfkkicmgcbbijnpeog"
+	ImmutableObjectFormat = "hgldghadipiblonfkkicmgcbbijnpeog",
+	JetBrainsId = "hmhgeddbohgjknpmjagkdomcpobmllji"
 
 installExtension(REACT_DEVELOPER_TOOLS)
 installExtension(REACT_PERF)
 installExtension(JQUERY_DEBUGGER)
 installExtension(REDUX_DEVTOOLS)
-installExtension(ScratchDevToolId)
-installExtension(ExtendedJsConsoleId)
+//installExtension(JetBrainsId)
+//installExtension(ScratchDevToolId)
+//installExtension(ExtendedJsConsoleId)
 installExtension(ImmutableObjectFormat)
 
 
-
-
+acceptHot(module,log)

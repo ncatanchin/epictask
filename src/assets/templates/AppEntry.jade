@@ -12,11 +12,27 @@ html.fill-width.fill-height(lang="en")
 		style!=mainStyles
 		// Splash screen load
 		script.
-
-			require('babel-polyfill')
 			var
-							electron = require('electron'),
-							_ = require('lodash'),
+					electron = require('electron'),
+					remote = electron.remote,
+					isDev = remote.getGlobal('Env').isDev,
+					baseDir = "./",
+					rootDir = isDev ? baseDir + "../../" : baseDir,
+					rootPath = rootDir,//process.cwd(),
+					nodeModsPath = ''//rootPath + '/node_modules/'
+
+			function reqNodeMod(name) {
+				return require(nodeModsPath + name)
+			}
+
+			function makeLocalPath(name) {
+				return name //process.cwd() + '/dist/app/' + name
+			}
+
+			reqNodeMod('babel-polyfill')
+			var
+
+							_ = reqNodeMod('lodash'),//require('lodash'),
 							{hash,href} = window.location,
 							pairs = hash.substr(1).split('&'),
 							params = pairs.reduce(function (map, nextPair) {
@@ -27,24 +43,19 @@ html.fill-width.fill-height(lang="en")
 							}, {}),
 							log = console,
 							loaded = false,
-							remote = electron.remote,
-							isDev = remote.getGlobal('Env').isDev,
-							baseDir = "./",
 							loaderReady = false,
 							docReady = false,
 							fontsReady = false,
-							rootDir = isDev ? baseDir + "../../" : baseDir,
 							Events = remote.getGlobal('Constants').Events,
-							_ = require('lodash'),
 							processType = params.processType || 'UI'
 
 			process.env.EPIC_ENTRY = processType
 
 			_.assign(global, {
 				_: _,
-				$: require('jquery'),
-				React: require('react'),
-				ReactDOM: require('react-dom'),
+				$: reqNodeMod('jquery'),
+				React: reqNodeMod('react'),
+				ReactDOM: reqNodeMod('react-dom'),
 				getLogger: function (loggerName) {
 					return console
 				}
@@ -53,7 +64,7 @@ html.fill-width.fill-height(lang="en")
 			if (isDev) {
 				//require('source-map-support').install()
 				try {
-					require('devtron').install()
+					reqNodeMod('devtron').install()
 				} catch (err) {
 					log.info(`Dev tron is prob already loaded`)
 				}
@@ -82,7 +93,7 @@ html.fill-width.fill-height(lang="en")
 				if (callback)
 					script.onload = callback
 
-				script.src = scriptPath
+				script.src = makeLocalPath(scriptPath)
 				getHead().appendChild(script)
 			}
 			function addCSS(cssPath) {

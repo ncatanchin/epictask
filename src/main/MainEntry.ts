@@ -34,6 +34,11 @@ if (Env.isDev) {
 }
 
 
+/**
+ * Get the service manager
+ *
+ * @returns {ServiceManager}
+ */
 function getServiceManager() {
 	return (require('shared/services').getServiceManager as typeof getServiceManagerType)()
 }
