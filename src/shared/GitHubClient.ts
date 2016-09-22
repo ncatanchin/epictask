@@ -548,7 +548,10 @@ export class GitHubClient {
 // Create a new GitHubClient
 export function createClient(token:string = null) {
 	if (process.env.EPIC_CLI && !token) {
-		token = (DEBUG && process.env.GITHUB_API_TOKEN)
+		if (DEBUG) {
+			token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
+			log.info(`Using API token ${token}`)
+		}
 	}
 	
 	if (!token)

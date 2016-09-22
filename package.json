@@ -73,7 +73,7 @@
     "@types/source-map-support": "^0.2.27",
     "asar": "^0.12.1",
     "autoprefixer": "^6.3.7",
-    "awesome-typescript-loader": "2.1.1",
+    "awesome-typescript-loader": "2.2.4",
     "aws-sdk-typescript": "github:densebrain/aws-sdk-typescript#v0.0.4",
     "babel-cli": "^6.11.4",
     "babel-core": "^6.13.1",
