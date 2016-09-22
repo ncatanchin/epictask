@@ -16,7 +16,7 @@ import { IssueLabelsAndMilestones } from './IssueLabelsAndMilestones'
 import { IssueActivityText } from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
-	selectedIssueIdsSelector, issuesSelector, commentsSelector, selectedIssueSelector
+	selectedIssueIdsSelector, issuesSelector, commentsSelector, selectedIssueSelector, activitySelector
 } from 'shared/actions/issue/IssueSelectors'
 import { HotKeyContext } from 'ui/components/common/HotKeyContext'
 
@@ -30,6 +30,7 @@ import { canEditIssue, canAssignIssue } from 'shared/Permission'
 
 import baseStyles from './IssueDetailPanel.styles'
 import { VisibleList } from "ui/components/common/VisibleList"
+import { TIssueActivity } from "shared/actions/issue/IssueState"
 
 
 // Other stuff
@@ -46,7 +47,8 @@ export interface IIssueDetailPanelProps {
 	selectedIssue?:Issue
 	issues?:List<Issue>
 	comments?:List<Comment>
-	theme?:any,
+	activity?:TIssueActivity
+	theme?:any
 	styles?:any
 }
 
@@ -66,7 +68,8 @@ export interface IIssueDetailPanelState {
 	selectedIssueIds: selectedIssueIdsSelector,
 	selectedIssue: selectedIssueSelector,
 	issues: issuesSelector,
-	comments: commentsSelector
+	comments: commentsSelector,
+	activity: activitySelector
 }))
 @ThemedStyles(baseStyles, 'issueDetail')
 @PureRender

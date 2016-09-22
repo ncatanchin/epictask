@@ -4,7 +4,7 @@ import {List,Map,Record} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
 
 import {ActionMessage} from 'typedux'
-import {Comment,Issue} from 'shared/models'
+import { Comment, Issue, IssuesEvent } from 'shared/models'
 import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
 import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 import {Label} from 'shared/models/Label'
@@ -17,7 +17,10 @@ export {TIssueEditInlineConfig} from './IIssueListItems'
 
 const log = getLogger(__filename)
 
- 
+export type TIssueActivity = {
+	events:List<IssuesEvent>
+	comments:List<Comment>
+}
 
 export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
 
@@ -48,6 +51,7 @@ export const IssuePatchModes = {
 export const IssueStateRecord = Record({
 	issues: List<Issue>(),
 	comments:List<Comment>(),
+	issuesEvents:List<IssuesEvent>(),
 	groupVisibility:Map<string,boolean>(),
 	selectedIssueIds:[],
 	editingInline:false,
@@ -93,6 +97,7 @@ export class IssueState extends IssueStateRecord {
 	
 	
 	issues:List<Issue>
+	
 	groupVisibility:Map<string,boolean>
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
@@ -100,6 +105,7 @@ export class IssueState extends IssueStateRecord {
 	issueSaving:boolean
 	issueSaveError: Error
 	comments:List<Comment>
+	issuesEvents:List<IssuesEvent>
 	editInlineConfig:TIssueEditInlineConfig
 	selectedIssueIds:Array<number>
 	patchIssues:Issue[]

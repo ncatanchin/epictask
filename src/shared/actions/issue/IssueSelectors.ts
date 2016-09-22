@@ -1,9 +1,13 @@
 
 import {Map,List} from 'immutable'
+import * as moment from 'moment'
 import {IssueKey} from 'shared/Constants'
 
 import {Issue} from 'shared/models/Issue'
-import { TIssueSortAndFilter, TEditCommentRequest, TIssueEditInlineConfig } from 'shared/actions/issue/IssueState'
+import {
+	TIssueSortAndFilter, TEditCommentRequest, TIssueEditInlineConfig,
+	TIssueActivity
+} from 'shared/actions/issue/IssueState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 
 import {IssueState} from 'shared/actions/issue/IssueState'
@@ -17,7 +21,7 @@ import {
 	enabledRepoIdsSelector,
 	enabledMilestonesSelector, enabledLabelsSelector, enabledAssigneesSelector
 } from "shared/actions/repo/RepoSelectors"
-import { Label, Milestone, User } from "shared/models"
+import { Label, Milestone, User, IssuesEvent } from "shared/models"
 import {createSelector} from 'reselect'
 import { IIssueSort, TIssueSortDirection, TIssueFieldsGroupable } from "shared/actions/issue/IIssueSort"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
@@ -64,9 +68,31 @@ export const groupVisibilitySelector:(state) => Map<string,boolean> = createSele
 /**
  * Comments
  */
-export const commentsSelector:(state) => List<Comment> =
-	(state) => issueStateSelector(state).comments
+export const commentsSelector:(state) => List<Comment> = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.comments
+)
+	
 
+export const issuesEventsSelector:(state) => List<IssuesEvent> = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.issuesEvents
+)
+
+
+
+
+export const activitySelector:(state) => TIssueActivity = createSelector(
+	commentsSelector,
+	issuesEventsSelector,
+	(comments:List<Comment>,events:List<IssuesEvent>) => {
+		
+		return {
+			comments,
+			events: events.sortBy((event) => moment(event.created_at).valueOf()) as List<IssuesEvent>
+		}
+	}
+)
 
 export const issueSortSelector = createSelector(
 	issueStateSelector,

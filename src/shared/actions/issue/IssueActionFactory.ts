@@ -32,7 +32,7 @@ import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
 import {Provided} from 'shared/util/ProxyProvided'
-import { User, AvailableRepo, CommentStore } from "shared/models"
+import { User, AvailableRepo, CommentStore, IssuesEvent, IssuesEventStore } from "shared/models"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
@@ -357,6 +357,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 									issue.labels = []
 									break
 								}
+								
 								const
 									addLabels = patchCopy.labels
 										.filter(({action}:IIssuePatchLabel) => action === 'add')
@@ -1215,11 +1216,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Set all activity - add pull requests, etc
 	 *
 	 * @param comments
+	 * @param issuesEvents
 	 */
 	@ActionReducer()
-	private setActivity(comments:List<Comment>) {
+	private setActivity(comments:List<Comment>,issueEvents:List<IssuesEvent>) {
 		return (state:IssueState) =>
-			state.set('comments',comments)
+			state
+				.set('comments',comments)
+				.set('issuesEvents',issueEvents)
+		
 	}
 	
 	/**
@@ -1230,8 +1235,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	async getActivity(issue:Issue) {
 		
-		
-		
 		const
 			comments:List<Comment> = await pagedFinder(
 				Comment,
@@ -1239,10 +1242,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				getStores().comment,
 				(commentStore:CommentStore,nextRequest:FinderRequest) =>
 					commentStore.findByCommentPrefix(nextRequest,issue.repoId, issue.number)
+			),
+			issuesEvents:List<IssuesEvent> = await pagedFinder(IssuesEvent,FinderItemsPerPage,getStores().issuesEvent,
+				(issuesEventStore:IssuesEventStore,nextRequest:FinderRequest) =>
+					issuesEventStore.findByIssue(nextRequest,issue)
 			)
 		
 		return {
-			comments
+			comments,
+			issuesEvents
 		}
 		
 	}
@@ -1277,10 +1285,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			
 			const
-				{comments} = await this.getActivity(issue)
+				{comments,issuesEvents} = await this.getActivity(issue)
 			
-			log.info(`Loading activity for issue `, issueId,comments)
-			this.setActivity(comments)
+			log.info(`Loading activity for issue `, issueId,comments,issuesEvents)
+			this.setActivity(comments,issuesEvents)
 			// TODO: Activity load
 			// Now push the models into the data state for tracking
 			// const dataActions = Container.get(DataActionFactory)
