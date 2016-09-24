@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 
-MODS="react-valid-props redux react react-dom react-tap-event-plugin react-addons-create-fragment react-addons-transition-group material-ui typelogger typedux typestore typestore-mocks typestore-plugin-pouchdb"
+GLOBAL_MODS="react-valid-props reflect-metadata redux react react-dom react-tap-event-plugin react-addons-create-fragment react-addons-transition-group material-ui typelogger typedux typestore typestore-mocks typestore-plugin-pouchdb"
 
 if [ ! -h "node_modules/material-ui" ]; then
 	npm i -g redux@3.5.2 react@15.3.0 react-dom@15.3.0 react-tap-event-plugin@1.0.0 react-addons-create-fragment@15.3.0 react-addons-transition-group@15.3.0
@@ -28,8 +28,8 @@ if [ ! -h "node_modules/material-ui" ]; then
 	fi
 fi
 
-echo "Linking modules ${MODS}"
-npm link ${MODS}
+echo "Linking modules ${GLOBAL_MODS}"
+npm link ${GLOBAL_MODS}
 echo "Installing others"
 npm i
 
