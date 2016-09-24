@@ -31,12 +31,195 @@ import { canEditIssue, canAssignIssue } from 'shared/Permission'
 import baseStyles from './IssueDetailPanel.styles'
 import { VisibleList } from "ui/components/common/VisibleList"
 import { TIssueActivity } from "shared/actions/issue/IssueState"
+import {
+	IssuesEvent, TIssueEventType, TIssueEventGroupType, IssueEventTypeGroups, isComment,
+	isIssue, getEventGroupType, User
+} from "shared/models"
+import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
+import LabelChip from "ui/components/common/LabelChip"
+
 
 
 // Other stuff
 const
 	{ Textfit } = require('react-textfit'),
 	log = getLogger(__filename)
+
+
+
+
+/**
+ * Class that holds a set of events
+ */
+export class EventGroup {
+	
+	/**
+	 * All the events in this group
+	 */
+	public events = List<IssuesEvent>()
+	
+	/**
+	 * The group type
+	 */
+	public groupType:TIssueEventGroupType
+	
+	/**
+	 * Time from now for grouping
+	 */
+	public timeFromNow:string
+	
+	/**
+	 * Event actor
+	 */
+	public actor:User
+	
+	/**
+	 * Concat all event ids into a string
+	 *
+	 * @returns {string}
+	 */
+	get id() {
+		return this.events.map(event => event.id).join('//')
+	}
+	
+	/**
+	 * Default constructor
+	 *
+	 * @param event
+	 */
+	constructor(event:IssuesEvent) {
+		this.groupType = getEventGroupType(event)
+		this.actor = event.actor
+		
+		assert(this.groupType,`No group type found for ${event.event}`)
+		
+		this.addEvent(event)
+	}
+
+	/**
+	 * Does this grouping include the passed event
+	 *
+	 * @param event
+	 * @returns {boolean|Assertion}
+	 */
+	acceptsEvent(event:IssuesEvent) {
+		const
+			timeFromNow = moment(event).fromNow()
+		
+		
+		return this.groupType === getEventGroupType(event) &&
+			this.actor.id === event.actor.id &&
+				(!this.timeFromNow || this.timeFromNow === timeFromNow) &&
+					(this.events.size === 0 || this.groupType !== 'pencil')
+	}
+	
+	/**
+	 * Add an event to the list
+	 *
+	 * @param event
+	 * @returns {EventGroup}
+	 */
+	addEvent(event:IssuesEvent) {
+		const
+			accepted = this.acceptsEvent(event)
+		
+		if (DEBUG && !accepted)
+			debugger
+		
+		assert(accepted,`This grouping does not accept the passed event (this group = ${this.groupType}) - event type is ${event.event}`)
+		
+		
+		
+		this.events = this.events.push(event)
+		if (!this.timeFromNow)
+			this.timeFromNow = moment(event).fromNow()
+		
+		return this
+	}
+	
+	getDescription(activityStyle,styles) {
+		const
+			{groupType:type,events} = this
+			
+		if (events.size) {
+			if (type === 'pencil') {
+				const
+					event = events.get(0),
+					{rename} = event
+				
+				return <div>renamed from {rename.from} tp {rename.to}</div>
+			}
+			
+			// TAGS/LABELS
+			else if (type === 'tag') {
+				
+				return <div>
+					{events.map((event,index) =>
+						<span>
+							{index > 0 ? ', ' : ''}
+							{event.event === 'labeled' ? 'added ' : 'removed '}
+							<LabelChip label={event.label}/>
+						</span>
+					)}
+				</div>
+			}
+			
+			//MILESTONES
+			else if (type === 'person') {
+				
+				return <div>
+					{events.map((event,index) =>
+						<span>
+							{index > 0 ? ', ' : ''}
+							{event.event === 'assigned' ? 'assigned this to ' : 'unassigned this from '}
+							{event.assignee ? event.assignee.login : 'not available'}
+						</span>
+					)}
+				</div>
+			}
+			
+			//MILESTONES
+			else if (type === 'milestone') {
+				
+				return <div>
+					{events.map((event,index) =>
+						<span>
+							{index > 0 ? ', ' : ''}
+							{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}
+							<LabelChip label={event.milestone}/>
+						</span>
+					)}
+				</div>
+			}
+			
+			//MILESTONES
+			else if (type === 'mention') {
+				
+				return <div>
+					{events.map((event,index) =>
+						<span>
+							{index > 0 ? ', ' : ''}
+							{event.event === 'mentioned' ? 'mentioned this ' : 'unknown'}
+						</span>
+					)}
+				</div>
+			}
+		}
+		return React.DOM.noscript()
+	}
+}
+
+type TDetailItem = Comment|EventGroup|Issue
+
+/**
+ * Type guard events
+ *
+ * @param o
+ * @returns {boolean}
+ */
+function isEventGroup(o:any):o is EventGroup {
+	return List.isList(o.events)
+}
 
 /**
  * IIssueDetailPanelProps
@@ -46,14 +229,13 @@ export interface IIssueDetailPanelProps {
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>
-	comments?:List<Comment>
 	activity?:TIssueActivity
 	theme?:any
 	styles?:any
 }
 
 export interface IIssueDetailPanelState {
-
+	items:List<TDetailItem>
 }
 
 /**
@@ -68,7 +250,6 @@ export interface IIssueDetailPanelState {
 	selectedIssueIds: selectedIssueIdsSelector,
 	selectedIssue: selectedIssueSelector,
 	issues: issuesSelector,
-	comments: commentsSelector,
 	activity: activitySelector
 }))
 @ThemedStyles(baseStyles, 'issueDetail')
@@ -76,6 +257,108 @@ export interface IIssueDetailPanelState {
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> {
 	
 	refs:{[name:string]:any}
+	
+	
+	/**
+	 * Update the state when props change
+	 *
+	 * @param props
+	 */
+	private updateState = (props = this.props) => {
+		const
+			{activity:currentActivity,selectedIssue:currentSelectedIssue} = this.props,
+			{activity} = props,
+			{events,comments,selectedIssue} = activity
+		
+		let
+			items:List<TDetailItem> = this.state && this.state.items
+		
+		// CHECK CHANGES OR FIRST LOAD
+		const
+			itemsChanged = !items || !shallowEquals(selectedIssue,currentSelectedIssue,'updated_at') || !shallowEquals(currentActivity,activity,'events','comments')
+		
+		// IF NO CHANGES THEN RETURN
+		if (!itemsChanged) {
+			log.info(`Items did not change in issue details`)
+			return
+		}
+		
+		
+		// CREATE NEW ITEMS
+		items = List<TDetailItem>()
+		
+		// NO SELECTED ISSUE = NO ACTIVITY
+		if (selectedIssue) {
+			
+			// COMBINE ALL ACTIVITY
+			const
+				eventsAndComments = List<IssuesEvent|Comment>().concat(
+					events.filter(event => getEventGroupType(event) !== 'none'),
+					comments
+				).sortBy(o => o.created_at)
+			
+			
+			// FILL ITEMS WITH ACTIVITY
+			items = items.withMutations(newItems => {
+				newItems.push(selectedIssue)
+				
+				// ITERATE COMMENTS AND EVENTS ADDING ALL
+				eventsAndComments.reduce((eventGroup:EventGroup,eventOrComment:IssuesEvent|Comment) => {
+					if (isComment(eventOrComment)) {
+						newItems.push(eventOrComment)
+						
+						// If there was a group then this stops appending to it
+						return null
+					
+					} else {
+						const
+							event = eventOrComment
+							
+						if (!eventGroup || !eventGroup.acceptsEvent(event)) {
+							eventGroup = new EventGroup(event)
+							newItems.push(eventGroup)
+						} else {
+							eventGroup.addEvent(event)
+						}
+					}
+					
+					return eventGroup
+				},null)
+				
+				return newItems
+			})
+			
+		}
+		
+		this.setState({
+			items
+		})
+	
+		
+		
+	}
+	
+	
+	/**
+	 * On Mount - update the state
+	 */
+	componentWillMount = this.updateState
+	
+	/**
+	 * When props change - update the state
+	 */
+	componentWillReceiveProps = this.updateState
+	
+	/**
+	 * Should update simply shallow compares the states 'items' value
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @param nextContext
+	 */
+	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
+		return !shallowEquals(this.state,nextState,'items') || !shallowEquals(this.props,nextProps,'activity')
+	}
 	
 	/**
 	 * Add label
@@ -246,11 +529,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Render the issue body if it has one
 	 *
-	 * @param comments
+	 * @param items
+	 * @param item
+	 * @param selectedIssue
 	 * @param index
 	 * @param styles
 	 */
-	renderBody = (comments:List<Comment>, index, styles) => <IssueActivityText
+	renderBody = (items:List<TDetailItem>,item:Issue,selectedIssue:Issue,index, styles) => <IssueActivityText
 		key={'issue-body'}
 		issue={this.props.selectedIssue}
 		activityType='post'
@@ -261,42 +546,57 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Render a comment
 	 *
-	 * @param comments
+	 * @param items
+	 * @param comment
+	 * @param selectedIssue
 	 * @param index
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderComment = (comments:List<Comment>, index, styles) => <IssueActivityText
-		key={comments.get(index).id}
-		issue={this.props.selectedIssue}
-		comment={comments.get(index)}
+	renderComment = (items:List<TDetailItem>, comment:Comment,selectedIssue:Issue, index, styles) => <IssueActivityText
+		key={comment.id}
+		issue={selectedIssue}
+		comment={comment}
 		activityActionText='commented'
 		activityType='comment'
 		activityStyle={styles.content.activities.activity}/>
 	
 	
+	renderEventGroup = (items:List<TDetailItem>,eventGroup:EventGroup,selectedIssue:Issue,index,styles) => <IssueActivityText
+		key={eventGroup.id}
+		issue={selectedIssue}
+		eventGroup={eventGroup}
+		activityType='eventGroup'
+		activityStyle={styles.content.activities.activity}/>
+	
 	/**
 	 * Render an item for the activity list
 	 *
-	 * @param comments
+	 * @param items
 	 * @param index
 	 * @returns {any}
 	 */
-	renderActivityListItem = (comments:List<Comment>, index) => (index === 0) ?
-		this.renderBody(comments, index, this.props.styles) :
-		this.renderComment(comments, index - 1, this.props.styles)
+	renderDetailItem = (items:List<TDetailItem>, index) => {
+		const
+			issue = items.get(0) as Issue,
+			item = items.get(index)
+			
+		return isIssue(item) ? this.renderBody(items,item,issue,index, this.props.styles) :
+			isEventGroup(item) ? this.renderEventGroup(items,item,issue,index,this.props.styles) :
+			this.renderComment(items,item,issue, index, this.props.styles)
+	}
 	
 	
 	/**
 	 * Render issue
 	 *
 	 * @param issue
-	 * @param comments
+	 * @param items
 	 * @param styles
 	 * @param palette
 	 * @returns {any}
 	 */
-	renderIssue = (issue:Issue, comments:List<Comment>, styles, palette) => issue && <div style={styles.issue}>
+	renderIssue = (issue:Issue,items:List<TDetailItem>, styles, palette) => issue && <div style={styles.issue}>
 		
 		<Style
 			scopeSelector={`.markdown.issue-${issue.id}`}
@@ -309,9 +609,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
 				<VisibleList
-					items={List(comments).push(null)}
-					itemCount={comments.size + 1}
-					itemRenderer={this.renderActivityListItem}
+					items={items}
+					itemCount={items.size}
+					itemRenderer={this.renderDetailItem}
 				
 				/>
 			</div>
@@ -329,7 +629,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	render() {
 		const
-			{ selectedIssueIds, issues, theme, comments, styles } = this.props
+			{ selectedIssueIds, activity,issues, theme, styles } = this.props,
+			{items} = this.state,
+			{selectedIssue} = activity
 		
 		if (!List.isList(issues))
 			return React.DOM.noscript()
@@ -337,9 +639,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
 			<HotKeys id='issueDetailPanel'
 			         style={styles.root}>
-				{ selectedIssueIds.length > 1 ?
+				{ !selectedIssue ?
 					this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
-					this.renderIssue(issues.find(it => it && selectedIssueIds[ 0 ] === it.id), comments, styles, theme.palette)
+					this.renderIssue(selectedIssue, items,styles, theme.palette)
 				}
 			</HotKeys>
 	}

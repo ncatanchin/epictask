@@ -22,6 +22,10 @@ declare namespace NodeJS {
  */
 declare var isDev:boolean
 
+import {Map as MapGlobal} from 'immutable'
+
+declare var MapConstructor:typeof MapGlobal
+declare var Map:typeof MapGlobal
 
 import {install} from 'source-map-support'
 

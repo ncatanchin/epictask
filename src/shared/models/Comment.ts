@@ -11,7 +11,7 @@ import {PouchDBMangoFinder,PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} fr
 import {User} from './User'
 import {Issue} from './Issue'
 import {RegisterModel} from '../Registry'
-import { Repo } from "shared/models"
+import { Repo } from "./Repo"
 import { isNumber, isObject, isObjectType } from "shared/util/ObjectUtil"
 
 export function makeCommentIdPrefix(repoId:number,issueNumber:number)
@@ -45,6 +45,7 @@ export function makeCommentId(repoOrRepoIdOrComment:number|Comment|Repo,issueOrI
 		issueNumber = issueOrIssueNumber.number
 	}
 	
+	
 	assert(repoId > -1 && issueNumber > -1 && commentId > -1,
 		`Repo id and issue id could not be determined (${repoId}-${issueNumber}-${commentId})`)
 	
@@ -60,6 +61,8 @@ export class Comment extends DefaultModel {
 	static makeCommentIdPrefix = makeCommentIdPrefix
 	
 	static makeCommentId = makeCommentId
+	
+	//static $$clazz = 'Comment'
 	
 	$$clazz = 'Comment'
 
@@ -191,12 +194,11 @@ export class CommentStore extends TSRepo<Comment> {
 }
 
 /**
- * Apply update to comment
+ * Type guard comment
  *
- * @param comment
- * @param newComment
- * @returns {any}
+ * @param o
+ * @returns {any|boolean}
  */
-export function applyCommentUpdate(comment:Comment,newComment:Comment) {
-	return assign(newComment, comment || {}, newComment)
+export function isComment(o:any):o is Comment {
+	return o && (o.$$clazz === Comment.$$clazz || o instanceof Comment)
 }

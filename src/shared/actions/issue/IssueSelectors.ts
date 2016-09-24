@@ -82,18 +82,6 @@ export const issuesEventsSelector:(state) => List<IssuesEvent> = createSelector(
 
 
 
-export const activitySelector:(state) => TIssueActivity = createSelector(
-	commentsSelector,
-	issuesEventsSelector,
-	(comments:List<Comment>,events:List<IssuesEvent>) => {
-		
-		return {
-			comments,
-			events: events.sortBy((event) => moment(event.created_at).valueOf()) as List<IssuesEvent>
-		}
-	}
-)
-
 export const issueSortSelector = createSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueSort
@@ -575,5 +563,23 @@ export const issueItemsSelector = createSelector(
 		}
 		
 		
+	}
+)
+
+
+/**
+ * All current issue activity
+ */
+export const activitySelector:(state) => TIssueActivity = createSelector(
+	commentsSelector,
+	issuesEventsSelector,
+	selectedIssueSelector,
+	
+	(comments:List<Comment>,events:List<IssuesEvent>,selectedIssue:Issue) => {
+		return {
+			selectedIssue,
+			comments,
+			events: events.sortBy((event) => moment(event.created_at).valueOf()) as List<IssuesEvent>
+		}
 	}
 )

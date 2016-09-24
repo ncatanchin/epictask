@@ -20,6 +20,7 @@ const log = getLogger(__filename)
 export type TIssueActivity = {
 	events:List<IssuesEvent>
 	comments:List<Comment>
+	selectedIssue:Issue
 }
 
 export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"

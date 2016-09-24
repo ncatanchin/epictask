@@ -101,7 +101,9 @@ export class DatabaseServerEntry extends WorkerEntry {
 		
 		try {
 			storePlugin = new PouchDBPlugin(storeOptions())
+			
 			coordinator = new TSCoordinator()
+			
 			await coordinator.init({}, storePlugin)
 			
 			const

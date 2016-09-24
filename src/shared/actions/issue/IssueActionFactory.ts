@@ -157,7 +157,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const
 				enabledRepos = enabledAvailableReposSelector(getState())
 			
-			let issues
+			let
+				issues
+			
 			if (!enabledRepos || enabledRepos.size === 0) {
 				log.warn(`No enabled repos found, can not load issues`)
 				issues = List<Issue>()
@@ -165,8 +167,19 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				issues = await this.getIssues(enabledRepos.toArray())
 				log.info(`Loaded issues`,issues)
 			}
-				
+			
+			const
+				selectedIssueIds = selectedIssueIdsSelector(getState())
+			
+			// SET ISSUES
 			this.setIssues(issues)
+			
+			// IFF SELECTED ISSUE THEN LOAD ACTIVITY
+			if (selectedIssueIds && selectedIssueIds.length === 1) {
+				this.loadActivityForIssue(selectedIssueIds[0])
+			}
+			
+			
 		}
 	}
 	

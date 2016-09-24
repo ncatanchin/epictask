@@ -12,7 +12,7 @@ import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
 import { JobActionFactory } from "shared/actions/jobs/JobActionFactory"
 import * as fs from 'fs'
-import { debounce } from "lodash-decorators"
+
 import { getJobActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
@@ -134,8 +134,8 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param timeRemaining
 	 * @param epochETA
 	 */
-	@debounce(500)
-	setProgress(progress:number,timeRemaining:number,epochETA:number) {
+	
+	setProgress = _.debounce((progress:number,timeRemaining:number,epochETA:number) => {
 		assign(this.detail, {
 			progress,
 			timeRemaining,
@@ -143,7 +143,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		})
 		
 		this.actions.update(this.job,this.detail)
-	}
+	},500)
 	
 	/**
 	 * Start the handler

@@ -6,6 +6,8 @@ import {
 	FinderRequest,
 	FinderResultArray
 } from 'typestore'
+import {Map} from 'immutable'
+
 import {
 	PouchDBMangoFinder,
 	PouchDBPrefixFinder,
@@ -14,9 +16,16 @@ import {
 } from 'typestore-plugin-pouchdb'
 
 
-import { Issue, Label, Repo, User } from "shared/models"
+
 import { RegisterModel } from "shared/Registry"
 import { isNumber } from "shared/util/ObjectUtil"
+
+import { User} from "shared/models/User"
+import { Issue} from "shared/models/Issue"
+import { Repo} from "shared/models/Repo"
+// import { Label} from "shared/models/Label"
+// import { Milestone } from "shared/models/Milestone"
+
 
 const
 	log = getLogger(__filename)
@@ -156,6 +165,7 @@ export class RepoEvent<P extends IEventPayload> extends DefaultModel {
 	//noinspection ReservedWordAsName
 	@AttributeDescriptor()
 	public:boolean
+	
 	@AttributeDescriptor()
 	actor:User
 	@AttributeDescriptor()
@@ -248,7 +258,7 @@ export interface IIssuesEventPayload extends IEventPayload {
 	action:TIssueEventAction
 	issue:Issue
 	changes?:IChanges
-	label?:Label
+	label?
 	assignee?:User
 }
 
@@ -278,9 +288,9 @@ export interface IIssueCommentEventPayload extends IEventPayload {
 	comment?:Comment
 }
 
-export type TIssueEventType = 'closed'|'reopened'|'subscribed'|'merged'|'referenced'|'mentioned'|'assigned'|'unassigned'|'labeled'|'milestoned'|'demilestoned'|'renamed'|'locked'|'unlocked'|'head_ref_deleted'|'head_ref_restored'
+export type TIssueEventType = 'closed'|'reopened'|'subscribed'|'merged'|'referenced'|'mentioned'|'assigned'|'unassigned'|'unlabeled'|'labeled'|'milestoned'|'demilestoned'|'renamed'|'locked'|'unlocked'|'head_ref_deleted'|'head_ref_restored'
 
-export const IssueEventTypes = {
+export const IssueEventTypes:{[type:string]:TIssueEventType} = {
 	closed:'closed',
 	reopened:'reopened',
 	subscribed:'subscribed',
@@ -290,6 +300,7 @@ export const IssueEventTypes = {
 	assigned:'assigned',
 	unassigned:'unassigned',
 	labeled:'labeled',
+	unlabeled:'unlabeled',
 	milestoned:'milestoned',
 	demilestoned:'demilestoned',
 	renamed:'renamed',
@@ -299,7 +310,37 @@ export const IssueEventTypes = {
 	head_ref_restored:'head_ref_restored'
 }
 
+const
+	{
+		closed,reopened,subscribed,merged,
+		referenced,mentioned,assigned,unassigned,
+		unlabeled,labeled,milestoned,demilestoned,
+		renamed,locked,unlocked,
+		head_ref_deleted,head_ref_restored
+	} = IssueEventTypes
 
+export type TIssueEventGroupType = 'issue-reopened' | 'issue-closed' | 'pencil' | 'milestone' | 'tag' | 'person' | 'mention' | 'none'
+
+export type TIssueEventGroupTypes = Map<TIssueEventGroupType,TIssueEventType[]>
+
+/**
+ * Event type groups
+ */
+export const IssueEventTypeGroups:TIssueEventGroupTypes = Map<TIssueEventGroupType,TIssueEventType[]>({
+	'issue-reopened': [reopened],
+	'issue-closed': [closed],
+	'pencil': [renamed],
+	'milestone': [milestoned,demilestoned],
+	'tag': [labeled,unlabeled],
+	'person': [assigned,unassigned],
+	'mention': [referenced,mentioned],
+	'none': [locked,unlocked,head_ref_deleted,head_ref_restored,merged]
+})
+
+
+export function getEventGroupType(event:IssuesEvent) {
+	return IssueEventTypeGroups.findKey((eventTypes) => eventTypes.includes(event.event))
+}
 
 /**
  * Create a issues event id
@@ -398,6 +439,18 @@ export class IssuesEvent extends DefaultModel {
 	rename:IChange
 	@AttributeDescriptor()
 	issue:Issue
+	
+	@AttributeDescriptor()
+	label
+	
+	@AttributeDescriptor()
+	milestone
+	
+	@AttributeDescriptor()
+	assignee:User
+	
+	@AttributeDescriptor()
+	assigner:User
 	
 	constructor(o:any = {}) {
 		super()

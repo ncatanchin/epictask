@@ -6,7 +6,7 @@ import {
 	SearchResult, SearchItem
 } from 'shared/actions/search/SearchState'
 import ValueCache from 'shared/util/ValueCache'
-import {debounce} from 'lodash-decorators'
+
 import {GitHubClient} from 'shared/GitHubClient'
 import {RepoStore} from 'shared/models/Repo'
 
@@ -201,10 +201,10 @@ export default class SearchProvider {
 	}
 	
 	
-	@debounce(150)
-	setQuery(query:string) {
+	
+	setQuery = _.debounce((query:string) => {
 		this.queryCache.set(query)
-	}
+	},150)
 
 	mapResultsToSearchItems(idProperty:string,results:FinderResultArray<any>) {
 		const md = results.itemMetadata

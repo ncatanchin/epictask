@@ -13,6 +13,7 @@ later = require('later/index-browserify')
 import 'shared/ErrorHandling'
 import 'shared/util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
+import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 import * as ContextUtils from './util/ContextUtils'
 import * as path from 'path'
 import * as assertGlobal from 'assert'
@@ -62,6 +63,9 @@ function installGlobals() {
 	// Assign all of our internal globals
 	Object.assign(g, {
 		Immutable: ImmutableGlobal,
+		Map:MapGlobal,
+		List:ListGlobal,
+		Record:RecordGlobal,
 		_: LodashGlobal,
 		getLogger: LoggerFactory,
 		assert: assertGlobal,
@@ -80,6 +84,15 @@ function installGlobals() {
  */
 
 declare global {
+	
+	// //noinspection ES6ConvertVarToLetConst
+	// var MapConstructor:typeof MapGlobal
+	//
+	// //noinspection ES6ConvertVarToLetConst
+	// var Map:typeof MapGlobal
+	//
+	// var ListConstructor:typeof ListGlobal
+	// var List:typeof ListGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Container:typeof ContainerGlobal
 
