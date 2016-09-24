@@ -87,6 +87,19 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 
 }
 
+export function shallowEqualsArrayOrList(val1,val2) {
+	
+	if (!val1 || !val2)
+		return false
+	
+	const
+		isArray = (Array.isArray(val1) && Array.isArray(val2) && val1.length === val2.length),
+		isList = List.isList(val1) && List.isList(val2) && val1.size === val2.size
+			
+	
+	return (isArray || isList) && val1.every((testVal,index) => testVal === (isArray ? val2[index] : val2.get(index)))
+}
+
 
 export function shallowEqualsProp(o1,o2,key) {
 	const
@@ -94,10 +107,7 @@ export function shallowEqualsProp(o1,o2,key) {
 		val2 = _.get(o2,key)
 	
 	return val1 === val2 ||
-		(val1 && val2 &&
-		Array.isArray(val1) && Array.isArray(val2) &&
-		val1.length === val2.length &&
-		val1.every((testVal,index) => testVal === val2[index]))
+		shallowEqualsArrayOrList(val1,val2)
 }
 
 export function shallowEquals(o1,o2,...props:string[]) {

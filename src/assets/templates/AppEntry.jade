@@ -2,38 +2,19 @@
 	var fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss'))
 	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
 	var webFontLoaderUrl = require('!!file!libs/webfont-loader/webfont-loader.js')
-
 doctype html
 html.fill-width.fill-height(lang="en")
-
 	head
 		meta(charset='utf-8')
 		style!=fontStyles
 		style!=mainStyles
 		// Splash screen load
 		script.
+			require('babel-polyfill')
 			var
-					electron = require('electron'),
-					remote = electron.remote,
-					isDev = remote.getGlobal('Env').isDev,
-					baseDir = "./",
-					rootDir = isDev ? baseDir + "../../" : baseDir,
-					rootPath = rootDir,//process.cwd(),
-					nodeModsPath = ''//rootPath + '/node_modules/'
-
-			function reqNodeMod(name) {
-				return require(nodeModsPath + name)
-			}
-
-			function makeLocalPath(name) {
-				return name //process.cwd() + '/dist/app/' + name
-			}
-
-			reqNodeMod('babel-polyfill')
-			var
-
-							_ = reqNodeMod('lodash'),//require('lodash'),
-							{hash,href} = window.location,
+							electron = require('electron'),
+							_ = require('lodash'),
+							{hash, href} = window.location,
 							pairs = hash.substr(1).split('&'),
 							params = pairs.reduce(function (map, nextPair) {
 								const parts = nextPair.split('=')
@@ -43,19 +24,24 @@ html.fill-width.fill-height(lang="en")
 							}, {}),
 							log = console,
 							loaded = false,
+							remote = electron.remote,
+							isDev = remote.getGlobal('Env').isDev,
+							baseDir = "./",
 							loaderReady = false,
 							docReady = false,
 							fontsReady = false,
+							rootDir = isDev ? baseDir + "../../" : baseDir,
 							Events = remote.getGlobal('Constants').Events,
+							_ = require('lodash'),
 							processType = params.processType || 'UI'
 
 			process.env.EPIC_ENTRY = processType
 
 			_.assign(global, {
 				_: _,
-				$: reqNodeMod('jquery'),
-				React: reqNodeMod('react'),
-				ReactDOM: reqNodeMod('react-dom'),
+				$: require('jquery'),
+				React: require('react'),
+				ReactDOM: require('react-dom'),
 				getLogger: function (loggerName) {
 					return console
 				}
@@ -64,7 +50,7 @@ html.fill-width.fill-height(lang="en")
 			if (isDev) {
 				//require('source-map-support').install()
 				try {
-					reqNodeMod('devtron').install()
+					require('devtron').install()
 				} catch (err) {
 					log.info(`Dev tron is prob already loaded`)
 				}
@@ -93,7 +79,7 @@ html.fill-width.fill-height(lang="en")
 				if (callback)
 					script.onload = callback
 
-				script.src = makeLocalPath(scriptPath)
+				script.src = scriptPath
 				getHead().appendChild(script)
 			}
 			function addCSS(cssPath) {
@@ -108,7 +94,6 @@ html.fill-width.fill-height(lang="en")
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 		title epictask
 		script.
-
 			function loadUI() {
 				//addStyleSheet("#{JSON.stringify(fontStyles)}")
 				//addStyleSheet("#{JSON.stringify(mainStyles)}")
@@ -147,8 +132,7 @@ html.fill-width.fill-height(lang="en")
 					},
 					custom: {
 						families: ['AvenirNext'],
-						//urls: [makeBasePath("
-						#{fontUrl}
+						//urls: [makeBasePath("#{fontUrl}
 					}
 				})
 

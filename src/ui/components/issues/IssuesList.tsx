@@ -36,7 +36,7 @@ import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvi
 import {createSelector} from 'reselect'
 import { TransitionDurationLong } from "shared/themes/styles/CommonStyles"
 import { IssuesPanel } from "ui/components/issues/IssuesPanel"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
 
 
 
@@ -236,6 +236,7 @@ interface IIssueGroupHeaderProps extends React.HTMLAttributes<any>,IIssueItemGro
 @Radium
 @PureRender
 class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,void> {
+	
 	render() {
 		const
 			{expanded,style,styles,onClick,group} = this.props,
@@ -318,8 +319,9 @@ export interface IIssuesListProps {
 
 export interface IIssuesListState {
 	firstSelectedIndex?: number
-	srcItems?: List<IIssueListItem<any>>
+	checkedItems?: List<IIssueListItem<any>>
 	itemIndexes?:List<number>
+	itemIds?:List<number>
 }
 
 
@@ -450,17 +452,28 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{groupVisibility,items,issues,groups,editInlineConfig} = props
 			
 		let
-			srcItems = _.get(this.state,'srcItems',List<IIssueListItem<any>>()),
+			checkedItems = _.get(this.state,'checkedItems',List<IIssueListItem<any>>()),
+			itemIds = _.get(this.state,'itemIds',List<number>()),
 			itemIndexes = _.get(this.state,'itemIndexes',List<number>())
 		
-		const
-			itemsChanged = items !== this.props.items || items !== srcItems
+		let
+			itemsChanged = items !== this.props.items || items !== checkedItems
+		
+		// If the lists look similar then compare then compare the ids before running an update
+		if (itemsChanged && itemIds && items) {
+			
+			itemsChanged = !shallowEqualsArrayOrList(itemIds,items.map(it => it.id))
+			// if (!itemsChanged) {
+			// 	srcItems = items
+			// }
+		}
 		
 		log.info(`ITEMS CHANGED`,itemsChanged)
 		
 		if (itemsChanged) {
-				
-			srcItems = items
+			
+			checkedItems = items
+			itemIds = checkedItems.map(it => it.id) as List<number>
 			
 			// Recreate index list
 			itemIndexes = items.map((item,index) => index) as List<number>
@@ -478,7 +491,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			
 			this.setState({
 				itemIndexes,
-				srcItems
+				itemIds,
+				checkedItems
 			})
 			
 			return true
@@ -550,7 +564,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
-		return !shallowEquals(nextProps,this.props,'items','editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes')
+		return !shallowEquals(nextProps,this.props,'editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes','checkedItems')
 	}
 	
 	/**
@@ -619,10 +633,9 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{
 				theme,
 				styles,
-				items,
 				editingInline
 			} = this.props,
-			{itemIndexes} = this.state,
+			{itemIndexes,checkedItems} = this.state,
 			
 			// Item count - groups or issues
 			itemCount = itemIndexes.size + (editingInline ? 1 : 0)
@@ -637,7 +650,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				<VisibleList items={itemIndexes}
 				             itemCount={itemCount}
 				             itemRenderer={this.renderItem}
-				             itemKeyFn={(listItems,item,index) => `${_.get(items.get(item),'id',index)}`}
+				             itemKeyFn={(listItems,item,index) => `${_.get(checkedItems.get(item),'id',index)}`}
 				             initialItemsPerPage={50}
 				             itemHeight={this.getItemHeight}
 				             className="show-scrollbar"

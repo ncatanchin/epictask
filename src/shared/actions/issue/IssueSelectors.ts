@@ -111,7 +111,7 @@ export const issueFilterSelector = createSelector(
  * @param state
  * @return TIssueSortAndFilter
  */
-export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = createSelector(
+export const issueSortAndFilterSelector:(state) => TIssueSortAndFilter = createDeepEqualSelector(
 	issueSortSelector,
 	issueFilterSelector,
 	(issueSort:IIssueSort,issueFilter:IIssueFilter) => ({

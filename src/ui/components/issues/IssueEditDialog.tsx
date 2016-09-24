@@ -651,6 +651,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								<LabelFieldEditor labels={editingIssue.labels || []}
 								                  id="issueEditDialogLabels"
 								                  hint="Labels"
+								                  mode="normal"
 								                  hintAlways={true}
 								                  style={{marginBottom: rem(1.5)}}
 								                  inputStyle={makeStyle(_.omit(styles.input,'width'))}
