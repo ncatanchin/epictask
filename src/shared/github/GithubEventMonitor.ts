@@ -22,7 +22,9 @@ const
  */
 export interface IGithubEventListener {
 	repoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
+	allRepoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
 	issuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
+	allIssuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
 }
 
 
@@ -124,8 +126,8 @@ export class GithubEventMonitor {
 		}
 		
 		const
-			{issuesConfig} = config,
-			lastPolledTimestamp = issuesConfig.polledTimestamp
+			{issuesConfig} = config
+			
 		
 		issuesConfig.running = true
 		
@@ -155,7 +157,7 @@ export class GithubEventMonitor {
 						
 						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
 						if (pageNumber === 0) {
-							log.info(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
+							log.debug(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
 							if (eTag)
 								issuesConfig.eTag = eTag
 							
@@ -180,7 +182,7 @@ export class GithubEventMonitor {
 								(listenersWantToContinue === true) &&
 								
 								// ALL DATA IS NEWER THEN OUR LAST POLL
-								(!lastPolledTimestamp || lastItemTimestamp > lastPolledTimestamp)
+								(!issuesConfig.polledTimestamp || lastItemTimestamp > issuesConfig.polledTimestamp)
 						
 						// KEEP TRACK OF THE OLDEST TIMESTAMP
 						
@@ -189,11 +191,16 @@ export class GithubEventMonitor {
 							log.debug(`Set newest timestamp to newestTimestamp`)
 						}
 						
-						log.info(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
+						log.debug(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
 						return shouldContinue
 						
 					}
 				})
+				
+				config.listeners.forEach(listener => {
+					listener.allIssuesEventsReceived && listener.allIssuesEventsReceived(issuesConfig.eTag,...allEvents)
+				})
+				
 				log.info(`All issues events - count ${allEvents.length}`)
 			} catch (err) {
 				if (err && err.statusCode === 304) {
@@ -206,7 +213,7 @@ export class GithubEventMonitor {
 			
 			if (newestTimestamp) {
 				issuesConfig.polledTimestamp = newestTimestamp + 1
-				log.info(`Set last polled timestamp to ${issuesConfig.polledTimestamp}`)
+				log.debug(`Set last polled timestamp to ${issuesConfig.polledTimestamp}`)
 			}
 			
 			
@@ -219,7 +226,7 @@ export class GithubEventMonitor {
 			const
 				pollIntervalMillis = issuesConfig.pollIntervalMillis || DefaultPollIntervalMillis
 			
-			log.info(`Scheduling next issues poll in ${pollIntervalMillis / 1000}s`)
+			log.debug(`Scheduling next issues poll in ${pollIntervalMillis / 1000}s`)
 			issuesConfig.pollTimer = setTimeout(() => this.pollIssues(config),pollIntervalMillis) as any
 		})
 	}
@@ -230,7 +237,7 @@ export class GithubEventMonitor {
 	 * @param config
 	 */
 	private pollRepo(config:IGithubMonitorConfig) {
-		log.info(`Polling repo config: ${config.fullName}`)
+		log.debug(`Polling repo config: ${config.fullName}`)
 		if (this.killed) {
 			return log.warn(`Can not poll, we have been killed`)
 		}
@@ -241,8 +248,8 @@ export class GithubEventMonitor {
 		}
 		
 		const
-			{repoConfig} = config,
-			lastPolledTimestamp = repoConfig.polledTimestamp
+			{repoConfig} = config
+			
 		
 		repoConfig.running = true
 		
@@ -272,7 +279,7 @@ export class GithubEventMonitor {
 						
 						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
 						if (pageNumber === 0) {
-							log.info(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
+							log.debug(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
 							if (eTag)
 								repoConfig.eTag = eTag
 							
@@ -297,7 +304,7 @@ export class GithubEventMonitor {
 								(listenersWantToContinue === true) &&
 								
 								// ALL DATA IS NEWER THEN OUR LAST POLL
-								(!lastPolledTimestamp || lastItemTimestamp > lastPolledTimestamp)
+								(!repoConfig.polledTimestamp || lastItemTimestamp > repoConfig.polledTimestamp)
 						
 						// KEEP TRACK OF THE OLDEST TIMESTAMP
 						
@@ -311,7 +318,12 @@ export class GithubEventMonitor {
 						
 					}
 				})
-				log.info(`All repo events - count ${allEvents.length}`)
+				
+				config.listeners.forEach(listener => {
+					listener.allRepoEventsReceived && listener.allRepoEventsReceived(repoConfig.eTag,...allEvents)
+				})
+				
+				log.debug(`All repo events - count ${allEvents.length}`)
 			} catch (err) {
 				if (err && err.statusCode === 304) {
 					log.info(`Content has not been updated based on the previous eTag ${repoConfig.eTag}`)
@@ -325,8 +337,6 @@ export class GithubEventMonitor {
 				repoConfig.polledTimestamp = newestTimestamp + 1
 				log.info(`Set last polled timestamp to ${repoConfig.polledTimestamp}`)
 			}
-			
-			
 		}
 		
 		// Start the poll, add a finally handler to set running to false
@@ -336,7 +346,7 @@ export class GithubEventMonitor {
 			const
 				pollIntervalMillis = repoConfig.pollIntervalMillis || DefaultPollIntervalMillis
 			
-			log.info(`Scheduling next poll in ${pollIntervalMillis / 1000}s`)
+			log.debug(`Scheduling next poll in ${pollIntervalMillis / 1000}s`)
 			repoConfig.pollTimer = setTimeout(() => this.pollRepo(config),pollIntervalMillis) as any
 		})
 	}
@@ -344,10 +354,11 @@ export class GithubEventMonitor {
 	/**
 	 * Override function to force polling now for all monitored repos
 	 */
-	forcePolling() {
+	forcePolling(...repoIds:number[]) {
 		Object
 			.keys(this.monitoredRepos)
 			.map(toNumber)
+			.filter(repoId => !repoIds.length || repoIds.includes(repoId))
 			.forEach(repoId => {
 				const
 					config = this.monitoredRepos[repoId]

@@ -10,47 +10,49 @@ import { ChipsField,TChipsFieldMode } from './ChipsField'
 import { MenuItem } from 'material-ui'
 import { Themed } from 'shared/themes/ThemeManager'
 
-const tinycolor = require('tinycolor2')
+const
 
 // Constants
-const log = getLogger(__filename)
-const styles = createStyles({
-	root: [FlexColumn, FlexAuto, {}],
-	chip: [FlexAuto,PositionRelative, {
-		cursor: 'pointer',
-		height: '3.4rem',
-		padding: '1rem 1rem 0 0',
-	}],
-	chipContent: makeStyle(FlexAuto, FlexRowCenter, {
-		display: 'flex',
-		borderRadius: '1.5rem',
-		height: '2.4rem',
-		
-		
-		control: makeStyle(makeTransition([ 'background-color', 'font-weight', 'border-radius' ]), FlexAuto, FlexRowCenter, {
-			padding: '0.2rem 2rem',
-			borderRadius: '1.2rem',
-			height: '2.4rem',
-			width: '2.4rem',
-			boxSizing: 'border-box',
-			backgroundColor: 'rgba(0,0,0,0.2)',
+	log = getLogger(__filename),
+	tinycolor = require('tinycolor2'),
+	styles = createStyles({
+		root: [FlexColumn, FlexAuto, {}],
+		chip: [FlexAuto,PositionRelative, {
 			cursor: 'pointer',
-			fontWeight: 400,
-			fontSize: '1.5rem',
-			':hover': {
-				backgroundColor: 'white',
-				borderRadius: '0rem',
-				fontWeight: 700,
-				fontSize: '2rem',
-			}
-		}),
-		
-		label: makeStyle(FlexAuto, FlexRowCenter, OverflowHidden, {
-			padding: '0 2rem 0 1rem',
-			fontWeight: 700
+			height: '3.4rem',
+			padding: '1rem 1rem 0 0',
+		}],
+		chipContent: makeStyle(FlexAuto, FlexRowCenter, {
+			display: 'flex',
+			borderRadius: '1.5rem',
+			height: '2.4rem',
+			
+			
+			control: makeStyle(makeTransition([ 'background-color', 'font-weight', 'border-radius' ]), FlexAuto, FlexRowCenter, {
+				padding: '0.2rem 2rem',
+				borderRadius: '1.2rem',
+				height: '2.4rem',
+				width: '2.4rem',
+				boxSizing: 'border-box',
+				backgroundColor: 'rgba(0,0,0,0.2)',
+				cursor: 'pointer',
+				fontWeight: 400,
+				fontSize: '1.5rem',
+				
+				':hover': {
+					backgroundColor: 'white',
+					borderRadius: '0rem',
+					fontWeight: 700,
+					fontSize: '2rem',
+				}
+			}),
+			
+			label: makeStyle(FlexAuto, FlexRowCenter, OverflowHidden, {
+				padding: '0 2rem 0 1rem',
+				fontWeight: 700
+			})
 		})
 	})
-})
 
 
 /**
@@ -69,10 +71,13 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
 	hintStyle?:any
 	chipStyle?:any
 	hintAlways?:boolean
-	underlineStyle?:any
-	underlineFocusStyle?:any
+	
 	labelStyle?:any
 	labelFocusStyle?:any
+	
+	underlineStyle?:any
+	underlineFocusStyle?:any
+	underlineDisabledStyle?:any
 	underlineShow?:boolean
 	
 	labels:Label[]
@@ -92,25 +97,36 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
 export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any> {
 	
 	
-	constructor(props, context) {
-		super(props, context)
-		
-		this.state = this.getNewState(props)
-	}
 	
-	getNewState(props) {
-		const { availableLabels, labels } = props
-		const filteredAvailableLabels = _.sortBy(
-			_.nilFilter(availableLabels)
-				.filter((availLabel:Label) => !labels
-					.find(label => label.url === availLabel.url)),
-			(label:Label) => _.toLower(label.name)
-		)
+	/**
+	 * Create a new state value
+	 *
+	 * @param props
+	 */
+	private getNewState(props) {
+		const
+			{ availableLabels, labels } = props,
+			filteredAvailableLabels = _.sortBy(
+				_.nilFilter(availableLabels)
+					.filter((availLabel:Label) => !labels
+						.find(label => label.url === availLabel.url)),
+				(label:Label) => _.toLower(label.name)
+			)
 		
 		
 		return { availableLabels: filteredAvailableLabels }
 	}
 	
+	/**
+	 * Set state on mount
+	 */
+	componentWillMount():void {
+		this.setState(this.getNewState(this.props))
+	}
+	
+	/**
+	 * Update state with new props
+	 */
 	componentWillReceiveProps(nextProps) {
 		this.setState(this.getNewState(nextProps))
 	}
@@ -152,6 +168,12 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		return _(item.name).toLower().includes(_.toLower(query))
 	}
 	
+	/**
+	 * Create a label color style
+	 *
+	 * @param item
+	 * @returns {{cursor: string, backgroundColor: string, color: any}}
+	 */
 	labelColorStyle(item:Label) {
 		const
 			{ theme } = this.props,
@@ -223,7 +245,10 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 				labelStyle,
 				hintStyle,
 				hintAlways,
-				underlineShow
+				underlineShow,
+				underlineDisabledStyle,
+				underlineFocusStyle,
+				underlineStyle
 			} = props,
 			{ availableLabels } = state,
 			s = mergeStyles(styles, theme.component)
@@ -245,6 +270,9 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			labelStyle={labelStyle}
 			hintStyle={hintStyle}
 			hintAlways={hintAlways}
+			underlineDisabledStyle={underlineDisabledStyle}
+			underlineFocusStyle={underlineFocusStyle}
+			underlineStyle={underlineStyle}
 			underlineShow={underlineShow !== false}
 			onChipSelected={this.onChipSelected}
 			keySource={(item:Label) => item.url}>

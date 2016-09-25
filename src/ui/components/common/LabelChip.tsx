@@ -8,82 +8,101 @@ import * as Radium from 'radium'
 import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {Label} from 'shared/models/Label'
-import {Icon} from 'ui/components'
+import {Icon} from 'ui/components/common'
 import {Milestone} from 'shared/models/Milestone'
 
 const tinycolor = require('tinycolor2')
 
 // Constants
 //noinspection JSUnusedLocalSymbols
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	accessoryDim = rem(2.4),
+	accessoryDimHalf = rem(1.2),
+	accessoryTransition = makeTransition([
+		'background-color',
+		'font-weight',
+		'font-size',
+		'border-radius',
+		'opacity',
+		'width',
+		'padding',
+		'background-color',
+		'color'
+	])
 
 export const baseStyles = createStyles({
-	label: [PositionRelative,FlexAuto,FlexRowCenter,{
-		borderRadius: '0.3rem',
+	label: [makeTransition('width'),PositionRelative,FlexAuto,FlexRowCenter,{
+		display: 'flex',
+		borderRadius: accessoryDimHalf,
+		height: accessoryDim,
+		//borderRadius: '0.3rem',
 		marginTop: 0,
 		marginRight: rem(1),
 		marginBottom: 0,
 		marginLeft: 0,
 		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
-		':hover': {}
+		
+		':hover': {
+			
+		},
+		
+		collapsed: [{
+			width: rem(2.4)
+		}]
 	}],
 
 
 	// Accessories
-	accessory: [FlexAuto,FlexRowCenter,{
-		height: "100%",
-		
+	accessory:[
+		accessoryTransition,
+		FlexAuto,FlexRowCenter,
+		makePaddingRem(0,0,0,0), {
+		height: accessoryDim,
+		width: accessoryDim,
+		borderRadius: accessoryDimHalf,
 
 		// icon decoration
-		icon: [{
-			padding: "0.6rem",
-			fontSize: themeFontSize(1),
-			lineHeight: 1
-			
-		}],
-
-		right: [PositionAbsolute,{
-			right: 0,
-			top:0,
-			bottom: 0
-		}],
-
-		left: [PositionAbsolute,{
-			left: 0,
-			top:0,
-			bottom: 0
+		icon: [accessoryTransition,FlexColumnCenter,makePaddingRem(0,0,0,0),{
+			height: accessoryDim,
+			width: accessoryDim,
+			fontSize: accessoryDimHalf
 		}],
 		
-
-		// remove control
-		remove: [makeTransition(['opacity','width','padding','background-color','color']), OverflowHidden,{
+		hover: [{
+			borderRadius: 0,
+			fontWeight: 700,
+			fontSize: rem(1.5),
+			icon: [{
+				
+			}]
+		}],
+			
+		// REMOVE CONTROL
+		remove: [OverflowHidden,{
+			//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
 			fontSize: themeFontSize(1),
-			padding: 0,
 			cursor: 'pointer',
-			lineHeight: 1,
-			display: 'block',
-			opacity: 0,
-			width: 0,
-			maxWidth: 0,
-
+			
+			// ICON REMOVE
+			icon: [{
+				
+			}],
+			
+			// HOVER REMOVE
 			hover: [{
-				width: 'auto',
-				maxWidth: 'none',
-				opacity: 1,
-				padding: '0.6rem'
+				icon: [{
+					
+				}]
 			}]
 		}]
 
 
 	}],
 
-	text: [makePaddingRem(0,0.8,0,8),FlexAuto,FlexRowCenter,{
-		flexGrow: 1,
-		height: '100%',
+	text: [makePaddingRem(0,1.2,0,1.2),{
 		textAlign: 'baseline',
-		//justifyContent: '',
-		
-		withLeftIcon: [makePaddingRem(0,0.8,0,0)]
+		withLeftIcon: [makePaddingRem(0,1.2,0,0.6)]
 	}]
 
 })
@@ -123,19 +142,44 @@ export interface ILabelChipProps {
 @PureRender
 export default class LabelChip extends React.Component<ILabelChipProps,any> {
 
-	constructor(props,context) {
-		super(props,context)
-	}
-
-
-	updateState(props) {
+	
+	private updateState(props) {
 		this.setState({hovering: Radium.getState(this.state,'label',':hover')})
 	}
-
+	
+	/**
+	 * On mount create initial state
+	 */
 	componentWillMount = () => this.updateState(this.props)
-
+	
+	/**
+	 * Update state when newProps are received
+	 *
+	 * @param newProps
+	 */
 	componentWillReceiveProps = (newProps) => this.updateState(newProps)
-
+	
+	
+	labelColorStyle(label:Label) {
+		const
+			{ theme } = this.props,
+			backgroundColor = '#' + label.color,
+			color = tinycolor.mostReadable(backgroundColor, [
+				theme.textColor,
+				tinycolor(theme.alternateTextColor).lighten(20)
+			]).toRgbString()
+		
+		return {
+			cursor: 'pointer',
+			backgroundColor,
+			color,
+			accessory: {
+				backgroundColor: tinycolor(backgroundColor).darken(10).toRgbString()
+			}
+		}
+		
+	}
+	
 	render() {
 		const
 			{
@@ -152,26 +196,16 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			isMilestone = !isLabel(label)
 
 
-		const makeLabelStyle = (label:Label) => {
-			const
-				backgroundColor = '#' + label.color
-
-			return makeStyle(styles.label, {
-				backgroundColor,
-				color: tinycolor.mostReadable(backgroundColor,[
-					palette.text.secondary,
-					palette.alternateText.secondary
-				])
-			},labelStyle)
-		}
-
-
-		const makeMilestoneStyle = (milestone:Milestone) => {
-			return makeStyle(styles.label, {
-				backgroundColor: 'black',
-				color: 'white'
-			},labelStyle)
-		}
+		const
+			makeLabelStyle = (label:Label) => {
+				return makeStyle(styles.label,this.labelColorStyle(label),labelStyle)
+			},
+			makeMilestoneStyle = (milestone:Milestone) => {
+				return makeStyle(styles.label, {
+					backgroundColor: 'black',
+					color: 'white'
+				},labelStyle)
+			}
 
 
 
@@ -184,32 +218,43 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			hovering = Radium.getState(this.state,'label',':hover')
 
 
-		return <div ref='label' style={finalLabelStyle} onClick={onClick}>
-			{showIcon &&
-				<div style={styles.accessory}>
-					<Icon style={styles.accessory.icon}
-				      iconSet='octicon'
-				      iconName={isMilestone ? 'milestone' : 'tag'}/>
-			      </div>
+		return <div ref='label' style={[finalLabelStyle]} onClick={onClick}>
+			{onRemove ?
+				<div style={[
+					styles.accessory,
+					finalLabelStyle.accessory,
+					hovering && styles.accessory.hover,
+					hovering && styles.accessory.remove.hover
+					]} className="removeControl">
+					<Icon
+						style={makeStyle(
+								styles.accessory.icon,
+								styles.accessory.remove.icon,
+								hovering && styles.accessory.remove.hover.icon
+								
+							)}
+						onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}>
+						clear
+					</Icon>
+			</div> :
+				showIcon ?
+					<div style={[
+						styles.accessory,
+						finalLabelStyle.accessory
+					]}>
+						<Icon style={styles.accessory.icon}
+					      iconSet='octicon'
+					      iconName={isMilestone ? 'milestone' : 'tag'}/>
+		      </div> :
+				React.DOM.noscript()
 			}
 
-	        <div style={[styles.text, showIcon && styles.text.withLeftIcon]} >
-		        <span>{isLabel(label) ? label.name : label.title}</span>
+	        <div style={[styles.text, (showIcon || onRemove) && styles.text.withLeftIcon]} >
+		        {isLabel(label) ? label.name : label.title}
 	        </div>
 
 
-			{onRemove &&
-				<div style={[styles.accessory,styles.accessory.left]} className="removeControl">
-					<Icon
-						style={[
-							styles.accessory.remove,
-							hovering && styles.accessory.remove.hover,
-							hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
-						]}
-						onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}
-						iconSet='fa'
-						iconName='times'/>
-				</div>}
+			
 		</div>
 	}
 

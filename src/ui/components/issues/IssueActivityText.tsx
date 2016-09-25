@@ -26,22 +26,62 @@ const baseStyles = createStyles({
 		borderStyle: 'solid',
 		borderRadius: '0 0.2rem 0.2rem 0.2rem',
 
-		eventGroup: [{
+		eventGroup: [
+			FlexRow,
+			PositionRelative,
+			makeFlexAlign('center','flex-start'),
+			makePaddingRem(1,1,1,5), {
 			
-			icon: [{
+			boxSizing: 'border-box',
+			
+			verticalDots: [PositionAbsolute,{
+				width: rem(1.2),
+				height: '100%',
+				borderRightWidth: rem(0.1),
+				borderRightStyle: 'dashed'
+			}],
 				
+			horizontalDots: [PositionAbsolute,{
+				height: rem(0.2),
+				bottom: 0,
+				left: rem(6.2),
+				right: 0,
+				borderBottomWidth: rem(0.1),
+				borderBottomStyle: 'dashed'
 			}],
 			
-			avatar: [{
-				
+			fontSize: themeFontSize(1.1),
+			
+			icon: [FlexAuto,FlexColumnCenter,makePaddingRem(0,0,0,0),makeMarginRem(0,1,0,0),{
+				fontSize: rem(1.3),
+				borderRadius: '50%',
+				width: rem(2.4),
+				height: rem(2.4),
+				zIndex: 2
 			}],
 			
-			timestamp: [{
+			avatar: [makePaddingRem(0,1,0,0.5),{
 				
+				height: rem(2.6),
+				width: rem(2.6),
+				
+				label: [makePaddingRem(0,1,0,0),{
+					fontSize: themeFontSize(1.1),
+					fontWeight: 500
+				}]
 			}],
 			
-			description: [{
-				
+			timestamp: [FlexAuto,makePaddingRem(0,0,0,1),{
+				fontStyle: 'italic',
+				fontWeight: 300
+			}],
+			
+			description: [FlexRow, makeFlexAlign('center','flex-start'),{
+				flexShrink: 1,
+				flexBasis: 'auto',
+				flexGrow: 0,
+				flexWrap: 'wrap',
+				lineHeight: rem(3)
 			}]
 		}],
 		
@@ -109,6 +149,7 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	comment?:Comment
 	eventGroup?:EventGroup
 	issue:Issue
+	hideBottomBorder?:boolean
 	activityActionText?:string
 	activityStyle:any
 	activityType:'post'|'comment'|'eventGroup'
@@ -218,7 +259,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				issue,
 				activityType,
 				activityActionText,
-				eventGroup
+				eventGroup,
+				hideBottomBorder
 			} = this.props,
 			{
 				user,
@@ -256,24 +298,40 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			eventGroup ?
 				
 				// EVENT GROUP
-				<div {...filterProps(this.props)} style={[activityStyle,activityStyle.eventGroup,{':hover': {}}]}>
+				<div {...filterProps(this.props)}
+					key='activity'
+					style={[activityStyle,styles.activityContent.eventGroup,activityStyle.eventGroup,{':hover': {}}]}>
 					
-					<Icon iconSet='octicon' iconName={groupType} style={styles.activityContent.eventGroup.icon}/>
+					{/* LEFT VERTICAL DOTS */}
+					<div style={[styles.activityContent.eventGroup.verticalDots]}/>
+					
+					{/* BOTTOM HORIZONTAL DOTS */}
+					{hideBottomBorder !== true &&
+						<div style={[styles.activityContent.eventGroup.horizontalDots]}/>}
+					
+					<Icon iconSet='octicon'
+					      iconName={groupType}
+					      style={
+					      	styles.activityContent.eventGroup.icon
+				        }/>
 					
 					<Avatar user={user}
-					        style={userStyle}
+					        labelStyle={styles.activityContent.eventGroup.avatar.label}
 					        labelPlacement='after'
 					        avatarStyle={makeStyle(styles.avatar,activityStyle.avatar,styles.activityContent.eventGroup.avatar)} />
 					
-					{eventGroup.getDescription(activityStyle,styles.activityContent.eventGroup)}
-					
+					<div style={[styles.activityContent.eventGroup.description]}>
+						{eventGroup.getDescription(activityStyle,styles.activityContent.eventGroup)}
+					</div>
 					<div style={[styles.activityContent.eventGroup.timestamp]}>
 						{eventGroup.timeFromNow}
 					</div>
 				</div> :
 				
 				// COMMENT
-				<div {...filterProps(this.props)} style={[activityStyle,{':hover': {}}]}>
+				<div {...filterProps(this.props)}
+					key='activity'
+					style={[activityStyle,{':hover': {}}]}>
 				
 				{/* COMMENTER AVATAR*/}
 				<Avatar user={user}

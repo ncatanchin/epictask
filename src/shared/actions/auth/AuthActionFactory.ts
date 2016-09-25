@@ -5,7 +5,7 @@ import {AppActionFactory} from 'shared/actions/AppActionFactory'
 import {AuthState,AuthMessage} from 'shared/actions/auth/AuthState'
 import {AppStateType} from 'shared/AppStateType'
 import {getSettings,getSettingsFile} from 'shared/Settings'
-import {Toaster} from 'shared/Toaster'
+import { Toaster, addErrorMessage } from 'shared/Toaster'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {ProcessType} from "shared/ProcessType"
 import {Provided} from 'shared/util/ProxyProvided'
@@ -88,27 +88,42 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	verify() {
 		return async (dispatch,getState) => {
 			log.info(`Verifying user`)
-			const
-				appActions = this.appActions.withDispatcher(dispatch,getState),
-				user = await this.client.user()
-
-			log.info(`Verified user as`,user)
-			const
-				Settings = getSettingsFile(),
-				invalidUser = !user || !user.login
 			
-			
-			if (invalidUser) {
-				log.error(`Invalid token, set login state`,user)
-				Settings.token = null
-				Settings.user = null
-			} else {
-				Settings.user = user
+			try {
+				const
+					appActions = this.appActions.withDispatcher(dispatch, getState),
+					user = await this.client.user()
+				
+				log.info(`Verified user as`, user)
+				const
+					Settings = getSettingsFile(),
+					invalidUser = !user || !user.login
+				
+				
+				if (invalidUser) {
+					log.error(`Invalid token, set login state`, user)
+					Settings.token = null
+					Settings.user = null
+				} else {
+					Settings.user = user
+				}
+				
+				appActions.setUser(user)
+				appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Home)
+			} catch (err) {
+				log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
+				
+				const
+					errorMessage = err.statusCode === 403 ?
+						`token is invalid or rate limit exceeded 
+								${this.client.getRateLimitInfoAsString()}` :
+						err.message
+				
+				addErrorMessage(`Verification of Github API token failed: 
+					${errorMessage}`)
 			}
-
-			appActions.setUser(user)
-			appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Home)
 		}
+		
 	}
 
 

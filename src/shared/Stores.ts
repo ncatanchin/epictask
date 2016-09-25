@@ -1,4 +1,3 @@
-import {ActivityStore} from 'shared/models/Activity'
 import {UserStore} from 'shared/models/User'
 import {LabelStore} from 'shared/models/Label'
 import {MilestoneStore} from 'shared/models/Milestone'
@@ -26,7 +25,6 @@ export class Stores {
 	milestone: MilestoneStore
 	comment: CommentStore
 	label: LabelStore
-	activity: ActivityStore
 	user: UserStore
 	
 	getModelStore<T extends IModel>(clazz:{new ():T}):TSRepo<T> {

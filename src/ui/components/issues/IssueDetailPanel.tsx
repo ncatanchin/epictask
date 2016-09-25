@@ -10,13 +10,14 @@ import { Style } from 'radium'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { Avatar, PureRender, Renderers } from 'ui/components/common'
+
 import { Issue } from 'shared/models/Issue'
 import { Comment } from 'shared/models/Comment'
-import { IssueLabelsAndMilestones } from './IssueLabelsAndMilestones'
+import { IssueLabelsAndMilestones } from 'ui/components/issues'
 import { IssueActivityText } from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
-	selectedIssueIdsSelector, issuesSelector, commentsSelector, selectedIssueSelector, activitySelector
+	selectedIssueIdsSelector, issuesSelector, selectedIssueSelector, activitySelector
 } from 'shared/actions/issue/IssueSelectors'
 import { HotKeyContext } from 'ui/components/common/HotKeyContext'
 
@@ -32,10 +33,10 @@ import baseStyles from './IssueDetailPanel.styles'
 import { VisibleList } from "ui/components/common/VisibleList"
 import { TIssueActivity } from "shared/actions/issue/IssueState"
 import {
-	IssuesEvent, TIssueEventType, TIssueEventGroupType, IssueEventTypeGroups, isComment,
+	IssuesEvent, TIssueEventGroupType, isComment,
 	isIssue, getEventGroupType, User
 } from "shared/models"
-import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util/ObjectUtil"
 import LabelChip from "ui/components/common/LabelChip"
 
 
@@ -139,7 +140,23 @@ export class EventGroup {
 	
 	getDescription(activityStyle,styles) {
 		const
-			{groupType:type,events} = this
+			{groupType:type,events} = this,
+			makeEventSpacer = (index) => (events.size < 2 || index === events.size - 1) ?
+				'' :
+				(index === events.size - 2) ?
+					// LAST TAG
+					<span>&nbsp;and&nbsp;</span> :
+					
+					// MIDDLE TAG
+					<span>,&nbsp;</span>,
+			
+			// LABEL CHIP STYLES
+			chipStyles = {
+				label:{
+					display: 'inline-flex',
+					marginRight:0
+				}
+			}
 			
 		if (events.size) {
 			if (type === 'pencil') {
@@ -147,62 +164,55 @@ export class EventGroup {
 					event = events.get(0),
 					{rename} = event
 				
-				return <div>renamed from {rename.from} tp {rename.to}</div>
+				return <span>renamed from {rename.from} tp {rename.to}</span>
 			}
 			
 			// TAGS/LABELS
 			else if (type === 'tag') {
 				
-				return <div>
-					{events.map((event,index) =>
-						<span>
-							{index > 0 ? ', ' : ''}
-							{event.event === 'labeled' ? 'added ' : 'removed '}
-							<LabelChip label={event.label}/>
+				return events.map((event,index) =>
+						<span key={event.id}>
+							{event.event === 'labeled' ? 'added' : 'removed'}&nbsp;&nbsp;
+							<LabelChip showIcon={true} label={event.label} styles={chipStyles}/>
+							{makeEventSpacer(index)}
 						</span>
-					)}
-				</div>
+					)
 			}
 			
 			//MILESTONES
 			else if (type === 'person') {
 				
-				return <div>
-					{events.map((event,index) =>
-						<span>
-							{index > 0 ? ', ' : ''}
-							{event.event === 'assigned' ? 'assigned this to ' : 'unassigned this from '}
-							{event.assignee ? event.assignee.login : 'not available'}
-						</span>
-					)}
-				</div>
+				return events.map((event,index) =>
+					<span key={event.id}>
+						{event.event === 'assigned' ? 'assigned this to ' : 'unassigned this from '}
+						{event.assignee ? event.assignee.login : 'not available'}
+						{makeEventSpacer(index)}
+					</span>
+				)
 			}
 			
 			//MILESTONES
 			else if (type === 'milestone') {
 				
-				return <div>
-					{events.map((event,index) =>
-						<span>
-							{index > 0 ? ', ' : ''}
-							{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}
-							<LabelChip label={event.milestone}/>
-						</span>
-					)}
-				</div>
+				return events.map((event,index) =>
+					<span key={event.id}>
+						{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}
+						<LabelChip showIcon={true} label={assign({id:'-1'},event.milestone)} styles={chipStyles}/>
+						{makeEventSpacer(index)}
+					</span>
+				)
+				
 			}
 			
 			//MILESTONES
 			else if (type === 'mention') {
 				
-				return <div>
-					{events.map((event,index) =>
-						<span>
-							{index > 0 ? ', ' : ''}
-							{event.event === 'mentioned' ? 'mentioned this ' : 'unknown'}
-						</span>
-					)}
-				</div>
+				return events.map((event,index) =>
+					<span key={event.id}>
+						{event.event === 'mentioned' ? 'mentioned this ' : 'unknown'}
+						{makeEventSpacer(index)}
+					</span>
+				)
 			}
 		}
 		return React.DOM.noscript()
@@ -218,7 +228,7 @@ type TDetailItem = Comment|EventGroup|Issue
  * @returns {boolean}
  */
 function isEventGroup(o:any):o is EventGroup {
-	return List.isList(o.events)
+	return o && List.isList(o.events)
 }
 
 /**
@@ -566,6 +576,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		key={eventGroup.id}
 		issue={selectedIssue}
 		eventGroup={eventGroup}
+		hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
 		activityType='eventGroup'
 		activityStyle={styles.content.activities.activity}/>
 	
@@ -581,9 +592,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			issue = items.get(0) as Issue,
 			item = items.get(index)
 			
-		return isIssue(item) ? this.renderBody(items,item,issue,index, this.props.styles) :
-			isEventGroup(item) ? this.renderEventGroup(items,item,issue,index,this.props.styles) :
-			this.renderComment(items,item,issue, index, this.props.styles)
+		return isIssue(item) ?
+			this.renderBody(items,item,issue,index, this.props.styles) :
+			
+				isEventGroup(item) ?
+					this.renderEventGroup(items,item,issue,index,this.props.styles) :
+					
+					this.renderComment(items,item,issue, index, this.props.styles)
 	}
 	
 	

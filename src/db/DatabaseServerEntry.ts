@@ -129,7 +129,7 @@ export class DatabaseServerEntry extends WorkerEntry {
 			
 			const {
 				RepoStore, IssueStore, AvailableRepoStore, CommentStore,
-				LabelStore, ActivityStore, MilestoneStore, UserStore,
+				LabelStore, MilestoneStore, UserStore,
 				IssuesEventStore, RepoEventStore
 			} = allModelsAndRepos
 			
@@ -142,7 +142,6 @@ export class DatabaseServerEntry extends WorkerEntry {
 				milestone: getStore(MilestoneStore),
 				comment: getStore(CommentStore),
 				label: getStore(LabelStore),
-				activity: getStore(ActivityStore),
 				user: getStore(UserStore),
 				issuesEvent: getStore(IssuesEventStore),
 				repoEvent: getStore(RepoEventStore)

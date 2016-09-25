@@ -65,7 +65,7 @@ const baseStyles = createStyles({
 
 	input: [{
 		padding: '0.3rem 1rem',
-		fontWeight: 700,
+		fontWeight: 400,
 
 		floatingLabel: [{
 			left: rem(1)
@@ -579,7 +579,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 									           underlineStyle={styles.input.underlineDisabled}
 									           underlineDisabledStyle={styles.input.underlineDisabled}
 									           underlineFocusStyle={styles.input.underlineFocus}
-									           underlineShow={false}
+									           underlineShow={true}
 									           fullWidth={true}
 									           autoFocus/>
 								</div>
@@ -659,6 +659,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								                  onLabelsChanged={this.onLabelsChanged}
 								                  underlineStyle={styles.input.underlineDisabled}
 								                  underlineFocusStyle={styles.input.underlineFocus}
+								                  underlineDisabledStyle={styles.input.underlineDisabled}
 								                  underlineShow={true}
 								                  hintStyle={makeStyle(styles.input.hint,{left:10,bottom: 8})}
 								                  chipStyle={{margin: "1rem 0.5rem"}}

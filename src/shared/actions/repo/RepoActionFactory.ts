@@ -17,8 +17,6 @@ import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 import Toaster from 'shared/Toaster'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
-import ActivityManagerService from 'shared/services/ActivityManagerService'
-import {ActivityType, Activity} from 'shared/models/Activity'
 import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from 'shared/actions/repo/RepoSelectors'
 import {getSettings} from 'shared/Settings'
 import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
@@ -75,11 +73,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return RepoKey;
 	}
 
-	get activityManager() {
-		return Container.get(ActivityManagerService)
-	}
-	
-	
 	
 	@Action()
 	onSyncChanges(changes:ISyncChanges) {
@@ -150,16 +143,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	
-	/**
-	 * get the last repo sync time
-	 *
-	 * @param repoId
-	 */
-	getLastRepoSync(repoId:number):Promise<Activity> {
-		return this.activityManager.findLastActivity(ActivityType.RepoSync,repoId)
-	}
-
 	/**
 	 * Sync repo including issues, comments, milestones,
 	 * labels, collaborators, etc, etc
@@ -170,8 +153,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 */
 	@Action()
 	syncRepo(repoIds:number|number[],force:boolean=false) {
-		
-		
 		return async (dispatch,getState) => {
 			
 			const
@@ -184,14 +165,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			for (let repoId of _.uniq(repoIds)) {
 				const
 					availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
-					repo = await this.stores.repo.get(repoId),
-					act = await this.getLastRepoSync(repoId)
-
-				// Check the last execution time
-				if (!force && act && moment().diff(act.timestamp,'minutes') < 5) {
-					log.info(`Repo sync for ${repo.full_name} was rung less than 5 minutes ago (${moment(act.timestamp).fromNow()}), not syncing`)
-					continue
-				}
+					repo = await this.stores.repo.get(repoId)
 
 				// Create RepoSync Job
 				log.info(`Triggering repo sync for ${repo.full_name}`)
@@ -238,6 +212,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		)
 	}
 	
+	/**
+	 * Get all available repos and their dependent resources from backing store
+	 */
 	async getAllAvailableRepoResources() {
 		const
 			stores = Container.get(Stores)
@@ -339,7 +316,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	clearSelectedRepos() {
 		return (state:RepoState) => state.set('selectedRepoIds',[])
 	}
-
+	
+	/**
+	 * Select a repo in the repo list
+	 *
+	 * @param selectedRepoId
+	 * @param selected
+	 */
 	@ActionReducer()
 	setRepoSelected(selectedRepoId:number,selected:boolean) {
 		return (state:RepoState) => state.set(
@@ -349,7 +332,11 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				.concat(selected ? [selectedRepoId] : [])
 		)
 	}
-
+	
+	/**
+	 * Mark a repo as an 'AvailableRepo'
+	 * @param repo
+	 */
 	@Action()
 	createAvailableRepo(repo:Repo) {
 		return async(dispatch, getState) => {
@@ -390,7 +377,14 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 		}
 	}
-
+	
+	/**
+	 * Remove an AvailableRepo from the system
+	 *
+	 * @param availRepoId
+	 * @param dispatch
+	 * @param getState
+	 */
 	@Benchmarker
 	private async removeAvailableRepoAction(availRepoId,dispatch, getState) {
 		
@@ -401,8 +395,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 		// Get the repo
 		let
-			availRepos = await stores.availableRepo.get(availRepoId),
-			availRepo = availRepos[0]
+			availRepo = await stores.availableRepo.get(availRepoId)
 		
 		assert(availRepo,`Available repo not found for id ${availRepoId}`)
 		const
@@ -436,7 +429,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			issueIds = await stores.issue.findIdsByIssuePrefix(null,repoId),
 			commentIds = await stores.comment.findIdsByRepoId(null,repoId),
 			milestoneIds = await stores.milestone.findIdsByRepo(repoId),
-			users = (await stores.user.findByRepoId(repoId))
+			users = (await stores.user.findByRepoId(null,repoId))
 				.filter(user => user.id !== myUserId),
 			
 			removeUsers = users
@@ -463,7 +456,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			// Create a promise to remove everything
 			removePromise = Promise.all([
-				this.activityManager.removeByObjectId(repoId),
 				chunkRemove(commentIds,stores.comment),
 				chunkRemove(labelIds,stores.label),
 				chunkRemove(milestoneIds,stores.milestone),

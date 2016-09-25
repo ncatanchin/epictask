@@ -174,3 +174,5 @@ export const GHIcons = {
 	"plus-small": 61700,
 	"reply": 61701
 }
+
+export default GHIcons

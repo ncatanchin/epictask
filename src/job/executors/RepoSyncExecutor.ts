@@ -1,27 +1,20 @@
 import * as moment from 'moment'
 
-import ActivityManagerService from 'shared/services/ActivityManagerService'
 
 import {JobHandler} from 'job/JobHandler'
 import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
-import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ActivityType} from 'shared/models'
+import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment} from 'shared/models'
 
-// import Toaster from 'shared/Toaster'
-import {Stores,chunkSave} from 'shared/services/DatabaseClientService'
+import {Stores} from 'shared/services/DatabaseClientService'
 import {getSettings} from 'shared/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
 import {JobType, IJob, IJobLogger} from 'shared/actions/jobs/JobTypes'
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
-import { getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { getRepoActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
-import { shallowEquals } from "shared/util/ObjectUtil"
-import { checkUpdatedAndAssign } from "shared/util/ModelUtil"
-
-import SyncStatus from 'shared/github/GithubSyncStatus'
-import { syncComments, syncAssignees, syncMilestones,syncIssues,syncLabels } from "shared/github/GithubEventHandlers"
+import { RepoSyncManager } from "shared/github/GithubEventHandlers"
 
 
 
@@ -40,18 +33,19 @@ export class RepoSyncExecutor implements IJobExecutor {
 	}
 	
 	private client:GitHubClient
-	//private lastSyncParams:any
 	private availableRepo:AvailableRepo
 	private repo:Repo
 	private job:IJob
 	private logger:IJobLogger
 	private progressTracker:JobProgressTracker
-	
 	private syncChanges:ISyncChanges
 	
+	
+	/**
+	 * Trigger an issue reload
+	 */
 	async reloadIssues() {
-		// Reload issues first
-		await Container.get(IssueActionFactory).loadIssues()
+		await getIssueActions().loadIssues()
 	}
 	
 	
@@ -66,15 +60,12 @@ export class RepoSyncExecutor implements IJobExecutor {
 	/**
 	 * Init params
 	 *
-	 * @param activityManager
 	 * @param repo
 	 */
 	@Benchmarker
 	async initParams(repo) {
 		assert(getSettings().token,'Can not sync when not authenticated')
 
-
-		
 		this.syncChanges = {
 			repoId:repo.id,
 			repoChanged: false,
@@ -93,7 +84,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncAssignees(stores:Stores, repo:Repo,onDataCallback:OnDataCallback<User> = null) {
-		if (await syncAssignees(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
+		if (await RepoSyncManager.get(repo).syncAssignees(stores,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
 		
 
@@ -108,7 +99,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncIssues(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Issue> = null) {
-		return syncIssues(stores,repo,this.logger,this.progressTracker,this.syncChanges,onDataCallback,this.isDryRun())
+		return RepoSyncManager.get(repo).syncIssues(stores,this.logger,this.progressTracker,this.syncChanges,onDataCallback,this.isDryRun())
 	}
 
 	/**
@@ -120,7 +111,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 */
 	@Benchmarker
 	async syncLabels(stores:Stores,repo,onDataCallback:OnDataCallback<Label> = null) {
-		if (await syncLabels(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
+		if (await RepoSyncManager.get(repo).syncLabels(stores,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
 			
 			
@@ -137,7 +128,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	@Benchmarker
 	async syncMilestones(stores:Stores,repo,onDataCallback:OnDataCallback<Milestone> = null) {
 		
-		if (await syncMilestones(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
+		if (await RepoSyncManager.get(repo).syncMilestones(stores,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
 		
 		
@@ -155,7 +146,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 	
 	@Benchmarker
 	async syncComments(stores:Stores,repo:Repo,onDataCallback:OnDataCallback<Comment> = null) {
-		return await syncComments(stores,repo,this.logger,this.progressTracker,onDataCallback,this.isDryRun())
+		return await RepoSyncManager.get(repo).syncComments(stores,this.logger,this.progressTracker,onDataCallback,this.isDryRun())
 	}
 
 	

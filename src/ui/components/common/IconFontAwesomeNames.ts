@@ -678,6 +678,8 @@ const aliases = {
 	'yc': hexCodes['y-combinator'],
 	'yc-square': hexCodes['hacker-news'],
 	'yen': hexCodes['jpy'],
-};
+}
 
-export const FAIcons = Object.assign(hexCodes, aliases);
+export const FAIcons = Object.assign(hexCodes, aliases)
+
+export default FAIcons

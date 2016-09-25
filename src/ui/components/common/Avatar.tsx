@@ -8,15 +8,18 @@ import {User} from 'shared/models'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import * as Radium from 'radium'
 import {Icon} from 'ui/components/common'
+import PureRender from "ui/components/common/PureRender"
 
 // Constants
 const log = getLogger(__filename)
 const baseStyles = createStyles({
 	root: [FlexAuto,FlexRowCenter,Ellipsis,PositionRelative,{
 		fontSize: themeFontSize(1),
-		clickable: [makeTransition('background-color'),CursorPointer,{
-			borderRadius: rem(0.2),
-			padding: '0.3rem 0.5rem'
+		clickable: [
+			makeTransition('background-color'),
+			CursorPointer,
+			makePaddingRem(0.3,0.5),{
+			borderRadius: rem(0.2)
 		}],
 		':hover': {}
 	}],
@@ -27,8 +30,7 @@ const baseStyles = createStyles({
 		height: "100%",
 
 		// icon decoration
-		icon: [{
-			padding: "0.6rem",
+		icon: [makePaddingRem(0.6),{
 			fontSize: themeFontSize(1),
 			lineHeight: 1
 		}],
@@ -56,18 +58,17 @@ const baseStyles = createStyles({
 			width: 0,
 			maxWidth: 0,
 
-			hover: [{
+			hover: [makePaddingRem(0.6),{
 				width: 'auto',
 				maxWidth: 'none',
-				opacity: 1,
-				padding: '0.6rem'
+				opacity: 1
 			}]
 		}]
 
 
 	}],
 
-	avatar: [{
+	avatar: [makeMarginRem(0),{
 		backgroundRepeat: 'no-repeat',
 		backgroundSize: '100%',
 		width: 25,
@@ -76,19 +77,19 @@ const baseStyles = createStyles({
 		borderWidth: '0.2rem',
 		borderStyle: 'solid',
 		borderColor: 'transparent',
-		margin: '0 0 0 0',
+		
 
-		labelBefore: {
-			margin: '0 0 0 1rem',
-		},
-		labelAfter: {
-			margin: '0 1rem 0 0',
-		}
+		labelBefore: [makeMarginRem(0,0,0,1),{
+			
+		}],
+		labelAfter: [makeMarginRem(0,1,0,0),{
+			
+		}],
 	}],
 
 
-	label: [{
-		padding: '0 0 0 0'
+	label: [makePaddingRem(0),{
+		
 	}]
 })
 
@@ -119,7 +120,7 @@ export interface IAvatarProps extends React.HTMLAttributes<any> {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'avatar')
-
+@PureRender
 export class Avatar extends React.Component<IAvatarProps,any> {
 
 	render() {

@@ -109,14 +109,16 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
 	renderChipSearchItem: (chipProps: any, item: M) => any
 	keySource: (item: M) => string|number
 	mode?:TChipsFieldMode
-
+	
+	underlineStyle?: any
+	underlineFocusStyle?: any
+	underlineDisabledStyle?:any
 	underlineShow?: boolean
 	inputStyle?: any
 	hintStyle?: any
 	hintAlways?: boolean
 	style?: any
-	underlineStyle?: any
-	underlineFocusStyle?: any
+	
 	labelStyle?: any
 	labelFocusStyle?: any
 	maxSearchResults?: number
@@ -265,7 +267,10 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				hint,
 				hintStyle,
 				hintAlways,
-				underlineShow
+				underlineShow,
+				underlineDisabledStyle,
+				underlineFocusStyle,
+				underlineStyle
 			} = props,
 			s = mergeStyles(styles, theme.component),
 
@@ -283,7 +288,10 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				onKeyDown={props.onKeyDown}
 				className='chipAutoComplete'
 				hintText={hint.toUpperCase()}
-				underlineShow={false}
+				underlineDisabledStyle={underlineDisabledStyle}
+				underlineFocusStyle={underlineFocusStyle}
+				underlineStyle={underlineStyle}
+				underlineShow={underlineShow}
 				menuProps={{maxHeight:300}}
 				onItemSelected={this.onItemSelectedOrEnterPressed}
 				onInputChanged={this.handleUpdateInput}

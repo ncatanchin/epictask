@@ -4,17 +4,25 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {getSettings} from 'shared/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import { cloneObject, isString, isNumber } from 'shared/util/ObjectUtil'
+import { cloneObject, isString, isNumber, toNumber } from 'shared/util/ObjectUtil'
 import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
-
+import {List} from 'immutable'
+import { getToaster, addInfoMessage, addErrorMessage } from "shared/Toaster"
  
 
-const {URLSearchParams} = require('urlsearchparams')
-
 const
+	APIRateLimit = 250,
+	APIRateLimitDuration = 60000,
+	{URLSearchParams} = require('urlsearchparams'),
 	PageIntervalDelay = 500,
 	log = getLogger(__filename),
 	hostname = 'https://api.github.com'
+
+let
+	APICallHistory = List<any>(),
+	githubRateLimitInfo:any
+
+
 
 function makeUrl(path:string,query:any = null) {
 	let url = `${hostname}${path}`
@@ -23,6 +31,66 @@ function makeUrl(path:string,query:any = null) {
 
 	return url
 
+}
+
+/**
+ * Wraps fetch function to monitor rate limiting
+ *
+ * @param url
+ * @param args
+ * @returns {any}
+ */
+const doFetch:typeof fetch = async (url,...args) => {
+	if (APICallHistory.size > APIRateLimit) {
+		APICallHistory = APICallHistory.filter(apiCall => apiCall.timestamp > Date.now() - APIRateLimitDuration) as List<any>
+		
+		if (APICallHistory.size > APIRateLimit) {
+			log.error(`Local rate limit exceeded: ${APICallHistory.size}`, APICallHistory.toArray())
+			addErrorMessage(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
+			
+			throw new Error(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
+		}
+	}
+	
+	
+	APICallHistory.push({
+		url,
+		timestamp: Date.now()
+	})
+	
+	const
+		response = await (fetch as any)(url,...args),
+		{headers} = response
+	
+	let
+		rateLimit = toNumber(headers.get('X-RateLimit-Limit'))
+	
+	if (rateLimit) {
+		const
+			rateLimitRemaining = toNumber(headers.get('X-RateLimit-Remaining')),
+			rateLimitResetTimestamp = toNumber(headers.get('X-RateLimit-Reset')) * 1000
+		
+		githubRateLimitInfo = {
+			rateLimit,
+			rateLimitRemaining,
+			rateLimitResetTimestamp
+		}
+		
+		if (rateLimit - rateLimitRemaining > (rateLimit / 3) * 2)
+			addInfoMessage(`Github Rate Limit is less than 50%, limit=${rateLimit} remaining=${rateLimitRemaining} resets @ ${new Date(rateLimitResetTimestamp)}`)
+		
+	}
+	
+	return response
+}
+
+/**
+ * Get github rate limit info
+ *
+ * @returns {any}
+ */
+export function getGithubRateLimitInfo() {
+	return githubRateLimitInfo
 }
 
 const DefaultGetOpts ={
@@ -96,6 +164,7 @@ export class GitHubClient {
 	}
 	
 	
+	
 	private makeGetHeaders(opts:RequestOptions) {
 		const
 			headers = {}
@@ -132,7 +201,19 @@ export class GitHubClient {
 
 		return request
 	}
-
+	
+	
+	getRateLimitInfo() {
+		return githubRateLimitInfo
+	}
+	
+	getRateLimitInfoAsString() {
+		const
+			info = githubRateLimitInfo
+		
+		return `limit=${info.rateLimit},remaining=${info.rateLimitRemaining},resets=${new Date(info.rateLimitResetTimestamp)}`
+	}
+	
 	async get<T>(path:string,modelType:any,opts:RequestOptions = null):Promise<T> { // | PagedArray<T>
 
 		opts = _.merge({},DefaultGetOpts,opts)
@@ -154,7 +235,7 @@ export class GitHubClient {
 		
 		let
 			url = makeUrl(path,query),
-			response =  await fetch(url,this.initRequest(HttpMethod.GET,null,this.makeGetHeaders(opts)))
+			response =  await doFetch(url,this.initRequest(HttpMethod.GET,null,this.makeGetHeaders(opts)))
 
 		if (response.status >= 300) {
 			throw new GithubError(
@@ -294,7 +375,7 @@ export class GitHubClient {
 
 		const
 			payload = JSON.stringify(json),
-			response = await fetch(makeUrl(uri), this.initRequest(method,payload,{
+			response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
 				'Accept': 'application/json',
 				'Content-Type': 'application/json'
 			}))
@@ -342,7 +423,7 @@ export class GitHubClient {
 			[uri,method] = [`/repos/${repo.full_name}/issues/comments/${comment.id}`,HttpMethod.DELETE]
 		
 		const
-			response = await fetch(makeUrl(uri), this.initRequest(method,null,{
+			response = await doFetch(makeUrl(uri), this.initRequest(method,null,{
 				'Accept': 'application/json'
 			}))
 		
@@ -401,7 +482,7 @@ export class GitHubClient {
 
 		const issuePayload = JSON.stringify(issueJson)
 
-		const response = await fetch(makeUrl(uri), this.initRequest(method,issuePayload,{
+		const response = await doFetch(makeUrl(uri), this.initRequest(method,issuePayload,{
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}))
@@ -580,6 +661,7 @@ if (DEBUG) {
 			
 			return createClient()
 		},
+		getGithubRateLimitInfo,
 		GitHubClient
 	})
 }

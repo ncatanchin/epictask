@@ -86,6 +86,138 @@ export interface ConfigurePropertyOptions {
 	jsonInclude?:boolean
 }
 
+
+export interface IOneAtATimeOptions {
+	waitForResult?:boolean,
+	executeAgainWhenComplete?:boolean
+}
+
+const defaultOneAtATimeOpts = {
+	waitForResult: true,
+	executeAgainWhenComplete: false
+} as IOneAtATimeOptions
+
+export interface IOneAtATimeFn<T> {
+	isPending():boolean
+	pendingPromise():Promise<any>
+	override(overrideOpts:IOneAtATimeOptions):T
+}
+
+export function OneAtATime<T>(moreOpts:IOneAtATimeOptions = {},target:T):T & IOneAtATimeFn<T> {
+	
+	const
+		opts = assign(defaultOneAtATimeOpts,moreOpts)
+	
+	let
+		pendingResult:Promise.Resolver<any>,
+		waitingForNextResult = [],
+		fn = null
+	
+	fn = ((...args:any[]) =>  {
+		let
+			overrideOpts = {}
+		
+		if (args[0] && args[0].overrideOpts) {
+			overrideOpts = 	args[0].overrideOpts
+			args = args[0].overrideArgs
+		}
+		
+		const
+			{
+				waitForResult,
+				executeAgainWhenComplete
+			} = assign(opts,overrideOpts),
+			
+			
+			deferred = Promise.defer()
+		
+		if (pendingResult) {
+			
+			// EXECUTE AGAIN WHEN THIS ITERATION CONTINUES
+			if (executeAgainWhenComplete) {
+				waitingForNextResult.push(waitForResult ? deferred : false)
+			} else if (waitForResult && !executeAgainWhenComplete) {
+				pendingResult.promise.then((result) => deferred.resolve(result))
+			} else {
+				deferred.resolve()
+			}
+			
+			//return pendingResult.promise
+		} else {
+			pendingResult = Promise.defer()
+			
+			let
+				thisResult = null, thisErr = null
+			
+			deferred.resolve((target as any)(...args)
+				.then(result => {
+					thisResult = result
+					return result
+				})
+				.catch (err => {
+					thisErr = err
+					throw err
+				})
+				.finally(() => {
+					// RESOLVE THIS ITERATION NO MATTER WHAT
+					if (thisErr)
+						pendingResult.reject(thisErr)
+					else
+						pendingResult.resolve(thisResult)
+					
+					// STEP OUT OF STACK AND RE-ENTER IF EXECUTE AGAIN
+					if (waitingForNextResult.length) {
+						setTimeout(() => {
+							const
+								oldPendingResult = pendingResult,
+								waitingForThisResult = waitingForNextResult.slice().filter(it => it !== false)
+							
+							waitingForNextResult.length = 0
+							pendingResult = null
+							
+							oldPendingResult
+								.resolve(
+									fn(...args)
+										// ITERATE ALL CURRENT WAITING PROMISES & RESOLVE OR REJECT
+										.then(result => {
+											waitingForThisResult.forEach(it => it.resolve(result))
+											return result
+										})
+										.catch(err => {
+											waitingForThisResult.forEach(it => it.reject(err))
+											throw err
+										})
+								)
+						})
+					} else {
+						pendingResult = null
+					}
+					
+				}))
+			
+			// pendingResult =
+			// 	deferred
+			// 		.promise
+			// 		.catch(err => deferred.reject(err))
+			// 		.finally(() => pendingResult = null)
+			
+			
+		}
+		
+		return deferred.promise
+	}) as any
+	
+	fn.isPending = () => !!pendingResult
+	fn.pendingPromise = () => pendingResult
+	
+	// CREATES AN OVERRIDE FN WITH SPECIFIC OPTS
+	fn.override = (overrideOpts:IOneAtATimeOptions):T =>
+		((...args) => fn({overrideOpts,overrideArgs:args})) as any
+	
+	return fn as T & IOneAtATimeFn<T>
+	
+}
+
 /**
  * Adds a set listener
  *

@@ -25,3 +25,5 @@ export function PureRender(Component) {
 	})
 	
 }
+
+export default PureRender

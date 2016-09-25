@@ -49,8 +49,8 @@ export function isSymbol(o:any):o is Symbol {
 }
 
 
-export function toNumber(str:string):number {
-	return parseInt(str,10)
+export function toNumber(str:string|number):number {
+	return isNumber(str) ? str : parseInt(str,10)
 }
 
 export function canProxyProperty(name:any) {

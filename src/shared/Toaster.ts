@@ -3,7 +3,8 @@
 import * as uuid from 'node-uuid'
 
 import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import { isString } from "shared/util/ObjectUtil"
 
 
 const
@@ -15,8 +16,8 @@ const
  */
 export class Toaster {
 
-	get uiActions():UIActionFactory {
-		return Container.get(require('shared/actions/ui/UIActionFactory').default as typeof UIActionFactory)
+	get uiActions() {
+		return getUIActions()
 	}
 
 	addMessage(message:IToastMessage|string,type:ToastMessageType = ToastMessageType.Info) {
@@ -38,16 +39,21 @@ export class Toaster {
 		this.addMessage(message,ToastMessageType.Debug)
 	}
 	
+	addInfoMessage(message:IToastMessage|string) {
+		this.addMessage(message,ToastMessageType.Info)
+	}
+	
 	addSuccessMessage(message:IToastMessage|string) {
 		this.addMessage(message,ToastMessageType.Success)
 	}
 
 	addErrorMessage(err:Error|string) {
-		if (_.isString(err)) {
+		if (isString(err)) {
 			err = new Error(err)
 		}
-		const payload = _.pick(err, 'message', 'code', 'stack', 'description') as any
-		//logError(err)
+		const
+			payload = _.pick(err, 'message', 'code', 'stack', 'description') as any
+		
 		this.uiActions.addErrorMessage(payload)
 	}
 }
@@ -73,7 +79,7 @@ Container.bind(Toaster).provider({get: getToaster})
 
 
 export function clearMessages() {
-	Container.get(UIActionFactory).clearMessages()
+	this.uiActions.clearMessages()
 }
 
 /**
@@ -93,6 +99,11 @@ export function addSuccessMessage(message:IToastMessage|string) {
 export function addDebugMessage(message:IToastMessage|string) {
 	getToaster().addDebugMessage(message)
 }
+
+export function addInfoMessage(message:IToastMessage|string) {
+	getToaster().addInfoMessage(message)
+}
+
 
 /**
  * Report an error to the UI from anywhere

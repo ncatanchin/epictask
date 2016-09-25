@@ -58,7 +58,8 @@ const
 	// INPUT
 	InputStyle = {
 		color: text.primary,
-		backgroundColor: primary.hue2,
+		//backgroundColor: primary.hue2,
+		backgroundColor: Transparent,
 	
 		hint: {
 			zIndex: 5,
@@ -221,6 +222,15 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		text: {
 			fontSize: themeFontSize(1),
 			fontWeight: 500
+		},
+		
+		accessory: {
+			remove: {
+				hover: {
+					backgroundColor: 'white',
+					color: warn.hue1
+				}
+			}
 		}
 	},
 
@@ -400,7 +410,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		menu: {
 			color: text.primary,
 			fill: text.secondary,
-			backgroundColor: primary.hue2 //primary.hue2//,text.primary
+			backgroundColor: Transparent,//primary.hue2 //primary.hue2//,text.primary
 		},
 
 		menuItem: {
@@ -415,7 +425,8 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 		input: {
 			color: text.primary,
-			backgroundColor: primary.hue2,
+			//backgroundColor: primary.hue2,
+			backgroundColor: Transparent,
 
 			hint:  {
 				zIndex: 5,
@@ -436,7 +447,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			},
 
 			underlineDisabled: {
-				borderColor: 'transparent',
+				borderColor: primary.hue2,//'transparent',
 				borderBottomWidth: `0.1rem`,
 				transform: 'scaleX(1)'
 			},
@@ -455,6 +466,22 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	},
 	issueCreateInline: {
 
+	},
+	
+	issueActivityText: {
+		activityContent: {
+			eventGroup: {
+				verticalDots: {
+					borderRightColor: primary.hue3
+				},
+				horizontalDots: {
+					borderBottomColor: primary.hue3
+				},
+				icon: {
+					backgroundColor: tc(primary.hue3).setAlpha(1).toRgbString()
+				}
+			}
+		}
 	},
 
 	repoAddDialog: {
@@ -805,11 +832,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 					post: {
 						backgroundColor: primary.hue2,
-						borderColor:     accent.hue1,
+						//borderColor:     accent.hue1,
+						borderColor:     Transparent,
 
 						user: {
 							backgroundColor: primary.hue3,
-							borderColor: accent.hue1,
+							//borderColor: accent.hue1,
+							borderColor:     Transparent,
 							transform: 'translate(0.2rem,0)'
 						},
 
@@ -823,11 +852,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 					comment: {
 						backgroundColor: primary.hue2,
-						borderColor:     secondary.hue1,
+						//borderColor:     secondary.hue1,
+						borderColor:     Transparent,
 
 						user: {
 							backgroundColor: primary.hue3,
-							borderColor:     secondary.hue1,
+							//borderColor:     secondary.hue1,
+							borderColor:     Transparent,
 							transform: 'translate(0.2rem,0)'
 						},
 

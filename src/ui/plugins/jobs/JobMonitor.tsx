@@ -19,7 +19,7 @@ import {JobDetail} from "./JobDetail"
 import {RegisterTool} from "shared/Registry"
 import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {ToolPanelLocation, IToolProps} from "shared/tools/ToolTypes"
-import {Button, Icon} from "ui/components"
+import {Button, Icon} from "ui/components/common"
 
 // Constants
 const

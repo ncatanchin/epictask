@@ -3,14 +3,18 @@ import {List,Map} from 'immutable'
 
 export type TListTypes<T> = Array<T>|List<T>
 
+
+
 declare global {
+	
+	
 	module _ {
 		interface LoDashStatic {
 			isArrayEqualBy(arr1, arr2, prop):boolean
 			inline<R>(fn:()=>R):R
 			uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
 			toJS(o:any):any
-			assignGlobal(o:any):any
+			assignGlobal:IAssignGlobal
 			isPromise(o:any):boolean
 			modelArrayToMapBy(o:any[], prop:string):any
 			nilFilter<T>(o:T[]):T[]
@@ -76,9 +80,11 @@ _.mixin({
 		return (o && _.isFunction(o.toJS)) ? o.toJS() : o
 	},
 	
-	assignGlobal(o:any) {
-		const g = global as any
-		Object.assign(g,o)
+	assignGlobal(...sources:any[]) {
+		const
+			g = global as any
+		
+		Object.assign(g,...sources)
 	}
 })
 

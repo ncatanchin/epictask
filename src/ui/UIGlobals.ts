@@ -5,7 +5,7 @@ import * as ReactDOMGlobal from 'react-dom'
 import {Toaster as ToasterType} from 'shared/Toaster'
 import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
 import * as JQueryGlobal from 'jquery'
-
+import * as RadiumGlobal from 'radium'
 
 /**
  * Now the shared globals - this is required for proper logging config
@@ -46,6 +46,7 @@ declare global {
 	var Notification:any
 	var logError:typeof logErrorGlobal
 	var $:typeof JQueryGlobal
+	var Radium:typeof RadiumGlobal
 	
 	interface Window {
 		$:typeof JQueryGlobal
@@ -54,12 +55,14 @@ declare global {
 
 const g = global as any
 
-Object.assign(g,{
+
+assignGlobal({
 	CSSModules: require('react-css-modules'),
 	React: ReactGlobal,
 	ReactDOM: ReactDOMGlobal,
 	logError: logErrorGlobal,
-	$: window.$ || JQueryGlobal
+	$: window.$ || JQueryGlobal,
+	Radium:RadiumGlobal
 })
 
 

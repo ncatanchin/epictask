@@ -9,7 +9,6 @@ export * from './Issue'
 export * from './User'
 export * from './Permission'
 export * from './Sync'
-export * from './Activity'
 export * from './GitHubEvents'
 
 

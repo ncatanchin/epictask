@@ -3,8 +3,6 @@
  */
 
 // Imports
-import * as React from 'react'
-import * as Radium from 'radium'
 import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {AutoComplete} from 'material-ui'
@@ -39,7 +37,10 @@ export interface ITypeAheadSelectProps extends React.HTMLAttributes<any> {
 	query?: string
 
 	openAlways?:boolean
-
+	
+	underlineStyle?: any
+	underlineFocusStyle?: any
+	underlineDisabledStyle?:any
 	underlineShow?: boolean
 	openOnFocus?: boolean
 
@@ -128,7 +129,10 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 				menuProps,
 				fullWidth,
 				openOnFocus,
-				openAlways
+				openAlways,
+				underlineDisabledStyle,
+				underlineFocusStyle,
+				underlineStyle
 			} = this.props,
 			{
 				internalQuery:query
@@ -158,7 +162,9 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 			hintStyle={hintStyle}
 			listStyle={styles.list}
 			fullWidth={fullWidth}
-
+			underlineDisabledStyle={underlineDisabledStyle}
+			underlineFocusStyle={underlineFocusStyle}
+			underlineStyle={underlineStyle}
 			underlineShow={underlineShow}
 			filter={AutoComplete.noFilter}
 

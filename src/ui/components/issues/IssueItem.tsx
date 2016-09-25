@@ -3,8 +3,8 @@
 
 // Imports
 import * as moment from 'moment'
-import * as React from 'react'
 
+import {List} from 'immutable'
 import {PureRender, Renderers, Avatar} from '../common'
 import {connect} from 'react-redux'
 import filterProps from 'react-valid-props'
@@ -12,7 +12,7 @@ import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
 import {Issue} from 'shared/models'
 
 import { IIssueListItem } from 'shared/actions/issue/IIssueListItems'
-import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
+import { selectedIssueIdsSelector, issuesSelector } from "shared/actions/issue/IssueSelectors"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
@@ -22,7 +22,8 @@ import { shallowEquals } from "shared/util/ObjectUtil"
 
 interface IIssueItemProps extends React.HTMLAttributes<any> {
 	styles:any
-	item:IIssueListItem<Issue>
+	issueId:number
+	issue?:Issue
 	onSelected:(event:any, issue:Issue) => void
 	isSelected?:boolean
 	isSelectedMulti?:boolean
@@ -32,20 +33,27 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 @connect(() => {
 	
 	const
+		issueSelector = createSelector(
+			issuesSelector,
+			(state,props:IIssueItemProps) => props.issueId,
+			(issues:List<Issue>,issueId:number):Issue => {
+				return issues.find(issue => issue.id === issueId)
+			}
+		),
 		selector = createSelector(
 			//(state,props:IIssueItemProps):number[] => _.get(props,'issuesPanel.updatedSelectedIssueIds',[]),
 			selectedIssueIdsSelector,
-			(state,props:IIssueItemProps):IIssueListItem<Issue> => props.item,
-			(selectedIssueIds:number[],item:IIssueListItem<Issue>) => {
+			issueSelector,
+			(selectedIssueIds:number[],issue:Issue) => {
 				const
 					isSelected =
-						item &&
+						issue &&
 						selectedIssueIds &&
-						selectedIssueIds.includes((item.item as Issue).id)
+						selectedIssueIds.includes(issue.id)
 				
 				return {
 					isSelected,
-					item,
+					issue,
 					isSelectedMulti: isSelected && selectedIssueIds.length > 1
 				}
 			}
@@ -53,21 +61,18 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 	
 	let previousData = null
 	
-	return (state,props) => {
+	return (state,props:IIssueItemProps) => {
 		let
-			selectedIssueIds = selectedIssueIdsSelector(state),
-			{item} = props,
-			isSelected =
-				item &&
-				selectedIssueIds &&
-				selectedIssueIds.includes((item.item as Issue).id),
-			newData = {
-				item,
-				isSelected,
-				isSelectedMulti: isSelected && selectedIssueIds.length > 1
-			}
+			//selectedIssueIds = selectedIssueIdsSelector(state),
+			//{issue} = props,
+			// isSelected =
+			// 	issue &&
+			// 	selectedIssueIds &&
+			// 	selectedIssueIds.includes(issue.id),
+			
+			newData = selector(state,props)
 		
-		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','item')) {
+		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','issue')) {
 			return previousData
 		}
 		
@@ -88,20 +93,19 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssueItemProps) {
-		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','item')
+		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','issue','issueId')
 	}
 	
 	render() {
 		const
 			{props} = this,
-			{styles,onSelected,item,isSelected,isSelectedMulti} = props
+			{styles,onSelected,issue,isSelected,isSelectedMulti} = props
 			
 			
-		if (!item)
+		if (!issue)
 			return React.DOM.noscript()
 
 		const
-			issue = item.item,
 			{labels} = issue,
 			issueStyles = makeStyle(
 				styles.issue,

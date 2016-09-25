@@ -4,12 +4,13 @@
 
 // Imports
 import * as React from 'react'
-import * as Radium from 'radium'
-import {FAIcons} from './IconFontAwesomeNames'
-import {GHIcons} from './IconOpticonNames'
+import {FAIcons,GHIcons} from 'ui/components/common'
+
 import filterProps from 'react-valid-props'
-import {PureRender} from 'ui/components'
+
 import {Themed} from "shared/themes/ThemeManager"
+import { PureRender } from "ui/components/common"
+
 // Constants
 const log = getLogger(__filename)
 
@@ -46,8 +47,9 @@ function iconCode(codeSet,iconName) {
  **/
 
 
-//@PureRender
+
 @Themed
+@PureRender
 export class Icon extends React.Component<IIconProps,any> {
 
 	// constructor(props,context) {

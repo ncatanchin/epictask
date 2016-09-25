@@ -84,32 +84,34 @@ function installGlobals() {
  */
 
 declare global {
+	interface IAssignGlobal {
+		(...sources:any[]):any
+	}
 	
-	// //noinspection ES6ConvertVarToLetConst
-	// var MapConstructor:typeof MapGlobal
-	//
-	// //noinspection ES6ConvertVarToLetConst
-	// var Map:typeof MapGlobal
-	//
-	// var ListConstructor:typeof ListGlobal
-	// var List:typeof ListGlobal
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Container:typeof ContainerGlobal
 
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var getLogger:typeof LoggerFactory
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Immutable:typeof ImmutableGlobal
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var requireContext:typeof ContextUtils.requireContext
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var mergeContext:typeof ContextUtils.mergeContext
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal// & LodashMixins
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Env:typeof EnvGlobal
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean
 	
@@ -117,10 +119,18 @@ declare global {
 	var assign:typeof Object.assign
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var assignGlobal:typeof _.assignGlobal
-
+	var assignGlobal:IAssignGlobal
+	
+	/**
+	 * Extending root types with some custom props
+	 */
 	interface Object {
+		
+		// Class name
 		$$clazz?:string
+		
+		// Used internally to clear state of typestore/pouch objects
+		$$docs?:any
 	}
 }
 

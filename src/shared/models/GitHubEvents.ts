@@ -119,6 +119,7 @@ export function makeRepoEventId(repoEventOrRepoId:number|RepoEvent<any>,eventId:
 		eventId = repoEventOrRepoId.id
 	}
 	
+	assert(repoId && eventId,`RepoId ${repoId}, Event Id ${eventId} must all be valid`)
 	return `${makeRepoEventPrefix(repoId)}${eventId}`
 }
 
@@ -365,7 +366,7 @@ export function makeIssuesEventPrefix(issueOrRepoId:Issue|number,issueNumber:num
 		repoId = issueOrRepoId.repoId
 		issueNumber = issueOrRepoId.number
 	}
-	
+	assert(repoId && issueNumber,`RepoId ${repoId} & issueNumber ${issueNumber} must all be valid`)
 	return `${repoId}-${issueNumber}-`
 }
 
@@ -395,6 +396,7 @@ export function makeIssuesEventId(eventOrRepoId:number|IssuesEvent,issueNumber:n
 		issueNumber = eventOrRepoId.issue.number
 	}
 	
+	assert(repoId && eventId && issueNumber,`RepoId ${repoId}, Event Id ${eventId} & issueNumber ${issueNumber} must all be valid`)
 	return `${makeIssuesEventPrefix(repoId,issueNumber)}${eventId}`
 }
 

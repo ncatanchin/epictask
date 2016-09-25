@@ -39,6 +39,8 @@ import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
 import { isListType } from "shared/util/ObjectUtil"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
+import { RepoSyncManager } from "shared/github/GithubEventHandlers"
+import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 
 
 /**
@@ -474,6 +476,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const
 			loadedIssue = await issueStore.get(Issue.makeIssueId(mergedIssue))
 		
+		// SYNC ISSUE EVENTS
+		getGithubEventMonitor().forcePolling(repo.id)
+		//RepoSyncManager.get(repo).syncIssues(getStores(),repo)
+		
 		log.info(`Updating issue in state`,loadedIssue)
 		this.reloadIssues(loadedIssue)
 			
@@ -493,15 +499,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const
 				client = Container.get(GitHubClient),
 				stores = Container.get(Stores),
-				enabledRepoIds = enabledRepoIdsSelector(getState()),
 				repo = issue.repo || await stores.repo.get(issue.repoId)
 			
 			try {
 				const
-					updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue)
-				
-				
-				const
+					updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue),
 					wasInline = this.state.editingInline
 				
 				addMessage(`Saved issue #${updatedIssue.number}`)

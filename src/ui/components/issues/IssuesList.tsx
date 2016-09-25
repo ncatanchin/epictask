@@ -603,9 +603,9 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			// ISSUE
 			<IssueItem
 				key={key}
+				issueId={item.item.id}
 				styles={styles}
 				style={style}
-				item={item}
 				onSelected={onIssueSelected}/>
 		
 	}

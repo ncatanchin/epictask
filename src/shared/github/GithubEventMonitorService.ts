@@ -13,7 +13,7 @@ import { AvailableRepo } from "shared/models"
 import SyncStatus from './GithubSyncStatus'
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
-import { handleIssuesEvents, handleRepoEvents } from "shared/github/GithubEventHandlers"
+import { RepoSyncManager } from "shared/github/GithubEventHandlers"
 
 
 
@@ -107,14 +107,14 @@ export class GithubEventService extends BaseService {
 					issuesLastETag: SyncStatus.getETag(issuesResourceUrl),
 					issuesLastTimestamp: SyncStatus.getTimestamp(issuesResourceUrl)
 				},{
-					issuesEventsReceived(eTag:string,...events:IssuesEvent[]) {
-						handleIssuesEvents(availRepo,...events)
+					allIssuesEventsReceived(eTag:string,...events:IssuesEvent[]) {
+						RepoSyncManager.get(availRepo).handleIssuesEvents(availRepo,...events)
 						
 						SyncStatus.setETag(issuesResourceUrl,eTag)
 						SyncStatus.setTimestamp(issuesResourceUrl,Date.now())
 					},
-					repoEventsReceived(eTag:string,...events:RepoEvent<any>[]) {
-						handleRepoEvents(availRepo,...events)
+					allRepoEventsReceived(eTag:string,...events:RepoEvent<any>[]) {
+						RepoSyncManager.get(availRepo).handleRepoEvents(availRepo,...events)
 						
 						SyncStatus.setETag(repoResourceUrl,eTag)
 						SyncStatus.setTimestamp(repoResourceUrl,Date.now())
@@ -123,9 +123,7 @@ export class GithubEventService extends BaseService {
 			})
 	}
 	
-	async init():Promise<any> {
-		return super.init()
-	}
+	
 	
 	/**
 	 * Start the Job Service,

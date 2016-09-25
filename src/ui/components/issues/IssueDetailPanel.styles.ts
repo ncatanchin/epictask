@@ -30,8 +30,7 @@ const baseStyles = createStyles({
 				fontSmooth:          'always',
 				WebkitFontSmoothing: 'antialiased'
 			}],
-			assignee: [{
-				margin: '0 0 0 1rem'
+			assignee: [makeMarginRem(0,0,0,1),{
 			}]
 		}],
 
@@ -111,8 +110,7 @@ const baseStyles = createStyles({
 
 					title: [flexTransition, FlexColumn, FlexAuto, {}],
 					
-					margin: '1rem 1rem 1rem 0.5rem',
-
+					
 					avatar: {
 						width:        40,
 						height:       40,
