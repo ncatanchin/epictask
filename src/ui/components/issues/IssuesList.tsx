@@ -276,7 +276,7 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 	}
 	
 	componentWillUnmount() {
-		log.info(`Header unmounting`,this.props)
+		log.info(`Header un-mounting`,this.props)
 	}
 	
 	/**
