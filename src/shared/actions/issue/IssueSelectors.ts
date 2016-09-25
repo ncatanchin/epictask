@@ -482,7 +482,7 @@ export function makeIssueGroupIdSelector():(state,props) => string {
  * Return a selector that determines whether a group is expanded or closed
  */
 export function makeIssueGroupExpandedSelector() {
-	return createSelector(
+	return createDeepEqualSelector(
 		groupVisibilitySelector,
 		makeIssueGroupIdSelector(),
 		(groupVisibility:Map<string,boolean>, groupId) =>

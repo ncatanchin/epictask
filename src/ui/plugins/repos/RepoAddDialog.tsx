@@ -2,7 +2,7 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 import * as Radium from 'radium'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppActionFactory} from '../../../shared/actions/app/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchPanel} from 'ui/components/search'
 import * as Constants from 'shared/Constants'

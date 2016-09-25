@@ -18,7 +18,7 @@ import {
 } from 'shared/actions/repo/RepoSelectors'
 import {PureRender} from "ui/components/common/PureRender"
 import {DataComponent, MapData} from "ui/components/data/DataComponent"
-import { getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { getRepoActions } from  "shared/actions/ActionFactoryProvider"
 
 /**
  * Displays a list of repos

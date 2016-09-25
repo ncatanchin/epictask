@@ -35,7 +35,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {CommonKeys} from 'shared/KeyMaps'
 import {Milestone} from 'shared/models/Milestone'
 import {ThemedStyles, makeThemeFontSize} from 'shared/themes/ThemeManager'
-import {appUserSelector} from 'shared/actions/AppSelectors'
+import {appUserSelector} from '../../../shared/actions/app/AppSelectors'
 import {
 	editingIssueSelector, issueStateSelector, issueSaveErrorSelector,
 	issueSavingSelector

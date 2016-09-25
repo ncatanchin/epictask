@@ -57,28 +57,74 @@ export function canProxyProperty(name:any) {
 	return InvalidProxyNames.includes(name) || isSymbol(name)
 }
 
+/**
+ * Generates a short id
+ *
+ * @returns {string}
+ */
 export function shortId():string {
 	return generateShortId()
 }
 
+/**
+ * Generates v4 UUID
+ *
+ * @returns {string}
+ */
 export function uuid():string {
 	return require('node-uuid').v4()
 }
 
+/**
+ * Object cloning wrapper with some special extras
+ * - copies typestore $$docs value
+ * - copies explicit ids
+ *
+ * @param o
+ * @param newSources
+ * @returns {any}
+ */
 export function cloneObject<T>(o:T,...newSources:any[]):T {
-	const cloned = _.cloneDeep(o)
+	const
+		cloned = _.cloneDeep(o),
+		
+		/**
+		 * After clone - copy special props, etc
+		 *
+		 * @param it
+		 * @param index
+		 */
+		afterObjectClone = (it,index = -1) => {
+			const
+				base:any = index === -1 ? o : o[index]
+			
+			if (base && isObject(it)) {
+				if (base.id)
+					it.id = base.id
+				
+				if (base.$$doc)
+					it.$$doc = cloneObject(base.$$doc)
+				
+				assign(it,...newSources)
+			}
+			
+			
+		}
+	
+	
 	
 	if (cloned) {
+		
+		// ARRAY CLONED
 		if (Array.isArray(cloned)) {
-			cloned.forEach((acloned,index) => {
-				if (o[index] && isObject(o[index]))
-					acloned.id = o[index].id
-				
-				_.assign(acloned,...newSources)
+			cloned.forEach((it,index) => {
+				afterObjectClone(it,index)
 			})
-		} else if (_.isObject(cloned)) {
-			cloned.id = (o as any)['id']
-			_.assign(cloned,...newSources)
+		}
+		
+		// SINGLE OBJECT CLONED
+		else if (isObject(cloned)) {
+			afterObjectClone(cloned)
 		}
 		
 	}
@@ -87,6 +133,14 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 
 }
 
+/**
+ * Shallow equal an array or list
+ *
+ * @param val1
+ * @param val2
+ * @param props
+ * @returns {boolean}
+ */
 export function shallowEqualsArrayOrList(val1,val2,...props:string[]) {
 	
 	if (!val1 || !val2)
@@ -105,7 +159,14 @@ export function shallowEqualsArrayOrList(val1,val2,...props:string[]) {
 	})
 }
 
-
+/**
+ * Shallow equal a specific property key for two objects
+ *
+ * @param o1
+ * @param o2
+ * @param key
+ * @returns {boolean}
+ */
 export function shallowEqualsProp(o1,o2,key) {
 	const
 		val1 = _.get(o1,key),
@@ -115,6 +176,14 @@ export function shallowEqualsProp(o1,o2,key) {
 		shallowEqualsArrayOrList(val1,val2)
 }
 
+/**
+ * Shallow equals two objects on either all own properties - OR - specific props provided
+ *
+ * @param o1
+ * @param o2
+ * @param props
+ * @returns {any}
+ */
 export function shallowEquals(o1,o2,...props:string[]) {
 	if (o1 === o2)
 		return true

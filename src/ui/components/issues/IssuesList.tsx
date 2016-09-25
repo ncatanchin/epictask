@@ -31,12 +31,13 @@ import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
 import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
 
 import { VisibleList } from "ui/components/common/VisibleList"
-import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getUIActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 
 import {createSelector} from 'reselect'
 import { TransitionDurationLong } from "shared/themes/styles/CommonStyles"
 import { IssuesPanel } from "ui/components/issues/IssuesPanel"
 import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 
 
 
@@ -45,8 +46,28 @@ const
 	log = getLogger(__filename),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
-
 //region STYLES
+// const styleSheet = CreateGlobalThemedStyles((theme,Style) => {
+// 	return createStyles({
+// 		'.issueListTransition': [makeTransition(['height','opacity']),{
+//
+// 		}],
+// 		'.issueListTransition-enter': {
+// 			height: '0 !important',
+// 			opacity: '0 !important'
+// 		},
+// 		'.issueListTransition-leave, .issueListTransition-leave-active': {
+// 			height: '0 !important',
+// 			opacity: '0 !important'
+// 		}
+// 	})
+// })
+//
+// if (module.hot) {
+// 	module.hot.dispose(styleSheet.clean)
+// }
+//
+
 const baseStyles = createStyles({
 	panel: [Fill, {}],
 	panelSplitPane: [Fill, {
@@ -67,6 +88,7 @@ const baseStyles = createStyles({
 	listContainer: [FlexColumn, FlexScale, FillWidth, {
 		overflow: 'auto'
 	}],
+	
 	
 	
 	/**
@@ -90,6 +112,8 @@ const baseStyles = createStyles({
 		// Header Controls
 		control: [makeTransition(['transform'],TransitionDurationLong),{
 			width: rem(3),
+			display: 'block',
+			
 			padding: '0 1rem',
 			backgroundColor: 'transparent',
 			transform: 'rotate(0deg)',
@@ -98,27 +122,27 @@ const baseStyles = createStyles({
 			}]
 		}],
 		labels: [FlexScale, OverflowAuto],
-		stats: {
+		stats: [FlexAuto,{
 			number: {
 				fontWeight: 700
 			},
 			fontWeight: 100,
 			padding: '0 1rem',
 			textTransform: 'uppercase'
-		}
+		}]
 	}],
 	
 	issue: [
 		makeTransition(['height', 'flex-grow', 'flex-shrink', 'flex-basis','box-shadow']),
-		FlexRow,
+		FlexRowCenter,
 		FlexAuto,
 		FillWidth,
+		FillHeight,
 		FlexAlignStart,
+		makePaddingRem(1,1,0,1),
 		{
 			height: rem(9.4),
-			padding: '1rem 1rem 0rem 1rem',
 			cursor: 'pointer',
-			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
 			
 			// Issue selected
 			selected: [],
@@ -230,12 +254,41 @@ interface IIssueGroupHeaderProps extends React.HTMLAttributes<any>,IIssueItemGro
  * Issue group header component
  *
  */
-@connect(createStructuredSelector({
-	expanded: makeIssueGroupExpandedSelector()
-}))
+@connect(() => {
+	
+	return createDeepEqualSelector(
+		makeIssueGroupExpandedSelector(),
+		(expanded) => ({expanded})
+	)
+})
 @Radium
 @PureRender
-class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,void> {
+class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
+	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
+	}
+	
+	componentWillReceiveProps(nextProps) {
+		log.info(`Group header getting props`,nextProps)
+	}
+	
+	componentWillUnmount() {
+		log.info(`Header unmounting`,this.props)
+	}
+	
+	/**
+	 * Checks whether expanded has changed OR group.id has changed
+	 *
+	 * @param nextProps
+	 * @returns {boolean}
+	 */
+	shouldComponentUpdate(nextProps:IIssueGroupHeaderProps):boolean {
+		log.info(`Shallow equal update check`)
+		return !shallowEquals(this.props,nextProps,'expanded','group.id')
+	}
 	
 	render() {
 		const
@@ -244,58 +297,50 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,void> {
 			headerStyles = styles.issueGroupHeader,
 			issueCount = group.issueIndexes.length
 		
-		log.info(`Group by`,groupBy,`item`,groupByItem)
+		log.info(`Group by`,groupBy,`item`,groupByItem,group)
 		
-		return <div style={[headerStyles,expanded && headerStyles.expanded,style]} onClick={onClick}>
-			<Icon style={[headerStyles.control,expanded && headerStyles.control.expanded]}
-						iconSet='fa'
-			      iconName={'chevron-right'}/>
-			{/*<Icon iconSet='material-icons' style={styles.issueGroupHeader.control}>apps</Icon>*/}
-			{/*<Button style={styles.issueGroupHeader.control}>*/}
-			{/*/!*<Icon iconSet='fa' iconName='chevron-right'/>*!/*/}
-			{/*<Icon iconSet='material-icons'>apps</Icon>*/}
-			{/*</Button>*/}
+		return <div style={[headerStyles,expanded && headerStyles.expanded,style]}
+		            id={`group-${group.id}`}
+		            onClick={onClick}>
+			<div style={[headerStyles.control,expanded && headerStyles.control.expanded]}>
+				<Icon style={[]}
+							iconSet='fa'
+				      iconName={'chevron-right'}/>
+			</div>
 			
-			<div style={[headerStyles.middle]}>
-				
-				{/* Top label line: Label Group with 5 issues (example) */}
-				<div style={[headerStyles.middle.top]}>
-					<div style={[headerStyles.text]}>Group</div>
-					<div style={[headerStyles.stats]}>
-						<span style={headerStyles.stats.number}>
-							{issueCount}
-						</span>
-						&nbsp;Issue{issueCount !== 1 ? 's' : ''}
-					</div>
-				</div>
-				
-				<div style={[headerStyles.middle.bottom]}>
-					{//GROUP BY MILESTONES
-						(groupBy === 'milestone') ?
-							<IssueLabelsAndMilestones
-								style={headerStyles.labels}
-								showIcon
-								labels={[]}
-								milestones={[!groupByItem ? Milestone.EmptyMilestone : groupByItem]}/> :
-							
-							// GROUP BY LABELS
-							(groupBy === 'labels') ?
-								<IssueLabelsAndMilestones
-									style={styles.issueGroupHeader.labels}
-									showIcon
-									labels={(!groupByItem || groupByItem.length === 0) ?
-									[NO_LABELS_ITEM] :
-									Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
-								
-								// GROUP BY ASSIGNEE
-								<div
-									style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
-					}
-				</div>
+			{/* GROUPING */}
+			{
+				//GROUP BY MILESTONES
+				(groupBy === 'milestone') ?
+					<IssueLabelsAndMilestones
+						style={headerStyles.labels}
+						showIcon
+						labels={[]}
+						milestones={[!groupByItem ? Milestone.EmptyMilestone : groupByItem]}/> :
+					
+					// GROUP BY LABELS
+					(groupBy === 'labels') ?
+						<IssueLabelsAndMilestones
+							style={styles.issueGroupHeader.labels}
+							showIcon
+							labels={(!groupByItem || groupByItem.length === 0) ?
+							[NO_LABELS_ITEM] :
+							Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
+						
+						// GROUP BY ASSIGNEE
+						<div
+							style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
+			}
+		
 			
 				
 				
-			{/*<Icon iconSet='material-icons'>apps</Icon>*/}
+			{/* STATS */}
+			<div style={[headerStyles.stats]}>
+					<span style={headerStyles.stats.number}>
+						{issueCount}
+					</span>
+				&nbsp;Issue{issueCount !== 1 ? 's' : ''}
 			</div>
 		</div>
 	}
@@ -341,7 +386,6 @@ export interface IIssuesListState {
 	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig
 }),null,null,{withRef:true})
 @ThemedStyles(baseStyles, 'issuesPanel')
-
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
 	
@@ -422,22 +466,22 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @param props
 	 */
 	private updateGroupFilteredIndexes(props = this.props) {
-		if (props.groupVisibility !== this.props.groupVisibility) {
-			log.info(`Group visibility changed - updating exclusions`)
-			const
-				{items,groups,issues,editInlineConfig} = props,
-				{itemIndexes} = this.state
-			
-			this.setState({
-				itemIndexes: this.filterExcludedItems(
-					items,
-					itemIndexes,
-					issues,
-					groups,
-					props.groupVisibility,
-					editInlineConfig)
-			})
-		}
+		//if (props.groupVisibility !== this.props.groupVisibility) {
+		log.info(`Group visibility changed - updating exclusions`)
+		const
+			{items,groups,issues,editInlineConfig} = props,
+			itemIndexes = items.map((item,index) => index) as List<number>
+		
+		this.setState({
+			itemIndexes: this.filterExcludedItems(
+				items,
+				itemIndexes,
+				issues,
+				groups,
+				props.groupVisibility,
+				editInlineConfig)
+		})
+		//}
 	}
 	
 	
@@ -454,7 +498,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		let
 			checkedItems = _.get(this.state,'checkedItems',List<IIssueListItem<any>>()),
 			itemIds = _.get(this.state,'itemIds',List<number>()),
-			itemIndexes = _.get(this.state,'itemIndexes',List<number>())
+			itemIndexes = _.get(this.state,'itemIndexes',List<number>()),
+			groupsChanged = groupVisibility !== this.props.groupVisibility
 		
 		let
 			itemsChanged = items !== this.props.items || items !== checkedItems
@@ -498,8 +543,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			return true
 		}
 		
-		
-		this.updateGroupFilteredIndexes(props)
+		if (groupsChanged)
+			this.updateGroupFilteredIndexes(props)
 		
 		return false
 	}
@@ -564,7 +609,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
-		return !shallowEquals(nextProps,this.props,'editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes','checkedItems')
+		return !shallowEquals(nextProps,this.props,'editInlineConfig','theme','styles') || !shallowEquals(nextState,this.state,'itemIndexes')
 	}
 	
 	/**
@@ -580,37 +625,48 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		const
 			{
 				styles,
+				theme,
 				items,
 				onIssueSelected
 			} = this.props,
 			
 			item = items.get(itemIndexes.get(index))
 		
-		
+		log.info(`Rendering new item for`,item)
 		return isGroupListItem(item) ?
 			
 			// GROUP
 			<IssueGroupHeader
-				key={key}
 				onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
+				key={key}
 				styles={styles}
 				style={style}
 				group={item.item as IIssueGroup}/> :
 			
 			isEditInlineListItem(item) ?
-				<IssueEditInline style={style} key={key}/> :
+				<IssueEditInline key={key}
+				                 style={style}/> :
 			
 			// ISSUE
 			<IssueItem
 				key={key}
 				issueId={item.item.id}
 				styles={styles}
+				theme={theme}
 				style={style}
 				onSelected={onIssueSelected}/>
 		
 	}
-
 	
+	
+	/**
+	 * Get the height of an item
+	 *
+	 * @param listItems
+	 * @param listItem
+	 * @param index
+	 * @returns {number}
+	 */
 	getItemHeight = (listItems,listItem,index) => {
 		const
 			{items} = this.props,
@@ -622,7 +678,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				convertRem(4) :
 			item.type === IssueListItemType.EditIssueInline ?
 				convertRem(21.2) :
-				convertRem(9.6)
+				convertRem(10)
 	}
 	
 	/**
@@ -638,8 +694,16 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{itemIndexes,checkedItems} = this.state,
 			
 			// Item count - groups or issues
-			itemCount = itemIndexes.size + (editingInline ? 1 : 0)
+			itemCount = itemIndexes.size + (editingInline ? 1 : 0),
+			
+			transitionProps = {}
+			// {
+			// 	transitionName:"issueListTransition",
+			// 	transitionEnterTimeout:200,
+			// 	transitionLeaveTimeout:150
+			// }
 		
+			
 		
 		return <div style={styles.listContent}>
 			{/* ISSUE FILTERS */}
@@ -650,9 +714,16 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				<VisibleList items={itemIndexes}
 				             itemCount={itemCount}
 				             itemRenderer={this.renderItem}
-				             itemKeyFn={(listItems,item,index) => `${_.get(checkedItems.get(item),'id',index)}`}
+				             itemKeyFn={(listItems,item,index) => {
+				             	const
+				             	  foundItem = checkedItems.get(itemIndexes.get(index))
+				             	  
+				             	
+				             	return `${_.get(foundItem,'id',index)}`
+				             }}
 				             initialItemsPerPage={50}
 				             itemHeight={this.getItemHeight}
+				             transitionProps={transitionProps}
 				             className="show-scrollbar"
 				             
 				/>

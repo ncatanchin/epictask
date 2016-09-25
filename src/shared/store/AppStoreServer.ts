@@ -1,7 +1,7 @@
 import { getStore, getStoreState } from "shared/store/AppStore"
 import { IPCServer } from "shared/net/IPCServer"
 import { getHot, setDataOnDispose,acceptHot } from "shared/util/HotUtils"
-import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
+import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
 import {
 	getAllActions
 } from 'typedux'

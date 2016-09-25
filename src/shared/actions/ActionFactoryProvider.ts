@@ -1,11 +1,11 @@
 import { IActionFactoryConstructor } from "shared/Registry"
 import { JobActionFactory } from "shared/actions/jobs/JobActionFactory"
-import { AuthActionFactory } from "shared/actions/auth/AuthActionFactory"
-import { AppActionFactory } from "shared/actions/AppActionFactory"
+import { AppActionFactory } from "shared/actions/app/AppActionFactory"
 import { IssueActionFactory } from "shared/actions/issue/IssueActionFactory"
 import { RepoActionFactory } from "shared/actions/repo/RepoActionFactory"
 import { UIActionFactory } from "shared/actions/ui/UIActionFactory"
 import { JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey } from "shared/Constants"
+import { AuthActionFactory } from "shared/actions/auth/AuthActionFactory"
 
 const log = getLogger(__filename)
 

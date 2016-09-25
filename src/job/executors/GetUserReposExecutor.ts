@@ -5,7 +5,7 @@ import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
 import {GitHubClient} from 'shared/GitHubClient'
 import {Repo} from 'shared/models/Repo'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 import {IJobExecutor} from "job/JobExecutors"
 import {JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJob} from "shared/actions/jobs/JobTypes"

@@ -1,3 +1,4 @@
+import windowStateKeeper = require('electron-window-state')
 import WebViewElement = Electron.WebViewElement
 import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
 import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
@@ -6,6 +7,7 @@ import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProces
 
 
 const
+	
 	HEARTBEAT_TIMEOUT = 1000,
 	START_TIMEOUT_DEFAULT = 30000,
 
@@ -352,6 +354,15 @@ export default class ChildProcessRenderer {
 		this.checkRestart()
 	}
 	
+	//noinspection JSUnusedLocalSymbols
+	/**
+	 * Re-mapped console message handler - usually not enabled
+	 *
+	 * @param args
+	 */
+	private handleConsoleMessage = (...args) => {
+		console.log(`Child message from type ${this.name}`,...args)
+	}
 
 	/**
 	 * Handle message
@@ -360,11 +371,9 @@ export default class ChildProcessRenderer {
 	 * @param body
 	 */
 	handleMessage = (type,body) => {
-		//const message:IChildProcessMessage = event.args[0]
 		
-		// First handle message internally
+		// HANDLE INTERNALLY FIRST - IF NO DEFAULT HANDLER - PASS TO REGISTERED HANDLERS
 		switch (type) {
-			
 			
 			// Ping <> Pong
 			case 'pong':
@@ -381,14 +390,12 @@ export default class ChildProcessRenderer {
 			default:
 				[...this.listeners,...globalListeners].forEach(listener =>
 					listener.onMessage && listener.onMessage(this,body))
-				
-				
 		}
-		
-		
 	}
 	
-	
+	/**
+	 * Process cleanup
+	 */
 	private cleanup() {
 		this.clearHeartbeatTimeout()
 		
@@ -494,13 +501,22 @@ export default class ChildProcessRenderer {
 	
 	
 	/**
+	 * If should show the window - then show it
+	 */
+	private showIfEnabled = () => {
+		if (ProcessConfig.showChildDevTools(this.processType)) {
+			log.info(`Opening dev tools for child process`,this.name)
+			this.browserWindow.show()
+			this.browserWindow.webContents.openDevTools()
+		}
+	}
+	
+	
+	/**
 	 * Completes connection to client webview
 	 */
 	private connectToChild = () => {
-		if (ProcessConfig.showChildDevTools(this.processType)) {
-			log.info(`Opening dev tools for child process`,this.name)
-			this.browserWindow.webContents.openDevTools()
-		}
+		this.showIfEnabled()
 		
 		// Setup communications verification
 		let
@@ -552,30 +568,25 @@ export default class ChildProcessRenderer {
 		try {
 			
 			const
-				//hasWindow = typeof window !== 'undefined',
-				//win = hasWindow && window as any,
-				//{href,hash} = win || {} as any,
 				processTypeName = ProcessConfig.getTypeName(this.processType) || 'unknown',
+				childWindowState = windowStateKeeper({
+					defaultWidth: 1024,
+					defaultHeight: 728,
+					file: `child-window-${processTypeName}`
+				}),
 				templateURL = require('path').resolve(process.cwd(),'dist/app/app-entry.html'),
 				url = `file://${templateURL}#processType=${processTypeName}`
-			// href.replace(new RegExp(_.escapeRegExp(hash),'g'),'') +
-			// 		`#processType=${ProcessConfig.getTypeName(this.processType) || 'unknown'}`
 			
-			// this.webViewElem = $(`
-			// 	<webview src="${url}"
-			// 					 width="0"
-			// 					 height="0"
-			// 					 style="max-width:0;max-height:0;overflow:hidden; position: absolute;"
-			// 					 nodeintegration>
-			//
-			// 	</webview>`).appendTo($('body'))
-			//
-			// this.webView = this.webViewElem[0] as any
 			
-			this.browserWindow = new BrowserWindow({})
+			this.browserWindow = new BrowserWindow(Object.assign({show:false},childWindowState))
+			
+			// ATTACH STATE HANDLER
+			childWindowState.manage(this.browserWindow)
 			
 			// Assign handlers
 			this.browserWindow
+				// WHEN READY TO SHOW - IF SHOULD SHOW DEVTOOLS THEN SHOW WINDOW
+				.once('ready-to-show',this.showIfEnabled)
 				.on('close',this.handleClose)
 				.webContents
 				.on('did-fail-load',this.handleError)
@@ -589,10 +600,7 @@ export default class ChildProcessRenderer {
 				.on('ipc-message',this.handleMessage)
 			
 			this.browserWindow.loadURL(url)
-			// this.webView.addEventListener('console-message',(...args) => {
-			// 	log.info(`Child message from type ${this.name}`,...args)
-			// })
-			//this.browserWindow.webContents
+			// this.webView.addEventListener('console-message',this.handleConsoleMessage)
 			
 			
 			process.on('beforeExit',() => {

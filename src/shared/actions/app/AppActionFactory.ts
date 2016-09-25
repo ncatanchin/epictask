@@ -1,13 +1,13 @@
 
-import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
-import {AppStateType} from 'shared/AppStateType'
+import {ActionFactory,ActionReducer,ActionThunk,ActionMessage} from 'typedux'
 
 import {AppKey} from "shared/Constants"
-import {ISettings} from 'shared/Settings'
-import {AppState} from 'shared/actions/AppState'
+import {ISettings} from 'shared/settings/Settings'
+import {AppState} from 'shared/actions/app/AppState'
 import {User} from 'shared/models/User'
 import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
+import { AppStateType } from "shared/AppStateType"
 
 const log = getLogger(__filename)
 

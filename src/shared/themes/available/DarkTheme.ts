@@ -708,18 +708,18 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 
 
 		panel: {
-			backgroundColor: primary.hue2
+			backgroundColor: tc(primary.hue2).darken(5).toRgbString()
 		},
 
 
 		issueGroupHeader: {
 			color: text.primary,
-			boxShadow: 'inset 0rem -0.5rem 0.3rem 0rem ' + tc(accent.hue2).darken(20).setAlpha(0.8).toRgbString(),
-			backgroundColor: tc(accent.hue2).darken(50).setAlpha(0.6).toRgbString(),
+			boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
+			backgroundColor: tc(primary.hue2).lighten(10).setAlpha(0.6).toRgbString(),
 			
 			expanded: {
-				backgroundColor: accent.hue2,
-				boxShadow: 'inset 0.1rem 0.1rem 0.5rem rgba(0,0,0,0.4)'
+				boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
+				backgroundColor: tc(primary.hue2).lighten(10).toRgbString()
 			}
 		},
 
@@ -728,13 +728,13 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		issue: {
 			backgroundColor: background,
 			color:           text.secondary,
-			boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(text.secondary).setAlpha(0.3).toRgbString(),
+			boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue2).setAlpha(1).toRgbString(),
 
 			// Selected state
 			selected: {
 				backgroundColor: primary.hue2,
 				color:           text.primary,
-				boxShadow: 'none',
+				boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue1).setAlpha(1).toRgbString(),
 			},
 			
 			// multi selected state

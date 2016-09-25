@@ -6,7 +6,7 @@ import {
 } from "shared/models"
 import * as moment from 'moment'
 import { createClient, GitHubClient, OnDataCallback } from "shared/GitHubClient"
-import { getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { checkUpdatedAndAssign } from "shared/util/ModelUtil"
 import JobProgressTracker from "job/JobProgressTracker"
 import { chunkSave } from "shared/db/DatabaseUtil"

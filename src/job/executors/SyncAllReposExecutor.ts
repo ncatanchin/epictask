@@ -6,7 +6,7 @@ import {JobExecutor} from 'job/JobDecorations'
 import {IJob, JobType, IJobLogger} from "shared/actions/jobs/JobTypes"
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
-import { getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { getRepoActions } from  "shared/actions/ActionFactoryProvider"
 
 
 

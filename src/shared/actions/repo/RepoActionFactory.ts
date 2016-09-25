@@ -7,7 +7,7 @@ import {chunkRemove} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
 import {AutoWired, Inject, Container} from 'typescript-ioc'
 import { Stores, getStores } from 'shared/Stores'
-import {ActionFactory, ActionReducer,Action} from 'typedux'
+import {ActionFactory, ActionReducer,ActionThunk} from 'typedux'
 import {RepoKey} from 'shared/Constants'
 import {RepoMessage, RepoState} from './RepoState'
 import {Repo} from 'shared/models/Repo'
@@ -18,7 +18,7 @@ import Toaster from 'shared/Toaster'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from 'shared/actions/repo/RepoSelectors'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
@@ -28,7 +28,7 @@ import { cloneObject } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
-import { getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -74,7 +74,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 	
-	@Action()
+	@ActionThunk()
 	onSyncChanges(changes:ISyncChanges) {
 		return (dispatch,getState) => {
 			log.info(`Received repo sync changes`,changes)
@@ -151,7 +151,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @param repoIds
 	 * @param force
 	 */
-	@Action()
+	@ActionThunk()
 	syncRepo(repoIds:number|number[],force:boolean=false) {
 		return async (dispatch,getState) => {
 			
@@ -184,7 +184,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<AvailableRepo[]>}
 	 */
-	@Action()
+	@ActionThunk()
 	syncUserRepos() {
 		return (dispatch,getState) => {
 			log.info('Triggering user repo sync')
@@ -193,7 +193,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 
-	@Action()
+	@ActionThunk()
 	syncAll() {
 		return (dispatch,getState) => {
 			
@@ -291,7 +291,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@Action()
+	@ActionThunk()
 	loadAvailableRepos(syncChanges:ISyncChanges = null) {
 		return async (dispatch,getState) => {
 			log.info(`Getting available repos`)
@@ -337,7 +337,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * Mark a repo as an 'AvailableRepo'
 	 * @param repo
 	 */
-	@Action()
+	@ActionThunk()
 	createAvailableRepo(repo:Repo) {
 		return async(dispatch, getState) => {
 			const
@@ -479,7 +479,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @param availRepoId
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@Action()
+	@ActionThunk()
 	removeAvailableRepo(availRepoId:number) {
 		return (dispatch, getState) => this.removeAvailableRepoAction(availRepoId,dispatch,getState)
 	}
@@ -492,7 +492,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @param enabled
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined|boolean>}
 	 */
-	@Action()
+	@ActionThunk()
 	setRepoEnabled(availRepoId,enabled:boolean) {
 		return async (dispatch,getState) => {
 			const

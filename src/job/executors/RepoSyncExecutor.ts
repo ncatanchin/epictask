@@ -6,13 +6,13 @@ import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment} from 'shared/models'
 
 import {Stores} from 'shared/services/DatabaseClientService'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
 import {JobType, IJob, IJobLogger} from 'shared/actions/jobs/JobTypes'
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
-import { getRepoActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getRepoActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 import { RepoSyncManager } from "shared/github/GithubEventHandlers"
 

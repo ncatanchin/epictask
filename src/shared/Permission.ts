@@ -3,7 +3,7 @@
 import {Repo} from 'shared/models/Repo'
 import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 
 export function canCreateIssue(repo:Repo) {
 	return repo && repo.permissions && repo.permissions.pull

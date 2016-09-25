@@ -1,5 +1,5 @@
 import {StateLeafKeys} from 'shared/Constants'
-import {AppState as AppStateType} from 'shared/actions/AppState'
+import {AppState as AppStateType} from '../actions/app/AppState'
 import {AuthState as AuthStateType} from 'shared/actions/auth/AuthState'
 import {RepoState as RepoStateType} from 'shared/actions/repo/RepoState'
 import {IssueState as IssueStateType} from 'shared/actions/issue/IssueState'

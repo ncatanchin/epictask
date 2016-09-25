@@ -2,7 +2,7 @@
 
 import {ServiceManager} from "shared/services"
 import * as TestServicesType from './fixtures/TestService.fixture'
-import {AppActionFactory as AppActionFactoryType} from 'shared/actions/AppActionFactory'
+import {AppActionFactory as AppActionFactoryType} from '../../../shared/actions/app/AppActionFactory'
 //let getServiceManager:typeof getServiceManagerType = null
 let serviceManagerRef = null
 function getServiceManager(clear = false):ServiceManager {

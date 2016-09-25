@@ -120,24 +120,27 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			const
 				{webContents} = browserWindow
 
-
+			// ATTACH STATE HANDLER
 			mainWindowState.manage(browserWindow)
 			
-			browserWindow.show()
-			
+			// ON READY - SHOW
+			browserWindow.once('ready-to-show',() => browserWindow.show())
 			
 			// On PageLoaded - show and focus
-			
 			webContents
 				.once('did-finish-load', () => {
+					
+					// IN DEV - SHOW HERE
 					if (Env.isDev)
 						browserWindow.show()
+					
 					log.info(`MainWindow loaded, waiting for loader started`)
-					
-					
 				})
+			
+			// WHEN LOADER SAYS ITS READY
 			ipcMain.once('epictask-loader-ready',async () => {
 				log.info(`Received READY from loader`)
+				
 				// If HMR event occurred - only for dev
 				if (!browserWindow)
 					return

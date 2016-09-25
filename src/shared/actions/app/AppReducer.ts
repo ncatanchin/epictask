@@ -1,6 +1,6 @@
 
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
-import {AppKey} from "../Constants"
+import {AppKey} from "shared/Constants"
 import {AppState} from './AppState'
 import {Provided} from 'shared/util/ProxyProvided'
 /**

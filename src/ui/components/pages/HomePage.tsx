@@ -5,7 +5,7 @@ import {List} from 'immutable'
 import {createStructuredSelector} from 'reselect'
 import {IssuesPanel} from 'ui/components/issues'
 import {Page} from './Page'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppActionFactory} from '../../../shared/actions/app/AppActionFactory'
 import {connect} from 'react-redux'
 
 import {PureRender} from 'ui/components/common'

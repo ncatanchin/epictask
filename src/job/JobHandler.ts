@@ -13,7 +13,7 @@ import JobProgressTracker from "job/JobProgressTracker"
 import { JobActionFactory } from "shared/actions/jobs/JobActionFactory"
 import * as fs from 'fs'
 
-import { getJobActions } from "shared/actions/ActionFactoryProvider"
+import { getJobActions } from  "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 

@@ -165,7 +165,7 @@ const config = {
 			libs: path.resolve(baseDir, 'libs'),
 			GitHubClient: tsAlias('shared/GitHubClient'),
 			Constants: tsAlias('shared/Constants'),
-			Settings: tsAlias('shared/Settings')
+			Settings: tsAlias('shared/settings/Settings')
 		},
 		
 		

@@ -1,5 +1,5 @@
 
-import { getSettingsFile } from "shared/Settings"
+import { getSettingsFile } from "shared/settings/Settings"
 const {Record} = Immutable
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from 'shared/Registry'

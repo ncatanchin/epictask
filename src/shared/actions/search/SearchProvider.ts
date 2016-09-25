@@ -22,7 +22,7 @@ import {RepoActionFactory} from "shared/actions/repo/RepoActionFactory"
 import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {IssueState} from "shared/actions/issue/IssueState"
 import {AvailableRepo, Repo, Issue, Label, Milestone} from "shared/models"
-import { getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 
 
 

@@ -5,6 +5,7 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
+import {List} from 'immutable'
 import {User,Issue,Comment} from 'shared/models'
 import {Avatar, Markdown, PureRender, Icon, Button} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
@@ -13,7 +14,7 @@ import {canEditComment,canEditIssue} from "shared/Permission"
 import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {Container} from "typescript-ioc"
 import * as Radium from "radium"
-import { EventGroup } from "ui/components/issues/IssueDetailPanel"
+import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 
 // Constants
 const log = getLogger(__filename)
@@ -153,14 +154,15 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	activityActionText?:string
 	activityStyle:any
 	activityType:'post'|'comment'|'eventGroup'
+	//availableAssignees?:List<User>
 }
 
 export interface IIssueActivityTextState {
-	comment?:Comment
-	user?:User
-	text?:string
-	updatedAt?:Date
-	createdAt?:Date
+	// comment?:Comment
+	// user?:User
+	// text?:string
+	// updatedAt?:Date
+	// createdAt?:Date
 }
 
 /**
@@ -180,31 +182,36 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param props
 	 * @returns {{comment: null, user: null, text: null, createdAt: null, updatedAt: null}}
 	 */
-	getNewState = (props:IIssueActivityTextProps):IIssueActivityTextState => {
+	getValues = (props:IIssueActivityTextProps) => {
+		
 		const
-			{issue,comment} = props,
+			{eventGroup,issue,comment} = props,
 
 		
 			// Determine model
-			model:Comment|Issue = comment || issue
+			model:Comment|Issue|EventGroup = comment || issue || eventGroup
 
 		// Map model props
 		let
-			user = null,
-			text = null,
-			createdAt = null,
-			updatedAt = null
+			user:User = null,
+			text:string = null,
+			createdAt:Date = null,
+			updatedAt:Date = null
 		
 		if (model) {
-			({user,body:text,created_at:createdAt,updated_at:updatedAt} = model)
+			if (!isEventGroup(model)) {
+				({ user, body: text, created_at: createdAt, updated_at: updatedAt } = model)
+			} else {
+				user = eventGroup.actor
+			}
 		}
 		
 		return {
 			comment,
 			user,
 			text,
-			createdAt,
-			updatedAt
+			createdAt: new Date(createdAt),
+			updatedAt: new Date(updatedAt)
 		}
 	}
 	
@@ -236,7 +243,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	/**
 	 * When the component mounts, create the state
 	 */
-	componentWillMount = () => this.setState(this.getNewState(this.props))
+	//componentWillMount = () => this.setState(this.getNewState(this.props))
 
 
 	/**
@@ -244,7 +251,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 *
 	 * @param newProps
 	 */
-	componentWillReceiveProps = (newProps) =>this.setState(this.getNewState(newProps))
+	//componentWillReceiveProps = (newProps) =>this.setState(this.getNewState(newProps))
 
 	/**
 	 * Render the issue activity component
@@ -268,7 +275,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				comment,
 				updatedAt,
 				createdAt
-			} = this.state,
+			} = this.getValues(this.props),
 
 			// Hovering header
 			hovering = Radium.getState(this.state,'activity',':hover'),
@@ -315,7 +322,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 					      	styles.activityContent.eventGroup.icon
 				        }/>
 					
-					<Avatar user={user}
+					<Avatar user={eventGroup.actor}
 					        labelStyle={styles.activityContent.eventGroup.avatar.label}
 					        labelPlacement='after'
 					        avatarStyle={makeStyle(styles.avatar,activityStyle.avatar,styles.activityContent.eventGroup.avatar)} />

@@ -1,6 +1,6 @@
 
 import {FinderRequest} from 'typestore'
-import {ActionFactory, Action, ActionReducer} from 'typedux'
+import {ActionFactory, ActionThunk, ActionReducer} from 'typedux'
 import {List} from 'immutable'
 
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
@@ -13,7 +13,7 @@ import {
 	TEditCommentRequest, IIssuePatchLabel
 } from './IssueState'
 import {Issue, IssueStore, TIssueState} from 'shared/models/Issue'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppActionFactory} from '../app/AppActionFactory'
 import {
 	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
@@ -27,7 +27,7 @@ import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
 import {Repo} from 'shared/models/Repo'
 import {getStoreState} from 'shared/store'
@@ -153,7 +153,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				.set('issues',issues)
 	}
 	
-	@Action()
+	@ActionThunk()
 	loadIssues() {
 		return async (dispatch,getState) => {
 			const
@@ -316,7 +316,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			issues = selectedIssuesSelector(getState())
 		}
 		
-		
 		if (!issues.length) {
 			log.warn('Must have at least 1 issue selected to open patch editor', issues)
 			return
@@ -334,7 +333,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 * @param useAssign
 	 */
-	@Action()
+	@ActionThunk()
 	applyPatchToIssues(patch: any, useAssign: boolean, ...issues: Issue[]) {
 		issues = cloneObject(issues)
 		
@@ -368,6 +367,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 						
 						switch (key) {
 							case 'labels':
+								patchCopy.labels = _.nilFilter(patchCopy.labels)
+								
 								if (!patchCopy.labels || !patchCopy.labels.length) {
 									issue.labels = []
 									break
@@ -386,10 +387,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 								// Add new labels and filter out old ones
 								issue.labels = _.uniqBy((issue.labels || [])
 										.concat(addLabels
-											.filter(label => label.repoId === issue.repoId)
+											.filter(label => label && label.repoId === issue.repoId)
 										)
 										, 'url'
-									).filter(label => !removeLabelUrls.includes(label.url))
+									).filter(label => label && !removeLabelUrls.includes(label.url))
 								
 								log.info(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
 								break
@@ -493,7 +494,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issue
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@Action()
+	@ActionThunk()
 	private doIssueSave(issue: Issue) {
 		return async(dispatch, getState) => {
 			const
@@ -530,7 +531,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param comment
 	 */
 	
-	@Action()
+	@ActionThunk()
 	commentDelete(comment: Comment) {
 		return async(dispatch, getState) => {
 			assert(comment.issueNumber && comment.repoId, 'Comment issue number and repo id MUST be set')
@@ -586,8 +587,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		const
 			commentStore = getStores().comment,
-			ghComment = await client.commentSave(repo, issue, comment),
-			commentId = Comment.makeCommentId(repo.id,issue.number,comment.id || ghComment.id)
+			ghComment = await client.commentSave(repo, issue, comment)
 		
 		// Assign all the updated from github to the comment
 		Object.assign(comment, ghComment, {
@@ -595,6 +595,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			repoId: repo.id,
 			parentRefId: Comment.makeParentRefId(repo.id, issue.number)
 		})
+		
+		const
+			commentId = Comment.makeCommentId(comment),
+			existingComment = comment.id && (await commentStore.get(commentId))
+		
+		if (existingComment)
+			comment = cloneObject(existingComment,comment)
 		
 		// Persist
 		await commentStore.save(comment)
@@ -629,7 +636,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @param editCommentRequest
 	 */
-	@Action()
+	@ActionThunk()
 	private doCommentSave(editCommentRequest: TEditCommentRequest) {
 		
 		return async(dispatch, getState) => {
@@ -775,7 +782,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			})
 	}
 	
-	@Action()
+	@ActionThunk()
 	editInline() {
 		return (dispatch,getState) => {
 			let
@@ -813,7 +820,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@Action()
+	@ActionThunk()
 	newIssue(fromIssue: Issue = null, inline: boolean = false) {
 		return async(dispatch, getState) => {
 			const
@@ -1056,7 +1063,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.setFilteringAndSorting(newIssueFilter)
 	}
 	
-	@Action()
+	@ActionThunk()
 	onSyncChanges(changes:ISyncChanges) {
 		return async (dispatch,getState) => {
 			log.info(`Received repo sync changes`,changes)
@@ -1162,7 +1169,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 		}
 	}
-	@Action()
+	@ActionThunk()
 	commentsChanged(...comments:Comment[]) {
 		return async (dispatch,getState) => {
 			this.updateCommentsInState(List<Comment>().push(...comments))
@@ -1276,7 +1283,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @param issueId
 	 */
-	@Action()
+	@ActionThunk()
 	loadActivityForIssue(issueId: number) {
 		return async(dispatch, getState) => {
 			
@@ -1372,7 +1379,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	reloadIssues(...issuesOrIssueIds:Array<number|Issue>)
 	
-	@Action()
+	@ActionThunk()
 	reloadIssues(...args:any[]) {
 		return async (dispatch,getState) => {
 			let
@@ -1406,7 +1413,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issueIds
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@Action()
+	@ActionThunk()
 	setIssueStatus(newState: TIssueState, ...issueIds: number[]) {
 		return async(dispatch, getState) => {
 			let

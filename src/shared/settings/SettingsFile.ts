@@ -3,7 +3,7 @@ import {getUserDataFilename, readFile} from 'shared/util/Files'
 import {Property} from "shared/util/Decorations";
 import {toJSONObject} from "shared/util/JSONUtil";
 import {User} from 'shared/models/User'
-import {ISettings} from "shared/Settings"
+import {ISettings} from "shared/settings/Settings"
 
 
 const

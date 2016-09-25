@@ -5,22 +5,23 @@
 import * as moment from 'moment'
 
 import {List} from 'immutable'
-import {PureRender, Renderers, Avatar} from '../common'
+import {Renderers, Avatar} from 'ui/components/common'
 import {connect} from 'react-redux'
 import filterProps from 'react-valid-props'
-import {IssueLabelsAndMilestones} from './IssueLabelsAndMilestones'
+import {IssueLabelsAndMilestones} from 'ui/components/issues'
 import {Issue} from 'shared/models'
 
-import { IIssueListItem } from 'shared/actions/issue/IIssueListItems'
 import { selectedIssueIdsSelector, issuesSelector } from "shared/actions/issue/IssueSelectors"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
-import { IssuesPanel } from "ui/components/issues/IssuesPanel"
 import { shallowEquals } from "shared/util/ObjectUtil"
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import { Themed } from "shared/themes/ThemeManager"
 
 
 interface IIssueItemProps extends React.HTMLAttributes<any> {
+	theme?:any
 	styles:any
 	issueId:number
 	issue?:Issue
@@ -31,7 +32,6 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 
 // State is connected at the item level to minimize redraws for the whole issue list
 @connect(() => {
-	
 	const
 		issueSelector = createSelector(
 			issuesSelector,
@@ -39,50 +39,25 @@ interface IIssueItemProps extends React.HTMLAttributes<any> {
 			(issues:List<Issue>,issueId:number):Issue => {
 				return issues.find(issue => issue.id === issueId)
 			}
-		),
-		selector = createSelector(
-			//(state,props:IIssueItemProps):number[] => _.get(props,'issuesPanel.updatedSelectedIssueIds',[]),
-			selectedIssueIdsSelector,
-			issueSelector,
-			(selectedIssueIds:number[],issue:Issue) => {
-				const
-					isSelected =
-						issue &&
-						selectedIssueIds &&
-						selectedIssueIds.includes(issue.id)
-				
-				return {
-					isSelected,
-					issue,
-					isSelectedMulti: isSelected && selectedIssueIds.length > 1
-				}
-			}
 		)
-	
-	let previousData = null
-	
-	return (state,props:IIssueItemProps) => {
-		let
-			//selectedIssueIds = selectedIssueIdsSelector(state),
-			//{issue} = props,
-			// isSelected =
-			// 	issue &&
-			// 	selectedIssueIds &&
-			// 	selectedIssueIds.includes(issue.id),
+	return createDeepEqualSelector(
+		selectedIssueIdsSelector,
+		issueSelector,
+		(selectedIssueIds:number[],issue:Issue) => {
+			const
+				isSelected =
+					issue &&
+					selectedIssueIds &&
+					selectedIssueIds.includes(issue.id)
 			
-			newData = selector(state,props)
-		
-		if (shallowEquals(previousData,newData,'isSelected','isSelectedMulti','issue')) {
-			return previousData
+			return {
+				isSelected,
+				issue,
+				isSelectedMulti: isSelected && selectedIssueIds.length > 1
+			}
 		}
-		
-		previousData = newData
-		
-		return newData
-	}
+	)
 })
-
-
 class IssueItem extends React.Component<IIssueItemProps,void> {
 	
 	/**
@@ -93,10 +68,11 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssueItemProps) {
-		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','issue','issueId')
+		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','issue.id','theme','styles')
 	}
 	
 	render() {
+		
 		const
 			{props} = this,
 			{styles,onSelected,issue,isSelected,isSelectedMulti} = props
@@ -121,7 +97,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
-		                                    className={'animated fadeIn ' + (isSelected ? 'selected' : '')}
+		                                    className={(isSelected ? 'selected' : '')}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}

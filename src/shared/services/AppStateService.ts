@@ -1,13 +1,13 @@
 import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
 import {ObservableStore} from 'typedux'
 import {AppStateType} from 'shared/AppStateType'
-import {getSettings} from 'shared/Settings'
+import {getSettings} from 'shared/settings/Settings'
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {ProcessType} from "shared/ProcessType"
 import ValueCache from "shared/util/ValueCache"
 import { getStoreState } from "shared/store"
 import { AppKey } from "shared/Constants"
-import { getAppActions, getRepoActions, getAuthActions } from "shared/actions/ActionFactoryProvider"
+import { getAppActions, getRepoActions, getAuthActions } from  "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 

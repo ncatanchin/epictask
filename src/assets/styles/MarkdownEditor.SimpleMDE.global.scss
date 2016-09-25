@@ -8,3 +8,10 @@
 	background-color: white;
 	opacity: 1;
 }
+
+.editor-preview-side {
+	
+	&.editor-preview-active-side {
+		color: black;
+	}
+}

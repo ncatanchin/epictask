@@ -1,16 +1,16 @@
-import {ActionFactory,ActionReducer,Action} from 'typedux'
+import {ActionFactory,ActionReducer,ActionThunk} from 'typedux'
 import {GitHubClient} from 'shared/GitHubClient'
 import {AuthKey} from "shared/Constants"
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppActionFactory} from '../app/AppActionFactory'
 import {AuthState,AuthMessage} from 'shared/actions/auth/AuthState'
 import {AppStateType} from 'shared/AppStateType'
-import {getSettings,getSettingsFile} from 'shared/Settings'
+import {getSettings,getSettingsFile} from 'shared/settings/Settings'
 import { Toaster, addErrorMessage } from 'shared/Toaster'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {ProcessType} from "shared/ProcessType"
 import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
-import { Settings } from "shared/SettingsFile"
+import { Settings } from "shared/settings/SettingsFile"
 
 const log = getLogger(__filename)
 
@@ -60,7 +60,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		}
 	}
 	
-	@Action()
+	@ActionThunk()
 	setToken(token:string) {
 		return (dispatch,getState) => {
 			
@@ -81,10 +81,10 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		return (state:AuthState) => state.merge({authenticating})
 	}
 
-	@Action()
+	@ActionThunk()
 	setError(err:Error) {}
 
-	@Action()
+	@ActionThunk()
 	verify() {
 		return async (dispatch,getState) => {
 			log.info(`Verifying user`)
@@ -128,7 +128,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 
 
 
-	@Action()
+	@ActionThunk()
 	logout() {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch, getState)
@@ -138,7 +138,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		}
 	}
 
-	@Action()
+	@ActionThunk()
 	setAuthResult(err:Error,token:string) {
 		return (dispatch,getState) => {
 			const actions = this.withDispatcher(dispatch,getState)

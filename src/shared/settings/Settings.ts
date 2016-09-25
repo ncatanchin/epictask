@@ -3,7 +3,7 @@
 // import {getStoreState as getStoreStateType} from "shared/store/AppStore"
 // import {AppKey} from "shared/Constants"
 import {User} from "shared/models"
-import {SettingsFile} from "shared/SettingsFile"
+import {SettingsFile} from "shared/settings/SettingsFile"
 import { getStateValue as getStateClientType } from "shared/AppStoreClient"
 import { AppKey } from "shared/Constants"
 
@@ -56,7 +56,7 @@ export async function getSettingsFromState():Promise<ISettings> {
  * @returns {ISettings}
  */
 export function getSettings():ISettings {
-	return require('shared/SettingsFile').Settings
+	return require('shared/settings/SettingsFile').Settings
 	
 }
 
@@ -66,5 +66,5 @@ export function getSettings():ISettings {
  * @returns {SettingsFile}
  */
 export function getSettingsFile():ISettings {
-	return require('shared/SettingsFile').Settings as SettingsFile
+	return require('shared/settings/SettingsFile').Settings as SettingsFile
 }

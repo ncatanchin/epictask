@@ -3,7 +3,7 @@ import {Container} from 'typescript-ioc'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { getActionClient, getStateValue } from "shared/AppStoreClient"
 import { UIKey, RepoKey, AuthKey } from "shared/Constants"
-import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
+import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
 
 const
 	{
@@ -13,9 +13,8 @@ const
 		shell,
 		ipcMain,
 		dialog
-	} = Electron
-
-const log = getLogger(__filename)
+	} = Electron,
+	log = getLogger(__filename)
 
 
 function makeDevMenu(mainWindow) {

@@ -45,7 +45,7 @@ import { TIssueEditInlineConfig, TIssueSortAndFilter } from 'shared/actions/issu
 import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
 import { HotKeys } from "ui/components/common/Other"
 import { VisibleList } from "ui/components/common/VisibleList"
-import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { getUIActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
 import { isNumber, shallowEquals } from "shared/util/ObjectUtil"

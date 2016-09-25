@@ -3,7 +3,7 @@ import {AppStateType} from 'shared/AppStateType'
 import {LoginPage} from './LoginPage'
 import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
-import {AppActionFactory} from 'shared/actions/AppActionFactory'
+import {AppActionFactory} from '../../../shared/actions/app/AppActionFactory'
 
 export * from './Page'
 

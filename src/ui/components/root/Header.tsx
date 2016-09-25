@@ -7,7 +7,7 @@ import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
 import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import { UIKey } from "shared/Constants"
-import { ActionFactoryProviders } from "shared/actions/ActionFactoryProvider"
+import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 

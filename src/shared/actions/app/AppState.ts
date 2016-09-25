@@ -5,7 +5,7 @@ import {List,Record,Map} from 'immutable'
 import {IToastMessage} from 'shared/models/Toast'
 import {User} from 'shared/models/User'
 import {AppStateType} from 'shared/AppStateType'
-import {ISettings} from 'shared/Settings'
+import {ISettings} from 'shared/settings/Settings'
 import {RegisterModel} from 'shared/Registry'
 
 
@@ -31,7 +31,7 @@ export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
 		const checkSettings = (state) => {
-			return state.set('settings',require('shared/SettingsFile').Settings.toJSON())
+			return state.set('settings',require('shared/settings/SettingsFile').Settings.toJSON())
 		}
 		
 		if (o && o instanceof AppState) {

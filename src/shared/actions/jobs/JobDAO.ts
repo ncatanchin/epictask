@@ -1,7 +1,7 @@
 
 import { JobType, IJob, JobStatus, IJobStatusDetail, JobLogLevel, TJobLogLevel } from "shared/actions/jobs/JobTypes"
 import { uuid } from "shared/util/ObjectUtil"
-import { getJobActions } from "shared/actions/ActionFactoryProvider"
+import { getJobActions } from  "shared/actions/ActionFactoryProvider"
 import { tempFilename } from "shared/util/Files"
 
 
