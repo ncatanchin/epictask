@@ -571,7 +571,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		activityType='comment'
 		activityStyle={styles.content.activities.activity}/>
 	
-	
+	/**
+	 *
+	 *
+	 * @param items
+	 * @param eventGroup
+	 * @param selectedIssue
+	 * @param index
+	 * @param styles
+	 */
 	renderEventGroup = (items:List<TDetailItem>,eventGroup:EventGroup,selectedIssue:Issue,index,styles) => <IssueActivityText
 		key={eventGroup.id}
 		issue={selectedIssue}
