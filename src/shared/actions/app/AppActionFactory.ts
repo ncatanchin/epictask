@@ -42,7 +42,11 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	constructor() {
 		super(AppState)
 	}
-
+	
+	/**
+	 * Leaf name
+	 * @returns {string}
+	 */
 	leaf():string {
 		return AppKey;
 	}

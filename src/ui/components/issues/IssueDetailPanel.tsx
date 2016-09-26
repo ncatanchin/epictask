@@ -19,9 +19,6 @@ import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
 	selectedIssueIdsSelector, issuesSelector, selectedIssueSelector, activitySelector
 } from 'shared/actions/issue/IssueSelectors'
-import { HotKeyContext } from 'ui/components/common/HotKeyContext'
-
-import { HotKeys } from "ui/components/common/Other"
 import { Milestone } from 'shared/models/Milestone'
 import { Label } from 'shared/models/Label'
 import { IssueActionFactory } from 'shared/actions/issue/IssueActionFactory'
@@ -39,6 +36,11 @@ import {
 import { shallowEquals } from "shared/util/ObjectUtil"
 import LabelChip from "ui/components/common/LabelChip"
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
+import {
+	CommandComponent, ICommandComponentProps, ICommandComponent,
+	getCommandProps
+} from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 
 
 
@@ -56,7 +58,7 @@ type TDetailItem = Comment|EventGroup|Issue
  * IIssueDetailPanelProps
  */
 
-export interface IIssueDetailPanelProps {
+export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>
@@ -76,7 +78,7 @@ export interface IIssueDetailPanelState {
  * @constructor
  **/
 
-@HotKeyContext()
+
 @connect(createStructuredSelector({
 	selectedIssueIds: selectedIssueIdsSelector,
 	selectedIssue: selectedIssueSelector,
@@ -84,11 +86,17 @@ export interface IIssueDetailPanelState {
 	activity: activitySelector
 }))
 @ThemedStyles(baseStyles, 'issueDetail')
+@CommandComponent()
 @PureRender
-export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> {
+export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> implements  ICommandComponent {
 	
 	refs:{[name:string]:any}
 	
+	readonly commands:ICommand[] = []
+	
+	get commandComponentId():string {
+		return 'IssueDetailPanel'
+	}
 	
 	/**
 	 * Update the state when props change
@@ -295,7 +303,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 					}
 				</div>
 		
-		return <div style={styles.header}>
+		return <div style={styles.header} {...getCommandProps(this)}>
 			{/* ROW 1 */}
 			<div style={styles.header.row1}>
 				
@@ -485,13 +493,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			return React.DOM.noscript()
 		
 		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
-			<HotKeys id='issueDetailPanel'
+			<div id='issueDetailPanel'
 			         style={styles.root}>
 				{ !selectedIssue ?
 					this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
 					this.renderIssue(selectedIssue, items,styles, theme.palette)
 				}
-			</HotKeys>
+			</div>
 	}
 	
 }

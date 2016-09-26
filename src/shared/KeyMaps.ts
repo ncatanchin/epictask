@@ -11,43 +11,43 @@ export enum CommonKeys {
 	Escape,
 	Enter,
 	Delete,
+	Backspace,
 	Space,
-	Find,
-	View1,
-	View2,
-	SetAssignee,
-	SetMilestone,
-	AddLabels,
-	CreateComment
+	Find
+	// View1,
+	// View2,
+	// SetAssignee,
+	// SetMilestone,
+	// AddLabels,
+	// CreateComment
 }
 
-export const Global = {
-	[CommonKeys.New]: ['command+n','ctrl+n'],
-	[CommonKeys.Edit]: ['command+e','ctrl+e'],
-	[CommonKeys.MoveUp]: 'up',
-	[CommonKeys.MoveDown]: 'down',
-	[CommonKeys.MoveLeft]: 'left',
-	[CommonKeys.MoveRight]: 'right',
-	[CommonKeys.MoveUpSelect]: 'shift+up',
-	[CommonKeys.MoveDownSelect]: 'shift+down',
-	[CommonKeys.Enter]: 'enter',
-	[CommonKeys.Escape]: 'esc',
-	[CommonKeys.Find]: 'command+f',
-	[CommonKeys.View1]: 'command+1',
-	[CommonKeys.View2]: 'command+2',
-	[CommonKeys.Space]: 'space',
-	[CommonKeys.Delete]: ['del','backspace'],
-	[CommonKeys.SetAssignee]: ['alt+a','a'],
-	[CommonKeys.SetMilestone]: ['alt+m','m'],
-	[CommonKeys.AddLabels]: ['alt+t','t'],
-	[CommonKeys.CreateComment]: ['alt+c','c']
+export const GlobalKeys = {
+	[CommonKeys.New]: 'super+n',
+	[CommonKeys.Edit]: 'super+e',
+	[CommonKeys.MoveUp]: 'ArrowUp',
+	[CommonKeys.MoveDown]: 'ArrowDown',
+	[CommonKeys.MoveLeft]: 'ArrowLeft',
+	[CommonKeys.MoveRight]: 'ArrowRight',
+	[CommonKeys.MoveUpSelect]: 'Shift+ArrowUp',
+	[CommonKeys.MoveDownSelect]: 'Shift+ArrowDown',
+	[CommonKeys.Enter]: 'Enter',
+	[CommonKeys.Escape]: 'Escape',
+	[CommonKeys.Find]: 'Super+F',
+	[CommonKeys.Space]: 'Space',
+	[CommonKeys.Delete]: 'Delete',
+	[CommonKeys.Backspace]: 'Backspace'
+	// [CommonKeys.SetAssignee]: ['alt+a','a'],
+	// [CommonKeys.SetMilestone]: ['alt+m','m'],
+	// [CommonKeys.AddLabels]: ['alt+t','t'],
+	// [CommonKeys.CreateComment]: ['alt+c','c']
 
 }
 
-export const App = Object.assign({},Global,{
+export const App = Object.assign({},GlobalKeys,{
 
 })
 
-export const Main = Object.assign({},Global,{
+export const Main = Object.assign({},GlobalKeys,{
 
 })

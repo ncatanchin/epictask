@@ -67,8 +67,9 @@ async function stop() {
  */
 function onFocus() {
 	
-	// Someone tried to run a second instance, we should focus our window.
-	const win = mainWindow && mainWindow.getBrowserWindow()
+	// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
+	const
+		win = mainWindow && mainWindow.getBrowserWindow()
 	
 	if (win) {
 		win && win.isMinimized() && win.restore()
@@ -92,26 +93,27 @@ function onShutdown(event) {
 		
 		event.preventDefault()
 		
-		const killAll = async () => {
-			try {
-				await ProcessManager.stopAll()
-			} catch (err) {
-				log.warn(`Failed to cleanly shutdown processes`)
+		const
+			killAll = async () => {
+				try {
+					await ProcessManager.stopAll()
+				} catch (err) {
+					log.warn(`Failed to cleanly shutdown processes`)
+				}
+				
+				BrowserWindow.getAllWindows().forEach(win => {
+					try {
+						win.destroy()
+					} catch (err) {
+						log.warn(`Failed to destroy window`,err)
+					}
+				})
+				
+				app.quit()
 			}
 			
-			BrowserWindow.getAllWindows().forEach(win => {
-				try {
-					win.destroy()
-				} catch (err) {
-					log.warn(`Failed to destroy window`,err)
-				}
-			})
-			
-			app.quit()
+			killAll()
 		}
-		
-		killAll()
-	}
 }
 
 app.on('will-quit',onShutdown)
@@ -154,6 +156,7 @@ async function boot() {
 		require('./MainDevConfig')
 
 	log.info("Boot start")
+	require('shared/commands/CommandManager').getCommandManager()
 	global[MainBooted] = false
 	
 	log.info("Load Main Window")

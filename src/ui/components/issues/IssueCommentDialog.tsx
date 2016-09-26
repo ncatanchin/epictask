@@ -10,7 +10,7 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 
 import {Dialog} from 'material-ui'
-import { HotKeys } from "ui/components/common/Other"
+
 import {MuiThemeProvider} from 'material-ui/styles'
 import {Container} from 'typescript-ioc'
 
@@ -267,7 +267,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 
 				{ open && comment &&
 				<MuiThemeProvider muiTheme={theme}>
-					<HotKeys style={PositionRelative}>
+					<div style={PositionRelative}>
 
 						<form name="issuePatchDialogForm"
 						      id="issuePatchDialogForm"
@@ -293,7 +293,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 								{/*color={theme.progressIndicatorColor}*/}
 								{/*size={1}/>*/}
 						</div>}
-					</HotKeys>
+					</div>
 				</MuiThemeProvider>
 				}
 			</Dialog>

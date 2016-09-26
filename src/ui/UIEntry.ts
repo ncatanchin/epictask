@@ -3,11 +3,17 @@ import './UIGlobals'
 import { MainBooted } from "shared/Constants"
 
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
+
 
 if (Env.isDev && !Env.isTest) {
 	require('./UIDevConfig')
 }
+
+log.info(`Loading the CommandManager - 1st`)
+require('shared/commands/CommandManager').getCommandManager()
+
 
 /**
  * Boot everything up

@@ -4,51 +4,33 @@
 
 // Imports
 import {Map,List} from 'immutable'
-import * as React from 'react'
-import * as Radium from 'radium'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
 import {Style} from 'radium'
 
 import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
-import { Issue, User } from 'shared/models'
+import { Issue } from 'shared/models'
 
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {Container} from 'typescript-ioc'
 import {
-	issueSortAndFilterSelector,
 	selectedIssueIdsSelector,
-	issueStateSelector, issueIdsSelector, issuesSelector, selectedIssueIdSelector, orderedIssueIndexesSelector,
+	issueStateSelector, issuesSelector,
 	issueGroupsSelector, issueItemsSelector, selectedIssueSelector, editInlineConfigIssueSelector,
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import * as KeyMaps from 'shared/KeyMaps'
 import {CommonKeys} from 'shared/KeyMaps'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import IssueItem from 'ui/components/issues/IssueItem'
 
-import {Milestone} from 'shared/models/Milestone'
-import {Label} from 'shared/models/Label'
-import {FlexRowCenter} from 'shared/themes/styles/CommonStyles'
-import {IssueFilters} from 'ui/components/issues/IssueFilters'
 import {
-	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType,
-	isGroupListItem
+	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType
 } from 'shared/actions/issue/IIssueListItems'
-import {Icon} from 'ui/components/common/Icon'
-import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
-import {IssueEditInline} from 'ui/components/issues/IssueEditInline'
-import { TIssueEditInlineConfig, TIssueSortAndFilter } from 'shared/actions/issue/IssueState'
-import { enabledRepoIdsSelector } from 'shared/actions/repo/RepoSelectors'
-import { HotKeys } from "ui/components/common/Other"
-import { VisibleList } from "ui/components/common/VisibleList"
+import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
 import { getUIActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
 import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand, Command, CommandType } from "shared/commands/Command"
 
 
 // Constants & Non-typed Components
@@ -78,7 +60,6 @@ export interface IIssuesPanelProps {
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
 	items?: List<IIssueListItem<any>>
-	//selectedIssueIds?:number[]
 	hasAvailableRepos?: boolean
 	saving?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
@@ -101,7 +82,7 @@ export interface IIssuesPanelState {
  * @class IssuesPanel
  * @constructor
  **/
-@HotKeyContext()
+
 @connect(createStructuredSelector({
 	issues: issuesSelector,
 	items: issueItemsSelector,
@@ -109,14 +90,51 @@ export interface IIssuesPanelState {
 	editInlineConfig: editInlineConfigIssueSelector,
 	saving: (state) => issueStateSelector(state).issueSaving
 }))
+@CommandComponent()
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
-export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> {
+export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
 	
 	
+	readonly commands:ICommand[] = [
+		new Command({
+			id: 'issuePanelDown',
+			defaultAccelerator: CommonKeys.MoveDown,
+			name: 'Next Issue',
+			execute: (cmd,event) => this.moveDown(event),
+			type: CommandType.Regular
+		}),
+		new Command({
+			id: 'issuePanelDownSelect',
+			defaultAccelerator: CommonKeys.MoveDownSelect,
+			name: 'Next Issue Select',
+			execute: (cmd,event) => this.moveDown(event),
+			type: CommandType.Regular
+		}),
+		new Command({
+			id: 'issuePanelUp',
+			defaultAccelerator: CommonKeys.MoveUp,
+			name: 'Prev Issue',
+			execute: (cmd,event) => this.moveUp(event),
+			type: CommandType.Regular
+		}),
+		new Command({
+			id: 'issuePanelUpSelect',
+			defaultAccelerator: CommonKeys.MoveUpSelect,
+			name: 'Prev Issue Select',
+			execute: (cmd,event) => this.moveUp(event),
+			type: CommandType.Regular
+		})
+	]
 	
-	uiActions: UIActionFactory = getUIActions()
-	issueActions: IssueActionFactory = getIssueActions()
+	readonly commandComponentId = 'IssuesPanel'
+	
+	/**
+	 * Issue actions
+	 *
+	 * @type {IssueActionFactory}
+	 */
+	private issueActions: IssueActionFactory = getIssueActions()
 	
 	/**
 	 * Helper to get the current selected issue ids
@@ -203,32 +221,32 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDownSelect]: this.moveDown,
 		[CommonKeys.Enter]: this.onEnter,
 		[CommonKeys.Delete]: this.onDelete,
-		
-		[CommonKeys.SetAssignee]: (event) => {
-			log.info('Patch assignee')
-			getIssueActions().patchIssuesAssignee()
-			event.preventDefault()
-		},
-		[CommonKeys.SetMilestone]: (event) => {
-			log.info('Patch milestone')
-			getIssueActions().patchIssuesMilestone()
-			event.preventDefault()
-		},
-		[CommonKeys.AddLabels]: (event) => {
-			log.info('Patch labels')
-			getIssueActions().patchIssuesLabel()
-			event.preventDefault()
-		},
-		[CommonKeys.CreateComment]: (event) => {
-			log.info('Create Comment')
-			
-			getIssueActions().newComment()
-			event.preventDefault()
-		},
-		[CommonKeys.Edit]: () => {
-			log.info('Edit issue keys pressed - making dialog visible')
-			getIssueActions().editIssue()
-		},
+		//
+		// [CommonKeys.SetAssignee]: (event) => {
+		// 	log.info('Patch assignee')
+		// 	getIssueActions().patchIssuesAssignee()
+		// 	event.preventDefault()
+		// },
+		// [CommonKeys.SetMilestone]: (event) => {
+		// 	log.info('Patch milestone')
+		// 	getIssueActions().patchIssuesMilestone()
+		// 	event.preventDefault()
+		// },
+		// [CommonKeys.AddLabels]: (event) => {
+		// 	log.info('Patch labels')
+		// 	getIssueActions().patchIssuesLabel()
+		// 	event.preventDefault()
+		// },
+		// [CommonKeys.CreateComment]: (event) => {
+		// 	log.info('Create Comment')
+		//
+		// 	getIssueActions().newComment()
+		// 	event.preventDefault()
+		// },
+		// [CommonKeys.Edit]: () => {
+		// 	log.info('Edit issue keys pressed - making dialog visible')
+		// 	getIssueActions().editIssue()
+		// },
 	}
 	
 	// Helper for sorting
@@ -559,10 +577,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			itemCount = items.size
 		
 		
-		return <HotKeys style={styles.panel}
-		                keyMap={KeyMaps.App}
-		                handlers={this.keyHandlers}
-										id="issuesPanel">
+		return <div
+			{...getCommandProps(this)}
+								style={styles.panel}
+		            id="issuesPanel">
 			
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
@@ -577,6 +595,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					
 					{/* LIST CONTROLS FILTER/SORT */}
 					<IssuesList
+						
 						ref={(listRef) => this.setState({listRef})}
 						onIssueSelected={this.onIssueSelected} />
 					
@@ -585,7 +604,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				
 				</SplitPane>
 			}
-		</HotKeys>
+		</div>
 	}
 	
 }

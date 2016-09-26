@@ -12,18 +12,19 @@ import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResultsList} from './SearchResultsList'
 
 import {PureRender} from 'ui/components/common/PureRender'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import {isNumber} from "shared/util/ObjectUtil"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import {SearchItem} from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
 import {Themed} from "shared/themes/ThemeManager"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
+
 
 const $ = require('jquery')
 
 // Key mapping tools
 const {CommonKeys:Keys} = KeyMaps
-const {HotKeys} = require('react-hotkeys')
 
 // Constants
 const log = getLogger(__filename)
@@ -69,24 +70,41 @@ export interface ISearchPanelState {
  * @constructor
  **/
 
-@HotKeyContext()
+
 @CSSModules(styles)
 @Themed
+@CommandComponent()
 @PureRender
-export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> {
+export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelState> implements ICommandComponent {
 
-	static defaultProps = {
+	static defaultProps? = {
 		inlineResults: false,
 		expanded: false,
 		modal: false
 	}
-
+	
+	
+	/**
+	 * Commands
+	 */
+	readonly commands:ICommand[] = []
+	
+	/**
+	 * Command container id
+	 */
+	get commandComponentId():string {
+		return `SearchPanel-${this.props.searchId}`
+	}
+	
 	constructor(props, context) {
 		super(props, context)
 
 		this.state = {selectedIndex: 0}
 	}
 
+	
+	
+	
 
 	/**
 	 * Get the textField component
@@ -495,12 +513,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		//<div  className={panelClazz}  style={Fill} onFocus={this.onFocus}>
 		// {/*onFocus={this.onTextFieldFocus}*/}
 		// {/*onBlur={this.onTextFieldBlur}*/}
-		return <HotKeys keyMap={KeyMaps.App}
-		                handlers={this.keyHandlers}
-		                className={panelClazz}
+		return <div     className={panelClazz}
 		                style={Fill}
-		                onFocus={this.onFocus}
-		                onBlur={this.onBlur}>
+										{...getCommandProps(this)}>
 
 			<Paper className={wrapperClazz + focusedClazz}
 			       style={makeStyle(panelStyle)}
@@ -534,7 +549,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				</div>
 			</Paper>
 
-		</HotKeys>
+		</div>
 
 	}
 

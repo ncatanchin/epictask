@@ -632,7 +632,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			
 			item = items.get(itemIndexes.get(index))
 		
-		log.info(`Rendering new item for`,item)
+		
 		return isGroupListItem(item) ?
 			
 			// GROUP

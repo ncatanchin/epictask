@@ -12,27 +12,27 @@ import {IssueEditDialog} from 'ui/components/issues/IssueEditDialog'
 import {RepoAddDialog} from 'ui/plugins/repos/RepoAddDialog'
 import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
 import {getPage} from 'ui/components/pages'
-import {AppActionFactory} from '../../../shared/actions/app/AppActionFactory'
+import {AppActionFactory} from 'shared/actions/app/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AppStateType} from 'shared/AppStateType'
 import {Events, AppKey, UIKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
-import {AppState} from '../../../shared/actions/app/AppState'
+import {AppState} from 'shared/actions/app/AppState'
 import {UIState} from 'shared/actions/ui/UIState'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
-import { HotKeys } from "ui/components/common/Other"
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
 import {IssueCommentDialog} from 'ui/components/issues/IssueCommentDialog'
 import {StatusBar} from "ui/components/root/StatusBar"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 
-const {StyleRoot} = Radium
-const $ = require('jquery')
+const
+	{StyleRoot} = Radium,
+	$ = require('jquery')
 
 
 /**
@@ -53,12 +53,12 @@ try {
 
 
 // Build the container
-const store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any
+const
+	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any
 
 
 //region DEBUG Components/Vars
 let
-	appElement = null,
 	reduxStore = null,
 	win = window as any
 //endregion
@@ -113,11 +113,19 @@ const mapStateToProps = createStructuredSelector({
  */
 
 @connect(mapStateToProps)
+@CommandComponent()
 @Radium
 @PureRender
-export class App extends React.Component<IAppProps,any> {
-
-
+export class App extends React.Component<IAppProps,any> implements ICommandComponent {
+	
+	
+	/**
+	 * All global app root window commands
+	 */
+	readonly commands:ICommand[] = []
+	
+	readonly commandComponentId:string = 'App'
+	
 	appActions = Container.get(AppActionFactory)
 	repoActions = Container.get(RepoActionFactory)
 	issueActions = Container.get(IssueActionFactory)
@@ -153,18 +161,18 @@ export class App extends React.Component<IAppProps,any> {
 			this.uiActions.closeAllDialogs()
 			//ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
 		},
-		[KeyMaps.CommonKeys.View1]: () => {
-			log.info('Escaping and moving focus')
-			Container.get(UIActionFactory).focusIssuesPanel()
-		},
-		[KeyMaps.CommonKeys.View2]: () => {
-			log.info('Escaping and moving focus')
-			Container.get(UIActionFactory).focusIssueDetailPanel()
-		},
-		[KeyMaps.CommonKeys.Find]: () => {
-			log.info('Escaping and moving focus')
-			$('#header').find('input').focus()
-		}
+		// [KeyMaps.CommonKeys.View1]: () => {
+		// 	log.info('Escaping and moving focus')
+		// 	Container.get(UIActionFactory).focusIssuesPanel()
+		// },
+		// [KeyMaps.CommonKeys.View2]: () => {
+		// 	log.info('Escaping and moving focus')
+		// 	Container.get(UIActionFactory).focusIssueDetailPanel()
+		// },
+		// [KeyMaps.CommonKeys.Find]: () => {
+		// 	log.info('Escaping and moving focus')
+		// 	$('#header').find('input').focus()
+		// }
 		
 	}
 
@@ -203,13 +211,7 @@ export class App extends React.Component<IAppProps,any> {
 
 			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={reduxStore}>
-					<HotKeys keyMap={KeyMaps.App}
-					         handlers={this.keyHandlers}
-					         onFocus={this.onFocus}
-					         onBlur={this.onBlur}
-					         focused={true}
-					         id="appRoot"
-					>
+					<div id="appRoot" {...getCommandProps(this)}>
 
 						{/* DIALOGS */}
 						<IssueEditDialog />
@@ -236,7 +238,7 @@ export class App extends React.Component<IAppProps,any> {
 							<StatusBar/>
 						</div>
 						
-					</HotKeys>
+					</div>
 				</Provider>
 			</MuiThemeProvider>
 

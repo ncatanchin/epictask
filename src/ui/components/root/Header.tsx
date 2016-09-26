@@ -2,12 +2,12 @@ import * as React from 'react'
 import {SearchPanel} from 'ui/components/search'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {SearchType} from 'shared/actions/search/SearchState'
-import {HotKeys} from 'ui/components/common/Other'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
 import { UIKey } from "shared/Constants"
 import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
@@ -124,10 +124,15 @@ export interface IHeaderState {
 /**
  * The app header component, title/logo/settings
  */
-@HotKeyContext()
+@CommandComponent()
 @PureRender
-export class Header extends React.Component<IHeaderProps,IHeaderState> {
-
+export class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
+	
+	
+	readonly commands:ICommand[] = []
+	
+	readonly commandComponentId:string = 'Header'
+	
 	constructor(props,context) {
 		super(props,context)
 	}
@@ -272,12 +277,9 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
 		//ref={this.setSearchPanelRef}
 		// ref={this.setHotKeysRef}
-		return <HotKeys
+		return <div {...getCommandProps(this)}
 		                id="header"
-		                style={headerStyle}
-		                handlers={this.keyHandlers}
-		                onBlur={this.onBlur}
-		                onFocus={this.onFocus}>
+		                style={headerStyle}>
 			<SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='header-search'
@@ -292,7 +294,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> {
 				<img style={logoStyle} src={ImageLogoFile}/>
 			</div>
 
-		</HotKeys>
+		</div>
 	}
 }
 

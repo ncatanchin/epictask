@@ -26,11 +26,12 @@ export enum CommandType {
 	Regular
 }
 
+export type TCommandContainer = React.Component<any, any>|Electron.Menu
 
 /**
  * Executor shape
  */
-export type TCommandExecutor = (command:ICommand) => any
+export type TCommandExecutor = (command:ICommand,event?:any) => any
 
 /**
  * Command shape
@@ -108,7 +109,7 @@ export class Command implements ICommand {
 	
 	
 	id:string
-	container:React.Component<any, any>|Electron.Menu
+	container:TCommandContainer
 	defaultAccelerator:string|CommonKeys|any
 	overrideInput:boolean = false
 	hidden:boolean = false

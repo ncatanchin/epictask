@@ -1,13 +1,14 @@
-
+// IOC CONTAINER
 import {Container as ContainerGlobal} from 'typescript-ioc'
+
+// PROCESS CONFIG
 import 'shared/ProcessConfig'
 
-
 // LOGGING CONFIG FIRST
-require('shared/LogConfig')
+import 'shared/LogConfig'
 import {getLogger as LoggerFactory} from 'typelogger'
 
-// Import everything else
+// LATER - POOR TYPING
 later = require('later/index-browserify')
 
 import 'shared/ErrorHandling'
@@ -15,53 +16,46 @@ import 'shared/util/ObjectUtil'
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 import * as ContextUtils from './util/ContextUtils'
-import * as path from 'path'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
+import EnvGlobal from 'shared/Env'
+
 
 // Export globals
 const
 	_ = require('lodash'),
-	g = global as any,
-	isDev = process.env.NODE_ENV === 'development',
-	isRemote = typeof process.env.REMOTE !== 'undefined',
-	isOSX = process.platform === 'darwin',
-	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
-	envName =  LodashGlobal.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
+	g = global as any
 
-const EnvGlobal = {
-	envName,
-	isOSX,
-	isDev,
-	isDebug: DEBUG && isDev,
-	isHot: !LodashGlobal.isNil(process.env.HOT),
-	isTest: !_.isNil(process.env.EPIC_TEST),
-	isRemote,
-	isRenderer,
-	isMain: !isRenderer,
-	isElectron: ['browser','renderer'].includes(process.type),
-	baseDir: path.resolve(__dirname,'../..')
-}
 
-// Polyfill Fetch/FormData/etc
+/**
+ * Install polyfills & global objects
+ *
+ */
 function installGlobals() {
-	const w = ((typeof window !== 'undefined') ? window : {}) as any
-	if (!g.fetch) g.fetch = require('node-fetch')
-	if (!g.FormData) g.FormData = require('form-data')
-	if (!g.TextEncoder) {
-		const te = require("utf8-encoding/utf8-encoding.js");
-		g.TextEncoder = te.TextEncoder;
-		g.TextDecoder = te.TextDecoder;
+	
+	const
+		win = ((typeof window !== 'undefined') ? window : {}) as any,
+		
+		// TEXT ENCODER POLYFILL
+		textEncoderPolyFill = () => _.pick(
+			require("utf8-encoding/utf8-encoding.js"),
+			'TextEncoder',
+			'TextDecoder'
+		)
+	
+	
+	if (!g.TextEncoder)
+		_.assign(g,textEncoderPolyFill())
+	
 
-	}
-
-	if (!w.TextEncoder) {
-		w.TextEncoder = g.TextEncoder
-		w.TextDecoder = g.TextDecoder
-	}
+	if (!win.TextEncoder)
+		_.assign(win,textEncoderPolyFill())
+	
 
 	// Assign all of our internal globals
 	Object.assign(g, {
+		fetch: g.fetch || require('node-fetch'),
+		FormData: g.FormData || require('form-data'),
 		Immutable: ImmutableGlobal,
 		Map:MapGlobal,
 		List:ListGlobal,
@@ -107,7 +101,7 @@ declare global {
 	var mergeContext:typeof ContextUtils.mergeContext
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var _:typeof LodashGlobal// & LodashMixins
+	var _:typeof LodashGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Env:typeof EnvGlobal

@@ -4,23 +4,22 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
 import * as Radium from 'radium'
-const {Style} = Radium
 
-import {AutoComplete, MenuItem} from 'material-ui'
 import {PureRender} from 'ui/components/common'
 import {Toaster} from 'shared/Toaster'
 import {Container} from 'typescript-ioc'
 import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
-import { HotKeys } from "ui/components/common/Other"
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import { shallowEquals } from "shared/util/ObjectUtil"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 
 export type TChipsFieldMode = 'fixed-scroll-x'|'normal'
 
 const
+	{Style} = Radium,
 	toaster = Container.get(Toaster),
 	log = getLogger(__filename)
 
@@ -133,9 +132,16 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
  **/
 
 @Themed
+@CommandComponent()
 @PureRender
-export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
+export class ChipsField extends React.Component<IChipsFieldProps<any>,any> implements ICommandComponent {
 	
+	
+	readonly commands:ICommand[] = []
+	
+	get commandComponentId():string {
+		return `ChipsField-${this.props.id}`
+	}
 	
 	/**
 	 * Create a new datasource
@@ -301,8 +307,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 				openOnFocus={true}/>
 
 		// && {marginTop:'1rem'}
-		return <HotKeys {...props}
-			handlers={this.keyHandlers}
+		return <div {...props}  {...getCommandProps(this)}
 			style={makeStyle(s.root,props.style,!label && s.root.noLabel)}
 			onFocus={this.onSetFocus(true)}
 			onBlur={this.onSetFocus(false)}>
@@ -339,7 +344,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> {
 			 style={props.underlineStyle}
 			 />}
 			 */}
-		</HotKeys>
+		</div>
 	}
 
 }

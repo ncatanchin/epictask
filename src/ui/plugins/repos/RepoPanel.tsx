@@ -10,7 +10,7 @@ import {RepoList} from './RepoList'
 // Key mapping tools
 import * as KeyMaps from 'shared/KeyMaps'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
+
 import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
 
 
@@ -18,9 +18,10 @@ import {RegisterTool} from "shared/Registry"
 import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
 import {DataComponent, MapData} from "ui/components/data/DataComponent"
+import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 const
-	{CommonKeys:Keys} = KeyMaps,
-	{HotKeys} = require('react-hotkeys')
+	{CommonKeys:Keys} = KeyMaps
 
 
 // Constants
@@ -116,10 +117,14 @@ function getHeaderControls() {
 	label:'Repositories',getHeaderControls,
 	buttonLabel: 'Repos'
 })
-@HotKeyContext()
+
 @ThemedStyles(baseStyles,'repoPanel')
-export class RepoPanel extends React.Component<IRepoPanelProps,any> {
+@CommandComponent()
+export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
+	
+	readonly commands:ICommand[] = []
+	readonly commandComponentId:string = 'RepoPanel'
 	/**
 	 * Default location for the tool
 	 *
@@ -163,7 +168,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> {
 			headerButtonStyle = [styles.header.button]
 
 		//handlers={this.keyHandlers}
-		return <div style={panelStyle}>
+		return <div {...getCommandProps(this)} style={panelStyle}>
 
 				
 

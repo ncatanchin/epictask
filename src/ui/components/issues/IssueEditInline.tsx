@@ -23,8 +23,8 @@ import {
 	issueStateSelector, issueSaveErrorSelector, issueSavingSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {CircularProgress} from 'material-ui'
-import {HotKeyContext} from 'ui/components/common/HotKeyContext'
-import { HotKeys } from "ui/components/common/Other"
+
+
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {Container} from 'typescript-ioc'
 import {CommonKeys} from 'shared/KeyMaps'
@@ -39,6 +39,8 @@ import {
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
 import { cloneObject } from "shared/util/ObjectUtil"
+import { CommandComponent, getCommandProps, ICommandComponent } from "shared/commands/CommandComponent"
+import { ICommand } from "shared/commands/Command"
 
 // Constants
 const log = getLogger(__filename)
@@ -243,7 +245,7 @@ export interface IIssueEditInlineState {
  * @constructor
  **/
 
-@HotKeyContext()
+
 @connect(createStructuredSelector({
 	editingIssue: editingIssueSelector,
 	availableRepos: availableReposSelector,
@@ -254,9 +256,15 @@ export interface IIssueEditInlineState {
 	saveError: issueSaveErrorSelector
 }))
 @ThemedStyles(baseStyles,'inline','issueEditDialog','form')
+@CommandComponent()
 @ReactTimeout
-export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> {
-
+export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> implements ICommandComponent {
+	
+	
+	readonly commands:ICommand[] = []
+	readonly commandComponentId:string = 'IssueEditInline'
+	
+	
 	issueActions = Container.get(IssueActionFactory)
 	uiActions = Container.get(UIActionFactory)
 
@@ -561,13 +569,11 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 		const titleError = getGithubErrorText(saveError,'title') || _.get(saveError,'message')
 
-		return <HotKeys
+		return <div
 					{...filterProps(props)}
+					{...getCommandProps(this)}
 					style={makeStyle(issueStyles,style)}
-					handlers={this.keyHandlers}
-					onBlur={this.onBlur}
-					onFocus={this.onFocus}
-          className={'selected'}>
+					className={'selected'}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}
 			<div style={makeStyle(styles.root,saving && {opacity:0,pointerEvents:'none'})}>
@@ -672,7 +678,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					color={theme.progressIndicatorColor}
 					size={1} />
 			</div>
-		</HotKeys>
+		</div>
 	}
 
 }

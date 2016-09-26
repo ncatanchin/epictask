@@ -6,10 +6,8 @@
 import * as React from "react"
 import {connect} from "react-redux"
 import {createStructuredSelector} from "reselect"
-import * as Radium from "radium"
 import {List} from "immutable"
 import {Dialog, CircularProgress, MenuItem} from "material-ui"
-import { HotKeys } from "ui/components/common/Other"
 import {MuiThemeProvider} from "material-ui/styles"
 import {Container} from "typescript-ioc"
 
@@ -662,7 +660,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 
 				{ open &&
 				<MuiThemeProvider muiTheme={theme}>
-					<HotKeys handlers={this.keyHandlers} style={PositionRelative}>
+					<div style={PositionRelative}>
 
 						<form name="issuePatchDialogForm"
 						      id="issuePatchDialogForm"
@@ -703,7 +701,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 								color={theme.progressIndicatorColor}
 								size={1}/>
 						</div>}
-					</HotKeys>
+					</div>
 				</MuiThemeProvider>
 				}
 			</Dialog>
