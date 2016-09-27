@@ -75,6 +75,11 @@ export function uuid():string {
 	return require('node-uuid').v4()
 }
 
+export function hasOwnProps(o:any,...props:string[]) {
+	return o && props.every(prop => o.hasOwnProperty(prop))
+}
+
+
 /**
  * Object cloning wrapper with some special extras
  * - copies typestore $$docs value

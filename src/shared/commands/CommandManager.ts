@@ -7,11 +7,10 @@ import { ICommand, TCommandContainer, TCommandDefaultAccelerator } from "shared/
 import Electron = require('electron')
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import { CommonKeys, GlobalKeys } from "shared/KeyMaps"
-import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
+
 import { isReactComponent } from "shared/util/UIUtil"
 import { inElectron, isMac } from "shared/util/ElectronUtil"
-import _get from 'lodash/get'
+import { CommandAccelerator } from "shared/commands/CommandAccelerator"
 
 
 
@@ -30,195 +29,11 @@ const
 // DEBUG ENABLE
 log.setOverrideLevel(LogLevel.DEBUG)
 
-const
-	CommandOrControl = 'CommandOrControl',
-	Meta = 'meta',
-	Ctrl = 'ctrl',
-	Alt = 'alt',
-	Shift = 'shift',
-	Down = 'ArrowDown',
-	Up = 'ArrowUp',
-	Right = 'ArrowRight',
-	Left = 'ArrowLeft',
-	MappedKeys = {
-		[CommandOrControl.toLowerCase()]: isMac() ? Meta : Ctrl
-	},
-	ElectronMappedKeys = {
-		[Meta]: 'Super',
-		[Ctrl]: 'Control',
-		[Alt]: 'Alt',
-		[Shift]: 'Shift',
-		[Down]: 'Down',
-		[Up]: 'Up',
-		[Left]: 'Left',
-		[Right]: 'Right'
-	},
-	ModifiedKeyNames = ['ctrl','meta','shift','alt']
-
-
-function hasOwnProps(o:any,...props:string[]) {
-	return o && props.every(prop => o.hasOwnProperty(prop))
-}
-
-function isKeyboardEvent(o:any):o is KeyboardEvent {
-	return o && (o instanceof KeyboardEvent || (o.type && o.type.indexOf('key') > -1))
-}
-
-/**
- * Command accelerator configuration
- */
-class CommandAccelerator {
-	
-	/**
-	 * All non modifier key codes
-	 */
-	codes:string[] = []
-	
-	/**
-	 * Ctrl key
-	 */
-	ctrlKey:boolean = false
-	
-	/**
-	 * Super key
-	 */
-	metaKey:boolean = false
-	
-	/**
-	 * Shift key
-	 */
-	shiftKey:boolean = false
-	
-	/**
-	 * Alt key
-	 */
-	altKey:boolean = false
-	
-	
-	
-	/**
-	 * Has any modified
-	 */
-	get hasModifier() {
-		return this.shiftKey || this.ctrlKey || this.metaKey || this.altKey
-	}
-	
-	/**
-	 * Has non-input modifier (No shift)
-	 */
-	get hasNonInputModifier() {
-		return this.hasModifier && !this.shiftKey
-		
-	}
-	
-	/**
-	 * Add another part of the accelerator
-	 *
-	 * @param code
-	 */
-	private addPart(code:string) {
-		
-		if (code) {
-			code.toLowerCase()
-			
-			if (ModifiedKeyNames.includes(code))
-				this[`${code}Key`] = true
-			else
-				this.codes.push(MappedKeys[code] || code)
-		}
-	}
-	
-	/**
-	 * Create a new accelerator instance
-	 *
-	 * @param accelerator
-	 */
-	constructor(
-		public accelerator:TCommandDefaultAccelerator|KeyboardEvent
-	) {
-		if (!accelerator)
-			return
-		
-		// IF KEYBOARD EVENT
-		if (isKeyboardEvent(accelerator)) {
-			this.addPart(accelerator.code)
-			assign(this,_.pick(accelerator,'ctrlKey','altKey','metaKey','shiftKey'))
-		} else {
-			if (isNumber(accelerator))
-				accelerator = GlobalKeys[accelerator]
-			
-			this.accelerator = accelerator.toLowerCase().replace(/\s/g,'')
-			this.accelerator.split('+').forEach(part => this.addPart(part))
-		}
-	}
-	
-	/**
-	 * Map to electron accelerator string
-	 *
-	 * @returns {string}
-	 */
-	toElectronAccelerator():string {
-		return !this.codes.length ? '' :this
-			.codes
-			.map(code => {
-				return ElectronMappedKeys[code] || code
-			})
-			.join('+')
-	}
-	
-	/**
-	 * Compare to accelerators
-	 *
-	 * @param o
-	 */
-	isEqual(o:CommandAccelerator) {
-		return shallowEquals(this,o,'ctrlKey','altKey','metaKey','shiftKey') &&
-				this.codes.every(it => o.codes.includes(it))
-	}
-}
-
-/**
- * Accelerator comparator
- *
- * @param accelerator
- * @param event
- * @returns {any}
- */
-function matchAcceleratorToEvent(accelerator:TCommandDefaultAccelerator,event:KeyboardEvent) {
-	if (!accelerator || !event)
-		return false
-	
-	const
-		accel = new CommandAccelerator(accelerator),
-		keyAccel = new CommandAccelerator(event)
-	
-	return accel.isEqual(keyAccel)
-	// if (isNumber(accelerator))
-	// 	accelerator = GlobalKeys[accelerator]
-	//
-	// accelerator = accelerator.toLowerCase().replace(/\s/g,'')
-	//
-	// const
-	// 	parts = accelerator.split('+'),
-	// 	eventParts = [],
-	// 	addEventPart = (eventPart:string) => eventPart && eventParts.push(eventPart.toLowerCase())
-	//
-	// addEventPart(event.code)
-	// event.ctrlKey && addEventPart('ctrl')
-	// event.metaKey && addEventPart('super')
-	// event.shiftKey && addEventPart('shift')
-	// event.altKey && addEventPart('alt')
-	//
-	// log.info(`Comparing accel parts`,eventParts,parts)
-	// return parts.every(part => eventParts.includes(part))
-	
-}
-
 
 /**
  * Command container registration
  */
-interface ICommandContainerRegistration {
+export interface ICommandContainerRegistration {
 	container:TCommandContainer
 	element?:HTMLElement
 	available:boolean
@@ -263,6 +78,24 @@ export class CommandManager {
 	private menuItemRegs:{[commandId:string]:ICommandMenuItemRegistration} = {}
 	
 	/**
+	 * Browser menu commands that were sent to main
+	 */
+	private browserMenuCommands:ICommand[] = []
+	
+	/**
+	 * All the menu items managed in the main process (only fills in main process)
+	 */
+	private managedMenuItems:Electron.MenuItem[] = []
+	
+	
+	private removeManagedMenuItem(item:Electron.MenuItem) {
+		const
+			managedIndex = this.managedMenuItems.findIndex(it => it === item || (it as any).id === (item as any).id)
+		
+		if (managedIndex > -1)
+			this.managedMenuItems.splice(managedIndex,1)
+	}
+	/**
 	 * Get menu item registration
 	 *
 	 * @param cmd
@@ -270,7 +103,7 @@ export class CommandManager {
 	 */
 	private getMenuItemRegistration(cmd:ICommand,createIfMissing = true) {
 		if (!isMain || !inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,cmd)
+			log.warn(`Not in electron environment, can not add menu item`,cmd.id)
 			return null
 		}
 		
@@ -282,23 +115,26 @@ export class CommandManager {
 			reg =  this.menuItemRegs[cmd.id]
 		
 		if (!reg && createIfMissing) {
+			const
+				menuItem = new MenuItem({
+					label: cmd.name,
+					id: cmd.id,
+					accelerator: cmd.electronAccelerator,
+					click: (event) => {
+						log.info(`Menu Execute`)
+						cmd.execute(cmd,event)
+					}
+				})
+			
+			this.managedMenuItems.push(menuItem)
+			
 			reg = this.menuItemRegs[cmd.id] = {
 				id:cmd.id,
 				cmd,
 				mounted: false,
 				enabled: true,
 				
-				accelerator: cmd.electronAccelerator || new CommandAccelerator(cmd.defaultAccelerator)
-					.toElectronAccelerator(),
-				
-				menuItem: new MenuItem({
-					label: cmd.name,
-					id: cmd.id,
-					click: (event) => {
-						log.info(`Menu Execute`)
-						cmd.execute(cmd,event)
-					}
-				})
+				menuItem
 			}
 		}
 		return reg
@@ -313,9 +149,12 @@ export class CommandManager {
 	 */
 	private mountMenuCommand(...commands:ICommand[]) {
 		if (!inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,commands)
+			log.warn(`Not in electron environment, can not add menu item`,commands.map(it => it.id))
 			return
 		}
+		
+		if (!commands.length)
+			return
 		
 		const
 			Electron = require('electron')
@@ -327,18 +166,24 @@ export class CommandManager {
 				mappedCommands = commands
 					.filter(cmd => cmd.menuPath)
 					.map(cmd => {
-						return assign(_.pick(cmd,
-							'id',
-							'execute',
-							'name',
-							'description',
-							'menuPath',
-							'type'),{
-							electronAccelerator: new CommandAccelerator(cmd.defaultAccelerator).toElectronAccelerator()
-						})
+						const
+							mappedCmd = assign(_.pick(cmd,
+								'id',
+								'execute',
+								'name',
+								'description',
+								'menuPath',
+								'type'),{
+								electronAccelerator: new CommandAccelerator(cmd.defaultAccelerator).toElectronAccelerator()
+							})
+						
+						if (!this.browserMenuCommands.find(it => it.id === mappedCmd.id))
+							this.browserMenuCommands.push(mappedCmd)
+						
+						return mappedCmd
 					})
 			
-			log.debug(`Passing mapped commands to main process`,mappedCommands)
+			log.debug(`Passing mapped commands to main process`,mappedCommands.map(it => it.id))
 			manager.mountMenuCommand(...mappedCommands)
 			return
 		}
@@ -359,7 +204,7 @@ export class CommandManager {
 				itemReg = this.getMenuItemRegistration(cmd)
 			
 			if (itemReg.mounted) {
-				log.debug(`Already mounted item`,itemReg)
+				log.debug(`Already mounted item`,itemReg.id)
 				return
 			}
 			
@@ -385,6 +230,8 @@ export class CommandManager {
 							submenu: nextMenu
 						})
 						
+						this.managedMenuItems.push(nextMenuItem)
+						
 						currentMenu.append ?
 							currentMenu.append(nextMenuItem) :
 							currentMenu.items.push(nextMenuItem)
@@ -397,13 +244,24 @@ export class CommandManager {
 				}, appMenu as any)
 			
 			// PUSH THE ITEM AND UPDATE
-			menu.append ? menu.append(itemReg.menuItem) : menu.items.push(itemReg)
+			menu.append ?
+				menu.append(itemReg.menuItem) :
+				menu.items.push(itemReg)
 			
 			
 		})
 		
 		// FORCE UPDATE
-		Menu.setApplicationMenu(appMenu)
+		log.info(`mounting app menu`)
+		const
+			newAppMenu = new Menu()
+		
+		appMenu.items
+			.filter(item => item.type !== 'submenu' || (Array.isArray(item.submenu) ? item.submenu.length > 0 : item.submenu.items.length > 0))
+			.forEach(item => newAppMenu.append(item))
+		
+		Menu.setApplicationMenu(newAppMenu)
+		//Menu.setApplicationMenu(appMenu)
 		
 		
 	}
@@ -411,15 +269,18 @@ export class CommandManager {
 	/**
 	 * Remove menu commands (unmount them)
 	 *
-	 * @param commands
+	 * @param commandIds
 	 */
-	private unmountMenuCommand(...commands:ICommand[]) {
-		log.debug(`Going to try and unmount: `, commands)
+	private unmountMenuCommand(...commandIds:string[]) {
+		log.debug(`Going to try and unmount: `, commandIds)
 		
 		if (!inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,commands)
+			log.warn(`Not in electron environment, can not add menu item`,commandIds)
 			return
 		}
+		
+		if (!commandIds.length)
+			return
 		
 		const
 			Electron = require('electron')
@@ -427,21 +288,10 @@ export class CommandManager {
 		if (!isMain) {
 			const
 				mainGetCommandManager = Electron.remote.getGlobal('getCommandManager') as typeof getCommandManager,
-				manager = mainGetCommandManager(),
-				mappedCommands = commands
-					.filter(cmd => cmd.menuPath)
-					.map(cmd => {
-						return _.pick(cmd,
-							'id',
-							'execute',
-							'name',
-							'description',
-							'menuPath',
-							'type')
-					})
-			
-			log.debug(`Passing mapped commands to  for UNMOUNT`,mappedCommands)
-			manager.unmountMenuCommand(...mappedCommands)
+				manager = mainGetCommandManager()
+				
+			log.debug(`Passing mapped commands to  for UNMOUNT`,commandIds)
+			manager.unmountMenuCommand(...commandIds)
 			return
 		}
 		
@@ -449,20 +299,21 @@ export class CommandManager {
 		const
 			{Menu} = isMain ? Electron : Electron.remote,
 			appMenu = Menu.getApplicationMenu(),
-			touchedMenus:Electron.Menu[] = [appMenu]
+			touchedMenus:Electron.Menu[] = []
 		
 		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commands.forEach(cmd => {
-			if (!cmd.menuPath) {
+		commandIds.forEach(commandId => {
+			const
+				itemReg = this.menuItemRegs[commandId],
+				cmd = itemReg && itemReg.cmd
+			
+			if (!itemReg || !cmd.menuPath) {
 				log.debug(`Called addMenuItem, but no menu path specified`)
 				return
 			}
 			
-			const
-				itemReg = this.getMenuItemRegistration(cmd,false)
-			
-			if (!itemReg || !itemReg.mounted) {
-				log.info(`Already un-mounted item`,itemReg)
+			if (!itemReg.mounted) {
+				log.debug(`Already un-mounted item`,itemReg.id)
 				return
 			}
 			
@@ -495,7 +346,7 @@ export class CommandManager {
 				}, appMenu as any)
 			
 			if (!menu) {
-				log.debug(`Item is not currently mounted`,cmd)
+				log.debug(`Item is not currently mounted`,cmd.id)
 				return
 			}
 			
@@ -510,101 +361,56 @@ export class CommandManager {
 		})
 		
 		
-		log.debug(`Checking menus that need to be pruned`,touchedMenus)
-		let
-			changes = false
+		log.debug(`Checking menus that need to be pruned`,touchedMenus.length)
 		
-		touchedMenus.reverse().forEach(topMenu => {
-			const
-				itemsToRemove = [],
-				topItems = (Array.isArray(topMenu) ? topMenu.items : topMenu.items) as Electron.MenuItem[]
-			
-			topItems
-				.forEach(item => {
-					if (item && item.submenu) {
-						
-						const
-							{submenu} = item,
-							hasItems = Array.isArray(submenu) ? submenu.length > 0 : submenu.items.length > 0
-						
-						if (!hasItems) {
-							itemsToRemove.push(item)
-						}
-					}
-				})
-			
-			
-			while (itemsToRemove.length) {
+		touchedMenus
+			.reverse()
+			.forEach(topMenu => {
+				
 				const
-					item = itemsToRemove.pop(),
-					index = topItems.findIndex(it => it === item || (it as any).id === (item as any).id)
+					itemsToRemove = [],
+					topItems = (Array.isArray(topMenu) ? topMenu.items : topMenu.items) as Electron.MenuItem[]
 				
-				log.debug(`Pruning item`,item,index)
-				if (index > -1) {
-					topItems.splice(index,1)
+				topItems
+					.forEach(item => {
+						if (item && item.submenu) {
+							
+							const
+								{submenu} = item,
+								hasItems = Array.isArray(submenu) ? submenu.length > 0 : submenu.items.length > 0
+							
+							if (!hasItems && this.managedMenuItems.includes(item)) {
+								itemsToRemove.push(item)
+							}
+						}
+					})
+				
+				
+				while (itemsToRemove.length) {
+					const
+						item = itemsToRemove.pop(),
+						index = topItems.findIndex(it => it === item || (it as any).id === (item as any).id)
+					
+					log.debug(`Pruning item`,item.id,index)
+					
+					if (index > -1 && this.managedMenuItems.includes(item)) {
+						this.removeManagedMenuItem(item)
+						
+						topItems.splice(index,1)
+					}
+					
 				}
-				
-			}
-			
-			// if (!changes)
-			// 	changes = itemsToRemove.length > 0
-			//
-			// if (itemsToRemove.length) {
-			// 	// const
-			// 	// 	newSubMenu = new Menu()
-			//
-			// 	const
-			// 		submenu = topItem.submenu as any,
-			// 		goodItems = topItems
-			// 			.filter(item => !itemsToRemove.includes(item) && !itemsToRemove.find(it => item === it || (it as any).id === (item as any).id))
-			//
-			//
-			// 	submenu.clear()
-			// 	goodItems.forEach(item => submenu.append(item))
-			// 	// submenu.
-			// 	// if (submenu.clear) {
-			// 	//
-			// 	// }// = newSubMenu
-			//
-			// }
-			
-		})
+			})
 		
-		// if (changes) {
-		// 	const
-		// 		appMenuItems = appMenu as any,
-		// 		itemsToRemove = appMenu.items
-		// 			.filter(item => item.submenu && (Array.isArray(item.submenu) ? !item.submenu.length : !item.submenu.items.length))
-		//
-		// 	//appMenuItems.clear()
-		// 	//goodItems.forEach(item => appMenu.append(item))
-		//
-		// 	while (itemsToRemove.length) {
-		// 		const
-		// 			item = itemsToRemove.pop(),
-		// 			index = appMenu.items.findIndex(it => it === item || (it as any).id === (item as any).id)
-		//
-		// 		log.debug(`Pruning item`,item,index)
-		// 		if (index > -1) {
-		// 			appMenu.items.splice(index,1)
-		// 		}
-		//
-		// 	}
-		//
-			// FORCE UPDATE
+		// FORCE UPDATE
 		const
 			newAppMenu = new Menu()
+
+		appMenu.items
+			.filter(item => !this.managedMenuItems.includes(item) || item.type !== 'submenu' || (Array.isArray(item.submenu) ? item.submenu.length > 0 : item.submenu.items.length > 0))
+			.forEach(item => newAppMenu.append(item))
 		
-		newAppMenu.items = appMenu.items
-		//Menu.setApplicationMenu(appMenu)
 		Menu.setApplicationMenu(newAppMenu)
-		//}
-		
-		
-		
-		// setImmediate(() => {
-		//
-		// })
 		
 	}
 	
@@ -657,31 +463,28 @@ export class CommandManager {
 	 */
 	private handleKeyDown(event:KeyboardEvent) {
 		
-		
-		// event.stopImmediatePropagation()
-		// event.stopPropagation()
-		// event.preventDefault()
-		// event.cancelBubble = true
-		
 		const
 			containers = this.focusedContainers(),
 			isInputTarget = event.target && InputTagNames.includes((event.target as HTMLElement).tagName)
 		
 		log.debug(`Key down received`, event,`Ordered containers: `, containers.map(it => it.element))
 		
-		
-		
 		for (let container of containers) {
+			
 			const
-				cmd = container.commands.find(it => matchAcceleratorToEvent(it.defaultAccelerator,event))
-				
+				cmd = container.commands.find(it =>
+					CommandAccelerator.matchToEvent(it.defaultAccelerator,event))
 			
 			if (cmd && (!isInputTarget || cmd.overrideInput)) {
 				cmd.execute(cmd,event)
+				event.preventDefault()
+				event.stopPropagation()
+				event.stopImmediatePropagation()
 				break
 			}
 		}
 	}
+	
 	
 	/**
 	 * On window blur
@@ -691,7 +494,8 @@ export class CommandManager {
 	private onWindowBlur(event) {
 		log.debug('body blur')
 		
-		this.unmountMenuCommand(...Object.values(this.menuItemRegs).map(it => it.cmd))
+		
+		this.unmountMenuCommand(...this.browserMenuCommands.map(cmd => cmd.id))
 		
 	}
 	
@@ -703,7 +507,7 @@ export class CommandManager {
 	private onWindowFocus(event) {
 		log.debug('body focus')
 		
-		this.mountMenuCommand(...Object.values(this.menuItemRegs).map(it => it.cmd))
+		this.mountMenuCommand(...this.browserMenuCommands)
 	}
 	
 	
@@ -826,7 +630,7 @@ export class CommandManager {
 	registerContainerCommand(id:string, container:TCommandContainer, ...commands:ICommand[]) {
 		commands.forEach(cmd => {
 			
-			log.debug(`Registering command`,cmd)
+			log.debug(`Registering command`,cmd.id)
 			
 			this.commands[cmd.id] = cmd
 		})
@@ -841,7 +645,7 @@ export class CommandManager {
 				.concat(commands)
 		
 		
-		log.info(`Mounting menu command`,commands)
+		log.info(`Mounting menu command`,commands.map(it => it.id))
 		this.mountMenuCommand(...commands)
 		
 		
@@ -856,7 +660,7 @@ export class CommandManager {
 	 */
 	unregisterContainerCommand(id:string, container:TCommandContainer, ...commands:ICommand[]) {
 		commands.forEach(cmd => {
-			log.debug(`Removing command`,cmd)
+			log.debug(`Removing command`,cmd.id)
 			delete this.commands[cmd.id]
 		})
 		
@@ -865,8 +669,8 @@ export class CommandManager {
 		
 		status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
 		
-		log.info(`Unmounting menu command`,...commands)
-		this.unmountMenuCommand(...commands)
+		log.info(`Unmounting menu command`,...commands.map(it => it.id))
+		this.unmountMenuCommand(...commands.map(it => it.id))
 		
 	}
 	
