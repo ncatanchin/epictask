@@ -1,34 +1,9 @@
 
-import { isMac } from "shared/util/ElectronUtil"
 import { TCommandDefaultAccelerator } from "shared/commands/Command"
 import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
 import { GlobalKeys } from "shared/KeyMaps"
+import { ModifiedKeyNames, MappedKeys, ElectronMappedKeys } from "shared/commands/CommandManagerConfig"
 
-
-const
-	CommandOrControl = 'CommandOrControl',
-	Meta = 'meta',
-	Ctrl = 'ctrl',
-	Alt = 'alt',
-	Shift = 'shift',
-	Down = 'ArrowDown',
-	Up = 'ArrowUp',
-	Right = 'ArrowRight',
-	Left = 'ArrowLeft',
-	MappedKeys = {
-		[CommandOrControl.toLowerCase()]: isMac() ? Meta : Ctrl
-	},
-	ElectronMappedKeys = {
-		[Meta]: 'Super',
-		[Ctrl]: 'Control',
-		[Alt]: 'Alt',
-		[Shift]: 'Shift',
-		[Down]: 'Down',
-		[Up]: 'Up',
-		[Left]: 'Left',
-		[Right]: 'Right'
-	},
-	ModifiedKeyNames = ['ctrl','meta','shift','alt']
 
 
 

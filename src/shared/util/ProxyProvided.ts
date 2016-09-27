@@ -44,7 +44,7 @@ export function Provided<T>(newTarget:T):T {
 	
 	
 	
-	log.info(`Checking proxy provider for ${name}`)
+	log.debug(`Checking proxy provider for ${name}`)
 	
 	/**
 	 * Get provider if exists
@@ -58,12 +58,12 @@ export function Provided<T>(newTarget:T):T {
 	
 	// Create if first load
 	if (provider) {
-		log.info(`Updating existing provider for ${name}`)
+		log.debug(`Updating existing provider for ${name}`)
 		provider.target = newTarget
 		provider.rev++
 		provider.newConstructor.prototype = (newTarget as any).prototype
 	} else {
-		log.info(`Creating provider for ${name}`)
+		log.debug(`Creating provider for ${name}`)
 		provider = proxiedProviders[name] = {
 			name,
 			target: newTarget,
@@ -85,7 +85,7 @@ export function Provided<T>(newTarget:T):T {
 			
 			return new Proxy(baseInstance, {
 				get: function (fooTarget, prop) {
-					//log.info('intercepted',prop)
+					//log.debug('intercepted',prop)
 					
 					if (baseInstance.$$rev !== provider.rev) {
 						makeInstance()
@@ -113,7 +113,7 @@ export function Provided<T>(newTarget:T):T {
 		.filter(it => !['prototype','__proto__','name','constructor'].includes(it))
 		.forEach(it => provider.newConstructor[it] = newTarget[it])
 	
-	//log.info(`Object keys`, Object.keys(newTarget).join(', '))
+	//log.debug(`Object keys`, Object.keys(newTarget).join(', '))
 	return provider.newConstructor as any
 	
 	

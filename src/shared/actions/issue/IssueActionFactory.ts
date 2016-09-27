@@ -168,7 +168,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				issues = List<Issue>()
 			} else {
 				issues = await this.getIssues(enabledRepos.toArray())
-				log.info(`Loaded issues`,issues)
+				log.debug(`Loaded issues`,issues)
 			}
 			
 			const
@@ -199,7 +199,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		if (isListType(availRepos,AvailableRepo))
 			availRepos = availRepos.toArray()
 		
-		log.info(`Getting issues for avail repos`,availRepos)
+		log.debug(`Getting issues for avail repos`,availRepos)
 		
 		availRepos = _.nilFilter(availRepos) as AvailableRepo[]
 		
@@ -313,7 +313,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const getState = getStoreState
 		
 		if (!issues || !issues.length) {
-			log.info(`no issues passed to patch, going to use the selected issues`)
+			log.debug(`no issues passed to patch, going to use the selected issues`)
 			issues = selectedIssuesSelector(getState())
 		}
 		
@@ -364,7 +364,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 						patchCopy = cloneObject(patch)
 					
 					Object.entries(patch).forEach(([key,val]) => {
-						log.info(`Patching key ${key}`,patch[key])
+						log.debug(`Patching key ${key}`,patch[key])
 						
 						switch (key) {
 							case 'labels':
@@ -393,7 +393,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 										, 'url'
 									).filter(label => label && !removeLabelUrls.includes(label.url))
 								
-								log.info(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
+								log.debug(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
 								break
 							case 'milestone':
 								if (!patchCopy.milestone)
@@ -471,7 +471,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			savedIssue:Issue = await client.issueSave(repo, issue),
 			mergedIssue = _.merge({}, issue, savedIssue)
 		
-		log.info(`Issue save, our version`,issue,'github version',savedIssue,'merged version',mergedIssue)
+		log.debug(`Issue save, our version`,issue,'github version',savedIssue,'merged version',mergedIssue)
 		
 		await issueStore.save(mergedIssue)
 		
@@ -482,7 +482,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		getGithubEventMonitor().forcePolling(repo.id)
 		//RepoSyncManager.get(repo).syncIssues(getStores(),repo)
 		
-		log.info(`Updating issue in state`,loadedIssue)
+		log.debug(`Updating issue in state`,loadedIssue)
 		this.reloadIssues(loadedIssue)
 			
 		return  loadedIssue
@@ -663,7 +663,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					repo = availRepo && availRepo.repo
 				
 				
-				log.info(`Got repo`,repo,`for issue`,issue,`for comment`,comment)
+				log.debug(`Got repo`,repo,`for issue`,issue,`for comment`,comment)
 				assert(repo,`Unable to get repo from repoId on issue: ${issue.repoId}`)
 				
 				// Clone the comment to not affect UI state and
@@ -834,7 +834,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			
 			if (this.uiActions.state.dialogs[dialogName]) {
-				log.info('Dialog is already open', dialogName)
+				log.debug('Dialog is already open', dialogName)
 				return
 			}
 			
@@ -1068,18 +1068,18 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	@ActionThunk()
 	onSyncChanges(changes:ISyncChanges) {
 		return async (dispatch,getState) => {
-			log.info(`Received repo sync changes`,changes)
+			log.debug(`Received repo sync changes`,changes)
 			
 			const
 				issueNumbers = _.nilFilter([...(changes.issueNumbersChanged || []),...(changes.issueNumbersNew || [])])
 			
 			if (issueNumbers.length) {
-				log.info(`Issues have been updated during sync `,...issueNumbers)
+				log.debug(`Issues have been updated during sync `,...issueNumbers)
 				
 				const
 					issueIds = issueNumbers.map(issueNumber => Issue.makeIssueId(changes.repoId,issueNumber))
 				
-				log.info(`Mapped numbers to ids`,issueIds)
+				log.debug(`Mapped numbers to ids`,issueIds)
 				
 				const
 					issueSort = this.state.issueSort,
@@ -1091,7 +1091,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				this.updateIssuesInState(issues)
 				
 				if (selectedIssueId && issueIds.includes(selectedIssueId)) {
-					log.info(`Selected issue has been updated - reloading it's activity`)
+					log.debug(`Selected issue has been updated - reloading it's activity`)
 					this.loadActivityForIssue(selectedIssueId)
 				}
 				
@@ -1138,7 +1138,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				// REMOVE COMMENT
 				if (remove) {
 					if (commentIndex === -1) {
-						log.info(`Comment is not in state, can not remove`, updatedComment)
+						log.debug(`Comment is not in state, can not remove`, updatedComment)
 					} else {
 						comments = comments.remove(commentIndex)
 					}
@@ -1230,7 +1230,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			availRepos = enabledAvailableReposSelector(getState),
 			repoIds = availRepos.map(availRepo => availRepo.repoId)
 		
-		log.info(`Loading issues for repos`, repoIds)
+		log.debug(`Loading issues for repos`, repoIds)
 		
 		this.setIssues(await this.getIssues(availRepos))
 		
@@ -1293,7 +1293,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			let
 				issues:List<Issue> = issuesSelector(getState())
 			
-			//log.info(`Loading issue activity`,issues,issueId)
+			//log.debug(`Loading issue activity`,issues,issueId)
 			if (!isListType(issues,Issue))
 				return
 			
@@ -1311,7 +1311,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const
 				{comments,issuesEvents} = await this.getActivity(issue)
 			
-			log.info(`Loading activity for issue `, issueId,comments,issuesEvents)
+			log.debug(`Loading activity for issue `, issueId,comments,issuesEvents)
 			this.setActivity(comments,issuesEvents)
 			// TODO: Activity load
 			// Now push the models into the data state for tracking
@@ -1392,7 +1392,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 						: args
 						
 			
-			log.info(`Going to reload issues`, issues, 'from args', args)
+			log.debug(`Going to reload issues`, issues, 'from args', args)
 			if (!issues.length) {
 				log.warn(`No issues found in state to update from `, args)
 				return
@@ -1421,7 +1421,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			let
 				issues = this.getSelectedIssuesFromState(...issueIds)
 			
-			log.info(`Going to delete ${issues.length} issues`)
+			log.debug(`Going to delete ${issues.length} issues`)
 			
 			const
 				client = Container.get(GitHubClient),

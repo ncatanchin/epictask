@@ -5,7 +5,12 @@ import filterProps from 'react-valid-props'
 import { isFunction, shortId } from "shared/util/ObjectUtil"
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	commandContainerCommands = new WeakMap<CommandContainer,ICommand[]>()
+
+// DEBUG ENABLE
+log.setOverrideLevel(LogLevel.DEBUG)
+
 
 /**
  * Options for the future (maybe global commands or something??
@@ -91,7 +96,9 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	/**
 	 * On unmount, set 'mounted' = false, then update the commands (remove them)
 	 */
-	componentWillUnmount = () => this.setState({ mounted: false }, this.updateCommands)
+	componentWillUnmount = () => this.setState({
+		mounted: false
+	}, this.updateCommands)
 	
 	/**
 	 * Set the command component instance
@@ -100,7 +107,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	setInstance = (instance:ICommandComponent) => {
 		if (!instance) {
-			log.info(`Instance set to null`, this)
+			log.debug(`Instance set to null`, this)
 			return
 		}
 		
@@ -120,12 +127,12 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.info(`focused`, id)
+		log.debug(`focused`, id)
 		
 		assert(instance, `Focused, but no instance???`)
 		
 		if (focused) {
-			log.info(`Already focused`)
+			log.debug(`Already focused`)
 		} else {
 			this.setState({ focused: true })
 		}
@@ -148,16 +155,19 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.info(`blurred`, id)
+		log.debug(`blurred`, id)
 		assert(instance, `Blur, but no instance???`)
 		
 		if (!focused) {
-			log.info(`Blur, but not focused`)
+			log.debug(`Blur, but not focused`)
 		} else {
 			this.setState({ focused: false })
 		}
 		
-		getCommandManager().setContainerFocused(id, this, false, event)
+		setImmediate(() => {
+			getCommandManager().setContainerFocused(id, this, false, event)
+		})
+		
 		
 		if (instance.onBlur)
 			instance.onBlur(event)
@@ -172,28 +182,24 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{ instance, id } = this,
 			{ mounted, registered } = this.state
 		
-		log.info(`Updating commands for ${id}`)
+		log.debug(`Updating commands for ${id}`)
 		
-		if (!instance) {
-			log.warn(`Instance is not set yet, can not do anything, mounted=${mounted}`)
+		if (!instance || !id) {
+			log.warn(`Instance is not set yet, can not do anything, mounted=${mounted}, id=${id}`)
 			return
 		}
 		
-		const
-			manager = getCommandManager()
 		
 		// REGISTER
-		if (mounted && !registered) {
-			log.info(`Registering commands on container ${id}`)
-			manager.registerContainerCommand(this.id, this, ...this.getCommands())
+		if (!registered) {
+			log.debug(`Registering commands on container ${id}`)
+			
+			getCommandManager()
+				.registerContainerCommand(this.id, this, ...this.getCommands())
+			
 			this.setState({ registered: true })
 		}
-		// UN REGISTER
-		else if (!mounted && registered) {
-			log.info(`Un=registering commands on container ${id}`)
-			manager.unregisterContainerCommand(this.id, this, ...this.getCommands())
-			this.setState({ registered: false })
-		}
+		
 	}
 	
 	/**
@@ -201,11 +207,20 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	private getCommands = () => {
 		let
-			{ commands } = this.instance
+			commands = commandContainerCommands.get(this)
 		
-		if (isFunction(commands)) {
-			commands = commands(new CommandContainerBuilder(this))
+		if (!commands) {
+			const
+			 rawCommands = this.instance.commands
+			
+			commands = (isFunction(rawCommands)) ?
+				rawCommands(new CommandContainerBuilder(this)) :
+				rawCommands
+			
+			commandContainerCommands.set(this,commands)
 		}
+		
+		
 		return commands
 	}
 	

@@ -77,7 +77,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	onSyncChanges(changes:ISyncChanges) {
 		return (dispatch,getState) => {
-			log.info(`Received repo sync changes`,changes)
+			log.debug(`Received repo sync changes`,changes)
 			if (changes.repoChanged)
 				this.loadAvailableRepos()
 		}
@@ -168,7 +168,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					repo = await this.stores.repo.get(repoId)
 
 				// Create RepoSync Job
-				log.info(`Triggering repo sync for ${repo.full_name}`)
+				log.debug(`Triggering repo sync for ${repo.full_name}`)
 				JobDAO.create(JobType.RepoSync,null,{
 					availableRepo,
 					repo,
@@ -187,7 +187,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	syncUserRepos() {
 		return (dispatch,getState) => {
-			log.info('Triggering user repo sync')
+			log.debug('Triggering user repo sync')
 			
 			JobDAO.create(JobType.GetUserRepos)
 		}
@@ -224,7 +224,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				.filter(availRepo => !availRepo.deleted),
 			availRepoIds = availRepos.map(it => it.id)
 		
-		log.info(`Got available repos `, availRepos,availRepoIds)
+		log.debug(`Got available repos `, availRepos,availRepoIds)
 		
 		// Filter Deleted
 		const
@@ -294,16 +294,16 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	loadAvailableRepos(syncChanges:ISyncChanges = null) {
 		return async (dispatch,getState) => {
-			log.info(`Getting available repos`)
+			log.debug(`Getting available repos`)
 			
 			const
 				availableRepos = await this.getAllAvailableRepoResources()
 			
-			log.info(`Got all avail repo parts`,availableRepos)
+			log.debug(`Got all avail repo parts`,availableRepos)
 			this.updateAvailableRepos(availableRepos)
 			
 			if (syncChanges) {
-				log.info(`Now checking issue sync changes`,syncChanges)
+				log.debug(`Now checking issue sync changes`,syncChanges)
 				
 				getIssueActions().onSyncChanges(syncChanges)
 			}
@@ -358,7 +358,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 			let savedRepo = await repoStore.get(repo.id)
 			if (!savedRepo) {
-				log.info(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
+				log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
 				await repoStore.save(repo)
 			}
 
@@ -367,7 +367,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			const
 				existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)
 			
-			log.info('Saving new available repo as ',availRepo.repoId,'existing',existingAvailRepo && JSON.stringify(existingAvailRepo,null,4))
+			log.debug('Saving new available repo as ',availRepo.repoId,'existing',existingAvailRepo && JSON.stringify(existingAvailRepo,null,4))
 			if (existingAvailRepo)
 				availRepo = assign(existingAvailRepo,availRepo)
 		
@@ -405,10 +405,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		availRepo = await stores.availableRepo.save(availRepo)
 
 		// FIRST - get everything out of the state
-		log.info(`Reloading avail repos`)
+		log.debug(`Reloading avail repos`)
 		await actions.loadAvailableRepos()
 
-		log.info('Cleaning up issue selections')
+		log.debug('Cleaning up issue selections')
 		const
 			issueActions:IssueActionFactory = Container.get(IssueActionFactory),
 			editingIssue = editingIssueSelector(getState())
@@ -419,7 +419,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		if (_.get(editingIssue,'repoId') === repoId)
 			issueActions.setEditingIssue(null)
 
-		log.info(`Going to delay for a second then delete everything`)
+		log.debug(`Going to delay for a second then delete everything`)
 		await Promise.delay(1000)
 
 
@@ -439,7 +439,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					return user
 				})
 
-		log.info(`Going to remove
+		log.debug(`Going to remove
 			availRepo: ${availRepo.id}
 			labels: ${labelIds.length}
 			issues: ${issueIds.length}
@@ -448,7 +448,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			users (update): ${removeUsers.length}
 		`)
 
-		log.info(`Removing avail repo`)
+		log.debug(`Removing avail repo`)
 
 		const
 			// Concat all ids to remove
@@ -469,7 +469,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		// Wait for the all-clear
 		await removePromise
 
-		log.info(`Avail repo removed ${repoId}`)
+		log.debug(`Avail repo removed ${repoId}`)
 
 	}
 	
@@ -499,7 +499,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				stores = this.stores,
 				availRepo = await stores.availableRepo.get(availRepoId)
 			
-			log.info(`Setting available repo ${availRepo.id} to enabled ${enabled}`,availRepo,enabled)
+			log.debug(`Setting available repo ${availRepo.id} to enabled ${enabled}`,availRepo,enabled)
 			if (enabled === availRepo.enabled) {
 				log.warn(`No change in avail repo enabled state`,availRepo,enabled)
 				return
@@ -520,7 +520,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				availableRepos.findIndex(it => it.id === availRepoId),
 				(availableRepo) => cloneObject(availableRepo,{enabled})
 			))
-			log.info('Saved avail repo, setting enabled to',enabled)
+			log.debug('Saved avail repo, setting enabled to',enabled)
 			
 		}
 	}

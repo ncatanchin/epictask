@@ -272,11 +272,11 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 	}
 	
 	componentWillReceiveProps(nextProps) {
-		log.info(`Group header getting props`,nextProps)
+		log.debug(`Group header getting props`,nextProps)
 	}
 	
 	componentWillUnmount() {
-		log.info(`Header un-mounting`,this.props)
+		log.debug(`Header un-mounting`,this.props)
 	}
 	
 	/**
@@ -286,7 +286,7 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssueGroupHeaderProps):boolean {
-		log.info(`Shallow equal update check`)
+		log.debug(`Shallow equal update check`)
 		return !shallowEquals(this.props,nextProps,'expanded','group.id')
 	}
 	
@@ -297,7 +297,7 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 			headerStyles = styles.issueGroupHeader,
 			issueCount = group.issueIndexes.length
 		
-		log.info(`Group by`,groupBy,`item`,groupByItem,group)
+		log.debug(`Group by`,groupBy,`item`,groupByItem,group)
 		
 		return <div style={[headerStyles,expanded && headerStyles.expanded,style]}
 		            id={`group-${group.id}`}
@@ -467,7 +467,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 */
 	private updateGroupFilteredIndexes(props = this.props) {
 		//if (props.groupVisibility !== this.props.groupVisibility) {
-		log.info(`Group visibility changed - updating exclusions`)
+		log.debug(`Group visibility changed - updating exclusions`)
 		const
 			{items,groups,issues,editInlineConfig} = props,
 			itemIndexes = items.map((item,index) => index) as List<number>
@@ -513,7 +513,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			// }
 		}
 		
-		log.info(`ITEMS CHANGED`,itemsChanged)
+		log.debug(`ITEMS CHANGED`,itemsChanged)
 		
 		if (itemsChanged) {
 			
@@ -560,7 +560,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		if (lastIssueId) {
 			const elem = $(`#issue-item-${lastIssueId}`)[0] as any
 			if (elem) {
-				log.info('scrolling into view', elem)
+				log.debug('scrolling into view', elem)
 				elem.scrollIntoViewIfNeeded()
 			}
 		}
@@ -575,7 +575,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 */
 	toggleGroupVisible(group: IIssueGroup) {
 		
-		log.info(`Toggling group`,group)
+		log.debug(`Toggling group`,group)
 		
 		const
 			groupId = getIssueGroupId(group),

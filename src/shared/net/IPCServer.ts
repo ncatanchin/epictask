@@ -95,12 +95,12 @@ export class IPCServer {
 		ipc.serve(() => {
 			Object.keys(this.handlers).forEach(event => {
 				
-				log.info(`Registering handler ${event}`)
+				log.debug(`Registering handler ${event}`)
 				const
 					handler = this.handlers[event]
 				
 				ipc.server.on(event,(request, socket) => {
-					log.info(`Received event`,event,request,socket)
+					log.debug(`Received event`,event,request,socket)
 					handler(this,socket,event,cloneObject(request))
 				})
 			})

@@ -3,32 +3,57 @@
 
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommand, TCommandContainer, TCommandDefaultAccelerator } from "shared/commands/Command"
+import { ICommand, TCommandContainer } from "shared/commands/Command"
 import Electron = require('electron')
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import { isReactComponent } from "shared/util/UIUtil"
-import { inElectron, isMac } from "shared/util/ElectronUtil"
+
 import { CommandAccelerator } from "shared/commands/CommandAccelerator"
+import { isMain, InputTagNames, isElectron } from "shared/commands/CommandManagerConfig"
+import { getCommandMainMenuManagerType, CommandMainMenuManager } from "shared/commands/CommandMainMenuManager"
+import {
+	addWindowListener, addBrowserWindowListener,
+	removeBrowserWindowListener, removeWindowListener,
+	getCommandBrowserWindow
+} from "shared/commands/CommandManagerUtil"
+import { shallowEquals } from "shared/util/ObjectUtil"
 
 
 
 
 const
 	log = getLogger(__filename),
-	InputTagNames = ['INPUT','SELECT','TEXTAREA'],
-	isMain = process.type === 'browser',
+	
 	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
+		clazz:typeof CommandManager,
 		instance:CommandManager,
-		hotInstance:CommandManager
+		hotInstance:CommandManager,
+		
+		mainManager:CommandManager
 	}
 
 // DEBUG ENABLE
 log.setOverrideLevel(LogLevel.DEBUG)
 
+
+	
+
+/**
+ * Get the command manager on the main process
+ *
+ * @returns {CommandManager}
+ */
+function getMainCommandManager() {
+	if (instanceContainer.mainManager)
+		return instanceContainer.mainManager
+	
+	return (instanceContainer.mainManager = (isMain ? getCommandManager() :
+			(require('electron').remote.getGlobal('getCommandManager') as getCommandManagerType)()))
+}
 
 /**
  * Command container registration
@@ -40,25 +65,7 @@ export interface ICommandContainerRegistration {
 	focused:boolean
 	commands?:ICommand[]
 }
-	
-/**
- * Client to main process
- */
-export interface ICommandMenuClient {
-	addMenuCommand(cmd:ICommand):void
-}
 
-/**
- *
- */
-export interface ICommandMenuItemRegistration {
-	id:string
-	menuItem?:Electron.MenuItem
-	mounted:boolean
-	enabled:boolean
-	cmd:ICommand
-	accelerator?:string
-}
 
 /**
  * The command manager - menu, shortcuts, containers, etc
@@ -73,353 +80,64 @@ export class CommandManager {
 	}
 	
 	/**
-	 * All current menu item registrations
+	 * Return the main process menu manager
+	 *
+	 * @returns {any}
 	 */
-	private menuItemRegs:{[commandId:string]:ICommandMenuItemRegistration} = {}
+	private getMainMenuManager() {
+		return 	(isMain) ?
+				(require('./CommandMainMenuManager').getCommandMainMenuManager as getCommandMainMenuManagerType)() :
+				getMainCommandManager().getMainMenuManager()
+	}
+	
+	private mainMenuManager = new Proxy({},{
+		get: (target,prop) => {
+			return (...args) => {
+				try {
+					const
+						manager = this.getMainMenuManager(),
+						fn = manager && manager[prop]
+					
+					
+					if (!fn) {
+						return log.debug(`Prop ${prop} not available on main menu manager`)
+					}
+					if (typeof fn !== 'function') {
+						return log.warn(`Prop ${prop} is NOT a function`)
+					}
+					
+					fn(...args)
+				} catch (err) {
+					log.error(`Error occurred calling main menu`,err)
+					throw err
+				}
+			}
+		}
+	}) as CommandMainMenuManager
 	
 	/**
 	 * Browser menu commands that were sent to main
 	 */
-	private browserMenuCommands:ICommand[] = []
-	
-	/**
-	 * All the menu items managed in the main process (only fills in main process)
-	 */
-	private managedMenuItems:Electron.MenuItem[] = []
-	
-	
-	private removeManagedMenuItem(item:Electron.MenuItem) {
-		const
-			managedIndex = this.managedMenuItems.findIndex(it => it === item || (it as any).id === (item as any).id)
-		
-		if (managedIndex > -1)
-			this.managedMenuItems.splice(managedIndex,1)
-	}
-	/**
-	 * Get menu item registration
-	 *
-	 * @param cmd
-	 * @param createIfMissing
-	 */
-	private getMenuItemRegistration(cmd:ICommand,createIfMissing = true) {
-		if (!isMain || !inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,cmd.id)
-			return null
-		}
-		
-		const
-			Electron = require('electron'),
-			{Menu,MenuItem} = isMain ? Electron : Electron.remote
-			
-		let
-			reg =  this.menuItemRegs[cmd.id]
-		
-		if (!reg && createIfMissing) {
-			const
-				menuItem = new MenuItem({
-					label: cmd.name,
-					id: cmd.id,
-					accelerator: cmd.electronAccelerator,
-					click: (event) => {
-						log.info(`Menu Execute`)
-						cmd.execute(cmd,event)
-					}
-				})
-			
-			this.managedMenuItems.push(menuItem)
-			
-			reg = this.menuItemRegs[cmd.id] = {
-				id:cmd.id,
-				cmd,
-				mounted: false,
-				enabled: true,
-				
-				menuItem
-			}
-		}
-		return reg
-	}
-	
-	
-	/**
-	 * Add a menu command, if on the renderer it trys to get the
-	 * command manager on the main process
-	 *
-	 * @param commands
-	 */
-	private mountMenuCommand(...commands:ICommand[]) {
-		if (!inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,commands.map(it => it.id))
-			return
-		}
-		
-		if (!commands.length)
-			return
-		
-		const
-			Electron = require('electron')
-		
-		if (!isMain) {
-			const
-				mainGetCommandManager = Electron.remote.getGlobal('getCommandManager') as typeof getCommandManager,
-				manager = mainGetCommandManager(),
-				mappedCommands = commands
-					.filter(cmd => cmd.menuPath)
-					.map(cmd => {
-						const
-							mappedCmd = assign(_.pick(cmd,
-								'id',
-								'execute',
-								'name',
-								'description',
-								'menuPath',
-								'type'),{
-								electronAccelerator: new CommandAccelerator(cmd.defaultAccelerator).toElectronAccelerator()
-							})
-						
-						if (!this.browserMenuCommands.find(it => it.id === mappedCmd.id))
-							this.browserMenuCommands.push(mappedCmd)
-						
-						return mappedCmd
-					})
-			
-			log.debug(`Passing mapped commands to main process`,mappedCommands.map(it => it.id))
-			manager.mountMenuCommand(...mappedCommands)
-			return
-		}
-		
-		
-		const
-			{Menu,MenuItem} = isMain ? Electron : Electron.remote,
-			appMenu = Menu.getApplicationMenu()
-		
-		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commands.forEach(cmd => {
-			if (!cmd.menuPath) {
-				//log.debug(`Called addMenuItem, but no menu path specified`)
-				return
-			}
-			
-			const
-				itemReg = this.getMenuItemRegistration(cmd)
-			
-			if (itemReg.mounted) {
-				log.debug(`Already mounted item`,itemReg.id)
-				return
-			}
-			
-			itemReg.mounted = true
-			
-			const
-				menuPath = cmd.menuPath,
-				
-				// GET THE MENU END POINT
-				menu = menuPath.reduce((currentMenu, nextName) => {
-					let
-						nextMenuItem = (currentMenu.items || currentMenu).find(it => it.label === nextName)
-					
-					if (nextMenuItem && nextMenuItem.type !== 'submenu') {
-						throw new Error(`Can not add a menu item to a non 'submenu' type element for menu path ${menuPath}, type is ${nextMenuItem.type}`)
-					} else if (!nextMenuItem) {
-						const
-							nextMenu = new Menu()
-						
-						nextMenuItem = new MenuItem({
-							label: nextName,
-							type: 'submenu',
-							submenu: nextMenu
-						})
-						
-						this.managedMenuItems.push(nextMenuItem)
-						
-						currentMenu.append ?
-							currentMenu.append(nextMenuItem) :
-							currentMenu.items.push(nextMenuItem)
-						
-						
-					}
-					
-					
-					return nextMenuItem.submenu
-				}, appMenu as any)
-			
-			// PUSH THE ITEM AND UPDATE
-			menu.append ?
-				menu.append(itemReg.menuItem) :
-				menu.items.push(itemReg)
-			
-			
-		})
-		
-		// FORCE UPDATE
-		log.info(`mounting app menu`)
-		const
-			newAppMenu = new Menu()
-		
-		appMenu.items
-			.filter(item => item.type !== 'submenu' || (Array.isArray(item.submenu) ? item.submenu.length > 0 : item.submenu.items.length > 0))
-			.forEach(item => newAppMenu.append(item))
-		
-		Menu.setApplicationMenu(newAppMenu)
-		//Menu.setApplicationMenu(appMenu)
-		
-		
-	}
-	
-	/**
-	 * Remove menu commands (unmount them)
-	 *
-	 * @param commandIds
-	 */
-	private unmountMenuCommand(...commandIds:string[]) {
-		log.debug(`Going to try and unmount: `, commandIds)
-		
-		if (!inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,commandIds)
-			return
-		}
-		
-		if (!commandIds.length)
-			return
-		
-		const
-			Electron = require('electron')
-		
-		if (!isMain) {
-			const
-				mainGetCommandManager = Electron.remote.getGlobal('getCommandManager') as typeof getCommandManager,
-				manager = mainGetCommandManager()
-				
-			log.debug(`Passing mapped commands to  for UNMOUNT`,commandIds)
-			manager.unmountMenuCommand(...commandIds)
-			return
-		}
-		
-		
-		const
-			{Menu} = isMain ? Electron : Electron.remote,
-			appMenu = Menu.getApplicationMenu(),
-			touchedMenus:Electron.Menu[] = []
-		
-		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commandIds.forEach(commandId => {
-			const
-				itemReg = this.menuItemRegs[commandId],
-				cmd = itemReg && itemReg.cmd
-			
-			if (!itemReg || !cmd.menuPath) {
-				log.debug(`Called addMenuItem, but no menu path specified`)
-				return
-			}
-			
-			if (!itemReg.mounted) {
-				log.debug(`Already un-mounted item`,itemReg.id)
-				return
-			}
-			
-			itemReg.mounted = false
-			
-			const
-				menuPath = cmd.menuPath,
-				
-				// GET THE MENU END POINT
-				menu = menuPath.reduce((currentMenu, nextName) => {
-					if (!currentMenu)
-						return null
-					
-					let
-						nextMenuItem = (currentMenu.items || currentMenu).find(it => it.label === nextName)
-					
-					if (nextMenuItem && nextMenuItem.type !== 'submenu') {
-						throw new Error(`Can not add a menu item to a non 'submenu' type element for menu path ${menuPath}, type is ${nextMenuItem.type}`)
-					} else if (!nextMenuItem) {
-						return null
-					}
-					
-					
-					currentMenu = nextMenuItem.submenu
-					
-					// KEEP TRACK SO WE CAN PRUNE
-					touchedMenus.push(currentMenu)
-					
-					return currentMenu
-				}, appMenu as any)
-			
-			if (!menu) {
-				log.debug(`Item is not currently mounted`,cmd.id)
-				return
-			}
-			
-			const
-				itemIndex = (menu.items || []).findIndex(it => it === itemReg.menuItem || it.id === cmd.id)
-			
-			// REMOVE THE ITEM
-			log.debug(`Found item to remove at index ${itemIndex}`,itemIndex)
-			if (itemIndex > -1)
-				menu.items.splice(itemIndex,1)
-			
-		})
-		
-		
-		log.debug(`Checking menus that need to be pruned`,touchedMenus.length)
-		
-		touchedMenus
-			.reverse()
-			.forEach(topMenu => {
-				
-				const
-					itemsToRemove = [],
-					topItems = (Array.isArray(topMenu) ? topMenu.items : topMenu.items) as Electron.MenuItem[]
-				
-				topItems
-					.forEach(item => {
-						if (item && item.submenu) {
-							
-							const
-								{submenu} = item,
-								hasItems = Array.isArray(submenu) ? submenu.length > 0 : submenu.items.length > 0
-							
-							if (!hasItems && this.managedMenuItems.includes(item)) {
-								itemsToRemove.push(item)
-							}
-						}
-					})
-				
-				
-				while (itemsToRemove.length) {
-					const
-						item = itemsToRemove.pop(),
-						index = topItems.findIndex(it => it === item || (it as any).id === (item as any).id)
-					
-					log.debug(`Pruning item`,item.id,index)
-					
-					if (index > -1 && this.managedMenuItems.includes(item)) {
-						this.removeManagedMenuItem(item)
-						
-						topItems.splice(index,1)
-					}
-					
-				}
-			})
-		
-		// FORCE UPDATE
-		const
-			newAppMenu = new Menu()
-
-		appMenu.items
-			.filter(item => !this.managedMenuItems.includes(item) || item.type !== 'submenu' || (Array.isArray(item.submenu) ? item.submenu.length > 0 : item.submenu.items.length > 0))
-			.forEach(item => newAppMenu.append(item))
-		
-		Menu.setApplicationMenu(newAppMenu)
-		
-	}
-	
-	
+	private menuCommands:ICommand[] = []
 	
 	/**
 	 * Map of all currently registered commands
 	 */
 	private commands:{[commandId:string]:ICommand} = {}
+	
+	
+	/**
+	 * Window & document listeners
+	 */
+	private windowListeners
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * Map of all current containers
@@ -492,26 +210,18 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowBlur(event) {
-		log.debug('body blur')
-		
-		
-		this.unmountMenuCommand(...this.browserMenuCommands.map(cmd => cmd.id))
-		
+		this.unmountMenuCommand(...this.menuCommands)
 	}
-	
+		
 	/**
 	 * on window focus
 	 *
 	 * @param event
 	 */
 	private onWindowFocus(event) {
-		log.debug('body focus')
-		
-		this.mountMenuCommand(...this.browserMenuCommands)
+		this.mountMenuCommand(...this.menuCommands)
 	}
 	
-	
-	private windowListeners
 	
 	/**
 	 * Attach to event producers
@@ -520,31 +230,31 @@ export class CommandManager {
 		if (typeof window !== 'undefined') {
 			if (!this.windowListeners) {
 				this.windowListeners = {
-					keydown: this.handleKeyDown.bind(this),
-					focus: this.onWindowFocus.bind(this),
-					blur: this.onWindowBlur.bind(this)
+					keydown: {
+						listener: this.handleKeyDown.bind(this),
+						attacher: addWindowListener,
+						detacher: removeWindowListener
+							
+					},
+					focus: {
+						listener:this.onWindowFocus.bind(this),
+						attacher: addBrowserWindowListener,
+						detacher: removeBrowserWindowListener
+					},
+					blur: {
+						listener: this.onWindowBlur.bind(this),
+						attacher: addBrowserWindowListener,
+						detacher: removeBrowserWindowListener
+					}
 				}
-				
-				
-				const
-					doc = window.document
 				
 				Object
 					.keys(this.windowListeners)
 					.forEach(eventName => {
 						const
-							listener = this.windowListeners[ eventName ]
+							{attacher,listener} = this.windowListeners[eventName]
 						
-						if (['keydown'].includes(eventName)) {
-							doc.addEventListener(eventName, listener)
-						} else {
-							if (!isMain && inElectron()) {
-								const
-									browserWindow = require('electron').remote.getCurrentWindow()
-								
-								browserWindow.addListener(eventName,listener)
-							}
-						}
+						attacher(eventName,listener)
 					})
 			}
 			// doc.body.addEventListener('focus',(event) => log.debug('body focus'))
@@ -557,28 +267,16 @@ export class CommandManager {
 	 */
 	detachEventHandlers() {
 		if (this.windowListeners) {
-			const
-				doc = window.document
+			log.debug(`Detaching window listeners`)
 			
 			Object
 				.keys(this.windowListeners)
 				.forEach(eventName => {
 					const
-						listener = this.windowListeners[ eventName ]
+						{listener,detacher} = this.windowListeners[eventName]
 					
-					if (['keydown'].includes(eventName)) {
-						doc.removeEventListener(eventName, listener)
-					} else {
-						if (!isMain && inElectron()) {
-							const
-								browserWindow = require('electron').remote.getCurrentWindow()
-							
-							browserWindow.removeListener(eventName,listener)
-						}
-					}
-					// doc.removeEventListener(eventName,this.windowListeners[eventName])
+					detacher(eventName,listener)
 				})
-			
 			
 			this.windowListeners = null
 		}
@@ -591,12 +289,12 @@ export class CommandManager {
 	 * @param container
 	 * @param available
 	 */
-	private getContainerStatus(id:string,container:TCommandContainer,available:boolean):ICommandContainerRegistration  {
+	private getContainerRegistration(id:string, container:TCommandContainer, available:boolean):ICommandContainerRegistration  {
 		let
-			status = this.containers[id]
+			reg = this.containers[id]
 		
-		if (!status) {
-			status = this.containers[id] = {
+		if (!reg) {
+			reg = this.containers[id] = {
 				container,
 				available,
 				focused: false,
@@ -605,12 +303,12 @@ export class CommandManager {
 					ReactDOM.findDOMNode(container) as HTMLElement
 			}
 		} else {
-			status.available = available
+			reg.available = available
 			if (!available)
-				status.focused = false
+				reg.focused = false
 		}
 		
-		return status
+		return reg
 	}
 	
 	/**
@@ -621,6 +319,218 @@ export class CommandManager {
 	}
 	
 	/**
+	 * Map a menu command
+	 *
+	 * @param cmd
+	 * @returns {any}
+	 */
+	private mapMenuCommand = (cmd:ICommand) => {
+		return assign(_.pick(cmd,
+			'id',
+			'execute',
+			'name',
+			'description',
+			'enabled',
+			'hidden',
+			'menuPath',
+			'type'),{
+			electronAccelerator: cmd.electronAccelerator || new CommandAccelerator(cmd.defaultAccelerator).toElectronAccelerator()
+		})
+	}
+	
+	/**
+	 * Add/Update menu commands
+	 *
+	 * @param commands
+	 */
+	private addMenuCommand(...commands:ICommand[]) {
+		this.menuCommands =
+			this.menuCommands
+				.filter(it => !commands.find(cmd => cmd.id === it.id))
+				.concat(commands.map(this.mapMenuCommand))
+		
+	}
+	
+	/**
+	 * Map commands to electron menu commands
+	 *
+	 * @param commands
+	 * @returns {any[]}
+	 */
+	private getMenuCommands(...commands:ICommand[]) {
+		return commands
+			.filter(cmd => cmd.menuPath)
+			.map(cmd => {
+				const
+					mappedCmd = this.mapMenuCommand(cmd)
+				
+				this.addMenuCommand(mappedCmd)
+				
+				return mappedCmd
+			})
+	}
+	
+	/**
+	 * Update menu commands
+	 *
+	 * @param commands
+	 * @param force
+	 */
+	private updateMenuCommands(commands:ICommand[],force = false) {
+		const
+			mappedCommands = commands
+				.filter(it => it.menuPath)
+				.map(this.mapMenuCommand),
+			changedCommands = force ? mappedCommands : []
+			
+		// LOOK FOR CHANGES
+		let
+			changes = force
+		
+		if (!changes) {
+			for (let cmd of mappedCommands) {
+				if (!shallowEquals(cmd, this.menuCommands.find(it => it.id === cmd.id))) {
+					changes = true
+					changedCommands.push(cmd)
+				}
+			}
+		}
+		
+		if (changes) {
+			this.addMenuCommand(...changedCommands)
+		  this.mainMenuManager.updateCommand(...changedCommands)
+		}
+	}
+	
+	/**
+	 * Remove a set of menu commands
+	 *
+	 * @param commands
+	 */
+	private removeMenuCommands(commands:ICommand[]) {
+		
+		commands = commands
+			.filter(it => it.menuPath)
+		
+		for (let cmd of commands) {
+			const
+				index = this.menuCommands
+					.findIndex(it => it.id === cmd.id)
+			
+			if (index > -1) {
+				this.menuCommands.splice(index,1)
+			}
+		}
+		
+		this.mainMenuManager.removeCommand(...commands)
+	}
+	
+	
+	/**
+	 * Mount all menu commands
+	 *
+	 * @param commands
+	 */
+	private mountMenuCommand(...commands:ICommand[]) {
+		if (getCommandBrowserWindow() && !getCommandBrowserWindow().isFocused())
+			return
+		
+		const
+			manager = this.mainMenuManager,
+			menuCommands = this.getMenuCommands(...commands)
+		
+		manager.showCommand(...menuCommands)
+	}
+	
+	/**
+	 * Unmount a set of menu commands on the main process
+	 *
+	 * @param commands
+	 */
+	private unmountMenuCommand(...commands:ICommand[]) {
+		const
+			manager = this.mainMenuManager,
+			menuCommandIds = commands
+				.filter(it => it.menuPath)
+				.map(it => it.id)
+		
+		log.info(`Unmounting menu command`,...menuCommandIds)
+		manager.hideCommand(...menuCommandIds)
+		
+	}
+	
+	/**
+	 * Register commands globally
+	 *
+	 * @param commands
+	 */
+	private mountCommand(...commands:ICommand[]) {
+		this.mountMenuCommand(...commands)
+		
+		
+		
+	}
+	
+	/**
+	 * Unmount a set of commands
+	 *
+	 * @param commands
+	 */
+	private unmountCommand(...commands:ICommand[]) {
+		this.unmountMenuCommand(...commands)
+	}
+	
+	
+	
+	/**
+	 * Register commands
+	 *
+	 * @param commands
+	 */
+	registerCommand(...commands:ICommand[]) {
+		commands.forEach(cmd => {
+			assert(cmd.id && cmd.name,`A command can not be registered without an id & name`)
+			
+			// ADD OR UPDATE
+			const
+				currentCmd = this.commands[cmd.id]
+			
+			if (currentCmd) {
+				cmd = Object.assign(currentCmd,cmd)
+			} else {
+				this.commands[cmd.id] = cmd
+			}
+			
+			// IF AN UPDATE MANAGER IS PROVIDED THEN SEND AN UPDATER
+			if (cmd.updateManager)
+				cmd.updateManager(cmd,{
+					setHidden:(hidden:boolean) =>
+						this.registerCommand(Object.assign(cmd,{hidden})),
+					setEnabled:(enabled:boolean) =>
+						this.registerCommand(Object.assign(cmd,{enabled})),
+					update:(cmd:ICommand) => this.registerCommand(cmd)
+				})
+		})
+		// FINALLY UPDATE MENU ITEMS
+		log.info(`Mounting menu command`,commands.map(it => it.id))
+		this.updateMenuCommands(commands)
+	}
+	
+	/**
+	 * Un-register commands
+	 *
+	 * @param commands
+	 */
+	unregisterCommand(...commands:ICommand[]) {
+		commands.forEach(cmd => {
+			delete this.commands[cmd.id]
+		})
+		
+		// FINALLY MAKE SURE MENU ITEMS ARE REMOVED
+		this.removeMenuCommands(commands)
+	}
+	
+	/**
 	 * Register a command
 	 *
 	 * @param id
@@ -628,25 +538,20 @@ export class CommandManager {
 	 * @param commands
 	 */
 	registerContainerCommand(id:string, container:TCommandContainer, ...commands:ICommand[]) {
-		commands.forEach(cmd => {
-			
-			log.debug(`Registering command`,cmd.id)
-			
-			this.commands[cmd.id] = cmd
-		})
+		
+		this.registerCommand(...commands)
 		
 		const
-			status = this.getContainerStatus(id,container,true)
+			reg = this.getContainerRegistration(id,container,true)
 		
-		status.commands =
-			status
+		// UPDATE COMMANDS ON CONTAINER REG
+		reg.commands =
+			reg
 				.commands
 				.filter(cmd => !commands.find(it => it.id === cmd.id))
 				.concat(commands)
 		
 		
-		log.info(`Mounting menu command`,commands.map(it => it.id))
-		this.mountMenuCommand(...commands)
 		
 		
 	}
@@ -665,13 +570,10 @@ export class CommandManager {
 		})
 		
 		const
-			status = this.getContainerStatus(id,container,false)
+			reg = this.getContainerRegistration(id,container,false)
 		
-		status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
-		
-		log.info(`Unmounting menu command`,...commands.map(it => it.id))
-		this.unmountMenuCommand(...commands.map(it => it.id))
-		
+		//status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
+		this.unregisterCommand(...reg.commands)
 	}
 	
 	
@@ -688,10 +590,16 @@ export class CommandManager {
 		log.info(`Focused on container ${id}`)
 		
 		const
-			status = this.getContainerStatus(id,container,true)
+			status = this.getContainerRegistration(id,container,true),
+			{commands} = status
 		
 		//TODO: mark others as not focused
 		status.focused = focused
+		
+		if (commands) {
+			focused ? this.mountCommand(...commands) : this.unmountCommand(...commands)
+		}
+		
 		return status
 	}
 	
@@ -702,8 +610,15 @@ export class CommandManager {
 	 * @param container
 	 * @param available
 	 */
-	setContainerStatus(id:string,container:TCommandContainer,available:boolean) {
-		return this.getContainerStatus(id,container,available)
+	setContainerMounted(id:string, container:TCommandContainer, available:boolean) {
+		const
+			reg = this.getContainerRegistration(id,container,available)
+		
+		if (reg.commands) {
+			available ? this.registerCommand(...reg.commands) : this.unregisterCommand(...reg.commands)
+		}
+		
+		return reg
 	}
 	
 	/**
@@ -723,6 +638,7 @@ export class CommandManager {
 			log.warn(`No container found for ${containerId}`)
 			return
 		}
+		
 		log.debug(`Focusing on ${containerId}`,containerReg.element)
 	  const
 		  {element} = containerReg,
@@ -741,7 +657,7 @@ export class CommandManager {
  */
 export const getCommandManager = getHot(module,'getCommandManager',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {
-		return CommandManager.getInstance()
+		return instanceContainer.clazz.getInstance()
 	}
 })) as () => CommandManager
 
@@ -770,29 +686,14 @@ declare global {
 
 
 /**
- * Update the singleton on HMR reload
+ * Update the singleton on HMR reload & set root clazz
  */
+instanceContainer.clazz = CommandManager
+
 if (instanceContainer.hotInstance) {
-	log.info(`Reloaded from HMR, we simply replace the prototype and force an update here`)
-	
-	const
-		fromInstance = instanceContainer.hotInstance,
-		fromProto = fromInstance && Object.getPrototypeOf(fromInstance)
-	
-	let
-		newProto
-	
-	if (fromInstance) {
-		fromInstance.detachEventHandlers()
-		
-		Object.setPrototypeOf(fromInstance,CommandManager.prototype)
-		
-		newProto = Object.getPrototypeOf(fromInstance)
-		
-		fromInstance.attachEventHandlers()
-	}
-	
-	log.debug(`hot reloading`,fromInstance,fromProto,newProto,'Are protos equal?',newProto === fromProto)
+	instanceContainer.hotInstance.detachEventHandlers()
+	Object.setPrototypeOf(instanceContainer.hotInstance,CommandManager.prototype)
+	instanceContainer.hotInstance.attachEventHandlers()
 }
 
 setDataOnHotDispose(module,() => ({

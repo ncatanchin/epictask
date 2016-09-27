@@ -54,7 +54,7 @@ export class RepoStateService extends BaseService {
 		
 		
 		let enabledReposValueCache = new ValueCache(_.debounce((enabledRepos) => {
-			log.info(`CHANGED: Enabled repo`,enabledRepos)
+			log.debug(`CHANGED: Enabled repo`,enabledRepos)
 			getIssueActions().loadIssues()
 		},150),true)
 		
@@ -63,7 +63,7 @@ export class RepoStateService extends BaseService {
 				const
 					enabledRepos = enabledAvailableReposSelector(getStoreState())
 				
-				log.info(`Enabled repo`,enabledRepos)
+				log.debug(`Enabled repo`,enabledRepos)
 				enabledReposValueCache.set(enabledRepos)
 			}),
 			this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
@@ -103,9 +103,9 @@ export class RepoStateService extends BaseService {
 	 * Watches for changes to selected issue ids
 	 */
 	private selectedIssueIdsChanged = _.debounce((selectedIssueIds:number[]) => {
-		log.info(`Selected issue ids updated`,selectedIssueIds)
+		log.debug(`Selected issue ids updated`,selectedIssueIds)
 		if (selectedIssueIds && selectedIssueIds.length === 1) {
-			log.info(`Loading activity`)
+			log.debug(`Loading activity`)
 			getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
 	},150)
@@ -119,7 +119,7 @@ export class RepoStateService extends BaseService {
 	//  */
 	// private checkEnabledRepos = _.debounce(() => {
 	//
-	// 	log.info(`Old repo ids`,oldValue, `New Repo Ids`,newValue)
+	// 	log.debug(`Old repo ids`,oldValue, `New Repo Ids`,newValue)
 	// 	getIssueActions().loadIssues()
 	//
 	// },150)
@@ -128,5 +128,5 @@ export class RepoStateService extends BaseService {
 export default RepoStateService
 
 if (module.hot) {
-	module.hot.accept(() => log.info('hot reload',__filename))
+	module.hot.accept(() => log.debug('hot reload',__filename))
 }

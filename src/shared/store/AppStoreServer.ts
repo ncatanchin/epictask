@@ -36,7 +36,7 @@ const clientMessageHandlers = {
 			rawValue = getStateValue(...keyPath),
 			value = _.toJS(rawValue)
 		
-		log.info(`Getting state value`, id, keyPath, rawValue, value)
+		log.debug(`Getting state value`, id, keyPath, rawValue, value)
 		
 		server.send(socket, 'stateResponse', {
 			id,
@@ -114,7 +114,7 @@ const clientMessageHandlers = {
 	 * @param args
 	 */
 		actionRequest(server:IPCServer, socket, event:string, { type, leaf, args }) {
-		log.info(`Received action request: `, leaf, type, args)
+		log.debug(`Received action request: `, leaf, type, args)
 		
 		const
 			actions = ActionFactoryProviders[ leaf ]
@@ -189,11 +189,11 @@ export async function start() {
 	try {
 		ipcServer = new IPCServer(AppStoreServerName,clientMessageHandlers)
 		
-		log.info(`Starting store server`)
+		log.debug(`Starting store server`)
 		
 		await ipcServer.start()
 		
-		log.info(`Server started`)
+		log.debug(`Server started`)
 	} catch (err) {
 		log.error(`Failed to start app store server, process type is ${ProcessConfig.getTypeName()}`, err)
 		

@@ -33,6 +33,17 @@ export enum CommandType {
 
 export type TCommandContainer = React.Component<any, any>|Electron.Menu
 
+
+/**
+ * Command updater set on registration
+ */
+export interface ICommandUpdater {
+	setEnabled:(enabled:boolean) => any
+	setHidden:(hidden:boolean) => any
+	update:(cmd:ICommand) => any
+}
+
+
 /**
  * Executor shape
  */
@@ -100,6 +111,11 @@ export interface ICommand {
 	hidden?:boolean
 	
 	/**
+	 * Current action is enabled
+	 */
+	enabled?:boolean
+	
+	/**
 	 * Path to the menu where this should be added
 	 */
 	menuPath?:string[]
@@ -109,6 +125,13 @@ export interface ICommand {
 	 * overrides all
 	 */
 	disableKeyReassign?:boolean
+	
+	/**
+	 * A function that accepts and updater for making changes to registered commands
+	 *
+	 * @param updater
+	 */
+	updateManager?:(cmd:ICommand,updater:ICommandUpdater) => any
 }
 
 
