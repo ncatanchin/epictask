@@ -14,6 +14,7 @@ declare global {
 		Fill:any,
 		FillWidth:any,
 		FillHeight:any,
+		FillWindow:any,
 		Flex:any,
 		FlexScale:any,
 		FlexAuto:any,
@@ -26,6 +27,7 @@ declare global {
 		FlexAlignCenter:any,
 		FlexAlignStart:any,
 		FlexAlignEnd:any,
+		
 		Ellipsis:any,
 		PositionRelative:any,
 		PositionAbsolute:any,

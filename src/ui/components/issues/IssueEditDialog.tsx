@@ -692,3 +692,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 
 }
+
+
+export default IssueEditDialog

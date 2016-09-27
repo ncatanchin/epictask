@@ -20,6 +20,7 @@ import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
 import {DataComponent, MapData} from "ui/components/data/DataComponent"
 import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
+import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 const
 	{CommonKeys:Keys} = KeyMaps
 
@@ -124,15 +125,22 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> implements I
 	
 	readonly commands:ICommand[] = []
 	readonly commandComponentId:string = 'RepoPanel'
+	
 	/**
-	 * Default location for the tool
+	 * Repo Action
 	 *
 	 * @type {ToolPanelLocation}
 	 */
 	
-	private repoActions:RepoActionFactory = Container.get(RepoActionFactory)
+	private repoActions = getRepoActions()
 	
-	private uiActions = Container.get(UIActionFactory)
+	
+	/**
+	 * UI Actions
+	 *
+	 * @type {UIActionFactory}
+	 */
+	private uiActions = getUIActions()
 	
 	
 	
@@ -145,14 +153,8 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> implements I
 	onBlur = () => {
 		this.repoActions.clearSelectedRepos()
 	}
-
 	
-
-	keyHandlers = {
-
-	}
-	
-	
+		
 	render() {
 		const
 			{theme,styles,style,visible} = this.props,

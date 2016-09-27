@@ -59,6 +59,7 @@ export const IssueStateRecord = Record({
 	editInlineConfig:null,
 	editingIssue:null,
 	editCommentRequest:null,
+	
 	patchIssues:null,
 	patchMode:null,
 	
@@ -93,7 +94,7 @@ export class IssueState extends IssueStateRecord {
 	}
 	
 	toJS() {
-		return _.pick(this,'issueFilter','issueSort','selectedIssueIds')
+		return _.pick(this,'issueFilter','issueSort','selectedIssueIds','patchIssues','patchMode','editingIssue','editCommentRequest')
 	}
 	
 	

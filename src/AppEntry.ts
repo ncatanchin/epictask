@@ -15,7 +15,8 @@ const Entries = {
 	[ProcessType.Main]: () => require("main/MainEntry"),
 	[ProcessType.DatabaseServer]: () => require("db/DatabaseServerEntry"),
 	[ProcessType.JobServer]: () => require("job/JobServerEntry"),
-	[ProcessType.UI]: () => require("ui/UIEntry")
+	[ProcessType.UI]: () => require("ui/UIEntry"),
+	[ProcessType.UIDialog]: () => require("ui/UIEntry")
 }
 
 if (DEBUG) {

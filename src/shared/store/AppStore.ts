@@ -2,16 +2,18 @@
 import thunkMiddleware from 'redux-thunk'
 import {Store as ReduxStore} from 'redux'
 import {Map} from 'immutable'
-import { StoreEnhancer,compose, applyMiddleware } from 'redux'
+import { StoreEnhancer,Store,compose, applyMiddleware } from 'redux'
 import {ReduxDebugSessionKey, UIKey} from 'shared/Constants'
-import {Toaster} from 'shared/Toaster'
+import { getToaster } from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 
 
 import {
 	setStoreProvider,
 	ILeafReducer,
-	ObservableStore
+	ObservableStore,
+	addActionInterceptor,
+	IActionInterceptorNext
 } from 'typedux'
 
 import {
@@ -26,6 +28,9 @@ import {
 import {OnlyIfFn, If} from "shared/util/Decorations"
 import {isString} from "shared/util/ObjectUtil"
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
+import { IChildStore, IChildStoreSubscriptionManager, ChildStoreSubscriptionStatus } from "shared/store/ChildStore"
+import { attachChildStore } from "shared/AppStoreClient"
+
 
 const
 	log = getLogger(__filename),
@@ -36,7 +41,47 @@ const
 // HMR - setup
 let
 	hmrReady = false,
-	hmrDisposed = false
+	hmrDisposed = false,
+	interceptorInstalled = false
+
+log.setOverrideLevel(LogLevel.DEBUG)
+
+/**
+ * Install action interceptor for child
+ *
+ * @param childStoreManager
+ */
+function installActionInterceptor(childStoreManager:IChildStoreSubscriptionManager) {
+	// MAKE SURE THE INTERCEPTOR IS INSTALLED FOR CHILD STORES
+	// - INTERCEPTS ACTIONS (NOT REDUCER ACTIONS)
+	// - PUSHES TO ROOT STORE
+	If(!interceptorInstalled && !ProcessConfig.isType(ProcessType.UI),() => {
+		
+		interceptorInstalled = true
+		
+		const
+			unregisterInterceptor = addActionInterceptor(
+				({leaf,type,options}, next:IActionInterceptorNext, ...args:any[]) => {
+					
+					// Push it to the server
+					childStoreManager.sendAction({leaf,type,args})
+					
+					// If it's a reducer then process it, otherwise - wait for server
+					// to process the action and send data
+					return (options && options.isReducer) ? next() : null
+					
+				}
+			)
+		
+		if (module.hot) {
+			module.hot.dispose(() => {
+				log.info(`HMR Removing action interceptor`)
+				unregisterInterceptor()
+			})
+		}
+	})
+}
+
 
 /**
  * Create the appropriate middleware
@@ -53,7 +98,8 @@ function createMiddleware() {
  *
  * @type {*[]}
  */
-const middleware = _.get(module,'module.hot.data.middleware',createMiddleware())
+const
+	middleware = getHot(module,'middleware',createMiddleware())
 
 
 let
@@ -97,7 +143,9 @@ function getDebugSessionKey() {
  * @param reducer
  */
 function onError(err:Error,reducer?:ILeafReducer<any,any>) {
-	const toaster = Container.get(Toaster)
+	const
+		toaster = getToaster()
+	
 	log.error('Reducer error occurred',reducer,err,err.stack)
 	setImmediate(() => {
 		toaster.addErrorMessage(err)
@@ -130,9 +178,15 @@ function hmrSetup() {
  */
 function initStore(devToolsMode = false,defaultState = null) {
 
-	const enhancers = [
-		applyMiddleware(...middleware)
-	]
+	const
+		enhancers = [
+			applyMiddleware(...middleware)
+		]
+	
+	// ADD AppStoreEnhancer to broadcast to children only in UI process
+	if (ProcessConfig.isType(ProcessType.UI)) {
+		enhancers.push(require('./AppStoreEnhancer').default)
+	}
 
 	// if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
 	// 	enhancers.push(applyMiddleware(createLogger()))
@@ -148,15 +202,17 @@ function initStore(devToolsMode = false,defaultState = null) {
 	}
 	
 
-	let reducers = getReducers()
+	let
+		reducers = getReducers()
 
-	// Create the store/*
-	const newStore = ObservableStore.createObservableStore(
-		reducers,
-		compose.call(null,...enhancers) as StoreEnhancer<any>,
-		null,
-		defaultState
-	)
+	// CREATE STORE
+	const
+		newStore = ObservableStore.createObservableStore(
+			reducers,
+			compose.call(null,...enhancers) as StoreEnhancer<any>,
+			null,
+			defaultState
+		)
 
 	// If HMR enabled then prepare for it
 	hmrSetup()
@@ -210,37 +266,102 @@ export function loadAndInitStorybookStore() {
 /**
  * Load existing state from disk
  *
+ * @param defaultStateValue
  * @returns {ObservableStore<any>}
  */
 
-export async function loadAndInitStore() {
+export async function loadAndInitStore(defaultStateValue = null) {
 	loadActionFactories()
 	
-	let defaultStateValue = null
 	
-	
-	try {
-		// If state server then try and load from disk
-		const stateJson = readFile(stateFilename)
-		
-		if (stateJson) {
-			let
-				count = 0,
-				stateData = stateJson
+	// ONLY LOAD STATE ON MAIN UI PROCESS
+	if (ProcessConfig.isType(ProcessType.UI)) {
+		try {
+			// If state server then try and load from disk
+			const
+				stateJson = readFile(stateFilename)
 			
-			while (isString(stateData) && count < 3) {
-				stateData = JSON.parse(stateData)
+			if (stateJson) {
+				let
+					count = 0,
+					stateData = stateJson
+				
+				while (isString(stateData) && count < 3) {
+					stateData = JSON.parse(stateData)
+				}
+				
+				defaultStateValue = stateData
+				//log.info(`Read state from file`, JSON.stringify(defaultStateValue[ UIKey ], null, 4))
 			}
-			
-			defaultStateValue = stateData
-			log.info(`Read state from file`,JSON.stringify(defaultStateValue[UIKey],null,4))
+		} catch (err) {
+			log.error('unable to load previous state data, starting fresh', err)
 		}
-	} catch (err) {
-		log.error('unable to load previous state data, starting fresh', err)
 	}
-
+	
 	return initStore(false,defaultStateValue)
 }
+
+
+/**
+ * Create a child store that connects to the root process
+ *
+ * @returns {ObservableStore<any>}
+ */
+export async function loadAndInitChildStore() {
+	let
+		childReduxStore,
+		initialState,
+		manager:IChildStoreSubscriptionManager
+	
+	const
+		// Message list - this is used to save reducer messages until ready
+		pendingMessages = [],
+		
+		// Child Store
+		childStore:IChildStore = {
+			dispatch(action) {
+				if (childReduxStore) {
+					childReduxStore.dispatch(action)
+				}else {
+					pendingMessages.push(action)
+				}
+			},
+			
+			setState(state) {
+				log.info(`Child got initial state`, state)
+				initialState = state
+			}
+		}
+		
+	try {
+		manager = await attachChildStore(childStore)
+		manager.onStatusChange((status:ChildStoreSubscriptionStatus,err:Error = null) => {
+			log.info(`Child store state changed`,status,err)
+		})
+		
+		installActionInterceptor(manager)
+		
+		const
+			preStore = await loadAndInitStore(initialState)
+		
+		while (pendingMessages.length) {
+			const
+				nextMsg = pendingMessages.shift()
+			
+			preStore.dispatch(nextMsg)
+		}
+		
+		//noinspection JSUnusedAssignment
+		childReduxStore = preStore
+	}	catch (err) {
+		log.error(`Failed to start the child store - this is bad`,err)
+		throw err
+	}
+	
+	return store
+	
+}
+
 
 
 
@@ -248,6 +369,9 @@ export async function loadAndInitStore() {
  * Write the actual state async
  */
 function writeStoreState(state = getStoreState(),doAsync = false) {
+	if (!ProcessConfig.isType(ProcessType.UI))
+		return Promise.resolve()
+	
 	log.info(`Writing current state to: ${stateFilename}`)
 	if (persistingState) {
 		log.info('Persisting, can not persist until completion')
@@ -273,11 +397,17 @@ function writeStoreState(state = getStoreState(),doAsync = false) {
 	return Promise.resolve()
 }
 
-
+/**
+ * Is persistence allowed
+ * @returns {any|boolean}
+ */
 function canPersistState() {
-	const canPersist = ProcessConfig.isMain() && !hmrDisposed
+	const
+		canPersist = ProcessConfig.isType(ProcessType.UI) && !hmrDisposed
+	
 	if (!canPersist)
-		log.debug(`Can not persist state isMain=${ProcessConfig.isMain()} hmrDisposed=${hmrDisposed}`)
+		log.debug(`Can not persist state in process=${ProcessConfig.getTypeName()} hmrDisposed=${hmrDisposed}`)
+	
 	return canPersist
 		
 }
@@ -337,7 +467,9 @@ export function serializeState(state = getStoreState()) {
 
 
 // Just in case its an hmr request
-const existingRemoveListener = getHot(module,'removeListener') as Function
+const
+	existingRemoveListener = getHot(module,'removeListener') as Function
+
 if (existingRemoveListener)
 	existingRemoveListener()
 
@@ -349,11 +481,10 @@ if (existingRemoveListener)
 
 
 // On unload write the state
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && ProcessConfig.isUI) {
 	window.addEventListener('beforeunload', () => {
 		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
 		writeStoreState()
-		//removeListener()
 	})
 }
 

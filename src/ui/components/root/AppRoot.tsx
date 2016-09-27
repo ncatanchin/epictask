@@ -1,39 +1,38 @@
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {Container} from 'typescript-ioc'
 import {ObservableStore} from 'typedux'
-import * as Radium from 'radium'
 import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
 import {Provider, connect} from 'react-redux'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {PureRender} from 'ui/components/common'
-import {IssueEditDialog} from 'ui/components/issues/IssueEditDialog'
-import {RepoAddDialog} from 'ui/plugins/repos/RepoAddDialog'
 import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
 import {getPage} from 'ui/components/pages'
-import {AppActionFactory} from 'shared/actions/app/AppActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
+
 import {AppStateType} from 'shared/AppStateType'
 import {Events, AppKey, UIKey} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 import {AppState} from 'shared/actions/app/AppState'
 import {UIState} from 'shared/actions/ui/UIState'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {RootState} from 'shared/store/RootState'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
-import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
-import {IssueCommentDialog} from 'ui/components/issues/IssueCommentDialog'
 import {StatusBar} from "ui/components/root/StatusBar"
-import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
-import { ContainerNames } from "shared/UIConstants"
+import {
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
+import { CommandType } from "shared/commands/Command"
+import { DialogConfigs } from "shared/UIConstants"
+import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { acceptHot } from "shared/util/HotUtils"
+import { If } from "shared/util/Decorations"
+import { FillWindow, makeStyle } from "shared/themes"
+
 
 const
 	{StyleRoot} = Radium,
-	$ = require('jquery')
+	$ = require('jquery'),
+	dialogName = process.env.EPIC_DIALOG,
+	isDialog = dialogName && dialogName !== 'undefined' && DialogConfigs[ dialogName ]
 
 
 /**
@@ -123,14 +122,25 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 	/**
 	 * All global app root window commands
 	 */
-	readonly commands:ICommand[] = []
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+			//MOVEMENT
+			.command(
+				CommandType.Container,
+				'New Issue',
+				(cmd,event) => getIssueActions().newIssue(),
+				"CommandOrControl+n",{
+					// menuPath:['Issue']
+				})
+			
+			.make()
 	
 	readonly commandComponentId:string = 'App'
 	
-	appActions = Container.get(AppActionFactory)
-	repoActions = Container.get(RepoActionFactory)
-	issueActions = Container.get(IssueActionFactory)
-	uiActions = Container.get(UIActionFactory)
+	appActions = getAppActions()
+	repoActions =getRepoActions()
+	issueActions = getIssueActions()
+	uiActions = getUIActions()
 
 
 
@@ -142,104 +152,65 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 		log.info('Blur')
 	}
 
-	/**
-	 * Map hot keys for the root
-	 *
-	 * @type {{}}
-	 */
-	keyHandlers = {
-		[KeyMaps.CommonKeys.New]: () => {
-			log.info('New issue keys pressed - making dialog visible')
-			this.issueActions.newIssue()
-		},
-
-		[KeyMaps.CommonKeys.MoveUp]: (event) => log.info('key up',event),
-		[KeyMaps.CommonKeys.MoveDown]:(event) => log.info('key down',event),
-
-		
-		[KeyMaps.CommonKeys.Escape]: () => {
-			log.info('Escaping and moving focus')
-			this.uiActions.closeAllDialogs()
-			//ReactDOM.findDOMNode<HTMLDivElement>(this.pageBodyHolder).focus()
-		},
-		// [KeyMaps.CommonKeys.View1]: () => {
-		// 	log.info('Escaping and moving focus')
-		// 	Container.get(UIActionFactory).focusIssuesPanel()
-		// },
-		// [KeyMaps.CommonKeys.View2]: () => {
-		// 	log.info('Escaping and moving focus')
-		// 	Container.get(UIActionFactory).focusIssueDetailPanel()
-		// },
-		// [KeyMaps.CommonKeys.Find]: () => {
-		// 	log.info('Escaping and moving focus')
-		// 	$('#header').find('input').focus()
-		// }
-		
-	}
-
 
 	/**
 	 * Render the app container
 	 */
 	render() {
-		//adjustedBodyStyle
-		const {hasAvailableRepos, stateType,dialogOpen, theme} = this.props,
-			{palette} = theme
-
+		
 		const
+			{hasAvailableRepos, stateType,dialogOpen, theme} = this.props,
+			{palette} = theme,
+			
 			page = {component: getPage(stateType)},
-			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos
+			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
 
-		const headerVisibility = (stateType < AppStateType.Home) ?
-			HeaderVisibility.Hidden :
-			(expanded) ? HeaderVisibility.Expanded :
-				HeaderVisibility.Normal
-
-		//region Create Themed Styles
-		const contentStyles = makeStyle(styles.content, {
-			backgroundColor: palette.canvasColor,
-			display: 'flex',
-			flexDirection: 'column'
-		}, expanded && styles.collapsed)
-		//endregion
-
-		let rootClasses = 'fill-height fill-width root-content'
-		if (dialogOpen)
-			rootClasses += ' dialog-open'
-
-
+			headerVisibility = (stateType < AppStateType.Home) ?
+				HeaderVisibility.Hidden :
+				(expanded) ? HeaderVisibility.Expanded :
+					HeaderVisibility.Normal,
+			
+			contentStyles = makeStyle(styles.content, {
+				backgroundColor: palette.canvasColor,
+				display: 'flex',
+				flexDirection: 'column'
+			}, expanded && styles.collapsed),
+		
+			DialogComponent = isDialog && DialogConfigs[ dialogName ].rootElement()
+		
+		log.info(`Dialog Component`,DialogComponent)
+			
 		return (
 
 			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={reduxStore}>
 					<CommandRoot
+						style={FillWindow}
 						component={this}
 						id="appRoot">
-
-						{/* DIALOGS */}
-						<IssueEditDialog />
-						<IssueCommentDialog />
-						<RepoAddDialog />
-						<IssuePatchDialog />
-
-						{/* Global flex box */}
-						<div className={rootClasses}
-						     style={[styles.content,theme.app]}>
-
+						
+						{isDialog ? <DialogComponent />:
+							
+						
+						
+						<div className={'root-content'}
+						     style={[FillWindow,styles.content,theme.app]}>
+							
 							<Header visibility={headerVisibility}/>
-
+							
 							{(stateType === AppStateType.AuthLogin || hasAvailableRepos) &&
-								<div style={makeStyle(FlexScale,FlexColumn)}>
-									<div style={contentStyles}>
-										<page.component />
-									</div>
-
-									<ToastMessages/>
+							<div style={makeStyle(FlexScale,FlexColumn)}>
+								<div style={contentStyles}>
+									<page.component />
 								</div>
+								
+								<ToastMessages/>
+							</div>
 							}
 							
 							<StatusBar/>
 						</div>
+						}
 						
 					</CommandRoot>
 				</Provider>
@@ -272,15 +243,18 @@ function render() {
 		document.getElementById('root'),
 		(ref) => {
 			log.info('Rendered, hiding splash screen')
-			window.postMessage({type:Events.UIReady},"*")
 			
-			// STOP SPINNING LOADER
-			win.stopLoader()
+			If(ProcessConfig.isUI(),() => {
+				
+				// STOP SPINNER
+				if (win.stopLoader)
+					win.stopLoader()
+				
+				window.postMessage({
+					type: Events.UIReady
+				}, "*")
+			})
 			
-			// TODO: ON LOAD FOCUS ON ISSUES PANEL
-			// setTimeout(() => {
-			// 	getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-			// },200)
 			
 		}
 	)
@@ -291,21 +265,26 @@ function render() {
  * is ready for us to load everything
  */
 function checkIfRenderIsReady() {
-	const state = store.getState()
-	const appState = state ? state.get(AppKey) : null
-	const ready = appState ? appState.ready : false
+	
+	const
+		state = store.getState(),
+		appState = state ? state.get(AppKey) : null,
+		ready = appState ? appState.ready : false
 
 	if (!ready) {
 		log.info('Theme is not set yet')
-		const observer = store.observe([AppKey,'ready'],(newReady) => {
-			log.info('RECEIVED READY, NOW RENDER',newReady)
-			if (!newReady !== true) {
-				log.info('Main is not ready',newReady)
-				return
-			}
-			observer()
-			render()
-		})
+		
+		const
+			observer = store.observe([AppKey,'ready'],(newReady) => {
+				log.info('RECEIVED READY, NOW RENDER',newReady)
+				if (!newReady !== true) {
+					log.info('Main is not ready',newReady)
+					return
+				}
+				observer()
+				render()
+			})
+		
 	} else {
 		render()
 	}
@@ -317,13 +296,7 @@ checkIfRenderIsReady()
 /**
  * Enable HMR
  */
-if (module.hot) {
-	module.hot.accept()
-	module.hot.dispose(() => {
-		log.info('HMR - App Root Disposed')
-	})
-}
-
+acceptHot(module,log)
 
 
 

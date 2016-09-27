@@ -1,8 +1,5 @@
 import * as assert from 'assert'
 import {Loader} from "ui/components/common/Loader"
-import * as ReactDOM from 'react-dom'
-import * as React from 'react'
-import * as Constants from 'shared/Constants'
 import Electron = require('electron')
 
 
@@ -59,30 +56,6 @@ function startLoaderEntry() {
 	
 	loadApp()
 	
-	//
-	// /**
-	//  * On main ready complete boot
-	//  */
-	// Electron.ipcRenderer.once(Constants.Events.MainReady,(event) => {
-	// 	log.info(`Received MainReady`)
-	//
-	// })
-	//
-	// /**
-	//  * Check if the Main process has already booted
-	//  */
-	// function checkIfMainIsReady() {
-	// 	if (loaded)
-	// 		return
-	// 	if (Electron.remote.getGlobal(Constants.MainBooted)) {
-	// 		log.info(`Main is booted, load UI`)
-	// 		loadApp()
-	// 	} else {
-	// 		checkTimer = setTimeout(checkIfMainIsReady,300)
-	// 	}
-	// }
-	//
-	// checkIfMainIsReady()
 	
 }
 

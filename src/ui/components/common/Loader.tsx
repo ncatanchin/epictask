@@ -1,7 +1,6 @@
 
 
 // Imports
-import * as React from 'react'
 import {PureRender} from 'ui/components/common/PureRender'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import * as shortId from 'short-id'

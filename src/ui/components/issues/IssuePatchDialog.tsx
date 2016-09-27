@@ -4,38 +4,38 @@
 
 // Imports
 import * as React from "react"
-import {connect} from "react-redux"
-import {createStructuredSelector} from "reselect"
-import {List} from "immutable"
-import {Dialog, CircularProgress, MenuItem} from "material-ui"
-import {MuiThemeProvider} from "material-ui/styles"
-import {Container} from "typescript-ioc"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
+import { List } from "immutable"
+import { Dialog, CircularProgress, MenuItem } from "material-ui"
+import { MuiThemeProvider } from "material-ui/styles"
+import { Container } from "typescript-ioc"
 
-import {PureRender, Button} from 'ui/components/common'
-import {createDeepEqualSelector} from "shared/util/SelectorUtil"
+import { PureRender, Button } from 'ui/components/common'
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 
-import {ThemedStyles} from "shared/themes/ThemeManager"
-import {Issue} from "shared/models/Issue"
+import { ThemedStyles } from "shared/themes/ThemeManager"
+import { Issue } from "shared/models/Issue"
 
-import {patchIssuesSelector, patchModeSelector, issueStateSelector} from "shared/actions/issue/IssueSelectors"
-import {User} from "shared/models/User"
-import {Label} from "shared/models/Label"
-import {Milestone} from "shared/models/Milestone"
-import {uiStateSelector} from "shared/actions/ui/UISelectors"
-import {Dialogs} from "shared/Constants"
-import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
-import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {IssuePatchModes, TIssuePatchMode} from "shared/actions/issue/IssueState"
-import {TypeAheadSelect} from "ui/components/common/TypeAheadSelect"
+import { patchIssuesSelector, patchModeSelector, issueStateSelector } from "shared/actions/issue/IssueSelectors"
+import { User } from "shared/models/User"
+import { Label } from "shared/models/Label"
+import { Milestone } from "shared/models/Milestone"
+import { uiStateSelector } from "shared/actions/ui/UISelectors"
+import { Dialogs } from "shared/Constants"
+import { IssueActionFactory } from "shared/actions/issue/IssueActionFactory"
+import { UIActionFactory } from "shared/actions/ui/UIActionFactory"
+import { IssuePatchModes, TIssuePatchMode } from "shared/actions/issue/IssueState"
+import { TypeAheadSelect } from "ui/components/common/TypeAheadSelect"
 import {
 	enabledRepoIdsSelector, enabledAssigneesSelector,
 	enabledLabelsSelector, enabledMilestonesSelector
 } from "shared/actions/repo/RepoSelectors"
 import LabelChip from "ui/components/common/LabelChip"
-import {IssueLabelsAndMilestones} from "ui/components/issues"
-import {Avatar} from 'ui/components/common'
-import {CommonKeys} from "shared/KeyMaps"
-import { ContainerNames } from "shared/UIConstants"
+import { IssueLabelsAndMilestones } from "ui/components/issues"
+import { Avatar } from 'ui/components/common'
+import { CommonKeys } from "shared/KeyMaps"
+import { ContainerNames, DialogConfigs } from "shared/UIConstants"
 
 
 // Constants
@@ -48,7 +48,7 @@ const tinycolor = require('tinycolor2')
  */
 const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
 	const
-		{secondary, accent} = theme.palette,
+		{ secondary, accent } = theme.palette,
 		focusBgColor = tinycolor(accent.hue3).setAlpha(0.2).toRgbString(),
 		focusColor = accent.hue1,
 		focusBorderColor = tinycolor(accent.hue1).setAlpha(1).toRgbString(),
@@ -79,12 +79,12 @@ const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
 				opacity: 0.0,
 			}
 		})
-
-
+	
+	
 	return createStyles({
-		'.patchMenuItem:after,.patchMenuItem:before': [makeTransition(['opacity', 'box-shadow', 'color']), {
+		'.patchMenuItem:after,.patchMenuItem:before': [ makeTransition([ 'opacity', 'box-shadow', 'color' ]), {
 			opacity: 0
-		}],
+		} ],
 		'.patchMenuItem:after': {
 			zIndex: 10,
 			content: '\' \'',
@@ -105,24 +105,24 @@ const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
 			top: '50%',
 			transform: 'translate(0,-50%)',
 			width: 'auto'
-
+			
 		},
 		// Hover or focus - make opaque
 		'div[data-hover=true] .patchMenuItem:before,  div[data-hover=true] .patchMenuItem:after, div[data-keyboard-focused=true] .patchMenuItem:before, div[data-keyboard-focused=true] .patchMenuItem:after': {
 			opacity: 1
 		},
-
+		
 		// Hover states
 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:before': {
 			color: hoverColor,
 			animation: `${pulseAnimation} 1.2s ease-out`,
 			animationIterationCount: 'infinite'
 		},
-
+		
 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:after': {
 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${hoverColor} !important`
 		},
-
+		
 		// Focus states
 		'div[data-keyboard-focused=true] .patchMenuItem:before': {
 			color: focusColor,
@@ -131,9 +131,9 @@ const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
 		},
 		'div[data-keyboard-focused=true] .patchMenuItem:after': {
 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${focusBorderColor} !important`
-
+			
 		}
-
+		
 	})
 })
 
@@ -147,36 +147,52 @@ if (module.hot) {
  * Add component styles
  */
 const baseStyles = createStyles({
-	root: [FlexColumn, FlexAuto, {}],
-
-	title: [FlexColumn, FillWidth, {
-		action: [FlexRow],
-		issues: [FlexRow, FillWidth, OverflowAuto,{
+	root: [ FillWindow,FlexColumn, {} ],
+	
+	title: [ FlexColumn, FillWidth, makePaddingRem(0,1,0,1),makeFlexAlign('flex-start','center'), {
+		
+		// DIALOG TITLE BAR
+		height: rem(6),
+		cursor: 'move',
+		
+		WebkitUserSelect: 'none',
+		WebkitAppRegion:  'drag',
+		
+		
+		
+		label: [ FlexRow, makePaddingRem(0,0,0.5,0), {
+			fontWeight: 500
+		}],
+		
+		issues: [ FlexRow, FillWidth, OverflowAuto, {
 			fontSize: rem(1)
-
 		}],
-		issueNumber: [{
+		issueNumber: [ {
 			fonStyle: 'italic',
-			fontWeight: 900
-		}],
-		issueTitle: [{
+			fontWeight: 400
+		} ],
+		issueTitle: [ {
 			fontWeight: 300
-		}]
-	}],
-
-	form: {
+		} ]
+	} ],
+	
+	form: [FlexScale,{
 		paddingTop: rem(2)
-	},
-
-	row: [{
-		height: 72
 	}],
-
-	savingIndicator: [PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
+	
+	row: [ {
+		height: 72
+	} ],
+	
+	actions: [FlexRow,makeFlexAlign('center','flex-end'),{
+		height: rem(4)
+	}],
+	
+	savingIndicator: [ PositionAbsolute, FlexColumnCenter, Fill, makeAbsolute(), {
 		opacity: 0,
 		pointerEvents: 'none'
-	}],
-
+	} ],
+	
 })
 
 
@@ -185,38 +201,38 @@ const baseStyles = createStyles({
  */
 
 export const IssuePatchFns = {
-	[IssuePatchModes.Label]: (labels) => ({labels: labels.map(label => ({action:'add',label}))}),
-	[IssuePatchModes.Milestone]: (milestones /* always length 1 */) => ({milestone: milestones[0]}),
-	[IssuePatchModes.Assignee]: (assignees /* always length 1 */) => ({assignee: assignees[0]})
+	[IssuePatchModes.Label]: (labels) => ({ labels: labels.map(label => ({ action: 'add', label })) }),
+	[IssuePatchModes.Milestone]: (milestones /* always length 1 */) => ({ milestone: milestones[ 0 ] }),
+	[IssuePatchModes.Assignee]: (assignees /* always length 1 */) => ({ assignee: assignees[ 0 ] })
 }
 
 /**
  * IIssuePatchDialogProps
  */
 export interface IIssuePatchDialogProps extends React.HTMLAttributes<any> {
-	theme?: any
-	styles?: any
-	open?: boolean
-	saving?: boolean
-	saveError?: Error
-	mode?: TIssuePatchMode
-	repoIds?: number[]
-	issuesIds?: number[]
-	issues?: Issue[]
-	availableAssignees?: List<User>
-	availableMilestones?: List<Milestone>
-	availableLabels?: List<Label>
-
+	theme?:any
+	styles?:any
+	open?:boolean
+	saving?:boolean
+	saveError?:Error
+	mode?:TIssuePatchMode
+	repoIds?:number[]
+	issuesIds?:number[]
+	issues?:Issue[]
+	availableAssignees?:List<User>
+	availableMilestones?:List<Milestone>
+	availableLabels?:List<Label>
+	
 }
 
 /**
  * IIssuePatchDialogState
  */
 export interface IIssuePatchDialogState {
-	newItems?: any
-	query?: string
-	dataSource?: any
-	typeAheadRef?: any
+	newItems?:any
+	query?:string
+	dataSource?:any
+	typeAheadRef?:any
 }
 
 /**
@@ -241,15 +257,14 @@ export interface IIssuePatchDialogState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'dialog')
-
 @PureRender
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
-
-
-	issueActions: IssueActionFactory = Container.get(IssueActionFactory)
-	uiActions: UIActionFactory= Container.get(UIActionFactory)
-
-
+	
+	
+	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
+	uiActions:UIActionFactory = Container.get(UIActionFactory)
+	
+	
 	/**
 	 * Get currently selected new items
 	 *
@@ -258,7 +273,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	get newItems() {
 		return _.get(this.state, 'newItems', [])
 	}
-
+	
 	/**
 	 * Get query from state
 	 *
@@ -267,21 +282,21 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	get query() {
 		return _.get(this.state, 'query', "")
 	}
-
+	
 	get typeAheadRef() {
 		return _.get(this.state, 'typeAheadRef', "")
 	}
-
-	setTypeAheadRef = (typeAheadRef) => this.setState({typeAheadRef})
-
+	
+	setTypeAheadRef = (typeAheadRef) => this.setState({ typeAheadRef })
+	
 	/**
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
-		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
+		this.uiActions.setDialogOpen(DialogConfigs.IssueEditDialog.name, false)
 		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
-
+	
 	/**
 	 * onBlur
 	 */
@@ -289,7 +304,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		log.info('blur hide')
 		this.hide()
 	}
-
+	
 	/**
 	 * onSave
 	 *
@@ -298,19 +313,19 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	onSave = (event = null) => {
 		const
 			selectedItem = _.get(this.state, 'selectedItem'),
-			patch = IssuePatchFns[this.props.mode](this.state.newItems || [])
-
+			patch = IssuePatchFns[ this.props.mode ](this.state.newItems || [])
+		
 		log.info('Applying patch to issue', patch)
 		
 		!this.props.saving &&
-			this.issueActions.applyPatchToIssues(
-				patch,
-				this.props.mode !== 'Label',
-				...this.props.issues
-			)
+		this.issueActions.applyPatchToIssues(
+			patch,
+			this.props.mode !== 'Label',
+			...this.props.issues
+		)
 	}
-
-
+	
+	
 	/**
 	 * On item selected, if the patch mode is NOT Label
 	 * then this will call save
@@ -320,14 +335,14 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	onItemSelected = (value, index) => {
 		const
-			{mode} = this.props,
+			{ mode } = this.props,
 			item = (value && value.item) || _.get(this, `state.dataSource[${index}].item`)
-
+		
 		log.info(`Item selected @ index ${index}`, item)
-
+		
 		this.setState(
-			{newItems: (mode === IssuePatchModes.Label) ? _.uniq(this.newItems.concat([item])) : [item]},
-
+			{ newItems: (mode === IssuePatchModes.Label) ? _.uniq(this.newItems.concat([ item ])) : [ item ] },
+			
 			// After new items are set
 			// Update the state & if mode isnt Label
 			// Trigger save
@@ -337,10 +352,10 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					this.onSave()
 			}
 		)
-
-
+		
+		
 	}
-
+	
 	/**
 	 * On input changed
 	 *
@@ -348,12 +363,12 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	onInputChanged = (newQuery) => {
 		log.info('Query updated', newQuery)
-
-		this.setState({query: newQuery}, () => this.updateState(this.props))
-
+		
+		this.setState({ query: newQuery }, () => this.updateState(this.props))
+		
 	}
-
-
+	
+	
 	/**
 	 * On new item remove
 	 *
@@ -361,10 +376,10 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	onNewItemRemove = (item) => {
 		log.info(`New item removed: `, item)
-
-		this.setState({newItems: this.newItems.filter(it => it !== item)})
+		
+		this.setState({ newItems: this.newItems.filter(it => it !== item) })
 	}
-
+	
 	/**
 	 * Make milestones datasource
 	 *
@@ -372,28 +387,28 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {{item: Milestone, text: string, value: any}[]}
 	 */
-	makeMilestoneDataSource(props: IIssuePatchDialogProps, repoIds) {
-
+	makeMilestoneDataSource(props:IIssuePatchDialogProps, repoIds) {
+		
 		const
-			{availableMilestones,issues} = props,
-			{query, newItems} = this,
+			{ availableMilestones, issues } = props,
+			{ query, newItems } = this,
 			items = availableMilestones
-				
+			
 			// Filter out repos that don't apply to these issues
-				.filter((item: Milestone) => (
+				.filter((item:Milestone) => (
 					// In current repo and not selected
 					repoIds.includes(item.repoId) && !newItems.includes(item) &&
-
+					
 					// Query match
 					(_.isEmpty(query) || _.toLower(item.title).indexOf(_.toLower(query)) > -1) &&
-
+					
 					// Label does not already exist on every item
-					!issues.every((issue: Issue) => _.get(issue, 'milestone.id') === item.id)
+					!issues.every((issue:Issue) => _.get(issue, 'milestone.id') === item.id)
 				))
-
+				
 				// Convert to JS Arraytyp
 				.toArray()
-
+		
 		const newDataSource = items.map(item => ({
 			item,
 			text: '',
@@ -404,11 +419,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					    />
 					}/>
 		}))
-
+		
 		log.info('new milestone data source =', newDataSource)
 		return newDataSource
 	}
-
+	
 	/**
 	 * Create labels datasource
 	 *
@@ -416,31 +431,31 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {{item: Label, text: string, value: any}[]}
 	 */
-	makeLabelDataSource(props: IIssuePatchDialogProps, repoIds) {
-
+	makeLabelDataSource(props:IIssuePatchDialogProps, repoIds) {
+		
 		const
-			{availableLabels,issues} = props,
-			{query, newItems} = this,
-
+			{ availableLabels, issues } = props,
+			{ query, newItems } = this,
+			
 			items = availableLabels
-
-				// Filter out repos that dont apply to these issues
-				.filter((item: Label) => (
-
+			
+			// Filter out repos that dont apply to these issues
+				.filter((item:Label) => (
+					
 					// In current repo and not selected
 					repoIds.includes(item.repoId) && !newItems.includes(item) &&
-
+					
 					// Query match
 					(_.isEmpty(query) || _.toLower(item.name).indexOf(_.toLower(query)) > -1) &&
-
+					
 					// Label does not already exist on every item
-					!issues.every((issue: Issue) => !_.isNil((issue.labels || []).find(it => it.url === item.url)))
-
+					!issues.every((issue:Issue) => !_.isNil((issue.labels || []).find(it => it.url === item.url)))
+				
 				))
-
+				
 				// Convert to JS Array
 				.toArray()
-
+		
 		const newDataSource = items.map(item => ({
 			item,
 			text: '',
@@ -460,7 +475,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					    />
 					}/>
 		}))
-
+		
 		log.info('new label data source =', newDataSource)
 		return newDataSource
 	}
@@ -473,29 +488,29 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {any}
 	 */
-	makeAssigneeDataSource(props: IIssuePatchDialogProps, repoIds) {
-
+	makeAssigneeDataSource(props:IIssuePatchDialogProps, repoIds) {
+		
 		const
-			{issues} = props
-
+			{ issues } = props
+		
 		const
 			collaborators = issues
-				.reduce((allUsers,issue:Issue) => {
+				.reduce((allUsers, issue:Issue) => {
 					
-					issue.collaborators.forEach(user => allUsers[user.id] = user)
+					issue.collaborators.forEach(user => allUsers[ user.id ] = user)
 					return allUsers
-				},{} as {[id:string]:User}),
-		
-		
+				}, {} as {[id:string]:User}),
+			
+			
 			// Convert to array
 			items = Object
 				.values(collaborators)
 				
 				// Filter out repos that don't apply to these issues
-				.filter((item:User) => !issues.every((issue: Issue) => _.get(issue, 'assignee.id') === item.id))
-	
-		log.info(`Assignee data source`,items,'from',collaborators,'for issues',issues)
-
+				.filter((item:User) => !issues.every((issue:Issue) => _.get(issue, 'assignee.id') === item.id))
+		
+		log.info(`Assignee data source`, items, 'from', collaborators, 'for issues', issues)
+		
 		/*
 		 style={s.form.assignee.avatar}
 		 avatarStyle={s.form.assignee.avatar.avatar}
@@ -512,22 +527,22 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			        labelStyle={makeStyle(FlexScale,{fontSize:rem(1.3)})}
 			        avatarStyle={{width:rem(4),height:rem(4),borderRadius: '50%'}}
 			/>
-
+		
 		)
-
+		
 		return items.map(item => ({
 			item,
 			text: '',
 			//style={s.menuItem}
 			value: <MenuItem key={item.id}
 			                 value={item.id}
-
+			
 			                 primaryText={makeCollabLabel(item)}
 			/>
 		}))
-
+		
 	}
-
+	
 	/**
 	 * Update the component state, create data source,
 	 * options, etc
@@ -537,32 +552,32 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	updateState(props:IIssuePatchDialogProps) {
 		if (!props.open || !props.issues || !props.issues.length)
 			return
-
+		
 		const
 			{
 				mode,
 				issues
 			} = props,
-
+			
 			// Get the repo ids for the selected issues only
 			repoIds = _.nilFilter(_.uniq(issues.map(issue => issue.repoId))),
-
+			
 			// Now get the datasource
 			dataSource = (mode === 'Milestone') ?
 				this.makeMilestoneDataSource(props, repoIds) : (mode === 'Label') ?
 				this.makeLabelDataSource(props, repoIds) :
 				this.makeAssigneeDataSource(props, repoIds)
-
-		this.setState({dataSource})
-
+		
+		this.setState({ dataSource })
+		
 	}
-
+	
 	/**
 	 * Before mount update the state
 	 */
 	componentWillMount = () => this.updateState(this.props)
-
-
+	
+	
 	/**
 	 * Update state with new props
 	 *
@@ -575,33 +590,33 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				newItems: []
 			})
 		}
-
+		
 		this.updateState(newProps)
 	}
-
+	
 	/**
 	 * Hot key handlers
 	 */
 	keyHandlers = {
 		[CommonKeys.Enter]: (event) => {
 			log.info('Enter pressed')
-
+			
 			//event.stopPropagation()
 			//event.preventDefault()
 			//event.cancelBubble = true
 		},
-
+		
 		[CommonKeys.MoveDown]: (event) => {
 			log.info('Down pressed', event, this.typeAheadRef)
-
+			
 			// event.stopPropagation()
 			// event.preventDefault()
 			// event.cancelBubble = true
 		}
-
+		
 	}
-
-
+	
+	
 	render() {
 		const
 			{
@@ -614,24 +629,25 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				saveError
 			} = this.props,
 			newItems = this.newItems
-
-		const actions = [
-			<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
-			<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
-		]
-
-
-		// Create title row
-		const makeTitle = () => <div style={styles.title}>
-			<div style={styles.title.action}>{mode === IssuePatchModes.Label ? 'Add Label to' :
-				mode === IssuePatchModes.Assignee ? 'Assign Issues' :
-					'Set Milestone'}
-			</div>
-			<div style={styles.title.Issues}>
-				{issues.map((issue:Issue,index:number) =>
-					<span key={issue.id} style={styles.title.issue}>
+		
+		
+		
+		
+		return <div style={styles.root}>
+			
+			<MuiThemeProvider muiTheme={theme}>
+				
+				<div style={[FillWidth,FlexColumn,FlexScale]}>
+					<div style={styles.title}>
+						<div style={[styles.title.label]}>{mode === IssuePatchModes.Label ? 'Add Label to' :
+							mode === IssuePatchModes.Assignee ? 'Assign Issues' :
+								'Set Milestone'}
+						</div>
+						<div style={[styles.title.subLabel,styles.title.issues]}>
+							{issues.map((issue:Issue, index:number) =>
+									<span key={issue.id} style={styles.title.issue}>
 						{index > 0 && <span>,&nbsp;</span>}
-						<span style={styles.title.issueNumber}>
+										<span style={styles.title.issueNumber}>
 							#{issue.number}&nbsp;
 						</span>
 						<span style={styles.title.issueTitle}>
@@ -639,76 +655,69 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 						</span>
 
 					</span>
-				)}
-			</div>
-
-		</div>
-
-
-		return <div>
-			<Dialog style={styles.root}
-			        open={open}
-			        actions={actions}
-			        actionsContainerStyle={styles.actions}
-			        modal={true}
-			        overlayStyle={styles.backdrop}
-			        autoScrollBodyContent={true}
-			        bodyStyle={styles.body}
-			        titleStyle={styles.title}
-			        title={open && makeTitle()}
-			        onBlur={this.onBlur}>
-
-
-				{ open &&
-				<MuiThemeProvider muiTheme={theme}>
-					<div style={PositionRelative}>
-
-						<form name="issuePatchDialogForm"
-						      id="issuePatchDialogForm"
-						      style={[
-						      	styles.form,saving && {opacity: 0,pointerEvents: 'none'}
-						      ]}>
-
-							<IssueLabelsAndMilestones
-								labels={mode === IssuePatchModes.Label && newItems}
-								milestones={mode === IssuePatchModes.Milestone && newItems}
-								showIcon={true}
-								onRemove={this.onNewItemRemove}
-								labelStyle={{}}
-
-							/>
-
-							<TypeAheadSelect
-								ref={this.setTypeAheadRef}
-								style={{margin: '1rem 0'}}
-								autoFocus={true}
-								fullWidth={true}
-								hintText={`${mode.toUpperCase()}...`}
-								menuProps={{maxHeight:300}}
-								onEscKeyDown={this.hide}
-								onItemSelected={this.onItemSelected}
-								onInputChanged={this.onInputChanged}
-								dataSource={this.state.dataSource}
-								openOnFocus={true}
-								openAlways={true}
-								underlineShow={false}/>
-
-
-						</form>
-
-						{/* Saving progress indicator */}
-						{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-							<CircularProgress
-								color={theme.progressIndicatorColor}
-								size={1}/>
-						</div>}
+							)}
+						</div>
+					
 					</div>
-				</MuiThemeProvider>
-				}
-			</Dialog>
+					
+					
+					<form name="issuePatchDialogForm"
+					      id="issuePatchDialogForm"
+					      style={[
+					      	styles.body,
+					      	styles.form,
+					      	saving && {
+						        opacity: 0,
+						        pointerEvents: 'none'
+						      }
+					      ]}>
+						
+						<IssueLabelsAndMilestones
+							labels={mode === IssuePatchModes.Label && newItems}
+							milestones={mode === IssuePatchModes.Milestone && newItems}
+							showIcon={true}
+							onRemove={this.onNewItemRemove}
+							labelStyle={{}}
+						
+						/>
+						
+						<TypeAheadSelect
+							ref={this.setTypeAheadRef}
+							style={{margin: '1rem 0'}}
+							autoFocus={true}
+							fullWidth={true}
+							hintText={`${mode && mode.toUpperCase()}...`}
+							menuProps={{maxHeight:300}}
+							onEscKeyDown={this.hide}
+							onItemSelected={this.onItemSelected}
+							onInputChanged={this.onInputChanged}
+							dataSource={this.state.dataSource}
+							openOnFocus={true}
+							openAlways={true}
+							underlineShow={false}/>
+					
+					
+					</form>
+					
+					
+					<div style={[styles.actions]}>
+						<Button onClick={this.hide} style={styles.action}>Cancel</Button>
+						<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
+					</div>
+					
+					{/* Saving progress indicator */}
+					{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
+						<CircularProgress
+							color={theme.progressIndicatorColor}
+							size={1}/>
+					</div>}
+				</div>
+			</MuiThemeProvider>
+			
+			{/*</Dialog>*/}
 		</div>
 	}
-
+	
 }
 
 export default IssuePatchDialog

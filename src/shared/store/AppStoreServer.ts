@@ -1,24 +1,130 @@
 import { getStore, getStoreState } from "shared/store/AppStore"
-import { IPCServer } from "shared/net/IPCServer"
+import { IPCServer, TIPCEventHandler } from "shared/net/IPCServer"
 import { getHot, setDataOnHotDispose,acceptHot } from "shared/util/HotUtils"
 import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
 import {
-	getAllActions
+	getAllActions,
+	ActionMessage,
+	getAction,
+	ActionFactory
 } from 'typedux'
+
 import { AppStoreServerName } from "shared/Constants"
+import { IChildStoreFilter } from "shared/store/ChildStore"
+import { getReduxStore } from "shared/store"
+import { transformValues, shortId } from "shared/util/ObjectUtil"
 
 const
 	log = getLogger(__filename),
-	clientObservers = getHot(module, 'clientObservers', {})
+	{nextTick} = process,
+	clientObservers = getHot(module, 'clientObservers', {}),
+	childStores = getHot(module, 'clientObservers', {}) as any
+	
+log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	ipcServer:IPCServer = getHot(module, 'ipcServer', null) as IPCServer
 
+/**
+ * Push an action reducer to children
+ *
+ * @param action
+ */
+export function broadcastAppStoreAction(action) {
+	Object
+		.values(childStores)
+		.filter(childStore => childStore.id !== (action as any).fromChildId)
+		.forEach(childStore => {
+			const
+				{ socket, filter, id } = childStore
+			
+			try {
+				ipcServer.send(socket, 'childStoreActionReducer', { id, action })
+			} catch (err) {
+				log.error(`Failed to send action reducer to ${id}`,err)
+			}
+		})
+}
 
 /**
  * All message handlers
  */
-const clientMessageHandlers = {
+namespace clientMessageHandlers {
+	
+	function childStoreDispatch({event,leaf,type,args}) {
+		const
+			store = getReduxStore(),
+			actionReg = getAction(leaf, type)
+		
+		if (!actionReg)
+			throw new Error(`Could not find action ${leaf}:${type} on main process`)
+		
+		log.info(`Executing action on main: ${leaf}:${type}`)
+		
+		nextTick(() => {
+			if (actionReg.options.isReducer) {
+				
+				const
+					actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any,
+					msg = actions.newMessage(shortId(), leaf, actionReg.type,[], args, {
+						source: {
+							isReducer: true,
+							fromRenderer: true
+						}
+					})
+				
+				store.dispatch(msg)
+			} else {
+				actionReg
+					.action(factory => Container.get(factory), ...args)
+			}
+		})
+	}
+	
+	export function childStoreSubscribeRequest(server:IPCServer,socket,event:string,{
+		id,
+		filter
+	}:{id:string,filter:IChildStoreFilter}) {
+		log.debug(`Child subscribing with id ${id} and filter`,filter)
+		childStores[id] = {
+			id,
+			filter,
+			socket
+		}
+		const
+			state = _.toJS(getStoreState())
+				
+		
+		server.send(socket,'childStoreSubscribeResponse',{id,initialState:state})
+	}
+	
+	
+	/**
+	 * Client store detach
+	 *
+	 * @param server
+	 * @param socket
+	 * @param event
+	 * @param id
+	 */
+	export function childStoreDetach(server:IPCServer,socket,event:string,{id}) {
+		log.debug(`Detaching child store ${id}`)
+		delete childStores[id]
+	}
+	
+	/**
+	 * Client store action
+	 *
+	 * @param server
+	 * @param socket
+	 * @param event
+	 * @param id
+	 * @param action
+	 */
+	export function childStoreAction(server:IPCServer,socket,event:string,{id,action}) {
+		log.debug(`Received action message`,action,'from',id)
+		childStoreDispatch(action)
+	}
 	
 	/**
 	 *
@@ -30,7 +136,7 @@ const clientMessageHandlers = {
 	 * @param id
 	 * @param keyPath
 	 */
-		stateRequest(server:IPCServer, socket, event:string, { id, keyPath }) {
+	export function stateRequest(server:IPCServer, socket, event:string, { id, keyPath }) {
 		const
 			state = getStoreState(),
 			rawValue = getStateValue(...keyPath),
@@ -42,7 +148,7 @@ const clientMessageHandlers = {
 			id,
 			value
 		})
-	},
+	}
 	
 	/**
 	 * Handle observer request
@@ -53,7 +159,7 @@ const clientMessageHandlers = {
 	 * @param id
 	 * @param keyPath
 	 */
-		observeStateRequest(server:IPCServer, socket, event:string, { id, keyPath }) {
+	export function observeStateRequest(server:IPCServer, socket, event:string, { id, keyPath }) {
 		
 		let
 			lastValue = null
@@ -81,7 +187,7 @@ const clientMessageHandlers = {
 			log.error(`Unable to create observer`, err)
 			server.send(socket, 'observeStateResponse', { id, err })
 		}
-	},
+	}
 	
 	/**
 	 * Stop watching state changes
@@ -91,8 +197,8 @@ const clientMessageHandlers = {
 	 * @param event
 	 * @param id
 	 */
-		
-		observeStateRemove(server:IPCServer, socket, event:string, { id }) {
+	
+	export function observeStateRemove(server:IPCServer, socket, event:string, { id }) {
 		const observer = clientObservers[ id ]
 		
 		if (!observer)
@@ -100,7 +206,7 @@ const clientMessageHandlers = {
 		
 		observer.remover()
 		delete clientObservers[ id ]
-	},
+	}
 	
 	
 	/**
@@ -113,7 +219,7 @@ const clientMessageHandlers = {
 	 * @param leaf
 	 * @param args
 	 */
-		actionRequest(server:IPCServer, socket, event:string, { type, leaf, args }) {
+	export function actionRequest(server:IPCServer, socket, event:string, { type, leaf, args }) {
 		log.debug(`Received action request: `, leaf, type, args)
 		
 		const
@@ -130,8 +236,18 @@ const clientMessageHandlers = {
 	}
 }
 
-
-
+const
+	messageHandlers = _.pick(
+		clientMessageHandlers,
+		'actionRequest',
+		'observeStateRemove',
+		'observeStateRequest',
+		'stateRequest',
+		'childStoreSubscribeRequest',
+		'childStoreDetach',
+		'childStoreAction'
+	) as {[event:string]:TIPCEventHandler}
+	
 
 /**
  * Stop the ipc server
@@ -187,7 +303,7 @@ export async function start() {
 	}
 	
 	try {
-		ipcServer = new IPCServer(AppStoreServerName,clientMessageHandlers)
+		ipcServer = new IPCServer(AppStoreServerName,messageHandlers)
 		
 		log.debug(`Starting store server`)
 		

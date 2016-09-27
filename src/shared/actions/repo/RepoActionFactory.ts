@@ -90,7 +90,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 * @returns {(state:RepoState)=>Map<K, V>}
 	 */
 	@ActionReducer()
-	updateAvailableRepos(availableRepos:List<AvailableRepo>) {
+	updateAvailableRepos(availableRepos:List<AvailableRepo>|AvailableRepo[]) {
+		if (Array.isArray(availableRepos))
+			availableRepos = List<AvailableRepo>(availableRepos)
+		
 		return (state:RepoState) => state.set('availableRepos',availableRepos)
 			
 	}
@@ -352,17 +355,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				deleted: false
 			})
 
-
-
-
-
-			let savedRepo = await repoStore.get(repo.id)
+			let
+				savedRepo = await repoStore.get(repo.id)
+			
 			if (!savedRepo) {
 				log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
 				await repoStore.save(repo)
 			}
-
-
 			
 			const
 				existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)

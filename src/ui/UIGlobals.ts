@@ -50,6 +50,7 @@ declare global {
 	
 	interface Window {
 		$:typeof JQueryGlobal
+		dialogName:string
 	}
 }
 

@@ -32,9 +32,9 @@ html.fill-width.fill-height(lang="en")
 							fontsReady = false,
 							rootDir = isDev ? baseDir + "../../" : baseDir,
 							Events = remote.getGlobal('Constants').Events,
-							_ = require('lodash'),
 							processType = params.processType || 'UI'
 
+			process.env.EPIC_DIALOG = params.dialogName
 			process.env.EPIC_ENTRY = processType
 
 			_.assign(global, {
@@ -95,9 +95,6 @@ html.fill-width.fill-height(lang="en")
 		title epictask
 		script.
 			function loadUI() {
-				//addStyleSheet("#{JSON.stringify(fontStyles)}")
-				//addStyleSheet("#{JSON.stringify(mainStyles)}")
-
 				const cssPaths = [
 					"node_modules/animate.css/animate.css",
 					"node_modules/font-awesome/css/font-awesome.min.css",
@@ -140,23 +137,30 @@ html.fill-width.fill-height(lang="en")
 					require('debug-menu').install()
 				}
 
-				addScript('LoaderEntry.bundle.js', false, function () {
-					log.info(`Loader - loaded`)
-					loaderReady = true
-					showLoader()
-				})
+				if (processType === 'UIDialog') {
+					$(document).ready(function () {
+						loadApp()
+					})
+				} else {
+					addScript('LoaderEntry.bundle.js', false, function () {
+						log.info(`Loader - loaded`)
+						loaderReady = true
+						showLoader()
+					})
 
-				$(document).ready(function () {
-					docReady = true
-					showLoader()
-				})
+					$(document).ready(function () {
+						docReady = true
+						showLoader()
+					})
+				}
+
 			}
 
 			function loadApp() {
 				addScript('./AppEntry.bundle.js')
 			}
 
-			if (processType === 'UI') {
+			if (processType === 'UI' || processType === 'UIDialog') {
 				loadUI()
 			} else {
 				loadApp()

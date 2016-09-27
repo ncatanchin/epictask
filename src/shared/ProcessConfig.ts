@@ -66,6 +66,24 @@ export namespace ProcessConfigGlobal {
 		return isType(ProcessType.Main)
 	}
 	
+	
+	/**
+	 * Is the main UI process
+	 * @returns {boolean}
+	 */
+	export function isUI() {
+		return isType(ProcessType.UI)
+	}
+	
+	/**
+	 * Is a UI dialog
+	 *
+	 * @returns {boolean}
+	 */
+	export function isUIDialog() {
+		return isType(ProcessType.UIDialog)
+	}
+	
 	/**
 	 * Is the current process type storybook
 	 * @returns {boolean}

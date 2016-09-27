@@ -181,6 +181,17 @@ export const FillWidth = {
 	overflow: 'hidden'
 }
 
+export const FillWindow = {
+	maxHeight: '100vh',
+	minHeight: '100vh',
+	height: '100vh',
+	
+	maxWidth: '100vw',
+	minWidth: '100vw',
+	width: '100vw',
+	overflow: 'hidden'
+}
+
 
 export const Fill = makeStyle(FillHeight,FillWidth)
 export const FillNoSpacing = makeStyle(Fill,{margin:0,padding:0,border:0,outline:0})

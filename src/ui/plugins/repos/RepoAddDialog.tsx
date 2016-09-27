@@ -1,8 +1,8 @@
 // Imports
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {AppActionFactory} from '../../../shared/actions/app/AppActionFactory'
+
+import {AppActionFactory} from 'shared/actions/app/AppActionFactory'
 import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchPanel} from 'ui/components/search'
 import * as Constants from 'shared/Constants'
@@ -15,6 +15,7 @@ import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {SearchType} from 'shared/actions/search/SearchState'
 import {ThemedNoRadium} from 'shared/themes/ThemeManager'
+import { uiStateSelector } from "shared/actions/ui/UISelectors"
 
 const {HotKeys} = require('react-hotkeys')
 
@@ -59,13 +60,11 @@ const baseStyles = createStyles({
 
 
 function mapStateToProps(state) {
-	const uiState = state.get(Constants.UIKey) as UIState
-	//const repoState = state.get(Constants.RepoKey) as RepoState
-
-	const open = uiState.dialogs.get(Dialogs.RepoAddDialog)
+	const
+		uiState = uiStateSelector(state),
+		open = uiState.dialogs.get(Dialogs.RepoAddDialog)
 
 	return {
-		theme: getTheme(),
 		open
 	}
 }
@@ -130,6 +129,7 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 		uiActions.setDialogOpen(Dialogs.RepoAddDialog,false)
 	}
 
+	
 	/**
 	 * When a result is selected
 	 *
@@ -221,3 +221,5 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 	}
 
 }
+
+export default RepoAddDialog

@@ -5,7 +5,8 @@ import './LoDashMixins'
 import {generate as generateShortId} from 'short-id'
 import { InvalidProxyNames } from "shared/Constants"
 
-const _ = require('lodash')
+const
+	_ = require('lodash')
 
 export function isNil(o:any) {
 	return _.isNil(o)

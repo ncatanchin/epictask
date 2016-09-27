@@ -59,7 +59,7 @@ function makeDevMenu(mainWindow) {
 			{
 				label: 'Toggle Developer Tools',
 				accelerator: 'Alt+Command+I',
-				click: () => (mainWindow as any).toggleDevTools()
+				click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
 			}
 		]
 	}

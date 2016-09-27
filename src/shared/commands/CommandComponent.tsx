@@ -129,7 +129,9 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		log.debug(`focused`, id)
 		
-		assert(instance, `Focused, but no instance???`)
+		if (!instance) {
+				return log.warn(`No instance but focused`,instance,this)
+		}
 		
 		if (focused) {
 			log.debug(`Already focused`)

@@ -362,20 +362,17 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	 * Dialog
 	 */
 	dialog: {
-		titleFontSize: fontSize * 1.9,
-		bodyFontSize:  fontSize * 1.5,
-		bodyColor:     text.primary,
-
+		
 		root: {
-
+			backgroundColor: background
 		},
 
+		
 		actions: {
 			backgroundColor:           primary.hue1,
 			color: text.primary
 		},
 		action: {
-			titleFontSize: fontSize * 1.3,
 			padding: '1rem 2rem',
 			margin: '0 0 0 1rem',
 			
@@ -384,19 +381,27 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			}
 		},
 
-		body: {
-			backgroundColor:           primary.hue1,
+		form: {
+			backgroundColor:           background,
+			fontSize: fontSize * 1.2,
 			color: text.primary
 		},
 
 		title: {
-			color:           accent.hue1,//text.primary,
-			backgroundColor: background,//secondary.hue1,
+			backgroundColor: background,
 			backgroundImage: makeLinearGradient('to bottom',primary.hue1,primary.hue2),
 			boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
 			
+			
+			
 			label: {
+				fontSize: fontSize * 1.7,
+				color:           accent.hue1,
 				textTransform: 'uppercase'
+			},
+			
+			subLabel: {
+				color: text.secondary
 			},
 
 			avatar: {

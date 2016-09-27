@@ -86,12 +86,13 @@ export class CommandAccelerator {
 	private addPart(code:string) {
 		
 		if (code) {
-			code.toLowerCase()
+			//code.toLowerCase()
+			code = (MappedKeys[code] || code).replace(/^Key/i,'').toLowerCase()
 			
 			if (ModifiedKeyNames.includes(code))
 				this[`${code}Key`] = true
 			else
-				this.codes.push(MappedKeys[code] || code)
+				this.codes.push(code)
 		}
 	}
 	

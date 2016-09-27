@@ -12,6 +12,8 @@ import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
 import { focusElementById } from "shared/util/UIUtil"
+import { getDialogManager } from "ui/DialogManager"
+import { DialogConfigs } from "shared/UIConstants"
 
 
 // Import only as type - in case we are not on Renderer
@@ -301,16 +303,33 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 	@ActionReducer()
 	setDialogOpen(name:string,open:boolean) {
-		return (state:UIState) => state.set(
-			'dialogs', state.dialogs.clear().set(name,open)
-		)
+		return (state:UIState) => {
+			
+			if (ProcessConfig.isType(ProcessType.UI)) {
+				const
+					dialogManager = getDialogManager()
+						
+				open ? dialogManager.open(DialogConfigs[name]) : dialogManager.closeWithConfig(DialogConfigs[name])
+			}
+			
+			return state.set(
+				'dialogs', state.dialogs.clear().set(name,open)
+			)
+		}
 	}
 
 	@ActionReducer()
 	closeAllDialogs() {
-		return (state:UIState) => state.set(
+		return (state:UIState) => {
+			
+			if (ProcessConfig.isType(ProcessType.UI)) {
+				getDialogManager().closeAll()
+			}
+			
+			return state.set(
 			'dialogs',state.dialogs.clear()
-		)
+			)
+		}
 	}
 
 

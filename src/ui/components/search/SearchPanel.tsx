@@ -17,8 +17,12 @@ import SearchProvider from "shared/actions/search/SearchProvider"
 import {SearchItem} from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
 import {Themed} from "shared/themes/ThemeManager"
-import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
+import {
+	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
+import { ICommand, CommandType } from "shared/commands/Command"
+import { CommonKeys } from "shared/KeyMaps"
 
 
 const $ = require('jquery')
@@ -87,7 +91,51 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Commands
 	 */
-	readonly commands:ICommand[] = []
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+		//MOVEMENT
+			.command(
+				CommandType.Container,
+				'Move down',
+				(cmd,event) => this.moveSelection(1),
+				CommonKeys.MoveDown,{
+					hidden:true,
+					overrideInput: true
+				})
+			.command(
+				CommandType.Container,
+				'Move up',
+				(cmd,event) => this.moveSelection(-1),
+				CommonKeys.MoveUp,{
+					hidden:true,
+					overrideInput: true
+				})
+			
+			// ESCAPE
+			.command(
+				CommandType.Container,
+				'Close results',
+				(cmd,event) => {
+					const
+						{onEscape} = this.props
+					
+					log.info('Escape key received', event, onEscape)
+					onEscape && onEscape()
+				},
+				CommonKeys.Escape,{
+					hidden:true
+				})
+			
+			// SELECT
+			.command(
+				CommandType.Container,
+				'Create a new issue inline',
+				(cmd,event) => this.onResultSelected(null),
+				CommonKeys.Enter)
+			
+			
+			
+			.make()
 	
 	/**
 	 * Command container id
@@ -398,17 +446,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		this.setSelectedIndex(selectedIndex + increment)
 	}
 
-	keyHandlers = {
-		[Keys.Escape]: (event) => {
-			const {onEscape} = this.props
-			log.info('Escape key received', event, onEscape)
-			onEscape && onEscape()
-		},
-		[Keys.MoveUp]: () => this.moveSelection(-1),
-		[Keys.MoveDown]: () => this.moveSelection(1),
-		[Keys.Enter]: () => this.onResultSelected(null)
-
-	}
+	
 
 	setTextFieldRef = (c) => {
 		if (!this.state.textField) {

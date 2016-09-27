@@ -22,9 +22,10 @@ import {Icon} from 'ui/components/common/Icon'
 
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	repoActions = new RepoActionFactory()
 
-const repoActions = new RepoActionFactory()
 //const elementClass = require('element-class')
 //const styleVisible = styles.resultsModalVisible
 //const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;

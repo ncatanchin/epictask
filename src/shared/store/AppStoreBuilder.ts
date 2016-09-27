@@ -1,4 +1,4 @@
-import {loadAndInitStore as loadAndInitStoreType} from 'shared/store'
+import * as AppStoreModule from 'shared/store'
 import {ObservableStore} from 'typedux'
 import {Container} from "typescript-ioc"
 
@@ -7,8 +7,13 @@ const log = getLogger(__filename)
 
 export async function storeBuilder() {
 	const
-		loadAndInitStore = require('shared/store/AppStore').loadAndInitStore as typeof loadAndInitStoreType,
-		store:ObservableStore<any> = await loadAndInitStore()
+		AppStore = require('shared/store/AppStore') as typeof AppStoreModule,
+		
+		store:ObservableStore<any> = ProcessConfig.isType(ProcessType.UI) ?
+			(await AppStore.loadAndInitStore()) :
+			ProcessConfig.isType(ProcessType.UIDialog) ?
+				(await AppStore.loadAndInitChildStore()) :
+				(await AppStore.loadAndInitStorybookStore())
 	
 	Container.bind(ObservableStore).provider({ get: () => store})
 	log.info(`Built store`)

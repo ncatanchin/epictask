@@ -108,7 +108,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	commands = (builder:CommandContainerBuilder) =>
 		builder
-			
 			//MOVEMENT
 			.command(
 				CommandType.Container,
