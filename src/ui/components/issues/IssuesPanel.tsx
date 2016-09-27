@@ -25,12 +25,17 @@ import {
 	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType
 } from 'shared/actions/issue/IIssueListItems'
 import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
-import { getUIActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
-import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
-import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { isNumber } from "shared/util/ObjectUtil"
+import {
+	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
 import { ICommand, Command, CommandType } from "shared/commands/Command"
+import { ContainerNames } from "shared/UIConstants"
+
 
 
 // Constants & Non-typed Components
@@ -96,38 +101,79 @@ export interface IIssuesPanelState {
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
 	
 	
-	readonly commands:ICommand[] = [
-		new Command({
-			id: 'issuePanelDown',
-			defaultAccelerator: CommonKeys.MoveDown,
-			name: 'Next Issue',
-			execute: (cmd,event) => this.moveDown(event),
-			type: CommandType.Regular
-		}),
-		new Command({
-			id: 'issuePanelDownSelect',
-			defaultAccelerator: CommonKeys.MoveDownSelect,
-			name: 'Next Issue Select',
-			execute: (cmd,event) => this.moveDown(event),
-			type: CommandType.Regular
-		}),
-		new Command({
-			id: 'issuePanelUp',
-			defaultAccelerator: CommonKeys.MoveUp,
-			name: 'Prev Issue',
-			execute: (cmd,event) => this.moveUp(event),
-			type: CommandType.Regular
-		}),
-		new Command({
-			id: 'issuePanelUpSelect',
-			defaultAccelerator: CommonKeys.MoveUpSelect,
-			name: 'Prev Issue Select',
-			execute: (cmd,event) => this.moveUp(event),
-			type: CommandType.Regular
-		})
-	]
-	
-	readonly commandComponentId = 'IssuesPanel'
+	/**
+	 * Command builder
+	 *
+	 * @param builder
+	 */
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+			
+			//MOVEMENT
+			.command(
+				CommandType.Container,
+				'Move down',
+				(cmd,event) => this.moveDown(event),
+				CommonKeys.MoveDown,{hidden:true})
+			.command(
+				CommandType.Container,
+				'Move down select',
+				(cmd,event) => this.moveDown(event),
+				CommonKeys.MoveDownSelect,{hidden:true})
+			.command(
+				CommandType.Container,
+				'Move up',
+				(cmd,event) => this.moveUp(event),
+				CommonKeys.MoveUp,{hidden:true})
+			.command(
+				CommandType.Container,
+				'Move up select',
+				(cmd,event) => this.moveUp(event),
+				CommonKeys.MoveUpSelect,{hidden:true})
+			
+			
+			// CLOSE ISSUES
+			.command(
+				CommandType.Container,
+				'Close selected issues',
+				(cmd,event) => this.onDelete(event),
+				CommonKeys.Delete)
+			
+			// CREATE INLINE
+			.command(
+				CommandType.Container,
+				'Create a new issue inline',
+				(cmd,event) => this.onEnter(event),
+				CommonKeys.Enter)
+			
+			// LABEL ISSUES
+			.command(
+				CommandType.Container,
+				'Label select issues',
+				(cmd,event) => {
+					log.debug('Patch labels')
+					getIssueActions().patchIssuesLabel()
+				},
+				"CommandOrControl+t",{
+					menuPath: ['Issue']
+				})
+			
+			// MILESTONE ISSUES
+			.command(
+				CommandType.Container,
+				'Milestone select issues',
+				(cmd,event) => {
+					log.debug('Patch milestones')
+					getIssueActions().patchIssuesMilestone()
+				},
+				"CommandOrControl+m",{
+					menuPath: ['Issue']
+				})
+			
+			
+			.make()
+		
+	readonly commandComponentId = ContainerNames.IssuesPanel
 	
 	/**
 	 * Issue actions
@@ -176,7 +222,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * 1 issue selected, nothing if 0
 	 * or add new if 1
 	 */
-	private onEnter = () => {
+	private onEnter = (event) => {
 		const
 			{items} = this.props
 			
@@ -219,8 +265,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		[CommonKeys.MoveDown]: this.moveDown,
 		[CommonKeys.MoveUpSelect]: this.moveUp,
 		[CommonKeys.MoveDownSelect]: this.moveDown,
-		[CommonKeys.Enter]: this.onEnter,
-		[CommonKeys.Delete]: this.onDelete,
+		// [CommonKeys.Enter]: this.onEnter,
+		// [CommonKeys.Delete]: this.onDelete,
 		//
 		// [CommonKeys.SetAssignee]: (event) => {
 		// 	log.info('Patch assignee')
@@ -571,16 +617,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
-			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
-			
-			// Item count - groups or issues
-			itemCount = items.size
+			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
 		
 		
-		return <div
-			{...getCommandProps(this)}
-								style={styles.panel}
-		            id="issuesPanel">
+		return <CommandRoot
+			component={this}
+			style={styles.panel}
+      id="issuesPanel">
 			
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
@@ -604,7 +647,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				
 				</SplitPane>
 			}
-		</div>
+		</CommandRoot>
 	}
 	
 }

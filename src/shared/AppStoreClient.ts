@@ -1,7 +1,7 @@
 import {ChildClient} from 'shared/ChildProcessEntry'
 import * as uuid from 'node-uuid'
 import { REQUEST_TIMEOUT, AppStoreServerName } from "shared/Constants"
-import { getHot, setDataOnDispose } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import {BrowserWindow,ipcMain} from 'electron'
 import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler
 import { Transport } from "shared/net/Transport"
@@ -15,7 +15,7 @@ const
 let
 	transport = getHot(module,'transport',null) as Transport
 
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	actionProxies,
 	observers,
 	stateRequests,

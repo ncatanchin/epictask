@@ -1,6 +1,6 @@
 import ChildProcessRenderer from './ChildProcessRenderer'
 import ProcessType from "shared/ProcessType"
-import { getHot, setDataOnDispose } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 
 const log = getLogger(__filename)
 
@@ -11,7 +11,7 @@ const
 
 
 // Add handler to set on dispose
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	children
 }))
 

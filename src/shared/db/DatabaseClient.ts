@@ -8,7 +8,7 @@ import {ProcessType} from "shared/ProcessType"
 import VariableProxy from 'shared/util/VariableProxy'
 import { DatabaseServerName } from "shared/Constants"
 import { cloneObject } from "shared/util/ObjectUtil"
-import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 const
 	TIMEOUT = 120000,
@@ -327,7 +327,7 @@ export default new Proxy({}, {
 }) as DatabaseClient
 
 
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	databaseClientProxy
 }))
 

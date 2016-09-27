@@ -1,22 +1,36 @@
 
-const log = getLogger(__filename)
+
+
 
 export function getHot<T extends any>(mod,key,defaultValue:T = null):T {
-	return _.get(mod,`hot.data.${key}`,defaultValue) as any
-}
-
-
-export function setDataOnDispose(mod,dataFn:() => any) {
-	if (mod.hot) {
-		mod.hot.addDisposeHandler((data:any) => {
-			log.info(`Setting hot data`)
-			_.assign(data,dataFn())
-		})
+	if (module.hot) {
+		return _.get(mod, `hot.data.${key}`, defaultValue) as any
 	}
 }
 
-export function acceptHot(mod,logger) {
-	if (mod.hot) {
-		mod.hot.accept(() => logger.info(`Self accepting HMR`))
+
+export function setDataOnHotDispose(mod, dataFn:() => any) {
+	if (module.hot) {
+		if (mod.hot) {
+			mod.hot.addDisposeHandler((data:any) => {
+				_.assign(data, dataFn())
+			})
+		}
 	}
 }
+
+export function addHotDisposeHandler(mod,fn) {
+	if (module.hot) {
+		mod.hot.addDisposeHandler(fn)
+	}
+}
+
+export function acceptHot(mod,logger = null) {
+	if (module.hot) {
+		if (mod.hot) {
+			mod.hot.accept(() => (logger || console).info(`Self accepting HMR`))
+		}
+	}
+}
+
+acceptHot(module,console)

@@ -1,14 +1,19 @@
 // Imports
 import {List} from 'immutable'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import { PureRender } from 'ui/components/common/PureRender'
-import { ThemedStyles, createThemedStyles, getTheme } from 'shared/themes/ThemeManager'
+import { createThemedStyles, getTheme } from 'shared/themes/ThemeManager'
 import { isNumber, isNil, isFunction, shallowEquals } from "shared/util/ObjectUtil"
+
+
 
 // Constants
 const
 	log = getLogger(__filename),
 	Resizable = require('react-component-resizable')
+
+
+// FOR DEBUG INFO
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = createStyles({
 	root: [ FlexColumn,FlexScale, PositionRelative, {
@@ -124,7 +129,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 			{items,itemHeight} = props,
 			itemsChanged = items !== this.props.items
 		
-		log.info(`ITEMS CHANGED changed`,itemsChanged)
+		log.debug(`ITEMS CHANGED changed`,itemsChanged)
 		
 			
 		
@@ -265,7 +270,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 				lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeightMin))
 
 			if (firstVisibleIndex >= startIndex && lastVisibleIndex <= endIndex) {
-				log.info(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
+				log.debug(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
 				return
 			}
 		}
@@ -287,7 +292,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	 * @param height
 	 */
 	private onResize = ({width,height}) => {
-		log.info(`Container resized ${width}/${height}`)
+		log.debug(`Container resized ${width}/${height}`)
 		this.setState({width,height}, () => this.updateItems())
 	}
 	

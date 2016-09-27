@@ -45,6 +45,7 @@ import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {CircularProgress} from 'material-ui'
 import {getGithubErrorText} from 'ui/components/common/Renderers'
 import { canAssignIssue, canCreateIssue } from 'shared/Permission'
+import { ContainerNames } from "shared/UIConstants"
 
 
 // import {HotKeyContext} from 'ui/components/common/HotKeyContext'
@@ -258,7 +259,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 	hide = () => {
 		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-		this.uiActions.focusIssuesPanel()
+		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
 
 	onBlur = () => {

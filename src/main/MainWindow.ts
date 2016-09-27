@@ -82,11 +82,11 @@ export function getBrowserWindow() {
  */
 function makeMenu() {
 	// Make the menu
-	const makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
-	menu = makeMainMenu(browserWindow)
-
-	// Assign it based on OS
-	Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+	// const makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	// menu = makeMainMenu(browserWindow)
+	//
+	// // Assign it based on OS
+	// Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
 }
 
 /**

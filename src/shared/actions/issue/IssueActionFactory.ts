@@ -41,6 +41,7 @@ import { isListType } from "shared/util/ObjectUtil"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 import { RepoSyncManager } from "shared/github/GithubEventHandlers"
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
+import { ContainerNames } from "shared/UIConstants"
 
 
 /**
@@ -515,7 +516,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				this.uiActions.closeAllDialogs()
 				
 				if (wasInline)
-					this.uiActions.focusIssuesPanel()
+					getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
+					
 				
 			} catch (err) {
 				log.error('failed to save issue', err)

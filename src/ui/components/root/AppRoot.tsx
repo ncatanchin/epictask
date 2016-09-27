@@ -27,8 +27,9 @@ import {createStructuredSelector} from 'reselect'
 import {IssuePatchDialog} from 'ui/components/issues/IssuePatchDialog'
 import {IssueCommentDialog} from 'ui/components/issues/IssueCommentDialog'
 import {StatusBar} from "ui/components/root/StatusBar"
-import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
+import { ContainerNames } from "shared/UIConstants"
 
 const
 	{StyleRoot} = Radium,
@@ -211,7 +212,9 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 
 			<MuiThemeProvider muiTheme={theme}>
 				<Provider store={reduxStore}>
-					<div id="appRoot" {...getCommandProps(this)}>
+					<CommandRoot
+						component={this}
+						id="appRoot">
 
 						{/* DIALOGS */}
 						<IssueEditDialog />
@@ -238,7 +241,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 							<StatusBar/>
 						</div>
 						
-					</div>
+					</CommandRoot>
 				</Provider>
 			</MuiThemeProvider>
 
@@ -249,20 +252,19 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 
 //let rendered = false
 
-let appInstance = null
 
-export function getAppInstance() {
-	return appInstance
-}
-
+/**
+ * Render App in appRoot node
+ */
 function render() {
+	
 	reduxStore = store.getReduxStore()
-	const state = store.getState()
-
-	// const appState = appActions.state
-	const props = mapStateToProps(state)
+	
+	const
+		state = store.getState(),
+		props = mapStateToProps(state)
 	 
-	appInstance = ReactDOM.render(
+	ReactDOM.render(
 		<App
 			store={reduxStore}
 			{...props}
@@ -272,9 +274,14 @@ function render() {
 			log.info('Rendered, hiding splash screen')
 			window.postMessage({type:Events.UIReady},"*")
 			
-			//appInstance = ref as any
+			// STOP SPINNING LOADER
 			win.stopLoader()
-			Container.get(UIActionFactory).focusAppRoot()
+			
+			// TODO: ON LOAD FOCUS ON ISSUES PANEL
+			// setTimeout(() => {
+			// 	getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
+			// },200)
+			
 		}
 	)
 }

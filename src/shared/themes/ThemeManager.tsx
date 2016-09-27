@@ -9,7 +9,7 @@ const shortId = require('short-id')
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import {mergeStyles} from "shared/themes/styles/CommonStyles"
 import {PureRender} from "ui/components/common/PureRender"
-import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
 import { shallowEquals } from "shared/util/ObjectUtil"
 
@@ -411,7 +411,7 @@ Object.assign(global as any,{
 
 
 // HMR CONFIG
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	ThemeState,
 	themeListeners
 }))

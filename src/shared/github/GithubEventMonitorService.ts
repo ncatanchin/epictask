@@ -7,7 +7,7 @@ import {DatabaseClientService} from "shared/services/DatabaseClientService"
 
 import { RepoKey } from "shared/Constants"
 import { clientObserveState, getStateValue } from "shared/AppStoreClient"
-import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { AvailableRepo } from "shared/models"
 
 import SyncStatus from './GithubSyncStatus'
@@ -198,7 +198,7 @@ if (instanceContainer.instance) {
 	// TODO: HMR / Do state update stuff here
 	log.info(`Reloaded from HMR`)
 }
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	// Tack on a ref to the hot instance so we know it's there
 	instanceContainer:assign(instanceContainer,{
 		hotInstance: instanceContainer.instance

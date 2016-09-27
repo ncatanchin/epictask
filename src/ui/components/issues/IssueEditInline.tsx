@@ -39,8 +39,9 @@ import {
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
 import { cloneObject } from "shared/util/ObjectUtil"
-import { CommandComponent, getCommandProps, ICommandComponent } from "shared/commands/CommandComponent"
+import { CommandComponent, getCommandProps, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
+import { ContainerNames } from "shared/UIConstants"
 
 // Constants
 const log = getLogger(__filename)
@@ -279,7 +280,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	keyHandlers = {
 		[CommonKeys.Escape]: () => {
 			this.hide()
-			this.uiActions.focusIssuesPanel()
+			getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 		},
 		[CommonKeys.Delete]: () => {},
 		[CommonKeys.Enter]: () => {
@@ -569,9 +570,9 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 		const titleError = getGithubErrorText(saveError,'title') || _.get(saveError,'message')
 
-		return <div
+		return <CommandRoot
 					{...filterProps(props)}
-					{...getCommandProps(this)}
+					component={this}
 					style={makeStyle(issueStyles,style)}
 					className={'selected'}>
 
@@ -678,7 +679,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					color={theme.progressIndicatorColor}
 					size={1} />
 			</div>
-		</div>
+		</CommandRoot>
 	}
 
 }

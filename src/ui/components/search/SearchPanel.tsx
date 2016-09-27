@@ -17,7 +17,7 @@ import SearchProvider from "shared/actions/search/SearchProvider"
 import {SearchItem} from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
 import {Themed} from "shared/themes/ThemeManager"
-import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 
 
@@ -513,9 +513,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		//<div  className={panelClazz}  style={Fill} onFocus={this.onFocus}>
 		// {/*onFocus={this.onTextFieldFocus}*/}
 		// {/*onBlur={this.onTextFieldBlur}*/}
-		return <div     className={panelClazz}
-		                style={Fill}
-										{...getCommandProps(this)}>
+		return <CommandRoot
+			component={this}
+			className={panelClazz}
+      style={Fill}>
 
 			<Paper className={wrapperClazz + focusedClazz}
 			       style={makeStyle(panelStyle)}
@@ -526,8 +527,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				<div className={styles.inputWrapper} style={!expanded ? Fill : {}}>
 					<TextField
 						ref={this.setTextFieldRef}
-						autoFocus={autoFocus}
-						tabIndex={1}
+						tabIndex={-1}
 						hintText={<div style={spTheme.hintStyle}>Search issues, comments, labels &amp; milestones</div>}
 						onChange={(e) => this.onInputChange(e)}
 
@@ -549,7 +549,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				</div>
 			</Paper>
 
-		</div>
+		</CommandRoot>
 
 	}
 

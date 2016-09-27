@@ -25,7 +25,7 @@ import {
 } from 'shared/actions/ActionFactoryProvider'
 import {OnlyIfFn, If} from "shared/util/Decorations"
 import {isString} from "shared/util/ObjectUtil"
-import { getHot, setDataOnDispose } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 
 const
 	log = getLogger(__filename),
@@ -362,7 +362,7 @@ if (typeof window !== 'undefined') {
 // })
 
 
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	store,
 	middleware
 }))

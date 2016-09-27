@@ -1,5 +1,6 @@
+import _get = require('lodash/get')
+
 const
-	which = require('which'),
 	log = getLogger(__filename)
 
 
@@ -22,7 +23,7 @@ function getElectronPath():string {
 		if (err.code === 'MODULE_NOT_FOUND') {
 			// ..if electron-prebuilt was not used try using which module
 			log.info('trying to get electron path from $PATH..')
-			electron = which.sync('electron')
+			electron = require('which').sync('electron')
 		} else {
 			throw err
 		}
@@ -33,3 +34,50 @@ function getElectronPath():string {
 
 
 export const ELECTRON_PATH = getElectronPath()
+
+
+/**
+ * In Electron runtime
+ */
+export function inElectron():boolean {
+	try {
+		const
+			electron = require('electron')
+		
+		return !!electron.app || !!electron.remote.app
+	} catch (err) {
+		return false
+	}
+}
+
+
+/**
+ * Test platform
+ *
+ * @param browserTest
+ * @param nodeTest
+ * @returns {boolean}
+ */
+export function testPlatform(browserTest:RegExp,nodeTest:RegExp) {
+	const
+		navPlatform = typeof window !== 'undefined' && _get(window,'navigator.platform') as string
+	
+	if  (navPlatform)
+		return browserTest.test(navPlatform.toLowerCase())
+	
+	return nodeTest.test(process.platform || '')
+}
+
+
+export function isMac() {
+	return testPlatform(/mac/,/darwin/)
+}
+
+export function isWindows() {
+	return testPlatform(/win/,/win32/)
+}
+
+export function isLinux() {
+	return testPlatform(/linux/,/linux|freebsd/)
+}
+

@@ -38,10 +38,10 @@ import LabelChip from "ui/components/common/LabelChip"
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {
 	CommandComponent, ICommandComponentProps, ICommandComponent,
-	getCommandProps
+	getCommandProps, CommandRoot
 } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
-
+import { ContainerNames } from "shared/UIConstants"
 
 
 // Other stuff
@@ -51,7 +51,6 @@ const
 
 
 type TDetailItem = Comment|EventGroup|Issue
-
 
 
 /**
@@ -85,18 +84,25 @@ export interface IIssueDetailPanelState {
 	issues: issuesSelector,
 	activity: activitySelector
 }))
-@ThemedStyles(baseStyles, 'issueDetail')
 @CommandComponent()
+@ThemedStyles(baseStyles, 'issueDetail')
 @PureRender
-export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> implements  ICommandComponent {
+export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> implements ICommandComponent {
+	
 	
 	refs:{[name:string]:any}
 	
+	/**
+	 * Commands for the container
+	 */
 	readonly commands:ICommand[] = []
 	
-	get commandComponentId():string {
-		return 'IssueDetailPanel'
-	}
+	/**
+	 * Command component id
+	 *
+	 * @type {string}
+	 */
+	readonly commandComponentId:string = ContainerNames.IssueDetailPanel
 	
 	/**
 	 * Update the state when props change
@@ -105,20 +111,20 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	private updateState = (props = this.props) => {
 		const
-			{activity:currentActivity,selectedIssue:currentSelectedIssue} = this.props,
-			{activity} = props,
-			{events,comments,selectedIssue} = activity
+			{ activity:currentActivity, selectedIssue:currentSelectedIssue } = this.props,
+			{ activity } = props,
+			{ events, comments, selectedIssue } = activity
 		
 		let
 			items:List<TDetailItem> = this.state && this.state.items
 		
 		// CHECK CHANGES OR FIRST LOAD
 		const
-			itemsChanged = !items || !shallowEquals(selectedIssue,currentSelectedIssue,'updated_at') || !shallowEquals(currentActivity,activity,'events','comments')
+			itemsChanged = !items || !shallowEquals(selectedIssue, currentSelectedIssue, 'updated_at') || !shallowEquals(currentActivity, activity, 'events', 'comments')
 		
 		// IF NO CHANGES THEN RETURN
 		if (!itemsChanged) {
-			log.info(`Items did not change in issue details`)
+			log.debug(`Items did not change in issue details`)
 			return
 		}
 		
@@ -142,17 +148,17 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 				newItems.push(selectedIssue)
 				
 				// ITERATE COMMENTS AND EVENTS ADDING ALL
-				eventsAndComments.reduce((eventGroup:EventGroup,eventOrComment:IssuesEvent|Comment) => {
+				eventsAndComments.reduce((eventGroup:EventGroup, eventOrComment:IssuesEvent|Comment) => {
 					if (isComment(eventOrComment)) {
 						newItems.push(eventOrComment)
 						
 						// If there was a group then this stops appending to it
 						return null
-					
+						
 					} else {
 						const
 							event = eventOrComment
-							
+						
 						if (!eventGroup || !eventGroup.acceptsEvent(event)) {
 							eventGroup = new EventGroup(event)
 							newItems.push(eventGroup)
@@ -162,7 +168,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 					}
 					
 					return eventGroup
-				},null)
+				}, null)
 				
 				return newItems
 			})
@@ -172,7 +178,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		this.setState({
 			items
 		})
-	
 		
 		
 	}
@@ -196,7 +201,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param nextContext
 	 */
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
-		return !shallowEquals(this.state,nextState,'items') || !shallowEquals(this.props,nextProps,'activity')
+		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity')
 	}
 	
 	/**
@@ -248,7 +253,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		if (!(item as any).id) {
 			const
 				label:Label = item as any,
-				labels = [{action:'remove',label}] //issue.labels.filter(it => it.url !== label.url)
+				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
 			
 			actions.applyPatchToIssues({ labels }, true, issue)
 		} else {
@@ -374,7 +379,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param index
 	 * @param styles
 	 */
-	renderBody = (items:List<TDetailItem>,item:Issue,selectedIssue:Issue,index, styles) => <IssueActivityText
+	renderBody = (items:List<TDetailItem>, item:Issue, selectedIssue:Issue, index, styles) => <IssueActivityText
 		key={'issue-body'}
 		issue={this.props.selectedIssue}
 		activityType='post'
@@ -392,7 +397,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderComment = (items:List<TDetailItem>, comment:Comment,selectedIssue:Issue, index, styles) => <IssueActivityText
+	renderComment = (items:List<TDetailItem>, comment:Comment, selectedIssue:Issue, index, styles) => <IssueActivityText
 		key={comment.id}
 		issue={selectedIssue}
 		comment={comment}
@@ -409,13 +414,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param index
 	 * @param styles
 	 */
-	renderEventGroup = (items:List<TDetailItem>,eventGroup:EventGroup,selectedIssue:Issue,index,styles) => <IssueActivityText
-		key={eventGroup.id}
-		issue={selectedIssue}
-		eventGroup={eventGroup}
-		hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
-		activityType='eventGroup'
-		activityStyle={styles.content.activities.activity}/>
+	renderEventGroup = (items:List<TDetailItem>, eventGroup:EventGroup, selectedIssue:Issue, index, styles) =>
+		<IssueActivityText
+			key={eventGroup.id}
+			issue={selectedIssue}
+			eventGroup={eventGroup}
+			hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
+			activityType='eventGroup'
+			activityStyle={styles.content.activities.activity}/>
 	
 	/**
 	 * Render an item for the activity list
@@ -428,14 +434,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		const
 			issue = items.get(0) as Issue,
 			item = items.get(index)
-			
+		
 		return isIssue(item) ?
-			this.renderBody(items,item,issue,index, this.props.styles) :
+			this.renderBody(items, item, issue, index, this.props.styles) :
 			
-				isEventGroup(item) ?
-					this.renderEventGroup(items,item,issue,index,this.props.styles) :
-					
-					this.renderComment(items,item,issue, index, this.props.styles)
+			isEventGroup(item) ?
+				this.renderEventGroup(items, item, issue, index, this.props.styles) :
+				
+				this.renderComment(items, item, issue, index, this.props.styles)
 	}
 	
 	
@@ -448,7 +454,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param palette
 	 * @returns {any}
 	 */
-	renderIssue = (issue:Issue,items:List<TDetailItem>, styles, palette) => issue && <div style={styles.issue}>
+	renderIssue = (issue:Issue, items:List<TDetailItem>, styles, palette) => issue && <div style={styles.issue}>
 		
 		<Style
 			scopeSelector={`.markdown.issue-${issue.id}`}
@@ -464,11 +470,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 					items={items}
 					itemCount={items.size}
 					itemRenderer={this.renderDetailItem}
-				  itemKeyFn={(listItems,item,index) => {
-            log.info(`Getting id for`,item)
-            
-            return `${_.get(item,'id',index)}`
-           }}
+					itemKeyFn={(listItems,item,index) => `${_.get(item,'id',index)}`}
 				/>
 			</div>
 		</div>
@@ -485,21 +487,26 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	render() {
 		const
-			{ selectedIssueIds, activity,issues, theme, styles } = this.props,
-			{items} = this.state,
-			{selectedIssue} = activity
+			{ selectedIssueIds, activity, issues, theme, styles } = this.props,
+			{ items } = this.state,
+			{ selectedIssue } = activity,
+			noSelectedIssues = !selectedIssueIds || !selectedIssueIds.length
 		
 		if (!List.isList(issues))
 			return React.DOM.noscript()
 		
-		return (!selectedIssueIds || !selectedIssueIds.length) ? <div/> :
-			<div id='issueDetailPanel'
-			         style={styles.root}>
-				{ !selectedIssue ?
-					this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
-					this.renderIssue(selectedIssue, items,styles, theme.palette)
-				}
-			</div>
+		return <CommandRoot
+			component={this}
+			id='issueDetailPanel'
+			style={!noSelectedIssues && styles.root}
+		>
+			{
+				noSelectedIssues ? <div/> :
+					!selectedIssue ?
+						this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
+						this.renderIssue(selectedIssue, items, styles, theme.palette)
+			}
+		</CommandRoot>
 	}
 	
 }

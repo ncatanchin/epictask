@@ -13,8 +13,9 @@ import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import { shallowEquals } from "shared/util/ObjectUtil"
-import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
+import filterProps from 'react-valid-props'
 
 export type TChipsFieldMode = 'fixed-scroll-x'|'normal'
 
@@ -225,13 +226,23 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> imple
 			query: newQuery
 		})
 	}
-
-
-	private onSetFocus = (isFocused) => {
-		return () => {
-			this.setState({isFocused})
-		}
-	}
+	
+	/**
+	 * Create focus handler
+	 *
+	 * @param isFocused
+	 */
+	private onSetFocus = (isFocused) => () => this.setState({isFocused})
+	
+	/**
+	 * onFocus handler
+	 */
+	onFocus = this.onSetFocus(true)
+	
+	/**
+	 * onBlur handler
+	 */
+	onBlur = this.onSetFocus(false)
 
 	private onItemSelectedOrEnterPressed = (chosenRequest: string, index: number) => {
 		log.debug('Selected / Enter', chosenRequest, index)
@@ -306,11 +317,11 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> imple
 				fullWidth={true}
 				openOnFocus={true}/>
 
-		// && {marginTop:'1rem'}
-		return <div {...props}  {...getCommandProps(this)}
+		return <CommandRoot
+			{...filterProps(props)}
+			component={this}
 			style={makeStyle(s.root,props.style,!label && s.root.noLabel)}
-			onFocus={this.onSetFocus(true)}
-			onBlur={this.onSetFocus(false)}>
+			>
 
 			<Style scopeSelector={`#${id}`}
 			       rules={_.assign({},s.inputRules,{
@@ -344,7 +355,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> imple
 			 style={props.underlineStyle}
 			 />}
 			 */}
-		</div>
+		</CommandRoot>
 	}
 
 }

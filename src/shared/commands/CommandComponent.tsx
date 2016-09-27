@@ -1,6 +1,8 @@
-import { ICommand } from "shared/commands/Command"
+import { ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator } from "shared/commands/Command"
 import { getCommandManager } from "shared/commands/CommandManager"
 import * as React from 'react'
+import filterProps from 'react-valid-props'
+import { isFunction, shortId } from "shared/util/ObjectUtil"
 
 const
 	log = getLogger(__filename)
@@ -27,6 +29,7 @@ interface ICommandContainerState {
 	instance?:ICommandComponent
 	mounted?:boolean
 	focused?:boolean
+	registered?:boolean
 }
 
 
@@ -35,12 +38,13 @@ interface ICommandContainerState {
  */
 export class CommandContainer extends React.Component<ICommandContainerProps,ICommandContainerState> {
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {
 			mounted: false,
-			focused:false
+			focused: false,
+			registered: false
 		}
 	}
 	
@@ -49,7 +53,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	get instance():ICommandComponent {
 		let
-			i = _.get(this,'state.instance',null) as any
+			i = _.get(this, 'state.instance', null) as any
 		
 		if (i && i.getWrappedInstance)
 			i = i.getWrappedInstance()
@@ -62,22 +66,32 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	get id() {
 		const
-			{instance} = this
+			{ instance } = this
 		
 		return instance && instance.commandComponentId
 	}
 	
+	/**
+	 * Return our wrapped instance
+	 *
+	 * @returns {ICommandComponent}
+	 */
+	getWrappedInstance() {
+		return this.instance
+	}
 	
 	/**
 	 * On mount, set 'mounted', then update the commands
 	 */
-	componentDidMount = () => this.setState({mounted:true},this.updateCommands)
+	componentDidMount = () => this.setState({
+		mounted: true
+	}, this.updateCommands)
 	
 	
 	/**
 	 * On unmount, set 'mounted' = false, then update the commands (remove them)
 	 */
-	componentWillUnmount = () => this.setState({mounted:false},this.updateCommands)
+	componentWillUnmount = () => this.setState({ mounted: false }, this.updateCommands)
 	
 	/**
 	 * Set the command component instance
@@ -86,18 +100,12 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	setInstance = (instance:ICommandComponent) => {
 		if (!instance) {
-			log.info(`Instance set to null`,this)
+			log.info(`Instance set to null`, this)
 			return
 		}
 		
-		const
-			i = instance as any
-		
 		// JUST IN CASE ITS WRAPPED IN RADIUM OR CONNECT/REDUX
-		instance
-		
-		
-		this.setState({instance},this.updateCommands)
+		this.setState({ instance }, this.updateCommands)
 	}
 	
 	/**
@@ -109,12 +117,12 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		
 		const
-			{instance,id} = this,
-			{focused} = this.state
+			{ instance, id } = this,
+			{ focused } = this.state
 		
-		log.info(`focused`,id)
+		log.info(`focused`, id)
 		
-		assert(instance,`Focused, but no instance???`)
+		assert(instance, `Focused, but no instance???`)
 		
 		if (focused) {
 			log.info(`Already focused`)
@@ -122,7 +130,9 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			this.setState({ focused: true })
 		}
 		
-		getCommandManager().setContainerFocused(id, this, true,event)
+		setImmediate(() => {
+			getCommandManager().setContainerFocused(id, this, true, event)
+		})
 		
 		if (instance.onFocus)
 			instance.onFocus(event)
@@ -135,11 +145,11 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	onBlur = (event:React.FocusEvent<any>) => {
 		const
-			{instance,id} = this,
-			{focused} = this.state
+			{ instance, id } = this,
+			{ focused } = this.state
 		
-		log.info(`blurred`,id)
-		assert(instance,`Blur, but no instance???`)
+		log.info(`blurred`, id)
+		assert(instance, `Blur, but no instance???`)
 		
 		if (!focused) {
 			log.info(`Blur, but not focused`)
@@ -147,7 +157,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			this.setState({ focused: false })
 		}
 		
-		getCommandManager().setContainerFocused(id, this, false,event)
+		getCommandManager().setContainerFocused(id, this, false, event)
 		
 		if (instance.onBlur)
 			instance.onBlur(event)
@@ -159,8 +169,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	updateCommands = () => {
 		const
-			{instance,id} = this,
-			{mounted} = this.state
+			{ instance, id } = this,
+			{ mounted, registered } = this.state
 		
 		log.info(`Updating commands for ${id}`)
 		
@@ -170,16 +180,33 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		}
 		
 		const
-			{commands} = instance,
 			manager = getCommandManager()
 		
-		if (mounted) {
-			log.info(`Registering commands on container ${id}`,commands)
-			manager.registerCommand(this.id,this,...commands)
-		} else {
-			log.info(`Un=registering commands on container ${id}`,commands)
-			manager.unregisterCommand(this.id,this,...commands)
+		// REGISTER
+		if (mounted && !registered) {
+			log.info(`Registering commands on container ${id}`)
+			manager.registerContainerCommand(this.id, this, ...this.getCommands())
+			this.setState({ registered: true })
 		}
+		// UN REGISTER
+		else if (!mounted && registered) {
+			log.info(`Un=registering commands on container ${id}`)
+			manager.unregisterContainerCommand(this.id, this, ...this.getCommands())
+			this.setState({ registered: false })
+		}
+	}
+	
+	/**
+	 * Get commands from instance
+	 */
+	private getCommands = () => {
+		let
+			{ commands } = this.instance
+		
+		if (isFunction(commands)) {
+			commands = commands(new CommandContainerBuilder(this))
+		}
+		return commands
 	}
 	
 	/**
@@ -188,14 +215,14 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	render() {
 		//noinspection JSUnusedLocalSymbols
 		const
-			{commandComponent} = this.props,
+			{ commandComponent } = this.props,
 			Wrapper = {
 				commandComponent
 			}
 		
 		return <Wrapper.commandComponent
 			tabIndex="-1"
-			{..._.omit(this.props,'onFocus','onBlur')}
+			{..._.omit(this.props, 'onFocus', 'onBlur')}
 			onFocus={this.onFocus}
 			onBlur={this.onBlur}
 			commandContainer={this} ref={this.setInstance}/>
@@ -210,10 +237,15 @@ export interface ICommandComponentProps extends React.HTMLAttributes<any> {
 }
 
 /**
+ * Container Command creator type
+ */
+export type TCommandsCreator = (builder:CommandContainerBuilder) => ICommand[]
+
+/**
  * The only property a command component must implement is "commands"
  */
-export interface ICommandComponent extends React.Component<ICommandComponentProps,any>{
-	readonly commands:ICommand[]
+export interface ICommandComponent extends React.Component<ICommandComponentProps,any> {
+	readonly commands:ICommand[]|TCommandsCreator
 	readonly commandComponentId:string
 	
 	onFocus?:(event:React.FocusEvent<any>) => any
@@ -227,10 +259,10 @@ export interface ICommandComponent extends React.Component<ICommandComponentProp
  * @returns {{onFocus,onBlur}
  */
 export function getCommandProps(component:ICommandComponent) {
-	return _.pick((component as any).props,['tabIndex','onFocus','onBlur']) as {
+	return _.pick((component as any).props, [ 'tabIndex', 'onFocus', 'onBlur' ]) as {
 		tabIndex:number
-		onFocus: React.FocusEventHandler<any>,
-		onBlur: React.FocusEventHandler<any>
+		onFocus:React.FocusEventHandler<any>,
+		onBlur:React.FocusEventHandler<any>
 	}
 }
 
@@ -238,7 +270,7 @@ export function getCommandProps(component:ICommandComponent) {
  * Constructor for a command component
  */
 export interface ICommandComponentConstructor<C extends ICommandComponent> {
-	new (props?,context?):C
+	new (props?, context?):C
 	defaultProps?:any
 }
 
@@ -249,17 +281,107 @@ export type TCommandComponentConstructor = ICommandComponentConstructor<any>
  *
  * @param opts
  */
-export function CommandComponent<T extends TCommandComponentConstructor>(opts:ICommandContainerOptions = {}) {
-
+export function CommandComponent<T extends TCommandComponentConstructor>(opts:ICommandContainerOptions = {} as any) {
+	
 	/**
 	 * @param Component - the component to wrap
 	 */
-	return ((TargetComponent:T):T => {
-
-		return (function(props,context) {
+	return ((TargetComponent:T) => {
+		
+		return (function (props, context) {
 			return <CommandContainer commandComponent={TargetComponent as any} {...props} />
 		}) as any
-	})
+	}) as any
+}
+
+/**
+ * Command Root element for controlling focus events, etc
+ */
+export interface ICommandRootProps extends React.HTMLAttributes<any> {
+	component:ICommandComponent & {props:any}
+}
+
+
+/**
+ * Command component root node - makes it easier - really
+ * just a div
+ *
+ * @param props
+ * @constructor
+ */
+export class CommandRoot extends React.Component<ICommandRootProps,void> {
+	
+	render() {
+		const
+			{ props } = this,
+			
+			// FILTER ONLY VALID HTML PROPS AND REMOVE onFocus + onBlur
+			cleanProps = Object.assign(filterProps(props), {
+				onFocus: null,
+				onBlur: null,
+				style: !props.style ? {} : Array.isArray(props.style) ? makeStyle(...props.style) : props.style
+			})
+		
+		return <div {...cleanProps} {...getCommandProps(props.component)}>
+			{props.children}
+		</div>
+	}
+}
+
+
+
+/**
+ * Command builder
+ */
+export class CommandContainerBuilder {
+	
+	private commands:ICommand[] = []
+	
+	/**
+	 * Create with a container
+	 *
+	 * @param container
+	 */
+	constructor(public container:CommandContainer) {
+		
+	}
+	
+	/**
+	 * Command factory function
+	 *
+	 * @param type
+	 * @param name
+	 * @param execute
+	 * @param defaultAccelerator
+	 * @param opts
+	 */
+	command = (type:CommandType,
+	           name:string,
+	           execute:TCommandExecutor,
+	           defaultAccelerator:TCommandDefaultAccelerator = null,
+	           opts:ICommand = {}) => {
+		
+		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
+		
+		const
+			cmd = Object.assign({
+				id: opts.id || `${this.container.id}-${name}`,
+				type,
+				execute,
+				name,
+				defaultAccelerator,
+				container: this.container
+			},opts || {})
+		
+		this.commands.push(cmd)
+			
+		return this
+	}
+	
+	make() {
+		return this.commands
+	}
+	
 }
 
 

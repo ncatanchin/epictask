@@ -9,6 +9,7 @@ import {IDatabaseRequest} from 'shared/db/DatabaseRequestResponse'
 import {tempFilename,getUserDataFilename} from 'shared/util/Files'
 import {ProcessNames} from "shared/ProcessType"
 import * as uuid from 'node-uuid'
+import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 
 // Logger
 const log = getLogger(__filename)
@@ -39,19 +40,31 @@ log.info('DB Path:',dbPath)
  * @returns {{filename: string}}
  */
 function storeOptions() {
-	let opts:IPouchDBOptions = {
-		filename: dbPath,
-		cacheSize:32 * 1024 * 1024,
-		databasePerRepo: true
+	
+	const
+		opts:IPouchDBOptions = {
+			
+			// FILENAME
+			filename: dbPath,
+			
+			// BIG CACHE SIZE
+			cacheSize:32 * 1024 * 1024,
+			
+			// 1 DB PER MODEL/REPO
+			databasePerRepo: true,
+			
+			// OVERWRITE ON CONFLICT
+			overwriteConflicts: true
 	}
+	
 	if (Env.isDev && !Env.isTest) {
-		opts = Object.assign({},opts, {
-			replication: {
-				to:   'http://127.0.0.1:5984/' + dbName,
-				live:  true,
-				retry: true
-			}
-		})
+		// Object.assign(opts, {
+		// 	replication: {
+		// 		to:   'http://127.0.0.1:5984/' + dbName,
+		// 		live:  true,
+		// 		retry: true
+		// 	}
+		// })
 	}
 	
 	return opts
@@ -286,27 +299,27 @@ export default databaseServerEntry
 /**
  * HMR - accept self - on dispose, close DB
  */
-if (module.hot) {
+
+
+addHotDisposeHandler(module,() => {
+	log.info('disposing database server')
+	databaseServerEntry.kill()
 	
-	module.hot.accept(() => log.info('Hot reloaded',__filename))
-	module.hot.dispose(() => {
-		log.info('disposing database server')
-		databaseServerEntry.kill()
-		
-		if (coordinator) {
-			try {
-				coordinator.stop()
-			} catch (err) {
-				log.warn(`HMR dispose, failed to stop TS coordinator`,err)
-			}
+	if (coordinator) {
+		try {
+			coordinator.stop()
+		} catch (err) {
+			log.warn(`HMR dispose, failed to stop TS coordinator`,err)
 		}
-		
-		if (storePlugin) {
-			try {
-				storePlugin.getDB(null).close()
-			} catch (err) {
-				log.warn(`HMR dispose, failed to stop TS coordinator`,err)
-			}
+	}
+	
+	if (storePlugin) {
+		try {
+			storePlugin.getDB(null).close()
+		} catch (err) {
+			log.warn(`HMR dispose, failed to stop TS coordinator`,err)
 		}
-	})
-}
+	}
+})
+
+acceptHot(module,log)

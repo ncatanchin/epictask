@@ -317,29 +317,29 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Focus on app root
 	 */
-	@ActionReducer()
-	focusAppRoot() {
-		return (state) => {
-			focusElementById('appRoot')
-			return state
-		}
-	}
-	@ActionReducer()
-	focusIssuesPanel() {
-		return (state) => {
-			focusElementById('issuesPanel')
-			return state
-		}
-
-	}
-
-	@ActionReducer()
-	focusIssueDetailPanel() {
-		return (state) => {
-			focusElementById('issueDetailPanel')
-			return state
-		}
-	}
+	// @ActionReducer()
+	// focusAppRoot() {
+	// 	return (state) => {
+	// 		focusElementById('appRoot')
+	// 		return state
+	// 	}
+	// }
+	// @ActionReducer()
+	// focusIssuesPanel() {
+	// 	return (state) => {
+	// 		focusElementById('issuesPanel')
+	// 		return state
+	// 	}
+	//
+	// }
+	//
+	// @ActionReducer()
+	// focusIssueDetailPanel() {
+	// 	return (state) => {
+	// 		focusElementById('issueDetailPanel')
+	// 		return state
+	// 	}
+	//}
 	
 	@ActionReducer()
 	toggleStatusBar() {

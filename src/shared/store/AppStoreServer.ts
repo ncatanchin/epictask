@@ -1,6 +1,6 @@
 import { getStore, getStoreState } from "shared/store/AppStore"
 import { IPCServer } from "shared/net/IPCServer"
-import { getHot, setDataOnDispose,acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose,acceptHot } from "shared/util/HotUtils"
 import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
 import {
 	getAllActions
@@ -204,7 +204,7 @@ export async function start() {
 	return stopStoreServer
 }
 
-setDataOnDispose(module, () => ({
+setDataOnHotDispose(module, () => ({
 	clientObservers,
 	ipcServer
 }))

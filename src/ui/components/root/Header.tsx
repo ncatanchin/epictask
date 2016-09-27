@@ -4,10 +4,9 @@ import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {SearchType} from 'shared/actions/search/SearchState'
 import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
-import { UIKey } from "shared/Constants"
-import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
-import { CommandComponent, ICommandComponent, getCommandProps } from "shared/commands/CommandComponent"
+import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
+import { ContainerNames } from "shared/UIConstants"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
@@ -184,20 +183,21 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 			return
 		
 		
+		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 		
-		const {searchPanel} = this
-
-		if (searchPanel) {
-			const textField:any = searchPanel.textField
-			if (textField) {
-				textField.blur()
-			} else {
-				const doc = document as any
-				doc.activeElement.blur()
-			}
-		}
+		// const {searchPanel} = this
+		//
+		// if (searchPanel) {
+		// 	const textField:any = searchPanel.textField
+		// 	if (textField) {
+		// 		textField.blur()
+		// 	} else {
+		// 		const doc = document as any
+		// 		doc.activeElement.blur()
+		// 	}
+		// }
 		
-		ActionFactoryProviders[UIKey].focusIssuesPanel()
+		//ActionFactoryProviders[UIKey].focusIssuesPanel()
 	}
 
 	/**
@@ -207,7 +207,10 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 	 */
 
 	onBlur = (event) => {
-		this.setState({resultsHidden:this.isExpanded,focused:false})
+		this.setState({
+			resultsHidden:this.isExpanded,
+			focused:false
+		})
 	}
 
 	/**
@@ -274,12 +277,16 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 			)
 		}
 
-		const controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
+		const
+			controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
 		//ref={this.setSearchPanelRef}
 		// ref={this.setHotKeysRef}
-		return <div {...getCommandProps(this)}
-		                id="header"
-		                style={headerStyle}>
+		
+		return <CommandRoot
+			component={this}
+      id="header"
+      style={headerStyle}>
+			
 			<SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='header-search'
@@ -294,7 +301,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 				<img style={logoStyle} src={ImageLogoFile}/>
 			</div>
 
-		</div>
+		</CommandRoot>
 	}
 }
 

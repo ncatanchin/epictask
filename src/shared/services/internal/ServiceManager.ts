@@ -1,7 +1,7 @@
 import {VariableProxy} from "shared/util/VariableProxy"
 import {IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
 import {IService} from "shared/services"
-import { setDataOnDispose, getHot, acceptHot } from "shared/util/HotUtils"
+import { setDataOnHotDispose, getHot, acceptHot } from "shared/util/HotUtils"
 
 const log = getLogger(__filename)
 
@@ -390,7 +390,7 @@ export class ServiceManager {
 
 
 // HMR
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	serviceManagerProxy
 }))
 

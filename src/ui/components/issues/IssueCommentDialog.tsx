@@ -31,6 +31,7 @@ import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
+import { ContainerNames } from "shared/UIConstants"
 
 
 // Constants
@@ -125,7 +126,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	hide = () => {
 		this.setState({comment: null})
 		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-		this.uiActions.focusIssuesPanel()
+		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
 
 	/**

@@ -6,6 +6,11 @@ import { isNil, isNumber, isString } from "shared/util/ObjectUtil"
 const
 	log = getLogger(__filename)
 
+
+
+export type TCommandDefaultAccelerator = string|CommonKeys|any
+
+
 /**
  * ALl command types
  */
@@ -23,7 +28,7 @@ export enum CommandType {
 	/**
 	 * Container or selector based
 	 */
-	Regular
+	Container
 }
 
 export type TCommandContainer = React.Component<any, any>|Electron.Menu
@@ -40,12 +45,12 @@ export interface ICommand {
 	/**
 	 * Unique identifier for command
 	 */
-	id:string
+	id?:string
 	
 	/**
 	 * Global, App or Regular command
 	 */
-	type:CommandType
+	type?:CommandType
 	
 	/**
 	 * React Component
@@ -57,7 +62,12 @@ export interface ICommand {
 	 *
 	 * @param command
 	 */
-	execute:TCommandExecutor
+	execute?:TCommandExecutor
+	
+	/**
+	 * Holder for electron accel
+	 */
+	electronAccelerator?:string
 	
 	/**
 	 * Electron styled accelerator (converted to mousetrap in browser window)
@@ -66,7 +76,7 @@ export interface ICommand {
 	 *
 	 * @see https://github.com/electron/electron/blob/master/docs/api/accelerator.md
 	 */
-	defaultAccelerator?:string|CommonKeys|false
+	defaultAccelerator?:TCommandDefaultAccelerator
 	
 	/**
 	 * If the command does not have a modifier and an input/select/textarea
@@ -77,7 +87,7 @@ export interface ICommand {
 	/**
 	 * The visible name or label
 	 */
-	name:string
+	name?:string
 	
 	/**
 	 * Optional extended info
@@ -110,7 +120,7 @@ export class Command implements ICommand {
 	
 	id:string
 	container:TCommandContainer
-	defaultAccelerator:string|CommonKeys|any
+	defaultAccelerator:TCommandDefaultAccelerator
 	overrideInput:boolean = false
 	hidden:boolean = false
 	menuPath:string[]

@@ -35,6 +35,7 @@ import LabelChip from "ui/components/common/LabelChip"
 import {IssueLabelsAndMilestones} from "ui/components/issues"
 import {Avatar} from 'ui/components/common'
 import {CommonKeys} from "shared/KeyMaps"
+import { ContainerNames } from "shared/UIConstants"
 
 
 // Constants
@@ -278,7 +279,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	hide = () => {
 		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-		this.uiActions.focusIssuesPanel()
+		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
 
 	/**

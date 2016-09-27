@@ -1,5 +1,5 @@
 import * as assert from 'assert'
-import { getHot, setDataOnDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 import {RepoEvent,IssuesEvent} from 'shared/models/GitHubEvents'
 import { createClient, GithubError } from "shared/GitHubClient"
@@ -538,7 +538,7 @@ if (instanceContainer.hotInstance) {
 	
 	log.debug(`hot reloading`,fromInstance,fromProto,newProto,'Are protos equal?',newProto === fromProto)
 }
-setDataOnDispose(module,() => ({
+setDataOnHotDispose(module,() => ({
 	// Tack on a ref to the hot instance so we know it's there
 	instanceContainer:assign(instanceContainer,{
 		hotInstance: instanceContainer.instance

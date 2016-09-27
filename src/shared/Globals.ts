@@ -6,7 +6,7 @@ import 'shared/ProcessConfig'
 
 // LOGGING CONFIG FIRST
 import 'shared/LogConfig'
-import {getLogger as LoggerFactory} from 'typelogger'
+import {getLogger as LoggerFactory,LogLevel as LogLevelGlobal} from 'typelogger'
 
 // LATER - POOR TYPING
 later = require('later/index-browserify')
@@ -19,6 +19,7 @@ import * as ContextUtils from './util/ContextUtils'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 import EnvGlobal from 'shared/Env'
+import { acceptHot } from "shared/util/HotUtils"
 
 
 // Export globals
@@ -62,6 +63,7 @@ function installGlobals() {
 		Record:RecordGlobal,
 		_: LodashGlobal,
 		getLogger: LoggerFactory,
+		LogLevel: LogLevelGlobal,
 		assert: assertGlobal,
 		Env: EnvGlobal,
 		Container: ContainerGlobal,
@@ -81,6 +83,9 @@ declare global {
 	interface IAssignGlobal {
 		(...sources:any[]):any
 	}
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var LogLevel:typeof LogLevelGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Container:typeof ContainerGlobal
@@ -131,3 +136,5 @@ declare global {
 installGlobals()
 
 export {}
+
+acceptHot(module)
