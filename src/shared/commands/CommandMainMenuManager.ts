@@ -148,57 +148,58 @@ export class CommandMainMenuManager {
 	 * @param commands
 	 */
 	updateCommand(...commands:ICommand[]) {
-		
-		commands.forEach(cmd => {
-			const
-				itemReg = this.getMenuItemRegistration(cmd),
-				{mounted} = itemReg
-			
-			// CHECK FOR SIMPLE CHANGES
-			if (mounted) {
+		setImmediate(() => {
+			commands.forEach(cmd => {
+				const
+					itemReg = this.getMenuItemRegistration(cmd),
+					{mounted} = itemReg
 				
-				// NO CHANGES
-				if (shallowEquals(itemReg.cmd,cmd)) {
-					log.debug(`No menu changes at all`)
-					return
-				}
-				
-				// VISIBILITY OR ENABLED CHANGE ONLY
-				else if (shallowEquals(itemReg.cmd,cmd,'label','electronAccelerator')) {
-					const
-						updates = {
-							enabled: cmd.enabled,
-							visible: cmd.hidden !== true
-						}
+				// CHECK FOR SIMPLE CHANGES
+				if (mounted) {
+					
+					// NO CHANGES
+					if (shallowEquals(itemReg.cmd,cmd)) {
+						log.debug(`No menu changes at all`)
+						return
+					}
+					
+					// VISIBILITY OR ENABLED CHANGE ONLY
+					else if (shallowEquals(itemReg.cmd,cmd,'label','electronAccelerator')) {
+						const
+							updates = {
+								enabled: cmd.enabled,
+								visible: cmd.hidden !== true
+							}
 						
-					Object.assign(itemReg.cmd, updates,{
-						execute: cmd.execute
-					})
-					
-					Object.assign(itemReg.menuItem, updates)
-					
-					return
+						Object.assign(itemReg.cmd, updates,{
+							execute: cmd.execute
+						})
+						
+						Object.assign(itemReg.menuItem, updates)
+						
+						return
+					}
 				}
-			}
-			
-			// UNMOUNT & REMOVE EXISTING ITEM
-			if (mounted)
-				this.removeCommand(itemReg.cmd)
-			
-			this.removeMenuItem(itemReg.menuItem)
-			
-			// UPDATE AND CREATE NEW ITEM
-			Object.assign(itemReg,{
-				cmd,
-				menuItem: this.makeMenuItem(cmd)
+				
+				// UNMOUNT & REMOVE EXISTING ITEM
+				if (mounted)
+					this.removeCommand(itemReg.cmd)
+				
+				this.removeMenuItem(itemReg.menuItem)
+				
+				// UPDATE AND CREATE NEW ITEM
+				Object.assign(itemReg,{
+					cmd,
+					menuItem: this.makeMenuItem(cmd)
+				})
+				
+				this.menuItems.push(itemReg.menuItem)
+				
+				
+				// SHOW UPDATE
+				this.showCommand(cmd)
+				
 			})
-			
-			this.menuItems.push(itemReg.menuItem)
-			
-			
-			// SHOW UPDATE
-			this.showCommand(cmd)
-			
 		})
 		
 	}
@@ -209,18 +210,21 @@ export class CommandMainMenuManager {
 	 * @param commands
 	 */
 	removeCommand(...commands:ICommand[]) {
-		this.hideCommand(...commands.map(it => it.id))
-		
-		commands.forEach(cmd => {
-			const
-				itemReg = this.menuItemRegs[cmd.id]
+		setImmediate(() => {
+			this.hideCommand(...commands.map(it => it.id))
 			
-			if (itemReg && itemReg.menuItem) {
-				this.removeMenuItem(itemReg.menuItem)
-			}
-			
-			delete this.menuItemRegs[cmd.id]
+			commands.forEach(cmd => {
+				const
+					itemReg = this.menuItemRegs[cmd.id]
+				
+				if (itemReg && itemReg.menuItem) {
+					this.removeMenuItem(itemReg.menuItem)
+				}
+				
+				delete this.menuItemRegs[cmd.id]
+			})
 		})
+		
 		
 	}
 	
@@ -231,80 +235,81 @@ export class CommandMainMenuManager {
 	 * @param commands
 	 */
 	showCommand(...commands:ICommand[]) {
-		if (!commands.length)
-			return
-		
-		const
-			{Menu,MenuItem} = Electron,
-			appMenu = Menu.getApplicationMenu()
-		
-		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commands.forEach(cmd => {
-			if (!cmd.menuPath) {
+		setImmediate(() => {
+			if (!commands.length)
 				return
-			}
 			
 			const
-				itemReg = this.getMenuItemRegistration(cmd)
+				{ Menu, MenuItem } = Electron,
+				appMenu = Menu.getApplicationMenu()
 			
-			if (itemReg.mounted) {
-				log.debug(`Already mounted item`,itemReg.id)
-				return
-			}
-			
-			itemReg.mounted = true
-			
-			const
-				menuPath = cmd.menuPath,
+			//ITERATE COMMANDS AND ADD WHENEVER NEEDED
+			commands.forEach(cmd => {
+				if (!cmd.menuPath) {
+					return
+				}
 				
-				// GET THE MENU END POINT
-				menu = menuPath.reduce((currentMenu, nextName) => {
-					let
-						nextMenuItem = (currentMenu.items || currentMenu).find(it => it.label === nextName)
+				const
+					itemReg = this.getMenuItemRegistration(cmd)
+				
+				if (itemReg.mounted) {
+					log.debug(`Already mounted item`, itemReg.id)
+					return
+				}
+				
+				itemReg.mounted = true
+				
+				const
+					menuPath = cmd.menuPath,
 					
-					if (nextMenuItem && nextMenuItem.type !== 'submenu') {
-						throw new Error(`Can not add a menu item to a non 'submenu' type element for menu path ${menuPath}, type is ${nextMenuItem.type}`)
-					} else if (!nextMenuItem) {
-						const
-							nextMenu = new Menu()
+					// GET THE MENU END POINT
+					menu = menuPath.reduce((currentMenu, nextName) => {
+						let
+							nextMenuItem = (currentMenu.items || currentMenu).find(it => it.label === nextName)
 						
-						nextMenuItem = new MenuItem({
-							label: nextName,
-							type: 'submenu',
-							submenu: nextMenu
-						})
+						if (nextMenuItem && nextMenuItem.type !== 'submenu') {
+							throw new Error(`Can not add a menu item to a non 'submenu' type element for menu path ${menuPath}, type is ${nextMenuItem.type}`)
+						} else if (!nextMenuItem) {
+							const
+								nextMenu = new Menu()
+							
+							nextMenuItem = new MenuItem({
+								label: nextName,
+								type: 'submenu',
+								submenu: nextMenu
+							})
+							
+							this.menuItems.push(nextMenuItem)
+							
+							currentMenu.append ?
+								currentMenu.append(nextMenuItem) :
+								currentMenu.items.push(nextMenuItem)
+							
+							
+						}
 						
-						this.menuItems.push(nextMenuItem)
 						
-						currentMenu.append ?
-							currentMenu.append(nextMenuItem) :
-							currentMenu.items.push(nextMenuItem)
-						
-						
-					}
-					
-					
-					return nextMenuItem.submenu
-				}, appMenu as any)
+						return nextMenuItem.submenu
+					}, appMenu as any)
+				
+				// PUSH THE ITEM AND UPDATE
+				menu.append ?
+					menu.append(itemReg.menuItem) :
+					menu.items.push(itemReg)
+				
+				
+			})
 			
-			// PUSH THE ITEM AND UPDATE
-			menu.append ?
-				menu.append(itemReg.menuItem) :
-				menu.items.push(itemReg)
+			// FORCE UPDATE
+			const
+				newAppMenu = new Menu()
 			
+			appMenu.items
+				.filter(item => item.type !== 'submenu' || menuHasItems(item.submenu))
+				.forEach(item => newAppMenu.append(item))
 			
+			Menu.setApplicationMenu(newAppMenu)
 		})
-		
-		// FORCE UPDATE
-		const
-			newAppMenu = new Menu()
-		
-		appMenu.items
-			.filter(item => item.type !== 'submenu' || menuHasItems(item.submenu))
-			.forEach(item => newAppMenu.append(item))
-		
-		Menu.setApplicationMenu(newAppMenu)
-		
 	}
 	
 	

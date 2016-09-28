@@ -109,6 +109,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, {
 				show: false,
 				frame: false,
+				acceptFirstMouse: true,
 				titleBarStyle: 'hidden',
 				title: 'epictask',
 				// darkTheme:true,

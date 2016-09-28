@@ -52,8 +52,11 @@ export const repoIdPredicate = (o:any) => {
 /**
  * All available repos that have been added (excluding deleted)
  */
-export const availableReposSelector =
-	(state):List<AvailableRepo> => repoStateSelector(state).availableRepos
+export const availableReposSelector = createSelector(
+	repoStateSelector,
+	(state):List<AvailableRepo> => state.availableRepos
+)
+	
 
 export const enabledAvailableReposSelector = createSelector(
 	availableReposSelector,

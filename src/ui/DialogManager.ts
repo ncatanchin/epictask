@@ -90,11 +90,14 @@ export class DialogManager {
 		const
 			dialogsToClose = this.dialogs.filter(it => it.config.name === config.name)
 		
+		log.debug(`Going to close dialogs`,dialogsToClose,'from config',config)
+		
 		while (dialogsToClose.length) {
 			const
 				dialog = dialogsToClose.shift()
 			
-			this.close(dialog.id)
+			log.debug(`Closing dialog`,dialog)
+			this.close(dialog)
 		}
 	}
 	
@@ -139,7 +142,9 @@ export class DialogManager {
 			id = `${config.name}-${shortId()}`,
 			dialogWindow = new Electron.remote.BrowserWindow({
 				parent: Electron.remote.getCurrentWindow(),
-				frame:false
+				frame:false,
+				minHeight: 500,
+				minWidth: 500
 			}),
 			dialog = this.dialogs[this.dialogs.length] = {
 				id,

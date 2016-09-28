@@ -3,7 +3,8 @@ import {List} from 'immutable'
 import 'shared/NamespaceConfig'
 import './LoDashMixins'
 import {generate as generateShortId} from 'short-id'
-import { InvalidProxyNames } from "shared/Constants"
+
+export const InvalidProxyNames = ['inspect','prototype','__proto__','constructor']
 
 const
 	_ = require('lodash')

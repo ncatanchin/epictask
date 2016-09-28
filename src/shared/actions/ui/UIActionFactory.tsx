@@ -1,5 +1,5 @@
 import * as uuid from 'node-uuid'
-import {ActionFactory,ActionReducer,ActionMessage} from 'typedux'
+import {ActionFactory,ActionReducer,ActionThunk,ActionMessage} from 'typedux'
 import {List,Map} from 'immutable'
 import {UIKey, getBuiltInToolId, BuiltInTools} from "shared/Constants"
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
@@ -301,7 +301,16 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return (state:UIState) => state.set('theme',theme)
 	}
 
+	
+	
 	@ActionReducer()
+	private internalSetDialogOpen(name:string,open:boolean) {
+		return (state:UIState) => state.set(
+			'dialogs', (state.dialogs ? state.dialogs : Map()).set(name,open)
+		)
+	}
+	
+	@ActionThunk()
 	setDialogOpen(name:string,open:boolean) {
 		return (state:UIState) => {
 			
@@ -309,26 +318,42 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				const
 					dialogManager = getDialogManager()
 						
-				open ? dialogManager.open(DialogConfigs[name]) : dialogManager.closeWithConfig(DialogConfigs[name])
+				if (open)
+					dialogManager.open(DialogConfigs[name])
+				else
+					dialogManager.closeWithConfig(DialogConfigs[name])
 			}
 			
-			return state.set(
-				'dialogs', state.dialogs.clear().set(name,open)
-			)
+			this.internalSetDialogOpen(name,open)
 		}
 	}
-
+	
+	/**
+	 * Close all dialogs reducer
+	 *
+	 * @returns {(state:UIState)=>Map<string, V>}
+	 */
 	@ActionReducer()
+	private internalCloseAllDialogs() {
+		return (state:UIState) => state.set(
+			'dialogs',state.dialogs ? state.dialogs.clear() : Map()
+		)
+	}
+	
+	/**
+	 * Close all dialogs
+	 *
+	 * @returns {(dispatch:any, getState:any)=>undefined}
+	 */
+	@ActionThunk()
 	closeAllDialogs() {
-		return (state:UIState) => {
+		return (dispatch,getState) => {
 			
 			if (ProcessConfig.isType(ProcessType.UI)) {
 				getDialogManager().closeAll()
 			}
 			
-			return state.set(
-			'dialogs',state.dialogs.clear()
-			)
+			this.internalCloseAllDialogs()
 		}
 	}
 

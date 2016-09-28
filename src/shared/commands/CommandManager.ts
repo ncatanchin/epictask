@@ -37,7 +37,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 	
@@ -629,10 +629,10 @@ export class CommandManager {
 		const
 			containerReg = this.containers[containerId]
 		
-		if (DEBUG) {
-			assert(containerReg, `Unknown container ${containerId}`)
-			assert(containerReg.container && containerReg.element, `only ui containers can be focused, element is not available`)
-		}
+		// if (DEBUG) {
+		// 	assert(containerReg, `Unknown container ${containerId}`)
+		// 	assert(containerReg.container && containerReg.element, `only ui containers can be focused, element is not available`)
+		// }
 		
 		if (!containerReg || !containerReg.element) {
 			log.warn(`No container found for ${containerId}`)

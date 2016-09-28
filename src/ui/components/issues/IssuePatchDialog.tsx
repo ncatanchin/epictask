@@ -7,9 +7,9 @@ import * as React from "react"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
-import { Dialog, CircularProgress, MenuItem } from "material-ui"
+import { CircularProgress, MenuItem } from "material-ui"
 import { MuiThemeProvider } from "material-ui/styles"
-import { Container } from "typescript-ioc"
+
 
 import { PureRender, Button } from 'ui/components/common'
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
@@ -23,8 +23,6 @@ import { Label } from "shared/models/Label"
 import { Milestone } from "shared/models/Milestone"
 import { uiStateSelector } from "shared/actions/ui/UISelectors"
 import { Dialogs } from "shared/Constants"
-import { IssueActionFactory } from "shared/actions/issue/IssueActionFactory"
-import { UIActionFactory } from "shared/actions/ui/UIActionFactory"
 import { IssuePatchModes, TIssuePatchMode } from "shared/actions/issue/IssueState"
 import { TypeAheadSelect } from "ui/components/common/TypeAheadSelect"
 import {
@@ -36,6 +34,9 @@ import { IssueLabelsAndMilestones } from "ui/components/issues"
 import { Avatar } from 'ui/components/common'
 import { CommonKeys } from "shared/KeyMaps"
 import { ContainerNames, DialogConfigs } from "shared/UIConstants"
+import { addHotDisposeHandler } from "shared/util/HotUtils"
+import { getIssueActions, getUIActions } from "shared/actions/ActionFactoryProvider"
+import { DialogRoot } from "ui/components/common/DialogRoot"
 
 
 // Constants
@@ -137,60 +138,29 @@ const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
 	})
 })
 
-
-if (module.hot) {
-	module.hot.dispose(styleSheet.clean)
-}
+// ADD HMR CLEANER
+addHotDisposeHandler(module, styleSheet.clean)
 
 
 /**
  * Add component styles
  */
 const baseStyles = createStyles({
-	root: [ FillWindow,FlexColumn, {} ],
-	
-	title: [ FlexColumn, FillWidth, makePaddingRem(0,1,0,1),makeFlexAlign('flex-start','center'), {
-		
-		// DIALOG TITLE BAR
-		height: rem(6),
-		cursor: 'move',
-		
-		WebkitUserSelect: 'none',
-		WebkitAppRegion:  'drag',
-		
-		
-		
-		label: [ FlexRow, makePaddingRem(0,0,0.5,0), {
-			fontWeight: 500
-		}],
+	title: [ {
 		
 		issues: [ FlexRow, FillWidth, OverflowAuto, {
-			fontSize: rem(1)
-		}],
-		issueNumber: [ {
-			fonStyle: 'italic',
-			fontWeight: 400
+			fontSize: rem(1),
+			
+			number: [ {
+				fonStyle: 'italic',
+				fontWeight: 400
+			} ],
+			
+			title: [ {
+				fontWeight: 300
+			} ]
 		} ],
-		issueTitle: [ {
-			fontWeight: 300
-		} ]
-	} ],
-	
-	form: [FlexScale,{
-		paddingTop: rem(2)
-	}],
-	
-	row: [ {
-		height: 72
-	} ],
-	
-	actions: [FlexRow,makeFlexAlign('center','flex-end'),{
-		height: rem(4)
-	}],
-	
-	savingIndicator: [ PositionAbsolute, FlexColumnCenter, Fill, makeAbsolute(), {
-		opacity: 0,
-		pointerEvents: 'none'
+		
 	} ],
 	
 })
@@ -256,13 +226,11 @@ export interface IIssuePatchDialogState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles, 'dialog')
+@ThemedStyles(baseStyles, 'issuePatchDialog')
 @PureRender
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
 	
 	
-	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
-	uiActions:UIActionFactory = Container.get(UIActionFactory)
 	
 	
 	/**
@@ -293,16 +261,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
-		this.uiActions.setDialogOpen(DialogConfigs.IssueEditDialog.name, false)
-		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-	}
-	
-	/**
-	 * onBlur
-	 */
-	onBlur = () => {
-		log.info('blur hide')
-		this.hide()
+		getUIActions().setDialogOpen(Dialogs.IssuePatchDialog, false)
+		
 	}
 	
 	/**
@@ -318,11 +278,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		log.info('Applying patch to issue', patch)
 		
 		!this.props.saving &&
-		this.issueActions.applyPatchToIssues(
-			patch,
-			this.props.mode !== 'Label',
-			...this.props.issues
-		)
+			getIssueActions().applyPatchToIssues(
+				patch,
+				this.props.mode !== 'Label',
+				...this.props.issues
+			)
 	}
 	
 	
@@ -454,27 +414,27 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				))
 				
 				// Convert to JS Array
-				.toArray()
-		
-		const newDataSource = items.map(item => ({
-			item,
-			text: '',
-			value: <MenuItem style={{padding:0}}
-			                 className='patchMenuItem'
-			                 manualFocusEnabled={false}
-			                 innerDivStyle={{padding:0,paddingRight:0,paddingLeft:0}}
-			                 primaryText={
-
-	                    <LabelChip label={item}
-								   labelStyle={makeStyle(makeMarginRem(0,0,0,0),{
-								   	borderRadius: 0,
-								   	padding:'1rem 1rem'
-								   })}
-								   showRemove={false}
-								   showIcon={true}
-					    />
-					}/>
-		}))
+				.toArray(),
+			
+			newDataSource = items.map(item => ({
+				item,
+				text: '',
+				value: <MenuItem style={{padding:0}}
+				                 className='patchMenuItem'
+				                 manualFocusEnabled={false}
+				                 innerDivStyle={{padding:0,paddingRight:0,paddingLeft:0}}
+				                 primaryText={
+	
+		                    <LabelChip label={item}
+									   labelStyle={makeStyle(makeMarginRem(0,0,0,0),{
+									    borderRadius: 0,
+									    padding:'1rem 1rem'
+									   })}
+									   showRemove={false}
+									   showIcon={true}
+						    />
+						}/>
+			}))
 		
 		log.info('new label data source =', newDataSource)
 		return newDataSource
@@ -628,22 +588,13 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				saving,
 				saveError
 			} = this.props,
-			newItems = this.newItems
-		
-		
-		
-		
-		return <div style={styles.root}>
+			newItems = this.newItems,
 			
-			<MuiThemeProvider muiTheme={theme}>
-				
-				<div style={[FillWidth,FlexColumn,FlexScale]}>
-					<div style={styles.title}>
-						<div style={[styles.title.label]}>{mode === IssuePatchModes.Label ? 'Add Label to' :
-							mode === IssuePatchModes.Assignee ? 'Assign Issues' :
-								'Set Milestone'}
-						</div>
-						<div style={[styles.title.subLabel,styles.title.issues]}>
+			title = mode === IssuePatchModes.Label ? 'Add Label to' :
+				mode === IssuePatchModes.Assignee ? 'Assign Issues' :
+					'Set Milestone',
+			
+			subTitle = <span style={[styles.title.issues]}>
 							{issues.map((issue:Issue, index:number) =>
 									<span key={issue.id} style={styles.title.issue}>
 						{index > 0 && <span>,&nbsp;</span>}
@@ -656,66 +607,52 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 
 					</span>
 							)}
-						</div>
-					
-					</div>
-					
-					
-					<form name="issuePatchDialogForm"
-					      id="issuePatchDialogForm"
-					      style={[
-					      	styles.body,
-					      	styles.form,
-					      	saving && {
-						        opacity: 0,
-						        pointerEvents: 'none'
-						      }
-					      ]}>
-						
-						<IssueLabelsAndMilestones
-							labels={mode === IssuePatchModes.Label && newItems}
-							milestones={mode === IssuePatchModes.Milestone && newItems}
-							showIcon={true}
-							onRemove={this.onNewItemRemove}
-							labelStyle={{}}
-						
-						/>
-						
-						<TypeAheadSelect
-							ref={this.setTypeAheadRef}
-							style={{margin: '1rem 0'}}
-							autoFocus={true}
-							fullWidth={true}
-							hintText={`${mode && mode.toUpperCase()}...`}
-							menuProps={{maxHeight:300}}
-							onEscKeyDown={this.hide}
-							onItemSelected={this.onItemSelected}
-							onInputChanged={this.onInputChanged}
-							dataSource={this.state.dataSource}
-							openOnFocus={true}
-							openAlways={true}
-							underlineShow={false}/>
-					
-					
-					</form>
-					
-					
-					<div style={[styles.actions]}>
-						<Button onClick={this.hide} style={styles.action}>Cancel</Button>
-						<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
-					</div>
-					
-					{/* Saving progress indicator */}
-					{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-						<CircularProgress
-							color={theme.progressIndicatorColor}
-							size={1}/>
-					</div>}
-				</div>
-			</MuiThemeProvider>
+						</span>,
+			
+			actionNodes =
+				[
+					<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
+					<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
+				]
+		
+		
+		return <DialogRoot
+			titleNode={title}
+			subTitleNode={subTitle}
+			actionNodes={actionNodes}
+			saving={saving}
+			style={styles.root}>
+			
+			
+			<IssueLabelsAndMilestones
+				labels={mode === IssuePatchModes.Label && newItems}
+				milestones={mode === IssuePatchModes.Milestone && newItems}
+				showIcon={true}
+				onRemove={this.onNewItemRemove}
+				labelStyle={{}}
+			
+			/>
+			
+			{this.state.dataSource &&
+			<TypeAheadSelect
+				ref={this.setTypeAheadRef}
+				style={makeMarginRem(1,0)}
+				autoFocus={true}
+				fullWidth={true}
+				hintText={`${mode && mode.toUpperCase()}...`}
+				menuProps={{maxHeight:300}}
+				onEscKeyDown={this.hide}
+				onItemSelected={this.onItemSelected}
+				onInputChanged={this.onInputChanged}
+				dataSource={this.state.dataSource}
+				openOnFocus={true}
+				openAlways={true}
+				underlineShow={false}/>
+			}
+			
 			
 			{/*</Dialog>*/}
-		</div>
+		</DialogRoot>
 	}
 	
 }

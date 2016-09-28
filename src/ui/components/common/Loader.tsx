@@ -13,7 +13,7 @@ const
 	log = console,
 
 	baseStyles = createStyles({
-		root: [FillWidth,FillHeight,FlexScale,PositionRelative, {
+		root: [FillWindow,FlexScale,PositionRelative, {
 			backgroundColor: getTheme().palette.background
 		}]
 	})
