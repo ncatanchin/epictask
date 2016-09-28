@@ -46,7 +46,7 @@ export const
 	},
 	
 	// KEYS - MODIFIER KEYS
-	ModifiedKeyNames = ['ctrl','meta','shift','alt'],
+	ModifiedKeyNames = [Ctrl,Alt,Meta,Shift],
 
 
 

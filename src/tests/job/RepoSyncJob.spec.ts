@@ -1,6 +1,5 @@
 
 import DatabaseClientService from 'shared/services/DatabaseClientService'
-import ActivityManagerService from 'shared/services/ActivityManagerService'
 import {User} from 'shared/models/User'
 import {Issue} from 'shared/models/Issue'
 import {Repo} from 'shared/models/Repo'
@@ -28,7 +27,7 @@ describe('RepoSyncJob tests',() => {
 	before(async () => {
 		log.info(`Loading database service`)
 		//await MainTestSetup.configureMain(DBService,ActivityManagerService)
-		await getServiceManager().start(DatabaseClientService,ActivityManagerService)
+		await getServiceManager().start(DatabaseClientService)
 
 		dbService = Container.get(DatabaseClientService)
 	})

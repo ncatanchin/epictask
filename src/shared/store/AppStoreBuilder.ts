@@ -11,7 +11,7 @@ export async function storeBuilder() {
 		
 		store:ObservableStore<any> = ProcessConfig.isType(ProcessType.UI) ?
 			(await AppStore.loadAndInitStore()) :
-			ProcessConfig.isType(ProcessType.UIDialog) ?
+			ProcessConfig.isType(ProcessType.UIChildWindow) ?
 				(await AppStore.loadAndInitChildStore()) :
 				(await AppStore.loadAndInitStorybookStore())
 	

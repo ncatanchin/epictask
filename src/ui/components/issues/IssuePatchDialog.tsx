@@ -33,7 +33,7 @@ import LabelChip from "ui/components/common/LabelChip"
 import { IssueLabelsAndMilestones } from "ui/components/issues"
 import { Avatar } from 'ui/components/common'
 import { CommonKeys } from "shared/KeyMaps"
-import { ContainerNames, DialogConfigs } from "shared/UIConstants"
+import { ContainerNames, WindowConfigs } from "shared/UIConstants"
 import { addHotDisposeHandler } from "shared/util/HotUtils"
 import { getIssueActions, getUIActions } from "shared/actions/ActionFactoryProvider"
 import { DialogRoot } from "ui/components/common/DialogRoot"

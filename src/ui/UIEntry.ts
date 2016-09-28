@@ -26,7 +26,7 @@ async function boot() {
 	let
 		stopAppStoreServer = null
 	
-	// UI loads services, etc - UIDialog - skips all of it
+	// UI loads services, etc - UIChildWindow - skips all of it
 	if (ProcessConfig.isType(ProcessType.UI)) {
 		log.debug(`Starting AppStoreServer`)
 		stopAppStoreServer = await require('shared/store/AppStoreServer').start()

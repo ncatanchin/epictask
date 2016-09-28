@@ -1,3 +1,4 @@
+import { acceptHot } from "shared/util/HotUtils"
 require('source-map-support').install()
 require('babel-polyfill')
 import 'reflect-metadata'
@@ -16,7 +17,7 @@ const Entries = {
 	[ProcessType.DatabaseServer]: () => require("db/DatabaseServerEntry"),
 	[ProcessType.JobServer]: () => require("job/JobServerEntry"),
 	[ProcessType.UI]: () => require("ui/UIEntry"),
-	[ProcessType.UIDialog]: () => require("ui/UIEntry")
+	[ProcessType.UIChildWindow]: () => require("ui/UIEntry")
 }
 
 if (DEBUG) {
@@ -37,6 +38,4 @@ TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
 entryFn()
 
 
-if (module.hot) {
-	module.hot.accept()
-}
+acceptHot(module,log)

@@ -8,7 +8,6 @@ import {getPage} from 'ui/components/pages'
 
 import {AppStateType} from 'shared/AppStateType'
 import {Events, AppKey, UIKey} from 'shared/Constants'
-import * as KeyMaps from 'shared/KeyMaps'
 import {AppState} from 'shared/actions/app/AppState'
 import {UIState} from 'shared/actions/ui/UIState'
 import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
@@ -21,7 +20,7 @@ import {
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
-import { DialogConfigs } from "shared/UIConstants"
+import { WindowConfigs } from "shared/UIConstants"
 import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
@@ -31,8 +30,8 @@ import { FillWindow, makeStyle } from "shared/themes"
 const
 	{StyleRoot} = Radium,
 	$ = require('jquery'),
-	dialogName = process.env.EPIC_DIALOG,
-	isDialog = dialogName && dialogName !== 'undefined' && DialogConfigs[ dialogName ]
+	childWindowId = process.env.EPIC_WINDOW_ID,
+	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
 
 
 /**
@@ -93,8 +92,6 @@ export interface IAppProps {
 	theme:any
 	stateType:AppStateType
 	hasAvailableRepos:boolean
-	dialogOpen:boolean
-	//adjustedBodyStyle:any
 }
 
 
@@ -122,19 +119,36 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 	/**
 	 * All global app root window commands
 	 */
-	commands = (builder:CommandContainerBuilder) =>
-		builder
-			//MOVEMENT
-			.command(
-				CommandType.Container,
-				'New Issue',
-				(cmd,event) => getIssueActions().newIssue(),
-				"CommandOrControl+n",{
-					// menuPath:['Issue']
-				})
+	commands = (builder:CommandContainerBuilder) => {
+		
+		If(ProcessConfig.isUI(), () => {
+			builder
+
+				// NEW ISSUE
+				.command(
+					CommandType.App,
+					'New Issue',
+					(cmd, event) => getIssueActions().newIssue(),
+					"CommandOrControl+n", {
+						menuPath:['Issue']
+					})
+		}, () => {
 			
-			.make()
-	
+			builder
+			
+			// NEW ISSUE
+				.command(
+					CommandType.Container,
+					'Close Window',
+					(cmd, event) => getUIActions().closeWindow(childWindowId),
+					"CommandOrControl+w", {
+						menuPath:['Window']
+					})
+		})
+		
+			
+		return builder.make()
+	}
 	readonly commandComponentId:string = 'App'
 	
 	appActions = getAppActions()
@@ -159,10 +173,10 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 	render() {
 		
 		const
-			{hasAvailableRepos, stateType,dialogOpen, theme} = this.props,
+			{hasAvailableRepos, stateType, theme} = this.props,
 			{palette} = theme,
 			
-			page = {component: getPage(stateType)},
+			PageComponent = getPage(stateType),// {component: getPage(stateType)},
 			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
 
 			headerVisibility = (stateType < AppStateType.Home) ?
@@ -176,7 +190,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 				flexDirection: 'column'
 			}, expanded && styles.collapsed),
 		
-			DialogComponent = isDialog && DialogConfigs[ dialogName ].rootElement()
+			DialogComponent = isChildWindow && WindowConfigs[ childWindowId ].rootElement()
 		
 		log.info(`Dialog Component`,DialogComponent)
 			
@@ -189,7 +203,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 						component={this}
 						id="appRoot">
 						
-						{isDialog ? <DialogComponent />:
+						{isChildWindow ? <DialogComponent />:
 							
 						
 						
@@ -201,7 +215,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 							{(stateType === AppStateType.AuthLogin || hasAvailableRepos) &&
 							<div style={makeStyle(FlexScale,FlexColumn)}>
 								<div style={contentStyles}>
-									<page.component />
+									<PageComponent />
 								</div>
 								
 								<ToastMessages/>
@@ -289,6 +303,8 @@ function checkIfRenderIsReady() {
 		render()
 	}
 }
+
+log.info(`Session store for windowID = ${childWindowId}`,window.sessionStorage.getItem(childWindowId))
 
 checkIfRenderIsReady()
 

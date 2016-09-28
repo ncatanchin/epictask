@@ -38,7 +38,7 @@ const actionFactoryClazzMap = {} as any
 export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 	get(target,leafKey) {
 		//log.info(`Getting action factory for leaf ${leafKey}`)
-		if (ProcessConfig.isType(ProcessType.UI,ProcessType.UIDialog,ProcessType.Storybook) && actionFactoryClazzMap[leafKey]) {
+		if (ProcessConfig.isType(ProcessType.UI,ProcessType.UIChildWindow,ProcessType.Storybook) && actionFactoryClazzMap[leafKey]) {
 			return new actionFactoryClazzMap[leafKey]()
 		} else {
 			return require("shared/AppStoreClient").getActionClient(leafKey)

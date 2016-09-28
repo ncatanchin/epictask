@@ -2,7 +2,10 @@
 import { TCommandDefaultAccelerator } from "shared/commands/Command"
 import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
 import { GlobalKeys } from "shared/KeyMaps"
-import { ModifiedKeyNames, MappedKeys, ElectronMappedKeys } from "shared/commands/CommandManagerConfig"
+import {
+	ModifiedKeyNames, MappedKeys, ElectronMappedKeys, Shift, Meta,
+	Alt, Ctrl
+} from "shared/commands/CommandManagerConfig"
 
 
 
@@ -126,12 +129,21 @@ export class CommandAccelerator {
 	 * @returns {string}
 	 */
 	toElectronAccelerator():string {
-		return !this.codes.length ? '' :this
-			.codes
-			.map(code => {
-				return ElectronMappedKeys[code] || code.toUpperCase()
-			})
-			.join('+')
+		return !this.codes.length ? '' :
+			ModifiedKeyNames
+				.filter(modKey => this[`${modKey}Key`])
+				.map(modKey => ElectronMappedKeys[modKey])
+				.concat(this
+					.codes
+					.map(code => {
+						const
+							electronKey = Object.keys(ElectronMappedKeys).find((key) => {
+								return key.toLowerCase() === code.toLowerCase()
+							})
+						
+						return electronKey ? ElectronMappedKeys[electronKey] : code.toUpperCase()
+					})
+				).join('+')
 	}
 	
 	/**

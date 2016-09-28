@@ -575,7 +575,7 @@ export default class ChildProcessRenderer {
 					file: `child-window-${processTypeName}`
 				}),
 				templateURL = require('path').resolve(process.cwd(),'dist/app/app-entry.html'),
-				url = `file://${templateURL}#processType=${processTypeName}`
+				url = `file://${templateURL}#EPIC_ENTRY=${processTypeName}`
 			
 			
 			this.browserWindow = new BrowserWindow(Object.assign({show:false},childWindowState))

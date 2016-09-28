@@ -12,8 +12,8 @@ import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
 import { focusElementById } from "shared/util/UIUtil"
-import { getDialogManager } from "ui/DialogManager"
-import { DialogConfigs } from "shared/UIConstants"
+import { getWindowManager } from "ui/WindowManager"
+import { WindowConfigs } from "shared/UIConstants"
 
 
 // Import only as type - in case we are not on Renderer
@@ -311,17 +311,24 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 	
 	@ActionThunk()
+	closeWindow(windowId:string) {
+		return (dispatch,getState) => {
+			getWindowManager().close(windowId)
+		}
+	}
+	
+	@ActionThunk()
 	setDialogOpen(name:string,open:boolean) {
 		return (state:UIState) => {
 			
 			if (ProcessConfig.isType(ProcessType.UI)) {
 				const
-					dialogManager = getDialogManager()
+					dialogManager = getWindowManager()
 						
 				if (open)
-					dialogManager.open(DialogConfigs[name])
+					dialogManager.open(WindowConfigs[name])
 				else
-					dialogManager.closeWithConfig(DialogConfigs[name])
+					dialogManager.close(name)
 			}
 			
 			this.internalSetDialogOpen(name,open)
@@ -350,7 +357,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return (dispatch,getState) => {
 			
 			if (ProcessConfig.isType(ProcessType.UI)) {
-				getDialogManager().closeAll()
+				getWindowManager().closeAll()
 			}
 			
 			this.internalCloseAllDialogs()

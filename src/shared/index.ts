@@ -1,6 +1,6 @@
 
 
-import Settings from './Settings'
+import Settings from './settings/Settings'
 import * as Constants from './Constants'
 import * as github from './GitHubClient'
 

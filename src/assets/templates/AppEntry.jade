@@ -12,29 +12,40 @@ html.fill-width.fill-height(lang="en")
 		script.
 			require('babel-polyfill')
 			var
+							{hash} = window.location,
+							_ = require('lodash')
+
+			function parseParams() {
+				var
+								pairs = hash.substr(1).split('&')
+
+				return pairs.reduce(function (map, nextPair) {
+					const
+									parts = nextPair.split('=')
+
+					if (parts.length === 2)
+						map[parts[0]] = parts[1]
+					return map
+				}, {})
+			}
+
+			//noinspection NpmUsedModulesInstalled
+			var
 							electron = require('electron'),
-							_ = require('lodash'),
-							{hash, href} = window.location,
-							pairs = hash.substr(1).split('&'),
-							params = pairs.reduce(function (map, nextPair) {
-								const parts = nextPair.split('=')
-								if (parts.length === 2)
-									map[parts[0]] = parts[1]
-								return map
-							}, {}),
+							params = parseParams(),
 							log = console,
 							loaded = false,
 							remote = electron.remote,
-							isDev = remote.getGlobal('Env').isDev,
+							isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true',//remote.getGlobal('Env').isDev,
 							baseDir = "./",
 							loaderReady = false,
 							docReady = false,
 							fontsReady = false,
 							rootDir = isDev ? baseDir + "../../" : baseDir,
-							Events = remote.getGlobal('Constants').Events,
-							processType = params.processType || 'UI'
+							processType = params.EPIC_ENTRY || 'UI',
+							isChildWindow = processType === 'UIChildWindow'
 
-			process.env.EPIC_DIALOG = params.dialogName
+			process.env.EPIC_WINDOW_ID = params.EPIC_WINDOW_ID
 			process.env.EPIC_ENTRY = processType
 
 			_.assign(global, {
@@ -47,8 +58,7 @@ html.fill-width.fill-height(lang="en")
 				}
 			})
 
-			if (isDev) {
-				//require('source-map-support').install()
+			if (isDev && !isChildWindow) {
 				try {
 					require('devtron').install()
 				} catch (err) {
@@ -105,13 +115,20 @@ html.fill-width.fill-height(lang="en")
 				cssPaths.forEach(function (cssFile) {
 					addCSS(makeRootPath(cssFile))
 				})
+
+				// DISPLAY THE LOADER
 				function showLoader() {
+					if (isChildWindow) {
+						log.info(`Child window does not load LoaderEntry`)
+						return
+					}
 					log.info('Template Ready state', fontsReady, docReady, loaderReady)
 					if (fontsReady && docReady && loaderReady)
 						window.startLoaderEntry()
 				}
 
-				WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
+				// LOAD WEB-FONTS
+				window.WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
 				WebFont.load({
 					loading: function () {
 						log.info('WebFonts loading')
@@ -119,7 +136,8 @@ html.fill-width.fill-height(lang="en")
 					active: function () {
 						log.info('WebFonts active')
 						fontsReady = true
-						showLoader()
+						if (!isChildWindow)
+							showLoader()
 					},
 					inactive: function () {
 						log.error('WebFonts inactive')
@@ -128,20 +146,21 @@ html.fill-width.fill-height(lang="en")
 						log.error('font failed', familyName)
 					},
 					custom: {
-						families: ['AvenirNext'],
-						//urls: [makeBasePath("#{fontUrl}
+						families: ['AvenirNext']
 					}
 				})
 
+				// IN DEV MODE - install debug menu
 				if (isDev) {
 					require('debug-menu').install()
 				}
 
-				if (processType === 'UIDialog') {
-					$(document).ready(function () {
-						loadApp()
-					})
+
+				if (isChildWindow) {
+					// CHILD WINDOW - LOAD IMMEDIATE
+					loadApp()
 				} else {
+					// MAIN UI - SHOW LOADER FIRST
 					addScript('LoaderEntry.bundle.js', false, function () {
 						log.info(`Loader - loaded`)
 						loaderReady = true
@@ -160,7 +179,7 @@ html.fill-width.fill-height(lang="en")
 				addScript('./AppEntry.bundle.js')
 			}
 
-			if (processType === 'UI' || processType === 'UIDialog') {
+			if (processType === 'UI' || processType === 'UIChildWindow') {
 				loadUI()
 			} else {
 				loadApp()

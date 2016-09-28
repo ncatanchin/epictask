@@ -7,7 +7,7 @@ export enum ProcessType {
 	Main,
 	DatabaseServer,
 	UI,
-	UIDialog,
+	UIChildWindow,
 	Test,
 	Storybook
 }

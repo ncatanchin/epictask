@@ -228,7 +228,8 @@ const config = {
 		new HtmlWebpackPlugin({
 			filename: "app-entry.html",
 			template: `${baseDir}/src/assets/templates/AppEntry.jade`,
-			inject: false
+			inject: false,
+			isDev
 		}),
 		new DefinePlugin(DefinedEnv),
 		new webpack.NamedModulesPlugin(),

@@ -80,8 +80,8 @@ export namespace ProcessConfigGlobal {
 	 *
 	 * @returns {boolean}
 	 */
-	export function isUIDialog() {
-		return isType(ProcessType.UIDialog)
+	export function isUIChildWindow() {
+		return isType(ProcessType.UIChildWindow)
 	}
 	
 	/**

@@ -3,7 +3,7 @@
 
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommand, TCommandContainer } from "shared/commands/Command"
+import { ICommand, TCommandContainer, CommandType } from "shared/commands/Command"
 import Electron = require('electron')
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
@@ -203,6 +203,15 @@ export class CommandManager {
 		}
 	}
 	
+	/**
+	 * Before unload - UNBIND - EVERYTHING
+	 *
+	 * @param event
+	 */
+	private beforeUnload(event) {
+		log.debug(`Unloading all commands`)
+		this.unmountCommand(...Object.values(this.commands))
+	}
 	
 	/**
 	 * On window blur
@@ -210,7 +219,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowBlur(event) {
-		this.unmountMenuCommand(...this.menuCommands)
+		this.unmountMenuCommand(...this.menuCommands.filter(cmd => cmd.type === CommandType.Container))
 	}
 		
 	/**
@@ -234,7 +243,11 @@ export class CommandManager {
 						listener: this.handleKeyDown.bind(this),
 						attacher: addWindowListener,
 						detacher: removeWindowListener
-							
+					},
+					beforeunload: {
+						listener: this.beforeUnload.bind(this),
+						attacher: addWindowListener,
+						detacher: removeWindowListener
 					},
 					focus: {
 						listener:this.onWindowFocus.bind(this),
@@ -488,8 +501,15 @@ export class CommandManager {
 	 * @param commands
 	 */
 	registerCommand(...commands:ICommand[]) {
+		const
+			windowId = process.env.EPIC_WINDOW_ID && process.env.EPIC_WINDOW_ID !== 'undefined' ? process.env.EPIC_WINDOW_ID : null
+		
 		commands.forEach(cmd => {
 			assert(cmd.id && cmd.name,`A command can not be registered without an id & name`)
+			
+			if (windowId && cmd.id.indexOf(`${windowId}-`) !== 0) {
+				cmd.id = `${windowId}-${cmd.id}`
+			}
 			
 			// ADD OR UPDATE
 			const
@@ -597,7 +617,15 @@ export class CommandManager {
 		status.focused = focused
 		
 		if (commands) {
-			focused ? this.mountCommand(...commands) : this.unmountCommand(...commands)
+			if (focused) {
+				this.mountCommand(...commands)
+			} else {
+				const
+					containerCommands = commands.filter(it => it.type === CommandType.Container)
+				
+				// ONLY UNMOUNT CONTAINER COMMANDS
+				this.unmountCommand(...containerCommands)
+			}
 		}
 		
 		return status
@@ -615,7 +643,11 @@ export class CommandManager {
 			reg = this.getContainerRegistration(id,container,available)
 		
 		if (reg.commands) {
-			available ? this.registerCommand(...reg.commands) : this.unregisterCommand(...reg.commands)
+			if (available) {
+				this.registerCommand(...reg.commands)
+			} else {
+				this.unregisterCommand(...reg.commands)
+			}
 		}
 		
 		return reg

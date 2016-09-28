@@ -2,7 +2,7 @@
 
 import windowStateKeeper = require('electron-window-state')
 import Electron = require('electron')
-import {GitHubConfig,AuthKey,Events} from 'shared/Constants'
+import { GitHubConfig, AuthKey, Events, AllWindowDefaults } from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 
@@ -103,15 +103,10 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			let mainWindowState = windowStateKeeper({
 				defaultWidth: 1024,
 				defaultHeight: 728,
-				file: 'main-window'
+				file: 'main-window.state'
 			})
 
-			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, {
-				show: false,
-				frame: false,
-				acceptFirstMouse: true,
-				titleBarStyle: 'hidden',
-				title: 'epictask',
+			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, AllWindowDefaults,{
 				// darkTheme:true,
 			}))
 			
