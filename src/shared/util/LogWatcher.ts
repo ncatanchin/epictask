@@ -58,6 +58,8 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	
 	private position = 0
 	
+	private lastFileSize = 0
+	
 	private stream:fs.ReadStream = null
 	
 	private watcher:fs.FSWatcher = null
@@ -67,11 +69,16 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	private fileExistTimer
 	
 	get lineCount() {
-		return this.allLines.length
+		return this.allLines && this.allLines.length
 	}
 	
 	get fileExists() {
-		return this.stream || fs.existsSync(this.filename)
+		return this.position || this.stream || fs.existsSync(this.filename)
+	}
+	
+	
+	get fileSize() {
+		return !this.fileExists ? 0 : fs.statSync(this.filename).size
 	}
 	
 	/**
@@ -102,7 +109,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	 * @param filename
 	 */
 	private onWatchEvent = (eventType,filename) => {
-		if (!this.stream)
+		if (!this.stream && eventType === 'change')
 			this.openStream()
 	}
 	
@@ -156,14 +163,19 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			
 			
 			// Trigger events
+			this.allLines.push(lineStr)
 			this.emit(LogWatcherEvent.Line, lineStr)
 			if (this.isJson) {
 				try {
-					const json = JSON.parse(lineStr)
+					const
+						json = JSON.parse(lineStr)
+					
 					this.allJsons.push(json)
-					log.info(`Parsed json from ${this.filename}`,json)
+					log.debug(`Parsed json from ${this.filename}`,json)
 					this.emit(LogWatcherEvent.JsonObject, this, json, lineStr)
+					
 				} catch (err) {
+					
 					log.error(`Failed to parse json from ${lineStr}`, lineStr, err)
 					this.emit(LogWatcherEvent.JsonObjectError, this, lineStr)
 				}
@@ -174,11 +186,22 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	}
 	
 	
+	/**
+	 * Read any changes to the file and close the stream
+	 */
 	private openStream() {
 		try {
-			if (this.stream || !this.fileExists) {
+			 
+			
+			const
+				newFileSize = this.fileSize
+			
+			// Make sure we're watching and the file exists with an updated size
+			if (!this.watching || this.stream || !newFileSize || (newFileSize && newFileSize === this.lastFileSize)) {
 				return this.stream
 			}
+			
+			this.lastFileSize = newFileSize
 			
 			fs
 				.createReadStream(this.filename, {
@@ -199,6 +222,11 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 							log.error(`Unable to close stream on end`,err)
 						}
 						this.stream = null
+						
+						if (this.fileSize !== this.position) {
+							log.debug(`Finished reading file, but size has changed again - reopen`)
+							setTimeout(() => this.openStream())
+						}
 					}
 				})
 				.on('error', (err) => {

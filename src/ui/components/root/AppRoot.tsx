@@ -282,30 +282,32 @@ function render() {
  * is ready for us to load everything
  */
 function checkIfRenderIsReady() {
-	//
-	// const
-	// 	state = store.getState(),
-	// 	appState = state ? state.get(AppKey) : null,
-	// 	ready = appState ? appState.ready : false
-	//
-	// if (!ready) {
-	// 	log.info('Theme is not set yet')
-	//
-	// 	const
-	// 		observer = store.observe([AppKey,'ready'],(newReady) => {
-	// 			log.info('RECEIVED READY, NOW RENDER',newReady)
-	// 			if (!newReady !== true) {
-	// 				log.info('Main is not ready',newReady)
-	// 				return
-	// 			}
-	// 			observer()
-	// 			render()
-	// 		})
-	//
-	// } else {
-	// 	render()
-	// }
-	render()
+	if (isChildWindow)
+		return render()
+	
+	
+	const
+		state = store.getState(),
+		appState = state ? state.get(AppKey) : null,
+		ready = appState ? appState.ready : false
+
+	if (!ready) {
+		log.info('Theme is not set yet')
+
+		const
+			observer = store.observe([AppKey,'ready'],(newReady) => {
+				log.info('RECEIVED READY, NOW RENDER',newReady)
+				if (!newReady !== true) {
+					log.info('Main is not ready',newReady)
+					return
+				}
+				observer()
+				render()
+			})
+
+	} else {
+		render()
+	}
 }
 
 

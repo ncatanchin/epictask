@@ -16,6 +16,8 @@ const
 		hotInstance:GithubEventMonitor
 	}
 
+// DEBUG ENABLE
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Receives either or both repo events and issue events
@@ -142,11 +144,15 @@ export class GithubEventMonitor {
 				client = createClient()
 			
 			let
-				newestTimestamp:number
+				newestTimestamp:number,
+				firstPageReceived = false
 			
 			try {
+				
+				//noinspection RedundantConditionalExpressionJS
 				const allEvents = await client.issuesEvents(config.fullName, {
 					eTag: issuesConfig.eTag,
+					reverse: !issuesConfig.eTag ? true : false,
 					
 					// CALLED AFTER EACH PAGE
 					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers) => {
@@ -157,8 +163,9 @@ export class GithubEventMonitor {
 							pollInterval = headers.get('X-Poll-Interval')
 						
 						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
-						if (pageNumber === 0) {
-							log.debug(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
+						if (!firstPageReceived) {
+							firstPageReceived = true
+							log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
 							if (eTag)
 								issuesConfig.eTag = eTag
 							
@@ -208,7 +215,7 @@ export class GithubEventMonitor {
 							log.debug(`Set newest timestamp to newestTimestamp`)
 						}
 						
-						log.debug(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
+						log.debug(`Received issues events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
 						return shouldContinue
 						
 					}
@@ -227,10 +234,10 @@ export class GithubEventMonitor {
 				}
 				
 				
-				log.info(`All issues events - count ${allEvents.length}`)
+				log.debug(`All issues events - count ${allEvents.length}`)
 			} catch (err) {
 				if (err && err.statusCode === 304) {
-					log.info(`Content has not been updated based on the previous eTag ${issuesConfig.eTag}`)
+					log.debug(`Content has not been updated based on the previous eTag ${issuesConfig.eTag}`)
 					return
 				}
 				
@@ -289,12 +296,14 @@ export class GithubEventMonitor {
 				client = createClient()
 			
 			let
-				newestTimestamp:number
+				newestTimestamp:number,
+				firstPageReceived = false
 			
 			try {
+				//noinspection RedundantConditionalExpressionJS
 				const allEvents = await client.repoEvents(config.fullName, {
 					eTag: repoConfig.eTag,
-					
+					reverse: !repoConfig.eTag ? true : false,
 					// CALLED AFTER EACH PAGE
 					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers) => {
 						
@@ -304,8 +313,9 @@ export class GithubEventMonitor {
 							pollInterval = headers.get('X-Poll-Interval')
 						
 						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
-						if (pageNumber === 0) {
-							log.debug(`On page 0 we received eTag=${eTag} pollInterval=${pollInterval}s`)
+						if (!firstPageReceived) {
+							firstPageReceived = true
+							log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
 							if (eTag)
 								repoConfig.eTag = eTag
 							
@@ -349,7 +359,7 @@ export class GithubEventMonitor {
 							log.debug(`Set oldest timestamp to ${newestTimestamp}`)
 						}
 						
-						log.info(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
+						log.debug(`Received repo events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
 						return shouldContinue
 						
 					}
@@ -370,7 +380,7 @@ export class GithubEventMonitor {
 				log.debug(`All repo events - count ${allEvents.length}`)
 			} catch (err) {
 				if (err && err.statusCode === 304) {
-					log.info(`Content has not been updated based on the previous eTag ${repoConfig.eTag}`)
+					log.debug(`Content has not been updated based on the previous eTag ${repoConfig.eTag}`)
 					return
 				}
 				
@@ -379,7 +389,7 @@ export class GithubEventMonitor {
 			
 			if (newestTimestamp) {
 				repoConfig.polledTimestamp = newestTimestamp + 1
-				log.info(`Set last polled timestamp to ${repoConfig.polledTimestamp}`)
+				log.debug(`Set last polled timestamp to ${repoConfig.polledTimestamp}`)
 			}
 		}
 		

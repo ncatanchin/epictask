@@ -22,7 +22,7 @@ require(`${srcRoot}/shared/Globals`)
 
 const
 	log = getLogger(__filename),
-	eventMonitor = require(`${srcRoot}/job/GithubEventMonitor`).getGithubEventMonitor()
+	eventMonitor = require(`${srcRoot}/shared/github/GithubEventMonitor`).getGithubEventMonitor()
 
 log.info(`Starting event monitor`)
 

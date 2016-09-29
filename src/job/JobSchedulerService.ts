@@ -102,7 +102,7 @@ export class JobSchedulerService extends BaseService {
 				nextText: moment(nextOccurrence).fromNow()
 			})
 			
-			log.info(`Scheduled Job ${wrapper.schedule.name} occurs next ${wrapper.schedule.nextText}`)
+			log.debug(`Scheduled Job ${wrapper.schedule.name} occurs next ${wrapper.schedule.nextText}`)
 		}
 		
 		

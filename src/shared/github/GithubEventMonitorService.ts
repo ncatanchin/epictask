@@ -74,7 +74,7 @@ export class GithubEventService extends BaseService {
 	 * @param availableRepos
 	 */
 	private onAvailableReposUpdated = (availableRepos:AvailableRepo[]) => {
-		log.info(`Received available repos`,availableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
+		log.debug(`Received available repos`,availableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
 		
 		const
 			monitor = getGithubEventMonitor(),
@@ -84,10 +84,11 @@ export class GithubEventService extends BaseService {
 		currentRepoIds
 			.filter(repoId => !availableRepos.find(availRepo => availRepo.id === repoId))
 			.forEach(repoId => {
-				log.info(`No longer monitoring repo ${repoId} - stopping monitor`)
+				log.debug(`No longer monitoring repo ${repoId} - stopping monitor`)
 				monitor.stopRepoMonitoring(repoId)
 			})
-			
+		
+		
 		
 		log.info(`Checking for new repos to monitor`)
 		availableRepos
@@ -99,6 +100,10 @@ export class GithubEventService extends BaseService {
 					repoResourceUrl = `repo-${availRepo.id}`,
 					issuesResourceUrl = `issues-${availRepo.id}`
 				
+				let
+					isFirstIssuesSync = !SyncStatus.getTimestamp(issuesResourceUrl),
+					isFirstRepoSync = !SyncStatus.getTimestamp(repoResourceUrl)
+				
 				monitor.addRepoListener({
 					id: availRepo.id,
 					fullName: availRepo.repo.full_name,
@@ -107,29 +112,61 @@ export class GithubEventService extends BaseService {
 					issuesLastETag: SyncStatus.getETag(issuesResourceUrl),
 					issuesLastTimestamp: SyncStatus.getTimestamp(issuesResourceUrl)
 				},{
+					
+					/**
+					 * Repo event page notification
+					 *
+					 * @param eTag
+					 * @param events
+					 */
 					repoEventsReceived: async (eTag:string,...events:RepoEvent<any>[]) => {
 						await RepoSyncManager.get(availRepo).handleRepoEvents(availRepo,...events)
-						SyncStatus.setETag(repoResourceUrl,eTag)
-						SyncStatus.setMostRecentTimestamp(repoResourceUrl, events, 'created_at')
+						if (isFirstRepoSync) {
+							SyncStatus.setETag(repoResourceUrl, eTag)
+							SyncStatus.setMostRecentTimestamp(repoResourceUrl, events, 'created_at')
+						}
 						
-					},
-					issuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
-						await RepoSyncManager.get(availRepo).handleIssuesEvents(availRepo,...events)
-						SyncStatus.setETag(issuesResourceUrl,eTag)
-						SyncStatus.setMostRecentTimestamp(issuesResourceUrl, events, 'created_at')
 					},
 					
-					allIssuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
-						
-						
-						// SyncStatus.setETag(issuesResourceUrl,eTag)
-						// SyncStatus.setTimestamp(issuesResourceUrl,Date.now())
-					},
+					/**
+					 * Repo event sync - after all completed
+					 *
+					 * @param eTag
+					 * @param events
+					 */
 					allRepoEventsReceived: async (eTag:string,...events:RepoEvent<any>[]) => {
+						isFirstRepoSync = false
+						SyncStatus.setETag(repoResourceUrl,eTag)
+						SyncStatus.setMostRecentTimestamp(repoResourceUrl, events, 'created_at')
+					},
+					
+					/**
+					 * IssuesEvent sync - page notification
+					 * @param eTag
+					 * @param events
+					 */
+					issuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
+						await RepoSyncManager.get(availRepo).handleIssuesEvents(availRepo,...events)
+						if (isFirstIssuesSync) {
+							SyncStatus.setETag(issuesResourceUrl,eTag)
+							SyncStatus.setMostRecentTimestamp(issuesResourceUrl, events, 'created_at')
+						}
 						
-						// SyncStatus.setETag(repoResourceUrl,eTag)
-						// SyncStatus.setTimestamp(repoResourceUrl,Date.now())
+					},
+					
+					/**
+					 * After all completed
+					 *
+					 * @param eTag
+					 * @param events
+					 */
+					allIssuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
+						isFirstIssuesSync = false
+						
+						SyncStatus.setETag(issuesResourceUrl,eTag)
+						SyncStatus.setMostRecentTimestamp(issuesResourceUrl, events, 'created_at')
 					}
+					
 				})
 			})
 	}
@@ -144,10 +181,10 @@ export class GithubEventService extends BaseService {
 	 */
 	async start():Promise<this> {
 		
-		log.info(`Waiting for github sync status to load`)
+		log.debug(`Waiting for github sync status to load`)
 		await SyncStatus.awaitLoaded()
 		
-		log.info(`Sync status loaded, subscribing for repo updates from state`)
+		log.debug(`Sync status loaded, subscribing for repo updates from state`)
 		this.unsubscriber = await clientObserveState([ RepoKey, 'availableRepos' ], this.onAvailableReposUpdated)
 		
 		
@@ -161,7 +198,7 @@ export class GithubEventService extends BaseService {
 		
 		
 		// Watch for job updates
-		log.info('Subscribe for state updates')
+		log.debug('Subscribe for state updates')
 		return super.start()
 	}
 	

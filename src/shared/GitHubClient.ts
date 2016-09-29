@@ -18,6 +18,9 @@ const
 	log = getLogger(__filename),
 	hostname = 'https://api.github.com'
 
+// DEBUG OVERRIDE
+log.setOverrideLevel(LogLevel.DEBUG)
+
 let
 	APICallHistory = List<any>(),
 	githubRateLimitInfo:any
@@ -142,6 +145,17 @@ export type OnDataCallback<M> = (pageNumber:number, totalPages:number, items:M[]
  */
 export interface RequestOptions {
 	traversePages?:boolean
+	
+	/**
+	 * Reverse ONLY applies when traverse is enabled,
+	 * it collects the first page, then collects the others from the end to
+	 * the beginning
+	 *
+	 * Finally appending the first page it received to the beginning
+	 *
+	 */
+	reverse?:boolean
+	
 	perPage?:number
 	page?:number
 	params?:any
@@ -247,9 +261,9 @@ export class GitHubClient {
 		const
 			headers = response.headers
 		
-		headers.forEach((value,name) => {
-			log.debug(`Header (${name}): ${value}`)
-		})
+		// headers.forEach((value,name) => {
+		// 	log.debug(`Header (${name}): ${value}`)
+		// })
 
 		let
 			result = await response.json()
@@ -274,7 +288,7 @@ export class GitHubClient {
 				// CHECK RESULT IS TYPE BOOLEAN === false TO STOP TRAVERSING
 				checkDataCallback = (dataCallbackResult) => {
 					if (dataCallbackResult === false) {
-						log.info(`Data callback returned false - not going to page`)
+						log.debug(`Data callback returned false - not going to page`)
 						return Promise.resolve(false)
 					}
 					
@@ -292,37 +306,59 @@ export class GitHubClient {
 				log.debug('Going to traverse pages', opts, pageLinks)
 				
 				let
-					timeoutId = null
+					timeoutId = null,
+					firstDataCallbackExecuted = false
+				
 				
 				const
-					allPagesDeferred = Promise.defer()
+					allPagesDeferred = Promise.defer(),
+					lastPageNumber = lastLink ? lastLink.pageNumber : result.pageNumber,
+					firstResult = result,
+					firstHeaders = headers,
+					firstDataCallback = () => {
+						firstDataCallbackExecuted = true
+						
+						return checkDataCallback(
+							this.doDataCallback(
+								opts,
+								firstResult.pageNumber,
+								lastPageNumber,
+								firstResult,
+								firstHeaders
+							))
+					}
 				
 				// CHECK CALLBACK RESULT / false=skip
-				if (await checkDataCallback(
-					this.doDataCallback(
-						opts,
-						result.pageNumber,
-						lastLink ? lastLink.pageNumber : result.pageNumber,
-						result,
-						headers
-					))
-				) {
+				if (opts.reverse === true || await firstDataCallback()){
 					
 						// Page counter / opts.page
 					let
-						nextPageNumber = result.pageNumber + 1
+						// OUR PAGES ARE 0 BASED - GH IS 1 BASED - SO ADD 1 BY DEFAULT TO OURS
+						nextPageNumber = result.pageNumber + 1,
+						remainingPageNumbers = []
+					
+					// CREATE PAGE NUMBER LIST
+					for (let i = nextPageNumber + 1; i <= lastPageNumber;i++) {
+						remainingPageNumbers.push(i)
+					}
+					
+					// IF REVERSE - INVERSE THE REMAINING LIST
+					if (opts.reverse) {
+						remainingPageNumbers = remainingPageNumbers.reverse()
+					}
 					
 					const
 						hasMorePages = () =>
-							lastLink && nextPageNumber < lastLink.pageNumber && !result.isLastPage,
+							remainingPageNumbers.length && !result.isLastPage,
+							//lastLink && nextPageNumber < lastLink.pageNumber && !result.isLastPage,
 					
 					
 						getNextPage = async () => {
 							try {
 								if (hasMorePages()) {
-									nextPageNumber++
+									nextPageNumber = remainingPageNumbers.shift()
 									
-									log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
+									log.debug(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
 									
 									// Delay by 1s in-between page requests
 									const
@@ -339,7 +375,7 @@ export class GitHubClient {
 									if ((await checkDataCallback(
 											this.doDataCallback(
 												opts,
-												nextPageNumber,
+												nextPageNumber - 1,
 												lastLink.pageNumber,
 												nextResult, headers
 											))) && hasMorePages()
@@ -361,6 +397,8 @@ export class GitHubClient {
 					allPagesDeferred.resolve(result)
 				}
 				
+				
+				
 				allPagesDeferred.promise.catch(err => {
 					log.error(`Page iteration failed, cleaning timeout`)
 					if (timeoutId) {
@@ -372,6 +410,10 @@ export class GitHubClient {
 				
 				// AWAIT ALL PAGES OR IMMEDIATE
 				await allPagesDeferred.promise
+				
+				if (opts.reverse === true && !firstDataCallbackExecuted) {
+					await firstDataCallback()
+				}
 				
 			}
 		} else {
@@ -683,7 +725,7 @@ export function createClient(token:string = null) {
 	if (process.env.EPIC_CLI && !token) {
 		if (DEBUG) {
 			token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
-			log.info(`Using API token ${token}`)
+			log.debug(`Using API token ${token}`)
 		}
 	}
 	
@@ -702,7 +744,7 @@ export function createClient(token:string = null) {
 if (DEBUG) {
 	assignGlobal({
 		getGithubClient() {
-			log.info(`You should be in DEBUG mode`)
+			log.debug(`You should be in DEBUG mode`)
 			
 			return createClient()
 		},

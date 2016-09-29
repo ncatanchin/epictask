@@ -68,9 +68,23 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssueItemProps) {
-		return !shallowEquals(nextProps,this.props,'isSelected','isSelectedMulti','issue.id','theme','styles')
+		return !shallowEquals(
+			nextProps,
+			this.props,
+			'isSelected',
+			'isSelectedMulti',
+			'issue.id',
+			'issue.updated_at',
+			'theme',
+			'styles'
+		)
 	}
 	
+	/**
+	 * Render the item
+	 *
+	 * @returns {any}
+	 */
 	render() {
 		
 		const

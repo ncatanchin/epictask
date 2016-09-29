@@ -724,7 +724,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				             initialItemsPerPage={50}
 				             itemHeight={this.getItemHeight}
 				             transitionProps={transitionProps}
-				             className="show-scrollbar"
 				             
 				/>
 				

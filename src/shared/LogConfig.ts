@@ -1,16 +1,75 @@
 
 import 'shared/LogCategories'
 
-import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
+import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
 import { isObject } from "shared/util/ObjectUtil"
 import { getAppConfig } from "shared/AppConfig"
- 
+
+let Reactotron = null
+
+/**
+ * Extended logger interface with tron
+ */
+export interface IEpicLogger extends ILogger {
+	tron(...args):any
+	tronWarn(...args):any
+	tronError(...args):any
+}
+
+/**
+ * Load Reactotron
+ */
+function loadReactotron() {
+	if (DEBUG) {
+		try {
+			Reactotron = require('reactotron-react-js').default
+		} catch (err) {
+			console.info(`Reactotron could not load`)
+		}
+	}
+}
+
+loadReactotron()
+
+
+/**
+ * Custom log Factory
+ */
+function EpicLoggerFactory(name:string): IEpicLogger {
+	
+	const
+		rootLogger = LoggerFactory(name) as any
+	
+	
+	
+	function makeTronLevel(level,tronLevel) {
+			return (...args) => {
+				rootLogger[level](...args)
+				Reactotron && Reactotron[tronLevel](...args)
+			}
+	}
+	
+	const
+		logger = Object.assign({},rootLogger)
+	
+	logger.tron = makeTronLevel('info','log')
+	logger.warn = logger.tronWarn = makeTronLevel('warn','warn')
+	logger.error = logger.tronError = makeTronLevel('error','error')
+	
+	return logger
+}
+
+declare global {
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var getLogger:typeof EpicLoggerFactory
+}
+
 
 if (ProcessConfig.isStorybook()) {
 	Object.assign(global as any, {
-		LoggerFactory,
-		getLogger: LoggerFactory
+		LoggerFactory:EpicLoggerFactory,
+		getLogger: EpicLoggerFactory
 	})
 } else {
 	
@@ -45,8 +104,8 @@ if (ProcessConfig.isStorybook()) {
 	// Expose the main logger - really so the UI/Renderer can attach if needed
 	Object.assign(global as any, {
 		MainLogger,
-		LoggerFactory,
-		getLogger: LoggerFactory
+		LoggerFactory:EpicLoggerFactory,
+		getLogger: EpicLoggerFactory
 	})
 	
 	const wrappedLogger = [ 'trace', 'debug', 'info', 'warn', 'error' ].reduce((newLogger, levelName) => {

@@ -96,7 +96,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	log(level:JobLogLevel,message:string,error:Error,...details:any[]) {
 		
 		// Log locally
-		log[JobLogLevel[level].toLowerCase()](
+		log[JobLogLevel[level].toLowerCase() === 'error' ? 'error' : 'debug'](
 			`Job > ${this.job.name} > ${this.job.id}`,
 			message,
 			error,

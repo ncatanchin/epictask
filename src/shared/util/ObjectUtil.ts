@@ -30,6 +30,14 @@ export function isObject(o:any):o is Object {
 	return _.isObject(o)
 }
 
+export function getValue<T>(fn:() => T,defaultValue:T = null):T {
+	try {
+		return fn()
+	} catch (err) {
+		return defaultValue
+	}
+}
+
 export function isPromise(o:any):o is Promise<any> {
 	return o && isObject(o) && (o instanceof Promise || isFunction(o.then))
 }

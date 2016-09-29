@@ -6,7 +6,8 @@ import 'shared/ProcessConfig'
 
 // LOGGING CONFIG FIRST
 import 'shared/LogConfig'
-import {getLogger as LoggerFactory,LogLevel as LogLevelGlobal} from 'typelogger'
+
+import {LogLevel as LogLevelGlobal} from 'typelogger'
 
 // LATER - POOR TYPING
 later = require('later/index-browserify')
@@ -28,6 +29,13 @@ const
 	g = global as any
 
 
+
+
+/**
+ * Global function for retrieving the child window id
+ *
+ * @returns {null}
+ */
 function getChildWindowIdGlobal() {
 	const
 		windowId = process.env.EPIC_WINDOW_ID
@@ -68,7 +76,6 @@ function installGlobals() {
 		List:ListGlobal,
 		Record:RecordGlobal,
 		_: LodashGlobal,
-		getLogger: LoggerFactory,
 		LogLevel: LogLevelGlobal,
 		assert: assertGlobal,
 		Env: EnvGlobal,
@@ -102,8 +109,7 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal
 	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var getLogger:typeof LoggerFactory
+	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Immutable:typeof ImmutableGlobal

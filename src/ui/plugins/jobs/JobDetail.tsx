@@ -11,12 +11,14 @@ import {getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus} from "sha
 import {TimeAgo} from "ui/components/common/TimeAgo"
 import {
 	FlexColumnCenter, FlexScale, makePaddingRem, rem, FillHeight, createStyles, FillWidth,
-	FlexRowCenter, Ellipsis
+	FlexRowCenter, Ellipsis, FlexColumn
 } from "shared/themes"
 
 import {getJobStatusColors} from "ui/plugins/jobs/JobItem"
 import { LogWatcher, LogWatcherEvent } from "shared/util/LogWatcher"
 import { IEnumEventRemover } from "shared/util/EnumEventEmitter"
+import { getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { VisibleList } from "ui/components/common/VisibleList"
 
 // Constants
 const log = getLogger(__filename)
@@ -43,7 +45,7 @@ const baseStyles = createStyles({
 		}],
 		icon: [FlexAuto,makePaddingRem(0,1,0,1)]
 	}],
-	logs: [FlexScale,FillWidth,OverflowAuto,{
+	logs: [FlexScale,FlexColumn,FillWidth,OverflowHidden,{
 		
 		levels: [{
 			warn: {
@@ -123,7 +125,8 @@ export interface IJobDetailProps extends React.HTMLAttributes<any> {
 
 export interface IJobDetailState {
 	watcher?:LogWatcher
-	watcherEventRemovers:IEnumEventRemover[]
+	watcherEventRemovers?:IEnumEventRemover[]
+	lineCount?:number
 }
 
 
@@ -137,23 +140,38 @@ export interface IJobDetailState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs','jobs.item','jobs.detail')
-@PureRender
 export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> {
 	
-	constructor (props,context) {
-		super(props,context)
-	
-	}
-
-	
-	get watcher():LogWatcher {
-		return _.get(this,'state.watcher',null)
-	}
-	
-	get watcherEventRemovers():IEnumEventRemover[] {
-		return _.get(this,'state.watcherEventRemovers',null)
+	/**
+	 * Get the current watcher
+	 *
+	 * @returns {LogWatcher}
+	 */
+	private get watcher():LogWatcher {
+		return getValue(() => this.state.watcher,null)
 	}
 	
+	/**
+	 * Get event removers
+	 *
+	 * @returns {IEnumEventRemover[]}
+	 */
+	private get watcherEventRemovers():IEnumEventRemover[] {
+		return getValue(() => this.state.watcherEventRemovers,null)
+	}
+	
+	/**
+	 * Debounced event handler
+	 */
+	private onWatcherEvent = _.debounce((event:LogWatcherEvent,watcher:LogWatcher,...args) => {
+		log.debug(`Received watcher event ${LogWatcherEvent[event]}`,watcher,...args)
+		
+		if (watcher.lineCount !== getValue(() => this.state.lineCount,0)) {
+			this.setState({
+				lineCount: watcher.lineCount
+			})
+		}
+	},250)
 	
 	/**
 	 * Update the job detail component state
@@ -167,59 +185,151 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		let
 			watcher:LogWatcher = this.watcher,
 			{job,detail} = props,
-			jobFilename:string = _.get(job,'logJSONFilename',null)
+			jobFilename = getValue(() => job.logJSONFilename,null)
 			
-		
+		// IF FILENAME HAS NOT CHANGED THEN RETURN
 		if (watcher && watcher.filename === jobFilename) {
 			log.info(`Job changed, closing previous watcher`)
 			return
 		}
 		
+		// IF IT HAS CHANGED THEN STOP THE OLD ONE
 		if (watcher && watcher.filename !== jobFilename) {
 			watcher.stop()
 		}
-	
-	
+		
 		
 		if (!job || !detail) {
 			log.info(`No job or detail - cant start tailing yet`, job,detail)
 			return
 		}
 		
+		// GET THE WATCHER
 		watcher = LogWatcher.getInstance(job.logJSONFilename,true)
-		log.info(`Got watcher`,watcher)
+		
+		log.debug(`Got watcher`,watcher)
 		this.setState({
+			lineCount:0,
 			watcher,
-			watcherEventRemovers: watcher.addAllListener((event:LogWatcherEvent,watcher:LogWatcher,...args) => {
-				log.info(`Received watcher event ${LogWatcherEvent[event]}`,watcher,...args)
-			})
+			watcherEventRemovers: watcher.addAllListener(this.onWatcherEvent)
 		},() => {
-			log.info(`State set, starting log watcher for ${watcher.filename}`)
+			log.debug(`State set, starting log watcher for ${watcher.filename}`)
 			watcher.start()
 		})
 	}
 	
-	componentWillMount() {
-		this.updateState()
-	}
+	/**
+	 * On mount create the watcher
+	 */
+	componentWillMount = this.updateState
 	
-	componentWillReceiveProps(nextProps) {
-		this.updateState(nextProps)
-	}
-
+	/**
+	 * On update - check the watcher
+	 */
+	componentWillReceiveProps = this.updateState
 	
+	/**
+	 * On unmount clear everything
+	 */
 	componentWillUnmount() {
-		const {watcher,watcherEventRemovers} = this
+		const
+			{watcher,watcherEventRemovers} = this
 		
 		if (watcher) {
-			log.info(`Stopping watcher`,watcher)
+			log.debug(`Stopping watcher`,watcher)
 			watcher.stop()
 		}
 		
 		if (watcherEventRemovers) {
-			log.info(`Removing all listeners`)
+			log.debug(`Removing all listeners`)
 			watcherEventRemovers.forEach(it => it())
 		}
+		
+		this.setState({
+			watcher:null,
+			watcherEventRemovers:null,
+			lineCount: 0
+		})
+	}
+	
+	/**
+	 * Only update when log file, selection or log line counts change
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @param nextContext
+	 * @returns {boolean}
+	 */
+	shouldComponentUpdate(nextProps:IJobDetailProps, nextState:IJobDetailState, nextContext:any):boolean {
+		return !shallowEquals(this.props,nextProps,'job.logJSONFilename','selectedLogId') ||
+				!shallowEquals(this.state,nextState,'lineCount','watcher')
+	}
+	
+	/**
+	 * Get log level style
+	 *
+	 * @param logItem
+	 */
+	private levelStyle = (logItem:IJobLog) =>
+		this.props.styles.logs.levels['WARN' === logItem.level ? 'warn' : 'ERROR' === logItem.level ? 'error' : 'DEBUG' === logItem.level ? 'success' : 'info']
+	
+	
+	/**
+	 * Render a log item
+	 *
+	 * @param logItems
+	 * @param index
+	 * @param style
+	 * @param key
+	 * @returns {any}
+	 */
+	private renderLogItem = (logItems:IJobLog[],index:number,style,key) => {
+		const
+			{styles, selectedLogId} = this.props,
+			logItem = logItems[index],
+			isError = logItem.level === 'ERROR',
+			errorDetails = logItem.errorDetails,
+			errorStyle = isError && this.levelStyle(logItem),
+			logKey = logItem.id,
+			selected = selectedLogId === logItem.id,
+			hoverStyle =
+				(selected || Radium.getState(this.state,logKey,':hover')) &&
+				styles.logs.entry.hovered
+		
+		
+		
+		//Log Entry Row
+		return <div key={logKey}
+		            onClick={() => !selected && Container.get(JobActionFactory).setSelectedLogId(logItem.id)}
+		            style={[
+													styles.logs.entry,
+													index < logItems.size - 1 && styles.logs.entry.divider
+												]}>
+			<div style={[styles.logs.entry.row]}>
+				<div style={[styles.logs.entry.level,hoverStyle,this.levelStyle(logItem)]}>
+					{logItem.level}
+				</div>
+				<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
+					{logItem.message}
+				</div>
+				<div style={[styles.logs.entry.time,errorStyle]}>
+					<TimeAgo timestamp={logItem.timestamp}/>
+				</div>
+			</div>
+			
+			{/* Error stack details */}
+			{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
+				<div style={[styles.logs.entry.level]}>
+					{/* Empty spacing place holder */}
+				</div>
+				<pre style={[styles.logs.entry.details]}>
+					<div>Error details: </div>
+					<div>{errorDetails.message}</div>
+					<div>{errorDetails.stack}</div>
+				</pre>
+			</div>}
+		</div>
+		
 	}
 	
 	/**
@@ -230,13 +340,11 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 	render() {
 		
 		const
-			{theme, styles, job, jobs,detail,selectedLogId} = this.props,
-			watcher:LogWatcher = _.get(this,'state.watcher',null),
-			logs = watcher && watcher.allJsons,//detail && detail.logs,
+			{theme, styles, job, jobs,detail} = this.props,
+			watcher:LogWatcher = this.watcher,
+			lineCount = getValue(() => this.state.lineCount,0),
 			statusColors = getJobStatusColors(detail,styles)
 		
-		const levelStyle = (log:IJobLog) =>
-			styles.logs.levels['WARN' === log.level ? 'warn' : 'ERROR' === log.level ? 'error' : 'DEBUG' === log.level ? 'success' : 'info']
 		
 		
 		return <div style={[styles.root, jobs && jobs.size && styles.root.hasJobs ]}>
@@ -251,14 +359,6 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				
 				{/* HEADER */}
 				<div style={[styles.header]}>
-					
-					{/*<Icon*/}
-						{/*style={[*/}
-								{/*styles.header.icon,*/}
-								{/*...statusColors*/}
-							{/*]}*/}
-						{/*iconSet="fa"*/}
-						{/*iconName={getJobStatusIcon(detail)} />*/}
 					
 					<div style={styles.header.description}>{getJobDescription(job)}</div>
 				
@@ -287,63 +387,13 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				
 				{/* LOGS */}
 				<div style={styles.logs}>
+					<VisibleList
+						itemCount={lineCount}
+					  items={watcher.allJsons || []}
+					  itemRenderer={this.renderLogItem}
+					  itemKeyFn={(logItems,logItem,index) => `${job.id}-${index}`}
+					/>
 					
-					{logs && logs.map((log:IJobLog,index) => { //_.uniqBy(logs,'id').map((log:IJobLog,index) => {
-						const
-							isError = log.level === 'ERROR',
-							errorDetails = log.errorDetails,
-							errorStyle = isError && levelStyle(log),
-							logKey = log.id,
-							selected = selectedLogId === log.id,
-							hoverStyle =
-								(selected || Radium.getState(this.state,logKey,':hover')) &&
-								styles.logs.entry.hovered
-							
-						
-						
-						//Log Entry Row
-						return <div key={logKey}
-						            onClick={() => !selected && Container.get(JobActionFactory).setSelectedLogId(log.id)}
-						            style={[
-													styles.logs.entry,
-													index < logs.size - 1 && styles.logs.entry.divider
-												]}>
-							<div style={[styles.logs.entry.row]}>
-								<div style={[styles.logs.entry.level,hoverStyle,levelStyle(log)]}>
-									{log.level}
-								</div>
-								<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
-									{log.message}
-								</div>
-								<div style={[styles.logs.entry.time,errorStyle]}>
-									<TimeAgo timestamp={log.timestamp}/>
-								</div>
-							</div>
-							
-							{/* Error stack details */}
-							{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
-								<div style={[styles.logs.entry.level]}>
-									{/* Empty spacing place holder */}
-								</div>
-								<pre style={[styles.logs.entry.details]}>
-									<div>Error details: </div>
-									<div>{errorDetails.message}</div>
-									<div>{errorDetails.stack}</div>
-									{/*{errorDetails.stack.map(frame => <div>*/}
-										{/*<span>*/}
-											{/*<span>{frame.functionName}</span>*/}
-											{/*at*/}
-											{/*<span>{frame.fileName}</span>*/}
-											{/*:(*/}
-											{/*<span>{frame.lineNumber}</span>:*/}
-											{/*<span>{frame.columnNumber}</span>*/}
-											{/*)*/}
-										{/*</span>*/}
-									{/*</div>)}*/}
-								</pre>
-							</div>}
-						</div>
-					})}
 				</div>
 			</div>}
 		</div>

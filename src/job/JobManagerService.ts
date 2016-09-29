@@ -117,7 +117,7 @@ export class JobManagerService extends BaseService {
 		
 		const name = executorConstructor.name
 		
-		log.info(`Registering Job: ${name}`)
+		log.debug(`Registering Job: ${name}`)
 		if (this.killed) {
 			log.warn(`Job Process is killed, can not load ${name}`)
 			return null
@@ -142,7 +142,7 @@ export class JobManagerService extends BaseService {
 			{type} = job,
 			name = JobType[type]
 		
-		log.info(`Looking for job executor that can handle job type ${name}`)
+		log.debug(`Looking for job executor that can handle job type ${name}`)
 		
 		const executorClazz = this.executorClassMap[name]
 		assert(executorClazz,`Unable to find class for job named ${name}, available classes are: ${Object.keys(this.executorClassMap)}`)
@@ -176,7 +176,7 @@ export class JobManagerService extends BaseService {
 		
 		
 		// Watch for job updates
-		log.info('Subscribe for state updates')
+		log.debug('Subscribe for state updates')
 		return super.start()
 	}
 	
@@ -187,7 +187,7 @@ export class JobManagerService extends BaseService {
 	 * @param jobs
 	 */
 	onJobsUpdated = async (jobs:{[id:string]:IJob}) => {
-		log.info(`Checking jobs`,jobs)
+		log.debug(`Checking jobs`,jobs)
 		
 		try {
 			const
@@ -199,7 +199,7 @@ export class JobManagerService extends BaseService {
 				
 				details = await getStateValue(JobKey, 'details')
 			
-			log.info(`Found ${newJobs.length} new jobs, executing now`)
+			log.debug(`Found ${newJobs.length} new jobs, executing now`)
 			
 			newJobs.forEach(job => {
 				this.execute(job, details.find(detail => detail.id === job.id))
@@ -222,7 +222,7 @@ export class JobManagerService extends BaseService {
 		const workingJob = this.workingJobs[job.id]
 		
 		if (workingJob && job.status >= JobStatus.Completed) {
-			log.info(`Removing ${job.name} (${job.id}) from working job list`)
+			log.debug(`Removing ${job.name} (${job.id}) from working job list`)
 			delete this.workingJobs[job.id]
 			
 			this.checkPendingQueue()
@@ -255,7 +255,7 @@ export class JobManagerService extends BaseService {
 	 */
 	execute = (job:IJob,detail:IJobStatusDetail) => {
 		if (Object.keys(this.workingJobs).length > JobsMaxConcurrency) {
-			log.info(`Job is pending, max concurrency reached`,job,JobsMaxConcurrency)
+			log.debug(`Job is pending, max concurrency reached`,job,JobsMaxConcurrency)
 			pendingJobQueue.push({job,detail})
 			return
 		}
@@ -273,7 +273,7 @@ export class JobManagerService extends BaseService {
 			job
 		}
 		
-		log.info(`Executing Job ${job.name} (${job.id})`)
+		log.debug(`Executing Job ${job.name} (${job.id})`)
 		handler.execute()
 			.then(() => {
 				setTimeout(this.checkPendingQueue,10)
