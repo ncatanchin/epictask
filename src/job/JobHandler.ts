@@ -2,7 +2,7 @@
 import * as uuid from 'node-uuid'
 import {JobManagerService} from "job/JobManagerService"
 import {EnumEventEmitter} from 'shared/util/EnumEventEmitter'
-import {JobDAO} from 'shared/actions/jobs/JobDAO'
+
 import {
 	JobStatus, IJob, JobCancelledStatuses, IJobLogger,
 	IJobStatusDetail, JobLogLevelNames, JobLogLevel
@@ -14,8 +14,10 @@ import { JobActionFactory } from "shared/actions/jobs/JobActionFactory"
 import * as fs from 'fs'
 
 import { getJobActions } from  "shared/actions/ActionFactoryProvider"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 
 export enum JobHandlerEventType {
@@ -24,6 +26,9 @@ export enum JobHandlerEventType {
 	Changed,
 	Finished
 }
+
+
+
 
 /**
  * Job Event names
@@ -166,6 +171,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @returns {IJob}
 	 */
 	async setStatus(status:JobStatus, error:Error = null) {
+		if (status < this.job.status) {
+			log.info(`Job status value, can not decrement`)
+			return
+		}
+		
 		assign(this.job, {status})
 		assign(this.detail, {
 			status,
@@ -183,29 +193,31 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 *
 	 * @returns {IJob}
 	 */
-	async execute() {
+	
+	 async execute() {
 		
-		const {job, started, killed} = this
+		const
+			{job, started, killed} = this
+		
 		assert(!started && !killed && job.status === JobStatus.Created,
 			'Job Status must be CREATED and the handler can not be started or killed in order to execute')
 		
 		
-		
 		try {
 			
-			this.logFile = fs.openSync(job.logFilename,'w')
-			this.logJSONFile = fs.openSync(job.logJSONFilename,'w')
+			this.logFile = fs.openSync(job.logFilename, 'w')
+			this.logJSONFile = fs.openSync(job.logJSONFilename, 'w')
 			
-			log.info(`Log file @`,job.logFilename)
-			log.info(`Log JSON file @`,job.logJSONFilename)
+			log.info(`Log file @`, job.logFilename)
+			log.info(`Log JSON file @`, job.logJSONFilename)
 			
 			// Make the logger
-			this.logger = JobLogLevelNames.reduce((logger,level) => {
-				logger[level.toLowerCase()] = (message:string,error:Error = null,...details:any[]) => {
-					this.log(JobLogLevel[level],message,error,...details)
+			this.logger = JobLogLevelNames.reduce((logger, level) => {
+				logger[ level.toLowerCase() ] = (message:string, error:Error = null, ...details:any[]) => {
+					this.log(JobLogLevel[ level ], message, error, ...details)
 				}
 				return logger
-			},{}) as IJobLogger
+			}, {}) as IJobLogger
 			
 			this.started = true
 			
@@ -213,12 +225,14 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 			await this.setStatus(JobStatus.InProgress)
 			
 			// Get the result
-			job.result = await this.executor.execute(this,this.logger,this.progressTracker,job)
+			job.result = await this.executor.execute(this, this.logger, this.progressTracker, job)
+			
 			
 			await this.setStatus(JobStatus.Completed)
 		} catch (err) {
 			log.error(`Job failed: ${job.name}(${job.id}) - ${job.description}`, err)
 			
+			// if (this.job.)
 			await this.setStatus(JobStatus.Failed, err)
 		} finally {
 			try {
@@ -233,6 +247,9 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 				log.error(`Failed to close file`)
 			}
 		}
+	
+	
+		
 		
 	}
 }

@@ -30,6 +30,10 @@ export function isObject(o:any):o is Object {
 	return _.isObject(o)
 }
 
+export function isPromise(o:any):o is Promise<any> {
+	return o && isObject(o) && (o instanceof Promise || isFunction(o.then))
+}
+
 export function isObjectType<T>(o:any,type:{new():T}):o is T {
 	return o instanceof type || o.$$clazz === type.name
 }

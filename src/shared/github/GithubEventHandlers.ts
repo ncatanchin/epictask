@@ -1,19 +1,20 @@
 import { IssuesEvent } from 'shared/models/GitHubEvents'
 import { getStores, Stores } from "shared/Stores"
 import {
-	makeIssueId, applyIssueUpdate, Comment, AvailableRepo, Repo, Issue, RepoEvent,
-	IIssuesEventPayload, IIssueCommentEventPayload, Milestone, User, Label
+	Comment, AvailableRepo, Repo, Issue, RepoEvent,
+	Milestone, User, Label
 } from "shared/models"
 import * as moment from 'moment'
 import { createClient, GitHubClient, OnDataCallback } from "shared/GitHubClient"
-import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryProvider"
 import { checkUpdatedAndAssign } from "shared/util/ModelUtil"
 import JobProgressTracker from "job/JobProgressTracker"
 import { chunkSave } from "shared/db/DatabaseUtil"
-import { isNil, isNumber, shallowEquals, cloneObject } from "shared/util/ObjectUtil"
+import { shallowEquals, cloneObject } from "shared/util/ObjectUtil"
 import SyncStatus from 'shared/github/GithubSyncStatus'
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 import { OneAtATime } from "shared/util/Decorations"
+import { isRepoSyncPending } from "job/executors/RepoSyncExecutor"
 
 const
 	log = getLogger(__filename)
@@ -39,19 +40,28 @@ export class RepoSyncManager {
 	static get(availRepoOrRepo:AvailableRepo|Repo) {
 		const
 			repo = (isAvailableRepo(availRepoOrRepo)) ? availRepoOrRepo.repo : availRepoOrRepo,
-			{id} = repo,
-			{managers} = RepoSyncManager
+			{id} = repo
 		
-		if (!managers[id])
-			managers[id] = new RepoSyncManager(repo)
+		if (!RepoSyncManager.managers[id])
+			RepoSyncManager.managers[id] = new RepoSyncManager(repo)
 		
-		return managers[id]
+		return RepoSyncManager.managers[id]
 	}
 	
 	
 	constructor(public repo:Repo) {
 		
 	}
+	
+	/**
+	 * Triggers a repo sync if one is not pending
+	 */
+	private triggerRepoSync() {
+		if (!isRepoSyncPending(this.repo.id)) {
+			getRepoActions().syncRepo(this.repo.id)
+		}
+	}
+	
 	
 	/**
 	 * Update comments for a specific issue
@@ -148,28 +158,15 @@ export class RepoSyncManager {
 					} else {
 						await stores.issuesEvent.save(event)
 					}
-					
-					
-				
 				} catch (err) {
 					log.error(`Failed to handle event: ${event.event}`, event, err)
 				}
 				
 			}))
 			
-			// NOW ISSUE SYNC
-			const
-				updatedIssues = await this.syncIssues.override({waitForResult:true})(stores),
-				issueNumbersChanged = updatedIssues.map(issue => issue.number)
+			// TRIGGER SYNC
+			this.triggerRepoSync()
 			
-			log.debug(`Resolved ${events.length} issue events, issue numbers ${issueNumbersChanged.join(', ')} were changed`)
-			
-			if (updatedIssues.length) {
-				getIssueActions().onSyncChanges({
-					repoId,
-					issueNumbersChanged
-				})
-			}
 			
 		} catch (err) {
 			log.error(`Failed to resolve ${events.length} issue events`, err)
@@ -258,10 +255,8 @@ export class RepoSyncManager {
 				}
 			})
 			
-			if (shouldUpdateIssues) {
-				this.updateIssues(stores, client)
-			} else if (shouldUpdateComments) {
-				this.updateComments(stores, client)
+			if (shouldUpdateIssues || shouldUpdateComments) {
+				this.triggerRepoSync()
 			}
 			log.debug(`Resolved ${events.length} issue events`)
 		} catch (err) {
@@ -355,78 +350,92 @@ export class RepoSyncManager {
 			updatedIssues:Issue[] = [],
 			issuesResourceUrl = `${this.repo.id}-issues`,
 			issuesSinceParams = SyncStatus.getSinceTimestampParams(issuesResourceUrl),
-			issueSavePromises:Promise<any>[] = [],
+			{repo} = this
+		
+		// SAVE A PAGE OF ISSUES
+		async function saveIssuesPage(issues:Issue[], pageNumber:number, totalPages:number) {
 			
-			// Save a batch of images
-			saveIssuesPage = async(issues:Issue[], pageNumber:number, totalPages:number) => {
-				
+			const
+				pending = []
+			
+			for (let issue of issues) {
+				issue.repoId = repo.id
 				const
-					pending = []
+					existing = await stores.issue.get(issue.id)
 				
-				for (let issue of issues) {
-					issue.repoId = this.repo.id
-					const
-						existing = await stores.issue.get(issue.id)
-					
-					
-					// IF NO UPDATE THEN RETURN
-					if (!(issue = checkUpdatedAndAssign(logger || log, issue.id, issue, existing)))
-						continue
-					
-					if (syncChanges) {
-						existing ?
-							syncChanges.issueNumbersChanged.push(issue.number) :
-							syncChanges.issueNumbersNew.push(issue.number)
-					}
-					
-					pending.push(issue)
-					
+				
+				// IF NO UPDATE THEN RETURN
+				if (!(issue = checkUpdatedAndAssign(logger || log, issue.id, issue, existing)))
+					continue
+				
+				if (syncChanges) {
+					existing ?
+						syncChanges.issueNumbersChanged.push(issue.number) :
+						syncChanges.issueNumbersNew.push(issue.number)
 				}
 				
-				if (pending.length)
-					await chunkSave(pending, stores.issue)
+				pending.push(issue)
 				
-				updatedIssues.push(...pending)
-				progressTracker && progressTracker.completed()
-			},
+			}
 			
-			// Get all issues
+			if (pending.length)
+				await chunkSave(pending, stores.issue)
+			
+			updatedIssues.push(...pending)
+			progressTracker && progressTracker.completed()
+			SyncStatus.setMostRecentTimestamp(issuesResourceUrl, pending, 'updated_at', 'created_at')
+		}
+		
+		/**
+		 * Handle a page of issues
+		 *
+		 * @param pageNumber
+		 * @param totalPages
+		 * @param items
+		 */
+		async function handleIssuesPage(pageNumber:number, totalPages:number, items:Issue[]) {
+			
+			// Update Progress
+			if (!pagesSet) {
+				progressTracker && progressTracker.increment(totalPages)
+				logger && logger.info(`Getting ${totalPages} issue pages`)
+			}
+			pagesSet = true
+			
+			
+			// Now handle
+			logger && logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
+			if (isDryRun) {
+				log.info(`In dry run, skipping save`)
+				return
+			}
+			
+			await saveIssuesPage(items, pageNumber, totalPages)
+			
+			if (onDataCallback)
+				onDataCallback(pageNumber, totalPages, items)
+			
+			logger && logger.info(`Completed saving issues, page ${pageNumber} of ${totalPages}`)
+			progressTracker && progressTracker.completed()
+		}
+		
+		// START PAGING ISSUES
+		const
 			issues = await client.repoIssues(this.repo, {
 				
-				// On each data call back add a promise to the list
-				onDataCallback: (pageNumber:number, totalPages:number, items:Issue[]) => {
-					
-					// Update Progress
-					if (!pagesSet) {
-						progressTracker && progressTracker.increment((totalPages * 2))
-						logger && logger.info(`Getting ${totalPages} issue pages`)
-					}
-					pagesSet = true
-					progressTracker && progressTracker.completed()
-					
-					// Now handle
-					logger && logger.info(`Received issues, page ${pageNumber} of ${totalPages}`)
-					if (isDryRun) {
-						log.info(`In dry run, skipping save`)
-						return
-					}
-					
-					
-					issueSavePromises.push(saveIssuesPage(items, pageNumber, totalPages))
-					if (onDataCallback)
-						onDataCallback(pageNumber, totalPages, items)
-				},
-				params: assign({
+				// PAGING & SINCE PARAMS
+				onDataCallback: handleIssuesPage,
+				params: assign(issuesSinceParams,{
 					state: 'all',
 					sort: 'updated',
 					filter: 'all'
-				}, issuesSinceParams)
+				})
 			})
 		
-		await Promise.all(issueSavePromises)
+		// await Promise.all(issueSavePromises)
 		logger && logger.info(`Received & processed ${issues.length} issues, updating sync status timestamp`)
 		
-		SyncStatus.setMostRecentTimestamp(issuesResourceUrl, updatedIssues, 'updated_at', 'created_at')
+		
 		
 		return updatedIssues
 	})
@@ -452,9 +461,8 @@ export class RepoSyncManager {
 			client = createClient(),
 			commentsResourceUrl = `${this.repo.id}-comments`,
 			commentsSinceParams = SyncStatus.getSinceTimestampParams(commentsResourceUrl),
-			commentSavePromises = [],
 			
-			// Save a batch of images
+			// SAVE PAGE OF COMMENTS
 			saveCommentsPage = async(comments:Comment[], pageNumber:number, totalPages:number) => {
 				
 				
@@ -492,48 +500,43 @@ export class RepoSyncManager {
 				// Push updates to STATE
 				this.checkReloadActivity(pending)
 				
+				
 				updatedComments.push(...pending)
-				progressTracker && progressTracker.completed()
+				
+				SyncStatus.setMostRecentTimestamp(commentsResourceUrl, pending, 'updated_at', 'created_at')
+				
 			},
 			comments = await client.repoComments(this.repo, {
 				// On each data call back add a promise to the list
-				onDataCallback: (pageNumber:number, totalPages:number, items:Comment[]) => {
+				onDataCallback: async (pageNumber:number, totalPages:number, items:Comment[]) => {
 					
 					if (!pagesSet) {
 						log.info(`Getting ${totalPages} comment pages`)
-						progressTracker && progressTracker.increment(totalPages * 2)
+						progressTracker && progressTracker.increment(totalPages)
 					}
 					
 					pagesSet = true
-					progressTracker && progressTracker.completed()
 					
-					log.info(`Received comments, page ${pageNumber} of ${totalPages}`)
+					
+					logger && logger.info(`Received comments, page ${pageNumber} of ${totalPages}`)
+					
 					if (isDryRun) {
 						log.info(`In dry run, skipping save`)
 						return
 					}
 					
 					
-					commentSavePromises.push(saveCommentsPage(items, pageNumber, totalPages))
+					await saveCommentsPage(items, pageNumber, totalPages)
 					if (onDataCallback)
 						onDataCallback(pageNumber, totalPages, items)
+					
+					logger && logger.info(`Saved comments, page ${pageNumber} of ${totalPages}`)
+					progressTracker && progressTracker.completed()
 				},
 				params: assign({ sort: 'updated' }, commentsSinceParams)
 			})
 		
-		logger && logger.info(`Received ${comments.length} comments since last sync`)
-		
-		if (isDryRun)
-			return updatedComments
-		
-		log.info(`Saving ${comments.length} comments`)
-		await Promise.all(commentSavePromises)
-		log.info(`Saved`)
-		
-		logger && logger.info(`Saved ${comments.length} comments`)
-		
-		SyncStatus.setMostRecentTimestamp(commentsResourceUrl, updatedComments, 'updated_at', 'created_at')
-		
+		logger && logger.info(`Checked ${comments.length} and updated ${updatedComments.length} comments`)
 		return updatedComments
 	})
 	

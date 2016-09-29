@@ -33,16 +33,38 @@ export function loadModelClasses() {
  * @param models
  * @param modelStore
  */
-export async function chunkSave<T extends IModel>(models:T[],modelStore:TSRepo<T>) {
+export function chunkSave<T extends IModel>(models:T[],modelStore:TSRepo<T>) {
 	if (!models.length)
-		return
+		return Promise.resolve()
 	
 	const
-		chunks = _.chunk(models,CHUNK_SIZE)
+		chunks = _.chunk(models,CHUNK_SIZE),
+		deferred = Promise.defer(),
+		saveNextChunk = () => {
+			try {
+				const
+					chunk = chunks.shift()
+				
+				modelStore.bulkSave(...chunk)
+					.then(() => {
+						if (chunks.length) {
+							setTimeout(saveNextChunk, 1)
+						} else {
+							deferred.resolve()
+						}
+					})
+					.catch(err => deferred.reject(err))
+			} catch (err) {
+				log.error(`Chunk save failed`,err)
+				deferred.reject(err)
+			}
+			
+		}
 	
-	for (let chunk of chunks) {
-		await modelStore.bulkSave(...chunk)
-	}
+	saveNextChunk()
+	
+	return deferred.promise
+	
 }
 
 // /**

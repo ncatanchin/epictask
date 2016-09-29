@@ -48,10 +48,8 @@ export class RepoStateService extends BaseService {
 		await super.start()
 		
 		const
-			repoActions = getRepoActions()
-		
-		repoActions.loadAvailableRepos()
-		
+			repoActions = getRepoActions(),
+			availableRepos = await repoActions.getAllAvailableRepoResources()
 		
 		let enabledReposValueCache = new ValueCache(_.debounce((enabledRepos) => {
 			log.debug(`CHANGED: Enabled repo`,enabledRepos)
@@ -68,6 +66,18 @@ export class RepoStateService extends BaseService {
 			}),
 			this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
 		)
+		
+		
+		log.debug(`Got all avail repo parts`,availableRepos.map(repo => repo.id).join(','))
+		repoActions.updateAvailableRepos(availableRepos)
+		
+		//await Promise.delay(100)
+		//getIssueActions().loadIssues()
+		
+		//repoActions.loadAvailableRepos()
+		
+		
+		
 		
 		// Subscribe for changes
 		// this.unsubscribe = this.store.getReduxStore().subscribe(() => {

@@ -107,17 +107,28 @@ export class GithubEventService extends BaseService {
 					issuesLastETag: SyncStatus.getETag(issuesResourceUrl),
 					issuesLastTimestamp: SyncStatus.getTimestamp(issuesResourceUrl)
 				},{
-					allIssuesEventsReceived(eTag:string,...events:IssuesEvent[]) {
-						RepoSyncManager.get(availRepo).handleIssuesEvents(availRepo,...events)
-						
-						SyncStatus.setETag(issuesResourceUrl,eTag)
-						SyncStatus.setTimestamp(issuesResourceUrl,Date.now())
-					},
-					allRepoEventsReceived(eTag:string,...events:RepoEvent<any>[]) {
-						RepoSyncManager.get(availRepo).handleRepoEvents(availRepo,...events)
-						
+					repoEventsReceived: async (eTag:string,...events:RepoEvent<any>[]) => {
+						await RepoSyncManager.get(availRepo).handleRepoEvents(availRepo,...events)
 						SyncStatus.setETag(repoResourceUrl,eTag)
-						SyncStatus.setTimestamp(repoResourceUrl,Date.now())
+						SyncStatus.setMostRecentTimestamp(repoResourceUrl, events, 'created_at')
+						
+					},
+					issuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
+						await RepoSyncManager.get(availRepo).handleIssuesEvents(availRepo,...events)
+						SyncStatus.setETag(issuesResourceUrl,eTag)
+						SyncStatus.setMostRecentTimestamp(issuesResourceUrl, events, 'created_at')
+					},
+					
+					allIssuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
+						
+						
+						// SyncStatus.setETag(issuesResourceUrl,eTag)
+						// SyncStatus.setTimestamp(issuesResourceUrl,Date.now())
+					},
+					allRepoEventsReceived: async (eTag:string,...events:RepoEvent<any>[]) => {
+						
+						// SyncStatus.setETag(repoResourceUrl,eTag)
+						// SyncStatus.setTimestamp(repoResourceUrl,Date.now())
 					}
 				})
 			})

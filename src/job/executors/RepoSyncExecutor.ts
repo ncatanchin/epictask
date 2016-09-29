@@ -1,6 +1,3 @@
-import * as moment from 'moment'
-
-
 import {JobHandler} from 'job/JobHandler'
 import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment} from 'shared/models'
@@ -9,25 +6,45 @@ import {Stores} from 'shared/services/DatabaseClientService'
 import {getSettings} from 'shared/settings/Settings'
 import {Benchmark} from 'shared/util/Benchmark'
 import {JobExecutor} from 'job/JobDecorations'
-import {JobType, IJob, IJobLogger} from 'shared/actions/jobs/JobTypes'
+import { JobType, IJob, IJobLogger, JobStatus } from 'shared/actions/jobs/JobTypes'
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
 import { getRepoActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
 import { RepoSyncManager } from "shared/github/GithubEventHandlers"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 
+interface IRepoSyncPending {
+	resolver:Promise.Resolver<any>
+	started:boolean
+}
 
 const
 	log = getLogger(__filename),
-	Benchmarker = Benchmark(__filename)
+	Benchmarker = Benchmark(__filename),
+	repoSyncMap = getHot(module,'repoSyncMap',{}) as {[repoId:number]:IRepoSyncPending}
+
+setDataOnHotDispose(module,() => ({
+	repoSyncMap
+}))
 
 
+/**
+ * Check to see if a pending repo sync exists
+ *
+ * @param repoId
+ */
+export function isRepoSyncPending(repoId:number) {
+	return !!repoSyncMap[repoId] && !repoSyncMap[repoId].started
+}
 
 @JobExecutor
 export class RepoSyncExecutor implements IJobExecutor {
-
-
+	
+	/**
+	 * Job types that the sync executor supports
+	 */
 	static supportedTypes() {
 		return [JobType.RepoSync]
 	}
@@ -86,8 +103,6 @@ export class RepoSyncExecutor implements IJobExecutor {
 	async syncAssignees(stores:Stores, repo:Repo,onDataCallback:OnDataCallback<User> = null) {
 		if (await RepoSyncManager.get(repo).syncAssignees(stores,this.logger,this.progressTracker,onDataCallback,this.isDryRun()))
 			this.syncChanges.repoChanged = true
-		
-
 	}
 
 	/**
@@ -160,78 +175,116 @@ export class RepoSyncExecutor implements IJobExecutor {
 	 * @param job
 	 */
 	@Benchmarker
-	async execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob) {
+	execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob):Promise<any> {
+		
 		this.logger = logger
 		this.progressTracker = progressTracker
 		
-		
-		
-		
-		
 		if (!getSettings().token) {
 			this.logger.error(`User is not authenticated, can not sync`)
-			throw new Error(`You are not authenticated, can not sync`)
+			return Promise.reject(new Error(`You are not authenticated, can not sync`))
 		}
+		
 		
 		// Assign job & props
 		if (job) {
-			Object.assign(this,
-				_.pick(job.args,'availableRepo','repo'),
-				{job})
+			Object.assign(this,_.pick(job.args,'availableRepo','repo'),{job})
 		}
-
-		this.client = Container.get(GitHubClient)
-
+		
 		const
-			stores = Container.get(Stores),
-			{availableRepo,repo} = this
+			{availableRepo,repo} = this,
+			repoId = repo.id,
 		
+			// CHECK FOR PENDING SYNC
+			pendingSync = repoSyncMap[repoId],
+			pendingResolver = pendingSync && pendingSync.resolver,
+			pendingPromise = pendingResolver && pendingResolver.promise
 		
-		if (!getSettings().token) {
-			this.logger.error("Can not sync, not authenticated")
-			return
+		// If there is a pending sync then cancel
+		if (pendingSync && !pendingSync.started) {
+			this.logger.warn(`There is already a pending sync, this job is canceled: ${repoId}`)
+			handler.setStatus(JobStatus.Cancelled,new Error(`There is already a pending sync, this job is canceled`))
+			return Promise.resolve()
 		}
-
-		this.logger.info(`Starting repo sync job for ${repo.full_name}: ${job.id}`)
 		
-		try {
-
-			// Grab the repo
-			let {repoId} = availableRepo
-
-			// Check the last updated activity
-			await this.initParams(repo)
-
-			// Load Labels, milestones and assignees first
-			await Promise.all([
-				this.syncLabels(stores,repo),
-				this.syncMilestones(stores,repo),
-				this.syncAssignees(stores,repo)
-			])
-			
-			// Load the issues, eventually track progress
-			log.debug('waiting for all promises - we sync comments later ;)')
-			await this.syncIssues(stores,repo)
-
-			
-			// Now get the store state to check if updates are needed
-			getRepoActions().onSyncChanges(this.syncChanges)
+		const
+			deferred = Promise.defer(),
+			thisSync = {
+				started: false,
+				resolver: deferred
+			}
 			
 			
-			log.info('Now syncing comments')
-			await Promise.delay(1000)
-			await this.syncComments(stores,repo)
+			/**
+		 * Sync function, executes serially
+		 */
+		const syncRepo = async () => {
 			
+			this.client = Container.get(GitHubClient)
 			
+			const
+				stores = Container.get(Stores)
 			
-		} catch (err) {
-			log.error('failed to sync repo issues', err)
-			throw err
+			this.logger.info(`Starting repo sync job for ${repo.full_name}: ${job.id}`)
+			
+			try {
+				
+				// Check the last updated activity
+				await this.initParams(repo)
+				
+				// Load Labels, milestones and assignees first
+				await Promise.all([
+					this.syncLabels(stores,repo),
+					this.syncMilestones(stores,repo),
+					this.syncAssignees(stores,repo)
+				])
+				
+				// Load the issues, eventually track progress
+				log.debug('waiting for all promises - we sync comments later ;)')
+				await this.syncIssues(stores,repo)
+				
+				
+				// Now get the store state to check if updates are needed
+				getRepoActions().onSyncChanges(this.syncChanges)
+				
+				
+				log.info('Now syncing comments')
+				await Promise.delay(1000)
+				await this.syncComments(stores,repo)
+				
+				
+				deferred.resolve()
+			} catch (err) {
+				log.error('failed to sync repo issues', err)
+				//throw err
+				deferred.reject(err)
+			}
 		}
+		
+		
+		
+		// SET OUR RESOLVER AS THE CURRENT ONE
+		repoSyncMap[repoId] = thisSync
+		
+		if (pendingSync && pendingPromise.isResolved() && pendingPromise.isRejected()) {
+			this.logger.info(`Already syncing ${repo.full_name} / will continue when it completes`)
+			pendingPromise.then(() => {
+				thisSync.started = true
+				this.logger.info(`Previous sync completed, now we are syncing`)
+				setTimeout(syncRepo,100)
+			})
+		} else {
+			setTimeout(syncRepo,100)
+		}
+		
+		return deferred
+			.promise
+			.finally(() => {
+				if (thisSync === repoSyncMap[repoId]) {
+					delete repoSyncMap[repoId]
+				}
+			})
 	}
 }
 
-
-if (module.hot) {
-	module.hot.accept(() => log.info(`HMR update - job classes just re-register/2`))
-}
+acceptHot(module,log)

@@ -72,7 +72,7 @@ export class JobList extends React.Component<IJobListProps,void> {
 		
 		const details:IJobStatusDetail[] =  _.orderBy(
 			_.get(this.props,'details',List<IJobStatusDetail>()).toArray(),
-			['updatedAt'],['desc'])
+			['status','createdAt'],['asc','desc'])
 		
 		return <div style={styles.root}>
 			{/* List of Jobs */}

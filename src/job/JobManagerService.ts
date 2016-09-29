@@ -8,8 +8,9 @@ import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "job/JobEx
 import {BaseService, RegisterService, IServiceConstructor} from "shared/services"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {IJobStatusDetail} from "shared/actions/jobs/JobState"
-import { JobKey } from "shared/Constants"
+import { JobKey, JobsMaxConcurrency } from "shared/Constants"
 import { clientObserveState, getStateValue } from "shared/AppStoreClient"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 
 const log = getLogger(__filename)
 
@@ -27,8 +28,18 @@ export type TJobMap= {[name:string]:IJobContainer}
 
 
 // Singleton ref
-let jobManager:JobManagerService
+let
+	jobManager:JobManagerService
 
+interface IJobPending {
+	job:IJob
+	detail:IJobStatusDetail
+}
+
+const
+	pendingJobQueue = getHot(module,'pendingJobQueue',[]) as IJobPending[]
+
+setDataOnHotDispose(module,() => ({pendingJobQueue}))
 
 /**
  * Type guard job
@@ -177,20 +188,25 @@ export class JobManagerService extends BaseService {
 	 */
 	onJobsUpdated = async (jobs:{[id:string]:IJob}) => {
 		log.info(`Checking jobs`,jobs)
-		const newJobs = Object
-			.values(jobs)
-			.filter(job =>
-				job &&
-				job.status === JobStatus.Created &&
-				!this.workingJobs[job.id])
 		
-		const details = await getStateValue(JobKey,'details')
-		
-		log.info(`Found ${newJobs.length} new jobs, executing now`)
-		
-		newJobs.forEach(job => {
-			this.execute(job,details.find(detail => detail.id === job.id))
-		})
+		try {
+			const
+				newJobs = Object
+					.values(jobs)
+					.filter(job =>
+					job &&
+					job.status === JobStatus.Created && !this.workingJobs[ job.id ]),
+				
+				details = await getStateValue(JobKey, 'details')
+			
+			log.info(`Found ${newJobs.length} new jobs, executing now`)
+			
+			newJobs.forEach(job => {
+				this.execute(job, details.find(detail => detail.id === job.id))
+			})
+		} catch (err) {
+			log.error(`Failed to updated jobs from state`,err)
+		}
 	}
 	
 
@@ -205,11 +221,29 @@ export class JobManagerService extends BaseService {
 	onJobEvent = (event:JobHandlerEventType, handler:JobHandler, job:IJob, detail:IJobStatusDetail) => {
 		const workingJob = this.workingJobs[job.id]
 		
-		if (workingJob && [JobStatus.Failed,JobStatus.Completed].includes(job.status)) {
+		if (workingJob && job.status >= JobStatus.Completed) {
 			log.info(`Removing ${job.name} (${job.id}) from working job list`)
 			delete this.workingJobs[job.id]
+			
+			this.checkPendingQueue()
 		}
 			
+	}
+	
+	/**
+	 * Check pending queue for next job
+	 */
+	private checkPendingQueue = () => {
+		if (pendingJobQueue.length) {
+			const
+				{job,detail} = pendingJobQueue.shift()
+			
+			if (job.status > JobStatus.Created) {
+				log.error(`A pending job should not have a status above created`,job)
+			} else {
+				this.execute(job,detail)
+			}
+		}
 	}
 	
 	/**
@@ -220,6 +254,12 @@ export class JobManagerService extends BaseService {
 	 * @returns {JobHandler}
 	 */
 	execute = (job:IJob,detail:IJobStatusDetail) => {
+		if (Object.keys(this.workingJobs).length > JobsMaxConcurrency) {
+			log.info(`Job is pending, max concurrency reached`,job,JobsMaxConcurrency)
+			pendingJobQueue.push({job,detail})
+			return
+		}
+		
 		// Create a new executor
 		const
 			handler = new JobHandler(this,job,detail),
@@ -235,6 +275,12 @@ export class JobManagerService extends BaseService {
 		
 		log.info(`Executing Job ${job.name} (${job.id})`)
 		handler.execute()
+			.then(() => {
+				setTimeout(this.checkPendingQueue,10)
+			})
+	
+		
+		
 		
 	}
 

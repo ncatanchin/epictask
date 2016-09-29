@@ -185,7 +185,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 					}
 				</div>
 				<div style={[styles.label.time]}>
-					{Math.round(detail.progress * 100)}%
+					{Math.round(detail.progress * 100.0)}%
 					{/*{!detail.epochETA ? 'N/A' : moment(detail.epochETA).fromNow()}*/}
 				</div>
 				

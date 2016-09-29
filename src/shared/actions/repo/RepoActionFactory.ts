@@ -28,7 +28,7 @@ import { cloneObject } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
-import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { getIssueActions, getJobActions } from  "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -159,12 +159,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return async (dispatch,getState) => {
 			
 			const
-				jobActions = this.jobActions
-					.withDispatcher(dispatch,getState)
+				jobActions = getJobActions()
 
 			if (!Array.isArray(repoIds))
 				repoIds = [repoIds]
-
+			
+			
 			for (let repoId of _.uniq(repoIds)) {
 				const
 					availableRepo = await this.stores.availableRepo.findByRepoId(repoId),

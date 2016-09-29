@@ -3,7 +3,7 @@ import thunkMiddleware from 'redux-thunk'
 import {Store as ReduxStore} from 'redux'
 import {Map} from 'immutable'
 import { StoreEnhancer,Store,compose, applyMiddleware } from 'redux'
-import {ReduxDebugSessionKey, UIKey} from 'shared/Constants'
+import { ReduxDebugSessionKey, UIKey, RepoKey } from 'shared/Constants'
 import { getToaster } from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 
@@ -30,6 +30,7 @@ import {isString} from "shared/util/ObjectUtil"
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import { IChildStore, IChildStoreSubscriptionManager, ChildStoreSubscriptionStatus } from "shared/store/ChildStore"
 import { attachChildStore } from "shared/AppStoreClient"
+import { RepoState } from "shared/actions/repo/RepoState"
 
 
 const
@@ -389,7 +390,20 @@ function writeStoreState(state = getStoreState(),doAsync = false) {
 			.finally(() => persistingState = false)
 	
 	try {
-		writeFile(stateFilename, serializeState(state))
+		
+		// TODO: Add Storage store filter
+		
+		//writeFile(stateFilename, serializeState(state))
+		const
+			js = _.toJS(state),
+			repoState = _.get(js,RepoKey,null) as RepoState
+		
+		if (repoState && repoState.availableRepos)
+			delete repoState['availableRepos']
+		
+		
+		
+		writeFile(stateFilename, JSON.stringify(js))
 	} catch (err) {
 		log.error(`Failed to persist store state`,err)
 	}
@@ -461,7 +475,7 @@ If(DEBUG,() => {
  *
  * @returns {string}
  */
-export function serializeState(state = getStoreState()) {
+export function serializeState(state = getStoreState(), filter = null) {
 	return JSON.stringify(_.toJS(state))
 }
 

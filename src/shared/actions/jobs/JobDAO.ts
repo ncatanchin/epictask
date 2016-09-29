@@ -64,12 +64,13 @@ export namespace JobDAO {
 			}
 			
 		// Create details
-		const detail = assign(_.pick(job, 'id', 'status', 'type'), {
-			createdAt: Date.now(),
-			updatedAt: Date.now(),
-			progress: 0,
-			logs: []
-		}) as IJobStatusDetail
+		const
+			detail = assign(_.pick(job, 'id', 'status', 'type'), {
+				createdAt: Date.now(),
+				updatedAt: Date.now(),
+				progress: 0,
+				logs: []
+			}) as IJobStatusDetail
 		
 		getJobActions().update(job, detail)
 		

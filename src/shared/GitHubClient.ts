@@ -4,7 +4,7 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {getSettings} from 'shared/settings/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import { cloneObject, isString, isNumber, toNumber } from 'shared/util/ObjectUtil'
+import { cloneObject, isString, isNumber, toNumber, isPromise } from 'shared/util/ObjectUtil'
 import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
 import {List} from 'immutable'
 import { getToaster, addInfoMessage, addErrorMessage } from "shared/Toaster"
@@ -275,10 +275,15 @@ export class GitHubClient {
 				checkDataCallback = (dataCallbackResult) => {
 					if (dataCallbackResult === false) {
 						log.info(`Data callback returned false - not going to page`)
-						return false
+						return Promise.resolve(false)
 					}
 					
-					return true
+					if (isPromise(dataCallbackResult))
+						return dataCallbackResult.then(result => {
+							return !(result === false)
+						})
+					
+					return Promise.resolve(true)
 				}
 			
 			
@@ -286,8 +291,14 @@ export class GitHubClient {
 			if (opts.traversePages && result.length) {
 				log.debug('Going to traverse pages', opts, pageLinks)
 				
+				let
+					timeoutId = null
+				
+				const
+					allPagesDeferred = Promise.defer()
+				
 				// CHECK CALLBACK RESULT / false=skip
-				if (checkDataCallback(
+				if (await checkDataCallback(
 					this.doDataCallback(
 						opts,
 						result.pageNumber,
@@ -296,38 +307,72 @@ export class GitHubClient {
 						headers
 					))
 				) {
-						
-						// Page counter / opts.page
-					let nextPageNumber = result.pageNumber + 1
 					
-					// Iterate all pages
-					while (lastLink && nextPageNumber < lastLink.pageNumber && !result.isLastPage) {
-						nextPageNumber++
-						
-						log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
-						
-						// Delay by 1s in-between page requests
-						await Promise.resolve(true).delay(PageIntervalDelay)
-						
-						const
-							nextOpts = Object.assign({}, opts, { page: nextPageNumber }),
-							nextResult = await this.get<T>(path, modelType, nextOpts) as T
-						
-						
-						result.push(...(nextResult as any))
-						
-						// CHECK CALLBACK RESULT / false=break
-						if (checkDataCallback(
-							this.doDataCallback(
-								opts,
-								nextPageNumber,
-								lastLink.pageNumber,
-								nextResult,headers
-							))
-						)
-							break
-					}
+						// Page counter / opts.page
+					let
+						nextPageNumber = result.pageNumber + 1
+					
+					const
+						hasMorePages = () =>
+							lastLink && nextPageNumber < lastLink.pageNumber && !result.isLastPage,
+					
+					
+						getNextPage = async () => {
+							try {
+								if (hasMorePages()) {
+									nextPageNumber++
+									
+									log.info(`Getting page number ${nextPageNumber} of ${lastLink.pageNumber}`)
+									
+									// Delay by 1s in-between page requests
+									const
+										nextOpts = Object.assign({}, opts, {
+											traversePages: false,
+											page: nextPageNumber
+										}),
+										nextResult = await this.get<T>(path, modelType, nextOpts) as T
+									
+									
+									result.push(...(nextResult as any))
+									
+									// CHECK CALLBACK RESULT / false=break
+									if ((await checkDataCallback(
+											this.doDataCallback(
+												opts,
+												nextPageNumber,
+												lastLink.pageNumber,
+												nextResult, headers
+											))) && hasMorePages()
+									) {
+										timeoutId = setTimeout(getNextPage,PageIntervalDelay)
+										return
+									}
+								}
+								allPagesDeferred.resolve(result)
+							} catch (err) {
+								log.error(`Page iteration failed ${nextPageNumber}`,err)
+								allPagesDeferred.reject(err)
+							}
+						}
+					// START PAGING
+					getNextPage()
+					
+				} else {
+					allPagesDeferred.resolve(result)
 				}
+				
+				allPagesDeferred.promise.catch(err => {
+					log.error(`Page iteration failed, cleaning timeout`)
+					if (timeoutId) {
+						try {
+							clearTimeout(timeoutId)
+						} catch (err2) {}
+					}
+				})
+				
+				// AWAIT ALL PAGES OR IMMEDIATE
+				await allPagesDeferred.promise
+				
 			}
 		} else {
 			result = new (modelType)(result)

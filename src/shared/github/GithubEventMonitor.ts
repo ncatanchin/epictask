@@ -4,7 +4,7 @@ import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import {RepoEvent,IssuesEvent} from 'shared/models/GitHubEvents'
 import { createClient, GithubError } from "shared/GitHubClient"
 import { PagedArray } from "shared/PagedArray"
-import { isString, toNumber } from "shared/util/ObjectUtil"
+import { isString, toNumber, isPromise } from "shared/util/ObjectUtil"
 
 const
 	log = getLogger(__filename),
@@ -22,8 +22,9 @@ const
  */
 export interface IGithubEventListener {
 	repoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
-	allRepoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
 	issuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
+	allRepoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
+	
 	allIssuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
 }
 
@@ -148,7 +149,7 @@ export class GithubEventMonitor {
 					eTag: issuesConfig.eTag,
 					
 					// CALLED AFTER EACH PAGE
-					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers) => {
+					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers) => {
 						
 						let
 							listenersWantToContinue = true,
@@ -166,11 +167,27 @@ export class GithubEventMonitor {
 						}
 						
 						// ITERATE LISTENERS & EMIT EVENTS
-						config.listeners.forEach(listener => {
-							if (listener.issuesEventsReceived && listener.issuesEventsReceived(eTag, ...items) === false) {
+						for (let listener of config.listeners) {
+							if (!listener.issuesEventsReceived)
+								continue
+							
+							let
+								result = listener.issuesEventsReceived(eTag, ...items)
+							
+							if (isPromise(result)) {
+								result = await result
+							}
+							
+							if (result === false) {
 								listenersWantToContinue = false
 							}
-						})
+						}
+						
+						// config.listeners.forEach(listener => {
+						// 	if (listener.issuesEventsReceived && listener.issuesEventsReceived(eTag, ...items) === false) {
+						// 		listenersWantToContinue = false
+						// 	}
+						// })
 						
 						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
 						const
@@ -197,9 +214,18 @@ export class GithubEventMonitor {
 					}
 				})
 				
-				config.listeners.forEach(listener => {
-					listener.allIssuesEventsReceived && listener.allIssuesEventsReceived(issuesConfig.eTag,...allEvents)
-				})
+				// CALLBACK AFTER ALL EVENTS
+				for (let listener of config.listeners) {
+					if (!listener.allIssuesEventsReceived)
+						continue
+					
+					let
+						result = listener.allIssuesEventsReceived(issuesConfig.eTag,...allEvents)
+					
+					if (isPromise(result))
+						await result
+				}
+				
 				
 				log.info(`All issues events - count ${allEvents.length}`)
 			} catch (err) {
@@ -270,7 +296,7 @@ export class GithubEventMonitor {
 					eTag: repoConfig.eTag,
 					
 					// CALLED AFTER EACH PAGE
-					onDataCallback: (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers) => {
+					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers) => {
 						
 						let
 							listenersWantToContinue = true,
@@ -288,11 +314,21 @@ export class GithubEventMonitor {
 						}
 						
 						// ITERATE LISTENERS & EMIT EVENTS
-						config.listeners.forEach(listener => {
-							if (listener.repoEventsReceived && listener.repoEventsReceived(eTag, ...items) === false) {
+						for (let listener of config.listeners) {
+							if (!listener.repoEventsReceived)
+								continue
+							
+							let
+								result = listener.repoEventsReceived(eTag, ...items)
+							
+							if (isPromise(result))
+								result = await result
+									
+							if (result === false) {
 								listenersWantToContinue = false
 							}
-						})
+						}
+						
 						
 						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
 						const
@@ -319,9 +355,17 @@ export class GithubEventMonitor {
 					}
 				})
 				
-				config.listeners.forEach(listener => {
-					listener.allRepoEventsReceived && listener.allRepoEventsReceived(repoConfig.eTag,...allEvents)
-				})
+				// CALLBACK AFTER ALL EVENTS
+				for (let listener of config.listeners) {
+					if (!listener.allRepoEventsReceived)
+						continue
+					
+					let
+						result = listener.allRepoEventsReceived(repoConfig.eTag,...allEvents)
+					
+					if (isPromise(result))
+						await result
+				}
 				
 				log.debug(`All repo events - count ${allEvents.length}`)
 			} catch (err) {

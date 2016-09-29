@@ -29,12 +29,17 @@ export class RepoState extends RepoStateRecord {
 			}
 		}
 		
-		if (o && o instanceof RepoState)
-			return o
+		let
+			instance:RepoState = o && o instanceof RepoState ? o : new RepoState(
+				Object.assign({},o)
+			)
+		
+		if (!instance.availableRepos)
+			instance = instance.set('availableRepos',List()) as any
+		
+		return instance
 		
 		
-		
-		return new RepoState(Object.assign({},o))
 	}
 	
 	// toJS() {
