@@ -4,6 +4,7 @@ import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
 import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
 import { ProcessType } from "shared/ProcessType"
 import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
+import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 
 
 const
@@ -574,11 +575,16 @@ export default class ChildProcessRenderer {
 					defaultHeight: 728,
 					file: `child-window-${processTypeName}`
 				}),
-				templateURL = require('path').resolve(process.cwd(),'dist/app/app-entry.html'),
+				templateURL = getAppEntryHtmlPath(),
 				url = `file://${templateURL}#EPIC_ENTRY=${processTypeName}`
 			
 			
-			this.browserWindow = new BrowserWindow(Object.assign({show:false},childWindowState))
+			this.browserWindow = new BrowserWindow(Object.assign({
+				show:false,
+				webPreferences: {
+					partition: `child-${processTypeName}`
+				}
+			},childWindowState))
 			
 			// ATTACH STATE HANDLER
 			childWindowState.manage(this.browserWindow)

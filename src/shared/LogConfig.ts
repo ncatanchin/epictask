@@ -13,11 +13,12 @@ if (ProcessConfig.isStorybook()) {
 	})
 } else {
 	const
+		cwd = process.cwd(),
 		mkdir = require('mkdirp'),
 		winston = require('winston'),
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
-		logFilename = `${process.cwd()}/logs/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`,
-		logDir = path.dirname(logFilename)
+		logDir = path.dirname(cwd && cwd.length ? cwd : '/tmp'),
+		logFilename = `${logDir}/logs/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
 	
 	// Create the log file root
 	mkdir.sync(logDir)

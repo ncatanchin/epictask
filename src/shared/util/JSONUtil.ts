@@ -1,4 +1,5 @@
 import {JSONKey} from "../Constants"
+import { isFunction } from "shared/util/ObjectUtil"
 
 export function toJSONObject(o) {
 	const
@@ -20,10 +21,16 @@ export function toJSONObject(o) {
 }
 
 
-export function toJSON(o) {
+export function toJSON(o,includeFunctions = false) {
 	o = toJSONObject(o)
 	
-	return JSON.stringify(o)
+	return JSON.stringify(o,(key,value) => {
+		if (isFunction(value)) {
+			return includeFunctions ? value.toString() : undefined
+		}
+		
+		return value
+	})
 }
 
 const

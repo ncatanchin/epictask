@@ -16,19 +16,25 @@
 #echo "dist/EpicTask.app/Contents/MacOS/Electron" > path.txt
 #popd
 #popd
+#
+#DIST=$PWD/target/electron-dev
+#
+#
+#mkdir -p ${DIST}
+#electron-packager ./ \
+#	--platform=darwin \
+#	--overwrite \
+#	--arch=x64 \
+#	--asar=false \
+#	--appname=EpicTask \
+#	--out=${DIST} --ignore="src|etc|libs|docs|bin|dist\/electron|logs|typings|\.*" \
+#	--icon=./src/assets/images/icons/icon-darwin.icns \
+#	--derefSymlinks=false
+#
+#ln -fs ${PWD} ${DIST}/epictask-darwin-x64/epictask.app/Contents/Resources/app
 
-DIST=$PWD/target/electron-dev
+mkdir -p dist/app/bin
+cp bin/epictask-start.js dist/app/bin
 
 
-mkdir -p ${DIST}
-electron-packager ./ \
-	--platform=darwin \
-	--overwrite \
-	--arch=x64 \
-	--asar=false \
-	--appname=EpicTask \
-	--out=${DIST} --ignore="src|etc|libs|docs|bin|dist\/electron|logs|typings|\.*" \
-	--icon=./src/assets/images/icons/icon-darwin.icns \
-	--derefSymlinks=false
-
-ln -fs ${PWD} ${DIST}/epictask-darwin-x64/epictask.app/Contents/Resources/app
+ ./node_modules/.bin/build -m --dir

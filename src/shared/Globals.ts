@@ -28,6 +28,12 @@ const
 	g = global as any
 
 
+function getChildWindowIdGlobal() {
+	const
+		windowId = process.env.EPIC_WINDOW_ID
+	return  windowId && windowId !== 'undefined' ? windowId : null
+}
+
 /**
  * Install polyfills & global objects
  *
@@ -68,7 +74,8 @@ function installGlobals() {
 		Env: EnvGlobal,
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
-		assignGlobal: _.assignGlobal.bind(_)
+		assignGlobal: _.assignGlobal.bind(_),
+		getChildWindowId: getChildWindowIdGlobal
 	}, ContextUtils)
 }
 
@@ -83,6 +90,8 @@ declare global {
 	interface IAssignGlobal {
 		(...sources:any[]):any
 	}
+	
+	var getChildWindowId:typeof getChildWindowIdGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var LogLevel:typeof LogLevelGlobal

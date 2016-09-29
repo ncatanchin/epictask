@@ -3,8 +3,8 @@ import ProcessType from './ProcessType'
 export namespace ProcessConfigGlobal {
 	
 	const ChildDevTools = {
-		[ProcessType.DatabaseServer]: true,
-		[ProcessType.JobServer]: true
+		[ProcessType.DatabaseServer]: false,
+		[ProcessType.JobServer]: false
 		//[ProcessType.DatabaseServer]: true,
 	}
 	

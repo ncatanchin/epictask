@@ -13,49 +13,49 @@ module.exports = {
 	 * All pre-loaders, for
 	 * hot loading, source-maps, etc
 	 */
-	preLoaders: [
-		{
-			happy: {id: 'js-pre'},
-			test: srcTest,
-			exclude: [/node_modules/],
-			loaders: ['source-map-loader',proxyProvidedLoaderPath]
-		}
-	],
+	// preLoaders: [
+	// 	{
+	// 		//happy: {id: 'js-pre'},
+	// 		test: srcTest,
+	// 		exclude: [/node_modules/],
+	// 		loaders: ['source-map-loader',proxyProvidedLoaderPath]
+	// 	}
+	// ],
 	
 	
 	loaders: [
 		{
-			happy: {id: 'json'},
+			//happy: {id: 'json'},
 			test: /\.json$/,
 			loader: 'json'
 		},
 		
 		// SourceCode
 		{
-			happy: {id: 'source'},
+			//happy: {id: 'source'},
 			test: srcTest,
 			exclude: [/(node_modules|typedux|typelogger|typestore)/],
-			loader: TypeScriptEnabled ? 'awesome-typescript' : 'babel',
+			loaders: [TypeScriptEnabled ? 'awesome-typescript' : 'babel','source-map-loader',proxyProvidedLoaderPath],
 			
 			// Add the query object for babel
-			...(TypeScriptEnabled ? {} : {
-				query:  {
-					cacheDirectory: true
-				}
-			})
+			// ...(TypeScriptEnabled ? {} : {
+			// 	query:  {
+			// 		cacheDirectory: true
+			// 	}
+			// })
 		},
 		
 		// JADE
 		{
-			happy: {id: 'jade'},
+			//happy: {id: 'jade'},
 			test: /\.(jade|pug)$/,
-			loaders: ['jade-loader']
+			loaders: ['pug-loader']
 		},
 		
 		// ASSETS / FONTS
 		{
 			//happy: {id: 'fonts'},
-			type: 'fonts',
+			//type: 'fonts',
 			test: /\.(eot|svg|ttf|woff|woff2)\w*/,
 			loaders: ['file?name=assets/fonts/[name].[hash].[ext]']
 			
@@ -66,13 +66,13 @@ module.exports = {
 			//happy: {id: 'images'},
 			test: /\.(png|jpg|gif|ico)$/,
 			loaders: ['file?name=assets/images/[name].[hash].[ext]'],
-			type: 'images'
+			//type: 'images'
 		},
 		
 		
 		// CSS
 		{
-			happy: {id: 'css-global'},
+			//happy: {id: 'css-global'},
 			test: /\.global\.css$/,
 			loaders: [
 				'style-loader',
@@ -80,12 +80,12 @@ module.exports = {
 			]
 		},
 		{
-			happy: {id: 'css-node-modules'},
+			//happy: {id: 'css-node-modules'},
 			test: /node_modules.*\.css$/,
 			loaders: ['file?name=assets/images/[name].[hash].[ext]']
 		},
 		{
-			happy: {id: 'css'},
+			//happy: {id: 'css'},
 			test: /^((?!\.global).)*\.css$/,
 			exclude: /(node_modules)/,
 			loaders: [
@@ -96,16 +96,19 @@ module.exports = {
 		
 		// SCSS
 		{
-			happy: {id: 'scss-global'},
+			//happy: {id: 'scss-global'},
 			test: /\.global\.scss$/,
 			loaders: [
 				'style-loader',
 				'css-loader',
-				'sass'
-			]
+				`sass?includePaths=${path.resolve(baseDir, "./src/assets")}`
+			],
+			// query: {
+			// 	includePaths: [path.resolve(baseDir, "./src/assets")]
+			// }
 		},
 		{
-			happy: {id: 'scss'},
+			//happy: {id: 'scss'},
 			test: /^((?!\.global).)*\.scss$/,
 			exclude: /(node_modules)/,
 			loaders: [
@@ -113,10 +116,13 @@ module.exports = {
 				'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
 				// 'css-loader',
 				// 'postcss-loader?parser=postcss-js',
-				'sass'
+				`sass?includePaths=${path.resolve(baseDir, "./src/assets")}`
 				// ,
 				// sassContentLoader + '?path=' + themesJs
-			]
+			],
+			// query: {
+			// 	includePaths: [path.resolve(baseDir, "./src/assets")]
+			// }
 		}
 	]
 }

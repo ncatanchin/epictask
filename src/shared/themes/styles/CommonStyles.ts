@@ -97,6 +97,26 @@ export function makeTransition(props:string[]|string = null,duration = Transitio
 	}
 }
 
+export function makeDimensionConstraint(dim:'width'|'height',val:string|number) {
+	const
+		dimUpper = dim.charAt(0).toUpperCase() + dim.substring(1)
+	return {
+		[dim]: val,
+		[`min${dimUpper}`]: val,
+		[`max${dimUpper}`]: val,
+		overflow: 'hidden'
+	}
+	
+}
+
+export function makeHeightConstraint(val:string|number) {
+	return makeDimensionConstraint('height',val)
+}
+
+export function makeWidthConstraint(val:string|number) {
+	return makeDimensionConstraint('width',val)
+}
+
 export function makeLinearGradient(...colorStops:string[]) {
 	//return `-webkit-linear-gradient(${colorStops.join(',')})`
 	return `linear-gradient(${colorStops.join(',')})`
@@ -167,30 +187,14 @@ export const PositionAbsolute = {
 	position: 'absolute'
 }
 
-export const FillHeight = {
-	maxHeight: '100%',
-	minHeight: '100%',
-	height: '100%',
-	overflow: 'hidden'
-}
+export const FillHeight = makeHeightConstraint('100%')
 
-export const FillWidth = {
-	maxWidth: '100%',
-	minWidth: '100%',
-	width: '100%',
-	overflow: 'hidden'
-}
+export const FillWidth = makeWidthConstraint('100%')
 
-export const FillWindow = {
-	maxHeight: '100vh',
-	minHeight: '100vh',
-	height: '100vh',
-	
-	maxWidth: '100vw',
-	minWidth: '100vw',
-	width: '100vw',
-	overflow: 'hidden'
-}
+export const FillWindow = Object.assign(
+	makeWidthConstraint('100vw'),
+	makeHeightConstraint('100vh')
+)
 
 
 export const Fill = makeStyle(FillHeight,FillWidth)

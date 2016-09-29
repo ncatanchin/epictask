@@ -341,7 +341,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @returns {(state:UIState)=>Map<string, V>}
 	 */
 	@ActionReducer()
-	private internalCloseAllDialogs() {
+	private internalCloseAllWindows() {
 		return (state:UIState) => state.set(
 			'dialogs',state.dialogs ? state.dialogs.clear() : Map()
 		)
@@ -353,14 +353,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @returns {(dispatch:any, getState:any)=>undefined}
 	 */
 	@ActionThunk()
-	closeAllDialogs() {
+	closeAllWindows() {
 		return (dispatch,getState) => {
 			
 			if (ProcessConfig.isType(ProcessType.UI)) {
 				getWindowManager().closeAll()
 			}
 			
-			this.internalCloseAllDialogs()
+			this.internalCloseAllWindows()
 		}
 	}
 

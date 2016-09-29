@@ -7,6 +7,12 @@ export enum WindowType {
 	Modal
 }
 
+/**
+ * Dev tools position
+ */
+export type TDevToolsPosition = 'right'|'bottom'|'undocked'|'detach'
+
+export const DevToolsPositionDefault:TDevToolsPosition = 'undocked'
 
 /**
  * Window Configuration
@@ -22,6 +28,8 @@ export interface IWindowConfig {
 	 * In dev mode - show dev tools
 	 */
 	showDevTools?:boolean
+	
+	devToolsPosition?:TDevToolsPosition
 	
 	/**
 	 * Store the windows state for future openings
@@ -60,24 +68,28 @@ export const WindowConfigs = {
 	IssueEditDialog: {
 		name: 'IssueEditDialog',
 		type: WindowType.Dialog,
+		showDevTools: true,
 		rootElement: () =>
 			require('ui/components/issues/IssueEditDialog').default
 	},
 	IssuePatchDialog: {
 		name: 'IssuePatchDialog',
 		type: WindowType.Dialog,
+		showDevTools: true,
 		rootElement: () =>
 			require('ui/components/issues/IssuePatchDialog').default
 	},
 	RepoAddDialog: {
 		name: 'RepoAddDialog',
 		type: WindowType.Dialog,
+		showDevTools: true,
 		rootElement: () =>
 			require('ui/plugins/repos/RepoAddDialog').default
 	},
 	IssueCommentDialog: {
 		name: 'IssueCommentDialog',
 		type: WindowType.Dialog,
+		showDevTools: true,
 		rootElement: () =>
 			require('ui/components/issues/IssueCommentDialog').default
 	}

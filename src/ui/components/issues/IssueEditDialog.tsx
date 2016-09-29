@@ -21,7 +21,7 @@ import {Avatar} from 'ui/components/common/Avatar'
 import {LabelFieldEditor} from 'ui/components/common/LabelFieldEditor'
 
 import {MenuItem, SelectField, TextField,} from 'material-ui'
-import {cloneObject} from 'shared/util/ObjectUtil'
+import { cloneObject, shallowEquals } from 'shared/util/ObjectUtil'
 import {
 	repoIdPredicate,
 	availableReposSelector
@@ -50,8 +50,20 @@ const
 const baseStyles = createStyles({
 	root: [FlexColumn, FlexAuto],
 
-	action: {},
-
+	issueEdit: [ {
+		title: [ {
+			avatar: [ FlexAuto, {
+				label: {
+					fontWeight: 500,
+				},
+				avatar: {
+					height: 30,
+					width: 30,
+				}
+			} ]
+		} ],
+	}],
+	
 	input: [{
 		padding: '0.3rem 1rem',
 		fontWeight: 400,
@@ -72,31 +84,9 @@ const baseStyles = createStyles({
 
 
 	}],
-
-	title: [FlexRowCenter, FillWidth, {
-		height: 30,
-		
-		label: [FlexScale,{
-			fontWeight: 500
-		}],
-		avatar: [FlexAuto, {
-			label: {
-				fontWeight: 500,
-			},
-			avatar: {
-				height: 30,
-				width: 30,
-			}
-		}]
-	}],
-
-	body: [{}],
-
-	savingIndicator: [PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
-		opacity: 0,
-		pointerEvents: 'none'
-	}],
-
+	
+	
+	
 
 	form: makeStyle({
 
@@ -171,9 +161,9 @@ const baseStyles = createStyles({
 			})
 		}],
 
-		row1: [FlexRow, FlexAlignStart, FillWidth, {overflow:'visible'}],
-		row2: [FlexRow, FlexAlignStart, FillWidth, {marginBottom:rem(0.8)}],
-		row3: [FlexRow, FlexAlignStart, FillWidth, {}]
+		row1: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {overflow:'visible'}],
+		row2: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {marginBottom:rem(0.8)}],
+		row3: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {}]
 	}),
 
 
@@ -189,8 +179,6 @@ export interface IIssueEditDialogProps extends React.HTMLAttributes<any> {
 	saveError?:any
 	editingIssue?:Issue
 	availableRepos?:List<AvailableRepo>
-	
-	open?:boolean
 	user?:User
 	saving?:boolean
 }
@@ -222,13 +210,18 @@ export interface IIssueEditDialogState {
 
 }))
 @ThemedStyles(baseStyles,'dialog','issueEditDialog','form')
-@PureRender
+//@PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
 
 	repoActions = getRepoActions()
 	issueActions = getIssueActions()
 	uiActions = getUIActions()
-
+	
+	
+	shouldComponentUpdate(nextProps:IIssueEditDialogProps,nextState:IIssueEditDialogState) {
+		return !shallowEquals(this.state,nextState,'availableRepo','labels','assigneeMenuItems','repoMenuItems','milestoneMenuItems') ||
+				!shallowEquals(this.props,nextProps,'theme','styles','editingIssue','saving')
+	}
 
 	/**
 	 * Key handlers for the issue editor
@@ -257,7 +250,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	onSave = (event) => {
 		!this.props.saving &&
 			this.issueActions.issueSave(
-				cloneObject(this.props.editingIssue, this.textInputState())
+				cloneObject(this.props.editingIssue, this.textInputState()),
+				getChildWindowId()
 			)
 	}
 
@@ -321,7 +315,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			this.updateIssueState({labels: newLabels})
 		}
 	}
-
+	
 
 	/**
 	 * Create milestone items
@@ -437,10 +431,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	getNewState(props:IIssueEditDialogProps) {
 		const
-			{styles,theme,editingIssue,open} = props,
+			{styles,editingIssue,open} = props,
 			repoId = editingIssue && editingIssue.repoId
 
-		if (!open || !editingIssue)
+		if (!editingIssue)
 			return {} as any
 
 		
@@ -482,6 +476,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			assigneeMenuItems: this.makeAssigneeMenuItems(collaborators, styles)
 		}
 	}
+	
+	
 
 	componentWillReceiveProps = (nextProps) => this.setState(this.getNewState(nextProps))
 
@@ -508,35 +504,35 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				<Button onClick={this.onSave} style={makeStyle(styles.action,styles.action.save)} mode='raised'>Save</Button>
 			],
 		 
-			titleNode = editingIssue.id ? `EDIT #${editingIssue.number}` : `CREATE`
-			// 	<div style={styles.title}>
-			// 	<div style={styles.title.label}>
-			//
-			// 	</div>
-			// 	<div style={styles.title.avatar}>
-			// 		<Avatar user={user}
-			// 		        prefix='issue being created by'
-			// 		        prefixStyle={{padding: '0 0.5rem 0 0'}}
-			// 		        labelPlacement='before'
-			// 		        labelStyle={styles.title.avatar.label}
-			// 		        avatarStyle={styles.title.avatar.avatar}/>
-			// 	</div>
-			// </div>
+			titleNode = <div style={styles.issueEdit.title.label}>
+					{editingIssue.id ? `EDIT #${editingIssue.number}` : `CREATE`}
+				</div>,
+			subTitleNode = <div style={styles.issueEdit.title.avatar}>
+					<Avatar user={user}
+					        prefix='issue being created by'
+					        prefixStyle={{padding: '0 0.5rem 0 0'}}
+					        labelPlacement='before'
+					        labelStyle={styles.title.avatar.label}
+					        avatarStyle={styles.title.avatar.avatar}/>
+				</div>
+			
 
 		const
 			selectMenuStyle = makeStyle(styles.menu,styles.selectList,styles.form.assignee.menu)
 
 		return <DialogRoot
+			titleMode='horizontal'
 			titleNode={titleNode}
+			subTitleNode={subTitleNode}
 			actionNodes={actionNodes}
 			saving={saving}
 			>
-				<Style rules={{
-				'.CodeMirror': {
-					height: '30vh'
-				},
-				'.issueEditDialogFormMenuItem:hover':styles.menuItem.hover
-			}}/>
+				{/*<Style rules={{*/}
+				{/*'.CodeMirror': {*/}
+					{/*height: '30vh'*/}
+				{/*},*/}
+				{/*'.issueEditDialogFormMenuItem:hover':styles.menuItem.hover*/}
+			{/*}}/>*/}
 			
 			
 
@@ -544,7 +540,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				
 					
 								<div style={styles.form.row1}>
-									<TextField value={this.state.titleValue}
+									<TextField defaultValue={this.state.titleValue || ''}
 									           onChange={this.onTitleChange}
 									           errorStyle={{transform: 'translate(0,1rem)'}}
 									           errorText={getGithubErrorText(saveError,'title')}
@@ -623,7 +619,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 										{this.state.repoMenuItems}
 									</SelectField>
 								</div>
-
+								
 								<LabelFieldEditor labels={editingIssue.labels || []}
 								                  id="issueEditDialogLabels"
 								                  hint="Labels"
@@ -641,17 +637,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								                  chipStyle={{margin: "1rem 0.5rem"}}
 								                  labelStyle={makeStyle(styles.input.floatingLabel,{})}
 								                  labelFocusStyle={styles.input.floatingLabelFocus}/>
-
-
+								
+								
 								<SimpleMDE onChange={this.onMarkdownChange}
 								           style={{maxHeight: 500}}
 								           options={{
 									            autoDownloadFontAwesome: false,
 									            spellChecker: false,
-									            initialValue: editingIssue.body,
+									            initialValue: _.get(editingIssue,'body',''),
 									            autoFocus: false
 									           }}/>
-						
+								
 				
 		</DialogRoot>
 	}

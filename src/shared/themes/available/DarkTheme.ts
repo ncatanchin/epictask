@@ -392,10 +392,9 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 			backgroundImage: makeLinearGradient('to bottom',primary.hue1,primary.hue2),
 			boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
 			
-			
-			
 			label: {
-				fontSize: fontSize * 1.7,
+				fontSize: fontSize * 2,
+				fontWeight: 500,
 				color:           accent.hue1,
 				textTransform: 'uppercase'
 			},

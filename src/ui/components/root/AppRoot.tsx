@@ -20,11 +20,12 @@ import {
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
-import { WindowConfigs } from "shared/UIConstants"
+import { WindowConfigs, IWindowConfig } from "shared/UIConstants"
 import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
 import { FillWindow, makeStyle } from "shared/themes"
+import { isString } from "shared/util/ObjectUtil"
 
 
 const
@@ -33,6 +34,8 @@ const
 	childWindowId = process.env.EPIC_WINDOW_ID,
 	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
 
+let
+	childWindowConfig:IWindowConfig
 
 /**
  * Global CSS
@@ -190,7 +193,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 				flexDirection: 'column'
 			}, expanded && styles.collapsed),
 		
-			DialogComponent = isChildWindow && WindowConfigs[ childWindowId ].rootElement()
+			DialogComponent = childWindowConfig && childWindowConfig.rootElement()
 		
 		log.info(`Dialog Component`,DialogComponent)
 			
@@ -279,34 +282,76 @@ function render() {
  * is ready for us to load everything
  */
 function checkIfRenderIsReady() {
-	
-	const
-		state = store.getState(),
-		appState = state ? state.get(AppKey) : null,
-		ready = appState ? appState.ready : false
-
-	if (!ready) {
-		log.info('Theme is not set yet')
-		
-		const
-			observer = store.observe([AppKey,'ready'],(newReady) => {
-				log.info('RECEIVED READY, NOW RENDER',newReady)
-				if (!newReady !== true) {
-					log.info('Main is not ready',newReady)
-					return
-				}
-				observer()
-				render()
-			})
-		
-	} else {
-		render()
-	}
+	//
+	// const
+	// 	state = store.getState(),
+	// 	appState = state ? state.get(AppKey) : null,
+	// 	ready = appState ? appState.ready : false
+	//
+	// if (!ready) {
+	// 	log.info('Theme is not set yet')
+	//
+	// 	const
+	// 		observer = store.observe([AppKey,'ready'],(newReady) => {
+	// 			log.info('RECEIVED READY, NOW RENDER',newReady)
+	// 			if (!newReady !== true) {
+	// 				log.info('Main is not ready',newReady)
+	// 				return
+	// 			}
+	// 			observer()
+	// 			render()
+	// 		})
+	//
+	// } else {
+	// 	render()
+	// }
+	render()
 }
 
-log.info(`Session store for windowID = ${childWindowId}`,window.sessionStorage.getItem(childWindowId))
 
-checkIfRenderIsReady()
+// CHILD WINDOW - GET CONFIG FIRST
+if (isChildWindow) {
+	
+	// GET SESSION & COOKIES
+	const
+		{remote} = require('electron'),
+		webContents = remote.getCurrentWebContents(),
+		{session} = webContents,
+		{cookies} = session
+	
+	// GET OUR COOKIE
+	cookies.get({name: childWindowId},(err,cookies) => {
+		if (err) {
+			log.error(`Failed to get cookies`, err)
+			throw err
+		}
+		
+		log.info('cookies',cookies)
+		
+		const
+			configStr = cookies[0].value// window.localStorage.getItem(childWindowId)
+		
+		
+		assert(configStr,`No config found for ${childWindowId}`)
+		childWindowConfig = JSON.parse(configStr,(key,value) => {
+			if (key === 'rootElement' && isString(value)) {
+				return eval(value)
+			}
+			
+			return value
+		})
+		
+		checkIfRenderIsReady()
+	})
+	
+}
+
+// MAIN UI
+else {
+	checkIfRenderIsReady()
+}
+
+
 
 
 /**

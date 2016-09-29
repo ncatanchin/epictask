@@ -129,9 +129,17 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			// SELECT
 			.command(
 				CommandType.Container,
-				'Create a new issue inline',
-				(cmd,event) => this.onResultSelected(null),
-				CommonKeys.Enter)
+				'Select this issue',
+				(cmd,event) => {
+					event.preventDefault()
+					event.stopPropagation()
+					this.onResultSelected(null)
+						
+				},
+				CommonKeys.Enter,{
+					hidden:true,
+					overrideInput: true
+				})
 			
 			
 			
@@ -361,6 +369,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	onResultSelected = (item:SearchItem) => {
 		
 		item = item || _.get(this, 'state.selectedItem', null)
+		
+		log.info(`Result selected`,item,this.state)
 		
 		const
 			{provider,items,selectedIndex} = this.state,

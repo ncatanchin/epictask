@@ -132,11 +132,11 @@ const config = {
 	target: 'electron',
 	//watch: isDev,
 	// Compile callback
-	onCompileCallback(err,stats,watchMode = false) {
-		if (err)
-			log(`Compile Failed`, err)
-	},
-	
+	// onCompileCallback(err,stats,watchMode = false) {
+	// 	if (err)
+	// 		log(`Compile Failed`, err)
+	// },
+	//
 	entry: entries,
 	context: srcRootDir,
 	stats: WebpackStatsConfig,
@@ -153,7 +153,7 @@ const config = {
 	cache: true,
 	recordsPath: `${distDir}/_records`,
 	devtool: '#source-map',
-	debug: true,
+	//debug: true,
 	
 	// Currently we need to add '.ts' to the resolve.extensions array.
 	resolve: {
@@ -173,13 +173,13 @@ const config = {
 		modules: moduleDirs,
 		
 		// FALLBACK PATHS
-		fallback: [path.resolve(baseDir,'src')],
+		//fallback: [path.resolve(baseDir,'src')],
 		
 		// EXTENSIONS
-		extensions: TypeScriptEnabled ? ['', '.ts','.tsx','.js', '.jsx'] : ['', '.js', '.jsx'],
+		extensions: TypeScriptEnabled ? ['.ts','.tsx','.js', '.jsx'] : ['', '.js', '.jsx'],
 		
 		// PACKAGE MAIN
-		packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
+		//packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
 		
 	},
 	
@@ -187,23 +187,23 @@ const config = {
 	module:  loaders,
 	
 	// SASS/SCSS Loader Config
-	sassLoader: {
-		includePaths: [path.resolve(baseDir, "./src/assets")]
-	},
+	// sassLoader: {
+	//
+	// },
 	
 	// POSTCSS (NOT USED CURRENTLY)
-	postcss() {
-		return [
-			require('postcss-modules'),
-			require('autoprefixer'),
-			require('postcss-js')
-		]
-	},
+	// postcss() {
+	// 	return [
+	// 		require('postcss-modules'),
+	// 		require('autoprefixer'),
+	// 		require('postcss-js')
+	// 	]
+	// },
 	
 	// HAPPY PACK
-	other: {
-		happyPlugins
-	},
+	// other: {
+	// 	happyPlugins
+	// },
 	
 	// PLUGINS
 	plugins: [
@@ -276,7 +276,7 @@ if (isDev) {
 		},
 		
 		//debug: true,
-		dev: true
+		//dev: true
 	})
 	
 	// Add HMR

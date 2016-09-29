@@ -210,8 +210,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			comment,
 			user,
 			text,
-			createdAt: new Date(createdAt),
-			updatedAt: new Date(updatedAt)
+			createdAt: new Date(createdAt as any),
+			updatedAt: new Date(updatedAt as any)
 		}
 	}
 	

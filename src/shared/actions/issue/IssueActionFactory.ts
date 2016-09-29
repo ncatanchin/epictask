@@ -427,7 +427,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}))
 				
 				actions.setIssueSaving(false)
-				this.uiActions.closeAllDialogs()
+				this.uiActions.closeAllWindows()
 				actions.setPatchIssues(null)
 				
 			} catch (err) {
@@ -493,10 +493,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Save an issue and update it in GitHub
 	 *
 	 * @param issue
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 * @param childWindowId - if triggered from a dialog
 	 */
 	@ActionThunk()
-	private doIssueSave(issue: Issue) {
+	private doIssueSave(issue: Issue, childWindowId:string = null) {
 		return async(dispatch, getState) => {
 			const
 				client = Container.get(GitHubClient),
@@ -513,7 +513,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				this.setSelectedIssueIds([updatedIssue.id])
 				this.setIssueSaving(false)
 				this.setEditingIssue(null)
-				this.uiActions.closeAllDialogs()
+				
+				if (childWindowId)
+					this.uiActions.closeWindow(childWindowId)
 				
 				if (wasInline)
 					getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
@@ -676,7 +678,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				actions.setIssueSaving(false)
 				actions.setEditingComment(null)
 				
-				this.uiActions.closeAllDialogs()
+				this.uiActions.closeAllWindows()
 				
 				await Promise.setImmediate()
 				
@@ -730,12 +732,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Save an issue, update or create
 	 *
 	 * @param issue
+	 * @param childWindowId
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
 	
-	issueSave(issue: Issue) {
+	issueSave(issue: Issue,childWindowId:string = null) {
 		this.setIssueSaving(true)
-		this.doIssueSave(issue)
+		this.doIssueSave(issue,childWindowId)
 	}
 	
 	/**

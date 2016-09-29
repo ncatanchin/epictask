@@ -36,6 +36,8 @@ export interface ICommandMenuItemRegistration {
 	id:string
 	menuItem?:Electron.MenuItem
 	mounted:boolean
+	mountMenu?:Electron.Menu
+	mountIndex?:number
 	cmd:ICommand
 	accelerator?:string
 }
@@ -164,42 +166,51 @@ export class CommandMainMenuManager {
 					}
 					
 					// VISIBILITY OR ENABLED CHANGE ONLY
-					//else if (shallowEquals(itemReg.cmd,cmd,'label','electronAccelerator')) {
-					const
-						updates = {
-							enabled: cmd.enabled,
-							visible: cmd.hidden !== true,
-							accelerator: cmd.electronAccelerator,
-							label: cmd.name
-						}
-					
-					Object.assign(itemReg.cmd, updates,{
-						execute: cmd.execute
-					})
-					
-					Object.assign(itemReg.menuItem, updates)
-					
-						//return
-					//}
+					else if (shallowEquals(itemReg.cmd,cmd,'label','electronAccelerator')) {
+						const
+							updates = {
+								enabled: cmd.enabled,
+								visible: cmd.hidden !== true
+							}
+						
+						Object.assign(itemReg.cmd, updates,{
+							execute: cmd.execute
+						})
+						
+						Object.assign(itemReg.menuItem, updates)
+						
+						return
+					}
 				}
 				
 				// // UNMOUNT & REMOVE EXISTING ITEM
+				const
+					oldMenuItem = itemReg.menuItem,
+					newMenuItem = this.makeMenuItem(cmd)
+				
+				oldMenuItem.enabled = false
+				oldMenuItem.visible = false
+				
 				// if (mounted)
 				// 	this.internalRemoveCommand(itemReg.cmd)
 				//
 				// this.removeMenuItem(itemReg.menuItem)
-				//
-				// // UPDATE AND CREATE NEW ITEM
-				// Object.assign(itemReg,{
-				// 	cmd,
-				// 	menuItem: this.makeMenuItem(cmd)
-				// })
-				//
-				// this.menuItems.push(itemReg.menuItem)
-				//
-				//
-				// // SHOW UPDATE
-				// this.internalShowCommand(cmd)
+
+				// UPDATE AND CREATE NEW ITEM
+				Object.assign(itemReg,{
+					cmd,
+					menuItem: newMenuItem
+				})
+				
+				//this.menuItems.push(itemReg.menuItem)
+				
+				if (itemReg.mountMenu) {
+					itemReg.mountMenu.items[itemReg.mountIndex] = itemReg.menuItem
+				}
+
+				// SHOW UPDATE
+				if (mounted)
+					this.internalShowCommand(cmd)
 				
 			})
 		})
@@ -308,10 +319,15 @@ export class CommandMainMenuManager {
 			if (!itemReg.menuItem.visible) {
 				itemReg.menuItem.visible = true
 			} else {
+				itemReg.mountMenu = menu
+				itemReg.mountIndex = menu.items.length
+				
 				menu.append ?
 					menu.append(itemReg.menuItem) :
 					menu.items.push(itemReg.menuItem)
 			}
+			
+			 
 			
 		})
 		

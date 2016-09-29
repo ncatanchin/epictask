@@ -5,18 +5,19 @@
 
 import windowStateKeeper = require('electron-window-state')
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommand, TCommandContainer } from "shared/commands/Command"
 import Electron = require('electron')
 import * as React from 'react'
-import * as ReactDOM from 'react-dom'
 
-import { shallowEquals, shortId, isString } from "shared/util/ObjectUtil"
-import { IWindowConfig, WindowType } from "shared/UIConstants"
+import { shortId, isString } from "shared/util/ObjectUtil"
+import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/UIConstants"
 import { AllWindowDefaults } from "shared/Constants"
+import { toJSON } from "shared/util/JSONUtil"
+import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
+
+
 
 const
 	log = getLogger(__filename),
-	
 	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
@@ -83,12 +84,10 @@ export class WindowManager {
 	 * Close all windows
 	 */
 	closeAll() {
-		while (this.windows.length) {
-			const
-				dialog = this.windows.shift()
-			
-			this.close(dialog)
-		}
+		this.close(...this.windows)
+		// while (this.windows.length) {
+		//
+		// }
 	}
 	
 	
@@ -150,93 +149,132 @@ export class WindowManager {
 	open(config:IWindowConfig)
 	open(id:string,config:IWindowConfig)
 	open(configOrId:string|IWindowConfig,config?:IWindowConfig) {
-		let
-			id = null
-		
-		if (isString(configOrId)) {
-			id = configOrId
-		} else {
-			id = `${configOrId.name}-${shortId()}`
-			config = configOrId
-		}
-		
-		// IF SINGLE WINDOW THEN ALWAYS USE CONFIG NAME
-		if (config.singleWindow) {
-			id = config.name
-		}
-		
-		// CHECK FOR EXISTING WINDOW (ONLY IN CASE ID WAS PROVIDED
-		let
-			existingWindowInstance = this.windows.find(it => it.id === id)
-		
-		if (existingWindowInstance) {
-			log.warn(`Window with id ${id} already exists - returning`)
-			return existingWindowInstance
-		}
-		
-		
 		const
-			newWindowOpts = Object.assign({},WindowTypeDefaults[config.type], config.type === WindowType.Dialog && {
-				parent: Electron.remote.getCurrentWindow()
+			windowCreateDeferred = Promise.defer()
+		try {
+			
+			let
+				id = null
+			
+			if (isString(configOrId)) {
+				id = configOrId
+			} else {
+				id = `${configOrId.name}-${shortId()}`
+				config = configOrId
+			}
+			
+			// IF SINGLE WINDOW THEN ALWAYS USE CONFIG NAME
+			if (config.singleWindow) {
+				id = config.name
+			}
+			
+			// CHECK FOR EXISTING WINDOW (ONLY IN CASE ID WAS PROVIDED
+			let
+				partition = config.name,
+				existingWindowInstance = this.windows.find(it => it.id === id)
+			
+			if (existingWindowInstance) {
+				log.warn(`Window with id ${id} already exists - returning`)
+				return existingWindowInstance
+			}
+			
+			
+			const
+				newWindowOpts = _.merge(
+					{},
+					WindowTypeDefaults[ config.type ],
+					config.type === WindowType.Dialog && {
+						parent: Electron.remote.getCurrentWindow()
+					}, {
+						webPreferences: {
+							partition
+						}
+					}
+				)
+			
+			// IF STORE STATE ENABLED, CREATE STATE MANAGER
+			let
+				childWindowState:ElectronWindowState.WindowState
+			
+			if (config.storeState) {
+				childWindowState = windowStateKeeper({ file: `child-window-${id}.state` })
+			}
+			
+			// TODO: REMOVE - TEST
+			const
+				windowSession = Electron.remote.session.fromPartition(partition),
+				windowConfig = toJSON(config, true),
+				windowConfigCookie = {
+					url: 'https://densebrain.com/epictask',
+					name: id,
+					value: windowConfig
+				}
+			
+			
+			windowSession.cookies.set(windowConfigCookie, (err) => {
+				if (err) {
+					log.error(`Failed to create window config cooke`, err)
+					return windowCreateDeferred.reject(err)
+				}
+				
+				
+				// CREATE WINDOW AND GET TO WORK
+				const
+					newWindow = new Electron.remote.BrowserWindow(Object.assign({}, childWindowState, newWindowOpts)),
+					
+					windowInstance = this.windows[ this.windows.length ] = {
+						id,
+						config,
+						window: newWindow
+					},
+					templateURL = getAppEntryHtmlPath(),
+					url = `file://${templateURL}#EPIC_ENTRY=${ProcessConfig.getTypeName(ProcessType.UIChildWindow)}&EPIC_WINDOW_ID=${id}`
+				
+				// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
+				if (childWindowState) {
+					childWindowState.manage(newWindow)
+				}
+				
+				log.debug(`Loading dialog ${id} with URL:`, url)
+				newWindow.loadURL(url)
+				
+				// OPEN DEV TOOLS IF CONFIGURED
+				if (DEBUG && config.showDevTools) {
+					newWindow.show()
+					newWindow.webContents.openDevTools({
+						mode: config.devToolsPosition || DevToolsPositionDefault
+					})
+				}
+				
+				newWindow.once('ready-to-show', () => {
+					log.debug(`Ready to show for window ${id}`)
+					newWindow.show()
+					newWindow.focus()
+				})
+				
+				
+				newWindow.on('close', () => {
+					log.debug(`Window closed ${id}`)
+					
+					// REMOVE THE WINDOW
+					this.close(id)
+					//this.windows.splice(this.windows.findIndex(it => it.id === id),1)
+				})
+				
+				windowCreateDeferred.resolve(windowInstance)
 			})
-		
-		// IF STORE STATE ENABLED, CREATE STATE MANAGER
-		let
-			childWindowState:ElectronWindowState.WindowState
-		
-		if (config.storeState) {
-			childWindowState = windowStateKeeper({file:`child-window-${id}.state`})
+		} catch (err) {
+			windowCreateDeferred.reject(err)
 		}
 		
-		// TODO: REMOVE - TEST
-		window.sessionStorage.setItem(id,'your parent set this')
+		return windowCreateDeferred.promise
 		
-		// CREATE WINDOW AND GET TO WORK
-		const
-			newWindow = new Electron.remote.BrowserWindow(Object.assign({},childWindowState,newWindowOpts)),
-			
-			windowInstance = this.windows[this.windows.length] = {
-				id,
-				config,
-				window: newWindow
-			},
-			templateURL = require('path').resolve(process.cwd(),'dist/app/app-entry.html'),
-			url = `file://${templateURL}#EPIC_ENTRY=${ProcessConfig.getTypeName(ProcessType.UIChildWindow)}&EPIC_WINDOW_ID=${config.name}`
-		
-		// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
-		if (childWindowState) {
-			childWindowState.manage(newWindow)
-		}
-		
-		log.debug(`Loading dialog ${id} with URL:`,url)
-		newWindow.loadURL(url)
-		
-		if (DEBUG && config.showDevTools) {
-			newWindow.show()
-			newWindow.webContents.openDevTools()
-		}
-		
-		newWindow.once('ready-to-show',() => {
-			newWindow.show()
-		})
-		
-		
-		newWindow.on('close',() => {
-			log.debug(`Window closed ${id}`)
-			
-			// REMOVE THE WINDOW
-			this.close(id)
-			//this.windows.splice(this.windows.findIndex(it => it.id === id),1)
-		})
-			
-		return windowInstance
 	}
 }
 
 
 /**
  * Get the command manager from anywhere
- * @type {()=>WindowManager}
  */
 export const getWindowManager = getHot(module,'getWindowManager',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {

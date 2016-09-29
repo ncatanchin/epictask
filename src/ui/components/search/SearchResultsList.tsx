@@ -12,7 +12,6 @@ import {Issue,Repo,AvailableRepo} from 'shared/models'
 import {
 	SearchResult, SearchType, SearchSource,SearchItem
 } from 'shared/actions/search/SearchState'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {Renderers} from 'ui/components/common'
 
 import {ThemedNoRadium} from 'shared/themes/ThemeManager'
@@ -23,8 +22,7 @@ import {Icon} from 'ui/components/common/Icon'
 
 // Constants
 const
-	log = getLogger(__filename),
-	repoActions = new RepoActionFactory()
+	log = getLogger(__filename)
 
 //const elementClass = require('element-class')
 //const styleVisible = styles.resultsModalVisible
@@ -323,6 +321,10 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		log.info(`Created mouse down for `,item)
 		
 		return (event) => {
+			log.info(`Clicked for event`,item)
+			event.preventDefault()
+			event.stopPropagation()
+			
 			const
 				{onResultSelected} = this.props,
 				isFn = _.isFunction(onResultSelected)
@@ -388,6 +390,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 				     style={resultStyle}
 				     onMouseEnter={() => onResultHover && onResultHover(item)}
 				     onClick={this.onClick(item)}
+				     onMouseDown={this.onClick(item)}
 				>
 					{itemContent}
 				</div>

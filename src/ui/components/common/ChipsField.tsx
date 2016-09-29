@@ -132,8 +132,9 @@ export interface IChipsFieldProps<M> extends React.HTMLAttributes<any> {
  * @constructor
  **/
 
-@Themed
+
 @CommandComponent()
+@Themed
 @PureRender
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> implements ICommandComponent {
 	
