@@ -14,7 +14,7 @@ require('babel-runtime/core-js/promise').default = Bluebird
 
 Bluebird.config({
 	cancellation: true,
-	longStackTraces: true,
+	//longStackTraces: true,
 	warnings: {
 		wForgottenReturn: false
 	},

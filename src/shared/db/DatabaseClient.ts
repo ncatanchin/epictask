@@ -11,7 +11,7 @@ import { cloneObject } from "shared/util/ObjectUtil"
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 const
-	TIMEOUT = 120000,
+	TIMEOUT = 180000,
 	DatabaseServerType = ProcessType.DatabaseServer
 	
 

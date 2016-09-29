@@ -130,13 +130,7 @@ const config = {
 	
 	// Target
 	target: 'electron',
-	//watch: isDev,
-	// Compile callback
-	// onCompileCallback(err,stats,watchMode = false) {
-	// 	if (err)
-	// 		log(`Compile Failed`, err)
-	// },
-	//
+	
 	entry: entries,
 	context: srcRootDir,
 	stats: WebpackStatsConfig,

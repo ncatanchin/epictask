@@ -11,6 +11,9 @@ import {
 
 import LabelChip from "ui/components/common/LabelChip"
 
+const
+	log = getLogger(__filename)
+
 /**
  * Class that holds a set of events
  */

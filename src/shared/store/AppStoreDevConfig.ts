@@ -15,16 +15,19 @@ const NullMiddleware = f => f
 
 /**
  * Make remote middleware
- *
- * @returns {Array<Middleware>}
  */
 function makeRemoteMiddleware(name:string = null) {
-	const remoteDevTools = require('remote-redux-devtools')
-	return remoteDevTools({
-		name: 'EpicTask - ' + (name || ((Env.isRenderer) ? 'RENDERER' : 'MAIN')),
-		realtime: true,
-		hostname: 'localhost', port: 8787
-	})
+	if (DEBUG) {
+		const
+			remoteDevTools = require('remote-redux-devtools')
+		
+		return remoteDevTools({
+			name: 'EpicTask - ' + (name || (Env.isRenderer ? 'RENDERER' : 'MAIN')),
+			realtime: true,
+			hostname: 'localhost', port: 8787
+		})
+	}
+	return NullMiddleware
 }
 
 let DevTools = null, DevToolsMiddleware = null
@@ -46,18 +49,20 @@ export function loadDevTools() {
 
 
 export function makeReactotronEnhancer(enhancers) {
-	try {
-		const
-			Reactotron = require('reactotron-react-js').default
-		
-		let
-			createReactotronEnhancer = require('reactotron-redux')
-		
-		createReactotronEnhancer = createReactotronEnhancer.default || createReactotronEnhancer
-		
-		enhancers.push(createReactotronEnhancer(Reactotron))
-	} catch (err) {
-		log.error(`Failed to add reactotron`,err)
+	if (DEBUG) {
+		try {
+			const
+				Reactotron = require('reactotron-react-js').default
+			
+			let
+				createReactotronEnhancer = require('reactotron-redux')
+			
+			createReactotronEnhancer = createReactotronEnhancer.default || createReactotronEnhancer
+			
+			enhancers.push(createReactotronEnhancer(Reactotron))
+		} catch (err) {
+			log.error(`Failed to add reactotron`, err)
+		}
 	}
 }
 
@@ -71,7 +76,7 @@ export default function addDevMiddleware(enhancers) {
 		//makeReactotronEnhancer(enhancers)
 		
 		enhancers.push(window.devToolsExtension())
-	} else {
+	} else if (DEBUG) {
 		enhancers.push(makeRemoteMiddleware())
 	}
 	

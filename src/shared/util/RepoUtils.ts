@@ -3,6 +3,9 @@ import {Repo as TSRepo,FinderRequest} from 'typestore'
 import {List} from 'immutable'
 import { IModelConstructor } from "shared/Registry"
 
+const
+	log = getLogger(__filename)
+
 /**
  * Paged finder
  *
@@ -12,7 +15,7 @@ import { IModelConstructor } from "shared/Registry"
  * @param finderFn
  * @returns {List<T>}
  */
-export async function pagedFinder<T,R extends TSRepo<any>>(
+export function pagedFinder<T,R extends TSRepo<any>>(
 	type:{new():T},
 	itemsPerPage:number,
 	store:R,
@@ -20,26 +23,49 @@ export async function pagedFinder<T,R extends TSRepo<any>>(
 ):Promise<List<T>> {
 		
 	const
-		allItems = []
+		allItems = [],
+		deferred = Promise.defer()
 	
 	let
 		moreAvailable = true,
 		pageNumber = -1,
 		itemCount = 0
 	
-	while (moreAvailable) {
+	const getNextPage = () => {
 		pageNumber++
 		
 		const
-			nextRequest = new FinderRequest(itemsPerPage,pageNumber * itemsPerPage),
-			moreItems = await finderFn(store,nextRequest)
+			nextRequest = new FinderRequest(itemsPerPage,pageNumber * itemsPerPage)
 		
-		moreAvailable = moreItems.length >= itemsPerPage
-		allItems.push(...moreItems)
-		itemCount += allItems.length
+		try {
+			finderFn(store, nextRequest)
+				.then(moreItems => {
+					let
+						moreAvailable = moreItems.length >= itemsPerPage
+					
+					allItems.push(...moreItems)
+					itemCount += allItems.length
+					
+					log.debug(`Paging finder ${type.$$clazz} / page ${pageNumber} / ${moreItems.length} items on this page, more = ${moreAvailable} / total items so far ${itemCount}`)
+					
+					if (moreAvailable) {
+						setTimeout(getNextPage, 1)
+					} else {
+						deferred.resolve(List<T>().push(...allItems))
+					}
+				})
+				.catch(err => {
+					log.error(`Paging finder error`, err)
+					deferred.reject(err)
+				})
+		} catch (err) {
+			log.error(`Paged finder failed`,err)
+			deferred.reject(err)
+		}
 		
-		log.info(`Paging finder ${type.$$clazz} / page ${pageNumber} / ${moreItems.length} items on this page, more = ${moreAvailable} / total items so far ${itemCount}`)
 	}
 	
-	return List<T>().push(...allItems)
+	getNextPage()
+	
+	return deferred.promise
 }

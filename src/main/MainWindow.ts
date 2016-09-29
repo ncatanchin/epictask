@@ -5,15 +5,15 @@ import Electron = require('electron')
 import { GitHubConfig, AuthKey, Events, AllWindowDefaults } from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
+import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 
 const log = getLogger(__filename)
 const path = require('path')
 const {BrowserWindow,Menu,ipcMain} = Electron
 
 
-//const templateURL = 'file://' + path.resolve(process.cwd(),'dist/app',require('!!file!pug-html!assets/templates/MainEntry.jade'))
 const
-	templateURL = 'file://' + path.resolve(process.cwd(),'dist/app/app-entry.html')
+	templateURL = 'file://' + getAppEntryHtmlPath()
 	
 // Jetbrains - for another time
 //'http://localhost:63342/epictask/dist/app/app-entry.html'

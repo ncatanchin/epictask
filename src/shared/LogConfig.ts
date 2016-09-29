@@ -4,6 +4,7 @@ import 'shared/LogCategories'
 import {getLogger as LoggerFactory,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
 import { isObject } from "shared/util/ObjectUtil"
+import { getAppConfig } from "shared/AppConfig"
  
 
 if (ProcessConfig.isStorybook()) {
@@ -12,12 +13,17 @@ if (ProcessConfig.isStorybook()) {
 		getLogger: LoggerFactory
 	})
 } else {
+	
 	const
 		cwd = process.cwd(),
 		mkdir = require('mkdirp'),
 		winston = require('winston'),
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
-		logDir = path.dirname(cwd && cwd.length ? cwd : '/tmp'),
+		
+		logDir = (DEBUG ?
+			path.dirname(cwd && cwd.length ? cwd : '/tmp') :
+			getAppConfig().paths.tempPath),
+		
 		logFilename = `${logDir}/logs/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
 	
 	// Create the log file root

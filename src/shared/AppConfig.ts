@@ -18,7 +18,7 @@ let appConfig:AppConfig
  * @returns {AppConfig}
  */
 export function getAppConfig() {
-	const log = getLogger(__filename)
+	//const log = getLogger(__filename)
 	
 	if (ProcessConfig.isStorybook()) {
 		return {
@@ -34,7 +34,7 @@ export function getAppConfig() {
 		try {
 			require('electron')
 		} catch (err) {
-			log.error(`Failed to resolve electron`, err)
+			console.error(`Failed to resolve electron`, err)
 			throw err
 		}
 		

@@ -38,4 +38,4 @@ TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
 entryFn()
 
 
-acceptHot(module,log)
+acceptHot(module,console)

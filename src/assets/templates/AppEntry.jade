@@ -113,7 +113,7 @@ html.fill-width.fill-height(lang="en")
 				]
 
 				cssPaths.forEach(function (cssFile) {
-					addCSS(makeRootPath(cssFile))
+					addCSS(makeRootPath((!isDev ? '../../' : '') + cssFile))
 				})
 
 				// DISPLAY THE LOADER
@@ -154,8 +154,6 @@ html.fill-width.fill-height(lang="en")
 				if (isDev) {
 					require('debug-menu').install()
 				}
-
-
 				if (isChildWindow) {
 					// CHILD WINDOW - LOAD IMMEDIATE
 					loadApp()
@@ -166,15 +164,12 @@ html.fill-width.fill-height(lang="en")
 						loaderReady = true
 						showLoader()
 					})
-
 					$(document).ready(function () {
 						docReady = true
 						showLoader()
 					})
 				}
-
 			}
-
 			function loadApp() {
 				addScript('./AppEntry.bundle.js')
 			}

@@ -197,7 +197,7 @@ function initStore(devToolsMode = false,defaultState = null) {
 	 *
 	 * @type {function(): *}
 	 */
-	if (Env.isDev && !Env.isTest) {
+	if ((Env.isDev && !Env.isTest) || (Env.isDev && window.devToolsExtension)) {
 		require('./AppStoreDevConfig').default(enhancers)
 	}
 	

@@ -1,29 +1,41 @@
 import {getAppConfig} from "shared/AppConfig"
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
 
-const uuid = !ProcessConfig.isStorybook() && require('node-uuid')
-const mkdirp = !ProcessConfig.isStorybook() && require('mkdirp')
+	uuid = !ProcessConfig.isStorybook() && require('node-uuid'),
+	mkdirp = !ProcessConfig.isStorybook() && require('mkdirp'),
 
-const fs = require('fs')
-const path = require('path')
-const dataUrl = require('dataurl')
+	fs = require('fs'),
+	path = require('path'),
+	dataUrl = require('dataurl'),
 
-const fileProto = 'file://'
-const httpProto = 'http://'
-const httpsProto = 'https://'
-const protos = [fileProto,httpProto,httpProto]
+	fileProto = 'file://',
+	httpProto = 'http://',
+	httpsProto = 'https://',
+	
+	protos = [
+		fileProto,
+		httpProto,
+		httpProto
+	]
 
 
 
 function getPaths() {
-	const ensureDir = (dir) => {
-		if (!fs.existsSync(dir))
-			fs.mkdirSync(dir)
-		
-		return dir
-	}
+	const
+		ensureDir = (dir) => {
+			if (!fs.existsSync(dir))
+				fs.mkdirSync(dir)
+			
+			return dir
+		}
 	
-	const {userDataPath,cachePath,tempPath} = getAppConfig().paths
+	const
+		{
+			userDataPath,
+			cachePath,
+			tempPath
+		} = getAppConfig().paths
 	
 	return (ProcessConfig.isStorybook()) ?
 		[userDataPath,cachePath,tempPath] :

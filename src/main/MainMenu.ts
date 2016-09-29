@@ -1,6 +1,6 @@
 import Electron = require('electron')
-import {Container} from 'typescript-ioc'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import { Container } from 'typescript-ioc'
+import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
 import { getActionClient, getStateValue } from "shared/AppStoreClient"
 import { UIKey, RepoKey, AuthKey } from "shared/Constants"
 import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
@@ -53,14 +53,9 @@ function makeDevMenu(mainWindow) {
 				label: 'Break',
 				accelerator: 'Command+F8',
 				click: () => mainWindow.webContents.executeJavaScript('debugger;')
-			},
-			
-			// Toggle developer tools
-			{
-				label: 'Toggle Developer Tools',
-				accelerator: 'Alt+Command+I',
-				click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
 			}
+		
+		
 		]
 	}
 }
@@ -68,7 +63,7 @@ function makeDevMenu(mainWindow) {
 /* Repos Menu */
 const reposMenu = {
 	label: 'Repos',
-	submenu: [{
+	submenu: [ {
 		label: 'Add a Repo',
 		accelerator: 'CmdOrCtrl+Shift+N',
 		click() {
@@ -76,17 +71,17 @@ const reposMenu = {
 			const actions = getActionClient(UIKey) as UIActionFactory
 			actions.showAddRepoDialog()
 		}
-	},{
+	}, {
 		label: 'Synchronize All',
 		accelerator: 'Ctrl+S',
 		click: () => {
 			log.debug('Sending sync all repos')
-			const actions = ActionFactoryProviders[RepoKey]
+			const actions = ActionFactoryProviders[ RepoKey ]
 			actions.syncAll()
 			
 			
 		}
-	}]
+	} ]
 }
 
 function makeViewMenu(mainWindow) {
@@ -108,7 +103,7 @@ function makeViewMenu(mainWindow) {
 					Container.get(UIActionFactory)
 						.toggleRepoPanelOpen()
 				}
-			},{
+			}, {
 				label: 'Toggle Full Screen',
 				accelerator: 'Ctrl+Command+F',
 				click() {
@@ -122,22 +117,22 @@ function makeViewMenu(mainWindow) {
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	let template
 	let menu
-
+	
 	const viewMenu = makeViewMenu(mainWindow)
-
+	
 	if (process.platform === 'darwin') {
-		template = [{
+		template = [ {
 			label: 'EpicTask',
-			submenu: [{
+			submenu: [ {
 				label: 'About EpicTask',
 				selector: 'orderFrontStandardAboutPanel:'
-			},{
+			}, {
 				type: 'separator'
 			}, {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					ActionFactoryProviders[AuthKey].logout()
+					ActionFactoryProviders[ AuthKey ].logout()
 				}
 			}, {
 				type: 'separator'
@@ -163,13 +158,13 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Quit',
 				accelerator: 'Command+Q',
 				click() {
-
+					
 					app.quit()
 				}
-			}]
-		},{
+			} ]
+		}, {
 			label: 'Edit',
-			submenu: [{
+			submenu: [ {
 				label: 'Undo',
 				accelerator: 'Command+Z',
 				selector: 'undo:'
@@ -195,36 +190,46 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				label: 'Select All',
 				accelerator: 'Command+A',
 				selector: 'selectAll:'
-			}]
-		},reposMenu, viewMenu, {
-			label: 'Window',
-			submenu: [{
-				label: 'Minimize',
-				accelerator: 'Command+M',
-				selector: 'performMiniaturize:'
-			}, {
-				type: 'separator'
-			}, {
-				label: 'Bring All to Front',
-				selector: 'arrangeInFront:'
-			}]
-		}]
-
-
+			} ]
+		},
+			reposMenu,
+			viewMenu,
+			{
+				label: 'Window',
+				submenu: [
+					{
+						label: 'Minimize',
+						accelerator: 'Command+M',
+						selector: 'performMiniaturize:'
+					}, {
+						type: 'separator'
+					}, {
+						label: 'Bring All to Front',
+						selector: 'arrangeInFront:'
+					}, {
+						// Toggle developer tools
+						label: 'Toggle Developer Tools',
+						accelerator: 'Alt+Command+I',
+						click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
+					}
+				]
+			} ]
+		
+		
 	} else {
-		template = [{
-			label:   '&File',
-			submenu: [{
+		template = [ {
+			label: '&File',
+			submenu: [ {
 				label: 'Signout...',
 				accelerator: 'Command+L',
 				click() {
-					ActionFactoryProviders[AuthKey].logout()
+					ActionFactoryProviders[ AuthKey ].logout()
 				}
-			}]
+			} ]
 		}, {
-			label:   '&View',
-			submenu: (Env.isDev) ? [{
-				label:       '&Reload',
+			label: '&View',
+			submenu: (Env.isDev) ? [ {
+				label: '&Reload',
 				accelerator: 'Ctrl+R',
 				click() {
 					//mainWindow.restart()
@@ -232,33 +237,33 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 					mainWindow.reload()
 				}
 			}, {
-				label:       'Toggle &Full Screen',
+				label: 'Toggle &Full Screen',
 				accelerator: 'F11',
 				click() {
 					mainWindow.setFullScreen(!mainWindow.isFullScreen())
 				}
 			}, {
-				label:       'Toggle &Developer Tools',
+				label: 'Toggle &Developer Tools',
 				accelerator: 'Alt+Ctrl+I',
 				click() {
 					(mainWindow as any).toggleDevTools()
 				}
-			}] : [{
-				label:       'Toggle &Full Screen',
+			} ] : [ {
+				label: 'Toggle &Full Screen',
 				accelerator: 'F11',
 				click() {
 					mainWindow.setFullScreen(!mainWindow.isFullScreen())
 				}
-			}]
-		}]
-
-
+			} ]
+		} ]
+		
+		
 	}
-
+	
 	if (Env.isDev)
 		template.push(makeDevMenu(mainWindow))
-
+	
 	menu = Menu.buildFromTemplate(template)
-
+	
 	return menu
 }
