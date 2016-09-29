@@ -177,6 +177,8 @@ async function boot() {
 	setImmediate(() => {
 		mainWindow.ready()
 	})
+	
+	
 }
 
 /**

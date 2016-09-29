@@ -331,21 +331,18 @@ if (isChildWindow) {
 		log.info('cookies',cookies)
 		
 		const
-			configStr = cookies[0].value// window.localStorage.getItem(childWindowId)
-		
+			configStr = cookies[0].value
 		
 		assert(configStr,`No config found for ${childWindowId}`)
 		childWindowConfig = JSON.parse(configStr,(key,value) => {
 			if (key === 'rootElement' && isString(value)) {
 				return eval(value)
 			}
-			
 			return value
 		})
 		
 		checkIfRenderIsReady()
 	})
-	
 }
 
 // MAIN UI

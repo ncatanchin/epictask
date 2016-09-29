@@ -47,7 +47,9 @@ async function boot() {
 			
 			log.info(`Going to wait for epictask-children-ready`)
 			
-			const childrenDeferred = Promise.defer()
+			const
+				childrenDeferred = Promise.defer()
+			
 			ipcRenderer.on('epictask-children-ready', () => {
 				log.info(`Got notification from main - kids are ready`)
 				childrenDeferred.resolve()

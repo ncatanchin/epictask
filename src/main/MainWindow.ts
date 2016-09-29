@@ -6,6 +6,7 @@ import { GitHubConfig, AuthKey, Events, AllWindowDefaults } from 'shared/Constan
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
+import { getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 const path = require('path')
@@ -66,6 +67,8 @@ export function ready() {
 	browserWindow.webContents.send(Events.MainReady)
 	browserWindow.webContents.send('epictask-children-ready')
 	
+	getAppActions().setReady(true)
+	
 }
 
 /**
@@ -109,9 +112,6 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, AllWindowDefaults,{
 				// darkTheme:true,
 			}))
-			
-			
-			
 			
 			const
 				{webContents} = browserWindow

@@ -1,10 +1,15 @@
 
 /**
- * No load the main entry
+ * ENV CONFIG
  */
-
 process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+if (!process.env.NODE_ENV) {
+	process.env.NODE_ENV = 'production'
+}
 
+/**
+ * CONFIGURE PROMISES FIRST
+ */
 const
 	Bluebird = require('bluebird')
 
@@ -14,19 +19,20 @@ Bluebird.config({
 	warnings: {
 		wForgottenReturn: false
 	},
-	monitoring: true
+	monitoring: process.env.NODE_ENV === 'development'
 })
 
+/**
+ * APP SEARCH PATHS FOR ASAR
+ */
 const
-	appPaths = [
+	APP_SEARCH_PATHS = [
 		'../dist/app',
 		'../app',
 		'..',
 		'.',
 		'../../../app'
 	]
-
-
 
 let
 	outBuf = '',
@@ -37,7 +43,7 @@ const logOut = (...args) => {
 	outBuf += args.join(' // ') + '\n'
 }
 
-for (let appPath of appPaths) {
+for (let appPath of APP_SEARCH_PATHS) {
 	try {
 		appPath = require.resolve(`${appPath}/AppEntry.bundle`)
 		
@@ -58,16 +64,16 @@ const
 		${outBuf}
 	`
 
-console.log(errInfo)
-
 if (resolvedAppPath) {
 	require(resolvedAppPath)
 } else {
-	
-	require('fs').writeFileSync('/tmp/epicinfo',errInfo)
 	try {
 		require('../AppEntry.bundle')
 	} catch (err) {
+		try {
+			require('fs').writeFileSync('/tmp/epicinfo', errInfo)
+		} catch (err) {}
+		console.error(errInfo)
 		console.error(`NOTHING WORKED`,err)
 		process.exit(0)
 		
