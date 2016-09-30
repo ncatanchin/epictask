@@ -45,7 +45,8 @@ let
 	hmrDisposed = false,
 	interceptorInstalled = false
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//DEBUG
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Install action interceptor for child

@@ -2,25 +2,23 @@
 
 
 import {List} from 'immutable'
-import * as moment from 'moment'
 import {chunkRemove} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
-import {AutoWired, Inject, Container} from 'typescript-ioc'
 import { Stores, getStores } from 'shared/Stores'
 import {ActionFactory, ActionReducer,ActionThunk} from 'typedux'
 import {RepoKey} from 'shared/Constants'
 import {RepoMessage, RepoState} from './RepoState'
-import {Repo} from 'shared/models/Repo'
-import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {JobActionFactory} from 'shared/actions/jobs/JobActionFactory'
 
-import Toaster from 'shared/Toaster'
-import {Label} from 'shared/models/Label'
-import {Milestone} from 'shared/models/Milestone'
+// import {Repo} from 'shared/models/Repo'
+// import {AvailableRepo} from 'shared/models/AvailableRepo'
+// import {Label} from 'shared/models/Label'
+// import {Milestone} from 'shared/models/Milestone'
+
+import {Milestone,Label,AvailableRepo,Repo} from 'shared/models'
+
 import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from 'shared/actions/repo/RepoSelectors'
 import {getSettings} from 'shared/settings/Settings'
 import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
@@ -29,18 +27,13 @@ import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { getIssueActions, getJobActions } from  "shared/actions/ActionFactoryProvider"
+import { ISyncChanges } from "shared/models"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
 const Benchmarker = Benchmark('RepoActionFactory')
 
 
-export interface ISyncChanges {
-	repoId:number
-	repoChanged?:boolean
-	issueNumbersNew?:number[]
-	issueNumbersChanged?:number[]
-}
 
 /**
  * RepoActionFactory.ts
@@ -54,19 +47,11 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	
 	static leaf = RepoKey
 	
-	stores:Stores
-
-	jobActions:JobActionFactory
-
-	toaster:Toaster
-
-
+	
 	constructor() {
 		super(RepoState)
 		
-		this.stores = Container.get(Stores)
-		this.jobActions = Container.get(JobActionFactory)
-		this.toaster = Container.get(Toaster)
+		
 	}
 
 	leaf():string {
@@ -167,8 +152,8 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			for (let repoId of _.uniq(repoIds)) {
 				const
-					availableRepo = await this.stores.availableRepo.findByRepoId(repoId),
-					repo = await this.stores.repo.get(repoId)
+					availableRepo = await getStores().availableRepo.findByRepoId(repoId),
+					repo = await getStores().repo.get(repoId)
 
 				// Create RepoSync Job
 				log.debug(`Triggering repo sync for ${repo.full_name}`)
@@ -213,6 +198,77 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return pagedFinder(User,50,getStores().user,(store,nextRequest) =>
 			store.findByRepoId(nextRequest,...repoIds)
 		)
+	}
+	
+	/**
+	 * Patch available repo
+	 */
+	
+	private patchAvailableRepo(state:RepoState,repoId:number,field:string,value:any) {
+		let
+			{availableRepos} = state,
+			index = availableRepos.findIndex(it => it.id === repoId),
+			availableRepo = index !== -1 && availableRepos.get(index)
+		
+		if (!availableRepo) {
+			log.error(`Can not update ${field} on state, no repo found with id ${repoId}`)
+			return state
+		}
+		
+		availableRepo[field] = value
+		
+		return state.set('availableRepos', availableRepos.set(index,availableRepo))
+	}
+	
+	
+	/**
+	 * Update milestones on state
+	 *
+	 * @param repoId
+	 * @param milestones
+	 */
+	@ActionReducer()
+	updateMilestones(repoId:number,...milestones:Milestone[]) {
+		return (state:RepoState) => this.patchAvailableRepo(state,repoId,'milestones',milestones)
+	}
+	
+	/**
+	 * Update labels on state
+	 *
+	 * @param repoId
+	 * @param labels
+	 */
+	@ActionReducer()
+	updateLabels(repoId:number,...labels:Label[]) {
+		return (state:RepoState) => this.patchAvailableRepo(state,repoId,'labels',labels)
+	}
+	
+	/**
+	 * Update assignees on state
+	 *
+	 * @param repoId
+	 * @param collaborators
+	 */
+	@ActionReducer()
+	updateCollaborators(repoId:number,...collaborators:User[]) {
+		return (state:RepoState) => {
+			const
+				availableRepo = state.availableRepos.find(it => it.id === repoId)
+			
+			if (!availableRepo) {
+				log.error(`Unable to find repo ${repoId} on state - can not update assignees`)
+				return state
+			}
+			
+			collaborators = !availableRepo.collaborators ?
+				collaborators :
+				availableRepo
+					.collaborators
+					.filter(it => !collaborators.find(newCollab => newCollab.id === it.id))
+					.concat(collaborators)
+			
+			return this.patchAvailableRepo(state,repoId,'collaborators',collaborators)
+		}
 	}
 	
 	/**
@@ -345,8 +401,8 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		return async(dispatch, getState) => {
 			const
 				actions = this.withDispatcher(dispatch, getState),
-				repoStore = this.stores.repo,
-				availRepoStore = this.stores.availableRepo
+				repoStore = getStores().repo,
+				availRepoStore = getStores().availableRepo
 
 			let availRepo:AvailableRepo = new AvailableRepo({
 				id: repo.id,
@@ -389,7 +445,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		const
 			actions = this.withDispatcher(dispatch, getState),
-			{stores} = this,
+			stores = getStores(),
 			myUserId = _.get(getSettings(),'user.id')
 
 		// Get the repo
@@ -409,7 +465,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 		log.debug('Cleaning up issue selections')
 		const
-			issueActions:IssueActionFactory = Container.get(IssueActionFactory),
+			issueActions = getIssueActions(),
 			editingIssue = editingIssueSelector(getState())
 		
 		issueActions.setSelectedIssueIds([])
@@ -495,7 +551,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	setRepoEnabled(availRepoId,enabled:boolean) {
 		return async (dispatch,getState) => {
 			const
-				stores = this.stores,
+				stores = getStores(),
 				availRepo = await stores.availableRepo.get(availRepoId)
 			
 			log.debug(`Setting available repo ${availRepo.id} to enabled ${enabled}`,availRepo,enabled)

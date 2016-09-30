@@ -29,17 +29,21 @@ import {addErrorMessage} from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
 import {getSettings} from 'shared/settings/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
-import {Repo} from 'shared/models/Repo'
+import {Repo,ISyncChanges} from 'shared/models/Repo'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {CommentStore} from 'shared/models/Comment'
+import {IssuesEventStore,IssuesEvent} from 'shared/models/GitHubEvents'
+
 import {getStoreState} from 'shared/store'
 import {Provided} from 'shared/util/ProxyProvided'
-import { User, AvailableRepo, CommentStore, IssuesEvent, IssuesEventStore } from "shared/models"
+
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
 import { isListType } from "shared/util/ObjectUtil"
-import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
-import { RepoSyncManager } from "shared/github/GithubEventHandlers"
+
+
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "shared/UIConstants"
 
@@ -1131,43 +1135,44 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	@ActionReducer()
 	private updateCommentsInState(updatedComments:List<Comment>,remove = false) {
 		return (state:IssueState) => {
-			let
-				{comments} = state
 			
-			updatedComments.forEach(updatedComment => {
-				const
-					commentIndex = comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
-				
-				// REMOVE COMMENT
-				if (remove) {
-					if (commentIndex === -1) {
-						log.debug(`Comment is not in state, can not remove`, updatedComment)
-					} else {
-						comments = comments.remove(commentIndex)
+			let
+				{comments,selectedIssueIds,issues} = state
+			
+			if (!selectedIssueIds || selectedIssueIds.length !== 1)
+				return state
+			
+			const
+				selectedIssue = this.state.issues.find(it => it.id === selectedIssueIds[0])
+			
+			if (!selectedIssue)
+				return state
+			
+			updatedComments
+				.filter(comment => comment.issueNumber === selectedIssue.number && comment.repoId === selectedIssue.repoId)
+				.forEach(updatedComment => {
+					const
+						commentIndex = comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
+					
+					// REMOVE COMMENT
+					if (remove) {
+						if (commentIndex === -1) {
+							log.debug(`Comment is not in state, can not remove`, updatedComment)
+						} else {
+							comments = comments.remove(commentIndex)
+						}
 					}
-				}
-				
-				// UPDATE & ADD COMMENT
-				else {
-					if (commentIndex > -1)
-						comments = comments.set(commentIndex, updatedComment)
+					
+					// UPDATE & ADD COMMENT
 					else {
-						
-						// CHECK TO SEE IF A NEW ISSUE WAS ADDED TO THE CURRENT ISSUE
-						const
-							selectedIssue = selectedIssueSelector(getStoreState())
-						
-						// COMMENT ADD TO CURRENT SELECTED ISSUE
-						if (
-							selectedIssue &&
-							selectedIssue.number === updatedComment.issueNumber &&
-							updatedComment.repoId === selectedIssue.repoId
-						)
+						if (commentIndex > -1) {
+							comments = comments.set(commentIndex, updatedComment)
+						}else {
 							comments = comments.push(updatedComment)
+						}
 					}
-				}
-			})
-			 
+				})
+				 
 			return (comments === state.comments) ?
 				state :
 				state.set('comments',comments)

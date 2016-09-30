@@ -1,5 +1,5 @@
 import {RegisterModel} from 'shared/Registry'
-import {Record,List} from 'immutable'
+import {Record,List,Map} from 'immutable'
 import {ActionMessage} from 'typedux'
 import { AvailableRepo, Milestone, User, Label } from "shared/models"
 import { cloneObject } from "shared/util/ObjectUtil"
@@ -9,8 +9,8 @@ const log = getLogger(__filename)
 export const RepoStateRecord = Record({
 	reposIds:[],
 	availableRepos:List<AvailableRepo>(),
-	selectedRepoIds:[]
-	
+	selectedRepoIds:[],
+	reposLoading:Map<number,boolean>()
 })
 
 /**
@@ -21,11 +21,19 @@ export const RepoStateRecord = Record({
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {
-		if (o && o.availableRepos && !List.isList(o.availableRepos)) {
+		if (o) {
 			if (o.withMutations) {
-				o = o.set('availableRepos',List(o.availableRepos))
+				if (!List.isList(o.availableRepos))
+					o = o.set('availableRepos',List(o.availableRepos))
+				if (o.reposLoading && !Map.isMap(o.reposLoading)) {
+					o = o.set('reposLoading',List(o.reposLoading))
+				}
 			} else {
-				o.availableRepos = List(o.availableRepos)
+				if (!List.isList(o.availableRepos))
+					o.availableRepos = List(o.availableRepos)
+				if (o.reposLoading && !Map.isMap(o.reposLoading)) {
+					o.reposLoading = Map(o.reposLoading)
+				}
 			}
 		}
 		
@@ -42,12 +50,14 @@ export class RepoState extends RepoStateRecord {
 		
 	}
 	
-	// toJS() {
-	// 	return {
-	// 		ava
-	// 	}
-	// }
+	toJS() {
+		return {
+			selectedRepoIds: this.selectedRepoIds,
+			availableRepos: _.toJS(this.availableRepos)
+		}
+	}
 	
+	reposLoading:Map<number,boolean>
 	selectedRepoIds:number[]
 	availableRepos:List<AvailableRepo>
 

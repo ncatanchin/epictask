@@ -1,9 +1,16 @@
-import { IssuesEvent } from 'shared/models/GitHubEvents'
+
 import { getStores, Stores } from "shared/Stores"
-import {
-	Comment, AvailableRepo, Repo, Issue, RepoEvent,
-	Milestone, User, Label
-} from "shared/models"
+
+import {Repo} from 'shared/models/Repo'
+import {AvailableRepo} from 'shared/models/AvailableRepo'
+import {Issue} from 'shared/models/Issue'
+import {User} from 'shared/models/User'
+import {Label} from 'shared/models/Label'
+import {Milestone} from 'shared/models/Milestone'
+import {Comment} from 'shared/models/Comment'
+import {RepoEvent,IssuesEvent} from 'shared/models/GitHubEvents'
+import {} from 'shared/models/GitHubEvents'
+
 import * as moment from 'moment'
 import { createClient, GitHubClient, OnDataCallback } from "shared/GitHubClient"
 import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryProvider"
@@ -12,9 +19,10 @@ import JobProgressTracker from "job/JobProgressTracker"
 import { chunkSave } from "shared/db/DatabaseUtil"
 import { shallowEquals, cloneObject } from "shared/util/ObjectUtil"
 import SyncStatus from 'shared/github/GithubSyncStatus'
-import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
+import { ISyncChanges } from "shared/models/Repo"
 import { OneAtATime } from "shared/util/Decorations"
 import { isRepoSyncPending } from "job/executors/RepoSyncExecutor"
+
 
 const
 	log = getLogger(__filename)
@@ -27,8 +35,14 @@ function isAvailableRepo(o:any):o is AvailableRepo {
 	return o.repoId || o.repo
 }
 
+/**
+ * RepoSyncManager
+ */
 export class RepoSyncManager {
 	
+	/**
+	 * Map of repo managers keyed by eye
+	 */
 	private static managers:{[repoId:number]:RepoSyncManager} = {}
 	
 	/**
@@ -49,9 +63,12 @@ export class RepoSyncManager {
 	}
 	
 	
-	constructor(public repo:Repo) {
-		
-	}
+	/**
+	 * Create a new repo manager
+	 *
+	 * @param repo
+	 */
+	constructor(public repo:Repo) { }
 	
 	/**
 	 * Triggers a repo sync if one is not pending
@@ -71,10 +88,8 @@ export class RepoSyncManager {
 	 * @param repo
 	 * @param issue
 	 */
-	
 	updateComments = _.debounce(async(stores:Stores, client:GitHubClient) => {
 		try {
-			
 			await this.syncComments(stores)
 			
 		} catch (err) {
@@ -117,7 +132,6 @@ export class RepoSyncManager {
 	handleIssuesEvents = async(availRepo:AvailableRepo, ...events:IssuesEvent[]) => {
 		if (pendingEventUpdate)
 			await pendingEventUpdate.promise
-		
 		
 		// Create a new resolver
 		const
@@ -274,11 +288,15 @@ export class RepoSyncManager {
 	 * @param comments
 	 */
 	checkReloadActivity(comments:Comment[]) {
+		
 		// Reload current issue if loaded
 		getIssueActions().commentsChanged(...comments)
 		
 	}
 	
+	/**
+	 * Sync milestones
+	 */
 	syncMilestones = OneAtATime({}, async(stores:Stores, logger = null, progressTracker:JobProgressTracker = null, onDataCallback:OnDataCallback<Milestone> = null, isDryRun = false) => {
 		
 		const
@@ -320,6 +338,9 @@ export class RepoSyncManager {
 		
 		progressTracker && progressTracker.completed()
 		
+		// UPDATE MILESTONES ON STATE
+		getRepoActions().updateMilestones(this.repo.id,...milestones)
+		
 		return pending.length
 		
 	})
@@ -342,8 +363,17 @@ export class RepoSyncManager {
 		//this.progressTracker.increment(1)
 		
 		let
-			pagesSet = false
+			pagesSet = false,
+			issuesToUpdateOnState = []
 		
+		function pushIssuesToState() {
+			if (!issuesToUpdateOnState.length)
+				return
+			
+			log.debug(`Updating ${issuesToUpdateOnState.length} issues on state`)
+			getIssueActions().reloadIssues(issuesToUpdateOnState)
+			issuesToUpdateOnState = []
+		}
 		
 		const
 			client = createClient(),
@@ -384,6 +414,13 @@ export class RepoSyncManager {
 			updatedIssues.push(...pending)
 			progressTracker && progressTracker.completed()
 			SyncStatus.setMostRecentTimestamp(issuesResourceUrl, pending, 'updated_at', 'created_at')
+			issuesToUpdateOnState.push(...pending)
+			
+			if (pageNumber && pageNumber % 5 === 0) {
+				pushIssuesToState()
+			}
+				
+			
 		}
 		
 		/**
@@ -432,6 +469,7 @@ export class RepoSyncManager {
 				})
 			})
 		
+		pushIssuesToState()
 		// await Promise.all(issueSavePromises)
 		logger && logger.info(`Received & processed ${issues.length} issues, updating sync status timestamp`)
 		
@@ -498,7 +536,7 @@ export class RepoSyncManager {
 					await chunkSave(pending, stores.comment)
 				
 				// Push updates to STATE
-				this.checkReloadActivity(pending)
+				getIssueActions().commentsChanged(...pending)
 				
 				
 				updatedComments.push(...pending)
@@ -628,12 +666,16 @@ export class RepoSyncManager {
 		// progressTracker && progressTracker.completed()
 		log.info(`Updated ${users.length} for repo ${this.repo.full_name}`)
 		
+		getRepoActions().updateCollaborators(this.repo.id,...updatedUsers)
+		
 		return updatedUsers.length
 		
 		
 	})
 	
-	
+	/**
+	 * Sync all the labels for a repo
+	 */
 	syncLabels = OneAtATime({}, async(stores:Stores, logger = null, progressTracker:JobProgressTracker = null, onDataCallback:OnDataCallback<Label> = null, isDryRun = false) => {
 		progressTracker && progressTracker.increment(2)
 		const
@@ -666,6 +708,8 @@ export class RepoSyncManager {
 		
 		await chunkSave(pending, stores.label)
 		progressTracker && progressTracker.completed()
+		
+		getRepoActions().updateLabels(this.repo.id,...labels)
 		return pending.length
 	})
 	

@@ -1,16 +1,15 @@
 import {ActionFactory,ActionReducer,ActionThunk} from 'typedux'
 import {GitHubClient} from 'shared/GitHubClient'
 import {AuthKey} from "shared/Constants"
-import {AppActionFactory} from '../app/AppActionFactory'
 import {AuthState,AuthMessage} from 'shared/actions/auth/AuthState'
 import {AppStateType} from 'shared/AppStateType'
 import {getSettings,getSettingsFile} from 'shared/settings/Settings'
-import { Toaster, addErrorMessage } from 'shared/Toaster'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {ProcessType} from "shared/ProcessType"
+import { Toaster, addErrorMessage, getToaster } from 'shared/Toaster'
+
 import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
 import { Settings } from "shared/settings/SettingsFile"
+import { getRepoActions, getAppActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 
@@ -20,16 +19,12 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	
 	static leaf = AuthKey
 	
-	appActions:AppActionFactory
-	toaster:Toaster
-
+	
 	private _client:GitHubClient
 
 	constructor() {
 		super(AuthState)
 
-		this.appActions = Container.get(AppActionFactory)
-		this.toaster = Container.get(Toaster)
 		this.makeClient()
 	}
 
@@ -91,7 +86,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 			
 			try {
 				const
-					appActions = this.appActions.withDispatcher(dispatch, getState),
+					appActions = getAppActions(),
 					user = await this.client.user()
 				
 				log.info(`Verified user as`, user)
@@ -131,8 +126,9 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	@ActionThunk()
 	logout() {
 		return (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch, getState)
-			const appActions = this.appActions.withDispatcher(dispatch,getState)
+			const
+				actions = this.withDispatcher(dispatch, getState),
+				appActions = getAppActions()
 			actions.setToken(null)
 			appActions.setStateType(AppStateType.AuthLogin)
 		}
@@ -141,8 +137,9 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	@ActionThunk()
 	setAuthResult(err:Error,token:string) {
 		return (dispatch,getState) => {
-			const actions = this.withDispatcher(dispatch,getState)
-			const appActions = this.appActions.withDispatcher(dispatch,getState)
+			const
+				actions = this.withDispatcher(dispatch,getState),
+				appActions = getAppActions()
 			
 			
 			
@@ -152,7 +149,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				
 			} else {
 				actions.setToken(token)
-				const repoActions = Container.get(RepoActionFactory)
+				const repoActions = getRepoActions()
 				repoActions.syncUserRepos()
 				appActions.setStateType(AppStateType.AuthVerify)
 				
@@ -160,7 +157,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 			
 			if (err) {
 				log.error('GH token received: ' + token,err)
-				this.toaster.addErrorMessage(err)
+				getToaster().addErrorMessage(err)
 			} else {
 				
 				log.info('GH token received: ' + token,err)

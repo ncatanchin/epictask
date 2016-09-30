@@ -19,8 +19,9 @@ const
 	{nextTick} = process,
 	clientObservers = getHot(module, 'clientObservers', {}),
 	childStores = getHot(module, 'clientObservers', {}) as any
-	
-log.setOverrideLevel(LogLevel.DEBUG)
+
+// DEBUG ENABLE
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	ipcServer:IPCServer = getHot(module, 'ipcServer', null) as IPCServer

@@ -1,6 +1,6 @@
 import {JobHandler} from 'job/JobHandler'
 import {GitHubClient, OnDataCallback} from 'shared/GitHubClient'
-import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment} from 'shared/models'
+import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ISyncChanges} from 'shared/models'
 
 import {Stores} from 'shared/services/DatabaseClientService'
 import {getSettings} from 'shared/settings/Settings'
@@ -10,7 +10,7 @@ import { JobType, IJob, IJobLogger, JobStatus } from 'shared/actions/jobs/JobTyp
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
 import { getRepoActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
-import { ISyncChanges } from "shared/actions/repo/RepoActionFactory"
+
 import { RepoSyncManager } from "shared/github/GithubEventHandlers"
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
@@ -58,14 +58,14 @@ export class RepoSyncExecutor implements IJobExecutor {
 	private syncChanges:ISyncChanges
 	
 	
-	/**
-	 * Trigger an issue reload
-	 */
-	async reloadIssues() {
-		await getIssueActions().loadIssues()
-	}
-	
-	
+	// /**
+	//  * Trigger an issue reload
+	//  */
+	// async reloadIssues() {
+	// 	await getIssueActions().loadIssues()
+	// }
+	//
+	//
 	
 	/**
 	 * if dryRun argument was passed as true,

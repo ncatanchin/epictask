@@ -6,7 +6,7 @@ import { GitHubConfig, AuthKey, Events, AllWindowDefaults } from 'shared/Constan
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
-import { getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
+import { getAppActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 const path = require('path')

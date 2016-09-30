@@ -16,6 +16,14 @@ import {User} from './User'
 import {Permission} from './Permission'
 import {RegisterModel} from '../Registry'
 
+export interface ISyncChanges {
+	repoId:number
+	repoChanged?:boolean
+	issueNumbersNew?:number[]
+	issueNumbersChanged?:number[]
+}
+
+
 
 @RegisterModel
 @PouchDBModel({
