@@ -108,6 +108,21 @@ export namespace GithubSyncStatus {
 		await loadPromise
 	}
 	
+	export function clearPrefix(prefix:string) {
+		for (let map of [status.eTags,status.timestamps]) {
+			Object
+				.keys(map)
+				.filter(key => key.startsWith(prefix))
+				.forEach(key => {
+					delete map[key]
+				})
+		}
+		
+		save()
+		
+			
+	}
+	
 	/**
 	 * Set a resource eTag
 	 * @param url
@@ -212,6 +227,7 @@ export namespace GithubSyncStatus {
  */
 export const {
 	awaitLoaded,
+	clearPrefix,
 	getTimestamp,
 	setTimestamp,
 	getETag,

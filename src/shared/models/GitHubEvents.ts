@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	DefaultModel,
 	Repo as TSRepo,
 	FinderRequest,
@@ -150,26 +150,26 @@ export class RepoEvent<P extends IEventPayload> extends DefaultModel {
 	 */
 	static makeId = makeRepoEventId
 	
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id:string
 	
-	@AttributeDescriptor()
+	@Attribute()
 	repoId:number
 	
-	@AttributeDescriptor()
+	@Attribute()
 	created_at:Date
-	@AttributeDescriptor()
+	@Attribute()
 	type:TRepoEventType
-	@AttributeDescriptor()
+	@Attribute()
 	repo:Repo
 	
 	//noinspection ReservedWordAsName
-	@AttributeDescriptor()
+	@Attribute()
 	public:boolean
 	
-	@AttributeDescriptor()
+	@Attribute()
 	actor:User
-	@AttributeDescriptor()
+	@Attribute()
 	org:User
 	
 	payload:P
@@ -421,37 +421,37 @@ export class IssuesEvent extends DefaultModel {
 	
 	static makePrefix = makeIssuesEventPrefix
 	
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id:number
-	@AttributeDescriptor()
+	@Attribute()
 	repoId:number
-	@AttributeDescriptor()
+	@Attribute()
 	url:string
-	@AttributeDescriptor()
+	@Attribute()
 	actor:User
-	@AttributeDescriptor()
+	@Attribute()
 	event:TIssueEventType
-	@AttributeDescriptor()
+	@Attribute()
 	commit_id:string
-	@AttributeDescriptor()
+	@Attribute()
 	commit_url:string
-	@AttributeDescriptor()
+	@Attribute()
 	created_at:Date
-	@AttributeDescriptor()
+	@Attribute()
 	rename:IChange
-	@AttributeDescriptor()
+	@Attribute()
 	issue:Issue
 	
-	@AttributeDescriptor()
+	@Attribute()
 	label
 	
-	@AttributeDescriptor()
+	@Attribute()
 	milestone
 	
-	@AttributeDescriptor()
+	@Attribute()
 	assignee:User
 	
-	@AttributeDescriptor()
+	@Attribute()
 	assigner:User
 	
 	constructor(o:any = {}) {

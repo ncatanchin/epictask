@@ -19,7 +19,7 @@ export function pagedFinder<T,R extends TSRepo<any>>(
 	type:{new():T},
 	itemsPerPage:number,
 	store:R,
-  finderFn:(store:R,nextRequest:FinderRequest) => Promise<T[]>
+  finderFn:(store:R,nextRequest:FinderRequest,results?:T[]) => Promise<T[]>
 ):Promise<List<T>> {
 		
 	const
@@ -27,6 +27,7 @@ export function pagedFinder<T,R extends TSRepo<any>>(
 		deferred = Promise.defer()
 	
 	let
+		lastItems = null,
 		moreAvailable = true,
 		pageNumber = -1,
 		itemCount = 0
@@ -38,11 +39,12 @@ export function pagedFinder<T,R extends TSRepo<any>>(
 			nextRequest = new FinderRequest(itemsPerPage,pageNumber * itemsPerPage)
 		
 		try {
-			finderFn(store, nextRequest)
+			finderFn(store, nextRequest,lastItems)
 				.then(moreItems => {
 					let
 						moreAvailable = moreItems.length >= itemsPerPage
 					
+					lastItems = moreItems
 					allItems.push(...moreItems)
 					itemCount += allItems.length
 					

@@ -10,6 +10,7 @@ import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {TIssueEditInlineConfig} from './IIssueListItems'
+import { reviveImmutable } from "shared/util/ModelUtil"
 
 // Refactor - so we export here too
 export {TIssueEditInlineConfig} from './IIssueListItems'
@@ -87,15 +88,27 @@ export const IssueStateRecord = Record({
 export class IssueState extends IssueStateRecord {
 
 	static fromJS(o:any) {
-		if (o && o instanceof IssueState)
-			return o
-		
-		return new IssueState(o)
+		return reviveImmutable(
+			o,
+			IssueState,
+			['issues','comments','issuesEvents'],
+			['groupVisibility']
+		)
 	}
 	
 	toJS() {
-		return _.pick(this,'issueFilter','issueSort','selectedIssueIds','patchIssues','patchMode','editingIssue','editCommentRequest')
+		return _.pick(
+			this,
+			'issueFilter',
+			'issueSort',
+			'selectedIssueIds',
+			'patchIssues',
+			'patchMode',
+			'editingIssue',
+			'editCommentRequest'
+		)
 	}
+	
 	
 	
 	issues:List<Issue>

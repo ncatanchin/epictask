@@ -127,6 +127,7 @@ export interface IJobDetailState {
 	watcher?:LogWatcher
 	watcherEventRemovers?:IEnumEventRemover[]
 	lineCount?:number
+	allLogs?:IJobLog[]
 }
 
 
@@ -168,10 +169,13 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		if (watcher.lineCount !== getValue(() => this.state.lineCount,0)) {
 			this.setState({
-				lineCount: watcher.lineCount
+				lineCount: watcher.lineCount,
+				allLogs: watcher.allJsons
 			})
 		}
-	},250)
+	},1000, {
+		maxWait: 2000
+	})
 	
 	/**
 	 * Update the job detail component state
@@ -206,15 +210,14 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		// GET THE WATCHER
 		watcher = LogWatcher.getInstance(job.logJSONFilename,true)
+		watcher.start()
 		
 		log.debug(`Got watcher`,watcher)
 		this.setState({
-			lineCount:0,
+			lineCount: watcher.lineCount,
+			allLogs: watcher.allJsons,
 			watcher,
 			watcherEventRemovers: watcher.addAllListener(this.onWatcherEvent)
-		},() => {
-			log.debug(`State set, starting log watcher for ${watcher.filename}`)
-			watcher.start()
 		})
 	}
 	
@@ -236,7 +239,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 			{watcher,watcherEventRemovers} = this
 		
 		if (watcher) {
-			log.debug(`Stopping watcher`,watcher)
+			log.debug(`Stopping watcher`)
 			watcher.stop()
 		}
 		
@@ -248,7 +251,8 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		this.setState({
 			watcher:null,
 			watcherEventRemovers:null,
-			lineCount: 0
+			lineCount: 0,
+			allLogs: []
 		})
 	}
 	
@@ -262,7 +266,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 	 */
 	shouldComponentUpdate(nextProps:IJobDetailProps, nextState:IJobDetailState, nextContext:any):boolean {
 		return !shallowEquals(this.props,nextProps,'job.logJSONFilename','selectedLogId') ||
-				!shallowEquals(this.state,nextState,'lineCount','watcher')
+				!shallowEquals(this.state,nextState,'lineCount','allLogs')
 	}
 	
 	/**
@@ -299,7 +303,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		
 		//Log Entry Row
-		return <div key={logKey}
+		return <div key={key}
 		            onClick={() => !selected && Container.get(JobActionFactory).setSelectedLogId(logItem.id)}
 		            style={[
 													styles.logs.entry,
@@ -341,7 +345,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		const
 			{theme, styles, job, jobs,detail} = this.props,
-			watcher:LogWatcher = this.watcher,
+			allLogs = getValue(() => this.state.allLogs,[]),
 			lineCount = getValue(() => this.state.lineCount,0),
 			statusColors = getJobStatusColors(detail,styles)
 		
@@ -389,7 +393,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				<div style={styles.logs}>
 					<VisibleList
 						itemCount={lineCount}
-					  items={watcher.allJsons || []}
+					  items={allLogs || []}
 					  itemRenderer={this.renderLogItem}
 					  itemKeyFn={(logItems,logItem,index) => `${job.id}-${index}`}
 					/>

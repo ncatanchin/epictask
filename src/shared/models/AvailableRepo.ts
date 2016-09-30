@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	DefaultModel,
 	Repo as TSRepo
 } from 'typestore'
@@ -12,9 +12,21 @@ import {Milestone} from './Milestone'
 import {User} from './User'
 import {Repo} from './Repo'
 import {RegisterModel} from '../Registry'
+import { Transient } from "shared/util/Decorations"
 
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
+
+
+/**
+ * Current status of repo's data loading
+ */
+export enum LoadStatus {
+	NotLoaded = 1,
+	Loading,
+	Loaded
+}
 
 /**
  * Maps repos that have been configured for tasks
@@ -22,7 +34,7 @@ const log = getLogger(__filename)
  *
  */
 @RegisterModel
-@ModelDescriptor({transientAttrs: ['repo']})
+@Model()
 export class AvailableRepo extends DefaultModel {
 
 	$$clazz = 'AvailableRepo'
@@ -33,31 +45,67 @@ export class AvailableRepo extends DefaultModel {
 	 * @param o
 	 */
 	static fromJS = (o:any) => new AvailableRepo(o)
-
-	@AttributeDescriptor({primaryKey:true})
+	
+	/**
+	 * id, equals repoId, equals repo.id
+	 */
+	@Attribute({primaryKey:true})
 	id:number
-
-	@AttributeDescriptor({index:{unique:true,name:'repoId'}})
+	
+	/**
+	 * Repo id ref
+	 */
+	@Attribute({index:{unique:true,name:'repoId'}})
 	repoId:number
-
-	@AttributeDescriptor()
+	
+	/**
+	 * Enabled or not enabled
+	 */
+	@Attribute()
 	enabled:boolean
-
-	@AttributeDescriptor()
+	
+	/**
+	 * Is this repo deleted
+	 */
+	@Attribute()
 	deleted:boolean
-
-	@AttributeDescriptor({transient:true})
+	
+	/**
+	 * Repo reference
+	 */
+	@Transient
 	repo:Repo
-
-	@AttributeDescriptor({transient:true})
+	
+	/**
+	 * All current labels
+	 */
+	@Transient
 	labels:Label[]
-
-	@AttributeDescriptor({transient:true})
+	
+	/**
+	 * All current milestones
+	 */
+	@Transient
 	milestones:Milestone[]
-
-	@AttributeDescriptor({transient:true})
+	
+	/**
+	 * All available assignees/collaborators
+	 */
+	@Transient
 	collaborators:User[]
-
+	
+	/**
+	 * Current load status of the repo
+	 */
+	@Transient
+	repoLoadStatus:LoadStatus
+	
+	/**
+	 * Current load status of issues for this repo
+	 */
+	@Transient
+	issuesLoadStatus:LoadStatus
+	
 	constructor(props = {}) {
 		super()
 

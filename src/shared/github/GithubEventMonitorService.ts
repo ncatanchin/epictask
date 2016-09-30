@@ -8,7 +8,7 @@ import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import { RepoKey } from "shared/Constants"
 import { clientObserveState, getStateValue } from "shared/AppStoreClient"
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { AvailableRepo } from "shared/models"
+import { AvailableRepo, LoadStatus } from "shared/models"
 
 import SyncStatus from './GithubSyncStatus'
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
@@ -74,7 +74,13 @@ export class GithubEventService extends BaseService {
 	 * @param availableRepos
 	 */
 	private onAvailableReposUpdated = (availableRepos:AvailableRepo[]) => {
-		log.debug(`Received available repos`,availableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
+		const
+			loadedAvailableRepos = availableRepos
+				.filter(it => it.repoLoadStatus === LoadStatus.Loaded)
+		
+		log.debug(`Received available repos`,loadedAvailableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
+		
+		
 		
 		const
 			monitor = getGithubEventMonitor(),
@@ -82,7 +88,7 @@ export class GithubEventService extends BaseService {
 		
 		log.info(`Checking for removed repos`)
 		currentRepoIds
-			.filter(repoId => !availableRepos.find(availRepo => availRepo.id === repoId))
+			.filter(repoId => !loadedAvailableRepos.find(availRepo => availRepo.id === repoId))
 			.forEach(repoId => {
 				log.debug(`No longer monitoring repo ${repoId} - stopping monitor`)
 				monitor.stopRepoMonitoring(repoId)
@@ -91,14 +97,14 @@ export class GithubEventService extends BaseService {
 		
 		
 		log.info(`Checking for new repos to monitor`)
-		availableRepos
+		loadedAvailableRepos
 			.filter(availRepo => !currentRepoIds.includes(availRepo.id))
 			.forEach(availRepo => {
 				log.info(`Starting to monitor repo ${availRepo.repo.full_name}`)
 				
 				const
-					repoResourceUrl = `repo-${availRepo.id}`,
-					issuesResourceUrl = `issues-${availRepo.id}`
+					repoResourceUrl = `${availRepo.id}-repo`,
+					issuesResourceUrl = `${availRepo.id}-issues`
 				
 				let
 					isFirstIssuesSync = !SyncStatus.getTimestamp(issuesResourceUrl),
@@ -138,6 +144,11 @@ export class GithubEventService extends BaseService {
 						isFirstRepoSync = false
 						SyncStatus.setETag(repoResourceUrl,eTag)
 						SyncStatus.setMostRecentTimestamp(repoResourceUrl, events, 'created_at')
+						
+						// TRIGGER SYNC - IF EVENTS RECEIVED
+						if (events.length) {
+							RepoSyncManager.get(availRepo).triggerRepoSync()
+						}
 					},
 					
 					/**
@@ -163,8 +174,15 @@ export class GithubEventService extends BaseService {
 					allIssuesEventsReceived: async (eTag:string,...events:IssuesEvent[]) => {
 						isFirstIssuesSync = false
 						
+						
+						
 						SyncStatus.setETag(issuesResourceUrl,eTag)
 						SyncStatus.setMostRecentTimestamp(issuesResourceUrl, events, 'created_at')
+						
+						// TRIGGER SYNC - IF EVENTS RECEIVED
+						if (events.length) {
+							RepoSyncManager.get(availRepo).triggerRepoSync()
+						}
 					}
 					
 				})

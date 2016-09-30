@@ -1,5 +1,5 @@
 
-
+import {Map,List} from 'immutable'
 import { shallowEquals, cloneObject } from "shared/util/ObjectUtil"
 import * as moment from 'moment'
 
@@ -41,4 +41,71 @@ export function checkUpdatedAndAssign(logger,id:string|number,newModel,existingM
 	}
 	
 	return newModel
+}
+
+
+/**
+ * Revive an immutable object tree
+ *
+ * @param val
+ * @param type
+ * @param listProps
+ * @param mapProps
+ * @returns {any}
+ */
+export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [],mapProps:string[] = []):T {
+	val = val || new type()
+
+	
+	// SET LIST PROPS
+	listProps.forEach(prop => {
+		
+		let
+			propVal = val[prop]
+		
+		if (!propVal)
+			propVal = List()
+		
+		if (!List.isList(propVal)) {
+			propVal = List(propVal)
+		}
+		
+		if (val.withMutations) {
+			val = val.set(prop, propVal)
+		}else {
+			val[prop] = propVal
+		}
+	})
+	
+	//SET MAP PROPS
+	mapProps.forEach(prop => {
+		
+		let
+			propVal = val[prop]
+		
+		if (!propVal)
+			propVal = Map()
+		
+		if (!Map.isMap(propVal)) {
+			propVal = Map(propVal)
+		}
+		
+		if (val.withMutations) {
+			val = val.set(prop, propVal)
+		}else {
+			val[prop] = propVal
+		}
+		
+	})
+	
+
+	
+	
+	return val && val instanceof type ?
+		
+		// IF ALREADY IMMUTABLE INSTANCE
+		val :
+		
+		// OBJECT TYPE
+		new (type as any)(Object.assign({},val))
 }

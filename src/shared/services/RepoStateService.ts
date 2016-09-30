@@ -8,6 +8,7 @@ import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryPr
 import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
 import { RepoKey, IssueKey } from "shared/Constants"
 import { getStoreState } from "shared/store"
+import { getStores } from "shared/Stores"
 
 const log = getLogger(__filename)
 
@@ -37,57 +38,43 @@ export class RepoStateService extends BaseService {
 		this.unsubscribers.length = 0
 	}
 
+	private async finishPendingDeletes() {
+		try {
+			const
+				pendingRepos = (await getStores().availableRepo.findAll())
+					.filter(availRepo => availRepo.deleted)
+			
+			log.debug(`Pending ${pendingRepos.size} repos to delete`)
+			
+			pendingRepos.forEach(pendingRepo =>
+				getRepoActions().removeAvailableRepo(pendingRepo.id))
+			
+		} catch (err) {
+			log.error(`Failed to remove pending deletes`)
+		}
+	}
+	
 
 	async init():Promise<this> {
 		this.store = Container.get(ObservableStore as any) as any
 		
 		return super.init()
 	}
-
+	
+	/**
+	 * On start load available repos
+	 *
+	 * @returns {RepoStateService}
+	 */
 	async start():Promise<this> {
 		await super.start()
 		
-		const
-			repoActions = getRepoActions(),
-			availableRepos = await repoActions.getAllAvailableRepoResources()
+		getRepoActions().loadAvailableRepos(true)
 		
-		let enabledReposValueCache = new ValueCache(_.debounce((enabledRepos) => {
-			log.debug(`CHANGED: Enabled repo`,enabledRepos)
-			getIssueActions().loadIssues()
-		},150),true)
+		this.unsubscribe = this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
 		
-		this.unsubscribers.push(
-			this.store.observe([RepoKey,'availableRepos'],(newValue) => {
-				const
-					enabledRepos = enabledAvailableReposSelector(getStoreState())
-				
-				log.debug(`Enabled repo`,enabledRepos)
-				enabledReposValueCache.set(enabledRepos)
-			}),
-			this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
-		)
-		
-		
-		log.debug(`Got all avail repo parts`,availableRepos.map(repo => repo.id).join(','))
-		repoActions.updateAvailableRepos(availableRepos)
-		
-		//await Promise.delay(100)
-		//getIssueActions().loadIssues()
-		
-		//repoActions.loadAvailableRepos()
-		
-		
-		
-		
-		// Subscribe for changes
-		// this.unsubscribe = this.store.getReduxStore().subscribe(() => {
-		// 	//const state = this.store.getState()
-		//
-		// 	enabledRepoIdsValue.set(enabledRepoIdsSelector(state))
-		// 	selectedIssueIdsValue.set(selectedIssueIdsSelector(state))
-		// })
-		
-		
+		// CONTINUE REMOVING ANY REPOS MARKED FOR DELETE
+		this.finishPendingDeletes()
 		
 		if (module.hot) {
 			module.hot.dispose(() => this.clean())
@@ -118,7 +105,7 @@ export class RepoStateService extends BaseService {
 			log.debug(`Loading activity`)
 			getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
-	},150)
+	},200)
 	
 	
 	

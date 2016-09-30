@@ -6,6 +6,7 @@ import { RepoActionFactory } from "shared/actions/repo/RepoActionFactory"
 import { UIActionFactory } from "shared/actions/ui/UIActionFactory"
 import { JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey } from "shared/Constants"
 import { AuthActionFactory } from "shared/actions/auth/AuthActionFactory"
+import { If } from "shared/util/Decorations"
 
 const log = getLogger(__filename)
 
@@ -105,7 +106,10 @@ export function loadActionFactories() {
 			})
 	})
 	
-	
+	// IN DEBUG EXPOSE ALL PROVIDERS
+	If(DEBUG,() => {
+		assignGlobal(exports)
+	})
 	
 	
 	if (module.hot) {

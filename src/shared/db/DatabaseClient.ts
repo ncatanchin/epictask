@@ -111,7 +111,7 @@ export class DatabaseClient {
 	 *
 	 * @returns {boolean}
 	 */
-	get runningOnDatabaseServer() {
+	get notRunningOnDatabaseServer() {
 		return !ProcessConfig.isType(DatabaseServerType)
 	}
 	
@@ -125,7 +125,7 @@ export class DatabaseClient {
 	 */
 	async connect() {
 		// Connect the transport if not the DB server
-		if (this.runningOnDatabaseServer) {
+		if (this.notRunningOnDatabaseServer) {
 			await this.transport.connect()
 			
 			this.transport.on(DatabaseEvents.Response,this.onResponse)

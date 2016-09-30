@@ -193,7 +193,10 @@ export class DatabaseClientService extends BaseService {
  * @param repo
  * @returns {Promise<undefined>}
  */
-export async function chunkRemove(modelIds,repo:TSRepo<any>) {
+export function chunkRemove(modelIds,repo:TSRepo<any>) {
+	if (!modelIds || !modelIds.length)
+		return Promise.resolve()
+	
 	return repo.bulkRemove(...modelIds)
 }
 

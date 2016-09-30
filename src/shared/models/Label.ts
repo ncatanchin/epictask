@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	DefaultModel,
 	Repo as TSRepo
 } from 'typestore'
@@ -31,16 +31,16 @@ export class Label extends DefaultModel {
 	 */
 	static fromJS = (o:any) => new Label(o)
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	url: string
 
-	@AttributeDescriptor({index:{name:'repoId'}})
+	@Attribute({index:{name:'repoId'}})
 	repoId:number
 
-	@AttributeDescriptor({index:{name:'labelName'}})
+	@Attribute({index:{name:'labelName'}})
 	name: string;
 
-	@AttributeDescriptor()
+	@Attribute()
 	color: string;
 
 	constructor(props = {}) {

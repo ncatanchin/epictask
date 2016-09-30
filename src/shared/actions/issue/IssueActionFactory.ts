@@ -46,6 +46,8 @@ import { isListType } from "shared/util/ObjectUtil"
 
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "shared/UIConstants"
+import { LoadStatus } from "shared/models"
+import { getRepoActions } from "shared/actions/ActionFactoryProvider"
 
 
 /**
@@ -153,9 +155,20 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	@ActionReducer()
 	private setIssues(issues:List<Issue>) {
-		return (issueState:IssueState) =>
-			issueState
-				.set('issues',issues)
+		return (state:IssueState) => state.update(
+			'issues',
+			(updateIssues) => updateIssues.withMutations(newIssues => {
+				issues.forEach(issue => {
+					const
+						index = newIssues.findIndex(it => it.id === issue.id)
+					
+					newIssues = index === -1 ?
+						newIssues.push(issue) :
+						newIssues.set(index,issue)
+						
+				})
+			})
+		)
 	}
 	
 	@ActionThunk()
@@ -171,15 +184,14 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				log.warn(`No enabled repos found, can not load issues`)
 				issues = List<Issue>()
 			} else {
-				issues = await this.getIssues(enabledRepos.toArray())
-				log.debug(`Loaded issues`,issues)
+				log.info(`Updating repos`,enabledRepos)
+				// GET ISSUES PUSHES THEM A PAGE AT A TIME UNLESS ITS AN UPDATE
+				// @see reloadIssues
+				await this.getIssues(enabledRepos.toArray())
 			}
 			
 			const
 				selectedIssueIds = selectedIssueIdsSelector(getState())
-			
-			// SET ISSUES
-			this.setIssues(issues)
 			
 			// IFF SELECTED ISSUE THEN LOAD ACTIVITY
 			if (selectedIssueIds && selectedIssueIds.length === 1) {
@@ -203,62 +215,142 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		if (isListType(availRepos,AvailableRepo))
 			availRepos = availRepos.toArray()
 		
-		log.debug(`Getting issues for avail repos`,availRepos)
 		
-		availRepos = _.nilFilter(availRepos) as AvailableRepo[]
+		// REPOS TO USE FOR VALUES
+		availRepos = (_.nilFilter(availRepos) as AvailableRepo[])
+		
+		/**
+		 * Update issue load status
+		 *
+		 * @param newLoadStatus
+		 */
+		const updateIssuesLoadStatus = async (newLoadStatus:LoadStatus)=> {
+			availRepos = availableReposSelector(getStoreState())
+				.filter(it => (availRepos as any).find(availRepo => availRepo.id === it.id)) as any
+			
+			availRepos = (availRepos as any).map(it => assign({},it,{
+				issuesLoadStatus: newLoadStatus
+			}))
+			
+			getRepoActions().updateAvailableRepos(availRepos)
+			await Promise.delay(10)
+		}
+		
+		
+		/**
+		 * Fill issues
+		 *
+		 * @param partialIssues
+		 * @returns {List<Issue>|List<any>|any}
+		 */
+		const fillIssues = (partialIssues) => {
+			const
+				filledIssues = partialIssues
+					.filter(issue => {
+						const hasRepoId = issue && !!issue.repoId
+						
+						if (!hasRepoId) {
+							log.warn(`Issue does not have repoId`,issue)
+						}
+						
+						return hasRepoId
+					})
+					.map(issue => {
+						const
+							availRepo = (availRepos as AvailableRepo[])
+								.find(availRepo => availRepo.repoId === issue.repoId),
+							repo = availRepo.repo
+						
+						
+						return cloneObject(issue,{
+							repo,
+							collaborators: availRepo.collaborators,
+							
+							// Find labels
+							labels: !issue.labels ? [] :
+								issue.labels.map(label =>
+								availRepo.labels.find(it => it.url === label.url) || label),
+							
+							// Find milestones
+							milestone: (issue.milestone &&
+							availRepo.milestones.find(it => it.id === issue.milestone.id)) || issue.milestone
+						})
+					})
+			return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
+		}
+		
+		
 		
 		let
-			issues = List<Issue>()
+			issues = List<Issue>(),
+			loadingFromRepos = false
 		
+		// IF SOURCE ISSUES ARE PASSED THEN WE DO NOT NEED TO LOAD
 		if (fromIssues && fromIssues.length) {
 			issues = issues.push(...fromIssues)
-		} else {
+			issues = fillIssues(issues)
+		}
+		// OTHERWISE ONLY LOAD ISSUES SPECIFICALLY FOR UNLOADED REPOS
+		else {
+			loadingFromRepos = true
 			
-			await Promise.all(availRepos.map(async(availRepo) => {
-				const repoIssues:List<Issue> = await pagedFinder(
-					Issue,
-					FinderItemsPerPage,
-					getStores().issue,
-					(issueStore:IssueStore, nextRequest:FinderRequest) =>
-						issueStore.findByIssuePrefix(nextRequest, availRepo.repoId)
-				)
-				
-				
-				issues = issues.concat(repoIssues) as List<Issue>
+			// FILTER OUT ANY LOADED REPOS
+			availRepos = availRepos
+				.filter(it => !it.issuesLoadStatus || it.issuesLoadStatus < LoadStatus.Loading)
+			
+			// UPDATE LOADING STATUS
+			updateIssuesLoadStatus(LoadStatus.Loading)
+			
+			// NOW GET EVERYTHING
+			await Promise.all(
+				availRepos
+					.map(async(availRepo) => {
+						
+						let
+							loadedIssueIds = List<number>()
+						
+						const
+							pushIssues = (issuesToPush) => {
+								// ADD EACH PAGE OF ISSUES
+								if (issuesToPush && (issuesToPush.length || issuesToPush.size)) {
+									
+									// FIRST FILTER ANY LOADED ISSUES
+									issuesToPush = issuesToPush
+										.filter(it => !loadedIssueIds.includes(it.id))
+									
+									// NOW FILL THE ISSUES
+									const
+										filledIssues = fillIssues(issuesToPush)
+									
+									// PUSH THE IDS
+									loadedIssueIds = loadedIssueIds.concat(
+										filledIssues.map(it => it.id)) as List<number>
+									
+									this.setIssues(filledIssues)
+								}
+							},
+							
+							repoIssues:List<Issue> = await pagedFinder(
+								Issue,
+								FinderItemsPerPage,
+								getStores().issue,
+								(issueStore:IssueStore, nextRequest:FinderRequest, lastIssues:Issue[]) => {
+									
+									pushIssues(lastIssues)
+									
+									return issueStore.findByIssuePrefixReverse(nextRequest, availRepo.repoId)
+								}
+							)
+						
+						pushIssues(repoIssues)
+						//issues = issues.concat(repoIssues) as List<Issue>
 			}))
 		}
 			
-		issues = issues
-			.filter(issue => {
-				const hasRepoId = issue && !!issue.repoId
-				
-				if (!hasRepoId) {
-					log.warn(`Issue does not have repoId`,issue)
-				}
-				
-				return hasRepoId
-			})
-			.map(issue => {
-				const
-					availRepo = (availRepos as AvailableRepo[])
-						.find(availRepo => availRepo.repoId === issue.repoId),
-					repo = availRepo.repo
-					
-				
-				return cloneObject(issue,{
-					repo,
-					collaborators: availRepo.collaborators,
-					
-					// Find labels
-					labels: !issue.labels ? [] :
-						issue.labels.map(label =>
-							availRepo.labels.find(it => it.url === label.url) || label),
-					
-					// Find milestones
-					milestone: (issue.milestone &&
-						availRepo.milestones.find(it => it.id === issue.milestone.id)) || issue.milestone
-				})
-			}) as List<Issue>
+		
+		if (loadingFromRepos) {
+			await updateIssuesLoadStatus(LoadStatus.Loaded)
+		}
 		
 		
 		return issues
@@ -295,14 +387,24 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.newIssue(fromIssue, true)
 	}
 	
+	/**
+	 * Update issues label
+	 */
 	patchIssuesLabel() {
 		this.patchIssues('Label')
 	}
 	
+	
+	/**
+	 * Update issues milestone
+	 */
 	patchIssuesMilestone() {
 		this.patchIssues('Milestone')
 	}
 	
+	/**
+	 * Update issues assignee
+	 */
 	patchIssuesAssignee() {
 		this.patchIssues('Assignee')
 	}
@@ -1071,41 +1173,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		this.setFilteringAndSorting(newIssueFilter)
 	}
-	
-	@ActionThunk()
-	onSyncChanges(changes:ISyncChanges) {
-		return async (dispatch,getState) => {
-			log.debug(`Received repo sync changes`,changes)
-			
-			const
-				issueNumbers = _.nilFilter([...(changes.issueNumbersChanged || []),...(changes.issueNumbersNew || [])])
-			
-			if (issueNumbers.length) {
-				log.debug(`Issues have been updated during sync `,...issueNumbers)
-				
-				const
-					issueIds = issueNumbers.map(issueNumber => Issue.makeIssueId(changes.repoId,issueNumber))
-				
-				log.debug(`Mapped numbers to ids`,issueIds)
-				
-				const
-					issueSort = this.state.issueSort,
-					fromIssues = await getStores().issue.bulkGet(...issueIds),
-					issues = await this.getIssues(availableReposSelector(getState()),fromIssues),
-					selectedIssueId = selectedIssueIdSelector(getState())
-				
-				
-				this.updateIssuesInState(issues)
-				
-				if (selectedIssueId && issueIds.includes(selectedIssueId)) {
-					log.debug(`Selected issue has been updated - reloading it's activity`)
-					this.loadActivityForIssue(selectedIssueId)
-				}
-				
-			}
-				
-		}
-	}
+
 	
 	/**
 	 * Update a list of issues in the current state
@@ -1220,6 +1288,47 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	
 	/**
+	 * Remove all issues & comments matching this repo
+	 *
+	 * @param repoId
+	 */
+	@ActionReducer()
+	removeAllRepoResources(repoId:number) {
+		return (state:IssueState) => {
+			
+			if (state.selectedIssueIds && state.selectedIssueIds.length) {
+				state = state.set('selectedIssueIds',state.selectedIssueIds.filter(issueId => {
+					const
+						issue = state.issues.find(it => it.id === issueId)
+					
+					return issue && issue.repoId !== repoId
+				})) as IssueState
+			}
+			
+			if (state.editingIssue && state.editingIssue.repoId === repoId) {
+				state = state
+					.set('editingIssue', null)
+					.set('editingInlineConfig',null)
+					.set('patchIssues',[])
+					.set('editCommentRequest',null)
+					.set('editingInline',false)
+					.set('issueSaving',false)
+					.set('issueError',null) as IssueState
+			}
+			
+			state = state
+				.set('issues', state.issues.filter(it => it.repoId !== repoId))
+				.set('issuesEvents', state.issuesEvents.filter(it => it.repoId !== repoId))
+				.set('comments', state.comments.filter(it => it.repoId !== repoId)) as IssueState
+			
+			
+			
+			
+			return state
+		}
+	}
+	
+	/**
 	 * Load all issues for enabled repos
 	 *
 	 * @param dispatch
@@ -1233,8 +1342,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		// Issue repo
 		const
 			issueState = actions.state,
-			issueStore = actions.stores.issue,
-			issueFilter = issueState.issueFilter,
 			availRepos = enabledAvailableReposSelector(getState),
 			repoIds = availRepos.map(availRepo => availRepo.repoId)
 		
@@ -1251,11 +1358,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issuesEvents
 	 */
 	@ActionReducer()
-	private setActivity(comments:List<Comment>,issueEvents:List<IssuesEvent>) {
+	private setActivity(comments:List<Comment>,issuesEvents:List<IssuesEvent>) {
 		return (state:IssueState) =>
 			state
 				.set('comments',comments)
-				.set('issuesEvents',issueEvents)
+				.set('issuesEvents',issuesEvents)
 		
 	}
 	
@@ -1319,7 +1426,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const
 				{comments,issuesEvents} = await this.getActivity(issue)
 			
-			log.debug(`Loading activity for issue `, issueId,comments,issuesEvents)
+			log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
 			this.setActivity(comments,issuesEvents)
 			// TODO: Activity load
 			// Now push the models into the data state for tracking
@@ -1393,12 +1500,16 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	reloadIssues(...args:any[]) {
 		return async (dispatch,getState) => {
 			let
-				issues:Issue[] = (Array.isArray(args[0])) ?
-					args[0] : isListType(args[0],Issue) ?
-					args[0].toArray() :
-					isNumber(args[0]) ? nilFilter(args.filter(id => this.state.issues.find(it => it.id === id)))
-						: args
-						
+				enabledRepoIds = enabledRepoIdsSelector(getState()),
+				issues:Issue[] =
+					(Array.isArray(args[0])) ? args[0] :
+						isListType(args[0],Issue) ? args[0].toArray() :
+							isNumber(args[0]) ? nilFilter(args.filter(id => this.state.issues.find(it => it.id === id)))
+								: args
+			
+			// FINALLY FILTER FOR ONLY ENABLED REPO IDS
+			
+			issues = issues.filter(it => enabledRepoIds.includes(it.repoId))
 			
 			log.debug(`Going to reload issues`, issues, 'from args', args)
 			if (!issues.length) {

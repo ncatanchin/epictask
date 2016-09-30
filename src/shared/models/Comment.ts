@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	FinderDescriptor,
 	DefaultModel,
 	FinderRequest,
@@ -77,16 +77,16 @@ export class Comment extends DefaultModel {
 		return `${repoId}-${issueNumber}`
 	}
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id: number;
 
-	@AttributeDescriptor()
+	@Attribute()
 	repoId:number
 
-	@AttributeDescriptor()
+	@Attribute()
 	issueNumber:number
 	
-	@AttributeDescriptor()
+	@Attribute()
 	url: string
 	
 	html_url: string
@@ -171,7 +171,6 @@ export class CommentStore extends TSRepo<Comment> {
 	/**
 	 * Find all comments for a repo
 	 *
-	 * @param request
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
@@ -186,7 +185,7 @@ export class CommentStore extends TSRepo<Comment> {
 			}
 		}
 	})
-	findIdsByRepoId(request:FinderRequest,repoId:number):Promise<string[]> {
+	findIdsByRepoId(repoId:number):Promise<string[]> {
 		return null
 	}
 

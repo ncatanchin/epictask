@@ -1,21 +1,26 @@
+import {Attribute} from 'typestore'
 import {JSONKey} from 'shared/Constants'
 import {isFunction,isNil} from 'shared/util/ObjectUtil'
 
-
-
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	
+	//Keep track of annotated property values
+	propertyMap = new WeakMap()
 
 /**
- * Keep track of annotated property values
+ * Get props for a given object
  *
- * @type {WeakMap<any, any>}
+ * @param target
+ * @returns {any}
  */
-const propertyMap = new WeakMap()
-
 function getProps(target) {
-	let props = propertyMap.get(target)
+	let
+		props = propertyMap.get(target)
+	
 	if (!props) {
-		propertyMap.set(target, (props = {}))
+		props = {}
+		propertyMap.set(target, props)
 	}
 
 	return props
@@ -259,4 +264,15 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 		
 		
 	}
+}
+
+/**
+ * Mark an attribute as transient
+ *
+ * @param target
+ * @param propertyKey
+ * @constructor
+ */
+export function Transient(target:any,propertyKey:string) {
+	return Attribute({transient:true})(target,propertyKey)
 }

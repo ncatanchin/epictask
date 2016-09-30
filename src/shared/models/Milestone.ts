@@ -1,6 +1,6 @@
 import {
-	AttributeDescriptor,
 	DefaultModel,
+	Attribute,
 	Repo as TSRepo
 } from 'typestore'
 
@@ -36,10 +36,10 @@ export class Milestone extends DefaultModel {
 	static fromJS = (o:any) => new Milestone(o)
 
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id: number
 
-	@AttributeDescriptor()
+	@Attribute()
 	repoId:number
 
 	url: string
@@ -49,7 +49,7 @@ export class Milestone extends DefaultModel {
 
 	number: number
 
-	@AttributeDescriptor()
+	@Attribute()
 	state: string
 	title: string
 	description: string

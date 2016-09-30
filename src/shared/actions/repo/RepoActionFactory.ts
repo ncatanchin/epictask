@@ -1,10 +1,10 @@
 
 
-
+import {FinderRequest} from 'typestore'
 import {List} from 'immutable'
 import {chunkRemove} from 'shared/services/DatabaseClientService'
 import {Benchmark} from 'shared/util/Benchmark'
-import { Stores, getStores } from 'shared/Stores'
+import { getStores } from 'shared/Stores'
 import {ActionFactory, ActionReducer,ActionThunk} from 'typedux'
 import {RepoKey} from 'shared/Constants'
 import {RepoMessage, RepoState} from './RepoState'
@@ -14,20 +14,23 @@ import {RepoMessage, RepoState} from './RepoState'
 // import {Label} from 'shared/models/Label'
 // import {Milestone} from 'shared/models/Milestone'
 
-import {Milestone,Label,AvailableRepo,Repo} from 'shared/models'
+import {
+	Milestone, Label, AvailableRepo, Repo, LoadStatus, Issue, IssueStore, makeIssueId,
+	Comment,CommentStore, makeCommentId
+} from 'shared/models'
 
 import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from 'shared/actions/repo/RepoSelectors'
 import {getSettings} from 'shared/settings/Settings'
-import {editingIssueSelector} from 'shared/actions/issue/IssueSelectors'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
-import { cloneObject } from "shared/util/ObjectUtil"
+import { getValue, isNil, nilFilter } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { getIssueActions, getJobActions } from  "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/models"
+import GithubSyncStatus from 'shared/github/GithubSyncStatus'
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -76,60 +79,28 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 */
 	@ActionReducer()
 	updateAvailableRepos(availableRepos:List<AvailableRepo>|AvailableRepo[]) {
-		if (Array.isArray(availableRepos))
-			availableRepos = List<AvailableRepo>(availableRepos)
-		
-		return (state:RepoState) => state.set('availableRepos',availableRepos)
+		return (state:RepoState) => {
+			availableRepos = Array.isArray(availableRepos) ?
+				List<AvailableRepo>(availableRepos) :
+				availableRepos
+			
+			return state.set('availableRepos',
+				state.availableRepos.withMutations(newAvailRepos => {
+					(availableRepos as any).forEach((availRepo:AvailableRepo) => {
+						const
+							index = newAvailRepos.findIndex(it => it.id === availRepo.id)
+						
+						newAvailRepos = index === -1 ?
+							newAvailRepos.push(availRepo) :
+							newAvailRepos.set(index,availRepo)
+					})
+				})
+					
+			)
+		}
 			
 	}
 	
-	async getLabelsByRepoIds(...repoIds):Promise<Label[]> {
-		const mappedLabels = await Promise.all(repoIds
-			.map(repoId => getStores().label.findByRepo(repoId)))
-		
-		return mappedLabels.reduce((allLabels,labels) => {
-			allLabels.push(...labels)
-			return allLabels
-		},[]) as Label[]
-	}
-	
-	async getMilestonesByRepoIds(...repoIds):Promise<Milestone[]> {
-		const mappedMilestones = await Promise.all(repoIds
-			.map(repoId => getStores().milestone.findByRepo(repoId)))
-		
-		return mappedMilestones.reduce((allMilestones,milestones) => {
-			allMilestones.push(...milestones)
-			return allMilestones
-		},[]) as Milestone[]
-	}
-	
-	
-	async getReposWithValues(...repoIds) {
-		const
-			stores = Container.get(Stores),
-			promises = [
-				stores.availableRepo.findByRepoId(...repoIds),
-				stores.repo.bulkGet(...repoIds),
-				this.getLabelsByRepoIds(...repoIds),
-				this.getMilestonesByRepoIds(...repoIds),
-				this.getUsersByRepoId(...repoIds)
-			],
-			[availableRepos,repos,labels,milestones,collaborators]:[AvailableRepo[],Repo[],Label[],Milestone[],User[]] =
-				await Promise.all(promises) as any
-		
-		return {
-			availableRepos: availableRepos.map(availRepo => cloneObject(availRepo,{
-				repo: repos.find(it => it.id === availRepo.repoId),
-				labels: labels.filter(it => it.repoId === availRepo.repoId),
-				milestones: milestones.filter(it => it.repoId === availRepo.repoId),
-				collaborators: collaborators.filter(it => it.repoIds.includes(availRepo.repoId))
-			})),
-			repos,
-			labels,
-			milestones,
-			collaborators
-		}
-	}
 	
 	/**
 	 * Sync repo including issues, comments, milestones,
@@ -142,13 +113,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	syncRepo(repoIds:number|number[],force:boolean=false) {
 		return async (dispatch,getState) => {
-			
-			const
-				jobActions = getJobActions()
 
 			if (!Array.isArray(repoIds))
 				repoIds = [repoIds]
-			
 			
 			for (let repoId of _.uniq(repoIds)) {
 				const
@@ -217,7 +184,9 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		availableRepo[field] = value
 		
-		return state.set('availableRepos', availableRepos.set(index,availableRepo))
+		
+		
+		return state.set('availableRepos', availableRepos.set(index,assign({},availableRepo)))
 	}
 	
 	
@@ -271,106 +240,151 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	/**
-	 * Get all available repos and their dependent resources from backing store
-	 */
-	async getAllAvailableRepoResources() {
+	private repoInState(availRepo) {
 		const
-			stores = Container.get(Stores)
-		
-		let
-			availRepos = (await stores.availableRepo.findAll())
-				.filter(availRepo => !availRepo.deleted),
-			availRepoIds = availRepos.map(it => it.id)
-		
-		log.debug(`Got available repos `, availRepos,availRepoIds)
-		
-		// Filter Deleted
-		const
-			repoIds = availRepos.map(item => item.id),
-			milestones = [],
-			labels = [],
-			assignees = [],
+			{availableRepos} = this.state,
+			currentRepo = availableRepos && availableRepos
+				.find(it =>
+					it.id === availRepo.id &&
+					it.repoLoadStatus &&
+					it.repoLoadStatus > LoadStatus.NotLoaded)
+		return !isNil(currentRepo)
 			
-			// All Promises
-			promises = [
-				
-				// Repos
-				stores.repo.bulkGet(...repoIds)
-					.then(models => {
-						availRepos.forEach(it =>
-							it.repo = models.find(repo => repo.id ===  it.id))
-					}),
-				
-				// Users/Assignees/Collaborators
-				this.getUsersByRepoId(...repoIds).then(modelList => {
-					const
-						models = modelList.toArray()
-					
-					assignees.push(...models)
-					availRepos.forEach(it =>
-						(it.collaborators = it.collaborators || [])
-							.push(...models.filter(user => user.repoIds.includes(it.repoId))))
-				})
-			
-			
-			].concat(
-				
-				// Labels
-				repoIds.map(repoId =>
-					stores.label.findByRepo(repoId)
-						.then(models => {
-							labels.push(...models)
-							availRepos.forEach(it =>
-								it.labels = models.filter(label =>  label.repoId ===  it.repoId))
-						}),
-				),
-				
-				// Milestones
-				repoIds.map(repoId =>
-					stores.milestone.findByRepo(repoId)
-						.then(models => {
-							milestones.push(...models)
-							availRepos.forEach(it =>
-								it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
-						})
-				)
-			)
-		
-		
-		
-		
-		await Promise.all(promises)
-		
-		return List<AvailableRepo>(availRepos)
 	}
 	
 	/**
-	 * Reload all available repo resources
-	 *
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 * Load all available repo resources
 	 */
 	@ActionThunk()
-	loadAvailableRepos(syncChanges:ISyncChanges = null) {
+	loadAvailableRepos(prepareOnBoot = false) {
 		return async (dispatch,getState) => {
 			log.debug(`Getting available repos`)
 			
 			const
-				availableRepos = await this.getAllAvailableRepoResources()
-			
-			log.debug(`Got all avail repo parts`,availableRepos)
-			this.updateAvailableRepos(availableRepos)
-			
-			if (syncChanges) {
-				log.debug(`Now checking issue sync changes`,syncChanges)
+				stores = getStores(),
 				
-				getIssueActions().onSyncChanges(syncChanges)
+				// UPDATE LOAD STATUS AND STEP OVER
+				updateLoadStatuses = async (availReposToUpdate,repoLoadStatus:LoadStatus,issuesLoadStatus:LoadStatus) => {
+					let
+						updatedAvailRepos = availReposToUpdate.map(it => assign({},it,{
+							repoLoadStatus: LoadStatus.Loading,
+							issuesLoadStatus: LoadStatus.NotLoaded
+						}))
+					
+					this.updateAvailableRepos(updatedAvailRepos)
+					
+					// QUICK DELAY TO ALLOW UI UPDATE
+					await Promise.setImmediate()
+					
+					if (List.isList(updatedAvailRepos))
+						updatedAvailRepos = updatedAvailRepos.toArray()
+					
+					return updatedAvailRepos as AvailableRepo[]
+				}
+			
+			
+			
+			// IF THIS IS THE BOOT REQUEST
+			if (prepareOnBoot && getValue(() => this.state.availableRepos.size,0)) {
+				await updateLoadStatuses(this.state.availableRepos,LoadStatus.NotLoaded, LoadStatus.NotLoaded)
 			}
+			
+			// NOW QUERY THE DB AND GET TO WORK
+			let
+				availRepos = (await stores.availableRepo.findAll())
+					// FILTER DELETED && ALREADY IN STATE
+					.filter(availRepo => !availRepo.deleted && !this.repoInState(availRepo)),
+				
+				availRepoIds = availRepos.map(it => it.id)
+			
+			// IF EVERYTHING IS IN THE STATE THEN EXIT IMMEDIATELY
+			if (availRepoIds.length === 0)
+				return
+			
+			// SET LOADING
+			availRepos = await updateLoadStatuses(
+				availRepos,
+				LoadStatus.Loading,
+				LoadStatus.NotLoaded)
+			
+			// DELAYING FOR A QUICK STATE UPDATE TO DISPLAY LOADING STATUS
+			log.debug(`Got available repos `, availRepos,availRepoIds)
+			
+			
+			const
+				repoIds = availRepos.map(item => item.id),
+				milestones = [],
+				labels = [],
+				assignees = [],
+				
+				// LOAD REPO, ASSIGNEES/COLLABS, LABELS & MILESTONES
+				promises = [
+					
+					// Repos
+					stores.repo.bulkGet(...repoIds)
+						.then(models => {
+							availRepos.forEach(it =>
+								it.repo = models.find(repo => repo.id ===  it.id))
+						}),
+					
+					// Users/Assignees/Collaborators
+					this.getUsersByRepoId(...repoIds).then(modelList => {
+						const
+							models = modelList.toArray()
+						
+						assignees.push(...models)
+						availRepos.forEach(it =>
+							(it.collaborators = it.collaborators || [])
+								.push(...models.filter(user => user.repoIds.includes(it.repoId))))
+					})
+				
+				
+				].concat(
+					
+					// Labels
+					repoIds.map(repoId =>
+						stores.label.findByRepo(repoId)
+							.then(models => {
+								labels.push(...models)
+								availRepos.forEach(it =>
+									it.labels = models.filter(label =>  label.repoId ===  it.repoId))
+							}),
+					),
+					
+					// Milestones
+					repoIds.map(repoId =>
+						stores.milestone.findByRepo(repoId)
+							.then(models => {
+								milestones.push(...models)
+								availRepos.forEach(it =>
+									it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
+							})
+					)
+				)
+			
+			// WAIT FOR EVERYTHING TO LOAD
+			await Promise.all(promises)
+			
+			// UPDATE ALL STATUSES
+			availRepos.forEach(it => it.repoLoadStatus = LoadStatus.Loaded)
+			
+			// ASSIGN TO NEW REF
+			this.updateAvailableRepos(List<AvailableRepo>(availRepos.map(it => assign({},it))))
+			
+			// QUICK DELAY
+			await Promise.delay(100)
+			
+			// LOAD ISSUES
+			getIssueActions().loadIssues()
 			
 		}
 	}
-
-
+	
+	/**
+	 * Clear selected repos
+	 *
+	 * @returns {(state:RepoState)=>Map<string, Array>}
+	 */
 	@ActionReducer()
 	clearSelectedRepos() {
 		return (state:RepoState) => state.set('selectedRepoIds',[])
@@ -434,6 +448,17 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 	
 	/**
+	 * Remove the repo from the state
+	 *
+	 * @param repoId
+	 */
+	@ActionReducer()
+	private removeAvailableRepoFromState(repoId:number) {
+		return (state:RepoState) => state.set(
+			'availableRepos',state.availableRepos.filter(it => it.id !== repoId))
+	}
+	
+	/**
 	 * Remove an AvailableRepo from the system
 	 *
 	 * @param availRepoId
@@ -444,7 +469,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	private async removeAvailableRepoAction(availRepoId,dispatch, getState) {
 		
 		const
-			actions = this.withDispatcher(dispatch, getState),
 			stores = getStores(),
 			myUserId = _.get(getSettings(),'user.id')
 
@@ -453,37 +477,52 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			availRepo = await stores.availableRepo.get(availRepoId)
 		
 		assert(availRepo,`Available repo not found for id ${availRepoId}`)
+		
 		const
 			{repoId} = availRepo
 		
 		availRepo.deleted = true
+		availRepo.enabled = false
 		availRepo = await stores.availableRepo.save(availRepo)
-
+		
+		GithubSyncStatus.clearPrefix(`${availRepoId}`)
+		
 		// FIRST - get everything out of the state
 		log.debug(`Reloading avail repos`)
-		await actions.loadAvailableRepos()
+		this.removeAvailableRepoFromState(availRepo.id)
 
 		log.debug('Cleaning up issue selections')
-		const
-			issueActions = getIssueActions(),
-			editingIssue = editingIssueSelector(getState())
+		getIssueActions().removeAllRepoResources(availRepo.id)
 		
-		issueActions.setSelectedIssueIds([])
-		// issueActions.clearAndLoadIssues()
-		
-		if (_.get(editingIssue,'repoId') === repoId)
-			issueActions.setEditingIssue(null)
-
 		log.debug(`Going to delay for a second then delete everything`)
 		await Promise.delay(1000)
 
 
 		// Retrieve every entity for the repo
 		const
-			labelIds = await stores.label.findIdsByRepo(repoId),
-			issueIds = await stores.issue.findIdsByIssuePrefix(null,repoId),
-			commentIds = await stores.comment.findIdsByRepoId(null,repoId),
-			milestoneIds = await stores.milestone.findIdsByRepo(repoId),
+			labelIds = (await stores.label.findIdsByRepo(repoId)).map(url => `${repoId}-${url}`),
+			milestoneIds = (await stores.milestone.findIdsByRepo(repoId)).map(id => `${repoId}-${id}`),
+			
+			// MAP ALL ISSUES TO ISSUE IDS
+			issueIds = (await pagedFinder(
+					Issue,
+					100,
+					getStores().issue,
+					(issueStore:IssueStore, nextRequest:FinderRequest, lastIssues:Issue[]) =>
+						issueStore.findByIssuePrefix(nextRequest, availRepo.repoId)
+				)).map(issue => makeIssueId(issue)).toArray(),
+			
+			// ALL COMMENTS
+			commentIds = (await pagedFinder(
+				Comment,
+				100,
+				getStores().comment,
+				(commentStore:CommentStore,nextRequest:FinderRequest) =>
+					commentStore.findByRepoId(nextRequest,repoId)
+				
+			)).map(comment => makeCommentId(comment)).toArray(),
+			
+			// USERS
 			users = (await stores.user.findByRepoId(null,repoId))
 				.filter(user => user.id !== myUserId),
 			
@@ -507,7 +546,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 
 		const
 			// Concat all ids to remove
-			removeUserIds = removeUsers.map(user => user.id),
+			removeUserIds = nilFilter(removeUsers.map(user => user.id)).map(id => id + ''),
 			
 			// Create a promise to remove everything
 			removePromise = Promise.all([
@@ -515,15 +554,17 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				chunkRemove(labelIds,stores.label),
 				chunkRemove(milestoneIds,stores.milestone),
 				chunkRemove(issueIds,stores.issue),
-				chunkRemove(removeUserIds,stores.user),
-				stores.availableRepo.remove(availRepoId)
-				
+				chunkRemove(removeUserIds,stores.user)
 			])
 
 
 		// Wait for the all-clear
 		await removePromise
 
+		// WE DO THIS AT THE END JUST IN CASE THE APP EXITS
+		// IN THE MIDDLE SO WE CAN CONTINUE DELETING AFTER
+		await stores.availableRepo.remove(availRepoId)
+		
 		log.debug(`Avail repo removed ${repoId}`)
 
 	}
@@ -550,9 +591,11 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	setRepoEnabled(availRepoId,enabled:boolean) {
 		return async (dispatch,getState) => {
-			const
+			let
 				stores = getStores(),
-				availRepo = await stores.availableRepo.get(availRepoId)
+				availableRepos = availableReposSelector(getState()),
+				availRepo = availableRepos.find(it => it.id === availRepoId)
+			
 			
 			log.debug(`Setting available repo ${availRepo.id} to enabled ${enabled}`,availRepo,enabled)
 			if (enabled === availRepo.enabled) {
@@ -560,21 +603,37 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				return
 			}
 			
-			availRepo.enabled = enabled
-			await stores.availableRepo.save(availRepo)
-			
-			
 			let
-				availableRepos = availableReposSelector(getState())
-				 
-					
-				
-					
+				persistentAvailRepo = await stores.availableRepo.get(availRepoId)
 			
-			this.updateAvailableRepos(availableRepos.update(
-				availableRepos.findIndex(it => it.id === availRepoId),
-				(availableRepo) => cloneObject(availableRepo,{enabled})
-			))
+			availRepo.enabled = persistentAvailRepo.enabled = enabled
+			await stores.availableRepo.save(persistentAvailRepo)
+			
+			
+			const
+				
+				updatedAvailRepo = assign(
+					{},
+					availRepo,
+					{
+						enabled
+					},
+					{issuesLoadStatus: LoadStatus.NotLoaded}
+				) as AvailableRepo
+			
+			
+			// UPDATE THE ACTUAL REPO
+			this.updateAvailableRepos(List<AvailableRepo>([updatedAvailRepo]))
+			
+			// IF NOT ENABLED THEN CLEAR ISSUES
+			
+			await Promise.delay(100)
+			if (!enabled) {
+				getIssueActions().removeAllRepoResources(availRepoId)
+			} else {
+				getIssueActions().loadIssues()
+			}
+			
 			log.debug('Saved avail repo, setting enabled to',enabled)
 			
 		}

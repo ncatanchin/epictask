@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	FinderDescriptor,
 	DefaultModel,
 	FinderRequest,
@@ -14,7 +14,7 @@ import {RegisterModel} from '../Registry'
  * User model from GitHub schema
  */
 @RegisterModel
-@ModelDescriptor()
+@Model()
 export class User extends DefaultModel {
 
 	/**
@@ -24,10 +24,10 @@ export class User extends DefaultModel {
 	 */
 	static fromJS = (o:any) => new User(o)
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id: number;
 
-	@AttributeDescriptor({
+	@Attribute({
 		index:{
 			name: 'idxLogin',
 			unique:true
@@ -35,54 +35,54 @@ export class User extends DefaultModel {
 	})
 	login: string;
 
-	@AttributeDescriptor()
+	@Attribute()
 	repoIds: number[]
 	
 	
-	@AttributeDescriptor()
+	@Attribute()
 	name:string
 	
-	@AttributeDescriptor()
+	@Attribute()
 	avatar_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	gravatar_id: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	url: string;
 	html_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	followers_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	following_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	gists_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	starred_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	subscriptions_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	organizations_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	repos_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	events_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	received_events_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	type: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	site_admin: boolean;
 
 	constructor(props = {}) {

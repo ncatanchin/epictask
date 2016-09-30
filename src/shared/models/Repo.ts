@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	FinderDescriptor,
 	DefaultModel,
 	DefaultValue,
@@ -41,7 +41,7 @@ export class Repo extends DefaultModel {
 	static fromJS = (o:any) => new Repo(o)
 
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id: number
 	
 	/**
@@ -54,16 +54,16 @@ export class Repo extends DefaultModel {
 	 */
 	owner: User
 
-	@AttributeDescriptor()
+	@Attribute()
 	name: string;
 
-	@AttributeDescriptor()
+	@Attribute()
 	full_name: string;
 
-	@AttributeDescriptor()
+	@Attribute()
 	description: string;
 
-	@AttributeDescriptor()
+	@Attribute()
 	//'private': boolean;
 	fork: boolean;
 	url: string;

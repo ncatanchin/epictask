@@ -1,6 +1,6 @@
 import {
-	ModelDescriptor,
-	AttributeDescriptor,
+	Model,
+	Attribute,
 	DefaultModel,
 	Repo as TSRepo,
 	FinderRequest,
@@ -65,16 +65,16 @@ export class Issue extends DefaultModel {
 	 */
 	static fromJS = (o:any) => new Issue(o)
 
-	@AttributeDescriptor({primaryKey:true})
+	@Attribute({primaryKey:true})
 	id: number;
 
-	@AttributeDescriptor()
+	@Attribute()
 	repoId:number
 
 	/**
 	 * Globally unique url to view the issue
 	 */
-	@AttributeDescriptor()
+	@Attribute()
 	url: string;
 
 
@@ -83,7 +83,7 @@ export class Issue extends DefaultModel {
 	 *
 	 * @transient
 	 */
-	@AttributeDescriptor({transient:true})
+	@Attribute({transient:true})
 	repo:Repo
 
 
@@ -92,7 +92,7 @@ export class Issue extends DefaultModel {
 	 *
 	 * @transient
 	 */
-	@AttributeDescriptor({transient:true})
+	@Attribute({transient:true})
 	milestones:Milestone[]
 
 	/**
@@ -100,13 +100,13 @@ export class Issue extends DefaultModel {
 	 *
 	 * @transient
 	 */
-	@AttributeDescriptor({transient:true})
+	@Attribute({transient:true})
 	collaborators:User[]
 
 	/**
 	 * State open/closed
 	 */
-	@AttributeDescriptor()
+	@Attribute()
 	state: TIssueState;
 
 	repository_url: string;
@@ -115,46 +115,46 @@ export class Issue extends DefaultModel {
 	events_url: string;
 	html_url: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	number: number;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	title: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	body: string;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	user: User;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	labels: Label[];
 	
-	@AttributeDescriptor()
+	@Attribute()
 	assignee: User;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	milestone: Milestone;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	locked: boolean;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	comments: number;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	pull_request: PullRequest;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	closed_at: any;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	created_at: Date;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	updated_at: Date;
 	
-	@AttributeDescriptor()
+	@Attribute()
 	closed_by: User;
 
 
@@ -198,6 +198,30 @@ export class IssueStore extends TSRepo<Issue> {
 	}
 	
 	/**
+	 * Same as above - just reverse order - better for
+	 * loading in display
+	 *
+	 * @param request
+	 * @param repoId
+	 * @returns {null}
+	 */
+	@PouchDBPrefixFinder({
+		reverse:true,
+		keyProvider: (repoId:number) => {
+			const
+				startKey = makeIssuePrefix(repoId)
+			
+			return {
+				startKey,
+				endKey: makePrefixEndKey(startKey)
+			}
+		}
+	})
+	findByIssuePrefixReverse(request:FinderRequest,repoId:number):Promise<Issue[]> {
+		return null
+	}
+	
+	/**
 	 * Find all issues in provided repo id
 	 *
 	 * @param request
@@ -216,9 +240,11 @@ export class IssueStore extends TSRepo<Issue> {
 			}
 		}
 	})
-	findIdsByIssuePrefix(request:FinderRequest,repoId:number):Promise<string[]> {
+	findIdsByIssuePrefix(repoId:number):Promise<string[]> {
 		return null
 	}
+	
+	
 	
 	
 }

@@ -73,7 +73,7 @@ export class RepoSyncManager {
 	/**
 	 * Triggers a repo sync if one is not pending
 	 */
-	private triggerRepoSync() {
+	triggerRepoSync() {
 		if (!isRepoSyncPending(this.repo.id)) {
 			getRepoActions().syncRepo(this.repo.id)
 		}
@@ -178,8 +178,7 @@ export class RepoSyncManager {
 				
 			}))
 			
-			// TRIGGER SYNC
-			this.triggerRepoSync()
+			
 			
 			
 		} catch (err) {
@@ -269,9 +268,7 @@ export class RepoSyncManager {
 				}
 			})
 			
-			if (shouldUpdateIssues || shouldUpdateComments) {
-				this.triggerRepoSync()
-			}
+			
 			log.debug(`Resolved ${events.length} issue events`)
 		} catch (err) {
 			log.error(`Failed to resolve ${events.length} issue events`, err)
@@ -378,7 +375,7 @@ export class RepoSyncManager {
 		const
 			client = createClient(),
 			updatedIssues:Issue[] = [],
-			issuesResourceUrl = `${this.repo.id}-issues`,
+			issuesResourceUrl = `${this.repo.id}-issue-sync`,
 			issuesSinceParams = SyncStatus.getSinceTimestampParams(issuesResourceUrl),
 			{repo} = this
 		
@@ -497,7 +494,7 @@ export class RepoSyncManager {
 		
 		const
 			client = createClient(),
-			commentsResourceUrl = `${this.repo.id}-comments`,
+			commentsResourceUrl = `${this.repo.id}-comment-syn`,
 			commentsSinceParams = SyncStatus.getSinceTimestampParams(commentsResourceUrl),
 			
 			// SAVE PAGE OF COMMENTS

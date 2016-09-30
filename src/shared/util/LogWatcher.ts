@@ -135,7 +135,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			if (index === -1) {
 				index = this.buf.indexOf(10)
 				if (index === -1) {
-					log.info(`Line return not detected yet`)
+					log.debug(`Line return not detected yet`)
 					break
 				}
 			}
@@ -147,14 +147,14 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			
 			// Get the line return data and reset the buffer
 			
-			log.info(`Return found at index ${index}`)
+			log.debug(`Return found at index ${index}`)
 			const
 				lineBuf = this.buf.slice(0, index),
 				lineStr = String.fromCharCode(...lineBuf)
 			
 			
 			this.buf.splice(0, index)
-			log.info(`Buf size went from ${bufSize} to ${this.buf.length} - JSON size is ${lineBuf.length}`, lineStr)
+			log.debug(`Buf size went from ${bufSize} to ${this.buf.length} - JSON size is ${lineBuf.length}`)
 			
 			if (lineStr.length === 0) {
 				log.warn(`Line str length is 0`, lineStr, this.buf)
@@ -208,12 +208,12 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 					start: this.position
 				})
 				.on('open', () => {
-					log.info(`File opened log read stream ${this.filename}`)
+					log.debug(`File opened log read stream ${this.filename}`)
 					this.emit(LogWatcherEvent.Opened, this, this.filename)
 				})
 				.on('data', this.onData)
 				.on('end', () => {
-					log.info(`File end log read stream ${this.filename}`)
+					log.debug(`File end log read stream ${this.filename}`)
 					this.emit(LogWatcherEvent.End, this, this.filename)
 					if (this.stream) {
 						try {
@@ -246,9 +246,9 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	 * Stop the watcher
 	 */
 	stop() {
-		log.info(`Stopping ${this.filename}`)
+		log.debug(`Stopping ${this.filename}`)
 		if (!this.watching) {
-			log.info(`Not currently watching ${this.filename} - can not stop`)
+			log.debug(`Not currently watching ${this.filename} - can not stop`)
 			return
 		}
 		
@@ -299,7 +299,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			
 			// Check to make sure everything is ready
 			if (!this.watching) {
-				log.info(`Watching has stopped before file was opened`)
+				log.debug(`Watching has stopped before file was opened`)
 				return
 			} else if (!this.fileExists) {
 				this.fileExistTimer = setTimeout(tryToOpen,100)
@@ -308,7 +308,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			
 			
 			
-			log.info(`File is ready to open stream ${this.filename}`)
+			log.debug(`File is ready to open stream ${this.filename}`)
 			this.openStream()
 			
 			this.watcher = fs.watch(this.filename,{
@@ -318,7 +318,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 		
 		
 		
-		log.info(`Trying to open log ${this.filename}`)
+		log.debug(`Trying to open log ${this.filename}`)
 		tryToOpen()
 		
 	}
