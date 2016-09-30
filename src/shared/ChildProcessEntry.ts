@@ -4,6 +4,7 @@ import {ProcessType} from "shared/ProcessType"
 import {getServiceManager} from "shared/services"
 import Bluebird from 'shared/PromiseConfig'
 import {ipcRenderer} from 'electron'
+import { START_TIMEOUT_DEFAULT } from "shared/Constants"
 
 const
 	log = getLogger(__filename)
@@ -189,7 +190,7 @@ async function startChildProcess(processType:ProcessType, workerEntry:ChildProce
 			log.info('Starting all services')
 			await Promise
 				.resolve(getServiceManager().start())
-				.timeout(10000)
+				.timeout(START_TIMEOUT_DEFAULT)
 		}
 		
 		await workerStart()
@@ -243,7 +244,7 @@ export abstract class ChildProcessEntry {
 	 *
 	 * @param timeout
 	 */
-	async waitForStart(timeout = 5000) {
+	async waitForStart(timeout = START_TIMEOUT_DEFAULT) {
 		await startDeferred
 			.promise
 			.timeout(timeout)

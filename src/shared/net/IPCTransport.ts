@@ -1,5 +1,6 @@
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "shared/net/Transport"
 import Counter from "shared/Counter"
+import { START_TIMEOUT_DEFAULT } from "shared/Constants"
 
 const
 	log = getLogger(__filename),
@@ -157,7 +158,7 @@ export class IPCTransport extends Transport {
 		try {
 			await this.connectDeferred
 				.promise
-				.timeout(15000)
+				.timeout(START_TIMEOUT_DEFAULT)
 		} catch (err) {
 			log.error('Failed to connect',err)
 			try {
