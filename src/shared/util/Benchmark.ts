@@ -1,6 +1,66 @@
 
 
-const log =getLogger(__filename)
+const
+	log = getLogger(__filename)
+
+
+/**
+ * benchmarking function to use anywhere
+ *
+ * @param name
+ * @param origFn
+ * @param detail
+ */
+export function benchmark<T extends Function>(name, origFn:T,detail:string = ''):T {
+	return function (...args:any[]) {
+		const
+			startTime = Date.now()
+		
+		let
+			returnVal = null
+		
+		try {
+			returnVal = origFn.call(this,...args)
+		} finally {
+			
+			const
+				isPromise = returnVal && _.isFunction(returnVal.then)
+			
+			/**
+			 * Since our reporting function can be attached to a promise
+			 * we want to make sure to pass any value passed in directly thru
+			 *
+			 * @param passthruVal
+			 * @returns {null}
+			 */
+			function doReport(passthruVal = null) {
+				const
+					duration = Date.now() - startTime
+				
+				
+				log.info(`${name ? `${name}.` : '[BENCHMARK]'}${detail} ${isPromise ? 'PromiseResolve' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
+				
+				return passthruVal
+			}
+			
+			
+			// If a promised was returned then wait for it to resolve
+			if (isPromise) {
+				log.debug('Got promise result, attaching as then-able to report')
+				returnVal.then(doReport)
+			} else {
+				doReport()
+			}
+		}
+		
+		return returnVal
+	} as any
+}
+
+/**
+ * Benchmark decorator function - can be used as an
+ * es7 / typescript decorator or as a standalone function wrapper
+ */
 
 export function Benchmark(name:string = null) {
 	return (target:any,
@@ -11,35 +71,8 @@ export function Benchmark(name:string = null) {
 
 		// Wrap the function for timing purposes
 		const origFn = descriptor.value
-		descriptor.value = function (...args:any[]) {
-			const startTime = Date.now()
-			let returnVal = null
-			try {
-				returnVal = origFn.call(this,...args)
-			} finally {
-
-
-				function doReport() {
-					const duration = Date.now() - startTime,
-						isPromise = _.isFunction(returnVal.then)
-
-
-					log.info(`${name ? `${name}.` : '[BENCHMARK]'}${propertyKey} ${isPromise ? 'PromiseResolve' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
-				}
-
-
-				// If a promised was returned then wait for it to resolve
-				if (returnVal && _.isFunction(returnVal.then)) {
-					log.debug('Got promise result, attaching as then-able to report')
-					returnVal.then(doReport)
-				} else {
-					doReport()
-				}
-
-			}
-
-			return returnVal
-		}
+		descriptor.value = benchmark(name,origFn,propertyKey)
+		
 
 		//return descriptor
 	}

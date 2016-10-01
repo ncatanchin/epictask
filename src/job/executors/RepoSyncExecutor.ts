@@ -243,13 +243,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 				log.debug('waiting for all promises - we sync comments later ;)')
 				await this.syncIssues(stores,repo)
 				
-				
-				// Now get the store state to check if updates are needed
-				getRepoActions().onSyncChanges(this.syncChanges)
-				
-				
 				log.info('Now syncing comments')
-				await Promise.delay(1000)
 				await this.syncComments(stores,repo)
 				
 				

@@ -9,7 +9,7 @@ import Electron = require('electron')
 import * as React from 'react'
 
 import { shortId, isString } from "shared/util/ObjectUtil"
-import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/UIConstants"
+import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/WindowConfig"
 import { AllWindowDefaults } from "shared/Constants"
 import { toJSON } from "shared/util/JSONUtil"
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
@@ -128,9 +128,14 @@ export class WindowManager {
 			
 			log.debug(`Closing win`,win)
 			
-			if (win.window.isClosable()) {
-				win.window.close()
+			try{
+				if (win.window.isClosable()) {
+					win.window.close()
+				}
+			} catch (err) {
+				log.warn(`Unable to close window, probably destroyed`,err)
 			}
+		
 			
 			if (index > -1) {
 				this.windows.splice(index,1)
@@ -183,13 +188,14 @@ export class WindowManager {
 				newWindowOpts = _.merge(
 					{},
 					WindowTypeDefaults[ config.type ],
-					config.type === WindowType.Dialog && {
+					(config.type === WindowType.Dialog || config.type === WindowType.Modal) && {
 						parent: Electron.remote.getCurrentWindow()
 					}, {
 						webPreferences: {
 							partition
 						}
-					}
+					},
+					config.opts || {}
 				)
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
@@ -247,8 +253,11 @@ export class WindowManager {
 				}
 				
 				newWindow.once('ready-to-show', () => {
+					
 					log.debug(`Ready to show for window ${id}`)
+					newWindow.setSheetOffset(500)
 					newWindow.show()
+					// newWindow.center()
 					newWindow.focus()
 				})
 				

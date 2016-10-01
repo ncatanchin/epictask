@@ -10,7 +10,7 @@ import * as ReactDOM from 'react-dom'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import {Issue,Repo,AvailableRepo} from 'shared/models'
 import {
-	SearchResult, SearchType, SearchSource,SearchItem
+	SearchType,SearchItem
 } from 'shared/actions/search/SearchState'
 import {Renderers} from 'ui/components/common'
 
@@ -28,10 +28,9 @@ const
 //const styleVisible = styles.resultsModalVisible
 //const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;
 
-const doc = document
-const {body} = doc
-
-
+const
+	doc = document,
+	{body} = doc
 
 //region Styles
 const styles = {
@@ -60,8 +59,8 @@ const styles = {
 		padding: `0.1rem 0.8rem`
 	},
 
-	result: makeStyle(makeTransition(),FlexRowCenter,FillWidth,{
-		padding: `1rem 1rem`,
+	result: makeStyle(makeTransition(),FlexRowCenter,FillWidth,makePaddingRem(0,1),{
+		height: 48,
 		cursor: 'pointer'
 	}),
 
@@ -422,11 +421,12 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 
 			const containerStyle = props.open && anchor ? (() => {
-				const rect =  anchor.getBoundingClientRect()
-				const top = (rect.height + rect.top)
-				const winHeight = window.innerHeight
-				const height = winHeight - top - (winHeight * .1)
-				const maxHeight = `${height}px`
+				const
+					rect =  anchor.getBoundingClientRect(),
+					top = (rect.height + rect.top),
+					winHeight = window.innerHeight,
+					//height = winHeight - top - (winHeight * .1).
+					maxHeight = `${winHeight - 48}px`
 				return {
 					position: 'absolute',
 					display: 'block',

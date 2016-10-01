@@ -56,6 +56,8 @@ export const IssueStateRecord = Record({
 	issuesEvents:List<IssuesEvent>(),
 	groupVisibility:Map<string,boolean>(),
 	selectedIssueIds:[],
+	
+	
 	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,

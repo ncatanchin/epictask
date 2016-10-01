@@ -2,22 +2,17 @@
 import * as React from 'react'
 import {connect} from 'react-redux'
 
-import {AppActionFactory} from 'shared/actions/app/AppActionFactory'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {SearchPanel} from 'ui/components/search'
-import * as Constants from 'shared/Constants'
 import {Dialogs} from 'shared/Constants'
 import * as KeyMaps from 'shared/KeyMaps'
 import {PureRender} from 'ui/components/common/PureRender'
 
 import {MuiThemeProvider} from 'material-ui/styles'
-import {UIState} from 'shared/actions/ui/UIState'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {SearchType} from 'shared/actions/search/SearchState'
 import {ThemedNoRadium} from 'shared/themes/ThemeManager'
 import { uiStateSelector } from "shared/actions/ui/UISelectors"
-
-const {HotKeys} = require('react-hotkeys')
+import { getRepoActions, getAppActions } from "shared/actions/ActionFactoryProvider"
 
 // Constants
 const log = getLogger(__filename)
@@ -96,11 +91,11 @@ export interface IRepoAddDialogState {
 export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddDialogState> {
 
 	get appActions() {
-		return Container.get(AppActionFactory)
+		return getAppActions()
 	}
 	
 	get repoActions() {
-		return Container.get(RepoActionFactory)
+		return getRepoActions()
 	}
 	
 
@@ -120,12 +115,6 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 	 * Hide the repo add panel
 	 */
 	hide = () => {
-		const {state} = this
-		const {searchPanel} = state || {} as any
-
-		// if (searchPanel)
-		// 	searchPanel.getWrapperInstance().blur()
-
 		uiActions.setDialogOpen(Dialogs.RepoAddDialog,false)
 	}
 
@@ -139,7 +128,21 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 		log.info(`Repo add result was selected`,result)
 		this.hide()
 	}
-
+	
+	/**
+	 * Whenever we get results changed, we adjust the size
+	 *
+	 * @param items
+	 */
+	onResultsChanged = (items) => {
+		const
+			count = Math.min(items.length,6),
+			win = require('electron').remote.getCurrentWindow()
+		
+		win.setSize(win.getSize()[0], (count + 1) * 48,true)
+		
+	}
+	
 	/**
 	 * Sets a reference to the search panel
 	 *
@@ -195,29 +198,25 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 			{theme} = this.props,
 			rootStyles = mergeStyles(styles.root,this.props.open && styles.root.open)
 
-		return <div style={rootStyles}>
-			<HotKeys handlers={this.keyHandlers} onFocus={this.setFocused} style={rootStyles}>
-				{this.props.open && <MuiThemeProvider muiTheme={theme}>
+		return <MuiThemeProvider muiTheme={theme}>
+			<div style={[styles.container]}>
+				<SearchPanel ref={this.setSearchPanel}
+				             autoFocus={true}
+				             modal={true}
+				             onEscape={this.hide}
+				             open={this.props.open}
+				             resultsHidden={!this.props.open}
+				             searchId='repo-add-search'
+				             types={[SearchType.Repo]}
+				             inlineResults={true}
+				             expanded={false}
+				             mode='repos'
+				             onResultsChanged={this.onResultsChanged}
+				             onResultSelected={this.onResultSelected}
+							       hidden={!open}/>
+			</div>
 
-						<div style={styles.container}>
-							<SearchPanel ref={this.setSearchPanel}
-							             autoFocus={true}
-							             modal={true}
-							             onEscape={this.hide}
-							             open={this.props.open}
-							             resultsHidden={!this.props.open}
-							             searchId='repo-add-search'
-							             types={[SearchType.Repo]}
-							             inlineResults={true}
-							             expanded={false}
-							             mode='repos'
-							             onResultSelected={this.onResultSelected}
-										 hidden={!open}/>
-						</div>
-
-				</MuiThemeProvider>}
-			</HotKeys>
-		</div>
+		</MuiThemeProvider>
 	}
 
 }

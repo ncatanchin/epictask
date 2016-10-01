@@ -13,9 +13,8 @@ import {RepoStore} from 'shared/models/Repo'
 import {Benchmark} from 'shared/util/Benchmark'
 import {getStoreState} from 'shared/store/AppStore'
 
-import {VariableProxy} from "shared/util/VariableProxy"
 import {
-	enabledRepoIdsSelector, enabledLabelsSelector,
+	enabledLabelsSelector,
 	enabledMilestonesSelector
 } from "shared/actions/repo/RepoSelectors"
 import {RepoActionFactory} from "shared/actions/repo/RepoActionFactory"
@@ -23,6 +22,7 @@ import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {IssueState} from "shared/actions/issue/IssueState"
 import {AvailableRepo, Repo, Issue, Label, Milestone} from "shared/models"
 import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { getStores } from "shared/Stores"
 
 
 
@@ -89,9 +89,6 @@ export default class SearchProvider {
 	
 	private pendingSearch:Promise<void>
 	
-	private stores:Stores
-	
-	
 	private searchTypes:SearchType[] = []
 	
 	
@@ -118,8 +115,6 @@ export default class SearchProvider {
 	constructor(public searchId?:string) {
 		if (!searchId)
 			throw new Error(`Search id can not be null`)
-		
-		this.stores = Container.get(Stores)
 		
 		this.queryCache = new ValueCache((newValue,oldValue) => {
 			if (!this.pendingSearch)
@@ -204,7 +199,7 @@ export default class SearchProvider {
 	
 	setQuery = _.debounce((query:string) => {
 		this.queryCache.set(query)
-	},150)
+	},250)
 
 	mapResultsToSearchItems(idProperty:string,results:FinderResultArray<any>) {
 		const md = results.itemMetadata
@@ -218,7 +213,7 @@ export default class SearchProvider {
 
 	@Benchmarker
 	async searchRepos(query:string):Promise<SearchResult> {
-		const repoStore:RepoStore = this.stores.repo
+		const repoStore:RepoStore = getStores().repo
 
 		const results = await repoStore.findWithText(new FinderRequest(4),query)
 		log.info(`Found repos`,results)
@@ -247,7 +242,7 @@ export default class SearchProvider {
 		if (queryParts.length === 2 && queryParts.every(part => part.length > 0)) {
 			try {
 				const
-					repoStore:RepoStore = this.stores.repo,
+					repoStore:RepoStore = getStores().repo,
 					client:GitHubClient = Container.get(GitHubClient)
 
 				result = await repoStore.findByFullName(query)

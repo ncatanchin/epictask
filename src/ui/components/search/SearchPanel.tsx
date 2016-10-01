@@ -49,6 +49,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	hidden?: boolean
 	mode: "repos"|"issues"
 	onEscape?: () => void
+	onResultsChanged?: (items: SearchItem[]) => void
 	onResultSelected?: (item: SearchItem) => void
 }
 
@@ -123,7 +124,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					onEscape && onEscape()
 				},
 				CommonKeys.Escape,{
-					hidden:true
+					hidden:true,
+					overrideInput: true
 				})
 			
 			// SELECT
@@ -241,10 +243,19 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			newState.unsubscribe = provider.addListener(
 				SearchEvent.ResultsUpdated,
 				(newResults:SearchResult[]) => {
+					
 					log.info(`New Results received`,newResults)
+					
 					this.setState({
 						results:newResults
 					},this.updateState as any)
+					
+					if (this.props.onResultsChanged) {
+						this.props.onResultsChanged(newResults.reduce((allItems,nextResult) => {
+							allItems.push(...nextResult.items.toArray())
+							return allItems
+						},[]))
+					}
 				})
 		}
 		
@@ -341,7 +352,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	
 	updateSearchResults(query) {
-		const {provider} = this.state
+		const
+			{provider} = this.state
 		
 		provider.setTypes(...this.props.types)
 		provider.setQuery(query)
@@ -355,7 +367,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 
 	onInputChange(event) {
-		const query = event.target.value
+		const
+			query = event.target.value
 		log.debug('Search value: ' + query)
 		this.setState({query})
 		this.updateSearchResults(query)

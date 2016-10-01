@@ -110,6 +110,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			})
 
 			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, AllWindowDefaults,{
+				titleBarStyle: 'hidden'
 				// darkTheme:true,
 			}))
 			

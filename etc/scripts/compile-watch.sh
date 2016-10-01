@@ -2,8 +2,6 @@
 
 ./etc/scripts/configure-dev-env.sh
 
-
-
 #./etc/scripts/notify-on-error.sh
 
 # Redirect stdout ( > ) into a named pipe ( >() ) running "tee"
@@ -16,4 +14,4 @@ if [ "${NODE_ENV}" == "" ];then
 	export DEBUG=1
 fi
 
-node --max-old-space-size=4000 ./node_modules/.bin/gulp compile-watch
+node --max-old-space-size=6000 ./node_modules/.bin/gulp compile-watch

@@ -79,45 +79,7 @@ export class RepoSyncManager {
 		}
 	}
 	
-	
-	/**
-	 * Update comments for a specific issue
-	 *
-	 * @param stores
-	 * @param client
-	 * @param repo
-	 * @param issue
-	 */
-	updateComments = _.debounce(async(stores:Stores, client:GitHubClient) => {
-		try {
-			await this.syncComments(stores)
-			
-		} catch (err) {
-			log.error(`Failed to update comments`, this.repo, err)
-		}
-	}, 500)
-	
-	/**
-	 * Push update to store if required
-	 *
-	 * @param stores
-	 * @param client
-	 * @param availRepo
-	 * @param eventIssue
-	 */
-	updateIssues = _.debounce(async(stores:Stores, client:GitHubClient) => {
-		try {
-			log.debug(`Triggering issue sync`)
-			
-			await this.syncIssues(stores).then(() => this.syncComments(stores))
-			
-			log.debug(`Issues completed successfully`)
-			
-		} catch (err) {
-			log.error(`Failed to update/create issue from event`, err)
-		}
-		
-	}, 500)
+
 	
 	/**
 	 * Handle issue events
@@ -284,10 +246,15 @@ export class RepoSyncManager {
 	 *
 	 * @param comments
 	 */
-	checkReloadActivity(comments:Comment[]) {
-		
-		// Reload current issue if loaded
-		getIssueActions().commentsChanged(...comments)
+	async checkReloadActivity(comments:Comment[]) {
+		try {
+			
+			// Reload current issue if loaded
+			getIssueActions().commentsChanged(...comments)
+			
+		} catch (err) {
+			log.error(`Failed to update the state with changed comments`)
+		}
 		
 	}
 	
@@ -490,7 +457,17 @@ export class RepoSyncManager {
 		
 		let
 			pagesSet = false,
+			pendingChanges:Comment[] = [],
 			updatedComments:Comment[] = []
+		
+		/**
+		 * Push pending changes to the state
+		 */
+		function pushPendingChanges() {
+			getIssueActions().commentsChanged(...pendingChanges)
+			pendingChanges = []
+		}
+		
 		
 		const
 			client = createClient(),
@@ -532,10 +509,12 @@ export class RepoSyncManager {
 				if (pending.length)
 					await chunkSave(pending, stores.comment)
 				
-				// Push updates to STATE
-				getIssueActions().commentsChanged(...pending)
-				
-				
+				// PERIODICALLY PUSH PENDING COMMENT CHANGES TO THE STATE
+				pendingChanges.push(...pending)
+				if (pageNumber % 10 === 0)
+					pushPendingChanges()
+								
+				// KEEP TRACK OF ALL CHANGES
 				updatedComments.push(...pending)
 				
 				SyncStatus.setMostRecentTimestamp(commentsResourceUrl, pending, 'updated_at', 'created_at')
@@ -572,6 +551,7 @@ export class RepoSyncManager {
 			})
 		
 		logger && logger.info(`Checked ${comments.length} and updated ${updatedComments.length} comments`)
+		pushPendingChanges()
 		return updatedComments
 	})
 	

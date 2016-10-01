@@ -53,24 +53,17 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	
 	constructor() {
 		super(RepoState)
-		
-		
 	}
-
+	
+	/**
+	 * Supported leaf = RepoState
+	 *
+	 * @returns {string}
+	 */
 	leaf():string {
 		return RepoKey;
 	}
 
-	
-	@ActionThunk()
-	onSyncChanges(changes:ISyncChanges) {
-		return (dispatch,getState) => {
-			log.debug(`Received repo sync changes`,changes)
-			if (changes.repoChanged)
-				this.loadAvailableRepos()
-		}
-	}
-	
 	/**
 	 * Updated available repo resources
 	 *
@@ -147,7 +140,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			JobDAO.create(JobType.GetUserRepos)
 		}
 	}
-
+	
+	/**
+	 * Sync everything / enabled repos & current user repos list
+	 */
 	@ActionThunk()
 	syncAll() {
 		return (dispatch,getState) => {
@@ -240,6 +236,12 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
+	/**
+	 * Check if a repo has already been loaded into the state
+	 *
+	 * @param availRepo
+	 * @returns {boolean}
+	 */
 	private repoInState(availRepo) {
 		const
 			{availableRepos} = this.state,
@@ -408,6 +410,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	
 	/**
 	 * Mark a repo as an 'AvailableRepo'
+	 *
 	 * @param repo
 	 */
 	@ActionThunk()

@@ -69,7 +69,8 @@ class DatabaseProxy {
 	ProcessType.JobServer,
 	ProcessType.JobWorker,
 	ProcessType.Main,
-	ProcessType.UI
+	ProcessType.UI,
+	ProcessType.UIChildWindow
 )
 export class DatabaseClientService extends BaseService {
 
@@ -85,7 +86,10 @@ export class DatabaseClientService extends BaseService {
 	get stores() {
 		return this._stores
 	}
-
+	
+	/**
+	 * Creates a new client service
+	 */
 	constructor() {
 		super()
 		
@@ -119,7 +123,7 @@ export class DatabaseClientService extends BaseService {
 		
 		// Load all
 		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
-			LabelStore,ActivityStore,MilestoneStore,UserStore,IssuesEventStore,RepoEventStore} = require('shared/models')
+			LabelStore,MilestoneStore,UserStore,IssuesEventStore,RepoEventStore} = require('shared/models')
 		
 		assign(this._stores, {
 			repo:          this.getStore(RepoStore),
@@ -128,18 +132,15 @@ export class DatabaseClientService extends BaseService {
 			milestone:     this.getStore(MilestoneStore),
 			comment:       this.getStore(CommentStore),
 			label:         this.getStore(LabelStore),
-			activity:      this.getStore(ActivityStore),
 			user:          this.getStore(UserStore),
 			issuesEvent:  this.getStore(IssuesEventStore),
 			repoEvent: this.getStore(RepoEventStore)
 		})
 
-		log.info('Repos Loaded')
+		log.debug('Repos Loaded')
 		
 		// Direct proxy
 		this.dbProxy = new Proxy({},new DatabaseProxy())
-		
-		
 		
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {

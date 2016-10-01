@@ -1200,6 +1200,14 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		})
 	}
 	
+	
+	/**
+	 * Internally updates the state with new comments that match the
+	 * currently selected issue
+	 *
+	 * @param updatedComments
+	 * @param remove
+	 */
 	@ActionReducer()
 	private updateCommentsInState(updatedComments:List<Comment>,remove = false) {
 		return (state:IssueState) => {
@@ -1247,25 +1255,33 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 		}
 	}
+	
+	/**
+	 * Push updated comments for the currently selected issue
+	 *
+	 * @param comments
+	 */
 	@ActionThunk()
 	commentsChanged(...comments:Comment[]) {
-		return async (dispatch,getState) => {
-			this.updateCommentsInState(List<Comment>().push(...comments))
-			//
-			// let
-			// 	{comments} = this.state
-			//
-			// for (let commentId of commentIds) {
-			//
-			// }
-			// commentIds.forEach(commentId => {
-			// 	const
-			// 		commentIndex = comments.findIndex(comment => comment && comment.id === commentId)
-			//
-			//
-			// })
-			//
-			// state.set
+		return (dispatch,getState) => {
+			const
+				selectedIssue = selectedIssueSelector(getState())
+			
+			if (!selectedIssue)
+				return
+			
+			const
+				filteredComments = comments.filter(comment =>
+					comment.issueNumber === selectedIssue.number &&
+					comment.repoId === selectedIssue.repoId)
+			
+			if (!filteredComments.length) {
+				log.debug(`No issue comments matched in batch of ${comments.length}`)
+				return
+			}
+			
+			log.debug(`Pushing ${filteredComments.length} onto the state`)
+			this.updateCommentsInState(List<Comment>().push(...filteredComments))
 		}
 	}
 	

@@ -5,9 +5,18 @@
 doctype html
 html.fill-width.fill-height(lang="en")
 	head
+		script.
+			window.startLoadTime = Date.now()
+
 		meta(charset='utf-8')
 		style!=fontStyles
 		style!=mainStyles
+		style!=eval(require('!!css!sass!styles/split-pane.global.scss'))
+		style!=eval(require('!!css!animate.css/animate.css'))
+		style!=eval(require('!!css!font-awesome/css/font-awesome.min.css'))
+		style!=eval(require('!!css!highlight.js/styles/dark.css'))
+		style!=eval(require('!!css!simplemde/dist/simplemde.min.css'))
+
 		// Splash screen load
 		script.
 			require('babel-polyfill')
@@ -58,6 +67,11 @@ html.fill-width.fill-height(lang="en")
 				}
 			})
 
+			try {
+				require('react-tap-event-plugin')()
+			} catch (err) {
+				log.info('Failed to inject tap event handler = HMR??')
+			}
 			if (isDev && !isChildWindow) {
 				try {
 					require('devtron').install()
@@ -105,6 +119,7 @@ html.fill-width.fill-height(lang="en")
 		title epictask
 		script.
 			function loadUI() {
+				/*
 				const cssPaths = [
 					"node_modules/animate.css/animate.css",
 					"node_modules/font-awesome/css/font-awesome.min.css",
@@ -115,7 +130,7 @@ html.fill-width.fill-height(lang="en")
 				cssPaths.forEach(function (cssFile) {
 					addCSS(makeRootPath((!isDev ? '../../' : '') + cssFile))
 				})
-
+				*/
 				// DISPLAY THE LOADER
 				function showLoader() {
 					if (isChildWindow) {
@@ -150,10 +165,7 @@ html.fill-width.fill-height(lang="en")
 					}
 				})
 
-				// IN DEV MODE - install debug menu
-				if (isDev) {
-					require('debug-menu').install()
-				}
+
 				if (isChildWindow) {
 					// CHILD WINDOW - LOAD IMMEDIATE
 					loadApp()
@@ -172,6 +184,11 @@ html.fill-width.fill-height(lang="en")
 			}
 			function loadApp() {
 				addScript('./AppEntry.bundle.js')
+			}
+
+			// IN DEV MODE - install debug menu
+			if (isDev) {
+				require('debug-menu').install()
 			}
 
 			if (processType === 'UI' || processType === 'UIChildWindow') {

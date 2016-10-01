@@ -1,35 +1,28 @@
 import {ObservableStore} from 'typedux'
-import * as injectTapEventPlugin from 'react-tap-event-plugin'
-import {Provider, connect} from 'react-redux'
+
+import {Provider} from 'react-redux'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {PureRender} from 'ui/components/common'
-import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
-import {getPage} from 'ui/components/pages'
 
-import {AppStateType} from 'shared/AppStateType'
-import {Events, AppKey, UIKey} from 'shared/Constants'
-import {AppState} from 'shared/actions/app/AppState'
-import {UIState} from 'shared/actions/ui/UIState'
-import {availableRepoCountSelector} from 'shared/actions/repo/RepoSelectors'
+import {Events, AppKey} from 'shared/Constants'
+
 import {RootState} from 'shared/store/RootState'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector} from 'reselect'
-import {StatusBar} from "ui/components/root/StatusBar"
+
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
-import { WindowConfigs, IWindowConfig } from "shared/UIConstants"
+import { IWindowConfig } from "shared/WindowConfig"
 import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
-import { FillWindow, makeStyle } from "shared/themes"
+import { FillWindow} from "shared/themes"
 import { isString } from "shared/util/ObjectUtil"
+import { UIRoot } from "ui/components/root/UIRoot"
 
 
 const
-	{StyleRoot} = Radium,
 	$ = require('jquery'),
 	childWindowId = process.env.EPIC_WINDOW_ID,
 	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
@@ -41,17 +34,12 @@ let
  * Global CSS
  */
 
-require('styles/split-pane.global.scss')
 
 
 // Logger
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
-try {
-	injectTapEventPlugin()
-} catch (err) {
-	log.info('Failed to inject tap event handler = HMR??')
-}
 
 
 // Build the container
@@ -66,53 +54,20 @@ let
 //endregion
 
 
-//region Styles
-const styles = {
-	app: makeStyle(FlexColumn, FlexScale, {
-		overflow: 'hidden'
-	}),
-
-	header: makeStyle(makeTransition(), FlexRowCenter, {}),
-
-	content: makeStyle(makeTransition(), FlexColumn, PositionRelative, {
-		flexBasis: 0,
-		flexGrow: 1,
-		flexShrink: 1
-	}),
-
-	collapsed: makeStyle({flexGrow: 0})
-
-
-}
-//endregion
-
-
 /**
  * Properties for App/State
  */
 export interface IAppProps {
 	store:any
 	theme:any
-	stateType:AppStateType
-	hasAvailableRepos:boolean
 }
 
 
-/**
- * State selector for AppRoot
- */
-const mapStateToProps = createStructuredSelector({
-	hasAvailableRepos: availableRepoCountSelector,
-	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
-	theme: () => getTheme(),
-	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
-},createDeepEqualSelector)
 
 /**
  * Root App Component
  */
 
-@connect(mapStateToProps)
 @CommandComponent()
 @Radium
 @PureRender
@@ -168,34 +123,44 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 	onBlur = () => {
 		log.info('Blur')
 	}
-
-
+	
+	
+	/**
+	 * Render a child window
+	 *
+	 * @returns {any}
+	 */
+	renderChildWindow() {
+		const
+			ChildRootComponent = childWindowConfig && childWindowConfig.rootElement()
+		
+		log.debug(`Dialog Component`,ChildRootComponent)
+		
+		return <ChildRootComponent />
+	}
+	
+	/**
+	 * Render the main app window
+	 *
+	 * @returns {any}
+	 */
+	renderMainWindow() {
+		return <UIRoot />
+	}
+	
 	/**
 	 * Render the app container
 	 */
 	render() {
 		
 		const
-			{hasAvailableRepos, stateType, theme} = this.props,
-			{palette} = theme,
-			
-			PageComponent = getPage(stateType),// {component: getPage(stateType)},
-			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
-
-			headerVisibility = (stateType < AppStateType.Home) ?
-				HeaderVisibility.Hidden :
-				(expanded) ? HeaderVisibility.Expanded :
-					HeaderVisibility.Normal,
-			
-			contentStyles = makeStyle(styles.content, {
-				backgroundColor: palette.canvasColor,
-				display: 'flex',
-				flexDirection: 'column'
-			}, expanded && styles.collapsed),
+			{theme} = this.props
 		
-			DialogComponent = childWindowConfig && childWindowConfig.rootElement()
 		
-		log.info(`Dialog Component`,DialogComponent)
+		
+		
+		
+			
 			
 		return (
 
@@ -206,28 +171,7 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 						component={this}
 						id="appRoot">
 						
-						{isChildWindow ? <DialogComponent />:
-							
-						
-						
-						<div className={'root-content'}
-						     style={[FillWindow,styles.content,theme.app]}>
-							
-							<Header visibility={headerVisibility}/>
-							
-							{(stateType === AppStateType.AuthLogin || hasAvailableRepos) &&
-							<div style={makeStyle(FlexScale,FlexColumn)}>
-								<div style={contentStyles}>
-									<PageComponent />
-								</div>
-								
-								<ToastMessages/>
-							</div>
-							}
-							
-							<StatusBar/>
-						</div>
-						}
+						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
 						
 					</CommandRoot>
 				</Provider>
@@ -248,18 +192,21 @@ function render() {
 	
 	reduxStore = store.getReduxStore()
 	
-	const
-		state = store.getState(),
-		props = mapStateToProps(state)
-	 
 	ReactDOM.render(
 		<App
 			store={reduxStore}
-			{...props}
+		  theme={getTheme()}
 		/>,
 		document.getElementById('root'),
 		(ref) => {
-			log.info('Rendered, hiding splash screen')
+			log.debug('Rendered')
+			
+			const
+				startLoadTime:number = (window as any).startLoadTime,
+				loadDuration = Date.now() - startLoadTime
+			
+			log.tron(`It took a ${loadDuration / 1000}s to load window ${childWindowId ? childWindowId : 'main window'}`)
+			
 			
 			If(ProcessConfig.isUI(),() => {
 				
@@ -296,9 +243,9 @@ function checkIfRenderIsReady() {
 
 		const
 			observer = store.observe([AppKey,'ready'],(newReady) => {
-				log.info('RECEIVED READY, NOW RENDER',newReady)
+				log.debug('RECEIVED READY, NOW RENDER',newReady)
 				if (!newReady !== true) {
-					log.info('Main is not ready',newReady)
+					log.debug('Main is not ready',newReady)
 					return
 				}
 				observer()

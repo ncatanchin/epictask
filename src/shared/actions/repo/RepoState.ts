@@ -7,6 +7,10 @@ import { reviveImmutable } from "shared/util/ModelUtil"
 const
 	log = getLogger(__filename)
 
+
+/**
+ * Repo State Record
+ */
 export const RepoStateRecord = Record({
 	reposIds:[],
 	availableRepos:List<AvailableRepo>(),
@@ -14,11 +18,8 @@ export const RepoStateRecord = Record({
 	reposLoading:Map<number,boolean>()
 })
 
-
-
 /**
- * Registry state
- *
+ * Repository State
  */
 @RegisterModel
 export class RepoState extends RepoStateRecord {
