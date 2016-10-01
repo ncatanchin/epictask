@@ -1,6 +1,6 @@
 // IMPORTS
 import './UIGlobals'
-import { MainBooted } from "shared/Constants"
+import { Events } from "shared/config/Events"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { benchmark } from "shared/util/Benchmark"
 
@@ -30,7 +30,7 @@ const setupCommandManager = benchmark('Setup Command Manager', () => {
 const childServicesBoot = benchmark('Child service boot', async () => {
 	
 	
-	if (!require('electron').remote.getGlobal(MainBooted)) {
+	if (!require('electron').remote.getGlobal(Events.MainBooted)) {
 		const
 			{ ipcRenderer } = require('electron')
 		
@@ -41,7 +41,7 @@ const childServicesBoot = benchmark('Child service boot', async () => {
 		const
 			childrenDeferred = Promise.defer()
 		
-		ipcRenderer.on('epictask-children-ready', () => {
+		ipcRenderer.on(Events.ChildrenReady, () => {
 			log.debug(`Got notification from main - kids are ready`)
 			childrenDeferred.resolve()
 		})

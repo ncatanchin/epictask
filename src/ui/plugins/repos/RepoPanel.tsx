@@ -3,8 +3,7 @@
 // Imports
 import {Container} from 'typescript-ioc'
 import * as React from 'react'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
-import {Icon,Button,PureRender} from 'ui/components/common'
+import {Icon,Button} from 'ui/components/common'
 import {RepoList} from './RepoList'
 
 // Key mapping tools
@@ -15,10 +14,9 @@ import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
 
 
 import {RegisterTool} from "shared/Registry"
-import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
+import {getBuiltInToolId, BuiltInTools} from "shared/config/ToolConfig"
 import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
-import {DataComponent, MapData} from "ui/components/data/DataComponent"
-import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
+import { CommandComponent, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 const
@@ -118,7 +116,7 @@ function getHeaderControls() {
 	label:'Repositories',getHeaderControls,
 	buttonLabel: 'Repos'
 })
-@CommandComponent()
+// @CommandComponent()
 @ThemedStyles(baseStyles,'repoPanel')
 export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	

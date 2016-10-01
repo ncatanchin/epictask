@@ -2,7 +2,7 @@
 import {ServiceManager} from "shared/services"
 
 export * from './internal/Types'
-export * from './internal/Decorations'
+export * from './internal/ServiceDecorations'
 export * from './internal/ServiceManager'
 export * from './internal/BaseService'
 

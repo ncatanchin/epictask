@@ -158,7 +158,9 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{ focused } = this.state
 		
 		log.debug(`blurred`, id)
-		assert(instance, `Blur, but no instance???`)
+		if(!instance)
+			return log.warn(`Blur, but no instance???`)
+		//assert(instance, `Blur, but no instance???`)
 		
 		if (!focused) {
 			log.debug(`Blur, but not focused`)

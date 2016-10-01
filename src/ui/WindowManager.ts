@@ -10,7 +10,7 @@ import * as React from 'react'
 
 import { shortId, isString } from "shared/util/ObjectUtil"
 import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/WindowConfig"
-import { AllWindowDefaults } from "shared/Constants"
+import { AllWindowDefaults } from "shared/config/WindowConfig"
 import { toJSON } from "shared/util/JSONUtil"
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 

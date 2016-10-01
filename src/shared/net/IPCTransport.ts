@@ -1,6 +1,6 @@
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "shared/net/Transport"
 import Counter from "shared/Counter"
-import { START_TIMEOUT_DEFAULT } from "shared/Constants"
+import { START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
 
 const
 	log = getLogger(__filename),
@@ -136,6 +136,7 @@ export class IPCTransport extends Transport {
 			// Connect
 			this.on(TransportEvents.Error,(err) => {
 				log.error(`Error ${processClientId}`,err)
+				// TODO: Implement backoff retry
 				//this.connectDeferred.resolve(true)
 			})
 			

@@ -1,4 +1,4 @@
-import {JSONKey} from "../Constants"
+import {JSONKey} from "shared/config/DecorationConfig"
 import { isFunction } from "shared/util/ObjectUtil"
 
 export function toJSONObject(o) {

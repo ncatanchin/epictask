@@ -3,7 +3,8 @@ import {ActionFactory, ActionMessage, ActionThunk,ActionReducer} from 'typedux'
 import {List, Map} from 'immutable'
 import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "shared/actions/jobs/JobState"
 import {IJob, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTypes'
-import {JobKey, JobsMaxCompleted} from "shared/Constants"
+import {JobKey} from "shared/Constants"
+import {JobsMaxCompleted} from 'shared/config/JobConfig'
 import {Provided} from 'shared/util/ProxyProvided'
 import {cloneObject} from "shared/util/ObjectUtil"
 import { RegisterActionFactory } from "shared/Registry"

@@ -72,4 +72,13 @@ export const ProcessNames = new Proxy({},{
 	}
 }) as typeof Names
 
+
+/**
+ * Global process names
+ */
+export const
+	AppStoreServerName = ProcessNames.UI,
+	DatabaseServerName = ProcessNames.DatabaseServer
+
+
 export default ProcessType

@@ -4,7 +4,7 @@ import {ProcessType} from "shared/ProcessType"
 import {getServiceManager} from "shared/services"
 import Bluebird from 'shared/PromiseConfig'
 import {ipcRenderer} from 'electron'
-import { START_TIMEOUT_DEFAULT } from "shared/Constants"
+import { START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
 
 const
 	log = getLogger(__filename)

@@ -3,7 +3,7 @@ import * as React from 'react'
 import {connect} from 'react-redux'
 
 import {SearchPanel} from 'ui/components/search'
-import {Dialogs} from 'shared/Constants'
+import {Dialogs} from 'shared/UIConstants'
 import * as KeyMaps from 'shared/KeyMaps'
 import {PureRender} from 'ui/components/common/PureRender'
 

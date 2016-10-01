@@ -17,7 +17,7 @@ import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {JobList} from "./JobList"
 import {JobDetail} from "./JobDetail"
 import {RegisterTool} from "shared/Registry"
-import {getBuiltInToolId, BuiltInTools} from "shared/Constants"
+import {getBuiltInToolId, BuiltInTools} from "shared/config/ToolConfig"
 import {ToolPanelLocation, IToolProps} from "shared/tools/ToolTypes"
 import {Button, Icon} from "ui/components/common"
 

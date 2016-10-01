@@ -22,7 +22,7 @@ import { User } from "shared/models/User"
 import { Label } from "shared/models/Label"
 import { Milestone } from "shared/models/Milestone"
 import { uiStateSelector } from "shared/actions/ui/UISelectors"
-import { Dialogs } from "shared/Constants"
+import { Dialogs } from "shared/UIConstants"
 import { IssuePatchModes, TIssuePatchMode } from "shared/actions/issue/IssueState"
 import { TypeAheadSelect } from "ui/components/common/TypeAheadSelect"
 import {

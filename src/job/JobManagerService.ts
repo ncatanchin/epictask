@@ -8,7 +8,8 @@ import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "job/JobEx
 import {BaseService, RegisterService, IServiceConstructor} from "shared/services"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
 import {IJobStatusDetail} from "shared/actions/jobs/JobState"
-import { JobKey, JobsMaxConcurrency } from "shared/Constants"
+import { JobKey } from "shared/Constants"
+import {JobsMaxConcurrency} from 'shared/config/JobConfig'
 import { clientObserveState, getStateValue } from "shared/AppStoreClient"
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 

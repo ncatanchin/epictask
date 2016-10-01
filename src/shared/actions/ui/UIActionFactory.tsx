@@ -1,10 +1,11 @@
 import * as uuid from 'node-uuid'
 import {ActionFactory,ActionReducer,ActionThunk,ActionMessage} from 'typedux'
 import {List,Map} from 'immutable'
-import {UIKey, getBuiltInToolId, BuiltInTools} from "shared/Constants"
+import {UIKey} from "shared/Constants"
+import {getBuiltInToolId, BuiltInTools} from 'shared/config/ToolConfig'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
-import {Dialogs} from 'shared/Constants'
+import {Dialogs} from 'shared/UIConstants'
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
 import {isNumber, shortId, isString} from "shared/util/ObjectUtil"

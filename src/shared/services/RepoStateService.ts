@@ -1,15 +1,10 @@
 import {ObservableStore} from 'typedux'
 import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
-import ValueCache from 'shared/util/ValueCache'
 import {ProcessType} from "shared/ProcessType"
 import {DatabaseClientService} from "shared/services/DatabaseClientService"
-import { enabledRepoIdsSelector, enabledAvailableReposSelector } from "shared/actions/repo/RepoSelectors"
 import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryProvider"
-import { selectedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
-import { RepoKey, IssueKey } from "shared/Constants"
-import { getStoreState } from "shared/store"
+import { IssueKey } from "shared/Constants"
 import { getStores } from "shared/Stores"
-
 const log = getLogger(__filename)
 
 @RegisterService(ProcessType.UI)

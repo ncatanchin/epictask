@@ -9,7 +9,7 @@ import {
 	ActionFactory
 } from 'typedux'
 
-import { AppStoreServerName } from "shared/Constants"
+import { AppStoreServerName } from "shared/ProcessType"
 import { IChildStoreFilter } from "shared/store/ChildStore"
 import { getReduxStore } from "shared/store"
 import { transformValues, shortId } from "shared/util/ObjectUtil"

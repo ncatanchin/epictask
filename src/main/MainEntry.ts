@@ -1,11 +1,13 @@
 
+
 require('shared/NodeEntryInit')
 
 import checkSingleInstance from "main/CheckSingleInstance"
-import {RemoteDebuggingPort, Events, MainBooted} from 'shared/Constants'
+import {RemoteDebuggingPort} from 'shared/config/DebugConfig'
 import * as MainWindowType from './MainWindow'
 import {getServiceManager as getServiceManagerType} from "shared/services"
 import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
+import { Events } from "shared/config/Events"
 
 const
 	{app,BrowserWindow} = require('electron'),
@@ -157,7 +159,7 @@ async function boot() {
 
 	log.info("Boot start")
 	require('shared/commands/CommandManager').getCommandManager()
-	global[MainBooted] = false
+	global[Events.MainBooted] = false
 	
 	log.info("Load Main Window")
 	mainWindow = require('./MainWindow') as typeof MainWindowType
@@ -172,7 +174,7 @@ async function boot() {
 	})
 
 	// Notifying the main window that we are ready
-	global[MainBooted] = true
+	global[Events.MainBooted] = true
 	
 	setImmediate(() => {
 		mainWindow.ready()

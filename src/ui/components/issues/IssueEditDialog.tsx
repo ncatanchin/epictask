@@ -12,7 +12,7 @@ import {Repo} from 'shared/models/Repo'
 import {User} from 'shared/models/User'
 import {Label} from 'shared/models/Label'
 
-import {Dialogs} from 'shared/Constants'
+import {Dialogs} from 'shared/UIConstants'
 import {PureRender} from 'ui/components/common/PureRender'
 import * as Renderers from 'ui/components/common/Renderers'
 import {Icon} from 'ui/components/common/Icon'

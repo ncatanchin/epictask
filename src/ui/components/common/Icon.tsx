@@ -48,7 +48,8 @@ function iconCode(codeSet,iconName) {
 
 
 
-@Themed
+//@Themed
+@Radium
 @PureRender
 export class Icon extends React.Component<IIconProps,any> {
 

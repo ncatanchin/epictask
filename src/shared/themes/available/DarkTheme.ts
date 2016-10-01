@@ -92,7 +92,7 @@ export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 	textColor: text.primary,
 	alternateTextColor: alternateText.primary,
 
-	progressIndicatorColor: secondary.hue1,
+	progressIndicatorColor: accent.hue1,// secondary.hue1,
 	
 	/**
 	 * Job Monitor widget

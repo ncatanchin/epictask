@@ -5,7 +5,7 @@ import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
 import { ProcessType } from "shared/ProcessType"
 import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
-import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "shared/Constants"
+import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
 
 
 const

@@ -50,11 +50,9 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	
 	/**
 	 * All Json Objects
-	 * @type {aby[]}
+	 * @type {any[]}
 	 */
 	allJsons:any[] = []
-	
-	private failed = false
 	
 	private position = 0
 	

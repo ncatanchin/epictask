@@ -5,7 +5,9 @@ import {List} from 'immutable'
 
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
-import { Dialogs, IssueKey, FinderItemsPerPage } from 'shared/Constants'
+import { IssueKey } from 'shared/Constants'
+import {Dialogs} from 'shared/UIConstants'
+import {FinderItemsPerPage} from 'shared/config/FinderConfig'
 import { cloneObject, extractError, isNil, nilFilter, isNumber } from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {

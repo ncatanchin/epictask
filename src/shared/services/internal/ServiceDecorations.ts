@@ -1,6 +1,6 @@
 
 import {IServiceConstructor} from "./Types"
-import {ServiceManager} from "./ServiceManager"
+import {ServiceManager} from "shared/services/internal/ServiceManager"
 import ProcessType from "shared/ProcessType"
 
 const log = getLogger(__filename)

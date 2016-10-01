@@ -2,8 +2,9 @@
 import thunkMiddleware from 'redux-thunk'
 import {Store as ReduxStore} from 'redux'
 import {Map} from 'immutable'
-import { StoreEnhancer,Store,compose, applyMiddleware } from 'redux'
-import { ReduxDebugSessionKey, UIKey, RepoKey } from 'shared/Constants'
+import { StoreEnhancer,compose, applyMiddleware } from 'redux'
+import { UIKey, RepoKey } from 'shared/Constants'
+import {ReduxDebugSessionKey} from 'shared/config/DebugConfig'
 import { getToaster } from 'shared/Toaster'
 import {getReducers} from 'shared/store/Reducers'
 

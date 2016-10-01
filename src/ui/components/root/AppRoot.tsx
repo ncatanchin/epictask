@@ -3,13 +3,13 @@ import {ObservableStore} from 'typedux'
 import {Provider} from 'react-redux'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {PureRender} from 'ui/components/common'
-
-import {Events, AppKey} from 'shared/Constants'
-
+import {Events} from 'shared/config/Events'
+import {AppKey} from 'shared/Constants'
 import {RootState} from 'shared/store/RootState'
-
 import {
-	CommandComponent, ICommandComponent, CommandRoot,
+	CommandComponent,
+	ICommandComponent,
+	CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"

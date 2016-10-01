@@ -2,18 +2,18 @@
 
 import windowStateKeeper = require('electron-window-state')
 import Electron = require('electron')
-import { GitHubConfig, AuthKey, Events, AllWindowDefaults } from 'shared/Constants'
+import { AuthKey } from 'shared/Constants'
 import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 import { getAppActions } from "shared/actions/ActionFactoryProvider"
-
-const log = getLogger(__filename)
-const path = require('path')
-const {BrowserWindow,Menu,ipcMain} = Electron
-
+import { GitHubConfig } from "shared/config/GithubConfig"
+import { Events } from "shared/config/Events"
+import { AllWindowDefaults } from "shared/config/WindowConfig"
 
 const
+	log = getLogger(__filename),
+	{BrowserWindow,Menu,ipcMain} = Electron,
 	templateURL = 'file://' + getAppEntryHtmlPath()
 	
 // Jetbrains - for another time
@@ -65,7 +65,7 @@ export function start(cb = null) {
  */
 export function ready() {
 	browserWindow.webContents.send(Events.MainReady)
-	browserWindow.webContents.send('epictask-children-ready')
+	browserWindow.webContents.send(Events.ChildrenReady)
 	
 	getAppActions().setReady(true)
 	

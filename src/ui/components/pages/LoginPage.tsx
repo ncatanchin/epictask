@@ -2,9 +2,11 @@ import * as React from 'react'
 const log = getLogger(__filename)
 
 import {RaisedButton,FlatButton,FontIcon} from 'material-ui'
-import {AuthActionFactory} from '../../../shared/actions/auth/AuthActionFactory'
 import {Page} from './Page'
-import {GitHubConfig} from "shared/Constants"
+import {GitHubConfig} from "shared/config/GithubConfig"
+import { getAuthActions } from "shared/actions/ActionFactoryProvider"
+import { Themed } from "shared/themes/ThemeManager"
+import { PureRender } from "ui/components/common"
 
 const styles = {
 	page: makeStyle(FlexColumnCenter,FlexScale,{
@@ -33,12 +35,17 @@ const styles = {
 	})
 }
 
+interface ILoginPageProps {
+	theme?:any
+}
 
 
 /**
- * The root container for the app
+ * LOGIN PAGE
  */
-export class LoginPage extends React.Component<any,any> {
+@Themed
+@PureRender
+export class LoginPage extends React.Component<ILoginPageProps,any> {
 
 	constructor(props, context) {
 		super(props, context)
@@ -46,14 +53,12 @@ export class LoginPage extends React.Component<any,any> {
 
 
 	startAuth = () => {
-		const authActions = Container.get(AuthActionFactory)
+		const
+			authActions = getAuthActions(),
+			GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default,
+			authRequest = new GitHubOAuthWindow(GitHubConfig)
 		
 		authActions.setAuthenticating(true)
-		
-		const GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default
-		
-		// Create a new auth request/window
-		const authRequest = new GitHubOAuthWindow(GitHubConfig)
 		
 		// Start authentication
 		authRequest.startRequest(function(err,token) {
@@ -62,24 +67,25 @@ export class LoginPage extends React.Component<any,any> {
 	}
 	
 	render() {
-		const theme = getTheme()
-		const {palette} = theme
+		const
+			{props} = this,
+			{theme} = props,
+			{palette} = theme,
 
-		const pageStyle = makeStyle(styles.page,{
-			backgroundColor: palette.accent4Color,
-			color: palette.accent4ColorText
-		})
+			pageStyle = makeStyle(styles.page,{
+				backgroundColor: palette.accent4Color,
+				color: palette.accent4ColorText
+			}),
 
 
 
-		const buttonStyle = makeStyle(styles.label,{
-			border: `0.1rem solid ${palette.accent4ColorText}`,
-			borderRadius: '0.2rem',
-			padding: '1rem',
-			height: 'auto',
-			// backgroundColor: 'transparent',
-			color: palette.textColor
-		})
+			buttonStyle = makeStyle(styles.label,{
+				border: `0.1rem solid ${palette.accent4ColorText}`,
+				borderRadius: '0.2rem',
+				padding: '1rem',
+				height: 'auto',
+				color: palette.textColor
+			})
 
 		return (
 			<Page style={pageStyle} id='loginPage'>

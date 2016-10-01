@@ -35,7 +35,7 @@ module.exports = {
 			//happy: {id: 'source'},
 			test: srcTest,
 			exclude: [/(node_modules|typedux|typelogger|typestore)/],
-			loaders: [TypeScriptEnabled ? 'awesome-typescript' : 'babel','source-map-loader',proxyProvidedLoaderPath],
+			loaders: ["react-hot-loader/webpack",TypeScriptEnabled ? 'awesome-typescript' : 'babel','source-map-loader',proxyProvidedLoaderPath],
 			
 			// Add the query object for babel
 			// ...(TypeScriptEnabled ? {} : {

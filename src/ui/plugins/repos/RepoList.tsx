@@ -4,28 +4,25 @@ import {List} from 'immutable'
 import * as React from 'react'
 import {Icon} from 'ui/components/common/Icon'
 import * as Renderers from 'ui/components/common/Renderers'
-import {RepoActionFactory} from 'shared/actions/repo/RepoActionFactory'
 import {AvailableRepo} from 'shared/models/AvailableRepo'
-import {Repo} from 'shared/models/Repo'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
 import {ThemedStyles} from "shared/themes/ThemeManager"
 import {createDeepEqualSelector} from "shared/util/SelectorUtil"
 import {createStructuredSelector} from 'reselect'
 import {
-	selectedRepoIdsSelector, availableRepoIdsSelector,
+	selectedRepoIdsSelector,
 	availableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
-import {PureRender} from "ui/components/common/PureRender"
-import {DataComponent, MapData} from "ui/components/data/DataComponent"
 import { getRepoActions } from  "shared/actions/ActionFactoryProvider"
+import { shallowEquals } from "shared/util/ObjectUtil"
+import { LoadStatus } from "shared/models"
+import { CircularProgress} from "material-ui"
 
 /**
  * Displays a list of repos
  */
-const log = getLogger(__filename)
-
-
+const
+	log = getLogger(__filename)
 
 
 //region Styles
@@ -53,24 +50,39 @@ const baseStyles = createStyles({
 			
 			
 			
-			label: [FlexScale,Ellipsis,{
+			label: [makeTransition(['flex','flex-basis','flex-shrink','flex-grow','width']),FlexScale,Ellipsis,{
 				padding: '0.2rem 0.2rem 0 0.5rem',
 				justifyContent: 'flex-start',
 				// fontSize: themeFontSize(1.1),
 				fontWeight: 100
 			}],
 			
-			icon: [FlexAuto,{
-				padding: '0 0.2rem',
+			icon: [makeTransition(['width','opacity']),OverflowHidden,makePaddingRem(0),{
 				fontSize: rem(1.3),
+				display: 'block',
 				
-				remove: [FlexAuto,{
-					padding: '0 0.2rem',
-					fontSize: rem(1.3),
+				remove: [{
+					//flexBasis: 0,
 					opacity: 0,
-					':hover': {
+					width: 0,
+					
+					// ON HOVER SHOW
+					hover: [makePaddingRem(0,0.2),{
+						//flexBasis: 'auto',
+						width: rem(1.7),
 						opacity: 1
-					}
+					}]
+				}],
+				
+				
+			}],
+			
+			loading: [FlexColumnCenter,FillHeight,OverflowHidden,makeTransition(['width','opacity']),{
+				width: rem(1.7),
+				opacity: 1,
+				not: [{
+					opacity:0,
+					width: 0
 				}]
 			}]
 		}]
@@ -102,16 +114,42 @@ export interface IRepoListProps {
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
 @ThemedStyles(baseStyles,'repoPanel')
-@PureRender
 export class RepoList extends React.Component<IRepoListProps,any> {
 
+	
 
 	constructor(props = {},context = {}) {
 		super(props,context)
 
 		this.state = {hoverId:null}
 	}
-
+	
+	
+	get baseStyles() {
+		return baseStyles
+	}
+	
+	/**
+	 * When to update
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @param nextContext
+	 * @returns {boolean}
+	 */
+	shouldComponentUpdate(nextProps:IRepoListProps, nextState:any, nextContext:any):boolean {
+		return !shallowEquals(this.props,nextProps,'theme','styles','selectedRepoIds','availableRepos') ||
+			!shallowEquals(this.state,nextState,'hoverId')
+	}
+	
+	/**
+	 * Enable/Disable repos
+	 *
+	 * @param availRepo
+	 * @param availRepoIndex
+	 * @param isSelected
+	 * @param event
+	 */
 	onAvailRepoClicked = (availRepo:AvailableRepo,availRepoIndex:number,isSelected:boolean,event:any) => {
 		log.info(`Avail repo clicked`,availRepo)
 		
@@ -143,6 +181,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 
 		const {
 			availableRepos,
+			theme,
 			styles,
 			selectedRepoIds = []
 		} = this.props
@@ -157,7 +196,8 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						{repo} = availRepo, //_.find(repos,(it) => it.id === availRepo.repoId)
 						isSelected = !!selectedRepoIds.includes(availRepo.repoId),
 						isEnabled = availRepo.enabled,
-						isHovering = this.state.hoverId === availRepo.repoId
+						isHovering = this.state.hoverId === availRepo.repoId,
+						isLoading = availRepo.repoLoadStatus === LoadStatus.Loading || availRepo.issuesLoadStatus === LoadStatus.Loading
 						
 
 					
@@ -181,20 +221,33 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						{/* Repo */}
 						<Renderers.RepoName repo={repo} style={styles.list.item.label}/>
 						
-
+						{/* LOADING INDICATOR */}
+						
+						<div style={[styles.list.item.loading.not, isLoading && styles.list.item.loading ]}>
+							{
+								(isLoading) &&
+								
+								<CircularProgress
+									color={theme.progressIndicatorColor}
+									size={12}/>
+								
+								
+							}
+						</div>
+						
+						
+						{/* REMOVE CONTROL */}
 						<Icon
 							style={[
 								styles.list.item.icon,
 								styles.list.item.icon.remove,
-								isHovering && {opacity:1}
+								isHovering && styles.list.item.icon.remove.hover
 							]}
 						  onClick={(e) => this.onRemoveClicked(e,id)}
 						>
 							remove_circle
 						</Icon>
-						{/*<Button style={styles.itemIcon}>*/}
-							{/**/}
-						{/*</Button>*/}
+						
 					</div>
 				})
 			}

@@ -3,9 +3,7 @@ import * as React from 'react'
 import { connect } from 'react-redux'
 import * as Radium from 'radium'
 import { PureRender } from 'ui/components/common/PureRender'
-import {Events, AppKey, UIKey} from 'shared/Constants'
-import { ThemedStyles } from 'shared/themes/ThemeManager'
-
+import {AppKey, UIKey} from 'shared/Constants'
 import { UIState } from "shared/actions/ui/UIState"
 import { AppState } from "shared/actions/app/AppState"
 import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
@@ -105,7 +103,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 			
 			<Header visibility={headerVisibility}/>
 			
-			{(stateType === AppStateType.AuthLogin || hasAvailableRepos) &&
+			{(hasAvailableRepos) &&
 			<div style={makeStyle(FlexScale,FlexColumn)}>
 				<div style={contentStyles}>
 					<PageComponent />

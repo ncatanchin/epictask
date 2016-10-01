@@ -12,10 +12,9 @@ import {TJobMap, IJobStatusDetail} from "shared/actions/jobs/JobTypes"
 import {IToastMessage} from "shared/models/Toast"
 import {uiStateSelector} from "shared/actions/ui/UISelectors"
 import {ToastMessage} from 'ui/components/ToastMessage'
-//import {JobMonitor} from "ui/plugins/jobs/JobMonitor"
-import {JobItem} from "../../plugins/jobs/JobItem"
+import {JobItem} from "ui/plugins/jobs/JobItem"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {BuiltInTools, getBuiltInToolId} from "shared/Constants"
+import {BuiltInTools, getBuiltInToolId} from "shared/config/ToolConfig"
 
 // Constants
 const log = getLogger(__filename)

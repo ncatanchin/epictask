@@ -1,7 +1,8 @@
 import {ActionMessage} from 'typedux'
 import {ChildClient} from 'shared/ChildProcessEntry'
 import * as uuid from 'node-uuid'
-import { REQUEST_TIMEOUT, AppStoreServerName, TStoreStateKey, StateLeafKeys } from "shared/Constants"
+import {AppStoreServerName} from 'shared/ProcessType'
+import {REQUEST_TIMEOUT} from 'shared/config/NetworkConfig'
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import {BrowserWindow,ipcMain} from 'electron'
 import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler

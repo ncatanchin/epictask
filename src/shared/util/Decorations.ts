@@ -1,5 +1,5 @@
 import {Attribute} from 'typestore'
-import {JSONKey} from 'shared/Constants'
+import {JSONKey} from 'shared/config/DecorationConfig'
 import {isFunction,isNil} from 'shared/util/ObjectUtil'
 
 const

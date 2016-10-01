@@ -25,7 +25,7 @@ import {
 } from 'shared/actions/issue/IssueSelectors'
 
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {Dialogs} from 'shared/Constants'
+import {Dialogs} from 'shared/UIConstants'
 
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
