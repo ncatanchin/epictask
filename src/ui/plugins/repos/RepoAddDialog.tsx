@@ -196,7 +196,10 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 
 		const {styles} = this.state,
 			{theme} = this.props,
-			rootStyles = mergeStyles(styles.root,this.props.open && styles.root.open)
+			rootStyles = mergeStyles(
+				styles.root,
+				this.props.open && styles.root.open
+			)
 
 		return <MuiThemeProvider muiTheme={theme}>
 			<div style={[styles.container]}>
@@ -215,7 +218,6 @@ export class RepoAddDialog extends React.Component<IRepoAddDialogProps,IRepoAddD
 				             onResultSelected={this.onResultSelected}
 							       hidden={!open}/>
 			</div>
-
 		</MuiThemeProvider>
 	}
 
