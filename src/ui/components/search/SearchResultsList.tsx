@@ -18,6 +18,7 @@ import {ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
 import {Icon} from 'ui/components/common/Icon'
+import { ThemedStyles } from "shared/themes/ThemeDecorations"
 
 
 // Constants
@@ -33,93 +34,113 @@ const
 	{body} = doc
 
 //region Styles
-const styles = {
-	resultsModal: {
-		position: 'absolute',
-		zIndex: 100
-	},
-
-	results: makeStyle(makeTransition(),{
-		overflow: 'hidden'
-	}),
-
-	resultsTitle: {
-		fontWeight: 900,
-		textTransform: 'uppercase',
-		padding: `0.2rem 0.8rem`
-	},
-
-	resultSection: makeStyle(makeTransition(null,0.15),{
-
-	}),
-
-	resultSectionTitle: {
-		//borderBottom: '0.1rem solid transparent',
-		marginBottom: rem(0.2),
-		padding: `0.1rem 0.8rem`
-	},
-
-	result: makeStyle(makeTransition(),FlexRowCenter,FillWidth,makePaddingRem(0,1),{
-		height: 48,
-		cursor: 'pointer'
-	}),
-
-	resultInfo: makeStyle(FlexColumnCenter,makeFlexAlign('stretch','center'),{
-		padding: '0.2rem 2rem 0.2rem 1rem'
-	}),
-
-
-	resultLabel: makeStyle(Ellipsis,FlexAuto,{
-		flexShrink: 1,
-		fontWeight: 100,
-		fontSize: rem(1.6),
-		padding: '0 0 0.5rem 0'
-	}),
-
-	resultLabelSecond: makeStyle(FlexAuto,{
-		fontWeight: 100,
-		fontSize: rem(1.2)
-	}),
-
-	resultLabelSelected: {
-		fontWeight: 500
-	},
-
-	resultAction: makeStyle(Ellipsis,{
-		fontWeight: 100,
-		fontSize: rem(1.3),
-		textStyle: 'italic'
-	}),
-
-	resultActionSelected: {
-
-	},
-
-	resultType: makeStyle(Ellipsis,{
-		fontWeight: 100,
-		fontSize: rem(1.3),
-		textStyle: 'italic',
-		borderRadius: rem(0.2),
-		padding: rem(0.3)
-	}),
-
-	resultTypeSelected: {
-
-	},
-
-
-
-	noResults: makeStyle(Ellipsis,{
-		fontStyle: 'italic',
-		fontSize: rem(0.8),
-		opacity: 0.8,
-		padding: `0.1rem 1rem`
-	}),
-
-	padded: {
-		padding: '0.2rem 1rem'
+const baseStyles = createStyles((topStyles,theme,palette) => {
+	const
+		{accent,primary,text,secondary} = palette
+	
+	return {
+		content: {
+			
+		},
+		resultsModal: {
+			position: 'absolute',
+			zIndex: 100
+		},
+		
+		results: [makeTransition(['background-color','color']), {
+			overflow: 'hidden',
+			maxHeight: "80vh"
+		}],
+		
+		resultsTitle: {
+			fontWeight: 900,
+			textTransform: 'uppercase',
+			padding: `0.2rem 0.8rem`
+		},
+		
+		resultSection: [makeTransition(['background-color','color'], 0.15), {}],
+		
+		resultSectionTitle: {
+			//borderBottom: '0.1rem solid transparent',
+			marginBottom: rem(0.2),
+			padding: `0.1rem 0.8rem`
+		},
+		
+		result: [makeTransition(['background-color','color']), PositionRelative,FlexRowCenter, FillWidth, {
+			height: 48,
+			cursor: 'pointer',
+			borderBottom: `0.1rem solid ${accent.hue1}`,
+			color: primary.hue1,
+			
+			normal: {
+				backgroundColor: text.primary,
+				color: primary.hue1
+			},
+			
+			selected: {
+				backgroundColor: accent.hue1,
+				color: text.primary
+			}
+		}],
+		
+		resultInfo: [FlexScale,FlexColumnCenter, makeFlexAlign('stretch', 'center'), {
+			padding: '0.2rem 2rem 0.2rem 1rem'
+		}],
+		
+		
+		resultLabel: makeStyle(Ellipsis, FlexAuto,makePaddingRem(0,1), {
+			flexShrink: 1,
+			fontWeight: 100,
+			fontSize: rem(1.6)
+		}),
+		
+		resultLabelSecond: makeStyle(FlexAuto, {
+			fontWeight: 100,
+			fontSize: rem(1.2)
+		}),
+		
+		resultLabelSelected: {
+			fontWeight: 500
+		},
+		
+		resultAction: makeStyle(Ellipsis, {
+			fontWeight: 100,
+			fontSize: rem(1.3),
+			textStyle: 'italic'
+		}),
+		
+		resultActionSelected: {},
+		
+		resultType: [FillHeight,FlexRowCenter,FlexAuto,Ellipsis, {
+			fontWeight: 100,
+			fontSize: rem(1.3),
+			textStyle: 'italic',
+			padding: rem(0.3),
+			width: 48,
+			background: Transparent,
+			//borderRight: `0.1rem solid ${accent.hue1}`,
+			
+			
+		}],
+		
+		resultTypeSelected: [{
+			// background: text.primary,
+			// color: primary.hue1
+		}],
+		
+		
+		noResults: makeStyle(Ellipsis, {
+			fontStyle: 'italic',
+			fontSize: rem(0.8),
+			opacity: 0.8,
+			padding: `0.1rem 1rem`
+		}),
+		
+		padded: {
+			padding: '0.2rem 1rem'
+		}
 	}
-}
+})
 //endregion
 
 
@@ -127,11 +148,14 @@ const styles = {
  * ISearchResultsProps
  */
 export interface ISearchResultsListProps {
+	theme?:any
+	styles?:any
 	anchor?: string | React.ReactElement<any>
 	searchId:string
+	
 	containerStyle?:any
 	inline?: boolean
-	theme?:any
+	
 	open:boolean
 	searchItems:List<SearchItem>
 	selectedIndex?:number
@@ -147,7 +171,7 @@ export interface ISearchResultsListProps {
  * @constructor
  **/
 
-@ThemedNoRadium
+@ThemedStyles(baseStyles)
 export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
 
@@ -164,7 +188,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 
 		this.node = doc.createElement('div')
-		_.assign(this.node.style, styles.resultsModal)
+		_.assign(this.node.style, this.props.styles.resultsModal)
 
 		body.appendChild(this.node)
 		this.renderResults(this.props)
@@ -192,33 +216,34 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 	renderResult(label:any,labelSecond:any,actionLabel,typeLabel,isSelected) {
 		const
+			{styles} = this.props,
 			// Get theme pack
 			themeStyles = this.getThemeStyles(),
 
 			// Make style
 			resultStyle = makeStyle(
 				styles.result,
-				themeStyles.result.normal,
-				isSelected && themeStyles.result.selected
+				styles.result.normal,
+				isSelected && styles.result.selected
 			),
 
 			actionStyle = makeStyle(
 				styles.resultAction,
-				themeStyles.content.action,
+				styles.content.action,
 				isSelected && styles.resultActionSelected,
 				isSelected && themeStyles.content.selected
 			),
 
 			labelStyle = makeStyle(
 				styles.resultLabel,
-				themeStyles.content.label,
+				styles.content.label,
 				isSelected && styles.resultLabelSelected,
-				isSelected && themeStyles.content.selected
+				isSelected && styles.content.selected
 			),
 
 			typeStyle = makeStyle(
 				styles.resultType,
-				themeStyles.content.type,
+				styles.content.type,
 				isSelected && styles.resultTypeSelected
 			)
 
@@ -349,7 +374,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 	 */
 	prepareResults(props:ISearchResultsListProps) {
 		const
-			{onResultHover,onResultSelected,searchItems,selectedIndex} = props,
+			{styles,onResultHover,onResultSelected,searchItems,selectedIndex} = props,
 			themeStyles = this.getThemeStyles()
 
 
@@ -379,8 +404,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 			// Make the row style
 			const resultStyle = makeStyle(
 				styles.result,
-				themeStyles.result.normal,
-				isSelected && themeStyles.result.selected
+				styles.result.normal,
+				isSelected && styles.result.selected
 			)
 
 			return (
@@ -404,6 +429,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 
 	renderResults(props) {
 		const
+			{styles} = props,
 			t = getTheme(),
 			{palette:p} = t
 

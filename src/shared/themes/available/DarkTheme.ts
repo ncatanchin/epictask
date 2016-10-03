@@ -651,8 +651,8 @@ export function DarkTheme(palette) {
 				label: {},
 				action: {},
 				type: {
-					backgroundColor: accent.hue3,
-					color: text.primary
+					//backgroundColor: accent.hue3,
+					//color: text.primary
 				},
 				selected: {}
 				

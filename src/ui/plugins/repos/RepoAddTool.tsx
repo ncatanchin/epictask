@@ -61,18 +61,21 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 				height: rem(3.6),
 				backgroundColor: Transparent,
 				color: primary.hue1,
+				//color: text.secondary,
 			}],
 			
 			input: [makePaddingRem(0,1),{
 				fontWeight: 500,
-				color: accent.hue1,
+				color: primary.hue1,
+				//color: accent.hue1,
 				backgroundColor: Transparent
 			}],
 			
 			hint: [makePaddingRem(0,1),{
 				marginBottom: -6,
 				fontWeight: 300,
-				color: accent.hue2,
+				color: primary.hue1,
+				//color: text.primary,
 				backgroundColor: Transparent
 			}],
 		}

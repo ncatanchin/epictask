@@ -692,8 +692,9 @@ export class CommandManager {
 	/**
 	 * Focus on container
 	 * @param containerId
+	 * @param skipEvent
 	 */
-	focusOnContainer(containerId:string) {
+	focusOnContainer(containerId:string, skipEvent = false) {
 		const
 			containerReg = this.containers[containerId]
 		
@@ -707,11 +708,14 @@ export class CommandManager {
 			return
 		}
 		
+		
 		const
 			doFocus = () => {
-				log.debug(`Focusing on ${containerId}`, containerReg.element)
 				const
-					{ element } = containerReg,
+					{element} = containerReg
+				
+				log.debug(`Focusing on ${containerId}`, element)
+				const
 					focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
 						relatedTarget: element
 					}) : document.createEvent("FocusEvent")
@@ -719,7 +723,9 @@ export class CommandManager {
 				element.dispatchEvent(focusEvent)
 			}
 		
-		if (document.activeElement) {
+		if (skipEvent) {
+			
+		} else if (document.activeElement) {
 			$(document.activeElement).blur()
 			setTimeout(doFocus,150)
 		} else

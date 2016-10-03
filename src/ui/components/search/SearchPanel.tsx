@@ -24,6 +24,8 @@ import {
 import { ICommand, CommandType } from "shared/commands/Command"
 import { CommonKeys } from "shared/KeyMaps"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
+import { getCommandManager } from "shared/commands/CommandManager"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 
 const $ = require('jquery')
@@ -63,7 +65,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 		hint: [{
 			backgroundColor: 'transparent',
 			color: text.secondary,
-			fontWeight: 100
+			fontWeight: 300
 		}],
 		
 		field: [FillWidth,PositionRelative,{
@@ -222,7 +224,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * Command container id
 	 */
 	get commandComponentId():string {
-		return `SearchPanel-${this.props.searchId}`
+		const
+			componentId = `SearchPanel-${this.props.searchId}`
+		log.debug(`Search panel with id = ${componentId}`)
+		return componentId
 	}
 	
 	constructor(props, context) {
@@ -656,7 +661,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 
 
-			<div style={[styles.field.wrapper,!expanded && Fill]}>
+			<div tabIndex={-1} style={[styles.field.wrapper,!expanded && Fill]}>
 				<TextField
 					id={searchPanelId}
 					ref={this.setTextFieldRef}
@@ -669,7 +674,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 							{commandContainer} = this.props
 						
 						log.debug(`Received text box focus event`,event,commandContainer)
-						commandContainer && commandContainer.onFocus(event)}}
+						getCommandManager().setContainerFocused(this.commandComponentId,commandContainer,true,event)
+						commandContainer && commandContainer.onFocus(event)
+					}}
 					hintText={<div style={makeStyle(styles.hint,hintStyle)}>Search issues, comments, labels &amp; milestones</div>}
 					onChange={(e) => this.onInputChange(e)}
 					style={fieldStyle}
