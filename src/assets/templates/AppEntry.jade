@@ -3,12 +3,14 @@
 	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
 	var webFontLoaderUrl = require('!!file!libs/webfont-loader/webfont-loader.js')
 doctype html
-html.fill-width.fill-height(lang="en")
+html(lang="en")
 	head
 		script.
 			window.startLoadTime = Date.now()
+			//console.log('original window width: ', window.innerWidth)
 
 		meta(charset='utf-8')
+		meta(name="viewport" content="width=device-width, initial-scale=1")
 		style!=fontStyles
 		style!=mainStyles
 		style!=eval(require('!!css!sass!styles/split-pane.global.scss'))

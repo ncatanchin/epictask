@@ -2,7 +2,6 @@
 // Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {LinearProgress} from "material-ui"
 
@@ -193,7 +192,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 			
 		// IF FILENAME HAS NOT CHANGED THEN RETURN
 		if (watcher && watcher.filename === jobFilename) {
-			log.info(`Job changed, closing previous watcher`)
+			log.debug(`Job changed, closing previous watcher`)
 			return
 		}
 		
@@ -204,7 +203,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		
 		if (!job || !detail) {
-			log.info(`No job or detail - cant start tailing yet`, job,detail)
+			log.debug(`No job or detail - cant start tailing yet`, job,detail)
 			return
 		}
 		

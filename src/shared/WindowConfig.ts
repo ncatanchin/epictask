@@ -81,12 +81,12 @@ export const WindowConfigs = {
 		rootElement: () =>
 			require('ui/components/issues/IssuePatchDialog').default
 	},
-	RepoAddDialog: {
-		name: 'RepoAddDialog',
+	RepoAddTool: {
+		name: 'RepoAddTool',
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: () =>
-			require('ui/plugins/repos/RepoAddDialog').default,
+			require('ui/plugins/repos/RepoAddTool').default,
 		opts: {
 			frame: false,
 			minHeight: 48,

@@ -17,41 +17,26 @@ import { IWindowConfig } from "shared/WindowConfig"
 import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
-import { FillWindow} from "shared/themes"
-import { isString } from "shared/util/ObjectUtil"
+import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes"
+import { isString, getValue, shallowEquals } from "shared/util/ObjectUtil"
 import { UIRoot } from "ui/components/root/UIRoot"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { Themed } from "shared/themes/ThemeManager"
+import { Sheets } from "shared/config/DialogsAndSheets"
 
 
+// Logger, Store +++
 const
+	log = getLogger(__filename),
+	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any,
+	win = window as any,
 	$ = require('jquery'),
 	childWindowId = process.env.EPIC_WINDOW_ID,
 	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
 
 let
-	childWindowConfig:IWindowConfig
-
-/**
- * Global CSS
- */
-
-
-
-// Logger
-const
-	log = getLogger(__filename)
-
-
-
-// Build the container
-const
-	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any
-
-
-//region DEBUG Components/Vars
-let
 	reduxStore = null,
-	win = window as any
-//endregion
+	childWindowConfig:IWindowConfig
 
 
 /**
@@ -59,19 +44,22 @@ let
  */
 export interface IAppProps {
 	store:any
-	theme:any
+	theme?:any
 }
 
+export interface IAppState {
+	windowStyle?:any
+	windowSizeListener?:any
+}
 
 
 /**
  * Root App Component
  */
-
 @CommandComponent()
-@Radium
+@Themed
 @PureRender
-export class App extends React.Component<IAppProps,any> implements ICommandComponent {
+export class App extends React.Component<IAppProps,IAppState> implements ICommandComponent {
 	
 	
 	/**
@@ -81,7 +69,23 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
-
+				// IMPORT REPO
+				.command(
+					CommandType.App,
+					'Import Repo...',
+					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
+					"CommandOrControl+Shift+n", {
+						menuPath:['GitHub']
+					})
+				
+				// SYNC EVERYTHING
+				.command(
+					CommandType.App,
+					'Sync Everything...',
+					(cmd, event) => getRepoActions().syncAll(),
+					"CommandOrControl+s", {
+						menuPath:['GitHub']
+					})
 				// NEW ISSUE
 				.command(
 					CommandType.App,
@@ -90,11 +94,16 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 					"CommandOrControl+n", {
 						menuPath:['Issue']
 					})
+				
+				
+				
+				
+			
 		}, () => {
 			
 			builder
 			
-			// NEW ISSUE
+				// CLOSE CHILD WINDOW
 				.command(
 					CommandType.Container,
 					'Close Window',
@@ -107,21 +116,76 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 			
 		return builder.make()
 	}
-	readonly commandComponentId:string = 'App'
 	
-	appActions = getAppActions()
-	repoActions =getRepoActions()
-	issueActions = getIssueActions()
-	uiActions = getUIActions()
-
-
-
-	onFocus = () => {
-		log.info('Focused')
+	
+	/**
+	 * Container id
+	 */
+	readonly commandComponentId:string = ContainerNames.AppRoot
+	
+	/**
+	 * On focus
+	 */
+	onFocus() {
+		log.debug('Focused')
 	}
-
-	onBlur = () => {
-		log.info('Blur')
+	
+	/**
+	 * On blur
+	 */
+	onBlur() {
+		log.debug('Blur')
+	}
+	
+	/**
+	 * Update the window style
+	 *
+	 * @param props
+	 */
+	private updateState = (props = this.props) => {
+		const
+			windowStyle = getValue(() => makeStyle(
+				makeWidthConstraint(window.innerWidth),
+				makeHeightConstraint(window.innerHeight)
+			),FillWindow)
+		
+		if (shallowEquals(windowStyle, getValue(() => this.state.windowStyle)))
+			return
+		
+		let
+			newState = {
+				windowStyle
+			} as any,
+			listener = getValue(() => this.state.windowSizeListener)
+		
+		if (!listener) {
+			newState.listener = (event) => this.updateState()
+		}
+		
+		this.setState(newState)
+	}
+	
+	
+	/**
+	 * On mount create state and start listening to size
+	 */
+	componentWillMount() {
+		this.updateState()
+		
+	}
+	
+	/**
+	 * On unmount - remove window listener
+	 */
+	componentWillUnmount() {
+		const
+			listener = getValue(() => this.state.windowSizeListener)
+		
+		if (listener) {
+			window.removeEventListener('resize',listener)
+			
+			this.setState({windowSizeListener:undefined})
+		}
 	}
 	
 	
@@ -154,35 +218,24 @@ export class App extends React.Component<IAppProps,any> implements ICommandCompo
 	render() {
 		
 		const
-			{theme} = this.props
-		
-		
-		
-		
-		
+			{theme} = this.props,
+			windowStyle = getValue(() => this.state.windowStyle,FillWindow)
 			
 			
-		return (
-
-			<MuiThemeProvider muiTheme={theme}>
-				<Provider store={reduxStore}>
-					<CommandRoot
-						style={FillWindow}
-						component={this}
-						id="appRoot">
-						
-						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-						
-					</CommandRoot>
-				</Provider>
-			</MuiThemeProvider>
-
-
-		)
+		return <MuiThemeProvider muiTheme={theme}>
+			<Provider store={reduxStore}>
+				<CommandRoot
+					style={windowStyle}
+					component={this}
+					id="appRoot">
+					
+					{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+					
+				</CommandRoot>
+			</Provider>
+		</MuiThemeProvider>
 	}
 }
-
-//let rendered = false
 
 
 /**
@@ -195,19 +248,27 @@ function render() {
 	ReactDOM.render(
 		<App
 			store={reduxStore}
-		  theme={getTheme()}
 		/>,
+		
+		// ROOT ELEMENT TO MOUNT ON
 		document.getElementById('root'),
+		
+		/**
+		 * After Initial render
+		 */
 		(ref) => {
-			log.debug('Rendered')
-			
+			/**
+			 * Tron logging window load time
+			 */
 			const
 				startLoadTime:number = (window as any).startLoadTime,
 				loadDuration = Date.now() - startLoadTime
 			
 			log.tron(`It took a ${loadDuration / 1000}s to load window ${childWindowId ? childWindowId : 'main window'}`)
 			
-			
+			/**
+			 * If main ui then stop load spinner
+			 */
 			If(ProcessConfig.isUI(),() => {
 				
 				// STOP SPINNER

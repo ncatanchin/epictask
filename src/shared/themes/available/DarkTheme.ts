@@ -1,7 +1,7 @@
 import * as Styles from 'material-ui/styles'
-import {makeTheme, Palettes} from '../material/MaterialTools'
+
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
-import { makeLinearGradient } from "shared/themes"
+import { makeLinearGradient, Transparent, CSSHoverState, createStyles } from "shared/themes/styles/CommonStyles"
 
 
 
@@ -17,34 +17,6 @@ const
 	windowControlDim = navBarHeight / 5,
 
 
-	theme = makeTheme(
-		Palettes.grey,
-		['l900', '#303030', 'l800', 'l700'],
-		Palettes.purple,
-		['l400', 'l300', 'l200', 'l100'],
-		// Palettes.teal,
-		// ['l400', 'l200', 'l100', 'l50'],
-		Palettes.lightBlue,
-		['A700', 'A400', 'A200', 'A100'],
-		Palettes.red,
-		['l400', 'l200', 'l100', 'l50'],
-		Palettes.green,
-		['A700', 'A400', 'A200', 'A100'],
-		Palettes.black,
-		true
-	),
-	
-	// PALETTE
-	{
-		primary,
-		secondary,
-		accent,
-		warn,
-		success,
-		background,
-		text,
-		alternateText
-	} = theme,
 	
 	// FONTS
 	fontFamilyRegular = 'AvenirNext',
@@ -55,19 +27,7 @@ const
 	fontWeight = 400,
 	fontSize = 10,
 	
-	// INPUT
-	InputStyle = {
-		color: text.primary,
-		//backgroundColor: primary.hue2,
-		backgroundColor: Transparent,
 	
-		hint: {
-			zIndex: 5,
-			textTransform: 'uppercase',
-			color: primary.hue4,
-			backgroundColor: 'transparent'
-		}
-	},
 	
 	// STATUS BAR HEIGHT
 	statusBarHeight = 2.6
@@ -76,911 +36,932 @@ function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
 }
 
-export const DarkTheme = Styles.getMuiTheme(_.merge(baseTheme, createStyles({
-	ThemeName: 'DarkTheme',
 
-	/**
-	 * Global
-	 */
 
-	fontFamily,
-	fontWeight,
-	fontSize,
+export function DarkTheme(palette) {
 	
+	const
+		// PALETTE
+		{
+			primary,
+			secondary,
+			accent,
+			warn,
+			success,
+			background,
+			text,
+			alternateText
+		} = palette,
 	
-	
-	textColor: text.primary,
-	alternateTextColor: alternateText.primary,
-
-	progressIndicatorColor: accent.hue1,// secondary.hue1,
-	
-	/**
-	 * Job Monitor widget
-	 */
-	jobs: {
-		root: {
-			backgroundColor: primary.hue1,
-			color: text.primary
-		},
-		
-		list: {
-			backgroundColor: primary.hue1,
+		// INPUT
+		InputStyle = {
+			color: text.primary,
+			backgroundColor: Transparent,
 			
-			item: {
-				selected: {
-					backgroundColor: primary.hue3,
-				}
-			},
-			
-			divider: {
-				borderBottomColor: primary.hue2
+			hint: {
+				zIndex: 5,
+				textTransform: 'uppercase',
+				color: primary.hue4,
+				backgroundColor: 'transparent'
 			}
-		},
+		}
 		
-		item: {
-			inProgress: {
-				color: accent.hue1
-			},
-			
-			success: {
-				color: success.hue1
-			},
-			
-			failed: {
-				color: warn.hue1
-			},
-			
-			label: {
-				time: {
-					color: text.secondary
-				}
-			}
-		},
+	return Styles.getMuiTheme(_.merge(baseTheme, createStyles({
+		ThemeName: 'DarkTheme',
 		
-		detail: {
-			
+		/**
+		 * Global
+		 */
+		
+		fontFamily,
+		fontWeight,
+		fontSize,
+		
+		
+		textColor: text.primary,
+		alternateTextColor: alternateText.primary,
+		
+		progressIndicatorColor: accent.hue1,// secondary.hue1,
+		
+		/**
+		 * Job Monitor widget
+		 */
+		jobs: {
 			root: {
-				borderLeftColor: primary.hue2,
-			},
-			header: {
-				backgroundColor: primary.hue3,
-				color: text.secondary
+				backgroundColor: primary.hue1,
+				color: text.primary
 			},
 			
-			logs: {
-				backgroundColor: background,
+			list: {
+				backgroundColor: primary.hue1,
 				
-				levels: {
-					info: {
-						color: success.hue1
-					},
-					warn: {
-						color: accent.hue1
-					},
-					success: {
-						color: success.hue1
-					},
-					error: {
-						color: warn.hue1
+				item: {
+					selected: {
+						backgroundColor: primary.hue3,
 					}
 				},
 				
-				entry: {
-					':hover': {
-						backgroundColor: primary.hue1,
-					},
-					
+				divider: {
+					borderBottomColor: primary.hue2
+				}
+			},
+			
+			item: {
+				inProgress: {
+					color: accent.hue1
+				},
+				
+				success: {
+					color: success.hue1
+				},
+				
+				failed: {
+					color: warn.hue1
+				},
+				
+				label: {
 					time: {
 						color: text.secondary
+					}
+				}
+			},
+			
+			detail: {
+				
+				root: {
+					borderLeftColor: primary.hue2,
+				},
+				header: {
+					backgroundColor: primary.hue3,
+					color: text.secondary
+				},
+				
+				logs: {
+					backgroundColor: background,
+					
+					levels: {
+						info: {
+							color: success.hue1
+						},
+						warn: {
+							color: accent.hue1
+						},
+						success: {
+							color: success.hue1
+						},
+						error: {
+							color: warn.hue1
+						}
 					},
 					
-					divider: {
-						borderBottomColor: primary.hue1
+					entry: {
+						':hover': {
+							backgroundColor: primary.hue1,
+						},
+						
+						time: {
+							color: text.secondary
+						},
+						
+						divider: {
+							borderBottomColor: primary.hue1
+						}
+					}
+				}
+				
+			},
+		},
+		
+		/**
+		 * Style the status bar, for jobs, saving, info, etc
+		 */
+		// Height is needed for calculating layouts
+		statusBarHeight,
+		
+		statusBar: {
+			
+			// Root Colors
+			root: {
+				height: statusBarHeight,
+				backgroundColor: background,//primary.hue3,
+				borderTopColor: primary.hue3,
+				color: text.primary,
+				
+				
+			},
+			
+			status: {
+				item: {
+					backgroundColor: primary.hue1,//background,
+					':hover': {
+						backgroundColor: tc(primary.hue2).lighten(5).toRgbString()
+					},
+				}
+			},
+			
+			
+		},
+		
+		/**
+		 * Label Chip Styles
+		 */
+		labelChip: {
+			text: {
+				fontSize: themeFontSize(1),
+				fontWeight: 500
+			},
+			
+			accessory: {
+				remove: {
+					hover: {
+						backgroundColor: 'white',
+						color: warn.hue1
 					}
 				}
 			}
-			
-		},
-	},
-	
-	/**
-	 * Style the status bar, for jobs, saving, info, etc
-	 */
-	// Height is needed for calculating layouts
-	statusBarHeight,
-	
-	statusBar: {
-		
-		// Root Colors
-		root: {
-			height: statusBarHeight,
-			backgroundColor: background,//primary.hue3,
-			borderTopColor: primary.hue3,
-			color: text.primary,
-			
-			
-			
 		},
 		
-		status: {
-			item: {
-				backgroundColor: primary.hue1,//background,
-				':hover': {
-					backgroundColor: tc(primary.hue2).lighten(5).toRgbString()
-				},
+		/**
+		 * TypeAheadSelect styling
+		 */
+		typeAheadSelect: {
+			root: InputStyle
+		},
+		
+		
+		issueStateIcon: {
+			open: {
+				backgroundColor: 'rgba(101,181,73,1)',
+				color: text.primary
+			},
+			closed: {
+				color: text.primary,
+				backgroundColor: warn.hue1
 			}
 		},
 		
-		
-		 
-	},
-	
-	/**
-	 * Label Chip Styles
-	 */
-	labelChip: {
-		text: {
-			fontSize: themeFontSize(1),
-			fontWeight: 500
+		app: {
+			fontFamily,
+			fontWeight,
+			background: background
 		},
 		
-		accessory: {
-			remove: {
-				hover: {
-					backgroundColor: 'white',
-					color: warn.hue1
+		chipsField: {
+			chipContent: {
+				control: {
+					':hover': {
+						color: warn.hue1
+					}
 				}
 			}
-		}
-	},
-
-	/**
-	 * TypeAheadSelect styling
-	 */
-	typeAheadSelect: {
-		root: InputStyle
-	},
-
-
-	issueStateIcon: {
-		open: {
-			backgroundColor: 'rgba(101,181,73,1)',
-			color: text.primary
 		},
-		closed: {
-			color: text.primary,
-			backgroundColor: warn.hue1
-		}
-	},
-
-	app: {
-		fontFamily,
-		fontWeight
-	},
-
-	chipsField: {
-		chipContent: {
-			control: {
-				':hover': {
-					color: warn.hue1
+		
+		avatar: {
+			root: {
+				clickable: {
+					':hover': {
+						backgroundColor: accent.hue1
+					}
 				}
+			},
+			avatar: {
+				borderColor: secondary.hue1,
+				backgroundColor: accent.hue1
 			}
-		}
-	},
-
-	avatar: {
-		root:   {
-			clickable: {
+		},
+		
+		button: {
+			root: {
+				fontFamily: fontFamilyRegular,
+				fontWeight: 500,
+				borderRadius: 2
+			},
+			flat: {
+				backgroundColor: primary.hue1,
+				color: text.secondary,
 				':hover': {
 					backgroundColor: accent.hue1
 				}
-			}
-		},
-		avatar: {
-			borderColor: secondary.hue1,
-			backgroundColor: accent.hue1
-		}
-	},
-
-	button: {
-		root: {
-			fontFamily: fontFamilyRegular,
-			fontWeight: 500,
-			borderRadius: 2
-		},
-		flat: {
-			backgroundColor: primary.hue1,
-			color:           text.secondary,
-			':hover': {
-				backgroundColor: accent.hue1
-			}
-		},
-
-		raised: {
-			color:           text.primary,
-			//backgroundColor: secondary.hue1
-			backgroundColor: tc(accent.hue1).setAlpha(0.2).toRgbString(),
-			[CSSHoverState]: {
-				backgroundColor: accent.hue1
-			}
-		},
-
-		disabled: {
-			color:           text.hintOrDisabledOrIcon,
-			backgroundColor: primary.hue1
-		}
-	},
-
-	form: {
-		menuItem: [{
-			cursor: 'pointer'
-		}],
-		select: {
-
-			list: {
-				padding: 0,
-				paddingTop: 0,
-				paddingBottom: 0,
-				backgroundColor: 'transparent'
 			},
-			item: [{
-				cursor: 'pointer'
-			}]
-		}
-	},
-
-	/**
-	 * This styling is for material-ui Lists
-	 */
-	list: {
-		paddingTop:0,
-		paddingBottom:0
-	},
-
-	/**
-	 * Inline editing
-	 */
-	inline: {
-		input: {
-			color: text.primary,
-			backgroundColor: primary.hue3,
-			focused: {
-				backgroundColor: secondary.hue1,
-			},
-
-			hint: {
-				color: tc(primary.hue4).lighten(20).toString(),
-				backgroundColor: 'transparent',
-				fontWeight: 400
-			},
-
-		}
-
-	},
-	
-	/**
-	 * Dialog
-	 */
-	dialog: {
-		
-		root: {
-			backgroundColor: background
-		},
-
-		
-		actions: {
-			backgroundColor:           primary.hue1,
-			color: text.primary
-		},
-		action: {
-			padding: '1rem 2rem',
-			margin: '0 0 0 1rem',
 			
-			save: {
+			raised: {
+				color: text.primary,
+				//backgroundColor: secondary.hue1
+				backgroundColor: tc(accent.hue1).setAlpha(0.2).toRgbString(),
+				[CSSHoverState]: {
+					backgroundColor: accent.hue1
+				}
+			},
+			
+			disabled: {
+				color: text.hintOrDisabledOrIcon,
+				backgroundColor: primary.hue1
+			}
+		},
+		
+		form: {
+			menuItem: [ {
+				cursor: 'pointer'
+			} ],
+			select: {
+				
+				list: {
+					padding: 0,
+					paddingTop: 0,
+					paddingBottom: 0,
+					backgroundColor: 'transparent'
+				},
+				item: [ {
+					cursor: 'pointer'
+				} ]
+			}
+		},
+		
+		/**
+		 * This styling is for material-ui Lists
+		 */
+		list: {
+			paddingTop: 0,
+			paddingBottom: 0
+		},
+		
+		/**
+		 * Inline editing
+		 */
+		inline: {
+			input: {
+				color: text.primary,
+				backgroundColor: primary.hue3,
+				focused: {
+					backgroundColor: secondary.hue1,
+				},
+				
+				hint: {
+					color: tc(primary.hue4).lighten(20).toString(),
+					backgroundColor: 'transparent',
+					fontWeight: 400
+				},
 				
 			}
-		},
-
-		form: {
-			backgroundColor:           background,
-			fontSize: fontSize * 1.2,
-			color: text.primary
-		},
-
-		title: {
-			backgroundColor: background,
-			backgroundImage: makeLinearGradient('to bottom',primary.hue1,primary.hue2),
-			boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
 			
-			label: {
-				fontSize: fontSize * 2,
-				fontWeight: 500,
-				color:           accent.hue1,
-				textTransform: 'uppercase'
+		},
+		
+		/**
+		 * Dialog
+		 */
+		dialog: {
+			
+			root: {
+				backgroundColor: background
 			},
 			
-			subLabel: {
-				color: text.secondary
+			
+			actions: {
+				backgroundColor: primary.hue1,
+				color: text.primary
 			},
-
-			avatar: {
-				color: text.secondary,
-				avatar: {
-					borderColor: Transparent
-				}
-			}
-		},
-
-		menu: {
-			color: text.primary,
-			fill: text.secondary,
-			backgroundColor: Transparent,//primary.hue2 //primary.hue2//,text.primary
-		},
-
-		menuItem: {
-			backgroundColor: primary.hue2,
-			color: text.primary,
-			hover: {
-				color: text.primary + ' !important',
-				backgroundColor: accent.hue1 + ' !important'
-			}
-
-		},
-
-		input: {
-			color: text.primary,
-			//backgroundColor: primary.hue2,
-			backgroundColor: Transparent,
-
-			hint:  {
-				zIndex: 5,
-				textTransform: 'uppercase',
-				color:           primary.hue4,
-				backgroundColor: 'transparent'
+			action: {
+				padding: '1rem 2rem',
+				margin: '0 0 0 1rem',
+				
+				save: {}
 			},
-
-
-			floatingLabel: {
-				color:           primary.hue4,
-				backgroundColor: 'transparent'
+			
+			form: {
+				backgroundColor: background,
+				fontSize: fontSize * 1.2,
+				color: text.primary
 			},
-
-			floatingLabelFocus: {
-				color:           text.secondary,
-				backgroundColor: 'transparent'
-			},
-
-			underlineDisabled: {
-				borderColor: primary.hue2,//'transparent',
-				borderBottomWidth: `0.1rem`,
-				transform: 'scaleX(1)'
-			},
-
-			underlineFocus: {
-				borderColor: primary.hue3,
-				borderBottomWidth: `0.1rem`
-			}
-
-
-		},
-	},
-
-	issueEditDialog: {
-
-	},
-	issueCreateInline: {
-
-	},
-	
-	issueActivityText: {
-		activityContent: {
-			eventGroup: {
-				verticalDots: {
-					borderRightColor: primary.hue3
-				},
-				horizontalDots: {
-					borderBottomColor: primary.hue3
-				},
-				icon: {
-					backgroundColor: tc(primary.hue3).setAlpha(1).toRgbString()
-				}
-			}
-		}
-	},
-
-	repoAddDialog: {
-		container: {
-			// boxShadow: `0 0 1rem ${accent.hue1}`,
-			boxShadow: `0 0 1rem ${text.primary}`,
-			minHeight: 50
-		}
-	},
-
-	header: {
-		logoWrapper:    {
-			height: navBarHeight
-		},
-		logo:    {
-
-		},
-		controlStyle: {
-			color:           'white',
-			height:          windowControlDim,
-			width:           windowControlDim,
-			fontSize:        windowControlDim * 0.7,
-			backgroundColor: 'white',
-			borderRadius:    windowControlDim / 2,
-			borderColor:     'rgba(255,255,255,0.2)',
-			margin:          '0.2rem'
-		},
-		style:        {
-			color:           text.primary,
-			backgroundColor: background,
-			height:          navBarHeight
-
-		}
-	},
-	
-	homePage: {
-		viewWrapper: {
-			borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
-		}
-	},
-	
-	/**
-	 * Tool Panel Container
-	 */
-	toolPanel: {
-		
-		[ToolPanelLocation.Left]: { minDim: 2 },
-		[ToolPanelLocation.Right]: { minDim: 2 },
-		[ToolPanelLocation.Bottom]: { minDim: 2.4 },
-		[ToolPanelLocation.Popup]: { minDim: 2.4 },
-		
-		gutter: {
-			backgroundColor: tc(primary.hue2).lighten(5).toRgbString(),
-		},
-		
-		
-		tool: {
-			header: {
-				color: text.primary,
-				backgroundColor: primary.hue2,
-				//borderColor: primary.hue3,
+			
+			title: {
+				backgroundColor: background,
+				backgroundImage: makeLinearGradient('to bottom', primary.hue1, primary.hue2),
+				boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
 				
 				label: {
+					fontSize: fontSize * 2,
+					fontWeight: 500,
+					color: accent.hue1,
+					textTransform: 'uppercase'
+				},
+				
+				subLabel: {
+					color: text.secondary
+				},
+				
+				avatar: {
 					color: text.secondary,
+					avatar: {
+						borderColor: Transparent
+					}
 				}
 			},
 			
-			container: {
-				
-				borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
-				
-			}
-		},
-
-		tools: {
-			// borderColor: primary.hue3
-			[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-			[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-			[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue3).setAlpha(1).toRgbString() },
-			[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+			menu: {
+				color: text.primary,
+				fill: text.secondary,
+				backgroundColor: Transparent,//primary.hue2 //primary.hue2//,text.primary
+			},
 			
-		}
-	},
-	
-	/**
-	 * RepoPanelTool
-	 */
-	repoPanel: {
-		root: {
-			backgroundColor: primary.hue1,
-			color:           text.primary
+			menuItem: {
+				backgroundColor: primary.hue2,
+				color: text.primary,
+				hover: {
+					color: text.primary + ' !important',
+					backgroundColor: accent.hue1 + ' !important'
+				}
+				
+			},
+			
+			input: {
+				color: text.primary,
+				//backgroundColor: primary.hue2,
+				backgroundColor: Transparent,
+				
+				hint: {
+					zIndex: 5,
+					textTransform: 'uppercase',
+					color: primary.hue4,
+					backgroundColor: 'transparent'
+				},
+				
+				
+				floatingLabel: {
+					color: primary.hue4,
+					backgroundColor: 'transparent'
+				},
+				
+				floatingLabelFocus: {
+					color: text.secondary,
+					backgroundColor: 'transparent'
+				},
+				
+				underlineDisabled: {
+					borderColor: primary.hue2,//'transparent',
+					borderBottomWidth: `0.1rem`,
+					transform: 'scaleX(1)'
+				},
+				
+				underlineFocus: {
+					borderColor: primary.hue3,
+					borderBottomWidth: `0.1rem`
+				}
+				
+				
+			},
 		},
-
-
-		header:            {
-			backgroundColor: primary.hue2,
-			color:           text.secondary
-			// padding: '1rem 1rem'
-		},
-		headerButton:      {
-			backgroundColor: primary.hue2,
-			color:           text.secondary,
-			':hover': {
-				backgroundColor: accent.hue1
+		
+		issueEditDialog: {},
+		issueCreateInline: {},
+		
+		issueActivityText: {
+			activityContent: {
+				eventGroup: {
+					verticalDots: {
+						borderRightColor: primary.hue3
+					},
+					horizontalDots: {
+						borderBottomColor: primary.hue3
+					},
+					icon: {
+						backgroundColor: tc(primary.hue3).setAlpha(1).toRgbString()
+					}
+				}
 			}
 		},
 		
-		list:              {
-			item: {
-				backgroundColor: primary.hue3,
-				opacity:         0.6,
+		repoAddDialog: {
+			container: {
+				// boxShadow: `0 0 1rem ${accent.hue1}`,
+				boxShadow: `0 0 1rem ${text.primary}`,
+				minHeight: 50
+			}
+		},
+		
+		header: {
+			logoWrapper: {
+				height: navBarHeight
+			},
+			logo: {},
+			controlStyle: {
+				color: 'white',
+				height: windowControlDim,
+				width: windowControlDim,
+				fontSize: windowControlDim * 0.7,
+				backgroundColor: 'white',
+				borderRadius: windowControlDim / 2,
+				borderColor: 'rgba(255,255,255,0.2)',
+				margin: '0.2rem'
+			},
+			style: {
+				color: text.primary,
+				backgroundColor: background,
+				height: navBarHeight
 				
-				hover: {
-					backgroundColor: accent.hue2,
-					color:           text.primary,
-					opacity:         1
+			}
+		},
+		
+		homePage: {
+			viewWrapper: {
+				borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
+			}
+		},
+		
+		/**
+		 * Tool Panel Container
+		 */
+		toolPanel: {
+			
+			[ToolPanelLocation.Left]: { minDim: 2 },
+			[ToolPanelLocation.Right]: { minDim: 2 },
+			[ToolPanelLocation.Bottom]: { minDim: 2.4 },
+			[ToolPanelLocation.Popup]: { minDim: 2.4 },
+			
+			gutter: {
+				backgroundColor: tc(primary.hue2).lighten(5).toRgbString(),
+			},
+			
+			
+			tool: {
+				header: {
+					color: text.primary,
+					backgroundColor: primary.hue2,
+					//borderColor: primary.hue3,
+					
+					label: {
+						color: text.secondary,
+					}
 				},
 				
-				enabled: {
-					borderColor: accent.hue1,
-					color:           text.primary,
-					opacity:         1
-				},
+				container: {
+					
+					borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
+					
+				}
+			},
+			
+			tools: {
+				// borderColor: primary.hue3
+				[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+				[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+				[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue3).setAlpha(1).toRgbString() },
+				[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
 				
-				selected:      {
-					backgroundColor: accent.hue1,
-					color:           text.primary,
-					opacity:         1,
+			}
+		},
+		
+		/**
+		 * RepoPanelTool
+		 */
+		repoPanel: {
+			root: {
+				backgroundColor: primary.hue1,
+				color: text.primary
+			},
+			
+			
+			header: {
+				backgroundColor: primary.hue2,
+				color: text.secondary
+				// padding: '1rem 1rem'
+			},
+			headerButton: {
+				backgroundColor: primary.hue2,
+				color: text.secondary,
+				':hover': {
+					backgroundColor: accent.hue1
+				}
+			},
+			
+			list: {
+				item: {
+					backgroundColor: primary.hue3,
+					opacity: 0.6,
 					
 					hover: {
 						backgroundColor: accent.hue2,
-						color:           text.primary,
-						opacity:         1
+						color: text.primary,
+						opacity: 1
+					},
+					
+					enabled: {
+						borderColor: accent.hue1,
+						color: text.primary,
+						opacity: 1
+					},
+					
+					selected: {
+						backgroundColor: accent.hue1,
+						color: text.primary,
+						opacity: 1,
+						
+						hover: {
+							backgroundColor: accent.hue2,
+							color: text.primary,
+							opacity: 1
+						}
 					}
+					
 				}
 				
-			}
-			
-
-			
-
-
-		}
-	},
-
-	/**
-	 * Search Panel
-	 */
-	searchPanel: {
-		wrapperStyle: {
-			backgroundColor: primary.hue2,
-		},
-
-		wrapperExpandedStyle: {},
-
-		hintStyle: {
-			backgroundColor: 'transparent',
-			color:           text.secondary,
-			fontWeight:      100
-		},
-
-		style: {
-			backgroundColor: 'transparent',
-			color:           text.secondary
-		},
-
-		focusedStyle: {
-			backgroundColor: primary.hue4,
-			color:           text.primary
-		}
-	},
-
-	searchResults: {
-		result: {
-			normal:   {
-				backgroundColor: text.primary,
-				color:           primary.hue1
-			},
-			selected: {
-				backgroundColor: accent.hue1,
-				color:           text.primary
+				
 			}
 		},
-
-		content: {
-			label:    {},
-			action:   {},
-			type:     {
-				backgroundColor: accent.hue3,
-				color:           text.primary
-			},
-			selected: {}
-
-		}
-	},
-
-
-	/**
-	 * Issue filters
-	 */
-	issueFilters: {
-		root: {
-			color: text.secondary
-		},
-
-		filters: {
-			controls: {
-				groupBy: {
-					color: text.primary,
-					backgroundColor: accent.hue1
+		
+		/**
+		 * Search Panel
+		 */
+		searchPanel: {
+			
+			
+			wrapper: {
+				
+				expanded: {
+					
 				}
-			}
-		},
-
-		hasFiltersColor: accent.hue1
-
-	},
-
-
-	/**
-	 * Issues Panel
-	 */
-	issuesPanel: {
-
-
-		panel: {
-			backgroundColor: tc(primary.hue2).darken(5).toRgbString()
-		},
-
-
-		issueGroupHeader: {
-			color: text.primary,
-			boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
-			backgroundColor: tc(primary.hue2).lighten(10).setAlpha(0.6).toRgbString(),
-			
-			expanded: {
-				boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
-				backgroundColor: tc(primary.hue2).lighten(10).toRgbString()
-			}
-		},
-
-
-		// Issue item in list
-		issue: {
-			backgroundColor: background,
-			color:           text.secondary,
-			boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue2).setAlpha(1).toRgbString(),
-
-			// Selected state
-			selected: {
-				backgroundColor: primary.hue2,
-				color:           text.primary,
-				boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue1).setAlpha(1).toRgbString(),
 			},
 			
-			// multi selected state
-			multi:  {
-				backgroundColor: primary.hue2,
-					color:           text.primary
+			hint: {
+				backgroundColor: 'transparent',
+				color: text.secondary,
+				fontWeight: 100
+			},
+			
+			
+			
+			
+		},
+		
+		/**
+		 * Search Results
+		 */
+		searchResults: {
+			result: {
+				normal: {
+					backgroundColor: text.primary,
+					color: primary.hue1
+				},
+				selected: {
+					backgroundColor: accent.hue1,
+					color: text.primary
+				}
+			},
+			
+			content: {
+				label: {},
+				action: {},
+				type: {
+					backgroundColor: accent.hue3,
+					color: text.primary
+				},
+				selected: {}
+				
 			}
 		},
-
-		issueMilestone: {
-			color: text.secondary
-		},
-
-		issueNumber: {
-			color:      text.primary
-		},
-
-		issueRepo: {
-			color:      secondary.hue1,
-			fontFamily: fontFamilyRegular,
-			fontWeight: 500
-		},
-
-		issueTitleRow: {
-			fontFamily: fontFamilyRegular,
-		},
-
-		issueTitle: {
-			color:      text.primary,
-			fontFamily: fontFamilyRegular,
-			fontWeight: 300,
-			fontSize: themeFontSize(1.2)
-		},
-
-		issueTitleSelected: {
-			color:      text.primary,
-			fontWeight: 400,
-			fontSize: themeFontSize(1.2)
-		},
-
-		issueLabel: {
-			// fontFamily: fontFamilyDetail
-		},
-
-		issueTitleSelectedMulti: {}
-	},
-
-	/**
-	 * Issue detail
-	 */
-	issueDetail: {
-		root: {
-			color: text.primary
-		},
-
-		header: {
-			//backgroundColor: accent.hue1,
-			backgroundColor: tc(primary.hue2).setAlpha(0.5).toRgbString(),
-			color:           text.primary,
-
-			row1: {
-				repo: {
-					color: tc(text.secondary).setAlpha(0.7).toRgbString(),
-					':hover': {
-						color: secondary.hue1
+		
+		
+		/**
+		 * Issue filters
+		 */
+		issueFilters: {
+			root: {
+				color: text.secondary
+			},
+			
+			filters: {
+				controls: {
+					groupBy: {
+						color: text.primary,
+						backgroundColor: accent.hue1
 					}
 				}
-			}
+			},
+			
+			hasFiltersColor: accent.hue1
+			
 		},
-
-		content: {
-			backgroundColor: primary.hue1, //secondary.hue1,
-			color:           text.primary,
-
-			activities: {
-				activity: {
-					
-					all: {
-						details: {
-							control: {
-								button: {
-									backgroundColor: 'transparent',
-									color: tc(text.primary).setAlpha(0.8).toRgbString(),
-									':hover': {
-										color: tc(text.primary).setAlpha(1).toRgbString(),
+		
+		
+		/**
+		 * Issues Panel
+		 */
+		issuesPanel: {
+			
+			
+			panel: {
+				backgroundColor: tc(primary.hue2).darken(5).toRgbString()
+			},
+			
+			
+			issueGroupHeader: {
+				color: text.primary,
+				boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
+				backgroundColor: tc(primary.hue2).lighten(10).setAlpha(0.6).toRgbString(),
+				
+				expanded: {
+					boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
+					backgroundColor: tc(primary.hue2).lighten(10).toRgbString()
+				}
+			},
+			
+			
+			// Issue item in list
+			issue: {
+				backgroundColor: background,
+				color: text.secondary,
+				boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue2).setAlpha(1).toRgbString(),
+				
+				// Selected state
+				selected: {
+					backgroundColor: primary.hue2,
+					color: text.primary,
+					boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue1).setAlpha(1).toRgbString(),
+				},
+				
+				// multi selected state
+				multi: {
+					backgroundColor: primary.hue2,
+					color: text.primary
+				}
+			},
+			
+			issueMilestone: {
+				color: text.secondary
+			},
+			
+			issueNumber: {
+				color: text.primary
+			},
+			
+			issueRepo: {
+				color: secondary.hue1,
+				fontFamily: fontFamilyRegular,
+				fontWeight: 500
+			},
+			
+			issueTitleRow: {
+				fontFamily: fontFamilyRegular,
+			},
+			
+			issueTitle: {
+				color: text.primary,
+				fontFamily: fontFamilyRegular,
+				fontWeight: 300,
+				fontSize: themeFontSize(1.2)
+			},
+			
+			issueTitleSelected: {
+				color: text.primary,
+				fontWeight: 400,
+				fontSize: themeFontSize(1.2)
+			},
+			
+			issueLabel: {
+				// fontFamily: fontFamilyDetail
+			},
+			
+			issueTitleSelectedMulti: {}
+		},
+		
+		/**
+		 * Issue detail
+		 */
+		issueDetail: {
+			root: {
+				color: text.primary
+			},
+			
+			header: {
+				//backgroundColor: accent.hue1,
+				backgroundColor: tc(primary.hue2).setAlpha(0.5).toRgbString(),
+				color: text.primary,
+				
+				row1: {
+					repo: {
+						color: tc(text.secondary).setAlpha(0.7).toRgbString(),
+						':hover': {
+							color: secondary.hue1
+						}
+					}
+				}
+			},
+			
+			content: {
+				backgroundColor: primary.hue1, //secondary.hue1,
+				color: text.primary,
+				
+				activities: {
+					activity: {
+						
+						all: {
+							details: {
+								control: {
+									button: {
+										backgroundColor: 'transparent',
+										color: tc(text.primary).setAlpha(0.8).toRgbString(),
+										':hover': {
+											color: tc(text.primary).setAlpha(1).toRgbString(),
+										}
+									},
+									
+									icon: {
+										fontSize: themeFontSize(1.3)
 									}
-								},
-								
-								icon: {
-									fontSize: themeFontSize(1.3)
 								}
 							}
-						}
-					},
-
-					post: {
-						backgroundColor: primary.hue2,
-						//borderColor:     accent.hue1,
-						borderColor:     Transparent,
-
-						user: {
-							backgroundColor: primary.hue3,
-							//borderColor: accent.hue1,
-							borderColor:     Transparent,
-							transform: 'translate(0.2rem,0)'
 						},
-
-						details: {
-							backgroundColor: primary.hue3,
-							color:           text.primary,
+						
+						post: {
+							backgroundColor: primary.hue2,
+							//borderColor:     accent.hue1,
+							borderColor: Transparent,
 							
+							user: {
+								backgroundColor: primary.hue3,
+								//borderColor: accent.hue1,
+								borderColor: Transparent,
+								transform: 'translate(0.2rem,0)'
+							},
 							
-						}
-					},
-
-					comment: {
-						backgroundColor: primary.hue2,
-						//borderColor:     secondary.hue1,
-						borderColor:     Transparent,
-
-						user: {
-							backgroundColor: primary.hue3,
+							details: {
+								backgroundColor: primary.hue3,
+								color: text.primary,
+								
+								
+							}
+						},
+						
+						comment: {
+							backgroundColor: primary.hue2,
 							//borderColor:     secondary.hue1,
-							borderColor:     Transparent,
-							transform: 'translate(0.2rem,0)'
-						},
-
-						details: {
-							//backgroundColor: secondary.hue1,
-							backgroundColor: primary.hue3,
-							color:           text.primary
+							borderColor: Transparent,
+							
+							user: {
+								backgroundColor: primary.hue3,
+								//borderColor:     secondary.hue1,
+								borderColor: Transparent,
+								transform: 'translate(0.2rem,0)'
+							},
+							
+							details: {
+								//backgroundColor: secondary.hue1,
+								backgroundColor: primary.hue3,
+								color: text.primary
+							}
 						}
 					}
 				}
-			}
-		},
-
-		footer: {
-			backgroundColor: accent.hue1,
-			color:           text.primary
-		},
-
-	},
-	/**
-	 * Toast
-	 */
-
-	toast:       {
-		bgInfo:  {
-			backgroundColor: accent.hue1
-		},
-		fgInfo:  {
-			color: text.primary
-		},
-		bgSuccess:  {
-			backgroundColor: success.hue1
-		},
-		fgSuccess:  {
-			color: text.primary
-		},
-		bgError: {
-			backgroundColor: warn.hue1
-		},
-		fgError: {
-			color: text.primary
-		},
-		
-		root: {
-			fontFamily: fontFamily,
+			},
+			
+			footer: {
+				backgroundColor: accent.hue1,
+				color: text.primary
+			},
 			
 		},
-
-		body: {
-			fontFamily: fontFamily
-		},
-
+		/**
+		 * Toast
+		 */
+		
 		toast: {
-			fontFamily: fontFamily
-		},
-
-		content: {
-			backgroundColor: primary.hue2
-		},
-
-		action: {
+			bgInfo: {
+				backgroundColor: accent.hue1
+			},
+			fgInfo: {
+				color: text.primary
+			},
+			bgSuccess: {
+				backgroundColor: success.hue1
+			},
+			fgSuccess: {
+				color: text.primary
+			},
+			bgError: {
+				backgroundColor: warn.hue1
+			},
+			fgError: {
+				color: text.primary
+			},
 			
+			root: {
+				fontFamily: fontFamily,
+				
+			},
 			
-			info: {
-				backgroundColor: secondary.hue1,
-				color:           text.primary,
-				':hover':        {
-					backgroundColor: secondary.hue2
+			body: {
+				fontFamily: fontFamily
+			},
+			
+			toast: {
+				fontFamily: fontFamily
+			},
+			
+			content: {
+				backgroundColor: primary.hue2
+			},
+			
+			action: {
+				
+				
+				info: {
+					backgroundColor: secondary.hue1,
+					color: text.primary,
+					':hover': {
+						backgroundColor: secondary.hue2
+					}
+				},
+				
+				success: {
+					backgroundColor: secondary.hue1,
+					color: success.hue1,
+					':hover': {
+						color: secondary.hue2,
+						backgroundColor: success.hue1
+					}
+				},
+				
+				error: {
+					backgroundColor: primary.hue1,
+					color: text.secondary,
+					':hover': {
+						color: text.primary,
+						backgroundColor: warn.hue1
+					}
 				}
 			},
 			
-			success: {
-				backgroundColor: secondary.hue1,
-				color:           success.hue1,
-				':hover':        {
-					color:           secondary.hue2,
-					backgroundColor: success.hue1
-				}
-			},
 			
-			error: {
-				backgroundColor: primary.hue1,
-				color:           text.secondary,
-				':hover':        {
-					color:           text.primary,
-					backgroundColor: warn.hue1
-				}
-			}
 		},
-
 		
-	},
+		palette: {
+			text,
+			alternateText,
+			textColor: text.primary,
+			canvasColor: background,
+			primary1Color: primary.hue1,
+			primary1ColorText: text.primary,
+			primary2Color: primary.hue2,
+			primary2ColorText: text.primary,
+			primary3Color: primary.hue3,
+			primary3ColorText: text.primary,
+			
+			accent1Color: accent.hue1,
+			accent1ColorText: text.primary,
+			accent2Color: accent.hue2,
+			accent2ColorText: text.primary,
+			accent3Color: accent.hue3,
+			accent3ColorText: text.primary,
+			highlightColor: accent.hue1,
+			errorColor: warn.hue1,
+			secondary,
+			primary,
+			accent,
+			background
+		}
+	})))
+}
 
-	palette: {
-		                   text,
-		                   alternateText,
-		textColor:         text.primary,
-		canvasColor:       background,
-		primary1Color:     primary.hue1,
-		primary1ColorText: text.primary,
-		primary2Color:     primary.hue2,
-		primary2ColorText: text.primary,
-		primary3Color:     primary.hue3,
-		primary3ColorText: text.primary,
-
-		accent1Color:     accent.hue1,
-		accent1ColorText: text.primary,
-		accent2Color:     accent.hue2,
-		accent2ColorText: text.primary,
-		accent3Color:     accent.hue3,
-		accent3ColorText: text.primary,
-		highlightColor:   accent.hue1,
-		errorColor:       warn.hue1,
-		secondary,
-		primary,
-		accent,
-		background
-	}
-})))
-
+export namespace DarkTheme {
+	export const ThemeName = 'DarkTheme'
+}
 export default DarkTheme

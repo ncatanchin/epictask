@@ -37,7 +37,7 @@ const
 	}
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 	
@@ -131,6 +131,10 @@ export class CommandManager {
 	 */
 	private windowListeners
 	
+	/**
+	 * Browser window listeners for electronm
+	 */
+	private browserListeners
 	
 	
 	
@@ -203,6 +207,25 @@ export class CommandManager {
 		}
 	}
 	
+	
+	/**
+	 * Focus event for any component
+	 *
+	 * @param event
+	 */
+	private handleFocus(event:FocusEvent) {
+		log.debug(`focus received`,event)
+	}
+	
+	/**
+	 * Blur event for any component
+	 *
+	 * @param event
+	 */
+	private handleBlur(event:FocusEvent) {
+		log.debug(`blur received`,event)
+	}
+	
 	/**
 	 * Before unload - UNBIND - EVERYTHING
 	 *
@@ -239,16 +262,22 @@ export class CommandManager {
 		if (typeof window !== 'undefined') {
 			if (!this.windowListeners) {
 				this.windowListeners = {
+					focus: {
+						listener: this.handleFocus.bind(this)
+					},
+					blur: {
+						listener: this.handleBlur.bind(this)
+					},
 					keydown: {
-						listener: this.handleKeyDown.bind(this),
-						attacher: addWindowListener,
-						detacher: removeWindowListener
+						listener: this.handleKeyDown.bind(this)
 					},
 					beforeunload: {
-						listener: this.beforeUnload.bind(this),
-						attacher: addWindowListener,
-						detacher: removeWindowListener
-					},
+						listener: this.beforeUnload.bind(this)
+					}
+					
+				}
+				
+				this.browserListeners = {
 					focus: {
 						listener:this.onWindowFocus.bind(this),
 						attacher: addBrowserWindowListener,
@@ -261,17 +290,19 @@ export class CommandManager {
 					}
 				}
 				
+				
 				Object
 					.keys(this.windowListeners)
 					.forEach(eventName => {
-						const
-							{attacher,listener} = this.windowListeners[eventName]
-						
-						attacher(eventName,listener)
+						addWindowListener(eventName,this.windowListeners[eventName].listener)
+					})
+				
+				Object
+					.keys(this.browserListeners)
+					.forEach(eventName => {
+						addBrowserWindowListener(eventName,this.browserListeners[eventName].listener)
 					})
 			}
-			// doc.body.addEventListener('focus',(event) => log.debug('body focus'))
-			// doc.body.addEventListener('blur',(event) => )
 		}
 	}
 	
@@ -282,16 +313,21 @@ export class CommandManager {
 		if (this.windowListeners) {
 			log.debug(`Detaching window listeners`)
 			
+			
 			Object
 				.keys(this.windowListeners)
 				.forEach(eventName => {
-					const
-						{listener,detacher} = this.windowListeners[eventName]
-					
-					detacher(eventName,listener)
+					removeWindowListener(eventName,this.windowListeners[eventName].listener)
+				})
+			
+			Object
+				.keys(this.browserListeners)
+				.forEach(eventName => {
+					removeBrowserWindowListener(eventName,this.browserListeners[eventName].listener)
 				})
 			
 			this.windowListeners = null
+			this.browserListeners = null
 		}
 	}
 	
@@ -328,7 +364,7 @@ export class CommandManager {
 	 * Load or reload keymaps, commands, etc
 	 */
 	load() {
-		log.info(`Loading commands & keymaps`)
+		log.debug(`Loading commands & keymaps`)
 	}
 	
 	/**
@@ -467,7 +503,7 @@ export class CommandManager {
 				.filter(it => it.menuPath)
 				.map(it => it.id)
 		
-		log.info(`Unmounting menu command`,...menuCommandIds)
+		log.debug(`Unmounting menu command`,...menuCommandIds)
 		manager.hideCommand(...menuCommandIds)
 		
 	}
@@ -532,7 +568,7 @@ export class CommandManager {
 				})
 		})
 		// FINALLY UPDATE MENU ITEMS
-		log.info(`Mounting menu command`,commands.map(it => it.id))
+		log.debug(`Mounting menu command`,commands.map(it => it.id))
 		this.updateMenuCommands(commands)
 	}
 	
@@ -607,7 +643,7 @@ export class CommandManager {
 	 * @returns {ICommandContainerRegistration}
 	 */
 	setContainerFocused(id:string,container:TCommandContainer,focused:boolean, event:React.FocusEvent<any> = null) {
-		log.info(`Focused on container ${id}`)
+		log.debug(`Focused on container ${id}`)
 		
 		const
 			status = this.getContainerRegistration(id,container,true),
@@ -671,14 +707,23 @@ export class CommandManager {
 			return
 		}
 		
-		log.debug(`Focusing on ${containerId}`,containerReg.element)
-	  const
-		  {element} = containerReg,
-		  focusEvent = (window as any).FocusEvent ? new FocusEvent('focus',{
-				relatedTarget: element
-			}) : document.createEvent("FocusEvent")
+		const
+			doFocus = () => {
+				log.debug(`Focusing on ${containerId}`, containerReg.element)
+				const
+					{ element } = containerReg,
+					focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
+						relatedTarget: element
+					}) : document.createEvent("FocusEvent")
+				
+				element.dispatchEvent(focusEvent)
+			}
 		
-		element.dispatchEvent(focusEvent)
+		if (document.activeElement) {
+			$(document.activeElement).blur()
+			setTimeout(doFocus,150)
+		} else
+			doFocus()
 	}
 }
 

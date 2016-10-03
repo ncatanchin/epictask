@@ -1,30 +1,59 @@
 
+//import {getTheme,getPalette} from '../ThemeState'
+
 declare global {
 	interface IStyle {
 		
 	}
 }
 
-const tinycolor = require('tinycolor2')
+const
+	tinycolor = require('tinycolor2')
+
 export const TinyColor = tinycolor
 
 export function rem(val:number) {
 	return `${val}rem`
 }
 
-export function createStyles(styles:any,topStyles:any = null):any {
-	topStyles = topStyles || styles
+function getTheme() {
+	return require('../ThemeState').getTheme()
+}
 
+function getPalette() {
+	return require('../ThemeState').getPalette()
+}
+
+/**
+ * Create deeply configured styles
+ * @param styles
+ * @param topStyles
+ * @param theme
+ * @param palette
+ * @returns {any}
+ */
+//export function createStyles(styles:any,topStyles:any = null,theme = getTheme(),palette = getPalette()):any {
+export function createStyles(styles:any,topStyles:any = null,theme = getTheme(),palette = getPalette()):any {
+	
+	if (!styles) {
+		return {}
+	} else if (Array.isArray(styles))
+		return mergeStyles(...styles.map(style => createStyles(style,topStyles,theme,palette)))
+	else if (_.isFunction(styles))
+		return createStyles(styles(topStyles,theme,palette),topStyles,theme,palette)
+	
+	topStyles = topStyles || styles
+		
 	return Object.keys(styles).reduce((expandedStyles,nextKey) => {
 		const baseStyleVal = styles[nextKey]
 
 		expandedStyles[nextKey] = (() => {
 			if (Array.isArray(baseStyleVal)) {
-				return createStyles(_.merge({},...baseStyleVal),topStyles)
+				return createStyles(_.merge({},...baseStyleVal),topStyles,theme,palette)
 			} else if (_.isPlainObject(baseStyleVal)) {
-				return createStyles(baseStyleVal,topStyles)
+				return createStyles(baseStyleVal,topStyles,theme,palette)
 			} else if (_.isFunction(baseStyleVal)) {
-				return createStyles(baseStyleVal(topStyles),topStyles)
+				return createStyles(baseStyleVal(topStyles,theme,palette),topStyles,theme,palette)
 			} else {
 				return baseStyleVal
 			}

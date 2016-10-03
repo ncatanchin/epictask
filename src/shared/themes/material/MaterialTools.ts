@@ -43,7 +43,7 @@ export const ThemeDefaults = {
 };
 
 
-export function makePalette(hex:string):MaterialColorPalette {
+export function makeMaterialPalette(hex:string):MaterialColorPalette {
 	const colors = [
 		{
 			hex: tinycolor(hex).lighten(52).toHexString(),
@@ -108,7 +108,8 @@ export interface MaterialColorSet {
 	hue4?:string
 }
 
-export interface MaterialTheme {
+export interface MaterialPalette {
+	PaletteName?:string
 	palettes:{
 		primary:MaterialColorPalette,
 		secondary:MaterialColorPalette,
@@ -156,6 +157,7 @@ export function makeTextColors(textColor:string,opacities:ThemeTextOpacity) {
 /**
  * Create a palette theme
  *
+ * @param name
  * @param primary
  * @param primaryHues
  * @param secondary
@@ -172,7 +174,8 @@ export function makeTextColors(textColor:string,opacities:ThemeTextOpacity) {
  * @param success
  * @param successHues
  */
-export function makeTheme(
+export function makePalette(
+	name:string,
 	primary:MaterialColorPalette,
 	primaryHues:string[],
 	secondary:MaterialColorPalette,
@@ -188,7 +191,7 @@ export function makeTheme(
 	dark:boolean,
     textColor = null,
 	textOpacities:ThemeTextOpacity = null
-):MaterialTheme {
+):MaterialPalette {
 
 	const themeType = dark ? ThemeType.Dark : ThemeType.Light
 
@@ -197,6 +200,7 @@ export function makeTheme(
 
 
 	return {
+		PaletteName:name,
 		palettes:{primary,secondary,accent,warn,background},
 		primary: makeHues(primary,primaryHues),
 		secondary: makeHues(secondary,secondaryHues),

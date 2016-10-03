@@ -5,6 +5,7 @@ import {User} from 'shared/models/User'
 import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
 import {IToolPanel, ToolPanelLocation, makeToolPanels} from "shared/tools/ToolTypes"
+import { IUISheet } from "shared/config/DialogsAndSheets"
 
 const log = getLogger(__filename)
 
@@ -41,6 +42,7 @@ export const UIStateRecord = Record({
 	statusBar: {
 		visible: true
 	},
+	sheet:null,
 	dialogs: Map<string,boolean>(),
 	messages: List<IToastMessage>(),
 	toolPanels: makeToolPanels()
@@ -64,9 +66,11 @@ export class UIState extends UIStateRecord implements State {
 			toolPanels: makeToolPanels(o.toolPanels)
 		}))
 	}
-
+	
+	
 	ready:boolean
 	user:User
+	sheet:IUISheet
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
 	toolPanels:Map<string,IToolPanel>

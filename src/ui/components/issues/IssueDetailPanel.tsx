@@ -41,7 +41,7 @@ import {
 	getCommandProps, CommandRoot
 } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 
 // Other stuff
@@ -278,7 +278,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param issue
 	 * @param styles
 	 * @returns {any}
-	 * @param palette
+	 * @param theme
 	 */
 	renderHeader = (issue, styles, palette) => {
 		

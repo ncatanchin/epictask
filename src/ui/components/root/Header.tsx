@@ -6,7 +6,9 @@ import {TextField} from 'material-ui/TextField'
 import {PureRender} from 'ui/components/common'
 import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { getCommandManager } from "shared/commands/CommandManager"
+import { ThemedStyles } from "shared/themes/ThemeDecorations"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
@@ -26,90 +28,106 @@ export enum HeaderVisibility {
 	Expanded
 }
 
-const baseStyles = {
-	header: makeStyle(FlexRow, FlexAlignCenter, FlexAuto, PositionRelative, makeTransition(), {
-		WebkitUserSelect: 'none',
-		WebkitAppRegion:  'drag',
-		opacity:          0,
-		height:           0,
-		padding:          0,
-		border:           0,
-	}),
-
-	headerNormal: {
-		padding: '0.3rem 10rem',
-		opacity: 1
-	},
-
-	headerExpanded: makeStyle({
-		height:     '100vh',
-		maxHeight:  '100vh',
-		flexBasis:  '100vh',
-		flexGrow:   1,
-		flexShrink: 0
-	}),
-
-	controls: makeStyle(makeAbsolute(), {
-		opacity: 1,
-		border:  '0.2rem solid transparent',
-		padding: 0
-	}),
-
-	controlButton: makeStyle(makeTransition(), FlexRowCenter, {
-		display: 'inline-flex',
-		border:  '0.2rem solid transparent'
-	}),
-
-	controlButtonBefore: makeStyle(makeTransition()),
-
-	logoWrapper: makeStyle(makeTransition(), PositionAbsolute, {
-		right:              0,
-		top:                0,
-		width:              'auto',
-		padding:            '0.2rem 1rem',
-
-
-	}),
-
-	logo: makeStyle(makeTransition(), PositionAbsolute, {
-		top:'50%',
-		left:'50%',
-		height:             '70%',
-		width:              'auto',
-		maxWidth:           '70%',
-		transform:          'translate(-50%,-50%)'
-
-	}),
-
-	logoExpanded: makeStyle({
-		top:'50%',
-		left:'50%',
-		height:             '80%',
-		width:              'auto',
-		maxWidth:           '80%',
-		transform:          'translate(-50%,-50%)'
-	}),
-
-	logoWrapperExpanded: makeStyle({
-		top: '25%',
-		left: '50%',
-		right: 'inherit',
-		transform:          'translate(-50%,-50%)',
-		padding:            '10rem 10rem 4rem 10rem',
-		height:             '50%',
-		width:              '50%',
-		backgroundSize:     '40%',
-		backgroundPosition: 'bottom center'
-	})
-
-}
-
-
+const baseStyles = createStyles((topStyles,theme,palette) => {
+	
+	return {
+		header: makeStyle(FlexRow, FlexAlignCenter, FlexAuto, PositionRelative, makeTransition(), {
+			WebkitUserSelect: 'none',
+			WebkitAppRegion: 'drag',
+			opacity: 0,
+			height: 0,
+			padding: 0,
+			border: 0,
+		}),
+		
+		headerNormal: {
+			padding: '0.3rem 10rem',
+			opacity: 1
+		},
+		
+		headerExpanded: makeStyle({
+			height: '100vh',
+			maxHeight: '100vh',
+			flexBasis: '100vh',
+			flexGrow: 1,
+			flexShrink: 0
+		}),
+		
+		controls: makeStyle(makeAbsolute(), {
+			opacity: 1,
+			border: '0.2rem solid transparent',
+			padding: 0
+		}),
+		
+		controlButton: makeStyle(makeTransition(), FlexRowCenter, {
+			display: 'inline-flex',
+			border: '0.2rem solid transparent'
+		}),
+		
+		controlButtonBefore: makeStyle(makeTransition()),
+		
+		logoWrapper: makeStyle(makeTransition(), PositionAbsolute, {
+			right: 0,
+			top: 0,
+			width: 'auto',
+			padding: '0.2rem 1rem',
+			
+			
+		}),
+		
+		logo: makeStyle(makeTransition(), PositionAbsolute, {
+			top: '50%',
+			left: '50%',
+			height: '70%',
+			width: 'auto',
+			maxWidth: '70%',
+			transform: 'translate(-50%,-50%)'
+			
+		}),
+		
+		logoExpanded: makeStyle({
+			top: '50%',
+			left: '50%',
+			height: '80%',
+			width: 'auto',
+			maxWidth: '80%',
+			transform: 'translate(-50%,-50%)'
+		}),
+		
+		logoWrapperExpanded: makeStyle({
+			top: '25%',
+			left: '50%',
+			right: 'inherit',
+			transform: 'translate(-50%,-50%)',
+			padding: '10rem 10rem 4rem 10rem',
+			height: '50%',
+			width: '50%',
+			backgroundSize: '40%',
+			backgroundPosition: 'bottom center'
+		}),
+		
+		search: [ {
+			backgroundColor: Transparent,
+			
+			field: [ {
+				backgroundColor: Transparent
+			}],
+			input: [ {
+				backgroundColor: Transparent
+			} ],
+			hint: [ {} ]
+		
+		} ]
+		
+	}
+	
+})
 
 export interface IHeaderProps {
 	className?:string
 	visibility:HeaderVisibility
 	style?:any
+	styles?:any
 }
 
 export interface IHeaderState {
@@ -124,6 +142,7 @@ export interface IHeaderState {
  * The app header component, title/logo/settings
  */
 @CommandComponent()
+@ThemedStyles(baseStyles,'header')
 @PureRender
 export class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
 	
@@ -182,7 +201,9 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 		if (this.isExpanded)
 			return
 		
-		
+		// if (this.textField)
+		// 	this.textField.blur()
+		//
 		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 		
 		// const {searchPanel} = this
@@ -238,7 +259,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 	render() {
 		const theme = getTheme()
 		const
-			{visibility, style} = this.props,
+			{visibility, styles,style} = this.props,
 			expanded = this.isExpanded,
 			{resultsHidden} = this.state
 
@@ -293,7 +314,9 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 				types={HeaderSearchTypes}
 				inlineResults={expanded}
 				expanded={expanded}
-
+				panelStyle={styles.search}
+				fieldStyle={styles.search.field}
+				inputStyle={styles.search.input}
 				onEscape={this.onEscape}
 				mode={expanded ? 'repos' : 'issues'}/>
 

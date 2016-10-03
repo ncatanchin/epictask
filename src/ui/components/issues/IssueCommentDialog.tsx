@@ -25,13 +25,13 @@ import {
 } from 'shared/actions/issue/IssueSelectors'
 
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {Dialogs} from 'shared/UIConstants'
+import {Dialogs} from 'shared/config/DialogsAndSheets'
 
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 
 // Constants

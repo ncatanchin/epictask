@@ -41,7 +41,7 @@ import { User } from "shared/models"
 import { cloneObject } from "shared/util/ObjectUtil"
 import { CommandComponent, getCommandProps, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 // Constants
 const log = getLogger(__filename)

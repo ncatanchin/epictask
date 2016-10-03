@@ -6,7 +6,7 @@ import {List} from 'immutable'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
 import { IssueKey } from 'shared/Constants'
-import {Dialogs} from 'shared/UIConstants'
+import {Dialogs} from 'shared/config/DialogsAndSheets'
 import {FinderItemsPerPage} from 'shared/config/FinderConfig'
 import { cloneObject, extractError, isNil, nilFilter, isNumber } from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
@@ -47,7 +47,7 @@ import { isListType } from "shared/util/ObjectUtil"
 
 
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { LoadStatus } from "shared/models"
 import { getRepoActions } from "shared/actions/ActionFactoryProvider"
 

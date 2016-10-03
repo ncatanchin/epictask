@@ -1,11 +1,6 @@
 // Imports
-import * as React from 'react'
 import { connect } from 'react-redux'
-import * as Radium from 'radium'
 import { PureRender } from 'ui/components/common/PureRender'
-import {AppKey, UIKey} from 'shared/Constants'
-import { UIState } from "shared/actions/ui/UIState"
-import { AppState } from "shared/actions/app/AppState"
 import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
 import {getPage} from 'ui/components/pages'
 import {StatusBar} from "ui/components/root/StatusBar"
@@ -13,6 +8,14 @@ import {createStructuredSelector} from 'reselect'
 import { availableRepoCountSelector } from "shared/actions/repo/RepoSelectors"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import { AppStateType } from "shared/AppStateType"
+import { Themed } from "shared/themes/ThemeManager"
+import { appStateTypeSelector } from "shared/actions/app/AppSelectors"
+import { childWindowOpenSelector, modalWindowOpenSelector, sheetSelector } from "shared/actions/ui/UISelectors"
+import { IUISheet } from "shared/config/DialogsAndSheets"
+import { SheetRoot } from "ui/components/root/SheetRoot"
+import { FillWindow } from "shared/themes/styles/CommonStyles"
+import { FlexColumn, Fill } from "shared/themes"
+
 
 // Constants
 const
@@ -20,23 +23,30 @@ const
 
 
 //region Styles
-const styles = {
-	app: makeStyle(FlexColumn, FlexScale, {
+const styles = createStyles({
+	app: [FlexColumn, FlexScale, {
 		overflow: 'hidden'
-	}),
+	}],
 	
-	header: makeStyle(makeTransition(), FlexRowCenter, {}),
+	header: [makeTransition(['height','width','opacity']), FlexRowCenter, {}],
 	
-	content: makeStyle(makeTransition(), FlexColumn, PositionRelative, {
+	content: [makeTransition(['height','width','opacity']), FlexColumn, PositionRelative, {
 		flexBasis: 0,
 		flexGrow: 1,
 		flexShrink: 1
-	}),
+	}],
 	
-	collapsed: makeStyle({flexGrow: 0})
+	collapsed: [{
+		flexGrow: 0
+	}],
+	
+	blur: [{
+		WebkitFilter: "blur(0.2rem)", /* Chrome, Safari, Opera */
+		filter: "blur(0.2rem)"
+	}]
 	
 	
-}
+})
 //endregion
 
 
@@ -49,6 +59,10 @@ export interface IUIRootProps extends React.HTMLAttributes<any> {
 	styles?:any
 	stateType?:AppStateType
 	hasAvailableRepos?:boolean
+	childOpen?:boolean
+	modalOpen?:boolean
+	sheet?:IUISheet
+	
 }
 
 /**
@@ -67,20 +81,18 @@ export interface IUIRootState {
 
 @connect(createStructuredSelector({
 	hasAvailableRepos: availableRepoCountSelector,
-	stateType: (state)=> (state.get(AppKey) as AppState).stateType,
-	theme: () => getTheme(),
-	dialogOpen: (state) => (state.get(UIKey) as UIState).dialogs.valueSeq().includes(true)
-},createDeepEqualSelector))
-
-// If you have a specific theme key you want to
-// merge provide it as the second param
-@Radium
+	stateType: appStateTypeSelector,
+	childOpen: childWindowOpenSelector,
+	modalOpen: modalWindowOpenSelector,
+	sheet: sheetSelector
+}))
+@Themed
 @PureRender
 export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 	
 	render() {
 		const
-			{hasAvailableRepos, stateType, theme} = this.props,
+			{hasAvailableRepos, stateType, theme, modalOpen, sheet} = this.props,
 			{palette} = theme,
 			
 			PageComponent = getPage(stateType),
@@ -92,28 +104,44 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 					HeaderVisibility.Normal,
 			
 			contentStyles = makeStyle(styles.content, {
-				backgroundColor: palette.canvasColor,
+				backgroundColor: theme.canvasColor,
 				display: 'flex',
 				flexDirection: 'column'
 			}, expanded && styles.collapsed)
 		
 		
 		return <div className={'root-content'}
-		            style={[FillWindow,styles.content,theme.app]}>
-			
-			<Header visibility={headerVisibility}/>
-			
-			{(hasAvailableRepos) &&
-			<div style={makeStyle(FlexScale,FlexColumn)}>
-				<div style={contentStyles}>
-					<PageComponent />
-				</div>
+		            style={[
+		            	FillWindow,
+		            	styles.content,
+		            	theme.app
+	              ]}
+		>
+			<div style={[
+				Fill,
+				FlexColumn,
 				
+				(sheet || modalOpen) && styles.blur
+			]}>
+				{/* HEADER */}
+				<Header visibility={headerVisibility}/>
+				
+				{(hasAvailableRepos) &&
+					<div style={[FlexScale,FlexColumn]}>
+						<div style={contentStyles}>
+							<PageComponent />
+						</div>
+					</div>
+				}
+				
+				{/* TOASTER */}
 				<ToastMessages/>
+				
+				{/* STATUS BAR */}
+				<StatusBar/>
 			</div>
-			}
-			
-			<StatusBar/>
+			{/* SHEET ROOT */}
+			<SheetRoot />
 		</div>
 	}
 	

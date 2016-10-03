@@ -14,6 +14,7 @@ import {
 } from "shared/themes"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 import {getToolComponent, getToolHeaderControls, loadPlugins, addRegistryListener, RegistryEvent} from "shared/Registry"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
 
 loadPlugins()
 
@@ -191,7 +192,7 @@ const GutterButton = Radium((props) => {
 	
 	return <div style={[toggleStyles,toggleStyles[location]]}>
 		<Button tabIndex={-1}
-		        onClick={() => Container.get(UIActionFactory).toggleTool(tool.id)}
+		        onClick={() => getUIActions().toggleTool(tool.id)}
 		        style={[toggleStyles.button,toggleStyles.button[location]]} >
 			<Icon style={[toggleStyles.icon]} iconSet='octicon' iconName='repo'/>
 			<div style={[toggleStyles.label,toggleStyles.label[location]]}>

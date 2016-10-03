@@ -34,7 +34,7 @@ import {
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { ICommand, Command, CommandType } from "shared/commands/Command"
-import { ContainerNames } from "shared/UIConstants"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 
 

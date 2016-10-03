@@ -1,4 +1,5 @@
 export interface MaterialColorPalette {
+	PaletteName?:string
 	l50?:string
 	l100?:string
 	l200?:string

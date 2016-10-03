@@ -16,9 +16,14 @@ import {ThemedStyles, createThemedStyles} from 'shared/themes/ThemeManager'
 import {RegisterTool} from "shared/Registry"
 import {getBuiltInToolId, BuiltInTools} from "shared/config/ToolConfig"
 import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
-import { CommandComponent, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
+import {
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
+import { ICommand, CommandType } from "shared/commands/Command"
 import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { CommonKeys } from "shared/KeyMaps"
+import { ContainerNames } from "shared/config/CommandContainerConfig"
 const
 	{CommonKeys:Keys} = KeyMaps
 
@@ -116,13 +121,26 @@ function getHeaderControls() {
 	label:'Repositories',getHeaderControls,
 	buttonLabel: 'Repos'
 })
-// @CommandComponent()
+@CommandComponent()
 @ThemedStyles(baseStyles,'repoPanel')
 export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
 	
-	readonly commands:ICommand[] = []
-	readonly commandComponentId:string = 'RepoPanel'
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+			// IMPORT REPO
+			.command(
+				CommandType.Container,
+				'Hide sheet...',
+				(cmd, event) => getUIActions().closeSheet(),
+				CommonKeys.Escape, {
+					//hidden:true,
+					overrideInput: true
+				})
+			.make()
+		
+	
+	readonly commandComponentId:string = ContainerNames.RepoPanel
 	
 	/**
 	 * Repo Action

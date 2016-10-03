@@ -5,16 +5,17 @@ import {UIKey} from "shared/Constants"
 import {getBuiltInToolId, BuiltInTools} from 'shared/config/ToolConfig'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
-import {Dialogs} from 'shared/UIConstants'
+import { Dialogs, IUISheet } from 'shared/config/DialogsAndSheets'
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
 import {isNumber, shortId, isString} from "shared/util/ObjectUtil"
 import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
-import { focusElementById } from "shared/util/UIUtil"
 import { getWindowManager } from "ui/WindowManager"
 import { WindowConfigs } from "shared/WindowConfig"
+import { If } from "shared/util/Decorations"
+import { focusElementById } from "shared/util/UIUtil"
 
 
 // Import only as type - in case we are not on Renderer
@@ -365,34 +366,30 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 
-
 	/**
 	 * Focus on app root
 	 */
-	// @ActionReducer()
-	// focusAppRoot() {
-	// 	return (state) => {
-	// 		focusElementById('appRoot')
-	// 		return state
-	// 	}
-	// }
-	// @ActionReducer()
-	// focusIssuesPanel() {
-	// 	return (state) => {
-	// 		focusElementById('issuesPanel')
-	// 		return state
-	// 	}
-	//
-	// }
-	//
-	// @ActionReducer()
-	// focusIssueDetailPanel() {
-	// 	return (state) => {
-	// 		focusElementById('issueDetailPanel')
-	// 		return state
-	// 	}
-	//}
+	focusAppRoot() {
+		If(ProcessConfig.isUI(),() => focusElementById('appRoot'))
+	}
 	
+	/**
+	 * Focus on issues panel
+	 */
+	focusIssuesPanel() {
+		If(ProcessConfig.isUI(),() => focusElementById('issuesPanel'))
+	}
+	
+	/**
+	 * Focus on issue details
+	 */
+	focusIssueDetailPanel() {
+		If(ProcessConfig.isUI(),() => focusElementById('issueDetailPanel'))
+	}
+	
+	/**
+	 * Toggle status bar visibility
+	 */
 	@ActionReducer()
 	toggleStatusBar() {
 		return (state:UIState) =>
@@ -404,11 +401,25 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			)
 	}
 	
+	/**
+	 * Set the open sheet
+	 *
+	 * @param sheet
+	 */
+	@ActionReducer()
+	openSheet(sheet:IUISheet) {
+		return (state:UIState) => state.set('sheet',sheet)
+	}
 	
-
-
+	/**
+	 * Close the current sheet
+	 */
+	closeSheet() {
+		this.openSheet(null)
+	}
+	
 	showAddRepoDialog() {
-		return this.setDialogOpen(Dialogs.RepoAddDialog,true)
+		return this.setDialogOpen(Dialogs.RepoAddTool,true)
 	}
 
 

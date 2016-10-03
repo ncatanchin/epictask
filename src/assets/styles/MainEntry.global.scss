@@ -10,7 +10,6 @@
 	user-select: none;
 }
 
-
 .fill-height {
 	height: 100vh;
 	min-height: 100vh;
@@ -110,12 +109,7 @@ body {
 	overflow: hidden;
 
 	.root-content {
-		&.dialog-open {
-
-			-webkit-filter: blur(0.2rem); /* Chrome, Safari, Opera */
-			filter: blur(0.2rem);
-
-		}
+		
 	}
 }
 

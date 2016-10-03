@@ -1,4 +1,5 @@
 import Electron = require('electron')
+//import {BrowserWindow} from 'electron'
 import { Container } from 'typescript-ioc'
 import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
 import { getActionClient, getStateValue } from "shared/AppStoreClient"
@@ -45,7 +46,7 @@ function makeDevMenu(mainWindow) {
 			{
 				label: 'Reload',
 				accelerator: 'Command+Shift+R',
-				click: () => mainWindow.reload()
+				click: () => BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache()
 			},
 			
 			// Break
@@ -60,29 +61,6 @@ function makeDevMenu(mainWindow) {
 	}
 }
 
-/* Repos Menu */
-const reposMenu = {
-	label: 'Repos',
-	submenu: [ {
-		label: 'Add a Repo',
-		accelerator: 'CmdOrCtrl+Shift+N',
-		click() {
-			log.debug('Sending add new repo')
-			const actions = getActionClient(UIKey) as UIActionFactory
-			actions.showAddRepoDialog()
-		}
-	}, {
-		label: 'Synchronize All',
-		accelerator: 'Ctrl+S',
-		click: () => {
-			log.debug('Sending sync all repos')
-			const actions = ActionFactoryProviders[ RepoKey ]
-			actions.syncAll()
-			
-			
-		}
-	} ]
-}
 
 function makeViewMenu(mainWindow) {
 	return {
@@ -192,7 +170,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				selector: 'selectAll:'
 			} ]
 		},
-			reposMenu,
+			
 			viewMenu,
 			{
 				label: 'Window',

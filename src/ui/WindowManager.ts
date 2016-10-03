@@ -53,6 +53,7 @@ export const WindowTypeDefaults = {
 
 export interface IWindowInstance {
 	id:string
+	type:WindowType
 	config:IWindowConfig
 	window:Electron.BrowserWindow
 }
@@ -81,13 +82,17 @@ export class WindowManager {
 	
 	
 	/**
+	 * Retrieve windows
+	 */
+	get all() {
+		return [...this.windows]
+	}
+	
+	/**
 	 * Close all windows
 	 */
 	closeAll() {
 		this.close(...this.windows)
-		// while (this.windows.length) {
-		//
-		// }
 	}
 	
 	
@@ -156,6 +161,7 @@ export class WindowManager {
 	open(configOrId:string|IWindowConfig,config?:IWindowConfig) {
 		const
 			windowCreateDeferred = Promise.defer()
+		
 		try {
 			
 			let
@@ -230,6 +236,7 @@ export class WindowManager {
 					
 					windowInstance = this.windows[ this.windows.length ] = {
 						id,
+						type: config.type,
 						config,
 						window: newWindow
 					},

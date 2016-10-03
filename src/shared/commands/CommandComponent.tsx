@@ -9,7 +9,7 @@ const
 	commandContainerCommands = new WeakMap<CommandContainer,ICommand[]>()
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
@@ -127,7 +127,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.debug(`focused`, id)
+		log.debug(`focused`, id, instance)
 		
 		if (!instance) {
 				return log.warn(`No instance but focused`,instance,this)
@@ -141,10 +141,12 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		setImmediate(() => {
 			getCommandManager().setContainerFocused(id, this, true, event)
+			
+			if (instance.onFocus)
+				instance.onFocus(event)
 		})
 		
-		if (instance.onFocus)
-			instance.onFocus(event)
+		
 	}
 	
 	/**
@@ -241,7 +243,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		return <Wrapper.commandComponent
 			tabIndex="-1"
-			{..._.omit(this.props, 'onFocus', 'onBlur')}
+			{..._.omit(this.props,'ref', 'onFocus', 'onBlur')}
 			onFocus={this.onFocus}
 			onBlur={this.onBlur}
 			commandContainer={this} ref={this.setInstance}/>

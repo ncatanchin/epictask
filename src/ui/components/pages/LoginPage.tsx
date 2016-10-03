@@ -1,12 +1,16 @@
 import * as React from 'react'
-const log = getLogger(__filename)
 
-import {RaisedButton,FlatButton,FontIcon} from 'material-ui'
+
+import {FlatButton} from 'material-ui'
 import {Page} from './Page'
 import {GitHubConfig} from "shared/config/GithubConfig"
 import { getAuthActions } from "shared/actions/ActionFactoryProvider"
 import { Themed } from "shared/themes/ThemeManager"
 import { PureRender } from "ui/components/common"
+
+
+const
+	log = getLogger(__filename)
 
 const styles = {
 	page: makeStyle(FlexColumnCenter,FlexScale,{

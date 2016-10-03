@@ -93,23 +93,23 @@ export class HomePage extends React.Component<IHomeProps,IHomeState> {
 				}
 			},
 			borderGradientColorCap = TinyColor(accent.hue2).setAlpha(0.2).toRgbString(),
-			borderGradientColor = TinyColor(accent.hue2).setAlpha(0.7).toRgbString()
+			borderGradientColor = TinyColor(accent.hue2).setAlpha(0.7).toRgbString(),
+			
+			splitPaneStyles = createStyles({
+				' > .Pane': [paneTransition],
+				' > .Resizer.vertical::after': [{
+					background: makeLinearGradient('to right',borderGradientColorCap,borderGradientColor,borderGradientColorCap),
+					
+				}],
+				' > .Resizer.horizontal::after': [{
+					background: makeLinearGradient(borderGradientColorCap,borderGradientColor,borderGradientColorCap),
+				}],
+			})
 		
 			
 		return <Page onResize={this.updateState} id="homePage">
 			<Radium.Style scopeSelector=".SplitPane"
-			              rules={createStyles({
-														' > .Pane': [paneTransition],
-														' > .Resizer.vertical::after': [{
-															background: makeLinearGradient('to right',borderGradientColorCap,borderGradientColor,borderGradientColorCap),
-															
-														}],
-														' > .Resizer.horizontal::after': [{
-															background: makeLinearGradient(borderGradientColorCap,borderGradientColor,borderGradientColorCap),
-														}],
-														
-														
-						              })}
+			              rules={splitPaneStyles}
 			/>
 			<div style={styles.bodyWrapper}>
 				{/* Tool Panel bottom Split */}

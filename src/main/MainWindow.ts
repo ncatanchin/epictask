@@ -128,8 +128,8 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				.once('did-finish-load', () => {
 					
 					// IN DEV - SHOW HERE
-					if (Env.isDev)
-						browserWindow.show()
+					// if (Env.isDev)
+					// 	browserWindow.show()
 					
 					log.info(`MainWindow loaded, waiting for loader started`)
 				})
@@ -146,6 +146,12 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				browserWindow.setTitle('EpicTask')
 				browserWindow.show()
 				browserWindow.focus()
+				/**
+				 * IN DEV MODE - NOT REMOTE RENDER DEBUG - SHOW DEV TOOLS
+				 */
+				if (Env.isDev && !Env.isRemote) {
+					browserWindow.webContents.openDevTools()
+				}
 				
 				
 			})
@@ -176,12 +182,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				browserWindow = null
 			})
 
-			/**
-			 * IN DEV MODE - NOT REMOTE RENDER DEBUG - SHOW DEV TOOLS
-			 */
-			if (Env.isDev && !Env.isRemote) {
-				browserWindow.webContents.openDevTools()
-			}
+			
 
 
 			
