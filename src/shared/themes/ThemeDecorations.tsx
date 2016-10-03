@@ -57,6 +57,8 @@ export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any =
 export function makeThemedComponent(Component,skipRadium = false,baseStyles = null,...themeKeys:string[]) {
 	
 	log.debug(`Decorating theme component `,Component)
+	let
+		lastStyles = null
 	
 	const
 		FinalComponent = skipRadium ? Component : Radium(Component),
@@ -68,7 +70,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				constructor(props,context) {
 					super(props,context)
 					
-					this.state = this.getNewState(this.props,this.getBaseStyles())
+					this.state = this.getNewState(this.props,baseStyles)
 				}
 				
 				// Used to unsubscribe from theme updates on unmount
@@ -93,6 +95,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 							styles = createThemedStyles(inputStyles,themeKeys,props,theme)
 						
 						Object.assign(newState,{styles})
+						
+						lastStyles = inputStyles
 					}
 					
 					return newState
@@ -107,18 +111,16 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 */
 				updateTheme(props = this.props, newTheme = getTheme()) {
 					
-					const
-						inputStyles = this.getBaseStyles()
 					
 					if (
 						// Check for theme changes
-					getValue(() => this.state.theme) !== newTheme ||
-					getValue(() => this.state.inputStyles) !== inputStyles ||
-					// Check for style changes
-					_.isEqual(_.pick(props,'styles'),_.pick(this.props,'styles'))
+						!getValue(() => this.state.theme) !== newTheme ||
+						!_.isEqual(baseStyles,lastStyles) ||
+						// Check for style changes
+						!_.isEqual(_.pick(props,'styles'),_.pick(this.props,'styles'))
 					) {
 						//log.debug(`Updating state`)
-						this.setState(this.getNewState(props,inputStyles,newTheme), () => this.forceUpdate())
+						this.setState(this.getNewState(props,baseStyles,newTheme), () => this.forceUpdate())
 					}
 					
 				}
@@ -137,7 +139,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
 					return !shallowEquals(this.props,nextProps) ||
 						!shallowEquals(this.state,nextState,'theme','styles') ||
-						this.getBaseStyles() !== getValue(() => this.state.inputStyles)
+							!_.isEqual(baseStyles,lastStyles)
 				}
 				
 				/**
@@ -147,8 +149,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 * @param nextProps
 				 */
 				componentWillReceiveProps(nextProps) {
-					if (this.props.styles !== nextProps.styles || getValue(() => this.state.inputStyles) !== this.getBaseStyles())
-						this.updateTheme(nextProps)
+					this.updateTheme(nextProps)
 				}
 				
 				/**
@@ -170,12 +171,6 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 					return getValue(() => this.state.wrappedInstance,null) as any
 				}
 				
-				getBaseStyles() {
-					const
-						instance = this.getWrappedInstance()
-					
-					return (instance && instance.baseStyles) || baseStyles
-				}
 				
 				setWrappedInstanceRef = (wrappedInstance) => this.setState({wrappedInstance})
 				

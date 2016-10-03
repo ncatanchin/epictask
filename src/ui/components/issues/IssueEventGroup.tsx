@@ -175,7 +175,8 @@ export class EventGroup {
 				
 				return events.map((event,index) =>
 					<span key={event.id}>
-						{event.event === 'mentioned' ? 'mentioned this ' : 'unknown'}
+						{event.event === 'mentioned' ?
+							'mentioned this ' : event.event}
 						{makeEventSpacer(index)}
 					</span>
 				)

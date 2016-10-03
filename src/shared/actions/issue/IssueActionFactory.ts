@@ -183,7 +183,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				issues
 			
 			if (!enabledRepos || enabledRepos.size === 0) {
-				log.warn(`No enabled repos found, can not load issues`)
+				log.debug(`No enabled repos found, can not load issues`)
 				issues = List<Issue>()
 			} else {
 				log.info(`Updating repos`,enabledRepos)
@@ -895,6 +895,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			})
 	}
 	
+	/**
+	 * Begin editing inline
+	 *
+	 * @returns {(dispatch:any, getState:any)=>undefined}
+	 */
 	@ActionThunk()
 	editInline() {
 		return (dispatch,getState) => {
@@ -1514,6 +1519,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	reloadIssues(...issuesOrIssueIds:Array<number|Issue>)
 	
+	
+	/**
+	 * Reload issues in the current state (will only work for enabled repos)
+	 *
+	 * @param args
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
 	@ActionThunk()
 	reloadIssues(...args:any[]) {
 		return async (dispatch,getState) => {
@@ -1531,7 +1543,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			log.debug(`Going to reload issues`, issues, 'from args', args)
 			if (!issues.length) {
-				log.warn(`No issues found in state to update from `, args)
+				log.debug(`No issues found in state to update from `, args)
 				return
 			}
 			

@@ -1,9 +1,9 @@
 /**
  * State Holder
  */
-import {List,Record,Map} from 'immutable'
-import {ActionMessage} from 'typedux'
+import {List} from 'immutable'
 import {RegisterModel} from 'shared/Registry'
+import SearchProvider from "shared/actions/search/SearchProvider"
 
 
 
@@ -11,6 +11,7 @@ import {RegisterModel} from 'shared/Registry'
 
 export enum SearchType {
 	Issue = 1,
+	Assignee,
 	Repo,
 	AvailableRepo,
 	Milestone,
@@ -20,6 +21,7 @@ export enum SearchType {
 
 export enum SearchSource {
 	Issue = 1,
+	Assignee,
 	Repo,
 	GitHub,
 	AvailableRepo,
@@ -28,6 +30,7 @@ export enum SearchSource {
 }
 
 export const SearchTypeSourceMap = {
+	[SearchType.Assignee]: [SearchSource.Assignee],
 	[SearchType.Issue]: [SearchSource.Issue],
 	[SearchType.Repo]: [SearchSource.Repo,SearchSource.GitHub],
 	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
@@ -36,6 +39,7 @@ export const SearchTypeSourceMap = {
 }
 
 export const SearchSourceTypeMap = {
+	[SearchSource.Assignee]:SearchType.Assignee,
 	[SearchSource.Issue]:SearchType.Issue,
 	[SearchSource.Repo]:SearchType.Repo,
 	[SearchSource.GitHub]:SearchType.Repo,
@@ -127,3 +131,10 @@ export class SearchResult {
 
 }
 
+export interface ISearchState {
+	items:List<SearchItem>
+	results:SearchResult[]
+	working?:boolean
+	selectedIndex:number
+	provider:SearchProvider
+}

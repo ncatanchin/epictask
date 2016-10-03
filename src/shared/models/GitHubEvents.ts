@@ -313,11 +313,23 @@ export const IssueEventTypes:{[type:string]:TIssueEventType} = {
 
 const
 	{
-		closed,reopened,subscribed,merged,
-		referenced,mentioned,assigned,unassigned,
-		unlabeled,labeled,milestoned,demilestoned,
-		renamed,locked,unlocked,
-		head_ref_deleted,head_ref_restored
+		closed,
+		reopened,
+		subscribed,
+		merged,
+		referenced,
+		mentioned,
+		assigned,
+		unassigned,
+		unlabeled,
+		labeled,
+		milestoned,
+		demilestoned,
+		renamed,
+		locked,
+		unlocked,
+		head_ref_deleted,
+		head_ref_restored
 	} = IssueEventTypes
 
 export type TIssueEventGroupType = 'issue-reopened' | 'issue-closed' | 'pencil' | 'milestone' | 'tag' | 'person' | 'mention' | 'none'
@@ -334,7 +346,7 @@ export const IssueEventTypeGroups:TIssueEventGroupTypes = Map<TIssueEventGroupTy
 	'milestone': [milestoned,demilestoned],
 	'tag': [labeled,unlabeled],
 	'person': [assigned,unassigned],
-	'mention': [referenced,mentioned],
+	'mention': [referenced,mentioned,subscribed],
 	'none': [locked,unlocked,head_ref_deleted,head_ref_restored,merged]
 })
 

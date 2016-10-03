@@ -1,13 +1,12 @@
 import {List} from 'immutable'
 import {FinderRequest, FinderResultArray} from 'typestore'
-import {Stores} from 'shared/services/DatabaseClientService'
 import {
 	SearchType, SearchSource, SearchTypeSourceMap,
 	SearchResult, SearchItem
 } from 'shared/actions/search/SearchState'
 import ValueCache from 'shared/util/ValueCache'
 
-import {GitHubClient} from 'shared/GitHubClient'
+import { GitHubClient, createClient } from 'shared/GitHubClient'
 import {RepoStore} from 'shared/models/Repo'
 
 import {Benchmark} from 'shared/util/Benchmark'
@@ -15,21 +14,21 @@ import {getStoreState} from 'shared/store/AppStore'
 
 import {
 	enabledLabelsSelector,
-	enabledMilestonesSelector
+	enabledMilestonesSelector, enabledAssigneesSelector
 } from "shared/actions/repo/RepoSelectors"
-import {RepoActionFactory} from "shared/actions/repo/RepoActionFactory"
-import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
+
 import {IssueState} from "shared/actions/issue/IssueState"
-import {AvailableRepo, Repo, Issue, Label, Milestone} from "shared/models"
-import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { AvailableRepo, Repo, Issue, Label, Milestone, User } from "shared/models"
+import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryProvider"
 import { getStores } from "shared/Stores"
+import { cloneObject } from "shared/util/ObjectUtil"
+import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
 
 
 
 const
 	log = getLogger(__filename),
-	Benchmarker = Benchmark(__filename),
-	instances:{[searchId:string]:SearchProvider} = {}
+	Benchmarker = Benchmark(__filename)
 
 
 /**
@@ -72,20 +71,7 @@ export type TSearchListener = (...args:any[]) => void
 
 export default class SearchProvider {
 	
-	/**
-	 * Get singleton proxy wrapper
-	 *
-	 * @param searchId
-	 * @returns {any}
-	 */
-	static getInstance(searchId:string):SearchProvider {
-		let instance = instances[searchId]
-		if (!instance)
-			instance = instances[searchId] =
-				new SearchProvider(searchId)
-		
-		return instance
-	}
+
 	
 	private pendingSearch:Promise<void>
 	
@@ -102,6 +88,11 @@ export default class SearchProvider {
 	 * Current result lists
 	 */
 	results:SearchResult[] = []
+	
+	/**
+	 * Keeps track of the selected index
+	 */
+	selectedIndex:number
 	
 	/**
 	 * Listener map
@@ -196,11 +187,14 @@ export default class SearchProvider {
 	}
 	
 	
-	
+	/**
+	 * Update the query
+	 */
 	setQuery = _.debounce((query:string) => {
 		this.queryCache.set(query)
 	},250)
-
+	
+	
 	mapResultsToSearchItems(idProperty:string,results:FinderResultArray<any>) {
 		const md = results.itemMetadata
 		return List<SearchItem>(results.map((item,index) => {
@@ -210,7 +204,13 @@ export default class SearchProvider {
 			return new SearchItem(item[idProperty],SearchType.Repo,item,score || 1)
 		}))
 	}
-
+	
+	/**
+	 * Search repos
+	 *
+	 * @param query
+	 * @returns {SearchResult}
+	 */
 	@Benchmarker
 	async searchRepos(query:string):Promise<SearchResult> {
 		const repoStore:RepoStore = getStores().repo
@@ -229,61 +229,62 @@ export default class SearchProvider {
 
 
 	}
-
-
+	
+	
+	/**
+	 * Search github
+	 *
+	 * @param query
+	 * @returns {SearchResult}
+	 */
 	@Benchmarker
 	async searchGitHub(query:string):Promise<SearchResult> {
 		
-		const
-			queryParts = query.split('/')
-
-		let result = -1
 		
-		if (queryParts.length === 2 && queryParts.every(part => part.length > 0)) {
+		let
+			items = List<SearchItem>()
+		
+		if (query && query.length > 3) {
 			try {
 				const
 					repoStore:RepoStore = getStores().repo,
-					client:GitHubClient = Container.get(GitHubClient)
-
-				result = await repoStore.findByFullName(query)
-				log.info('GitHub repo local id search',result,'for query',query)
-				if (!_.isNumber(result) || result < 1) {
-					log.info('Going to query GitHub')
+					client:GitHubClient = createClient(),
+					results = await client.searchRepos(`fork:false ${query}`)
+				
+				for (let repo of results.items) {
+					if (!repo.id)
+						continue
 					
-					let repo = await client.repo(query)
-					log.info('GitHub exact repo result', repo)
+					const
+						existingRepo = await repoStore.get(repo.id)
 					
-					// If we got a valid repo, check to see if
-					// it is stored locally, otherwise, add it
-					if (repo) {
-						log.info('Saving GitHub match locally for the future')
-						
-						const existingRepo = await repoStore.get(repo.id)
-						if (existingRepo)
-							log.warn(`Names don't match, but we already have a record of this repo???  going to overwrite it`)
-
-						repo = Object.assign({},existingRepo,repo)
-						repo = await repoStore.save(repo)
-
-						result = repo.id
-
+					if (existingRepo) {
+						repo = cloneObject(existingRepo,repo)
 					}
+					
+					
+					await repoStore.save(repo)
+					
+					
+					items = items.push(
+						new SearchItem(repo.id,SearchType.Repo,repo,(repo as any).score || 1)
+					) as any
 				}
 
+				
 			} catch (err) {
 				log.info('Repo with explicitly name not found',err)
 			}
 		}
-
-		const count = result && result > 0 ? 1 : 0
-
+		
+	
 		return new SearchResult(
 			this.searchId,
-			List((count) ? [new SearchItem(result,SearchType.Repo,result,1)] : []),
+			items,
 			SearchType.Repo,
 			SearchSource.GitHub,
-			count,
-			count
+			items.size,
+			items.size
 		)
 	}
 	
@@ -317,7 +318,29 @@ export default class SearchProvider {
 		)
 
 	}
-
+	@Benchmarker
+	async searchAssignees(query:string):Promise<SearchResult> {
+		const
+			assignees = enabledAssigneesSelector(getStoreState()),
+			items = textSearchFilter(
+				query,
+				assignees,
+				['name','login']
+			)
+		
+		
+		return new SearchResult(
+			this.searchId,
+			items.map(item => new SearchItem(item.id,SearchType.Assignee,item,1)) as List<SearchItem>,
+			SearchType.Assignee,
+			SearchSource.Assignee,
+			items.size,
+			items.size
+		)
+	}
+	
+	
+	
 	@Benchmarker
 	async searchMilestones(query:string):Promise<SearchResult> {
 		const
@@ -388,6 +411,7 @@ export default class SearchProvider {
 		[SearchSource.Issue]: this.searchIssues,
 		[SearchSource.AvailableRepo]: this.searchAvailableRepos,
 		[SearchSource.Label]: this.searchLabels,
+		[SearchSource.Assignee]: this.searchAssignees,
 		[SearchSource.Milestone]: this.searchMilestones
 	} as any
 
@@ -408,6 +432,18 @@ export default class SearchProvider {
 	 * @param query
 	 */
 	private async runSearch(query:string) {
+		log.info(`Running search with query: ${query}`)
+		
+		const nextSearch = () => {
+			this.pendingSearch = (query !== this.queryCache.get()) ?
+				this.runSearch(this.queryCache.get()) :
+				null
+		}
+		
+		if (!query || !query.length) {
+			return nextSearch()
+		}
+		
 		this.setStarted()
 		
 		try {
@@ -420,7 +456,9 @@ export default class SearchProvider {
 			
 			
 			log.info(`Waiting for all type searches to return: ${searchId}`)
-			const results = await Promise.all(searchPromises)
+			const
+				results = await Promise.all(searchPromises)
+			
 			log.info(`Got Results for ${query}`,results)
 			this.setResults(results)
 			
@@ -431,9 +469,7 @@ export default class SearchProvider {
 		}
 		
 		
-		this.pendingSearch = (query !== this.queryCache.get()) ?
-			this.runSearch(this.queryCache.get()) :
-			null
+		nextSearch()
 		
 			
 		
@@ -458,15 +494,15 @@ export default class SearchProvider {
 		log.info('selected item',model)
 		
 		const
-			repoActions = Container.get(RepoActionFactory),
-			issueActions = Container.get(IssueActionFactory),
+			repoActions = getRepoActions(),
+			issueActions = getIssueActions(),
 			issueState:IssueState = issueActions.state,
 			{
 				issueFilter,
 				issueSort
 			} = issueState
 		
-		const newIssueFilter = _.cloneDeep(issueFilter)
+		const newIssueFilter = _.cloneDeep(issueFilter) as IIssueFilter
 		
 		switch (model.$$clazz) {
 			case AvailableRepo.$$clazz:
@@ -483,10 +519,25 @@ export default class SearchProvider {
 				issueActions.setSelectedIssueIds([model.id])
 				break
 			
+			case User.$$clazz:
+				const
+					user:User = model
+				let
+					assigneeIds = newIssueFilter.assigneeIds || (newIssueFilter.assigneeIds = [])
+				
+				if (assigneeIds.includes(user.id))
+					break
+				
+				assigneeIds.push(user.id)
+				issueActions.setFilteringAndSorting(newIssueFilter)
+				break
+			
 			case Label.$$clazz:
-				const issue:Issue = model
-				const labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = [])
-				const labelIndex = labelUrls.indexOf(issue.url)
+				const
+					issue:Issue = model,
+					labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
+					labelIndex = labelUrls.indexOf(issue.url)
+				
 				if (labelIndex === -1)
 					labelUrls.push(issue.url)
 				else

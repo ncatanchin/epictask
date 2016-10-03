@@ -15,11 +15,13 @@ export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 const log = getLogger(__filename)
 
 const HeaderSearchTypes = [
-	SearchType.Repo,
-	SearchType.AvailableRepo,
-	SearchType.Issue,
 	SearchType.Milestone,
-	SearchType.Label
+	SearchType.Label,
+	SearchType.Assignee,
+	SearchType.Issue,
+	SearchType.Repo,
+	SearchType.AvailableRepo
+	
 ]
 
 export enum HeaderVisibility {

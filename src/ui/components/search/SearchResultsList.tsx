@@ -1,72 +1,28 @@
-/**
- * Created by jglanz on 6/4/16.
- */
-
 // Imports
-import {List} from 'immutable'
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import {Issue,Repo,AvailableRepo} from 'shared/models'
-import {
-	SearchType,SearchItem
-} from 'shared/actions/search/SearchState'
-import {Renderers} from 'ui/components/common'
+import * as React from 'react'
 
-import {ThemedNoRadium} from 'shared/themes/ThemeManager'
-import {Label} from 'shared/models/Label'
-import {Milestone} from 'shared/models/Milestone'
-import {Icon} from 'ui/components/common/Icon'
-import { ThemedStyles } from "shared/themes/ThemeDecorations"
+import {List} from 'immutable'
+import { PureRender } from 'ui/components/common/PureRender'
+import { ThemedStyles } from 'shared/themes/ThemeManager'
+import { SearchItem, ISearchState } from "shared/actions/search"
 
+import { shallowEquals, getValue } from "shared/util/ObjectUtil"
+import { SearchResultItem } from "ui/components/search/SearchResultItem"
+import { SearchPanel } from "ui/components/search"
 
 // Constants
 const
 	log = getLogger(__filename)
+//DEBUG
+log.setOverrideLevel(LogLevel.DEBUG)
 
-//const elementClass = require('element-class')
-//const styleVisible = styles.resultsModalVisible
-//const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;
-
-const
-	doc = document,
-	{body} = doc
-
-//region Styles
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
 	const
-		{accent,primary,text,secondary} = palette
+		{ accent, primary, text, secondary } = palette
 	
 	return {
-		content: {
-			
-		},
-		resultsModal: {
-			position: 'absolute',
-			zIndex: 100
-		},
-		
-		results: [makeTransition(['background-color','color']), {
-			overflow: 'hidden',
-			maxHeight: "80vh"
-		}],
-		
-		resultsTitle: {
-			fontWeight: 900,
-			textTransform: 'uppercase',
-			padding: `0.2rem 0.8rem`
-		},
-		
-		resultSection: [makeTransition(['background-color','color'], 0.15), {}],
-		
-		resultSectionTitle: {
-			//borderBottom: '0.1rem solid transparent',
-			marginBottom: rem(0.2),
-			padding: `0.1rem 0.8rem`
-		},
-		
-		result: [makeTransition(['background-color','color']), PositionRelative,FlexRowCenter, FillWidth, {
+		result: [ makeTransition([ 'background-color', 'color' ]), PositionRelative, FlexRowCenter, FillWidth, {
 			height: 48,
 			cursor: 'pointer',
 			borderBottom: `0.1rem solid ${accent.hue1}`,
@@ -77,275 +33,170 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 				color: primary.hue1
 			},
 			
-			selected: {
+			selected: [{
 				backgroundColor: accent.hue1,
 				color: text.primary
-			}
-		}],
-		
-		resultInfo: [FlexScale,FlexColumnCenter, makeFlexAlign('stretch', 'center'), {
-			padding: '0.2rem 2rem 0.2rem 1rem'
-		}],
-		
-		
-		resultLabel: makeStyle(Ellipsis, FlexAuto,makePaddingRem(0,1), {
-			flexShrink: 1,
-			fontWeight: 100,
-			fontSize: rem(1.6)
-		}),
-		
-		resultLabelSecond: makeStyle(FlexAuto, {
-			fontWeight: 100,
-			fontSize: rem(1.2)
-		}),
-		
-		resultLabelSelected: {
-			fontWeight: 500
-		},
-		
-		resultAction: makeStyle(Ellipsis, {
-			fontWeight: 100,
-			fontSize: rem(1.3),
-			textStyle: 'italic'
-		}),
-		
-		resultActionSelected: {},
-		
-		resultType: [FillHeight,FlexRowCenter,FlexAuto,Ellipsis, {
-			fontWeight: 100,
-			fontSize: rem(1.3),
-			textStyle: 'italic',
-			padding: rem(0.3),
-			width: 48,
-			background: Transparent,
-			//borderRight: `0.1rem solid ${accent.hue1}`,
+			}],
 			
 			
-		}],
+			info: [FlexScale, FlexColumnCenter, makeFlexAlign('stretch', 'center'), {
+				padding: '0.2rem 2rem 0.2rem 1rem'
+			} ],
+			
+			label: [Ellipsis, FlexAuto, makePaddingRem(0, 1), {
+				flexShrink: 1,
+				fontWeight: 100,
+				fontSize: rem(1.6),
+				
+				second: [FlexAuto, {
+					fontWeight: 100,
+					fontSize: rem(1.2)
+				}],
+				
+				selected: [{
+					fontWeight: 500
+				}]
+			}],
+			
+			action: [{
+				fontWeight: 100,
+				fontSize: rem(1.3),
+				textStyle: 'italic',
+				
+				selected: [{
+					
+				}]
+			}],
+			
+			type: [ FillHeight, FlexRowCenter, FlexAuto, Ellipsis, {
+				fontWeight: 100,
+				fontSize: rem(1.3),
+				textStyle: 'italic',
+				padding: rem(0.3),
+				width: 48,
+				background: Transparent,
+				//borderRight: `0.1rem solid ${accent.hue1}`,
+				
+				selected: [{}]
+			} ]
+			
+		} ]
 		
-		resultTypeSelected: [{
-			// background: text.primary,
-			// color: primary.hue1
-		}],
 		
 		
-		noResults: makeStyle(Ellipsis, {
-			fontStyle: 'italic',
-			fontSize: rem(0.8),
-			opacity: 0.8,
-			padding: `0.1rem 1rem`
-		}),
 		
-		padded: {
-			padding: '0.2rem 1rem'
-		}
+		
+		
+		
+		
 	}
-})
-//endregion
+}
 
 
 /**
- * ISearchResultsProps
+ * ISearchResultsListProps
  */
-export interface ISearchResultsListProps {
+export interface ISearchResultsListProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
-	anchor?: string | React.ReactElement<any>
-	searchId:string
-	
-	containerStyle?:any
-	inline?: boolean
-	
-	open:boolean
-	searchItems:List<SearchItem>
-	selectedIndex?:number
-	className?:string
+	open?:boolean
+	searchPanel:SearchPanel
+	searchState:ISearchState
 	onResultSelected?:(item:SearchItem) => void
 	onResultHover?:(item:SearchItem) => void
 }
 
 /**
- * SearchResults
+ * ISearchResultsListState
+ */
+export interface ISearchResultsListState {
+	itemCache?:{[id:string]:SearchResultItem}
+	items?:SearchResultItem[]
+	ids?:number[]
+}
+
+/**
+ * SearchResultsList
  *
- * @class SearchResults
+ * @class SearchResultsList
  * @constructor
  **/
 
-@ThemedStyles(baseStyles)
-export class SearchResultsList extends React.Component<ISearchResultsListProps,any> {
 
-
-	/**
-	 * Mount node for search results
-	 */
-	private node:HTMLElement
-
+@ThemedStyles(baseStyles,'searchResults')
+@PureRender
+export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
+	
+	
 	constructor(props,context) {
 		super(props,context)
+		
+		this.state = {
+			itemCache: {}
+		}
 	}
-
-	componentDidMount():void {
-
-
-		this.node = doc.createElement('div')
-		_.assign(this.node.style, this.props.styles.resultsModal)
-
-		body.appendChild(this.node)
-		this.renderResults(this.props)
-	}
-
-	componentWillReceiveProps(nextProps:ISearchResultsListProps, nextContext:any):void {
-		if (!nextProps.inline && !_.isEqual(nextProps,this.props))
-			this.renderResults(nextProps)
-	}
-
-	componentWillUnmount():void {
-
-		ReactDOM.unmountComponentAtNode(this.node)
-		body.removeChild(this.node)
-		// elementClass(body).remove(styleVisible)
-	}
-
-
-
-	getThemeStyles() {
-		const {theme} = this.props
-		return theme ? theme.searchResults : {}
-	}
-
-
-	renderResult(label:any,labelSecond:any,actionLabel,typeLabel,isSelected) {
-		const
-			{styles} = this.props,
-			// Get theme pack
-			themeStyles = this.getThemeStyles(),
-
-			// Make style
-			resultStyle = makeStyle(
-				styles.result,
-				styles.result.normal,
-				isSelected && styles.result.selected
-			),
-
-			actionStyle = makeStyle(
-				styles.resultAction,
-				styles.content.action,
-				isSelected && styles.resultActionSelected,
-				isSelected && themeStyles.content.selected
-			),
-
-			labelStyle = makeStyle(
-				styles.resultLabel,
-				styles.content.label,
-				isSelected && styles.resultLabelSelected,
-				isSelected && styles.content.selected
-			),
-
-			typeStyle = makeStyle(
-				styles.resultType,
-				styles.content.type,
-				isSelected && styles.resultTypeSelected
-			)
-
-		return <div style={resultStyle}>
-			<div style={makeStyle(typeStyle,styles.padded)}>
-				<Icon iconSet='octicon' iconName={typeLabel}/>
-				{/*{typeLabel}*/}
-			</div>
-			<div style={makeStyle(styles.resultInfo,styles.padded)}>
-				<div style={labelStyle}>
-					{label}
-				</div>
-				{/*<div style={actionStyle}>*/}
-					{/*{actionLabel}*/}
-				{/*</div>*/}
-			</div>
-			<div style={makeStyle(labelStyle,styles.resultLabelSecond,styles.padded)}>
-				{labelSecond}
-			</div>
-
-		</div>
-	}
-
-	renderRepo = (item:SearchItem,repo:Repo,isSelected) => {
-
-		return this.renderResult(
-			<Renderers.RepoName repo={repo}/>,
-			`${repo.open_issues_count} open issues`,
-			'Add issue repo',
-			'repo',
-			isSelected
-		)
-	}
-
+	
 	/**
-	 * Render an available repo, once allready initialized
-	 *
-	 * @param item
-	 * @param availRepo
-	 * @param isSelected
-	 * @returns {any}
+	 * Update state - create new items, remove old ones, etc
 	 */
-	renderAvailableRepo = (item:SearchItem,availRepo:AvailableRepo,isSelected) => {
-		// const
-		// 	// Get data
-		// 	availRepoSelected = availRepo.enabled,
-		// 	repo = availRepo.repo || repoActions.state.stores.find(item => item.id === availRepo.repoId)
-		//
-		// // The wrapper element with content inside
-		// // Row 1: label
-		// // Row 2: possible action
-		// return this.renderResult(
-		// 	Renderers.repoName(repo),
-		// 	`${repo.open_issues_count} open issues`,
-		// 	(availRepoSelected) ? 'Hide issues' : 'Show Issues',
-		// 	'repo',
-		// 	isSelected)
-		return null
-
+	updateState = (props = this.props) => {
+		//if (this.searchItemsChanged(props,this.state))
+		this.updateResults(props)
 	}
-
-	renderIssue = (item:SearchItem,issue:Issue,isSelected) => {
-		const repo = null//repoModels && repoModels.get(`${issue.repoId}`)
-		return this.renderResult(
-			issue.title,
-			repo ? <Renderers.RepoName repo={repo}/> : '',
-			'Select issue',
-			'issue-opened',
-			isSelected
-		)
+	
+	/**
+	 * On mount - update state
+	 */
+	componentWillMount = this.updateState
+	
+	
+	/**
+	 * Have items changed
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @returns {boolean}
+	 */
+	searchItemsChanged(nextProps:ISearchResultsListProps,nextState) {
+		return !getValue(() => this.state.items) || !shallowEquals(
+			this.props,
+			nextProps,
+			'theme',
+			'styles',
+			'searchState',
+			'searchState.items') || !shallowEquals(
+				this.state,
+				nextState,
+				'theme',
+				'styles',
+				'items')
 	}
-
-	renderMilestone = (item:SearchItem,milestone:Milestone,isSelected) => {
-		
-		const repo = null//repoModels && repoModels.get(`${milestone.repoId}`)
-		return this.renderResult(
-			milestone.title,
-			repo ? <Renderers.RepoName repo={repo}/> : '',
-			'Filter milestone',
-			'milestone',
-			isSelected
-		)
-	}
-
-	renderLabel = (item:SearchItem,label:Label,isSelected) => {
-		
-		const repo = null//repoModels && repoModels.get(`${label.repoId}`)
-		return this.renderResult(
-			label.name,
-			repo ? <Renderers.RepoName repo={repo}/> : '',
-			'Filter label',
-			'tag',
-			isSelected
-		)
-	}
+	/**
+	 * On new props - update the state
+	 *
+	 * @param nextProps
+	 */
+	componentWillReceiveProps = (nextProps) => this.updateState(nextProps)
+	
+	// /**
+	//  * Should the component re-render
+	//  *
+	//  * @param nextProps
+	//  * @param nextState
+	//  */
+	// shouldComponentUpdate(nextProps,nextState) {
+	// 	// getValue(() => this.props.searchState.items.size,-1) !==
+	// 	// getValue(() => nextProps.searchState.items.size) ||
+	// 	//return this.searchItemsChanged(nextProps,nextState)
+	// }
+	
 	
 	
 	onClick = (item:SearchItem) => {
-		log.info(`Created mouse down for `,item)
+		//log.info(`Created mouse down for `,item)
 		
 		return (event) => {
-			log.info(`Clicked for event`,item)
+			log.debug(`Clicked for event`,item)
 			event.preventDefault()
 			event.stopPropagation()
 			
@@ -359,145 +210,101 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,a
 		}
 	}
 	
-	private renderFns = {
-		[SearchType.Repo]: this.renderRepo,
-		[SearchType.AvailableRepo]: this.renderAvailableRepo,
-		[SearchType.Issue]: this.renderIssue,
-		[SearchType.Milestone]: this.renderMilestone,
-		[SearchType.Label]: this.renderLabel
-	}
-
+	
+	
 	/**
 	 * Generate the result sections
 	 *
 	 * @returns {any}
 	 */
-	prepareResults(props:ISearchResultsListProps) {
+	updateResults(props:ISearchResultsListProps) {
 		const
-			{styles,onResultHover,onResultSelected,searchItems,selectedIndex} = props,
-			themeStyles = this.getThemeStyles()
-
-
-		if (!searchItems)
-			return null
+			{styles,onResultHover,onResultSelected,searchPanel,searchState} = props,
+			{items: searchItems,selectedIndex} = searchState,
+			currentIds = [],
+			{ itemCache } = this.state
 		
-		log.debug(`Selected index in results ${selectedIndex}`)
-
-		const rows = searchItems.map((item,index) => {
-			
-
-			const
-				{id,type,value} = item,
-				resultRenderer:any = this.renderFns[type],
-				isSelected = selectedIndex === index
-
-
-			// TODO: caclulate this in the SearchPanel - this is expensive
-			// if (isSelected && (_.get(this,'state.selectedItem.item.id',-1) !== item.id))
-			// 	this.setState({selectedItem:itemModel})
-
-			const itemContent = resultRenderer(item,value,isSelected)
-
-			if (!itemContent)
-				return null
-
-			// Make the row style
-			const resultStyle = makeStyle(
-				styles.result,
-				styles.result.normal,
-				isSelected && styles.result.selected
-			)
-
-			return (
-				<div key={`${item.id}`}
-				     className={isSelected && 'selected'}
-				     style={resultStyle}
-				     onMouseEnter={() => onResultHover && onResultHover(item)}
-				     onClick={this.onClick(item)}
-				     onMouseDown={this.onClick(item)}
-				>
-					{itemContent}
-				</div>
-			)
-		})
-
-		log.debug(`Rendering rows`,rows.size,rows)
-		return rows
-
-	}
-
-
-	renderResults(props) {
 		const
-			{styles} = props,
-			t = getTheme(),
-			{palette:p} = t
-
-		let resultsStyle = makeStyle(styles.results,{
-			backgroundColor: p.alternateBgColor,
-			color: p.alternateTextColor
-		})
-
-		log.debug('rendering results inline:',props.inline,'open',props.open,'anchor',props.anchor)
-
-		if (!props.inline) {
-			const anchor = typeof props.anchor === 'string' ?
-				document.querySelector(props.anchor) :
-				props.anchor
-
-
-			const containerStyle = props.open && anchor ? (() => {
+			items:SearchResultItem[] = []
+		
+		log.debug('updating results from search state',searchState)
+		
+		if (searchItems) {
+			
+			log.debug(`Selected index in results ${selectedIndex}`)
+			
+			
+			/**
+			 * Iterate results, create items for each
+			 */
+			searchItems.forEach((searchItem, index) => {
+				
 				const
-					rect =  anchor.getBoundingClientRect(),
-					top = (rect.height + rect.top),
-					winHeight = window.innerHeight,
-					//height = winHeight - top - (winHeight * .1).
-					maxHeight = `${winHeight - 48}px`
-				return {
-					position: 'absolute',
-					display: 'block',
-					width: rect.width + 'px',
-					top: `${top}px`,
-					left: rect.left + 'px',
-					height: maxHeight,
-					maxHeight,
-					overflow: 'auto',
-					fontFamily: t.fontFamily,
-					fontWidth: t.fontWeight,
-					zIndex: 99999
+					id = `${searchItem.id}`
+				
+				if (currentIds.includes(id))
+					return
+				
+				currentIds.push(id)
+				
+				let
+					item = itemCache[ id ]
+				
+				if (!item) {
+					item = itemCache[ id ] = <SearchResultItem key={id}
+					                                    styles={styles}
+					                                    item={searchItem}
+					                                    searchPanel={searchPanel}
+					                                    onMouseEnter={() => onResultHover && onResultHover(searchItem)}
+					                                    onClick={this.onClick(searchItem)}
+					                                    onMouseDown={this.onClick(searchItem)}
+					/> as any
 				}
-			})() : {
-				height: 0
-			}
-
-			log.debug('rendering results',{anchor,node:this.node,containerStyle})
-			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
-			const resultsElement = (<div className="searchResults" style={resultsStyle}>
-				<CSSTransitionGroup
-					transitionName="results"
-					transitionEnterTimeout={250}
-					transitionLeaveTimeout={150}>
-
-					{props.open && this.prepareResults(props)}
-
-				</CSSTransitionGroup>
-			</div>)
-
-			_.assign(this.node.style, containerStyle)
-			ReactDOM.render(resultsElement, this.node)
-		} else {
-			return <div className={props.className} style={resultsStyle}>
-				{props.open && this.prepareResults(props)}
-			</div>
+				
+				items.push(item)
+			})
 		}
-		//renderSubtreeIntoContainer(this,resultsElement,this.node)
+		
+		// REMOVE OLD OBJECTS
+		
+		Object
+			.keys(itemCache)
+			.filter(id => !currentIds.includes(id))
+			.forEach(id => {
+				delete itemCache[id]
+			})
+		
+		const
+			ids = getValue(() => this.state.ids)
+		
+		// IF NO CHANGE - RETURN
+		if (
+			ids &&
+			ids.length === currentIds.length &&
+			currentIds.every((id,index) => ids[index] === id)
+		)
+			return
+		
+		log.debug(`Settings items`,items,currentIds)
+		this.setState({items,ids:currentIds})
+		
 	}
-
+	
 	render() {
-		return (this.props.inline) ?
-			this.renderResults(this.props) :
-			<div></div>
-			// React.DOM.noscript()
+		const
+			{props,state} = this,
+			{ theme, styles ,style} = props
+		
+		return <div style={style}>
+			<CSSTransitionGroup
+				transitionName="results"
+				transitionEnterTimeout={250}
+				transitionLeaveTimeout={150}>
+				
+				{getValue(() => this.state.items)}
+			
+			</CSSTransitionGroup>
+		</div>
 	}
-
+	
 }

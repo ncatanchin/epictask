@@ -200,6 +200,12 @@ export class RepoSyncExecutor implements IJobExecutor {
 			pendingResolver = pendingSync && pendingSync.resolver,
 			pendingPromise = pendingResolver && pendingResolver.promise
 		
+		
+		if(availableRepo.deleted) {
+			this.logger.warn(`Repo has been deleted`)
+			return Promise.resolve()
+		}
+		
 		// If there is a pending sync then cancel
 		if (pendingSync && !pendingSync.started) {
 			this.logger.warn(`There is already a pending sync, this job is canceled: ${repoId}`)

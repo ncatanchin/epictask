@@ -9,12 +9,12 @@ import * as React from 'react'
 import {Paper, TextField} from 'material-ui'
 import * as KeyMaps from 'shared/KeyMaps'
 import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
-import {SearchResultsList} from './SearchResultsList'
+import {SearchResults} from './SearchResults'
 
 import {PureRender} from 'ui/components/common/PureRender'
 import { isNumber, getValue, shallowEquals } from "shared/util/ObjectUtil"
 import SearchProvider from "shared/actions/search/SearchProvider"
-import {SearchItem} from "shared/actions/search"
+import { SearchItem, ISearchState } from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
 import {Themed} from "shared/themes/ThemeManager"
 import {
@@ -124,17 +124,19 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	onResultSelected?: (item: SearchItem) => void
 }
 
+export type TSearchSelectionListener = (selectedIndex:number,id:any) => any
+
 export interface ISearchPanelState {
 	focused?: boolean
-	selectedIndex?: number
 	totalItemCount?: number
 	selected?: boolean
 	query?: string
 	textField?: any
 	resultsListRef?:any
+	selectionListeners?:TSearchSelectionListener[]
 	provider?:SearchProvider
 	results?:SearchResult[]
-	items?:List<SearchItem>
+	searchState?:ISearchState
 	unsubscribe?:Function
 }
 
@@ -195,6 +197,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					if (onEscape)
 						onEscape()
 					
+					this.onBlur(event)
+					
 				},
 				CommonKeys.Escape,{
 					hidden:true,
@@ -220,6 +224,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			
 			.make()
 	
+	
 	/**
 	 * Command container id
 	 */
@@ -233,10 +238,39 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	constructor(props, context) {
 		super(props, context)
 
-		this.state = {selectedIndex: 0}
+		this.state = {
+			selectionListeners:[],
+			searchState:{
+				items:List<SearchItem>(),
+				results: [],
+				provider:null,
+				selectedIndex: 0
+			}
+		}
 	}
 
 	
+	addSelectionListener(listener:TSearchSelectionListener) {
+		const
+			{selectionListeners} = this.state
+		
+		if (selectionListeners.indexOf(listener) === -1)
+			selectionListeners.push(listener)
+		
+		
+	}
+	
+	removeSelectionListener(listener:TSearchSelectionListener) {
+		const
+			{selectionListeners} = this.state,
+			index = selectionListeners.indexOf(listener)
+		
+		if (index > -1)
+			selectionListeners.splice(index,1)
+		
+		
+		
+	}
 	
 	
 
@@ -296,7 +330,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	getItems(results:SearchResult[] = []):List<SearchItem> {
 		return results.reduce((items,result) =>
-			items.concat(result.items) as List<SearchItem>
+			items.concat(result.items.size > 5 ?
+				result.items.slice(0,5) :
+				result.items) as List<SearchItem>
 		,List<SearchItem>())
 	}
 	
@@ -315,7 +351,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			provider:SearchProvider = getValue(() => this.state.provider)
 		
 		if (!provider) {
-			provider = newState.provider = SearchProvider.getInstance(this.props.searchId)
+			provider = newState.provider = new SearchProvider(this.props.searchId)
 			
 			newState.unsubscribe = provider.addListener(
 				SearchEvent.ResultsUpdated,
@@ -324,7 +360,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					log.info(`New Results received`,newResults)
 					
 					this.setState({
-						results:newResults
+						results:newResults,
+						searchState: assign({},assign(searchState,{results:newResults}))
 					},this.updateState as any)
 					
 					if (this.props.onResultsChanged) {
@@ -337,12 +374,23 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		}
 		
 		
-		
+		let
+			searchState = getValue(() => this.state.searchState,{
+				items: List<SearchItem>(),
+				selectedIndex: 0,
+				provider
+			})
 		
 		const
 			results:SearchResult[] = getValue(() => this.state.results,[]),
 			items = this.getItems(results),
-			totalItemCount = items.size
+			totalItemCount = items.size,
+			selectedIndex = totalItemCount &&
+				Math.min(
+					searchState.selectedIndex,
+					Math.max(0, totalItemCount - 1))
+		
+		
 		
 		
 		return (assign(newState,{
@@ -350,11 +398,14 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			results,
 			items,
 			totalItemCount,
-			selectedIndex: totalItemCount &&
-				Math.min(
-					getValue(() => this.state.selectedIndex, 0),
-					Math.max(0, totalItemCount - 1))
-		}, _.isBoolean(focused) ? {focused} : {}))
+			focused,
+			searchState: assign({},assign(searchState,{
+				results,
+				selectedIndex,
+				items,
+				provider
+			}))
+		}))
 	}
 
 
@@ -401,8 +452,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	onFocus = (event) => {
 		log.info('Search panel gained focus query = ', this.query)
-		//this.setState({focused:true})
 		this.updateState(this.props,true)
+		
 		//this.focusTextField()
 		// this.updateState(this.props, true)
 		// if (this.query.length) {
@@ -426,8 +477,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	onBlur = (event) => {
 		log.info('search panel blur')
-
-		this.updateState(this.props,false)
+		this.setState({focused:false})
+		//this.updateState(this.props,false)
 		//this.setState({selected: false, focused: false})
 
 	}
@@ -435,10 +486,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	
 	updateSearchResults(query) {
 		const
-			{provider} = this.state
+			{provider,searchState} = this.state
 		
 		provider.setTypes(...this.props.types)
+		
+		
+		
 		provider.setQuery(query)
+		
+		
 	}
 
 	/**
@@ -450,10 +506,23 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	onInputChange(event) {
 		const
-			query = event.target.value
+			query = event.target.value,
+			{searchState} = this.state
 		log.debug('Search value: ' + query)
-		this.setState({query})
-		this.updateSearchResults(query)
+		if (!query || !query.length) {
+			this.setState({
+				query,
+				searchState: assign({},assign(searchState,{
+					selectedIndex: 0,
+					results: [],
+					items: List<SearchItem>()
+				}))
+			})
+		} else {
+			this.setState({query})
+			this.updateSearchResults(query)
+		}
+		
 	}
 
 	/**
@@ -468,7 +537,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		log.info(`Result selected`,item,this.state)
 		
 		const
-			{provider,items,selectedIndex} = this.state,
+			{provider,searchState} = this.state,
+			{items,selectedIndex} = searchState,
 			{onResultSelected} = this.props
 		
 		if (!item) {
@@ -510,13 +580,14 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	onHover = (item: SearchItem) => {
 		const
-			{items} = this.state,
+			{searchState} = this.state,
+			{items,selectedIndex} = searchState,
 			index = Math.max(
 				items.findIndex(findItem => findItem.id === item.id),
 				0
 			)
 
-		if (this.state.selectedIndex !== index)
+		if (selectedIndex !== index)
 			this.setSelectedIndex(index)
 	}
 
@@ -525,30 +596,55 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @returns {SearchResultsList}
 	 */
-	get resultsList(): SearchResultsList {
+	get resultsList(): SearchResults {
 		const listWrapper = this.state.resultsListRef
 		return (listWrapper && listWrapper.getWrappedInstance) ?
 			listWrapper.getWrappedInstance() as any :
 			null
 	}
 
+	getSelectedIndexAndItem():[number,SearchItem] {
+		return getValue(() => {
+			const
+				{searchState} = this.state,
+				{selectedIndex,items} = searchState
+					
+			return [selectedIndex,items.get(searchState.selectedIndex)]
+		},[0,null]) as any
+	}
+	
 	setSelectedIndex = (selectedIndex) => {
-		const {totalItemCount} = this.state
-		const endIndex = Math.max(totalItemCount - 1, 0)
+		
+		const
+			{selectionListeners} = this.state
+		
+		let
+			{searchState,totalItemCount} = this.state,
+			endIndex = Math.max(totalItemCount - 1, 0),
 
-		const newSelectedIndex = selectedIndex < 0 ? endIndex :
-			(selectedIndex > endIndex) ? 0 :
-				selectedIndex
+			newSelectedIndex = selectedIndex < 0 ? endIndex :
+				(selectedIndex > endIndex) ? 0 :
+					selectedIndex
 
 
-		log.info('state selectedIndex', this.state.selectedIndex, 'param selectedIndex', selectedIndex, 'newSelectedIndex', newSelectedIndex, 'endIndex', endIndex)
-		this.setState({selectedIndex: newSelectedIndex})
+		log.debug('state selectedIndex', searchState.selectedIndex, 'param selectedIndex', selectedIndex, 'newSelectedIndex', newSelectedIndex, 'endIndex', endIndex)
+		
+		
+		
+		this.setState({
+			searchState: assign({},assign(searchState,{
+				selectedIndex:newSelectedIndex
+			}))
+		}, () => selectionListeners.forEach(listener => {
+			listener(newSelectedIndex,searchState.items.get(newSelectedIndex) || {})
+		}))
+		
 	}
 
 	moveSelection = (increment: number) => {
 		log.info('move selection trigger')
-		const {selectedIndex} = this.state
-		this.setSelectedIndex(selectedIndex + increment)
+		
+		this.setSelectedIndex(getValue(() => this.state.searchState.selectedIndex,0) + increment)
 	}
 
 	
@@ -583,11 +679,23 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	
 	componentWillUnmount = () => {
-		const unsubscribe:any = _.get(this,'state.unsubscribe')
+		const
+			unsubscribe:any = getValue(() => this.state.unsubscribe,null) as any
+		
+		const
+			newState = {
+				provider:null,
+				searchState: assign({},assign(this.state.searchState,{
+					provider: null
+				}))
+			} as any
+			
 		if (unsubscribe) {
 			unsubscribe()
-			this.setState({unsubscribe:null})
+			newState.unsubscribe = null
 		}
+		
+		this.setState(newState)
 	}
 	/**
 	 * On props
@@ -596,18 +704,25 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	componentWillReceiveProps = (nextProps: ISearchPanelProps) => {
 		const
-			selectedIndex:number = _.get(this.state, 'selectedIndex', 0),
-			selectedItem = isNumber(selectedIndex) && selectedIndex > -1 && this.state.items[selectedIndex],
+			{searchState} = this.state,
+			selectedIndex:number = searchState.selectedIndex,
+			selectedItem = isNumber(selectedIndex) && selectedIndex > -1 && searchState.items.get(selectedIndex),
 			newState = this.updateState(nextProps)
 		
-		let newSelectedIndex = 0
+		let
+			newSelectedIndex = 0
+		
 		if (selectedItem) {
 				newSelectedIndex = (newState.items || [])
 					.findIndex(newItem => newItem.id === selectedItem.id)
 		}
 
 		if (isNumber(selectedIndex))
-			this.setState({selectedIndex: newSelectedIndex})
+			this.setState({
+				searchState: assign(searchState,{
+					selectedIndex: newSelectedIndex
+				})
+			})
 	}
 
 
@@ -619,12 +734,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	render() {
 		const
 			{expanded,styles, theme,inlineResults,hintStyle,underlineFocusStyle,underlineStyle, autoFocus,searchId, modal} = this.props,
-			{items,results,query,selectedIndex} = this.state
-		
-		
-		const
+			{searchState,results,query} = this.state,
+			{selectedIndex,items} = searchState,
 			
-			focused = modal || this.isFocused(this.props),
+			focused = this.isFocused(this.props),
 			resultsOpen = focused,
 
 			
@@ -683,10 +796,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					inputStyle={inputStyle}
 					defaultValue={query || ''}
 				/>
-				<SearchResultsList ref={(resultsListRef) => this.setState({resultsListRef})}
+				<SearchResults ref={(resultsListRef) => this.setState({resultsListRef})}
 				                   anchor={'#' + searchPanelId}
-				                   selectedIndex={selectedIndex}
-				                   searchItems={items}
+				                   searchState={searchState}
+				                   searchPanel={this}
 				                   searchId={searchId}
 				                   open={resultsOpen}
 				                   inline={inlineResults}

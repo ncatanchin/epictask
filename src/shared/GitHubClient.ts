@@ -163,6 +163,39 @@ export interface RequestOptions {
 	onDataCallback?:OnDataCallback<any>
 }
 
+/**
+ * Search results wrapper
+ */
+export class GithubSearchResults<T> {
+	
+	total_count:number
+	incomplete_results:boolean
+	items:T[]
+	
+	/**
+	 * Accepts the json results and a model type
+	 *
+	 * @param results
+	 * @param modelType
+	 */
+	constructor(results,public modelType:{new():T}) {
+		Object.assign(this,_.omit(results,'items'))
+		
+		this.items = !results.items ? [] :
+			results.items.map(it => new (modelType as any)(it))
+	}
+}
+
+/**
+ * Repo search results
+ */
+export class GithubRepoSearchResults extends GithubSearchResults<Repo> {
+	
+	constructor(results) {
+		super(results,Repo)
+	}
+}
+
 
 /**
  * GitHubClient for remote
@@ -686,13 +719,13 @@ export class GitHubClient {
 	/**
 	 * Get all comments on an issue in a repo
 	 */
-	issueComments = async (repo:Repo|string,issue:Issue|number,opts:RequestOptions = null) => {
+	issueComments = (repo:Repo|string,issue:Issue|number,opts:RequestOptions = null) => {
 		const
 			repoName = isString(repo) ? repo : repo.full_name,
 			issueNumber = isNumber(issue) ? issue : issue.number,
 			url = `/repos/${repoName}/issues/${issueNumber}/comments`
 		
-		return await this.get<PagedArray<Comment>>(url,Comment,opts)
+		return this.get<PagedArray<Comment>>(url,Comment,opts)
 	}
 
 	/**
@@ -706,6 +739,25 @@ export class GitHubClient {
 	repoComments = async (repo:Repo,opts:RequestOptions = null) => {
 		const url = `/repos/${repo.full_name}/issues/comments`
 		return await this.get<PagedArray<Comment>>(url,Comment,opts)
+	}
+	
+	/**
+	 * Search for matching repos
+	 *
+	 * @param query
+	 * @returns {Promise<Repo[]>}
+	 */
+	searchRepos = (query:string):Promise<GithubRepoSearchResults> =>  {
+		const
+			url = `/search/repositories`,
+			opts = {
+				params: {
+					q: query
+				}
+			}
+			
+		return this.get<GithubRepoSearchResults>(url,GithubRepoSearchResults,opts)
+		
 	}
 
 	/**

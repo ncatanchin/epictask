@@ -77,19 +77,25 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				List<AvailableRepo>(availableRepos) :
 				availableRepos
 			
-			return state.set('availableRepos',
-				state.availableRepos.withMutations(newAvailRepos => {
-					(availableRepos as any).forEach((availRepo:AvailableRepo) => {
-						const
-							index = newAvailRepos.findIndex(it => it.id === availRepo.id)
-						
-						newAvailRepos = index === -1 ?
-							newAvailRepos.push(availRepo) :
-							newAvailRepos.set(index,availRepo)
-					})
-				})
-					
-			)
+			let
+				newAvailRepos = state.availableRepos
+			
+			availableRepos = Array.isArray(availableRepos) ?
+				availableRepos :
+				availableRepos.toArray()
+			
+			for (let availRepo of availableRepos) {
+				const
+					index = newAvailRepos.findIndex(it => it.id === availRepo.id)
+				
+				newAvailRepos = index === -1 ?
+					newAvailRepos.push(availRepo) :
+					newAvailRepos.set(index,assign({},availRepo))
+			}
+			
+			
+			return state.set('availableRepos',newAvailRepos)
+			
 		}
 			
 	}
@@ -488,7 +494,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		availRepo.enabled = false
 		availRepo = await stores.availableRepo.save(availRepo)
 		
-		GithubSyncStatus.clearPrefix(`${availRepoId}`)
 		
 		// FIRST - get everything out of the state
 		log.debug(`Reloading avail repos`)
@@ -559,8 +564,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				chunkRemove(issueIds,stores.issue),
 				chunkRemove(removeUserIds,stores.user)
 			])
-
-
+		
+		
+		GithubSyncStatus.clearPrefix(`${availRepoId}`)
+		
 		// Wait for the all-clear
 		await removePromise
 

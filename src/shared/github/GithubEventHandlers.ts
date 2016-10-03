@@ -620,6 +620,7 @@ export class RepoSyncManager {
 					
 					
 					updatedUsers.push(user)
+					await userRepo.save(user)
 					
 				}
 				
@@ -628,11 +629,13 @@ export class RepoSyncManager {
 			// ADD NEW USER
 			else {
 				user.repoIds = [ this.repo.id ]
+				updatedUsers.push(user)
+				await userRepo.save(user)
 			}
 			
-			await userRepo.save(user)
 			
-			updatedUsers.push(user)
+			
+			
 		}))
 		
 		

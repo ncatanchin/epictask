@@ -87,7 +87,7 @@ export function loadActionFactories() {
 			actionFactoryClazz = (actionCtx(modName) as any).default as IActionFactoryConstructor
 		
 		if (!actionFactoryClazz) {
-			return log.warn(`Unable to get action clazz from ${modName}`)
+			return log.debug(`Unable to get action clazz from ${modName}`)
 		}
 		
 		const
