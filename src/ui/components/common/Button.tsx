@@ -2,6 +2,7 @@
 import * as React from 'react'
 import filterProps from 'react-valid-props'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
+import { CSSHoverState } from "shared/themes"
 const Ink = require('react-ink')
 const tinycolor = require('tinycolor2')
 //endregion
@@ -11,18 +12,64 @@ const log = getLogger(__filename)
 //endregion
 
 //region Styles
-const baseStyles = createStyles({
-	root: [PositionRelative,makeTransition('background-color'),{
-		cursor: 'pointer',
-		border: 0,
-		padding: '0.5rem 1rem',
-		margin: 0,
-		outline: 0,
-		width: 'auto',
-		textTransform: 'uppercase',
-		// fontSize: themeFontSize(1.3)
-	}]
-})
+const baseStyles = (topStyles,theme,palette) => {
+	
+	const
+		{text,accent,primary,secondary,background} = palette
+	
+	return {
+		root: [ PositionRelative, makeTransition(['border','background-color','color','font-size','font-weight']),makeMarginRem(0), {
+			cursor: 'pointer',
+			border: 0,
+			
+			
+			outline: 0,
+			width: 'auto',
+			textTransform: 'uppercase',
+			
+			borderRadius: 2,
+			
+		} ],
+		
+		// NORMAL SIZE
+		normal: [makePaddingRem(0.5,1),{
+			fontWeight: 300,
+			fontSize: themeFontSize(1.3)
+		}],
+		
+		// BIG SIZE
+		big: [makePaddingRem(1,1.5),{
+			fontSize: themeFontSize(1.8)
+		}],
+		
+		flat: {
+			backgroundColor: primary.hue1,
+			color: text.secondary,
+			':hover': {
+				backgroundColor: accent.hue1
+			}
+		},
+		
+		raised: {
+			color: text.primary,
+			//backgroundColor: secondary.hue1
+			//backgroundColor: accent.hue2,
+			backgroundColor: Transparent,
+			fontWeight: 100,
+			border: `0.1rem solid ${primary.hue2}`,
+				
+			[CSSHoverState]: {
+				fontWeight: 500,
+				backgroundColor: accent.hue1
+			}
+		},
+		
+		disabled: {
+			color: text.hintOrDisabledOrIcon,
+			backgroundColor: primary.hue1
+		}
+	}
+}
 //endrgion
 
 
@@ -35,6 +82,7 @@ export interface IButtonProps extends React.HTMLAttributes<any> {
 	styles?:any
 	ripple?:boolean
 	mode?:'flat'|'raised'|'fab'
+	sizing?:'big'|'normal'
 	disabled?:boolean
 }
 //endregion
@@ -50,16 +98,18 @@ export class Button extends React.Component<IButtonProps,void> {
 
 	static defaultProps = {
 		ripple: true,
-		mode: 'flat'
+		mode: 'flat',
+		sizing: 'normal'
 	}
 
 	render() {
 		const
-			{ripple,mode,disabled,style,styles,children} = this.props
+			{ripple,mode,disabled,style,styles,sizing,children} = this.props
 
 		const rootStyle = mergeStyles(
 			styles.root,
 			styles[mode],
+			styles[sizing],
 			(disabled) && styles.disabled,
 			...(Array.isArray(style) ? style : [style])
 		)

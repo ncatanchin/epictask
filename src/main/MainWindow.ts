@@ -123,6 +123,12 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			// ON READY - SHOW
 			browserWindow.once('ready-to-show',() => browserWindow.show())
 			
+			// webContents.on('will-navigate',(event:any,url) => {
+			// 	log.info(`App wants to navigate`,url)
+			// 	event.returnValue = false
+			// 	event.preventDefault()
+			// })
+			
 			// On PageLoaded - show and focus
 			webContents
 				.once('did-finish-load', () => {

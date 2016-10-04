@@ -4,10 +4,7 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import * as Constants from '../../../shared/Constants'
-import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
+import {ThemedNoRadium} from 'shared/themes/ThemeManager'
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')

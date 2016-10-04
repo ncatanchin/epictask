@@ -31,16 +31,12 @@ const
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
 		clazz:typeof CommandManager,
 		instance:CommandManager,
-		hotInstance:CommandManager,
-		
-		mainManager:CommandManager
+		hotInstance:CommandManager
 	}
 
 // DEBUG ENABLE
 log.setOverrideLevel(LogLevel.DEBUG)
 
-
-	
 
 /**
  * Get the command manager on the main process
@@ -48,11 +44,8 @@ log.setOverrideLevel(LogLevel.DEBUG)
  * @returns {CommandManager}
  */
 function getMainCommandManager() {
-	if (instanceContainer.mainManager)
-		return instanceContainer.mainManager
-	
-	return (instanceContainer.mainManager = (isMain ? getCommandManager() :
-			(require('electron').remote.getGlobal('getCommandManager') as getCommandManagerType)()))
+	return (isMain ? getCommandManager() :
+			(require('electron').remote.getGlobal('getCommandManager') as getCommandManagerType)())
 }
 
 /**
@@ -231,7 +224,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private beforeUnload(event) {
+	private unload(event) {
 		log.debug(`Unloading all commands`)
 		this.unmountCommand(...Object.values(this.commands))
 	}
@@ -271,8 +264,8 @@ export class CommandManager {
 					keydown: {
 						listener: this.handleKeyDown.bind(this)
 					},
-					beforeunload: {
-						listener: this.beforeUnload.bind(this)
+					unload: {
+						listener: this.unload.bind(this)
 					}
 					
 				}

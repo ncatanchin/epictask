@@ -10,8 +10,8 @@ import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 const log = getLogger(__filename)
 
 const baseStyles = createStyles({
-	root:        [makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd, {
-		margin:          '0.5rem',
+	root:        [makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd,makeMarginRem(0.5), {
+		
 		width:           '100%',
 		maxWidth:        '100%',
 		maxHeight:       '100%',
@@ -23,28 +23,25 @@ const baseStyles = createStyles({
 		
 	}],
 	
-	content: [FlexRowCenter, {
+	content: [FlexRowCenter,makePaddingRem(0), {
 		height: rem(4.8),
 		borderRadius: '0.2rem',
 		maxWidth:     '100%',
 		maxHeight:    '100%',
-		padding:      '0 0 0',
+		
 		
 	}],
 	
-	icon:         [FlexRowCenter,{
-		height: '100%',
-		padding: '1rem 1rem'
+	icon:         [FlexRowCenter, makePaddingRem(1,1),{
+		height: '100%'
 	}],
 	
-	text:         [FlexScale, Ellipsis, {
+	text:         [FlexScale, Ellipsis, makePaddingRem(1,1), {
 		display: 'block',
-		padding: '1rem 1rem'
 	}],
-	action:       [FlexRowCenter, FlexAuto, {
+	action:       [FlexRowCenter, FlexAuto, makePaddingRem(0,1),{
 		height: rem(4.8),
-		textTransform: 'uppercase',
-		padding:       '0 1rem'
+		textTransform: 'uppercase'
 	}]
 })
 

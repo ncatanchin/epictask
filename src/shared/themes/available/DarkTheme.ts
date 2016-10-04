@@ -271,32 +271,7 @@ export function DarkTheme(palette) {
 		},
 		
 		button: {
-			root: {
-				fontFamily: fontFamilyRegular,
-				fontWeight: 500,
-				borderRadius: 2
-			},
-			flat: {
-				backgroundColor: primary.hue1,
-				color: text.secondary,
-				':hover': {
-					backgroundColor: accent.hue1
-				}
-			},
 			
-			raised: {
-				color: text.primary,
-				//backgroundColor: secondary.hue1
-				backgroundColor: tc(accent.hue1).setAlpha(0.2).toRgbString(),
-				[CSSHoverState]: {
-					backgroundColor: accent.hue1
-				}
-			},
-			
-			disabled: {
-				color: text.hintOrDisabledOrIcon,
-				backgroundColor: primary.hue1
-			}
 		},
 		
 		form: {
@@ -350,52 +325,6 @@ export function DarkTheme(palette) {
 		 * Dialog
 		 */
 		dialog: {
-			
-			root: {
-				backgroundColor: background
-			},
-			
-			
-			actions: {
-				backgroundColor: primary.hue1,
-				color: text.primary
-			},
-			action: {
-				padding: '1rem 2rem',
-				margin: '0 0 0 1rem',
-				
-				save: {}
-			},
-			
-			form: {
-				backgroundColor: background,
-				fontSize: fontSize * 1.2,
-				color: text.primary
-			},
-			
-			title: {
-				backgroundColor: background,
-				backgroundImage: makeLinearGradient('to bottom', primary.hue1, primary.hue2),
-				boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
-				
-				label: {
-					fontSize: fontSize * 2,
-					fontWeight: 500,
-					color: accent.hue1,
-					textTransform: 'uppercase'
-				},
-				
-				subLabel: {
-					color: text.secondary
-				},
-				
-				avatar: {
-					color: text.secondary,
-					avatar: {
-						borderColor: Transparent
-					}
-				}
-			},
 			
 			menu: {
 				color: text.primary,

@@ -32,6 +32,8 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {cloneObject} from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { DialogRoot } from "ui/components/common/DialogRoot"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
 
 
 // Constants
@@ -124,9 +126,8 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
-		this.setState({comment: null})
-		this.uiActions.setDialogOpen(Dialogs.IssueEditDialog, false)
-		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
+		getUIActions().setDialogOpen(Dialogs.IssueCommentDialog, false)
+		//getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
 
 	/**
@@ -229,45 +230,34 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 			
 
 		
-		const actions = [
-			<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
-			<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
-		]
+		
 
-		// Create title row
-		const makeTitle = () => <div style={styles.title}>
-			<div style={styles.title.action}>
+		const
+			titleNode = <div style={styles.title.action}>
 				{comment.id ? 'Edit Comment' : 'Create Comment'}
-			</div>
-			<div style={styles.title.Issues}>
-				<span key={issue.id} style={styles.title.issue}>
+			</div>,
+			subTitleNode = <span key={issue.id} style={styles.title.issue}>
 					<span style={styles.title.issueNumber}>
 						#{issue.number}&nbsp;
 					</span>
 					<span style={styles.title.issueTitle}>
 						{issue.title}
 					</span>
-				</span>
-			</div>
-		</div>
+				</span>,
+			actionNodes =  [
+				<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
+				<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
+			]
+		
 
 
-		return <div>
-			<Dialog style={styles.root}
-			        open={open}
-			        actions={actions}
-			        actionsContainerStyle={styles.actions}
-			        modal={true}
-			        overlayStyle={styles.backdrop}
-			        autoScrollBodyContent={true}
-			        bodyStyle={styles.body}
-			        titleStyle={styles.title}
-			        title={open && comment && makeTitle()}
-			        onBlur={this.onBlur}>
-
-
-				{ open && comment &&
-				<MuiThemeProvider muiTheme={theme}>
+		return <DialogRoot
+			titleMode='horizontal'
+			titleNode={titleNode}
+			subTitleNode={subTitleNode}
+			actionNodes={actionNodes}
+			saving={saving}
+		>
 					<div style={PositionRelative}>
 
 						<form name="issuePatchDialogForm"
@@ -295,10 +285,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 								{/*size={1}/>*/}
 						</div>}
 					</div>
-				</MuiThemeProvider>
-				}
-			</Dialog>
-		</div>
+		</DialogRoot>
 	}
 
 }

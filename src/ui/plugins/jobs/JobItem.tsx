@@ -94,10 +94,10 @@ export interface IJobItemProps extends React.HTMLAttributes<any> {
 }
 
 
-export function getJobStatusColors(job:IJob,styles):any[] {
-	return !job ? [] : [
-		job.status === JobStatus.Completed && styles.success,
-		job.status === JobStatus.Failed && styles.failed
+export function getJobStatusColors(detail:IJobStatusDetail,styles):any[] {
+	return !detail ? [] : [
+		detail.status === JobStatus.Completed && styles.success,
+		detail.status === JobStatus.Failed && styles.failed
 	]
 }
 
@@ -132,7 +132,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 	render() {
 		const
 			{theme, styles,job,detail,labelStyle} = this.props,
-			statusColors = getJobStatusColors(job,styles)
+			statusColors = getJobStatusColors(detail,styles)
 		
 		return <div {...filterProps(this.props)} style={styles.root}>
 		

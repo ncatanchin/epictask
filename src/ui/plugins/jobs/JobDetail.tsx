@@ -346,7 +346,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 			{theme, styles, job, jobs,detail} = this.props,
 			allLogs = getValue(() => this.state.allLogs,[]),
 			lineCount = getValue(() => this.state.lineCount,0),
-			statusColors = getJobStatusColors(job,styles)
+			statusColors = getJobStatusColors(detail,styles)
 		
 		
 		

@@ -6,6 +6,8 @@ import { makeThemeFontSize } from "shared/themes/ThemeState"
 export * from './ThemeState'
 export * from './ThemeDecorations'
 
+const
+	log = getLogger(__filename)
 
 /**
  * Export getTheme globally

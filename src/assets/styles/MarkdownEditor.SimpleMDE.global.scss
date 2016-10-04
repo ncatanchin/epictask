@@ -7,6 +7,11 @@
 .editor-toolbar {
 	background-color: white;
 	opacity: 1;
+	border-radius: 0 !important;
+}
+
+.CodeMirror {
+	flex: 1 1 0;
 }
 
 .editor-preview-side {

@@ -9,7 +9,7 @@ import * as React from 'react'
 import { Style } from 'radium'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
-import { Avatar, PureRender, Renderers } from 'ui/components/common'
+import { Avatar, PureRender, Renderers, Button } from 'ui/components/common'
 
 import { Issue } from 'shared/models/Issue'
 import { Comment } from 'shared/models/Comment'
@@ -38,10 +38,12 @@ import LabelChip from "ui/components/common/LabelChip"
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {
 	CommandComponent, ICommandComponentProps, ICommandComponent,
-	getCommandProps, CommandRoot
+	getCommandProps, CommandRoot, CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
+import { ICommand, CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { RepoName } from "ui/components/common/Renderers"
 
 
 // Other stuff
@@ -95,7 +97,22 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Commands for the container
 	 */
-	readonly commands:ICommand[] = []
+	commands = (builder:CommandContainerBuilder) =>
+	  // NEW COMMENT
+		builder
+			.command(
+				CommandType.Container,
+				'New Comment',
+				(cmd, event) => getIssueActions().newComment(),
+					"Ctrl+m", {
+					menuPath:['Issue']
+				})
+			.make()
+	/*
+	 * Insert images (Drag and drop and select)
+	 * Handle clicks in viewers (links)
+	 * make editor look dope everywhere
+	 */
 	
 	/**
 	 * Command component id
@@ -267,8 +284,33 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param issues
 	 * @param styles
 	 */
-	renderMulti = (issues:List<Issue>, styles) => <div>
-		{issues.size} selected issues
+	renderMulti = (issues:List<Issue>, styles) => <div style={styles.multi}>
+		<div style={styles.multi.title}>
+			{issues.size} selected issues
+		</div>
+		<div style={styles.multi.issues}>
+			{(issues.size < 20 ? issues : issues.slice(0,20)).map(issue =>
+				<div key={issue.id} style={styles.multi.issue}>
+					<div style={styles.multi.issue.row}>
+						<div style={styles.multi.issue.number}>#{issue.number}</div>
+						<div style={styles.multi.issue.title}>{issue.title}</div>
+						<RepoName style={styles.multi.issue.repo} repo={issue.repo}/>
+					</div>
+					
+				</div>
+			)}
+		</div>
+		<div style={styles.multi.title}>
+			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesAssignee()}>
+				Assign
+			</Button>
+			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesLabel()}>
+				Labels
+			</Button>
+			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesMilestone()}>
+				Milestone
+			</Button>
+		</div>
 	</div>
 	
 	
@@ -277,8 +319,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 *
 	 * @param issue
 	 * @param styles
+	 * @param palette
 	 * @returns {any}
-	 * @param theme
 	 */
 	renderHeader = (issue, styles, palette) => {
 		

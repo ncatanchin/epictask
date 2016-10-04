@@ -120,6 +120,18 @@ function onShutdown(event) {
 
 app.on('will-quit',onShutdown)
 
+
+/**
+ * On open event handler
+ *
+ * @param event
+ */
+function onOpen(event) {
+	log.info(`Received on open event`,event)
+	event.preventDefault()
+}
+
+
 /**
  * Start all child processes
  *
@@ -157,6 +169,9 @@ async function boot() {
 	if (Env.isDev)
 		require('./MainDevConfig')
 
+	require('./NavManager')
+	
+	
 	log.info("Boot start")
 	require('shared/commands/CommandManager').getCommandManager()
 	global[Events.MainBooted] = false
@@ -197,6 +212,9 @@ function onAllClosed() {
  * App started
  */
 function onStart() {
+	app.on('open-file',onOpen)
+	app.on('open-url',onOpen)
+	
 	app.setName('EpicTask')
 	return boot()
 }

@@ -98,35 +98,31 @@ const
 			/**
 			 * Toggle button for opening/focusing tool
 			 */
-			toggle: [makeTransition(['opacity']),PositionRelative,FlexColumnCenter,FlexAuto,{
+			toggle: [makeTransition(['opacity']),PositionRelative,FlexColumnCenter,FlexAuto,makeMarginRem(0),makePaddingRem(0),{
 				opacity: 1,
 				pointerEvents: 'auto',
 				textAlign: 'center',
-				padding: 0,
-				margin: 0,
+				
 				
 				[Left]: [{width: gutterHorizDim}],
 				[Right]: [{width: gutterHorizDim}],
 				[Bottom]: [{height: gutterVertDim}],
 				[Popup]: [{height: gutterVertDim}],
 				
-				button: [FlexAlignCenter,makeFlex(0,1,'auto'),{
-					padding: 0,//"0.5rem 0.3rem",
+				button: [FlexAlignCenter,makeFlex(0,1,'auto'),makePaddingRem(0),{
+					
 					
 					[Left]: [FillWidth,FlexColumnReverse,{
 						width: gutterHorizDim
 					}],
-					[Right]: [FillWidth,FlexColumn,{
-						width: gutterHorizDim,
-						padding: "0.5rem 0 0.5rem 0"
+					[Right]: [FillWidth,FlexColumn,makePaddingRem(0.5,0),{
+						width: gutterHorizDim
 					}],
-					[Popup]: [FillHeight,FlexRow,{
-						height: gutterHorizDim,
-						padding: "0rem 0.5rem 0 0.5rem"
+					[Popup]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
+						height: gutterHorizDim
 					}],
-					[Bottom]: [FillHeight,FlexRow,{
-						height: gutterHorizDim,
-						padding: "0rem 0.5rem 0 0.5rem"
+					[Bottom]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
+						height: gutterHorizDim
 					}]
 				}],
 				

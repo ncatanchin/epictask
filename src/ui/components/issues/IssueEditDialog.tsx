@@ -3,6 +3,7 @@
  */
 
 // Imports
+
 import {createStructuredSelector} from 'reselect'
 import {List} from 'immutable'
 import {connect} from 'react-redux'
@@ -15,12 +16,11 @@ import {Label} from 'shared/models/Label'
 import {Dialogs} from 'shared/config/DialogsAndSheets'
 import * as Renderers from 'ui/components/common/Renderers'
 import {Icon} from 'ui/components/common/Icon'
-import {Button} from 'ui/components/common/Button'
 import {Avatar} from 'ui/components/common/Avatar'
 import {LabelFieldEditor} from 'ui/components/common/LabelFieldEditor'
 
 import {MenuItem, SelectField, TextField,} from 'material-ui'
-import { cloneObject, shallowEquals } from 'shared/util/ObjectUtil'
+import { cloneObject, shallowEquals, getValue } from 'shared/util/ObjectUtil'
 import {
 	repoIdPredicate,
 	availableReposSelector
@@ -37,6 +37,8 @@ import {getGithubErrorText} from 'ui/components/common/Renderers'
 import { canAssignIssue, canCreateIssue } from 'shared/Permission'
 import { DialogRoot } from "ui/components/common/DialogRoot"
 import { getUIActions, getRepoActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { makeHeightConstraint } from "shared/themes"
+import { FileDrop } from "ui/components/common/FileDrop"
 
 
 const
@@ -44,129 +46,175 @@ const
 	SimpleMDE = require('react-simplemde-editor'),
 	{Style} = Radium
 
+log.setOverrideLevel(LogLevel.DEBUG)
 
-
-const baseStyles = createStyles({
-	root: [FlexColumn, FlexAuto],
-
-	issueEdit: [ {
-		title: [ {
-			avatar: [ FlexAuto, {
-				label: {
-					fontWeight: 500,
-				},
-				avatar: {
-					height: 30,
-					width: 30,
-				}
-			} ]
+const baseStyles = (topStyles,theme,palette) => {
+	const
+		{
+			primary,
+			secondary,
+			accent,
+			warn,
+			success,
+			background,
+			text,
+			alternateText
+		} = palette,
+		
+		rowStyle = [FlexRow, FlexAuto, FlexAlignStart, FillWidth,makePaddingRem(0,1)]
+		
+	return {
+		dialog: [{
+			minHeight: 500,
+			minWidth: 500
+		}],
+		root: [ FlexColumn, FlexAuto ],
+		
+		actions: [FlexRowCenter,FillHeight],
+		
+		action: [makePaddingRem(1,1.5),FlexColumnCenter,FillHeight,{
+			cursor: 'pointer',
+			
+			icon: [makeHeightConstraint(rem(1.8)),{
+				fontSize: rem(1.8),
+			}],
+			
+			
+			cancel: [{
+				[CSSHoverState]: [{
+					backgroundColor: warn.hue1
+				}]
+			}],
+			
+			save: [{
+				[CSSHoverState]: [{
+					backgroundColor: accent.hue1
+				}]
+			}],
+			
+			
+		}],
+		
+		issueEdit: [ {
+			title: [ {
+				avatar: [ FlexAuto, {
+					label: {
+						fontWeight: 500,
+					},
+					avatar: {
+						height: 30,
+						width: 30,
+					}
+				} ]
+			} ],
 		} ],
-	}],
-	
-	input: [{
-		padding: '0.3rem 1rem',
-		fontWeight: 400,
-
-		floatingLabel: [{
-			left: rem(1)
-		}],
-
-		floatingLabelFocus: [{
-			transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
-		}],
-
-		underlineFocus: [{
-			width: 'auto',
-			left: 10,
-			right: 10
-		}]
-
-
-	}],
-	
-	
-	
-
-	form: makeStyle({
-
-		title: [{
-			flex: '1 0 50%',
-			padding: "1rem 0",
-			height: 72
-		}],
-
-		repo: [FlexScale, {
-			height: 50,
-			margin: "1.1rem 0 1.1rem 0.5rem",
-			padding: "1rem 0",
-			menu: [{
-				transform: 'translate(0,-30%)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: [FlexScale, Ellipsis, {
-					fontSize: makeThemeFontSize(1.2),
-					padding: '0 0 0 1rem'
+		
+		input: [ {
+			padding: '0.3rem 1rem',
+			fontWeight: 400,
+			
+			floatingLabel: [ {
+				left: rem(1)
+			} ],
+			
+			floatingLabelFocus: [ {
+				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
+			} ],
+			
+			underlineFocus: [ {
+				width: 'auto',
+				left: 10,
+				right: 10
+			} ]
+			
+			
+		} ],
+		
+		
+		form: [FlexScale,FlexColumn,FillWidth,{
+			
+			title: [ {
+				flex: '1 0 50%',
+				padding: "1rem 0",
+				height: 72
+			} ],
+			
+			repo: [ FlexScale, {
+				height: 50,
+				margin: "1.1rem 0 1.1rem 0.5rem",
+				padding: "1rem 0",
+				menu: [ {
+					transform: 'translate(0,-30%)'
+				} ],
+				list: [ {
+					padding: '0 0 0 0 !important'
+				} ],
+				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
+					label: [ FlexScale, Ellipsis, {
+						fontSize: makeThemeFontSize(1.2),
+						padding: '0 0 0 1rem'
+					} ]
+				} ]
+			} ],
+			
+			
+			milestone: [ FlexScale, {
+				height: 50,
+				margin: "1.1rem 0 1.1rem 0.5rem",
+				padding: "1rem 0",
+				menu: [ {
+					transform: 'translate(0,-30%)'
+				} ],
+				list: [ {
+					padding: '0 0 0 0 !important'
+				} ],
+				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
+					label: [ FlexScale, Ellipsis, {
+						fontSize: makeThemeFontSize(1.2),
+						padding: '0 0 0 1rem'
+					} ]
+				} ]
+			} ],
+			
+			assignee: [ FlexScale, {
+				height: 50,
+				margin: "1.1rem 0 1.1rem 0rem",
+				padding: "1rem 0",
+				menu: [ {
+					transform: 'translate(0,-30%)'
+				} ],
+				list: [ {
+					padding: '0 0 0 0 !important'
+				} ],
+				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
+					label: [ FlexScale, Ellipsis, {
+						padding: '0 0 0 1rem'
+					} ]
+				} ],
+				
+				avatar: [FlexRow, makeFlexAlign('center', 'flex-start'), {
+					label: {
+						fontWeight: 500,
+					},
+					avatar: {
+						height: 22,
+						width: 22,
+					}
+					
 				}]
-			}]
+			} ],
+			
+			row1: [ ...rowStyle, { overflow: 'visible' } ],
+			row2: [ ...rowStyle, { marginBottom: rem(0.8) } ],
+			row3: [ ...rowStyle, {} ],
+			
+			editor: [FlexScale,FillWidth]
+			
 		}],
-
-
-		milestone: [FlexScale, {
-			height: 50,
-			margin: "1.1rem 0 1.1rem 0.5rem",
-			padding: "1rem 0",
-			menu: [{
-				transform: 'translate(0,-30%)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: [FlexScale, Ellipsis, {
-					fontSize: makeThemeFontSize(1.2),
-					padding: '0 0 0 1rem'
-				}]
-			}]
-		}],
-
-		assignee: [FlexScale, {
-			height: 50,
-			margin: "1.1rem 0 1.1rem 0rem",
-			padding: "1rem 0",
-			menu: [{
-				transform: 'translate(0,-30%)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: [FlexScale, Ellipsis, {
-					padding: '0 0 0 1rem'
-				}]
-			}],
-
-			avatar: makeStyle(FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: {
-					fontWeight: 500,
-				},
-				avatar: {
-					height: 22,
-					width: 22,
-				}
-
-			})
-		}],
-
-		row1: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {overflow:'visible'}],
-		row2: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {marginBottom:rem(0.8)}],
-		row3: [FlexRow, FlexAuto,FlexAlignStart, FillWidth, {}]
-	}),
-
-
-})
+		
+		
+	}
+}
 
 
 /**
@@ -190,6 +238,10 @@ export interface IIssueEditDialogState {
 	assigneeMenuItems?:any[]
 	repoMenuItems?:any[]
 	milestoneMenuItems?:any[]
+	
+	markdownEditor?:any
+	simplemde?:any
+	codemirror?:any
 }
 
 /**
@@ -233,19 +285,25 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			this.hide()
 		}
 	}
-
-
+	
+	
+	/**
+	 * Hide/close the window
+	 */
 	hide = () => {
 		getUIActions().setDialogOpen(Dialogs.IssueEditDialog, false)
-		//getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
-
-	onBlur = () => {
-		log.debug('Blurred')
-	}
-
+	
+	/**
+	 * On cancel - call hide
+	 */
 	onCancel = this.hide
-
+	
+	/**
+	 * On save - send to actions with child window id
+	 *
+	 * @param event
+	 */
 	onSave = (event) => {
 		!this.props.saving &&
 			this.issueActions.issueSave(
@@ -482,8 +540,39 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 
 	componentWillMount = () => this.setState(this.getNewState(this.props))
 
-
-
+	
+	onFilesDropped = (data:DataTransfer) => {
+		log.debug(`Received data transfer`,data)
+	}
+	
+	
+	setMarkdownEditor = (markdownEditor) => {
+		
+		
+		const
+			simplemde = getValue(() => markdownEditor.simplemde),
+			codemirror = getValue(() => simplemde.codemirror)
+		
+		log.debug(`Markdown editor received`,markdownEditor,simplemde,codemirror)
+		
+		if (codemirror) {
+			for (let eventName of ['dragstart','dragenter','dragover','dragleave','drop']) {
+				codemirror.on(eventName,(cm,event) => {
+					log.debug(`CM Drag event`,event)
+					
+					event.codemirrorIgnore = true
+				})
+			}
+			
+		}
+		
+		this.setState({
+			markdownEditor,
+			simplemde,
+			codemirror
+		})
+	}
+	
 	render() {
 
 		const
@@ -498,15 +587,23 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const
 			canAssign = canAssignIssue(repo),
 			
-			actionNodes = [
-				<Button onClick={this.onCancel} style={styles.action}>Cancel</Button>,
-				<Button onClick={this.onSave} style={makeStyle(styles.action,styles.action.save)} mode='raised'>Save</Button>
-			],
-		 
+			// actionNodes = [
+			//
+			// ],
+			//
 			titleNode = <div style={styles.issueEdit.title.label}>
 					{editingIssue.id ? `EDIT #${editingIssue.number}` : `CREATE`}
 				</div>,
-			subTitleNode = <div style={styles.issueEdit.title.avatar}>
+			titleActionNodes = [
+				<div key='cancelButton' style={[styles.action,styles.action.cancel]}>
+					<Icon onClick={this.onCancel} style={[styles.action.icon]}>cancel</Icon>
+				</div>,
+				<div key='saveButton' style={[styles.action,styles.action.save]}>
+					<Icon onClick={this.onSave} style={[styles.action.icon]}>save</Icon>
+				</div>
+				]
+				/*
+				<div style={styles.issueEdit.title.avatar}>
 					<Avatar user={user}
 					        prefix='issue being created by'
 					        prefixStyle={{padding: '0 0.5rem 0 0'}}
@@ -514,7 +611,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					        labelStyle={styles.title.avatar.label}
 					        avatarStyle={styles.title.avatar.avatar}/>
 				</div>
-			
+			*/
 
 		const
 			selectMenuStyle = makeStyle(styles.menu,styles.selectList,styles.form.assignee.menu)
@@ -522,21 +619,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		return <DialogRoot
 			titleMode='horizontal'
 			titleNode={titleNode}
-			subTitleNode={subTitleNode}
-			actionNodes={actionNodes}
+			titleActionNodes={titleActionNodes}
+			
 			saving={saving}
+		  styles={styles.dialog}
 			>
-				{/*<Style rules={{*/}
-				{/*'.CodeMirror': {*/}
-					{/*height: '30vh'*/}
-				{/*},*/}
-				{/*'.issueEditDialogFormMenuItem:hover':styles.menuItem.hover*/}
-			{/*}}/>*/}
 			
-			
-
-
-				
+				<FileDrop onFilesDropped={this.onFilesDropped} acceptedTypes={['png','jpg','jpeg','gif','svg']} style={styles.form}>
 					
 								<div style={styles.form.row1}>
 									<TextField defaultValue={this.state.titleValue || ''}
@@ -639,14 +728,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 								
 								
 								<SimpleMDE onChange={this.onMarkdownChange}
-								           style={{maxHeight: 500}}
+								           ref={this.setMarkdownEditor}
+								           style={styles.form.editor}
+								           onDragOver={(event) => log.info(`Dragging over markdown editor`,event)}
 								           options={{
 									            autoDownloadFontAwesome: false,
 									            spellChecker: false,
+									            status: false,
 									            initialValue: _.get(editingIssue,'body',''),
 									            autoFocus: false
 									           }}/>
-								
+				</FileDrop>
 				
 		</DialogRoot>
 	}

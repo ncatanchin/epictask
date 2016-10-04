@@ -31,7 +31,7 @@ export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any =
 
 	// GET ALL THEME PARTS
 	const
-		themeParts = themeKeys.map(themeKey => getValue(() => theme[themeKey],{}))
+		themeParts = themeKeys.map(themeKey => _.get(theme,themeKey,{}))
 	
 	// MAP ALL STYLES
 	let

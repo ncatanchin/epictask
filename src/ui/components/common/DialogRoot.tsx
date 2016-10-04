@@ -1,67 +1,108 @@
 // Imports
-
-import { PureRender } from 'ui/components/common/PureRender'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { MuiThemeProvider } from "material-ui/styles"
 import { CircularProgress} from "material-ui"
-import { makeHeightConstraint } from "shared/themes"
+import { makeHeightConstraint, makeWidthConstraint } from "shared/themes"
 
 // Constants
 const
 	log = getLogger(__filename)
 
-const baseStyles = createStyles({
-	root: [ FillWindow,FlexColumn, {
-		minHeight: 500
-	} ],
+const baseStyles = (topStyles,theme,palette) => {
+	const
+		{text,accent,primary,secondary,background} = palette,
+		actionStyle = {
+			backgroundColor: primary.hue1,
+			color: text.primary
+		}
 	
-	title: [ FillWidth, makeHeightConstraint(rem(7.2)),makePaddingRem(1.5,1,0,1), {
+	return {
+		root: [ FillWindow, FlexColumn, {
+			minHeight: 500,
+			backgroundColor: background
+		} ],
 		
-		
-		cursor: 'move',
-		
-		WebkitUserSelect: 'none',
-		WebkitAppRegion:  'drag',
-		
-		
-		vertical: [FlexColumn,makeFlexAlign('flex-start','center')],
-		horizontal: [FlexRow,makeFlexAlign('center','flex-start')],
-		
-		label: [ FlexRow,FlexScale,Ellipsis,  {
-			vertical: [FillWidth],
-			horizontal: [FlexScale]
-		}],
-		
-		subLabel: [FlexRow,Ellipsis,{
+		titleBar: [ FlexRowCenter, FillWidth, makeHeightConstraint(rem(5)), {
+			backgroundColor: background,
+			backgroundImage: makeLinearGradient('to top', background, primary.hue1),
+			//boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
+			borderBottom: `0.1rem solid ${TinyColor(primary.hue1).setAlpha(0.2).toRgbString()}`
 			
-			vertical: [FillWidth,makePaddingRem(0.5,0,0,0)],
-			horizontal: [FlexAuto,makePaddingRem(0,0,0,0.5),{
-				textAlign: 'right'
+			// borderBottomImage: makeLinearGradient('to bottom', primary.hue1, primary.hue2),
+		} ],
+		
+		// WINDOW CONTROLS ARE FAR LEFT
+		windowControls: [ makeWidthConstraint(rem(10)), {} ],
+		
+		// TITLE IS BETWEEN WINDOW CONTROLS AND TITLE ACTION NODES
+		title: [ FillHeight, FlexScale, FlexRowCenter, makePaddingRem(0), {
+			
+			cursor: 'move',
+			
+			WebkitUserSelect: 'none',
+			WebkitAppRegion: 'drag',
+			
+			
+			vertical: [ FlexColumn, makeFlexAlign('flex-start', 'center') ],
+			horizontal: [ FlexRow, makeFlexAlign('center', 'flex-start') ],
+			
+			// TITLE LABEL/SUB-LABEL
+			label: [ FlexRow, FlexScale, Ellipsis, {
+				fontSize: themeFontSize(2.1),
+				fontWeight: 400,
+				color: accent.hue1,
+				textTransform: 'uppercase',
+				
+				vertical: [ FillWidth ],
+				horizontal: [ FlexScale ]
+			} ],
+			
+			subLabel: [ FlexColumnCenter, Ellipsis,FillHeight, {
+				color: text.secondary,
+				vertical: [ FillWidth, makePaddingRem(0.5, 0, 0, 0) ],
+				horizontal: [ FlexAuto, makePaddingRem(0, 0, 0, 0), {
+					textAlign: 'right'
+				} ]
+			} ],
+			
+			avatar: [{
+				color: text.secondary,
+				avatar: {
+					borderColor: Transparent
+				}
 			}]
-		}],
-		
-		
-	} ],
-	
-	form: [FlexScale,FlexColumn,FillWidth,PositionRelative,makePaddingRem(2,2),OverflowAuto,{
-		
-		row: [ {
-			height: 72
+			
 		} ],
 		
 		
-	}],
-	
-	actions: [FlexRow,makeFlexAlign('center','flex-end'),{
-		height: rem(5)
-	}],
-	
-	savingIndicator: [ PositionAbsolute, FlexColumnCenter, Fill, makeAbsolute(), {
-		opacity: 0,
-		pointerEvents: 'none'
-	} ]
-	
-})
+		
+		form: [ FlexScale, FlexColumn, FillWidth, PositionRelative, OverflowAuto, {
+			backgroundColor: background,
+			fontSize: themeFontSize(2),
+			color: text.primary,
+			
+			row: [ {
+				height: 72
+			} ],
+			
+			
+		} ],
+		
+		// ACTION NODES
+		titleActions: [FillHeight,FlexAuto,FlexRowCenter,actionStyle],
+		titleAction: [FillHeight],
+		actions: [ FlexRow, makePaddingRem(0, 1), makeFlexAlign('center', 'flex-end'), actionStyle,{
+			
+			height: rem(5)
+		} ],
+		
+		savingIndicator: [ PositionAbsolute, FlexColumnCenter, Fill, makeAbsolute(), {
+			opacity: 0,
+			pointerEvents: 'none'
+		} ]
+		
+	}
+}
 
 
 /**
@@ -75,6 +116,7 @@ export interface IDialogRootProps extends React.HTMLAttributes<any> {
 	subTitleNode?:React.ReactNode|string
 	titleMode?:'vertical'|'horizontal'
 	saving?:boolean
+	titleActionNodes?:any
 	actionNodes?:any
 }
 
@@ -99,26 +141,34 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 	
 	render() {
 		const
-			{ titleNode,subTitleNode,actionNodes,saving,theme, styles } = this.props,
+			{ titleNode,subTitleNode,actionNodes,titleActionNodes,saving,theme, styles } = this.props,
 			titleMode = this.props.titleMode || 'vertical'
 		
 		return <div style={styles.root}>
 			
 			<MuiThemeProvider muiTheme={theme}>
 				
-				<div style={[FillWidth,FlexColumn,FlexScale]}>
-					<div style={[styles.title,styles.title[titleMode]]}>
-						<div style={[styles.title.label, styles.title.label[titleMode]]}>
-							{titleNode}
+				<div style={[Fill,FlexColumn,FlexScale]}>
+					{/* TITLE BAR */}
+					<div style={[styles.titleBar]}>
+						<div style={[styles.windowControls]}></div>
+						<div style={[styles.title,styles.title[titleMode]]}>
+							<div style={[styles.title.label, styles.title.label[titleMode]]}>
+								{titleNode}
+							</div>
 							
-							
+							{subTitleNode && <div style={[styles.title.subLabel,styles.title.subLabel[titleMode]]}>
+								{subTitleNode}
+							</div>}
 						</div>
-						
-						{subTitleNode && <div style={[styles.title.subLabel,styles.title.subLabel[titleMode]]}>
-							{subTitleNode}
-						</div>}
-						
-					
+						{/* TITLE BAR ACTION CONTROLS */}
+						{titleActionNodes && titleActionNodes.length &&
+						<div style={[styles.titleActions]}>
+							{!Array.isArray(titleActionNodes) ?
+								titleActionNodes :
+								titleActionNodes.map((action,index) => <div style={styles.titleAction} key={index}>{action}</div>)}
+						</div>
+						}
 					</div>
 					
 					

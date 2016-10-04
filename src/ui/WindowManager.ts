@@ -37,7 +37,8 @@ const WindowDefaultOpts = Object.assign(AllWindowDefaults,{
 
 const WindowDialogDefaultOpts = Object.assign({},WindowDefaultOpts,{
 	minHeight: 500,
-	minWidth: 500
+	minWidth: 500,
+	titleBarStyle: 'hidden',
 })
 
 const WindowModalDefaultOpts = Object.assign({},WindowDefaultOpts,WindowDialogDefaultOpts,{
@@ -123,7 +124,7 @@ export class WindowManager {
 				)
 			)
 		
-		log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
+		//log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
 		
 		// ITERATE AND DESTROY/REMOVE
 		while (windowsToClose.length) {
@@ -192,11 +193,20 @@ export class WindowManager {
 			
 			const
 				newWindowOpts = _.merge(
-					{},
+					{
+						backgroundColor: getPalette().background
+					},
+					
+					// TYPE DEFAULTS
 					WindowTypeDefaults[ config.type ],
+					
+					// CONFIG DEFAULTS
 					(config.type === WindowType.Dialog || config.type === WindowType.Modal) && {
 						parent: Electron.remote.getCurrentWindow()
-					}, {
+					},
+					
+					// MANAGER PARTITIONING
+					{
 						webPreferences: {
 							partition
 						}

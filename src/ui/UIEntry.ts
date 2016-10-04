@@ -1,5 +1,6 @@
 // IMPORTS
 import './UIGlobals'
+//import 'ui/NavManager'
 import { Events } from "shared/config/Events"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { benchmark } from "shared/util/Benchmark"

@@ -1,3 +1,4 @@
+
 import {ObservableStore} from 'typedux'
 
 import {Provider} from 'react-redux'
@@ -24,6 +25,9 @@ import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { Themed } from "shared/themes/ThemeManager"
 import { Sheets } from "shared/config/DialogsAndSheets"
 
+// STYLES
+import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
+
 
 // Logger, Store +++
 const
@@ -49,7 +53,6 @@ export interface IAppProps {
 
 export interface IAppState {
 	windowStyle?:any
-	windowSizeListener?:any
 }
 
 
@@ -138,6 +141,13 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	}
 	
 	/**
+	 * on resize update the state
+	 *
+	 * @param event
+	 */
+	onWindowResize = (event) => this.updateState()
+	
+	/**
 	 * Update the window style
 	 *
 	 * @param props
@@ -152,17 +162,11 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		if (shallowEquals(windowStyle, getValue(() => this.state.windowStyle)))
 			return
 		
-		let
-			newState = {
-				windowStyle
-			} as any,
-			listener = getValue(() => this.state.windowSizeListener)
+		 
 		
-		if (!listener) {
-			newState.listener = (event) => this.updateState()
-		}
-		
-		this.setState(newState)
+		this.setState({
+			windowStyle,
+		})
 	}
 	
 	
@@ -170,6 +174,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
+		window.addEventListener('resize',this.onWindowResize)
 		this.updateState()
 		
 	}
@@ -178,14 +183,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On unmount - remove window listener
 	 */
 	componentWillUnmount() {
-		const
-			listener = getValue(() => this.state.windowSizeListener)
-		
-		if (listener) {
-			window.removeEventListener('resize',listener)
-			
-			this.setState({windowSizeListener:undefined})
-		}
+		window.removeEventListener('resize',this.onWindowResize)
 	}
 	
 	

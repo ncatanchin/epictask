@@ -3,14 +3,12 @@
 import { isElectron,isMain } from "shared/commands/CommandManagerConfig"
 
 let
-	thisBrowserWindow:Electron.BrowserWindow = null,
 	thisWindow:Window = null
 	
 
 export function getCommandBrowserWindow():Electron.BrowserWindow {
-	return thisBrowserWindow ? thisBrowserWindow :
-		(!isMain && isElectron) ?
-			(thisBrowserWindow = require('electron').remote.getCurrentWindow()) :
+	return (!isMain && isElectron) ?
+			require('electron').remote.getCurrentWindow() :
 			null
 }
 
