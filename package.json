@@ -18,13 +18,15 @@
     "tsc-watch": "tsc --project tsconfig.json -w ",
     "clean-electron": "./etc/scripts/clean-electron.sh",
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "package": "./etc/scripts/electron-package.sh"
   },
   "build": {
     "appId": "com.densebrain.epictask",
     "copyright": "Copyright © 2016 Densebrain, Inc.",
     "productName": "Epictask",
     "mac": {
+      "identity": "Densebrain, Inc",
       "icon": "./src/assets/images/icons/icon-darwin.icns"
     },
     "files": [
