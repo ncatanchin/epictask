@@ -4,46 +4,40 @@
 
 // Imports
 import { List } from 'immutable'
-import * as moment from 'moment'
 import * as React from 'react'
 import { Style } from 'radium'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
-import { Avatar, PureRender, Renderers, Button } from 'ui/components/common'
+import { Button } from 'ui/components/common'
 
 import { Issue } from 'shared/models/Issue'
 import { Comment } from 'shared/models/Comment'
-import { IssueLabelsAndMilestones } from 'ui/components/issues'
 import { IssueActivityText } from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
 	selectedIssueIdsSelector, issuesSelector, selectedIssueSelector, activitySelector
 } from 'shared/actions/issue/IssueSelectors'
-import { Milestone } from 'shared/models/Milestone'
-import { Label } from 'shared/models/Label'
-import { IssueActionFactory } from 'shared/actions/issue/IssueActionFactory'
-import { Container } from 'typescript-ioc'
-import { canEditIssue, canAssignIssue } from 'shared/Permission'
-//import {Button, Icon} from 'epictask/ui/components/common'
 
 import baseStyles from './IssueDetailPanel.styles'
 import { VisibleList } from "ui/components/common/VisibleList"
 import { TIssueActivity } from "shared/actions/issue/IssueState"
 import {
-	IssuesEvent, TIssueEventGroupType, isComment,
-	isIssue, getEventGroupType, User
+	IssuesEvent, isComment,
+	isIssue, getEventGroupType
 } from "shared/models"
 import { shallowEquals } from "shared/util/ObjectUtil"
-import LabelChip from "ui/components/common/LabelChip"
+
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {
 	CommandComponent, ICommandComponentProps, ICommandComponent,
-	getCommandProps, CommandRoot, CommandContainerBuilder
+	CommandRoot, CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { ICommand, CommandType } from "shared/commands/Command"
+import { CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { RepoName } from "ui/components/common/Renderers"
+import { IssueDetailHeader } from "ui/components/issues/IssueDetailHeader"
+import { IssueMultiInlineList } from "ui/components/common/IssueMultiInlineList"
 
 
 // Other stuff
@@ -60,16 +54,20 @@ type TDetailItem = Comment|EventGroup|Issue
  */
 
 export interface IIssueDetailPanelProps extends ICommandComponentProps {
+	theme?:any
+	styles?:any
+	
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>
 	activity?:TIssueActivity
-	theme?:any
-	styles?:any
+	
 }
 
 export interface IIssueDetailPanelState {
-	items:List<TDetailItem>
+	items?:List<TDetailItem>
+	
+	
 }
 
 /**
@@ -88,7 +86,7 @@ export interface IIssueDetailPanelState {
 }))
 @CommandComponent()
 @ThemedStyles(baseStyles, 'issueDetail')
-@PureRender
+//@PureRender
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> implements ICommandComponent {
 	
 	
@@ -120,6 +118,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @type {string}
 	 */
 	readonly commandComponentId:string = ContainerNames.IssueDetailPanel
+	
+	
+	
 	
 	/**
 	 * Update the state when props change
@@ -218,64 +219,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param nextContext
 	 */
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
-		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity')
-	}
-	
-	/**
-	 * Add label
-	 */
-	
-	addLabel = (...issues:Issue[]) =>
-		Container.get(IssueActionFactory).patchIssues("Label", ...issues)
-	
-	/**
-	 * Change the assigned milestone
-	 *
-	 * @param issues
-	 */
-	editMilestone = (...issues:Issue[]) =>
-		Container.get(IssueActionFactory)
-			.patchIssues("Milestone", ...issues)
-	
-	/**
-	 * Assign the issue
-	 *
-	 * @param issues
-	 */
-	assignIssue = (...issues:Issue[]) =>
-		Container.get(IssueActionFactory)
-			.patchIssues("Assignee", ...issues)
-	
-	
-	/**
-	 * Unassign the issues
-	 *
-	 * @param issues
-	 */
-	unassignIssue = (...issues:Issue[]) =>
-		Container.get(IssueActionFactory)
-			.applyPatchToIssues({ assignee: null }, true, ...issues)
-	
-	/**
-	 * Callback for label or milestone remove
-	 *
-	 * @param issue
-	 * @param item
-	 */
-	removeItem = (issue:Issue, item:Label|Milestone) => {
-		const actions = Container.get(IssueActionFactory)
-		
-		log.info(`Removing item from issue`, item)
-		
-		if (!(item as any).id) {
-			const
-				label:Label = item as any,
-				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
-			
-			actions.applyPatchToIssues({ labels }, true, issue)
-		} else {
-			actions.applyPatchToIssues({ milestone: null }, true, issue)
-		}
+		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue')
 	}
 	
 	/**
@@ -288,18 +232,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		<div style={styles.multi.title}>
 			{issues.size} selected issues
 		</div>
-		<div style={styles.multi.issues}>
-			{(issues.size < 20 ? issues : issues.slice(0,20)).map(issue =>
-				<div key={issue.id} style={styles.multi.issue}>
-					<div style={styles.multi.issue.row}>
-						<div style={styles.multi.issue.number}>#{issue.number}</div>
-						<div style={styles.multi.issue.title}>{issue.title}</div>
-						<RepoName style={styles.multi.issue.repo} repo={issue.repo}/>
-					</div>
-					
-				</div>
-			)}
-		</div>
 		<div style={styles.multi.title}>
 			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesAssignee()}>
 				Assign
@@ -311,6 +243,8 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 				Milestone
 			</Button>
 		</div>
+		<IssueMultiInlineList issues={issues} />
+		
 	</div>
 	
 	
@@ -323,86 +257,10 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @returns {any}
 	 */
 	renderHeader = (issue, styles, palette) => {
-		
-		
-		const
-			
-			// EDIT CONTROLS
-			controlStyle = {
-				backgroundColor: palette.canvasColor,
-				color: palette.textColor
-			},
-			
-			editLabelsControl = canEditIssue(issue.repo, issue) &&
-				<div style={FlexRowCenter}>
-					
-					{/* Add a tag/label */}
-					<i key={`${issue.id}LabelEditIcon`}
-					   onClick={() => this.addLabel(issue)}
-					   style={[styles.header.row3.labels.add, controlStyle]}
-					   className='material-icons'>add</i>
-					
-					{/* Add/change milestone */}
-					{!issue.milestone && <i key={`${issue.id}MilestoneEditIcon`}
-					                        onClick={() => this.editMilestone(issue)}
-					                        style={[styles.header.row3.labels.add, controlStyle]}
-					                        className='octicon octicon-milestone'/>
-					}
-				</div>
-		
-		return <div style={styles.header} {...getCommandProps(this)}>
-			{/* ROW 1 */}
-			<div style={styles.header.row1}>
-				
-				<div style={[styles.header.row1.repo]}>
-					<Renderers.RepoName repo={issue.repo}/>
-				</div>
-				
-				{/* ASSIGNEE */}
-				<Avatar user={issue.assignee}
-				        labelPlacement='before'
-				        onRemove={
-			        	issue.assignee &&
-				            canAssignIssue(issue.repo) &&
-				                (() => this.unassignIssue(issue))
-			        }
-				        onClick={canAssignIssue(issue.repo) && (() => this.assignIssue(issue))}
-				        prefix={issue.assignee ? 'assigned to' : null}
-				        prefixStyle={issue.assignee && {padding: '0 0.5rem 0 0'}}
-				        style={styles.header.row1.assignee}
-				        labelStyle={styles.username}
-				        avatarStyle={styles.avatar}/>
-			
-			
-			</div>
-			
-			{/* ROW 2 */}
-			<div style={styles.header.row2}>
-				{}
-				<Textfit mode='multi' style={styles.header.row2.title}>{issue.title}</Textfit>
-				
-				{/* TIME */}
-				<div
-					style={[styles.time,canAssignIssue(issue.repo) && {marginRight:rem(0.5)}]}>{moment(issue.updated_at).fromNow()}</div>
-			
-			</div>
-			
-			{/* ROW 3 */}
-			<div style={styles.header.row3}>
-				{/* LABELS & MILESTONES */}
-				<IssueLabelsAndMilestones labels={issue.labels}
-				                          showIcon={true}
-				                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
-				                          milestones={issue.milestone && [issue.milestone]}
-				                          onMilestoneClick={canEditIssue(issue.repo,issue) && (() => this.editMilestone(issue))}
-				                          labelStyle={styles.header.row3.labels.label}
-				                          afterAllNode={editLabelsControl}
-				                          style={styles.header.row3.labels}/>
-			
-			
-			</div>
-		</div>
+		return <IssueDetailHeader />
 	}
+		
+		
 	
 	/**
 	 * Render the footer (when comments go ;))

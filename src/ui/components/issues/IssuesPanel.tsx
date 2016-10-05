@@ -25,7 +25,7 @@ import {
 	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType
 } from 'shared/actions/issue/IIssueListItems'
 import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
-import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
+import { getIssueActions, getUIActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
 import { isNumber } from "shared/util/ObjectUtil"
@@ -513,6 +513,23 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	/**
+	 * Open an issue (usually double click)
+	 *
+	 * @param event
+	 * @param issue
+	 */
+	onIssueOpen = (event: MouseEvent, issue) => {
+		log.debug(`Received issue open`,issue)
+		if (!issue) {
+			return
+		}
+		
+		this.updateSelectedIssueIds([issue.id])
+		getIssueActions().editIssue(issue)
+		
+	}
+	
+	/**
 	 * On issue selection, updated selected issues
 	 *
 	 * @param event
@@ -639,6 +656,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					<IssuesList
 						
 						ref={(listRef) => this.setState({listRef})}
+						onIssueOpen={this.onIssueOpen}
 						onIssueSelected={this.onIssueSelected} />
 					
 					{/* ISSUE DETAIL PANEL */}

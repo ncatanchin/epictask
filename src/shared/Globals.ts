@@ -77,6 +77,7 @@ function installGlobals() {
 		Record:RecordGlobal,
 		_: LodashGlobal,
 		LogLevel: LogLevelGlobal,
+		moment: require('moment'),
 		assert: assertGlobal,
 		Env: EnvGlobal,
 		Container: ContainerGlobal,

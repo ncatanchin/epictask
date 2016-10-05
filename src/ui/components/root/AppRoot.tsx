@@ -27,6 +27,7 @@ import { Sheets } from "shared/config/DialogsAndSheets"
 
 // STYLES
 import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
+import { FileDrop } from "ui/components/common/FileDrop"
 
 
 // Logger, Store +++
@@ -222,12 +223,15 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			
 		return <MuiThemeProvider muiTheme={theme}>
 			<Provider store={reduxStore}>
+				
 				<CommandRoot
 					style={windowStyle}
 					component={this}
 					id="appRoot">
 					
-					{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+					
+						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+					
 					
 				</CommandRoot>
 			</Provider>

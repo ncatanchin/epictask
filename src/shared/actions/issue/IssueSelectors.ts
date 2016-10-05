@@ -133,7 +133,7 @@ export const selectedIssueIdSelector = createDeepEqualSelector(
 /**
  * If a single issue is selected then get the id
  */
-export const selectedIssueSelector = createSelector(
+export const selectedIssueSelector = createDeepEqualSelector(
 	selectedIssueIdSelector,
 	issuesSelector,
 	(selectedIssueId:number,issues:List<Issue>):Issue =>

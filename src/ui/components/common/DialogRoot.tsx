@@ -2,7 +2,9 @@
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { MuiThemeProvider } from "material-ui/styles"
 import { CircularProgress} from "material-ui"
-import { makeHeightConstraint, makeWidthConstraint } from "shared/themes"
+import { makeHeightConstraint, makeWidthConstraint, createStyles } from "shared/themes"
+import { createThemedStyles } from "shared/themes/ThemeDecorations"
+import { Icon } from "ui/components/common"
 
 // Constants
 const
@@ -106,6 +108,68 @@ const baseStyles = (topStyles,theme,palette) => {
 
 
 /**
+ * Default Action Styles
+ */
+
+function actionBaseStyles(topStyles,theme,palette) {
+	const
+		{
+			accent,
+			warn,
+			text,
+			secondary
+		} = palette
+		
+	return {
+		action: [makePaddingRem(1,1.5),FlexColumnCenter,FillHeight,{
+			cursor: 'pointer',
+			
+			icon: [makeHeightConstraint(rem(1.8)),{
+				fontSize: rem(1.8),
+				cursor: 'pointer',
+			}],
+			
+			
+			cancel: [makeTransition('background-color'),{
+				[CSSHoverState]: [{
+					backgroundColor: warn.hue1
+				}]
+			}],
+			
+			save: [makeTransition('background-color'),{
+				[CSSHoverState]: [{
+					backgroundColor: accent.hue1
+				}]
+			}]
+			
+		}]
+	}
+}
+
+/**
+ * Create default actions
+ *
+ * @param theme
+ * @param palette
+ * @param saveAction
+ * @param cancelAction
+ */
+export function createSaveCancelActions(theme,palette,saveAction, cancelAction) {
+	const
+		styles = createStyles(actionBaseStyles,{},theme,palette)
+	
+	return [
+		<div onClick={cancelAction} key='cancelButton' style={[styles.action,styles.action.cancel]}>
+			<Icon style={[styles.action.icon]}>cancel</Icon>
+		</div>,
+		<div onClick={saveAction} key='saveButton' style={[styles.action,styles.action.save]}>
+			<Icon style={[styles.action.icon]}>save</Icon>
+		</div>
+	]
+	
+}
+
+/**
  * IDialogRootProps
  */
 export interface IDialogRootProps extends React.HTMLAttributes<any> {
@@ -119,6 +183,8 @@ export interface IDialogRootProps extends React.HTMLAttributes<any> {
 	titleActionNodes?:any
 	actionNodes?:any
 }
+
+
 
 /**
  * IDialogRootState

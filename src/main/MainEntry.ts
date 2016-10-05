@@ -1,5 +1,6 @@
 
 
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 require('shared/NodeEntryInit')
 
 import checkSingleInstance from "main/CheckSingleInstance"
@@ -140,23 +141,31 @@ function onOpen(event) {
  */
 async function startProcesses() {
 		
-	ProcessManager = require('shared/ChildProcessManager').ChildProcessManager as typeof ChildProcessManagerType
+	ProcessManager = getHot(module,'ProcessManager',
+		require('shared/ChildProcessManager').ChildProcessManager) as typeof ChildProcessManagerType
+	
+	setDataOnHotDispose(module,() => ({
+		ProcessManager
+	}))
 	
 	// HMR STOP PROCESSES
-	if (module.hot) {
-		
-		module.hot.addDisposeHandler(() => {
-			try {
-				ProcessManager.stopAll()
-			} catch (err) {
-				log.error(`Failed to stop sub-processes`,err)
-			}
-		})
-	}
+	// if (module.hot) {
+	//
+	// 	module.hot.addDisposeHandler(() => {
+	// 		try {
+	// 			ProcessManager.stopAll()
+	// 		} catch (err) {
+	// 			log.error(`Failed to stop sub-processes`,err)
+	// 		}
+	// 	})
+	// }
 	
 	
 	log.info(`Starting all processes`)
-	await ProcessManager.startAll()
+	// ONLY OCCURS IN HMR SCENARIO
+	if (!ProcessManager.isRunning())
+		await ProcessManager.startAll()
+	
 	processesRunning = true
 	
 }
@@ -235,20 +244,20 @@ if (module.hot) {
 
 	
 	// Main window or configurator - reboot app
-	module.hot.accept(['./MainWindow'], (mods) => {
-		log.info("Rebooting main, updated dependencies",mods)
-
-		// We get a reference to the new window here
-		return boot().then(() => {
-			const newWindow = mainWindow.getBrowserWindow()
-
-			require('electron').BrowserWindow.getAllWindows()
-				.filter(win => win !== newWindow && win !== devWindow)
-				.forEach(oldWindow => oldWindow.close())
-
-		})
-
-	})
+	// module.hot.accept(['./MainWindow'], (mods) => {
+	// 	log.info("Rebooting main, updated dependencies",mods)
+	//
+	// 	// We get a reference to the new window here
+	// 	// return boot().then(() => {
+	// 	// 	const newWindow = mainWindow.getBrowserWindow()
+	// 	//
+	// 	// 	require('electron').BrowserWindow.getAllWindows()
+	// 	// 		.filter(win => win !== newWindow && win !== devWindow)
+	// 	// 		.forEach(oldWindow => oldWindow.close())
+	// 	//
+	// 	// })
+	//
+	// })
 
 	// Worst case - accept myself??
 	module.hot.accept()

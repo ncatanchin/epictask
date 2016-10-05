@@ -69,7 +69,7 @@ export const IssueStateRecord = Record({
 	issueSaveError: null,
 	issueSaving: false,
 	issueSort:{
-		fields:['updated_at'],
+		fields:['created_at'],
 		direction:'desc',
 		groupBy: 'none',
 		groupByDirection: 'asc'

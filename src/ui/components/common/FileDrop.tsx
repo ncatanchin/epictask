@@ -14,15 +14,41 @@ log.setOverrideLevel(LogLevel.DEBUG)
 
 export interface IFileDropProps extends React.HTMLAttributes<any> {
 	onFilesDropped?:(files:DataTransfer) => any
-	acceptedTypes:string[]
+	acceptedTypes?:Array<string|RegExp>
+	effectAllowed?:string
+	dropEffect?:string
 }
 
 export interface IFileDropState {
-	
+	isOver?:boolean
+	dragImage?:any
 }
 
 @PureRender
 export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
+	
+	
+	private ensureOver(event:React.DragEvent<any>) {
+		log.debug(`ensure over`,event,event.dataTransfer)
+		if (!getValue(() => this.state.isOver)) {
+			// const
+			// 	{dataTransfer} = event as any,
+			// 	{files} = dataTransfer
+			//
+			// let
+			// 	dragImage = null
+			//
+			
+			
+			
+			this.setState({
+				isOver:true
+			})
+			
+		}
+		event.preventDefault()
+		event.stopPropagation()
+	}
 	
 	/**
 	 * Dragging started
@@ -30,7 +56,9 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 	 * @param event
 	 */
 	handleDragStart = (event) => {
-		log.debug(`File drag start`,event)
+		this.ensureOver(event)
+		
+		
 	}
 	
 	/**
@@ -42,11 +70,12 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 		const
 			{onFilesDropped} = this.props
 		
-		if (event.dataTransfer.files.length > 0) {
-			if (onFilesDropped) {
-				onFilesDropped(event.dataTransfer)
-			}
+		if (onFilesDropped) {
+			onFilesDropped(event.dataTransfer)
 		}
+		
+		event.preventDefault()
+		event.stopPropagation()
 	}
 	
 	/**
@@ -55,6 +84,7 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 	 * @param event
 	 */
 	handleDragEnter = (event:React.DragEvent<any>) => {
+		this.ensureOver(event)
 		
 	}
 	
@@ -64,7 +94,14 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 	 * @param event
 	 */
 	handleDragLeave = (event:React.DragEvent<any>) => {
+		log.debug(`Drag leave`)
 		
+		this.setState({
+			isOver:false,
+			dragImage: null
+		})
+		event.preventDefault()
+		event.stopPropagation()
 	}
 	
 	/**
@@ -73,7 +110,16 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 	 * @param event
 	 */
 	handleDragOver = (event:React.DragEvent<any>) => {
-		log.debug(`File drag over`,event,getValue(() => event.dataTransfer.files))
+		this.ensureOver(event)
+		
+		// log.debug(`Drag over`)
+		// const
+		// 	{dropEffect} = this.props
+		//
+		// if (dropEffect && event.dataTransfer)
+		// 	event.dataTransfer.dropEffect = dropEffect
+		
+		
 	}
 	
 	/**
@@ -82,7 +128,10 @@ export class FileDrop extends React.Component<IFileDropProps,IFileDropState> {
 	 * @param event
 	 */
 	handleDragEnd = (event:React.DragEvent<any>) => {
+		log.debug(`Drag ended`)
 		
+		event.preventDefault()
+		event.stopPropagation()
 	}
 		
 	render() {

@@ -172,30 +172,53 @@ export class CommandManager {
 	}
 	
 	/**
+	 * Find a matching command and accelerator
+	 *
+	 * @param commands
+	 * @param event
+	 * @returns {[ICommand,CommandAccelerator]}
+	 */
+	private matchAcceleratorAndCommand(commands:ICommand[],event):[ICommand,CommandAccelerator] {
+		for (let cmd of commands) {
+			if (CommandAccelerator.matchToEvent(cmd.defaultAccelerator,event)) {
+				return [cmd,new CommandAccelerator(event)]
+			}
+		}
+		return null
+	}
+	
+	/**
 	 * Handle the key down event
 	 *
 	 * @param event
+	 * @param fromInputOverride - for md editing really
 	 */
-	private handleKeyDown(event:KeyboardEvent) {
+	handleKeyDown(event:KeyboardEvent,fromInputOverride = false) {
 		
 		const
 			containers = this.focusedContainers(),
-			isInputTarget = event.target && InputTagNames.includes((event.target as HTMLElement).tagName)
+			isInputTarget =
+				(event.target && InputTagNames.includes((event.target as HTMLElement).tagName)) ||
+				fromInputOverride
 		
 		log.debug(`Key down received`, event,`Ordered containers: `, containers.map(it => it.element))
 		
 		for (let container of containers) {
 			
 			const
-				cmd = container.commands.find(it =>
-					CommandAccelerator.matchToEvent(it.defaultAccelerator,event))
-			
-			if (cmd && (!isInputTarget || cmd.overrideInput)) {
-				cmd.execute(cmd,event)
-				event.preventDefault()
-				event.stopPropagation()
-				event.stopImmediatePropagation()
-				break
+				match = this.matchAcceleratorAndCommand(container.commands,event)
+			if (match) {
+				const
+					[cmd,accel] = match
+				
+				
+				if (cmd && (!isInputTarget || cmd.overrideInput || accel.hasNonInputModifier)) {
+					cmd.execute(cmd, event)
+					event.preventDefault()
+					event.stopPropagation()
+					event.stopImmediatePropagation()
+					break
+				}
 			}
 		}
 	}

@@ -15,6 +15,9 @@ import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {Container} from "typescript-ioc"
 import * as Radium from "radium"
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
+import { selectedIssueSelector } from "shared/actions/issue/IssueSelectors"
+import {createStructuredSelector} from 'reselect'
+import { connect } from "react-redux"
 
 // Constants
 const log = getLogger(__filename)
@@ -154,15 +157,10 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	activityActionText?:string
 	activityStyle:any
 	activityType:'post'|'comment'|'eventGroup'
-	//availableAssignees?:List<User>
 }
 
 export interface IIssueActivityTextState {
-	// comment?:Comment
-	// user?:User
-	// text?:string
-	// updatedAt?:Date
-	// createdAt?:Date
+	
 }
 
 /**
@@ -172,6 +170,9 @@ export interface IIssueActivityTextState {
  * @constructor
  **/
 
+@connect(createStructuredSelector({
+	issue: selectedIssueSelector
+}))
 @ThemedStyles(baseStyles,'issueActivityText')
 @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {

@@ -9,50 +9,70 @@ import { PureRender, Icon } from 'ui/components/common'
 import { ChipsField,TChipsFieldMode } from './ChipsField'
 import { MenuItem } from 'material-ui'
 import { Themed } from 'shared/themes/ThemeManager'
+import { ThemedStyles } from "shared/themes/ThemeDecorations"
+import { makeComponentStyles } from "ui/components/common/ComponentStyles"
 
 const
 
 // Constants
 	log = getLogger(__filename),
 	tinycolor = require('tinycolor2'),
-	styles = createStyles({
-		root: [FlexColumn, FlexAuto, {}],
-		chip: [FlexAuto,PositionRelative, {
-			cursor: 'pointer',
-			height: '3.4rem',
-			padding: '1rem 1rem 0 0',
-		}],
-		chipContent: makeStyle(FlexAuto, FlexRowCenter, {
-			display: 'flex',
-			borderRadius: '1.5rem',
-			height: '2.4rem',
+	
+	
+	baseStyles = (topStyles,theme,palette) => {
+		const
+			{
+				accent,
+				warn
+			} = palette
+		
+		return [makeComponentStyles(theme,palette),{
+			root: [ FlexColumn, FlexAuto, {} ],
 			
 			
-			control: makeStyle(makeTransition([ 'background-color', 'font-weight', 'border-radius' ]), FlexAuto, FlexRowCenter, {
-				padding: '0.2rem 2rem',
-				borderRadius: '1.2rem',
-				height: '2.4rem',
-				width: '2.4rem',
-				boxSizing: 'border-box',
-				backgroundColor: 'rgba(0,0,0,0.2)',
+			
+			
+			
+			chip: [ FlexAuto, PositionRelative, {
 				cursor: 'pointer',
-				fontWeight: 400,
-				fontSize: '1.5rem',
-				
-				':hover': {
-					backgroundColor: 'white',
-					borderRadius: '0rem',
-					fontWeight: 700,
-					fontSize: '2rem',
-				}
-			}),
+				height: '3.4rem',
+				padding: '1rem 1rem 0 0',
+			} ],
 			
-			label: makeStyle(FlexAuto, FlexRowCenter, OverflowHidden, {
-				padding: '0 2rem 0 1rem',
-				fontWeight: 700
+			chipContent: makeStyle(FlexAuto, FlexRowCenter, {
+				display: 'flex',
+				borderRadius: '1.5rem',
+				height: '2.4rem',
+				
+				
+				
+				control: makeStyle(makeTransition([ 'background-color', 'font-weight', 'border-radius' ]), FlexAuto, FlexRowCenter, {
+					padding: '0.2rem 2rem',
+					borderRadius: '1.2rem',
+					height: '2.4rem',
+					width: '2.4rem',
+					boxSizing: 'border-box',
+					backgroundColor: 'rgba(0,0,0,0.2)',
+					cursor: 'pointer',
+					fontWeight: 400,
+					fontSize: '1.5rem',
+					
+					':hover': {
+						backgroundColor: 'white',
+						borderRadius: '0rem',
+						fontWeight: 700,
+						// fontSize: '2rem',
+					}
+				}),
+				
+				label: makeStyle(FlexAuto, FlexRowCenter, OverflowHidden, {
+					padding: '0 2rem 0 1rem',
+					fontSize: rem(1.5),
+					fontWeight: 700
+				})
 			})
-		})
-	})
+		}]
+	}
 
 
 /**
@@ -61,6 +81,7 @@ const
 
 export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
 	theme?:any
+	styles?:any
 	style?:any
 	id:string
 	mode?:TChipsFieldMode
@@ -92,7 +113,7 @@ export interface ILabelFieldEditorProps extends React.HTMLAttributes<any> {
  * @constructor
  **/
 
-@Themed
+@ThemedStyles(baseStyles,'labelFieldEditor','chipsField','component')
 @PureRender
 export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any> {
 	
@@ -194,24 +215,22 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	renderChip = (item:Label) => {
 		const
 			{ theme, chipStyle } = this.props,
-			s = mergeStyles(
-				styles,
-				theme.labelFieldEditor,
-				theme.chipsField,
+			styles = mergeStyles(
+				this.props.styles,
 				{ chip: chipStyle }
 			),
 			chipContentStyle = makeStyle(
-				s.chipContent,
+				styles.chipContent,
 				this.labelColorStyle(item)
 			)
 		
-		return <div key={item.url} className='chip' style={s.chip}>
+		return <div key={item.url} className='chip' style={styles.chip}>
 			<div style={chipContentStyle}>
-				<Icon style={s.chipContent.control}
+				<Icon style={styles.chipContent.control}
 				      onClick={() => this.onChipRemoved(item)}>
 					clear
 				</Icon>
-				<div style={s.chipContent.label}>
+				<div style={styles.chipContent.label}>
 					{item.name}
 				</div>
 			</div>
@@ -220,7 +239,6 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	
 	renderChipSearchItem = (chipProps:any, item:Label) => {
 		const
-			{ theme } = this.props,
 			{ query } = chipProps,
 			itemStyle = this.labelColorStyle(item)
 		
@@ -243,6 +261,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 				label,
 				inputStyle,
 				labelStyle,
+				labelFocusStyle,
 				hintStyle,
 				hintAlways,
 				underlineShow,
@@ -251,14 +270,13 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 				underlineStyle
 			} = props,
 			{ availableLabels } = state,
-			s = mergeStyles(styles, theme.component)
+			styles = mergeStyles(this.props.styles)
 		
 		availableLabels = availableLabels || []
 		labels = labels || []
 		
 		
 		return <ChipsField {...props}
-			style={makeStyle(s.root,props.style)}
 			maxSearchResults={5}
 			modelType={Label}
 			filterChip={this.chipFilter}
@@ -266,17 +284,25 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			renderChipSearchItem={this.renderChipSearchItem}
 			allChips={availableLabels}
 			selectedChips={labels}
-			inputStyle={inputStyle}
-			labelStyle={labelStyle}
-			hintStyle={hintStyle}
-			hintAlways={hintAlways}
-			underlineDisabledStyle={underlineDisabledStyle}
-			underlineFocusStyle={underlineFocusStyle}
-			underlineStyle={underlineStyle}
-			underlineShow={underlineShow !== false}
 			onChipSelected={this.onChipSelected}
-			keySource={(item:Label) => item.url}>
-		</ChipsField>
+			keySource={(item:Label) => item.url}
+						
+			style={/* FIELD STYLES */ makeStyle(styles.root,props.style)}
+						
+			inputStyle={/* INPUT STYLES */ makeStyle(styles.input,inputStyle)}
+						
+			labelStyle={/* LABEL STYLE */ makeStyle(styles.label,labelStyle)}
+			labelFocusStyle={makeStyle(styles.label.focus,labelFocusStyle)}
+						
+			hintStyle={/* HINT STYLES */ makeStyle(styles.hint,hintStyle)}
+			hintAlways={hintAlways}
+						
+			underlineDisabledStyle={/* UNDERLINE STYLES */ makeStyle(styles.underline.disabled,underlineDisabledStyle)}
+			underlineFocusStyle={makeStyle(styles.underline.focus,underlineFocusStyle)}
+			underlineStyle={makeStyle(styles.underline,underlineStyle)}
+			underlineShow={underlineShow !== false}
+			
+		/>
 	}
 	
 }

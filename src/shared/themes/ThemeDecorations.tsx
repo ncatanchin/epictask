@@ -3,6 +3,7 @@ import * as React from 'react'
 import { mergeStyles } from "shared/themes/styles/CommonStyles"
 import { addThemeListener } from "shared/themes/ThemeState"
 import { getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { IPalette } from "shared/themes/material/MaterialTools"
 
 const
 	Radium = require('radium'),
@@ -14,8 +15,15 @@ const
 export interface IThemedState {
 	theme?:any
 	styles?:any
+	palette?:IPalette
 	inputStyles?:any
 	wrappedInstance?:any
+}
+
+export interface IThemedAttributes extends React.HTMLAttributes<any>{
+	theme?:any
+	styles?:any
+	palette?:any
 }
 
 /**
@@ -83,10 +91,11 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				/**
 				 * Create a new new theme state
 				 */
-				getNewState = (props, inputStyles, theme = getTheme()) => {
+				getNewState = (props, inputStyles, theme = getTheme(), palette = getPalette()) => {
 					const
 						newState = {
 							theme,
+							palette,
 							inputStyles
 						}
 						
@@ -109,18 +118,23 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 * as well as by componentWillMount to
 				 * create initial styles
 				 */
-				updateTheme(props = this.props, newTheme = getTheme()) {
+				updateTheme(props = this.props, newTheme = getTheme(), newPalette = getPalette()) {
 					
-					
+					// IF ANY PARTS CHANGED - UPDATE
 					if (
-						// Check for theme changes
+						// THEME
 						!getValue(() => this.state.theme) !== newTheme ||
+						
+						// PALETTE
+						!getValue(() => this.state.palette) !== newPalette ||
+						
+						// BASE STYLES FROM COMPONENT
 						!_.isEqual(baseStyles,lastStyles) ||
-						// Check for style changes
+						
+						// PASSED PROP STYLES
 						!_.isEqual(_.pick(props,'styles'),_.pick(this.props,'styles'))
 					) {
-						//log.debug(`Updating state`)
-						this.setState(this.getNewState(props,baseStyles,newTheme), () => this.forceUpdate())
+						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette), () => this.forceUpdate())
 					}
 					
 				}
@@ -132,13 +146,13 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				componentWillMount() {
 					this.updateTheme()
 					this.unsubscribe = addThemeListener(
-						(newTheme) => this.updateTheme(this.props,newTheme))
+						(newTheme,newPalette) => this.updateTheme(this.props,newTheme,newPalette))
 				}
 				
 				
 				shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
 					return !shallowEquals(this.props,nextProps) ||
-						!shallowEquals(this.state,nextState,'theme','styles') ||
+						!shallowEquals(this.state,nextState,'theme','styles','palette') ||
 							!_.isEqual(baseStyles,lastStyles)
 				}
 				
@@ -176,9 +190,13 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				
 				render() {
 					
+					const
+						styles = this.state.styles || this.props.styles || {}
+					
 					return <FinalComponent
 						{..._.omit(this.props,'styles','themedComponent','themedBaseStyles')}
-						{..._.omit(this.state,'inputStyles')}
+						{..._.omit(this.state,'styles','inputStyles','wrappedInstance')}
+						styles={styles}
 						ref={this.setWrappedInstanceRef} />
 				}
 			}

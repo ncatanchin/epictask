@@ -55,8 +55,6 @@ export const UIStateRecord = Record({
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {
-		//log.info(`Inflating UIState from`,JSON.stringify(o,null,4))
-		
 		if (o && o instanceof UIState)
 			return o
 		
@@ -67,6 +65,9 @@ export class UIState extends UIStateRecord implements State {
 		}))
 	}
 	
+	toJS() {
+		return _.omit(super.toJS(),'messages')
+	}
 	
 	ready:boolean
 	user:User

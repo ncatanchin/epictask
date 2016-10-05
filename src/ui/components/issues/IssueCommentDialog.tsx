@@ -4,90 +4,97 @@
 
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-import {Button} from 'ui/components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {createStructuredSelector} from 'reselect'
+import { connect } from 'react-redux'
+import { Button } from 'ui/components/common'
+import { createDeepEqualSelector } from 'shared/util/SelectorUtil'
+import { createStructuredSelector } from 'reselect'
 
-import {Dialog} from 'material-ui'
-
-import {MuiThemeProvider} from 'material-ui/styles'
-import {Container} from 'typescript-ioc'
+import { Container } from 'typescript-ioc'
 
 
-import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Comment} from 'shared/models/Comment'
-import {Issue} from 'shared/models/Issue'
+import { ThemedStyles } from 'shared/themes/ThemeManager'
+import { Comment } from 'shared/models/Comment'
+import { Issue } from 'shared/models/Issue'
 
 import {
 	issueStateSelector,
 	editCommentRequestSelector
 } from 'shared/actions/issue/IssueSelectors'
 
-import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {Dialogs} from 'shared/config/DialogsAndSheets'
+import { uiStateSelector } from 'shared/actions/ui/UISelectors'
+import { Dialogs } from 'shared/config/DialogsAndSheets'
 
-import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
-import {cloneObject} from 'shared/util/ObjectUtil'
+import { IssueActionFactory } from 'shared/actions/issue/IssueActionFactory'
+import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
+import { cloneObject, getValue } from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
+
+import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"
+import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { MarkdownEditor } from "ui/components/common/MarkdownEditor"
+import { CommandRoot, CommandContainerBuilder, CommandComponent } from "shared/commands/CommandComponent"
+import { FileDrop } from "ui/components/common/FileDrop"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
-import { DialogRoot } from "ui/components/common/DialogRoot"
-import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import { CommandType } from "shared/commands/Command"
+import { RepoName } from "ui/components/common/Renderers"
 
 
 // Constants
 const
-	log = getLogger(__filename),
-	tinycolor = require('tinycolor2'),
-	SimpleMDE = require('react-simplemde-editor')
+	log = getLogger(__filename)
 
 
 /**
  * Add component styles
  */
-const baseStyles = createStyles({
-	root: [FlexColumn, FlexAuto, {}],
-
-	title: [FlexColumn, FillWidth, {
-		action: [FlexRow],
-		issues: [FlexRow, FillWidth, OverflowAuto,{
-			fontSize: rem(1)
-
-		}],
-		issueNumber: [{
-			//fontStyle: 'italic',
-			fontWeight: 500
-		}],
-		issueTitle: [{
-			fontWeight: 300
-		}]
-	}],
-
-	form: {
-		paddingTop: rem(2)
-	},
-
-	row: [{
-		height: 72
-	}],
-
-	savingIndicator: [PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
-		opacity: 0,
-		pointerEvents: 'none'
-	}],
-
-})
+function baseStyles(topStyles, theme, palette) {
+	const
+		{
+			accent,
+			warn,
+			text,
+			secondary
+		} = palette
+	
+	return {
+		root: [ FlexColumn, FlexAuto, {} ],
+		
+		titleBar: [ {
+			label: [ FlexRowCenter, {
+				fontSize: rem(1.6),
+				
+				repo: [ makePaddingRem(0, 0.6, 0, 0), {} ],
+				
+				number: [ {
+					fontStyle: 'italic',
+					paddingTop: rem(0.3),
+					fontSize: rem(1.5),
+					fontWeight: 500,
+					color: text.secondary
+				} ]
+			} ],
+			
+			subTitle: [ makePaddingRem(0, 1.5, 0, 0), {
+				textTransform: 'uppercase',
+				fontSize: rem(1.6)
+			} ]
+		} ],
+		
+		form: [ FlexColumn, FlexScale, Fill, {
+			
+			editor: [ FlexScale ]
+		} ]
+	}
+}
 
 /**
  * IIssueCommentDialogProps
  */
-export interface IIssueCommentDialogProps extends React.HTMLAttributes<any> {
-	theme?: any
-	styles?: any
-	open?: boolean
-	saving?: boolean
-	savingError?: Error
+export interface IIssueCommentDialogProps extends IThemedAttributes {
+	open?:boolean
+	saving?:boolean
+	savingError?:Error
 	editCommentRequest?:TEditCommentRequest
 }
 
@@ -96,6 +103,7 @@ export interface IIssueCommentDialogProps extends React.HTMLAttributes<any> {
  */
 export interface IIssueCommentDialogState {
 	comment?:Comment
+	mdEditor?:MarkdownEditor
 }
 
 /**
@@ -114,45 +122,55 @@ export interface IIssueCommentDialogState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
+@CommandComponent()
 @ThemedStyles(baseStyles, 'dialog')
 export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps,IIssueCommentDialogState> {
-
-
-	issueActions: IssueActionFactory = Container.get(IssueActionFactory)
-	uiActions: UIActionFactory= Container.get(UIActionFactory)
-
-
+	
+	
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+			.command(CommandType.Container,
+				'Save Changes',
+				(cmd, event) => this.onSave(event),
+				"CommandOrControl+Enter", {
+					hidden: true
+				})
+			.make()
+	
+	
+	commandComponentId = ContainerNames.CommentEditDialog
+	
+	
 	/**
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
 		getUIActions().setDialogOpen(Dialogs.IssueCommentDialog, false)
-		//getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 	}
-
-	/**
-	 * onBlur
-	 */
-	onBlur = () => {
-		log.info('blur hide')
-		this.hide()
-	}
-
+	//
+	// /**
+	//  * onBlur
+	//  */
+	// onBlur = () => {
+	// 	log.debug('blur hide')
+	// 	this.hide()
+	// }
+	
 	/**
 	 * onSave
 	 *
 	 * @param event
 	 */
 	onSave = (event = null) => {
-
-		const
-			issue = _.get(this.props.editCommentRequest,'issue') as Issue,
-			{comment} = this.state
 		
-		log.info('Adding comment to issue', comment,issue)
-
+		const
+			issue = _.get(this.props.editCommentRequest, 'issue') as Issue,
+			{ comment } = this.state
+		
+		log.debug('Adding comment to issue', comment, issue)
+		
 		!this.props.saving &&
-			this.issueActions.commentSave({issue,comment})
+		getIssueActions().commentSave({ issue, comment })
 	}
 	
 	/**
@@ -161,21 +179,44 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 * @param value
 	 */
 	onMarkdownChange = (value) => {
-		log.info('markdown change', value)
-		const comment = _.get(this.state,'comment') as Comment
+		log.debug('markdown change', value)
+		
+		const
+			comment = _.get(this.state, 'comment') as Comment
+		
 		assert(comment, 'Comment can not be null on a markdown update')
 		
-		const updatedComment = Object.assign(cloneObject(comment),{body:value})
+		const
+			updatedComment = assign({}, comment, { body: value })
 		
 		
 		this.setState({
 			comment: updatedComment
 		})
 	}
-
-
-
-
+	
+	/**
+	 * Set md editor ref
+	 *
+	 * @param mdEditor
+	 */
+	private setMarkdownEditor = (mdEditor:MarkdownEditor) => {
+		this.setState({ mdEditor })
+	}
+	
+	/**
+	 * On drop event handler
+	 *
+	 * @param data
+	 */
+	onDrop = (data:DataTransfer) => {
+		const
+			mde = getValue(() => this.state.mdEditor)
+		
+		mde.onDrop(data)
+	}
+	
+	
 	/**
 	 * Update the component state, create data source,
 	 * options, etc
@@ -187,23 +228,23 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 			return
 		
 		const
-			{comment} = props.editCommentRequest,
-			currentComment = _.get(this.state,'comment') as Comment
+			{ comment } = props.editCommentRequest,
+			currentComment = _.get(this.state, 'comment') as Comment
 		
 		if (this.state && (!comment || (currentComment && currentComment.issueNumber === comment.issueNumber)))
 			return
-			
-		this.setState({comment})
-
+		
+		this.setState({ comment })
+		
 	}
-
+	
 	/**
 	 * Before mount update the state
 	 */
 	componentWillMount() {
 		this.updateState(this.props)
 	}
-
+	
 	/**
 	 * Update state with new props
 	 *
@@ -220,74 +261,83 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 		const
 			{
 				theme,
+				palette,
 				editCommentRequest,
-				open,
 				styles,
 				saving
 			} = this.props,
-			{	issue } = editCommentRequest,
-			{ comment } = this.state
 			
-
+			{ issue } = editCommentRequest,
+			
+			{ comment } = this.state
 		
 		
-
 		const
-			titleNode = <div style={styles.title.action}>
-				{comment.id ? 'Edit Comment' : 'Create Comment'}
+			titleNode = <div style={makeStyle(styles.titleBar.label)}>
+				<div style={styles.titleBar.label}>
+					<RepoName repo={issue.repo}
+					          style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
+				
+				</div>
+			
 			</div>,
-			subTitleNode = <span key={issue.id} style={styles.title.issue}>
-					<span style={styles.title.issueNumber}>
-						#{issue.number}&nbsp;
-					</span>
-					<span style={styles.title.issueTitle}>
-						{issue.title}
-					</span>
-				</span>,
-			actionNodes =  [
-				<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
-				<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
-			]
+			subTitleNode = <div style={styles.titleBar.subTitle}>
+				{/*<span>Comment</span>&nbsp;&nbsp;*/}
+				<span style={[styles.titleBar.label.number]}>#{issue.number}</span>
+			</div>,
+			// subTitleNode = <span key={issue.id} style={styles.title.issue}>
+			// 		<span style={styles.title.issueNumber}>
+			// 			#{issue.number}&nbsp;
+			// 		</span>
+			// 		<span style={styles.title.issueTitle}>
+			// 			{issue.title}
+			// 		</span>
+			// 	</span>,
+			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide),
+			rootStyle = makeStyle(Fill, FlexScale, FlexColumn)
 		
-
-
-		return <DialogRoot
-			titleMode='horizontal'
-			titleNode={titleNode}
-			subTitleNode={subTitleNode}
-			actionNodes={actionNodes}
-			saving={saving}
-		>
-					<div style={PositionRelative}>
-
-						<form name="issuePatchDialogForm"
-						      id="issuePatchDialogForm"
-						      style={[
-						      	styles.form,saving && {opacity: 0,pointerEvents: 'none'}
-						      ]}>
+		
+		return <CommandRoot
+			id={ContainerNames.CommentEditDialog}
+			component={this}
+			style={rootStyle}>
+			
+			<DialogRoot
+				titleMode='horizontal'
+				titleNode={titleNode}
+				subTitleNode={subTitleNode}
+				titleActionNodes={titleActionNodes}
+				saving={saving}
+			>
+				
+				
+				<FileDrop onFilesDropped={this.onDrop}
+				          acceptedTypes={[/image/]}
+				          dropEffect='all'
+				          style={rootStyle}>
+					
+					<form style={[styles.form,saving && styles.form.saving]}>
+						
+						<MarkdownEditor
+							ref={this.setMarkdownEditor}
+							autoFocus={true}
 							
-							<SimpleMDE onChange={this.onMarkdownChange}
-							           style={{
-							           	maxHeight: 500
-							           }}
-							           options={{
-									            autoDownloadFontAwesome: false,
-									            spellChecker: false,
-									            initialValue: comment.body,
-									            autoFocus: false
-									           }}/>
-						</form>
-
-						{/* Saving progress indicator */}
-						{saving && <div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-							{/*<CircularProgress*/}
-								{/*color={theme.progressIndicatorColor}*/}
-								{/*size={1}/>*/}
-						</div>}
-					</div>
-		</DialogRoot>
+							onChange={this.onMarkdownChange}
+							defaultValue={getValue(() => issue.body)}
+							onKeyDown={(event) => getCommandManager().handleKeyDown(event as any,true)}
+							style={styles.form.editor}
+						/>
+					
+					
+					</form>
+				
+				</FileDrop>
+			
+			
+			</DialogRoot>
+		</CommandRoot>
 	}
-
+	
 }
 
 export default IssueCommentDialog

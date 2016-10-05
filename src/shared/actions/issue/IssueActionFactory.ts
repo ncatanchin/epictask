@@ -27,7 +27,7 @@ import {
 import {GitHubClient} from 'shared/GitHubClient'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
-import {addErrorMessage} from 'shared/Toaster'
+import { addErrorMessage, getToaster } from 'shared/Toaster'
 import {addMessage} from 'shared/Toaster'
 import {getSettings} from 'shared/settings/Settings'
 import {TIssuePatchMode} from 'shared/actions/issue/IssueState'
@@ -49,7 +49,7 @@ import { isListType } from "shared/util/ObjectUtil"
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { LoadStatus } from "shared/models"
-import { getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { getRepoActions, getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
 
 
 /**
@@ -608,7 +608,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async(dispatch, getState) => {
 			const
 				client = Container.get(GitHubClient),
-				stores = Container.get(Stores),
+				stores = getStores(),
 				repo = issue.repo || await stores.repo.get(issue.repoId)
 			
 			try {
@@ -618,7 +618,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 				addMessage(`Saved issue #${updatedIssue.number}`)
 				
-				this.setSelectedIssueIds([updatedIssue.id])
+				//this.setSelectedIssueIds([updatedIssue.id])
 				this.setIssueSaving(false)
 				this.setEditingIssue(null)
 				
@@ -943,9 +943,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return async(dispatch, getState) => {
 			const
 				actions = this.withDispatcher(dispatch, getState),
-				uiActions = Container.get(UIActionFactory),
-				appActions = Container.get(AppActionFactory),
-				{issue:issueStore,availableRepo:availRepoStore} = Container.get(Stores),
+				uiActions = getUIActions(),
+				appActions = getAppActions(),
+				{issue:issueStore,availableRepo:availRepoStore} = getStores(),
 				dialogName = Dialogs.IssueEditDialog
 			
 			
@@ -956,8 +956,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			
 			const
-				availRepoIds = availableRepoIdsSelector(getState()),
-				availRepos = _.sortBy(await availRepoStore.bulkGet(...availRepoIds.toArray()), 'name')
+				availRepos =  enabledAvailableReposSelector(getState())
+			
+			if (!availRepos.size)
+				return getToaster().addErrorMessage(`Enable or import a repository to create an issue`)
 			
 			// If no from issue was provided then use the selected
 			// issue if available - otherwise totally empty
@@ -972,19 +974,20 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					fromIssue = null
 			}
 			
-			let repoId: number = _.get(fromIssue, 'repoId') as any
+			
+			let
+				repoId: number = _.get(fromIssue, 'repoId') as any
 			
 			if (!availRepos.find(item => item.repoId === repoId))
-				repoId = (availRepos.length) ? availRepos[0].repoId : null
+				repoId = (availRepos.size) ? availRepos.get(0).repoId : null
 			
 			if (!repoId) {
 				addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
 				return
 			}
 			
-			// TODO: Issue fill
-			//fillIssue(getState, , repoId)
-			const issue = new Issue({repoId})
+			const
+				issue = new Issue({repoId})
 			
 			if (fromIssue)
 				assign(issue, _.cloneDeep(_.pick(fromIssue, 'milestone', 'labels')))
@@ -1007,7 +1010,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	async editIssue(issue:Issue = null) {
 		const
-			uiActions = Container.get(UIActionFactory),
+			uiActions = getUIActions(),
 			dialogName = Dialogs.IssueEditDialog,
 			getState = getStoreState
 			
@@ -1331,7 +1334,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			if (state.editingIssue && state.editingIssue.repoId === repoId) {
 				state = state
 					.set('editingIssue', null)
-					.set('editingInlineConfig',null)
+					.set('editInlineConfig',null)
 					.set('patchIssues',[])
 					.set('editCommentRequest',null)
 					.set('editingInline',false)

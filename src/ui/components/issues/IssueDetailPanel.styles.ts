@@ -1,9 +1,9 @@
 
-import {baseStyles as labelBaseStyles} from 'ui/components/common/LabelChip'
+
 import {
 	makeWidthConstraint, makeHeightConstraint, makeMarginRem, PositionRelative, OverflowAuto,
 	FlexColumnCenter, FlexScale, OverflowHidden, Fill, FlexColumn, makeTransition, makePaddingRem, FillWidth,
-	FlexRowCenter, Ellipsis, Transparent, FlexAuto
+	FlexRowCenter, Ellipsis, Transparent, FlexAuto, FlexAlignStart
 } from "shared/themes"
 
 const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
@@ -11,53 +11,27 @@ const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shri
 const baseStyles = (topStyles,theme,palette) => {
 	
 	const
-		{text,accent,primary,secondary,background} = palette
+		{text,accent,primary,secondary,background} = palette,
+		flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
 	
 	return {
-		root: [ FlexColumn, Fill, OverflowHidden, {
+		
+			
+		root: [ flexTransition,FlexColumn, Fill, OverflowHidden, {
+			backgroundColor: background,
 			minWidth: '36.5rem'
 		} ],
 		
-		// MULTI-ISSUE PATCHING
-		multi: [ PositionRelative, FlexColumnCenter, FlexScale, {
-			
+		// MULTI
+		multi: [PositionRelative, FlexColumnCenter, FlexScale,{
 			title: [ {
 				fontSize: rem(3),
 				textAlign: 'center'
 			} ],
-			
-			issues: [ PositionRelative,  makeWidthConstraint('70%'), makeMarginRem(0.5,0,1,0), OverflowAuto,{
-				background,
-				maxHeight: '35%'
-			} ],
-			
-			issue: [FlexColumn, OverflowHidden, makeMarginRem(1,0.5), makePaddingRem(1),{
+			button: [makeMarginRem(1,1,0,1),{
 				
-				background: TinyColor(primary.hue1).darken(3).toRgbString(),
-				
-				row: [FlexRowCenter,FillWidth],
-				
-				number: [{
-					fontSize: themeFontSize(1.3),
-					fontWeight: 300,
-					fontStyle: 'italic',
-					color: text.secondary,
-					
-				}],
-				title: [FlexScale,Ellipsis,makePaddingRem(0,1),{
-					fontSize: themeFontSize(1.3),
-				}],
-				
-				repo: [{
-					color: accent.hue1
-				}]
 			}],
-			
-			button: [makeMarginRem(0,1),{
-				
-			}]
-			
-		} ],
+		}],
 		
 		
 		
@@ -68,74 +42,30 @@ const baseStyles = (topStyles,theme,palette) => {
 			fontWeight: 100
 		} ],
 		
-		issue: [ flexTransition, FlexColumn, FlexScale, {} ],
-		
-		
-		header: [ flexTransition, FlexAuto, FlexColumn, {
-			padding: "1rem",
+		input: [ {
+			padding: '0.3rem 1rem',
+			fontWeight: 400,
 			
-			row1: [ FlexRowCenter, FlexAuto, {
-				repo: [ FlexScale, {
-					fontSize: themeFontSize(1.4),
-					padding: '0 0 0.5rem 0',
-					fontWeight: 500,
-					fontSmooth: 'always',
-					WebkitFontSmoothing: 'antialiased'
-				} ],
-				assignee: [ makeMarginRem(0, 0, 0, 1), {} ]
+			floatingLabel: [ {
+				left: rem(1)
 			} ],
 			
-			row2: [ FlexRowCenter, FlexAuto, PositionRelative, {
-				padding: '0.5rem 0 1rem 0',
-				title: [ OverflowHidden, PositionRelative, FlexScale, {
-					fontSize: themeFontSize(2),
-					textOverflow: 'clip ellipsis',
-					lineHeight: '2.2rem',
-					maxHeight: '4.4rem',
-					maxWidth: '100%'
-				} ],
-				
-				
+			floatingLabelFocus: [ {
+				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
 			} ],
 			
-			// Row 3 - Labels + title
-			row3: [ flexTransition, FlexRowCenter, FlexAuto, {
-				labels: [ FlexScale, FlexAlignStart, {
-					flexWrap: 'wrap',
-					label: {
-						marginTop: rem(0.5)
-					},
-					add: [
-						labelBaseStyles.label,
-						FlexRowCenter,
-						FlexAuto,
-						makeTransition([ 'transform', 'font-size', 'font-weight', 'opacity' ]),
-						makeMarginRem(0.5, 0.5, 0, 0),
-						{
-							//margin: makeMarginRem(0.5,0.5,0,0),//"0.5rem 0.5rem 0 0",
-							padding: 0,
-							height: rem(2.4),
-							width: rem(2.4),
-							position: 'relative',
-							fontSize: rem(1.2),
-							opacity: 0.5,
-							fontWeight: 900,
-							cursor: 'pointer',
-							
-							':hover': {
-								opacity: 1,
-								transform: 'scale(1.1)'
-							}
-							
-						}
-					]
-				} ],
-				milestone: makeStyle({})
-				
-				
+			underlineFocus: [ {
+				width: 'auto',
+				left: 10,
+				right: 10
 			} ]
 			
 		} ],
+		
+		issue: [ flexTransition, FlexColumn, FlexScale, {} ],
+		
+		
+		
 		
 		/**
 		 * ISSUE DETAILS / COMMENTS / BODY

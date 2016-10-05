@@ -15,19 +15,6 @@ app.on('web-contents-created',(event,webContents) => {
 	})
 })
 
-// window.addEventListener('beforeunload',(event) => {
-// 	log.info(`Before unload event`,event)
-// 	event.stopPropagation()
-// 	event.preventDefault()
-// 	event.stopImmediatePropagation()
-// 	event.returnValue = ""
-// })
-
-// window.addEventListener('dragdrop',(event) => {
-// 	log.info(`drop event`,event)
-// 	event.preventDefault()
-// })
-//
 log.info(`Bound to navigate`)
 
 export {

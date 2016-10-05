@@ -70,14 +70,14 @@ export class CommandAccelerator {
 	 * Has any modified
 	 */
 	get hasModifier() {
-		return this.shiftKey || this.ctrlKey || this.metaKey || this.altKey
+		return this.hasNonInputModifier || this.shiftKey
 	}
 	
 	/**
 	 * Has non-input modifier (No shift)
 	 */
 	get hasNonInputModifier() {
-		return this.hasModifier && !this.shiftKey
+		return this.ctrlKey || this.metaKey || this.altKey
 		
 	}
 	

@@ -20,11 +20,15 @@ import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import { Themed } from "shared/themes/ThemeManager"
 
 
+const
+	log = getLogger(__filename)
+
 interface IIssueItemProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles:any
 	issueId:number
 	issue?:Issue
+	onOpen?:(event:any, issue:Issue) => void
 	onSelected:(event:any, issue:Issue) => void
 	isSelected?:boolean
 	isSelectedMulti?:boolean
@@ -89,7 +93,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 		
 		const
 			{props} = this,
-			{styles,onSelected,issue,isSelected,isSelectedMulti} = props
+			{styles,onOpen,onSelected,issue,isSelected,isSelectedMulti} = props
 			
 			
 		if (!issue)
@@ -97,6 +101,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 
 		const
 			{labels} = issue,
+			
 			issueStyles = makeStyle(
 				styles.issue,
 				isSelected && styles.issue.selected,
@@ -112,6 +117,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
 		                                    className={(isSelected ? 'selected' : '')}
+		                                    onDoubleClick={event => onOpen && onOpen(event,issue)}
 		                                    onClick={(event) => onSelected(event,issue)}>
 
 			{/*<div style={styles.issueMarkers}></div>*/}

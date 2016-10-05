@@ -5,11 +5,11 @@
 // Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import {PureRender} from 'ui/components/common'
-import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {Label} from 'shared/models/Label'
-import {Icon} from 'ui/components/common'
-import {Milestone} from 'shared/models/Milestone'
+import { PureRender } from 'ui/components/common'
+import { ThemedStyles } from 'shared/themes/ThemeManager'
+import { Label } from 'shared/models/Label'
+import { Icon } from 'ui/components/common'
+import { Milestone } from 'shared/models/Milestone'
 
 const tinycolor = require('tinycolor2')
 
@@ -32,7 +32,7 @@ const
 	])
 
 export const baseStyles = createStyles({
-	label: [makeTransition('width'),PositionRelative,FlexAuto,FlexRowCenter,{
+	label: [ makeTransition('width'), PositionRelative, FlexAuto, FlexRowCenter, {
 		display: 'flex',
 		borderRadius: accessoryDimHalf,
 		height: accessoryDim,
@@ -43,68 +43,60 @@ export const baseStyles = createStyles({
 		marginLeft: 0,
 		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
 		
-		':hover': {
-			
-		},
+		':hover': {},
 		
-		collapsed: [{
+		collapsed: [ {
 			width: rem(2.4)
-		}]
-	}],
-
-
+		} ]
+	} ],
+	
+	
 	// Accessories
-	accessory:[
+	accessory: [
 		accessoryTransition,
-		FlexAuto,FlexRowCenter,
-		makePaddingRem(0,0,0,0), {
-		height: accessoryDim,
-		width: accessoryDim,
-		borderRadius: accessoryDimHalf,
-
-		// icon decoration
-		icon: [accessoryTransition,FlexColumnCenter,makePaddingRem(0,0,0,0),{
+		FlexAuto, FlexRowCenter,
+		makePaddingRem(0, 0, 0, 0), {
 			height: accessoryDim,
 			width: accessoryDim,
-			fontSize: accessoryDimHalf
-		}],
-		
-		hover: [{
-			borderRadius: 0,
-			fontWeight: 700,
-			fontSize: rem(1.5),
-			icon: [{
+			borderRadius: accessoryDimHalf,
+			
+			// icon decoration
+			icon: [ accessoryTransition, FlexColumnCenter, makePaddingRem(0, 0, 0, 0), {
+				height: accessoryDim,
+				width: accessoryDim,
+				fontSize: accessoryDimHalf
+			} ],
+			
+			hover: [ {
+				borderRadius: 0,
+				fontWeight: 700,
+				fontSize: rem(1.5),
+				icon: [ {} ]
+			} ],
+			
+			// REMOVE CONTROL
+			remove: [ OverflowHidden, {
+				//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
+				fontSize: themeFontSize(1),
+				cursor: 'pointer',
 				
-			}]
-		}],
-			
-		// REMOVE CONTROL
-		remove: [OverflowHidden,{
-			//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
-			fontSize: themeFontSize(1),
-			cursor: 'pointer',
-			
-			// ICON REMOVE
-			icon: [{
+				// ICON REMOVE
+				icon: [ {} ],
 				
-			}],
+				// HOVER REMOVE
+				hover: [ {
+					icon: [ {} ]
+				} ]
+			} ]
 			
-			// HOVER REMOVE
-			hover: [{
-				icon: [{
-					
-				}]
-			}]
-		}]
-
-
-	}],
-
-	text: [makePaddingRem(0,1.2,0,1.2),{
+			
+		} ],
+	
+	text: [ makePaddingRem(0, 1.2, 0, 1.2), {
 		textAlign: 'baseline',
-		withLeftIcon: [makePaddingRem(0,1.2,0,0.6)]
-	}]
-
+		withLeftIcon: [ makePaddingRem(0, 1.2, 0, 0.6) ]
+	} ]
+	
 })
 
 
@@ -118,11 +110,12 @@ export type TLabelCallback = (label:Label|Milestone) => void
  * ILabelChipProps
  */
 export interface ILabelChipProps {
-	theme?: any
-	styles?: any
+	theme?:any
+	styles?:any
 	onClick?:React.MouseEventHandler<any>
 	label:Label|Milestone
 	labelStyle?:any
+	textStyle?:any
 	showIcon?:boolean
 	showRemove?:boolean
 	onRemove?:TLabelCallback
@@ -138,13 +131,13 @@ export interface ILabelChipProps {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'labelChip')
+@ThemedStyles(baseStyles, 'labelChip')
 @PureRender
 export default class LabelChip extends React.Component<ILabelChipProps,any> {
-
+	
 	
 	private updateState(props) {
-		this.setState({hovering: Radium.getState(this.state,'label',':hover')})
+		this.setState({ hovering: Radium.getState(this.state, 'label', ':hover') })
 	}
 	
 	/**
@@ -190,35 +183,35 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 				onRemove,
 				showRemove,
 				label,
-				labelStyle
+				labelStyle,
+				textStyle
 			} = this.props,
-			{palette} = theme,
+			{ palette } = theme,
 			isMilestone = !isLabel(label)
-
-
+		
+		
 		const
 			makeLabelStyle = (label:Label) => {
-				return makeStyle(styles.label,this.labelColorStyle(label),labelStyle)
+				return makeStyle(styles.label, this.labelColorStyle(label), labelStyle)
 			},
 			makeMilestoneStyle = (milestone:Milestone) => {
 				return makeStyle(styles.label, {
 					backgroundColor: 'black',
 					color: 'white'
-				},labelStyle)
+				}, labelStyle)
 			}
-
-
-
+		
+		
 		// Is the label in hover state
 		const
 			finalLabelStyle = (!isMilestone) ?
 				makeLabelStyle(label as Label) :
 				makeMilestoneStyle(label as Milestone),
-
-			hovering = Radium.getState(this.state,'label',':hover')
-
-
-		return <div ref='label' style={[finalLabelStyle]} onClick={onClick}>
+			
+			hovering = Radium.getState(this.state, 'label', ':hover')
+		
+		
+		return <div ref='label' className="labelChip" style={[finalLabelStyle]} onClick={onClick}>
 			{onRemove ?
 				<div style={[
 					styles.accessory,
@@ -236,26 +229,25 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 						onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}>
 						clear
 					</Icon>
-			</div> :
+				</div> :
 				showIcon ?
 					<div style={[
 						styles.accessory,
 						finalLabelStyle.accessory
 					]}>
 						<Icon style={styles.accessory.icon}
-					      iconSet='octicon'
-					      iconName={isMilestone ? 'milestone' : 'tag'}/>
-		      </div> :
-				React.DOM.noscript()
+						      iconSet='octicon'
+						      iconName={isMilestone ? 'milestone' : 'tag'}/>
+					</div> :
+					React.DOM.noscript()
 			}
-
-	        <div style={[styles.text, (showIcon || onRemove) && styles.text.withLeftIcon]} >
-		        {isLabel(label) ? label.name : label.title}
-	        </div>
-
-
 			
+			<div style={[styles.text, (showIcon || onRemove) && styles.text.withLeftIcon,textStyle]}>
+				{isLabel(label) ? label.name : label.title}
+			</div>
+		
+		
 		</div>
 	}
-
+	
 }

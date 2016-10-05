@@ -90,24 +90,24 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 *
 	 * @param level
 	 * @param message
-	 * @param details
+	 * @param logDetails
 	 * @param error
 	 */
-	log(level:JobLogLevel,message:string,error:Error,...details:any[]) {
+	log(level:JobLogLevel,message:string,error:Error,...logDetails:any[]) {
 		
 		// Log locally
 		log[JobLogLevel[level].toLowerCase() === 'error' ? 'error' : 'debug'](
 			`Job > ${this.job.name} > ${this.job.id}`,
 			message,
 			error,
-			...details
+			...logDetails
 		)
 		
 		// Then log to actions to update everywhere
 		try {
 			let msg = `[${JobLogLevel[level]}] \t> ${this.job.name} \t > ${message}\n`
-			details.forEach((detail,index) => {
-				msg += `\t\tDetail[${index}] >> ${detail}\n`
+			logDetails.forEach((logDetail,index) => {
+				msg += `\t\tDetail[${index}] >> ${logDetail}\n`
 			})
 			if (error) {
 				msg += `\t\tError ${error.message} > ${error.stack}\n`
@@ -118,7 +118,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 				level: JobLogLevel[level],
 				timestamp: Date.now(),
 				message,
-				details,
+					logDetails,
 				error,
 				id: uuid.v4()
 			}) + '\n')
@@ -141,13 +141,17 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 */
 	
 	setProgress = _.debounce((progress:number,timeRemaining:number,epochETA:number) => {
-		assign(this.detail, {
-			progress,
-			timeRemaining,
-			epochETA
-		})
-		
-		this.actions.update(this.job,this.detail)
+		try {
+			assign(this.detail, {
+				progress,
+				timeRemaining,
+				epochETA
+			})
+			
+			this.actions.update(this.job, this.detail)
+		} catch (err) {
+			log.error(`Progress update failed`,err)
+		}
 	},500)
 	
 	/**
@@ -171,21 +175,24 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @returns {IJob}
 	 */
 	async setStatus(status:JobStatus, error:Error = null) {
-		if (status < this.job.status) {
-			log.info(`Job status value, can not decrement`)
-			return
+		try {
+			if (status < this.job.status) {
+				log.info(`Job status value, can not decrement`)
+				return
+			}
+			
+			assign(this.job, { status })
+			assign(this.detail, {
+				status,
+				error
+			})
+			
+			
+			this.actions.update(this.job, this.detail)
+			this.fireEvent(JobHandlerEventType.Changed)
+		} catch (err) {
+			log.error('Status update failed',err)
 		}
-		
-		assign(this.job, {status})
-		assign(this.detail, {
-			status,
-			error
-		})
-		
-		
-		
-		this.actions.update(this.job,this.detail)
-		this.fireEvent(JobHandlerEventType.Changed)
 	}
 
 	/**

@@ -357,6 +357,7 @@ export interface IIssuesListProps {
 	groups?:List<IIssueGroup>
 	groupVisibility?:Map<string,boolean>
 	onIssueSelected:(event: MouseEvent, issue:Issue) => any
+	onIssueOpen:(event: MouseEvent, issue:Issue) => any
 	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
 	
@@ -627,7 +628,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				styles,
 				theme,
 				items,
-				onIssueSelected
+				onIssueSelected,
+				onIssueOpen
 			} = this.props,
 			
 			item = items.get(itemIndexes.get(index))
@@ -654,6 +656,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				styles={styles}
 				theme={theme}
 				style={style}
+				onOpen={onIssueOpen}
 				onSelected={onIssueSelected}/>
 		
 	}

@@ -108,7 +108,7 @@ export interface MaterialColorSet {
 	hue4?:string
 }
 
-export interface MaterialPalette {
+export interface IPalette {
 	PaletteName?:string
 	palettes:{
 		primary:MaterialColorPalette,
@@ -191,7 +191,7 @@ export function makePalette(
 	dark:boolean,
     textColor = null,
 	textOpacities:ThemeTextOpacity = null
-):MaterialPalette {
+):IPalette {
 
 	const themeType = dark ? ThemeType.Dark : ThemeType.Light
 

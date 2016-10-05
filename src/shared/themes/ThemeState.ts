@@ -4,7 +4,7 @@ import * as $ from 'jquery'
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
-import { MaterialPalette } from "shared/themes/material/MaterialTools"
+import { IPalette } from "shared/themes/material/MaterialTools"
 
 
 const
@@ -25,7 +25,7 @@ export const
 // ONLY LET FOR HMR
 export let
 	Themes:{[ThemeName:string]:TTheme} = null,
-	Palettes:{[PaletteName:string]:MaterialPalette} = null,
+	Palettes:{[PaletteName:string]:IPalette} = null,
 	DefaultTheme = null,
 	DefaultPalette = null
 
@@ -42,7 +42,7 @@ const
 /**
  * Theme listener type, eventually will be typed
  */
-export type TThemeListener = (theme:any) => void
+export type TThemeListener = (theme:any,palette:IPalette) => any
 
 
 /**
@@ -61,11 +61,13 @@ const
  * @param listener
  * @returns {()=>undefined}
  */
-export function addThemeListener(listener) {
+export function addThemeListener(listener:TThemeListener) {
 	themeListeners.push(listener)
 	
 	return () => {
-		const index = themeListeners.findIndex(item => item === listener)
+		const
+			index = themeListeners.findIndex(item => item === listener)
+		
 		if (index > -1)
 			themeListeners.splice(index,1)
 	}
@@ -74,10 +76,10 @@ export function addThemeListener(listener) {
 /**
  * Notify all listeners of update
  */
-function notifyListeners(newTheme:TTheme) {
+function notifyListeners(newTheme:TTheme,newPalette:IPalette) {
 	const listenersCopy = [...themeListeners]
 	//log.info(`Notifying listeners`,listenersCopy,'of new theme',newTheme)
-	listenersCopy.forEach(listener => listener(newTheme))
+	listenersCopy.forEach(listener => listener(newTheme,newPalette))
 }
 
 function loadDefaultPalette() {
@@ -85,7 +87,7 @@ function loadDefaultPalette() {
 }
 
 export interface IPaletteCreator {
-	(): MaterialPalette
+	(): IPalette
 	PaletteName:string
 }
 
@@ -102,13 +104,16 @@ export function setPalette(newPalette:IPaletteCreator) {
 	
 	assert(_.isFunction(newPalette),`Palette MUST be a function`)
 	
+	const
+		palette = newPalette()
+	
 	Object.assign(ThemeState,{
 		paletteName: newPalette.PaletteName,
-		palette: newPalette()
+		palette
 	})
 	
 	// Assign app props to the body & to html
-	notifyListeners(newPalette)
+	notifyListeners(getTheme(),palette)
 }
 
 
@@ -124,7 +129,9 @@ export function setTheme(newTheme:TTheme) {
 	}
 	
 	assert(_.isFunction(newTheme),`Theme MUST be a function`)
-	newTheme = newTheme(ThemeState.palette || loadDefaultPalette()())
+	const
+		palette = ThemeState.palette || loadDefaultPalette()()
+	newTheme = newTheme(palette)
 	Object.assign(ThemeState,{
 		themeName: newTheme.ThemeName,
 		theme: newTheme
@@ -135,7 +142,8 @@ export function setTheme(newTheme:TTheme) {
 		Object.assign(document.getElementsByTagName('html')[ 0 ].style, newTheme.app)
 		Object.assign(document.getElementsByTagName('body')[ 0 ].style, newTheme.app)
 	} catch (err) {}
-	notifyListeners(newTheme)
+	
+	notifyListeners(newTheme,palette)
 	
 }
 

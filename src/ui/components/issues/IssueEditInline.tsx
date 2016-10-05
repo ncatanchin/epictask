@@ -98,7 +98,7 @@ const baseStyles = createStyles({
 
 	input: {
 		height: 38,
-		fontWeight: 700,
+		fontWeight: 300,
 		padding: '0.5rem 1rem',
 		margin: '0.5rem 0',
 
@@ -553,7 +553,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 				styles.issueTitleSelected
 			),
 			selectProps = {
-				style:makeStyle(styles.form.repo,styles.menu),
+				style:makeStyle(styles.form.repo,styles.menu,{marginRight:rem(1),flexShrink:0.5}),
 				inputStyle:makeStyle(styles.input,{height:30}),
 				labelStyle:makeStyle(styles.menu,{paddingRight:34}),
 				iconStyle:makeStyle(styles.menu,{top: 0}),
@@ -590,18 +590,33 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 						{this.makeRepoMenuItems()}
 					</SelectField>
-
+					{/* MILESTONE */}
+					<SelectField
+						{...selectProps}
+						value={_.get(issue.milestone,'url',null)}
+						onChange={this.onMilestoneChange}
+					>
+						
+						{this.makeMilestoneItems()}
+					</SelectField>
 					<div style={styles.row.spacer} />
 
 					<Button style={styles.row.action}
 					        mode='flat'
 					        onClick={this.hide}>
-						<Icon style={[styles.row.action.icon,{padding: rem(0.3)}]}
+						<Icon style={[styles.row.action.icon,{padding: rem(0.1)}]}
 						      iconSet='material-icons'>
 							close
 						</Icon>
 					</Button>
-
+					<Button style={styles.row.action}
+					        mode='flat'
+					        onClick={this.save}>
+						<Icon style={[styles.row.action.icon,{padding: rem(0.1)}]}
+						      iconSet='material-icons'>
+							save
+						</Icon>
+					</Button>
 				</div>
 
 
@@ -649,28 +664,20 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					                  />
 
 				</div>
-				<div style={styles.row}>
-					{/* MILESTONE */}
-					<SelectField
-						{...selectProps}
-						value={_.get(issue.milestone,'url',null)}
-						onChange={this.onMilestoneChange}
-					>
-
-						{this.makeMilestoneItems()}
-					</SelectField>
-					<div style={styles.row.spacer} />
-
-					<Button style={styles.row.action}
-					        mode='raised'
-					        onClick={this.save}>
-						<Icon style={styles.row.action.icon}
-						      iconSet='material-icons'>
-							save
-						</Icon>
-						<div style={styles.row.action.label}>save</div>
-					</Button>
-				</div>
+				{/*<div style={styles.row}>*/}
+					{/**/}
+					{/*<div style={styles.row.spacer} />*/}
+				
+					{/*<Button style={styles.row.action}*/}
+					        {/*mode='raised'*/}
+					        {/*onClick={this.save}>*/}
+						{/*<Icon style={styles.row.action.icon}*/}
+						      {/*iconSet='material-icons'>*/}
+							{/*save*/}
+						{/*</Icon>*/}
+						{/*<div style={styles.row.action.label}>save</div>*/}
+					{/*</Button>*/}
+				{/*</div>*/}
 				{/* Saving progress indicator */}
 
 			</div>

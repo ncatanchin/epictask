@@ -22,7 +22,7 @@ import { User } from "shared/models/User"
 import { Label } from "shared/models/Label"
 import { Milestone } from "shared/models/Milestone"
 import { uiStateSelector } from "shared/actions/ui/UISelectors"
-import {Dialogs} from 'shared/config/DialogsAndSheets'
+import { Dialogs } from 'shared/config/DialogsAndSheets'
 import { IssuePatchModes, TIssuePatchMode } from "shared/actions/issue/IssueState"
 import { TypeAheadSelect } from "ui/components/common/TypeAheadSelect"
 import {
@@ -36,7 +36,9 @@ import { CommonKeys } from "shared/KeyMaps"
 import { WindowConfigs } from "shared/WindowConfig"
 import { addHotDisposeHandler } from "shared/util/HotUtils"
 import { getIssueActions, getUIActions } from "shared/actions/ActionFactoryProvider"
-import { DialogRoot } from "ui/components/common/DialogRoot"
+import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { IssueMultiInlineList } from "ui/components/common/IssueMultiInlineList"
 
 
 // Constants
@@ -47,123 +49,169 @@ const tinycolor = require('tinycolor2')
 /**
  * Add global themed styles
  */
-const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
-	const
-		{ secondary, accent } = theme.palette,
-		focusBgColor = tinycolor(accent.hue3).setAlpha(0.2).toRgbString(),
-		focusColor = accent.hue1,
-		focusBorderColor = tinycolor(accent.hue1).setAlpha(1).toRgbString(),
-		hoverColor = secondary.hue1,
-		pulseAnimation = Style.registerKeyframes({
-			"0%": {
-				transform: "translate(0,-50%) scale(0)",
-				opacity: "0.0"
-			},
-			'25%': {
-				transform: 'translate(0,-50%) scale(0.25)',
-				opacity: 0.3,
-			},
-			'50%': {
-				transform: "translate(0,-50%) scale(0.6)",
-				opacity: 0.5
-			},
-			'65%': {
-				transform: 'translate(0,-50%) scale(1)',
-				opacity: 0.7
-			},
-			'85%': {
-				transform: 'translate(0,-50%) scale(0.8)',
-				opacity: 0.3
-			},
-			'100%': {
-				transform: 'translate(0,-50%) scale(0.5)',
-				opacity: 0.0,
-			}
-		})
-	
-	
-	return createStyles({
-		'.patchMenuItem:after,.patchMenuItem:before': [ makeTransition([ 'opacity', 'box-shadow', 'color' ]), {
-			opacity: 0
-		} ],
-		'.patchMenuItem:after': {
-			zIndex: 10,
-			content: '\' \'',
-			position: 'absolute',
-			top: 0,
-			left: 0,
-			right: 0,
-			bottom: 0
-		},
-		'.patchMenuItem:before': {
-			zIndex: 12,
-			content: `'${String.fromCodePoint(parseInt('f111'/*'f192'*/, 16))}'`,// '\'\\2022\''
-			fontFamily: 'FontAwesome',
-			position: 'absolute',
-			fontSize: rem(1.3),
-			right: rem(0.5),
-			lineHeight: rem(2),
-			top: '50%',
-			transform: 'translate(0,-50%)',
-			width: 'auto'
-			
-		},
-		// Hover or focus - make opaque
-		'div[data-hover=true] .patchMenuItem:before,  div[data-hover=true] .patchMenuItem:after, div[data-keyboard-focused=true] .patchMenuItem:before, div[data-keyboard-focused=true] .patchMenuItem:after': {
-			opacity: 1
-		},
-		
-		// Hover states
-		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:before': {
-			color: hoverColor,
-			animation: `${pulseAnimation} 1.2s ease-out`,
-			animationIterationCount: 'infinite'
-		},
-		
-		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:after': {
-			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${hoverColor} !important`
-		},
-		
-		// Focus states
-		'div[data-keyboard-focused=true] .patchMenuItem:before': {
-			color: focusColor,
-			animation: `${pulseAnimation} 1.2s ease-out`,
-			animationIterationCount: 'infinite'
-		},
-		'div[data-keyboard-focused=true] .patchMenuItem:after': {
-			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${focusBorderColor} !important`
-			
-		}
-		
-	})
-})
+// const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
+// 	const
+// 		{ secondary, accent } = theme.palette,
+// 		focusBgColor = tinycolor(accent.hue3).setAlpha(0.2).toRgbString(),
+// 		focusColor = accent.hue1,
+// 		focusBorderColor = tinycolor(accent.hue1).setAlpha(1).toRgbString(),
+// 		hoverColor = secondary.hue1,
+// 		pulseAnimation = Style.registerKeyframes({
+// 			"0%": {
+// 				transform: "translate(0,-50%) scale(0)",
+// 				opacity: "0.0"
+// 			},
+// 			'25%': {
+// 				transform: 'translate(0,-50%) scale(0.25)',
+// 				opacity: 0.3,
+// 			},
+// 			'50%': {
+// 				transform: "translate(0,-50%) scale(0.6)",
+// 				opacity: 0.5
+// 			},
+// 			'65%': {
+// 				transform: 'translate(0,-50%) scale(1)',
+// 				opacity: 0.7
+// 			},
+// 			'85%': {
+// 				transform: 'translate(0,-50%) scale(0.8)',
+// 				opacity: 0.3
+// 			},
+// 			'100%': {
+// 				transform: 'translate(0,-50%) scale(0.5)',
+// 				opacity: 0.0,
+// 			}
+// 		})
+//
+//
+// 	return createStyles({
+// 		'.patchMenuItem:after,.patchMenuItem:before': [ makeTransition([ 'opacity', 'box-shadow', 'color' ]), {
+// 			opacity: 0
+// 		} ],
+// 		'.patchMenuItem:after': {
+// 			zIndex: 10,
+// 			content: '\' \'',
+// 			position: 'absolute',
+// 			top: 0,
+// 			left: 0,
+// 			right: 0,
+// 			bottom: 0
+// 		},
+// 		'.patchMenuItem:before': {
+// 			zIndex: 12,
+// 			content: `'${String.fromCodePoint(parseInt('f111'/*'f192'*/, 16))}'`,// '\'\\2022\''
+// 			fontFamily: 'FontAwesome',
+// 			position: 'absolute',
+// 			fontSize: rem(1.3),
+// 			right: rem(0.5),
+// 			lineHeight: rem(2),
+// 			top: '50%',
+// 			transform: 'translate(0,-50%)',
+// 			width: 'auto'
+//
+// 		},
+// 		// Hover or focus - make opaque
+// 		'div[data-hover=true] .patchMenuItem:before,  div[data-hover=true] .patchMenuItem:after, div[data-keyboard-focused=true] .patchMenuItem:before, div[data-keyboard-focused=true] .patchMenuItem:after': {
+// 			opacity: 1
+// 		},
+//
+// 		// Hover states
+// 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:before': {
+// 			color: hoverColor,
+// 			animation: `${pulseAnimation} 1.2s ease-out`,
+// 			animationIterationCount: 'infinite'
+// 		},
+//
+// 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:after': {
+// 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${hoverColor} !important`
+// 		},
+//
+// 		// Focus states
+// 		'div[data-keyboard-focused=true] .patchMenuItem:before': {
+// 			color: focusColor,
+// 			animation: `${pulseAnimation} 1.2s ease-out`,
+// 			animationIterationCount: 'infinite'
+// 		},
+// 		'div[data-keyboard-focused=true] .patchMenuItem:after': {
+// 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${focusBorderColor} !important`
+//
+// 		}
+//
+// 	})
+// })
 
 // ADD HMR CLEANER
-addHotDisposeHandler(module, styleSheet.clean)
+//addHotDisposeHandler(module, styleSheet.clean)
 
 
 /**
  * Add component styles
  */
-const baseStyles = createStyles({
-	title: [ {
+function baseStyles(topStyles, theme, palette) {
+	
+	const
+		{text,primary,accent,secondary} = palette
+	
+	return [ FlexColumnCenter, Fill, {
+		root: [Fill,FlexColumnCenter,FlexScale,{
+			paddingLeft: '15%',
+			paddingBottom: '10%',
+			paddingRight: '15%',
+			paddingTop: '10%'
+		}],
+			
 		
-		issues: [ FlexRow, FillWidth, OverflowAuto, {
-			fontSize: rem(1),
-			
-			number: [ {
-				fonStyle: 'italic',
-				fontWeight: 400
-			} ],
-			
-			title: [ {
-				fontWeight: 300
+		titleBar: [ {
+			label: [ FlexRowCenter, {
+				fontSize: rem(1.6),
+				
+				repo: [ makePaddingRem(0, 0.6, 0, 0), {} ],
+				
+				number: [ {
+					paddingTop: rem(0.3),
+					fontSize: rem(1.4),
+					fontWeight: 100,
+					color: text.secondary
+				} ]
 			} ]
 		} ],
 		
-	} ],
+		title: [ {
+			
+			issues: [ FlexRow, FillWidth, OverflowAuto, {
+				fontSize: rem(1),
+				
+				number: [ {
+					fonStyle: 'italic',
+					fontWeight: 400
+				} ],
+				
+				title: [ {
+					fontWeight: 300
+				} ]
+			} ],
+			
+		} ],
+		
+		input: [FillWidth,makeMarginRem(1,0),FlexScale,{
+			
+		}],
+		
+		labelsAndMilestones: [FillWidth,{
+			
+		}],
+		
+		issues: [FillWidth,FlexScale,FlexColumnCenter,{
+			
+			list:[Fill,{
+				//maxWidth: '70%',
+				//maxHeight: '50%'
+			}]
+		}]
+		
+	} ]
 	
-})
+}
 
 
 /**
@@ -179,9 +227,7 @@ export const IssuePatchFns = {
 /**
  * IIssuePatchDialogProps
  */
-export interface IIssuePatchDialogProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface IIssuePatchDialogProps extends IThemedAttributes {
 	open?:boolean
 	saving?:boolean
 	saveError?:Error
@@ -231,8 +277,6 @@ export interface IIssuePatchDialogState {
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
 	
 	
-	
-	
 	/**
 	 * Get currently selected new items
 	 *
@@ -278,11 +322,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		log.info('Applying patch to issue', patch)
 		
 		!this.props.saving &&
-			getIssueActions().applyPatchToIssues(
-				patch,
-				this.props.mode !== 'Label',
-				...this.props.issues
-			)
+		getIssueActions().applyPatchToIssues(
+			patch,
+			this.props.mode !== 'Label',
+			...this.props.issues
+		)
 	}
 	
 	
@@ -586,6 +630,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				open,
 				styles,
 				saving,
+				palette,
 				saveError
 			} = this.props,
 			newItems = this.newItems,
@@ -594,37 +639,21 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				mode === IssuePatchModes.Assignee ? 'Assign Issues' :
 					'Set Milestone',
 			
-			subTitle = <span style={[styles.title.issues]}>
-							{issues.map((issue:Issue, index:number) =>
-									<span key={issue.id} style={styles.title.issue}>
-						{index > 0 && <span>,&nbsp;</span>}
-										<span style={styles.title.issueNumber}>
-							#{issue.number}&nbsp;
-						</span>
-						<span style={styles.title.issueTitle}>
-							{issue.title}
-						</span>
-
-					</span>
-							)}
-						</span>,
+			titleNode = <div style={makeStyle(styles.titleBar.label)}>
+				{title}
+			</div>,
+			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide)
 			
-			actionNodes =
-				[
-					<Button onClick={this.hide} style={styles.action}>Cancel</Button>,
-					<Button onClick={this.onSave} style={styles.action} mode='raised'>Save</Button>
-				]
-		
 		
 		return <DialogRoot
-			titleNode={title}
-			subTitleNode={subTitle}
-			actionNodes={actionNodes}
+			titleNode={titleNode}
+			titleActionNodes={titleActionNodes}
 			saving={saving}
-			style={styles.root}>
-			
+			style={styles}>
+			<div style={styles.root}>
 			
 			<IssueLabelsAndMilestones
+				style={makeStyle(styles.labelsAndMilestones)}
 				labels={mode === IssuePatchModes.Label && newItems}
 				milestones={mode === IssuePatchModes.Milestone && newItems}
 				showIcon={true}
@@ -636,22 +665,27 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			{this.state.dataSource &&
 			<TypeAheadSelect
 				ref={this.setTypeAheadRef}
-				style={makeMarginRem(1,0)}
+				style={styles.input}
 				autoFocus={true}
 				fullWidth={true}
 				hintText={`${mode && mode.toUpperCase()}...`}
-				menuProps={{maxHeight:300}}
+				menuProps={{maxHeight:'30%'}}
 				onEscKeyDown={this.hide}
 				onItemSelected={this.onItemSelected}
 				onInputChanged={this.onInputChanged}
 				dataSource={this.state.dataSource}
 				openOnFocus={true}
 				openAlways={true}
-				underlineShow={false}/>
+				underlineShow={true}/>
 			}
 			
+			<div style={styles.issues}>
+				<IssueMultiInlineList issues={List<Issue>(issues)} style={styles.issues.list}/>
+			</div>
 			
-			{/*</Dialog>*/}
+			
+				
+				</div>
 		</DialogRoot>
 	}
 	

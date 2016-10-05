@@ -707,10 +707,7 @@ export function DarkTheme(palette) {
 				
 				row1: {
 					repo: {
-						color: tc(text.secondary).setAlpha(0.7).toRgbString(),
-						':hover': {
-							color: secondary.hue1
-						}
+						
 					}
 				}
 			},
