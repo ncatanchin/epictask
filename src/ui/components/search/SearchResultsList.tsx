@@ -140,7 +140,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 * Update state - create new items, remove old ones, etc
 	 */
 	updateState = (props = this.props) => {
-		//if (this.searchItemsChanged(props,this.state))
 		this.updateResults(props)
 	}
 	
@@ -178,37 +177,29 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 */
 	componentWillReceiveProps = (nextProps) => this.updateState(nextProps)
 	
-	// /**
-	//  * Should the component re-render
-	//  *
-	//  * @param nextProps
-	//  * @param nextState
-	//  */
-	// shouldComponentUpdate(nextProps,nextState) {
-	// 	// getValue(() => this.props.searchState.items.size,-1) !==
-	// 	// getValue(() => nextProps.searchState.items.size) ||
-	// 	//return this.searchItemsChanged(nextProps,nextState)
-	// }
 	
-	
-	
-	onClick = (item:SearchItem) => {
-		//log.info(`Created mouse down for `,item)
+	/**
+	 * On click
+	 *
+	 * @param item
+	 *
+	 * @returns {(event:any)=>undefined}
+	 */
+	onClick = (item:SearchItem) => (event) => {
+		log.debug(`Clicked for event`,item)
 		
-		return (event) => {
-			log.debug(`Clicked for event`,item)
-			event.preventDefault()
-			event.stopPropagation()
-			
-			const
-				{onResultSelected} = this.props,
-				isFn = _.isFunction(onResultSelected)
-			
-			if (isFn) {
-				onResultSelected(item)
-			}
+		event.preventDefault()
+		event.stopPropagation()
+		
+		const
+			{onResultSelected} = this.props,
+			isFn = _.isFunction(onResultSelected)
+		
+		if (isFn) {
+			onResultSelected(item)
 		}
 	}
+
 	
 	
 	
