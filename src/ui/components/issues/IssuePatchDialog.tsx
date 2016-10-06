@@ -7,8 +7,8 @@ import * as React from "react"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
-import { CircularProgress, MenuItem } from "material-ui"
-import { MuiThemeProvider } from "material-ui/styles"
+import { MenuItem } from "material-ui"
+
 
 
 import { PureRender, Button } from 'ui/components/common'

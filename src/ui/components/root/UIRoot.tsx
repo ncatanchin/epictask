@@ -126,7 +126,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				{/* HEADER */}
 				<Header visibility={headerVisibility}/>
 				
-				{(hasAvailableRepos) &&
+				{(hasAvailableRepos || stateType < AppStateType.Home) &&
 					<div style={[FlexScale,FlexColumn]}>
 						<div style={contentStyles}>
 							<PageComponent />
