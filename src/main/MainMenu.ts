@@ -1,5 +1,4 @@
 import Electron = require('electron')
-//import {BrowserWindow} from 'electron'
 import { Container } from 'typescript-ioc'
 import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
 import { getActionClient, getStateValue } from "shared/AppStoreClient"

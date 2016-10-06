@@ -96,7 +96,7 @@ function makeMenu() {
  * Load the actual window
  */
 function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
-	makeMenu()
+	
 	
 	return new Promise((resolve,reject) => {
 
@@ -113,6 +113,8 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				titleBarStyle: 'hidden'
 				// darkTheme:true,
 			}))
+			
+			makeMenu()
 			
 			const
 				{webContents} = browserWindow
