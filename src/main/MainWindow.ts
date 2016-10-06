@@ -119,6 +119,8 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			
 			makeMenu()
 			
+			makeMenu()
+			
 			const
 				{webContents} = browserWindow
 
