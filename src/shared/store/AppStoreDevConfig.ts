@@ -77,7 +77,7 @@ export default function addDevMiddleware(enhancers) {
 		
 		enhancers.push(window.devToolsExtension())
 	} else if (DEBUG) {
-		enhancers.push(makeRemoteMiddleware())
+		//enhancers.push(makeRemoteMiddleware())
 	}
 	
 }

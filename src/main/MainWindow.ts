@@ -89,14 +89,14 @@ function makeMenu() {
 	menu = makeMainMenu(browserWindow)
 
 	// Assign it based on OS
-	Env.isOSX ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+	process.platform !== 'win32' ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
 }
 
 /**
  * Load the actual window
  */
 function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
-	makeMenu()
+	
 	
 	return new Promise((resolve,reject) => {
 
@@ -109,10 +109,15 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				file: 'main-window.state'
 			})
 
-			browserWindow = new BrowserWindow(Object.assign({}, mainWindowState, AllWindowDefaults,{
-				titleBarStyle: 'hidden'
-				// darkTheme:true,
-			}))
+			browserWindow = new BrowserWindow(Object.assign(
+				{},
+				mainWindowState,
+				AllWindowDefaults,Env.isOSX && {
+					titleBarStyle: 'hidden'
+					// darkTheme:true,
+				}))
+			
+			makeMenu()
 			
 			const
 				{webContents} = browserWindow

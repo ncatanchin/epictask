@@ -21,7 +21,7 @@ export interface IEpicLogger extends ILogger {
  * Load Reactotron
  */
 function loadReactotron() {
-	if (DEBUG) {
+	if (DEBUG && process.platform === 'darwin') {
 		try {
 			Reactotron = require('reactotron-react-js').default
 		} catch (err) {

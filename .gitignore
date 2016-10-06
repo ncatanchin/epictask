@@ -126,3 +126,4 @@ _book
 *.mobi
 *.pdf
 .happypack
+.DS_Store
