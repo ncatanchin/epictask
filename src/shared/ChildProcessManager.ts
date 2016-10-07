@@ -1,6 +1,6 @@
 import ChildProcessRenderer from './ChildProcessRenderer'
 import ProcessType from "shared/ProcessType"
-import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 const log = getLogger(__filename)
 
@@ -157,5 +157,6 @@ export namespace ChildProcessManager {
 	process.on('exit',(exitCode) => killAll())
 }
 
+acceptHot(module,log)
 
 export default ChildProcessManager

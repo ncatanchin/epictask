@@ -19,7 +19,6 @@ import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immuta
 import * as ContextUtils from './util/ContextUtils'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
-import EnvGlobal from 'shared/Env'
 import { acceptHot } from "shared/util/HotUtils"
 
 
@@ -79,7 +78,6 @@ function installGlobals() {
 		LogLevel: LogLevelGlobal,
 		moment: require('moment'),
 		assert: assertGlobal,
-		Env: EnvGlobal,
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
@@ -124,8 +122,7 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal
 	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var Env:typeof EnvGlobal
+	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean

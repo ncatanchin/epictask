@@ -1,28 +1,20 @@
 import * as React from 'react'
 import {SearchPanel} from 'ui/components/search'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
-import {SearchType} from 'shared/actions/search/SearchState'
 import {TextField} from 'material-ui/TextField'
-import {PureRender} from 'ui/components/common'
-import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
+import { PureRender, Icon } from 'ui/components/common'
+import { CommandComponent, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getCommandManager } from "shared/commands/CommandManager"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
+import { CSSHoverState, PositionAbsolute } from "shared/themes"
+import { WindowControls } from "ui/components/common/WindowControls"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
 const log = getLogger(__filename)
 
-const HeaderSearchTypes = [
-	SearchType.Milestone,
-	SearchType.Label,
-	SearchType.Assignee,
-	SearchType.Issue,
-	SearchType.Repo,
-	SearchType.AvailableRepo
-	
-]
 
 export enum HeaderVisibility {
 	Hidden,
@@ -30,17 +22,20 @@ export enum HeaderVisibility {
 	Expanded
 }
 
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
+	
+	const
+		{primary,accent,text,secondary,background} = palette
 	
 	return {
-		header: makeStyle(FlexRow, FlexAlignCenter, FlexAuto, PositionRelative, makeTransition(), {
+		header: [FlexRowCenter, FlexAuto, PositionRelative, makeTransition(), {
 			WebkitUserSelect: 'none',
 			WebkitAppRegion: 'drag',
 			opacity: 0,
 			height: 0,
 			padding: 0,
 			border: 0,
-		}),
+		}],
 		
 		headerNormal: {
 			padding: '0.3rem 10rem',
@@ -54,6 +49,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			flexGrow: 1,
 			flexShrink: 0
 		}),
+		
 		
 		controls: makeStyle(makeAbsolute(), {
 			opacity: 1,
@@ -96,7 +92,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			transform: 'translate(-50%,-50%)'
 		}),
 		
-		logoWrapperExpanded: makeStyle({
+		logoWrapperExpanded: [{
 			top: '25%',
 			left: '50%',
 			right: 'inherit',
@@ -106,24 +102,13 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			width: '50%',
 			backgroundSize: '40%',
 			backgroundPosition: 'bottom center'
-		}),
+		}]
 		
-		search: [ {
-			backgroundColor: Transparent,
-			
-			field: [ {
-				backgroundColor: Transparent
-			}],
-			input: [ {
-				backgroundColor: Transparent
-			} ],
-			hint: [ {} ]
 		
-		} ]
 		
 	}
 	
-})
+}
 
 export interface IHeaderProps {
 	className?:string
@@ -139,6 +124,8 @@ export interface IHeaderState {
 	forceBlur?:boolean
 	focused?:boolean
 }
+
+
 
 /**
  * The app header component, title/logo/settings
@@ -247,12 +234,15 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 
 	keyHandlers = {}
 
+	
 
 	/**
 	 * on mount clear the state
 	 */
 	componentWillMount = () => !this.state && this.setState({})
 
+	
+	
 	/**
 	 * Render component
 	 *
@@ -263,37 +253,37 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 		const
 			{visibility, styles,style} = this.props,
 			expanded = this.isExpanded,
-			{resultsHidden} = this.state
+			{resultsHidden} = this.state,
 
-		const themeHeight = theme.header.style.height
+			themeHeight = theme.header.style.height
 
 		//noinspection JSSuspiciousNameCombination
 		const logoWrapperStyle = makeStyle(
-			baseStyles.logoWrapper,
+			styles.logoWrapper,
 			theme.header.logoWrapperStyle,
 			{
 				height: themeHeight,
 				width: themeHeight,
 				right: themeHeight / 2
 			},
-			expanded && baseStyles.logoWrapperExpanded)
+			expanded && styles.logoWrapperExpanded)
 
 		const logoStyle = makeStyle(
-			baseStyles.logo,
+			styles.logo,
 			theme.header.logo,
-			expanded && baseStyles.logoExpanded
+			expanded && styles.logoExpanded
 		)
 
-		let headerStyle = makeStyle(baseStyles.header)
+		let headerStyle = makeStyle(styles.header)
 
 		
 		if ((visibility !== HeaderVisibility.Hidden)) {
 			headerStyle = makeStyle(
 				theme.header.style,
 				style,
-				baseStyles.header,
-				baseStyles.headerNormal,
-				expanded && baseStyles.headerExpanded, {
+				styles.header,
+				styles.headerNormal,
+				expanded && styles.headerExpanded, {
 					height: (visibility === HeaderVisibility.Expanded) ? '100%' : themeHeight,
 					WebkitAppRegion: 'drag'
 				}
@@ -301,7 +291,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 		}
 
 		const
-			controlStyle = makeStyle(theme.header.controlStyle,baseStyles.controlButton)
+			controlStyle = makeStyle(theme.header.controlStyle,styles.controlButton)
 		//ref={this.setSearchPanelRef}
 		// ref={this.setHotKeysRef}
 		
@@ -310,17 +300,8 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
       id="header"
       style={headerStyle}>
 			
-			<SearchPanel
-				ref={this.setSearchPanelRef}
-				searchId='header-search'
-				types={HeaderSearchTypes}
-				inlineResults={expanded}
-				expanded={expanded}
-				panelStyle={styles.search}
-				fieldStyle={styles.search.field}
-				inputStyle={styles.search.input}
-				onEscape={this.onEscape}
-				mode={expanded ? 'repos' : 'issues'}/>
+			<WindowControls />
+			
 
 			<div style={logoWrapperStyle}>
 				<img style={logoStyle} src={ImageLogoFile}/>

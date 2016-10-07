@@ -1,8 +1,9 @@
-import { acceptHot } from "shared/util/HotUtils"
 require('source-map-support').install()
 require('babel-polyfill')
 import 'reflect-metadata'
 
+import 'shared/Env'
+import { acceptHot } from "shared/util/HotUtils"
 import 'shared/NamespaceConfig'
 import ProcessType from 'shared/ProcessType'
 import 'shared/ProcessConfig'

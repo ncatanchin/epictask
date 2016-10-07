@@ -3,6 +3,7 @@ import { Container } from 'typescript-ioc'
 import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
 import { AuthKey } from "shared/Constants"
 import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
+import { shutdownApp } from "main/MainShutdownHandler"
 
 const
 	{
@@ -133,10 +134,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}, {
 				label: 'Quit',
 				accelerator: 'Command+Q',
-				click() {
-					
-					app.quit()
-				}
+				click: shutdownApp
 			} ]
 		}, {
 			label: 'Edit',
@@ -194,13 +192,25 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 		
 	} else {
 		template = [ {
+			
+			// FILE MENU
 			label: '&File',
+			
+			
 			submenu: [ {
-				label: 'Signout...',
-				accelerator: 'Command+L',
+				
+				// SIGNOUT
+				label: '&Signout...',
+				accelerator: 'Ctrl+Super+L',
 				click() {
 					ActionFactoryProviders[ AuthKey ].logout()
 				}
+			}, {
+				// QUIT
+				label: '&Quit',
+				accelerator: 'Ctrl+Q',
+				click: shutdownApp
+			
 			} ]
 		}, {
 			label: '&View',

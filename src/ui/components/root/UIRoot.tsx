@@ -15,6 +15,7 @@ import { IUISheet } from "shared/config/DialogsAndSheets"
 import { SheetRoot } from "ui/components/root/SheetRoot"
 import { FillWindow } from "shared/themes/styles/CommonStyles"
 import { FlexColumn, Fill } from "shared/themes"
+import { WelcomePage } from "ui/components/pages/WelcomePage"
 
 
 // Constants
@@ -95,7 +96,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 			{hasAvailableRepos, stateType, theme, modalOpen, sheet} = this.props,
 			{palette} = theme,
 			
-			PageComponent = getPage(stateType),
+			PageComponent = hasAvailableRepos ? getPage(stateType) : WelcomePage,
 			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
 			
 			headerVisibility = (stateType < AppStateType.Home) ?
@@ -126,13 +127,12 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				{/* HEADER */}
 				<Header visibility={headerVisibility}/>
 				
-				{(hasAvailableRepos || stateType < AppStateType.Home) &&
-					<div style={[FlexScale,FlexColumn]}>
-						<div style={contentStyles}>
-							<PageComponent />
-						</div>
+			
+				<div style={[FlexScale,FlexColumn]}>
+					<div style={contentStyles}>
+						<PageComponent />
 					</div>
-				}
+				</div>
 				
 				{/* TOASTER */}
 				<ToastMessages/>

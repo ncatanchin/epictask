@@ -1,15 +1,14 @@
 
 
-import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
+import { acceptHot } from "shared/util/HotUtils"
 require('shared/NodeEntryInit')
 
 import checkSingleInstance from "main/CheckSingleInstance"
-import {RemoteDebuggingPort} from 'shared/config/DebugConfig'
 import * as MainWindowType from './MainWindow'
 import {getServiceManager as getServiceManagerType} from "shared/services"
-import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
 import { Events } from "shared/config/Events"
-
+import { getProcessManager } from "shared/ProcessManagement"
+import './MainAppSwitches'
 const
 	{app,BrowserWindow} = require('electron'),
 	log = getLogger(__filename),
@@ -21,20 +20,8 @@ _.assignGlobal({Constants:{Events}})
 
 
 // Reference for dev monitor window (redux, etc)
-let
-	mainWindow:any,
-	devWindow = null,
-	ProcessManager:typeof ChildProcessManagerType = null,
-	processesRunning = false
-
 log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
 
-/**
- * In debug mode enable remote debugging
- */
-if (Env.isDev) {
-	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort)
-}
 
 
 /**
@@ -64,6 +51,8 @@ async function stop() {
 	await getServiceManager().stop()
 }
 
+// ATTACH SERVICE MANAGER STOP TO WILL-QUIT
+app.on('will-quit',stop)
 
 /**
  * Callback from open if already running
@@ -72,7 +61,8 @@ function onFocus() {
 	
 	// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
 	const
-		win = mainWindow && mainWindow.getBrowserWindow()
+		allWindows = BrowserWindow.getAllWindows(),
+		win = allWindows && allWindows[0]
 	
 	if (win) {
 		win && win.isMinimized() && win.restore()
@@ -82,44 +72,6 @@ function onFocus() {
 	
 }
 
-
-/**
- * On shutdown intercepts quit requests and makes sure
- * all children are properly shutdown/killed
- *
- * @param event
- */
-function onShutdown(event) {
-	
-	if (ProcessManager && processesRunning) {
-		processesRunning = false
-		
-		event.preventDefault()
-		
-		const
-			killAll = async () => {
-				try {
-					await ProcessManager.stopAll()
-				} catch (err) {
-					log.warn(`Failed to cleanly shutdown processes`)
-				}
-				
-				BrowserWindow.getAllWindows().forEach(win => {
-					try {
-						win.destroy()
-					} catch (err) {
-						log.warn(`Failed to destroy window`,err)
-					}
-				})
-				
-				app.quit()
-			}
-			
-			killAll()
-		}
-}
-
-app.on('will-quit',onShutdown)
 
 
 /**
@@ -141,32 +93,13 @@ function onOpen(event) {
  */
 async function startProcesses() {
 		
-	ProcessManager = getHot(module,'ProcessManager',
-		require('shared/ChildProcessManager').ChildProcessManager) as typeof ChildProcessManagerType
-	
-	setDataOnHotDispose(module,() => ({
-		ProcessManager
-	}))
-	
-	// HMR STOP PROCESSES
-	// if (module.hot) {
-	//
-	// 	module.hot.addDisposeHandler(() => {
-	// 		try {
-	// 			ProcessManager.stopAll()
-	// 		} catch (err) {
-	// 			log.error(`Failed to stop sub-processes`,err)
-	// 		}
-	// 	})
-	// }
-	
+	const
+		ProcessManager = getProcessManager()
 	
 	log.info(`Starting all processes`)
 	// ONLY OCCURS IN HMR SCENARIO
 	if (!ProcessManager.isRunning())
 		await ProcessManager.startAll()
-	
-	processesRunning = true
 	
 }
 
@@ -174,19 +107,25 @@ async function startProcesses() {
  * Boot the app
  */
 async function boot() {
-
+	
+	
+	
 	if (Env.isDev)
 		require('./MainDevConfig')
 
 	require('./NavManager')
 	
 	
-	log.info("Boot start")
+	log.debug("Boot start")
 	require('shared/commands/CommandManager').getCommandManager()
 	global[Events.MainBooted] = false
 	
-	log.info("Load Main Window")
-	mainWindow = require('./MainWindow') as typeof MainWindowType
+	log.debug("Load Main Window")
+	
+	const
+		mainWindow = require('./MainWindow') as typeof MainWindowType
+	
+	
 	
 	// Load the main window & start the loader animation
 	await mainWindow.start(async () => {
@@ -207,15 +146,6 @@ async function boot() {
 	
 }
 
-/**
- * All windows closed
- */
-function onAllClosed() {
-	log.debug('All windows closed')
-
-	if (process.platform !== 'darwin')
-		app.quit()
-}
 
 /**
  * App started
@@ -229,8 +159,6 @@ function onStart() {
 }
 
 if (checkSingleInstance(app,onFocus)) {
-	if (!Env.isHot)
-		app.on('window-all-closed', onAllClosed)
 	
 	// app.on('will-quit',onWillQuit)
 	app.on('ready', onStart)
@@ -239,27 +167,29 @@ if (checkSingleInstance(app,onFocus)) {
 /**
  * Enable HMR
  */
-if (module.hot) {
-	console.info('Setting up HMR')
 
-	
-	// Main window or configurator - reboot app
-	// module.hot.accept(['./MainWindow'], (mods) => {
-	// 	log.info("Rebooting main, updated dependencies",mods)
-	//
-	// 	// We get a reference to the new window here
-	// 	// return boot().then(() => {
-	// 	// 	const newWindow = mainWindow.getBrowserWindow()
-	// 	//
-	// 	// 	require('electron').BrowserWindow.getAllWindows()
-	// 	// 		.filter(win => win !== newWindow && win !== devWindow)
-	// 	// 		.forEach(oldWindow => oldWindow.close())
-	// 	//
-	// 	// })
-	//
-	// })
-
-	// Worst case - accept myself??
-	module.hot.accept()
-
-}
+acceptHot(module,log)
+// if (module.hot) {
+// 	console.info('Setting up HMR')
+//
+//
+// 	// Main window or configurator - reboot app
+// 	// module.hot.accept(['./MainWindow'], (mods) => {
+// 	// 	log.info("Rebooting main, updated dependencies",mods)
+// 	//
+// 	// 	// We get a reference to the new window here
+// 	// 	// return boot().then(() => {
+// 	// 	// 	const newWindow = mainWindow.getBrowserWindow()
+// 	// 	//
+// 	// 	// 	require('electron').BrowserWindow.getAllWindows()
+// 	// 	// 		.filter(win => win !== newWindow && win !== devWindow)
+// 	// 	// 		.forEach(oldWindow => oldWindow.close())
+// 	// 	//
+// 	// 	// })
+// 	//
+// 	// })
+//
+// 	// Worst case - accept myself??
+// 	module.hot.accept()
+//
+// }

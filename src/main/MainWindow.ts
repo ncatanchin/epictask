@@ -9,7 +9,9 @@ import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 import { getAppActions } from "shared/actions/ActionFactoryProvider"
 import { GitHubConfig } from "shared/config/GithubConfig"
 import { Events } from "shared/config/Events"
-import { AllWindowDefaults } from "shared/config/WindowConfig"
+import { AllWindowDefaults, WindowIconPath } from "shared/config/WindowConfig"
+import { setupShutdownOnWindowClose } from "main/MainShutdownHandler"
+import { setDataOnHotDispose, getHot } from "shared/util/HotUtils"
 
 const
 	log = getLogger(__filename),
@@ -22,8 +24,11 @@ log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
 let
 	menu,
-	browserWindow:Electron.BrowserWindow = null,
-	firstLoad = true
+	browserWindow:Electron.BrowserWindow = getHot(module,'browserWindow',null)
+
+setDataOnHotDispose(module,() => ({
+	browserWindow
+}))
 
 ipcMain.on(AuthKey,(event,arg) => {
 	log.info('Got auth request',event,arg)
@@ -57,6 +62,9 @@ export function stop() {
  */
 export function start(cb = null) {
 	log.info('> start')
+	if (browserWindow)
+		return Promise.resolve(true)
+	
 	return loadRootWindow(cb)
 }
 
@@ -109,15 +117,21 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				file: 'main-window.state'
 			})
 
-			browserWindow = new BrowserWindow(Object.assign(
-				{},
-				mainWindowState,
-				AllWindowDefaults,Env.isOSX && {
-					titleBarStyle: 'hidden'
-					// darkTheme:true,
-				}))
+			const
+				windowOpts = Object.assign({},
+					mainWindowState,
+					AllWindowDefaults,Env.isMac && {
+						titleBarStyle: 'hidden'
+						// darkTheme:true,
+					}
+				)
 			
-			makeMenu()
+			browserWindow = new BrowserWindow(windowOpts)
+			
+			if (Env.isLinux) {
+				browserWindow.setIcon(WindowIconPath as any)
+			}
+			
 			
 			makeMenu()
 			
@@ -129,6 +143,8 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			
 			// ON READY - SHOW
 			browserWindow.once('ready-to-show',() => browserWindow.show())
+			
+			setupShutdownOnWindowClose(browserWindow)
 			
 			// webContents.on('will-navigate',(event:any,url) => {
 			// 	log.info(`App wants to navigate`,url)
