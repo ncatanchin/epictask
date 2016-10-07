@@ -136,7 +136,7 @@ const config = {
 	stats: WebpackStatsConfig,
 	output: {
 		path: `${distDir}/`,
-		//publicPath: `${path.relative(process.cwd(),distDir)}/`,
+		//publicPath: isDev ? './dist/app/' : './', //`${path.relative(process.cwd(),distDir)}/`,
 		publicPath: "./",
 		filename: '[name].bundle.js',
 		libraryTarget: 'commonjs2'

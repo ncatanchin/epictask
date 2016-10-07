@@ -6,14 +6,19 @@ import { ProcessType } from "shared/ProcessType"
 import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
+import { setDataOnHotDispose, getHot } from "shared/util/HotUtils"
 
 
 const
 	
 	log = getLogger(__filename),
 	
-	globalListeners:IChildProcessEventListener[] = [],
+	globalListeners:IChildProcessEventListener[] = getHot(module,'globalListeners',[]),
 	{ipcRenderer,BrowserWindow} = require('electron')
+
+setDataOnHotDispose(module,() => ({
+	globalListeners
+}))
 
 /**
  * Add a listener to the worker

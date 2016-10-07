@@ -9,8 +9,7 @@ function clean() {
 		'dist/**/*',
 		'.awcache*',
 		'.happy*',
-		'.sass*',
-		'build'
+		'.sass*'
 	])
 }
 

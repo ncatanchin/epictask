@@ -1,8 +1,14 @@
+
+const iconPath = 'build/icon.png'
+
+export const WindowIconPath = iconPath
+	//(!Env.isDev ? 'resources/' : '') + iconPath
+
 /**
  * Global common window defaults
  */
 export const
-	AllWindowDefaults = {
+	AllWindowDefaults = Object.assign({
 		show: false,
 		frame: false,
 		acceptFirstMouse: true,
@@ -10,4 +16,7 @@ export const
 		webPreferences: {
 			
 		}
-	}
+	},Env.isLinux && {
+			icon: WindowIconPath
+		}) as any
+

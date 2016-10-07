@@ -35,6 +35,8 @@ import {
 } from "shared/commands/CommandComponent"
 import { ICommand, Command, CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { SearchPanel } from "ui/components/search"
+import { SearchType } from "shared/actions/search"
 
 
 
@@ -46,14 +48,34 @@ const
 
 
 //region STYLES
-const baseStyles = createStyles({
-	panel: [Fill, {}],
-	panelSplitPane: [Fill, {
-		' > .Pane2': makeStyle(OverflowHidden, {})
-		
-	}]
+const baseStyles = (topStyles,theme,palette) => {
 	
-})
+	const
+		{primary,accent,text,background} = palette
+	
+	return {
+		panel: [ Fill, {} ],
+		panelSplitPane: [ Fill, {
+			' > .Pane2': makeStyle(OverflowHidden, {})
+			
+		} ],
+		
+		search: [ makePaddingRem(0, 1), {
+			backgroundColor: Transparent,
+			borderBottom: `0.1rem solid ${primary.hue3}`,
+			
+			field: [ {
+				backgroundColor: Transparent
+			} ],
+			input: [ {
+				backgroundColor: Transparent
+			} ],
+			hint: [ {} ]
+			
+		} ]
+		
+	}
+}
 //endregion
 
 /**
@@ -77,6 +99,7 @@ export interface IIssuesPanelState {
 	srcItems?: List<IIssueListItem<any>>
 	groupsVisibility?:Map<string,boolean>
 	listRef?:any
+	searchPanelRef?:any
 	
 }
 
@@ -181,6 +204,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private issueActions: IssueActionFactory = getIssueActions()
 	
+	
+	/**
+	 * Set search panel ref
+	 *
+	 * @param searchPanelRef
+	 */
+	private setSearchPanelRef = (searchPanelRef) => this.setState({searchPanelRef})
+	
 	/**
 	 * Helper to get the current selected issue ids
 	 *
@@ -256,45 +287,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		this.issueActions.setIssueStatus('closed', ...selectedIssueIds)
 	}
 	
-	/**
-	 * Key handlers for Issue Panel
-	 */
-	keyHandlers = {
-		[CommonKeys.MoveUp]: this.moveUp,
-		[CommonKeys.MoveDown]: this.moveDown,
-		[CommonKeys.MoveUpSelect]: this.moveUp,
-		[CommonKeys.MoveDownSelect]: this.moveDown,
-		// [CommonKeys.Enter]: this.onEnter,
-		// [CommonKeys.Delete]: this.onDelete,
-		//
-		// [CommonKeys.SetAssignee]: (event) => {
-		// 	log.info('Patch assignee')
-		// 	getIssueActions().patchIssuesAssignee()
-		// 	event.preventDefault()
-		// },
-		// [CommonKeys.SetMilestone]: (event) => {
-		// 	log.info('Patch milestone')
-		// 	getIssueActions().patchIssuesMilestone()
-		// 	event.preventDefault()
-		// },
-		// [CommonKeys.AddLabels]: (event) => {
-		// 	log.info('Patch labels')
-		// 	getIssueActions().patchIssuesLabel()
-		// 	event.preventDefault()
-		// },
-		// [CommonKeys.CreateComment]: (event) => {
-		// 	log.info('Create Comment')
-		//
-		// 	getIssueActions().newComment()
-		// 	event.preventDefault()
-		// },
-		// [CommonKeys.Edit]: () => {
-		// 	log.info('Edit issue keys pressed - making dialog visible')
-		// 	getIssueActions().editIssue()
-		// },
-	}
 	
-	// Helper for sorting
+	/**
+	 * Get issue or froup @ index
+	 *
+	 * @param itemIndex
+	 * @returns {null}
+	 */
 	getItemAtIndex = (itemIndex) => {
 		const
 			{items} = this.props,
@@ -306,6 +305,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		return items.get(itemIndexes.get(itemIndex))
 	}
 	
+	/**
+	 * Get the index for a given issue or id
+	 *
+	 * @param issueOrIssueId
+	 * @returns {any}
+	 */
 	getIssueIndex = (issueOrIssueId:Issue|number) => {
 		const
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id,
@@ -610,6 +615,39 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		})
 	}
 
+
+
+	/**
+	 * On escape sequence close the search
+	 */
+	onSearchEscape = () => {
+		
+		// log.info(`Header on escape`)
+		//
+		// if (this.isExpanded)
+		// 	return
+		//
+		// if (this.textField)
+		// 	this.textField.blur()
+		//
+		//getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
+		
+		// const {searchPanel} = this
+		//
+		// if (searchPanel) {
+		// 	const textField:any = searchPanel.textField
+		// 	if (textField) {
+		// 		textField.blur()
+		// 	} else {
+		// 		const doc = document as any
+		// 		doc.activeElement.blur()
+		// 	}
+		// }
+		
+		//ActionFactoryProviders[UIKey].focusIssuesPanel()
+	}
+
+	
 	/**
 	 * Render the component
 	 */
@@ -644,7 +682,26 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			<Style scopeSelector=".issuePanelSplitPane"
 			       rules={styles.panelSplitPane}/>
 			
+			{/* ISSUE SEARCH AND FILTERING */}
+			<SearchPanel
+				ref={this.setSearchPanelRef}
+				searchId='issues-search'
+				types={[SearchType.Milestone,
+					SearchType.Label,
+					SearchType.Assignee,
+					SearchType.Issue,
+					SearchType.Repo,
+					SearchType.AvailableRepo
+				]}
+				inlineResults={false}
+				expanded={false}
+				panelStyle={styles.search}
+				fieldStyle={styles.search.field}
+				inputStyle={styles.search.input}
+				onEscape={this.onSearchEscape}
+				mode={'issues'}/>
 			
+			{/* ISSUES LIST & DETAILS*/}
 			{items &&
 				<SplitPane split="vertical"
 				           allowResize={allowResize}
