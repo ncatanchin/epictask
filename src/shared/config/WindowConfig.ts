@@ -1,7 +1,15 @@
 
-const iconPath = 'build/icon.png'
+const
+	dataUrl = require('dataurl'),
+	iconRawData = require('!!raw!../../../build/icon.png'),
+	iconPath = 'build/icon.png',
+	{nativeImage} = require('electron'),
+	iconUrl = dataUrl.format({
+		mimetype:'image/png',
+		data:iconRawData
+	})
 
-export const WindowIconPath = iconPath
+export const WindowIcon = nativeImage.createFromDataURL(iconUrl)
 	//(!Env.isDev ? 'resources/' : '') + iconPath
 
 /**
@@ -17,6 +25,6 @@ export const
 			
 		}
 	},Env.isLinux && {
-			icon: WindowIconPath
+			icon: WindowIcon
 		}) as any
 

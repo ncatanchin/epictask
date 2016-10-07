@@ -26,16 +26,19 @@
     "copyright": "Copyright © 2016 Densebrain, Inc.",
     "productName": "Epictask",
     "linux": {
-      "desktop": "etc/packages/linux/Epictask.desktop"
+      "category": "Development",
+      "packageCategory": "devel",
+      "target": ["deb","AppImage"]
     },
     "mac": {
       "identity": "Densebrain, Inc",
       "icon": "build/icon.icns"
     },
     "extraFiles": [
-      "build/icon*"
+      "build/**/*"
     ],
     "files": [
+      "build/**/*",
       "etc/packages/**/*",
       "dist/app/**/*",
       "package.json",

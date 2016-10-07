@@ -9,7 +9,7 @@ import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 import { getAppActions } from "shared/actions/ActionFactoryProvider"
 import { GitHubConfig } from "shared/config/GithubConfig"
 import { Events } from "shared/config/Events"
-import { AllWindowDefaults, WindowIconPath } from "shared/config/WindowConfig"
+import { AllWindowDefaults, WindowIcon } from "shared/config/WindowConfig"
 import { setupShutdownOnWindowClose } from "main/MainShutdownHandler"
 import { setDataOnHotDispose, getHot } from "shared/util/HotUtils"
 
@@ -129,7 +129,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			browserWindow = new BrowserWindow(windowOpts)
 			
 			if (Env.isLinux) {
-				browserWindow.setIcon(WindowIconPath as any)
+				browserWindow.setIcon(WindowIcon as any)
 			}
 			
 			
