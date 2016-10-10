@@ -9,8 +9,7 @@ import Electron = require('electron')
 import * as React from 'react'
 
 import { shortId, isString } from "shared/util/ObjectUtil"
-import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/WindowConfig"
-import { AllWindowDefaults } from "shared/config/WindowConfig"
+import { IWindowConfig, WindowType, DevToolsPositionDefault,AllWindowDefaults } from "shared/config/WindowConfig"
 import { toJSON } from "shared/util/JSONUtil"
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 
@@ -38,7 +37,7 @@ const WindowDefaultOpts = Object.assign(AllWindowDefaults,{
 const WindowDialogDefaultOpts = Object.assign({},WindowDefaultOpts,{
 	minHeight: 500,
 	minWidth: 500,
-	titleBarStyle: 'hidden',
+	//titleBarStyle: 'hidden',
 })
 
 const WindowModalDefaultOpts = Object.assign({},WindowDefaultOpts,WindowDialogDefaultOpts,{

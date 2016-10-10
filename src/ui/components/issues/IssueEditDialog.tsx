@@ -426,7 +426,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			let
 				availRepo = availableRepos.find(it => it.id === editingIssue.repoId)
 			
-			labels = availRepo.labels
+			labels = !availRepo ? [] : availRepo.labels
 		}
 		
 		let

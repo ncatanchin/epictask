@@ -101,6 +101,14 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						menuPath:['Issue']
 					})
 				
+				.command(
+					CommandType.Global,
+					'New Issue',
+					(cmd, event) => getIssueActions().newIssue(),
+					"Control+Alt+n", {
+						hidden:true
+					})
+				
 				
 				
 				

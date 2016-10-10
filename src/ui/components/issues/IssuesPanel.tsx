@@ -176,6 +176,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				(cmd,event) => this.moveUp(event),
 				CommonKeys.MoveUpSelect,{hidden:true})
 			
+			// NEW COMMENT
+			.command(
+				CommandType.Container,
+				'New Comment',
+				(cmd, event) => getIssueActions().newComment(),
+				"Ctrl+m", {
+					menuPath:['Issue']
+				})
+			
 			
 			// CLOSE ISSUES
 			.command(

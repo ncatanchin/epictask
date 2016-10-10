@@ -98,13 +98,13 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	commands = (builder:CommandContainerBuilder) =>
 	  // NEW COMMENT
 		builder
-			.command(
-				CommandType.Container,
-				'New Comment',
-				(cmd, event) => getIssueActions().newComment(),
-					"Ctrl+m", {
-					menuPath:['Issue']
-				})
+			// .command(
+			// 	CommandType.Container,
+			// 	'New Comment',
+			// 	(cmd, event) => getIssueActions().newComment(),
+			// 		"Ctrl+m", {
+			// 		menuPath:['Issue']
+			// 	})
 			.make()
 	/*
 	 * Insert images (Drag and drop and select)

@@ -13,7 +13,7 @@ import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
 import { getWindowManager } from "ui/WindowManager"
-import { WindowConfigs } from "shared/WindowConfig"
+import { WindowConfigs } from "shared/config/WindowConfig"
 import { If } from "shared/util/Decorations"
 import { focusElementById } from "shared/util/UIUtil"
 

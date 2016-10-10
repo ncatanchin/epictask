@@ -10,7 +10,7 @@ const
 echo(`Will use builder @ ${buildCmd}`)
 
 echo(`Cleaning`)
-rm('-Rf','dist/*','.awcache')
+rm('-rf','dist/*','.awcache/*')
 
 echo("Starting Compilation")
 process.env.NODE_ENV='production'

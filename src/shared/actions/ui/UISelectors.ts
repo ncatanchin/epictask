@@ -4,7 +4,7 @@ import {UIKey} from 'shared/Constants'
 import {UIState} from 'shared/actions/ui/UIState'
 import {createSelector} from 'reselect'
 import { IWindowInstance,WindowManager } from "ui/WindowManager"
-import { WindowType } from "shared/WindowConfig"
+import { WindowType } from "shared/config/WindowConfig"
 import { IUISheet } from "shared/config/DialogsAndSheets"
 
 

@@ -18,7 +18,7 @@ import {
 	removeBrowserWindowListener, removeWindowListener,
 	getCommandBrowserWindow
 } from "shared/commands/CommandManagerUtil"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals, getValue } from "shared/util/ObjectUtil"
 
 
 
@@ -112,6 +112,18 @@ export class CommandManager {
 	 * Browser menu commands that were sent to main
 	 */
 	private menuCommands:ICommand[] = []
+	
+	
+	/**
+	 * Global command list
+	 */
+	private globalCommands:{[id:string]:{
+		id:string,
+		electronAccelerator:string,
+		registered:boolean,
+		conflict:boolean,
+		cmd:ICommand
+	}} = {}
 	
 	/**
 	 * Map of all currently registered commands
@@ -436,6 +448,82 @@ export class CommandManager {
 	}
 	
 	/**
+	 * Remove a global shortcut
+	 *
+	 * @param commands
+	 */
+	removeGlobalShortcut(...commands:ICommand[]) {
+		if (!isElectron)
+			return
+		
+		if (!commands.length) {
+			log.info(`No global shortcut commands provided, so removing all`)
+			commands = Object.values(this.globalCommands)
+		}
+		
+		const
+			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+		
+		commands
+			.filter(it => it.type === CommandType.Global)
+			.forEach(it => {
+				const
+					shortcut = this.globalCommands[it.id]
+				
+				if (!shortcut) {
+					log.debug(`No short cut for command`,it)
+					return
+				}
+				
+				log.debug(`Removing global shortcut: ${it.id}`)
+				globalShortcut.unregister(shortcut.electronAccelerator)
+				delete this.globalCommands[it.id]
+			})
+	}
+	
+	
+	/**
+	 * Update global shortcuts
+	 *
+	 * @param commands
+	 */
+	private updateGlobalCommands(commands:ICommand[]) {
+		const
+			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+		
+		commands
+			.filter(it => it.type === CommandType.Global)
+			.forEach(it => {
+				if (this.globalCommands[it.id]) {
+					log.debug('un-registering global shortcut first',it)
+					this.removeGlobalShortcut(it)
+				}
+				
+				const
+					electronAccelerator =
+						new CommandAccelerator(it.defaultAccelerator).toElectronAccelerator(),
+					
+					shortcut = this.globalCommands[it.id] = {
+						id: it.id,
+						cmd: it,
+						electronAccelerator,
+						registered: false,
+						conflict: globalShortcut.isRegistered(electronAccelerator)
+					}
+					
+				log.debug(`Registering shortcut`,shortcut)
+				const
+					result = shortcut.registered = (globalShortcut.register(electronAccelerator,() => {
+						log.debug(`Executing global shortcut`, shortcut)
+						shortcut.cmd.execute(shortcut.cmd)
+					})) as any
+				
+				log.debug(`Command was registered success=${result}`)
+					
+			})
+	}
+	
+	/**
 	 * Update menu commands
 	 *
 	 * @param commands
@@ -577,15 +665,20 @@ export class CommandManager {
 			if (cmd.updateManager)
 				cmd.updateManager(cmd,{
 					setHidden:(hidden:boolean) =>
-						this.registerCommand(Object.assign(cmd,{hidden})),
+						this.registerCommand(Object.assign(cmd,{
+							hidden
+						})),
 					setEnabled:(enabled:boolean) =>
-						this.registerCommand(Object.assign(cmd,{enabled})),
+						this.registerCommand(Object.assign(cmd,{
+							enabled
+						})),
 					update:(cmd:ICommand) => this.registerCommand(cmd)
 				})
 		})
 		// FINALLY UPDATE MENU ITEMS
 		log.debug(`Mounting menu command`,commands.map(it => it.id))
 		this.updateMenuCommands(commands)
+		this.updateGlobalCommands(commands)
 	}
 	
 	/**
@@ -760,6 +853,21 @@ export const getCommandManager = getHot(module,'getCommandManager',new Proxy(fun
 	}
 })) as () => CommandManager
 
+
+// ADD REMOVE GLOBAL SHORTCUTS
+if (isElectron) {
+	const
+		removeShortcuts = () => getCommandManager().removeGlobalShortcut()
+	
+	if (isMain) {
+		Electron.app.on('will-quit',() => {
+			removeShortcuts()
+			Electron.globalShortcut.unregisterAll()
+		})
+	} else {
+		Electron.remote.getCurrentWindow().on('close',removeShortcuts)
+	}
+}
 
 /**
  * Default export is the singleton getter
