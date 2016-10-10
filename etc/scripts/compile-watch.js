@@ -15,8 +15,17 @@ Object.assign(process.env,{
 })
 
 require('shelljs/global')
-if (process.platform === 'win32')
-	exec('node_modules\\.bin\\gulp.cmd compile-watch')
-else
-	exec('./node_modules/.bin/gulp compile-watch')
+
+const
+	path = require('path'),
+	gulpCmd = path
+		.resolve(
+			process.cwd(),
+			'node_modules',
+			'.bin',
+			`gulp${process.platform === 'win32' ? '.cmd' : ''}`
+		)
+
+exec(`${gulpCmd} compile-watch`)
+
 //exec('node --max-old-space-size=1500 ./node_modules/gulp/bin/gulp.js compile-watch')
