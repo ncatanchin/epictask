@@ -7,7 +7,7 @@ const
 app.on('web-contents-created',(event,webContents) => {
 	webContents.on('will-navigate',(event:any,url) => {
 		log.info(`App wants to navigate`,url)
-		if (url.startsWith('http'))
+		if (!url.startsWith('https://github.com/login') && url.startsWith('http'))
 			shell.openExternal(url)
 		
 		event.returnValue = false

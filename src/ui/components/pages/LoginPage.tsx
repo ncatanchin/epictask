@@ -5,27 +5,56 @@ import {FlatButton} from 'material-ui'
 import {Page} from './Page'
 import {GitHubConfig} from "shared/config/GithubConfig"
 import { getAuthActions } from "shared/actions/ActionFactoryProvider"
-import { Themed } from "shared/themes/ThemeManager"
-import { PureRender } from "ui/components/common"
+import { PureRender, Icon } from "ui/components/common"
+import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { makeHeightConstraint, PositionAbsolute, makeWidthConstraint, FillWindow, Fill } from "shared/themes"
+import { Logo } from "ui/components/common/Logo"
+import { getValue } from "shared/util/ObjectUtil"
 
 
 const
 	log = getLogger(__filename)
 
-const styles = {
-	page: makeStyle(FlexColumnCenter,FlexScale,{
+const baseStyles = (topStyles,theme,palette) => ({
+	page: [FillWindow,{
 		// WebkitAppRegion: 'drag'
-	}),
+	}],
 
-	panel: makeStyle(FlexAuto,FlexColumn,{
+	panel: [FlexAuto,FlexColumn,{
 
-	}),
+	}],
 
-	logo: makeStyle({
-		maxWidth: '80vw',
-		height: 'auto',
-		paddingBottom: '5vh'
-	}),
+	logo: [
+		PositionAbsolute,
+		{
+			left: '50%',
+			top: '50%',
+			transform: 'translate(-50%,-50%)',
+			
+			spinner: [Fill,{
+				//animationDuration: '6s'
+			}]
+		
+		}
+	],
+	
+	button: [makeTransition(['opacity','color','background-color']),PositionAbsolute,{
+		left: '50%',
+		top: '50%',
+		transform: 'translate(-50%,-50%)',
+		cursor: 'pointer',
+		//border: `0.1rem solid ${palette.accent4ColorText}`,
+		//borderRadius: '0.2rem',
+		//height: 'auto',
+		opacity: 0.7,
+		backgroundColor: Transparent,
+		color: palette.text.secondary,
+		
+		':hover': {
+			opacity: 1,
+			color: palette.text.primary
+		}
+	}],
 
 	label: makeStyle({
 		fontSize: '2rem',
@@ -37,23 +66,23 @@ const styles = {
 		fontSize: '6rem',
 		textTransform: 'none'
 	})
+})
+
+export interface ILoginPageProps extends IThemedAttributes {
+	
 }
 
-interface ILoginPageProps {
-	theme?:any
+export interface ILoginPageState {
+	logoStyle:any
+	buttonStyle:any
 }
-
 
 /**
  * LOGIN PAGE
  */
-@Themed
+@ThemedStyles(baseStyles)
 @PureRender
 export class LoginPage extends React.Component<ILoginPageProps,any> {
-
-	constructor(props, context) {
-		super(props, context)
-	}
 
 
 	startAuth = () => {
@@ -70,45 +99,55 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 		})
 	}
 	
+	private updateStyles = () => {
+		const
+			dim = Math.min(window.innerHeight,window.innerWidth) / 2
+		
+		this.setState({
+			buttonStyle: makeStyle({
+				fontSize: dim
+			}),
+			logoStyle: makeStyle(
+				makeHeightConstraint(dim),
+				makeWidthConstraint(dim)
+			)
+		})
+		
+	}
+	
+	
+	componentWillMount():void {
+		this.updateStyles()
+		window.addEventListener('resize',this.updateStyles)
+	}
+	
+	componentWillUnmount():void {
+		window.removeEventListener('resize',this.updateStyles)
+	}
+	
 	render() {
 		const
 			{props} = this,
-			{theme} = props,
-			{palette} = theme,
+			{theme,styles} = props,
+			{palette} = theme
 
-			pageStyle = makeStyle(styles.page,{
-				backgroundColor: palette.accent4Color,
-				color: palette.accent4ColorText
-			}),
-
-
-
-			buttonStyle = makeStyle(styles.label,{
-				border: `0.1rem solid ${palette.accent4ColorText}`,
-				borderRadius: '0.2rem',
-				padding: '1rem',
-				height: 'auto',
-				color: palette.textColor
-			})
 
 		return (
-			<Page style={pageStyle} id='loginPage'>
-				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				<div style={styles.panel}>
-					<img style={styles.logo}
-					     src={require('assets/images/epictask-logo-rainbow.png')}/>
-					<FlatButton
-						style={buttonStyle}
-						hoverColor={palette.accent3Color}
-						onClick={this.startAuth}>
+			<Page style={styles.page} id='loginPage'>
+				
+				<Logo style={makeStyle(styles.logo,getValue(() => this.state.logoStyle))}
+				      eHidden={true}
+				      spinnerStyle={styles.logo.spinner} />
+				      
+			
+				<Icon
+					style={makeStyle(styles.button,getValue(() => this.state.buttonStyle))}
+					iconName='github'
+					iconSet='fa'
+					onClick={this.startAuth} />
 
-						<div style={makeStyle(FlexRowCenter)}>
-							<span className='fa' style={styles.icon}>{'\uf09b'}</span>
-							<span style={styles.label}>Login</span>
-						</div>
-					</FlatButton>
 
-				</div>
+			
 			</Page>
 		)
 	}

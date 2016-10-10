@@ -121,7 +121,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				windowOpts = Object.assign({},
 					mainWindowState,
 					AllWindowDefaults,Env.isMac && {
-						titleBarStyle: 'hidden'
+						//titleBarStyle: 'hidden'
 						// darkTheme:true,
 					}
 				)

@@ -2,6 +2,11 @@ require('source-map-support').install()
 require('babel-polyfill')
 import 'reflect-metadata'
 
+if (process.type === 'browser' && !process.env.EPIC_ENTRY) {
+	// IF CLEAN REQUESTED
+	require('shared/AppCleaner')
+}
+
 import 'shared/Env'
 import { acceptHot } from "shared/util/HotUtils"
 import 'shared/NamespaceConfig'

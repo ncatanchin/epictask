@@ -13,7 +13,7 @@ import filterProps from 'react-valid-props'
 
 // Constants
 const log = getLogger(__filename)
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexAuto, FlexRowCenter, Ellipsis, PositionRelative, {
 		fontSize: themeFontSize(1),
 		clickable: [

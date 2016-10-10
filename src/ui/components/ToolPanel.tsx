@@ -46,118 +46,123 @@ const
 		OverflowHidden,{
 			minHeight: gutterVertDim
 		}
-	],
-	baseStyles = createStyles({
-		root: [FlexScale, OverflowHidden, {
+	]
+
+
+function baseStyles(topStyles,theme,palette) {
+	return {
+		
+		root: [ FlexScale, OverflowHidden, {
 			border: 0,
 			
-			[Left]: [FlexRow,FillHeight],
-			[Right]: [FlexRow,FillHeight],
-			[Bottom]: [FlexColumnReverse,FillWidth],
-			[Popup]: [FlexColumn,FillWidth]
-		
-		}],
-		
-		tools: [FlexScale,OverflowHidden,makeBorderRem(),{
+			[Left]: [ FlexRow, FillHeight ],
+			[Right]: [ FlexRow, FillHeight ],
+			[Bottom]: [ FlexColumnReverse, FillWidth ],
+			[Popup]: [ FlexColumn, FillWidth ]
 			
+		} ],
 		
-			[Left]: [FlexColumn,FillHeight, {borderLeftStyle: 'solid',borderLeftWidth: rem(0.1)}],
-			[Right]: [FlexColumn,FillHeight, {borderRightStyle: 'solid',borderRightWidth: rem(0.1)}],
-			[Popup]: [FlexRow,FillWidth, {borderTopStyle: 'solid',borderTopWidth: rem(0.1)}],
-			[Bottom]: [FlexRow,FillWidth, {borderBottomStyle: 'solid',borderBottomWidth: rem(0.1)}],
-		}],
-		
-		tool: [FlexColumn,FlexScale,OverflowHidden,{
-			[Left]: [FillWidth],
-			[Right]: [FillWidth],
-			[Bottom]: [FillHeight],
-			[Popup]: [FillHeight],
+		tools: [ FlexScale, OverflowHidden, makeBorderRem(), {
 			
-			header: [FlexRowCenter,makeFlex(0,0,rem(2)),{
+			
+			[Left]: [ FlexColumn, FillHeight, { borderLeftStyle: 'solid', borderLeftWidth: rem(0.1) } ],
+			[Right]: [ FlexColumn, FillHeight, { borderRightStyle: 'solid', borderRightWidth: rem(0.1) } ],
+			[Popup]: [ FlexRow, FillWidth, { borderTopStyle: 'solid', borderTopWidth: rem(0.1) } ],
+			[Bottom]: [ FlexRow, FillWidth, { borderBottomStyle: 'solid', borderBottomWidth: rem(0.1) } ],
+		} ],
+		
+		tool: [ FlexColumn, FlexScale, OverflowHidden, {
+			[Left]: [ FillWidth ],
+			[Right]: [ FillWidth ],
+			[Bottom]: [ FillHeight ],
+			[Popup]: [ FillHeight ],
+			
+			header: [ FlexRowCenter, makeFlex(0, 0, rem(2)), {
 				// borderBottomStyle: 'solid',
 				// borderBottomWidth: rem(0.1),
 				
-				label: [FlexScale,Ellipsis,{
+				label: [ FlexScale, Ellipsis, {
 					fontSize: themeFontSize(1.2),
 					padding: '0.4rem 0.5rem'
-				}]
-			}],
+				} ]
+			} ],
 			
-			container: [OverflowHidden,PositionRelative,FlexScale,{
+			container: [ OverflowHidden, PositionRelative, FlexScale, {
 				borderStyle: 'solid',
 				borderWidth: rem(0.1)
-			}]
-		}],
+			} ]
+		} ],
 		
-		gutter: [{
-			[Left]: [...gutterVertical],
-			[Right]: [...gutterVertical],
-			[Popup]: [...gutterHorizontal],
-			[Bottom]: [...gutterHorizontal],
+		gutter: [ {
+			[Left]: [ ...gutterVertical ],
+			[Right]: [ ...gutterVertical ],
+			[Popup]: [ ...gutterHorizontal ],
+			[Bottom]: [ ...gutterHorizontal ],
 			
 			/**
 			 * Toggle button for opening/focusing tool
 			 */
-			toggle: [makeTransition(['opacity']),PositionRelative,FlexColumnCenter,FlexAuto,makeMarginRem(0),makePaddingRem(0),{
+			toggle: [ makeTransition([ 'opacity' ]), PositionRelative, FlexColumnCenter, FlexAuto, makeMarginRem(0), makePaddingRem(0), {
 				opacity: 1,
 				pointerEvents: 'auto',
 				textAlign: 'center',
 				
 				
-				[Left]: [{width: gutterHorizDim}],
-				[Right]: [{width: gutterHorizDim}],
-				[Bottom]: [{height: gutterVertDim}],
-				[Popup]: [{height: gutterVertDim}],
+				[Left]: [ { width: gutterHorizDim } ],
+				[Right]: [ { width: gutterHorizDim } ],
+				[Bottom]: [ { height: gutterVertDim } ],
+				[Popup]: [ { height: gutterVertDim } ],
 				
-				button: [FlexAlignCenter,makeFlex(0,1,'auto'),makePaddingRem(0),{
+				button: [ FlexAlignCenter, makeFlex(0, 1, 'auto'), makePaddingRem(0), {
 					
 					
-					[Left]: [FillWidth,FlexColumnReverse,{
+					[Left]: [ FillWidth, FlexColumnReverse, {
 						width: gutterHorizDim
-					}],
-					[Right]: [FillWidth,FlexColumn,makePaddingRem(0.5,0),{
+					} ],
+					[Right]: [ FillWidth, FlexColumn, makePaddingRem(0.5, 0), {
 						width: gutterHorizDim
-					}],
-					[Popup]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
+					} ],
+					[Popup]: [ FillHeight, FlexRow, makePaddingRem(0, 0.5), {
 						height: gutterHorizDim
-					}],
-					[Bottom]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
+					} ],
+					[Bottom]: [ FillHeight, FlexRow, makePaddingRem(0, 0.5), {
 						height: gutterHorizDim
-					}]
-				}],
+					} ]
+				} ],
 				
 				// Label
-				label: [makeFlex(0,1,'auto'),Ellipsis,{
+				label: [ makeFlex(0, 1, 'auto'), Ellipsis, {
 					
 					fontSize: rem(0.9),
 					
-					[Left]: [{
+					[Left]: [ {
 						padding: "0.5rem 0.3rem",
 						textOrientation: "sideways-right",
 						writingMode: "vertical-lr",
 						transform: "rotate(0.5turn)"
-					}],
+					} ],
 					
-					[Right]: [{
+					[Right]: [ {
 						padding: "0.5rem 0.3rem",
 						textOrientation: "sideways-left",
 						writingMode: "vertical-lr",
 						transform: "rotate(-0.5turn)"
-					}],
-					[Bottom]: [{padding: "0rem 0.5rem",}]
-				}],
+					} ],
+					[Bottom]: [ { padding: "0rem 0.5rem", } ]
+				} ],
 				
 				// Icon
-				icon: [makePaddingRem(0.4),{
-					 fontSize: rem(1.1)
-				}]
+				icon: [ makePaddingRem(0.4), {
+					fontSize: rem(1.1)
+				} ]
 				
 				
-			}]
-		}]
+			} ]
+		} ]
 		
 		
-	})
+	}
+}
 
 
 

@@ -68,7 +68,7 @@ const
 // }
 //
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	panel: [Fill, {}],
 	panelSplitPane: [Fill, {
 		' > .Pane2': makeStyle(OverflowHidden, {})

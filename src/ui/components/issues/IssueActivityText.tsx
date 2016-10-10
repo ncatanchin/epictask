@@ -22,7 +22,7 @@ import { connect } from "react-redux"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: {},
 
 	activityContent: [FlexColumn,FlexScale,OverflowHidden,{
@@ -282,7 +282,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			hovering = Radium.getState(this.state,'activity',':hover'),
 
 			// Grab the activity type style
-			rootStyle = _.merge({},baseStyles.activityContent,activityStyle.all,activityStyle[activityType],styles[activityType]),
+			rootStyle = _.merge({},styles.activityContent,activityStyle.all,activityStyle[activityType],styles[activityType]),
 
 			// Time styles
 			timeStyle = rootStyle.details.time,

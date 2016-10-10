@@ -1,3 +1,4 @@
+import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 const log = getLogger(__filename)
 
 import * as React from 'react'
@@ -7,7 +8,7 @@ import {Page} from './Page'
 
 const authActions = new AuthActionFactory()
 
-const styles = {
+const baseStyles = (topStyles,theme,palette) => ({
 	page: makeStyle(FlexColumnCenter,FlexScale,{
 		WebkitAppRegion: 'drag'
 	}),
@@ -15,21 +16,21 @@ const styles = {
 	panel: makeStyle(FlexAuto,{
 
 	})
-}
+})
 
 /**
  * The root container for the app
  */
-export class VerifyLoginPage extends React.Component<any,any> {
-
+@ThemedStyles(baseStyles)
+export class VerifyLoginPage extends React.Component<IThemedAttributes,void> {
 
 	render() {
-		const theme = getTheme()
-		const {palette} = theme
-		const pageStyle = makeStyle(styles.page,{
-			backgroundColor: palette.accent4Color,
-			color: palette.accent4ColorText
-		})
+		const
+			{styles,palette} = this.props,
+			pageStyle = makeStyle(styles.page,{
+				backgroundColor: palette.accent4Color,
+				color: palette.accent4ColorText
+			})
 
 		return (
 			<Page style={pageStyle}>

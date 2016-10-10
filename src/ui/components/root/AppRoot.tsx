@@ -1,12 +1,13 @@
 
 import {ObservableStore} from 'typedux'
-
+import * as Radium from 'radium'
 import {Provider} from 'react-redux'
 import {MuiThemeProvider} from 'material-ui/styles'
 import {PureRender} from 'ui/components/common'
 import {Events} from 'shared/config/Events'
 import {AppKey} from 'shared/Constants'
 import {RootState} from 'shared/store/RootState'
+
 import {
 	CommandComponent,
 	ICommandComponent,
@@ -32,6 +33,7 @@ import { FileDrop } from "ui/components/common/FileDrop"
 
 // Logger, Store +++
 const
+	{StyleRoot} = Radium,
 	log = getLogger(__filename),
 	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any,
 	win = window as any,
@@ -222,20 +224,21 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			
 			
 		return <MuiThemeProvider muiTheme={theme}>
-			<Provider store={reduxStore}>
-				
-				<CommandRoot
-					style={windowStyle}
-					component={this}
-					id="appRoot">
+				<Provider store={reduxStore}>
 					
-					
-						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-					
-					
-				</CommandRoot>
-			</Provider>
-		</MuiThemeProvider>
+					<CommandRoot
+						style={windowStyle}
+						component={this}
+						id="appRoot">
+						
+						
+							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+						
+						
+					</CommandRoot>
+				</Provider>
+			</MuiThemeProvider>
+		
 	}
 }
 
@@ -248,9 +251,9 @@ function render() {
 	reduxStore = store.getReduxStore()
 	
 	ReactDOM.render(
-		<App
+		<StyleRoot><App
 			store={reduxStore}
-		/>,
+		/></StyleRoot>,
 		
 		// ROOT ELEMENT TO MOUNT ON
 		document.getElementById('root'),

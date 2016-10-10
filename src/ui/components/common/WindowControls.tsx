@@ -35,7 +35,7 @@ function baseStyles(topStyles,theme,palette) {
 		
 		windowControls: [ FlexRowCenter, PositionAbsolute, {
 			WebkitAppRegion: 'no-drag',
-			top: 10,
+			top: 17,
 			left: 10,
 			height: rem(2)
 		} ],

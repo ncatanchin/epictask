@@ -31,12 +31,14 @@ import { IssuesList } from "ui/components/issues/IssuesList"
 import { isNumber } from "shared/util/ObjectUtil"
 import {
 	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
-	CommandContainerBuilder
+	CommandContainerBuilder, CommandContainer
 } from "shared/commands/CommandComponent"
 import { ICommand, Command, CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { SearchPanel } from "ui/components/search"
 import { SearchType } from "shared/actions/search"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { FlexColumnCenter } from "shared/themes"
 
 
 
@@ -48,7 +50,7 @@ const
 
 
 //region STYLES
-const baseStyles = (topStyles,theme,palette) => {
+function baseStyles(topStyles,theme,palette) {
 	
 	const
 		{primary,accent,text,background} = palette
@@ -59,6 +61,26 @@ const baseStyles = (topStyles,theme,palette) => {
 			' > .Pane2': makeStyle(OverflowHidden, {})
 			
 		} ],
+		
+		noItems: [Fill,FlexColumnCenter,{
+			text: [{
+				color: text.secondary,
+				fontWeight: 100,
+				fontSize: rem(1.6),
+				lineSpacing: rem(1.9),
+				letterSpacing: rem(0.3),
+				textTransform: 'uppercase',
+				textAlign: 'center',
+				
+				strong: [{
+					color: text.primary,
+					fontWeight: 500
+				}]
+				
+			}]
+			
+			
+		}],
 		
 		search: [ makePaddingRem(0, 1), {
 			backgroundColor: Transparent,
@@ -81,12 +103,13 @@ const baseStyles = (topStyles,theme,palette) => {
 /**
  * IIssuesPanelProps
  */
-export interface IIssuesPanelProps {
-	theme?: any
-	styles?: any
+export interface IIssuesPanelProps extends IThemedAttributes {
+	commandContainer?:CommandContainer
+	
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
 	items?: List<IIssueListItem<any>>
+	
 	hasAvailableRepos?: boolean
 	saving?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
@@ -622,29 +645,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	onSearchEscape = () => {
 		
-		// log.info(`Header on escape`)
-		//
-		// if (this.isExpanded)
-		// 	return
-		//
-		// if (this.textField)
-		// 	this.textField.blur()
-		//
-		//getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-		
-		// const {searchPanel} = this
-		//
-		// if (searchPanel) {
-		// 	const textField:any = searchPanel.textField
-		// 	if (textField) {
-		// 		textField.blur()
-		// 	} else {
-		// 		const doc = document as any
-		// 		doc.activeElement.blur()
-		// 	}
-		// }
-		
-		//ActionFactoryProviders[UIKey].focusIssuesPanel()
 	}
 
 	
@@ -654,14 +654,17 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	render() {
 		const
 			{
-				theme,
 				styles,
+				palette,
 				issues,
-				editInlineConfig
+				items,
+				commandContainer
 			} = this.props,
+			
+			// FOCUSED BASED ON CONTAINER
+			focused = commandContainer.isFocused(),
+			
 			selectedIssueIds = this.selectedIssueIds,
-			{items} = this.props,
-			{palette} = theme,
 			
 			
 			validSelectedIssueIds = selectedIssueIds
@@ -669,9 +672,26 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						!_.isNil(issues.find(issue => issue.id === issueId))),
 
 			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
+			itemsAvailable = items && items.size > 0,
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
-			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5)
+			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
+			
+			noItemsContentNode = !itemsAvailable && (issues.size ?
+				<span>
+					<span style={styles.noItems.text.strong}>You've filtered all the issues</span>
+					&nbsp;in the your enabled repositories, you might want to check that
+				</span> :
+					<span>
+						<span style={styles.noItems.text.strong}>No issues exist</span>
+						&nbsp;in your enabled repositories, why don't you create one
+					</span>
+				),
+			noItemsNode = !itemsAvailable && <div style={styles.noItems}>
+					<div style={styles.noItems.text}>
+						{noItemsContentNode}
+					</div>
+						</div>
 		
 		
 		return <CommandRoot
@@ -679,47 +699,55 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			style={styles.panel}
       id="issuesPanel">
 			
-			<Style scopeSelector=".issuePanelSplitPane"
-			       rules={styles.panelSplitPane}/>
+			{/*<Style scopeSelector=".issuePanelSplitPane"*/}
+			       {/*rules={styles.panelSplitPane}/>*/}
 			
-			{/* ISSUE SEARCH AND FILTERING */}
-			<SearchPanel
+			
+			{itemsAvailable && <SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='issues-search'
 				types={[SearchType.Milestone,
-					SearchType.Label,
-					SearchType.Assignee,
-					SearchType.Issue,
-					SearchType.Repo,
-					SearchType.AvailableRepo
-				]}
+						SearchType.Label,
+						SearchType.Assignee,
+						SearchType.Issue,
+						SearchType.Repo,
+						SearchType.AvailableRepo
+					]}
 				inlineResults={false}
 				expanded={false}
+				underlineStyle={makeStyle({borderBottomColor: Transparent})}
+				underlineFocusStyle={{borderBottomColor: palette.primary.hue3}}
 				panelStyle={styles.search}
 				fieldStyle={styles.search.field}
 				inputStyle={styles.search.input}
 				onEscape={this.onSearchEscape}
 				mode={'issues'}/>
+			}
 			
-			{/* ISSUES LIST & DETAILS*/}
-			{items &&
-				<SplitPane split="vertical"
-				           allowResize={allowResize}
-				           minSize={listMinWidth}
-				           maxSize={listMaxWidth}
-				           className='issuePanelSplitPane'>
-					
-					{/* LIST CONTROLS FILTER/SORT */}
-					<IssuesList
-						
-						ref={(listRef) => this.setState({listRef})}
-						onIssueOpen={this.onIssueOpen}
-						onIssueSelected={this.onIssueSelected} />
-					
-					{/* ISSUE DETAIL PANEL */}
-					<IssueDetailPanel />
+			
+			{/* ISSUE SEARCH AND FILTERING */}
+			{!itemsAvailable  ? noItemsNode :
 				
-				</SplitPane>
+					<SplitPane split="vertical"
+					           allowResize={allowResize}
+					           minSize={listMinWidth}
+					           maxSize={listMaxWidth}
+					           className='issuePanelSplitPane'>
+						
+						{/* LIST CONTROLS FILTER/SORT */}
+						<IssuesList
+							
+							ref={(listRef) => this.setState({listRef})}
+							onIssueOpen={this.onIssueOpen}
+							onIssueSelected={this.onIssueSelected}/>
+						
+						{/* ISSUE DETAIL PANEL */}
+						<IssueDetailPanel />
+					
+					</SplitPane>
+					
+				
+				
 			}
 		</CommandRoot>
 	}

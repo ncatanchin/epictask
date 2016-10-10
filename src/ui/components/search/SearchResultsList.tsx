@@ -2,7 +2,6 @@
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import * as React from 'react'
 
-import {List} from 'immutable'
 import { PureRender } from 'ui/components/common/PureRender'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { SearchItem, ISearchState } from "shared/actions/search"
@@ -161,7 +160,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			this.props,
 			nextProps,
 			'theme',
-			'styles',
+				'style',
+				'styles',
 			'searchState',
 			'searchState.items') || !shallowEquals(
 				this.state,

@@ -48,7 +48,7 @@ const log = getLogger(__filename)
 const ReactTimeout = require('react-timeout')
 
 //region Styles
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [FlexColumn,FillWidth,FlexAuto,makeTransition('opacity')],
 	savingIndicator: [makeTransition('opacity'),PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
 		opacity: 0,

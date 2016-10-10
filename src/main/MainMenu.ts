@@ -26,14 +26,14 @@ function makeDevMenu(mainWindow) {
 			{
 				label: 'Start Perf',
 				accelerator: 'Ctrl+P',
-				click: () => mainWindow.webContents.executeJavaScript('Perf.start()')
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('Perf.start()')
 			},
 			
 			// Stop Perf
 			{
 				label: 'Stop Perf',
 				accelerator: 'Ctrl+Shift+P',
-				click: () => mainWindow.webContents.executeJavaScript(`
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript(`
 					Perf.stop();
 					measurements = Perf.getLastMeasurements();
 					Perf.printInclusive(measurements);
@@ -52,7 +52,25 @@ function makeDevMenu(mainWindow) {
 			{
 				label: 'Break',
 				accelerator: 'Command+F8',
-				click: () => mainWindow.webContents.executeJavaScript('debugger;')
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('debugger;')
+			},
+			
+			// CLEAN
+			{
+				label: 'Clean / Reset App',
+				click: () => {
+					
+					
+					const
+						opts = {args: ['clean']} //process.argv.slice(1).filter(it => it !== 'clean').concat(['clean'])
+					
+					if (DEBUG)
+						opts.args.unshift(process.argv[process.argv.length - 1])
+					
+					log.info(`relaunching with args: ${opts}`)
+					app.relaunch(opts)
+					app.exit(0)
+				}
 			}
 		
 		

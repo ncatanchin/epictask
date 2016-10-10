@@ -12,7 +12,7 @@ import { SearchPanel } from "ui/components/search"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn, FlexAuto, {} ]
 })
 

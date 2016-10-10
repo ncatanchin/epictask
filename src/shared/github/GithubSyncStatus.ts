@@ -5,7 +5,7 @@ import { toJSON, parseJSON } from "shared/util/JSONUtil"
 
 const
 	log = getLogger(__filename),
-	syncStatusFilename = getUserDataFilename('sync-status.json')
+	syncStatusFilename = getUserDataFilename('epictask-sync-status.json')
 
 log.info(`SyncStatusFilename file: ${syncStatusFilename}`)
 

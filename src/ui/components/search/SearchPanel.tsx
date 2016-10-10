@@ -6,7 +6,7 @@
 import {List} from 'immutable'
 import * as ReactDOM from 'react-dom'
 import * as React from 'react'
-import {Paper, TextField} from 'material-ui'
+import {TextField} from 'material-ui'
 import * as KeyMaps from 'shared/KeyMaps'
 import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResults} from './SearchResults'
@@ -16,16 +16,15 @@ import { isNumber, getValue, shallowEquals } from "shared/util/ObjectUtil"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import { SearchItem, ISearchState } from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
-import {Themed} from "shared/themes/ThemeManager"
 import {
 	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
 	CommandContainerBuilder, CommandContainer
 } from "shared/commands/CommandComponent"
-import { ICommand, CommandType } from "shared/commands/Command"
+import { CommandType } from "shared/commands/Command"
 import { CommonKeys } from "shared/KeyMaps"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
 import { getCommandManager } from "shared/commands/CommandManager"
-import { ContainerNames } from "shared/config/CommandContainerConfig"
+
 
 
 const $ = require('jquery')
@@ -41,7 +40,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // STYLES
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
 	const
 		{primary,accent,text} = palette
 	
@@ -90,7 +89,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			color: text.primary
 		}]
 	}]
-})
+}
 
 /**
  * ISearchPanelProps
@@ -105,6 +104,8 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	fieldStyle?:any
 	underlineStyle?:any
 	underlineFocusStyle?:any
+	
+	hint?:any
 	hintStyle?:any
 	
 	resultStyle?:any
@@ -148,8 +149,6 @@ export interface ISearchPanelState {
  * @constructor
  **/
 
-
-//@CSSModules(styles)
 @CommandComponent()
 @ThemedStyles(baseStyles,'searchPanel')
 @PureRender
@@ -158,7 +157,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	static defaultProps? = {
 		inlineResults: false,
 		expanded: false,
-		modal: false
+		modal: false,
+		hint: <span>Search issues, comments, labels &amp; milestones</span>
 	}
 	
 	
@@ -319,7 +319,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param props
 	 */
-	isFocused = (props): boolean => getValue(() => this.state.focused,false)
+	isFocused = (props = this.props): boolean => {
+		return getValue(() => this.state.focused,false) || props.commandContainer.isFocused()
+	}
+		
 	
 	
 	/**
@@ -733,13 +736,21 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	render() {
 		const
-			{expanded,styles, theme,inlineResults,hintStyle,underlineFocusStyle,underlineStyle, autoFocus,searchId, modal} = this.props,
-			{searchState,results,query} = this.state,
-			{selectedIndex,items} = searchState,
+			{
+				commandContainer,
+				expanded,
+				styles,
+				inlineResults,
+				hint,
+				hintStyle,
+				underlineFocusStyle,
+				underlineStyle,
+				autoFocus,
+				searchId
+			} = this.props,
+			{searchState,query} = this.state,
 			
-			focused = this.isFocused(this.props),
-			resultsOpen = focused,
-
+			focused = this.isFocused(),
 			
 			// Focused Styles
 			focusedStyle = focused && styles.focused,
@@ -780,17 +791,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					ref={this.setTextFieldRef}
 					tabIndex={-1}
 					autoFocus={autoFocus}
-					underlineStyle={underlineStyle}
-					underlineFocusStyle={underlineFocusStyle}
+					underlineStyle={makeStyle(underlineStyle)}
+					underlineFocusStyle={focused && underlineFocusStyle}
 					onFocus={(event) => {
-						const
-							{commandContainer} = this.props
 						
 						log.debug(`Received text box focus event`,event,commandContainer)
 						getCommandManager().setContainerFocused(this.commandComponentId,commandContainer,true,event)
-						commandContainer && commandContainer.onFocus(event)
+						//commandContainer && commandContainer.onFocus(event)
 					}}
-					hintText={<div style={makeStyle(styles.hint,hintStyle)}>Search issues, comments, labels &amp; milestones</div>}
+					hintText={<div style={makeStyle(styles.hint,hintStyle)}>{hint}</div>}
 					onChange={(e) => this.onInputChange(e)}
 					style={fieldStyle}
 					inputStyle={inputStyle}
@@ -801,7 +810,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				                   searchState={searchState}
 				                   searchPanel={this}
 				                   searchId={searchId}
-				                   open={resultsOpen}
+				                   open={focused}
 				                   inline={inlineResults}
 				                   onResultHover={this.onHover}
 				                   onResultSelected={this.onResultSelected}

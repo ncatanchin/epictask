@@ -31,7 +31,7 @@ const
 		'color'
 	])
 
-export const baseStyles = createStyles({
+export const baseStyles = (topStyles,theme,palette) => ({
 	label: [ makeTransition('width'), PositionRelative, FlexAuto, FlexRowCenter, {
 		display: 'flex',
 		borderRadius: accessoryDimHalf,

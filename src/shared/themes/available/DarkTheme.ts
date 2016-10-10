@@ -408,9 +408,6 @@ export function DarkTheme(palette) {
 		},
 		
 		header: {
-			logoWrapper: {
-				height: navBarHeight
-			},
 			logo: {},
 			controlStyle: {
 				color: 'white',

@@ -16,7 +16,7 @@ import { ContainerNames } from "shared/config/CommandContainerConfig"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
 	const
 		{text,accent,primary,secondary} = palette
 	
@@ -73,7 +73,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			
 		}
 	]
-})
+}
 
 
 /**

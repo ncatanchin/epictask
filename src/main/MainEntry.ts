@@ -1,14 +1,20 @@
 
 
+
+import 'shared/NodeEntryInit'
+
 import { acceptHot } from "shared/util/HotUtils"
-require('shared/NodeEntryInit')
 
 import checkSingleInstance from "main/CheckSingleInstance"
 import * as MainWindowType from './MainWindow'
 import {getServiceManager as getServiceManagerType} from "shared/services"
 import { Events } from "shared/config/Events"
 import { getProcessManager } from "shared/ProcessManagement"
+
+
+
 import './MainAppSwitches'
+
 const
 	{app,BrowserWindow} = require('electron'),
 	log = getLogger(__filename),

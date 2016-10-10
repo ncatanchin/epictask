@@ -81,6 +81,7 @@ export class MilestoneStore extends TSRepo<Milestone> {
 	 * @returns {Promise<Comment[]>}
 	 */
 	@PouchDBPrefixFinder({
+		includeDocs: true,
 		keyProvider: (repoId:number) => {
 			const
 				startKey = `${repoId}-`

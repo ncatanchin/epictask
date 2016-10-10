@@ -1,21 +1,20 @@
 // Imports
 import { connect } from 'react-redux'
 import { PureRender } from 'ui/components/common/PureRender'
-import {Header, HeaderVisibility, ToastMessages} from 'ui/components/root'
-import {getPage} from 'ui/components/pages'
-import {StatusBar} from "ui/components/root/StatusBar"
-import {createStructuredSelector} from 'reselect'
+import { Header, HeaderVisibility, ToastMessages } from 'ui/components/root'
+import { getPage } from 'ui/components/pages'
+import { StatusBar } from "ui/components/root/StatusBar"
+import { createStructuredSelector } from 'reselect'
 import { availableRepoCountSelector } from "shared/actions/repo/RepoSelectors"
-import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import { AppStateType } from "shared/AppStateType"
-import { Themed } from "shared/themes/ThemeManager"
 import { appStateTypeSelector } from "shared/actions/app/AppSelectors"
 import { childWindowOpenSelector, modalWindowOpenSelector, sheetSelector } from "shared/actions/ui/UISelectors"
 import { IUISheet } from "shared/config/DialogsAndSheets"
 import { SheetRoot } from "ui/components/root/SheetRoot"
 import { FillWindow } from "shared/themes/styles/CommonStyles"
-import { FlexColumn, Fill } from "shared/themes"
+import { FlexColumn, Fill, FlexScale } from "shared/themes"
 import { WelcomePage } from "ui/components/pages/WelcomePage"
+import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 
 // Constants
@@ -24,40 +23,39 @@ const
 
 
 //region Styles
-const styles = createStyles({
-	app: [FlexColumn, FlexScale, {
-		overflow: 'hidden'
-	}],
-	
-	header: [makeTransition(['height','width','opacity']), FlexRowCenter, {}],
-	
-	content: [makeTransition(['height','width','opacity']), FlexColumn, PositionRelative, {
-		flexBasis: 0,
-		flexGrow: 1,
-		flexShrink: 1
-	}],
-	
-	collapsed: [{
-		flexGrow: 0
-	}],
-	
-	blur: [{
-		WebkitFilter: "blur(0.2rem)", /* Chrome, Safari, Opera */
-		filter: "blur(0.2rem)"
-	}]
-	
-	
-})
+function baseStyles(topStyles, theme, palette) {
+	return {
+		app: [ FlexColumn, FlexScale, {
+			overflow: 'hidden'
+		} ],
+		
+		header: [ makeTransition([ 'height', 'width', 'opacity' ]), FlexRowCenter, {} ],
+		
+		content: [ makeTransition([ 'height', 'width', 'opacity' ]), FlexColumn, PositionRelative, {
+			flexBasis: 0,
+			flexGrow: 1,
+			flexShrink: 1
+		} ],
+		
+		collapsed: [ {
+			flexGrow: 0
+		} ],
+		
+		blur: [ {
+			WebkitFilter: "blur(0.2rem)", /* Chrome, Safari, Opera */
+			filter: "blur(0.2rem)"
+		} ]
+		
+		
+	}
+}
 //endregion
-
 
 
 /**
  * IUIRootProps
  */
-export interface IUIRootProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface IUIRootProps extends IThemedAttributes {
 	stateType?:AppStateType
 	hasAvailableRepos?:boolean
 	childOpen?:boolean
@@ -87,28 +85,28 @@ export interface IUIRootState {
 	modalOpen: modalWindowOpenSelector,
 	sheet: sheetSelector
 }))
-@Themed
+@ThemedStyles(baseStyles)
 @PureRender
 export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 	
 	render() {
 		const
-			{hasAvailableRepos, stateType, theme, modalOpen, sheet} = this.props,
-			{palette} = theme,
+			{ hasAvailableRepos, stateType, styles, theme, modalOpen, sheet } = this.props,
 			
-			PageComponent = hasAvailableRepos ? getPage(stateType) : WelcomePage,
-			expanded = stateType > AppStateType.AuthLogin && !hasAvailableRepos,
+			PageComponent = ((hasAvailableRepos || stateType < AppStateType.Home) ?
+					getPage(stateType) :
+					WelcomePage
+			) as any,
 			
-			headerVisibility = (stateType < AppStateType.Home) ?
+			headerVisibility = (stateType < AppStateType.Home || !hasAvailableRepos) ?
 				HeaderVisibility.Hidden :
-				(expanded) ? HeaderVisibility.Expanded :
-					HeaderVisibility.Normal,
+				HeaderVisibility.Normal,
 			
 			contentStyles = makeStyle(styles.content, {
 				backgroundColor: theme.canvasColor,
 				display: 'flex',
 				flexDirection: 'column'
-			}, expanded && styles.collapsed)
+			})
 		
 		
 		return <div className={'root-content'}
@@ -127,7 +125,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				{/* HEADER */}
 				<Header visibility={headerVisibility}/>
 				
-			
+				
 				<div style={[FlexScale,FlexColumn]}>
 					<div style={contentStyles}>
 						<PageComponent />
@@ -138,7 +136,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				<ToastMessages/>
 				
 				{/* STATUS BAR */}
-				<StatusBar/>
+				<StatusBar open={HeaderVisibility.Hidden !== headerVisibility}/>
 			</div>
 			{/* SHEET ROOT */}
 			<SheetRoot />

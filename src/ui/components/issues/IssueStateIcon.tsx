@@ -11,7 +11,7 @@ import {TIssueState} from 'shared/models/Issue'
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [{
 		padding: rem(0.3),
 		borderRadius: rem(0.3)

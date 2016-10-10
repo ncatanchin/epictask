@@ -19,7 +19,7 @@ import { getValue, cloneObject, shallowEquals } from "shared/util/ObjectUtil"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { IssueLabelsAndMilestones } from "ui/components/issues"
 
-import {baseStyles as labelBaseStyles} from 'ui/components/common/LabelChip'
+import {baseStyles as labelBaseStylesFn} from 'ui/components/common/LabelChip'
 import {
 	FlexRowCenter, FlexAuto, makeTransition, makeMarginRem, FlexScale, FlexAlignStart,
 	PositionRelative, makePaddingRem, FlexColumn
@@ -37,8 +37,10 @@ log.setOverrideLevel(LogLevel.DEBUG)
 
 const
 	baseStyles = (topStyles,theme,palette) => {
+			
 		
 		const
+			labelBaseStyles = createStyles(labelBaseStylesFn,null,theme,palette),
 			{background,primary,accent,text,secondary} = palette,
 			flexTransition = makeTransition([
 				'opacity',

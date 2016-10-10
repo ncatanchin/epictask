@@ -13,7 +13,7 @@ const
 //DEBUG
 log.setOverrideLevel(LogLevel.DEBUG)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn, FlexAuto, {} ]
 })
 

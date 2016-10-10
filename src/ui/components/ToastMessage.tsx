@@ -9,7 +9,7 @@ import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root:        [makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd,makeMarginRem(0.5), {
 		
 		width:           '100%',

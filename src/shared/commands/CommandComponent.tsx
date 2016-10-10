@@ -2,7 +2,7 @@ import { ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator } f
 import { getCommandManager } from "shared/commands/CommandManager"
 import * as React from 'react'
 import filterProps from 'react-valid-props'
-import { isFunction, shortId } from "shared/util/ObjectUtil"
+import { isFunction, shortId, getValue } from "shared/util/ObjectUtil"
 
 const
 	log = getLogger(__filename),
@@ -100,12 +100,22 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		mounted: false
 	}, this.updateCommands)
 	
+	
+	/**
+	 * Whether the container is currently focused or not
+	 *
+	 * @returns {boolean}
+	 */
+	isFocused() {
+		return getValue(() => this.state.focused,false)
+	}
+	
 	/**
 	 * Set the command component instance
 	 *
 	 * @param instance
 	 */
-	setInstance = (instance:ICommandComponent) => {
+	private setInstance = (instance:ICommandComponent) => {
 		if (!instance) {
 			log.debug(`Instance set to null`, this)
 			return
@@ -120,7 +130,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	onFocus = (event:React.FocusEvent<any>) => {
+	private onFocus = (event:React.FocusEvent<any>) => {
 		
 		
 		const
@@ -154,7 +164,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	onBlur = (event:React.FocusEvent<any>) => {
+	private onBlur = (event:React.FocusEvent<any>) => {
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
@@ -246,7 +256,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{..._.omit(this.props,'ref', 'onFocus', 'onBlur')}
 			onFocus={this.onFocus}
 			onBlur={this.onBlur}
-			commandContainer={this} ref={this.setInstance}/>
+			commandContainer={this}
+			ref={this.setInstance}/>
 	}
 }
 

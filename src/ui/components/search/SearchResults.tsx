@@ -30,7 +30,7 @@ const
 	{body} = doc
 
 //region Styles
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
 	const
 		{accent,primary,text,secondary} = palette
 	
@@ -75,7 +75,7 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			padding: '0.2rem 1rem'
 		}
 	}
-})
+}
 //endregion
 
 
@@ -162,54 +162,66 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	// 	return (nextProps.inline && shouldUpdate)
 	// }
 	//
+	
+	
+	private getContainerStyle(anchor,theme) {
+		// FUNC TO GET STYLE
+		
+		const
+			rect =  anchor && anchor.getBoundingClientRect(),
+			top = (rect.height + rect.top),
+			winHeight = window.innerHeight,
+			maxHeight = winHeight - top - (winHeight * .1),
+			maxHeightStr = `${maxHeight - 48}px`,
+			style = {
+				position: 'absolute',
+				display: 'block',
+				width: rect.width + 'px',
+				top: `${top}px`,
+				left: rect.left + 'px',
+				//height: height + 'px',
+				maxHeight: maxHeightStr,
+				overflow: 'auto',
+				fontFamily: theme.fontFamily,
+				fontWidth: theme.fontWeight,
+				zIndex: 99999
+			}
+		
+		log.debug(`Container style`,rect,top,winHeight,maxHeight)
+		
+		return style
+	
+	}
+	
 	renderResults(props) {
 		const
-			{styles,theme,searchState,open,inline} = props,
+			{styles,theme,searchState,open,inline,searchPanel} = props,
 			{palette} = theme
 
-		let resultsStyle = makeStyle(styles.results,{
-			backgroundColor: palette.alternateBgColor,
-			color: palette.alternateTextColor
-		})
+		
+		
+		let
+			{anchor} = props,
+			resultsStyle = makeStyle(styles.results,{
+				backgroundColor: palette.alternateBgColor,
+				color: palette.alternateTextColor
+			})
 
 		log.debug('rendering results inline:',inline,'open',open,'anchor',props.anchor)
 
 		if (!props.inline) {
-			let
-				{anchor} = props
-			
 			anchor = typeof anchor === 'string' ?
 				document.querySelector(anchor) :
 				props.anchor
+			
 
-
-			const containerStyle = props.open && anchor ? (() => {
-				const
-					rect =  anchor.getBoundingClientRect(),
-					top = (rect.height + rect.top),
-					winHeight = window.innerHeight,
-					//height = winHeight - top - (winHeight * .1).
-					maxHeight = `${winHeight - 48}px`
-				
-				return {
-					position: 'absolute',
-					display: 'block',
-					width: rect.width + 'px',
-					top: `${top}px`,
-					left: rect.left + 'px',
-					height: maxHeight,
-					maxHeight,
-					overflow: 'auto',
-					fontFamily: theme.fontFamily,
-					fontWidth: theme.fontWeight,
-					zIndex: 99999
+			const
+				containerStyle = open && anchor ? this.getContainerStyle(anchor,theme) : {
+					maxHeight: '0px'
 				}
-			})() : {
-				height: 0
-			}
 
 			log.debug('rendering results',{anchor,node:this.node,containerStyle})
-			resultsStyle = makeStyle(resultsStyle, props.containerStyle)
+			resultsStyle = makeStyle(resultsStyle)
 			
 			const
 				resultsElement = <SearchResultsList

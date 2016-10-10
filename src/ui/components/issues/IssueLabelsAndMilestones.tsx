@@ -18,7 +18,7 @@ const
 	tinycolor = require('tinycolor2')
 
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: makeStyle(FlexRow, FlexAuto, {
 		// overflowX: 'auto',
 		// overflowY: 'visible'

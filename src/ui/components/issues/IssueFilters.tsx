@@ -22,7 +22,8 @@ import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector, createSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {
-	issueSortAndFilterSelector
+	issueSortAndFilterSelector, issueSortSelector, issueFilterSelector, issueFilterLabelsSelector,
+	issueFilterMilestonesSelector
 } from 'shared/actions/issue/IssueSelectors'
 import {IssueActionFactory} from 'shared/actions/issue/IssueActionFactory'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
@@ -42,71 +43,88 @@ import {
 	enabledLabelsSelector
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
+import {
+	FlexRow, FlexAuto, FillWidth, FlexRowCenter, Ellipsis, FlexScale, rem, FlexColumn,
+	makeFlexAlign, OverflowHidden
+} from "shared/themes"
+import { getValue } from "shared/util/ObjectUtil"
 
 
-const log = getLogger(__filename)
-const tinycolor = require('tinycolor2')
+const
+	log = getLogger(__filename)
+
+//DEBUG
+log.setOverrideLevel(LogLevel.DEBUG)
+
 
 // Styles
-const baseStyles = createStyles({
-	root: [FlexRow, FlexAuto, FillWidth, {
-		padding: '0.5rem 0rem 0.5rem 1rem'
-	}],
-
-	filters: [FlexRowCenter, FlexAuto, FillWidth, OverflowHidden, {
-
-		none: [FlexScale, {
-			fontWeight: 100,
-			fontSize: themeFontSize(1.2)
-		}],
-		labels: [FlexScale, {
-			flexWrap: 'wrap',
-			label: [{
-				margin: '0.5rem 1rem 0.5rem 0'
+function baseStyles(topStyles,theme,palette) {
+	return {
+		root: [makeTransition(['max-height','height','opacity']),FlexAuto, FillWidth, {
+			padding: '0.5rem 0rem 0.5rem 1rem',
+			height: 'auto',
+			
+			empty: [ {
+				padding: 0,
+				maxHeight: 0,
 			}]
 		}],
-
-		// Right side controls & stats
-		controls: [FlexColumn, makeFlexAlign('flex-end','center'), {
-			groupBy: [FlexAuto, FlexRowCenter, {
-				padding: '0.2rem 0 0.2rem 1.4rem',
-				borderRadius: '0.3rem',
-				margin: '0 0.2rem 0 0',
-				boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
+		
+		filters: [FlexRowCenter, FillWidth, {
+			
+			none: [FlexScale, {
+				fontWeight: 100,
+				fontSize: themeFontSize(1.2)
 			}],
-			stats: [Ellipsis,{
-				margin: '1rem 1rem 0.5rem 1rem',
-				fontSize: rem(1),
-				fontWeight: 300
-			}]
-		}]
-
-	}],
-
-	list: {
-		item: {
-
-			text: [FlexRowCenter, FillWidth, {
-				value: {
-					width: 300,
-				},
-				primary: [FlexAuto, Ellipsis, {
-					padding: '0 0 0 1rem',
-					fontWeight: 700,
-					flexGrow: 1
+			labels: [FlexScale, {
+				flexWrap: 'wrap',
+				label: [{
+					margin: '0.5rem 1rem 0.5rem 0'
+				}]
+			}],
+			
+			// Right side controls & stats
+			controls: [FlexColumn, makeFlexAlign('flex-end','center'), {
+				groupBy: [FlexAuto, FlexRowCenter, {
+					padding: '0.2rem 0 0.2rem 1.4rem',
+					borderRadius: '0.3rem',
+					margin: '0 0.2rem 0 0',
+					boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
 				}],
-				secondary: [FlexScale, Ellipsis, {
+				stats: [Ellipsis,{
+					margin: '1rem 1rem 0.5rem 1rem',
+					fontSize: rem(1),
 					fontWeight: 300
-				}],
-				spacer: [FlexScale],
-				icon: [FlexAuto, {
-					width: 18
 				}]
 			}]
+			
+		}],
+		
+		list: {
+			item: {
+				
+				text: [FlexRowCenter, FillWidth, {
+					value: {
+						width: 300,
+					},
+					primary: [FlexAuto, Ellipsis, {
+						padding: '0 0 0 1rem',
+						fontWeight: 700,
+						flexGrow: 1
+					}],
+					secondary: [FlexScale, Ellipsis, {
+						fontWeight: 300
+					}],
+					spacer: [FlexScale],
+					icon: [FlexAuto, {
+						width: 18
+					}]
+				}]
+			}
+			
 		}
-
 	}
-})
+}
 
 /**
  * IIssueFiltersProps
@@ -119,8 +137,10 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	issuesGrouped?:IIssueGroup[],
 	issueSort?:IIssueSort
 	issueFilter?:IIssueFilter
-	issueFilterLabels?:Label[]
-	issueFilterMilestones?:Milestone[]
+	
+	issueFilterLabels?:List<Label>
+	issueFilterMilestones?:List<Milestone>
+	
 	labels?:List<Label>
 	milestones?:List<Milestone>
 	assignees?:List<User>
@@ -135,17 +155,14 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
  **/
 
 @connect(createStructuredSelector({
-	//unfilteredIssueIds: issueIdsSelector,
-	//issues: issuesSelector,
-	//issuesGrouped: issuesGroupedSelector,
-	issueSort: createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
-	issueFilter: createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
-	//issueFilterLabels: issueFilterLabelsSelector,
-	//issueFilterMilestones: issueFilterMilestonesSelector,
+	issueSort: issueSortSelector,// createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
+	issueFilter: issueFilterSelector, //createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
+	issueFilterLabels: issueFilterLabelsSelector,
+	issueFilterMilestones: issueFilterMilestonesSelector,
 	labels: enabledLabelsSelector,
 	milestones: enabledMilestonesSelector,
 	assignees: enabledAssigneesSelector
-}, createDeepEqualSelector),null,null,{withRef:true})
+}),null,null,{withRef:true})
 
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender
@@ -225,7 +242,6 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			{
 				theme,
 				styles,
-				issueSort,
 				issueFilter,
 				labels,
 			} = this.props,
@@ -234,7 +250,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		return labels.map(label => {
 			const
 				backgroundColor = `#${label.color}`,
-				color = tinycolor.mostReadable(backgroundColor, [
+				color = TinyColor.mostReadable(backgroundColor, [
 					palette.text.primary,
 					palette.alternateText.primary
 				]).toString(),
@@ -445,18 +461,22 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				issuesGrouped = [],
 				issueSort,
 				issueFilter,
-				issueFilterLabels,
 				issueFilterMilestones,
+				issueFilterLabels,
 				labels,
 				milestones,
 			} = this.props,
-			{palette} = theme,
+			
+			
+			
 			isGrouped = issueSort.groupBy !== 'none',
 			hasFilters =
-				_.size(_.nilFilter(issueFilterLabels || [])) +
-				_.size(_.nilFilter(issueFilterMilestones || [])) > 0
+				getValue(() => issueFilter.labelUrls.length,0) +
+				getValue(() => issueFilter.milestoneIds.length,0) > 0
 
 
+		log.debug('Issue filter, has filters',hasFilters, 'labels',issueFilterLabels,'milestones',issueFilterMilestones)
+		
 		// LABEL
 		const labelMenuItemText = <div style={styles.list.item.text}>
 			<div>
@@ -619,7 +639,13 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 
 
 		// ASSEMBLE
-		return <div style={styles.root}>
+		return <div
+			style={[
+				styles.root,
+				// IF EMPTY / HIDE
+				issueSort.groupBy === 'none' && !hasFilters && styles.root.empty
+			]}>
+			
 			<div style={styles.filters}>
 
 				{!hasFilters ?
@@ -629,8 +655,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 						labelStyle={styles.filters.labels.label}
 						onRemove={this.onRemoveItemFromFilter}
 						showIcon
-						labels={issueFilterLabels}
-						milestones={issueFilterMilestones}
+						labels={issueFilterLabels.toArray()}
+						milestones={issueFilterMilestones.toArray()}
 					/>
 				}
 

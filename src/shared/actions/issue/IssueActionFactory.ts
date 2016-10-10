@@ -230,11 +230,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			availRepos = availableReposSelector(getStoreState())
 				.filter(it => (availRepos as any).find(availRepo => availRepo.id === it.id)) as any
 			
-			availRepos = (availRepos as any).map(it => assign({},it,{
-				issuesLoadStatus: newLoadStatus
-			}))
 			
-			getRepoActions().updateAvailableRepos(availRepos)
+			getRepoActions().patchAvailableRepos({issuesLoadStatus: newLoadStatus},availRepos)
 			await Promise.delay(10)
 		}
 		

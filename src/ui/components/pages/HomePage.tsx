@@ -15,6 +15,7 @@ import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
 import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
 import {makeLinearGradient, Transparent} from "shared/themes"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 
 const
@@ -27,7 +28,7 @@ const
 	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
 	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
 
-const baseStyles:any = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 
 	page:[],
 	bodyWrapper: [FlexScale,Fill],
@@ -38,13 +39,11 @@ const baseStyles:any = createStyles({
 
 })
 
-interface IHomeProps {
-	theme?:any
-	styles?:any
+export interface IHomeProps extends IThemedAttributes {
 	toolPanels:Map<string,IToolPanel>
 }
 
-interface IHomeState {
+export interface IHomeState {
 	width?:number
 }
 
