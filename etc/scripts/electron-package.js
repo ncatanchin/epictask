@@ -3,16 +3,19 @@
 require('shelljs/global')
 
 const
-	{process} = global
+	path = require('path'),
+	{process} = global,
+	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${process.platform === 'win32' ? '.cmd' : ''}`)
 
+echo(`Will use builder @ ${buildCmd}`)
 
 echo(`Cleaning`)
-exec('rm -Rf dist/* .awcache')
+rm('-Rf','dist/*','.awcache')
 
 echo("Starting Compilation")
 process.env.NODE_ENV='production'
-exec('echo NODE_ENV = ${NODE_ENV}')
-if (exec('NODE_ENV=production gulp compile').code !== 0) {
+
+if (exec('gulp compile').code !== 0) {
 	console.error(`compile FAILED`)
 	exit(1)
 }
@@ -29,4 +32,5 @@ let
 
 
 echo("Packaging")
-exec(`./node_modules/.bin/build ${platforms.join(' ')}`)
+
+exec(`${buildCmd} ${platforms.join(' ')}`)

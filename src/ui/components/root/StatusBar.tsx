@@ -20,7 +20,6 @@ import {BuiltInTools, getBuiltInToolId} from "shared/config/ToolConfig"
 const
 	log = getLogger(__filename)
 
-
 /**
  * IStatusBarProps
  */

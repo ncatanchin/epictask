@@ -32,7 +32,7 @@ const
 function resolveDirs(...dirs) {
 	return dirs.map(dir => {
 		const resolvedPath =
-			['/','.'].includes(dir.charAt(0)) ?
+			['C','/','.'].includes(dir.charAt(0)) ?
 				path.resolve(dir) :
 				path.join(baseDir, dir)
 		

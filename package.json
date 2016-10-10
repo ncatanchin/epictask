@@ -12,19 +12,25 @@
     "start-dev-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --enable-logging ./dist/MainEntry.js",
     "start-dev-debug": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
     "start-dev-debug-remote": "./node_modules/.bin/cross-env HOT=1 REMOTE=1 NODE_ENV=development ./node_modules/.bin/electron --debug=5858 ./dist/MainEntry.js",
-    "postinstall": "./etc/scripts/post-install.sh",
-    "compile-watch": "./etc/scripts/compile-watch.sh",
+    "postinstall": "node ./etc/scripts/post-install.js",
+    "compile-watch": "node ./etc/scripts/compile-watch.js",
     "clean-compile-watch": "./etc/scripts/clean.sh && ./etc/scripts/compile-watch.sh",
     "tsc-watch": "tsc --project tsconfig.json -w ",
     "clean-electron": "./etc/scripts/clean-electron.sh",
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
     "build-storybook": "build-storybook",
-    "package": "./etc/scripts/electron-package.sh"
+    "package": "node ./etc/scripts/electron-package.js"
   },
   "build": {
     "appId": "com.densebrain.epictask",
     "copyright": "Copyright © 2016 Densebrain, Inc.",
     "productName": "Epictask",
+    "squirrelWindows": {
+      "msi": true
+    },
+    "win": {
+      "icon": "build/icon.ico"
+    },
     "linux": {
       "category": "Development",
       "packageCategory": "devel",
