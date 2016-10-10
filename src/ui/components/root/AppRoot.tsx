@@ -15,7 +15,7 @@ import {
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
-import { IWindowConfig } from "shared/WindowConfig"
+import { IWindowConfig } from "shared/config/WindowConfig"
 import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
