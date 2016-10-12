@@ -19,11 +19,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
-
-//const elementClass = require('element-class')
-//const styleVisible = styles.resultsModalVisible
-//const renderSubtreeIntoContainer = require("react-dom").unstable_renderSubtreeIntoContainer;
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const
 	doc = document,

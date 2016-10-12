@@ -1,12 +1,16 @@
-
-import {ObservableStore} from 'typedux'
+import HTML5Backend from 'react-dnd-html5-backend'
+import { DragDropContext } from 'react-dnd'
 import * as Radium from 'radium'
-import {Provider} from 'react-redux'
-import {MuiThemeProvider} from 'material-ui/styles'
-import {PureRender} from 'ui/components/common'
-import {Events} from 'shared/config/Events'
-import {AppKey} from 'shared/Constants'
-import {RootState} from 'shared/store/RootState'
+
+
+import { ObservableStore } from 'typedux'
+import { Provider } from 'react-redux'
+
+import { MuiThemeProvider } from 'material-ui/styles'
+import { PureRender } from 'ui/components/common'
+import { Events } from 'shared/config/Events'
+import { AppKey } from 'shared/Constants'
+import { RootState } from 'shared/store/RootState'
 
 import {
 	CommandComponent,
@@ -16,7 +20,7 @@ import {
 } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
 import { IWindowConfig } from "shared/config/WindowConfig"
-import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
 import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes"
@@ -29,11 +33,12 @@ import { Sheets } from "shared/config/DialogsAndSheets"
 // STYLES
 import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
 import { FileDrop } from "ui/components/common/FileDrop"
+import { ToolDragLayer } from "ui/components/ToolDragLayer"
 
 
 // Logger, Store +++
 const
-	{StyleRoot} = Radium,
+	{ StyleRoot } = Radium,
 	log = getLogger(__filename),
 	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any,
 	win = window as any,
@@ -62,6 +67,7 @@ export interface IAppState {
 /**
  * Root App Component
  */
+@(DragDropContext as any)(HTML5Backend)
 @CommandComponent()
 @Themed
 @PureRender
@@ -75,13 +81,13 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
-				// IMPORT REPO
+			// IMPORT REPO
 				.command(
 					CommandType.App,
 					'Import Repo...',
 					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
 					"CommandOrControl+Shift+n", {
-						menuPath:['GitHub']
+						menuPath: [ 'GitHub' ]
 					})
 				
 				// SYNC EVERYTHING
@@ -90,7 +96,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					'Sync Everything...',
 					(cmd, event) => getRepoActions().syncAll(),
 					"CommandOrControl+s", {
-						menuPath:['GitHub']
+						menuPath: [ 'GitHub' ]
 					})
 				// NEW ISSUE
 				.command(
@@ -98,7 +104,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					'New Issue',
 					(cmd, event) => getIssueActions().newIssue(),
 					"CommandOrControl+n", {
-						menuPath:['Issue']
+						menuPath: [ 'Issue' ]
 					})
 				
 				.command(
@@ -106,31 +112,33 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					'New Issue',
 					(cmd, event) => getIssueActions().newIssue(),
 					"Control+Alt+n", {
-						hidden:true
+						hidden: true
 					})
-				
-				
-				
-				
+			
 			
 		}, () => {
 			
 			builder
 			
-				// CLOSE CHILD WINDOW
+			// CLOSE CHILD WINDOW
 				.command(
 					CommandType.Container,
 					'Close Window',
 					(cmd, event) => getUIActions().closeWindow(childWindowId),
 					"CommandOrControl+w", {
-						menuPath:['Window']
+						menuPath: [ 'Window' ]
 					})
 		})
 		
-			
+		
 		return builder.make()
 	}
 	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
+	}
 	
 	/**
 	 * Container id
@@ -168,12 +176,11 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			windowStyle = getValue(() => makeStyle(
 				makeWidthConstraint(window.innerWidth),
 				makeHeightConstraint(window.innerHeight)
-			),FillWindow)
+			), FillWindow)
 		
 		if (shallowEquals(windowStyle, getValue(() => this.state.windowStyle)))
 			return
 		
-		 
 		
 		this.setState({
 			windowStyle,
@@ -185,7 +192,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
-		window.addEventListener('resize',this.onWindowResize)
+		window.addEventListener('resize', this.onWindowResize)
 		this.updateState()
 		
 	}
@@ -194,7 +201,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On unmount - remove window listener
 	 */
 	componentWillUnmount() {
-		window.removeEventListener('resize',this.onWindowResize)
+		window.removeEventListener('resize', this.onWindowResize)
 	}
 	
 	
@@ -207,7 +214,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		const
 			ChildRootComponent = childWindowConfig && childWindowConfig.rootElement()
 		
-		log.debug(`Dialog Component`,ChildRootComponent)
+		log.debug(`Dialog Component`, ChildRootComponent)
 		
 		return <ChildRootComponent />
 	}
@@ -227,11 +234,13 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	render() {
 		
 		const
-			{theme} = this.props,
-			windowStyle = getValue(() => this.state.windowStyle,FillWindow)
-			
-			
-		return <MuiThemeProvider muiTheme={theme}>
+			{ theme } = this.props,
+			windowStyle = getValue(() => this.state.windowStyle, FillWindow)
+		
+		
+		return <StyleRoot>
+				<div style={FillWindow}>
+				<MuiThemeProvider muiTheme={theme}>
 				<Provider store={reduxStore}>
 					
 					<CommandRoot
@@ -240,12 +249,16 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						id="appRoot">
 						
 						
-							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-						
-						
+						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+					
+					
 					</CommandRoot>
+						
 				</Provider>
 			</MuiThemeProvider>
+					<ToolDragLayer />
+				</div>
+		</StyleRoot>
 		
 	}
 }
@@ -259,9 +272,9 @@ function render() {
 	reduxStore = store.getReduxStore()
 	
 	ReactDOM.render(
-		<StyleRoot><App
+		<App
 			store={reduxStore}
-		/></StyleRoot>,
+		/>,
 		
 		// ROOT ELEMENT TO MOUNT ON
 		document.getElementById('root'),
@@ -282,7 +295,7 @@ function render() {
 			/**
 			 * If main ui then stop load spinner
 			 */
-			If(ProcessConfig.isUI(),() => {
+			If(ProcessConfig.isUI(), () => {
 				
 				// STOP SPINNER
 				if (win.stopLoader)
@@ -311,21 +324,21 @@ function checkIfRenderIsReady() {
 		state = store.getState(),
 		appState = state ? state.get(AppKey) : null,
 		ready = appState ? appState.ready : false
-
+	
 	if (!ready) {
 		log.info('Theme is not set yet')
-
+		
 		const
-			observer = store.observe([AppKey,'ready'],(newReady) => {
-				log.debug('RECEIVED READY, NOW RENDER',newReady)
+			observer = store.observe([ AppKey, 'ready' ], (newReady) => {
+				log.debug('RECEIVED READY, NOW RENDER', newReady)
 				if (!newReady !== true) {
-					log.debug('Main is not ready',newReady)
+					log.debug('Main is not ready', newReady)
 					return
 				}
 				observer()
 				render()
 			})
-
+		
 	} else {
 		render()
 	}
@@ -337,25 +350,25 @@ if (isChildWindow) {
 	
 	// GET SESSION & COOKIES
 	const
-		{remote} = require('electron'),
+		{ remote } = require('electron'),
 		webContents = remote.getCurrentWebContents(),
-		{session} = webContents,
-		{cookies} = session
+		{ session } = webContents,
+		{ cookies } = session
 	
 	// GET OUR COOKIE
-	cookies.get({name: childWindowId},(err,cookies) => {
+	cookies.get({ name: childWindowId }, (err, cookies) => {
 		if (err) {
 			log.error(`Failed to get cookies`, err)
 			throw err
 		}
 		
-		log.info('cookies',cookies)
+		log.info('cookies', cookies)
 		
 		const
-			configStr = cookies[0].value
+			configStr = cookies[ 0 ].value
 		
-		assert(configStr,`No config found for ${childWindowId}`)
-		childWindowConfig = JSON.parse(configStr,(key,value) => {
+		assert(configStr, `No config found for ${childWindowId}`)
+		childWindowConfig = JSON.parse(configStr, (key, value) => {
 			if (key === 'rootElement' && isString(value)) {
 				return eval(value)
 			}
@@ -372,12 +385,10 @@ else {
 }
 
 
-
-
 /**
  * Enable HMR
  */
-acceptHot(module,log)
+acceptHot(module, log)
 
 
 

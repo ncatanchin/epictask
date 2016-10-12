@@ -51,7 +51,7 @@ function makeDevMenu(mainWindow) {
 			// Break
 			{
 				label: 'Break',
-				accelerator: 'Command+F8',
+				accelerator: 'Control+F8',
 				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('debugger;')
 			},
 			

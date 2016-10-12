@@ -8,7 +8,7 @@ import {UIState} from 'shared/actions/ui/UIState'
 import { Dialogs, IUISheet } from 'shared/config/DialogsAndSheets'
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
-import {isNumber, shortId, isString} from "shared/util/ObjectUtil"
+import { isNumber, shortId, isString, cloneObjectShallow, getValue } from "shared/util/ObjectUtil"
 import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
@@ -16,6 +16,7 @@ import { getWindowManager } from "ui/WindowManager"
 import { WindowConfigs } from "shared/config/WindowConfig"
 import { If } from "shared/util/Decorations"
 import { focusElementById } from "shared/util/UIUtil"
+import { uiStateSelector } from "shared/actions/ui/UISelectors"
 
 
 // Import only as type - in case we are not on Renderer
@@ -39,12 +40,34 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	
 	static leaf = UIKey
 	
+	constructor() {
+		super(UIState)
+	}
+	
+	leaf():string {
+		return UIKey;
+	}
+	
+	/**
+	 * Create a predicate for finding a tool panel
+	 *
+	 * @param id
+	 * @param location
+	 */
 	private toolPanelPredicate = (id:string,location:ToolPanelLocation) =>
 		(it:IToolPanel) =>
 			it.location === location &&
 			(it.location !== Popup || it.id === id)
 	
 	
+	
+	/**
+	 * Get the a tool's parent panel
+	 *
+	 * @param toolId
+	 * @param state
+	 * @returns {IToolPanel}
+	 */
 	getToolParentPanel(toolId:string, state:UIState = this.state):IToolPanel {
 		return state.toolPanels.valueSeq().find(it => !!it.tools[toolId])
 	}
@@ -58,9 +81,11 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @returns {any}
 	 */
 	getTool(toolId:string, state:UIState = this.state):ITool {
-		const panels = state.toolPanels.valueSeq().toArray()
+		const
+			panels = state.toolPanels.valueSeq().toArray()
 		
-		let tool:ITool
+		let
+			tool:ITool
 		
 		for (let panel of panels) {
 			tool = panel.tools[toolId]
@@ -72,13 +97,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return tool
 	}
 	
-	constructor() {
-		super(UIState)
-	}
+	
+	
 
-	leaf():string {
-		return UIKey;
-	}
+	
 	
 	
 	/**
@@ -88,9 +110,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param forceState
 	 */
 	toggleTool(toolId:string,forceState:boolean = null) {
-		const tool = this.getTool(toolId)
-		assert(tool,`Unable to find tool with id ${toolId}`)
+		const
+			tool = this.getTool(toolId)
 		
+		assert(tool,`Unable to find tool with id ${toolId}`)
 		
 		this.updateTool(cloneObject(tool,{
 			active:!_.isNil(forceState) ? forceState : !tool.active
@@ -109,8 +132,110 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	private doPanelUpdate(state:UIState,panel:IToolPanel) {
 		
+		const
+			toolPanels = this.getToolPanels(state)
 		
-		return state.set('toolPanels',this.getToolPanels(state).set(panel.id,panel))
+		return state.set(
+			'toolPanels',
+			toolPanels.set(
+				panel.id,
+				cloneObjectShallow(panel)
+			)
+		)
+	}
+	
+	@ActionReducer()
+	setToolDragging(dragging:boolean) {
+		return (state:UIState) => state.set('toolDragging',dragging)
+	}
+	
+	/**
+	 * Remove a tool from a tool panel
+	 *
+	 * @param panelId
+	 * @param toolId
+	 * @returns {(state:UIState)=>UIState}
+	 */
+	@ActionReducer()
+	private removeToolFromPanel(toolId:string) {
+		return (state:UIState) => {
+			
+			let
+				toolPanels = this.getToolPanels(state),
+				panel = this.getToolParentPanel(toolId,state)
+			
+			// IF TOOL ON PANEL THEN REMOVE
+			if (getValue(() => panel.tools[toolId])) {
+				panel = cloneObjectShallow(panel)
+				panel.tools = cloneObjectShallow(panel.tools)
+				
+				// REMOVE FROM TOOL MAP
+				delete panel.tools[toolId]
+				
+				// REMOVE FROM TOOL ID LIST
+				panel.toolIds = panel.toolIds.filter(it => it !== toolId)
+				
+				state = state.set('toolPanels',toolPanels.set(panel.id,panel)) as any
+			}
+			
+			return state
+		}
+	}
+	
+	/**
+	 * Add a tool to a given panel
+	 *
+	 * @param panelId
+	 * @param tool
+	 * @returns {(state:UIState)=>UIState}
+	 */
+	@ActionReducer()
+	private addToolFromPanel(panelId:string,tool:ITool) {
+		return (state:UIState) => {
+			
+			let
+				existingPanel = this.getToolParentPanel(tool.id,state),
+				toolPanels = this.getToolPanels(state),
+				panel = toolPanels.get(panelId)
+			
+			assert(!existingPanel || existingPanel.id === panelId, `A tool can not be added to multiple panels`)
+			
+			// IF NOT TOOL ON PANEL THEN ADD
+			if (!getValue(() => panel.tools[tool.id])) {
+				
+				panel = cloneObjectShallow(panel)
+				panel.tools = cloneObjectShallow(panel.tools)
+				panel.tools[tool.id] = tool
+				
+				panel.toolIds = panel.toolIds.concat([tool.id])
+				
+				state = state.set('toolPanels',toolPanels.set(panelId,panel)) as any
+			}
+			
+			return state
+		}
+	}
+	
+	
+	
+	/**
+	 * Move a tool to a new panel
+	 *
+	 * @param tool
+	 * @param panelId
+	 */
+	
+	moveToolToPanel(panelId:string,tool:ITool) {
+		const
+			currentPanel = this.getToolParentPanel(tool.id)
+		
+		if (currentPanel && currentPanel.id === panelId) {
+			log.debug(`Tool (${tool.id}) is already in panel ${panelId}`)
+			return
+		}
+		
+		this.removeToolFromPanel(tool.id)
+		this.addToolFromPanel(panelId,tool)
 	}
 	
 	/**
@@ -123,12 +248,18 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	updateTool(tool:ITool) {
 		return (state:UIState) => {
 			
-			// Find the panel first
-			const parentPanel = this.getToolParentPanel(tool.id,state) || this.getToolPanel(tool.defaultLocation)
+			
+			
+			// FIND THE NEW AND OLD PANEL
+			const
+				parentPanel =
+					this.getToolParentPanel(tool.id,state) ||
+					this.getToolPanel(tool.defaultLocation)
 			
 			assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
 			
-			const panel = cloneObject(parentPanel)
+			const
+				panel = cloneObject(parentPanel)
 			
 			panel.tools[tool.id] = tool
 			panel.open = Object.values(panel.tools).some(it => it.active)
@@ -206,7 +337,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				location,
 				open: [Popup,Left].includes(location),
 				isDefault: Left === location,
-				tools:{}
+				tools:{},
+				toolIds: []
 			}
 			this.updateToolPanel(panel)
 		}

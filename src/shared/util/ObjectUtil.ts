@@ -153,6 +153,16 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 }
 
 /**
+ * Shallow clone object and assign properties
+ *
+ * @param o
+ * @param newSources
+ */
+export function cloneObjectShallow<T>(o:T,...newSources:any[]):T {
+	return assign(_.clone(o),...newSources)
+}
+
+/**
  * Shallow equal an array or list
  *
  * @param val1

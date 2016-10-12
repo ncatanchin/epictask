@@ -15,6 +15,7 @@ import { FillWindow } from "shared/themes/styles/CommonStyles"
 import { FlexColumn, Fill, FlexScale } from "shared/themes"
 import { WelcomePage } from "ui/components/pages/WelcomePage"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { ToolDragLayer } from "ui/components/ToolDragLayer"
 
 
 // Constants
@@ -137,9 +138,11 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				
 				{/* STATUS BAR */}
 				<StatusBar open={HeaderVisibility.Hidden !== headerVisibility}/>
+				
 			</div>
 			{/* SHEET ROOT */}
 			<SheetRoot />
+			
 		</div>
 	}
 	

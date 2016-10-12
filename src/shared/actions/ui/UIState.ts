@@ -6,6 +6,7 @@ import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
 import {IToolPanel, ToolPanelLocation, makeToolPanels} from "shared/tools/ToolTypes"
 import { IUISheet } from "shared/config/DialogsAndSheets"
+import { getValue, cloneObjectShallow } from "shared/util/ObjectUtil"
 
 const log = getLogger(__filename)
 
@@ -45,7 +46,9 @@ export const UIStateRecord = Record({
 	sheet:null,
 	dialogs: Map<string,boolean>(),
 	messages: List<IToastMessage>(),
-	toolPanels: makeToolPanels()
+	
+	toolPanels: makeToolPanels(),
+	toolDragging: false
 })
 
 /**
@@ -58,10 +61,24 @@ export class UIState extends UIStateRecord implements State {
 		if (o && o instanceof UIState)
 			return o
 		
+		let
+			toolPanels = makeToolPanels(o.toolPanels),
+			toolPanelList = toolPanels.valueSeq()
+		
+		// Make sure tool ids are set
+		toolPanelList.forEach((panel:IToolPanel) => {
+			panel.toolIds = getValue(() => panel.toolIds.length,0) ?
+				panel.toolIds :
+				Object.keys(panel.tools)
+			
+			toolPanels = toolPanels.set(panel.id,cloneObjectShallow(panel))
+				
+		})
+		
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
-			toolPanels: makeToolPanels(o.toolPanels)
+			toolPanels
 		}))
 	}
 	
@@ -74,7 +91,10 @@ export class UIState extends UIStateRecord implements State {
 	sheet:IUISheet
 	dialogs:TDialogMap
 	messages:List<IToastMessage>
+	
 	toolPanels:Map<string,IToolPanel>
+	toolDragging:boolean
+	
 	statusBar:{
 		visible:boolean
 	}

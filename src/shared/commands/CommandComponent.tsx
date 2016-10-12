@@ -320,9 +320,11 @@ export function CommandComponent<T extends TCommandComponentConstructor>(opts:IC
 	 */
 	return ((TargetComponent:T) => {
 		
-		return (function (props, context) {
-			return <CommandContainer commandComponent={TargetComponent as any} {...props} />
-		}) as any
+		return class CommandComponentWrapped extends React.Component<any,any> {
+			render() {
+				return <CommandContainer commandComponent={TargetComponent as any} {...this.props} />
+			}
+		} as any
 	}) as any
 }
 

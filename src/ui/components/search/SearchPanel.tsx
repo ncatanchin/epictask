@@ -35,8 +35,9 @@ const {CommonKeys:Keys} = KeyMaps
 // Constants
 const
 	log = getLogger(__filename)
+
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // STYLES
