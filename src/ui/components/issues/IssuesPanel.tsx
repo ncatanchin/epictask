@@ -682,11 +682,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
 			itemsAvailable = items && items.size > 0,
+			allItemsFiltered = !itemsAvailable && issues.size,
+			
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
 			listMaxWidth = !allowResize ? '100%' : -1 * convertRem(36.5),
 			
-			noItemsContentNode = !itemsAvailable && (issues.size ?
+			noItemsContentNode = !itemsAvailable && (allItemsFiltered ?
 				<span>
 					<span style={styles.noItems.text.strong}>You've filtered all the issues</span>
 					&nbsp;in the your enabled repositories, you might want to check that
@@ -735,7 +737,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			
 			{/* ISSUE SEARCH AND FILTERING */}
-			{!itemsAvailable  ? noItemsNode :
+			{!itemsAvailable && !allItemsFiltered ? noItemsNode :
 				
 					<SplitPane split="vertical"
 					           allowResize={allowResize}
