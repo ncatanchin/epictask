@@ -1,17 +1,20 @@
 // Imports
-import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
 import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { sheetSelector } from "shared/actions/ui/UISelectors"
-import { IUISheet } from "shared/config/DialogsAndSheets"
+import { IUISheet } from "shared/config/WindowConfig"
 import {
 	PositionAbsolute, makeTransition, makeHeightConstraint, createStyles, FillHeight,
 	FlexColumn
 } from "shared/themes"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { CommandType } from "shared/commands/Command"
+import { CommonKeys } from "shared/KeyMaps"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
 
 // Constants
 const log = getLogger(__filename)
@@ -79,9 +82,7 @@ const baseStyles = (topStyles,theme,palette) => {
 /**
  * ISheetRootProps
  */
-export interface ISheetRootProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface ISheetRootProps extends IThemedAttributes {
 	sheet?:IUISheet
 }
 
@@ -110,7 +111,18 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	/**
 	 * Commands
 	 */
-	commands = (builder:CommandContainerBuilder) => []
+	commands = (builder:CommandContainerBuilder) =>
+		builder
+			// CLOSE THE SHEET
+			.command(
+				CommandType.Container,
+				'Hide sheet...',
+				(cmd, event) => getUIActions().closeSheet(),
+				CommonKeys.Escape, {
+					hidden:true,
+					overrideInput: true
+				})
+			.make()
 	
 	commandComponentId = ContainerNames.SheetRoot
 	

@@ -22,7 +22,7 @@ const
 	log = global.log = console,
 	{readJSONFileSync} = require('./helpers')
 
-log.info(chalk.green(`Base Directory: ${baseDir}`))
+//log.info(chalk.green(`Base Directory: ${baseDir}`))
 
 process.argv.forEach(arg => {
 	if (arg == '--dev')

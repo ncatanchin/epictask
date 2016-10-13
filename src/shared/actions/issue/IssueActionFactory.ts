@@ -6,9 +6,9 @@ import {List} from 'immutable'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
 import { IssueKey } from 'shared/Constants'
-import {Dialogs} from 'shared/config/DialogsAndSheets'
+
 import {FinderItemsPerPage} from 'shared/config/FinderConfig'
-import { cloneObject, extractError, isNil, nilFilter, isNumber } from 'shared/util/ObjectUtil'
+import { cloneObject, extractError, isNil, nilFilter, isNumber, cloneObjectShallow } from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
@@ -50,6 +50,7 @@ import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { LoadStatus } from "shared/models"
 import { getRepoActions, getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
+import { Dialogs } from "shared/config/WindowConfig"
 
 
 /**
@@ -138,7 +139,90 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	//
 	// }
 	
+	/**
+	 * Set the current focused issue ids
+	 *
+	 * @param focusedIssueIds
+	 */
+	@ActionReducer()
+	setFocusedIssueIds(focusedIssueIds:number[]) {
+		return (state:IssueState) => state.set('focusedIssueIds',focusedIssueIds)
+	}
 	
+	
+	/**
+	 * Toggle selected as focused
+	 */
+	toggleSelectedAsFocused() {
+		let
+			{selectedIssueIds,focusedIssueIds = []} = this.state
+		
+		if (!selectedIssueIds || !selectedIssueIds.length)
+			return
+		
+		// COPY
+		focusedIssueIds = cloneObjectShallow(focusedIssueIds)
+		
+		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
+			selectedIssueIds.forEach(id => {
+				focusedIssueIds.splice(focusedIssueIds.indexOf(id),1,0)
+			})
+		} else {
+			focusedIssueIds = _.uniq(focusedIssueIds.concat(selectedIssueIds))
+		}
+		
+		this.setFocusedIssueIds(focusedIssueIds)
+		
+	}
+	
+	/**
+	 * Set focus on an issue
+	 *
+	 * @param issue
+	 */
+	focusOnIssue(issue:Issue)
+	focusOnIssue(issueId:number)
+	focusOnIssue(issueOrIssueId:Issue|number) {
+		const
+			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
+		
+		let
+			{focusedIssueIds = []} = this.state
+		
+		if (focusedIssueIds.includes(issueId)) {
+			log.debug(`Issue id ${issueId} is already focused`)
+			return
+		}
+		
+		this.setFocusedIssueIds([...focusedIssueIds,issueId])
+			
+	}
+	
+	/**
+	 * Remove issue focus
+	 *
+	 * @param issue
+	 */
+	removeIssueFocus(issue:Issue)
+	removeIssueFocus(issueId:number)
+	removeIssueFocus(issueOrIssueId:Issue|number) {
+		const
+			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
+		
+		let
+			{focusedIssueIds = []} = this.state
+		
+		if (!focusedIssueIds.includes(issueId)) {
+			log.debug(`Issue id ${issueId} does not have focus`)
+			return
+		}
+		
+		const
+			newFocusedIds = [].concat(focusedIssueIds)
+		
+		newFocusedIds.splice(newFocusedIds.indexOf(issueId),1,0)
+		this.setFocusedIssueIds(newFocusedIds)
+	}
 	
 	/**
 	 * Create a new comment
@@ -154,7 +238,12 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.editComment(issue)
 	}
 	
-	
+	/**
+	 * Set current issues
+	 *
+	 * @param issues
+	 * @returns {(state:IssueState)=>Map<string, any>}
+	 */
 	@ActionReducer()
 	private setIssues(issues:List<Issue>) {
 		return (state:IssueState) => state.update(
@@ -173,6 +262,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		)
 	}
 	
+	/**
+	 * Load all issues
+	 *
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
 	@ActionThunk()
 	loadIssues() {
 		return async (dispatch,getState) => {
@@ -1336,7 +1430,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					.set('editCommentRequest',null)
 					.set('editingInline',false)
 					.set('issueSaving',false)
-					.set('issueError',null) as IssueState
+					.set('issueSaveError',null) as IssueState
 			}
 			
 			state = state
@@ -1423,53 +1517,52 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @param issueId
 	 */
-	@ActionThunk()
+	
 	loadActivityForIssue(issueId: number) {
-		return async(dispatch, getState) => {
-			
-			// Issue repo
-			let
-				issues:List<Issue> = issuesSelector(getState())
-			
-			//log.debug(`Loading issue activity`,issues,issueId)
-			if (!isListType(issues,Issue))
-				return
-			
-			let
-				issue: Issue = issues.find(issue => issue.id === issueId)
-			
-			if (!issue) {
-				log.error(`Issue not found in state: ${issueId}`)
-				//assert(issue, `Issue still not found in state ${issueId}`)
-				return
+		
+		const
+			deferred = Promise.defer(),
+			isCancelled = () => deferred.isCancelled(),
+			doResolve = () => !isCancelled() && deferred.resolve(),
+			doLoad = async () => {
+				try {
+					// Issue repo
+					let
+						{ issues } = this.state
+					
+					//log.debug(`Loading issue activity`,issues,issueId)
+					if (!isListType(issues, Issue) || isCancelled())
+						return doResolve()
+					
+					let
+						issue:Issue = issues.find(issue => issue.id === issueId)
+					
+					if (!issue) {
+						log.error(`Issue not found in state: ${issueId}`)
+						//assert(issue, `Issue still not found in state ${issueId}`)
+						return doResolve()
+					}
+					
+					const
+						{ comments, issuesEvents } = await this.getActivity(issue)
+					
+					if (isCancelled())
+						return doResolve()
+					
+					log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
+					this.setActivity(comments, issuesEvents)
+				} catch (err) {
+					log.error(`Failed to load activity for issue ${issueId}`,err)
+					
+				} finally {
+					doResolve()
+				}
 			}
+		
+		doLoad()
 			
-			
-			
-			const
-				{comments,issuesEvents} = await this.getActivity(issue)
-			
-			log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
-			this.setActivity(comments,issuesEvents)
-			// TODO: Activity load
-			// Now push the models into the data state for tracking
-			// const dataActions = Container.get(DataActionFactory)
-			// await dataActions.submitRequestAction(
-			// 	DataRequest.create(
-			// 		'comments-list',
-			// 		false,
-			// 		commentIds,
-			// 		Comment.$$clazz
-			// 	),
-			// 	commentMap,
-			// 	dispatch,
-			// 	getState
-			// )
-			//
-			
-			//actions.setFilteringAndSorting()
-			
-		}
+		return deferred
+		
 	}
 	
 	/**

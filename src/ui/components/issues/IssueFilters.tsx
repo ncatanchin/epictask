@@ -643,7 +643,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			style={[
 				styles.root,
 				// IF EMPTY / HIDE
-				issueSort.groupBy === 'none' && !hasFilters && styles.root.empty
+				//issueSort.groupBy === 'none' && !hasFilters && styles.root.empty
 			]}>
 			
 			<div style={styles.filters}>

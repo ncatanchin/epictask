@@ -12,4 +12,35 @@ export function isReactComponent(c:any):c is React.Component<any,any> {
 		)
 }
 
+/**
+ * Unwrapped references
+ *
+ * @param component
+ * @returns {any}
+ */
+export function unwrapRef<T>(component:T):T {
+	
+	while(component && (component as any).getWrappedInstance) {
+		component = (component as any).getWrappedInstance()
+	}
+	
+	return component as any
+}
 
+
+export type TComponent = React.ComponentClass<any>
+
+export type TComponentResolver = Promise.Resolver<TComponent>
+
+export type TComponentLoader = (resolver:TComponentResolver) => any
+
+export function makePromisedComponent(loader:TComponentLoader): () => Promise<TComponent> {
+	return function() {
+		const
+			resolver = Promise.defer()
+		
+		loader(resolver)
+		
+		return resolver.promise as Promise<TComponent>
+	}
+}

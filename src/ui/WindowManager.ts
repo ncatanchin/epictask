@@ -149,6 +149,18 @@ export class WindowManager {
 		
 	}
 	
+	/**
+	 * Open a pre-configured dialog
+	 * @param name
+	 */
+	openDialog(name:string) {
+		require.ensure(['ui/DialogsAndSheets'],function(require) {
+			const
+				{DialogConfigs} = require('ui/DialogsAndSheets') as any
+			
+			getWindowManager().open(DialogConfigs[name] as IWindowConfig)
+		})
+	}
 	
 	/**
 	 * Open a new dialog with a given config

@@ -17,75 +17,11 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-const baseStyles = (topStyles,theme,palette) => {
+function baseStyles(topStyles,theme,palette) {
 	const
 		{ accent, primary, text, secondary } = palette
 	
 	return {
-		result: [ makeTransition([ 'background-color', 'color' ]), PositionRelative, FlexRowCenter, FillWidth, {
-			height: 48,
-			cursor: 'pointer',
-			borderBottom: `0.1rem solid ${accent.hue1}`,
-			color: primary.hue1,
-			
-			normal: {
-				backgroundColor: text.primary,
-				color: primary.hue1
-			},
-			
-			selected: [{
-				backgroundColor: accent.hue1,
-				color: text.primary
-			}],
-			
-			
-			info: [FlexScale, FlexColumnCenter, makeFlexAlign('stretch', 'center'), {
-				padding: '0.2rem 2rem 0.2rem 1rem'
-			} ],
-			
-			label: [Ellipsis, FlexAuto, makePaddingRem(0, 1), {
-				flexShrink: 1,
-				fontWeight: 100,
-				fontSize: rem(1.6),
-				
-				second: [FlexAuto, {
-					fontWeight: 100,
-					fontSize: rem(1.2)
-				}],
-				
-				selected: [{
-					fontWeight: 500
-				}]
-			}],
-			
-			action: [{
-				fontWeight: 100,
-				fontSize: rem(1.3),
-				textStyle: 'italic',
-				
-				selected: [{
-					
-				}]
-			}],
-			
-			type: [ FillHeight, FlexRowCenter, FlexAuto, Ellipsis, {
-				fontWeight: 100,
-				fontSize: rem(1.3),
-				textStyle: 'italic',
-				padding: rem(0.3),
-				width: 48,
-				background: Transparent,
-				//borderRight: `0.1rem solid ${accent.hue1}`,
-				
-				selected: [{}]
-			} ]
-			
-		} ]
-		
-		
-		
-		
-		
 		
 		
 		
@@ -244,7 +180,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				
 				if (!item) {
 					item = itemCache[ id ] = <SearchResultItem key={id}
-					                                    styles={styles}
 					                                    item={searchItem}
 					                                    searchPanel={searchPanel}
 					                                    onMouseEnter={() => onResultHover && onResultHover(searchItem)}

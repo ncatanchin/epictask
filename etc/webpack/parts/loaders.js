@@ -6,7 +6,7 @@ const
 	{TypeScriptEnabled} = global,
 	srcTest = TypeScriptEnabled ? /\.tsx?$/ :  /\.jsx?$/
 
-log.info(`Resolved provided proxy pre-loader to ${proxyProvidedLoaderPath}`)
+//log.info(`Resolved provided proxy pre-loader to ${proxyProvidedLoaderPath}`)
 
 module.exports = {
 	/**

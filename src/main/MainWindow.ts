@@ -22,6 +22,7 @@ const
 //'http://localhost:63342/epictask/dist/app/app-entry.html'
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
+
 let
 	menu,
 	browserWindow:Electron.BrowserWindow = getHot(module,'browserWindow',null)

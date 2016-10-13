@@ -1,3 +1,10 @@
+try {
+	require('babel-core/register')
+} catch (err) {}
+try {
+	require('babel-polyfill')
+} catch (err) {}
+
 require('../tools/global-env')
 
 
@@ -36,7 +43,7 @@ function resolveDirs(...dirs) {
 				path.resolve(dir) :
 				path.join(baseDir, dir)
 		
-		log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
+		//log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
 		return resolvedPath
 	})
 }
@@ -82,7 +89,7 @@ const
 	
 	
 
-log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
+//log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
 
 // TypeScript SRC ALIAS
 function tsAlias(tsFilename) {
@@ -259,9 +266,9 @@ if (isDev) {
 	_.merge(config, {
 		
 		//In development, use inline source maps
-		devtool: '#cheap-module-source-map',
+		//devtool: '#cheap-module-source-map',
 		// devtool: '#inline-source-map',
-		//devtool: '#cheap-module-inline-source-map',
+		devtool: '#cheap-module-inline-source-map',
 		
 		// In development specify absolute path - better debugger support
 		output:  {

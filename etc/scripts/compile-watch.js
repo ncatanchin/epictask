@@ -18,14 +18,16 @@ require('shelljs/global')
 
 const
 	path = require('path'),
-	gulpCmd = path
+	webpackCmd = path
 		.resolve(
 			process.cwd(),
 			'node_modules',
 			'.bin',
-			`gulp${process.platform === 'win32' ? '.cmd' : ''}`
+			`webpack${process.platform === 'win32' ? '.cmd' : ''}`
 		)
 
-exec(`${gulpCmd} compile-watch`)
+exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --colors`)
+
+//exec(`${gulpCmd} compile-watch`)
 
 //exec('node --max-old-space-size=1500 ./node_modules/gulp/bin/gulp.js compile-watch')

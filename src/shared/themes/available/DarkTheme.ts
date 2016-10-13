@@ -2,6 +2,7 @@ import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
 import { makeLinearGradient, Transparent, CSSHoverState, createStyles } from "shared/themes/styles/CommonStyles"
+import { rem, makePaddingRem } from "shared/themes"
 
 
 
@@ -36,9 +37,57 @@ function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
 }
 
+/**
+ * Create the sheet theme
+ *
+ * @param accent
+ * @param primary
+ */
+function makeSheetTheme({accent,primary}) {
+	return {
+		search: {
+			panel: [{
+				backgroundColor: Transparent
+			}],
+			
+			underline: [{
+				transform: 'scaleX(1)',
+				borderBottom: `0.1rem solid ${accent.hue1}`,
+				borderBottomColor: accent.hue1,
+				bottom: '0px'
+			}],
+			
+			field: [{
+				height: rem(3.6),
+				backgroundColor: Transparent,
+				color: primary.hue1
+			}],
+			
+			input: [makePaddingRem(0,1),{
+				fontWeight: 500,
+				color: primary.hue1,
+				backgroundColor: Transparent
+			}],
+			
+			hint: [makePaddingRem(0,1),{
+				marginBottom: -6,
+				fontWeight: 300,
+				color: primary.hue1,
+				//color: text.primary,
+				backgroundColor: Transparent
+			}],
+		}
+	}
+}
 
-
+/**
+ * Create the compiled dark theme
+ *
+ * @param palette
+ * @returns {any}
+ */
 export function DarkTheme(palette) {
+	
 	
 	const
 		// PALETTE
@@ -228,6 +277,10 @@ export function DarkTheme(palette) {
 			root: InputStyle
 		},
 		
+		/**
+		 * Sheet theme style
+		 */
+		sheet: makeSheetTheme(palette),
 		
 		issueStateIcon: {
 			open: {
@@ -631,62 +684,6 @@ export function DarkTheme(palette) {
 			},
 			
 			
-			// Issue item in list
-			issue: {
-				backgroundColor: background,
-				color: text.secondary,
-				boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue2).setAlpha(1).toRgbString(),
-				
-				// Selected state
-				selected: {
-					backgroundColor: primary.hue2,
-					color: text.primary,
-					boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + tc(primary.hue1).setAlpha(1).toRgbString(),
-				},
-				
-				// multi selected state
-				multi: {
-					backgroundColor: primary.hue2,
-					color: text.primary
-				}
-			},
-			
-			issueMilestone: {
-				color: text.secondary
-			},
-			
-			issueNumber: {
-				color: text.primary
-			},
-			
-			issueRepo: {
-				color: secondary.hue1,
-				fontFamily: fontFamilyRegular,
-				fontWeight: 500
-			},
-			
-			issueTitleRow: {
-				fontFamily: fontFamilyRegular,
-			},
-			
-			issueTitle: {
-				color: text.primary,
-				fontFamily: fontFamilyRegular,
-				fontWeight: 300,
-				fontSize: themeFontSize(1.2)
-			},
-			
-			issueTitleSelected: {
-				color: text.primary,
-				fontWeight: 400,
-				fontSize: themeFontSize(1.2)
-			},
-			
-			issueLabel: {
-				// fontFamily: fontFamilyDetail
-			},
-			
-			issueTitleSelectedMulti: {}
 		},
 		
 		/**

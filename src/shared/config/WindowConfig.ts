@@ -1,3 +1,5 @@
+import {ClassType} from 'react'
+
 
 const
 	dataUrl = require('dataurl'),
@@ -78,47 +80,11 @@ export interface IWindowConfig {
 }
 
 
-/**
- * Default Window Configs
- */
-export const WindowConfigs = {
-	IssueEditDialog: {
-		name: 'IssueEditDialog',
-		type: WindowType.Dialog,
-		showDevTools: false,
-		rootElement: () =>
-			require('ui/components/issues/IssueEditDialog').default
-	},
-	IssuePatchDialog: {
-		name: 'IssuePatchDialog',
-		type: WindowType.Dialog,
-		showDevTools: false,
-		rootElement: () =>
-			require('ui/components/issues/IssuePatchDialog').default
-	},
-	RepoAddTool: {
-		name: 'RepoAddTool',
-		type: WindowType.Dialog,
-		showDevTools: false,
-		rootElement: () =>
-			require('ui/plugins/repos/RepoAddTool').default,
-		opts: {
-			frame: false,
-			minHeight: 48,
-			height: 48,
-			minWidth: 300
-			//titleBarStyle: 'hidden'
-		}
-	},
-	IssueCommentDialog: {
-		name: 'IssueCommentDialog',
-		type: WindowType.Dialog,
-		showDevTools: false,
-		rootElement: () =>
-			require('ui/components/issues/IssueCommentDialog').default
-		
-	}
-} as {[configName:string]:IWindowConfig}
+export interface IUISheet {
+	name:string
+	title:string
+	rootElement:() => ClassType<any,any,any>
+}
 
 
 /**
@@ -137,3 +103,13 @@ export const
 			icon: WindowIcon
 		}) as any
 
+
+/**
+ * Dialog Names
+ */
+export const Dialogs = {
+	IssueEditDialog: 'IssueEditDialog',
+	IssuePatchDialog: 'IssuePatchDialog',
+	RepoAddTool: 'RepoAddTool',
+	IssueCommentDialog: 'IssueCommentDialog'
+}

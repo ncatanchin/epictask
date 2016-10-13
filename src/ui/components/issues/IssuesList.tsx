@@ -38,6 +38,7 @@ import { TransitionDurationLong } from "shared/themes/styles/CommonStyles"
 import { IssuesPanel } from "ui/components/issues/IssuesPanel"
 import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 
 
@@ -46,27 +47,6 @@ const
 	log = getLogger(__filename),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
-//region STYLES
-// const styleSheet = CreateGlobalThemedStyles((theme,Style) => {
-// 	return createStyles({
-// 		'.issueListTransition': [makeTransition(['height','opacity']),{
-//
-// 		}],
-// 		'.issueListTransition-enter': {
-// 			height: '0 !important',
-// 			opacity: '0 !important'
-// 		},
-// 		'.issueListTransition-leave, .issueListTransition-leave-active': {
-// 			height: '0 !important',
-// 			opacity: '0 !important'
-// 		}
-// 	})
-// })
-//
-// if (module.hot) {
-// 	module.hot.dispose(styleSheet.clean)
-// }
-//
 
 const baseStyles = (topStyles,theme,palette) => ({
 	panel: [Fill, {}],
@@ -132,106 +112,9 @@ const baseStyles = (topStyles,theme,palette) => ({
 		}]
 	}],
 	
-	issue: [
-		makeTransition(['height', 'flex-grow', 'flex-shrink', 'flex-basis','box-shadow']),
-		FlexRowCenter,
-		FlexAuto,
-		FillWidth,
-		FillHeight,
-		FlexAlignStart,
-		makePaddingRem(1,1,0,1),
-		{
-			height: rem(9.4),
-			cursor: 'pointer',
-			
-			// Issue selected
-			selected: [],
-			
-			// Avatar component
-			avatar: [{
-				padding: '0'
-			}]
-		}
-	],
 	
 	
-	issueMarkers: makeStyle(FlexColumn, FlexAuto, {
-		minWidth: '1rem',
-		pointerEvents: 'none'
-	}),
 	
-	
-	issueDetails: makeStyle(FlexColumn, FlexScale, OverflowHidden, {
-		padding: '0 0.5rem'
-		//pointerEvents: 'none'
-	}),
-	
-	issueRepoRow: makeStyle(FlexRow, makeFlexAlign('center', 'center'), {
-		pointerEvents: 'none',
-		padding: '0 0 0.5rem 0rem'
-	}),
-	
-	issueNumber: [{
-		fontSize: themeFontSize(1.1),
-		fontWeight: 500
-	}],
-	
-	issueRepo: makeStyle(Ellipsis, FlexRow, FlexScale, {
-		fontSize: themeFontSize(1.1),
-		
-	}),
-	
-	issueTitleRow: makeStyle(makeTransition(['height']), FlexRowCenter, FillWidth, OverflowHidden, {
-		padding: '0 0 1rem 0',
-		pointerEvents: 'none'
-	}),
-	
-	issueTitleTime: makeStyle(FlexAuto, {
-		fontSize: themeFontSize(1),
-		fontWeight: 100,
-	}),
-	
-	
-	// TODO: Fonts configured in theme, ones that aren't should be moved
-	issueTitle: [makeTransition(['font-size', 'font-weight']), Ellipsis, FlexScale, {
-		display: 'block',
-		padding: '0 1rem 0 0'
-	}],
-	
-	
-	issueTitleSelected: makeStyle({}),
-	
-	issueBottomRow: makeStyle(FlexRowCenter, {
-		margin: '0rem 0 0.3rem 0',
-		overflow: 'auto'
-	}),
-	
-	issueMilestone: makeStyle(FlexAuto, Ellipsis, {
-		fontSize: themeFontSize(1),
-		padding: '0 1rem'
-	}),
-	
-	
-	/**
-	 * Issue labels styling
-	 */
-	issueLabels: [makePaddingRem(), FlexScale, {
-		overflowX: 'auto',
-		
-		wrapper: [FlexScale,{
-			overflow: 'hidden',
-			marginRight: rem(1)
-		}],
-		//flexWrap: 'wrap',
-		
-		label: {
-			marginTop: 0,
-			marginRight: '0.7rem',
-			marginBottom: '0.5rem',
-			marginLeft: 0
-		}
-		
-	}]
 	
 	
 })
@@ -349,17 +232,20 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 /**
  * IIssuesPanelProps
  */
-export interface IIssuesListProps {
-	theme?: any
-	styles?: any
+export interface IIssuesListProps extends IThemedAttributes {
+	
 	issues?:List<Issue>
 	items?: List<IIssueListItem<any>>
 	groups?:List<IIssueGroup>
 	groupVisibility?:Map<string,boolean>
 	onIssueSelected:(event: MouseEvent, issue:Issue) => any
 	onIssueOpen:(event: MouseEvent, issue:Issue) => any
+	
 	editingInline?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
+	
+	// WHEN ALL ITEMS HAVE BEEN FILTERED
+	allItemsFilteredMessage?:any
 	
 }
 
@@ -482,8 +368,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				props.groupVisibility,
 				editInlineConfig)
 		})
-		//}
 	}
+	
 	
 	
 	/**
@@ -653,7 +539,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			<IssueItem
 				key={key}
 				issueId={item.item.id}
-				styles={styles}
 				theme={theme}
 				style={style}
 				onOpen={onIssueOpen}
@@ -690,21 +575,20 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	render() {
 		const
 			{
-				theme,
 				styles,
-				editingInline
+				editingInline,
+				allItemsFilteredMessage
 			} = this.props,
-			{itemIndexes,checkedItems} = this.state,
+			{
+				itemIndexes,
+				checkedItems
+			} = this.state,
 			
 			// Item count - groups or issues
 			itemCount = itemIndexes.size + (editingInline ? 1 : 0),
 			
 			transitionProps = {}
-			// {
-			// 	transitionName:"issueListTransition",
-			// 	transitionEnterTimeout:200,
-			// 	transitionLeaveTimeout:150
-			// }
+			
 		
 			
 		
@@ -712,8 +596,10 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{/* ISSUE FILTERS */}
 			<IssueFilters />
 			
+			
 			{/* ROOT LIST - groups or issues */}
 			<div style={styles.listContainer}>
+				{allItemsFilteredMessage ||
 				<VisibleList items={itemIndexes}
 				             itemCount={itemCount}
 				             itemRenderer={this.renderItem}
@@ -727,9 +613,9 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				             initialItemsPerPage={50}
 				             itemHeight={this.getItemHeight}
 				             transitionProps={transitionProps}
-				             
-				/>
 				
+				/>
+				}
 			</div>
 		</div>
 		

@@ -5,7 +5,7 @@ import {UIKey} from "shared/Constants"
 import {getBuiltInToolId, BuiltInTools} from 'shared/config/ToolConfig'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
 import {UIState} from 'shared/actions/ui/UIState'
-import { Dialogs, IUISheet } from 'shared/config/DialogsAndSheets'
+
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
 import { isNumber, shortId, isString, cloneObjectShallow, getValue } from "shared/util/ObjectUtil"
@@ -13,10 +13,9 @@ import {cloneObject} from "shared/util/ObjectUtil"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
 import { getWindowManager } from "ui/WindowManager"
-import { WindowConfigs } from "shared/config/WindowConfig"
 import { If } from "shared/util/Decorations"
 import { focusElementById } from "shared/util/UIUtil"
-import { uiStateSelector } from "shared/actions/ui/UISelectors"
+import { IUISheet } from "shared/config/WindowConfig"
 
 
 // Import only as type - in case we are not on Renderer
@@ -460,7 +459,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 					dialogManager = getWindowManager()
 						
 				if (open)
-					dialogManager.open(WindowConfigs[name])
+					dialogManager.openDialog(name)
 				else
 					dialogManager.close(name)
 			}
@@ -550,11 +549,6 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		this.openSheet(null)
 	}
 	
-	showAddRepoDialog() {
-		return this.setDialogOpen(Dialogs.RepoAddTool,true)
-	}
-
-
 	toggleRepoPanelOpen() {
 		return this.toggleTool(getBuiltInToolId(BuiltInTools.RepoPanel),true)
 	}

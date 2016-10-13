@@ -56,7 +56,7 @@ export const IssueStateRecord = Record({
 	issuesEvents:List<IssuesEvent>(),
 	groupVisibility:Map<string,boolean>(),
 	selectedIssueIds:[],
-	
+	focusedIssueIds: [],
 	
 	editingInline:false,
 	editInlineConfig:null,
@@ -114,6 +114,8 @@ export class IssueState extends IssueStateRecord {
 	
 	
 	issues:List<Issue>
+	
+	focusedIssueIds:number[]
 	
 	groupVisibility:Map<string,boolean>
 	issueSort:IIssueSort

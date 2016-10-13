@@ -1,12 +1,8 @@
 // Imports
 import * as React from 'react'
-import {connect} from 'react-redux'
-
 import {SearchPanel} from 'ui/components/search'
-import {Dialogs} from 'shared/config/DialogsAndSheets'
 import {PureRender} from 'ui/components/common/PureRender'
 import {SearchType} from 'shared/actions/search/SearchState'
-import { uiStateSelector } from "shared/actions/ui/UISelectors"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
 import { getValue } from "shared/util/ObjectUtil"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
@@ -19,82 +15,10 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 		{primary,text,accent,secondary} = palette
 	
 	return {
-		root: [ makeTransition([ 'opacity' ]), {
-			// position: 'fixed',
-			// left: 0,
-			// right: 0,
-			// top: 0,
-			// bottom: 0,
-			//pointerEvents: 'none',
-			opacity: 0,
-			zIndex: 99999,
-			
-			// open: {
-			// 	opacity: 1,
-			// 	pointerEvents: 'auto'
-			// }
-		} ],
-		
-		container: [ PositionAbsolute, {
-			borderRadius: '0.5rem',
-			maxHeight: '80%',
-			top: '50%',
-			left: '50%',
-			transform: 'translate(-50%,-50%)',
-			width: '70%',
-			overflow: 'hidden'
-		} ],
-		
-		search: {
-			panel: [{
-				backgroundColor: Transparent
-			}],
-			
-			underline: [{
-				transform: 'scaleX(1)',
-				borderBottom: `0.1rem solid ${accent.hue1}`,
-				borderBottomColor: accent.hue1,
-				bottom: '0px'
-			}],
-			
-			field: [{
-				height: rem(3.6),
-				backgroundColor: Transparent,
-				color: primary.hue1,
-				//color: text.secondary,
-			}],
-			
-			input: [makePaddingRem(0,1),{
-				fontWeight: 500,
-				color: primary.hue1,
-				//color: accent.hue1,
-				backgroundColor: Transparent
-			}],
-			
-			hint: [makePaddingRem(0,1),{
-				marginBottom: -6,
-				fontWeight: 300,
-				color: primary.hue1,
-				//color: text.primary,
-				backgroundColor: Transparent
-			}],
-		}
-		
-		
 		
 	}
 })
 
-
-function mapStateToProps(state) {
-	const
-		uiState = uiStateSelector(state),
-		open = uiState.dialogs.get(Dialogs.RepoAddTool)
-
-	return {
-		open
-	}
-}
 
 /**
  * IIssueEditDialogProps
@@ -117,9 +41,7 @@ export interface IRepoAddToolState {
  * @constructor
  **/
 
-	
-@connect(mapStateToProps)
-@ThemedStyles(baseStyles,'dialog','repoAddDialog')
+@ThemedStyles(baseStyles,'dialog','repoAddDialog','sheet')
 @PureRender
 export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolState> {
 	
@@ -131,10 +53,6 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 		getUIActions().closeSheet()
 	}
 	
-	componentDidUpdate(prevProps,prevState) {
-		//this.setFocused()
-	}
-
 	
 	/**
 	 * When a result is selected
@@ -144,20 +62,6 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	onResultSelected = (result) => {
 		log.info(`Repo add result was selected`,result)
 		this.hide()
-	}
-	
-	/**
-	 * Whenever we get results changed, we adjust the size
-	 *
-	 * @param items
-	 */
-	onResultsChanged = (items) => {
-		// const
-		// 	count = Math.min(items.length,6),
-		// 	win = require('electron').remote.getCurrentWindow()
-		//
-		// win.setSize(win.getSize()[0], (count + 1) * 48,true)
-		//
 	}
 	
 	/**
@@ -180,20 +84,6 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 		return getValue(() => this.state.searchPanel,null)
 	}
 	
-	/**
-	 * When the panel is focused we focus on the search field
-	 */
-	setFocused = () => {
-		
-		
-		if (this.searchPanel) {
-			const
-				elem = this.searchPanel.getWrappedInstance()
-			
-			// debugger
-			// elem.updateFocus()
-		}
-	}
 	
 	/**
 	 * Create a new state
@@ -225,11 +115,8 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	render() {
 
 		const
-			{theme,styles} = this.props,
-			rootStyles = mergeStyles(
-				styles.root,
-				this.props.open && styles.root.open
-			)
+			{styles} = this.props
+			
 
 		return <div
 			style={[FlexColumn]}>
@@ -250,7 +137,6 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 			             inlineResults={true}
 			             expanded={false}
 			             mode='repos'
-			             onResultsChanged={this.onResultsChanged}
 			             onResultSelected={this.onResultSelected}
 						       hidden={false}/>
 			

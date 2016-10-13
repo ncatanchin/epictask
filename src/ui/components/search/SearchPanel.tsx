@@ -100,11 +100,16 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	styles?:any
 	commandContainer?:CommandContainer
 	
+	allowEmptyQuery?:boolean
+	perSourceLimit?:number
+	
 	panelStyle?:any
 	inputStyle?:any
 	fieldStyle?:any
 	underlineStyle?:any
 	underlineFocusStyle?:any
+	
+	
 	
 	hint?:any
 	hintStyle?:any
@@ -120,7 +125,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	focused?: boolean
 	resultsHidden?: boolean
 	hidden?: boolean
-	mode: "repos"|"issues"
+	mode: "repos"|"issues"|"actions"
 	onEscape?: () => void
 	onResultsChanged?: (items: SearchItem[]) => void
 	onResultSelected?: (item: SearchItem) => void
@@ -159,9 +164,13 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		inlineResults: false,
 		expanded: false,
 		modal: false,
+		perSourceLimit: 5,
+		allowEmptyQuery: false,
 		hint: <span>Search issues, comments, labels &amp; milestones</span>
 	}
 	
+	
+	private mounted = false
 	
 	/**
 	 * Commands
@@ -280,7 +289,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {any}
 	 */
 	get textField(): React.Component<any,any> {
-		return _.get(this, 'state.textField') as any
+		return getValue(() => this.state.textField) as any
 	}
 
 	/**
@@ -289,7 +298,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {E|Element}
 	 */
 	get textFieldElement() {
-		return (this.textField) ? ReactDOM.findDOMNode(this.textField) : null
+		return getValue(() => ReactDOM.findDOMNode(this.textField))
 	}
 
 	/**
@@ -333,11 +342,35 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @returns {SearchItem[]}
 	 */
 	getItems(results:SearchResult[] = []):List<SearchItem> {
-		return results.reduce((items,result) =>
-			items.concat(result.items.size > 5 ?
-				result.items.slice(0,5) :
-				result.items) as List<SearchItem>
-		,List<SearchItem>())
+		return results.reduce((allItems,result) => {
+			const
+				{perSourceLimit} = this.props
+			
+			let
+				{items} = result
+			
+			items = (!perSourceLimit || perSourceLimit < 1 || result.items.size <= perSourceLimit) ?
+				items :
+				items.slice(0,perSourceLimit) as List<SearchItem>
+			
+			return allItems.concat(items) as List<SearchItem>
+		},List<SearchItem>())
+	}
+	
+	
+	/**
+	 * Create the search provider
+	 *
+	 * @param props
+	 */
+	createSearchProvider(props = this.props) {
+		const
+			provider = new SearchProvider(this.props.searchId)
+		
+		provider.setTypes(...props.types)
+		provider.allowEmptyQuery = props.allowEmptyQuery
+		
+		return provider
 	}
 	
 	/**
@@ -355,7 +388,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			provider:SearchProvider = getValue(() => this.state.provider)
 		
 		if (!provider) {
-			provider = newState.provider = new SearchProvider(this.props.searchId)
+			provider = newState.provider = this.createSearchProvider(props)
 			
 			newState.unsubscribe = provider.addListener(
 				SearchEvent.ResultsUpdated,
@@ -375,6 +408,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 						},[]))
 					}
 				})
+			
+			if (props.allowEmptyQuery)
+				provider.setQuery('')
 		}
 		
 		
@@ -481,7 +517,11 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	onBlur = (event) => {
 		log.info('search panel blur')
-		this.setState({focused:false})
+		
+		setTimeout(() =>
+			this.mounted && this.setState({focused:false}),1
+		)
+		
 		//this.updateState(this.props,false)
 		//this.setState({selected: false, focused: false})
 
@@ -491,10 +531,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	updateSearchResults(query) {
 		const
 			{provider,searchState} = this.state
-		
-		provider.setTypes(...this.props.types)
-		
-		
 		
 		provider.setQuery(query)
 		
@@ -566,7 +602,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		} else {
 			const
 				$ = require('jquery'),
-				inputElement = $('input', ReactDOM.findDOMNode(this.state.textField))[0]
+				inputElement = this.inputElement
 			
 			if (inputElement)
 				inputElement.blur()
@@ -681,8 +717,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	componentWillMount = () => this.updateState(this.props)
 
+	componentDidMount = () => this.mounted = true
+	
 	
 	componentWillUnmount = () => {
+		this.mounted = false
+		
 		const
 			unsubscribe:any = getValue(() => this.state.unsubscribe,null) as any
 		

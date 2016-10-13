@@ -13,10 +13,9 @@ import { Repo } from 'shared/models/Repo'
 import { User } from 'shared/models/User'
 import { Label } from 'shared/models/Label'
 
-import { Dialogs } from 'shared/config/DialogsAndSheets'
+import { Dialogs } from 'shared/config/WindowConfig'
 import * as Renderers from 'ui/components/common/Renderers'
 import { Icon } from 'ui/components/common/Icon'
-import { Avatar } from 'ui/components/common/Avatar'
 import { LabelFieldEditor } from 'ui/components/common/LabelFieldEditor'
 
 import { MenuItem, SelectField, TextField, } from 'material-ui'

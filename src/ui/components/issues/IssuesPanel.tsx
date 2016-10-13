@@ -6,7 +6,7 @@
 import {Map,List} from 'immutable'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
-import {Style} from 'radium'
+
 
 import {PureRender} from '../common'
 import {IssueDetailPanel} from './IssueDetailPanel'
@@ -25,20 +25,21 @@ import {
 	IIssueGroup, getIssueGroupId, IIssueListItem, IssueListItemType
 } from 'shared/actions/issue/IIssueListItems'
 import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
-import { getIssueActions, getUIActions } from  "shared/actions/ActionFactoryProvider"
+import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
-import { isNumber } from "shared/util/ObjectUtil"
+import { isNumber, getValue } from "shared/util/ObjectUtil"
 import {
-	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
+	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder, CommandContainer
 } from "shared/commands/CommandComponent"
-import { ICommand, Command, CommandType } from "shared/commands/Command"
+import { CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { SearchPanel } from "ui/components/search"
 import { SearchType } from "shared/actions/search"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { FlexColumnCenter } from "shared/themes"
+import { unwrapRef } from "shared/util/UIUtil"
 
 
 
@@ -48,6 +49,8 @@ const
 	SplitPane = require('react-split-pane'),
 	NO_LABELS_ITEM = {name: 'No Labels', color: 'ffffff'}
 
+//DEBUG OVERRIDE
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 //region STYLES
 function baseStyles(topStyles,theme,palette) {
@@ -56,7 +59,7 @@ function baseStyles(topStyles,theme,palette) {
 		{primary,accent,text,background} = palette
 	
 	return {
-		panel: [ Fill, {} ],
+		panel: [ Fill,FlexColumn, {} ],
 		panelSplitPane: [ Fill, {
 			' > .Pane2': makeStyle(OverflowHidden, {})
 			
@@ -82,7 +85,7 @@ function baseStyles(topStyles,theme,palette) {
 			
 		}],
 		
-		search: [ makePaddingRem(0, 1), {
+		search: [ FlexAuto,makePaddingRem(0, 1), {
 			backgroundColor: Transparent,
 			borderBottom: `0.1rem solid ${primary.hue3}`,
 			
@@ -185,11 +188,18 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					menuPath:['Issue']
 				})
 			
+			// MARK ISSUE FOCUSED
+			.command(
+				CommandType.Container,
+				'Mark selected issues focused',
+				(cmd,event) => getIssueActions().toggleSelectedAsFocused(),
+				CommonKeys.Space)
+			
 			
 			// CLOSE ISSUES
 			.command(
 				CommandType.Container,
-				'Close selected issues',
+				'Mark selected issues closed',
 				(cmd,event) => this.onDelete(event),
 				CommonKeys.Delete)
 			
@@ -198,7 +208,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommandType.Container,
 				'Create a new issue inline',
 				(cmd,event) => this.onEnter(event),
-				CommonKeys.Enter)
+				CommonKeys.Enter,{
+					hidden:true
+				})
 			
 			// LABEL ISSUES
 			.command(
@@ -225,6 +237,27 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				})
 			
 			
+			// FIND/FUZZY
+			.command(
+				CommandType.Container,
+				'Find Issues, Labels & Milestones...',
+				(cmd,event) => {
+					
+					const
+						{searchPanel} = this,
+						inputElement = searchPanel && searchPanel.inputElement
+					
+					log.debug('Fuzzy find',searchPanel,inputElement)
+					
+					if (inputElement)
+						$(inputElement).focus()
+					
+				},
+				"CommandOrControl+f",{
+					menuPath: ['Edit']
+				})
+			
+			
 			.make()
 		
 	readonly commandComponentId = ContainerNames.IssuesPanel
@@ -236,6 +269,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private issueActions: IssueActionFactory = getIssueActions()
 	
+	/**
+	 * Get search panel
+	 *
+	 * @returns {SearchPanel}
+	 */
+	private get searchPanel():SearchPanel {
+		return unwrapRef<SearchPanel>(getValue(() => this.state.searchPanelRef))
+	}
 	
 	/**
 	 * Set search panel ref
@@ -258,15 +299,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Get item indexes from the embedded list
 	 */
 	private get itemIndexes():List<number> {
-		let
-			listRef = _.get(this.state,'listRef',null)
+		const
+			listRef = unwrapRef(getValue(() => this.state.listRef))
 		
-		
-		while(listRef && listRef.getWrappedInstance) {
-			listRef = listRef.getWrappedInstance()
-		}
-		
-		return _.get(listRef,'state.itemIndexes',List<number>()) as any
+		return getValue(() => listRef.state.itemIndexes,List<number>()) as any
 	}
 	
 	/**
@@ -680,9 +716,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					.filter(issueId =>
 						!_.isNil(issues.find(issue => issue.id === issueId))),
 
-			allowResize = validSelectedIssueIds && validSelectedIssueIds.length > 0,
+			
 			itemsAvailable = items && items.size > 0,
 			allItemsFiltered = !itemsAvailable && issues.size,
+			
+			allowResize = itemsAvailable && validSelectedIssueIds && validSelectedIssueIds.length > 0,
 			
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
@@ -717,13 +755,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{itemsAvailable && <SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='issues-search'
-				types={[SearchType.Milestone,
-						SearchType.Label,
-						SearchType.Assignee,
-						SearchType.Issue,
-						SearchType.Repo,
-						SearchType.AvailableRepo
-					]}
+				types={[
+					SearchType.Milestone,
+					SearchType.Label,
+					SearchType.Assignee,
+					SearchType.Issue
+				]}
 				inlineResults={false}
 				expanded={false}
 				underlineStyle={makeStyle({borderBottomColor: Transparent})}
@@ -738,7 +775,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			{/* ISSUE SEARCH AND FILTERING */}
 			{!itemsAvailable && !allItemsFiltered ? noItemsNode :
-				
+				<div style={[FlexScale,FillWidth,PositionRelative,OverflowHidden]}>
 					<SplitPane split="vertical"
 					           allowResize={allowResize}
 					           minSize={listMinWidth}
@@ -750,14 +787,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 							
 							ref={(listRef) => this.setState({listRef})}
 							onIssueOpen={this.onIssueOpen}
-							onIssueSelected={this.onIssueSelected}/>
+							onIssueSelected={this.onIssueSelected}
+							allItemsFilteredMessage={allItemsFiltered && noItemsNode}
+						/>
 						
 						{/* ISSUE DETAIL PANEL */}
 						<IssueDetailPanel />
 					
 					</SplitPane>
 					
-				
+				</div>
 				
 			}
 		</CommandRoot>

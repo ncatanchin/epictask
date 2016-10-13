@@ -321,8 +321,30 @@ export function CommandComponent<T extends TCommandComponentConstructor>(opts:IC
 	return ((TargetComponent:T) => {
 		
 		return class CommandComponentWrapped extends React.Component<any,any> {
+			
+			/**
+			 * Store the underlying ref
+			 *
+			 * @param commandContainerRef
+			 */
+			private setCommandContainer = (commandContainerRef) => this.setState({commandContainerRef})
+			
+			/**
+			 * Get the command container ref
+			 *
+			 * @returns {any}
+			 */
+			getWrappedInstance() {
+				return getValue(() => this.state.commandContainerRef.getWrappedInstance())
+			}
+			
+			/**
+			 * Render the component
+			 *
+			 * @returns {any}
+			 */
 			render() {
-				return <CommandContainer commandComponent={TargetComponent as any} {...this.props} />
+				return <CommandContainer ref={this.setCommandContainer} commandComponent={TargetComponent as any} {...this.props} />
 			}
 		} as any
 	}) as any

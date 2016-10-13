@@ -5,12 +5,8 @@
 // Imports
 import * as React from 'react'
 import { connect } from 'react-redux'
-import { Button } from 'ui/components/common'
 import { createDeepEqualSelector } from 'shared/util/SelectorUtil'
 import { createStructuredSelector } from 'reselect'
-
-import { Container } from 'typescript-ioc'
-
 
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { Comment } from 'shared/models/Comment'
@@ -22,11 +18,9 @@ import {
 } from 'shared/actions/issue/IssueSelectors'
 
 import { uiStateSelector } from 'shared/actions/ui/UISelectors'
-import { Dialogs } from 'shared/config/DialogsAndSheets'
+import { Dialogs } from 'shared/config/WindowConfig'
 
-import { IssueActionFactory } from 'shared/actions/issue/IssueActionFactory'
-import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
-import { cloneObject, getValue } from 'shared/util/ObjectUtil'
+import { getValue } from 'shared/util/ObjectUtil'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
 
 import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"

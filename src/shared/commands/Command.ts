@@ -111,6 +111,11 @@ export interface ICommand {
 	hidden?:boolean
 	
 	/**
+	 * Hide in allCommands result
+	 */
+	hideInAllCommands?:boolean
+	
+	/**
 	 * Current action is enabled
 	 */
 	enabled?:boolean

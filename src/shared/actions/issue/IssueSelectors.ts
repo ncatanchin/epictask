@@ -587,6 +587,13 @@ export const issueItemsSelector = createSelector(
 	}
 )
 
+/**
+ * Selector for focused issue ids
+ */
+export const focusedIssueIdsSelector:(state) => number[] = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.focusedIssueIds
+)
 
 /**
  * All current issue activity

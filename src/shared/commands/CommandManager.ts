@@ -181,6 +181,7 @@ export class CommandManager {
 	 */
 	allCommands():ICommand[] {
 		return Object.values(this.commands)
+			.filter(cmd => cmd.hideInAllCommands !== true && cmd.hidden !== true)
 	}
 	
 	/**

@@ -5,8 +5,8 @@ import {createSelector} from 'reselect'
 import {UIKey} from 'shared/Constants'
 import {UIState} from 'shared/actions/ui/UIState'
 import { IWindowInstance,WindowManager } from "ui/WindowManager"
-import { WindowType } from "shared/config/WindowConfig"
-import { IUISheet } from "shared/config/DialogsAndSheets"
+import { IUISheet,WindowType } from "shared/config/WindowConfig"
+
 import { ToolPanelLocation, IToolPanel } from "shared/tools/ToolTypes"
 
 const

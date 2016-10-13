@@ -219,7 +219,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param nextContext
 	 */
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
-		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue')
+		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue','selectedIssueIds')
 	}
 	
 	/**

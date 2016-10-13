@@ -21,7 +21,11 @@ try {
 
 export const
 	CommandOrControl = 'CommandOrControl',
+	Super = 'super',
+	Command = 'control',
+	Cmd = 'cmd',
 	Meta = 'meta',
+	Control = 'control',
 	Ctrl = 'ctrl',
 	Alt = 'alt',
 	Shift = 'shift',
@@ -29,8 +33,13 @@ export const
 	Up = 'ArrowUp',
 	Right = 'ArrowRight',
 	Left = 'ArrowLeft',
+	
 	MappedKeys = {
-		[CommandOrControl.toLowerCase()]: isMac() ? Meta : Ctrl
+		[CommandOrControl.toLowerCase()]: isMac() ? Meta : Ctrl,
+		[Control]: Ctrl,
+		[Super]: Meta,
+		[Command]: Meta,
+		[Cmd]: Meta
 	},
 	
 	// KEY CODE -> ELECTRON KEY CODE

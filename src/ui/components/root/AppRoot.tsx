@@ -28,12 +28,13 @@ import { isString, getValue, shallowEquals } from "shared/util/ObjectUtil"
 import { UIRoot } from "ui/components/root/UIRoot"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { Themed } from "shared/themes/ThemeManager"
-import { Sheets } from "shared/config/DialogsAndSheets"
+import { Sheets } from "ui/DialogsAndSheets"
 
 // STYLES
 import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
 import { FileDrop } from "ui/components/common/FileDrop"
 import { ToolDragLayer } from "ui/components/ToolDragLayer"
+import { PromisedComponent } from "ui/components/root/PromisedComponent"
 
 
 // Logger, Store +++
@@ -84,7 +85,20 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			// IMPORT REPO
 				.command(
 					CommandType.App,
-					'Import Repo...',
+					'Find action.',
+					(cmd, event) => {
+						log.debug(`Triggering find action`)
+						getUIActions().openSheet(Sheets.FindActionSheet)
+					},
+					"CommandOrControl+Shift+p", {
+						menuPath: [ 'Edit' ],
+						hideInAllCommands: true
+						
+					})
+				// IMPORT REPO
+				.command(
+					CommandType.App,
+					'Import Repository',
 					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
 					"CommandOrControl+Shift+n", {
 						menuPath: [ 'GitHub' ]
@@ -109,7 +123,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 				
 				.command(
 					CommandType.Global,
-					'New Issue',
+					'New Issue Global',
 					(cmd, event) => getIssueActions().newIssue(),
 					"Control+Alt+n", {
 						hidden: true
@@ -134,8 +148,8 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		return builder.make()
 	}
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {}
 	}
@@ -211,12 +225,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * @returns {any}
 	 */
 	renderChildWindow() {
-		const
-			ChildRootComponent = childWindowConfig && childWindowConfig.rootElement()
-		
-		log.debug(`Dialog Component`, ChildRootComponent)
-		
-		return <ChildRootComponent />
+		return <PromisedComponent promise={getValue(() => childWindowConfig.rootElement())} />
 	}
 	
 	/**
@@ -239,25 +248,23 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		
 		
 		return <StyleRoot>
-				<div style={FillWindow}>
-				<MuiThemeProvider muiTheme={theme}>
-				<Provider store={reduxStore}>
-					
-					<CommandRoot
-						style={windowStyle}
-						component={this}
-						id="appRoot">
+			<CommandRoot
+				component={this}
+				id="appRoot"
+				style={windowStyle}>
+				<div style={windowStyle}>
+					<MuiThemeProvider muiTheme={theme}>
+						<Provider store={reduxStore}>
+							
+							
+							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
 						
 						
-						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-					
-					
-					</CommandRoot>
-						
-				</Provider>
-			</MuiThemeProvider>
+						</Provider>
+					</MuiThemeProvider>
 					<ToolDragLayer />
 				</div>
+			</CommandRoot>
 		</StyleRoot>
 		
 	}

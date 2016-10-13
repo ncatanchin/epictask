@@ -89,8 +89,8 @@ export default function (topStyles,theme,palette) {
 		} ],
 		
 		toast: [ {
-			root: [ {
-				margin: 0,
+			root: [makeMarginRem(0), {
+				
 				cursor: 'pointer'
 			} ],
 			content: [ {

@@ -106,8 +106,13 @@ const boot = benchmark('UIBoot', async ()=> {
 	// Now the theme manager
 	require("shared/themes/ThemeManager")
 	
-	// Finally load the AppRoot
-	require('ui/components/root/AppRoot')
+	
+	// Finally load the AppRoot (sep chunk - faster compile - i hope)
+	require.ensure(['ui/components/root/AppRoot'],function(require) {
+		require('ui/components/root/AppRoot')
+	})
+	//
+	// require('ui/components/root/AppRoot')
 
 })
 
