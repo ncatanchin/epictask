@@ -133,7 +133,6 @@
     "babel-polyfill": "^6.8.0",
     "babel-preset-async-to-bluebird": "^1.1.0",
     "babel-preset-es2015": "^6.9.0",
-    "babel-preset-es2015-native-modules": "^6.6.0",
     "babel-preset-es2016-node5": "^1.1.2",
     "babel-preset-modern": "^1.1.0",
     "babel-preset-react": "^6.11.1",

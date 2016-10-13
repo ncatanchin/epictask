@@ -78,14 +78,13 @@
         "useCache": true,
         "babelOptions": {
             "presets": [
-                "es2016-node5",
+                ["es2015", { "modules": false }],
                 "stage-0",
                 "react",
                 "async-to-bluebird"
             ],
             "sourceMaps": "both",
             "plugins": [
-                "transform-es2015-classes",
                 "transform-runtime"
             ],
             "env": {

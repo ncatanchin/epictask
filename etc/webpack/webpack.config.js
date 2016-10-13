@@ -153,8 +153,8 @@ const config = {
 	
 	cache: true,
 	recordsPath: `${distDir}/_records`,
-	devtool: '#source-map',
-	//debug: true,
+	//devtool: '#source-map',
+	devtool: '#cheap-module-source-map',
 	
 	// Currently we need to add '.ts' to the resolve.extensions array.
 	resolve: {
@@ -208,13 +208,11 @@ const config = {
 	
 	// PLUGINS
 	plugins: [
-		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-		...(ForkCheckerPlugin ?
-			[new ForkCheckerPlugin()] :
-			[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
+		//new webpack.dependencies.LabeledModulesPlugin(),
 		
-		// HAPPY PACK PLUGINS
-		...happyPlugins,
+		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+		new ForkCheckerPlugin(),
+		
 		
 		
 		// SPLIT FOR PARALLEL LOADING
@@ -237,6 +235,11 @@ const config = {
 		new webpack.ProvidePlugin({
 			'Promise': 'bluebird'
 		})
+		
+		// UNUSED / HAPPYPACK / SEPERATE COMPILE
+		//[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
+		// HAPPY PACK PLUGINS
+		//...happyPlugins,
 	],
 	
 	// NODE SHIMS
@@ -282,6 +285,17 @@ if (isDev) {
 	
 	// Add HMR
 	config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
+} else {
+	config.plugins.push(new webpack.optimize.UglifyJsPlugin({
+		mangle: false,
+		mangleProperties: false,
+		compress:{
+			warnings: true
+		}
+	}),new webpack.LoaderOptionsPlugin({
+		minimize: true,
+		debug: false
+	}))
 }
 
 

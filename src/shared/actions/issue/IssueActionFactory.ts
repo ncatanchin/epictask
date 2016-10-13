@@ -165,7 +165,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
 			selectedIssueIds.forEach(id => {
-				focusedIssueIds.splice(focusedIssueIds.indexOf(id),1,0)
+				focusedIssueIds.splice(focusedIssueIds.indexOf(id),1)
 			})
 		} else {
 			focusedIssueIds = _.uniq(focusedIssueIds.concat(selectedIssueIds))
@@ -220,7 +220,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		const
 			newFocusedIds = [].concat(focusedIssueIds)
 		
-		newFocusedIds.splice(newFocusedIds.indexOf(issueId),1,0)
+		newFocusedIds.splice(newFocusedIds.indexOf(issueId),1)
 		this.setFocusedIssueIds(newFocusedIds)
 	}
 	
