@@ -47,25 +47,32 @@ function baseStyles(topStyles,theme,palette) {
 			cursor: 'pointer',
 			
 			
+			bar: [PositionAbsolute,makeTransition('border-left'),{
+				top: 0,
+				left: 0,
+				bottom: 0,
+				zIndex: 2,
+				borderLeft: `0.4rem inset ${Transparent}`
+				
+			}],
 			
 			// MARKED AS FOCUSED
 			focused: [{
 				color: text.primary,
-				
-				bar: [PositionAbsolute,{
-					top: 0,
-					left: 0,
-					bottom: 0,
-					zIndex: 2,
+				bar: [{
 					borderLeft: `0.4rem inset ${accent.hue1}`
-				}],
+				}]
 			}],
 			
 			// SELECTED
 			selected: [{
 				backgroundColor: primary.hue2,
 				color: text.primary,
-				boxShadow: 'inset 0rem 0rem 0.1rem 0.1rem ' + colorAlpha(secondary.hue1,0.4),
+				
+				bar: [{
+					borderLeft: `0.4rem inset ${secondary.hue1}`
+				}],
+				//boxShadow: 'inset 0rem 0rem 0.1rem 0.1rem ' + colorAlpha(secondary.hue1,0.4),
 				
 				multi: [{
 					backgroundColor: primary.hue2,
@@ -346,7 +353,11 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 			</div>
 			
 			{/* FOCUSED MARKING BAR */}
-			{isFocused && <div style={styles.focused.bar}/>}
+			<div style={[
+				styles.bar,
+				isSelected && styles.selected.bar,
+				isFocused && styles.focused.bar
+			]}/>
 			
 		</div>
 

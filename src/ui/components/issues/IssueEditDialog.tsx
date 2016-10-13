@@ -19,12 +19,11 @@ import { Icon } from 'ui/components/common/Icon'
 import { LabelFieldEditor } from 'ui/components/common/LabelFieldEditor'
 
 import { MenuItem, SelectField, TextField, } from 'material-ui'
-import { cloneObject, shallowEquals, getValue } from 'shared/util/ObjectUtil'
+import { cloneObject, getValue } from 'shared/util/ObjectUtil'
 import {
 	repoIdPredicate,
-	availableReposSelector, enabledAvailableReposSelector
+	enabledAvailableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
-import { CommonKeys } from 'shared/KeyMaps'
 import { Milestone } from 'shared/models/Milestone'
 import { ThemedStyles, makeThemeFontSize } from 'shared/themes/ThemeManager'
 import { appUserSelector } from 'shared/actions/app/AppSelectors'

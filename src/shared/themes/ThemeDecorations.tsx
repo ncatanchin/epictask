@@ -134,7 +134,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 						// PASSED PROP STYLES
 						!shallowEquals(props.styles,this.props.styles)
 					) {
-						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette), () => this.forceUpdate())
+						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette))
 					}
 					
 				}

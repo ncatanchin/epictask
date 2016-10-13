@@ -27,7 +27,7 @@ export interface IPromisedComponentProps extends IThemedAttributes {
  * IPromisedComponentState
  */
 export interface IPromisedComponentState {
-	component?:TComponent
+	
 	attachedPromise?:Promise<TComponent>
 }
 
@@ -43,6 +43,7 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	
 	private mounted = false
 	
+	private component:TComponent
 	/**
 	 * Attach to the current promise
 	 *
@@ -61,17 +62,20 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 		
 		// SET THE PROMISE
 		attachedPromise = props.promise
+		this.component = null
+		
 		this.setState({
-			attachedPromise,
-			component: null
+			attachedPromise
 		})
 		
 		// ADD COMPONENT SETTER
 		attachedPromise
-			.then(component =>
-			this.mounted && this.setState({
-				component
-			}))
+			.then(component => {
+				if (this.mounted) {
+					this.component = component
+					this.forceUpdate()
+				}
+			})
 	}
 	
 	/**
@@ -90,14 +94,13 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	componentWillUnmount() {
 		this.mounted = false
 		this.setState({
-			attachedPromise:null,
-			component: null
+			attachedPromise:null
 		})
 	}
 	
 	render() {
 		const
-			Component = getValue(() => this.state.component)
+			Component = getValue(() => this.component)
 		
 		return !Component ? React.DOM.noscript() : <Component />
 	}

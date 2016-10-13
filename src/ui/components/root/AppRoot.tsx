@@ -1,13 +1,10 @@
-import HTML5Backend from 'react-dnd-html5-backend'
-import { DragDropContext } from 'react-dnd'
+
 import * as Radium from 'radium'
-
-
 import { ObservableStore } from 'typedux'
 import { Provider } from 'react-redux'
 
 import { MuiThemeProvider } from 'material-ui/styles'
-import { PureRender } from 'ui/components/common'
+import { PureRender } from 'ui/components/common/PureRender'
 import { Events } from 'shared/config/Events'
 import { AppKey } from 'shared/Constants'
 import { RootState } from 'shared/store/RootState'
@@ -24,17 +21,17 @@ import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/Ac
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
 import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes"
-import { isString, getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, shallowEquals } from "shared/util/ObjectUtil"
 import { UIRoot } from "ui/components/root/UIRoot"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { Themed } from "shared/themes/ThemeManager"
-import { Sheets } from "ui/DialogsAndSheets"
+import { Sheets, DialogConfigs } from "ui/DialogsAndSheets"
 
 // STYLES
-import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
-import { FileDrop } from "ui/components/common/FileDrop"
-import { ToolDragLayer } from "ui/components/ToolDragLayer"
+//import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
+
 import { PromisedComponent } from "ui/components/root/PromisedComponent"
+import { benchmarkLoadTime } from "shared/util/UIUtil"
 
 
 // Logger, Store +++
@@ -68,7 +65,7 @@ export interface IAppState {
 /**
  * Root App Component
  */
-@(DragDropContext as any)(HTML5Backend)
+
 @CommandComponent()
 @Themed
 @PureRender
@@ -234,6 +231,8 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * @returns {any}
 	 */
 	renderMainWindow() {
+		// const
+		// 	UIRoot = require("ui/components/root/UIRoot").UIRoot
 		return <UIRoot />
 	}
 	
@@ -262,7 +261,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						
 						</Provider>
 					</MuiThemeProvider>
-					<ToolDragLayer />
+					
 				</div>
 			</CommandRoot>
 		</StyleRoot>
@@ -290,14 +289,9 @@ function render() {
 		 * After Initial render
 		 */
 		(ref) => {
-			/**
-			 * Tron logging window load time
-			 */
-			const
-				startLoadTime:number = (window as any).startLoadTime,
-				loadDuration = Date.now() - startLoadTime
 			
-			log.tron(`It took a ${loadDuration / 1000}s to load window ${childWindowId ? childWindowId : 'main window'}`)
+			// BENCHMARK
+			benchmarkLoadTime(`render window ${childWindowId ? childWindowId : 'main window'}`)
 			
 			/**
 			 * If main ui then stop load spinner
@@ -323,32 +317,33 @@ function render() {
  * is ready for us to load everything
  */
 function checkIfRenderIsReady() {
-	if (isChildWindow)
-		return render()
-	
-	
-	const
-		state = store.getState(),
-		appState = state ? state.get(AppKey) : null,
-		ready = appState ? appState.ready : false
-	
-	if (!ready) {
-		log.info('Theme is not set yet')
-		
-		const
-			observer = store.observe([ AppKey, 'ready' ], (newReady) => {
-				log.debug('RECEIVED READY, NOW RENDER', newReady)
-				if (!newReady !== true) {
-					log.debug('Main is not ready', newReady)
-					return
-				}
-				observer()
-				render()
-			})
-		
-	} else {
-		render()
-	}
+	render()
+	// if (isChildWindow)
+	// 	return render()
+	//
+	//
+	// const
+	// 	state = store.getState(),
+	// 	appState = state ? state.get(AppKey) : null,
+	// 	ready = appState ? appState.ready : false
+	//
+	// if (!ready) {
+	// 	log.info('Theme is not set yet')
+	//
+	// 	const
+	// 		observer = store.observe([ AppKey, 'ready' ], (newReady) => {
+	// 			log.debug('RECEIVED READY, NOW RENDER', newReady)
+	// 			if (!newReady !== true) {
+	// 				log.debug('Main is not ready', newReady)
+	// 				return
+	// 			}
+	// 			observer()
+	// 			render()
+	// 		})
+	//
+	// } else {
+	// 	render()
+	// }
 }
 
 
@@ -372,15 +367,12 @@ if (isChildWindow) {
 		log.info('cookies', cookies)
 		
 		const
-			configStr = cookies[ 0 ].value
+			configName = cookies[ 0 ].value
+			
 		
-		assert(configStr, `No config found for ${childWindowId}`)
-		childWindowConfig = JSON.parse(configStr, (key, value) => {
-			if (key === 'rootElement' && isString(value)) {
-				return eval(value)
-			}
-			return value
-		})
+		childWindowConfig = DialogConfigs[configName]
+		assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
+		 
 		
 		checkIfRenderIsReady()
 	})

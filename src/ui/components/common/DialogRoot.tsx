@@ -1,6 +1,5 @@
 // Imports
 import { ThemedStyles } from 'shared/themes/ThemeManager'
-import { MuiThemeProvider } from "material-ui/styles"
 import { CircularProgress} from "material-ui"
 import { makeHeightConstraint, makeWidthConstraint, createStyles } from "shared/themes"
 

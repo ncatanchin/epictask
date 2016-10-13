@@ -240,7 +240,7 @@ export class WindowManager {
 				windowConfigCookie = {
 					url: 'https://densebrain.com/epictask',
 					name: id,
-					value: windowConfig
+					value: config.name
 				}
 			
 			

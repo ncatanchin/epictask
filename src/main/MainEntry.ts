@@ -165,9 +165,12 @@ function onStart() {
 }
 
 if (checkSingleInstance(app,onFocus)) {
-	
+	log.info(`Is single instance`)
 	// app.on('will-quit',onWillQuit)
-	app.on('ready', onStart)
+	if (app.isReady())
+		onStart()
+	else
+		app.on('ready', onStart)
 }
 
 /**

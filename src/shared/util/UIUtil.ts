@@ -1,4 +1,7 @@
 
+const
+	log = getLogger(__filename)
+
 export function focusElementById(id:string,timeout = 50) {
 	if (ProcessConfig.isType(ProcessType.UI))
 		setTimeout(() => $(`#${id}`).focus(),timeout)
@@ -43,4 +46,16 @@ export function makePromisedComponent(loader:TComponentLoader): () => Promise<TC
 		
 		return resolver.promise as Promise<TComponent>
 	}
+}
+
+
+export function benchmarkLoadTime(to:string) {
+	/**
+	 * Tron logging window load time
+	 */
+	const
+		startLoadTime:number = (window as any).startLoadTime,
+		loadDuration = Date.now() - startLoadTime
+	
+	log.tron(`${to} took ${loadDuration / 1000}s`)
 }

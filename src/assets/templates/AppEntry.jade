@@ -7,6 +7,9 @@ html(lang="en")
 	head
 		script.
 			window.startLoadTime = Date.now()
+			window.logBenchmark = function (name) {
+				console.log(`Time to ${name} is ${(Date.now() - startLoadTime) / 1000}s`)
+			}
 			//console.log('original window width: ', window.innerWidth)
 
 		meta(charset='utf-8')
@@ -18,10 +21,13 @@ html(lang="en")
 		style!=eval(require('!!css!font-awesome/css/font-awesome.min.css'))
 		style!=eval(require('!!css!highlight.js/styles/dark.css'))
 		style!=eval(require('!!css!simplemde/dist/simplemde.min.css'))
+		style!=eval(require('!!css!sass!assets/styles/MarkdownEditor.SimpleMDE.global.scss'))
 
 		// Splash screen load
 		script.
-			require('babel-polyfill')
+			logBenchmark('After styles')
+			//require('babel-polyfill')
+			logBenchmark('After polyfill')
 			var
 							{hash} = window.location,
 							_ = require('lodash')
@@ -68,7 +74,7 @@ html(lang="en")
 					return console
 				}
 			})
-
+			logBenchmark('After globals')
 			try {
 				require('react-tap-event-plugin')()
 			} catch (err) {
@@ -140,12 +146,13 @@ html(lang="en")
 						return
 					}
 					log.info('Template Ready state', fontsReady, docReady, loaderReady)
-					if (fontsReady && docReady && loaderReady)
+					if (docReady && loaderReady)
 						window.startLoaderEntry()
 				}
 
 				// LOAD WEB-FONTS
-				window.WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
+				//window.WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
+				/*
 				WebFont.load({
 					loading: function () {
 						log.info('WebFonts loading')
@@ -166,11 +173,14 @@ html(lang="en")
 						families: ['AvenirNext']
 					}
 				})
+				*/
 
 
 				if (isChildWindow) {
 					// CHILD WINDOW - LOAD IMMEDIATE
+					logBenchmark('Loading app')
 					loadApp()
+					logBenchmark('Loaded app')
 				} else {
 					// MAIN UI - SHOW LOADER FIRST
 					addScript('LoaderEntry.bundle.js', false, function () {
@@ -185,14 +195,16 @@ html(lang="en")
 				}
 			}
 			function loadApp() {
-				addScript('./AppEntry.bundle.js')
+				require('./AppEntry.bundle.js')
+				//addScript('./AppEntry.bundle.js')
 			}
 
 			// IN DEV MODE - install debug menu
 			if (isDev) {
-				require('debug-menu').install()
+				//require('debug-menu').install()
 			}
 
+			logBenchmark('To load')
 			if (processType === 'UI' || processType === 'UIChildWindow') {
 				loadUI()
 			} else {
