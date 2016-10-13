@@ -1,16 +1,12 @@
 -
 	var fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss'))
 	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
-	var webFontLoaderUrl = require('!!file!libs/webfont-loader/webfont-loader.js')
 doctype html
 html(lang="en")
 	head
 		script.
 			window.startLoadTime = Date.now()
-			window.logBenchmark = function (name) {
-				//console.log(`Time to ${name} is ${(Date.now() - startLoadTime) / 1000}s`)
-			}
-			//console.log('original window width: ', window.innerWidth)
+
 
 		meta(charset='utf-8')
 		meta(name="viewport" content="width=device-width, initial-scale=1")
@@ -25,191 +21,19 @@ html(lang="en")
 
 		// Splash screen load
 		script.
-			logBenchmark('After styles')
-			//require('babel-polyfill')
-			logBenchmark('After polyfill')
-			var
-							{hash} = window.location,
-							_ = require('lodash')
 
-			function parseParams() {
-				var
-								pairs = hash.substr(1).split('&')
 
-				return pairs.reduce(function (map, nextPair) {
-					const
-									parts = nextPair.split('=')
-
-					if (parts.length === 2)
-						map[parts[0]] = parts[1]
-					return map
-				}, {})
-			}
-
-			//noinspection NpmUsedModulesInstalled
-			var
-							electron = require('electron'),
-							params = parseParams(),
-							log = console,
-							loaded = false,
-							remote = electron.remote,
-							isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true',//remote.getGlobal('Env').isDev,
-							baseDir = "./",
-							loaderReady = false,
-							docReady = false,
-							fontsReady = false,
-							rootDir = isDev ? baseDir + "../../" : baseDir,
-							processType = params.EPIC_ENTRY || 'UI',
-							isChildWindow = processType === 'UIChildWindow'
-
-			process.env.EPIC_WINDOW_ID = params.EPIC_WINDOW_ID
-			process.env.EPIC_ENTRY = processType
-
-			_.assign(global, {
-				_: _,
-				$: require('jquery'),
-				React: require('react'),
-				ReactDOM: require('react-dom'),
-				getLogger: function (loggerName) {
-					return console
-				}
-			})
-			logBenchmark('After globals')
-			try {
-				require('react-tap-event-plugin')()
-			} catch (err) {
-				log.info('Failed to inject tap event handler = HMR??')
-			}
-			if (isDev && !isChildWindow) {
-				try {
-					require('devtron').install()
-				} catch (err) {
-					log.info(`Dev tron is prob already loaded`)
-				}
-			}
-
-			function makeRootPath(filename) {
-				return rootDir + filename
-			}
-
-			function makeBasePath(filename) {
-				return baseDir + filename
-			}
-
-			function getHead() {
-				return document.getElementsByTagName('head')[0]
-			}
-
-			//Add a script tag to load content
-			function addScript(scriptPath, asyncLoad, callback) {
-				const script = document.createElement('script');
-				script.type = 'text/javascript'
-				if (asyncLoad) {
-					script.async = true
-				}
-
-				if (callback)
-					script.onload = callback
-
-				script.src = scriptPath
-				getHead().appendChild(script)
-			}
-			function addCSS(cssPath) {
-				const link = document.createElement('link')
-				link.setAttribute('rel', 'stylesheet')
-				link.href = cssPath
-				getHead().appendChild(link)
-			}
-			function addStyleSheet(styleSheet) {
-				$(getHead()).append('<style>' + styleSheet + '</style>')
-			}
 		meta(name="viewport",content="width=device-width, initial-scale=1")
 		title epictask
 		script.
-			function loadUI() {
-				/*
-				const cssPaths = [
-					"node_modules/animate.css/animate.css",
-					"node_modules/font-awesome/css/font-awesome.min.css",
-					"node_modules/highlight.js/styles/dark.css",
-					"node_modules/simplemde/dist/simplemde.min.css"
-				]
+			//noinspection NodeModulesDependencies
+			var isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true'
 
-				cssPaths.forEach(function (cssFile) {
-					addCSS(makeRootPath((!isDev ? '../../' : '') + cssFile))
-				})
-				*/
-				// DISPLAY THE LOADER
-				function showLoader() {
-					if (isChildWindow) {
-						log.info(`Child window does not load LoaderEntry`)
-						return
-					}
-					log.info('Template Ready state', fontsReady, docReady, loaderReady)
-					if (docReady && loaderReady)
-						window.startLoaderEntry()
-				}
-
-				// LOAD WEB-FONTS
-				//window.WebFont = require(makeBasePath("#{webFontLoaderUrl}"))
-				/*
-				WebFont.load({
-					loading: function () {
-						log.info('WebFonts loading')
-					},
-					active: function () {
-						log.info('WebFonts active')
-						fontsReady = true
-						if (!isChildWindow)
-							showLoader()
-					},
-					inactive: function () {
-						log.error('WebFonts inactive')
-					},
-					fontinactive: function (familyName, fvd) {
-						log.error('font failed', familyName)
-					},
-					custom: {
-						families: ['AvenirNext']
-					}
-				})
-				*/
+			//noinspection JSAnnotator
+			require('./BrowserEntry.bundle.js')
+				.initBrowser(isDev)
 
 
-				if (isChildWindow) {
-					// CHILD WINDOW - LOAD IMMEDIATE
-					logBenchmark('Loading app')
-					loadApp()
-					logBenchmark('Loaded app')
-				} else {
-					// MAIN UI - SHOW LOADER FIRST
-					addScript('LoaderEntry.bundle.js', false, function () {
-						log.info(`Loader - loaded`)
-						loaderReady = true
-						showLoader()
-					})
-					$(document).ready(function () {
-						docReady = true
-						showLoader()
-					})
-				}
-			}
-			function loadApp() {
-				require('./AppEntry.bundle.js')
-				//addScript('./AppEntry.bundle.js')
-			}
-
-			// IN DEV MODE - install debug menu
-			if (isDev) {
-				//require('debug-menu').install()
-			}
-
-			logBenchmark('To load')
-			if (processType === 'UI' || processType === 'UIChildWindow') {
-				loadUI()
-			} else {
-				loadApp()
-			}
 
 	body.fill-width.fill-height()
 		#root
