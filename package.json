@@ -19,7 +19,8 @@
     "clean-electron": "./etc/scripts/clean-electron.sh",
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
     "build-storybook": "build-storybook",
-    "package": "node ./etc/scripts/electron-package.js"
+    "package": "node ./etc/scripts/electron-package.js",
+    "install": "node ./etc/scripts/electron-package.js --install"
   },
   "build": {
     "appId": "com.densebrain.epictask",

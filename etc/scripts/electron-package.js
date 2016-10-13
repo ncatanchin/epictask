@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-
+require('babel-polyfill')
 require('shelljs/global')
 
 const
 	path = require('path'),
 	{process} = global,
-	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${process.platform === 'win32' ? '.cmd' : ''}`)
+	isMac = process.platform === 'darwin',
+	isWindows = process.platform === 'win32',
+	doInstall = process.argv.includes('--install'),
+	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${isWindows ? '.cmd' : ''}`)
 
 echo(`Will use builder @ ${buildCmd}`)
 
@@ -27,10 +30,30 @@ cp('bin/epictask-start.js','dist/app/bin')
 
 
 let
-	platforms = [process.platform === 'darwin' ? '--mac' : process.platform === 'win32' ? '--win' : '--linux']
-
+	platforms = [
+		isMac ?
+			'--mac' :
+			isWindows ?
+				'--win' :
+				'--linux'
+	]
 
 
 echo("Packaging")
 
-exec(`${buildCmd} ${platforms.join(' ')}`)
+
+
+if (exec(`${buildCmd} ${platforms.join(' ')}`).code === 0) {
+	if (doInstall) {
+		install()
+	}
+}
+
+function install() {
+	echo(`Installing App`)
+	if (isMac) {
+		exec('pkill -9 Epictask')
+		rm('-Rf', '/Applications/Epictask.app')
+		cp('-r', 'dist/build/mac/Epictask.app', '/Applications/')
+	}
+}
