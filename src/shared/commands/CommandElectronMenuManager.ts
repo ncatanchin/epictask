@@ -85,6 +85,8 @@ export class CommandElectronMenuManager implements ICommandMenuManager {
 	}
 	
 	
+	
+	
 	/**
 	 * Create a new menu item from a command
 	 *
@@ -99,10 +101,9 @@ export class CommandElectronMenuManager implements ICommandMenuManager {
 			id: item.id,
 			enabled: item.enabled,
 			visible: item.hidden !== true,
-			accelerator: item.electronAccelerator,
 			click: (event) => {
 				log.info(`Menu Execute`,item)
-				item.execute(item,event)
+				item && item.execute && item.execute(item,event)
 			}
 		})
 	}

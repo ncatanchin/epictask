@@ -73,7 +73,8 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 			.then(component => {
 				if (this.mounted) {
 					this.component = component
-					this.forceUpdate()
+					setImmediate(() => this.forceUpdate())
+					
 				}
 			})
 	}

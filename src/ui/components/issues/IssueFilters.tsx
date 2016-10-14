@@ -30,12 +30,9 @@ import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {Icon} from 'ui/components/common/Icon'
 import {IssueLabelsAndMilestones} from 'ui/components/issues/IssueLabelsAndMilestones'
-import {IconMenu} from 'material-ui'
-import {IconButton} from 'material-ui'
-import {MenuItem} from 'material-ui'
+import {IconMenu,IconButton,MenuItem,Divider} from 'material-ui'
 import {NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon} from 'material-ui/svg-icons'
 import * as moment from 'moment'
-import {Divider} from 'material-ui'
 import {IIssueGroup} from 'shared/actions/issue/IIssueListItems'
 import {Issue} from 'shared/models/Issue'
 import {
@@ -44,8 +41,8 @@ import {
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
 import {
-	FlexRow, FlexAuto, FillWidth, FlexRowCenter, Ellipsis, FlexScale, rem, FlexColumn,
-	makeFlexAlign, OverflowHidden
+	FlexAuto, FillWidth, FlexRowCenter, Ellipsis, FlexScale, rem, FlexColumn,
+	makeFlexAlign
 } from "shared/themes"
 import { getValue } from "shared/util/ObjectUtil"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
@@ -55,7 +52,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // Styles

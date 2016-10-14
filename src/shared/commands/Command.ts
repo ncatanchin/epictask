@@ -200,7 +200,7 @@ export class Command implements ICommand {
  * Command menu item type
  */
 export enum CommandMenuItemType {
-	Submenu = 1,
+	Menu = 1,
 	Command,
 	Separator,
 	Checkbox
@@ -209,7 +209,39 @@ export enum CommandMenuItemType {
 /**
  * Executor shape
  */
-export type TCommandMenuItemExecutor = (menuItem:ICommandMenuItem,event?:any) => any
+export type TCommandMenuItemExecutor = (item:ICommandMenuItem,event?:any) => any
+
+
+export interface ICommandFontIcon {
+	iconSet:string
+	iconName:string
+}
+
+export interface ICommandImageIcon {
+	url:string
+}
+
+
+export type TCommandIcon = string|ICommandFontIcon|ICommandImageIcon
+
+/**
+ * Check for font icon
+ *
+ * @param o
+ */
+export function isCommandFontIcon(o:any):o is ICommandFontIcon {
+	return o && o.iconSet && o.iconName
+}
+
+/**
+ * Is image icon
+ *
+ * @param o
+ * @returns {any}
+ */
+export function isCommandImageIcon(o:any):o is ICommandImageIcon {
+	return o && o.url
+}
 
 /**
  * Command menu item
@@ -221,13 +253,15 @@ export interface ICommandMenuItem {
 	 */
 	id?:string
 	
-	iconUrl?:string
+	containerId?:string
+	
+	icon?:TCommandIcon
 	
 	type?:CommandMenuItemType
 	
 	subItems?:ICommandMenuItem[]
 	
-	isSubItem?:boolean
+	commandId?:string
 	
 	mountsWithContainer?:boolean
 	
@@ -239,20 +273,10 @@ export interface ICommandMenuItem {
 	
 	hidden?:boolean
 	
-	electronAccelerator?:TCommandDefaultAccelerator
-	
-	defaultAccelerator?:TCommandDefaultAccelerator
-	
-	accelerator?:TCommandDefaultAccelerator
-	
 	menuPath?:string[]
 	
-	/**
-	 * Execute the item, takes no args aside from the command
-	 *
-	 * @param command
-	 */
 	execute?:TCommandMenuItemExecutor
+	
 }
 
 

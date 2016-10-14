@@ -1,11 +1,9 @@
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from "shared/commands/Command"
-import { inElectron } from "shared/util/ElectronUtil"
-import { isMain } from "shared/commands/CommandManagerConfig"
-import { shallowEquals, getValue } from "shared/util/ObjectUtil"
-import { getCommandManagerType, getCommandManager } from "shared/commands/CommandManager"
+import { getValue, cloneObject } from "shared/util/ObjectUtil"
 import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
+import { OrderedMap } from "immutable"
 
 const
 	log = getLogger(__filename),
@@ -46,7 +44,8 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	/**
 	 * All current menu item registrations
 	 */
-	private menuItems:{[itemId:string]:ICommandMenuItem} = {}
+	private menuItems:OrderedMap<string,ICommandMenuItem> =
+		OrderedMap<string,ICommandMenuItem>().asMutable()
 	
 	/**
 	 * Root items
@@ -55,12 +54,21 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	
 	
 	/**
+	 * Get the current root items
+	 *
+	 * @returns {ICommandMenuItem[]}
+	 */
+	getRootItems() {
+		return this.rootItems
+	}
+	
+	/**
 	 * Rebuild the rootMenuItems
 	 */
 	private rebuild() {
 		const
-			items:ICommandMenuItem[] =
-				_.orderBy(Object.values(this.menuItems),['type'],['asc']),
+			menuItems = this.menuItems.valueSeq().toJS(),
+			items:ICommandMenuItem[] = cloneObject(menuItems),
 			
 			rootItems = [],
 			
@@ -73,7 +81,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 					makeSubMenu = (label:string) => ({
 						id: label,
 						label,
-						type: CommandMenuItemType.Submenu,
+						type: CommandMenuItemType.Menu,
 						subItems: []
 					})
 			
@@ -105,9 +113,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 			
 		// CREATE & MAP ALL ITEMS
 		items
-			.filter(item => item && !item.isSubItem)
 			.forEach(item => {
-				item = _.clone(item)
 				
 				const
 					
@@ -119,18 +125,18 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 						findParent(item.menuPath),
 					
 					// FIND SUB ITEMS
-					subItems = getValue(() => parentItem.subItems, rootItems)
+					parentItems = getValue(() => parentItem.subItems, rootItems)
 				
 				// PUSH THIS ITEM TO THE LIST
-				subItems.push(item)
+				parentItems.push(item)
 				
-				if (item.subItems)
-					item.subItems = item
-						.subItems
-						.filter(item =>
-							this.menuItems[item.id] &&
-							this.menuItems[item.id].hidden !== true
-						)
+				//if (item.subItems)
+					// item.subItems = item
+					// 	.subItems
+					// 	.filter(item =>
+					// 		this.menuItems[item.id] &&
+					// 		this.menuItems[item.id].hidden !== true
+					// 	)
 			})
 		
 		this.rootItems = rootItems
@@ -145,23 +151,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	updateItem(...items:ICommandMenuItem[]) {
 		const
 			addItem = (item) => {
-				this.menuItems[item.id] = _.clone(item)
-				
-				if (item.type === CommandMenuItemType.Submenu) {
-					
-					const
-						subItems =
-							item.subItems = _.clone(item.subItems || [])
-					
-					subItems.forEach(item => {
-						item = _.clone(item) as ICommandMenuItem
-						assign(item,{
-							isSubItem: true
-						})
-						
-						addItem(item)
-					})
-				}
+				this.menuItems.set(item.id,  cloneObject(item))
 			}
 			
 		items.forEach(addItem)
@@ -174,7 +164,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	 * @param items
 	 */
 	removeItem(...items:ICommandMenuItem[]) {
-		items.forEach(item => delete this.menuItems[item.id])
+		items.forEach(item => this.menuItems.remove(item.id))
 		
 		this.rebuild()
 	}
@@ -203,14 +193,15 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	 */
 	hideItem(...itemIds:string[]) {
 		const
-			items = Object
-				.values(this.menuItems)
+			items = this
+				.menuItems
+				.valueSeq()
 				.filter(item => item && itemIds.includes(item.id))
 		
 		items.forEach(item => {
-			this.menuItems[item.id] = assign(_.clone(item), {
+			this.menuItems.set(item.id,cloneObject(item, {
 				hidden: true
-			})
+			}))
 		})
 		
 		this.rebuild()

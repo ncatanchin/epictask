@@ -32,6 +32,7 @@ import { Sheets, DialogConfigs } from "ui/DialogsAndSheets"
 
 import { PromisedComponent } from "ui/components/root/PromisedComponent"
 import { benchmarkLoadTime } from "shared/util/UIUtil"
+import { MenuIds } from "shared/UIConstants"
 
 
 // Logger, Store +++
@@ -61,7 +62,14 @@ export interface IAppState {
 	windowStyle?:any
 }
 
-
+const
+	CIDS = {
+		GithubImport: 'GithubImport',
+		GithubSync: 'GithubSync',
+		GlobalNewIssue: 'GlobalNewIssue',
+		FindAction: 'FindAction',
+		CloseWindow: 'CloseWindow'
+	}
 /**
  * Root App Component
  */
@@ -79,38 +87,26 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
-			
-				// GitHub Menu
-				.menuItem(
-					CommandMenuItemType.Submenu,
-					'GitHub',
-					null,
-					null,{
-						subItems: []
+				
+				.command(
+					CommandType.App,
+					'Import Repository',
+					(item, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
+					"CommandOrControl+Shift+n",{
+						id: CIDS.GithubImport
 					}
 				)
 				
-				// IMPORT REPO
-				.menuItem(
-					CommandMenuItemType.Command,
-					'Import Repository',
-					null,
-					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
-					{
-						defaultAccelerator: "CommandOrControl+Shift+n",
-						menuPath: ['GitHub']
-					})
-				
-				// SYNC EVERYTHING
-				.menuItem(
-					CommandMenuItemType.Command,
-					'Sync Everything...',
-					null,
+				.command(
+					CommandType.App,
+					'Sync Everything',
 					(item, event) => getRepoActions().syncAll(),
-					{
-						defaultAccelerator: "CommandOrControl+s",
-						menuPath: [ 'GitHub' ]
-					})
+					"CommandOrControl+s",{
+						id: CIDS.GithubSync
+					}
+				)
+					
+			
 				
 				
 				.command(
@@ -118,24 +114,54 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					'New Issue Global',
 					(cmd, event) => getIssueActions().newIssue(),
 					"Control+Alt+n", {
+						id: CIDS.GlobalNewIssue,
 						hidden: true
 					})
 				
+				.command(
+					CommandType.App,
+					'Find action',
+					(item, event) => {
+						log.debug(`Triggering find action`)
+						getUIActions().openSheet(Sheets.FindActionSheet)
+					},
+					"CommandOrControl+Shift+p",{
+						id: CIDS.FindAction
+					}
+				)
 				
 				.menuItem(
-					CommandMenuItemType.Submenu,
-					'Navigate',
-					null,
-					null, {
-						subItems: [{
-							id: 'find-action',
-							label: 'Find action',
-							execute: (item, event) => {
-								log.debug(`Triggering find action`)
-								getUIActions().openSheet(Sheets.FindActionSheet)
+					MenuIds.Navigate,
+					CommandMenuItemType.Menu,
+					'Find',
+					{iconSet: 'fa', iconName: 'search'},
+					{
+						subItems: [builder.makeMenuItem('find-action-menu-item', CIDS.FindAction)]
+					}
+				)
+				
+				// GitHub Menu
+				.menuItem(
+					MenuIds.GitHub,
+					CommandMenuItemType.Menu,
+					'GitHub',
+					{iconSet: 'fa', iconName: 'github'},
+					{
+						id: MenuIds.GitHub,
+						subItems: [
+							{
+								id: 'gh-import-menu-item',
+								type: CommandMenuItemType.Command,
+								commandId: CIDS.GithubImport
 							},
-							defaultAccelerator: "CommandOrControl+Shift+p"
-						}]
+							{
+								id: 'gh-sync-menu-item',
+								type: CommandMenuItemType.Command,
+								commandId: CIDS.GithubSync
+								
+								
+							}
+						]
 					}
 				)
 			
@@ -143,17 +169,29 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 		}, () => {
 			
 			builder
-			
-			// CLOSE CHILD WINDOW
-				.menuItem(
-					CommandMenuItemType.Command,
+				
+				.command(
+					CommandType.App,
 					'Close Window',
-					null,
 					(cmd, event) => getUIActions().closeWindow(childWindowId),
+					"CommandOrControl+w",{
+						id: CIDS.CloseWindow
+					}
+				)
+				.menuItem(
+					MenuIds.Navigate,
+					CommandMenuItemType.Menu,
+					'Find',
+					{iconSet: 'fa', iconName: 'search'},
 					{
-						defaultAccelerator: "CommandOrControl+w",
-						menuPath: [ 'Navigate' ]
-					})
+						subItems: [{
+							id: 'close-window-menu-item',
+							type: CommandMenuItemType.Command,
+							commandId: CIDS.CloseWindow
+						}]
+					}
+				)
+				
 		})
 		
 		

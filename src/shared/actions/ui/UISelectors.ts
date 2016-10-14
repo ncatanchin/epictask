@@ -8,6 +8,7 @@ import { IWindowInstance,WindowManager } from "ui/WindowManager"
 import { IUISheet,WindowType } from "shared/config/WindowConfig"
 
 import { ToolPanelLocation, IToolPanel } from "shared/tools/ToolTypes"
+import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 
 const
 	log = getLogger(__filename)
@@ -68,18 +69,25 @@ export const toolDraggingSelector = createSelector(
 	(state:UIState) => state.toolDragging
 )
 
+
+export const createToolPanelLocationSelector: () => (state) => {id:string,location:ToolPanelLocation} =
+	() => createDeepEqualSelector(
+		(state,props) => _.pick(props || {}, 'id', 'location'),
+		(panelLocation) => panelLocation
+	)
+
 /**
  * Tool Panel selector based on prop id / location
  *
- * @returns {Selector<TInput, TOutput>}
  */
 export function createToolPanelSelector() {
-	return createSelector(
+	return createDeepEqualSelector(
 		uiStateSelector,
-		(state,props) => _.pick(props || {}, 'id', 'location'),
+		createToolPanelLocationSelector(),
 		(uiState:UIState, { id, location }) => {
 			id = id || ToolPanelLocation[ location ]
-			log.info(`Got id ${id} and location ${location} and tool panels = `, uiState.toolPanels)
+			
+			//log.info(`Got id ${id} and location ${location} and tool panels = `, uiState.toolPanels)
 			
 			return uiState.toolPanels.get(id)
 			

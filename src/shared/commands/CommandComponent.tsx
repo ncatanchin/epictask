@@ -1,11 +1,11 @@
 import {
 	ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator,
-	ICommandMenuItem, CommandMenuItemType, TCommandMenuItemExecutor
+	ICommandMenuItem, CommandMenuItemType, TCommandMenuItemExecutor, TCommandIcon
 } from "shared/commands/Command"
 import { getCommandManager } from "shared/commands/CommandManager"
 import * as React from 'react'
 import filterProps from 'react-valid-props'
-import { isFunction, shortId, getValue } from "shared/util/ObjectUtil"
+import { isFunction, shortId, getValue, isNumber, isString } from "shared/util/ObjectUtil"
 
 
 
@@ -252,16 +252,6 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	}
 	
 	/**
-	 * Get commands from instance
-	 */
-	private getCommands = () => this.getItems().commands
-	
-	/**
-	 * Get all menu items for this container
-	 */
-	private getMenuItems = () => this.getItems().menuItems
-	
-	/**
 	 * Render the HOC wrapped component
 	 */
 	render() {
@@ -434,17 +424,43 @@ export class CommandContainerBuilder {
 	 * @param defaultAccelerator
 	 * @param opts
 	 */
-	command = (type:CommandType,
-	           name:string,
-	           execute:TCommandExecutor,
-	           defaultAccelerator:TCommandDefaultAccelerator = null,
-	           opts:ICommand = {}) => {
+	command(type:CommandType,
+	        name:string,
+	        execute?:TCommandExecutor,
+	        defaultAccelerator?:TCommandDefaultAccelerator,
+	        opts?:ICommand)
+	command(
+		id:string,
+		type:CommandType,
+    name:string,
+    execute?:TCommandExecutor,
+    defaultAccelerator?:TCommandDefaultAccelerator,
+		opts?:ICommand)
+	
+	command(...args:any[]) {
+		
+		// Check for ID first
+		let
+			id:string = null
+			
+		if (isString(args[0]))
+			id = args.shift()
+		
+		// Deconstruct
+		const
+			[type,name,execute,defaultAccelerator,opts = {}] = args as [
+				CommandType,
+				string,
+				TCommandExecutor,
+				TCommandDefaultAccelerator,
+				ICommand
+			]
 		
 		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
 		
 		const
 			cmd = _.assign({
-				id: opts.id || `${this.container.id}-${name}`,
+				id: id || opts.id || `${this.container.id}-${name}`,
 				type,
 				execute,
 				name,
@@ -457,31 +473,123 @@ export class CommandContainerBuilder {
 		return this
 	}
 	
+	
+	/**
+	 * Make menu item
+	 *
+	 * @param type
+	 * @param label
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	/**
+	 * Make menu item
+	 *
+	 * @param id
+	 * @param commandId
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		id:string,
+		commandId:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	
+	/**
+	 * Make menu item
+	 *
+	 * @param id
+	 * @param type
+	 * @param label
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		id:string,
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	makeMenuItem(
+		...args:any[]
+	) {
+		
+		let
+			id:string,
+			type:CommandMenuItemType,
+			label:string,
+			icon:TCommandIcon,
+			commandId:string,
+			opts:ICommandMenuItem
+		
+		if (isNumber(args[0])) {
+			([type,label,icon,opts] = args)
+		} else if (isString(args[1])) {
+			([id,commandId,icon,opts] = args)
+			type = CommandMenuItemType.Command
+		} else {
+			([id,type,label,icon,opts] = args)
+		}
+		
+		opts = opts || {}
+		
+		if (!id) {
+			id = opts.id || `${this.container.id}-${label}`
+		}
+		
+		return _.assign({
+				id,
+				type,
+				commandId,
+				containerId: this.container.id,
+				label,
+				icon
+			},opts) as ICommandMenuItem
+		
+	}
+	
 	/**
 	 * Create a menu item
 	 *
 	 * @param type
 	 * @param label
-	 * @param iconUrl
-	 * @param execute
+	 * @param icon
 	 * @param opts
 	 */
-	menuItem = (
+	menuItem(
 		type:CommandMenuItemType,
 	  label:string,
-	  iconUrl:string,
-		execute:TCommandMenuItemExecutor,
-	  opts:ICommandMenuItem
-	) => {
-		const
-			item = _.assign({
-				id: opts.id || `${this.container.id}-${label}`,
-				label,
-				iconUrl,
-				execute
-			},opts) as ICommandMenuItem
+	  icon?:TCommandIcon,
+	  opts?:ICommandMenuItem
+	)
+	menuItem(
+		id:string,
+		commandId:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	menuItem(
+		id:string,
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	menuItem(
+		...args:any[]
+	)
+	{
 		
-		this.menuItems.push(item)
+		this.menuItems.push((this.makeMenuItem as any)(...args))
 		
 		return this
 	}

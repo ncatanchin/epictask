@@ -40,6 +40,7 @@ import { SearchType } from "shared/actions/search"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { FlexColumnCenter } from "shared/themes"
 import { unwrapRef } from "shared/util/UIUtil"
+import { MenuIds } from "shared/UIConstants"
 
 
 
@@ -130,6 +131,16 @@ export interface IIssuesPanelState {
 }
 
 
+const
+	CIDS = {
+		NewIssue: 'NewIssue',
+		LabelIssues: 'LabelIssues',
+		MilestoneIssues: 'MilestoneIssues',
+		FindIssues: 'FindIssues',
+		CloseIssues: 'CloseIssues',
+		NewComment: 'NewComment'
+	}
+
 /**
  * IssuesPanel
  *
@@ -181,6 +192,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			// NEW COMMENT
 			.command(
+				CIDS.NewComment,
 				CommandType.Container,
 				'New Comment',
 				(cmd, event) => getIssueActions().newComment(),
@@ -193,6 +205,21 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				(cmd,event) => getIssueActions().toggleSelectedAsFocused(),
 				CommonKeys.Space)
 			
+			.command(
+				CIDS.NewIssue,
+				CommandType.App,
+				'New Issue',
+				(item, event) => getIssueActions().newIssue(),
+				"CommandOrControl+n"
+			)
+			
+			// CLOSE ISSUES
+			.command(
+				CIDS.CloseIssues,
+				CommandType.Container,
+				'Close selected issues',
+				(cmd,event) => this.onDelete(event),
+				CommonKeys.Delete)
 			
 			
 			// CREATE INLINE
@@ -204,65 +231,77 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					hidden:true
 				})
 			
+			// LABEL ISSUES
+			.command(
+				CIDS.LabelIssues,
+				CommandType.Container,
+				'Label selected issues',
+				(cmd,event) => getIssueActions().patchIssuesLabel(),
+				"CommandOrControl+t")
+			
+			// MILESTONE ISSUES
+			.command(
+				CIDS.MilestoneIssues,
+				CommandType.Container,
+				'Milestone selected issues',
+				(cmd,event) => getIssueActions().patchIssuesMilestone(),
+				"CommandOrControl+m")
+				
+			// FIND/FUZZY
+			.command(
+				CIDS.FindIssues,
+				CommandType.Container,
+				'Find Issues, Labels & Milestones...',
+				this.openFindIssues,
+				"CommandOrControl+f",{
+					menuPath: ['Edit']
+				})
+			
+			// INSERT INTO NAV MENU
+			.menuItem(
+				'find-issues-menu-item',
+				CIDS.FindIssues,
+				null,
+				{
+					menuPath: [MenuIds.Navigate]
+				}
+			)
 			
 			
 			.menuItem(
-				CommandMenuItemType.Submenu,
+				MenuIds.Issues,
+				CommandMenuItemType.Menu,
 				'Issues',
-				null,
-				null,{
-					id: 'issues-menu',
+				{iconSet: 'octicon', iconName: 'issue-opened'},
+				{
 					mountsWithContainer: true,
 					label: 'Issues',
 					subItems: [
 						{
 							id: 'new-issue',
-							label: 'New Issue',
-					    execute: (item, event) => getIssueActions().newIssue(),
-							defaultAccelerator: "CommandOrControl+n"
-						},{
-							id: 'mark-closed',
-							label: 'Mark selected issues closed',
-							execute: (item,event) => this.onDelete(event),
-							defaultAccelerator: CommonKeys.Delete
-						},{
+							type: CommandMenuItemType.Command,
+							commandId: CIDS.NewIssue
+						},
+						{
 							id: 'issues-sep-1',
 							type:CommandMenuItemType.Separator
 						},
 						{
 							id: 'milestone-issues',
 							type: CommandMenuItemType.Command,
-							label: 'Milestone Selected Issues',
-							
-							defaultAccelerator: "CommandOrControl+m",
-							execute: (item, event) => getIssueActions().patchIssuesLabel(),
+							commandId: CIDS.MilestoneIssues
 						},{
 							id: 'label-issues',
 							type: CommandMenuItemType.Command,
-							label: 'Label Selected Issues',
-							defaultAccelerator: "CommandOrControl+t",
-							execute: (item, event) => getIssueActions().patchIssuesLabel(),
+							commandId: CIDS.LabelIssues
 						},{
 							id: 'new-comment',
 							type: CommandMenuItemType.Command,
-							label: 'New Comment',
-							execute: (item, event) => getIssueActions().newComment(),
+							commandId: CIDS.NewComment
 						}
-						
+					
 					]
-				}
-			)
-			
-			.menuItem(
-				CommandMenuItemType.Command,
-				'Find Issues, Labels & Milestones...',
-				null,
-				this.openFindIssues,
-				{
-					id: 'find-issues',
-					defaultAccelerator: "CommandOrControl+f"
-				}
-			)
+				})
 			
 			.make()
 		

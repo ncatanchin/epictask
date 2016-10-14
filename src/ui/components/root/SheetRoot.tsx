@@ -15,6 +15,8 @@ import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { CommandType } from "shared/commands/Command"
 import { CommonKeys } from "shared/KeyMaps"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import { getValue } from "shared/util/ObjectUtil"
+import { PromisedComponent } from "ui/components/root/PromisedComponent"
 
 // Constants
 const log = getLogger(__filename)
@@ -134,18 +136,20 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	render() {
 		const
 			{ styles,sheet } = this.props,
-			SheetElement = sheet && sheet.rootElement()
+			sheetPromise = getValue(() => sheet.rootElement())
+			
 		
 		return <CommandRoot
 			component={this}
 			id="sheetRoot"
 			style={[styles, sheet && styles.visible]}>
-			{SheetElement && <div ref={this.setSheetContent} style={[styles.content]}>
+			{sheetPromise && <div ref={this.setSheetContent} style={[styles.content]}>
 				<div style={[styles.header]}>
 					<div style={[styles.header.title]}>{sheet.title}</div>
 				</div>
 				<div style={[styles.body]}>
-					<SheetElement/>
+					<PromisedComponent promise={sheetPromise} />
+					
 				</div>
 			</div>
 			 }

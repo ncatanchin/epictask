@@ -14,6 +14,7 @@ import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { CSSHoverState, PositionAbsolute } from "shared/themes"
 import { WindowControls } from "ui/components/common/WindowControls"
 import { Logo } from "ui/components/common/Logo"
+import { CommandMenuRoot } from "shared/commands/CommandMenuRoot"
 
 export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
@@ -31,27 +32,20 @@ const baseStyles = (topStyles,theme,palette) => {
 		{primary,accent,text,secondary,background} = palette
 	
 	return {
-		header: [FlexRowCenter, FlexAuto, PositionRelative, makeTransition(), {
-			height: 50,
-			WebkitUserSelect: 'none',
-			WebkitAppRegion: 'drag',
-			opacity: 0,
-			padding: 0,
-			border: 0,
-		}],
-		
-		headerNormal: {
-			padding: '0.3rem 10rem',
-			opacity: 1
-		},
-		
-		headerExpanded: makeStyle({
-			height: '100vh',
-			maxHeight: '100vh',
-			flexBasis: '100vh',
-			flexGrow: 1,
-			flexShrink: 0
-		}),
+		header: [
+			FlexRowCenter,
+			FillWidth,
+			FlexAuto,
+			PositionRelative,
+			makePaddingRem(0,0,0,10),
+			{
+				height: 50,
+				WebkitUserSelect: 'none',
+				WebkitAppRegion: 'drag',
+				border: 0,
+				opacity: 1
+			}
+		],
 		
 		
 		controls: makeStyle(makeAbsolute(), {
@@ -67,15 +61,19 @@ const baseStyles = (topStyles,theme,palette) => {
 		
 		controlButtonBefore: makeStyle(makeTransition()),
 		
-		logo: [makeTransition(['opacity']), PositionAbsolute, {
-			transform: 'scale(0.7)',
-			top: 0,
-			right: 10,
-			
-			spinner: [{
-				animationDuration: '5s'
-			}]
-		}],
+		logo: [
+			makeTransition(['opacity']),
+			//PositionAbsolute,
+			{
+				transform: 'scale(0.7)',
+				// top: 0,
+				// right: 10,
+				
+				spinner: [{
+					animationDuration: '5s'
+				}]
+			}
+		],
 		
 		
 		
@@ -229,8 +227,7 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 			headerStyle = makeStyle(
 				theme.header.style,
 				style,
-				styles.header,
-				styles.headerNormal
+				styles.header
 			)
 		}
 
@@ -241,12 +238,13 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 			
 			<WindowControls />
 			
+			<div style={FlexScale}/>
 			
 			<Logo style={styles.logo}
 			      eHidden
 			      spinnerStyle={styles.logo.spinner}/>
 			
-
+			<CommandMenuRoot />
 		</CommandRoot>
 	}
 }

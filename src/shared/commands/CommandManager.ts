@@ -20,7 +20,7 @@ import {
 	removeBrowserWindowListener, removeWindowListener,
 	getCommandBrowserWindow
 } from "shared/commands/CommandManagerUtil"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue, cloneObject } from "shared/util/ObjectUtil"
 
 
 
@@ -166,6 +166,18 @@ export class CommandManager {
 			  c2.element.contains(c1.element) ? -1 : 0)
 	}
 	
+	private executeMenuItem(item:ICommandMenuItem,event:any = null) {
+		const
+			cmd = item.commandId && this.getCommand(item.commandId)
+		
+		cmd && cmd.execute(cmd,event)
+		
+	}
+	
+	private makeExecuteMenuItem(item:ICommandMenuItem) {
+		return (event) => this.executeMenuItem(item,event)
+	}
+	
 	/**
 	 * Get the menu manager from the configured provider
 	 *
@@ -182,6 +194,23 @@ export class CommandManager {
 	 */
 	setMenuManagerProvider(menuManagerProvider:ICommandMenuManagerProvider) {
 		this.menuManagerProvider = menuManagerProvider
+	}
+	
+	/**
+	 * Get a command by id
+	 *
+	 * @param commandId
+	 * @returns {ICommand}
+	 */
+	getCommand(commandId:string) {
+		let
+			cmd = this.commands[commandId]
+		
+		if (!cmd) {
+			cmd = Object.values(this.commands).find(it => it.name && it.name.endsWith(commandId) || it.id.endsWith(commandId))
+		}
+		
+		return cmd
 	}
 	
 	/**
@@ -414,19 +443,8 @@ export class CommandManager {
 	 * @returns {any}
 	 */
 	private mapMenuItem = (item:ICommandMenuItem) => {
-		return assign(_.pick(item,
-			'id',
-			'execute',
-			'label',
-			'subLabel',
-			'iconUrl',
-			'mountsWithContainer',
-			'subLabel',
-			'enabled',
-			'hidden',
-			'menuPath',
-			'type'),{
-			electronAccelerator: item.electronAccelerator || new CommandAccelerator(item.defaultAccelerator).toElectronAccelerator()
+		return cloneObject(item,item.execute && {
+			execute: this.makeExecuteMenuItem(item)
 		})
 	}
 	
@@ -668,15 +686,19 @@ export class CommandManager {
 	registerItems(commands:ICommand[], menuItems:ICommandMenuItem[]) {
 		const
 			windowId = process.env.EPIC_WINDOW_ID && process.env.EPIC_WINDOW_ID !== 'undefined' ? process.env.EPIC_WINDOW_ID : null,
-			
-			ensureValidId = (cmdOrMenuItem:ICommand|ICommandMenuItem) => {
-				if (windowId && cmdOrMenuItem.id.indexOf(`${windowId}-`) !== 0) {
-					cmdOrMenuItem.id = `${windowId}-${cmdOrMenuItem.id}`
+			expandId = (id:string) => {
+				if (windowId && id.indexOf(`${windowId}-`) !== 0) {
+					id = `${windowId}-${id}`
 				}
+				return id
+			},
+			ensureValidId = (cmdOrMenuItem:ICommand|ICommandMenuItem) => {
+				cmdOrMenuItem.id = expandId(cmdOrMenuItem.id)
 			}
 		
 		commands.forEach(cmd => {
-			assert(cmd.id && cmd.name,`A command can not be registered without an id & name`)
+			cmd.id = cmd.id || cmd.name
+			assert(cmd.id,`A command can not be registered without an id & name`)
 			
 			ensureValidId(cmd)
 			
@@ -727,6 +749,7 @@ export class CommandManager {
 	 * Un-register commands
 	 *
 	 * @param commands
+	 * @param menuItems
 	 */
 	unregisterItems(commands:ICommand[],menuItems:ICommandMenuItem[]) {
 		commands.forEach(cmd => {

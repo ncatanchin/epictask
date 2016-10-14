@@ -9,18 +9,20 @@ export const Sheets = {
 		name: 'RepoImportSheet',
 		title: 'Import Repository',
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/plugins/repos/RepoAddTool'],function(require:any) {
-				resolver.resolve(require('ui/plugins/repos/RepoAddTool').RepoAddTool)
-			}))
+			resolver.resolve(require('ui/plugins/repos/RepoAddTool').RepoAddTool))
+			// require.ensure(['ui/plugins/repos/RepoAddTool'],function(require:any) {
+			// 	resolver.resolve(require('ui/plugins/repos/RepoAddTool').RepoAddTool)
+			// }))
 			
 	},
 	FindActionSheet: {
 		name: 'FindActionSheet',
 		title: 'Find an Epic action',
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/components/actions/FindActionTool'],function(require:any) {
-				resolver.resolve(require('ui/components/actions/FindActionTool').FindActionTool)
-			}))
+			resolver.resolve(require('ui/components/actions/FindActionTool').FindActionTool))
+			// require.ensure(['ui/components/actions/FindActionTool'],function(require:any) {
+			// 	resolver.resolve(require('ui/components/actions/FindActionTool').FindActionTool)
+			// }))
 		
 	}
 }
