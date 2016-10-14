@@ -175,7 +175,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Commands
 	 */
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 		//MOVEMENT
 			.command(

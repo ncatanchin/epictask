@@ -1,7 +1,7 @@
 import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
-import { makeLinearGradient, Transparent, CSSHoverState, createStyles } from "shared/themes/styles/CommonStyles"
+import { Transparent, createStyles } from "shared/themes/styles/CommonStyles"
 import { rem, makePaddingRem } from "shared/themes"
 
 

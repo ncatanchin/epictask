@@ -93,12 +93,17 @@ export function getBrowserWindow() {
  * Make menu function * HMR ready
  */
 function makeMenu() {
-	// Make the menu
-	const makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	// ONLY SET MAIN MENU ON MAC
+	if (!Env.isMac)
+		return
+	
+	const
+		makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	
 	menu = makeMainMenu(browserWindow)
-
-	// Assign it based on OS
-	process.platform !== 'win32' ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+	Menu.setApplicationMenu(menu)
+	
+	
 }
 
 /**

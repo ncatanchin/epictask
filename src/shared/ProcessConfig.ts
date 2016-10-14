@@ -6,7 +6,7 @@ export namespace ProcessConfigGlobal {
 	
 	const ChildDevTools = {
 		[ProcessType.DatabaseServer]: false,
-		[ProcessType.JobServer]: false
+		[ProcessType.JobServer]: true
 	}
 	
 	/**

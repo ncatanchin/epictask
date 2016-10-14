@@ -13,7 +13,10 @@ import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import { shallowEquals } from "shared/util/ObjectUtil"
-import { CommandComponent, ICommandComponent, getCommandProps, CommandRoot } from "shared/commands/CommandComponent"
+import {
+	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 import filterProps from 'react-valid-props'
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
@@ -140,7 +143,8 @@ export interface IChipsFieldProps<M> extends IThemedAttributes {
 export class ChipsField extends React.Component<IChipsFieldProps<any>,any> implements ICommandComponent {
 	
 	
-	readonly commands:ICommand[] = []
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder.make()
 	
 	get commandComponentId():string {
 		return `ChipsField-${this.props.id}`

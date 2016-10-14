@@ -239,8 +239,7 @@ export class RepoSyncManager {
 			pendingEventUpdate = null
 		}
 	}
-	
-	
+		
 	/**
 	 * Notify the UI that a comment was updated
 	 *
@@ -255,7 +254,6 @@ export class RepoSyncManager {
 		} catch (err) {
 			log.error(`Failed to update the state with changed comments`)
 		}
-		
 	}
 	
 	/**
@@ -264,7 +262,9 @@ export class RepoSyncManager {
 	syncMilestones = OneAtATime({}, async(stores:Stores, logger = null, progressTracker:JobProgressTracker = null, onDataCallback:OnDataCallback<Milestone> = null, isDryRun = false) => {
 		
 		const
-			client = createClient()
+			client = createClient(),
+			{repo} = this,
+			repoId = repo.id
 		
 		progressTracker && progressTracker.increment(2)
 		
@@ -282,30 +282,54 @@ export class RepoSyncManager {
 		
 		log.info(`Got ${milestones.length} milestones`)
 		
+		// MARK REPO ID FIRST
+		milestones.forEach(milestone => milestone.repoId = repoId)
+		
+		
 		const
-			pending = []
+			currentMilestones =
+				await stores.milestone.findByRepo(repoId),
+			
+			pendingMilestones = [],
+			
+			// FIND REMOVED MILESTONES
+			removedMilestones = currentMilestones
+				.filter(m1 => !milestones.find(m2 => m1.id === m2.id))
+		
+		// REMOVE OLD MILESTONES
+		for (let milestone of removedMilestones) {
+			await stores.milestone.remove(Milestone.makeId(milestone))
+		}
+		
 		
 		for (let milestone of milestones) {
-			milestone.repoId = this.repo.id
+			
 			const
-				existing = await stores.milestone.get(milestone.id)
+				current = currentMilestones.find(it => it.id === milestone.id)
 			
 			
 			// IF NO UPDATE THEN RETURN
-			if (!(milestone = checkUpdatedAndAssign(logger || log, milestone.id, milestone, existing)))
+			milestone = !current ? milestone : checkUpdatedAndAssign(
+				logger || log,
+				milestone.id,
+				milestone,
+				current
+			)
+			
+			if (!milestone)
 				continue
 			
-			pending.push(milestone)
+			pendingMilestones.push(milestone)
 		}
 		
-		await chunkSave(pending, stores.milestone)
+		await chunkSave(pendingMilestones, stores.milestone)
 		
 		progressTracker && progressTracker.completed()
 		
 		// UPDATE MILESTONES ON STATE
-		getRepoActions().updateMilestones(this.repo.id,...milestones)
+		getRepoActions().updateMilestones(repoId,...milestones)
 		
-		return pending.length
+		return pendingMilestones.length
 		
 	})
 	
@@ -657,9 +681,14 @@ export class RepoSyncManager {
 	 * Sync all the labels for a repo
 	 */
 	syncLabels = OneAtATime({}, async(stores:Stores, logger = null, progressTracker:JobProgressTracker = null, onDataCallback:OnDataCallback<Label> = null, isDryRun = false) => {
+		
 		progressTracker && progressTracker.increment(2)
+		
 		const
+			{repo} = this,
+			repoId = repo.id,
 			client = createClient(),
+			
 			labels = await client.repoLabels(this.repo, {
 				onDataCallback
 			})
@@ -669,28 +698,54 @@ export class RepoSyncManager {
 		if (isDryRun)
 			return labels
 		
-		const
-			pending = []
 		
+		// SET REPO ID
+		labels.forEach(label => label.repoId = this.repo.id)
+		
+		const
+			pendingLabels = [],
+			
+			// CURRENT LABELS
+			currentLabels = await stores.label.findByRepo(repoId),
+			
+			// DETERMINE REMOVED LABELS
+			removeLabels = currentLabels
+				.filter(l1 => !labels.find(l2 => l1.url === l2.url))
+		
+		// REMOVE OLD ONES
+		for (let label of removeLabels) {
+				await stores.label.remove(Label.makeId(label))
+		}
+		
+		// MAKE UPDATES
 		for (let label of labels) {
-			label.repoId = this.repo.id
 			const
-				existing = await stores.label.get(label.url)
+				current = await stores.label.get(Label.makeId(label))
 			
 			// IF NO UPDATE THEN RETURN
-			if (!(label = checkUpdatedAndAssign(logger || log, label.url, label, existing, 'color', 'url', 'name')))
+			label = !current ? label :
+				checkUpdatedAndAssign(
+					logger || log,
+					label.url,
+					label,
+					current,
+					'color',
+					'url',
+					'name'
+				)
+			
+			if (!label)
 				continue
 			
-			pending.push(label)
+			pendingLabels.push(label)
 			
 		}
 		
-		
-		await chunkSave(pending, stores.label)
+		await chunkSave(pendingLabels, stores.label)
 		progressTracker && progressTracker.completed()
 		
-		getRepoActions().updateLabels(this.repo.id,...labels)
-		return pending.length
+		getRepoActions().updateLabels(repoId,...labels)
+		return pendingLabels.length
 	})
 	
 	

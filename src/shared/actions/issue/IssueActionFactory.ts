@@ -8,7 +8,10 @@ import { Stores, getStores } from 'shared/Stores'
 import { IssueKey } from 'shared/Constants'
 
 import {FinderItemsPerPage} from 'shared/config/FinderConfig'
-import { cloneObject, extractError, isNil, nilFilter, isNumber, cloneObjectShallow } from 'shared/util/ObjectUtil'
+import {
+	cloneObject, extractError, isNil, nilFilter, isNumber, cloneObjectShallow,
+	shallowEquals
+} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
@@ -41,7 +44,7 @@ import {Provided} from 'shared/util/ProxyProvided'
 
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
-import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
+import { IIssueFilter, EmptyIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
 import { isListType } from "shared/util/ObjectUtil"
 
@@ -299,6 +302,122 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	/**
+	 * Refill all the issues for a given repo based on resource changes
+	 * @param availRepo
+	 * @param field (only for a specific field)
+	 */
+	refillResourcesForRepo(availRepo:AvailableRepo,field:'both'|'milestone'|'labels') {
+		const
+			{issues} = this.state
+		
+		let
+			changes = List<Issue>()
+		
+		issues
+			.filter(issue => issue.repoId === availRepo.id)
+			.forEach(issue => {
+				if (['milestone','both'].includes(field)) {
+					if (issue.milestone) {
+						const
+							milestone = availRepo.milestones.find(it => it.id === issue.milestone.id)
+						
+						if (milestone && shallowEquals(milestone, issue.milestone, 'state', 'title', 'description', 'due_on"'))
+							return
+						
+						const
+							change = cloneObjectShallow(issue)
+						
+						change.milestone = milestone
+						changes = changes.push(change) as List<Issue>
+					}
+				}
+				
+				if (['labels','both'].includes(field)) {
+					if (issue.labels && issue.labels.length) {
+						let
+							changed = false
+						
+						for (let label of issue.labels) {
+							const
+								newLabel = availRepo.labels.find(it => it.url === label.url)
+							
+							if (!newLabel || !shallowEquals(label,newLabel,'color','name')) {
+								changed = true
+								break
+							}
+						}
+						
+						if (changed) {
+							const
+								change = cloneObjectShallow(issue)
+							
+							change.labels = nilFilter(
+								change.labels.map(label =>
+									availRepo
+										.labels
+										.find(it => label.url === it.url))
+							)
+							
+							changes = changes.push(change) as List<Issue>
+						}
+					}
+				}
+			})
+		
+		if (changes.size) {
+			this.setIssues(changes)
+		}
+		
+	}
+	
+	/**
+	 * Fill issues
+	 *
+	 * @param partialIssues
+	 * @param availRepos
+	 * @returns {List<Issue>}
+	 */
+	fillIssueResources(partialIssues,...availRepos:AvailableRepo[]) {
+		const
+			filledIssues = partialIssues
+				.filter(issue => {
+					const
+						hasRepoId = issue && !!issue.repoId
+					
+					if (!hasRepoId) {
+						log.warn(`Issue does not have repoId`,issue)
+					}
+					
+					return hasRepoId
+				})
+				.map(issue => {
+					const
+						availRepo = (availRepos as AvailableRepo[])
+							.find(availRepo => availRepo.repoId === issue.repoId),
+						repo = availRepo.repo
+					
+					
+					return cloneObject(issue,{
+						repo,
+						collaborators: availRepo.collaborators,
+						
+						// Find labels
+						labels: !issue.labels ? [] :
+							nilFilter(issue.labels.map(label =>
+								availRepo.labels.find(it => it.url === label.url)
+							)),
+						
+						// Find milestones
+						milestone: (
+							issue.milestone &&
+							availRepo.milestones.find(it => it.id === issue.milestone.id)
+						)
+					})
+				})
+		return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
+	}
+	
+	/**
 	 * Get issues for a set of available repos
 	 *
 	 * @param availRepos
@@ -313,7 +432,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		
 		// REPOS TO USE FOR VALUES
-		availRepos = (_.nilFilter(availRepos) as AvailableRepo[])
+		availRepos = (nilFilter(availRepos) as AvailableRepo[])
 		
 		/**
 		 * Update issue load status
@@ -330,49 +449,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 		
 		
-		/**
-		 * Fill issues
-		 *
-		 * @param partialIssues
-		 * @returns {List<Issue>|List<any>|any}
-		 */
-		const fillIssues = (partialIssues) => {
-			const
-				filledIssues = partialIssues
-					.filter(issue => {
-						const hasRepoId = issue && !!issue.repoId
-						
-						if (!hasRepoId) {
-							log.warn(`Issue does not have repoId`,issue)
-						}
-						
-						return hasRepoId
-					})
-					.map(issue => {
-						const
-							availRepo = (availRepos as AvailableRepo[])
-								.find(availRepo => availRepo.repoId === issue.repoId),
-							repo = availRepo.repo
-						
-						
-						return cloneObject(issue,{
-							repo,
-							collaborators: availRepo.collaborators,
-							
-							// Find labels
-							labels: !issue.labels ? [] :
-								issue.labels.map(label =>
-								availRepo.labels.find(it => it.url === label.url) || label),
-							
-							// Find milestones
-							milestone: (issue.milestone &&
-							availRepo.milestones.find(it => it.id === issue.milestone.id)) || issue.milestone
-						})
-					})
-			return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
-		}
-		
-		
 		
 		let
 			issues = List<Issue>(),
@@ -381,7 +457,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		// IF SOURCE ISSUES ARE PASSED THEN WE DO NOT NEED TO LOAD
 		if (fromIssues && fromIssues.length) {
 			issues = issues.push(...fromIssues)
-			issues = fillIssues(issues)
+			issues = this.fillIssueResources(issues,...availRepos)
 		}
 		// OTHERWISE ONLY LOAD ISSUES SPECIFICALLY FOR UNLOADED REPOS
 		else {
@@ -413,7 +489,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 									
 									// NOW FILL THE ISSUES
 									const
-										filledIssues = fillIssues(issuesToPush)
+										filledIssues = this.fillIssueResources(issuesToPush,availRepo)
 									
 									// PUSH THE IDS
 									loadedIssueIds = loadedIssueIds.concat(
@@ -1164,6 +1240,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	
 	/**
+	 * Clear all current issue filters
+	 */
+	clearFilters() {
+		this.filteringAndSorting(EmptyIssueFilter)
+	}
+	
+	/**
 	 * Set the group by mode
 	 *
 	 * @param groupBy
@@ -1697,9 +1780,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				results = await Promise.all(promises)
 			
 			
-			addMessage(`Closed ${results.length} issues successfully`)
+			addMessage(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
 			
-			// Now we simply update the state - remvoed
+			// Now we simply update the state - removed
 			//this.loadIssuesAction(dispatch, getState)
 			
 		}

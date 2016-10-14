@@ -1,19 +1,16 @@
 #!/usr/bin/env node
-require('babel-polyfill')
-require('shelljs/global')
+require('./init-scripts')
 
 const
 	path = require('path'),
-	{process} = global,
-	isMac = process.platform === 'darwin',
-	isWindows = process.platform === 'win32',
+	{isMac,isLinux,isWindows,process} = global,
+	
 	doInstall = process.argv.includes('--install'),
 	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${isWindows ? '.cmd' : ''}`)
 
 echo(`Will use builder @ ${buildCmd}`)
 
-echo(`Cleaning`)
-rm('-rf','dist/*','.awcache/*')
+require('./clean')
 
 echo("Starting Compilation")
 process.env.NODE_ENV='production'

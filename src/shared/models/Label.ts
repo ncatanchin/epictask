@@ -20,6 +20,8 @@ export function makeLabelId(label:Label) {
 })
 export class Label extends DefaultModel {
 
+	static makeId = makeLabelId
+	
 	static isLabel(o:any):o is Label {
 		return o.url && o.name && !o.id
 	}

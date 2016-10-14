@@ -111,7 +111,7 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	/**
 	 * Commands
 	 */
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			// CLOSE THE SHEET
 			.command(

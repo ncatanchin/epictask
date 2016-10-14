@@ -13,7 +13,7 @@ import { AvailableRepo, LoadStatus } from "shared/models"
 import SyncStatus from './GithubSyncStatus'
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
-import { RepoSyncManager } from "shared/github/GithubEventHandlers"
+import { RepoSyncManager } from "shared/github/GithubSyncHandlers"
 
 
 

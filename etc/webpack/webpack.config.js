@@ -107,7 +107,8 @@ const
 	// Entries
 	entries = {
 		"AppEntry": [`./AppEntry`],
-		"LoaderEntry": [`./LoaderEntry`]
+		"LoaderEntry": [`./LoaderEntry`],
+		"BrowserEntry": [`./BrowserEntry`],
 	},
 	
 	// Import HappyPack
@@ -271,7 +272,9 @@ if (isDev) {
 		//In development, use inline source maps
 		//devtool: '#cheap-module-source-map',
 		// devtool: '#inline-source-map',
-		devtool: '#cheap-module-inline-source-map',
+		//devtool: '#cheap-module-inline-source-map',
+		//devtool: 'eval',
+		devtool: 'cheap-module-eval-source-map',
 		
 		// In development specify absolute path - better debugger support
 		output:  {

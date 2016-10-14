@@ -49,6 +49,8 @@ export interface ICommandUpdater {
  */
 export type TCommandExecutor = (command:ICommand,event?:any) => any
 
+
+
 /**
  * Command shape
  */
@@ -89,6 +91,12 @@ export interface ICommand {
 	 */
 	defaultAccelerator?:TCommandDefaultAccelerator
 	
+	
+	/**
+	 * Accelerator currently configured
+	 */
+	accelerator?:TCommandDefaultAccelerator
+	
 	/**
 	 * If the command does not have a modifier and an input/select/textarea
 	 * has focus, unless overrideInput is true, the command is not triggered
@@ -123,7 +131,7 @@ export interface ICommand {
 	/**
 	 * Path to the menu where this should be added
 	 */
-	menuPath?:string[]
+	menuItem?:ICommandMenuItem
 	
 	/**
 	 * if hidden disabled is assumed, but this prop
@@ -151,7 +159,7 @@ export class Command implements ICommand {
 	defaultAccelerator:TCommandDefaultAccelerator
 	overrideInput:boolean = false
 	hidden:boolean = false
-	menuPath:string[]
+	menuItem:ICommandMenuItem
 	disableKeyReassign:boolean
 	
 	/**
@@ -187,3 +195,106 @@ export class Command implements ICommand {
 }
 
 
+
+/**
+ * Command menu item type
+ */
+export enum CommandMenuItemType {
+	Submenu = 1,
+	Command,
+	Separator,
+	Checkbox
+}
+
+/**
+ * Executor shape
+ */
+export type TCommandMenuItemExecutor = (menuItem:ICommandMenuItem,event?:any) => any
+
+/**
+ * Command menu item
+ */
+export interface ICommandMenuItem {
+	
+	/**
+	 * Menu item id
+	 */
+	id?:string
+	
+	iconUrl?:string
+	
+	type?:CommandMenuItemType
+	
+	subItems?:ICommandMenuItem[]
+	
+	isSubItem?:boolean
+	
+	mountsWithContainer?:boolean
+	
+	label?:string
+	
+	subLabel?:string
+	
+	enabled?:boolean
+	
+	hidden?:boolean
+	
+	electronAccelerator?:TCommandDefaultAccelerator
+	
+	defaultAccelerator?:TCommandDefaultAccelerator
+	
+	accelerator?:TCommandDefaultAccelerator
+	
+	menuPath?:string[]
+	
+	/**
+	 * Execute the item, takes no args aside from the command
+	 *
+	 * @param command
+	 */
+	execute?:TCommandMenuItemExecutor
+}
+
+
+export interface ICommandMenuManager {
+	
+	
+	
+	/**
+	 * Update menu items
+	 *
+	 * @param menuItems
+	 */
+	updateItem(...menuItems:ICommandMenuItem[]):void
+	
+	/**
+	 * Remove items
+	 *
+	 * @param menuItems
+	 */
+	removeItem(...menuItems:ICommandMenuItem[]):void
+	
+	
+	/**
+	 * Show items
+	 *
+	 * @param menuItems
+	 */
+	showItem(...menuItems:ICommandMenuItem[]):void
+	
+	
+	/**
+	 * Hide items
+	 *
+	 * @param menuItemIds
+	 */
+	hideItem(...menuItemIds:string[]):void
+}
+
+
+/**
+ * Provider interface
+ */
+export interface ICommandMenuManagerProvider {
+	():ICommandMenuManager
+}

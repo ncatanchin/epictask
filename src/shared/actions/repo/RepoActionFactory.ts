@@ -24,7 +24,7 @@ import {getSettings} from 'shared/settings/Settings'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
-import { getValue, isNil, nilFilter, cloneObject } from "shared/util/ObjectUtil"
+import { getValue, isNil, nilFilter, cloneObject, cloneObjectShallow } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
@@ -210,7 +210,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		let
 			{availableRepos} = state,
 			index = availableRepos.findIndex(it => it.id === repoId),
-			availableRepo = index !== -1 && availableRepos.get(index)
+			availableRepo = index !== -1 && cloneObjectShallow(availableRepos.get(index))
 		
 		if (!availableRepo) {
 			log.error(`Can not update ${field} on state, no repo found with id ${repoId}`)
@@ -219,9 +219,18 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		availableRepo[field] = value
 		
+		// ON NEXT TICK UPDATE ISSUES
+		setImmediate(() => {
+			getIssueActions()
+				.refillResourcesForRepo(
+					availableRepo,
+					field === 'milestones' ?
+						'milestone' :
+						'labels'
+				)
+		})
 		
-		
-		return state.set('availableRepos', availableRepos.set(index,assign({},availableRepo)))
+		return state.set('availableRepos', availableRepos.set(index,availableRepo))
 	}
 	
 	

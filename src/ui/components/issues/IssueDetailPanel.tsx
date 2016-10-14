@@ -95,7 +95,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Commands for the container
 	 */
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 	  // NEW COMMENT
 		builder
 			// .command(

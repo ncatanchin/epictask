@@ -5,7 +5,7 @@ import {RegisterModel} from 'shared/Registry'
 
 import {ActionMessage} from 'typedux'
 import { Comment, Issue, IssuesEvent } from 'shared/models'
-import {IIssueFilter} from 'shared/actions/issue/IIssueFilter'
+import { IIssueFilter, EmptyIssueFilter } from 'shared/actions/issue/IIssueFilter'
 import {IIssueSort} from 'shared/actions/issue/IIssueSort'
 import {Label} from 'shared/models/Label'
 import {Milestone} from 'shared/models/Milestone'
@@ -74,11 +74,7 @@ export const IssueStateRecord = Record({
 		groupBy: 'none',
 		groupByDirection: 'asc'
 	} as IIssueSort,
-	issueFilter:{
-		offset:0,
-		limit:100,
-		includeClosed: false
-	} as IIssueFilter
+	issueFilter:EmptyIssueFilter
 
 })
 

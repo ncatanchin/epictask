@@ -1,4 +1,6 @@
 
+
+
 export interface IIssueFilter {
 	// Milestone Ids
 	milestoneIds?:number[]
@@ -22,3 +24,8 @@ export interface IIssueFilter {
 }
 
 
+export const EmptyIssueFilter = {
+	offset:0,
+	limit:100,
+	includeClosed: false
+} as IIssueFilter

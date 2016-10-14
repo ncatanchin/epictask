@@ -347,7 +347,8 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 					
 
 
-					<IssueStateIcon styles={[styles.state]} state={issue.state}/>
+					<IssueStateIcon styles={[styles.state]}
+					                issue={issue}/>
 					
 				</div>
 			</div>

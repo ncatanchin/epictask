@@ -121,7 +121,7 @@ export interface IIssueCommentDialogState {
 export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps,IIssueCommentDialogState> {
 	
 	
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.command(CommandType.Container,
 				'Save Changes',

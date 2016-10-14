@@ -33,7 +33,7 @@ import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder, CommandContainer
 } from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
+import { CommandType, CommandMenuItemType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { SearchPanel } from "ui/components/search"
 import { SearchType } from "shared/actions/search"
@@ -155,7 +155,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @param builder
 	 */
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			//MOVEMENT
 			.command(
@@ -184,9 +184,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommandType.Container,
 				'New Comment',
 				(cmd, event) => getIssueActions().newComment(),
-				"Ctrl+m", {
-					menuPath:['Issue']
-				})
+				"Ctrl+m")
 			
 			// MARK ISSUE FOCUSED
 			.command(
@@ -196,12 +194,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommonKeys.Space)
 			
 			
-			// CLOSE ISSUES
-			.command(
-				CommandType.Container,
-				'Mark selected issues closed',
-				(cmd,event) => this.onDelete(event),
-				CommonKeys.Delete)
 			
 			// CREATE INLINE
 			.command(
@@ -212,55 +204,89 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					hidden:true
 				})
 			
-			// LABEL ISSUES
-			.command(
-				CommandType.Container,
-				'Label select issues',
-				(cmd,event) => {
-					log.debug('Patch labels')
-					getIssueActions().patchIssuesLabel()
-				},
-				"CommandOrControl+t",{
-					menuPath: ['Issue']
-				})
-			
-			// MILESTONE ISSUES
-			.command(
-				CommandType.Container,
-				'Milestone select issues',
-				(cmd,event) => {
-					log.debug('Patch milestones')
-					getIssueActions().patchIssuesMilestone()
-				},
-				"CommandOrControl+m",{
-					menuPath: ['Issue']
-				})
 			
 			
-			// FIND/FUZZY
-			.command(
-				CommandType.Container,
+			.menuItem(
+				CommandMenuItemType.Submenu,
+				'Issues',
+				null,
+				null,{
+					id: 'issues-menu',
+					mountsWithContainer: true,
+					label: 'Issues',
+					subItems: [
+						{
+							id: 'new-issue',
+							label: 'New Issue',
+					    execute: (item, event) => getIssueActions().newIssue(),
+							defaultAccelerator: "CommandOrControl+n"
+						},{
+							id: 'mark-closed',
+							label: 'Mark selected issues closed',
+							execute: (item,event) => this.onDelete(event),
+							defaultAccelerator: CommonKeys.Delete
+						},{
+							id: 'issues-sep-1',
+							type:CommandMenuItemType.Separator
+						},
+						{
+							id: 'milestone-issues',
+							type: CommandMenuItemType.Command,
+							label: 'Milestone Selected Issues',
+							
+							defaultAccelerator: "CommandOrControl+m",
+							execute: (item, event) => getIssueActions().patchIssuesLabel(),
+						},{
+							id: 'label-issues',
+							type: CommandMenuItemType.Command,
+							label: 'Label Selected Issues',
+							defaultAccelerator: "CommandOrControl+t",
+							execute: (item, event) => getIssueActions().patchIssuesLabel(),
+						},{
+							id: 'new-comment',
+							type: CommandMenuItemType.Command,
+							label: 'New Comment',
+							execute: (item, event) => getIssueActions().newComment(),
+						}
+						
+					]
+				}
+			)
+			
+			.menuItem(
+				CommandMenuItemType.Command,
 				'Find Issues, Labels & Milestones...',
-				(cmd,event) => {
-					
-					const
-						{searchPanel} = this,
-						inputElement = searchPanel && searchPanel.inputElement
-					
-					log.debug('Fuzzy find',searchPanel,inputElement)
-					
-					if (inputElement)
-						$(inputElement).focus()
-					
-				},
-				"CommandOrControl+f",{
-					menuPath: ['Edit']
-				})
-			
+				null,
+				this.openFindIssues,
+				{
+					id: 'find-issues',
+					defaultAccelerator: "CommandOrControl+f"
+				}
+			)
 			
 			.make()
 		
 	readonly commandComponentId = ContainerNames.IssuesPanel
+	
+	
+	/**
+	 * Open issue finder
+	 *
+	 * @param cmdOrMenuItem
+	 * @param event
+	 */
+	private openFindIssues = (cmdOrMenuItem,event) => {
+		
+		const
+			{searchPanel} = this,
+			inputElement = searchPanel && searchPanel.inputElement
+		
+		log.debug('Fuzzy find',searchPanel,inputElement)
+		
+		if (inputElement)
+			$(inputElement).focus()
+		
+	}
 	
 	/**
 	 * Issue actions

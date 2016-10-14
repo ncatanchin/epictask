@@ -126,7 +126,7 @@ function getHeaderControls() {
 export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
 	
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.make()
 		

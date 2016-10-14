@@ -26,6 +26,7 @@ import {
 } from "shared/themes"
 import { MilestoneSelect } from "ui/components/common/MilestoneSelect"
 import { AssigneeSelect } from "ui/components/common/AssigneeSelect"
+import { IssueStateIcon } from "ui/components/issues/IssueStateIcon"
 
 // Constants
 const
@@ -72,8 +73,14 @@ const
 			
 			row1: [ flexTransition,FlexRowCenter, FlexAuto, {
 				
+				state: [{
+					root:[{
+						marginRight: rem(1)
+					}]
+				}],
+				
 				// REPO
-				repo: [ FlexScale, makePaddingRem(0,0,0.5,0), {
+				repo: [ FlexScale, makePaddingRem(0.5,0), {
 					fontSize: themeFontSize(1.4),
 					fontWeight: 500,
 					fontSmooth: 'always',
@@ -419,8 +426,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				backgroundColor: palette.canvasColor,
 				color: palette.textColor
 			},
-			
-			editLabelsControl = canEditIssue(issue.repo, issue) &&
+			canEdit = canEditIssue(issue.repo, issue),
+			editLabelsControl = canEdit &&
 				<div style={FlexRowCenter}>
 					
 					{/* Add a tag/label */}
@@ -441,6 +448,11 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			
 			{/* ROW 1 */}
 			<div style={[styles.row1,saving && {opacity: 0}]}>
+				
+				{/* STATE ICON - CAN TOGGLE ON/OFF */}
+				<IssueStateIcon styles={[styles.row1.state]}
+				                showToggle={canEdit}
+				                issue={issue}/>
 				
 				<div style={[styles.row1.repo]}>
 					<RepoName repo={issue.repo}/>

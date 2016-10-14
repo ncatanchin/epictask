@@ -21,6 +21,8 @@ export function makeMilestoneId(milestone:Milestone) {
 })
 export class Milestone extends DefaultModel {
 
+	static makeId = makeMilestoneId
+	
 	static EmptyMilestone = new Milestone({
 		id: -1,
 		repoId: 0,

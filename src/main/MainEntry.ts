@@ -12,7 +12,6 @@ import { Events } from "shared/config/Events"
 import { getProcessManager } from "shared/ProcessManagement"
 
 
-
 import './MainAppSwitches'
 
 const
@@ -109,6 +108,21 @@ async function startProcesses() {
 	
 }
 
+
+export function loadCommandManager() {
+	const
+		commandManagerMod = require('shared/commands/CommandManager'),
+		commandManager = commandManagerMod.getCommandManager(),
+		
+		electronMenuProvider =
+			require('shared/commands/CommandElectronMenuManager')
+				.ElectronMainManagerProvider
+	
+	
+	commandManager.setMenuManagerProvider(electronMenuProvider)
+	return commandManager
+}
+
 /**
  * Boot the app
  */
@@ -123,7 +137,10 @@ async function boot() {
 	
 	
 	log.debug("Boot start")
-	require('shared/commands/CommandManager').getCommandManager()
+	loadCommandManager()
+		
+	
+	
 	global[Events.MainBooted] = false
 	
 	log.debug("Load Main Window")

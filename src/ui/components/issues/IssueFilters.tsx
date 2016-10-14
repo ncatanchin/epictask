@@ -48,6 +48,7 @@ import {
 	makeFlexAlign, OverflowHidden
 } from "shared/themes"
 import { getValue } from "shared/util/ObjectUtil"
+import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 
 
 const
@@ -194,6 +195,10 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			this.issueActions.toggleIssueFilterMilestone(item)
 	}
 
+	
+	onClearFilters = () => {
+		getIssueActions().clearFilters()
+	}
 
 	/**
 	 * Toggle the inclusion of closed issues
@@ -594,7 +599,14 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			iconButtonElement={<IconButton style={filterIconStyle} iconStyle={filterIconStyle}><SvgFilterIcon /></IconButton>}
 			style={filterIconStyle}
 			listStyle={theme.list}>
-
+			
+			{hasFilters &&
+				// CLEAR FILTERS
+				<MenuItem primaryText={'Clear Filters'}
+					listStyle={theme.list}
+					onTouchTap={this.onClearFilters}/>
+			}
+			
 			{/* SORT ORDER */}
 			<MenuItem primaryText={sortOrderMenuItemText}
 			          listStyle={theme.list}

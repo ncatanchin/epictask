@@ -5,6 +5,7 @@ import { Events } from "shared/config/Events"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { benchmark } from "shared/util/Benchmark"
 import { benchmarkLoadTime } from "shared/util/UIUtil"
+import { SimpleMenuManagerProvider } from "shared/commands/CommandReactMenuManager"
 
 benchmarkLoadTime(`Starting UIEntry`)
 
@@ -23,7 +24,11 @@ const setupDevTools = benchmark('Setup dev tools',() => {
  */
 const setupCommandManager = benchmark('Setup Command Manager', () => {
 	log.debug(`Loading the CommandManager - 1st`)
-	require('shared/commands/CommandManager').getCommandManager()
+	
+	const
+		commandManager = require('shared/commands/CommandManager').getCommandManager()
+	
+	commandManager.setMenuManagerProvider(SimpleMenuManagerProvider)
 })
 
 /**

@@ -245,12 +245,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	
 	
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.command(CommandType.Container,
 				'Save Comment',
 				(cmd, event) => this.onSave(event),
-				"CommandOrControl+Enter", {})
+				"CommandOrControl+Enter")
+			.command(CommandType.Container,
+				'Close Dialog',
+				this.hide,
+				"Escape")
 			
 			.make()
 	
@@ -262,7 +266,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * Hide/close the window
 	 */
 	private hide = () => {
-		getUIActions().setDialogOpen(Dialogs.IssueEditDialog, false)
+		const
+			childWindowId = getChildWindowId()
+		
+		if (childWindowId)
+			getUIActions().closeWindow(childWindowId)
 	}
 	
 	/**

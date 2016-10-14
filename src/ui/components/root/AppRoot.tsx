@@ -15,7 +15,7 @@ import {
 	CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
+import { CommandType, CommandMenuItemType } from "shared/commands/Command"
 import { IWindowConfig } from "shared/config/WindowConfig"
 import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
@@ -75,48 +75,43 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	/**
 	 * All global app root window commands
 	 */
-	commands = (builder:CommandContainerBuilder) => {
+	commandItems = (builder:CommandContainerBuilder) => {
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
-			// IMPORT REPO
-				.command(
-					CommandType.App,
-					'Find action.',
-					(cmd, event) => {
-						log.debug(`Triggering find action`)
-						getUIActions().openSheet(Sheets.FindActionSheet)
-					},
-					"CommandOrControl+Shift+p", {
-						menuPath: [ 'Edit' ],
-						hideInAllCommands: true
-						
-					})
+			
+				// GitHub Menu
+				.menuItem(
+					CommandMenuItemType.Submenu,
+					'GitHub',
+					null,
+					null,{
+						subItems: []
+					}
+				)
+				
 				// IMPORT REPO
-				.command(
-					CommandType.App,
+				.menuItem(
+					CommandMenuItemType.Command,
 					'Import Repository',
+					null,
 					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
-					"CommandOrControl+Shift+n", {
-						menuPath: [ 'GitHub' ]
+					{
+						defaultAccelerator: "CommandOrControl+Shift+n",
+						menuPath: ['GitHub']
 					})
 				
 				// SYNC EVERYTHING
-				.command(
-					CommandType.App,
+				.menuItem(
+					CommandMenuItemType.Command,
 					'Sync Everything...',
-					(cmd, event) => getRepoActions().syncAll(),
-					"CommandOrControl+s", {
+					null,
+					(item, event) => getRepoActions().syncAll(),
+					{
+						defaultAccelerator: "CommandOrControl+s",
 						menuPath: [ 'GitHub' ]
 					})
-				// NEW ISSUE
-				.command(
-					CommandType.App,
-					'New Issue',
-					(cmd, event) => getIssueActions().newIssue(),
-					"CommandOrControl+n", {
-						menuPath: [ 'Issue' ]
-					})
+				
 				
 				.command(
 					CommandType.Global,
@@ -125,6 +120,24 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					"Control+Alt+n", {
 						hidden: true
 					})
+				
+				
+				.menuItem(
+					CommandMenuItemType.Submenu,
+					'Navigate',
+					null,
+					null, {
+						subItems: [{
+							id: 'find-action',
+							label: 'Find action',
+							execute: (item, event) => {
+								log.debug(`Triggering find action`)
+								getUIActions().openSheet(Sheets.FindActionSheet)
+							},
+							defaultAccelerator: "CommandOrControl+Shift+p"
+						}]
+					}
+				)
 			
 			
 		}, () => {
@@ -132,12 +145,14 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			builder
 			
 			// CLOSE CHILD WINDOW
-				.command(
-					CommandType.Container,
+				.menuItem(
+					CommandMenuItemType.Command,
 					'Close Window',
+					null,
 					(cmd, event) => getUIActions().closeWindow(childWindowId),
-					"CommandOrControl+w", {
-						menuPath: [ 'Window' ]
+					{
+						defaultAccelerator: "CommandOrControl+w",
+						menuPath: [ 'Navigate' ]
 					})
 		})
 		

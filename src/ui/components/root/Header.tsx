@@ -3,7 +3,10 @@ import {SearchPanel} from 'ui/components/search'
 import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
 import {TextField} from 'material-ui/TextField'
 import { PureRender, Icon } from 'ui/components/common'
-import { CommandComponent, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
+import {
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getCommandManager } from "shared/commands/CommandManager"
@@ -105,7 +108,8 @@ export interface IHeaderState {
 export class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
 	
 	
-	readonly commands:ICommand[] = []
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder.make()
 	
 	readonly commandComponentId:string = 'Header'
 	
