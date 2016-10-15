@@ -4,7 +4,16 @@ require('./init-scripts')
 const
 	path = require('path'),
 	{process} = global,
-	electronRoot = path.resolve(process.env.HOME,'Library','Application Support','Electron')
+	electronRoot =
+		
+		// MAC
+		isMac ? path.resolve(process.env.HOME,'Library','Application Support','Electron') :
+			
+			// LINUX
+			isLinux ? path.resolve(process.env.HOME,'.config','Electron') :
+				
+				// WINDOWS
+				path.resolve(process.env.HOME,'AppData','Roaming','Electron')
 
 echo(`Cleaning ${electronRoot}`)
 cd(electronRoot)
