@@ -10,6 +10,8 @@ import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
 import { Settings } from "shared/settings/SettingsFile"
 import { getRepoActions, getAppActions } from "shared/actions/ActionFactoryProvider"
+import { GitHubConfig } from "shared/config/GithubConfig"
+import { authenticatingSelector } from "shared/actions/auth/AuthSelectors"
 
 const log = getLogger(__filename)
 
@@ -121,6 +123,23 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		
 	}
 
+	@ActionThunk()
+	startAuth() {
+		return (dispatch,getState) => {
+			if (authenticatingSelector(getState())) {
+				log.debug(`Already authenticating`)
+				return
+			}
+				
+			const
+				GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default,
+				authRequest = new GitHubOAuthWindow(getCurrentWindow(),GitHubConfig)
+			
+			this.setAuthenticating(true)
+			
+			authRequest.start((err,token) => this.setAuthResult(err,token))
+		}
+	}
 
 
 	@ActionThunk()
