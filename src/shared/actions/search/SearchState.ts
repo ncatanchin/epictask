@@ -15,7 +15,8 @@ export enum SearchType {
 	Repo,
 	AvailableRepo,
 	Milestone,
-	Label
+	Label,
+	Action
 }
 
 
@@ -26,7 +27,8 @@ export enum SearchSource {
 	GitHub,
 	AvailableRepo,
 	Milestone,
-	Label
+	Label,
+	Action
 }
 
 export const SearchTypeSourceMap = {
@@ -35,7 +37,8 @@ export const SearchTypeSourceMap = {
 	[SearchType.Repo]: [SearchSource.Repo,SearchSource.GitHub],
 	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
 	[SearchType.Label]: [SearchSource.Label],
-	[SearchType.Milestone]: [SearchSource.Milestone]
+	[SearchType.Milestone]: [SearchSource.Milestone],
+	[SearchType.Action]: [SearchSource.Action]
 }
 
 export const SearchSourceTypeMap = {
@@ -45,7 +48,8 @@ export const SearchSourceTypeMap = {
 	[SearchSource.GitHub]:SearchType.Repo,
 	[SearchSource.AvailableRepo]:SearchType.AvailableRepo,
 	[SearchSource.Milestone]:SearchType.Milestone,
-	[SearchSource.Label]:SearchType.Label
+	[SearchSource.Label]:SearchType.Label,
+	[SearchSource.Action]:SearchType.Action
 
 }
 

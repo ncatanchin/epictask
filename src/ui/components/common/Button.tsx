@@ -18,7 +18,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		{text,accent,primary,secondary,background} = palette
 	
 	return {
-		root: [ PositionRelative, makeTransition(['border','background-color','color','font-size','font-weight']),makeMarginRem(0), {
+		root: [ PositionRelative,OverflowHidden, makeTransition(['border','background-color','color','font-size','font-weight']),makeMarginRem(0), {
 			cursor: 'pointer',
 			border: 0,
 			
@@ -94,12 +94,18 @@ export interface IButtonProps extends React.HTMLAttributes<any> {
  * @constructor
  **/
 @ThemedStyles(baseStyles,'button')
-export class Button extends React.Component<IButtonProps,void> {
+export class Button extends React.Component<IButtonProps,any> {
 
 	static defaultProps = {
 		ripple: true,
 		mode: 'flat',
 		sizing: 'normal'
+	}
+	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
 	}
 
 	render() {

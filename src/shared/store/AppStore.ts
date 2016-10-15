@@ -36,7 +36,7 @@ import { RepoState } from "shared/actions/repo/RepoState"
 
 const
 	log = getLogger(__filename),
-	stateFilename = getUserDataFilename('store-state'),
+	stateFilename = getUserDataFilename('epictask-store-state.json'),
 	ActionLoggerEnabled = false
 
 

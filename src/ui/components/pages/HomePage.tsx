@@ -1,7 +1,6 @@
 import * as React from 'react'
 
 import * as Radium from 'radium'
-import {List} from 'immutable'
 import {createStructuredSelector} from 'reselect'
 import {IssuesPanel} from 'ui/components/issues'
 import {Page} from './Page'
@@ -11,10 +10,12 @@ import {connect} from 'react-redux'
 import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
-import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
 import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
-import {makeLinearGradient, Transparent} from "shared/themes"
+import { makeLinearGradient, Transparent, convertRem } from "shared/themes"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { toolPanelsSelector, toolDraggingSelector } from "shared/actions/ui/UISelectors"
+import { getValue } from "shared/util/ObjectUtil"
 
 
 const
@@ -27,7 +28,7 @@ const
 	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
 	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
 
-const baseStyles:any = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 
 	page:[],
 	bodyWrapper: [FlexScale,Fill],
@@ -38,13 +39,12 @@ const baseStyles:any = createStyles({
 
 })
 
-interface IHomeProps {
-	theme?:any
-	styles?:any
+export interface IHomeProps extends IThemedAttributes {
 	toolPanels:Map<string,IToolPanel>
+	toolDragging:boolean
 }
 
-interface IHomeState {
+export interface IHomeState {
 	width?:number
 }
 
@@ -53,45 +53,65 @@ interface IHomeState {
  * The root container for the app
  */
 @connect(createStructuredSelector({
-	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
-}, createDeepEqualSelector))
+	toolPanels: toolPanelsSelector,
+	toolDragging: toolDraggingSelector
+}))
 @ThemedStyles(baseStyles,'homePage')
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {
 	
-	appActions = Container.get(AppActionFactory)
+	
 	
 	componentWillMount = () => this.setState(this.getNewState())
-
+	
+	/**
+	 * Get new state
+	 */
 	getNewState = () => ({width:window.innerWidth})
-
+	
+	/**
+	 * Update state
+	 */
 	updateState = () => this.setState(this.getNewState())
 
+	
 	render() {
 		const
-			{theme,styles,toolPanels} = this.props,
+			{theme,styles,toolDragging,toolPanels} = this.props,
 			{palette} = theme,
 			{accent} = palette,
+			
+			panelMinOpen = convertRem(20),
+			
+			
 			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
 			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
-			toolCount = (panel:IToolPanel) => Object.keys(getTools(panel)).length,
-			rightPanel = getPanel(ToolPanelLocation.Right),
-			leftPanel = getPanel(ToolPanelLocation.Left),
-			bottomPanel = getPanel(ToolPanelLocation.Bottom),
-			[panelMinOpen] = [convertRem(20)],
+			toolCount = (panel:IToolPanel) => getValue(() => panel.toolIds.length,0),
 			
 			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[panel.location].minDim),
-			panelMinSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),
-			panelMaxSize = (panel:IToolPanel) => !toolCount(panel) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel),
+			panelMinSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),
+			panelMaxSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel),
+			
+			
 			constraintNames = (panel:IToolPanel) => [ToolPanelLocation.Popup,ToolPanelLocation.Bottom].includes(panel.location) ?
 				['minHeight','maxHeight'] : ['minWidth','maxWidth'],
+			
 			makePanelConstraint = (panel:IToolPanel) => {
-				const [min,max] = constraintNames(panel)
+				const
+					[min,max] = constraintNames(panel)
+				
 				return {
 					[min]: panelMinSize(panel),
 					[max]: panelMaxSize(panel)
 				}
-			},
+			}
+			
+			
+		const
+			rightPanel = getPanel(ToolPanelLocation.Right),
+			leftPanel = getPanel(ToolPanelLocation.Left),
+			bottomPanel = getPanel(ToolPanelLocation.Bottom),
+			
 			borderGradientColorCap = TinyColor(accent.hue2).setAlpha(0.2).toRgbString(),
 			borderGradientColor = TinyColor(accent.hue2).setAlpha(0.7).toRgbString(),
 			

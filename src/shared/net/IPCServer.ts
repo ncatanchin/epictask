@@ -1,5 +1,6 @@
 
 import { cloneObject } from "shared/util/ObjectUtil"
+import { makeIPCServerId } from "shared/net/IPCUtil"
 const
 	log = getLogger(__filename),
 	IPC = require('node-ipc').IPC
@@ -16,6 +17,7 @@ export type TIPCEventHandler = (server:IPCServer,socket,event,request) => any
 
 export type TIPCEventHandlers = {[event:string]:TIPCEventHandler}
 
+
 /**
  * IPC Server
  */
@@ -26,8 +28,13 @@ export class IPCServer {
 	
 	private startDeferred:Promise.Resolver<any>
 	
-	constructor(public readonly name:string,private handlers:TIPCEventHandlers) {
-		
+	/**
+	 * IPC Server Id
+	 */
+	readonly name:string
+	
+	constructor(name:string,private handlers:TIPCEventHandlers) {
+		this.name = makeIPCServerId(name)
 	}
 	
 	

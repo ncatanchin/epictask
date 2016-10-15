@@ -1,10 +1,10 @@
 // Imports
 import { ThemedStyles } from 'shared/themes/ThemeManager'
-import { MuiThemeProvider } from "material-ui/styles"
 import { CircularProgress} from "material-ui"
 import { makeHeightConstraint, makeWidthConstraint, createStyles } from "shared/themes"
-import { createThemedStyles } from "shared/themes/ThemeDecorations"
+
 import { Icon } from "ui/components/common"
+import { WindowControls } from "ui/components/common/WindowControls"
 
 // Constants
 const
@@ -211,9 +211,8 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 			titleMode = this.props.titleMode || 'vertical'
 		
 		return <div style={styles.root}>
-			
-			<MuiThemeProvider muiTheme={theme}>
-				
+			{/*<MuiThemeProvider theme={theme}>*/}
+				<WindowControls />
 				<div style={[Fill,FlexColumn,FlexScale]}>
 					{/* TITLE BAR */}
 					<div style={[styles.titleBar]}>
@@ -261,9 +260,10 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 							size={50}/>
 					</div>}
 				</div>
-			</MuiThemeProvider>
+			
 			
 			{/*</Dialog>*/}
+			{/*</MuiThemeProvider>*/}
 		</div>
 	}
 	

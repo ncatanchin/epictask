@@ -1,16 +1,27 @@
-import { ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator } from "shared/commands/Command"
+import {
+	ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator,
+	ICommandMenuItem, CommandMenuItemType, TCommandMenuItemExecutor, TCommandIcon
+} from "shared/commands/Command"
 import { getCommandManager } from "shared/commands/CommandManager"
 import * as React from 'react'
 import filterProps from 'react-valid-props'
-import { isFunction, shortId } from "shared/util/ObjectUtil"
+import { isFunction, shortId, getValue, isNumber, isString } from "shared/util/ObjectUtil"
+
+
+
 
 const
 	log = getLogger(__filename),
-	commandContainerCommands = new WeakMap<CommandContainer,ICommand[]>()
+	commandContainerItems = new WeakMap<CommandContainer,ICommandContainerItems>()
 
 // DEBUG ENABLE
 log.setOverrideLevel(LogLevel.DEBUG)
 
+
+export interface ICommandContainerItems {
+	commands: ICommand[]
+	menuItems: ICommandMenuItem[]
+}
 
 /**
  * Options for the future (maybe global commands or something??
@@ -90,7 +101,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	componentDidMount = () => this.setState({
 		mounted: true
-	}, this.updateCommands)
+	}, this.updateRegistration)
 	
 	
 	/**
@@ -98,21 +109,31 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	componentWillUnmount = () => this.setState({
 		mounted: false
-	}, this.updateCommands)
+	}, this.updateRegistration)
+	
+	
+	/**
+	 * Whether the container is currently focused or not
+	 *
+	 * @returns {boolean}
+	 */
+	isFocused() {
+		return getValue(() => this.state.focused,false)
+	}
 	
 	/**
 	 * Set the command component instance
 	 *
 	 * @param instance
 	 */
-	setInstance = (instance:ICommandComponent) => {
+	private setInstance = (instance:ICommandComponent) => {
 		if (!instance) {
 			log.debug(`Instance set to null`, this)
 			return
 		}
 		
 		// JUST IN CASE ITS WRAPPED IN RADIUM OR CONNECT/REDUX
-		this.setState({ instance }, this.updateCommands)
+		this.setState({ instance }, this.updateRegistration)
 	}
 	
 	/**
@@ -120,7 +141,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	onFocus = (event:React.FocusEvent<any>) => {
+	private onFocus = (event:React.FocusEvent<any>) => {
 		
 		
 		const
@@ -154,7 +175,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	onBlur = (event:React.FocusEvent<any>) => {
+	private onBlur = (event:React.FocusEvent<any>) => {
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
@@ -183,7 +204,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	/**
 	 * Update the commands when we get a new instance or changes are registered
 	 */
-	updateCommands = () => {
+	updateRegistration = () => {
 		const
 			{ instance, id } = this,
 			{ mounted, registered } = this.state
@@ -200,8 +221,11 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		if (!registered) {
 			log.debug(`Registering commands on container ${id}`)
 			
+			const
+				{commands,menuItems} = this.getItems()
+			
 			getCommandManager()
-				.registerContainerCommand(this.id, this, ...this.getCommands())
+				.registerContainerItems(this.id, this, commands,menuItems)
 			
 			this.setState({ registered: true })
 		}
@@ -209,25 +233,22 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	}
 	
 	/**
-	 * Get commands from instance
+	 * Get All items for container
+	 *
+	 * @returns {ICommandContainerItems}
 	 */
-	private getCommands = () => {
+	private getItems() {
 		let
-			commands = commandContainerCommands.get(this)
+			items = commandContainerItems.get(this)
 		
-		if (!commands) {
-			const
-			 rawCommands = this.instance.commands
+		if (!items) {
+		
+			items = this.instance.commandItems(new CommandContainerBuilder(this))
 			
-			commands = (isFunction(rawCommands)) ?
-				rawCommands(new CommandContainerBuilder(this)) :
-				rawCommands
-			
-			commandContainerCommands.set(this,commands)
+			commandContainerItems.set(this,items)
 		}
 		
-		
-		return commands
+		return items
 	}
 	
 	/**
@@ -246,7 +267,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			{..._.omit(this.props,'ref', 'onFocus', 'onBlur')}
 			onFocus={this.onFocus}
 			onBlur={this.onBlur}
-			commandContainer={this} ref={this.setInstance}/>
+			commandContainer={this}
+			ref={this.setInstance}/>
 	}
 }
 
@@ -260,14 +282,14 @@ export interface ICommandComponentProps extends React.HTMLAttributes<any> {
 /**
  * Container Command creator type
  */
-export type TCommandsCreator = (builder:CommandContainerBuilder) => ICommand[]
+export type TCommandItemsCreator = (builder:CommandContainerBuilder) => ICommandContainerItems
 
 /**
  * The only property a command component must implement is "commands"
  */
 export interface ICommandComponent extends React.Component<ICommandComponentProps,any> {
-	readonly commands:ICommand[]|TCommandsCreator
-	readonly commandComponentId:string
+	commandItems:TCommandItemsCreator
+	commandComponentId:string
 	
 	onFocus?:(event:React.FocusEvent<any>) => any
 	onBlur?:(event:React.FocusEvent<any>) => any
@@ -309,9 +331,33 @@ export function CommandComponent<T extends TCommandComponentConstructor>(opts:IC
 	 */
 	return ((TargetComponent:T) => {
 		
-		return (function (props, context) {
-			return <CommandContainer commandComponent={TargetComponent as any} {...props} />
-		}) as any
+		return class CommandComponentWrapped extends React.Component<any,any> {
+			
+			/**
+			 * Store the underlying ref
+			 *
+			 * @param commandContainerRef
+			 */
+			private setCommandContainer = (commandContainerRef) => this.setState({commandContainerRef})
+			
+			/**
+			 * Get the command container ref
+			 *
+			 * @returns {any}
+			 */
+			getWrappedInstance() {
+				return getValue(() => this.state.commandContainerRef.getWrappedInstance())
+			}
+			
+			/**
+			 * Render the component
+			 *
+			 * @returns {any}
+			 */
+			render() {
+				return <CommandContainer ref={this.setCommandContainer} commandComponent={TargetComponent as any} {...this.props} />
+			}
+		} as any
 	}) as any
 }
 
@@ -358,6 +404,8 @@ export class CommandContainerBuilder {
 	
 	private commands:ICommand[] = []
 	
+	private menuItems:ICommandMenuItem[] = []
+	
 	/**
 	 * Create with a container
 	 *
@@ -376,31 +424,184 @@ export class CommandContainerBuilder {
 	 * @param defaultAccelerator
 	 * @param opts
 	 */
-	command = (type:CommandType,
-	           name:string,
-	           execute:TCommandExecutor,
-	           defaultAccelerator:TCommandDefaultAccelerator = null,
-	           opts:ICommand = {}) => {
+	command(type:CommandType,
+	        name:string,
+	        execute?:TCommandExecutor,
+	        defaultAccelerator?:TCommandDefaultAccelerator,
+	        opts?:ICommand)
+	command(
+		id:string,
+		type:CommandType,
+    name:string,
+    execute?:TCommandExecutor,
+    defaultAccelerator?:TCommandDefaultAccelerator,
+		opts?:ICommand)
+	
+	command(...args:any[]) {
+		
+		// Check for ID first
+		let
+			id:string = null
+			
+		if (isString(args[0]))
+			id = args.shift()
+		
+		// Deconstruct
+		const
+			[type,name,execute,defaultAccelerator,opts = {}] = args as [
+				CommandType,
+				string,
+				TCommandExecutor,
+				TCommandDefaultAccelerator,
+				ICommand
+			]
 		
 		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
 		
 		const
-			cmd = Object.assign({
-				id: opts.id || `${this.container.id}-${name}`,
+			cmd = _.assign({
+				id: id || opts.id || `${this.container.id}-${name}`,
 				type,
 				execute,
 				name,
 				defaultAccelerator,
 				container: this.container
-			},opts || {})
+			},opts || {}) as ICommand
 		
 		this.commands.push(cmd)
 			
 		return this
 	}
 	
-	make() {
-		return this.commands
+	
+	/**
+	 * Make menu item
+	 *
+	 * @param type
+	 * @param label
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	/**
+	 * Make menu item
+	 *
+	 * @param id
+	 * @param commandId
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		id:string,
+		commandId:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	
+	/**
+	 * Make menu item
+	 *
+	 * @param id
+	 * @param type
+	 * @param label
+	 * @param icon
+	 * @param opts
+	 */
+	makeMenuItem(
+		id:string,
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	makeMenuItem(
+		...args:any[]
+	) {
+		
+		let
+			id:string,
+			type:CommandMenuItemType,
+			label:string,
+			icon:TCommandIcon,
+			commandId:string,
+			opts:ICommandMenuItem
+		
+		if (isNumber(args[0])) {
+			([type,label,icon,opts] = args)
+		} else if (isString(args[1])) {
+			([id,commandId,icon,opts] = args)
+			type = CommandMenuItemType.Command
+		} else {
+			([id,type,label,icon,opts] = args)
+		}
+		
+		opts = opts || {}
+		
+		if (!id) {
+			id = opts.id || `${this.container.id}-${label}`
+		}
+		
+		return _.assign({
+				id,
+				type,
+				commandId,
+				containerId: this.container.id,
+				label,
+				icon
+			},opts) as ICommandMenuItem
+		
+	}
+	
+	/**
+	 * Create a menu item
+	 *
+	 * @param type
+	 * @param label
+	 * @param icon
+	 * @param opts
+	 */
+	menuItem(
+		type:CommandMenuItemType,
+	  label:string,
+	  icon?:TCommandIcon,
+	  opts?:ICommandMenuItem
+	)
+	menuItem(
+		id:string,
+		commandId:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	menuItem(
+		id:string,
+		type:CommandMenuItemType,
+		label:string,
+		icon?:TCommandIcon,
+		opts?:ICommandMenuItem
+	)
+	menuItem(
+		...args:any[]
+	)
+	{
+		
+		this.menuItems.push((this.makeMenuItem as any)(...args))
+		
+		return this
+	}
+	
+	/**
+	 * Make command container items
+	 */
+	make():ICommandContainerItems {
+		return {
+			commands: this.commands,
+			menuItems: this.menuItems
+		}
 	}
 	
 }

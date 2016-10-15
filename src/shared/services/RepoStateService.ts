@@ -16,6 +16,7 @@ export class RepoStateService extends BaseService {
 	
 	private store:ObservableStore<any>
 	
+	private pendingActivityLoad:CancelablePromiseResolver
 	
 	/**
 	 * DatabaseClientService must be loaded first
@@ -98,9 +99,15 @@ export class RepoStateService extends BaseService {
 		log.debug(`Selected issue ids updated`,selectedIssueIds)
 		if (selectedIssueIds && selectedIssueIds.length === 1) {
 			log.debug(`Loading activity`)
-			getIssueActions().loadActivityForIssue(selectedIssueIds[0])
+			const
+				{pendingActivityLoad} = this
+			
+			if (pendingActivityLoad)
+				pendingActivityLoad.cancel()
+			
+			this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
-	},200)
+	},300)
 	
 	
 	

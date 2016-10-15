@@ -2,7 +2,7 @@
 // Imports
 import * as React from 'react'
 import {connect} from 'react-redux'
-import {PureRender, Icon} from 'ui/components/common'
+import {PureRender} from 'ui/components/common'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {createStructuredSelector} from 'reselect'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
@@ -17,8 +17,8 @@ import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 import {BuiltInTools, getBuiltInToolId} from "shared/config/ToolConfig"
 
 // Constants
-const log = getLogger(__filename)
-
+const
+	log = getLogger(__filename)
 
 /**
  * IStatusBarProps
@@ -50,7 +50,6 @@ export interface IStatusBarState {
 @connect(createStructuredSelector({
 	jobs: jobsSelector,
 	details: jobDetailsSelector,
-	open: (state) => uiStateSelector(state).statusBar.visible,
 	messages: (state):IToastMessage[] => _.orderBy(
 		uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg)) || [],
 		['createdAt'],

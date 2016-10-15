@@ -1,24 +1,26 @@
-
-
+import Electron = require('electron')
 
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommand, TCommandContainer, CommandType } from "shared/commands/Command"
-import Electron = require('electron')
+
+import {
+	ICommand, TCommandContainer, CommandType, ICommandMenuManagerProvider,
+	ICommandMenuManager, ICommandMenuItem
+} from "shared/commands/Command"
+
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import { isReactComponent } from "shared/util/UIUtil"
-
 import { CommandAccelerator } from "shared/commands/CommandAccelerator"
 import { isMain, InputTagNames, isElectron } from "shared/commands/CommandManagerConfig"
-import { getCommandMainMenuManagerType, CommandMainMenuManager } from "shared/commands/CommandMainMenuManager"
+
 import {
 	addWindowListener, addBrowserWindowListener,
 	removeBrowserWindowListener, removeWindowListener,
 	getCommandBrowserWindow
 } from "shared/commands/CommandManagerUtil"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, cloneObject } from "shared/util/ObjectUtil"
 
 
 
@@ -35,18 +37,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
-
-
-/**
- * Get the command manager on the main process
- *
- * @returns {CommandManager}
- */
-function getMainCommandManager() {
-	return (isMain ? getCommandManager() :
-			(require('electron').remote.getGlobal('getCommandManager') as getCommandManagerType)())
-}
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration
@@ -57,13 +48,17 @@ export interface ICommandContainerRegistration {
 	available:boolean
 	focused:boolean
 	commands?:ICommand[]
+	menuItems?:ICommandMenuItem[]
 }
 
+ 
 
 /**
  * The command manager - menu, shortcuts, containers, etc
  */
 export class CommandManager {
+	
+	
 	
 	static getInstance() {
 		if (!instanceContainer.instance)
@@ -72,46 +67,55 @@ export class CommandManager {
 		return instanceContainer.instance
 	}
 	
-	/**
-	 * Return the main process menu manager
-	 *
-	 * @returns {any}
-	 */
-	private getMainMenuManager() {
-		return 	(isMain) ?
-				(require('./CommandMainMenuManager').getCommandMainMenuManager as getCommandMainMenuManagerType)() :
-				getMainCommandManager().getMainMenuManager()
-	}
+	 
 	
-	private mainMenuManager = new Proxy({},{
-		get: (target,prop) => {
-			return (...args) => {
-				try {
-					const
-						manager = this.getMainMenuManager(),
-						fn = manager && manager[prop]
-					
-					
-					if (!fn) {
-						return log.debug(`Prop ${prop} not available on main menu manager`)
-					}
-					if (typeof fn !== 'function') {
-						return log.warn(`Prop ${prop} is NOT a function`)
-					}
-					
-					fn(...args)
-				} catch (err) {
-					log.error(`Error occurred calling main menu`,err)
-					throw err
-				}
-			}
-		}
-	}) as CommandMainMenuManager
+	
+	// private mainMenuManager = new Proxy({},{
+	// 	get: (target,prop) => {
+	// 		return (...args) => {
+	// 			try {
+	// 				const
+	// 					manager = this.getMainMenuManager(),
+	// 					fn = manager && manager[prop]
+	//
+	//
+	// 				if (!fn) {
+	// 					return log.debug(`Prop ${prop} not available on main menu manager`)
+	// 				}
+	// 				if (typeof fn !== 'function') {
+	// 					return log.warn(`Prop ${prop} is NOT a function`)
+	// 				}
+	//
+	// 				fn(...args)
+	// 			} catch (err) {
+	// 				log.error(`Error occurred calling main menu`,err)
+	// 				throw err
+	// 			}
+	// 		}
+	// 	}
+	// }) as CommandMainMenuManager
+	
+	/**
+	 * Menu Manager Provider
+	 */
+	private menuManagerProvider:ICommandMenuManagerProvider
 	
 	/**
 	 * Browser menu commands that were sent to main
 	 */
-	private menuCommands:ICommand[] = []
+	private menuItems:ICommandMenuItem[] = []
+	
+	
+	/**
+	 * Global command list
+	 */
+	private globalCommands:{[id:string]:{
+		id:string,
+		electronAccelerator:string,
+		registered:boolean,
+		conflict:boolean,
+		cmd:ICommand
+	}} = {}
 	
 	/**
 	 * Map of all currently registered commands
@@ -162,6 +166,53 @@ export class CommandManager {
 			  c2.element.contains(c1.element) ? -1 : 0)
 	}
 	
+	private executeMenuItem(item:ICommandMenuItem,event:any = null) {
+		const
+			cmd = item.commandId && this.getCommand(item.commandId)
+		
+		cmd && cmd.execute(cmd,event)
+		
+	}
+	
+	private makeExecuteMenuItem(item:ICommandMenuItem) {
+		return (event) => this.executeMenuItem(item,event)
+	}
+	
+	/**
+	 * Get the menu manager from the configured provider
+	 *
+	 * @returns {ICommandMenuManager}
+	 */
+	getMenuManager():ICommandMenuManager {
+		return getValue(() => this.menuManagerProvider(),null)
+	}
+	
+	/**
+	 * Set the menu manager provider
+	 *
+	 * @param menuManagerProvider
+	 */
+	setMenuManagerProvider(menuManagerProvider:ICommandMenuManagerProvider) {
+		this.menuManagerProvider = menuManagerProvider
+	}
+	
+	/**
+	 * Get a command by id
+	 *
+	 * @param commandId
+	 * @returns {ICommand}
+	 */
+	getCommand(commandId:string) {
+		let
+			cmd = this.commands[commandId]
+		
+		if (!cmd) {
+			cmd = Object.values(this.commands).find(it => it.name && it.name.endsWith(commandId) || it.id.endsWith(commandId))
+		}
+		
+		return cmd
+	}
+	
 	/**
 	 * Retrieve all current commands
 	 *
@@ -169,6 +220,7 @@ export class CommandManager {
 	 */
 	allCommands():ICommand[] {
 		return Object.values(this.commands)
+			.filter(cmd => cmd.hideInAllCommands !== true && cmd.hidden !== true)
 	}
 	
 	/**
@@ -258,7 +310,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowBlur(event) {
-		this.unmountMenuCommand(...this.menuCommands.filter(cmd => cmd.type === CommandType.Container))
+		this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
 	}
 		
 	/**
@@ -267,7 +319,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowFocus(event) {
-		this.mountMenuCommand(...this.menuCommands)
+		this.mountMenuItems(...this.menuItems)
 	}
 	
 	
@@ -364,6 +416,7 @@ export class CommandManager {
 				available,
 				focused: false,
 				commands: [],
+				menuItems: [],
 				element: isReactComponent(container) &&
 					ReactDOM.findDOMNode(container) as HTMLElement
 			}
@@ -386,141 +439,205 @@ export class CommandManager {
 	/**
 	 * Map a menu command
 	 *
-	 * @param cmd
+	 * @param item
 	 * @returns {any}
 	 */
-	private mapMenuCommand = (cmd:ICommand) => {
-		return assign(_.pick(cmd,
-			'id',
-			'execute',
-			'name',
-			'description',
-			'enabled',
-			'hidden',
-			'menuPath',
-			'type'),{
-			electronAccelerator: cmd.electronAccelerator || new CommandAccelerator(cmd.defaultAccelerator).toElectronAccelerator()
+	private mapMenuItem = (item:ICommandMenuItem) => {
+		return cloneObject(item,item.execute && {
+			execute: this.makeExecuteMenuItem(item)
 		})
 	}
 	
 	/**
 	 * Add/Update menu commands
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	private addMenuCommand(...commands:ICommand[]) {
-		this.menuCommands =
-			this.menuCommands
-				.filter(it => !commands.find(cmd => cmd.id === it.id))
-				.concat(commands.map(this.mapMenuCommand))
+	private addMenuItem(...items:ICommandMenuItem[]) {
+		this.menuItems =
+			this.menuItems
+				.filter(it => !items.find(item => item.id === it.id))
+				.concat(items.map(this.mapMenuItem))
 		
 	}
 	
 	/**
-	 * Map commands to electron menu commands
+	 * Get all menu items in a list of commands
 	 *
 	 * @param commands
-	 * @returns {any[]}
+	 * @returns {ICommandMenuItem[]}
 	 */
-	private getMenuCommands(...commands:ICommand[]) {
+	private getMenuItemsFromCommands(...commands:ICommand[]):ICommandMenuItem[] {
 		return commands
-			.filter(cmd => cmd.menuPath)
-			.map(cmd => {
+			.filter(cmd => cmd.menuItem)
+			.map(cmd => cmd.menuItem)
+	}
+	
+	
+	/**
+	 * Remove a global shortcut
+	 *
+	 * @param commands
+	 */
+	removeGlobalShortcut(...commands:ICommand[]) {
+		if (!isElectron)
+			return
+		
+		if (!commands.length) {
+			log.info(`No global shortcut commands provided, so removing all`)
+			commands = Object.values(this.globalCommands)
+		}
+		
+		const
+			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+		
+		commands
+			.filter(it => it.type === CommandType.Global)
+			.forEach(it => {
 				const
-					mappedCmd = this.mapMenuCommand(cmd)
+					shortcut = this.globalCommands[it.id]
 				
-				this.addMenuCommand(mappedCmd)
+				if (!shortcut) {
+					log.debug(`No short cut for command`,it)
+					return
+				}
 				
-				return mappedCmd
+				log.debug(`Removing global shortcut: ${it.id}`)
+				globalShortcut.unregister(shortcut.electronAccelerator)
+				delete this.globalCommands[it.id]
 			})
+	}
+	
+	
+	/**
+	 * Update global shortcuts
+	 *
+	 * @param commands
+	 */
+	private updateGlobalCommands(commands:ICommand[]) {
+		const
+			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+		
+		commands
+			.filter(it => it.type === CommandType.Global)
+			.forEach(it => {
+				if (this.globalCommands[it.id]) {
+					log.debug('un-registering global shortcut first',it)
+					this.removeGlobalShortcut(it)
+				}
+				
+				const
+					electronAccelerator =
+						new CommandAccelerator(it.defaultAccelerator).toElectronAccelerator(),
+					
+					shortcut = this.globalCommands[it.id] = {
+						id: it.id,
+						cmd: it,
+						electronAccelerator,
+						registered: false,
+						conflict: globalShortcut.isRegistered(electronAccelerator)
+					}
+					
+				log.debug(`Registering shortcut`,shortcut)
+				const
+					result = shortcut.registered = (globalShortcut.register(electronAccelerator,() => {
+						log.debug(`Executing global shortcut`, shortcut)
+						shortcut.cmd.execute(shortcut.cmd)
+					})) as any
+				
+				log.debug(`Command was registered success=${result}`)
+					
+			})
+	}
+	
+	/**
+	 * A guarded menu manager command
+	 *
+	 * @param fn
+	 */
+	private menuManagerFn(fn:(menuManager:ICommandMenuManager) => any) {
+		const
+			menuManager = this.getMenuManager()
+		
+		if (menuManager) {
+			fn(menuManager)
+		}
 	}
 	
 	/**
 	 * Update menu commands
 	 *
-	 * @param commands
+	 * @param items
 	 * @param force
 	 */
-	private updateMenuCommands(commands:ICommand[],force = false) {
-		const
-			mappedCommands = commands
-				.filter(it => it.menuPath)
-				.map(this.mapMenuCommand),
-			changedCommands = force ? mappedCommands : []
-			
+	private updateMenuItems(items:ICommandMenuItem[], force = false) {
+		this.addMenuItem(...items)
+		this.menuManagerFn((menuManager) => menuManager.updateItem(...items))
+		
 		// LOOK FOR CHANGES
-		let
-			changes = force
+		// let
+		// 	changes = force
+		//
+		// if (!changes) {
+		// 	for (let cmd of mappedCommands) {
+		// 		if (!shallowEquals(cmd, this.menuItems.find(it => it.id === cmd.id))) {
+		// 			changes = true
+		// 			changedCommands.push(cmd)
+		// 		}
+		// 	}
+		// }
 		
-		if (!changes) {
-			for (let cmd of mappedCommands) {
-				if (!shallowEquals(cmd, this.menuCommands.find(it => it.id === cmd.id))) {
-					changes = true
-					changedCommands.push(cmd)
-				}
-			}
-		}
+		//if (changes) {
 		
-		if (changes) {
-			this.addMenuCommand(...changedCommands)
-		  this.mainMenuManager.updateCommand(...changedCommands)
-		}
+		//}
 	}
 	
 	/**
 	 * Remove a set of menu commands
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	private removeMenuCommands(commands:ICommand[]) {
+	private removeMenuItems(items:ICommandMenuItem[]) {
 		
-		commands = commands
-			.filter(it => it.menuPath)
-		
-		for (let cmd of commands) {
+		for (let item of items) {
 			const
-				index = this.menuCommands
-					.findIndex(it => it.id === cmd.id)
+				index = this.menuItems
+					.findIndex(it => it.id === item.id)
 			
 			if (index > -1) {
-				this.menuCommands.splice(index,1)
+				this.menuItems.splice(index,1)
 			}
 		}
 		
-		this.mainMenuManager.removeCommand(...commands)
+		this.menuManagerFn(manager => manager.removeItem(...items))
 	}
 	
 	
 	/**
 	 * Mount all menu commands
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	private mountMenuCommand(...commands:ICommand[]) {
+	private mountMenuItems(...items:ICommandMenuItem[]) {
 		if (getCommandBrowserWindow() && !getCommandBrowserWindow().isFocused())
 			return
 		
-		const
-			manager = this.mainMenuManager,
-			menuCommands = this.getMenuCommands(...commands)
-		
-		manager.showCommand(...menuCommands)
+		this.menuManagerFn(manager => manager.showItem(...items))
 	}
 	
 	/**
 	 * Unmount a set of menu commands on the main process
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	private unmountMenuCommand(...commands:ICommand[]) {
+	private unmountMenuItems(...items:ICommandMenuItem[]) {
 		const
-			manager = this.mainMenuManager,
-			menuCommandIds = commands
-				.filter(it => it.menuPath)
-				.map(it => it.id)
+			menuItemIds = items.map(it => it.id)
 		
-		log.debug(`Unmounting menu command`,...menuCommandIds)
-		manager.hideCommand(...menuCommandIds)
+		log.debug(`Unmounting menu command`,...menuItemIds)
+		
+		this.menuManagerFn(manager => manager.hideItem(...menuItemIds))
+		
 		
 	}
 	
@@ -530,7 +647,7 @@ export class CommandManager {
 	 * @param commands
 	 */
 	private mountCommand(...commands:ICommand[]) {
-		this.mountMenuCommand(...commands)
+		this.mountMenuItems(...this.getMenuItemsFromCommands(commands))
 		
 		
 		
@@ -542,26 +659,48 @@ export class CommandManager {
 	 * @param commands
 	 */
 	private unmountCommand(...commands:ICommand[]) {
-		this.unmountMenuCommand(...commands)
+		this.unmountMenuItems(...this.getMenuItemsFromCommands(commands))
 	}
 	
-	
+	/**
+	 * Create a command updater
+	 *
+	 * @param cmd
+	 * @returns {(patch:any)=>undefined}
+	 */
+	private makeCommandUpdater(cmd:ICommand) {
+		return (patch) => {
+			const
+				patchedCmd = _.assign(_.clone(cmd),patch)
+			
+			this.registerItems([patchedCmd],[])
+		}
+	}
 	
 	/**
 	 * Register commands
 	 *
 	 * @param commands
+	 * @param menuItems
 	 */
-	registerCommand(...commands:ICommand[]) {
+	registerItems(commands:ICommand[], menuItems:ICommandMenuItem[]) {
 		const
-			windowId = process.env.EPIC_WINDOW_ID && process.env.EPIC_WINDOW_ID !== 'undefined' ? process.env.EPIC_WINDOW_ID : null
+			windowId = process.env.EPIC_WINDOW_ID && process.env.EPIC_WINDOW_ID !== 'undefined' ? process.env.EPIC_WINDOW_ID : null,
+			expandId = (id:string) => {
+				if (windowId && id.indexOf(`${windowId}-`) !== 0) {
+					id = `${windowId}-${id}`
+				}
+				return id
+			},
+			ensureValidId = (cmdOrMenuItem:ICommand|ICommandMenuItem) => {
+				cmdOrMenuItem.id = expandId(cmdOrMenuItem.id)
+			}
 		
 		commands.forEach(cmd => {
-			assert(cmd.id && cmd.name,`A command can not be registered without an id & name`)
+			cmd.id = cmd.id || cmd.name
+			assert(cmd.id,`A command can not be registered without an id & name`)
 			
-			if (windowId && cmd.id.indexOf(`${windowId}-`) !== 0) {
-				cmd.id = `${windowId}-${cmd.id}`
-			}
+			ensureValidId(cmd)
 			
 			// ADD OR UPDATE
 			const
@@ -574,32 +713,62 @@ export class CommandManager {
 			}
 			
 			// IF AN UPDATE MANAGER IS PROVIDED THEN SEND AN UPDATER
-			if (cmd.updateManager)
-				cmd.updateManager(cmd,{
-					setHidden:(hidden:boolean) =>
-						this.registerCommand(Object.assign(cmd,{hidden})),
-					setEnabled:(enabled:boolean) =>
-						this.registerCommand(Object.assign(cmd,{enabled})),
-					update:(cmd:ICommand) => this.registerCommand(cmd)
+			if (cmd.updateManager) {
+				const
+					cmdUpdater = this.makeCommandUpdater(cmd)
+				
+				cmd.updateManager(cmd, {
+					setHidden: (hidden:boolean) =>
+						cmdUpdater({ hidden })
+					,
+					
+					setEnabled: (enabled:boolean) =>
+						cmdUpdater({ enabled })
+					,
+					update: (newCmd:ICommand) =>
+						cmdUpdater(newCmd)
 				})
+			}
 		})
+		
+		const
+			allMenuItems:ICommandMenuItem[] = (menuItems || []).concat(this.getMenuItemsFromCommands(commands))
+		
+		allMenuItems.forEach(item => {
+			assert(item.id || item.label,`Menu ID or label is required`)
+			ensureValidId(item)
+		})
+		
 		// FINALLY UPDATE MENU ITEMS
-		log.debug(`Mounting menu command`,commands.map(it => it.id))
-		this.updateMenuCommands(commands)
+		log.debug(`Mounting menu command`,allMenuItems.map(it => it.id))
+		this.updateMenuItems(allMenuItems)
+		this.updateGlobalCommands(commands)
 	}
 	
 	/**
 	 * Un-register commands
 	 *
 	 * @param commands
+	 * @param menuItems
 	 */
-	unregisterCommand(...commands:ICommand[]) {
+	unregisterItems(commands:ICommand[],menuItems:ICommandMenuItem[]) {
 		commands.forEach(cmd => {
 			delete this.commands[cmd.id]
 		})
 		
 		// FINALLY MAKE SURE MENU ITEMS ARE REMOVED
-		this.removeMenuCommands(commands)
+		this.removeMenuItems(this.getAllMenuItems(commands,menuItems))
+	}
+	
+	/**
+	 * Get all menu items from commands and
+	 * base menu items
+	 *
+	 * @param commands
+	 * @param menuItems
+	 */
+	private getAllMenuItems(commands:ICommand[],menuItems:ICommandMenuItem[]):ICommandMenuItem[] {
+		return _.uniqBy(this.getMenuItemsFromCommands(commands).concat(menuItems),'id')
 	}
 	
 	/**
@@ -608,10 +777,11 @@ export class CommandManager {
 	 * @param id
 	 * @param container
 	 * @param commands
+	 * @param menuItems
 	 */
-	registerContainerCommand(id:string, container:TCommandContainer, ...commands:ICommand[]) {
+	registerContainerItems(id:string, container:TCommandContainer,commands:ICommand[],menuItems:ICommandMenuItem[]) {
 		
-		this.registerCommand(...commands)
+		this.registerItems(commands,menuItems)
 		
 		const
 			reg = this.getContainerRegistration(id,container,true)
@@ -623,6 +793,14 @@ export class CommandManager {
 				.filter(cmd => !commands.find(it => it.id === cmd.id))
 				.concat(commands)
 		
+		const
+			allMenuItems = this.getAllMenuItems(commands,menuItems)
+		
+		reg.menuItems =
+			reg
+				.menuItems
+				.filter(item => !allMenuItems.find(it => it.id === item.id))
+				.concat(allMenuItems)
 		
 		
 		
@@ -645,7 +823,7 @@ export class CommandManager {
 			reg = this.getContainerRegistration(id,container,false)
 		
 		//status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
-		this.unregisterCommand(...reg.commands)
+		this.unregisterItems(reg.commands,reg.menuItems)
 	}
 	
 	
@@ -694,11 +872,11 @@ export class CommandManager {
 		const
 			reg = this.getContainerRegistration(id,container,available)
 		
-		if (reg.commands) {
+		if (getValue(() => reg.commands.length,0) || getValue(() => reg.menuItems.length,0)) {
 			if (available) {
-				this.registerCommand(...reg.commands)
+				this.registerItems(reg.commands,reg.menuItems)
 			} else {
-				this.unregisterCommand(...reg.commands)
+				this.unregisterItems(reg.commands,reg.menuItems)
 			}
 		}
 		
@@ -761,6 +939,21 @@ export const getCommandManager = getHot(module,'getCommandManager',new Proxy(fun
 })) as () => CommandManager
 
 
+// ADD REMOVE GLOBAL SHORTCUTS
+if (isElectron) {
+	const
+		removeShortcuts = () => getCommandManager().removeGlobalShortcut()
+	
+	if (isMain) {
+		Electron.app.on('will-quit',() => {
+			removeShortcuts()
+			Electron.globalShortcut.unregisterAll()
+		})
+	} else {
+		Electron.remote.getCurrentWindow().on('close',removeShortcuts)
+	}
+}
+
 /**
  * Default export is the singleton getter
  */
@@ -768,7 +961,7 @@ export default getCommandManager
 
 
 // REF TYPE FOR GETTER
-type getCommandManagerType = typeof getCommandManager
+export type getCommandManagerType = typeof getCommandManager
 
 /**
  * Add getCommandManager onto the global scope

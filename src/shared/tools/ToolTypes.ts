@@ -77,6 +77,7 @@ export interface IToolPanel {
 	id:string
 	location:ToolPanelLocation
 	tools:{[toolId:string]:ITool}
+	toolIds:string[]
 	open:boolean
 	isDefault?:boolean
 	data?:any
@@ -131,6 +132,7 @@ export function makeDefaultToolPanel(location:ToolPanelLocation, open = false) {
 		id: ToolPanelLocation[location],
 		location,
 		tools: {},
+		toolIds: [],
 		open
 	}
 }
@@ -142,36 +144,37 @@ export function makeDefaultToolPanel(location:ToolPanelLocation, open = false) {
  * @returns {Map<string,IToolPanel>}
  */
 export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
-	const defaultLocations = [
-		ToolPanelLocation.Right,
-		ToolPanelLocation.Left,
-		ToolPanelLocation.Bottom
-	]
+	const
+		defaultLocations = [
+			ToolPanelLocation.Right,
+			ToolPanelLocation.Left,
+			ToolPanelLocation.Bottom
+		],
 	
-	const panels = defaultLocations
-		.map(location => ({id:ToolPanelLocation[location],location}))
-		.map(({id,location}) => {
-			const panel = fromPanels[id]
-			if (panel) {
-				log.debug(`Loading existing panel`,panel)
-				return panel
-			}
-			
-			return {
-				id,
-				location,
-				tools:{},
-				open: false
-			}
-		})
+		panels = defaultLocations
+			.map(location => ({id:ToolPanelLocation[location],location}))
+			.map(({id,location}) => {
+				const
+					panel = fromPanels[id] || {}
+				
+				
+				return _.defaults(panel,{
+					id,
+					location,
+					tools:{},
+					toolIds: [],
+					open: false
+				})
+			})
 	
+	// ANY NON-STANDARD PANELS ARE RE-ADDED HERE
 	Object
 		.keys(fromPanels)
-		.filter(id => !Object.keys(panels).includes(id))
-		.forEach(id => panels[id] = fromPanels[id])
+		.filter(id => panels.findIndex(it => it.id === id) === -1)
+		.forEach(id => panels.push(fromPanels[id]))
 	
-	return Object
-		.values(panels)
+	// REDUCE ALL PANELS TO MAP
+	return panels
 		.reduce((panelMap:Map<string,IToolPanel>, panel:IToolPanel) => {
 			return panelMap.set(panel.id,panel)
 		},Map<string,IToolPanel>())

@@ -1,18 +1,25 @@
 import * as React from 'react'
 import filterProps from 'react-valid-props'
+import { IThemedAttributes, ThemedStyles } from "shared/themes/ThemeDecorations"
+import { PureRender } from "ui/components/common"
 
 const log = getLogger(__filename)
 
-const styles = {
+const baseStyles = (topStyles,theme,palette) => ({
 	page: makeStyle(FlexRowCenter,FlexScale,PositionRelative,{
 		overflow: 'hidden'
 	})
-}
+})
 
-export interface IPageProps extends React.HTMLAttributes<any> {
+export interface IPageProps {
 	onResize?:Function
+	style?:any
+	styles?:any
+	id?:string
 }
 
+@ThemedStyles(baseStyles)
+@PureRender
 export class Page extends React.Component<IPageProps,any> {
 
 
@@ -28,8 +35,11 @@ export class Page extends React.Component<IPageProps,any> {
 
 	render() {
 
-		let {style} = this.props
-		const pageStyle = makeStyle(styles.page,style)
+		let
+			{style,styles} = this.props
+		
+		const
+			pageStyle = makeStyle(styles.page,style)
 
 		return <div {...filterProps(this.props)} style={pageStyle}>
 			{this.props.children}

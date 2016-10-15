@@ -22,7 +22,7 @@ import { User } from "shared/models/User"
 import { Label } from "shared/models/Label"
 import { Milestone } from "shared/models/Milestone"
 import { uiStateSelector } from "shared/actions/ui/UISelectors"
-import { Dialogs } from 'shared/config/DialogsAndSheets'
+import { Dialogs } from 'shared/config/WindowConfig'
 import { IssuePatchModes, TIssuePatchMode } from "shared/actions/issue/IssueState"
 import { TypeAheadSelect } from "ui/components/common/TypeAheadSelect"
 import {
@@ -33,7 +33,7 @@ import LabelChip from "ui/components/common/LabelChip"
 import { IssueLabelsAndMilestones } from "ui/components/issues"
 import { Avatar } from 'ui/components/common'
 import { CommonKeys } from "shared/KeyMaps"
-import { WindowConfigs } from "shared/WindowConfig"
+import { DialogConfigs } from "ui/DialogsAndSheets"
 import { addHotDisposeHandler } from "shared/util/HotUtils"
 import { getIssueActions, getUIActions } from "shared/actions/ActionFactoryProvider"
 import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"

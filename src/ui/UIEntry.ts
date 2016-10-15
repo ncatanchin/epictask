@@ -4,7 +4,10 @@ import './UIGlobals'
 import { Events } from "shared/config/Events"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { benchmark } from "shared/util/Benchmark"
+import { benchmarkLoadTime } from "shared/util/UIUtil"
+import { SimpleMenuManagerProvider } from "shared/commands/CommandSimpleMenuManager"
 
+benchmarkLoadTime(`Starting UIEntry`)
 
 const
 	log = getLogger(__filename)
@@ -21,7 +24,11 @@ const setupDevTools = benchmark('Setup dev tools',() => {
  */
 const setupCommandManager = benchmark('Setup Command Manager', () => {
 	log.debug(`Loading the CommandManager - 1st`)
-	require('shared/commands/CommandManager').getCommandManager()
+	
+	const
+		commandManager = require('shared/commands/CommandManager').getCommandManager()
+	
+	commandManager.setMenuManagerProvider(SimpleMenuManagerProvider)
 })
 
 /**
@@ -56,10 +63,13 @@ const childServicesBoot = benchmark('Child service boot', async () => {
  */
 const boot = benchmark('UIBoot', async ()=> {
 	
+	benchmarkLoadTime(`Boot starting`)
 	const
 		storeBuilder = require('shared/store/AppStoreBuilder').default
 	
 	await storeBuilder()
+	
+	benchmarkLoadTime(`Store built`)
 	
 	let
 		stopAppStoreServer = null
@@ -82,10 +92,13 @@ const boot = benchmark('UIBoot', async ()=> {
 		
 	}
 	
+	benchmarkLoadTime(`Getting service manager`)
+	
 	// START THE SERVICE MANAGER EVERYWHERE
 	const
 		getServiceManager = require('shared/services').getServiceManager
 	
+	benchmarkLoadTime(`Starting services`)
 	
 	// HMR STOP SERVICES
 	addHotDisposeHandler(module,() => {
@@ -99,6 +112,7 @@ const boot = benchmark('UIBoot', async ()=> {
 	
 	log.info('Starting all services')
 	await getServiceManager().start()
+	benchmarkLoadTime(`services started`)
 	
 	// Load Styles
 	require('shared/themes/styles')
@@ -106,14 +120,26 @@ const boot = benchmark('UIBoot', async ()=> {
 	// Now the theme manager
 	require("shared/themes/ThemeManager")
 	
-	// Finally load the AppRoot
-	require('ui/components/root/AppRoot')
+	benchmarkLoadTime(`themes loaded`)
+	// Finally load the AppRoot (sep chunk - faster compile - i hope)
+	require.ensure(['ui/components/root/AppRoot'],function(require) {
+		benchmarkLoadTime(`Loading app root`)
+		require('ui/components/root/AppRoot')
+		benchmarkLoadTime(`Loaded App root`)
+	})
+	//
+	// require('ui/components/root/AppRoot')
 
 })
 
-// Kick it off
+
+// BENCHMARK
+benchmarkLoadTime(`before dev tools & command manager`)
 setupDevTools()
+benchmarkLoadTime(`after dev tools`)
 setupCommandManager()
+
+benchmarkLoadTime(`after command manager`)
 boot().then(() => console.log('Booted App'))
 
 acceptHot(module,log)

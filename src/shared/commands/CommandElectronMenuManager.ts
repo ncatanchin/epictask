@@ -1,23 +1,24 @@
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommand } from "shared/commands/Command"
+import { ICommandMenuManager, ICommandMenuItem } from "shared/commands/Command"
 import { inElectron } from "shared/util/ElectronUtil"
 import { isMain } from "shared/commands/CommandManagerConfig"
 import { shallowEquals } from "shared/util/ObjectUtil"
 import Electron = require('electron')
+import { getCommandManagerType, getCommandManager } from "shared/commands/CommandManager"
 
 const
 	log = getLogger(__filename),
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
-		clazz:typeof CommandMainMenuManager,
-		instance:CommandMainMenuManager,
-		hotInstance:CommandMainMenuManager
+		clazz:typeof CommandElectronMenuManager,
+		instance:CommandElectronMenuManager,
+		hotInstance:CommandElectronMenuManager
 	}
 
 // DEBUG ENABLE
 log.setOverrideLevel(LogLevel.DEBUG)
-	
+
 	
 /**
  * Determine if a menu or item list has items
@@ -38,18 +39,18 @@ export interface ICommandMenuItemRegistration {
 	mounted:boolean
 	mountMenu?:Electron.Menu
 	mountIndex?:number
-	cmd:ICommand
+	item:ICommandMenuItem
 	accelerator?:string
 }
 	
 /**
  * Manage Electron Main Menu
  */
-export class CommandMainMenuManager {
+export class CommandElectronMenuManager implements ICommandMenuManager {
 	
 	static getInstance() {
 		if (!instanceContainer.instance)
-			instanceContainer.instance = new CommandMainMenuManager()
+			instanceContainer.instance = new CommandElectronMenuManager()
 		
 		return instanceContainer.instance
 	}
@@ -81,31 +82,28 @@ export class CommandMainMenuManager {
 	 */
 	private removeMenuItem(item:Electron.MenuItem) {
 		item.visible = false
-		// const
-		// 	managedIndex = this.menuItems.findIndex(it => it === item || (it as any).id === (item as any).id)
-		//
-		// if (managedIndex > -1)
-		// 	this.menuItems.splice(managedIndex,1)
 	}
+	
+	
+	
 	
 	/**
 	 * Create a new menu item from a command
 	 *
-	 * @param cmd
+	 * @param item
 	 */
-	private makeMenuItem(cmd:ICommand) {
+	private makeMenuItem(item:ICommandMenuItem) {
 		const
 			{MenuItem} = Electron
 		
 		return new MenuItem({
-			label: cmd.name,
-			id: cmd.id,
-			enabled: cmd.enabled,
-			visible: cmd.hidden !== true,
-			accelerator: cmd.electronAccelerator,
+			label: item.label,
+			id: item.id,
+			enabled: item.enabled,
+			visible: item.hidden !== true,
 			click: (event) => {
-				log.info(`Menu Execute`,cmd)
-				cmd.execute(cmd,event)
+				log.info(`Menu Execute`,item)
+				item && item.execute && item.execute(item,event)
 			}
 		})
 	}
@@ -113,12 +111,12 @@ export class CommandMainMenuManager {
 	/**
 	 * Get menu item registration
 	 *
-	 * @param cmd
+	 * @param item
 	 * @param createIfMissing
 	 */
-	private getMenuItemRegistration(cmd:ICommand,createIfMissing = true) {
+	private getMenuItemRegistration(item:ICommandMenuItem,createIfMissing = true) {
 		if (!isMain || !inElectron()) {
-			log.warn(`Not in electron environment, can not add menu item`,cmd.id)
+			log.warn(`Not in electron environment, can not add menu item`,item.id)
 			return null
 		}
 		
@@ -126,17 +124,17 @@ export class CommandMainMenuManager {
 			{Menu,MenuItem} = Electron
 		
 		let
-			reg =  this.menuItemRegs[cmd.id]
+			reg =  this.menuItemRegs[item.id]
 		
 		if (!reg && createIfMissing) {
 			const
-				menuItem = this.makeMenuItem(cmd)
+				menuItem = this.makeMenuItem(item)
 			
 			this.menuItems.push(menuItem)
 			
-			reg = this.menuItemRegs[cmd.id] = {
-				id:cmd.id,
-				cmd,
+			reg = this.menuItemRegs[item.id] = {
+				id:item.id,
+				item,
 				mounted: false,
 				menuItem
 			}
@@ -147,34 +145,34 @@ export class CommandMainMenuManager {
 	/**
 	 * Update menu commands
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	updateCommand(...commands:ICommand[]) {
+	updateItem(...items:ICommandMenuItem[]) {
 		setImmediate(() => {
-			commands.forEach(cmd => {
+			items.forEach(item => {
 				const
-					itemReg = this.getMenuItemRegistration(cmd),
+					itemReg = this.getMenuItemRegistration(item),
 					{mounted} = itemReg
 				
 				// CHECK FOR SIMPLE CHANGES
 				if (mounted) {
 					
 					// NO CHANGES
-					if (shallowEquals(itemReg.cmd,cmd)) {
+					if (shallowEquals(itemReg.item,item)) {
 						log.debug(`No menu changes at all`)
 						return
 					}
 					
 					// VISIBILITY OR ENABLED CHANGE ONLY
-					else if (shallowEquals(itemReg.cmd,cmd,'label','electronAccelerator')) {
+					else if (shallowEquals(itemReg.item,item,'label','electronAccelerator')) {
 						const
 							updates = {
-								enabled: cmd.enabled,
-								visible: cmd.hidden !== true
+								enabled: item.enabled,
+								visible: item.hidden !== true
 							}
 						
-						Object.assign(itemReg.cmd, updates,{
-							execute: cmd.execute
+						Object.assign(itemReg.item, updates,{
+							execute: item.execute
 						})
 						
 						Object.assign(itemReg.menuItem, updates)
@@ -186,7 +184,7 @@ export class CommandMainMenuManager {
 				// // UNMOUNT & REMOVE EXISTING ITEM
 				const
 					oldMenuItem = itemReg.menuItem,
-					newMenuItem = this.makeMenuItem(cmd)
+					newMenuItem = this.makeMenuItem(item)
 				
 				oldMenuItem.enabled = false
 				oldMenuItem.visible = false
@@ -198,7 +196,7 @@ export class CommandMainMenuManager {
 
 				// UPDATE AND CREATE NEW ITEM
 				Object.assign(itemReg,{
-					cmd,
+					item,
 					menuItem: newMenuItem
 				})
 				
@@ -210,7 +208,7 @@ export class CommandMainMenuManager {
 
 				// SHOW UPDATE
 				if (mounted)
-					this.internalShowCommand(cmd)
+					this.internalShowItem(item)
 				
 			})
 		})
@@ -220,14 +218,14 @@ export class CommandMainMenuManager {
 	/**
 	 * Internal remove command
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	private internalRemoveCommand(...commands:ICommand[]) {
-		this.internalHideCommand(...commands.map(it => it.id))
+	private internalRemoveItem(...items:ICommandMenuItem[]) {
+		this.internalHideItem(...items.map(it => it.id))
 		
-		commands.forEach(cmd => {
+		items.forEach(item => {
 			const
-				itemReg = this.menuItemRegs[cmd.id]
+				itemReg = this.menuItemRegs[item.id]
 			
 			if (itemReg && itemReg.menuItem) {
 				this.removeMenuItem(itemReg.menuItem)
@@ -240,11 +238,11 @@ export class CommandMainMenuManager {
 	/**
 	 * Remove commands
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	removeCommand(...commands:ICommand[]) {
+	removeItem(...items:ICommandMenuItem[]) {
 		setImmediate(() => {
-			this.internalRemoveCommand(...commands)
+			this.internalRemoveItem(...items)
 		})
 		
 		
@@ -253,10 +251,10 @@ export class CommandMainMenuManager {
 	/**
 	 * Internal show commands function
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	internalShowCommand(...commands:ICommand[]) {
-		if (!commands.length)
+	internalShowItem(...items:ICommandMenuItem[]) {
+		if (!items.length)
 			return
 		
 		const
@@ -264,13 +262,13 @@ export class CommandMainMenuManager {
 			appMenu = Menu.getApplicationMenu()
 		
 		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commands.forEach(cmd => {
-			if (!cmd.menuPath) {
+		items.forEach(item => {
+			if (!item.menuPath) {
 				return
 			}
 			
 			const
-				itemReg = this.getMenuItemRegistration(cmd)
+				itemReg = this.getMenuItemRegistration(item)
 			
 			if (itemReg.mounted) {
 				log.debug(`Already mounted item`, itemReg.id)
@@ -280,7 +278,7 @@ export class CommandMainMenuManager {
 			itemReg.mounted = true
 			
 			const
-				menuPath = cmd.menuPath,
+				menuPath = item.menuPath,
 				
 				// GET THE MENU END POINT
 				menu = menuPath.reduce((currentMenu, nextName) => {
@@ -346,11 +344,11 @@ export class CommandMainMenuManager {
 	 * Add a menu command, if on the renderer it trys to get the
 	 * command manager on the main process
 	 *
-	 * @param commands
+	 * @param items
 	 */
-	showCommand(...commands:ICommand[]) {
+	showItem(...items:ICommandMenuItem[]) {
 		setImmediate(() => {
-			this.internalShowCommand(...commands)
+			this.internalShowItem(...items)
 		})
 	}
 	
@@ -358,12 +356,12 @@ export class CommandMainMenuManager {
 	/**
 	 * Internal hide command - actually hides commands
 	 *
-	 * @param commandIds
+	 * @param itemIds
 	 */
-	private internalHideCommand(...commandIds) {
-		log.debug(`Going to try and unmount: `, commandIds)
+	private internalHideItem(...itemIds) {
+		log.debug(`Going to try and unmount: `, itemIds)
 		
-		if (!commandIds.length)
+		if (!itemIds.length)
 			return
 		
 		const
@@ -375,12 +373,12 @@ export class CommandMainMenuManager {
 			changes = false
 		
 		//ITERATE COMMANDS AND ADD WHENEVER NEEDED
-		commandIds.forEach(commandId => {
+		itemIds.forEach(itemId => {
 			const
-				itemReg = this.menuItemRegs[commandId],
-				cmd = itemReg && itemReg.cmd
+				itemReg = this.menuItemRegs[itemId],
+				item = itemReg && itemReg.item
 			
-			if (!itemReg || !cmd.menuPath || !itemReg.mounted || !itemReg.menuItem.visible) {
+			if (!itemReg || !item.menuPath || !itemReg.mounted || !itemReg.menuItem.visible) {
 				log.debug(`Called addMenuItem, not registered or not mounted or no menu path or already hidden`)
 				return
 			}
@@ -436,11 +434,11 @@ export class CommandMainMenuManager {
 	/**
 	 * Remove menu commands (unmount them)
 	 *
-	 * @param commandIds
+	 * @param itemIds
 	 */
-	hideCommand(...commandIds:string[]) {
+	hideItem(...itemIds:string[]) {
 		setImmediate(() => {
-			this.internalHideCommand(...commandIds)
+			this.internalHideItem(...itemIds)
 		})
 	}
 	
@@ -453,36 +451,64 @@ export class CommandMainMenuManager {
 /**
  * Get the command main menu manager from anywhere
  */
-export const getCommandMainMenuManager = getHot(module,'getCommandMainMenuManager',new Proxy(function(){},{
+export const getCommandElectronMenuManager = getHot(module,'getCommandElectronMenuManager',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {
 		return instanceContainer.clazz.getInstance()
 	}
-})) as () => CommandMainMenuManager
+})) as () => CommandElectronMenuManager
 
 
 /**
  * Default export is the singleton getter
  */
-export default getCommandMainMenuManager
+export default getCommandElectronMenuManager
+
+
+
+/**
+ * Get the command manager on the main process
+ *
+ * @returns {CommandManager}
+ */
+function getMainCommandManager() {
+	return (isMain ? getCommandManager() :
+		(require('electron').remote.getGlobal('getCommandManager') as getCommandManagerType)())
+}
+
+/**
+ * Return the main process menu manager
+ *
+ * @returns {any}
+ */
+
+export const ElectronMainManagerProvider = () => {
+	return 	(isMain) ?
+		getCommandElectronMenuManager() :
+		getMainCommandManager().getMenuManager()
+}
+
 
 
 // REF TYPE FOR GETTER
-export type getCommandMainMenuManagerType = typeof getCommandMainMenuManager
+export type getCommandElectronMenuManagerType = typeof getCommandElectronMenuManager
 
 /**
  * Add getCommandManager onto the global scope
  */
 if (DEBUG)
-	assignGlobal({getCommandMainMenuManager})
+	assignGlobal({getCommandElectronMenuManager})
 
 
-instanceContainer.clazz = CommandMainMenuManager
+instanceContainer.clazz = CommandElectronMenuManager
 
 /**
  * Update the singleton on HMR reload
  */
 if (instanceContainer.hotInstance) {
-	Object.setPrototypeOf(instanceContainer.hotInstance,CommandMainMenuManager.prototype)
+	Object.setPrototypeOf(
+		instanceContainer.hotInstance,
+		CommandElectronMenuManager.prototype
+	)
 }
 
 setDataOnHotDispose(module,() => ({
@@ -490,7 +516,7 @@ setDataOnHotDispose(module,() => ({
 	instanceContainer:assign(instanceContainer,{
 		hotInstance: instanceContainer.instance
 	}),
-	getCommandMainMenuManager
+	getCommandElectronMenuManager
 }))
 
 acceptHot(module,log)

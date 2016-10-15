@@ -27,7 +27,7 @@ module.exports = function(content) {
 						${isTS ? '(console as any)' : 'console'}.log(...hotLogArgs)
 				}
 				
-				module.hot.accept(() => hotLog('HMR Updating ProxyProvided',typeof __filename !== 'undefined' ? __filename : '${resourcePath}'))
+				module.hot.accept(() => hotLog('HMR Updating ProxyProvided',typeof __filename !== 'undefined' ? __filename : '${resourcePath.replace(/\\/g,'/')}'))
 			}	
 		`
 	}

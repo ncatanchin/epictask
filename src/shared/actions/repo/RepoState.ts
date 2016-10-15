@@ -28,12 +28,12 @@ export class RepoState extends RepoStateRecord {
 		return reviveImmutable(o,RepoState,['availableRepos'])
 	}
 	
-	toJS() {
-		return {
-			selectedRepoIds: this.selectedRepoIds,
-			availableRepos: _.toJS(this.availableRepos)
-		}
-	}
+	// toJS() {
+	// 	return {
+	// 		selectedRepoIds: this.selectedRepoIds,
+	// 		availableRepos: _.toJS(this.availableRepos)
+	// 	}
+	// }
 	
 	
 	selectedRepoIds:number[]

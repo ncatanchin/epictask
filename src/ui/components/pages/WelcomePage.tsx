@@ -12,11 +12,11 @@ import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
-import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
-import {makeLinearGradient, Transparent} from "shared/themes"
+import { Transparent, FlexColumnCenter, Fill, FlexScale, rem } from "shared/themes"
 import { SearchType } from "shared/actions/search"
 import { SearchPanel } from "ui/components/search"
+import { Logo } from "ui/components/common/Logo"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 
 const
@@ -29,17 +29,22 @@ const
 	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
 	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
 
-const baseStyles:any = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	
 	page:[],
-	bodyWrapper: [FlexScale,Fill],
+	bodyWrapper: [FlexRowCenter,Fill, makePaddingRem(1)],
 	viewWrapper:[FlexScale,Fill,{
 		borderStyle: 'solid',
 		borderWidth: rem(0.1)
 	}],
 	
+	logo: [makeMarginRem(0,2,0,0)],//[makeMarginRem(0,0,3,0)],
+	
 	search: [ {
 		backgroundColor: Transparent,
+		minWidth: 'auto',
+		maxWidth: 600,
+		
 		
 		field: [ {
 			backgroundColor: Transparent
@@ -53,12 +58,11 @@ const baseStyles:any = createStyles({
 	
 })
 
-interface IWelcomePageProps {
-	theme?:any
-	styles?:any
+export interface IWelcomePageProps extends IThemedAttributes {
+	
 }
 
-interface IWelcomePageState {
+export interface IWelcomePageState {
 	width?:number
 	searchPanelRef?:any
 }
@@ -98,16 +102,22 @@ export class WelcomePage extends React.Component<IWelcomePageProps,IWelcomePageS
 			{accent} = palette
 		
 		
-		return <Page onResize={this.updateState} id="homePage">
+		return <Page onResize={this.updateState} id="welcomePage">
 			
 			<div style={styles.bodyWrapper}>
-				
+				<Logo eHidden style={styles.logo} />
 				<SearchPanel
 					ref={this.setSearchPanelRef}
 					searchId='welcome-repo-search'
 					types={[
 						SearchType.Repo
 					]}
+					hint={
+						<span>
+							Import <i><strong>angular</strong></i>
+							&nbsp;&nbsp;or <i><strong>docker</strong></i>&nbsp;&nbsp;or one of your repos
+						</span>
+					}
 					inlineResults={false}
 					expanded={false}
 					panelStyle={styles.search}

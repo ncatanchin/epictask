@@ -1,114 +1,213 @@
 import * as React from 'react'
 
-
-import {FlatButton} from 'material-ui'
 import {Page} from './Page'
-import {GitHubConfig} from "shared/config/GithubConfig"
+import {connect} from 'react-redux'
+import {createStructuredSelector} from 'reselect'
 import { getAuthActions } from "shared/actions/ActionFactoryProvider"
-import { Themed } from "shared/themes/ThemeManager"
-import { PureRender } from "ui/components/common"
-
+import { PureRender, Icon } from "ui/components/common"
+import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { makeHeightConstraint, PositionAbsolute, makeWidthConstraint, FillWindow, Fill } from "shared/themes"
+import { Logo } from "ui/components/common/Logo"
+import { getValue } from "shared/util/ObjectUtil"
+import { authenticatingSelector } from "shared/actions/auth/AuthSelectors"
 
 const
 	log = getLogger(__filename)
 
-const styles = {
-	page: makeStyle(FlexColumnCenter,FlexScale,{
-		// WebkitAppRegion: 'drag'
-	}),
-
-	panel: makeStyle(FlexAuto,FlexColumn,{
-
-	}),
-
-	logo: makeStyle({
-		maxWidth: '80vw',
-		height: 'auto',
-		paddingBottom: '5vh'
-	}),
-
-	label: makeStyle({
-		fontSize: '2rem',
-		textTransform: 'none'
-	}),
-
-	icon:  makeStyle({
-		paddingRight: '2rem',
-		fontSize: '6rem',
-		textTransform: 'none'
-	})
+function baseStyles(topStyles,theme,palette) {
+	const
+		{text,primary} = palette
+	
+	return {
+		page: [ FillWindow, {
+			WebkitAppRegion: 'drag',
+		} ],
+		
+		authenticating: [ {
+			pointerEvents: 'none'
+		} ],
+		
+		
+		panel: [ FlexAuto, FlexColumn, {} ],
+		
+		logo: [
+			PositionAbsolute,
+			{
+				left: '50%',
+				top: '50%',
+				transform: 'translate(-50%,-50%)',
+				
+				spinner: [ Fill, {
+					//animationDuration: '6s'
+				} ]
+				
+			}
+		],
+		
+		button: [ makeTransition([ 'opacity', 'color', 'background-color' ]), PositionAbsolute, {
+			left: '50%',
+			top: '50%',
+			transform: 'translate(-50%,-50%)',
+			cursor: 'pointer',
+			WebkitAppRegion: 'no-drag2',
+			
+			//border: `0.1rem solid ${palette.accent4ColorText}`,
+			//borderRadius: '0.2rem',
+			//height: 'auto',
+			opacity: 1,
+			backgroundColor: Transparent,
+			
+			':hover': {}
+		} ],
+		
+		label: [ PositionAbsolute, makeTransition('opacity'), {
+			left: '50%',
+			top: '50%',
+			transform: 'translate(-50%,-50%)',
+			opacity: 1,
+			color: text.primary,
+			textAlign: 'center',
+			pointerEvents: 'none',
+			letterSpacing: rem(1),
+			//fontStyle: 'italic',
+			fontWeight: 700,
+			hovering: [ {
+				opacity: 0
+			} ]
+		} ],
+		
+		icon: [ PositionAbsolute, makeTransition('opacity'), {
+			left: '50%',
+			top: '50%',
+			transform: 'translate(-50%,-50%)',
+			opacity: 0,
+			pointerEvents: 'none',
+			textAlign: 'center',
+			color: text.primary,
+			hovering: [ {
+				opacity: 1
+			} ]
+		} ]
+	}
 }
 
-interface ILoginPageProps {
-	theme?:any
+export interface ILoginPageProps extends IThemedAttributes {
+	authenticating?:boolean
 }
 
+export interface ILoginPageState {
+	logoStyle:any
+	buttonStyle:any
+}
 
 /**
  * LOGIN PAGE
  */
-@Themed
+@connect(createStructuredSelector({
+	authenticating: authenticatingSelector
+}))
+@ThemedStyles(baseStyles)
 @PureRender
 export class LoginPage extends React.Component<ILoginPageProps,any> {
-
-	constructor(props, context) {
-		super(props, context)
-	}
-
-
-	startAuth = () => {
-		const
-			authActions = getAuthActions(),
-			GitHubOAuthWindow = require('main/auth/GitHubOAuthWindow').default,
-			authRequest = new GitHubOAuthWindow(GitHubConfig)
+	
+	constructor(props,context) {
+		super(props,context)
 		
-		authActions.setAuthenticating(true)
+		this.state = {}
+	}
+	
+	/**
+	 * Show the auth popup
+	 *
+	 */
+	startAuth = () => {
+		
+		
+		getAuthActions().startAuth()
 		
 		// Start authentication
-		authRequest.startRequest(function(err,token) {
-			authActions.setAuthResult(err,token)
+		
+	}
+	
+	private updateStyles = () => {
+		const
+			dim = Math.min(window.innerHeight,window.innerWidth) / 2
+		
+		this.setState({
+			buttonStyle: makeStyle(
+				makeHeightConstraint(dim),
+				makeWidthConstraint(dim),
+				{
+					fontSize: dim
+				}
+			),
+			logoStyle: makeStyle(
+				makeHeightConstraint(dim),
+				makeWidthConstraint(dim)
+			)
 		})
+		
+	}
+	
+	
+	componentWillMount():void {
+		this.updateStyles()
+		window.addEventListener('resize',this.updateStyles)
+	}
+	
+	componentWillUnmount():void {
+		window.removeEventListener('resize',this.updateStyles)
 	}
 	
 	render() {
 		const
 			{props} = this,
-			{theme} = props,
-			{palette} = theme,
+			{authenticating,styles} = props,
+			buttonHovering = Radium.getState(this.state,'authButton',':hover')
+			
 
-			pageStyle = makeStyle(styles.page,{
-				backgroundColor: palette.accent4Color,
-				color: palette.accent4ColorText
-			}),
-
-
-
-			buttonStyle = makeStyle(styles.label,{
-				border: `0.1rem solid ${palette.accent4ColorText}`,
-				borderRadius: '0.2rem',
-				padding: '1rem',
-				height: 'auto',
-				color: palette.textColor
-			})
 
 		return (
-			<Page style={pageStyle} id='loginPage'>
-				{/*Login here, <Link to="/repos">Goto Repos</Link>*/}
-				<div style={styles.panel}>
-					<img style={styles.logo}
-					     src={require('assets/images/epictask-logo-rainbow.png')}/>
-					<FlatButton
-						style={buttonStyle}
-						hoverColor={palette.accent3Color}
-						onClick={this.startAuth}>
-
-						<div style={makeStyle(FlexRowCenter)}>
-							<span className='fa' style={styles.icon}>{'\uf09b'}</span>
-							<span style={styles.label}>Login</span>
-						</div>
-					</FlatButton>
-
+			<Page style={makeStyle(
+							styles.page)}
+			      id='loginPage'>
+				
+				<Logo style={makeStyle(styles.logo,getValue(() => this.state.logoStyle))}
+				      eHidden={true}
+				      spinnerStyle={styles.logo.spinner} />
+				      
+			
+				<div ref="authButton"
+				     onClick={this.startAuth}
+				     style={makeStyle(
+								styles.button,
+								getValue(() => this.state.buttonStyle),
+								authenticating && styles.authenticating
+							)}
+				     >
+					<Icon
+						style={makeStyle(
+							styles.icon,
+							getValue(() => this.state.buttonStyle),
+							buttonHovering && styles.icon.hovering,
+							authenticating && styles.authenticating
+						)}
+						iconName='github'
+						iconSet='fa' />
+					<div style={makeStyle(
+							styles.label,
+							//getValue(() => this.state.buttonStyle),
+							{
+								fontSize: getValue(() => this.state.buttonStyle.fontSize / 6,rem(2) as any)
+							},
+							buttonHovering && styles.label.hovering,
+							authenticating && styles.authenticating
+						)}>
+						start
+					</div>
 				</div>
+
+			
 			</Page>
 		)
 	}

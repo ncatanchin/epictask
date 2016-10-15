@@ -1,14 +1,19 @@
 
 
+
+import 'shared/NodeEntryInit'
+
 import { acceptHot } from "shared/util/HotUtils"
-require('shared/NodeEntryInit')
 
 import checkSingleInstance from "main/CheckSingleInstance"
 import * as MainWindowType from './MainWindow'
 import {getServiceManager as getServiceManagerType} from "shared/services"
 import { Events } from "shared/config/Events"
 import { getProcessManager } from "shared/ProcessManagement"
+
+
 import './MainAppSwitches'
+
 const
 	{app,BrowserWindow} = require('electron'),
 	log = getLogger(__filename),
@@ -103,6 +108,21 @@ async function startProcesses() {
 	
 }
 
+
+export function loadCommandManager() {
+	const
+		commandManagerMod = require('shared/commands/CommandManager'),
+		commandManager = commandManagerMod.getCommandManager(),
+		
+		electronMenuProvider =
+			require('shared/commands/CommandElectronMenuManager')
+				.ElectronMainManagerProvider
+	
+	
+	commandManager.setMenuManagerProvider(electronMenuProvider)
+	return commandManager
+}
+
 /**
  * Boot the app
  */
@@ -117,7 +137,10 @@ async function boot() {
 	
 	
 	log.debug("Boot start")
-	require('shared/commands/CommandManager').getCommandManager()
+	loadCommandManager()
+		
+	
+	
 	global[Events.MainBooted] = false
 	
 	log.debug("Load Main Window")
@@ -159,9 +182,12 @@ function onStart() {
 }
 
 if (checkSingleInstance(app,onFocus)) {
-	
+	log.info(`Is single instance`)
 	// app.on('will-quit',onWillQuit)
-	app.on('ready', onStart)
+	if (app.isReady())
+		onStart()
+	else
+		app.on('ready', onStart)
 }
 
 /**

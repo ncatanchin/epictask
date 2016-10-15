@@ -14,7 +14,10 @@ import { Milestone, Label, User } from "shared/models"
  * @param state
  * @return {RepoState}
  */
-export const repoStateSelector:(state) => RepoState = (state) => state.get(RepoKey)
+export const repoStateSelector:(state) => RepoState = createSelector(
+	(state:any) => state.get(RepoKey),
+	(repoState:RepoState) => repoState
+)
 
 /**
  * Get repo id from object
@@ -54,7 +57,7 @@ export const repoIdPredicate = (o:any) => {
  */
 export const availableReposSelector = createSelector(
 	repoStateSelector,
-	(state):List<AvailableRepo> => state.availableRepos
+	(state:RepoState):List<AvailableRepo> => state.availableRepos
 )
 	
 

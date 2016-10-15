@@ -10,6 +10,7 @@ import {tempFilename,getUserDataFilename} from 'shared/util/Files'
 import {ProcessNames} from "shared/ProcessType"
 import * as uuid from 'node-uuid'
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
+import { makeIPCServerId } from "shared/net/IPCUtil"
 
 // Logger
 const log = getLogger(__filename)
@@ -19,7 +20,7 @@ const ipc = require('node-ipc')
 
 let startDeferred:Promise.Resolver<any> = null
 
-ipc.config.id = ProcessNames.DatabaseServer
+ipc.config.id = makeIPCServerId(ProcessNames.DatabaseServer)
 ipc.config.retry = 1500
 ipc.config.silent = true
 

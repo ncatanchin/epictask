@@ -5,12 +5,20 @@ import {PureRender, Icon, Button} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {IToastMessage, ToastMessageType} from "shared/models/Toast"
 import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
 
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
-	root:        [makeTransition(['opacity', 'height']), OverflowHidden, PositionRelative, FlexRow, FlexAlignEnd,makeMarginRem(0.5), {
+const baseStyles = (topStyles,theme,palette) => ({
+	root:        [
+		makeTransition(['opacity', 'height']),
+		OverflowHidden,
+		PositionRelative,
+		
+		FlexRow,
+		FlexAlignEnd,
+		makeMarginRem(0.5), {
 		
 		width:           '100%',
 		maxWidth:        '100%',
@@ -105,7 +113,7 @@ export class ToastMessage extends React.Component<IToastMessageProps,void> {
 		log.info(`Toast message with id: ${msg.id}`)
 		return <div key={msg.id}
 		            className={'toastMessage ' + (animate ? 'animated bounce' : '')}
-		            onClick={() => Container.get(UIActionFactory).removeMessage(msg.id)}
+		            onClick={() => getUIActions().removeMessage(msg.id)}
 		            style={styles.root}>
 			
 			<div style={makeStyle(styles.content)}>
@@ -113,7 +121,7 @@ export class ToastMessage extends React.Component<IToastMessageProps,void> {
 				
 				<span style={makeStyle(styles.text,fg)}>{msg.content}</span>
 				{isError && <Button style={[styles.action,actionColors]}
-				                    onClick={() => Container.get(UIActionFactory).removeMessage(msg.id)}>
+				                    onClick={() => getUIActions().removeMessage(msg.id)}>
 					Acknowledge
 				</Button>}
 			</div>

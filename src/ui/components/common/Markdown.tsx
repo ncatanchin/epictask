@@ -5,6 +5,7 @@
 // Imports
 import * as React from 'react'
 import {ThemedNoRadium} from 'shared/themes/ThemeManager'
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')
@@ -13,9 +14,9 @@ const hljs = require('highlight.js')
 // Constants
 const log = getLogger(__filename)
 
-const styles = {
+const baseStyles = (topStyles,theme,palette) => ({
 	root: makeStyle(FlexColumn, FlexAuto, {})
-}
+})
 
 /**
  * Map theme into props - very shorthand
@@ -54,8 +55,7 @@ const CodeBlock = React.createClass({
 /**
  * IMarkdownProps
  */
-export interface IMarkdownProps extends React.HTMLAttributes<any> {
-	theme?:any
+export interface IMarkdownProps extends IThemedAttributes {
 	source?:any
 	className?:string
 	style?:any
@@ -79,7 +79,7 @@ export class Markdown extends React.Component<IMarkdownProps,any> {
 
 	render() {
 		const
-			{theme,source} = this.props,
+			{theme,styles} = this.props,
 			s = mergeStyles(styles, theme.component)
 
 		return <ReactMarkdown {...this.props}

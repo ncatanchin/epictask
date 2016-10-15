@@ -1,6 +1,7 @@
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "shared/net/Transport"
 import Counter from "shared/Counter"
 import { START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
+import { makeIPCServerId } from "shared/net/IPCUtil"
 
 const
 	log = getLogger(__filename),
@@ -96,7 +97,7 @@ export class IPCTransport extends Transport {
 	 * @returns {string}
 	 */
 	get serverName() {
-		return this.opts.hostname
+		return makeIPCServerId(this.opts.hostname)
 	}
 	
 	/**

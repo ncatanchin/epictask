@@ -1,37 +1,43 @@
 
-import {ObservableStore} from 'typedux'
+import * as Radium from 'radium'
+import { ObservableStore } from 'typedux'
+import { Provider } from 'react-redux'
 
-import {Provider} from 'react-redux'
-import {MuiThemeProvider} from 'material-ui/styles'
-import {PureRender} from 'ui/components/common'
-import {Events} from 'shared/config/Events'
-import {AppKey} from 'shared/Constants'
-import {RootState} from 'shared/store/RootState'
+import { MuiThemeProvider } from 'material-ui/styles'
+import { PureRender } from 'ui/components/common/PureRender'
+import { Events } from 'shared/config/Events'
+import { AppKey } from 'shared/Constants'
+import { RootState } from 'shared/store/RootState'
+
 import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
-import { IWindowConfig } from "shared/WindowConfig"
-import { getUIActions, getIssueActions, getAppActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
+import { CommandType, CommandMenuItemType } from "shared/commands/Command"
+import { IWindowConfig } from "shared/config/WindowConfig"
+import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
 import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes"
-import { isString, getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, shallowEquals } from "shared/util/ObjectUtil"
 import { UIRoot } from "ui/components/root/UIRoot"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { Themed } from "shared/themes/ThemeManager"
-import { Sheets } from "shared/config/DialogsAndSheets"
+import { Sheets, DialogConfigs } from "ui/DialogsAndSheets"
 
 // STYLES
-import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
-import { FileDrop } from "ui/components/common/FileDrop"
+//import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
+
+import { PromisedComponent } from "ui/components/root/PromisedComponent"
+import { benchmarkLoadTime } from "shared/util/UIUtil"
+import { MenuIds } from "shared/UIConstants"
 
 
 // Logger, Store +++
 const
+	{ StyleRoot } = Radium,
 	log = getLogger(__filename),
 	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any,
 	win = window as any,
@@ -56,10 +62,18 @@ export interface IAppState {
 	windowStyle?:any
 }
 
-
+const
+	CIDS = {
+		GithubImport: 'GithubImport',
+		GithubSync: 'GithubSync',
+		GlobalNewIssue: 'GlobalNewIssue',
+		FindAction: 'FindAction',
+		CloseWindow: 'CloseWindow'
+	}
 /**
  * Root App Component
  */
+
 @CommandComponent()
 @Themed
 @PureRender
@@ -69,58 +83,126 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	/**
 	 * All global app root window commands
 	 */
-	commands = (builder:CommandContainerBuilder) => {
+	commandItems = (builder:CommandContainerBuilder) => {
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
-				// IMPORT REPO
-				.command(
-					CommandType.App,
-					'Import Repo...',
-					(cmd, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
-					"CommandOrControl+Shift+n", {
-						menuPath:['GitHub']
-					})
 				
-				// SYNC EVERYTHING
 				.command(
 					CommandType.App,
-					'Sync Everything...',
-					(cmd, event) => getRepoActions().syncAll(),
-					"CommandOrControl+s", {
-						menuPath:['GitHub']
-					})
-				// NEW ISSUE
+					'Import Repository',
+					(item, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
+					"CommandOrControl+Shift+n",{
+						id: CIDS.GithubImport
+					}
+				)
+				
 				.command(
 					CommandType.App,
-					'New Issue',
+					'Sync Everything',
+					(item, event) => getRepoActions().syncAll(),
+					"CommandOrControl+s",{
+						id: CIDS.GithubSync
+					}
+				)
+					
+			
+				
+				
+				.command(
+					CommandType.Global,
+					'New Issue Global',
 					(cmd, event) => getIssueActions().newIssue(),
-					"CommandOrControl+n", {
-						menuPath:['Issue']
+					"Control+Alt+n", {
+						id: CIDS.GlobalNewIssue,
+						hidden: true
 					})
 				
+				.command(
+					CommandType.App,
+					'Find action',
+					(item, event) => {
+						log.debug(`Triggering find action`)
+						getUIActions().openSheet(Sheets.FindActionSheet)
+					},
+					"CommandOrControl+Shift+p",{
+						id: CIDS.FindAction
+					}
+				)
 				
+				.menuItem(
+					MenuIds.Navigate,
+					CommandMenuItemType.Menu,
+					'Find',
+					{iconSet: 'fa', iconName: 'search'},
+					{
+						subItems: [builder.makeMenuItem('find-action-menu-item', CIDS.FindAction)]
+					}
+				)
 				
-				
+				// GitHub Menu
+				.menuItem(
+					MenuIds.GitHub,
+					CommandMenuItemType.Menu,
+					'GitHub',
+					{iconSet: 'fa', iconName: 'github'},
+					{
+						id: MenuIds.GitHub,
+						subItems: [
+							{
+								id: 'gh-import-menu-item',
+								type: CommandMenuItemType.Command,
+								commandId: CIDS.GithubImport
+							},
+							{
+								id: 'gh-sync-menu-item',
+								type: CommandMenuItemType.Command,
+								commandId: CIDS.GithubSync
+								
+								
+							}
+						]
+					}
+				)
+			
 			
 		}, () => {
 			
 			builder
-			
-				// CLOSE CHILD WINDOW
+				
 				.command(
-					CommandType.Container,
+					CommandType.App,
 					'Close Window',
 					(cmd, event) => getUIActions().closeWindow(childWindowId),
-					"CommandOrControl+w", {
-						menuPath:['Window']
-					})
+					"CommandOrControl+w",{
+						id: CIDS.CloseWindow
+					}
+				)
+				.menuItem(
+					MenuIds.Navigate,
+					CommandMenuItemType.Menu,
+					'Find',
+					{iconSet: 'fa', iconName: 'search'},
+					{
+						subItems: [{
+							id: 'close-window-menu-item',
+							type: CommandMenuItemType.Command,
+							commandId: CIDS.CloseWindow
+						}]
+					}
+				)
+				
 		})
 		
-			
+		
 		return builder.make()
 	}
 	
+	constructor(props, context) {
+		super(props, context)
+		
+		this.state = {}
+	}
 	
 	/**
 	 * Container id
@@ -158,12 +240,11 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			windowStyle = getValue(() => makeStyle(
 				makeWidthConstraint(window.innerWidth),
 				makeHeightConstraint(window.innerHeight)
-			),FillWindow)
+			), FillWindow)
 		
 		if (shallowEquals(windowStyle, getValue(() => this.state.windowStyle)))
 			return
 		
-		 
 		
 		this.setState({
 			windowStyle,
@@ -175,7 +256,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
-		window.addEventListener('resize',this.onWindowResize)
+		window.addEventListener('resize', this.onWindowResize)
 		this.updateState()
 		
 	}
@@ -184,7 +265,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On unmount - remove window listener
 	 */
 	componentWillUnmount() {
-		window.removeEventListener('resize',this.onWindowResize)
+		window.removeEventListener('resize', this.onWindowResize)
 	}
 	
 	
@@ -194,12 +275,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * @returns {any}
 	 */
 	renderChildWindow() {
-		const
-			ChildRootComponent = childWindowConfig && childWindowConfig.rootElement()
-		
-		log.debug(`Dialog Component`,ChildRootComponent)
-		
-		return <ChildRootComponent />
+		return <PromisedComponent promise={getValue(() => childWindowConfig.rootElement())} />
 	}
 	
 	/**
@@ -208,6 +284,8 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * @returns {any}
 	 */
 	renderMainWindow() {
+		// const
+		// 	UIRoot = require("ui/components/root/UIRoot").UIRoot
 		return <UIRoot />
 	}
 	
@@ -217,25 +295,30 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	render() {
 		
 		const
-			{theme} = this.props,
-			windowStyle = getValue(() => this.state.windowStyle,FillWindow)
-			
-			
-		return <MuiThemeProvider muiTheme={theme}>
-			<Provider store={reduxStore}>
-				
-				<CommandRoot
-					style={windowStyle}
-					component={this}
-					id="appRoot">
+			{ theme } = this.props,
+			windowStyle = getValue(() => this.state.windowStyle, FillWindow)
+		
+		
+		return <StyleRoot>
+			<CommandRoot
+				component={this}
+				id="appRoot"
+				style={windowStyle}>
+				<div style={windowStyle}>
+					<MuiThemeProvider muiTheme={theme}>
+						<Provider store={reduxStore}>
+							
+							
+							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
+						
+						
+						</Provider>
+					</MuiThemeProvider>
 					
-					
-						{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-					
-					
-				</CommandRoot>
-			</Provider>
-		</MuiThemeProvider>
+				</div>
+			</CommandRoot>
+		</StyleRoot>
+		
 	}
 }
 
@@ -259,19 +342,14 @@ function render() {
 		 * After Initial render
 		 */
 		(ref) => {
-			/**
-			 * Tron logging window load time
-			 */
-			const
-				startLoadTime:number = (window as any).startLoadTime,
-				loadDuration = Date.now() - startLoadTime
 			
-			log.tron(`It took a ${loadDuration / 1000}s to load window ${childWindowId ? childWindowId : 'main window'}`)
+			// BENCHMARK
+			benchmarkLoadTime(`render window ${childWindowId ? childWindowId : 'main window'}`)
 			
 			/**
 			 * If main ui then stop load spinner
 			 */
-			If(ProcessConfig.isUI(),() => {
+			If(ProcessConfig.isUI(), () => {
 				
 				// STOP SPINNER
 				if (win.stopLoader)
@@ -292,32 +370,33 @@ function render() {
  * is ready for us to load everything
  */
 function checkIfRenderIsReady() {
-	if (isChildWindow)
-		return render()
-	
-	
-	const
-		state = store.getState(),
-		appState = state ? state.get(AppKey) : null,
-		ready = appState ? appState.ready : false
-
-	if (!ready) {
-		log.info('Theme is not set yet')
-
-		const
-			observer = store.observe([AppKey,'ready'],(newReady) => {
-				log.debug('RECEIVED READY, NOW RENDER',newReady)
-				if (!newReady !== true) {
-					log.debug('Main is not ready',newReady)
-					return
-				}
-				observer()
-				render()
-			})
-
-	} else {
-		render()
-	}
+	render()
+	// if (isChildWindow)
+	// 	return render()
+	//
+	//
+	// const
+	// 	state = store.getState(),
+	// 	appState = state ? state.get(AppKey) : null,
+	// 	ready = appState ? appState.ready : false
+	//
+	// if (!ready) {
+	// 	log.info('Theme is not set yet')
+	//
+	// 	const
+	// 		observer = store.observe([ AppKey, 'ready' ], (newReady) => {
+	// 			log.debug('RECEIVED READY, NOW RENDER', newReady)
+	// 			if (!newReady !== true) {
+	// 				log.debug('Main is not ready', newReady)
+	// 				return
+	// 			}
+	// 			observer()
+	// 			render()
+	// 		})
+	//
+	// } else {
+	// 	render()
+	// }
 }
 
 
@@ -326,30 +405,27 @@ if (isChildWindow) {
 	
 	// GET SESSION & COOKIES
 	const
-		{remote} = require('electron'),
+		{ remote } = require('electron'),
 		webContents = remote.getCurrentWebContents(),
-		{session} = webContents,
-		{cookies} = session
+		{ session } = webContents,
+		{ cookies } = session
 	
 	// GET OUR COOKIE
-	cookies.get({name: childWindowId},(err,cookies) => {
+	cookies.get({ name: childWindowId }, (err, cookies) => {
 		if (err) {
 			log.error(`Failed to get cookies`, err)
 			throw err
 		}
 		
-		log.info('cookies',cookies)
+		log.info('cookies', cookies)
 		
 		const
-			configStr = cookies[0].value
+			configName = cookies[ 0 ].value
+			
 		
-		assert(configStr,`No config found for ${childWindowId}`)
-		childWindowConfig = JSON.parse(configStr,(key,value) => {
-			if (key === 'rootElement' && isString(value)) {
-				return eval(value)
-			}
-			return value
-		})
+		childWindowConfig = DialogConfigs[configName]
+		assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
+		 
 		
 		checkIfRenderIsReady()
 	})
@@ -361,12 +437,10 @@ else {
 }
 
 
-
-
 /**
  * Enable HMR
  */
-acceptHot(module,log)
+acceptHot(module, log)
 
 
 

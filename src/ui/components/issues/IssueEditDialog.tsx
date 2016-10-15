@@ -13,19 +13,17 @@ import { Repo } from 'shared/models/Repo'
 import { User } from 'shared/models/User'
 import { Label } from 'shared/models/Label'
 
-import { Dialogs } from 'shared/config/DialogsAndSheets'
+import { Dialogs } from 'shared/config/WindowConfig'
 import * as Renderers from 'ui/components/common/Renderers'
 import { Icon } from 'ui/components/common/Icon'
-import { Avatar } from 'ui/components/common/Avatar'
 import { LabelFieldEditor } from 'ui/components/common/LabelFieldEditor'
 
 import { MenuItem, SelectField, TextField, } from 'material-ui'
-import { cloneObject, shallowEquals, getValue } from 'shared/util/ObjectUtil'
+import { cloneObject, getValue } from 'shared/util/ObjectUtil'
 import {
 	repoIdPredicate,
-	availableReposSelector, enabledAvailableReposSelector
+	enabledAvailableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
-import { CommonKeys } from 'shared/KeyMaps'
 import { Milestone } from 'shared/models/Milestone'
 import { ThemedStyles, makeThemeFontSize } from 'shared/themes/ThemeManager'
 import { appUserSelector } from 'shared/actions/app/AppSelectors'
@@ -247,12 +245,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	
 	
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.command(CommandType.Container,
 				'Save Comment',
 				(cmd, event) => this.onSave(event),
-				"CommandOrControl+Enter", {})
+				"CommandOrControl+Enter")
+			.command(CommandType.Container,
+				'Close Dialog',
+				this.hide,
+				"Escape")
 			
 			.make()
 	
@@ -264,7 +266,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * Hide/close the window
 	 */
 	private hide = () => {
-		getUIActions().setDialogOpen(Dialogs.IssueEditDialog, false)
+		const
+			childWindowId = getChildWindowId()
+		
+		if (childWindowId)
+			getUIActions().closeWindow(childWindowId)
 	}
 	
 	/**
@@ -426,7 +432,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			let
 				availRepo = availableRepos.find(it => it.id === editingIssue.repoId)
 			
-			labels = availRepo.labels
+			labels = !availRepo ? [] : availRepo.labels
 		}
 		
 		let

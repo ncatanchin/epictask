@@ -1,3 +1,10 @@
+try {
+	require('babel-core/register')
+} catch (err) {}
+try {
+	require('babel-polyfill')
+} catch (err) {}
+
 require('../tools/global-env')
 
 
@@ -32,11 +39,11 @@ const
 function resolveDirs(...dirs) {
 	return dirs.map(dir => {
 		const resolvedPath =
-			['/','.'].includes(dir.charAt(0)) ?
+			['C','/','.'].includes(dir.charAt(0)) ?
 				path.resolve(dir) :
 				path.join(baseDir, dir)
 		
-		log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
+		//log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
 		return resolvedPath
 	})
 }
@@ -82,7 +89,7 @@ const
 	
 	
 
-log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
+//log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
 
 // TypeScript SRC ALIAS
 function tsAlias(tsFilename) {
@@ -100,7 +107,8 @@ const
 	// Entries
 	entries = {
 		"AppEntry": [`./AppEntry`],
-		"LoaderEntry": [`./LoaderEntry`]
+		"LoaderEntry": [`./LoaderEntry`],
+		"BrowserEntry": [`./BrowserEntry`],
 	},
 	
 	// Import HappyPack
@@ -146,8 +154,8 @@ const config = {
 	
 	cache: true,
 	recordsPath: `${distDir}/_records`,
-	devtool: '#source-map',
-	//debug: true,
+	//devtool: '#source-map',
+	devtool: '#cheap-module-source-map',
 	
 	// Currently we need to add '.ts' to the resolve.extensions array.
 	resolve: {
@@ -201,13 +209,11 @@ const config = {
 	
 	// PLUGINS
 	plugins: [
-		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-		...(ForkCheckerPlugin ?
-			[new ForkCheckerPlugin()] :
-			[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
+		//new webpack.dependencies.LabeledModulesPlugin(),
 		
-		// HAPPY PACK PLUGINS
-		...happyPlugins,
+		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+		new ForkCheckerPlugin(),
+		
 		
 		
 		// SPLIT FOR PARALLEL LOADING
@@ -230,6 +236,11 @@ const config = {
 		new webpack.ProvidePlugin({
 			'Promise': 'bluebird'
 		})
+		
+		// UNUSED / HAPPYPACK / SEPERATE COMPILE
+		//[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
+		// HAPPY PACK PLUGINS
+		//...happyPlugins,
 	],
 	
 	// NODE SHIMS
@@ -259,9 +270,11 @@ if (isDev) {
 	_.merge(config, {
 		
 		//In development, use inline source maps
-		devtool: '#cheap-module-source-map',
+		//devtool: '#cheap-module-source-map',
 		// devtool: '#inline-source-map',
 		//devtool: '#cheap-module-inline-source-map',
+		//devtool: 'eval',
+		devtool: 'cheap-module-eval-source-map',
 		
 		// In development specify absolute path - better debugger support
 		output:  {
@@ -275,6 +288,17 @@ if (isDev) {
 	
 	// Add HMR
 	config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
+} else {
+	config.plugins.push(new webpack.optimize.UglifyJsPlugin({
+		mangle: false,
+		mangleProperties: false,
+		compress:{
+			warnings: true
+		}
+	}),new webpack.LoaderOptionsPlugin({
+		minimize: true,
+		debug: false
+	}))
 }
 
 

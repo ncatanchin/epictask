@@ -129,12 +129,12 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 						!getValue(() => this.state.palette) !== newPalette ||
 						
 						// BASE STYLES FROM COMPONENT
-						!_.isEqual(baseStyles,lastStyles) ||
+						//!_.isEqual(baseStyles,lastStyles) ||
 						
 						// PASSED PROP STYLES
-						!_.isEqual(_.pick(props,'styles'),_.pick(this.props,'styles'))
+						!shallowEquals(props.styles,this.props.styles)
 					) {
-						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette), () => this.forceUpdate())
+						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette))
 					}
 					
 				}
@@ -153,7 +153,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
 					return !shallowEquals(this.props,nextProps) ||
 						!shallowEquals(this.state,nextState,'theme','styles','palette') ||
-							!_.isEqual(baseStyles,lastStyles)
+							!shallowEquals(baseStyles,lastStyles)
 				}
 				
 				/**

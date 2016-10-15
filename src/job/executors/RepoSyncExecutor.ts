@@ -9,9 +9,8 @@ import {JobExecutor} from 'job/JobDecorations'
 import { JobType, IJob, IJobLogger, JobStatus } from 'shared/actions/jobs/JobTypes'
 import {IJobExecutor} from "job/JobExecutors"
 import JobProgressTracker from "job/JobProgressTracker"
-import { getRepoActions, getIssueActions } from  "shared/actions/ActionFactoryProvider"
 
-import { RepoSyncManager } from "shared/github/GithubEventHandlers"
+import { RepoSyncManager } from "shared/github/GithubSyncHandlers"
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 

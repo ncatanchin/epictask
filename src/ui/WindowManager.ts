@@ -9,8 +9,7 @@ import Electron = require('electron')
 import * as React from 'react'
 
 import { shortId, isString } from "shared/util/ObjectUtil"
-import { IWindowConfig, WindowType, DevToolsPositionDefault } from "shared/WindowConfig"
-import { AllWindowDefaults } from "shared/config/WindowConfig"
+import { IWindowConfig, WindowType, DevToolsPositionDefault,AllWindowDefaults } from "shared/config/WindowConfig"
 import { toJSON } from "shared/util/JSONUtil"
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 
@@ -38,7 +37,7 @@ const WindowDefaultOpts = Object.assign(AllWindowDefaults,{
 const WindowDialogDefaultOpts = Object.assign({},WindowDefaultOpts,{
 	minHeight: 500,
 	minWidth: 500,
-	titleBarStyle: 'hidden',
+	//titleBarStyle: 'hidden',
 })
 
 const WindowModalDefaultOpts = Object.assign({},WindowDefaultOpts,WindowDialogDefaultOpts,{
@@ -150,6 +149,18 @@ export class WindowManager {
 		
 	}
 	
+	/**
+	 * Open a pre-configured dialog
+	 * @param name
+	 */
+	openDialog(name:string) {
+		require.ensure(['ui/DialogsAndSheets'],function(require) {
+			const
+				{DialogConfigs} = require('ui/DialogsAndSheets') as any
+			
+			getWindowManager().open(DialogConfigs[name] as IWindowConfig)
+		})
+	}
 	
 	/**
 	 * Open a new dialog with a given config
@@ -229,7 +240,7 @@ export class WindowManager {
 				windowConfigCookie = {
 					url: 'https://densebrain.com/epictask',
 					name: id,
-					value: windowConfig
+					value: config.name
 				}
 			
 			

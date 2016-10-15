@@ -1,6 +1,8 @@
+import Electron = require('electron')
+
 const log = getLogger(__filename)
 const assert = require('assert')
-const electron = require('electron')
+
 const FormData = require('form-data')
 const fetch = require('node-fetch')
 
@@ -13,46 +15,58 @@ export default class GitHubOAuthWindow {
 	waitForApp
 	remote:boolean
 	window:Electron.BrowserWindow
-	electron
+	parentWindow:Electron.BrowserWindow
+	electron:typeof Electron
 	app
-	BrowserWindow
+	BrowserWindow:typeof Electron.BrowserWindow
 
-	constructor(obj:any) {
+	constructor(parentWindow:Electron.BrowserWindow,obj:any) {
 		const
 			{
 				id,
 				secret,
-				remote,
 				scopes = [],
 				waitForApp = false
-			} = obj
+			} = obj,
+			remote = obj.remote === true,
+			electron = (remote || Electron.remote) ? Electron.remote : Electron,
+			{BrowserWindow} = electron
+			
+		
 		
 		assert.ok(id, 'Client ID is needed!')
 		assert.ok(secret, 'Client Secret is needed!')
 		
-		this.scopeQuery = scopes.length > 0 ? '&scope=' + scopes.join('%2C') : ''
-		this.clientId = id
-		this.clientSecret = secret
-		this.waitForApp = waitForApp
-		this.remote = remote === true
-		this.window = null
-		this.electron = (this.remote || electron.remote) ? electron.remote : electron
-		this.app = this.electron.app
-		this.BrowserWindow = this.electron.BrowserWindow
-
+		assign(this,{
+			scopeQuery: scopes.length > 0 ? '&scope=' + scopes.join('%2C') : '',
+			clientId: id,
+			clientSecret: secret,
+			waitForApp: waitForApp,
+			remote: remote === true,
+			window: null,
+			electron,
+			app: electron.app,
+			BrowserWindow,
+			parentWindow
+		})
+		
+		
 	}
 
 
 
-	startRequest(callback) {
+	start(callback) {
 
 		const doAuth = () => {
+			
+				
+			
 			this.window = new this.BrowserWindow({
-				width: 1024,
-				height: 768,
-				webPreferences: {
-					nodeIntegration: true, webSecurity: false
-				}
+				center: true,
+				parent: this.parentWindow,
+				modal: true,
+				autoHideMenuBar: true,
+				alwaysOnTop: true
 			})
 
 

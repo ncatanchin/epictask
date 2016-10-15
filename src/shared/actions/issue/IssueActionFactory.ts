@@ -6,9 +6,12 @@ import {List} from 'immutable'
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import { Stores, getStores } from 'shared/Stores'
 import { IssueKey } from 'shared/Constants'
-import {Dialogs} from 'shared/config/DialogsAndSheets'
+
 import {FinderItemsPerPage} from 'shared/config/FinderConfig'
-import { cloneObject, extractError, isNil, nilFilter, isNumber } from 'shared/util/ObjectUtil'
+import {
+	cloneObject, extractError, isNil, nilFilter, isNumber, cloneObjectShallow,
+	shallowEquals
+} from 'shared/util/ObjectUtil'
 import {Comment} from 'shared/models/Comment'
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
@@ -41,7 +44,7 @@ import {Provided} from 'shared/util/ProxyProvided'
 
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
-import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
+import { IIssueFilter, EmptyIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
 import { isListType } from "shared/util/ObjectUtil"
 
@@ -50,6 +53,7 @@ import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { LoadStatus } from "shared/models"
 import { getRepoActions, getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
+import { Dialogs } from "shared/config/WindowConfig"
 
 
 /**
@@ -138,7 +142,90 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	//
 	// }
 	
+	/**
+	 * Set the current focused issue ids
+	 *
+	 * @param focusedIssueIds
+	 */
+	@ActionReducer()
+	setFocusedIssueIds(focusedIssueIds:number[]) {
+		return (state:IssueState) => state.set('focusedIssueIds',focusedIssueIds)
+	}
 	
+	
+	/**
+	 * Toggle selected as focused
+	 */
+	toggleSelectedAsFocused() {
+		let
+			{selectedIssueIds,focusedIssueIds = []} = this.state
+		
+		if (!selectedIssueIds || !selectedIssueIds.length)
+			return
+		
+		// COPY
+		focusedIssueIds = cloneObjectShallow(focusedIssueIds)
+		
+		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
+			selectedIssueIds.forEach(id => {
+				focusedIssueIds.splice(focusedIssueIds.indexOf(id),1)
+			})
+		} else {
+			focusedIssueIds = _.uniq(focusedIssueIds.concat(selectedIssueIds))
+		}
+		
+		this.setFocusedIssueIds(focusedIssueIds)
+		
+	}
+	
+	/**
+	 * Set focus on an issue
+	 *
+	 * @param issue
+	 */
+	focusOnIssue(issue:Issue)
+	focusOnIssue(issueId:number)
+	focusOnIssue(issueOrIssueId:Issue|number) {
+		const
+			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
+		
+		let
+			{focusedIssueIds = []} = this.state
+		
+		if (focusedIssueIds.includes(issueId)) {
+			log.debug(`Issue id ${issueId} is already focused`)
+			return
+		}
+		
+		this.setFocusedIssueIds([...focusedIssueIds,issueId])
+			
+	}
+	
+	/**
+	 * Remove issue focus
+	 *
+	 * @param issue
+	 */
+	removeIssueFocus(issue:Issue)
+	removeIssueFocus(issueId:number)
+	removeIssueFocus(issueOrIssueId:Issue|number) {
+		const
+			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
+		
+		let
+			{focusedIssueIds = []} = this.state
+		
+		if (!focusedIssueIds.includes(issueId)) {
+			log.debug(`Issue id ${issueId} does not have focus`)
+			return
+		}
+		
+		const
+			newFocusedIds = [].concat(focusedIssueIds)
+		
+		newFocusedIds.splice(newFocusedIds.indexOf(issueId),1)
+		this.setFocusedIssueIds(newFocusedIds)
+	}
 	
 	/**
 	 * Create a new comment
@@ -154,7 +241,12 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		this.editComment(issue)
 	}
 	
-	
+	/**
+	 * Set current issues
+	 *
+	 * @param issues
+	 * @returns {(state:IssueState)=>Map<string, any>}
+	 */
 	@ActionReducer()
 	private setIssues(issues:List<Issue>) {
 		return (state:IssueState) => state.update(
@@ -173,6 +265,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		)
 	}
 	
+	/**
+	 * Load all issues
+	 *
+	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	 */
 	@ActionThunk()
 	loadIssues() {
 		return async (dispatch,getState) => {
@@ -205,6 +302,122 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	/**
+	 * Refill all the issues for a given repo based on resource changes
+	 * @param availRepo
+	 * @param field (only for a specific field)
+	 */
+	refillResourcesForRepo(availRepo:AvailableRepo,field:'both'|'milestone'|'labels') {
+		const
+			{issues} = this.state
+		
+		let
+			changes = List<Issue>()
+		
+		issues
+			.filter(issue => issue.repoId === availRepo.id)
+			.forEach(issue => {
+				if (['milestone','both'].includes(field)) {
+					if (issue.milestone) {
+						const
+							milestone = availRepo.milestones.find(it => it.id === issue.milestone.id)
+						
+						if (milestone && shallowEquals(milestone, issue.milestone, 'state', 'title', 'description', 'due_on"'))
+							return
+						
+						const
+							change = cloneObjectShallow(issue)
+						
+						change.milestone = milestone
+						changes = changes.push(change) as List<Issue>
+					}
+				}
+				
+				if (['labels','both'].includes(field)) {
+					if (issue.labels && issue.labels.length) {
+						let
+							changed = false
+						
+						for (let label of issue.labels) {
+							const
+								newLabel = availRepo.labels.find(it => it.url === label.url)
+							
+							if (!newLabel || !shallowEquals(label,newLabel,'color','name')) {
+								changed = true
+								break
+							}
+						}
+						
+						if (changed) {
+							const
+								change = cloneObjectShallow(issue)
+							
+							change.labels = nilFilter(
+								change.labels.map(label =>
+									availRepo
+										.labels
+										.find(it => label.url === it.url))
+							)
+							
+							changes = changes.push(change) as List<Issue>
+						}
+					}
+				}
+			})
+		
+		if (changes.size) {
+			this.setIssues(changes)
+		}
+		
+	}
+	
+	/**
+	 * Fill issues
+	 *
+	 * @param partialIssues
+	 * @param availRepos
+	 * @returns {List<Issue>}
+	 */
+	fillIssueResources(partialIssues,...availRepos:AvailableRepo[]) {
+		const
+			filledIssues = partialIssues
+				.filter(issue => {
+					const
+						hasRepoId = issue && !!issue.repoId
+					
+					if (!hasRepoId) {
+						log.warn(`Issue does not have repoId`,issue)
+					}
+					
+					return hasRepoId
+				})
+				.map(issue => {
+					const
+						availRepo = (availRepos as AvailableRepo[])
+							.find(availRepo => availRepo.repoId === issue.repoId),
+						repo = availRepo.repo
+					
+					
+					return cloneObject(issue,{
+						repo,
+						collaborators: availRepo.collaborators,
+						
+						// Find labels
+						labels: !issue.labels ? [] :
+							nilFilter(issue.labels.map(label =>
+								availRepo.labels.find(it => it.url === label.url)
+							)),
+						
+						// Find milestones
+						milestone: (
+							issue.milestone &&
+							availRepo.milestones.find(it => it.id === issue.milestone.id)
+						)
+					})
+				})
+		return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
+	}
+	
+	/**
 	 * Get issues for a set of available repos
 	 *
 	 * @param availRepos
@@ -219,7 +432,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		
 		// REPOS TO USE FOR VALUES
-		availRepos = (_.nilFilter(availRepos) as AvailableRepo[])
+		availRepos = (nilFilter(availRepos) as AvailableRepo[])
 		
 		/**
 		 * Update issue load status
@@ -230,55 +443,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			availRepos = availableReposSelector(getStoreState())
 				.filter(it => (availRepos as any).find(availRepo => availRepo.id === it.id)) as any
 			
-			availRepos = (availRepos as any).map(it => assign({},it,{
-				issuesLoadStatus: newLoadStatus
-			}))
 			
-			getRepoActions().updateAvailableRepos(availRepos)
+			getRepoActions().patchAvailableRepos({issuesLoadStatus: newLoadStatus},availRepos)
 			await Promise.delay(10)
-		}
-		
-		
-		/**
-		 * Fill issues
-		 *
-		 * @param partialIssues
-		 * @returns {List<Issue>|List<any>|any}
-		 */
-		const fillIssues = (partialIssues) => {
-			const
-				filledIssues = partialIssues
-					.filter(issue => {
-						const hasRepoId = issue && !!issue.repoId
-						
-						if (!hasRepoId) {
-							log.warn(`Issue does not have repoId`,issue)
-						}
-						
-						return hasRepoId
-					})
-					.map(issue => {
-						const
-							availRepo = (availRepos as AvailableRepo[])
-								.find(availRepo => availRepo.repoId === issue.repoId),
-							repo = availRepo.repo
-						
-						
-						return cloneObject(issue,{
-							repo,
-							collaborators: availRepo.collaborators,
-							
-							// Find labels
-							labels: !issue.labels ? [] :
-								issue.labels.map(label =>
-								availRepo.labels.find(it => it.url === label.url) || label),
-							
-							// Find milestones
-							milestone: (issue.milestone &&
-							availRepo.milestones.find(it => it.id === issue.milestone.id)) || issue.milestone
-						})
-					})
-			return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
 		}
 		
 		
@@ -290,7 +457,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		// IF SOURCE ISSUES ARE PASSED THEN WE DO NOT NEED TO LOAD
 		if (fromIssues && fromIssues.length) {
 			issues = issues.push(...fromIssues)
-			issues = fillIssues(issues)
+			issues = this.fillIssueResources(issues,...availRepos)
 		}
 		// OTHERWISE ONLY LOAD ISSUES SPECIFICALLY FOR UNLOADED REPOS
 		else {
@@ -322,7 +489,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 									
 									// NOW FILL THE ISSUES
 									const
-										filledIssues = fillIssues(issuesToPush)
+										filledIssues = this.fillIssueResources(issuesToPush,availRepo)
 									
 									// PUSH THE IDS
 									loadedIssueIds = loadedIssueIds.concat(
@@ -1073,6 +1240,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	
 	/**
+	 * Clear all current issue filters
+	 */
+	clearFilters() {
+		this.filteringAndSorting(EmptyIssueFilter)
+	}
+	
+	/**
 	 * Set the group by mode
 	 *
 	 * @param groupBy
@@ -1339,7 +1513,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					.set('editCommentRequest',null)
 					.set('editingInline',false)
 					.set('issueSaving',false)
-					.set('issueError',null) as IssueState
+					.set('issueSaveError',null) as IssueState
 			}
 			
 			state = state
@@ -1426,53 +1600,52 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @param issueId
 	 */
-	@ActionThunk()
+	
 	loadActivityForIssue(issueId: number) {
-		return async(dispatch, getState) => {
-			
-			// Issue repo
-			let
-				issues:List<Issue> = issuesSelector(getState())
-			
-			//log.debug(`Loading issue activity`,issues,issueId)
-			if (!isListType(issues,Issue))
-				return
-			
-			let
-				issue: Issue = issues.find(issue => issue.id === issueId)
-			
-			if (!issue) {
-				log.error(`Issue not found in state: ${issueId}`)
-				//assert(issue, `Issue still not found in state ${issueId}`)
-				return
+		
+		const
+			deferred = Promise.defer(),
+			isCancelled = () => deferred.isCancelled(),
+			doResolve = () => !isCancelled() && deferred.resolve(),
+			doLoad = async () => {
+				try {
+					// Issue repo
+					let
+						{ issues } = this.state
+					
+					//log.debug(`Loading issue activity`,issues,issueId)
+					if (!isListType(issues, Issue) || isCancelled())
+						return doResolve()
+					
+					let
+						issue:Issue = issues.find(issue => issue.id === issueId)
+					
+					if (!issue) {
+						log.error(`Issue not found in state: ${issueId}`)
+						//assert(issue, `Issue still not found in state ${issueId}`)
+						return doResolve()
+					}
+					
+					const
+						{ comments, issuesEvents } = await this.getActivity(issue)
+					
+					if (isCancelled())
+						return doResolve()
+					
+					log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
+					this.setActivity(comments, issuesEvents)
+				} catch (err) {
+					log.error(`Failed to load activity for issue ${issueId}`,err)
+					
+				} finally {
+					doResolve()
+				}
 			}
+		
+		doLoad()
 			
-			
-			
-			const
-				{comments,issuesEvents} = await this.getActivity(issue)
-			
-			log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
-			this.setActivity(comments,issuesEvents)
-			// TODO: Activity load
-			// Now push the models into the data state for tracking
-			// const dataActions = Container.get(DataActionFactory)
-			// await dataActions.submitRequestAction(
-			// 	DataRequest.create(
-			// 		'comments-list',
-			// 		false,
-			// 		commentIds,
-			// 		Comment.$$clazz
-			// 	),
-			// 	commentMap,
-			// 	dispatch,
-			// 	getState
-			// )
-			//
-			
-			//actions.setFilteringAndSorting()
-			
-		}
+		return deferred
+		
 	}
 	
 	/**
@@ -1607,9 +1780,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				results = await Promise.all(promises)
 			
 			
-			addMessage(`Closed ${results.length} issues successfully`)
+			addMessage(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
 			
-			// Now we simply update the state - remvoed
+			// Now we simply update the state - removed
 			//this.loadIssuesAction(dispatch, getState)
 			
 		}

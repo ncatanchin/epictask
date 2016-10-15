@@ -53,9 +53,11 @@ function iconCode(codeSet,iconName) {
 @PureRender
 export class Icon extends React.Component<IIconProps,any> {
 
-	// constructor(props,context) {
-	// 	super(props,context)
-	// }
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
+	}
 	//
 	// componentWillMount() {
 	// 	this.state = {}

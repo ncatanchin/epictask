@@ -35,7 +35,14 @@ const log = getLogger(__filename)
  * @param state
  * @return {IssueState}
  */
-export const issueStateSelector = (state):IssueState => state.get(IssueKey) as IssueState
+
+export const issueStateSelector:(state) => IssueState = createSelector(
+	(state:any) => state.get(IssueKey),
+	(issueState:IssueState) => issueState
+)
+
+
+
 
 /**
  * Select all current issues
@@ -91,6 +98,20 @@ export const issueSortSelector = createSelector(
 export const issueFilterSelector = createSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueFilter
+)
+
+export const issueFilterLabelsSelector = createSelector(
+	issueFilterSelector,
+	enabledLabelsSelector,
+	(filter:IIssueFilter,labels:List<Label>):List<Label> =>
+		labels.filter(label => filter && filter.labelUrls && filter.labelUrls.includes(label.url)) as any
+)
+
+export const issueFilterMilestonesSelector = createSelector(
+	issueFilterSelector,
+	enabledMilestonesSelector,
+	(filter:IIssueFilter,milestones:List<Milestone>):List<Milestone> =>
+		milestones.filter(milestone => filter && filter.milestoneIds && filter.milestoneIds.includes(milestone.id)) as any
 )
 
 /**
@@ -211,39 +232,39 @@ export const editCommentRequestSelector:(state) => TEditCommentRequest = createS
 	issueStateSelector,
 	(issueState:IssueState) => issueState.editCommentRequest
 )
-
-
-/**
- * Label filters
- */
-export const issueFilterLabelsSelector = createDeepEqualSelector(
-	issueSortAndFilterSelector,
-	enabledLabelsSelector,
-	(issueSortAndFilter:TIssueSortAndFilter,labels:Label[]) => {
-		const
-			{issueFilter} = issueSortAndFilter,
-			labelUrls = issueFilter.labelUrls || []
-
-		return _.nilFilter(labelUrls.map(url => labels.find(label => label.url === url)))
-	}
-)
-
-/**
- * Milestone filters
- */
-export const issueFilterMilestonesSelector = createDeepEqualSelector(
-	issueSortAndFilterSelector,
-	enabledMilestonesSelector,
-	(issueSortAndFilter:TIssueSortAndFilter,milestones:Milestone[]) => {
-		const
-			{issueFilter} = issueSortAndFilter,
-			milestoneIds = issueFilter.milestoneIds || []
-		
-		
-		return _.nilFilter(
-			milestoneIds.map(id => milestones.find(it => it.id === id)))
-	}
-)
+//
+//
+// /**
+//  * Label filters
+//  */
+// export const issueFilterLabelsSelector = createDeepEqualSelector(
+// 	issueSortAndFilterSelector,
+// 	enabledLabelsSelector,
+// 	(issueSortAndFilter:TIssueSortAndFilter,labels:Label[]) => {
+// 		const
+// 			{issueFilter} = issueSortAndFilter,
+// 			labelUrls = issueFilter.labelUrls || []
+//
+// 		return _.nilFilter(labelUrls.map(url => labels.find(label => label.url === url)))
+// 	}
+// )
+//
+// /**
+//  * Milestone filters
+//  */
+// export const issueFilterMilestonesSelector = createDeepEqualSelector(
+// 	issueSortAndFilterSelector,
+// 	enabledMilestonesSelector,
+// 	(issueSortAndFilter:TIssueSortAndFilter,milestones:Milestone[]) => {
+// 		const
+// 			{issueFilter} = issueSortAndFilter,
+// 			milestoneIds = issueFilter.milestoneIds || []
+//
+//
+// 		return _.nilFilter(
+// 			milestoneIds.map(id => milestones.find(it => it.id === id)))
+// 	}
+// )
 
 /**
  * All currently selected assignee filters
@@ -566,6 +587,13 @@ export const issueItemsSelector = createSelector(
 	}
 )
 
+/**
+ * Selector for focused issue ids
+ */
+export const focusedIssueIdsSelector:(state) => number[] = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.focusedIssueIds
+)
 
 /**
  * All current issue activity

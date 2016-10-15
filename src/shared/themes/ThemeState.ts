@@ -1,6 +1,5 @@
 import * as assert from 'assert'
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
-import * as $ from 'jquery'
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"

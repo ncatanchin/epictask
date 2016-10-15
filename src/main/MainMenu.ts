@@ -1,8 +1,5 @@
 import Electron = require('electron')
-import { Container } from 'typescript-ioc'
-import { UIActionFactory } from 'shared/actions/ui/UIActionFactory'
-import { AuthKey } from "shared/Constants"
-import { ActionFactoryProviders } from  "shared/actions/ActionFactoryProvider"
+import { getAuthActions } from  "shared/actions/ActionFactoryProvider"
 import { shutdownApp } from "main/MainShutdownHandler"
 
 const
@@ -17,23 +14,28 @@ const
 	log = getLogger(__filename)
 
 
-function makeDevMenu(mainWindow) {
+function makeDevMenu(mainWindow:Electron.BrowserWindow) {
 	return {
 		label: 'Dev',
 		submenu: [
-			
+			{
+				// Toggle developer tools
+				label: 'Toggle Developer Tools',
+				accelerator: 'Alt+Command+I',
+				click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
+			},
 			// Start Perf
 			{
 				label: 'Start Perf',
 				accelerator: 'Ctrl+P',
-				click: () => mainWindow.webContents.executeJavaScript('Perf.start()')
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('Perf.start()')
 			},
 			
 			// Stop Perf
 			{
 				label: 'Stop Perf',
 				accelerator: 'Ctrl+Shift+P',
-				click: () => mainWindow.webContents.executeJavaScript(`
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript(`
 					Perf.stop();
 					measurements = Perf.getLastMeasurements();
 					Perf.printInclusive(measurements);
@@ -51,53 +53,41 @@ function makeDevMenu(mainWindow) {
 			// Break
 			{
 				label: 'Break',
-				accelerator: 'Command+F8',
-				click: () => mainWindow.webContents.executeJavaScript('debugger;')
-			}
-		
-		
-		]
-	}
-}
-
-
-function makeViewMenu(mainWindow) {
-	return {
-		label: 'View',
-		submenu: [
-			{
-				label: 'Toggle StatusBar',
-				//accelerator: 'Command+3',
-				click() {
-					Container.get(UIActionFactory)
-						.toggleStatusBar()
-				}
+				accelerator: 'Control+F8',
+				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('debugger;')
 			},
+			
+			// CLEAN
 			{
-				label: 'Toggle Repo Panel',
-				accelerator: 'Command+3',
-				click() {
-					Container.get(UIActionFactory)
-						.toggleRepoPanelOpen()
-				}
-			}, {
-				label: 'Toggle Full Screen',
-				accelerator: 'Ctrl+Command+F',
-				click() {
-					mainWindow.setFullScreen(!mainWindow.isFullScreen())
+				label: 'Clean / Reset App',
+				click: () => {
+					
+					
+					const
+						opts = { args: [ 'clean' ] } //process.argv.slice(1).filter(it => it !== 'clean').concat(['clean'])
+					
+					if (DEBUG)
+						opts.args.unshift(process.argv[ process.argv.length - 1 ])
+					
+					log.info(`relaunching with args: ${opts}`)
+					app.relaunch(opts)
+					app.exit(0)
 				}
 			}
+		
+		
 		]
 	}
 }
+
 
 export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
-	let template
-	let menu
 	
-	const viewMenu = makeViewMenu(mainWindow)
 	
-	if (process.platform === 'darwin') {
+	if (!Env.isMac)
+		return null
+	
+	const
 		template = [ {
 			label: 'EpicTask',
 			submenu: [ {
@@ -106,11 +96,9 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			}, {
 				type: 'separator'
 			}, {
-				label: 'Signout...',
+				label: 'Logout of Epictask...',
 				accelerator: 'Command+L',
-				click() {
-					ActionFactoryProviders[ AuthKey ].logout()
-				}
+				click: () => getAuthActions().logout()
 			}, {
 				type: 'separator'
 			}, {
@@ -165,91 +153,39 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				accelerator: 'Command+A',
 				selector: 'selectAll:'
 			} ]
-		},
-			
-			viewMenu,
-			{
-				label: 'Window',
-				submenu: [
-					{
-						label: 'Minimize',
-						accelerator: 'Command+M',
-						selector: 'performMiniaturize:'
-					}, {
-						type: 'separator'
-					}, {
-						label: 'Bring All to Front',
-						selector: 'arrangeInFront:'
-					}, {
-						// Toggle developer tools
-						label: 'Toggle Developer Tools',
-						accelerator: 'Alt+Command+I',
-						click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
-					}
-				]
-			} ]
-		
-		
-	} else {
-		template = [ {
-			
-			// FILE MENU
-			label: '&File',
-			
-			
-			submenu: [ {
-				
-				// SIGNOUT
-				label: '&Signout...',
-				accelerator: 'Ctrl+Super+L',
-				click() {
-					ActionFactoryProviders[ AuthKey ].logout()
-				}
-			}, {
-				// QUIT
-				label: '&Quit',
-				accelerator: 'Ctrl+Q',
-				click: shutdownApp
-			
-			} ]
 		}, {
-			label: '&View',
-			submenu: (Env.isDev) ? [ {
-				label: '&Reload',
-				accelerator: 'Ctrl+R',
-				click() {
-					//mainWindow.restart()
-					//mainWindow.webContents.executeJavaScript('window.loadEpicTask()')
-					mainWindow.reload()
+			label: 'View',
+			submenu: [
+				{
+					label: 'Toggle Full Screen',
+					accelerator: 'Ctrl+Command+F',
+					click() {
+						mainWindow.setFullScreen(!mainWindow.isFullScreen())
+					}
 				}
-			}, {
-				label: 'Toggle &Full Screen',
-				accelerator: 'F11',
-				click() {
-					mainWindow.setFullScreen(!mainWindow.isFullScreen())
-				}
-			}, {
-				label: 'Toggle &Developer Tools',
-				accelerator: 'Alt+Ctrl+I',
-				click() {
-					(mainWindow as any).toggleDevTools()
-				}
-			} ] : [ {
-				label: 'Toggle &Full Screen',
-				accelerator: 'F11',
-				click() {
-					mainWindow.setFullScreen(!mainWindow.isFullScreen())
-				}
-			} ]
-		} ]
-		
-		
-	}
+			]
+		}
+		// , {
+		// 	label: 'Window',
+		// 	submenu: [
+		// 		{
+		// 			label: 'Minimize',
+		// 			accelerator: 'Command+M',
+		// 			selector: 'performMiniaturize:'
+		// 		}, {
+		// 			type: 'separator'
+		// 		}, {
+		// 			label: 'Bring All to Front',
+		// 			selector: 'arrangeInFront:'
+		// 		}
+		// 	]
+		// }
+		] as any
+	
 	
 	if (Env.isDev)
 		template.push(makeDevMenu(mainWindow))
 	
-	menu = Menu.buildFromTemplate(template)
 	
-	return menu
+	return Menu.buildFromTemplate(template)
 }

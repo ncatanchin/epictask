@@ -25,8 +25,16 @@ const JobDescriptions = {
  * @return {string} describing the job
  */
 export function getJobDescription(job:IJob):string {
-	const descFn = JobDescriptions[job.type]
-	assert(descFn,`Unable to find job description function for type: ${job.type}`)
+	if (!job)
+		return null
+	
+	const
+		descFn = JobDescriptions[job.type]
+	
+	assert(
+		descFn,
+		`Unable to find job description function for type: ${job.type}`
+	)
 	
 	return descFn(job)
 }

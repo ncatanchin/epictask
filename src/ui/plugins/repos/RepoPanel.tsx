@@ -1,7 +1,6 @@
 
 
 // Imports
-import {Container} from 'typescript-ioc'
 import * as React from 'react'
 import {Icon,Button} from 'ui/components/common'
 import {RepoList} from './RepoList'
@@ -20,10 +19,10 @@ import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { ICommand, CommandType } from "shared/commands/Command"
 import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { CommonKeys } from "shared/KeyMaps"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { Sheets } from "ui/DialogsAndSheets"
 const
 	{CommonKeys:Keys} = KeyMaps
 
@@ -99,7 +98,7 @@ function getHeaderControls() {
 					
 							log.debug(`add repo click`,event)
 					
-							Container.get(UIActionFactory).showAddRepoDialog()
+							getUIActions().openSheet(Sheets.RepoImportSheet)
 					
 						}}>
 			<Icon style={styles.header.button.icon} iconSet='fa' iconName='plus'/>
@@ -118,7 +117,8 @@ function getHeaderControls() {
 @RegisterTool({
 	id:getBuiltInToolId(BuiltInTools.RepoPanel),
 	defaultLocation: ToolPanelLocation.Left,
-	label:'Repositories',getHeaderControls,
+	label:'Repositories',
+	getHeaderControls,
 	buttonLabel: 'Repos'
 })
 @CommandComponent()
@@ -126,17 +126,8 @@ function getHeaderControls() {
 export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
 	
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 		builder
-			// IMPORT REPO
-			.command(
-				CommandType.Container,
-				'Hide sheet...',
-				(cmd, event) => getUIActions().closeSheet(),
-				CommonKeys.Escape, {
-					//hidden:true,
-					overrideInput: true
-				})
 			.make()
 		
 	

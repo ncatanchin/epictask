@@ -49,6 +49,8 @@ export interface ICommandUpdater {
  */
 export type TCommandExecutor = (command:ICommand,event?:any) => any
 
+
+
 /**
  * Command shape
  */
@@ -89,6 +91,12 @@ export interface ICommand {
 	 */
 	defaultAccelerator?:TCommandDefaultAccelerator
 	
+	
+	/**
+	 * Accelerator currently configured
+	 */
+	accelerator?:TCommandDefaultAccelerator
+	
 	/**
 	 * If the command does not have a modifier and an input/select/textarea
 	 * has focus, unless overrideInput is true, the command is not triggered
@@ -111,6 +119,11 @@ export interface ICommand {
 	hidden?:boolean
 	
 	/**
+	 * Hide in allCommands result
+	 */
+	hideInAllCommands?:boolean
+	
+	/**
 	 * Current action is enabled
 	 */
 	enabled?:boolean
@@ -118,7 +131,7 @@ export interface ICommand {
 	/**
 	 * Path to the menu where this should be added
 	 */
-	menuPath?:string[]
+	menuItem?:ICommandMenuItem
 	
 	/**
 	 * if hidden disabled is assumed, but this prop
@@ -146,7 +159,7 @@ export class Command implements ICommand {
 	defaultAccelerator:TCommandDefaultAccelerator
 	overrideInput:boolean = false
 	hidden:boolean = false
-	menuPath:string[]
+	menuItem:ICommandMenuItem
 	disableKeyReassign:boolean
 	
 	/**
@@ -182,3 +195,130 @@ export class Command implements ICommand {
 }
 
 
+
+/**
+ * Command menu item type
+ */
+export enum CommandMenuItemType {
+	Menu = 1,
+	Command,
+	Separator,
+	Checkbox
+}
+
+/**
+ * Executor shape
+ */
+export type TCommandMenuItemExecutor = (item:ICommandMenuItem,event?:any) => any
+
+
+export interface ICommandFontIcon {
+	iconSet:string
+	iconName:string
+}
+
+export interface ICommandImageIcon {
+	url:string
+}
+
+
+export type TCommandIcon = string|ICommandFontIcon|ICommandImageIcon
+
+/**
+ * Check for font icon
+ *
+ * @param o
+ */
+export function isCommandFontIcon(o:any):o is ICommandFontIcon {
+	return o && o.iconSet && o.iconName
+}
+
+/**
+ * Is image icon
+ *
+ * @param o
+ * @returns {any}
+ */
+export function isCommandImageIcon(o:any):o is ICommandImageIcon {
+	return o && o.url
+}
+
+/**
+ * Command menu item
+ */
+export interface ICommandMenuItem {
+	
+	/**
+	 * Menu item id
+	 */
+	id?:string
+	
+	containerId?:string
+	
+	icon?:TCommandIcon
+	
+	type?:CommandMenuItemType
+	
+	subItems?:ICommandMenuItem[]
+	
+	commandId?:string
+	
+	mountsWithContainer?:boolean
+	
+	label?:string
+	
+	subLabel?:string
+	
+	enabled?:boolean
+	
+	hidden?:boolean
+	
+	menuPath?:string[]
+	
+	execute?:TCommandMenuItemExecutor
+	
+}
+
+
+export interface ICommandMenuManager {
+	
+	
+	
+	/**
+	 * Update menu items
+	 *
+	 * @param menuItems
+	 */
+	updateItem(...menuItems:ICommandMenuItem[]):void
+	
+	/**
+	 * Remove items
+	 *
+	 * @param menuItems
+	 */
+	removeItem(...menuItems:ICommandMenuItem[]):void
+	
+	
+	/**
+	 * Show items
+	 *
+	 * @param menuItems
+	 */
+	showItem(...menuItems:ICommandMenuItem[]):void
+	
+	
+	/**
+	 * Hide items
+	 *
+	 * @param menuItemIds
+	 */
+	hideItem(...menuItemIds:string[]):void
+}
+
+
+/**
+ * Provider interface
+ */
+export interface ICommandMenuManagerProvider {
+	():ICommandMenuManager
+}

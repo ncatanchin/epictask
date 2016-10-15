@@ -1,28 +1,96 @@
 // Imports
 import * as React from 'react'
 import { PureRender } from 'ui/components/common/PureRender'
-import { SearchItem, SearchType, ISearchState } from "shared/actions/search"
+import { SearchItem, SearchType } from "shared/actions/search"
 import { shallowEquals, getValue } from "shared/util/ObjectUtil"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "shared/models"
 import { RepoName } from "ui/components/common/Renderers"
 import filterProps from 'react-valid-props'
 import { Icon } from "ui/components/common"
 import { SearchPanel } from "ui/components/search"
+import { ICommand } from "shared/commands/Command"
+import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
-	root: [ FlexColumn, FlexAuto, {} ]
-})
+
+function baseStyles(topStyles,theme,palette) {
+	const
+		{ accent, primary, text, secondary } = palette
+	
+	return [ makeTransition([ 'background-color', 'color' ]), PositionRelative, FlexRowCenter, FillWidth, {
+			height: 48,
+			cursor: 'pointer',
+			borderBottom: `0.1rem solid ${accent.hue1}`,
+			color: primary.hue1,
+			
+			normal: {
+				backgroundColor: text.primary,
+				color: primary.hue1
+			},
+			
+			selected: [{
+				backgroundColor: accent.hue1,
+				color: text.primary
+			}],
+			
+			
+			info: [
+				FlexScale,
+				FlexColumnCenter,
+				makePaddingRem(0.2,2,0.2,1),
+				makeFlexAlign('stretch', 'center'), {
+				
+				}
+			],
+			
+			label: [Ellipsis, FlexAuto, makePaddingRem(0, 1), {
+				flexShrink: 1,
+				fontWeight: 300,
+				fontSize: rem(1.6),
+				
+				second: [FlexAuto, {
+					fontWeight: 100,
+					fontSize: rem(1.2)
+				}],
+				
+				selected: [{
+					fontWeight: 500
+				}]
+			}],
+			
+			action: [{
+				fontWeight: 300,
+				fontSize: rem(1.3),
+				textStyle: 'italic',
+				
+				selected: [{
+					
+				}]
+			}],
+			
+			type: [ FillHeight, FlexRowCenter, FlexAuto, Ellipsis, {
+				fontWeight: 300,
+				fontSize: rem(1.3),
+				textStyle: 'italic',
+				padding: rem(0.3),
+				width: 48,
+				background: Transparent,
+				//borderRight: `0.1rem solid ${accent.hue1}`,
+				
+				selected: [{}]
+			} ]
+			
+		} ]
+	
+}
 
 
 /**
  * ISearchResultItemProps
  */
-export interface ISearchResultItemProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface ISearchResultItemProps extends IThemedAttributes {
 	searchPanel:SearchPanel
 	item:SearchItem
 }
@@ -43,7 +111,8 @@ export interface ISearchResultItemState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-
+@ThemedStyles(baseStyles)
+@PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {
 	
 	constructor(props:ISearchResultItemProps,context) {
@@ -60,46 +129,38 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	}
 	
 	
-	renderResult(label:any,labelSecond:any,actionLabel,typeLabel,isSelected) {
+	renderResult(label:any,labelSecond:any,actionLabel,iconName,isSelected) {
 		const
 			{styles} = this.props,
 			
 			// Make style
 			resultStyle = makeStyle(
-				styles.result,
-				styles.result.normal,
-				isSelected && styles.result.selected
-			),
-			
-			actionStyle = makeStyle(
-				styles.result.action,
-				isSelected && styles.result.action.selected,
+				styles,
+				styles.normal,
+				isSelected && styles.selected
 			),
 			
 			labelStyle = makeStyle(
-				styles.result.label,
-				isSelected && styles.result.label.selected
+				styles.label,
+				isSelected && styles.label.selected
 			),
 			
 			typeStyle = makeStyle(
-				styles.result.type,
-				isSelected && styles.result.type.selected
+				styles.type,
+				isSelected && styles.type.selected
 			)
 		
 		return <div style={resultStyle}>
 			<div style={typeStyle}>
-				<Icon iconSet='octicon' iconName={typeLabel}/>
+				<Icon iconSet='octicon' iconName={iconName}/>
 				{/*{typeLabel}*/}
 			</div>
-			<div style={styles.result.info}>
+			<div style={styles.info}>
 				<div style={labelStyle}>
 					{label}
 				</div>
-				{/*<div style={actionStyle}>*/}
-				{/*{actionLabel}*/}
-				{/*</div>*/}
 			</div>
-			<div style={makeStyle(labelStyle,styles.result.label.second)}>
+			<div style={makeStyle(labelStyle,styles.label.second)}>
 				{labelSecond}
 			</div>
 		
@@ -192,6 +253,18 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		)
 	}
 	
+	
+	renderAction = (item:SearchItem,cmd:ICommand,isSelected) => {
+		
+		return this.renderResult(
+			cmd.name,
+			cmd.description,
+			'Execute',
+			'zap',
+			isSelected
+		)
+	}
+	
 	private renderFns = {
 		[SearchType.Repo]: this.renderRepo,
 		[SearchType.AvailableRepo]: this.renderAvailableRepo,
@@ -199,6 +272,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		[SearchType.Milestone]: this.renderMilestone,
 		[SearchType.Label]: this.renderLabel,
 		[SearchType.Assignee]: this.renderAssignee,
+		[SearchType.Action]: this.renderAction,
 	}
 	
 	/**
@@ -254,12 +328,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 			{props,state} = this,
 			{ styles,item } = props,
 			{type} = item,
-			{selected} = state,
-			resultStyle = makeStyle(
-				styles.result,
-				styles.result.normal,
-				selected && styles.result.selected
-			)
+			{selected} = state
 		
 		const
 			resultRenderer:any = this.renderFns[type],

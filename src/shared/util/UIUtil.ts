@@ -1,4 +1,7 @@
 
+const
+	log = getLogger(__filename)
+
 export function focusElementById(id:string,timeout = 50) {
 	if (ProcessConfig.isType(ProcessType.UI))
 		setTimeout(() => $(`#${id}`).focus(),timeout)
@@ -12,4 +15,47 @@ export function isReactComponent(c:any):c is React.Component<any,any> {
 		)
 }
 
+/**
+ * Unwrapped references
+ *
+ * @param component
+ * @returns {any}
+ */
+export function unwrapRef<T>(component:T):T {
+	
+	while(component && (component as any).getWrappedInstance) {
+		component = (component as any).getWrappedInstance()
+	}
+	
+	return component as any
+}
 
+
+export type TComponent = React.ComponentClass<any>
+
+export type TComponentResolver = Promise.Resolver<TComponent>
+
+export type TComponentLoader = (resolver:TComponentResolver) => any
+
+export function makePromisedComponent(loader:TComponentLoader): () => Promise<TComponent> {
+	return function() {
+		const
+			resolver = Promise.defer()
+		
+		loader(resolver)
+		
+		return resolver.promise as Promise<TComponent>
+	}
+}
+
+
+export function benchmarkLoadTime(to:string) {
+	/**
+	 * Tron logging window load time
+	 */
+	const
+		startLoadTime:number = (window as any).startLoadTime,
+		loadDuration = Date.now() - startLoadTime
+	
+	log.tron(`${to} took ${loadDuration / 1000}s`)
+}

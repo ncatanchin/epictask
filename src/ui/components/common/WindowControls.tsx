@@ -11,36 +11,15 @@ function baseStyles(topStyles,theme,palette) {
 		{primary,accent,text,secondary,background} = palette
 	
 	return {
-		header: [ FlexRowCenter, FlexAuto, PositionRelative, makeTransition(), {
-			WebkitUserSelect: 'none',
-			WebkitAppRegion: 'drag',
-			opacity: 0,
-			height: 0,
-			padding: 0,
-			border: 0,
-		} ],
 		
-		headerNormal: {
-			padding: '0.3rem 10rem',
-			opacity: 1
-		},
-		
-		headerExpanded: makeStyle({
-			height: '100vh',
-			maxHeight: '100vh',
-			flexBasis: '100vh',
-			flexGrow: 1,
-			flexShrink: 0
-		}),
-		
-		windowControls: [ FlexRowCenter, PositionAbsolute, {
+		controls: [ FlexRowCenter, PositionAbsolute, {
 			WebkitAppRegion: 'no-drag',
-			top: 10,
+			top: 17,
 			left: 10,
 			height: rem(2)
 		} ],
 		
-		windowControl: [ FlexColumnCenter, makeMarginRem(0, 0.5), makeTransition([ 'border', 'color' ]), {
+		control: [ FlexColumnCenter, makeMarginRem(0, 0.5), makeTransition([ 'border', 'color' ]), {
 			width: rem(1.5),
 			height: rem(1.5),
 			cursor: 'pointer',
@@ -63,8 +42,8 @@ function baseStyles(topStyles,theme,palette) {
 }
 
 const WindowControl = Radium(({styles,style,iconName,onClick}) =>
-	<div style={makeStyle(styles.windowControl,style)} onClick={onClick}>
-		<span style={styles.windowControl.icon} className={`fa fa-${iconName}`}/>
+	<div style={makeStyle(styles.control,style)} onClick={onClick}>
+		<span style={styles.control.icon} className={`fa fa-${iconName}`}/>
 	</div>
 
 )
@@ -121,7 +100,7 @@ export class WindowControls extends React.Component<IThemedAttributes,void> {
 			{styles} = this.props
 		
 		
-		return <div style={styles.windowControls}>
+		return <div style={styles.controls}>
 			<WindowControl styles={styles} iconName='times' onClick={this.close} />
 			<WindowControl styles={styles} iconName='minus' onClick={this.minimize} />
 			<WindowControl styles={styles} iconName='plus' onClick={this.maximize} />

@@ -1,6 +1,5 @@
 // Imports
 import * as React from 'react'
-import * as moment from 'moment'
 import filterProps from 'react-valid-props'
 import {PureRender, Icon} from 'ui/components/common'
 
@@ -11,7 +10,7 @@ import {LinearProgress} from "material-ui"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [
 		CursorPointer,
 		FillWidth,
@@ -77,8 +76,8 @@ const baseStyles = createStyles({
 		}
 	]
 	
-	
 })
+
 
 
 /**

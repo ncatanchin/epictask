@@ -1,22 +1,27 @@
 // Imports
-import * as ReactDOM from 'react-dom'
 import { connect } from 'react-redux'
 import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { sheetSelector } from "shared/actions/ui/UISelectors"
-import { IUISheet } from "shared/config/DialogsAndSheets"
+import { IUISheet } from "shared/config/WindowConfig"
 import {
 	PositionAbsolute, makeTransition, makeHeightConstraint, createStyles, FillHeight,
 	FlexColumn
 } from "shared/themes"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { CommandType } from "shared/commands/Command"
+import { CommonKeys } from "shared/KeyMaps"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import { getValue } from "shared/util/ObjectUtil"
+import { PromisedComponent } from "ui/components/root/PromisedComponent"
 
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = (topStyles,theme,palette) => {
 	const
 		{text,accent,primary,secondary} = palette
 	
@@ -73,15 +78,13 @@ const baseStyles = createStyles((topStyles,theme,palette) => {
 			
 		}
 	]
-})
+}
 
 
 /**
  * ISheetRootProps
  */
-export interface ISheetRootProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface ISheetRootProps extends IThemedAttributes {
 	sheet?:IUISheet
 }
 
@@ -110,7 +113,18 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	/**
 	 * Commands
 	 */
-	commands = (builder:CommandContainerBuilder) => []
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder
+			// CLOSE THE SHEET
+			.command(
+				CommandType.Container,
+				'Hide sheet...',
+				(cmd, event) => getUIActions().closeSheet(),
+				CommonKeys.Escape, {
+					hidden:true,
+					overrideInput: true
+				})
+			.make()
 	
 	commandComponentId = ContainerNames.SheetRoot
 	
@@ -122,18 +136,20 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	render() {
 		const
 			{ styles,sheet } = this.props,
-			SheetElement = sheet && sheet.rootElement()
+			sheetPromise = getValue(() => sheet.rootElement())
+			
 		
 		return <CommandRoot
 			component={this}
 			id="sheetRoot"
 			style={[styles, sheet && styles.visible]}>
-			{SheetElement && <div ref={this.setSheetContent} style={[styles.content]}>
+			{sheetPromise && <div ref={this.setSheetContent} style={[styles.content]}>
 				<div style={[styles.header]}>
 					<div style={[styles.header.title]}>{sheet.title}</div>
 				</div>
 				<div style={[styles.body]}>
-					<SheetElement/>
+					<PromisedComponent promise={sheetPromise} />
+					
 				</div>
 			</div>
 			 }

@@ -22,6 +22,7 @@ const
 //'http://localhost:63342/epictask/dist/app/app-entry.html'
 log.info(`Starting EpicTask (inDev=${Env.isDev})`,process.env.NODE_ENV)
 
+
 let
 	menu,
 	browserWindow:Electron.BrowserWindow = getHot(module,'browserWindow',null)
@@ -29,22 +30,6 @@ let
 setDataOnHotDispose(module,() => ({
 	browserWindow
 }))
-
-ipcMain.on(AuthKey,(event,arg) => {
-	log.info('Got auth request',event,arg)
-
-	//const OAuthGithub = require('electron-oauth-github')
-	const authRequest = new GitHubOAuthWindow(GitHubConfig)
-
-	authRequest.startRequest(function(err,token) {
-		if (err) {
-			log.error(err);
-		}
-
-		event.sender.send(AuthKey,{token})
-		log.info('GH token received: ' + token)
-	});
-})
 
 // If in debug mode then add electron-debug
 if ((Env.isDev || Env.isDev) && !Env.isRemote) {
@@ -92,12 +77,17 @@ export function getBrowserWindow() {
  * Make menu function * HMR ready
  */
 function makeMenu() {
-	// Make the menu
-	const makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	// ONLY SET MAIN MENU ON MAC
+	if (!Env.isMac)
+		return
+	
+	const
+		makeMainMenu:typeof makeMainMenuType = require('./MainMenu').makeMainMenu
+	
 	menu = makeMainMenu(browserWindow)
-
-	// Assign it based on OS
-	process.platform !== 'win32' ? Menu.setApplicationMenu(menu) : browserWindow.setMenu(menu)
+	Menu.setApplicationMenu(menu)
+	
+	
 }
 
 /**
@@ -121,7 +111,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 				windowOpts = Object.assign({},
 					mainWindowState,
 					AllWindowDefaults,Env.isMac && {
-						titleBarStyle: 'hidden'
+						//titleBarStyle: 'hidden'
 						// darkTheme:true,
 					}
 				)

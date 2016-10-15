@@ -2,10 +2,16 @@ import * as Bluebird from 'bluebird'// = require('bluebird')
 
 declare global {
 	var Promise:typeof Bluebird
-
+	
+	interface CancelablePromiseResolver extends Promise.Resolver<any> {
+		isCancelled():boolean
+		cancel():void
+		onCancel(cancelCallback:(CancelablePromiseResolver) => any):void
+	}
+	
 	interface PromiseConstructor {
 		setImmediate():Promise<void>
-		defer():Promise.Resolver<any>
+		defer():CancelablePromiseResolver
 	}
 	
 }
@@ -23,29 +29,50 @@ Bluebird.config({
 
 Object.assign(Bluebird as any, {
 	defer() {
-		let resolve, reject;
-		const promise = new Promise(function () {
-			resolve = arguments[0];
-			reject = arguments[1];
+		let
+			resolve,
+			reject,
+			onCancel,
+			ref,
+			cancelled = false,
+			cancelCallbacks = []
+		
+		const promise = new Promise(function (resolver, rejecter, onCancelRegistrar) {
+			resolve = resolver
+			reject = rejecter
+			onCancel = onCancelRegistrar
+			
+			onCancel(() => {
+				cancelled = true
+				cancelCallbacks.forEach(it => it(ref))
+			})
 		});
-		return {
+		
+		ref = {
 			resolve: resolve,
 			reject: reject,
-			promise: promise
-		};
+			cancel: () => {
+				!cancelled && !promise.isResolved() && !promise.isRejected() &&
+				promise.cancel()
+			},
+			promise: promise,
+			isCancelled: () => cancelled,
+			onCancel: (callback) => cancelCallbacks.push(callback)
+		}
+		
+		return ref
 	}
 })
 
-Object.assign(global as any,{
-	Promise:Bluebird
+Object.assign(global as any, {
+	Promise: Bluebird
 })
 
-Promise.setImmediate = function() {
+Promise.setImmediate = function () {
 	return new Promise<void>(resolve => {
 		setImmediate(() => resolve())
 	})
 }
-
 
 
 export default Promise

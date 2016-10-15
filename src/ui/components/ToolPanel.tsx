@@ -1,20 +1,23 @@
 // Imports
 import * as React from 'react'
 import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {PureRender, Button, Icon,filterProps} from 'ui/components/common'
-import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
+import {createStructuredSelector} from 'reselect'
+import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import {ToolPanelLocation, IToolPanel, ITool, TToolMap} from "shared/tools/ToolTypes"
-import {uiStateSelector} from "shared/actions/ui/UISelectors"
+import {ToolPanelLocation, IToolPanel, ITool} from "shared/tools/ToolTypes"
+import { createToolPanelSelector, toolDraggingSelector } from "shared/actions/ui/UISelectors"
 import {
 	FlexRow, FlexColumnReverse, FlexColumn, FlexScale, makeFlexAlign, FillHeight, FillWidth,
-	FlexAlignCenter, FlexAuto, makeTransition, FlexColumnCenter, OverflowHidden, makeFlex, makePaddingRem, FlexRowCenter,
+	FlexAuto, OverflowHidden, makeFlex, FlexRowCenter,
 	rem, Ellipsis
 } from "shared/themes"
-import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
-import {getToolComponent, getToolHeaderControls, loadPlugins, addRegistryListener, RegistryEvent} from "shared/Registry"
-import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import {loadPlugins, addRegistryListener, RegistryEvent} from "shared/Registry"
+import { ToolGutter } from "ui/components/ToolGutter"
+import { ToolWrapper } from "ui/components/ToolWrapper"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import { colorAlpha } from "shared/themes/styles/ColorTools"
+
+
 
 loadPlugins()
 
@@ -46,118 +49,77 @@ const
 		OverflowHidden,{
 			minHeight: gutterVertDim
 		}
-	],
-	baseStyles = createStyles({
-		root: [FlexScale, OverflowHidden, {
+	]
+
+
+function baseStyles(topStyles,theme,palette) {
+	const
+		{primary,accent,warn,success} = palette
+	return {
+		
+		root: [ FlexScale, OverflowHidden, {
 			border: 0,
 			
-			[Left]: [FlexRow,FillHeight],
-			[Right]: [FlexRow,FillHeight],
-			[Bottom]: [FlexColumnReverse,FillWidth],
-			[Popup]: [FlexColumn,FillWidth]
-		
-		}],
-		
-		tools: [FlexScale,OverflowHidden,makeBorderRem(),{
+			[Left]: [ FlexRow, FillHeight ],
+			[Right]: [ FlexRow, FillHeight ],
+			[Bottom]: [ FlexColumnReverse, FillWidth ],
+			[Popup]: [ FlexColumn, FillWidth ]
 			
+		} ],
 		
-			[Left]: [FlexColumn,FillHeight, {borderLeftStyle: 'solid',borderLeftWidth: rem(0.1)}],
-			[Right]: [FlexColumn,FillHeight, {borderRightStyle: 'solid',borderRightWidth: rem(0.1)}],
-			[Popup]: [FlexRow,FillWidth, {borderTopStyle: 'solid',borderTopWidth: rem(0.1)}],
-			[Bottom]: [FlexRow,FillWidth, {borderBottomStyle: 'solid',borderBottomWidth: rem(0.1)}],
-		}],
-		
-		tool: [FlexColumn,FlexScale,OverflowHidden,{
-			[Left]: [FillWidth],
-			[Right]: [FillWidth],
-			[Bottom]: [FillHeight],
-			[Popup]: [FillHeight],
+		tools: [ FlexScale, OverflowHidden, makeBorderRem(), {
 			
-			header: [FlexRowCenter,makeFlex(0,0,rem(2)),{
+			
+			[Left]: [ FlexColumn, FillHeight, { borderLeftStyle: 'solid', borderLeftWidth: rem(0.1) } ],
+			[Right]: [ FlexColumn, FillHeight, { borderRightStyle: 'solid', borderRightWidth: rem(0.1) } ],
+			[Popup]: [ FlexRow, FillWidth, { borderTopStyle: 'solid', borderTopWidth: rem(0.1) } ],
+			[Bottom]: [ FlexRow, FillWidth, { borderBottomStyle: 'solid', borderBottomWidth: rem(0.1) } ],
+		} ],
+		
+		tool: [ FlexColumn, FlexScale, OverflowHidden, {
+			[Left]: [ FillWidth ],
+			[Right]: [ FillWidth ],
+			[Bottom]: [ FillHeight ],
+			[Popup]: [ FillHeight ],
+			
+			header: [ FlexRowCenter, makeFlex(0, 0, rem(2)), {
 				// borderBottomStyle: 'solid',
 				// borderBottomWidth: rem(0.1),
 				
-				label: [FlexScale,Ellipsis,{
+				label: [ FlexScale, Ellipsis, {
 					fontSize: themeFontSize(1.2),
 					padding: '0.4rem 0.5rem'
-				}]
-			}],
+				} ]
+			} ],
 			
-			container: [OverflowHidden,PositionRelative,FlexScale,{
+			container: [ OverflowHidden, PositionRelative, FlexScale, {
 				borderStyle: 'solid',
 				borderWidth: rem(0.1)
-			}]
-		}],
+			} ]
+		} ],
 		
-		gutter: [{
-			[Left]: [...gutterVertical],
-			[Right]: [...gutterVertical],
-			[Popup]: [...gutterHorizontal],
-			[Bottom]: [...gutterHorizontal],
+		gutter: [ makeTransition(['background-color','border','width','height','min-width','min-height']),{
+			[Left]: [ ...gutterVertical ],
+			[Right]: [ ...gutterVertical ],
+			[Popup]: [ ...gutterHorizontal ],
+			[Bottom]: [ ...gutterHorizontal ],
 			
-			/**
-			 * Toggle button for opening/focusing tool
-			 */
-			toggle: [makeTransition(['opacity']),PositionRelative,FlexColumnCenter,FlexAuto,makeMarginRem(0),makePaddingRem(0),{
-				opacity: 1,
-				pointerEvents: 'auto',
-				textAlign: 'center',
-				
-				
-				[Left]: [{width: gutterHorizDim}],
-				[Right]: [{width: gutterHorizDim}],
-				[Bottom]: [{height: gutterVertDim}],
-				[Popup]: [{height: gutterVertDim}],
-				
-				button: [FlexAlignCenter,makeFlex(0,1,'auto'),makePaddingRem(0),{
-					
-					
-					[Left]: [FillWidth,FlexColumnReverse,{
-						width: gutterHorizDim
-					}],
-					[Right]: [FillWidth,FlexColumn,makePaddingRem(0.5,0),{
-						width: gutterHorizDim
-					}],
-					[Popup]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
-						height: gutterHorizDim
-					}],
-					[Bottom]: [FillHeight,FlexRow,makePaddingRem(0,0.5),{
-						height: gutterHorizDim
-					}]
-				}],
-				
-				// Label
-				label: [makeFlex(0,1,'auto'),Ellipsis,{
-					
-					fontSize: rem(0.9),
-					
-					[Left]: [{
-						padding: "0.5rem 0.3rem",
-						textOrientation: "sideways-right",
-						writingMode: "vertical-lr",
-						transform: "rotate(0.5turn)"
-					}],
-					
-					[Right]: [{
-						padding: "0.5rem 0.3rem",
-						textOrientation: "sideways-left",
-						writingMode: "vertical-lr",
-						transform: "rotate(-0.5turn)"
-					}],
-					[Bottom]: [{padding: "0rem 0.5rem",}]
-				}],
-				
-				// Icon
-				icon: [makePaddingRem(0.4),{
-					 fontSize: rem(1.1)
-				}]
-				
-				
+			dragging: [{
+				border: `0.2rem solid ${colorAlpha(success.hue2,0.6)}`,
+				backgroundColor: colorAlpha(success.hue3,0.8),
+			}],
+			
+			dragHover: [{
+				border: `0.2rem solid ${colorAlpha(success.hue1,0.6)}`,
+				backgroundColor: colorAlpha(success.hue1,0.8),
 			}]
-		}]
+			
+			
+		} ]
 		
 		
-	})
+	}
+}
 
 
 
@@ -165,87 +127,13 @@ const
 /**
  * IToolPanelProps
  */
-export interface IToolPanelProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface IToolPanelProps extends IThemedAttributes {
 	id?:string
 	location:ToolPanelLocation
 	panel?:IToolPanel
+	dragging?:boolean
 }
 
-/**
- * Tool toggle button, used to activate button from Gutter
- *
- * @param props
- * @returns {any}
- * @constructor
- */
-const GutterButton = Radium((props) => {
-	const
-		{styles,tool,panel} = props,
-		{location} = panel,
-		toggleStyles = styles.gutter.toggle
-	
-	return <div style={[toggleStyles,toggleStyles[location]]}>
-		<Button tabIndex={-1}
-		        onClick={() => getUIActions().toggleTool(tool.id)}
-		        style={[toggleStyles.button,toggleStyles.button[location]]} >
-			<Icon style={[toggleStyles.icon]} iconSet='octicon' iconName='repo'/>
-			<div style={[toggleStyles.label,toggleStyles.label[location]]}>
-				{/* Default to 'buttonLabel' / if null then use 'label' */}
-				{tool.buttonLabel || tool.label}
-			</div>
-		</Button>
-	</div>
-	
-})
-
-interface IToolWrapperProps {
-	styles:any
-	tool:ITool
-	panel:IToolPanel
-}
-
-@Radium
-class ToolWrapper extends React.Component<IToolWrapperProps,any> {
-	
-	render() {
-		const
-			{styles,tool,panel} = this.props,
-			{location} = panel,
-			toolStyles = styles.tool,
-			ToolComponent = getToolComponent(tool.id),
-			ToolHeaderControls = getToolHeaderControls(tool.id)
-		
-		return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
-			<div style={[toolStyles.header,toolStyles.header[location]]}>
-				<div style={[toolStyles.header.label]}>{tool.label}</div>
-				{ToolHeaderControls}
-			</div>
-			<div style={[toolStyles.container]}>
-				<ToolComponent tool={tool} panel={panel} visible={panel.open && tool.active} />
-			</div>
-		</div>
-	}
-}
-
-
-/**
- * Gutter component
- *
- * @type {((props)=>any)|((component?:TElement)=>TElement)}
- */
-const Gutter = Radium((props) => {
-	const
-		{panel,styles} = props,
-		tools:TToolMap = _.get(panel,'tools',[]) as any
-	
-	return <div {...filterProps(props)} style={[styles.gutter,styles.gutter[panel.location]]}>
-		{Object.values(tools).map(tool =>
-			<GutterButton key={tool.id} styles={styles} tool={tool} panel={panel}/>
-		)}
-	</div>
-})
 
 /**
  * ToolPanel
@@ -254,20 +142,10 @@ const Gutter = Radium((props) => {
  * @constructor
  **/
 
-@connect(() =>
-	createDeepEqualSelector(
-		[uiStateSelector,(state,props) => _.pick(props || {},'id','location')],
-		(uiState,{id,location}) => {
-			id = id || ToolPanelLocation[location]
-			log.info(`Got id ${id} and location ${location} and tool panels = `,uiState.toolPanels)
-			
-			return {
-				panel: uiState.toolPanels
-					.get(id)
-			}
-		}
-	)
-)
+@connect(() => createStructuredSelector({
+	panel: createToolPanelSelector(),
+	dragging: toolDraggingSelector
+}))
 @ThemedStyles(baseStyles,'toolPanel')
 @PureRender
 export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
@@ -292,22 +170,26 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 	
 	render() {
 		const
-			{styles,style,panel,location} = this.props,
-			tools:ITool[] = Object.values(_.get(panel,'tools',{})) as any
+			{styles,style,panel,dragging,location} = this.props,
+			{tools,toolIds} = panel || {} as IToolPanel,
+			toolList:ITool[] = toolIds.map(id => tools[id])
 		
 		return <div style={[styles.root,styles.root[location],style]}>
 			{/* The Gutter of toggle controls and decorations */}
 			
-			<Gutter panel={panel}
-			        styles={styles}/>
+			<ToolGutter panel={panel}
+			            dragging={dragging}
+			            styles={styles.gutter}/>
 			
 			<div style={[styles.tools,styles.tools[location]]}>
-				{tools.filter(it => it.active).map(tool => {
-					return <ToolWrapper key={tool.id}
-					                    styles={styles}
-					                    panel={panel}
-					                    tool={tool}/>
-				})}
+				{toolList
+					.filter(it => it.active)
+					.map(tool => <ToolWrapper
+						key={tool.id}
+            styles={styles}
+            panel={panel}
+            tool={tool}/>
+				)}
 			</div>
 		</div>
 	}

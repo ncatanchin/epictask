@@ -33,44 +33,46 @@ const uiActions = Container.get(UIActionFactory)
 
 
 //region Styles
-const baseStyles = createStyles({
-	root:            [makeTransition(), PositionAbsolute, {
-		backgroundColor: 'transparent',
-		right:           0,
-		bottom:          0,
-		left:            'auto',
-		padding:         '2rem',
-		zIndex: 99999
-	}],
-	transitionGroup: [makeTransition(), FlexColumn, FlexAlignEnd, {}],
-	toastMessagesTransition: [{
-		'.toastMessages-enter': {
-			height: 0,
-			opacity: .01
-		},
-		'.toastMessages-enter-active': {
-			height: 48,
-			opacity: 1
-		},
-		'.toastMessages-leave': {
-			height: 48,
-			opacity: 1
-		},
-		'.toastMessages-leave-active': {
-			height: 0,
-			opacity: .01
-		}
-	}],
-	
-	body:         [OverflowHidden, Ellipsis, PositionRelative, {
-		backgroundColor: 'transparent',
-		display:         'block'
-	}],
-
-	
-	
-
-})
+function baseStyles(topStyles,theme,palette) {
+	return {
+		root:            [makeTransition(), PositionAbsolute, {
+			backgroundColor: 'transparent',
+			right:           0,
+			bottom:          0,
+			left:            'auto',
+			padding:         '2rem',
+			zIndex: 99999
+		}],
+		transitionGroup: [makeTransition(), FlexColumn, FlexAlignEnd, {}],
+		toastMessagesTransition: [{
+			'.toastMessages-enter': {
+				height: 0,
+				opacity: .01
+			},
+			'.toastMessages-enter-active': {
+				height: 48,
+				opacity: 1
+			},
+			'.toastMessages-leave': {
+				height: 48,
+				opacity: 1
+			},
+			'.toastMessages-leave-active': {
+				height: 0,
+				opacity: .01
+			}
+		}],
+		
+		body:         [OverflowHidden, Ellipsis, PositionRelative, {
+			backgroundColor: 'transparent',
+			display:         'block'
+		}],
+		
+		
+		
+		
+	}
+}
 //endregion
 
 

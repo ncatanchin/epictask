@@ -257,14 +257,6 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 				.then(() => {
 					fireEvent(RegistryEvent.ToolRegistered, reg)
 					log.info(`Events fired for ${reg.id}`)
-					// if (config) {
-					// 	const
-					// 		AppRoot = require('ui/components/root/AppRoot'),
-					// 		appInstance = AppRoot.getAppInstance()
-					//
-					// 	if (appInstance)
-					// 		require('react-deep-force-update')(appInstance)
-					// }
 				})
 		}
 		return config.react.proxyComponent

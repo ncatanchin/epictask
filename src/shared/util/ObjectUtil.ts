@@ -31,11 +31,18 @@ export function isObject(o:any):o is Object {
 }
 
 export function getValue<T>(fn:() => T,defaultValue:T = null):T {
+	let
+		result
+	
 	try {
-		return fn()
+		result = fn()
 	} catch (err) {
-		return defaultValue
 	}
+	
+	if (isNil(result))
+		result = defaultValue
+	
+	return result
 }
 
 export function isPromise(o:any):o is Promise<any> {
@@ -150,6 +157,16 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 	
 	return cloned
 
+}
+
+/**
+ * Shallow clone object and assign properties
+ *
+ * @param o
+ * @param newSources
+ */
+export function cloneObjectShallow<T>(o:T,...newSources:any[]):T {
+	return assign(_.clone(o),...newSources)
 }
 
 /**

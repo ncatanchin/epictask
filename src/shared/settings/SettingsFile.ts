@@ -8,7 +8,7 @@ import {ISettings} from "shared/settings/Settings"
 
 const
 	log = getLogger(__filename),
-	settingsFilename = getUserDataFilename('settings.json')
+	settingsFilename = getUserDataFilename('epictask-settings.json')
 
 log.info(`Settings file: ${settingsFilename}`)
 

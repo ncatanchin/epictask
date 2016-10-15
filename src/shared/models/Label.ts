@@ -20,6 +20,8 @@ export function makeLabelId(label:Label) {
 })
 export class Label extends DefaultModel {
 
+	static makeId = makeLabelId
+	
 	static isLabel(o:any):o is Label {
 		return o.url && o.name && !o.id
 	}
@@ -61,6 +63,7 @@ export class LabelStore extends TSRepo<Label> {
 	 * @returns {Promise<Comment[]>}
 	 */
 	@PouchDBPrefixFinder({
+		includeDocs: true,
 		keyProvider: (repoIdOrRepo:number|Repo) => {
 			const
 				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`

@@ -95,16 +95,16 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Commands for the container
 	 */
-	commands = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder) =>
 	  // NEW COMMENT
 		builder
-			.command(
-				CommandType.Container,
-				'New Comment',
-				(cmd, event) => getIssueActions().newComment(),
-					"Ctrl+m", {
-					menuPath:['Issue']
-				})
+			// .command(
+			// 	CommandType.Container,
+			// 	'New Comment',
+			// 	(cmd, event) => getIssueActions().newComment(),
+			// 		"Ctrl+m", {
+			// 		menuPath:['Issue']
+			// 	})
 			.make()
 	/*
 	 * Insert images (Drag and drop and select)
@@ -219,7 +219,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param nextContext
 	 */
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
-		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue')
+		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue','selectedIssueIds')
 	}
 	
 	/**

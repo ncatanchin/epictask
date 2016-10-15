@@ -22,6 +22,7 @@ declare namespace __WebpackModuleApi {
 		 * Returns the exports from a dependency. The call is sync. No request to the server is fired. The compiler ensures that the dependency is available.
 		 */
 		// <T>(path: string): T;
+		//(path: string): any
 		/**
 		 * Behaves similar to require.ensure, but the callback is called with the exports of each dependency in the paths array. There is no option to provide a chunk name.
 		 */

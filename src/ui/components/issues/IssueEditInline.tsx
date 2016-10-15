@@ -39,7 +39,10 @@ import {
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
 import { cloneObject } from "shared/util/ObjectUtil"
-import { CommandComponent, getCommandProps, ICommandComponent, CommandRoot } from "shared/commands/CommandComponent"
+import {
+	CommandComponent, getCommandProps, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from "shared/commands/CommandComponent"
 import { ICommand } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 
@@ -48,7 +51,7 @@ const log = getLogger(__filename)
 const ReactTimeout = require('react-timeout')
 
 //region Styles
-const baseStyles = createStyles({
+const baseStyles = (topStyles,theme,palette) => ({
 	root: [FlexColumn,FillWidth,FlexAuto,makeTransition('opacity')],
 	savingIndicator: [makeTransition('opacity'),PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
 		opacity: 0,
@@ -260,9 +263,11 @@ export interface IIssueEditInlineState {
 @CommandComponent()
 @ReactTimeout
 export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> implements ICommandComponent {
+
+
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder.make()
 	
-	
-	readonly commands:ICommand[] = []
 	readonly commandComponentId:string = 'IssueEditInline'
 	
 	

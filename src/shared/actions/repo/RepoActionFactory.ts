@@ -24,7 +24,7 @@ import {getSettings} from 'shared/settings/Settings'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
-import { getValue, isNil, nilFilter } from "shared/util/ObjectUtil"
+import { getValue, isNil, nilFilter, cloneObject, cloneObjectShallow } from "shared/util/ObjectUtil"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
@@ -63,7 +63,39 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	leaf():string {
 		return RepoKey;
 	}
-
+	
+	@ActionReducer()
+	patchAvailableRepos(patch:any,availableRepos:List<AvailableRepo>|AvailableRepo[]) {
+		return (state:RepoState) => {
+			
+			let
+				newAvailRepos = state.availableRepos
+			
+			availableRepos = (Array.isArray(availableRepos) ?
+				availableRepos :
+				availableRepos.toArray()) as AvailableRepo[]
+			
+			for (let availRepo of availableRepos) {
+				const
+					index = newAvailRepos.findIndex(it => it.id === availRepo.id),
+					existingAvailRepo = index > -1 && newAvailRepos.get(index)
+				
+				if (!existingAvailRepo) {
+					log.warn(`Tried to patch a repo that is not in the state`, availRepo)
+					continue
+				}
+				
+				availRepo = assign(_.clone(existingAvailRepo),patch)
+				
+				newAvailRepos = newAvailRepos.set(index,availRepo)
+			}
+			
+			
+			return state.set('availableRepos',newAvailRepos)
+			
+		}
+	}
+	
 	/**
 	 * Updated available repo resources
 	 *
@@ -73,24 +105,25 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionReducer()
 	updateAvailableRepos(availableRepos:List<AvailableRepo>|AvailableRepo[]) {
 		return (state:RepoState) => {
-			availableRepos = Array.isArray(availableRepos) ?
-				List<AvailableRepo>(availableRepos) :
-				availableRepos
 			
 			let
 				newAvailRepos = state.availableRepos
 			
-			availableRepos = Array.isArray(availableRepos) ?
+			availableRepos = (Array.isArray(availableRepos) ?
 				availableRepos :
-				availableRepos.toArray()
+				availableRepos.toArray()) as AvailableRepo[]
 			
 			for (let availRepo of availableRepos) {
 				const
-					index = newAvailRepos.findIndex(it => it.id === availRepo.id)
+					index = newAvailRepos.findIndex(it => it.id === availRepo.id),
+					existingAvailRepo = index > -1 && newAvailRepos.get(index)
+				
+				
+				availRepo = assign(_.clone(existingAvailRepo || availRepo),availRepo)
 				
 				newAvailRepos = index === -1 ?
 					newAvailRepos.push(availRepo) :
-					newAvailRepos.set(index,assign({},availRepo))
+					newAvailRepos.set(index,availRepo)
 			}
 			
 			
@@ -177,7 +210,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		let
 			{availableRepos} = state,
 			index = availableRepos.findIndex(it => it.id === repoId),
-			availableRepo = index !== -1 && availableRepos.get(index)
+			availableRepo = index !== -1 && cloneObjectShallow(availableRepos.get(index))
 		
 		if (!availableRepo) {
 			log.error(`Can not update ${field} on state, no repo found with id ${repoId}`)
@@ -186,9 +219,18 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		
 		availableRepo[field] = value
 		
+		// ON NEXT TICK UPDATE ISSUES
+		setImmediate(() => {
+			getIssueActions()
+				.refillResourcesForRepo(
+					availableRepo,
+					field === 'milestones' ?
+						'milestone' :
+						'labels'
+				)
+		})
 		
-		
-		return state.set('availableRepos', availableRepos.set(index,assign({},availableRepo)))
+		return state.set('availableRepos', availableRepos.set(index,availableRepo))
 	}
 	
 	
@@ -274,7 +316,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				// UPDATE LOAD STATUS AND STEP OVER
 				updateLoadStatuses = async (availReposToUpdate,repoLoadStatus:LoadStatus,issuesLoadStatus:LoadStatus) => {
 					let
-						updatedAvailRepos = availReposToUpdate.map(it => assign({},it,{
+						updatedAvailRepos = availReposToUpdate.map(it => assign(_.clone(it),{
 							repoLoadStatus: LoadStatus.Loading,
 							issuesLoadStatus: LoadStatus.NotLoaded
 						}))
@@ -321,9 +363,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			const
 				repoIds = availRepos.map(item => item.id),
-				milestones = [],
-				labels = [],
-				assignees = [],
 				
 				// LOAD REPO, ASSIGNEES/COLLABS, LABELS & MILESTONES
 				promises = [
@@ -340,7 +379,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 						const
 							models = modelList.toArray()
 						
-						assignees.push(...models)
 						availRepos.forEach(it =>
 							(it.collaborators = it.collaborators || [])
 								.push(...models.filter(user => user.repoIds.includes(it.repoId))))
@@ -350,22 +388,18 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				].concat(
 					
 					// Labels
-					repoIds.map(repoId =>
-						stores.label.findByRepo(repoId)
+					availRepos.map(availRepo =>
+						stores.label.findByRepo(availRepo.id)
 							.then(models => {
-								labels.push(...models)
-								availRepos.forEach(it =>
-									it.labels = models.filter(label =>  label.repoId ===  it.repoId))
+								availRepo.labels = models
 							}),
 					),
 					
 					// Milestones
-					repoIds.map(repoId =>
-						stores.milestone.findByRepo(repoId)
+					availRepos.map(availRepo =>
+						stores.milestone.findByRepo(availRepo.id)
 							.then(models => {
-								milestones.push(...models)
-								availRepos.forEach(it =>
-									it.milestones = models.filter(milestone =>  milestone.repoId ===  it.repoId))
+								availRepo.milestones = models
 							})
 					)
 				)
@@ -374,10 +408,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await Promise.all(promises)
 			
 			// UPDATE ALL STATUSES
-			availRepos.forEach(it => it.repoLoadStatus = LoadStatus.Loaded)
+			availRepos = availRepos.map(it => assign(_.clone(it),{repoLoadStatus: LoadStatus.Loaded}))
 			
 			// ASSIGN TO NEW REF
-			this.updateAvailableRepos(List<AvailableRepo>(availRepos.map(it => assign({},it))))
+			this.updateAvailableRepos(List<AvailableRepo>(availRepos))
 			
 			// QUICK DELAY
 			await Promise.delay(100)
@@ -620,20 +654,13 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await stores.availableRepo.save(persistentAvailRepo)
 			
 			
-			const
-				
-				updatedAvailRepo = assign(
-					{},
-					availRepo,
-					{
-						enabled
-					},
-					{issuesLoadStatus: LoadStatus.NotLoaded}
-				) as AvailableRepo
 			
 			
 			// UPDATE THE ACTUAL REPO
-			this.updateAvailableRepos(List<AvailableRepo>([updatedAvailRepo]))
+			this.patchAvailableRepos({
+				enabled,
+				issuesLoadStatus: LoadStatus.NotLoaded
+			},[availRepo])
 			
 			// IF NOT ENABLED THEN CLEAR ISSUES
 			
