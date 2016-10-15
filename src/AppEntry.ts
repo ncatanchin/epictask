@@ -33,21 +33,14 @@ import 'shared/index'
 function loadApp() {
 	
 	function loadUI() {
-		require.ensure([ "ui/UIEntry" ], function (require) {
-			require("ui/UIEntry")
-		})
+		require("ui/UIEntry")
+		
 	}
 	
 	const Entries = {
-		[ProcessType.Main]: () => require.ensure([ "main/MainEntry" ], function (require) {
-			require("main/MainEntry")
-		}),
-		[ProcessType.DatabaseServer]: () => require.ensure([ "db/DatabaseServerEntry" ], function (require) {
-			require("db/DatabaseServerEntry")
-		}),
-		[ProcessType.JobServer]: () => require.ensure([ "job/JobServerEntry" ], function (require) {
-			require("job/JobServerEntry")
-		}),
+		[ProcessType.Main]: () => require("main/MainEntry"),
+		[ProcessType.DatabaseServer]: () => require("db/DatabaseServerEntry"),
+		[ProcessType.JobServer]: () => require("job/JobServerEntry"),
 		[ProcessType.UI]: loadUI,
 		[ProcessType.UIChildWindow]: loadUI
 	}
