@@ -1,12 +1,14 @@
-const log = getLogger(__filename)
-import * as fs from 'fs'
-import * as path from 'path'
+
+
 import electron = require('electron')
 import uuid = require('node-uuid')
 
-const {app} = electron
-const dataUrl = require('dataurl')
-// import {Events} from 'shared/Constants'
+const
+	log = getLogger(__filename),
+
+	{app} = electron,
+	dataUrl = require('dataurl')
+	
 
 export function toDataUrl(template:Function|string,locals:any = {},mimetype:string = 'text/html'):string {
 	if (typeof template === 'function') {

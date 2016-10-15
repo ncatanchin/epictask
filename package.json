@@ -211,7 +211,6 @@
     "typescript": "2.1.0-dev.20160914",
     "url-loader": "^0.5.7",
     "vinyl-named": "^1.1.0",
-    "watchman-processor": "^1.4.0",
     "webpack": "^2.1.0-beta.25",
     "webpack-dashboard": "^0.1.8",
     "webpack-dev-middleware": "^1.6.1",
