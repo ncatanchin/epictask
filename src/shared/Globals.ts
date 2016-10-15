@@ -21,6 +21,8 @@ import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 import { acceptHot } from "shared/util/HotUtils"
 
+import Electron = require('electron')
+import { getValue } from "shared/util/ObjectUtil"
 
 // Export globals
 const
@@ -39,6 +41,20 @@ function getChildWindowIdGlobal() {
 	const
 		windowId = process.env.EPIC_WINDOW_ID
 	return  windowId && windowId !== 'undefined' ? windowId : null
+}
+
+
+/**
+ * Finds the current window from anywhere
+ * @returns {Electron.BrowserWindow}
+ */
+function getCurrentWindowGlobal():Electron.BrowserWindow {
+	try {
+		return getValue(() => Electron.remote.getCurrentWindow(),Electron.BrowserWindow.getFocusedWindow())
+	} catch (err) {
+		console.error(`Unable to find any current window`,err)
+		return null
+	}
 }
 
 /**
@@ -65,6 +81,8 @@ function installGlobals() {
 	if (!win.TextEncoder)
 		_.assign(win,textEncoderPolyFill())
 	
+	
+	
 
 	// Assign all of our internal globals
 	Object.assign(g, {
@@ -81,9 +99,11 @@ function installGlobals() {
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
-		getChildWindowId: getChildWindowIdGlobal
+		getChildWindowId: getChildWindowIdGlobal,
+		getCurrentWindow: getCurrentWindowGlobal
 	}, ContextUtils)
 }
+
 
 
 /**
@@ -122,7 +142,7 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal
 	
-	
+	let getCurrentWindow:typeof getCurrentWindowGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var MainBooted:boolean

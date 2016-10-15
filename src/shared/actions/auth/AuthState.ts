@@ -21,7 +21,9 @@ export class AuthState extends AuthStateRecord {
 		if (o && o instanceof AuthState)
 			return o
 		
-		return new AuthState(assign({},o))
+		return new AuthState(assign({},o,{
+			authenticating: false
+		}))
 	}
 
 	authenticating:boolean

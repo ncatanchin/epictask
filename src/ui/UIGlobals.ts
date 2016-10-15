@@ -7,6 +7,7 @@ import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared
 import * as JQueryGlobal from 'jquery'
 import * as RadiumGlobal from 'radium'
 
+
 /**
  * Now the shared globals - this is required for proper logging config
  */
@@ -37,6 +38,7 @@ process.on("unhandledRejection", function (reason, promise) {
 	console.error(`Epic Task Unhandled Exception`, reason, reason && reason.stack,promise)
 	logErrorGlobal(reason instanceof Error ? reason : new Error(reason))
 })
+
 
 declare global {
 	var CreateGlobalThemedStyles:typeof CreateGlobalThemedStylesGlobal

@@ -18,6 +18,7 @@ import { FlexColumn, Fill, FlexScale } from "shared/themes"
 import { WelcomePage } from "ui/components/pages/WelcomePage"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { ToolDragLayer } from "ui/components/ToolDragLayer"
+import { authenticatingSelector } from "shared/actions/auth/AuthSelectors"
 
 
 // Constants
@@ -63,6 +64,7 @@ export interface IUIRootProps extends IThemedAttributes {
 	hasAvailableRepos?:boolean
 	childOpen?:boolean
 	modalOpen?:boolean
+	authenticating?:boolean
 	sheet?:IUISheet
 	
 }
@@ -86,6 +88,7 @@ export interface IUIRootState {
 	stateType: appStateTypeSelector,
 	childOpen: childWindowOpenSelector,
 	modalOpen: modalWindowOpenSelector,
+	authenticating: authenticatingSelector,
 	sheet: sheetSelector
 }))
 @ThemedStyles(baseStyles)
@@ -94,7 +97,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 	
 	render() {
 		const
-			{ hasAvailableRepos, stateType, styles, theme, modalOpen, sheet } = this.props,
+			{ hasAvailableRepos, authenticating,stateType, styles, theme, modalOpen, sheet } = this.props,
 			
 			PageComponent = ((hasAvailableRepos || stateType < AppStateType.Home) ?
 					getPage(stateType) :
@@ -123,7 +126,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				Fill,
 				FlexColumn,
 				
-				(sheet || modalOpen) && styles.blur
+				(sheet || modalOpen || authenticating) && styles.blur
 			]}>
 				{/* HEADER */}
 				<Header visibility={headerVisibility}/>
@@ -139,7 +142,7 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				<ToastMessages/>
 				
 				{/* STATUS BAR */}
-				<StatusBar open={HeaderVisibility.Hidden !== headerVisibility}/>
+				<StatusBar open={headerVisibility !== HeaderVisibility.Hidden}/>
 				
 				
 			</div>

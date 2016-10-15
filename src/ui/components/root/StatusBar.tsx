@@ -50,7 +50,6 @@ export interface IStatusBarState {
 @connect(createStructuredSelector({
 	jobs: jobsSelector,
 	details: jobDetailsSelector,
-	open: (state) => uiStateSelector(state).statusBar.visible,
 	messages: (state):IToastMessage[] => _.orderBy(
 		uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg)) || [],
 		['createdAt'],

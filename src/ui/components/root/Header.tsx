@@ -11,7 +11,7 @@ import { ICommand } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getCommandManager } from "shared/commands/CommandManager"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { CSSHoverState, PositionAbsolute } from "shared/themes"
+import { CSSHoverState, PositionAbsolute, makeHeightConstraint } from "shared/themes"
 import { WindowControls } from "ui/components/common/WindowControls"
 import { Logo } from "ui/components/common/Logo"
 import { CommandMenuRoot } from "shared/commands/CommandMenuRoot"
@@ -33,19 +33,26 @@ const baseStyles = (topStyles,theme,palette) => {
 	
 	return {
 		header: [
+			makeTransition(['height','max-height','min-height','opacity']),
+			makeHeightConstraint('50px'),
 			FlexRowCenter,
 			FillWidth,
 			FlexAuto,
 			PositionRelative,
 			makePaddingRem(0,0,0,10),
 			{
-				height: 50,
 				WebkitUserSelect: 'none',
 				WebkitAppRegion: 'drag',
 				border: 0,
-				opacity: 1
+				opacity: 1,
+				
+				hidden: [makeHeightConstraint('0px'),makePaddingRem(0),{
+					opacity: 0
+				}]
 			}
 		],
+		
+		
 		
 		
 		controls: makeStyle(makeAbsolute(), {
@@ -219,17 +226,16 @@ export class Header extends React.Component<IHeaderProps,IHeaderState> implement
 
 			
 		
-		let
-			headerStyle = makeStyle(styles.header)
-
 		
-		if ((visibility !== HeaderVisibility.Hidden)) {
+		const
 			headerStyle = makeStyle(
 				theme.header.style,
 				style,
-				styles.header
+				styles.header,
+				visibility === HeaderVisibility.Hidden &&
+					styles.header.hidden
 			)
-		}
+		
 
 		return <CommandRoot
 			component={this}

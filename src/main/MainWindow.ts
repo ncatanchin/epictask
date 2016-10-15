@@ -31,22 +31,6 @@ setDataOnHotDispose(module,() => ({
 	browserWindow
 }))
 
-ipcMain.on(AuthKey,(event,arg) => {
-	log.info('Got auth request',event,arg)
-
-	//const OAuthGithub = require('electron-oauth-github')
-	const authRequest = new GitHubOAuthWindow(GitHubConfig)
-
-	authRequest.startRequest(function(err,token) {
-		if (err) {
-			log.error(err);
-		}
-
-		event.sender.send(AuthKey,{token})
-		log.info('GH token received: ' + token)
-	});
-})
-
 // If in debug mode then add electron-debug
 if ((Env.isDev || Env.isDev) && !Env.isRemote) {
 	require('electron-debug')({})

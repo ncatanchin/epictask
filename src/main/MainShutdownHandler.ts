@@ -73,7 +73,8 @@ function onShutdown(event) {
 					}
 				})
 				
-				app.quit()
+				app.exit(0)
+				
 			}
 		
 		killAll()

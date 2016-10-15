@@ -1,7 +1,7 @@
 import {
 	createStyles, FlexAuto, FlexColumn, makePaddingRem, FlexScale, rem, FlexAlignCenter,
 	FlexRow, FlexAlignEnd, FillWidth, Ellipsis, FlexRowCenter, OverflowHidden, FillHeight, PositionRelative,
-	makeTransition
+	makeTransition, makeHeightConstraint
 } from "shared/themes"
 
 
@@ -40,19 +40,18 @@ export default function (topStyles,theme,palette) {
 	return {
 		root: [
 			//['flex-basis','flex-shrink','height','font-size','font-weight','background-color','color']
-			makeTransition(),
+			makeTransition(['opacity','height','max-height','min-height']),
+			makeHeightConstraint(rem(2.6)),
 			FlexRowCenter,
 			FlexAuto,
 			FillWidth,
 			OverflowHidden,
 			{
-				minHeight: rem(2.6),
-				height: rem(2.6),
 				fontSize: rem(0.8),
 				borderTopStyle: 'solid',
 				borderTopWidth: rem(0.1),
 				padding: makePaddingRem(0.5, 0.5),
-				
+				opacity: 1,
 				
 				// Jobs are InProgress
 				inProgress: [ {
@@ -62,12 +61,8 @@ export default function (topStyles,theme,palette) {
 				
 				
 				// User hidden
-				hidden: [ makePaddingRem(), {
-					flexBasis: 0,
-					flexShrink: 1,
-					minHeight: 0,
-					maxHeight: 0,
-					height: 0,
+				hidden: [ makePaddingRem(), makeHeightConstraint(0), {
+					opacity: 0,
 					borderTopWidth: 0
 				} ]
 			}
