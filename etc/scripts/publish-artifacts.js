@@ -42,10 +42,11 @@ async function upload() {
 	let
 		files = []
 	
-	for (let filePath of ["*.dmg","*.zip","*.exe","*.deb","*.AppImage"]) {
-		files = files.concat(await glob(filePath))
+	for (let buildRoot of ['','mac/']) {
+		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb", "*.AppImage"]) {
+			files = files.concat(await glob(`${buildRoot}${filePath}`))
+		}
 	}
-	
 	files = files.filter(file => !fs.statSync(file).isDirectory())
 	
 	echo(`Uploading ${files.length} files`)
