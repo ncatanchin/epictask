@@ -80,10 +80,6 @@ const
 	} = webpack,
 	
 	
-	
-	// Enable flag for using happy pack
-	happyEnabled = false,
-	
 	// EXTERNALS / makes all node_modules external
 	nodeExternals = require('webpack-node-externals')
 	
@@ -109,22 +105,8 @@ const
 		"AppEntry": [`./AppEntry`],
 		"LoaderEntry": [`./LoaderEntry`],
 		"BrowserEntry": [`./BrowserEntry`],
-	},
+	}
 	
-	// Import HappyPack
-	HappyPack = require('happypack'),
-	
-	// HAPPY THREAD POOL
-	happyThreadPool = happyEnabled && HappyPack.ThreadPool({size: 10}),
-	
-	// HAPPY LOAD PLUGINS
-	happyPlugins = (!happyEnabled || isMain) ? [] :
-		loaders.loaders
-			.filter(loader => loader.happy && loader.happy.id)
-			.map(loader => new HappyPack({
-				id: `${loader.happy.id}`,
-				threadPool: happyThreadPool
-			}))
 
 // HMR ENTRY ADDITION
 if (isDev) {
@@ -181,32 +163,10 @@ const config = {
 		// EXTENSIONS
 		extensions: ['.ts','.tsx','.js', '.jsx']
 		
-		// PACKAGE MAIN
-		//packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
-		
 	},
 	
 	// LOADERS
 	module:  loaders,
-	
-	// SASS/SCSS Loader Config
-	// sassLoader: {
-	//
-	// },
-	
-	// POSTCSS (NOT USED CURRENTLY)
-	// postcss() {
-	// 	return [
-	// 		require('postcss-modules'),
-	// 		require('autoprefixer'),
-	// 		require('postcss-js')
-	// 	]
-	// },
-	
-	// HAPPY PACK
-	// other: {
-	// 	happyPlugins
-	// },
 	
 	// PLUGINS
 	plugins: [
@@ -214,8 +174,6 @@ const config = {
 		
 		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
 		//new ForkCheckerPlugin(),
-		
-		
 		
 		// SPLIT FOR PARALLEL LOADING
 		// new webpack.optimize.AggressiveSplittingPlugin({
@@ -238,10 +196,6 @@ const config = {
 			'Promise': 'bluebird'
 		})
 		
-		// UNUSED / HAPPYPACK / SEPERATE COMPILE
-		//[new webpack.WatchIgnorePlugin([/src\/.*\.tsx?$/])]),
-		// HAPPY PACK PLUGINS
-		//...happyPlugins,
 	],
 	
 	// NODE SHIMS
