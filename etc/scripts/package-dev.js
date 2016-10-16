@@ -1,6 +1,6 @@
 require('./init-scripts')
 
-module.exports = (doWIn,doLinux) => {
+module.exports = (doWin,doLinux) => {
 	if (doWin) {
 		echo(`Packaging on Windows`)
 		require('./package-win-remote')
