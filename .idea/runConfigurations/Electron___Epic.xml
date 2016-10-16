@@ -1,0 +1,6 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Electron / Epic" type="JavascriptDebugType" factoryName="JavaScript Debug" uri="http://localhost:63342/epictask/dist/app/app-entry.html">
+    <mapping url="http://localhost:63342/epictask" local-file="$PROJECT_DIR$" />
+    <method />
+  </configuration>
+</component>
