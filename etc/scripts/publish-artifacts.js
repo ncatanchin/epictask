@@ -41,13 +41,14 @@ async function upload() {
 	
 	let
 		files = [],
-		promises = [],
-		basePath = pwd()
+		promises = []
 	
 	for (let buildRoot of ['','mac']) {
-		const newRoot = path.resolve(basePath,buildRoot)
-		echo(`Publishing from ${newRoot}`)
-		cd(newRoot)
+		//const newRoot = path.resolve(basePath,buildRoot)
+		//echo(`Publishing from ${newRoot}`)
+		if (buildRoot && !isEmpty(buildRoot))
+			cd(buildRoot)
+		
 		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb", "*.AppImage"]) {
 			files = files.concat(await glob(filePath))
 		}
@@ -75,6 +76,9 @@ async function upload() {
 					console.error(`Failed to upload ${file}`,err)
 				}
 			}))
+		
+		if (buildRoot && !isEmpty(buildRoot))
+			cd('..')
 	}
 	
 	
