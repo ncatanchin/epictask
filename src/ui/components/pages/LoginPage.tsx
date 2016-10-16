@@ -165,7 +165,7 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 			{authenticating,styles} = props,
 			buttonHovering = Radium.getState(this.state,'authButton',':hover')
 			
-
+		log.debug(`testing`)
 
 		return (
 			<Page style={makeStyle(

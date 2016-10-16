@@ -22,12 +22,10 @@ if (!skipBuild) {
 	echo("Starting Compilation")
 	process.env.NODE_ENV = 'production'
 	
-	
-	if (exec(`${webpackCmd} --config etc/webpack/webpack.config.js -p --display-error-details --display-chunks --colors`).code !== 0) {
-		console.error(`compile FAILED`)
-		exit(1)
+	if (exec(`gulp compile`).code !== 0) {
+		echo(`compile FAILED`)
+		process.exit(0)
 	}
-	
 	
 	echo("Copy resources")
 	mkdir('-p', 'dist/app/bin')
@@ -50,8 +48,15 @@ echo("Packaging")
 
 if (exec(`${buildCmd} ${platforms.join(' ')}`).code === 0) {
 	if (doWin) {
+		echo(`Packaging on Windows`)
 		require('./package-win-remote')
 	}
+	
+	if (doLinux) {
+		echo(`Packaging on Linux`)
+		require('./package-linux-remote')
+	}
+	
 	if (doInstall) {
 		install()
 	}

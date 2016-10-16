@@ -1,5 +1,4 @@
 require('babel-polyfill')
-//require('shelljs/global')
 
 const
 	path = require('path'),
@@ -9,9 +8,9 @@ const
 	spawn = require('child_process').spawn;
 
 console.log(`args`,process.argv)
-
+process.chdir(baseDir)
 // Child will use parent's stdios
-spawn(`npm.cmd`, ['run',process.argv[2]], {
+spawn(`powershell.exe`, ['-Command','npm','run',process.argv[2]], {
 	cwd: baseDir,
 	stdio: 'inherit'
-});
+})

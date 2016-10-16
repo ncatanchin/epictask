@@ -13,29 +13,19 @@ module.exports = {
 	 * All pre-loaders, for
 	 * hot loading, source-maps, etc
 	 */
-	// preLoaders: [
-	// 	{
-	// 		//happy: {id: 'js-pre'},
-	// 		test: srcTest,
-	// 		exclude: [/node_modules/],
-	// 		loaders: ['source-map-loader',proxyProvidedLoaderPath]
-	// 	}
-	// ],
 	
 	
 	loaders: [
 		{
-			//happy: {id: 'json'},
 			test: /\.json$/,
 			loader: 'json'
 		},
 		
 		// SourceCode
 		{
-			//happy: {id: 'source'},
 			test: srcTest,
 			exclude: [/(node_modules|typedux|typelogger|typestore)/],
-			loaders: ["react-hot-loader/webpack",TypeScriptEnabled ? 'awesome-typescript' : 'babel','source-map-loader',proxyProvidedLoaderPath],
+			loaders: ["react-hot-loader/webpack",'awesome-typescript','source-map-loader',proxyProvidedLoaderPath],
 			
 			// Add the query object for babel
 			// ...(TypeScriptEnabled ? {} : {

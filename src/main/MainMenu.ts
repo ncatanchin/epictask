@@ -160,7 +160,10 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 					label: 'Toggle Full Screen',
 					accelerator: 'Ctrl+Command+F',
 					click() {
-						mainWindow.setFullScreen(!mainWindow.isFullScreen())
+						mainWindow
+							.setFullScreen(
+								!mainWindow.isFullScreen()
+							)
 					}
 				}
 			]

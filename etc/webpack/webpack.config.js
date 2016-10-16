@@ -165,7 +165,7 @@ const config = {
 			styles: path.resolve(baseDir, 'src/assets/styles'),
 			assets: path.resolve(baseDir, 'src/assets'),
 			libs: path.resolve(baseDir, 'libs'),
-			build: path.resolve(baseDir, 'build'),
+			buildResources: path.resolve(baseDir, 'build'),
 			GitHubClient: tsAlias('shared/GitHubClient'),
 			Constants: tsAlias('shared/Constants'),
 			Settings: tsAlias('shared/settings/Settings')
@@ -179,7 +179,7 @@ const config = {
 		//fallback: [path.resolve(baseDir,'src')],
 		
 		// EXTENSIONS
-		extensions: TypeScriptEnabled ? ['.ts','.tsx','.js', '.jsx'] : ['', '.js', '.jsx'],
+		extensions: ['.ts','.tsx','.js', '.jsx']
 		
 		// PACKAGE MAIN
 		//packageMains: ['webpack', 'browser', 'web', ['jam', 'main'], 'main']
@@ -213,7 +213,7 @@ const config = {
 		//new webpack.dependencies.LabeledModulesPlugin(),
 		
 		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-		new ForkCheckerPlugin(),
+		//new ForkCheckerPlugin(),
 		
 		
 		

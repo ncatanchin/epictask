@@ -7,8 +7,8 @@ const
 
 
 //cd(baseDir)
-//process.chdir(baseDir)
-console.log(`Set working directory to ${process.cwd()}`)
+// process.chdir(baseDir)
+//console.log(`Set working directory to ${process.cwd()}`)
 
 const
 	{platform} = process,

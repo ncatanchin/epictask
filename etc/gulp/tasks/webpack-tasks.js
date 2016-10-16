@@ -1,3 +1,4 @@
+require('shelljs/global')
 require ('./../../webpack/parts/stats.js')
 const
 	path = require('path'),
@@ -28,6 +29,7 @@ function makeWebpackCompile(watch = false) {
 		}
 		
 		function doCallback(err,stats) {
+			echo(`Build Completed watch=${watch} err=${err}`)
 			if (err) {
 				log.error('an error occurred', err)
 				const {errors, warnings} = stats.toJson()
@@ -39,15 +41,16 @@ function makeWebpackCompile(watch = false) {
 				}
 			} else {
 				log.info(`[webpack] Completed / watching(${watch})`, (stats) ? stats.toString(WebpackStatsConfig) : null, err)
-				
 			}
 			
 			if (webpackConfig.onCompileCallback)
 				webpackConfig.onCompileCallback(err,stats,watch)
 			
+			
 			if (!watch) {
 				//noinspection JSCheckFunctionSignatures
 				done(err)
+				//process.exit(0)
 			}
 		}
 		

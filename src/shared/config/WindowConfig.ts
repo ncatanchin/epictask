@@ -3,8 +3,8 @@ import { searchPathsForFile } from "shared/util/Files"
 
 
 const
-	iconFile = require('!!file!build/icons/256x256.png'),
-	iconRawData = require('!!raw!build/icons/256x256.png'),
+	iconFile = require('!!file!buildResources/icons/256x256.png'),
+	iconRawData = require('!!raw!buildResources/icons/256x256.png'),
 	dataUrl = require('dataurl'),
 	{nativeImage} = require('electron')
 	
