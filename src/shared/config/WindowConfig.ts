@@ -117,7 +117,7 @@ export const
 		webPreferences: {
 			
 		}
-	},Env.isLinux && {
+	},!Env.isMac && {
 			icon: WindowIcon
 		}) as any
 

@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 require('./init-scripts')
 
+
 const
 	path = require('path'),
 	{isMac,isLinux,isWindows,process} = global,
 	
 	doInstall = process.argv.includes('--install'),
+	doWin = process.argv.includes('--win'),
+	doLinux = process.argv.includes('--linux'),
 	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${isWindows ? '.cmd' : ''}`)
 
 echo(`Will use builder @ ${buildCmd}`)
@@ -19,7 +22,8 @@ if (!skipBuild) {
 	echo("Starting Compilation")
 	process.env.NODE_ENV = 'production'
 	
-	if (exec('gulp compile').code !== 0) {
+	
+	if (exec(`${webpackCmd} --config etc/webpack/webpack.config.js -p --display-error-details --display-chunks --colors`).code !== 0) {
 		console.error(`compile FAILED`)
 		exit(1)
 	}
@@ -45,6 +49,9 @@ echo("Packaging")
 
 
 if (exec(`${buildCmd} ${platforms.join(' ')}`).code === 0) {
+	if (doWin) {
+		require('./package-win-remote')
+	}
 	if (doInstall) {
 		install()
 	}

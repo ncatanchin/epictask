@@ -55,6 +55,7 @@
             "./typings/globals",
             "./typings/modules"
         ],
+        
         "types": [
             "../typings/custom/index"
         ]

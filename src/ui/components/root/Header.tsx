@@ -56,6 +56,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		
 		
 		controls: makeStyle(makeAbsolute(), {
+			WebkitAppRegion: 'no-drag',
 			opacity: 1,
 			border: '0.2rem solid transparent',
 			padding: 0

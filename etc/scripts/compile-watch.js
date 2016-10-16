@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+require('./init-scripts')
 // ./etc/scripts/configure-dev-env.sh
 
 // #./etc/scripts/notify-on-error.sh
@@ -17,15 +17,8 @@ Object.assign(process.env,{
 require('shelljs/global')
 
 const
-	path = require('path'),
-	webpackCmd = path
-		.resolve(
-			process.cwd(),
-			'node_modules',
-			'.bin',
-			`webpack${process.platform === 'win32' ? '.cmd' : ''}`
-		)
-
+	path = require('path')
+	
 exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --colors`)
 
 //exec(`${gulpCmd} compile-watch`)

@@ -1,9 +1,8 @@
 {
   "name": "epictask",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/app/bin/epictask-start.js",
-  
   "scripts": {
     "local-install": "./etc/scripts/local-install.sh",
     "clean": "node ./etc/scripts/clean.js",
@@ -20,6 +19,7 @@
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
     "build-storybook": "build-storybook",
     "package": "node ./etc/scripts/package.js",
+    "make-icons": "node ./etc/scripts/make-icons.js",
     "install-app": "node ./etc/scripts/package.js --install"
   },
   "build": {
@@ -30,7 +30,14 @@
       "msi": true
     },
     "win": {
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "installerHeaderIcon": "build/icon.ico"
     },
     "linux": {
       "category": "Development",
@@ -72,7 +79,7 @@
     ],
     "platformResources": {
       "darwin": {
-        "icon": "./src/assets/images/icon-darwin.icns"
+        "icon": "./build/icon.icns"
       }
     }
   },
@@ -208,6 +215,7 @@
     "script-loader": "^0.7.0",
     "semver": "^5.1.0",
     "shelljs": "^0.7.0",
+    "shelljs-plugin-ssh": "^1.2.0",
     "simple-assign": "^0.1.0",
     "sinon": "^1.17.4",
     "source-map-loader": "^0.1.5",

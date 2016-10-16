@@ -37,6 +37,9 @@ function baseStyles(topStyles, theme, palette) {
 	
 	
 	return [ {
+		root: [{
+			WebkitAppRegion: 'no-drag'
+		}],
 		menuItem: [makePaddingRem(0)],
 		item: [FlexRowCenter,FillHeight,FillWidth,makePaddingRem(0),{
 			textAlign: 'right',
@@ -215,6 +218,7 @@ export class CommandMenuRoot extends React.Component<ICommandMenuRootProps,IComm
 			ref={this.setIconButton}
 			anchorOrigin={{vertical: 'bottom',horizontal: 'right'}}
 			targetOrigin={{vertical: 'top',horizontal: 'right'}}
+			style={styles.root}
 			iconButtonElement={iconButton}>
 			
 			{this.makeItems(menuItems)}

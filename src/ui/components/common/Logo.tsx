@@ -204,7 +204,6 @@ export interface ILogoState {
  **/
 
 @ThemedStyles(baseStyles)
-@Radium
 @PureRender
 export class Logo extends React.Component<ILogoProps,ILogoState> {
 	

@@ -4,6 +4,9 @@ import ProcessType from './ProcessType'
 
 export namespace ProcessConfigGlobal {
 	
+	/**
+	 * Dev tool configs
+	 */
 	const ChildDevTools = {
 		[ProcessType.DatabaseServer]: false,
 		[ProcessType.JobServer]: false

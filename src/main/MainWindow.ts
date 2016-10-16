@@ -2,12 +2,9 @@
 
 import windowStateKeeper = require('electron-window-state')
 import Electron = require('electron')
-import { AuthKey } from 'shared/Constants'
-import GitHubOAuthWindow from './auth/GitHubOAuthWindow'
 import {makeMainMenu as makeMainMenuType}  from './MainMenu'
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
 import { getAppActions } from "shared/actions/ActionFactoryProvider"
-import { GitHubConfig } from "shared/config/GithubConfig"
 import { Events } from "shared/config/Events"
 import { AllWindowDefaults, WindowIcon } from "shared/config/WindowConfig"
 import { setupShutdownOnWindowClose } from "main/MainShutdownHandler"
@@ -119,7 +116,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			
 			browserWindow = new BrowserWindow(windowOpts)
 			
-			if (Env.isLinux) {
+			if (!Env.isMac) {
 				browserWindow.setIcon(WindowIcon as any)
 			}
 			
