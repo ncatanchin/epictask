@@ -5,7 +5,8 @@ const
 	_ = require('lodash'),
 	{isEmpty} = _,
 	fs = require('fs'),
-	glob = require('glob-promise')
+	glob = require('glob-promise'),
+	path = require('path')
 
 
 const
@@ -43,8 +44,8 @@ async function upload() {
 		promises = [],
 		basePath = pwd()
 	
-	for (let buildRoot of ['','mac/']) {
-		const newRoot = `${basePath}${buildRoot}`
+	for (let buildRoot of ['','mac']) {
+		const newRoot = path.resolve(basePath,buildRoot)
 		echo(`Publishing from ${newRoot}`)
 		cd(newRoot)
 		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb", "*.AppImage"]) {
