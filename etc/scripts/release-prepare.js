@@ -26,7 +26,7 @@ function getNewVersion() {
 	pkg.version = newVersion
 	
 	fs.writeFileSync('./package.json',JSON.stringify(pkg,null,2),'utf8')
-	execNoError(`git commit -m Patched && git tag v${newVersion}`)
+	execNoError(`git commit -a -m Patched && git tag v${newVersion}`)
 	
 	return newVersion
 	
