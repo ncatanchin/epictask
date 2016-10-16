@@ -19,7 +19,7 @@
     "clean-electron": "./etc/scripts/clean-electron.sh",
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
     "build-storybook": "build-storybook",
-    "package": "node ./etc/scripts/package.js",
+    "package": "babel-node ./etc/scripts/package.js",
     "package-all": "node ./etc/scripts/package.js --win --linux",
     "make-icons": "node ./etc/scripts/make-icons.js",
     "install-app": "node ./etc/scripts/package.js --install"
