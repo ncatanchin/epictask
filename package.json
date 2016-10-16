@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/app/bin/epictask-start.js",
   "scripts": {
