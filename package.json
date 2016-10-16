@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/app/bin/epictask-start.js",
   "scripts": {
@@ -52,7 +52,10 @@
     "mac": {
       "identity": "Densebrain, Inc",
       "icon": "build/icon.icns",
-      "target": ["dmg","zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ]
     },
     "extraFiles": [
       "build/**/*"
