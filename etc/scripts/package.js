@@ -45,28 +45,21 @@ let
 echo("Packaging")
 
 
+// OPTIONALLY BUILD OTHER
+execNoError(`${buildCmd} ${platforms.join(' ')}`)
 
-if (exec(`${buildCmd} ${platforms.join(' ')}`).code === 0) {
-	if (doWin) {
-		echo(`Packaging on Windows`)
-		require('./package-win-remote')
-	}
-	
-	if (doLinux) {
-		echo(`Packaging on Linux`)
-		require('./package-linux-remote')
-	}
-	
-	if (doInstall) {
-		install()
-	}
-}
+require('./package-dev')(doWin,doLinux)
 
-function install() {
-	echo(`Installing App`)
-	if (isMac) {
-		exec('pkill -9 Epictask')
-		rm('-Rf', '/Applications/Epictask.app')
-		cp('-r', 'dist/build/mac/Epictask.app', '/Applications/')
-	}
+doInstall && require('./install-app')
+
+const
+	{
+		AWS_ACCESS_KEY_ID:accessKeyId,
+		AWS_SECRET_ACCESS_KEY:secretAccessKey,
+		EPICTASK_BUILD:buildNumber,
+		EPICTASK_VERSION:version
+	} = process.env
+
+if (awsAccessKeyId && buildNumber && version) {
+	require('./publish-artifacts')(accessKeyId,secretAccessKey,version,buildNumber)
 }

@@ -1,9 +1,32 @@
 require('babel-polyfill')
 require('shelljs/global')
 
+
+
+
 const
 	path = require('path'),
+	{process} = global,
 	baseDir = path.resolve(__dirname,'..','..')
+
+/**
+ * Exec cmd
+ *
+ * @param cmd
+ * @param onError
+ */
+function execNoError(cmd,onError = null) {
+	const
+		result = exec(cmd)
+	
+	if (result.code !== 0) {
+		if (!onError || onError(result) !== false) {
+			process.exit(result.code)
+		}
+	}
+	
+	return result
+}
 
 
 //cd(baseDir)
@@ -17,6 +40,7 @@ const
 
 
 Object.assign(global,{
+	execNoError,
 	isMac,
 	isWindows,
 	isLinux: !isMac && !isWindows,
