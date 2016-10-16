@@ -35,33 +35,26 @@ async function upload() {
 	
 	const
 		Bucket = 'epictask-releases',
-		s3 = new AWS.S3()
+		s3 = new AWS.S3(),
+		artifactPath = isMac ? 'dist/build/mac' : 'dist/build'
 	
-	cd('dist/build')
+	cd(artifactPath)
 	
 	let
-		promises = []
+		promises = [],
+		files = []
 	
-	for (let buildRoot of ['','mac']) {
+	
 		//const newRoot = path.resolve(basePath,buildRoot)
 		//echo(`Publishing from ${newRoot}`)
-		let
-			files = []
 		
-		if (buildRoot && !isEmpty(buildRoot)) {
-			try {
-				if (!fs.statSync(path.resolve(pwd(), buildRoot)).isDirectory())
-					continue
-			} catch (err) {
-				continue
-			}
-			cd(buildRoot)
-		}
+			
+		
 		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb", "*.AppImage"]) {
 			files = files.concat(await glob(filePath))
 		}
 		
-		files = files.filter(file => fs.existsSync(file) && !fs.statSync(file).isDirectory())
+		files = files.filter(file => !fs.statSync(file).isDirectory())
 		
 		echo(`Uploading ${files.length} files`)
 		
@@ -85,9 +78,6 @@ async function upload() {
 				}
 			}))
 		
-		if (buildRoot && !isEmpty(buildRoot))
-			cd('..')
-	}
 	
 	
 	await Promise.all(promises)
