@@ -1,16 +1,44 @@
 require('./init-scripts')
 
-echo(`Updating patch version`)
-
-echo(`Updating version`)
-execNoError(`npm version patch`)
-
 const
 	{process} = global,
 	path = require('path'),
-	pkg = require(path.resolve(process.cwd(),'package.json')),
-	{version} = pkg,
 	fs = require('fs'),
+	semver = require('semver')
+	
+echo(`Updating patch version`)
+function getPkg() {
+	return require(path.resolve(process.cwd(),'package.json'))
+}
+
+
+echo(`Updating version`)
+
+function getNewVersion() {
+	const
+		pkg = getPkg()
+	
+	let
+		{version} = pkg,
+		newVersion = semver.inc(version,'patch')
+	
+	echo(`Incrementing semver to ${newVersion}`)
+	pkg.version = newVersion
+	
+	fs.writeFileSync('./package.json',JSON.stringify(pkg,null,2),'utf8')
+	execNoError(`git commit -m Patched && git tag v${newVersion}`)
+	
+	return newVersion
+	
+	
+}
+
+//execNoError(`npm version patch`)
+
+const
+	pkg = getPkg(),
+	version = getNewVersion(),
+	
 	versionProps = `
 EPICTASK_VERSION=${version}
 EPICTASK_BUILD=${process.env.BUILD_NUMBER}
