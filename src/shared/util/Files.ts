@@ -266,3 +266,63 @@ export async function getDataUrlFromUrl(url:string,mimetype:string = 'image/png'
 	return dataUrl.format({mimetype,data})
 
 }
+
+export const searchPathDefaults = [
+	'.',
+	'./dist/app',
+	'./build',
+	'dist/app',
+	'../dist/app',
+	'../app',
+	'..',
+	'../../../app'
+]
+
+export function searchPathsForFile(filename:string,...searchPaths:string[]) {
+	
+	/**
+	 * APP SEARCH PATHS FOR ASAR
+	 */
+	if (searchPaths.length === 0)
+		searchPaths.push(...searchPathDefaults)
+	
+	let
+		fs = require('fs'),
+		resolvedPath = null,
+		resourcePath = null
+	
+	
+	for (let searchPath of searchPaths) {
+		try {
+			const
+				baseResourcePath = `${searchPath}/${filename}`
+			
+			log.info(`Looking for ${filename} using base path ${baseResourcePath} @ ${searchPath}`)
+			try {
+					const
+						hardPath = path.resolve(baseResourcePath)
+				
+					if (fs.existsSync(hardPath)) {
+						resolvedPath = hardPath
+						log.info(`Found at hard path: ${hardPath}`)
+						break
+					}
+			} catch (err) {
+				log.info(`File not avail at hard path: ${baseResourcePath}`)
+			}
+			
+			resourcePath = __non_webpack_require__.resolve(baseResourcePath)
+			
+			if (fs.existsSync(resourcePath)) {
+				resolvedPath = resourcePath
+				log.info(`Found at ${resolvedPath}`)
+				break
+			}
+		} catch (err) {
+			log.warn(`Failed to find at path ${searchPath}/${resourcePath}/${filename} ${err.message} ${err}`)
+		}
+	}
+	
+	return resolvedPath
+	
+}

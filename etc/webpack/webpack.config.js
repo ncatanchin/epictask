@@ -165,6 +165,7 @@ const config = {
 			styles: path.resolve(baseDir, 'src/assets/styles'),
 			assets: path.resolve(baseDir, 'src/assets'),
 			libs: path.resolve(baseDir, 'libs'),
+			build: path.resolve(baseDir, 'build'),
 			GitHubClient: tsAlias('shared/GitHubClient'),
 			Constants: tsAlias('shared/Constants'),
 			Settings: tsAlias('shared/settings/Settings')

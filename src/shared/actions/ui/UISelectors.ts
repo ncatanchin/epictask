@@ -17,7 +17,10 @@ function getWindowManager():WindowManager {
 	return require('ui/WindowManager').getWindowManager()
 }
 
-export const uiStateSelector = (state) => state.get(UIKey) as UIState
+export const uiStateSelector: (state) => UIState = createSelector(
+	(state:any) => state.get(UIKey) as UIState,
+	(uiState:UIState) => uiState
+)
 
 /**
  * All current open windows
@@ -81,7 +84,7 @@ export const createToolPanelLocationSelector: () => (state) => {id:string,locati
  *
  */
 export function createToolPanelSelector() {
-	return createDeepEqualSelector(
+	return createSelector(
 		uiStateSelector,
 		createToolPanelLocationSelector(),
 		(uiState:UIState, { id, location }) => {

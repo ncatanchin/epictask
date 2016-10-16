@@ -55,7 +55,7 @@ export interface IHomeState {
 @connect(createStructuredSelector({
 	toolPanels: toolPanelsSelector,
 	toolDragging: toolDraggingSelector
-}))
+},createDeepEqualSelector))
 @ThemedStyles(baseStyles,'homePage')
 @PureRender
 export class HomePage extends React.Component<IHomeProps,IHomeState> {

@@ -258,9 +258,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
 			
 			const
-				panel = cloneObject(parentPanel)
+				panel = cloneObjectShallow(parentPanel)
 			
 			panel.tools[tool.id] = tool
+			if (panel.toolIds.indexOf(tool.id) === -1)
+				panel.toolIds = panel.toolIds.concat([tool.id])
+			
 			panel.open = Object.values(panel.tools).some(it => it.active)
 			
 			return this.doPanelUpdate(state,panel)

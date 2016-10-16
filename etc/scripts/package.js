@@ -10,21 +10,25 @@ const
 
 echo(`Will use builder @ ${buildCmd}`)
 
-require('./clean')
+const
+	skipBuild = false
 
-echo("Starting Compilation")
-process.env.NODE_ENV='production'
-
-if (exec('gulp compile').code !== 0) {
-	console.error(`compile FAILED`)
-	exit(1)
+if (!skipBuild) {
+	require('./clean')
+	
+	echo("Starting Compilation")
+	process.env.NODE_ENV = 'production'
+	
+	if (exec('gulp compile').code !== 0) {
+		console.error(`compile FAILED`)
+		exit(1)
+	}
+	
+	
+	echo("Copy resources")
+	mkdir('-p', 'dist/app/bin')
+	cp('bin/epictask-start.js', 'dist/app/bin')
 }
-
-
-echo("Copy resources")
-mkdir('-p','dist/app/bin')
-cp('bin/epictask-start.js','dist/app/bin')
-
 
 let
 	platforms = [

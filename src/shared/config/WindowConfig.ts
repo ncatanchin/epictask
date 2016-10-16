@@ -1,18 +1,36 @@
 import {ClassType} from 'react'
+import { searchPathsForFile } from "shared/util/Files"
 
 
 const
+	iconFile = require('!!file!build/icons/256x256.png'),
+	iconRawData = require('!!raw!build/icons/256x256.png'),
 	dataUrl = require('dataurl'),
-	iconRawData = require('!!raw!../../../build/icon.png'),
-	iconPath = 'build/icon.png',
-	{nativeImage} = require('electron'),
+	{nativeImage} = require('electron')
+	
+let
+	iconPath = searchPathsForFile(iconFile),
 	iconUrl = dataUrl.format({
 		mimetype:'image/png',
 		data:iconRawData
 	})
+	
+	//iconRawData = require('!!raw!build/icon.icns'),
+	//iconPath = 'build/icons/128x128.png',
+	
+console.log(`Original icon file: ${iconFile} / path ${iconPath}`)
+if (!iconPath) {
+	console.log(`Icon not resolved, using url`)
+	iconPath = iconUrl
+}
 
-export const WindowIcon = nativeImage.createFromDataURL(iconUrl)
-	//(!Env.isDev ? 'resources/' : '') + iconPath
+export const WindowIconUrl = iconUrl
+export const WindowIconPath = iconPath
+export const WindowIcon = iconPath
+
+//export const WindowIcon = nativeImage.createFromDataURL(iconUrl)
+
+//(!Env.isDev ? 'resources/' : '') + iconPath
 
 
 

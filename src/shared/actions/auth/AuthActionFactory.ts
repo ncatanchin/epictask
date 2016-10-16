@@ -137,7 +137,10 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 			
 			this.setAuthenticating(true)
 			
-			authRequest.start((err,token) => this.setAuthResult(err,token))
+			authRequest.start((err,token) => {
+				this.setAuthenticating(false)
+				this.setAuthResult(err,token)
+			})
 		}
 	}
 

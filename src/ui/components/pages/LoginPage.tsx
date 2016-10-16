@@ -49,7 +49,7 @@ function baseStyles(topStyles,theme,palette) {
 			top: '50%',
 			transform: 'translate(-50%,-50%)',
 			cursor: 'pointer',
-			WebkitAppRegion: 'no-drag2',
+			WebkitAppRegion: 'no-drag',
 			
 			//border: `0.1rem solid ${palette.accent4ColorText}`,
 			//borderRadius: '0.2rem',
