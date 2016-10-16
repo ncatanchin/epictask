@@ -23,7 +23,7 @@ const
 	path = require('path'),
 	fs = require('fs'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	ForkCheckerPlugin = (TypeScriptEnabled) ? require('awesome-typescript-loader').ForkCheckerPlugin : null
+	ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 	
 
 // Import globals
