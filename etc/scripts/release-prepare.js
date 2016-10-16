@@ -4,11 +4,12 @@ const
 	{process} = global,
 	path = require('path'),
 	fs = require('fs'),
+	pkgPath = path.resolve(process.cwd(),'package.json'),
 	semver = require('semver')
 	
 echo(`Updating patch version`)
 function getPkg() {
-	return require(path.resolve(process.cwd(),'package.json'))
+	return require(pkgPath)
 }
 
 
@@ -25,8 +26,8 @@ function getNewVersion() {
 	echo(`Incrementing semver to ${newVersion}`)
 	pkg.version = newVersion
 	
-	fs.writeFileSync('./package.json',JSON.stringify(pkg,null,2),'utf8')
-	execNoError(`git commit -a -m Patched && git tag v${newVersion} && git push`)
+	fs.writeFileSync(pkgPath,JSON.stringify(pkg,null,2),'utf8')
+	execNoError(`git commit -a -m Patched && git tag v${newVersion} && git push --tags && git push`)
 	
 	return newVersion
 	

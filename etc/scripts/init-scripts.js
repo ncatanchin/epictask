@@ -1,4 +1,6 @@
-require('babel-polyfill')
+try {
+	require('babel-polyfill')
+} catch (err) {}
 require('shelljs/global')
 
 

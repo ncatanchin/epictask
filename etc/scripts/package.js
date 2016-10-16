@@ -52,14 +52,7 @@ require('./package-dev')(doWin,doLinux)
 
 doInstall && require('./install-app')
 
-const
-	{
-		AWS_ACCESS_KEY_ID:accessKeyId,
-		AWS_SECRET_ACCESS_KEY:secretAccessKey,
-		EPICTASK_BUILD:buildNumber,
-		EPICTASK_VERSION:version
-	} = process.env
 
-if (awsAccessKeyId && buildNumber && version) {
-	require('./publish-artifacts')(accessKeyId,secretAccessKey,version,buildNumber)
-}
+//if (accessKeyId && buildNumber && version) {
+require('./publish-artifacts')
+//}
