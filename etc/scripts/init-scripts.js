@@ -1,6 +1,11 @@
 try {
+	require('babel/register')
+} catch (err) {}
+
+try {
 	require('babel-polyfill')
 } catch (err) {}
+
 require('shelljs/global')
 
 
@@ -46,6 +51,7 @@ Object.assign(global,{
 	isMac,
 	isWindows,
 	isLinux: !isMac && !isWindows,
+	platformName: isWindows ? 'windows' : isMac ?  'macos' : 'linux',
 	WindowsEpicPath: `c:/users/jglanz/development/densebrain/epictask-workspace/epictask`,
 	webpackCmd: path
 		.resolve(

@@ -2,55 +2,44 @@ require('./init-scripts')
 
 
 const
-	_ = require('lodash'),
-	{isEmpty} = _,
-	fs = require('fs'),
-	glob = require('glob-promise'),
-	path = require('path')
+	AWS = require('./aws-init')
 
-
-const
-	{
-		AWS_ACCESS_KEY_ID:accessKeyId,
-		AWS_SECRET_ACCESS_KEY:secretAccessKey,
-		EPICTASK_BUILD:buildNumber,
-		EPICTASK_VERSION:version
-	} = process.env
-
-
-
-async function upload() {
+if (AWS) {
+	const
+		{process} = global,
+		_ = require('lodash'),
+		{isEmpty} = _,
+		fs = require('fs'),
+		glob = require('glob-promise'),
+		path = require('path')
 	
 	
 	const
-		AWS = require('aws-sdk')
-	
-	AWS.config.setPromisesDependency(require('bluebird'))
-	AWS.config.update({
-		accessKeyId,
-		secretAccessKey,
-		region: 'us-east-1'
-	})
+		{
+			EPICTASK_BUILD:buildNumber,
+			EPICTASK_VERSION:version
+		} = process.env
 	
 	
-	const
-		Bucket = 'epictask-releases',
-		s3 = new AWS.S3(),
-		artifactPath = isMac ? 'dist/build/mac' : 'dist/build'
-	
-	cd(artifactPath)
-	
-	let
-		promises = [],
-		files = []
-	
-	
+	async function upload() {
+		const
+			Promise = require('bluebird'),
+			Bucket = 'epictask-releases',
+			s3 = new AWS.S3(),
+			artifactPath = isMac ? 'dist/build/mac' : 'dist/build'
+		
+		cd(artifactPath)
+		
+		let
+			promises = [],
+			files = []
+		
+		
 		//const newRoot = path.resolve(basePath,buildRoot)
 		//echo(`Publishing from ${newRoot}`)
 		
-			
 		
-		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb", "*.AppImage"]) {
+		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb"]) {
 			files = files.concat(await glob(filePath))
 		}
 		
@@ -59,32 +48,36 @@ async function upload() {
 		echo(`Uploading ${files.length} files`)
 		
 		promises.push(...files.map(async(file, index) => {
-				echo(`Uploading ${index} of ${files.length}: ${file}`)
+			echo(`Uploading ${index} of ${files.length}: ${file}`)
+			
+			try {
+				const
+					stream = fs.createReadStream(file),
+					ext = path.extname(file),
+					releaseFilename = `epictask-${platformName}-v${version}-${buildNumber}${ext}`
 				
-				try {
-					const
-						stream = fs.createReadStream(file)
-					
-					await s3.putObject({
-						Bucket,
-						Key: `electron/${file}`,
-						Body: stream,
-						ACL: 'public-read'
-					}).promise()
-					
-					echo(`Uploaded ${index} of ${files.length},${file}`)
-				} catch (err) {
-					console.error(`Failed to upload ${file}`,err)
-				}
-			}))
+				echo(`Mapped filename ${releaseFilename}`)
+				
+				await s3.putObject({
+					Bucket,
+					Key: `electron/${releaseFilename}`,
+					Body: stream,
+					ACL: 'public-read'
+				}).promise()
+				
+				echo(`Uploaded ${index} of ${files.length},${file}`)
+			} catch (err) {
+				console.error(`Failed to upload ${file}`, err)
+			}
+		}))
 		
-	
-	
-	await Promise.all(promises)
-	
-	echo(`All files uploaded`)
+		
+		await Promise.all(promises)
+		
+		echo(`All files uploaded`)
+		
+	}
+	if (!isEmpty(version) && !isEmpty(buildNumber))
+		upload()
 	
 }
-
-if (!isEmpty(accessKeyId) && !isEmpty(version) && !isEmpty(buildNumber))
-	upload()
