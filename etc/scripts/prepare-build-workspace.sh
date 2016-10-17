@@ -19,4 +19,3 @@ if [ "${INSTALL_PKGS}" != "" ];then
 	npm i ${INSTALL_PKGS}
 fi
 
-node etc/scripts/release-prepare.js
