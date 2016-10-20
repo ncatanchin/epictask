@@ -459,12 +459,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			
 			if (ProcessConfig.isType(ProcessType.UI)) {
 				const
-					dialogManager = getWindowManager()
+					windowManager = getWindowManager()
 						
 				if (open)
-					dialogManager.openDialog(name)
+					windowManager.openDialog(name)
 				else
-					dialogManager.close(name)
+					windowManager.close(name)
 			}
 			
 			this.internalSetDialogOpen(name,open)

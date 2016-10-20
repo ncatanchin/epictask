@@ -4,6 +4,8 @@ import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
 import { IPalette } from "shared/themes/material/MaterialTools"
+import { PersistentValue, PersistentValueEvent } from "shared/util/PersistentValue"
+import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
 
 
 const
@@ -18,13 +20,15 @@ const
  */
 
 export const
-	DefaultThemeName = 'DarkTheme',
-	DefaultPaletteName = 'DarkPalette'
+	PersistentThemeName = new PersistentValue<string>('epictask-theme'),
+	PersistentPaletteName = new PersistentValue<string>('epictask-palette'),
+	DefaultThemeName = PersistentThemeName.get() || 'DarkTheme',
+	DefaultPaletteName = PersistentPaletteName.get() ||  'DarkPalette'
 
 // ONLY LET FOR HMR
 export let
-	Themes:{[ThemeName:string]:TTheme} = null,
-	Palettes:{[PaletteName:string]:IPalette} = null,
+	Themes:{[ThemeName:string]:IThemeCreator} = null,
+	Palettes:{[PaletteName:string]:IPaletteCreator} = null,
 	DefaultTheme = null,
 	DefaultPalette = null
 
@@ -53,6 +57,17 @@ const
 	themeListeners = getHot(module,'themeListeners',[]) as TThemeListener[]
 
 //log.info(`Using theme listeners at start`,themeListeners)
+
+export enum ThemeEvent {
+	Changed
+}
+
+/**
+ * Event emitter for user theme changed=s
+ *
+ * @type {EnumEventEmitter<ThemeEvent>}
+ */
+export const ThemeEvents = new EnumEventEmitter<ThemeEvent>(ThemeEvent)
 
 /**
  * Add a theme listener
@@ -85,9 +100,21 @@ function loadDefaultPalette() {
 	return require('./available/DarkPalette').default
 }
 
+/**
+ * Palette creator interface
+ */
+	
 export interface IPaletteCreator {
 	(): IPalette
 	PaletteName:string
+}
+
+/**
+ * Theme Creator interface
+ */
+export interface IThemeCreator {
+	(palette:IPalette): TTheme
+	ThemeName:string
 }
 
 /**
@@ -95,7 +122,7 @@ export interface IPaletteCreator {
  *
  * @param newPalette
  */
-export function setPalette(newPalette:IPaletteCreator) {
+function setPalette(newPalette:IPaletteCreator) {
 	if (!newPalette) {
 		log.error(`Null theme, requiring dark palette directly`,newPalette)
 		newPalette = loadDefaultPalette()
@@ -111,47 +138,122 @@ export function setPalette(newPalette:IPaletteCreator) {
 		palette
 	})
 	
+	PersistentPaletteName.set(ThemeState.paletteName)
+	
 	// Assign app props to the body & to html
 	notifyListeners(getTheme(),palette)
+}
+
+/**
+ * Change palette at runtime
+ *
+ * @param creator
+ */
+export function setPaletteCreator(creator:IPaletteCreator) {
+	setPalette(creator)
+	ThemeEvents.emit(ThemeEvent.Changed)
 }
 
 
 /**
  * Set the current theme
  *
- * @param newTheme
+ * @param newThemeCreator
  */
-export function setTheme(newTheme:TTheme) {
-	if (!newTheme) {
-		log.error(`Null theme, requiring dark theme directly`,newTheme)
-		newTheme = require('./available/DarkTheme').default
+function setTheme(newThemeCreator:IThemeCreator) {
+	if (!newThemeCreator) {
+		log.error(`Null theme, requiring dark theme directly`,newThemeCreator)
+		newThemeCreator = require('./available/DarkTheme').default
 	}
 	
-	assert(_.isFunction(newTheme),`Theme MUST be a function`)
+	assert(_.isFunction(newThemeCreator),`Theme MUST be a function`)
+	
 	const
 		palette = ThemeState.palette || loadDefaultPalette()()
-	newTheme = newTheme(palette)
+	
+	const
+		newTheme = newThemeCreator(palette)
+	
 	Object.assign(ThemeState,{
 		themeName: newTheme.ThemeName,
 		theme: newTheme
 	})
 	
+	PersistentThemeName.set(ThemeState.themeName)
+	
 	// Assign app props to the body & to html
 	try {
-		Object.assign(document.getElementsByTagName('html')[ 0 ].style, newTheme.app)
-		Object.assign(document.getElementsByTagName('body')[ 0 ].style, newTheme.app)
+		$('html,body').css(newTheme.app)
+		// Object.assign(document.getElementsByTagName('body')[ 0 ].style, newTheme.app)
 	} catch (err) {}
 	
 	notifyListeners(newTheme,palette)
 	
 }
 
+
+/**
+ * Change Theme at runtime
+ *
+ * @param creator
+ */
+export function setThemeCreator(creator:IThemeCreator) {
+	setTheme(creator)
+	ThemeEvents.emit(ThemeEvent.Changed)
+}
+
+
 export function getTheme() {
 	return ThemeState.theme
 }
 
+/**
+ * Get a theme creator
+ *
+ * @param name
+ * @returns {IThemeCreator}
+ */
+export function getThemeCreator(name:string) {
+	return Themes[name]
+}
+
+/**
+ * Get all available theme names
+ *
+ * @returns {string[]}
+ */
+export function getThemeNames() {
+	return Object.keys(Themes)
+}
+
+/**
+ * Get the current theme name
+ *
+ * @returns {any}
+ */
+export function getThemeName() {
+	return ThemeState.themeName
+}
+
 export function getPalette() {
 	return ThemeState.palette
+}
+
+export function getPaletteCreator(name:string) {
+	return Palettes[name]
+}
+
+
+export function getPaletteName() {
+	return ThemeState.paletteName
+}
+
+export function getPalettes() {
+	return Object.values(Palettes)
+}
+
+export function getPaletteNames() {
+	return Object.keys(Palettes)
 }
 
 export function forceThemeUpdate() {
@@ -230,6 +332,43 @@ function loadThemesAndPalettes() {
 }
 
 loadThemesAndPalettes()
+
+/**
+ * Listen for palette changes
+ */
+PersistentPaletteName.on(PersistentValueEvent.Changed,() => {
+	const
+		paletteName = PersistentPaletteName.get()
+	
+	log.debug(`Changing palette from notification to ${paletteName}`)
+	if (ThemeState.paletteName === paletteName) {
+		log.debug(`Current palette is already ${paletteName}`)
+		return
+	}
+	const
+		paletteCreator = Palettes[paletteName]
+	
+	log.debug(`Setting new palette`,paletteCreator,paletteName)
+	setPaletteCreator(paletteCreator)
+})
+
+
+
+/**
+ * Listen for palette changes
+ */
+PersistentThemeName.on(PersistentValueEvent.Changed,() => {
+	const
+		themeName = PersistentThemeName.get()
+	
+	log.debug(`Changing theme from notification to ${themeName}`)
+	if (ThemeState.themeName === themeName) {
+		log.debug(`Current theme is already ${themeName}`)
+		return
+	}
+	setThemeCreator(Themes[themeName])
+})
+
 
 /**
  * Create a font size based on the themes font size

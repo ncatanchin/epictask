@@ -104,43 +104,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	
 	static leaf = IssueKey
 	
-	stores: Stores
 	
-	uiActions: UIActionFactory
 	
 	constructor() {
 		super(IssueState)
 		
-		this.stores = Container.get(Stores)
-		this.uiActions = Container.get(UIActionFactory)
+		
 	}
 	
 	leaf(): string {
 		return IssueKey;
 	}
-	
-	// @ActionReducer()
-	// setIssueIds(issueIds: number[]) {
-	// 	return (state: IssueState) => {
-	// 		let selectedIssueIds = state.selectedIssueIds
-	// 		if (selectedIssueIds.length) {
-	// 			selectedIssueIds = selectedIssueIds
-	// 				.filter(selectedIssueId => (
-	// 					issueIds.includes(selectedIssueId)
-	// 				))
-	//
-	// 			// if (!selectedIssueIds.length && issueIds.length)
-	// 			// 	selectedIssueIds = [issueIds[0]]
-	// 		}
-	//
-	// 		let newState = state.set('issueIds', issueIds)
-	// 		if (!_.isEqual(selectedIssueIds, state.selectedIssueIds))
-	// 			newState = newState.set('selectedIssueIds', selectedIssueIds)
-	//
-	// 		return newState
-	// 	}
-	//
-	// }
 	
 	/**
 	 * Set the current focused issue ids
@@ -543,9 +517,16 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@ActionReducer()
 	setSelectedIssueIds(selectedIssueIds: number[]) {
-		return (state: IssueState) => state
-			.set('selectedIssueIds', selectedIssueIds)
-			.set('editingInline', false)
+		return (state: IssueState) => {
+			state = state
+				.set('selectedIssueIds', selectedIssueIds) as any
+			
+			if (state.editingInline)
+				state.set('editingInline', false)
+			
+			return state
+		}
+			
 	}
 	
 	/**
@@ -598,7 +579,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 		
 		this.setPatchIssues(issues, mode)
-		this.uiActions.setDialogOpen(Dialogs.IssuePatchDialog, true)
+		getUIActions().setDialogOpen(Dialogs.IssuePatchDialog, true)
 	}
 	
 	/**
@@ -702,7 +683,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}))
 				
 				actions.setIssueSaving(false)
-				this.uiActions.closeAllWindows()
+				getUIActions().closeAllWindows()
 				actions.setPatchIssues(null)
 				
 			} catch (err) {
@@ -725,7 +706,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		issue = cloneObject(issue)
 		
 		const
-			issueStore: IssueStore = this.stores.issue
+			issueStore: IssueStore = getStores().issue
 			
 		// Because our object could be
 		// behind the persistent rev,
@@ -790,7 +771,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				this.setEditingIssue(null)
 				
 				if (childWindowId)
-					this.uiActions.closeWindow(childWindowId)
+					getUIActions().closeWindow(childWindowId)
 				
 				if (wasInline)
 					getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
@@ -820,7 +801,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				client = Container.get(GitHubClient),
 				stores = Container.get(Stores),
 				repo = await stores.repo.get(comment.repoId),
-				commentStore = actions.stores.comment
+				commentStore = getStores().comment
 				
 			actions.setIssueSaving(true)
 			
@@ -953,7 +934,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				actions.setIssueSaving(false)
 				actions.setEditingComment(null)
 				
-				this.uiActions.closeAllWindows()
+				getUIActions().closeAllWindows()
 				
 				await Promise.setImmediate()
 				
@@ -1116,7 +1097,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				dialogName = Dialogs.IssueEditDialog
 			
 			
-			if (this.uiActions.state.dialogs[dialogName]) {
+			if (getUIActions().state.dialogs[dialogName]) {
 				log.debug('Dialog is already open', dialogName)
 				return
 			}
@@ -1595,6 +1576,17 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	}
 	
 	/**
+	 * Set activity loading flag
+	 *
+	 * @param loading
+	 * @returns {(state:IssueState)=>Map<string, V>}
+	 */
+	@ActionReducer()
+	setActivityLoading(loading:boolean) {
+		return (state:IssueState) => state.set('activityLoading',loading)
+	}
+	
+	/**
 	 * Load comments (and should be all activity, pull requests etc)
 	 * for an issue
 	 *
@@ -1608,6 +1600,8 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			isCancelled = () => deferred.isCancelled(),
 			doResolve = () => !isCancelled() && deferred.resolve(),
 			doLoad = async () => {
+				this.setActivityLoading(true)
+			
 				try {
 					// Issue repo
 					let
@@ -1634,6 +1628,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 					
 					log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
 					this.setActivity(comments, issuesEvents)
+					this.setActivityLoading(false)
 				} catch (err) {
 					log.error(`Failed to load activity for issue ${issueId}`,err)
 					

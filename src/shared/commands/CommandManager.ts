@@ -37,7 +37,7 @@ const
 	}
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration
@@ -908,22 +908,24 @@ export class CommandManager {
 				const
 					{element} = containerReg
 				
-				log.debug(`Focusing on ${containerId}`, element)
-				const
-					focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
-						relatedTarget: element
-					}) : document.createEvent("FocusEvent")
-				
-				element.dispatchEvent(focusEvent)
+				// log.debug(`Focusing on ${containerId}`, element)
+				// const
+				// 	focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
+				// 		relatedTarget: element
+				// 	}) : document.createEvent("FocusEvent")
+				//
+				// element.dispatchEvent(focusEvent)
+				$('#issuesPanel').focus()
 			}
 		
-		if (skipEvent) {
-			
-		} else if (document.activeElement) {
-			$(document.activeElement).blur()
-			setTimeout(doFocus,150)
-		} else
-			doFocus()
+		doFocus()
+		// if (skipEvent) {
+		//
+		// } else if (document.activeElement) {
+		// 	$(document.activeElement).blur()
+		// 	setTimeout(doFocus,150)
+		// } else
+		// 	doFocus()
 	}
 }
 

@@ -126,7 +126,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	resultsHidden?: boolean
 	hidden?: boolean
 	mode: "repos"|"issues"|"actions"
-	onEscape?: () => void
+	onEscape?: () => any
 	onResultsChanged?: (items: SearchItem[]) => void
 	onResultSelected?: (item: SearchItem) => void
 }
@@ -204,10 +204,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 						{onEscape} = this.props
 					
 					log.info('Escape key received', event, onEscape)
-					if (onEscape)
-						onEscape()
-					
-					this.onBlur(event)
+					if (onEscape && onEscape() === true) {
+						(this.textField as any).blur()
+					}
+					//this.onBlur(event)
 					
 				},
 				CommonKeys.Escape,{
@@ -627,6 +627,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				0
 			)
 
+		
 		if (selectedIndex !== index)
 			this.setSelectedIndex(index)
 	}

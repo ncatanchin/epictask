@@ -58,6 +58,8 @@ export const IssueStateRecord = Record({
 	selectedIssueIds:[],
 	focusedIssueIds: [],
 	
+	activityLoading: false,
+	
 	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,
@@ -116,6 +118,8 @@ export class IssueState extends IssueStateRecord {
 	groupVisibility:Map<string,boolean>
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
+	
+	activityLoading: boolean
 	
 	issueSaving:boolean
 	issueSaveError: Error

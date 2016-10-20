@@ -15,7 +15,7 @@ import { Comment } from 'shared/models/Comment'
 import { IssueActivityText } from './IssueActivityText'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {
-	selectedIssueIdsSelector, issuesSelector, selectedIssueSelector, activitySelector
+	selectedIssueIdsSelector, issuesSelector, selectedIssueSelector, activitySelector, activityLoadingSelector
 } from 'shared/actions/issue/IssueSelectors'
 
 import baseStyles from './IssueDetailPanel.styles'
@@ -25,19 +25,19 @@ import {
 	IssuesEvent, isComment,
 	isIssue, getEventGroupType
 } from "shared/models"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals, getValue } from "shared/util/ObjectUtil"
 
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {
 	CommandComponent, ICommandComponentProps, ICommandComponent,
 	CommandRoot, CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
-import { RepoName } from "ui/components/common/Renderers"
+
 import { IssueDetailHeader } from "ui/components/issues/IssueDetailHeader"
 import { IssueMultiInlineList } from "ui/components/common/IssueMultiInlineList"
+import { unwrapRef } from "shared/util/UIUtil"
 
 
 // Other stuff
@@ -61,12 +61,13 @@ export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	selectedIssue?:Issue
 	issues?:List<Issue>
 	activity?:TIssueActivity
+	activityLoading?:boolean
 	
 }
 
 export interface IIssueDetailPanelState {
 	items?:List<TDetailItem>
-	
+	listRef?:any
 	
 }
 
@@ -82,12 +83,15 @@ export interface IIssueDetailPanelState {
 	selectedIssueIds: selectedIssueIdsSelector,
 	selectedIssue: selectedIssueSelector,
 	issues: issuesSelector,
-	activity: activitySelector
+	activity: activitySelector,
+	activityLoading: activityLoadingSelector
 }))
 @CommandComponent()
 @ThemedStyles(baseStyles, 'issueDetail')
 //@PureRender
 export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIssueDetailPanelState> implements ICommandComponent {
+	
+	
 	
 	
 	refs:{[name:string]:any}
@@ -120,7 +124,12 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	readonly commandComponentId:string = ContainerNames.IssueDetailPanel
 	
 	
-	
+	/**
+	 * List ref
+	 *
+	 * @param listRef
+	 */
+	private setListRef = (listRef) => this.setState({listRef})
 	
 	/**
 	 * Update the state when props change
@@ -219,7 +228,16 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param nextContext
 	 */
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
-		return !shallowEquals(this.state, nextState, 'items') || !shallowEquals(this.props, nextProps, 'activity','selectedIssue','selectedIssueIds')
+		const
+			themeChanged = !shallowEquals(this.props,'theme')
+		
+		setTimeout(() => {
+			getValue(() => unwrapRef(this.state.listRef).forceUpdate())
+		},150)
+		
+		return !shallowEquals(this.state, nextState, 'items') ||
+			!shallowEquals(this.props, nextProps,
+				'activity','selectedIssue','selectedIssueIds') || themeChanged
 	}
 	
 	/**
@@ -281,7 +299,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	renderBody = (items:List<TDetailItem>, item:Issue, selectedIssue:Issue, index, styles) => <IssueActivityText
 		key={'issue-body'}
-		issue={this.props.selectedIssue}
 		activityType='post'
 		activityActionText='posted issue'
 		activityStyle={styles.content.activities.activity}/>
@@ -317,7 +334,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	renderEventGroup = (items:List<TDetailItem>, eventGroup:EventGroup, selectedIssue:Issue, index, styles) =>
 		<IssueActivityText
 			key={eventGroup.id}
-			issue={selectedIssue}
 			eventGroup={eventGroup}
 			hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
 			activityType='eventGroup'
@@ -366,12 +382,15 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		{/* Issue Detail Body */}
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
-				<VisibleList
-					items={items}
-					itemCount={items.size}
-					itemRenderer={this.renderDetailItem}
-					itemKeyFn={(listItems,item,index) => `${_.get(item,'id',index)}`}
-				/>
+				{!this.props.activityLoading &&
+					<VisibleList
+						ref={this.setListRef}
+						items={items}
+						itemCount={items.size}
+						itemRenderer={this.renderDetailItem}
+						itemKeyFn={(listItems,item,index) => `${_.get(item,'id',index)}`}
+					/>
+				}
 			</div>
 		</div>
 		

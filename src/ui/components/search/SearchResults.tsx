@@ -191,20 +191,26 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	renderResults(props) {
 		const
-			{styles,theme,searchState,open,inline,searchPanel} = props,
+			{styles,theme,searchState,onResultHover,onResultSelected,open,inline,searchPanel} = props,
 			{palette} = theme
 
 		
 		
 		let
 			{anchor} = props,
-			resultsStyle = makeStyle(styles.results,{
-				backgroundColor: palette.alternateBgColor,
-				color: palette.alternateTextColor
-			})
+			resultsStyle = makeStyle(
+				styles.results,
+				{
+					backgroundColor: palette.alternateBgColor,
+					color: palette.alternateTextColor
+				}
+			)
 
 		log.debug('rendering results inline:',inline,'open',open,'anchor',props.anchor)
-
+		
+		if (!this.props.open)
+			return
+		
 		if (!props.inline) {
 			anchor = typeof anchor === 'string' ?
 				document.querySelector(anchor) :
@@ -224,6 +230,8 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 					open={this.props.open}
 					searchPanel={this.props.searchPanel}
 					searchState={searchState}
+					onResultHover={onResultHover}
+					onResultSelected={onResultSelected}
 					className="searchResults"
 					style={resultsStyle}/>
 
@@ -234,6 +242,8 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				open={this.props.open}
 				searchPanel={this.props.searchPanel}
 				searchState={searchState}
+				onResultHover={onResultHover}
+				onResultSelected={onResultSelected}
 				className="searchResults"
 				style={resultsStyle}/>
 		}

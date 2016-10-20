@@ -3,22 +3,22 @@
 
 // Imports
 import * as moment from 'moment'
-
+import * as React from 'react'
 import {List} from 'immutable'
 import {Renderers, Avatar} from 'ui/components/common'
 import {connect} from 'react-redux'
 import filterProps from 'react-valid-props'
-import {IssueLabelsAndMilestones} from 'ui/components/issues'
+import { IssueLabelsAndMilestones, IssuesPanel } from 'ui/components/issues'
 import {Issue} from 'shared/models'
 
 import { selectedIssueIdsSelector, issuesSelector, focusedIssueIdsSelector } from "shared/actions/issue/IssueSelectors"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from 'ui/components/issues/IssueStateIcon'
 
-import { shallowEquals } from "shared/util/ObjectUtil"
-import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import { shallowEquals, getValue } from "shared/util/ObjectUtil"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { colorAlpha } from "shared/themes/styles/ColorTools"
+import {createStructuredSelector} from 'reselect'
 
 const
 	log = getLogger(__filename)
@@ -40,19 +40,19 @@ function baseStyles(topStyles,theme,palette) {
 			// COLORS
 			backgroundColor: background,
 			color: text.secondary,
-			boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + colorAlpha(primary.hue2,1),
+			//boxShadow: 'inset 0rem -0.1rem 0rem 0rem ' + colorAlpha(primary.hue2,1),
 			
 			// LAYOUT
 			height: rem(9.4),
 			cursor: 'pointer',
 			
 			
-			bar: [PositionAbsolute,makeTransition('border-left'),{
+			bar: [PositionAbsolute,{
 				top: 0,
 				left: 0,
 				bottom: 0,
-				zIndex: 2,
-				borderLeft: `0.4rem inset ${Transparent}`
+				zIndex: 10,
+				borderLeft: `0.6rem inset ${Transparent}`
 				
 			}],
 			
@@ -60,7 +60,7 @@ function baseStyles(topStyles,theme,palette) {
 			focused: [{
 				color: text.primary,
 				bar: [{
-					borderLeft: `0.4rem inset ${accent.hue1}`
+					borderLeft: `0.6rem inset ${accent.hue1}`
 				}]
 			}],
 			
@@ -70,7 +70,7 @@ function baseStyles(topStyles,theme,palette) {
 				color: text.primary,
 				
 				bar: [{
-					borderLeft: `0.4rem inset ${secondary.hue1}`
+					borderLeft: `0.6rem inset ${colorAlpha(secondary.hue2,0.8)}`
 				}],
 				//boxShadow: 'inset 0rem 0rem 0.1rem 0.1rem ' + colorAlpha(secondary.hue1,0.4),
 				
@@ -101,11 +101,16 @@ function baseStyles(topStyles,theme,palette) {
 				padding: '0 0 0.5rem 0rem'
 			}],
 			
-			repo: [Ellipsis, FlexRow, FlexScale, {
-				fontSize: themeFontSize(1.1),
-				color: secondary.hue1,
+			repo: [Ellipsis, FlexRow, FlexScale, makeTransition(['color','font-size']), {
+				fontSize: themeFontSize(1),
+				color: text.secondary,
 				//fontFamily: fontFamilyRegular,
-				fontWeight: 500
+				fontWeight: 300,
+				selected: [{
+					fontWeight: 300,
+					fontSize: themeFontSize(1.1),
+					color: secondary.hue1,
+				}]
 			}],
 			
 			row2: [makeTransition(['height']), FlexRowCenter, FillWidth, OverflowHidden, {
@@ -118,13 +123,13 @@ function baseStyles(topStyles,theme,palette) {
 				padding: '0 1rem 0 0',
 				
 				color: text.primary,
-				fontWeight: 300,
+				fontWeight: 400,
 				fontSize: themeFontSize(1.2),
 				
 				selected: [{
-					
+					fontWeight: 500,
 					color: text.primary,
-					fontWeight: 400,
+					
 					fontSize: themeFontSize(1.2),
 					
 					multi: [{
@@ -189,52 +194,116 @@ export interface IIssueItemProps extends IThemedAttributes {
 	
 	issueId:number
 	
-	issue?:Issue
+	
 	onOpen?:(event:any, issue:Issue) => void
 	onSelected:(event:any, issue:Issue) => void
-	
+	issue?:Issue
 	isFocused?:boolean
+}
+
+export interface IIssueItemState {
+	
 	isSelected?:boolean
 	isSelectedMulti?:boolean
 }
-
-// State is connected at the item level to minimize redraws for the whole issue list
+//
+// // State is connected at the item level to minimize redraws for the whole issue list
 @connect(() => {
 	const
 		issueSelector = createSelector(
 			issuesSelector,
-			(state,props:IIssueItemProps) => props.issueId,
-			(issues:List<Issue>,issueId:number):Issue => {
+			(state, props:IIssueItemProps) => props.issueId,
+			(issues:List<Issue>, issueId:number):Issue => {
 				return issues.find(issue => issue.id === issueId)
 			}
+		),
+		isFocusedSelector = createSelector(
+			issueSelector,
+			focusedIssueIdsSelector,
+			(issue:Issue, focusedIssueIds:number[]) =>
+			issue &&
+			focusedIssueIds &&
+			focusedIssueIds.includes(issue.id)
 		)
-	return createDeepEqualSelector(
-		selectedIssueIdsSelector,
-		focusedIssueIdsSelector,
-		issueSelector,
-		(selectedIssueIds:number[],focusedIssueIds:number[],issue:Issue) => {
-			const
-				isSelected =
-					issue &&
-					selectedIssueIds &&
-					selectedIssueIds.includes(issue.id),
-				isFocused = 
-					issue &&
-					focusedIssueIds &&
-					focusedIssueIds.includes(issue.id)
-			
-			
-			return {
-				isSelected,
-				isFocused,
-				issue,
-				isSelectedMulti: isSelected && selectedIssueIds.length > 1
-			}
-		}
-	)
+		
+		
+		return createStructuredSelector({
+		issue: issueSelector,
+		isFocused: isFocusedSelector
+	})
 })
+// 		isSelectedSelector = createSelector(
+// 			issueSelector,
+// 			selectedIssueIdsSelector,
+// 			(issue:Issue, selectedIssueIds:number[]) =>
+// 				issue &&
+// 				selectedIssueIds &&
+// 				selectedIssueIds.includes(issue.id)
+// 		),
+// 		isSelectedMultiSelector = createSelector(
+// 			isSelectedSelector,
+// 			selectedIssueIdsSelector,
+// 			(isSelected, selectedIssueIds:number[]) =>
+// 				isSelected &&
+// 				selectedIssueIds &&
+// 				selectedIssueIds.length > 1
+// 		),
+//
+// 	return createStructuredSelector({
+// 		issue: issueSelector,
+// 		isFocused: isFocusedSelector,
+// 		isSelected: isSelectedSelector,
+// 		isSelectedMulti: isSelectedMultiSelector
+// 	})
+// })
 @ThemedStyles(baseStyles)
-class IssueItem extends React.Component<IIssueItemProps,void> {
+class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> {
+	
+	static contextTypes = {
+		issuesPanel:React.PropTypes.object
+	}
+	
+	get issuesPanel() {
+		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
+	}
+	
+	private updateState = () => {
+		const
+			issuesPanel = this.issuesPanel
+		
+		if (issuesPanel) {
+			const
+				{issue} = this.props,
+				{ selectedIssueIds } = issuesPanel,
+				isSelected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id)
+			
+			
+			
+			this.setState({
+				isSelected,
+				isSelectedMulti: isSelected && selectedIssueIds.length > 1
+			})
+		}
+	}
+	
+	
+	
+	
+	componentWillMount() {
+		const
+			{issuesPanel} = this
+		
+		issuesPanel.addSelectListener(this.updateState)
+		this.updateState()
+		
+	}
+	
+	componentWillUnmount() {
+		const
+			{issuesPanel} = this
+		
+		issuesPanel.removeSelectListener(this.updateState)
+	}
 	
 	/**
 	 * Checks whether the item should update comparing
@@ -242,21 +311,23 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	 *
 	 * @param nextProps
 	 * @returns {boolean}
+	 * @param nextState
 	 */
-	shouldComponentUpdate(nextProps:IIssueItemProps) {
+	shouldComponentUpdate(nextProps:IIssueItemProps,nextState:IIssueItemState) {
 		return !shallowEquals(
 			nextProps,
 			this.props,
 			'isFocused',
-			'isSelected',
-			'isSelectedMulti',
 			'issue.id',
 			'issue.labels',
 			'issue.milestone',
-			'issue.updated_at',
-			'theme',
-			'styles'
-		)
+			'issue.updated_at'
+		) || !shallowEquals(
+				nextState,
+				this.state,
+				'isSelected',
+				'isSelectedMulti'
+			)
 	}
 	
 	/**
@@ -267,17 +338,20 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		
 		const
-			{props} = this,
+			{props,state} = this,
 			{
 				style:styleParam,
 				styles,
-				onOpen,
-				onSelected,
 				issue,
+				onOpen,
+				isFocused,
+				onSelected
+			} = props,
+			{
+				
 				isSelected,
-				isSelectedMulti,
-				isFocused
-			} = props
+				isSelectedMulti
+			} = state
 			
 			
 		if (!issue)
@@ -313,7 +387,7 @@ class IssueItem extends React.Component<IIssueItemProps,void> {
 						<span style={styles.number}>
 							#{issue.number}&nbsp;&nbsp;
 						</span>
-						<Renderers.RepoName repo={issue.repo} style={styles.repo}/>
+						<Renderers.RepoName repo={issue.repo} style={makeStyle(styles.repo,isSelected && styles.repo.selected)}/>
 						
 					</div>
 

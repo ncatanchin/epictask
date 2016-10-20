@@ -3,6 +3,8 @@
  */
 
 // Imports
+import { ObservableStore } from "typedux"
+import * as React from 'react'
 import {Map,List} from 'immutable'
 import {connect} from 'react-redux'
 import {createStructuredSelector} from 'reselect'
@@ -41,6 +43,9 @@ import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { FlexColumnCenter } from "shared/themes"
 import { unwrapRef } from "shared/util/UIUtil"
 import { MenuIds } from "shared/UIConstants"
+import { getCommandManager } from "shared/commands/CommandManager"
+
+import { IssueKey } from "shared/Constants"
 
 
 
@@ -159,6 +164,11 @@ const
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
+	
+	static childContextTypes = {
+		issuesPanel: React.PropTypes.object
+	}
+	
 	
 	
 	/**
@@ -334,6 +344,32 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private issueActions: IssueActionFactory = getIssueActions()
 	
+	
+	
+	private selectedIssueIdsUnsubscribe
+	
+	/**
+	 * Private ref for selected issue ids
+	 */
+	
+	private _selectedIssueIds:number[]
+	
+	private selectListeners:Function[] = []
+	
+	addSelectListener(listener) {
+		if (!this.selectListeners.includes(listener))
+			this.selectListeners.push(listener)
+	}
+	
+	removeSelectListener(listener) {
+		const
+			index = this.selectListeners.indexOf(listener)
+		
+		if (index > -1)
+			this.selectListeners.splice(index,1)
+	}
+	
+	
 	/**
 	 * Get search panel
 	 *
@@ -355,10 +391,23 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @returns {Array<number>|Array}
 	 */
-	private get selectedIssueIds():number[] {
-		return selectedIssueIdsSelector(getStoreState()) || []
+	get selectedIssueIds():number[] {
+		return this._selectedIssueIds || selectedIssueIdsSelector(getStoreState()) || []
 	}
 	
+	set selectedIssueIds(ids:number[]) {
+		this._selectedIssueIds = ids || []
+		
+		this.selectListeners.forEach(listener => listener())
+	}
+	
+	
+	/**
+	 * Clear the cached selected issues
+	 */
+	clearSelectedIssueIds() {
+		this._selectedIssueIds = null
+	}
 	
 	/**
 	 * Get item indexes from the embedded list
@@ -436,6 +485,18 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			return null
 		
 		return items.get(itemIndexes.get(itemIndex))
+	}
+	
+	
+	/**
+	 * Send an issues context down
+	 *
+	 * @returns {{issuesPanel: IssuesPanel}}
+	 */
+	getChildContext() {
+		return {
+			issuesPanel: this
+		}
 	}
 	
 	/**
@@ -567,19 +628,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	
 	
 	
-	/**
-	 * Push the most current selected issue ids
-	 */
-	private doPushSelectedIssueIds(newSelectedIssueIds) {
-		getIssueActions().setSelectedIssueIds(newSelectedIssueIds)
-		
-		// this.selectedIssueIdsHistory.unshift(newSelectedIssueIds)
-		// this.selectedIssueIdsHistory.length =
-		// 		Math.min(3, this.selectedIssueIdsHistory.length)
-		//
-		// this.issueActions.setSelectedIssueIds(newSelectedIssueIds)
-		
-	}
+	pushSelectedIssueIds = _.debounce(() => {
+		getIssueActions().setSelectedIssueIds(this.selectedIssueIds)
+	},200)
 	
 	/**
 	 * Update the internal selected issue ids & push to state
@@ -589,9 +640,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	updateSelectedIssueIds(newSelectedIssueIds: number[], force = false) {
 		this.adjustScroll(newSelectedIssueIds)
+		this.selectedIssueIds = newSelectedIssueIds
 		
-		this.doPushSelectedIssueIds(newSelectedIssueIds)
+		
+		this.pushSelectedIssueIds()
 	}
+	
+	
 	
 	/**
 	 * Retrieves the start and end index
@@ -680,6 +735,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{items} = this.props,
 			{itemIndexes} = this
 		
+		
+		
 		// Get the issue index for track of "last index"
 		const
 				issueIndex = this.getIssueIndex(issue),
@@ -754,9 +811,32 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * On escape sequence close the search
 	 */
 	onSearchEscape = () => {
+		log.info(`Search escape`)
+		// getValue(() => unwrapRef(this.state.searchPanelRef).blur())
 		
+		setTimeout(() => {
+			getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
+			// getValue(() => unwrapRef(this.state.listRef).focus())
+			
+		},100)
+		return true
 	}
 
+	
+	componentWillMount() {
+		const
+			store:ObservableStore<any> = Container.get(ObservableStore as any) as any
+		this.selectedIssueIdsUnsubscribe = store.observe(
+			[IssueKey,'selectedIssueIds'],
+			(selectedIssueIds) => this.selectedIssueIds = selectedIssueIds)
+	}
+	
+	componentWillUnmount() {
+		if (this.selectedIssueIdsUnsubscribe) {
+			this.selectedIssueIdsUnsubscribe()
+			this.selectedIssueIdsUnsubscribe = null
+		}
+	}
 	
 	/**
 	 * Render the component

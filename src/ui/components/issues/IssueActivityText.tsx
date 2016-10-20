@@ -15,9 +15,10 @@ import {IssueActionFactory} from "shared/actions/issue/IssueActionFactory"
 import {Container} from "typescript-ioc"
 import * as Radium from "radium"
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
-import { selectedIssueSelector } from "shared/actions/issue/IssueSelectors"
+import { selectedIssueSelector, activityLoadingSelector } from "shared/actions/issue/IssueSelectors"
 import {createStructuredSelector} from 'reselect'
 import { connect } from "react-redux"
+import { shallowEquals } from "shared/util/ObjectUtil"
 
 // Constants
 const log = getLogger(__filename)
@@ -152,8 +153,9 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	styles?:any
 	comment?:Comment
 	eventGroup?:EventGroup
-	issue:Issue
+	issue?:Issue
 	hideBottomBorder?:boolean
+	
 	activityActionText?:string
 	activityStyle:any
 	activityType:'post'|'comment'|'eventGroup'
@@ -174,7 +176,7 @@ export interface IIssueActivityTextState {
 	issue: selectedIssueSelector
 }))
 @ThemedStyles(baseStyles,'issueActivityText')
-@PureRender
+// @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 
 	/**
@@ -216,6 +218,9 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 		}
 	}
 	
+	shouldComponentUpdate(nextProps,nextState) {
+		return !shallowEquals(nextProps,this.props,'issue')
+	}
 	
 	makeOnIssueEditClick = (issue) => event =>
 		Container.get(IssueActionFactory).editIssue(issue)

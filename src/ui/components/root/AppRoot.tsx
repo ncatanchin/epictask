@@ -16,7 +16,7 @@ import {
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
 import { CommandType, CommandMenuItemType } from "shared/commands/Command"
-import { IWindowConfig } from "shared/config/WindowConfig"
+import { IWindowConfig, Dialogs } from "shared/config/WindowConfig"
 import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
@@ -33,6 +33,7 @@ import { Sheets, DialogConfigs } from "ui/DialogsAndSheets"
 import { PromisedComponent } from "ui/components/root/PromisedComponent"
 import { benchmarkLoadTime } from "shared/util/UIUtil"
 import { MenuIds } from "shared/UIConstants"
+import { ThemeEvents, ThemeEvent } from "shared/themes/ThemeState"
 
 
 // Logger, Store +++
@@ -68,7 +69,8 @@ const
 		GithubSync: 'GithubSync',
 		GlobalNewIssue: 'GlobalNewIssue',
 		FindAction: 'FindAction',
-		CloseWindow: 'CloseWindow'
+		CloseWindow: 'CloseWindow',
+		Settings: 'Settings'
 	}
 /**
  * Root App Component
@@ -105,8 +107,14 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						id: CIDS.GithubSync
 					}
 				)
-					
-			
+				
+				.command(
+					CommandType.App,
+					'Settings',
+					(cmd, event) => getUIActions().setDialogOpen(Dialogs.SettingsWindow,true),
+					"CommandOrControl+Comma", {
+						id: CIDS.Settings
+					})
 				
 				
 				.command(
@@ -126,7 +134,8 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						getUIActions().openSheet(Sheets.FindActionSheet)
 					},
 					"CommandOrControl+Shift+p",{
-						id: CIDS.FindAction
+						id: CIDS.FindAction,
+						hidden: true
 					}
 				)
 				
@@ -162,6 +171,16 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 								
 							}
 						]
+					}
+				)
+				
+				.menuItem(
+					'settings-menu-item',
+					CommandMenuItemType.Command,
+					'Settings',
+					{iconSet: 'fa', iconName: 'cog'},
+					{
+						commandId: CIDS.Settings
 					}
 				)
 			
@@ -323,9 +342,13 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 }
 
 
+let
+	rootElement = document.getElementById('root')
+
 /**
  * Render App in appRoot node
  */
+
 function render() {
 	
 	reduxStore = store.getReduxStore()
@@ -336,7 +359,7 @@ function render() {
 		/>,
 		
 		// ROOT ELEMENT TO MOUNT ON
-		document.getElementById('root'),
+		rootElement,
 		
 		/**
 		 * After Initial render
@@ -359,45 +382,38 @@ function render() {
 					type: Events.UIReady
 				}, "*")
 			})
-			
-			
 		}
 	)
 }
 
 /**
- * Make sure the whole front end is loaded and the backend
- * is ready for us to load everything
+ * Unmount, clear cache and fully reload
  */
-function checkIfRenderIsReady() {
-	render()
-	// if (isChildWindow)
-	// 	return render()
-	//
-	//
-	// const
-	// 	state = store.getState(),
-	// 	appState = state ? state.get(AppKey) : null,
-	// 	ready = appState ? appState.ready : false
-	//
-	// if (!ready) {
-	// 	log.info('Theme is not set yet')
-	//
-	// 	const
-	// 		observer = store.observe([ AppKey, 'ready' ], (newReady) => {
-	// 			log.debug('RECEIVED READY, NOW RENDER', newReady)
-	// 			if (!newReady !== true) {
-	// 				log.debug('Main is not ready', newReady)
-	// 				return
-	// 			}
-	// 			observer()
-	// 			render()
-	// 		})
-	//
-	// } else {
-	// 	render()
-	// }
+function remount() {
+	
+	ReactDOM.unmountComponentAtNode(rootElement)
+	
+	$('#root').remove()
+	rootElement = $(`<div id="root"></div>`).appendTo($('body'))[0]
+	
+	const
+		webContents = require('electron').remote.getCurrentWebContents()
+			
+	Object
+		.keys(require.cache)
+		.forEach(key => delete require.cache[key])
+	
+	webContents.reload()
 }
+
+/**
+ * On a complete theme change, destroy everything
+ */
+ThemeEvents.on(ThemeEvent.Changed,() => {
+	log.info(`Remounting on theme change`)
+	remount()
+})
+
 
 
 // CHILD WINDOW - GET CONFIG FIRST
@@ -427,13 +443,13 @@ if (isChildWindow) {
 		assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
 		 
 		
-		checkIfRenderIsReady()
+		render()
 	})
 }
 
 // MAIN UI
 else {
-	checkIfRenderIsReady()
+	render()
 }
 
 

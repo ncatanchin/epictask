@@ -18,12 +18,14 @@ export interface IThemedState {
 	palette?:IPalette
 	inputStyles?:any
 	wrappedInstance?:any
+	mounted?:boolean
 }
 
 export interface IThemedAttributes extends React.HTMLAttributes<any>{
 	theme?:any
 	styles?:any
 	palette?:any
+	
 }
 
 /**
@@ -75,6 +77,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 			//noinspection JSUnusedLocalSymbols
 			class ThemedWrapperComponent extends React.Component<any, IThemedState> {
 				
+				mounted = false
+				
 				constructor(props,context) {
 					super(props,context)
 					
@@ -119,6 +123,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 * create initial styles
 				 */
 				updateTheme(props = this.props, newTheme = getTheme(), newPalette = getPalette()) {
+					if (!this.mounted)
+						return
 					
 					// IF ANY PARTS CHANGED - UPDATE
 					if (
@@ -134,7 +140,17 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 						// PASSED PROP STYLES
 						!shallowEquals(props.styles,this.props.styles)
 					) {
-						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette))
+						
+						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette),() => {
+							// try {
+							// 	const
+							// 		instance = this.getWrappedInstance()
+							//
+							// 	instance && instance.forceUpdate()
+							// }	catch (err) {
+							// 	log.warn(`failed to updated wrapped component`)
+							// }
+						})
 					}
 					
 				}
@@ -144,9 +160,13 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 * Update the theme on mount and subscribe
 				 */
 				componentWillMount() {
+					this.mounted = true
+					
 					this.updateTheme()
+					
 					this.unsubscribe = addThemeListener(
-						(newTheme,newPalette) => this.updateTheme(this.props,newTheme,newPalette))
+						(newTheme,newPalette) =>this.updateTheme(this.props,newTheme,newPalette))
+						
 				}
 				
 				
@@ -170,6 +190,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				 * Unsubscribe from theme updates
 				 */
 				componentWillUnmount() {
+					this.mounted = false
+					
 					if (this.unsubscribe) {
 						this.unsubscribe()
 						this.unsubscribe = null

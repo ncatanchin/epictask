@@ -126,6 +126,7 @@ export const
  * Dialog Names
  */
 export const Dialogs = {
+	SettingsWindow: 'SettingsWindow',
 	IssueEditDialog: 'IssueEditDialog',
 	IssuePatchDialog: 'IssuePatchDialog',
 	RepoAddTool: 'RepoAddTool',

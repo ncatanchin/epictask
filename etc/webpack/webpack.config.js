@@ -173,7 +173,7 @@ const config = {
 		//new webpack.dependencies.LabeledModulesPlugin(),
 		
 		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-		//new ForkCheckerPlugin(),
+		new ForkCheckerPlugin(),
 		
 		// SPLIT FOR PARALLEL LOADING
 		// new webpack.optimize.AggressiveSplittingPlugin({

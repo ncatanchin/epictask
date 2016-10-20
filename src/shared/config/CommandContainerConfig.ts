@@ -2,6 +2,7 @@
  * Container Names
  */
 export const ContainerNames = {
+	SettingsWindow: 'SettingsWindow',
 	AppRoot: 'AppRoot',
 	CommentEditDialog: 'CommentEditDialog',
 	IssuesPanel: 'IssuesPanel',

@@ -15,7 +15,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 function baseStyles(topStyles,theme,palette) {
 	const
@@ -136,8 +136,19 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			onResultSelected(item)
 		}
 	}
-
 	
+	/**
+	 * On hover function generator
+	 * @param item
+	 */
+	onHover = (item:SearchItem) => (event) => {
+		const
+			{onResultHover} = this.props
+		
+		log.debug(`Hovering over search item`,item)
+		
+		onResultHover && onResultHover(item)
+	}
 	
 	
 	/**
@@ -182,7 +193,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 					item = itemCache[ id ] = <SearchResultItem key={id}
 					                                    item={searchItem}
 					                                    searchPanel={searchPanel}
-					                                    onMouseEnter={() => onResultHover && onResultHover(searchItem)}
+					                                    onMouseEnter={this.onHover(searchItem)}
 					                                    onClick={this.onClick(searchItem)}
 					                                    onMouseDown={this.onClick(searchItem)}
 					/> as any

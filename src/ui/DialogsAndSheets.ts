@@ -32,6 +32,18 @@ export const Sheets = {
  * Default Window Configs
  */
 export const DialogConfigs = {
+	SettingsWindow: {
+		name: 'SettingsWindow',
+		type: WindowType.Dialog,
+		showDevTools: false,
+		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
+			require.ensure(['ui/entries/SettingsWindow'],function(require:any) {
+				resolver.resolve(require('ui/entries/SettingsWindow').default)
+			}))
+		
+		
+	},
+	
 	IssueEditDialog: {
 		name: 'IssueEditDialog',
 		type: WindowType.Dialog,

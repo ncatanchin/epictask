@@ -509,10 +509,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const
 			canAssign = canAssignIssue(repo),
 			
-			// actionNodes = [
-			//
-			// ],
-			//
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				{editingIssue.id ? <div style={styles.titleBar.label}>
 					<RepoName repo={editingIssue.repo}
@@ -520,17 +516,18 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
 				</div> : `CREATE`}
 			</div>,
+			
 			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.onCancel)
 		
 		return <CommandRoot
 			id={ContainerNames.IssueEditDialog}
 			component={this}
 			style={makeStyle(Fill)}>
+			
 			<DialogRoot
 				titleMode='horizontal'
 				titleNode={titleNode}
 				titleActionNodes={titleActionNodes}
-				
 				saving={saving}
 				styles={styles.dialog}
 			>

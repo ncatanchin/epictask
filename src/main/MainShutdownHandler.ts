@@ -34,9 +34,7 @@ export function shutdownApp() {
  * @param mainWindow
  */
 export function setupShutdownOnWindowClose(mainWindow:Electron.BrowserWindow) {
-	if (!Env.isMac) {
-		mainWindow.on('close',shutdownApp)
-	}
+	mainWindow.on('close',shutdownApp)
 }
 
 

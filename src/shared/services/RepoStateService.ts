@@ -95,7 +95,7 @@ export class RepoStateService extends BaseService {
 	/**
 	 * Watches for changes to selected issue ids
 	 */
-	private selectedIssueIdsChanged = _.debounce((selectedIssueIds:number[]) => {
+	private selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
 		log.debug(`Selected issue ids updated`,selectedIssueIds)
 		if (selectedIssueIds && selectedIssueIds.length === 1) {
 			log.debug(`Loading activity`)
@@ -107,7 +107,7 @@ export class RepoStateService extends BaseService {
 			
 			this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
-	},300)
+	}
 	
 	
 	

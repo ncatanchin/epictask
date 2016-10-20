@@ -10,6 +10,7 @@ export * from './Other'
 export * from './IconFontAwesomeNames'
 export * from './IconOpticonNames'
 export * from './MilestoneSelect'
+export * from './DialogRoot'
 
 import * as Renderers from './Renderers'
 

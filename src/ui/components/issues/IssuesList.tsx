@@ -145,7 +145,6 @@ interface IIssueGroupHeaderProps extends React.HTMLAttributes<any>,IIssueItemGro
 	)
 })
 @Radium
-@PureRender
 class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,any> {
 	
 	constructor(props,context) {
@@ -496,7 +495,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
-		return !shallowEquals(nextProps,this.props,'editInlineConfig','theme','styles') || !shallowEquals(nextState,this.state,'itemIndexes')
+		return !shallowEquals(nextProps,this.props,'editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes')
 	}
 	
 	/**

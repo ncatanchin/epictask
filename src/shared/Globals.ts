@@ -99,6 +99,7 @@ function installGlobals() {
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
+		node_require: __non_webpack_require__,
 		getChildWindowId: getChildWindowIdGlobal,
 		getCurrentWindow: getCurrentWindowGlobal
 	}, ContextUtils)
@@ -152,6 +153,9 @@ declare global {
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assignGlobal:IAssignGlobal
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var node_require:typeof __non_webpack_require__
 	
 	/**
 	 * Extending root types with some custom props

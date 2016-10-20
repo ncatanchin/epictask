@@ -147,6 +147,22 @@ function actionBaseStyles(topStyles,theme,palette) {
 }
 
 /**
+ * Create a cancel/close button
+ * @param theme
+ * @param palette
+ * @param cancelAction
+ * @returns {any}
+ */
+export function createCancelButton(theme,palette,cancelAction) {
+	const
+		styles = createStyles(actionBaseStyles,{},theme,palette)
+	
+	return <div onClick={cancelAction} key='cancelButton' style={[styles.action,styles.action.cancel]}>
+		<Icon style={[styles.action.icon]}>cancel</Icon>
+	</div>
+}
+
+/**
  * Create default actions
  *
  * @param theme
@@ -159,9 +175,7 @@ export function createSaveCancelActions(theme,palette,saveAction, cancelAction) 
 		styles = createStyles(actionBaseStyles,{},theme,palette)
 	
 	return [
-		<div onClick={cancelAction} key='cancelButton' style={[styles.action,styles.action.cancel]}>
-			<Icon style={[styles.action.icon]}>cancel</Icon>
-		</div>,
+		createCancelButton(theme,palette,cancelAction),
 		<div onClick={saveAction} key='saveButton' style={[styles.action,styles.action.save]}>
 			<Icon style={[styles.action.icon]}>save</Icon>
 		</div>

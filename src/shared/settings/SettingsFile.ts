@@ -12,10 +12,6 @@ const
 
 log.info(`Settings file: ${settingsFilename}`)
 
-// const low = require('lowdb')
-// const storage = require('lowdb/file-sync')
-// const db = low(settingsFilename,{storage})
-
 /**
  * Create default settings
  */

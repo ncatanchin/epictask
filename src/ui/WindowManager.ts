@@ -19,7 +19,7 @@ const
 	log = getLogger(__filename),
 	
 	// Container to support hot reloading
-	instanceContainer = getHot(module,'instanceContainer',{}) as {
+	instanceContainer = ((global as any).instanceContainer || {}) as {
 		clazz:typeof WindowManager,
 		instance:WindowManager,
 		hotInstance:WindowManager
@@ -193,7 +193,6 @@ export class WindowManager {
 			
 			// CHECK FOR EXISTING WINDOW (ONLY IN CASE ID WAS PROVIDED
 			let
-				partition = config.name,
 				existingWindowInstance = this.windows.find(it => it.id === id)
 			
 			if (existingWindowInstance) {
@@ -218,9 +217,7 @@ export class WindowManager {
 					
 					// MANAGER PARTITIONING
 					{
-						webPreferences: {
-							partition
-						}
+						
 					},
 					config.opts || {}
 				)
@@ -235,7 +232,7 @@ export class WindowManager {
 			
 			// TODO: REMOVE - TEST
 			const
-				windowSession = Electron.remote.session.fromPartition(partition),
+				windowSession = Electron.remote.getCurrentWebContents().session,
 				windowConfig = toJSON(config, true),
 				windowConfigCookie = {
 					url: 'https://densebrain.com/epictask',
@@ -352,11 +349,15 @@ if (instanceContainer.hotInstance) {
 	Object.setPrototypeOf(instanceContainer.hotInstance,WindowManager.prototype)
 }
 
+Object.assign((global as any), {
+	instanceContainer: assign(instanceContainer,{
+		hotInstance: instanceContainer.instance
+	})
+})
+
 setDataOnHotDispose(module,() => ({
 	// Tack on a ref to the hot instance so we know it's there
-	instanceContainer:assign(instanceContainer,{
-		hotInstance: instanceContainer.instance
-	}),
+	
 	getWindowManager
 }))
 

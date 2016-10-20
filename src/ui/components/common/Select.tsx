@@ -176,7 +176,6 @@ export class Select extends React.Component<ISelectProps,ISelectState> {
 			underlineDisabledStyle={styles.input.underlineDisabled}
 			underlineFocusStyle={styles.input.underlineFocus}
 			
-			
 			underlineShow={underlineShow}
 			fullWidth={true}
 		>

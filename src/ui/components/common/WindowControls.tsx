@@ -3,34 +3,36 @@
 
 import { IThemedAttributes, ThemedStyles } from "shared/themes/ThemeDecorations"
 import { PureRender } from "ui/components/common"
+import { colorAlpha, colorDarken } from "shared/themes/styles/ColorTools"
 
 
 function baseStyles(topStyles,theme,palette) {
 
 	const
-		{primary,accent,text,secondary,background} = palette
+		{primary,accent,text,secondary,background} = palette,
+		controlBorderColor = colorDarken(primary.hue1,5)
 	
 	return {
 		
 		controls: [ FlexRowCenter, PositionAbsolute, {
 			WebkitAppRegion: 'no-drag',
-			top: 17,
+			top: 14,
 			left: 10,
 			height: rem(2)
 		} ],
 		
-		control: [ FlexColumnCenter, makeMarginRem(0, 0.5), makeTransition([ 'border', 'color' ]), {
+		control: [ FlexColumnCenter, makeMarginRem(0, 0.5), makeTransition(['background', 'border', 'color' ]), {
 			width: rem(1.5),
 			height: rem(1.5),
 			cursor: 'pointer',
 			borderRadius: '50%',
-			border: `0.2rem solid ${primary.hue2}`,
+			border: `0.2rem solid ${controlBorderColor}`,
 			color: Transparent,
 			background: Transparent,
 			
 			[CSSHoverState]: [ {
 				border: `0.1rem solid transparent`,
-				background: primary.hue2,
+				background: controlBorderColor,
 				color: text.primary
 			} ],
 			

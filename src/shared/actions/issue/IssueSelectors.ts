@@ -79,7 +79,12 @@ export const commentsSelector:(state) => List<Comment> = createSelector(
 	issueStateSelector,
 	(state:IssueState) => state.comments
 )
-	
+
+export const activityLoadingSelector: (state) => boolean = createSelector(
+	issueStateSelector,
+	(state:IssueState) => state.activityLoading
+)
+
 
 export const issuesEventsSelector:(state) => List<IssuesEvent> = createSelector(
 	issueStateSelector,
@@ -89,18 +94,18 @@ export const issuesEventsSelector:(state) => List<IssuesEvent> = createSelector(
 
 
 
-export const issueSortSelector = createSelector(
+export const issueSortSelector = createDeepEqualSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueSort
 )
 
 
-export const issueFilterSelector = createSelector(
+export const issueFilterSelector = createDeepEqualSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueFilter
 )
 
-export const issueFilterLabelsSelector = createSelector(
+export const issueFilterLabelsSelector = createDeepEqualSelector(
 	issueFilterSelector,
 	enabledLabelsSelector,
 	(filter:IIssueFilter,labels:List<Label>):List<Label> =>

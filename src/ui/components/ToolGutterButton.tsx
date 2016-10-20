@@ -66,8 +66,8 @@ function baseStyles(topStyles,theme,palette) {
 		// Label
 		label: [ makeFlex(0, 1, 'auto'), Ellipsis, {
 			
-			fontSize: rem(0.9),
-			
+			fontSize: rem(1),
+			fontWeight: 500,
 			dragging: [FlexAuto,{
 				
 			}],
