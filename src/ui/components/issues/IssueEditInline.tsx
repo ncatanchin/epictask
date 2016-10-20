@@ -38,7 +38,7 @@ import {
 	enabledAssigneesSelector, enabledLabelsSelector, enabledMilestonesSelector
 } from "shared/actions/repo/RepoSelectors"
 import { User } from "shared/models"
-import { cloneObject } from "shared/util/ObjectUtil"
+import { cloneObject } from "shared/util"
 import {
 	CommandComponent, getCommandProps, ICommandComponent, CommandRoot,
 	CommandContainerBuilder

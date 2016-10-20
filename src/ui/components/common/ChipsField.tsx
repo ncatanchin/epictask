@@ -12,7 +12,7 @@ import {Container} from 'typescript-ioc'
 import {Themed, ThemedNoRadium} from 'shared/themes/ThemeManager'
 import {CommonKeys} from 'shared/KeyMaps'
 import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import {
 	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
 	CommandContainerBuilder

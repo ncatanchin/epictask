@@ -19,7 +19,7 @@ import { Icon } from 'ui/components/common/Icon'
 import { LabelFieldEditor } from 'ui/components/common/LabelFieldEditor'
 
 import { MenuItem, SelectField, TextField, } from 'material-ui'
-import { cloneObject, getValue } from 'shared/util/ObjectUtil'
+import { cloneObject, getValue } from 'shared/util'
 import {
 	repoIdPredicate,
 	enabledAvailableReposSelector
@@ -35,7 +35,7 @@ import { getGithubErrorText } from 'ui/components/common/Renderers'
 import { canAssignIssue, canCreateIssue } from 'shared/Permission'
 import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"
 import { getUIActions, getRepoActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
-import { makeHeightConstraint, FlexColumn, FlexAuto, FlexRowCenter, FillHeight } from "shared/themes"
+import { makeHeightConstraint, FlexColumn, FlexAuto, FlexRowCenter, FillHeight } from "shared/themes/styles"
 import { FileDrop } from "ui/components/common/FileDrop"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"

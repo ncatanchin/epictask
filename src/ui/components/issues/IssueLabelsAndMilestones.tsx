@@ -8,7 +8,7 @@ import {Label} from 'shared/models/Label'
 import {ThemedStylesNoRadium } from 'shared/themes/ThemeManager'
 import {Milestone} from 'shared/models/Milestone'
 import LabelChip from 'ui/components/common/LabelChip'
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 
 
 

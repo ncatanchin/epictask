@@ -21,7 +21,7 @@ import { getUIActions} from "shared/actions/ActionFactoryProvider"
 import {
 	makeHeightConstraint, FlexColumn, FlexAuto, FlexRowCenter, FillHeight, makeFlex,
 	OverflowAuto, FlexColumnCenter, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill
-} from "shared/themes"
+} from "shared/themes/styles"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
 import { CommandType } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"

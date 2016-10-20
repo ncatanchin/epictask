@@ -14,12 +14,11 @@ import { childWindowOpenSelector, modalWindowOpenSelector, sheetSelector } from 
 import { IUISheet } from "shared/config/WindowConfig"
 import { SheetRoot } from "ui/components/root/SheetRoot"
 import { FillWindow } from "shared/themes/styles/CommonStyles"
-import { FlexColumn, Fill, FlexScale } from "shared/themes"
+import { FlexColumn, Fill, FlexScale } from "shared/themes/styles"
 import { WelcomePage } from "ui/components/pages/WelcomePage"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { ToolDragLayer } from "ui/components/ToolDragLayer"
 import { authenticatingSelector } from "shared/actions/auth/AuthSelectors"
-
 
 // Constants
 const
@@ -73,7 +72,7 @@ export interface IUIRootProps extends IThemedAttributes {
  * IUIRootState
  */
 export interface IUIRootState {
-	
+	statusBarHasItems?:boolean
 }
 
 /**
@@ -94,6 +93,12 @@ export interface IUIRootState {
 @ThemedStyles(baseStyles)
 @PureRender
 export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
+	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {statusBarHasItems: false}
+	}
 	
 	render() {
 		const
@@ -125,7 +130,6 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 			<div style={[
 				Fill,
 				FlexColumn,
-				
 				(sheet || modalOpen || authenticating) && styles.blur
 			]}>
 				{/* HEADER */}
@@ -142,7 +146,9 @@ export class UIRoot extends React.Component<IUIRootProps,IUIRootState> {
 				<ToastMessages/>
 				
 				{/* STATUS BAR */}
-				<StatusBar open={headerVisibility !== HeaderVisibility.Hidden}/>
+				<StatusBar open={
+					headerVisibility !== HeaderVisibility.Hidden
+				}/>
 				
 				
 			</div>

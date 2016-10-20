@@ -1,5 +1,5 @@
 
-import {Map} from 'immutable'
+import {Map,List} from 'immutable'
 import {createSelector} from 'reselect'
 
 import {UIKey} from 'shared/Constants'
@@ -9,6 +9,9 @@ import { IUISheet,WindowType } from "shared/config/WindowConfig"
 
 import { ToolPanelLocation, IToolPanel } from "shared/tools/ToolTypes"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
+import { IToastMessage } from "shared/models/Toast"
+import { jobDetailsSelector, jobsSelector } from "shared/actions/jobs/JobSelectors"
+import { getValue } from "shared/util"
 
 const
 	log = getLogger(__filename)
@@ -78,7 +81,22 @@ export const createToolPanelLocationSelector: () => (state) => {id:string,locati
 		(state,props) => _.pick(props || {}, 'id', 'location'),
 		(panelLocation) => panelLocation
 	)
+	
+export const messagesSelector:(state) => List<IToastMessage> = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.messages
+)
 
+export const messagesSortedSelector:(state) => List<IToastMessage> = createSelector(
+	messagesSelector,
+	(messages:List<IToastMessage>) =>
+		messages.sortBy(message => message.createdAt) as List<IToastMessage>
+)
+
+// (state):IToastMessage[] => _.orderBy(
+// 	.toArray().map(msg => _.toJS(msg)) || [],
+// 	['createdAt'],
+// 	['desc'])
 /**
  * Tool Panel selector based on prop id / location
  *
@@ -97,3 +115,10 @@ export function createToolPanelSelector() {
 		}
 	)
 }
+
+export const statusBarHasItemsSelector:(state) => boolean = createSelector(
+	messagesSortedSelector,
+	jobsSelector,
+	(messages,jobs) =>
+		getValue(() => Object.keys(jobs).length,0) + getValue(() => messages.size) > 0
+)

@@ -2,7 +2,7 @@
 import * as React from 'react'
 import filterProps from 'react-valid-props'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
-import { CSSHoverState } from "shared/themes"
+import { CSSHoverState } from "shared/themes/styles"
 const Ink = require('react-ink')
 const tinycolor = require('tinycolor2')
 //endregion

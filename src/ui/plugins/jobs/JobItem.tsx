@@ -133,7 +133,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 			{theme, styles,job,detail,labelStyle} = this.props,
 			statusColors = getJobStatusColors(detail,styles)
 		
-		return <div {...filterProps(this.props)} style={styles.root}>
+		return !job || !detail ? React.DOM.noscript() : <div {...filterProps(this.props)} style={styles.root}>
 		
 			
 			{/* Job Status */}

@@ -1,7 +1,7 @@
 
 
 import { CommonKeys } from "shared/KeyMaps"
-import { isNil, isNumber, isString } from "shared/util/ObjectUtil"
+import { isNil, isNumber, isString } from "shared/util"
 
 const
 	log = getLogger(__filename)

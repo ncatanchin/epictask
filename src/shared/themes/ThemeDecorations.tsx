@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { mergeStyles } from "shared/themes/styles/CommonStyles"
 import { addThemeListener } from "shared/themes/ThemeState"
-import { getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, shallowEquals } from "shared/util"
 import { IPalette } from "shared/themes/material/MaterialTools"
 
 const

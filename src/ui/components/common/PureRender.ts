@@ -1,5 +1,5 @@
 import shallowCompare = require('react-addons-shallow-compare')
-import {interceptFn} from "shared/util/ObjectUtil"
+import {interceptFn} from "shared/util"
 
 const
 	log = getLogger(__filename)

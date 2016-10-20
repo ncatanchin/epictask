@@ -285,6 +285,10 @@ export const Ellipsis = makeStyle({
 })
 //endregion
 
+export const ImgFitFill = makeStyle(Fill,{
+	objectFit: 'contain'
+})
+
 
 function getRootElementFontSize( ) {
 	// Returns a number

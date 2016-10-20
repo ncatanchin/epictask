@@ -3,7 +3,7 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import { PureRender } from 'ui/components/common/PureRender'
 
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 
 // Constants
 const

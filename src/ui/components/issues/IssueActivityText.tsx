@@ -18,7 +18,7 @@ import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import { selectedIssueSelector, activityLoadingSelector } from "shared/actions/issue/IssueSelectors"
 import {createStructuredSelector} from 'reselect'
 import { connect } from "react-redux"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 
 // Constants
 const log = getLogger(__filename)

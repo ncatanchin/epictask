@@ -6,9 +6,9 @@ import {createStructuredSelector} from 'reselect'
 import { getAuthActions } from "shared/actions/ActionFactoryProvider"
 import { PureRender, Icon } from "ui/components/common"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { makeHeightConstraint, PositionAbsolute, makeWidthConstraint, FillWindow, Fill } from "shared/themes"
+import { makeHeightConstraint, PositionAbsolute, makeWidthConstraint, FillWindow, Fill } from "shared/themes/styles"
 import { Logo } from "ui/components/common/Logo"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 import { authenticatingSelector } from "shared/actions/auth/AuthSelectors"
 
 const

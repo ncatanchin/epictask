@@ -25,7 +25,7 @@ import {
 	IssuesEvent, isComment,
 	isIssue, getEventGroupType
 } from "shared/models"
-import { shallowEquals, getValue } from "shared/util/ObjectUtil"
+import { shallowEquals, getValue } from "shared/util"
 
 import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {

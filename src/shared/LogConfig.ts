@@ -3,7 +3,7 @@ import 'shared/LogCategories'
 
 import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
-import { isObject } from "shared/util/ObjectUtil"
+import { isObject } from "shared/util"
 import { getAppConfig } from "shared/AppConfig"
 
 let Reactotron = null

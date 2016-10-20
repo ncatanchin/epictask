@@ -9,8 +9,8 @@ import { DragLayer } from 'react-dnd'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { ToolGutterButton } from "ui/components/ToolGutterButton"
-import { getValue, shallowEquals } from "shared/util/ObjectUtil"
-import { PositionAbsolute } from "shared/themes"
+import { getValue, shallowEquals } from "shared/util"
+import { PositionAbsolute } from "shared/themes/styles"
 
 // Constants
 const

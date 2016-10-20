@@ -2,7 +2,7 @@ import {
 	createStyles, FlexAuto, FlexColumn, makePaddingRem, FlexScale, rem, FlexAlignCenter,
 	FlexRow, FlexAlignEnd, FillWidth, Ellipsis, FlexRowCenter, OverflowHidden, FillHeight, PositionRelative,
 	makeTransition, makeHeightConstraint
-} from "shared/themes"
+} from "shared/themes/styles"
 
 
 /**

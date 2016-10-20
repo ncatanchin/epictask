@@ -1,6 +1,6 @@
 
 import { TCommandDefaultAccelerator } from "shared/commands/Command"
-import { isNumber, shallowEquals } from "shared/util/ObjectUtil"
+import { isNumber, shallowEquals } from "shared/util"
 import { GlobalKeys } from "shared/KeyMaps"
 import {
 	ModifiedKeyNames, MappedKeys, ElectronMappedKeys, Shift, Meta,

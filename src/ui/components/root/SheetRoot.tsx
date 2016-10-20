@@ -8,14 +8,14 @@ import { IUISheet } from "shared/config/WindowConfig"
 import {
 	PositionAbsolute, makeTransition, makeHeightConstraint, createStyles, FillHeight,
 	FlexColumn
-} from "shared/themes"
+} from "shared/themes/styles"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { CommandType } from "shared/commands/Command"
 import { CommonKeys } from "shared/KeyMaps"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 import { PromisedComponent } from "ui/components/root/PromisedComponent"
 
 // Constants

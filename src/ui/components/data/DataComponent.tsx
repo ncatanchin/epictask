@@ -4,7 +4,7 @@ import {
 	DataClient, createDataClient, TDataId, IDataRequest, IDataPendingRequest,
 	TDataMappedProvider, IDataProviderPendingRequest, IDataProviderRequest
 } from "ui/components/data/DataManager"
-import {isFunction, isString} from "shared/util/ObjectUtil"
+import {isFunction, isString} from "shared/util"
 import './DataProviders'
 import { PureRender } from "ui/components/common/PureRender"
 

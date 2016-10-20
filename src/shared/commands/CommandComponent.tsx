@@ -5,7 +5,7 @@ import {
 import { getCommandManager } from "shared/commands/CommandManager"
 import * as React from 'react'
 import filterProps from 'react-valid-props'
-import { isFunction, shortId, getValue, isNumber, isString } from "shared/util/ObjectUtil"
+import { isFunction, shortId, getValue, isNumber, isString } from "shared/util"
 
 
 

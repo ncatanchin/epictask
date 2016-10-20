@@ -36,7 +36,7 @@ import { getUIActions, getIssueActions } from  "shared/actions/ActionFactoryProv
 import {createSelector} from 'reselect'
 import { TransitionDurationLong } from "shared/themes/styles/CommonStyles"
 import { IssuesPanel } from "ui/components/issues/IssuesPanel"
-import { shallowEquals, shallowEqualsArrayOrList } from "shared/util/ObjectUtil"
+import { shallowEquals, shallowEqualsArrayOrList } from "shared/util"
 import { createDeepEqualSelector } from "shared/util/SelectorUtil"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 

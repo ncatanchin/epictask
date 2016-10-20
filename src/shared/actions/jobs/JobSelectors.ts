@@ -29,7 +29,7 @@ export const jobSelector:TSelector<TJobMap> = createDeepEqualSelector(
 /**
  * Get all jobs
  */
-export const jobsSelector:TSelector<IJob> = createDeepEqualSelector(
+export const jobsSelector:TSelector<{[id:string]:IJob}> = createDeepEqualSelector(
 	jobStateSelector,
 	(state:JobState) => state.all.toJS()
 )

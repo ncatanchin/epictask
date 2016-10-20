@@ -4,7 +4,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import {MenuItem, SelectField} from 'material-ui'
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import { makeComponentStyles } from "ui/components/common"
 import filterProps from 'react-valid-props'
 // Constants

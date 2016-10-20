@@ -1,8 +1,7 @@
 import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "shared/tools/ToolTypes"
-import { Transparent, createStyles } from "shared/themes/styles/CommonStyles"
-import { rem, makePaddingRem } from "shared/themes"
+import { Transparent, createStyles,rem, makePaddingRem } from "shared/themes/styles"
 
 
 
@@ -86,7 +85,7 @@ function makeSheetTheme({accent,primary}) {
  * @param palette
  * @returns {any}
  */
-export function DarkTheme(palette) {
+export function DefaultTheme(palette) {
 	
 	
 	const
@@ -116,7 +115,7 @@ export function DarkTheme(palette) {
 		}
 		
 	return Styles.getMuiTheme(_.merge(baseTheme, createStyles({
-		ThemeName: 'DarkTheme',
+		ThemeName: 'DefaultTheme',
 		
 		/**
 		 * Global
@@ -881,7 +880,7 @@ export function DarkTheme(palette) {
 	})))
 }
 
-export namespace DarkTheme {
-	export const ThemeName = 'DarkTheme'
+export namespace DefaultTheme {
+	export const ThemeName = 'DefaultTheme'
 }
-export default DarkTheme
+export default DefaultTheme

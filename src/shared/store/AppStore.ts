@@ -27,7 +27,7 @@ import {
 	loadActionFactories
 } from 'shared/actions/ActionFactoryProvider'
 import {OnlyIfFn, If} from "shared/util/Decorations"
-import {isString} from "shared/util/ObjectUtil"
+import {isString} from "shared/util"
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import { IChildStore, IChildStoreSubscriptionManager, ChildStoreSubscriptionStatus } from "shared/store/ChildStore"
 import { attachChildStore } from "shared/AppStoreClient"

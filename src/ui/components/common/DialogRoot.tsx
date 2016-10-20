@@ -1,7 +1,7 @@
 // Imports
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { CircularProgress} from "material-ui"
-import { makeHeightConstraint, makeWidthConstraint, createStyles } from "shared/themes"
+import { makeHeightConstraint, makeWidthConstraint, createStyles } from "shared/themes/styles"
 
 import { Icon } from "ui/components/common"
 import { WindowControls } from "ui/components/common/WindowControls"

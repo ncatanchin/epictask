@@ -15,7 +15,7 @@ import {
 	NavigationMenu as SvgNavMenuIcon
 } from 'material-ui/svg-icons'
 import {IconMenu,IconButton,MenuItem,Divider} from 'material-ui'
-import { getValue, isString } from "shared/util/ObjectUtil"
+import { getValue, isString } from "shared/util"
 import { getCommandManager } from "shared/commands/CommandManager"
 import { Icon } from "ui/components/common"
 import { CommandAccelerator } from "shared/commands/CommandAccelerator"

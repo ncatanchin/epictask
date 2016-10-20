@@ -11,12 +11,12 @@ import {TimeAgo} from "ui/components/common/TimeAgo"
 import {
 	FlexColumnCenter, FlexScale, makePaddingRem, rem, FillHeight, createStyles, FillWidth,
 	FlexRowCenter, Ellipsis, FlexColumn
-} from "shared/themes"
+} from "shared/themes/styles"
 
 import {getJobStatusColors} from "ui/plugins/jobs/JobItem"
 import { LogWatcher, LogWatcherEvent } from "shared/util/LogWatcher"
 import { IEnumEventRemover } from "shared/util/EnumEventEmitter"
-import { getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, shallowEquals } from "shared/util"
 import { VisibleList } from "ui/components/common/VisibleList"
 
 // Constants

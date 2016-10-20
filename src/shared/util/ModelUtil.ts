@@ -1,6 +1,6 @@
 
 import {Map,List} from 'immutable'
-import { shallowEquals, cloneObject } from "shared/util/ObjectUtil"
+import { shallowEquals, cloneObject } from "shared/util"
 import * as moment from 'moment'
 
 /**

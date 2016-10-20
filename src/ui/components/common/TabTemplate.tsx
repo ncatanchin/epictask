@@ -4,7 +4,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { makeHeightConstraint, PositionRelative, Fill } from "shared/themes"
+import { makeHeightConstraint, PositionRelative, Fill } from "shared/themes/styles"
 
 // Constants
 const

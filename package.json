@@ -4,25 +4,26 @@
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/app/bin/epictask-start.js",
   "scripts": {
-    "local-install": "./etc/scripts/local-install.sh",
+    
     "clean": "node ./etc/scripts/clean.js",
-    "clean-dev-electron": "node ./etc/scripts/clean-dev-electron.js",
-    "sync-win-dev-scp": "scp -r ${PWD}/src/* 10.0.1.49:c:/users/jglanz/development/densebrain/epictask-workspace/epictask/src/",
-    "sync-win-dev": "node_modules\\.bin\\sync-files.cmd --watch z:\\jglanz\\Development\\densebrain\\epictask-workspace\\epictask\\src .\\src",
-    "sync-linux-dev": "./node_modules/.bin/sync-files --watch /mnt/hgfs/jglanz/Development/densebrain/epictask-workspace/epictask/src ./src",
+    "clean-electron-workspace": "node ./etc/scripts/clean-dev-electron.js",
     "test": "gulp compile test",
     "test-watch": "gulp compile-watch",
-    "start-dev": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./dist/MainEntry.js",
+    "start": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./bin/epictask-start.js",
     "postinstall": "node ./etc/scripts/post-install.js",
     "compile": "gulp compile",
     "compile-watch": "node ./etc/scripts/compile-watch.js",
-    "clean-electron": "./etc/scripts/clean-electron.sh",
-    "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
-    "build-storybook": "build-storybook",
     "package": "babel-node ./etc/scripts/package.js",
     "package-all": "node ./etc/scripts/package.js --win --linux",
+    
     "make-icons": "node ./etc/scripts/make-icons.js",
-    "install-app": "node ./etc/scripts/package.js --install"
+  
+    "install-material-ui": "npm i material-ui@../material-ui/build",
+    "install-app": "node ./etc/scripts/package.js --install",
+    
+    "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
+    "build-storybook": "build-storybook"
+    
   },
   "build": {
     "appId": "com.densebrain.epictask",

@@ -9,7 +9,7 @@ import * as ReactDOM from 'react-dom'
 import {SearchItem} from 'shared/actions/search/SearchState'
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
 import { SearchResultsList } from "ui/components/search/SearchResultsList"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import { ISearchState } from "shared/actions/search"
 import { SearchPanel } from "ui/components/search"
 
@@ -112,21 +112,28 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * Mount node for search results
 	 */
 	private node:HTMLElement
-
-	constructor(props,context) {
-		super(props,context)
-	}
-
-	componentDidMount():void {
-
-
+	
+	/**
+	 * On search results mounted
+	 */
+	componentDidMount() {
 		this.node = doc.createElement('div')
-		_.assign(this.node.style, this.props.styles.resultsModal)
+		
+		Object
+			.assign(this.node.style,
+				this.props.styles.resultsModal
+			)
 
 		body.appendChild(this.node)
 		this.renderResults(this.props)
 	}
-
+	
+	/**
+	 * New props received
+	 *
+	 * @param nextProps
+	 * @param nextContext
+	 */
 	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
 		const
 			shouldUpdate = !shallowEquals(nextProps,this.props) || !shallowEquals(nextProps,this.props,
@@ -138,30 +145,23 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		if (!nextProps.inline && shouldUpdate)
 			this.renderResults(nextProps)
 	}
-
+	
+	/**
+	 * On unmount cleanup
+	 */
 	componentWillUnmount():void {
 		ReactDOM.unmountComponentAtNode(this.node)
 		body.removeChild(this.node)
-		// elementClass(body).remove(styleVisible)
 	}
 	
-	//
-	// shouldComponentUpdate(nextProps:ISearchResultsProps, nextState:ISearchResultsState, nextContext:any):boolean {
-	// 	const
-	// 		shouldUpdate = !shallowEquals(nextProps,this.props,
-	// 			'theme',
-	// 			'styles',
-	// 			'searchState',
-	// 			'searchState.items',
-	// 			'searchState.selectedIndex')
-	//
-	// 	return (nextProps.inline && shouldUpdate)
-	// }
-	//
 	
-	
+	/**
+	 * getContainerStyle
+	 *
+	 * @param anchor
+	 * @param theme
+	 */
 	private getContainerStyle(anchor,theme) {
-		// FUNC TO GET STYLE
 		
 		const
 			rect =  anchor && anchor.getBoundingClientRect(),
@@ -189,7 +189,16 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	}
 	
+	/**
+	 * Render results list
+	 *
+	 * @param props
+	 * @returns {any}
+	 */
 	renderResults(props) {
+		if (!props.open)
+			return React.DOM.noscript()
+		
 		const
 			{styles,theme,searchState,onResultHover,onResultSelected,open,inline,searchPanel} = props,
 			{palette} = theme
@@ -208,8 +217,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 
 		log.debug('rendering results inline:',inline,'open',open,'anchor',props.anchor)
 		
-		if (!this.props.open)
-			return
+		
 		
 		if (!props.inline) {
 			anchor = typeof anchor === 'string' ?
@@ -234,8 +242,12 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 					onResultSelected={onResultSelected}
 					className="searchResults"
 					style={resultsStyle}/>
-
-			_.assign(this.node.style, containerStyle)
+			
+			
+			Object.assign(this.node.style,
+				containerStyle
+			)
+			
 			ReactDOM.render(resultsElement, this.node)
 		} else {
 			return <SearchResultsList
@@ -247,14 +259,15 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				className="searchResults"
 				style={resultsStyle}/>
 		}
-		//renderSubtreeIntoContainer(this,resultsElement,this.node)
 	}
-
+	
+	/**
+	 * Render results when inline
+	 */
 	render() {
 		return (this.props.inline) ?
 			this.renderResults(this.props) :
 			<div></div>
-			// React.DOM.noscript()
 	}
 
 }

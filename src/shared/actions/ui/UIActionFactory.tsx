@@ -8,8 +8,8 @@ import {UIState} from 'shared/actions/ui/UIState'
 
 import {Provided} from 'shared/util/ProxyProvided'
 import {ToolPanelLocation, ITool,IToolPanel} from "shared/tools/ToolTypes"
-import { isNumber, shortId, isString, cloneObjectShallow, getValue } from "shared/util/ObjectUtil"
-import {cloneObject} from "shared/util/ObjectUtil"
+import { isNumber, shortId, isString, cloneObjectShallow, getValue } from "shared/util"
+import {cloneObject} from "shared/util"
 import * as assert from "assert"
 import { RegisterActionFactory } from "shared/Registry"
 import { getWindowManager } from "ui/WindowManager"

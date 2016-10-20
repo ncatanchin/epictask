@@ -4,7 +4,7 @@ import * as uuid from 'node-uuid'
 
 import {ToastMessageType, IToastMessage} from 'shared/models/Toast'
 import { getUIActions } from  "shared/actions/ActionFactoryProvider"
-import { isString } from "shared/util/ObjectUtil"
+import { isString } from "shared/util"
 
 
 const

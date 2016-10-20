@@ -20,7 +20,7 @@ import {
 	removeBrowserWindowListener, removeWindowListener,
 	getCommandBrowserWindow
 } from "shared/commands/CommandManagerUtil"
-import { getValue, cloneObject } from "shared/util/ObjectUtil"
+import { getValue, cloneObject } from "shared/util"
 
 
 

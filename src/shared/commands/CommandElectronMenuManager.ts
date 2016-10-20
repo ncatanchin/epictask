@@ -3,7 +3,7 @@ import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { ICommandMenuManager, ICommandMenuItem } from "shared/commands/Command"
 import { inElectron } from "shared/util/ElectronUtil"
 import { isMain } from "shared/commands/CommandManagerConfig"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import Electron = require('electron')
 import { getCommandManagerType, getCommandManager } from "shared/commands/CommandManager"
 

@@ -1,4 +1,4 @@
-import {cloneObject} from 'shared/util/ObjectUtil'
+import {cloneObject} from 'shared/util'
 const log = getLogger(__filename)
 
 import {List} from 'immutable'

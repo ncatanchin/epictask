@@ -7,7 +7,7 @@ import {Transport} from "shared/net/Transport"
 import {ProcessType} from "shared/ProcessType"
 import VariableProxy from 'shared/util/VariableProxy'
 import { DatabaseServerName } from "shared/ProcessType"
-import { cloneObject } from "shared/util/ObjectUtil"
+import { cloneObject } from "shared/util"
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 
 const

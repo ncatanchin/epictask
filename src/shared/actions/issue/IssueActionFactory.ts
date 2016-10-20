@@ -11,7 +11,7 @@ import {FinderItemsPerPage} from 'shared/config/FinderConfig'
 import {
 	cloneObject, extractError, isNil, nilFilter, isNumber, cloneObjectShallow,
 	shallowEquals
-} from 'shared/util/ObjectUtil'
+} from 'shared/util'
 import {Comment} from 'shared/models/Comment'
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
@@ -46,7 +46,7 @@ import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"
 import { IIssueFilter, EmptyIssueFilter } from "shared/actions/issue/IIssueFilter"
 import { IIssueSort } from "shared/actions/issue/IIssueSort"
-import { isListType } from "shared/util/ObjectUtil"
+import { isListType } from "shared/util"
 
 
 import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"

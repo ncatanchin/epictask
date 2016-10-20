@@ -20,7 +20,7 @@ import {
 import { uiStateSelector } from 'shared/actions/ui/UISelectors'
 import { Dialogs } from 'shared/config/WindowConfig'
 
-import { getValue } from 'shared/util/ObjectUtil'
+import { getValue } from 'shared/util'
 import { TEditCommentRequest } from "shared/actions/issue/IssueState"
 
 import { DialogRoot, createSaveCancelActions } from "ui/components/common/DialogRoot"

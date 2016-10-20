@@ -1,5 +1,5 @@
 
-import { cloneObject } from "shared/util/ObjectUtil"
+import { cloneObject } from "shared/util"
 import { makeIPCServerId } from "shared/net/IPCUtil"
 const
 	log = getLogger(__filename),

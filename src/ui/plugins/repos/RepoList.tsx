@@ -14,7 +14,7 @@ import {
 	availableReposSelector
 } from 'shared/actions/repo/RepoSelectors'
 import { getRepoActions } from  "shared/actions/ActionFactoryProvider"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import { LoadStatus } from "shared/models"
 import { CircularProgress} from "material-ui"
 

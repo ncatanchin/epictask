@@ -1,11 +1,18 @@
 import * as assert from 'assert'
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 
-import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
 import { IPalette } from "shared/themes/material/MaterialTools"
 import { PersistentValue, PersistentValueEvent } from "shared/util/PersistentValue"
 import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
+
+import * as BuiltInsType from './builtin'
+
+let
+	BuiltIns:typeof BuiltInsType = null
+
+
 
 
 const
@@ -22,15 +29,16 @@ const
 export const
 	PersistentThemeName = new PersistentValue<string>('epictask-theme'),
 	PersistentPaletteName = new PersistentValue<string>('epictask-palette'),
-	DefaultThemeName = PersistentThemeName.get() || 'DarkTheme',
-	DefaultPaletteName = PersistentPaletteName.get() ||  'DarkPalette'
+	
+	DefaultThemeName = PersistentThemeName.get() || 'DefaultTheme',
+	DefaultPaletteName = PersistentPaletteName.get() ||  'LightPalette'
 
 // ONLY LET FOR HMR
 export let
 	Themes:{[ThemeName:string]:IThemeCreator} = null,
 	Palettes:{[PaletteName:string]:IPaletteCreator} = null,
-	DefaultTheme = null,
-	DefaultPalette = null
+	DefaultTheme:IThemeCreator = null,
+	DefaultPalette:IPaletteCreator = null
 
 // Internal ref to the current theme
 const
@@ -96,9 +104,6 @@ function notifyListeners(newTheme:TTheme,newPalette:IPalette) {
 	listenersCopy.forEach(listener => listener(newTheme,newPalette))
 }
 
-function loadDefaultPalette() {
-	return require('./available/DarkPalette').default
-}
 
 /**
  * Palette creator interface
@@ -125,7 +130,7 @@ export interface IThemeCreator {
 function setPalette(newPalette:IPaletteCreator) {
 	if (!newPalette) {
 		log.error(`Null theme, requiring dark palette directly`,newPalette)
-		newPalette = loadDefaultPalette()
+		newPalette = BuiltIns.LightPalette
 	}
 	
 	assert(_.isFunction(newPalette),`Palette MUST be a function`)
@@ -163,13 +168,13 @@ export function setPaletteCreator(creator:IPaletteCreator) {
 function setTheme(newThemeCreator:IThemeCreator) {
 	if (!newThemeCreator) {
 		log.error(`Null theme, requiring dark theme directly`,newThemeCreator)
-		newThemeCreator = require('./available/DarkTheme').default
+		newThemeCreator = DefaultTheme
 	}
 	
 	assert(_.isFunction(newThemeCreator),`Theme MUST be a function`)
 	
 	const
-		palette = ThemeState.palette || loadDefaultPalette()()
+		palette = ThemeState.palette || DefaultPalette()
 	
 	const
 		newTheme = newThemeCreator(palette)
@@ -260,78 +265,37 @@ export function forceThemeUpdate() {
 	setTheme(_.cloneDeep(getTheme()))
 }
 
-function loadThemesAndPalettes() {
-	log.info('Loading themes')
+
+
+function loadBuiltIns() {
+	BuiltIns = require('./builtin')
 	
-	const
-		ctx = require.context('./available',true,/(Palette$|Palette\.[tj]sx?$|Theme$|Theme\.[tj]sx?$)/),
-		keys = ctx.keys()
+	DefaultTheme = BuiltIns.DefaultTheme
+	DefaultPalette = BuiltIns.LightPalette
 	
+	Themes = {
+		DefaultTheme: BuiltIns.DefaultTheme
+	}
 	
-	Themes = {}
-	Palettes = {}
+	Palettes = {
+		LightPalette: BuiltIns.LightPalette,
+		DarkPalette: BuiltIns.DarkPalette
+	}
 	
-	keys
-		.filter(key => /Palette/.test(key))
-		.map(key => {
-			let
-				mod = ctx(key) as any
-			
-			mod = mod.default || mod
-			
-			log.info(`Loaded`,key,'got',mod)
-			return mod
-		})
-		.filter(mod => mod.PaletteName && _.isFunction(mod))
-		.forEach(mod => {
-			Palettes[mod.PaletteName] = mod
-		})
-	
-	
-	// Set the default palettes
-	log.info(`Loaded palettes`,Palettes)
-	DefaultPalette = Palettes[DefaultPaletteName]
-	
-	
-	
-	keys
-		.filter(key => /Theme/.test(key))
-		.map(key => {
-			let
-				mod = ctx(key) as any
-			
-			mod = mod.default || mod
-			
-			log.info(`Loaded`,key,'got',mod)
-			return mod
-		})
-		.filter(mod => mod.ThemeName && _.isFunction(mod))
-		.forEach(mod => {
-			Themes[mod.ThemeName] = mod
-		})
-	
-	
-	// Set the default theme
-	log.info(`Loaded themes`,Themes)
-	DefaultTheme = Themes[DefaultThemeName]
-	
-	
-	
-	// If this is a reload then grab the theme name from the hot data
 	ThemeState.themeName = getHot(module,'themeName',DefaultThemeName)
 	
 	setPalette(Palettes[ThemeState.paletteName] || DefaultPalette)
 	setTheme(Themes[ThemeState.themeName] || DefaultTheme)
 	
 	if (module.hot) {
-		module.hot.accept([ctx.id],(updates) => {
-			log.info(`HMR Theme Update`)
-			loadThemesAndPalettes()
-		})
+		module.hot.accept(['./builtin'],loadBuiltIns)
 	}
 }
 
-loadThemesAndPalettes()
+
+loadBuiltIns()
+
+
 
 /**
  * Listen for palette changes

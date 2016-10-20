@@ -12,7 +12,7 @@ import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResults} from './SearchResults'
 
 import {PureRender} from 'ui/components/common/PureRender'
-import { isNumber, getValue, shallowEquals } from "shared/util/ObjectUtil"
+import { isNumber, getValue, shallowEquals } from "shared/util"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import { SearchItem, ISearchState } from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"

@@ -6,7 +6,7 @@ import {RegisterModel} from 'shared/Registry'
 import {State} from "typedux"
 import {IToolPanel, ToolPanelLocation, makeToolPanels} from "shared/tools/ToolTypes"
 import { IUISheet } from "shared/config/WindowConfig"
-import { getValue, cloneObjectShallow } from "shared/util/ObjectUtil"
+import { getValue, cloneObjectShallow } from "shared/util"
 
 const log = getLogger(__filename)
 

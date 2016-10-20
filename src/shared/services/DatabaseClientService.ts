@@ -5,7 +5,7 @@ import {Stores} from 'shared/Stores'
 import {BaseService, RegisterService, IServiceConstructor} from 'shared/services'
 import {loadModelClasses,chunkSave} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
-import { canProxyProperty } from "shared/util/ObjectUtil"
+import { canProxyProperty } from "shared/util"
 
 const
 	log = getLogger(__filename)

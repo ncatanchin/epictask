@@ -3,7 +3,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 import { SearchType } from "shared/actions/search"
 import { SearchPanel } from "ui/components/search"
 

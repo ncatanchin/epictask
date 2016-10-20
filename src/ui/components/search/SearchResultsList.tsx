@@ -6,7 +6,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { SearchItem, ISearchState } from "shared/actions/search"
 
-import { shallowEquals, getValue } from "shared/util/ObjectUtil"
+import { shallowEquals, getValue } from "shared/util"
 import { SearchResultItem } from "ui/components/search/SearchResultItem"
 import { SearchPanel } from "ui/components/search"
 

@@ -2,7 +2,7 @@
 import {List} from 'immutable'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import { createThemedStyles, getTheme } from 'shared/themes/ThemeManager'
-import { isNumber, isNil, isFunction, shallowEquals } from "shared/util/ObjectUtil"
+import { isNumber, isNil, isFunction, shallowEquals } from "shared/util"
 
 
 

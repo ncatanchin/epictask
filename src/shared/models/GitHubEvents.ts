@@ -18,7 +18,7 @@ import {
 
 
 import { RegisterModel } from "shared/Registry"
-import { isNumber } from "shared/util/ObjectUtil"
+import { isNumber } from "shared/util"
 
 import { User} from "shared/models/User"
 import { Issue} from "shared/models/Issue"

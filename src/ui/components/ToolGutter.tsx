@@ -8,7 +8,7 @@ import filterProps from "react-valid-props"
 import {DropTarget,DropTargetConnector,DropTargetMonitor} from 'react-dnd'
 import { DragTypes } from "shared/config/DragConfig"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 
 // Constants
 const

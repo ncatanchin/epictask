@@ -25,7 +25,7 @@ import { Label, Milestone, User, IssuesEvent } from "shared/models"
 import {createSelector} from 'reselect'
 import { IIssueSort, TIssueSortDirection, TIssueFieldsGroupable } from "shared/actions/issue/IIssueSort"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
-import { isListType, nilFilterList, nilFilter, isNumber } from "shared/util/ObjectUtil"
+import { isListType, nilFilterList, nilFilter, isNumber } from "shared/util"
 
 const log = getLogger(__filename)
 

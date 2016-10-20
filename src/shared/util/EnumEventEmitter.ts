@@ -1,7 +1,7 @@
 
 import {EventEmitter} from 'events'
 import {enumKeys} from "shared/util/EnumUtil"
-import { isNumber } from "shared/util/ObjectUtil"
+import { isNumber } from "shared/util"
 
 
 

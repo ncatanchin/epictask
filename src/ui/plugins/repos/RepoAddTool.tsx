@@ -4,7 +4,7 @@ import {SearchPanel} from 'ui/components/search'
 import {PureRender} from 'ui/components/common/PureRender'
 import {SearchType} from 'shared/actions/search/SearchState'
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
 
 // Constants

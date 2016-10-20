@@ -4,7 +4,7 @@ import {Repo} from 'shared/models/Repo'
 import {Issue} from 'shared/models/Issue'
 import {Comment} from 'shared/models/Comment'
 import {getSettings} from 'shared/settings/Settings'
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 
 const getUserId = () => getValue(() => getSettings().user.id,-2)
 

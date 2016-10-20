@@ -10,11 +10,12 @@ import baseStyles from './StatusBar.styles'
 import {jobsSelector, jobDetailsSelector} from "shared/actions/jobs/JobSelectors"
 import {TJobMap, IJobStatusDetail} from "shared/actions/jobs/JobTypes"
 import {IToastMessage} from "shared/models/Toast"
-import {uiStateSelector} from "shared/actions/ui/UISelectors"
 import {ToastMessage} from 'ui/components/ToastMessage'
 import {JobItem} from "ui/plugins/jobs/JobItem"
-import {UIActionFactory} from "shared/actions/ui/UIActionFactory"
 import {BuiltInTools, getBuiltInToolId} from "shared/config/ToolConfig"
+import { getValue } from "shared/util"
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
+import { messagesSortedSelector, statusBarHasItemsSelector } from "shared/actions/ui/UISelectors"
 
 // Constants
 const
@@ -31,6 +32,7 @@ export interface IStatusBarProps extends React.HTMLAttributes<any> {
 	jobs?:TJobMap
 	details?:IJobStatusDetail[]
 	messages?:IToastMessage[]
+	hasItems?:boolean
 }
 
 /**
@@ -50,16 +52,13 @@ export interface IStatusBarState {
 @connect(createStructuredSelector({
 	jobs: jobsSelector,
 	details: jobDetailsSelector,
-	messages: (state):IToastMessage[] => _.orderBy(
-		uiStateSelector(state).messages.toArray().map(msg => _.toJS(msg)) || [],
-		['createdAt'],
-		['desc'])
+	hasItems: statusBarHasItemsSelector,
+	messages: messagesSortedSelector
 }, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'statusBar')
-
 @PureRender
 export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> {
 	
@@ -73,6 +72,16 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 	}
 	
 	/**
+	 * Whether the bar has items or not
+	 *
+	 * @returns {boolean}
+	 */
+	get hasItems() {
+		return getValue(() => this.props.hasItems,false)
+	}
+	
+	
+	/**
 	 * Render the complete status bar
 	 */
 	render() {
@@ -82,6 +91,7 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 				open,
 				details,
 				messages,
+				hasItems,
 				styles
 			} = this.props,
 			//inProgress = details.some(it => it.status < JobStatus.Completed),
@@ -100,7 +110,7 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			style={[
 				styles.root,
 				//inProgress && styles.root.inProgress,
-				!open && styles.root.hidden
+				(!hasItems || !open) && styles.root.hidden
 			]}>
 			
 			<div style={[styles.spacer]}></div>
@@ -114,7 +124,7 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			
 			{/* Job Status */}
 			{detail && <div style={[styles.status]}>
-				<JobItem onClick={() => Container.get(UIActionFactory)
+				<JobItem onClick={() => getUIActions()
 									.toggleTool(getBuiltInToolId(BuiltInTools.JobMonitor))}
 				         styles={{root:styles.status.item}}
 				         job={job}

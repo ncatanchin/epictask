@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { PureRender } from "ui/components/common"
 import filterProps from 'react-valid-props'
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 
 
 const

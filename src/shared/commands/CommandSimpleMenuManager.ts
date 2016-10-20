@@ -1,7 +1,7 @@
 
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from "shared/commands/Command"
-import { getValue, cloneObject } from "shared/util/ObjectUtil"
+import { getValue, cloneObject } from "shared/util"
 import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
 import { OrderedMap } from "immutable"
 

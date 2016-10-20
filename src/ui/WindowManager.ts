@@ -8,7 +8,7 @@ import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import Electron = require('electron')
 import * as React from 'react'
 
-import { shortId, isString } from "shared/util/ObjectUtil"
+import { shortId, isString } from "shared/util"
 import { IWindowConfig, WindowType, DevToolsPositionDefault,AllWindowDefaults } from "shared/config/WindowConfig"
 import { toJSON } from "shared/util/JSONUtil"
 import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"

@@ -43,8 +43,8 @@ import { User } from "shared/models"
 import {
 	FlexAuto, FillWidth, FlexRowCenter, Ellipsis, FlexScale, rem, FlexColumn,
 	makeFlexAlign
-} from "shared/themes"
-import { getValue } from "shared/util/ObjectUtil"
+} from "shared/themes/styles"
+import { getValue } from "shared/util"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 
 

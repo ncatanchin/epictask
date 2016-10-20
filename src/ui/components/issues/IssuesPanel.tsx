@@ -30,7 +30,7 @@ import { TIssueEditInlineConfig} from 'shared/actions/issue/IssueState'
 import { getIssueActions } from  "shared/actions/ActionFactoryProvider"
 import { getStoreState } from "shared/store"
 import { IssuesList } from "ui/components/issues/IssuesList"
-import { isNumber, getValue } from "shared/util/ObjectUtil"
+import { isNumber, getValue } from "shared/util"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder, CommandContainer
@@ -40,7 +40,7 @@ import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { SearchPanel } from "ui/components/search"
 import { SearchType } from "shared/actions/search"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { FlexColumnCenter } from "shared/themes"
+import { FlexColumnCenter } from "shared/themes/styles"
 import { unwrapRef } from "shared/util/UIUtil"
 import { MenuIds } from "shared/UIConstants"
 import { getCommandManager } from "shared/commands/CommandManager"

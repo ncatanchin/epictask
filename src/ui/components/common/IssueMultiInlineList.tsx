@@ -10,7 +10,7 @@ import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { Issue } from "shared/models"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { RepoName } from "ui/components/common/Renderers"
-import { makeWidthConstraint } from "shared/themes"
+import { makeWidthConstraint } from "shared/themes/styles"
 
 // Constants
 const log = getLogger(__filename)

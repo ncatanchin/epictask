@@ -12,10 +12,10 @@ import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {ToolPanelLocation, IToolPanel} from "shared/tools/ToolTypes"
 import {ToolPanelComponent as ToolPanel} from "ui/components/ToolPanel"
-import { makeLinearGradient, Transparent, convertRem } from "shared/themes"
+import { makeLinearGradient, Transparent, convertRem } from "shared/themes/styles"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { toolPanelsSelector, toolDraggingSelector } from "shared/actions/ui/UISelectors"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 
 
 const

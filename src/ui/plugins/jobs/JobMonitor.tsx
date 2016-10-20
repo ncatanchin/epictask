@@ -11,7 +11,7 @@ import {jobStateSelector, jobLogIdSelector} from "shared/actions/jobs/JobSelecto
 import {
 	FlexColumnCenter, FlexScale, FillHeight, FillWidth,
 	convertRem, FlexColumn
-} from "shared/themes"
+} from "shared/themes/styles"
 
 import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {JobList} from "./JobList"

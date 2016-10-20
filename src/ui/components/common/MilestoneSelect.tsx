@@ -13,7 +13,7 @@ import { Icon } from "ui/components/common"
 import {MenuItem} from 'material-ui'
 import { Select, ISelectItem } from "ui/components/common/Select"
 import { enabledMilestonesSelector } from "shared/actions/repo/RepoSelectors"
-import { shallowEquals } from "shared/util/ObjectUtil"
+import { shallowEquals } from "shared/util"
 import filterProps from 'react-valid-props'
 
 // Constants

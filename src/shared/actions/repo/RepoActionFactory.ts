@@ -24,7 +24,7 @@ import {getSettings} from 'shared/settings/Settings'
 import {User} from 'shared/models/User'
 import {JobType} from "shared/actions/jobs/JobTypes"
 import {Provided} from 'shared/util/ProxyProvided'
-import { getValue, isNil, nilFilter, cloneObject, cloneObjectShallow } from "shared/util/ObjectUtil"
+import { getValue, isNil, nilFilter, cloneObject, cloneObjectShallow } from "shared/util"
 import JobDAO from "shared/actions/jobs/JobDAO"
 import { RegisterActionFactory } from "shared/Registry"
 import { pagedFinder } from "shared/util/RepoUtils"

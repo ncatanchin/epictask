@@ -15,7 +15,7 @@ import { Issue, Milestone, Label, User } from "shared/models"
 import { canEditIssue, canAssignIssue } from "shared/Permission"
 import { RepoName, getGithubErrorText } from "ui/components/common/Renderers"
 import { Avatar, LabelFieldEditor, makeComponentStyles } from "ui/components/common"
-import { getValue, cloneObject, shallowEquals } from "shared/util/ObjectUtil"
+import { getValue, cloneObject, shallowEquals } from "shared/util"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { IssueLabelsAndMilestones } from "ui/components/issues"
 
@@ -23,7 +23,7 @@ import {baseStyles as labelBaseStylesFn} from 'ui/components/common/LabelChip'
 import {
 	FlexRowCenter, FlexAuto, makeTransition, makeMarginRem, FlexScale, FlexAlignStart,
 	PositionRelative, makePaddingRem, FlexColumn
-} from "shared/themes"
+} from "shared/themes/styles"
 import { MilestoneSelect } from "ui/components/common/MilestoneSelect"
 import { AssigneeSelect } from "ui/components/common/AssigneeSelect"
 import { IssueStateIcon } from "ui/components/issues/IssueStateIcon"

@@ -13,16 +13,17 @@ import {LogLevel as LogLevelGlobal} from 'typelogger'
 later = require('later/index-browserify')
 
 import 'shared/ErrorHandling'
-import 'shared/util/ObjectUtil'
+import {getValue} from 'shared/util'
+
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
+
 import * as ContextUtils from './util/ContextUtils'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 import { acceptHot } from "shared/util/HotUtils"
 
 import Electron = require('electron')
-import { getValue } from "shared/util/ObjectUtil"
 
 // Export globals
 const

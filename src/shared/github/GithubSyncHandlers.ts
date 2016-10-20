@@ -17,7 +17,7 @@ import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryPr
 import { checkUpdatedAndAssign } from "shared/util/ModelUtil"
 import JobProgressTracker from "job/JobProgressTracker"
 import { chunkSave } from "shared/db/DatabaseUtil"
-import { shallowEquals, cloneObject } from "shared/util/ObjectUtil"
+import { shallowEquals, cloneObject } from "shared/util"
 import SyncStatus from 'shared/github/GithubSyncStatus'
 import { ISyncChanges } from "shared/models/Repo"
 import { OneAtATime } from "shared/util/Decorations"

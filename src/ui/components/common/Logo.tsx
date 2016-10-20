@@ -6,7 +6,10 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { createDeepEqualSelector } from 'shared/util/SelectorUtil'
 import { createStructuredSelector, createSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
-import { makeHeightConstraint, FillWindow, makeStyle, FlexColumnCenter, PositionAbsolute } from "shared/themes"
+import {
+	makeHeightConstraint, FillWindow, makeStyle, FlexColumnCenter, PositionAbsolute,
+	ImgFitFill
+} from "shared/themes/styles"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 // Constants
@@ -132,27 +135,6 @@ function baseStyles(topStyles,theme,palette) {
 				animationIterationCount: 'infinite'
 			},
 			
-			eWrapper: makeStyle(FlexColumnCenter,PositionAbsolute,{
-				top: 0,
-				left: 0,
-				width: iconWidth,
-				height: iconWidth
-			}),
-			
-		
-			e: {
-				fontFamily: 'AvenirNext',
-				fontSize: iconWidth,
-				transform: 'translate(0,-4px)',
-				opacity: 0,
-				animationDelay: '0.2s',
-				animationDuration: '0.6s',
-				animationTimingFunction: 'linear',
-				animationFillMode: 'forwards',
-				color: text.primary,
-				textAlign: 'center'
-				
-			},
 			title: {
 				position: 'absolute',
 				fontFamily: 'AvenirNext',
@@ -224,9 +206,10 @@ export class Logo extends React.Component<ILogoProps,ILogoState> {
 				style
 			]}>
 			
-			
-			<div style={[styles.spinner,{animationName: spinnerFrames},spinnerStyle]}>
-				<img src={require('assets/images/epic-circle.svg')}/>
+			<div style={[styles.spinner,spinnerStyle,{opacity: 0}]}>
+			{/*<div style={[styles.spinner,{animationName: spinnerFrames},spinnerStyle]}>*/}
+				{/*<img src={require('assets/images/epic-circle.svg')}/>*/}
+				{/*<img style={[ImgFitFill,{borderRadius: rem(0.4)}]} src={require('assets/images/logo/epic-e-transparent.png')}/>*/}
 			</div>
 			
 			{!eHidden &&

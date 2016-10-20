@@ -12,7 +12,7 @@ import {User} from './User'
 import {Issue} from './Issue'
 import {RegisterModel} from '../Registry'
 import { Repo } from "./Repo"
-import { isNumber, isObject, isObjectType } from "shared/util/ObjectUtil"
+import { isNumber, isObject, isObjectType } from "shared/util"
 
 export function makeCommentIdPrefix(repoId:number,issueNumber:number)
 export function makeCommentIdPrefix(repo:Repo,issue:Issue)

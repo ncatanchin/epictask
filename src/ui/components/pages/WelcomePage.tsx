@@ -12,7 +12,7 @@ import {PureRender} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
-import { Transparent, FlexColumnCenter, Fill, FlexScale, rem } from "shared/themes"
+import { Transparent, FlexColumnCenter, Fill, FlexScale, rem } from "shared/themes/styles"
 import { SearchType } from "shared/actions/search"
 import { SearchPanel } from "ui/components/search"
 import { Logo } from "ui/components/common/Logo"

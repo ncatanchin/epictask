@@ -4,7 +4,7 @@ import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
 import {RepoEvent,IssuesEvent} from 'shared/models/GitHubEvents'
 import { createClient, GithubError } from "shared/GitHubClient"
 import { PagedArray } from "shared/PagedArray"
-import { isString, toNumber, isPromise } from "shared/util/ObjectUtil"
+import { isString, toNumber, isPromise } from "shared/util"
 
 const
 	log = getLogger(__filename),

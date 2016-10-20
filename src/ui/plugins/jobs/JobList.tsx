@@ -6,7 +6,7 @@ import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {TJobIMap, JobActionFactory} from "shared/actions/jobs/JobActionFactory"
 import {IJobStatusDetail, IJob} from "shared/actions/jobs/JobTypes"
 import {JobItem} from "./JobItem"
-import {makePaddingRem} from "shared/themes"
+import {makePaddingRem} from "shared/themes/styles"
 
 
 // Constants

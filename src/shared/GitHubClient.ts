@@ -4,10 +4,10 @@ import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
 import {getSettings} from 'shared/settings/Settings'
 import * as GitHubSchema from 'shared/models'
 import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import { cloneObject, isString, isNumber, toNumber, isPromise } from 'shared/util/ObjectUtil'
+import { cloneObject, isString, isNumber, toNumber, isPromise } from 'shared/util'
 import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
 import {List} from 'immutable'
-import { getToaster, addInfoMessage, addErrorMessage } from "shared/Toaster"
+import { addInfoMessage, addErrorMessage } from "shared/Toaster"
  
 
 const

@@ -6,7 +6,7 @@ import {IJob, JobStatus, IJobSchedule, IJobLog} from 'shared/actions/jobs/JobTyp
 import {JobKey} from "shared/Constants"
 import {JobsMaxCompleted} from 'shared/config/JobConfig'
 import {Provided} from 'shared/util/ProxyProvided'
-import {cloneObject} from "shared/util/ObjectUtil"
+import {cloneObject} from "shared/util"
 import { RegisterActionFactory } from "shared/Registry"
 
 

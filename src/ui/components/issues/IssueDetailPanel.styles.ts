@@ -4,7 +4,7 @@ import {
 	makeWidthConstraint, makeHeightConstraint, makeMarginRem, PositionRelative, OverflowAuto,
 	FlexColumnCenter, FlexScale, OverflowHidden, Fill, FlexColumn, makeTransition, makePaddingRem, FillWidth,
 	FlexRowCenter, Ellipsis, Transparent, FlexAuto, FlexAlignStart
-} from "shared/themes"
+} from "shared/themes/styles"
 
 const flexTransition = makeTransition(['height', 'flex', 'flex-grow', 'flex-shrink', 'flex-basis'])
 

@@ -1,4 +1,5 @@
 import * as assert from 'assert'
+import * as Radium from 'radium'
 import {Loader} from "ui/components/common/Loader"
 import Electron = require('electron')
 
@@ -16,7 +17,7 @@ function startLoaderEntry() {
 	
 	assert(loaderRoot,`Unable to find element #loader-root`)
 	
-	ReactDOM.render(<Loader animate />,loaderRoot,() => {
+	ReactDOM.render(<Loader  />,loaderRoot,() => {
 		log.info(`Rendered loader`)
 		
 		// Notify the main process that the loader is running

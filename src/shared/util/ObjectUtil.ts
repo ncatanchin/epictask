@@ -1,35 +1,27 @@
 import {List} from 'immutable'
 
-import 'shared/NamespaceConfig'
-import './LoDashMixins'
-import {generate as generateShortId} from 'short-id'
 
-export const InvalidProxyNames = ['inspect','prototype','__proto__','constructor']
+
+import { isNil, isObject } from "shared/util/TypeCheckUtil"
+
 
 const
 	_ = require('lodash')
-
-export function isNil(o:any) {
-	return _.isNil(o)
-}
-
-export function nilFilterList<L extends List<any>>(list:L):L {
-	return _.nilListFilter(list)
-}
-
-export function nilFilter<T>(a:T[]):T[] {
-	return _.nilFilter(a)
-}
 
 
 export function isListType<T>(o:any,type:{new():T}):o is List<T> {
 	return (List.isList(o))
 }
 
-export function isObject(o:any):o is Object {
-	return _.isObject(o)
-}
 
+/**
+ * Get a value in a guarded fashion
+ * ensuring no exception
+ *
+ * @param fn
+ * @param defaultValue
+ * @returns {any}
+ */
 export function getValue<T>(fn:() => T,defaultValue:T = null):T {
 	let
 		result
@@ -45,56 +37,23 @@ export function getValue<T>(fn:() => T,defaultValue:T = null):T {
 	return result
 }
 
-export function isPromise(o:any):o is Promise<any> {
-	return o && isObject(o) && (o instanceof Promise || isFunction(o.then))
-}
-
-export function isObjectType<T>(o:any,type:{new():T}):o is T {
-	return o instanceof type || o.$$clazz === type.name
-}
-
-export function isString(o:any):o is string {
-	return _.isString(o)
-}
-
-export function isNumber(o:any):o is number {
-	return _.isNumber(o) && !isNaN(o)
-}
-
-export function isFunction(o:any):o is Function {
-	return _.isFunction(o)
-}
-
-export function isSymbol(o:any):o is Symbol {
-	return typeof o === 'symbol'
-}
-
-
-export function toNumber(str:string|number):number {
-	return isNumber(str) ? str : parseInt(str,10)
-}
-
-export function canProxyProperty(name:any) {
-	return InvalidProxyNames.includes(name) || isSymbol(name)
-}
 
 /**
- * Generates a short id
+ * Execute a function guarded from exception
  *
- * @returns {string}
+ * @param fn
+ * @returns {(fn:()=>any)=>(fn:()=>any)=>any}
  */
-export function shortId():string {
-	return generateShortId()
+export function guard(fn:() => any) {
+	try {
+		fn()
+	} catch (err) {
+		return
+	}
 }
 
-/**
- * Generates v4 UUID
- *
- * @returns {string}
- */
-export function uuid():string {
-	return require('node-uuid').v4()
-}
+
+
 
 export function hasOwnProps(o:any,...props:string[]) {
 	return o && props.every(prop => o.hasOwnProperty(prop))
@@ -133,11 +92,7 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 				
 				assign(it,...newSources)
 			}
-			
-			
 		}
-	
-	
 	
 	if (cloned) {
 		
@@ -236,6 +191,15 @@ export function shallowEquals(o1,o2,...props:string[]) {
 				.every(key => shallowEqualsProp(o1,o2,key)))
 }
 
+/**
+ * Decoration wrapper
+ *
+ * @param name
+ * @param clazz
+ * @param decorator
+ * @param data
+ * @returns {any}
+ */
 export function postConstructorDecorate<T>(name:string, clazz:{new():T}, decorator:(instance:T,args:any[],data:any) => T,data:any = null) {
 	const makeDecorator =  new Function('name','clazz','decorator','data',`
 		function ${name}() {
@@ -251,16 +215,6 @@ export function postConstructorDecorate<T>(name:string, clazz:{new():T}, decorat
 }
 
 
-export function interceptFn(o,key,interceptor = null) {
-	if (!isString(key)) {
-		Object.keys(key).forEach(prop => interceptFn(o,prop,key[prop]))
-	} else {
-		const origFn = o[key]
-		o[key] = function (...args:any[]) {
-			return interceptor.apply(this, [origFn && origFn.bind(this), ...args])
-		}
-	}
-}
 
 export interface IValueTransformer {
 	(key:string,val:any):any

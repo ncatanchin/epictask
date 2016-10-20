@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { PureRender } from 'ui/components/common/PureRender'
 import { SearchItem, SearchType } from "shared/actions/search"
-import { shallowEquals, getValue } from "shared/util/ObjectUtil"
+import { shallowEquals, getValue } from "shared/util"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "shared/models"
 import { RepoName } from "ui/components/common/Renderers"
 import filterProps from 'react-valid-props'

@@ -120,3 +120,30 @@ body {
 
 // Import global styles
 @import "MarkdownEditor.SimpleMDE.global";
+
+@keyframes loader-logo {
+	0%{transform: translate(-50%,-50%) scale(0);
+		top: 50%;}
+	55%{transform: translate(-50%,-50%) scale(1.2);
+		top: 50%;
+		opacity: 1;
+		box-shadow: none;}
+	70%{transform: translate(-50%,-50%) scale(0.9);}
+	85%{transform: translate(-50%,-50%) scale(1);}
+	100%{transform: translate(-50%,-50%) scale(1);
+		top: 50%;
+		box-shadow: 0px 0.4rem 0.5rem 1.2rem #99DD58;
+		opacity: 1;
+	}
+}
+
+@keyframes loader-tagline {
+	0%{
+		transform: translate(-50%,-30%) scale(0.8);
+		opacity: 0;
+	}
+	100%{
+		transform: translate(-50%,-50%) scale(1);
+		opacity: 1;
+	}
+}

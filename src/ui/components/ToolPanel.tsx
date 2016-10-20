@@ -10,7 +10,7 @@ import {
 	FlexRow, FlexColumnReverse, FlexColumn, FlexScale, makeFlexAlign, FillHeight, FillWidth,
 	FlexAuto, OverflowHidden, makeFlex, FlexRowCenter,
 	rem, Ellipsis
-} from "shared/themes"
+} from "shared/themes/styles"
 import {loadPlugins, addRegistryListener, RegistryEvent} from "shared/Registry"
 import { ToolGutter } from "ui/components/ToolGutter"
 import { ToolWrapper } from "ui/components/ToolWrapper"

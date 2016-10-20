@@ -4,7 +4,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { getValue } from "shared/util/ObjectUtil"
+import { getValue } from "shared/util"
 import { TComponent } from "shared/util/UIUtil"
 
 // Constants
