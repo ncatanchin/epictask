@@ -1,16 +1,13 @@
 import {
-	Model,
 	Attribute,
-	FinderDescriptor,
 	DefaultModel,
-	DefaultValue,
 	FinderRequest,
 	FinderResultArray,
 	Repo as TSRepo
 } from 'typestore'
 
 
-import {PouchDBFullTextFinder, PouchDBModel,PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Permission} from './Permission'
@@ -22,8 +19,6 @@ export interface ISyncChanges {
 	issueNumbersNew?:number[]
 	issueNumbersChanged?:number[]
 }
-
-
 
 @RegisterModel
 @PouchDBModel({
@@ -136,36 +131,17 @@ export class Repo extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class RepoStore extends TSRepo<Repo> {
-	constructor() {
-		super(RepoStore,Repo)
-	}
+export interface RepoStore extends TSRepo<Repo> {
+	
+	findWithText(request:FinderRequest, name:string):Promise<FinderResultArray<Repo>>
 
-	@PouchDBFullTextFinder({
-		includeDocs: true,
-		textFields: ['name','full_name','description']
-	})
-	findWithText(request:FinderRequest, name:string):Promise<FinderResultArray<Repo>> {
-		return null
-	}
-
-	@PouchDBMangoFinder({
-		single: true,
-		includeDocs: false,
-		indexFields: ['full_name'],
-		selector: (full_name) => ({full_name})
-	})
-	findByFullName(fullName:string):Promise<number> {
-		return null
-	}
+	findByFullName(fullName:string):Promise<number>
 
 	/**
 	 * Find all repos
 	 * @returns {Promise<Repo[]>}
 	 */
-	@PouchDBMangoFinder({all:true})
-	findAll():Promise<Repo[]> {
-		return null
-	}
+	findAll():Promise<Repo[]>
+	
 }
 

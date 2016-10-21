@@ -6,6 +6,7 @@ import {PureRender, Icon} from 'ui/components/common'
 import {ThemedStyles} from 'shared/themes/ThemeManager'
 import {IJobStatusDetail, IJob, JobStatus, getJobDescription} from "shared/actions/jobs/JobTypes"
 import {LinearProgress} from "material-ui"
+import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 // Constants
 const log = getLogger(__filename)
@@ -17,10 +18,9 @@ const baseStyles = (topStyles,theme,palette) => ({
 		makeTransition(['height','width','flex-grow','flex-shrink','flex-basis']),
 		FlexColumnCenter,
 		Ellipsis,
-		
+		makePaddingRem(0,0.5),
 		{
-			minWidth: rem(24),
-			padding: '0 0.5rem',
+			minWidth: rem(24)
 		}
 	],
 	
@@ -83,9 +83,8 @@ const baseStyles = (topStyles,theme,palette) => ({
 /**
  * IJobItemProps
  */
-export interface IJobItemProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface IJobItemProps extends IThemedAttributes {
+	
 	labelStyle?:any
 	
 	job:IJob
@@ -130,7 +129,14 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 	
 	render() {
 		const
-			{theme, styles,job,detail,labelStyle} = this.props,
+			{
+				theme,
+				styles,
+				job,
+				detail,
+				labelStyle
+			} = this.props,
+			
 			statusColors = getJobStatusColors(detail,styles)
 		
 		return !job || !detail ? React.DOM.noscript() : <div {...filterProps(this.props)} style={styles.root}>

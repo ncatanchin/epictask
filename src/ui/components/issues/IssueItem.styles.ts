@@ -1,4 +1,9 @@
 import { colorAlpha } from "shared/themes/styles/ColorTools"
+import {
+	rem, makeHeightConstraint, makeTransition, FlexScale, FlexRow, Ellipsis,
+	FlexRowCenter, FillWidth, OverflowHidden, FlexAuto, makeStyle, makePaddingRem, Transparent, PositionAbsolute,
+	makeFlexAlign, FlexColumn, makeWidthConstraint
+} from "shared/themes/styles"
 export default function baseStyles(topStyles, theme, palette) {
 	
 	const
@@ -23,12 +28,12 @@ export default function baseStyles(topStyles, theme, palette) {
 			cursor: 'pointer',
 			
 			
-			bar: [PositionAbsolute,{
+			bar: [PositionAbsolute,makeWidthConstraint(rem(0.6)),{
 				top: 0,
 				left: 0,
 				bottom: 0,
 				zIndex: 10,
-				borderLeft: `0.6rem inset ${Transparent}`
+				backgroundColor: Transparent
 				
 			}],
 			
@@ -36,7 +41,7 @@ export default function baseStyles(topStyles, theme, palette) {
 			focused: [{
 				color: text.primary,
 				bar: [{
-					borderLeft: `0.6rem inset ${accent.hue1}`
+					backgroundColor: accent.hue1
 				}]
 			}],
 			
@@ -46,7 +51,8 @@ export default function baseStyles(topStyles, theme, palette) {
 				color: text.primary,
 				
 				bar: [{
-					borderLeft: `0.6rem inset ${colorAlpha(secondary.hue2,0.8)}`
+					backgroundColor: secondary.hue2
+					//borderLeft: `0.6rem inset ${colorAlpha(secondary.hue2,0.8)}`
 				}],
 				//boxShadow: 'inset 0rem 0rem 0.1rem 0.1rem ' + colorAlpha(secondary.hue1,0.4),
 				
@@ -56,26 +62,27 @@ export default function baseStyles(topStyles, theme, palette) {
 				}]
 			}],
 			
-			details: [FlexColumn, FlexScale, OverflowHidden, {
-				padding: '0 0.5rem'
-			}],
+			details: [FlexColumn, FlexScale, OverflowHidden, makePaddingRem(0,0.5)],
 			
 			// AVATAR
-			avatar: [{
-				padding: '0'
-			}],
+			avatar: [makePaddingRem()],
 			
 			number: [{
-				fontSize: themeFontSize(1.1),
+				fontSize: themeFontSize(1),
 				fontWeight: 500,
 				color: text.primary
 			}],
 			
 			
-			row1: [FlexRow, makeFlexAlign('center', 'center'), {
-				pointerEvents: 'none',
-				padding: '0 0 0.5rem 0rem'
-			}],
+			row1: [
+				FlexRow,
+				makeFlexAlign('center', 'center'),
+				makeHeightConstraint(rem(2.5)),
+				makePaddingRem(0,0,0.5,0),
+				{
+					pointerEvents: 'none',
+				}
+			],
 			
 			repo: [Ellipsis, FlexRow, FlexScale, makeTransition(['color','font-size']), {
 				fontSize: themeFontSize(1),
@@ -89,29 +96,37 @@ export default function baseStyles(topStyles, theme, palette) {
 				}]
 			}],
 			
-			row2: [makeTransition(['height']), FlexRowCenter, FillWidth, OverflowHidden, {
-				padding: '0 0 1rem 0',
+			row2: [makeTransition(['height']), FlexRowCenter, FillWidth, OverflowHidden, makePaddingRem(0,0,1,0),{
 				pointerEvents: 'none'
 			}],
 			
-			title: [makeTransition(['font-size', 'font-weight']), Ellipsis, FlexScale, {
+			title: [makeTransition(['font-size', 'font-weight']), Ellipsis, FlexScale, makePaddingRem(0,1,0,0), {
 				display: 'block',
-				padding: '0 1rem 0 0',
 				
 				color: text.primary,
 				fontWeight: 400,
-				fontSize: themeFontSize(1.2),
+				fontSize: themeFontSize(1.4),
 				
 				selected: [{
 					fontWeight: 500,
 					color: text.primary,
 					
-					fontSize: themeFontSize(1.2),
+					fontSize: themeFontSize(1.5),
 					
 					multi: [{
 						
 					}]
 				}],
+				
+				
+				focused: [{
+					fontWeight: 500,
+					color: text.primary,
+					
+					multi: [{
+						
+					}]
+				}]
 			}],
 			
 			time: [FlexAuto, {

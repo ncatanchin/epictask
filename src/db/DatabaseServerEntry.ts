@@ -11,6 +11,15 @@ import {ProcessNames} from "shared/ProcessType"
 import * as uuid from 'node-uuid'
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { makeIPCServerId } from "shared/net/IPCUtil"
+import { UserStoreImpl } from "db/stories/UserStoreImpl"
+import { IssueStoreImpl } from "db/stories/IssueStoreImpl"
+import { RepoStoreImpl } from "db/stories/RepoStoreImpl"
+import { AvailableRepoStoreImpl } from "db/stories/AvailableRepoStoreImpl"
+import { MilestoneStoreImpl } from "db/stories/MilestoneStoreImpl"
+import { CommentStoreImpl } from "db/stories/CommentStoreImpl"
+import { LabelStoreImpl } from "db/stories/LabelStoreImpl"
+import { IssuesEventStoreImpl } from "db/stories/IssuesEventStoreImpl"
+import { RepoEventStoreImpl } from "db/stories/RepoEventStoreImpl"
 
 // Logger
 const log = getLogger(__filename)
@@ -141,24 +150,19 @@ export class DatabaseServerEntry extends WorkerEntry {
 			log.info('Coordinator started, loading repos')
 			
 			
-			const {
-				RepoStore, IssueStore, AvailableRepoStore, CommentStore,
-				LabelStore, MilestoneStore, UserStore,
-				IssuesEventStore, RepoEventStore
-			} = allModelsAndRepos
 			
 			log.info('Got all model stores')
 			
 			Object.assign(stores, {
-				repo: getStore(RepoStore),
-				issue: getStore(IssueStore),
-				availableRepo: getStore(AvailableRepoStore),
-				milestone: getStore(MilestoneStore),
-				comment: getStore(CommentStore),
-				label: getStore(LabelStore),
-				user: getStore(UserStore),
-				issuesEvent: getStore(IssuesEventStore),
-				repoEvent: getStore(RepoEventStore)
+				repo: getStore(RepoStoreImpl),
+				issue: getStore(IssueStoreImpl),
+				availableRepo: getStore(AvailableRepoStoreImpl),
+				milestone: getStore(MilestoneStoreImpl),
+				comment: getStore(CommentStoreImpl),
+				label: getStore(LabelStoreImpl),
+				user: getStore(UserStoreImpl),
+				issuesEvent: getStore(IssuesEventStoreImpl),
+				repoEvent: getStore(RepoEventStoreImpl)
 			})
 			
 			log.info('Repos Loaded')

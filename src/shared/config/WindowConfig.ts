@@ -113,13 +113,16 @@ export const
 		show: false,
 		frame: false,
 		acceptFirstMouse: true,
-		title: 'epictask',
+		title: '',
 		webPreferences: {
 			
 		}
 	},!Env.isMac && {
-			icon: WindowIcon
-		}) as any
+		icon: WindowIcon
+	},Env.isMac && {
+		//titleBarStyle: 'hidden'
+		// darkTheme:true,
+	}) as any
 
 
 /**

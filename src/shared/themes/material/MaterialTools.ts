@@ -189,11 +189,12 @@ export function makePalette(
 	background:string,
 
 	dark:boolean,
-    textColor = null,
+  textColor = null,
 	textOpacities:ThemeTextOpacity = null
 ):IPalette {
 
-	const themeType = dark ? ThemeType.Dark : ThemeType.Light
+	const
+		themeType = dark ? ThemeType.Dark : ThemeType.Light
 
 	textColor = textColor || (dark ? BasePalettes.white : BasePalettes.black)
 	textOpacities =  textOpacities || ThemeDefaults.TextOpacity[themeType]
@@ -210,7 +211,7 @@ export function makePalette(
 		background,
 		text: makeTextColors(textColor,textOpacities),
 		alternateText: makeTextColors(
-			BasePalettes[dark ? 'black' : 'white'],
+			dark ? BasePalettes.black : BasePalettes.white,
 			ThemeDefaults.TextOpacity[dark ? ThemeType.Light : ThemeType.Dark]
 		)
 	}

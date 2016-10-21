@@ -42,6 +42,7 @@ export default function (topStyles,theme,palette) {
 			//['flex-basis','flex-shrink','height','font-size','font-weight','background-color','color']
 			makeTransition(['opacity','height','max-height','min-height']),
 			makeHeightConstraint(rem(2.6)),
+			makePaddingRem(0.5, 0.5),
 			FlexRowCenter,
 			FlexAuto,
 			FillWidth,
@@ -50,7 +51,6 @@ export default function (topStyles,theme,palette) {
 				fontSize: rem(0.8),
 				borderTopStyle: 'solid',
 				borderTopWidth: rem(0.1),
-				padding: makePaddingRem(0.5, 0.5),
 				opacity: 1,
 				
 				// Jobs are InProgress
@@ -61,10 +61,14 @@ export default function (topStyles,theme,palette) {
 				
 				
 				// User hidden
-				hidden: [ makePaddingRem(), makeHeightConstraint(0), {
-					opacity: 0,
-					borderTopWidth: 0
-				} ]
+				hidden: [
+					makePaddingRem(),
+					makeHeightConstraint(0),
+					{
+						opacity: 0,
+						borderTopWidth: 0
+					}
+				]
 			}
 		],
 		

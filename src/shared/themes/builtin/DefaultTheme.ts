@@ -70,7 +70,7 @@ function makeSheetTheme({accent,primary}) {
 			
 			hint: [makePaddingRem(0,1),{
 				marginBottom: -6,
-				fontWeight: 300,
+				fontWeight: 400,
 				color: primary.hue1,
 				//color: text.primary,
 				backgroundColor: Transparent
@@ -281,6 +281,9 @@ export function DefaultTheme(palette) {
 		 */
 		sheet: makeSheetTheme(palette),
 		
+		/**
+		 * Issue state icon
+		 */
 		issueStateIcon: {
 			open: {
 				backgroundColor: 'rgba(101,181,73,1)',
@@ -298,6 +301,10 @@ export function DefaultTheme(palette) {
 			background: background
 		},
 		
+		
+		/**
+		 * Chips field
+		 */
 		chipsField: {
 			chipContent: {
 				control: {
@@ -308,6 +315,9 @@ export function DefaultTheme(palette) {
 			}
 		},
 		
+		/**
+		 * Avatar
+		 */
 		avatar: {
 			root: {
 				clickable: {
@@ -326,6 +336,9 @@ export function DefaultTheme(palette) {
 			
 		},
 		
+		/**
+		 * Form
+		 */
 		form: {
 			menuItem: [ {
 				cursor: 'pointer'
@@ -602,7 +615,7 @@ export function DefaultTheme(palette) {
 			hint: {
 				backgroundColor: 'transparent',
 				color: text.secondary,
-				fontWeight: 100
+				fontWeight: 400
 			},
 			
 			
@@ -682,6 +695,10 @@ export function DefaultTheme(palette) {
 				}
 			},
 			
+			
+		},
+		
+		issueItem: {
 			
 		},
 		

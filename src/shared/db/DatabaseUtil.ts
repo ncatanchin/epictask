@@ -67,6 +67,21 @@ export function chunkSave<T extends IModel>(models:T[],modelStore:TSRepo<T>) {
 	
 }
 
+/**
+ * Chunk remove utility
+ *
+ * @param modelIds
+ * @param repo
+ * @returns {Promise<undefined>}
+ */
+export function chunkRemove(modelIds,repo:TSRepo<any>) {
+	if (!modelIds || !modelIds.length)
+		return Promise.resolve()
+	
+	return repo.bulkRemove(...modelIds)
+}
+
+
 // /**
 //  * Bulk remove models
 //  *

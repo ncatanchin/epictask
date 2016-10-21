@@ -117,41 +117,12 @@ export class AvailableRepo extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class AvailableRepoStore extends TSRepo<AvailableRepo> {
-	constructor() {
-		super(AvailableRepoStore,AvailableRepo)
-	}
-
-	@PouchDBFullTextFinder({
-		textFields: ['name']
-	})
-	findByName(name:string):Promise<AvailableRepo[]> {
-		return null
-	}
+export interface AvailableRepoStore extends TSRepo<AvailableRepo> {
 	
-	@PouchDBMangoFinder({
-		includeDocs: true,
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({repoId}))
-		})
-	})
-	findByRepoId(...repoIds:number[]):Promise<AvailableRepo[]> {
-		return null
-	}
-
-	// @PouchDBMangoFinder({
-	// 	single: true,
-	// 	indexFields: ['repoId'],
-	// 	selector: (repoId) => ({repoId})
-	// })
-	// findByRepoId(repoId:number):Promise<AvailableRepo> {
-	// 	return null
-	// }
-
-	@PouchDBMangoFinder({all:true})
-	findAll():Promise<AvailableRepo[]> {
-		return null
-	}
+	findByName(name:string):Promise<AvailableRepo[]>
+	
+	findByRepoId(...repoIds:number[]):Promise<AvailableRepo[]>
+	
+	findAll():Promise<AvailableRepo[]>
 
 }

@@ -72,7 +72,7 @@ export interface IIssueItemState {
 	})
 })
 
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles,'issueItem')
 class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> {
 	
 	static contextTypes = {
@@ -198,13 +198,14 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> {
 			
 			issueStyles = makeStyle(
 				styles,
+				isFocused && styles.focused,
 				isSelected && styles.selected,
 				(isSelectedMulti) && styles.multi,
-				isFocused && styles.focused,
 				styleParam // PARAM PASSED FROM LIST
 			),
 			issueTitleStyle = makeStyle(
 				styles.title,
+				isFocused && styles.title.focused,
 				isSelected && styles.title.selected,
 				isSelectedMulti && styles.title.selected.multi
 			)
@@ -220,10 +221,19 @@ class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> {
 
 				<div style={styles.row1}>
 					<div style={styles.repo}>
-						<span style={styles.number}>
+						<span style={[
+							styles.number,
+							isFocused && styles.number.focused,
+							isSelected && styles.number.selected
+						]}>
 							#{issue.number}&nbsp;&nbsp;
 						</span>
-						<Renderers.RepoName repo={issue.repo} style={makeStyle(styles.repo,isSelected && styles.repo.selected)}/>
+						<Renderers.RepoName repo={issue.repo} style={
+							makeStyle(
+								styles.repo,
+								isFocused && styles.repo.focused,
+								isSelected && styles.repo.selected
+							)}/>
 						
 					</div>
 

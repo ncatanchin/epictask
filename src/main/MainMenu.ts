@@ -168,22 +168,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 				}
 			]
 		}
-		// , {
-		// 	label: 'Window',
-		// 	submenu: [
-		// 		{
-		// 			label: 'Minimize',
-		// 			accelerator: 'Command+M',
-		// 			selector: 'performMiniaturize:'
-		// 		}, {
-		// 			type: 'separator'
-		// 		}, {
-		// 			label: 'Bring All to Front',
-		// 			selector: 'arrangeInFront:'
-		// 		}
-		// 	]
-		// }
-		] as any
+	] as any
 	
 	
 	if (Env.isDev)

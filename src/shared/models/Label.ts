@@ -51,10 +51,7 @@ export class Label extends DefaultModel {
 	}
 }
 
-export class LabelStore extends TSRepo<Label> {
-	constructor() {
-		super(LabelStore,Label)
-	}
+export interface LabelStore extends TSRepo<Label> {
 	
 	/**
 	 * Find all milestone ids for a repo
@@ -62,21 +59,7 @@ export class LabelStore extends TSRepo<Label> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		includeDocs: true,
-		keyProvider: (repoIdOrRepo:number|Repo) => {
-			const
-				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByRepo(repoId:number|Repo):Promise<Label[]> {
-		return null
-	}
+	findByRepo(repoId:number|Repo):Promise<Label[]>
 	
 	/**
 	 * Find all milestone ids for a repo
@@ -84,22 +67,7 @@ export class LabelStore extends TSRepo<Label> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		includeDocs: false,
-		keyProvider: (repoIdOrRepo:number|Repo) => {
-			const
-				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findIdsByRepo(repoId:number|Repo):Promise<string[]> {
-		return null
-	}
-
+	findIdsByRepo(repoId:number|Repo):Promise<string[]>
 
 
 }

@@ -106,22 +106,12 @@ export function initBrowser(isDev) {
 				win.startLoaderEntry()
 		}
 		
-		if (isChildWindow) {
-			// CHILD WINDOW - LOAD IMMEDIATE
-			logBenchmark('Loading app')
-			loadApp()
-			logBenchmark('Loaded app')
-		} else {
-			// MAIN UI - SHOW LOADER FIRST
-			__non_webpack_require__('./LoaderEntry.bundle.js')
-			loaderReady = true
-			showLoader()
-			
-			$(document).ready(function () {
-				docReady = true
-				showLoader()
-			})
-		}
+		
+		// CHILD WINDOW - LOAD IMMEDIATE
+		logBenchmark('Loading app')
+		loadApp()
+		logBenchmark('Loaded app')
+	 
 	}
 	
 	// IN DEV MODE - install debug menu

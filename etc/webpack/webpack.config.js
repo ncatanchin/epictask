@@ -103,7 +103,6 @@ const
 	// Entries
 	entries = {
 		"AppEntry": [`./AppEntry`],
-		"LoaderEntry": [`./LoaderEntry`],
 		"BrowserEntry": [`./BrowserEntry`],
 	}
 	
@@ -187,6 +186,12 @@ const config = {
 		new HtmlWebpackPlugin({
 			filename: "app-entry.html",
 			template: `${baseDir}/src/assets/templates/AppEntry.jade`,
+			inject: false,
+			isDev
+		}),
+		new HtmlWebpackPlugin({
+			filename: "splash-entry.html",
+			template: `${baseDir}/src/assets/templates/SplashEntry.jade`,
 			inject: false,
 			isDev
 		}),

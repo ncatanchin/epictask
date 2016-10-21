@@ -29,7 +29,7 @@ export function addHotDisposeHandler(mod,fn) {
 export function acceptHot(mod,logger = null) {
 	if (module.hot) {
 		if (mod.hot) {
-			mod.hot.accept(() => (logger || console).info(`Self accepting HMR`))
+			mod.hot.accept(() => (logger || console).debug(`Self accepting HMR`))
 		}
 	}
 }

@@ -65,7 +65,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		hint: [{
 			backgroundColor: 'transparent',
 			color: text.secondary,
-			fontWeight: 300
+			fontWeight: 400
 		}],
 		
 		field: [FillWidth,PositionRelative,{

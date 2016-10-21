@@ -70,9 +70,25 @@ function baseStyles(topStyles,theme,palette) {
 			pointerEvents: 'none',
 			letterSpacing: rem(1),
 			//fontStyle: 'italic',
-			fontWeight: 700,
+			fontWeight: 400,
 			hovering: [ {
 				opacity: 0
+			} ]
+		} ],
+		
+		sublabel: [ PositionAbsolute, makeTransition('opacity'), {
+			left: '50%',
+			top: '65%',
+			transform: 'translate(-50%,-50%)',
+			opacity: 0,
+			color: text.primary,
+			textAlign: 'center',
+			pointerEvents: 'none',
+			letterSpacing: rem(0.5),
+			//fontStyle: 'italic',
+			fontWeight: 400,
+			hovering: [ {
+				opacity: 1
 			} ]
 		} ],
 		
@@ -98,6 +114,7 @@ export interface ILoginPageProps extends IThemedAttributes {
 export interface ILoginPageState {
 	logoStyle:any
 	buttonStyle:any
+	iconStyle:any
 }
 
 /**
@@ -131,7 +148,7 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 	
 	private updateStyles = () => {
 		const
-			dim = Math.min(window.innerHeight,window.innerWidth) / 2
+			dim = Math.min(window.innerHeight,window.innerWidth) / 5
 		
 		this.setState({
 			buttonStyle: makeStyle(
@@ -139,6 +156,13 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 				makeWidthConstraint(dim),
 				{
 					fontSize: dim
+				}
+			),
+			iconStyle: makeStyle(
+				// makeHeightConstraint(dim),
+				// makeWidthConstraint(dim),
+				{
+					fontSize: dim / 2
 				}
 			),
 			logoStyle: makeStyle(
@@ -163,7 +187,10 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 		const
 			{props} = this,
 			{authenticating,styles} = props,
-			buttonHovering = Radium.getState(this.state,'authButton',':hover')
+			buttonHovering = Radium.getState(this.state,'authButton',':hover'),
+			sublabelFontSize = getValue(() => this.state.buttonStyle.fontSize / 9,rem(2) as any),
+			sublabelIconFontSize = getValue(() => this.state.buttonStyle.fontSize / 7,rem(3) as any)
+		
 			
 		log.debug(`testing`)
 
@@ -188,11 +215,11 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 					<Icon
 						style={makeStyle(
 							styles.icon,
-							getValue(() => this.state.buttonStyle),
+							getValue(() => this.state.iconStyle),
 							buttonHovering && styles.icon.hovering,
 							authenticating && styles.authenticating
 						)}
-						iconName='github'
+						iconName='user'
 						iconSet='fa' />
 					<div style={makeStyle(
 							styles.label,
@@ -203,10 +230,26 @@ export class LoginPage extends React.Component<ILoginPageProps,any> {
 							buttonHovering && styles.label.hovering,
 							authenticating && styles.authenticating
 						)}>
-						start
+						press
 					</div>
+					
+					
 				</div>
-
+				<div style={makeStyle(
+							styles.sublabel,
+							//getValue(() => this.state.buttonStyle),
+							{
+								fontSize: sublabelFontSize
+							},
+							buttonHovering && styles.sublabel.hovering,
+							authenticating && styles.authenticating
+						)}>
+					authenticate&nbsp;
+					<Icon
+						style={{fontSize: sublabelIconFontSize}}
+						iconSet="fa"
+						iconName="github"/>
+				</div>
 			
 			</Page>
 		)

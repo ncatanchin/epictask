@@ -7,11 +7,10 @@ import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
 } from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getCommandManager } from "shared/commands/CommandManager"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { CSSHoverState, PositionAbsolute, makeHeightConstraint } from "shared/themes/styles"
+import { makeHeightConstraint } from "shared/themes/styles"
 import { WindowControls } from "ui/components/common/WindowControls"
 import { Logo } from "ui/components/common/Logo"
 import { CommandMenuRoot } from "shared/commands/CommandMenuRoot"

@@ -1,11 +1,11 @@
 
-import {Repo as TSRepo, IModel} from 'typestore'
 import ProcessType from "shared/ProcessType"
 import {Stores} from 'shared/Stores'
 import {BaseService, RegisterService, IServiceConstructor} from 'shared/services'
-import {loadModelClasses,chunkSave} from 'shared/db/DatabaseUtil'
+import {chunkRemove,chunkSave} from 'shared/db/DatabaseUtil'
 import {getDatabaseClient} from "shared/db/DatabaseClient"
 import { canProxyProperty } from "shared/util"
+import { acceptHot } from "shared/util/HotUtils"
 
 const
 	log = getLogger(__filename)
@@ -28,11 +28,9 @@ export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
 class DatabaseProxy {
 
 	private fnMap = {}
-	private store:string
-
-	constructor(private repoClazz = null) {
-		this.store = (!repoClazz) ? null :
-			(repoClazz.name || _.get(repoClazz,'prototype.constructor.name'))
+	
+	constructor(private store:string = null) {
+		
 	}
 
 	/**
@@ -112,29 +110,25 @@ export class DatabaseClientService extends BaseService {
 		// assert(this.status() < ServiceStatus.Started,'Service is already started')
 		
 		log.info('Connecting to db first')
-		const client = getDatabaseClient()
-		await client.connect()
+		const
+			client = getDatabaseClient()
 		
+		await client.connect()
 		
 		// Load all model classes
 		log.info('Loading models and creating store')
-		loadModelClasses()
+		//loadModelClasses()
 
-		
-		// Load all
-		const {RepoStore,IssueStore,AvailableRepoStore,CommentStore,
-			LabelStore,MilestoneStore,UserStore,IssuesEventStore,RepoEventStore} = require('shared/models')
-		
 		assign(this._stores, {
-			repo:          this.getStore(RepoStore),
-			issue:         this.getStore(IssueStore),
-			availableRepo: this.getStore(AvailableRepoStore),
-			milestone:     this.getStore(MilestoneStore),
-			comment:       this.getStore(CommentStore),
-			label:         this.getStore(LabelStore),
-			user:          this.getStore(UserStore),
-			issuesEvent:  this.getStore(IssuesEventStore),
-			repoEvent: this.getStore(RepoEventStore)
+			repo:          this.getStore('RepoStore'),
+			issue:         this.getStore('IssueStore'),
+			availableRepo: this.getStore('AvailableRepoStore'),
+			milestone:     this.getStore('MilestoneStore'),
+			comment:       this.getStore('CommentStore'),
+			label:         this.getStore('LabelStore'),
+			user:          this.getStore('UserStore'),
+			issuesEvent:  this.getStore('IssuesEventStore'),
+			repoEvent: this.getStore('RepoEventStore')
 		})
 
 		log.debug('Repos Loaded')
@@ -144,7 +138,9 @@ export class DatabaseClientService extends BaseService {
 		
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {
-			assignGlobal({Repos:this._stores})
+			assignGlobal({
+				Repos:this._stores
+			})
 		}
 
 		// Now bind repos to the IOC
@@ -179,37 +175,23 @@ export class DatabaseClientService extends BaseService {
 	 * @returns {T}Í
 	 */Í
 
-	getStore<T extends TSRepo<M>, M extends IModel>(repoClazz:{new ():T;}):T {
-		return new Proxy({},new DatabaseProxy(repoClazz)) as any
+	private getStore(repoName:string) {
+		return new Proxy({},new DatabaseProxy(repoName)) as any
 	}
 }
 
 
 
 
-/**
- * Chunk remove utility
- *
- * @param modelIds
- * @param repo
- * @returns {Promise<undefined>}
- */
-export function chunkRemove(modelIds,repo:TSRepo<any>) {
-	if (!modelIds || !modelIds.length)
-		return Promise.resolve()
-	
-	return repo.bulkRemove(...modelIds)
-}
 
 // Re-export stores & utils
 export {
 	Stores,
-	chunkSave
+	chunkSave,
+	chunkRemove
 }
 
 
 export default DatabaseClientService
 
-if (module.hot) {
-	module.hot.accept(() => log.info('hot reload',__filename))
-}
+acceptHot(module)

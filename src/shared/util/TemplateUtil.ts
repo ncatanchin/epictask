@@ -19,7 +19,7 @@ export function toDataUrl(template:Function|string,locals:any = {},mimetype:stri
 	return dataUrl.format({mimetype,data:template})
 }
 
-export function getAppEntryHtmlPath() {
+function getEntryFile(file:string) {
 	const
 		appPaths = [
 			'../dist/app',
@@ -40,7 +40,7 @@ export function getAppEntryHtmlPath() {
 	
 	for (let appPath of appPaths) {
 		try {
-			appPath = __non_webpack_require__.resolve(`${appPath}/app-entry.html`)
+			appPath = __non_webpack_require__.resolve(`${appPath}/${file}`)
 			
 			if (fs.existsSync(appPath)) {
 				resolvedPath = appPath
@@ -57,8 +57,17 @@ export function getAppEntryHtmlPath() {
 	}
 	
 	return resolvedPath
-	
 }
+
+
+export function getSplashEntryHtmlPath() {
+	return getEntryFile("splash-entry.html")
+}
+
+export function getAppEntryHtmlPath() {
+	return getEntryFile("app-entry.html")
+}
+
 //
 //
 // export function makeMainTemplate() {

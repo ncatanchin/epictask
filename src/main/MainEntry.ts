@@ -5,9 +5,11 @@ import 'shared/NodeEntryInit'
 
 import { acceptHot } from "shared/util/HotUtils"
 
+import * as AppWindowType from './AppWindow'
 import checkSingleInstance from "main/CheckSingleInstance"
-import * as MainWindowType from './MainWindow'
-import {getServiceManager as getServiceManagerType} from "shared/services"
+import {
+	getServiceManager as getServiceManagerType
+} from "shared/services"
 import { Events } from "shared/config/Events"
 import { getProcessManager } from "shared/ProcessManagement"
 
@@ -128,42 +130,36 @@ export function loadCommandManager() {
  */
 async function boot() {
 	
-	
-	
 	if (Env.isDev)
 		require('./MainDevConfig')
 
 	require('./NavManager')
 	
-	
 	log.debug("Boot start")
 	loadCommandManager()
-		
-	
 	
 	global[Events.MainBooted] = false
 	
 	log.debug("Load Main Window")
 	
 	const
-		mainWindow = require('./MainWindow') as typeof MainWindowType
-	
-	
+		appWindow = require('./AppWindow') as typeof AppWindowType
 	
 	// Load the main window & start the loader animation
-	await mainWindow.start(async () => {
-		log.info('Starting Services')
+	await appWindow.start(async () => {
+		log.debug('Starting Services')
+		
 		await startProcesses()
 		await start()
 		
-		log.info('Services started')
+		log.debug('Services started')
 	})
 
 	// Notifying the main window that we are ready
 	global[Events.MainBooted] = true
 	
 	setImmediate(() => {
-		mainWindow.ready()
+		appWindow.ready()
 	})
 	
 	
@@ -177,12 +173,12 @@ function onStart() {
 	app.on('open-file',onOpen)
 	app.on('open-url',onOpen)
 	
-	app.setName('EpicTask')
+	//app.setName('EpicTask')
 	return boot()
 }
 
 if (checkSingleInstance(app,onFocus)) {
-	log.info(`Is single instance`)
+	log.debug(`Is single instance`)
 	// app.on('will-quit',onWillQuit)
 	if (app.isReady())
 		onStart()
@@ -194,28 +190,7 @@ if (checkSingleInstance(app,onFocus)) {
  * Enable HMR
  */
 
+
+
 acceptHot(module,log)
-// if (module.hot) {
-// 	console.info('Setting up HMR')
-//
-//
-// 	// Main window or configurator - reboot app
-// 	// module.hot.accept(['./MainWindow'], (mods) => {
-// 	// 	log.info("Rebooting main, updated dependencies",mods)
-// 	//
-// 	// 	// We get a reference to the new window here
-// 	// 	// return boot().then(() => {
-// 	// 	// 	const newWindow = mainWindow.getBrowserWindow()
-// 	// 	//
-// 	// 	// 	require('electron').BrowserWindow.getAllWindows()
-// 	// 	// 		.filter(win => win !== newWindow && win !== devWindow)
-// 	// 	// 		.forEach(oldWindow => oldWindow.close())
-// 	// 	//
-// 	// 	// })
-// 	//
-// 	// })
-//
-// 	// Worst case - accept myself??
-// 	module.hot.accept()
-//
-// }
+

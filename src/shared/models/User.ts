@@ -7,7 +7,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+
 import {RegisterModel} from '../Registry'
 
 /**
@@ -98,56 +98,9 @@ export class User extends DefaultModel {
 	}
 }
 
-/**
- * Repository for accessing repos
- */
-export class UserStore extends TSRepo<User> {
-	constructor() {
-		super(UserStore,User)
-	}
-
-
-	@PouchDBMangoFinder({
-		single:true,
-		indexFields: ['login'],
-		selector:{
-			selector: (login:string) => {login}
-		}
-	})
-	findByLogin(login:string):Promise<User> {
-		return null
-	}
-
-	/**
-	 * Find all users who contribute to a repo
-	 *
-	 * @param request
-	 * @param repoIds
-	 * @returns {Promise<User[]>}
-	 */
-	@PouchDBMangoFinder({
-		indexFields: ['repoId'],
-		selector: (...repoIds:number[]) => ({
-			$or: repoIds.map(repoId => ({
-				repoIds: {
-					$elemMatch:{
-						$eq: repoId
-					}
-				}
-			}))
-		})
-	})
-	findByRepoId(request:FinderRequest,...repoIds:number[]):Promise<User[]> {
-		return null
-	}
-
-	@PouchDBMangoFinder({
-		all:true,
-		includeDocs:false
-	})
-	findAll():Promise<number[]> {
-		return null
-	}
-
-
+export interface UserStore extends TSRepo<User> {
+	
+	findByLogin(login:string):Promise<User>
+	findByRepoId(request:FinderRequest,...repoIds:number[]):Promise<User[]>
+	findAll():Promise<number[]>
 }

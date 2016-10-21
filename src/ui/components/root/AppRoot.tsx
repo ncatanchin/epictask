@@ -373,14 +373,10 @@ function render() {
 			 * If main ui then stop load spinner
 			 */
 			If(ProcessConfig.isUI(), () => {
-				
-				// STOP SPINNER
-				if (win.stopLoader)
-					win.stopLoader()
-				
-				window.postMessage({
-					type: Events.UIReady
-				}, "*")
+				require('electron').ipcRenderer.send(Events.UIReady)
+				// window.postMessage({
+				// 	type: Events.UIReady
+				// }, "*")
 			})
 		}
 	)

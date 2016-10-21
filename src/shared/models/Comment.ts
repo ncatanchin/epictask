@@ -6,7 +6,7 @@ import {
 	FinderRequest,
 	Repo as TSRepo
 } from 'typestore'
-import {PouchDBMangoFinder,PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Issue} from './Issue'
@@ -103,13 +103,8 @@ export class Comment extends DefaultModel {
 	}
 }
 
-export class CommentStore extends TSRepo<Comment> {
+export interface CommentStore extends TSRepo<Comment> {
 
-	constructor() {
-		super(CommentStore,Comment)
-	}
-	
-	
 	/**
 	 * Find all comments for a repo
 	 *
@@ -131,20 +126,6 @@ export class CommentStore extends TSRepo<Comment> {
 	findByCommentPrefix(request:FinderRequest,repo:Repo,issue:Issue):Promise<Comment[]>
 	
 	
-	@PouchDBPrefixFinder({
-		keyProvider: (repoOrRepoId:number|Repo,issueOrIssueNumber:number|Issue) => {
-			const
-				startKey = makeCommentIdPrefix(repoOrRepoId as any,issueOrIssueNumber as any)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByCommentPrefix(request:FinderRequest,repoOrRepoId:number|Repo,issueOrIssueNumber:number|Issue):Promise<Comment[]> {
-		return null
-	}
 	
 	/**
 	 * Find all comments for a repo
@@ -153,20 +134,8 @@ export class CommentStore extends TSRepo<Comment> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		keyProvider: (repoIdOrRepo:number|Repo) => {
-			const
-				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByRepoId(request:FinderRequest,repoId:number):Promise<Comment[]> {
-		return null
-	}
+	
+	findByRepoId(request:FinderRequest,repoId:number):Promise<Comment[]>
 	
 	/**
 	 * Find all comments for a repo
@@ -174,21 +143,7 @@ export class CommentStore extends TSRepo<Comment> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		keyProvider: (repoIdOrRepo:number|Repo) => {
-			const
-				startKey = `${isNumber(repoIdOrRepo) ? repoIdOrRepo : repoIdOrRepo.id}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findIdsByRepoId(repoId:number):Promise<string[]> {
-		return null
-	}
-
+	findIdsByRepoId(repoId:number):Promise<string[]>
 	
 }
 

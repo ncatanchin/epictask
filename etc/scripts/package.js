@@ -53,6 +53,4 @@ require('./package-dev')(doWin,doLinux)
 doInstall && require('./install-app')
 
 
-//if (accessKeyId && buildNumber && version) {
 require('./publish-artifacts')
-//}

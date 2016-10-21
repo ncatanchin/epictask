@@ -71,7 +71,7 @@ function baseStyles(topStyles,theme,palette) {
 		filters: [FlexRowCenter, FillWidth, {
 			
 			none: [FlexScale, {
-				fontWeight: 100,
+				fontWeight: 400,
 				fontSize: themeFontSize(1.2)
 			}],
 			labels: [FlexScale, {

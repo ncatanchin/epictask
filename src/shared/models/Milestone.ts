@@ -4,7 +4,7 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBModel} from 'typestore-plugin-pouchdb'
 import {User} from 'shared/models/User'
 import {RegisterModel} from '../Registry'
 
@@ -70,11 +70,7 @@ export class Milestone extends DefaultModel {
 }
 
 
-export class MilestoneStore extends TSRepo<Milestone> {
-	constructor() {
-		super(MilestoneStore,Milestone)
-	}
-
+export interface MilestoneStore extends TSRepo<Milestone> {
 	
 	/**
 	 * Find all milestone ids for a repo
@@ -82,21 +78,7 @@ export class MilestoneStore extends TSRepo<Milestone> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		includeDocs: true,
-		keyProvider: (repoId:number) => {
-			const
-				startKey = `${repoId}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByRepo(repoId:number):Promise<Milestone[]> {
-		return null
-	}
+	findByRepo(repoId:number):Promise<Milestone[]>
 	
 	/**
 	 * Find all milestone ids for a repo
@@ -104,21 +86,7 @@ export class MilestoneStore extends TSRepo<Milestone> {
 	 * @param repoId
 	 * @returns {Promise<Comment[]>}
 	 */
-	@PouchDBPrefixFinder({
-		includeDocs: false,
-		keyProvider: (repoId) => {
-			const
-				startKey = `${repoId}-`
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findIdsByRepo(repoId:number):Promise<string[]> {
-		return null
-	}
+	findIdsByRepo(repoId:number):Promise<string[]>
 
 }
 

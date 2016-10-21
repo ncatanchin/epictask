@@ -3,10 +3,9 @@ import {
 	Attribute,
 	DefaultModel,
 	Repo as TSRepo,
-	FinderRequest,
-	FinderResultArray
+	FinderRequest
 } from 'typestore'
-import {PouchDBFullTextFinder, PouchDBMangoFinder,PouchDBPrefixFinder,PouchDBModel,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 //import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import {User} from './User'
@@ -168,12 +167,8 @@ export class Issue extends DefaultModel {
 /**
  * Repository for accessing repos
  */
-export class IssueStore extends TSRepo<Issue> {
-	constructor() {
-		super(IssueStore,Issue)
-	}
-
-
+export interface IssueStore extends TSRepo<Issue> {
+	
 	
 	/**
 	 * Find all issues in provided repo id
@@ -182,20 +177,7 @@ export class IssueStore extends TSRepo<Issue> {
 	 * @param repoId
 	 * @returns {Promise<Issue[]>}
 	 */
-	@PouchDBPrefixFinder({
-		keyProvider: (repoId:number) => {
-			const
-				startKey = makeIssuePrefix(repoId)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByIssuePrefix(request:FinderRequest,repoId:number):Promise<Issue[]> {
-		return null
-	}
+	findByIssuePrefix(request:FinderRequest,repoId:number):Promise<Issue[]>
 	
 	/**
 	 * Same as above - just reverse order - better for
@@ -205,21 +187,7 @@ export class IssueStore extends TSRepo<Issue> {
 	 * @param repoId
 	 * @returns {null}
 	 */
-	@PouchDBPrefixFinder({
-		reverse:true,
-		keyProvider: (repoId:number) => {
-			const
-				startKey = makeIssuePrefix(repoId)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByIssuePrefixReverse(request:FinderRequest,repoId:number):Promise<Issue[]> {
-		return null
-	}
+	findByIssuePrefixReverse(request:FinderRequest,repoId:number):Promise<Issue[]>
 	
 	/**
 	 * Find all issues in provided repo id
@@ -228,24 +196,7 @@ export class IssueStore extends TSRepo<Issue> {
 	 * @param repoId
 	 * @returns {Promise<Issue[]>}
 	 */
-	@PouchDBPrefixFinder({
-		includeDocs: false,
-		keyProvider: (repoId:number) => {
-			const
-				startKey = makeIssuePrefix(repoId)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findIdsByIssuePrefix(repoId:number):Promise<string[]> {
-		return null
-	}
-	
-	
-	
+	findIdsByIssuePrefix(repoId:number):Promise<string[]>
 	
 }
 

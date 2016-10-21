@@ -186,12 +186,7 @@ export class RepoEvent<P extends IEventPayload> extends DefaultModel {
 }
 
 
-export class RepoEventStore extends TSRepo<RepoEvent<any>> {
-	
-	constructor() {
-		super(RepoEventStore,RepoEvent)
-	}
-	
+export interface RepoEventStore extends TSRepo<RepoEvent<any>> {
 	
 	/**
 	 * Find all events for a specific repo
@@ -209,23 +204,6 @@ export class RepoEventStore extends TSRepo<RepoEvent<any>> {
 	 */
 	findByRepo(finderRequest:FinderRequest,repoId:number):Promise<RepoEvent<any>[]>
 	
-	@PouchDBPrefixFinder({
-		includeDocs: true,
-		keyProvider: (repoOrRepoId:Repo|number) => {
-			
-			// CHECK TYPES & ASSIGN
-			const
-				startKey = makeRepoEventPrefix(isNumber(repoOrRepoId) ? repoOrRepoId : repoOrRepoId.id)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByRepo(finderRequest:FinderRequest,repoOrRepoId:Repo|number):Promise<RepoEvent<any>[]> {
-		return null
-	}
 }
 
 
@@ -478,11 +456,7 @@ export class IssuesEvent extends DefaultModel {
 /**
  * Issue Events Store
  */
-export class IssuesEventStore extends TSRepo<IssuesEvent> {
-	
-	constructor() {
-		super(IssuesEventStore,IssuesEvent)
-	}
+export interface IssuesEventStore extends TSRepo<IssuesEvent> {
 	
 	
 	/**
@@ -502,26 +476,7 @@ export class IssuesEventStore extends TSRepo<IssuesEvent> {
 	 */
 	findByIssue(finderRequest:FinderRequest,repoId:number,issueNumber:number):Promise<IssuesEvent[]>
 	
-	@PouchDBPrefixFinder({
-		includeDocs: true,
-		keyProvider: (issueOrRepoId:Issue|number,issueNumber:number) => {
-			
-			// CHECK TYPES & ASSIGN
-			issueNumber = isNumber(issueOrRepoId) ? issueNumber : issueOrRepoId.number
-			
-			const
-				repoId = isNumber(issueOrRepoId) ? issueOrRepoId : issueOrRepoId.repoId,
-				startKey = makeIssuesEventPrefix(repoId,issueNumber)
-			
-			return {
-				startKey,
-				endKey: makePrefixEndKey(startKey)
-			}
-		}
-	})
-	findByIssue(finderRequest:FinderRequest,issueOrRepoId:Issue|number,issueNumber:number = null):Promise<IssuesEvent[]> {
-		return null
-	}
+	
 }
 
 

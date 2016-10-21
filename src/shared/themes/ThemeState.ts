@@ -118,8 +118,9 @@ export interface IPaletteCreator {
  * Theme Creator interface
  */
 export interface IThemeCreator {
-	(palette:IPalette): TTheme
+	(palette:IPalette,baseTheme?:TTheme): TTheme
 	ThemeName:string
+	BaseThemeName?:string
 }
 
 /**
@@ -177,7 +178,9 @@ function setTheme(newThemeCreator:IThemeCreator) {
 		palette = ThemeState.palette || DefaultPalette()
 	
 	const
-		newTheme = newThemeCreator(palette)
+		{BaseThemeName} = newThemeCreator,
+		newBaseTheme = BaseThemeName && Themes[BaseThemeName] && Themes[BaseThemeName](palette),
+		newTheme = newThemeCreator(palette,newBaseTheme)
 	
 	Object.assign(ThemeState,{
 		themeName: newTheme.ThemeName,
@@ -274,7 +277,8 @@ function loadBuiltIns() {
 	DefaultPalette = BuiltIns.LightPalette
 	
 	Themes = {
-		DefaultTheme: BuiltIns.DefaultTheme
+		DefaultTheme: BuiltIns.DefaultTheme,
+		LightTheme: BuiltIns.LightTheme
 	}
 	
 	Palettes = {
