@@ -2,8 +2,8 @@ import {BaseService, IServiceConstructor, RegisterService} from 'shared/services
 import ProcessType from 'shared/ProcessType'
 import DatabaseClientService from './DatabaseClientService'
 import {ObservableStore} from 'typedux'
-import {ToastMessageType} from 'shared/models/Toast'
-import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
+import {ToastMessageType} from 'shared/models'
+import { getUIActions } from "shared/actions/ActionFactoryProvider"
 
 const log = getLogger(__filename)
 
@@ -13,7 +13,6 @@ export class ToastService extends BaseService {
 	private unsubscribe:Function
 	private pendingTimers = {}
 
-	private uiActions:UIActionFactory
 	private store:ObservableStore<any>
 	
 	/**
@@ -27,7 +26,6 @@ export class ToastService extends BaseService {
 	
 	
 	init(): Promise<this> {
-		this.uiActions = Container.get(UIActionFactory)
 		this.store = Container.get(ObservableStore as any) as any
 		return super.init()
 	}
@@ -42,7 +40,7 @@ export class ToastService extends BaseService {
 			.keys(this.pendingTimers)
 			.forEach(timerId => clearTimeout(this[timerId]))
 
-		this.uiActions.clearMessages()
+		getUIActions().clearMessages()
 	}
 	
 	/**
@@ -59,7 +57,7 @@ export class ToastService extends BaseService {
 			const
 				stopFloating = () => {
 					msg.floatVisible = false
-					this.uiActions.updateMessage(msg)
+					getUIActions().updateMessage(msg)
 					delete this.pendingTimers[msg.id]
 				},
 				isError = msg.type === ToastMessageType.Error
@@ -86,7 +84,7 @@ export class ToastService extends BaseService {
 	 */
 	async start() {
 		this.unsubscribe = this.store.observe(
-			[this.uiActions.leaf(), 'messages'],
+			[getUIActions().leaf(), 'messages'],
 			this.onMessagesChanged
 		)
 

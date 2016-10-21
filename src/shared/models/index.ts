@@ -11,4 +11,4 @@ export * from './Permission'
 export * from './Sync'
 export * from './GitHubEvents'
 
-
+export * from './Toast'
