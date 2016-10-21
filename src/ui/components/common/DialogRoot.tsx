@@ -14,7 +14,7 @@ const baseStyles = (topStyles,theme,palette) => {
 	const
 		{text,accent,primary,secondary,background} = palette,
 		actionStyle = {
-			backgroundColor: primary.hue1,
+			backgroundColor: Transparent,
 			color: text.primary
 		}
 	
@@ -26,7 +26,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		
 		titleBar: [ FlexRowCenter, FillWidth, makeHeightConstraint(rem(5)), {
 			backgroundColor: background,
-			backgroundImage: makeLinearGradient('to top', background, primary.hue1),
+			//backgroundImage: makeLinearGradient('to top', background, primary.hue1),
 			//boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
 			borderBottom: `0.1rem solid ${TinyColor(primary.hue1).setAlpha(0.2).toRgbString()}`
 			
@@ -157,8 +157,14 @@ export function createCancelButton(theme,palette,cancelAction) {
 	const
 		styles = createStyles(actionBaseStyles,{},theme,palette)
 	
-	return <div onClick={cancelAction} key='cancelButton' style={[styles.action,styles.action.cancel]}>
-		<Icon style={[styles.action.icon]}>cancel</Icon>
+	return <div
+		onClick={cancelAction}
+		key='cancelButton'
+		style={[
+			styles.action,
+			styles.action.cancel
+		]}>
+		<Icon style={[styles.action.icon]}>close</Icon>
 	</div>
 }
 

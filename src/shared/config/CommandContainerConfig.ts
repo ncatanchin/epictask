@@ -2,6 +2,7 @@
  * Container Names
  */
 export const ContainerNames = {
+	RepoAddWindow: 'RepoAddWindow',
 	SettingsWindow: 'SettingsWindow',
 	AppRoot: 'AppRoot',
 	CommentEditDialog: 'CommentEditDialog',

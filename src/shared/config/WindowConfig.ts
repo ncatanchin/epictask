@@ -132,6 +132,7 @@ export const Dialogs = {
 	SettingsWindow: 'SettingsWindow',
 	IssueEditDialog: 'IssueEditDialog',
 	IssuePatchDialog: 'IssuePatchDialog',
+	RepoAddWindow: 'RepoAddWindow',
 	RepoAddTool: 'RepoAddTool',
 	IssueCommentDialog: 'IssueCommentDialog'
 }

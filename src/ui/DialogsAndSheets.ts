@@ -32,6 +32,18 @@ export const Sheets = {
  * Default Window Configs
  */
 export const DialogConfigs = {
+	RepoAddWindow: {
+		name: 'RepoAddWindow',
+		type: WindowType.Dialog,
+		showDevTools: false,
+		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
+			require.ensure(['ui/plugins/repos/RepoAddWindow'],function(require:any) {
+				resolver.resolve(require('ui/plugins/repos/RepoAddWindow').default)
+			}))
+		
+		
+	},
+	
 	SettingsWindow: {
 		name: 'SettingsWindow',
 		type: WindowType.Dialog,

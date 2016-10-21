@@ -206,16 +206,16 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					return <div key={'repoList-' + id}
 					           onMouseEnter={() => this.setState({hoverId:availRepo.repoId})}
 					           onMouseLeave={() => this.setState({hoverId:null})}
-					           onClick={(event) => {
-												this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
-					           }}
+					           onClick={(event) =>
+										  this.onAvailRepoClicked(availRepo,availRepoIndex,isSelected,event)
+					           }
 					           style={[
-					                styles.list.item,
-					                isEnabled && styles.list.item.enabled,
-					                isHovering && styles.list.item.hover,
-					                isSelected && styles.list.item.selected,
-					                (isSelected && isHovering) && styles.list.item.selected.hover
-				                ]}>
+				                styles.list.item,
+				                isEnabled && styles.list.item.enabled,
+				                isHovering && styles.list.item.hover,
+				                isSelected && styles.list.item.selected,
+				                (isSelected && isHovering) && styles.list.item.selected.hover
+			                ]}>
 						<Icon style={styles.list.item.icon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
 
 						{/* Repo */}

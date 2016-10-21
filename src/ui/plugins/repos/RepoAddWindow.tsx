@@ -107,30 +107,30 @@ const baseStyles = (topStyles, theme, palette) => {
 
 
 /**
- * ISettingsWindowProps
+ * IRepoAddWindowProps
  */
-export interface ISettingsWindowProps extends IThemedAttributes {
+export interface IRepoAddWindowProps extends IThemedAttributes {
 	user?:User
 	
 }
 
-export interface ISettingsWindowState {
+export interface IRepoAddWindowState {
 	
 }
 
 /**
- * SettingsWindow
+ * RepoAddWindow
  *
- * @class SettingsWindow
+ * @class RepoAddWindow
  * @constructor
  **/
 @connect(createStructuredSelector({
 	user: appUserSelector
 }))
 @CommandComponent()
-@ThemedStyles(baseStyles, 'dialog', 'SettingsWindow', 'form')
+@ThemedStyles(baseStyles, 'dialog', 'RepoAddWindow', 'form')
 @PureRender
-export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettingsWindowState> {
+export class RepoAddWindow extends React.Component<IRepoAddWindowProps,IRepoAddWindowState> {
 	
 	/**
 	 * Command items
@@ -148,7 +148,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	 *
 	 * @type {string}
 	 */
-	commandComponentId = ContainerNames.SettingsWindow
+	commandComponentId = ContainerNames.RepoAddWindow
 	
 	
 	/**
@@ -157,7 +157,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	private hide = () => {
 		const
 			childWindowId = getChildWindowId()
-
+		
 		if (childWindowId)
 			getUIActions().closeWindow(childWindowId)
 	}
@@ -203,7 +203,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			{ styles,theme,palette } = this.props,
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
-				Settings
+				Repo Settings
 			</div>,
 			
 			themeItems = getThemeNames().map(themeName => ({
@@ -222,66 +222,68 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 		
 		//[createCancelButton(theme,palette,this.close)]
 		return <CommandRoot
-				id={ContainerNames.SettingsWindow}
-				component={this}
-				style={makeStyle(Fill)}>
+			id={ContainerNames.RepoAddWindow}
+			component={this}
+			style={makeStyle(Fill)}>
+			
+			<DialogRoot
+				titleMode='horizontal'
+				titleNode={titleNode}
 				
-				<DialogRoot
-					titleMode='horizontal'
-					titleNode={titleNode}
-					styles={styles.dialog}
-				>
-					{/*<Tabs*/}
-						{/*style={Fill}*/}
-						{/*contentContainerStyle={Fill}*/}
-					  {/*tabTemplate={TabTemplate}*/}
-					{/*>*/}
-						{/*<Tab*/}
-							{/*iconStyle={styles.tabs.icon}*/}
-							{/*icon={<FontIcon className="fa fa-globe"/> }*/}
-							{/*style={FillHeight}*/}
-						{/*>*/}
-						{/*</Tab>*/}
-					
-						{/**/}
-						{/**/}
-					{/*<Tab*/}
-						{/*iconStyle={styles.tabs.icon}*/}
-						{/*icon={<FontIcon className="material-icons">color_lens</FontIcon> }*/}
-						{/*style={FillHeight}*/}
-					{/*>*/}
-					
-						<form name="themeForm" style={styles.form}>
-							<div style={styles.form.content}>
-								<div style={styles.form.title}>
-									Change your Theme and Palette
-								</div>
-								<div style={styles.form.row}>
-									<div style={styles.form.inputCell}>
-										<Select items={themeItems}
-										        onSelect={this.changeTheme}
-										        value={themeName} />
-									</div>
-									<div style={styles.form.labelCell}>
-										Select an alternate theme
-									</div>
-								</div>
-								
-								
-								<div style={styles.form.row}>
-									<div style={styles.form.inputCell}>
-										<Select items={paletteItems}
-										        onSelect={this.changePalette}
-										        value={paletteName} />
-									</div>
-									<div style={styles.form.labelCell}>
-										Select an alternate palette
-									</div>
-								</div>
+				styles={styles.dialog}
+			>
+				
+				{/*<Tabs*/}
+				{/*style={Fill}*/}
+				{/*contentContainerStyle={Fill}*/}
+				{/*tabTemplate={TabTemplate}*/}
+				{/*>*/}
+				{/*<Tab*/}
+				{/*iconStyle={styles.tabs.icon}*/}
+				{/*icon={<FontIcon className="fa fa-globe"/> }*/}
+				{/*style={FillHeight}*/}
+				{/*>*/}
+				{/*</Tab>*/}
+				
+				{/**/}
+				{/**/}
+				{/*<Tab*/}
+				{/*iconStyle={styles.tabs.icon}*/}
+				{/*icon={<FontIcon className="material-icons">color_lens</FontIcon> }*/}
+				{/*style={FillHeight}*/}
+				{/*>*/}
+				
+				<form name="themeForm" style={styles.form}>
+					<div style={styles.form.content}>
+						<div style={styles.form.title}>
+							Change your Theme and Palette
+						</div>
+						<div style={styles.form.row}>
+							<div style={styles.form.inputCell}>
+								<Select items={themeItems}
+								        onSelect={this.changeTheme}
+								        value={themeName} />
 							</div>
-						</form>
-					{/*</Tab>
-			</Tabs>*/}
+							<div style={styles.form.labelCell}>
+								Select an alternate theme
+							</div>
+						</div>
+						
+						
+						<div style={styles.form.row}>
+							<div style={styles.form.inputCell}>
+								<Select items={paletteItems}
+								        onSelect={this.changePalette}
+								        value={paletteName} />
+							</div>
+							<div style={styles.form.labelCell}>
+								Select an alternate palette
+							</div>
+						</div>
+					</div>
+				</form>
+				{/*</Tab>
+				 </Tabs>*/}
 			
 			
 			
@@ -292,4 +294,4 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 }
 
 
-export default SettingsWindow
+export default RepoAddWindow
