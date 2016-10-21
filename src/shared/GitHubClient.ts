@@ -527,23 +527,14 @@ export class GitHubClient {
 	
 	
 	/**
-	 * Delete comment
+	 * Internal delete command
 	 *
-	 * @param repo
-	 * @param issue
-	 * @param comment
-	 * @returns {any}
+	 * @param uri
 	 */
-	async commentDelete(repo:Repo,comment:Comment):Promise<void> {
-		let json = _.pick(comment,'body') as any
-		
+	private async doDelete(uri) {
 		
 		const
-			commentId = comment.id,
-			[uri,method] = [`/repos/${repo.full_name}/issues/comments/${comment.id}`,HttpMethod.DELETE]
-		
-		const
-			response = await doFetch(makeUrl(uri), this.initRequest(method,null,{
+			response = await doFetch(makeUrl(uri), this.initRequest(HttpMethod.DELETE,null,{
 				'Accept': 'application/json'
 			}))
 		
@@ -564,7 +555,140 @@ export class GitHubClient {
 			)
 			
 		}
+	}
+	
+	
+	/**
+	 * Delete a label
+	 *
+	 * @param repo
+	 * @param label
+	 */
+	async labelDelete(repo:Repo,label:Label):Promise<void> {
+		await this.doDelete(`/repos/${repo.full_name}/labels/${encodeURIComponent(label.name)}`)
+	}
+	
+	/**
+	 * Delete a milestone
+	 *
+	 * @param repo
+	 * @param milestone
+	 */
+	async milestoneDelete(repo:Repo,milestone:Milestone) {
+		await this.doDelete(`/repos/${repo.full_name}/milestones/${milestone.number}`)
+	}
+	
+	/**
+	 * Create or update a milestone
+	 *
+	 * @param repo
+	 * @param milestone
+	 * @returns {Milestone}
+	 */
+	async milestoneSave(repo:Repo,milestone:Milestone) {
+		let
+			json = _.pick(milestone,'title','state','description','due_on') as any
 		
+		
+		const
+			[uri,method] = milestone.number ?
+				[`/repos/${repo.full_name}/milestones/${milestone.number}`,HttpMethod.PATCH] :
+				[`/repos/${repo.full_name}/milestones`,HttpMethod.POST]
+		
+		const
+			payload = JSON.stringify(json)
+		
+		const response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
+			'Accept': 'application/json',
+			'Content-Type': 'application/json'
+		}))
+		
+		
+		if (response.status >= 300) {
+			let result = null
+			
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+			}
+			
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors
+			)
+			
+		}
+		
+		
+		let result = await response.json()
+		
+		return _.merge(cloneObject(milestone),result)
+	}
+	
+	
+	/**
+	 * Create or update a label
+	 *
+	 * @param repo
+	 * @param label
+	 *
+	 * @returns {Label}
+	 */
+	async labelSave(repo:Repo,label:Label) {
+		let
+			json = _.pick(label,'name','color') as any
+		
+		
+		const
+			[uri,method] = label.url ?
+				[`/repos/${repo.full_name}/labels/${encodeURIComponent(label.name)}`,HttpMethod.PATCH] :
+				[`/repos/${repo.full_name}/labels`,HttpMethod.POST]
+		
+		const
+			payload = JSON.stringify(json)
+		
+		const response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
+			'Accept': 'application/json',
+			'Content-Type': 'application/json'
+		}))
+		
+		
+		if (response.status >= 300) {
+			let result = null
+			
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+			}
+			
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors
+			)
+			
+		}
+		
+		let
+			result = await response.json()
+		
+		return _.merge(cloneObject(label),result)
+	}
+	
+	
+	/**
+	 * Delete comment
+	 *
+	 * @param repo
+	 * @param issue
+	 * @param comment
+	 * @returns {any}
+	 */
+	async commentDelete(repo:Repo,comment:Comment):Promise<void> {
+		await this.doDelete(`/repos/${repo.full_name}/issues/comments/${comment.id}`)
 	}
 
 	/**

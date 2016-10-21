@@ -3,7 +3,7 @@
 import * as ReactGlobal from 'react'
 import * as ReactDOMGlobal from 'react-dom'
 import {Toaster as ToasterType} from 'shared/Toaster'
-import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/ThemeManager'
+import {CreateGlobalThemedStyles as CreateGlobalThemedStylesGlobal} from 'shared/themes/styles'
 import * as JQueryGlobal from 'jquery'
 import * as RadiumGlobal from 'radium'
 

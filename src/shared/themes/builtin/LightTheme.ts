@@ -1,7 +1,5 @@
-import * as Styles from 'material-ui/styles'
 import { Transparent, createStyles} from "shared/themes/styles"
-
-
+import { colorAlpha } from "shared/themes/styles/ColorTools"
 
 export function LightTheme(palette,baseTheme) {
 	
@@ -25,7 +23,7 @@ export function LightTheme(palette,baseTheme) {
 		issueItem: {
 			
 			selected: [{
-				backgroundColor: secondary.hue1,
+				backgroundColor: secondary.hue1,//colorAlpha(secondary.hue1,0.5),
 				color: alternateText.primary,
 				bar: [{
 					backgroundColor: Transparent

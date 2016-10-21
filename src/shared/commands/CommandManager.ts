@@ -37,7 +37,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration
@@ -59,7 +59,6 @@ export interface ICommandContainerRegistration {
 export class CommandManager {
 	
 	
-	
 	static getInstance() {
 		if (!instanceContainer.instance)
 			instanceContainer.instance = new CommandManager()
@@ -67,33 +66,6 @@ export class CommandManager {
 		return instanceContainer.instance
 	}
 	
-	 
-	
-	
-	// private mainMenuManager = new Proxy({},{
-	// 	get: (target,prop) => {
-	// 		return (...args) => {
-	// 			try {
-	// 				const
-	// 					manager = this.getMainMenuManager(),
-	// 					fn = manager && manager[prop]
-	//
-	//
-	// 				if (!fn) {
-	// 					return log.debug(`Prop ${prop} not available on main menu manager`)
-	// 				}
-	// 				if (typeof fn !== 'function') {
-	// 					return log.warn(`Prop ${prop} is NOT a function`)
-	// 				}
-	//
-	// 				fn(...args)
-	// 			} catch (err) {
-	// 				log.error(`Error occurred calling main menu`,err)
-	// 				throw err
-	// 			}
-	// 		}
-	// 	}
-	// }) as CommandMainMenuManager
 	
 	/**
 	 * Menu Manager Provider

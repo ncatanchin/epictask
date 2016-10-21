@@ -33,9 +33,10 @@ import { IssuesList } from "ui/components/issues/IssuesList"
 import { isNumber, getValue } from "shared/util"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder, CommandContainer
-} from "shared/commands/CommandComponent"
-import { CommandType, CommandMenuItemType } from "shared/commands/Command"
+	CommandContainerBuilder, CommandContainer,
+	CommandType, CommandMenuItemType
+} from "shared/commands"
+
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { SearchPanel } from "ui/components/search"
 import { SearchType } from "shared/actions/search"

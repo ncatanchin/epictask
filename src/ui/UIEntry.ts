@@ -5,7 +5,7 @@ import { Events } from "shared/config/Events"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { benchmark } from "shared/util/Benchmark"
 import { benchmarkLoadTime } from "shared/util/UIUtil"
-import { SimpleMenuManagerProvider } from "shared/commands/CommandSimpleMenuManager"
+import { SimpleMenuManagerProvider } from "shared/commands"
 
 benchmarkLoadTime(`Starting UIEntry`)
 

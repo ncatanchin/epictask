@@ -1,10 +1,10 @@
 
 
-import {FontBlack} from 'shared/themes/styles/CommonStyles'
+import {FontBlack} from 'shared/themes/styles'
 import {IGithubValidationError, GithubErrorCodes} from 'shared/GitHubClient'
-import * as Radium from "radium"
+
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { CommandAccelerator } from "shared/commands/CommandAccelerator"
+import { CommandAccelerator } from "shared/commands"
 
 
 const repoBaseStyles = (topStyles,theme,palette) => {

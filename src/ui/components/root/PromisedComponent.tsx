@@ -1,11 +1,13 @@
 // Imports
-import { connect } from 'react-redux'
+
+import { Provider } from 'react-redux'
 import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { getValue } from "shared/util"
 import { TComponent } from "shared/util/UIUtil"
+import { getReduxStore } from "shared/store"
 
 // Constants
 const
@@ -38,7 +40,6 @@ export interface IPromisedComponentState {
  * @constructor
  **/
 
-@PureRender
 export class PromisedComponent extends React.Component<IPromisedComponentProps,IPromisedComponentState> {
 	
 	private mounted = false

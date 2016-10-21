@@ -167,7 +167,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			mainWindowState.manage(appWindow)
 			
 			// ONLY TO DEBUG STARTUP ERRORS // ON READY - SHOW
-			appWindow.once('ready-to-show',() => appWindow.show())
+			//appWindow.once('ready-to-show',() => appWindow.show())
 			
 			setupShutdownOnWindowClose(appWindow)
 			

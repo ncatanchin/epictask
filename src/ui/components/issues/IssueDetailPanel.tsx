@@ -31,7 +31,7 @@ import { EventGroup, isEventGroup } from "ui/components/issues/IssueEventGroup"
 import {
 	CommandComponent, ICommandComponentProps, ICommandComponent,
 	CommandRoot, CommandContainerBuilder
-} from "shared/commands/CommandComponent"
+} from "shared/commands"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { getIssueActions } from "shared/actions/ActionFactoryProvider"
 

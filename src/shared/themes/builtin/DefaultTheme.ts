@@ -698,7 +698,56 @@ export function DefaultTheme(palette) {
 			
 		},
 		
+		/**
+		 * Issue item styling
+		 */
 		issueItem: {
+			
+			selected: [{
+				backgroundColor: secondary.hue1,//colorAlpha(secondary.hue1,0.5),
+				color: alternateText.primary,
+				bar: [{
+					backgroundColor: Transparent
+					//backgroundColor: secondary.hue2
+				}]
+			}],
+			
+			focused: [{
+				backgroundColor: accent.hue1,
+				color: alternateText.primary,
+				bar: [{
+					backgroundColor: Transparent
+					//backgroundColor: accent.hue2
+				}]
+			}],
+			
+			
+			number: [{
+				selected:[{
+					color: alternateText.primary,
+				}],
+				focused:[{
+					color: alternateText.primary,
+				}]
+			}],
+			
+			repo:[{
+				selected:[{
+					color: alternateText.primary,
+				}],
+				focused:[{
+					color: alternateText.primary,
+				}]
+			}],
+			
+			title: [{
+				selected:[{
+					color: alternateText.primary,
+				}],
+				focused:[{
+					color: alternateText.primary,
+				}],
+			}]
 			
 		},
 		

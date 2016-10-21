@@ -15,9 +15,9 @@ import {TypeAheadSelect} from 'ui/components/common/TypeAheadSelect'
 import { shallowEquals } from "shared/util"
 import {
 	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
-	CommandContainerBuilder
-} from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
+	CommandContainerBuilder,ICommand
+} from "shared/commands"
+
 import filterProps from 'react-valid-props'
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 

@@ -18,7 +18,7 @@ import {ToolPanelLocation,IToolProps} from "shared/tools/ToolTypes"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
-} from "shared/commands/CommandComponent"
+} from "shared/commands"
 import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { CommonKeys } from "shared/KeyMaps"
 import { ContainerNames } from "shared/config/CommandContainerConfig"

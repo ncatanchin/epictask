@@ -141,38 +141,13 @@ export default class GitHubOAuthWindow {
 			const json = await response.json()
 			callback(null, json.access_token, this)
 
-			//let text = await response.text()
-			//console.log('response',text)
-			//let json = await response.json()
-			// const payload = text.split('&').reduce((vals,pair) => {
-			// 	const parts = pair.split('=')
-			// 	vals[parts[0]] = decodeURIComponent(parts[1])
-			// 	return vals
-			// },{})
-			//
-			// callback(null, payload.access_token, this)
 		} catch (err) {
 			log.error('auth failed',err)
 			callback(err)
 		} finally {
 			onFinish()
 		}
-		//
-		// request.post('https://github.com/login/oauth/access_token', {
-		//   client_id: id,
-		//   client_secret: secret,
-		//   code: code,
-		// }).end((err, response) => {
-		//   try {
-		//     if (err) {
-		//
-		//     } else {
-		//
-		//     }
-		//   } finally {
-		//     this.window.close()
-		//   }
-		// })
+
 	}
 
 }

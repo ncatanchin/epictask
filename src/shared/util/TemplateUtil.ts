@@ -2,6 +2,7 @@
 
 import electron = require('electron')
 import uuid = require('node-uuid')
+import { searchPathsForFile } from "shared/util/Files"
 
 const
 	log = getLogger(__filename),
@@ -19,53 +20,42 @@ export function toDataUrl(template:Function|string,locals:any = {},mimetype:stri
 	return dataUrl.format({mimetype,data:template})
 }
 
+/**
+ * Gets an entry file
+ *
+ * @param file
+ * @returns {string}
+ */
 function getEntryFile(file:string) {
-	const
-		appPaths = [
-			'../dist/app',
-			'../app',
-			'..',
-			'.',
-			'../../../app'
-		]
-	
-	let
-		outBuf = '',
-		resolvedPath = null,
-		fs = require('fs')
-	
-	const logOut = (...args) => {
-		outBuf += args.join(' // ') + '\n'
-	}
-	
-	for (let appPath of appPaths) {
-		try {
-			appPath = __non_webpack_require__.resolve(`${appPath}/${file}`)
-			
-			if (fs.existsSync(appPath)) {
-				resolvedPath = appPath
-				logOut(`Found at ${resolvedPath}`)
-				break
-			}
-		} catch (err) {
-			logOut(`Failed to find at path ${appPath} ${err.message} ${err}`)
-		}
-	}
-	
-	if (!resolvedPath) {
-		throw new Error(`Unable to find app entry template: ${outBuf}`)
-	}
-	
-	return resolvedPath
+	return searchPathsForFile(file)
 }
 
 
+/**
+ * Splash entry html path
+ *
+ * @returns {string}
+ */
 export function getSplashEntryHtmlPath() {
 	return getEntryFile("splash-entry.html")
 }
 
+/**
+ * App entry html path
+ *
+ * @returns {string}
+ */
 export function getAppEntryHtmlPath() {
 	return getEntryFile("app-entry.html")
+}
+
+/**
+ * Github Auth entry html path
+ *
+ * @returns {string}
+ */
+export function getGitHubEntryHtmlPath() {
+	return getEntryFile("github-auth-entry.html")
 }
 
 //

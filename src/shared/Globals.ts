@@ -23,7 +23,7 @@ import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 import { acceptHot } from "shared/util/HotUtils"
 
-import Electron = require('electron')
+
 
 // Export globals
 const
@@ -51,6 +51,9 @@ function getChildWindowIdGlobal() {
  */
 function getCurrentWindowGlobal():Electron.BrowserWindow {
 	try {
+		const
+			Electron = require('electron')
+		
 		return getValue(() => Electron.remote.getCurrentWindow(),Electron.BrowserWindow.getFocusedWindow())
 	} catch (err) {
 		console.error(`Unable to find any current window`,err)

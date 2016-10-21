@@ -27,10 +27,10 @@ import { DialogRoot, createSaveCancelActions } from "ui/components/common/Dialog
 import { getUIActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import { MarkdownEditor } from "ui/components/common/MarkdownEditor"
-import { CommandRoot, CommandContainerBuilder, CommandComponent } from "shared/commands/CommandComponent"
+import { CommandRoot, CommandContainerBuilder, CommandComponent,CommandType } from "shared/commands"
 import { FileDrop } from "ui/components/common/FileDrop"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
-import { CommandType } from "shared/commands/Command"
+
 import { RepoName } from "ui/components/common/Renderers"
 
 

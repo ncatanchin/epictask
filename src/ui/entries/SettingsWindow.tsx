@@ -7,22 +7,24 @@
 import { createStructuredSelector } from 'reselect'
 import { connect } from 'react-redux'
 import { User } from 'shared/models/User'
-import { ThemedStyles} from 'shared/themes/ThemeManager'
+import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { appUserSelector } from 'shared/actions/app/AppSelectors'
-import { DialogRoot} from "ui/components/common/DialogRoot"
-import { getUIActions} from "shared/actions/ActionFactoryProvider"
+
+import { getUIActions, getAppActions } from "shared/actions/ActionFactoryProvider"
 import {
 	FlexColumn, FlexAuto, FlexRowCenter, FillHeight, makeFlex,
-	OverflowAuto, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill, makeStyle
+	OverflowAuto, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill, makeStyle, makeFlexAlign, FlexRow
 } from "shared/themes/styles"
-import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
+import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands"
+
 import { ContainerNames } from "shared/config/CommandContainerConfig"
-import { PureRender, Select, ISelectItem } from "ui/components/common"
+import { PureRender, Select, ISelectItem, DialogRoot, Icon, Button } from "ui/components/common"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
 import {
 	getPaletteName, getThemeName, getThemeNames,
 	getPaletteNames, getThemeCreator, getPaletteCreator, setThemeCreator, setPaletteCreator
 } from "shared/themes/ThemeState"
+
 
 const
 	log = getLogger(__filename),
@@ -51,11 +53,11 @@ const baseStyles = (topStyles, theme, palette) => {
 		
 		root: [ FlexColumn, FlexAuto ],
 		
-		tabs: [{
-			icon: [{
+		tabs: [ {
+			icon: [ {
 				fontSize: rem(4)
-			}]
-		}],
+			} ]
+		} ],
 		
 		actions: [ FlexRowCenter, FillHeight ],
 		
@@ -75,35 +77,37 @@ const baseStyles = (topStyles, theme, palette) => {
 			} ]
 		} ],
 		
-		form: [FlexColumn,OverflowAuto,Fill,{
-			content: [FillWidth,makePaddingRem(3,5),{
+		form: [ FlexColumn, OverflowAuto, Fill, {
+			content: [ FillWidth, makePaddingRem(3, 5), {
 				maxWidth: 800
-			}],
+			} ],
 			
-			title: [FlexAuto, makePaddingRem(2,1,3,1),{
+			title: [ FlexAuto, FlexRow, makeFlexAlign('center', 'flex-start'), makePaddingRem(2, 1, 3, 1), {
 				color: accent.hue1,
-				fontSize: rem(2)
-			}],
-			
-			row: [FlexAuto,FlexRowCenter,makePaddingRem(1,2),{
-				backgroundColor: primary.hue2,
+				fontSize: rem(2),
 				
-			}],
+				icon: [ makePaddingRem(0, 1, 0, 0), {
+					fontSize: rem(3),
+				} ]
+			} ],
 			
-			inputCell: [makeFlex(0,0,'35%'),{
+			row: [ FlexAuto, FlexRowCenter, makePaddingRem(1, 2), {
+				//backgroundColor: primary.hue2,
+				
+			} ],
+			
+			inputCell: [ makeFlex(0, 0, '35%'), {
 				backgroundColor: primary.hue3
-			}],
+			} ],
 			
-			labelCell: [FlexScale,Ellipsis,makePaddingRem(1,1,1,3),{
+			labelCell: [ FlexScale, Ellipsis, makePaddingRem(1, 1, 1, 3), {
 				
 				fontSize: rem(1.5),
 				fontWeight: 400
-			}]
-		}]
+			} ]
+		} ]
 	}
 }
-
-
 
 
 /**
@@ -157,7 +161,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	private hide = () => {
 		const
 			childWindowId = getChildWindowId()
-
+		
 		if (childWindowId)
 			getUIActions().closeWindow(childWindowId)
 	}
@@ -200,7 +204,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	
 	render() {
 		const
-			{ styles,theme,palette } = this.props,
+			{ styles, theme, palette } = this.props,
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				Settings
@@ -220,69 +224,70 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			})),
 			paletteName = getPaletteName()
 		
-		//[createCancelButton(theme,palette,this.close)]
 		return <CommandRoot
-				id={ContainerNames.SettingsWindow}
-				component={this}
-				style={makeStyle(Fill)}>
-				
-				<DialogRoot
-					titleMode='horizontal'
-					titleNode={titleNode}
-					styles={styles.dialog}
-				>
-					{/*<Tabs*/}
-						{/*style={Fill}*/}
-						{/*contentContainerStyle={Fill}*/}
-					  {/*tabTemplate={TabTemplate}*/}
-					{/*>*/}
-						{/*<Tab*/}
-							{/*iconStyle={styles.tabs.icon}*/}
-							{/*icon={<FontIcon className="fa fa-globe"/> }*/}
-							{/*style={FillHeight}*/}
-						{/*>*/}
-						{/*</Tab>*/}
-					
-						{/**/}
-						{/**/}
-					{/*<Tab*/}
-						{/*iconStyle={styles.tabs.icon}*/}
-						{/*icon={<FontIcon className="material-icons">color_lens</FontIcon> }*/}
-						{/*style={FillHeight}*/}
-					{/*>*/}
-					
-						<form name="themeForm" style={styles.form}>
-							<div style={styles.form.content}>
-								<div style={styles.form.title}>
-									Change your Theme and Palette
-								</div>
-								<div style={styles.form.row}>
-									<div style={styles.form.inputCell}>
-										<Select items={themeItems}
-										        onSelect={this.changeTheme}
-										        value={themeName} />
-									</div>
-									<div style={styles.form.labelCell}>
-										Select an alternate theme
-									</div>
-								</div>
-								
-								
-								<div style={styles.form.row}>
-									<div style={styles.form.inputCell}>
-										<Select items={paletteItems}
-										        onSelect={this.changePalette}
-										        value={paletteName} />
-									</div>
-									<div style={styles.form.labelCell}>
-										Select an alternate palette
-									</div>
-								</div>
-							</div>
-						</form>
-					{/*</Tab>
-			</Tabs>*/}
+			id={ContainerNames.SettingsWindow}
+			component={this}
+			style={makeStyle(Fill)}>
 			
+			<DialogRoot
+				titleMode='horizontal'
+				titleNode={titleNode}
+				styles={styles.dialog}
+			>
+				
+				<form name="themeForm" style={styles.form}>
+					<div style={styles.form.content}>
+						
+						
+						{/* PALETTES & THEMES */}
+						<div style={styles.form.title}>
+							<Icon style={styles.form.title.icon}>color_lens</Icon> <span>Theme and Palette</span>
+						</div>
+						
+						
+						<div style={styles.form.row}>
+							
+							<div style={styles.form.labelCell}>
+								Theme
+							</div>
+							<div style={styles.form.inputCell}>
+								<Select items={themeItems}
+								        onSelect={this.changeTheme}
+								        underlineShow={false}
+								        value={themeName}/>
+							</div>
+						</div>
+						
+						
+						<div style={styles.form.row}>
+							
+							<div style={styles.form.labelCell}>
+								Palette
+							</div>
+							<div style={styles.form.inputCell}>
+								<Select items={paletteItems}
+								        onSelect={this.changePalette}
+								        underlineShow={false}
+								        value={paletteName}/>
+							</div>
+						
+						</div>
+						
+						
+						{/* RESET APP */}
+						<div style={styles.form.title}>
+							<Icon style={styles.form.title.icon} iconSet="fa" iconName="globe"/> <span>Reset</span>
+						</div>
+						<div style={styles.form.row}>
+							<div style={styles.form.labelCell}>
+								Remove all internal files and settings.
+							</div>
+							
+							<Button style={styles.form.inputCell} onClick={() => getAppActions().clean()}>RESET</Button>
+						
+						</div>
+					</div>
+				</form>
 			
 			
 			</DialogRoot>

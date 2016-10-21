@@ -1,5 +1,5 @@
 import * as assert from 'assert'
-import {create as FreeStyleCreate,FreeStyle} from 'free-style'
+
 
 import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
 import { TTheme } from "shared/themes/Theme"
@@ -16,8 +16,8 @@ let
 
 
 const
-	log = getLogger(__filename),
-	shortId = require('short-id')
+	log = getLogger(__filename)
+	
 
 // if (log.setOverrideLevel)
 // 	log.setOverrideLevel(LogLevel.DEBUG)
@@ -240,7 +240,7 @@ export function getThemeNames() {
  * @returns {any}
  */
 export function getThemeName() {
-	return ThemeState.themeName
+	return PersistentThemeName.get()
 }
 
 export function getPalette() {
@@ -253,7 +253,7 @@ export function getPaletteCreator(name:string) {
 
 
 export function getPaletteName() {
-	return ThemeState.paletteName
+	return PersistentPaletteName.get()
 }
 
 export function getPalettes() {
@@ -278,7 +278,7 @@ function loadBuiltIns() {
 	
 	Themes = {
 		DefaultTheme: BuiltIns.DefaultTheme,
-		LightTheme: BuiltIns.LightTheme
+		//LightTheme: BuiltIns.LightTheme
 	}
 	
 	Palettes = {
@@ -286,19 +286,37 @@ function loadBuiltIns() {
 		DarkPalette: BuiltIns.DarkPalette
 	}
 	
-	ThemeState.themeName = getHot(module,'themeName',DefaultThemeName)
+	//ThemeState.themeName = DefaultThemeName
 	
-	setPalette(Palettes[ThemeState.paletteName] || DefaultPalette)
-	setTheme(Themes[ThemeState.themeName] || DefaultTheme)
+	setPalette(currentPaletteCreator())
+	setTheme(currentThemeCreator())
 	
-	if (module.hot) {
-		module.hot.accept(['./builtin'],loadBuiltIns)
-	}
+	
 }
 
+/**
+ * Get the current palette creator or default if not available
+ *
+ * @returns {IPaletteCreator|any}
+ */
+export function currentPaletteCreator() {
+	return Palettes[getPaletteName()] || DefaultPalette || Palettes['DarkPalette']
+}
+
+/**
+ * Get the current theme creator
+ *
+ * @returns {IThemeCreator}
+ */
+export function currentThemeCreator() {
+	return Themes[getThemeName()] || DefaultTheme || Themes['DefaultTheme']
+}
 
 loadBuiltIns()
 
+if (module.hot) {
+	module.hot.accept(['./builtin'],loadBuiltIns)
+}
 
 
 /**
@@ -353,74 +371,13 @@ export function makeThemeFontSize(multiplier:number) {
 }
 
 
-const globalStyleConfigs = [] as any
-
-
-export interface IGlobalThemedStyle {
-	id:string
-	fn:(theme:any,Style:FreeStyle) => any
-	remove:() => void
-	create: () => void
-	element: typeof $
-	clean:() => void
-}
-
-export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):IGlobalThemedStyle {
-	
-	const
-		id = `themedStyle${shortId.generate()}`,
-		config = {} as any,
-		remove = () => $(`#${id}`).remove(),
-		create = () => {
-			remove()
-			const
-				Style = FreeStyleCreate(),
-				newStyles = fn(getTheme(),Style)
-			
-			
-			Object
-				.keys(newStyles)
-				.forEach(selector => Style.registerRule(selector,newStyles[selector]))
-			
-			
-			return $(`<style id="${id}" type="text/css">
-				${Style.getStyles()}
-			</style>`).appendTo($('head'))
-		}
-	
-	Object.assign(config, {
-		id,
-		fn,
-		remove,
-		create,
-		element: create(),
-		removeListener: addThemeListener(() => {
-			config.create()
-		}),
-		clean() {
-			if (!config.removeListener)
-				throw new Error(`ThemeStyle has already been remove ${id}`)
-			
-			config.removeListener()
-			config.removeListener = null
-			config.remove()
-		}
-	})
-	
-	globalStyleConfigs.push(config)
-	
-	return config
-	
-}
-
 
 
 // Export globals
 Object.assign(global as any,{
 	getTheme,
 	getPalette,
-	themeFontSize:makeThemeFontSize,
-	CreateGlobalThemedStyles
+	themeFontSize:makeThemeFontSize
 })
 
 

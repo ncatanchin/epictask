@@ -1,7 +1,7 @@
-
 import * as CommonStyles from './CommonStyles'
-export * from './CommonStyles'
 
+export * from './CommonStyles'
+export * from './GlobalStyles'
 
 
 declare global {

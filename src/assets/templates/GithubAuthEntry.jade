@@ -1,0 +1,44 @@
+-
+	var fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss'))
+	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
+doctype html
+html(lang="en")
+	head
+		script.
+			window.startLoadTime = Date.now()
+
+
+		meta(charset='utf-8')
+		meta(name="viewport" content="width=device-width, initial-scale=1")
+		style!=fontStyles
+		style!=mainStyles
+		style!=eval(require('!!css!font-awesome/css/font-awesome.min.css'))
+
+		meta(name="viewport",content="width=device-width, initial-scale=1")
+		title!=""
+		script.
+			//noinspection NodeModulesDependencies
+			const
+				isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true',
+				encodedJson = window.location.hash,
+				$ = require('jquery')
+
+			if (isDev)
+				console.log("Checking encoded json ",encodedJson)
+
+			try {
+				const
+					{clientId,scopeQuery} = JSON.parse(encodedJson),
+					authURL = 'https://github.com/login/oauth/authorize?client_id=' + clientId + scopeQuery
+
+				$('<webview src="' + ghUrl + '" id="gh" class="ghAuth"></webview>')
+			} catch (err) {
+				console.error(`Unable to created auth webview`)
+			}
+			//noinspection JSAnnotator
+			require('./BrowserEntry.bundle.js')
+				.initBrowser(isDev)
+
+
+
+	body.fill-width.fill-height()

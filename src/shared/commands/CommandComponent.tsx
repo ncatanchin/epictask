@@ -1,8 +1,9 @@
 import {
 	ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator,
-	ICommandMenuItem, CommandMenuItemType, TCommandMenuItemExecutor, TCommandIcon
-} from "shared/commands/Command"
-import { getCommandManager } from "shared/commands/CommandManager"
+	ICommandMenuItem, CommandMenuItemType, TCommandIcon,
+	getCommandManager
+} from "shared/commands"
+
 import * as React from 'react'
 import filterProps from 'react-valid-props'
 import { isFunction, shortId, getValue, isNumber, isString } from "shared/util"

@@ -4,7 +4,7 @@ import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { makeHeightConstraint, PositionRelative, Fill } from "shared/themes/styles"
+import { makeHeightConstraint, PositionRelative, Fill, makeTransition, FlexScale } from "shared/themes/styles"
 
 // Constants
 const
@@ -19,7 +19,7 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ Fill, PositionRelative, makeTransition(['height','max-height','min-height']), {
+	return [ FlexScale, PositionRelative, makeTransition(['height','max-height','min-height']), {
 			hidden: [makeHeightConstraint(0)]
 	} ]
 }

@@ -37,8 +37,8 @@ import { DialogRoot, createSaveCancelActions } from "ui/components/common/Dialog
 import { getUIActions, getRepoActions, getIssueActions } from "shared/actions/ActionFactoryProvider"
 import { makeHeightConstraint, FlexColumn, FlexAuto, FlexRowCenter, FillHeight } from "shared/themes/styles"
 import { FileDrop } from "ui/components/common/FileDrop"
-import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
+import { CommandType,CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands"
+
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { MilestoneSelect, PureRender } from "ui/components/common"
 import { AssigneeSelect } from "ui/components/common/AssigneeSelect"

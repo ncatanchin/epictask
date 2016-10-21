@@ -1,11 +1,15 @@
-
+// HMR
 import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommandMenuManager, ICommandMenuItem } from "shared/commands/Command"
-import { inElectron } from "shared/util/ElectronUtil"
+
+
+import { ICommandMenuManager, ICommandMenuItem, getCommandManagerType, getCommandManager } from "shared/commands"
 import { isMain } from "shared/commands/CommandManagerConfig"
+
+
+import { inElectron } from "shared/util/ElectronUtil"
 import { shallowEquals } from "shared/util"
 import Electron = require('electron')
-import { getCommandManagerType, getCommandManager } from "shared/commands/CommandManager"
+
 
 const
 	log = getLogger(__filename),

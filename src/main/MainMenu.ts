@@ -1,6 +1,7 @@
 import Electron = require('electron')
 import { getAuthActions } from  "shared/actions/ActionFactoryProvider"
 import { shutdownApp } from "main/MainShutdownHandler"
+import { restartAndClean } from "main/Cleaner"
 
 const
 	{
@@ -60,21 +61,8 @@ function makeDevMenu(mainWindow:Electron.BrowserWindow) {
 			// CLEAN
 			{
 				label: 'Clean / Reset App',
-				click: () => {
-					
-					
-					const
-						opts = { args: [ 'clean' ] } //process.argv.slice(1).filter(it => it !== 'clean').concat(['clean'])
-					
-					if (DEBUG)
-						opts.args.unshift(process.argv[ process.argv.length - 1 ])
-					
-					log.info(`relaunching with args: ${opts}`)
-					app.relaunch(opts)
-					app.exit(0)
-				}
+				click: () => restartAndClean()
 			}
-		
 		
 		]
 	}
@@ -93,12 +81,6 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 			submenu: [ {
 				label: 'About EpicTask',
 				selector: 'orderFrontStandardAboutPanel:'
-			}, {
-				type: 'separator'
-			}, {
-				label: 'Logout of Epictask...',
-				accelerator: 'Command+L',
-				click: () => getAuthActions().logout()
 			}, {
 				type: 'separator'
 			}, {

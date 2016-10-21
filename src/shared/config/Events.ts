@@ -10,7 +10,8 @@ export enum EventType {
 	StoreGetMainState,
 	StoreMainStateChanged,
 	StoreRendererDispatch,
-	StoreRendererRegister
+	StoreRendererRegister,
+	Clean
 	
 }
 
@@ -18,6 +19,7 @@ export enum EventType {
  * Event Constants
  */
 export const Events = {
+	Clean: EventType[EventType.Clean],
 	MainBooted: EventType[EventType.MainBooted],
 	MainReady: EventType[EventType.MainReady],
 	ChildrenReady: EventType[EventType.ChildrenReady],

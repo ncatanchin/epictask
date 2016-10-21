@@ -32,15 +32,12 @@ export const Sheets = {
  * Default Window Configs
  */
 export const DialogConfigs = {
-	RepoAddWindow: {
-		name: 'RepoAddWindow',
+	RepoSettingsWindow: {
+		name: 'RepoSettingsWindow',
 		type: WindowType.Dialog,
-		showDevTools: false,
+		showDevTools: true,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/plugins/repos/RepoAddWindow'],function(require:any) {
-				resolver.resolve(require('ui/plugins/repos/RepoAddWindow').default)
-			}))
-		
+			resolver.resolve(require('ui/plugins/repos/RepoSettingsWindow').default))
 		
 	},
 	
@@ -49,9 +46,7 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/entries/SettingsWindow'],function(require:any) {
-				resolver.resolve(require('ui/entries/SettingsWindow').default)
-			}))
+			resolver.resolve(require('ui/entries/SettingsWindow').default))
 		
 		
 	},
@@ -61,9 +56,9 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/components/issues/IssueEditDialog'],function(require:any) {
-				resolver.resolve(require('ui/components/issues/IssueEditDialog').default)
-			}))
+			
+				resolver.resolve(require('ui/components/issues/IssueEditDialog').default))
+			
 
 			
 	},
@@ -72,9 +67,9 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/components/issues/IssuePatchDialog'],function(require:any) {
-				resolver.resolve(require('ui/components/issues/IssuePatchDialog').default)
-			}))
+			
+				resolver.resolve(require('ui/components/issues/IssuePatchDialog').default))
+			
 		
 			
 	},
@@ -83,8 +78,7 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure(['ui/components/issues/IssueCommentDialog'],function(require:any) {
-				resolver.resolve(require('ui/components/issues/IssueCommentDialog').default)
-			}))
+				resolver.resolve(require('ui/components/issues/IssueCommentDialog').default))
+			
 	}
 } as {[configName:string]:IWindowConfig}

@@ -25,7 +25,8 @@ const baseStyles = (topStyles,theme,palette) => {
 		}],
 		
 		icon: [{
-			
+			fill: text.secondary,
+			transform: 'translate(0,-0.6rem)'
 		}],
 		
 		list: {
@@ -34,6 +35,14 @@ const baseStyles = (topStyles,theme,palette) => {
 			paddingBottom: 0,
 			backgroundColor: 'transparent'
 		},
+		
+		menuItem: [{
+			//color: accent.hue1,
+			
+			content: [{
+				//color: accent.hue1
+			}]
+		}],
 		
 		item: [FlexRowCenter,makePaddingRem(0,1,0,0),{
 			backgroundColor: primary.hue2,
@@ -46,6 +55,9 @@ const baseStyles = (topStyles,theme,palette) => {
 		}],
 		
 		label: [FlexScale, FillHeight,FlexRow,makeFlexAlign('center','flex-start'),Ellipsis, makePaddingRem(0,2,0,0), {
+			color: accent.hue1,
+			fontWeight: 500,
+			letterSpacing: rem(0.1),
 			fontSize: themeFontSize(1.2),
 			top: 'auto'
 			
@@ -127,15 +139,15 @@ export class Select extends React.Component<ISelectProps,ISelectState> {
 	
 	private updateState = (props = this.props) => {
 		const
-			{items,itemStyle} = props
+			{items,itemStyle,styles} = props
 		
 		this.setState({
 			menuItems: items.map(item =>
 				<MenuItem key={item.key}
 				          value={item.value || ''}
-				          style={itemStyle}
+				          style={makeStyle(styles.menuItem,itemStyle)}
 				          innerDivStyle={makePaddingRem(0.3,0.5)}
-				          primaryText={item.node} />
+				          primaryText={<div style={styles.menuItem.content}>{item.node}</div>} />
 			)
 		})
 	}

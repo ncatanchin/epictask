@@ -31,6 +31,7 @@ import { pagedFinder } from "shared/util/RepoUtils"
 import { getIssueActions, getJobActions } from  "shared/actions/ActionFactoryProvider"
 import { ISyncChanges } from "shared/models"
 import GithubSyncStatus from 'shared/github/GithubSyncStatus'
+import { createClient } from "shared/GitHubClient"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -673,6 +674,113 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			log.debug('Saved avail repo, setting enabled to',enabled)
 			
+		}
+	}
+	
+	@ActionThunk()
+	saveMilestone(repo:Repo,milestone:Milestone) {
+		return async (dispatch,getState) => {
+			const
+				milestoneStore = getStores().milestone,
+				client = createClient()
+			
+			const
+				updatedMilestone = await client.milestoneSave(repo,milestone)
+				
+			
+			if (!updatedMilestone.repoId)
+				updatedMilestone.repoId = repo.id
+			
+			const
+				savedMilestone = await milestoneStore.save(updatedMilestone),
+			
+				availableRepos = availableReposSelector(getState()),
+				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
+			
+			availableRepo.milestones = availableRepo.milestones
+				.filter(it => it.id !== savedMilestone.id)
+				.concat([savedMilestone])
+			
+			this.updateAvailableRepos([availableRepo])
+		}
+	}
+	
+	@ActionThunk()
+	deleteMilestone(repo:Repo,milestone:Milestone) {
+		return async (dispatch,getState) => {
+			const
+				milestoneStore = getStores().milestone,
+				client = createClient()
+			
+			await client.milestoneDelete(repo,milestone)
+			
+			await milestoneStore.remove(Milestone.makeId(milestone))
+			
+			const
+				availableRepos = availableReposSelector(getState()),
+				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
+			
+			availableRepo.milestones = availableRepo
+				.milestones
+				.filter(it => it.id !== milestone.id)
+			
+			this.updateAvailableRepos([availableRepo])
+		}
+	}
+	
+	@ActionThunk()
+	saveLabel(repo:Repo,label:Label) {
+		return async (dispatch,getState) => {
+			const
+				labelStore = getStores().label,
+				client = createClient()
+			
+			
+			
+			const
+				updatedLabel = await client.labelSave(repo,label)
+			
+			if (!updatedLabel.repoId)
+				updatedLabel.repoId = repo.id
+			
+			const
+				savedLabel = await labelStore.save(updatedLabel),
+			
+				availableRepos = availableReposSelector(getState()),
+				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
+			
+			
+			
+			availableRepo.labels = availableRepo
+				.labels
+				.filter(it => it.url !== label.url)
+				.concat([savedLabel])
+			
+			this.updateAvailableRepos([availableRepo])
+		}
+	}
+	
+	
+	@ActionThunk()
+	deleteLabel(repo:Repo,label:Label) {
+		return async (dispatch,getState) => {
+			const
+				labelStore = getStores().label,
+				client = createClient()
+			
+			await client.labelDelete(repo,label)
+			
+			await labelStore.remove(Label.makeId(label))
+			
+			const
+				availableRepos = availableReposSelector(getState()),
+				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id)),
+				currentLabels = availableRepo.labels
+			
+			
+			availableRepo.labels = availableRepo.labels.filter(it => it.url !== label.url)
+			log.info(`Removed label, new labels=`,availableRepo.labels,'old labels=',currentLabels)
+			this.updateAvailableRepos([availableRepo])
 		}
 	}
 

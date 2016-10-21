@@ -6,13 +6,13 @@ import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { sheetSelector } from "shared/actions/ui/UISelectors"
 import { IUISheet } from "shared/config/WindowConfig"
 import {
-	PositionAbsolute, makeTransition, makeHeightConstraint, createStyles, FillHeight,
+	PositionAbsolute, makeTransition, FillHeight,
 	FlexColumn
 } from "shared/themes/styles"
-import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands/CommandComponent"
+import { CommandComponent, CommandContainerBuilder, CommandRoot, CommandType } from "shared/commands"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { CommandType } from "shared/commands/Command"
+
 import { CommonKeys } from "shared/KeyMaps"
 import { getUIActions } from "shared/actions/ActionFactoryProvider"
 import { getValue } from "shared/util"

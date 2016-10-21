@@ -12,18 +12,18 @@ import {SearchResult, SearchType} from 'shared/actions/search/SearchState'
 import {SearchResults} from './SearchResults'
 
 import {PureRender} from 'ui/components/common/PureRender'
-import { isNumber, getValue, shallowEquals } from "shared/util"
+import { isNumber, getValue } from "shared/util"
 import SearchProvider from "shared/actions/search/SearchProvider"
 import { SearchItem, ISearchState } from "shared/actions/search"
 import {SearchEvent} from "shared/actions/search/SearchProvider"
 import {
-	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
-	CommandContainerBuilder, CommandContainer
-} from "shared/commands/CommandComponent"
-import { CommandType } from "shared/commands/Command"
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder, CommandContainer,CommandType,getCommandManager
+} from "shared/commands"
+
 import { CommonKeys } from "shared/KeyMaps"
 import { ThemedStyles } from "shared/themes/ThemeDecorations"
-import { getCommandManager } from "shared/commands/CommandManager"
+
 
 
 

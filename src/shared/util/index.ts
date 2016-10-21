@@ -6,6 +6,8 @@ import './ProtoExts'
 export * from './JSONUtil'
 export * from './ObjectUtil'
 
+export * from './EnumEventEmitter'
+
 export * from './TypeCheckUtil'
 export * from './IdUtil'
 export * from './ListUtil'

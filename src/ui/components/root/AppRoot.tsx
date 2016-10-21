@@ -6,19 +6,21 @@ import { Provider } from 'react-redux'
 import { MuiThemeProvider } from 'material-ui/styles'
 import { PureRender } from 'ui/components/common/PureRender'
 import { Events } from 'shared/config/Events'
-import { AppKey } from 'shared/Constants'
+
 import { RootState } from 'shared/store/RootState'
 
 import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
-	CommandContainerBuilder
-} from "shared/commands/CommandComponent"
-import { CommandType, CommandMenuItemType } from "shared/commands/Command"
+	CommandContainerBuilder,
+	CommandType,
+	CommandMenuItemType
+} from "shared/commands"
+
 import { IWindowConfig, Dialogs } from "shared/config/WindowConfig"
 import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
-import { acceptHot } from "shared/util/HotUtils"
+import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
 import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes/styles"
 import { getValue, shallowEquals } from "shared/util"
@@ -34,20 +36,21 @@ import { PromisedComponent } from "ui/components/root/PromisedComponent"
 import { benchmarkLoadTime } from "shared/util/UIUtil"
 import { MenuIds } from "shared/UIConstants"
 import { ThemeEvents, ThemeEvent } from "shared/themes/ThemeState"
+import { getReduxStore } from "shared/store"
 
 
 // Logger, Store +++
 const
 	{ StyleRoot } = Radium,
 	log = getLogger(__filename),
-	store:ObservableStore<RootState> = Container.get(ObservableStore as any) as any,
+	
 	win = window as any,
 	$ = require('jquery'),
 	childWindowId = process.env.EPIC_WINDOW_ID,
 	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
-
+		
+		
 let
-	reduxStore = null,
 	childWindowConfig:IWindowConfig
 
 
@@ -55,7 +58,7 @@ let
  * Properties for App/State
  */
 export interface IAppProps {
-	store:any
+	store?:any
 	theme?:any
 }
 
@@ -70,7 +73,8 @@ const
 		GlobalNewIssue: 'GlobalNewIssue',
 		FindAction: 'FindAction',
 		CloseWindow: 'CloseWindow',
-		Settings: 'Settings'
+		Settings: 'Settings',
+		RepoSettings: 'RepoSettings'
 	}
 /**
  * Root App Component
@@ -116,6 +120,14 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						id: CIDS.Settings
 					})
 				
+				
+				.command(
+					CommandType.App,
+					'Repository Labels, Milestones & Settings',
+					(cmd, event) => getUIActions().setDialogOpen(Dialogs.RepoSettingsWindow,true),
+					"CommandOrControl+Shift+Comma", {
+						id: CIDS.RepoSettings
+					})
 				
 				.command(
 					CommandType.Global,
@@ -181,6 +193,16 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 					{iconSet: 'fa', iconName: 'cog'},
 					{
 						commandId: CIDS.Settings
+					}
+				)
+				
+				.menuItem(
+					'repo-settings-menu-item',
+					CommandMenuItemType.Command,
+					'Repository Settings',
+					{iconSet: 'octicons', iconName: 'repo'},
+					{
+						commandId: CIDS.RepoSettings
 					}
 				)
 			
@@ -317,7 +339,6 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			{ theme } = this.props,
 			windowStyle = getValue(() => this.state.windowStyle, FillWindow)
 		
-		
 		return <StyleRoot>
 			<CommandRoot
 				component={this}
@@ -325,7 +346,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 				style={windowStyle}>
 				<div style={windowStyle}>
 					<MuiThemeProvider muiTheme={theme}>
-						<Provider store={reduxStore}>
+						<Provider store={this.props.store}>
 							
 							
 							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
@@ -350,13 +371,8 @@ let
  */
 
 function render() {
-	
-	reduxStore = store.getReduxStore()
-	
 	ReactDOM.render(
-		<App
-			store={reduxStore}
-		/>,
+		<App store={getReduxStore()} />,
 		
 		// ROOT ELEMENT TO MOUNT ON
 		rootElement,
@@ -374,9 +390,6 @@ function render() {
 			 */
 			If(ProcessConfig.isUI(), () => {
 				require('electron').ipcRenderer.send(Events.UIReady)
-				// window.postMessage({
-				// 	type: Events.UIReady
-				// }, "*")
 			})
 		}
 	)
@@ -399,17 +412,24 @@ function remount() {
 		.keys(require.cache)
 		.forEach(key => delete require.cache[key])
 	
-	webContents.reload()
+	render()
+	//webContents.reload()
+}
+
+function themeChangeListener() {
+
+	log.info(`Remounting on theme change`)
+	remount()
 }
 
 /**
  * On a complete theme change, destroy everything
  */
-ThemeEvents.on(ThemeEvent.Changed,() => {
-	log.info(`Remounting on theme change`)
-	remount()
-})
+ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
 
+// ADD HMR REMOVE
+addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
+	
 
 
 // CHILD WINDOW - GET CONFIG FIRST

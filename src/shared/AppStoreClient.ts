@@ -305,7 +305,9 @@ function attachEvents(transport) {
 		if (!wrapper)
 			return log.error(`Unknown child store ${id}`)
 		
-		wrapper.childStore.dispatch(action)
+		//process.nextTick(() =>
+		require('shared/store/AppStore').getReduxStore().dispatch(action)
+			//wrapper.childStore.dispatch(action))
 		
 	})
 	

@@ -8,7 +8,7 @@ import { RepoName } from "ui/components/common/Renderers"
 import filterProps from 'react-valid-props'
 import { Icon } from "ui/components/common"
 import { SearchPanel } from "ui/components/search"
-import { ICommand } from "shared/commands/Command"
+import { ICommand } from "shared/commands"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
 
 // Constants

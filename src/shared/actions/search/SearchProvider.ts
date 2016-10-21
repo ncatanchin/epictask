@@ -23,7 +23,7 @@ import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryPr
 import { getStores } from "shared/Stores"
 import { cloneObject, cloneObjectShallow } from "shared/util"
 import { IIssueFilter } from "shared/actions/issue/IIssueFilter"
-import { getCommandManager } from "shared/commands/CommandManager"
+import { getCommandManager } from "shared/commands"
 import { ICommand } from "shared/commands/Command"
 
 

@@ -113,7 +113,7 @@ async function startProcesses() {
 
 export function loadCommandManager() {
 	const
-		commandManagerMod = require('shared/commands/CommandManager'),
+		commandManagerMod = require('shared/commands'),
 		commandManager = commandManagerMod.getCommandManager(),
 		
 		electronMenuProvider =

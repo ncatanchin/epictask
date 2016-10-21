@@ -8,6 +8,7 @@ import {User} from 'shared/models/User'
 import {Provided} from 'shared/util/ProxyProvided'
 import { RegisterActionFactory } from "shared/Registry"
 import { AppStateType } from "shared/AppStateType"
+import { Events } from "shared/config/Events"
 
 const log = getLogger(__filename)
 
@@ -95,6 +96,13 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	@ActionReducer()
 	setStateType(stateType:AppStateType) {
 		return (state:AppState) => state.set('stateType',stateType)
+	}
+	
+	/**
+	 * Tells the main process to relaunch and clean
+	 */
+	clean() {
+		require('electron').ipcRenderer.send(Events.Clean)
 	}
 
 

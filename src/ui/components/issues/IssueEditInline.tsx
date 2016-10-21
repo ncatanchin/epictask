@@ -42,8 +42,7 @@ import { cloneObject } from "shared/util"
 import {
 	CommandComponent, getCommandProps, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
-} from "shared/commands/CommandComponent"
-import { ICommand } from "shared/commands/Command"
+} from "shared/commands"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 
 // Constants

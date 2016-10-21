@@ -10,7 +10,7 @@ function baseStyles(topStyles,theme,palette) {
 
 	const
 		{primary,accent,text,secondary,background} = palette,
-		controlBorderColor = colorDarken(primary.hue1,5)
+		controlBorderColor = colorDarken(text.secondary,5)
 	
 	return {
 		
@@ -26,7 +26,7 @@ function baseStyles(topStyles,theme,palette) {
 			height: rem(1.5),
 			cursor: 'pointer',
 			borderRadius: '50%',
-			border: `0.2rem solid ${controlBorderColor}`,
+			border: `0.1rem solid ${controlBorderColor}`,
 			color: Transparent,
 			background: Transparent,
 			
@@ -49,7 +49,6 @@ const WindowControl = Radium(({styles,style,iconName,onClick}) =>
 	</div>
 
 )
-
 
 function getWindow():Electron.BrowserWindow {
 	return require('electron').remote.getCurrentWindow()

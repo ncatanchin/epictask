@@ -13,7 +13,7 @@ export function canCreateIssue(repo:Repo) {
 }
 
 export function canAssignIssue(repo:Repo) {
-	return repo && repo.permissions && repo.permissions.push
+	return repo && repo.permissions && (repo.permissions.push || repo.permissions.admin)
 }
 
 export function canEditIssue(repo:Repo,issue:Issue) {
@@ -23,3 +23,9 @@ export function canEditIssue(repo:Repo,issue:Issue) {
 export function canEditComment(repo:Repo,comment:Comment) {
 	return (canAssignIssue(repo) || comment.user.id === getUserId())
 }
+
+
+export function canEditRepo(repo:Repo) {
+	return canAssignIssue(repo)
+}
+

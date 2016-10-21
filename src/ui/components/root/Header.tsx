@@ -1,23 +1,23 @@
 import * as React from 'react'
 import {SearchPanel} from 'ui/components/search'
-import {makeAbsolute} from 'shared/themes/styles/CommonStyles'
+import {makeAbsolute, makeHeightConstraint} from 'shared/themes/styles'
 import {TextField} from 'material-ui/TextField'
-import { PureRender, Icon } from 'ui/components/common'
+
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder
-} from "shared/commands/CommandComponent"
+	CommandContainerBuilder, getCommandManager
+} from "shared/commands"
+import { CommandMenuRoot } from "shared/commands/components"
+
 import { ContainerNames } from "shared/config/CommandContainerConfig"
-import { getCommandManager } from "shared/commands/CommandManager"
 import { ThemedStyles, IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { makeHeightConstraint } from "shared/themes/styles"
-import { WindowControls } from "ui/components/common/WindowControls"
-import { Logo } from "ui/components/common/Logo"
-import { CommandMenuRoot } from "shared/commands/CommandMenuRoot"
+import { PureRender,Logo,WindowControls } from "ui/components/common"
 
-export const ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
+export const
+	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 
 export enum HeaderVisibility {

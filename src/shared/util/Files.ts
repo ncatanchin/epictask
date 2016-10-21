@@ -278,6 +278,14 @@ export const searchPathDefaults = [
 	'../../../app'
 ]
 
+/**
+ * Search paths for a file
+ *
+ * @param filename
+ * @param searchPaths
+ *
+ * @returns {string}
+ */
 export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 	
 	/**

@@ -247,12 +247,13 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 							</div>}
 						</div>
 						{/* TITLE BAR ACTION CONTROLS */}
-						{titleActionNodes && titleActionNodes.length &&
+						{!titleActionNodes ? React.DOM.noscript() : Array.isArray(titleActionNodes) ?
 						<div style={[styles.titleActions]}>
 							{!Array.isArray(titleActionNodes) ?
 								titleActionNodes :
 								titleActionNodes.map((action,index) => <div style={styles.titleAction} key={index}>{action}</div>)}
-						</div>
+						</div> :
+							titleActionNodes
 						}
 					</div>
 					

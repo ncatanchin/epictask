@@ -1,11 +1,10 @@
 
-import { TCommandDefaultAccelerator } from "shared/commands/Command"
+
 import { isNumber, shallowEquals } from "shared/util"
 import { GlobalKeys } from "shared/KeyMaps"
-import {
-	ModifiedKeyNames, MappedKeys, ElectronMappedKeys, Shift, Meta,
-	Alt, Ctrl
-} from "shared/commands/CommandManagerConfig"
+
+import {TCommandDefaultAccelerator} from './Command'
+import {ModifiedKeyNames, MappedKeys, ElectronMappedKeys} from "./CommandManagerConfig"
 
 
 
