@@ -130,7 +130,6 @@
     "babel-core": "^6.13.1",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.4",
-    "babel-plugin-bluebird-async-functions": "^1.2.0",
     "babel-plugin-transform-runtime": "^6.8.0",
     "babel-polyfill": "^6.8.0",
     "babel-preset-async-to-bluebird": "^1.1.0",

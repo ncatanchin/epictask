@@ -46,7 +46,7 @@ const
 
 echo(`Tweaking package config`)
 echo('material-ui tweak')
-appPkg.dependencies['material-ui'] = "../../../material-ui"
+//appPkg.dependencies['material-ui'] = "../../../material-ui"
 
 // WRITE APP PKG
 fs.writeFileSync(
