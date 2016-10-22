@@ -6,7 +6,7 @@ const
 	fs = require('fs'),
 	pkgPath = path.resolve(process.cwd(),'package.json'),
 	semver = require('semver')
-	
+
 echo(`Updating patch version`)
 function getPkg() {
 	return require(pkgPath)
@@ -15,31 +15,29 @@ function getPkg() {
 
 echo(`Updating version`)
 
-function getNewVersion() {
+function getVersion() {
 	const
 		pkg = getPkg()
-	
+
 	let
-		{version} = pkg,
-		newVersion = semver.inc(version,'patch')
-	
-	echo(`Incrementing semver to ${newVersion}`)
-	pkg.version = newVersion
-	
-	fs.writeFileSync(pkgPath,JSON.stringify(pkg,null,2),'utf8')
-	execNoError(`git commit -a -m Patched && git tag v${newVersion} && git push --tags && git push`)
-	
-	return newVersion
-	
-	
+		{version} = pkg
+
+
+
+	//fs.writeFileSync(pkgPath,JSON.stringify(pkg,null,2),'utf8')
+	//execNoError(`git commit -a -m Patched && git tag v${newVersion} && git push --tags && git push`)
+
+	return version
+
+
 }
 
 //execNoError(`npm version patch`)
 
 const
 	pkg = getPkg(),
-	version = getNewVersion(),
-	
+	version = getVersion(),
+
 	versionProps = `
 EPICTASK_VERSION=${version}
 EPICTASK_BUILD=${process.env.BUILD_NUMBER}
