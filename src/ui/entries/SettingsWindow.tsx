@@ -16,7 +16,7 @@ import {
 	OverflowAuto, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill, makeStyle, makeFlexAlign, FlexRow
 } from "shared/themes/styles"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands"
-
+import {Checkbox} from 'material-ui'
 import { ContainerNames } from "shared/config/CommandContainerConfig"
 import { PureRender, Select, ISelectItem, DialogRoot, Icon, Button } from "ui/components/common"
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
@@ -24,6 +24,9 @@ import {
 	getPaletteName, getThemeName, getThemeNames,
 	getPaletteNames, getThemeCreator, getPaletteCreator, setThemeCreator, setPaletteCreator
 } from "shared/themes/ThemeState"
+import { NativeNotificationsEnabled } from "shared/settings/Settings"
+import { PersistentValueEvent } from "shared/util/PersistentValue"
+import { getValue } from "shared/util"
 
 
 const
@@ -99,6 +102,9 @@ const baseStyles = (topStyles, theme, palette) => {
 			inputCell: [ makeFlex(0, 0, '35%'), {
 				backgroundColor: primary.hue3
 			} ],
+			checkboxCell: [ makeFlex(0, 0, '35%'), {
+				
+			} ],
 			
 			labelCell: [ FlexScale, Ellipsis, makePaddingRem(1, 1, 1, 3), {
 				
@@ -119,7 +125,7 @@ export interface ISettingsWindowProps extends IThemedAttributes {
 }
 
 export interface ISettingsWindowState {
-	
+	nativeNotificationsEnabled?:boolean
 }
 
 /**
@@ -202,6 +208,22 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 		setPaletteCreator(palette)
 	}
 	
+	onNativeNotificationsChanged = () => {
+		log.info(`Notifications changed`,NativeNotificationsEnabled.get())
+		this.setState({
+			nativeNotificationsEnabled: NativeNotificationsEnabled.get()
+		})
+	}
+	
+	componentWillMount() {
+		this.onNativeNotificationsChanged()
+		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNativeNotificationsChanged)
+	}
+	
+	componentWillUnmount() {
+		NativeNotificationsEnabled.removeListener(PersistentValueEvent.Changed,this.onNativeNotificationsChanged)
+	}
+	
 	render() {
 		const
 			{ styles, theme, palette } = this.props,
@@ -235,7 +257,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 				styles={styles.dialog}
 			>
 				
-				<form name="themeForm" style={styles.form}>
+				<div style={styles.form}>
 					<div style={styles.form.content}>
 						
 						
@@ -273,6 +295,24 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 						
 						</div>
 						
+						{/* NATIVE NOTIFICATIONS */}
+						<div style={styles.form.title}>
+							<Icon style={styles.form.title.icon} iconSet="fa" iconName="globe"/> <span>Reset</span>
+						</div>
+						<div style={styles.form.row}>
+							<div style={styles.form.labelCell}>
+								Desktop notifications (suggested) or in-app only.
+							</div>
+							
+							<Checkbox style={styles.form.checkboxCell}
+							          checked={getValue(() => this.state.nativeNotificationsEnabled)}
+							          onCheck={(event,isChecked) => {
+							          	log.info(`Setting notifications enabled`,isChecked)
+							          	NativeNotificationsEnabled.set(isChecked)
+							          }} />
+						
+						</div>
+						
 						
 						{/* RESET APP */}
 						<div style={styles.form.title}>
@@ -287,7 +327,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 						
 						</div>
 					</div>
-				</form>
+				</div>
 			
 			
 			</DialogRoot>

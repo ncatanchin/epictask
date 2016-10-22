@@ -19,6 +19,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="tsconfig$roots" level="project" />
-    <orderEntry type="library" name="node_modules" level="project" />
+    <orderEntry type="library" name="node_types" level="project" />
   </component>
 </module>

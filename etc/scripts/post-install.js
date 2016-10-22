@@ -10,3 +10,4 @@ const
 
 cd('node_modules/leveldown')
 exec(`node-gyp rebuild --target=${electronVersion} --arch=x64 --dist-url=https://atom.io/download/atom-shell`)
+

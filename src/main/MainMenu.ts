@@ -153,7 +153,7 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	] as any
 	
 	
-	if (Env.isDev)
+	//if (Env.isDev)
 		template.push(makeDevMenu(mainWindow))
 	
 	

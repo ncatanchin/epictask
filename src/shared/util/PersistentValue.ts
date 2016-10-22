@@ -32,6 +32,7 @@ export class PersistentValue<T> extends EnumEventEmitter<PersistentValueEvent> {
 	
 	constructor(
 		private key:string,
+		private defaultValue:T = null,
 		private serializer:TPersistentValueSerializer<T> = null,
 		private deserializer:TPersistentValueDeserializer<T> = null
 	) {
@@ -70,6 +71,9 @@ export class PersistentValue<T> extends EnumEventEmitter<PersistentValueEvent> {
 		this.rawValue = localStorage.getItem(this.key)
 		this.value = this.deserialize(this.rawValue)
 		
+		if (_.isNil(this.value) && !_.isNil(this.defaultValue))
+			this.value = this.defaultValue
+			
 		//this.emit(PersistentValueEvent.Loaded,this.value)
 	}
 	
@@ -116,7 +120,7 @@ export class PersistentValue<T> extends EnumEventEmitter<PersistentValueEvent> {
 		
 		localStorage.setItem(this.key,rawValue)
 		
-		//this.emit(PersistentValueEvent.Changed,item)
+		this.emit(PersistentValueEvent.Changed,item)
 		this.emit(PersistentValueEvent.Persisted,item)
 		return item
 	}

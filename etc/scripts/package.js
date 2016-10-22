@@ -4,6 +4,7 @@ require('./init-scripts')
 
 const
 	path = require('path'),
+	fs = require('fs'),
 	{isMac,isLinux,isWindows,process} = global,
 	
 	doInstall = process.argv.includes('--install'),
@@ -16,11 +17,14 @@ echo(`Will use builder @ ${buildCmd}`)
 const
 	skipBuild = false
 
+
+process.env.NODE_ENV = 'production'
+
 if (!skipBuild) {
 	require('./clean')
 	
 	echo("Starting Compilation")
-	process.env.NODE_ENV = 'production'
+	
 	
 	if (exec(`gulp compile`).code !== 0) {
 		echo(`compile FAILED`)
@@ -29,8 +33,13 @@ if (!skipBuild) {
 	
 	echo("Copy resources")
 	mkdir('-p', 'dist/app/bin')
-	cp('bin/epictask-start.js', 'dist/app/bin')
+	
 }
+
+cp('bin/epictask-start.js', 'dist/app/bin')
+
+
+cp('package-app.json', 'dist/app/package.json')
 
 let
 	platforms = [

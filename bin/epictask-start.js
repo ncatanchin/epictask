@@ -1,10 +1,13 @@
 
+const
+	{env} = process
+
 /**
  * ENV CONFIG
  */
-process.env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
-if (!process.env.NODE_ENV) {
-	process.env.NODE_ENV = 'production'
+env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+if (!env.NODE_ENV) {
+	env.NODE_ENV = 'production'
 }
 
 /**
@@ -19,7 +22,7 @@ Bluebird.config({
 	warnings: {
 		wForgottenReturn: false
 	},
-	monitoring: process.env.NODE_ENV === 'development'
+	monitoring: env.NODE_ENV === 'development'
 })
 
 /**
@@ -59,7 +62,7 @@ for (let appPath of APP_SEARCH_PATHS) {
 
 const
 	errInfo = `Starting ${__dirname}/${__filename}/
-		${require('electron').app.getPath('exe')}/${process.cwd()}/${process.env.NODE_ENV}:\n${JSON.stringify(process.env,null,4)}
+		${require('electron').app.getPath('exe')}/${process.cwd()}/${env.NODE_ENV}:\n${JSON.stringify(process.env,null,4)}
 	
 		${outBuf}
 	`

@@ -6,7 +6,7 @@ import * as Radium from 'radium'
 
 import {connect} from 'react-redux'
 import {IToastMessage, ToastMessageType} from 'shared/models/Toast'
-import {Icon, Button} from './common'
+
 import {UIActionFactory} from 'shared/actions/ui/UIActionFactory'
 import {Container} from 'typescript-ioc'
 import {PureRender} from 'ui/components/common/PureRender'
@@ -15,11 +15,17 @@ import {createStructuredSelector} from 'reselect'
 import {uiStateSelector} from 'shared/actions/ui/UISelectors'
 import {createDeepEqualSelector} from 'shared/util/SelectorUtil'
 import {ToastMessage} from "ui/components/ToastMessage"
+import { PersistentValueEvent } from "shared/util/PersistentValue"
+import { NativeNotificationsEnabled } from "shared/settings/Settings"
+
 
 const dataUrl = require('dataurl')
 const {Style} = Radium
 
-const NotificationEvents = ['click','timeout']
+const
+	NotificationEvents = ['click','timeout']
+
+	
 
 //endregion
 
@@ -145,6 +151,8 @@ function processNotifications(newMessages:IToastMessage[]) {
 }
 
 
+
+
 /**
  * ToastMessages
  *
@@ -164,12 +172,36 @@ function processNotifications(newMessages:IToastMessage[]) {
 @PureRender
 export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 
+	private getNewState() {
+		return {
+			enabled: !NativeNotificationsEnabled.get()
+		}
+	}
+	
 	constructor(props,context) {
 		super(props,context)
+		
+		this.state = this.getNewState()
 	}
 
+	private onNativeNotificationConfigChanged = () => {
+		this.setState(this.getNewState())
+	}
+	
 	componentWillReceiveProps(newProps) {
-		processNotifications(newProps.messages)
+		if (this.state.enabled)
+			processNotifications(newProps.messages)
+	}
+	
+	
+	
+	
+	componentWillMount() {
+		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
+	}
+	
+	componentWillUnmount() {
+		NativeNotificationsEnabled.removeListener(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
 	}
 
 	/**
@@ -181,14 +213,15 @@ export class ToastMessages extends React.Component<IToastMessagesProps,any> {
 	render() {
 		log.info('new toast render')
 		let
-			{messages, styles,theme} = this.props
+			{messages, styles,theme} = this.props,
+			{enabled} = this.state
 			
 
 		messages = _.toJS(messages)
 
 
 
-		return <div style={styles.root}>
+		return !enabled ? React.DOM.noscript() : <div style={styles.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
 			       rules={_.merge(
 			       	styles.transitionGroup,

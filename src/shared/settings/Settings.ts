@@ -5,7 +5,17 @@
 import {User} from "shared/models"
 import {SettingsFile} from "shared/settings/SettingsFile"
 import { getStateValue as getStateClientType } from "shared/AppStoreClient"
-import { AppKey } from "shared/Constants"
+import { AppKey, SettingKeys, SettingDefaults } from "shared/Constants"
+import { PersistentValue } from "shared/util/PersistentValue"
+
+
+export const
+	NativeNotificationsEnabled = new PersistentValue<boolean>(
+		SettingKeys.NativeNotifications,
+		SettingDefaults[SettingKeys.NativeNotifications],
+		(val) => val ? 'true' : 'false',
+		(raw) => ['true','1','yes'].includes(raw)
+	)
 
 /**
  * Settings interface

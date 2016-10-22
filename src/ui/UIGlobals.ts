@@ -42,7 +42,7 @@ process.on("unhandledRejection", function (reason, promise) {
 
 declare global {
 	var CreateGlobalThemedStyles:typeof CreateGlobalThemedStylesGlobal
-	var CSSModules:any
+	
 	var React:typeof ReactGlobal
 	var ReactDOM:typeof ReactDOMGlobal
 	var Notification:any
@@ -60,7 +60,6 @@ const g = global as any
 
 
 assignGlobal({
-	CSSModules: require('react-css-modules'),
 	React: ReactGlobal,
 	ReactDOM: ReactDOMGlobal,
 	logError: logErrorGlobal,

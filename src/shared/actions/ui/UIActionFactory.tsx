@@ -389,16 +389,24 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 	@ActionReducer()
 	addMessage(message:IToastMessage) {
-		return (state:UIState) => state.messages
-			.findIndex(item => _.toJS(item).id === message.id) > -1 ?
-			state :
-			state.update('messages',messages => {
-				messages = messages.push(message)
-				if (messages.size > 5)
-					messages = messages.splice(0,messages.size - 5)
-
-				return messages
-			})
+		return (state:UIState) => {
+			let
+				{messages} = state
+			
+			const
+				msgIndex = messages
+					.findIndex(item => _.toJS(item).id === message.id)
+			
+			messages = (msgIndex > -1) ?
+				 messages.set(msgIndex,_.clone(message)) :
+				messages.push(_.clone(message))
+			
+			if (messages.size > 5)
+					messages = messages.splice(0, messages.size - 5) as any
+					
+			return state.set('messages',messages)
+			
+		}
 	}
 
 
@@ -412,12 +420,9 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return this.addMessage(message)
 	}
 	
-	@ActionReducer()
+	
 	updateMessage(message:IToastMessage) {
-		return (state:UIState) => state.update(
-			'messages',
-			(messages) => messages.set(message.id,message)
-		)
+		return this.addMessage(message)
 	}
 
 	@ActionReducer()
