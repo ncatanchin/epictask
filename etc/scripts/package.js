@@ -5,6 +5,7 @@ require('./init-scripts')
 const
 	path = require('path'),
 	fs = require('fs'),
+	_ = require('lodash'),
 	{isMac,isLinux,isWindows,process} = global,
 	
 	doInstall = process.argv.includes('--install'),
@@ -39,7 +40,15 @@ if (!skipBuild) {
 cp('bin/epictask-start.js', 'dist/app/bin')
 
 
-cp('package-app.json', 'dist/app/package.json')
+const
+	pkg = require('../../package.json'),
+	appPkg = _.pick(pkg,'name','version','description','author','main','dependencies')
+
+// WRITE APP PKG
+fs.writeFileSync(
+	'dist/app/package.json',
+	JSON.stringify(appPkg,null,2)
+)
 
 let
 	platforms = [
