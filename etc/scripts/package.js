@@ -44,6 +44,10 @@ const
 	pkg = require('../../package.json'),
 	appPkg = _.pick(pkg,'name','version','description','author','main','dependencies')
 
+echo(`Tweaking package config`)
+echo('material-ui tweak')
+appPkg.dependencies['material-ui'] = "../../../material-ui"
+
 // WRITE APP PKG
 fs.writeFileSync(
 	'dist/app/package.json',
