@@ -27,10 +27,5 @@ function execNoError(cmd,onError = null) {
 }
 
 
-
-cd('material-ui')
-execNoError('npm.cmd i')
-execNoError('npm.cmd run build')
-cd('../epictask')
 execNoError('npm.cmd i')
 execNoError('npm.cmd run package')
