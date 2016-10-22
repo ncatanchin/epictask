@@ -1,7 +1,17 @@
 #!/bin/bash
 
+# "es2016-node5",
+# 		"stage-0",
+# 		"react",
+# 		"async-to-bluebird"
+# 	],
+# 	"sourceMaps": "both",
+# 	"plugins": [
+# 		"transform-es2015-classes",
+# 		"transform-runtime"
+
 PKGS="semver shelljs aws-sdk source-map-support lodash aws-sdk babel-cli babel-preset-es2016-node5 babel-polyfill \
-	babel-preset-stage-0 babel-preset-react babel-preset-async-to-bluebird \
+	babel-preset-stage-0 babel-preset-react babel-preset-async-to-bluebird babel-preset-es2016-node5 babel-plugin-transform-es2015-classes \
     babel-plugin-transform-runtime gulp electron-prebuilt@1.3.5"
 
 INSTALL_PKGS=""
