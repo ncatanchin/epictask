@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "dist/app/bin/epictask-start.js",
   "scripts": {
@@ -81,7 +81,6 @@
       }
     }
   },
-  
   "browser": {
     "vertx": false
   },
@@ -94,7 +93,6 @@
     "name": "Densebrain, Inc",
     "url": "http://densebrain.com"
   },
-  
   "devDependencies": {
     "@kadira/storybook": "^2.5.2",
     "@types/electron": "^1.3.20",
@@ -208,7 +206,6 @@
     "redux-devtools-inspector": "^0.5.1",
     "redux-devtools-log-monitor": "^1.0.11",
     "redux-logger": "^2.6.1",
-    
     "redux-slider-monitor": "^1.0.5",
     "remote-redux-devtools": "^0.3.3",
     "run-sequence": "^1.1.5",
@@ -236,6 +233,5 @@
     "webpack-node-externals": "^1.2.0",
     "webpack-stream": "^3.2.0"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
