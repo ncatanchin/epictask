@@ -330,7 +330,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param props
 	 */
 	isFocused = (props = this.props): boolean => {
-		return getValue(() => this.state.focused,false) || props.commandContainer.isFocused()
+		return props.focused || getValue(() => this.state.focused,false) || props.commandContainer.isFocused()
 	}
 		
 	

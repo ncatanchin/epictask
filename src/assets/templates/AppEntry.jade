@@ -27,7 +27,10 @@ html(lang="en")
 		title!=""
 		script.
 			//noinspection NodeModulesDependencies
-			var isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true'
+			var
+				isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true',
+				$ = require('jquery')
+
 
 			//noinspection JSAnnotator
 			require('./BrowserEntry.bundle.js')
@@ -39,9 +42,27 @@ html(lang="en")
 		#root
 		#loader-root
 
+		script.
+			function updateRootSize() {
+				const
+					{innerWidth:width, innerHeight:height} = window
+
+				$('#root').css({
+					width,
+					minWidth: width,
+					maxWidth: width,
+					height,
+					minHeight: height,
+					maxHeight: height
+				})
+			}
+
+			updateRootSize()
+			window.addEventListener('resize',updateRootSize)
+
+
 		// GOOGLE ANALYTICS
 		script.
-
 			(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject'] = r;i[r]=i[r]||function(){
 				(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 				m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)

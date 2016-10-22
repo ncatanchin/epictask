@@ -1,16 +1,17 @@
 // Imports
+import * as moment from 'moment'
 import { connect } from 'react-redux'
 import { PureRender } from 'ui/components/common/PureRender'
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { IThemedAttributes } from "shared/themes/ThemeDecorations"
-import { Label, Repo, AvailableRepo } from "shared/models"
-import {TextField} from 'material-ui'
+import { Milestone, AvailableRepo } from "shared/models"
+import {TextField,DatePicker} from 'material-ui'
 import { List } from "immutable"
-import { enabledLabelsSelector } from "shared/actions/repo/RepoSelectors"
+import { enabledMilestonesSelector } from "shared/actions/repo/RepoSelectors"
 import {
 	FillWidth, FlexColumn, FlexScale, OverflowAuto, makeHeightConstraint,
-	makeTransition, FlexRowCenter, FlexAuto, makePaddingRem, rem, Fill, makeMarginRem, FillHeight, makeWidthConstraint
+	makeTransition, FlexRowCenter, FlexAuto, makePaddingRem, rem,  makeMarginRem, FillHeight, makeWidthConstraint
 } from "shared/themes/styles"
 import { getValue } from "shared/util"
 import { LabelChip,Button, Icon } from "ui/components/common"
@@ -34,9 +35,9 @@ function baseStyles(topStyles, theme, palette) {
 		root: [FlexScale,FlexColumn,FillWidth,FillHeight,{
 			
 		}],
-			
+		
 		list: [FlexColumn,FlexScale,OverflowAuto],
-			
+		
 		edit: [{} ],
 		
 		form: [FlexRowCenter,FlexAuto, makeTransition(['height','max-height','min-height']),{
@@ -47,7 +48,7 @@ function baseStyles(topStyles, theme, palette) {
 				
 			}],
 			name: [ FlexScale,makePaddingRem(0,2,0,0),{} ],
-			color: [{}],
+			dueOn: [{}],
 			button: [ FlexAuto, FlexRowCenter, makePaddingRem(0.5, 1, 1),makeMarginRem(0.5,0,0.5,1),makeHeightConstraint(rem(3)),{
 				fontSize: rem(1.4),
 				
@@ -70,10 +71,16 @@ function baseStyles(topStyles, theme, palette) {
 		
 		row: [ FillWidth, FlexRowCenter, FlexAuto, makePaddingRem(1), {
 			
-			label: [ FlexAuto, {
+			milestone: [ FlexAuto, {
 				chip: [ {
 					fontSize: rem(1.2)
-				} ]
+				} ],
+				
+				dueOn: [FlexAuto,makePaddingRem(0,1),{
+					color: text.secondary,
+					fontSize: rem(1.2),
+					fontWeight: 400
+				}]
 			} ],
 			spacer: [ FlexScale ],
 			actions: [ FlexAuto, makePaddingRem(0, 0, 0, 1) ]
@@ -83,50 +90,58 @@ function baseStyles(topStyles, theme, palette) {
 
 
 /**
- * IRepoLabelEditorProps
+ * IRepoMilestoneEditorProps
  */
-export interface IRepoLabelEditorProps extends IThemedAttributes {
+export interface IRepoMilestoneEditorProps extends IThemedAttributes {
 	repo:AvailableRepo
-	labels?:List<Label>
+	milestones?:List<Milestone>
 }
 
 /**
- * IRepoLabelEditorState
+ * IRepoMilestoneEditorState
  */
-export interface IRepoLabelEditorState {
-	label?:Label
+export interface IRepoMilestoneEditorState {
+	milestone?:Milestone
 	errors?:any
 	textFieldRef?:any
 }
 
 /**
- * RepoLabelEditor
+ * RepoMilestoneEditor
  *
- * @class RepoLabelEditor
+ * @class RepoMilestoneEditor
  * @constructor
  **/
 
 @connect(createStructuredSelector({
-	labels: enabledLabelsSelector
+	milestones: enabledMilestonesSelector
 }))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
 @PureRender
-export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepoLabelEditorState> {
+export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorProps,IRepoMilestoneEditorState> {
 	
 	constructor(props,context) {
 		super(props,context)
 		this.state = {
-			label: new Label(),
+			milestone: new Milestone(),
 			errors: {}
 		}
 	}
 	
 	
-	private get label() {
-		return getValue(() => this.state.label)
+	private get milestone() {
+		return getValue(() => this.state.milestone)
+	}
+	
+	private get milestoneDueOn() {
+		const
+			{milestone} = this,
+			dueOn = getValue(() => milestone.due_on)
+		
+		return dueOn && new Date(dueOn)
 	}
 	
 	private get textField() {
@@ -137,14 +152,14 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 		return getValue(() => ReactDOM.findDOMNode(this.textField))
 	}
 	
-	private clearLabel = () => {
-		this.setState({label: new Label()},() => {
-			const
-				{textFieldElement} = this,
-				input = textFieldElement && $(textFieldElement).find('input')
-			
-			log.debug(`Clearing element`,textFieldElement,input,this.textField)
-			input && input.val('')
+	private clearMilestone = () => {
+		this.setState({milestone: new Milestone()},() => {
+			// const
+			// 	{textFieldElement} = this,
+			// 	input = textFieldElement && $(textFieldElement).find('input')
+			//
+			// log.debug(`Clearing element`,textFieldElement,input,this.textField)
+			// input && input.val('')
 		})
 	}
 	
@@ -152,28 +167,28 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 	
 	
 	/**
-	 * Set the label being edited
-	 * 
-	 * @param label
+	 * Set the milestone being edited
+	 *
+	 * @param milestone
 	 */
-	private editLabel = label => this.setState({label})
-		
+	private editMilestone = milestone => this.setState({milestone})
 	
-	private patchLabel = (patch) => this.setState({
-		label: assign(
+	
+	private patchMilestone = (patch) => this.setState({
+		milestone: assign(
 			{},
-			getValue(() => this.state.label, {}),
+			getValue(() => this.state.milestone, {}),
 			patch
 		) as any
 	})
 	
-	private onNameChange = (event) => this.patchLabel({
-		name: event.target.value
+	private onTitleChange = (event) => this.patchMilestone({
+		title: event.target.value
 	})
 	
-	private onColorChange = (event) => {
-		this.patchLabel({
-			color: getValue(() => event.target.value.replace(/#/,''))
+	private onDateChange = (event,date:Date) => {
+		this.patchMilestone({
+			due_on: moment(date).format()
 		})
 	}
 	
@@ -186,97 +201,107 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 	private onSave = () => {
 		const
 			repo = getValue(() => this.props.repo.repo),
-			{label} = this
+			{milestone} = this
 		
 		if (this.validate())
-			getRepoActions().saveLabel(repo,label)
+			getRepoActions().saveMilestone(repo,milestone)
 	}
 	
 	
-	private isLabelValid = () => {
+	private isMilestoneValid = () => {
 		const
-			{label} = this
+			{milestone} = this
 		
-		return getValue(() => label.name.length,0) && getValue(() => label.color.length,0)
+		return getValue(() => milestone.title.length,0)
 	}
 	
 	private areActionsVisible = () => {
 		const
-			{label} = this
+			{milestone} = this
 		
-		return label && (label.url || getValue(() => label.name.length,0) > 0)
+		return milestone && (milestone.id || this.isMilestoneValid())
 	}
 	
+	
+	
 	render() {
-		const 
-			{ styles,repo,labels } = this.props,
-			{label} = this.state,
+		const
+			{ styles,repo,milestones } = this.props,
+			{milestone,milestoneDueOn} = this,
 			
-			labelEditFields = <div key="edit-fields" style={styles.form.fields}>
+			milestoneEditFields = <div key="edit-fields" style={styles.form.fields}>
 				<div style={styles.form.name}>
-					<TextField hintText="new label..."
+					<TextField hintText="new milestone..."
 					           ref={(textFieldRef) => this.setState({textFieldRef})}
-					           defaultValue={getValue(() => this.label.name,"")}
+					           value={getValue(() => this.milestone.title,"")}
 					           fullWidth={true}
-					           onChange={this.onNameChange}/>
+					           onChange={this.onTitleChange}/>
 				</div>
-				<div style={[styles.form.color]}>
-					<input type="color" value={getValue(() => `#${this.state.label.color}`)} onChange={this.onColorChange}/>
+				<div style={[styles.form.dueOn]}>
+					<DatePicker hintText="due on"
+					            mode="landscape"
+					            onChange={this.onDateChange}
+					            value={getValue(() => this.milestoneDueOn)}
+					            container="inline"
+					/>
 				</div>
 				<div style={[styles.form.actions, !this.areActionsVisible() && styles.form.actions.hide]}>
 					<Button
 						style={styles.form.button}
-						disabled={!this.isLabelValid()}
+						disabled={!this.isMilestoneValid()}
 						onClick={this.onSave}>
 						<Icon style={styles.form.button.icon}>
 							save
 						</Icon> SAVE
 					</Button>
-				
-				
+					
+					
 					<Button
 						style={styles.form.button}
-						onClick={this.clearLabel}>
+						onClick={this.clearMilestone}>
 						<Icon style={styles.form.button.icon}>clear</Icon> CLEAR
 					</Button>
 				
 				</div>
 			</div>
+		
+		return <div style={styles.root}>
+			<div style={[styles.form, milestone.url && styles.form.hidden]}>
+				{!milestone.url && milestoneEditFields}
 			
-			return <div style={styles.root}>
-				<div style={[styles.form, label.url && styles.form.hidden]}>
-					{!label.url && labelEditFields}
-				
-				</div>
-				
-				<div style={styles.list}>
-					{
-					labels
+			</div>
+			
+			<div style={styles.list}>
+				{
+					milestones
 						.filter(it => it.repoId === repo.id)
-						.map(it => getValue(() => this.label.url === it.url) ?
-							labelEditFields :
+						.map(it => getValue(() => this.milestone.url === it.url) ?
+							milestoneEditFields :
 							<div key={it.url}
 							     style={styles.row}>
-								<div style={styles.row.label}>
+								<div style={styles.row.milestone}>
 									<LabelChip
 										label={it}
 										showIcon
-										textStyle={styles.row.label.chip}
+										textStyle={styles.row.milestone.chip}
 									/>
 								</div>
 								<div style={styles.row.spacer}/>
+								<div style={styles.row.milestone.dueOn}>
+									{!it.due_on ? 'no due date' : `due on ` + moment(it.due_on).format('MM-DD-YY')}
+								</div>
 								<div style={styles.row.actions}>
-									<Button onClick={() => this.editLabel(it)}><Icon>edit</Icon></Button>
+									<Button onClick={() => this.editMilestone(it)}><Icon>edit</Icon></Button>
 								</div>
 								<div style={styles.row.actions}>
 									<Button onClick={() => {
-											getRepoActions().deleteLabel(repo.repo,it)
+											getRepoActions().deleteMilestone(repo.repo,it)
 										}}><Icon>delete</Icon></Button>
 								</div>
 							</div>
 						)}
-				</div>
 			</div>
+		</div>
 	}
 	
 }

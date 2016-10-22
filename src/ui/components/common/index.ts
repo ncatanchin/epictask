@@ -12,7 +12,7 @@ export * from './IconFontAwesomeNames'
 export * from './IconOpticonNames'
 export * from './MilestoneSelect'
 export * from './DialogRoot'
-
+export * from './LabelChip'
 export * from './Logo'
 export * from './WindowControls'
 

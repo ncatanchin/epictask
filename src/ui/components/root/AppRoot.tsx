@@ -22,7 +22,7 @@ import { IWindowConfig, Dialogs } from "shared/config/WindowConfig"
 import { getUIActions, getIssueActions, getRepoActions } from "shared/actions/ActionFactoryProvider"
 import { acceptHot, addHotDisposeHandler } from "shared/util/HotUtils"
 import { If } from "shared/util/Decorations"
-import { FillWindow, makeWidthConstraint, makeHeightConstraint } from "shared/themes/styles"
+import { FillWindow, makeWidthConstraint, makeHeightConstraint, Fill } from "shared/themes/styles"
 import { getValue, shallowEquals } from "shared/util"
 import { UIRoot } from "ui/components/root/UIRoot"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
@@ -297,8 +297,8 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
-		window.addEventListener('resize', this.onWindowResize)
-		this.updateState()
+		// window.addEventListener('resize', this.onWindowResize)
+		// this.updateState()
 		
 	}
 	
@@ -306,7 +306,7 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 	 * On unmount - remove window listener
 	 */
 	componentWillUnmount() {
-		window.removeEventListener('resize', this.onWindowResize)
+		// window.removeEventListener('resize', this.onWindowResize)
 	}
 	
 	
@@ -340,11 +340,12 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 			windowStyle = getValue(() => this.state.windowStyle, FillWindow)
 		
 		return <StyleRoot>
-			<CommandRoot
+				
+				<CommandRoot
 				component={this}
 				id="appRoot"
-				style={windowStyle}>
-				<div style={windowStyle}>
+				style={Fill}>
+				
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							
@@ -355,8 +356,9 @@ export class App extends React.Component<IAppProps,IAppState> implements IComman
 						</Provider>
 					</MuiThemeProvider>
 					
-				</div>
+				
 			</CommandRoot>
+		
 		</StyleRoot>
 		
 	}

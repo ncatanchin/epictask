@@ -14,7 +14,7 @@ import { getUIActions, getRepoActions } from "shared/actions/ActionFactoryProvid
 import {
 	FlexColumn, FlexAuto, FlexRowCenter, FillHeight, makeFlex,
 	OverflowAuto, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill, makeStyle, makeHeightConstraint,
-	makeTransition, PositionRelative
+	makeTransition, PositionRelative, OverflowHidden, FlexRow, makeFlexAlign, FlexAlignStart
 } from "shared/themes/styles"
 import { CommandComponent, CommandContainerBuilder, CommandRoot } from "shared/commands"
 import { ContainerNames } from "shared/config/CommandContainerConfig"
@@ -33,6 +33,7 @@ import { TabTemplate } from "ui/components/common/TabTemplate"
 import { Tab, Tabs, TextField } from 'material-ui'
 import LabelChip from "ui/components/common/LabelChip"
 import { RepoLabelEditor } from "ui/plugins/repos/RepoLabelEditor"
+import { RepoMilestoneEditor } from "ui/plugins/repos/RepoMilestoneEditor"
 const
 	log = getLogger(__filename)
 
@@ -65,6 +66,25 @@ const baseStyles = (topStyles, theme, palette) => {
 		
 		root: [ FlexColumn, FlexAuto ],
 		
+		
+		repoSelect: [OverflowHidden,{
+			maxWidth: '40vw',
+			//minWidth: rem(25)
+			label: [
+				Ellipsis,
+				FlexRow,
+				makeFlexAlign('center','flex-end'),
+				FillWidth
+			],
+			
+			repoName: [
+				makePaddingRem(0,1),
+				FillWidth,
+				FlexScale,
+				makeFlexAlign('center','flex-end')
+			]
+		}],
+		
 		tabs: [ {
 			items: [
 				makeHeightConstraint(rem(12)), {
@@ -80,8 +100,6 @@ const baseStyles = (topStyles, theme, palette) => {
 					} ]
 				}
 			],
-			
-			
 		} ],
 		
 		actions: [ FlexRowCenter, FillHeight ],
@@ -91,14 +109,7 @@ const baseStyles = (topStyles, theme, palette) => {
 			label: [ FlexRowCenter, {
 				fontSize: rem(1.6),
 				
-				repo: [ makePaddingRem(0, 0.6, 0, 0), {} ],
 				
-				number: [ {
-					paddingTop: rem(0.3),
-					fontSize: rem(1.4),
-					fontWeight: 100,
-					color: text.secondary
-				} ]
 			} ]
 		} ],
 		
@@ -253,7 +264,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				.map(repo => ({
 					key: repo.id,
 					value: repo.id,
-					node: <RepoName repo={repo.repo}/>
+					node: <RepoName style={styles.repoSelect.repoName} repo={repo.repo}/>
 				})).toArray(),
 			
 			iconStyle = styles.tabs.items.icon,
@@ -275,7 +286,8 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				titleNode={titleNode}
 				titleActionNodes={
 					<Select items={repoItems}
-									style={{width: '20vw'}}
+									style={styles.repoSelect}
+									labelStyle={styles.repoSelect.label}
 					        onSelect={this.selectRepo}
 					        underlineShow={false}
 					        value={selectedRepo.id} />
@@ -310,8 +322,11 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 						style={FillHeight}
 						label={<span style={makeStyle(activeTab === Milestones && styles.tabs.items.active)}>MILESTONES</span>}
 					>
-					
-					
+						
+						{
+							selectedRepo &&
+							activeTab === Milestones &&
+							<RepoMilestoneEditor repo={selectedRepo}/>}
 					</Tab>
 				</Tabs>
 			

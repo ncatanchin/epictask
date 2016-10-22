@@ -39,7 +39,7 @@ export interface IPromisedComponentState {
  * @class PromisedComponent
  * @constructor
  **/
-
+@PureRender
 export class PromisedComponent extends React.Component<IPromisedComponentProps,IPromisedComponentState> {
 	
 	private mounted = false

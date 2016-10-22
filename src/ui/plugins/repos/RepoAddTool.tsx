@@ -130,6 +130,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 			             autoFocus={true}
 			             modal={true}
 			             onEscape={this.hide}
+			             focused={true}
 			             open={true}
 			             resultsHidden={false}
 			             searchId='repo-add-search'

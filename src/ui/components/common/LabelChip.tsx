@@ -5,11 +5,12 @@
 // Imports
 import * as React from 'react'
 import * as Radium from 'radium'
-import { PureRender } from 'ui/components/common'
+import * as moment from 'moment'
+import { PureRender,Icon } from 'ui/components/common'
 import { ThemedStyles } from 'shared/themes/ThemeManager'
 import { Label } from 'shared/models/Label'
-import { Icon } from 'ui/components/common'
 import { Milestone } from 'shared/models/Milestone'
+import { getValue } from "shared/util"
 
 const tinycolor = require('tinycolor2')
 
@@ -117,6 +118,7 @@ export interface ILabelChipProps {
 	labelStyle?:any
 	textStyle?:any
 	showIcon?:boolean
+	showDueOn?:boolean
 	showRemove?:boolean
 	onRemove?:TLabelCallback
 }
@@ -133,7 +135,7 @@ export interface ILabelChipProps {
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'labelChip')
 @PureRender
-export default class LabelChip extends React.Component<ILabelChipProps,any> {
+export class LabelChip extends React.Component<ILabelChipProps,any> {
 	
 	
 	private updateState(props) {
@@ -152,6 +154,13 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 	 */
 	componentWillReceiveProps = (newProps) => this.updateState(newProps)
 	
+	
+	formatDueOn(milestone:Milestone) {
+		const
+			due = getValue(() => milestone.due_on)
+		
+		return !due ? '' : `  (due on ${moment(due).format('MM-DD-YY')})`
+	}
 	
 	labelColorStyle(label:Label) {
 		const
@@ -182,6 +191,7 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 				onClick,
 				onRemove,
 				showRemove,
+				showDueOn,
 				label,
 				labelStyle,
 				textStyle
@@ -243,7 +253,7 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 			}
 			
 			<div style={[styles.text, (showIcon || onRemove) && styles.text.withLeftIcon,textStyle]}>
-				{isLabel(label) ? label.name : label.title}
+				{isLabel(label) ? label.name : `${label.title}${!showDueOn ? '' : this.formatDueOn(label)}`}
 			</div>
 		
 		
@@ -251,3 +261,5 @@ export default class LabelChip extends React.Component<ILabelChipProps,any> {
 	}
 	
 }
+
+export default LabelChip

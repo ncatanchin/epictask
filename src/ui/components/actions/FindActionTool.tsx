@@ -107,6 +107,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			             perSourceLimit={-1}
 			             onEscape={this.hide}
 			             open={true}
+			             focused={true}
 			             hint='Execute an Epic action'
 			             resultsHidden={false}
 			             searchId='find-action-search'
