@@ -7,6 +7,8 @@
           <resourceRoots>
             <path value="file://$PROJECT_DIR$/src" />
             <path value="file://$PROJECT_DIR$/src/assets" />
+            <path value="file://$PROJECT_DIR$/packages" />
+            <path value="file://$PROJECT_DIR$/packages/epic-assets" />
           </resourceRoots>
         </entryData>
       </entry>
