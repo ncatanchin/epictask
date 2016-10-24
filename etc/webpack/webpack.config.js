@@ -232,15 +232,48 @@ function makeResolveConfig() {
 	}
 }
 
+/**
+ * Unwrap all deps
+ *
+ * @param dependencies
+ * @returns {*}
+ */
+function unwrapDependencies(dependencies) {
+	
+	const
+		packages = getPackages()
+	
+	let
+		depsIn = [...(dependencies || [])]
+	
+	while (true) {
+		const
+			depsOut = _.uniq(depsIn.reduce((nextDeps,dep) => {
+				nextDeps.push(...(packages[dep].dependencies || []))
+				return nextDeps
+			},[]).concat(depsIn))
+		
+		if (depsIn.length === depsOut.length)
+			break
+		
+		depsIn = depsOut
+	}
+	
+	return depsIn
+}
+
 // Webpack Config
 function makeConfig(pkg) {
 	
 	const
 		{
 			name,
-			dependencies,
 			entry: isEntry
-		} = pkg
+		} = pkg,
+		dependencies = pkg.dependencies //unwrapDependencies(pkg.dependencies)
+		//dependencies = unwrapDependencies(pkg.dependencies)
+	
+	log.info(`Deps for "${name}":`,dependencies)
 	
 	let
 		config = {

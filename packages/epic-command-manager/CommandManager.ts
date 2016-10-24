@@ -1,30 +1,25 @@
 import Electron = require('electron')
 
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-
-
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
-
+import * as React from "react"
+import * as ReactDOM from "react-dom"
+import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObject } from "epic-common"
 import {
-	ICommand, TCommandContainer, CommandType, ICommandMenuManagerProvider,
-	ICommandMenuManager, ICommandMenuItem
-} from  "epic-command-manager"
-
-
-import { isReactComponent } from  "epic-common"
-import { CommandAccelerator } from  "./CommandAccelerator"
-
-import { isMain, InputTagNames, isElectron } from  "./CommandManagerConfig"
-
+	ICommand,
+	TCommandContainer,
+	CommandType,
+	ICommandMenuManagerProvider,
+	ICommandMenuManager,
+	ICommandMenuItem
+} from "./Command"
+import { CommandAccelerator } from "./CommandAccelerator"
+import { isMain, InputTagNames, isElectron } from "./CommandManagerConfig"
 import {
-	addWindowListener, addBrowserWindowListener,
-	removeBrowserWindowListener, removeWindowListener,
+	addWindowListener,
+	addBrowserWindowListener,
+	removeBrowserWindowListener,
+	removeWindowListener,
 	getCommandBrowserWindow
-} from  "./CommandManagerUtil"
-import { getValue, cloneObject } from  "epic-common"
-
-
+} from "./CommandManagerUtil"
 
 
 const

@@ -1,23 +1,20 @@
 
 
-import windowStateKeeper = require('electron-window-state')
+
 import Electron = require('electron')
-import {makeMainMenu as makeMainMenuType}  from './MainMenu'
-import { getAppEntryHtmlPath, getSplashEntryHtmlPath } from  "epic-common"
+import { makeMainMenu as makeMainMenuType } from "./MainMenu"
+import { getAppEntryHtmlPath, getSplashEntryHtmlPath, setDataOnHotDispose, getHot } from "epic-common"
 import { getAppActions } from "epic-typedux"
 import { Events } from "epic-global"
-
 import { AllWindowDefaults, WindowIcon } from "epic-process-manager"
-
 import { setupShutdownOnWindowClose } from "./MainShutdownHandler"
-import { setDataOnHotDispose, getHot, addHotDisposeHandler } from  "epic-common"
 
 const
 	log = getLogger(__filename),
+	windowStateKeeper = require('electron-window-state'),
 	{BrowserWindow,Menu,screen,ipcMain} = Electron,
 	splashTemplateURL = 'file://' + getSplashEntryHtmlPath(),
 	appTemplateURL = 'file://' + getAppEntryHtmlPath()
-
 
 // Jetbrains - for another time
 //'http://localhost:63342/epictask/dist/app/app-entry.html'

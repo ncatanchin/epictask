@@ -21,10 +21,13 @@ function makeConfig() {
 			"epic-models": {
 				dependencies: ["epic-common"]
 			},
+			"epic-command-manager": {
+				dependencies: ["epic-common"]
+			},
 			//
 			// GITHUB
 			"epic-github": {
-				dependencies: ["epic-common"]
+				dependencies: ["epic-models"]
 			},
 
 			// NETWORKING
@@ -43,14 +46,13 @@ function makeConfig() {
 			//
 			// TYPEDUX, STORE, STATE, ETC
 			"epic-typedux": {
-				dependencies: ["epic-process-manager","epic-github", "epic-database-client"]
+				dependencies: ["epic-command-manager","epic-process-manager","epic-github", "epic-database-client"]
 			},
 
 			// SERVICES
 			"epic-services": {
 				dependencies: [
-					"epic-typedux",
-					"epic-database-client"
+					"epic-typedux"
 				]
 			},
 			//
@@ -75,6 +77,7 @@ function makeConfig() {
 			// // // MAIN ENTRY
 			"epic-entry-main": {
 				dependencies: [
+					"epic-command-manager",
 					"epic-process-manager",
 					"epic-services"
 				],
@@ -109,12 +112,12 @@ function makeConfig() {
 
 			// // UI COMPONENTS
 			"epic-ui-components": {
-				dependencies: ["epic-typedux","epic-styles"]
+				dependencies: ["epic-command-manager","epic-typedux","epic-styles"]
 			},
 			//
 			// // UI ENTRY
 			"epic-entry-ui": {
-				dependencies: ["epic-ui-components","epic-plugins-default", "epic-services"],
+				dependencies: ["epic-plugins-default","epic-command-manager","epic-typedux", "epic-services"],
 				entry: true
 			},
 			//
@@ -126,7 +129,7 @@ function makeConfig() {
 			//
 			// // DEFAULT PLUGINS
 			"epic-plugins-default": {
-				dependencies: ["epic-ui-components"]
+				dependencies: ["epic-typedux","epic-styles" , "epic-services","epic-global","epic-common","epic-command-manager","epic-ui-components"]
 			}
 			
 		}
