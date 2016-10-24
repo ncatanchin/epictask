@@ -1,13 +1,11 @@
 import {Container} from 'typescript-ioc'
 
-import {PageLink, PageLinkType,PagedArray} from "./PagedArray"
-import {getSettings} from 'shared/settings/Settings'
-import * as GitHubSchema from 'shared/models'
-import {Repo,Issue,User,Label,Milestone,Comment} from 'shared/models'
-import { cloneObject, isString, isNumber, toNumber, isPromise } from 'shared/util'
-import {IssuesEvent,RepoEvent} from 'shared/models/GitHubEvents'
+import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-common"
+
+import {IssuesEvent,RepoEvent,Repo,Issue,User,Label,Milestone,Comment} from 'epic-models'
+import {  addInfoMessage, addErrorMessage,isString, isNumber, toNumber, isPromise } from  "epic-global"
 import {List} from 'immutable'
-import { addInfoMessage, addErrorMessage } from "shared/Toaster"
+
  
 
 const
@@ -759,19 +757,19 @@ export class GitHubClient {
 	
 	
 	async user():Promise<User> {
-		return await this.get<GitHubSchema.User>('/user',User)
+		return await this.get<User>('/user',User)
 	}
 
-	async userRepos(opts:RequestOptions = null):Promise<PagedArray<GitHubSchema.Repo>> {
+	async userRepos(opts:RequestOptions = null):Promise<PagedArray<Repo>> {
 		return await this.get<PagedArray<Repo>>('/user/repos',Repo,opts)
 	}
 
 
-	async repo(repoName:string,opts:RequestOptions = null):Promise<GitHubSchema.Repo> {
+	async repo(repoName:string,opts:RequestOptions = null):Promise<Repo> {
 		return await this.get<Repo>(`/repos/${repoName}`,Repo,opts)
 	}
 	
-	async issue(repoName:string,issueNumber:number,opts:RequestOptions = null):Promise<GitHubSchema.Issue> {
+	async issue(repoName:string,issueNumber:number,opts:RequestOptions = null):Promise<Issue> {
 		return await this.get<Issue>(`/repos/${repoName}/issues/${issueNumber}`,Issue,opts)
 	}
 	

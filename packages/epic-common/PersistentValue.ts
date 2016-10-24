@@ -1,6 +1,6 @@
 
 
-import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
+import { EnumEventEmitter } from  "./EnumEventEmitter"
 const
 	log = getLogger(__filename),
 	inWindow = typeof window !== 'undefined'

@@ -1,7 +1,7 @@
 
 import {IServiceConstructor} from "./Types"
-import {ServiceManager} from "shared/services/internal/ServiceManager"
-import ProcessType from "shared/ProcessType"
+import {ServiceManager} from "./ServiceManager"
+import {ProcessType} from "epic-global"
 
 const log = getLogger(__filename)
 

@@ -11,8 +11,11 @@ const
  * @returns {any[]}
  */
 export function loadModelClasses() {
-	const allModelsAndRepos = require('shared/models')
-	const names = Object.keys(allModelsAndRepos)
+	
+	
+	const
+		allModelsAndRepos = require('epic-models'),
+		names = Object.keys(allModelsAndRepos)
 
 	return names
 		.filter(name => {

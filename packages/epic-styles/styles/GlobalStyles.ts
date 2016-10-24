@@ -1,5 +1,5 @@
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
-import { addThemeListener } from "shared/themes/ThemeState"
+import { addThemeListener } from "epic-styles"
 
 const
 	globalStyleConfigs = [] as any,

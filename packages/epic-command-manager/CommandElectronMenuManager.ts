@@ -1,13 +1,11 @@
 // HMR
-import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
+import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
+import { inElectron,shallowEquals } from  "epic-common"
 
+import {ICommandMenuManager, ICommandMenuItem} from './Command'
+import { getCommandManagerType, getCommandManager } from  "./CommandManager"
+import { isMain } from  "./CommandManagerConfig"
 
-import { ICommandMenuManager, ICommandMenuItem, getCommandManagerType, getCommandManager } from "shared/commands"
-import { isMain } from "shared/commands/CommandManagerConfig"
-
-
-import { inElectron } from "shared/util/ElectronUtil"
-import { shallowEquals } from "shared/util"
 import Electron = require('electron')
 
 

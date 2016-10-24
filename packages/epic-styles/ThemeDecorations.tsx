@@ -1,9 +1,9 @@
 
 import * as React from 'react'
-import { mergeStyles } from "shared/themes/styles/CommonStyles"
-import { addThemeListener } from "shared/themes/ThemeState"
-import { getValue, shallowEquals } from "shared/util"
-import { IPalette } from "shared/themes/material/MaterialTools"
+import { mergeStyles } from "./styles/CommonRules"
+import { addThemeListener } from "./ThemeState"
+import { getValue, shallowEquals } from  "epic-common"
+import { IPalette } from "./material"
 
 const
 	Radium = require('radium'),

@@ -1,6 +1,6 @@
 
-import { cloneObject } from "shared/util"
-import { makeIPCServerId } from "shared/net/IPCUtil"
+import { cloneObject } from  "epic-common"
+import { makeIPCServerId } from "./IPCUtil"
 const
 	log = getLogger(__filename),
 	IPC = require('node-ipc').IPC

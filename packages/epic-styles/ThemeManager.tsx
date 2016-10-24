@@ -1,7 +1,7 @@
 
 import './styles'
-import { acceptHot } from "shared/util/HotUtils"
-import { makeThemeFontSize } from "shared/themes/ThemeState"
+import { acceptHot } from  "epic-common"
+import { makeThemeFontSize } from "./ThemeState"
 
 export * from './ThemeState'
 export * from './ThemeDecorations'

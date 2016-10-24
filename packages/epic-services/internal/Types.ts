@@ -1,4 +1,4 @@
-import {VariableProxy} from "shared/util/VariableProxy"
+import {VariableProxy} from  "epic-common"
 
 /**
  * Service state

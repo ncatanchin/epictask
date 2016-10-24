@@ -1,6 +1,6 @@
 
 
-import { isElectron,isMain } from "shared/commands/CommandManagerConfig"
+import { isElectron,isMain } from  "./CommandManagerConfig"
 
 let
 	thisWindow:Window = null

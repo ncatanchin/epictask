@@ -2,7 +2,7 @@
 import {getDecorator} from "./StoryHelper"
 
 import * as faker from 'faker'
-import { VisibleList } from "ui/components/common/VisibleList"
+import { VisibleList } from "epic-ui-components"
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
 // logger

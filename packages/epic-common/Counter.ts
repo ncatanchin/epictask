@@ -1,7 +1,7 @@
 /**
  * A counter that can be incremented and decremented
  */
-export default class Counter {
+export class Counter {
 	
 	/**
 	 * Create a new counter, default start value is 0
@@ -42,3 +42,5 @@ export default class Counter {
 		return this.incrementBy(-1)
 	}
 }
+
+export default Counter

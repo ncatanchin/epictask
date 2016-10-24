@@ -2,11 +2,12 @@ import {
 	ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator,
 	ICommandMenuItem, CommandMenuItemType, TCommandIcon,
 	getCommandManager
-} from "shared/commands"
+} from  "epic-command-manager"
 
 import * as React from 'react'
 import filterProps from 'react-valid-props'
-import { isFunction, shortId, getValue, isNumber, isString } from "shared/util"
+import { shortId, getValue} from  "epic-common"
+import {isFunction,isNumber, isString } from 'epic-global'
 
 
 

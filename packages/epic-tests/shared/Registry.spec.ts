@@ -1,7 +1,7 @@
 
 
 
-import {RegisterModel} from 'shared/Registry'
+import {RegisterModel} from "epic-global"
 
 describe('Registry',() => {
 	describe('Decorations',() => {

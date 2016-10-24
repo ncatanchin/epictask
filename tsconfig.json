@@ -21,35 +21,11 @@
         "pretty": true,
         "outDir": "./dist/out",
         "paths": {
-            "tests/*": [
-                "./tests/*"
-            ],
-            "ui": [
-                "./ui/index.ts"
-            ],
-            "ui/*": [
-                "./ui/*"
-            ],
-            "job/*": [
-                "./job/*"
-            ],
-            "db/*": [
-                "./db/*"
-            ],
-            "server/*": [
-                "./server/*"
-            ],
-            "shared/*": [
-                "./shared/*"
-            ],
-            "main": [
-                "./main/index.ts"
-            ],
-            "main/*": [
-                "./main/*"
+            "*": [
+                "*"
             ]
         },
-        "baseUrl": "./src",
+        "baseUrl": "./packages",
         "typeRoots": [
             "./node_modules/@types",
             "./typings/globals",

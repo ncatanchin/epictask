@@ -9,6 +9,5 @@ export * from './Issue'
 export * from './User'
 export * from './Permission'
 export * from './Sync'
-export * from './GitHubEvents'
-
-export * from './Toast'
+export * from './RepoEvent'
+export * from './IssuesEvent'

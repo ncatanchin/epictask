@@ -1,7 +1,6 @@
 
 import {Repo as TSRepo,FinderRequest} from 'typestore'
 import {List} from 'immutable'
-import { IModelConstructor } from "shared/Registry"
 
 const
 	log = getLogger(__filename)

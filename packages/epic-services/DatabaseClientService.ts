@@ -1,11 +1,7 @@
-
-import ProcessType from "shared/ProcessType"
-import {Stores} from 'shared/Stores'
-import {BaseService, RegisterService, IServiceConstructor} from 'shared/services'
-import {chunkRemove,chunkSave} from 'shared/db/DatabaseUtil'
-import {getDatabaseClient} from "shared/db/DatabaseClient"
-import { canProxyProperty } from "shared/util"
-import { acceptHot } from "shared/util/HotUtils"
+import { ProcessType } from "epic-global"
+import { Stores, getDatabaseClient, chunkRemove, chunkSave } from "epic-database-client"
+import { BaseService, RegisterService, IServiceConstructor } from "./internal"
+import { canProxyProperty, acceptHot } from "epic-common"
 
 const
 	log = getLogger(__filename)

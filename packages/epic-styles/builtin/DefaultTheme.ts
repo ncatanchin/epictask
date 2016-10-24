@@ -1,7 +1,7 @@
 import * as Styles from 'material-ui/styles'
 
-import {ToolPanelLocation} from "shared/tools/ToolTypes"
-import { Transparent, createStyles,rem, makePaddingRem } from "shared/themes/styles"
+import {ToolPanelLocation} from "epic-global"
+import { Transparent, createStyles,rem, makePaddingRem } from "epic-styles"
 
 
 

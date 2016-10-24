@@ -5,14 +5,13 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
-
 import {Label} from './Label'
 import {Milestone} from './Milestone'
 import {User} from './User'
 import {Repo} from './Repo'
-import {RegisterModel} from '../Registry'
-import { Transient } from "shared/util/Decorations"
+
+import {RegisterModel} from 'epic-global'
+import { Transient } from  "epic-common"
 
 
 const

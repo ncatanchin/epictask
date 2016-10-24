@@ -1,7 +1,5 @@
 import {
-	Model,
 	Attribute,
-	FinderDescriptor,
 	DefaultModel,
 	FinderRequest,
 	Repo as TSRepo
@@ -10,9 +8,8 @@ import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Issue} from './Issue'
-import {RegisterModel} from '../Registry'
 import { Repo } from "./Repo"
-import { isNumber, isObject, isObjectType } from "shared/util"
+import { RegisterModel,isNumber, isObject, isObjectType } from  "epic-global"
 
 export function makeCommentIdPrefix(repoId:number,issueNumber:number)
 export function makeCommentIdPrefix(repo:Repo,issue:Issue)

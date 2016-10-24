@@ -1,7 +1,7 @@
 
 import {Map,List} from 'immutable'
-import { shallowEquals, cloneObject } from "shared/util"
 import * as moment from 'moment'
+import { shallowEquals, cloneObject } from "./ObjectUtil"
 
 /**
  * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided

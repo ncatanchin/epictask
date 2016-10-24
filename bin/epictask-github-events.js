@@ -14,15 +14,15 @@ require('babel-polyfill')
 require('reflect-metadata')
 
 
-require(`${srcRoot}/shared/NamespaceConfig`)
-require(`${srcRoot}/shared/ProcessConfig`)
-require(`${srcRoot}/shared/PromiseConfig`)
-require(`${srcRoot}/shared/LogConfig`)
-require(`${srcRoot}/shared/Globals`)
+require(`${srcRoot}/epic-global/NamespaceConfig`)
+require(`${srcRoot}/epic-global/ProcessConfig`)
+require(`${srcRoot}/epic-global/PromiseConfig`)
+require(`${srcRoot}/epic-global/LogConfig`)
+require(`${srcRoot}/epic-global/Globals`)
 
 const
 	log = getLogger(__filename),
-	eventMonitor = require(`${srcRoot}/shared/github/GithubEventMonitor`).getGithubEventMonitor()
+	eventMonitor = require(`${srcRoot}/epic-global/github/GithubEventMonitor`).getGithubEventMonitor()
 
 log.info(`Starting event monitor`)
 

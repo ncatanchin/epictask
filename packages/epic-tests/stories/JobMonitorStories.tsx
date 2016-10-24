@@ -1,17 +1,21 @@
 // Setup story environment
-import {getDecorator} from "./StoryHelper"
+import * as uuid from "node-uuid"
+import * as faker from "faker"
+import { getDecorator } from "./StoryHelper"
+import {
+	JobActionFactory,
+	JobType,
+	IJob,
+	JobStatus,
+	JobLogLevelNames,
+	jobStateSelector,
+	getStoreState,
+	JobDAO
+} from "epic-typedux"
+import { Button, BuiltInTools, getBuiltInToolId } from "epic-ui-components"
+import { JobMonitor } from "epic-plugins-default"
 
-import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
-import {JobType, IJob, JobStatus, JobLogLevelNames} from "shared/actions/jobs/JobTypes"
-import {Button} from 'ui/components/common'
-import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
-import {getStoreState} from "shared/store"
-import {JobMonitor} from "ui/plugins/jobs/JobMonitor"
-import * as uuid from 'node-uuid'
-import * as faker from 'faker'
-import {makeDefaultToolPanel, ToolPanelLocation, makeDefaultTool} from "shared/tools/ToolTypes"
-import {BuiltInTools, getBuiltInToolId} from "shared/config/ToolConfig"
-import JobDAO from "shared/actions/jobs/JobDAO"
+import { makeDefaultToolPanel, ToolPanelLocation, makeDefaultTool } from "epic-global"
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
 

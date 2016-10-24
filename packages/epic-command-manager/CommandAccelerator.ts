@@ -1,9 +1,9 @@
 
+import {isNumber} from 'epic-global'
+import { shallowEquals } from  "epic-common"
 
-import { isNumber, shallowEquals } from "shared/util"
-import { GlobalKeys } from "shared/KeyMaps"
 
-import {TCommandDefaultAccelerator} from './Command'
+import {GlobalKeys,TCommandDefaultAccelerator} from './Command'
 import {ModifiedKeyNames, MappedKeys, ElectronMappedKeys} from "./CommandManagerConfig"
 
 

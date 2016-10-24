@@ -2,24 +2,17 @@
 import 'reflect-metadata'
 ProcessConfig.setType(ProcessType.Storybook)
 
-import 'shared/NamespaceConfig'
-import 'shared/LogConfig'
-
 
 //import 'shared/RendererLogging'
-import 'shared/PromiseConfig'
-import "shared/Globals"
-import "ui/UIGlobals"
 
-// Load Styles
-import 'shared/themes/styles'
+
 
 // Now the theme manager
-import "shared/themes/ThemeManager"
+import "epic-styles"
 
 import {Provider} from 'react-redux'
 import {MuiThemeProvider} from "material-ui/styles"
-import {loadAndInitStorybookStore,getReduxStore} from 'shared/store/AppStore'
+import {loadAndInitStorybookStore,getReduxStore} from "epic-typedux"
 
 
 // Setup the store for storybook

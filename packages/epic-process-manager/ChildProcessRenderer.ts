@@ -1,18 +1,18 @@
-import windowStateKeeper = require('electron-window-state')
-import WebViewElement = Electron.WebViewElement
-import DidFailLoadEvent = Electron.WebViewElement.DidFailLoadEvent
-import IpcMessageEvent = Electron.WebViewElement.IpcMessageEvent
-import { ProcessType } from "shared/ProcessType"
-import {ChildProcessManager as ChildProcessManagerType} from 'shared/ChildProcessManager'
-import { getAppEntryHtmlPath } from "shared/util/TemplateUtil"
-import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
-import { setDataOnHotDispose, getHot } from "shared/util/HotUtils"
+
+
+import Electron = require('electron')
+
+import { ProcessType } from "epic-global"
+import {ChildProcessManager as ChildProcessManagerType} from './ChildProcessManager'
+import { getAppEntryHtmlPath } from  "epic-common"
+import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "epic-net"
+import { setDataOnHotDispose, getHot } from  "epic-common"
 
 
 const
 	
 	log = getLogger(__filename),
-	
+	windowStateKeeper = require('electron-window-state'),
 	globalListeners:IChildProcessEventListener[] = getHot(module,'globalListeners',[]),
 	{ipcRenderer,BrowserWindow} = require('electron')
 
@@ -283,7 +283,7 @@ export default class ChildProcessRenderer {
 	 *
 	 * @param event
 	 */
-	private handleError = (event:DidFailLoadEvent) => {
+	private handleError = (event) => {
 		log.error(`Error received ${this.name}`,event)
 		this.listeners.forEach(listener => {
 			try {

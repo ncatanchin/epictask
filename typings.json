@@ -7,7 +7,6 @@
   },
   "globalDependencies": {
     "bluebird": "registry:dt/bluebird#2.0.0+20160701023356",
-    "electron-window-state": "registry:dt/electron-window-state#2.0.0+20160212171354",
     "expectations": "registry:dt/expectations#0.2.5+20160317120654",
     "history": "registry:dt/history#1.8.0+20160316155526",
     "jquery": "registry:dt/jquery#1.10.0+20160704162008",

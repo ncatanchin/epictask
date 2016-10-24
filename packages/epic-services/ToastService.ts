@@ -1,15 +1,10 @@
-import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
-import ProcessType from 'shared/ProcessType'
-import DatabaseClientService from './DatabaseClientService'
-import {ObservableStore} from 'typedux'
-import {ToastMessageType} from 'shared/models'
-import { getUIActions } from "shared/actions/ActionFactoryProvider"
-import { PersistentValueEvent } from "shared/util/PersistentValue"
+import { ObservableStore } from "typedux"
 
-import { getToaster } from "shared/Toaster"
-import { cloneObjectShallow } from "shared/util"
-import { NativeNotificationsEnabled } from "shared/settings/Settings"
-import { UIKey } from "shared/Constants"
+import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { ProcessType, NotificationMessageType, getNotificationCenter, UIKey } from "epic-global"
+import DatabaseClientService from "./DatabaseClientService"
+import { getUIActions } from "epic-typedux"
+import { PersistentValueEvent, cloneObjectShallow, NativeNotificationsEnabled } from "epic-common"
 
 const
 	log = getLogger(__filename)
@@ -91,11 +86,11 @@ export class ToastService extends BaseService {
 							
 							delete this.pendingTimers[ msg.id ]
 						},
-						isError = msg.type === ToastMessageType.Error
+						isError = msg.type === NotificationMessageType.Error
 					
 					
 					// Don't add a remove timer for Error messages
-					// if (msg.type === ToastMessageType.Error)
+					// if (msg.type === NotificationMessageType.Error)
 					// 	return
 					
 					if (this.pendingTimers[ msg.id ]) {
@@ -135,7 +130,7 @@ export class ToastService extends BaseService {
 	private onNotificationConfigChange = () => {
 		//this.clear()
 		
-		getToaster().addMessage("Notification configuration changed successfully")
+		getNotificationCenter().addMessage("Notification configuration changed successfully")
 	}
 	
 	/**

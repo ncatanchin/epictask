@@ -7,7 +7,7 @@ export type OnValueChanged = (newValue,oldValue) => any
  * Creates a value cache, when changed
  * the onValueChange listener is triggered
  */
-export default class ValueCache {
+export class ValueCache {
 
 	private value:any
 	
@@ -43,3 +43,5 @@ export default class ValueCache {
 		return this.value
 	}
 }
+
+export default ValueCache

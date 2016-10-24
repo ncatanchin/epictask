@@ -1,7 +1,7 @@
-import {VariableProxy} from "shared/util/VariableProxy"
-import {IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
-import {IService} from "shared/services"
-import { setDataOnHotDispose, getHot, acceptHot } from "shared/util/HotUtils"
+import {VariableProxy,setDataOnHotDispose, getHot, acceptHot } from  "epic-common"
+import {IService,IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
+
+
 
 const log = getLogger(__filename)
 
@@ -275,21 +275,23 @@ export class ServiceManager {
 	 * @returns {any}
 	 */
 	loadContext() {
-		const
-			ctx = this.ctxRef = require.context('shared/services',false,/^((?!internal).*)Service\.(ts|js)$/),
-			serviceFiles = ctx.keys()
+		// const
+		// 	ctx = this.ctxRef = require.context('epic-services',false,/^((?!internal).*)Service\.(ts|js)$/),
+		// 	serviceFiles = ctx.keys()
+		//
+		// // Log all the files in the context
+		// log.info(`Services Context has keys: ${serviceFiles.join(', ')}`)
+		//
+		// // Evaluate/load all modules
+		// // Each module will register it's services
+		// // With decorations accordingly
+		// ctx.keys().forEach(ctx)
+		//
+		//
+		//
+		// return ctx
 		
-		// Log all the files in the context
-		log.info(`Services Context has keys: ${serviceFiles.join(', ')}`)
-		
-		// Evaluate/load all modules
-		// Each module will register it's services
-		// With decorations accordingly
-		ctx.keys().forEach(ctx)
-		
-		
-		
-		return ctx
+		return require('./index')
 	}
 	
 	/**

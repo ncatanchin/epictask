@@ -1,10 +1,10 @@
 
-import 'shared/LogCategories'
+import './LogCategories'
 
 import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
-import { isObject } from "shared/util"
-import { getAppConfig } from "shared/AppConfig"
+import { isObject } from  "./TypeChecks"
+import { getAppConfig } from "./AppConfig"
 
 let Reactotron = null
 
@@ -125,4 +125,4 @@ if (ProcessConfig.isStorybook()) {
 
 
 // Configure log levels
-setCategoryLevels(require('shared/LogCategories'))
+setCategoryLevels(require('./LogCategories'))

@@ -1,6 +1,7 @@
-import ChildProcessRenderer from './ChildProcessRenderer'
-import ProcessType from "shared/ProcessType"
-import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
+import ChildProcessRenderer from "./ChildProcessRenderer"
+//import ProcessType from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot } from "epic-common"
+import { ProcessType } from "epic-global"
 
 const log = getLogger(__filename)
 

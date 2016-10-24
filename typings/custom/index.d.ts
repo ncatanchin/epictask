@@ -10,7 +10,6 @@
 /// <reference path="./reactotron.d.ts"/>
 
 
-
 declare namespace NodeJS {
 	interface Global {
 		MainBooted:boolean
@@ -34,3 +33,14 @@ import {install} from 'source-map-support'
 interface NodeRequireFunction {
 	(moduleName: 'source-map-support'): typeof install;
 }
+
+
+// GLOBALS
+import * as ReactGlobal from 'react'
+import * as RadiumGlobal from 'radium'
+//import * as JQueryGlobal from 'jquery'
+
+
+declare var React:typeof ReactGlobal
+declare var Radium:typeof RadiumGlobal
+declare var $:any

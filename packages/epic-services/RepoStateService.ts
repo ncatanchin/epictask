@@ -1,10 +1,9 @@
-import {ObservableStore} from 'typedux'
-import {BaseService, IServiceConstructor, RegisterService} from 'shared/services'
-import {ProcessType} from "shared/ProcessType"
-import {DatabaseClientService} from "shared/services/DatabaseClientService"
-import { getIssueActions, getRepoActions } from  "shared/actions/ActionFactoryProvider"
-import { IssueKey } from "shared/Constants"
-import { getStores } from "shared/Stores"
+import { ObservableStore } from "typedux"
+import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { ProcessType, IssueKey } from "epic-global"
+import { DatabaseClientService } from "./DatabaseClientService"
+import { getIssueActions, getRepoActions } from "epic-typedux"
+import { getStores } from "epic-database-client"
 const log = getLogger(__filename)
 
 @RegisterService(ProcessType.UI)

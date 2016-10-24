@@ -22,7 +22,7 @@ module.exports = {
 		// SourceCode
 		{
 			test: srcTest,
-			exclude: [/(node_modules|typedux|typelogger|typestore)/],
+			exclude: [/(node_modules)/],
 			loaders: ["react-hot-loader/webpack",'awesome-typescript','source-map-loader',proxyProvidedLoaderPath],
 			
 			

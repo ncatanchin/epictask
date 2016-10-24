@@ -1,10 +1,10 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {Button} from 'ui/components/common'
-import {getStoreState} from "shared/store"
-import {clearMessages,addErrorMessage, addMessage, addSuccessMessage} from "shared/Toaster"
-import {ToastMessages} from 'ui/components/ToastMessages'
+import {Button} from "epic-ui-components"
+import {getStoreState} from "epic-typedux"
+import {clearMessages,addErrorMessage, addMessage, addSuccessMessage} from "epic-global"
+import {ToastMessages} from "epic-ui-components"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 

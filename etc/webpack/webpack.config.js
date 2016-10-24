@@ -5,9 +5,11 @@ try {
 	require('babel-polyfill')
 } catch (err) {}
 
+// GET SHELL JS
+require('shelljs/global')
+
+echo(`Load global environment`)
 require('../tools/global-env')
-
-
 
 const
 	{
@@ -38,13 +40,9 @@ const
  */
 function resolveDirs(...dirs) {
 	return dirs.map(dir => {
-		const resolvedPath =
-			['C','/','.'].includes(dir.charAt(0)) ?
-				path.resolve(dir) :
-				path.join(baseDir, dir)
-		
-		//log.info(chalk.green(`Resolved "${dir}":`) + `${resolvedPath}`)
-		return resolvedPath
+		return (['C','/','.'].includes(dir.charAt(0))) ?
+			path.resolve(dir) :
+			path.join(baseDir, dir)
 	})
 }
 
@@ -92,127 +90,65 @@ function tsAlias(tsFilename) {
 	return path.resolve(srcRootDir, tsFilename)
 }
 
-
-
-const
+/**
+ * Get all epic packages
+ */
+function getPackages() {
+	const
+		{packages} = require('../../epic-config')
 	
+	Object.keys(packages).forEach(name => {
+		packages[name].name = name
+	})
 	
-	// Create loaders
-	loaders = require('./parts/loaders'),
-	
-	// Entries
-	entries = {
-		"AppEntry": [`./AppEntry`],
-		"BrowserEntry": [`./BrowserEntry`],
-	}
-	
-
-// HMR ENTRY ADDITION
-if (isDev) {
-	entries.AppEntry.unshift('webpack/hot/poll.js?500')
-	//.forEach(entry => entry.unshift('webpack/hot/signal'))
-	//`webpack/hot/poll.js?1000`
+	return packages
 }
 
-// Webpack Config
-const config = {
+/**
+ * Read the tsconfig.json file
+ */
+function getTypeScriptConfig() {
+	return JSON.parse(cat('tsconfig.json'))
+}
+
+/**
+ * Get Compiler Options from tsconfig.json
+ */
+function getTypeScriptCompilerOptions() {
+	return getTypeScriptConfig().compilerOptions
+}
+
+
+/**
+ * Create typescript package aliases from tsconfig.json
+ */
+function makePackageAliases() {
 	
-	// Target
-	target: 'electron',
-	
-	entry: entries,
-	context: srcRootDir,
-	stats: WebpackStatsConfig,
-	output: {
-		path: `${distDir}/`,
-		//publicPath: isDev ? './dist/app/' : './', //`${path.relative(process.cwd(),distDir)}/`,
-		publicPath: "./",
-		filename: '[name].bundle.js',
-		libraryTarget: 'commonjs2'
-	},
-	
-	
-	
-	cache: true,
-	recordsPath: `${distDir}/_records`,
-	//devtool: '#source-map',
-	devtool: '#cheap-module-source-map',
-	
-	// Currently we need to add '.ts' to the resolve.extensions array.
-	resolve: {
-		
-		// ALIAS
-		alias: {
-			styles: path.resolve(baseDir, 'src/assets/styles'),
-			assets: path.resolve(baseDir, 'src/assets'),
-			libs: path.resolve(baseDir, 'libs'),
-			buildResources: path.resolve(baseDir, 'build'),
-			GitHubClient: tsAlias('shared/GitHubClient'),
-			Constants: tsAlias('shared/Constants'),
-			Settings: tsAlias('shared/settings/Settings')
-		},
 		
 		
-		// MODULE PATHS
-		modules: moduleDirs,
+	return Object.values(getPackages()).reduce((aliasMap = {},{name}) => {
+		aliasMap[name] = path.resolve(process.cwd(),'packages',name)
+		return aliasMap
+	},{})
+}
+
+
+function makeAliases() {
+	return _.assign(makePackageAliases(),{
+		buildResources: path.resolve(baseDir, 'build'),
+		libs: path.resolve(baseDir, 'libs'),
 		
-		// FALLBACK PATHS
-		//fallback: [path.resolve(baseDir,'src')],
+		styles: tsAlias('epic-assets/styles'),
+		assets: tsAlias('epic-assets')
 		
-		// EXTENSIONS
-		extensions: ['.ts','.tsx','.js', '.jsx']
-		
-	},
-	
-	// LOADERS
-	module:  loaders,
-	
-	// PLUGINS
-	plugins: [
-		//new webpack.dependencies.LabeledModulesPlugin(),
-		
-		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-		new ForkCheckerPlugin(),
-		
-		// SPLIT FOR PARALLEL LOADING
-		// new webpack.optimize.AggressiveSplittingPlugin({
-		// 	maxSize: 50000
-		// }),
-		
-		// BASICS
-		new webpack.IgnorePlugin(/vertx/),
-		//new webpack.optimize.OccurrenceOrderPlugin(),
-		new webpack.NoErrorsPlugin(),
-		new HtmlWebpackPlugin({
-			filename: "app-entry.html",
-			template: `${baseDir}/src/assets/templates/AppEntry.jade`,
-			inject: false,
-			isDev
-		}),
-		new HtmlWebpackPlugin({
-			filename: "splash-entry.html",
-			template: `${baseDir}/src/assets/templates/SplashEntry.jade`,
-			inject: false,
-			isDev
-		}),
-		new DefinePlugin(DefinedEnv),
-		new webpack.NamedModulesPlugin(),
-		new webpack.ProvidePlugin({
-			'Promise': 'bluebird'
-		})
-		
-	],
-	
-	// NODE SHIMS
-	node: {
-		__dirname: true,
-		__filename: true,
-		global: true,
-		process: true
-	},
-	
-	// Configure all node_modules as external if in electron
-	externals: [
+	})
+}
+
+/**
+ * Create externals array
+ */
+function makeExternals() {
+	return [
 		nodeExternals({
 			whitelist: [
 				/webpack\/hot/,
@@ -224,45 +160,229 @@ const config = {
 		}
 	]
 }
+
+
+/**
+ * Resolve package index
+ *
+ * @param name
+ * @returns {string}
+ */
+function resolvePkgIndex(name) {
+	return path.resolve(srcRootDir,name,'index.ts')
+}
+
+/**
+ * Create module config
+ */
+function makeModuleConfig() {
+	return require('./parts/loaders')
+}
+
+/**
+ * Make all entries
+ */
+function makeEntry(pkg) {
+	const
+		entry = [`./index`]
+		
+
+	// HMR ENTRY ADDITION
+	if (isDev && pkg.entry === true) {
+		entry.unshift('webpack/hot/poll.js?500')
+	}
 	
-// Development specific updates
-if (isDev) {
-	_.merge(config, {
-		
-		//In development, use inline source maps
-		//devtool: '#cheap-module-source-map',
-		// devtool: '#inline-source-map',
-		//devtool: '#cheap-module-inline-source-map',
-		//devtool: 'eval',
-		devtool: 'cheap-module-eval-source-map',
-		
-		// In development specify absolute path - better debugger support
-		output:  {
-			devtoolModuleFilenameTemplate: "[absolute-resource-path]",
-			devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
-		},
-		
-		//debug: true,
-		//dev: true
-	})
-	
-	// Add HMR
-	config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
-} else {
-	config.plugins.push(new webpack.optimize.UglifyJsPlugin({
-		mangle: false,
-		mangleProperties: false,
-		compress:{
-			warnings: true
-		}
-	}),new webpack.LoaderOptionsPlugin({
-		minimize: true,
-		debug: false
-	}))
+	return {
+		[pkg.name]: entry
+	}
 }
 
 
-module.exports = config
+function makeOutputConfig(name,isEntry = false) {
+	const
+		outputConfig = {
+			path: `${distDir}/`,
+				publicPath: "./",
+			libraryTarget: 'commonjs2'
+		}
+	
+	if (name) {
+		outputConfig.filename = '[name].js'
+	}
+		
+	if (isEntry !== true)
+		outputConfig.library = `${name}_[hash]`
+		
+	return outputConfig
+}
+
+
+function makeResolveConfig() {
+	return {
+		
+		// ALIAS
+		alias: makeAliases(),
+		
+		// MODULE PATHS
+		modules: moduleDirs,
+		
+		// EXTENSIONS
+		extensions: ['.ts','.tsx','.js', '.jsx']
+		
+	}
+}
+
+// Webpack Config
+function makeConfig(pkg) {
+	
+	const
+		{
+			name,
+			dependencies,
+			entry: isEntry
+		} = pkg
+	
+	let
+		config = {
+		
+			name,
+			dependencies,
+			/**
+			 * Target type
+			 */
+			target: 'electron',
+			
+			/**
+			 * All entries including common
+			 */
+			entry: makeEntry(pkg),
+			
+			/**
+			 * Source root, './packages'
+			 */
+			context: path.resolve(srcRootDir,name),
+			
+			/**
+			 * Stats config
+			 */
+			stats: WebpackStatsConfig,
+			
+			/**
+			 * Output configuration
+			 */
+			output: makeOutputConfig(name,isEntry || false),
+			
+			// LOADERS
+			module:  makeModuleConfig(),
+			
+			cache: true,
+			recordsPath: `${distDir}/records__${name}`,
+			
+			/**
+			 * DevTool config
+			 */
+			//devtool: '#source-map',
+			devtool: '#cheap-module-source-map',
+			
+			// Currently we need to add '.ts' to the resolve.extensions array.
+			resolve: makeResolveConfig(),
+						
+			
+			// PLUGINS
+			plugins: [
+				
+				// IF LIB THEN ADD DLL PLUGIN
+				...(isEntry ? [] : [
+					new webpack.DllPlugin({
+						name: `${name}_[hash]`,
+						path: path.resolve(distDir,`manifest.${name}.json`)
+					})
+				]),
+				
+				// ADD REFS TO DEPS
+				...dependencies.map(depName => new webpack.DllReferencePlugin({
+					manifest: path.resolve(distDir,`manifest.${depName}.json`)
+				})),
+				
+				//new webpack.optimize.DedupePlugin(),
+				
+				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+				new ForkCheckerPlugin(),
+				
+				// BASICS
+				//new webpack.IgnorePlugin(/vertx/),
+				
+				new webpack.NoErrorsPlugin(),
+				
+				new DefinePlugin(DefinedEnv),
+				
+				//new webpack.NamedModulesPlugin(),
+				new webpack.ProvidePlugin({
+					'Promise': 'bluebird'
+				})
+			
+			],
+			
+			// NODE SHIMS
+			node: {
+				__dirname: true,
+				__filename: true,
+				global: true,
+				process: true
+			},
+			
+			// Configure all node_modules as external if in electron
+			externals: makeExternals()
+		}
+	
+	// Development specific updates
+	if (isDev) {
+		_.merge(config, {
+			
+			//In development, use inline source maps
+			//devtool: '#cheap-module-source-map',
+			// devtool: '#inline-source-map',
+			//devtool: '#cheap-module-inline-source-map',
+			//devtool: 'eval',
+			devtool: 'cheap-module-eval-source-map',
+			
+			// In development specify absolute path - better debugger support
+			output:  {
+				devtoolModuleFilenameTemplate: "[absolute-resource-path]",
+				devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
+			},
+			
+		})
+		
+		// IF ENTRY & DEV THEN HMR
+		if (isEntry)
+			config.plugins.splice(1, 0, new HotModuleReplacementPlugin())
+	} else {
+		config.plugins.push(new webpack.optimize.UglifyJsPlugin({
+			mangle: false,
+			mangleProperties: false,
+			compress:{
+				warnings: true
+			}
+		}),new webpack.LoaderOptionsPlugin({
+			minimize: true,
+			debug: false
+		}))
+	}
+	
+	if (pkg.webpackConfig)
+		config = pkg.webpackConfig(config,isDev)
+	
+	return config
+	
+}
+
+
+
+module.exports = Object
+	.values(getPackages())
+	.map(makeConfig)
+	.concat()
 	
 
 

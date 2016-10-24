@@ -1,14 +1,13 @@
 import {
 	Model,
 	Attribute,
-	FinderDescriptor,
 	DefaultModel,
 	FinderRequest,
 	Repo as TSRepo
 } from 'typestore'
 
 
-import {RegisterModel} from '../Registry'
+import {RegisterModel} from 'epic-global'
 
 /**
  * User model from GitHub schema

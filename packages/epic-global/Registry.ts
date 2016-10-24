@@ -1,7 +1,6 @@
-import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} from "shared/tools/ToolTypes"
+import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} from "./ToolTypes"
 
 import React from 'react'
-import {UIActionFactory as UIActionFactoryType} from "shared/actions/ui/UIActionFactory"
 import {ActionFactory} from 'typedux'
 
 
@@ -246,23 +245,24 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 				}
 			}
 		}
-		
-		const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
-		Container.get(UIActionFactory).registerTool(reg as any)
+		//
+		// const UIActionFactory = require("shared/actions/ui/UIActionFactory").UIActionFactory as typeof UIActionFactoryType
+		// Container.get(UIActionFactory).registerTool(reg as any)
 	
 		
 		if (update) {
-			Promise
-				.delay(100)
-				.then(() => {
-					fireEvent(RegistryEvent.ToolRegistered, reg)
-					log.info(`Events fired for ${reg.id}`)
-				})
+			setImmediate(() =>{
+				fireEvent(RegistryEvent.ToolRegistered, reg)
+			})
 		}
-		return config.react.proxyComponent
+		
+		return config
+			.react
+			.proxyComponent
+		
 	} catch (err) {
 		log.error(`Failed to register tool`,err)
-		require('shared/Toaster').addErrorMessage(err)
+		require('epic-global').NotificationCenter.addErrorMessage(err)
 		
 		return clazz
 	}
@@ -272,7 +272,7 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 
 
 function getToolConfig(id:string) {
-	loadPlugins()
+	//loadPlugins()
 	
 	return getRegistry(RegistryType.Tools)[id]
 }
@@ -334,28 +334,21 @@ let loaded = false
 /**
  * Load all plugin contexts - only runs once, then monitors in HMR
  */
-export function loadPlugins(force = false) {
-	if (loaded && !force)
-		return
-	
-	loaded = true
-	const contexts = []
-	function loadPluginCtx(ctx) {
-		contexts.push(ctx)
-		ctx.keys().forEach(ctx)
-	}
-	
-	if (typeof window !== 'undefined')
-		loadPluginCtx(require.context('ui/plugins/',true))
-	
-	// if (module.hot) {
-	// 	module.hot.accept(contexts.map(ctx => ctx.id), (updates) => {
-	// 		log.info('HMR Updates for plugins, reloading plugins', updates)
-	// 		loadPlugins(true)
-	// 	})
-	// }
-	
-}
+// export function loadPlugins(force = false) {
+// 	if (loaded && !force)
+// 		return
+//
+// 	loaded = true
+// 	const contexts = []
+// 	function loadPluginCtx(ctx) {
+// 		contexts.push(ctx)
+// 		ctx.keys().forEach(ctx)
+// 	}
+//
+// 	if (typeof window !== 'undefined')
+// 		loadPluginCtx(require.context('epic-plugins-default',true))
+//
+// }
 
 
 /**

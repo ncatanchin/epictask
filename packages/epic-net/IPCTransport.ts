@@ -1,7 +1,7 @@
-import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "shared/net/Transport"
-import Counter from "shared/Counter"
-import { START_TIMEOUT_DEFAULT } from "shared/config/NetworkConfig"
-import { makeIPCServerId } from "shared/net/IPCUtil"
+import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"
+import {Counter} from "epic-common"
+import { START_TIMEOUT_DEFAULT } from "./NetworkConfig"
+import { makeIPCServerId } from "./IPCUtil"
 
 const
 	log = getLogger(__filename),

@@ -1,14 +1,14 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {StatusBar} from 'ui/components/root/StatusBar'
-import {JobActionFactory} from "shared/actions/jobs/JobActionFactory"
-import {JobType, IJob, JobStatus} from "shared/actions/jobs/JobTypes"
-import {Button} from 'ui/components/common/Button'
-import {jobStateSelector} from "shared/actions/jobs/JobSelectors"
-import {getStoreState} from "shared/store"
-import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "shared/Toaster"
-import JobDAO from "shared/actions/jobs/JobDAO"
+import {StatusBar} from "epic-ui-components"
+import {JobActionFactory} from "epic-typedux"
+import {JobType, IJob, JobStatus} from "epic-typedux"
+import {Button} from "epic-ui-components"
+import {jobStateSelector} from "epic-typedux"
+import {getStoreState} from "epic-typedux"
+import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "epic-global"
+import {JobDAO} from "epic-typedux"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 

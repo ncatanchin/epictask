@@ -1,5 +1,5 @@
-import {JSONKey} from "shared/config/DecorationConfig"
-import { isFunction } from "shared/util"
+import {isFunction,JSONKey} from "epic-global"
+
 
 export function toJSONObject(o) {
 	const

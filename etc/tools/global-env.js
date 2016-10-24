@@ -51,9 +51,8 @@ Object.assign(global, {
 	env,
 	isDev: env === 'development',
 	processDir,
-	TypeScriptEnabled,
 	basePackageJson: readJSONFileSync(`${baseDir}/package.json`),
-	srcRootDir: path.resolve(baseDir, TypeScriptEnabled ? 'src' : 'dist/out'),
+	srcRootDir: path.resolve(baseDir, TypeScriptEnabled ? 'packages' : 'dist/out'),
 	Deferred: require('./deferred'),
 	assert
 }, require('./helpers'))

@@ -1,5 +1,5 @@
 import * as TypeLogger from 'typelogger'
-import { isMac } from "shared/util/ElectronUtil"
+import { isMac } from  "epic-common"
 
 const
 	log = TypeLogger.create(__filename)

@@ -1,31 +1,29 @@
 
 
-import {Repo} from 'shared/models/Repo'
-import {Issue} from 'shared/models/Issue'
-import {Comment} from 'shared/models/Comment'
-import {getSettings} from 'shared/settings/Settings'
-import { getValue } from "shared/util"
+//import {Repo,Issue,Comment} from 'epic-models'
+import {getSettings} from './settings'
+import { getValue } from  "./ObjectUtil"
 
 const getUserId = () => getValue(() => getSettings().user.id,-2)
 
-export function canCreateIssue(repo:Repo) {
+export function canCreateIssue(repo) {
 	return repo && repo.permissions && repo.permissions.pull
 }
 
-export function canAssignIssue(repo:Repo) {
+export function canAssignIssue(repo) {
 	return repo && repo.permissions && (repo.permissions.push || repo.permissions.admin)
 }
 
-export function canEditIssue(repo:Repo,issue:Issue) {
+export function canEditIssue(repo,issue) {
 	return (canAssignIssue(repo) || getValue(() => issue.user.id,-1) === getUserId())
 }
 
-export function canEditComment(repo:Repo,comment:Comment) {
+export function canEditComment(repo,comment) {
 	return (canAssignIssue(repo) || comment.user.id === getUserId())
 }
 
 
-export function canEditRepo(repo:Repo) {
+export function canEditRepo(repo) {
 	return canAssignIssue(repo)
 }
 

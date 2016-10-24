@@ -1,13 +1,13 @@
 
 
-import electron = require('electron')
+import Electron = require('electron')
 import uuid = require('node-uuid')
-import { searchPathsForFile } from "shared/util/Files"
+import { searchPathsForFile } from  "./Files"
 
 const
 	log = getLogger(__filename),
 
-	{app} = electron,
+	{app} = Electron,
 	dataUrl = require('dataurl')
 	
 

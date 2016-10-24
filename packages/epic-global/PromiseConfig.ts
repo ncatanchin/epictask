@@ -74,5 +74,8 @@ Promise.setImmediate = function () {
 	})
 }
 
+export {
+	Bluebird
+}
 
 export default Promise

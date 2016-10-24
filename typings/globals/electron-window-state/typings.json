@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/a617153d464e26092a0286418116d156d652932b/electron-window-state/electron-window-state.d.ts",
-    "raw": "registry:dt/electron-window-state#2.0.0+20160212171354",
-    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/a617153d464e26092a0286418116d156d652932b/electron-window-state/electron-window-state.d.ts"
-  }
-}

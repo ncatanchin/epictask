@@ -5,8 +5,8 @@ import {
 } from 'typestore'
 
 import {PouchDBModel} from 'typestore-plugin-pouchdb'
-import {User} from 'shared/models/User'
-import {RegisterModel} from '../Registry'
+import {User} from './User'
+import {RegisterModel} from 'epic-global'
 
 
 

@@ -11,7 +11,7 @@ import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Permission} from './Permission'
-import {RegisterModel} from '../Registry'
+import {RegisterModel} from 'epic-global'
 
 export interface ISyncChanges {
 	repoId:number

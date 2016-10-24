@@ -1,14 +1,11 @@
 
 import path = require('path')
-import * as uuid from 'node-uuid'
-import {DatabaseEvents} from './DatabaseEvents'
-import {IDatabaseResponse, IDatabaseRequest} from './DatabaseRequestResponse'
-import {Transport} from "shared/net/Transport"
-import {ProcessType} from "shared/ProcessType"
-import VariableProxy from 'shared/util/VariableProxy'
-import { DatabaseServerName } from "shared/ProcessType"
-import { cloneObject } from "shared/util"
-import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
+import * as uuid from "node-uuid"
+import { DatabaseEvents } from "./DatabaseEvents"
+import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
+import { Transport } from "epic-net"
+import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-common"
+import { DatabaseServerName, ProcessType } from "epic-global"
 
 const
 	TIMEOUT = 180000,

@@ -1,9 +1,7 @@
-import {ProcessType} from "shared/ProcessType"
-import {Map} from 'immutable'
-import WorkerManager from '../../shared/ChildProcessManager'
-import storeBuilder from 'shared/store/AppStoreBuilder'
-import {AppActionFactory} from "../../shared/actions/app/AppActionFactory"
-import {AppStateType} from "shared/AppStateType"
+import {ProcessType} from "epic-global"
+import {ChildProcessManager as WorkerManager} from 'epic-process-manager'
+import {storeBuilder} from "epic-typedux"
+import {AppStateType} from "epic-typedux"
 
 const log = getLogger(__filename)
 

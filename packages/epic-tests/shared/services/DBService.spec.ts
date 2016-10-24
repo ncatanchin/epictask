@@ -1,9 +1,9 @@
 
 
 
-import {DatabaseClientService} from 'shared/services/DatabaseClientService'
-import {User} from 'shared/models/User'
-import {getServiceManager} from "shared/services"
+import {DatabaseClientService} from "epic-services"
+import {User} from "epic-models"
+import {getServiceManager} from "epic-services"
 
 const log = getLogger(__filename)
 

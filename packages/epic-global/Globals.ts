@@ -1,28 +1,33 @@
+import Electron = require('electron')
 // IOC CONTAINER
 import {Container as ContainerGlobal} from 'typescript-ioc'
 
 // PROCESS CONFIG
-import 'shared/ProcessConfig'
+import './ProcessConfig'
 
 // LOGGING CONFIG FIRST
-import 'shared/LogConfig'
+import './LogConfig'
 
 import {LogLevel as LogLevelGlobal} from 'typelogger'
 
 // LATER - POOR TYPING
 later = require('later/index-browserify')
 
-import 'shared/ErrorHandling'
-import {getValue} from 'shared/util'
+import './ErrorHandling'
+//import {getValue} from  "epic-common"
 
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 
-import * as ContextUtils from './util/ContextUtils'
+import * as ContextUtils from './ContextUtils'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
-import { acceptHot } from "shared/util/HotUtils"
 
+import * as ReactGlobal from 'react'
+import * as ReactDOMGlobal from 'react-dom'
+
+import * as JQueryGlobal from 'jquery'
+import * as RadiumGlobal from 'radium'
 
 
 // Export globals
@@ -53,8 +58,11 @@ function getCurrentWindowGlobal():Electron.BrowserWindow {
 	try {
 		const
 			Electron = require('electron')
-		
-		return getValue(() => Electron.remote.getCurrentWindow(),Electron.BrowserWindow.getFocusedWindow())
+		try {
+			return Electron.remote.getCurrentWindow()
+		} catch (err) {
+			return Electron.BrowserWindow.getFocusedWindow()
+		}
 	} catch (err) {
 		console.error(`Unable to find any current window`,err)
 		return null
@@ -161,6 +169,18 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var node_require:typeof __non_webpack_require__
 	
+	var React:typeof ReactGlobal
+	var ReactDOM:typeof ReactDOMGlobal
+	var Notification:any
+	//var logError:typeof logErrorGlobal
+	var $:typeof JQueryGlobal
+	var Radium:typeof RadiumGlobal
+	
+	interface Window {
+		$:typeof JQueryGlobal
+		dialogName:string
+	}
+	
 	/**
 	 * Extending root types with some custom props
 	 */
@@ -178,4 +198,6 @@ installGlobals()
 
 export {}
 
-acceptHot(module)
+if (module.hot) {
+	module.hot.accept()
+}

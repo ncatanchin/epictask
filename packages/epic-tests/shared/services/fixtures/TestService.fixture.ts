@@ -1,7 +1,7 @@
 
 
-import {ProcessType} from "shared/ProcessType"
-import {RegisterService, BaseService, IServiceConstructor} from "shared/services"
+import {ProcessType} from "epic-global"
+import {RegisterService, BaseService, IServiceConstructor} from "epic-services"
 
 const log = getLogger(__filename)
 

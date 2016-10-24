@@ -2,7 +2,7 @@ import {List} from 'immutable'
 
 
 
-import { isNil, isObject } from "shared/util/TypeCheckUtil"
+import { isNil, isObject } from  "epic-global"
 
 
 const

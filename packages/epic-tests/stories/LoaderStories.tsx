@@ -1,7 +1,7 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {Loader} from "ui/components/common/Loader"
+import {Loader} from "epic-ui-components"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
@@ -16,6 +16,6 @@ storiesOf('Loader Animation',module)
 	.add('Responsive loader', () => {
 		
 		
-		return <Loader animate/>
+		return <Loader />
 	})
 	

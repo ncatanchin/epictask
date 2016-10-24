@@ -1,5 +1,7 @@
 import {EventEmitter} from "events"
-const log = getLogger(__filename)
+
+const
+	log = getLogger(__filename)
 
 /**
  * Available Transport Schemes

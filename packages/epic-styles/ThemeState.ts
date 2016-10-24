@@ -1,11 +1,11 @@
 import * as assert from 'assert'
 
 
-import { getHot, setDataOnHotDispose } from "shared/util/HotUtils"
-import { TTheme } from "shared/themes/Theme"
-import { IPalette } from "shared/themes/material/MaterialTools"
-import { PersistentValue, PersistentValueEvent } from "shared/util/PersistentValue"
-import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
+import { getHot, setDataOnHotDispose } from  "epic-common"
+import { TTheme } from "./Theme"
+import { IPalette } from "./material"
+import { PersistentValue, PersistentValueEvent } from  "epic-common"
+import { EnumEventEmitter } from  "epic-common"
 
 import * as BuiltInsType from './builtin'
 
@@ -35,8 +35,8 @@ export const
 
 // ONLY LET FOR HMR
 export let
-	Themes:{[ThemeName:string]:IThemeCreator} = null,
-	Palettes:{[PaletteName:string]:IPaletteCreator} = null,
+	ThemeCreators:{[ThemeName:string]:IThemeCreator} = null,
+	PaletteCreators:{[PaletteName:string]:IPaletteCreator} = null,
 	DefaultTheme:IThemeCreator = null,
 	DefaultPalette:IPaletteCreator = null
 
@@ -179,7 +179,7 @@ function setTheme(newThemeCreator:IThemeCreator) {
 	
 	const
 		{BaseThemeName} = newThemeCreator,
-		newBaseTheme = BaseThemeName && Themes[BaseThemeName] && Themes[BaseThemeName](palette),
+		newBaseTheme = BaseThemeName && ThemeCreators[BaseThemeName] && ThemeCreators[BaseThemeName](palette),
 		newTheme = newThemeCreator(palette,newBaseTheme)
 	
 	Object.assign(ThemeState,{
@@ -222,7 +222,7 @@ export function getTheme() {
  * @returns {IThemeCreator}
  */
 export function getThemeCreator(name:string) {
-	return Themes[name]
+	return ThemeCreators[name]
 }
 
 /**
@@ -231,7 +231,7 @@ export function getThemeCreator(name:string) {
  * @returns {string[]}
  */
 export function getThemeNames() {
-	return Object.keys(Themes)
+	return Object.keys(ThemeCreators)
 }
 
 /**
@@ -248,7 +248,7 @@ export function getPalette() {
 }
 
 export function getPaletteCreator(name:string) {
-	return Palettes[name]
+	return PaletteCreators[name]
 }
 
 
@@ -257,11 +257,11 @@ export function getPaletteName() {
 }
 
 export function getPalettes() {
-	return Object.values(Palettes)
+	return Object.values(PaletteCreators)
 }
 
 export function getPaletteNames() {
-	return Object.keys(Palettes)
+	return Object.keys(PaletteCreators)
 }
 
 export function forceThemeUpdate() {
@@ -276,12 +276,12 @@ function loadBuiltIns() {
 	DefaultTheme = BuiltIns.DefaultTheme
 	DefaultPalette = BuiltIns.LightPalette
 	
-	Themes = {
+	ThemeCreators = {
 		DefaultTheme: BuiltIns.DefaultTheme,
 		//LightTheme: BuiltIns.LightTheme
 	}
 	
-	Palettes = {
+	PaletteCreators = {
 		LightPalette: BuiltIns.LightPalette,
 		DarkPalette: BuiltIns.DarkPalette
 	}
@@ -300,7 +300,7 @@ function loadBuiltIns() {
  * @returns {IPaletteCreator|any}
  */
 export function currentPaletteCreator() {
-	return Palettes[getPaletteName()] || DefaultPalette || Palettes['DarkPalette']
+	return PaletteCreators[getPaletteName()] || DefaultPalette || PaletteCreators['DarkPalette']
 }
 
 /**
@@ -309,7 +309,7 @@ export function currentPaletteCreator() {
  * @returns {IThemeCreator}
  */
 export function currentThemeCreator() {
-	return Themes[getThemeName()] || DefaultTheme || Themes['DefaultTheme']
+	return ThemeCreators[getThemeName()] || DefaultTheme || ThemeCreators['DefaultTheme']
 }
 
 loadBuiltIns()
@@ -332,7 +332,7 @@ PersistentPaletteName.on(PersistentValueEvent.Changed,() => {
 		return
 	}
 	const
-		paletteCreator = Palettes[paletteName]
+		paletteCreator = PaletteCreators[paletteName]
 	
 	log.debug(`Setting new palette`,paletteCreator,paletteName)
 	setPaletteCreator(paletteCreator)
@@ -352,7 +352,7 @@ PersistentThemeName.on(PersistentValueEvent.Changed,() => {
 		log.debug(`Current theme is already ${themeName}`)
 		return
 	}
-	setThemeCreator(Themes[themeName])
+	setThemeCreator(ThemeCreators[themeName])
 })
 
 

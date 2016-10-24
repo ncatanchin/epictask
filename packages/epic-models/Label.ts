@@ -6,9 +6,8 @@ import {
 } from 'typestore'
 
 import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
-import {RegisterModel} from 'shared/Registry'
-import { Repo } from "shared/models"
-import { isNumber } from "shared/util"
+import {isNumber,RegisterModel} from 'epic-global'
+import { Repo } from "./Repo"
 
 export function makeLabelId(label:Label) {
 	return `${label.repoId}-${label.url}`

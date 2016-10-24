@@ -1,6 +1,7 @@
 import {Attribute} from 'typestore'
-import {JSONKey} from 'shared/config/DecorationConfig'
-import {isFunction,isNil} from 'shared/util'
+
+
+import {isNil,isFunction, JSONKey } from "epic-global"
 
 const
 	log = getLogger(__filename),

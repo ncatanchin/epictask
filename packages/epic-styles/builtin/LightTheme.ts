@@ -1,5 +1,4 @@
-import { Transparent, createStyles} from "shared/themes/styles"
-import { colorAlpha } from "shared/themes/styles/ColorTools"
+import { Transparent, createStyles,colorAlpha } from "../styles"
 
 export function LightTheme(palette,baseTheme) {
 	

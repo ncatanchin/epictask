@@ -4,7 +4,7 @@
 // const log = getLogger(__filename)
 //
 //
-// import {UserStore} from 'shared/models/User'
+// import {UserStore} from "epic-models"
 // import Electron = require('electron')
 // //import {toDataUrl} from 'main/MainTemplates'
 //

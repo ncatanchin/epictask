@@ -1,12 +1,13 @@
 
-import { getHot, setDataOnHotDispose, acceptHot } from "shared/util/HotUtils"
-import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from "shared/commands/Command"
-import { getValue, cloneObject } from "shared/util"
-import { EnumEventEmitter } from "shared/util/EnumEventEmitter"
+import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
+import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from  "./Command"
+import { getValue, cloneObject } from  "epic-common"
+import { EnumEventEmitter } from  "epic-common"
 import { OrderedMap } from "immutable"
 
 const
 	log = getLogger(__filename),
+	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
 		clazz:typeof CommandSimpleMenuManager,
