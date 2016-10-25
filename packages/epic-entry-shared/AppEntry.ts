@@ -1,4 +1,4 @@
-import "epic-global/LogConfig"
+import "epic-global/LogCategories"
 import "epic-global/ProcessConfig"
 
 // DEBUG HELPERS
@@ -21,7 +21,7 @@ TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
 import "epic-global/Env"
 import "epic-global/NamespaceConfig"
 import "epic-global/PromiseConfig"
-
+import "epic-global/LogConfig"
 import "epic-global/Globals"
 
 

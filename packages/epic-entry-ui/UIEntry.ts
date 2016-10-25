@@ -1,137 +1,151 @@
 import "epic-entry-shared/AppEntry"
 import { Events, acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime } from "epic-global"
-import { SimpleMenuManagerProvider } from "epic-command-manager"
+
 
 benchmarkLoadTime(`Starting UIEntry`)
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	startupPromises = []
+	
+let
+	stopAppStoreServer = null
 
+/**
+ * Setup dev tools
+ */
 const setupDevTools = benchmark('Setup dev tools',() => {
-	if (Env.isDev && !Env.isTest) {
+	const
+		deferred = Promise.defer()
+	
+	require.ensure([],function(require:any) {
 		require('./UIDevConfig')
-	}
+		deferred.resolve()
+	})
+	
+	return deferred.promise
 })
+
+if (Env.isDev && !Env.isTest) {
+	startupPromises.push(setupDevTools())
+}
 
 
 /**
  * Start the command manager
  */
 const setupCommandManager = benchmark('Setup Command Manager', () => {
+	const
+		deferred = Promise.defer()
+	
+	
 	log.debug(`Loading the CommandManager - 1st`)
 	
-	const
-		commandManager = require('epic-command-manager').getCommandManager()
+	require.ensure([],function(require:any) {
+		const
+			{SimpleMenuManagerProvider,getCommandManager} = require('epic-command-manager')
+		
+		getCommandManager().setMenuManagerProvider(SimpleMenuManagerProvider)
+		deferred.resolve()
+	})
 	
-	commandManager.setMenuManagerProvider(SimpleMenuManagerProvider)
+	return deferred.promise
+	
 })
 
-/**
- * Ensure the main process starts the DatabaseServer
- * and the job server
- */
-const childServicesBoot = benchmark('Child service boot', async () => {
-	
-	
-	if (!require('electron').remote.getGlobal(Events.MainBooted)) {
-		const
-			{ ipcRenderer } = require('electron')
-		
-		ipcRenderer.send('epictask-start-children')
-		
-		log.debug(`Going to wait for epictask-children-ready`)
-		
-		const
-			childrenDeferred = Promise.defer()
-		
-		ipcRenderer.on(Events.ChildrenReady, () => {
-			log.debug(`Got notification from main - kids are ready`)
-			childrenDeferred.resolve()
-		})
-		
-		await childrenDeferred.promise
-	}
-})
+startupPromises.push(setupCommandManager())
 
 /**
- * Boot everything up
+ * Create the store
+ *
+ * @returns {Promise<T>}
  */
-const boot = benchmark('UIBoot', async ()=> {
-	
+const setupStore = () => {
 	benchmarkLoadTime(`Boot starting`)
 	const
-		{storeBuilder} = require('epic-typedux/store/AppStoreBuilder')
+		deferred = Promise.defer()
 	
-	await storeBuilder()
-	
-	benchmarkLoadTime(`Store built`)
-	
-	let
-		stopAppStoreServer = null
-	
-	// APP STORE SERVER RUNS ON MAIN UI PROCESS ONLY
-	if (ProcessConfig.isType(ProcessType.UI)) {
-		log.debug(`Starting AppStoreServer`)
-		stopAppStoreServer = await require('epic-typedux/store/AppStoreServer').start()
+	require.ensure([],function(require:any) {
+		const
+			{storeBuilder} = require('epic-typedux/store/AppStoreBuilder')
 		
-		addHotDisposeHandler(module, () => {
-			stopAppStoreServer()
-		})
-		
-		
-		log.info(`App store server is up`)
-		
-		
-		// Check if the main process is completely loaded - if not then wait
-		await childServicesBoot()
-		
-	}
-	
-	benchmarkLoadTime(`Getting service manager`)
-	
-	// START THE SERVICE MANAGER EVERYWHERE
-	const
-		getServiceManager = require('epic-services').getServiceManager
-	
-	benchmarkLoadTime(`Starting services`)
-	
-	// HMR STOP SERVICES
-	addHotDisposeHandler(module,() => {
-		try {
-			getServiceManager().stop()
-		} catch (err) {
-			log.error(`Failed to stop services`, err)
-		}
+		storeBuilder()
+			.then(async () => {
+				
+				// APP STORE SERVER RUNS ON MAIN UI PROCESS ONLY
+				if (ProcessConfig.isType(ProcessType.UI)) {
+					log.debug(`Starting AppStoreServer`)
+					stopAppStoreServer = await require('epic-typedux/store/AppStoreServer').start()
+					
+					addHotDisposeHandler(module, () => {
+						stopAppStoreServer()
+					})
+					
+					
+					log.info(`App store server is up`)
+					
+					
+					// Check if the main process is completely loaded - if not then wait
+					await require('./StartChildProcesses').childServicesBoot()
+					
+				}
+				
+				// START THE SERVICE MANAGER EVERYWHERE
+				const
+					getServiceManager = require('epic-services').getServiceManager
+				
+				benchmarkLoadTime(`Starting services`)
+				
+				// HMR STOP SERVICES
+				addHotDisposeHandler(module,() => {
+					try {
+						getServiceManager().stop()
+					} catch (err) {
+						log.error(`Failed to stop services`, err)
+					}
+				})
+				
+				
+				log.info('Starting all services')
+				await getServiceManager().start()
+				benchmarkLoadTime(`services started`)
+				
+				deferred.resolve()
+			})
 	})
 	
 	
-	log.info('Starting all services')
-	await getServiceManager().start()
-	benchmarkLoadTime(`services started`)
-	
-	// Load Styles
-	require('epic-styles')
-	
-	
-	benchmarkLoadTime(`themes loaded`)
-	// Finally load the AppRoot (sep chunk - faster compile - i hope)
-	benchmarkLoadTime(`Loading app root`)
-	require('./AppRoot')
-	benchmarkLoadTime(`Loaded App root`)
-	
-	//
-	// require('ui/components/root/AppRoot')
+	return deferred.promise
+}
 
+startupPromises.push(setupStore())
+
+
+/**
+ * Setup/Load Styles
+ */
+function setupStyles() {
+	const
+		deferred = Promise.defer()
+	
+	require.ensure([],function(require:any) {
+		// Load Styles
+		require('epic-styles')
+		deferred.resolve()
+	})
+	
+	return deferred.promise
+}
+
+startupPromises.push(setupStyles())
+
+require.ensure([],function(require:any) {
+	function loadAppRoot() {
+		require('./AppRoot')
+	}
+	
+	Promise.all(startupPromises).then(loadAppRoot)
 })
 
-
-// BENCHMARK
-benchmarkLoadTime(`before dev tools & command manager`)
-setupDevTools()
-benchmarkLoadTime(`after dev tools`)
-setupCommandManager()
-
-benchmarkLoadTime(`after command manager`)
-boot().then(() => console.log('Booted App'))
 
 acceptHot(module,log)
