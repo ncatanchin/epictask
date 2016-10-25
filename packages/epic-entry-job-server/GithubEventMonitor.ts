@@ -1,5 +1,5 @@
 import * as assert from 'assert'
-import { PagedArray,getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
+import { PagedArray,getHot, setDataOnHotDispose, acceptHot } from  "epic-global"
 
 import {RepoEvent,IssuesEvent} from 'epic-models'
 import { createClient, GithubError } from "epic-github"

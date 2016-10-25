@@ -1,7 +1,7 @@
 // Imports
 import * as React from 'react'
 import {List} from 'immutable'
-import {PureRender} from "epic-ui-components"
+import {PureRender} from "epic-ui-components/PureRender"
 import {ThemedStyles} from "epic-styles"
 import {TJobIMap, JobActionFactory} from "epic-typedux"
 import {IJobStatusDetail, IJob} from "epic-typedux"

@@ -36,8 +36,8 @@ import { getUIActions, getIssueActions } from "epic-typedux"
 import {createSelector} from 'reselect'
 import { TransitionDurationLong } from "epic-styles"
 import { IssuesPanel } from "epic-ui-components"
-import { shallowEquals, shallowEqualsArrayOrList } from  "epic-common"
-import { createDeepEqualSelector } from  "epic-common"
+import { shallowEquals, shallowEqualsArrayOrList } from  "epic-global"
+import { createDeepEqualSelector } from  "epic-global"
 import { IThemedAttributes } from "epic-styles"
 
 

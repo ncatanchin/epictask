@@ -1,7 +1,5 @@
 import ChildProcessRenderer from "./ChildProcessRenderer"
-//import ProcessType from "epic-global"
-import { getHot, setDataOnHotDispose, acceptHot } from "epic-common"
-import { ProcessType } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, ProcessType } from "epic-global"
 
 const log = getLogger(__filename)
 
@@ -33,13 +31,14 @@ export namespace ChildProcessManager {
 	
 	let running = false
 	
-	ipcMain.on('child-message',(event,{processTypeName,workerId,type,body}) => {
-		const child = children.find(it => it.processType === ProcessType[processTypeName] as any)
-		assert(child,`Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
-		
-		child.handleMessage(type,body)
-	})
-	
+	if (ipcMain) {
+		ipcMain.on('child-message', (event, { processTypeName, workerId, type, body }) => {
+			const child = children.find(it => it.processType === ProcessType[ processTypeName ] as any)
+			assert(child, `Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
+			
+			child.handleMessage(type, body)
+		})
+	}
 	/**
 	 * isRunning - processes are running
 	 */
@@ -155,7 +154,8 @@ export namespace ChildProcessManager {
 	}
 	
 	//process.on('beforeExit',(exitCode) => stopAll())
-	process.on('exit',(exitCode) => killAll())
+	if (ipcMain)
+		process.on('exit',(exitCode) => killAll())
 }
 
 acceptHot(module,log)

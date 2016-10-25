@@ -4,7 +4,7 @@
 // Imports
 import * as React from "react"
 import { connect } from "react-redux"
-import { createDeepEqualSelector, getValue } from "epic-common"
+import { createDeepEqualSelector, getValue } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
@@ -16,7 +16,7 @@ import {
 	getUIActions,
 	getIssueActions
 } from "epic-typedux"
-import { Dialogs } from "epic-process-manager"
+import { Dialogs } from "epic-global"
 import { DialogRoot, createSaveCancelActions, MarkdownEditor, FileDrop, RepoName } from "epic-ui-components"
 import {
 	CommandRoot,

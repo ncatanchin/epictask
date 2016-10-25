@@ -1,4 +1,4 @@
-import ProcessType from './ProcessType'
+import ProcessTypeGlobal from './ProcessType'
 
 
 
@@ -8,21 +8,21 @@ export namespace ProcessConfigGlobal {
 	 * Dev tool configs
 	 */
 	const ChildDevTools = {
-		[ProcessType.DatabaseServer]: false,
-		[ProcessType.JobServer]: false
+		[ProcessTypeGlobal.DatabaseServer]: true,
+		[ProcessTypeGlobal.JobServer]: true
 	}
 	
 	/**
 	 * All possible process types in EpicTask
 	 */
-	export const Type = ProcessType
+	export const Type = ProcessTypeGlobal
 	
 	/**
 	 * The current process type
 	 *
 	 * @type {ProcessType}
 	 */
-	let processType:ProcessType = null
+	let processType:ProcessTypeGlobal = null
 	
 	/**
 	 * Check the current process type
@@ -30,7 +30,7 @@ export namespace ProcessConfigGlobal {
 	 * @param testProcessTypes
 	 * @returns {boolean}
 	 */
-	export function isType(...testProcessTypes:ProcessType[]) {
+	export function isType(...testProcessTypes:ProcessTypeGlobal[]) {
 		return testProcessTypes.includes(processType)
 	}
 	
@@ -39,7 +39,7 @@ export namespace ProcessConfigGlobal {
 	 *
 	 * @param newProcessType
 	 */
-	export function setType(newProcessType:ProcessType) {
+	export function setType(newProcessType:ProcessTypeGlobal) {
 		processType = newProcessType
 		console.log('Process Type set to',getTypeName())
 	}
@@ -47,7 +47,7 @@ export namespace ProcessConfigGlobal {
 	/**
 	 * Get this processes type
 	 *
-	 * @returns {ProcessType}
+	 * @returns {ProcessTypeGlobal}
 	 */
 	export function getType() {
 		return processType
@@ -58,8 +58,8 @@ export namespace ProcessConfigGlobal {
 	 *
 	 * @returns {string}
 	 */
-	export function getTypeName(processType:ProcessType = getType()):string {
-		return ProcessType[processType]
+	export function getTypeName(processType:ProcessTypeGlobal = getType()):string {
+		return ProcessTypeGlobal[processType]
 	}
 	
 	/**
@@ -67,7 +67,7 @@ export namespace ProcessConfigGlobal {
 	 * @returns {boolean}
 	 */
 	export function isMain() {
-		return isType(ProcessType.Main)
+		return isType(ProcessTypeGlobal.Main)
 	}
 	
 	
@@ -76,7 +76,7 @@ export namespace ProcessConfigGlobal {
 	 * @returns {boolean}
 	 */
 	export function isUI() {
-		return isType(ProcessType.UI)
+		return isType(ProcessTypeGlobal.UI)
 	}
 	
 	/**
@@ -85,7 +85,7 @@ export namespace ProcessConfigGlobal {
 	 * @returns {boolean}
 	 */
 	export function isUIChildWindow() {
-		return isType(ProcessType.UIChildWindow)
+		return isType(ProcessTypeGlobal.UIChildWindow)
 	}
 	
 	/**
@@ -93,7 +93,7 @@ export namespace ProcessConfigGlobal {
 	 * @returns {boolean}
 	 */
 	export function isStorybook() {
-		return isType(ProcessType.Storybook)
+		return isType(ProcessTypeGlobal.Storybook)
 	}
 	
 	/**
@@ -102,7 +102,7 @@ export namespace ProcessConfigGlobal {
 	 * @param processType
 	 * @returns {any|boolean}
 	 */
-	export function showChildDevTools(processType:ProcessType) {
+	export function showChildDevTools(processType:ProcessTypeGlobal) {
 		return ChildDevTools[processType] && DEBUG
 	}
 	
@@ -113,14 +113,28 @@ export namespace ProcessConfigGlobal {
 
 declare global {
 	
+	
+	namespace ProcessConfig {
+		function isStorybook():boolean
+		function showChildDevTools(processTypeIn:ProcessTypeGlobal)
+		function isUIChildWindow():boolean
+		function isUI():boolean
+		function isMain():boolean
+		function getTypeName(processTypeIn?:ProcessTypeGlobal):string
+		function getType():ProcessTypeGlobal
+		function setType(newProcessType:ProcessTypeGlobal)
+		function isType(...testProcessTypes:ProcessTypeGlobal[])
+		const Type:ProcessTypeGlobal
+	}
+	
 	//noinspection JSUnusedLocalSymbols
 	/**
 	 * Process type of the currently running process
 	 */
-	const ProcessConfig:typeof ProcessConfigGlobal
+	//const ProcessConfig:typeof ProcessConfigGlobal
 	
 	//noinspection JSUnusedLocalSymbols
-	const ProcessType:typeof ProcessConfigGlobal.Type
+	const ProcessType:typeof ProcessTypeGlobal
 }
 
 // Assign to global

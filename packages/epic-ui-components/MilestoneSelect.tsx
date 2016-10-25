@@ -4,7 +4,7 @@ import { connect } from 'react-redux'
 import {List} from 'immutable'
 import * as Radium from 'radium'
 import { PureRender } from "epic-ui-components"
-import { createDeepEqualSelector } from  "epic-common"
+import { createDeepEqualSelector } from  "epic-global"
 import { createStructuredSelector, createSelector } from 'reselect'
 import { ThemedStyles } from "epic-styles"
 import { Milestone } from "epic-models"
@@ -13,7 +13,7 @@ import { Icon } from "epic-ui-components"
 import {MenuItem} from 'material-ui'
 import { Select, ISelectItem } from "epic-ui-components"
 import { enabledMilestonesSelector } from "epic-typedux"
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 import filterProps from 'react-valid-props'
 
 // Constants

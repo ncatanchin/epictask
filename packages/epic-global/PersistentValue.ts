@@ -109,6 +109,9 @@ export class PersistentValue<T> extends EnumEventEmitter<PersistentValueEvent> {
 	 * @returns {T|null} item param when changed, null when not changed
 	 */
 	set(item:T) {
+		if (!inWindow)
+			return
+		
 		const
 			rawValue = (this.serializer ? this.serialize(item) : item) as string
 				 

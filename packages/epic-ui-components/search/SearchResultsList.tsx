@@ -6,7 +6,7 @@ import { PureRender } from "epic-ui-components"
 import { ThemedStyles } from "epic-styles"
 import { SearchItem, ISearchState } from "epic-typedux"
 
-import { shallowEquals, getValue } from  "epic-common"
+import { shallowEquals, getValue } from  "epic-global"
 import { SearchResultItem } from "epic-ui-components"
 import { SearchPanel } from "epic-ui-components"
 

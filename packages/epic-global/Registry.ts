@@ -2,10 +2,12 @@ import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} fr
 
 import React from 'react'
 import {ActionFactory} from 'typedux'
+import { IWindowConfig } from "./WindowConfig"
+import { decorateConstructor } from "./Decorations"
+import { getValue } from "epic-global"
 
 
 const
-	createReactProxy = require('react-proxy').default,
 	log = getLogger(__filename)
 		
 //forceReactUpdate = getReactForceUpdate(React);
@@ -17,6 +19,7 @@ export enum RegistryType {
 	Models = 1,
 	Tools,
 	Views,
+	WindowConfig,
 	ActionFactory
 }
 
@@ -36,13 +39,18 @@ const registryListeners:TRegistryListener[] = _.get(module,'hot.data.registryLis
 
 export function addRegistryListener(listener:TRegistryListener) {
 	registryListeners.push(listener)
+	
 	return function() {
-		const index = registryListeners.indexOf(listener)
+		
+		const
+			index = registryListeners.indexOf(listener)
+		
 		if (index > -1) {
 			registryListeners.splice(index,1)
 		}
 	}
 }
+
 
 function fireEvent(event:RegistryEvent,...args:any[]) {
 	registryListeners.forEach(listener => {
@@ -58,8 +66,10 @@ function fireEvent(event:RegistryEvent,...args:any[]) {
  * Typing for registry
  */
 export interface RegistryEntry<T> {
-	name:string,
-	clazz:T
+	name:string
+	data?:any
+	value?:T
+	clazz?:T
 	react?:{
 		proxyComponent:any
 		proxy:any
@@ -81,7 +91,6 @@ export interface IModelConstructor<T> {
 
 export interface IToolConstructor extends React.ComponentClass<IToolProps> {
 	
-	
 }
 
 export interface IViewConstructor {
@@ -97,6 +106,7 @@ const emptyRegistries = {
 	[RegistryType.Models]: {} as TRegistry<IModelConstructor<any>>,
 	[RegistryType.Tools]: {} as TRegistry<IToolConstructor>,
 	[RegistryType.Views]: {} as TRegistry<IViewConstructor>,
+	[RegistryType.WindowConfig]: {} as TRegistry<IWindowConfig>,
 	[RegistryType.ActionFactory]: {} as TRegistry<IActionFactoryConstructor>
 }
 /**
@@ -123,54 +133,29 @@ export function RegisterActionFactory(target:IActionFactoryConstructor) {
 }
 
 /**
- * Decorate a constructor - ripped from typescript-ioc - many thx ;)
- *
- * @param derived
- * @param base
- * @returns {Function}
- */
-function decorateConstructor(derived: Function, base: Function) {
-	for (let p of Object.getOwnPropertyNames(base)) {
-		if (base.hasOwnProperty(p) && !derived.hasOwnProperty(p)) {
-			derived[p] = base[p];
-		}
-	}
-	derived['__parent'] = base;
-	function __() { this.constructor = derived; }
-	derived.prototype = base === null ? Object.create(base) :
-		(__.prototype = base.prototype, new __());
-	return derived;
-}
-
-
-/**
  * Auto register a class
  * so it can be dynamically recreated in revivers etc
  *
  * @param target
  */
 export function RegisterModel<T extends IModelConstructor<any>>(target:T):T {
-	const clazzName = target.name
-	log.info(`Registering model: ${clazzName}`)
-	
-	registerModel(clazzName,target)
+	const
+		clazzName = target.name
 	
 	target.$$clazz = clazzName
 	
-	return decorateConstructor(function(...args:any[]) {
-		target.apply(this,args)
-		//super(...args)
-		this.$$clazz = clazzName
-	},target) as T
+	const
+		decoratedClazz = decorateConstructor(function(...args:any[]) {
+			target.apply(this,args)
+			this.$$clazz = clazzName
+		},target) as T
 	
-	// const newTarget = postConstructorDecorate(clazzName,target,function(instance:T,args:any[]) {
-	// 	instance.$$clazz = clazzName
-	// 	return instance
-	// })
-	//
-	// newTarget.$$clazz = target.$$clazz = clazzName
-	// registerModel(clazzName,newTarget)
-	// return newTarget
+	log.info(`Registering model: ${clazzName}`)
+	
+	
+	registerModel(clazzName,decoratedClazz)
+	
+	return decoratedClazz
 }
 
 /**
@@ -206,11 +191,12 @@ export function getModel(name):IModelConstructor<any> {
  */
 export function RegisterTool(reg:IToolRegistration) {
 	return (target:IToolConstructor) => {
-		const id = reg.id || target.name
+		const
+			id = reg.id || target.name
+		
 		log.info(`Registering tool: ${id}`)
+		
 		return registerTool(reg, target) as any
-		
-		
 	}
 }
 
@@ -223,20 +209,33 @@ export function RegisterTool(reg:IToolRegistration) {
  * @param clazz
  */
 function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
+	const
+		createReactProxy = require('react-proxy').default
+	
 	try {
 		log.info(`Registering ${reg.id}`)
-		let config = getRegistry(RegistryType.Tools)[reg.id]
-		let update = false
+		let
+			config = getRegistry(RegistryType.Tools)[reg.id],
+			update = false
 		
 		if (config) {
 			update = true
+			
+			config.data = {
+				reg
+			}
 			config.clazz = clazz
 			config.react.getHeaderControls = reg.getHeaderControls
 			config.react.proxy.update(clazz)
 		} else {
-			const proxy = createReactProxy(clazz)
+			const
+				proxy = createReactProxy(clazz)
+			
 			config = getRegistry(RegistryType.Tools)[reg.id] = {
 				name: reg.id,
+				data: {
+					reg
+				},
 				clazz,
 				react: {
 					proxy,
@@ -250,11 +249,11 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 		// Container.get(UIActionFactory).registerTool(reg as any)
 	
 		
-		if (update) {
-			setImmediate(() =>{
-				fireEvent(RegistryEvent.ToolRegistered, reg)
-			})
-		}
+		//if (update) {
+		setImmediate(() =>{
+			fireEvent(RegistryEvent.ToolRegistered, reg)
+		})
+		//}
 		
 		return config
 			.react
@@ -262,7 +261,7 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 		
 	} catch (err) {
 		log.error(`Failed to register tool`,err)
-		require('epic-global').NotificationCenter.addErrorMessage(err)
+		require('./NotificationCenter').NotificationCenter.addErrorMessage(err)
 		
 		return clazz
 	}
@@ -270,12 +269,44 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 	
 }
 
-
+/**
+ * Get a tool config
+ *
+ * @param id
+ * @returns {RegistryEntry<any>}
+ */
 function getToolConfig(id:string) {
-	//loadPlugins()
-	
 	return getRegistry(RegistryType.Tools)[id]
 }
+
+/**
+ * get tool registration
+ *
+ * @param id
+ * @returns {IToolRegistration}
+ */
+function getToolRegistration(id:string):IToolRegistration {
+	return getValue(() => getToolConfig(id).data.reg) as IToolRegistration
+}
+
+/**
+ * Get all tool ids
+ *
+ * @returns {string[]}
+ */
+function getToolIds():string[] {
+	return Object.keys(getRegistry(RegistryType.Tools))
+}
+
+/**
+ * Get all tool configs
+ *
+ * @returns {IToolRegistration[]}
+ */
+export function getToolRegistrations():IToolConfig[] {
+	return getToolIds().map(getToolRegistration)
+}
+
 
 /**
  * Retrieve the class constructor for a given name
@@ -284,12 +315,20 @@ function getToolConfig(id:string) {
  * @returns {any}
  */
 export function getToolComponent(id:string):IToolConstructor {
-	const tool = getToolConfig(id)
+	const
+		tool = getToolConfig(id)
+	
 	assert(tool,`Tool not found for ${id}`)
 	
 	return tool.clazz// tool.react.proxyComponent
 }
 
+/**
+ * Get tool component class
+ *
+ * @param id
+ * @returns {any}
+ */
 export function getToolComponentClass(id:string):IToolConstructor {
 	const tool = getToolConfig(id)
 	assert(tool,`Tool not found for ${id}`)
@@ -297,6 +336,12 @@ export function getToolComponentClass(id:string):IToolConstructor {
 	return tool.clazz
 }
 
+/**
+ * Get tool header controls
+ *
+ * @param id
+ * @returns {React.ReactElement<any>[]|Array}
+ */
 export function getToolHeaderControls(id:string):React.ReactElement<any>[] {
 	const tool = getToolConfig(id)
 	assert(tool,`Tool not found for ${id}`)
@@ -329,26 +374,42 @@ function registerView(name,clazz:IViewConstructor) {
 	getRegistry(RegistryType.Views)[name] = {name,clazz}
 }
 
-let loaded = false
+/**
+ * Get window config registry
+ *
+ * @returns {TRegistry<IWindowConfig>}
+ */
+function getWindowConfigRegistry() {
+	return getRegistry(RegistryType.WindowConfig) as TRegistry<IWindowConfig>
+}
 
 /**
- * Load all plugin contexts - only runs once, then monitors in HMR
+ * Get a window config
+ * @param name
+ *
  */
-// export function loadPlugins(force = false) {
-// 	if (loaded && !force)
-// 		return
-//
-// 	loaded = true
-// 	const contexts = []
-// 	function loadPluginCtx(ctx) {
-// 		contexts.push(ctx)
-// 		ctx.keys().forEach(ctx)
-// 	}
-//
-// 	if (typeof window !== 'undefined')
-// 		loadPluginCtx(require.context('epic-plugins-default',true))
-//
-// }
+export function getWindowConfig(name:string):IWindowConfig {
+	const
+		entry = getWindowConfigRegistry()[name]
+	
+	assert(entry,`No window config found for ${name}`)
+	return entry.value
+}
+
+/**
+ * Register a window config
+ *
+ * @param name
+ * @param windowConfig
+ */
+export function registerWindowConfig(name:string,windowConfig:IWindowConfig) {
+	getWindowConfigRegistry()[name] = {
+		name,
+		value:windowConfig
+	}
+}
+
+let loaded = false
 
 
 /**
@@ -372,4 +433,10 @@ if (module.hot) {
 		})
 	})
 	module.hot.accept(() => log.info(`HMR update`))
+}
+
+if (DEBUG) {
+	Object.assign(global,{
+		Registry: module.exports
+	})
 }

@@ -56,7 +56,9 @@ export interface IDataBackend {
 
 let dataBackend:IDataBackend = {
 	get(type:any,ids:any[]):Promise<any> {
-		const store = Container.get(Stores).getModelStore(type)
+		const
+			store = Container.get(Stores).getModelStore(type)
+		
 		if (!ids[0]) {
 			log.warn(`First id must be truthy`,ids)
 			return Promise.resolve([])

@@ -6,13 +6,12 @@
 import * as React from 'react'
 import * as Radium from 'radium'
 
-import {PureRender} from "epic-ui-components"
-import {NotificationCenter} from "epic-global"
-import {Container} from 'typescript-ioc'
+import {PureRender} from "./PureRender"
+import { NotificationCenter, getNotificationCenter } from "epic-global"
 import {Themed, ThemedNoRadium} from "epic-styles"
 import {CommonKeys} from 'epic-command-manager'
-import {TypeAheadSelect} from "epic-ui-components"
-import { shallowEquals } from  "epic-common"
+import {TypeAheadSelect} from "./TypeAheadSelect"
+import { shallowEquals } from  "epic-global"
 import {
 	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
 	CommandContainerBuilder,ICommand
@@ -25,7 +24,7 @@ export type TChipsFieldMode = 'fixed-scroll-x'|'normal'
 
 const
 	{Style} = Radium,
-	toaster = Container.get(NotificationCenter),
+	toaster =getNotificationCenter(),
 	log = getLogger(__filename)
 
 const baseStyles = (topStyles,theme,palette) => ({

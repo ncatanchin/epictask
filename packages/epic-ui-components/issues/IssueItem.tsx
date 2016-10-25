@@ -15,7 +15,7 @@ import { issuesSelector, focusedIssueIdsSelector } from "epic-typedux"
 import {createSelector} from 'reselect'
 import {IssueStateIcon} from "epic-ui-components"
 
-import { shallowEquals, getValue } from  "epic-common"
+import { shallowEquals, getValue } from  "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import {createStructuredSelector} from 'reselect'
 

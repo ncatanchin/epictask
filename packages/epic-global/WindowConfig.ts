@@ -1,5 +1,5 @@
 import {ClassType} from 'react'
-import { searchPathsForFile } from  "epic-common"
+import { searchPathsForFile } from  "./Files"
 
 
 const

@@ -4,18 +4,18 @@ import * as Radium from 'radium'
 import {createStructuredSelector} from 'reselect'
 import {IssuesPanel} from "epic-ui-components"
 import {Page} from './Page'
-import {AppActionFactory} from "epic-typedux"
+
 import {connect} from 'react-redux'
 
 import {PureRender} from "epic-ui-components"
 import {ThemedStyles} from "epic-styles"
-import {createDeepEqualSelector} from  "epic-common"
+import {createDeepEqualSelector} from  "epic-global"
 import {ToolPanelLocation, IToolPanel} from "epic-global"
 import {ToolPanelComponent as ToolPanel} from "epic-ui-components"
 import { makeLinearGradient, Transparent, convertRem } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
 import { toolPanelsSelector, toolDraggingSelector } from "epic-typedux"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 
 
 const

@@ -1,6 +1,6 @@
 import {Container} from 'typescript-ioc'
 
-import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-common"
+import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-global"
 
 import {IssuesEvent,RepoEvent,Repo,Issue,User,Label,Milestone,Comment} from 'epic-models'
 import {  addInfoMessage, addErrorMessage,isString, isNumber, toNumber, isPromise } from  "epic-global"

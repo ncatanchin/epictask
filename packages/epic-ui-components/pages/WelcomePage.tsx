@@ -1,22 +1,18 @@
 import * as React from 'react'
-
-import * as Radium from 'radium'
-import {List} from 'immutable'
 import {createStructuredSelector} from 'reselect'
-import {IssuesPanel} from "epic-ui-components"
 import {Page} from './Page'
-import {AppActionFactory} from "epic-typedux"
 import {connect} from 'react-redux'
 
 import {PureRender} from "epic-ui-components"
 import {ThemedStyles} from "epic-styles"
-import {createDeepEqualSelector} from  "epic-common"
+import {createDeepEqualSelector} from  "epic-global"
 import {uiStateSelector} from "epic-typedux"
 import { Transparent, FlexColumnCenter, Fill, FlexScale, rem } from "epic-styles"
 import { SearchType } from "epic-typedux"
 import { SearchPanel } from "epic-ui-components"
 import { Logo } from "epic-ui-components"
 import { IThemedAttributes } from "epic-styles"
+import { getAppActions } from "epic-typedux/provider"
 
 
 const
@@ -78,7 +74,7 @@ export interface IWelcomePageState {
 @PureRender
 export class WelcomePage extends React.Component<IWelcomePageProps,IWelcomePageState> {
 	
-	appActions = Container.get(AppActionFactory)
+	appActions = getAppActions()
 	
 	componentWillMount = () => this.setState(this.getNewState())
 	

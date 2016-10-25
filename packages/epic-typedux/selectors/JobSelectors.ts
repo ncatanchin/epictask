@@ -1,10 +1,10 @@
 import {JobKey} from "epic-global"
 
-import {createDeepEqualSelector} from  "epic-common"
+import {createDeepEqualSelector} from  "epic-global"
 
 import {JobState } from "../state/JobState"
 import {IJob, TJobMap, IJobStatusDetail,IJobAndStatusDetail} from "../state/jobs"
-import {TSelector, TRootState} from "epic-common"
+import {TSelector, TRootState} from "epic-global"
 
 
 /**

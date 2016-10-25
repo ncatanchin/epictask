@@ -1,7 +1,10 @@
-import { ProcessType } from "epic-global"
+import { ProcessType } from "epic-global/ProcessType"
+import { acceptHot } from "epic-global/HotUtils"
+import {canProxyProperty} from 'epic-global/ProxyUtil'
 import { Stores, getDatabaseClient, chunkRemove, chunkSave } from "epic-database-client"
-import { BaseService, RegisterService, IServiceConstructor } from "./internal"
-import { canProxyProperty, acceptHot } from "epic-common"
+import { BaseService } from "./internal/BaseService"
+import { IServiceConstructor} from './internal/Types'
+import {RegisterService} from './internal/ServiceDecorations'
 
 const
 	log = getLogger(__filename)
@@ -109,7 +112,7 @@ export class DatabaseClientService extends BaseService {
 		const
 			client = getDatabaseClient()
 		
-		await client.connect()
+		client.connect().then(() => log.info('Connected'))
 		
 		// Load all model classes
 		log.info('Loading models and creating store')

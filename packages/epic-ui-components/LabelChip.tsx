@@ -10,7 +10,7 @@ import { PureRender,Icon } from "epic-ui-components"
 import { ThemedStyles } from "epic-styles"
 import { Label } from "epic-models"
 import { Milestone } from "epic-models"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 
 const tinycolor = require('tinycolor2')
 

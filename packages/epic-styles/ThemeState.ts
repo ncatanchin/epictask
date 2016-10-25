@@ -1,13 +1,8 @@
-import * as assert from 'assert'
-
-
-import { getHot, setDataOnHotDispose } from  "epic-common"
+import * as assert from "assert"
+import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent, EnumEventEmitter } from "epic-global"
 import { TTheme } from "./Theme"
 import { IPalette } from "./material"
-import { PersistentValue, PersistentValueEvent } from  "epic-common"
-import { EnumEventEmitter } from  "epic-common"
-
-import * as BuiltInsType from './builtin'
+import * as BuiltInsType from "./builtin"
 
 let
 	BuiltIns:typeof BuiltInsType = null

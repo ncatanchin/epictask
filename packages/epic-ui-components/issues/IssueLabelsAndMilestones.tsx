@@ -8,7 +8,7 @@ import {Label} from "epic-models"
 import {ThemedStylesNoRadium } from "epic-styles"
 import {Milestone} from "epic-models"
 import {LabelChip} from "epic-ui-components"
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 
 
 

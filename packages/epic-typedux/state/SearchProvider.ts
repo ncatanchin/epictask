@@ -1,31 +1,29 @@
-import {List} from 'immutable'
-import {FinderRequest, FinderResultArray} from 'typestore'
-import {
-	SearchType, SearchSource, SearchTypeSourceMap,
-	SearchResult, SearchItem
-} from "epic-typedux"
-import {ValueCache} from  "epic-common"
-
-import { GitHubClient, createClient } from "epic-github"
-import {RepoStore} from "epic-models"
-
-import {Benchmark} from  "epic-common"
-import {getStoreState} from '../store/AppStore'
-
-import {
-	enabledLabelsSelector,
-	enabledMilestonesSelector, enabledAssigneesSelector
-} from "epic-typedux"
-
-
-import { AvailableRepo, Repo, Issue, Label, Milestone, User } from "epic-models"
-import { getIssueActions, getRepoActions } from "../provider"
+import { List } from "immutable"
+import { FinderRequest, FinderResultArray } from "typestore"
+import { RepoStore, AvailableRepo, Repo, Issue, Label, Milestone, User } from "epic-models"
 import { getStores } from "epic-database-client"
-import { cloneObject, cloneObjectShallow } from  "epic-common"
-import { IIssueFilter } from "../state/issue"
-import { getCommandManager } from  "epic-command-manager"
-import { ICommand } from  "epic-command-manager"
 
+import {
+	SearchType,
+	SearchSource,
+	SearchTypeSourceMap,
+	SearchResult,
+	SearchItem
+} from './SearchState'
+import {
+	
+	enabledLabelsSelector,
+	enabledMilestonesSelector,
+	enabledAssigneesSelector
+} from "../selectors/RepoSelectors"
+import { ValueCache, Benchmark, cloneObject } from "epic-global"
+import { GitHubClient, createClient } from "epic-github"
+
+import { getStoreState } from "../store/AppStore"
+import { getIssueActions, getRepoActions } from "../provider"
+
+import { IIssueFilter } from "../state/issue"
+import { getCommandManager, ICommand } from "epic-command-manager"
 
 
 const

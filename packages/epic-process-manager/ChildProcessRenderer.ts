@@ -4,9 +4,9 @@ import Electron = require('electron')
 
 import { ProcessType } from "epic-global"
 import {ChildProcessManager as ChildProcessManagerType} from './ChildProcessManager'
-import { getAppEntryHtmlPath } from  "epic-common"
+import { getAppEntryHtmlPath } from  "epic-global"
 import { HEARTBEAT_TIMEOUT, START_TIMEOUT_DEFAULT } from "epic-net"
-import { setDataOnHotDispose, getHot } from  "epic-common"
+import { setDataOnHotDispose, getHot } from  "epic-global"
 
 
 const
@@ -610,7 +610,7 @@ export default class ChildProcessRenderer {
 			
 			this.browserWindow.loadURL(url)
 			// this.webView.addEventListener('console-message',this.handleConsoleMessage)
-			
+			this.browserWindow.show()
 			
 			process.on('beforeExit',() => {
 				try {

@@ -6,7 +6,7 @@ import {DefaultLeafReducer} from 'typedux'
 import {RepoKey} from "epic-global"
 import {RepoState,RepoMessage} from '../state/RepoState'
 
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 
 @Provided
 export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {

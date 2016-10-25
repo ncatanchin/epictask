@@ -4,14 +4,14 @@ import {createSelector} from 'reselect'
 
 import {UIKey} from "epic-global"
 import {UIState} from "../state/UIState"
-import { IUISheet,WindowType,IWindowInstance,WindowManager } from "epic-process-manager"
-
+import { IUISheet,WindowType } from "epic-global"
+import {IWindowInstance,WindowManager} from 'epic-process-manager'
 
 import { ToolPanelLocation, IToolPanel } from "epic-global"
-import { createDeepEqualSelector } from  "epic-common"
+import { createDeepEqualSelector } from  "epic-global"
 import { INotificationMessage } from "epic-global"
 import { jobDetailsSelector, jobsSelector } from "./JobSelectors"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 
 const
 	log = getLogger(__filename)

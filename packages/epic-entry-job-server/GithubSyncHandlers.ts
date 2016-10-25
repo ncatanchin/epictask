@@ -7,12 +7,12 @@ import * as moment from 'moment'
 import { createClient, GitHubClient, OnDataCallback } from "epic-github"
 import { getIssueActions, getRepoActions } from  "epic-typedux"
 
-import { shallowEquals, cloneObject,checkUpdatedAndAssign } from  "epic-common"
+import { shallowEquals, cloneObject,checkUpdatedAndAssign } from  "epic-global"
 
 import { chunkSave } from "epic-database-client"
 
-import {GithubSyncStatus as SyncStatus} from 'epic-common'
-import { OneAtATime } from  "epic-common"
+import {GithubSyncStatus as SyncStatus} from "epic-global"
+import { OneAtATime } from  "epic-global"
 import { isRepoSyncPending } from "./executors/RepoSyncExecutor"
 
 

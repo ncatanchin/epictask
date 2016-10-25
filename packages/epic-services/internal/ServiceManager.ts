@@ -1,4 +1,4 @@
-import {VariableProxy,setDataOnHotDispose, getHot, acceptHot } from  "epic-common"
+import {VariableProxy,setDataOnHotDispose, getHot, acceptHot } from  "epic-global"
 import {IService,IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
 
 
@@ -275,6 +275,13 @@ export class ServiceManager {
 	 * @returns {any}
 	 */
 	loadContext() {
+		return _.merge({},
+			require('../DatabaseClientService'),
+			require('../AppStateService'),
+			require('../UIStateService'),
+			require('../RepoStateService'),
+			require('../ToastService')
+		)
 		// const
 		// 	ctx = this.ctxRef = require.context('epic-services',false,/^((?!internal).*)Service\.(ts|js)$/),
 		// 	serviceFiles = ctx.keys()
@@ -291,7 +298,7 @@ export class ServiceManager {
 		//
 		// return ctx
 		
-		return require('./index')
+		//return require('./index')
 	}
 	
 	/**
@@ -306,21 +313,7 @@ export class ServiceManager {
 		}
 			
 		// Grab the services context
-		const ctx = this.loadContext()
-		
-		// If HMR then accept this context
-		if (module.hot) {
-			module.hot.accept([ctx.id],(updates) => {
-				if (this.stopped) {
-					log.warn('Service manager has been stopped, no HMR for this instance',updates)
-					return
-				}
-				
-				log.info(`HMR Updated Service modules`,updates)
-				this.loadModules()
-			})
-		}
-		
+		this.loadContext()
 		
 		
 		// Load/Reload any pending services
@@ -352,7 +345,7 @@ export class ServiceManager {
 			while (!allLoaded()) {
 				nextReg = pendingServices.find(it => {
 					return it.service.dependencies().length === 0 || it.service.dependencies().every(reg =>
-						this.registrations[reg.name].loaded)
+						this.registrations[reg.name] && this.registrations[reg.name].loaded)
 				})
 				
 				if (!nextReg){

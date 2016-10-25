@@ -4,7 +4,7 @@ import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import { ProcessType, NotificationMessageType, getNotificationCenter, UIKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
-import { PersistentValueEvent, cloneObjectShallow, NativeNotificationsEnabled } from "epic-common"
+import { PersistentValueEvent, cloneObjectShallow, NativeNotificationsEnabled } from "epic-global"
 
 const
 	log = getLogger(__filename)

@@ -3,7 +3,7 @@ import { PureRender } from "epic-ui-components"
 import { ThemedStyles } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
 import { getUIActions } from "epic-typedux"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 import { SearchType } from "epic-typedux"
 import { SearchPanel } from "epic-ui-components"
 

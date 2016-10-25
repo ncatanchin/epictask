@@ -2,8 +2,12 @@
 import * as React from "react"
 import { connect } from "react-redux"
 import { List } from "immutable"
-import { PureRender, getBuiltInToolId, BuiltInTools, Button, Icon } from "epic-ui-components"
-import { createDeepEqualSelector } from "epic-common"
+import {getBuiltInToolId, BuiltInTools} from 'epic-ui-components/tools/ToolConfig'
+import { PureRender   } from "epic-ui-components/PureRender"
+import { Button   } from "epic-ui-components/Button"
+import { Icon   } from "epic-ui-components/Icon"
+
+import { createDeepEqualSelector } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, createThemedStyles, FlexScale, FlexColumn } from "epic-styles"
 import { IJobStatusDetail, jobStateSelector, jobLogIdSelector, TJobIMap, JobActionFactory } from "epic-typedux"

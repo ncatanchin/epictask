@@ -1,5 +1,5 @@
 
-import { RemoteDebuggingPort } from "epic-global"
+import { RemoteDebuggingPort } from "epic-global/Constants"
 
 const
 	{app} = require('electron')

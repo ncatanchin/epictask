@@ -1,5 +1,5 @@
 
-import { cloneObject } from  "epic-common"
+import { cloneObject } from  "epic-global"
 import { makeIPCServerId } from "./IPCUtil"
 const
 	log = getLogger(__filename),

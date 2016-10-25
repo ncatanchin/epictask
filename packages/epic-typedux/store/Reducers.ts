@@ -7,22 +7,31 @@ export function getReducers():ILeafReducer<any,any>[] {
 	
 	// TODO - LOAD FROM SERVICE REGISTRY
 	//ctx = require.context('../actions/',true,/Reducer/)
-	let ctx = require.context('../actions/',true,/(Reducer\.ts$|Reducer$)/)
-	log.info(`Loaded Reducers`,ctx.keys())
-	const mods = ctx.keys().map(ctx)
-
-	let reducers = []
+	// let
+	// 	ctx = require.context('../reducers/',true,/(Reducer\.ts$|Reducer$)/)
+	//
+	
+	const
+		ctxMod = require('../reducers')
+	
+	//log.info(`Loaded Reducers`,ctx.keys())
+	const mods = Object
+		.keys(ctxMod)
+		.filter(key => key.indexOf('Reducer') > 0 && _.isFunction(ctxMod[key]))
+		.map(key => ctxMod[key])
+	
+	let
+		reducers = []
+	
 	mods.forEach(mod => {
-		for (let key of Object.keys(mod)) {
-			if (key.indexOf('Reducer') > -1) {
-				const
-					reducerClazz = mod[key],
-					reducer = new reducerClazz()
-				if (_.isFunction(reducer.leaf) && !reducers.find(it => it.leaf() === reducer.leaf())) {
-					reducers.push(new reducerClazz())
-				}
-				
-			}
+		const
+			reducerClazz = mod,
+			reducer = new reducerClazz()
+		if (
+			_.isFunction(reducer.leaf) &&
+			!reducers.find(it => it.leaf() === reducer.leaf())
+		) {
+			reducers.push(reducer)
 		}
 	})
 

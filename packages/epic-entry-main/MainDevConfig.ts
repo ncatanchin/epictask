@@ -4,7 +4,7 @@
 // 	.configure() // we can use plugins here -- more on this later
 // 	.connect()
 
-import { acceptHot } from  "epic-common"
+import { acceptHot } from  "epic-global"
 const
 	log = getLogger(__filename),
 	{

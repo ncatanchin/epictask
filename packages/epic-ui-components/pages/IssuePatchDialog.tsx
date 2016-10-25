@@ -17,7 +17,7 @@ import {
 	createSaveCancelActions,
 	IssueMultiInlineList
 } from "epic-ui-components"
-import { createDeepEqualSelector } from "epic-common"
+import { createDeepEqualSelector, Dialogs } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
@@ -34,7 +34,6 @@ import {
 	getIssueActions,
 	getUIActions
 } from "epic-typedux"
-import { Dialogs } from "epic-process-manager"
 import { CommonKeys } from "epic-command-manager"
 
 

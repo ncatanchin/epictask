@@ -3,7 +3,7 @@ import { RegisterModel } from "epic-global"
 import { ActionMessage } from "typedux"
 import { Comment, Issue, IssuesEvent, Label, Milestone } from "epic-models"
 import { TIssueEditInlineConfig, IIssueSort, IIssueFilter, EmptyIssueFilter } from "./issue"
-import { reviveImmutable } from "epic-common"
+import { reviveImmutable } from "epic-global"
 
 // Refactor - so we export here too
 // export {

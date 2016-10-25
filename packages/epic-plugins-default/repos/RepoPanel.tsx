@@ -12,7 +12,7 @@ import {UIActionFactory} from "epic-typedux"
 import {ThemedStyles, createThemedStyles} from "epic-styles"
 
 
-import {RegisterTool} from "epic-global"
+import {RegisterTool} from "epic-global/Registry"
 import {getBuiltInToolId, BuiltInTools} from "epic-ui-components"
 import {ToolPanelLocation,IToolProps} from "epic-global"
 import {

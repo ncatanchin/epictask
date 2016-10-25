@@ -18,7 +18,6 @@ import {
 	issueItemsSelector,
 	selectedIssueSelector,
 	editInlineConfigIssueSelector,
-	IssueActionFactory,
 	IIssueGroup,
 	getIssueGroupId,
 	IIssueListItem,
@@ -42,7 +41,7 @@ import {
 } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes, FlexColumnCenter } from "epic-styles"
 import { IssuesList, SearchPanel } from "epic-ui-components"
-import { getValue, unwrapRef } from "epic-common"
+import { getValue, unwrapRef } from "epic-global"
 import { MenuIds, isNumber, IssueKey } from "epic-global"
 
 
@@ -339,7 +338,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @type {IssueActionFactory}
 	 */
-	private issueActions: IssueActionFactory = getIssueActions()
+	private issueActions = getIssueActions()
 	
 	
 	

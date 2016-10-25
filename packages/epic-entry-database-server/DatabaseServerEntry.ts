@@ -1,12 +1,18 @@
+import "epic-entry-shared/AppEntry"
+
 import * as uuid from "node-uuid"
 import { IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
 
-import { ChildProcessEntry as WorkerEntry } from "epic-entry-shared/ChildProcessEntry"
+import { loadChildProcessEntry } from "epic-entry-shared"
 import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
 
+const
+	{ChildProcessEntry} = loadChildProcessEntry()
+
+
 import { Stores, IDatabaseRequest, DatabaseEvents } from "epic-database-client"
-import { tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler } from "epic-common"
-import { ProcessNames } from "epic-global"
+import { tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler } from "epic-global"
+import { ProcessNames, ProcessType } from "epic-global"
 
 import { makeIPCServerId } from "epic-net"
 import { UserStoreImpl } from "./stores/UserStoreImpl"
@@ -20,12 +26,14 @@ import { IssuesEventStoreImpl } from "./stores/IssuesEventStoreImpl"
 import { RepoEventStoreImpl } from "./stores/RepoEventStoreImpl"
 
 // Logger
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
 
-// IPC
-const ipc = require('node-ipc')
+	// IPC
+	ipc = require('node-ipc')
 
-let startDeferred:Promise.Resolver<any> = null
+let
+	startDeferred:Promise.Resolver<any> = null
 
 ipc.config.id = makeIPCServerId(ProcessNames.DatabaseServer)
 ipc.config.retry = 1500
@@ -91,7 +99,7 @@ function getStore<T extends TSRepo<M>,M extends IModel>(repoClazz:{new():T}):T {
 	return coordinator.getRepo(repoClazz)
 }
 
-export class DatabaseServerEntry extends WorkerEntry {
+export class DatabaseServerEntry extends ChildProcessEntry {
 	
 	constructor() {
 		super(ProcessType.DatabaseServer)

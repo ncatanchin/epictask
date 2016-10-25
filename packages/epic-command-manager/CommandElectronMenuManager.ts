@@ -1,6 +1,6 @@
 // HMR
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
-import { inElectron,shallowEquals } from  "epic-common"
+import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global"
+import { inElectron,shallowEquals } from  "epic-global"
 
 import {ICommandMenuManager, ICommandMenuItem} from './Command'
 import { getCommandManagerType, getCommandManager } from  "./CommandManager"

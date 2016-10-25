@@ -1,8 +1,7 @@
-import {RegisterModel} from "epic-global"
-import {Record,List,Map} from 'immutable'
-import {ActionMessage} from 'typedux'
+import { RegisterModel, reviveImmutable } from "epic-global"
+import { Record, List, Map } from "immutable"
+import { ActionMessage } from "typedux"
 import { AvailableRepo } from "epic-models"
-import { reviveImmutable } from  "epic-common"
 
 const
 	log = getLogger(__filename)

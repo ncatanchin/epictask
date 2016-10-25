@@ -1,5 +1,5 @@
 
-export default function checkSingleInstance(app,onFocus) {
+export function checkSingleInstance(app,onFocus) {
 	const
 		log = getLogger(__filename),
 		shouldQuit = app.makeSingleInstance(onFocus)

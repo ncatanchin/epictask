@@ -1,10 +1,7 @@
 // Imports
-import * as React from 'react'
-import * as Radium from 'radium'
 import {PureRender, Icon, Button} from "epic-ui-components"
 import {ThemedStyles} from "epic-styles"
 import {INotificationMessage, NotificationMessageType} from "epic-global"
-import {UIActionFactory} from "epic-typedux"
 import { getUIActions } from "epic-typedux"
 
 // Constants

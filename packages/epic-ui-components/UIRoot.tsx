@@ -17,7 +17,7 @@ import {
 	sheetSelector,
 	authenticatingSelector
 } from "epic-typedux"
-import { IUISheet } from "epic-process-manager"
+import { IUISheet } from "epic-global"
 import { SheetRoot } from "./SheetRoot"
 import { FillWindow, FlexColumn, Fill, FlexScale, ThemedStyles, IThemedAttributes } from "epic-styles"
 import { ToolDragLayer } from "./ToolDragLayer"

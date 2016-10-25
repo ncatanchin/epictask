@@ -1,7 +1,7 @@
 import {DefaultLeafReducer,ActionMessage} from 'typedux'
 import {UIState} from "../state/UIState"
 import {UIKey} from "epic-global"
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 
 @Provided
 export class UIReducer extends DefaultLeafReducer<UIState,ActionMessage<UIState>> {

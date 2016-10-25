@@ -1,10 +1,7 @@
 
 import './styles'
-import { acceptHot } from  "epic-common"
+import { acceptHot } from  "epic-global"
 import { makeThemeFontSize } from "./ThemeState"
-
-export * from './ThemeState'
-export * from './ThemeDecorations'
 
 const
 	log = getLogger(__filename)

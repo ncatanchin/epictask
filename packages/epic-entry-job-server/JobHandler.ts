@@ -1,7 +1,7 @@
 
 import * as uuid from 'node-uuid'
 import {JobManagerService} from "./JobManagerService"
-import {EnumEventEmitter} from "epic-common"
+import {EnumEventEmitter} from "epic-global"
 
 import {
 	JobStatus, IJob, JobCancelledStatuses, IJobLogger,

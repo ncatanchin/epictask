@@ -2,18 +2,17 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import {List} from 'immutable'
-import * as Radium from 'radium'
-import { PureRender } from "epic-ui-components"
-import { createDeepEqualSelector } from  "epic-common"
+import { PureRender } from "./PureRender"
+
 import { createStructuredSelector, createSelector } from 'reselect'
 import { ThemedStyles } from "epic-styles"
-import { Milestone, User } from "epic-models"
-import LabelChip from "epic-ui-components"
-import { Icon, Avatar } from "epic-ui-components"
-import {MenuItem} from 'material-ui'
-import { Select, ISelectItem } from "epic-ui-components"
-import { enabledMilestonesSelector, enabledAssigneesSelector } from "epic-typedux"
-import { shallowEquals } from  "epic-common"
+import { User } from "epic-models"
+
+import { Avatar } from "epic-ui-components"
+
+import { Select, ISelectItem } from "./Select"
+import { enabledAssigneesSelector } from "epic-typedux"
+import { shallowEquals } from  "epic-global"
 import filterProps from 'react-valid-props'
 
 // Constants

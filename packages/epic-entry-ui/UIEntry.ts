@@ -1,12 +1,6 @@
-// IMPORTS
-//import './UIGlobals'
-//import 'ui/NavManager'
-
-import { Events } from "epic-global"
-import { acceptHot, addHotDisposeHandler } from  "epic-common"
-import { benchmark } from  "epic-common"
-import { benchmarkLoadTime } from  "epic-common"
-import { SimpleMenuManagerProvider } from  "epic-command-manager"
+import "epic-entry-shared/AppEntry"
+import { Events, acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime } from "epic-global"
+import { SimpleMenuManagerProvider } from "epic-command-manager"
 
 benchmarkLoadTime(`Starting UIEntry`)
 
@@ -66,7 +60,7 @@ const boot = benchmark('UIBoot', async ()=> {
 	
 	benchmarkLoadTime(`Boot starting`)
 	const
-		storeBuilder = require('epic-typedux').AppStoreBuilder
+		{storeBuilder} = require('epic-typedux/store/AppStoreBuilder')
 	
 	await storeBuilder()
 	
@@ -78,7 +72,7 @@ const boot = benchmark('UIBoot', async ()=> {
 	// APP STORE SERVER RUNS ON MAIN UI PROCESS ONLY
 	if (ProcessConfig.isType(ProcessType.UI)) {
 		log.debug(`Starting AppStoreServer`)
-		stopAppStoreServer = await require('epic-typedux').AppStoreServer.start()
+		stopAppStoreServer = await require('epic-typedux/store/AppStoreServer').start()
 		
 		addHotDisposeHandler(module, () => {
 			stopAppStoreServer()
@@ -121,11 +115,10 @@ const boot = benchmark('UIBoot', async ()=> {
 	
 	benchmarkLoadTime(`themes loaded`)
 	// Finally load the AppRoot (sep chunk - faster compile - i hope)
-	require.ensure(['ui/components/root/AppRoot'],function(require) {
-		benchmarkLoadTime(`Loading app root`)
-		require('ui/components/root/AppRoot')
-		benchmarkLoadTime(`Loaded App root`)
-	})
+	benchmarkLoadTime(`Loading app root`)
+	require('./AppRoot')
+	benchmarkLoadTime(`Loaded App root`)
+	
 	//
 	// require('ui/components/root/AppRoot')
 

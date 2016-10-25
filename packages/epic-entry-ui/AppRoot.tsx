@@ -1,39 +1,43 @@
-
-import * as Radium from 'radium'
-import { Provider } from 'react-redux'
-
-import { MuiThemeProvider } from 'material-ui/styles'
-import { PureRender } from "epic-ui-components"
-import { Events } from 'epic-global'
-
+import * as Radium from "radium"
+import { Provider } from "react-redux"
+import { MuiThemeProvider } from "material-ui/styles"
+import { PureRender } from "epic-ui-components/PureRender"
+import {
+	Events,
+	IWindowConfig,
+	Dialogs,
+	acceptHot,
+	addHotDisposeHandler,
+	If,
+	getValue,
+	shallowEquals,
+	benchmarkLoadTime,
+	MenuIds
+} from "epic-global"
 import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
 	CommandContainerBuilder,
 	CommandType,
-	CommandMenuItemType
-} from  "epic-command-manager"
-
-import { IWindowConfig, Dialogs } from "epic-process-manager"
-import { getUIActions, getIssueActions, getRepoActions } from "epic-typedux"
-import { acceptHot, addHotDisposeHandler } from  "epic-common"
-import { If } from  "epic-common"
-import { FillWindow, makeWidthConstraint, makeHeightConstraint, Fill } from "epic-styles"
-import { getValue, shallowEquals } from  "epic-common"
-import { UIRoot } from "epic-ui-components"
-import { ContainerNames } from "epic-command-manager"
-import { Themed } from "epic-styles"
-import { Sheets, DialogConfigs } from "epic-ui-components"
-
+	CommandMenuItemType,
+	ContainerNames
+} from "epic-command-manager"
+import { getUIActions, getIssueActions, getRepoActions, getReduxStore } from "epic-typedux"
+import {
+	FillWindow,
+	makeWidthConstraint,
+	makeHeightConstraint,
+	Fill,
+	Themed,
+	ThemeEvents,
+	ThemeEvent
+} from "epic-styles"
+import { UIRoot } from "epic-ui-components/UIRoot"
+import { Sheets, DialogConfigs } from "epic-ui-components/DialogsAndSheets"
 // STYLES
 //import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
-
-import { PromisedComponent } from "epic-ui-components"
-import { benchmarkLoadTime } from  "epic-common"
-import { MenuIds } from "epic-global"
-import { ThemeEvents, ThemeEvent } from "epic-styles"
-import { getReduxStore } from "epic-typedux"
+import { PromisedComponent } from "epic-ui-components/PromisedComponent"
 
 
 // Logger, Store +++
@@ -390,6 +394,8 @@ function render() {
 			If(ProcessConfig.isUI(), () => {
 				require('electron').ipcRenderer.send(Events.UIReady)
 			})
+			
+			require("epic-plugins-default")
 		}
 	)
 }

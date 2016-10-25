@@ -1,20 +1,15 @@
-
-import {ChildClient} from 'epic-common'
-import * as uuid from 'node-uuid'
-import {AppStoreServerName} from 'epic-global'
-import {REQUEST_TIMEOUT} from 'epic-net'
-import { getHot, setDataOnHotDispose } from  "epic-common"
-import {BrowserWindow,ipcMain} from 'electron'
-import { Transport } from "epic-net"
-
-import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler
-
+import { ChildClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
+import * as uuid from "node-uuid"
+import { REQUEST_TIMEOUT, Transport } from "epic-net"
+import { BrowserWindow, ipcMain } from "electron"
 import {
-	IChildStore, ChildStoreSubscriptionStatus, IChildStoreSubscriptionManager, TChildStoreSubscriptionStatusListener
+	IChildStore,
+	ChildStoreSubscriptionStatus,
+	IChildStoreSubscriptionManager,
+	TChildStoreSubscriptionStatusListener
 } from "./ChildStore"
 
-
-
+import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler
 
 
 /**

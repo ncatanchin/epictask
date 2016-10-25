@@ -1,5 +1,7 @@
-export * from "./MainEntry"
-
+import "./MainEntry"
+export {
+	
+}
 // export * from './AppWindow'
 // export * from "./CheckSingleInstance"
 // export * from "./Cleaner"

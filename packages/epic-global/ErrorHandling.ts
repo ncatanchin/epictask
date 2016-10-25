@@ -6,6 +6,7 @@ Object.assign(global as any, {StackTrace})
 // Get an error logger
 let
 	errorLogger = null
+
 const
 	getErrorLogger = () =>
 		errorLogger ||

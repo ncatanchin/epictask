@@ -1,17 +1,19 @@
-import * as React from 'react'
-import {SearchPanel} from "epic-ui-components"
-import {makeAbsolute, makeHeightConstraint} from "epic-styles"
-import {TextField} from 'material-ui/TextField'
-
+import * as React from "react"
+import { SearchPanel } from "./search/SearchPanel"
+import { makeAbsolute, makeHeightConstraint, ThemedStyles, IThemedAttributes } from "epic-styles"
+import { TextField } from "material-ui/TextField"
 import {
-	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder, getCommandManager
-} from  "epic-command-manager"
-import { CommandMenuRoot } from  "./CommandMenuRoot"
-
-import { ContainerNames } from "epic-command-manager"
-import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { PureRender,Logo,WindowControls } from "epic-ui-components"
+	CommandComponent,
+	ICommandComponent,
+	CommandRoot,
+	CommandContainerBuilder,
+	getCommandManager,
+	ContainerNames
+} from "epic-command-manager"
+import { CommandMenuRoot } from "./CommandMenuRoot"
+import { PureRender } from "epic-ui-components/PureRender"
+import { Logo } from "./Logo"
+import { WindowControls } from "./WindowControls"
 
 export const
 	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')

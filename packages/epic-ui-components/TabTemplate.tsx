@@ -1,10 +1,15 @@
 // Imports
-import { connect } from 'react-redux'
-import { PureRender } from "epic-ui-components"
-import { createStructuredSelector } from 'reselect'
-import { ThemedStyles } from "epic-styles"
-import { IThemedAttributes } from "epic-styles"
-import { makeHeightConstraint, PositionRelative, Fill, makeTransition, FlexScale } from "epic-styles"
+import { connect } from "react-redux"
+import { PureRender } from "epic-ui-components/PureRender"
+import { createStructuredSelector } from "reselect"
+import {
+	ThemedStyles,
+	IThemedAttributes,
+	makeHeightConstraint,
+	PositionRelative,
+	makeTransition,
+	FlexScale
+} from "epic-styles"
 
 // Constants
 const

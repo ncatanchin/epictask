@@ -2,7 +2,7 @@
 import {ActionMessage,DefaultLeafReducer} from 'typedux'
 import {AppKey} from "epic-global"
 import {AppState} from '../state/AppState'
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 /**
  * Global App State Reducer
  */

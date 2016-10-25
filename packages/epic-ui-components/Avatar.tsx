@@ -7,8 +7,8 @@ import * as React from 'react'
 import { User } from "epic-models"
 import { ThemedStyles } from "epic-styles"
 import * as Radium from 'radium'
-import { Icon } from "epic-ui-components"
-import {PureRender} from "epic-ui-components"
+import { Icon } from "./Icon"
+import {PureRender} from "./PureRender"
 import filterProps from 'react-valid-props'
 
 // Constants

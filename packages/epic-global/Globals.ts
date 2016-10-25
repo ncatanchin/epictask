@@ -1,4 +1,7 @@
 import Electron = require('electron')
+
+import './LoDashMixins'
+
 // IOC CONTAINER
 import {Container as ContainerGlobal} from 'typescript-ioc'
 
@@ -14,7 +17,8 @@ import {LogLevel as LogLevelGlobal} from 'typelogger'
 later = require('later/index-browserify')
 
 import './ErrorHandling'
-//import {getValue} from  "epic-common"
+
+//import {getValue} from  "epic-global"
 
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
@@ -34,8 +38,6 @@ import * as RadiumGlobal from 'radium'
 const
 	_ = require('lodash'),
 	g = global as any
-
-
 
 
 /**
@@ -119,6 +121,18 @@ function installGlobals() {
 
 
 
+installGlobals()
+
+export {}
+
+if (module.hot) {
+	module.hot.accept()
+}
+
+
+
+
+
 /**
  * Declare globals
  *
@@ -137,7 +151,7 @@ declare global {
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Container:typeof ContainerGlobal
-
+	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var assert:typeof assertGlobal
 	
@@ -192,12 +206,4 @@ declare global {
 		// Used internally to clear state of typestore/pouch objects
 		$$docs?:any
 	}
-}
-
-installGlobals()
-
-export {}
-
-if (module.hot) {
-	module.hot.accept()
 }

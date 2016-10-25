@@ -1,7 +1,7 @@
 import { ActionFactory, ActionReducer, ActionThunk, ActionMessage } from 'typedux'
 
 import { RegisterActionFactory,Events, AppKey } from "epic-global"
-import { Provided,ISettings } from 'epic-common'
+import { Provided,ISettings } from "epic-global"
 
 import { User } from "epic-models"
 

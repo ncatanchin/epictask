@@ -1,7 +1,7 @@
 
 import {IServiceConstructor} from "./Types"
 import {ServiceManager} from "./ServiceManager"
-import {ProcessType} from "epic-global"
+import {ProcessType} from "epic-global/ProcessType"
 
 const log = getLogger(__filename)
 

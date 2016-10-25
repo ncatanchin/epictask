@@ -13,7 +13,7 @@ import {
 	FillWidth, FlexColumn, FlexScale, OverflowAuto, makeHeightConstraint,
 	makeTransition, FlexRowCenter, FlexAuto, makePaddingRem, rem,  makeMarginRem, FillHeight, makeWidthConstraint
 } from "epic-styles"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 import { LabelChip,Button, Icon } from "epic-ui-components"
 import { getRepoActions } from "epic-typedux"
 

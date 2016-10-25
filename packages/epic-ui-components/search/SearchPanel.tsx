@@ -13,7 +13,7 @@ import {SearchResults} from './SearchResults'
 
 import {isNumber} from 'epic-global'
 import {PureRender} from "epic-ui-components"
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 import {SearchProvider} from "epic-typedux"
 import { SearchItem, ISearchState } from "epic-typedux"
 import {SearchEvent} from "epic-typedux"

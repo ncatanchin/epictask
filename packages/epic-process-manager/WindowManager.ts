@@ -1,10 +1,18 @@
 import Electron = require('electron')
 import * as React from "react"
-import { getHot, setDataOnHotDispose, acceptHot, shortId, toJSON, getAppEntryHtmlPath } from "epic-common"
-import { isString } from "epic-global"
-import { IWindowConfig, WindowType, DevToolsPositionDefault, AllWindowDefaults } from "./WindowConfig"
-
-
+import {
+	IWindowConfig,
+	WindowType,
+	DevToolsPositionDefault,
+	AllWindowDefaults,
+	getHot,
+	setDataOnHotDispose,
+	acceptHot,
+	shortId,
+	toJSON,
+	getAppEntryHtmlPath,
+	isString, getWindowConfig
+} from "epic-global"
 
 const
 	log = getLogger(__filename),
@@ -146,12 +154,7 @@ export class WindowManager {
 	 * @param name
 	 */
 	openDialog(name:string) {
-		require.ensure(['epic-ui-components'],function(require) {
-			const
-				{DialogConfigs} = require('epic-ui-components') as any
-			
-			getWindowManager().open(DialogConfigs[name] as IWindowConfig)
-		})
+		getWindowManager().open(getWindowConfig(name))
 	}
 	
 	/**
@@ -196,7 +199,7 @@ export class WindowManager {
 			const
 				newWindowOpts = _.merge(
 					{
-						backgroundColor: getPalette().background
+						backgroundColor: require('epic-styles').getPalette().background
 					},
 					
 					// TYPE DEFAULTS

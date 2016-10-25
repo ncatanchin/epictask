@@ -152,7 +152,10 @@ export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
 		],
 	
 		panels = defaultLocations
-			.map(location => ({id:ToolPanelLocation[location],location}))
+			.map(location => ({
+				id:ToolPanelLocation[location],
+				location
+			}))
 			.map(({id,location}) => {
 				const
 					panel = fromPanels[id] || {}

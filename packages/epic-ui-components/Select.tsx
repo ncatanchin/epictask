@@ -4,7 +4,7 @@ import { PureRender } from "epic-ui-components"
 
 import { ThemedStyles } from "epic-styles"
 import {MenuItem, SelectField} from 'material-ui'
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 import { makeComponentStyles } from "epic-ui-components"
 import filterProps from 'react-valid-props'
 // Constants

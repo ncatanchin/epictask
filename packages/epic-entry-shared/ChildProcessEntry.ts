@@ -1,12 +1,8 @@
 import {ipcRenderer} from 'electron'
-
-import * as shortId from 'short-id'
-import {getServiceManager} from "epic-services"
-import {Bluebird} from 'epic-global'
-
+import {Bluebird,ProcessType} from 'epic-global'
 import { START_TIMEOUT_DEFAULT } from "epic-net"
-import { ProcessType } from "epic-global"
-import { ChildClient } from "epic-common"
+import { ChildClient } from "epic-global"
+import {getServiceManager} from "epic-services"
 
 const
 	log = getLogger(__filename)
@@ -29,8 +25,9 @@ const defaultMessageHandlers:{[messageType:string]:ChildClient.TWorkerMessageHan
 
 //endregion
 
-let startDeferred:Promise.Resolver<any> = null
-let stopDeferred:Promise.Resolver<any> = null
+let
+	startDeferred:Promise.Resolver<any> = null,
+	stopDeferred:Promise.Resolver<any> = null
 
 /**
  * Shut it down

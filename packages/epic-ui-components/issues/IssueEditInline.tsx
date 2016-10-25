@@ -1,49 +1,37 @@
 /**
  * Created by jglanz on 7/21/16.
  */
-
 // Imports
-import * as React from 'react'
-import {PureRender, LabelFieldEditor, Icon, Button} from "epic-ui-components"
-import {List} from 'immutable'
-import {Issue} from "epic-models"
-import {Label} from "epic-models"
-import {Milestone} from "epic-models"
-import {Repo} from "epic-models"
-import filterProps from 'react-valid-props'
-import {RepoName, getGithubErrorText} from "epic-ui-components"
-import {TextField} from 'material-ui'
-import {ThemedStyles, makeThemeFontSize} from "epic-styles"
-
-import {connect} from 'react-redux'
-import {createStructuredSelector} from 'reselect'
-import {createDeepEqualSelector} from  "epic-common"
+import * as React from "react"
+import { LabelFieldEditor, Icon, Button, RepoName, getGithubErrorText } from "epic-ui-components"
+import { List } from "immutable"
+import { Issue, Label, Milestone, AvailableRepo, User } from "epic-models"
+import filterProps from "react-valid-props"
+import { TextField, CircularProgress, MenuItem, SelectField } from "material-ui"
+import { ThemedStyles, makeThemeFontSize } from "epic-styles"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
 import {
 	editingIssueSelector,
-	issueStateSelector, issueSaveErrorSelector, issueSavingSelector
+	issueSaveErrorSelector,
+	issueSavingSelector,
+	availableReposSelector,
+	enabledAssigneesSelector,
+	enabledLabelsSelector,
+	enabledMilestonesSelector
 } from "epic-typedux"
-import {CircularProgress} from 'material-ui'
-
-
-import {IssueActionFactory} from "epic-typedux"
-import {Container} from 'typescript-ioc'
-import {CommonKeys} from 'epic-command-manager'
-import {UIActionFactory} from "epic-typedux"
+import {
+	CommonKeys,
+	getCommandManager,
+	CommandComponent,
+	ICommandComponent,
+	CommandRoot,
+	CommandContainerBuilder,
+	ContainerNames
+} from "epic-command-manager"
+import { cloneObject } from "epic-global"
+import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import Radium = require('radium')
-import {AvailableRepo} from "epic-models"
-import {MenuItem} from 'material-ui'
-import {SelectField} from 'material-ui'
-import {
-	enabledRepoIdsSelector, availableReposSelector,
-	enabledAssigneesSelector, enabledLabelsSelector, enabledMilestonesSelector
-} from "epic-typedux"
-import { User } from "epic-models"
-import { cloneObject } from  "epic-common"
-import {
-	CommandComponent, getCommandProps, ICommandComponent, CommandRoot,
-	CommandContainerBuilder
-} from  "epic-command-manager"
-import { ContainerNames } from "epic-command-manager"
 
 // Constants
 const log = getLogger(__filename)
@@ -270,8 +258,8 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	readonly commandComponentId:string = 'IssueEditInline'
 	
 	
-	issueActions = Container.get(IssueActionFactory)
-	uiActions = Container.get(UIActionFactory)
+	issueActions = getIssueActions()
+	uiActions = getUIActions()
 
 	private get issue():Issue {
 		return this.props.editingIssue
@@ -299,8 +287,9 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * Title input changed
 	 *
 	 */
-	onTitleChange = (event,title) => this.issueActions
-		.setEditingIssue(_.cloneDeep(assign({},this.issue,{title})),true)
+	onTitleChange = (event,title) =>
+		this.issueActions.setEditingIssue(
+			_.cloneDeep(assign({},this.issue,{title})),true)
 
 
 	/**

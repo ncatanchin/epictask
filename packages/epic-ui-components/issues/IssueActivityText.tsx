@@ -5,20 +5,19 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import {List} from 'immutable'
 import {User,Issue,Comment} from "epic-models"
 import {Avatar, Markdown, PureRender, Icon, Button} from "epic-ui-components"
 import {ThemedStyles} from "epic-styles"
 import filterProps from 'react-valid-props'
-import {canEditComment,canEditIssue} from "epic-common"
-import {IssueActionFactory} from "epic-typedux"
-import {Container} from "typescript-ioc"
+import {canEditComment,canEditIssue} from "epic-global"
+
 import * as Radium from "radium"
 import { EventGroup, isEventGroup } from "epic-ui-components"
 import { selectedIssueSelector, activityLoadingSelector } from "epic-typedux"
 import {createStructuredSelector} from 'reselect'
 import { connect } from "react-redux"
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
+import { getIssueActions } from "epic-typedux/provider"
 
 // Constants
 const log = getLogger(__filename)
@@ -223,7 +222,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	}
 	
 	makeOnIssueEditClick = (issue) => event =>
-		Container.get(IssueActionFactory).editIssue(issue)
+		getIssueActions().editIssue(issue)
 	
 	/**
 	 * Create an onclick handler for a comment
@@ -232,7 +231,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param comment
 	 */
 	makeOnCommentEditClick = (issue,comment) => event =>
-		Container.get(IssueActionFactory).editComment(issue,comment)
+		getIssueActions().editComment(issue,comment)
 	
 	
 	/**
@@ -242,7 +241,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param comment
 	 */
 	makeOnCommentDeleteClick = (issue,comment) => event =>
-		Container.get(IssueActionFactory).commentDelete(comment)
+		getIssueActions().commentDelete(comment)
 	
 	
 	

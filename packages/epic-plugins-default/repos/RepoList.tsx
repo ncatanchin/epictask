@@ -7,14 +7,14 @@ import * as Renderers from "epic-ui-components"
 import {AvailableRepo} from "epic-models"
 import {connect} from 'react-redux'
 import {ThemedStyles} from "epic-styles"
-import {createDeepEqualSelector} from  "epic-common"
+import {createDeepEqualSelector} from  "epic-global"
 import {createStructuredSelector} from 'reselect'
 import {
 	selectedRepoIdsSelector,
 	availableReposSelector
 } from "epic-typedux"
 import { getRepoActions } from "epic-typedux"
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 import { LoadStatus } from "epic-models"
 import { CircularProgress} from "material-ui"
 

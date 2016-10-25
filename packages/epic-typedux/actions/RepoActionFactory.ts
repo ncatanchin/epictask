@@ -3,7 +3,7 @@
 import {FinderRequest} from 'typestore'
 import {List} from 'immutable'
 import {chunkRemove} from "epic-services"
-import {Benchmark} from  "epic-common"
+import {Benchmark} from  "epic-global"
 import { getStores } from "epic-database-client"
 import {ActionFactory, ActionReducer,ActionThunk} from 'typedux'
 import {RepoKey,isNil} from "epic-global"
@@ -20,16 +20,16 @@ import {
 } from "epic-models"
 
 import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from "epic-typedux"
-import {getSettings} from "epic-common"
+import {getSettings} from "epic-global"
 import {User} from "epic-models"
 import {JobType} from "epic-typedux"
-import {Provided} from  "epic-common"
-import { getValue, nilFilter, cloneObject, cloneObjectShallow } from  "epic-common"
+import {Provided} from  "epic-global"
+import { getValue, nilFilter, cloneObject, cloneObjectShallow } from  "epic-global"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { RegisterActionFactory } from "epic-global"
-import { pagedFinder } from  "epic-common"
+import { pagedFinder } from  "epic-global"
 import { getIssueActions, getJobActions } from "epic-typedux"
-import {GithubSyncStatus} from 'epic-common'
+import {GithubSyncStatus} from "epic-global"
 import { createClient } from "epic-github"
 
 const log = getLogger(__filename)

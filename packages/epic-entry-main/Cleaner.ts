@@ -1,11 +1,18 @@
 import path = require('path')
 import child_process = require('child_process')
-import { Events } from "epic-global"
 
 
 
-for (let arg of process.argv) {
-	if (arg === '--epic-clean') {
+export namespace Cleaner {
+	
+	
+	export const EPIC_ARG_CLEAN = '--epic-clean'
+	
+	export function isCleanRequested() {
+		return process.argv.find(arg => arg === EPIC_ARG_CLEAN)
+	}
+	
+	export function clean() {
 		try {
 			console.log(`Cleaning app`)
 			const
@@ -39,28 +46,35 @@ for (let arg of process.argv) {
 		}
 		
 		console.log(`Finished cleaning, continuing`)
-		break
+		
+	}
+	
+	
+	/**
+	 * Restart and clean the app
+	 */
+	export function restartAndClean() {
+		
+		const
+			Electron = require('electron'),
+			{remote} = Electron,
+			app = remote && remote.app ? remote.app : Electron.app,
+			opts = { args: process.argv.slice(1).concat([EPIC_ARG_CLEAN]) } //process.argv.slice(1).filter(it => it !== 'clean').concat(['clean'])
+		
+		// if (DEBUG)
+		// 	opts.args.unshift(process.argv[ process.argv.length - 1 ])
+		
+		console.log(`relaunching with args: ${opts.args}`)
+		app.relaunch(opts)
+		app.exit(0)
+	}
+
+	export function registerCleaner() {
+		const
+			{Events }= require("epic-global/Constants")
+		
+		require('electron').ipcMain.on(Events.Clean,Cleaner.restartAndClean)
 	}
 }
-
-
-/**
- * Restart and clean the app
- */
-export function restartAndClean() {
 	
-	const
-		Electron = require('electron'),
-		{remote} = Electron,
-		app = remote && remote.app ? remote.app : Electron.app,
-		opts = { args: process.argv.slice(1).concat(['--epic-clean']) } //process.argv.slice(1).filter(it => it !== 'clean').concat(['clean'])
-	
-	// if (DEBUG)
-	// 	opts.args.unshift(process.argv[ process.argv.length - 1 ])
-	
-	console.log(`relaunching with args: ${opts.args}`)
-	app.relaunch(opts)
-	app.exit(0)
-}
 
-require('electron').ipcMain.on(Events.Clean,restartAndClean)

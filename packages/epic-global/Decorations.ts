@@ -277,3 +277,24 @@ export function Property(opts:ConfigurePropertyOptions = {}):PropertyDecorator {
 export function Transient(target:any,propertyKey:string) {
 	return Attribute({transient:true})(target,propertyKey)
 }
+
+/**
+ * Decorate a constructor - ripped from typescript-ioc - many thx ;)
+ *
+ * @param derived
+ * @param base
+ * @returns {Function}
+ */
+export function decorateConstructor(derived: Function, base: Function) {
+	for (let p of Object.getOwnPropertyNames(base)) {
+		if (base.hasOwnProperty(p) && !derived.hasOwnProperty(p)) {
+			derived[p] = base[p];
+		}
+	}
+	derived['__parent'] = base;
+	function __() { this.constructor = derived; }
+	derived.prototype = base === null ? Object.create(base) :
+		(__.prototype = base.prototype, new __());
+	return derived;
+}
+

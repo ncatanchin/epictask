@@ -6,7 +6,7 @@ import {IssueKey,isNumber} from "epic-global"
 
 import {Comment,Issue,Label, Milestone, User, IssuesEvent } from "epic-models"
 
-import {createDeepEqualSelector,isListType, nilFilterList, nilFilter} from  "epic-common"
+import {createDeepEqualSelector,isListType, nilFilterList, nilFilter} from  "epic-global"
 
 
 

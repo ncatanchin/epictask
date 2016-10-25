@@ -7,6 +7,7 @@ export * from './internal/ServiceManager'
 export * from './internal/BaseService'
 
 export * from './DatabaseClientService'
+export * from './UIStateService'
 export * from './AppStateService'
 
 const

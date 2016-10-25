@@ -1,4 +1,8 @@
 __non_webpack_require__('babel-polyfill')
+__non_webpack_require__('source-map-support').install()
+__non_webpack_require__('reflect-metadata')
+
+
 
 const
 	win = window as any
@@ -18,7 +22,23 @@ function logBenchmark(name) {
  * Load app
  */
 function loadApp() {
-	__non_webpack_require__('./epic-entry-ui.js')
+	Object.assign(global,{
+		epic_libs: __non_webpack_require__('./epic_libs')
+	})
+	
+	switch(process.env.EPIC_ENTRY) {
+		case "DatabaseServer":
+			__non_webpack_require__('./epic-entry-database-server.js')
+			break
+		case "JobServer":
+			__non_webpack_require__('./epic-entry-job-server.js')
+			break
+		default:
+			__non_webpack_require__('./epic-entry-ui.js')
+			break
+	}
+	
+	
 }
 
 

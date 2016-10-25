@@ -25,7 +25,7 @@ import {
 	IssuesEvent, isComment,
 	isIssue, getEventGroupType
 } from "epic-models"
-import { shallowEquals, getValue } from  "epic-common"
+import { shallowEquals, getValue } from  "epic-global"
 
 import { EventGroup, isEventGroup } from "epic-ui-components"
 import {
@@ -37,7 +37,7 @@ import { getIssueActions } from "epic-typedux"
 
 import { IssueDetailHeader } from "epic-ui-components"
 import { IssueMultiInlineList } from "epic-ui-components"
-import { unwrapRef } from  "epic-common"
+import { unwrapRef } from  "epic-global"
 
 
 // Other stuff

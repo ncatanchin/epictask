@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { PureRender } from "epic-ui-components"
 import { SearchItem, SearchType } from "epic-typedux"
-import { shallowEquals, getValue } from  "epic-common"
+import { shallowEquals, getValue } from  "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "epic-models"
 import { RepoName } from "epic-ui-components"
 import filterProps from 'react-valid-props'

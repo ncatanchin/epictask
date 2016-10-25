@@ -1,4 +1,4 @@
-import {VariableProxy} from  "epic-common"
+import {VariableProxy} from  "epic-global/VariableProxy"
 
 /**
  * Service state

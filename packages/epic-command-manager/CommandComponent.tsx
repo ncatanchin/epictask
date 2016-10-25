@@ -1,15 +1,17 @@
 import {
-	ICommand, CommandType, TCommandExecutor, TCommandDefaultAccelerator,
-	ICommandMenuItem, CommandMenuItemType, TCommandIcon,
+	ICommand,
+	CommandType,
+	TCommandExecutor,
+	TCommandDefaultAccelerator,
+	ICommandMenuItem,
+	CommandMenuItemType,
+	TCommandIcon,
 	getCommandManager
-} from  "epic-command-manager"
-
-import * as React from 'react'
-import filterProps from 'react-valid-props'
-import { shortId, getValue} from  "epic-common"
-import {isFunction,isNumber, isString } from 'epic-global'
-
-
+} from "epic-command-manager"
+import * as React from "react"
+import filterProps from "react-valid-props"
+import { getValue, isNumber, isString } from "epic-global"
+import { makeStyle } from "epic-styles/styles"
 
 
 const

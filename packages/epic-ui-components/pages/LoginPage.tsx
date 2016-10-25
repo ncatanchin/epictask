@@ -1,15 +1,21 @@
-import * as React from 'react'
-
-import {Page} from './Page'
-import {connect} from 'react-redux'
-import {createStructuredSelector} from 'reselect'
-import { getAuthActions } from "epic-typedux"
-import { PureRender, Icon } from "epic-ui-components"
-import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { makeHeightConstraint, PositionAbsolute, makeWidthConstraint, FillWindow, Fill } from "epic-styles"
-import { Logo } from "epic-ui-components"
-import { getValue } from  "epic-common"
-import { authenticatingSelector } from "epic-typedux"
+import * as React from "react"
+import { Page } from "./Page"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
+import { getAuthActions, authenticatingSelector } from "epic-typedux"
+import { PureRender } from "../PureRender"
+import { Icon } from "../Icon"
+import {
+	ThemedStyles,
+	IThemedAttributes,
+	makeHeightConstraint,
+	PositionAbsolute,
+	makeWidthConstraint,
+	FillWindow,
+	Fill
+} from "epic-styles"
+import { Logo } from "epic-ui-components/Logo"
+import { getValue } from "epic-global"
 
 const
 	log = getLogger(__filename)

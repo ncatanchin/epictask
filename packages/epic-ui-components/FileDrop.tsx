@@ -1,8 +1,8 @@
 
 import * as React from 'react'
-import { PureRender } from "epic-ui-components"
+import { PureRender } from "./PureRender"
 import filterProps from 'react-valid-props'
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 
 
 const

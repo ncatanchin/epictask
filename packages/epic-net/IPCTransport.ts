@@ -1,5 +1,5 @@
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"
-import {Counter} from "epic-common"
+import {Counter} from "epic-global"
 import { START_TIMEOUT_DEFAULT } from "./NetworkConfig"
 import { makeIPCServerId } from "./IPCUtil"
 

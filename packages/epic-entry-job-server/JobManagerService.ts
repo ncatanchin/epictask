@@ -2,7 +2,7 @@ import {Map} from 'immutable'
 
 import {JobHandler, JobHandlerEventType} from './JobHandler'
 import * as assert from 'assert'
-import {IEnumEventRemover} from "epic-common"
+import {IEnumEventRemover} from "epic-global"
 import {IJob, JobStatus, JobType} from "epic-typedux"
 import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "./JobExecutors"
 import {BaseService, RegisterService, IServiceConstructor} from "epic-services"
@@ -10,8 +10,8 @@ import {DatabaseClientService} from "epic-services"
 import {IJobStatusDetail} from "epic-typedux"
 import { JobKey } from "epic-global"
 import {JobsMaxConcurrency} from 'epic-global'
-import { clientObserveState, getStateValue } from "epic-typedux"
-import { getHot, setDataOnHotDispose } from "epic-common"
+import { clientObserveState, getStateValue } from "epic-typedux/store/AppStoreClient"
+import { getHot, setDataOnHotDispose } from "epic-global"
 
 const log = getLogger(__filename)
 

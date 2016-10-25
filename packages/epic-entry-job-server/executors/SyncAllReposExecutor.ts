@@ -1,7 +1,7 @@
 
 import {JobHandler} from '../JobHandler'
 import {Stores} from "epic-services"
-import {Benchmark} from "epic-common"
+import {Benchmark} from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import {IJob, JobType, IJobLogger} from "epic-typedux"
 import {IJobExecutor} from "../JobExecutors"

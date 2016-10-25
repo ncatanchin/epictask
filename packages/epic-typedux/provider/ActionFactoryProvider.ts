@@ -1,12 +1,15 @@
-import { IActionFactoryConstructor } from "epic-global"
-import { JobActionFactory } from "epic-typedux"
-import { AppActionFactory } from "epic-typedux"
-import { IssueActionFactory } from "epic-typedux"
-import { RepoActionFactory } from "epic-typedux"
-import { UIActionFactory } from "epic-typedux"
-import { JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey } from "epic-global"
-import { AuthActionFactory } from "epic-typedux"
-import { If } from  "epic-common"
+import {
+	IActionFactoryConstructor, JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey, If,
+	isFunction
+} from "epic-global"
+import {
+	JobActionFactory,
+	AppActionFactory,
+	IssueActionFactory,
+	RepoActionFactory,
+	UIActionFactory,
+	AuthActionFactory
+} from "../actions"
 
 const log = getLogger(__filename)
 
@@ -88,8 +91,11 @@ export function loadActionFactories() {
 	Object.keys(allActions)
 		.filter(modName => modName.endsWith('ActionFactory'))
 		.forEach(modName => {
+			
 			const
-				actionFactoryClazz = allActions[modName].default as IActionFactoryConstructor
+				mod = allActions[modName],
+				actionFactoryClazz = (isFunction(mod) ? mod : mod.default) as IActionFactoryConstructor
+			
 			
 			if (!actionFactoryClazz) {
 				return log.debug(`Unable to get action clazz from ${modName}`)

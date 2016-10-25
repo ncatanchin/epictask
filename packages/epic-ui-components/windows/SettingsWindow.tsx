@@ -36,7 +36,7 @@ import { appUserSelector, getUIActions, getAppActions } from "epic-typedux"
 import { CommandComponent, CommandContainerBuilder, CommandRoot, ContainerNames } from "epic-command-manager"
 import { Checkbox } from "material-ui"
 import { PureRender, Select, ISelectItem, DialogRoot, Icon, Button } from "epic-ui-components"
-import { NativeNotificationsEnabled, PersistentValueEvent, getValue } from "epic-common"
+import { NativeNotificationsEnabled, PersistentValueEvent, getValue } from "epic-global"
 
 
 const

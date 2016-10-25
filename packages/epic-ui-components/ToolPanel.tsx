@@ -1,21 +1,30 @@
 // Imports
-import * as React from 'react'
-import {connect} from 'react-redux'
-import {createStructuredSelector} from 'reselect'
-import {PureRender} from "epic-ui-components"
-import {ThemedStyles} from "epic-styles"
-import {ToolPanelLocation, IToolPanel, ITool} from "epic-global"
-import { createToolPanelSelector, toolDraggingSelector } from "epic-typedux"
+import * as React from "react"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
+import { PureRender } from "./PureRender"
 import {
-	FlexRow, FlexColumnReverse, FlexColumn, FlexScale, makeFlexAlign, FillHeight, FillWidth,
-	FlexAuto, OverflowHidden, makeFlex, FlexRowCenter,
-	rem, Ellipsis
+	ThemedStyles,
+	FlexRow,
+	FlexColumnReverse,
+	FlexColumn,
+	FlexScale,
+	makeFlexAlign,
+	FillHeight,
+	FillWidth,
+	FlexAuto,
+	OverflowHidden,
+	makeFlex,
+	FlexRowCenter,
+	rem,
+	Ellipsis,
+	IThemedAttributes,
+	colorAlpha
 } from "epic-styles"
-import {addRegistryListener, RegistryEvent} from "epic-global"
-import { ToolGutter } from "epic-ui-components"
-import { ToolWrapper } from "epic-ui-components"
-import { IThemedAttributes } from "epic-styles"
-import { colorAlpha } from "epic-styles"
+import { ToolPanelLocation, IToolPanel, ITool, addRegistryListener, RegistryEvent } from "epic-global"
+import { createToolPanelSelector, toolDraggingSelector } from "epic-typedux"
+import { ToolGutter } from "./ToolGutter"
+import { ToolWrapper } from "./ToolWrapper"
 
 
 // Constants

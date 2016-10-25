@@ -1,5 +1,4 @@
 export * from './Palettes'
-export * from "./Palettes"
 export * from "./Theme"
 export * from "./ThemeDecorations"
 export * from "./ThemeManager"

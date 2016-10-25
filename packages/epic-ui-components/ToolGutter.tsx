@@ -1,15 +1,12 @@
 // Imports
-import * as React from 'react'
-import {DropTarget,DropTargetConnector,DropTargetMonitor} from 'react-dnd'
+import * as React from "react"
+import { DropTarget, DropTargetConnector, DropTargetMonitor } from "react-dnd"
 import { PureRender } from "./PureRender"
-import { IThemedAttributes, Themed } from "epic-styles"
+import { IThemedAttributes } from "epic-styles"
 import { DraggableToolGutterButton } from "./ToolGutterButton"
-import { TToolMap, IToolPanel, ITool } from "epic-global"
+import { TToolMap, IToolPanel, ITool, DragTypes, getValue } from "epic-global"
 import filterProps from "react-valid-props"
-
-import { DragTypes } from "epic-global"
 import { getUIActions } from "epic-typedux"
-import { getValue } from  "epic-common"
 
 // Constants
 const

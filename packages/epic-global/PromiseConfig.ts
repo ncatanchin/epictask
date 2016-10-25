@@ -1,5 +1,50 @@
 import * as Bluebird from 'bluebird'// = require('bluebird')
 
+/**
+ * Update Babel Runtime
+ *
+ * @type {PromiseConstructor|Promise}
+ */
+require('babel-runtime/core-js/promise').default = Bluebird
+
+
+/**
+ * Configure
+ */
+const
+	{env} = process
+
+env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+if (!env.NODE_ENV) {
+	env.NODE_ENV = 'production'
+}
+
+/**
+ * CONFIGURE PROMISES FIRST
+ */
+
+Bluebird.config({
+	cancellation: true,
+	longStackTraces: env.NODE_ENV === 'development',
+	warnings: {
+		wForgottenReturn: false
+	},
+	monitoring: env.NODE_ENV === 'development'
+})
+
+// ORIGINAL PROMISE CONFIG
+// Bluebird.config({
+// 	cancellation: true,
+// 	//longStackTraces: true,
+// 	warnings: {
+// 		wForgottenReturn: false
+// 	},
+// 	monitoring: true
+// })
+
+/**
+ * Update global promise definition
+ */
 declare global {
 	var Promise:typeof Bluebird
 	
@@ -16,17 +61,10 @@ declare global {
 	
 }
 
-require('babel-runtime/core-js/promise').default = Bluebird
 
-Bluebird.config({
-	cancellation: true,
-	//longStackTraces: true,
-	warnings: {
-		wForgottenReturn: false
-	},
-	monitoring: true
-})
-
+/**
+ * Extend bluebird with custom defer() and setImmediate
+ */
 Object.assign(Bluebird as any, {
 	defer() {
 		let
@@ -61,6 +99,12 @@ Object.assign(Bluebird as any, {
 		}
 		
 		return ref
+	},
+	
+	setImmediate: function () {
+		return new Promise<void>(resolve => {
+			setImmediate(() => resolve())
+		})
 	}
 })
 
@@ -68,11 +112,6 @@ Object.assign(global as any, {
 	Promise: Bluebird
 })
 
-Promise.setImmediate = function () {
-	return new Promise<void>(resolve => {
-		setImmediate(() => resolve())
-	})
-}
 
 export {
 	Bluebird

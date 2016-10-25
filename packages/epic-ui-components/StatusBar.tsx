@@ -2,7 +2,7 @@
 import * as React from "react"
 import { connect } from "react-redux"
 import { PureRender } from "./PureRender"
-import { createDeepEqualSelector, getValue } from "epic-common"
+import { createDeepEqualSelector, getValue } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import baseStyles from "./StatusBar.styles"

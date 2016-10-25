@@ -1,7 +1,14 @@
-import {ChildProcessEntry as WorkerEntry} from "epic-entry-shared/ChildProcessEntry"
+import "epic-entry-shared/AppEntry"
+
+import {loadChildProcessEntry} from "epic-entry-shared"
+import { ProcessType } from "epic-global/ProcessType"
+
 
 const
+	{ChildProcessEntry} = loadChildProcessEntry(),
 	log = getLogger(__filename)
+
+
 
 require('./JobManagerService')
 require('./JobSchedulerService')
@@ -13,7 +20,7 @@ require('./GithubEventMonitorService')
  *
  * Simply registers the job manager service on create
  */
-export class JobServerEntry extends WorkerEntry {
+class JobServerEntry extends ChildProcessEntry {
 	
 	/**
 	 * Register the job manager service
@@ -43,12 +50,8 @@ export class JobServerEntry extends WorkerEntry {
  * 
  * @type {JobServerEntry}
  */
-const jobServerEntry = new JobServerEntry()
-
-/**
- * Singleton instance
- */
-export default jobServerEntry
+const
+	jobServerEntry = new JobServerEntry()
 
 
 // If hot is enabled
@@ -62,3 +65,7 @@ if (module.hot) {
 	module.hot.accept(() => log.info(`Hot Reload`,__filename))
 }
 
+
+export {
+	
+}

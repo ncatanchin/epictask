@@ -2,17 +2,17 @@ import {List,Map} from 'immutable'
 
 import * as assert from 'assert'
 
-import {BaseService, RegisterService, IServiceConstructor} from "epic-services"
-import {DatabaseClientService} from "epic-services"
+import {BaseService, RegisterService, IServiceConstructor} from "epic-services/internal"
+import {DatabaseClientService} from "epic-services/DatabaseClientService"
 
 import { RepoKey } from "epic-global"
-import { clientObserveState, getStateValue } from "epic-typedux"
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
+import { clientObserveState, getStateValue } from "epic-typedux/store/AppStoreClient"
+import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global/HotUtils"
 import { AvailableRepo, LoadStatus } from "epic-models"
 
 import {getGithubEventMonitor} from './GithubEventMonitor'
 import {RepoSyncManager} from './GithubSyncHandlers'
-import {GithubSyncStatus as SyncStatus} from 'epic-common'
+import {GithubSyncStatus as SyncStatus} from "epic-global/GithubSyncStatus"
 import {IssuesEvent,RepoEvent} from 'epic-models'
 
 
@@ -76,7 +76,7 @@ export class GithubEventService extends BaseService {
 	 */
 	private onAvailableReposUpdated = (availableRepos:AvailableRepo[]) => {
 		const
-			loadedAvailableRepos = availableRepos
+			loadedAvailableRepos = !availableRepos ? [] : availableRepos
 				.filter(it => it.repoLoadStatus === LoadStatus.Loaded)
 		
 		log.debug(`Received available repos`,loadedAvailableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))

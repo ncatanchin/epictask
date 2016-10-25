@@ -3,8 +3,8 @@ import { ThemedStyles } from "epic-styles"
 import { CircularProgress} from "material-ui"
 import { makeHeightConstraint, makeWidthConstraint, createStyles } from "epic-styles"
 
-import { Icon } from "epic-ui-components"
-import { WindowControls } from "epic-ui-components"
+import { Icon } from "./Icon"
+import { WindowControls } from "./WindowControls"
 
 // Constants
 const

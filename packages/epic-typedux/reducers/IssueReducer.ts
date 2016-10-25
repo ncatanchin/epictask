@@ -3,7 +3,7 @@ const log = getLogger(__filename)
 import {DefaultLeafReducer} from 'typedux'
 import {IssueKey} from "epic-global"
 import {IssueState,IssueMessage} from '../state/IssueState'
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 
 @Provided
 export class IssueReducer extends DefaultLeafReducer<IssueState,IssueMessage> {

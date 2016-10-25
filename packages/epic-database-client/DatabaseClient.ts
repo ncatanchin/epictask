@@ -4,7 +4,7 @@ import * as uuid from "node-uuid"
 import { DatabaseEvents } from "./DatabaseEvents"
 import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
 import { Transport } from "epic-net"
-import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-common"
+import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-global"
 import { DatabaseServerName, ProcessType } from "epic-global"
 
 const
@@ -222,31 +222,41 @@ export class DatabaseClient {
 	request(store:string,fn:string,args:any[])
 	request(storeOrFn:string,fnOrArgs:string|any[],finalArgs:any[] = null) {
 		
-		this.checkConnected()
 		
-
-		// Map the correct overload
-		const [store,fn,args] = ((_.isString(fnOrArgs)) ?
-			[storeOrFn,fnOrArgs,finalArgs] :
-			[null,storeOrFn,fnOrArgs]
-		)
-
-
-		assert(fn && args,'Both args and fn MUST be defined')
-
-
-
-		// Create the request
-		const request = {
-			id: `${store || 'db'}-${fn}-${uuid.v1()}`,
-			store,
-			fn,
-			args
-		}
+		const
+			deferred = Promise.defer(),
+			[store,fn,args] = ((_.isString(fnOrArgs)) ?
+				[storeOrFn,fnOrArgs,finalArgs] :
+				[null,storeOrFn,fnOrArgs]),
+				
+			request = {
+				id: `${store || 'db'}-${fn}-${uuid.v1()}`,
+				store,
+				fn,
+				args
+			}
+		
+		this.transport.waitForConnection()
+			.then(() => {
+				this.checkConnected()
+				
+				assert(fn && args,'Both args and fn MUST be defined')
+				
+				// Map the pending request
+				this.pendingRequests[request.id] = {
+					id:request.id,
+					request,
+					deferred
+				}
+				
+				// Send the request
+				this.transport.emit(DatabaseEvents.Request,request)
+				
+			})
 
 		// Configure the promise timeout
-		const deferred = Promise.defer()
 		deferred.promise
+			
 			.timeout(TIMEOUT)
 
 			// Catch and remap timeout error
@@ -255,21 +265,9 @@ export class DatabaseClient {
 			// Finally clean up the request
 			.finally(this.onRequestFinished(request))
 
-		// Map the pending request
-		const pendingRequest:IDatabasePendingRequest = {
-			id:request.id,
-			request,
-			deferred
-		}
 		
-		//this.pendingRequests.set(request.id, pendingRequest)
-		this.pendingRequests[request.id] = pendingRequest
-
-		// Send the request
-		this.transport.emit(DatabaseEvents.Request,request)
-
 		// Return the promise
-		return pendingRequest.deferred.promise
+		return deferred.promise
 	}
 
 

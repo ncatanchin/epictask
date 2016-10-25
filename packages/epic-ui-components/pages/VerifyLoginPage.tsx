@@ -2,11 +2,10 @@ import { ThemedStyles, IThemedAttributes } from "epic-styles"
 const log = getLogger(__filename)
 
 import * as React from 'react'
-import {AuthActionFactory} from "epic-typedux"
+
 import {CircularProgress} from 'material-ui'
 import {Page} from './Page'
 
-const authActions = new AuthActionFactory()
 
 const baseStyles = (topStyles,theme,palette) => ({
 	page: makeStyle(FlexColumnCenter,FlexScale,{

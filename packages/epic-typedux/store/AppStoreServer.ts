@@ -1,6 +1,6 @@
 import { getStore, getStoreState, getReduxStore } from "./AppStore"
 import { IPCServer, TIPCEventHandler } from "epic-net"
-import { getHot, setDataOnHotDispose, acceptHot, shortId } from "epic-common"
+import { getHot, setDataOnHotDispose, acceptHot, shortId } from "epic-global"
 import { ActionFactoryProviders } from "../provider"
 import { getAllActions, getAction, ActionFactory } from "typedux"
 import { AppStoreServerName } from "epic-global"

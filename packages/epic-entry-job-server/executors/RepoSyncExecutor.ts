@@ -3,8 +3,8 @@ import {GitHubClient, OnDataCallback} from "epic-github"
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ISyncChanges} from 'epic-models'
 
 import {Stores} from "epic-services"
-import {getSettings} from "epic-common"
-import {Benchmark} from "epic-common"
+import {getSettings} from "epic-global"
+import {Benchmark} from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import { JobType, IJob, IJobLogger, JobStatus } from "epic-typedux"
 import {IJobExecutor} from "../JobExecutors"
@@ -12,7 +12,7 @@ import JobProgressTracker from "../JobProgressTracker"
 
 import { RepoSyncManager } from "../GithubSyncHandlers"
 
-import { getHot, setDataOnHotDispose, acceptHot } from "epic-common"
+import { getHot, setDataOnHotDispose, acceptHot } from "epic-global"
 
 
 interface IRepoSyncPending {

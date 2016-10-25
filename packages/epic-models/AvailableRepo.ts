@@ -11,7 +11,7 @@ import {User} from './User'
 import {Repo} from './Repo'
 
 import {RegisterModel} from 'epic-global'
-import { Transient } from  "epic-common"
+import { Transient } from  "epic-global"
 
 
 const

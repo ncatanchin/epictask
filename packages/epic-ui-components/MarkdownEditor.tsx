@@ -3,7 +3,7 @@ import * as React from 'react'
 import * as Radium from 'radium'
 import { PureRender } from "epic-ui-components"
 
-import { getValue } from  "epic-common"
+import { getValue } from  "epic-global"
 
 // Constants
 const

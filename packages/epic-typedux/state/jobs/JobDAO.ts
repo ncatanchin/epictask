@@ -1,8 +1,8 @@
 
 import { JobType, IJob, JobStatus, IJobStatusDetail, JobLogLevel, TJobLogLevel } from "../jobs/JobTypes"
-import { uuid } from  "epic-common"
+import { uuid } from  "epic-global"
 import { getJobActions } from "../../provider"
-import { tempFilename } from  "epic-common"
+import { tempFilename } from  "epic-global"
 
 
 

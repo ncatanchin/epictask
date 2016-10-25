@@ -9,7 +9,7 @@ import * as ReactDOM from 'react-dom'
 import {SearchItem} from "epic-typedux"
 import { ThemedStyles } from "epic-styles"
 import { SearchResultsList } from "epic-ui-components"
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 import { ISearchState } from "epic-typedux"
 import { SearchPanel } from "epic-ui-components"
 

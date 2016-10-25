@@ -5,7 +5,7 @@ import {List,Record,Map} from 'immutable'
 import {INotificationMessage} from 'epic-global'
 import {User} from "epic-models"
 import {AppStateType} from './app/AppStateType'
-import {ISettings} from "epic-common"
+import {ISettings} from "epic-global"
 import {RegisterModel} from "epic-global"
 
 
@@ -31,7 +31,7 @@ export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
 		const checkSettings = (state) => {
-			return state.set('settings',require('epic-common').Settings.toJSON())
+			return state.set('settings',require("epic-global").Settings.toJSON())
 		}
 		
 		if (o && o instanceof AppState) {

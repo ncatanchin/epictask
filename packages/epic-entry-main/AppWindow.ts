@@ -3,10 +3,10 @@
 
 import Electron = require('electron')
 import { makeMainMenu as makeMainMenuType } from "./MainMenu"
-import { getAppEntryHtmlPath, getSplashEntryHtmlPath, setDataOnHotDispose, getHot } from "epic-common"
+import { getAppEntryHtmlPath, getSplashEntryHtmlPath, setDataOnHotDispose, getHot } from "epic-global"
 import { getAppActions } from "epic-typedux"
 import { Events } from "epic-global"
-import { AllWindowDefaults, WindowIcon } from "epic-process-manager"
+import { AllWindowDefaults, WindowIcon } from "epic-global"
 import { setupShutdownOnWindowClose } from "./MainShutdownHandler"
 
 const
@@ -166,7 +166,7 @@ function loadRootWindow(onFinishLoadCallback:(err?:Error) => void = null) {
 			mainWindowState.manage(appWindow)
 			
 			// ONLY TO DEBUG STARTUP ERRORS // ON READY - SHOW
-			//appWindow.once('ready-to-show',() => appWindow.show())
+			appWindow.once('ready-to-show',() => appWindow.show())
 			
 			setupShutdownOnWindowClose(appWindow)
 			

@@ -1,23 +1,23 @@
-
 // Imports
-import * as React from 'react'
-import * as Radium from 'radium'
-import {ThemedStyles} from "epic-styles"
-import {LinearProgress} from "material-ui"
-
-import {JobActionFactory, TJobIMap} from "epic-typedux"
-import {getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus} from "epic-typedux"
-import {TimeAgo} from "epic-ui-components"
 import {
-	FlexColumnCenter, FlexScale, makePaddingRem, rem, FillHeight, createStyles, FillWidth,
-	FlexRowCenter, Ellipsis, FlexColumn
+	ThemedStyles,
+	FlexColumnCenter,
+	FlexScale,
+	makePaddingRem,
+	rem,
+	FillHeight,
+	createStyles,
+	FillWidth,
+	FlexRowCenter,
+	Ellipsis,
+	FlexColumn
 } from "epic-styles"
-
-import {getJobStatusColors} from "./JobItem"
-import { LogWatcher, LogWatcherEvent } from  "epic-common"
-import { IEnumEventRemover } from  "epic-common"
-import { getValue, shallowEquals } from  "epic-common"
-import { VisibleList } from "epic-ui-components"
+import { LinearProgress } from "material-ui"
+import { JobActionFactory, TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux"
+import { TimeAgo } from "epic-ui-components/TimeAgo"
+import { getJobStatusColors } from "./JobItem"
+import { LogWatcher, LogWatcherEvent, IEnumEventRemover, getValue, shallowEquals } from "epic-global"
+import { VisibleList } from "epic-ui-components/VisibleList"
 
 // Constants
 const log = getLogger(__filename)

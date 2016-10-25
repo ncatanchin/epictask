@@ -4,19 +4,22 @@
 
 // Imports
 import * as React from 'react'
-import {FAIcons,GHIcons} from "epic-ui-components"
-
+import * as Radium from 'radium'
 import filterProps from 'react-valid-props'
 
-import {Themed} from "epic-styles"
-import { PureRender } from "epic-ui-components"
+import {FAIcons} from "./IconFontAwesomeNames"
+import {GHIcons} from "./IconOpticonNames"
+import { PureRender } from "./PureRender"
+
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
 
-const MaterialIcons = 'material-icons'
-const FontAwesome = 'fa'
-const Octicons = 'octicon'
+	MaterialIcons = 'material-icons',
+	FontAwesome = 'fa',
+	Octicons = 'octicon'
+
 /**
  * IMIconProps
  */

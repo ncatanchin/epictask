@@ -1,34 +1,14 @@
+require('source-map-support').install()
+require('babel-polyfill')
+require('reflect-metadata')
 
-const
-	{env} = process
 
-/**
- * ENV CONFIG
- */
-env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
-if (!env.NODE_ENV) {
-	env.NODE_ENV = 'production'
-}
-
-/**
- * CONFIGURE PROMISES FIRST
- */
-const
-	Bluebird = require('bluebird')
-
-Bluebird.config({
-	cancellation: true,
-	longStackTraces: false,
-	warnings: {
-		wForgottenReturn: false
-	},
-	monitoring: env.NODE_ENV === 'development'
-})
 
 /**
  * APP SEARCH PATHS FOR ASAR
  */
 const
+	{env} = process,
 	APP_SEARCH_PATHS = [
 		'../dist/app',
 		'../app',
@@ -37,18 +17,21 @@ const
 		'../../../app'
 	]
 
+
 let
 	outBuf = '',
 	resolvedAppPath = null,
-	fs = require('fs')
+	fs = require('fs'),
+	path = require('path')
 
 const logOut = (...args) => {
 	outBuf += args.join(' // ') + '\n'
+	console.log(...args)
 }
 
 for (let appPath of APP_SEARCH_PATHS) {
 	try {
-		appPath = require.resolve(`${appPath}/AppEntry.bundle`)
+		appPath = require.resolve(`${appPath}/epic-entry-main`)
 		
 		if (fs.existsSync(appPath)) {
 			resolvedAppPath = appPath
@@ -68,10 +51,28 @@ const
 	`
 
 if (resolvedAppPath) {
+	const
+		dir = path.dirname(resolvedAppPath)
+	
+	
+	logOut(`Loading main`)
+	// const
+	// 	commonOut = require(path.resolve(dir,"epic_libs")),
+	// 	mainOut =
 	require(resolvedAppPath)
+	
+	logOut(`Loading common`)
+	
+	
+	
+	
+	
+	
 } else {
 	try {
-		require('../AppEntry.bundle')
+		
+		require('../epic-libs')
+		require('../epic-entry-main')
 	} catch (err) {
 		try {
 			require('fs').writeFileSync('/tmp/epicinfo', errInfo)

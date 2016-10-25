@@ -1,19 +1,27 @@
-import { BaseService, IServiceConstructor, RegisterService, DatabaseClientService } from "epic-services"
+import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import {DatabaseClientService} from './DatabaseClientService'
 import { ObservableStore } from "typedux"
-import { AppStateType, getAppActions, getAuthActions } from "epic-typedux"
-import { getSettings, ValueCache } from "epic-common"
-import { ProcessType, AppKey } from "epic-global"
+import { getAppActions, getAuthActions } from "epic-typedux/provider"
+import { getSettings, ProcessType, AppKey} from "epic-global"
+import {AppStateType} from 'epic-typedux/state/app/AppStateType'
 
-const log = getLogger(__filename)
+
+const
+	log = getLogger(__filename)
 
 @RegisterService(ProcessType.UI)
 export default class AppStateService extends BaseService {
-
-	store:ObservableStore<any>
-
-
+	
+	/**
+	 * ObservableStore
+	 */
+	private store:ObservableStore<any>
+	
+	/**
+	 * Unsubscribe
+	 */
 	private unsubscribe
-	private stateTypeCache:ValueCache
+	
 	
 	/**
 	 * DatabaseClientService must be loaded first
@@ -24,40 +32,31 @@ export default class AppStateService extends BaseService {
 		return [DatabaseClientService]
 	}
 	
-
-
+	
 	constructor() {
 		super()
-		
 	}
 	
-	
+	/**
+	 * Init
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	init(): Promise<this> {
 		return super.init()
 	}
 	
-	// loadDep(mod):any {
-	// 	return Container.get(mod.default)
-	// }
-	//
-	// loadDeps() {
-	// 	this.appActions = this.loadDep((require as any)('shared/actions/AppActionFactory')) as AppActionFactory
-	// 	this.repoActions = this.loadDep((require as any)('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
-	// 	this.authActions = this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
-	// 	this.appActions = Container.get(AppActionFactory)// this.loadDep((require as any)('shared/actions/AppActionFactory')) as AppActionFactory
-	// 	this.repoActions = Container.get(RepoActionFactory) //this.loadDep((require as any)//('shared/actions/repo/RepoActionFactory')) as RepoActionFactory
-	// 	this.authActions = Container.get(AuthActionFactory)//this.loadDep((require as any)('shared/actions/auth/AuthActionFactory')) as AuthActionFactory
-	//
-	//
-	// }
-
+	/**
+	 * Start the AppStateService
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	async start():Promise<this> {
 		
 		this.store = Container.get(ObservableStore as any) as any
 		this.store.observe([AppKey,'stateType'],this.checkStateType)
 		
 		this.checkStateType(null,null)
-		
 		
 		return super.start()
 	}

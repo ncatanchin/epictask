@@ -1,13 +1,8 @@
 // Imports
-
-import { Provider } from 'react-redux'
-import { PureRender } from "epic-ui-components"
-import { createStructuredSelector } from 'reselect'
-import { ThemedStyles } from "epic-styles"
+import { PureRender } from "./PureRender"
 import { IThemedAttributes } from "epic-styles"
-import { getValue } from  "epic-common"
-import { TComponent } from  "epic-common"
-import { getReduxStore } from "epic-typedux"
+import { getValue, TComponent } from "epic-global"
+
 
 // Constants
 const

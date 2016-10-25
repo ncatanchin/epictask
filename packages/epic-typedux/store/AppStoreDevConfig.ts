@@ -81,12 +81,3 @@ export default function addDevMiddleware(enhancers) {
 	}
 	
 }
-
-/**
- * Declare dev tools extensions
- */
-declare global{
-	interface Window {
-		devToolsExtension:any
-	}
-}

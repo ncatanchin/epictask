@@ -1,15 +1,11 @@
 // Imports
 import * as React from 'react'
-import { connect } from 'react-redux'
-import * as Radium from 'radium'
-import { PureRender } from "epic-ui-components"
-import { createDeepEqualSelector } from  "epic-common"
 import { DragLayer } from 'react-dnd'
 
 import { ThemedStyles } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
-import { ToolGutterButton } from "epic-ui-components"
-import { getValue, shallowEquals } from  "epic-common"
+import { ToolGutterButton } from "epic-ui-components/ToolGutterButton"
+import { getValue, shallowEquals } from  "epic-global"
 import { PositionAbsolute } from "epic-styles"
 
 // Constants

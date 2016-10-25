@@ -5,8 +5,9 @@ import {BaseService, RegisterService, IServiceConstructor} from "epic-services"
 import {JobManagerService} from "./JobManagerService"
 import {JobActionFactory} from "epic-typedux"
 import * as moment from 'moment'
-import { JobKey } from "epic-global"
-import { JobDAO,getActionClient } from "epic-typedux"
+import { JobKey, ProcessType } from "epic-global"
+import { getActionClient } from "epic-typedux/store/AppStoreClient"
+import { JobDAO } from "epic-typedux/state/jobs/JobDAO"
 
 const log = getLogger(__filename)
 

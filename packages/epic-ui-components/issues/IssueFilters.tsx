@@ -1,51 +1,48 @@
 /**
  * Created by jglanz on 7/19/16.
  */
-
 // Imports
-import {List} from 'immutable'
-import * as React from 'react'
-import {connect} from 'react-redux'
-import * as Radium from 'radium'
-import {PureRender} from "epic-ui-components"
-import {Milestone} from "epic-models"
-import {Label} from "epic-models"
+import { List } from "immutable"
+import * as React from "react"
+import { connect } from "react-redux"
+import { PureRender } from "epic-ui-components/PureRender"
+import { Milestone, Label, Issue, User } from "epic-models"
 import {
-	IIssueSort, IssueSortableFields,
-	IssueGroupByFields, IssueGroupByNames,
-	IssueSortableFieldNames
+	IIssueSort,
+	IssueSortableFields,
+	IssueGroupByFields,
+	IssueGroupByNames,
+	IssueSortableFieldNames,
+	IIssueFilter,
+	issueSortSelector,
+	issueFilterSelector,
+	issueFilterLabelsSelector,
+	issueFilterMilestonesSelector,
+	IIssueGroup,
+	enabledAssigneesSelector,
+	enabledMilestonesSelector,
+	enabledLabelsSelector,
+	getIssueActions
 } from "epic-typedux"
+import { createStructuredSelector } from "reselect"
 import {
-	IIssueFilter
-} from "epic-typedux"
-import {createDeepEqualSelector} from  "epic-common"
-import {createStructuredSelector, createSelector} from 'reselect'
-import {ThemedStyles} from "epic-styles"
-import {
-	issueSortAndFilterSelector, issueSortSelector, issueFilterSelector, issueFilterLabelsSelector,
-	issueFilterMilestonesSelector
-} from "epic-typedux"
-import {IssueActionFactory} from "epic-typedux"
-import {UIActionFactory} from "epic-typedux"
-import {Container} from 'typescript-ioc'
-import {Icon} from "epic-ui-components"
-import {IssueLabelsAndMilestones} from "epic-ui-components"
-import {IconMenu,IconButton,MenuItem,Divider} from 'material-ui'
-import {NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon} from 'material-ui/svg-icons'
-import * as moment from 'moment'
-import {IIssueGroup} from "epic-typedux"
-import {Issue} from "epic-models"
-import {
-	enabledAssigneesSelector, enabledMilestonesSelector,
-	enabledLabelsSelector
-} from "epic-typedux"
-import { User } from "epic-models"
-import {
-	FlexAuto, FillWidth, FlexRowCenter, Ellipsis, FlexScale, rem, FlexColumn,
+	ThemedStyles,
+	FlexAuto,
+	FillWidth,
+	FlexRowCenter,
+	Ellipsis,
+	FlexScale,
+	rem,
+	FlexColumn,
 	makeFlexAlign
 } from "epic-styles"
-import { getValue } from  "epic-common"
-import { getIssueActions } from "epic-typedux"
+import { Icon } from "epic-ui-components/Icon"
+import { IssueLabelsAndMilestones } from "epic-ui-components/issues/IssueLabelsAndMilestones"
+import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
+import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon } from "material-ui/svg-icons"
+import * as moment from "moment"
+import { getValue } from "epic-global"
+import { getUIActions } from "epic-typedux/provider"
 
 
 const
@@ -166,8 +163,13 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 @PureRender
 export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 
-	uiActions:UIActionFactory = Container.get(UIActionFactory)
-	issueActions:IssueActionFactory = Container.get(IssueActionFactory)
+	get uiActions() {
+		return getUIActions()
+	}
+	
+	get issueActions() {
+		return getIssueActions()
+	}
 
 	/**
 	 * Event handlers

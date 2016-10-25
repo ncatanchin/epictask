@@ -5,8 +5,8 @@ import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "epic-typedu
 import {IJob, JobStatus, IJobSchedule, IJobLog} from "../state/jobs/JobTypes"
 import {JobKey} from "epic-global"
 import {JobsMaxCompleted} from 'epic-global'
-import {Provided} from  "epic-common"
-import {cloneObject} from  "epic-common"
+import {Provided} from  "epic-global"
+import {cloneObject} from  "epic-global"
 import { RegisterActionFactory } from "epic-global"
 
 

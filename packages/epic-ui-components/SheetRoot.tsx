@@ -1,22 +1,18 @@
 // Imports
-import { connect } from 'react-redux'
-import { PureRender } from "epic-ui-components"
-import { createStructuredSelector } from 'reselect'
-import { ThemedStyles } from "epic-styles"
-import { sheetSelector } from "epic-typedux"
-import { IUISheet } from "epic-process-manager"
+import { connect } from "react-redux"
+import { PureRender, PromisedComponent } from "epic-ui-components"
+import { createStructuredSelector } from "reselect"
+import { ThemedStyles, PositionAbsolute, makeTransition, FillHeight, FlexColumn, IThemedAttributes } from "epic-styles"
+import { sheetSelector, getUIActions } from "epic-typedux"
+import { IUISheet, getValue } from "epic-global"
 import {
-	PositionAbsolute, makeTransition, FillHeight,
-	FlexColumn
-} from "epic-styles"
-import { CommandComponent, CommandContainerBuilder, CommandRoot, CommandType } from  "epic-command-manager"
-import { ContainerNames } from "epic-command-manager"
-import { IThemedAttributes } from "epic-styles"
-
-import { CommonKeys } from "epic-command-manager"
-import { getUIActions } from "epic-typedux"
-import { getValue } from  "epic-common"
-import { PromisedComponent } from "epic-ui-components"
+	CommandComponent,
+	CommandContainerBuilder,
+	CommandRoot,
+	CommandType,
+	ContainerNames,
+	CommonKeys
+} from "epic-command-manager"
 
 // Constants
 const log = getLogger(__filename)

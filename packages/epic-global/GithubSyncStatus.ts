@@ -1,13 +1,13 @@
 import * as fs from 'fs'
 import * as moment from 'moment'
 
-import { getUserDataFilename,toJSON, parseJSON } from  "epic-common"
+import { getUserDataFilename,toJSON, parseJSON } from  "epic-global"
 
 const
 	log = getLogger(__filename),
 	syncStatusFilename = getUserDataFilename('epictask-sync-status.json')
 
-log.info(`SyncStatusFilename file: ${syncStatusFilename}`)
+log.debug(`SyncStatusFilename file: ${syncStatusFilename}`)
 
 interface IGithubSyncStatus {
 	eTags:{[url:string]:string}
@@ -88,7 +88,7 @@ export namespace GithubSyncStatus {
 	}
 	
 	
-	loadPromise = load()
+	
 	
 	/**
 	 * Check to ensure status is loaded
@@ -102,6 +102,9 @@ export namespace GithubSyncStatus {
 	 * Wait until status is loaded and ready
 	 */
 	export async function awaitLoaded() {
+		if (!loadPromise)
+			loadPromise = load()
+		
 		if (loadPromise.isResolved())
 			return
 		

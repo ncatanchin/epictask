@@ -1,5 +1,5 @@
 
-import { getSettingsFile } from "epic-common"
+import { getSettingsFile } from "epic-global"
 import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from "epic-global"

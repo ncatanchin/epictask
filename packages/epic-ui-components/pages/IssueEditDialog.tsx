@@ -20,7 +20,7 @@ import {
 	MarkdownEditor
 } from "epic-ui-components"
 import { MenuItem, SelectField, TextField } from "material-ui"
-import { cloneObject, getValue, canAssignIssue, canCreateIssue } from "epic-common"
+import { cloneObject, getValue, canAssignIssue, canCreateIssue } from "epic-global"
 import {
 	repoIdPredicate,
 	enabledAvailableReposSelector,

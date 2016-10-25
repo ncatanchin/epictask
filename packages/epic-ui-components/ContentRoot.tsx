@@ -1,6 +1,4 @@
-import {getTheme} from "epic-styles"
-import {FlexScale} from "epic-styles"
-
+import { getTheme, FlexScale } from "epic-styles"
 
 
 export const ContentRoot = (props) => (

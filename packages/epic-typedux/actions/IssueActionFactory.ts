@@ -11,7 +11,7 @@ import {FinderItemsPerPage,IssueKey, isNil,isNumber} from 'epic-global'
 import {
 	cloneObject, extractError, nilFilter, cloneObjectShallow,
 	shallowEquals
-} from  "epic-common"
+} from  "epic-global"
 import {Comment} from "epic-models"
 import {
 	IssueMessage, IssueState, TIssueSortAndFilter,
@@ -32,7 +32,7 @@ import {Label} from "epic-models"
 import {Milestone} from "epic-models"
 import { addErrorMessage, getNotificationCenter } from "epic-global"
 import {addMessage} from "epic-global"
-import {getSettings} from "epic-common"
+import {getSettings} from "epic-global"
 import {TIssuePatchMode} from "epic-typedux"
 import {Repo,ISyncChanges} from "epic-models"
 import {AvailableRepo} from "epic-models"
@@ -40,20 +40,20 @@ import {CommentStore} from "epic-models"
 import {IssuesEventStore,IssuesEvent} from "epic-models"
 
 import {getStoreState} from "epic-typedux"
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 
 import { RegisterActionFactory } from "epic-global"
-import { pagedFinder } from  "epic-common"
+import { pagedFinder } from  "epic-global"
 import { IIssueFilter, EmptyIssueFilter } from "epic-typedux"
 import { IIssueSort } from "epic-typedux"
-import { isListType } from  "epic-common"
+import { isListType } from  "epic-global"
 
 
 //import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
 import { LoadStatus } from "epic-models"
 import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
-import { Dialogs } from "epic-process-manager"
+import { Dialogs } from "epic-global"
 
 
 /**

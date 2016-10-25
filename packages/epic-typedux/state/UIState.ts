@@ -1,12 +1,15 @@
-import {List,Record,Map} from 'immutable'
-
-import {INotificationMessage} from 'epic-global'
-import {User} from "epic-models"
-import {RegisterModel} from "epic-global"
-import {State} from "typedux"
-import {IToolPanel, makeToolPanels} from "epic-global"
-import { IUISheet } from "epic-process-manager"
-import { getValue, cloneObjectShallow } from  "epic-common"
+import { List, Record, Map } from "immutable"
+import {
+	INotificationMessage,
+	RegisterModel,
+	IToolPanel,
+	makeToolPanels,
+	IUISheet,
+	getValue,
+	cloneObjectShallow
+} from "epic-global"
+import { User } from "epic-models"
+import { State } from "typedux"
 
 const log = getLogger(__filename)
 

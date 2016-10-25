@@ -2,7 +2,7 @@
 import {DefaultLeafReducer,ActionMessage} from 'typedux'
 import {JobKey} from "epic-global"
 import {JobState} from "../state/JobState"
-import {Provided} from  "epic-common"
+import {Provided} from  "epic-global"
 
 const log = getLogger(__filename)
 

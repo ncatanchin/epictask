@@ -1,38 +1,42 @@
 /**
  * Created by jglanz on 6/14/16.
  */
-
 // Imports
-
-import { createStructuredSelector } from 'reselect'
-import { connect } from 'react-redux'
-import { User } from "epic-models"
-import { ThemedStyles } from "epic-styles"
-import { appUserSelector } from "epic-typedux"
-import { DialogRoot } from "epic-ui-components"
-import { getUIActions, getRepoActions } from "epic-typedux"
+import { createStructuredSelector } from "reselect"
+import { connect } from "react-redux"
+import { User, AvailableRepo, Milestone } from "epic-models"
 import {
-	FlexColumn, FlexAuto, FlexRowCenter, FillHeight, makeFlex,
-	OverflowAuto, FillWidth, FlexScale, Ellipsis, makePaddingRem, rem, Fill, makeStyle, makeHeightConstraint,
-	makeTransition, PositionRelative, OverflowHidden, FlexRow, makeFlexAlign, FlexAlignStart
+	ThemedStyles,
+	FlexColumn,
+	FlexAuto,
+	FlexRowCenter,
+	FillHeight,
+	OverflowAuto,
+	FillWidth,
+	FlexScale,
+	Ellipsis,
+	makePaddingRem,
+	rem,
+	Fill,
+	makeStyle,
+	makeHeightConstraint,
+	OverflowHidden,
+	FlexRow,
+	makeFlexAlign,
+	FlexAlignStart,
+	IThemedAttributes
 } from "epic-styles"
-import { CommandComponent, CommandContainerBuilder, CommandRoot } from  "epic-command-manager"
-import { ContainerNames } from "epic-command-manager"
-import { PureRender, Select, ISelectItem, RepoName, Icon, Button } from "epic-ui-components"
-import { IThemedAttributes } from "epic-styles"
-
-import { Repo, AvailableRepo, Milestone, Label } from "epic-models"
+import { appUserSelector, getUIActions, enabledAvailableReposSelector, enabledMilestonesSelector } from "epic-typedux"
+import { DialogRoot } from "epic-ui-components/DialogRoot"
+import { CommandComponent, CommandContainerBuilder, CommandRoot, ContainerNames } from "epic-command-manager"
+import { PureRender, Select, ISelectItem, RepoName, Icon } from "epic-ui-components"
 import { List } from "immutable"
-import { canEditRepo } from "epic-common"
-import {
-	enabledAvailableReposSelector, enabledLabelsSelector,
-	enabledMilestonesSelector
-} from "epic-typedux"
-import { getValue } from  "epic-common"
-import { TabTemplate } from "epic-ui-components"
-import { Tab, Tabs, TextField } from 'material-ui'
+import { canEditRepo, getValue } from "epic-global"
+import { TabTemplate } from "epic-ui-components/TabTemplate"
+import { Tab, Tabs } from "material-ui"
+import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
+import { RepoLabelEditor } from "./RepoLabelEditor"
 
-import { RepoMilestoneEditor,RepoLabelEditor } from "epic-plugins-default"
 
 const
 	log = getLogger(__filename)

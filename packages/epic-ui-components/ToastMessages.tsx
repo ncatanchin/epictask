@@ -1,22 +1,20 @@
-
 //region Imports
-import * as React from 'react'
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import * as Radium from 'radium'
-
-import {connect} from 'react-redux'
-import {INotificationMessage, NotificationMessageType} from 'epic-global'
-
-import {UIActionFactory} from "epic-typedux"
-import {Container} from 'typescript-ioc'
-import {PureRender} from "epic-ui-components"
-import {ThemedStyles} from "epic-styles"
-import {createStructuredSelector} from 'reselect'
-import {uiStateSelector} from "epic-typedux"
-import {createDeepEqualSelector} from  "epic-common"
-import {ToastMessage} from "epic-ui-components"
-import { PersistentValueEvent } from  "epic-common"
-import { NativeNotificationsEnabled } from "epic-common"
+import * as React from "react"
+import * as CSSTransitionGroup from "react-addons-css-transition-group"
+import * as Radium from "radium"
+import { connect } from "react-redux"
+import {
+	INotificationMessage,
+	createDeepEqualSelector,
+	PersistentValueEvent,
+	NativeNotificationsEnabled
+} from "epic-global"
+import { PureRender } from "./PureRender"
+import { ThemedStyles } from "epic-styles"
+import { createStructuredSelector } from "reselect"
+import { uiStateSelector } from "epic-typedux/selectors"
+import { ToastMessage } from "./ToastMessage"
+import { getUIActions } from "epic-typedux/provider"
 
 
 const dataUrl = require('dataurl')
@@ -31,10 +29,6 @@ const
 
 //region Logger
 const log = getLogger(__filename)
-//endregion
-
-//region Constants
-const uiActions = Container.get(UIActionFactory)
 //endregion
 
 
@@ -127,7 +121,7 @@ function processNotifications(newMessages:INotificationMessage[]) {
 		.filter(msg => !messageNotifications[msg.id] && msg.notify === true)
 		.forEach(msg => {
 
-			const clearMessage = () => uiActions.removeMessage(msg.id)
+			const clearMessage = () => getUIActions().removeMessage(msg.id)
 
 			// TODO: add 'tag' and 'sticky' for error
 			const notification = new Notification('epictask',{

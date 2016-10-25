@@ -7,9 +7,13 @@ let
 	
 
 export function getCommandBrowserWindow():Electron.BrowserWindow {
-	return (!isMain && isElectron) ?
-			require('electron').remote.getCurrentWindow() :
-			null
+	if (!isElectron)
+		return null
+	
+	const
+		Electron = require('electron')
+	
+	return Electron.remote && Electron.remote.getCurrentWindow()
 }
 
 function getWindow() {

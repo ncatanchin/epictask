@@ -1,13 +1,12 @@
-
-
-import * as React from 'react'
-import { IThemedAttributes, Themed, ThemedStyles } from "epic-styles"
-import { ITool, IToolPanel, ToolPanelLocation } from "epic-global"
+import * as React from "react"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
+import { ITool, IToolPanel, ToolPanelLocation, DragTypes } from "epic-global"
 import { getUIActions } from "epic-typedux"
-import { Button, Icon, PureRender } from "epic-ui-components"
-import {DragSource,DragSourceConnector,DragSourceMonitor} from 'react-dnd'
-import { DragTypes } from "epic-global"
-import {getEmptyImage} from 'react-dnd-html5-backend'
+import { PureRender } from "./PureRender"
+import { Icon } from "epic-ui-components/Icon"
+import { Button } from "epic-ui-components/Button"
+import { DragSource, DragSourceConnector, DragSourceMonitor } from "react-dnd"
+import { getEmptyImage } from "react-dnd-html5-backend"
 
 const
 	log = getLogger(__filename)

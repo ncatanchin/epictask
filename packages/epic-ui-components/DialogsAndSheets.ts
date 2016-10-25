@@ -1,7 +1,7 @@
 
 
-import { WindowType, IWindowConfig } from "epic-process-manager"
-import { makePromisedComponent, TComponentResolver } from  "epic-common"
+import { WindowType, IWindowConfig } from "epic-global"
+import { makePromisedComponent, TComponentResolver, registerWindowConfig } from  "epic-global"
 
 
 export const Sheets = {
@@ -10,7 +10,7 @@ export const Sheets = {
 		title: 'Import Repository',
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
 			//resolver.resolve(require('epic-plugins-default').RepoAddTool))
-			resolver.resolve(node_require('./epic-plugins-default').RepoAddTool))
+			resolver.resolve(require('epic-plugins-default/repos/RepoAddTool').RepoAddTool))
 			// require.ensure(['ui/plugins/repos/RepoAddTool'],function(require:any) {
 			// 	resolver.resolve(require('ui/plugins/repos/RepoAddTool').RepoAddTool)
 			// }))
@@ -38,7 +38,7 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: true,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			resolver.resolve(require('epic-plugins-default').RepoSettingsWindow))
+			resolver.resolve(require('epic-plugins-default/repos/RepoSettingsWindow').RepoSettingsWindow))
 		
 	},
 	
@@ -83,3 +83,9 @@ export const DialogConfigs = {
 			
 	}
 } as {[configName:string]:IWindowConfig}
+
+
+// REGISTER ALL CONFIGS
+Object
+	.values(DialogConfigs)
+	.forEach(config => registerWindowConfig(config.name,config))

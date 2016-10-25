@@ -1,7 +1,7 @@
 import Electron = require('electron')
 import { getAuthActions } from "epic-typedux"
 import { shutdownApp } from "./MainShutdownHandler"
-import { restartAndClean } from "./Cleaner"
+import { Cleaner } from "./Cleaner"
 
 const
 	{
@@ -61,7 +61,7 @@ function makeDevMenu(mainWindow:Electron.BrowserWindow) {
 			// CLEAN
 			{
 				label: 'Clean / Reset App',
-				click: () => restartAndClean()
+				click: () => Cleaner.restartAndClean()
 			}
 		
 		]

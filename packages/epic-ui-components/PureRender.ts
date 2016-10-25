@@ -1,5 +1,5 @@
 import shallowCompare = require('react-addons-shallow-compare')
-import {interceptFn} from  "epic-common"
+import {interceptFn} from  "epic-global"
 
 const
 	log = getLogger(__filename)

@@ -1,6 +1,6 @@
 // Imports
 import { connect } from 'react-redux'
-import { PureRender } from "epic-ui-components"
+import { PureRender } from "epic-ui-components/PureRender"
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
@@ -12,8 +12,10 @@ import {
 	FillWidth, FlexColumn, FlexScale, OverflowAuto, makeHeightConstraint,
 	makeTransition, FlexRowCenter, FlexAuto, makePaddingRem, rem, Fill, makeMarginRem, FillHeight, makeWidthConstraint
 } from "epic-styles"
-import { getValue } from  "epic-common"
-import { LabelChip,Button, Icon } from "epic-ui-components"
+import { getValue } from  "epic-global"
+import { LabelChip } from "epic-ui-components/LabelChip"
+import {Button} from "epic-ui-components/Button"
+import {Icon} from "epic-ui-components/Icon"
 import { getRepoActions } from "epic-typedux"
 
 

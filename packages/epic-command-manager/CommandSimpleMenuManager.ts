@@ -1,8 +1,8 @@
 
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-common"
+import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global"
 import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from  "./Command"
-import { getValue, cloneObject } from  "epic-common"
-import { EnumEventEmitter } from  "epic-common"
+import { getValue, cloneObject } from  "epic-global"
+import { EnumEventEmitter } from  "epic-global"
 import { OrderedMap } from "immutable"
 
 const

@@ -1,6 +1,6 @@
 
 import {isNumber} from 'epic-global'
-import { shallowEquals } from  "epic-common"
+import { shallowEquals } from  "epic-global"
 
 
 import {GlobalKeys,TCommandDefaultAccelerator} from './Command'

@@ -40,7 +40,7 @@ import {
 	getIssueActions
 } from "epic-typedux"
 import { Issue, Milestone, Label, User } from "epic-models"
-import { canEditIssue, canAssignIssue, getValue, cloneObject, shallowEquals } from "epic-common"
+import { canEditIssue, canAssignIssue, getValue, cloneObject, shallowEquals } from "epic-global"
 
 // Constants
 const

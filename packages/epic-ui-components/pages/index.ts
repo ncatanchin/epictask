@@ -3,7 +3,8 @@ import {AppStateType} from 'epic-typedux'
 import {LoginPage} from './LoginPage'
 import {VerifyLoginPage} from './VerifyLoginPage'
 import {HomePage} from './HomePage'
-import {AppActionFactory} from "epic-typedux"
+import { getAppActions } from "epic-typedux/provider"
+
 
 export * from './Page'
 
@@ -18,9 +19,12 @@ const Pages = {
 
 export function getPage(stateType:AppStateType = null) {
 	const
-		appActions = Container.get(AppActionFactory)
+		appActions = getAppActions()
+	
 	stateType = stateType || appActions.state.stateType
-	const page = Pages[stateType] || HomePage
+	
+	const
+		page = Pages[stateType] || HomePage
 
 	log.debug('Returning page for app state type', stateType,AppStateType[stateType])
 

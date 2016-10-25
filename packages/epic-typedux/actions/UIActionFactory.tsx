@@ -10,12 +10,15 @@ import {
 	ToolPanelLocation,
 	ITool,
 	IToolPanel,
-	RegisterActionFactory
+	IUISheet,
+	RegisterActionFactory,
+	getToolRegistrations, nilFilter
 } from "epic-global"
 import { UIState } from "epic-typedux"
-import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-common"
+import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
 import * as assert from "assert"
-import { getWindowManager, IUISheet } from "epic-process-manager"
+import { getWindowManager } from "epic-process-manager"
+
 
 
 // Import only as type - in case we are not on Renderer
@@ -97,7 +100,36 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 	
 	
-	
+	/**
+	 * Update all registered tools for the registry
+	 */
+	updateRegisteredTools() {
+		const
+			tools =
+				nilFilter(getToolRegistrations())
+					.map(reg => {
+						let
+							tool = this.getTool(reg.id)
+						
+						if (!tool) {
+							tool = cloneObjectShallow(reg, {
+								active: false,
+								data: {}
+							}) as ITool
+						} else {
+							tool = cloneObjectShallow(tool,reg)
+						}
+						
+						 
+						
+						return tool
+						
+					})
+		
+		
+		this.updateTool(...tools)
+		
+	}
 
 	
 	
@@ -151,7 +183,6 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Remove a tool from a tool panel
 	 *
-	 * @param panelId
 	 * @param toolId
 	 * @returns {(state:UIState)=>UIState}
 	 */
@@ -240,33 +271,36 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Update a tool
 	 * 
-	 * @param tool
-	 * @returns {(state:UIState)=>Map<string, V>}
+	 * @param tools
+	 * @returns {(state:UIState)=>UIState}
 	 */
 	@ActionReducer()
-	updateTool(tool:ITool) {
+	updateTool(...tools:ITool[]) {
 		return (state:UIState) => {
 			
+			tools.forEach(tool => {
+				// FIND THE NEW AND OLD PANEL
+				const
+					parentPanel =
+						this.getToolParentPanel(tool.id,state) ||
+						this.getToolPanel(tool.defaultLocation)
+				
+				assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
+				
+				const
+					panel = cloneObjectShallow(parentPanel)
+				
+				panel.tools[tool.id] = tool
+				if (panel.toolIds.indexOf(tool.id) === -1)
+					panel.toolIds = panel.toolIds.concat([tool.id])
+				
+				panel.open = Object.values(panel.tools).some(it => it.active)
+				
+				state = this.doPanelUpdate(state,panel)	as UIState
+			})
 			
 			
-			// FIND THE NEW AND OLD PANEL
-			const
-				parentPanel =
-					this.getToolParentPanel(tool.id,state) ||
-					this.getToolPanel(tool.defaultLocation)
-			
-			assert(parentPanel, `Unable to locate existing panel or find default for ${tool.id} w/defaultLocation ${tool.defaultLocation}`)
-			
-			const
-				panel = cloneObjectShallow(parentPanel)
-			
-			panel.tools[tool.id] = tool
-			if (panel.toolIds.indexOf(tool.id) === -1)
-				panel.toolIds = panel.toolIds.concat([tool.id])
-			
-			panel.open = Object.values(panel.tools).some(it => it.active)
-			
-			return this.doPanelUpdate(state,panel)
+			return state
 			
 		}
 	}
