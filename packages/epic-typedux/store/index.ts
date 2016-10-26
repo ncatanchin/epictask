@@ -1,5 +1,5 @@
 export * from './AppStore'
-export * from "./AppStoreBuilder"
+//export * from "./AppStoreBuilder"
 //export * from "./AppStoreClient"
 //export * from "./AppStoreDevConfig"
 //export * from "./AppStoreEnhancer"

@@ -24,6 +24,7 @@ const
 	assert = require('assert'),
 	path = require('path'),
 	fs = require('fs'),
+	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
 	ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
 	
@@ -51,6 +52,7 @@ function resolveDirs(...dirs) {
 assert(fs.existsSync(srcRootDir),`TypeScript must be compiled to ${path.resolve(srcRootDir)}`)
 
 const
+	noWebpack = process.env.NO_WEBPACK,
 	
 	// Module Directories
 	moduleDirs = resolveDirs(srcRootDir,'node_modules'),
@@ -215,9 +217,9 @@ function makeOutputConfig(name,isEntry = false) {
 			libraryTarget: 'commonjs2'
 		}
 	
-	//if (name) {
-		outputConfig.filename = '[name].js'
-	//}
+	
+	outputConfig.filename = '[name].js'
+	
 
 	if (isEntry !== true)
 		outputConfig.library = `${name}`
@@ -395,10 +397,9 @@ function makeConfig(name,dependencies,entry,configFn) {
 			externals: makeExternals()
 		}
 	
+	if (configFn)
+		configFn(config)
 	
-	// if (pkg.webpackConfig)
-	// 	config = pkg.webpackConfig(config,isDev)
-	//
 	return patchConfig(config)
 	
 }
@@ -409,120 +410,58 @@ const
 		cwd:srcRootDir,
 		nodir:true
 	}
-	// epicLibsConfig = patchConfig({
-	//
-	// 	name: "epic_libs",
-	// 	dependencies: [],
-	// 	target: 'electron',
-	// 	entry,
-	//
-	// 	/**
-	// 	 * Source root, './packages'
-	// 	 */
-	// 	context: srcRootDir,
-	//
-	// 	/**
-	// 	 * Stats config
-	// 	 */
-	// 	stats: WebpackStatsConfig,
-	//
-	// 	/**
-	// 	 * Output configuration
-	// 	 */
-	// 	// output: makeOutputConfig(name,isEntry || false),
-	// 	output: makeOutputConfig("epic_libs"),
-	//
-	// 	// LOADERS
-	// 	module:  makeModuleConfig(),
-	//
-	// 	cache: true,
-	// 	//recordsPath: `${distDir}/records__${name}`,
-	// 	recordsPath: `${distDir}/records__epic_libs`,
-	// 	/**
-	// 	 * DevTool config
-	// 	 */
-	// 	devtool,
-	//
-	// 	// Currently we need to add '.ts' to the resolve.extensions array.
-	// 	resolve: makeResolveConfig(),
-	//
-	//
-	// 	// PLUGINS
-	// 	plugins: [
-	//
-	// 		// IF LIB THEN ADD DLL PLUGIN
-	// 		// ...(isEntry ? [] : [
-	//
-	//
-	// 		//new webpack.optimize.DedupePlugin(),
-	//
-	// 		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-	// 		new ForkCheckerPlugin(),
-	//
-	// 		// BASICS
-	// 		//new webpack.IgnorePlugin(/vertx/),
-	//
-	// 		new webpack.NoErrorsPlugin(),
-	//
-	// 		new DefinePlugin(DefinedEnv),
-	//
-	// 		//new webpack.NamedModulesPlugin(),
-	// 		new webpack.ProvidePlugin({
-	// 			'Promise': 'bluebird'
-	// 		}),
-	//
-	//
-	// 	],
-	//
-	// 	// NODE SHIMS
-	// 	node: {
-	// 		__dirname: true,
-	// 		__filename: true,
-	// 		global: true,
-	// 		process: true
-	// 	},
-	//
-	// 	// Configure all node_modules as external if in electron
-	// 	externals: makeExternals()
-	// })
-
-
-
-
-
-module.exports = [
 	
-	
-	makeConfig('epic_libs',[],{
-		"epic_libs": [
-			"epic-entry-shared",
-			"epic-global",
-			"epic-net",
-			"epic-github",
-			"epic-database-client",
-			"epic-process-manager",
+const
+	makeHtmlConfig = () => makeConfig('epic-html',[],{
+		"epic-entry-browser": makeHotEntry([
+			"./epic-entry-browser/index"
+		]),
+	},config => {
+		
+		if (noWebpack) {
+			config.plugins.unshift(new CopyWebpackPlugin([
+				{
+					from: 'epic-assets',
+					to: 'assets'
+				},
+				{
+					from: path.resolve(process.cwd(), 'bin'),
+					to: 'bin'
+				}
+			], {
+				ignore: ["**/*.psd"],
+				debug: 'info'
+				
+			}))
+		}
+		
+		config.plugins.push(
 			
-			"epic-typedux",
-			"epic-services"
-			// ...glob.sync("epic-entry-shared/**/*",globOpts),
-			// ...glob.sync("epic-global/**/*",globOpts),
-			// ...glob.sync("epic-net/**/*",globOpts),
-			// ...glob.sync("epic-github/**/*",globOpts),
-			// ...glob.sync("epic-database-client/**/*",globOpts),
-			// ...glob.sync("epic-process-manager/**/*",globOpts),
-			//
-			// ...glob.sync("epic-typedux/**/*",globOpts),
-			// ...glob.sync("epic-services/**/*",globOpts)
+			new HtmlWebpackPlugin({
+				filename: "app-entry.html",
+				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
+				inject: false,
+				isDev
+			}),
 			
-		]
-	}, config => {
-		config.plugins.unshift(new webpack.DllPlugin({
-			name: `epic_libs`,
-			path: path.resolve(distDir,`manifest.epic_libs.json`)
-		}))
-	}),
+			new HtmlWebpackPlugin({
+				filename: "splash-entry.html",
+				template: `${process.cwd()}/packages/epic-assets/templates/SplashEntry.jade`,
+				inject: false,
+				isDev
+			})
+		
+		)
+	})
+
+
+module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
-	makeConfig('epic_app',['epic_libs'],{
+	
+	
+	
+
+	makeConfig('epic-app',['epic_libs'],{
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"
 		]),
@@ -543,34 +482,33 @@ module.exports = [
 	
 	
 	
-	// BROWSER ENTRY
-	makeConfig('epic-html',[],{
-		"epic-entry-browser": makeHotEntry([
-			"./epic-entry-browser/index"
-		]),
-	},config => {
-		config.plugins.push(
-			new HtmlWebpackPlugin({
-				filename: "app-entry.html",
-				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
-				inject: false,
-				isDev
-			}),
+	makeConfig('epic_libs',[],{
+		"epic_libs": [
+			...glob.sync("epic-entry-shared/**/*",globOpts),
+			//...glob.sync("epic-global/**/*",globOpts),
 			
-			new HtmlWebpackPlugin({
-				filename: "splash-entry.html",
-				template: `${process.cwd()}/packages/epic-assets/templates/SplashEntry.jade`,
-				inject: false,
-				isDev
-			})
-		
-		)
-	})
+			// "./epic-entry-shared/Globals",
+			// "./epic-entry-shared/GlobalDeclarations",
+			// "./epic-entry-shared/ProcessType",
+			// "./epic-entry-shared/ProcessConfig",
+			"./epic-global",
+			"./epic-net",
+			"./epic-github",
+			"./epic-database-client",
+			"./epic-process-manager",
+			"./epic-typedux",
+			"./epic-services"
+		]
+	}, config => {
+		config.plugins.unshift(new webpack.DllPlugin({
+			name: `epic_libs`,
+			path: path.resolve(distDir,`manifest.epic_libs.json`)
+		}))
+	}),
+	
+	// BROWSER ENTRY
+	 makeHtmlConfig()
 ]
-// module.exports = Object
-// 	.values(getPackages())
-// 	.map(makeConfig)
-// 	.concat()
-//
+
 
 

@@ -1,3 +1,5 @@
+import './GlobalDeclarations'
+
 import Electron = require('electron')
 
 import './LoDashMixins'
@@ -144,7 +146,9 @@ declare global {
 		(...sources:any[]):any
 	}
 	
-	var getChildWindowId:typeof getChildWindowIdGlobal
+	
+	
+	let getChildWindowId:typeof getChildWindowIdGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var LogLevel:typeof LogLevelGlobal

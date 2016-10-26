@@ -28,10 +28,13 @@ function logErrorGlobal(err:Error|string) {
 // ERROR HANDLING
 if (typeof window !== 'undefined') {
 	const errorLog = getLogger('UnhandledErrors')
-	window.onerror = function(message,url,lineno,colno,error) {
-		const allErrorArgs = [...arguments]
-		errorLog.error('unhandled',allErrorArgs)
-		console.error('unhandled',allErrorArgs)
+	window.onerror = (message,url,lineno,colno,error,...args) => {
+		const
+			allErrorArgs = [message,url,lineno,colno,error,...args]
+		
+		errorLog.error('unhandled',...allErrorArgs)
+		console.error('unhandled',...allErrorArgs)
+		
 		logErrorGlobal(error || new Error(message))
 	}
 }

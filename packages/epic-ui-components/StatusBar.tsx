@@ -17,7 +17,7 @@ import {
 } from "epic-typedux"
 import { INotificationMessage } from "epic-global"
 import { ToastMessage } from "./ToastMessage"
-import { JobItem } from "epic-plugins-default"
+import { JobItem } from "epic-plugins-default/jobs/JobItem"
 import { BuiltInTools, getBuiltInToolId } from "./tools"
 
 // Constants

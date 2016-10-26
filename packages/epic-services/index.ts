@@ -23,7 +23,7 @@ if (module.hot) {
 	/**
 	 * Reload the service manager on HMR
 	 */
-	async function reload() {
+	const reload = async () => {
 		log.info(`Stopping old service manager first`)
 		await oldServiceManager.stop()
 		

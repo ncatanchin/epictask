@@ -32,17 +32,21 @@ html(lang="en")
 				$ = require('jquery')
 
 
-			//noinspection JSAnnotator
-			require('./epic-entry-browser.js')
-				.initBrowser(isDev)
-
-
 
 	body.fill-width.fill-height()
 		#root
 		#loader-root
 
 		script.
+
+			global.__NO_WEBPACK__ = !!require('electron').remote.getGlobal('__NO_WEBPACK__')
+			if (global.__NO_WEBPACK__)
+				require("./bin/epictask-polyfill-webpack")
+
+			//noinspection JSAnnotator
+			require('./epic-entry-browser.js')
+				.initBrowser(isDev)
+
 			function updateRootSize() {
 				const
 					{innerWidth:width, innerHeight:height} = window
@@ -78,6 +82,8 @@ html(lang="en")
 				ga('set', 'checkProtocolTask', null);
 				ga('send', 'pageview');
 			})();
+
+
 
 
 

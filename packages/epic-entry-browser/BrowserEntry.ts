@@ -22,19 +22,31 @@ function logBenchmark(name) {
  * Load app
  */
 function loadApp() {
-	Object.assign(global,{
-		epic_libs: __non_webpack_require__('./epic_libs')
-	})
+	const
+		loadPkg = (pkgName:string) => {
+			if (!(global as any).__NO_WEBPACK__)
+				pkgName = `./${pkgName}.js`
+				
+			__non_webpack_require__(pkgName)
+		}
+	
+	// LOAD THE DLL
+	if (!(global as any).__NO_WEBPACK__) {
+		Object.assign(global, {
+			epic_libs: __non_webpack_require__('./epic_libs')
+		})
+	}
+	
 	
 	switch(process.env.EPIC_ENTRY) {
 		case "DatabaseServer":
-			__non_webpack_require__('./epic-entry-database-server.js')
+			loadPkg("epic-entry-database-server")
 			break
 		case "JobServer":
-			__non_webpack_require__('./epic-entry-job-server.js')
+			loadPkg("epic-entry-job-server")
 			break
 		default:
-			__non_webpack_require__('./epic-entry-ui.js')
+			loadPkg("epic-entry-ui")
 			break
 	}
 	

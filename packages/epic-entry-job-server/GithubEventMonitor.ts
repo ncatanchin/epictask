@@ -155,7 +155,7 @@ export class GithubEventMonitor {
 					reverse: !issuesConfig.eTag ? true : false,
 					
 					// CALLED AFTER EACH PAGE
-					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers) => {
+					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers:any) => {
 						
 						let
 							listenersWantToContinue = true,
@@ -305,7 +305,7 @@ export class GithubEventMonitor {
 					eTag: repoConfig.eTag,
 					reverse: !repoConfig.eTag ? true : false,
 					// CALLED AFTER EACH PAGE
-					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers) => {
+					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers:any) => {
 						
 						let
 							listenersWantToContinue = true,

@@ -14,24 +14,27 @@ const
 	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
 
 
+
 const EnvGlobal = {
 	envName,
 	isMac,
 	isWin32,
 	isLinux,
 	isDev,
-	isDebug: DEBUG && isDev,
+	isDebug: isDev,
 	isHot: !_.isNil(process.env.HOT),
 	isTest: !_.isNil(process.env.EPIC_TEST),
 	isRemote,
 	isRenderer,
 	isMain,
 	isElectron: ['browser','renderer'].includes(process.type),
+	isWebpack: !['true','1','on'].includes(process.env.NO_WEBPACK),
 	baseDir: path.resolve(__dirname,'../..')
 }
 
 Object.assign(global as any,{
-	Env:EnvGlobal
+	Env:EnvGlobal,
+	DEBUG: isDev
 })
 
 declare global {

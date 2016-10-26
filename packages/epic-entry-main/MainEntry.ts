@@ -1,14 +1,17 @@
 
+
 const
 	{Cleaner} = require('./Cleaner')
 
-require('epic-entry-shared/AppEntry')
+// LOAD THE DLL
+if ((global as any).__NO_WEBPACK__ !== true) {
+	Object.assign(global, {
+		epic_libs: __non_webpack_require__('./epic_libs')
+	})
+}
 
-Object.assign(global,{
-	epic_libs: __non_webpack_require__('./epic_libs')
-}) 
-
-//require('epic_libs')
+// NOW LOAD COMMON ENTRY
+import 'epic-entry-shared/AppEntry'
 
 
 function loadMainApp() {

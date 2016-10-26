@@ -331,7 +331,8 @@ export class ServiceManager {
 		
 		const pendingServices = [..._.uniqBy(this.pendingServices, 'name')]
 		
-		let nextReg = null
+		let
+			nextReg:IServiceRegistration = null
 		
 		try {
 			this.pendingProcess = Promise.defer()

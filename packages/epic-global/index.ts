@@ -1,5 +1,6 @@
 
-export * from 'epic-entry-shared'
+export * from 'epic-entry-shared/ProcessType'
+export * from 'epic-entry-shared/ProcessConfig'
 
 export * from "./TypeChecks"
 export * from "./Constants"

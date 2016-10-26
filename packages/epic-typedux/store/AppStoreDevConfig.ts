@@ -21,7 +21,7 @@ export default function addDevMiddleware(enhancers) {
 		/**
 		 * Make remote middleware
 		 */
-		function makeRemoteMiddleware(name:string = null) {
+		const makeRemoteMiddleware = (name:string = null) => {
 			if (DEBUG) {
 				const
 					remoteDevTools = require('remote-redux-devtools')
@@ -37,11 +37,11 @@ export default function addDevMiddleware(enhancers) {
 		
 		let DevTools = null, DevToolsMiddleware = null
 		
-		function getDevTools() {
+		const getDevTools = () => {
 			return DevTools
 		}
 		
-		function loadDevTools() {
+		const loadDevTools = () => {
 			if (DevToolsMiddleware)
 				return DevToolsMiddleware
 			
@@ -53,7 +53,7 @@ export default function addDevMiddleware(enhancers) {
 		}
 		
 		
-		function makeReactotronEnhancer(enhancers) {
+		const makeReactotronEnhancer = (enhancers) => {
 			if (DEBUG) {
 				try {
 					const

@@ -1,6 +1,9 @@
 import "epic-entry-shared/AppEntry"
-import { Events, acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime } from "epic-global"
+import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime } from "epic-global"
+import {loadUI as LoadUIGlobal} from './AppRoot'
 
+
+polyfillRequire(__non_webpack_require__)
 
 benchmarkLoadTime(`Starting UIEntry`)
 
@@ -20,10 +23,10 @@ const setupDevTools = benchmark('Setup dev tools',() => {
 	const
 		deferred = Promise.defer()
 	
-	require.ensure([],function(require:any) {
+	//require.ensure([],function(require:any) {
 		require('./UIDevConfig')
 		deferred.resolve()
-	})
+	//})
 	
 	return deferred.promise
 })
@@ -43,13 +46,13 @@ const setupCommandManager = benchmark('Setup Command Manager', () => {
 	
 	log.debug(`Loading the CommandManager - 1st`)
 	
-	require.ensure([],function(require:any) {
+	//require.ensure([],function(require:any) {
 		const
 			{SimpleMenuManagerProvider,getCommandManager} = require('epic-command-manager')
 		
 		getCommandManager().setMenuManagerProvider(SimpleMenuManagerProvider)
 		deferred.resolve()
-	})
+	//})
 	
 	return deferred.promise
 	
@@ -67,7 +70,7 @@ const setupStore = benchmark('Start Store and Children',() => {
 	const
 		deferred = Promise.defer()
 	
-	require.ensure([], function (require:any) {
+	//require.ensure([], function (require:any) {
 		benchmarkLoadTime(`Building store`)
 		const
 			{ storeBuilder } = require('epic-typedux/store/AppStoreBuilder')
@@ -119,7 +122,7 @@ const setupStore = benchmark('Start Store and Children',() => {
 				benchmarkLoadTime(`services started`)
 				
 				deferred.resolve()
-			})
+			//})
 	})
 	
 	
@@ -142,12 +145,17 @@ function setupUI() {
 	const
 		deferred = Promise.defer()
 	
-	require.ensure([],function(require:any) {
-		// Load Styles
-		benchmarkLoadTime(`Styles Loaded`)
-		require('./AppRoot').loadUI(UIResourcesLoaded.promise)
-		deferred.resolve()
-	})
+	benchmarkLoadTime(`Styles Loaded`)
+	const
+		loadUI = require('./AppRoot').loadUI as typeof LoadUIGlobal
+	
+	loadUI(UIResourcesLoaded.promise)
+	deferred.resolve()
+	
+	// require.ensure([],function(require:any) {
+	// 	// Load Styles
+	//
+	// })
 	
 	return deferred.promise
 }

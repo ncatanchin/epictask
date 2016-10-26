@@ -33,7 +33,7 @@ export function benchmark<T extends Function>(name, origFn:T,detail:string = '')
 			 * @param passthruVal
 			 * @returns {null}
 			 */
-			function doReport(passthruVal = null) {
+			const doReport = (passthruVal = null) => {
 				const
 					duration = Date.now() - startTime
 				

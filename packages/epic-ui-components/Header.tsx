@@ -16,7 +16,8 @@ import { Logo } from "./Logo"
 import { WindowControls } from "./WindowControls"
 
 export const
-	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
+	ImageLogoFile = __NO_WEBPACK__ ? __non_webpack_require__.resolve('../assets/images/epictask-logo-rainbow.png') :
+		require('assets/images/epictask-logo-rainbow.png')
 
 const
 	log = getLogger(__filename)

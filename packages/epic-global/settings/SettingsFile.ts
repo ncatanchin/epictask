@@ -3,6 +3,7 @@ import {getUserDataFilename, readFile} from  "../Files"
 import {Property} from  "../Decorations"
 import {toJSONObject} from  "../JSONUtil"
 import {ISettings} from "./Settings"
+import { addHotDisposeHandler } from "epic-global/HotUtils"
 
 
 const
@@ -20,6 +21,9 @@ function defaultSettings() {
 	}
 }
 
+
+
+
 /**
  * Setting change listener listener
  *
@@ -30,15 +34,16 @@ function onChange(propertyKey:string, newVal:any) {
 	this.isLoaded && this.save()
 }
 
-const visiblePropOpts = {onChange,jsonInclude:true}
-
-
+const
+	visiblePropOpts = {onChange,jsonInclude:true}
 
 
 /**
  * Application settings object
  */
 export class SettingsFile implements ISettings {
+	
+	
 	
 	constructor() {
 		this.load()
@@ -84,6 +89,8 @@ export class SettingsFile implements ISettings {
 				newSettings = JSON.parse(readFile(settingsFilename),(k, v) => {
 					return (k === 'isLoaded') ? undefined : v
 				})
+			} else {
+				fs.writeFileSync(settingsFilename,"{}")
 			}
 		} catch (err) {
 			log.warn(`failed to read settings: ${settingsFilename}`,err)
@@ -116,6 +123,20 @@ export class SettingsFile implements ISettings {
  * @type {SettingsFile}
  */
 export const Settings = new SettingsFile()
+
+
+const
+	watcher = fs.watch(settingsFilename,{
+		persistent:false
+	},(event) => {
+		log.debug(`Reloading settings`)
+		Settings.load()
+	})
+
+
+addHotDisposeHandler(module,() => {
+	watcher.close()
+})
 
 export default Settings
 

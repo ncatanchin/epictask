@@ -1,19 +1,27 @@
 import {ClassType} from 'react'
 import { searchPathsForFile } from  "./Files"
-
+import * as fs from 'fs'
 
 const
-	iconFile = require('!!file!buildResources/icons/256x256.png'),
-	iconRawData = require('!!raw!buildResources/icons/256x256.png'),
+	// WEBPACK REMOVE TWEAKS
+	iconFile =
+		__NO_WEBPACK__ ?
+			__non_webpack_require__('assets/images/icons/icon-256x256.png') :
+			require('!!file!buildResources/icons/256x256.png'),
+	
+	// iconFile = require('!!file!buildResources/icons/256x256.png'),
+	// iconRawData = require('!!raw!buildResources/icons/256x256.png'),
 	dataUrl = require('dataurl'),
 	{nativeImage} = require('electron')
 	
 let
 	iconPath = searchPathsForFile(iconFile),
+	iconRawData = fs.readFileSync(iconPath),
 	iconUrl = dataUrl.format({
 		mimetype:'image/png',
 		data:iconRawData
 	})
+	
 	
 	//iconRawData = require('!!raw!build/icon.icns'),
 	//iconPath = 'build/icons/128x128.png',

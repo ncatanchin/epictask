@@ -1,19 +1,19 @@
 require('source-map-support').install()
 require('babel-polyfill')
 require('reflect-metadata')
-//
-// const
-// 	noWebpack = true
-//
-//
-// if (noWebpack) {
-// 	const
-// 		Module = require('module')
-//
-// 	Module.prototype.require.ensure = function(deps,fn) {
-// 		fn(require)
-// 	}
-// }
+
+const
+	noWebpack = ['true','1','on'].includes(process.env.NO_WEBPACK || '')
+
+
+
+if (noWebpack) {
+	require('./epictask-polyfill-webpack')
+} else {
+	Object.assign(global,{
+		__NO_WEBPACK__: false
+	})
+}
 
 
 /**
@@ -83,7 +83,7 @@ if (resolvedAppPath) {
 } else {
 	try {
 		
-		require('../epic-libs')
+		//require('../epic-libs')
 		require('../epic-entry-main')
 	} catch (err) {
 		try {

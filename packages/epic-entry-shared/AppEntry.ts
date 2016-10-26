@@ -1,15 +1,16 @@
+///<reference path="../epic-entry-shared/Globals.ts"/>
+///<reference path="../epic-entry-shared/Env.ts"/>
+///<reference path="../epic-entry-shared/PromiseConfig.ts"/>
+
 import "./LogCategories"
 import "./ProcessConfig"
 
-
-
-
-// DEBUG HELPERS
-// if (DEBUG) {
-// 	Object.assign(global,{
-// 		__webpack_require__
-// 	})
-// }
+Object.assign(global, {
+	polyfillRequire(r) {
+		if (!r.ensure)
+			r.ensure = (deps, fn) => fn(r)
+	}
+})
 
 
 const

@@ -16,6 +16,10 @@ declare namespace NodeJS {
 	}
 }
 
+
+declare var __NO_WEBPACK__:boolean
+
+
 /**
  * Is in development mode
  */

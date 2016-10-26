@@ -1,3 +1,6 @@
+// import 'epic-entry-shared/AppEntry'
+// import 'epic-ui-components/UIGlobals'
+
 import {
 	Events,
 	IWindowConfig,
@@ -10,6 +13,8 @@ import {
 	benchmarkLoadTime,
 	MenuIds
 } from "epic-global"
+
+
 
 benchmarkLoadTime(`Starting to loading AppRoot`)
 

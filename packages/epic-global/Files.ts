@@ -289,6 +289,13 @@ export const searchPathDefaults = [
  */
 export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 	
+	const
+		fs = require('fs')
+	
+	try {
+		if (fs.existsSync(filename))
+			return filename
+	} catch (err) {}
 	/**
 	 * APP SEARCH PATHS FOR ASAR
 	 */
@@ -296,7 +303,6 @@ export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 		searchPaths.push(...searchPathDefaults)
 	
 	let
-		fs = require('fs'),
 		resolvedPath = null,
 		resourcePath = null
 	
