@@ -81,4 +81,9 @@ export const
 	DatabaseServerName = ProcessNames.DatabaseServer
 
 
+Object.assign(global as any,{
+	AppStoreServerName,
+	DatabaseServerName
+})
+
 export default ProcessType

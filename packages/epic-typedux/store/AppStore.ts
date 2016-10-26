@@ -2,77 +2,39 @@ import thunkMiddleware from "redux-thunk"
 import { Store as ReduxStore, StoreEnhancer, compose, applyMiddleware } from "redux"
 import { Map } from "immutable"
 import {
-	RepoKey,
 	ReduxDebugSessionKey,
 	getNotificationCenter,
-	isString,
-	readFile,
-	writeFile,
-	writeFileAsync,
-	getUserDataFilename,
-	OnlyIfFn,
 	If,
 	getHot,
-	setDataOnHotDispose
+	setDataOnHotDispose, ProcessType
 } from "epic-global"
 import { getReducers } from "./Reducers"
-import { setStoreProvider, ILeafReducer, ObservableStore, addActionInterceptor, IActionInterceptorNext } from "typedux"
+import { setStoreProvider, ILeafReducer, ObservableStore} from "typedux"
 import { loadActionFactories } from "../provider"
-import { IChildStore, IChildStoreSubscriptionManager, ChildStoreSubscriptionStatus } from "./ChildStore"
 import { attachChildStore } from "./AppStoreClient"
-import { RepoState } from "../state/RepoState"
+import addDevMiddleware from "epic-typedux/store/AppStoreDevConfig"
+import { installActionInterceptor } from "epic-typedux/store/ActionInterceptor"
+import { configureStorePersistence, loadStateFromDisk } from "epic-typedux/store/AppStorePersistence"
+import {
+	IChildStoreSubscriptionManager, IChildStore,
+	ChildStoreSubscriptionStatus
+} from "epic-typedux/store/ChildStore"
 
 
 const
 	log = getLogger(__filename),
-	stateFilename = getUserDataFilename('epictask-store-state.json'),
 	ActionLoggerEnabled = false
 
 
 // HMR - setup
 let
 	hmrReady = false,
-	hmrDisposed = false,
-	interceptorInstalled = false
+	hmrDisposed = false
+	
 
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-/**
- * Install action interceptor for child
- *
- * @param childStoreManager
- */
-function installActionInterceptor(childStoreManager:IChildStoreSubscriptionManager) {
-	// MAKE SURE THE INTERCEPTOR IS INSTALLED FOR CHILD STORES
-	// - INTERCEPTS ACTIONS (NOT REDUCER ACTIONS)
-	// - PUSHES TO ROOT STORE
-	If(!interceptorInstalled && !ProcessConfig.isType(ProcessType.UI), () => {
-		
-		interceptorInstalled = true
-		
-		const
-			unregisterInterceptor = addActionInterceptor(
-				({ leaf, type, options }, next:IActionInterceptorNext, ...args:any[]) => {
-					
-					// Push it to the server
-					childStoreManager.sendAction({ leaf, type, args })
-					
-					// If it's a reducer then process it, otherwise - wait for server
-					// to process the action and send data
-					return (options && options.isReducer) ? next() : null
-					
-				}
-			)
-		
-		if (module.hot) {
-			module.hot.dispose(() => {
-				log.info(`HMR Removing action interceptor`)
-				unregisterInterceptor()
-			})
-		}
-	})
-}
 
 
 /**
@@ -95,8 +57,8 @@ const
 
 
 let
-	store:ObservableStore<any> = _.get(module.hot, 'data.store') as any,
-	persistingState = false
+	store:ObservableStore<any> = _.get(module.hot, 'data.store') as any
+	
 
 // Check for hot reload
 If(store, () => {
@@ -105,13 +67,6 @@ If(store, () => {
 })
 
 
-/**
- * onChange event of store
- */
-function onChange() {
-	log.debug(`Store state changed`)
-	persistStoreState(getStoreState())
-}
 
 //noinspection JSUnusedLocalSymbols
 /**
@@ -146,6 +101,7 @@ function onError(err:Error, reducer?:ILeafReducer<any,any>) {
 
 
 function updateReducers() {
+	log.debug('Updating reducers')
 	getStore().replaceReducers(...getReducers())
 }
 
@@ -153,14 +109,10 @@ function updateReducers() {
  * Setup HMR for the store
  */
 function hmrSetup() {
-	if (!Env.isRenderer && module.hot && !hmrReady) {
+	if (module.hot && !hmrReady) {
 		hmrReady = true
 		
-		module.hot.accept([ './Reducers' ], (updates) => {
-			log.info(`Reducer Updates received, reloading reducers`, updates)
-			
-			updateReducers()
-		})
+		module.hot.accept([ './Reducers' ],updateReducers)
 	}
 }
 
@@ -188,10 +140,7 @@ function initStore(devToolsMode = false, defaultState = null) {
 	 *
 	 * @type {function(): *}
 	 */
-	if ((Env.isDev && !Env.isTest) || (Env.isDev && window.devToolsExtension)) {
-		require('./AppStoreDevConfig').default(enhancers)
-	}
-	
+	addDevMiddleware(enhancers)
 	
 	let
 		reducers = getReducers()
@@ -209,7 +158,7 @@ function initStore(devToolsMode = false, defaultState = null) {
 	hmrSetup()
 	
 	newStore.rootReducer.onError = onError
-	newStore.subscribe(onChange)
+	
 	
 	store = newStore
 	setStoreProvider(newStore)
@@ -219,6 +168,8 @@ function initStore(devToolsMode = false, defaultState = null) {
 	if (!devToolsMode) {
 		loadActionFactories()
 	}
+	
+	configureStorePersistence(newStore,getStoreState)
 	return store
 }
 
@@ -226,14 +177,16 @@ function initStore(devToolsMode = false, defaultState = null) {
  * A store specifically for testing & storybook
  */
 export function loadAndInitStorybookStore() {
-	const enhancers = [ applyMiddleware(...middleware) ]
+	const
+		enhancers = [ applyMiddleware(...middleware) ]
 	
-	//enhancers.push(applyMiddleware(createLogger()))
+	addDevMiddleware(enhancers)
 	
-	require('./AppStoreDevConfig').default(enhancers)
+	const
+		reducers = getReducers()
 	
-	const reducers = getReducers()
 	log.info(`Creating story book with reducers`, reducers)
+	
 	// Create the store
 	const newStore = ObservableStore.createObservableStore(
 		reducers,
@@ -245,14 +198,21 @@ export function loadAndInitStorybookStore() {
 	hmrSetup()
 	
 	newStore.rootReducer.onError = onError
-	newStore.subscribe(onChange)
+	
 	
 	store = newStore
 	setStoreProvider(newStore)
 	loadActionFactories()
+	
+	
+	// PERSISTENCE
+	configureStorePersistence(newStore,getStoreState)
+	
+	
 	newStore.dispatch({ type: "@INIT" })
 	return store
 }
+
 
 /**
  * Load existing state from disk
@@ -267,26 +227,7 @@ export async function loadAndInitStore(defaultStateValue = null) {
 	
 	// ONLY LOAD STATE ON MAIN UI PROCESS
 	if (ProcessConfig.isType(ProcessType.UI)) {
-		try {
-			// If state server then try and load from disk
-			const
-				stateJson = readFile(stateFilename)
-			
-			if (stateJson) {
-				let
-					count = 0,
-					stateData = stateJson
-				
-				while (isString(stateData) && count < 3) {
-					stateData = JSON.parse(stateData)
-				}
-				
-				defaultStateValue = stateData
-				//log.info(`Read state from file`, JSON.stringify(defaultStateValue[ UIKey ], null, 4))
-			}
-		} catch (err) {
-			log.error('unable to load previous state data, starting fresh', err)
-		}
+		defaultStateValue = loadStateFromDisk()
 	}
 	
 	return initStore(false, defaultStateValue)
@@ -299,15 +240,19 @@ export async function loadAndInitStore(defaultStateValue = null) {
  * @returns {ObservableStore<any>}
  */
 export async function loadAndInitChildStore() {
+	// loadActionFactories()
+	//
+	//
+	// return initStore(false, null)
 	let
 		childReduxStore,
 		initialState,
 		manager:IChildStoreSubscriptionManager
-	
+
 	const
 		// Message list - this is used to save reducer messages until ready
 		pendingMessages = [],
-		
+
 		// Child Store
 		childStore:IChildStore = {
 			dispatch(action) {
@@ -317,110 +262,42 @@ export async function loadAndInitChildStore() {
 					pendingMessages.push(action)
 				}
 			},
-			
+
 			setState(state) {
 				log.info(`Child got initial state`, state)
 				initialState = state
 			}
 		}
-	
+
 	try {
 		manager = await attachChildStore(childStore)
 		manager.onStatusChange((status:ChildStoreSubscriptionStatus, err:Error = null) => {
 			log.info(`Child store state changed`, status, err)
 		})
-		
+
 		installActionInterceptor(manager)
-		
+
 		const
 			preStore = await loadAndInitStore(initialState)
-		
+
 		while (pendingMessages.length) {
 			const
 				nextMsg = pendingMessages.shift()
-			
+
 			preStore.dispatch(nextMsg)
 		}
-		
+
 		//noinspection JSUnusedAssignment
 		childReduxStore = preStore
 	} catch (err) {
 		log.error(`Failed to start the child store - this is bad`, err)
 		throw err
 	}
-	
+
 	return store
 	
 }
 
-
-/**
- * Write the actual state async
- */
-function writeStoreState(state = getStoreState(), doAsync = false) {
-	if (!ProcessConfig.isType(ProcessType.UI))
-		return Promise.resolve()
-	
-	log.info(`Writing current state to: ${stateFilename}`)
-	if (persistingState) {
-		log.info('Persisting, can not persist until completion')
-		return
-	}
-	
-	persistingState = true
-	
-	if (doAsync)
-		return Promise
-			.resolve(writeFileAsync(stateFilename, serializeState(state)))
-			.catch(err => {
-				log.error('state persistence failed', err)
-			})
-			.finally(() => persistingState = false)
-	
-	try {
-		
-		// TODO: Add Storage store filter
-		
-		//writeFile(stateFilename, serializeState(state))
-		const
-			js = _.toJS(state),
-			repoState = _.get(js, RepoKey, null) as RepoState
-		
-		if (repoState && repoState.availableRepos)
-			delete repoState[ 'availableRepos' ]
-		
-		
-		writeFile(stateFilename, JSON.stringify(js))
-	} catch (err) {
-		log.error(`Failed to persist store state`, err)
-	}
-	persistingState = false
-	return Promise.resolve()
-}
-
-/**
- * Is persistence allowed
- * @returns {any|boolean}
- */
-function canPersistState() {
-	const
-		canPersist = ProcessConfig.isType(ProcessType.UI) && !hmrDisposed
-	
-	if (!canPersist)
-		log.debug(`Can not persist state in process=${ProcessConfig.getTypeName()} hmrDisposed=${hmrDisposed}`)
-	
-	return canPersist
-	
-}
-
-/**
- * Debounced persist store state call
- */
-const persistStoreState = OnlyIfFn(canPersistState, _.debounce((state) => {
-	writeStoreState(state, true)
-}, 10000, {
-	maxWait: 30000
-}))
 
 /**
  * Get the observable store
@@ -456,37 +333,6 @@ If(DEBUG, () => {
 		getStoreState
 	})
 })
-
-/**
- * Serialize the current state as a string
- *
- * @returns {string}
- */
-export function serializeState(state = getStoreState(), filter = null) {
-	return JSON.stringify(_.toJS(state))
-}
-
-
-// Just in case its an hmr request
-const
-	existingRemoveListener = getHot(module, 'removeListener') as Function
-
-if (existingRemoveListener)
-	existingRemoveListener()
-
-
-// On unload write the state
-if (typeof window !== 'undefined' && ProcessConfig.isUI) {
-	window.addEventListener('beforeunload', () => {
-		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
-		writeStoreState()
-	})
-}
-
-// app.on('before-quit',() => {
-//
-// })
-
 
 setDataOnHotDispose(module, () => ({
 	store,

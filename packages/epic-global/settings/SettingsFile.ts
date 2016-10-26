@@ -2,7 +2,6 @@ import * as fs from 'fs'
 import {getUserDataFilename, readFile} from  "../Files"
 import {Property} from  "../Decorations"
 import {toJSONObject} from  "../JSONUtil"
-// import {User} from 'epic-models'
 import {ISettings} from "./Settings"
 
 

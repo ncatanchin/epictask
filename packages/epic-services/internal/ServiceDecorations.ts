@@ -1,9 +1,10 @@
 
 import {IServiceConstructor} from "./Types"
 import {ServiceManager} from "./ServiceManager"
-import {ProcessType} from "epic-global/ProcessType"
+import { ProcessType } from "epic-entry-shared"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 /**
  * Annotation to register a service

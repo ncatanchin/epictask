@@ -1,7 +1,3 @@
-import * as Radium from "radium"
-import { Provider } from "react-redux"
-import { MuiThemeProvider } from "material-ui/styles"
-import { PureRender } from "epic-ui-components/PureRender"
 import {
 	Events,
 	IWindowConfig,
@@ -14,6 +10,13 @@ import {
 	benchmarkLoadTime,
 	MenuIds
 } from "epic-global"
+
+benchmarkLoadTime(`Starting to loading AppRoot`)
+
+import { Provider } from "react-redux"
+import { MuiThemeProvider } from "material-ui/styles"
+import { PureRender } from "epic-ui-components/PureRender"
+
 import {
 	CommandComponent,
 	ICommandComponent,
@@ -23,7 +26,8 @@ import {
 	CommandMenuItemType,
 	ContainerNames
 } from "epic-command-manager"
-import { getUIActions, getIssueActions, getRepoActions, getReduxStore } from "epic-typedux"
+import { getUIActions, getIssueActions, getRepoActions } from "epic-typedux/provider"
+import {getReduxStore} from 'epic-typedux/store/AppStore'
 import {
 	FillWindow,
 	makeWidthConstraint,
@@ -38,6 +42,7 @@ import { Sheets, DialogConfigs } from "epic-ui-components/DialogsAndSheets"
 // STYLES
 //import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
 import { PromisedComponent } from "epic-ui-components/PromisedComponent"
+import * as assert from "assert"
 
 
 // Logger, Store +++
@@ -84,7 +89,7 @@ const
 @CommandComponent()
 @Themed
 @PureRender
-export class App extends React.Component<IAppProps,IAppState> implements ICommandComponent {
+class App extends React.Component<IAppProps,IAppState> implements ICommandComponent {
 	
 	
 	/**
@@ -422,56 +427,64 @@ function remount() {
 }
 
 function themeChangeListener() {
-
 	log.info(`Remounting on theme change`)
 	remount()
 }
 
-/**
- * On a complete theme change, destroy everything
- */
-ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
+
+benchmarkLoadTime(`Exporting loadUI`)
+export function loadUI(pendingResources:Promise<void>) {
+	benchmarkLoadTime(`Waiting for UI resources`)
+	pendingResources.then(() => {
+		
+		benchmarkLoadTime(`UI Resources loaded, now loading UI`)
+		/**
+		 * On a complete theme change, destroy everything
+		 */
+		ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
 
 // ADD HMR REMOVE
-addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
-	
-
-
-// CHILD WINDOW - GET CONFIG FIRST
-if (isChildWindow) {
-	
-	// GET SESSION & COOKIES
-	const
-		{ remote } = require('electron'),
-		webContents = remote.getCurrentWebContents(),
-		{ session } = webContents,
-		{ cookies } = session
-	
-	// GET OUR COOKIE
-	cookies.get({ name: childWindowId }, (err, cookies) => {
-		if (err) {
-			log.error(`Failed to get cookies`, err)
-			throw err
-		}
+		addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
 		
-		log.info('cookies', cookies)
 		
-		const
-			configName = cookies[ 0 ].value
+		// CHILD WINDOW - GET CONFIG FIRST
+		if (isChildWindow) {
 			
-		
-		childWindowConfig = DialogConfigs[configName]
-		assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
-		 
-		
-		render()
+			// GET SESSION & COOKIES
+			const
+				{ remote } = require('electron'),
+				webContents = remote.getCurrentWebContents(),
+				{ session } = webContents,
+				{ cookies } = session
+			
+			// GET OUR COOKIE
+			cookies.get({ name: childWindowId }, (err, cookies) => {
+				if (err) {
+					log.error(`Failed to get cookies`, err)
+					throw err
+				}
+				
+				log.info('cookies', cookies)
+				
+				const
+					configName = cookies[ 0 ].value
+				
+				
+				childWindowConfig = DialogConfigs[configName]
+				assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
+				
+				
+				render()
+			})
+		}
+
+		// MAIN UI
+		else {
+			render()
+		}
 	})
 }
 
-// MAIN UI
-else {
-	render()
-}
 
 
 /**

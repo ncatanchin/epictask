@@ -1,7 +1,7 @@
 import "epic-entry-shared/AppEntry"
 
 import {loadChildProcessEntry} from "epic-entry-shared"
-import { ProcessType } from "epic-global/ProcessType"
+//import { ProcessType } from "epic-global/ProcessType"
 
 
 const

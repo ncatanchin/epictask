@@ -38,30 +38,27 @@ export interface IJobExecutor {
 export function loadAllExecutors() {
 	log.info(`Loading Job Types`)
 	
-	const ctx =
-		require.context('epic-entry-job-server/executors/',true)
-	
+	// const ctx =
+	// 	require.context('epic-entry-job-server/executors/',true)
+	//
 	// Get the filenames
-	const jobExecutorNames = ctx.keys()
+	
+	const
+		executors = require('./executors'),
+	
+		jobExecutorNames = Object
+			.keys(executors)
+			.filter(key => key.endsWith('Executor'))
 	
 	log.info('Loading job executors',jobExecutorNames)
-	jobExecutorNames.forEach(ctx)
 	
-	// If HMR then accept the ctx
-	if (module.hot)
-		hmrSetup(ctx)
+	// jobExecutorNames.forEach(ctx)
+	//
+	// // If HMR then accept the ctx
+	// if (module.hot)
+	// 	hmrSetup(ctx)
 }
 
+if (module.hot)
+	module.hot.accept(['./executors'],() => loadAllExecutors)
 
-/**
- * Setup HMR
- * @param ctx
- */
-function hmrSetup(ctx:RequireContext) {
-	// TODO - unload old jobs
-	module.hot.accept([ctx.id],(updated) => {
-		loadAllExecutors()
-	})
-	
-}
-	

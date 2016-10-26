@@ -3,10 +3,13 @@ import './LogCategories'
 
 import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
-import { isObject } from  "./TypeChecks"
-import { getAppConfig } from "./AppConfig"
 
-let Reactotron = null
+import { getAppConfig } from "./AppConfig"
+import { ProcessType } from "./ProcessType"
+
+let
+	_ = require('lodash'),
+	Reactotron = null
 
 /**
  * Extended logger interface with tron
@@ -110,9 +113,11 @@ if (ProcessConfig.isStorybook()) {
 	
 	const wrappedLogger = [ 'trace', 'debug', 'info', 'warn', 'error' ].reduce((newLogger, levelName) => {
 		newLogger[ levelName ] = function (...args) {
-			MainLogger[ levelName ](...args.filter(it => !isObject(it)))
+			MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
+			
 			if (typeof console !== 'undefined') {
-				const fn = console[ levelName ] || console.log
+				const
+					fn = console[ levelName ] || console.log
 				fn.apply(console, args)
 			}
 		}

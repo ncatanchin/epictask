@@ -1,8 +1,8 @@
 import {ipcRenderer} from 'electron'
-import {Bluebird,ProcessType} from 'epic-global'
-import { START_TIMEOUT_DEFAULT } from "epic-net"
-import { ChildClient } from "epic-global"
-import {getServiceManager} from "epic-services"
+import {ProcessType} from './ProcessType'
+import { ChildClient } from "epic-global/ChildClient"
+import {getServiceManager} from "epic-services/internal/ServiceManager"
+import { START_TIMEOUT_DEFAULT } from "epic-net/NetworkConfig"
 
 const
 	log = getLogger(__filename)
@@ -41,7 +41,7 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
 		return stopDeferred.promise
 	}
 	
-	stopDeferred = Bluebird.defer()
+	stopDeferred = Promise.defer()
 	
 
 	stopDeferred.promise
@@ -83,7 +83,7 @@ async function startChildProcess(processType:ProcessType, workerEntry:ChildProce
 		return startDeferred.promise
 	
 	// Create the resolver
-	startDeferred = Bluebird.defer()
+	startDeferred = Promise.defer()
 	
 	// Add the default handlers first
 	Object

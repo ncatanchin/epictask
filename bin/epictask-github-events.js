@@ -14,6 +14,8 @@ require('babel-polyfill')
 require('reflect-metadata')
 
 
+
+
 require(`${srcRoot}/epic-global/NamespaceConfig`)
 require(`${srcRoot}/epic-global/ProcessConfig`)
 require(`${srcRoot}/epic-global/PromiseConfig`)

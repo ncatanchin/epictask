@@ -92,6 +92,7 @@ export function initBrowser(isDev) {
 		$: require('jquery'),
 		React: require('react'),
 		ReactDOM: require('react-dom'),
+		Radium: require('radium'),
 		getLogger: function (loggerName) {
 			return console
 		}

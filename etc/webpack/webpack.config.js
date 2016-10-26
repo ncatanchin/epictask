@@ -316,41 +316,13 @@ const
 		"source-map"
 
 // Webpack Config
-function makeConfig(pkg) {
-	// const
-	// 	name = "epic"
-	// const
-	// 	{
-	// 		name,
-	// 		entry: isEntry
-	// 	} = pkg,
-	// 	//dependencies = unwrapDependencies(pkg.dependencies)
-	// 	dependencies = pkg.dependencies
-	//
-	// log.info(`Deps for "${name}":`,dependencies)
-	//
-	const
-		entry = {
-			"epic-entry-database-server": makeHotEntry([
-				"./epic-entry-database-server/index"
-			]),
-			"epic-entry-job-server": makeHotEntry([
-				"./epic-entry-job-server/index"
-			]),
-			"epic-entry-main": makeHotEntry([
-				"./epic-entry-main/MainEntry"
-			]),
-			"epic-entry-ui": makeHotEntry([
-				"./epic-entry-ui/index"
-			]),
-		}
-	
+function makeConfig(name,dependencies,entry,configFn) {
 	
 	let
 		config = {
 		
-			name: "epic-entries",
-			dependencies: ["epic_libs"],
+			name,
+			dependencies,
 			/**
 			 * Target type
 			 */
@@ -359,12 +331,10 @@ function makeConfig(pkg) {
 			/**
 			 * All entries including common
 			 */
-			//entry: makeEntry(pkg),
 			entry,
 			/**
 			 * Source root, './packages'
 			 */
-			// context: path.resolve(srcRootDir,name),
 			context: srcRootDir,
 			
 			/**
@@ -380,10 +350,9 @@ function makeConfig(pkg) {
 			
 			// LOADERS
 			module:  makeModuleConfig(),
-			
 			cache: true,
-			//recordsPath: `${distDir}/records__${name}`,
-			recordsPath: `${distDir}/records__epictask`,
+			recordsPath: `${distDir}/records__${name}`,
+			
 			/**
 			 * DevTool config
 			 */
@@ -395,28 +364,6 @@ function makeConfig(pkg) {
 			
 			// PLUGINS
 			plugins: [
-				new webpack.DllReferencePlugin({
-					manifest: path.resolve(distDir,`manifest.epic_libs.json`)
-				}),
-				// IF LIB THEN ADD DLL PLUGIN
-				// ...(isEntry ? [] : [
-				// 	new webpack.DllPlugin({
-				// 		name: `${name}_[hash]`,
-				// 		path: path.resolve(distDir,`manifest.${name}.json`)
-				// 	})
-				// ]),
-				//
-				// // ADD REFS TO DEPS
-				// ...dependencies.map(depName => new webpack.DllReferencePlugin({
-				// 	manifest: path.resolve(distDir,`manifest.${depName}.json`)
-				// })),
-				
-				// new webpack.optimize.CommonsChunkPlugin({
-				// 	// The order of this array matters
-				// 	filename: "epic-common.js",
-				// 	names: ["common"],
-				// 	minChunks: Infinity
-				// }),
 				
 				//new webpack.optimize.DedupePlugin(),
 				
@@ -430,12 +377,10 @@ function makeConfig(pkg) {
 				
 				new DefinePlugin(DefinedEnv),
 				
-				//new webpack.NamedModulesPlugin(),
+				new webpack.NamedModulesPlugin(),
 				new webpack.ProvidePlugin({
 					'Promise': 'bluebird'
-				}),
-				
-			
+				})
 			],
 			
 			// NODE SHIMS
@@ -463,150 +408,148 @@ const
 	globOpts = {
 		cwd:srcRootDir,
 		nodir:true
-	},
-	epicLibsConfig = patchConfig({
-	
-		name: "epic_libs",
-		dependencies: [],
-		target: 'electron',
-		entry: {
-			"epic_libs": [
-				...glob.sync("epic-global/**/*",globOpts),
-				...glob.sync("epic-net/**/*",globOpts),
-				...glob.sync("epic-github/**/*",globOpts),
-				...glob.sync("epic-database-client/**/*",globOpts),
-				...glob.sync("epic-process-manager/**/*",globOpts),
-				...glob.sync("epic-typedux/**/*",globOpts),
-				...glob.sync("epic-services/**/*",globOpts),
-				...glob.sync("epic-entry-shared/**/*",globOpts)
-			]
-		},
-		
-		/**
-		 * Source root, './packages'
-		 */
-		context: srcRootDir,
-		
-		/**
-		 * Stats config
-		 */
-		stats: WebpackStatsConfig,
-		
-		/**
-		 * Output configuration
-		 */
-		// output: makeOutputConfig(name,isEntry || false),
-		output: makeOutputConfig("epic_libs"),
-		
-		// LOADERS
-		module:  makeModuleConfig(),
-		
-		cache: true,
-		//recordsPath: `${distDir}/records__${name}`,
-		recordsPath: `${distDir}/records__epic_libs`,
-		/**
-		 * DevTool config
-		 */
-		devtool,
-		
-		// Currently we need to add '.ts' to the resolve.extensions array.
-		resolve: makeResolveConfig(),
-		
-		
-		// PLUGINS
-		plugins: [
-			
-			// IF LIB THEN ADD DLL PLUGIN
-			// ...(isEntry ? [] : [
-			new webpack.DllPlugin({
-				name: `epic_libs`,
-				path: path.resolve(distDir,`manifest.epic_libs.json`)
-			}),
-			
-			//new webpack.optimize.DedupePlugin(),
-			
-			// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-			new ForkCheckerPlugin(),
-			
-			// BASICS
-			//new webpack.IgnorePlugin(/vertx/),
-			
-			new webpack.NoErrorsPlugin(),
-			
-			new DefinePlugin(DefinedEnv),
-			
-			//new webpack.NamedModulesPlugin(),
-			new webpack.ProvidePlugin({
-				'Promise': 'bluebird'
-			}),
-		
-		
-		],
-		
-		// NODE SHIMS
-		node: {
-			__dirname: true,
-			__filename: true,
-			global: true,
-			process: true
-		},
-		
-		// Configure all node_modules as external if in electron
-		externals: makeExternals()
-	})
+	}
+	// epicLibsConfig = patchConfig({
+	//
+	// 	name: "epic_libs",
+	// 	dependencies: [],
+	// 	target: 'electron',
+	// 	entry,
+	//
+	// 	/**
+	// 	 * Source root, './packages'
+	// 	 */
+	// 	context: srcRootDir,
+	//
+	// 	/**
+	// 	 * Stats config
+	// 	 */
+	// 	stats: WebpackStatsConfig,
+	//
+	// 	/**
+	// 	 * Output configuration
+	// 	 */
+	// 	// output: makeOutputConfig(name,isEntry || false),
+	// 	output: makeOutputConfig("epic_libs"),
+	//
+	// 	// LOADERS
+	// 	module:  makeModuleConfig(),
+	//
+	// 	cache: true,
+	// 	//recordsPath: `${distDir}/records__${name}`,
+	// 	recordsPath: `${distDir}/records__epic_libs`,
+	// 	/**
+	// 	 * DevTool config
+	// 	 */
+	// 	devtool,
+	//
+	// 	// Currently we need to add '.ts' to the resolve.extensions array.
+	// 	resolve: makeResolveConfig(),
+	//
+	//
+	// 	// PLUGINS
+	// 	plugins: [
+	//
+	// 		// IF LIB THEN ADD DLL PLUGIN
+	// 		// ...(isEntry ? [] : [
+	//
+	//
+	// 		//new webpack.optimize.DedupePlugin(),
+	//
+	// 		// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+	// 		new ForkCheckerPlugin(),
+	//
+	// 		// BASICS
+	// 		//new webpack.IgnorePlugin(/vertx/),
+	//
+	// 		new webpack.NoErrorsPlugin(),
+	//
+	// 		new DefinePlugin(DefinedEnv),
+	//
+	// 		//new webpack.NamedModulesPlugin(),
+	// 		new webpack.ProvidePlugin({
+	// 			'Promise': 'bluebird'
+	// 		}),
+	//
+	//
+	// 	],
+	//
+	// 	// NODE SHIMS
+	// 	node: {
+	// 		__dirname: true,
+	// 		__filename: true,
+	// 		global: true,
+	// 		process: true
+	// 	},
+	//
+	// 	// Configure all node_modules as external if in electron
+	// 	externals: makeExternals()
+	// })
 
 
 
 
 
 module.exports = [
-	epicLibsConfig,
-	makeConfig(),
+	
+	
+	makeConfig('epic_libs',[],{
+		"epic_libs": [
+			"epic-entry-shared",
+			"epic-global",
+			"epic-net",
+			"epic-github",
+			"epic-database-client",
+			"epic-process-manager",
+			
+			"epic-typedux",
+			"epic-services"
+			// ...glob.sync("epic-entry-shared/**/*",globOpts),
+			// ...glob.sync("epic-global/**/*",globOpts),
+			// ...glob.sync("epic-net/**/*",globOpts),
+			// ...glob.sync("epic-github/**/*",globOpts),
+			// ...glob.sync("epic-database-client/**/*",globOpts),
+			// ...glob.sync("epic-process-manager/**/*",globOpts),
+			//
+			// ...glob.sync("epic-typedux/**/*",globOpts),
+			// ...glob.sync("epic-services/**/*",globOpts)
+			
+		]
+	}, config => {
+		config.plugins.unshift(new webpack.DllPlugin({
+			name: `epic_libs`,
+			path: path.resolve(distDir,`manifest.epic_libs.json`)
+		}))
+	}),
+	
+	makeConfig('epic_app',['epic_libs'],{
+		"epic-entry-database-server": makeHotEntry([
+			"./epic-entry-database-server/index"
+		]),
+		"epic-entry-job-server": makeHotEntry([
+			"./epic-entry-job-server/index"
+		]),
+		"epic-entry-main": makeHotEntry([
+			"./epic-entry-main/MainEntry"
+		]),
+		"epic-entry-ui": makeHotEntry([
+			"./epic-entry-ui/index"
+		]),
+	}, config => {
+		config.plugins.unshift(new webpack.DllReferencePlugin({
+			manifest: path.resolve(distDir,`manifest.epic_libs.json`)
+		}))
+	}),
+	
+	
+	
 	// BROWSER ENTRY
-	patchConfig({
-		name: "epic-html",
-		dependencies: [],
-		target: 'electron',
-		entry: {
-			"epic-entry-browser": makeHotEntry([
-				"./epic-entry-browser/index"
-			]),
-		},
-		context: srcRootDir,
-		stats: WebpackStatsConfig,
-		output: makeOutputConfig(true),
-		
-		// LOADERS
-		module:  makeModuleConfig(),
-		
-		cache: true,
-		//recordsPath: `${distDir}/records__${name}`,
-		recordsPath: `${distDir}/records__epictask-browser`,
-		/**
-		 * DevTool config
-		 */
-		//devtool: '#source-map',
-		//devtool: '#cheap-module-source-map',
-		devtool,
-		
-		// Currently we need to add '.ts' to the resolve.extensions array.
-		resolve: makeResolveConfig(),
-		
-		
-		// PLUGINS
-		plugins: [
-			// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-			new ForkCheckerPlugin(),
-			
-			// BASICS
-			new webpack.NoErrorsPlugin(),
-			new DefinePlugin(DefinedEnv),
-			
-			//new webpack.NamedModulesPlugin(),
-			new webpack.ProvidePlugin({
-				'Promise': 'bluebird'
-			}),
-			
+	makeConfig('epic-html',[],{
+		"epic-entry-browser": makeHotEntry([
+			"./epic-entry-browser/index"
+		]),
+	},config => {
+		config.plugins.push(
 			new HtmlWebpackPlugin({
 				filename: "app-entry.html",
 				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
@@ -621,18 +564,7 @@ module.exports = [
 				isDev
 			})
 		
-		],
-		
-		// NODE SHIMS
-		node: {
-			__dirname: true,
-			__filename: true,
-			global: true,
-			process: true
-		},
-		
-		// Configure all node_modules as external if in electron
-		externals: makeExternals()
+		)
 	})
 ]
 // module.exports = Object

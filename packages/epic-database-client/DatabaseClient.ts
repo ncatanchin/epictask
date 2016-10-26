@@ -5,7 +5,7 @@ import { DatabaseEvents } from "./DatabaseEvents"
 import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
 import { Transport } from "epic-net"
 import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-global"
-import { DatabaseServerName, ProcessType } from "epic-global"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 
 const
 	TIMEOUT = 180000,

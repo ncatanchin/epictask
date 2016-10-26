@@ -23,7 +23,6 @@ import './ErrorHandling'
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 
-import * as ContextUtils from './ContextUtils'
 import * as assertGlobal from 'assert'
 import * as LodashGlobal from 'lodash'
 
@@ -113,10 +112,11 @@ function installGlobals() {
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
+		getAppConfig: require('./AppConfig').getAppConfig,
 		node_require: __non_webpack_require__,
 		getChildWindowId: getChildWindowIdGlobal,
 		getCurrentWindow: getCurrentWindowGlobal
-	}, ContextUtils)
+	})
 }
 
 
@@ -160,11 +160,6 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Immutable:typeof ImmutableGlobal
 	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var requireContext:typeof ContextUtils.requireContext
-	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var mergeContext:typeof ContextUtils.mergeContext
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal

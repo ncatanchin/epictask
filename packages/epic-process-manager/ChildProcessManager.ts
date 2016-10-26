@@ -1,5 +1,6 @@
 import ChildProcessRenderer from "./ChildProcessRenderer"
-import { getHot, setDataOnHotDispose, acceptHot, ProcessType } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot } from "epic-global/HotUtils"
+import ProcessType from "epic-entry-shared/ProcessType"
 
 const log = getLogger(__filename)
 
@@ -33,8 +34,13 @@ export namespace ChildProcessManager {
 	
 	if (ipcMain) {
 		ipcMain.on('child-message', (event, { processTypeName, workerId, type, body }) => {
-			const child = children.find(it => it.processType === ProcessType[ processTypeName ] as any)
-			assert(child, `Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
+			const
+				child = children.find(it => it.processType === ProcessType[ processTypeName ] as any)
+			
+			if (!child) {
+				log.warn(`Unable to find child for ${processTypeName} / ${workerId} / ${type}`)
+				return
+			}
 			
 			child.handleMessage(type, body)
 		})

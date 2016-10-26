@@ -1,7 +1,4 @@
-
-
-import { WindowType, IWindowConfig } from "epic-global"
-import { makePromisedComponent, TComponentResolver, registerWindowConfig } from  "epic-global"
+import { WindowType, IWindowConfig, makePromisedComponent, TComponentResolver, registerWindowConfig } from "epic-global"
 
 
 export const Sheets = {
@@ -9,21 +6,20 @@ export const Sheets = {
 		name: 'RepoImportSheet',
 		title: 'Import Repository',
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			//resolver.resolve(require('epic-plugins-default').RepoAddTool))
 			resolver.resolve(require('epic-plugins-default/repos/RepoAddTool').RepoAddTool))
-			// require.ensure(['ui/plugins/repos/RepoAddTool'],function(require:any) {
-			// 	resolver.resolve(require('ui/plugins/repos/RepoAddTool').RepoAddTool)
-			// }))
-			
+		//require.ensure([],function(require:any) {
+		//	resolver.resolve(require('epic-plugins-default/repos/RepoAddTool').RepoAddTool)
+		//}))
+		
 	},
 	FindActionSheet: {
 		name: 'FindActionSheet',
 		title: 'Find an Epic action',
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
 			resolver.resolve(require('./pages/FindActionTool').FindActionTool))
-			// require.ensure(['ui/components/actions/FindActionTool'],function(require:any) {
-			// 	resolver.resolve(require('ui/components/actions/FindActionTool').FindActionTool)
-			// }))
+		//require.ensure([],function(require:any) {
+		// 	resolver.resolve(require('./pages/FindActionTool').FindActionTool)
+		//}))
 		
 	}
 }
@@ -39,7 +35,9 @@ export const DialogConfigs = {
 		showDevTools: true,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
 			resolver.resolve(require('epic-plugins-default/repos/RepoSettingsWindow').RepoSettingsWindow))
-		
+		//require.ensure([],function(require:any) {
+		// 	resolver.resolve(require('epic-plugins-default/repos/RepoSettingsWindow').RepoSettingsWindow)
+		//}))
 	},
 	
 	SettingsWindow: {
@@ -48,6 +46,9 @@ export const DialogConfigs = {
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
 			resolver.resolve(require('./windows/SettingsWindow').default))
+		//require.ensure([],function(require:any) {
+		// 	resolver.resolve(require('./windows/SettingsWindow').default)
+		//}))
 		
 		
 	},
@@ -57,30 +58,34 @@ export const DialogConfigs = {
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			
-				resolver.resolve(require('./pages/IssueEditDialog').default))
-			
-
-			
+			resolver.resolve(require('./pages/IssueEditDialog').default))
+		//require.ensure([],function(require:any) {
+		// 	resolver.resolve(require('./pages/IssueEditDialog').default)
+		//}))
+		
 	},
 	IssuePatchDialog: {
 		name: 'IssuePatchDialog',
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-			
-				resolver.resolve(require('./pages/IssuePatchDialog').default))
-			
+			resolver.resolve(require('./pages/IssuePatchDialog').default))
+			// require.ensure([], function (require:any) {
+			// 	resolver.resolve(require('./pages/IssuePatchDialog').default)
+			// }))
 		
-			
 	},
 	IssueCommentDialog: {
 		name: 'IssueCommentDialog',
 		type: WindowType.Dialog,
 		showDevTools: false,
 		rootElement: makePromisedComponent((resolver:TComponentResolver) =>
-				resolver.resolve(require('./pages/IssueCommentDialog').default))
-			
+			resolver.resolve(require('./pages/IssueCommentDialog').default))
+		// require.ensure([], function (require:any) {
+			// 	resolver.resolve(require('./pages/IssueCommentDialog').default)
+			// }))
+		
+		
 	}
 } as {[configName:string]:IWindowConfig}
 
@@ -88,4 +93,4 @@ export const DialogConfigs = {
 // REGISTER ALL CONFIGS
 Object
 	.values(DialogConfigs)
-	.forEach(config => registerWindowConfig(config.name,config))
+	.forEach(config => registerWindowConfig(config.name, config))

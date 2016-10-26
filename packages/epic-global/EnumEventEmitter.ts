@@ -1,7 +1,7 @@
 
 import {EventEmitter} from 'events'
 import {enumKeys} from "./EnumUtil"
-import { isNumber } from "epic-global"
+import { isNumber } from "./TypeChecks"
 
 
 

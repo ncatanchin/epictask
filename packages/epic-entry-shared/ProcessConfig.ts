@@ -114,6 +114,11 @@ export namespace ProcessConfigGlobal {
 declare global {
 	
 	
+	let AppStoreServerName:string
+	let DatabaseServerName:string
+	
+	//const ProcessType:typeof ProcessTypeGlobal
+	
 	namespace ProcessConfig {
 		function isStorybook():boolean
 		function showChildDevTools(processTypeIn:ProcessTypeGlobal)

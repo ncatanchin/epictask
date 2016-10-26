@@ -1,4 +1,5 @@
-import {getAppConfig} from "epic-global"
+import {getAppConfig} from "epic-entry-shared"
+
 const
 	log = getLogger(__filename),
 

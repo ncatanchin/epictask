@@ -1,7 +1,8 @@
 import {Attribute} from 'typestore'
 
 
-import {isNil,isFunction, JSONKey } from "epic-global"
+import {isNil,isFunction} from "./TypeChecks"
+import {JSONKey } from './Constants'
 
 const
 	log = getLogger(__filename),

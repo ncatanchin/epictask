@@ -11,6 +11,8 @@ const
 let
 	stopAppStoreServer = null
 
+export const UIResourcesLoaded = Promise.defer()
+
 /**
  * Setup dev tools
  */
@@ -60,17 +62,22 @@ startupPromises.push(setupCommandManager())
  *
  * @returns {Promise<T>}
  */
-const setupStore = () => {
+const setupStore = benchmark('Start Store and Children',() => {
 	benchmarkLoadTime(`Boot starting`)
 	const
 		deferred = Promise.defer()
 	
-	require.ensure([],function(require:any) {
+	require.ensure([], function (require:any) {
+		benchmarkLoadTime(`Building store`)
 		const
-			{storeBuilder} = require('epic-typedux/store/AppStoreBuilder')
+			{ storeBuilder } = require('epic-typedux/store/AppStoreBuilder')
+		
+		benchmarkLoadTime(`Loaded store builder`)
 		
 		storeBuilder()
-			.then(async () => {
+			.then(async() => {
+				
+				benchmarkLoadTime(`Store built`)
 				
 				// APP STORE SERVER RUNS ON MAIN UI PROCESS ONLY
 				if (ProcessConfig.isType(ProcessType.UI)) {
@@ -91,13 +98,14 @@ const setupStore = () => {
 				}
 				
 				// START THE SERVICE MANAGER EVERYWHERE
+				benchmarkLoadTime(`Loading getService Manager`)
 				const
 					getServiceManager = require('epic-services').getServiceManager
 				
 				benchmarkLoadTime(`Starting services`)
 				
 				// HMR STOP SERVICES
-				addHotDisposeHandler(module,() => {
+				addHotDisposeHandler(module, () => {
 					try {
 						getServiceManager().stop()
 					} catch (err) {
@@ -115,8 +123,14 @@ const setupStore = () => {
 	})
 	
 	
-	return deferred.promise
-}
+	return deferred
+		.promise
+		.then(() => {
+				benchmarkLoadTime(`Resolved all resources`)
+				UIResourcesLoaded.resolve()
+			}
+		)
+})
 
 startupPromises.push(setupStore())
 
@@ -124,28 +138,21 @@ startupPromises.push(setupStore())
 /**
  * Setup/Load Styles
  */
-function setupStyles() {
+function setupUI() {
 	const
 		deferred = Promise.defer()
 	
 	require.ensure([],function(require:any) {
 		// Load Styles
-		require('epic-styles')
+		benchmarkLoadTime(`Styles Loaded`)
+		require('./AppRoot').loadUI(UIResourcesLoaded.promise)
 		deferred.resolve()
 	})
 	
 	return deferred.promise
 }
 
-startupPromises.push(setupStyles())
-
-require.ensure([],function(require:any) {
-	function loadAppRoot() {
-		require('./AppRoot')
-	}
-	
-	Promise.all(startupPromises).then(loadAppRoot)
-})
+startupPromises.push(setupUI())
 
 
 acceptHot(module,log)

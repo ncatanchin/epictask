@@ -1,6 +1,6 @@
 
 import {SettingsFile} from "./SettingsFile"
-import { AppKey, SettingKeys, SettingDefaults } from "epic-global"
+import { AppKey, SettingKeys, SettingDefaults } from "../Constants"
 import { PersistentValue } from  "../PersistentValue"
 
 

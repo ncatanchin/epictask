@@ -1,5 +1,8 @@
-import "epic-global/LogCategories"
-import "epic-global/ProcessConfig"
+import "./LogCategories"
+import "./ProcessConfig"
+
+
+
 
 // DEBUG HELPERS
 // if (DEBUG) {
@@ -18,11 +21,11 @@ ProcessConfig.setType(processType)
 TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
 
 
-import "epic-global/Env"
-import "epic-global/NamespaceConfig"
-import "epic-global/PromiseConfig"
-import "epic-global/LogConfig"
-import "epic-global/Globals"
+import "./Env"
+import "./NamespaceConfig"
+import "./PromiseConfig"
+import "./LogConfig"
+import "./Globals"
 
 
 // HMR ACCEPT

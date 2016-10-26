@@ -1,16 +1,19 @@
 
+const
+	{Cleaner} = require('./Cleaner')
+
+require('epic-entry-shared/AppEntry')
+
 Object.assign(global,{
 	epic_libs: __non_webpack_require__('./epic_libs')
 }) 
 
 //require('epic_libs')
-const
-	{Cleaner} = require('./Cleaner')
 
 
 function loadMainApp() {
 	
-	require('epic-entry-shared/AppEntry')
+	
 	
 	
 	const

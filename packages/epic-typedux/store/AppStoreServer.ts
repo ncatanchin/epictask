@@ -1,14 +1,13 @@
 import { getStore, getStoreState, getReduxStore } from "./AppStore"
 import { IPCServer, TIPCEventHandler } from "epic-net"
-import { getHot, setDataOnHotDispose, acceptHot, shortId } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, shortId, AppStoreServerName } from "epic-global"
 import { ActionFactoryProviders } from "../provider"
 import { getAllActions, getAction, ActionFactory } from "typedux"
-import { AppStoreServerName } from "epic-global"
 import { IChildStoreFilter } from "./ChildStore"
 
 const
 	log = getLogger(__filename),
-	{nextTick} = process,
+	{ nextTick } = process,
 	clientObservers = getHot(module, 'clientObservers', {}),
 	childStores = getHot(module, 'clientObservers', {}) as any
 
@@ -34,7 +33,7 @@ export function broadcastAppStoreAction(action) {
 			try {
 				ipcServer.send(socket, 'childStoreActionReducer', { id, action })
 			} catch (err) {
-				log.error(`Failed to send action reducer to ${id}`,err)
+				log.error(`Failed to send action reducer to ${id}`, err)
 			}
 		})
 }
@@ -44,7 +43,7 @@ export function broadcastAppStoreAction(action) {
  */
 namespace clientMessageHandlers {
 	
-	function childStoreDispatch({event,leaf,type,args}) {
+	function childStoreDispatch({ event, leaf, type, args }) {
 		const
 			store = getReduxStore(),
 			actionReg = getAction(leaf, type)
@@ -59,7 +58,7 @@ namespace clientMessageHandlers {
 				
 				const
 					actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any,
-					msg = actions.newMessage(shortId(), leaf, actionReg.type,[], args, {
+					msg = actions.newMessage(shortId(), leaf, actionReg.type, [], args, {
 						source: {
 							isReducer: true,
 							fromRenderer: true
@@ -74,21 +73,21 @@ namespace clientMessageHandlers {
 		})
 	}
 	
-	export function childStoreSubscribeRequest(server:IPCServer,socket,event:string,{
+	export function childStoreSubscribeRequest(server:IPCServer, socket, event:string, {
 		id,
 		filter
 	}:{id:string,filter:IChildStoreFilter}) {
-		log.debug(`Child subscribing with id ${id} and filter`,filter)
-		childStores[id] = {
+		log.debug(`Child subscribing with id ${id} and filter`, filter)
+		childStores[ id ] = {
 			id,
 			filter,
 			socket
 		}
 		const
 			state = _.toJS(getStoreState())
-				
 		
-		server.send(socket,'childStoreSubscribeResponse',{id,initialState:state})
+		
+		server.send(socket, 'childStoreSubscribeResponse', { id, initialState: state })
 	}
 	
 	
@@ -100,9 +99,9 @@ namespace clientMessageHandlers {
 	 * @param event
 	 * @param id
 	 */
-	export function childStoreDetach(server:IPCServer,socket,event:string,{id}) {
+	export function childStoreDetach(server:IPCServer, socket, event:string, { id }) {
 		log.debug(`Detaching child store ${id}`)
-		delete childStores[id]
+		delete childStores[ id ]
 	}
 	
 	/**
@@ -114,8 +113,8 @@ namespace clientMessageHandlers {
 	 * @param id
 	 * @param action
 	 */
-	export function childStoreAction(server:IPCServer,socket,event:string,{id,action}) {
-		log.debug(`Received action message`,action,'from',id)
+	export function childStoreAction(server:IPCServer, socket, event:string, { id, action }) {
+		log.debug(`Received action message`, action, 'from', id)
 		childStoreDispatch(action)
 	}
 	
@@ -240,7 +239,7 @@ const
 		'childStoreDetach',
 		'childStoreAction'
 	) as {[event:string]:TIPCEventHandler}
-	
+
 
 /**
  * Stop the ipc server
@@ -296,7 +295,7 @@ export async function start() {
 	}
 	
 	try {
-		ipcServer = new IPCServer(AppStoreServerName,messageHandlers)
+		ipcServer = new IPCServer(AppStoreServerName, messageHandlers)
 		
 		log.debug(`Starting store server`)
 		
@@ -317,4 +316,4 @@ setDataOnHotDispose(module, () => ({
 	clientObservers,
 	ipcServer
 }))
-acceptHot(module,log)
+acceptHot(module, log)

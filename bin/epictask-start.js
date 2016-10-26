@@ -1,7 +1,19 @@
 require('source-map-support').install()
 require('babel-polyfill')
 require('reflect-metadata')
-
+//
+// const
+// 	noWebpack = true
+//
+//
+// if (noWebpack) {
+// 	const
+// 		Module = require('module')
+//
+// 	Module.prototype.require.ensure = function(deps,fn) {
+// 		fn(require)
+// 	}
+// }
 
 
 /**
