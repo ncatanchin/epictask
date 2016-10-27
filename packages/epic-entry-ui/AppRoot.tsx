@@ -20,7 +20,7 @@ benchmarkLoadTime(`Starting to loading AppRoot`)
 
 import { Provider } from "react-redux"
 import { MuiThemeProvider } from "material-ui/styles"
-import { PureRender } from "epic-ui-components/PureRender"
+import { PureRender } from "epic-ui-components/common"
 
 import {
 	CommandComponent,
@@ -46,14 +46,11 @@ import {
 	ThemeEvents,
 	ThemeEvent
 } from "epic-styles"
-import { UIRoot } from "epic-ui-components/UIRoot"
-import { Sheets, DialogConfigs } from "epic-ui-components/DialogsAndSheets"
 
 // STYLES
-import { PromisedComponent } from "epic-ui-components/PromisedComponent"
 import * as assert from "assert"
-import { RouteView } from "epic-entry-ui/routes"
-
+import { RouteView, WindowHashURIProvider } from "./routes"
+import { Roots, Routes } from "./UIRoutes"
 
 // Logger, Store +++
 const
@@ -99,6 +96,7 @@ const
 @PureRender
 class App extends React.Component<IAppProps,IAppState> implements ICommandComponent {
 	
+	uriProvider = new WindowHashURIProvider()
 	
 	/**
 	 * All global app root window commands
@@ -111,7 +109,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 				.command(
 					CommandType.App,
 					'Import Repository',
-					(item, event) => getUIActions().openSheet(Sheets.RepoImportSheet),
+					(item, event) => getUIActions().openSheet(Roots.RepoImport.path),
 					"CommandOrControl+Shift+n",{
 						id: CIDS.GithubImport
 					}
@@ -129,7 +127,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 				.command(
 					CommandType.App,
 					'Settings',
-					(cmd, event) => getUIActions().setDialogOpen(Dialogs.SettingsWindow,true),
+					(cmd, event) => getUIActions().openWindow(Roots.Settings.path),
 					"CommandOrControl+Comma", {
 						id: CIDS.Settings
 					})
@@ -138,7 +136,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 				.command(
 					CommandType.App,
 					'Repository Labels, Milestones & Settings',
-					(cmd, event) => getUIActions().setDialogOpen(Dialogs.RepoSettingsWindow,true),
+					(cmd, event) => getUIActions().openWindow(Roots.RepoSettings.path),
 					"CommandOrControl+Shift+Comma", {
 						id: CIDS.RepoSettings
 					})
@@ -157,7 +155,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 					'Find action',
 					(item, event) => {
 						log.debug(`Triggering find action`)
-						getUIActions().openSheet(Sheets.FindActionSheet)
+						getUIActions().openSheet(Roots.FindAction.path)
 					},
 					"CommandOrControl+Shift+p",{
 						id: CIDS.FindAction,
@@ -326,26 +324,6 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 	
 	
 	/**
-	 * Render a child window
-	 *
-	 * @returns {any}
-	 */
-	renderChildWindow() {
-		return <PromisedComponent promise={getValue(() => childWindowConfig.rootElement())} />
-	}
-	
-	/**
-	 * Render the main app window
-	 *
-	 * @returns {any}
-	 */
-	renderMainWindow() {
-		// const
-		// 	UIRoot = require("ui/components/root/UIRoot").UIRoot
-		return <UIRoot />
-	}
-	
-	/**
 	 * Render the app container
 	 */
 	render() {
@@ -363,9 +341,9 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							
-							<RouteView />
-							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
-						
+							<RouteView routerId="app-root"
+							           routes={Routes}
+							           uriProvider={this.uriProvider} />
 						
 						</Provider>
 					</MuiThemeProvider>
@@ -443,6 +421,7 @@ function themeChangeListener() {
 benchmarkLoadTime(`Exporting loadUI`)
 export function loadUI(pendingResources:Promise<void>) {
 	benchmarkLoadTime(`Waiting for UI resources`)
+	
 	pendingResources.then(() => {
 		
 		benchmarkLoadTime(`UI Resources loaded, now loading UI`)
@@ -453,43 +432,9 @@ export function loadUI(pendingResources:Promise<void>) {
 
 		// ADD HMR REMOVE
 		addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
+					
+		render()
 		
-		
-		// CHILD WINDOW - GET CONFIG FIRST
-		if (isChildWindow) {
-			
-			// GET SESSION & COOKIES
-			const
-				{ remote } = require('electron'),
-				webContents = remote.getCurrentWebContents(),
-				{ session } = webContents,
-				{ cookies } = session
-			
-			// GET OUR COOKIE
-			cookies.get({ name: childWindowId }, (err, cookies) => {
-				if (err) {
-					log.error(`Failed to get cookies`, err)
-					throw err
-				}
-				
-				log.info('cookies', cookies)
-				
-				const
-					configName = cookies[ 0 ].value
-				
-				
-				childWindowConfig = DialogConfigs[configName]
-				assert(childWindowConfig, `No config found for ${childWindowId} / ${configName}`)
-				
-				
-				render()
-			})
-		}
-
-		// MAIN UI
-		else {
-			render()
-		}
 	})
 }
 

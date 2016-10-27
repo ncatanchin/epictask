@@ -1,35 +1,25 @@
 /**
  * Created by jglanz on 6/1/16.
  */
-
 // Imports
-import {List} from 'immutable'
-import * as ReactDOM from 'react-dom'
-import * as React from 'react'
-import {TextField} from 'material-ui'
-import * as KeyMaps from 'epic-command-manager'
-import {SearchResult, SearchType} from "epic-typedux"
-import {SearchResults} from './SearchResults'
-
-import {isNumber} from 'epic-global'
-import {PureRender} from "epic-ui-components"
-import { getValue } from  "epic-global"
-import {SearchProvider} from "epic-typedux"
-import { SearchItem, ISearchState } from "epic-typedux"
-import {SearchEvent} from "epic-typedux"
+import { List } from "immutable"
+import * as ReactDOM from "react-dom"
+import * as React from "react"
+import { TextField } from "material-ui"
+import * as KeyMaps from "epic-command-manager"
+import { CommandType, getCommandManager, CommonKeys } from "epic-command-manager"
+import { SearchResult, SearchType, SearchProvider, SearchItem, ISearchState, SearchEvent } from "epic-typedux"
+import { SearchResults } from "./SearchResults"
+import { isNumber, getValue } from "epic-global"
+import { PureRender } from "epic-ui-components/common"
 import {
-	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder, CommandContainer
-} from  "epic-command-manager-ui"
-
-import {
-	CommandType,getCommandManager
-} from  "epic-command-manager"
-
-import { CommonKeys } from "epic-command-manager"
+	CommandComponent,
+	ICommandComponent,
+	CommandRoot,
+	CommandContainerBuilder,
+	CommandContainer
+} from "epic-command-manager-ui"
 import { ThemedStyles } from "epic-styles"
-
-
 
 
 const $ = require('jquery')

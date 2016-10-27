@@ -3,15 +3,12 @@
  */
 
 // Imports
-import {List} from 'immutable'
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
 import {SearchItem} from "epic-typedux"
 import { ThemedStyles } from "epic-styles"
-import { SearchResultsList } from "epic-ui-components"
+import { SearchResultsList } from "./SearchResultsList"
 import { shallowEquals } from  "epic-global"
 import { ISearchState } from "epic-typedux"
-import { SearchPanel } from "epic-ui-components"
+import { SearchPanel } from "../search"
 
 
 // Constants

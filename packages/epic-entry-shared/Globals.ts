@@ -34,6 +34,7 @@ import * as ReactDOMGlobal from 'react-dom'
 import * as JQueryGlobal from 'jquery'
 import * as RadiumGlobal from 'radium'
 
+import {getNotificationCenter as getNotificationCenterGlobal} from 'epic-global/NotificationCenter'
 
 // Export globals
 const
@@ -111,6 +112,9 @@ function installGlobals() {
 		LogLevel: LogLevelGlobal,
 		moment: require('moment'),
 		assert: assertGlobal,
+		
+		getNotificationCenter: getNotificationCenterGlobal,
+		
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
@@ -151,18 +155,18 @@ declare global {
 	let getChildWindowId:typeof getChildWindowIdGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var LogLevel:typeof LogLevelGlobal
+	let LogLevel:typeof LogLevelGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var Container:typeof ContainerGlobal
+	let Container:typeof ContainerGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var assert:typeof assertGlobal
+	let assert:typeof assertGlobal
 	
 	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var Immutable:typeof ImmutableGlobal
+	let Immutable:typeof ImmutableGlobal
 	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
@@ -171,23 +175,25 @@ declare global {
 	let getCurrentWindow:typeof getCurrentWindowGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var MainBooted:boolean
+	let MainBooted:boolean
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var assign:typeof Object.assign
+	let assign:typeof Object.assign
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var assignGlobal:IAssignGlobal
+	let assignGlobal:IAssignGlobal
+	
+	let getNotificationCenter:typeof getNotificationCenterGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var node_require:typeof __non_webpack_require__
+	let node_require:typeof __non_webpack_require__
 	
-	var React:typeof ReactGlobal
-	var ReactDOM:typeof ReactDOMGlobal
-	var Notification:any
+	let React:typeof ReactGlobal
+	let ReactDOM:typeof ReactDOMGlobal
+	let Notification:any
 	//var logError:typeof logErrorGlobal
 	var $:typeof JQueryGlobal
-	var Radium:typeof RadiumGlobal
+	let Radium:typeof RadiumGlobal
 	
 	interface Window {
 		$:typeof JQueryGlobal

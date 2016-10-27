@@ -492,10 +492,8 @@ export function DefaultTheme(palette) {
 			}
 		},
 		
-		homePage: {
-			viewWrapper: {
-				borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
-			}
+		ideRoot: {
+			
 		},
 		
 		/**

@@ -1,7 +1,7 @@
 // Imports
 import * as React from "react"
-import { SearchPanel } from "epic-ui-components/search/SearchPanel"
-import { PureRender } from "epic-ui-components/PureRender"
+import { SearchPanel } from "epic-ui-components/search"
+import { PureRender } from "epic-ui-components"
 import { SearchType, getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
 import { ThemedStyles } from "epic-styles"

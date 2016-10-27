@@ -27,17 +27,13 @@ import {
 	IThemedAttributes
 } from "epic-styles"
 import { appUserSelector, getUIActions, enabledAvailableReposSelector, enabledMilestonesSelector } from "epic-typedux"
-import { DialogRoot } from "epic-ui-components/DialogRoot"
-import {
-	CommandComponent, CommandRoot,
-	CommandContainerBuilder
-} from  "epic-command-manager-ui"
-
+import { DialogRoot } from "epic-ui-components/layout/dialog"
+import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
-import { PureRender, Select, ISelectItem, RepoName, Icon } from "epic-ui-components"
+import { PureRender,  RepoName, Icon, TabTemplate } from "epic-ui-components"
+import {Select, ISelectItem} from 'epic-ui-components/fields'
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
-import { TabTemplate } from "epic-ui-components/TabTemplate"
 import { Tab, Tabs } from "material-ui"
 import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
 import { RepoLabelEditor } from "./RepoLabelEditor"

@@ -46,7 +46,7 @@ export const UIStateRecord = Record({
 	statusBar: {
 		visible: true
 	},
-	sheet:null,
+	sheetURI:null,
 	dialogs: Map<string,boolean>(),
 	messages: List<INotificationMessage>(),
 	
@@ -91,7 +91,7 @@ export class UIState extends UIStateRecord implements State {
 	
 	ready:boolean
 	user:User
-	sheet:IUISheet
+	sheetURI:string
 	dialogs:TDialogMap
 	messages:List<INotificationMessage>
 	

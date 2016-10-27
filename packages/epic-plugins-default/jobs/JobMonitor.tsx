@@ -2,18 +2,14 @@
 import * as React from "react"
 import { connect } from "react-redux"
 import { List } from "immutable"
-import {getBuiltInToolId, BuiltInTools} from 'epic-ui-components/tools/ToolConfig'
-import { PureRender   } from "epic-ui-components/PureRender"
-import { Button   } from "epic-ui-components/Button"
-import { Icon   } from "epic-ui-components/Icon"
-
-import { createDeepEqualSelector } from "epic-global"
+import { getBuiltInToolId, BuiltInTools } from "epic-ui-components/tools/ToolConfig"
+import { PureRender, Button, Icon } from "epic-ui-components"
+import { createDeepEqualSelector, RegisterTool, ToolPanelLocation, IToolProps } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, createThemedStyles, FlexScale, FlexColumn } from "epic-styles"
 import { IJobStatusDetail, jobStateSelector, jobLogIdSelector, TJobIMap, JobActionFactory } from "epic-typedux"
 import { JobList } from "./JobList"
 import { JobDetail } from "./JobDetail"
-import { RegisterTool, ToolPanelLocation, IToolProps } from "epic-global"
 
 // Constants
 const

@@ -54,8 +54,10 @@ export const WindowTypeDefaults = {
 export interface IWindowInstance {
 	id:string
 	type:WindowType
-	config:IWindowConfig
+	opts:Electron.BrowserWindowOptions
 	window:Electron.BrowserWindow
+	uri:string
+	url:string
 }
 
 /**
@@ -116,7 +118,7 @@ export class WindowManager {
 				idOrWindowInstances.find(criteria => isString(criteria) ?
 					
 					// IF IDS OR CONFIG NAMES - MATCH
-					[it.id,it.config.name].includes(criteria) :
+					[it.id,it.uri].includes(criteria) :
 					
 					// IF WINDOW INSTANCES
 					(it === criteria || it.id === criteria.id)
@@ -149,52 +151,22 @@ export class WindowManager {
 		
 	}
 	
-	/**
-	 * Open a pre-configured dialog
-	 * @param name
-	 */
-	openDialog(name:string) {
-		getWindowManager().open(getWindowConfig(name))
-	}
 	
 	/**
 	 * Open a new dialog with a given config
 	 *
-	 * @param config
+	 * @param uri
+	 * @param type
+	 * @param opts
+	 * @param showDevTools
+	 *
 	 * @returns {{id: string, config: IWindowConfig, window: Electron.remote.BrowserWindow}}
 	 */
-	open(config:IWindowConfig)
-	open(id:string,config:IWindowConfig)
-	open(configOrId:string|IWindowConfig,config?:IWindowConfig) {
+	open(uri:string,type:WindowType,opts:Electron.BrowserWindowOptions = null,showDevTools = false) {
 		const
 			windowCreateDeferred = Promise.defer()
 		
 		try {
-			
-			let
-				id = null
-			
-			if (isString(configOrId)) {
-				id = configOrId
-			} else {
-				id = `${configOrId.name}-${shortId()}`
-				config = configOrId
-			}
-			
-			// IF SINGLE WINDOW THEN ALWAYS USE CONFIG NAME
-			if (config.singleWindow) {
-				id = config.name
-			}
-			
-			// CHECK FOR EXISTING WINDOW (ONLY IN CASE ID WAS PROVIDED
-			let
-				existingWindowInstance = this.windows.find(it => it.id === id)
-			
-			if (existingWindowInstance) {
-				log.warn(`Window with id ${id} already exists - returning`)
-				return existingWindowInstance
-			}
-			
 			
 			const
 				newWindowOpts = _.merge(
@@ -203,95 +175,84 @@ export class WindowManager {
 					},
 					
 					// TYPE DEFAULTS
-					WindowTypeDefaults[ config.type ],
+					WindowTypeDefaults[ type ],
 					
 					// CONFIG DEFAULTS
-					(config.type === WindowType.Dialog || config.type === WindowType.Modal) && {
+					([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
 						parent: Electron.remote.getCurrentWindow()
 					},
 					
 					// MANAGER PARTITIONING
-					{
-						
-					},
-					config.opts || {}
+					{},
+					opts || {}
 				)
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
 			let
 				childWindowState = null
 			
-			if (config.storeState) {
-				childWindowState = windowStateKeeper({ file: `child-window-${id}.state` })
+			// TODO: REMOVE - TEST
+			
+			// CREATE WINDOW AND GET TO WORK
+			const
+				id = shortId(),
+				newWindow = new Electron.remote.BrowserWindow(Object.assign({}, childWindowState, newWindowOpts)),
+				templateURL = getAppEntryHtmlPath()
+			
+			let
+				url = `file://${templateURL}#${uri}`
+			url = url + (url.indexOf('?') > -1 ? '&' : '?') +
+					`EPIC_ENTRY=` +
+					ProcessConfig.getTypeName(ProcessType.UIChildWindow) +
+					`&EPIC_WINDOW_ID=${id}`
+			
+			const
+				windowInstance = this.windows[ this.windows.length ] = {
+					id,
+					type,
+					opts: newWindowOpts as any,
+					uri,
+					url,
+					window: newWindow
+				}
+			
+			
+			// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
+			if (childWindowState) {
+				childWindowState.manage(newWindow)
 			}
 			
-			// TODO: REMOVE - TEST
-			const
-				windowSession = Electron.remote.getCurrentWebContents().session,
-				windowConfig = toJSON(config, true),
-				windowConfigCookie = {
-					url: 'https://densebrain.com/epictask',
-					name: id,
-					value: config.name
-				}
+			log.debug(`Loading dialog ${id} with URL:`, url)
+			newWindow.loadURL(url)
 			
+			// OPEN DEV TOOLS IF CONFIGURED
+			if (DEBUG && showDevTools) {
+				newWindow.show()
+				newWindow.webContents.openDevTools({
+					mode: DevToolsPositionDefault
+				})
+			}
 			
-			windowSession.cookies.set(windowConfigCookie, (err) => {
-				if (err) {
-					log.error(`Failed to create window config cooke`, err)
-					return windowCreateDeferred.reject(err)
-				}
+			newWindow.once('ready-to-show', () => {
 				
-				
-				// CREATE WINDOW AND GET TO WORK
-				const
-					newWindow = new Electron.remote.BrowserWindow(Object.assign({}, childWindowState, newWindowOpts)),
-					
-					windowInstance = this.windows[ this.windows.length ] = {
-						id,
-						type: config.type,
-						config,
-						window: newWindow
-					},
-					templateURL = getAppEntryHtmlPath(),
-					url = `file://${templateURL}#EPIC_ENTRY=${ProcessConfig.getTypeName(ProcessType.UIChildWindow)}&EPIC_WINDOW_ID=${id}`
-				
-				// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
-				if (childWindowState) {
-					childWindowState.manage(newWindow)
-				}
-				
-				log.debug(`Loading dialog ${id} with URL:`, url)
-				newWindow.loadURL(url)
-				
-				// OPEN DEV TOOLS IF CONFIGURED
-				if (DEBUG && config.showDevTools) {
-					newWindow.show()
-					newWindow.webContents.openDevTools({
-						mode: config.devToolsPosition || DevToolsPositionDefault
-					})
-				}
-				
-				newWindow.once('ready-to-show', () => {
-					
-					log.debug(`Ready to show for window ${id}`)
-					newWindow.setSheetOffset(500)
-					newWindow.show()
-					// newWindow.center()
-					newWindow.focus()
-				})
-				
-				
-				newWindow.on('close', () => {
-					log.debug(`Window closed ${id}`)
-					
-					// REMOVE THE WINDOW
-					this.close(id)
-					//this.windows.splice(this.windows.findIndex(it => it.id === id),1)
-				})
-				
-				windowCreateDeferred.resolve(windowInstance)
+				log.debug(`Ready to show for window ${id}`)
+				newWindow.setSheetOffset(500)
+				newWindow.show()
+				// newWindow.center()
+				newWindow.focus()
 			})
+			
+			
+			newWindow.on('close', () => {
+				log.debug(`Window closed ${id}`)
+				
+				// REMOVE THE WINDOW
+				this.close(id)
+				//this.windows.splice(this.windows.findIndex(it => it.id === id),1)
+			})
+			
+			windowCreateDeferred.resolve(windowInstance)
+			
 		} catch (err) {
 			windowCreateDeferred.reject(err)
 		}

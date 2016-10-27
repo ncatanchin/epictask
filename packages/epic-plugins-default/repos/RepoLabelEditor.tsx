@@ -1,22 +1,29 @@
 // Imports
-import { connect } from 'react-redux'
-import { PureRender } from "epic-ui-components/PureRender"
-import { createStructuredSelector } from 'reselect'
-import { ThemedStyles } from "epic-styles"
-import { IThemedAttributes } from "epic-styles"
-import { Label, Repo, AvailableRepo } from "epic-models"
-import {TextField} from 'material-ui'
-import { List } from "immutable"
-import { enabledLabelsSelector } from "epic-typedux"
+import { connect } from "react-redux"
+import { PureRender, LabelChip, Button, Icon } from "epic-ui-components"
+import { createStructuredSelector } from "reselect"
 import {
-	FillWidth, FlexColumn, FlexScale, OverflowAuto, makeHeightConstraint,
-	makeTransition, FlexRowCenter, FlexAuto, makePaddingRem, rem, Fill, makeMarginRem, FillHeight, makeWidthConstraint
+	ThemedStyles,
+	IThemedAttributes,
+	FillWidth,
+	FlexColumn,
+	FlexScale,
+	OverflowAuto,
+	makeHeightConstraint,
+	makeTransition,
+	FlexRowCenter,
+	FlexAuto,
+	makePaddingRem,
+	rem,
+	makeMarginRem,
+	FillHeight,
+	makeWidthConstraint
 } from "epic-styles"
-import { getValue } from  "epic-global"
-import { LabelChip } from "epic-ui-components/LabelChip"
-import {Button} from "epic-ui-components/Button"
-import {Icon} from "epic-ui-components/Icon"
-import { getRepoActions } from "epic-typedux"
+import { Label, AvailableRepo } from "epic-models"
+import { TextField } from "material-ui"
+import { List } from "immutable"
+import { enabledLabelsSelector, getRepoActions } from "epic-typedux"
+import { getValue } from "epic-global"
 
 
 // Constants

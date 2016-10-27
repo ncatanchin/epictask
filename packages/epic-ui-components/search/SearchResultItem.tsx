@@ -1,14 +1,11 @@
 // Imports
-import * as React from 'react'
-import { PureRender } from "epic-ui-components"
+import { PureRender, RepoName, Icon } from "epic-ui-components"
 import { SearchItem, SearchType } from "epic-typedux"
-import { shallowEquals, getValue } from  "epic-global"
+import { shallowEquals, getValue } from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "epic-models"
-import { RepoName } from "epic-ui-components"
-import filterProps from 'react-valid-props'
-import { Icon } from "epic-ui-components"
-import { SearchPanel } from "epic-ui-components"
-import { ICommand } from  "epic-command-manager"
+import filterProps from "react-valid-props"
+import { SearchPanel } from "epic-ui-components/search"
+import { ICommand } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 // Constants

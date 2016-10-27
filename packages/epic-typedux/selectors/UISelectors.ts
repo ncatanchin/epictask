@@ -52,10 +52,9 @@ export const modalWindowOpenSelector = createSelector(
 /**
  * Retrieve the current UI sheet
  */
-export const sheetSelector: (state) => IUISheet = createSelector(
+export const sheetURISelector: (state) => string = createSelector(
 	uiStateSelector,
-	(state:UIState) => state.sheet && _.isFunction(state.sheet.rootElement) ?
-		state.sheet : null
+	(state:UIState) => state.sheetURI
 )
 
 /**

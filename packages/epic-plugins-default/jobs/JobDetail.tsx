@@ -14,10 +14,9 @@ import {
 } from "epic-styles"
 import { LinearProgress } from "material-ui"
 import { JobActionFactory, TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux"
-import { TimeAgo } from "epic-ui-components/TimeAgo"
+import { TimeAgo, VisibleList } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
 import { LogWatcher, LogWatcherEvent, IEnumEventRemover, getValue, shallowEquals } from "epic-global"
-import { VisibleList } from "epic-ui-components/VisibleList"
 
 // Constants
 const log = getLogger(__filename)

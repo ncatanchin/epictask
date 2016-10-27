@@ -1,8 +1,0 @@
-.panel {
-	composes: flex-row flex-scale from 'styles/flex.css';
-	composes: fill-width fill-height from 'styles/basics.css';
-}
-
-.list-container {
-	composes: flex-column flex-scale from 'styles/flex.css';
-}

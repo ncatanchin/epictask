@@ -70,7 +70,15 @@ export function initBrowser(isDev) {
 	
 	function parseParams() {
 		let
-			pairs = hash.substr(1).split('&')
+			paramStr = hash.substr(1)
+		if (paramStr.indexOf('?') > -1) {
+			paramStr = paramStr.substr(paramStr.indexOf('?') + 1)
+		}
+		
+		let
+			pairs = paramStr
+				.substr(1)
+				.split('&')
 		
 		return pairs.reduce(function (map, nextPair) {
 			const
@@ -100,8 +108,8 @@ export function initBrowser(isDev) {
 	})
 	
 	_.assign(global, {
-		_: _,
-		$: require('jquery'),
+		_,
+		$: (window as any).$ || require('jquery'),
 		React: require('react'),
 		ReactDOM: require('react-dom'),
 		Radium: require('radium'),

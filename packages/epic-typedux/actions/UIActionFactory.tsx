@@ -12,7 +12,7 @@ import {
 	IToolPanel,
 	IUISheet,
 	RegisterActionFactory,
-	getToolRegistrations, nilFilter
+	getToolRegistrations, nilFilter, WindowType
 } from "epic-global"
 import { UIState } from "epic-typedux"
 import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
@@ -492,22 +492,30 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
-	@ActionThunk()
-	setDialogOpen(name:string,open:boolean) {
-		return (state:UIState) => {
-			
-			if (ProcessConfig.isType(ProcessType.UI)) {
-				const
-					windowManager = getWindowManager()
-						
-				if (open)
-					windowManager.openDialog(name)
-				else
-					windowManager.close(name)
-			}
-			
-			this.internalSetDialogOpen(name,open)
-		}
+	
+	
+	
+	// @ActionThunk()
+	// setDialogOpen(name:string,open:boolean) {
+	// 	return (state:UIState) => {
+	//
+	// 		if (ProcessConfig.isType(ProcessType.UI)) {
+	// 			const
+	// 				windowManager = getWindowManager()
+	//
+	// 			if (open)
+	// 				windowManager.openDialog(name)
+	// 			else
+	// 				windowManager.close(name)
+	// 		}
+	//
+	// 		this.internalSetDialogOpen(name,open)
+	// 	}
+	// }
+	
+	
+	openWindow(uri:string,type = WindowType.Dialog) {
+		getWindowManager().open(uri,type)
 	}
 	
 	/**
@@ -577,11 +585,11 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Set the open sheet
 	 *
-	 * @param sheet
+	 * @param sheetURI
 	 */
 	@ActionReducer()
-	openSheet(sheet:IUISheet) {
-		return (state:UIState) => state.set('sheet',sheet)
+	openSheet(sheetURI:string) {
+		return (state:UIState) => state.set('sheetURI',sheetURI)
 	}
 	
 	/**

@@ -7,8 +7,8 @@ import { ThemedStyles } from "epic-styles"
 import { SearchItem, ISearchState } from "epic-typedux"
 
 import { shallowEquals, getValue } from  "epic-global"
-import { SearchResultItem } from "epic-ui-components"
-import { SearchPanel } from "epic-ui-components"
+import { SearchResultItem } from "./SearchResultItem"
+import { SearchPanel } from "./SearchPanel"
 
 // Constants
 const

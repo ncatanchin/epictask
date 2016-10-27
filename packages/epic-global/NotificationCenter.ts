@@ -1,11 +1,6 @@
-
-
 import * as uuid from 'node-uuid'
-
-//import {NotificationMessageType, INotificationMessage} from 'epic-global'
-//import { getUIActions } from "epic-typedux"
 import { isString } from  "./TypeChecks"
-
+import {Container} from 'typescript-ioc'
 
 const
 	log = getLogger(__filename)
@@ -48,9 +43,9 @@ export interface INotificationMessage {
  */
 export class NotificationCenter {
 
-	// get uiActions() {
-	// 	return getUIActions()
-	// }
+	get uiActions() {
+		return require("epic-typedux/provider").getUIActions()
+	}
 
 	addMessage(message:INotificationMessage|string,type:NotificationMessageType = NotificationMessageType.Info) {
 		if (_.isString(message)) {
@@ -64,7 +59,7 @@ export class NotificationCenter {
 		} else {
 			message.type = type
 		}
-		//this.uiActions.addMessage(message)
+		this.uiActions.addMessage(message)
 	}
 	
 	addDebugMessage(message:INotificationMessage|string) {
@@ -90,18 +85,18 @@ export class NotificationCenter {
 	}
 }
 
-let toaster:NotificationCenter = null
+let notificationCenter:NotificationCenter = null
 
 /**
- * get the current toaster
+ * get the current notificationCenter
  *
  * @returns {NotificationCenter}
  */
 export function getNotificationCenter() {
-	if (!toaster)
-		toaster = new NotificationCenter()
+	if (!notificationCenter)
+		notificationCenter = new NotificationCenter()
 	
-	return toaster
+	return notificationCenter
 }
 
 /**

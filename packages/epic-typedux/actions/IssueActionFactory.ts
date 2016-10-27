@@ -54,6 +54,7 @@ import { ContainerNames } from "epic-command-manager"
 import { LoadStatus } from "epic-models"
 import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
 import { Dialogs } from "epic-global"
+import { Roots } from "epic-entry-ui/UIRoutes"
 
 
 /**
@@ -579,7 +580,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 		
 		this.setPatchIssues(issues, mode)
-		getUIActions().setDialogOpen(Dialogs.IssuePatchDialog, true)
+		getUIActions().openWindow(Roots.IssuePatchDialog.makeURI(issues))
 	}
 	
 	/**
@@ -1143,7 +1144,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			actions.setIssueSaving(false)
 			actions.setEditingIssue(issue, inline)
 			
-			uiActions.setDialogOpen(dialogName, true)
+			uiActions.openWindow(Roots.IssueEditDialog.makeURI())
 		}
 	}
 	
@@ -1171,7 +1172,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		this.setIssueSaving(false)
 		this.setEditingIssue(editingIssue)
-		uiActions.setDialogOpen(dialogName, true)
+		uiActions.openWindow(Roots.IssueEditDialog.makeURI(editingIssue))
 	}
 	
 	/**
@@ -1182,7 +1183,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	async editComment(issue: Issue, comment: Comment = null) {
 		const
-			uiActions = Container.get(UIActionFactory),
+			uiActions = getUIActions(),
 			dialogName = Dialogs.IssueCommentDialog,
 			getState = getStoreState
 		
@@ -1201,7 +1202,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		this.setIssueSaving(false)
 		this.setEditingComment({issue,comment})
-		uiActions.setDialogOpen(dialogName, true)
+		uiActions.openWindow(Roots.IssueCommentDialog.makeURI(issue,comment))
 	}
 	
 	

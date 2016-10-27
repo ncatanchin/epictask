@@ -6,7 +6,7 @@ import {
 } from "./DataManager"
 import './DataProviders'
 import {isFunction, isString} from  "epic-global"
-import { PureRender } from "../PureRender"
+import { PureRender } from "../common/PureRender"
 
 
 // Constants

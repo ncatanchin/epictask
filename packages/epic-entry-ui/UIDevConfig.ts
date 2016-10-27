@@ -11,6 +11,19 @@ try {
 	log.error(`Failed to load reactotron`)
 }
 
+if (Env.isDev) {
+	const
+		installImmutableDevTools = require('immutable-devtools')
+	
+	installImmutableDevTools(Immutable)
+	
+	_.assignGlobal({
+		Perf:require('react-addons-perf')
+	})
+}
+
+
+
 export {
 	
 }

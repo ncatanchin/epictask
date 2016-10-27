@@ -1,8 +1,7 @@
 // Imports
 import * as React from "react"
 import filterProps from "react-valid-props"
-import { PureRender } from "epic-ui-components/PureRender"
-import { Icon } from "epic-ui-components/Icon"
+import { PureRender, Icon } from "epic-ui-components"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { IJobStatusDetail, IJob, JobStatus, getJobDescription } from "epic-typedux"
 import { LinearProgress } from "material-ui"
