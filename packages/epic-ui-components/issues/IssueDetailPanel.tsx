@@ -29,9 +29,9 @@ import { shallowEquals, getValue } from  "epic-global"
 
 import { EventGroup, isEventGroup } from "epic-ui-components"
 import {
-	CommandComponent, ICommandComponentProps, ICommandComponent,
-	CommandRoot, CommandContainerBuilder
-} from  "epic-command-manager"
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder,ICommandComponentProps
+} from  "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
 import { getIssueActions } from "epic-typedux"
 

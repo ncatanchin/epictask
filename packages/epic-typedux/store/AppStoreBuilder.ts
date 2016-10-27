@@ -1,6 +1,7 @@
 import * as AppStoreModule from './AppStore'
 import {ObservableStore} from 'typedux'
 import {Container} from "typescript-ioc"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 
 const log = getLogger(__filename)
 
@@ -12,7 +13,7 @@ export async function storeBuilder() {
 		store:ObservableStore<any> = ProcessConfig.isType(ProcessType.UI) ?
 			(await AppStore.loadAndInitStore()) :
 			ProcessConfig.isType(ProcessType.UIChildWindow) ?
-				(await AppStore.loadAndInitChildStore()) :
+				(await AppStore.loadAndInitStore()) : //(await AppStore.loadAndInitChildStore()) :
 				(await AppStore.loadAndInitStorybookStore())
 	
 	Container.bind(ObservableStore).provider({ get: () => store})

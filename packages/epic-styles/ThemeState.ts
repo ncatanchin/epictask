@@ -7,15 +7,11 @@ import * as BuiltInsType from "./builtin"
 let
 	BuiltIns:typeof BuiltInsType = null
 
-
-
-
 const
 	log = getLogger(__filename)
-	
 
-// if (log.setOverrideLevel)
-// 	log.setOverrideLevel(LogLevel.DEBUG)
+//DEBUG
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Define our dark palette
@@ -59,7 +55,6 @@ export type TThemeListener = (theme:any,palette:IPalette) => any
 const
 	themeListeners = getHot(module,'themeListeners',[]) as TThemeListener[]
 
-//log.info(`Using theme listeners at start`,themeListeners)
 
 export enum ThemeEvent {
 	Changed

@@ -42,12 +42,14 @@ import {
 } from "epic-styles"
 import {
 	CommandType,
-	CommandComponent,
-	CommandContainerBuilder,
-	CommandRoot,
 	ContainerNames,
 	getCommandManager
 } from "epic-command-manager"
+import {
+	CommandComponent,
+	CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
 
 
 const
@@ -410,17 +412,19 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			{ styles, editingIssue, open } = props,
 			repoId = editingIssue && editingIssue.repoId
 		
-		if (!editingIssue)
-			return {} as any
+		let
+			{ availableRepos } = props
 		
+		const
+			newState = {
+				repoMenuItems: this.makeRepoMenuItems(availableRepos, styles)
+			}
+		
+		if (!editingIssue)
+			return newState as any
 		
 		let
-			{ availableRepos } = props,
-			repos = availableRepos.map(it => it.repo),
-			milestones = Array<Milestone>(),
-			collaborators = Array<User>(),
 			labels = Array<Label>()
-		
 		
 		if (editingIssue.id > 0) {
 			availableRepos = availableRepos.filter(item => item.repoId === repoId) as List<AvailableRepo>
@@ -448,13 +452,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			titleValue = _.get(editingIssue, 'title', '')
 				
 		
-		return {
+		return Object.assign(newState,{
 			availableRepo: editingIssue && availableRepos.find(repoIdPredicate(editingIssue)),
 			bodyValue,
 			titleValue,
-			labels,
-			repoMenuItems: this.makeRepoMenuItems(availableRepos, styles)
-		}
+			labels
+		})
 	}
 	
 	
@@ -500,12 +503,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	render() {
 		
 		const
-			{ styles, editingIssue, palette, theme, open, user, saveError, saving } = this.props,
+			{ styles, palette, theme, open, user, saveError, saving } = this.props,
 			{ labels, availableRepo } = this.state,
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 		
+		let
+			editingIssue:Issue = null
+		
 		if (!editingIssue) {
-			return <div/>
+			editingIssue = this.props.editingIssue || new Issue()
+				//return <div/>
 		}
 		
 		const

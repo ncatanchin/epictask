@@ -4,11 +4,17 @@ import { ProcessType, IssueKey } from "epic-global"
 import { DatabaseClientService } from "./DatabaseClientService"
 import { getIssueActions, getRepoActions } from "epic-typedux"
 import { getStores } from "epic-database-client"
-const log = getLogger(__filename)
+import { acceptHot } from "epic-global/HotUtils"
 
-@RegisterService(ProcessType.UI)
+const
+	log = getLogger(__filename)
+
+@RegisterService(ProcessType.UI,ProcessType.UIChildWindow)
 export class RepoStateService extends BaseService {
-
+	
+	/**
+	 * Unsubscribe from store
+	 */
 	private unsubscribe:Function
 
 	private unsubscribers = []
@@ -26,8 +32,9 @@ export class RepoStateService extends BaseService {
 		return [DatabaseClientService]
 	}
 	
-	
-	
+	/**
+	 * Clean the repo state listeners
+	 */
 	private clean() {
 		this.unsubscribers.forEach(it => it())
 		this.unsubscribers.length = 0
@@ -49,7 +56,11 @@ export class RepoStateService extends BaseService {
 		}
 	}
 	
-
+	/**
+	 * Init the store
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	async init():Promise<this> {
 		this.store = Container.get(ObservableStore as any) as any
 		
@@ -66,7 +77,8 @@ export class RepoStateService extends BaseService {
 		
 		getRepoActions().loadAvailableRepos(true)
 		
-		this.unsubscribe = this.store.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
+		this.unsubscribe = this.store
+			.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
 		
 		// CONTINUE REMOVING ANY REPOS MARKED FOR DELETE
 		this.finishPendingDeletes()
@@ -77,14 +89,23 @@ export class RepoStateService extends BaseService {
 
 		return this
 	}
-
-
+	
+	/**
+	 * Stop the service
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	async stop():Promise<this> {
 		this.clean()
 		return super.stop()
 
 	}
-
+	
+	/**
+	 * Destroy the service
+	 *
+	 * @returns {RepoStateService}
+	 */
 	destroy():this {
 		this.clean()
 		return this
@@ -95,8 +116,10 @@ export class RepoStateService extends BaseService {
 	 * Watches for changes to selected issue ids
 	 */
 	private selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
+		
 		log.debug(`Selected issue ids updated`,selectedIssueIds)
 		if (selectedIssueIds && selectedIssueIds.length === 1) {
+			
 			log.debug(`Loading activity`)
 			const
 				{pendingActivityLoad} = this
@@ -107,24 +130,9 @@ export class RepoStateService extends BaseService {
 			this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
 		}
 	}
-	
-	
-	
-	
-	// /**
-	//  * When enabled repos change,
-	//  * load supporting data/models
-	//  */
-	// private checkEnabledRepos = _.debounce(() => {
-	//
-	// 	log.debug(`Old repo ids`,oldValue, `New Repo Ids`,newValue)
-	// 	getIssueActions().loadIssues()
-	//
-	// },150)
 }
 
 export default RepoStateService
 
-if (module.hot) {
-	module.hot.accept(() => log.debug('hot reload',__filename))
-}
+
+acceptHot(module,log)

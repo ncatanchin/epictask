@@ -18,7 +18,7 @@ import {ToolPanelLocation,IToolProps} from "epic-global"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
-} from  "epic-command-manager"
+} from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
 import { ContainerNames,CommonKeys } from "epic-command-manager"
 

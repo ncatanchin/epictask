@@ -25,19 +25,13 @@ const
 	log = getLogger(__filename),
 	ActionLoggerEnabled = false
 
-
-
-
 // HMR - setup
 let
 	hmrReady = false,
 	hmrDisposed = false
-	
 
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
-
-
 
 /**
  * Create the appropriate middleware
@@ -57,18 +51,14 @@ function createMiddleware() {
 const
 	middleware = getHot(module, 'middleware', createMiddleware())
 
-
 let
-	store:ObservableStore<any> = _.get(module.hot, 'data.store') as any
-	
+	store:ObservableStore<any> = getHot(module, 'store') as any
 
 // Check for hot reload
 If(store, () => {
 	hmrSetup()
 	updateReducers()
 })
-
-
 
 //noinspection JSUnusedLocalSymbols
 /**

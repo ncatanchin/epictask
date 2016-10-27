@@ -6,9 +6,11 @@ import { ThemedStyles, PositionAbsolute, makeTransition, FillHeight, FlexColumn,
 import { sheetSelector, getUIActions } from "epic-typedux"
 import { IUISheet, getValue } from "epic-global"
 import {
-	CommandComponent,
-	CommandContainerBuilder,
-	CommandRoot,
+	CommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
+
+import {
 	CommandType,
 	ContainerNames,
 	CommonKeys
@@ -17,15 +19,15 @@ import {
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = (topStyles,theme,palette) => {
+const baseStyles = (topStyles, theme, palette) => {
 	const
-		{text,accent,primary,secondary} = palette
+		{ text, accent, primary, secondary } = palette
 	
 	return [
 		PositionAbsolute,
 		OverflowHidden,
 		makeTransition([ 'transform', 'left', 'width' ]),
-		makeTransition([ 'top', 'height','max-height','min-height','opacity' ], 0.4),
+		makeTransition([ 'top', 'height', 'max-height', 'min-height', 'opacity' ], 0.4),
 		{
 			height: 0,
 			maxHeight: 0,
@@ -41,7 +43,7 @@ const baseStyles = (topStyles,theme,palette) => {
 			transform: "translate(-50%,0)",
 			opacity: 0,
 			
-				// VISIBLE THEN MOVE TOP
+			// VISIBLE THEN MOVE TOP
 			visible: [ {
 				pointerEvents: 'auto',
 				height: "auto",
@@ -56,7 +58,7 @@ const baseStyles = (topStyles,theme,palette) => {
 			
 			// HEADER
 			header: [ {
-				title: [ makePaddingRem(1),{
+				title: [ makePaddingRem(1), {
 					backgroundColor: accent.hue1,
 					color: text.primary,
 					fontSize: rem(2),
@@ -65,7 +67,7 @@ const baseStyles = (topStyles,theme,palette) => {
 				} ]
 			} ],
 			
-			body: [FillWidth,FlexColumn, {
+			body: [ FillWidth, FlexColumn, {
 				flexShrink: 1,
 				maxHeight: '50vh',
 				color: text.secondary
@@ -111,13 +113,13 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	 */
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
-			// CLOSE THE SHEET
+		// CLOSE THE SHEET
 			.command(
 				CommandType.Container,
 				'Hide sheet...',
 				(cmd, event) => getUIActions().closeSheet(),
 				CommonKeys.Escape, {
-					hidden:true,
+					hidden: true,
 					overrideInput: true
 				})
 			.make()
@@ -131,24 +133,24 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	
 	render() {
 		const
-			{ styles,sheet } = this.props,
+			{ styles, sheet } = this.props,
 			sheetPromise = getValue(() => sheet.rootElement())
-			
+		
 		
 		return <CommandRoot
 			component={this}
 			id="sheetRoot"
 			style={[styles, sheet && styles.visible]}>
+			
 			{sheetPromise && <div ref={this.setSheetContent} style={[styles.content]}>
 				<div style={[styles.header]}>
 					<div style={[styles.header.title]}>{sheet.title}</div>
 				</div>
 				<div style={[styles.body]}>
-					<PromisedComponent promise={sheetPromise} />
-					
+					<PromisedComponent promise={sheetPromise}/>
 				</div>
 			</div>
-			 }
+			}
 		</CommandRoot>
 	}
 	

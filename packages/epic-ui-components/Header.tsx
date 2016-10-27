@@ -3,10 +3,10 @@ import { SearchPanel } from "./search/SearchPanel"
 import { makeAbsolute, makeHeightConstraint, ThemedStyles, IThemedAttributes } from "epic-styles"
 import { TextField } from "material-ui/TextField"
 import {
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
+import {
 	getCommandManager,
 	ContainerNames
 } from "epic-command-manager"

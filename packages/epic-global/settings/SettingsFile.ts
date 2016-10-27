@@ -12,6 +12,28 @@ const
 
 log.info(`Settings file: ${settingsFilename}`)
 
+function createSettingsFile() {
+	const
+		sh = require('shelljs'),
+		path = require('path')
+	
+	sh.mkdir('-p',path.dirname(settingsFilename))
+	if (!sh.test('-e',settingsFilename))
+		sh.ShellString("{}").to(settingsFilename)
+		
+}
+
+try {
+	if (!fs.existsSync(settingsFilename))
+		createSettingsFile()
+} catch (err){
+	log.info(`Creating settings file: ${settingsFilename}`)
+	createSettingsFile()
+}
+		
+
+
+
 /**
  * Create default settings
  */
@@ -68,10 +90,15 @@ export class SettingsFile implements ISettings {
 	 *
 	 * @returns {SettingsFile}
 	 */
+	
 	save() {
 		
-		const settingsToSave = JSON.stringify(_.pick(this,'disableAutoSync','token','user'),null,4)
-		fs.writeFileSync(settingsFilename,settingsToSave)
+		const
+			settingsToSave = JSON.stringify(
+				_.pick(this,'disableAutoSync','token','user')
+			,null,4)
+		
+		require("shelljs").ShellString(settingsToSave).to(settingsFilename)
 		return this
 	}
 	
@@ -86,11 +113,8 @@ export class SettingsFile implements ISettings {
 			if (ProcessConfig.isStorybook()) {
 				newSettings = {}
 			} else if (fs.existsSync(settingsFilename)) {
-				newSettings = JSON.parse(readFile(settingsFilename),(k, v) => {
-					return (k === 'isLoaded') ? undefined : v
-				})
-			} else {
-				fs.writeFileSync(settingsFilename,"{}")
+				newSettings = __non_webpack_require__(settingsFilename)// JSON.parse(require('shelljs').cat(settingsFilename))
+				delete newSettings['isLoaded']
 			}
 		} catch (err) {
 			log.warn(`failed to read settings: ${settingsFilename}`,err)

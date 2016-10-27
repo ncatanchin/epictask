@@ -27,6 +27,10 @@ import {
 	ICommandComponent,
 	CommandRoot,
 	CommandContainerBuilder,
+} from 'epic-command-manager-ui'
+
+import {
+	
 	CommandType,
 	CommandMenuItemType,
 	ContainerNames
@@ -44,10 +48,11 @@ import {
 } from "epic-styles"
 import { UIRoot } from "epic-ui-components/UIRoot"
 import { Sheets, DialogConfigs } from "epic-ui-components/DialogsAndSheets"
+
 // STYLES
-//import "assets/styles/MarkdownEditor.SimpleMDE.global.scss"
 import { PromisedComponent } from "epic-ui-components/PromisedComponent"
 import * as assert from "assert"
+import { RouteView } from "epic-entry-ui/routes"
 
 
 // Logger, Store +++
@@ -60,10 +65,8 @@ const
 	childWindowId = process.env.EPIC_WINDOW_ID,
 	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
 		
-		
 let
 	childWindowConfig:IWindowConfig
-
 
 /**
  * Properties for App/State
@@ -250,6 +253,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 		return builder.make()
 	}
 	
+	
 	constructor(props, context) {
 		super(props, context)
 		
@@ -347,8 +351,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 	render() {
 		
 		const
-			{ theme } = this.props,
-			windowStyle = getValue(() => this.state.windowStyle, FillWindow)
+			{ theme } = this.props
 		
 		return <StyleRoot>
 				
@@ -360,7 +363,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							
-							
+							<RouteView />
 							{isChildWindow ? this.renderChildWindow() : this.renderMainWindow()}
 						
 						
@@ -448,7 +451,7 @@ export function loadUI(pendingResources:Promise<void>) {
 		 */
 		ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
 
-// ADD HMR REMOVE
+		// ADD HMR REMOVE
 		addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
 		
 		

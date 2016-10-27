@@ -1,36 +1,41 @@
-
-
-import {FinderRequest} from 'typestore'
-import {List} from 'immutable'
-import {chunkRemove} from "epic-services"
-import {Benchmark} from  "epic-global"
+import { FinderRequest } from "typestore"
+import { List } from "immutable"
+import { chunkRemove } from "epic-services"
+import {
+	Benchmark,
+	RepoKey,
+	isNil,
+	getSettings,
+	Provided,
+	getValue,
+	nilFilter,
+	cloneObjectShallow,
+	RegisterActionFactory,
+	pagedFinder,
+	GithubSyncStatus
+} from "epic-global"
 import { getStores } from "epic-database-client"
-import {ActionFactory, ActionReducer,ActionThunk} from 'typedux'
-import {RepoKey,isNil} from "epic-global"
-import {RepoMessage, RepoState} from '../state/RepoState'
-
-// import {Repo} from "epic-models"
-// import {AvailableRepo} from "epic-models"
-// import {Label} from "epic-models"
-// import {Milestone} from "epic-models"
+import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
+import { RepoMessage, RepoState } from "../state/RepoState"
 
 import {
-	Milestone, Label, AvailableRepo, Repo, LoadStatus, Issue, IssueStore, makeIssueId,
-	Comment,CommentStore, makeCommentId
+	Milestone,
+	Label,
+	AvailableRepo,
+	Repo,
+	LoadStatus,
+	Issue,
+	IssueStore,
+	makeIssueId,
+	Comment,
+	CommentStore,
+	makeCommentId,
+	User
 } from "epic-models"
-
-import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector } from "epic-typedux"
-import {getSettings} from "epic-global"
-import {User} from "epic-models"
-import {JobType} from "epic-typedux"
-import {Provided} from  "epic-global"
-import { getValue, nilFilter, cloneObject, cloneObjectShallow } from  "epic-global"
+import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector, JobType, getIssueActions } from "epic-typedux"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
-import { RegisterActionFactory } from "epic-global"
-import { pagedFinder } from  "epic-global"
-import { getIssueActions, getJobActions } from "epic-typedux"
-import {GithubSyncStatus} from "epic-global"
 import { createClient } from "epic-github"
+import ProcessType from "epic-entry-shared/ProcessType"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -417,7 +422,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await Promise.delay(100)
 			
 			// LOAD ISSUES
-			getIssueActions().loadIssues()
+			if (ProcessConfig.isType(ProcessType.UI)) {
+				log.warn('CHANGE THIS TO CONFIG')
+				getIssueActions().loadIssues()
+			}
 			
 		}
 	}

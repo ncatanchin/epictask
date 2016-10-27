@@ -258,23 +258,6 @@ export default class ChildProcessRenderer {
 		
 		log.info(`Preparing to restarting child process`,this)
 		
-		// this.clearHeartbeatTimeout()
-		// this.clearTryTimeout()
-		//
-		// Object.assign(this,{
-		// 	startDeferred: null,
-		// 	stopDeferred:null,
-		// 	killed: false,
-		// 	created: false,
-		// 	exited: false,
-		// 	browserWindow: null,
-		// 	heartbeatCount: 0,
-		// 	heartbeatTimestamp: 0,
-		// 	runningFlag: Promise.defer()
-		// })
-		//
-		// log.info(`Restarting child process`,this)
-		// this.start()
 	}
 	
 	
@@ -610,7 +593,7 @@ export default class ChildProcessRenderer {
 			
 			this.browserWindow.loadURL(url)
 			// this.webView.addEventListener('console-message',this.handleConsoleMessage)
-			this.browserWindow.show()
+			//this.browserWindow.show()
 			
 			process.on('beforeExit',() => {
 				try {
@@ -628,8 +611,6 @@ export default class ChildProcessRenderer {
 				return true
 			}
 			
-			
-			
 			// Wait for the 'pong'
 			try {
 				await Promise
@@ -637,8 +618,6 @@ export default class ChildProcessRenderer {
 					.timeout(this.opts.startTimeoutMillis || START_TIMEOUT_DEFAULT)
 				
 				log.info(`Child is RUNNING / ${this.name}`)
-				
-				
 				
 				this.heartbeat()
 			} finally {

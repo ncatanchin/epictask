@@ -5,7 +5,6 @@ const
 	log = getLogger(__filename),
 	{nextTick} = process
 
-
 /**
  * Main enhancer => post dispatch simply forwards action
  * + new state to renderers/clients
@@ -14,7 +13,6 @@ const
  * @returns {(reducer:any, initialState:any)=>undefined}
  */
 function appStoreEnhancer(storeCreator) {
-	
 	return (reducer, initialState) => {
 		let
 			store = storeCreator(reducer, initialState)
@@ -36,12 +34,9 @@ function appStoreEnhancer(storeCreator) {
 			if (state !== newState) {
 				nextTick(() => broadcastAppStoreAction(action))
 			}
-			
 		}
-		
 		return store
 	}
-	
 }
 
 export default appStoreEnhancer

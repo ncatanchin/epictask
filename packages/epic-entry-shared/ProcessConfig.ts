@@ -8,8 +8,8 @@ export namespace ProcessConfigGlobal {
 	 * Dev tool configs
 	 */
 	const ChildDevTools = {
-		[ProcessTypeGlobal.DatabaseServer]: true,
-		[ProcessTypeGlobal.JobServer]: true
+		[ProcessTypeGlobal.DatabaseServer]: false,
+		[ProcessTypeGlobal.JobServer]: false
 	}
 	
 	/**

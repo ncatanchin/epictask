@@ -19,7 +19,11 @@ import { SearchItem, ISearchState } from "epic-typedux"
 import {SearchEvent} from "epic-typedux"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder, CommandContainer,CommandType,getCommandManager
+	CommandContainerBuilder, CommandContainer
+} from  "epic-command-manager-ui"
+
+import {
+	CommandType,getCommandManager
 } from  "epic-command-manager"
 
 import { CommonKeys } from "epic-command-manager"

@@ -12,6 +12,9 @@ import {
 import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler
 
 
+const
+	log = getLogger(__filename)
+
 /**
  * Wrapper for observer
  */
@@ -32,7 +35,6 @@ interface IChildStoreWrapper {
 }
 
 const
-	log = getLogger(__filename),
 	actionProxies = getHot(module,'actionProxies',{}),
 	childStoreWrappers = getHot(module,'childStoreWrappers',{}) as {[id:string]:IChildStoreWrapper},
 	observers:{[id:string]:ObserveWrapper} = getHot(module,'observers',{}),

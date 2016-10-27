@@ -28,7 +28,12 @@ import {
 } from "epic-styles"
 import { appUserSelector, getUIActions, enabledAvailableReposSelector, enabledMilestonesSelector } from "epic-typedux"
 import { DialogRoot } from "epic-ui-components/DialogRoot"
-import { CommandComponent, CommandContainerBuilder, CommandRoot, ContainerNames } from "epic-command-manager"
+import {
+	CommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
+
+import { ContainerNames } from "epic-command-manager"
 import { PureRender, Select, ISelectItem, RepoName, Icon } from "epic-ui-components"
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"

@@ -19,12 +19,14 @@ import {
 import { Dialogs } from "epic-global"
 import { DialogRoot, createSaveCancelActions, MarkdownEditor, FileDrop, RepoName } from "epic-ui-components"
 import {
-	CommandRoot,
-	CommandContainerBuilder,
-	CommandComponent,
 	CommandType,
 	ContainerNames
 } from "epic-command-manager"
+import {
+	CommandComponent,
+	CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
 
 
 // Constants

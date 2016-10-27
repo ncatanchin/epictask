@@ -27,13 +27,14 @@ import {
 	getStoreState,
 	SearchType
 } from "epic-typedux"
+
+import {
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder, CommandContainer
+} from  "epic-command-manager-ui"
+
 import {
 	CommonKeys,
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
-	CommandContainer,
 	CommandType,
 	CommandMenuItemType,
 	getCommandManager,

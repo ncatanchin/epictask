@@ -32,9 +32,15 @@ import {
 	setThemeCreator,
 	setPaletteCreator
 } from "epic-styles"
+import {Checkbox} from "material-ui"
 import { appUserSelector, getUIActions, getAppActions } from "epic-typedux"
-import { CommandComponent, CommandContainerBuilder, CommandRoot, ContainerNames } from "epic-command-manager"
-import { Checkbox } from "material-ui"
+import {
+	CommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
+
+import { ContainerNames } from "epic-command-manager"
+
 import { PureRender, Select, ISelectItem, DialogRoot, Icon, Button } from "epic-ui-components"
 import { NativeNotificationsEnabled, PersistentValueEvent, getValue } from "epic-global"
 

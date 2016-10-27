@@ -17,8 +17,9 @@ import { ToastMessage } from "./ToastMessage"
 import { getUIActions } from "epic-typedux/provider"
 
 
-const dataUrl = require('dataurl')
-const {Style} = Radium
+const
+	dataUrl = require('dataurl'),
+	{Style} = Radium
 
 const
 	NotificationEvents = ['click','timeout']
@@ -177,23 +178,35 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 		
 		this.state = this.getNewState()
 	}
-
+	
+	/**
+	 * On native change
+	 */
 	private onNativeNotificationConfigChanged = () => {
-		this.setState(this.getNewState())
+		setImmediate(() => this.setState(this.getNewState()))
 	}
 	
+	/**
+	 * Component will receive new props
+	 *
+	 * @param newProps
+	 */
 	componentWillReceiveProps(newProps) {
 		if (this.state.enabled)
 			processNotifications(newProps.messages)
 	}
 	
 	
-	
-	
+	/**
+	 * Component will mount
+	 */
 	componentWillMount() {
 		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
 	}
 	
+	/**
+	 * Component un-mounting
+	 */
 	componentWillUnmount() {
 		NativeNotificationsEnabled.removeListener(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
 	}

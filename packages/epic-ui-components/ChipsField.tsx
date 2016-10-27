@@ -7,15 +7,15 @@ import * as React from 'react'
 import * as Radium from 'radium'
 
 import {PureRender} from "./PureRender"
-import { NotificationCenter, getNotificationCenter } from "epic-global"
-import {Themed, ThemedNoRadium} from "epic-styles"
+import { getNotificationCenter } from "epic-global"
+
 import {CommonKeys} from 'epic-command-manager'
 import {TypeAheadSelect} from "./TypeAheadSelect"
 import { shallowEquals } from  "epic-global"
 import {
-	CommandComponent, ICommandComponent, getCommandProps, CommandRoot,
-	CommandContainerBuilder,ICommand
-} from  "epic-command-manager"
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder
+} from  "epic-command-manager-ui"
 
 import filterProps from 'react-valid-props'
 import { ThemedStyles, IThemedAttributes } from "epic-styles"

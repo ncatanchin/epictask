@@ -23,12 +23,14 @@ import {
 import {
 	CommonKeys,
 	getCommandManager,
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
+	
 	ContainerNames
 } from "epic-command-manager"
+import {
+	CommandComponent, ICommandComponent, CommandRoot,
+	CommandContainerBuilder,ICommandComponentProps
+} from  "epic-command-manager-ui"
+
 import { cloneObject } from "epic-global"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import Radium = require('radium')
