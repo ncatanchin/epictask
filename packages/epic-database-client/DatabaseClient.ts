@@ -6,6 +6,7 @@ import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
 import { Transport } from "epic-net"
 import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
+import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 
 const
 	TIMEOUT = 180000,
@@ -21,6 +22,12 @@ const log = getLogger(__filename)
  */
 //const templateURL = 'file://' + path.resolve(process.cwd(),'dist/main-db-entry.html')
 
+
+const
+	changeEmitter = getHot(module,'changeEmitter', new SimpleEventEmitter())
+
+
+setDataOnHotDispose(module,() => ({changeEmitter}))
 
 
 /**
@@ -309,6 +316,19 @@ export class DatabaseClient {
  */
 export function getDatabaseClient():DatabaseClient {
 	return DatabaseClient.getInstance()
+}
+
+
+
+export type TDatabaseChangeListener = (modelType:string, modelId:string) => any
+
+export function addDatabaseChangeListener(listener:TDatabaseChangeListener) {
+	changeEmitter.addListener(listener)
+}
+
+
+export function removeDatabaseChangeListener(listener:TDatabaseChangeListener) {
+	changeEmitter.removeListener(listener)
 }
 
 // Set container provider

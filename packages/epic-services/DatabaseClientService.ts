@@ -5,6 +5,8 @@ import { Stores, getDatabaseClient, chunkRemove, chunkSave } from "epic-database
 import { BaseService } from "./internal/BaseService"
 import { IServiceConstructor} from './internal/Types'
 import {RegisterService} from './internal/ServiceDecorations'
+import { getHot } from "epic-global"
+import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 
 const
 	log = getLogger(__filename)
