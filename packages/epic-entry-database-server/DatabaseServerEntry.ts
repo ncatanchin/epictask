@@ -122,9 +122,12 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 	 * @returns {Promise<any>}
 	 */
 	protected async start() {
+		
+		// ONLY START ONCE
 		if (startDeferred)
 			return startDeferred.promise
 		
+		// CREATE DEFERRED PROMISE
 		startDeferred = Promise.defer()
 		
 		log.info('Starting Database Server')
@@ -220,7 +223,9 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 		ipc.server && ipc.server.stop && ipc.server.stop()
 		
 		// Stop TypeStore Coordinator
-		const coordinatorStopPromise = coordinator.stop()
+		const
+			coordinatorStopPromise = coordinator.stop()
+		
 		coordinator = null
 		
 		// Return TypeStore stop promise

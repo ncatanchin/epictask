@@ -316,7 +316,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 	}
 	
 	/**
-	 * On unmount - remove window listener
+	 * On unmount - remove window listener,
 	 */
 	componentWillUnmount() {
 		// window.removeEventListener('resize', this.onWindowResize)

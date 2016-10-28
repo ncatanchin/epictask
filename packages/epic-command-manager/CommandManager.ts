@@ -25,7 +25,6 @@ import {
 const
 	log = getLogger(__filename),
 	
-	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
 		clazz:typeof CommandManager,
@@ -458,7 +457,11 @@ export class CommandManager {
 		}
 		
 		const
-			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+			electron = require('electron'),
+			globalShortcut = getValue(() => electron.remote.globalShortcut) || getValue(() => electron.globalShortcut)
+		
+		if (!globalShortcut)
+			return
 		
 		commands
 			.filter(it => it.type === CommandType.Global)

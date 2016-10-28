@@ -77,7 +77,6 @@ export function initBrowser(isDev) {
 		
 		let
 			pairs = paramStr
-				.substr(1)
 				.split('&')
 		
 		return pairs.reduce(function (map, nextPair) {

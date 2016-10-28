@@ -457,10 +457,6 @@ const
 
 module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
-	
-	
-	
-
 	makeConfig('epic-app',['epic_libs'],{
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"
@@ -483,7 +479,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
 	
 	makeConfig('epic_libs',[],{
-		"epic_libs": [
+		"epic_libs": makeHotEntry([
 			...glob.sync("epic-entry-shared/**/*",globOpts),
 			//...glob.sync("epic-global/**/*",globOpts),
 			
@@ -498,7 +494,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 			"./epic-process-manager",
 			"./epic-typedux",
 			"./epic-services"
-		]
+		])
 	}, config => {
 		config.plugins.unshift(new webpack.DllPlugin({
 			name: `epic_libs`,

@@ -30,13 +30,27 @@ export function unwrapRef<T>(component:T):T {
 	return component as any
 }
 
-
+/**
+ * React component class
+ */
 export type TComponent = React.ComponentClass<any>
 
+/**
+ * Component resolver
+ */
 export type TComponentResolver = Promise.Resolver<TComponent>
 
+/**
+ * Component loader shape
+ */
 export type TComponentLoader = (resolver:TComponentResolver) => any
 
+/**
+ * Create a promised component
+ *
+ * @param loader
+ * @returns {()=>Promise<TComponent>}
+ */
 export function makePromisedComponent(loader:TComponentLoader): () => Promise<TComponent> {
 	return function() {
 		const

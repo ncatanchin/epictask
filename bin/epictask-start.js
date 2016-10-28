@@ -71,6 +71,13 @@ if (resolvedAppPath) {
 	// const
 	// 	commonOut = require(path.resolve(dir,"epic_libs")),
 	// 	mainOut =
+	
+	// LOAD THE DLL
+	if (global.__NO_WEBPACK__ !== true) {
+		Object.assign(global, {
+			epic_libs: require(path.resolve(dir,'epic_libs'))
+		})
+	}
 	require(resolvedAppPath)
 	
 	logOut(`Loading common`)
