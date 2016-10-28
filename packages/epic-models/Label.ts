@@ -5,12 +5,18 @@ import {
 	Repo as TSRepo
 } from 'typestore'
 
-import {PouchDBModel,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
-import {isNumber,RegisterModel} from 'epic-global'
+import {PouchDBModel} from 'typestore-plugin-pouchdb'
+import {RegisterModel} from 'epic-global'
 import { Repo } from "./Repo"
 
+/**
+ * Label ids
+ *
+ * @param label
+ * @returns {string}
+ */
 export function makeLabelId(label:Label) {
-	return `${label.repoId}-${label.url}`
+	return `${label.repoId}-${label.id}`
 }
 
 @RegisterModel
@@ -31,14 +37,17 @@ export class Label extends DefaultModel {
 	 * @param o
 	 */
 	static fromJS = (o:any) => new Label(o)
-
+	
 	@Attribute({primaryKey:true})
+	id:number
+	
+	@Attribute()
 	url: string
 
-	@Attribute({index:{name:'repoId'}})
+	@Attribute()
 	repoId:number
 
-	@Attribute({index:{name:'labelName'}})
+	@Attribute()
 	name: string;
 
 	@Attribute()

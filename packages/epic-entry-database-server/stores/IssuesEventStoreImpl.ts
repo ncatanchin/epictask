@@ -1,9 +1,10 @@
 import {
-	Repo as TSRepo,
+	
 	FinderRequest
 } from 'typestore'
 
 import {
+	PouchDBRepo,
 	PouchDBPrefixFinder,
 	makePrefixEndKey
 } from 'typestore-plugin-pouchdb'
@@ -14,7 +15,7 @@ import { isNumber } from  "epic-global"
 /**
  * Issue Events Store
  */
-export class IssuesEventStoreImpl extends TSRepo<IssuesEvent> implements IssuesEventStore {
+export class IssuesEventStoreImpl extends PouchDBRepo<IssuesEvent> implements IssuesEventStore {
 	
 	constructor() {
 		super(IssuesEventStoreImpl,IssuesEvent)

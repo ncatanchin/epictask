@@ -1,7 +1,6 @@
 import ProcessTypeGlobal from './ProcessType'
 
 
-
 export namespace ProcessConfigGlobal {
 	
 	/**

@@ -105,6 +105,8 @@ function installGlobals() {
 		fetch: g.fetch || require('node-fetch'),
 		FormData: g.FormData || require('form-data'),
 		Immutable: ImmutableGlobal,
+		M: MapGlobal,
+		L: ListGlobal,
 		Map:MapGlobal,
 		List:ListGlobal,
 		Record:RecordGlobal,
@@ -163,7 +165,8 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	let assert:typeof assertGlobal
 	
-	
+	let M:typeof Immutable.Map
+	let L:typeof Immutable.List
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	let Immutable:typeof ImmutableGlobal

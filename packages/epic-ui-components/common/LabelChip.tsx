@@ -99,7 +99,7 @@ export const baseStyles = (topStyles,theme,palette) => ({
 
 
 function isLabel(o:any):o is Label {
-	return !o.id
+	return o && o.url && o.$$clazz === Label.$$clazz
 }
 
 export type TLabelCallback = (label:Label|Milestone) => void

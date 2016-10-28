@@ -1,19 +1,21 @@
-
-
 import "epic-entry-shared/AppEntry"
 
+
 import * as uuid from "node-uuid"
-import { IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
+import { PouchDBRepo,IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
 
 import { loadChildProcessEntry } from "epic-entry-shared"
 import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
 
 const
-	{ChildProcessEntry} = loadChildProcessEntry()
+	{ ChildProcessEntry } = loadChildProcessEntry()
 
+import { Stores, IDatabaseRequest, DatabaseEvents, IDatabaseChange } from "epic-database-client"
 
-import { Stores, IDatabaseRequest, DatabaseEvents } from "epic-database-client"
-import { tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler } from "epic-global"
+import {
+	tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler, getHot,
+	setDataOnHotDispose, IModelConstructor, getValue
+} from "epic-global"
 import { ProcessNames, ProcessType } from "epic-global"
 
 import { makeIPCServerId } from "epic-net"
@@ -30,12 +32,17 @@ import { RepoEventStoreImpl } from "./stores/RepoEventStoreImpl"
 // Logger
 const
 	log = getLogger(__filename),
-
+	
 	// IPC
-	ipc = require('node-ipc')
+	ipc = getHot(module, 'ipc', require('node-ipc'))
+
+
+// DEBUG LOGGING
+//log.setOverrideLevel(LogLevel.DEBUG)
+
 
 let
-	startDeferred:Promise.Resolver<any> = null
+	startDeferred:Promise.Resolver<any> = getHot(module, 'startDeferred', null)
 
 ipc.config.id = makeIPCServerId(ProcessNames.DatabaseServer)
 ipc.config.retry = 1500
@@ -43,14 +50,37 @@ ipc.config.silent = true
 
 // Database name and path
 const
+	
 	dbName = Env.isTest ?
 		`epictask-test-${uuid.v4()}` :
 		`epictask-${Env.envName}`,
+	
 	dbPath = Env.isTest ?
 		tempFilename(dbName + '.db') :
 		getUserDataFilename(dbName + '.db')
 
-log.info('DB Path:',dbPath)
+log.debug('DB Path:', dbPath)
+
+let
+	// PouchDB Plugin
+	storePlugin:PouchDBPlugin = getHot(module, 'storePlugin') as PouchDBPlugin,
+	
+	// TypeStore coordinator
+	coordinator:TSCoordinator = getHot(module, 'coordinator') as TSCoordinator,
+	
+	// Stores Ref
+	stores:Stores = getHot(module, 'storePlugin', new Stores()),
+	
+	changeSubscriptions = getHot(module,'changeSubscriptions',M<string,any>())
+
+setDataOnHotDispose(module, () => ({
+	storePlugin,
+	coordinator,
+	stores,
+	startDeferred,
+	changeSubscriptions,
+	ipc
+}))
 
 /**
  * Create PouchDB store options
@@ -66,45 +96,120 @@ function storeOptions() {
 			filename: dbPath,
 			
 			// BIG CACHE SIZE
-			cacheSize:32 * 1024 * 1024,
+			cacheSize: 32 * 1024 * 1024,
 			
 			// 1 DB PER MODEL/REPO
 			databasePerRepo: true,
 			
 			// OVERWRITE ON CONFLICT
 			overwriteConflicts: true
-	}
+		}
 	
-	if (Env.isDev && !Env.isTest) {
-		// Object.assign(opts, {
-		// 	replication: {
-		// 		to:   'http://127.0.0.1:5984/' + dbName,
-		// 		live:  true,
-		// 		retry: true
-		// 	}
-		// })
-	}
+	log.debug(`Created store opts`, opts)
 	
 	return opts
 }
 
 
-let
-	// PouchDB Plugin
-	storePlugin:PouchDBPlugin,
-	
-	// TypeStore coordinator
-	coordinator:TSCoordinator,
-	stores:Stores = new Stores()
-
-function getStore<T extends TSRepo<M>,M extends IModel>(repoClazz:{new():T}):T {
-	return coordinator.getRepo(repoClazz)
+function getPouchDB(store:PouchDBRepo<any>):any {
+	return getValue(() => store.getPouchDB(),null)
 }
 
+/**
+ * Subscribe to the changes feed in pouchdb
+ */
+function updateChangeSubscriptions() {
+	Object
+		.values(stores)
+		.filter(store => store instanceof PouchDBRepo && getPouchDB(store))
+		.forEach((store:PouchDBRepo<any>) => {
+			
+			const
+				modelType = store.modelType.name
+			
+			if (changeSubscriptions[modelType]) {
+				log.debug(`Unsubscribing: ${modelType}`)
+				try {
+					changeSubscriptions[modelType].cancel()
+				} catch (err) {
+					log.error(`Failed to unsubscribe: ${modelType}`,err)
+				}
+				changeSubscriptions[modelType] = null
+			}
+			
+			log.debug(`Subscribing ${modelType}`)
+			
+			const
+				db = store.getPouchDB(),
+				changes = changeSubscriptions[modelType] = db.changes({
+					live: true,
+					since: 'now',
+					include_docs: true
+				})
+			
+			changes.on('change',(info) => {
+				log.debug(`Change received for type: ${modelType}`,info)
+				try {
+					const
+						doc = info.doc || {},
+						model = doc && doc.type === modelType && store.getModelFromObject(doc),
+						change:IDatabaseChange = doc && {
+							id: info.id,
+							rev: getValue(() => info.doc._rev),
+							deleted: getValue(() => info.doc._deleted,false),
+							doc,
+							clazz: store.modelClazz as any,
+							type: modelType,
+							model
+						}
+					
+					if (!model) {
+						log.debug(`No model on update`,info)
+						return
+					}
+					
+					log.debug(`Broadcasting change`,change)
+					ipc.server.broadcast(DatabaseEvents.Change,change)
+				} catch (err) {
+					log.error(`Failed to broadcast changes`,info,err)
+				}
+			})
+			
+			changes.on('error',err => {
+				log.error(`An error occurred while listening for changes to ${modelType}`,err)
+			})
+			
+		})
+}
+
+
+/**
+ * Retrieve store from coordinator
+ *
+ * @param repoClazz
+ * @returns {T}
+ */
+function getStore<T extends TSRepo<M>,M extends IModel>(repoClazz:{new():T}):T {
+	const
+		store = coordinator.getRepo(repoClazz)
+	
+	assert(store instanceof TSRepo,`Store must be an instance of TSRepo`)
+	return store
+}
+
+
+/**
+ * Database entry
+ */
 export class DatabaseServerEntry extends ChildProcessEntry {
 	
 	constructor() {
 		super(ProcessType.DatabaseServer)
+		
+		// IN HMR RELOAD
+		if (module.hot && stores && startDeferred) {
+			updateChangeSubscriptions()
+		}
 	}
 	
 	/**
@@ -127,13 +232,14 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 		if (startDeferred)
 			return startDeferred.promise
 		
+		
 		// CREATE DEFERRED PROMISE
 		startDeferred = Promise.defer()
-		
-		log.info('Starting Database Server')
-		
-		
 		try {
+			
+			log.info('Starting Database Server')
+			
+			
 			storePlugin = new PouchDBPlugin(storeOptions())
 			
 			coordinator = new TSCoordinator()
@@ -147,22 +253,18 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 			const modelClazzes = names
 				.filter(name => {
 					const
-						val = allModelsAndRepos[name]
+						val = allModelsAndRepos[ name ]
 					
 					return !_.endsWith(name, 'Store') && _.isFunction(val) && val.$$clazz
 				})
 				.map(name => {
 					log.info(`Loading model class: ${name}`)
-					return allModelsAndRepos[name]
+					return allModelsAndRepos[ name ]
 				})
 			
 			await coordinator.start(...modelClazzes)
 			
-			log.info('Coordinator started, loading repos')
-			
-			
-			
-			log.info('Got all model stores')
+			log.debug('Coordinator started, loading repos')
 			
 			Object.assign(stores, {
 				repo: getStore(RepoStoreImpl),
@@ -176,23 +278,27 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 				repoEvent: getStore(RepoEventStoreImpl)
 			})
 			
-			log.info('Repos Loaded')
+			
+			log.debug('Repos Loaded, subscribing to changes')
+			
+			
 			
 			
 			// In DEBUG mode expose repos on global
 			if (DEBUG) {
-				assignGlobal({Stores: stores})
+				assignGlobal({ Stores: stores })
 			}
 			
 			// Now bind repos to the IOC
 			Container.bind(Stores)
-				.provider({get: () => stores})
+				.provider({ get: () => stores })
+			
 			
 			log.info('Starting IPC Server')
 			
 			// Configure IPC Server
 			ipc.serve(() => {
-				ipc.server.on(DatabaseEvents.Request,async (request, socket) => {
+				ipc.server.on(DatabaseEvents.Request, async(request, socket) => {
 					await executeRequest(socket, request)
 				})
 				
@@ -205,15 +311,19 @@ export class DatabaseServerEntry extends ChildProcessEntry {
 			ipc.server.start()
 			
 			
-			
 		} catch (err) {
 			log.error('start failed', err)
 			startDeferred.reject(err)
 			throw err
 		}
 		
-		await startDeferred.promise.timeout(10000,"Database server took too long")
+		await startDeferred.promise.timeout(10000, "Database server took too long")
+		
+		log.debug(`Finally listen for changes`)
+		updateChangeSubscriptions()
 	}
+	
+	
 	
 	/**
 	 * Stop the database server
@@ -241,15 +351,15 @@ export class DatabaseServerEntry extends ChildProcessEntry {
  * @param result
  * @param error
  */
-function respond(socket,request:IDatabaseRequest,result,error:Error = null) {
+function respond(socket, request:IDatabaseRequest, result, error:Error = null) {
 	const response = {
-		requestId:request.id,
+		requestId: request.id,
 		result,
 		error
 	}
 	
-	log.debug('Sending response',response)
-	ipc.server.emit(socket,DatabaseEvents.Response,response)
+	log.debug('Sending response', response)
+	ipc.server.emit(socket, DatabaseEvents.Response, response)
 	//ipcRenderer.send(DatabaseEvents.Response,{requestId:request.id,result,error})
 }
 
@@ -259,9 +369,9 @@ function respond(socket,request:IDatabaseRequest,result,error:Error = null) {
  * @param socket
  * @param request
  */
-async function executeRequest(socket,request:IDatabaseRequest) {
+async function executeRequest(socket, request:IDatabaseRequest) {
 	try {
-		const {id:requestId,store:storeName,fn:fnName,args} = request
+		const { id:requestId, store:storeName, fn:fnName, args } = request
 		
 		// Final Result
 		let result
@@ -269,36 +379,36 @@ async function executeRequest(socket,request:IDatabaseRequest) {
 		if (storeName) {
 			
 			// Cleanup the store name
-			const storeName2 = _.camelCase(storeName.replace(/Store$/i,''))
+			const storeName2 = _.camelCase(storeName.replace(/Store$/i, ''))
 			
 			// Find the store
-			let store = stores[storeName] || stores[storeName2]
+			let store = stores[ storeName ] || stores[ storeName2 ]
 			assert(store, `Unable to find store for ${storeName} (requestId: ${requestId})`)
 			
 			// Check finder options for limit
-			if (args[0] && _.isNumber(args[0].limit))
-				args[0] = new FinderRequest(args[0])
+			if (args[ 0 ] && _.isNumber(args[ 0 ].limit))
+				args[ 0 ] = new FinderRequest(args[ 0 ])
 			
 			// Get the results
-			result = store[fnName](...args)
+			result = store[ fnName ](...args)
 			
 			
 		} else {
-			result = await storePlugin.getDB(null)[fnName](...args)
+			result = await storePlugin.getDB(null)[ fnName ](...args)
 			
 		}
 		
 		// Ensure someone set a result
-		assert(result,`Result can never be nil ${requestId}`)
+		assert(result, `Result can never be nil ${requestId}`)
 		
 		// If the result is a promise then wait
 		if (_.isFunction(result.then))
 			result = await result
 		
-		respond(socket,request,result)
+		respond(socket, request, result)
 	} catch (err) {
-		log.error('Request failed',err,request)
-		respond(socket, request,null,err)
+		log.error('Request failed', err, request)
+		respond(socket, request, null, err)
 	}
 }
 
@@ -313,13 +423,12 @@ const databaseServerEntry = new DatabaseServerEntry()
 export default databaseServerEntry
 
 
-
 /**
  * HMR - accept self - on dispose, close DB
  */
 
 
-addHotDisposeHandler(module,() => {
+addHotDisposeHandler(module, () => {
 	log.info('disposing database server')
 	databaseServerEntry.kill()
 	
@@ -327,7 +436,7 @@ addHotDisposeHandler(module,() => {
 		try {
 			coordinator.stop()
 		} catch (err) {
-			log.warn(`HMR dispose, failed to stop TS coordinator`,err)
+			log.warn(`HMR dispose, failed to stop TS coordinator`, err)
 		}
 	}
 	
@@ -335,9 +444,9 @@ addHotDisposeHandler(module,() => {
 		try {
 			storePlugin.getDB(null).close()
 		} catch (err) {
-			log.warn(`HMR dispose, failed to stop TS coordinator`,err)
+			log.warn(`HMR dispose, failed to stop TS coordinator`, err)
 		}
 	}
 })
 
-acceptHot(module,log)
+acceptHot(module, log)

@@ -15,7 +15,7 @@ import {
 	ContainerNames,
 	CommonKeys
 } from "epic-command-manager"
-import {  Routes } from "epic-entry-ui/UIRoutes"
+import {  Routes } from "epic-entry-ui/routes/Routes"
 import { sheetURISelector } from "epic-typedux/selectors"
 
 // Constants

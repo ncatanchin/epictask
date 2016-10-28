@@ -1,13 +1,9 @@
-import {
-	Repo as TSRepo
-} from 'typestore'
-
-import {PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBRepo,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
 import { Label, LabelStore, Repo } from "epic-models"
 import { isNumber } from  "epic-global"
 
 
-export class LabelStoreImpl extends TSRepo<Label> implements LabelStore {
+export class LabelStoreImpl extends PouchDBRepo<Label> implements LabelStore {
 	constructor() {
 		super(LabelStoreImpl,Label)
 	}

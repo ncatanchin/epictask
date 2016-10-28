@@ -4,7 +4,6 @@
 import {
 	Events,
 	IWindowConfig,
-	Dialogs,
 	acceptHot,
 	addHotDisposeHandler,
 	If,
@@ -48,9 +47,13 @@ import {
 } from "epic-styles"
 
 // STYLES
-import * as assert from "assert"
-import { RouteView, WindowHashURIProvider } from "./routes"
-import { Roots, Routes } from "./UIRoutes"
+import { RouteView, WindowHashURIProvider, IRoute, IRouteInstance, Router, RouterEvent } from "./routes"
+import { Roots, Routes } from "./routes/Routes"
+import { availableRepoCountSelector, appSettingsSelector, appStateTypeSelector } from "epic-typedux/selectors"
+import { getStoreState } from "epic-typedux/store"
+import { AppStateType } from "epic-typedux/state/app"
+import { connect } from "react-redux"
+import {createStructuredSelector} from 'reselect'
 
 // Logger, Store +++
 const
@@ -59,11 +62,11 @@ const
 	
 	win = window as any,
 	$ = require('jquery'),
-	childWindowId = process.env.EPIC_WINDOW_ID,
-	isChildWindow = childWindowId && childWindowId !== 'undefined' && childWindowId.length
-		
-let
-	childWindowConfig:IWindowConfig
+	childWindowId = process.env.EPIC_WINDOW_ID
+	
+	
+//DEBUG LOG
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Properties for App/State
@@ -71,10 +74,14 @@ let
 export interface IAppProps {
 	store?:any
 	theme?:any
+	repoCount?:number
+	appStateType?:AppStateType
+	
 }
 
 export interface IAppState {
 	windowStyle?:any
+	routeViewRef?:RouteView
 }
 
 const
@@ -90,7 +97,10 @@ const
 /**
  * Root App Component
  */
-
+@connect(createStructuredSelector({
+	appStateType: appStateTypeSelector,
+	repoCount: availableRepoCountSelector
+}))
 @CommandComponent()
 @Themed
 @PureRender
@@ -310,9 +320,12 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
-		// window.addEventListener('resize', this.onWindowResize)
-		// this.updateState()
-		
+		this.checkRoute()
+	}
+	
+	
+	componentWillReceiveProps(nextProps) {
+		this.checkRoute(nextProps)
 	}
 	
 	/**
@@ -320,6 +333,57 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 	 */
 	componentWillUnmount() {
 		// window.removeEventListener('resize', this.onWindowResize)
+	}
+	
+	private checkRoute = _.debounce((props = this.props,router:Router = null,route:IRouteInstance<any> = null) => {
+		setImmediate(() => {
+			router = router || getValue(() => this.state.routeViewRef.getRouter())
+			route = route || getValue(() => router.getRoute())
+			
+			if (!router || !route)
+				return log.warn(`Router and route can not be null`)
+			
+			const
+				{path} = route,
+				{uriProvider} = router,
+				{uri,params} = !uriProvider ? ({} as any) : uriProvider.getLocation(),
+				{repoCount,appStateType} = props,
+				isAuthenticated = appStateType !== AppStateType.AuthLogin,
+				isLogin = uri === Roots.Login.path,
+				isWelcome = uri === Roots.Welcome.path,
+				isIDERoot = [null,'',Roots.IDE.path].includes(uri)
+			
+			log.debug(`Checking root: ${uri} for IDE and no repos`,uri,path,isAuthenticated, isLogin,isIDERoot,repoCount)
+			
+			if (!isAuthenticated) {
+				if (!isLogin) {
+					log.debug(`Scheduling redirect to login`)
+					uriProvider.setLocation({
+						uri: Roots.Login.path,
+						params
+					})
+				}
+			} else if (isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
+				log.debug(`Scheduling redirect to welcome/ide`)
+				
+				uriProvider.setLocation({
+					uri: repoCount < 1 ? Roots.Welcome.path : Roots.IDE.path,
+					params
+				})
+				
+			}
+		})
+	},100)
+	
+	/**
+	 * When the route changes come here
+	 *
+	 * @param event
+	 * @param router
+	 * @param route
+	 */
+	private onRouteChange = (event:RouterEvent,router:Router,route:IRouteInstance<any>) => {
+		this.checkRoute(this.props,router,route)
 	}
 	
 	
@@ -341,9 +405,12 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							
-							<RouteView routerId="app-root"
-							           routes={Routes}
-							           uriProvider={this.uriProvider} />
+							<RouteView
+								ref={(routeViewRef) => this.setState({routeViewRef},() => this.checkRoute())}
+								routerId="app-root"
+								routes={Routes}
+								onRouteChange={this.onRouteChange}
+								uriProvider={this.uriProvider}/>
 						
 						</Provider>
 					</MuiThemeProvider>

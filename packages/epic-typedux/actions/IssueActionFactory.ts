@@ -54,7 +54,7 @@ import { ContainerNames } from "epic-command-manager"
 import { LoadStatus } from "epic-models"
 import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
 import { Dialogs } from "epic-global"
-import { Roots } from "epic-entry-ui/UIRoutes"
+import { Roots } from "epic-entry-ui/routes/Routes"
 
 
 /**

@@ -1,10 +1,14 @@
 
 import path = require('path')
 import * as uuid from "node-uuid"
+import { Map } from 'immutable'
 import { DatabaseEvents } from "./DatabaseEvents"
 import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
 import { Transport } from "epic-net"
-import { VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot } from "epic-global"
+import {
+	VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot, IModelConstructor,
+	isString, guard
+} from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 
@@ -13,21 +17,83 @@ const
 	DatabaseServerType = ProcessType.DatabaseServer
 	
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
+
+// DEBUG LOGGING
+//log.setOverrideLevel(LogLevel.DEBUG)
 	
 /**
  * Database entry template
  *
  * @type {string}
  */
-//const templateURL = 'file://' + path.resolve(process.cwd(),'dist/main-db-entry.html')
-
 
 const
-	changeEmitter = getHot(module,'changeEmitter', new SimpleEventEmitter())
+	changeEmitters = getHot(module,'changeEmitters', Map<string,SimpleEventEmitter<TDatabaseChangeListener>>().asMutable())
 
 
-setDataOnHotDispose(module,() => ({changeEmitter}))
+setDataOnHotDispose(module,() => ({changeEmitters}))
+
+/**
+ * Change shape
+ */
+export interface IDatabaseChange {
+	type:string
+	clazz?:IModelConstructor<any>
+	id:string
+	rev:string
+	doc?:any
+	model?:any
+	deleted?:boolean
+}
+
+
+/**
+ * Change listener shape
+ */
+export type TDatabaseChangeListener = (change:IDatabaseChange) => any
+
+
+/**
+ * Get the change emitter for a model type
+ *
+ * @param clazz
+ */
+function getChangeEmitter(clazz:IModelConstructor<any>|string):SimpleEventEmitter<TDatabaseChangeListener> {
+	
+	let
+		type = isString(clazz) ? clazz : clazz.$$clazz
+	
+	if (!changeEmitters.has(type))
+		changeEmitters.set(type,new SimpleEventEmitter<TDatabaseChangeListener>())
+	
+	
+	return changeEmitters.get(type)
+}
+
+/**
+ * Add a change listener
+ *
+ * @param clazz
+ * @param listener
+ */
+export function addDatabaseChangeListener(clazz:IModelConstructor<any>,listener:TDatabaseChangeListener) {
+	getChangeEmitter(clazz).addListener(listener)
+}
+
+
+/**
+ * Remove a change listener
+ *
+ * @param clazz
+ * @param listener
+ */
+export function removeDatabaseChangeListener(clazz:IModelConstructor<any>,listener:TDatabaseChangeListener) {
+	getChangeEmitter(clazz).removeListener(listener)
+}
+
+
 
 
 /**
@@ -133,6 +199,7 @@ export class DatabaseClient {
 			await this.transport.connect()
 			
 			this.transport.on(DatabaseEvents.Response,this.onResponse)
+			this.transport.on(DatabaseEvents.Change,this.onChange)
 		}
 	}
 	
@@ -154,9 +221,8 @@ export class DatabaseClient {
 	 */
 	private removeListeners() {
 		this.transport.removeListener(DatabaseEvents.Response,this.onResponse)
+		this.transport.removeListener(DatabaseEvents.Change,this.onChange)
 	}
-	
-	
 	
 	/**
 	 * On request finished
@@ -194,6 +260,17 @@ export class DatabaseClient {
 		else
 			pendingRequest.deferred.resolve(cloneObject(resp.result))
 
+	}
+	
+	/**
+	 * On a database chane, emit to all listeners
+	 *
+	 * @param change
+	 */
+	private onChange = (change:IDatabaseChange) => {
+		log.debug(`Change received`,change)
+		
+		getChangeEmitter(change.type).emit(change)
 	}
 
 
@@ -286,23 +363,8 @@ export class DatabaseClient {
 	 * @returns {any}
 	 */
 	kill():Promise<any> {
-		// if (isHot) {
-		// 	this.unbindEvents()
-		// 	return Promise.resolve(true)
-		// }
-
-		// if (this.internalStatus > DatabaseStatus.Started || !this.window)
-		// 	return Promise.resolve(true)
-		//
-		//
-		// const promise = (this.stopDeferred = Promise.defer()).promise
-		// promise.timeout(5000).catch((err) => {
-		// 	log.error(`Failed to stop`,err)
-		// })
-		//
-		// this.window.close()
-		this.transport.disconnect()
-		//this.removeListeners()
+		guard(() => this.removeListeners())
+		guard(() => this.transport.disconnect())
 		return Promise.resolve(true)
 
 	}
@@ -318,18 +380,6 @@ export function getDatabaseClient():DatabaseClient {
 	return DatabaseClient.getInstance()
 }
 
-
-
-export type TDatabaseChangeListener = (modelType:string, modelId:string) => any
-
-export function addDatabaseChangeListener(listener:TDatabaseChangeListener) {
-	changeEmitter.addListener(listener)
-}
-
-
-export function removeDatabaseChangeListener(listener:TDatabaseChangeListener) {
-	changeEmitter.removeListener(listener)
-}
 
 // Set container provider
 Container.bind(DatabaseClient).provider({get: getDatabaseClient})

@@ -9,7 +9,10 @@ const
 log.setOverrideLevel(LogLevel.DEBUG)
 
 
-export type TRouteChangeListener = (uri:string,params?:any) => any
+export type TRouteChangeListener = (
+	uriProvider:IRouteURIProvider,
+  uri:string,
+	params?:any) => any
 
 export type TRouteMap = {[path:string]:TComponentProvider<any>|IRoute<any>}
 
@@ -27,8 +30,8 @@ export interface IRouteURIProvider {
 	addListener(listener:TRouteChangeListener)
 	removeListener(listener:TRouteChangeListener)
 	
-	
 	getLocation():IRouterLocation
+	setLocation(location:IRouterLocation)
 }
 
 /**
@@ -45,6 +48,7 @@ export interface IRouteComponentProps<ParamsType> {
 export interface IRoute<ParamsType> {
 	path:string
 	provider:TComponentProvider<ParamsType>
+	onSelect?: (router:Router) => any
 	defaultRoute?:boolean
 }
 
@@ -129,7 +133,7 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 	/**
 	 * Current URI provider
 	 */
-	private uriProvider:IRouteURIProvider
+	uriProvider:IRouteURIProvider
 	
 	/**
 	 * Current route
@@ -231,10 +235,11 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 	/**
 	 * On URI change event handler
 	 *
+	 * @param uriProvider
 	 * @param uri
 	 * @param params
 	 */
-	private onURIChange = (uri:string,params:any) => {
+	private onURIChange = (uriProvider:IRouteURIProvider,uri:string,params:any) => {
 		this.setURI(uri,params)
 	}
 	
@@ -350,7 +355,7 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 			params
 		}) as any
 		
-		this.emit(RouterEvent.RouteChanged,this.route)
+		this.emit(RouterEvent.RouteChanged,this,this.route)
 		
 		return this
 	}

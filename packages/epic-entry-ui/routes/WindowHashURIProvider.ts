@@ -2,6 +2,7 @@ import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import { TRouteChangeListener, IRouterLocation } from "./Router"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { isString } from "epic-global"
+import { IRouteURIProvider } from "epic-entry-ui/routes"
 /**
  * Created by jglanz on 10/27/16.
  */
@@ -21,7 +22,7 @@ const
  * @class WindowHashURIProvider
  * @constructor
  **/
-export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListener> {
+export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListener> implements IRouteURIProvider {
 	
 	/**
 	 * Current location
@@ -37,7 +38,33 @@ export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListen
 		return this.location
 	}
 	
-	
+	/**
+	 * Set a new location
+	 *
+	 * @param location
+	 */
+	setLocation(location:IRouterLocation) {
+		let
+			{uri,params} = location
+		
+		params = params || {} as any
+		params.__cacheBuster = Math.random() * Date.now()
+		
+		const
+			paramKeys = Object.keys(params),
+			newHash = `#${uri}?${paramKeys
+					.map(key => `${key}=${encodeURIComponent(params[key])}`)
+					.join('&')
+			}`
+		
+		setImmediate(() => {
+			log.debug(`Setting new hash`,newHash)
+			window.location.hash = newHash
+		})
+		
+		
+		
+	}
 	
 	/**
 	 * on hash change handler
@@ -68,7 +95,7 @@ export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListen
 			params
 		}
 		
-		this.emit(uri,params)
+		this.emit(this,uri,params)
 	}
 	
 	constructor() {

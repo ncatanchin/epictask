@@ -1,11 +1,8 @@
-import {
-	Repo as TSRepo
-} from 'typestore'
 
-import {PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBRepo,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
 import { Milestone, MilestoneStore } from "epic-models"
 
-export class MilestoneStoreImpl extends TSRepo<Milestone> implements MilestoneStore {
+export class MilestoneStoreImpl extends PouchDBRepo<Milestone> implements MilestoneStore {
 	constructor() {
 		super(MilestoneStoreImpl,Milestone)
 	}

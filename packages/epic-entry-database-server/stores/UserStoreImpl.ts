@@ -1,15 +1,14 @@
 import {
-	FinderRequest,
-	Repo as TSRepo
+	FinderRequest
 } from 'typestore'
 
-import { PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
+import { PouchDBRepo,PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import { User } from "epic-models"
 
 /**
  * Repository for accessing repos
  */
-export class UserStoreImpl extends TSRepo<User> {
+export class UserStoreImpl extends PouchDBRepo<User>  {
 	constructor() {
 		super(UserStoreImpl,User)
 	}

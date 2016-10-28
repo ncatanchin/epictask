@@ -106,7 +106,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				}
 				
 				appActions.setUser(user)
-				appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Home)
+				appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Authenticated)
 			} catch (err) {
 				log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
 				
@@ -173,7 +173,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				actions.setToken(token)
 				const repoActions = getRepoActions()
 				repoActions.syncUserRepos()
-				appActions.setStateType(AppStateType.AuthVerify)
+				appActions.setStateType(AppStateType.Authenticated)
 				
 			}
 			

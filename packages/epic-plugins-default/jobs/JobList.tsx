@@ -1,12 +1,10 @@
 // Imports
-import * as React from 'react'
-import {List} from 'immutable'
-import {PureRender} from "epic-ui-components"
-import {ThemedStyles} from "epic-styles"
-import {TJobIMap, JobActionFactory} from "epic-typedux"
-import {IJobStatusDetail, IJob} from "epic-typedux"
-import {JobItem} from "./JobItem"
-import {makePaddingRem} from "epic-styles"
+import * as React from "react"
+import { List } from "immutable"
+import { PureRender } from "epic-ui-components"
+import { ThemedStyles, makePaddingRem } from "epic-styles"
+import { TJobIMap, getJobActions, IJobStatusDetail, IJob } from "epic-typedux"
+import { JobItem } from "./JobItem"
 
 
 // Constants
@@ -64,7 +62,7 @@ export class JobList extends React.Component<IJobListProps,void> {
 	 * @param job
 	 */
 	onSelect = (job:IJob) => {
-		Container.get(JobActionFactory).setSelectedId(job.id)
+		getJobActions().setSelectedId(job.id)
 	}
 	
 	render() {

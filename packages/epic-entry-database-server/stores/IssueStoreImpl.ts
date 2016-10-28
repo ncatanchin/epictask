@@ -1,8 +1,8 @@
 import {
-	Repo as TSRepo,
+	
 	FinderRequest
 } from 'typestore'
-import {PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
+import {PouchDBRepo,PouchDBPrefixFinder,makePrefixEndKey} from 'typestore-plugin-pouchdb'
 
 //import {IndexedDBFinderDescriptor} from 'typestore-plugin-indexeddb'
 import { IssueStore, Issue, makeIssuePrefix } from "epic-models"
@@ -13,7 +13,7 @@ import { IssueStore, Issue, makeIssuePrefix } from "epic-models"
 /**
  * Repository for accessing repos
  */
-export class IssueStoreImpl extends TSRepo<Issue> implements IssueStore {
+export class IssueStoreImpl extends PouchDBRepo<Issue> implements IssueStore {
 	constructor() {
 		super(IssueStoreImpl,Issue)
 	}

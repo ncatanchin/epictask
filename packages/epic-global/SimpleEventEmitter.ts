@@ -12,7 +12,7 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 const
-	SimpleEvent = "SimpleEvent"
+	SimpleEvent = Symbol("SimpleEvent")
 
 /**
  * SimpleEventEmitter - single event emitter
@@ -36,7 +36,7 @@ export class SimpleEventEmitter<ListenerType extends Function> {
 		this.emitter.removeListener(SimpleEvent,fn)
 	}
 	
-	protected emit(...args) {
+	emit(...args) {
 		this.emitter.emit(SimpleEvent,...args)
 	}
 	

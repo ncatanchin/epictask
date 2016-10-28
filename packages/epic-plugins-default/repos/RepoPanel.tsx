@@ -21,7 +21,7 @@ import {
 } from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
 import { ContainerNames,CommonKeys } from "epic-command-manager"
-import { Routes, Roots } from "epic-entry-ui/UIRoutes"
+import { Routes, Roots } from "epic-entry-ui/routes/Routes"
 
 const
 	{CommonKeys:Keys} = KeyMaps

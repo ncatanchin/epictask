@@ -1,5 +1,5 @@
+import { TRouteMap } from "./Router"
 import { makePromisedComponent, TComponentResolver, toJSON } from "epic-global"
-import { TRouteMap } from "epic-entry-ui/routes/Router"
 import { Issue,Comment } from "epic-models"
 
 
@@ -9,6 +9,7 @@ export const Roots = {
 		name: 'login',
 		path: "pages/login",
 		defaultRoute: true,
+		anonymous: true,
 		title: 'Login',
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
@@ -133,8 +134,6 @@ export const Roots = {
 			require.ensure([],function(require:any) {
 				resolver.resolve(require('epic-ui-components/pages/issue-comment').default)
 			}))
-			
-		
 		
 	}
 }
@@ -145,6 +144,8 @@ export const Routes:TRouteMap = Object.values(Roots)
 		routes[root.path] = root
 		return routes
 	},{})
+
+
 
 // REGISTER ALL CONFIGS
 // Object

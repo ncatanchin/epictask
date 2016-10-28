@@ -6,7 +6,8 @@ import { PureRender, PromisedComponent } from "epic-ui-components/common"
 import { TRouteMap, IRouteURIProvider, IRouteInstance, Router } from "./Router"
 import { WindowHashURIProvider } from "epic-entry-ui/routes/WindowHashURIProvider"
 import { RouterEvent } from "./Router"
-import { TRouteComponent } from "epic-entry-ui/routes"
+import { TRouteComponent, TRouteChangeListener, IRoute } from "epic-entry-ui/routes"
+import { getValue } from "epic-global"
 
 
 
@@ -17,6 +18,7 @@ import { TRouteComponent } from "epic-entry-ui/routes"
 export interface IRouteViewProps {
 	routerId:string
 	routes:TRouteMap
+	onRouteChange?: (event:RouterEvent,router:Router,route:IRouteInstance<any>) => any
 	uriProvider?:IRouteURIProvider
 }
 
@@ -46,7 +48,7 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		super(props,context)
 		
 		let
-			{routerId,uriProvider,routes} = props
+			{onRouteChange,routerId,uriProvider,routes} = props
 		
 		uriProvider = uriProvider || new WindowHashURIProvider()
 		
@@ -54,8 +56,12 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 			router = Router
 				.get(routerId)
 				.addRoutes(routes)
-				.setURIProvider(uriProvider)
 				
+		if (onRouteChange)
+			router.addListener(RouterEvent.RouteChanged,onRouteChange)
+		
+		router.setURIProvider(uriProvider)
+		
 		const
 			route = router.getRoute()
 		
@@ -67,6 +73,10 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		}
 	}
 	
+	
+	getRouter() {
+		return getValue(() => this.state.router)
+	}
 	
 	private updateRoute = (route:IRouteInstance<any>) => {
 		if (route === this.state.route)
@@ -82,10 +92,11 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 	 * On a route change
 	 *
 	 * @param event
+	 * @param router
 	 * @param route
 	 */
-	private onRouteChanged = (event,route:IRouteInstance<any>) => {
-		this.setState({route})
+	private onRouteChanged = (event:RouterEvent,router:Router,route:IRouteInstance<any>) => {
+		this.updateRoute(route)
 	}
 	
 	/**
@@ -98,8 +109,8 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		router.addListener(RouterEvent.RouteChanged,this.onRouteChanged)
 		
 		// UPDATE THE ROUTE IF REQUIRED
-		if (router.getRoute() !== route)
-			this.updateRoute(route)
+		//if (router.getRoute() !== route)
+		this.updateRoute(router.getRoute())
 			
 	}
 	

@@ -1,10 +1,9 @@
 /**
  * Events used for IPC with database server
- *
- * @type {{Request: string; Response: string}}
  */
 export const DatabaseEvents = {
 	Ready: 'DatabaseReady',
+	Change: 'DatabaseChange',
 	Request: 'DatabaseRequest',
 	Response: 'DatabaseResponse',
 	Stop: 'DatabaseStop',

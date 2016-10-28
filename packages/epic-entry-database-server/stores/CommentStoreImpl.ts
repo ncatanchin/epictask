@@ -1,12 +1,11 @@
 import {
-	FinderRequest,
-	Repo as TSRepo
+	FinderRequest
 } from 'typestore'
-import { PouchDBPrefixFinder, makePrefixEndKey } from 'typestore-plugin-pouchdb'
+import { PouchDBRepo,PouchDBPrefixFinder, makePrefixEndKey } from 'typestore-plugin-pouchdb'
 import { CommentStore, Comment,Repo, Issue, makeCommentIdPrefix } from "epic-models"
 import { isNumber } from  "epic-global"
 
-export class CommentStoreImpl extends TSRepo<Comment> implements CommentStore {
+export class CommentStoreImpl extends PouchDBRepo<Comment> implements CommentStore {
 	
 	constructor() {
 		super(CommentStoreImpl,Comment)

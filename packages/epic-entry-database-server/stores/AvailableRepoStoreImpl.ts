@@ -1,5 +1,5 @@
 import {
-	Repo as TSRepo
+	Repo as PouchDBRepo
 } from 'typestore'
 
 import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
@@ -9,7 +9,7 @@ import { AvailableRepoStore, AvailableRepo } from "epic-models"
 /**
  * Repository for accessing repos
  */
-export class AvailableRepoStoreImpl extends TSRepo<AvailableRepo> implements AvailableRepoStore {
+export class AvailableRepoStoreImpl extends PouchDBRepo<AvailableRepo> implements AvailableRepoStore {
 	constructor() {
 		super(AvailableRepoStoreImpl,AvailableRepo)
 	}
