@@ -3,7 +3,6 @@
 
 import {
 	Events,
-	IWindowConfig,
 	acceptHot,
 	addHotDisposeHandler,
 	If,
@@ -49,8 +48,8 @@ import {
 // STYLES
 import { RouteView, WindowHashURIProvider, IRoute, IRouteInstance, Router, RouterEvent } from "./routes"
 import { Roots, Routes } from "./routes/Routes"
-import { availableRepoCountSelector, appSettingsSelector, appStateTypeSelector } from "epic-typedux/selectors"
-import { getStoreState } from "epic-typedux/store"
+import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/selectors"
+
 import { AppStateType } from "epic-typedux/state/app"
 import { connect } from "react-redux"
 import {createStructuredSelector} from 'reselect'

@@ -75,7 +75,6 @@ function baseStyles(topStyles, theme, palette) {
  * IIssueCommentDialogProps
  */
 export interface IIssueCommentDialogProps extends IThemedAttributes {
-	open?:boolean
 	saving?:boolean
 	savingError?:Error
 	editCommentRequest?:TEditCommentRequest
@@ -98,9 +97,8 @@ export interface IIssueCommentDialogState {
 @connect(createStructuredSelector({
 	editCommentRequest: editCommentRequestSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError,
-	open: (state) => uiStateSelector(state).dialogs
-		.get(Dialogs.IssueCommentDialog) === true
+	saveError: (state) => issueStateSelector(state).issueSaveError
+	
 }, createDeepEqualSelector))
 
 // If you have a specific theme key you want to

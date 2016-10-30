@@ -15,3 +15,13 @@ export function enumKeys(enumType:any) {
 export function enumValues(enumType:any) {
 	return Object.keys(enumType).filter(key => !isNumberValue(key))
 }
+
+export function enumValueMap(enumType:any) {
+	return Object
+		.keys(enumType)
+		.filter(key => !isNumberValue(key))
+		.reduce((valueMap,nextVal:string) => {
+			valueMap[nextVal] = nextVal
+			return valueMap
+		},{})
+}

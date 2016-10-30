@@ -14,6 +14,7 @@ import { chunkSave } from "epic-database-client"
 import {GithubSyncStatus as SyncStatus} from "epic-global"
 import { OneAtATime } from  "epic-global"
 import { isRepoSyncPending } from "./executors/RepoSyncExecutor"
+import { cloneObjectShallow } from "epic-global"
 
 
 const
@@ -627,12 +628,12 @@ export class RepoSyncManager {
 					const
 						repoIds = _.uniq((existingUser.repoIds).concat(this.repo.id))
 					
-					user = cloneObject(existingUser, user, {
+					user = cloneObjectShallow(existingUser, user, {
 						repoIds
 					})
 					
 					if (existingUser.$$docs && existingUser.$$docs)
-						user.$$docs = cloneObject(existingUser.$$docs)
+						user.$$docs = cloneObjectShallow(existingUser.$$docs)
 					
 					
 					updatedUsers.push(user)

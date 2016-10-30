@@ -1,12 +1,11 @@
 
 import "epic-entry-shared/AppEntry"
-
-import {loadChildProcessEntry} from "epic-entry-shared"
-//import { ProcessType } from "epic-global/ProcessType"
+import {loadProcessClientEntry} from "epic-entry-shared"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 
 
 const
-	{ChildProcessEntry} = loadChildProcessEntry(),
+	{ProcessClientEntry} = loadProcessClientEntry(),
 	log = getLogger(__filename)
 
 
@@ -21,7 +20,7 @@ require('./GithubEventMonitorService')
  *
  * Simply registers the job manager service on create
  */
-class JobServerEntry extends ChildProcessEntry {
+class JobServerEntry extends ProcessClientEntry {
 	
 	/**
 	 * Register the job manager service

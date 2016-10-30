@@ -3,12 +3,7 @@ import * as React from "react"
 import { List } from "immutable"
 import { TextField, CircularProgress } from "material-ui"
 import { connect } from "react-redux"
-import {
-	LabelFieldEditor,
-	MilestoneSelect,
-	AssigneeSelect
-} from 'epic-ui-components/fields'
-
+import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
 import {
 	PureRender,
 	RepoName,
@@ -17,13 +12,8 @@ import {
 	makeComponentStyles,
 	IssueStateIcon,
 	IssueLabelsAndMilestones
-	
-	
-	
 } from "epic-ui-components"
-
-import {baseStyles as labelBaseStylesFn} from '../../common/LabelChip'
-
+import { baseStyles as labelBaseStylesFn } from "../../common/LabelChip"
 import { createStructuredSelector } from "reselect"
 import {
 	IThemedAttributes,
@@ -48,7 +38,7 @@ import {
 	getIssueActions
 } from "epic-typedux"
 import { Issue, Milestone, Label, User } from "epic-models"
-import { canEditIssue, canAssignIssue, getValue, cloneObject, shallowEquals } from "epic-global"
+import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
 
 // Constants
 const
@@ -254,7 +244,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			
 			assert(issue,`Issue should never be null here`)
 			
-			issue = cloneObject(issue)
+			issue = cloneObjectShallow(issue)
 		}
 		
 		return issue

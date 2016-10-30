@@ -1,6 +1,6 @@
 
 import Electron = require('electron')
-import { getProcessManager } from "epic-process-manager"
+import { getWindowManager } from "epic-process-manager"
 
 
 const
@@ -48,17 +48,17 @@ export function setupShutdownOnWindowClose(mainWindow:Electron.BrowserWindow) {
 function onShutdown(event) {
 	
 	const
-		ProcessManager = getProcessManager()
+		windowManager = getWindowManager()
 	
-	if (ProcessManager && !processesStopping) {
+	if (windowManager && !processesStopping) {
 		processesStopping = true
 		
 		event.preventDefault()
 		
 		const
-			killAll = async () => {
+			killAll = () => {
 				try {
-					await ProcessManager.stopAll()
+					windowManager.closeAll()
 				} catch (err) {
 					log.warn(`Failed to cleanly shutdown processes`)
 				}

@@ -13,17 +13,17 @@ const
 /**
  * WorkerClient global access
  */
-export namespace ChildClient {
+export namespace ProcessClient {
 	
 	/**
 	 * Worker Message handler shape
 	 */
-	export type TWorkerMessageHandler = (workerEntry, messageType:string, data?:any) => void
+	export type TProcessMessageHandler = (workerEntry, messageType:string, data?:any) => void
 	
 	/**
 	 * Raw process message handler
 	 */
-	export type TWorkerProcessMessageHandler = (messageType:string,data?:any) => void
+	export type TMessageHandler = (messageType:string, data?:any) => void
 	
 	/**
 	 * Get all the current message handlers
@@ -44,7 +44,7 @@ export namespace ChildClient {
 		return getMessageHandlers()[type]
 	}
 	
-	export function makeMessageHandler(workerEntry, messageType:string, messageHandler:TWorkerMessageHandler) {
+	export function makeMessageHandler(workerEntry, messageType:string, messageHandler:TProcessMessageHandler) {
 		addMessageHandler(messageType,(messageType:string,data:any) => {
 			messageHandler(workerEntry,messageType,data)
 		})
@@ -57,7 +57,7 @@ export namespace ChildClient {
 	 * @param type
 	 * @param fn
 	 */
-	export function addMessageHandler(type:string,fn:TWorkerProcessMessageHandler) {
+	export function addMessageHandler(type:string,fn:TMessageHandler) {
 		log.info(`Registering worker message handler ${type}`)
 		messageHandlers[type] = fn
 	}

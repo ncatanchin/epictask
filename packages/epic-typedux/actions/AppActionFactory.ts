@@ -7,6 +7,8 @@ import { User } from "epic-models"
 
 import { AppState } from "../state/AppState"
 import {AppStateType} from '../state/app/AppStateType'
+import { IWindowState } from "epic-process-manager-client"
+import { cloneObjectShallow } from "epic-global"
 
 
 const log = getLogger(__filename)
@@ -84,6 +86,27 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return (state:AppState) => {
 			return state.set('settings', newSettings).set('user', newSettings.user)
 		}
+	}
+	
+	/**
+	 * Update window state(s) on AppState
+	 *
+	 * @param id
+	 * @param windowState
+	 * @returns {(state:AppState)=>Map<string, Map<string, IWindowState>>}
+	 */
+	@ActionReducer()
+	updateWindow(...windowState:IWindowState[]) {
+		return (state:AppState) => state.set(
+			'windows',
+			state.windows.withMutations(newWindowMap => {
+				windowState.forEach(winState => {
+					newWindowMap.set(winState.id,cloneObjectShallow(winState))
+				})
+				
+				return newWindowMap
+			})
+		)
 	}
 	
 	/**

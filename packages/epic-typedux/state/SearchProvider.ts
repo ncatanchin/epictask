@@ -24,6 +24,7 @@ import { getIssueActions, getRepoActions } from "../provider"
 
 import { IIssueFilter } from "../state/issue"
 import { getCommandManager, ICommand } from "epic-command-manager"
+import { cloneObjectShallow } from "../../epic-global/ObjectUtil"
 
 
 const
@@ -377,7 +378,7 @@ export class SearchProvider {
 						existingRepo = await repoStore.get(repo.id)
 					
 					if (existingRepo) {
-						repo = cloneObject(existingRepo,repo)
+						repo = cloneObjectShallow(existingRepo,repo)
 					}
 					
 					

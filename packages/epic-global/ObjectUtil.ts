@@ -88,7 +88,7 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
 					it.id = base.id
 				
 				if (base.$$doc)
-					it.$$doc = cloneObject(base.$$doc)
+					it.$$doc = cloneObjectShallow(base.$$doc)
 				
 				assign(it,...newSources)
 			}

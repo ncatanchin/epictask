@@ -82,24 +82,6 @@ const setupStore = benchmark('Start Store and Children',() => {
 				
 				benchmarkLoadTime(`Store built`)
 				
-				// APP STORE SERVER RUNS ON MAIN UI PROCESS ONLY
-				if (ProcessConfig.isType(ProcessType.UI)) {
-					log.debug(`Starting AppStoreServer`)
-					stopAppStoreServer = await require('epic-typedux/store/AppStoreServer').start()
-					
-					addHotDisposeHandler(module, () => {
-						stopAppStoreServer()
-					})
-					
-					
-					log.info(`App store server is up`)
-					
-					
-					// Check if the main process is completely loaded - if not then wait
-					await require('./StartChildProcesses').childServicesBoot()
-					
-				}
-				
 				// START THE SERVICE MANAGER EVERYWHERE
 				benchmarkLoadTime(`Loading getService Manager`)
 				const

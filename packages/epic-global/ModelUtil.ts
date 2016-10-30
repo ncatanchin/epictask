@@ -1,7 +1,7 @@
 
 import {Map,List} from 'immutable'
 import * as moment from 'moment'
-import { shallowEquals, cloneObject } from "./ObjectUtil"
+import { shallowEquals, cloneObject, cloneObjectShallow } from "./ObjectUtil"
 
 /**
  * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided
@@ -32,7 +32,7 @@ export function checkUpdatedAndAssign(logger,id:string|number,newModel,existingM
 		}
 		
 		// CHANGES WERE MADE - MERGE AND RETURN
-		assign(!existingModel ? {} : cloneObject(existingModel), newModel)
+		assign(!existingModel ? {} : cloneObjectShallow(existingModel), newModel)
 		
 		//COPY THE DOC PROP
 		if (existingModel && existingModel.$$doc) {

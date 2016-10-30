@@ -32,6 +32,7 @@ import {
 } from "epic-styles"
 import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
+import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
 
 
 const
@@ -272,7 +273,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	private onSave = (event) => {
 		!this.props.saving &&
 		getIssueActions().issueSave(
-			cloneObject(this.props.editingIssue, this.textInputState()),
+			cloneObjectShallow(this.props.editingIssue, this.textInputState()),
 			getChildWindowId()
 		)
 	}

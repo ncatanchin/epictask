@@ -13,12 +13,14 @@ import { setStoreProvider, ILeafReducer, ObservableStore} from "typedux"
 import { loadActionFactories } from "../provider"
 import { attachChildStore } from "./AppStoreClient"
 import addDevMiddleware from "epic-typedux/store/AppStoreDevConfig"
-import { installActionInterceptor } from "epic-typedux/store/ActionInterceptor"
+//import { installActionInterceptor } from "epic-typedux/store/ActionInterceptor"
 import { configureStorePersistence, loadStateFromDisk } from "epic-typedux/store/AppStorePersistence"
 import {
 	IChildStoreSubscriptionManager, IChildStore,
 	ChildStoreSubscriptionStatus
 } from "epic-typedux/store/ChildStore"
+import { AppStoreEnhancerKey } from "epic-global"
+import { getValue } from "epic-global"
 
 
 const
@@ -118,10 +120,13 @@ function initStore(devToolsMode = false, defaultState = null) {
 			applyMiddleware(...middleware)
 		]
 	
-	// ADD AppStoreEnhancer to broadcast to children only in UI process
-	if (ProcessConfig.isType(ProcessType.UI)) {
-		enhancers.push(require('./AppStoreEnhancer').default)
-	}
+	// THE CLIENT ENHANCER IS THE DEFAULT, BUT MAIN-ENTRY HAS IT'S OWN
+	let
+		appStoreEnhancer =
+			getValue(() => Container.get<any>(AppStoreEnhancerKey),require('./AppStoreClientEnhancer').default)
+	
+	enhancers.push(appStoreEnhancer)
+	
 	
 	// if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {
 	// 	enhancers.push(applyMiddleware(createLogger()))
@@ -267,7 +272,7 @@ export async function loadAndInitChildStore() {
 			log.info(`Child store state changed`, status, err)
 		})
 
-		installActionInterceptor(manager)
+		//installActionInterceptor(manager)
 
 		const
 			preStore = await loadAndInitStore(initialState)

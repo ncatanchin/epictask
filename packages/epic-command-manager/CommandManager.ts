@@ -2,7 +2,7 @@ import Electron = require('electron')
 
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObject } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow } from "epic-global"
 import {
 	ICommand,
 	TCommandContainer,
@@ -411,7 +411,7 @@ export class CommandManager {
 	 * @returns {any}
 	 */
 	private mapMenuItem = (item:ICommandMenuItem) => {
-		return cloneObject(item,item.execute && {
+		return cloneObjectShallow(item,item.execute && {
 			execute: this.makeExecuteMenuItem(item)
 		})
 	}

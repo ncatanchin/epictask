@@ -1,6 +1,6 @@
 import {ipcRenderer} from 'electron'
 import {ProcessType} from './ProcessType'
-import { ChildClient } from "epic-global/ChildClient"
+import { ProcessClient } from "epic-global/ProcessClient"
 import {getServiceManager} from "epic-services/internal/ServiceManager"
 import { START_TIMEOUT_DEFAULT } from "epic-net/NetworkConfig"
 
@@ -11,10 +11,10 @@ const
 
 
 //region WorkerClient
-const defaultMessageHandlers:{[messageType:string]:ChildClient.TWorkerMessageHandler} = {
+const defaultMessageHandlers:{[messageType:string]:ProcessClient.TProcessMessageHandler} = {
 	ping(workerEntry, messageType:string, data:any) {
 		if (workerEntry.running) {
-			ChildClient.sendMessage('pong')
+			ProcessClient.sendMessage('pong')
 		} else {
 			log.info(`Worker is not yet ready`)
 		}
@@ -76,7 +76,7 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
  * @param workerEntry
  * @param workerStart
  */
-async function startChildProcess(processType:ProcessType, workerEntry:ChildProcessEntry, workerStart:() => Promise<any>) {
+async function startProcessClient(processType:ProcessType, workerEntry:ProcessClientEntry, workerStart:() => Promise<any>) {
 	
 	// If already initialized then return
 	if (startDeferred)
@@ -89,7 +89,7 @@ async function startChildProcess(processType:ProcessType, workerEntry:ChildProce
 	Object
 		.keys(defaultMessageHandlers)
 		.forEach(messageType =>
-			ChildClient.makeMessageHandler(
+			ProcessClient.makeMessageHandler(
 				workerEntry,
 				messageType,
 				defaultMessageHandlers[messageType]))
@@ -97,7 +97,7 @@ async function startChildProcess(processType:ProcessType, workerEntry:ChildProce
 	
 	// Now bind to all the process events
 	ipcRenderer.on('message',(event,{type,body}) => {
-		const handler = ChildClient.getMessageHandler(type)
+		const handler = ProcessClient.getMessageHandler(type)
 		assert(handler,`No handler defined for ${type}`)
 		
 		handler(type,body)
@@ -131,7 +131,7 @@ async function startChildProcess(processType:ProcessType, workerEntry:ChildProce
  * Base worker entry implementation which includes
  * all process management
  */
-export abstract class ChildProcessEntry {
+export abstract class ProcessClientEntry {
 	
 	
 	/**
@@ -140,9 +140,14 @@ export abstract class ChildProcessEntry {
 	 * @param processType
 	 */
 	constructor(private processType:ProcessType) {
-		startChildProcess(processType,this, () => this.start())
+		startProcessClient(processType,this, () => this.start())
 	}
 	
+	/**
+	 * Whether services are enabled for this entry
+	 *
+	 * @returns {boolean}
+	 */
 	servicesEnabled() {
 		return true
 	}
@@ -196,4 +201,4 @@ export abstract class ChildProcessEntry {
 	
 }
 
-export default ChildProcessEntry
+export default ProcessClientEntry

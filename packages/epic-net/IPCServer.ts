@@ -1,6 +1,7 @@
 
 import { cloneObject } from  "epic-global"
 import { makeIPCServerId } from "./IPCUtil"
+import { cloneObjectShallow } from "epic-global"
 const
 	log = getLogger(__filename),
 	IPC = require('node-ipc').IPC
@@ -108,7 +109,7 @@ export class IPCServer {
 				
 				ipc.server.on(event,(request, socket) => {
 					log.debug(`Received event`,event,request,socket)
-					handler(this,socket,event,cloneObject(request))
+					handler(this,socket,event,cloneObjectShallow(request))
 				})
 			})
 			

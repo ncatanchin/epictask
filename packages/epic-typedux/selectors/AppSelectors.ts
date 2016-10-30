@@ -1,12 +1,11 @@
-
-
-import {createSelector} from 'reselect'
-import {User} from "epic-models"
-import { AppKey, getValue } from "epic-global"
-import {AppState} from '../state/AppState'
+import { createSelector } from "reselect"
+import { User } from "epic-models"
+import { ISettings, AppKey, getValue } from "epic-global"
+import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
-import { ISettings } from "epic-global/settings"
-import {Map} from "immutable"
+import { Map } from "immutable"
+import { TWindowMap } from "epic-typedux/state"
+import { WindowType } from "epic-process-manager-client"
 
 export const appStateSelector:(state) => AppState = createSelector(
 	(state:Map<string,any>) => state.get(AppKey) as AppState,
@@ -33,4 +32,27 @@ export const appTokenSelector: (state) => string = createSelector(
 	(state:AppState) => getValue(() => state.settings.token,null)
 )
 
+export const windowsSelector: (state) => TWindowMap = createSelector(
+	appStateSelector,
+	(state:AppState) => state.windows
+)
 
+
+
+
+/**
+ * Child window open
+ */
+export const openWindowsSelector = createSelector(
+	windowsSelector,
+	(windows:TWindowMap) => windows.size > 0
+)
+
+/**
+ * Modal window open
+ */
+export const modalWindowOpenSelector = createSelector(
+	windowsSelector,
+	(windows:TWindowMap) =>
+		!!windows.find(it => it.running && it.type === WindowType.Modal )
+)

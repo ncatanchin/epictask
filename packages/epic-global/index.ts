@@ -47,9 +47,9 @@ export * from "./ValueCache"
 export * from "./VariableProxy"
 export * from "./WorkerEventType"
 export * from "./GithubSyncStatus"
-export * from './ChildClient'
+export * from './ProcessClient'
 
-export * from './WindowConfig'
+export * from '../epic-process-manager-client/WindowConfig'
 export * from './settings'
 
 

@@ -6,8 +6,9 @@ import {IJob, JobStatus, IJobSchedule, IJobLog} from "../state/jobs/JobTypes"
 import {JobKey} from "epic-global"
 import {JobsMaxCompleted} from 'epic-global'
 import {Provided} from  "epic-global"
-import {cloneObject} from  "epic-global"
+import {cloneObjectShallow} from  "epic-global"
 import { RegisterActionFactory } from "epic-global"
+
 
 
 const
@@ -177,8 +178,8 @@ export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobSt
 				allJobs:TJobIMap = jobState.all,
 				existingJob = allJobs.valueSeq().find(it => it.id === job.id),
 				newJob = existingJob ?
-					cloneObject(existingJob, job) :
-					cloneObject(job)
+					cloneObjectShallow(existingJob, job) :
+					cloneObjectShallow(job)
 			
 			jobState = jobState.set('all', allJobs.set(job.id, newJob)) as any
 			

@@ -47,7 +47,6 @@ export const UIStateRecord = Record({
 		visible: true
 	},
 	sheetURI:null,
-	dialogs: Map<string,boolean>(),
 	messages: List<INotificationMessage>(),
 	
 	toolPanels: makeToolPanels(),
@@ -92,7 +91,6 @@ export class UIState extends UIStateRecord implements State {
 	ready:boolean
 	user:User
 	sheetURI:string
-	dialogs:TDialogMap
 	messages:List<INotificationMessage>
 	
 	toolPanels:Map<string,IToolPanel>

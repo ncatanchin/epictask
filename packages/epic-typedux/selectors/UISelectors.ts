@@ -4,50 +4,25 @@ import {createSelector} from 'reselect'
 
 import {UIKey} from "epic-global"
 import {UIState} from "../state/UIState"
-import { IUISheet,WindowType } from "epic-global"
-import {IWindowInstance,WindowManager} from 'epic-process-manager'
+
+
 
 import { ToolPanelLocation, IToolPanel } from "epic-global"
 import { createDeepEqualSelector } from  "epic-global"
 import { INotificationMessage } from "epic-global"
-import { jobDetailsSelector, jobsSelector } from "./JobSelectors"
+import { jobsSelector } from "./JobSelectors"
 import { getValue } from  "epic-global"
 
 const
 	log = getLogger(__filename)
 
-function getWindowManager():WindowManager {
-	return require('epic-process-manager').getWindowManager()
-}
 
 export const uiStateSelector: (state) => UIState = createSelector(
 	(state:any) => state.get(UIKey) as UIState,
 	(uiState:UIState) => uiState
 )
 
-/**
- * All current open windows
- */
-export const allWindowsSelector = (state) =>
-	ProcessConfig.isUI() ? getWindowManager().all :
-		[]
 
-/**
- * Child window open
- */
-export const childWindowOpenSelector = createSelector(
-	allWindowsSelector,
-	(windows:IWindowInstance[]) => windows.length > 0
-)
-
-/**
- * Modal window open
- */
-export const modalWindowOpenSelector = createSelector(
-	allWindowsSelector,
-	(windows:IWindowInstance[]) =>
-		!!getWindowManager().all.find(it => it.type === WindowType.Modal)
-)
 
 /**
  * Retrieve the current UI sheet

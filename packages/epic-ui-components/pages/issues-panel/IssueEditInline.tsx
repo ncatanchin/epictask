@@ -34,6 +34,7 @@ import {
 import { cloneObject } from "epic-global"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import Radium = require('radium')
+import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
 
 // Constants
 const log = getLogger(__filename)
@@ -326,7 +327,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			{milestones,editingIssue} = this.props,
 
 			milestone = milestones.find(item => item.id === value),
-			newIssue = cloneObject(editingIssue,{
+			newIssue = cloneObjectShallow(editingIssue,{
 				milestone
 			})
 		
@@ -353,7 +354,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	onLabelsChanged = (labels:Label[]) => {
 		const
 			{issue} = this,
-			newIssue = cloneObject(issue,{labels})
+			newIssue = cloneObjectShallow(issue,{labels})
 		
 		this.issueActions.setEditingIssue(newIssue,true)
 

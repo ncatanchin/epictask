@@ -4,11 +4,11 @@ import "epic-entry-shared/AppEntry"
 import * as uuid from "node-uuid"
 import { PouchDBRepo,IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
 
-import { loadChildProcessEntry } from "epic-entry-shared"
+import { loadProcessClientEntry } from "epic-entry-shared"
 import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
 
 const
-	{ ChildProcessEntry } = loadChildProcessEntry()
+	{ProcessClientEntry} = loadProcessClientEntry()
 
 import { Stores, IDatabaseRequest, DatabaseEvents, IDatabaseChange } from "epic-database-client"
 
@@ -201,7 +201,7 @@ function getStore<T extends TSRepo<M>,M extends IModel>(repoClazz:{new():T}):T {
 /**
  * Database entry
  */
-export class DatabaseServerEntry extends ChildProcessEntry {
+export class DatabaseServerEntry extends ProcessClientEntry {
 	
 	constructor() {
 		super(ProcessType.DatabaseServer)

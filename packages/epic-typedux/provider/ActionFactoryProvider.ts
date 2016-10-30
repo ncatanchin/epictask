@@ -42,7 +42,7 @@ const actionFactoryClazzMap = {} as any
 export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 	get(target,leafKey) {
 		//log.info(`Getting action factory for leaf ${leafKey}`)
-		if (ProcessConfig.isType(ProcessType.UI,ProcessType.UIChildWindow,ProcessType.Storybook) && actionFactoryClazzMap[leafKey]) {
+		if (![ProcessType.DatabaseServer,ProcessType.Storybook].includes(ProcessConfig.getType()) && actionFactoryClazzMap[leafKey]) {
 			return new actionFactoryClazzMap[leafKey]()
 		} else {
 			return require("../store/AppStoreClient").getActionClient(leafKey)
@@ -50,9 +50,6 @@ export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 	}
 }) as any
 
-// export function getActionFactory(leafKey:TActionFactoryKeys) {
-// 	return actionFactoryProviderMap[leafKey]
-// }
 
 export function getJobActions():JobActionFactory {
 	return ActionFactoryProviders[JobKey]

@@ -12,12 +12,14 @@ import {
 	IToolPanel,
 	IUISheet,
 	RegisterActionFactory,
-	getToolRegistrations, nilFilter, WindowType
+	getToolRegistrations, nilFilter,
 } from "epic-global"
 import { UIState } from "epic-typedux"
 import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
 import * as assert from "assert"
-import { getWindowManager } from "epic-process-manager"
+ 
+import {WindowType,getWindowManagerClient} from "epic-process-manager-client"
+import { IWindowConfig } from "epic-process-manager-client"
 
 
 
@@ -146,7 +148,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		
 		assert(tool,`Unable to find tool with id ${toolId}`)
 		
-		this.updateTool(cloneObject(tool,{
+		this.updateTool(cloneObjectShallow(tool,{
 			active:!_.isNil(forceState) ? forceState : !tool.active
 		}))
 	}
@@ -392,7 +394,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	registerTool(tool:ITool) {
 		const
 			existingTool = this.getTool(tool.id),
-			completeTool = cloneObject(tool,_.pick(existingTool || {},'data','active')) as ITool
+			completeTool = cloneObjectShallow(tool,_.pick(existingTool || {},'data','active')) as ITool
 		
 		
 		completeTool.active = _.isNil(completeTool.active) ? false : completeTool.active
@@ -478,18 +480,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 	
 	
-	@ActionReducer()
-	private internalSetDialogOpen(name:string,open:boolean) {
-		return (state:UIState) => state.set(
-			'dialogs', (state.dialogs ? state.dialogs : Map()).set(name,open)
-		)
-	}
-	
-	@ActionThunk()
 	closeWindow(windowId:string) {
-		return (dispatch,getState) => {
-			getWindowManager().close(windowId)
-		}
+		getWindowManagerClient().close(windowId)
 	}
 	
 	
@@ -513,39 +505,37 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	// 	}
 	// }
 	
-	
-	openWindow(uri:string,type = WindowType.Dialog) {
-		getWindowManager().open(uri,type)
+	openWindow(uri:string)
+	openWindow(config:IWindowConfig)
+	openWindow(configOrURI:IWindowConfig|string){
+		let
+			config:IWindowConfig
+		
+		if (isString(configOrURI))
+			return
+		else
+			config = configOrURI
+		
+		getWindowManagerClient().open(config)
 	}
 	
-	/**
-	 * Close all dialogs reducer
-	 *
-	 * @returns {(state:UIState)=>Map<string, V>}
-	 */
-	@ActionReducer()
-	private internalCloseAllWindows() {
-		return (state:UIState) => state.set(
-			'dialogs',state.dialogs ? state.dialogs.clear() : Map()
-		)
-	}
-	
-	/**
-	 * Close all dialogs
-	 *
-	 * @returns {(dispatch:any, getState:any)=>undefined}
-	 */
-	@ActionThunk()
-	closeAllWindows() {
-		return (dispatch,getState) => {
-			
-			if (ProcessConfig.isType(ProcessType.UI)) {
-				getWindowManager().closeAll()
-			}
-			
-			this.internalCloseAllWindows()
-		}
-	}
+		
+	// /**
+	//  * Close all dialogs
+	//  *
+	//  * @returns {(dispatch:any, getState:any)=>undefined}
+	//  */
+	// @ActionThunk()
+	// closeAllWindows() {
+	// 	return (dispatch,getState) => {
+	//
+	// 		if (ProcessConfig.isType(ProcessType.UI)) {
+	// 			getWindowManager().closeAll()
+	// 		}
+	//
+	// 		this.internalCloseAllWindows()
+	// 	}
+	// }
 
 	/**
 	 * Focus on app root
@@ -576,7 +566,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return (state:UIState) =>
 			state.set(
 				'statusBar',
-				cloneObject(state.statusBar,{
+				cloneObjectShallow(state.statusBar,{
 					visible:!state.statusBar.visible
 				})
 			)

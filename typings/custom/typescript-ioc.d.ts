@@ -1,8 +1,12 @@
 declare module 'typescript-ioc' {
+	
+	export type TRef<T> = {new():T}&Function
+	export type TReturn<T> = T&Function
 	export class Container {
 		static bind(source: Function): Config;
 		//static get<T>(source:{new():T}&Function|any):T&Function|any;
-		static get<T>(source:{new():T}&Function):T&Function;
+		static get<T>(source:TRef<T>|string):TReturn<T>;
+	
 	}
 	
 	export function Singleton(target: Function): void;

@@ -1,4 +1,4 @@
-import { ChildClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
+import { ProcessClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
 import * as uuid from "node-uuid"
 import { REQUEST_TIMEOUT, Transport } from "epic-net"
 import { BrowserWindow, ipcMain } from "electron"
@@ -9,11 +9,17 @@ import {
 	TChildStoreSubscriptionStatusListener
 } from "./ChildStore"
 
-import TWorkerProcessMessageHandler = ChildClient.TWorkerProcessMessageHandler
+import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
+import {ActionMessage} from 'typedux'
+import { ActionMessageFilter } from "epic-typedux/filter"
+import { AppStoreServerEventNames } from "epic-global"
 
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	id = `${ProcessConfig.getTypeName()}-${process.pid}`
+
+
 
 /**
  * Wrapper for observer
@@ -36,17 +42,17 @@ interface IChildStoreWrapper {
 
 const
 	actionProxies = getHot(module,'actionProxies',{}),
-	childStoreWrappers = getHot(module,'childStoreWrappers',{}) as {[id:string]:IChildStoreWrapper},
 	observers:{[id:string]:ObserveWrapper} = getHot(module,'observers',{}),
 	stateRequests = getHot(module,'stateRequests',{})
 
 let
+	childStoreWrapper = getHot(module,'childStoreWrapper',{}) as IChildStoreWrapper,
 	transport = getHot(module,'transport',null) as Transport
 
 setDataOnHotDispose(module,() => ({
 	actionProxies,
 	observers,
-	childStoreWrappers,
+	childStoreWrapper,
 	stateRequests,
 	transport
 }))
@@ -70,7 +76,7 @@ const sendMessage = (type:string, body:any = {}) => {
  */
 function newActionClient(leaf,type) {
 	return function(...args) {
-		return sendMessage('actionRequest',{
+		return sendMessage(AppStoreServerEventNames.ActionRequest,{
 			leaf,
 			type,
 			args
@@ -98,6 +104,18 @@ export function getActionClient(leaf:string):any {
 
 export type TClientStateHandler = (newValue,oldValue) => any
 
+/**
+ * Push a message to the server,
+ * if it passes the filter
+ *
+ * @param action
+ */
+export const sendStoreAction = ActionMessageFilter((action:ActionMessage<any>) => {
+	assign(action,{
+		fromChildId: id
+	})
+	sendMessage(AppStoreServerEventNames.ChildStoreAction,{id,action})
+})
 
 /**
  * Attach a child store to the store server
@@ -109,14 +127,13 @@ export function attachChildStore(childStore:IChildStore):Promise<IChildStoreSubs
 	
 	let 
 		status:ChildStoreSubscriptionStatus = ChildStoreSubscriptionStatus.Starting,
-		id = uuid.v4(),
 		listeners:TChildStoreSubscriptionStatusListener[] = [],
 		{filter} = childStore, 
 		manager = {
 			detach() {
 				log.debug(`Detaching child store`)
-				sendMessage('childStoreDetach',{id})
-				delete childStoreWrappers[id]
+				sendMessage(AppStoreServerEventNames.ChildStoreDetach,{id})
+				childStoreWrapper = null
 			},
 			
 			onStatusChange(listener:TChildStoreSubscriptionStatusListener) {
@@ -129,12 +146,9 @@ export function attachChildStore(childStore:IChildStore):Promise<IChildStoreSubs
 			},
 			
 			// SEND ACTION MESSAGE TO PARENT
-			sendAction(action) {
-				action.fromChildId = id
-				sendMessage('childStoreAction',{id,action})
-			}
+			sendAction: sendStoreAction
 		} as IChildStoreSubscriptionManager,
-		wrapper = childStoreWrappers[id] =  {
+		wrapper = childStoreWrapper =  {
 			id,
 			childStore,
 			manager,
@@ -148,7 +162,7 @@ export function attachChildStore(childStore:IChildStore):Promise<IChildStoreSubs
 		{resolver} = wrapper
 	
 	// SEND THE SUBSCRIBE REQUEST
-	sendMessage('childStoreSubscribeRequest', {
+	sendMessage(AppStoreServerEventNames.ChildStoreSubscribeRequest, {
 		id, 
 		filter 
 	}).catch(err => resolver.reject(err))
@@ -159,7 +173,7 @@ export function attachChildStore(childStore:IChildStore):Promise<IChildStoreSubs
 		.timeout(REQUEST_TIMEOUT)
 		.catch((err) => {
 			log.error(`Failed to start child store`, wrapper, err)
-			delete childStoreWrappers[ id ]
+			childStoreWrapper = null
 			resolver.reject(err)
 		})
 }
@@ -186,7 +200,7 @@ export function clientObserveState(
 		},
 		{ reject } = wrapper.resolver
 	
-	sendMessage('observeStateRequest', { id, keyPath }).catch(err => reject(err))
+	sendMessage(AppStoreServerEventNames.ObserveStateRequest, { id, keyPath }).catch(err => reject(err))
 	
 	return wrapper
 		.resolver
@@ -217,7 +231,7 @@ export async function getStateValue(...keyPath:string[]):Promise<any> {
 		{ reject } = request.resolver
 	
 	try {
-		await sendMessage('stateRequest', { id, keyPath })
+		await sendMessage(AppStoreServerEventNames.StateRequest, { id, keyPath })
 	} catch (err) {
 		reject(err)
 	}
@@ -277,16 +291,16 @@ function connect():Promise<any> {
  */
 function attachEvents(transport) {
 	
-	transport.on('childStoreSubscribeResponse',({id,initialState,err}) => {
+	transport.on(AppStoreServerEventNames.ChildStoreSubscribeResponse,({id,initialState,err}) => {
 		const 
-			wrapper:IChildStoreWrapper = childStoreWrappers[id]
+			wrapper = childStoreWrapper
 		
 		if (err) {
 			log.error(`Failed to subscribe for childStore`,id,err,wrapper)
 			if (wrapper) {
 				wrapper.setStatus(ChildStoreSubscriptionStatus.Failed,err)
 				wrapper.resolver.reject(err)
-				delete childStoreWrappers[id]
+				childStoreWrapper = null
 			}
 			return
 		}
@@ -297,23 +311,18 @@ function attachEvents(transport) {
 		
 	})
 	
-	transport.on('childStoreActionReducer',({id,action}) => {
-		const
-			wrapper:IChildStoreWrapper = childStoreWrappers[id]
+	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({id,action}) => {
 		
-		if (!wrapper)
+		if (!childStoreWrapper)
 			return log.error(`Unknown child store ${id}`)
 		
-		//process.nextTick(() =>
 		require('./AppStore').getReduxStore().dispatch(action)
-			//wrapper.childStore.dispatch(action))
-		
 	})
 	
 	/**
 	 * Handle observe state change
 	 */
-	transport.on('observeStateChange', ({ id, newValue, oldValue }) => {
+	transport.on(AppStoreServerEventNames.ObserveStateChange, ({ id, newValue, oldValue }) => {
 		const observer = observers[ id ]
 		if (!observer) {
 			log.error(`Received a message for id ${id} - but no observer found`)
@@ -325,7 +334,7 @@ function attachEvents(transport) {
 	/**
 	 * Handle observe responses
 	 */
-	transport.on('observeStateResponse', ({ id, err }) => {
+	transport.on(AppStoreServerEventNames.ObserveStateResponse, ({ id, err }) => {
 		const
 			observer = observers[ id ]
 		
@@ -338,7 +347,7 @@ function attachEvents(transport) {
 		}
 		
 		observer.remover = () => {
-			sendMessage("observeStateRemove", { id })
+			sendMessage(AppStoreServerEventNames.ObserveStateRemove, { id })
 			delete observers[ id ]
 		}
 		

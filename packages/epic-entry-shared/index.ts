@@ -2,10 +2,10 @@
 
 import './AppEntry'
 
-import * as ChildProcessEntryType from './ChildProcessEntry'
+import * as ProcessClientEntryType from './ProcessClientEntry'
 
-export function loadChildProcessEntry() {
-	return require('./ChildProcessEntry') as typeof ChildProcessEntryType
+export function loadProcessClientEntry() {
+	return require('./ProcessClientEntry') as typeof ProcessClientEntryType
 }
 
 export * from './AppConfig'

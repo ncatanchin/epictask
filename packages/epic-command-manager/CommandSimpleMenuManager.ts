@@ -1,8 +1,5 @@
-
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global"
-import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from  "./Command"
-import { getValue, cloneObject } from  "epic-global"
-import { EnumEventEmitter } from  "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, getValue, EnumEventEmitter, cloneObjectShallow } from "epic-global"
+import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from "./Command"
 import { OrderedMap } from "immutable"
 
 const
@@ -69,7 +66,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	private rebuild() {
 		const
 			menuItems = this.menuItems.valueSeq().toJS(),
-			items:ICommandMenuItem[] = cloneObject(menuItems),
+			items:ICommandMenuItem[] = cloneObjectShallow(menuItems),
 			
 			rootItems = [],
 			
@@ -152,7 +149,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 	updateItem(...items:ICommandMenuItem[]) {
 		const
 			addItem = (item) => {
-				this.menuItems.set(item.id,  cloneObject(item))
+				this.menuItems.set(item.id,  cloneObjectShallow(item))
 			}
 			
 		items.forEach(addItem)
@@ -200,7 +197,7 @@ export class CommandSimpleMenuManager extends EnumEventEmitter<CommandSimpleMenu
 				.filter(item => item && itemIds.includes(item.id))
 		
 		items.forEach(item => {
-			this.menuItems.set(item.id,cloneObject(item, {
+			this.menuItems.set(item.id,cloneObjectShallow(item, {
 				hidden: true
 			}))
 		})

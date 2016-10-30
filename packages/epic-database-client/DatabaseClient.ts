@@ -11,6 +11,7 @@ import {
 } from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
+import { cloneObjectShallow } from "epic-global"
 
 const
 	TIMEOUT = 180000,
@@ -258,7 +259,7 @@ export class DatabaseClient {
 		if (resp.error)
 			pendingRequest.deferred.reject(_.isError(resp.error) ? resp.error : new Error(resp.error as any))
 		else
-			pendingRequest.deferred.resolve(cloneObject(resp.result))
+			pendingRequest.deferred.resolve(cloneObjectShallow(resp.result))
 
 	}
 	

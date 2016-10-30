@@ -218,7 +218,6 @@ export const IssuePatchFns = {
  * IIssuePatchDialogProps
  */
 export interface IIssuePatchDialogProps extends IThemedAttributes {
-	open?:boolean
 	saving?:boolean
 	saveError?:Error
 	mode?:TIssuePatchMode
@@ -256,8 +255,7 @@ export interface IIssuePatchDialogState {
 	mode: patchModeSelector,
 	saving: (state) => issueStateSelector(state).issueSaving,
 	saveError: (state) => issueStateSelector(state).issueSaveError,
-	open: (state) => uiStateSelector(state).dialogs
-		.get(Dialogs.IssuePatchDialog) === true
+
 }, createDeepEqualSelector))
 
 // If you have a specific theme key you want to
@@ -617,7 +615,6 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				theme,
 				issues,
 				mode,
-				open,
 				styles,
 				saving,
 				palette,

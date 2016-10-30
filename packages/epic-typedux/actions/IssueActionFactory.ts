@@ -1,59 +1,42 @@
-
-import {FinderRequest} from 'typestore'
-import {ActionFactory, ActionThunk, ActionReducer} from 'typedux'
-import {List} from 'immutable'
-
-import {UIActionFactory} from "epic-typedux"
-import { Stores, getStores } from 'epic-database-client'
-
-import {FinderItemsPerPage,IssueKey, isNil,isNumber} from 'epic-global'
-
-import {
-	cloneObject, extractError, nilFilter, cloneObjectShallow,
-	shallowEquals
-} from  "epic-global"
-import {Comment} from "epic-models"
-import {
-	IssueMessage, IssueState, TIssueSortAndFilter,
-	TEditCommentRequest, IIssuePatchLabel
-} from '../state/IssueState'
-import {Issue, IssueStore, TIssueState} from "epic-models"
-
-import {
-	enabledRepoIdsSelector, availableRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector
-} from "../selectors"
-
-import {
-	selectedIssueIdsSelector, issueSortAndFilterSelector, issuesSelector, selectedIssueIdSelector, selectedIssueSelector,
-	selectedIssuesSelector, issueItemsSelector
-} from "epic-typedux"
-import {GitHubClient} from "epic-github"
-import {Label} from "epic-models"
-import {Milestone} from "epic-models"
+import { FinderRequest } from "typestore"
+import { ActionFactory, ActionThunk, ActionReducer } from "typedux"
+import { List } from "immutable"
+import { Stores, getStores } from "epic-database-client"
+import { FinderItemsPerPage, IssueKey, isNil, isNumber } from "epic-global"
+import { cloneObject, extractError, nilFilter, cloneObjectShallow, shallowEquals } from "epic-global"
 import { addErrorMessage, getNotificationCenter } from "epic-global"
-import {addMessage} from "epic-global"
-import {getSettings} from "epic-global"
-import {TIssuePatchMode} from "epic-typedux"
-import {Repo,ISyncChanges} from "epic-models"
-import {AvailableRepo} from "epic-models"
-import {CommentStore} from "epic-models"
-import {IssuesEventStore,IssuesEvent} from "epic-models"
-
-import {getStoreState} from "epic-typedux"
-import {Provided} from  "epic-global"
-
+import { addMessage } from "epic-global"
+import { getSettings } from "epic-global"
+import { Provided } from "epic-global"
 import { RegisterActionFactory } from "epic-global"
-import { pagedFinder } from  "epic-global"
+import { pagedFinder } from "epic-global"
+import { isListType } from "epic-global"
+import { Dialogs } from "epic-global"
+import { Comment } from "epic-models"
+import { Issue, IssueStore, TIssueState } from "epic-models"
+import { Label } from "epic-models"
+import { Milestone } from "epic-models"
+import { Repo } from "epic-models"
+import { AvailableRepo } from "epic-models"
+import { CommentStore } from "epic-models"
+import { IssuesEventStore, IssuesEvent } from "epic-models"
+import { LoadStatus } from "epic-models"
+import { IssueMessage, IssueState, TEditCommentRequest, IIssuePatchLabel } from "../state/IssueState"
+import { enabledRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector } from "../selectors"
+import {
+	selectedIssueIdsSelector,
+	selectedIssueSelector,
+	selectedIssuesSelector,
+	issueItemsSelector
+} from "epic-typedux"
+import { TIssuePatchMode } from "epic-typedux"
+import { getStoreState } from "epic-typedux"
 import { IIssueFilter, EmptyIssueFilter } from "epic-typedux"
 import { IIssueSort } from "epic-typedux"
-import { isListType } from  "epic-global"
-
-
+import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
+import { GitHubClient } from "epic-github"
 //import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
-import { LoadStatus } from "epic-models"
-import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
-import { Dialogs } from "epic-global"
 import { Roots } from "epic-entry-ui/routes/Routes"
 
 
@@ -372,7 +355,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 						repo = availRepo.repo
 					
 					
-					return cloneObject(issue,{
+					return cloneObjectShallow(issue,{
 						repo,
 						collaborators: availRepo.collaborators,
 						
@@ -593,7 +576,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	@ActionThunk()
 	applyPatchToIssues(patch: any, useAssign: boolean, ...issues: Issue[]) {
-		issues = cloneObject(issues)
+		issues = cloneObjectShallow(issues)
 		
 		return async(dispatch, getState) => {
 			if (!issues.length)
@@ -601,7 +584,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			
 			
 			const
-				originalIssues = cloneObject(issues),
+				originalIssues = cloneObjectShallow(issues),
 				stores = Container.get(Stores),
 				actions = this.withDispatcher(dispatch, getState),
 				client = Container.get(GitHubClient)
@@ -618,7 +601,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				// Now apply the patch to clones
 				issues.forEach(issue => {
 					const
-						patchCopy = cloneObject(patch)
+						patchCopy = cloneObjectShallow(patch)
 					
 					Object.entries(patch).forEach(([key,val]) => {
 						log.debug(`Patching key ${key}`,patch[key])
@@ -684,7 +667,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}))
 				
 				actions.setIssueSaving(false)
-				getUIActions().closeAllWindows()
 				actions.setPatchIssues(null)
 				
 			} catch (err) {
@@ -704,7 +686,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	private async saveAndUpdateIssueModel(client: GitHubClient, repo: Repo, issue: Issue) {
 		
-		issue = cloneObject(issue)
+		issue = cloneObjectShallow(issue)
 		
 		const
 			issueStore: IssueStore = getStores().issue
@@ -862,7 +844,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			existingComment = comment.id && (await commentStore.get(commentId))
 		
 		if (existingComment)
-			comment = cloneObject(existingComment,comment)
+			comment = cloneObjectShallow(existingComment,comment)
 		
 		// Persist
 		await commentStore.save(comment)
@@ -934,8 +916,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				addMessage(`Saved comment`)
 				actions.setIssueSaving(false)
 				actions.setEditingComment(null)
-				
-				getUIActions().closeAllWindows()
 				
 				await Promise.setImmediate()
 				
@@ -1097,11 +1077,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				{issue:issueStore,availableRepo:availRepoStore} = getStores(),
 				dialogName = Dialogs.IssueEditDialog
 			
-			
-			if (getUIActions().state.dialogs[dialogName]) {
-				log.debug('Dialog is already open', dialogName)
-				return
-			}
 			
 			
 			const

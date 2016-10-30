@@ -1,5 +1,6 @@
 
 
+import { addHotDisposeHandler } from "epic-global"
 const
 	{Cleaner} = require('./Cleaner')
 
@@ -11,6 +12,10 @@ import 'epic-entry-shared/AppEntry'
 
 function loadMainApp() {
 	
+	let
+		
+		//Ref TO STORE SERVER STOP FUNC
+		stopAppStoreServer:Function
 	
 	
 	
@@ -28,7 +33,7 @@ function loadMainApp() {
 	
 	
 	// Reference for dev monitor window (redux, etc)
-	log.info(`Hot reload mode enabled: ${hotReloadEnabled}`)
+	log.debug(`Hot reload mode enabled: ${hotReloadEnabled}`)
 	
 	require('./MainAppSwitches')
 	
@@ -43,6 +48,27 @@ function loadMainApp() {
 	
 	function getProcessManager() {
 		return require('epic-process-manager/ProcessManagement').getProcessManager()
+	}
+	
+	
+	/**
+	 * Start the app store server
+	 */
+	async function startAppStoreServer() {
+		log.debug(`Starting AppStoreServer`)
+		stopAppStoreServer = await require('./AppStoreServer').start()
+		
+		// HMR - SHUT IT DOWN
+		addHotDisposeHandler(module, () => {
+			stopAppStoreServer()
+		})
+		
+		
+		log.debug(`App store server is up`)
+		
+		
+		// Check if the main process is completely loaded - if not then wait
+		await require('./StartBackgroundWorkers').childServicesBoot()
 	}
 	
 	/**
@@ -102,19 +128,15 @@ function loadMainApp() {
 	 * JobServer
 	 * DatabaseServer
 	 */
-	async function startProcesses() {
-		
-		const
-			ProcessManager = getProcessManager()
-		
-		log.info(`Starting all processes`)
-		// ONLY OCCURS IN HMR SCENARIO
-		if (!ProcessManager.isRunning())
-			await ProcessManager.startAll()
-		
+	async function startBackgroundWorkers() {
+		await require('./StartBackgroundWorkers').startBackgroundProcesses()
 	}
 	
-	
+	/**
+	 * Load the command manager for global shortcuts and native menu on mac
+	 *
+	 * @returns {any|CommandManager}
+	 */
 	function loadCommandManager() {
 		const
 			commandManagerMod = require('epic-command-manager'),
@@ -153,7 +175,7 @@ function loadMainApp() {
 		await appWindow.start(async() => {
 			log.debug('Starting Services')
 			
-			await startProcesses()
+			await startBackgroundWorkers()
 			await start()
 			
 			log.debug('Services started')
