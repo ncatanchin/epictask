@@ -4,7 +4,7 @@
 // Imports
 import * as React from "react"
 import { connect } from "react-redux"
-import { createDeepEqualSelector, getValue, Dialogs } from "epic-global"
+import { createDeepEqualSelector, getValue } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
@@ -126,7 +126,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
-		getUIActions().closeWindow(getChildWindowId())
+		getUIActions().closeWindow(getWindowId())
 	}
 	//
 	// /**

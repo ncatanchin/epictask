@@ -9,7 +9,8 @@ import {PouchDBRepo,PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-p
 import { Repo, RepoStore } from "epic-models"
 
 
-export class RepoStoreImpl extends PouchDBRepo<Repo> implements RepoStore{
+export class RepoStoreImpl extends PouchDBRepo<Repo> implements RepoStore {
+	
 	constructor() {
 		super(RepoStoreImpl,Repo)
 	}

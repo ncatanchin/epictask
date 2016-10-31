@@ -26,7 +26,7 @@ const
 	fs = require('fs'),
 	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	ForkCheckerPlugin = require('awesome-typescript-loader').ForkCheckerPlugin
+	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader')
 	
 
 // Import globals
@@ -238,7 +238,7 @@ function makeResolveConfig() {
 		modules: moduleDirs,
 		
 		// EXTENSIONS
-		extensions: ['.ts','.tsx','.js', '.jsx']
+		extensions: ['.js', '.jsx','.ts','.tsx']
 		
 	}
 }
@@ -314,7 +314,7 @@ function patchConfig(config) {
 //devtool: 'cheap-module-eval-source-map',
 const
 	devtool = isDev ?
-		'#cheap-module-inline-source-map' :
+		'cheap-module-source-map' :
 		"source-map"
 
 // Webpack Config
@@ -370,6 +370,7 @@ function makeConfig(name,dependencies,entry,configFn) {
 				//new webpack.optimize.DedupePlugin(),
 				
 				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
+				//new TsConfigPathsPlugin(),
 				new ForkCheckerPlugin(),
 				
 				// BASICS
@@ -492,6 +493,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 			"./epic-github",
 			"./epic-database-client",
 			"./epic-process-manager",
+			"./epic-process-manager-client",
 			"./epic-typedux",
 			"./epic-services"
 		])

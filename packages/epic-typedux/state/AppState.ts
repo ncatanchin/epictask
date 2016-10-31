@@ -5,10 +5,10 @@ import {List,Record,Map} from 'immutable'
 import {INotificationMessage} from 'epic-global'
 import {User} from "epic-models"
 import {AppStateType} from './app/AppStateType'
-import {ISettings} from "epic-global"
+import {Settings} from "epic-global"
 import {RegisterModel} from "epic-global"
 
-import {IWindowState} from 'epic-process-manager-client'
+import {IWindowState} from 'epic-process-manager-client/WindowTypes'
 
 
 export type TWindowMap = Map<string,IWindowState>
@@ -19,30 +19,13 @@ export type TWindowMap = Map<string,IWindowState>
  * @type {Immutable.Record.Class}
  */
 export const AppStateRecord:Record.Class = Record({
-	stateType: null,
-	settings: null,
-	monitorState: {},
+	stateType:AppStateType.AuthLogin,
+	settings: new Settings(),
 	ready: false,
 	user: null,
+	messages:List<INotificationMessage>(),
 	windows:Map<string,IWindowState>()
 })
-
-
-/**
- * Patch the settings on the state
- *
- * @param state
- *
- * @returns {AppState|Map<string, ISettings>}
- */
-function updateSettings(state:AppState):AppState {
-	return !ProcessConfig.isMain() ?
-			state:
-			state.set(
-				'settings',
-				require("epic-global/settings/SettingsFile").Settings.toJSON()) as AppState
-	
-}
 
 /**
  * The global app state
@@ -52,26 +35,25 @@ export class AppState extends AppStateRecord {
 
 	static fromJS(o:any) {
 		
-		
-		if (o && o instanceof AppState) {
-			return updateSettings(o)
-		}
-		
-		return updateSettings(new AppState(Object.assign({},o,{
+		return o && o instanceof AppState ? o : new AppState(Object.assign({},o,{
 			messages: List(o.messages),
-			dialogs: Map(o.dialogs),
+			settings: Map(o.settings),
 			windows: Map(o.windows)
-		})))
+		}))
 		
 	}
 
+	toJS() {
+		return Object.assign(_.pick(this,'stateType','user'),{
+			windows: this.windows.toJS()
+		})
+	}
+	
 	stateType:AppStateType
 	ready:boolean
-	settings:ISettings
+	settings:Settings
 	user:User
 	messages:List<INotificationMessage>
-	monitorState:any
-	error:Error
 	windows:Map<string,IWindowState>
 
 

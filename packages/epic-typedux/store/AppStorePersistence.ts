@@ -1,13 +1,12 @@
 
 import {
-	OnlyIfFn, RepoKey, writeFile, getHot, ProcessType, getUserDataFilename, writeFileAsync,
+	OnlyIfFn, RepoKey, writeFile, getHot, getUserDataFilename, writeFileAsync,
 	readFile, isString
 } from "epic-global"
 import { RepoState } from "epic-typedux/state/RepoState"
-import { loadActionFactories } from "epic-typedux/provider"
 const
 	log = getLogger(__filename),
-	stateFilename = getUserDataFilename('epictask-store-state.json')
+	stateFilename = getUserDataFilename(`epictask-store-state-${getWindowId()}.json`)
 
 let
 	persistingState = false,
@@ -48,9 +47,9 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	function writeStoreState(state = null, doAsync = false) {
 		if (!state)
 			state = (getStoreState && getStoreState()) || {}
-			
-		if (!ProcessConfig.isType(ProcessType.UI))
-			return Promise.resolve()
+		//
+		// if (!ProcessConfig.isType(ProcessType.UI))
+		// 	return Promise.resolve()
 		
 		log.info(`Writing current state to: ${stateFilename}`)
 		if (persistingState) {
@@ -94,13 +93,14 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	 * @returns {any|boolean}
 	 */
 	function canPersistState() {
-		const
-			canPersist = ProcessConfig.isType(ProcessType.UI)
-		
-		if (!canPersist)
-			log.debug(`Can not persist state in process=${ProcessConfig.getTypeName()}`)
-		
-		return canPersist
+		// const
+		// 	canPersist = ProcessConfig.isType(ProcessType.UI)
+		//
+		// if (!canPersist)
+		// 	log.debug(`Can not persist state in process=${ProcessConfig.getTypeName()}`)
+		//
+		//return canPersist
+		return true
 		
 	}
 	

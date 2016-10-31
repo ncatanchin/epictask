@@ -113,7 +113,7 @@ function hmrSetup() {
 /**
  * Initialize/Create the store
  */
-function initStore(devToolsMode = false, defaultState = null) {
+function initStore(devToolsMode = false, defaultState = null, enhancer = null) {
 	
 	const
 		enhancers = [
@@ -122,8 +122,7 @@ function initStore(devToolsMode = false, defaultState = null) {
 	
 	// THE CLIENT ENHANCER IS THE DEFAULT, BUT MAIN-ENTRY HAS IT'S OWN
 	let
-		appStoreEnhancer =
-			getValue(() => Container.get<any>(AppStoreEnhancerKey),require('./AppStoreClientEnhancer').default)
+		appStoreEnhancer = enhancer || require('./AppStoreClientEnhancer').default
 	
 	enhancers.push(appStoreEnhancer)
 	
@@ -215,19 +214,20 @@ export function loadAndInitStorybookStore() {
  * Load existing state from disk
  *
  * @param defaultStateValue
+ * @param enhancer
  * @returns {ObservableStore<any>}
  */
 
-export async function loadAndInitStore(defaultStateValue = null) {
+export async function loadAndInitStore(defaultStateValue = null, enhancer = null) {
 	loadActionFactories()
 	
 	
 	// ONLY LOAD STATE ON MAIN UI PROCESS
-	if (ProcessConfig.isType(ProcessType.UI)) {
-		defaultStateValue = loadStateFromDisk()
-	}
+	//if (ProcessConfig.isType(ProcessType.UI)) {
+	defaultStateValue = loadStateFromDisk()
+	//}
 	
-	return initStore(false, defaultStateValue)
+	return initStore(false, defaultStateValue,enhancer)
 }
 
 

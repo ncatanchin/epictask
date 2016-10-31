@@ -1,20 +1,21 @@
 import * as AppStoreModule from './AppStore'
 import {ObservableStore} from 'typedux'
 import {Container} from "typescript-ioc"
-import { ProcessType } from "epic-entry-shared/ProcessType"
-
-const log = getLogger(__filename)
 
 
-export async function storeBuilder() {
+const
+	log = getLogger(__filename)
+
+
+export async function storeBuilder(enhancer = null) {
+	
 	const
 		AppStore = require('./AppStore') as typeof AppStoreModule,
 		
-		store:ObservableStore<any> = ProcessConfig.isType(ProcessType.UI) ?
-			(await AppStore.loadAndInitStore()) :
-			ProcessConfig.isType(ProcessType.UIChildWindow) ?
-				(await AppStore.loadAndInitStore()) : //(await AppStore.loadAndInitChildStore()) :
-				(await AppStore.loadAndInitStorybookStore())
+		store:ObservableStore<any> = ProcessConfig.isStorybook() ?
+			(await AppStore.loadAndInitStorybookStore()) :
+			(await AppStore.loadAndInitStore(null,enhancer))
+				
 	
 	Container.bind(ObservableStore).provider({ get: () => store})
 	log.info(`Built store`)

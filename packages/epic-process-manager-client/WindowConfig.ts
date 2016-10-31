@@ -1,7 +1,11 @@
-import {ClassType} from 'react'
+import * as fs from "fs"
+import { ClassType } from "react"
+import { WindowType, IWindowConfig } from "./WindowTypes"
+import { ProcessType } from "epic-entry-shared/ProcessType"
+import { searchPathsForFile } from "epic-global/Files"
 
-import { searchPathsForFile } from  "epic-global/Files"
-import * as fs from 'fs'
+import { ProcessNames } from "epic-entry-shared/ProcessType"
+
 
 const
 	// WEBPACK REMOVE TWEAKS
@@ -31,6 +35,9 @@ if (!iconPath) {
 	iconPath = iconUrl
 }
 
+/**
+ * Window Icon
+ */
 export const
 	WindowIconUrl = iconUrl,
 	WindowIconPath = iconPath,
@@ -66,6 +73,129 @@ export const
 		//titleBarStyle: 'hidden'
 		// darkTheme:true,
 	}) as any
+
+
+/**
+ * Default window props for all but Background processes
+ */
+export const WindowDefaultOpts = Object.assign(AllWindowDefaults, {
+	minHeight: 200,
+	minWidth: 200,
+	width: 1024,
+	height: 728,
+	icon: WindowIcon
+})
+
+/**
+ * Dialog defaults
+ */
+export const WindowDialogDefaultOpts = Object.assign({}, WindowDefaultOpts, {
+	minHeight: 500,
+	minWidth: 500,
+	width: 800,
+	height: 600
+})
+
+/**
+ * Modal window defaults
+ */
+export const WindowModalDefaultOpts = Object.assign({}, WindowDefaultOpts, WindowDialogDefaultOpts, {
+	modal: true
+})
+
+/**
+ * Background window defaults
+ */
+export const WindowBackgroundDefaultOpts = Object.assign({},WindowDefaultOpts)
+
+/**
+ * Map WindowType -> BrowserWindowOptions
+ */
+export const WindowOptionDefaults = {
+	[WindowType.Normal]: WindowDefaultOpts,
+	[WindowType.Dialog]: WindowDialogDefaultOpts,
+	[WindowType.Modal]: WindowModalDefaultOpts,
+	[WindowType.Background]: WindowBackgroundDefaultOpts
+}
+
+
+/**
+ * Normal window defaults
+ */
+export const WindowConfigNormalDefaults = {
+	name: "UI",
+	type: WindowType.Normal,
+	processType: ProcessType.UI,
+	uri: "",
+	singleWindow: false,
+	autoRestart: false,
+	showDevTools: true,
+	storeState: true,
+	opts: WindowDefaultOpts
+}
+
+/**
+ * Dialog window defaults
+ */
+export const WindowConfigDialogDefaults = {
+	type: WindowType.Dialog,
+	processType: ProcessType.UI,
+	singleWindow: false,
+	autoRestart: false,
+	showDevTools: false,
+	storeState: true,
+	opts: WindowDialogDefaultOpts
+}
+
+/**
+ * Modal window defaults
+ */
+export const WindowConfigModalDefaults = {
+	type: WindowType.Modal,
+	processType: ProcessType.UI,
+	singleWindow: true,
+	autoRestart: false,
+	showDevTools: false,
+	storeState: true,
+	opts: WindowModalDefaultOpts
+}
+
+/**
+ * Background window defaults
+ */
+export const WindowConfigBackgroundDefaults = {
+	type: WindowType.Background,
+	uri: "",
+	singleWindow: true,
+	autoRestart: true,
+	showDevTools: true,
+	storeState: true,
+	opts: WindowBackgroundDefaultOpts
+}
+
+export const WindowConfigDefaults = {
+	[WindowType.Normal]: WindowConfigNormalDefaults,
+	[WindowType.Dialog]: WindowConfigDialogDefaults,
+	[WindowType.Modal]: WindowConfigModalDefaults,
+	[WindowType.Background]: WindowConfigBackgroundDefaults
+}
+
+
+/**
+ * Background configs
+ */
+export const WindowBackgroundConfigs:IWindowConfig[] = [
+	
+	Object.assign({
+		name: ProcessNames.DatabaseServer,
+		processType: ProcessType.DatabaseServer,
+	},WindowConfigBackgroundDefaults),
+	
+	Object.assign({
+		name: ProcessNames.JobServer,
+		processType: ProcessType.JobServer,
+	},WindowConfigBackgroundDefaults)
+]
 
 
 /**

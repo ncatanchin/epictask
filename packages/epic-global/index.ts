@@ -49,7 +49,6 @@ export * from "./WorkerEventType"
 export * from "./GithubSyncStatus"
 export * from './ProcessClient'
 
-export * from '../epic-process-manager-client/WindowConfig'
+
 export * from './settings'
-
-
+export * from './Config'

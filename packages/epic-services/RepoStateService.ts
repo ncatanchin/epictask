@@ -9,7 +9,7 @@ import { acceptHot } from "epic-global/HotUtils"
 const
 	log = getLogger(__filename)
 
-@RegisterService(ProcessType.UI,ProcessType.UIChildWindow)
+@RegisterService(ProcessType.UI)
 export class RepoStateService extends BaseService {
 	
 	/**

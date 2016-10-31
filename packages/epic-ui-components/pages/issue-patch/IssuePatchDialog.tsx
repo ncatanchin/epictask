@@ -10,7 +10,7 @@ import { MenuItem } from "material-ui"
 import { PureRender, LabelChip, Avatar, IssueLabelsAndMilestones } from "../../common"
 import { DialogRoot, createSaveCancelActions } from "../../layout/dialog"
 import { TypeAheadSelect } from "epic-ui-components/fields"
-import { createDeepEqualSelector, Dialogs } from "epic-global"
+import { createDeepEqualSelector } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
@@ -293,7 +293,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * Hide and focus on issue panel
 	 */
 	hide = () => {
-		getUIActions().closeWindow(getChildWindowId())
+		getUIActions().closeWindow(getWindowId())
 		
 	}
 	

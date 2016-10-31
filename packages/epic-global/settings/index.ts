@@ -1,2 +1,2 @@
 export * from "./Settings"
-export * from "./SettingsFile"
+export * from './getSettings'

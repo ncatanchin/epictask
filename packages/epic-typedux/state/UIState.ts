@@ -4,14 +4,14 @@ import {
 	RegisterModel,
 	IToolPanel,
 	makeToolPanels,
-	IUISheet,
 	getValue,
 	cloneObjectShallow
 } from "epic-global"
 import { User } from "epic-models"
 import { State } from "typedux"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 /**
  * Enumeration describing app status type

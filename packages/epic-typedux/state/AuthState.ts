@@ -1,5 +1,5 @@
 
-import { getSettingsFile } from "epic-global"
+
 import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import {RegisterModel} from "epic-global"
@@ -9,8 +9,7 @@ export const AuthStateRecord = Record({
 	error: null,
 	authenticated: false,
 	username: null,
-	email: null,
-	token: getSettingsFile().token
+	email: null
 })
 
 
@@ -35,11 +34,6 @@ export class AuthState extends AuthStateRecord {
 	username:string
 
 	email:string
-
-	token:string
-
-
-
 
 }
 

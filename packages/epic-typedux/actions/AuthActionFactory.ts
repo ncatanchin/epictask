@@ -1,14 +1,14 @@
 import {ActionFactory,ActionReducer,ActionThunk} from 'typedux'
-import {GitHubClient} from "epic-github"
+import {GitHubClient, createClient as createGithubClient} from "epic-github"
 import {AuthKey} from "epic-global"
 import {AuthState,AuthMessage} from "epic-typedux"
 import {AppStateType} from '../state/app/AppStateType'
-import {getSettings,getSettingsFile} from "epic-global"
-import { NotificationCenter, addErrorMessage, getNotificationCenter } from "epic-global"
+
+import { addErrorMessage, getNotificationCenter } from "epic-global"
 
 import {Provided} from  "epic-global"
 import { RegisterActionFactory } from "epic-global"
-import { Settings } from "epic-global"
+
 import { getRepoActions, getAppActions } from "epic-typedux"
 import { GitHubConfig } from "epic-global"
 import { authenticatingSelector } from "../selectors"
@@ -27,15 +27,11 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	constructor() {
 		super(AuthState)
 
-		this.makeClient()
 	}
 
-	private makeClient() {
-		return this._client = (getSettings().token) ? Container.get(GitHubClient) : null
-	}
 
 	get client() {
-		return this._client || this.makeClient()
+		return this._client || createGithubClient()
 	}
 
 	leaf():string {
@@ -62,9 +58,10 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		return (dispatch,getState) => {
 			
 			log.info('Setting token',token)
-			Settings.token = token
 			
-			this.makeClient()
+			
+			
+			
 			this.setTokenInternal(token)
 			
 			//settings.save()
@@ -83,42 +80,30 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 
 	@ActionThunk()
 	verify() {
-		return async (dispatch,getState) => {
+		return (dispatch,getState) => {
 			log.info(`Verifying user`)
 			
-			try {
-				const
-					appActions = getAppActions(),
-					user = await this.client.user()
-				
-				log.info(`Verified user as`, user)
-				const
-					Settings = getSettingsFile(),
-					invalidUser = !user || !user.login
-				
-				
-				if (invalidUser) {
-					log.error(`Invalid token, set login state`, user)
-					Settings.token = null
-					Settings.user = null
-				} else {
-					Settings.user = user
-				}
-				
-				appActions.setUser(user)
-				appActions.setStateType(invalidUser ? AppStateType.AuthLogin : AppStateType.Authenticated)
-			} catch (err) {
-				log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
-				
-				const
-					errorMessage = err.statusCode === 403 ?
-						`token is invalid or rate limit exceeded 
-								${this.client.getRateLimitInfoAsString()}` :
-						err.message
-				
-				addErrorMessage(`Verification of Github API token failed: 
-					${errorMessage}`)
-			}
+			// try {
+			// 	const
+			// 		appActions = getAppActions(),
+			// 		user = await this.client.user()
+			//
+			// 	log.info(`Verified user as`, user)
+			//
+			// 	appActions.setAuthenticated(user,token)
+			//
+			// } catch (err) {
+			// 	log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
+			//
+			// 	const
+			// 		errorMessage = err.statusCode === 403 ?
+			// 			`token is invalid or rate limit exceeded
+			// 					${this.client.getRateLimitInfoAsString()}` :
+			// 			err.message
+			//
+			// 	addErrorMessage(`Verification of Github API token failed:
+			// 		${errorMessage}`)
+			// }
 		}
 		
 	}

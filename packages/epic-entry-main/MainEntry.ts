@@ -1,6 +1,7 @@
 
 
-import { addHotDisposeHandler } from "epic-global"
+import { addHotDisposeHandler } from "epic-global/HotUtils"
+import { nilFilter } from "epic-global/ListUtil"
 const
 	{Cleaner} = require('./Cleaner')
 
@@ -8,6 +9,8 @@ const
 
 // NOW LOAD COMMON ENTRY
 import 'epic-entry-shared/AppEntry'
+import { showSplashWindow } from "epic-entry-main/SplashWindow"
+import { isString } from "epic-global"
 
 
 function loadMainApp() {
@@ -15,7 +18,8 @@ function loadMainApp() {
 	let
 		
 		//Ref TO STORE SERVER STOP FUNC
-		stopAppStoreServer:Function
+		stopAppStoreServer:Function,
+		appWindow
 	
 	
 	
@@ -46,39 +50,8 @@ function loadMainApp() {
 		return require('epic-services/internal/ServiceManager').getServiceManager()
 	}
 	
-	function getProcessManager() {
-		return require('epic-process-manager/ProcessManagement').getProcessManager()
-	}
 	
 	
-	/**
-	 * Start the app store server
-	 */
-	async function startAppStoreServer() {
-		log.debug(`Starting AppStoreServer`)
-		stopAppStoreServer = await require('./AppStoreServer').start()
-		
-		// HMR - SHUT IT DOWN
-		addHotDisposeHandler(module, () => {
-			stopAppStoreServer()
-		})
-		
-		
-		log.debug(`App store server is up`)
-		
-		
-		// Check if the main process is completely loaded - if not then wait
-		await require('./StartBackgroundWorkers').childServicesBoot()
-	}
-	
-	/**
-	 * Start all the services
-	 *
-	 * @returns {any}
-	 */
-	async function start():Promise<any> {
-		await getServiceManager().start()
-	}
 	
 	/**
 	 * Stop everything
@@ -123,16 +96,6 @@ function loadMainApp() {
 	
 	
 	/**
-	 * Start all child processes
-	 *
-	 * JobServer
-	 * DatabaseServer
-	 */
-	async function startBackgroundWorkers() {
-		await require('./StartBackgroundWorkers').startBackgroundProcesses()
-	}
-	
-	/**
 	 * Load the command manager for global shortcuts and native menu on mac
 	 *
 	 * @returns {any|CommandManager}
@@ -152,44 +115,77 @@ function loadMainApp() {
 	}
 	
 	/**
-	 * Boot the app
+	 * Create boot dependencies func
+	 *
+	 * @param steps
+	 * @returns {()=>Promise<void>}
 	 */
-	async function boot() {
+	function makeBootDependencies(...steps:any[]) {
 		
-		if (Env.isDev)
-			require('./MainDevConfig')
+		steps = nilFilter(steps)
 		
-		require('./NavManager')
-		
-		log.debug("Boot start")
-		loadCommandManager()
-		
-		global[ Events.MainBooted ] = false
-		
-		log.debug("Load Main Window")
-		
-		const
-			appWindow = require('./AppWindow')
-		
-		// Load the main window & start the loader animation
-		await appWindow.start(async() => {
-			log.debug('Starting Services')
-			
-			await startBackgroundWorkers()
-			await start()
-			
-			log.debug('Services started')
-		})
-		
-		// Notifying the main window that we are ready
-		global[ Events.MainBooted ] = true
-		
-		setImmediate(() => {
-			appWindow.ready()
-		})
-		
-		
+		return async () => {
+			for (let step of steps) {
+				
+				const
+					parts = Array.isArray(step) ? step : [step],
+					results = []
+				
+				for (let part of parts) {
+					if (isString(part)) {
+						log.info(`Boot: ${part}`)
+						continue
+					}
+					
+					let
+						result = part()
+					
+					if (result)
+						results.push(Promise.resolve(result))
+				}
+				
+				await Promise.all(results)
+				
+			}
+		}
 	}
+	
+	
+	/**
+	 * Boot dependencies func
+	 *
+	 * @type {()=>Promise<any>}
+	 */
+	const boot = makeBootDependencies(
+		
+		// DEV CONFIG
+		Env.isDev && (() => require('./MainDevConfig')),
+		
+		// SPLASH WINDOW
+		() => showSplashWindow(),
+		
+		// NAV MANAGER
+		() => require('./NavManager').start(),
+		
+		// APP STORE
+		() => require('epic-typedux/store/AppStoreBuilder').storeBuilder(require('./AppStoreServerEnhancer').default),
+			
+		// COMMAND MANAGER + AppStoreServer
+		[
+			() => loadCommandManager(),
+			() => require("./AppStoreServer").start()
+		],
+		
+		// LOAD THE REST
+		[
+			() => require('epic-process-manager/WindowManagerLoader').start(),
+			() => getServiceManager().start()
+		],
+		[
+			"set app ready",
+			() => require('epic-typedux/provider').getAppActions().setReady(true)
+		]
+	)
 	
 	
 	/**

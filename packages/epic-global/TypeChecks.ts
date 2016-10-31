@@ -1,11 +1,21 @@
+import {List,Map} from 'immutable'
 
-
-const _ = require('lodash')
+const
+	_ = require('lodash')
 
 
 
 export function isNil(o:any) {
 	return _.isNil(o)
+}
+
+
+export function isList(o:any):o is List<any> {
+	return List.isList(o) || isFunction(o.toArray)
+}
+
+export function isMap(o:any):o is Map<any,any> {
+	return Map.isMap(o)
 }
 
 

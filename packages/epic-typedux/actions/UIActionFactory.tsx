@@ -10,7 +10,6 @@ import {
 	ToolPanelLocation,
 	ITool,
 	IToolPanel,
-	IUISheet,
 	RegisterActionFactory,
 	getToolRegistrations, nilFilter,
 } from "epic-global"
@@ -19,7 +18,7 @@ import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focus
 import * as assert from "assert"
  
 import {WindowType,getWindowManagerClient} from "epic-process-manager-client"
-import { IWindowConfig } from "epic-process-manager-client"
+import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 
 
 

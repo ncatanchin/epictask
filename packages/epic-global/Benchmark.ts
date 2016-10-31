@@ -17,7 +17,7 @@ export function benchmark<T extends Function>(name, origFn:T,detail:string = '')
 			startTime = Date.now()
 		
 		let
-			returnVal = null
+			returnVal:any = null
 		
 		try {
 			returnVal = origFn.call(this,...args)

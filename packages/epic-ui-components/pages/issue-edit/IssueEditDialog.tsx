@@ -254,10 +254,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	private hide = () => {
 		const
-			childWindowId = getChildWindowId()
+			windowId = getWindowId()
 		
-		if (childWindowId)
-			getUIActions().closeWindow(childWindowId)
+		if (windowId)
+			getUIActions().closeWindow(windowId)
 	}
 	
 	/**
@@ -274,7 +274,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		!this.props.saving &&
 		getIssueActions().issueSave(
 			cloneObjectShallow(this.props.editingIssue, this.textInputState()),
-			getChildWindowId()
+			getWindowId()
 		)
 	}
 	

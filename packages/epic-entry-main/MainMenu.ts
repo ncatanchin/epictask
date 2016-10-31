@@ -15,7 +15,7 @@ const
 	log = getLogger(__filename)
 
 
-function makeDevMenu(mainWindow:Electron.BrowserWindow) {
+function makeDevMenu() {
 	return {
 		label: 'Dev',
 		submenu: [
@@ -69,7 +69,7 @@ function makeDevMenu(mainWindow:Electron.BrowserWindow) {
 }
 
 
-export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
+export function makeMainMenu() {
 	
 	
 	if (!Env.isMac)
@@ -142,10 +142,10 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 					label: 'Toggle Full Screen',
 					accelerator: 'Ctrl+Command+F',
 					click() {
-						mainWindow
-							.setFullScreen(
-								!mainWindow.isFullScreen()
-							)
+						const
+							win = BrowserWindow.getFocusedWindow()
+							
+						win && win.setFullScreen(!win.isFullScreen())
 					}
 				}
 			]
@@ -154,8 +154,16 @@ export function makeMainMenu(mainWindow:Electron.BrowserWindow) {
 	
 	
 	//if (Env.isDev)
-		template.push(makeDevMenu(mainWindow))
+		template.push(makeDevMenu())
 	
 	
 	return Menu.buildFromTemplate(template)
+}
+
+export function execute() {
+	// ONLY SET MAIN MENU ON MAC
+	if (!Env.isMac)
+		return
+	
+	Menu.setApplicationMenu(makeMainMenu())
 }

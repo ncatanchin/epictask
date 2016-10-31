@@ -1,14 +1,12 @@
-import { ActionFactory, ActionReducer, ActionThunk, ActionMessage } from 'typedux'
-
-import { RegisterActionFactory,Events, AppKey } from "epic-global"
-import { Provided,ISettings } from "epic-global"
+import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
+//import { IWindowState } from "epic-process-manager-client/WindowTypes"
+import { RegisterActionFactory, Events, AppKey, Provided, cloneObjectShallow } from "epic-global"
 
 import { User } from "epic-models"
-
 import { AppState } from "../state/AppState"
-import {AppStateType} from '../state/app/AppStateType'
-import { IWindowState } from "epic-process-manager-client"
-import { cloneObjectShallow } from "epic-global"
+import { AppStateType } from "../state/app/AppStateType"
+
+import { Settings } from "epic-global/settings/Settings"
 
 
 const log = getLogger(__filename)
@@ -67,11 +65,28 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * Set the user
 	 *
 	 * @param user
+	 * @param token
+	 *
 	 * @returns {Map<string, User>}
 	 */
 	@ActionReducer()
-	setUser(user:User) {
-		return (state:AppState) => state.set('user', user)
+	setAuthenticated(user:User,token:string = null) {
+		return (state:AppState) => state.withMutations((newState:AppState) => {
+			let
+				{settings} = newState
+			
+			if (!user || !token) {
+				user = null
+				token = null
+			}
+			
+			
+			
+			return newState
+				.set('settings',settings.set('user',user))
+				.set('user',user)
+				.set('appState',user && token ? AppStateType.Authenticated : AppStateType.AuthLogin)
+		})
 	}
 	
 	
@@ -82,7 +97,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * @returns {(state:AppState)=>Map<string, ISettings>}
 	 */
 	@ActionReducer()
-	updateSettings(newSettings:ISettings) {
+	updateSettings(newSettings:Settings) {
 		return (state:AppState) => {
 			return state.set('settings', newSettings).set('user', newSettings.user)
 		}
@@ -96,7 +111,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * @returns {(state:AppState)=>Map<string, Map<string, IWindowState>>}
 	 */
 	@ActionReducer()
-	updateWindow(...windowState:IWindowState[]) {
+	updateWindow(...windowState) {
 		return (state:AppState) => state.set(
 			'windows',
 			state.windows.withMutations(newWindowMap => {

@@ -183,10 +183,10 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	 */
 	private hide = () => {
 		const
-			childWindowId = getChildWindowId()
+			windowId = getWindowId()
 		
-		if (childWindowId)
-			getUIActions().closeWindow(childWindowId)
+		if (windowId)
+			getUIActions().closeWindow(windowId)
 	}
 	
 	/**

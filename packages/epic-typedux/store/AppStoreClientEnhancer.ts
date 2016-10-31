@@ -2,6 +2,7 @@
 
 
 import { sendStoreAction } from "epic-typedux/store/AppStoreClient"
+
 const
 	log = getLogger(__filename),
 	{nextTick} = process
@@ -24,6 +25,7 @@ function appStoreEnhancer(storeCreator) {
 		// OVERRIDE DISPATCH - CHECK STATE AFTER ACTION
 		store.dispatch = (action) => {
 			const
+				{fromServer} = action,
 				state = store.getState()
 			
 			storeDotDispatch(action)
@@ -32,11 +34,13 @@ function appStoreEnhancer(storeCreator) {
 				newState = store.getState()
 			
 			// IF CHANGED - SEND TO CHILDREN
-			if (state !== newState) {
+			if (!fromServer && state !== newState) {
 				
 				// If it's a reducer then process it, otherwise - wait for server
 				// to process the action and send data
-				nextTick(() => sendStoreAction(action))
+				nextTick(() => sendStoreAction(assign(action,{
+					windowId: getWindowId()
+				})))
 				
 			}
 		}

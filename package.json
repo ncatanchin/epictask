@@ -10,7 +10,6 @@
     "test-watch": "gulp compile-watch",
     "start": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./bin/epictask-start.js",
     "postinstall": "node ./etc/scripts/post-install.js",
-  
     "tsc-watch": "./node_modules/.bin/tsc --project tsconfig.json --watch",
     "compile": "gulp compile",
     "compile-watch": "babel-node ./etc/scripts/compile-watch.js",
@@ -221,8 +220,9 @@
     "source-map-loader": "^0.1.5",
     "style-loader": "^0.13.1",
     "sync-files": "^1.0.3",
+    "ts-loader": "^0.9.5",
     "tslint": "^3.13.0",
-    "typescript": "2.1.0-dev.20160914",
+    "typescript": "^2.1.0-dev.20161015",
     "typestore-mocks": "^0.2.10",
     "url-loader": "^0.5.7",
     "vinyl-named": "^1.1.0",

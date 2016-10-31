@@ -12,7 +12,7 @@ const
  * @param storeCreator
  * @returns {(reducer:any, initialState:any)=>undefined}
  */
-function appStoreEnhancer(storeCreator) {
+function appStoreServerEnhancer(storeCreator) {
 	return (reducer, initialState) => {
 		let
 			store = storeCreator(reducer, initialState)
@@ -39,4 +39,4 @@ function appStoreEnhancer(storeCreator) {
 	}
 }
 
-export default appStoreEnhancer
+export default appStoreServerEnhancer

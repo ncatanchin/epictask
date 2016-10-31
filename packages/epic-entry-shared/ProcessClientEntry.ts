@@ -105,6 +105,8 @@ async function startProcessClient(processType:ProcessType, workerEntry:ProcessCl
 	
 	log.info(`Starting Worker Entry`)
 	try {
+		await workerEntry.init()
+		
 		if (workerEntry.servicesEnabled()) {
 			log.info('Starting all services')
 			await Promise
@@ -172,6 +174,11 @@ export abstract class ProcessClientEntry {
 		await startDeferred
 			.promise
 			.timeout(timeout)
+	}
+	
+	
+	async init() {
+		
 	}
 	
 	/**

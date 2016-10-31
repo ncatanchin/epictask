@@ -20,5 +20,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="tsconfig$roots" level="project" />
     <orderEntry type="library" name="node_types" level="project" />
+    <orderEntry type="library" name="immutable-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="reselect-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="node_modules" level="project" />
   </component>
 </module>

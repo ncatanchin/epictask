@@ -2,7 +2,7 @@ import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} fr
 
 import React from 'react'
 import {ActionFactory} from 'typedux'
-import { IWindowConfig } from "epic-process-manager-client"
+import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { decorateConstructor } from "./Decorations"
 import { getValue } from "epic-global"
 

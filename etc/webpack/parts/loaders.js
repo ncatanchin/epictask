@@ -22,11 +22,18 @@ module.exports = {
 		// SourceCode
 		{
 			test: srcTest,
-			exclude: [/(node_modules)/],
+			exclude: [/node_modules/],
 			loaders: ["react-hot-loader/webpack",'awesome-typescript','source-map-loader',proxyProvidedLoaderPath],
-			
-			
 		},
+		// {
+		// 	test: srcTest,
+		// 	exclud
+		//
+		// e: [/node_modules/],
+		// 	loaders: ["react-hot-loader/webpack",'ts','source-map-loader',proxyProvidedLoaderPath],
+		// },
+		
+		
 		
 		// JADE
 		{

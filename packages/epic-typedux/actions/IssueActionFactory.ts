@@ -2,38 +2,55 @@ import { FinderRequest } from "typestore"
 import { ActionFactory, ActionThunk, ActionReducer } from "typedux"
 import { List } from "immutable"
 import { Stores, getStores } from "epic-database-client"
-import { FinderItemsPerPage, IssueKey, isNil, isNumber } from "epic-global"
-import { cloneObject, extractError, nilFilter, cloneObjectShallow, shallowEquals } from "epic-global"
-import { addErrorMessage, getNotificationCenter } from "epic-global"
-import { addMessage } from "epic-global"
-import { getSettings } from "epic-global"
-import { Provided } from "epic-global"
-import { RegisterActionFactory } from "epic-global"
-import { pagedFinder } from "epic-global"
-import { isListType } from "epic-global"
-import { Dialogs } from "epic-global"
-import { Comment } from "epic-models"
-import { Issue, IssueStore, TIssueState } from "epic-models"
-import { Label } from "epic-models"
-import { Milestone } from "epic-models"
-import { Repo } from "epic-models"
-import { AvailableRepo } from "epic-models"
-import { CommentStore } from "epic-models"
-import { IssuesEventStore, IssuesEvent } from "epic-models"
-import { LoadStatus } from "epic-models"
+import {
+	FinderItemsPerPage,
+	IssueKey,
+	isNil,
+	isNumber,
+	cloneObject,
+	extractError,
+	nilFilter,
+	cloneObjectShallow,
+	shallowEquals,
+	addErrorMessage,
+	getNotificationCenter,
+	addMessage,
+	getSettings,
+	Provided,
+	RegisterActionFactory,
+	pagedFinder,
+	isListType
+} from "epic-global"
+import {
+	Comment,
+	Issue,
+	IssueStore,
+	TIssueState,
+	Label,
+	Milestone,
+	Repo,
+	AvailableRepo,
+	CommentStore,
+	IssuesEventStore,
+	IssuesEvent,
+	LoadStatus
+} from "epic-models"
 import { IssueMessage, IssueState, TEditCommentRequest, IIssuePatchLabel } from "../state/IssueState"
 import { enabledRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector } from "../selectors"
 import {
 	selectedIssueIdsSelector,
 	selectedIssueSelector,
 	selectedIssuesSelector,
-	issueItemsSelector
+	issueItemsSelector,
+	TIssuePatchMode,
+	getStoreState,
+	IIssueFilter,
+	EmptyIssueFilter,
+	IIssueSort,
+	getRepoActions,
+	getUIActions,
+	getAppActions
 } from "epic-typedux"
-import { TIssuePatchMode } from "epic-typedux"
-import { getStoreState } from "epic-typedux"
-import { IIssueFilter, EmptyIssueFilter } from "epic-typedux"
-import { IIssueSort } from "epic-typedux"
-import { getRepoActions, getUIActions, getAppActions } from "epic-typedux"
 import { GitHubClient } from "epic-github"
 //import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
@@ -1073,13 +1090,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 			const
 				actions = this.withDispatcher(dispatch, getState),
 				uiActions = getUIActions(),
-				appActions = getAppActions(),
-				{issue:issueStore,availableRepo:availRepoStore} = getStores(),
-				dialogName = Dialogs.IssueEditDialog
-			
-			
-			
-			const
+				{issue:issueStore} = getStores(),
 				availRepos =  enabledAvailableReposSelector(getState())
 			
 			if (!availRepos.size)
@@ -1134,9 +1145,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	async editIssue(issue:Issue = null) {
 		const
-			uiActions = getUIActions(),
-			dialogName = Dialogs.IssueEditDialog,
-			getState = getStoreState
+			uiActions = getUIActions()
 			
 		issue = issue || await this.getSelectedIssue()
 		
@@ -1158,9 +1167,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	async editComment(issue: Issue, comment: Comment = null) {
 		const
-			uiActions = getUIActions(),
-			dialogName = Dialogs.IssueCommentDialog,
-			getState = getStoreState
+			uiActions = getUIActions()
 		
 		assert(issue, 'You must provide an issue to edit/create a comment ;)')
 		

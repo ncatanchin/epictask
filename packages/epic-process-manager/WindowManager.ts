@@ -1,36 +1,38 @@
 import Electron = require('electron')
+
 import * as React from "react"
 import {
-	AllWindowDefaults,
 	getHot,
 	setDataOnHotDispose,
 	acceptHot,
 	shortId,
-	toJSON,
 	getAppEntryHtmlPath,
-	isString, getWindowConfig
+	isString, isList, cloneObject
 } from "epic-global"
 import {
 	IWindowConfig,
 	WindowType,
 	DevToolsPositionDefault,
 	IWindowInstance
-} from "epic-process-manager-client"
-import { IWindowState } from "epic-process-manager-client"
-import { ProcessType } from "epic-entry-shared"
+} from "epic-process-manager-client/WindowTypes"
+import { IWindowState } from "epic-process-manager-client/WindowTypes"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 import { cloneObjectShallow } from "epic-global"
 import { getAppActions } from "epic-typedux/provider"
 import { attachEvents } from "epic-global/EventUtil"
 import { getValue } from "epic-global"
 import { HEARTBEAT_TIMEOUT } from "epic-net"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import { Events } from "epic-global"
+import { Events } from "epic-global/Constants"
+import { WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
+import {List} from 'immutable'
 
 const
 	log = getLogger(__filename),
+	
 	windowStateKeeper = require('electron-window-state'),
 	
-	{ipcMain} = Electron,
+	{BrowserWindow,ipcMain} = Electron,
 	
 	// Container to support hot reloading
 	instanceContainer = ((global as any).instanceContainer || {}) as {
@@ -40,23 +42,30 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
-
-const WindowDefaultOpts = Object.assign(AllWindowDefaults, {
-	minHeight: 200,
-	minWidth: 200
-})
-
-const WindowDialogDefaultOpts = Object.assign({}, WindowDefaultOpts, {
-	minHeight: 500,
-	minWidth: 500,
-	//titleBarStyle: 'hidden',
-})
-
-const WindowModalDefaultOpts = Object.assign({}, WindowDefaultOpts, WindowDialogDefaultOpts, {
-	modal: true
-})
+/**
+ * Crate a window state keeper
+ * 
+ * @param id
+ * @param config
+ * @returns {any}
+ */
+function createWindowStateKeeper(id:string,config:IWindowConfig) {
+	const
+		{opts = {}} = config,
+		{
+			width:defaultWidth,
+			height:defaultHeight
+		} = opts
+	
+	
+	return windowStateKeeper({
+		filename: `epic-window-state-${id}`,
+		defaultWidth,
+		defaultHeight
+	})
+}
 
 
 /**
@@ -67,12 +76,6 @@ export interface IWindowMessageHandler {
 }
 
 
-
-export const WindowTypeDefaults = {
-	[WindowType.Normal]: WindowDefaultOpts,
-	[WindowType.Dialog]: WindowDialogDefaultOpts,
-	[WindowType.Modal]: WindowModalDefaultOpts
-}
 
 
 /**
@@ -97,10 +100,45 @@ function appendURLParams(url:string,params:{[key:string]:any}) {
  * @returns {IWindowState}
  */
 function convertInstanceToState(instance:IWindowInstance):IWindowState {
-	return _.omit(instance,'heartbeatTimestamp','heartbeatTimeoutId','connectedFlag','heartbeatCount','config','window') as IWindowState
+	return _.omit(instance,
+		'heartbeatTimestamp',
+		'heartbeatTimeoutId',
+		'connectedFlag',
+		'heartbeatCount',
+		'config',
+		'window',
+		'webContents',
+		'onMessage'
+	) as IWindowState
 }
 
 
+//noinspection JSValidateJSDoc
+/**
+ * Create window options
+ * 
+ * @param type
+ * @param opts
+ * @returns {Electron.BrowserWindowOptions}
+ */
+function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOptions = {}):Electron.BrowserWindowOptions {
+	return _.merge(
+		{
+			backgroundColor: require('epic-styles').getPalette().background
+		},
+		
+		// TYPE DEFAULTS
+		WindowOptionDefaults[ type ],
+		
+		// CONFIG DEFAULTS
+		([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
+			parent: BrowserWindow.getFocusedWindow()
+		},
+		
+		// CUSTOM OPTS
+		opts
+	)
+}
 /**
  * The command manager - menu, shortcuts, containers, etc
  */
@@ -233,7 +271,7 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 	/**
 	 * Pushes the window states to AppState
 	 */
-	private pushWindowStates = _.debounce(() => {
+	pushWindowStates = _.debounce(() => {
 		getAppActions().updateWindow(...this.getWindowStates())
 	},150)
 	
@@ -459,13 +497,42 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 	 *
 	 * @returns {{id: string, config: IWindowConfig, window: Electron.remote.BrowserWindow}}
 	 */
-	async open(config:IWindowConfig) {
+	async open(config:IWindowConfig)
+	/**
+	 * Configs
+	 *
+	 * @param configs
+	 */
+	async open(configs:List<IWindowConfig>|Array<IWindowConfig>)
+	async open(configOrConfigs:IWindowConfig|List<IWindowConfig>|Array<IWindowConfig>) {
+		if (isList(configOrConfigs) || Array.isArray(configOrConfigs)) {
+			const
+				configs =
+					Array.isArray(configOrConfigs) ?
+						configOrConfigs :
+						configOrConfigs.toArray()
+			
+			return await Promise.all(configs.map(it => this.open(it)))
+		}
+		
+		const
+			config:IWindowConfig = cloneObject(configOrConfigs)
+		
 		let
 			{opts = {}} = config
 		
 		const
 			windowCreateDeferred = Promise.defer(),
-			{type,uri,singleWindow = false,autoRestart = false,showDevTools = false,processType = ProcessType.UI} = config
+			
+			{
+				type,
+				uri,
+				storeWindowState = false,
+				singleWindow = false,
+				autoRestart = false,
+				showDevTools = true,
+				processType = ProcessType.UI
+			} = config
 		
 		assert(!singleWindow || !this.windows.find(it => it.config.name === config.name),
 			`Window ${config.name} is marked as a single instance, but there is already one open` )
@@ -474,34 +541,22 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 		try {
 			
 			const
-				newWindowOpts = _.merge(
-					{
-						backgroundColor: require('epic-styles').getPalette().background
-					},
-					
-					// TYPE DEFAULTS
-					WindowTypeDefaults[ type ],
-					
-					// CONFIG DEFAULTS
-					([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
-						parent: Electron.remote.getCurrentWindow()
-					},
-					
-					// MANAGER PARTITIONING
-					{},
-					opts || {}
-				)
+				newWindowOpts = makeBrowserWindowOptions(type,opts)
+			
+			// ID IS NAME FOR SINGLE WINDOWS
+			const
+				id = singleWindow ? config.name : shortId()
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
 			let
-				childWindowState = null
+				savedWindowState = storeWindowState  && createWindowStateKeeper(id,config) 
+					
 			
 			// TODO: REMOVE - TEST
 			
 			// CREATE WINDOW AND GET TO WORK
 			const
-				id = shortId(),
-				newWindow = new Electron.remote.BrowserWindow(Object.assign({}, childWindowState, newWindowOpts)),
+				newWindow = new Electron.BrowserWindow(Object.assign({}, savedWindowState, newWindowOpts)),
 				templateURL = getAppEntryHtmlPath()
 			
 			let
@@ -546,8 +601,8 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 			})
 			
 			// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
-			if (childWindowState) {
-				childWindowState.manage(newWindow)
+			if (savedWindowState) {
+				savedWindowState.manage(newWindow)
 			}
 			
 			log.debug(`Loading dialog ${id} with URL:`, url)
@@ -555,7 +610,7 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 			
 			
 			// OPEN DEV TOOLS IF CONFIGURED
-			if (DEBUG && showDevTools) {
+			if (DEBUG &&  showDevTools) {
 				newWindow.show()
 				newWindow.webContents.openDevTools({
 					mode: DevToolsPositionDefault
@@ -629,6 +684,8 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 	}
 }
 
+// SET THE CLASS
+instanceContainer.clazz = WindowManager
 
 /**
  * Get the command manager from anywhere
@@ -641,47 +698,44 @@ export const getWindowManager = getHot(module, 'getWindowManager', new Proxy(fun
 })) as () => WindowManager
 
 
+
 /**
  * Default export is the singleton getter
  */
 export default getWindowManager
 
 
-// REF TYPE FOR GETTER
-type getWindowManagerType = typeof getWindowManager
 
 /**
  * Add getWindowManager onto the global scope
  */
-assignGlobal({ getWindowManager })
-
-/**
- * getWindowManager global declaration
- */
-declare global {
-	const getWindowManager:getWindowManagerType
-}
-
-
-/**
- * Update the singleton on HMR reload & set root clazz
- */
-instanceContainer.clazz = WindowManager
-
-if (instanceContainer.hotInstance) {
-	Object.setPrototypeOf(instanceContainer.hotInstance, WindowManager.prototype)
-}
-
-Object.assign((global as any), {
+assignGlobal({
+	getWindowManager,
 	instanceContainer: assign(instanceContainer, {
 		hotInstance: instanceContainer.instance
 	})
 })
 
-setDataOnHotDispose(module, () => ({
-	// Tack on a ref to the hot instance so we know it's there
-	
-	getWindowManager
-}))
 
-acceptHot(module, log)
+
+
+// HMR
+if (module.hot) {
+	
+	// UPDATE HOT INSTANCE
+	if (instanceContainer.hotInstance) {
+		Object.setPrototypeOf(instanceContainer.hotInstance, WindowManager.prototype)
+	}
+	
+	// ON DISPOSE, SAVE getWindowManager
+	setDataOnHotDispose(module, () => ({getWindowManager}))
+
+// ACCEPT SELF
+	acceptHot(module, log)
+}
+
+
+
+
+
+

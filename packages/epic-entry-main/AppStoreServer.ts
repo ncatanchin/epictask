@@ -26,19 +26,23 @@ let
  * @param action
  */
 export function broadcastAppStoreAction(action) {
-	Object
-		.values(childStores)
-		.filter(childStore => childStore.id !== (action as any).fromChildId)
-		.forEach(childStore => {
-			const
-				{ socket, filter, id } = childStore
-			
-			try {
-				ipcServer.send(socket, AppStoreServerEventNames.ChildStoreActionReducer, { id, action })
-			} catch (err) {
-				log.error(`Failed to send action reducer to ${id}`, err)
-			}
+	ipcServer.broadcast(
+		AppStoreServerEventNames.ChildStoreActionReducer, {
+			action: assign(action,{fromServer:true})
 		})
+	// Object
+	// 	.values(childStores)
+	// 	.filter(childStore => childStore.id !== (action as any).fromChildId)
+	// 	.forEach(childStore => {
+	// 		const
+	// 			{ socket, filter, id } = childStore
+	//
+	// 		try {
+	// 			ipcServer.send(socket, AppStoreServerEventNames.ChildStoreActionReducer, { id, action })
+	// 		} catch (err) {
+	// 			log.error(`Failed to send action reducer to ${id}`, err)
+	// 		}
+	// 	})
 }
 
 /**
@@ -90,7 +94,7 @@ namespace clientMessageHandlers {
 			state = _.toJS(getStoreState())
 		
 		
-		server.send(socket, 'childStoreSubscribeResponse', { id, initialState: state })
+		server.send(socket, AppStoreServerEventNames.ChildStoreSubscribeResponse, { id, initialState: state })
 	}
 	
 	
@@ -287,9 +291,6 @@ function getStateValue(...keyPath) {
 }
 
 
-interface IMessageSender {
-	sendMessage(type:string|number, body)
-}
 
 /**
  * Start the state server
@@ -297,6 +298,7 @@ interface IMessageSender {
  * @returns {any|{fontWeight}|void|{color}}
  */
 export async function start() {
+	
 	
 	if (ProcessConfig.isStorybook()) {
 		log.warn(`AppStore server does not run in storybook`)
@@ -326,8 +328,13 @@ export async function start() {
 	return stopStoreServer
 }
 
+
+/**
+ * HMR
+ */
 setDataOnHotDispose(module, () => ({
 	clientObservers,
 	ipcServer
 }))
+
 acceptHot(module, log)

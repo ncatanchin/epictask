@@ -1,6 +1,11 @@
 import "epic-entry-shared/AppEntry"
-import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime } from "epic-global"
+import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './AppRoot'
+import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
+
+
+const
+	{ProcessClientEntry} = loadProcessClientEntry()
 
 
 polyfillRequire(__non_webpack_require__)
@@ -31,9 +36,6 @@ const setupDevTools = benchmark('Setup dev tools',() => {
 	return deferred.promise
 })
 
-if (Env.isDev && !Env.isTest) {
-	startupPromises.push(setupDevTools())
-}
 
 
 /**
@@ -58,66 +60,6 @@ const setupCommandManager = benchmark('Setup Command Manager', () => {
 	
 })
 
-startupPromises.push(setupCommandManager())
-
-/**
- * Create the store
- *
- * @returns {Promise<T>}
- */
-const setupStore = benchmark('Start Store and Children',() => {
-	benchmarkLoadTime(`Boot starting`)
-	const
-		deferred = Promise.defer()
-	
-	//require.ensure([], function (require:any) {
-		benchmarkLoadTime(`Building store`)
-		const
-			{ storeBuilder } = require('epic-typedux/store/AppStoreBuilder')
-		
-		benchmarkLoadTime(`Loaded store builder`)
-		
-		storeBuilder()
-			.then(async() => {
-				
-				benchmarkLoadTime(`Store built`)
-				
-				// START THE SERVICE MANAGER EVERYWHERE
-				benchmarkLoadTime(`Loading getService Manager`)
-				const
-					getServiceManager = require('epic-services').getServiceManager
-				
-				benchmarkLoadTime(`Starting services`)
-				
-				// HMR STOP SERVICES
-				addHotDisposeHandler(module, () => {
-					try {
-						getServiceManager().stop()
-					} catch (err) {
-						log.error(`Failed to stop services`, err)
-					}
-				})
-				
-				
-				log.info('Starting all services')
-				await getServiceManager().start()
-				benchmarkLoadTime(`services started`)
-				
-				deferred.resolve()
-			//})
-	})
-	
-	
-	return deferred
-		.promise
-		.then(() => {
-				benchmarkLoadTime(`Resolved all resources`)
-				UIResourcesLoaded.resolve()
-			}
-		)
-})
-
-startupPromises.push(setupStore())
 
 
 /**
@@ -142,7 +84,58 @@ function setupUI() {
 	return deferred.promise
 }
 
-startupPromises.push(setupUI())
+export class UIEntry extends ProcessClientEntry {
+	constructor() {
+		super(ProcessType.UI)
+	}
+	
+	/**
+	 * Services are disabled on the database server
+	 *
+	 * @returns {boolean}
+	 */
+	servicesEnabled() {
+		return true
+	}
+	
+	/**
+	 * Called to start the worker
+	 */
+	protected async start() {
+		if (Env.isDev && !Env.isTest) {
+			startupPromises.push(setupDevTools())
+		}
+		
+		startupPromises.push(setupCommandManager())
+		
+		
+		
+		startupPromises.push(setupUI())
+		
+		await Promise.all(startupPromises)
+	}
+	
+	/**
+	 * Called to stop the worker
+	 */
+	protected async stop(exitCode) {
+		
+	}
+	
+	async init() {
+		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
+		
+		UIResourcesLoaded.resolve()
+	}
+	
+}
+
+
+export const uiEntry = getHot(module,'uiEntry',new UIEntry())
+
+setDataOnHotDispose(module,() => ({
+	uiEntry
+}))
 
 
 acceptHot(module,log)

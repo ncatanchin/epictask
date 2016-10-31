@@ -10,6 +10,7 @@ const
 
 
 
+
 require('./JobManagerService')
 require('./JobSchedulerService')
 require('./GithubEventMonitorService')
@@ -34,6 +35,7 @@ class JobServerEntry extends ProcessClientEntry {
 	 * Start the server
 	 */
 	protected async start() {
+		
 		log.info('Starting JobServerEntry')
 	}
 	
@@ -42,6 +44,10 @@ class JobServerEntry extends ProcessClientEntry {
 	 */
 	protected async stop() {
 		log.info(`Stopping JobServerEntry`)
+	}
+	
+	async init() {
+		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
 	}
 }
 

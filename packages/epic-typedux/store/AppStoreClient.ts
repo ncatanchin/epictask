@@ -1,7 +1,7 @@
 import { ProcessClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
 import * as uuid from "node-uuid"
 import { REQUEST_TIMEOUT, Transport } from "epic-net"
-import { BrowserWindow, ipcMain } from "electron"
+
 import {
 	IChildStore,
 	ChildStoreSubscriptionStatus,
@@ -210,7 +210,7 @@ export function clientObserveState(
 			log.error(`Failed to set state observer`, wrapper, err)
 			delete observers[ id ]
 			reject(err)
-		})
+		}) as Promise<Function>
 	
 }
 
@@ -311,10 +311,19 @@ function attachEvents(transport) {
 		
 	})
 	
-	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({id,action}) => {
+	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({action}) => {
 		
-		if (!childStoreWrapper)
-			return log.error(`Unknown child store ${id}`)
+		// if (!childStoreWrapper)
+		// 	return log.error(`Unknown child store ${id}`)
+		//
+		const
+			{windowId} = action
+		
+		if (windowId === getWindowId()) {
+			log.debug(`I sent this so no need to dispatch again`)
+			return
+		}
+			
 		
 		require('./AppStore').getReduxStore().dispatch(action)
 	})

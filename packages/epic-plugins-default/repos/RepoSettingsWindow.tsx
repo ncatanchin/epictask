@@ -192,10 +192,10 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 */
 	private hide = () => {
 		const
-			childWindowId = getChildWindowId()
+			windowId = getWindowId()
 		
-		if (childWindowId)
-			getUIActions().closeWindow(childWindowId)
+		if (windowId)
+			getUIActions().closeWindow(windowId)
 	}
 	
 	/**

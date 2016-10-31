@@ -47,7 +47,7 @@ const
  *
  * @returns {null}
  */
-function getChildWindowIdGlobal() {
+function getWindowIdGlobal() {
 	const
 		windowId = process.env.EPIC_WINDOW_ID
 	return  windowId && windowId !== 'undefined' ? windowId : null
@@ -122,7 +122,7 @@ function installGlobals() {
 		assignGlobal: _.assignGlobal.bind(_),
 		getAppConfig: require('./AppConfig').getAppConfig,
 		node_require: __non_webpack_require__,
-		getChildWindowId: getChildWindowIdGlobal,
+		getWindowId: getWindowIdGlobal,
 		getCurrentWindow: getCurrentWindowGlobal
 	})
 }
@@ -154,7 +154,7 @@ declare global {
 	
 	
 	
-	let getChildWindowId:typeof getChildWindowIdGlobal
+	let getWindowId:typeof getWindowIdGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	let LogLevel:typeof LogLevelGlobal
