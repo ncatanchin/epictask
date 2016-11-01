@@ -25,7 +25,9 @@ const
 	fs = require('fs'),
 	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader')
+	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader'),
+	
+	forkCheckerPlugin = new ForkCheckerPlugin()
 	
 
 // Import globals
@@ -370,7 +372,8 @@ function makeConfig(name,dependencies,entry,configFn) {
 				
 				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
 				//new TsConfigPathsPlugin(),
-				new ForkCheckerPlugin(),
+				//new ForkCheckerPlugin(),
+				forkCheckerPlugin,
 				
 				new CircularDependencyPlugin(),
 				
@@ -482,7 +485,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
 	makeConfig('epic_libs',[],{
 		"epic_libs": makeHotEntry([
-			...glob.sync("epic-entry-shared/**/*",globOpts),
+			"epic-entry-shared",
 			//...glob.sync("epic-global/**/*",globOpts),
 			
 			// "./epic-entry-shared/Globals",

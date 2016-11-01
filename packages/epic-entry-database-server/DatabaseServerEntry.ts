@@ -1,3 +1,5 @@
+///<reference path="../epic-entry-shared/AppEntry.ts"/>
+
 import "epic-entry-shared/AppEntry"
 
 

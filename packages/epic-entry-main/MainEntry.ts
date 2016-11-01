@@ -1,3 +1,4 @@
+///<reference path="../epic-entry-shared/AppEntry.ts"/>
 
 import { nilFilter } from "epic-global/ListUtil"
 

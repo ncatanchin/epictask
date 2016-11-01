@@ -1,3 +1,4 @@
+///<reference path="../epic-entry-shared/AppEntry.ts"/>
 import "epic-entry-shared/AppEntry"
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './AppRoot'

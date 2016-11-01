@@ -243,7 +243,7 @@
     "ts-jest": "^0.1.11",
     "ts-loader": "^0.9.5",
     "tslint": "^3.13.0",
-    "typescript": "^2.1.0-dev.20161015",
+    "typescript": "2.1.0-dev.20161015",
     "typestore-mocks": "^0.2.10",
     "url-loader": "^0.5.7",
     "vinyl-named": "^1.1.0",
@@ -322,7 +322,7 @@
     "typescript-ioc": "^0.2.3",
     "typestore": "^0.2.10",
     "typestore-plugin-pouchdb": "^0.2.10",
-    "typetransform": "0.0.1",
+    "typetransform": "^0.0.2",
     "urlsearchparams": "densebrain/URLSearchParams",
     "utf8-encoding": "^0.1.2",
     "winston": "^2.2.0"

@@ -1,6 +1,7 @@
-///<reference path="../epic-entry-shared/Globals.ts"/>
-///<reference path="../epic-entry-shared/Env.ts"/>
-///<reference path="../epic-entry-shared/PromiseConfig.ts"/>
+///<reference path="./LoDashMixins.ts"/>
+///<reference path="./Globals.ts"/>
+///<reference path="./Env.ts"/>
+///<reference path="./PromiseConfig.ts"/>
 
 import "./LogCategories"
 import "./ProcessConfig"
