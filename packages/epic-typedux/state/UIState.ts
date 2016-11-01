@@ -9,6 +9,8 @@ import {
 } from "epic-global"
 import { User } from "epic-models"
 import { State } from "typedux"
+import { toPlainObject,excludeFilterConfig,excludeFilter } from "typetransform"
+
 
 const
 	log = getLogger(__filename)
@@ -43,14 +45,18 @@ export type TDialogMap = Map<string,boolean>
 export const UIStateRecord = Record({
 	ready: false,
 	user: null,
-	statusBar: {
-		visible: true
-	},
+	
 	sheetURI:null,
 	messages: List<INotificationMessage>(),
 	
 	toolPanels: makeToolPanels(),
-	toolDragging: false
+	toolDragging: false,
+	
+	statusBar: {
+		visible: true
+	},
+	
+	jobs: {}
 })
 
 /**
@@ -85,7 +91,12 @@ export class UIState extends UIStateRecord implements State {
 	}
 	
 	toJS() {
-		return _.omit(super.toJS(),'messages')
+		
+		return toPlainObject(this,
+			excludeFilterConfig(
+				...excludeFilter('messages','ready','toolDragging')
+			))
+	
 	}
 	
 	ready:boolean
@@ -98,6 +109,19 @@ export class UIState extends UIStateRecord implements State {
 	
 	statusBar:{
 		visible:boolean
+	}
+	
+	jobs: {
+		
+		/**
+		 * Selected Job Id
+		 */
+		selectedId:string
+		
+		/**
+		 * Selected log id
+		 */
+		selectedLogId:string
 	}
 
 

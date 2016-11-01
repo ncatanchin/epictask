@@ -18,6 +18,19 @@ import {LogLevel as LogLevelGlobal} from 'typelogger'
 // LATER - POOR TYPING
 later = require('later/index-browserify')
 
+import {NotificationCenter,getNotificationCenter} from './NotificationCenter'
+
+// Export globals
+const
+	_ = require('lodash'),
+	g = global as any
+
+_.assignGlobal({
+	getNotificationCenter
+})
+
+
+
 import './ErrorHandling'
 
 //import {getValue} from  "epic-global"
@@ -34,12 +47,8 @@ import * as ReactDOMGlobal from 'react-dom'
 import * as JQueryGlobal from 'jquery'
 import * as RadiumGlobal from 'radium'
 
-import {getNotificationCenter as getNotificationCenterGlobal} from 'epic-global/NotificationCenter'
 
-// Export globals
-const
-	_ = require('lodash'),
-	g = global as any
+
 
 
 /**
@@ -53,6 +62,18 @@ function getWindowIdGlobal() {
 	return  windowId && windowId !== 'undefined' ? windowId : null
 }
 
+/**
+ * Retrieve a formatted process identifier - NOT A PID
+ *
+ * @returns {string}
+ */
+function getProcessId() {
+	const
+		windowId = getWindowIdGlobal(),
+		windowIdStr = !windowId ? '' : `-${windowId}`
+	
+	return  `${ProcessConfig.getTypeName()}${windowIdStr}`
+}
 
 /**
  * Finds the current window from anywhere
@@ -115,14 +136,13 @@ function installGlobals() {
 		moment: require('moment'),
 		assert: assertGlobal,
 		
-		getNotificationCenter: getNotificationCenterGlobal,
-		
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
 		getAppConfig: require('./AppConfig').getAppConfig,
 		node_require: __non_webpack_require__,
 		getWindowId: getWindowIdGlobal,
+		getProcessId,
 		getCurrentWindow: getCurrentWindowGlobal
 	})
 }
@@ -186,7 +206,7 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	let assignGlobal:IAssignGlobal
 	
-	let getNotificationCenter:typeof getNotificationCenterGlobal
+	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	let node_require:typeof __non_webpack_require__
@@ -197,6 +217,10 @@ declare global {
 	//var logError:typeof logErrorGlobal
 	var $:typeof JQueryGlobal
 	let Radium:typeof RadiumGlobal
+	
+	
+	function getNotificationCenter():NotificationCenter
+	function getProcessId():string
 	
 	interface Window {
 		$:typeof JQueryGlobal

@@ -1,7 +1,7 @@
 
 
 import { windowsSelector } from "epic-typedux/selectors"
-import { getStoreState } from "epic-typedux/store"
+
 import {
 	WindowBackgroundConfigs,
 	WindowConfigNormalDefaults

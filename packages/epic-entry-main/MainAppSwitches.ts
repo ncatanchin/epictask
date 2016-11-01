@@ -1,14 +1,6 @@
 
-import { RemoteDebuggingPort } from "epic-global/Constants"
-
-const
-	{app} = require('electron')
-
-// ON LINUX ADD FLAGS
-if (Env.isLinux) {
-	// app.commandLine.appendSwitch('enable-transparent-visuals')
-	// app.commandLine.appendSwitch('disable-gpu')
-}
+import { RemoteDebuggingPort } from "epic-global"
+import {app} from 'electron'
 
 /**
  * In debug mode enable remote debugging
@@ -16,7 +8,6 @@ if (Env.isLinux) {
 if (Env.isDev) {
 	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort)
 }
-
 
 export {
 	

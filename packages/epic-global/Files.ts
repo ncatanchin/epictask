@@ -1,4 +1,4 @@
-import {getAppConfig} from "epic-entry-shared"
+import {getAppConfig} from "epic-entry-shared/AppConfig"
 
 const
 	log = getLogger(__filename),
@@ -46,7 +46,7 @@ function getPaths() {
 
 const [userDataPath,cachePath,tempPath] = getPaths()
 
-log.info(`Using cache path: ${cachePath}`)
+//log.info(`Using cache path: ${cachePath}`)
 if (!ProcessConfig.isStorybook())
 	mkdirp.sync(cachePath)
 

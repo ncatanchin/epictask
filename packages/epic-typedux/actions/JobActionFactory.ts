@@ -1,14 +1,9 @@
 // IMPORTS
-import {ActionFactory, ActionMessage, ActionThunk,ActionReducer} from 'typedux'
-import {List, Map} from 'immutable'
-import {JobState, IJobStatusDetail, TJobLogLevel, JobLogLevel} from "epic-typedux"
-import {IJob, JobStatus, IJobSchedule, IJobLog} from "../state/jobs/JobTypes"
-import {JobKey} from "epic-global"
-import {JobsMaxCompleted} from 'epic-global'
-import {Provided} from  "epic-global"
-import {cloneObjectShallow} from  "epic-global"
-import { RegisterActionFactory } from "epic-global"
-
+import { ActionFactory, ActionMessage, ActionReducer } from "typedux"
+import { List, Map } from "immutable"
+import { JobState } from "../state/JobState"
+import { IJobStatusDetail, IJob, JobStatus, IJobSchedule } from "../state/jobs/JobTypes"
+import { JobKey, JobsMaxCompleted, Provided, cloneObjectShallow, RegisterActionFactory } from "epic-global"
 
 
 const

@@ -16,13 +16,6 @@ export function rem(val:number) {
 	return `${val}rem`
 }
 
-function getTheme() {
-	return require('../ThemeState').getTheme()
-}
-
-function getPalette() {
-	return require('../ThemeState').getPalette()
-}
 
 /**
  * Create deeply configured styles

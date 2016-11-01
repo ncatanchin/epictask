@@ -3,6 +3,8 @@ import {EventEmitter} from "events"
 const
 	log = getLogger(__filename)
 
+
+
 /**
  * Available Transport Schemes
  */
@@ -36,28 +38,7 @@ export interface ITransportConstructor {
 	new (opts: ITransportOptions): Transport
 }
 
-/**
- * Map of Transport enum values to function providers
- */
-export type TTransportProviderMap = {[name: string]: () => ITransportConstructor}
 
-
-/**
- * Default scheme
- * @type {TransportScheme}
- */
-const DefaultTransportScheme: TransportScheme =
-	(TransportScheme[process.env.DefaultTransportScheme] || TransportScheme.IPC) as any
-
-
-/**
- * Scheme >> Provider Mappings
- *
- * @type {TTransportProviderMap}
- */
-const TransportSchemeProviders: TTransportProviderMap = {
-	[TransportScheme[TransportScheme.IPC]]: () => require('./IPCTransport').default
-}
 
 /**
  * Transport
@@ -150,49 +131,6 @@ export abstract class Transport extends EventEmitter {
 		return this.eventEmitter.listenerCount(type)
 	}
 	
-}
-
-/**
- * Merge static functions
- */
-export namespace Transport {
-	
-	/**
-	 * Get a new transport for a given scheme and options
-	 *
-	 * @param opts
-	 * @returns {Transport}
-	 */
-	export function getTransport(opts: ITransportOptions = {}) {
-		
-		const
-			transportScheme = opts.scheme || getDefaultScheme(),
-			transportProvider = TransportSchemeProviders[transportScheme] ||
-				TransportSchemeProviders[TransportScheme[transportScheme]],
-			transportClazz = transportProvider() as ITransportConstructor
-		
-		return new transportClazz(opts)
-	}
-	
-	/**
-	 * Get the default scheme currently configured
-	 *
-	 * @returns {TransportScheme}
-	 */
-	export function getDefaultScheme(): TransportScheme {
-		return DefaultTransportScheme
-	}
-	
-	
-	/**
-	 * Get a new default transport instance with options
-	 *
-	 * @param opts
-	 * @returns {Transport}
-	 */
-	export function getDefault(opts: ITransportOptions = {}): Transport {
-		return Transport.getTransport(assign(opts,{scheme:DefaultTransportScheme}))
-	}
 }
 
 export default Transport

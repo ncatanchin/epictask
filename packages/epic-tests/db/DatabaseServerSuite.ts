@@ -1,3 +1,3 @@
-describe('DatabaseServerSuite',() => {
-	require('./DatabaseServerEntry.spec')
-})
+// describe('DatabaseServerSuite',() => {
+// 	require('./DatabaseServerEntry.spec')
+// })

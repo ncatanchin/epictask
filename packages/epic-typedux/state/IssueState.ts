@@ -4,6 +4,8 @@ import { ActionMessage } from "typedux"
 import { Comment, Issue, IssuesEvent, Label, Milestone } from "epic-models"
 import { TIssueEditInlineConfig, IIssueSort, IIssueFilter, EmptyIssueFilter } from "./issue"
 import { reviveImmutable } from "epic-global"
+import { toPlainObject } from "typetransform"
+import { excludeFilterConfig, excludeFilter } from "typetransform/dist/Helpers"
 
 // Refactor - so we export here too
 // export {
@@ -51,6 +53,7 @@ export const IssueStateRecord = Record({
 	comments:List<Comment>(),
 	issuesEvents:List<IssuesEvent>(),
 	groupVisibility:Map<string,boolean>(),
+	
 	selectedIssueIds:[],
 	focusedIssueIds: [],
 	
@@ -93,16 +96,12 @@ export class IssueState extends IssueStateRecord {
 	}
 	
 	toJS() {
-		return _.pick(
-			this,
-			'issueFilter',
-			'issueSort',
-			'selectedIssueIds',
-			'patchIssues',
-			'patchMode',
-			'editingIssue',
-			'editCommentRequest'
-		)
+		return toPlainObject(this,excludeFilterConfig(
+		...excludeFilter(
+			'activityLoading',
+			/^edit/,
+			/^issueSav/
+		)))
 	}
 	
 	

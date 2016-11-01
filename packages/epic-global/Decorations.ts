@@ -1,7 +1,7 @@
 import {Attribute} from 'typestore'
 
 
-import {isNil,isFunction} from "./TypeChecks"
+import {isNil,isFunction} from "typeguard"
 import {JSONKey } from './Constants'
 
 const

@@ -3,7 +3,7 @@ import child_process = require('child_process')
 
 
 
-export namespace Cleaner {
+namespace Cleaner {
 	
 	
 	export const EPIC_ARG_CLEAN = '--epic-clean'
@@ -76,5 +76,6 @@ export namespace Cleaner {
 		require('electron').ipcMain.on(Events.Clean,Cleaner.restartAndClean)
 	}
 }
-	
 
+
+export default Cleaner

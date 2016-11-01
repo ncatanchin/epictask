@@ -1,6 +1,6 @@
 
 import './styles'
-import { acceptHot } from  "epic-global"
+import { acceptHot } from  "epic-global/HotUtils"
 import { makeThemeFontSize } from "./ThemeState"
 
 const

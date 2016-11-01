@@ -24,7 +24,7 @@ export interface IEpicLogger extends ILogger {
  * Load Reactotron
  */
 function loadReactotron() {
-	if (DEBUG && process.platform === 'darwin') {
+	if (DEBUG && !ProcessConfig.isType(ProcessType.Test) && process.platform === 'darwin') {
 		try {
 			Reactotron = require('reactotron-react-js').default
 		} catch (err) {
@@ -69,7 +69,7 @@ declare global {
 }
 
 
-if (ProcessConfig.isStorybook()) {
+if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 	Object.assign(global as any, {
 		LoggerFactory:EpicLoggerFactory,
 		getLogger: EpicLoggerFactory

@@ -6,9 +6,12 @@ export * from './internal/ServiceDecorations'
 export * from './internal/ServiceManager'
 export * from './internal/BaseService'
 
-export * from './DatabaseClientService'
-export * from './UIStateService'
-export * from './AppStateService'
+/**
+ * Import default services
+ */
+import loadDefaultServices from './ServiceLoader'
+
+loadDefaultServices()
 
 const
 	log = getLogger(__filename),

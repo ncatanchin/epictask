@@ -24,7 +24,6 @@ import {
 	IssueListItemType,
 	TIssueEditInlineConfig,
 	getIssueActions,
-	getStoreState,
 	SearchType
 } from "epic-typedux"
 import {

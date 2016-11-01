@@ -1,36 +1,8 @@
-import {JobType, IJob, IJobLogger} from "epic-typedux"
-import {JobHandler} from "./JobHandler"
-import JobProgressTracker from "./JobProgressTracker"
 
 
 const log = getLogger(__filename)
 
-/**
- * Types Supported by the executor
- */
-export interface IJobExecutorConstructor {
-	new (job:IJob): IJobExecutor
-	
-	supportedTypes():JobType[]
-}
 
-
-
-/**
- * Executes a Job
- */
-export interface IJobExecutor {
-	
-	
-	
-	/**
-	 * Execute a job
-	 *
-	 * @param handler
-	 * @param job
-	 */
-	execute(handler:JobHandler,logger:IJobLogger,progressTracker:JobProgressTracker,job:IJob):Promise<any>
-}
 
 /**
  * Find & load all jobs in the current tree

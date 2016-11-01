@@ -270,37 +270,7 @@ export class ServiceManager {
 	}
 	
 	
-	/**
-	 * Load the services require context
-	 *
-	 * @returns {any}
-	 */
-	loadContext() {
-		return _.merge({},
-			require('../DatabaseClientService'),
-			require('../AppStateService'),
-			require('../UIStateService'),
-			require('../RepoStateService'),
-			require('../ToastService')
-		)
-		// const
-		// 	ctx = this.ctxRef = require.context('epic-services',false,/^((?!internal).*)Service\.(ts|js)$/),
-		// 	serviceFiles = ctx.keys()
-		//
-		// // Log all the files in the context
-		// log.info(`Services Context has keys: ${serviceFiles.join(', ')}`)
-		//
-		// // Evaluate/load all modules
-		// // Each module will register it's services
-		// // With decorations accordingly
-		// ctx.keys().forEach(ctx)
-		//
-		//
-		//
-		// return ctx
-		
-		//return require('./index')
-	}
+	
 	
 	/**
 	 * Load the service context
@@ -313,11 +283,6 @@ export class ServiceManager {
 			return
 		}
 			
-		// Grab the services context
-		this.loadContext()
-		
-		
-		// Load/Reload any pending services
 		await this.processPendingServices()
 	}
 	

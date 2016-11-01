@@ -1,6 +1,5 @@
 import { FinderRequest } from "typestore"
 import { List } from "immutable"
-import { chunkRemove } from "epic-services"
 import {
 	Benchmark,
 	RepoKey,
@@ -14,7 +13,7 @@ import {
 	pagedFinder,
 	GithubSyncStatus
 } from "epic-global"
-import { getStores } from "epic-database-client"
+import { getStores,chunkRemove } from "epic-database-client"
 import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
 import { RepoMessage, RepoState } from "../state/RepoState"
 
@@ -32,7 +31,9 @@ import {
 	makeCommentId,
 	User
 } from "epic-models"
-import { repoIdPredicate, enabledRepoIdsSelector, availableReposSelector, JobType, getIssueActions } from "epic-typedux"
+import {repoIdPredicate, enabledRepoIdsSelector, availableReposSelector} from '../selectors'
+import { getIssueActions } from "epic-typedux/provider"
+import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import ProcessType from "epic-entry-shared/ProcessType"

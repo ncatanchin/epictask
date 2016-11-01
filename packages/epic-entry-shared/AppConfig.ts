@@ -20,7 +20,7 @@ let appConfig:AppConfig
 export function getAppConfig() {
 	//const log = getLogger(__filename)
 	
-	if (ProcessConfig.isStorybook()) {
+	if (ProcessConfig.isStorybook() || ProcessConfig.isType(ProcessType.Test)) {
 		return {
 			paths: {
 				userDataPath: "/tmp",

@@ -16,10 +16,9 @@ const
 		isDev,
 		env,
 		baseDir,
-		srcRootDir,
-		chalk,
-		TypeScriptEnabled
+		srcRootDir
 	} = global,
+	CircularDependencyPlugin = require("circular-dependency-plugin"),
 	webpack = require('webpack'),
 	assert = require('assert'),
 	path = require('path'),
@@ -372,6 +371,8 @@ function makeConfig(name,dependencies,entry,configFn) {
 				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
 				//new TsConfigPathsPlugin(),
 				new ForkCheckerPlugin(),
+				
+				new CircularDependencyPlugin(),
 				
 				// BASICS
 				//new webpack.IgnorePlugin(/vertx/),

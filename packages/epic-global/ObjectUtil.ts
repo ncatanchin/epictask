@@ -2,7 +2,7 @@ import {List} from 'immutable'
 
 
 
-import { isNil, isObject } from  "epic-global"
+import { isNil, isObject } from  "typeguard"
 
 
 const

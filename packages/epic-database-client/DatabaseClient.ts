@@ -4,7 +4,7 @@ import * as uuid from "node-uuid"
 import { Map } from 'immutable'
 import { DatabaseEvents } from "./DatabaseEvents"
 import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
-import { Transport } from "epic-net"
+import { Transport, getDefaultTransport } from "epic-net"
 import {
 	VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot, IModelConstructor,
 	isString, guard
@@ -188,7 +188,7 @@ export class DatabaseClient {
 	
 	
 	private constructor() {
-		this.transport = Transport.getDefault({hostname: DatabaseServerName})
+		this.transport = getDefaultTransport({hostname: DatabaseServerName})
 	}
 	
 	/**

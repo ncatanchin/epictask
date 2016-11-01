@@ -1,12 +1,12 @@
 
 import {JobHandler} from '../JobHandler'
-import {Stores} from "epic-services"
+import {Stores} from "epic-database-client"
 import {Benchmark} from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import {GitHubClient} from "epic-github"
 import {Repo} from "epic-models"
 import {getSettings} from "epic-global"
-import {IJobExecutor} from "../JobExecutors"
+import {IJobExecutor} from "../JobTypes"
 import {JobType, IJobLogger} from "epic-typedux"
 import {IJob} from "epic-typedux"
 import JobProgressTracker from "../JobProgressTracker"

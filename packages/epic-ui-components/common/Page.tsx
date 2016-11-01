@@ -1,7 +1,7 @@
 import * as React from 'react'
 import filterProps from 'react-valid-props'
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { PureRender } from "epic-ui-components/common"
+import { PureRender } from "./PureRender"
 
 const log = getLogger(__filename)
 

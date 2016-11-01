@@ -1,7 +1,7 @@
 
 
 //import {Repo,Issue,Comment} from 'epic-models'
-import {getSettings} from './settings'
+import {getSettings} from './settings/getSettings'
 import { getValue } from  "./ObjectUtil"
 
 const getUserId = () => getValue(() => getSettings().user.id,-2)

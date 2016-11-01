@@ -1,13 +1,6 @@
 import { ProcessClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
 import * as uuid from "node-uuid"
-import { REQUEST_TIMEOUT, Transport } from "epic-net"
-
-import {
-	IChildStore,
-	ChildStoreSubscriptionStatus,
-	IChildStoreSubscriptionManager,
-	TChildStoreSubscriptionStatusListener
-} from "./ChildStore"
+import { REQUEST_TIMEOUT, Transport, getDefaultTransport } from "epic-net"
 
 import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
 import {ActionMessage} from 'typedux'
@@ -32,13 +25,6 @@ interface ObserveWrapper {
 	remover?:Function
 }
 
-interface IChildStoreWrapper {
-	id:string
-	childStore:IChildStore
-	resolver:Promise.Resolver<any>
-	manager:IChildStoreSubscriptionManager
-	setStatus(status:ChildStoreSubscriptionStatus,err?:Error)
-}
 
 const
 	actionProxies = getHot(module,'actionProxies',{}),
@@ -46,13 +32,11 @@ const
 	stateRequests = getHot(module,'stateRequests',{})
 
 let
-	childStoreWrapper = getHot(module,'childStoreWrapper',{}) as IChildStoreWrapper,
 	transport = getHot(module,'transport',null) as Transport
 
 setDataOnHotDispose(module,() => ({
 	actionProxies,
 	observers,
-	childStoreWrapper,
 	stateRequests,
 	transport
 }))
@@ -116,67 +100,6 @@ export const sendStoreAction = ActionMessageFilter((action:ActionMessage<any>) =
 	})
 	sendMessage(AppStoreServerEventNames.ChildStoreAction,{id,action})
 })
-
-/**
- * Attach a child store to the store server
- * 
- * @param childStore
- * @returns {any}
- */
-export function attachChildStore(childStore:IChildStore):Promise<IChildStoreSubscriptionManager> {
-	
-	let 
-		status:ChildStoreSubscriptionStatus = ChildStoreSubscriptionStatus.Starting,
-		listeners:TChildStoreSubscriptionStatusListener[] = [],
-		{filter} = childStore, 
-		manager = {
-			detach() {
-				log.debug(`Detaching child store`)
-				sendMessage(AppStoreServerEventNames.ChildStoreDetach,{id})
-				childStoreWrapper = null
-			},
-			
-			onStatusChange(listener:TChildStoreSubscriptionStatusListener) {
-				listeners.push(listener)
-			},
-			
-			
-			getStatus() {
-				return status
-			},
-			
-			// SEND ACTION MESSAGE TO PARENT
-			sendAction: sendStoreAction
-		} as IChildStoreSubscriptionManager,
-		wrapper = childStoreWrapper =  {
-			id,
-			childStore,
-			manager,
-			resolver: Promise.defer(),
-			setStatus(status:ChildStoreSubscriptionStatus,err:Error = null) {
-				listeners.forEach(listener => {
-					listener(status,err)
-				})
-			}
-		},
-		{resolver} = wrapper
-	
-	// SEND THE SUBSCRIBE REQUEST
-	sendMessage(AppStoreServerEventNames.ChildStoreSubscribeRequest, {
-		id, 
-		filter 
-	}).catch(err => resolver.reject(err))
-	
-	return wrapper
-		.resolver
-		.promise
-		.timeout(REQUEST_TIMEOUT)
-		.catch((err) => {
-			log.error(`Failed to start child store`, wrapper, err)
-			childStoreWrapper = null
-			resolver.reject(err)
-		})
-}
 
 /**
  * Observer a state value @ at given keypath
@@ -257,7 +180,7 @@ export async function getStateValue(...keyPath:string[]):Promise<any> {
 function connect():Promise<any> {
 	
 	if (!transport) {
-		transport = Transport.getDefault({
+		transport = getDefaultTransport({
 			hostname: AppStoreServerName
 		})
 		
@@ -291,25 +214,6 @@ function connect():Promise<any> {
  */
 function attachEvents(transport) {
 	
-	transport.on(AppStoreServerEventNames.ChildStoreSubscribeResponse,({id,initialState,err}) => {
-		const 
-			wrapper = childStoreWrapper
-		
-		if (err) {
-			log.error(`Failed to subscribe for childStore`,id,err,wrapper)
-			if (wrapper) {
-				wrapper.setStatus(ChildStoreSubscriptionStatus.Failed,err)
-				wrapper.resolver.reject(err)
-				childStoreWrapper = null
-			}
-			return
-		}
-		
-		wrapper.childStore.setState(initialState)
-		wrapper.setStatus(ChildStoreSubscriptionStatus.Running,err)
-		wrapper.resolver.resolve(wrapper.manager)
-		
-	})
 	
 	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({action}) => {
 		
@@ -325,7 +229,7 @@ function attachEvents(transport) {
 		}
 			
 		
-		require('./AppStore').getReduxStore().dispatch(action)
+		getReduxStore().dispatch(action)
 	})
 	
 	/**

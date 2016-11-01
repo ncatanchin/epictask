@@ -1,17 +1,12 @@
-import {Map} from 'immutable'
-
-import {JobHandler, JobHandlerEventType} from './JobHandler'
-import * as assert from 'assert'
-import {IEnumEventRemover} from "epic-global"
-import {IJob, JobStatus, JobType} from "epic-typedux"
-import {IJobExecutorConstructor, loadAllExecutors, IJobExecutor} from "./JobExecutors"
-import {BaseService, RegisterService, IServiceConstructor} from "epic-services"
-import {DatabaseClientService} from "epic-services"
-import {IJobStatusDetail} from "epic-typedux"
-import { JobKey } from "epic-global"
-import {JobsMaxConcurrency} from 'epic-global'
+import { JobHandler, JobHandlerEventType } from "./JobHandler"
+import * as assert from "assert"
+import { IEnumEventRemover, JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
+import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux"
+import { IJobExecutorConstructor, IJobExecutor } from "./JobTypes"
+import { BaseService, RegisterService, IServiceConstructor } from "epic-services"
+import { DatabaseClientService } from "epic-services/DatabaseClientService"
 import { clientObserveState, getStateValue } from "epic-typedux/store/AppStoreClient"
-import { getHot, setDataOnHotDispose } from "epic-global"
+//import { loadAllExecutors } from "epic-entry-job-server/JobExecutors"
 
 const log = getLogger(__filename)
 
@@ -164,7 +159,7 @@ export class JobManagerService extends BaseService {
 	 */
 	async start():Promise<this> {
 		log.info("Load executors")
-		loadAllExecutors()
+		//loadAllExecutors()
 		
 		
 		this.unsubscriber = await clientObserveState([JobKey, 'all'], this.onJobsUpdated)

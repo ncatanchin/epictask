@@ -5,6 +5,9 @@ import {createDeepEqualSelector} from  "epic-global"
 import {JobState } from "../state/JobState"
 import {IJob, TJobMap, IJobStatusDetail,IJobAndStatusDetail} from "../state/jobs"
 import {TSelector, TRootState} from "epic-global"
+import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
+import {createSelector} from 'reselect'
+import { UIState } from "epic-typedux/state/UIState"
 
 
 /**
@@ -34,8 +37,9 @@ export const jobsSelector:TSelector<{[id:string]:IJob}> = createDeepEqualSelecto
 	(state:JobState) => state.all.toJS()
 )
 
-export const jobLogIdSelector:TSelector<string> = _.memoize(
-	(state) => jobStateSelector(state).selectedLogId
+export const jobLogIdSelector:TSelector<string> = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.jobs.selectedLogId
 )
 
 /**

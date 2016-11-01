@@ -2,7 +2,9 @@
 
 import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
-import {RegisterModel} from "epic-global"
+import {RegisterModel} from "epic-global/Registry"
+import { excludeFilterConfig, excludeFilter,toPlainObject } from "typetransform"
+import { reviveImmutable } from "epic-global/ModelUtil"
 
 export const AuthStateRecord = Record({
 	authenticating: false,
@@ -17,12 +19,13 @@ export const AuthStateRecord = Record({
 export class AuthState extends AuthStateRecord {
 
 	static fromJS(o:any) {
-		if (o && o instanceof AuthState)
-			return o
-		
-		return new AuthState(assign({},o,{
-			authenticating: false
-		}))
+		return reviveImmutable(o,AuthState)
+	}
+	
+	toJS() {
+		return toPlainObject(this,
+			excludeFilterConfig(
+				...excludeFilter('authenticating','error')))
 	}
 
 	authenticating:boolean

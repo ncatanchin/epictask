@@ -1,19 +1,20 @@
-
-import * as uuid from 'node-uuid'
-import {JobManagerService} from "./JobManagerService"
-import {EnumEventEmitter} from "epic-global"
-
+import * as uuid from "node-uuid"
+import { JobManagerService } from "./JobManagerService"
+import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
 import {
-	JobStatus, IJob, JobCancelledStatuses, IJobLogger,
-	IJobStatusDetail, JobLogLevelNames, JobLogLevel
+	JobStatus,
+	IJob,
+	JobCancelledStatuses,
+	IJobLogger,
+	IJobStatusDetail,
+	JobLogLevelNames,
+	JobLogLevel,
+	JobActionFactory,
+	getJobActions
 } from "epic-typedux"
-
-import {IJobExecutor} from "./JobExecutors"
+import { IJobExecutor } from "./JobTypes"
 import JobProgressTracker from "./JobProgressTracker"
-import { JobActionFactory } from "epic-typedux"
-import * as fs from 'fs'
-
-import { getJobActions } from "epic-typedux"
+import * as fs from "fs"
 
 
 const

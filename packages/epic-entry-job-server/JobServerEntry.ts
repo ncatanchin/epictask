@@ -11,9 +11,12 @@ const
 
 
 
-require('./JobManagerService')
-require('./JobSchedulerService')
-require('./GithubEventMonitorService')
+import './JobManagerService'
+import './JobSchedulerService'
+import './GithubEventMonitorService'
+
+import { loadAllExecutors } from "./JobExecutors"
+loadAllExecutors()
 
 
 /**

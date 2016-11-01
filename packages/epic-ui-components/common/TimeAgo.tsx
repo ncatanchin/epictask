@@ -1,7 +1,7 @@
 // Imports
 import * as moment from 'moment'
 import * as React from 'react'
-import {PureRender} from "epic-ui-components/common"
+import {PureRender} from "./PureRender"
 
 
 // Constants

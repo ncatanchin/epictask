@@ -2,10 +2,6 @@ import * as assert from "assert"
 import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent, EnumEventEmitter } from "epic-global"
 import { TTheme } from "./Theme"
 import { IPalette } from "./material"
-import * as BuiltInsType from "./builtin"
-
-let
-	BuiltIns:typeof BuiltInsType = null
 
 const
 	log = getLogger(__filename)
@@ -39,6 +35,39 @@ const
 		paletteName: null as string,
 		palette:null as any
 	})
+
+
+/**
+ * Global theme access
+ *
+ * @returns {any}
+ */
+export function getTheme() {
+	return ThemeState.theme
+}
+
+/**
+ * Global palette access
+ *
+ * @returns {any}
+ */
+export function getPalette() {
+	return ThemeState.palette
+}
+
+assignGlobal({
+	getTheme,
+	getPalette,
+})
+
+
+
+import * as BuiltInsType from "./builtin"
+
+let
+	BuiltIns:typeof BuiltInsType = null
+
+
 
 
 /**
@@ -201,9 +230,6 @@ export function setThemeCreator(creator:IThemeCreator) {
 }
 
 
-export function getTheme() {
-	return ThemeState.theme
-}
 
 /**
  * Get a theme creator
@@ -233,9 +259,6 @@ export function getThemeName() {
 	return PersistentThemeName.get()
 }
 
-export function getPalette() {
-	return ThemeState.palette
-}
 
 export function getPaletteCreator(name:string) {
 	return PaletteCreators[name]
@@ -362,11 +385,9 @@ export function makeThemeFontSize(multiplier:number) {
 
 
 
-
 // Export globals
-Object.assign(global as any,{
-	getTheme,
-	getPalette,
+assignGlobal({
+	
 	themeFontSize:makeThemeFontSize
 })
 

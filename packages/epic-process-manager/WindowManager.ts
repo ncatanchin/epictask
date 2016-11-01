@@ -7,7 +7,8 @@ import {
 	acceptHot,
 	shortId,
 	getAppEntryHtmlPath,
-	isString, isList, cloneObject
+	isString, isList, cloneObject,
+	attachEvents,cloneObjectShallow,Events,getValue
 } from "epic-global"
 import {
 	IWindowConfig,
@@ -17,22 +18,23 @@ import {
 } from "epic-process-manager-client/WindowTypes"
 import { IWindowState } from "epic-process-manager-client/WindowTypes"
 import { ProcessType } from "epic-entry-shared/ProcessType"
-import { cloneObjectShallow } from "epic-global"
-import { getAppActions } from "epic-typedux/provider"
-import { attachEvents } from "epic-global/EventUtil"
-import { getValue } from "epic-global"
+
+
 import { HEARTBEAT_TIMEOUT } from "epic-net"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import { Events } from "epic-global/Constants"
+import {  } from "epic-global/Constants"
 import { WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
 import {List} from 'immutable'
+
+
+
 
 const
 	log = getLogger(__filename),
 	
 	windowStateKeeper = require('electron-window-state'),
 	
-	{BrowserWindow,ipcMain} = Electron,
+	{BrowserWindow,app,ipcMain} = Electron,
 	
 	// Container to support hot reloading
 	instanceContainer = ((global as any).instanceContainer || {}) as {
@@ -142,7 +144,8 @@ function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOp
 /**
  * The command manager - menu, shortcuts, containers, etc
  */
-export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
+export class WindowManager  {
+	
 	
 	static getInstance() {
 		if (!instanceContainer.instance)
@@ -152,13 +155,15 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 	}
 	
 	
+	private messageEmitter = new SimpleEventEmitter<IWindowMessageHandler>()
+	
+	
 	private windows:IWindowInstance[] = []
 	
 	/**
 	 * Private constructor for creating the command manager
 	 */
 	private constructor() {
-		super()
 		
 		ipcMain.on(Events.ProcessMessage,this.onProcessMessage)
 	}
@@ -272,7 +277,7 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 	 * Pushes the window states to AppState
 	 */
 	pushWindowStates = _.debounce(() => {
-		getAppActions().updateWindow(...this.getWindowStates())
+		app.emit(Events.WindowStatesChanged,this.getWindowStates())
 	},150)
 	
 	/**
@@ -430,7 +435,7 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 					this.heartbeat(id)
 					break
 				default:
-					super.emit(this,win,type,body)
+					this.messageEmitter.emit(this,win,type,body)
 			}
 		}
 	}
@@ -682,6 +687,13 @@ export class WindowManager extends SimpleEventEmitter<IWindowMessageHandler> {
 			.timeout(60000)
 		
 	}
+}
+
+/**
+ * We ONLY want the interface exported, we don't want the module loaded
+ */
+export interface IWindowManagerClient extends WindowManager {
+	
 }
 
 // SET THE CLASS

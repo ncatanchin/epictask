@@ -1,7 +1,4 @@
 
-import {NotificationCenter} from 'epic-global'
-
-
 
 /**
  * Now the shared globals - this is required for proper logging config
@@ -20,12 +17,7 @@ function getErrorLogger() {
  * @param err
  */
 function logErrorGlobal(err:Error|string) {
-	
-	const
-		notificationCenter = require('epic-global/NotificationCenter').getNotificationCenter() as NotificationCenter
-	
-	
-	notificationCenter.addErrorMessage(err)
+	getNotificationCenter().addErrorMessage(err)
 }
 
 

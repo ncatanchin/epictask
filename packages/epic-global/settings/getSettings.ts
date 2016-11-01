@@ -1,12 +1,11 @@
 
 import { Settings } from "./Settings"
-
-import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
-import { getStoreState } from "epic-typedux/store/AppStore"
+import { AppKey } from "epic-global/Constants"
+import { AppState } from "epic-typedux/state/AppState"
 
 
 export function getSettings() {
-	return settingsSelector(getStoreState()) || new Settings()
+	return (getStoreState().get(AppKey) as AppState).settings
 }
 
 

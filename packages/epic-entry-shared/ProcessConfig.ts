@@ -78,6 +78,14 @@ export namespace ProcessConfigGlobal {
 		return isType(ProcessTypeGlobal.UI)
 	}
 	
+	/**
+	 * Is the Test process
+	 * @returns {boolean}
+	 */
+	export function isTest() {
+		return isType(ProcessTypeGlobal.Test)
+	}
+	
 	
 	/**
 	 * Is the current process type storybook
@@ -115,6 +123,7 @@ declare global {
 		function showChildDevTools(processTypeIn:ProcessTypeGlobal)
 		function isUIChildWindow():boolean
 		function isUI():boolean
+		function isTest():boolean
 		function isMain():boolean
 		function getTypeName(processTypeIn?:ProcessTypeGlobal):string
 		function getType():ProcessTypeGlobal

@@ -13,7 +13,6 @@ import {
 	cloneObjectShallow,
 	shallowEquals,
 	addErrorMessage,
-	getNotificationCenter,
 	addMessage,
 	getSettings,
 	Provided,
@@ -41,16 +40,22 @@ import {
 	selectedIssueIdsSelector,
 	selectedIssueSelector,
 	selectedIssuesSelector,
-	issueItemsSelector,
-	TIssuePatchMode,
-	getStoreState,
-	IIssueFilter,
-	EmptyIssueFilter,
-	IIssueSort,
+	issueItemsSelector
+} from "../selectors"
+import {
 	getRepoActions,
 	getUIActions,
 	getAppActions
-} from "epic-typedux"
+} from '../provider'
+import {
+	TIssuePatchMode,
+} from '../state/IssueState'
+import {
+	IIssueFilter,
+	EmptyIssueFilter,
+	IIssueSort
+} from '../state/issue'
+
 import { GitHubClient } from "epic-github"
 //import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
@@ -567,11 +572,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issues
 	 */
 	async patchIssues(mode: TIssuePatchMode, ...issues: Issue[]) {
-		const getState = getStoreState
+		
 		
 		if (!issues || !issues.length) {
 			log.debug(`no issues passed to patch, going to use the selected issues`)
-			issues = selectedIssuesSelector(getState())
+			issues = selectedIssuesSelector(getStoreState())
 		}
 		
 		if (!issues.length) {

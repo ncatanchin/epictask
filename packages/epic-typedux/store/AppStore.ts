@@ -1,27 +1,14 @@
 import thunkMiddleware from "redux-thunk"
 import { Store as ReduxStore, StoreEnhancer, compose, applyMiddleware } from "redux"
 import { Map } from "immutable"
-import {
-	ReduxDebugSessionKey,
-	getNotificationCenter,
-	If,
-	getHot,
-	setDataOnHotDispose, ProcessType
-} from "epic-global"
+import { ReduxDebugSessionKey, If, getHot, setDataOnHotDispose } from "epic-global"
 import { getReducers } from "./Reducers"
-import { setStoreProvider, ILeafReducer, ObservableStore} from "typedux"
-import { loadActionFactories } from "../provider"
-import { attachChildStore } from "./AppStoreClient"
-import addDevMiddleware from "epic-typedux/store/AppStoreDevConfig"
-//import { installActionInterceptor } from "epic-typedux/store/ActionInterceptor"
-import { configureStorePersistence, loadStateFromDisk } from "epic-typedux/store/AppStorePersistence"
-import {
-	IChildStoreSubscriptionManager, IChildStore,
-	ChildStoreSubscriptionStatus
-} from "epic-typedux/store/ChildStore"
-import { AppStoreEnhancerKey } from "epic-global"
-import { getValue } from "epic-global"
+import { setStoreProvider, ILeafReducer, ObservableStore } from "typedux"
 
+import { loadActionFactories } from "../provider"
+
+import { configureStorePersistence, loadStateFromDisk } from "./AppStorePersistence"
+import addDevMiddleware from "./AppStoreDevConfig"
 
 const
 	log = getLogger(__filename),
@@ -232,71 +219,6 @@ export async function loadAndInitStore(defaultStateValue = null, enhancer = null
 
 
 /**
- * Create a child store that connects to the root process
- *
- * @returns {ObservableStore<any>}
- */
-export async function loadAndInitChildStore() {
-	// loadActionFactories()
-	//
-	//
-	// return initStore(false, null)
-	let
-		childReduxStore,
-		initialState,
-		manager:IChildStoreSubscriptionManager
-
-	const
-		// Message list - this is used to save reducer messages until ready
-		pendingMessages = [],
-
-		// Child Store
-		childStore:IChildStore = {
-			dispatch(action) {
-				if (childReduxStore) {
-					childReduxStore.dispatch(action)
-				} else {
-					pendingMessages.push(action)
-				}
-			},
-
-			setState(state) {
-				log.info(`Child got initial state`, state)
-				initialState = state
-			}
-		}
-
-	try {
-		manager = await attachChildStore(childStore)
-		manager.onStatusChange((status:ChildStoreSubscriptionStatus, err:Error = null) => {
-			log.info(`Child store state changed`, status, err)
-		})
-
-		//installActionInterceptor(manager)
-
-		const
-			preStore = await loadAndInitStore(initialState)
-
-		while (pendingMessages.length) {
-			const
-				nextMsg = pendingMessages.shift()
-
-			preStore.dispatch(nextMsg)
-		}
-
-		//noinspection JSUnusedAssignment
-		childReduxStore = preStore
-	} catch (err) {
-		log.error(`Failed to start the child store - this is bad`, err)
-		throw err
-	}
-
-	return store
-	
-}
-
-
-/**
  * Get the observable store
  *
  * @returns {ObservableStore<any>}
@@ -320,28 +242,40 @@ export function getReduxStore():ReduxStore<Map<string,any>> {
  * @returns {Map<string,any>}
  */
 export function getStoreState():Map<string,any> {
-	return getStore() ? getStore().getState() : Immutable.Map()
+	return getStore() ? getStore().getState() : Map()
 }
 
 // In Development Environment, expose getStore/getStoreState
-If(DEBUG, () => {
-	_.assignGlobal({
-		getStore,
-		getStoreState
-	})
+// If(DEBUG, () => {
+assignGlobal({
+	getStore,
+	getReduxStore,
+	getStoreState
 })
+// })
+
+/**
+ * Expose globally
+ */
+declare global {
+	function getStore():ObservableStore<Map<string,any>>
+	function getStoreState():Map<string,any>
+	function getReduxStore():ReduxStore<Map<string,any>>
+}
+
 
 setDataOnHotDispose(module, () => ({
 	store,
 	middleware
 }))
 
+
+
 if (module.hot) {
 	// On dispose, save current middleware and store
 	module.hot.addDisposeHandler(() => {
 		hmrDisposed = true
 	})
-	
 	
 	module.hot.accept(() => log.info(`HMR update`, __filename))
 }

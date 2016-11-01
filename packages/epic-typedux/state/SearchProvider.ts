@@ -19,7 +19,7 @@ import {
 import { ValueCache, Benchmark, cloneObject } from "epic-global"
 import { GitHubClient, createClient } from "epic-github"
 
-import { getStoreState } from "../store/AppStore"
+
 import { getIssueActions, getRepoActions } from "../provider"
 
 import { IIssueFilter } from "../state/issue"

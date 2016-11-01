@@ -1,20 +1,18 @@
 import Electron = require('electron')
-import { getAuthActions } from "epic-typedux"
+import Cleaner from "./Cleaner"
 import { shutdownApp } from "./MainShutdownHandler"
-import { Cleaner } from "./Cleaner"
 
 const
 	{
-		app,
 		BrowserWindow,
-		Menu,
-		shell,
-		ipcMain,
-		dialog
+		Menu
 	} = Electron,
 	log = getLogger(__filename)
 
 
+/**
+ * Create Dev Menu
+ */
 function makeDevMenu() {
 	return {
 		label: 'Dev',
@@ -160,6 +158,10 @@ export function makeMainMenu() {
 	return Menu.buildFromTemplate(template)
 }
 
+
+/**
+ * Execute load
+ */
 export function execute() {
 	// ONLY SET MAIN MENU ON MAC
 	if (!Env.isMac)

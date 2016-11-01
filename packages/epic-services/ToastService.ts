@@ -1,7 +1,7 @@
 import { ObservableStore } from "typedux"
 
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
-import { ProcessType, NotificationMessageType, getNotificationCenter, UIKey } from "epic-global"
+import { ProcessType, NotificationMessageType, UIKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
 import { PersistentValueEvent, cloneObjectShallow, NativeNotificationsEnabled } from "epic-global"

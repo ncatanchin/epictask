@@ -1,16 +1,12 @@
-import {ActionFactory,ActionReducer,ActionThunk} from 'typedux'
-import {GitHubClient, createClient as createGithubClient} from "epic-github"
-import {AuthKey} from "epic-global"
-import {AuthState,AuthMessage} from "epic-typedux"
-import {AppStateType} from '../state/app/AppStateType'
+import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
+import { GitHubClient, createClient as createGithubClient } from "epic-github"
+import { AuthKey, Provided, RegisterActionFactory, GitHubConfig } from "epic-global"
 
-import { addErrorMessage, getNotificationCenter } from "epic-global"
+import { getRepoActions, getAppActions } from "epic-typedux/provider"
 
-import {Provided} from  "epic-global"
-import { RegisterActionFactory } from "epic-global"
+import { AuthState, AuthMessage } from "../state/AuthState"
+import { AppStateType } from "../state/app/AppStateType"
 
-import { getRepoActions, getAppActions } from "epic-typedux"
-import { GitHubConfig } from "epic-global"
 import { authenticatingSelector } from "../selectors"
 
 const log = getLogger(__filename)

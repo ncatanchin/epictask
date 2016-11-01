@@ -10,6 +10,7 @@ import { ThemedStyles, createThemedStyles, FlexScale, FlexColumn } from "epic-st
 import { IJobStatusDetail, jobStateSelector, jobLogIdSelector, TJobIMap, JobActionFactory } from "epic-typedux"
 import { JobList } from "./JobList"
 import { JobDetail } from "./JobDetail"
+import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
 
 // Constants
 const
@@ -94,7 +95,7 @@ function getHeaderControls() {
 @connect(createStructuredSelector({
 	jobs: (state) => jobStateSelector(state).all,
 	details:(state) => jobStateSelector(state).details,
-	selectedId:(state) => jobStateSelector(state).selectedId,
+	selectedId:(state) => uiStateSelector(state).jobs.selectedId,
 	selectedLogId: jobLogIdSelector,
 }, createDeepEqualSelector))
 

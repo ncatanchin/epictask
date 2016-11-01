@@ -3,10 +3,10 @@ const
 	log = getLogger(__filename)
 
 import {DefaultLeafReducer} from 'typedux'
-import {RepoKey} from "epic-global"
+import {RepoKey} from "epic-global/Constants"
 import {RepoState,RepoMessage} from '../state/RepoState'
 
-import {Provided} from  "epic-global"
+import {Provided} from  "epic-global/ProxyProvided"
 
 @Provided
 export class RepoReducer extends DefaultLeafReducer<RepoState,RepoMessage> {

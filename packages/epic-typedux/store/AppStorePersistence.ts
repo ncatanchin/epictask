@@ -3,21 +3,30 @@ import {
 	OnlyIfFn, RepoKey, writeFile, getHot, getUserDataFilename, writeFileAsync,
 	readFile, isString
 } from "epic-global"
-import { RepoState } from "epic-typedux/state/RepoState"
+import { RepoState } from "../state/RepoState"
+import { IFilterConfig } from "typetransform"
 const
 	log = getLogger(__filename),
-	stateFilename = getUserDataFilename(`epictask-store-state-${getWindowId()}.json`)
+	stateFilename = getUserDataFilename(`epictask-store-state-${getProcessId()}.json`)
 
 let
 	persistingState = false,
 	getStoreState = null
+
+
+const DefaultStoreStatePersistenceFilter:IFilterConfig = {
+	defaultExcluded: false,
+	filters: [
+		
+	]
+}
 
 /**
  * Serialize the current state as a string
  *
  * @returns {string}
  */
-export function serializeState(state = null, filter = null) {
+export function serializeState(state = null, filter:IFilterConfig = null) {
 	if (!state)
 		state = (getStoreState && getStoreState()) || {}
 		
@@ -25,8 +34,15 @@ export function serializeState(state = null, filter = null) {
 }
 
 
+/**
+ * Configure the stores persistence
+ *
+ * @param store
+ * @param getStoreStateIn
+ */
 export function configureStorePersistence(store,getStoreStateIn) {
 	assert(_.isFunction(getStoreStateIn), "Get store state must be a function")
+	
 	getStoreState = getStoreStateIn
 	
 	

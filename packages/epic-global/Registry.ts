@@ -1,10 +1,10 @@
-import {ToolPanelLocation, ITool, IToolProps, IToolConfig, IToolRegistration} from "./ToolTypes"
+import {IToolProps, IToolConfig, IToolRegistration} from "./ToolTypes"
 
 import React from 'react'
 import {ActionFactory} from 'typedux'
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { decorateConstructor } from "./Decorations"
-import { getValue } from "epic-global"
+import { getValue } from "./ObjectUtil"
 
 
 const
@@ -261,7 +261,7 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 		
 	} catch (err) {
 		log.error(`Failed to register tool`,err)
-		require('./NotificationCenter').NotificationCenter.addErrorMessage(err)
+		getNotificationCenter().addErrorMessage(err)
 		
 		return clazz
 	}

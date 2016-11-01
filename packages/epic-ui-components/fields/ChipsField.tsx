@@ -7,7 +7,6 @@ import * as React from 'react'
 import * as Radium from 'radium'
 
 import {PureRender} from "../common/PureRender"
-import { getNotificationCenter } from "epic-global"
 
 import {CommonKeys} from 'epic-command-manager'
 import {TypeAheadSelect} from "./TypeAheadSelect"

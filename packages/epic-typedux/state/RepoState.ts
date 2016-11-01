@@ -2,6 +2,7 @@ import { RegisterModel, reviveImmutable } from "epic-global"
 import { Record, List, Map } from "immutable"
 import { ActionMessage } from "typedux"
 import { AvailableRepo } from "epic-models"
+import { toPlainObject,excludeFilter,excludeFilterConfig } from "typetransform"
 
 const
 	log = getLogger(__filename)
@@ -11,7 +12,6 @@ const
  * Repo State Record
  */
 export const RepoStateRecord = Record({
-	reposIds:[],
 	availableRepos:List<AvailableRepo>(),
 	selectedRepoIds:[],
 	reposLoading:Map<number,boolean>()
@@ -24,20 +24,28 @@ export const RepoStateRecord = Record({
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {
-		return reviveImmutable(o,RepoState,['availableRepos'])
+		return reviveImmutable(
+			o,
+			RepoState,
+			[
+				'availableRepos'
+			],[
+				'reposLoading'
+			]
+		)
 	}
 	
-	// toJS() {
-	// 	return {
-	// 		selectedRepoIds: this.selectedRepoIds,
-	// 		availableRepos: _.toJS(this.availableRepos)
-	// 	}
-	// }
+	toJS() {
+		return toPlainObject(this,
+			excludeFilterConfig(
+				...excludeFilter('reposLoading')
+			))
+	}
 	
 	
 	selectedRepoIds:number[]
 	availableRepos:List<AvailableRepo>
-
+	reposLoading:Map<number,boolean>
 }
 
 /**

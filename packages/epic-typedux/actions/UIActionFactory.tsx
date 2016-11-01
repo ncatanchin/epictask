@@ -1,5 +1,5 @@
 import * as uuid from "node-uuid"
-import { ActionFactory, ActionReducer, ActionThunk, ActionMessage } from "typedux"
+import { ActionFactory, ActionReducer,  ActionMessage } from "typedux"
 import { List, Map } from "immutable"
 import {
 	UIKey,
@@ -13,11 +13,11 @@ import {
 	RegisterActionFactory,
 	getToolRegistrations, nilFilter,
 } from "epic-global"
-import { UIState } from "epic-typedux"
+import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
 import * as assert from "assert"
  
-import {WindowType,getWindowManagerClient} from "epic-process-manager-client"
+import {getWindowManagerClient} from "epic-process-manager-client"
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 
 

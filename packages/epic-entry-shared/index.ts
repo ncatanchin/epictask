@@ -2,6 +2,9 @@
 
 import './AppEntry'
 
+export * from './ProcessType'
+export * from './ProcessConfig'
+
 import * as ProcessClientEntryType from './ProcessClientEntry'
 
 export function loadProcessClientEntry() {
@@ -9,5 +12,4 @@ export function loadProcessClientEntry() {
 }
 
 export * from './AppConfig'
-export * from './ProcessConfig'
-export * from './ProcessType'
+

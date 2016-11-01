@@ -1,52 +1,18 @@
 import * as uuid from 'node-uuid'
-import { isString } from  "./TypeChecks"
+import { isString } from  "typeguard"
 import {Container} from 'typescript-ioc'
+import { INotificationMessage, NotificationMessageType } from "epic-global/NotificationCenterClient"
 
-const
-	log = getLogger(__filename)
-
-
-/**
- * Notification types
- */
-export enum NotificationMessageType {
-	Debug = 1,
-	Info,
-	Success,
-	Error
-}
-
-/**
- * Notification actions
- */
-export interface INotificationMessageAction {
-	label:string
-	execute:Function
-}
-
-
-/**
- * Notification message shape
- */
-export interface INotificationMessage {
-	id:string
-	createdAt:number
-	type:NotificationMessageType
-	notify?:boolean
-	floatVisible?:boolean
-	content:any
-	actions?:INotificationMessageAction[]
-}
 
 /**
  * NotificationCenter functions for use globally
  */
 export class NotificationCenter {
-
+	
 	get uiActions() {
 		return require("epic-typedux/provider").getUIActions()
 	}
-
+	
 	addMessage(message:INotificationMessage|string,type:NotificationMessageType = NotificationMessageType.Info) {
 		if (_.isString(message)) {
 			message = {
@@ -73,7 +39,7 @@ export class NotificationCenter {
 	addSuccessMessage(message:INotificationMessage|string) {
 		this.addMessage(message,NotificationMessageType.Success)
 	}
-
+	
 	addErrorMessage(err:Error|string) {
 		if (isString(err)) {
 			err = new Error(err)
@@ -105,41 +71,6 @@ export function getNotificationCenter() {
 Container.bind(NotificationCenter).provider({get: getNotificationCenter})
 
 
-export function clearMessages() {
-	this.uiActions.clearMessages()
+export {
+	
 }
-
-/**
- * Report message to ui from anywhere
- *
- * @param message
- * @param type
- */
-export function addMessage(message:INotificationMessage|string,type:NotificationMessageType = NotificationMessageType.Info) {
-	getNotificationCenter().addMessage(message,type)
-}
-
-export function addSuccessMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addSuccessMessage(message)
-}
-
-export function addDebugMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addDebugMessage(message)
-}
-
-export function addInfoMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addInfoMessage(message)
-}
-
-
-/**
- * Report an error to the UI from anywhere
- *
- * @param err
- */
-export function addErrorMessage(err:Error|string) {
-	getNotificationCenter().addErrorMessage(err)
-}
-
-
-export default NotificationCenter

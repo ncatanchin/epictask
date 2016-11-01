@@ -1,45 +1,38 @@
 
-
-import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { nilFilter } from "epic-global/ListUtil"
-const
-	{Cleaner} = require('./Cleaner')
+
+import Cleaner from './Cleaner'
 
 
 
 // NOW LOAD COMMON ENTRY
 import 'epic-entry-shared/AppEntry'
+
+// LOAD DEPS
 import { showSplashWindow } from "epic-entry-main/SplashWindow"
-import { isString } from "epic-global"
+import { Events,isString } from "epic-global"
+import { app, BrowserWindow } from 'electron'
+import checkSingleInstance from "./CheckSingleInstance"
+import './MainAppSwitches'
+
+const
+	log = getLogger(__filename)
 
 
 function loadMainApp() {
-	
-	let
 		
-		//Ref TO STORE SERVER STOP FUNC
-		stopAppStoreServer:Function,
-		appWindow
-	
-	
-	
-	const
-		{ Events } = require("epic-global/Constants"),
-		
-		{ app, BrowserWindow } = require('electron'),
-		{ checkSingleInstance } = require("./CheckSingleInstance"),
-		
-		log = getLogger(__filename),
-		hotReloadEnabled = Env.isHot
 	
 	// ADD EVENTS TO GLOBAL
-	_.assignGlobal({ Constants: { Events } })
+	assignGlobal({
+		Constants: {
+			Events
+		}
+	})
 	
 	
-	// Reference for dev monitor window (redux, etc)
-	log.debug(`Hot reload mode enabled: ${hotReloadEnabled}`)
+	// HMR
+	log.debug(`Hot reload mode enabled: ${Env.isHot}`)
 	
-	require('./MainAppSwitches')
 	
 	/**
 	 * Get the service manager
@@ -50,9 +43,6 @@ function loadMainApp() {
 		return require('epic-services/internal/ServiceManager').getServiceManager()
 	}
 	
-	
-	
-	
 	/**
 	 * Stop everything
 	 *
@@ -62,9 +52,6 @@ function loadMainApp() {
 		await getServiceManager().stop()
 	}
 
-	// ATTACH SERVICE MANAGER STOP TO WILL-QUIT
-	app.on('will-quit', stop)
-	
 	/**
 	 * Callback from open if already running
 	 */
@@ -133,7 +120,7 @@ function loadMainApp() {
 				
 				for (let part of parts) {
 					if (isString(part)) {
-						log.info(`Boot: ${part}`)
+						log.debug(`Boot: ${part}`)
 						continue
 					}
 					
@@ -192,18 +179,19 @@ function loadMainApp() {
 	 * App started
 	 */
 	function onStart() {
+		// ATTACH SERVICE MANAGER STOP TO WILL-QUIT
+		app.on('will-quit', stop)
 		app.on('open-file', onOpen)
 		app.on('open-url', onOpen)
 		
 		Cleaner.registerCleaner()
 		
-		//app.setName('EpicTask')
 		return boot()
 	}
 	
 	if (checkSingleInstance(app, onFocus)) {
 		log.debug(`Is single instance`)
-		// app.on('will-quit',onWillQuit)
+		
 		if (app.isReady())
 			onStart()
 		else
@@ -217,17 +205,13 @@ function loadMainApp() {
 	
 }
 
-/**
- * Enable HMR
- */
 
 /**
  * Clean if --clean is passed
  */
 
-
 if (Cleaner.isCleanRequested()) {
-		Cleaner.clean()
+	Cleaner.clean()
 }
 
 loadMainApp()

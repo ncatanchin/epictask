@@ -9,6 +9,10 @@ import {Settings} from "epic-global"
 import {RegisterModel} from "epic-global"
 
 import {IWindowState} from 'epic-process-manager-client/WindowTypes'
+import { toPlainObject,excludeFilterConfig, excludeFilter } from "typetransform"
+import { reviveImmutable } from "epic-global/ModelUtil"
+import { getValue } from "epic-global/ObjectUtil"
+
 
 
 export type TWindowMap = Map<string,IWindowState>
@@ -33,20 +37,26 @@ export const AppStateRecord:Record.Class = Record({
 @RegisterModel
 export class AppState extends AppStateRecord {
 
-	static fromJS(o:any) {
+	static fromJS(o:any):AppState {
 		
-		return o && o instanceof AppState ? o : new AppState(Object.assign({},o,{
-			messages: List(o.messages),
-			settings: Map(o.settings),
-			windows: Map(o.windows)
-		}))
+		let appState = reviveImmutable(
+			o,
+			AppState,
+			['messages'],
+			['windows']
+		)
+		
+		if (!(appState.settings instanceof Settings))
+			appState = appState.set('settings',new Settings(getValue(() => o.settings,{}))) as any
+				
+		return appState
 		
 	}
 
 	toJS() {
-		return Object.assign(_.pick(this,'stateType','user'),{
-			windows: this.windows.toJS()
-		})
+		return toPlainObject(this,excludeFilterConfig(
+			...excludeFilter('ready','messages')
+		))
 	}
 	
 	stateType:AppStateType

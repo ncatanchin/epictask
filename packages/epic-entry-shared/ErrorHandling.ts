@@ -1,5 +1,5 @@
 const
-	StackTrace = require('stacktrace-js')
+	StackTrace = !ProcessConfig.isTest() && require('stacktrace-js')
 
 Object.assign(global as any, {StackTrace})
 
@@ -25,7 +25,10 @@ if (typeof window !== 'undefined') {
  * @param reason
  */
 function	deepTrace(reason) {
-		const
+	if (ProcessConfig.isTest())
+		return
+	
+	const
 			log = getErrorLogger()
 	
 		if (reason instanceof Error || reason.stack) {
@@ -72,7 +75,7 @@ function unhandledRejection (reason, promise) {
 	
 	//deepTrace(reason)
 	//console.error('Unhandled rejection', reason)
-	log.error('Unhandled rejection', reason, promise)
+	log && log.error('Unhandled rejection', reason, promise)
 	
 	try {
 		deepTrace(reason)
@@ -91,7 +94,7 @@ process.on("unhandledRejection", unhandledRejection)
 function uncaughtException (err) {
 	const log = getErrorLogger()
 	console.error('Unhandled exception', err)
-	log.error('Unhandled exception', err)
+	log ? log.error('Unhandled exception', err) : console.error('unhandled',err)
 }
 
 process.on("uncaughtException", uncaughtException)
@@ -103,7 +106,7 @@ process.on("uncaughtException", uncaughtException)
  */
 function systemWarning(warning) {
 	const log = getErrorLogger()
-	log.warn('WARNING', warning)
+	log ? log.warn('WARNING', warning) : console.warn(warning)
 }
 
 process.on("warning", systemWarning)

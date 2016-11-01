@@ -7,14 +7,9 @@ export * from "./Constants"
 export * from "./UIConstants"
 
 export * from "./ErrorHandling"
-
-
 export * from "./Registry"
-export * from "./SourceMapSupport"
-export * from "./NotificationCenter"
-
 export * from './ToolTypes'
-
+export * from './NotificationCenterClient'
 
 
 export * from "./ObjectUtil"
@@ -52,3 +47,4 @@ export * from './ProcessClient'
 
 export * from './settings'
 export * from './Config'
+export * from "./EventUtil"

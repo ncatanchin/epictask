@@ -1,7 +1,8 @@
 import * as fs from 'fs'
 import * as moment from 'moment'
 
-import { getUserDataFilename,toJSON, parseJSON } from  "epic-global"
+import { getUserDataFilename} from  "./Files"
+import {toJSON, parseJSON } from "./JSONUtil"
 
 const
 	log = getLogger(__filename),

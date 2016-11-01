@@ -2,12 +2,12 @@ import {JobHandler} from '../JobHandler'
 import {GitHubClient, OnDataCallback} from "epic-github"
 import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ISyncChanges} from 'epic-models'
 
-import {Stores} from "epic-services"
+import {Stores} from "epic-database-client"
 import {getSettings} from "epic-global"
 import {Benchmark} from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import { JobType, IJob, IJobLogger, JobStatus } from "epic-typedux"
-import {IJobExecutor} from "../JobExecutors"
+import {IJobExecutor} from "../JobTypes"
 import JobProgressTracker from "../JobProgressTracker"
 
 import { RepoSyncManager } from "../GithubSyncHandlers"

@@ -3,10 +3,10 @@ import {getDecorator} from "./StoryHelper"
 
 import {StatusBar} from "epic-ui-components/status-bar"
 import {JobActionFactory} from "epic-typedux"
-import {JobType, IJob, JobStatus} from "epic-typedux"
+import {JobType, IJob, JobStatus} from "epic-typedux/state/jobs/JobTypes"
 import {Button} from "epic-ui-components"
 import {jobStateSelector} from "epic-typedux"
-import {getStoreState} from "epic-typedux"
+
 import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "epic-global"
 import {JobDAO} from "epic-typedux"
 

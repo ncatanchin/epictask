@@ -1,7 +1,5 @@
-import {ActionMessage} from 'typedux'
-import { isFunction } from "epic-global"
-import { getValue } from "epic-global"
-import { AppKey } from "epic-global"
+import { ActionMessage } from "typedux"
+import { isFunction, getValue, AppKey } from "epic-global"
 
 /**
  * Options, none yet ;)

@@ -1,7 +1,7 @@
 
 import { JobType, IJob, JobStatus, IJobStatusDetail, JobLogLevel, TJobLogLevel } from "../jobs/JobTypes"
 import { uuid } from  "epic-global"
-import { getJobActions } from "../../provider"
+import { JobActionFactory } from "../../actions/JobActionFactory"
 import { tempFilename } from  "epic-global"
 
 
@@ -72,7 +72,7 @@ export namespace JobDAO {
 				logs: []
 			}) as IJobStatusDetail
 		
-		getJobActions().update(job, detail)
+		new JobActionFactory().update(job, detail)
 		
 		return {job, detail}
 		

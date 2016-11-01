@@ -1,6 +1,6 @@
 
 
-import { isSymbol, isString } from  "epic-global"
+import { isSymbol, isString } from  "typeguard"
 
 export const InvalidProxyNames = ['inspect','prototype','__proto__','constructor']
 
