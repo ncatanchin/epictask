@@ -1,4 +1,4 @@
-import * as React from "react"
+
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { getAuthActions, authenticatingSelector } from "epic-typedux"

@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { List } from "immutable"
 import { RepoName, PureRender } from "../../common"
 import { PositionRelative, ThemedStyles, IThemedAttributes, makeWidthConstraint } from "epic-styles"

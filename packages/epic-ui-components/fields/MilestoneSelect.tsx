@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { connect } from "react-redux"
 import { List } from "immutable"
 import { PureRender, LabelChip } from "epic-ui-components"

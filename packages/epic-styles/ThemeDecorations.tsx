@@ -1,5 +1,4 @@
 
-import * as React from 'react'
 import { mergeStyles } from "./styles/CommonRules"
 import { addThemeListener } from "./ThemeState"
 import { getValue, shallowEquals } from  "epic-global"

@@ -6,13 +6,52 @@ import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
 import {ActionMessage} from 'typedux'
 import { ActionMessageFilter } from "epic-typedux/filter"
 import { AppStoreServerEventNames } from "epic-global"
+import { fromPlainObject } from "typetransform"
 
 
 const
 	log = getLogger(__filename),
 	id = `${ProcessConfig.getTypeName()}-${process.pid}`
 
+let
+	storeReady = false,
+	pendingActions = []
 
+/**
+ * Push actions to the store
+ *
+ * @param actions
+ */
+function pushStoreAction(...actions) {
+	const
+		store = storeReady && getReduxStore()
+	
+	if (!store) {
+		const
+			newActions = actions
+				.filter(action => !pendingActions.includes(action))
+		
+		pendingActions.push(...newActions)
+		return false
+	} else {
+		actions.forEach(action => store.dispatch(action))
+		return true
+	}
+}
+
+/**
+ * Mark store as ready and push pending actions
+ *
+ * @param ready
+ */
+export function setStoreReady(ready:boolean) {
+	storeReady = ready
+	
+	if (ready && pendingActions.length) {
+		pushStoreAction(...pendingActions) &&
+			(pendingActions = [])
+	}
+}
 
 /**
  * Wrapper for observer
@@ -228,8 +267,7 @@ function attachEvents(transport) {
 			return
 		}
 			
-		
-		getReduxStore().dispatch(action)
+		pushStoreAction(action)
 	})
 	
 	/**
@@ -269,7 +307,7 @@ function attachEvents(transport) {
 	})
 	
 	
-	transport.on('stateResponse', ({ id, value, err }) => {
+	transport.on(AppStoreServerEventNames.StateResponse, ({ id, value, err }) => {
 		const
 			request = stateRequests[ id ]
 		
@@ -280,6 +318,8 @@ function attachEvents(transport) {
 		if (err) {
 			return request.resolver.reject(err)
 		}
+		
+		value = fromPlainObject(value)
 		
 		request.resolver.resolve(value)
 	})

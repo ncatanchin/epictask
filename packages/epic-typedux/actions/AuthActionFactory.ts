@@ -1,13 +1,12 @@
 import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
 import { GitHubClient, createClient as createGithubClient } from "epic-github"
 import { AuthKey, Provided, RegisterActionFactory, GitHubConfig } from "epic-global"
-
 import { getRepoActions, getAppActions } from "epic-typedux/provider"
-
 import { AuthState, AuthMessage } from "../state/AuthState"
 import { AppStateType } from "../state/app/AppStateType"
-
 import { authenticatingSelector } from "../selectors"
+import { User } from "epic-models"
+import { addErrorMessage } from "epic-global/NotificationCenterClient"
 
 const log = getLogger(__filename)
 
@@ -35,13 +34,16 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	}
 
 	@ActionReducer()
-	private setTokenInternal(token) {
+	private setAuthenticated(
+		authenticated:boolean,
+		authenticating:boolean,
+	  error:Error = null
+	) {
 		return (state:AuthState) => {
 			state = state.merge({
-				token,
-				authenticating:false,
-				authenticated: !_.isNil(token),
-				error:null
+				authenticating,
+				authenticated,
+				error
 			}) as any
 			
 			
@@ -49,58 +51,46 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		}
 	}
 	
-	@ActionThunk()
-	setToken(token:string) {
-		return (dispatch,getState) => {
-			
-			log.info('Setting token',token)
-			
-			
-			
-			
-			this.setTokenInternal(token)
-			
-			//settings.save()
-		}
-
-
-	}
-
-	@ActionReducer()
-	setAuthenticating(authenticating:boolean) {
-		return (state:AuthState) => state.merge({authenticating})
-	}
 
 	@ActionThunk()
 	setError(err:Error) {}
-
-	@ActionThunk()
-	verify() {
-		return (dispatch,getState) => {
-			log.info(`Verifying user`)
+	
+	/**
+	 * Get the user with the provided token
+	 *
+	 * verifies token really
+	 *
+	 * @param token - if not provided then uses the stored token
+	 */
+	async getUser(token:string = null):Promise<User> {
+		let
+			user:User
+		
+		try {
+			const
+				client = createGithubClient(token)
 			
-			// try {
-			// 	const
-			// 		appActions = getAppActions(),
-			// 		user = await this.client.user()
-			//
-			// 	log.info(`Verified user as`, user)
-			//
-			// 	appActions.setAuthenticated(user,token)
-			//
-			// } catch (err) {
-			// 	log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
-			//
-			// 	const
-			// 		errorMessage = err.statusCode === 403 ?
-			// 			`token is invalid or rate limit exceeded
-			// 					${this.client.getRateLimitInfoAsString()}` :
-			// 			err.message
-			//
-			// 	addErrorMessage(`Verification of Github API token failed:
-			// 		${errorMessage}`)
-			// }
+			user = await client.user()
+			
+			log.debug(`Verified user as`, user)
+			
+		} catch (err) {
+			log.error(`Unable to verify user`,this.client.getRateLimitInfo(),err)
+			
+			const
+				errorMessage = err.statusCode === 403 ?
+					`token is invalid or rate limit exceeded
+								${this.client.getRateLimitInfoAsString()}` :
+					err.message
+			
+			addErrorMessage(
+				`Verification of Github API token failed:
+					${errorMessage}`)
+			
+			
 		}
+		
+		return user
 		
 	}
 
@@ -116,10 +106,9 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				GitHubOAuthWindow = require('./auth/GitHubOAuthWindow').default,
 				authRequest = new GitHubOAuthWindow(getCurrentWindow(),GitHubConfig)
 			
-			this.setAuthenticating(true)
+			this.setAuthenticated(false,true)
 			
 			authRequest.start((err,token) => {
-				this.setAuthenticating(false)
 				this.setAuthResult(err,token)
 			})
 		}
@@ -130,44 +119,49 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	logout() {
 		return (dispatch,getState) => {
 			const
-				actions = this.withDispatcher(dispatch, getState),
 				appActions = getAppActions()
-			actions.setToken(null)
-			appActions.setStateType(AppStateType.AuthLogin)
+			
+			this.setAuthenticated(false,false)
+			appActions.setAuthenticated(null,null)
 		}
 	}
 
 	@ActionThunk()
 	setAuthResult(err:Error,token:string) {
-		return (dispatch,getState) => {
+		return async (dispatch,getState) => {
 			const
-				actions = this.withDispatcher(dispatch,getState),
 				appActions = getAppActions()
 			
+			let
+				success = false
 			
-			
-			if (err) {
-				actions.setError(err)
+			if (err || !token) {
+				this.setError(err)
 				appActions.setStateType(AppStateType.AuthLogin)
 				
-			} else {
-				actions.setToken(token)
-				const repoActions = getRepoActions()
-				repoActions.syncUserRepos()
-				appActions.setStateType(AppStateType.Authenticated)
-				
-			}
-			
-			if (err) {
 				log.error('GH token received: ' + token,err)
 				getNotificationCenter().addErrorMessage(err)
 			} else {
 				
-				log.info('GH token received: ' + token,err)
+				const
+					user = await this.getUser(token)
+				
+				if (!user) {
+					appActions.setAuthenticated(null,null)
+				} else {
+					
+					
+					appActions.setAuthenticated(user, token)
+					getRepoActions().syncUserRepos()
+					
+					success = true
+					
+					log.info('GH token received: ' + token, err)
+				}
 			}
 			
 			
-			
+			this.setAuthenticated(success,false,!success && err)
 
 		}
 	}

@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "ES5",
+        "target": "ES6",
         "lib": [
             "es6",
             "es7",
@@ -9,7 +9,7 @@
             "es2017",
             "dom"
         ],
-        "module": "commonjs",
+        "module": "es6",
         "moduleResolution": "node",
         "declaration": false,
         "emitDecoratorMetadata": true,
@@ -23,6 +23,9 @@
         "paths": {
             "*": [
                 "*"
+            ],
+            "epic-electron": [
+                "epic-global/Electron"
             ]
         },
         "baseUrl": "./packages",
@@ -36,6 +39,7 @@
             "../typings/custom/index"
         ]
     },
+    "compileOnSave": true,
     "exclude": [
         "libs/**/*.*",
         "typings/custom",
@@ -50,18 +54,19 @@
         "node_modules.disk"
     ],
     "awesomeTypescriptLoaderOptions": {
-        "useBabel": false,
+        "useBabel": true,
         "forkChecker": true,
         "useCache": true,
         "babelOptions": {
             "presets": [
-                ["es2015", { "modules": false }],
+                "es2016-node5",
                 "stage-0",
                 "react",
                 "async-to-bluebird"
             ],
             "sourceMaps": "both",
             "plugins": [
+                "transform-es2015-classes",
                 "transform-runtime"
             ],
             "env": {

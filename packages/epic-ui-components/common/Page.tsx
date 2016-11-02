@@ -1,4 +1,3 @@
-import * as React from 'react'
 import filterProps from 'react-valid-props'
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import { PureRender } from "./PureRender"

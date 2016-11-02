@@ -3,8 +3,6 @@
  */
 
 // Imports
-import * as React from 'react'
-import * as Radium from 'radium'
 import filterProps from 'react-valid-props'
 
 import {FAIcons} from "./IconFontAwesomeNames"

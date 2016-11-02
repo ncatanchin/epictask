@@ -1,5 +1,6 @@
 import { ActionMessage } from "typedux"
 import { isFunction, getValue, AppKey } from "epic-global"
+import { SynchronizedStateKeys } from "epic-global/Constants"
 
 /**
  * Options, none yet ;)
@@ -21,7 +22,7 @@ function makeMessageFilterHandler<M,R>(options,handler:IActionMessageHandler<M,R
 		const
 			leaf = getValue(() => action.leaf)
 		
-		if (!leaf || leaf !== AppKey)
+		if (!SynchronizedStateKeys.includes(leaf))
 			return null
 		
 		return handler(action)

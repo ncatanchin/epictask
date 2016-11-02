@@ -1,6 +1,5 @@
 // Imports
-import * as React from 'react'
-import * as Radium from 'radium'
+
 import { PureRender } from './PureRender'
 import { ThemedStyles } from "epic-styles"
 import {

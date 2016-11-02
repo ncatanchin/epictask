@@ -40,8 +40,8 @@ interface NodeRequireFunction {
 
 
 // GLOBALS
-import * as ReactGlobal from 'react'
-import * as RadiumGlobal from 'radium'
+import ReactGlobal from 'react'
+import RadiumGlobal from 'radium'
 //import * as JQueryGlobal from 'jquery'
 
 

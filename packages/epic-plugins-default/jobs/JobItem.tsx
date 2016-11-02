@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import filterProps from "react-valid-props"
 import { PureRender, Icon } from "epic-ui-components"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"

@@ -6,7 +6,7 @@ import {ICommandMenuManager, ICommandMenuItem} from './Command'
 import { getCommandManagerType, getCommandManager } from  "./CommandManager"
 import { isMain } from  "./CommandManagerConfig"
 
-import Electron = require('electron')
+import Electron from 'epic-electron'
 
 
 const

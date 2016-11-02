@@ -14,7 +14,7 @@ import {
 } from "epic-typedux"
 import { IJobExecutor } from "./JobTypes"
 import JobProgressTracker from "./JobProgressTracker"
-import * as fs from "fs"
+import fs from "fs"
 
 
 const

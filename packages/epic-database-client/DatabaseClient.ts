@@ -1,5 +1,5 @@
 
-import path = require('path')
+
 import * as uuid from "node-uuid"
 import { Map } from 'immutable'
 import { DatabaseEvents } from "./DatabaseEvents"
@@ -22,7 +22,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG LOGGING
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 	
 /**
  * Database entry template
@@ -259,7 +259,8 @@ export class DatabaseClient {
 		if (resp.error)
 			pendingRequest.deferred.reject(_.isError(resp.error) ? resp.error : new Error(resp.error as any))
 		else
-			pendingRequest.deferred.resolve(cloneObjectShallow(resp.result))
+			pendingRequest.deferred.resolve(resp.result)
+			//pendingRequest.deferred.resolve(cloneObjectShallow(resp.result))
 
 	}
 	

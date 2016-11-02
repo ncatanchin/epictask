@@ -1,6 +1,6 @@
 import {List,Map} from 'immutable'
 
-import * as assert from 'assert'
+
 
 import {BaseService, RegisterService, IServiceConstructor} from "epic-services/internal"
 import {DatabaseClientService} from "epic-services/DatabaseClientService"

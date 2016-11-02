@@ -5,4 +5,4 @@ require('fs')
 	.forEach(filename => {
 		console.log(`loading task file ${filename}`)
 		require(`./${filename.replace(/\.js$/g,'')}`)
-	})
+	})S

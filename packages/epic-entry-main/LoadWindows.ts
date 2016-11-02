@@ -1,5 +1,5 @@
 //
-// import Electron = require('electron')
+// import Electron from 'epic-electron'
 // import { makeMainMenu as makeMainMenuType } from "./MainMenu"
 // import { getAppEntryHtmlPath, setDataOnHotDispose, getHot } from "epic-global"
 // import { AllWindowDefaults, WindowIcon } from "epic-global"

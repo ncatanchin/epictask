@@ -28,21 +28,26 @@ function appStoreEnhancer(storeCreator) {
 				{fromServer} = action,
 				state = store.getState()
 			
-			storeDotDispatch(action)
-			
-			const
-				newState = store.getState()
-			
-			// IF CHANGED - SEND TO CHILDREN
-			if (!fromServer && state !== newState) {
+			nextTick(() => {
+				storeDotDispatch(action)
 				
-				// If it's a reducer then process it, otherwise - wait for server
-				// to process the action and send data
-				nextTick(() => sendStoreAction(assign(action,{
-					windowId: getWindowId()
-				})))
+				const
+					newState = store.getState()
 				
-			}
+				// IF CHANGED - SEND TO CHILDREN
+				if (!fromServer && state !== newState) {
+					
+					// If it's a reducer then process it, otherwise - wait for server
+					// to process the action and send data
+					nextTick(() => sendStoreAction(assign(action,{
+						windowId: getWindowId()
+					})))
+					
+				}
+			})
+			
+			
+			
 		}
 		return store
 	}

@@ -2,7 +2,6 @@
  * Created by jglanz on 8/9/16.
  */
 // Imports
-import * as moment from "moment"
 import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles } from "epic-styles"

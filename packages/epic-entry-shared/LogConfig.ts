@@ -2,13 +2,12 @@
 import './LogCategories'
 
 import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
-import * as path from 'path'
-
+import path from 'path'
+import _ from './LoDashMixins'
 import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"
 
 let
-	_ = require('lodash'),
 	Reactotron = null
 
 /**
@@ -62,6 +61,10 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 	
 	return logger
 }
+
+_.assignGlobal({
+	getLogger: EpicLoggerFactory
+})
 
 declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst

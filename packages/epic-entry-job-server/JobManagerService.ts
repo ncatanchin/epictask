@@ -1,5 +1,5 @@
 import { JobHandler, JobHandlerEventType } from "./JobHandler"
-import * as assert from "assert"
+
 import { IEnumEventRemover, JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
 import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux"
 import { IJobExecutorConstructor, IJobExecutor } from "./JobTypes"

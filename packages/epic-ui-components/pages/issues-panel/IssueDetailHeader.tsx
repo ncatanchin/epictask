@@ -1,5 +1,4 @@
 // Imports
-import * as React from "react"
 import { List } from "immutable"
 import { TextField, CircularProgress } from "material-ui"
 import { connect } from "react-redux"

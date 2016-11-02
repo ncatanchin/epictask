@@ -37,7 +37,6 @@ import {
 } from "epic-styles"
 import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon } from "material-ui/svg-icons"
-import * as moment from "moment"
 import { getValue } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
 

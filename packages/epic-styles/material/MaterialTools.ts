@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+
 import * as BasePalettes from './MaterialColorPalettes'
 import {MaterialColorPalette} from './MaterialColorPalettes'
 

@@ -7,7 +7,7 @@ import { setStoreProvider, ILeafReducer, ObservableStore } from "typedux"
 
 import { loadActionFactories } from "../provider"
 
-import { configureStorePersistence, loadStateFromDisk } from "./AppStorePersistence"
+import { configureStorePersistence } from "./AppStorePersistence"
 import addDevMiddleware from "./AppStoreDevConfig"
 
 const
@@ -207,12 +207,6 @@ export function loadAndInitStorybookStore() {
 
 export async function loadAndInitStore(defaultStateValue = null, enhancer = null) {
 	loadActionFactories()
-	
-	
-	// ONLY LOAD STATE ON MAIN UI PROCESS
-	//if (ProcessConfig.isType(ProcessType.UI)) {
-	defaultStateValue = loadStateFromDisk()
-	//}
 	
 	return initStore(false, defaultStateValue,enhancer)
 }

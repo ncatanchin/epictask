@@ -1,7 +1,6 @@
 //region Imports
-import * as React from "react"
-import * as CSSTransitionGroup from "react-addons-css-transition-group"
-import * as Radium from "radium"
+import CSSTransitionGroup from "react-addons-css-transition-group"
+
 import { connect } from "react-redux"
 import {
 	INotificationMessage,
@@ -230,7 +229,7 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 
 		return !enabled ? React.DOM.noscript() : <div style={styles.root}>
 			<Style scopeSelector=".toastMessageTransitionGroup"
-			       rules={_.merge(
+			       rules={makeStyle(
 			       	styles.transitionGroup,
 			       	styles.toastMessagesTransition)}
 			/>

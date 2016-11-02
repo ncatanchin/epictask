@@ -9,9 +9,7 @@ import { reviveImmutable } from "epic-global/ModelUtil"
 export const AuthStateRecord = Record({
 	authenticating: false,
 	error: null,
-	authenticated: false,
-	username: null,
-	email: null
+	authenticated: false
 })
 
 
@@ -34,9 +32,6 @@ export class AuthState extends AuthStateRecord {
 
 	authenticated:boolean
 
-	username:string
-
-	email:string
 
 }
 

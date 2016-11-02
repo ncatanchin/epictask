@@ -1,4 +1,4 @@
-import * as Bluebird from 'bluebird'// = require('bluebird')
+import Bluebird from 'bluebird'// = require('bluebird')
 
 /**
  * Update Babel Runtime

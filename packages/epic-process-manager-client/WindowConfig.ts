@@ -1,4 +1,4 @@
-import * as fs from "fs"
+import fs from "fs"
 import { ClassType } from "react"
 import { WindowType, IWindowConfig } from "./WindowTypes"
 import { ProcessType } from "epic-entry-shared/ProcessType"
@@ -130,7 +130,7 @@ export const WindowConfigNormalDefaults = {
 	singleWindow: false,
 	autoRestart: false,
 	showDevTools: true,
-	storeState: true,
+	storeWindowState: true,
 	opts: WindowDefaultOpts
 }
 
@@ -143,7 +143,7 @@ export const WindowConfigDialogDefaults = {
 	singleWindow: false,
 	autoRestart: false,
 	showDevTools: false,
-	storeState: true,
+	storeWindowState: false,
 	opts: WindowDialogDefaultOpts
 }
 
@@ -156,7 +156,7 @@ export const WindowConfigModalDefaults = {
 	singleWindow: true,
 	autoRestart: false,
 	showDevTools: false,
-	storeState: true,
+	storeWindowState: true,
 	opts: WindowModalDefaultOpts
 }
 
@@ -169,7 +169,7 @@ export const WindowConfigBackgroundDefaults = {
 	singleWindow: true,
 	autoRestart: true,
 	showDevTools: true,
-	storeState: true,
+	storeWindowState: true,
 	opts: WindowBackgroundDefaultOpts
 }
 
@@ -187,14 +187,16 @@ export const WindowConfigDefaults = {
 export const WindowBackgroundConfigs:IWindowConfig[] = [
 	
 	Object.assign({
+		id: ProcessNames.DatabaseServer,
 		name: ProcessNames.DatabaseServer,
-		processType: ProcessType.DatabaseServer,
-	},WindowConfigBackgroundDefaults),
+		processType: ProcessType.DatabaseServer
+	},Object.assign({},WindowConfigBackgroundDefaults)),
 	
 	Object.assign({
+		id: ProcessNames.JobServer,
 		name: ProcessNames.JobServer,
-		processType: ProcessType.JobServer,
-	},WindowConfigBackgroundDefaults)
+		processType: ProcessType.JobServer
+	},Object.assign({},WindowConfigBackgroundDefaults))
 ]
 
 

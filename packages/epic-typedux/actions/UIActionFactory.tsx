@@ -1,4 +1,3 @@
-import * as uuid from "node-uuid"
 import { ActionFactory, ActionReducer,  ActionMessage } from "typedux"
 import { List, Map } from "immutable"
 import {
@@ -12,10 +11,10 @@ import {
 	IToolPanel,
 	RegisterActionFactory,
 	getToolRegistrations, nilFilter,
+	uuid
 } from "epic-global"
 import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
-import * as assert from "assert"
  
 import {getWindowManagerClient} from "epic-process-manager-client"
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
@@ -29,7 +28,7 @@ const
 
 export function makeToastMessage(opts:any) {
 	return Object.assign({},opts,{
-		id:uuid.v4(),
+		id: uuid(),
 		createdAt:Date.now(),
 		floatVisible: true,
 		content: opts.content || 'No content provided - DANGER will robinson'

@@ -2,7 +2,7 @@
  * Created by jglanz on 7/24/16.
  */
 // Imports
-import * as React from "react"
+
 import { connect } from "react-redux"
 import { createDeepEqualSelector, getValue } from "epic-global"
 import { createStructuredSelector } from "reselect"

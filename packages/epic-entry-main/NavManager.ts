@@ -1,4 +1,4 @@
-import Electron = require('electron')
+import Electron from 'epic-electron'
 
 const
 	log = getLogger(__filename),

@@ -33,7 +33,6 @@ import {
 
 import { cloneObject } from "epic-global"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
-import Radium = require('radium')
 import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
 
 // Constants

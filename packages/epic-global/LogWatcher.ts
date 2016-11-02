@@ -1,6 +1,6 @@
 
 
-import * as fs from 'fs'
+import fs from 'fs'
 import {EnumEventEmitter} from  "./EnumEventEmitter"
 
 const log = getLogger(__filename)

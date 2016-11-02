@@ -1,4 +1,4 @@
-import Electron = require('electron')
+import Electron from 'epic-electron'
 import Cleaner from "./Cleaner"
 import { shutdownApp } from "./MainShutdownHandler"
 

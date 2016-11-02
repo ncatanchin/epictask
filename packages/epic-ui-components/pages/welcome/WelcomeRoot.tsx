@@ -1,4 +1,4 @@
-import * as React from "react"
+
 import { createStructuredSelector } from "reselect"
 import { Page, PureRender, Logo } from "../../common"
 import { connect } from "react-redux"

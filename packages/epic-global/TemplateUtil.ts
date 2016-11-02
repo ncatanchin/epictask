@@ -1,15 +1,23 @@
 
 
-import Electron = require('electron')
-import uuid = require('node-uuid')
+
+
 import { searchPathsForFile } from  "./Files"
 
 const
 	log = getLogger(__filename),
 
-	{app} = Electron,
 	dataUrl = require('dataurl')
+
+let
+	app:Electron.App
+
+function getApp() {
+	if(!app)
+		app = require('epic-electron').app
 	
+	return app
+}
 
 export function toDataUrl(template:Function|string,locals:any = {},mimetype:string = 'text/html'):string {
 	if (typeof template === 'function') {

@@ -1,5 +1,5 @@
 // Imports
-import * as moment from "moment"
+
 import { connect } from "react-redux"
 import { PureRender, LabelChip, Button, Icon } from "epic-ui-components"
 import { createStructuredSelector } from "reselect"

@@ -1,7 +1,7 @@
 
 
 import {List} from 'immutable'
-import * as React from 'react'
+
 import {Icon} from "epic-ui-components"
 import * as Renderers from "epic-ui-components"
 import {AvailableRepo} from "epic-models"

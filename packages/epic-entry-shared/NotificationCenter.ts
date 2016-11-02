@@ -70,6 +70,9 @@ export function getNotificationCenter() {
  */
 Container.bind(NotificationCenter).provider({get: getNotificationCenter})
 
+declare global {
+	function getNotificationCenter():NotificationCenter
+}
 
 export {
 	

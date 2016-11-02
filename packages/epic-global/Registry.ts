@@ -1,11 +1,9 @@
 import {IToolProps, IToolConfig, IToolRegistration} from "./ToolTypes"
 
-import React from 'react'
 import {ActionFactory} from 'typedux'
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { decorateConstructor } from "./Decorations"
 import { getValue } from "./ObjectUtil"
-
 
 const
 	log = getLogger(__filename)
@@ -120,7 +118,8 @@ const registries:typeof emptyRegistries = _.get(module,'hot.data.registries',emp
 
 export function getRegistry(type:RegistryType):TRegistry<any> {
 	
-	const registry = registries[type]
+	const
+		registry = registries[type]
 	assert(registry,`Unknown registry type: ${type}`)
 	return registry
 }

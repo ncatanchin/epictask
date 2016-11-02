@@ -1,5 +1,3 @@
-import * as React from 'react'
-import * as ReactDOM from 'react-dom'
 import {createDevTools} from 'redux-devtools'
 
 // import * as LogMonitor from 'redux-devtools-log-monitor'

@@ -1,4 +1,4 @@
-import * as React from "react"
+
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import { ITool, IToolPanel, ToolPanelLocation, DragTypes } from "epic-global"
 import { getUIActions } from "epic-typedux"

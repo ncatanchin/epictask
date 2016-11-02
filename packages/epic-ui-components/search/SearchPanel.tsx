@@ -3,8 +3,6 @@
  */
 // Imports
 import { List } from "immutable"
-import * as ReactDOM from "react-dom"
-import * as React from "react"
 import { TextField } from "material-ui"
 import * as KeyMaps from "epic-command-manager"
 import { CommandType, getCommandManager, CommonKeys } from "epic-command-manager"

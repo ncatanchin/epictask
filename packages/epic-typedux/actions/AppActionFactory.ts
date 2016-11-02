@@ -1,15 +1,14 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
-//import { IWindowState } from "epic-process-manager-client/WindowTypes"
 import { RegisterActionFactory, Events, AppKey, Provided, cloneObjectShallow } from "epic-global"
 
 import { User } from "epic-models"
 import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
-
 import { Settings } from "epic-global/settings/Settings"
 
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 // /**
 //  * Update the transient values on an issue
@@ -80,12 +79,14 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 				token = null
 			}
 			
-			
+			settings = settings
+				.set('user',user)
+				.set('token',token) as Settings
 			
 			return newState
-				.set('settings',settings.set('user',user))
+				.set('settings',settings)
 				.set('user',user)
-				.set('appState',user && token ? AppStateType.Authenticated : AppStateType.AuthLogin)
+				.set('stateType',user && token ? AppStateType.Authenticated : AppStateType.AuthLogin)
 		})
 	}
 	

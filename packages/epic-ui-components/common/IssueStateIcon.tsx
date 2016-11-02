@@ -2,7 +2,7 @@
  * Created by jglanz on 7/23/16.
  */
 // Imports
-import * as React from "react"
+
 import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"

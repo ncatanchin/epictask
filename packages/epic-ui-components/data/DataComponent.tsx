@@ -1,5 +1,5 @@
 // Imports
-import * as React from 'react'
+
 import {
 	DataClient, createDataClient, TDataId, IDataRequest, IDataPendingRequest,
 	TDataMappedProvider, IDataProviderPendingRequest, IDataProviderRequest

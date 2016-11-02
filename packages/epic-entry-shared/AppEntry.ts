@@ -2,7 +2,7 @@
 ///<reference path="./Globals.ts"/>
 ///<reference path="./Env.ts"/>
 ///<reference path="./PromiseConfig.ts"/>
-
+import './SourceMapSupport'
 import "./LogCategories"
 import "./ProcessConfig"
 

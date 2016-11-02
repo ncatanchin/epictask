@@ -64,6 +64,6 @@ export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):
 	
 }
 
-_.assignGlobal({
+assignGlobal({
 	CreateGlobalThemedStyles
 })

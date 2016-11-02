@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { DragLayer } from "react-dnd"
 import { ThemedStyles, IThemedAttributes, PositionAbsolute } from "epic-styles"
 import { ToolGutterButton } from "./ToolGutterButton"

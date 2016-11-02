@@ -1,9 +1,9 @@
 // Imports
-import * as React from "react"
+
 import { connect } from "react-redux"
 import { PureRender, ToastMessage } from "../common"
 import { createDeepEqualSelector, getValue, INotificationMessage } from "epic-global"
-import { createStructuredSelector } from "reselect"
+import { createStructuredSelector,createSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import baseStyles from "./StatusBar.styles"
 import {
@@ -12,8 +12,7 @@ import {
 	TJobMap,
 	IJobStatusDetail,
 	getUIActions,
-	messagesSortedSelector,
-	statusBarHasItemsSelector
+	messagesSortedSelector
 } from "epic-typedux"
 import { JobItem } from "epic-plugins-default/jobs/JobItem"
 import { BuiltInTools, getBuiltInToolId } from "../tools"
@@ -21,6 +20,15 @@ import { BuiltInTools, getBuiltInToolId } from "../tools"
 // Constants
 const
 	log = getLogger(__filename)
+
+const statusBarHasItemsSelector:(state) => boolean = createSelector(
+	messagesSortedSelector,
+	jobsSelector,
+	(messages,jobs) =>
+		getValue(() =>
+			Object.keys(jobs).length,0) + getValue(() => messages.size) > 0
+)
+
 
 /**
  * IStatusBarProps

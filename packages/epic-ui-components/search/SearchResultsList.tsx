@@ -1,8 +1,7 @@
 // Imports
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
-import * as React from 'react'
+import CSSTransitionGroup from 'react-addons-css-transition-group'
 
-import { PureRender } from "epic-ui-components"
+import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles } from "epic-styles"
 import { SearchItem, ISearchState } from "epic-typedux"
 

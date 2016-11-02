@@ -1,4 +1,3 @@
-
 export * from 'epic-entry-shared/ProcessType'
 export * from 'epic-entry-shared/ProcessConfig'
 

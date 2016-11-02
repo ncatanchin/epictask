@@ -1,7 +1,8 @@
 
 import {Map,List} from 'immutable'
-import * as moment from 'moment'
+
 import { shallowEquals, cloneObject, cloneObjectShallow } from "./ObjectUtil"
+import { isMap } from "typeguard"
 
 /**
  * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided
@@ -54,14 +55,14 @@ export function checkUpdatedAndAssign(logger,id:string|number,newModel,existingM
  * @returns {any}
  */
 export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [],mapProps:string[] = []):T {
-	val = val || new type()
+	val = val || {}
 
 	
 	// SET LIST PROPS
 	listProps.forEach(prop => {
 		
 		let
-			propVal = val[prop]
+			propVal = val.get ? val.get(prop) : val[prop]
 		
 		if (!propVal)
 			propVal = List()
@@ -81,7 +82,7 @@ export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [
 	mapProps.forEach(prop => {
 		
 		let
-			propVal = val[prop]
+			propVal = val.get ? val.get(prop) : val[prop]
 		
 		if (!propVal)
 			propVal = Map()
@@ -99,7 +100,17 @@ export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [
 	})
 	
 
-	
+	const makeInstance = () => {
+		const
+			props = Object.assign(
+				{},
+				isMap(val) ?
+					val.toObject() :
+					val
+			)
+		
+		return new (type as any)(props)
+	}
 	
 	return val && val instanceof type ?
 		
@@ -107,5 +118,5 @@ export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [
 		val :
 		
 		// OBJECT TYPE
-		new (type as any)(Object.assign({},val))
+		makeInstance()
 }

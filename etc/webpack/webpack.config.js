@@ -25,9 +25,7 @@ const
 	fs = require('fs'),
 	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader'),
-	
-	forkCheckerPlugin = new ForkCheckerPlugin()
+	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader')
 	
 
 // Import globals
@@ -140,7 +138,7 @@ function makeAliases() {
 	return _.assign(makePackageAliases(),{
 		buildResources: path.resolve(baseDir, 'build'),
 		libs: path.resolve(baseDir, 'libs'),
-		
+		"epic-electron": tsAlias('epic-global/Electron'),
 		styles: tsAlias('epic-assets/styles'),
 		assets: tsAlias('epic-assets')
 		
@@ -239,7 +237,7 @@ function makeResolveConfig() {
 		modules: moduleDirs,
 		
 		// EXTENSIONS
-		extensions: ['.js', '.jsx','.ts','.tsx']
+		extensions: ['.ts','.tsx','.js', '.jsx']
 		
 	}
 }
@@ -315,7 +313,8 @@ function patchConfig(config) {
 //devtool: 'cheap-module-eval-source-map',
 const
 	devtool = isDev ?
-		'cheap-module-source-map' :
+		'#inline-source-map' :
+		//'#cheap-module-inline-source-map' :
 		"source-map"
 
 // Webpack Config
@@ -372,8 +371,8 @@ function makeConfig(name,dependencies,entry,configFn) {
 				
 				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
 				//new TsConfigPathsPlugin(),
-				//new ForkCheckerPlugin(),
-				forkCheckerPlugin,
+				new ForkCheckerPlugin(),
+				
 				
 				new CircularDependencyPlugin(),
 				
@@ -485,7 +484,9 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
 	makeConfig('epic_libs',[],{
 		"epic_libs": makeHotEntry([
-			"epic-entry-shared",
+			//"epic-entry-shared",
+			...glob.sync("epic-entry-shared/**/*",globOpts),
+			//...glob.sync("epic-entry-shared/**/*",globOpts),
 			//...glob.sync("epic-global/**/*",globOpts),
 			
 			// "./epic-entry-shared/Globals",

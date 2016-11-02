@@ -1,10 +1,18 @@
-import Electron = require('electron')
+import Electron from 'epic-electron'
+import { getValue } from "epic-global/ObjectUtil"
 
-const log = getLogger(__filename)
-const assert = require('assert')
+const
+	log = getLogger(__filename),
+	FormData = require('form-data')
+	fetch = require('node-fetch')
 
-const FormData = require('form-data')
-const fetch = require('node-fetch')
+function getApp() {
+	return getValue(() => Electron.remote.app,Electron.app)
+}
+
+function getBrowserWindow() {
+	return getValue(() => Electron.remote.BrowserWindow,Electron.BrowserWindow)
+}
 
 
 export default class GitHubOAuthWindow {
@@ -17,8 +25,7 @@ export default class GitHubOAuthWindow {
 	window:Electron.BrowserWindow
 	parentWindow:Electron.BrowserWindow
 	electron:typeof Electron
-	app
-	BrowserWindow:typeof Electron.BrowserWindow
+	
 
 	constructor(parentWindow:Electron.BrowserWindow,obj:any) {
 		const
@@ -27,26 +34,19 @@ export default class GitHubOAuthWindow {
 				secret,
 				scopes = [],
 				waitForApp = false
-			} = obj,
-			remote = obj.remote === true,
-			electron = (remote || Electron.remote) ? Electron.remote : Electron,
-			{BrowserWindow} = electron
+			} = obj
+			
 			
 		
-		
-		assert.ok(id, 'Client ID is needed!')
-		assert.ok(secret, 'Client Secret is needed!')
+		assert(id, 'Client ID is needed!')
+		assert(secret, 'Client Secret is needed!')
 		
 		assign(this,{
 			scopeQuery: scopes.length > 0 ? '&scope=' + scopes.join('%2C') : '',
 			clientId: id,
 			clientSecret: secret,
 			waitForApp: waitForApp,
-			remote: remote === true,
 			window: null,
-			electron,
-			app: electron.app,
-			BrowserWindow,
 			parentWindow
 		})
 		
@@ -60,21 +60,25 @@ export default class GitHubOAuthWindow {
 		const doAuth = () => {
 			
 				
+			const
+				BrowserWindow = getBrowserWindow()
 			
-			this.window = new this.BrowserWindow({
-				center: true,
-				parent: this.parentWindow,
-				modal: true,
-				autoHideMenuBar: true,
-				alwaysOnTop: true
-			})
+			
 
 
 			const
 				authURL = 'https://github.com/login/oauth/authorize?client_id=' + this.clientId + this.scopeQuery,
-				{webContents} = this.window
+				{webContents} = this.window = new BrowserWindow({
+					center: true,
+					//parent: this.parentWindow,
+					modal: !DEBUG,
+					autoHideMenuBar: true,
+					alwaysOnTop: true
+				})
 			
 			webContents.enableDeviceEmulation({fitToView:true} as any)
+			
+			webContents.openDevTools()
 			webContents.on('did-finish-load', () => {
 				try {
 					if (this.window && !this.window.isDestroyed() && this.window.isClosable()) {
@@ -104,7 +108,8 @@ export default class GitHubOAuthWindow {
 			this.window.loadURL(authURL)
 		}
 
-		(this.waitForApp) ? this.app.on('ready', doAuth) : doAuth()
+		//(this.waitForApp) ? getApp().on('ready', doAuth) : doAuth()
+		doAuth()
 	}
 
 	handleCallback(url, callback) {

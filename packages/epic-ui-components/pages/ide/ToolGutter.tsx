@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { DropTarget, DropTargetConnector, DropTargetMonitor } from "react-dnd"
 import { PureRender } from "../../common"
 import { IThemedAttributes } from "epic-styles"

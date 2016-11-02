@@ -1,9 +1,7 @@
-///<reference path="../epic-entry-shared/AppEntry.ts"/>
-
 import "epic-entry-shared/AppEntry"
 
 
-import * as uuid from "node-uuid"
+
 import { PouchDBRepo,IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
 
 import { loadProcessClientEntry } from "epic-entry-shared"
@@ -16,9 +14,9 @@ import { Stores, IDatabaseRequest, DatabaseEvents, IDatabaseChange } from "epic-
 
 import {
 	tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler, getHot,
-	setDataOnHotDispose, IModelConstructor, getValue
+	setDataOnHotDispose, getValue,uuid
 } from "epic-global"
-import { ProcessNames, ProcessType } from "epic-global"
+import { ProcessNames, ProcessType } from "epic-entry-shared/ProcessType"
 
 import { makeIPCServerId } from "epic-net"
 import { UserStoreImpl } from "./stores/UserStoreImpl"
@@ -54,7 +52,7 @@ ipc.config.silent = true
 const
 	
 	dbName = Env.isTest ?
-		`epictask-test-${uuid.v4()}` :
+		`epictask-test-${uuid()}` :
 		`epictask-${Env.envName}`,
 	
 	dbPath = Env.isTest ?

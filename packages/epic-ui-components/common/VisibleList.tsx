@@ -1,6 +1,6 @@
 // Imports
 import {List} from 'immutable'
-import * as CSSTransitionGroup from 'react-addons-css-transition-group'
+import CSSTransitionGroup from 'react-addons-css-transition-group'
 import { createThemedStyles, getTheme } from "epic-styles"
 import { isNumber, isNil, isFunction } from  "epic-global"
 import {shallowEquals} from "epic-global"

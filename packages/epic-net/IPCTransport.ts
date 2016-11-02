@@ -143,7 +143,7 @@ export class IPCTransport extends Transport {
 			
 			// Connect
 			this.on(TransportEvents.Connect,() => {
-				log.info(`Connected ${processClientId}`)
+				log.info(`${processClientId} connected to ${this.serverName}`)
 				this.disconnected = false
 				this.connectDeferred.resolve(true)
 			})

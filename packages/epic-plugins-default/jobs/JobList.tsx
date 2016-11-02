@@ -1,5 +1,4 @@
 // Imports
-import * as React from "react"
 import { List } from "immutable"
 import { PureRender } from "epic-ui-components"
 import { ThemedStyles, makePaddingRem } from "epic-styles"

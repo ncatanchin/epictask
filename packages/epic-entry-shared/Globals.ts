@@ -1,8 +1,9 @@
-import './GlobalDeclarations'
 
-import Electron = require('electron')
+import {List,Map} from 'immutable'
 
-import './LoDashMixins'
+import Electron from 'epic-electron'
+
+import LodashGlobal from './LoDashMixins'
 
 // IOC CONTAINER
 import {Container as ContainerGlobal} from 'typescript-ioc'
@@ -33,22 +34,29 @@ _.assignGlobal({
 
 import './ErrorHandling'
 
-//import {getValue} from  "epic-global"
-
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 
-import * as assertGlobal from 'assert'
-import * as LodashGlobal from 'lodash'
+import momentGlobal from 'moment'
 
-import * as ReactGlobal from 'react'
-import * as ReactDOMGlobal from 'react-dom'
+const
+	momentMod = require('moment'),
+	momentExport = [momentMod,momentMod.default,momentGlobal]
+		.find(it => _.isFunction(it))
 
-import * as JQueryGlobal from 'jquery'
-import * as RadiumGlobal from 'radium'
+import ReactGlobal from 'react'
+import ReactDOMGlobal from 'react-dom'
+
+import JQueryGlobal from 'jquery'
+import RadiumGlobal from 'radium'
 
 
+import * as Constants from 'epic-global/Constants'
 
+// ADD EVENTS TO GLOBAL
+_.assignGlobal({
+	Constants
+})
 
 
 /**
@@ -77,16 +85,34 @@ function getProcessId() {
 
 /**
  * Finds the current window from anywhere
+ *
+ * @param flushCache
+ *
  * @returns {Electron.BrowserWindow}
  */
-function getCurrentWindowGlobal():Electron.BrowserWindow {
-	try {
-		const
-			Electron = require('electron')
+function getCurrentWindowGlobal(flushCache = false):Electron.BrowserWindow {
+	if (flushCache) {
 		try {
-			return Electron.remote.getCurrentWindow()
+			delete require.cache[require.resolve('electron')]
 		} catch (err) {
-			return Electron.BrowserWindow.getFocusedWindow()
+			console.warn(`failed to clear electron from cache`, err)
+		}
+	}
+	try {
+		
+		let
+			Electron = require('electron')
+		
+		try {
+			return Electron.remote ?
+				Electron.remote.getCurrentWindow() :
+				Electron.BrowserWindow.getFocusedWindow()
+			
+		} catch (err) {
+			if (!flushCache)
+				return getCurrentWindowGlobal(true)
+			else
+				return (Electron.remote || Electron).BrowserWindow.getFocusedWindow()
 		}
 	} catch (err) {
 		console.error(`Unable to find any current window`,err)
@@ -128,13 +154,17 @@ function installGlobals() {
 		Immutable: ImmutableGlobal,
 		M: MapGlobal,
 		L: ListGlobal,
+		moment: momentExport,
+		//moment: momentGlobal,
 		Map:MapGlobal,
 		List:ListGlobal,
 		Record:RecordGlobal,
 		_: LodashGlobal,
 		LogLevel: LogLevelGlobal,
-		moment: require('moment'),
-		assert: assertGlobal,
+		assert: (test,msg) => {
+			if (!test)
+				throw new Error(msg)
+		},
 		
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
@@ -172,70 +202,76 @@ declare global {
 		(...sources:any[]):any
 	}
 	
+	// GLOBAL WHEN RUNNING STANDALONE
+	let __NO_WEBPACK__:boolean
+	
+	// POLYFILL REQUIRE
+	function polyfillRequire(r:any)
 	
 	
-	let getWindowId:typeof getWindowIdGlobal
-	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let LogLevel:typeof LogLevelGlobal
-	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let Container:typeof ContainerGlobal
-	
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let assert:typeof assertGlobal
-	
-	let M:typeof Immutable.Map
-	let L:typeof Immutable.List
+	function getWindowId():string
+	function getProcessId():string
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let Immutable:typeof ImmutableGlobal
+	var LogLevel:typeof LogLevelGlobal
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var Container:typeof ContainerGlobal
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	function assert(test:any,msg?:string)
+	
+	
+	var M:typeof Immutable.Map
+	var L:typeof Immutable.List
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var Immutable:typeof ImmutableGlobal
 	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var _:typeof LodashGlobal
 	
-	let getCurrentWindow:typeof getCurrentWindowGlobal
+	function getCurrentWindow():Electron.BrowserWindow
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let MainBooted:boolean
+	var MainBooted:boolean
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let assign:typeof Object.assign
+	var assign:typeof Object.assign
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let assignGlobal:IAssignGlobal
+	var assignGlobal:IAssignGlobal
 	
-	
+	interface IAssignGlobal {
+		(...sources:any[]):any
+	}
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	let node_require:typeof __non_webpack_require__
+	var node_require:typeof __non_webpack_require__
 	
-	let React:typeof ReactGlobal
-	let ReactDOM:typeof ReactDOMGlobal
-	let Notification:any
+	
+	var moment:typeof momentGlobal
+	
+	var React:typeof ReactGlobal
+	var ReactDOM:typeof ReactDOMGlobal
+	var Notification:any
 	//var logError:typeof logErrorGlobal
 	var $:typeof JQueryGlobal
-	let Radium:typeof RadiumGlobal
-	
-	
-	function getNotificationCenter():NotificationCenter
-	function getProcessId():string
+	var Radium:typeof RadiumGlobal
 	
 	interface Window {
 		$:typeof JQueryGlobal
 		dialogName:string
 	}
 	
-	/**
-	 * Extending root types with some custom props
-	 */
 	interface Object {
-		
 		// Class name
 		$$clazz?:string
 		
 		// Used internally to clear state of typestore/pouch objects
 		$$docs?:any
 	}
+	
+	
 }

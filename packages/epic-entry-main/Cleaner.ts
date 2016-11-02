@@ -1,5 +1,4 @@
-import path = require('path')
-import child_process = require('child_process')
+import path from 'path'
 
 
 

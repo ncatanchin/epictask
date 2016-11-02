@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { connect } from "react-redux"
 import { List } from "immutable"
 import { getBuiltInToolId, BuiltInTools } from "epic-ui-components/tools/ToolConfig"

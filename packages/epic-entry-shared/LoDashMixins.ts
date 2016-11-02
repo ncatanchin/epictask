@@ -1,29 +1,24 @@
-
 import {List,Map} from 'immutable'
 
 export type TListTypes<T> = Array<T>|List<T>
 
 
+import LodashGlobal from 'lodash'
 
-declare global {
-	
-	
-	module _ {
-		interface LoDashStatic {
-			isArrayEqualBy(arr1, arr2, prop):boolean
-			inline<R>(fn:()=>R):R
-			uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
-			toJS(o:any):any
-			assignGlobal:IAssignGlobal
-			isPromise(o:any):boolean
-			modelArrayToMapBy(o:any[], prop:string):any
-			nilFilter<T>(o:T[]):T[]
-			nilListFilter<T extends any>(a:List<T>):List<T>
-		}
-	}
+export interface IEpicLodashMixins {
+	isArrayEqualBy(arr1, arr2, prop):boolean
+	inline<R>(fn:()=>R):R
+	uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
+	toJS(o:any):any
+	assignGlobal:IAssignGlobal
+	isPromise(o:any):boolean
+	modelArrayToMapBy(o:any[], prop:string):any
+	nilFilter<T>(o:T[]):T[]
+	nilListFilter<T extends any>(a:List<T>):List<T>
 }
 
- 
+type TLodash = typeof LodashGlobal
+export type TEpicLodash = IEpicLodashMixins&TLodash
 
 const _ = require('lodash')
 
@@ -88,6 +83,4 @@ _.mixin({
 	}
 })
 
-export {
-	_
-}
+export default _ as TEpicLodash

@@ -9,9 +9,9 @@ export * from './internal/BaseService'
 /**
  * Import default services
  */
-import loadDefaultServices from './ServiceLoader'
+import './DefaultServices'
 
-loadDefaultServices()
+
 
 const
 	log = getLogger(__filename),

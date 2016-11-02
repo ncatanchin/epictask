@@ -2,7 +2,7 @@
  * Created by jglanz on 6/16/16.
  */
 // Imports
-import * as moment from "moment"
+
 
 import { User, Issue, Comment } from "epic-models"
 import { Avatar, Icon, Button } from "epic-ui-components"

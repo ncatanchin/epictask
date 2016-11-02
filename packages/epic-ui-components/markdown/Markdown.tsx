@@ -3,7 +3,6 @@
  */
 
 // Imports
-import * as React from 'react'
 import {ThemedNoRadium} from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
 

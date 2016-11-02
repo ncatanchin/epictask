@@ -5,6 +5,7 @@ import { getHot, setDataOnHotDispose, acceptHot, shortId, AppStoreServerName } f
 import { ActionFactoryProviders } from "epic-typedux/provider"
 
 import { AppStoreServerEventNames } from "epic-global"
+import { toPlainObject } from "typetransform"
 
 
 
@@ -139,7 +140,7 @@ namespace clientMessageHandlers {
 		const
 			state = getStoreState(),
 			rawValue = getStateValue(...keyPath),
-			value = _.toJS(rawValue)
+			value = toPlainObject(rawValue)
 		
 		log.debug(`Getting state value`, id, keyPath, rawValue, value)
 		
@@ -273,6 +274,12 @@ function stopStoreServer() {
 }
 
 
+/**
+ * Get value from state
+ *
+ * @param keyPath
+ * @returns {Map<string, any>}
+ */
 function getStateValue(...keyPath) {
 	let val = getStoreState()
 	
@@ -298,12 +305,6 @@ function getStateValue(...keyPath) {
  * @returns {any|{fontWeight}|void|{color}}
  */
 export async function start() {
-	
-	
-	if (ProcessConfig.isStorybook()) {
-		log.warn(`AppStore server does not run in storybook`)
-		return
-	}
 	
 	if (ipcServer) {
 		log.warn(`IPC server already warning - maybe HMR`)

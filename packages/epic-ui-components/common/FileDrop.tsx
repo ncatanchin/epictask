@@ -1,5 +1,5 @@
 
-import * as React from 'react'
+
 import { PureRender } from "./PureRender"
 import filterProps from 'react-valid-props'
 import { getValue } from  "epic-global"

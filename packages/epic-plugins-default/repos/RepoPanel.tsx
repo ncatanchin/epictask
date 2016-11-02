@@ -1,12 +1,12 @@
 
 
 // Imports
-import * as React from 'react'
+
 import {Icon,Button} from "epic-ui-components"
 import {RepoList} from './RepoList'
 
 // Key mapping tools
-import * as KeyMaps from 'epic-command-manager'
+//import * as KeyMaps from 'epic-command-manager'
 import {UIActionFactory} from "epic-typedux"
 
 import {ThemedStyles, createThemedStyles} from "epic-styles"
@@ -20,11 +20,10 @@ import {
 	CommandContainerBuilder
 } from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
-import { ContainerNames,CommonKeys } from "epic-command-manager"
+import { ContainerNames,CommonKeys as Keys } from "epic-command-manager"
 import { Routes, Roots } from "epic-entry-ui/routes/Routes"
 
-const
-	{CommonKeys:Keys} = KeyMaps
+
 
 
 // Constants

@@ -1,7 +1,7 @@
-import Electron = require('electron')
+import Electron from 'epic-electron'
 
-import * as React from "react"
-import * as ReactDOM from "react-dom"
+import React from "react"
+import ReactDOM from "react-dom"
 import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow } from "epic-global"
 import {
 	ICommand,

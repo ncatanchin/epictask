@@ -5,7 +5,7 @@
 //
 //
 // import {UserStore} from "epic-models"
-// import Electron = require('electron')
+// import Electron from 'epic-electron'
 // //import {toDataUrl} from 'main/MainTemplates'
 //
 // const {BrowserWindow,ipcMain} = Electron

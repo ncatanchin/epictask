@@ -1,8 +1,10 @@
+
+
 /**
  * Created by jglanz on 6/14/16.
  */
 // Imports
-import * as React from "react"
+
 import { Label } from "epic-models"
 import { makeComponentStyles, PureRender, Icon } from "epic-ui-components"
 import { ChipsField, TChipsFieldMode } from "./ChipsField"

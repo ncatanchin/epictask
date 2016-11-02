@@ -1,4 +1,3 @@
-import * as assert from "assert"
 import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent, EnumEventEmitter } from "epic-global"
 import { TTheme } from "./Theme"
 import { IPalette } from "./material"

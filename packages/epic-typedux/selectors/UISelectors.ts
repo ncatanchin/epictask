@@ -10,7 +10,7 @@ import {UIState} from "../state/UIState"
 import { ToolPanelLocation, IToolPanel } from "epic-global"
 import { createDeepEqualSelector } from  "epic-global"
 import { INotificationMessage } from "epic-global"
-import { jobsSelector } from "./JobSelectors"
+
 import { getValue } from  "epic-global"
 
 const
@@ -90,9 +90,3 @@ export function createToolPanelSelector() {
 	)
 }
 
-export const statusBarHasItemsSelector:(state) => boolean = createSelector(
-	messagesSortedSelector,
-	jobsSelector,
-	(messages,jobs) =>
-		getValue(() => Object.keys(jobs).length,0) + getValue(() => messages.size) > 0
-)

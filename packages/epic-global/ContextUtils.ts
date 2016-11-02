@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+
 import {getLogger as LoggerFactory} from 'typelogger'
 
 const log = LoggerFactory(__filename)

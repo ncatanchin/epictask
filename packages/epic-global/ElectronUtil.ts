@@ -1,4 +1,4 @@
-import _get = require('lodash/get')
+import _get from 'lodash/get'
 
 const
 	log = getLogger(__filename)

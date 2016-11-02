@@ -11,9 +11,9 @@ import {
 	
 	IWindowConfig
 } from "epic-process-manager-client/WindowTypes"
-import { cloneObjectShallow } from "epic-global"
-import { getWindowManager } from "epic-process-manager/WindowManager"
-import {List} from 'immutable'
+
+import { getWindowManager } from "epic-process-manager"
+import { cloneObject } from "epic-global/ObjectUtil"
 
 const
 	log = getLogger(__filename)
@@ -33,7 +33,7 @@ export async function start() {
 	
 	// MAKE SURE WE HAVE AT LEAST ONE NORMAL WINDOW
 	if (!normalWindows.length)
-		normalWindows.push(WindowConfigNormalDefaults as any)
+		normalWindows.push(cloneObject(WindowConfigNormalDefaults) as any)
 			
 	const
 		windows:IWindowConfig[] = [

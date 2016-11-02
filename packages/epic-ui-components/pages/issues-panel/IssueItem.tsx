@@ -1,6 +1,6 @@
 // Imports
-import * as moment from "moment"
 import { List } from "immutable"
+
 import { Renderers, Avatar, IssueLabelsAndMilestones, IssueStateIcon } from "epic-ui-components"
 import { connect } from "react-redux"
 import filterProps from "react-valid-props"

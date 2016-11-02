@@ -7,9 +7,10 @@ const
 	mkdirp = !ProcessConfig.isStorybook() && require('mkdirp'),
 
 	fs = require('fs'),
+	fsp = Promise.promisifyAll(fs),
 	path = require('path'),
 	dataUrl = require('dataurl'),
-
+	
 	fileProto = 'file://',
 	httpProto = 'http://',
 	httpsProto = 'https://',
@@ -141,6 +142,7 @@ export function readFile(filename:string,encoding = 'utf-8') {
  * or any ENOENT exception occurs a `null` is returned
  *
  * @param filename
+ * @param encoding
  * @returns {any}
  */
 export async function readFileAsync(filename:string,encoding = 'utf-8') {
@@ -148,7 +150,7 @@ export async function readFileAsync(filename:string,encoding = 'utf-8') {
 		if (!fs.existsSync(filename))
 			return null
 
-		return await fs.readFile(filename, encoding)
+		return await fsp.readFileAsync(filename, encoding)
 	} catch (err) {
 		if (err.code === 'ENOENT')
 			return null

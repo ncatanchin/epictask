@@ -1,4 +1,4 @@
-import Electron = require('electron')
+import Electron from 'epic-electron'
 import { ProcessType } from "epic-entry-shared/ProcessType"
 
 
@@ -28,6 +28,11 @@ export const DevToolsPositionDefault:TDevToolsPosition = 'undocked'
  * Window Configuration
  */
 export interface IWindowConfig {
+	
+	/**
+	 * An id can be provided
+	 */
+	id?:string
 	
 	/**
 	 * Configuration name

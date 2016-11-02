@@ -1,10 +1,14 @@
-
 import {
-	OnlyIfFn, RepoKey, writeFile, getHot, getUserDataFilename, writeFileAsync,
-	readFile, isString
+	OnlyIfFn,
+	writeFile, getHot, getUserDataFilename, writeFileAsync
 } from "epic-global"
-import { RepoState } from "../state/RepoState"
-import { IFilterConfig } from "typetransform"
+
+import { IFilterConfig, fromPlainObject, toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
+import { readFileAsync } from "epic-global/Files"
+import { AppKey, JobKey } from "epic-global/Constants"
+import {Map} from 'immutable'
+import { isMap } from "typeguard"
+
 const
 	log = getLogger(__filename),
 	stateFilename = getUserDataFilename(`epictask-store-state-${getProcessId()}.json`)
@@ -14,12 +18,21 @@ let
 	getStoreState = null
 
 
-const DefaultStoreStatePersistenceFilter:IFilterConfig = {
-	defaultExcluded: false,
-	filters: [
-		
-	]
-}
+/**
+ * Main filter can store everything it has
+ *
+ * @type {IFilterConfig}
+ */
+const MainFilterConfig = excludeFilterConfig()
+
+/**
+ * Clients do not persist AppState or JobState
+ *
+ * @type {IFilterConfig}
+ */
+const ClientFilterConfig = excludeFilterConfig(
+	...excludeFilter(AppKey,JobKey)
+)
 
 /**
  * Serialize the current state as a string
@@ -29,8 +42,30 @@ const DefaultStoreStatePersistenceFilter:IFilterConfig = {
 export function serializeState(state = null, filter:IFilterConfig = null) {
 	if (!state)
 		state = (getStoreState && getStoreState()) || {}
+	
+	const
+		filterConfig = Env.isMain ? MainFilterConfig : ClientFilterConfig,
+		leafs = isMap(state) ?
+			state.keySeq().toArray() :
+			Object.keys(state),
 		
-	return JSON.stringify(_.toJS(state))
+	
+	
+		plainObject = toPlainObject(
+			leafs.reduce((cleanState,leaf) => {
+				const
+					leafState = state.get ? state.get(leaf) : state[leaf]
+				
+				cleanState[leaf] = leafState.toJS ?
+					leafState.toJS() :
+					leafState
+				
+				return cleanState
+			},{}),
+			filterConfig
+		)
+	
+	return JSON.stringify(plainObject)
 }
 
 
@@ -52,20 +87,17 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	 */
 	function onChange() {
 		log.debug(`Store state changed`)
-		persistStoreState(getStoreState())
+		persistStoreState()
 	}
 	
-	store.subscribe(onChange)
+	
 	
 	/**
 	 * Write the actual state async
 	 */
-	function writeStoreState(state = null, doAsync = false) {
-		if (!state)
+	function writeStoreState(doAsync = false) {
+		const
 			state = (getStoreState && getStoreState()) || {}
-		//
-		// if (!ProcessConfig.isType(ProcessType.UI))
-		// 	return Promise.resolve()
 		
 		log.info(`Writing current state to: ${stateFilename}`)
 		if (persistingState) {
@@ -75,28 +107,19 @@ export function configureStorePersistence(store,getStoreStateIn) {
 		
 		persistingState = true
 		
+		const
+			serializedState = serializeState(state)
+		
 		if (doAsync)
 			return Promise
-				.resolve(writeFileAsync(stateFilename, serializeState(state)))
+				.resolve(writeFileAsync(stateFilename, serializedState))
 				.catch(err => {
 					log.error('state persistence failed', err)
 				})
 				.finally(() => persistingState = false)
 		
 		try {
-			
-			// TODO: Add Storage store filter
-			
-			//writeFile(stateFilename, serializeState(state))
-			const
-				js = _.toJS(state),
-				repoState = _.get(js, RepoKey, null) as RepoState
-			
-			if (repoState && repoState.availableRepos)
-				delete repoState[ 'availableRepos' ]
-			
-			
-			writeFile(stateFilename, JSON.stringify(js))
+			writeFile(stateFilename, serializedState)
 		} catch (err) {
 			log.error(`Failed to persist store state`, err)
 		}
@@ -123,12 +146,18 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	/**
 	 * Debounced persist store state call
 	 */
-	const persistStoreState = OnlyIfFn(canPersistState, _.debounce((state) => {
-		writeStoreState(state, true)
-	}, 10000, {
-		maxWait: 30000
-	}))
+	const persistStoreState = _.debounce(() => {
+		writeStoreState(true)
+	}, 60000)
 	
+	
+	
+	
+	// SUBSCRIBE TO SYSTEM EVENTS & UPDATES
+	if (Env.isMain) {
+		require('electron').app.on('will-quit',() => writeStoreState(false))
+	}
+	store.subscribe(onChange)
 	
 
 	// Just in case its an hmr request
@@ -150,26 +179,29 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	
 }
 
-export function loadStateFromDisk() {
+/**
+ * Load and hydrate the state from disk
+ *
+ * @returns {any}
+ */
+export async function loadStateFromDisk() {
+	let
+		state = null
+	
 	try {
 		// If state server then try and load from disk
 		const
-			stateJson = readFile(stateFilename)
+			stateData = await readFileAsync(stateFilename),
+			stateJson = stateData && JSON.parse(stateData)
 		
-		if (stateJson) {
-			let
-				count = 0,
-				stateData = stateJson
+		
+		state = stateJson && fromPlainObject(stateJson)
 			
-			while (isString(stateData) && count < 3) {
-				stateData = JSON.parse(stateData)
-			}
-			
-			return stateData
-			//log.info(`Read state from file`, JSON.stringify(defaultStateValue[ UIKey ], null, 4))
-		}
+	
 	} catch (err) {
 		log.error('unable to load previous state data, starting fresh', err)
-		return {}
+	
 	}
+	
+	return state
 }

@@ -1,32 +1,31 @@
-import Electron = require('electron')
+import Electron from "epic-electron"
 
-import * as React from "react"
 import {
 	getHot,
 	setDataOnHotDispose,
 	acceptHot,
 	shortId,
 	getAppEntryHtmlPath,
-	isString, isList, cloneObject,
-	attachEvents,cloneObjectShallow,Events,getValue
+	isString,
+	isList,
+	cloneObject,
+	attachEvents,
+	cloneObjectShallow,
+	Events,
+	getValue
 } from "epic-global"
 import {
 	IWindowConfig,
 	WindowType,
 	DevToolsPositionDefault,
-	IWindowInstance
+	IWindowInstance,
+	IWindowState
 } from "epic-process-manager-client/WindowTypes"
-import { IWindowState } from "epic-process-manager-client/WindowTypes"
 import { ProcessType } from "epic-entry-shared/ProcessType"
-
-
 import { HEARTBEAT_TIMEOUT } from "epic-net"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import {  } from "epic-global/Constants"
 import { WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
-import {List} from 'immutable'
-
-
+import { List } from "immutable"
 
 
 const
@@ -63,7 +62,7 @@ function createWindowStateKeeper(id:string,config:IWindowConfig) {
 	
 	
 	return windowStateKeeper({
-		filename: `epic-window-state-${id}`,
+		file: `epic-window-state-${id}`,
 		defaultWidth,
 		defaultHeight
 	})
@@ -521,7 +520,7 @@ export class WindowManager  {
 		}
 		
 		const
-			config:IWindowConfig = cloneObject(configOrConfigs)
+			config:IWindowConfig = cloneObject(configOrConfigs) as IWindowConfig
 		
 		let
 			{opts = {}} = config
@@ -550,7 +549,7 @@ export class WindowManager  {
 			
 			// ID IS NAME FOR SINGLE WINDOWS
 			const
-				id = singleWindow ? config.name : shortId()
+				id = config.id  || (singleWindow ? config.name : shortId())
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
 			let
@@ -561,7 +560,7 @@ export class WindowManager  {
 			
 			// CREATE WINDOW AND GET TO WORK
 			const
-				newWindow = new Electron.BrowserWindow(Object.assign({}, savedWindowState, newWindowOpts)),
+				newWindow = new Electron.BrowserWindow(Object.assign({}, newWindowOpts,savedWindowState)),
 				templateURL = getAppEntryHtmlPath()
 			
 			let

@@ -1,6 +1,3 @@
-///<reference path="../epic-entry-shared/AppEntry.ts"/>
-
-import { nilFilter } from "epic-global/ListUtil"
 
 import Cleaner from './Cleaner'
 
@@ -10,11 +7,12 @@ import Cleaner from './Cleaner'
 import 'epic-entry-shared/AppEntry'
 
 // LOAD DEPS
-import { showSplashWindow } from "epic-entry-main/SplashWindow"
-import { Events,isString } from "epic-global"
+import { showSplashWindow, hideSplashWindow } from "epic-entry-main/SplashWindow"
+import { Events } from "epic-global"
 import { app, BrowserWindow } from 'electron'
 import checkSingleInstance from "./CheckSingleInstance"
 import './MainAppSwitches'
+import makeBootLoader from "epic-entry-shared/BootLoader"
 
 const
 	log = getLogger(__filename)
@@ -22,13 +20,6 @@ const
 
 function loadMainApp() {
 		
-	
-	// ADD EVENTS TO GLOBAL
-	assignGlobal({
-		Constants: {
-			Events
-		}
-	})
 	
 	
 	// HMR
@@ -102,41 +93,7 @@ function loadMainApp() {
 		return commandManager
 	}
 	
-	/**
-	 * Create boot dependencies func
-	 *
-	 * @param steps
-	 * @returns {()=>Promise<void>}
-	 */
-	function makeBootDependencies(...steps:any[]) {
-		
-		steps = nilFilter(steps)
-		
-		return async () => {
-			for (let step of steps) {
-				
-				const
-					parts = Array.isArray(step) ? step : [step],
-					results = []
-				
-				for (let part of parts) {
-					if (isString(part)) {
-						log.debug(`Boot: ${part}`)
-						continue
-					}
-					
-					let
-						result = part()
-					
-					if (result)
-						results.push(Promise.resolve(result))
-				}
-				
-				await Promise.all(results)
-				
-			}
-		}
-	}
+	
 	
 	
 	/**
@@ -144,7 +101,7 @@ function loadMainApp() {
 	 *
 	 * @type {()=>Promise<any>}
 	 */
-	const boot = makeBootDependencies(
+	const boot = makeBootLoader(
 		
 		// DEV CONFIG
 		Env.isDev && (() => require('./MainDevConfig')),
@@ -163,16 +120,21 @@ function loadMainApp() {
 			() => loadCommandManager(),
 			() => require("./AppStoreServer").start()
 		],
-		
+		//
 		// LOAD THE REST
 		[
 			() => require('epic-process-manager/WindowManagerLoader').start(),
 			() => getServiceManager().start()
 		],
+		
+		// MARK ALL READY
 		[
 			"set app ready",
 			() => require('epic-typedux/provider').getAppActions().setReady(true)
-		]
+		],
+		
+		// HIDE SPLASH
+		() => hideSplashWindow(),
 	)
 	
 	

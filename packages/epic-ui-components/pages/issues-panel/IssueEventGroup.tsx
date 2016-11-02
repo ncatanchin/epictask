@@ -1,6 +1,4 @@
 import { List } from "immutable"
-import * as moment from "moment"
-import * as React from "react"
 import { IssuesEvent, TIssueEventGroupType, getEventGroupType, User } from "epic-models"
 import { LabelChip } from "epic-ui-components"
 

@@ -70,6 +70,9 @@ export function hasOwnProps(o:any,...props:string[]) {
  * @returns {any}
  */
 export function cloneObject<T>(o:T,...newSources:any[]):T {
+	if (!o)
+		return o
+	
 	const
 		cloned = _.cloneDeep(o),
 		
@@ -121,7 +124,7 @@ export function cloneObject<T>(o:T,...newSources:any[]):T {
  * @param newSources
  */
 export function cloneObjectShallow<T>(o:T,...newSources:any[]):T {
-	return assign(_.clone(o),...newSources)
+	return o && assign(_.clone(o),...newSources)
 }
 
 /**

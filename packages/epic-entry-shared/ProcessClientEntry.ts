@@ -1,13 +1,11 @@
 import {ipcRenderer} from 'electron'
 import {ProcessType} from './ProcessType'
 import { ProcessClient } from "epic-global/ProcessClient"
-import {getServiceManager} from "epic-services/internal/ServiceManager"
 import { START_TIMEOUT_DEFAULT } from "epic-net/NetworkConfig"
+import {getServiceManager} from "epic-services"
 
 const
 	log = getLogger(__filename)
-	//ipc = require('node-ipc')
-
 
 
 //region WorkerClient

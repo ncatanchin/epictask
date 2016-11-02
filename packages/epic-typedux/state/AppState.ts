@@ -1,18 +1,11 @@
-
-
-import {List,Record,Map} from 'immutable'
-
-import {INotificationMessage} from 'epic-global'
-import {User} from "epic-models"
-import {AppStateType} from './app/AppStateType'
-import {Settings} from "epic-global"
-import {RegisterModel} from "epic-global"
-
-import {IWindowState} from 'epic-process-manager-client/WindowTypes'
-import { toPlainObject,excludeFilterConfig, excludeFilter } from "typetransform"
+import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
+import { List, Record, Map } from "immutable"
+import { INotificationMessage, Settings, RegisterModel } from "epic-global"
+import { User } from "epic-models"
+import { AppStateType } from "./app/AppStateType"
+import { IWindowState } from "epic-process-manager-client/WindowTypes"
 import { reviveImmutable } from "epic-global/ModelUtil"
 import { getValue } from "epic-global/ObjectUtil"
-
 
 
 export type TWindowMap = Map<string,IWindowState>
@@ -38,6 +31,8 @@ export const AppStateRecord:Record.Class = Record({
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any):AppState {
+		let
+			settings = o && (o.get ? o.get('settings') : o.settings)
 		
 		let appState = reviveImmutable(
 			o,
@@ -46,8 +41,8 @@ export class AppState extends AppStateRecord {
 			['windows']
 		)
 		
-		if (!(appState.settings instanceof Settings))
-			appState = appState.set('settings',new Settings(getValue(() => o.settings,{}))) as any
+		if (!settings || !(settings instanceof Settings))
+			appState = appState.set('settings',new Settings(settings)) as any
 				
 		return appState
 		

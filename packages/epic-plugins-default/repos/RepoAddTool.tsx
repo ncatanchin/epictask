@@ -1,5 +1,5 @@
 // Imports
-import * as React from "react"
+
 import { SearchPanel } from "epic-ui-components/search"
 import { PureRender } from "epic-ui-components"
 import { SearchType, getUIActions } from "epic-typedux"

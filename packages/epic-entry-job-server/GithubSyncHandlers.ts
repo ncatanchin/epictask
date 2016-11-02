@@ -1,20 +1,15 @@
-
-import { getStores, Stores } from "epic-database-client"
-
-import {RepoEvent,IssuesEvent,Comment,Milestone,Label,User,Issue,AvailableRepo,Repo} from 'epic-models'
-
-import * as moment from 'moment'
-import { createClient, GitHubClient, OnDataCallback } from "epic-github"
-import { getIssueActions, getRepoActions } from  "epic-typedux"
-
-import { shallowEquals, cloneObject,checkUpdatedAndAssign } from  "epic-global"
-
-import { chunkSave } from "epic-database-client"
-
-import {GithubSyncStatus as SyncStatus} from "epic-global"
-import { OneAtATime } from  "epic-global"
+import { getStores, Stores, chunkSave } from "epic-database-client"
+import { RepoEvent, IssuesEvent, Comment, Milestone, Label, User, Issue, AvailableRepo, Repo } from "epic-models"
+import { createClient, OnDataCallback } from "epic-github"
+import { getRepoActions } from "epic-typedux"
+import {
+	shallowEquals,
+	checkUpdatedAndAssign,
+	GithubSyncStatus as SyncStatus,
+	OneAtATime,
+	cloneObjectShallow
+} from "epic-global"
 import { isRepoSyncPending } from "./executors/RepoSyncExecutor"
-import { cloneObjectShallow } from "epic-global"
 
 
 const
@@ -238,16 +233,16 @@ export class RepoSyncManager {
 	 *
 	 * @param comments
 	 */
-	async checkReloadActivity(comments:Comment[]) {
-		try {
-			
-			// Reload current issue if loaded
-			getIssueActions().commentsChanged(...comments)
-			
-		} catch (err) {
-			log.error(`Failed to update the state with changed comments`)
-		}
-	}
+	// async checkReloadActivity(comments:Comment[]) {
+	// 	try {
+	//
+	// 		// Reload current issue if loaded
+	// 		getIssueActions().commentsChanged(...comments)
+	//
+	// 	} catch (err) {
+	// 		log.error(`Failed to update the state with changed comments`)
+	// 	}
+	// }
 	
 	/**
 	 * Sync milestones
@@ -320,7 +315,7 @@ export class RepoSyncManager {
 		progressTracker && progressTracker.completed()
 		
 		// UPDATE MILESTONES ON STATE
-		getRepoActions().updateMilestones(repoId,...milestones)
+		//getRepoActions().updateMilestones(repoId,...milestones)
 		
 		return pendingMilestones.length
 		
@@ -344,17 +339,17 @@ export class RepoSyncManager {
 		//this.progressTracker.increment(1)
 		
 		let
-			pagesSet = false,
-			issuesToUpdateOnState = []
+			pagesSet = false
+			//issuesToUpdateOnState = []
 		
-		function pushIssuesToState() {
-			if (!issuesToUpdateOnState.length)
-				return
-			
-			log.debug(`Updating ${issuesToUpdateOnState.length} issues on state`)
-			getIssueActions().reloadIssues(issuesToUpdateOnState)
-			issuesToUpdateOnState = []
-		}
+		// function pushIssuesToState() {
+		// 	if (!issuesToUpdateOnState.length)
+		// 		return
+		//
+		// 	log.debug(`Updating ${issuesToUpdateOnState.length} issues on state`)
+		// 	getIssueActions().reloadIssues(issuesToUpdateOnState)
+		// 	issuesToUpdateOnState = []
+		// }
 		
 		const
 			client = createClient(),
@@ -395,11 +390,11 @@ export class RepoSyncManager {
 			updatedIssues.push(...pending)
 			progressTracker && progressTracker.completed()
 			SyncStatus.setMostRecentTimestamp(issuesResourceUrl, pending, 'updated_at', 'created_at')
-			issuesToUpdateOnState.push(...pending)
+			//issuesToUpdateOnState.push(...pending)
 			
-			if (pageNumber && pageNumber % 5 === 0) {
-				pushIssuesToState()
-			}
+			// if (pageNumber && pageNumber % 5 === 0) {
+			// 	pushIssuesToState()
+			// }
 				
 			
 		}
@@ -450,7 +445,7 @@ export class RepoSyncManager {
 				})
 			})
 		
-		pushIssuesToState()
+		//pushIssuesToState()
 		// await Promise.all(issueSavePromises)
 		logger && logger.info(`Received & processed ${issues.length} issues, updating sync status timestamp`)
 		
@@ -474,16 +469,16 @@ export class RepoSyncManager {
 		
 		let
 			pagesSet = false,
-			pendingChanges:Comment[] = [],
+			//pendingChanges:Comment[] = [],
 			updatedComments:Comment[] = []
 		
 		/**
 		 * Push pending changes to the state
 		 */
-		function pushPendingChanges() {
-			getIssueActions().commentsChanged(...pendingChanges)
-			pendingChanges = []
-		}
+		// function pushPendingChanges() {
+		// 	getIssueActions().commentsChanged(...pendingChanges)
+		// 	pendingChanges = []
+		// }
 		
 		
 		const
@@ -526,11 +521,6 @@ export class RepoSyncManager {
 				if (pending.length)
 					await chunkSave(pending, stores.comment)
 				
-				// PERIODICALLY PUSH PENDING COMMENT CHANGES TO THE STATE
-				pendingChanges.push(...pending)
-				if (pageNumber % 10 === 0)
-					pushPendingChanges()
-								
 				// KEEP TRACK OF ALL CHANGES
 				updatedComments.push(...pending)
 				
@@ -568,7 +558,7 @@ export class RepoSyncManager {
 			})
 		
 		logger && logger.info(`Checked ${comments.length} and updated ${updatedComments.length} comments`)
-		pushPendingChanges()
+		//pushPendingChanges()
 		return updatedComments
 	})
 	
@@ -663,7 +653,7 @@ export class RepoSyncManager {
 		// progressTracker && progressTracker.completed()
 		log.info(`Updated ${users.length} for repo ${this.repo.full_name}`)
 		
-		getRepoActions().updateCollaborators(this.repo.id,...updatedUsers)
+		//getRepoActions().updateCollaborators(this.repo.id,...updatedUsers)
 		
 		return updatedUsers.length
 		
@@ -737,7 +727,7 @@ export class RepoSyncManager {
 		await chunkSave(pendingLabels, stores.label)
 		progressTracker && progressTracker.completed()
 		
-		getRepoActions().updateLabels(repoId,...labels)
+		//getRepoActions().updateLabels(repoId,...labels)
 		return pendingLabels.length
 	})
 	

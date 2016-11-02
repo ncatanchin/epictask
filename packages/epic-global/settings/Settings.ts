@@ -1,5 +1,6 @@
 
 import { Record } from "immutable"
+import { reviveImmutable } from "epic-global/ModelUtil"
 
 const
 	log = getLogger(__filename)
@@ -14,6 +15,14 @@ export const SettingsRecord = Record({
  * Application settings object
  */
 export class Settings extends SettingsRecord {
+	
+	static fromJS(o:any = {}) {
+		return reviveImmutable(o,Settings)
+	}
+	
+	constructor(o:any = {}) {
+		super(o)
+	}
 	
 	/**
 	 * API Token

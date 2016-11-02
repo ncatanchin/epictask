@@ -1,8 +1,12 @@
+import 'jest'
+
 jest.mock('electron')
 jest.mock('node-uuid')
-jest.mock('typelogger')
-import 'epic-entry-shared/Globals'
 
+//jest.mock('typelogger')
+import 'epic-entry-shared/LogConfig'
+import 'epic-entry-shared/Globals'
+assignGlobal({assert:require('assert')})
 
 import { AuthState } from "epic-typedux/state/AuthState"
 import { fromPlainObject } from "typetransform"
@@ -12,15 +16,22 @@ import { isNil, isMap } from "typeguard"
 
 test(`Everything is running`,() => {
 	const
-		authState = new AuthState({authenticating: true})
+		authState = new AuthState({
+			authenticated: true,
+			authenticating: true
+		})
 	
-	expect(authState.authenticating).toBe(true)
+	expect(authState.authenticated).toBe(true)
 	
 	const
 		po = authState.toJS()
 	
+	
+	
 	expect(!isNil(po.$$value)).toBe(true)
-	expect(po.$$value.authenticating).toBe(true)
+	
+	console.log(po)
+	expect(po.$$value.authenticated).toBe(true)
 	
 	const
 		hydrated = fromPlainObject(po)
@@ -31,9 +42,12 @@ test(`Everything is running`,() => {
 	const
 		newAuthState = AuthState.fromJS(hydrated)
 	
-	expect(newAuthState instanceof AuthState).toBe(true)
-	expect(newAuthState.authenticating).toBe(true)
+	console.log(`hydrated`,hydrated,'new auth state',newAuthState,newAuthState.authenticated)
+	expect(newAuthState instanceof AuthState).toBeTruthy()
+	expect(newAuthState.authenticated).toBeTruthy()
+	expect(newAuthState.authenticating).toBeFalsy()
 })
+
 
 
 export {

@@ -3,7 +3,7 @@
  */
 // Imports
 import { List } from "immutable"
-import * as React from "react"
+
 import { Style } from "radium"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"

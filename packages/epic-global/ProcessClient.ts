@@ -1,13 +1,14 @@
 import {ipcRenderer} from 'electron'
+import { shortId } from "epic-global/IdUtil"
 
-import * as shortId from 'short-id'
+
 
 
 const
 	log = getLogger(__filename)
 
 const
-	workerId = process.env.WORKER_ID || `${__filename}-${shortId.generate()}`,
+	workerId = process.env.WORKER_ID || `${__filename}-${shortId()}`,
 	messageHandlers = {}
 
 /**

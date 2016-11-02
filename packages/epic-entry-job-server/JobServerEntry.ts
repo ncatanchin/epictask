@@ -1,5 +1,3 @@
-///<reference path="../epic-entry-shared/AppEntry.ts"/>
-
 import "epic-entry-shared/AppEntry"
 import {loadProcessClientEntry} from "epic-entry-shared"
 import { ProcessType } from "epic-entry-shared/ProcessType"

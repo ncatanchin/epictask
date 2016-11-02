@@ -1,6 +1,6 @@
 
 import {Map,List} from 'immutable'
-import * as moment from 'moment'
+
 
 import {IssueKey,isNumber} from "epic-global"
 
