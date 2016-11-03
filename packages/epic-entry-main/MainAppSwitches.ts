@@ -1,5 +1,5 @@
 
-import { RemoteDebuggingPort } from "epic-global"
+import { RemoteDebuggingPort } from "epic-global/Constants"
 import {app} from 'electron'
 
 /**

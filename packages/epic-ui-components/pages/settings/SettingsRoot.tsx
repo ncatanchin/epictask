@@ -4,7 +4,7 @@
 // Imports
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
-import { User } from "epic-models"
+
 import {
 	ThemedStyles,
 	FlexColumn,
@@ -33,7 +33,7 @@ import {
 	setPaletteCreator
 } from "epic-styles"
 import {Checkbox} from "material-ui"
-import { appUserSelector, getUIActions, getAppActions } from "epic-typedux"
+import { getUIActions, getAppActions } from "epic-typedux"
 import {
 	CommandComponent, CommandRoot,
 	CommandContainerBuilder
@@ -43,7 +43,9 @@ import { ContainerNames } from "epic-command-manager"
 import {Select, ISelectItem} from '../../fields'
 import {DialogRoot} from '../../layout/dialog'
 import { PureRender, Icon, Button } from "epic-ui-components"
-import { NativeNotificationsEnabled, PersistentValueEvent, getValue } from "epic-global"
+import { getValue } from "epic-global"
+import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
+import { Settings } from "epic-global/settings/Settings"
 
 
 const
@@ -137,12 +139,11 @@ const baseStyles = (topStyles, theme, palette) => {
  * ISettingsWindowProps
  */
 export interface ISettingsWindowProps extends IThemedAttributes {
-	user?:User
+	settings?:Settings
 	
 }
 
 export interface ISettingsWindowState {
-	nativeNotificationsEnabled?:boolean
 }
 
 /**
@@ -152,7 +153,7 @@ export interface ISettingsWindowState {
  * @constructor
  **/
 @connect(createStructuredSelector({
-	user: appUserSelector
+	settings: settingsSelector
 }))
 @CommandComponent()
 @ThemedStyles(baseStyles, 'dialog', 'SettingsWindow', 'form')
@@ -225,25 +226,11 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 		setPaletteCreator(palette)
 	}
 	
-	onNativeNotificationsChanged = () => {
-		log.info(`Notifications changed`,NativeNotificationsEnabled.get())
-		this.setState({
-			nativeNotificationsEnabled: NativeNotificationsEnabled.get()
-		})
-	}
 	
-	componentWillMount() {
-		this.onNativeNotificationsChanged()
-		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNativeNotificationsChanged)
-	}
-	
-	componentWillUnmount() {
-		NativeNotificationsEnabled.removeListener(PersistentValueEvent.Changed,this.onNativeNotificationsChanged)
-	}
 	
 	render() {
 		const
-			{ styles, theme, palette } = this.props,
+			{ styles, theme, palette, settings } = this.props,
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				Settings
@@ -322,10 +309,12 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							</div>
 							
 							<Checkbox style={styles.form.checkboxCell}
-							          checked={getValue(() => this.state.nativeNotificationsEnabled)}
+							          checked={getValue(() => settings.nativeNotificationsEnabled)}
 							          onCheck={(event,isChecked) => {
 							          	log.info(`Setting notifications enabled`,isChecked)
-							          	NativeNotificationsEnabled.set(isChecked)
+							          	updateSettings({
+							          		nativeNotificationsEnabled: isChecked
+							          	})
 							          }} />
 						
 						</div>

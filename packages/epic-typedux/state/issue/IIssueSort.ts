@@ -30,4 +30,11 @@ export interface IIssueSort {
 
 }
 
+export const DefaultIssueSort = {
+	fields:['created_at'],
+		direction:'desc',
+	groupBy: 'none',
+	groupByDirection: 'asc'
+} as IIssueSort
+
 export default IIssueSort

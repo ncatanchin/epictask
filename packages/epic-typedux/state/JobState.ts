@@ -21,10 +21,7 @@ const log = getLogger(__filename)
 export const JobStateRecord = Record({
 	details:List<IJobStatusDetail>(),
 	all:Map<string,IJob>(),
-	schedules:Map<string,IJobSchedule>(),
-	selectedId: null,
-	selectedLogId: null
-	
+	schedules:Map<string,IJobSchedule>()
 })
 
 
@@ -36,6 +33,14 @@ export const JobStateRecord = Record({
 export class JobState extends JobStateRecord {
 
 	static fromJS(o:any) {
+		if (o) {
+			if (Map.isMap(o)) {
+				o = o.remove('selectedId').remove('selectedLogId')
+			} else {
+				delete o[ 'selectedId' ]
+				delete o[ 'selectedLogId' ]
+			}
+		}
 		return reviveImmutable(
 			o,
 			JobState,

@@ -18,6 +18,7 @@ import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focus
  
 import {getWindowManagerClient} from "epic-process-manager-client"
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
+import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
 
 
 
@@ -509,10 +510,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		let
 			config:IWindowConfig
 		
-		if (isString(configOrURI))
-			return
-		else
-			config = configOrURI
+		if (isString(configOrURI)) {
+			config = cloneObjectShallow(WindowConfigDialogDefaults,{
+				uri:configOrURI
+			}) as any
+		} else
+			config = cloneObjectShallow(configOrURI)
 		
 		getWindowManagerClient().open(config)
 	}

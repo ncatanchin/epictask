@@ -164,7 +164,13 @@ export class UIModelWatcherService extends BaseService {
 		log.debug(`on user change`,changes)
 		
 		const
-			userId = getValue(() => getSettings().user.id,null),
+			settings = getSettings()
+		
+		if (!settings)
+			return
+		
+		const
+			userId = getValue(() => settings.user.id,null),
 			users = changesToModels<User>(changes),
 			userChange = userId && users.find(it => it.id === userId)
 		
@@ -174,7 +180,7 @@ export class UIModelWatcherService extends BaseService {
 				appActions = getAppActions(),
 				{settings} = appActions.state
 					
-			appActions.updateSettings(settings.set('user',userChange) as Settings)
+			appActions.setSettings(settings.set('user',userChange) as Settings)
 			
 		}
 		

@@ -40,9 +40,7 @@ function appStoreEnhancer(storeCreator) {
 					
 					// If it's a reducer then process it, otherwise - wait for server
 					// to process the action and send data
-					nextTick(() => sendStoreAction(assign(action,{
-						windowId: getWindowId()
-					})))
+					nextTick(() => sendStoreAction(action))
 					
 				}
 			})

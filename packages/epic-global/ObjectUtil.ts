@@ -2,7 +2,10 @@ import {List} from 'immutable'
 
 
 
-import { isNil, isObject } from  "typeguard"
+import { isObject,getValue as getValueGlobal } from  "typeguard"
+
+export const getValue = getValueGlobal
+
 
 
 const
@@ -16,29 +19,6 @@ export function isListType<T>(o:any,type:{new():T}):o is List<T> {
 	return (List.isList(o))
 }
 
-
-/**
- * Get a value in a guarded fashion
- * ensuring no exception
- *
- * @param fn
- * @param defaultValue
- * @returns {any}
- */
-export function getValue<T>(fn:() => T,defaultValue:T = null):T {
-	let
-		result
-	
-	try {
-		result = fn()
-	} catch (err) {
-	}
-	
-	if (isNil(result))
-		result = defaultValue
-	
-	return result
-}
 
 
 /**

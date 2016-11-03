@@ -3,17 +3,18 @@ import CSSTransitionGroup from "react-addons-css-transition-group"
 
 import { connect } from "react-redux"
 import {
-	INotificationMessage,
-	createDeepEqualSelector,
-	PersistentValueEvent,
-	NativeNotificationsEnabled
+	INotificationMessage
 } from "epic-global"
 import { PureRender } from "./PureRender"
 import { ThemedStyles } from "epic-styles"
 import { createStructuredSelector } from "reselect"
-import { uiStateSelector } from "epic-typedux/selectors"
 import { ToastMessage } from "./ToastMessage"
 import { getUIActions } from "epic-typedux/provider"
+import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
+import { messagesSelector } from "epic-typedux/selectors/UISelectors"
+import { getValue } from "epic-global/ObjectUtil"
+
+import {List} from 'immutable'
 
 
 const
@@ -83,7 +84,8 @@ function baseStyles(topStyles,theme,palette) {
 export interface INotificationMessagesProps {
 	theme?:any
 	styles?:any
-	messages?:INotificationMessage[]
+	settings?:ISettings
+	messages?:List<INotificationMessage>
 }
 //endregion
 
@@ -91,6 +93,19 @@ export interface INotificationMessagesProps {
 let lastMessages = null
 const messageNotifications = {}
 
+/**
+ * Clear a notification
+ *
+ * @param msgId
+ */
+function clearNotification(msgId:string) {
+	const
+		notification = messageNotifications[msgId]
+	
+	notification.close()
+	
+	delete messageNotifications[msgId]
+}
 
 
 /**
@@ -99,8 +114,8 @@ const messageNotifications = {}
  * @param newMessages
  */
 //TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
-function processNotifications(newMessages:INotificationMessage[]) {
-	if (_.isEqual(newMessages, lastMessages))
+function processNotifications(newMessages:List<INotificationMessage>) {
+	if (newMessages === lastMessages)
 		return
 
 	Object.keys(messageNotifications)
@@ -110,25 +125,25 @@ function processNotifications(newMessages:INotificationMessage[]) {
 				return
 			}
 
-			const notification = messageNotifications[msgId]
-			notification.close()
-			delete messageNotifications[msgId]
+			clearNotification(msgId)
 
 		})
 
 	lastMessages = newMessages
+	
 	newMessages
 		.filter(msg => !messageNotifications[msg.id] && msg.notify === true)
 		.forEach(msg => {
 
-			const clearMessage = () => getUIActions().removeMessage(msg.id)
+			const
+				clearMessage = () => getUIActions().removeMessage(msg.id),
 
-			// TODO: add 'tag' and 'sticky' for error
-			const notification = new Notification('epictask',{
-				title: 'epictask',
-				body: msg.content,
-				tag: msg.id
-			})
+				// TODO: add 'tag' and 'sticky' for error
+				notification = new Notification('epictask',{
+					title: 'epictask',
+					body: msg.content,
+					tag: msg.id
+				})
 
 
 			// Add Notification events
@@ -155,12 +170,10 @@ function processNotifications(newMessages:INotificationMessage[]) {
  **/
 
 @connect(createStructuredSelector({
-	messages: (state):INotificationMessage[] => uiStateSelector(state)
-		.messages
-		.filter(it => it.floatVisible)
-		.map(msg => _.toJS(msg))
-		.toArray()
-},createDeepEqualSelector))
+	messages: messagesSelector,
+	settings: settingsSelector
+		
+}))
 @ThemedStyles(baseStyles,'toast')
 
 @PureRender
@@ -168,7 +181,7 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 
 	private getNewState() {
 		return {
-			enabled: !NativeNotificationsEnabled.get()
+			enabled: !getSettings().nativeNotificationsEnabled
 		}
 	}
 	
@@ -179,36 +192,26 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 	}
 	
 	/**
-	 * On native change
-	 */
-	private onNativeNotificationConfigChanged = () => {
-		setImmediate(() => this.setState(this.getNewState()))
-	}
-	
-	/**
-	 * Component will receive new props
+	 * Process native notifications if enabled
 	 *
-	 * @param newProps
+	 * @param props
 	 */
-	componentWillReceiveProps(newProps) {
-		if (this.state.enabled)
-			processNotifications(newProps.messages)
-	}
-	
-	
-	/**
-	 * Component will mount
-	 */
-	componentWillMount() {
-		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
+	private processNotifications = (props = this.props) => {
+		if (getValue(() => props.settings.nativeNotificationsEnabled))
+			processNotifications(props.messages)
 	}
 	
 	/**
-	 * Component un-mounting
+	 * On mount process notifications
 	 */
-	componentWillUnmount() {
-		NativeNotificationsEnabled.removeListener(PersistentValueEvent.Changed,this.onNativeNotificationConfigChanged)
-	}
+	componentWillMount = this.processNotifications
+	
+	/**
+	 *On new props process notifications
+	 */
+	componentWillReceiveProps  = this.processNotifications
+	
+	
 
 	/**
 	 * Render the snackbar container
@@ -221,9 +224,7 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 		let
 			{messages, styles,theme} = this.props,
 			{enabled} = this.state
-			
-
-		messages = _.toJS(messages)
+		
 
 
 

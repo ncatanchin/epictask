@@ -24,15 +24,13 @@ import {
 	Comment,
 	Issue,
 	IssueStore,
-	TIssueState,
 	Label,
 	Milestone,
 	Repo,
 	AvailableRepo,
 	CommentStore,
 	IssuesEventStore,
-	IssuesEvent,
-	LoadStatus
+	IssuesEvent
 } from "epic-models"
 import { IssueMessage, IssueState, TEditCommentRequest, IIssuePatchLabel } from "../state/IssueState"
 import { enabledRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector } from "../selectors"
@@ -52,7 +50,7 @@ import {
 } from '../state/IssueState'
 import {
 	IIssueFilter,
-	EmptyIssueFilter,
+	DefaultIssueFilter,
 	IIssueSort
 } from '../state/issue'
 
@@ -60,6 +58,7 @@ import { GitHubClient } from "epic-github"
 //import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
 import { Roots } from "epic-entry-ui/routes/Routes"
+import { issueSortSelector, issueFilterSelector } from "epic-typedux/selectors/IssueSelectors"
 
 
 /**
@@ -487,7 +486,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 									
 									pushIssues(lastIssues)
 									
-									return issueStore.findByIssuePrefixReverse(nextRequest, availRepo.repoId)
+									return issueStore.findByIssuePrefix(nextRequest, availRepo.repoId)
 								}
 							)
 						
@@ -1198,10 +1197,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (issueState: IssueState) => issueState.withMutations((newIssueState: IssueState) => {
 			
 			if (issueFilter)
-				newIssueState.set('issueFilter', issueFilter)
+				newIssueState.set('issueFilter', cloneObjectShallow(issueFilter))
 			
 			if (issueSort)
-				newIssueState.set('issueSort', issueSort)
+				newIssueState.set('issueSort', cloneObjectShallow(issueSort))
 			
 			return newIssueState
 		})
@@ -1212,7 +1211,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * Clear all current issue filters
 	 */
 	clearFilters() {
-		this.filteringAndSorting(EmptyIssueFilter)
+		this.filteringAndSorting(DefaultIssueFilter)
 	}
 	
 	/**
@@ -1222,11 +1221,10 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 */
 	setGroupBy(groupBy: string) {
 		const
-			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = assign(
-				_.cloneDeep(issueSort),
-				{groupBy}
-			)
+			issueSort = issueSortSelector(getStoreState()),
+			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
+				groupBy
+			})
 		
 		this.setFilteringAndSorting(null, newIssueSort)
 	}
@@ -1237,14 +1235,11 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	toggleGroupByDirection() {
 		const
 			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = _.assign(
-				_.cloneDeep(issueSort),
-				{
+			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
 					groupByDirection: (issueSort.groupByDirection === 'asc') ?
 						'desc' :
 						'asc'
-				}
-			) as any
+			})
 		
 		this.setFilteringAndSorting(null, newIssueSort)
 	}
@@ -1443,6 +1438,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		return (state:IssueState) => state.set('groupVisibility',state.groupVisibility.set(id,visible))
 	}
 	
+	
+	getFilter() {
+		return issueFilterSelector(getStoreState())
+	}
+	
+	getSort() {
+		return issueSortSelector(getStoreState())
+	}
+	
 	/**
 	 * Set filtering and sorting
 	 *
@@ -1451,7 +1455,9 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
 	 */
 	
-	setFilteringAndSorting(issueFilter: IIssueFilter = null, issueSort: IIssueSort = null) {
+	setFilteringAndSorting(
+		issueFilter: IIssueFilter = this.getFilter(), issueSort: IIssueSort = this.getSort()
+	) {
 		return this.filteringAndSorting(issueFilter, issueSort)
 	}
 	

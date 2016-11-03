@@ -1,6 +1,6 @@
 
 
-export class Permission {
+export class Permission implements IPermission {
 	
 	
 	admin: boolean;

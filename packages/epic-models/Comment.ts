@@ -54,7 +54,7 @@ export function makeCommentId(repoOrRepoIdOrComment:number|Comment|Repo,issueOrI
 	keyMapper: makeCommentId,
 	onlyMapDefinedAttributes: true
 })
-export class Comment extends DefaultModel {
+export class Comment extends DefaultModel implements IComment {
 	
 	static makeCommentIdPrefix = makeCommentIdPrefix
 	

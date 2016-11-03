@@ -7,14 +7,8 @@ import { loadStateFromDisk } from "epic-typedux/store/AppStorePersistence"
 import { isMap } from "typeguard"
 import { getModel } from "epic-global/Registry"
 
-
-
 const
 	log = getLogger(__filename)
-
-
-
-
 
 export async function storeBuilder(enhancer = null) {
 	
@@ -71,7 +65,12 @@ export async function storeBuilder(enhancer = null) {
 	client && client.setStoreReady(true)
 	
 	log.info(`Built store`)
+	
+	setStoreReady(true)
+	
 	return store
 }
+
+
 
 export default storeBuilder

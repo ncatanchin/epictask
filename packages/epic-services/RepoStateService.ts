@@ -88,10 +88,6 @@ export class RepoStateService extends BaseService {
 	async start():Promise<this> {
 		await super.start()
 		
-		// ADD DB CHANGE LISTENERS FIRST
-		this.listeners.forEach((listener,clazz) => {
-			addDatabaseChangeListener(clazz,listener)
-		})
 		
 		getRepoActions().loadAvailableRepos(true)
 		
@@ -155,48 +151,6 @@ export class RepoStateService extends BaseService {
 	}
 	
 	
-	/**
-	 *
-	 * @param changes
-	 */
-	private onRepoChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on repo change`,changes)
-	}
-	
-	private onLabelChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on label change`,changes)
-	}
-	
-	private onAvailRepoChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on avail repo change`,changes)
-	}
-	
-	private onMilestoneChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on milestone change`,changes)
-	}
-	
-	private onUserChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on user change`,changes)
-	}
-	
-	private onCommentChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on comment change`,changes)
-	}
-	
-	private onIssueChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on issue change`,changes)
-	}
-	
-	private listeners = M<IModelConstructor<any>,TDatabaseChangeListener>({
-		[Repo.$$clazz]: this.onRepoChange,
-		[AvailableRepo.$$clazz]: this.onAvailRepoChange,
-		[Label.$$clazz]: this.onLabelChange,
-		[Milestone.$$clazz]: this.onMilestoneChange,
-		[Comment.$$clazz]: this.onCommentChange,
-		[Issue.$$clazz]: this.onIssueChange,
-		[User.$$clazz]: this.onUserChange
-		
-	} as {[type:string]:TDatabaseChangeListener})
 }
 
 export default RepoStateService

@@ -18,7 +18,7 @@ import {RegisterModel} from 'epic-global'
 import { isNumber, isObjectType, isObject } from  "epic-global"
 
 
-export type TIssueState = "open" | "closed"
+
 
 
 export function makeIssuePrefix(repoOrRepoId:number|Repo) {
@@ -53,7 +53,7 @@ export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNu
 	onlyMapDefinedAttributes: true
 	
 })
-export class Issue extends DefaultModel {
+export class Issue extends DefaultModel implements IIssue {
 
 	static makeIssuePrefix = makeIssuePrefix
 	

@@ -7,6 +7,7 @@ import { Icon } from "./icon/Icon"
 import { ThemedStyles } from "epic-styles"
 import { Label, Milestone } from "epic-models"
 import { getValue } from "epic-global"
+import { isLabel } from "epic-models/Label"
 
 const tinycolor = require('tinycolor2')
 
@@ -97,9 +98,6 @@ export const baseStyles = (topStyles,theme,palette) => ({
 })
 
 
-function isLabel(o:any):o is Label {
-	return o && o.url && o.$$clazz === Label.$$clazz
-}
 
 export type TLabelCallback = (label:Label|Milestone) => void
 

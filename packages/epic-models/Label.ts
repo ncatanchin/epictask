@@ -19,19 +19,21 @@ export function makeLabelId(label:Label) {
 	return `${label.repoId}-${label.id}`
 }
 
+
+
 @RegisterModel
 @PouchDBModel({
 	keyMapper: makeLabelId,
 	onlyMapDefinedAttributes: true
 })
-export class Label extends DefaultModel {
+export class Label extends DefaultModel implements ILabel {
 
 	static makeId = makeLabelId
 	
 	static isLabel(o:any):o is Label {
-		return o.url && o.name && !o.id
+		return o && ((o.color && o.name) || o.$$clazz === Label.$$clazz)
 	}
-
+	
 	/**
 	 * Revive from JS/JSON
 	 *
@@ -59,6 +61,15 @@ export class Label extends DefaultModel {
 		Object.assign(this,props)
 	}
 }
+
+
+/**
+ * Guard for label
+ *
+ * @param o
+ * @returns {any|boolean}
+ */
+export const isLabel = Label.isLabel
 
 export interface LabelStore extends TSRepo<Label> {
 	

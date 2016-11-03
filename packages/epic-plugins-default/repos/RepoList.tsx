@@ -15,7 +15,6 @@ import {
 } from "epic-typedux"
 import { getRepoActions } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
-import { LoadStatus } from "epic-models"
 import { CircularProgress} from "material-ui"
 
 /**

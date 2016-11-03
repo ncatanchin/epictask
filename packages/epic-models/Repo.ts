@@ -25,7 +25,7 @@ export interface ISyncChanges {
 	keyMapper: (repo:Repo) => `${repo.id}`,
 	onlyMapDefinedAttributes: true
 })
-export class Repo extends DefaultModel {
+export class Repo extends DefaultModel implements IRepo {
 
 	$$clazz = 'Repo'
 

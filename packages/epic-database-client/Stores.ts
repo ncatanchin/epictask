@@ -4,13 +4,13 @@ import {
 	UserStore,
 	LabelStore,
 	MilestoneStore,
-	AvailableRepoStore,
 	RepoStore,
 	IssueStore,
 	CommentStore,
 	IssuesEventStore,
 	RepoEventStore
 } from "epic-models"
+import { AvailableRepoStore } from "epic-models/AvailableRepo"
 
 
 

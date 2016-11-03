@@ -109,7 +109,8 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 		'config',
 		'window',
 		'webContents',
-		'onMessage'
+		'onMessage',
+		'opts'
 	) as IWindowState
 }
 
@@ -129,7 +130,7 @@ function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOp
 		},
 		
 		// TYPE DEFAULTS
-		WindowOptionDefaults[ type ],
+		cloneObject(WindowOptionDefaults[ type ]),
 		
 		// CONFIG DEFAULTS
 		([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
@@ -516,7 +517,10 @@ export class WindowManager  {
 						configOrConfigs :
 						configOrConfigs.toArray()
 			
-			return await Promise.all(configs.map(it => this.open(it)))
+			const
+				windowPromises = configs.map(it => this.open(it))
+			await Promise.all(windowPromises)
+			return true
 		}
 		
 		const
@@ -592,11 +596,14 @@ export class WindowManager  {
 					heartbeatCount:0,
 					window: newWindow,
 					
-					onMessage: this.makeOnIpcMessage(id),
-					connectedFlag: windowCreateDeferred,
+					
 					config
 				}) as IWindowInstance
 			
+			assign(windowInstance,{
+				onMessage: this.makeOnIpcMessage(id),
+				connectedFlag: windowCreateDeferred
+			})
 			
 			process.on('beforeExit',() => {
 				try {
@@ -675,15 +682,16 @@ export class WindowManager  {
 				crashed: (event, killed) => this.onWindowExit(id,{crashed:true,killed:true}),
 				destroyed: () => this.onWindowExit(id,{destroyed:true}),
 			})
-			windowCreateDeferred.resolve(windowInstance)
+			windowCreateDeferred.resolve()
 			
 		} catch (err) {
 			windowCreateDeferred.reject(err)
 		}
 		
-		return windowCreateDeferred
+		await windowCreateDeferred
 			.promise
 			.timeout(60000)
+		return true
 		
 	}
 }

@@ -4,6 +4,10 @@ import { PureRender } from "epic-ui-components"
 import { ThemedStyles, makePaddingRem } from "epic-styles"
 import { TJobIMap, getJobActions, IJobStatusDetail, IJob } from "epic-typedux"
 import { JobItem } from "./JobItem"
+import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { getValue } from "epic-global/ObjectUtil"
+
+import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
 
 
 // Constants
@@ -54,6 +58,22 @@ export interface IJobListProps extends React.HTMLAttributes<any> {
 @PureRender
 export class JobList extends React.Component<IJobListProps,void> {
 	
+	static contextTypes = {
+		monitorController:React.PropTypes.object
+	}
+	
+	/**
+	 * Get job monitor from context typed
+	 *
+	 * @returns {JobMonitor}
+	 */
+	private get controller() {
+		return getValue(() => (this.context as any).monitorController) as JobMonitorController
+	}
+	
+	constructor(props,context) {
+		super(props,context)
+	}
 	
 	/**
 	 * On job selected
@@ -61,7 +81,7 @@ export class JobList extends React.Component<IJobListProps,void> {
 	 * @param job
 	 */
 	onSelect = (job:IJob) => {
-		getJobActions().setSelectedId(job.id)
+		this.controller.setSelectedId(job.id)
 	}
 	
 	render() {

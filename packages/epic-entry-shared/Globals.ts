@@ -50,8 +50,9 @@ import ReactDOMGlobal from 'react-dom'
 import JQueryGlobal from 'jquery'
 import RadiumGlobal from 'radium'
 
-
+import EventHub,{TEventHub} from  './EventHub'
 import * as Constants from 'epic-global/Constants'
+import { EventType } from "epic-global/Constants"
 
 // ADD EVENTS TO GLOBAL
 _.assignGlobal({
@@ -169,8 +170,21 @@ function installGlobals() {
 		Container: ContainerGlobal,
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
+		EventHub,
+		setStoreReady(ready:boolean) {
+			g.GlobalStoreReady = true
+			
+			if (isStoreReady()) {
+				EventHub.emit(EventType.StoreReady)
+			}
+		},
+		isStoreReady() {
+			return g.GlobalStoreReady === true
+		},
 		getAppConfig: require('./AppConfig').getAppConfig,
 		node_require: __non_webpack_require__,
+		
+		
 		getWindowId: getWindowIdGlobal,
 		getProcessId,
 		getCurrentWindow: getCurrentWindowGlobal
@@ -211,6 +225,11 @@ declare global {
 	
 	function getWindowId():string
 	function getProcessId():string
+	
+	function isStoreReady():boolean
+	function setStoreReady(ready:boolean)
+	
+	var EventHub:TEventHub
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var LogLevel:typeof LogLevelGlobal

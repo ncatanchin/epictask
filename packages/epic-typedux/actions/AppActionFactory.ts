@@ -99,11 +99,13 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * @returns {(state:AppState)=>Map<string, ISettings>}
 	 */
 	@ActionReducer()
-	updateSettings(newSettings:Settings) {
+	setSettings(newSettings:Settings) {
 		return (state:AppState) => {
 			if (!(newSettings instanceof Settings))
 				newSettings = new Settings(newSettings)
-			return state.set('settings', newSettings).set('user', newSettings.user)
+			return state
+				.set('settings', newSettings)
+				.set('user', newSettings.user)
 		}
 	}
 	

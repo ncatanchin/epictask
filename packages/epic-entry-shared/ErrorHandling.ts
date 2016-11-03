@@ -1,7 +1,7 @@
 const
 	StackTrace = !ProcessConfig.isTest() && require('stacktrace-js')
 
-Object.assign(global as any, {StackTrace})
+Object.assign(global as any, { StackTrace })
 
 // Get an error logger
 let
@@ -9,8 +9,8 @@ let
 
 const
 	getErrorLogger = () =>
-		errorLogger ||
-		(errorLogger = require('typelogger').create(__filename))
+	errorLogger ||
+	(errorLogger = require('typelogger').create(__filename))
 
 if (typeof window !== 'undefined') {
 	const log = getLogger(__filename)
@@ -19,18 +19,33 @@ if (typeof window !== 'undefined') {
 	}
 }
 
+function deepTraceHere() {
+	if (ProcessConfig.isTest())
+		return
+	const
+		log = getErrorLogger()
+	
+	StackTrace.get()
+		.then(function (stack) {
+			log.error('Deep Trace for Stack', stack)
+		})
+		.catch(function (err) {
+			log.error('failed to get stack', err)
+		});
+}
+
 /**
  * Deep trace an error
  *
  * @param reason
  */
-function	deepTrace(reason) {
+function deepTrace(reason) {
 	if (ProcessConfig.isTest())
 		return
-	
-	const
+	try {
+		const
 			log = getErrorLogger()
-	
+		
 		if (reason instanceof Error || reason.stack) {
 			StackTrace.fromError(reason)
 				.then((updatedErrorStack) => {
@@ -47,22 +62,23 @@ function	deepTrace(reason) {
 							}).join('\n')
 						)
 					} catch (err) {
-						log.error(`Failed to map deep trace`,err,updatedErrorStack,reason)
+						log.error(`Failed to map deep trace`, err, updatedErrorStack, reason)
 					}
 					// updatedErrorStack.forEach(frame => {
 					// 	log.error(frame)
 					// })
 				})
-		} else {
-			StackTrace.get()
-				.then(function (stack) {
-					log.error('Deep Trace for Stack', reason, stack)
+				.catch(err => {
+					console.error(`Deep trace failed`,err)
 				})
-				.catch(function (err) {
-					log.error('failed to get stack', err)
-				});
+		} else {
+			deepTraceHere()
 		}
+	} catch (err) {
+		console.error('Deep trace failed', err)
 	}
+	
+}
 
 /**
  * Unhandled rejection
@@ -70,31 +86,29 @@ function	deepTrace(reason) {
  * @param reason
  * @param promise
  */
-function unhandledRejection (reason, promise) {
+function unhandledRejection(reason, promise) {
 	const log = getErrorLogger()
 	
 	//deepTrace(reason)
 	//console.error('Unhandled rejection', reason)
 	log && log.error('Unhandled rejection', reason, promise)
 	
-	try {
-		deepTrace(reason)
-	} catch (err) {
-		console.error('Deep trace failed',err)
-	}
+	
+	deepTrace(reason)
 	
 }
-	
+
 process.on("unhandledRejection", unhandledRejection)
 
 /**
  * Uncaught Exception
  * @param err
  */
-function uncaughtException (err) {
+function uncaughtException(err) {
 	const log = getErrorLogger()
+	
 	console.error('Unhandled exception', err)
-	log ? log.error('Unhandled exception', err) : console.error('unhandled',err)
+	log ? log.error('Unhandled exception', err) : console.error('unhandled', err)
 }
 
 process.on("uncaughtException", uncaughtException)
@@ -105,8 +119,14 @@ process.on("uncaughtException", uncaughtException)
  * @param warning
  */
 function systemWarning(warning) {
-	const log = getErrorLogger()
-	log ? log.warn('WARNING', warning) : console.warn(warning)
+	const
+		log = getErrorLogger()
+	
+	if (warning instanceof Error) {
+		deepTrace(warning)
+	}
+	
+	log ? log.error('WARNING', warning) : console.warn(warning)
 }
 
 process.on("warning", systemWarning)
@@ -121,6 +141,4 @@ process.on("warning", systemWarning)
 // })
 
 
-export {
-	
-}
+export {}

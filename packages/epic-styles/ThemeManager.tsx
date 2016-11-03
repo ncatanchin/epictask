@@ -1,10 +1,63 @@
 
 import './styles'
-import { acceptHot } from  "epic-global/HotUtils"
-import { makeThemeFontSize } from "./ThemeState"
+import { acceptHot, addHotDisposeHandler } from  "epic-global/HotUtils"
+import {
+	makeThemeFontSize, getThemeName, getThemeCreator, setThemeCreator, getPaletteName,
+	getPaletteCreator, setPaletteCreator
+} from "./ThemeState"
+import { EventType, SettingsPath } from "epic-global/Constants"
+
 
 const
 	log = getLogger(__filename)
+
+let
+	unsubscribe:Function
+
+
+addHotDisposeHandler(module,() => {
+	if (unsubscribe) {
+		unsubscribe()
+		unsubscribe = null
+	}
+})
+
+// SUBSCRIBE FOR SETTINGS UPDATES
+function subscribe() {
+	if (!isStoreReady() || unsubscribe)
+		return
+	
+	unsubscribe = getStore().observe(SettingsPath,(newSettings:ISettings) => {
+		const
+			{themeName,paletteName} = newSettings
+		
+		let
+			changed = false
+		
+		if (themeName && themeName !== getThemeName()) {
+			log.info(`Theme changed: ${themeName}`)
+			setThemeCreator(getThemeCreator(themeName))
+			changed = true
+		}
+		
+		if (paletteName && paletteName !== getPaletteName()) {
+			log.info(`Palette changed: ${paletteName}`)
+			setPaletteCreator(getPaletteCreator(paletteName))
+			changed = true
+		}
+	})
+	
+	
+}
+
+// LISTEN FOR STORE READY
+EventHub.once(EventType.StoreReady,subscribe)
+
+// SEE IF IT IS READY NOW
+if (isStoreReady()) {
+	subscribe()
+}
+
 
 /**
  * Export getTheme globally

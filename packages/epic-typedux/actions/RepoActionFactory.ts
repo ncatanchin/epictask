@@ -22,7 +22,6 @@ import {
 	Label,
 	AvailableRepo,
 	Repo,
-	LoadStatus,
 	Issue,
 	IssueStore,
 	makeIssueId,
@@ -514,7 +513,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				// UPDATE LOAD STATUS AND STEP OVER
 				updateLoadStatuses = async (availReposToUpdate,repoLoadStatus:LoadStatus,issuesLoadStatus:LoadStatus) => {
 					let
-						updatedAvailRepos = availReposToUpdate.map(it => assign(_.clone(it),{
+						updatedAvailRepos = availReposToUpdate.map(it => cloneObjectShallow(it,{
 							repoLoadStatus: LoadStatus.Loading,
 							issuesLoadStatus: LoadStatus.NotLoaded
 						}))
@@ -533,15 +532,18 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			
 			// IF THIS IS THE BOOT REQUEST
-			if (prepareOnBoot && getValue(() => this.state.availableRepos.size,0)) {
-				await updateLoadStatuses(this.state.availableRepos,LoadStatus.NotLoaded, LoadStatus.NotLoaded)
-			}
-			
+			// if (prepareOnBoot) {
+			// 	const
+			// 		currentAvailableRepos = availableReposSelector(getState())
+			//
+			// 	await updateLoadStatuses(currentAvailableRepos,LoadStatus.NotLoaded, LoadStatus.NotLoaded)
+			// }
+			//
 			// NOW QUERY THE DB AND GET TO WORK
 			let
 				availRepos = (await stores.availableRepo.findAll())
-					// FILTER DELETED && ALREADY IN STATE
-					.filter(availRepo => !availRepo.deleted && !this.repoInState(availRepo)),
+					// FILTER DELETED && ALREADY IN STATE (IF NOT BOOTING)
+					.filter(availRepo => !availRepo.deleted && (prepareOnBoot || !this.repoInState(availRepo))),
 				
 				availRepoIds = availRepos.map(it => it.id)
 			

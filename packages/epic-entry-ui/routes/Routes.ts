@@ -83,7 +83,7 @@ export const Roots = {
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			
 		require.ensure([],function(require:any) {
-			resolver.resolve(require('epic-ui-components/pages/settings').default)
+			resolver.resolve(require('epic-ui-components/pages/settings').SettingsWindow)
 		}))
 		
 		
@@ -98,7 +98,7 @@ export const Roots = {
 		showDevTools: false,
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/issue-edit').default)
+				resolver.resolve(require('epic-ui-components/pages/issue-edit').IssueEditDialog)
 			}))
 		
 		
@@ -117,7 +117,7 @@ export const Roots = {
 		showDevTools: false,
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/issue-patch').default)
+				resolver.resolve(require('epic-ui-components/pages/issue-patch').IssuePatchDialog)
 			}))
 		
 		
@@ -132,7 +132,7 @@ export const Roots = {
 		},
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/issue-comment').default)
+				resolver.resolve(require('epic-ui-components/pages/issue-comment').IssueCommentDialog)
 			}))
 		
 	}

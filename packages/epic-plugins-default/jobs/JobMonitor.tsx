@@ -3,14 +3,18 @@
 import { connect } from "react-redux"
 import { List } from "immutable"
 import { getBuiltInToolId, BuiltInTools } from "epic-ui-components/tools/ToolConfig"
-import { PureRender, Button, Icon } from "epic-ui-components"
-import { createDeepEqualSelector, RegisterTool, ToolPanelLocation, IToolProps } from "epic-global"
+import { PureRender, Button, Icon } from "epic-ui-components/common"
+import { RegisterTool, ToolPanelLocation, IToolProps } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, createThemedStyles, FlexScale, FlexColumn } from "epic-styles"
-import { IJobStatusDetail, jobStateSelector, jobLogIdSelector, TJobIMap, JobActionFactory } from "epic-typedux"
+import { IJobStatusDetail, TJobIMap} from "epic-typedux/state/jobs"
 import { JobList } from "./JobList"
 import { JobDetail } from "./JobDetail"
-import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
+
+import { jobsSelector, jobDetailsSelector} from "epic-typedux/selectors/JobSelectors"
+
+import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
+import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 // Constants
 const
@@ -47,15 +51,16 @@ export interface IJobMonitorProps extends IToolProps, React.HTMLAttributes<any> 
 	styles?: any
 	jobs?: TJobIMap
 	details?: List<IJobStatusDetail>
-	selectedId?:string
-	selectedLogId?:string
+	
 }
 
 /**
  * IJobMonitorState
  */
 export interface IJobMonitorState {
-	
+	selectedId?:string
+	selectedLogId?:string
+	controller?:JobMonitorController
 }
 
 function getHeaderControls() {
@@ -70,7 +75,7 @@ function getHeaderControls() {
 					
 							log.debug(`add repo click`,event)
 					
-							Container.get(JobActionFactory).clear()
+							getJobActions().clear()
 					
 						}}>
 			<Icon style={styles.header.button.icon} iconSet='fa' iconName='times'/>
@@ -93,11 +98,9 @@ function getHeaderControls() {
 	getHeaderControls
 })
 @connect(createStructuredSelector({
-	jobs: (state) => jobStateSelector(state).all,
-	details:(state) => jobStateSelector(state).details,
-	selectedId:(state) => uiStateSelector(state).jobs.selectedId,
-	selectedLogId: jobLogIdSelector,
-}, createDeepEqualSelector))
+	jobs: jobsSelector,
+	details: jobDetailsSelector
+}))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
@@ -105,14 +108,50 @@ function getHeaderControls() {
 @PureRender
 export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorState> {
 	
+	static childContextTypes = {
+		monitorController: React.PropTypes.object
+	}
+	
+
+	constructor(props,context) {
+		super(props,context)
+		
+		const
+			controller = new JobMonitorController()
+		
+		
+		this.state = {
+			controller
+		}
+		
+		controller.addListener((selectedId:string,selectedLogId:string) => this.setState({
+			selectedId,
+			selectedLogId
+		}))
+	}
+	
+	/**
+	 * Get child context
+	 *
+	 * @returns {{monitorController: (any|string|null)}}
+	 */
+	getChildContext() {
+		return {
+			monitorController: this.state.controller
+		}
+	}
+	
 	render() {
 		
 		const
-			{styles,jobs,details,selectedId,selectedLogId,panel} = this.props,
+			{styles,jobs,details,panel} = this.props,
+			
+			{selectedId,selectedLogId} = this.state,
+			
 			splitOrientation = panel.location === ToolPanelLocation.Bottom ? 'vertical' : 'horizontal',
+			
 			jobCount = jobs ? jobs.size : 0
 			
-		
 		
 		return <div style={styles.root}>
 			

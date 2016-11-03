@@ -28,6 +28,7 @@ import "./NamespaceConfig"
 import "./PromiseConfig"
 import "./LogConfig"
 import "./Globals"
+import "./EventHub"
 import './NotificationCenter'
 
 // HMR ACCEPT

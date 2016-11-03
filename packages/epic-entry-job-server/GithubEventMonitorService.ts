@@ -7,7 +7,7 @@ import {DatabaseClientService} from "epic-services/DatabaseClientService"
 
 import { RepoKey } from "epic-global"
 import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global/HotUtils"
-import { AvailableRepo, LoadStatus } from "epic-models"
+import { AvailableRepo } from "epic-models"
 
 import {getGithubEventMonitor} from './GithubEventMonitor'
 import {RepoSyncManager} from './GithubSyncHandlers'

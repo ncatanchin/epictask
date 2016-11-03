@@ -70,6 +70,13 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		this.executor = service.newExecutor(job)
 		
 	}
+	
+	/**
+	 * Throttled job update push
+	 */
+	private pushStatusUpdate = _.throttle(() => {
+		this.actions.update(this.job, this.detail)
+	},3000)
 
 	/**
 	 * When the internal state
@@ -143,7 +150,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	 * @param epochETA
 	 */
 	
-	setProgress = _.debounce((progress:number,timeRemaining:number,epochETA:number) => {
+	setProgress = (progress:number,timeRemaining:number,epochETA:number) => {
 		try {
 			assign(this.detail, {
 				progress,
@@ -151,11 +158,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 				epochETA
 			})
 			
-			this.actions.update(this.job, this.detail)
+			this.pushStatusUpdate()
 		} catch (err) {
 			log.error(`Progress update failed`,err)
 		}
-	},3000)
+	}
 	
 	/**
 	 * Start the handler
@@ -190,7 +197,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 				error
 			})
 			
-			
+			this.pushStatusUpdate.cancel()
 			this.actions.update(this.job, this.detail)
 			this.fireEvent(JobHandlerEventType.Changed)
 		} catch (err) {

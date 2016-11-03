@@ -1,17 +1,19 @@
+export * from './TypeChecks'
+export * from "./ObjectUtil"
+
+
 export * from 'epic-entry-shared/ProcessType'
 export * from 'epic-entry-shared/ProcessConfig'
 
-export * from "./TypeChecks"
 export * from "./Constants"
 export * from "./UIConstants"
 
-export * from "./ErrorHandling"
 export * from "./Registry"
 export * from './ToolTypes'
 export * from './NotificationCenterClient'
 
 
-export * from "./ObjectUtil"
+
 export * from "./Benchmark"
 export * from "./Counter"
 export * from "./DateUtil"

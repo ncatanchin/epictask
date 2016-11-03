@@ -27,6 +27,10 @@ export enum LoadStatus {
 	Loaded
 }
 
+assignGlobal({
+	LoadStatus
+})
+
 /**
  * Maps repos that have been configured for tasks
  * to real repos
@@ -34,7 +38,7 @@ export enum LoadStatus {
  */
 @RegisterModel
 @Model()
-export class AvailableRepo extends DefaultModel {
+export class AvailableRepo extends DefaultModel implements IAvailableRepo {
 
 	$$clazz = 'AvailableRepo'
 
@@ -74,6 +78,7 @@ export class AvailableRepo extends DefaultModel {
 	 */
 	@Transient
 	repo:Repo
+	
 	
 	/**
 	 * All current labels

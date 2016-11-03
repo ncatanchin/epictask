@@ -99,13 +99,13 @@ storiesOf('Job Monitor',module)
 			//   makeId(i),
 			//   JobLogLevel[level],
 			//   faker.lorem.sentence(faker.random.number(20)),
-			//   startTime + (i * increment),
+			//   startTime + (i * increment),≥
 			// 	error
 			// )
 				
 		}
 		
-		jobActions.setSelectedId(job.id)
+		
 		const
 			panel = makeDefaultToolPanel(ToolPanelLocation.Bottom,true),
 			tool = makeDefaultTool(getBuiltInToolId(BuiltInTools.JobMonitor))

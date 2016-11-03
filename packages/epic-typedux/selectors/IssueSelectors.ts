@@ -94,18 +94,18 @@ export const issuesEventsSelector:(state) => List<IssuesEvent> = createSelector(
 
 
 
-export const issueSortSelector = createDeepEqualSelector(
+export const issueSortSelector = createSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueSort
 )
 
 
-export const issueFilterSelector = createDeepEqualSelector(
+export const issueFilterSelector = createSelector(
 	issueStateSelector,
 	(issueState:IssueState) => issueState.issueFilter
 )
 
-export const issueFilterLabelsSelector = createDeepEqualSelector(
+export const issueFilterLabelsSelector = createSelector(
 	issueFilterSelector,
 	enabledLabelsSelector,
 	(filter:IIssueFilter,labels:List<Label>):List<Label> =>
@@ -275,11 +275,10 @@ export const editCommentRequestSelector:(state) => TEditCommentRequest = createS
  * All currently selected assignee filters
  */
 export const issueFilterAssigneeSelector = createDeepEqualSelector(
-	issueSortAndFilterSelector,
+	issueFilterSelector,
 	enabledAssigneesSelector,
-	(issueSortAndFilter:TIssueSortAndFilter,assignees:User[]) => {
+	(issueFilter:IIssueFilter,assignees:User[]) => {
 		const
-			{issueFilter} = issueSortAndFilter,
 			assigneeIds = issueFilter.assigneeIds || []
 		
 		
@@ -301,10 +300,11 @@ export const groupBySelector = createSelector(
  */
 export const orderedIssueIndexesSelector = createSelector(
 	issuesSelector,
-	issueSortAndFilterSelector,
+	issueSortSelector,
+	issueFilterSelector,
 	enabledAssigneesSelector,
 	editInlineConfigIssueSelector,
-	(issues:List<Issue>, {issueSort,issueFilter},assignees:List<User>,editInlineConfig:TIssueEditInlineConfig):List<number> => {
+	(issues:List<Issue>, issueSort:IIssueSort,issueFilter:IIssueFilter,assignees:List<User>,editInlineConfig:TIssueEditInlineConfig):List<number> => {
 		
 		const
 			{groupBy} = issueSort,
@@ -406,10 +406,10 @@ export const orderedIssueIndexesSelector = createSelector(
  * List items
  */
 export const issueGroupsSelector = createSelector(
-	issueSortAndFilterSelector,
+	issueSortSelector,
 	issuesSelector,
 	orderedIssueIndexesSelector,
-	({issueSort},issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
+	(issueSort:IIssueSort,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
 		
 		const
 			groupBy = issueSort.groupBy

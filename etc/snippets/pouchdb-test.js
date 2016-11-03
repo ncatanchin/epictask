@@ -13,7 +13,7 @@ openDB()
 			.then(indexes => {
 				console.log('got indexes',indexes)
 			})
-			.then(Promise.resolve(db))
+			.then(() => Promise.resolve(db))
 	})
 	.catch(err => {
 		console.error('error occurred',err)

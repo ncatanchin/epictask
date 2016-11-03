@@ -20,7 +20,7 @@ export function makeMilestoneId(milestone:Milestone) {
 	keyMapper: makeMilestoneId,
 	onlyMapDefinedAttributes: true
 })
-export class Milestone extends DefaultModel {
+export class Milestone extends DefaultModel implements IMilestone {
 
 	static makeId = makeMilestoneId
 	

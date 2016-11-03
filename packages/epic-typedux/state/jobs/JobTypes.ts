@@ -221,6 +221,11 @@ export interface IJobStatusDetail {
 	
 }
 
+/**
+ * Immutable job map
+ */
+export type TJobIMap = Map<string,IJob>
+
 
 export interface IJobAndStatusDetail {
 	id:string

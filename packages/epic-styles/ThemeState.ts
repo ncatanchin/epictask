@@ -12,12 +12,12 @@ const
  * Define our dark palette
  */
 
-export const
-	PersistentThemeName = new PersistentValue<string>('epictask-theme'),
-	PersistentPaletteName = new PersistentValue<string>('epictask-palette'),
+
 	
-	DefaultThemeName = PersistentThemeName.get() || 'DefaultTheme',
-	DefaultPaletteName = PersistentPaletteName.get() ||  'LightPalette'
+
+export const
+	DefaultThemeName =  'DefaultTheme',
+	DefaultPaletteName =  'LightPalette'
 
 // ONLY LET FOR HMR
 export let
@@ -29,9 +29,9 @@ export let
 // Internal ref to the current theme
 const
 	ThemeState = getHot(module,'ThemeState',{
-		themeName: null as any,
+		themeName: getSettings().themeName as any,
 		theme:null as any,
-		paletteName: null as string,
+		paletteName: getSettings().paletteName as string,
 		palette:null as any
 	})
 
@@ -162,7 +162,10 @@ function setPalette(newPalette:IPaletteCreator) {
 		palette
 	})
 	
-	PersistentPaletteName.set(ThemeState.paletteName)
+	if (getSettings().paletteName !== ThemeState.paletteName)
+		updateSettings({
+			paletteName:ThemeState.paletteName
+		})
 	
 	// Assign app props to the body & to html
 	notifyListeners(getTheme(),palette)
@@ -205,7 +208,13 @@ function setTheme(newThemeCreator:IThemeCreator) {
 		theme: newTheme
 	})
 	
-	PersistentThemeName.set(ThemeState.themeName)
+	if (getSettings().themeName !== ThemeState.themeName)
+		updateSettings({
+			themeName:ThemeState.themeName
+		})
+	
+	
+	
 	
 	// Assign app props to the body & to html
 	try {
@@ -255,7 +264,7 @@ export function getThemeNames() {
  * @returns {any}
  */
 export function getThemeName() {
-	return PersistentThemeName.get()
+	return ThemeState.themeName
 }
 
 
@@ -265,7 +274,7 @@ export function getPaletteCreator(name:string) {
 
 
 export function getPaletteName() {
-	return PersistentPaletteName.get()
+	return ThemeState.paletteName
 }
 
 export function getPalettes() {
@@ -312,7 +321,7 @@ function loadBuiltIns() {
  * @returns {IPaletteCreator|any}
  */
 export function currentPaletteCreator() {
-	return PaletteCreators[getPaletteName()] || DefaultPalette || PaletteCreators['DarkPalette']
+	return PaletteCreators[getPaletteName()] || DefaultPalette || PaletteCreators[DefaultPaletteName]
 }
 
 /**
@@ -321,7 +330,7 @@ export function currentPaletteCreator() {
  * @returns {IThemeCreator}
  */
 export function currentThemeCreator() {
-	return ThemeCreators[getThemeName()] || DefaultTheme || ThemeCreators['DefaultTheme']
+	return ThemeCreators[getThemeName()] || DefaultTheme || ThemeCreators[DefaultThemeName]
 }
 
 loadBuiltIns()
@@ -331,41 +340,7 @@ if (module.hot) {
 }
 
 
-/**
- * Listen for palette changes
- */
-PersistentPaletteName.on(PersistentValueEvent.Changed,() => {
-	const
-		paletteName = PersistentPaletteName.get()
-	
-	log.debug(`Changing palette from notification to ${paletteName}`)
-	if (ThemeState.paletteName === paletteName) {
-		log.debug(`Current palette is already ${paletteName}`)
-		return
-	}
-	const
-		paletteCreator = PaletteCreators[paletteName]
-	
-	log.debug(`Setting new palette`,paletteCreator,paletteName)
-	setPaletteCreator(paletteCreator)
-})
 
-
-
-/**
- * Listen for palette changes
- */
-PersistentThemeName.on(PersistentValueEvent.Changed,() => {
-	const
-		themeName = PersistentThemeName.get()
-	
-	log.debug(`Changing theme from notification to ${themeName}`)
-	if (ThemeState.themeName === themeName) {
-		log.debug(`Current theme is already ${themeName}`)
-		return
-	}
-	setThemeCreator(ThemeCreators[themeName])
-})
 
 
 /**

@@ -256,7 +256,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	/**
 	 * On scroll event is debounced
 	 */
-	private onScroll = _.debounce((event) => {
+	private onScroll = _.throttle((event) => {
 		const
 			{scrollTop} = this.state.listElement,
 			{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
@@ -279,7 +279,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 		this.setState({scrollTop},this.updateItems)
 
 		
-	},150)
+	},250)
 	
 	
 	shouldComponentUpdate(nextProps:IVisibleListProps, nextState:IVisibleListState, nextContext:any):boolean {

@@ -16,7 +16,7 @@ import {RegisterModel} from 'epic-global'
 @Model({
 	onlyMapDefinedAttributes: true
 })
-export class User extends DefaultModel {
+export class User extends DefaultModel implements IUser {
 
 	/**
 	 * Revive from JS/JSON
@@ -54,6 +54,27 @@ export class User extends DefaultModel {
 	@Attribute()
 	url: string;
 	
+	
+	@Attribute()
+	type: string;
+	
+	@Attribute()
+	site_admin: boolean;
+
+	constructor(props = {}) {
+		super()
+		Object.assign(this,props)
+	}
+
+	addRepoId(repoId) {
+		const repoIds = this.repoIds = this.repoIds || []
+
+		repoIds.push(repoId)
+		this.repoIds = _.uniq(repoIds)
+	}
+	
+	
+	
 	//
 	// html_url: string;
 	//
@@ -75,24 +96,6 @@ export class User extends DefaultModel {
 	// events_url: string;
 	//
 	// received_events_url: string;
-	
-	@Attribute()
-	type: string;
-	
-	@Attribute()
-	site_admin: boolean;
-
-	constructor(props = {}) {
-		super()
-		Object.assign(this,props)
-	}
-
-	addRepoId(repoId) {
-		const repoIds = this.repoIds = this.repoIds || []
-
-		repoIds.push(repoId)
-		this.repoIds = _.uniq(repoIds)
-	}
 }
 
 export interface UserStore extends TSRepo<User> {

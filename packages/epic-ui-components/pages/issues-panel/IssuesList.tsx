@@ -31,6 +31,7 @@ import { IssueFilters } from "./IssueFilters"
 import { Icon, IssueLabelsAndMilestones, VisibleList } from "epic-ui-components"
 import { IssueEditInline } from "./IssueEditInline"
 import { shallowEquals, shallowEqualsArrayOrList, createDeepEqualSelector } from "epic-global"
+import { getValue } from "epic-global/ObjectUtil"
 
 
 // Constants & Non-typed Components
@@ -373,7 +374,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{groupVisibility,items,issues,groups,editInlineConfig} = props
 			
 		let
-			checkedItems = _.get(this.state,'checkedItems',List<IIssueListItem<any>>()),
+			checkedItems = getValue(() => this.state.checkedItems,List<IIssueListItem<any>>()),
 			itemIds = _.get(this.state,'itemIds',List<number>()),
 			itemIndexes = _.get(this.state,'itemIndexes',List<number>()),
 			groupsChanged = groupVisibility !== this.props.groupVisibility
@@ -486,7 +487,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
-		return !shallowEquals(nextProps,this.props,'editInlineConfig') || !shallowEquals(nextState,this.state,'itemIndexes')
+		return !shallowEquals(nextProps,this.props,'editInlineConfig','items') || !shallowEquals(nextState,this.state,'itemIndexes')
 	}
 	
 	/**

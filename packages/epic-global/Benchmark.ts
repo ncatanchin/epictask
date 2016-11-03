@@ -24,7 +24,7 @@ export function benchmark<T extends Function>(name, origFn:T,detail:string = '')
 		} finally {
 			
 			const
-				isPromise = returnVal && _.isFunction(returnVal.then)
+				isPromise = returnVal && returnVal instanceof Promise
 			
 			/**
 			 * Since our reporting function can be attached to a promise

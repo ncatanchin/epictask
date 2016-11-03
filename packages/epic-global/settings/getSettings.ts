@@ -1,22 +1,45 @@
-import { ObservableStore } from "typedux"
-import { Settings } from "./Settings"
-import { AppKey } from "epic-global/Constants"
+
 import { getValue } from "epic-global/ObjectUtil"
 
-export function getSettings():Settings {
+
+
+export function getSettings():ISettings {
+	return getValue(() => require("epic-typedux/provider")
+			.getAppActions()
+			.state.settings,null)
 	
-	return getValue(() =>
-		(Container.get(ObservableStore as any) as any).getState().get(AppKey).settings)
+	// return getValue(() =>
+	// 	getStoreState().get(AppKey).settings
+	// )
 }
 
+export function updateSettings(newSettings:ISettingsProps) {
+	let
+		settings = getSettings()
+	
+	
+	if (!settings)
+		return
+	
+	Object.keys(newSettings).forEach(key => {
+		settings = settings.set(key,newSettings[key])
+	})
+
+	
+	require("epic-typedux/provider")
+		.getAppActions()
+		.setSettings(settings)
+}
 
 assignGlobal({
-	getSettings
+	getSettings,
+	updateSettings
 })
 
 /**
  * Expose getSettings
  */
 declare global {
-	function getSettings():Settings
+	function getSettings():ISettings
+	function updateSettings(settings:ISettingsProps)
 }

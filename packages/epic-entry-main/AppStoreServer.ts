@@ -6,7 +6,8 @@ import { ActionFactoryProviders } from "epic-typedux/provider"
 
 import { AppStoreServerEventNames } from "epic-global"
 import {isFunction} from 'typeguard'
-import { toPlainObject } from "typetransform"
+import { toPlainObject,fromPlainObject } from "typetransform"
+import { cloneObjectShallow } from "epic-global/ObjectUtil"
 
 
 
@@ -29,9 +30,9 @@ let
  */
 export function broadcastAppStoreAction(action) {
 	ipcServer.broadcast(
-		AppStoreServerEventNames.ChildStoreActionReducer, {
-			action: assign(action,{fromServer:true})
-		})
+		AppStoreServerEventNames.ChildStoreActionReducer, toPlainObject({
+			action: cloneObjectShallow(action,{fromServer:true})
+		}))
 }
 
 /**
@@ -46,15 +47,16 @@ namespace clientMessageHandlers {
 	 * @param action
 	 */
 	function childStoreDispatch(action) {
+		action = fromPlainObject(action)
 		const
-			{ fromChildId, event, leaf, type, args } = action,
+			{ fromChildId, leaf, type, args } = action,
 			store = getReduxStore(),
 			actionReg = getAction(leaf, type)
 		
 		if (!actionReg)
 			throw new Error(`Could not find action ${leaf}:${type} on main process`)
 		
-		log.info(`Executing action on main: ${leaf}:${type}`)
+		log.debug(`Executing action on main: ${leaf}:${type}`)
 		
 		nextTick(() => {
 			if (actionReg.options.isReducer) {
@@ -71,9 +73,10 @@ namespace clientMessageHandlers {
 				
 				store.dispatch(msg)
 				
-				nextTick(() => {
-					broadcastAppStoreAction(action)
-				})
+				const
+					actionCopy = cloneObjectShallow(action)
+				
+				nextTick(() => broadcastAppStoreAction(actionCopy))
 			} else {
 				actionReg
 					.action(factory => Container.get(factory), ...args)
@@ -122,6 +125,7 @@ namespace clientMessageHandlers {
 	 * @param action
 	 */
 	export function childStoreAction(server:IPCServer, socket, event:string, { id, action }) {
+		
 		log.debug(`Received action message`, action, 'from', id)
 		childStoreDispatch(action)
 	}

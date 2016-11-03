@@ -1,12 +1,15 @@
-import { ProcessClient, AppStoreServerName, getHot, setDataOnHotDispose } from "epic-global"
-import * as uuid from "node-uuid"
+import { ProcessClient} from 'epic-global/ProcessClient'
+import {AppStoreServerName} from 'epic-entry-shared/ProcessType'
+import {getHot, setDataOnHotDispose } from "epic-global/HotUtils"
+import {uuid} from 'epic-global/IdUtil'
 import { REQUEST_TIMEOUT, Transport, getDefaultTransport } from "epic-net"
 
 import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
 import {ActionMessage} from 'typedux'
 import { ActionMessageFilter } from "epic-typedux/filter"
 import { getValue,AppStoreServerEventNames } from "epic-global"
-import { fromPlainObject } from "typetransform"
+import { fromPlainObject,toPlainObject } from "typetransform"
+import { cloneObjectShallow } from "epic-global/ObjectUtil"
 
 
 
@@ -137,9 +140,10 @@ export type TClientStateHandler = (newValue,oldValue) => any
  * @param action
  */
 export const sendStoreAction = ActionMessageFilter((action:ActionMessage<any>) => {
-	assign(action,{
+	action = toPlainObject(cloneObjectShallow(action,{
+		windowId: getWindowId(),
 		fromChildId: id
-	})
+	}))
 	sendMessage(AppStoreServerEventNames.ChildStoreAction,{id,action})
 })
 
@@ -156,7 +160,7 @@ export function clientObserveState(
 ):Promise<Function> {
 	
 	const
-		id = uuid.v4(),
+		id = uuid(),
 		wrapper:ObserveWrapper = observers[ id ] = {
 			id,
 			keyPath,
@@ -187,7 +191,7 @@ export function clientObserveState(
 export async function getStateValue(...keyPath:string[]):Promise<any> {
 	
 	const
-		id = uuid.v4(),
+		id = uuid(),
 		request = stateRequests[ id ] = {
 			id,
 			keyPath,
@@ -259,6 +263,7 @@ function attachEvents(transport) {
 	
 	
 	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({action}) => {
+		action = fromPlainObject(action)
 		log.debug(`Received reducer action from server`,action)
 		// if (!childStoreWrapper)
 		// 	return log.error(`Unknown child store ${id}`)

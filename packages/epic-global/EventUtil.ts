@@ -13,6 +13,7 @@ export function attachEvents(log:ILogger,emitter:EventEmitter,handlerMap:{[type:
 							log.debug(`Received event ${key}`)
 						
 						handler(...args)
+						return null
 					}
 					
 				emitter.on(key,wrappedHandler)

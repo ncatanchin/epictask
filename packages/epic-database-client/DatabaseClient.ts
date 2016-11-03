@@ -241,9 +241,10 @@ export class DatabaseClient {
 			return
 		}
 
-		if (resp.error)
+		if (resp.error) {
+			log.error(`Database query failed`, pendingRequest.request,resp.error)
 			pendingRequest.deferred.reject(_.isError(resp.error) ? resp.error : new Error(resp.error as any))
-		else
+		} else
 			pendingRequest.deferred.resolve(resp.result)
 			//pendingRequest.deferred.resolve(cloneObjectShallow(resp.result))
 

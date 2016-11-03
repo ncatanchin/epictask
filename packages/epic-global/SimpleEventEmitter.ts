@@ -36,8 +36,8 @@ export class SimpleEventEmitter<ListenerType extends Function> {
 		this.emitter.removeListener(SimpleEvent,fn)
 	}
 	
-	emit(...args) {
+	emit:ListenerType = ((...args) => {
 		this.emitter.emit(SimpleEvent,...args)
-	}
+	}) as any
 	
 }

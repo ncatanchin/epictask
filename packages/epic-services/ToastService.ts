@@ -4,7 +4,9 @@ import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import { ProcessType, NotificationMessageType, UIKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
-import { PersistentValueEvent, cloneObjectShallow, NativeNotificationsEnabled } from "epic-global"
+import { PersistentValueEvent, cloneObjectShallow } from "epic-global"
+import { SettingsPath } from "epic-global/Constants"
+import { addHotDisposeHandler, acceptHot } from "epic-global/HotUtils"
 
 const
 	log = getLogger(__filename)
@@ -100,10 +102,10 @@ export class ToastService extends BaseService {
 					
 					const
 						timeout = isError ? 60000 : 5000,
-						nativeNotificationEnabled = NativeNotificationsEnabled.get()
+						{nativeNotificationsEnabled} = getSettings()
 					
-					log.info(`Native notification`, nativeNotificationEnabled, msg)
-					if (nativeNotificationEnabled && !this.pendingNotifications[msg.id]) {
+					log.info(`Native notification`, nativeNotificationsEnabled, msg)
+					if (nativeNotificationsEnabled && !this.pendingNotifications[msg.id]) {
 						const
 							title = isError ? 'an error occurred' : 'epictask'
 						
@@ -162,16 +164,23 @@ export class ToastService extends BaseService {
 	async start() {
 		await super.start()
 		
-		NativeNotificationsEnabled.on(PersistentValueEvent.Changed,this.onNotificationConfigChange)
+		const
+			settingsUnsubscribe = this.store.observe(
+				[...SettingsPath,'nativeNotificationsEnabled'],
+				this.onNotificationConfigChange)
+		
+		
 		
 		this.unsubscribe = this.store.observe(
 			[UIKey, 'messages'],
 			this.onMessagesChanged
 		)
-
-		if (module.hot)
-			module.hot.dispose(() => this.clear())
-
+		
+		addHotDisposeHandler(module,() => {
+			settingsUnsubscribe()
+			this.clear()
+		})
+		
 		return this
 	}
 
@@ -186,6 +195,4 @@ export class ToastService extends BaseService {
 
 export default ToastService
 
-if (module.hot) {
-	module.hot.accept(() => log.info('hot reload',__filename))
-}
+acceptHot(module,log)

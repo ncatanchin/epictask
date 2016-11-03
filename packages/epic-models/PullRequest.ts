@@ -1,7 +1,7 @@
 
 
 
-export class PullRequest {
+export class PullRequest implements IPullRequest {
 	url: string;
 	html_url: string;
 	diff_url: string;

@@ -41,7 +41,7 @@ _.mixin({
 		},{})
 	},
 	isPromise(o:any) {
-		return o instanceof Promise || (o && _.isFunction(o.then))
+		return o && o instanceof Promise
 	},
 	isArrayEqualBy(arr1,arr2,prop) {
 		return arr1 === arr2 ||  _.isEqual(

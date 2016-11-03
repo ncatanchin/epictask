@@ -2,10 +2,11 @@ import { List, Map, Record } from "immutable"
 import { RegisterModel } from "epic-global"
 import { ActionMessage } from "typedux"
 import { Comment, Issue, IssuesEvent, Label, Milestone } from "epic-models"
-import { TIssueEditInlineConfig, IIssueSort, IIssueFilter, EmptyIssueFilter } from "./issue"
+import { TIssueEditInlineConfig, IIssueSort, IIssueFilter, DefaultIssueFilter } from "./issue"
 import { reviveImmutable } from "epic-global"
 import { toPlainObject } from "typetransform"
 import { excludeFilterConfig, excludeFilter } from "typetransform/dist/Helpers"
+import { DefaultIssueSort } from "epic-typedux/state/issue/IIssueSort"
 
 // Refactor - so we export here too
 // export {
@@ -69,13 +70,8 @@ export const IssueStateRecord = Record({
 	
 	issueSaveError: null,
 	issueSaving: false,
-	issueSort:{
-		fields:['created_at'],
-		direction:'desc',
-		groupBy: 'none',
-		groupByDirection: 'asc'
-	} as IIssueSort,
-	issueFilter:EmptyIssueFilter
+	issueSort:DefaultIssueSort,
+	issueFilter:DefaultIssueFilter
 
 })
 

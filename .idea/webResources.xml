@@ -9,6 +9,7 @@
             <path value="file://$PROJECT_DIR$/src/assets" />
             <path value="file://$PROJECT_DIR$/packages" />
             <path value="file://$PROJECT_DIR$/packages/epic-assets" />
+            <path value="file://$PROJECT_DIR$/typings" />
           </resourceRoots>
         </entryData>
       </entry>

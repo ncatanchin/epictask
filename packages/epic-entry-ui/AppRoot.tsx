@@ -470,12 +470,12 @@ function remount() {
 	const
 		webContents = require('electron').remote.getCurrentWebContents()
 			
-	Object
-		.keys(require.cache)
-		.forEach(key => delete require.cache[key])
-	
-	render()
-	//webContents.reload()
+	// Object
+	// 	.keys(require.cache)
+	// 	.forEach(key => delete require.cache[key])
+	//
+	// render()
+	webContents.reload()
 }
 
 function themeChangeListener() {

@@ -3,7 +3,8 @@ import {
 } from 'typestore'
 
 import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
-import { AvailableRepoStore, AvailableRepo } from "epic-models"
+import { AvailableRepo } from "epic-models"
+import { AvailableRepoStore } from "epic-models/AvailableRepo"
 
 
 /**

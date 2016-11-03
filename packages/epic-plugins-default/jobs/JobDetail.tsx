@@ -13,10 +13,11 @@ import {
 	FlexColumn
 } from "epic-styles"
 import { LinearProgress } from "material-ui"
-import { JobActionFactory, TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux"
+import { TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux/state"
 import { TimeAgo, VisibleList } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
 import { LogWatcher, LogWatcherEvent, IEnumEventRemover, getValue, shallowEquals } from "epic-global"
+import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
 
 // Constants
 const log = getLogger(__filename)
@@ -140,6 +141,19 @@ export interface IJobDetailState {
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'jobs','jobs.item','jobs.detail')
 export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> {
+	
+	static contextTypes = {
+		monitorController:React.PropTypes.object
+	}
+	
+	/**
+	 * Get job monitor from context typed
+	 *
+	 * @returns {JobMonitor}
+	 */
+	private get controller() {
+		return getValue(() => (this.context as any).monitorController) as JobMonitorController
+	}
 	
 	/**
 	 * Get the current watcher
@@ -302,7 +316,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		
 		//Log Entry Row
 		return <div key={key}
-		            onClick={() => !selected && Container.get(JobActionFactory).setSelectedLogId(logItem.id)}
+		            onClick={() => !selected && this.controller.setSelectedLogId(logItem.id)}
 		            style={[
 													styles.logs.entry,
 													index < logItems.size - 1 && styles.logs.entry.divider
