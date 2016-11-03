@@ -21,7 +21,8 @@ export function makeLabelId(label:Label) {
 
 @RegisterModel
 @PouchDBModel({
-	keyMapper: makeLabelId
+	keyMapper: makeLabelId,
+	onlyMapDefinedAttributes: true
 })
 export class Label extends DefaultModel {
 
@@ -36,7 +37,7 @@ export class Label extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new Label(o)
+	static fromJS = (o:any) => !o ? null : o instanceof Label ? o : new Label(o)
 	
 	@Attribute({primaryKey:true})
 	id:number

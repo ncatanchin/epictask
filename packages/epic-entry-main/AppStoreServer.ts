@@ -5,6 +5,7 @@ import { getHot, setDataOnHotDispose, acceptHot, shortId, AppStoreServerName } f
 import { ActionFactoryProviders } from "epic-typedux/provider"
 
 import { AppStoreServerEventNames } from "epic-global"
+import {isFunction} from 'typeguard'
 import { toPlainObject } from "typetransform"
 
 
@@ -31,19 +32,6 @@ export function broadcastAppStoreAction(action) {
 		AppStoreServerEventNames.ChildStoreActionReducer, {
 			action: assign(action,{fromServer:true})
 		})
-	// Object
-	// 	.values(childStores)
-	// 	.filter(childStore => childStore.id !== (action as any).fromChildId)
-	// 	.forEach(childStore => {
-	// 		const
-	// 			{ socket, filter, id } = childStore
-	//
-	// 		try {
-	// 			ipcServer.send(socket, AppStoreServerEventNames.ChildStoreActionReducer, { id, action })
-	// 		} catch (err) {
-	// 			log.error(`Failed to send action reducer to ${id}`, err)
-	// 		}
-	// 	})
 }
 
 /**
@@ -51,8 +39,15 @@ export function broadcastAppStoreAction(action) {
  */
 namespace clientMessageHandlers {
 	
-	function childStoreDispatch({ event, leaf, type, args }) {
+	
+	/**
+	 * Dispatch Action from child process
+	 *
+	 * @param action
+	 */
+	function childStoreDispatch(action) {
 		const
+			{ fromChildId, event, leaf, type, args } = action,
 			store = getReduxStore(),
 			actionReg = getAction(leaf, type)
 		
@@ -69,11 +64,16 @@ namespace clientMessageHandlers {
 					msg = actions.newMessage(shortId(), leaf, actionReg.type, [], args, {
 						source: {
 							isReducer: true,
-							fromRenderer: true
+							fromRenderer: true,
+							fromChildId
 						}
 					})
 				
 				store.dispatch(msg)
+				
+				nextTick(() => {
+					broadcastAppStoreAction(action)
+				})
 			} else {
 				actionReg
 					.action(factory => Container.get(factory), ...args)
@@ -92,7 +92,7 @@ namespace clientMessageHandlers {
 			socket
 		}
 		const
-			state = _.toJS(getStoreState())
+			state = toPlainObject(getStoreState())
 		
 		
 		server.send(socket, AppStoreServerEventNames.ChildStoreSubscribeResponse, { id, initialState: state })
@@ -139,7 +139,8 @@ namespace clientMessageHandlers {
 	export function stateRequest(server:IPCServer, socket, event:string, { id, keyPath }) {
 		const
 			state = getStoreState(),
-			rawValue = getStateValue(...keyPath),
+			keys = (Array.isArray(keyPath) ? keyPath : [keyPath]),
+			rawValue = getStateValue(...keys),
 			value = toPlainObject(rawValue)
 		
 		log.debug(`Getting state value`, id, keyPath, rawValue, value)
@@ -170,7 +171,7 @@ namespace clientMessageHandlers {
 					oldValue = lastValue
 				}
 				
-				lastValue = newValue = _.toJS(newValue)
+				lastValue = newValue = toPlainObject(newValue)
 				server.send(socket, AppStoreServerEventNames.ObserveStateChange, { id, newValue, oldValue })
 			}
 		
@@ -287,9 +288,11 @@ function getStateValue(...keyPath) {
 		if (!val)
 			break
 		
-		let nextVal = _.isFunction(val.get) && val.get(key)
+		let nextVal =
+			isFunction(val.get) ? val.get(key) : val[ key ]
+		
 		if (!nextVal)
-			nextVal = val[ key ]
+			return null
 		
 		val = nextVal
 	}
@@ -312,13 +315,14 @@ export async function start() {
 	}
 	
 	try {
-		ipcServer = new IPCServer(AppStoreServerName, messageHandlers)
+		ipcServer = new IPCServer(AppStoreServerName, messageHandlers, true)
 		
-		log.debug(`Starting store server`)
+		log.info(`Starting IPC server`)
 		
-		await ipcServer.start()
+		await ipcServer.start().delay(500)
 		
-		log.debug(`Server started`)
+		
+		log.info(`IPC Server started`)
 	} catch (err) {
 		log.error(`Failed to start app store server, process type is ${ProcessConfig.getTypeName()}`, err)
 		

@@ -1,14 +1,20 @@
 import { ObservableStore } from "typedux"
-import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import { ProcessType, IssueKey } from "epic-global"
-import { DatabaseClientService } from "./DatabaseClientService"
 import { getIssueActions, getRepoActions } from "epic-typedux"
 import { getStores } from "epic-database-client"
 import { acceptHot } from "epic-global/HotUtils"
 import {
-	addDatabaseChangeListener
+	addDatabaseChangeListener, removeDatabaseChangeListener
 } from "epic-database-client/DatabaseClient"
 import { Issue,User ,Milestone,Label ,AvailableRepo,Comment ,Repo } from "epic-models"
+
+import { BaseService, IServiceConstructor, RegisterService } from "epic-services/internal"
+import { DatabaseClientService } from "epic-services/DatabaseClientService"
+import { nilFilter } from "epic-global/ListUtil"
+import { changesToModels, changesToDeletedIds } from "epic-database-client/DatabaseUtil"
+import { getAppActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { getValue } from "epic-global/ObjectUtil"
+import { Settings } from "epic-global/settings/Settings"
 
 const
 	log = getLogger(__filename)
@@ -17,21 +23,11 @@ const
 log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
- * Manages data state changes and takes approriate action
+ * Manages data state changes and takes appropriate action
  */
-@RegisterService(ProcessType.UI)
-export class RepoStateService extends BaseService {
+@RegisterService(ProcessType.UI,ProcessType.JobServer)
+export class UIModelWatcherService extends BaseService {
 	
-	/**
-	 * Unsubscribe from store
-	 */
-	private unsubscribe:Function
-
-	private unsubscribers = []
-	
-	private store:ObservableStore<any>
-	
-	private pendingActivityLoad:CancelablePromiseResolver
 	
 	/**
 	 * DatabaseClientService must be loaded first
@@ -46,24 +42,8 @@ export class RepoStateService extends BaseService {
 	 * Clean the repo state listeners
 	 */
 	private clean() {
-		this.unsubscribers.forEach(it => it())
-		this.unsubscribers.length = 0
-	}
-
-	private async finishPendingDeletes() {
-		try {
-			const
-				pendingRepos = (await getStores().availableRepo.findAll())
-					.filter(availRepo => availRepo.deleted)
-			
-			log.debug(`Pending ${pendingRepos.size} repos to delete`)
-			
-			pendingRepos.forEach(pendingRepo =>
-				getRepoActions().removeAvailableRepo(pendingRepo.id))
-			
-		} catch (err) {
-			log.error(`Failed to remove pending deletes`)
-		}
+		this.listeners.forEach((listener,clazz) =>
+			removeDatabaseChangeListener(clazz,listener))
 	}
 	
 	/**
@@ -72,7 +52,6 @@ export class RepoStateService extends BaseService {
 	 * @returns {Promise<BaseService>}
 	 */
 	async init():Promise<this> {
-		this.store = Container.get(ObservableStore as any) as any
 		
 		return super.init()
 	}
@@ -93,20 +72,10 @@ export class RepoStateService extends BaseService {
 			addDatabaseChangeListener(clazz,listener)
 		})
 		
-		getRepoActions().loadAvailableRepos(true)
-		
-		this.unsubscribe = this.store
-			.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
-		
-		
-		
-		// CONTINUE REMOVING ANY REPOS MARKED FOR DELETE
-		this.finishPendingDeletes()
-		
 		if (module.hot) {
 			module.hot.dispose(() => this.clean())
 		}
-
+		
 		return this
 	}
 	
@@ -118,7 +87,7 @@ export class RepoStateService extends BaseService {
 	async stop():Promise<this> {
 		this.clean()
 		return super.stop()
-
+		
 	}
 	
 	/**
@@ -133,58 +102,109 @@ export class RepoStateService extends BaseService {
 	
 	
 	/**
-	 * Watches for changes to selected issue ids
-	 */
-	private selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
-		
-		if (ProcessConfig.isType(ProcessType.JobServer))
-			return
-		
-		log.debug(`Selected issue ids updated`,selectedIssueIds)
-		if (selectedIssueIds && selectedIssueIds.length === 1) {
-			
-			log.debug(`Loading activity`)
-			const
-				{pendingActivityLoad} = this
-			
-			if (pendingActivityLoad)
-				pendingActivityLoad.cancel()
-			
-			this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
-		}
-	}
-	
-	
-	/**
 	 *
 	 * @param changes
 	 */
 	private onRepoChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on repo change`,changes)
+		
+		getRepoActions().updateRepos(
+			changesToModels<Repo>(changes)
+		)
 	}
 	
-	private onLabelChange = (changes:IDatabaseChange[]) => {
-		log.debug(`on label change`,changes)
-	}
-	
+	/**
+	 * On available repo changes, enable or deleted really
+	 *
+	 * @param changes
+	 */
 	private onAvailRepoChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on avail repo change`,changes)
+		
+		getRepoActions().onAvailableRepoChanges(
+			changesToModels<AvailableRepo>(changes),
+			changesToDeletedIds(changes)
+		)
 	}
 	
+	/**
+	 * on label changes
+	 *
+	 * @param changes
+	 */
+	private onLabelChange = (changes:IDatabaseChange[]) => {
+		log.debug(`on label change`,changes)
+		
+		getRepoActions().updateLabels(
+			changesToModels<Label>(changes),
+			changesToDeletedIds(changes)
+		)
+	}
+	
+	/**
+	 * on milestone changed
+	 *
+	 * @param changes
+	 */
 	private onMilestoneChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on milestone change`,changes)
+		
+		getRepoActions().updateMilestones(
+			changesToModels<Milestone>(changes),
+			changesToDeletedIds(changes)
+		)
 	}
 	
+	/**
+	 * On user change
+	 *
+	 * @param changes
+	 */
 	private onUserChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on user change`,changes)
+		
+		const
+			userId = getValue(() => getSettings().user.id,null),
+			users = changesToModels<User>(changes),
+			userChange = userId && users.find(it => it.id === userId)
+		
+		if (userChange) {
+			log.info(`App user info changed`,userChange)
+			const
+				appActions = getAppActions(),
+				{settings} = appActions.state
+					
+			appActions.updateSettings(settings.set('user',userChange) as Settings)
+			
+		}
+		
+			
+			
+			
+			getRepoActions().updateCollaborators(users)
 	}
 	
+	/**
+	 * On comments changed
+	 *
+	 * @param changes
+	 */
 	private onCommentChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on comment change`,changes)
+		
+		
+		getIssueActions().commentsChanged(...changesToModels<Comment>(changes))
 	}
 	
+	/**
+	 * Issues updated
+	 *
+	 * @param changes
+	 */
 	private onIssueChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on issue change`,changes)
+		
+		getIssueActions().reloadIssues(changesToModels<Issue>(changes))
 	}
 	
 	private listeners = M<IModelConstructor<any>,TDatabaseChangeListener>({
@@ -199,7 +219,7 @@ export class RepoStateService extends BaseService {
 	} as {[type:string]:TDatabaseChangeListener})
 }
 
-export default RepoStateService
+export default UIModelWatcherService
 
 
 acceptHot(module,log)

@@ -1,7 +1,10 @@
-import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"
+import msgpack from 'msgpack-lite'
+import {isString} from 'typeguard'
 import {Counter} from "epic-global"
+import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"
 import { START_TIMEOUT_DEFAULT } from "./NetworkConfig"
 import { makeIPCServerId } from "./IPCUtil"
+import IPCBufferedMessage,{ makeIPCMsgPackReadStream } from "./IPCBufferedMessage"
 
 const
 	log = getLogger(__filename),
@@ -9,7 +12,11 @@ const
 	processClientId = `epic-ipc-${ProcessConfig.getTypeName()}-${process.pid}`,
 	instanceCounter = new Counter()
 
+//log.setOverrideLevel(LogLevel.DEBUG)
 
+export interface IIPCTransportOptions extends ITransportOptions {
+	raw?:boolean
+}
 
 
 /**
@@ -19,6 +26,9 @@ const
  * @constructor
  **/
 export class IPCTransport extends Transport {
+	
+	
+	bufferedMessage:IPCBufferedMessage
 	
 	/**
 	 * IPC instance ref
@@ -43,6 +53,7 @@ export class IPCTransport extends Transport {
 	 */
 	private disconnected = false
 	
+	private raw = false
 	
 	/**
 	 * Is the transport currently connected
@@ -82,6 +93,8 @@ export class IPCTransport extends Transport {
 		return this.server
 	}
 	
+	
+	
 	/**
 	 * Get the IPC server
 	 *
@@ -100,12 +113,33 @@ export class IPCTransport extends Transport {
 		return makeIPCServerId(this.opts.hostname)
 	}
 	
+	
+	onData = (noop,data) => {
+		try {
+			const
+				{ type, msg } = data
+			
+			try {
+				this.listeners(type).forEach(listener => listener(msg))
+				
+			} catch (err) {
+				log.error(`Failed to emit ${type}`,err)
+			}
+			
+		} catch (err) {
+			log.error(`Failed to decode buf`, err)
+		}
+	}
+	
+	dataStream = makeIPCMsgPackReadStream(this.onData)
+	
 	/**
 	 * Create IPCTransport
 	 */
-	constructor(opts:ITransportOptions) {
+	constructor(opts:IIPCTransportOptions) {
 		super(opts)
 		
+		this.raw = opts.raw === true
 		
 		this.instanceClientId = `${processClientId}-${instanceCounter.increment()}`
 		this.ipc = new IPC
@@ -114,7 +148,9 @@ export class IPCTransport extends Transport {
 		assign(this.ipc.config, {
 			id: this.instanceClientId,
 			retry: 1500,
-			silent: true
+			silent: true,
+			rawBuffer: this.raw,
+			encoding: this.raw ? 'hex' : 'utf8'
 		})
 		
 	}
@@ -122,7 +158,7 @@ export class IPCTransport extends Transport {
 	/**
 	 * Connect to IPC Server
 	 */
-	async connect():Promise<void> {
+	connect():Promise<void> {
 		if (this.connectDeferred)
 			return this.connectDeferred.promise
 		
@@ -135,41 +171,81 @@ export class IPCTransport extends Transport {
 		this.ipc.connectTo(this.serverName,() => {
 			
 			// Connect
-			this.on(TransportEvents.Error,(err) => {
+			this.server.on(TransportEvents.Error,(err) => {
 				log.error(`Error ${processClientId}`,err)
 				// TODO: Implement backoff retry
 				//this.connectDeferred.resolve(true)
+				
 			})
 			
 			// Connect
-			this.on(TransportEvents.Connect,() => {
+			this.server.on(TransportEvents.Connect,() => {
 				log.info(`${processClientId} connected to ${this.serverName}`)
 				this.disconnected = false
 				this.connectDeferred.resolve(true)
+				
+				
 			})
 			
 			// Disconnect
-			this.on(TransportEvents.Disconnect,() => {
-				log.info(`Disconnected ${processClientId}`)
+			this.server.on(TransportEvents.Disconnect,() => {
+				log.info(`Disconnected ${processClientId} from ${this.serverName}`)
+				
 				// if (!this.connectDeferred.promise.isResolved())
 				// 	this.connectDeferred.reject(new Error('Connection failed'))
 				//this.disconnected = true
 			})
+			
+			
+			
+			this.server.on('data',(buf) => {
+				log.debug(`data received from ${this.serverName}`,buf)
+				//IPCBufferedMessage.handleData(this,buf,this.onData)
+				this.dataStream(null,buf)
+				
+			})
 		})
 		
-		try {
-			await this.connectDeferred
-				.promise
-				.timeout(START_TIMEOUT_DEFAULT)
-		} catch (err) {
-			log.error('Failed to connect',err)
-			try {
-				this.ipc.disconnect(this.serverName)
-			} catch (err2) {}
+		
+		return this.connectDeferred
+			.promise
+			.timeout(START_TIMEOUT_DEFAULT)
+			.catch(err => {
+				log.error('Failed to connect',err)
+				try {
+					this.ipc.disconnect(this.serverName)
+				} catch (err2) {}
+				
+				throw err
+			})
+		
+	}
+	
+	
+	
+	emit(event:string, ...args):any {
+		if (this.raw) {
+			let
+				content:any
 			
-			throw err
+			if (!isString(event)) {
+				args = [event,...args]
+				content = (args.length > 1) ? args : args[0]
+			} else {
+				content = {
+					type: event,
+					msg: (args.length > 1) ? args : args[0]
+				}
+			}
+			const
+				payload = msgpack.encode(content)
+			this.server.emit(msgpack.encode(`@@dataStart-${payload.length}`))
+			this.server.emit(payload)
+		} else {
+			this.server.emit(event,...args)
 		}
 	}
+	
 	
 	/**
 	 * Wait for connection initiation to complete

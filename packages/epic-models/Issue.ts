@@ -49,7 +49,9 @@ export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNu
 
 @RegisterModel
 @PouchDBModel({
-	keyMapper: makeIssueId
+	keyMapper: makeIssueId,
+	onlyMapDefinedAttributes: true
+	
 })
 export class Issue extends DefaultModel {
 
@@ -62,7 +64,7 @@ export class Issue extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new Issue(o)
+	static fromJS = (o:any) => !o ? null : o instanceof Issue ? o : new Issue(o)
 
 	@Attribute({primaryKey:true})
 	id: number;
@@ -108,10 +110,15 @@ export class Issue extends DefaultModel {
 	@Attribute()
 	state: TIssueState;
 
+	
 	repository_url: string;
+	
 	labels_url: string;
+	
 	comments_url: string;
+	
 	events_url: string;
+	
 	html_url: string;
 	
 	@Attribute()
@@ -157,9 +164,17 @@ export class Issue extends DefaultModel {
 	closed_by: User;
 
 
-	constructor(props = {}) {
+	constructor(props:any = {}) {
 		super()
-		Object.assign(this,props)
+		
+		Object.assign(this,props,{
+			labels: !props.labels ? [] : props.labels.map(Label.fromJS),
+			milestone: Milestone.fromJS(props.milestone),
+			closed_by: User.fromJS(props.closed_by),
+			user: User.fromJS(props.user),
+			assignee: User.fromJS(props.assignee),
+			collaborators: !props.collaborators ? [] : props.collaborators.map(User.fromJS)
+		})
 	}
 }
 

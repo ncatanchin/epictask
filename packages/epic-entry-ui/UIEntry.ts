@@ -77,18 +77,23 @@ function setupUI() {
 	loadUI(UIResourcesLoaded.promise)
 	deferred.resolve()
 	
-	// require.ensure([],function(require:any) {
-	// 	// Load Styles
-	//
-	// })
-	
 	return deferred.promise
 }
 
+
+/**
+ * UI entry point
+ */
 export class UIEntry extends ProcessClientEntry {
+	
+	/**
+	 * Create UI Entry
+	 */
 	constructor() {
 		super(ProcessType.UI)
 	}
+	
+	
 	
 	/**
 	 * Services are disabled on the database server
@@ -97,6 +102,25 @@ export class UIEntry extends ProcessClientEntry {
 	 */
 	servicesEnabled() {
 		return true
+	}
+	
+	/**
+	 * Before anything else - load up the app store
+	 */
+	protected async init() {
+		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
+		
+		log.info(`Preparing UI Modules`)
+		const
+			ctx = require.context('./services',true),
+			moduleIds = ctx.keys()
+		
+		log.info(`Loading modules`,moduleIds)
+		moduleIds.forEach(ctx)
+		log.info(`Loaded modules`,moduleIds)
+		
+		
+		UIResourcesLoaded.resolve()
 	}
 	
 	/**
@@ -123,11 +147,7 @@ export class UIEntry extends ProcessClientEntry {
 		
 	}
 	
-	async init() {
-		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
-		
-		UIResourcesLoaded.resolve()
-	}
+	
 	
 }
 

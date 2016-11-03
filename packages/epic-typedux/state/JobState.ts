@@ -3,7 +3,7 @@
 // Imports
 import {List,Map,Record} from 'immutable'
 import {RegisterModel} from "epic-global"
-import {IJob, IJobSchedule, IJobStatusDetail} from "./jobs/JobTypes"
+import { IJob, IJobSchedule, IJobStatusDetail, TJobMap } from "./jobs/JobTypes"
 import { toPlainObject } from "typetransform"
 import { reviveImmutable } from "epic-global/ModelUtil"
 
@@ -60,7 +60,7 @@ export class JobState extends JobStateRecord {
 		return this.details.find(detail => detail.id === jobId)
 	}
 	
-	all:Map<string,IJob>
+	all:TJobMap
 	details:List<IJobStatusDetail>
 	schedules:Map<string,IJobSchedule>
 	

@@ -41,6 +41,9 @@ export async function storeBuilder(enhancer = null) {
 				SynchronizedStateKeys.map(key => client.getStateValue(key))
 			)
 		
+		if (!enhancer)
+			enhancer = require('./AppStoreClientEnhancer').default
+		
 		SynchronizedStateKeys.forEach((leaf,index) => {
 			const
 				clazz = getModel(leaf),

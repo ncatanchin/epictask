@@ -79,13 +79,6 @@ export interface RegistryEntry<T> {
 
 export type TRegistry<T> = {[name:string]: RegistryEntry<T>}
 
-/**
- * Shape of model constructor
- */
-export interface IModelConstructor<T> {
-	new (...args:any[]):T
-	fromJS(o:any):T
-}
 
 export interface IToolConstructor extends React.ComponentClass<IToolProps> {
 	

@@ -1,6 +1,6 @@
-import * as uuid from "node-uuid"
+
 import { JobManagerService } from "./JobManagerService"
-import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
+import { EnumEventEmitter,uuid } from "epic-global"
 import {
 	JobStatus,
 	IJob,
@@ -9,12 +9,13 @@ import {
 	IJobStatusDetail,
 	JobLogLevelNames,
 	JobLogLevel,
-	JobActionFactory,
-	getJobActions
-} from "epic-typedux"
+	
+} from "epic-typedux/state/jobs"
+
 import { IJobExecutor } from "./JobTypes"
 import JobProgressTracker from "./JobProgressTracker"
 import fs from "fs"
+import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 
 const
@@ -47,10 +48,11 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	private started = false
 	private executor:IJobExecutor
 	private logger:IJobLogger
-	private actions:JobActionFactory
+	
 	private logFile
 	private logJSONFile
 	
+	private actions = getJobActions()
 	
 	/**
 	 * The progress tracker for the job, used to calculate progress, etc
@@ -62,7 +64,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 	constructor(public service:JobManagerService,public job:IJob,private detail:IJobStatusDetail) {
 		super(JobHandlerEventType)
 		
-		this.actions = getJobActions()
+		
 		this.progressTracker = new JobProgressTracker(this)
 		
 		this.executor = service.newExecutor(job)
@@ -121,7 +123,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 				message,
 					logDetails,
 				error,
-				id: uuid.v4()
+				id: uuid()
 			}) + '\n')
 			//JobDAO.logRecord(this.job.id,uuid.v4(),level,message,Date.now(), error,...details)
 		} catch (err) {
@@ -153,7 +155,7 @@ export class JobHandler extends EnumEventEmitter<JobHandlerEventType> {
 		} catch (err) {
 			log.error(`Progress update failed`,err)
 		}
-	},500)
+	},3000)
 	
 	/**
 	 * Start the handler

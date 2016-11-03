@@ -72,9 +72,15 @@ async function stopWorker(workerEntry,workerStop,exitCode = 0) {
  *
  * @param processType
  * @param workerEntry
+ * @param workerInit
  * @param workerStart
  */
-async function startProcessClient(processType:ProcessType, workerEntry:ProcessClientEntry, workerStart:() => Promise<any>) {
+async function startProcessClient(
+	processType:ProcessType,
+	workerEntry:ProcessClientEntry,
+	workerInit:() => Promise<any>,
+	workerStart:() => Promise<any>
+) {
 	
 	// If already initialized then return
 	if (startDeferred)
@@ -95,7 +101,9 @@ async function startProcessClient(processType:ProcessType, workerEntry:ProcessCl
 	
 	// Now bind to all the process events
 	ipcRenderer.on('message',(event,{type,body}) => {
-		const handler = ProcessClient.getMessageHandler(type)
+		const
+			handler = ProcessClient.getMessageHandler(type)
+		
 		assert(handler,`No handler defined for ${type}`)
 		
 		handler(type,body)
@@ -103,7 +111,7 @@ async function startProcessClient(processType:ProcessType, workerEntry:ProcessCl
 	
 	log.info(`Starting Worker Entry`)
 	try {
-		await workerEntry.init()
+		await workerInit()
 		
 		if (workerEntry.servicesEnabled()) {
 			log.info('Starting all services')
@@ -113,7 +121,7 @@ async function startProcessClient(processType:ProcessType, workerEntry:ProcessCl
 		}
 		
 		await workerStart()
-		
+		log.info(`Worker start successfully`)
 		
 		
 		startDeferred.resolve(true)
@@ -140,7 +148,7 @@ export abstract class ProcessClientEntry {
 	 * @param processType
 	 */
 	constructor(private processType:ProcessType) {
-		startProcessClient(processType,this, () => this.start())
+		startProcessClient(processType,this, () => this.init(),() => this.start())
 	}
 	
 	/**
@@ -149,6 +157,10 @@ export abstract class ProcessClientEntry {
 	 * @returns {boolean}
 	 */
 	servicesEnabled() {
+		return true
+	}
+	
+	stateStoreEnabled() {
 		return true
 	}
 	
@@ -175,7 +187,7 @@ export abstract class ProcessClientEntry {
 	}
 	
 	
-	async init() {
+	protected async init() {
 		
 	}
 	

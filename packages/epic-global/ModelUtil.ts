@@ -101,15 +101,7 @@ export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [
 	
 
 	const makeInstance = () => {
-		const
-			props = Object.assign(
-				{},
-				isMap(val) ?
-					val.toObject() :
-					val
-			)
-		
-		return new (type as any)(props)
+		return new (type as any)(val)
 	}
 	
 	return val && val instanceof type ?

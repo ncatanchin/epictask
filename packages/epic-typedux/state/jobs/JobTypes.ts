@@ -1,3 +1,5 @@
+
+import {Map} from 'immutable'
 /**
  * All the available job types
  */
@@ -102,7 +104,7 @@ export interface IJob {
 /**
  * Type for ref map to jobs
  */
-export type TJobMap = {[id:string]:IJob}
+export type TJobMap = Map<string,IJob>
 
 /**
  * Job level string literals

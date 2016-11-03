@@ -76,7 +76,7 @@ export const ProcessNames = new Proxy({},{
  * Global process names
  */
 export const
-	AppStoreServerName = ProcessNames.UI,
+	AppStoreServerName = "AppStoreServer",
 	DatabaseServerName = ProcessNames.DatabaseServer
 
 

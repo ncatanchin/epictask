@@ -43,7 +43,7 @@ export class AvailableRepo extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new AvailableRepo(o)
+	static fromJS = (o:any) => !o ? null : o instanceof AvailableRepo ? o : new AvailableRepo(o)
 	
 	/**
 	 * id, equals repoId, equals repo.id

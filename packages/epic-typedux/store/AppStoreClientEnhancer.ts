@@ -2,6 +2,7 @@
 
 
 import { sendStoreAction } from "epic-typedux/store/AppStoreClient"
+import { SynchronizedStateKeys } from "epic-global/Constants"
 
 const
 	log = getLogger(__filename),
@@ -35,7 +36,7 @@ function appStoreEnhancer(storeCreator) {
 					newState = store.getState()
 				
 				// IF CHANGED - SEND TO CHILDREN
-				if (!fromServer && state !== newState) {
+				if (SynchronizedStateKeys.includes(action.leaf) &&  !fromServer && state !== newState) {
 					
 					// If it's a reducer then process it, otherwise - wait for server
 					// to process the action and send data

@@ -1,13 +1,12 @@
 import {
-	OnlyIfFn,
 	writeFile, getHot, getUserDataFilename, writeFileAsync
 } from "epic-global"
 
 import { IFilterConfig, fromPlainObject, toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 import { readFileAsync } from "epic-global/Files"
 import { AppKey, JobKey } from "epic-global/Constants"
-import {Map} from 'immutable'
 import { isMap } from "typeguard"
+import msgpack from 'msgpack-lite'
 
 const
 	log = getLogger(__filename),
@@ -23,7 +22,9 @@ let
  *
  * @type {IFilterConfig}
  */
-const MainFilterConfig = excludeFilterConfig()
+const MainFilterConfig = excludeFilterConfig(
+	...excludeFilter(/JobState\.(all|details)/)
+)
 
 /**
  * Clients do not persist AppState or JobState
@@ -49,8 +50,6 @@ export function serializeState(state = null, filter:IFilterConfig = null) {
 			state.keySeq().toArray() :
 			Object.keys(state),
 		
-	
-	
 		plainObject = toPlainObject(
 			leafs.reduce((cleanState,leaf) => {
 				const
@@ -65,7 +64,7 @@ export function serializeState(state = null, filter:IFilterConfig = null) {
 			filterConfig
 		)
 	
-	return JSON.stringify(plainObject)
+	return msgpack.encode(plainObject) // JSON.stringify(plainObject)
 }
 
 
@@ -110,37 +109,22 @@ export function configureStorePersistence(store,getStoreStateIn) {
 		const
 			serializedState = serializeState(state)
 		
-		if (doAsync)
+		if (doAsync) {
 			return Promise
 				.resolve(writeFileAsync(stateFilename, serializedState))
 				.catch(err => {
 					log.error('state persistence failed', err)
 				})
 				.finally(() => persistingState = false)
-		
-		try {
-			writeFile(stateFilename, serializedState)
-		} catch (err) {
-			log.error(`Failed to persist store state`, err)
+		} else {
+			try {
+				writeFile(stateFilename, serializedState)
+			} catch (err) {
+				log.error(`Failed to persist store state`, err)
+			}
+			persistingState = false
+			return Promise.resolve()
 		}
-		persistingState = false
-		return Promise.resolve()
-	}
-	
-	/**
-	 * Is persistence allowed
-	 * @returns {any|boolean}
-	 */
-	function canPersistState() {
-		// const
-		// 	canPersist = ProcessConfig.isType(ProcessType.UI)
-		//
-		// if (!canPersist)
-		// 	log.debug(`Can not persist state in process=${ProcessConfig.getTypeName()}`)
-		//
-		//return canPersist
-		return true
-		
 	}
 	
 	/**
@@ -155,7 +139,16 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	
 	// SUBSCRIBE TO SYSTEM EVENTS & UPDATES
 	if (Env.isMain) {
-		require('electron').app.on('will-quit',() => writeStoreState(false))
+		const
+			{app} = require('electron'),
+			makeStatePersist = name => () => {
+				console.log(`Saving state ${name}`)
+				writeStoreState(false)
+			}
+		
+		process.on('beforeExit',makeStatePersist('processBeforeExit'))
+		app.on('before-quit',makeStatePersist('eBeforeQuit'))
+		app.on('will-quit',makeStatePersist('eWillQuit'))
 	}
 	store.subscribe(onChange)
 	
@@ -192,7 +185,7 @@ export async function loadStateFromDisk() {
 		// If state server then try and load from disk
 		const
 			stateData = await readFileAsync(stateFilename),
-			stateJson = stateData && JSON.parse(stateData)
+			stateJson = stateData && msgpack.decode(stateData)// JSON.parse(stateData)
 		
 		
 		state = stateJson && fromPlainObject(stateJson)

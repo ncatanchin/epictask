@@ -37,6 +37,7 @@ import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import ProcessType from "epic-entry-shared/ProcessType"
+import { shallowEquals } from "epic-global/ObjectUtil"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -226,67 +227,258 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		availableRepo[field] = value
 		
 		// ON NEXT TICK UPDATE ISSUES
-		setImmediate(() => {
-			getIssueActions()
-				.refillResourcesForRepo(
-					availableRepo,
-					field === 'milestones' ?
-						'milestone' :
-						'labels'
-				)
+		if (['milestone','labels'].includes(field))
+			setImmediate(() => {
+				getIssueActions()
+					.refillResourcesForRepo(
+						availableRepo,
+						field === 'milestones' ?
+							'milestone' :
+							'labels'
+					)
 		})
 		
-		return state.set('availableRepos', availableRepos.set(index,availableRepo))
+		return state.set('availableRepos', availableRepos.set(index,availableRepo)) as RepoState
+	}
+	
+	/**
+	 * Update available repos
+	 *
+	 * @param availRepos
+	 * @param deletedIds
+	 * @returns {(state:RepoState)=>(RepoState|Map<(value:Map<any, any>)=>Map<any, any>, V>)}
+	 */
+	@ActionReducer()
+	onAvailableRepoChanges(availRepos:AvailableRepo[],deletedIds:number[] = []) {
+		
+		return (state:RepoState) => {
+			
+			const
+				repoIds = availRepos.map(it => it.id),
+				affectedRepos = state
+					.availableRepos
+					
+					// CHECK NOT DELETED && THEN CHECK FOR CHANGES
+					.filter((it:AvailableRepo) => deletedIds.includes(it.id) ||
+						!!availRepos.find(availRepo => availRepo.id === it.id &&
+							!shallowEquals(it,availRepo,'enabled','deleted'))
+					
+					)
+			
+				// availRepos = state.availableRepos
+				// 	.filter(it => repoIds.includes(it.id)) as List<AvailableRepo>
+			
+			if (!affectedRepos.size)
+				return state
+			
+			
+			return state.withMutations((newState:RepoState) => {
+				
+				
+				let
+					updatedAvailRepos = newState.availableRepos
+				
+				newState.availableRepos.forEach((availRepo,index) => {
+					
+					// WE NEED ACCURATE INDEXES - SO THIS INSTEAD OF FILTERING
+					if (!repoIds.includes(availRepo.id))
+						return
+					
+					const
+						changedAvailRepo = availRepos.find(it => it.id === availRepo.id),
+						updatedAvailRepo = cloneObjectShallow(availRepo,_.pick(changedAvailRepo,'deleted','enabled'))
+					
+					updatedAvailRepos = updatedAvailRepos
+						.set(index,updatedAvailRepo) as any
+					
+				})
+				
+				// FINALLY FILTER OUT ALL THE DELETES
+				updatedAvailRepos = updatedAvailRepos.filter(it =>
+					!it.deleted && !deletedIds.includes(it.id)) as any
+				
+				return newState.set('availableRepos',updatedAvailRepos) as RepoState
+			})
+		}
+	}
+	
+	/**
+	 * On repo change - make some updates ;)
+	 *
+	 * @param repos
+	 * @returns {(state:RepoState)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
+	 */
+	@ActionReducer()
+	updateRepos(repos:Repo[]) {
+		return (state:RepoState) => {
+			
+			const
+				repoIds = repos.map(it => it.id),
+				availRepos = state.availableRepos.filter(it => repoIds.includes(it.id)) as List<AvailableRepo>
+				
+			if (!availRepos.size)
+				return state
+			
+			
+			return state.withMutations((newState:RepoState) => {
+				
+				let
+					updatedAvailRepos = newState.availableRepos
+				
+				newState.availableRepos.forEach((availRepo,index) => {
+					
+					// WE NEED ACCURATE INDEXES - SO THIS INSTEAD OF FILTERING
+					if (!repoIds.includes(availRepo.id))
+						return
+					
+					const
+						repo = repos.find(it => it.id === availRepo.id),
+						updatedRepo = cloneObjectShallow(availRepo.repo,repo),
+						updatedAvailRepo = cloneObjectShallow(availRepo,{
+							repo:updatedRepo
+						})
+					
+					updatedAvailRepos = updatedAvailRepos
+						.set(index,updatedAvailRepo) as any
+					
+				})
+				
+				return newState.set('availableRepos',updatedAvailRepos) as RepoState
+			})
+		}
 	}
 	
 	
 	/**
 	 * Update milestones on state
 	 *
-	 * @param repoId
 	 * @param milestones
+	 * @param deletedIds
 	 */
 	@ActionReducer()
-	updateMilestones(repoId:number,...milestones:Milestone[]) {
-		return (state:RepoState) => this.patchAvailableRepo(state,repoId,'milestones',milestones)
+	updateMilestones(milestones:Milestone[], deletedIds:number[] = []) {
+		return (state:RepoState) => {
+			
+			const
+				updatedMilestoneIds = milestones.map(it => it.id).concat(deletedIds),
+				{availableRepos} = state
+			
+			return state.withMutations((newState:RepoState) => {
+				
+				// ITERATE REPOS, UPDATING ALL
+				availableRepos.forEach(availableRepo => {
+					
+					const
+						repoId = availableRepo.id,
+						repoMilestones = milestones.filter(it =>it.repoId === repoId)
+					
+					if (!repoMilestones.length)
+						return
+					
+					// TODO: As we move back to general data management with requests, etc - we should simply do allLoadedUsers.filter(repoIds.includes(repoId)
+					
+					// THIS FILTERS UPDATES AND DELETES
+					let
+						updatedMilestones =  (availableRepo.milestones || [])
+							.filter(milestone => !updatedMilestoneIds.includes(milestone.id))
+							.concat(repoMilestones)
+					
+					
+					newState = this.patchAvailableRepo(newState,repoId,'milestones',updatedMilestones)
+				})
+				
+				return newState
+			})
+			
+		}
 	}
 	
 	/**
 	 * Update labels on state
 	 *
-	 * @param repoId
 	 * @param labels
+	 * @param deletedIds
 	 */
 	@ActionReducer()
-	updateLabels(repoId:number,...labels:Label[]) {
-		return (state:RepoState) => this.patchAvailableRepo(state,repoId,'labels',labels)
+	updateLabels(labels:Label[], deletedIds:number[] = []) {
+		return (state:RepoState) => {
+			
+			const
+				updatedLabelIds = labels.map(it => it.id).concat(deletedIds),
+				{availableRepos} = state
+			
+			return state.withMutations((newState:RepoState) => {
+				
+				// ITERATE REPOS, UPDATING ALL
+				availableRepos.forEach(availableRepo => {
+					
+					const
+						repoId = availableRepo.id,
+						repoLabels = labels.filter(it =>it.repoId === repoId)
+					
+					if (!repoLabels.length)
+						return
+					
+					// TODO: As we move back to general data management with requests, etc - we should simply do allLoadedUsers.filter(repoIds.includes(repoId)
+					
+					// THIS FILTERS UPDATES AND DELETES
+					let
+						updatedLabels =  (availableRepo.labels || [])
+							.filter(label => !updatedLabelIds.includes(label.id))
+							.concat(repoLabels)
+					
+					
+					newState = this.patchAvailableRepo(newState,repoId,'labels',updatedLabels)
+				})
+				
+				return newState
+			})
+			
+		}
 	}
 	
 	/**
 	 * Update assignees on state
 	 *
-	 * @param repoId
 	 * @param collaborators
 	 */
 	@ActionReducer()
-	updateCollaborators(repoId:number,...collaborators:User[]) {
+	updateCollaborators(collaborators:User[]) {
 		return (state:RepoState) => {
+			
 			const
-				availableRepo = state.availableRepos.find(it => it.id === repoId)
+				updatedCollabIds = collaborators.map(it => it.id),
+				{availableRepos} = state
 			
-			if (!availableRepo) {
-				log.error(`Unable to find repo ${repoId} on state - can not update assignees`)
-				return state
-			}
-			
-			collaborators = !availableRepo.collaborators ?
-				collaborators :
-				availableRepo
-					.collaborators
-					.filter(it => !collaborators.find(newCollab => newCollab.id === it.id))
-					.concat(collaborators)
-			
-			return this.patchAvailableRepo(state,repoId,'collaborators',collaborators)
+			return state.withMutations((newState:RepoState) => {
+				
+				// ITERATE REPOS, UPDATING ALL
+				availableRepos.forEach(availableRepo => {
+					
+					const
+						repoId = availableRepo.id,
+						repoCollabs = collaborators.filter(it =>
+							it.repoIds && it.repoIds.includes(repoId)
+						)
+					
+					
+					if (!repoCollabs.length)
+						return
+					
+					// TODO: As we move back to general data management with requests, etc - we should simply do allLoadedUsers.filter(repoIds.includes(repoId)
+					
+					// THIS FILTERS UPDATES AND DELETES
+					let
+						updatedCollabs =  availableRepo
+							.collaborators
+							.filter(collab => !updatedCollabIds.includes(collab.id))
+							.concat(repoCollabs)
+					
+					newState = this.patchAvailableRepo(newState,repoId,'collaborators',updatedCollabs)
+				})
+				
+				return newState
+			})
 		}
 	}
 	

@@ -1,15 +1,17 @@
 import { JobHandler, JobHandlerEventType } from "./JobHandler"
-
-import { IEnumEventRemover, JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
-import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux"
 import { IJobExecutorConstructor, IJobExecutor } from "./JobTypes"
-import { BaseService, RegisterService, IServiceConstructor } from "epic-services"
-import { DatabaseClientService } from "epic-services/DatabaseClientService"
-import { clientObserveState, getStateValue } from "epic-typedux/store/AppStoreClient"
-//import { loadAllExecutors } from "epic-entry-job-server/JobExecutors"
+import { IEnumEventRemover, JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
+import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux/state/jobs"
+import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
+import { jobsSelector, jobDetailsSelector } from "epic-typedux/selectors/JobSelectors"
+import { ObservableStore } from "typedux"
+import { TJobMap } from "epic-typedux/state/jobs/JobTypes"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
+// DEBUG
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 export type TJobExecutorClassMap = {[name:string]:IJobExecutorConstructor}
@@ -19,8 +21,6 @@ export interface IJobContainer {
 	handler:JobHandler
 	job:IJob
 }
-
-export type TJobMap= {[name:string]:IJobContainer}
 
 
 // Singleton ref
@@ -61,6 +61,7 @@ export class JobManagerService extends BaseService {
 		return jobManager
 	}
 	
+	private store:ObservableStore<any>
 	
 	private killed = false
 
@@ -77,7 +78,7 @@ export class JobManagerService extends BaseService {
 	 *
 	 * @type {TJobIMap}
 	 */
-	private workingJobs:TJobMap = {}
+	private workingJobs = M<string,IJobContainer>().asMutable()
 	
 	
 	
@@ -87,6 +88,8 @@ export class JobManagerService extends BaseService {
 	private unsubscriber:Function
 	
 	dependencies(): IServiceConstructor[] {
+		const
+			{DatabaseClientService} = require("epic-services/DatabaseClientService") as any
 		return [DatabaseClientService]
 	}
 	
@@ -148,6 +151,8 @@ export class JobManagerService extends BaseService {
 	
 	
 	async init():Promise<any> {
+		this.store = Container.get(ObservableStore as any) as any
+		
 		return super.init()
 	}
 	
@@ -159,17 +164,15 @@ export class JobManagerService extends BaseService {
 	 */
 	async start():Promise<this> {
 		log.info("Load executors")
-		//loadAllExecutors()
 		
 		
-		this.unsubscriber = await clientObserveState([JobKey, 'all'], this.onJobsUpdated)
-		
+		this.unsubscriber =  this.store.observe([JobKey, 'all'], this.onJobsUpdated)
 		
 		// Execute default jobs
-		const allJobs = await getStateValue(JobKey,'all')
+		const
+			allJobs = jobsSelector(getStoreState())
+		
 		await this.onJobsUpdated(allJobs)
-		
-		
 		
 		// Watch for job updates
 		log.debug('Subscribe for state updates')
@@ -182,20 +185,20 @@ export class JobManagerService extends BaseService {
 	 *
 	 * @param jobs
 	 */
-	onJobsUpdated = async (jobs:{[id:string]:IJob}) => {
+	onJobsUpdated = async (jobs:TJobMap) => {
 		log.debug(`Checking jobs`,jobs)
 		
 		try {
 			const
-				newJobs = Object
-					.values(jobs)
+				newJobs = jobs
+					.valueSeq()
 					.filter(job =>
 					job &&
-					job.status === JobStatus.Created && !this.workingJobs[ job.id ]),
+					job.status === JobStatus.Created && !this.workingJobs.has(job.id)),
 				
-				details = await getStateValue(JobKey, 'details')
+				details = jobDetailsSelector(this.store.getState())
 			
-			log.debug(`Found ${newJobs.length} new jobs, executing now`)
+			log.debug(`Found ${newJobs.size} new jobs, executing now`)
 			
 			newJobs.forEach(job => {
 				this.execute(job, details.find(detail => detail.id === job.id))
@@ -215,11 +218,11 @@ export class JobManagerService extends BaseService {
 	 * @param detail
 	 */
 	onJobEvent = (event:JobHandlerEventType, handler:JobHandler, job:IJob, detail:IJobStatusDetail) => {
-		const workingJob = this.workingJobs[job.id]
+		const workingJob = this.workingJobs.get(job.id)
 		
 		if (workingJob && job.status >= JobStatus.Completed) {
 			log.debug(`Removing ${job.name} (${job.id}) from working job list`)
-			delete this.workingJobs[job.id]
+			this.workingJobs.remove(job.id)
 			
 			this.checkPendingQueue()
 		}
@@ -250,7 +253,7 @@ export class JobManagerService extends BaseService {
 	 * @returns {JobHandler}
 	 */
 	execute = (job:IJob,detail:IJobStatusDetail) => {
-		if (Object.keys(this.workingJobs).length > JobsMaxConcurrency) {
+		if (this.workingJobs.size > JobsMaxConcurrency) {
 			log.debug(`Job is pending, max concurrency reached`,job,JobsMaxConcurrency)
 			pendingJobQueue.push({job,detail})
 			return
@@ -263,11 +266,11 @@ export class JobManagerService extends BaseService {
 			// Attach to all events
 			eventRemovers:IEnumEventRemover[] = handler.onAll(this.onJobEvent)
 
-		this.workingJobs[job.id] = {
+		this.workingJobs.set(job.id, {
 			eventRemovers,
 			handler,
 			job
-		}
+		})
 		
 		log.debug(`Executing Job ${job.name} (${job.id})`)
 		handler.execute()
@@ -291,12 +294,13 @@ export class JobManagerService extends BaseService {
 	findJob(nameOrId) {
 		if (this.killed) return null
 
-		const workingJobs = this.workingJobs
-		const container = this.workingJobs[nameOrId] || Object
-			.values(workingJobs)
-			.find(({handler}) =>
-				handler.job.status < JobStatus.Completed &&
-				handler.job.name === nameOrId)
+		const
+			workingJobs = this.workingJobs,
+			container = this.workingJobs.get(nameOrId) || workingJobs
+				.valueSeq()
+				.find(({handler}) =>
+					handler.job.status < JobStatus.Completed &&
+					handler.job.name === nameOrId)
 
 		return container ? container.handler.job : null
 
@@ -310,7 +314,7 @@ export class JobManagerService extends BaseService {
 		if (this.unsubscriber)
 			this.unsubscriber()
 		
-		this.workingJobs = {}
+		this.workingJobs.clear()
 	}
 	
 	

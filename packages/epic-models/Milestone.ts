@@ -17,7 +17,8 @@ export function makeMilestoneId(milestone:Milestone) {
 
 @RegisterModel
 @PouchDBModel({
-	keyMapper: makeMilestoneId
+	keyMapper: makeMilestoneId,
+	onlyMapDefinedAttributes: true
 })
 export class Milestone extends DefaultModel {
 
@@ -35,7 +36,7 @@ export class Milestone extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new Milestone(o)
+	static fromJS = (o:any) => !o ? null : o instanceof Milestone ? o : new Milestone(o)
 
 
 	@Attribute({primaryKey:true})
@@ -43,29 +44,54 @@ export class Milestone extends DefaultModel {
 
 	@Attribute()
 	repoId:number
-
+	
+	@Attribute()
 	url: string
+	
+	
 	html_url: string
+	
+	@Attribute()
 	labels_url: string
-
-
+	
+	@Attribute()
 	number: number
 
 	@Attribute()
 	state: string
+	
+	@Attribute()
 	title: string
+	
+	@Attribute()
 	description: string
+	
+	@Attribute()
 	creator: User
+	
+	@Attribute()
 	open_issues: number
+	
+	@Attribute()
 	closed_issues: number
+	
+	@Attribute()
 	created_at: Date
+	
+	@Attribute()
 	updated_at: Date
+	
+	@Attribute()
 	closed_at: Date
+	
+	@Attribute()
 	due_on: Date
 
-	constructor(props = {}) {
+	constructor(props:any = {}) {
 		super()
-		Object.assign(this,props)
+		Object.assign(this,props,{
+			user: User.fromJS(props.creator)
+		})
 	}
 }
 

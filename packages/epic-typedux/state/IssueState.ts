@@ -99,6 +99,7 @@ export class IssueState extends IssueStateRecord {
 		return toPlainObject(this,excludeFilterConfig(
 		...excludeFilter(
 			'activityLoading',
+			'issues',
 			/^edit/,
 			/^issueSav/
 		)))

@@ -1,12 +1,8 @@
-import {JobKey} from "epic-global"
-
-import {createDeepEqualSelector} from  "epic-global"
-
-import {JobState } from "../state/JobState"
-import {IJob, TJobMap, IJobStatusDetail,IJobAndStatusDetail} from "../state/jobs"
-import {TSelector, TRootState} from "epic-global"
+import { JobKey, createDeepEqualSelector, TSelector, TRootState } from "epic-global"
+import { JobState } from "../state/JobState"
+import { IJob, TJobMap, IJobStatusDetail, IJobAndStatusDetail } from "../state/jobs"
 import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
-import {createSelector} from 'reselect'
+import { createSelector } from "reselect"
 import { UIState } from "epic-typedux/state/UIState"
 
 
@@ -21,20 +17,13 @@ export const jobStateSelector:TSelector<JobState> =
 	(state):JobState => state.get(JobKey) as JobState
 
 
-/**
- * Get all jobs
- */
-export const jobSelector:TSelector<TJobMap> = createDeepEqualSelector(
-	(state:TRootState,props) => jobStateSelector(state).all.get(props.jobId),
-	(job:IJob) => job
-)
 
 /**
  * Get all jobs
  */
-export const jobsSelector:TSelector<{[id:string]:IJob}> = createDeepEqualSelector(
+export const jobsSelector:TSelector<TJobMap> = createSelector(
 	jobStateSelector,
-	(state:JobState) => state.all.toJS()
+	(state:JobState) => state.all
 )
 
 export const jobLogIdSelector:TSelector<string> = createSelector(

@@ -5,13 +5,16 @@ import { REQUEST_TIMEOUT, Transport, getDefaultTransport } from "epic-net"
 import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
 import {ActionMessage} from 'typedux'
 import { ActionMessageFilter } from "epic-typedux/filter"
-import { AppStoreServerEventNames } from "epic-global"
+import { getValue,AppStoreServerEventNames } from "epic-global"
 import { fromPlainObject } from "typetransform"
+
 
 
 const
 	log = getLogger(__filename),
 	id = `${ProcessConfig.getTypeName()}-${process.pid}`
+
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	storeReady = false,
@@ -24,7 +27,7 @@ let
  */
 function pushStoreAction(...actions) {
 	const
-		store = storeReady && getReduxStore()
+		store = getValue(() => storeReady && getReduxStore())
 	
 	if (!store) {
 		const
@@ -220,8 +223,9 @@ function connect():Promise<any> {
 	
 	if (!transport) {
 		transport = getDefaultTransport({
-			hostname: AppStoreServerName
-		})
+			hostname: AppStoreServerName,
+			raw: true
+		} as any)
 		
 		log.info(`Connecting to store server`)
 		
@@ -255,14 +259,16 @@ function attachEvents(transport) {
 	
 	
 	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({action}) => {
-		
+		log.debug(`Received reducer action from server`,action)
 		// if (!childStoreWrapper)
 		// 	return log.error(`Unknown child store ${id}`)
 		//
 		const
-			{windowId} = action
+			{fromChildId,fromWindowId,windowId} = action,
+			ids = [fromChildId,fromWindowId,windowId],
+			isNewAction = !ids.includes(id) && !ids.includes(getWindowId())
 		
-		if (windowId === getWindowId()) {
+		if (!isNewAction) {
 			log.debug(`I sent this so no need to dispatch again`)
 			return
 		}
@@ -274,7 +280,9 @@ function attachEvents(transport) {
 	 * Handle observe state change
 	 */
 	transport.on(AppStoreServerEventNames.ObserveStateChange, ({ id, newValue, oldValue }) => {
-		const observer = observers[ id ]
+		const
+			observer = observers[ id ]
+		
 		if (!observer) {
 			log.error(`Received a message for id ${id} - but no observer found`)
 		}

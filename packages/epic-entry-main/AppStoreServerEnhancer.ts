@@ -1,5 +1,6 @@
 
 import { broadcastAppStoreAction } from "./AppStoreServer"
+import { getValue } from "epic-global/ObjectUtil"
 
 const
 	log = getLogger(__filename),
@@ -28,10 +29,12 @@ function appStoreServerEnhancer(storeCreator) {
 			storeDotDispatch(action)
 			
 			const
+				{fromChildId} = action,
+				fromRenderer = getValue(() => action.source.fromRenderer),
 				newState = store.getState()
 			
 			// IF CHANGED - SEND TO CHILDREN
-			if (state !== newState) {
+			if (!fromChildId && !fromRenderer && state !== newState) {
 				nextTick(() => broadcastAppStoreAction(action))
 			}
 		}

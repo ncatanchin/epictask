@@ -1,14 +1,11 @@
+import {BaseService, RegisterService, IServiceConstructor} from "epic-services/internal"
 
 import DefaultJobSchedules from './JobSchedules'
 import {IJobSchedule} from "epic-typedux"
-import {BaseService, RegisterService, IServiceConstructor} from "epic-services"
-import {JobManagerService} from "./JobManagerService"
-import {JobActionFactory} from "epic-typedux"
-
 import { JobKey, ProcessType } from "epic-global"
-import { getActionClient } from "epic-typedux/store/AppStoreClient"
+import {JobManagerService} from "./JobManagerService"
 import { JobDAO } from "epic-typedux/state/jobs/JobDAO"
-
+import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 const log = getLogger(__filename)
 
 
@@ -44,10 +41,6 @@ export class JobSchedulerService extends BaseService {
 	private schedules:TJobScheduleMap = {}
 	
 	
-	/**
-	 * Job actions
-	 */
-	private actions:JobActionFactory
 	
 	/**
 	 * Constructor ensures singleton
@@ -55,7 +48,6 @@ export class JobSchedulerService extends BaseService {
 	constructor() {
 		super()
 		
-		this.actions = getActionClient(JobKey)
 		assert(!jobScheduler,`Job Scheduler can only be instantiated once`)
 	}
 	
@@ -111,7 +103,7 @@ export class JobSchedulerService extends BaseService {
 		const allSchedules = Object.values(this.schedules).map(wrapper => wrapper.schedule)
 		
 		// Set on state
-		this.actions.setSchedules(...allSchedules)
+		getJobActions().setSchedules(...allSchedules)
 	}
 	
 	/**

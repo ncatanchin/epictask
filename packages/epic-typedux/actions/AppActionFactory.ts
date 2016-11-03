@@ -91,6 +91,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	
+	
 	/**
 	 * Update app settings
 	 *
@@ -100,6 +101,8 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	@ActionReducer()
 	updateSettings(newSettings:Settings) {
 		return (state:AppState) => {
+			if (!(newSettings instanceof Settings))
+				newSettings = new Settings(newSettings)
 			return state.set('settings', newSettings).set('user', newSettings.user)
 		}
 	}

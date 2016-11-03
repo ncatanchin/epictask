@@ -13,7 +13,9 @@ import {RegisterModel} from 'epic-global'
  * User model from GitHub schema
  */
 @RegisterModel
-@Model()
+@Model({
+	onlyMapDefinedAttributes: true
+})
 export class User extends DefaultModel {
 
 	/**
@@ -21,7 +23,9 @@ export class User extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new User(o)
+	static fromJS = (o:any) => {
+		return !o ? null : o instanceof User ? o : new User(o)
+	}
 
 	@Attribute({primaryKey:true})
 	id: number;
@@ -49,34 +53,28 @@ export class User extends DefaultModel {
 	
 	@Attribute()
 	url: string;
-	html_url: string;
 	
-	@Attribute()
-	followers_url: string;
-	
-	@Attribute()
-	following_url: string;
-	
-	@Attribute()
-	gists_url: string;
-	
-	@Attribute()
-	starred_url: string;
-	
-	@Attribute()
-	subscriptions_url: string;
-	
-	@Attribute()
-	organizations_url: string;
-	
-	@Attribute()
-	repos_url: string;
-	
-	@Attribute()
-	events_url: string;
-	
-	@Attribute()
-	received_events_url: string;
+	//
+	// html_url: string;
+	//
+	//
+	// followers_url: string;
+	//
+	// following_url: string;
+	//
+	// gists_url: string;
+	//
+	// starred_url: string;
+	//
+	// subscriptions_url: string;
+	//
+	// organizations_url: string;
+	//
+	// repos_url: string;
+	//
+	// events_url: string;
+	//
+	// received_events_url: string;
 	
 	@Attribute()
 	type: string;

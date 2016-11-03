@@ -1,4 +1,6 @@
 import {Repo as TSRepo,IModel} from 'typestore'
+import { nilFilter } from "epic-global/ListUtil"
+import { getValue } from "epic-global/ObjectUtil"
 
 const
 	CHUNK_SIZE = 50,
@@ -84,6 +86,29 @@ export function chunkRemove(modelIds,repo:TSRepo<any>) {
 	return repo.bulkRemove(...modelIds)
 }
 
+/**
+ * Convert changes to models
+ *
+ * @param changes
+ * @returns {T[]}
+ */
+export function changesToModels<T>(changes:IDatabaseChange[]):T[] {
+	return nilFilter(changes.map(it => it.model)) as T[]
+}
+
+/**
+ * Convert change list to deleted ids
+ *
+ * @param changes
+ * @returns {number[]}
+ */
+export function changesToDeletedIds(changes:IDatabaseChange[]):number[] {
+	return nilFilter(
+		changes
+			.filter(it => it.deleted)
+			.map(it => getValue(() => it.model.id,null))
+	) as number[]
+}
 
 // /**
 //  * Bulk remove models

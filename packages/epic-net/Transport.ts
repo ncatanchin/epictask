@@ -1,4 +1,5 @@
 import {EventEmitter} from "events"
+import { clearArray } from "epic-global/ObjectUtil"
 
 const
 	log = getLogger(__filename)
@@ -30,6 +31,7 @@ export interface ITransportOptions {
 	hostname?:string
 	url?:string
 }
+
 
 /**
  * Transport constructor shape
@@ -92,14 +94,25 @@ export abstract class Transport extends EventEmitter {
 	 */
 	abstract async waitForConnection()
 	
+	private listenerMap = M<string,Function[]>().asMutable()
+	
+	
 	
 	// Event emitter map funcs
 	addListener(event: string, listener: Function) {
-		this.eventEmitter.addListener(event,listener)
+		this.on(event,listener)
+		
+		
 		return this
 	}
 	on(event: string, listener: Function) {
-		this.eventEmitter.on(event,listener)
+		const
+			listeners = this.listeners(event)
+		
+		if (!listeners.includes(listener))
+			listeners.push(listener)
+		
+		
 		return this
 	}
 	once(event: string, listener: Function){
@@ -107,10 +120,22 @@ export abstract class Transport extends EventEmitter {
 		return this
 	}
 	removeListener(event: string, listener: Function){
+		const
+			listeners = this.listeners(event),
+			index = listeners.indexOf(listener)
+		
+		if (index > -1)
+			listeners.splice(index,1)
+		
 		this.eventEmitter.removeListener && this.eventEmitter.removeListener(event,listener)
 		return this
 	}
 	removeAllListeners(event?: string){
+		const
+			listeners = this.listeners(event)
+		
+		clearArray(listeners)
+		
 		this.eventEmitter.removeAllListeners(event)
 		return this
 	}
@@ -122,7 +147,14 @@ export abstract class Transport extends EventEmitter {
 		return this.eventEmitter.getMaxListeners()
 	}
 	listeners(event: string) {
-		return this.eventEmitter.listeners(event)
+		let
+			listeners = this.listenerMap.get(event)
+		
+		if (!listeners) {
+			listeners = []
+			this.listenerMap.set(event,listeners)
+		}
+		return listeners
 	}
 	emit(event: string, ...args: any[]) {
 		return this.eventEmitter.emit(event,...args)
@@ -130,6 +162,7 @@ export abstract class Transport extends EventEmitter {
 	listenerCount(type: string) {
 		return this.eventEmitter.listenerCount(type)
 	}
+	
 	
 }
 

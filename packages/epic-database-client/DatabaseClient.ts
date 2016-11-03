@@ -6,12 +6,12 @@ import { DatabaseEvents } from "./DatabaseEvents"
 import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
 import { Transport, getDefaultTransport } from "epic-net"
 import {
-	VariableProxy, cloneObject, getHot, setDataOnHotDispose, acceptHot, IModelConstructor,
+	VariableProxy, getHot, setDataOnHotDispose, acceptHot,
 	isString, guard
 } from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import { cloneObjectShallow } from "epic-global"
+
 
 const
 	TIMEOUT = 180000,
@@ -22,7 +22,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG LOGGING
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 	
 /**
  * Database entry template
@@ -35,26 +35,6 @@ const
 
 
 setDataOnHotDispose(module,() => ({changeEmitters}))
-
-/**
- * Change shape
- */
-export interface IDatabaseChange {
-	type:string
-	clazz?:IModelConstructor<any>
-	id:string
-	rev:string
-	doc?:any
-	model?:any
-	deleted?:boolean
-}
-
-
-/**
- * Change listener shape
- */
-export type TDatabaseChangeListener = (change:IDatabaseChange) => any
-
 
 /**
  * Get the change emitter for a model type
@@ -186,9 +166,14 @@ export class DatabaseClient {
 		return !ProcessConfig.isType(DatabaseServerType)
 	}
 	
-	
+	/**
+	 * Create the client and IPC in raw mode
+	 */
 	private constructor() {
-		this.transport = getDefaultTransport({hostname: DatabaseServerName})
+		this.transport = getDefaultTransport({
+			hostname: DatabaseServerName,
+			raw:true
+		} as any)
 	}
 	
 	/**
@@ -267,12 +252,25 @@ export class DatabaseClient {
 	/**
 	 * On a database chane, emit to all listeners
 	 *
-	 * @param change
+	 * @param ungroupedChanges
 	 */
-	private onChange = (change:IDatabaseChange) => {
-		log.debug(`Change received`,change)
+	private onChange = (ungroupedChanges:IDatabaseChange[]) => {
+		log.debug(`Change received`,ungroupedChanges)
 		
-		getChangeEmitter(change.type).emit(change)
+		const
+			changesByType = _.groupBy(ungroupedChanges,it => it.type)
+		
+		Object
+			.keys(changesByType)
+			.forEach(type => {
+				const
+					changes = changesByType[type]
+				
+				log.debug(`Broadcast changes for "${type}, count=${changes.length}"`)
+				getChangeEmitter(type).emit(changes)
+			})
+		
+		
 	}
 
 

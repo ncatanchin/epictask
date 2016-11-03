@@ -8,6 +8,9 @@ import { isNil, isObject } from  "typeguard"
 const
 	_ = require('lodash')
 
+export function clearArray(arr:Array<any>) {
+	return arr.splice(0,arr.length)
+}
 
 export function isListType<T>(o:any,type:{new():T}):o is List<T> {
 	return (List.isList(o))

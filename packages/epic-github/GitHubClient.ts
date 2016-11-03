@@ -5,6 +5,7 @@ import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-gl
 import {IssuesEvent,RepoEvent,Repo,Issue,User,Label,Milestone,Comment} from 'epic-models'
 import {  addInfoMessage, addErrorMessage,isString, isNumber, toNumber, isPromise } from  "epic-global"
 import {List} from 'immutable'
+import { getValue } from "epic-global/ObjectUtil"
 
  
 
@@ -895,7 +896,7 @@ export class GitHubClient {
 }
 
 // Create a new GitHubClient
-export function createClient(token:string = null) {
+export function createClient(token:string = getValue(() => getSettings().token)) {
 	if (process.env.EPIC_CLI && !token) {
 		if (DEBUG) {
 			token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
@@ -903,9 +904,7 @@ export function createClient(token:string = null) {
 		}
 	}
 	
-	if (!token)
-		token = getSettings().token
-
+	
 	// If not set and env var exists then use it
 	//token = token ||	process.env.GITHUB_API_TOKEN
 		

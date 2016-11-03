@@ -1,7 +1,5 @@
 import "epic-entry-shared/AppEntry"
 
-
-
 import { PouchDBRepo,IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
 
 import { loadProcessClientEntry } from "epic-entry-shared"
@@ -10,15 +8,14 @@ import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } f
 const
 	{ProcessClientEntry} = loadProcessClientEntry()
 
-import { Stores, IDatabaseRequest, DatabaseEvents, IDatabaseChange } from "epic-database-client"
+import { Stores, IDatabaseRequest, DatabaseEvents } from "epic-database-client"
 
 import {
 	tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler, getHot,
 	setDataOnHotDispose, getValue,uuid
 } from "epic-global"
-import { ProcessNames, ProcessType } from "epic-entry-shared/ProcessType"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 
-import { makeIPCServerId } from "epic-net"
 import { UserStoreImpl } from "./stores/UserStoreImpl"
 import { IssueStoreImpl } from "./stores/IssueStoreImpl"
 import { RepoStoreImpl } from "./stores/RepoStoreImpl"
@@ -28,13 +25,12 @@ import { CommentStoreImpl } from "./stores/CommentStoreImpl"
 import { LabelStoreImpl } from "./stores/LabelStoreImpl"
 import { IssuesEventStoreImpl } from "./stores/IssuesEventStoreImpl"
 import { RepoEventStoreImpl } from "./stores/RepoEventStoreImpl"
+import { IPCServer } from "epic-net/IPCServer"
+import { watchChanges } from "epic-entry-database-server/DatabaseChangeMonitor"
 
 // Logger
 const
-	log = getLogger(__filename),
-	
-	// IPC
-	ipc = getHot(module, 'ipc', require('node-ipc'))
+	log = getLogger(__filename)
 
 
 // DEBUG LOGGING
@@ -42,11 +38,9 @@ const
 
 
 let
-	startDeferred:Promise.Resolver<any> = getHot(module, 'startDeferred', null)
+	startDeferred:Promise.Resolver<any> = getHot(module, 'startDeferred', null),
+	ipcServer = getHot(module,'ipcServer',null) as IPCServer
 
-ipc.config.id = makeIPCServerId(ProcessNames.DatabaseServer)
-ipc.config.retry = 1500
-ipc.config.silent = true
 
 // Database name and path
 const
@@ -69,17 +63,14 @@ let
 	coordinator:TSCoordinator = getHot(module, 'coordinator') as TSCoordinator,
 	
 	// Stores Ref
-	stores:Stores = getHot(module, 'storePlugin', new Stores()),
-	
-	changeSubscriptions = getHot(module,'changeSubscriptions',M<string,any>())
+	stores:Stores = getHot(module, 'storePlugin', new Stores())
 
 setDataOnHotDispose(module, () => ({
 	storePlugin,
 	coordinator,
 	stores,
 	startDeferred,
-	changeSubscriptions,
-	ipc
+	ipcServer
 }))
 
 /**
@@ -115,71 +106,17 @@ function getPouchDB(store:PouchDBRepo<any>):any {
 	return getValue(() => store.getPouchDB(),null)
 }
 
-/**
- * Subscribe to the changes feed in pouchdb
- */
-function updateChangeSubscriptions() {
-	Object
-		.values(stores)
-		.filter(store => store instanceof PouchDBRepo && getPouchDB(store))
-		.forEach((store:PouchDBRepo<any>) => {
-			
-			const
-				modelType = store.modelType.name
-			
-			if (changeSubscriptions[modelType]) {
-				log.debug(`Unsubscribing: ${modelType}`)
-				try {
-					changeSubscriptions[modelType].cancel()
-				} catch (err) {
-					log.error(`Failed to unsubscribe: ${modelType}`,err)
-				}
-				changeSubscriptions[modelType] = null
-			}
-			
-			log.debug(`Subscribing ${modelType}`)
-			
-			const
-				db = store.getPouchDB(),
-				changes = changeSubscriptions[modelType] = db.changes({
-					live: true,
-					since: 'now',
-					include_docs: true
-				})
-			
-			changes.on('change',(info) => {
-				log.debug(`Change received for type: ${modelType}`,info)
-				try {
-					const
-						doc = info.doc || {},
-						model = doc && doc.type === modelType && store.getModelFromObject(doc),
-						change:IDatabaseChange = doc && {
-							id: info.id,
-							rev: getValue(() => info.doc._rev),
-							deleted: getValue(() => info.doc._deleted,false),
-							doc,
-							clazz: store.modelClazz as any,
-							type: modelType,
-							model
-						}
-					
-					if (!model) {
-						log.debug(`No model on update`,info)
-						return
-					}
-					
-					log.debug(`Broadcasting change`,change)
-					ipc.server.broadcast(DatabaseEvents.Change,change)
-				} catch (err) {
-					log.error(`Failed to broadcast changes`,info,err)
-				}
-			})
-			
-			changes.on('error',err => {
-				log.error(`An error occurred while listening for changes to ${modelType}`,err)
-			})
-			
-		})
+
+
+const RequestHandlers = {
+	[DatabaseEvents.Request]: async (
+		server:IPCServer,
+		socket,
+		type:string,
+		request
+	) => {
+		await executeRequest(server,socket, request)
+	}
 }
 
 
@@ -208,9 +145,11 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 		
 		// IN HMR RELOAD
 		if (module.hot && stores && startDeferred) {
-			updateChangeSubscriptions()
+			watchChanges(() => ipcServer,stores,getPouchDB)
 		}
 	}
+	
+	
 	
 	/**
 	 * Services are disabled on the database server
@@ -232,12 +171,14 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 		if (startDeferred)
 			return startDeferred.promise
 		
-		
 		// CREATE DEFERRED PROMISE
 		startDeferred = Promise.defer()
+		
+		
 		try {
 			
 			log.info('Starting Database Server')
+			
 			
 			
 			storePlugin = new PouchDBPlugin(storeOptions())
@@ -297,18 +238,17 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 			log.info('Starting IPC Server')
 			
 			// Configure IPC Server
-			ipc.serve(() => {
-				ipc.server.on(DatabaseEvents.Request, async(request, socket) => {
-					await executeRequest(socket, request)
-				})
-				
-				// Notify StateServer
-				log.info('DatabaseServer is ready - notifying worker owner')
-				startDeferred.resolve()
-			})
 			
-			//Start IPC Server
-			ipc.server.start()
+			if (!ipcServer) {
+				ipcServer = new IPCServer(DatabaseServerName,RequestHandlers,true)
+				
+				log.info(`Pending ipc server start`)
+				await ipcServer.start().timeout(10000, "IPC server took too long")
+				log.info(`IPC Server is ready`)
+			}
+			
+			
+			startDeferred.resolve()
 			
 			
 		} catch (err) {
@@ -317,10 +257,13 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 			throw err
 		}
 		
-		await startDeferred.promise.timeout(10000, "Database server took too long")
+		
 		
 		log.debug(`Finally listen for changes`)
-		updateChangeSubscriptions()
+		watchChanges(() => ipcServer,stores,getPouchDB)
+		
+		log.info(`Database server started`)
+		return startDeferred.promise
 	}
 	
 	
@@ -328,30 +271,28 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 	/**
 	 * Stop the database server
 	 */
-	protected stop():Promise<any> {
+	protected async stop():Promise<any> {
 		// Stop ipc server
-		ipc.server && ipc.server.stop && ipc.server.stop()
+		await ipcServer.stop()
 		
 		// Stop TypeStore Coordinator
-		const
-			coordinatorStopPromise = coordinator.stop()
+		await coordinator.stop()
 		
 		coordinator = null
 		
-		// Return TypeStore stop promise
-		return coordinatorStopPromise
 	}
 }
 
 /**
  * Send response to request
  *
+ * @param toServer
  * @param socket
  * @param request
  * @param result
  * @param error
  */
-function respond(socket, request:IDatabaseRequest, result, error:Error = null) {
+function respond(toServer:IPCServer,socket, request:IDatabaseRequest, result, error:Error = null) {
 	const response = {
 		requestId: request.id,
 		result,
@@ -359,17 +300,18 @@ function respond(socket, request:IDatabaseRequest, result, error:Error = null) {
 	}
 	
 	log.debug('Sending response', response)
-	ipc.server.emit(socket, DatabaseEvents.Response, response)
+	toServer.send(socket, DatabaseEvents.Response, response)
 	//ipcRenderer.send(DatabaseEvents.Response,{requestId:request.id,result,error})
 }
 
 /**
  * Execute a request
  *
+ * @param fromServer
  * @param socket
  * @param request
  */
-async function executeRequest(socket, request:IDatabaseRequest) {
+async function executeRequest(fromServer:IPCServer,socket, request:IDatabaseRequest) {
 	try {
 		const { id:requestId, store:storeName, fn:fnName, args } = request
 		
@@ -405,10 +347,10 @@ async function executeRequest(socket, request:IDatabaseRequest) {
 		if (_.isFunction(result.then))
 			result = await result
 		
-		respond(socket, request, result)
+		respond(fromServer,socket, request, result)
 	} catch (err) {
 		log.error('Request failed', err, request)
-		respond(socket, request, null, err)
+		respond(fromServer,socket, request, null, err)
 	}
 }
 

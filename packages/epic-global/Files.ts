@@ -23,6 +23,7 @@ const
 
 
 
+
 function getPaths() {
 	const
 		ensureDir = (dir) => {
@@ -51,6 +52,9 @@ const [userDataPath,cachePath,tempPath] = getPaths()
 if (!ProcessConfig.isStorybook())
 	mkdirp.sync(cachePath)
 
+
+
+export const UTF8 = 'utf-8'
 
 export function isUrl(testUrl:string) {
 	for (let proto of protos) {
@@ -107,7 +111,8 @@ export function filePathToUrl(filename) {
  * @returns {Object}
  */
 export function readJSONFile(filename:string) {
-	const data = readFile(filename)
+	const
+		data = readFile(filename,UTF8)
 	if (data) {
 		return JSON.parse(data)
 	}
@@ -122,7 +127,7 @@ export function readJSONFile(filename:string) {
  * @param encoding
  * @returns {any}
  */
-export function readFile(filename:string,encoding = 'utf-8') {
+export function readFile(filename:string,encoding = null) {
 	try {
 		if (!fs.existsSync(filename))
 			return null
@@ -145,7 +150,7 @@ export function readFile(filename:string,encoding = 'utf-8') {
  * @param encoding
  * @returns {any}
  */
-export async function readFileAsync(filename:string,encoding = 'utf-8') {
+export async function readFileAsync(filename:string,encoding = null) {
 	try {
 		if (!fs.existsSync(filename))
 			return null

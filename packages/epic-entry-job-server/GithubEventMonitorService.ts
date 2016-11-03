@@ -6,7 +6,6 @@ import {BaseService, RegisterService, IServiceConstructor} from "epic-services/i
 import {DatabaseClientService} from "epic-services/DatabaseClientService"
 
 import { RepoKey } from "epic-global"
-import { clientObserveState, getStateValue } from "epic-typedux/store/AppStoreClient"
 import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global/HotUtils"
 import { AvailableRepo, LoadStatus } from "epic-models"
 
@@ -14,6 +13,9 @@ import {getGithubEventMonitor} from './GithubEventMonitor'
 import {RepoSyncManager} from './GithubSyncHandlers'
 import {GithubSyncStatus as SyncStatus} from "epic-global/GithubSyncStatus"
 import {IssuesEvent,RepoEvent} from 'epic-models'
+import { availableReposSelector } from "epic-typedux/selectors/RepoSelectors"
+import { addDatabaseChangeListener } from "epic-database-client/DatabaseClient"
+import { getStores } from "epic-database-client/Stores"
 
 
 
@@ -74,14 +76,17 @@ export class GithubEventService extends BaseService {
 	 *
 	 * @param availableRepos
 	 */
-	private onAvailableReposUpdated = (availableRepos:AvailableRepo[]) => {
+	private onAvailableReposUpdated = _.debounce(async () => {
 		const
-			loadedAvailableRepos = !availableRepos ? [] : availableRepos
-				.filter(it => it.repoLoadStatus === LoadStatus.Loaded)
+			stores = getStores(),
+			availableRepos = (await stores.availableRepo.findAll())
+				.filter(it => !it.deleted)
 		
-		log.debug(`Received available repos`,loadedAvailableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
+		for (let availRepo of availableRepos) {
+			availRepo.repo = await stores.repo.get(availRepo.id)
+		}
 		
-		
+		log.debug(`Received available repos`,availableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
 		
 		const
 			monitor = getGithubEventMonitor(),
@@ -89,7 +94,7 @@ export class GithubEventService extends BaseService {
 		
 		log.info(`Checking for removed repos`)
 		currentRepoIds
-			.filter(repoId => !loadedAvailableRepos.find(availRepo => availRepo.id === repoId))
+			.filter(repoId => !availableRepos.find(availRepo => availRepo.id === repoId))
 			.forEach(repoId => {
 				log.debug(`No longer monitoring repo ${repoId} - stopping monitor`)
 				monitor.stopRepoMonitoring(repoId)
@@ -98,7 +103,7 @@ export class GithubEventService extends BaseService {
 		
 		
 		log.info(`Checking for new repos to monitor`)
-		loadedAvailableRepos
+		availableRepos
 			.filter(availRepo => !currentRepoIds.includes(availRepo.id))
 			.forEach(availRepo => {
 				log.info(`Starting to monitor repo ${availRepo.repo.full_name}`)
@@ -188,7 +193,7 @@ export class GithubEventService extends BaseService {
 					
 				})
 			})
-	}
+	},1000)
 	
 	
 	
@@ -204,15 +209,9 @@ export class GithubEventService extends BaseService {
 		await SyncStatus.awaitLoaded()
 		
 		log.debug(`Sync status loaded, subscribing for repo updates from state`)
-		this.unsubscriber = await clientObserveState([ RepoKey, 'availableRepos' ], this.onAvailableReposUpdated)
 		
-		
-		const
-			availableRepos:AvailableRepo[] = await getStateValue(RepoKey,'availableRepos')
-		
-		
-		log.info(`Starting Github event monitor with initial repos: `,availableRepos)
-		this.onAvailableReposUpdated(availableRepos)
+		addDatabaseChangeListener(AvailableRepo,this.onAvailableReposUpdated)
+		this.onAvailableReposUpdated()
 	
 		
 		

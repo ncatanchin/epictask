@@ -5,20 +5,16 @@ import { isElectron,isMain } from  "./CommandManagerConfig"
 let
 	thisWindow:Window = null
 	
+const
+	log = getLogger(__filename)
 
 export function getCommandBrowserWindow():Electron.BrowserWindow {
-	return getCurrentWindow()
-	// if (!isElectron)
-	//
-	//
-	// try {
-	// 	const
-	// 		Electron = require('electron')
-	//
-	// 	return Electron.remote && Electron.remote.getCurrentWindow()
-	// } catch (err) {
-	//
-	// }
+	
+	try {
+		return getCurrentWindow()
+	} catch (err) {
+		log.warn(`Unable to get current window`, err)
+	}
 }
 
 function getWindow() {
@@ -36,7 +32,11 @@ function getWindow() {
  * @param listener
  */
 export function addBrowserWindowListener(eventName:string,listener) {
-	getCommandBrowserWindow() && getCommandBrowserWindow().addListener(eventName,listener)
+	try {
+		getCommandBrowserWindow() && getCommandBrowserWindow().addListener(eventName,listener)
+	} catch (err) {
+		log.error(`Unable to add event listener`,eventName,err)
+	}
 	
 }
 

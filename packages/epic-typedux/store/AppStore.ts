@@ -108,10 +108,7 @@ function initStore(devToolsMode = false, defaultState = null, enhancer = null) {
 		]
 	
 	// THE CLIENT ENHANCER IS THE DEFAULT, BUT MAIN-ENTRY HAS IT'S OWN
-	let
-		appStoreEnhancer = enhancer || require('./AppStoreClientEnhancer').default
-	
-	enhancers.push(appStoreEnhancer)
+	enhancers.push(enhancer)
 	
 	
 	// if (Env.isDev && Env.isRenderer && ActionLoggerEnabled) {

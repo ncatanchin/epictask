@@ -22,7 +22,8 @@ export interface ISyncChanges {
 
 @RegisterModel
 @PouchDBModel({
-	keyMapper: (repo:Repo) => `${repo.id}`
+	keyMapper: (repo:Repo) => `${repo.id}`,
+	onlyMapDefinedAttributes: true
 })
 export class Repo extends DefaultModel {
 
@@ -33,7 +34,7 @@ export class Repo extends DefaultModel {
 	 *
 	 * @param o
 	 */
-	static fromJS = (o:any) => new Repo(o)
+	static fromJS = (o:any) => !o ? null : o instanceof Repo ? o : new Repo(o)
 
 
 	@Attribute({primaryKey:true})
@@ -42,11 +43,13 @@ export class Repo extends DefaultModel {
 	/**
 	 * Organization owner if not individual
 	 */
+	@Attribute()
 	organization: User
 	
 	/**
 	 * Individual owner
 	 */
+	@Attribute()
 	owner: User
 
 	@Attribute()
@@ -61,7 +64,49 @@ export class Repo extends DefaultModel {
 	@Attribute()
 	//'private': boolean;
 	fork: boolean;
+	
+	@Attribute()
 	url: string;
+	
+	
+	@Attribute()
+	homepage: string;
+	@Attribute()
+	language: any;
+	@Attribute()
+	forks_count: number;
+	@Attribute()
+	stargazers_count: number;
+	@Attribute()
+	watchers_count: number;
+	
+	@Attribute()
+	size: number;
+	@Attribute()
+	default_branch: string;
+	@Attribute()
+	open_issues_count: number;
+	@Attribute()
+	has_issues: boolean;
+	@Attribute()
+	has_wiki: boolean;
+	@Attribute()
+	has_pages: boolean;
+	@Attribute()
+	has_downloads: boolean;
+	
+	@Attribute()
+	pushed_at: string;
+	
+	@Attribute()
+	created_at: string;
+	
+	@Attribute()
+	updated_at: string;
+	
+	@Attribute()
+	permissions: Permission;
+	
 	html_url: string;
 	archive_url: string;
 	assignees_url: string;
@@ -104,27 +149,15 @@ export class Repo extends DefaultModel {
 	tags_url: string;
 	teams_url: string;
 	trees_url: string;
-	homepage: string;
-	language: any;
-	forks_count: number;
-	stargazers_count: number;
-	watchers_count: number;
-	size: number;
-	default_branch: string;
-	open_issues_count: number;
-	has_issues: boolean;
-	has_wiki: boolean;
-	has_pages: boolean;
-	has_downloads: boolean;
-	pushed_at: string;
-	created_at: string;
-	updated_at: string;
-	permissions: Permission;
+	
 
-	constructor(props = {}) {
+	constructor(props:any = {}) {
 		super()
 
-		Object.assign(this,props)
+		Object.assign(this,props, {
+			owner: User.fromJS(props.owner),
+			organization: User.fromJS(props.organization)
+		})
 	}
 }
 

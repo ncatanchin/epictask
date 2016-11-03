@@ -10,12 +10,6 @@ const
 
 
 
-import './JobManagerService'
-import './JobSchedulerService'
-import './GithubEventMonitorService'
-
-import { loadAllExecutors } from "./JobExecutors"
-loadAllExecutors()
 
 
 /**
@@ -32,6 +26,18 @@ class JobServerEntry extends ProcessClientEntry {
 		super(ProcessType.JobServer)
 	}
 	
+	/**
+	 * Before ANYTHING ELSE - load the app store
+	 */
+	protected async init() {
+		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
+		
+		require('./JobManagerService')
+		require('./JobSchedulerService')
+		require('./GithubEventMonitorService')
+		require("./JobExecutors").loadAllExecutors()
+		
+	}
 	
 	/**
 	 * Start the server
@@ -48,9 +54,7 @@ class JobServerEntry extends ProcessClientEntry {
 		log.info(`Stopping JobServerEntry`)
 	}
 	
-	async init() {
-		await require('epic-typedux/store/AppStoreBuilder').storeBuilder()
-	}
+	
 }
 
 /**

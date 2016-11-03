@@ -51,7 +51,8 @@ export function makeCommentId(repoOrRepoIdOrComment:number|Comment|Repo,issueOrI
 
 @RegisterModel
 @PouchDBModel({
-	keyMapper: makeCommentId
+	keyMapper: makeCommentId,
+	onlyMapDefinedAttributes: true
 })
 export class Comment extends DefaultModel {
 	
@@ -88,12 +89,19 @@ export class Comment extends DefaultModel {
 	
 	html_url: string
 	issue_url:string
-
+	
+	@Attribute()
 	body: string
+	
+	@Attribute()
 	user: User
+	
+	@Attribute()
 	created_at: Date
+	
+	@Attribute()
 	updated_at: Date
-
+	
 	constructor(props = {}) {
 		super()
 		Object.assign(this,props)
