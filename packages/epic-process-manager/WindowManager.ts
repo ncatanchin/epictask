@@ -264,6 +264,15 @@ export class WindowManager  {
 	}
 	
 	/**
+	 * Get the list
+	 *
+	 * @returns {IWindowInstance[]}
+	 */
+	getWindowInstances() {
+		return List(this.windows)
+	}
+	
+	/**
 	 * Returns all window states based on internal window instances
 	 *
 	 * @returns {IWindowState[]}

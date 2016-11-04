@@ -485,7 +485,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	makeConfig('epic_libs',[],{
 		"epic_libs": makeHotEntry([
 			//"epic-entry-shared",
-			...glob.sync("epic-entry-shared/**/*",globOpts),
+			"./epic-entry-shared",
 			//...glob.sync("epic-entry-shared/**/*",globOpts),
 			//...glob.sync("epic-global/**/*",globOpts),
 			

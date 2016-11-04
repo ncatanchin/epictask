@@ -4,6 +4,7 @@ import { PouchDBRepo } from "typestore-plugin-pouchdb"
 import { setDataOnHotDispose, getHot } from "epic-global/HotUtils"
 import { getValue } from "epic-global/ObjectUtil"
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
+import { EventType } from "epic-global/Constants"
 
 const
 	log = getLogger(__filename),
@@ -12,7 +13,6 @@ const
 
 
 let
-	getIPCServer:() => IIPCServer,
 	getPouchDB
 
 setDataOnHotDispose(module,() => ({
@@ -36,18 +36,16 @@ function cancelCurrentSubscription(modelType:string) {
 	}
 }
 
+
+
+
 /**
  * Broadcast pending changes to all clients
  */
 const broadcast = _.throttle(() => {
 	try {
-		const
-			ipcServer = getIPCServer()
+		EventHub.broadcast(EventType.DatabaseChanges,[...pendingChanges])
 		
-		if (!ipcServer) {
-			return log.warn(`IPC server is not available yet`)
-		}
-		ipcServer.broadcast(DatabaseEvents.Change, [...pendingChanges])
 		
 		// CLEAR THE LIST IF IT SUCCEEDED
 		pendingChanges.length = 0
@@ -71,13 +69,12 @@ function pushChange(change:IDatabaseChange) {
  * Subscribe to the changes feed in pouchdb
  */
 export function watchChanges(
-	ipcServerProvider: () => IIPCServer,
 	stores:Stores,
 	inGetPouchDB:Function
 ) {
 	
-	getIPCServer = ipcServerProvider
 	getPouchDB = inGetPouchDB
+	
 	Object
 		.values(stores)
 		.filter(store => store instanceof PouchDBRepo && getPouchDB(store))

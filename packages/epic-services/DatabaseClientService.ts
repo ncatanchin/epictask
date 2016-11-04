@@ -16,50 +16,6 @@ let
 
 
 /**
- * Database proxy function shape
- */
-export type TDatabaseProxyFunction = (...args:any[]) => Promise<any>
-
-/**
- * Database Client proxy - maps to a single store or no store
- */
-
-class DatabaseProxy {
-
-	private fnMap = {}
-	
-	constructor(private store:string = null) {
-		
-	}
-
-	/**
-	 * Get proxy Function
-	 *
-	 * @param target
-	 * @param name
-	 * @returns {TDatabaseProxyFunction}
-	 */
-	get(target,name):TDatabaseProxyFunction {
-		if (canProxyProperty(name))
-			return null
-		
-		log.debug(`Getting proxy for ${name}`)
-		
-		return this.fnMap[name] || (
-			this.fnMap[name] = (...args) => {
-				log.debug(`Proxy request for ${name}`)
-
-				return getDatabaseClient().request(this.store,name,args)
-			}
-		)
-		
-	}
-
-}
-
-
-
-/**
  * References to coordinator and plugins
  */
 @RegisterService(
@@ -72,8 +28,6 @@ export class DatabaseClientService extends BaseService {
 
 	private _stores:Stores
 	
-	
-	dbProxy
 	
 	/**
 	 * All global repositories
@@ -91,7 +45,6 @@ export class DatabaseClientService extends BaseService {
 		
 		databaseService = this
 		
-		this._stores = assign(new Stores(),{databaseService})
 	}
 	
 	
@@ -111,33 +64,14 @@ export class DatabaseClientService extends BaseService {
 		const
 			client = getDatabaseClient()
 		
-		client.connect().then(() => log.info('Connected'))
+		await client.ready()
 		
-		// Load all model classes
-		log.info('Loading models and creating store')
-		//loadModelClasses()
-
-		assign(this._stores, {
-			repo:          this.getStore('RepoStore'),
-			issue:         this.getStore('IssueStore'),
-			availableRepo: this.getStore('AvailableRepoStore'),
-			milestone:     this.getStore('MilestoneStore'),
-			comment:       this.getStore('CommentStore'),
-			label:         this.getStore('LabelStore'),
-			user:          this.getStore('UserStore'),
-			issuesEvent:  this.getStore('IssuesEventStore'),
-			repoEvent: this.getStore('RepoEventStore')
-		})
-
-		log.debug('Repos Loaded')
-		
-		// Direct proxy
-		this.dbProxy = new Proxy({},new DatabaseProxy())
+		this._stores = client.getStores()
 		
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {
 			assignGlobal({
-				Repos:this._stores
+				Stores:this._stores
 			})
 		}
 
@@ -166,16 +100,6 @@ export class DatabaseClientService extends BaseService {
 	}
 
 
-	/**
-	 * Get a repo instance for the local database
-	 *
-	 * @param repoClazz
-	 * @returns {T}Í
-	 */Í
-
-	private getStore(repoName:string) {
-		return new Proxy({},new DatabaseProxy(repoName)) as any
-	}
 }
 
 

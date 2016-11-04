@@ -10,6 +10,7 @@ import {
 	cloneObjectShallow
 } from "epic-global"
 import { isRepoSyncPending } from "./executors/RepoSyncExecutor"
+import { getValue } from "typeguard"
 
 
 const
@@ -67,6 +68,24 @@ export class RepoSyncManager {
 		}
 	}
 	
+	/**
+	 * Ensure we find the repo id
+	 *
+	 * @param availRepo
+	 * @returns {number}
+	 */
+	getRepoDetails(availRepo:AvailableRepo) {
+		const
+			repo = getValue(() => availRepo.repo,this.repo),
+			repoId = repo && repo.id
+		
+		assert(repoId && repo,`Both repo ID and repo must be available`)
+		
+		return {
+			repo,
+			repoId
+		}
+	}
 
 	
 	/**
@@ -92,12 +111,17 @@ export class RepoSyncManager {
 			log.debug(`Handling ${events.length} issue events`)
 			
 			const
-				stores = getStores(),
-				{ repo, repoId } = availRepo
-			
+				stores = getStores()
+				
+				
+				
 			// ITERATE SERIALLY - MULTIPLE EVENTS COULD ARRIVE FOR A SINGLE ISSUE AND ONLY THE LATEST NEEDS TO BE PROCESSED
 			await Promise.all(events.map(async(event) => {
+				
 				try {
+					const
+						{repo,repoId} = this.getRepoDetails(availRepo)
+					
 					const
 						{ issue:eventIssue } = event,
 						eventAt = moment(event.created_at),
@@ -167,7 +191,7 @@ export class RepoSyncManager {
 			const
 				stores = getStores(),
 				client = createClient(),
-				{ repo, repoId } = availRepo
+				{repo,repoId} = this.getRepoDetails(availRepo)
 			
 			// ITERATE SERIALLY - MULTIPLE EVENTS COULD ARRIVE FOR A SINGLE ISSUE AND ONLY THE LATEST NEEDS TO BE PROCESSED
 			await Promise.mapSeries(events, async(event) => {
@@ -175,10 +199,13 @@ export class RepoSyncManager {
 				const
 					eventAt = moment(event.created_at)
 				
-				// ASSIGN THE REPO_ID
-				event.repoId = repoId
-				
 				try {
+					const
+						{repo,repoId} = this.getRepoDetails(availRepo)
+					
+					// ASSIGN THE REPO_ID
+					event.repoId = repoId
+					
 					log.debug(`Received repo event ${event.type} for repo #${repo.full_name}
 						\tEvent Occurred @ ${eventAt.fromNow()}
 					`)

@@ -246,6 +246,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 			}))
 		
 		this.setState({
+			itemCache,
 			startIndex,
 			endIndex,
 			itemsPerPage,
@@ -257,29 +258,30 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 	 * On scroll event is debounced
 	 */
 	private onScroll = _.throttle((event) => {
-		const
-			{scrollTop} = this.state.listElement,
-			{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
-
-		if (isNumber(currentScrollTop)) {
-
-			if (!height || !itemHeightMin)
-				return
-
+		setImmediate(() => {
 			const
-				firstVisibleIndex = Math.max(0, Math.floor(scrollTop / itemHeightMin)),
-				lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeightMin))
-
-			if (firstVisibleIndex >= startIndex && lastVisibleIndex <= endIndex) {
-				log.debug(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
-				return
+				{scrollTop} = this.state.listElement,
+				{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
+			
+			if (isNumber(currentScrollTop)) {
+				
+				if (!height || !itemHeightMin)
+					return
+				
+				const
+					firstVisibleIndex = Math.max(0, Math.floor(scrollTop / itemHeightMin)),
+					lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeightMin))
+				
+				if (firstVisibleIndex >= startIndex && lastVisibleIndex <= endIndex) {
+					log.debug(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
+					return
+				}
 			}
-		}
-
-		this.setState({scrollTop},this.updateItems)
-
+			
+			this.setState({scrollTop},this.updateItems)
+		})
 		
-	},250)
+	},350)
 	
 	
 	shouldComponentUpdate(nextProps:IVisibleListProps, nextState:IVisibleListState, nextContext:any):boolean {
@@ -373,7 +375,7 @@ export class VisibleList extends React.Component<IVisibleListProps,IVisibleListS
 				renderedComponent: renderedComponent,
 				component: <div key={key} style={style}>{renderedComponent}</div>
 			}
-		} else if (!_.isEqual(itemReg.style,style)) {
+		} else if (!shallowEquals(itemReg.style,style,'top','height')) {
 			Object.assign(itemReg.style,style)
 			// Object.assign(itemReg,{
 			// 	style,

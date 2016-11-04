@@ -3,6 +3,8 @@
 const
 	log = getLogger(__filename)
 
+// DEBUG/ENABLE
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * benchmarking function to use anywhere
@@ -38,7 +40,7 @@ export function benchmark<T extends Function>(name, origFn:T,detail:string = '')
 					duration = Date.now() - startTime
 				
 				
-				log.info(`${name ? `${name}.` : '[BENCHMARK]'}${detail} ${isPromise ? 'PromiseResolve' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
+				log.debug(`${name ? `${name}.` : '[BENCHMARK]'}${detail} ${isPromise ? 'PromiseResolve' : '' } executed in ${duration}ms OR ${duration / 1000}s`)
 				
 				return passthruVal
 			}

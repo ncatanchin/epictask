@@ -1,4 +1,6 @@
 
+import Electron from 'epic-electron'
+import { getValue } from "typeguard"
 
 const
 	_ = require('lodash'),
@@ -11,9 +13,11 @@ const
 	isLinux = !isMac && !isWin32,
 	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
 	isMain = process.type === 'browser',
-	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production'))
+	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production')),
+	
+	MainEnv = getValue(() => !isMain && Electron.remote.getGlobal('Env'),{}) as any
 
-
+console.log(`is UI = ${ProcessConfig.isUI()}`)
 
 const EnvGlobal = {
 	envName,
@@ -29,6 +33,13 @@ const EnvGlobal = {
 	isMain,
 	isElectron: ['browser','renderer'].includes(process.type),
 	isWebpack: !['true','1','on'].includes(process.env.NO_WEBPACK),
+	
+	/**
+	 * IndexedDB - or - LevelDB
+	 */
+	useIndexedDB: !ProcessConfig.isUI() &&  (process.env.POUCH_MODULE_NAME === 'pouchdb-browser' ||
+	MainEnv.useIndexedDB),
+	
 	baseDir: path.resolve(__dirname,'../..')
 }
 

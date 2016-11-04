@@ -62,7 +62,7 @@ export class RepoStateService extends BaseService {
 				getRepoActions().removeAvailableRepo(pendingRepo.id))
 			
 		} catch (err) {
-			log.error(`Failed to remove pending deletes`)
+			log.error(`Failed to remove pending deletes`,err)
 		}
 	}
 	

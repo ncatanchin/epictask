@@ -145,5 +145,18 @@ declare global {
 // Assign to global
 Object.assign(global as any,{
 	ProcessConfig: ProcessConfigGlobal,
-	ProcessType: ProcessConfigGlobal.Type
+	ProcessType: ProcessConfigGlobal.Type,
+	polyfillRequire(r) {
+		if (!r.ensure)
+			r.ensure = (deps, fn) => fn(r)
+	}
 })
+
+
+
+const
+	TypeLogger = require('typelogger'),
+	processType = ProcessType[ process.env.EPIC_ENTRY ] || ProcessType.Main
+
+ProcessConfig.setType(processType as any)
+TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)

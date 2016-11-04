@@ -204,7 +204,13 @@ export function makeIssuesEventId(eventOrRepoId:number|IssuesEvent,issueNumber:n
 		issueNumber = eventOrRepoId.issue.number
 	}
 	
-	assert(repoId && eventId && issueNumber,`RepoId ${repoId}, Event Id ${eventId} & issueNumber ${issueNumber} must all be valid`)
+	const
+		isValid = repoId && eventId && issueNumber
+	
+	if (DEBUG && !isValid)
+		debugger
+	
+	assert(isValid,`RepoId ${repoId}, Event Id ${eventId} & issueNumber ${issueNumber} must all be valid`)
 	return `${makeIssuesEventPrefix(repoId,issueNumber)}${eventId}`
 }
 

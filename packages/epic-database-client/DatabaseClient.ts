@@ -2,19 +2,22 @@
 
 import * as uuid from "node-uuid"
 import { Map } from 'immutable'
-import { DatabaseEvents } from "./DatabaseEvents"
-import { IDatabaseResponse, IDatabaseRequest } from "./DatabaseRequestResponse"
-import { Transport, getDefaultTransport } from "epic-net"
 import {
-	VariableProxy, getHot, setDataOnHotDispose, acceptHot,
-	isString, guard
+	VariableProxy,
+	getHot,
+	setDataOnHotDispose,
+	acceptHot,
+	isString
 } from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
+import { Benchmark, benchmark } from "epic-global/Benchmark"
+import { addHotDisposeHandler } from "epic-global/HotUtils"
+import { EventType } from "epic-global/Constants"
+import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 
 
 const
-	TIMEOUT = 180000,
 	DatabaseServerType = ProcessType.DatabaseServer
 	
 
@@ -23,7 +26,43 @@ const
 
 // DEBUG LOGGING
 //log.setOverrideLevel(LogLevel.DEBUG)
+
+
+/**
+ * On database changes received, emit them
+ *
+ * @param eventType
+ * @param ungroupedChanges
+ */
+function onDatabaseChange(eventType:EventType,ungroupedChanges:IDatabaseChange[]) {
+	log.debug(`Change received`,ungroupedChanges)
 	
+	const
+		changesByType = _.groupBy(ungroupedChanges,it => it.type)
+	
+	Object
+		.keys(changesByType)
+		.forEach(type => {
+			const
+				changes = changesByType[type]
+			
+			log.debug(`Broadcast changes for "${type}, count=${changes.length}"`)
+			getChangeEmitter(type).emit(changes)
+		})
+	
+}
+
+
+/**
+ * Subscribe for database updates
+ */
+EventHub.on(EventType.DatabaseChanges,onDatabaseChange)
+
+// HMR dispose handler
+addHotDisposeHandler(module,() => {
+	EventHub.removeListener(EventType.DatabaseChanges,onDatabaseChange)
+})
+
 /**
  * Database entry template
  *
@@ -78,29 +117,6 @@ export function removeDatabaseChangeListener(clazz:IModelConstructor<any>,listen
 
 
 /**
- * A database error occurred
- */
-export class DatabaseError extends Error {
-
-	constructor(
-		public code,
-		public description,
-		public url
-	) {
-		super(description)
-	}
-}
-
-/**
- * Pending database request - internal
- */
-interface IDatabasePendingRequest {
-	id:string
-	request:IDatabaseRequest
-	deferred:Promise.Resolver<any>
-}
-
-/**
  * Create a singleton instance
  *
  * @type {DatabaseClient}
@@ -115,6 +131,10 @@ let databaseClient:DatabaseClient = null
  */
 let databaseClientProxy:VariableProxy<DatabaseClient> = getHot(module,'databaseClientProxy',null)
 
+
+
+let readyDeferred:Promise.Resolver<any>
+
 /**
  * DatabaseWindow wraps the background
  * renderer process that is used to manage
@@ -123,6 +143,7 @@ let databaseClientProxy:VariableProxy<DatabaseClient> = getHot(module,'databaseC
  */
 
 export class DatabaseClient {
+	
 	
 	/**
 	 * Get Singleton
@@ -143,153 +164,23 @@ export class DatabaseClient {
 		return databaseClientProxy.handler
 	}
 	
-	/**
-	 * Pending Request Map
-	 *
-	 * @type {{}}
-	 */
-	// private pendingRequests = new WeakMap<string,IDatabasePendingRequest>()
-	private pendingRequests:{[id:string]:IDatabasePendingRequest} = {}
 	
 	/**
-	 * Underlying transport - probably IPC
+	 * Internal adapter to use
 	 */
-	public transport: Transport
+	private adapter:DatabaseAdapter = DatabaseAdapter.get()
 	
 	
-	/**
-	 * Check if running on database server
-	 *
-	 * @returns {boolean}
-	 */
-	get notRunningOnDatabaseServer() {
-		return !ProcessConfig.isType(DatabaseServerType)
-	}
+	
 	
 	/**
 	 * Create the client and IPC in raw mode
 	 */
 	private constructor() {
-		this.transport = getDefaultTransport({
-			hostname: DatabaseServerName,
-			raw:true
-		} as any)
-	}
-	
-	/**
-	 * Connect to the database server
-	 */
-	async connect() {
-		// Connect the transport if not the DB server
-		if (this.notRunningOnDatabaseServer) {
-			await this.transport.connect()
-			
-			this.transport.on(DatabaseEvents.Response,this.onResponse)
-			this.transport.on(DatabaseEvents.Change,this.onChange)
-		}
-	}
-	
-	async disconnect() {
 		
 	}
 	
-	/**
-	 * Check if the IPC client is connected
-	 *
-	 * @throws if not connected
-	 */
-	private checkConnected() {
-		assert(this.transport.connected,`Database Client is not connected`)
-	}
 	
-	/**
-	 * Remove all IPC listeners
-	 */
-	private removeListeners() {
-		this.transport.removeListener(DatabaseEvents.Response,this.onResponse)
-		this.transport.removeListener(DatabaseEvents.Change,this.onChange)
-	}
-	
-	/**
-	 * On request finished
-	 *
-	 * @param request
-	 * @returns {()=>void}
-	 */
-	private onRequestFinished(request:IDatabaseRequest):() => void {
-		return () => {
-			delete this.pendingRequests[request.id]
-			//this.pendingRequests.delete(request.id)
-		}
-	}
-
-	/**
-	 * onResponse received from window,
-	 * map it back to request and resolve
-	 *
-	 * @param resp
-	 */
-	private onResponse = (resp:IDatabaseResponse) => {
-		log.debug('Response Received',resp.requestId)
-
-		const
-			pendingRequest = this.pendingRequests[resp.requestId]
-		
-		//const pendingRequest = this.pendingRequests.get(resp.requestId)
-		if (!pendingRequest) {
-			log.error(`Response received, but no request found with provided id: ${resp.requestId}`,resp.error)
-			return
-		}
-
-		if (resp.error) {
-			log.error(`Database query failed`, pendingRequest.request,resp.error)
-			pendingRequest.deferred.reject(_.isError(resp.error) ? resp.error : new Error(resp.error as any))
-		} else
-			pendingRequest.deferred.resolve(resp.result)
-			//pendingRequest.deferred.resolve(cloneObjectShallow(resp.result))
-
-	}
-	
-	/**
-	 * On a database chane, emit to all listeners
-	 *
-	 * @param ungroupedChanges
-	 */
-	private onChange = (ungroupedChanges:IDatabaseChange[]) => {
-		log.debug(`Change received`,ungroupedChanges)
-		
-		const
-			changesByType = _.groupBy(ungroupedChanges,it => it.type)
-		
-		Object
-			.keys(changesByType)
-			.forEach(type => {
-				const
-					changes = changesByType[type]
-				
-				log.debug(`Broadcast changes for "${type}, count=${changes.length}"`)
-				getChangeEmitter(type).emit(changes)
-			})
-		
-		
-	}
-
-
-	/**
-	 * onTimeout Handler
-	 *
-	 * @param request
-	 * @param deferred
-	 * @returns {Promise.Resolver<any>}
-	 */
-	private onTimeout(request:IDatabaseRequest,deferred:Promise.Resolver<any>) {
-		return (err:Promise.TimeoutError) => {
-			log.error(`Database request timed out (${request.id})`,err)
-			deferred.reject(new DatabaseError('TIMEOUT',err.toString(),''))
-		}
-	}
-
-
 	/**
 	 * Direct database request
 	 *
@@ -309,7 +200,6 @@ export class DatabaseClient {
 		
 		
 		const
-			deferred = Promise.defer(),
 			[store,fn,args] = ((_.isString(fnOrArgs)) ?
 				[storeOrFn,fnOrArgs,finalArgs] :
 				[null,storeOrFn,fnOrArgs]),
@@ -321,41 +211,26 @@ export class DatabaseClient {
 				args
 			}
 		
-		this.transport.waitForConnection()
-			.then(() => {
-				this.checkConnected()
-				
-				assert(fn && args,'Both args and fn MUST be defined')
-				
-				// Map the pending request
-				this.pendingRequests[request.id] = {
-					id:request.id,
-					request,
-					deferred
-				}
-				
-				// Send the request
-				this.transport.emit(DatabaseEvents.Request,request)
-				
-			})
-
-		// Configure the promise timeout
-		deferred.promise
-			
-			.timeout(TIMEOUT)
-
-			// Catch and remap timeout error
-			.catch(Promise.TimeoutError,this.onTimeout(request,deferred))
-
-			// Finally clean up the request
-			.finally(this.onRequestFinished(request))
-
+		return benchmark(`Client Querying ${store}.${fn}`,() => this.adapter.execute(request))()
 		
-		// Return the promise
-		return deferred.promise
 	}
 
-
+	ready() {
+		if (readyDeferred)
+			return readyDeferred.promise
+		
+		readyDeferred = Promise.defer()
+		
+		this.adapter.start()
+			.then(() => readyDeferred.resolve())
+			.catch(err => readyDeferred.reject(err))
+		
+		return readyDeferred.promise
+	}
+	
+	getStores() {
+		return this.adapter.getStores()
+	}
 	
 
 	/**
@@ -364,9 +239,8 @@ export class DatabaseClient {
 	 * @returns {any}
 	 */
 	kill():Promise<any> {
-		guard(() => this.removeListeners())
-		guard(() => this.transport.disconnect())
-		return Promise.resolve(true)
+		return this.adapter.stop()
+		
 
 	}
 
@@ -384,6 +258,7 @@ export function getDatabaseClient():DatabaseClient {
 
 // Set container provider
 Container.bind(DatabaseClient).provider({get: getDatabaseClient})
+
 
 /**
  * Export the singleton by default

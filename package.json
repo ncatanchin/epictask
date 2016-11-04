@@ -277,6 +277,7 @@
     "node-fetch": "^1.5.3",
     "node-ipc": "^8.1.0",
     "node-uuid": "^1.4.7",
+    "pouchdb-browser": "^6.0.7",
     "radium": "^0.18.1",
     "react": "15.3.0",
     "react-addons-create-fragment": "15.3.0",

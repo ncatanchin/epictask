@@ -2,6 +2,9 @@ require('source-map-support').install()
 require('babel-polyfill')
 require('reflect-metadata')
 
+
+process.env.POUCH_MODULE_NAME = 'pouchdb-browser'
+
 const
 	noWebpack = ['true','1','on'].includes(process.env.NO_WEBPACK || '')
 
