@@ -4,21 +4,35 @@ export type TListTypes<T> = Array<T>|List<T>
 
 
 import LodashGlobal from 'lodash'
-
-export interface IEpicLodashMixins {
-	isArrayEqualBy(arr1, arr2, prop):boolean
-	inline<R>(fn:()=>R):R
-	uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
-	toJS(o:any):any
-	assignGlobal:IAssignGlobal
-	isPromise(o:any):boolean
-	modelArrayToMapBy(o:any[], prop:string):any
-	nilFilter<T>(o:T[]):T[]
-	nilListFilter<T extends any>(a:List<T>):List<T>
+declare global {
+	module _ {
+		interface LoDashStatic {
+			isArrayEqualBy(arr1, arr2, prop):boolean
+			inline<R>(fn:()=>R):R
+			uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
+			toJS(o:any):any
+			assignGlobal:IAssignGlobal
+			isPromise(o:any):boolean
+			modelArrayToMapBy(o:any[], prop:string):any
+			nilFilter<T>(o:T[]):T[]
+			nilListFilter<T extends any>(a:List<T>):List<T>
+		}
+	}
 }
+// export interface IEpicLodashMixins extends _.LoDashStatic {
+// 	isArrayEqualBy(arr1, arr2, prop):boolean
+// 	inline<R>(fn:()=>R):R
+// 	uniqueListBy<T>(list:List<T>, ...keyPath:string[]):List<T>
+// 	toJS(o:any):any
+// 	assignGlobal:IAssignGlobal
+// 	isPromise(o:any):boolean
+// 	modelArrayToMapBy(o:any[], prop:string):any
+// 	nilFilter<T>(o:T[]):T[]
+// 	nilListFilter<T extends any>(a:List<T>):List<T>
+// }
 
-type TLodash = typeof LodashGlobal
-export type TEpicLodash = IEpicLodashMixins&TLodash
+//type TLodash = typeof LodashGlobal
+//export type TEpicLodash = IEpicLodashMixins&TLodash&_.LoDashStatic
 
 const _ = require('lodash')
 
@@ -83,4 +97,4 @@ _.mixin({
 	}
 })
 
-export default _ as TEpicLodash
+export default _ //as TEpicLodash

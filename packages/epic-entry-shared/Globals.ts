@@ -249,7 +249,7 @@ declare global {
 	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var _:typeof LodashGlobal
+	var _:_.LoDashStatic
 	
 	function getCurrentWindow():Electron.BrowserWindow
 	
