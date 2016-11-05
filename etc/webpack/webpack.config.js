@@ -140,7 +140,8 @@ function makeAliases() {
 		libs: path.resolve(baseDir, 'libs'),
 		"epic-electron": tsAlias('epic-global/Electron'),
 		styles: tsAlias('epic-assets/styles'),
-		assets: tsAlias('epic-assets')
+		assets: tsAlias('epic-assets'),
+		'epic-config': path.resolve(baseDir,'etc','config','default-config.js')
 		
 	})
 }
@@ -484,19 +485,12 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
 	makeConfig('epic_libs',[],{
 		"epic_libs": makeHotEntry([
-			//"epic-entry-shared",
 			"./epic-entry-shared",
-			//...glob.sync("epic-entry-shared/**/*",globOpts),
-			//...glob.sync("epic-global/**/*",globOpts),
-			
-			// "./epic-entry-shared/Globals",
-			// "./epic-entry-shared/GlobalDeclarations",
-			// "./epic-entry-shared/ProcessType",
-			// "./epic-entry-shared/ProcessConfig",
 			"./epic-global",
 			"./epic-net",
 			"./epic-github",
 			"./epic-database-client",
+			"./epic-database-adapter",
 			"./epic-process-manager",
 			"./epic-process-manager-client",
 			"./epic-typedux",

@@ -14,12 +14,20 @@ const
 	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
 	isMain = process.type === 'browser',
 	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production')),
-	
 	MainEnv = getValue(() => !isMain && Electron.remote.getGlobal('Env'),{}) as any
 
-console.log(`is UI = ${ProcessConfig.isUI()}`)
+
+const
+	Config = require('epic-config')()
+
+if (DEBUG)
+	console.log(`Parsed Config`, Config)
+
+// SET POUCH MODULE
+process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 
 const EnvGlobal = {
+	Config,
 	envName,
 	isMac,
 	isWin32,
@@ -33,12 +41,6 @@ const EnvGlobal = {
 	isMain,
 	isElectron: ['browser','renderer'].includes(process.type),
 	isWebpack: !['true','1','on'].includes(process.env.NO_WEBPACK),
-	
-	/**
-	 * IndexedDB - or - LevelDB
-	 */
-	useIndexedDB: !ProcessConfig.isUI() &&  (process.env.POUCH_MODULE_NAME === 'pouchdb-browser' ||
-	MainEnv.useIndexedDB),
 	
 	baseDir: path.resolve(__dirname,'../..')
 }

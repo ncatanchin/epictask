@@ -34,6 +34,10 @@ import {
 import { cloneObject } from "epic-global"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
+import { IRowState } from "epic-ui-components/common/VisibleList"
+import { getValue, isNumber } from "typeguard"
+import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
+import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 
 // Constants
 const log = getLogger(__filename)
@@ -218,7 +222,8 @@ export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
 	milestones?:List<Milestone>
 	labels?:List<Label>
 	assignees?:List<User>
-
+	
+	rowState?:IRowState<string,string,number>
 }
 
 /**
@@ -229,6 +234,11 @@ export interface IIssueEditInlineState {
 	focused?:boolean
 	labelField?:any
 	hideTimer?:any
+	
+	
+	
+	realIndex?:number
+	item?:IIssueListItem<any>
 }
 
 /**
@@ -256,6 +266,36 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder.make()
+	
+	
+	
+	
+	/**
+	 * Get issues panel from context
+	 *
+	 * @returns {IssuesPanel}
+	 */
+	private get issuesPanel() {
+		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
+	}
+	
+	
+	updateState = (props = this.props) => {
+		const
+			{rowState} = props,
+			realIndex:number = rowState.item,
+			panel = this.issuesPanel,
+			item = isNumber(realIndex) && panel.getItem(realIndex)
+		
+		this.setState({
+			item,
+			realIndex,
+		})
+	}
+	
+	componentWillMount = this.updateState
+	
+	componentWillReceiveProps = this.updateState
 	
 	readonly commandComponentId:string = 'IssueEditInline'
 	
@@ -291,7 +331,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 	onTitleChange = (event,title) =>
 		this.issueActions.setEditingIssue(
-			_.cloneDeep(assign({},this.issue,{title})),true)
+			cloneObject(this.issue,{title}))
 
 
 	/**

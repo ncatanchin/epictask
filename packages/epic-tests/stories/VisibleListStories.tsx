@@ -31,12 +31,12 @@ storiesOf('Visible List',module)
 					name: faker.lorem.sentence(10)
 				}))
 			
-		
-		return <VisibleList style={{root:Fill}}
-		                    items={items}
-		                    itemCount={items.length}
-		                    itemHeight={100}
-		                    itemRenderer={itemRenderer}
-		                    initialItemsPerPage={30}
-		                    />
+		return null
+		// return <VisibleList style={{root:Fill}}
+		//                     items={items}
+		//                     itemCount={items.length}
+		//                     itemHeight={100}
+		//                     itemRenderer={itemRenderer}
+		//                     initialItemsPerPage={30}
+		//                     />
 	})

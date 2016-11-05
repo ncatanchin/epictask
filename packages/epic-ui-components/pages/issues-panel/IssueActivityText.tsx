@@ -16,6 +16,10 @@ import { selectedIssueSelector } from "epic-typedux"
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
 import { getIssueActions } from "epic-typedux/provider"
+import { IRowState } from "epic-ui-components/common/VisibleList"
+import { TDetailItem } from "epic-ui-components/pages/issues-panel/IssueDetailPanel"
+import { getValue } from "typeguard"
+import { isIssue } from "epic-models/Issue"
 
 // Constants
 const log = getLogger(__filename)
@@ -156,6 +160,8 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	activityActionText?:string
 	activityStyle:any
 	activityType:'post'|'comment'|'eventGroup'
+	
+	rowState?:IRowState<string,string,TDetailItem>
 }
 
 export interface IIssueActivityTextState {
@@ -175,21 +181,26 @@ export interface IIssueActivityTextState {
 @ThemedStyles(baseStyles,'issueActivityText')
 // @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
-
+	
+	
 	/**
 	 * Create a the component state
 	 *
 	 * @param props
 	 * @returns {{comment: null, user: null, text: null, createdAt: null, updatedAt: null}}
 	 */
-	getValues = (props:IIssueActivityTextProps) => {
+	getValues = (props:IIssueActivityTextProps = this.props) => {
 		
 		const
-			{eventGroup,issue,comment} = props,
-
+			rowState = props.rowState
 		
+		if (!rowState)
+			return null
+
+		const
 			// Determine model
-			model:Comment|Issue|EventGroup = comment || issue || eventGroup
+			
+			{item ,style} = rowState
 
 		// Map model props
 		let
@@ -197,17 +208,20 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 			text:string = null,
 			createdAt:Date = null,
 			updatedAt:Date = null
+			
 		
-		if (model) {
-			if (!isEventGroup(model)) {
-				({ user, body: text, created_at: createdAt, updated_at: updatedAt } = model)
+		if (item) {
+			if (!isEventGroup(item)) {
+				
+				({ user, body: text, created_at: createdAt, updated_at: updatedAt } = item)
 			} else {
-				user = eventGroup.actor
+				user = item.actor
 			}
 		}
 		
 		return {
-			comment,
+			style,
+			comment: !isEventGroup(item) && !isIssue(item) && item,
 			user,
 			text,
 			createdAt: new Date(createdAt as any),
@@ -272,13 +286,21 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				eventGroup,
 				hideBottomBorder
 			} = this.props,
+			values = this.getValues(this.props)
+			
+		if (!values)
+			return React.DOM.noscript()
+		
+		
+		const
 			{
+				style,
 				user,
 				text,
 				comment,
 				updatedAt,
 				createdAt
-			} = this.getValues(this.props),
+			} = values,
 
 			// Hovering header
 			hovering = Radium.getState(this.state,'activity',':hover'),
@@ -310,7 +332,13 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				// EVENT GROUP
 				<div {...filterProps(this.props)}
 					key='activity'
-					style={[activityStyle,styles.activityContent.eventGroup,activityStyle.eventGroup,{':hover': {}}]}>
+					style={[
+						activityStyle,
+						styles.activityContent.eventGroup,
+						activityStyle.eventGroup,
+						{':hover': {}},
+						style
+					]}>
 					
 					{/* LEFT VERTICAL DOTS */}
 					<div style={[styles.activityContent.eventGroup.verticalDots]}/>

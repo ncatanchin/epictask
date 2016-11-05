@@ -39,7 +39,7 @@ export abstract class DatabaseAdapter {
 	
 	static get() {
 		return instance ||
-			(Env.useIndexedDB || ProcessConfig.isType(ProcessType.DatabaseServer) ?
+			(!Env.Config.RemoteDatabase || ProcessConfig.isType(ProcessType.DatabaseServer) ?
 				loadLocal() :
 				loadRemote())
 		

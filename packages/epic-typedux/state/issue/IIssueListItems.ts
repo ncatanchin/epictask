@@ -76,6 +76,10 @@ export interface IIssueListItem<T extends Issue|IIssueGroup|TIssueEditInlineConf
 	item:T
 }
 
+export function isIssueListItem(item:IIssueListItem<any>):item is IIssueListItem<Issue> {
+	return item.type === IssueListItemType.Issue
+}
+
 export function isGroupListItem(item:IIssueListItem<any>):item is IIssueListItem<IIssueGroup> {
 	return item.type === IssueListItemType.Group
 }

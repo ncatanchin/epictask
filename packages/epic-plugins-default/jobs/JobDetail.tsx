@@ -12,12 +12,15 @@ import {
 	Ellipsis,
 	FlexColumn
 } from "epic-styles"
+import {List} from 'immutable'
 import { LinearProgress } from "material-ui"
 import { TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux/state"
 import { TimeAgo, VisibleList } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
 import { LogWatcher, LogWatcherEvent, IEnumEventRemover, getValue, shallowEquals } from "epic-global"
 import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
+import { JobLogRow } from "epic-plugins-default/jobs/JobLogRow"
+import { IRowTypeConfig } from "epic-ui-components/common/VisibleList"
 
 // Constants
 const log = getLogger(__filename)
@@ -109,6 +112,10 @@ const baseStyles = createStyles({
 	}]
 })
 
+
+class JobLogList extends VisibleList<any,string,IJobLog> {
+	
+}
 
 /**
  * IJobDetailProps
@@ -281,70 +288,61 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				!shallowEquals(this.state,nextState,'lineCount','allLogs')
 	}
 	
-	/**
-	 * Get log level style
-	 *
-	 * @param logItem
-	 */
-	private levelStyle = (logItem:IJobLog) =>
-		this.props.styles.logs.levels['WARN' === logItem.level ? 'warn' : 'ERROR' === logItem.level ? 'error' : 'DEBUG' === logItem.level ? 'success' : 'info']
-	
 	
 	/**
 	 * Render a log item
 	 *
-	 * @param logItems
-	 * @param index
-	 * @param style
-	 * @param key
+	 * @param rowType
 	 * @returns {any}
 	 */
-	private renderLogItem = (logItems:IJobLog[],index:number,style,key) => {
-		const
-			{styles, selectedLogId} = this.props,
-			logItem = logItems[index],
-			isError = logItem.level === 'ERROR',
-			errorDetails = logItem.errorDetails,
-			errorStyle = isError && this.levelStyle(logItem),
-			logKey = logItem.id,
-			selected = selectedLogId === logItem.id,
-			hoverStyle =
-				(selected || Radium.getState(this.state,logKey,':hover')) &&
-				styles.logs.entry.hovered
+	private renderLogItem = (rowType):IRowTypeConfig<any,string,IJobLog> => {
 		
-		
-		
-		//Log Entry Row
-		return <div key={key}
-		            onClick={() => !selected && this.controller.setSelectedLogId(logItem.id)}
-		            style={[
-													styles.logs.entry,
-													index < logItems.size - 1 && styles.logs.entry.divider
-												]}>
-			<div style={[styles.logs.entry.row]}>
-				<div style={[styles.logs.entry.level,hoverStyle,this.levelStyle(logItem)]}>
-					{logItem.level}
-				</div>
-				<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
-					{logItem.message}
-				</div>
-				<div style={[styles.logs.entry.time,errorStyle]}>
-					<TimeAgo timestamp={logItem.timestamp}/>
-				</div>
-			</div>
-			
-			{/* Error stack details */}
-			{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
-				<div style={[styles.logs.entry.level]}>
-					{/* Empty spacing place holder */}
-				</div>
-				<pre style={[styles.logs.entry.details]}>
-					<div>Error details: </div>
-					<div>{errorDetails.message}</div>
-					<div>{errorDetails.stack}</div>
-				</pre>
-			</div>}
-		</div>
+		return {clazz: JobLogRow}
+		// const
+		// 	{styles, selectedLogId} = this.props,
+		// 	logItem = logItems[index],
+		// 	isError = logItem.level === 'ERROR',
+		// 	errorDetails = logItem.errorDetails,
+		// 	errorStyle = isError && this.levelStyle(logItem),
+		// 	logKey = logItem.id,
+		// 	selected = selectedLogId === logItem.id,
+		// 	hoverStyle =
+		// 		(selected || Radium.getState(this.state,logKey,':hover')) &&
+		// 		styles.logs.entry.hovered
+		//
+		//
+		//
+		// //Log Entry Row
+		// return <div key={key}
+		//             onClick={() => !selected && this.controller.setSelectedLogId(logItem.id)}
+		//             style={[
+		// 											styles.logs.entry,
+		// 											index < logItems.size - 1 && styles.logs.entry.divider
+		// 										]}>
+		// 	<div style={[styles.logs.entry.row]}>
+		// 		<div style={[styles.logs.entry.level,hoverStyle,this.levelStyle(logItem)]}>
+		// 			{logItem.level}
+		// 		</div>
+		// 		<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
+		// 			{logItem.message}
+		// 		</div>
+		// 		<div style={[styles.logs.entry.time,errorStyle]}>
+		// 			<TimeAgo timestamp={logItem.timestamp}/>
+		// 		</div>
+		// 	</div>
+		//
+		// 	{/* Error stack details */}
+		// 	{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
+		// 		<div style={[styles.logs.entry.level]}>
+		// 			{/* Empty spacing place holder */}
+		// 		</div>
+		// 		<pre style={[styles.logs.entry.details]}>
+		// 			<div>Error details: </div>
+		// 			<div>{errorDetails.message}</div>
+		// 			<div>{errorDetails.stack}</div>
+		// 		</pre>
+		// 	</div>}
+		// </div>
 		
 	}
 	
@@ -360,7 +358,6 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 			allLogs = getValue(() => this.state.allLogs,[]),
 			lineCount = getValue(() => this.state.lineCount,0),
 			statusColors = getJobStatusColors(detail,styles)
-		
 		
 		
 		return <div style={[styles.root, jobs && jobs.size && styles.root.hasJobs ]}>
@@ -403,10 +400,10 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				
 				{/* LOGS */}
 				<div style={styles.logs}>
-					<VisibleList
+					<JobLogList
 						itemCount={lineCount}
-					  items={allLogs || []}
-					  itemRenderer={this.renderLogItem}
+					  items={List<any>(allLogs)}
+					  itemBuilder={this.renderLogItem}
 					  itemKeyFn={(logItems,logItem,index) => `${job.id}-${index}`}
 					/>
 					

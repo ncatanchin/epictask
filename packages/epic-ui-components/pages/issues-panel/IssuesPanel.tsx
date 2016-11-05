@@ -309,6 +309,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	readonly commandComponentId = ContainerNames.IssuesPanel
 	
 	
+	
+	
+	
 	/**
 	 * Open issue finder
 	 *
@@ -460,6 +463,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		this.issueActions.setIssueStatus('closed', ...selectedIssueIds)
 	}
 	
+	/**
+	 * Get item at a real index, not sorted index
+	 *
+	 * @param realIndex
+	 * @returns {T}
+	 */
+	getItem(realIndex:number):IIssueListItem<any> {
+		return getValue(() => this.props.items.get(realIndex))
+	}
 	
 	/**
 	 * Get issue or froup @ index
@@ -468,14 +480,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @returns {null}
 	 */
 	getItemAtIndex = (itemIndex) => {
-		const
-			{items} = this.props,
-			{itemIndexes} = this
-		
-		if (!items || !itemIndexes)
-			return null
-		
-		return items.get(itemIndexes.get(itemIndex))
+		return getValue(() => this.getItem(
+			this.itemIndexes.get(itemIndex)
+		))
 	}
 	
 	

@@ -8,6 +8,7 @@ import { Icon } from "./icon/Icon"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue } from "epic-models"
 import { getIssueActions } from "epic-typedux"
+import { shallowEquals } from "epic-global/ObjectUtil"
 
 // Constants
 const
@@ -117,7 +118,6 @@ export interface IIssueStateIconState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles,'issueStateIcon')
-@PureRender
 export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueStateIconState> {
 	
 	/**
@@ -132,6 +132,9 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 		this.state = {}
 	}
 	
+	shouldComponentUpdate(nextProps) {
+		return !shallowEquals(nextProps,this.props,'issue.state')
+	}
 	
 	private toggleState = () => {
 		const

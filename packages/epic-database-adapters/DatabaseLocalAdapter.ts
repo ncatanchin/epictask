@@ -145,7 +145,7 @@ export namespace DatabaseLocalAdapter {
 			`epictask-test-${uuid()}` :
 			`epictask-${Env.envName}`,
 		
-		dbPath = Env.useIndexedDB ? dbName : Env.isTest ?
+		dbPath = Env.Config.UseIndexedDB ? dbName : Env.isTest ?
 			tempFilename(dbName + '.db') :
 			getUserDataFilename(dbName + '.db')
 	
@@ -191,7 +191,7 @@ export namespace DatabaseLocalAdapter {
 				},
 				
 				// OPTIONS ONLY FOR LEVELDB
-				Env.useIndexedDB  ? {} : {
+				Env.Config.UseIndexedDB  ? {} : {
 				
 				// BIG CACHE SIZE
 				cacheSize: 32 * 1024 * 1024

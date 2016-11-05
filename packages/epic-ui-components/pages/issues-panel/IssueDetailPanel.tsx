@@ -21,7 +21,7 @@ import {
 	getIssueActions
 } from "epic-typedux"
 import baseStyles from "./IssueDetailPanel.styles"
-import { shallowEquals, getValue, unwrapRef } from "epic-global"
+import { shallowEquals, uuid,getValue, unwrapRef } from "epic-global"
 import { EventGroup, isEventGroup } from "./IssueEventGroup"
 import {
 	CommandComponent,
@@ -41,7 +41,7 @@ const
 	log = getLogger(__filename)
 
 
-type TDetailItem = Comment|EventGroup|Issue
+export type TDetailItem = Comment|EventGroup|Issue
 
 
 /**
@@ -63,6 +63,13 @@ export interface IIssueDetailPanelProps extends ICommandComponentProps {
 export interface IIssueDetailPanelState {
 	items?:List<TDetailItem>
 	listRef?:any
+	
+}
+
+/**
+ * Typed visible list
+ */
+class IssueDetailsVisibleList extends VisibleList<string,string,TDetailItem> {
 	
 }
 
@@ -292,11 +299,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param index
 	 * @param styles
 	 */
-	renderBody = (items:List<TDetailItem>, item:Issue, selectedIssue:Issue, index, styles) => <IssueActivityText
-		key={'issue-body'}
-		activityType='post'
-		activityActionText='posted issue'
-		activityStyle={styles.content.activities.activity}/>
+	// renderBody = (items:List<TDetailItem>, item:Issue, selectedIssue:Issue, index, styles) =>
 	
 	
 	/**
@@ -309,14 +312,14 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param styles
 	 * @returns {any}
 	 */
-	renderComment = (items:List<TDetailItem>, comment:Comment, selectedIssue:Issue, index, styles) => <IssueActivityText
-		key={comment.id}
-		issue={selectedIssue}
-		comment={comment}
-		activityActionText='commented'
-		activityType='comment'
-		activityStyle={styles.content.activities.activity}/>
-	
+	// renderComment = (items:List<TDetailItem>, comment:Comment, selectedIssue:Issue, index, styles) => <IssueActivityText
+	// 	key={comment.id}
+	// 	issue={selectedIssue}
+	// 	comment={comment}
+	// 	activityActionText='commented'
+	// 	activityType='comment'
+	// 	activityStyle={styles.content.activities.activity}/>
+	//
 	/**
 	 *
 	 *
@@ -326,33 +329,50 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @param index
 	 * @param styles
 	 */
-	renderEventGroup = (items:List<TDetailItem>, eventGroup:EventGroup, selectedIssue:Issue, index, styles) =>
-		<IssueActivityText
-			key={eventGroup.id}
-			eventGroup={eventGroup}
-			hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
-			activityType='eventGroup'
-			activityStyle={styles.content.activities.activity}/>
+	// renderEventGroup = (items:List<TDetailItem>, eventGroup:EventGroup, selectedIssue:Issue, index, styles) =>
+	// 	<IssueActivityText
+	// 		key={eventGroup.id}
+	// 		eventGroup={eventGroup}
+	// 		hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
+	// 		activityType='eventGroup'
+	// 		activityStyle={styles.content.activities.activity}/>
 	
 	/**
 	 * Render an item for the activity list
 	 *
-	 * @param items
-	 * @param index
+	 * @param rowType
 	 * @returns {any}
 	 */
-	renderDetailItem = (items:List<TDetailItem>, index) => {
+	
+	
+	buildDetailItem = (rowType:string) => {
 		const
-			issue = items.get(0) as Issue,
+			{styles} = this.props
+		return {
+			clazz:IssueActivityText,
+			props: rowType === 'issue' ? {
+				activityType: 'post',
+				activityActionText:'posted issues',
+				activityStyle: styles.content.activities.activity
+			} : rowType === 'comment' ? {
+				activityType: 'comment',
+				activityActionText:'commented',
+				activityStyle: styles.content.activities.activity
+			} : {
+				activityType: 'eventGroup',
+				activityStyle: styles.content.activities.activity
+			}
+		}
+		
+	}
+	
+	getRowType = (items:List<TDetailItem>,index,key) => {
+		const
 			item = items.get(index)
 		
-		return isIssue(item) ?
-			this.renderBody(items, item, issue, index, this.props.styles) :
-			
-			isEventGroup(item) ?
-				this.renderEventGroup(items, item, issue, index, this.props.styles) :
-				
-				this.renderComment(items, item, issue, index, this.props.styles)
+		return isIssue(item) ? "issue" :
+			isEventGroup(item) ? "eventGroup" :
+				"comment"
 	}
 	
 	
@@ -378,11 +398,12 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
 				{!this.props.activityLoading &&
-					<VisibleList
+					<IssueDetailsVisibleList
 						ref={this.setListRef}
 						items={items}
 						itemCount={items.size}
-						itemRenderer={this.renderDetailItem}
+						rowTypeProvider={this.getRowType}
+						itemBuilder={this.buildDetailItem}
 						itemKeyFn={(listItems,item,index) => `${_.get(item,'id',index)}`}
 					/>
 				}
