@@ -120,7 +120,7 @@ export interface IWindowInstance extends IWindowState {
 	window:Electron.BrowserWindow
 	webContents?:Electron.WebContents
 	config?:IWindowConfig
-	
+	allEventRemovers?:any
 	heartbeatTimeoutId:any
 	connectedFlag:Promise.Resolver<boolean>
 }

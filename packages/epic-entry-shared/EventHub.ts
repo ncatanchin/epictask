@@ -98,7 +98,7 @@ function subscribe() {
 		
 }
 
-
+subscribe()
 
 /**
  * Broadcast event to all child windows

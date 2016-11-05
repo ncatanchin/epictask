@@ -342,6 +342,12 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		}
 	}
 	
+	private get hasItemHeight() {
+		const
+			{itemHeight} = this.props
+		return itemHeight && (isFunction(itemHeight) || isNumber(itemHeight))
+	}
+	
 	private getItemHeight = (items,item,index) => {
 		const
 			{itemHeight} = this.props
@@ -416,7 +422,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 			})
 		}
 		
-		log.info(`Setting offsets`,heightState)
+		log.debug(`Setting offsets`,heightState)
 		
 		this.setState(assign({
 			styles: createThemedStyles(baseStyles,[]),
@@ -426,7 +432,57 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	}
 	
 	
+	dumpItems = (props = this.props) => {
+		const
+			{state = {}} = this,
+			{items,itemCount,itemHeight,rowTypeProvider,itemKeyFn,itemBuilder} = props,
+			rowTypeConfigs = {} as any
+		
+		let
+			rowStates = items.map((item,index) => {
+				const
+					rowState = new RowState(),
+					key = isFunction(itemKeyFn) ? itemKeyFn(items,item,index) : index,
+					rowType = getValue(() => rowTypeProvider(items,index,key as any), '@@INTERNAL' as any) as any
+				
+				let
+					config = rowTypeConfigs[rowType]
+				
+				if (!config) {
+					rowTypeConfigs[rowType] = config = itemBuilder(rowType)
+				}
+				
+				
+				rowState.update({
+					item,
+					index,
+					style: makeStyle(FillWidth,{
+						position: 'relative'
+					}),
+					config,
+					key,
+					available: false
+				})
+				
+				return rowState
+			}) as any
+	
+		log.debug(`Dumped row stated`,rowStates)
+		
+		this.setState({
+			rowStates
+		})
+	}
+	
+	
 	updateItems = (props = this.props,scrollTop = getValue(() => this.state.scrollTop)) => {
+		
+		if (!this.hasItemHeight) {
+			this.dumpItems(props)
+			return
+		}
+		
+		
 		const
 			{state = {}} = this,
 			{itemCount,itemHeight,rowTypeProvider,itemBuilder} = props,
@@ -549,7 +605,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 								.filter(({rowComponent}) => rowComponent.available)
 						)
 					
-					log.info(`Total components for ${rowType} = ${newRowComponents.size} / available = ${availableRows.size}`)
+					log.debug(`Total components for ${rowType} = ${newRowComponents.size} / available = ${availableRows.size}`)
 					rowTypeItemsToPrepare.forEach(({item,key,realIndex}) => {
 						let
 							rowComponent:RowState<RowType,ItemKeyType,ItemType>,
@@ -679,7 +735,10 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	 * On scroll event is debounced
 	 */
 	private onScroll = _.debounce((event) => {
-			//
+		if (!this.hasItemHeight)
+			return
+		
+		//
 			const
 				{scrollTop} = this.state.listElement,
 				{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
@@ -721,7 +780,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		nextContext:any
 	):boolean {
 		//return !shallowEquals(this.state,nextState,'rowComponents.size')
-		return !shallowEquals(this.state,nextState,'rowStates')
+		return !shallowEquals(this.props,nextProps,'items') || !shallowEquals(this.state,nextState,'rowStates')
 	}
 	
 	/**

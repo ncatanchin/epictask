@@ -31,12 +31,12 @@ function loadApp() {
 		}
 	
 	// LOAD THE DLL
-	if (!(global as any).__NO_WEBPACK__) {
-		Object.assign(global, {
-			epic_libs: __non_webpack_require__('./epic_libs')
-		})
-	}
-	
+	// if (!(global as any).__NO_WEBPACK__) {
+	// 	Object.assign(global, {
+	// 		epic_libs: __non_webpack_require__('./epic-common')
+	// 	})
+	// }
+	//
 	
 	switch(process.env.EPIC_ENTRY) {
 		case "DatabaseServer":
@@ -167,3 +167,5 @@ export function initBrowser(isDev) {
 	}
 	
 }
+
+initBrowser((window as any).isDev)

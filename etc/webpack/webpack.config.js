@@ -214,7 +214,7 @@ function makeOutputConfig(name,isEntry = false) {
 		outputConfig = {
 			path: `${distDir}/`,
 				publicPath: "./",
-			libraryTarget: 'commonjs2'
+			// libraryTarget: 'commonjs2'
 		}
 	
 	
@@ -329,7 +329,7 @@ function makeConfig(name,dependencies,entry,configFn) {
 			/**
 			 * Target type
 			 */
-			target: 'electron',
+			target: 'node',
 			
 			/**
 			 * All entries including common
@@ -462,7 +462,7 @@ const
 
 module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
-	makeConfig('epic-app',['epic_libs'],{
+	makeConfig('epic-app',[],{
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"
 		]),
@@ -475,34 +475,48 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 		"epic-entry-ui": makeHotEntry([
 			"./epic-entry-ui/index"
 		]),
+		
 	}, config => {
-		config.plugins.unshift(new webpack.DllReferencePlugin({
-			manifest: path.resolve(distDir,`manifest.epic_libs.json`)
-		}))
+		config.plugins.unshift(
+			new webpack.optimize.CommonsChunkPlugin({
+				// The order of this array matters
+				name: "epic-common-2",
+				async: true
+				// names: [
+				// 	"epic-entry-database-server",
+				// 	"epic-entry-job-server",
+				// 	"epic-entry-main",
+				// 	"epic-entry-ui"
+				// ]
+			})
+			// new webpack.DllReferencePlugin({
+			// 	manifest: path.resolve(distDir,`manifest.epic_libs.json`)
+			// })
+		)
 	}),
 	
 	
 	
-	makeConfig('epic_libs',[],{
-		"epic_libs": makeHotEntry([
-			"./epic-entry-shared",
-			"./epic-global",
-			"./epic-net",
-			"./epic-github",
-			"./epic-database-client",
-			"./epic-database-adapter",
-			"./epic-process-manager",
-			"./epic-process-manager-client",
-			"./epic-typedux",
-			"./epic-services"
-		])
-	}, config => {
-		config.plugins.unshift(new webpack.DllPlugin({
-			name: `epic_libs`,
-			path: path.resolve(distDir,`manifest.epic_libs.json`)
-		}))
-	}),
-	
+	// makeConfig('epic_libs',[],{
+	// 	"epic_libs": makeHotEntry([
+	// 		"./epic-entry-shared",
+	// 		"./epic-global",
+	// 		"./epic-net",
+	// 		"./epic-github",
+	// 		"./epic-database-client",
+	// 		"./epic-database-adapter",
+	// 		"./epic-process-manager",
+	// 		"./epic-process-manager-client",
+	// 		"./epic-typedux",
+	// 		"./epic-services"
+	// 	])
+	// }, config => {
+	// 	config.plugins.unshift(new webpack.DllPlugin({
+	// 		name: `epic_libs`,
+	// 		path: path.resolve(distDir,`manifest.epic_libs.json`)
+	// 	}))
+	// }),
+	//
 	// BROWSER ENTRY
 	 makeHtmlConfig()
 ]

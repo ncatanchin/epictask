@@ -108,6 +108,7 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 		'heartbeatCount',
 		'config',
 		'window',
+		'allEventRemovers',
 		'webContents',
 		'onMessage',
 		'opts'
@@ -604,7 +605,7 @@ export class WindowManager  {
 					heartbeatTimestamp:0,
 					heartbeatCount:0,
 					window: newWindow,
-					
+					allEventRemovers:[],
 					
 					config
 				}) as IWindowInstance
@@ -644,26 +645,28 @@ export class WindowManager  {
 				makeOnUnresponsive = (unresponsive:boolean) => () => this.updateWindowState(id,{unresponsive}),
 				makeOnShow = (shown:boolean) => () => this.updateWindowState(id,{visible:shown})
 				
-			newWindow.on('close',(event) => {
-				log.info(`Window closed: ${id}`)
-				this.updateWindowState(id,{closed:true})
-			})
 			
-			attachEvents(log,newWindow,{
+			
+			windowInstance.allEventRemovers.push(attachEvents(log,newWindow,{
+				close: (event) => {
+					log.info(`Window closed: ${id}`)
+					this.updateWindowState(id,{closed:true})
+				},
 				responsive: makeOnUnresponsive(false),
 				unresponsive:makeOnUnresponsive(true),
 				focus:makeOnFocus(true),
 				blur:makeOnFocus(false),
 				show:makeOnShow(true),
-				hide:makeOnShow(false)
-			})
+				hide:makeOnShow(false),
+				'ready-to-show':() => {
+					log.debug(`Ready to show for window ${id}`)
+					newWindow.show()
+					newWindow.focus()
+				}
+			}))
 			
 			
-			newWindow.once('ready-to-show', () => {
-				log.debug(`Ready to show for window ${id}`)
-				newWindow.show()
-				newWindow.focus()
-			})
+			
 			
 			
 			// newWindow.on('close', () => {
@@ -683,14 +686,14 @@ export class WindowManager  {
 			const
 				onNavigate = (event, url) => this.updateWindowState(id,{url})
 			
-			attachEvents(log,webContents,{
+			windowInstance.allEventRemovers.push(attachEvents(log,webContents,{
 				'did-navigate': onNavigate,
 				'did-navigate-in-page': onNavigate,
 				'ipc=-message': windowInstance.onMessage,
 				'dom-ready': this.makeConnect(id),
 				crashed: (event, killed) => this.onWindowExit(id,{crashed:true,killed:true}),
 				destroyed: () => this.onWindowExit(id,{destroyed:true}),
-			})
+			}))
 			windowCreateDeferred.resolve()
 			
 		} catch (err) {

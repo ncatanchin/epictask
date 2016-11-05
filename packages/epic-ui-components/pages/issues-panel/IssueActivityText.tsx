@@ -152,8 +152,7 @@ const baseStyles = (topStyles,theme,palette) => ({
 export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
-	comment?:Comment
-	eventGroup?:EventGroup
+	
 	issue?:Issue
 	hideBottomBorder?:boolean
 	
@@ -221,6 +220,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 		
 		return {
 			style,
+			eventGroup: isEventGroup(item) && item,
 			comment: !isEventGroup(item) && !isIssue(item) && item,
 			user,
 			text,
@@ -283,7 +283,6 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				issue,
 				activityType,
 				activityActionText,
-				eventGroup,
 				hideBottomBorder
 			} = this.props,
 			values = this.getValues(this.props)
@@ -299,7 +298,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				text,
 				comment,
 				updatedAt,
-				createdAt
+				createdAt,
+				eventGroup
 			} = values,
 
 			// Hovering header
