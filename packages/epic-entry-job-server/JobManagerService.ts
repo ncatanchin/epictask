@@ -6,6 +6,7 @@ import { BaseService, RegisterService, IServiceConstructor } from "epic-services
 import { jobsSelector, jobDetailsSelector } from "epic-typedux/selectors/JobSelectors"
 import { ObservableStore } from "typedux"
 import { TJobMap } from "epic-typedux/state/jobs/JobTypes"
+import {Map} from 'immutable'
 
 const
 	log = getLogger(__filename)
@@ -78,7 +79,7 @@ export class JobManagerService extends BaseService {
 	 *
 	 * @type {TJobIMap}
 	 */
-	private workingJobs = M<string,IJobContainer>().asMutable()
+	private workingJobs = Map<string,IJobContainer>().asMutable()
 	
 	
 	

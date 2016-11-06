@@ -1,6 +1,6 @@
 import {EventEmitter} from "events"
 import { clearArray } from "epic-global/ObjectUtil"
-
+import {Map} from 'immutable'
 const
 	log = getLogger(__filename)
 
@@ -94,7 +94,7 @@ export abstract class Transport extends EventEmitter {
 	 */
 	abstract async waitForConnection()
 	
-	private listenerMap = M<string,Function[]>().asMutable()
+	private listenerMap = Map<string,Function[]>().asMutable()
 	
 	
 	

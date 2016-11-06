@@ -22,7 +22,7 @@ import { GitHubClient, createClient } from "epic-github"
 
 import { getIssueActions, getRepoActions } from "../provider"
 
-import { IIssueFilter } from "../state/issue"
+
 import { getCommandManager, ICommand } from "epic-command-manager"
 import { cloneObjectShallow } from "../../epic-global/ObjectUtil"
 
@@ -31,6 +31,9 @@ const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
+
+
+export type TOnSearchSelectHandler = (item:SearchItem) => any
 
 /**
  * Text filter a series of objects, by specific props
@@ -75,102 +78,102 @@ export type TSearchListener = (...args:any[]) => void
  * Handle search selection
  */
 export type TSearchSelectHandler = (searchId:string,item:SearchItem) => any
-
-/**
- * Clone the current issue filter
- *
- * @returns {IIssueFilter} - deep copied
- */
-function newIssueFilter() {
-	return cloneObject(getIssueActions().state.issueFilter)
-}
-
-/**
- * All current handlers
- */
-const SelectHandlers:{[searchType:number]:TSearchSelectHandler} = {
-	[SearchType.AvailableRepo]: (searchId:string,item:SearchItem) => {
-		const
-			model = item.value
-		
-		assert(model.$$clazz === AvailableRepo.$$clazz)
-		getRepoActions().setRepoEnabled(model,!model.enabled)
-	},
-	[SearchType.Repo]: (searchId:string,item:SearchItem) => {
-		const
-			model = item.value
-		
-		assert(model.$$clazz === Repo.$$clazz)
-		getRepoActions().createAvailableRepo(model)
-	},
-	[SearchType.Issue]: (searchId:string,item:SearchItem) => {
-		const
-			model = item.value
-		
-		assert(model.$$clazz === Issue.$$clazz)
-		getIssueActions().setSelectedIssueIds([model.id])
-	},
-	[SearchType.Assignee]: (searchId:string,item:SearchItem) => {
-		const
-			user:User = item.value,
-			newFilter = newIssueFilter()
-		
-		let
-			assigneeIds = newFilter.assigneeIds || (newFilter.assigneeIds = [])
-		
-		if (assigneeIds.includes(user.id))
-			return
-		
-		assigneeIds.push(user.id)
-		getIssueActions().setFilteringAndSorting(newFilter)
-	},
-	[SearchType.Label]: (searchId:string,item:SearchItem) => {
-		const
-			newFilter = newIssueFilter(),
-			label:Label = item.value,
-			labelUrls = newFilter.labelUrls || (newFilter.labelUrls = []),
-			labelIndex = labelUrls.indexOf(label.url)
-		
-		if (labelIndex === -1)
-			labelUrls.push(label.url)
-		else
-			labelUrls.splice(labelIndex,1)
-		
-		getIssueActions().setFilteringAndSorting(newFilter)
-	},
-	[SearchType.Milestone]: (searchId:string,item:SearchItem) => {
-		const
-			newFilter = newIssueFilter(),
-			milestone:Milestone = item.value,
-			milestoneIds = newFilter.milestoneIds || (newFilter.milestoneIds = []),
-			milestoneIndex = milestoneIds.indexOf(milestone.id)
-		
-		if (milestoneIndex === -1)
-			milestoneIds.push(milestone.id)
-		else
-			milestoneIds.splice(milestoneIndex,1)
-		
-		getIssueActions().setFilteringAndSorting(newFilter)
-	},
-	[SearchType.Action]: (searchId:string,item:SearchItem) => {
-		const
-			cmd = item.value as ICommand
-		
-		log.debug(`Selected action (${cmd.id}), executing`)
-		cmd.execute(cmd)
-	}
-
-}
-
-/**
- * Get a search select handler
- *
- * @param type
- * @returns {TSearchSelectHandler}
- */
-export function getSearchSelectHandler(type:SearchType):TSearchSelectHandler {
-	return SelectHandlers[type]
-}
+//
+// /**
+//  * Clone the current issue filter
+//  *
+//  * @returns {IIssueFilter} - deep copied
+//  */
+// function newIssueFilter() {
+// 	return cloneObject(getIssueActions().state.issueFilter)
+// }
+//
+// /**
+//  * All current handlers
+//  */
+// const SelectHandlers:{[searchType:number]:TSearchSelectHandler} = {
+// 	[SearchType.AvailableRepo]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			model = item.value
+//
+// 		assert(model.$$clazz === AvailableRepo.$$clazz)
+// 		getRepoActions().setRepoEnabled(model,!model.enabled)
+// 	},
+// 	[SearchType.Repo]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			model = item.value
+//
+// 		assert(model.$$clazz === Repo.$$clazz)
+// 		getRepoActions().createAvailableRepo(model)
+// 	},
+// 	[SearchType.Issue]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			model = item.value
+//
+// 		assert(model.$$clazz === Issue.$$clazz)
+// 		getIssueActions().setSelectedIssueIds([model.id])
+// 	},
+// 	[SearchType.Assignee]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			user:User = item.value,
+// 			newFilter = newIssueFilter()
+//
+// 		let
+// 			assigneeIds = newFilter.assigneeIds || (newFilter.assigneeIds = [])
+//
+// 		if (assigneeIds.includes(user.id))
+// 			return
+//
+// 		assigneeIds.push(user.id)
+// 		getIssueActions().setFilteringAndSorting(newFilter)
+// 	},
+// 	[SearchType.Label]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			newFilter = newIssueFilter(),
+// 			label:Label = item.value,
+// 			labelUrls = newFilter.labelUrls || (newFilter.labelUrls = []),
+// 			labelIndex = labelUrls.indexOf(label.url)
+//
+// 		if (labelIndex === -1)
+// 			labelUrls.push(label.url)
+// 		else
+// 			labelUrls.splice(labelIndex,1)
+//
+// 		getIssueActions().setFilteringAndSorting(newFilter)
+// 	},
+// 	[SearchType.Milestone]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			newFilter = newIssueFilter(),
+// 			milestone:Milestone = item.value,
+// 			milestoneIds = newFilter.milestoneIds || (newFilter.milestoneIds = []),
+// 			milestoneIndex = milestoneIds.indexOf(milestone.id)
+//
+// 		if (milestoneIndex === -1)
+// 			milestoneIds.push(milestone.id)
+// 		else
+// 			milestoneIds.splice(milestoneIndex,1)
+//
+// 		getIssueActions().setFilteringAndSorting(newFilter)
+// 	},
+// 	[SearchType.Action]: (searchId:string,item:SearchItem) => {
+// 		const
+// 			cmd = item.value as ICommand
+//
+// 		log.debug(`Selected action (${cmd.id}), executing`)
+// 		cmd.execute(cmd)
+// 	}
+//
+// }
+//
+// /**
+//  * Get a search select handler
+//  *
+//  * @param type
+//  * @returns {TSearchSelectHandler}
+//  */
+// export function getSearchSelectHandler(type:SearchType):TSearchSelectHandler {
+// 	return SelectHandlers[type]
+// }
 
 /**
  * Search provider
@@ -220,9 +223,8 @@ export class SearchProvider {
 	 */
 	perSourceLimit:number = -1
 
-	constructor()
-	constructor(searchId:string)
-	constructor(public searchId?:string) {
+	
+	constructor(public onSelectHandler:TOnSearchSelectHandler, public searchId?:string) {
 		if (!searchId)
 			throw new Error(`Search id can not be null`)
 		
@@ -417,24 +419,25 @@ export class SearchProvider {
 	@Benchmarker
 	async searchIssues(query:string):Promise<SearchResult> {
 		
-		const
-			issueState = getIssueActions().state,
-			issues = issueState.issues
-				.filter(issue =>
-					[issue.title,issue.body,issue.user.login,issue.user.name]
-							.join(' ').toLowerCase().indexOf(query.toLowerCase()) > -1
-				)
-				
+		// const
+		// 	issueState = getIssueActions().state,
+		// 	issues = issueState.issues
+		// 		.filter(issue =>
+		// 			[issue.title,issue.body,issue.user.login,issue.user.name]
+		// 					.join(' ').toLowerCase().indexOf(query.toLowerCase()) > -1
+		// 		)
+		//
+		//
 
-
-		return new SearchResult(
-			this.searchId,
-			issues.map(issue => new SearchItem(issue.id,SearchType.Issue,issue,1)) as List<SearchItem>,
-			SearchType.Issue,
-			SearchSource.Issue,
-			issues.size,
-			issues.size
-		)
+		// return new SearchResult(
+		// 	this.searchId,
+		// 	issues.map(issue => new SearchItem(issue.id,SearchType.Issue,issue,1)) as List<SearchItem>,
+		// 	SearchType.Issue,
+		// 	SearchSource.Issue,
+		// 	issues.size,
+		// 	issues.size
+		// )
+		return null
 
 	}
 	@Benchmarker
@@ -676,10 +679,12 @@ export class SearchProvider {
 	 */
 	select(searchId:string,item:SearchItem) {
 		
-		const
-			handler = getSearchSelectHandler(item.type)
+		this.onSelectHandler && this.onSelectHandler(item)
 		
-		handler(searchId,item)
+		// const
+		// 	handler = getSearchSelectHandler(item.type)
+		//
+		// handler(searchId,item)
 		
 	}
 	

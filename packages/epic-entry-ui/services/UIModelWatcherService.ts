@@ -15,6 +15,7 @@ import { changesToModels, changesToDeletedIds } from "epic-database-client/Datab
 import { getAppActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { getValue } from "epic-global/ObjectUtil"
 import { Settings } from "epic-global/settings/Settings"
+import {Map} from 'immutable'
 
 const
 	log = getLogger(__filename)
@@ -199,7 +200,7 @@ export class UIModelWatcherService extends BaseService {
 		log.debug(`on comment change`,changes)
 		
 		
-		getIssueActions().commentsChanged(...changesToModels<Comment>(changes))
+		//getIssueActions().commentsChanged(...changesToModels<Comment>(changes))
 	}
 	
 	/**
@@ -210,10 +211,10 @@ export class UIModelWatcherService extends BaseService {
 	private onIssueChange = (changes:IDatabaseChange[]) => {
 		log.debug(`on issue change`,changes)
 		
-		getIssueActions().reloadIssues(changesToModels<Issue>(changes))
+		//getIssueActions().reloadIssues(changesToModels<Issue>(changes))
 	}
 	
-	private listeners = M<IModelConstructor<any>,TDatabaseChangeListener>({
+	private listeners = Map<IModelConstructor<any>,TDatabaseChangeListener>({
 		[Repo.$$clazz]: this.onRepoChange,
 		[AvailableRepo.$$clazz]: this.onAvailRepoChange,
 		[Label.$$clazz]: this.onLabelChange,

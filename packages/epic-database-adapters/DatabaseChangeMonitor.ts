@@ -6,9 +6,11 @@ import { getValue } from "epic-global/ObjectUtil"
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 import { EventType } from "epic-global/Constants"
 
+import {Map} from 'immutable'
+
 const
 	log = getLogger(__filename),
-	changeSubscriptions = getHot(module,'changeSubscriptions',M<string,any>()),
+	changeSubscriptions = getHot(module,'changeSubscriptions',Map<string,any>()),
 	pendingChanges = []
 
 

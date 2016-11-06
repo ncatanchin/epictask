@@ -111,6 +111,7 @@ export class Issue extends DefaultModel implements IIssue {
 	state: TIssueState;
 
 	
+	
 	repository_url: string;
 	
 	labels_url: string;

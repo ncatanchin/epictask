@@ -216,6 +216,33 @@ declare global {
 		(...sources:any[]):any
 	}
 	
+	
+	// interface Map<K,V> extends Immutable.Map<K,V> {
+	//
+	// }
+	//
+	// interface MapConstructor  {
+	// 	<K,V>(entries?: any):Immutable.Map<K,V>
+	// 	(entries?: any):Immutable.Map<any,any>
+	//
+	// 	isMap(maybeMap: any): boolean;
+	//
+	// 	<K, V>(): Immutable.Map<K, V>;
+	// 	<K, V>(iter: Immutable.Iterable.Keyed<K, V>): Immutable.Map<K, V>;
+	// 	<K, V>(iter: Immutable.Iterable<any, /*[K,V]*/Array<any>>): Immutable.Map<K, V>;
+	// 	<K, V>(array: Array</*[K,V]*/Array<any>>): Immutable.Map<K, V>;
+	// 	<V>(obj: {[key: string]: V}): Immutable.Map<string, V>;
+	// 	<K, V>(iterator: Immutable.Iterator</*[K,V]*/Array<any>>): Immutable.Map<K, V>;
+	// 	<K, V>(iterable: /*Iterable<[K,V]>*/Object): Immutable.Map<K, V>;
+	// 	/**
+	// 	 * Creates a new Map from alternating keys and values
+	// 	 */
+	// 		of(...keyValues: any[]): Immutable.Map<any, any>;
+	// }
+
+	function isShuttingDown():boolean
+	
+	
 	// GLOBAL WHEN RUNNING STANDALONE
 	let __NO_WEBPACK__:boolean
 	
@@ -241,15 +268,15 @@ declare global {
 	function assert(test:any,msg?:string)
 	
 	
-	var M:typeof Immutable.Map
-	var L:typeof Immutable.List
+	// var M:typeof Immutable.Map
+	// var L:typeof Immutable.List
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var Immutable:typeof ImmutableGlobal
+	//var Immutable:typeof ImmutableGlobal
 	
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var _:_.LoDashStatic
+	var _:typeof LodashGlobal
 	
 	function getCurrentWindow():Electron.BrowserWindow
 	

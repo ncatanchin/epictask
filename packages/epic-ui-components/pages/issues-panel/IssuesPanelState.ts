@@ -1,17 +1,17 @@
-import { List, Map, Record } from "immutable"
-import { RegisterModel } from "epic-global"
-import { ActionMessage } from "typedux"
-import { Comment, Issue, IssuesEvent, Label, Milestone } from "epic-models"
-import { TIssueEditInlineConfig, IIssueSort, IIssueFilter, DefaultIssueFilter } from "./issue"
-import { reviveImmutable } from "epic-global"
-import { toPlainObject } from "typetransform"
-import { excludeFilterConfig, excludeFilter } from "typetransform/dist/Helpers"
 import { DefaultIssueSort } from "epic-typedux/state/issue/IIssueSort"
 
-// Refactor - so we export here too
-// export {
-// 	TIssueEditInlineConfig
-// }
+
+import { Map,Record,List } from "immutable"
+import { reviveImmutable } from "epic-global/ModelUtil"
+import { RegisterModel } from "epic-global/Registry"
+import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
+import { IssuesEvent,Issue,Comment } from "epic-models"
+import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
+import { TIssueEditInlineConfig } from "epic-typedux/state/issue/IIssueListItems"
+import { Label } from "epic-models/Label"
+import { Milestone } from "epic-models/Milestone"
+
+
 
 
 const
@@ -49,14 +49,18 @@ export const IssuePatchModes = {
 
 
 
-export const IssueStateRecord = Record({
-	issues: List<Issue>(),
+export const IssuesPanelStateRecord = Record({
+	issues:List<Issue>(),
+	
 	comments:List<Comment>(),
 	issuesEvents:List<IssuesEvent>(),
+	
 	groupVisibility:Map<string,boolean>(),
 	
-	selectedIssueIds:[],
-	focusedIssueIds: [],
+	selectedIssueIds:List<number>(),
+	focusedIssueIds: List<number>(),
+	issueSort:DefaultIssueSort,
+	issueFilter:DefaultIssueFilter,
 	
 	activityLoading: false,
 	
@@ -70,66 +74,64 @@ export const IssueStateRecord = Record({
 	
 	issueSaveError: null,
 	issueSaving: false,
-	issueSort:DefaultIssueSort,
-	issueFilter:DefaultIssueFilter
-
 })
 
-/**
- * Registry state
- *
- */
 @RegisterModel
-export class IssueState extends IssueStateRecord {
-
-	static fromJS(o:any) {
+class IssuesPanelState extends IssuesPanelStateRecord {
+	
+	static fromJS(o:any = {}) {
 		return reviveImmutable(
 			o,
-			IssueState,
-			['issues','comments','issuesEvents'],
+			IssuesPanelState,
+			['issueIds','commentIds','issueEventIds'],
 			['groupVisibility']
 		)
 	}
 	
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-		...excludeFilter(
-			'activityLoading',
-			'issues',
-			/^edit/,
-			/^issueSav/
-		)))
+			...excludeFilter(
+				'activityLoading',
+				'issues',
+				/^edit/,
+				/^issueSav/
+			)))
 	}
 	
-	
-	
 	issues:List<Issue>
+	comments:List<Comment>
+	issuesEvents:List<IssuesEvent>
 	
-	focusedIssueIds:number[]
-	
-	groupVisibility:Map<string,boolean>
+	//
+	// issueIds:List<number>
+	// commentIds:List<number>
+	// issuesEventIds:List<number>
+	//
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
+	
+	groupVisibility:Map<string,boolean>
+	
+	selectedIssueIds:List<number>
+	focusedIssueIds:List<number>
 	
 	activityLoading: boolean
 	
 	issueSaving:boolean
 	issueSaveError: Error
-	comments:List<Comment>
-	issuesEvents:List<IssuesEvent>
+	
 	editInlineConfig:TIssueEditInlineConfig
-	selectedIssueIds:Array<number>
 	patchIssues:Issue[]
 	patchMode:TIssuePatchMode
 	editCommentRequest:TEditCommentRequest
 	editingIssue:Issue
 	editingInline:boolean
-
+	
+	
+	constructor(o:any = {}) {
+		super(o)
+	}
 }
 
-/**
- * RepoMessage
- */
-export interface IssueMessage extends ActionMessage<IssueState> {
 
-}
+export default IssuesPanelState

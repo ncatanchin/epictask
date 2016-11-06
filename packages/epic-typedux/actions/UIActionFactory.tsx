@@ -19,6 +19,10 @@ import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focus
 import {getWindowManagerClient} from "epic-process-manager-client"
 import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
+import ViewState from "epic-typedux/state/window/ViewState"
+import { makePromisedComponent } from "epic-global/UIUtil"
+import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 
 
@@ -590,6 +594,57 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		this.openSheet(null)
 	}
 	
+	
+	
+	@ActionReducer()
+	createView(viewConfig:IViewConfig) {
+		return state => {
+			const
+				id = shortId(),
+				initialState = new (viewConfig.stateClazz)(),
+				viewState = new ViewState(cloneObjectShallow(viewConfig,{
+					id,
+					controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
+					state: initialState
+				}))
+			
+			
+			
+			return state.set('viewStates', state.viewStates.push(viewState))
+		}
+	}
+	
+	@ActionReducer()
+	updateView(viewState:ViewState) {
+		return (state:UIState) => {
+			const
+				index = state.viewStates.findIndex(it => it.id === viewState.id)
+			
+			if (index === -1) {
+				log.warn(`Unable to find view state in views`,viewState)
+				return state
+			}
+			
+			return state.set('viewStates',state.viewStates.set(index,viewState))
+		}
+	}
+	
+	createDefaultView = () => ({
+		name: 'Issues Panel',
+		stateClazz: IssuesPanelState,
+		controllerClazz: IssuePanelController,
+		componentLoader: makePromisedComponent(resolver => require.ensure([],function(require:any) {
+			resolver.resolve(require('epic-ui-components/pages/issues-panel').IssuesPanel)
+		}))
+	
+	})
+	
+	ensureDefaultView() {
+		const
+			uiState = getStoreState().get(UIKey) as UIState
+		
+		uiState.viewStates.size < 1 && this.createView(this.createDefaultView())
+	}
 
 
 

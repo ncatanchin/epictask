@@ -15,7 +15,7 @@ if (Env.isDev) {
 	const
 		installImmutableDevTools = require('immutable-devtools')
 	
-	installImmutableDevTools(Immutable)
+	installImmutableDevTools(require('immutable'))
 	
 	_.assignGlobal({
 		Perf:require('react-addons-perf')

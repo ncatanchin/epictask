@@ -25,10 +25,10 @@ declare var __NO_WEBPACK__:boolean
  */
 declare var isDev:boolean
 
-import {Map as MapGlobal} from 'immutable'
+// import {Map as MapGlobal} from 'immutable'
 
-declare var MapConstructor:typeof MapGlobal
-declare var Map:typeof MapGlobal
+// declare var MapConstructor:typeof MapGlobal
+// declare var Map:typeof MapGlobal
 
 
 

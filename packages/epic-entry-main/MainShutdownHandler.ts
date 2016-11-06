@@ -12,6 +12,12 @@ let
 	processesStopping = false
 
 
+function isShuttingDown() {
+	return shutdown
+}
+
+assignGlobal({isShuttingDown})
+
 
 /**
  * Global shutdown function

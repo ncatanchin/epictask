@@ -2,6 +2,7 @@
 import { List } from "immutable"
 import { TextField, CircularProgress } from "material-ui"
 import { connect } from "react-redux"
+import {createSelector} from 'reselect'
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
 import {
 	PureRender,
@@ -28,9 +29,6 @@ import {
 	FlexColumn
 } from "epic-styles"
 import {
-	selectedIssueSelector,
-	issueSaveErrorSelector,
-	issueSavingSelector,
 	enabledLabelsSelector,
 	enabledAssigneesSelector,
 	enabledMilestonesSelector,
@@ -38,6 +36,7 @@ import {
 } from "epic-typedux"
 import { Issue, Milestone, Label, User } from "epic-models"
 import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 // Constants
 const
@@ -176,6 +175,7 @@ const
  * IIssueDetailHeaderProps
  */
 export interface IIssueDetailHeaderProps extends IThemedAttributes {
+	viewController:IssuePanelController
 	selectedIssue?:Issue
 	labels?:List<Label>
 	milestones?:List<Milestone>
@@ -195,6 +195,24 @@ export interface IIssueDetailHeaderState {
 	editTitle?:boolean
 }
 
+
+function makeSelector() {
+	
+	const
+		selectedIssueSelector = createSelector(
+			(state,props:IIssueDetailHeaderProps) => getValue(() =>
+				props.viewController.selectors.selectedIssueSelector(state)),
+			(selectedIssue:Issue) => selectedIssue
+		)
+	
+	return createStructuredSelector({
+		selectedIssue: selectedIssueSelector,
+		labels: enabledLabelsSelector,
+		assignees: enabledAssigneesSelector,
+		milestones: enabledMilestonesSelector
+	})
+}
+
 /**
  * IssueDetailHeader
  *
@@ -202,14 +220,7 @@ export interface IIssueDetailHeaderState {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	selectedIssue: selectedIssueSelector,
-	labels: enabledLabelsSelector,
-	assignees: enabledAssigneesSelector,
-	milestones: enabledMilestonesSelector,
-	saving: issueSavingSelector,
-	saveError: issueSaveErrorSelector
-}))
+@connect(makeSelector)
 @ThemedStyles(baseStyles)
 @PureRender
 export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,IIssueDetailHeaderState> {
@@ -254,11 +265,12 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param event
 	 */
-	private editSave = (event:React.KeyboardEvent<any> = null) => {
+	private editSave = async (event:React.KeyboardEvent<any> = null) => {
 		event && event.preventDefault()
 		
-		getIssueActions().issueSave(this.state.editIssue)
+		await getIssueActions().saveIssue(this.state.editIssue)
 		this.stopEditingIssue()
+		
 	}
 	
 	/**
@@ -384,7 +396,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param issues
 	 */
 	private unassignIssue = (...issues:Issue[]) =>
-		getIssueActions().applyPatchToIssues({ assignee: null }, true, ...issues)
+		getIssueActions().applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
 	
 	/**
 	 * Callback for label or milestone remove
@@ -401,9 +413,9 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				label:Label = item as any,
 				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
 			
-			getIssueActions().applyPatchToIssues({ labels }, true, issue)
+			getIssueActions().applyPatchToIssues({ labels }, true, List<Issue>(issue))
 		} else {
-			getIssueActions().applyPatchToIssues({ milestone: null }, true, issue)
+			getIssueActions().applyPatchToIssues({ milestone: null }, true, List<Issue>(issue))
 		}
 	}
 	

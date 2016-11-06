@@ -4,7 +4,7 @@ import {createSelector} from 'reselect'
 
 import {UIKey} from "epic-global"
 import {UIState} from "../state/UIState"
-
+import ViewState from "epic-typedux/state/window/ViewState"
 
 
 import { ToolPanelLocation, IToolPanel } from "epic-global"
@@ -12,6 +12,7 @@ import { createDeepEqualSelector } from  "epic-global"
 import { INotificationMessage } from "epic-global"
 
 import { getValue } from  "epic-global"
+import { TSelector } from "epic-global/SelectorTypes"
 
 const
 	log = getLogger(__filename)
@@ -23,6 +24,11 @@ export const uiStateSelector: (state) => UIState = createSelector(
 )
 
 
+
+export const viewStatesSelector:TSelector<List<ViewState>> = createSelector(
+	uiStateSelector,
+	(uiState:UIState) => uiState.viewStates
+)
 
 /**
  * Retrieve the current UI sheet

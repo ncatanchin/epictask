@@ -18,6 +18,7 @@ import {
 	CommandContainer
 } from "epic-command-manager-ui"
 import { ThemedStyles } from "epic-styles"
+import { TOnSearchSelectHandler } from "epic-typedux/state/SearchProvider"
 
 
 const $ = require('jquery')
@@ -102,6 +103,7 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	underlineStyle?:any
 	underlineFocusStyle?:any
 	
+	onSearchItemSelected?:TOnSearchSelectHandler
 	
 	
 	hint?:any
@@ -358,7 +360,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	createSearchProvider(props = this.props) {
 		const
-			provider = new SearchProvider(this.props.searchId)
+			provider = new SearchProvider(
+				this.props.onResultSelected,
+				this.props.searchId
+			)
 		
 		provider.setTypes(...props.types)
 		provider.allowEmptyQuery = props.allowEmptyQuery

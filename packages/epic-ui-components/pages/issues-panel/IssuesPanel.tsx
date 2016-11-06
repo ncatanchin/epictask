@@ -11,13 +11,6 @@ import { PureRender } from "../../common"
 import { IssueDetailPanel } from "./IssueDetailPanel"
 import { Issue } from "epic-models"
 import {
-	selectedIssueIdsSelector,
-	issueStateSelector,
-	issuesSelector,
-	issueGroupsSelector,
-	issueItemsSelector,
-	selectedIssueSelector,
-	editInlineConfigIssueSelector,
 	IIssueGroup,
 	getIssueGroupId,
 	IIssueListItem,
@@ -38,6 +31,8 @@ import { ThemedStyles, IThemedAttributes, FlexColumnCenter } from "epic-styles"
 import { SearchPanel } from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber, IssueKey } from "epic-global"
+import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 
 // Constants & Non-typed Components
@@ -106,6 +101,8 @@ function baseStyles(topStyles,theme,palette) {
 export interface IIssuesPanelProps extends IThemedAttributes {
 	commandContainer?:CommandContainer
 	
+	viewController?:IssuePanelController
+	
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
 	items?: List<IIssueListItem<any>>
@@ -137,6 +134,20 @@ const
 		NewComment: 'NewComment'
 	}
 
+function makePropSelector(selectorProp) {
+	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
+}
+
+function makeSelector() {
+		
+		return createStructuredSelector({
+			issues: makePropSelector('issuesSelector'),
+			items: makePropSelector('issueItemsSelector'),
+			groups: makePropSelector('issueGroupsSelector'),
+			editInlineConfig: makePropSelector('editInlineConfigIssueSelector')
+		})
+	}
+	
 /**
  * IssuesPanel
  *
@@ -144,13 +155,7 @@ const
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	issues: issuesSelector,
-	items: issueItemsSelector,
-	groups: issueGroupsSelector,
-	editInlineConfig: editInlineConfigIssueSelector,
-	saving: (state) => issueStateSelector(state).issueSaving
-}))
+@connect(makeSelector)
 @CommandComponent()
 @ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
@@ -192,19 +197,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommonKeys.MoveUpSelect,{hidden:true})
 			
 			// NEW COMMENT
-			.command(
-				CIDS.NewComment,
-				CommandType.Container,
-				'New Comment',
-				(cmd, event) => getIssueActions().newComment(),
-				"Ctrl+m")
+			// .command(
+			// 	CIDS.NewComment,
+			// 	CommandType.Container,
+			// 	'New Comment',
+			// 	(cmd, event) => getIssueActions().newComment(),
+			// 	"Ctrl+m")
 			
 			// MARK ISSUE FOCUSED
-			.command(
-				CommandType.Container,
-				'Mark selected issues focused',
-				(cmd,event) => getIssueActions().toggleSelectedAsFocused(),
-				CommonKeys.Space)
+			// .command(
+			// 	CommandType.Container,
+			// 	'Mark selected issues focused',
+			// 	(cmd,event) => getIssueActions().toggleSelectedAsFocused(),
+			// 	CommonKeys.Space)
 			
 			.command(
 				CIDS.NewIssue,
@@ -237,7 +242,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CIDS.LabelIssues,
 				CommandType.Container,
 				'Label selected issues',
-				(cmd,event) => getIssueActions().patchIssuesLabel(),
+				(cmd,event) => getIssueActions().patchIssuesLabel(this.viewController.getSelectedIssues()),
 				"CommandOrControl+t")
 			
 			// MILESTONE ISSUES
@@ -245,7 +250,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CIDS.MilestoneIssues,
 				CommandType.Container,
 				'Milestone selected issues',
-				(cmd,event) => getIssueActions().patchIssuesMilestone(),
+				(cmd,event) => getIssueActions().patchIssuesMilestone(this.viewController.getSelectedIssues()),
 				"CommandOrControl+m")
 				
 			// FIND/FUZZY
@@ -310,7 +315,21 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	
 	
 	
+	private get viewController() {
+			return this.props.viewController
+	}
 	
+	private get selectedIssue() {
+		return this.viewController.getSelectedIssue()
+	}
+	
+	private get selectedIssues() {
+		return this.viewController.getSelectedIssues()
+	}
+	
+	private getSelectedIssueIds() {
+		return this.viewController.state.selectedIssueIds
+	}
 	
 	/**
 	 * Open issue finder
@@ -346,21 +365,31 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Private ref for selected issue ids
 	 */
 	
-	private _selectedIssueIds:number[]
+	private _selectedIssueIds:List<number>
 	
-	private selectListeners:Function[] = []
+	/**
+	 * Internal select event emitter
+	 *
+	 * @type {SimpleEventEmitter<Function>}
+	 */
+	private selectListeners = new SimpleEventEmitter<Function>()
 	
+	/**
+	 * Listen for selection changes
+	 *
+	 * @param listener
+	 */
 	addSelectListener(listener) {
-		if (!this.selectListeners.includes(listener))
-			this.selectListeners.push(listener)
+		this.selectListeners.addListener(listener)
 	}
 	
+	/**
+	 * Remove listener
+	 *
+	 * @param listener
+	 */
 	removeSelectListener(listener) {
-		const
-			index = this.selectListeners.indexOf(listener)
-		
-		if (index > -1)
-			this.selectListeners.splice(index,1)
+		this.selectListeners.removeListener(listener)
 	}
 	
 	
@@ -385,14 +414,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @returns {Array<number>|Array}
 	 */
-	get selectedIssueIds():number[] {
-		return this._selectedIssueIds || selectedIssueIdsSelector(getStoreState()) || []
+	get selectedIssueIds():List<number> {
+		return this._selectedIssueIds || this.getSelectedIssueIds()
 	}
 	
-	set selectedIssueIds(ids:number[]) {
-		this._selectedIssueIds = ids || []
+	/**
+	 * Set the current selected issue ids
+	 *
+	 * @param ids
+	 */
+	set selectedIssueIds(ids:List<number>) {
+		this._selectedIssueIds = ids || List<number>()
 		
-		this.selectListeners.forEach(listener => listener())
+		this.selectListeners.emit()
 	}
 	
 	
@@ -435,17 +469,17 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 		const
 			{selectedIssueIds} = this,
-			selectedIssue = selectedIssueSelector(getStoreState())
+			selectedIssue = this.viewController.getSelectedIssue()
 		
 		log.debug('Enter pressed', selectedIssueIds, selectedIssue)
 		
 		
 		// One issue selected
 		if (selectedIssue) {
-			this.issueActions.editInline()
+			//this.issueActions.editInline()
 		}
 		// Otherwise move down and clear selection
-		else if (selectedIssueIds.length) {
+		else if (selectedIssueIds.size) {
 			this.moveDown()
 		}
 	}
@@ -460,7 +494,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			selectedIssueIds = this.selectedIssueIds
 		
 		log.info(`OnDelete - going to remove`, selectedIssueIds)
-		this.issueActions.setIssueStatus('closed', ...selectedIssueIds)
+		this.issueActions.setIssueStatus(this.viewController.getSelectedIssues(),'closed')
 	}
 	
 	/**
@@ -546,7 +580,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			// If more than one issue is selected then use
 			// bounds to determine new selection index
-			if (selectedIssueIds && selectedIssueIds.length > 1) {
+			if (selectedIssueIds && selectedIssueIds.size > 1) {
 				const
 					{startIndex, endIndex} = this.getSelectionBounds()
 				
@@ -582,13 +616,13 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			
 			// Calculate new selected ids
-			let newSelectedIssueIds:number[] = (event && event.shiftKey) ?
+			let newSelectedIssueIds:List<number> = (event && event.shiftKey) ?
 				
 				// Select block continuation
 				this.calculateSelectedIssueIds(adjustedIndex, firstSelectedIndex) : // YOU ARE HERE - just map array of ids
 				
 				// Issue item
-				!item ? [] : [item.id as number]
+				List<number>(!item ? [] : [item.id as number])
 				
 					
 					
@@ -627,7 +661,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	
 	
 	pushSelectedIssueIds = _.debounce(() => {
-		getIssueActions().setSelectedIssueIds(this.selectedIssueIds)
+		this.viewController.setSelectedIssueIds(this.selectedIssueIds)
 	},200)
 	
 	/**
@@ -636,7 +670,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param newSelectedIssueIds
 	 * @param force
 	 */
-	updateSelectedIssueIds(newSelectedIssueIds: number[], force = false) {
+	updateSelectedIssueIds(newSelectedIssueIds: List<number>, force = false) {
 		this.adjustScroll(newSelectedIssueIds)
 		this.selectedIssueIds = newSelectedIssueIds
 		
@@ -662,19 +696,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			startIndex = -1,
 			endIndex = -1
 		
-		for (let issueId of selectedIssueIds) {
+		selectedIssueIds.forEach(issueId => {
 			const
 				index = this.getIssueIndex(issueId)
 			
 			if (index === -1)
-				continue
+				return
 			
 			if (startIndex === -1 || index < startIndex)
 				startIndex = index
 			
 			if (endIndex === -1 || index > endIndex)
 				endIndex = index
-		}
+		})
 		
 		return {startIndex, endIndex}
 	}
@@ -686,7 +720,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param firstSelectedIndex
 	 * @returns {number[]}
 	 */
-	calculateSelectedIssueIds(issueIndex, firstSelectedIndex):number[] {
+	calculateSelectedIssueIds(issueIndex, firstSelectedIndex):List<number> {
 		const
 			{itemIndexes} = this,
 			{items} = this.props
@@ -699,8 +733,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			.slice(startIndex, endIndex + 1)
 			.map(itemIndex => items.get(itemIndex))
 			.filter(item => !!item)
-			.map(item => item.id)
-			.toArray() as number[]
+			.map(item => item.id) as List<number>
 	}
 	
 	/**
@@ -715,7 +748,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			return
 		}
 		
-		this.updateSelectedIssueIds([issue.id])
+		this.updateSelectedIssueIds(List<number>(issue.id))
 		getIssueActions().editIssue(issue)
 		
 	}
@@ -725,7 +758,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 *
 	 * @param event
 	 * @param issue
-	 * @param index
 	 */
 	onIssueSelected = (event: MouseEvent, issue) => {
 		let
@@ -745,7 +777,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		log.info(`Issue selected`,issue,'at index',issueIndex)
 		if (
 				issueIndex > -1 && (
-						selectedIssueIds.length === 0 ||
+						selectedIssueIds.size === 0 ||
 						(!event.shiftKey && !event.metaKey)
 				)
 		) {
@@ -760,14 +792,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		// Toggle the issue selection if meta key used
 		else if (event.metaKey) {
 			
-			const wasSelected = selectedIssueIds.includes(issue.id)
+			const
+				wasSelected = selectedIssueIds.includes(issue.id)
+			
 			selectedIssueIds = (wasSelected) ?
 					selectedIssueIds.filter(id => id !== issue.id) :
-					selectedIssueIds.concat([issue.id]) as any
+					selectedIssueIds.push(issue.id) as any
 			
 			
 		} else {
-			selectedIssueIds = [issue.id]
+			selectedIssueIds = List<number>(issue.id)
 		}
 		
 		
@@ -881,7 +915,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			itemsAvailable = items && items.size > 0,
 			allItemsFiltered = !itemsAvailable && issues.size,
 			
-			allowResize = itemsAvailable && validSelectedIssueIds && validSelectedIssueIds.length > 0,
+			allowResize = itemsAvailable && validSelectedIssueIds && validSelectedIssueIds.size > 0,
 			
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
@@ -936,7 +970,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						
 						{/* LIST CONTROLS FILTER/SORT */}
 						<IssuesList
-							
+							viewController={this.viewController}
 							ref={(listRef) => this.setState({listRef})}
 							onIssueOpen={this.onIssueOpen}
 							onIssueSelected={this.onIssueSelected}
@@ -944,7 +978,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						/>
 						
 						{/* ISSUE DETAIL PANEL */}
-						<IssueDetailPanel />
+						<IssueDetailPanel viewController={this.viewController} />
 					
 					</SplitPane>
 					

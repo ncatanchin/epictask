@@ -5,10 +5,6 @@ import { DatabaseClientService } from "./DatabaseClientService"
 import { getIssueActions, getRepoActions } from "epic-typedux"
 import { getStores } from "epic-database-client"
 import { acceptHot } from "epic-global/HotUtils"
-import {
-	addDatabaseChangeListener
-} from "epic-database-client/DatabaseClient"
-import { Issue,User ,Milestone,Label ,AvailableRepo,Comment ,Repo } from "epic-models"
 
 const
 	log = getLogger(__filename)
@@ -91,8 +87,8 @@ export class RepoStateService extends BaseService {
 		
 		getRepoActions().loadAvailableRepos(true)
 		
-		this.unsubscribe = this.store
-			.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
+		// this.unsubscribe = this.store
+		// 	.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
 		
 		
 		
@@ -128,27 +124,27 @@ export class RepoStateService extends BaseService {
 	}
 	
 	
-	/**
-	 * Watches for changes to selected issue ids
-	 */
-	private selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
-		
-		if (ProcessConfig.isType(ProcessType.JobServer))
-			return
-		
-		log.debug(`Selected issue ids updated`,selectedIssueIds)
-		if (selectedIssueIds && selectedIssueIds.length === 1) {
-			
-			log.debug(`Loading activity`)
-			const
-				{pendingActivityLoad} = this
-			
-			if (pendingActivityLoad)
-				pendingActivityLoad.cancel()
-			
-			this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
-		}
-	}
+	// /**
+	//  * Watches for changes to selected issue ids
+	//  */
+	// private selectedIssueIdsChanged = (selectedIssueIds:number[]) => {
+	//
+	// 	if (ProcessConfig.isType(ProcessType.JobServer))
+	// 		return
+	//
+	// 	log.debug(`Selected issue ids updated`,selectedIssueIds)
+	// 	if (selectedIssueIds && selectedIssueIds.length === 1) {
+	//
+	// 		log.debug(`Loading activity`)
+	// 		const
+	// 			{pendingActivityLoad} = this
+	//
+	// 		if (pendingActivityLoad)
+	// 			pendingActivityLoad.cancel()
+	//
+	// 		this.pendingActivityLoad = getIssueActions().loadActivityForIssue(selectedIssueIds[0])
+	// 	}
+	// }
 	
 	
 }

@@ -32,33 +32,19 @@ import {
 	IssuesEventStore,
 	IssuesEvent
 } from "epic-models"
-import { IssueMessage, IssueState, TEditCommentRequest, IIssuePatchLabel } from "../state/IssueState"
+
 import { enabledRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector } from "../selectors"
-import {
-	selectedIssueIdsSelector,
-	selectedIssueSelector,
-	selectedIssuesSelector,
-	issueItemsSelector
-} from "../selectors"
+
 import {
 	getRepoActions,
-	getUIActions,
-	getAppActions
+	getUIActions
 } from '../provider'
-import {
-	TIssuePatchMode,
-} from '../state/IssueState'
-import {
-	IIssueFilter,
-	DefaultIssueFilter,
-	IIssueSort
-} from '../state/issue'
-
 import { GitHubClient } from "epic-github"
-//import { getGithubEventMonitor } from "shared/github/GithubEventMonitor"
 import { ContainerNames } from "epic-command-manager"
 import { Roots } from "epic-entry-ui/routes/Routes"
-import { issueSortSelector, issueFilterSelector } from "epic-typedux/selectors/IssueSelectors"
+import { TIssuePatchMode, IIssuePatchLabel } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import { getDatabaseClient } from "epic-database-client/DatabaseClient"
+import { getValue } from "typeguard"
 
 
 /**
@@ -97,151 +83,121 @@ export interface IIssueDataUpdate {
 }
 
 
+
+
 /**
  * RepoActionFactory.ts
  *
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@RegisterActionFactory
-@Provided
-export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
-	
-	static leaf = IssueKey
-	
-	
+export class IssueActionFactory  {
 	
 	constructor() {
-		super(IssueState)
+	}
+	
+	async queryIssues(issueSort:IIssueSort,issueFilter:IIssueFilter):Promise<List<Issue>> {
+		const
+			availRepos = enabledAvailableReposSelector(getStoreState()),
+			enabledRepoIds = availRepos
+				.map(it => it.id)
+				.sort()
+				
 		
-		
-	}
-	
-	leaf(): string {
-		return IssueKey;
-	}
-	
-	/**
-	 * Set the current focused issue ids
-	 *
-	 * @param focusedIssueIds
-	 */
-	@ActionReducer()
-	setFocusedIssueIds(focusedIssueIds:number[]) {
-		return (state:IssueState) => state.set('focusedIssueIds',focusedIssueIds)
-	}
-	
-	
-	/**
-	 * Toggle selected as focused
-	 */
-	toggleSelectedAsFocused() {
 		let
-			{selectedIssueIds,focusedIssueIds = []} = this.state
+			queryOpts:any = {
+				reduce: true,
+				keys: enabledRepoIds.map(it => [it]).toArray(), // MAP TO ARRAY OF ARRAYS
+				reverse: issueSort.direction === 'desc'
+			}
 		
-		if (!selectedIssueIds || !selectedIssueIds.length)
-			return
-		
-		// COPY
-		focusedIssueIds = cloneObjectShallow(focusedIssueIds)
-		
-		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
-			selectedIssueIds.forEach(id => {
-				focusedIssueIds.splice(focusedIssueIds.indexOf(id),1)
+		if (issueSort.groupBy !== 'none') {
+			assign(queryOpts,{
+				group: true,
+				group_level: 1
 			})
-		} else {
-			focusedIssueIds = _.uniq(focusedIssueIds.concat(selectedIssueIds))
 		}
-		
-		this.setFocusedIssueIds(focusedIssueIds)
-		
-	}
-	
-	/**
-	 * Set focus on an issue
-	 *
-	 * @param issue
-	 */
-	focusOnIssue(issue:Issue)
-	focusOnIssue(issueId:number)
-	focusOnIssue(issueOrIssueId:Issue|number) {
-		const
-			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
 		let
-			{focusedIssueIds = []} = this.state
+			viewName:string = "withSortFields"
 		
-		if (focusedIssueIds.includes(issueId)) {
-			log.debug(`Issue id ${issueId} is already focused`)
-			return
+		switch(issueSort.groupBy) {
+			case 'milestone':
+				viewName = "byMilestones"
+				break
+			case 'labels':
+				viewName = "byLabels"
+				break
+			case 'assignee':
+				viewName = "byAssignee"
 		}
 		
-		this.setFocusedIssueIds([...focusedIssueIds,issueId])
+		
+		const
+			viewPath = `issues/${viewName}`,
+			dbClient = getDatabaseClient(),
+			dbAdapter = dbClient.getAdapter(),
+			stores = getStores(),
+			results:any = await dbAdapter.direct(stores.issue,'query',viewPath,queryOpts)
+		
+		log.info(`Got raw issues`,results)
+		
+		
+		const
+			values = getValue(() => results.rows
+				.filter(it => Array.isArray(it.value) && Array.isArray(it.value[0]))
+				.map(it => it.value && it.value[0]),[]),
 			
-	}
-	
-	/**
-	 * Remove issue focus
-	 *
-	 * @param issue
-	 */
-	removeIssueFocus(issue:Issue)
-	removeIssueFocus(issueId:number)
-	removeIssueFocus(issueOrIssueId:Issue|number) {
-		const
-			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
-		
-		let
-			{focusedIssueIds = []} = this.state
-		
-		if (!focusedIssueIds.includes(issueId)) {
-			log.debug(`Issue id ${issueId} does not have focus`)
-			return
-		}
-		
-		const
-			newFocusedIds = [].concat(focusedIssueIds)
-		
-		newFocusedIds.splice(newFocusedIds.indexOf(issueId),1)
-		this.setFocusedIssueIds(newFocusedIds)
-	}
-	
-	/**
-	 * Create a new comment
-	 */
-	newComment() {
-		const
-			issue = selectedIssueSelector(getStoreState())
-		
-		if (!issue) {
-			return addErrorMessage('You can only add a comment when exactly one issue is selected')
-		}
-		
-		this.editComment(issue)
-	}
-	
-	/**
-	 * Set current issues
-	 *
-	 * @param issues
-	 * @returns {(state:IssueState)=>Map<string, any>}
-	 */
-	@ActionReducer()
-	private setIssues(issues:List<Issue>) {
-		return (state:IssueState) => state.update(
-			'issues',
-			(updateIssues) => updateIssues.withMutations(newIssues => {
-				issues.forEach(issue => {
-					const
-						index = newIssues.findIndex(it => it.id === issue.id)
-					
-					newIssues = index === -1 ?
-						newIssues.push(issue) :
-						newIssues.set(index,issue)
-						
+			issues = values.map(value => {
+				const
+					[
+						_id,
+						id,
+						repoId,
+						title,
+						state,
+						milestoneId,
+						milestoneTitle,
+						userId,
+						userLogin,
+						assigneeId,
+						assigneeLogin,
+						created_at,
+						updated_at
+					] = value
+				
+				return new Issue({
+					id,
+					repoId,
+					title,
+					state,
+					milestone: milestoneId && {
+						id: milestoneId,
+						title: milestoneTitle
+					},
+					user: userId && {
+						id: userId,
+						login: userLogin
+					},
+					assignee: assigneeId && {
+						id: assigneeId,
+						login: assigneeLogin
+					},
+					created_at,
+					updated_at
 				})
 			})
-		)
+		
+		log.info(`Mapped raw issues`, issues)
+		return List<Issue>(issues)
+		
+			
+		
+				
+		
+		
+		
+		
 	}
 	
 	/**
@@ -249,45 +205,67 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@ActionThunk()
-	loadIssues() {
-		return async (dispatch,getState) => {
-			const
-				enabledRepos = enabledAvailableReposSelector(getState())
-			
-			let
-				issues
-			
-			if (!enabledRepos || enabledRepos.size === 0) {
-				log.debug(`No enabled repos found, can not load issues`)
-				issues = List<Issue>()
-			} else {
-				log.info(`Updating repos`,enabledRepos)
-				// GET ISSUES PUSHES THEM A PAGE AT A TIME UNLESS ITS AN UPDATE
-				// @see reloadIssues
-				await this.getIssues(enabledRepos.toArray())
-			}
-			
-			const
-				selectedIssueIds = selectedIssueIdsSelector(getState())
-			
-			// IFF SELECTED ISSUE THEN LOAD ACTIVITY
-			if (selectedIssueIds && selectedIssueIds.length === 1) {
-				this.loadActivityForIssue(selectedIssueIds[0])
-			}
-			
-			
-		}
-	}
+	// @ActionThunk()
+	// loadIssues() {
+	// 	return async (dispatch,getState) => {
+	// 		const
+	// 			enabledRepos = enabledAvailableReposSelector(getState())
+	//
+	// 		let
+	// 			issues
+	//
+	// 		if (!enabledRepos || enabledRepos.size === 0) {
+	// 			log.debug(`No enabled repos found, can not load issues`)
+	// 			issues = List<Issue>()
+	// 		} else {
+	// 			log.info(`Updating repos`,enabledRepos)
+	// 			// GET ISSUES PUSHES THEM A PAGE AT A TIME UNLESS ITS AN UPDATE
+	// 			// @see reloadIssues
+	// 			await this.getIssues(enabledRepos.toArray())
+	// 		}
+	//
+	// 		const
+	// 			selectedIssueIds = selectedIssueIdsSelector(getState())
+	//
+	// 		// IFF SELECTED ISSUE THEN LOAD ACTIVITY
+	// 		if (selectedIssueIds && selectedIssueIds.length === 1) {
+	// 			this.loadActivityForIssue(selectedIssueIds[0])
+	// 		}
+	//
+	//
+	// 	}
+	// }
+	//
+	// async getIssueIds(issueFilter:IIssueFilter,issueSort:IIssueSort) {
+	// 	const
+	// 		availRepos = enabledAvailableReposSelector(getStoreState()),
+	// 		enabledRepoIds = availRepos.map(it => `${it.id}`).sort()
+	//
+	// 	let
+	// 		queryOpts:any = {
+	// 			keys: enabledRepoIds
+	// 		}
+	//
+	// 	if (issueSort.groupBy !== 'none') {
+	// 		assign(queryOpts,{
+	// 			reduce: true,
+	// 			group: true,
+	// 			group_level: 1
+	// 		})
+	// 	}
+	//
+
+	//
+	// }
 	
 	/**
 	 * Refill all the issues for a given repo based on resource changes
+	 *
+	 * @param issues
 	 * @param availRepo
 	 * @param field (only for a specific field)
 	 */
-	refillResourcesForRepo(availRepo:AvailableRepo,field:'both'|'milestone'|'labels') {
-		const
-			{issues} = this.state
+	refillResourcesForRepo(issues:List<Issue>,availRepo:AvailableRepo,field:'both'|'milestone'|'labels') {
 		
 		let
 			changes = List<Issue>()
@@ -343,9 +321,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				}
 			})
 		
-		if (changes.size) {
-			this.setIssues(changes)
-		}
+		return changes
 		
 	}
 	
@@ -440,8 +416,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 		// OTHERWISE ONLY LOAD ISSUES SPECIFICALLY FOR UNLOADED REPOS
 		else {
-			loadingFromRepos = true
-			
 			// FILTER OUT ANY LOADED REPOS
 			availRepos = availRepos
 				.filter(it => !it.issuesLoadStatus || it.issuesLoadStatus < LoadStatus.Loading)
@@ -454,114 +428,55 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				availRepos
 					.map(async(availRepo) => {
 						
-						let
-							loadedIssueIds = List<number>()
-						
 						const
-							pushIssues = (issuesToPush) => {
-								// ADD EACH PAGE OF ISSUES
-								if (issuesToPush && (issuesToPush.length || issuesToPush.size)) {
-									
-									// FIRST FILTER ANY LOADED ISSUES
-									issuesToPush = issuesToPush
-										.filter(it => !loadedIssueIds.includes(it.id))
-									
-									// NOW FILL THE ISSUES
-									const
-										filledIssues = this.fillIssueResources(issuesToPush,availRepo)
-									
-									// PUSH THE IDS
-									loadedIssueIds = loadedIssueIds.concat(
-										filledIssues.map(it => it.id)) as List<number>
-									
-									this.setIssues(filledIssues)
-								}
-							},
-							
 							repoIssues:List<Issue> = await pagedFinder(
 								Issue,
 								FinderItemsPerPage,
 								getStores().issue,
 								(issueStore:IssueStore, nextRequest:FinderRequest, lastIssues:Issue[]) => {
 									
-									pushIssues(lastIssues)
-									
 									return issueStore.findByIssuePrefix(nextRequest, availRepo.repoId)
 								}
 							)
 						
-						pushIssues(repoIssues)
-						//issues = issues.concat(repoIssues) as List<Issue>
+						
+						issues = issues.concat(repoIssues) as List<Issue>
 			}))
 		}
 			
-		
-		if (loadingFromRepos) {
-			await updateIssuesLoadStatus(LoadStatus.Loaded)
-		}
-		
-		
 		return issues
 		
 	}
 	
-	@ActionReducer()
-	private setPatchIssues(issues: Issue[], mode: TIssuePatchMode = null) {
-		return (state: IssueState) => state
-			.set('patchIssues', issues)
-			.set('patchMode', mode || state.patchMode)
-	}
-	
-	/**
-	 * The the selected issue ids
-	 *
-	 * (Highlighted issues in the main list)
-	 *
-	 * @param selectedIssueIds
-	 * @returns {(state:IssueState)=>Map<string, number[]>}
-	 */
-	@ActionReducer()
-	setSelectedIssueIds(selectedIssueIds: number[]) {
-		return (state: IssueState) => {
-			state = state
-				.set('selectedIssueIds', selectedIssueIds) as any
-			
-			if (state.editingInline)
-				state.set('editingInline', false)
-			
-			return state
-		}
-			
-	}
 	
 	/**
 	 * Start editing an i
 	 * @param fromIssue
 	 */
 	createIssueInline(fromIssue: Issue) {
-		this.newIssue(fromIssue, true)
+		return this.newIssue(fromIssue)
 	}
 	
 	/**
 	 * Update issues label
 	 */
-	patchIssuesLabel() {
-		this.patchIssues('Label')
+	patchIssuesLabel(issues:List<Issue>) {
+		return this.patchIssues('Label',issues)
 	}
 	
 	
 	/**
 	 * Update issues milestone
 	 */
-	patchIssuesMilestone() {
-		this.patchIssues('Milestone')
+	patchIssuesMilestone(issues:List<Issue>) {
+		return this.patchIssues('Milestone',issues)
 	}
 	
 	/**
 	 * Update issues assignee
 	 */
-	patchIssuesAssignee() {
-		this.patchIssues('Assignee')
+	patchIssuesAssignee(issues:List<Issue>) {
+		return this.patchIssues('Assignee',issues)
 	}
 	
 	/**
@@ -570,20 +485,13 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param mode
 	 * @param issues
 	 */
-	async patchIssues(mode: TIssuePatchMode, ...issues: Issue[]) {
+	async patchIssues(mode: TIssuePatchMode, issues: List<Issue>) {
 		
-		
-		if (!issues || !issues.length) {
-			log.debug(`no issues passed to patch, going to use the selected issues`)
-			issues = selectedIssuesSelector(getStoreState())
-		}
-		
-		if (!issues.length) {
+		if (!issues.size) {
 			log.warn('Must have at least 1 issue selected to open patch editor', issues)
 			return
 		}
 		
-		this.setPatchIssues(issues, mode)
 		getUIActions().openWindow(Roots.IssuePatchDialog.makeURI(issues))
 	}
 	
@@ -595,28 +503,27 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 * @param useAssign
 	 */
-	@ActionThunk()
-	applyPatchToIssues(patch: any, useAssign: boolean, ...issues: Issue[]) {
+	
+	async applyPatchToIssues(patch: any, useAssign: boolean, issues:List<Issue>) {
 		issues = cloneObjectShallow(issues)
 		
-		return async(dispatch, getState) => {
-			if (!issues.length)
+		
+			if (!issues.size)
 				return
 			
 			
 			const
-				originalIssues = cloneObjectShallow(issues),
-				stores = Container.get(Stores),
-				actions = this.withDispatcher(dispatch, getState),
+				originalIssues = issues,
+				stores = getStores(),
 				client = Container.get(GitHubClient)
 			
 			try {
 				
 				// Filter out issues that the milestone/assignee does not have access to
 				if (patch.hasOwnProperty('milestone') && patch.milestone) {
-					issues = issues.filter(issue => issue.repoId === patch.milestone.repoId)
+					issues = issues.filter(issue => issue.repoId === patch.milestone.repoId) as any
 				} else if (patch.hasOwnProperty('assignee') && patch.assignee) {
-					issues = issues.filter(issue => patch.assignee.repoIds && patch.assignee.repoIds.includes(issue.repoId))
+					issues = issues.filter(issue => patch.assignee.repoIds && patch.assignee.repoIds.includes(issue.repoId)) as any
 				}
 				
 				// Now apply the patch to clones
@@ -678,23 +585,22 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				
 				// const issueStore:IssueStore = this.stores.issue
 				// One by one update the issues on GitHub
-				await Promise.all(issues.map(async(issue: Issue, index) => {
+				await Promise.all(issues.map(async (issue: Issue, index) => {
 					const
 						repo = issue.repo || await stores.repo.get(issue.repoId)
 					
 					assert(repo, `Unable to find repo for issue patching: ${issue.repoId}`)
 					
-					await actions.saveAndUpdateIssueModel(client, repo, issue)
-				}))
+					await this.saveAndUpdateIssueModel(client, repo, issue)
+				}).toArray())
 				
-				actions.setIssueSaving(false)
-				actions.setPatchIssues(null)
+				
 				
 			} catch (err) {
 				log.error('issue patching failed', err, patch, issues, originalIssues)
-				actions.setIssueSaving(false, extractError(err))
+				throw err
 			}
-		}
+		
 	}
 	
 	/**
@@ -743,8 +649,6 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		//RepoSyncManager.get(repo).syncIssues(getStores(),repo)
 		
 		log.debug(`Updating issue in state`,loadedIssue)
-		this.reloadIssues(loadedIssue)
-			
 		return  loadedIssue
 		
 	}
@@ -755,37 +659,18 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issue
 	 * @param childWindowId - if triggered from a dialog
 	 */
-	@ActionThunk()
-	private doIssueSave(issue: Issue, childWindowId:string = null) {
-		return async(dispatch, getState) => {
+	async saveIssue(issue: Issue) {
+		
 			const
 				client = Container.get(GitHubClient),
 				stores = getStores(),
 				repo = issue.repo || await stores.repo.get(issue.repoId)
-			
-			try {
-				const
-					updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue),
-					wasInline = this.state.editingInline
-				
-				addMessage(`Saved issue #${updatedIssue.number}`)
-				
-				//this.setSelectedIssueIds([updatedIssue.id])
-				this.setIssueSaving(false)
-				this.setEditingIssue(null)
-				
-				if (childWindowId)
-					getUIActions().closeWindow(childWindowId)
-				
-				if (wasInline)
-					getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-					
-				
-			} catch (err) {
-				log.error('failed to save issue', err)
-				this.setIssueSaving(false, extractError(err))
-			}
-		}
+		
+		
+		
+		return await this.saveAndUpdateIssueModel(client, repo, issue)
+		
+		
 	}
 	
 	
@@ -795,66 +680,66 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param comment
 	 */
 	
-	@ActionThunk()
-	commentDelete(comment: Comment) {
-		return async(dispatch, getState) => {
-			assert(comment.issueNumber && comment.repoId, 'Comment issue number and repo id MUST be set')
+	
+	async deleteComment(comment: Comment) {
+	 
+		assert(comment.issueNumber && comment.repoId, 'Comment issue number and repo id MUST be set')
+		
+		const
+			client = Container.get(GitHubClient),
+			stores = getStores(),
+			repo = await stores.repo.get(comment.repoId),
+			commentStore = getStores().comment
+		
+		try {
+			await client.commentDelete(repo,comment)
+		} catch (err) {
+			if (_.get(err,'statusCode') !== 404)
+				throw err
 			
-			const
-				actions = this.withDispatcher(dispatch, getState),
-				client = Container.get(GitHubClient),
-				stores = Container.get(Stores),
-				repo = await stores.repo.get(comment.repoId),
-				commentStore = getStores().comment
-				
-			actions.setIssueSaving(true)
-			
-			try {
-				try {
-					await client.commentDelete(repo,comment)
-				} catch (err) {
-					if (_.get(err,'statusCode') !== 404)
-						throw err
-					
-					log.warn(`Issue was already removed from GitHub`)
-				}
-				
-				// PERSIST
-				await commentStore.remove(Comment.makeCommentId(comment))
-				
-				// REMOVE FROM STATE IF IN CURRENT COMMENTS
-				this.updateCommentsInState(List<Comment>([comment]),true)
-				
-				
-				addMessage(`Removed comment from issue #${comment.issueNumber}`)
-				actions.setIssueSaving(false)
-				actions.setEditingComment(null)
-				
-			} catch (err) {
-				log.error(`Failed to delete comment`,err)
-				actions.setIssueSaving(false,err)
-				addErrorMessage(err)
-			}
+			log.warn(`Issue was already removed from GitHub`)
 		}
+		
+		// PERSIST
+		await commentStore.remove(Comment.makeCommentId(comment))
+		
+	
 	}
 	
 	/**
 	 * Update / create the comment in GitHub, persist and update state
 	 *
-	 * @param client
-	 * @param repo
 	 * @param issue
 	 * @param comment
 	 */
-	private async saveAndUpdateComment(client,repo:Repo,issue:Issue,comment:Comment) {
+	async saveComment(issue:Issue,comment:Comment) {
+		
 		comment = cloneObject(comment)
+		
+		const
+			client = Container.get(GitHubClient),
+			stores = getStores()
+			
+		
+		assert(issue, `Unable to find issue with repoId = ${comment.repoId} and issueNumber ${comment.issueNumber}`)
+		
+		const
+			availRepo = availableReposSelector(getStoreState())
+				.find(it => it.repoId === issue.repoId),
+			
+			repo = availRepo && availRepo.repo
+		
+		
+		log.debug(`Got repo`,repo,`for issue`,issue,`for comment`,comment)
+		assert(repo,`Unable to get repo from repoId on issue: ${issue.repoId}`)
+		
 		
 		const
 			commentStore = getStores().comment,
 			ghComment = await client.commentSave(repo, issue, comment)
 		
 		// Assign all the updated from github to the comment
-		Object.assign(comment, ghComment, {
+		assign(comment, ghComment, {
 			issueNumber: issue.number,
 			repoId: repo.id,
 			parentRefId: Comment.makeParentRefId(repo.id, issue.number)
@@ -872,215 +757,15 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		
 		// Reload to make sure we're good
 		comment = await commentStore.get(commentId)
+		
 		assert(comment,`Persist was successful, but query for ${commentId} failed - ???`)
 		
-		const
-			currentComments = this.state.comments,
-			selectedIssue = selectedIssueSelector(getStoreState())
 		
-		// UPDATE STATE IF THE COMMENT SHOULD BE VISIBLE
-		if (currentComments && currentComments.find(it => it && it.id === comment.id) ||
-			(selectedIssue && selectedIssue.id) === issue.id) {
-			
-			const
-				commentIndex = currentComments.findIndex(it => it && it.id === comment.id)
-			
-			this.updateCommentsInState(commentIndex > -1 ?
-				currentComments.set(commentIndex,comment) :
-				currentComments.push(comment)
-			)
-		}
 		return comment
 		
 		
 	}
 			
-	/**
-	 * Save an issue and update it in GitHub
-	 *
-	 * @param editCommentRequest
-	 */
-	@ActionThunk()
-	private doCommentSave(editCommentRequest: TEditCommentRequest) {
-		
-		return async(dispatch, getState) => {
-			const
-				actions = this.withDispatcher(dispatch, getState)
-				
-			let
-				{comment,issue} = editCommentRequest
-			
-			try {
-				assert(comment.issueNumber && comment.repoId, 'Comment issue number and repo id MUST be set')
-				
-				const
-					client = Container.get(GitHubClient),
-					stores = Container.get(Stores),
-					{issue:issueStore} = stores
-				
-				assert(issue, `Unable to find issue with repoId = ${comment.repoId} and issueNumber ${comment.issueNumber}`)
-				
-				const
-					availRepo = availableReposSelector(getState()).find(it => it.repoId === issue.repoId),
-					repo = availRepo && availRepo.repo
-				
-				
-				log.debug(`Got repo`,repo,`for issue`,issue,`for comment`,comment)
-				assert(repo,`Unable to get repo from repoId on issue: ${issue.repoId}`)
-				
-				// Clone the comment to not affect UI state and
-				// ensure no mutations
-				comment = await this.saveAndUpdateComment(client,repo,issue,comment)
-				
-				
-				// Tell the user we are good to go!
-				addMessage(`Saved comment`)
-				actions.setIssueSaving(false)
-				actions.setEditingComment(null)
-				
-				await Promise.setImmediate()
-				
-				const
-					selectedIssueId = this.state.selectedIssueIds[0],
-					selectedIssue = selectedIssueId && await issueStore.get(selectedIssueId)
-				
-				if (selectedIssue && selectedIssue.id === issue.id)
-					actions.loadActivityForIssue(issue.id)
-				
-				
-			} catch (err) {
-				log.error('failed to save issue', err)
-				actions.setIssueSaving(false, extractError(err))
-			}
-		}
-	}
-	
-	
-	/**
-	 * Set issue saving to true/false
-	 *
-	 * @param saving
-	 * @param error
-	 * @returns {(state:IssueState)=>Map<string, boolean>}
-	 */
-	@ActionReducer()
-	setIssueSaving(saving: boolean, error: Error = null) {
-		return (state: IssueState) => state
-			.set('issueSaving', saving)
-			.set('issueSaveError', error)
-		
-	}
-	
-	
-	/**
-	 * Create/Update comment
-	 *
-	 * @param editCommentRequest
-	 *
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
-	 */
-	
-	commentSave(editCommentRequest:TEditCommentRequest) {
-		
-		this.setIssueSaving(true)
-		this.doCommentSave(editCommentRequest)
-	}
-	
-	/**
-	 * Save an issue, update or create
-	 *
-	 * @param issue
-	 * @param childWindowId
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
-	 */
-	
-	issueSave(issue: Issue,childWindowId:string = null) {
-		this.setIssueSaving(true)
-		this.doIssueSave(issue,childWindowId)
-	}
-	
-	/**
-	 * Set the current issue being edited
-	 *
-	 * @param editingIssue
-	 * @param inline
-	 * @return {(state:IssueState)=>Map<string, Issue>}
-	 */
-	@ActionReducer()
-	setEditingIssue(editingIssue: Issue, inline: boolean = false) {
-		return (state: IssueState) => state
-			.set('editingIssue', editingIssue).set('editingInline', inline)
-	}
-	
-	/**
-	 * Set whether or not inline editing is taking place
-	 *
-	 * @param inline
-	 * @returns {(state:IssueState)=>Map<string, boolean>}
-	 */
-	@ActionReducer()
-	setEditingInline(inline: boolean) {
-		return (state: IssueState) => {
-			state = state.set('editingInline', inline) as any
-			
-			return (inline) ?
-				state :
-				state
-					.set('editInlineConfig', null)
-					.set('editingIssue',null)
-			
-				
-		}
-	}
-	
-	
-	@ActionReducer()
-	private startEditInline(issue:Issue,fromIssueId,index:number) {
-		return (state:IssueState) => state
-			.set('editingInline', true)
-			.set('editingIssue', issue)
-			.set('editInlineConfig', {
-				index,
-				fromIssueId
-			})
-	}
-	
-	/**
-	 * Begin editing inline
-	 *
-	 * @returns {(dispatch:any, getState:any)=>undefined}
-	 */
-	@ActionThunk()
-	editInline() {
-		return (dispatch,getState) => {
-			let
-				items = issueItemsSelector(getState()),
-				selectedIssue = selectedIssueSelector(getState()),
-				index = selectedIssue && items.findIndex(item => item.id === selectedIssue.id)
-			
-			
-			if (!selectedIssue || isNil(index) || index === -1) {
-				log.warn('Issue index not found',index)
-				return
-			}
-			
-			// Increment here to show the create below the current issue
-			index++
-			
-			const
-				newIssue = new Issue(_.cloneDeep(_.pick(
-					selectedIssue,
-					'repoId',
-					'milestone',
-					'labels',
-					'assignee',
-					'collaborators'
-				)))
-			
-			this.startEditInline(newIssue,selectedIssue.id,index)
-		}
-		
-	}
 	
 	
 	/**
@@ -1088,78 +773,50 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@ActionThunk()
-	newIssue(fromIssue: Issue = null, inline: boolean = false) {
-		return async(dispatch, getState) => {
+	
+	async newIssue(fromIssue: Issue = null) {
+		
 			const
-				actions = this.withDispatcher(dispatch, getState),
 				uiActions = getUIActions(),
-				{issue:issueStore} = getStores(),
-				availRepos =  enabledAvailableReposSelector(getState())
-			
-			if (!availRepos.size)
-				return getNotificationCenter().addErrorMessage(`Enable or import a repository to create an issue`)
+				{issue:issueStore} = getStores()
 			
 			// If no from issue was provided then use the selected
 			// issue if available - otherwise totally empty
-			if (!fromIssue) {
-				const
-					selectedIssueIds = selectedIssueIdsSelector(getState()) || [],
-					selectedIssueId = selectedIssueIds.length && `${selectedIssueIds[0]}`
-				
-				if (selectedIssueId)
-					fromIssue = await issueStore.get(selectedIssueId)
-				else
-					fromIssue = null
-			}
 			
-			
-			let
-				repoId: number = _.get(fromIssue, 'repoId') as any
-			
-			if (!availRepos.find(item => item.repoId === repoId))
-				repoId = (availRepos.size) ? availRepos.get(0).repoId : null
-			
-			if (!repoId) {
-				addErrorMessage(new Error('You need to add some repos before you can create an issue. duh...'))
-				return
-			}
 			
 			const
-				issue = new Issue({repoId})
+				issue = assign(
+					new Issue(),
+					fromIssue && cloneObject(
+						_.pick(fromIssue,'milestone','labels','assignee','repoId')
+					)
+				)
 			
-			if (fromIssue)
-				assign(issue, _.cloneDeep(_.pick(fromIssue, 'milestone', 'labels')))
-			
-			actions.setIssueSaving(false)
-			actions.setEditingIssue(issue, inline)
-			
-			uiActions.openWindow(Roots.IssueEditDialog.makeURI())
-		}
+		
 	}
 	
-	getSelectedIssue():Issue {
-		return selectedIssueSelector(getStoreState())
+	newIssueDialog() {
+		getUIActions().openWindow(Roots.IssueEditDialog.makeURI())
 	}
+
+	
+	
 	
 	/**
 	 * Start editing an issue
 	 *
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	async editIssue(issue:Issue = null) {
+	editIssue(issue:Issue = null) {
 		const
 			uiActions = getUIActions()
-			
-		issue = issue || await this.getSelectedIssue()
 		
 		assert(issue, 'You must have an issue selected in order to edit one ;)')
 		
 		// TODO: fix issue fill
-		const editingIssue = _.cloneDeep(issue) // fillIssue(getState, _.cloneDeep(issue), issue.repoId)
+		const
+			editingIssue = cloneObject(issue)
 		
-		this.setIssueSaving(false)
-		this.setEditingIssue(editingIssue)
 		uiActions.openWindow(Roots.IssueEditDialog.makeURI(editingIssue))
 	}
 	
@@ -1169,7 +826,7 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * @param issue - required, used as the base for 'new comments'
 	 * @param comment - if editing, the comment to edit
 	 */
-	async editComment(issue: Issue, comment: Comment = null) {
+	editComment(issue: Issue, comment: Comment = null) {
 		const
 			uiActions = getUIActions()
 		
@@ -1186,360 +843,202 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 				body: ''
 			})
 		
-		this.setIssueSaving(false)
-		this.setEditingComment({issue,comment})
 		uiActions.openWindow(Roots.IssueCommentDialog.makeURI(issue,comment))
 	}
 	
 	
-	@ActionReducer()
-	private filteringAndSorting(issueFilter: IIssueFilter = null, issueSort: IIssueSort = null) {
-		return (issueState: IssueState) => issueState.withMutations((newIssueState: IssueState) => {
-			
-			if (issueFilter)
-				newIssueState.set('issueFilter', cloneObjectShallow(issueFilter))
-			
-			if (issueSort)
-				newIssueState.set('issueSort', cloneObjectShallow(issueSort))
-			
-			return newIssueState
-		})
-	}
+	
+	//
+	//
+	//
+	// /**
+	//  * Update a list of issues in the current state
+	//  *
+	//  * @param updatedIssues
+	//  * @returns {(state:IssueState)=>Map<K, V>}
+	//  */
+	// @ActionReducer()
+	// private updateIssuesInState(updatedIssues:List<Issue>) {
+	// 	return (state:IssueState) => state.withMutations((newState:IssueState) => {
+	// 		let
+	// 			{issues} = newState
+	//
+	// 		updatedIssues.forEach(updatedIssue => {
+	// 			const
+	// 				issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
+	//
+	// 			issues = (issueIndex > -1) ?
+	// 				issues.set(issueIndex,updatedIssue) :
+	// 				issues.push(updatedIssue)
+	// 		})
+	//
+	// 		return newState.set('issues',issues)
+	// 	})
+	// }
 	
 	
-	/**
-	 * Clear all current issue filters
-	 */
-	clearFilters() {
-		this.filteringAndSorting(DefaultIssueFilter)
-	}
-	
-	/**
-	 * Set the group by mode
-	 *
-	 * @param groupBy
-	 */
-	setGroupBy(groupBy: string) {
-		const
-			issueSort = issueSortSelector(getStoreState()),
-			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
-				groupBy
-			})
-		
-		this.setFilteringAndSorting(null, newIssueSort)
-	}
-	
-	/**
-	 * Toggle ascending and descending grouping
-	 */
-	toggleGroupByDirection() {
-		const
-			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
-					groupByDirection: (issueSort.groupByDirection === 'asc') ?
-						'desc' :
-						'asc'
-			})
-		
-		this.setFilteringAndSorting(null, newIssueSort)
-	}
-	
-	
-	/**
-	 * Set the sorting field
-	 *
-	 * @param field
-	 */
-	setSortByField(field: string) {
-		const
-			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = assign(
-				_.cloneDeep(issueSort),
-				{fields: [field]}
-			)
-		
-		this.setFilteringAndSorting(null, newIssueSort)
-	}
-	
-	/**
-	 * Toggle ascending and descending sort
-	 */
-	toggleSortByDirection() {
-		const
-			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = _.assign(
-				_.cloneDeep(issueSort),
-				{
-					direction: (issueSort.direction === 'asc') ?
-						'desc' :
-						'asc'
-				}
-			) as any
-		
-		this.setFilteringAndSorting(null, newIssueSort)
-	}
-	
-	/**
-	 * Toggle milestone on issue filter
-	 *
-	 * @param milestone
-	 */
-	toggleIssueFilterMilestone(milestone: Milestone) {
-		const {issueFilter} = this.state
-		const
-			newIssueFilter = _.cloneDeep(issueFilter),
-			milestoneIds = newIssueFilter.milestoneIds || (newIssueFilter.milestoneIds = []),
-			index = milestoneIds.indexOf(milestone.id)
-		
-		if (index === -1) {
-			milestoneIds.push(milestone.id)
-		} else {
-			milestoneIds.splice(index, 1)
-		}
-		
-		
-		this.setFilteringAndSorting(newIssueFilter)
-	}
-	
-	/**
-	 * Toggle a label on the issue filter
-	 *
-	 * @param label
-	 */
-	toggleIssueFilterLabel(label: Label) {
-		const {issueFilter} = this.state
-		const
-			newIssueFilter = _.cloneDeep(issueFilter),
-			labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
-			index = labelUrls.indexOf(label.url)
-		
-		if (index === -1) {
-			labelUrls.push(label.url)
-		} else {
-			labelUrls.splice(index, 1)
-		}
-		
-		this.setFilteringAndSorting(newIssueFilter)
-	}
-
-	
-	/**
-	 * Update a list of issues in the current state
-	 *
-	 * @param updatedIssues
-	 * @returns {(state:IssueState)=>Map<K, V>}
-	 */
-	@ActionReducer()
-	private updateIssuesInState(updatedIssues:List<Issue>) {
-		return (state:IssueState) => state.withMutations((newState:IssueState) => {
-			let
-				{issues} = newState
-			
-			updatedIssues.forEach(updatedIssue => {
-				const
-					issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
-				
-				issues = (issueIndex > -1) ?
-					issues.set(issueIndex,updatedIssue) :
-					issues.push(updatedIssue)
-			})
-			
-			return newState.set('issues',issues)
-		})
-	}
-	
-	
-	/**
-	 * Internally updates the state with new comments that match the
-	 * currently selected issue
-	 *
-	 * @param updatedComments
-	 * @param remove
-	 */
-	@ActionReducer()
-	private updateCommentsInState(updatedComments:List<Comment>,remove = false) {
-		return (state:IssueState) => {
-			
-			let
-				{comments,selectedIssueIds,issues} = state
-			
-			if (!selectedIssueIds || selectedIssueIds.length !== 1)
-				return state
-			
-			const
-				selectedIssue = this.state.issues.find(it => it.id === selectedIssueIds[0])
-			
-			if (!selectedIssue)
-				return state
-			
-			updatedComments
-				.filter(comment => comment.issueNumber === selectedIssue.number && comment.repoId === selectedIssue.repoId)
-				.forEach(updatedComment => {
-					const
-						commentIndex = comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
-					
-					// REMOVE COMMENT
-					if (remove) {
-						if (commentIndex === -1) {
-							log.debug(`Comment is not in state, can not remove`, updatedComment)
-						} else {
-							comments = comments.remove(commentIndex)
-						}
-					}
-					
-					// UPDATE & ADD COMMENT
-					else {
-						if (commentIndex > -1) {
-							comments = comments.set(commentIndex, updatedComment)
-						}else {
-							comments = comments.push(updatedComment)
-						}
-					}
-				})
-				 
-			return (comments === state.comments) ?
-				state :
-				state.set('comments',comments)
-				
-		}
-	}
-	
-	/**
-	 * Push updated comments for the currently selected issue
-	 *
-	 * @param comments
-	 */
-	@ActionThunk()
-	commentsChanged(...comments:Comment[]) {
-		return (dispatch,getState) => {
-			const
-				selectedIssue = selectedIssueSelector(getState())
-			
-			if (!selectedIssue)
-				return
-			
-			const
-				filteredComments = comments.filter(comment =>
-					comment.issueNumber === selectedIssue.number &&
-					comment.repoId === selectedIssue.repoId)
-			
-			if (!filteredComments.length) {
-				log.debug(`No issue comments matched in batch of ${comments.length}`)
-				return
-			}
-			
-			log.debug(`Pushing ${filteredComments.length} onto the state`)
-			this.updateCommentsInState(List<Comment>().push(...filteredComments))
-		}
-	}
-	
-	@ActionReducer()
-	toggleGroupVisibility(id:string,visible:boolean) {
-		return (state:IssueState) => state.set('groupVisibility',state.groupVisibility.set(id,visible))
-	}
-	
-	
-	getFilter() {
-		return issueFilterSelector(getStoreState())
-	}
-	
-	getSort() {
-		return issueSortSelector(getStoreState())
-	}
-	
-	/**
-	 * Set filtering and sorting
-	 *
-	 * @param issueFilter
-	 * @param issueSort
-	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
-	 */
-	
-	setFilteringAndSorting(
-		issueFilter: IIssueFilter = this.getFilter(), issueSort: IIssueSort = this.getSort()
-	) {
-		return this.filteringAndSorting(issueFilter, issueSort)
-	}
-	
+	// /**
+	//  * Internally updates the state with new comments that match the
+	//  * currently selected issue
+	//  *
+	//  * @param updatedComments
+	//  * @param remove
+	//  */
+	// @ActionReducer()
+	// private updateCommentsInState(updatedComments:List<Comment>,remove = false) {
+	// 	return (state:IssueState) => {
+	//
+	// 		let
+	// 			{comments,selectedIssueIds,issues} = state
+	//
+	// 		if (!selectedIssueIds || selectedIssueIds.length !== 1)
+	// 			return state
+	//
+	// 		const
+	// 			selectedIssue = this.state.issues.find(it => it.id === selectedIssueIds[0])
+	//
+	// 		if (!selectedIssue)
+	// 			return state
+	//
+	// 		updatedComments
+	// 			.filter(comment => comment.issueNumber === selectedIssue.number && comment.repoId === selectedIssue.repoId)
+	// 			.forEach(updatedComment => {
+	// 				const
+	// 					commentIndex = comments.findIndex(it => it && updatedComment && it.id === updatedComment.id)
+	//
+	// 				// REMOVE COMMENT
+	// 				if (remove) {
+	// 					if (commentIndex === -1) {
+	// 						log.debug(`Comment is not in state, can not remove`, updatedComment)
+	// 					} else {
+	// 						comments = comments.remove(commentIndex)
+	// 					}
+	// 				}
+	//
+	// 				// UPDATE & ADD COMMENT
+	// 				else {
+	// 					if (commentIndex > -1) {
+	// 						comments = comments.set(commentIndex, updatedComment)
+	// 					}else {
+	// 						comments = comments.push(updatedComment)
+	// 					}
+	// 				}
+	// 			})
+	//
+	// 		return (comments === state.comments) ?
+	// 			state :
+	// 			state.set('comments',comments)
+	//
+	// 	}
+	// }
+	//
+	// /**
+	//  * Push updated comments for the currently selected issue
+	//  *
+	//  * @param comments
+	//  */
+	// @ActionThunk()
+	// commentsChanged(...comments:Comment[]) {
+	// 	return (dispatch,getState) => {
+	// 		const
+	// 			selectedIssue = selectedIssueSelector(getState())
+	//
+	// 		if (!selectedIssue)
+	// 			return
+	//
+	// 		const
+	// 			filteredComments = comments.filter(comment =>
+	// 				comment.issueNumber === selectedIssue.number &&
+	// 				comment.repoId === selectedIssue.repoId)
+	//
+	// 		if (!filteredComments.length) {
+	// 			log.debug(`No issue comments matched in batch of ${comments.length}`)
+	// 			return
+	// 		}
+	//
+	// 		log.debug(`Pushing ${filteredComments.length} onto the state`)
+	// 		this.updateCommentsInState(List<Comment>().push(...filteredComments))
+	// 	}
+	// }
 	
 	/**
 	 * Remove all issues & comments matching this repo
 	 *
 	 * @param repoId
 	 */
-	@ActionReducer()
+	//@ActionReducer()
 	removeAllRepoResources(repoId:number) {
-		return (state:IssueState) => {
+		//return (state:IssueState) => {
+			//
+			// if (state.selectedIssueIds && state.selectedIssueIds.length) {
+			// 	state = state.set('selectedIssueIds',state.selectedIssueIds.filter(issueId => {
+			// 		const
+			// 			issue = state.issues.find(it => it.id === issueId)
+			//
+			// 		return issue && issue.repoId !== repoId
+			// 	})) as IssueState
+			// }
+			//
+			// if (state.editingIssue && state.editingIssue.repoId === repoId) {
+			// 	state = state
+			// 		.set('editingIssue', null)
+			// 		.set('editInlineConfig',null)
+			// 		.set('patchIssues',[])
+			// 		.set('editCommentRequest',null)
+			// 		.set('editingInline',false)
+			// 		.set('issueSaving',false)
+			// 		.set('issueSaveError',null) as IssueState
+			// }
+			//
+			// state = state
+			// 	.set('issues', state.issues.filter(it => it.repoId !== repoId))
+			// 	.set('issuesEvents', state.issuesEvents.filter(it => it.repoId !== repoId))
+			// 	.set('comments', state.comments.filter(it => it.repoId !== repoId)) as IssueState
+			//
+			//
 			
-			if (state.selectedIssueIds && state.selectedIssueIds.length) {
-				state = state.set('selectedIssueIds',state.selectedIssueIds.filter(issueId => {
-					const
-						issue = state.issues.find(it => it.id === issueId)
-					
-					return issue && issue.repoId !== repoId
-				})) as IssueState
-			}
-			
-			if (state.editingIssue && state.editingIssue.repoId === repoId) {
-				state = state
-					.set('editingIssue', null)
-					.set('editInlineConfig',null)
-					.set('patchIssues',[])
-					.set('editCommentRequest',null)
-					.set('editingInline',false)
-					.set('issueSaving',false)
-					.set('issueSaveError',null) as IssueState
-			}
-			
-			state = state
-				.set('issues', state.issues.filter(it => it.repoId !== repoId))
-				.set('issuesEvents', state.issuesEvents.filter(it => it.repoId !== repoId))
-				.set('comments', state.comments.filter(it => it.repoId !== repoId)) as IssueState
-			
-			
-			
-			
-			return state
-		}
+		//
+		// 	return state
+		// }
 	}
-	
-	/**
-	 * Load all issues for enabled repos
-	 *
-	 * @param dispatch
-	 * @param getState
-	 * @returns {number[]}
-	 */
-	async loadIssuesAction(dispatch, getState) {
-		const
-			actions = this.withDispatcher(dispatch, getState)
-		
-		// Issue repo
-		const
-			issueState = actions.state,
-			availRepos = enabledAvailableReposSelector(getState),
-			repoIds = availRepos.map(availRepo => availRepo.repoId)
-		
-		log.debug(`Loading issues for repos`, repoIds)
-		
-		this.setIssues(await this.getIssues(availRepos))
-		
-	}
-	
-	/**
-	 * Set all activity - add pull requests, etc
-	 *
-	 * @param comments
-	 * @param issuesEvents
-	 */
-	@ActionReducer()
-	private setActivity(comments:List<Comment>,issuesEvents:List<IssuesEvent>) {
-		return (state:IssueState) =>
-			state
-				.set('comments',comments)
-				.set('issuesEvents',issuesEvents)
-		
-	}
+	//
+	// /**
+	//  * Load all issues for enabled repos
+	//  *
+	//  * @param dispatch
+	//  * @param getState
+	//  * @returns {number[]}
+	//  */
+	// async loadIssuesAction(dispatch, getState) {
+	// 	const
+	// 		actions = this.withDispatcher(dispatch, getState)
+	//
+	// 	// Issue repo
+	// 	const
+	// 		issueState = actions.state,
+	// 		availRepos = enabledAvailableReposSelector(getState),
+	// 		repoIds = availRepos.map(availRepo => availRepo.repoId)
+	//
+	// 	log.debug(`Loading issues for repos`, repoIds)
+	//
+	// 	this.setIssues(await this.getIssues(availRepos))
+	//
+	// }
+	//
+	// /**
+	//  * Set all activity - add pull requests, etc
+	//  *
+	//  * @param comments
+	//  * @param issuesEvents
+	//  */
+	// @ActionReducer()
+	// private setActivity(comments:List<Comment>,issuesEvents:List<IssuesEvent>) {
+	// 	return (state:IssueState) =>
+	// 		state
+	// 			.set('comments',comments)
+	// 			.set('issuesEvents',issuesEvents)
+	//
+	// }
 	
 	/**
 	 * Get all activity for an issue
@@ -1568,157 +1067,147 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 		}
 		
 	}
+	//
+	// /**
+	//  * Set activity loading flag
+	//  *
+	//  * @param loading
+	//  * @returns {(state:IssueState)=>Map<string, V>}
+	//  */
+	// @ActionReducer()
+	// setActivityLoading(loading:boolean) {
+	// 	return (state:IssueState) => state.set('activityLoading',loading)
+	// }
 	
-	/**
-	 * Set activity loading flag
-	 *
-	 * @param loading
-	 * @returns {(state:IssueState)=>Map<string, V>}
-	 */
-	@ActionReducer()
-	setActivityLoading(loading:boolean) {
-		return (state:IssueState) => state.set('activityLoading',loading)
-	}
+	// /**
+	//  * Load comments (and should be all activity, pull requests etc)
+	//  * for an issue
+	//  *
+	//  * @param issueId
+	//  */
 	
-	/**
-	 * Load comments (and should be all activity, pull requests etc)
-	 * for an issue
-	 *
-	 * @param issueId
-	 */
-	
-	loadActivityForIssue(issueId: number) {
-		
-		const
-			deferred = Promise.defer(),
-			isCancelled = () => deferred.isCancelled(),
-			doResolve = () => !isCancelled() && deferred.resolve(),
-			doLoad = async () => {
-				this.setActivityLoading(true)
-			
-				try {
-					// Issue repo
-					let
-						{ issues } = this.state
-					
-					//log.debug(`Loading issue activity`,issues,issueId)
-					if (!isListType(issues, Issue) || isCancelled())
-						return doResolve()
-					
-					let
-						issue:Issue = issues.find(issue => issue.id === issueId)
-					
-					if (!issue) {
-						log.error(`Issue not found in state: ${issueId}`)
-						//assert(issue, `Issue still not found in state ${issueId}`)
-						return doResolve()
-					}
-					
-					const
-						{ comments, issuesEvents } = await this.getActivity(issue)
-					
-					if (isCancelled())
-						return doResolve()
-					
-					log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
-					this.setActivity(comments, issuesEvents)
-					this.setActivityLoading(false)
-				} catch (err) {
-					log.error(`Failed to load activity for issue ${issueId}`,err)
-					
-				} finally {
-					doResolve()
-				}
-			}
-		
-		doLoad()
-			
-		return deferred
-		
-	}
-	
-	/**
-	 * Update the filter to include closed and reload
-	 *
-	 * @param includeClosed
-	 */
-	includeClosedIssues(includeClosed: boolean) {
-		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter), {includeClosed})
-		this.setFilteringAndSorting(updatedFilter)
-	}
-	
-	
-	/**
-	 * Gets issue list from state, if no ids are provided
-	 * then it uses the selected ids
-	 * @param issueIds
-	 */
-	getSelectedIssuesFromState(...issueIds:number[]) {
-		
-		issueIds = issueIds.length ?
-			issueIds :
-			this.state.selectedIssueIds
-		
-		const
-			{issues} = this.state
-		
-		return issueIds
-			.map(id => issues.find(it => it.id === id))
-			.filter(issue => !isNil(issue))
-	}
-	
+	// loadActivityForIssue(issueId: number) {
+	//
+	// 	const
+	// 		deferred = Promise.defer(),
+	// 		isCancelled = () => deferred.isCancelled(),
+	// 		doResolve = () => !isCancelled() && deferred.resolve(),
+	// 		doLoad = async () => {
+	// 			this.setActivityLoading(true)
+	//
+	// 			try {
+	// 				// Issue repo
+	// 				let
+	// 					{ issues } = this.state
+	//
+	// 				//log.debug(`Loading issue activity`,issues,issueId)
+	// 				if (!isListType(issues, Issue) || isCancelled())
+	// 					return doResolve()
+	//
+	// 				let
+	// 					issue:Issue = issues.find(issue => issue.id === issueId)
+	//
+	// 				if (!issue) {
+	// 					log.error(`Issue not found in state: ${issueId}`)
+	// 					//assert(issue, `Issue still not found in state ${issueId}`)
+	// 					return doResolve()
+	// 				}
+	//
+	// 				const
+	// 					{ comments, issuesEvents } = await this.getActivity(issue)
+	//
+	// 				if (isCancelled())
+	// 					return doResolve()
+	//
+	// 				log.debug(`Loading activity for issue ${issueId}, comments = ${comments.size}, events = ${issuesEvents.size}`)
+	// 				this.setActivity(comments, issuesEvents)
+	// 				this.setActivityLoading(false)
+	// 			} catch (err) {
+	// 				log.error(`Failed to load activity for issue ${issueId}`,err)
+	//
+	// 			} finally {
+	// 				doResolve()
+	// 			}
+	// 		}
+	//
+	// 	doLoad()
+	//
+	// 	return deferred
+	//
+	// }
+	//
+	//
+	// /**
+	//  * Gets issue list from state, if no ids are provided
+	//  * then it uses the selected ids
+	//  * @param issueIds
+	//  */
+	// getSelectedIssuesFromState(...issueIds:number[]) {
+	//
+	// 	issueIds = issueIds.length ?
+	// 		issueIds :
+	// 		this.state.selectedIssueIds
+	//
+	// 	const
+	// 		{issues} = this.state
+	//
+	// 	return issueIds
+	// 		.map(id => issues.find(it => it.id === id))
+	// 		.filter(issue => !isNil(issue))
+	// }
+	//
 	//export type TIssueIdOrIssue = Array<number|Issue>
-	
-	/**
-	 * Reload all issues in the passed list
-	 * that are currently in the state
-	 *
-	 * @param issues
-	 */
-	reloadIssues(issues:List<Issue>|Issue[])
-	
-	/**
-	 * Same as above - but with rest args of ids or issues
-	 *
-	 * @param issuesOrIssueIds
-	 */
-	reloadIssues(...issuesOrIssueIds:Array<number|Issue>)
-	
-	
-	/**
-	 * Reload issues in the current state (will only work for enabled repos)
-	 *
-	 * @param args
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
-	 */
-	@ActionThunk()
-	reloadIssues(...args:any[]) {
-		return async (dispatch,getState) => {
-			let
-				enabledRepoIds = enabledRepoIdsSelector(getState()),
-				issues:Issue[] =
-					(Array.isArray(args[0])) ? args[0] :
-						isListType(args[0],Issue) ? args[0].toArray() :
-							isNumber(args[0]) ? nilFilter(args.filter(id => this.state.issues.find(it => it.id === id)))
-								: args
-			
-			// FINALLY FILTER FOR ONLY ENABLED REPO IDS
-			
-			issues = issues.filter(it => enabledRepoIds.includes(it.repoId))
-			
-			log.debug(`Going to reload issues`, issues, 'from args', args)
-			if (!issues.length) {
-				log.debug(`No issues found in state to update from `, args)
-				return
-			}
-			
-			const
-				updatedIssues = await this.getIssues(availableReposSelector(getStoreState()),issues)
-			
-			this.updateIssuesInState(List<Issue>(updatedIssues))
-		
-		}
-	}
+	//
+	// /**
+	//  * Reload all issues in the passed list
+	//  * that are currently in the state
+	//  *
+	//  * @param issues
+	//  */
+	// reloadIssues(issues:List<Issue>|Issue[])
+	//
+	// /**
+	//  * Same as above - but with rest args of ids or issues
+	//  *
+	//  * @param issuesOrIssueIds
+	//  */
+	// reloadIssues(...issuesOrIssueIds:Array<number|Issue>)
+	//
+	//
+	// /**
+	//  * Reload issues in the current state (will only work for enabled repos)
+	//  *
+	//  * @param args
+	//  * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
+	//  */
+	// @ActionThunk()
+	// reloadIssues(...args:any[]) {
+	// 	return async (dispatch,getState) => {
+	// 		let
+	// 			enabledRepoIds = enabledRepoIdsSelector(getState()),
+	// 			issues:Issue[] =
+	// 				(Array.isArray(args[0])) ? args[0] :
+	// 					isListType(args[0],Issue) ? args[0].toArray() :
+	// 						isNumber(args[0]) ? nilFilter(args.filter(id => this.state.issues.find(it => it.id === id)))
+	// 							: args
+	//
+	// 		// FINALLY FILTER FOR ONLY ENABLED REPO IDS
+	//
+	// 		issues = issues.filter(it => enabledRepoIds.includes(it.repoId))
+	//
+	// 		log.debug(`Going to reload issues`, issues, 'from args', args)
+	// 		if (!issues.length) {
+	// 			log.debug(`No issues found in state to update from `, args)
+	// 			return
+	// 		}
+	//
+	// 		const
+	// 			updatedIssues = await this.getIssues(availableReposSelector(getStoreState()),issues)
+	//
+	// 		this.updateIssuesInState(List<Issue>(updatedIssues))
+	//
+	// 	}
+	// }
 	
 	
 	/**
@@ -1726,67 +1215,66 @@ export class IssueActionFactory extends ActionFactory<IssueState,IssueMessage> {
 	 * our system is in redux
 	 *
 	 * @param newState
-	 * @param issueIds
+	 * @param issues
 	 * @returns {(dispatch:any, getState:any)=>Promise<undefined>}
 	 */
-	@ActionThunk()
-	setIssueStatus(newState: TIssueState, ...issueIds: number[]) {
-		return async(dispatch, getState) => {
-			let
-				issues = this.getSelectedIssuesFromState(...issueIds)
+	
+	async setIssueStatus(issues: List<Issue>,newState: TIssueState) {
+		
 			
-			log.debug(`Going to delete ${issues.length} issues`)
-			
-			const
-				client = Container.get(GitHubClient),
-				closeIssues = _.cloneDeep(issues)
-			
-			
-			for (let issue of closeIssues) {
-				if (!hasEditPermission(issue)) {
-					addErrorMessage(`You don't have permission to close this issue: ${issue.number}`)
-					return
-				}
+		
+		log.debug(`Going to delete ${issues.size} issues`)
+		
+		const
+			client = Container.get(GitHubClient),
+			closeIssues = issues.toArray().map(it => cloneObjectShallow(it))
+		
+		
+		for (let issue of closeIssues) {
+			if (!hasEditPermission(issue)) {
+				addErrorMessage(`You don't have permission to close this issue: ${issue.number}`)
+				return
 			}
-			
-			const
-				promises = closeIssues
-					.map(async(issue: Issue) => {
-						issue.state = newState
-						
-						try {
-							assert(issue.repo, 'repo not found for issue: ' + issue.repoId)
-							
-							return await this.saveAndUpdateIssueModel(client,issue.repo,issue)
-							
-						} catch (err) {
-							log.error('set issue state failed', err)
-							addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
-						}
-					}),
-				
-				// WAIT FOR ALL RESPONSES
-				results = await Promise.all(promises)
-			
-			
-			addMessage(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
-			
-			// Now we simply update the state - removed
-			//this.loadIssuesAction(dispatch, getState)
-			
 		}
 		
-	}
+		const
+			promises = closeIssues
+				.map(async(issue: Issue) => {
+					issue.state = newState
+					
+					try {
+						assert(issue.repo, 'repo not found for issue: ' + issue.repoId)
+						
+						return await this.saveAndUpdateIssueModel(client,issue.repo,issue)
+						
+					} catch (err) {
+						log.error('set issue state failed', err)
+						addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
+					}
+				}),
+			
+			// WAIT FOR ALL RESPONSES
+			results = await Promise.all(promises)
+		
+		
+		addMessage(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
+		
+		// Now we simply update the state - removed
+		//this.loadIssuesAction(dispatch, getState)
+		
 	
-	/**
-	 * Set the comment being edited
-	 *
-	 * @param editCommentRequest
-	 */
-	@ActionReducer()
-	setEditingComment(editCommentRequest: TEditCommentRequest) {
-		return (state: IssueState, getState) => state.set('editCommentRequest', editCommentRequest)
+		
 	}
+	//
+	// /**
+	//  * Set the comment being edited
+	//  *
+	//  * @param editCommentRequest
+	//  */
+	// @ActionReducer()
+	// setEditingComment(editCommentRequest: TEditCommentRequest) {
+	// 	return (state: IssueState, getState) => state.set('editCommentRequest', editCommentRequest)
+	// }
 }
 
 

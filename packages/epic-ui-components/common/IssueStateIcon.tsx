@@ -9,7 +9,7 @@ import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue } from "epic-models"
 import { getIssueActions } from "epic-typedux"
 import { shallowEquals } from "epic-global/ObjectUtil"
-
+import {List} from 'immutable'
 // Constants
 const
 	log = getLogger(__filename)
@@ -145,10 +145,10 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 		
 		getIssueActions()
 			.setIssueStatus(
+				List<Issue>(issue),
 				issue.state === 'open' ?
 					'closed' :
-					'open',
-				issue.id
+					'open'
 			)
 	}
 	

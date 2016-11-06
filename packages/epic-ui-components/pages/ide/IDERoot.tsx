@@ -20,6 +20,8 @@ import { Header } from "epic-ui-components/pages/ide/Header"
 import { StatusBar } from "epic-ui-components/status-bar"
 import { SheetRoot } from "epic-ui-components/layout/sheet"
 import { rem, colorAlpha, FillWindow, FlexColumn, FlexRowCenter, FlexScale, PositionRelative } from "epic-styles/styles"
+import { ViewContainer } from "epic-ui-components/pages/ide/ViewContainer"
+import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 
 const
@@ -99,7 +101,13 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
 	
 	
-	componentWillMount = () => this.setState(this.getNewState())
+	componentWillMount = () => {
+		
+		// MAKE SURE WE HAVE AT LEAST 1 VIEW
+		getUIActions().ensureDefaultView()
+		
+		this.setState(this.getNewState())
+	}
 	
 	/**
 	 * Get new state
@@ -207,7 +215,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							           maxSize={panelMaxSize(rightPanel)}
 							           pane2Style={makePanelConstraint(rightPanel)}>
 								<div style={styles.viewWrapper}>
-									<IssuesPanel />
+									<ViewContainer />
 								</div>
 								<ToolPanel location={ToolPanelLocation.Right}/>
 							</SplitPane>

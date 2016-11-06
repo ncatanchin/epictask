@@ -184,20 +184,18 @@ export const WindowConfigDefaults = {
 /**
  * Background configs
  */
-export const WindowBackgroundConfigs:IWindowConfig[] = [
-	
-	Object.assign({
+export const
+	DatabaseServerWindowConfig:IWindowConfig = Object.assign({
 		id: ProcessNames.DatabaseServer,
 		name: ProcessNames.DatabaseServer,
 		processType: ProcessType.DatabaseServer
 	},Object.assign({},WindowConfigBackgroundDefaults)),
 	
-	Object.assign({
+	JobServerWindowConfig:IWindowConfig = Object.assign({
 		id: ProcessNames.JobServer,
 		name: ProcessNames.JobServer,
 		processType: ProcessType.JobServer
 	},Object.assign({},WindowConfigBackgroundDefaults))
-]
 
 
 /**

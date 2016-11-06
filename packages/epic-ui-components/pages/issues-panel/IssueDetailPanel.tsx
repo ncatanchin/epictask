@@ -12,12 +12,6 @@ import { Issue, Comment, IssuesEvent, isComment, isIssue, getEventGroupType } fr
 
 import { ThemedStyles } from "epic-styles"
 import {
-	selectedIssueIdsSelector,
-	issuesSelector,
-	selectedIssueSelector,
-	activitySelector,
-	activityLoadingSelector,
-	TIssueActivity,
 	getIssueActions
 } from "epic-typedux"
 import baseStyles from "./IssueDetailPanel.styles"
@@ -35,6 +29,8 @@ import { IssueDetailHeader } from "./IssueDetailHeader"
 import { IssueMultiInlineList } from "./IssueMultiInlineList"
 
 import { IssueActivityText } from "./IssueActivityText"
+import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 // Other stuff
 const
 	{ Textfit } = require('react-textfit'),
@@ -51,7 +47,7 @@ export type TDetailItem = Comment|EventGroup|Issue
 export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	theme?:any
 	styles?:any
-	
+	viewController:IssuePanelController
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>
@@ -73,6 +69,24 @@ class IssueDetailsVisibleList extends VisibleList<string,string,TDetailItem> {
 	
 }
 
+function makePropSelector(selectorProp) {
+	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
+}
+
+
+function makeSelector() {
+	
+	
+	
+	return createStructuredSelector({
+		selectedIssueIds: makePropSelector('selectedIssueIdsSelector'),
+		selectedIssue: makePropSelector('selectedIssueSelector'),
+		issues: makePropSelector('issuesSelector'),
+		activity: makePropSelector('activitySelector'),
+		activityLoading: makePropSelector('activityLoadingSelector')
+	})
+}
+
 /**
  * IssueDetailPanel
  *
@@ -81,13 +95,7 @@ class IssueDetailsVisibleList extends VisibleList<string,string,TDetailItem> {
  **/
 
 
-@connect(createStructuredSelector({
-	selectedIssueIds: selectedIssueIdsSelector,
-	selectedIssue: selectedIssueSelector,
-	issues: issuesSelector,
-	activity: activitySelector,
-	activityLoading: activityLoadingSelector
-}))
+@connect(makeSelector)
 @CommandComponent()
 @ThemedStyles(baseStyles, 'issueDetail')
 //@PureRender
@@ -253,13 +261,22 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			{issues.size} selected issues
 		</div>
 		<div style={styles.multi.title}>
-			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesAssignee()}>
+			<Button mode='raised'
+			        sizing='big'
+			        style={styles.multi.button}
+			        onClick={() => getIssueActions().patchIssuesAssignee(issues)}>
 				Assign
 			</Button>
-			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesLabel()}>
+			<Button mode='raised'
+			        sizing='big'
+			        style={styles.multi.button}
+			        onClick={() => getIssueActions().patchIssuesLabel(issues)}>
 				Labels
 			</Button>
-			<Button mode='raised' sizing='big' style={styles.multi.button} onClick={() => getIssueActions().patchIssuesMilestone()}>
+			<Button mode='raised'
+			        sizing='big'
+			        style={styles.multi.button}
+			        onClick={() => getIssueActions().patchIssuesMilestone(issues)}>
 				Milestone
 			</Button>
 		</div>
@@ -277,7 +294,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * @returns {any}
 	 */
 	renderHeader = (issue, styles, palette) => {
-		return <IssueDetailHeader />
+		return <IssueDetailHeader viewController={this.props.viewController} />
 	}
 		
 		

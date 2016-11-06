@@ -1,6 +1,5 @@
 export * from './AppState'
 export * from "./AuthState"
-export * from "./IssueState"
 export * from "./JobState"
 export * from "./RepoState"
 export * from "./SearchState"

@@ -200,7 +200,7 @@ export class DatabaseClient {
 		
 		
 		const
-			[store,fn,args] = ((_.isString(fnOrArgs)) ?
+			[store,fn,args] = ((isString(fnOrArgs)) ?
 				[storeOrFn,fnOrArgs,finalArgs] :
 				[null,storeOrFn,fnOrArgs]),
 				
@@ -232,7 +232,11 @@ export class DatabaseClient {
 		return this.adapter.getStores()
 	}
 	
-
+	getAdapter() {
+		return this.adapter
+	}
+	
+	
 	/**
 	 * Stop the database
 	 *

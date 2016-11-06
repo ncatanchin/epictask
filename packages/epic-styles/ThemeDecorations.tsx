@@ -24,6 +24,7 @@ export interface IThemedAttributes extends React.HTMLAttributes<any>{
 	theme?:any
 	styles?:any
 	palette?:any
+	enableComponentRef?:boolean
 	
 }
 
@@ -217,8 +218,8 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 					return <FinalComponent
 						{..._.omit(this.props,'styles','themedComponent','themedBaseStyles')}
 						{..._.omit(this.state,'styles','inputStyles','wrappedInstance')}
-						styles={styles}
-						ref={this.setWrappedInstanceRef} />
+						{...(this.props.enableComponentRef && {ref: this.setWrappedInstanceRef})}
+						styles={styles} />
 				}
 			}
 		

@@ -9,10 +9,6 @@ import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
 import {
-	issueStateSelector,
-	editCommentRequestSelector,
-	uiStateSelector,
-	TEditCommentRequest,
 	getUIActions,
 	getIssueActions
 } from "epic-typedux"
@@ -21,6 +17,7 @@ import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-com
 import { MarkdownEditor } from "epic-ui-components/fields"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
 import { FileDrop, RepoName } from "epic-ui-components/common"
+import { TEditCommentRequest } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 
 
 // Constants
@@ -95,9 +92,9 @@ export interface IIssueCommentDialogState {
  * @constructor
  **/
 @connect(createStructuredSelector({
-	editCommentRequest: editCommentRequestSelector,
-	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError
+	// editCommentRequest: editCommentRequestSelector,
+	// saving: (state) => issueStateSelector(state).issueSaving,
+	// saveError: (state) => issueStateSelector(state).issueSaveError
 	
 }, createDeepEqualSelector))
 
@@ -151,7 +148,7 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 		log.debug('Adding comment to issue', comment, issue)
 		
 		!this.props.saving &&
-		getIssueActions().commentSave({ issue, comment })
+		getIssueActions().saveComment(issue, comment)
 	}
 	
 	/**

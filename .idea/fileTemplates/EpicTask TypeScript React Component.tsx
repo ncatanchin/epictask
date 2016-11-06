@@ -1,12 +1,15 @@
+
+
 #set ( $PropsName = "I${NAME}Props" )
 #set ( $StateName = "I${NAME}State" )
 
 // Imports
+import { Map,Record,List } from "immutable"
 import {connect} from 'react-redux'
-import {PureRender} from 'ui/components/common/PureRender'
-import {createStructuredSelector} from 'reselect'
-import {ThemedStyles} from 'shared/themes/ThemeManager'
-import { IThemedAttributes } from "shared/themes/ThemeDecorations"
+import {createStructuredSelector,createSelector} from 'reselect'
+import {PureRender} from 'epic-ui-components/common'
+import {IThemedAttributes,ThemedStyles} from 'epic-styles'
+
 
 // Constants
 const 

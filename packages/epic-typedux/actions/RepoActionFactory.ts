@@ -224,18 +224,18 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 		
 		availableRepo[field] = value
-		
-		// ON NEXT TICK UPDATE ISSUES
-		if (['milestone','labels'].includes(field))
-			setImmediate(() => {
-				getIssueActions()
-					.refillResourcesForRepo(
-						availableRepo,
-						field === 'milestones' ?
-							'milestone' :
-							'labels'
-					)
-		})
+		//
+		// // ON NEXT TICK UPDATE ISSUES
+		// if (['milestone','labels'].includes(field))
+		// 	setImmediate(() => {
+		// 		getIssueActions()
+		// 			.refillResourcesForRepo(
+		// 				availableRepo,
+		// 				field === 'milestones' ?
+		// 					'milestone' :
+		// 					'labels'
+		// 			)
+		// })
 		
 		return state.set('availableRepos', availableRepos.set(index,availableRepo)) as RepoState
 	}
@@ -617,10 +617,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await Promise.delay(100)
 			
 			// LOAD ISSUES
-			if (ProcessConfig.isType(ProcessType.UI)) {
-				log.warn('CHANGE THIS TO CONFIG')
-				getIssueActions().loadIssues()
-			}
+			// if (ProcessConfig.isType(ProcessType.UI)) {
+			// 	log.warn('CHANGE THIS TO CONFIG')
+			// 	getIssueActions().loadIssues()
+			// }
 			
 		}
 	}
@@ -870,8 +870,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await Promise.delay(100)
 			if (!enabled) {
 				getIssueActions().removeAllRepoResources(availRepoId)
-			} else {
-				getIssueActions().loadIssues()
 			}
 			
 			log.debug('Saved avail repo, setting enabled to',enabled)

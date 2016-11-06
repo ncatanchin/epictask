@@ -3,8 +3,7 @@
 import { windowsSelector } from "epic-typedux/selectors"
 
 import {
-	WindowBackgroundConfigs,
-	WindowConfigNormalDefaults
+	WindowConfigNormalDefaults, JobServerWindowConfig, DatabaseServerWindowConfig
 } from "epic-process-manager-client/WindowConfig"
 import {
 	WindowType,
@@ -14,6 +13,7 @@ import {
 
 import { getWindowManager } from "epic-process-manager"
 import { cloneObject } from "epic-global/ObjectUtil"
+import { EventType } from "epic-global/Constants"
 
 const
 	log = getLogger(__filename)
@@ -34,14 +34,36 @@ export async function start() {
 	// MAKE SURE WE HAVE AT LEAST ONE NORMAL WINDOW
 	if (!normalWindows.length)
 		normalWindows.push(cloneObject(WindowConfigNormalDefaults) as any)
-			
+	
+	const
+		dbReady = Promise.defer()
+	
+	EventHub.on(EventType.DatabaseReady,(event:EventType,errJson:any) => {
+		if (errJson) {
+			const
+				err = new Error(errJson.message)
+			log.error(`DB failed to init`,errJson,err)
+			dbReady.reject(err)
+			return
+		}
+		
+		dbReady.resolve()
+	})
+	
+	log.info(`Starting DB Window`)
+	const
+		windowManager = getWindowManager()
+	
+	await windowManager.open(DatabaseServerWindowConfig)
+	await dbReady.promise
+	
+	log.info(`DB is ready`)
+	
 	const
 		windows:IWindowConfig[] = [
-			...WindowBackgroundConfigs,
+			JobServerWindowConfig,
 			...normalWindows
-		],
-		
-		windowManager = getWindowManager()
+		]
 	
 	log.debug(`Opening windows`,windows)
 	

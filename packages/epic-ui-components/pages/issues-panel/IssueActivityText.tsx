@@ -12,7 +12,6 @@ import filterProps from "react-valid-props"
 import { canEditComment, canEditIssue, shallowEquals } from "epic-global"
 
 import { EventGroup, isEventGroup } from "./IssueEventGroup"
-import { selectedIssueSelector } from "epic-typedux"
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
 import { getIssueActions } from "epic-typedux/provider"
@@ -20,7 +19,8 @@ import { IRowState } from "epic-ui-components/common/VisibleList"
 import { TDetailItem } from "epic-ui-components/pages/issues-panel/IssueDetailPanel"
 import { getValue } from "typeguard"
 import { isIssue } from "epic-models/Issue"
-
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import {createSelector} from 'reselect'
 // Constants
 const log = getLogger(__filename)
 
@@ -154,6 +154,8 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	styles?:any
 	
 	issue?:Issue
+	
+	viewController?:IssuePanelController
 	hideBottomBorder?:boolean
 	
 	activityActionText?:string
@@ -167,6 +169,22 @@ export interface IIssueActivityTextState {
 	
 }
 
+
+
+function makeSelector() {
+	
+	const
+		selectedIssueSelector = createSelector(
+			(state,props:IIssueActivityTextProps) => getValue(() =>
+				props.viewController.selectors.selectedIssueSelector(state)),
+			(selectedIssue:Issue) => selectedIssue
+		)
+	
+	return createStructuredSelector({
+		issue: selectedIssueSelector
+	})
+}
+
 /**
  * IssueComment
  *
@@ -174,9 +192,7 @@ export interface IIssueActivityTextState {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	issue: selectedIssueSelector
-}))
+@connect(makeSelector)
 @ThemedStyles(baseStyles,'issueActivityText')
 // @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
@@ -253,7 +269,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param comment
 	 */
 	makeOnCommentDeleteClick = (issue,comment) => event =>
-		getIssueActions().commentDelete(comment)
+		getIssueActions().deleteComment(comment)
 	
 	
 	

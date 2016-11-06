@@ -7,16 +7,10 @@ import { connect } from "react-redux"
 import { PureRender, Icon, IssueLabelsAndMilestones } from "epic-ui-components"
 import { Milestone, Label, Issue, User } from "epic-models"
 import {
-	IIssueSort,
 	IssueSortableFields,
 	IssueGroupByFields,
 	IssueGroupByNames,
 	IssueSortableFieldNames,
-	IIssueFilter,
-	issueSortSelector,
-	issueFilterSelector,
-	issueFilterLabelsSelector,
-	issueFilterMilestonesSelector,
 	IIssueGroup,
 	enabledAssigneesSelector,
 	enabledMilestonesSelector,
@@ -39,6 +33,7 @@ import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon } from "material-ui/svg-icons"
 import { getValue } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 
 const
@@ -135,8 +130,29 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	labels?:List<Label>
 	milestones?:List<Milestone>
 	assignees?:List<User>
+	
+	viewController:IssuePanelController
 }
 
+
+function makePropSelector(selectorProp) {
+	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
+}
+
+
+function makeSelector() {
+	
+	
+	return createStructuredSelector({
+		issueSort: makePropSelector('issueSortSelector'),// createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
+		issueFilter: makePropSelector('issueFilterSelector'), //createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
+		issueFilterLabels: makePropSelector('issueFilterLabelsSelector'),
+		issueFilterMilestones: makePropSelector('issueFilterMilestonesSelector'),
+		labels: enabledLabelsSelector,
+		milestones: enabledMilestonesSelector,
+		assignees: enabledAssigneesSelector
+	})
+}
 
 /**
  * IssueFilters
@@ -145,15 +161,7 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	issueSort: issueSortSelector,// createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
-	issueFilter: issueFilterSelector, //createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
-	issueFilterLabels: issueFilterLabelsSelector,
-	issueFilterMilestones: issueFilterMilestonesSelector,
-	labels: enabledLabelsSelector,
-	milestones: enabledMilestonesSelector,
-	assignees: enabledAssigneesSelector
-}),null,null,{withRef:true})
+@connect(makeSelector,null,null,{withRef:true})
 
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender
@@ -166,16 +174,20 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	get issueActions() {
 		return getIssueActions()
 	}
-
+	
+	private get viewController() {
+		return this.props.viewController
+	}
+	
 	/**
 	 * Event handlers
 	 */
-	onSortDirectionChanged = () => this.issueActions.toggleSortByDirection()
+	onSortDirectionChanged = () => this.viewController.toggleSortByDirection()
 
 	/**
 	 * Group by direction change
 	 */
-	onGroupByDirectionChanged = () => this.issueActions.toggleGroupByDirection()
+	onGroupByDirectionChanged = () => this.viewController.toggleGroupByDirection()
 
 	/**
 	 * Remove a label/milestone filter
@@ -185,48 +197,48 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	 */
 	onRemoveItemFromFilter = (item:Label|Milestone, index:number) => {
 		if (Label.isLabel(item))
-			this.issueActions.toggleIssueFilterLabel(item)
+			this.viewController.toggleIssueFilterLabel(item)
 		else
-			this.issueActions.toggleIssueFilterMilestone(item)
+			this.viewController.toggleIssueFilterMilestone(item)
 	}
 
 	
 	onClearFilters = () => {
-		getIssueActions().clearFilters()
+		this.viewController.clearFilters()
 	}
 
 	/**
 	 * Toggle the inclusion of closed issues
 	 */
-	onToggleIncludeClosed = () => this.issueActions.includeClosedIssues(
+	onToggleIncludeClosed = () => this.viewController.includeClosedIssues(
 		!this.props.issueFilter.includeClosed
 	)
 
 	makeOnMilestoneSelected(milestone:Milestone) {
 		return (event) => {
 			log.info('Milestone toggled', event)
-			this.issueActions.toggleIssueFilterMilestone(milestone)
+			this.viewController.toggleIssueFilterMilestone(milestone)
 		}
 	}
 
 	makeOnLabelSelected(label:Label) {
 		return (event) => {
 			log.info('Label selected', event)
-			this.issueActions.toggleIssueFilterLabel(label)
+			this.viewController.toggleIssueFilterLabel(label)
 		}
 	}
 
 	makeOnSortBySelected(field:string) {
 		return (event) => {
 			log.info('Sort by selected', event)
-			this.issueActions.setSortByField(field)
+			this.viewController.setSortByField(field)
 		}
 	}
 
 	makeOnGroupBySelected(field:string) {
 		return (event) => {
 			log.info('Group by selected', event)
-			this.issueActions.setGroupBy(field)
+			this.viewController.setGroupBy(field)
 		}
 	}
 

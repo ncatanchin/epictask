@@ -15,9 +15,6 @@ import {
 	repoIdPredicate,
 	enabledAvailableReposSelector,
 	appUserSelector,
-	editingIssueSelector,
-	issueSaveErrorSelector,
-	issueSavingSelector,
 	getUIActions,
 	getIssueActions
 } from "epic-typedux"
@@ -218,10 +215,10 @@ export interface IIssueEditDialogState {
 
 @connect(createStructuredSelector({
 	user: appUserSelector,
-	editingIssue: editingIssueSelector,
+	//editingIssue: editingIssueSelector,
 	availableRepos: enabledAvailableReposSelector,
-	saving: issueSavingSelector,
-	saveError: issueSaveErrorSelector
+	// saving: issueSavingSelector,
+	// saveError: issueSaveErrorSelector
 	
 }))
 @CommandComponent()
@@ -270,12 +267,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param event
 	 */
-	private onSave = (event) => {
+	private onSave = async (event) => {
 		!this.props.saving &&
-		getIssueActions().issueSave(
-			cloneObjectShallow(this.props.editingIssue, this.textInputState()),
-			getWindowId()
+		await getIssueActions().saveIssue(
+			cloneObjectShallow(this.props.editingIssue, this.textInputState())
 		)
+		
+		getUIActions().closeWindow(getWindowId())
 	}
 	
 	
@@ -284,14 +282,15 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		body: this.state.bodyValue
 	})
 	
-	private updateIssueState = (newIssueProps) => getIssueActions().setEditingIssue(
-		new Issue(Object.assign(
-			{},
-			this.props.editingIssue,
-			this.textInputState(),
-			newIssueProps
-		))
-	)
+	private updateIssueState = (newIssueProps) => {}
+	// getIssueActions().setEditingIssue(
+	// 	new Issue(Object.assign(
+	// 		{},
+	// 		this.props.editingIssue,
+	// 		this.textInputState(),
+	// 		newIssueProps
+	// 	))
+	// )
 	
 	
 	/**
@@ -336,7 +335,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const editingIssue = new Issue(assign({}, this.props.editingIssue, this.textInputState()))
 		editingIssue.repoId = value
 		
-		getIssueActions().setEditingIssue(editingIssue)
+		//getIssueActions().setEditingIssue(editingIssue)
 	}
 	
 	onMilestoneChange = (milestone) => {

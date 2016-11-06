@@ -14,12 +14,6 @@ import { createDeepEqualSelector } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
-	patchIssuesSelector,
-	patchModeSelector,
-	issueStateSelector,
-	uiStateSelector,
-	IssuePatchModes,
-	TIssuePatchMode,
 	enabledRepoIdsSelector,
 	enabledAssigneesSelector,
 	enabledLabelsSelector,
@@ -29,6 +23,7 @@ import {
 } from "epic-typedux"
 import { CommonKeys } from "epic-command-manager"
 import { IssueMultiInlineList } from "epic-ui-components/pages/issues-panel/IssueMultiInlineList"
+import { IssuePatchModes, TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 
 
 // Constants
@@ -251,10 +246,10 @@ export interface IIssuePatchDialogState {
 	availableLabels: enabledLabelsSelector,
 	availableMilestones: enabledMilestonesSelector,
 	repoIds: enabledRepoIdsSelector,
-	issues: patchIssuesSelector,
-	mode: patchModeSelector,
-	saving: (state) => issueStateSelector(state).issueSaving,
-	saveError: (state) => issueStateSelector(state).issueSaveError,
+	// issues: patchIssuesSelector,
+	// mode: patchModeSelector,
+	// saving: (state) => issueStateSelector(state).issueSaving,
+	// saveError: (state) => issueStateSelector(state).issueSaveError,
 
 }, createDeepEqualSelector))
 
@@ -313,7 +308,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		getIssueActions().applyPatchToIssues(
 			patch,
 			this.props.mode !== 'Label',
-			...this.props.issues
+			List<Issue>(this.props.issues)
 		)
 	}
 	

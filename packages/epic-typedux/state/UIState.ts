@@ -10,6 +10,7 @@ import {
 import { User } from "epic-models"
 import { State } from "typedux"
 import { toPlainObject,excludeFilterConfig,excludeFilter } from "typetransform"
+import ViewState from "epic-typedux/state/window/ViewState"
 
 
 const
@@ -56,7 +57,9 @@ export const UIStateRecord = Record({
 		visible: true
 	},
 	
-	jobs: {}
+	jobs: {},
+		
+	viewStates: List<ViewState>()
 })
 
 /**
@@ -86,6 +89,7 @@ export class UIState extends UIStateRecord implements State {
 		return new UIState(Object.assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
+			viewStates: List(o.viewStates),
 			toolPanels
 		}))
 	}
@@ -123,6 +127,9 @@ export class UIState extends UIStateRecord implements State {
 		 */
 		selectedLogId:string
 	}
+	
+	viewStates: List<ViewState>
+	
 
 
 }

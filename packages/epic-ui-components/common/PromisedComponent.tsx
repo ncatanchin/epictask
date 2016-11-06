@@ -1,7 +1,7 @@
 // Imports
 import { PureRender } from "./PureRender"
 import { IThemedAttributes } from "epic-styles"
-import { getValue, TComponent } from "epic-global"
+import { getValue } from "epic-global"
 
 
 // Constants
@@ -17,7 +17,9 @@ const
  * IPromisedComponentProps
  */
 export interface IPromisedComponentProps extends IThemedAttributes {
-	promise:Promise<TComponent>
+	componentProps?:any
+	promise?:Promise<TComponent>
+	loader?:TPromisedComponentLoader
 }
 
 /**
@@ -26,6 +28,7 @@ export interface IPromisedComponentProps extends IThemedAttributes {
 export interface IPromisedComponentState {
 	
 	attachedPromise?:Promise<TComponent>
+	attachedLoader?:TPromisedComponentLoader
 }
 
 /**
@@ -49,20 +52,41 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 		this.mounted = true
 		
 		let
-			attachedPromise = getValue(() => this.state.attachedPromise)
+			{state} = this,
+			attachedPromise = getValue(() => state.attachedPromise),
+			attachedLoader = getValue(() => state.attachedLoader)
+		
+		if (props.loader) {
+			if (attachedLoader === props.loader) {
+				log.debug('Loader did not change')
+				return
+			}
 			
-		if (attachedPromise === props.promise) {
-			log.debug('Promise did not change')
-			return
+			attachedPromise = props.loader()
+			this.component = null
+			
+			this.setState({
+				attachedPromise,
+				attachedLoader: props.loader
+			})
+			
+		} else {
+			if (attachedPromise === props.promise) {
+				log.debug('Promise did not change')
+				return
+			}
+			
+			// SET THE PROMISE
+			attachedPromise = props.promise
+			this.component = null
+			
+			this.setState({
+				attachedPromise,
+				attachedLoader:props.loader
+			})
+			
 		}
 		
-		// SET THE PROMISE
-		attachedPromise = props.promise
-		this.component = null
-		
-		this.setState({
-			attachedPromise
-		})
 		
 		// ADD COMPONENT SETTER
 		attachedPromise
@@ -73,6 +97,7 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 					
 				}
 			})
+		
 	}
 	
 	/**
@@ -97,9 +122,10 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	
 	render() {
 		const
+			{componentProps} = this.props,
 			Component = getValue(() => this.component)
 		
-		return !Component ? React.DOM.noscript() : <Component />
+		return !Component ? React.DOM.noscript() : <Component {...componentProps}/>
 	}
 	
 }

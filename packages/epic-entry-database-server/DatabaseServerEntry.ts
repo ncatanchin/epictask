@@ -20,11 +20,16 @@ import { IPCServer } from "epic-net/IPCServer"
 import { isPromise, isFunction } from "typeguard"
 import { benchmark } from "epic-global/Benchmark"
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
+import { EventType } from "epic-global/Constants"
 
 // Logger
 const
 	log = getLogger(__filename)
 
+
+assignGlobal({
+	__webpack_require__
+})
 
 // DEBUG LOGGING
 //log.setOverrideLevel(LogLevel.DEBUG)
@@ -94,44 +99,41 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 		
 		// CREATE DEFERRED PROMISE
 		startDeferred = Promise.defer()
-		
-		dbAdapter = DatabaseAdapter.get()
-		
-		await dbAdapter.start()
-		
-		
 		try {
-			
 			log.info('Starting Database Server')
 			
+			dbAdapter = DatabaseAdapter.get()
 			
+			await dbAdapter.start()
 			
+			await require("./schema/DatabaseSchemaBuilder").default(dbAdapter)
 			
-			log.info('Starting IPC Server')
-			
-			// Configure IPC Server
-			
-			if (!ipcServer) {
-				ipcServer = new IPCServer(DatabaseServerName,RequestHandlers,true)
+			// IF USING REMOTE DB THEN SETUP IPC
+			if (Env.Config.RemoteDatabase) {
+					
+					// Configure IPC Server
+					if (!ipcServer) {
+						log.info('Starting IPC Server')
+						ipcServer = new IPCServer(DatabaseServerName, RequestHandlers, true)
+						
+						log.info(`Pending ipc server start`)
+						await ipcServer.start().timeout(10000, "IPC server took too long")
+						log.info(`IPC Server is ready`)
+					}
 				
-				log.info(`Pending ipc server start`)
-				await ipcServer.start().timeout(10000, "IPC server took too long")
-				log.info(`IPC Server is ready`)
+					
+				
+				
 			}
-			
-			
+			EventHub.broadcast(EventType.DatabaseReady)
 			startDeferred.resolve()
 			
-			
 		} catch (err) {
-			log.error('start failed', err)
+			log.error(`Failed to start db server`,err)
+			EventHub.broadcast(EventType.DatabaseReady,_.pick(err,'message','code','stack'))
 			startDeferred.reject(err)
 			throw err
 		}
-		
-		
-		
-		
 		
 		log.info(`Database server started`)
 		return startDeferred.promise
@@ -208,7 +210,6 @@ export default databaseServerEntry
 /**
  * HMR - accept self - on dispose, close DB
  */
-
 
 addHotDisposeHandler(module, () => {
 	log.info('disposing database server')

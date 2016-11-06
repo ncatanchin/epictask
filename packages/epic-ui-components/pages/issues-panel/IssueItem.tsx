@@ -1,19 +1,15 @@
 // Imports
-import { List } from "immutable"
-
 import { Renderers, Avatar, IssueLabelsAndMilestones, IssueStateIcon } from "epic-ui-components"
-import { connect } from "react-redux"
 import filterProps from "react-valid-props"
 import { IssuesPanel } from "./IssuesPanel"
 import { Issue } from "epic-models"
-import { issuesSelector, focusedIssueIdsSelector } from "epic-typedux"
-import { createSelector, createStructuredSelector } from "reselect"
 import { shallowEquals, getValue } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import baseStyles from "./IssueItem.styles"
 import { IRowState } from "epic-ui-components/common/VisibleList"
 import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { guard } from "epic-global/ObjectUtil"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 const
 	log = getLogger(__filename)
@@ -24,7 +20,7 @@ const
 export interface IIssueItemProps extends IThemedAttributes {
 	
 	
-	
+	viewController?:IssuePanelController
 	onOpen?:(event:any, issue:Issue) => void
 	onSelected:(event:any, issue:Issue) => void
 	
@@ -125,7 +121,7 @@ export class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> 
 					issue,
 					issueId,
 					isSelected,
-					isSelectedMulti: isSelected && selectedIssueIds.length > 1
+					isSelectedMulti: isSelected && selectedIssueIds.size > 1
 				}
 				
 			if (!shallowEquals(newState,this.state))

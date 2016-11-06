@@ -1,5 +1,4 @@
 import {Map} from 'immutable'
-import {TIssueFieldsGroupable} from "./IIssueSort"
 import {Issue} from "epic-models"
 
 

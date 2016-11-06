@@ -3,6 +3,8 @@ import "epic-entry-shared/AppEntry"
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './AppRoot'
 import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
+import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
+import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 
 const
@@ -71,6 +73,10 @@ function setupUI() {
 		deferred = Promise.defer()
 	
 	benchmarkLoadTime(`Styles Loaded`)
+	
+	// ENSURE AT LEAST 1 VIEW EXISTS
+	getUIActions().ensureDefaultView()
+	
 	const
 		loadUI = require('./AppRoot').loadUI as typeof LoadUIGlobal
 	

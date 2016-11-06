@@ -295,8 +295,10 @@ export class WindowManager  {
 	 *
 	 * @param id
 	 * @param patch
+	 * @param remove - singleWindows delete themselves on close
+	 *
 	 */
-	private updateWindowState(id:string,patch:any) {
+	private updateWindowState(id:string,patch:any,remove = false) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -307,7 +309,11 @@ export class WindowManager  {
 		const
 			index = this.windows.findIndex(it => it.id === win.id)
 		
-		this.windows[index] = cloneObjectShallow(win,patch)
+		if (remove) {
+			this.windows.splice(index,1)
+		} else {
+			this.windows[ index ] = cloneObjectShallow(win, patch)
+		}
 		
 		this.pushWindowStates()
 		
@@ -534,6 +540,7 @@ export class WindowManager  {
 		}
 		
 		const
+			originalConfig:IWindowConfig = cloneObject(configOrConfigs),
 			config:IWindowConfig = cloneObject(configOrConfigs) as IWindowConfig
 		
 		let
@@ -650,7 +657,12 @@ export class WindowManager  {
 			windowInstance.allEventRemovers.push(attachEvents(log,newWindow,{
 				close: (event) => {
 					log.info(`Window closed: ${id}`)
-					this.updateWindowState(id,{closed:true})
+					this.updateWindowState(id, { closed: true },singleWindow || autoRestart)
+					if (!isShuttingDown() && autoRestart) {
+						log.warn(`Auto Restarting Window: ${id}`)
+						setImmediate(() => this.open(originalConfig))
+					}
+						
 				},
 				responsive: makeOnUnresponsive(false),
 				unresponsive:makeOnUnresponsive(true),

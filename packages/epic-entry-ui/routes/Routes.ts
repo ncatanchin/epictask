@@ -1,6 +1,7 @@
 import { TRouteMap } from "./Router"
-import { makePromisedComponent, TComponentResolver, toJSON } from "epic-global"
+import { makePromisedComponent, toJSON } from "epic-global"
 import { Issue,Comment } from "epic-models"
+import {List} from 'immutable'
 
 
 export const Roots = {
@@ -106,7 +107,7 @@ export const Roots = {
 	IssuePatchDialog: {
 		name: 'IssuePatchDialog',
 		path: 'dialog/issue-patch',
-		makeURI(issues:Issue[]) {
+		makeURI(issues:List<Issue>) {
 			const
 				issueIds = toJSON(
 					issues.map(issue => Issue.makeIssueId(issue))

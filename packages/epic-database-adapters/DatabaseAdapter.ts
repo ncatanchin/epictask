@@ -1,5 +1,5 @@
 
-
+import { Repo as TSRepo} from "typestore"
 
 import { Stores } from "epic-database-client/Stores"
 import { IDatabaseRequest, IDatabaseResponse } from "epic-database-client/DatabaseRequestResponse"
@@ -43,6 +43,11 @@ export abstract class DatabaseAdapter {
 				loadLocal() :
 				loadRemote())
 		
+	}
+	
+	
+	direct(store:TSRepo<any>,name:string,...args) {
+		return Promise.resolve()
 	}
 	
 	/**

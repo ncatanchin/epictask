@@ -54,7 +54,31 @@ export class DatabaseLocalAdapter extends DatabaseAdapter {
 		await DatabaseLocalAdapter.stopAdapter()
 		 
 	}
-	R
+	
+	
+	/**
+	 * Get the underlying pouch db
+	 *
+	 * @param store
+	 * @returns {any}
+	 */
+	getPouchDB(store:TSRepo<any>) {
+		return (store as any).getPouchDB()
+	}
+	
+	
+	/**
+	 * Execute a direct db call
+	 *
+	 * @param store
+	 * @param name
+	 * @param args
+	 * @returns {any}
+	 */
+	direct(store:TSRepo<any>,name:string,...args) {
+		return this.getPouchDB(store)[name](...args)
+	}
+	
 	/**
 	 * Get the current stores
 	 *

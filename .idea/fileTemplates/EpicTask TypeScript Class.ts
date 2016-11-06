@@ -1,3 +1,5 @@
+import { Map,Record,List } from "immutable"
+
 /**
  * Created by ${USER} on ${DATE}.
  */
@@ -14,10 +16,12 @@ const
  * @class ${NAME}
  * @constructor
  **/
-export class ${NAME} {
+class ${NAME} {
 	
 	constructor() {
 		
 	}
 
 }
+
+export default ${NAME}

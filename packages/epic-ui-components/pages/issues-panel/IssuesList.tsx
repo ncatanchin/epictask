@@ -7,19 +7,12 @@ import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { Issue, Milestone } from "epic-models"
 import {
-	issueStateSelector,
-	issuesSelector,
-	issueGroupsSelector,
-	issueItemsSelector,
-	groupVisibilitySelector,
-	makeIssueGroupExpandedSelector,
 	IIssueGroup,
 	getIssueGroupId,
 	IIssueListItem,
 	isGroupListItem,
 	isGroupVisible,
 	IssueListItemType,
-	IIssueItemGroupProps,
 	EditIssueInlineIndex,
 	isEditInlineListItem,
 	TIssueEditInlineConfig,
@@ -34,6 +27,7 @@ import { uuid, shallowEquals, shallowEqualsArrayOrList, createDeepEqualSelector 
 import { getValue } from "epic-global/ObjectUtil"
 import { IRowState, IRowTypeConfig } from "epic-ui-components/common/VisibleList"
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 
 // Constants & Non-typed Components
@@ -110,14 +104,12 @@ const baseStyles = (topStyles, theme, palette) => ({
 //endregion
 
 
-function setGroupVisible(id:string, visible:boolean) {
-	getIssueActions().toggleGroupVisibility(id, visible)
-}
+
 
 
 export interface IIssueGroupHeaderProps extends IThemedAttributes {
 	styles:any
-	
+	viewController?:IssuePanelController
 	rowState?:IRowState<string,string,number>
 }
 
@@ -149,6 +141,13 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,IIssueGrou
 		this.state = {}
 	}
 	
+	private get viewController() {
+		return this.props.viewController
+	}
+	
+	setGroupVisible(id:string, visible:boolean) {
+		this.viewController.toggleGroupVisibility(id, visible)
+	}
 	
 	/**
 	 * Get issues panel from context
@@ -158,6 +157,8 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,IIssueGrou
 	private get issuesPanel() {
 		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
 	}
+	
+	
 	
 	/**
 	 * Update state
@@ -265,7 +266,7 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,IIssueGrou
  * IIssuesPanelProps
  */
 export interface IIssuesListProps extends IThemedAttributes {
-	
+	viewController:IssuePanelController
 	issues?:List<Issue>
 	items?:List<IIssueListItem<any>>
 	groups?:List<IIssueGroup>
@@ -291,6 +292,20 @@ export interface IIssuesListState {
 class IssueItemVisibleList extends VisibleList<string,string,number> {
 }
 
+function makePropSelector(selectorProp) {
+	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
+}
+
+function makeSelector() {
+	return createStructuredSelector({
+		issues: makePropSelector('issuesSelector'),
+		items: makePropSelector('issueItemsSelector'),
+		groups: makePropSelector('issueGroupsSelector'),
+		groupVisibility: makePropSelector('groupVisibilitySelector'),
+		//editInlineConfig: makePropSelector('editInlineConfigSelector')
+	})
+}
+
 /**
  * IssuesPanel
  *
@@ -298,13 +313,7 @@ class IssueItemVisibleList extends VisibleList<string,string,number> {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	issues: issuesSelector,
-	items: issueItemsSelector,
-	groups: issueGroupsSelector,
-	groupVisibility: groupVisibilitySelector,
-	editInlineConfig: (state) => issueStateSelector(state).editInlineConfig
-}), null, null, { withRef: true })
+@connect(makeSelector(), null, null, { withRef: true })
 @ThemedStyles(baseStyles, 'issuesPanel')
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
@@ -481,6 +490,14 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	}
 	
 	
+	private get viewController() {
+		return this.props.viewController
+	}
+	
+	setGroupVisible(id:string, visible:boolean) {
+		this.viewController.toggleGroupVisibility(id, visible)
+	}
+	
 	/**
 	 * Toggle issue group collapsed/expanded
 	 *
@@ -495,7 +512,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			groupId = getIssueGroupId(group),
 			isVisible = isGroupVisible(this.props.groupVisibility, groupId)
 		
-		setGroupVisible(groupId, !isVisible)
+		this.setGroupVisible(groupId, !isVisible)
 	}
 	
 	/**
@@ -588,7 +605,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				props: {
 					onClick:this.toggleGroupVisible,
 					key:`group-header-${uuid()}`,
-					styles
+					styles,
+					viewController: this.viewController
 				}
 			}
 			 :
@@ -598,6 +616,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				clazz: IssueEditInline,
 				props: {
 					key: `edit-inline-${uuid()}`,
+					viewController: this.viewController
 					
 				}
 			} : {
@@ -605,7 +624,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				props: {
 					key: `issue-${uuid()}`,
 					onOpen: onIssueOpen,
-					onSelected: onIssueSelected
+					onSelected: onIssueSelected,
+					viewController: this.viewController
 				}
 			}
 				
@@ -672,7 +692,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		
 		return <div style={styles.listContent}>
 			{/* ISSUE FILTERS */}
-			<IssueFilters />
+			<IssueFilters viewController={this.props.viewController}/>
 			
 			
 			{/* ROOT LIST - groups or issues */}

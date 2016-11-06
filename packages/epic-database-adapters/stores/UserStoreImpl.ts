@@ -16,9 +16,9 @@ export class UserStoreImpl extends PouchDBRepo<User>  {
 	
 	@PouchDBMangoFinder({
 		single:true,
-		indexFields: ['login'],
+		indexFields: ['attrs.login'],
 		selector:{
-			selector: (login:string) => {login}
+			selector: (login:string) => ({login})
 		}
 	})
 	findByLogin(login:string):Promise<User> {

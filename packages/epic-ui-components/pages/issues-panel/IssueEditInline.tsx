@@ -12,9 +12,6 @@ import { ThemedStyles, makeThemeFontSize } from "epic-styles"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import {
-	editingIssueSelector,
-	issueSaveErrorSelector,
-	issueSavingSelector,
 	availableReposSelector,
 	enabledAssigneesSelector,
 	enabledLabelsSelector,
@@ -38,6 +35,7 @@ import { IRowState } from "epic-ui-components/common/VisibleList"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
 import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
+import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 // Constants
 const log = getLogger(__filename)
@@ -222,7 +220,7 @@ export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
 	milestones?:List<Milestone>
 	labels?:List<Label>
 	assignees?:List<User>
-	
+	viewController?:IssuePanelController
 	rowState?:IRowState<string,string,number>
 }
 
@@ -250,13 +248,13 @@ export interface IIssueEditInlineState {
 
 
 @connect(createStructuredSelector({
-	editingIssue: editingIssueSelector,
+	//editingIssue: editingIssueSelector,
 	availableRepos: availableReposSelector,
 	milestones: enabledMilestonesSelector,
 	labels: enabledLabelsSelector,
 	assignees: enabledAssigneesSelector,
-	saving: issueSavingSelector,
-	saveError: issueSaveErrorSelector
+	// saving: issueSavingSelector,
+	// saveError: issueSaveErrorSelector
 }))
 @ThemedStyles(baseStyles,'inline','issueEditDialog','form')
 @CommandComponent()
@@ -329,9 +327,9 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * Title input changed
 	 *
 	 */
-	onTitleChange = (event,title) =>
-		this.issueActions.setEditingIssue(
-			cloneObject(this.issue,{title}))
+	onTitleChange = (event,title) => {}
+		// this.issueActions.setEditingIssue(
+		// 	cloneObject(this.issue,{title}))
 
 
 	/**
@@ -346,11 +344,11 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			{editingIssue} = this.props
 
 
-		this.issueActions.setEditingIssue(cloneObject(editingIssue,{
-			milestone:null,
-			labels:[],
-			repoId
-		}),true)
+		// this.issueActions.setEditingIssue(cloneObject(editingIssue,{
+		// 	milestone:null,
+		// 	labels:[],
+		// 	repoId
+		// }),true)
 	}
 
 	/**
@@ -372,7 +370,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 		
 		log.info('Milestone set issue=',editingIssue,'milestone',milestone,'value',value,'milestones',milestones,'newIssue',newIssue)
 		
-		this.issueActions.setEditingIssue(newIssue,true)
+		//this.issueActions.setEditingIssue(newIssue,true)
 		
 
 	}
@@ -383,7 +381,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			{assignees,editingIssue} = this.props,
 			assignee = assignees.find(it => it.id === value)
 			
-		this.issueActions.setEditingIssue(cloneObject(editingIssue,{assignee}))
+		//this.issueActions.setEditingIssue(cloneObject(editingIssue,{assignee}))
 		// const assignee = !editingIssue || !editingIssue.collaborators ? null :
 		// 	editingIssue.collaborators.find(item => item.login === value)
 
@@ -395,7 +393,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			{issue} = this,
 			newIssue = cloneObjectShallow(issue,{labels})
 		
-		this.issueActions.setEditingIssue(newIssue,true)
+		//this.issueActions.setEditingIssue(newIssue,true)
 
 	}
 
@@ -415,14 +413,14 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 
 	hide = () => {
-		this.issueActions.setEditingInline(false)
+		//this.issueActions.setEditingInline(false)
 	}
 
 	/**
 	 * Save the issue
 	 */
 	save = () => {
-		this.issueActions.issueSave(cloneObject(this.issue))
+		//this.issueActions.issueSave(cloneObject(this.issue))
 	}
 
 	/**
