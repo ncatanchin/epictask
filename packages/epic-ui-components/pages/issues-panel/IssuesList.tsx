@@ -28,6 +28,9 @@ import { getValue } from "epic-global/ObjectUtil"
 import { IRowState, IRowTypeConfig } from "epic-ui-components/common/VisibleList"
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
+import { PureRender } from "epic-ui-components/common/PureRender"
 
 
 // Constants & Non-typed Components
@@ -292,19 +295,7 @@ export interface IIssuesListState {
 class IssueItemVisibleList extends VisibleList<string,string,number> {
 }
 
-function makePropSelector(selectorProp) {
-	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
-}
 
-function makeSelector() {
-	return createStructuredSelector({
-		issues: makePropSelector('issuesSelector'),
-		items: makePropSelector('issueItemsSelector'),
-		groups: makePropSelector('issueGroupsSelector'),
-		groupVisibility: makePropSelector('groupVisibilitySelector'),
-		//editInlineConfig: makePropSelector('editInlineConfigSelector')
-	})
-}
 
 /**
  * IssuesPanel
@@ -313,8 +304,15 @@ function makeSelector() {
  * @constructor
  **/
 
-@connect(makeSelector(), null, null, { withRef: true })
-@ThemedStyles(baseStyles, 'issuesPanel')
+@connect(() => createStructuredSelector({
+	issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
+	items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
+	groups: getIssuesPanelSelector(selectors => selectors.issueGroupsSelector),
+	groupVisibility: getIssuesPanelSelector(selectors => selectors.groupVisibilitySelector),
+	editInlineConfig: getIssuesPanelSelector(selectors => selectors.editInlineConfigIssueSelector)
+}), null, null, { withRef: true })
+@ThemedStylesWithOptions({enableRef:true},baseStyles, 'issuesPanel')
+@PureRender
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
 	
@@ -531,66 +529,19 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		this.updateState(nextProps)
 	}
 	
-	/**
-	 * ONLY update when props.items or state.itemIndexes changes
-	 *
-	 * @param nextProps
-	 * @param nextState
-	 * @param nextContext
-	 * @returns {boolean}
-	 */
-	shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
-		return !shallowEquals(nextProps, this.props, 'editInlineConfig', 'items') || !shallowEquals(nextState, this.state, 'itemIndexes')
-	}
-	
-	//
 	// /**
-	//  * Render issue item
+	//  * ONLY update when props.items or state.itemIndexes changes
 	//  *
-	//  * @param itemIndexes
-	//  * @param index
-	//  * @param style
-	//  * @param key
-	//  * @returns {string|number}
+	//  * @param nextProps
+	//  * @param nextState
+	//  * @param nextContext
+	//  * @returns {boolean}
 	//  */
-	// renderItem = (itemIndexes:List<number>,index:number,style,key) => {
-	// 	const
-	// 		{
-	// 			styles,
-	// 			theme,
-	// 			items,
-	// 			onIssueSelected,
-	// 			onIssueOpen
-	// 		} = this.props,
-	//
-	// 		item = items.get(itemIndexes.get(index))
-	//
-	//
-	// 	return isGroupListItem(item) ?
-	//
-	// 		// GROUP
-	// 		<IssueGroupHeader
-	// 			onClick={() => this.toggleGroupVisible(item.item as IIssueGroup)}
-	// 			key={key}
-	// 			styles={styles}
-	// 			style={style}
-	// 			group={item.item as IIssueGroup}/> :
-	//
-	// 		isEditInlineListItem(item) ?
-	// 			<IssueEditInline key={key}
-	// 			                 style={style}/> :
-	//
-	// 		// ISSUE
-	// 		<IssueItem
-	// 			key={key}
-	// 			issueId={item.item.id}
-	// 			theme={theme}
-	// 			style={style}
-	// 			onOpen={onIssueOpen}
-	// 			onSelected={onIssueSelected}/>
-	//
+	// shouldComponentUpdate(nextProps:IIssuesListProps, nextState:IIssuesListState, nextContext:any):boolean {
+	// 	return !shallowEquals(nextProps, this.props, 'styles','style','editInlineConfig', 'items') || !shallowEquals(nextState, this.state, 'itemIndexes')
 	// }
 	//
+	
 	buildItem = (rowType:string):IRowTypeConfig<string,string,number> => {
 		const
 			{
@@ -604,7 +555,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				clazz: IssueGroupHeader,
 				props: {
 					onClick:this.toggleGroupVisible,
-					key:`group-header-${uuid()}`,
 					styles,
 					viewController: this.viewController
 				}
@@ -615,14 +565,12 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{
 				clazz: IssueEditInline,
 				props: {
-					key: `edit-inline-${uuid()}`,
 					viewController: this.viewController
 					
 				}
 			} : {
 				clazz: IssueItem,
 				props: {
-					key: `issue-${uuid()}`,
 					onOpen: onIssueOpen,
 					onSelected: onIssueSelected,
 					viewController: this.viewController

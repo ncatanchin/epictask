@@ -1,4 +1,4 @@
-import shallowCompare from 'react-addons-shallow-compare'
+const shallowCompare = require('react-addons-shallow-compare')
 import {interceptFn} from  "epic-global"
 
 const

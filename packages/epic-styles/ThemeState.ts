@@ -234,7 +234,8 @@ function setTheme(newThemeCreator:IThemeCreator) {
  */
 export function setThemeCreator(creator:IThemeCreator) {
 	setTheme(creator)
-	ThemeEvents.emit(ThemeEvent.Changed)
+	//ThemeEvents.emit(ThemeEvent.Changed)
+	EventHub.broadcast(EventHub.ThemeChanged)
 }
 
 

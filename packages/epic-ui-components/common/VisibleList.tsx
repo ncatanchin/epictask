@@ -57,37 +57,34 @@ export interface IRowState<RowType,ItemKeyType,ItemType> {
 	key:ItemKeyType
 	index:number
 	style:any
+	config: IRowTypeConfig<RowType,ItemKeyType,ItemType>
 }
 
 type TRowStateListener = (outRowState:IRowState<any,any,any>) => any
 
-class RowState<RowType,ItemKeyType,ItemType> extends SimpleEventEmitter<TRowStateListener> implements IRowState<RowType,ItemKeyType,ItemType> {
-	
-	id = uuid()
-	type:RowType
-	item:ItemType
-	items:TItems<ItemType>
-	key:ItemKeyType
-	index:number
-	style:any
-	available:boolean
-	component?:VisibleListRowWrapper
-	config: IRowTypeConfig<RowType,ItemKeyType,ItemType>
-	
-	constructor() {
-		super()
-		
-	}
-	
-	update(newState) {
-		
-		assign(this,newState)
-		//_.pick(this,'available','type','item','items','key','index','style') as any
-		this.emit(newState)
-	}
-	
-}
-
+// class RowState<RowType,ItemKeyType,ItemType> implements IRowState<RowType,ItemKeyType,ItemType> {
+//
+// 	type:RowType
+// 	item:ItemType
+// 	items:TItems<ItemType>
+// 	key:ItemKeyType
+// 	index:number
+// 	style:any
+// 	available:boolean
+// 	component?:VisibleListRowWrapper
+// 	config: IRowTypeConfig<RowType,ItemKeyType,ItemType>
+//
+// 	constructor() {
+// 		super()
+//
+// 	}
+//
+// 	update(newState) {
+// 		assign(this,newState)
+// 	}
+//
+// }
+//
 
 
 
@@ -136,7 +133,7 @@ export interface IVisibleListProps<RowType extends any,ItemKeyType extends any,I
 	transitionProps?:any
 }
 
-export type TRowComponents<RowType extends any,ItemKeyType extends any,ItemType extends any> = Map<RowType,List<RowState<RowType,ItemKeyType,ItemType>>>
+export type TRowComponents<RowType extends any,ItemKeyType extends any,ItemType extends any> = Map<RowType,List<IRowState<RowType,ItemKeyType,ItemType>>>
 
 /**
  * IVisibleListState
@@ -149,13 +146,14 @@ export interface IVisibleListState<RowType extends any,ItemKeyType extends any,I
 	
 	rowTypeComponents?:TRowComponents<RowType,ItemKeyType,ItemType>
 	rowComponents?:List<IVisibleListRowComponent<RowType,ItemKeyType,ItemType>>
-	rowStates?:List<RowState<RowType,ItemKeyType,ItemType>>
+	rowStates?:List<IRowState<RowType,ItemKeyType,ItemType>>
 	lastItems?:TItems<ItemType>
 	rootElement?:any
 	listElement?:any
 	itemsPerPage?:number
 	
 	
+	rowTypeConfigs?:any
 	
 	scrollTop?:number
 	currentItems?:any
@@ -173,145 +171,23 @@ export interface IVisibleListState<RowType extends any,ItemKeyType extends any,I
 
 
 
-function updateRowTypeComponents<RowType extends any,ItemKeyType extends any,ItemType extends any>
-(
-	rowTypeComponents:TRowComponents<RowType,ItemKeyType,ItemType>,
-	startIndex:number,
-	endIndex:number,
-	items:TItems<ItemType>,
-	itemsToPrepare,
-	currentItems
-) {
-	let
-		preparedRowStates = List<RowState<RowType,ItemKeyType,ItemType>>()
-		//preparedComponents = List<IVisibleListRowComponent<RowType,ItemKeyType,ItemType>>()
-	
-	rowTypeComponents = rowTypeComponents.withMutations(newRowTypeComponents => {
-		const
-			rowTypes = newRowTypeComponents.keySeq()
-		
-		rowTypes.forEach((rowType) => {
-			let
-				rows = newRowTypeComponents.get(rowType)
-			
-			rows = rows.withMutations(newRows => {
-				newRows.forEach((row,rowIndex) => {
-					const
-						{
-							index:itemIndex,
-							item,
-							available,
-							component
-						} = row,
-						inUse = !available && // CHECK TO SEE IF IT HAS ANY VALUE
-							currentItems.indexOf(item) > -1 &&
-							item && // ENSURE WE HAVE AN ITEM
-							itemIndex >= startIndex && // CHECK INDEXES
-							itemIndex <= endIndex &&
-							item === items.get(itemIndex) // FINALLY MAKE SURE THE ITEM HAS NOT CHANGED
-					
-					if (inUse) {
-						const
-							prepItemIndex = itemsToPrepare.findIndex(it => it.item === item)
-						
-						if (prepItemIndex === -1) {
-							log.error(`Item now found in prep items, but marked in use`,
-								row,
-								item,
-								prepItemIndex,
-								itemsToPrepare,
-								currentItems)
-							
-						} else {
-							itemsToPrepare = itemsToPrepare.remove(prepItemIndex)
-							//preparedComponents = preparedComponents.push(component) as any
-							preparedRowStates = preparedRowStates.push(row)
-						}
-						
-						return
-					}
-					
-					
-					row.update({
-						available: true,
-						item: null,
-						index: null,
-						key: null
-					})
-					
-					newRows = newRows.set(rowIndex,row)
-				})
-				
-				return newRows
-			})
-			
-			newRowTypeComponents.set(rowType,rows)
-		})
-		
-		return newRowTypeComponents
-	})
-	
-	return {
-		itemsToPrepare,
-		//preparedComponents,
-		preparedRowStates,
-		rowTypeComponents
-	}
-}
-
-
 interface IVisibleListRowWrapperProps extends IThemedAttributes {
-	rowState:RowState<any,any,any>
+	rowState:IRowState<any,any,any>
 }
 
-@PureRender
+//@PureRender
 class VisibleListRowWrapper extends React.Component<IVisibleListRowWrapperProps,any> {
-	
-	
-	// UPDATE_DELAY = Math.round(Math.random() * 300) + 300
-	//
-	// constructor(props,context) {
-	// 	super(props,context)
-	//
-	// 	log.debug(`Using update delay ${this.UPDATE_DELAY}`)
-	// 	this.state = {
-	// 		outRowState: props.rowState
-	// 	}
-	// }
-	
-	// private onUpdate = _.debounce((rowState) => {
-	// 	//log.debug(`New row state data`,this.props.rowState)
-	// 	if (getValue(() => this.state.mounted,false))
-	// 		this.forceUpdate()
-	// },this.UPDATE_DELAY,{maxWait:this.UPDATE_DELAY + 150})
-	//
-	// componentWillMount() {
-	// 	//this.setState({mounted:true},() => this.props.rowState.addListener(this.onUpdate))
-	//
-	//
-	// }
-	//
-	// componentWillUnmount() {
-	// 	//this.props.rowState.removeListener(this.onUpdate)
-	// 	//this.setState({mounted:false})
-	//
-	// }
-	//
-	// shouldComponentUpdate(nextProps,nextState) {
-	// 	return !shallowEquals(this.props,nextProps,'rowState.index','rowState.item')
-	//
-	// }
 	
 	render() {
 		const
 			{rowState} = this.props,
-			{config,style,id} = rowState,
+			{config,style,key} = rowState,
 			{clazz:ComponentClazz,props:rowTypeProps = {}} = config
 			
 			// THE OUT ROW STATE IS A REF COPY
 			//{outRowState} = this.state
 		
-		return <ComponentClazz key={id} {...(rowTypeProps)} rowState={rowState}  />
+		return <ComponentClazz key={key} {...(rowTypeProps)} rowState={rowState}  />
 	}
 }
 
@@ -338,7 +214,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		super(props,context)
 		this.state = {
 			scrollTop: 0,
-			rowTypeComponents: Map<RowType,List<RowState<RowType,ItemKeyType,ItemType>>>()
+			rowTypeConfigs: {}
 		}
 	}
 	
@@ -418,7 +294,8 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 				itemHeightTotal,
 				itemHeights,
 				startIndex: 0,
-				endIndex: 0
+				endIndex: 0,
+				rowStates: this.makeRowStates(props,itemOffsets,itemHeights)
 			})
 		}
 		
@@ -428,22 +305,26 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 			styles: createThemedStyles(baseStyles,[]),
 			theme: getTheme(),
 			itemCache
-		},heightState),() => this.updateItems(props))
+		},heightState, !this.hasItemHeight && {
+			rowStates: this.makeRowStates(props,null,null)
+		}),() => this.updateItems(props))
 	}
 	
 	
-	dumpItems = (props = this.props) => {
+	makeRowStates = (props,itemOffsets,itemHeights) => {
 		const
-			{state = {}} = this,
-			{items,itemCount,itemHeight,rowTypeProvider,itemKeyFn,itemBuilder} = props,
-			rowTypeConfigs = {} as any
+			{items,itemHeight,rowTypeProvider,itemBuilder} = props,
+			{rowTypeConfigs} = this.state,
+			{hasItemHeight} = this
 		
 		let
 			rowStates = items.map((item,index) => {
 				const
-					rowState = new RowState(),
-					key = isFunction(itemKeyFn) ? itemKeyFn(items,item,index) : index,
-					rowType = getValue(() => rowTypeProvider(items,index,key as any), '@@INTERNAL' as any) as any
+					//key = isFunction(itemKeyFn) ? itemKeyFn(items,item,index) : index,
+					key = this.getItemKey(items,index),
+					rowType = getValue(() => rowTypeProvider(items,index,key as any), '@@INTERNAL' as any) as any,
+					offset = hasItemHeight && itemOffsets.get(index)
+					
 				
 				let
 					config = rowTypeConfigs[rowType]
@@ -453,32 +334,35 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 				}
 				
 				
-				rowState.update({
+				return {
 					item,
 					index,
-					style: makeStyle(FillWidth,{
-						position: 'relative'
-					}),
+					style: makeStyle(
+						FillWidth,
+						hasItemHeight && makeHeightConstraint(itemHeights.get(index)),
+						hasItemHeight  ? {
+							position: 'absolute',
+							top: !offset || isNaN(offset) ? 0 : offset
+						} : {
+							position: 'relative'
+						}
+					),
 					config,
 					key,
 					available: false
-				})
+				}
 				
-				return rowState
 			}) as any
 	
 		log.debug(`Dumped row stated`,rowStates)
 		
-		this.setState({
-			rowStates
-		})
+		return rowStates
 	}
 	
 	
 	updateItems = (props = this.props,scrollTop = getValue(() => this.state.scrollTop)) => {
 		
 		if (!this.hasItemHeight) {
-			this.dumpItems(props)
 			return
 		}
 		
@@ -487,11 +371,8 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 			{state = {}} = this,
 			{itemCount,itemHeight,rowTypeProvider,itemBuilder} = props,
 			items = props.items as any,
-			{height,width,rootElement,itemOffsets,itemCache,itemHeights,itemHeightMin} = state
+			{height,width,rootElement,itemOffsets,rowTypeConfigs,itemHeights,itemHeightMin} = state
 
-		let
-			{bufferStartIndex,bufferEndIndex,rowTypeComponents} = state
-		
 		if (!height || !width || !rootElement || !itemOffsets) {
 			log.debug(`Height/width not set yet or no offsets `,height,width,rootElement,itemOffsets)
 			return
@@ -520,214 +401,76 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 				}
 			})
 			
+			if (!endIndex)
+				endIndex = itemCount
+			
 			itemsPerPage = endIndex - startIndex
-			
-			
-			// if (
-			// 	startIndex !== endIndex && isNumber(bufferStartIndex) && isNumber(bufferEndIndex) &&
-			// 	bufferEndIndex > bufferStartIndex &&
-			// 	bufferEndIndex - bufferStartIndex >= itemsPerPage &&
-			// 	startIndex >= bufferStartIndex &&
-			// 	endIndex <= bufferEndIndex) {
-			// 	log.debug(`Valid buffer range ${bufferStartIndex}-${bufferEndIndex} and we are in it ${startIndex}-${endIndex}`)
-			// 	return
-			// }
-			//
-			// const
-			// 	BUFFER_ITEMS = 5 // itemsPerPage
-			//
-			// bufferStartIndex = Math.max(0,startIndex - BUFFER_ITEMS)
-			// bufferEndIndex = Math.min(itemCount,endIndex + BUFFER_ITEMS)
-			
-			//
-			// const
-			// 	visibleIndex = Math.max(0, (.findIndex(offset => offset >= scrollTop) - 1) || 0)
-			//
-			// startIndex = visibleIndex
-			// endIndex = Math.min(itemCount, visibleIndex + itemsPerPage + itemsPerPage)
 		}
-			
+		
+		startIndex = Math.max(0,Math.min(startIndex,startIndex - 10))
+		endIndex = Math.min(itemCount,Math.min(endIndex,endIndex + 10))
+		
 		log.debug(`Start`,startIndex,'end',endIndex,'items per page',itemsPerPage)
 		
-		if (!isNumber(startIndex) && isNumber(scrollTop)) {
+		if (!isNumber(startIndex) || !isNumber(scrollTop)) {
 			log.warn(`Start index and scroll top must both be numbers`,startIndex,scrollTop)
 			return
 		}
 		
-		const
-			currentItems = itemHeight ?
-				items.slice(startIndex, endIndex) :
-				items
+		// const
+		// 	currentItems = itemHeight ?
+		// 		items.slice(startIndex, endIndex) :
+		// 		items,
+		// 	currentRowStates = this.state.rowStates,
+		// 	rowStates = currentItems.map((item,index) => {
+		// 		const
+		// 			realIndex = index + startIndex,
+		// 			offset = itemOffsets.get(realIndex),
+		// 			key = this.getItemKey(items,realIndex),
+		// 			rowType = rowTypeProvider(items,realIndex,key)
+		//
+		// 		let
+		// 			rowState = currentRowStates && currentRowStates.find(it =>
+		// 				it.index === realIndex &&
+		// 				it.key === key &&
+		// 				it.item === item
+		// 			),
+		// 			config = rowTypeConfigs[rowType as any]
+		//
+		// 		if (!config) {
+		// 			rowTypeConfigs[rowType as any] = config = itemBuilder(rowType)
+		// 		}
+		//
+		//
+		// 		if (!rowState) {
+		// 			rowState = {
+		// 				index: realIndex,
+		// 				item,
+		// 				key,
+		// 				items,
+		// 				type:rowType,
+		// 				config,
+		// 				style: makeStyle(
+		// 					FillWidth,
+		// 					makeHeightConstraint(itemHeights.get(realIndex)),
+		// 					{
+		// 						position: 'absolute',
+		// 						top: !offset || isNaN(offset) ? 0 : offset
+		// 					}
+		// 				)
+		// 			}
+		// 		}
+		// 		return rowState
+		// 	})
 		
-		let
-			itemsToPrepare = List(currentItems.map((item,index) => {
-				const
-					realIndex = index + startIndex
-				return {
-					item,
-					realIndex,
-					key:this.getItemKey(items,realIndex)
-				}
-			}) as any) as any
-			
-		// ITERATE EXISTING COMPONENTS, MARKING AVAILABLE/IN-USE
-		const
-			rowTypesUpdate = updateRowTypeComponents(rowTypeComponents,startIndex,endIndex,items,itemsToPrepare,currentItems)
 		
-		rowTypeComponents = rowTypesUpdate.rowTypeComponents as any
-		itemsToPrepare = rowTypesUpdate.itemsToPrepare as any
+		log.debug(`New indexes`,startIndex,endIndex)
 		
-		let
-			//{preparedComponents} = rowTypesUpdate
-			{preparedRowStates} = rowTypesUpdate
-		
-		rowTypeComponents = rowTypeComponents.withMutations((newRowTypeComponents:any) => {
-			// PREPARE ANY NEW OR REQUIRED COMPONENTS
-			const
-				groupedItemsToPrepare = Map(itemsToPrepare.groupBy(({key,realIndex}) =>
-					!rowTypeProvider ? ("NO-ROW-TYPE-PROVIDER" as any) : rowTypeProvider(items,realIndex,key)
-				)) as any
-			
-			groupedItemsToPrepare.forEach((rowTypeItemsToPrepare,rowType) => {
-				let
-					rowComponents = newRowTypeComponents.get(rowType)
-				
-				if (!rowComponents) {
-					rowComponents = List<RowState<RowType,ItemKeyType,ItemType>>()
-				}
-				
-				// ITERATE THE PRE ITEMS FOR THE ROW TYPE AND CREATE ANYTHING MISSING
-				rowComponents = rowComponents.withMutations(newRowComponents => {
-					let
-						availableRows = List<{rowComponent:RowState<RowType,ItemKeyType,ItemType>,rowIndex}>(
-							newRowComponents
-								.map((rowComponent,rowIndex) => ({rowComponent,rowIndex}))
-								.filter(({rowComponent}) => rowComponent.available)
-						)
-					
-					log.debug(`Total components for ${rowType} = ${newRowComponents.size} / available = ${availableRows.size}`)
-					rowTypeItemsToPrepare.forEach(({item,key,realIndex}) => {
-						let
-							rowComponent:RowState<RowType,ItemKeyType,ItemType>,
-							rowIndex:number
-						
-						if (availableRows.size) {
-							const
-								rowItem = availableRows.last()
-							
-							availableRows = availableRows.pop()
-							
-							rowComponent = getValue(() => rowItem.rowComponent)
-							rowIndex = getValue(() => rowItem.rowIndex,-1)
-						}
-						
-						if (!rowComponent) {
-							rowIndex = -1
-							rowComponent = assign(new RowState(),{
-								type:rowType,
-								config: itemBuilder(rowType)
-							})
-							//rowComponent.component = <VisibleListRowWrapper key={rowComponent.id} rowState={rowComponent} /> as any
-						} else {
-							rowComponent = cloneObjectShallow(rowComponent)
-						}
-						
-						
-						
-						// NOW STYLE THE COMPONENT
-						const
-							offset = itemOffsets.get(realIndex),
-							{clazz:RowComponentClazz,props:rowTypeProps} = rowComponent.config
-						
-						rowComponent.update({
-							available: false,
-							index: realIndex,
-							item,
-							key,
-							items,
-							style: makeStyle(
-								FillWidth,
-								makeHeightConstraint(itemHeights.get(realIndex)),
-								{
-									position: 'absolute',
-									top: !offset || isNaN(offset) ? 0 : offset
-								}
-							)
-						})
-						
-						log.debug(`Setting new row state`)
-						
-						//unwrappedComponent.setRowState(newRowState)
-						
-						// PUSH TO THE PREPARED LIST
-						//preparedComponents = preparedComponents.push(rowComponent.component)
-						preparedRowStates = preparedRowStates.push(rowComponent)
-						newRowComponents =  (rowIndex < 0) ?
-							newRowComponents.push(rowComponent) :
-							newRowComponents.set(rowIndex,rowComponent)
-							
-					})
-					
-					return newRowComponents
-				})
-				
-				newRowTypeComponents.set(rowType,rowComponents)
-				return newRowTypeComponents
-			})
-			
-			// itemsToPrepare.forEach(({item,realIndex},prepItemIndex) => {
-			// 	const
-			// 		key = this.getItemKey(items,realIndex),
-			// 		rowType = rowTypeProvider(items,realIndex,key)
-			//
-			//
-		})
-		
-			//
-			// 		.map((item, index) => {
-			// 		index += startIndex
-			//
-			// 		const
-			// 			offset = itemOffsets.get(index),
-			// 			style = makeStyle(FillWidth,{
-			// 				position: 'absolute',
-			// 				top: !offset || isNaN(offset) ? 0 : offset,
-			// 				height: itemHeights.get(index)
-			// 			}),
-			// 			indexId = `${index}`,
-			// 			key = this.getItemKey(items,index)
-			//
-			//
-			// 		return this.getItemComponent(itemCache,itemRenderer,items,item,key,index,style)
-			//
-			// 		//return itemRenderer(items, index,style,key)
-			//
-			// 	}) : items.map((item, index) => {
-			// 	const
-			// 		style = makeStyle(FillWidth,{
-			// 			position: 'relative'
-			// 		}),
-			// 		indexId = `${index}`,
-			// 		key = this.getItemKey(items,index)
-			//
-			// 	return this.getItemComponent(itemCache,itemRenderer,items,item,key,index,style)
-			// 	//return itemCache[item] || (itemCache[item] = itemRenderer(items, index,style,key))
-			// 	//return itemRenderer(items, index,style,key)
-			// }))
-			//
-		log.debug(`Prepared components`,preparedRowStates,rowTypeComponents,startIndex,endIndex)
 		this.setState({
-			itemCache,
 			startIndex,
 			endIndex,
-			bufferStartIndex,
-			bufferEndIndex,
 			scrollTop,
-			rowTypeComponents,
-			rowStates: List(preparedRowStates),
-			//rowComponents:List(preparedComponents),
-			itemsPerPage,
-			currentItems: currentItems || []
+			itemsPerPage
 		})
 	}
 	
@@ -738,31 +481,19 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		if (!this.hasItemHeight)
 			return
 		
-		//
 			const
-				{scrollTop} = this.state.listElement,
-				{itemHeightMin,height,startIndex,endIndex,scrollTop:currentScrollTop} = this.state
+				{scrollTop} = this.state.listElement
+		
 
-			if (isNumber(currentScrollTop)) {
-
-				if (!height || !itemHeightMin)
-					return
-
-				const
-					firstVisibleIndex = Math.max(0, Math.floor(scrollTop / itemHeightMin)),
-					lastVisibleIndex = Math.max(0, Math.ceil((scrollTop + height) / itemHeightMin))
-
-				if (firstVisibleIndex >= startIndex && lastVisibleIndex <= endIndex) {
-					log.debug(`Indexes`,firstVisibleIndex,lastVisibleIndex, `within start/end`,startIndex,endIndex)
-					return
-				}
-			}
-
-			setImmediate(() => this.updateItems(this.props,scrollTop))
+			this.updateItems(this.props,scrollTop)
 			//this.setState({scrollTop},)
 		
 		
-	},350,{maxWait:600})
+	},250,{
+		maxWait: 500
+		// leading: false,
+		// trailing: true
+	})
 	
 	/**
 	 * SHould component update
@@ -780,7 +511,8 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		nextContext:any
 	):boolean {
 		//return !shallowEquals(this.state,nextState,'rowComponents.size')
-		return !shallowEquals(this.props,nextProps,'items') || !shallowEquals(this.state,nextState,'rowStates')
+		//return !shallowEquals(this.props,nextProps,'items') || !shallowEquals(this.state,nextState,'rowStates')
+		return !shallowEquals(this.state,nextState,'rowStates')
 	}
 	
 	/**
@@ -848,41 +580,6 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	}
 	
 	/**
-	 * Get item component from cache
-	 *
-	 * @param itemCache
-	 * @param itemRenderer
-	 * @param items
-	 * @param item
-	 * @param key
-	 * @param index
-	 * @param style
-	 * @returns {any}
-	 */
-	private getItemComponent(itemCache,itemRenderer,items,item,key,index,style) {
-		let
-			itemReg = itemCache[key]
-		
-		if (!itemReg) {
-			const
-				renderedComponent = itemRenderer(items, index,{},key)
-			itemReg = itemCache[key] = {
-				style,
-				renderedComponent: renderedComponent,
-				component: <div key={key} style={style}>{renderedComponent}</div>
-			}
-		} else if (!shallowEquals(itemReg.style,style,'top','height')) {
-			Object.assign(itemReg.style,style)
-			// Object.assign(itemReg,{
-			// 	style,
-			// 	component: <div key={key} style={style}>{itemReg.renderedComponent}</div>
-			// })
-		}
-		
-		return itemReg.component
-	}
-	
-	/**
 	 * On render
 	 *
 	 * @returns {any}
@@ -890,24 +587,40 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	render() {
 		const
 			{props,state = {}} = this,
-			{itemHeight,className,transitionProps} = props,
-			{rowStates,rowComponents,itemHeightTotal,styles} = state
+			{itemHeight,className} = props,
+			{rowStates,itemHeightTotal,styles} = state
 			
 			
 		
 		// let
 		// 	contentHeight = itemHeightTotal//((items as any).size || (items as any).length) * itemHeightMin
 		
-		return <Resizable style={styles.root}
+		return <Resizable style={[styles.root,PositionRelative]}
 		                  ref={this.setRootRef}
 		                  onResize={this.onResize}>
-			<div style={[styles.list]} ref={this.setListRef} onScroll={this.onScroll} className={`visible-list ${className || ''}`} data-visible-list="true">
+			<div style={styles.list}
+			     ref={this.setListRef}
+			     onScroll={this.onScroll}
+			     className={`visible-list ${className || ''}`}
+			     data-visible-list="true">
 				
 				{/* SCROLL ITEMS CONTAINER - total item height */}
-				<div style={[styles.list.content,itemHeight && {height:isNaN(itemHeightTotal) ? 0 : itemHeightTotal}]}>
-					{rowStates && rowStates.map(rowState =>
-						<VisibleListRowWrapper key={rowState.id} rowState={rowState} />
-					)}
+				<div style={makeStyle(
+					styles.list.content,
+					itemHeight && {
+						height:isNaN(itemHeightTotal) ? 0 : itemHeightTotal
+					}
+				)}>
+					{rowStates && rowStates.map(rowState => {
+						const
+							{config,style,key} = rowState,
+							{clazz:ComponentClazz,props:rowTypeProps = {}} = config
+						
+						// THE OUT ROW STATE IS A REF COPY
+						//{outRowState} = this.state
+						
+						return <ComponentClazz key={key} {...rowTypeProps} style={style} rowState={rowState}  />
+					})}
 				</div>
 			</div>
 		</Resizable>

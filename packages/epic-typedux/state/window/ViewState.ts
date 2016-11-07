@@ -16,6 +16,7 @@ const
 
 export const ViewStateRecord = Record({
 	id: shortId(),
+	index:-1,
 	name: null,
 	stateClazz: null,
 	controller: null,
@@ -52,6 +53,7 @@ class ViewState extends ViewStateRecord implements IViewConfig{
 	
 	
 	id:string
+	index:number
 	name:string
 	componentLoader: TPromisedComponentLoader
 	controllerClazz: any

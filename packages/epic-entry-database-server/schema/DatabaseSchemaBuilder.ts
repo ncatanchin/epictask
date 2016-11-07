@@ -43,14 +43,20 @@ function dbCall(store,name,...args) {
 async function persistViews(store,name,views) {
 	const
 		id = `_design/${name}`,
-		existingDoc = await dbCall(store,'get',id),
 		doc = {
 			_id: id,
 			views
 		} as any
+	try {
+		const
+			existingDoc = await dbCall(store,'get',id)
+			
 	
-	if (existingDoc && existingDoc._rev)
-		doc._rev = existingDoc._rev
+		if (existingDoc && existingDoc._rev)
+			doc._rev = existingDoc._rev
+	} catch (err) {
+		log.debug(`Looks like a new doc`)
+	}
 	
 	log.info(`${doc._rev ? 'Updating' : 'Creating'} ${id}`)
 	await dbCall(store,'put',doc)

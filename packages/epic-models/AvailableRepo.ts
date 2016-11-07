@@ -64,7 +64,7 @@ export class AvailableRepo extends DefaultModel implements IAvailableRepo {
 	/**
 	 * Enabled or not enabled
 	 */
-	@Attribute()
+	@Transient
 	enabled:boolean
 	
 	/**

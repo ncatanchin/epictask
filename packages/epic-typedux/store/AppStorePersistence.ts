@@ -6,7 +6,7 @@ import { IFilterConfig, fromPlainObject, toPlainObject, excludeFilterConfig, exc
 import { readFileAsync } from "epic-global/Files"
 import { AppKey, JobKey } from "epic-global/Constants"
 import { isMap } from "typeguard"
-import msgpack from 'msgpack-lite'
+import * as msgpack from 'msgpack-lite'
 
 const
 	log = getLogger(__filename),

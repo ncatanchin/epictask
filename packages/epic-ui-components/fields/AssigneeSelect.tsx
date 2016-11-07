@@ -11,7 +11,7 @@ import { User } from "epic-models"
 
 
 import { Select, ISelectItem } from "./Select"
-import { enabledAssigneesSelector } from "epic-typedux"
+import { assigneesSelector,enabledAssigneesSelector } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
 import filterProps from 'react-valid-props'
 
@@ -53,6 +53,7 @@ export interface IAssigneeSelectProps {
 	underlineShow?:boolean
 	
 	assignees?:List<User>
+	enabledAssignees?:List<User>
 	assignee:User
 	onSelect: (assignee:User) => any
 	repoId:number
@@ -73,7 +74,8 @@ export interface IAssigneeSelectState {
  **/
 
 @connect(createStructuredSelector({
-	assignees: enabledAssigneesSelector
+	enabledAssignees: enabledAssigneesSelector,
+	assignees: assigneesSelector
 }))
 
 // If you have a specific theme key you want to

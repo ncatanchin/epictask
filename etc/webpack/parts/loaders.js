@@ -21,9 +21,11 @@ module.exports = {
 		
 		// SourceCode
 		{
+			//,'source-map-loader'
 			test: srcTest,
+			//include: [path.resolve(process.cwd(),'packages')],
 			exclude: [/node_modules/],
-			loaders: ["react-hot-loader/webpack",'awesome-typescript','source-map-loader',proxyProvidedLoaderPath],
+			loaders: ['awesome-typescript',proxyProvidedLoaderPath],
 		},
 		// {
 		// 	test: srcTest,

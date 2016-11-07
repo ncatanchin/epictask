@@ -8,7 +8,7 @@ import { createStructuredSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import { Milestone } from "epic-models"
 import { Select, ISelectItem } from "./Select"
-import { enabledMilestonesSelector } from "epic-typedux"
+import { enabledMilestonesSelector,milestonesSelector } from "epic-typedux"
 import filterProps from "react-valid-props"
 
 // Constants
@@ -43,6 +43,7 @@ export interface IMilestoneSelectProps {
 	underlineShow?:boolean
 	
 	milestones?:List<Milestone>
+	enabledMilestones?:List<Milestone>
 	milestone:Milestone
 	onSelect: (milestone:Milestone) => any
 	repoId:number
@@ -63,7 +64,8 @@ export interface IMilestoneSelectState {
  **/
 
 @connect(createStructuredSelector({
-	milestones: enabledMilestonesSelector
+	milestones: milestonesSelector,
+	enabledMilestones: enabledMilestonesSelector
 }))
 
 // If you have a specific theme key you want to

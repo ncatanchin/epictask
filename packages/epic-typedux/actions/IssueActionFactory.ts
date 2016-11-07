@@ -44,7 +44,7 @@ import { ContainerNames } from "epic-command-manager"
 import { Roots } from "epic-entry-ui/routes/Routes"
 import { TIssuePatchMode, IIssuePatchLabel } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getDatabaseClient } from "epic-database-client/DatabaseClient"
-import { getValue } from "typeguard"
+import { getValue, toNumber } from "typeguard"
 
 
 /**
@@ -140,7 +140,7 @@ export class IssueActionFactory  {
 			stores = getStores(),
 			results:any = await dbAdapter.direct(stores.issue,'query',viewPath,queryOpts)
 		
-		log.info(`Got raw issues`,results)
+		log.debug(`Got raw issues`,results)
 		
 		
 		const
@@ -148,14 +148,18 @@ export class IssueActionFactory  {
 				.filter(it => Array.isArray(it.value) && Array.isArray(it.value[0]))
 				.map(it => it.value && it.value[0]),[]),
 			
+			availableRepos = availableReposSelector(getStoreState()),
+			matchUser = (repo:AvailableRepo,userId) => repo.collaborators.find(it => it.id === toNumber(userId)),
 			issues = values.map(value => {
 				const
 					[
 						_id,
 						id,
 						repoId,
+						issueNumber,
 						title,
 						state,
+						labelsStr,
 						milestoneId,
 						milestoneTitle,
 						userId,
@@ -166,36 +170,34 @@ export class IssueActionFactory  {
 						updated_at
 					] = value
 				
+				const
+					repo = availableRepos.find(it => it.id === repoId)
+				
+				
 				return new Issue({
 					id,
 					repoId,
+					'number':issueNumber,
+					repo:repo.repo,
+					labels: !labelsStr ? [] : labelsStr
+						.split(',')
+						.filter(it => it && it.length > 0)
+						.map(it => repo && repo.labels.find(label => label.id === toNumber(it))),
 					title,
 					state,
-					milestone: milestoneId && {
-						id: milestoneId,
-						title: milestoneTitle
-					},
-					user: userId && {
-						id: userId,
-						login: userLogin
-					},
-					assignee: assigneeId && {
-						id: assigneeId,
-						login: assigneeLogin
-					},
+					milestone: milestoneId && repo.milestones.find(it => it.id === toNumber(milestoneId)),
+					user: userId && matchUser(repo,userId),
+					assignee: assigneeId && matchUser(repo,assigneeId),
 					created_at,
-					updated_at
+					updated_at,
+					$$doc: {
+						_id
+					}
 				})
 			})
 		
-		log.info(`Mapped raw issues`, issues)
+		log.debug(`Mapped raw issues`, issues)
 		return List<Issue>(issues)
-		
-			
-		
-				
-		
-		
 		
 		
 	}
@@ -399,8 +401,8 @@ export class IssueActionFactory  {
 				.filter(it => (availRepos as any).find(availRepo => availRepo.id === it.id)) as any
 			
 			
-			getRepoActions().patchAvailableRepos({issuesLoadStatus: newLoadStatus},availRepos)
-			await Promise.delay(10)
+			// getRepoActions().patchAvailableRepos({issuesLoadStatus: newLoadStatus},availRepos)
+			// await Promise.delay(10)
 		}
 		
 		

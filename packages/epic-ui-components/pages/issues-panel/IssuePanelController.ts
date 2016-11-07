@@ -1,19 +1,25 @@
 import { Map, Record, List } from "immutable"
+import * as Immutable from 'immutable'
 import { OneAtATime } from "epic-global/Decorations"
 import ViewState from "epic-typedux/state/window/ViewState"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { isNumber, isNil, getValue } from "typeguard"
-import { Issue } from "epic-models/Issue"
+
 import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
 import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
-import { Label } from "epic-models/Label"
-import { Milestone } from "epic-models/Milestone"
+
+import { Issue,Label,Comment,Milestone } from "epic-models"
 import { addErrorMessage } from "epic-global/NotificationCenterClient"
 import { TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { IssuesEvent } from "epic-models/IssuesEvent"
-import { makeIssuesPanelStateSelectors } from "epic-ui-components/pages/issues-panel/IssuesPanelSelectors"
+import {
+	makeIssuesPanelStateSelectors,
+	TIssuesPanelSelectors
+} from "epic-ui-components/pages/issues-panel/IssuesPanelSelectors"
 import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
+import { IIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
+import { RepoKey, UIKey } from "epic-global/Constants"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -23,10 +29,16 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 type TIssuesPanelStateUpdater = (...args) => (state:IssuesPanelState) => any
+
+
+export function getIssuesPanelSelector(fn:(selectors:TIssuesPanelSelectors) => any) {
+	return (state,props) => getValue(() => fn(props.viewController.selectors)(state,props))
+}
+
 
 /**
  * IssuePanelController
@@ -38,6 +50,9 @@ class IssuePanelController {
 	
 	
 	selectors
+	
+	private mounted:boolean
+	private unsubscribers:Function[]
 	
 	get viewState() {
 		return this.selectors.viewStateSelector(getStoreState())
@@ -80,7 +95,7 @@ class IssuePanelController {
 			return
 		
 		
-		setImmediate(() => {
+		//setImmediate(() => {
 			let
 				viewState = this.selectors
 					.viewStateSelector(getStoreState())
@@ -104,29 +119,117 @@ class IssuePanelController {
 			if (state !== this.state) {
 				getUIActions().updateView(viewState.set('state',state))
 			}
-		})
+		//})
 	}
 	
 	
 	constructor(public id:string, public initialState:IssuesPanelState = new IssuesPanelState()) {
 		this.selectors = makeIssuesPanelStateSelectors(id)
 		
-		this.loadIssues()
+		//this.loadIssues()
 		
+	}
+	
+	/**
+	 * Observer for repo changes
+	 */
+	private onReposChanged = (newAvailRepos,oldAvailRepos) => {
+		const
+			newIds = newAvailRepos && newAvailRepos.filter(it => it.enabled).map(it => it.id),
+			oldIds = oldAvailRepos && oldAvailRepos.filter(it => it.enabled).map(it => it.id)
+		
+		if (newIds && !Immutable.is(newIds,oldIds)) {
+			log.debug(`Enabled repos changed`,newIds,oldIds)
+			this.loadIssues()
+		}
+	}
+	
+	private onFilterSortChanged = (newVal,oldVal) => {
+		log.debug(`Filter/Sort changed`,newVal,oldVal)
+		
+		this.loadIssues()
+	}
+	
+	private onSelectedIssueIdsChanged = (newVal:List<number>,oldVal:List<number>) => {
+		log.debug(`Selected issue ids changed`,newVal,oldVal)
+		if (getValue(() => newVal.size,0) !== 1) {
+			return
+		}
+		
+		const
+			id = newVal.get(0),
+			issue = this.state.issues.find(it => it.id === id)
+		
+		if (!issue) {
+			log.warn(`Issue id selected, but issue is not available`,id)
+			return
+		}
+		
+		this.loadActivity(issue)
+			
+		
+		
+	}
+	
+	makeStatePath(...keys) {
+		return [UIKey,'viewStates',this.viewState.index,'state',...keys]
+	}
+	
+	/**
+	 * Set mounted
+	 *
+	 * @param mounted
+	 */
+	setMounted(mounted:boolean) {
+		this.mounted = mounted
+		
+		if (this.unsubscribers) {
+			this.unsubscribers.forEach(it => it())
+			this.unsubscribers = null
+		}
+		
+		if (!mounted)
+			return
+		
+		const
+			store = getStore()
+		
+		this.unsubscribers = [
+			store.observe([RepoKey,'availableRepos'],this.onReposChanged),
+			store.observe(this.makeStatePath('issueSort'),this.onFilterSortChanged),
+			store.observe(this.makeStatePath('issueFiler'),this.onFilterSortChanged),
+			store.observe(this.makeStatePath('selectedIssueIds'),this.onSelectedIssueIdsChanged)
+		]
+		this.loadIssues()
 	}
 	
 	/**
 	 * Updates the current issues
 	 */
-	loadIssues = OneAtATime({},async () => {
-		const
-			{issueSort,issueFilter} = this.state,
-			actions = new IssueActionFactory(),
-			issues = await actions.queryIssues(issueSort,issueFilter)
+	loadIssues = () => {
+		setImmediate(async () => {
+			const
+				{issueSort,issueFilter} = this.state,
+				actions = new IssueActionFactory(),
+				issues = await actions.queryIssues(issueSort,issueFilter)
+			
+			
+			this.updateState({issues})
+		})
 		
-		this.updateState({issues})
-	})
+	}
 	
+	/**
+	 * Load activity for an issue
+	 */
+	loadActivity = _.debounce(OneAtATime({}, async (issue:Issue) => {
+		
+			const
+				actions = new IssueActionFactory(),
+				{comments,issuesEvents} = await actions.getActivity(issue)
+			
+			this.setActivity(comments,issuesEvents)
+	}),400)
 	
 	/**
 	 * Update issues in the current panel
@@ -519,13 +622,43 @@ class IssuePanelController {
 		})
 	}
 	
+	/**
+	 * Get the currently selected issue
+	 *
+	 * @returns {any}
+	 */
 	getSelectedIssue():Issue {
 		return this.selectors.selectedIssueSelector(getStoreState())
 	}
 	
+	/**
+	 * Get the selected issues
+	 *
+	 * @returns {List<Issue>}
+	 */
 	getSelectedIssues():List<Issue> {
 		return this.selectors.selectedIssuesSelector(getStoreState())
 	}
+	
+	/**
+	 * Get the selected issues
+	 *
+	 * @returns {List<Issue>}
+	 */
+	getSelectedIssueIds():List<number> {
+		return getValue(() => this.state.selectedIssueIds)
+	}
+	
+	/**
+	 * Get the selected issues
+	 *
+	 * @returns {List<Issue>}
+	 */
+	getItem(index:number):IIssueListItem<any> {
+		return getValue(() => this.selectors.issueItemsSelector(getStoreState()).get(index),null)
+	}
+	
+	
 	
 	private startEditInline(issue:Issue,fromIssueId,index:number) {
 		this.updateState({

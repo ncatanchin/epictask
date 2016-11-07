@@ -1,7 +1,5 @@
 import Electron from 'epic-electron'
 
-import React from "react"
-import ReactDOM from "react-dom"
 import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow } from "epic-global"
 import {
 	ICommand,

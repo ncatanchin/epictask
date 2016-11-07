@@ -17,6 +17,8 @@ export interface IThemedState {
 	palette?:IPalette
 	inputStyles?:any
 	wrappedInstance?:any
+	
+	lastStyles?:any
 	mounted?:boolean
 }
 
@@ -59,16 +61,19 @@ export function createThemedStyles(baseStyles:any,themeKeys:string[],props:any =
  * Create a wrapped themed component
  *
  * @param Component
- * @param skipRadium
+ * @param opts
  * @param baseStyles
  * @param themeKeys
  * @returns {any}
  */
-export function makeThemedComponent(Component,skipRadium = false,baseStyles = null,...themeKeys:string[]) {
+export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyles = null,...themeKeys:string[]) {
+	
+	
 	
 	log.debug(`Decorating theme component `,Component)
 	let
-		lastStyles = null
+		skipRadium = opts.noRadium === true,
+		enableRef = opts.enableRef === true
 	
 	const
 		FinalComponent = skipRadium ? Component : Radium(Component),
@@ -101,7 +106,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 							theme,
 							palette,
 							inputStyles
-						}
+						} as any
 						
 					if (inputStyles) {
 						const
@@ -109,7 +114,7 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 						
 						Object.assign(newState,{styles})
 						
-						lastStyles = inputStyles
+						newState.lastStyles = inputStyles
 					}
 					
 					return newState
@@ -141,16 +146,26 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 						!shallowEquals(props.styles,this.props.styles)
 					) {
 						
-						this.setState(this.getNewState(props,baseStyles,newTheme,newPalette),() => {
-							// try {
-							// 	const
-							// 		instance = this.getWrappedInstance()
-							//
-							// 	instance && instance.forceUpdate()
-							// }	catch (err) {
-							// 	log.warn(`failed to updated wrapped component`)
-							// }
+						// this.setState(this.getNewState(props,baseStyles,newTheme,newPalette),() => {
+						//
+						// })
+						const
+							newStyles = _.merge({} as any,this.state.styles,props.styles) as any
+						this.setState({
+							styles: newStyles,
+							lastStyles: newStyles
+						},() => {
+							
 						})
+						// try {
+						// 	const
+						// 		instance = this.getWrappedInstance()
+						//
+						// 	instance && instance.forceUpdate()
+						// }	catch (err) {
+						// 	log.warn(`failed to updated wrapped component`)
+						// }
+						//})
 					}
 					
 				}
@@ -171,9 +186,9 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				
 				
 				shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
-					return !shallowEquals(this.props,nextProps) ||
-						!shallowEquals(this.state,nextState,'theme','styles','palette') ||
-							!shallowEquals(baseStyles,lastStyles)
+					//return !shallowEquals(this.props,nextProps) ||
+					return	!shallowEquals(this.state,nextState,'theme','styles','palette') ||
+							!shallowEquals(baseStyles,this.state.lastStyles)
 				}
 				
 				/**
@@ -213,12 +228,14 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 				render() {
 					
 					const
-						styles = this.state.styles || this.props.styles || {}
+						{enableComponentRef,styles:propStyles} = this.props,
+						styles = this.state.styles || propStyles || {},
+						addRef = true // enableRef !== false || enableComponentRef
 					
 					return <FinalComponent
 						{..._.omit(this.props,'styles','themedComponent','themedBaseStyles')}
 						{..._.omit(this.state,'styles','inputStyles','wrappedInstance')}
-						{...(this.props.enableComponentRef && {ref: this.setWrappedInstanceRef})}
+						{...(addRef && {ref: this.setWrappedInstanceRef})}
 						styles={styles} />
 				}
 			}
@@ -226,6 +243,12 @@ export function makeThemedComponent(Component,skipRadium = false,baseStyles = nu
 	return WrappedComponent as any
 	//return PureRender(skipRadium ? WrappedComponent : Radium(WrappedComponent)) as any
 	
+}
+
+
+export interface IThemedOptions {
+	noRadium?:boolean,
+	enableRef?:boolean
 }
 
 /**
@@ -239,10 +262,23 @@ export function Themed(Component) {
 	return makeThemedComponent(Component) as any
 }
 
+export function ThemedWithOptions(opts:IThemedOptions) {
+	return function (Component) {
+		return makeThemedComponent(Component,opts) as any
+	}
+}
 export function ThemedNoRadium(Component) {
-	return makeThemedComponent(Component,true) as any
+	return makeThemedComponent(Component,{
+		noRadium: true
+	}) as any
 }
 
+
+export function ThemedStylesWithOptions(opts:IThemedOptions = {},baseStyles:any = {},...themeKeys:string[]) {
+	return (Component) => {
+		return makeThemedComponent(Component,opts,baseStyles,...themeKeys) as any
+	}
+}
 
 /**
  * Same as Themed, but merges styles
@@ -254,13 +290,15 @@ export function ThemedNoRadium(Component) {
  */
 export function ThemedStyles(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,false,baseStyles,...themeKeys) as any
+		return makeThemedComponent(Component,{},baseStyles,...themeKeys) as any
 	}
 }
 
 export function ThemedStylesNoRadium(baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
-		return makeThemedComponent(Component,true,baseStyles,...themeKeys) as any
+		return makeThemedComponent(Component,{
+			noRadium:true
+		},baseStyles,...themeKeys) as any
 	}
 }
 

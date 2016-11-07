@@ -27,7 +27,7 @@ const
 		["typestore/packages/typestore/dist","typestore/dist"],
 		["typestore/packages/typestore-plugin-pouchdb/dist","typestore-plugin-pouchdb/dist"],
 		["typestore/packages/typestore-mocks/dist","typestore-mocks/dist"],
-		//["typedux/dist","typedux/dist"],
+		["typedux/dist","typedux/dist"],
 		["material-ui/build","material-ui"],
 		//["../typelogger/dist","typelogger/dist"],
 		["../typeguard/dist","typeguard/dist"],

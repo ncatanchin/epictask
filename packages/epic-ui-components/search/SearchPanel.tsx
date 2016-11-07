@@ -490,7 +490,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 
 	onFocus = (event) => {
 		log.info('Search panel gained focus query = ', this.query)
-		this.updateState(this.props,true)
+		// setImmediate(() => this.updateState(this.props,true))
 		
 		//this.focusTextField()
 		// this.updateState(this.props, true)

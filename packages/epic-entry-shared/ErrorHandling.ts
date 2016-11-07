@@ -15,6 +15,7 @@ const
 if (typeof window !== 'undefined') {
 	const log = getLogger(__filename)
 	window.onerror = function (message, url, line) {
+		console.error('Window error occurred', message, url, line)
 		log.error('Window error occurred', message, url, line)
 	}
 }

@@ -1,7 +1,6 @@
 // Imports
 import { Renderers, Avatar, IssueLabelsAndMilestones, IssueStateIcon } from "epic-ui-components"
 import filterProps from "react-valid-props"
-import { IssuesPanel } from "./IssuesPanel"
 import { Issue } from "epic-models"
 import { shallowEquals, getValue } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
@@ -10,6 +9,10 @@ import { IRowState } from "epic-ui-components/common/VisibleList"
 import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { guard } from "epic-global/ObjectUtil"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { connect } from "react-redux"
+import {createSelector,createStructuredSelector} from 'reselect'
+import {List} from 'immutable'
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 const
 	log = getLogger(__filename)
@@ -26,16 +29,8 @@ export interface IIssueItemProps extends IThemedAttributes {
 	
 	rowState?:IRowState<string,string,number>
 	
-}
-
-/**
- * Issue item state
- */
-export interface IIssueItemState {
 	isSelected?:boolean
 	isSelectedMulti?:boolean
-	
-	issueId?:number
 	
 	isFocused?:boolean
 	
@@ -45,112 +40,69 @@ export interface IIssueItemState {
 	
 }
 
+
+
+
 // State is connected at the item level to minimize redraws for the whole issue list
-// @connect(() => {
-// 	const
-// 		issueSelector = createSelector(
-// 			issuesSelector,
-// 			(state, props:IIssueItemProps) => props.issueId,
-// 			(issues:List<Issue>, issueId:number):Issue => {
-// 				return issues.find(issue => issue.id === issueId)
-// 			}
-// 		),
-// 		isFocusedSelector = createSelector(
-// 			issueSelector,
-// 			focusedIssueIdsSelector,
-// 			(issue:Issue, focusedIssueIds:number[]) =>
-// 			issue &&
-// 			focusedIssueIds &&
-// 			focusedIssueIds.includes(issue.id)
-// 		)
-//
-//
-// 		return createStructuredSelector({
-// 		issue: issueSelector,
-// 		isFocused: isFocusedSelector
-// 	})
-// })
+@connect(() => {
+	const
+		realIndexSelector = (state,props:IIssueItemProps) => props.rowState.item,
+		
+		itemSelector = createSelector(
+			realIndexSelector,
+			getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
+			(realIndex:number,items: List<IIssueListItem<any>>) => items.get(realIndex)
+		),
+		
+		issueSelector = createSelector(
+			itemSelector,
+			(item:IIssueListItem<any>) => item && isIssueListItem(item) && item.item
+		),
+			
+		isFocusedSelector = createSelector(
+			issueSelector,
+			getIssuesPanelSelector(selectors => selectors.focusedIssueIdsSelector),
+			(issue:Issue, focusedIssueIds:List<number>) =>
+				issue && focusedIssueIds && focusedIssueIds.includes(issue.id)
+		),
+		isSelectedSelector = createSelector(
+			issueSelector,
+			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
+			(issue:Issue, selectedIssueIds:List<number>):boolean =>
+			issue && selectedIssueIds.includes(issue.id)
+		),
+		isSelectedMultiSelector = createSelector(
+			issueSelector,
+			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
+			(issue:Issue, selectedIssueIds:List<number>):boolean =>
+			issue && selectedIssueIds.includes(issue.id) && selectedIssueIds.size > 0
+		)
+		
+
+
+	return createStructuredSelector({
+		realIndex: realIndexSelector,
+		item: itemSelector,
+		issue: issueSelector,
+		
+		isFocused: isFocusedSelector,
+		isSelected: isSelectedSelector,
+		isSelectedMulti: isSelectedMultiSelector
+	})
+})
 
 @ThemedStyles(baseStyles,'issueItem')
-export class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> {
-	
-	static contextTypes = {
-		issuesPanel:React.PropTypes.object
-	}
+export class IssueItem extends React.Component<IIssueItemProps,void> {
 	
 	constructor(props,context) {
 		super(props,context)
 	}
 	
-	
-	
-	
 	/**
-	 * Get issues panel from context
-	 *
-	 * @returns {IssuesPanel}
+	 * Get the item's issue
 	 */
-	private get issuesPanel() {
-		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
-	}
-	
-	/**
-	 * Update the state from the issue panel
-	 */
-	private updateState = (props = this.props) => {
-		const
-			issuesPanel = this.issuesPanel
-		
-			
-		if (issuesPanel) {
-			
-			const
-				{rowState} = props,
-				realIndex:number = rowState.item,
-				panel = this.issuesPanel,
-				item = panel.getItem(realIndex),
-				issue = item && isIssueListItem(item) && item.item,
-				issueId = issue && issue.id,
-				{selectedIssueIds} = issuesPanel,
-				
-				isSelected = issue && selectedIssueIds && selectedIssueIds.includes(issue.id),
-			
-				newState = {
-					item,
-					realIndex,
-					issue,
-					issueId,
-					isSelected,
-					isSelectedMulti: isSelected && selectedIssueIds.size > 1
-				}
-				
-			if (!shallowEquals(newState,this.state))
-				this.setState(newState)
-		}
-	}
-	
-	
-	/**
-	 * On mount attach to issues panel
-	 */
-	componentWillMount() {
-		const
-			{issuesPanel} = this
-		
-		issuesPanel.addSelectListener(this.updateState)
-		
-		this.updateState()
-		
-	}
-	
-	/**
-	 * on unmount - detach
-	 */
-	componentWillUnmount() {
-		const
-			{issuesPanel} = this
-		
-		issuesPanel.removeSelectListener(this.updateState)
+	private get issue():Issue {
+		return this.props.issue
 	}
 	
 	/**
@@ -159,35 +111,28 @@ export class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> 
 	 *
 	 * @param nextProps
 	 * @returns {boolean}
-	 * @param nextState
 	 */
-	shouldComponentUpdate(nextProps:IIssueItemProps,nextState:IIssueItemState) {
+	shouldComponentUpdate(nextProps:IIssueItemProps) {
 		return !shallowEquals(
 			nextProps,
 			this.props,
 			'rowState',
 			'style',
-			'issue.id',
-			'issue.labels',
-			'issue.milestone',
-			'issue.updated_at'
-		) || !shallowEquals(
-				nextState,
-				this.state,
-				'isFocused',
-				'isSelected',
-				'isSelectedMulti'
-			)
+			'issue',
+			'isFocused',
+			'isSelected',
+			'isSelectedMulti'
+		)
 	}
 	
 	
 	private onDoubleClick = (event) => {
-		guard(() => this.props.onOpen(event,this.state.issue))
+		guard(() => this.props.onOpen(event,this.issue))
 		
 	}
 	
 	private onClick = (event) => {
-		guard(() => this.props.onSelected(event,this.state.issue))
+		guard(() => this.props.onSelected(event,this.issue))
 	}
 	
 	/**
@@ -204,15 +149,13 @@ export class IssueItem extends React.Component<IIssueItemProps,IIssueItemState> 
 				styles,
 				onOpen,
 				onSelected,
-				rowState
-			} = props,
-			{
+				rowState,
 				issue,
 				isFocused,
 				isSelected,
 				isSelectedMulti
-			} = state
-			
+			} = props
+						
 			
 		if (!issue)
 			return React.DOM.noscript()

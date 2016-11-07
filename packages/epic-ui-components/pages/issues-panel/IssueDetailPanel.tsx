@@ -31,6 +31,8 @@ import { IssueMultiInlineList } from "./IssueMultiInlineList"
 import { IssueActivityText } from "./IssueActivityText"
 import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { PureRender } from "epic-ui-components/common/PureRender"
 // Other stuff
 const
 	{ Textfit } = require('react-textfit'),
@@ -52,7 +54,6 @@ export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	selectedIssue?:Issue
 	issues?:List<Issue>
 	activity?:TIssueActivity
-	activityLoading?:boolean
 	
 }
 
@@ -79,11 +80,11 @@ function makeSelector() {
 	
 	
 	return createStructuredSelector({
-		selectedIssueIds: makePropSelector('selectedIssueIdsSelector'),
-		selectedIssue: makePropSelector('selectedIssueSelector'),
-		issues: makePropSelector('issuesSelector'),
-		activity: makePropSelector('activitySelector'),
-		activityLoading: makePropSelector('activityLoadingSelector')
+		selectedIssueIds: getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
+		selectedIssue: getIssuesPanelSelector(selectors => selectors.selectedIssueSelector),
+		issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
+		activity: getIssuesPanelSelector(selectors => selectors.activitySelector),
+
 	})
 }
 
@@ -229,7 +230,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 * When props change - update the state
 	 */
 	componentWillReceiveProps = this.updateState
-	
+
 	/**
 	 * Should update simply shallow compares the states 'items' value
 	 *
@@ -240,11 +241,11 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	shouldComponentUpdate(nextProps:IIssueDetailPanelProps, nextState:IIssueDetailPanelState, nextContext:any):boolean {
 		const
 			themeChanged = !shallowEquals(this.props,'theme')
-		
-		setTimeout(() => {
-			getValue(() => unwrapRef(this.state.listRef).forceUpdate())
-		},150)
-		
+
+		// setTimeout(() => {
+		// 	getValue(() => unwrapRef(this.state.listRef).forceUpdate())
+		// },150)
+
 		return !shallowEquals(this.state, nextState, 'items') ||
 			!shallowEquals(this.props, nextProps,
 				'activity','selectedIssue','selectedIssueIds') || themeChanged
@@ -368,15 +369,18 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		return {
 			clazz:IssueActivityText,
 			props: rowType === 'issue' ? {
+				viewController: this.props.viewController,
 				activityType: 'post',
 				activityActionText:'posted issues',
 				activityStyle: styles.content.activities.activity
 			} : rowType === 'comment' ? {
-				activityType: 'comment',
+				viewController: this.props.viewController,
+					activityType: 'comment',
 				activityActionText:'commented',
 				activityStyle: styles.content.activities.activity
 			} : {
-				activityType: 'eventGroup',
+				viewController: this.props.viewController,
+					activityType: 'eventGroup',
 				activityStyle: styles.content.activities.activity
 			}
 		}
@@ -414,7 +418,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		{/* Issue Detail Body */}
 		<div style={styles.content}>
 			<div style={styles.content.wrapper}>
-				{!this.props.activityLoading &&
+				
 					<IssueDetailsVisibleList
 						ref={this.setListRef}
 						items={items}
@@ -423,7 +427,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 						itemBuilder={this.buildDetailItem}
 						itemKeyFn={(listItems,item,index) => `${_.get(item,'id',index)}`}
 					/>
-				}
+				
 			</div>
 		</div>
 		
@@ -442,7 +446,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			{ selectedIssueIds, activity, issues, theme, styles } = this.props,
 			{ items } = this.state,
 			{ selectedIssue } = activity,
-			noSelectedIssues = !selectedIssueIds || !selectedIssueIds.length
+			noSelectedIssues = !selectedIssueIds || !selectedIssueIds.size
 		
 		if (!List.isList(issues))
 			return React.DOM.noscript()

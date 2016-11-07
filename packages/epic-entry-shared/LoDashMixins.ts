@@ -3,7 +3,7 @@ import {List,Map} from 'immutable'
 export type TListTypes<T> = Array<T>|List<T>
 
 
-import LodashGlobal from 'lodash'
+import * as  LodashGlobal from 'lodash'
 // declare global {
 // 	module _ {
 // 		interface LoDashStatic {

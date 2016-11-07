@@ -2,9 +2,6 @@
 // import 'epic-ui-components/UIGlobals'
 
 import {
-	Events,
-	acceptHot,
-	addHotDisposeHandler,
 	If,
 	getValue,
 	shallowEquals,
@@ -34,7 +31,7 @@ import {
 	ContainerNames
 } from "epic-command-manager"
 import { getUIActions, getIssueActions, getRepoActions } from "epic-typedux/provider"
-import {getReduxStore} from 'epic-typedux/store/AppStore'
+
 import {
 	FillWindow,
 	makeWidthConstraint,
@@ -53,6 +50,7 @@ import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/s
 import { AppStateType } from "epic-typedux/state/app"
 import { connect } from "react-redux"
 import {createStructuredSelector} from 'reselect'
+import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 
 // Logger, Store +++
 const
@@ -61,7 +59,7 @@ const
 	
 	win = window as any,
 	$ = require('jquery'),
-	childWindowId = process.env.EPIC_WINDOW_ID
+	windowId = process.env.EPIC_WINDOW_ID
 	
 	
 //DEBUG LOG
@@ -70,7 +68,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 /**
  * Properties for App/State
  */
-export interface IAppProps {
+export interface IAppRootProps {
 	store?:any
 	theme?:any
 	repoCount?:number
@@ -78,7 +76,7 @@ export interface IAppProps {
 	
 }
 
-export interface IAppState {
+export interface IAppRootState {
 	windowStyle?:any
 	routeViewRef?:RouteView
 }
@@ -101,9 +99,9 @@ const
 	repoCount: availableRepoCountSelector
 }))
 @CommandComponent()
-@Themed
+@ThemedWithOptions({enableRef:true})
 @PureRender
-class App extends React.Component<IAppProps,IAppState> implements ICommandComponent {
+class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements ICommandComponent {
 	
 	uriProvider = new WindowHashURIProvider()
 	
@@ -235,7 +233,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 				.command(
 					CommandType.App,
 					'Close Window',
-					(cmd, event) => getUIActions().closeWindow(childWindowId),
+					(cmd, event) => getUIActions().closeWindow(windowId),
 					"CommandOrControl+w",{
 						id: CIDS.CloseWindow
 					}
@@ -423,95 +421,7 @@ class App extends React.Component<IAppProps,IAppState> implements ICommandCompon
 }
 
 
-let
-	rootElement = document.getElementById('root')
-
-/**
- * Render App in appRoot node
- */
-
-function render() {
-	ReactDOM.render(
-		<App store={getReduxStore()} />,
-		
-		// ROOT ELEMENT TO MOUNT ON
-		rootElement,
-		
-		/**
-		 * After Initial render
-		 */
-		(ref) => {
-			
-			// BENCHMARK
-			benchmarkLoadTime(`render window ${childWindowId ? childWindowId : 'main window'}`)
-			
-			/**
-			 * If main ui then stop load spinner
-			 */
-			If(ProcessConfig.isUI(), () => {
-				require('electron').ipcRenderer.send(Events.UIReady)
-			})
-			
-			require("epic-plugins-default")
-		}
-	)
-}
-
-/**
- * Unmount, clear cache and fully reload
- */
-function remount() {
-	
-	ReactDOM.unmountComponentAtNode(rootElement)
-	
-	$('#root').remove()
-	rootElement = $(`<div id="root"></div>`).appendTo($('body'))[0]
-	
-	const
-		webContents = require('electron').remote.getCurrentWebContents()
-			
-	// Object
-	// 	.keys(require.cache)
-	// 	.forEach(key => delete require.cache[key])
-	//
-	// render()
-	webContents.reload()
-}
-
-function themeChangeListener() {
-	log.info(`Remounting on theme change`)
-	remount()
-}
 
 
-benchmarkLoadTime(`Exporting loadUI`)
-export function loadUI(pendingResources:Promise<void>) {
-	benchmarkLoadTime(`Waiting for UI resources`)
-	
-	pendingResources.then(() => {
-		
-		benchmarkLoadTime(`UI Resources loaded, now loading UI`)
-		/**
-		 * On a complete theme change, destroy everything
-		 */
-		ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
-
-		// ADD HMR REMOVE
-		addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
-					
-		render()
-		
-	})
-}
-
-
-
-/**
- * Enable HMR
- */
-acceptHot(module, log)
-
-
-
-
+export default AppRoot
 

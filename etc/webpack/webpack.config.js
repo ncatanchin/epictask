@@ -153,8 +153,19 @@ function makeExternals() {
 	return [
 		nodeExternals({
 			whitelist: [
-				/webpack\/hot/,
-				/webpack-hot/
+				/webpack/,
+				/webpack-hot/,
+				// /react/,
+				// /redux/,
+				// /material-ui/,
+				// /lodash/,
+				// /typedux/,
+				// /typetransform/,
+				// /typestore/,
+				//
+				// /react-hot-loader\/AppContainer/,
+				// /react-hot-loader\/webpack/,
+			
 			]
 		}),
 		{
@@ -162,7 +173,6 @@ function makeExternals() {
 		}
 	]
 }
-
 
 /**
  * Resolve package index
@@ -199,11 +209,16 @@ function makeEntry(pkg) {
 	}
 }
 
-function makeHotEntry(entry) {
+function makeHotEntry(entry,devEntries) {
 	// HMR ENTRY ADDITION
 	if (isDev) {
-		entry.unshift('webpack/hot/poll.js?500')
+		
+			entry.unshift("webpack/hot/only-dev-server")
+			entry.unshift('webpack/hot/poll.js?500')
+		
 	}
+	if (devEntries)
+		entry.unshift(...devEntries)
 	
 	return entry
 }
@@ -314,8 +329,8 @@ function patchConfig(config) {
 //devtool: 'cheap-module-eval-source-map',
 const
 	devtool = isDev ?
-		'#inline-source-map' :
-		//'#cheap-module-inline-source-map' :
+		//'#inline-source-map' :
+		'#cheap-module-eval-source-map' :
 		"source-map"
 
 // Webpack Config
@@ -375,7 +390,7 @@ function makeConfig(name,dependencies,entry,configFn) {
 				new ForkCheckerPlugin(),
 				
 				
-				new CircularDependencyPlugin(),
+				//new CircularDependencyPlugin(),
 				
 				// BASICS
 				//new webpack.IgnorePlugin(/vertx/),
@@ -460,9 +475,27 @@ const
 	})
 
 
+
+
+
 module.exports = noWebpack ? [makeHtmlConfig()] : [
 	
 	makeConfig('epic-app',[],{
+		// "epic-app-all": makeHotEntry([
+		// 	"./epic-entry-database-server/index",
+		// 	"./epic-entry-job-server/index",
+		// 	"./epic-entry-main/MainEntry",
+		// 	"./epic-entry-ui/index"
+		// ]),
+		// "epic-entry-job-server": makeHotEntry([
+		//
+		// ]),
+		// "epic-entry-main": makeHotEntry([
+		//
+		// ]),
+		// "epic-entry-ui": makeHotEntry([
+		//
+		// ]),
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"
 		]),
@@ -472,30 +505,43 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 		"epic-entry-main": makeHotEntry([
 			"./epic-entry-main/MainEntry"
 		]),
-		"epic-entry-ui": makeHotEntry([
+		"epic-entry-ui":  makeHotEntry([
 			"./epic-entry-ui/index"
+			
 		]),
+		//,["react-hot-loader/patch"]
+		
+		"epic-entry-browser": [
+			"./epic-entry-browser/index"
+		]
+		
+		//
 		
 	}, config => {
 		config.plugins.unshift(
 			new webpack.optimize.CommonsChunkPlugin({
-				// The order of this array matters
 				name: "epic-common-2",
 				async: true
-				// names: [
-				// 	"epic-entry-database-server",
-				// 	"epic-entry-job-server",
-				// 	"epic-entry-main",
-				// 	"epic-entry-ui"
-				// ]
+			}),
+			new HtmlWebpackPlugin({
+				filename: "app-entry.html",
+				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
+				inject: false,
+				isDev
+			}),
+			
+			new HtmlWebpackPlugin({
+				filename: "splash-entry.html",
+				template: `${process.cwd()}/packages/epic-assets/templates/SplashEntry.jade`,
+				inject: false,
+				isDev
 			})
-			// new webpack.DllReferencePlugin({
-			// 	manifest: path.resolve(distDir,`manifest.epic_libs.json`)
-			// })
+
 		)
 	}),
 	
-	
+	// BROWSER ENTRY
+	//makeHtmlConfig()
 	
 	// makeConfig('epic_libs',[],{
 	// 	"epic_libs": makeHotEntry([
@@ -517,8 +563,8 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	// 	}))
 	// }),
 	//
-	// BROWSER ENTRY
-	 makeHtmlConfig()
+	
+	 
 ]
 
 

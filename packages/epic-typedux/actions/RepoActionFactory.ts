@@ -35,8 +35,8 @@ import { getIssueActions } from "epic-typedux/provider"
 import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
-import ProcessType from "epic-entry-shared/ProcessType"
 import { shallowEquals } from "epic-global/ObjectUtil"
+import { isList } from "typeguard"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -71,30 +71,31 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 	
 	@ActionReducer()
-	patchAvailableRepos(patch:any,availableRepos:List<AvailableRepo>|AvailableRepo[]) {
+	patchAvailableRepos(patch:any,changedRepos:List<AvailableRepo>|AvailableRepo) {
 		return (state:RepoState) => {
 			
 			let
 				newAvailRepos = state.availableRepos
 			
-			availableRepos = (Array.isArray(availableRepos) ?
-				availableRepos :
-				availableRepos.toArray()) as AvailableRepo[]
+			changedRepos = isList(changedRepos) ?
+				changedRepos :
+				List<AvailableRepo>([changedRepos])
 			
-			for (let availRepo of availableRepos) {
+			
+			changedRepos.forEach(changedRepo => {
 				const
-					index = newAvailRepos.findIndex(it => it.id === availRepo.id),
+					index = newAvailRepos.findIndex(it => it.id === changedRepo.id),
 					existingAvailRepo = index > -1 && newAvailRepos.get(index)
 				
 				if (!existingAvailRepo) {
-					log.warn(`Tried to patch a repo that is not in the state`, availRepo)
-					continue
+					log.warn(`Tried to patch a repo that is not in the state`, changedRepo)
+					return
 				}
 				
-				availRepo = assign(_.clone(existingAvailRepo),patch)
+				changedRepo = cloneObjectShallow(changedRepo,patch)
 				
-				newAvailRepos = newAvailRepos.set(index,availRepo)
-			}
+				newAvailRepos = newAvailRepos.set(index,changedRepo)
+			})
 			
 			
 			return state.set('availableRepos',newAvailRepos)
@@ -105,32 +106,32 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	/**
 	 * Updated available repo resources
 	 *
-	 * @param availableRepos
+	 * @param changedRepos
 	 * @returns {(state:RepoState)=>Map<K, V>}
 	 */
 	@ActionReducer()
-	updateAvailableRepos(availableRepos:List<AvailableRepo>|AvailableRepo[]) {
+	updateAvailableRepos(changedRepos:List<AvailableRepo>|AvailableRepo[]) {
 		return (state:RepoState) => {
 			
 			let
 				newAvailRepos = state.availableRepos
 			
-			availableRepos = (Array.isArray(availableRepos) ?
-				availableRepos :
-				availableRepos.toArray()) as AvailableRepo[]
+			changedRepos = (Array.isArray(changedRepos) ?
+				List<AvailableRepo>(changedRepos) :
+				changedRepos) as List<AvailableRepo>
 			
-			for (let availRepo of availableRepos) {
+			changedRepos.forEach(availRepo => {
 				const
 					index = newAvailRepos.findIndex(it => it.id === availRepo.id),
 					existingAvailRepo = index > -1 && newAvailRepos.get(index)
 				
 				
-				availRepo = assign(_.clone(existingAvailRepo || availRepo),availRepo)
+				availRepo = !existingAvailRepo ? availRepo : cloneObjectShallow(existingAvailRepo,availRepo)
 				
 				newAvailRepos = index === -1 ?
 					newAvailRepos.push(availRepo) :
 					newAvailRepos.set(index,availRepo)
-			}
+			})
 			
 			
 			return state.set('availableRepos',newAvailRepos)
@@ -285,7 +286,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					
 					const
 						changedAvailRepo = availRepos.find(it => it.id === availRepo.id),
-						updatedAvailRepo = cloneObjectShallow(availRepo,_.pick(changedAvailRepo,'deleted','enabled'))
+						updatedAvailRepo = cloneObjectShallow(availRepo,_.pick(changedAvailRepo,'deleted'))
 					
 					updatedAvailRepos = updatedAvailRepos
 						.set(index,updatedAvailRepo) as any
@@ -511,11 +512,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				stores = getStores(),
 				
 				// UPDATE LOAD STATUS AND STEP OVER
-				updateLoadStatuses = async (availReposToUpdate,repoLoadStatus:LoadStatus,issuesLoadStatus:LoadStatus) => {
+				updateLoadStatuses = async (availReposToUpdate,repoLoadStatus:LoadStatus) => {
 					let
 						updatedAvailRepos = availReposToUpdate.map(it => cloneObjectShallow(it,{
-							repoLoadStatus: LoadStatus.Loading,
-							issuesLoadStatus: LoadStatus.NotLoaded
+							repoLoadStatus: LoadStatus.Loading
 						}))
 					
 					this.updateAvailableRepos(updatedAvailRepos)
@@ -529,16 +529,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					return updatedAvailRepos as AvailableRepo[]
 				}
 			
-			
-			
-			// IF THIS IS THE BOOT REQUEST
-			// if (prepareOnBoot) {
-			// 	const
-			// 		currentAvailableRepos = availableReposSelector(getState())
-			//
-			// 	await updateLoadStatuses(currentAvailableRepos,LoadStatus.NotLoaded, LoadStatus.NotLoaded)
-			// }
-			//
 			// NOW QUERY THE DB AND GET TO WORK
 			let
 				availRepos = (await stores.availableRepo.findAll())
@@ -554,8 +544,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			// SET LOADING
 			availRepos = await updateLoadStatuses(
 				availRepos,
-				LoadStatus.Loading,
-				LoadStatus.NotLoaded)
+				LoadStatus.Loading)
 			
 			// DELAYING FOR A QUICK STATE UPDATE TO DISPLAY LOADING STATUS
 			log.debug(`Got available repos `, availRepos,availRepoIds)
@@ -608,19 +597,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			await Promise.all(promises)
 			
 			// UPDATE ALL STATUSES
-			availRepos = availRepos.map(it => assign(_.clone(it),{repoLoadStatus: LoadStatus.Loaded}))
+			availRepos = availRepos.map(it => cloneObjectShallow(it,{repoLoadStatus: LoadStatus.Loaded}))
 			
 			// ASSIGN TO NEW REF
 			this.updateAvailableRepos(List<AvailableRepo>(availRepos))
-			
-			// QUICK DELAY
-			await Promise.delay(100)
-			
-			// LOAD ISSUES
-			// if (ProcessConfig.isType(ProcessType.UI)) {
-			// 	log.warn('CHANGE THIS TO CONFIG')
-			// 	getIssueActions().loadIssues()
-			// }
 			
 		}
 	}
@@ -728,7 +708,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			{repoId} = availRepo
 		
 		availRepo.deleted = true
-		availRepo.enabled = false
 		availRepo = await stores.availableRepo.save(availRepo)
 		
 		
@@ -837,40 +816,14 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 */
 	@ActionThunk()
 	setRepoEnabled(availRepoId,enabled:boolean) {
-		return async (dispatch,getState) => {
+		return (dispatch,getState) => {
 			let
-				stores = getStores(),
 				availableRepos = availableReposSelector(getState()),
 				availRepo = availableRepos.find(it => it.id === availRepoId)
 			
-			
-			log.debug(`Setting available repo ${availRepo.id} to enabled ${enabled}`,availRepo,enabled)
-			if (enabled === availRepo.enabled) {
-				log.warn(`No change in avail repo enabled state`,availRepo,enabled)
-				return
-			}
-			
-			let
-				persistentAvailRepo = await stores.availableRepo.get(availRepoId)
-			
-			availRepo.enabled = persistentAvailRepo.enabled = enabled
-			await stores.availableRepo.save(persistentAvailRepo)
-			
-			
-			
-			
-			// UPDATE THE ACTUAL REPO
 			this.patchAvailableRepos({
-				enabled,
-				issuesLoadStatus: LoadStatus.NotLoaded
-			},[availRepo])
-			
-			// IF NOT ENABLED THEN CLEAR ISSUES
-			
-			await Promise.delay(100)
-			if (!enabled) {
-				getIssueActions().removeAllRepoResources(availRepoId)
-			}
+				enabled
+			},availRepo)
 			
 			log.debug('Saved avail repo, setting enabled to',enabled)
 			

@@ -13,7 +13,7 @@ import { MenuItem, SelectField, TextField } from "material-ui"
 import { cloneObject, getValue, canAssignIssue, canCreateIssue } from "epic-global"
 import {
 	repoIdPredicate,
-	enabledAvailableReposSelector,
+	availableReposSelector,
 	appUserSelector,
 	getUIActions,
 	getIssueActions
@@ -216,7 +216,7 @@ export interface IIssueEditDialogState {
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	//editingIssue: editingIssueSelector,
-	availableRepos: enabledAvailableReposSelector,
+	availableRepos: availableReposSelector,
 	// saving: issueSavingSelector,
 	// saveError: issueSaveErrorSelector
 	

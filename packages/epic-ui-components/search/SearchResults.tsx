@@ -245,7 +245,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				containerStyle
 			)
 			
-			ReactDOM.render(resultsElement, this.node)
+			setImmediate(() => ReactDOM.render(resultsElement, this.node))
 		} else {
 			return <SearchResultsList
 				open={this.props.open}

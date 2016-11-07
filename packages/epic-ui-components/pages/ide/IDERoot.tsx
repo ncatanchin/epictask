@@ -16,7 +16,7 @@ import {
 
 // TODO: Move to IDEView
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
-import { Header } from "epic-ui-components/pages/ide/Header"
+import Header from "epic-ui-components/pages/ide/Header"
 import { StatusBar } from "epic-ui-components/status-bar"
 import { SheetRoot } from "epic-ui-components/layout/sheet"
 import { rem, colorAlpha, FillWindow, FlexColumn, FlexRowCenter, FlexScale, PositionRelative } from "epic-styles/styles"

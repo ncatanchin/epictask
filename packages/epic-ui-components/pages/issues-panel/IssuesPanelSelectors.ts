@@ -43,6 +43,10 @@ const makeViewStateIdSelector = () => createSelector(
 	viewStateId => viewStateId
 )
 
+
+
+
+
 export function makeIssuesPanelStateSelectors(id:string = null) {
 	
 	
@@ -119,6 +123,11 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				selectedIssueIdsSelector,
 				(selectedIssuesIds:List<number>) => selectedIssuesIds && selectedIssuesIds.size === 1 &&
 				selectedIssuesIds.get(0)
+			),
+			
+			hasSelectedIssuesSelector = createSelector(
+				selectedIssueIdsSelector,
+				(selectedIssueIds:List<number>) => selectedIssueIds && selectedIssueIds.size > 0
 			),
 			
 			selectedIssueSelector = createDeepEqualSelector(
@@ -416,7 +425,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			/**
 			 * All issue items selector - fully sorted with groups
 			 */
-			issueItemsSelector = createSelector(
+			issueItemsSelector:TSelector<List<IIssueListItem<any>>> = createSelector(
 				issuesSelector,
 				orderedIssueIndexesSelector,
 				issueGroupsSelector,
@@ -526,6 +535,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		selectedIssueIdSelector,
 		
 		selectedIssueSelector,
+		hasSelectedIssuesSelector,
 		
 		selectedIssuesSelector,
 		
@@ -545,7 +555,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		issueFilterAssigneeSelector,
 		groupBySelector,
 		orderedIssueIndexesSelector,
-		
+		focusedIssueIdsSelector,
 		
 		
 		issueGroupsSelector,
@@ -580,7 +590,10 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 
 
 
+const
+	typedSelectors = makeIssuesPanelStateSelectors()
 
+export type TIssuesPanelSelectors = typeof typedSelectors
 
 
 

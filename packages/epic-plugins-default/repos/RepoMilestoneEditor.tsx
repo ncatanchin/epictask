@@ -23,7 +23,7 @@ import {
 import { Milestone, AvailableRepo } from "epic-models"
 import { TextField, DatePicker } from "material-ui"
 import { List } from "immutable"
-import { enabledMilestonesSelector, getRepoActions } from "epic-typedux"
+import { milestonesSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
 
 
@@ -123,7 +123,7 @@ export interface IRepoMilestoneEditorState {
  **/
 
 @connect(createStructuredSelector({
-	milestones: enabledMilestonesSelector
+	milestones: milestonesSelector
 }))
 
 // If you have a specific theme key you want to

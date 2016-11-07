@@ -26,7 +26,7 @@ import {
 	FlexAlignStart,
 	IThemedAttributes
 } from "epic-styles"
-import { appUserSelector, getUIActions, enabledAvailableReposSelector, enabledMilestonesSelector } from "epic-typedux"
+import { appUserSelector, getUIActions, availableReposSelector, milestonesSelector } from "epic-typedux"
 import { DialogRoot } from "epic-ui-components/layout/dialog"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
@@ -150,9 +150,8 @@ export interface IRepoSettingsWindowState {
  **/
 @connect(createStructuredSelector({
 	user: appUserSelector,
-	repos: enabledAvailableReposSelector,
-	
-	milestones: enabledMilestonesSelector
+	repos: availableReposSelector,
+	milestones: milestonesSelector
 }))
 @CommandComponent()
 @ThemedStyles(baseStyles, 'dialog', 'RepoSettingsWindow', 'form')

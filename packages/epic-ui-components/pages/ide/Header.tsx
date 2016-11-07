@@ -104,7 +104,7 @@ export interface IHeaderState {
 @CommandComponent()
 @ThemedStyles(baseStyles,'header')
 @PureRender
-export class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
+export default class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
 	
 	
 	commandItems = (builder:CommandContainerBuilder) =>

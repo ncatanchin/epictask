@@ -2,7 +2,7 @@
 import './LogCategories'
 
 import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
-import path from 'path'
+import * as path from 'path'
 import _ from './LoDashMixins'
 import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"

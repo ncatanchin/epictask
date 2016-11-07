@@ -1,5 +1,5 @@
 import {isString,toNumber} from 'typeguard'
-import msgpack from 'msgpack-lite'
+import * as msgpack from 'msgpack-lite'
 
 const
 	log = getLogger(__filename)

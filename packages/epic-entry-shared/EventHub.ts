@@ -4,6 +4,7 @@ import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
 import { EventType } from "epic-global/Constants"
 import { fromPlainObject, toPlainObject } from "typetransform"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
+import { enumValueMap } from "epic-global/EnumUtil"
 
 const
 	log = getLogger(__filename),
@@ -16,7 +17,7 @@ interface IEventHubMessage {
 	args:any[]
 }
 
-export type TEventHub = EnumEventEmitter<EventType> & {
+export type TEventHub = EnumEventEmitter<EventType> & typeof EventType & {
 	broadcast(type:EventType,...args:any[])
 }
 
@@ -26,13 +27,16 @@ export type TEventHub = EnumEventEmitter<EventType> & {
  *
  * @type {TEventHub}
  */
-const EventHub = new EnumEventEmitter<EventType>(EventType) as TEventHub
+const
+	EventHub = new EnumEventEmitter<EventType>(EventType) as TEventHub
 
-const InternalEvents = {
-	Broadcast: "@@EVENTHUB-BROADCAST"
-}
+const
+	InternalEvents = {
+		Broadcast: "@@EVENTHUB-BROADCAST"
+	}
 
-
+// ADD EVENT TYPE MIXED IN
+Object.assign(EventHub,enumValueMap(EventType))
 
 /**
  * On renderer message received

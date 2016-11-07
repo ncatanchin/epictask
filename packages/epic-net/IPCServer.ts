@@ -1,7 +1,7 @@
 
 import { isString,toNumber } from  "typeguard"
 import { makeIPCServerId } from "./IPCUtil"
-import msgpack from 'msgpack-lite'
+import * as msgpack from 'msgpack-lite'
 import IPCBufferedMessage from "epic-net/IPCBufferedMessage"
 import { makeIPCMsgPackReadStream } from "epic-net/IPCBufferedMessage"
 const

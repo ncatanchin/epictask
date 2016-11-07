@@ -17,6 +17,7 @@ export function getCommandBrowserWindow():Electron.BrowserWindow {
 	}
 }
 
+
 function getWindow() {
 	return thisWindow ?
 		thisWindow :

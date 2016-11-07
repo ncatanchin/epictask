@@ -9,7 +9,7 @@
             "es2017",
             "dom"
         ],
-        "module": "es6",
+        "module": "commonjs",
         "moduleResolution": "node",
         "declaration": false,
         "emitDecoratorMetadata": true,
@@ -58,21 +58,30 @@
         "useBabel": true,
         "forkChecker": true,
         "useCache": true,
+        "cacheDirectory": "dist/.awcache",
         "babelOptions": {
             "presets": [
                 "es2016-node5",
                 "stage-0",
-                "react",
-                "async-to-bluebird"
+                "react"
             ],
             "sourceMaps": "both",
             "plugins": [
-                "transform-es2015-classes",
-                "transform-runtime"
+                
             ],
             "env": {
                 "development": {
-                
+                    "plugins": [["react-transform", {
+                        "transforms": [{
+                            "transform": "react-transform-hmr",
+                            // if you use React Native, pass "react-native" instead:
+                            "imports": ["react"],
+                            // this is important for Webpack HMR:
+                            "locals": ["module"]
+                        }]
+                        // note: you can put more transforms into array
+                        // this is just one of them!
+                    }]]
                 }
             }
         }

@@ -22,7 +22,7 @@ import {
 import { Label, AvailableRepo } from "epic-models"
 import { TextField } from "material-ui"
 import { List } from "immutable"
-import { enabledLabelsSelector, getRepoActions } from "epic-typedux"
+import { labelsSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
 
 
@@ -116,7 +116,7 @@ export interface IRepoLabelEditorState {
  **/
 
 @connect(createStructuredSelector({
-	labels: enabledLabelsSelector
+	labels: labelsSelector
 }))
 
 // If you have a specific theme key you want to

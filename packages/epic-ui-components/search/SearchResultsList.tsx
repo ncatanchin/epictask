@@ -232,7 +232,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			{props,state} = this,
 			{ theme, styles ,style} = props
 		
-		return <div style={style}>
+		return !this.state || !this.state.items ? React.DOM.noscript() : <div style={style}>
 			<CSSTransitionGroup
 				transitionName="results"
 				transitionEnterTimeout={250}

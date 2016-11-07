@@ -34,6 +34,7 @@ import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilt
 import { getValue } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 
 
 const
@@ -135,24 +136,7 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 }
 
 
-function makePropSelector(selectorProp) {
-	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
-}
 
-
-function makeSelector() {
-	
-	
-	return createStructuredSelector({
-		issueSort: makePropSelector('issueSortSelector'),// createSelector(issueSortAndFilterSelector, ({issueSort}) => issueSort),
-		issueFilter: makePropSelector('issueFilterSelector'), //createSelector(issueSortAndFilterSelector, ({issueFilter}) => issueFilter),
-		issueFilterLabels: makePropSelector('issueFilterLabelsSelector'),
-		issueFilterMilestones: makePropSelector('issueFilterMilestonesSelector'),
-		labels: enabledLabelsSelector,
-		milestones: enabledMilestonesSelector,
-		assignees: enabledAssigneesSelector
-	})
-}
 
 /**
  * IssueFilters
@@ -161,8 +145,15 @@ function makeSelector() {
  * @constructor
  **/
 
-@connect(makeSelector,null,null,{withRef:true})
-
+@connect(() => createStructuredSelector({
+	issueSort: getIssuesPanelSelector(selectors => selectors.issueSortSelector),
+	issueFilter: getIssuesPanelSelector(selectors => selectors.issueFilterSelector),
+	issueFilterLabels: getIssuesPanelSelector(selectors => selectors.issueFilterLabelsSelector),
+	issueFilterMilestones: getIssuesPanelSelector(selectors => selectors.issueFilterMilestonesSelector),
+	labels: enabledLabelsSelector,
+	milestones: enabledMilestonesSelector,
+	assignees: enabledAssigneesSelector
+}),null,null,{withRef:true})
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender
 export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
@@ -690,8 +681,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 
 					<div style={styles.filters.controls.stats}>
 						{isGrouped && `${issuesGrouped.length} Groups with `}
-						{issues.length} Issues
-						{hasFilters && ` of ${unfilteredIssueIds.length} Issues`}
+						{issues.size} Issues
+						{hasFilters && ` of ${unfilteredIssueIds.size} Issues`}
 					</div>
 
 				</div>

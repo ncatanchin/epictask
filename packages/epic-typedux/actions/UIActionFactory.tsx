@@ -604,6 +604,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				initialState = new (viewConfig.stateClazz)(),
 				viewState = new ViewState(cloneObjectShallow(viewConfig,{
 					id,
+					index: state.viewStates.size,
 					controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
 					state: initialState
 				}))
@@ -625,7 +626,13 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				return state
 			}
 			
-			return state.set('viewStates',state.viewStates.set(index,viewState))
+			
+			
+			return state.set('viewStates',
+				state.viewStates.set(
+					index,
+					viewState.set('index',index) as ViewState)
+			)
 		}
 	}
 	

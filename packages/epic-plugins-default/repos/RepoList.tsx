@@ -16,6 +16,7 @@ import {
 import { getRepoActions } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
 import { CircularProgress} from "material-ui"
+import { PureRender } from "epic-ui-components/common/PureRender"
 
 /**
  * Displays a list of repos
@@ -113,6 +114,7 @@ export interface IRepoListProps {
 	selectedRepoIds: selectedRepoIdsSelector
 }, createDeepEqualSelector))
 @ThemedStyles(baseStyles,'repoPanel')
+@PureRender
 export class RepoList extends React.Component<IRepoListProps,any> {
 
 	
@@ -128,18 +130,18 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 		return baseStyles
 	}
 	
-	/**
-	 * When to update
-	 *
-	 * @param nextProps
-	 * @param nextState
-	 * @param nextContext
-	 * @returns {boolean}
-	 */
-	shouldComponentUpdate(nextProps:IRepoListProps, nextState:any, nextContext:any):boolean {
-		return !shallowEquals(this.props,nextProps,'theme','styles','selectedRepoIds','availableRepos') ||
-			!shallowEquals(this.state,nextState,'hoverId')
-	}
+	// /**
+	//  * When to update
+	//  *
+	//  * @param nextProps
+	//  * @param nextState
+	//  * @param nextContext
+	//  * @returns {boolean}
+	//  */
+	// shouldComponentUpdate(nextProps:IRepoListProps, nextState:any, nextContext:any):boolean {
+	// 	return !shallowEquals(this.props,nextProps,'theme','styles','selectedRepoIds','availableRepos') ||
+	// 		!shallowEquals(this.state,nextState,'hoverId')
+	// }
 	
 	/**
 	 * Enable/Disable repos

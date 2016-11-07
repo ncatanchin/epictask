@@ -33,6 +33,9 @@ import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber, IssueKey } from "epic-global"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
+import { shallowEquals } from "epic-global/ObjectUtil"
 
 
 // Constants & Non-typed Components
@@ -107,6 +110,8 @@ export interface IIssuesPanelProps extends IThemedAttributes {
 	groups?: List<IIssueGroup>
 	items?: List<IIssueListItem<any>>
 	
+	hasSelectedIssues?:boolean
+	
 	hasAvailableRepos?: boolean
 	saving?: boolean
 	editInlineConfig?: TIssueEditInlineConfig
@@ -134,17 +139,15 @@ const
 		NewComment: 'NewComment'
 	}
 
-function makePropSelector(selectorProp) {
-	return (state,props) => getValue(() => props.viewController.selectors[selectorProp](state,props))
-}
 
 function makeSelector() {
 		
 		return createStructuredSelector({
-			issues: makePropSelector('issuesSelector'),
-			items: makePropSelector('issueItemsSelector'),
-			groups: makePropSelector('issueGroupsSelector'),
-			editInlineConfig: makePropSelector('editInlineConfigIssueSelector')
+			hasSelectedIssues: getIssuesPanelSelector(selectors => selectors.hasSelectedIssuesSelector),
+			issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
+			items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
+			groups: getIssuesPanelSelector(selectors => selectors.issueGroupsSelector),
+			editInlineConfig: getIssuesPanelSelector(selectors => selectors.editInlineConfigIssueSelector)
 		})
 	}
 	
@@ -157,15 +160,13 @@ function makeSelector() {
 
 @connect(makeSelector)
 @CommandComponent()
-@ThemedStyles(baseStyles, 'issuesPanel')
-@PureRender
+@ThemedStylesWithOptions({enableRef: true},baseStyles, 'issuesPanel')
+//@PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
 	
-	static childContextTypes = {
-		issuesPanel: React.PropTypes.object
+	shouldComponentUpdate(nextProps) {
+		return !shallowEquals(this.props,nextProps,'hasSelectedIssues','issues','items','groups','editInlineConfig')
 	}
-	
-	
 	
 	/**
 	 * Command builder
@@ -358,40 +359,18 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	private issueActions = getIssueActions()
 	
 	
-	
-	private selectedIssueIdsUnsubscribe
-	
 	/**
 	 * Private ref for selected issue ids
 	 */
 	
-	private _selectedIssueIds:List<number>
+	//private _selectedIssueIds:List<number>
 	
 	/**
 	 * Internal select event emitter
 	 *
 	 * @type {SimpleEventEmitter<Function>}
 	 */
-	private selectListeners = new SimpleEventEmitter<Function>()
-	
-	/**
-	 * Listen for selection changes
-	 *
-	 * @param listener
-	 */
-	addSelectListener(listener) {
-		this.selectListeners.addListener(listener)
-	}
-	
-	/**
-	 * Remove listener
-	 *
-	 * @param listener
-	 */
-	removeSelectListener(listener) {
-		this.selectListeners.removeListener(listener)
-	}
-	
+	//private selectListeners = new SimpleEventEmitter<Function>()
 	
 	/**
 	 * Get search panel
@@ -415,7 +394,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @returns {Array<number>|Array}
 	 */
 	get selectedIssueIds():List<number> {
-		return this._selectedIssueIds || this.getSelectedIssueIds()
+		return this.getSelectedIssueIds()
 	}
 	
 	/**
@@ -424,9 +403,9 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * @param ids
 	 */
 	set selectedIssueIds(ids:List<number>) {
-		this._selectedIssueIds = ids || List<number>()
+		//this._selectedIssueIds = ids || List<number>()
+		this.viewController.setSelectedIssueIds(ids || List<number>())
 		
-		this.selectListeners.emit()
 	}
 	
 	
@@ -434,7 +413,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Clear the cached selected issues
 	 */
 	clearSelectedIssueIds() {
-		this._selectedIssueIds = null
+		
 	}
 	
 	/**
@@ -520,16 +499,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	
-	/**
-	 * Send an issues context down
-	 *
-	 * @returns {{issuesPanel: IssuesPanel}}
-	 */
-	getChildContext() {
-		return {
-			issuesPanel: this
-		}
-	}
 	
 	/**
 	 * Get the index for a given issue or id
@@ -607,7 +576,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			const
 				adjustedIndex = Math.max(0, Math.min(itemCount - 1, index)),
-				item = this.getItemAtIndex(index)
+				item = this.getItemAtIndex(adjustedIndex)
 			
 			if (!item) {
 				log.info('No issue at index ' + index)
@@ -659,11 +628,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	
-	
-	pushSelectedIssueIds = _.debounce(() => {
-		this.viewController.setSelectedIssueIds(this.selectedIssueIds)
-	},200)
-	
 	/**
 	 * Update the internal selected issue ids & push to state
 	 *
@@ -674,8 +638,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		this.adjustScroll(newSelectedIssueIds)
 		this.selectedIssueIds = newSelectedIssueIds
 		
-		
-		this.pushSelectedIssueIds()
 	}
 	
 	
@@ -801,7 +763,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			
 		} else {
-			selectedIssueIds = List<number>(issue.id)
+			selectedIssueIds = List<number>([issue.id])
 		}
 		
 		
@@ -856,18 +818,21 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 	
 	componentWillMount() {
-		const
-			store:ObservableStore<any> = Container.get(ObservableStore as any) as any
-		this.selectedIssueIdsUnsubscribe = store.observe(
-			[IssueKey,'selectedIssueIds'],
-			(selectedIssueIds) => this.selectedIssueIds = selectedIssueIds)
+		this.viewController.setMounted(true)
+		// const
+		// 	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
+		//
+		// this.selectedIssueIdsUnsubscribe = store.observe(
+		// 	this.viewController.makeStatePath('selectedIssueIds'),
+		// 	(selectedIssueIds) => this.selectedIssueIds = selectedIssueIds)
 	}
 	
 	componentWillUnmount() {
-		if (this.selectedIssueIdsUnsubscribe) {
-			this.selectedIssueIdsUnsubscribe()
-			this.selectedIssueIdsUnsubscribe = null
-		}
+		this.viewController.setMounted(false)
+		// if (this.selectedIssueIdsUnsubscribe) {
+		// 	this.selectedIssueIdsUnsubscribe()
+		// 	this.selectedIssueIdsUnsubscribe = null
+		// }
 	}
 	
 	
@@ -898,24 +863,25 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				palette,
 				issues,
 				items,
-				commandContainer
+				commandContainer,
+				hasSelectedIssues
 			} = this.props,
 			
 			// FOCUSED BASED ON CONTAINER
 			focused = commandContainer.isFocused(),
 			
-			selectedIssueIds = this.selectedIssueIds,
+			//selectedIssueIds = this.selectedIssueIds,
 			
 			
-			validSelectedIssueIds = selectedIssueIds
-					.filter(issueId =>
-						!_.isNil(issues.find(issue => issue.id === issueId))),
+			// validSelectedIssueIds = selectedIssueIds
+			// 		.filter(issueId =>
+			// 			!_.isNil(issues.find(issue => issue.id === issueId))),
 
 			
 			itemsAvailable = items && items.size > 0,
 			allItemsFiltered = !itemsAvailable && issues.size,
 			
-			allowResize = itemsAvailable && validSelectedIssueIds && validSelectedIssueIds.size > 0,
+			allowResize = itemsAvailable && hasSelectedIssues, //validSelectedIssueIds && validSelectedIssueIds.size > 0,
 			
 			//allowResize = true,
 			listMinWidth = !allowResize ? '100%' : convertRem(36.5),
