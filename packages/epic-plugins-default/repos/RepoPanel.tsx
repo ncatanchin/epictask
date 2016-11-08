@@ -21,7 +21,7 @@ import {
 } from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
 import { ContainerNames,CommonKeys as Keys } from "epic-command-manager"
-import { Routes, Roots } from "epic-entry-ui/routes/Routes"
+import { Routes, Pages } from "epic-entry-ui/routes/Routes"
 
 
 
@@ -97,7 +97,7 @@ function getHeaderControls() {
 					
 							log.debug(`add repo click`,event)
 					
-							getUIActions().openSheet(Roots.RepoImport.path)
+							getUIActions().openSheet(Pages.RepoImport.path)
 					
 						}}>
 			<Icon style={styles.header.button.icon} iconSet='fa' iconName='plus'/>

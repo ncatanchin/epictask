@@ -14,7 +14,7 @@ import {
 
 import { IJobExecutor } from "./JobTypes"
 import JobProgressTracker from "./JobProgressTracker"
-import fs from "fs"
+import * as fs from "fs"
 import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 

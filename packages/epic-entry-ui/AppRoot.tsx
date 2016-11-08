@@ -44,7 +44,7 @@ import {
 
 // STYLES
 import { RouteView, WindowHashURIProvider, IRoute, IRouteInstance, Router, RouterEvent } from "./routes"
-import { Roots, Routes } from "./routes/Routes"
+import { Pages, Routes } from "./routes/Routes"
 import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/selectors"
 
 import { AppStateType } from "epic-typedux/state/app"
@@ -116,7 +116,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				.command(
 					CommandType.App,
 					'Import Repository',
-					(item, event) => getUIActions().openSheet(Roots.RepoImport.path),
+					(item, event) => getUIActions().openSheet(Pages.RepoImport.path),
 					"CommandOrControl+Shift+n",{
 						id: CIDS.GithubImport
 					}
@@ -134,7 +134,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				.command(
 					CommandType.App,
 					'Settings',
-					(cmd, event) => getUIActions().openWindow(Roots.Settings.path),
+					(cmd, event) => getUIActions().openWindow(Pages.Settings.path),
 					"CommandOrControl+Comma", {
 						id: CIDS.Settings
 					})
@@ -143,7 +143,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				.command(
 					CommandType.App,
 					'Repository Labels, Milestones & Settings',
-					(cmd, event) => getUIActions().openWindow(Roots.RepoSettings.path),
+					(cmd, event) => getUIActions().openWindow(Pages.RepoSettings.path),
 					"CommandOrControl+Shift+Comma", {
 						id: CIDS.RepoSettings
 					})
@@ -162,7 +162,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					'Find action',
 					(item, event) => {
 						log.debug(`Triggering find action`)
-						getUIActions().openSheet(Roots.FindAction.path)
+						getUIActions().openSheet(Pages.FindAction.path)
 					},
 					"CommandOrControl+Shift+p",{
 						id: CIDS.FindAction,
@@ -346,9 +346,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				{uri,params} = !uriProvider ? ({} as any) : uriProvider.getLocation(),
 				{repoCount,appStateType} = props,
 				isAuthenticated = appStateType !== AppStateType.AuthLogin,
-				isLogin = uri === Roots.Login.path,
-				isWelcome = uri === Roots.Welcome.path,
-				isIDERoot = [null,'',Roots.IDE.path].includes(uri)
+				isLogin = uri === Pages.Login.path,
+				isWelcome = uri === Pages.Welcome.path,
+				isIDERoot = [null,'',Pages.IDE.path].includes(uri)
 			
 			log.debug(`Checking root: ${uri} for IDE and no repos`,uri,path,isAuthenticated, isLogin,isIDERoot,repoCount)
 			
@@ -356,7 +356,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				if (!isLogin) {
 					log.debug(`Scheduling redirect to login`)
 					uriProvider.setLocation({
-						uri: Roots.Login.path,
+						uri: Pages.Login.path,
 						params
 					})
 				}
@@ -364,7 +364,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				log.debug(`Scheduling redirect to welcome/ide`)
 				
 				uriProvider.setLocation({
-					uri: repoCount < 1 ? Roots.Welcome.path : Roots.IDE.path,
+					uri: repoCount < 1 ? Pages.Welcome.path : Pages.IDE.path,
 					params
 				})
 				

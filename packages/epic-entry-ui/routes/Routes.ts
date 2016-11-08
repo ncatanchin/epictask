@@ -4,7 +4,7 @@ import { Issue,Comment } from "epic-models"
 import {List} from 'immutable'
 
 
-export const Roots = {
+export const Pages = {
 	
 	Login: {
 		name: 'login',
@@ -140,7 +140,7 @@ export const Roots = {
 }
 
 
-export const Routes:TRouteMap = Object.values(Roots)
+export const Routes:TRouteMap = Object.values(Pages)
 	.reduce((routes,root) => {
 		routes[root.path] = root
 		return routes

@@ -41,7 +41,7 @@ import {
 } from '../provider'
 import { GitHubClient } from "epic-github"
 import { ContainerNames } from "epic-command-manager"
-import { Roots } from "epic-entry-ui/routes/Routes"
+import { Pages } from "epic-entry-ui/routes/Routes"
 import { TIssuePatchMode, IIssuePatchLabel } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getDatabaseClient } from "epic-database-client/DatabaseClient"
 import { getValue, toNumber } from "typeguard"
@@ -494,7 +494,7 @@ export class IssueActionFactory  {
 			return
 		}
 		
-		getUIActions().openWindow(Roots.IssuePatchDialog.makeURI(issues))
+		getUIActions().openWindow(Pages.IssuePatchDialog.makeURI(issues))
 	}
 	
 	/**
@@ -798,7 +798,7 @@ export class IssueActionFactory  {
 	}
 	
 	newIssueDialog() {
-		getUIActions().openWindow(Roots.IssueEditDialog.makeURI())
+		getUIActions().openWindow(Pages.IssueEditDialog.makeURI())
 	}
 
 	
@@ -819,7 +819,7 @@ export class IssueActionFactory  {
 		const
 			editingIssue = cloneObject(issue)
 		
-		uiActions.openWindow(Roots.IssueEditDialog.makeURI(editingIssue))
+		uiActions.openWindow(Pages.IssueEditDialog.makeURI(editingIssue))
 	}
 	
 	/**
@@ -845,7 +845,7 @@ export class IssueActionFactory  {
 				body: ''
 			})
 		
-		uiActions.openWindow(Roots.IssueCommentDialog.makeURI(issue,comment))
+		uiActions.openWindow(Pages.IssueCommentDialog.makeURI(issue,comment))
 	}
 	
 	
