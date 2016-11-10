@@ -487,6 +487,9 @@ export class WindowManager  {
 					
 					win = this.getWindowInstance(id)
 					
+					if (!win)
+						return
+					
 					// Wrap retry to clear id
 					win.heartbeatTimeoutId = setTimeout(() => {
 						this.clearHeartbeatTimeout(id)

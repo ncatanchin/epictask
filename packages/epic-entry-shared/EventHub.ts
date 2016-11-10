@@ -39,7 +39,8 @@ const
 	
 	
 // ADD EVENT TYPE MIXED IN
-Object.assign(EventHub,eventTypeValues)
+//Object.assign(EventHub,eventTypeValues)
+Object.assign(EventHub,EventType)
 
 /**
  * On renderer message received
