@@ -7,6 +7,7 @@ import { DraggableToolGutterButton } from "./ToolGutterButton"
 import { TToolMap, IToolPanel, ITool, DragTypes, getValue } from "epic-global"
 import filterProps from "react-valid-props"
 import { getUIActions } from "epic-typedux"
+import {Map,List} from 'immutable'
 
 // Constants
 const
@@ -78,8 +79,8 @@ export class ToolGutter extends React.Component<IToolGutterProps,any> {
 				dndConnect,
 				dndOver
 			} = props,
-			tools:TToolMap = getValue(() => panel.tools,{}),
-			toolIds = getValue(() => panel.toolIds,[])
+			tools:TToolMap = getValue(() => panel.tools,Map<string,ITool>()),
+			toolIds = getValue(() => panel.toolIds,List<string>())
 		
 		return dndConnect(<div
 			{...filterProps(props)}
@@ -92,7 +93,7 @@ export class ToolGutter extends React.Component<IToolGutterProps,any> {
 		>
 			{toolIds.map(toolId => {
 				const
-					tool = tools[toolId]
+					tool = tools.get(toolId)
 							
 				return <DraggableToolGutterButton
 					key={toolId}

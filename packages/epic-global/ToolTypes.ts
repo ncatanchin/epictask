@@ -1,6 +1,7 @@
 
 import React from 'react'
-import {Map} from 'immutable'
+import {Map,List} from 'immutable'
+import { isMap } from "typeguard"
 
 const log = getLogger(__filename)
 
@@ -17,7 +18,7 @@ export enum ToolPanelLocation {
 /**
  * Map of tools by id
  */
-export type TToolMap = {[id:string]:ITool}
+export type TToolMap = Map<string,ITool>
 
 /**
  * Denotes an available tool in the system
@@ -76,8 +77,8 @@ export interface ITool extends IToolConfig {
 export interface IToolPanel {
 	id:string
 	location:ToolPanelLocation
-	tools:{[toolId:string]:ITool}
-	toolIds:string[]
+	tools:Map<string,ITool>
+	toolIds:List<string>
 	open:boolean
 	isDefault?:boolean
 	data?:any
@@ -131,8 +132,8 @@ export function makeDefaultToolPanel(location:ToolPanelLocation, open = false) {
 	return {
 		id: ToolPanelLocation[location],
 		location,
-		tools: {},
-		toolIds: [],
+		tools: Map<string,ITool>(),
+		toolIds: List<string>(),
 		open
 	}
 }
@@ -160,12 +161,15 @@ export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
 				const
 					panel = fromPanels[id] || {}
 				
+				if (panel.tools && !isMap(panel.tools)) {
+					panel.tools = Map<string,ITool>(panel.tools)
+				}
 				
 				return _.defaults(panel,{
 					id,
 					location,
-					tools:{},
-					toolIds: [],
+					tools:Map<string,ITool>(),
+					toolIds: List<string>(),
 					open: false
 				})
 			})

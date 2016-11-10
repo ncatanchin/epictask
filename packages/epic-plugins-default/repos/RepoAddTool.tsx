@@ -1,10 +1,11 @@
 // Imports
 
 import { SearchPanel } from "epic-ui-components/search"
-import { PureRender } from "epic-ui-components"
-import { SearchType, getUIActions } from "epic-typedux"
+import { PureRender } from "epic-ui-components/common"
+import { getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
 import { ThemedStyles } from "epic-styles"
+import { SearchType } from "epic-ui-components/search"
 
 // Constants
 const log = getLogger(__filename)

@@ -37,7 +37,7 @@ import './ErrorHandling'
 import * as ImmutableGlobal from 'immutable'
 import {Map as MapGlobal,List as ListGlobal,Record as RecordGlobal} from 'immutable'
 
-import momentGlobal from 'moment'
+import * as momentGlobal from 'moment'
 
 const
 	momentMod = require('moment'),

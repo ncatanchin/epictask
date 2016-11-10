@@ -23,6 +23,7 @@ import ViewState from "epic-typedux/state/window/ViewState"
 import { makePromisedComponent } from "epic-global/UIUtil"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 
 
 
@@ -76,7 +77,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @returns {IToolPanel}
 	 */
 	getToolParentPanel(toolId:string, state:UIState = this.state):IToolPanel {
-		return state.toolPanels.valueSeq().find(it => !!it.tools[toolId])
+		return state.toolPanels.valueSeq().find(it => !!it.tools.get(toolId))
 	}
 	
 	
@@ -89,13 +90,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	getTool(toolId:string, state:UIState = this.state):ITool {
 		const
-			panels = state.toolPanels.valueSeq().toArray()
+			panels = state.toolPanels.valueSeq()
 		
 		let
 			tool:ITool
 		
-		for (let panel of panels) {
-			tool = panel.tools[toolId]
+		
+		for (let panel of panels.toArray()) {
+			tool = panel.tools.get(toolId)
 			
 			if (tool)
 				break
@@ -110,8 +112,9 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	updateRegisteredTools() {
 		const
+			regs = getToolRegistrations(),
 			tools =
-				nilFilter(getToolRegistrations())
+				nilFilter(regs)
 					.map(reg => {
 						let
 							tool = this.getTool(reg.id)
@@ -156,8 +159,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}))
 	}
 	
-	getToolPanels(state:UIState = this.state) {
-		return state.toolPanels || Map<string,IToolPanel>()
+	getToolPanels(state:UIState = null) {
+		return getValue(() => state.toolPanels,toolPanelsSelector(getStoreState())) || Map<string,IToolPanel>()
 	}
 	
 	/**
@@ -168,12 +171,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	private doPanelUpdate(state:UIState,panel:IToolPanel) {
 		
-		const
-			toolPanels = this.getToolPanels(state)
 		
 		return state.set(
 			'toolPanels',
-			toolPanels.set(
+			state.toolPanels.set(
 				panel.id,
 				cloneObjectShallow(panel)
 			)
@@ -202,13 +203,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			// IF TOOL ON PANEL THEN REMOVE
 			if (getValue(() => panel.tools[toolId])) {
 				panel = cloneObjectShallow(panel)
-				panel.tools = cloneObjectShallow(panel.tools)
 				
 				// REMOVE FROM TOOL MAP
-				delete panel.tools[toolId]
+				panel.tools = panel.tools.remove(toolId)
 				
 				// REMOVE FROM TOOL ID LIST
-				panel.toolIds = panel.toolIds.filter(it => it !== toolId)
+				panel.toolIds = panel.toolIds.filter(it => it !== toolId) as List<string>
 				
 				state = state.set('toolPanels',toolPanels.set(panel.id,panel)) as any
 			}
@@ -236,13 +236,11 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			assert(!existingPanel || existingPanel.id === panelId, `A tool can not be added to multiple panels`)
 			
 			// IF NOT TOOL ON PANEL THEN ADD
-			if (!getValue(() => panel.tools[tool.id])) {
+			if (!getValue(() => panel.tools.get(tool.id))) {
 				
 				panel = cloneObjectShallow(panel)
-				panel.tools = cloneObjectShallow(panel.tools)
-				panel.tools[tool.id] = tool
-				
-				panel.toolIds = panel.toolIds.concat([tool.id])
+				panel.tools = panel.tools.set(tool.id,cloneObjectShallow(tool))
+				panel.toolIds = panel.toolIds.push(tool.id)
 				
 				state = state.set('toolPanels',toolPanels.set(panelId,panel)) as any
 			}
@@ -282,6 +280,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	@ActionReducer()
 	updateTool(...tools:ITool[]) {
 		return (state:UIState) => {
+			let
+				toolPanels = state.toolPanels
 			
 			tools.forEach(tool => {
 				// FIND THE NEW AND OLD PANEL
@@ -295,17 +295,19 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				const
 					panel = cloneObjectShallow(parentPanel)
 				
-				panel.tools[tool.id] = tool
+				panel.tools = panel.tools.set(tool.id,cloneObjectShallow(tool))
+				
 				if (panel.toolIds.indexOf(tool.id) === -1)
-					panel.toolIds = panel.toolIds.concat([tool.id])
+					panel.toolIds = panel.toolIds.push(tool.id)
 				
-				panel.open = Object.values(panel.tools).some(it => it.active)
+				panel.open = panel.tools.valueSeq().some(it => it.active)
+				toolPanels = toolPanels.set(panel.id,panel)
 				
-				state = this.doPanelUpdate(state,panel)	as UIState
 			})
 			
 			
-			return state
+			
+			return state.set('toolPanels',toolPanels)	as UIState
 			
 		}
 	}
@@ -335,7 +337,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		const id:string = (isNumber(idOrLocation)) ? ToolPanelLocation[idOrLocation] : idOrLocation
 		
 		assert(id,'Location can not be nil')
-		return this.state.toolPanels.get(id)
+		return toolPanelsSelector(getStoreState()).get(id)
 	}
 	
 	/**
@@ -378,8 +380,8 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				location,
 				open: [Popup,Left].includes(location),
 				isDefault: Left === location,
-				tools:{},
-				toolIds: []
+				tools:Map<string,ITool>(),
+				toolIds: List<string>()
 			}
 			this.updateToolPanel(panel)
 		}

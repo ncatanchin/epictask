@@ -35,7 +35,7 @@ export class Page extends React.Component<IPageProps,any> {
 			{style,styles} = this.props
 		
 		const
-			pageStyle = makeStyle(styles.page,style)
+			pageStyle = mergeStyles(styles.page,style)
 
 		return <div {...filterProps(this.props)} style={pageStyle}>
 			{this.props.children}

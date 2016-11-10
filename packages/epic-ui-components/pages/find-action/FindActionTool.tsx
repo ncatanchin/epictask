@@ -1,13 +1,15 @@
 // Imports
 import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { getUIActions, SearchType } from "epic-typedux"
+import { getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
-import { SearchPanel } from "epic-ui-components/search"
+import { SearchPanel,SearchType } from "epic-ui-components/search"
+import { SearchController, SearchItem } from "epic-ui-components/search/SearchController"
 
 // Constants
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	FindActionSearchId = 'find-action-search'
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
@@ -54,16 +56,40 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 		getUIActions().closeSheet()
 	}
 	
+	/**
+	 * On search result selected
+	 * @param eventType
+	 * @param searchId
+	 * @param item
+	 */
+	private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
+		if (searchId !== FindActionSearchId || !getValue(() => item.type === SearchType.Action,false))
+			return
+		
+		
+		this.hide()
+		setTimeout(() =>
+			SearchController.getDefaultHandler(SearchType.Action)(searchId,item)
+		,100)
+		
+	}
 	
 	/**
-	 * When a result is selected
-	 *
-	 * @param result
+	 * On mount create initial state & bind listeners
 	 */
-	onResultSelected = (result) => {
-		log.debug(`Action result was selected`,result)
-		this.hide()
+	componentWillMount = () => {
+		EventHub.on(EventHub.SearchItemSelected,this.onResultSelected)
 	}
+	
+	/**
+	 * On unmount - unbind
+	 */
+	componentWillUnmount = () => {
+		EventHub.off(EventHub.SearchItemSelected,this.onResultSelected)
+	}
+	
+	
+	
 	
 	/**
 	 * Sets a reference to the search panel
@@ -113,7 +139,6 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			             inlineResults={true}
 			             expanded={false}
 			             mode='actions'
-			             onResultSelected={this.onResultSelected}
 			             hidden={false}/>
 		
 		</div>

@@ -1,4 +1,5 @@
 
+import { getValue } from "typeguard"
 const
 	log = getLogger(__filename)
 
@@ -45,6 +46,11 @@ export function makePromisedComponent(loader:TComponentLoader): TPromisedCompone
 		
 		return resolver.promise as Promise<TComponent>
 	}
+}
+
+
+export function isActiveComponent(comp) {
+	return getValue(() => ReactDOM.findDOMNode(comp).contains(document.activeElement),false)
 }
 
 

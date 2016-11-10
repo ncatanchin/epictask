@@ -1,12 +1,15 @@
 
 import { mergeStyles } from "./styles/CommonRules"
-import { addThemeListener } from "./ThemeState"
 import { getValue, shallowEquals } from  "epic-global"
 import { IPalette } from "./material"
+import { addHotDisposeHandler } from "epic-global/HotUtils"
+import { isObject } from "typeguard"
 
 const
 	Radium = require('radium'),
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	createReactProxy = require('react-proxy').default,
+	deepUpdate = require('react-deep-force-update')
 
 /**
  * Theme State interface for themed components
@@ -20,6 +23,7 @@ export interface IThemedState {
 	
 	lastStyles?:any
 	mounted?:boolean
+	unsubscribe?:Function
 }
 
 export interface IThemedAttributes extends React.HTMLAttributes<any>{
@@ -27,7 +31,6 @@ export interface IThemedAttributes extends React.HTMLAttributes<any>{
 	styles?:any
 	palette?:any
 	enableComponentRef?:boolean
-	
 }
 
 /**
@@ -77,12 +80,10 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 	
 	const
 		FinalComponent = skipRadium ? Component : Radium(Component),
-		
-		WrappedComponent =
+		Instances = [],
+		makeWrappedComponent = () => {
 			//noinspection JSUnusedLocalSymbols
-			class ThemedWrapperComponent extends React.Component<any, IThemedState> {
-				
-				mounted = false
+			return class ThemedWrapperComponent extends React.Component<any, IThemedState> {
 				
 				constructor(props,context) {
 					super(props,context)
@@ -91,7 +92,7 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 				}
 				
 				// Used to unsubscribe from theme updates on unmount
-				private unsubscribe
+				
 				
 				get wrappedComponent() {
 					return Component
@@ -107,7 +108,7 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 							palette,
 							inputStyles
 						} as any
-						
+					
 					if (inputStyles) {
 						const
 							styles = createThemedStyles(inputStyles,themeKeys,props,theme)
@@ -128,67 +129,53 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 				 * create initial styles
 				 */
 				updateTheme(props = this.props, newTheme = getTheme(), newPalette = getPalette()) {
-					if (!this.mounted)
+					
+					const
+						{state = {}} = this,
+						{theme,palette} = state
+					
+					if (!theme || !palette || !isObject(theme) || !isObject(palette)) {
+						log.warn(`Invalid theme & palette`, theme, palette)
 						return
+					}
 					
 					// IF ANY PARTS CHANGED - UPDATE
 					if (
 						// THEME
-						!getValue(() => this.state.theme) !== newTheme ||
-						
-						// PALETTE
-						!getValue(() => this.state.palette) !== newPalette ||
-						
-						// BASE STYLES FROM COMPONENT
-						//!_.isEqual(baseStyles,lastStyles) ||
-						
-						// PASSED PROP STYLES
-						!shallowEquals(props.styles,this.props.styles)
+					theme !== newTheme ||
+					
+					// PALETTE
+					palette !== newPalette ||
+					
+					// PASSED PROP STYLES
+					!shallowEquals(props.styles,this.props.styles)
 					) {
 						
-						// this.setState(this.getNewState(props,baseStyles,newTheme,newPalette),() => {
-						//
-						// })
-						const
-							newStyles = _.merge({} as any,this.state.styles,props.styles) as any
-						this.setState({
-							styles: newStyles,
-							lastStyles: newStyles
-						},() => {
-							
-						})
-						// try {
-						// 	const
-						// 		instance = this.getWrappedInstance()
-						//
-						// 	instance && instance.forceUpdate()
-						// }	catch (err) {
-						// 	log.warn(`failed to updated wrapped component`)
-						// }
-						//})
+						this.setState(
+							this.getNewState(props,baseStyles,newTheme,newPalette)
+						)
 					}
 					
 				}
+				
 				
 				
 				/**
 				 * Update the theme on mount and subscribe
 				 */
 				componentWillMount() {
-					this.mounted = true
+					Instances.push(this)
+					
 					
 					this.updateTheme()
 					
-					this.unsubscribe = addThemeListener(
-						(newTheme,newPalette) =>this.updateTheme(this.props,newTheme,newPalette))
-						
 				}
 				
 				
 				shouldComponentUpdate(nextProps:any, nextState:IThemedState, nextContext:any):boolean {
-					//return !shallowEquals(this.props,nextProps) ||
-					return	!shallowEquals(this.state,nextState,'theme','styles','palette') ||
-							!shallowEquals(baseStyles,this.state.lastStyles)
+					return !shallowEquals(this.props,nextProps) ||
+						!shallowEquals(this.state,nextState,'theme','styles','palette') ||
+						!shallowEquals(baseStyles,this.state.lastStyles)
 				}
 				
 				/**
@@ -205,12 +192,8 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 				 * Unsubscribe from theme updates
 				 */
 				componentWillUnmount() {
-					this.mounted = false
+					Instances.splice(Instances.indexOf(this),1)
 					
-					if (this.unsubscribe) {
-						this.unsubscribe()
-						this.unsubscribe = null
-					}
 				}
 				
 				/**
@@ -239,8 +222,26 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 						styles={styles} />
 				}
 			}
-		
-	return WrappedComponent as any
+		}
+	
+	const
+	 	ProxiedComponent = createReactProxy(makeWrappedComponent())
+	
+	let
+		unsubscribe = EventHub.on(EventHub.ThemeChanged,(eventType,newTheme,newPalette) => {
+			log.debug(`Updating themed component`,newTheme,getTheme(),newPalette,getPalette())
+			ProxiedComponent.update(makeWrappedComponent())
+			Instances.forEach(it => it.updateTheme(null,newTheme,newPalette))
+			setTimeout(() => Instances.forEach(it => deepUpdate(it)),250)
+		})
+	
+	addHotDisposeHandler(module,() => unsubscribe && unsubscribe())
+	return ProxiedComponent.get() as any
+	
+	// const
+	// 	WrappedComponent = makeWrappedComponent()
+	//
+	//return WrappedComponent as any
 	//return PureRender(skipRadium ? WrappedComponent : Radium(WrappedComponent)) as any
 	
 }
@@ -262,18 +263,41 @@ export function Themed(Component) {
 	return makeThemedComponent(Component) as any
 }
 
+/**
+ * Themed component with options
+ *
+ * @param opts
+ * @returns {(Component:any)=>any}
+ * @constructor
+ */
 export function ThemedWithOptions(opts:IThemedOptions) {
 	return function (Component) {
 		return makeThemedComponent(Component,opts) as any
 	}
 }
+
+/**
+ * Themed component without a radium wrapper
+ *
+ * @param Component
+ * @returns {any}
+ * @constructor
+ */
 export function ThemedNoRadium(Component) {
 	return makeThemedComponent(Component,{
 		noRadium: true
 	}) as any
 }
 
-
+/**
+ * Themed styles
+ *
+ * @param opts
+ * @param baseStyles
+ * @param themeKeys
+ * @returns {(Component:any)=>any}
+ * @constructor
+ */
 export function ThemedStylesWithOptions(opts:IThemedOptions = {},baseStyles:any = {},...themeKeys:string[]) {
 	return (Component) => {
 		return makeThemedComponent(Component,opts,baseStyles,...themeKeys) as any

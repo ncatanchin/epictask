@@ -151,7 +151,7 @@ export function makeMainMenu() {
 	] as any
 	
 	
-	//if (Env.isDev)
+	if (Env.isDev)
 		template.push(makeDevMenu())
 	
 	

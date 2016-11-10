@@ -260,9 +260,11 @@ export class CommandMenuRoot extends React.Component<ICommandMenuRootProps,IComm
 			// ON UPDATE SET THE ROOT ITEMS AND REBUILD THE MENU
 			menuUnsubscribe: menuManager.on(
 				CommandSimpleMenuManagerEventType.MenuChanged, (event,newMenuRootItems) => {
-					this.setState({
-						menuRootItems: newMenuRootItems,
-						menuNode: this.makeMenu(newMenuRootItems),
+					setImmediate(() => {
+						this.setState({
+							menuRootItems: newMenuRootItems,
+							menuNode: this.makeMenu(newMenuRootItems),
+						})
 					})
 				})
 		})

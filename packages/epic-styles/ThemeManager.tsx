@@ -33,21 +33,27 @@ function subscribe() {
 		
 		let
 			changed = false
-		
-		if (themeName && themeName !== getThemeName()) {
-			log.info(`Theme changed: ${themeName}`)
-			setThemeCreator(getThemeCreator(themeName))
-			changed = true
-		}
+			
 		
 		if (paletteName && paletteName !== getPaletteName()) {
 			log.info(`Palette changed: ${paletteName}`)
 			setPaletteCreator(getPaletteCreator(paletteName))
 			changed = true
 		}
+		
+		
+		if (changed || (themeName && themeName !== getThemeName())) {
+			log.info(`Theme changed: ${themeName}`)
+			setThemeCreator(getThemeCreator(themeName))
+			changed = true
+		}
+		
+		if (changed) {
+			EventHub.emit(EventType.ThemeChanged,getTheme(),getPalette())
+		}
 	})
 	
-	
+	//
 }
 
 // LISTEN FOR STORE READY

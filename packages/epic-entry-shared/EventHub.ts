@@ -32,11 +32,14 @@ const
 
 const
 	InternalEvents = {
-		Broadcast: "@@EVENTHUB-BROADCAST"
-	}
+		Broadcast: "@@EVENT-HUB-BROADCAST"
+	},
+	eventTypeValues = enumValueMap(EventType)
 
+	
+	
 // ADD EVENT TYPE MIXED IN
-Object.assign(EventHub,enumValueMap(EventType))
+Object.assign(EventHub,eventTypeValues)
 
 /**
  * On renderer message received

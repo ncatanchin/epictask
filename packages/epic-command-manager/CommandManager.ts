@@ -211,7 +211,7 @@ export class CommandManager {
 	 * @param event
 	 * @param fromInputOverride - for md editing really
 	 */
-	handleKeyDown(event:KeyboardEvent,fromInputOverride = false) {
+	handleKeyDown = (event:KeyboardEvent,fromInputOverride = false) => {
 		
 		const
 			containers = this.focusedContainers(),
@@ -247,7 +247,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private handleFocus(event:FocusEvent) {
+	private handleFocus = (event:FocusEvent) => {
 		log.debug(`focus received`,event)
 	}
 	
@@ -256,7 +256,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private handleBlur(event:FocusEvent) {
+	private handleBlur = (event:FocusEvent) => {
 		log.debug(`blur received`,event)
 	}
 	
@@ -265,7 +265,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private unload(event) {
+	private unload = (event) => {
 		log.debug(`Unloading all commands`)
 		this.unmountCommand(...Object.values(this.commands))
 	}
@@ -275,7 +275,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private onWindowBlur(event) {
+	private onWindowBlur = (event) => {
 		this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
 	}
 		
@@ -284,7 +284,7 @@ export class CommandManager {
 	 *
 	 * @param event
 	 */
-	private onWindowFocus(event) {
+	private onWindowFocus = (event) => {
 		this.mountMenuItems(...this.menuItems)
 	}
 	
@@ -297,28 +297,28 @@ export class CommandManager {
 			if (!this.windowListeners) {
 				this.windowListeners = {
 					focus: {
-						listener: this.handleFocus.bind(this)
+						listener: this.handleFocus
 					},
 					blur: {
-						listener: this.handleBlur.bind(this)
+						listener: this.handleBlur
 					},
 					keydown: {
-						listener: this.handleKeyDown.bind(this)
+						listener: this.handleKeyDown
 					},
 					unload: {
-						listener: this.unload.bind(this)
+						listener: this.unload
 					}
 					
 				}
 				
 				this.browserListeners = {
 					focus: {
-						listener:this.onWindowFocus.bind(this),
+						listener:this.onWindowFocus,
 						attacher: addBrowserWindowListener,
 						detacher: removeBrowserWindowListener
 					},
 					blur: {
-						listener: this.onWindowBlur.bind(this),
+						listener: this.onWindowBlur,
 						attacher: addBrowserWindowListener,
 						detacher: removeBrowserWindowListener
 					}

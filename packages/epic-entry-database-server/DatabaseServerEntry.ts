@@ -1,18 +1,20 @@
 import "epic-entry-shared/AppEntry"
+import { ProcessType } from "epic-entry-shared/ProcessType"
 
 import { loadProcessClientEntry } from "epic-entry-shared"
-import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
 
 const
 	{ProcessClientEntry} = loadProcessClientEntry()
 
-import { Stores, IDatabaseRequest, DatabaseEvents } from "epic-database-client"
+import { IDatabaseRequest, DatabaseEvents } from "epic-database-client"
 
 import {
-	tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler, getHot,
-	setDataOnHotDispose, getValue,uuid
+	acceptHot,
+	addHotDisposeHandler,
+	getHot,
+	setDataOnHotDispose
 } from "epic-global"
-import { ProcessType } from "epic-entry-shared/ProcessType"
+
 
 
 import { IPCServer } from "epic-net/IPCServer"

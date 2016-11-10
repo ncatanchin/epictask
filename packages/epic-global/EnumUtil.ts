@@ -2,7 +2,8 @@
 
 function isNumberValue(o:any) {
 	try {
-		return _.isNumber(parseInt(o,10))
+		//return _.isNumber(parseInt(o,10))
+		return parseInt(o,10) >= 0
 	} catch (err) {
 		return false
 	}
@@ -17,9 +18,11 @@ export function enumValues(enumType:any) {
 }
 
 export function enumValueMap(enumType:any) {
-	return Object
-		.keys(enumType)
-		.filter(key => !isNumberValue(key))
+	const
+		keys = Object
+			.keys(enumType)
+			.filter(key => !isNumberValue(key))
+	return keys
 		.reduce((valueMap,nextVal:string) => {
 			valueMap[nextVal] = nextVal
 			return valueMap

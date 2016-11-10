@@ -1,6 +1,6 @@
 // Setup story environment
-import * as uuid from "node-uuid"
-import * as faker from "faker"
+import uuid from "node-uuid"
+import faker from "faker"
 import { getDecorator } from "./StoryHelper"
 import {
 	JobActionFactory,

@@ -75,6 +75,11 @@ export class EnumEventEmitter<E> {
 		return this.on(event,listener,true)
 	}
 	
+	
+	off(event: E, listener: Function): this {
+		return this.removeListener(event,listener)
+	}
+	
 	removeListener(event: E, listener: Function): this {
 		this.emitter.removeListener(this.eventName(event), listener)
 		return this
@@ -106,6 +111,7 @@ export class EnumEventEmitter<E> {
 
 		return remover
 	}
+	
 	
 	
 

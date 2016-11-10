@@ -7,6 +7,7 @@ import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import { viewStatesSelector } from "epic-typedux/selectors/UISelectors"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { View } from "epic-ui-components/pages/ide/View"
+import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 // Constants
 const
@@ -55,6 +56,14 @@ export interface IViewContainerState {
 //@ThemedStyles(baseStyles)
 @PureRender
 export class ViewContainer extends React.Component<IViewContainerProps,IViewContainerState> {
+	
+	componentWillMount() {
+		if (this.props.viewStates.size < 1) {
+			
+			// MAKE SURE WE HAVE AT LEAST 1 VIEW
+			//getUIActions().ensureDefaultView()
+		}
+	}
 	
 	render() {
 		const { styles, viewStates } = this.props

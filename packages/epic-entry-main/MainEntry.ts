@@ -5,6 +5,7 @@ import Cleaner from './Cleaner'
 
 // NOW LOAD COMMON ENTRY
 import 'epic-entry-shared/AppEntry'
+import "./MainShutdownHandler"
 
 // LOAD DEPS
 import { showSplashWindow, hideSplashWindow } from "epic-entry-main/SplashWindow"

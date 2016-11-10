@@ -1,5 +1,5 @@
 //region Imports
-import CSSTransitionGroup from "react-addons-css-transition-group"
+import * as  CSSTransitionGroup from "react-addons-css-transition-group"
 
 import { connect } from "react-redux"
 import {

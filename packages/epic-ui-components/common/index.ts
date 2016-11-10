@@ -1,5 +1,6 @@
 export * from "./PureRender"
 
+export * from "./PromisedComponent"
 import * as Renderers from './Renderers'
 export * from "./Renderers"
 
@@ -43,5 +44,4 @@ export * from './TimeAgo'
 
 export * from "./FileDrop"
 
-export * from "./PromisedComponent"
 export * from "./Other"

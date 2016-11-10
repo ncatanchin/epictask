@@ -1,5 +1,5 @@
 // Imports
-
+import {List} from 'immutable'
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { PureRender } from "../../common"
@@ -25,6 +25,8 @@ import { ToolPanelLocation, IToolPanel, ITool, addRegistryListener, RegistryEven
 import { createToolPanelSelector, toolDraggingSelector } from "epic-typedux"
 import { ToolGutter } from "./ToolGutter"
 import { ToolWrapper } from "./ToolWrapper"
+import { createDeepEqualSelector } from "epic-global/SelectorUtil"
+import { createToolsSelector } from "epic-typedux/selectors/UISelectors"
 
 
 // Constants
@@ -148,10 +150,14 @@ export interface IToolPanelProps extends IThemedAttributes {
  * @constructor
  **/
 
-@connect(() => createStructuredSelector({
-	panel: createToolPanelSelector(),
-	dragging: toolDraggingSelector
-}))
+@connect(() => {
+	
+	return createStructuredSelector({
+		panel: createToolPanelSelector(),
+		tools: createToolsSelector(),
+		dragging: toolDraggingSelector
+	})
+})
 @ThemedStyles(baseStyles,'toolPanel')
 @PureRender
 export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
@@ -178,8 +184,8 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 		const
 			{styles,style,panel,dragging,location} = this.props,
 			{tools,toolIds} = panel || {} as IToolPanel,
-			toolList:ITool[] = toolIds.map(id => tools[id])
-		
+			toolList:List<ITool> = toolIds.map(id => tools.get(id)) as any
+		log.info(`Tool panel with tools`,tools,toolIds)
 		return <div style={[styles.root,styles.root[location],style]}>
 			{/* The Gutter of toggle controls and decorations */}
 			

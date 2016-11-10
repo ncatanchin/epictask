@@ -2,7 +2,7 @@
 const {app,BrowserWindow} = require('electron')
 
 
-import path from 'path'
+import * as  path from 'path'
 
 const templateURL = 'file://' + path.resolve(process.cwd(),'dist/main-devtools-entry.html')
 const windowStateKeeper = require('electron-window-state')

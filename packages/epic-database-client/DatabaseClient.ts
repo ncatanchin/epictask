@@ -1,6 +1,6 @@
 
 
-import * as uuid from "node-uuid"
+import uuid from "node-uuid"
 import { Map } from 'immutable'
 import {
 	VariableProxy,

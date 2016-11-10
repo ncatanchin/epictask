@@ -1,54 +1,59 @@
 
 import { createStructuredSelector } from "reselect"
-import { Page, PureRender, Logo } from "../../common"
+import { Page, PureRender, Logo } from "epic-ui-components/common"
 import { connect } from "react-redux"
 import { ThemedStyles, Transparent, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
 import { createDeepEqualSelector } from "epic-global"
-import { uiStateSelector, SearchType,getAppActions } from "epic-typedux"
-import { SearchPanel } from "epic-ui-components/search"
+import { uiStateSelector,getAppActions } from "epic-typedux"
+import { SearchType,SearchPanel } from "epic-ui-components/search"
+import { SearchItem, SearchController } from "epic-ui-components/search/SearchController"
+import { getValue } from "typeguard"
+
+const
+	log = getLogger(__filename),
+	WelcomeSearchId = 'welcome-repo-search'
 
 
 const
-	log = getLogger(__filename)
-
-
-const
-	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
-	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
-
-const baseStyles = (topStyles,theme,palette) => ({
-	
-	page:[],
-	bodyWrapper: [FlexRowCenter,Fill, makePaddingRem(1)],
-	viewWrapper:[FlexScale,Fill,{
-		borderStyle: 'solid',
-		borderWidth: rem(0.1)
-	}],
-	
-	logo: [makeMarginRem(0,2,0,0)],//[makeMarginRem(0,0,3,0)],
-	
-	search: [ {
-		backgroundColor: Transparent,
-		minWidth: 'auto',
-		maxWidth: 600,
+	baseStyles = (topStyles,theme,palette) => ({
 		
-		
-		field: [ {
-			backgroundColor: Transparent
+		page:[],
+		bodyWrapper: [FlexRowCenter,Fill, makePaddingRem(1)],
+		viewWrapper:[FlexScale,Fill,{
+			borderStyle: 'solid',
+			borderWidth: rem(0.1)
 		}],
-		input: [ {
-			backgroundColor: Transparent
-		} ],
-		hint: [ {} ]
 		
-	} ]
-	
-})
+		logo: [makeMarginRem(0,2,0,0)],//[makeMarginRem(0,0,3,0)],
+		
+		search: [ {
+			backgroundColor: Transparent,
+			minWidth: 'auto',
+			maxWidth: 600,
+			
+			
+			field: [ {
+				backgroundColor: Transparent
+			}],
+			input: [ {
+				backgroundColor: Transparent
+			} ],
+			hint: [ {} ]
+			
+		} ]
+		
+	})
 
+/**
+ * WelcomeProps
+ */
 export interface IWelcomeRootProps extends IThemedAttributes {
 	
 }
 
+/**
+ * WelcomeState
+ */
 export interface IWelcomeRootState {
 	width?:number
 	searchPanelRef?:any
@@ -67,38 +72,70 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	
 	appActions = getAppActions()
 	
-	componentWillMount = () => this.setState(this.getNewState())
+	/**
+	 * On search result selected
+	 * @param eventType
+	 * @param searchId
+	 * @param item
+	 */
+	private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
+		if (searchId !== WelcomeSearchId || !getValue(() => item.type === SearchType.Repo,false))
+			return
+		
+		SearchController.getDefaultHandler(SearchType.Repo)(searchId,item)
+	}
 	
-	getNewState = () => ({width:window.innerWidth})
+	/**
+	 * On mount create initial state & bind listeners
+	 */
+	componentWillMount = () => {
+		EventHub.on(EventHub.SearchItemSelected,this.onResultSelected)
+		this.setState(this.getNewState())
+	}
+	
+	/**
+	 * On unmount - unbind
+	 */
+	componentWillUnmount = () => {
+		EventHub.off(EventHub.SearchItemSelected,this.onResultSelected)
+	}
+	
+	/**
+	 * Create new state instance
+	 */
+	getNewState = () => ({
+		width:window.innerWidth
+	})
 	
 	updateState = () => this.setState(this.getNewState())
 	
 	/**
 	 * on escape sequence from search panel
 	 */
-	private onEscape = () => {
-		
-	}
+	private onEscape = () => {}
 	
-	private setSearchPanelRef = (searchPanelRef) => this.setState({searchPanelRef})
+	
+	private setSearchPanelRef = (searchPanelRef) => this.setState({
+		searchPanelRef
+	})
 	
 	render() {
 		const
-			{theme,styles} = this.props,
-			{palette} = theme,
+			{theme,palette,styles} = this.props,
 			{accent} = palette
 		
 		
-		return <Page onResize={this.updateState} id="welcomePage">
+		return <Page
+			onResize={this.updateState}
+			style={[Fill,FlexColumnCenter]}
+			id="welcomePage">
 			
 			<div style={styles.bodyWrapper}>
 				<Logo eHidden style={styles.logo} />
 				<SearchPanel
 					ref={this.setSearchPanelRef}
-					searchId='welcome-repo-search'
-					types={[
-						SearchType.Repo
-					]}
+					searchId={WelcomeSearchId}
+					types={[SearchType.Repo]}
 					hint={
 						<span>
 							Import <i><strong>angular</strong></i>
@@ -107,6 +144,7 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 					}
 					inlineResults={false}
 					expanded={false}
+					focused={true}
 					panelStyle={styles.search}
 					fieldStyle={styles.search.field}
 					inputStyle={styles.search.input}

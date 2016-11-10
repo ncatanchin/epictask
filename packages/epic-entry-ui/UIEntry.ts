@@ -72,6 +72,7 @@ function setupUI() {
 	const
 		deferred = Promise.defer()
 	
+	require('epic-styles')
 	benchmarkLoadTime(`Styles Loaded`)
 	
 	// ENSURE AT LEAST 1 VIEW EXISTS

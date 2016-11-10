@@ -4,33 +4,158 @@ import { RepoStore, AvailableRepo, Repo, Issue, Label, Milestone, User } from "e
 import { getStores } from "epic-database-client"
 
 import {
-	SearchType,
-	SearchSource,
-	SearchTypeSourceMap,
-	SearchResult,
-	SearchItem
-} from './SearchState'
-import {
-	
 	enabledLabelsSelector,
 	enabledMilestonesSelector,
 	enabledAssigneesSelector
-} from "../selectors/RepoSelectors"
-import { ValueCache, Benchmark, cloneObject } from "epic-global"
+} from "epic-typedux/selectors/RepoSelectors"
+
 import { GitHubClient, createClient } from "epic-github"
-
-
-import { getIssueActions, getRepoActions } from "../provider"
-
-
 import { getCommandManager, ICommand } from "epic-command-manager"
-import { cloneObjectShallow } from "../../epic-global/ObjectUtil"
+import { ValueCache, Benchmark ,cloneObjectShallow,EnumEventEmitter } from "epic-global"
+import {  getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 
 const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
+
+
+
+
+
+
+export enum SearchType {
+	Issue = 1,
+	Assignee,
+	Repo,
+	AvailableRepo,
+	Milestone,
+	Label,
+	Action
+}
+
+
+export enum SearchSource {
+	Issue = 1,
+	Assignee,
+	Repo,
+	GitHub,
+	AvailableRepo,
+	Milestone,
+	Label,
+	Action
+}
+
+export const SearchTypeSourceMap = {
+	[SearchType.Assignee]: [SearchSource.Assignee],
+	[SearchType.Issue]: [SearchSource.Issue],
+	[SearchType.Repo]: [SearchSource.Repo,SearchSource.GitHub],
+	[SearchType.AvailableRepo]: [SearchSource.AvailableRepo],
+	[SearchType.Label]: [SearchSource.Label],
+	[SearchType.Milestone]: [SearchSource.Milestone],
+	[SearchType.Action]: [SearchSource.Action]
+}
+
+export const SearchSourceTypeMap = {
+	[SearchSource.Assignee]:SearchType.Assignee,
+	[SearchSource.Issue]:SearchType.Issue,
+	[SearchSource.Repo]:SearchType.Repo,
+	[SearchSource.GitHub]:SearchType.Repo,
+	[SearchSource.AvailableRepo]:SearchType.AvailableRepo,
+	[SearchSource.Milestone]:SearchType.Milestone,
+	[SearchSource.Label]:SearchType.Label,
+	[SearchSource.Action]:SearchType.Action
+	
+}
+
+export class SearchItem {
+	
+	static fromJS(o:any) {
+		return new SearchItem(o)
+	}
+	
+	id:string|number
+	type:SearchType
+	score:number
+	value:any
+	
+	
+	constructor(id:string|number,type:SearchType,value,score:number)
+	constructor(obj:any)
+	constructor(idOrObject:any, type:SearchType = null,value = null,score:number = 1) {
+		if (_.isNumber(idOrObject) || _.isString(idOrObject)) {
+			Object.assign(this, {
+				id: idOrObject,
+				type,
+				score,
+				value
+			})
+		} else {
+			Object.assign(this, idOrObject)
+		}
+		
+	}
+}
+
+/**
+ * Search Result
+ */
+export class SearchResult {
+	
+	static fromJS(o:any) {
+		if (o && o instanceof SearchResult)
+			return o
+		
+		return new SearchResult(o)
+	}
+	
+	items:List<SearchItem>
+	type:SearchType
+	source:SearchSource
+	dataId:string
+	searchId:string
+	
+	constructor(searchId:string,items:List<SearchItem>,type:SearchType, source:SearchSource,count:number,total:number)
+	constructor(obj:any)
+	constructor(
+		searchIdOrObject:any,
+		items:List<SearchItem> = List<SearchItem>(),
+		type:SearchType = null,
+		source:SearchSource = null,
+		public count:number = -1,
+		public total:number = -1
+	) {
+		if (_.isString(searchIdOrObject)) {
+			Object.assign(this,{
+				searchId: searchIdOrObject,
+				items,
+				type,
+				source
+			})
+		} else {
+			const obj = searchIdOrObject,
+				baseItems = (obj.items && Array.isArray(obj.items) || List.isList(obj.items)) ?
+					_.toJS(obj.items) :
+					[]
+			
+			const newItems = baseItems.map(item => SearchItem.fromJS(item))
+			
+			Object.assign(this,obj,{items:newItems})
+		}
+		
+		this.dataId = this.dataId || `${this.searchId}-${this.source}`
+	}
+	
+}
+
+export interface ISearchState {
+	items:List<SearchItem>
+	results:SearchResult[]
+	working?:boolean
+	selectedIndex:number
+	controller:SearchController
+}
 
 
 export type TOnSearchSelectHandler = (item:SearchItem) => any
@@ -68,7 +193,8 @@ function textSearchFilter(query:string,items:List<any>,props:string[], limit:num
 export enum SearchEvent {
 	Started = 1,
 	Finished,
-	ResultsUpdated
+	StateChanged,
+	ItemSelected
 }
 
 export type TSearchListener = (...args:any[]) => void
@@ -78,109 +204,13 @@ export type TSearchListener = (...args:any[]) => void
  * Handle search selection
  */
 export type TSearchSelectHandler = (searchId:string,item:SearchItem) => any
-//
-// /**
-//  * Clone the current issue filter
-//  *
-//  * @returns {IIssueFilter} - deep copied
-//  */
-// function newIssueFilter() {
-// 	return cloneObject(getIssueActions().state.issueFilter)
-// }
-//
-// /**
-//  * All current handlers
-//  */
-// const SelectHandlers:{[searchType:number]:TSearchSelectHandler} = {
-// 	[SearchType.AvailableRepo]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			model = item.value
-//
-// 		assert(model.$$clazz === AvailableRepo.$$clazz)
-// 		getRepoActions().setRepoEnabled(model,!model.enabled)
-// 	},
-// 	[SearchType.Repo]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			model = item.value
-//
-// 		assert(model.$$clazz === Repo.$$clazz)
-// 		getRepoActions().createAvailableRepo(model)
-// 	},
-// 	[SearchType.Issue]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			model = item.value
-//
-// 		assert(model.$$clazz === Issue.$$clazz)
-// 		getIssueActions().setSelectedIssueIds([model.id])
-// 	},
-// 	[SearchType.Assignee]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			user:User = item.value,
-// 			newFilter = newIssueFilter()
-//
-// 		let
-// 			assigneeIds = newFilter.assigneeIds || (newFilter.assigneeIds = [])
-//
-// 		if (assigneeIds.includes(user.id))
-// 			return
-//
-// 		assigneeIds.push(user.id)
-// 		getIssueActions().setFilteringAndSorting(newFilter)
-// 	},
-// 	[SearchType.Label]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			newFilter = newIssueFilter(),
-// 			label:Label = item.value,
-// 			labelUrls = newFilter.labelUrls || (newFilter.labelUrls = []),
-// 			labelIndex = labelUrls.indexOf(label.url)
-//
-// 		if (labelIndex === -1)
-// 			labelUrls.push(label.url)
-// 		else
-// 			labelUrls.splice(labelIndex,1)
-//
-// 		getIssueActions().setFilteringAndSorting(newFilter)
-// 	},
-// 	[SearchType.Milestone]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			newFilter = newIssueFilter(),
-// 			milestone:Milestone = item.value,
-// 			milestoneIds = newFilter.milestoneIds || (newFilter.milestoneIds = []),
-// 			milestoneIndex = milestoneIds.indexOf(milestone.id)
-//
-// 		if (milestoneIndex === -1)
-// 			milestoneIds.push(milestone.id)
-// 		else
-// 			milestoneIds.splice(milestoneIndex,1)
-//
-// 		getIssueActions().setFilteringAndSorting(newFilter)
-// 	},
-// 	[SearchType.Action]: (searchId:string,item:SearchItem) => {
-// 		const
-// 			cmd = item.value as ICommand
-//
-// 		log.debug(`Selected action (${cmd.id}), executing`)
-// 		cmd.execute(cmd)
-// 	}
-//
-// }
-//
-// /**
-//  * Get a search select handler
-//  *
-//  * @param type
-//  * @returns {TSearchSelectHandler}
-//  */
-// export function getSearchSelectHandler(type:SearchType):TSearchSelectHandler {
-// 	return SelectHandlers[type]
-// }
 
 /**
  * Search provider
  *
  * TODO: Redesign this
  */
-export class SearchProvider {
+export class SearchController extends EnumEventEmitter<SearchEvent> {
 	
 
 	
@@ -188,6 +218,12 @@ export class SearchProvider {
 	
 	private searchTypes:SearchType[] = []
 	
+	
+	private working:boolean
+	
+	private items:List<SearchItem>
+	
+	private state:ISearchState
 	/**
 	 * Will an empty query return results (for things like actions)
 	 *
@@ -222,12 +258,16 @@ export class SearchProvider {
 	 * @type {number}
 	 */
 	perSourceLimit:number = -1
-
 	
-	constructor(public onSelectHandler:TOnSearchSelectHandler, public searchId?:string) {
-		if (!searchId)
-			throw new Error(`Search id can not be null`)
+	
+	searchId:string
+	
+	constructor() {
+		super(SearchEvent)
 		
+		// if (!searchId)
+		// 	throw new Error(`Search id can not be null`)
+		//
 		this.queryCache = new ValueCache((newValue,oldValue) => {
 			if (!this.pendingSearch)
 				this.pendingSearch = this.runSearch(newValue)
@@ -237,33 +277,44 @@ export class SearchProvider {
 	}
 	
 	/**
-	 * Get listener list for event type
-	 * @param event
-	 * @returns {TSearchListener[]}
+	 * Flatten all items in a result set
+	 *
+	 * @param results
+	 * @returns {SearchItem[]}
 	 */
-	private getListeners(event:SearchEvent) {
-		return this.listenerMap[SearchEvent[event]] ||
-			(this.listenerMap[SearchEvent[event]] = [])
+	private makeItems(results:SearchResult[] = []):List<SearchItem> {
+		return results.reduce((allItems,result) => {
+			const
+				{perSourceLimit} = this
+			
+			let
+				{items} = result
+			
+			items = (!perSourceLimit || perSourceLimit < 1 || result.items.size <= perSourceLimit) ?
+				items :
+				items.slice(0,perSourceLimit) as List<SearchItem>
+			
+			return allItems.concat(items) as List<SearchItem>
+		},List<SearchItem>())
 	}
 	
-	/**
-	 * Add a search listener
-	 *
-	 * @param event
-	 * @param listener
-	 * @returns {Function}
-	 */
-	addListener(event:SearchEvent,listener:TSearchListener):Function {
-		let listeners = this.getListeners(event)
-		
-		listeners.push(listener)
-		
-		return () => {
-			const index = listeners.indexOf(listener)
-			if (index > -1) {
-				listeners.splice(index,1)
-			}
+	
+	private updateState() {
+		this.state = {
+			items: this.makeItems(this.results),
+			results: this.results || [],
+			controller: this,
+			working: this.working,
+			selectedIndex: this.selectedIndex
 		}
+		this.fireEvent(SearchEvent.StateChanged,this.state)
+		return this.state
+	}
+	
+	
+	
+	getState() {
+		return this.state || this.updateState()
 	}
 	
 	/**
@@ -273,15 +324,7 @@ export class SearchProvider {
 	 * @param args
 	 */
 	private fireEvent(event:SearchEvent,...args:any[]) {
-		this
-			.getListeners(event)
-			.forEach(listener => {
-				try {
-					listener(...args)
-				} catch (err) {
-					log.error(`Failed to notify search listener ${event}`,err)
-				}
-			})
+		this.emit(event,...args)
 	}
 	
 	/**
@@ -291,16 +334,26 @@ export class SearchProvider {
 	 */
 	private setResults(results:SearchResult[]) {
 		this.results = results
-		this.fireEvent(SearchEvent.ResultsUpdated,results)
+		this.updateState()
+		
 	}
 	
 	
 	private setStarted() {
-		this.fireEvent(SearchEvent.Started)
+		this.working = true
+		this.updateState()
 	}
 	
 	private setFinished() {
-		this.fireEvent(SearchEvent.Finished)
+		this.working = false
+		this.updateState()
+	}
+	
+	
+	
+	setSelectedIndex(index:number) {
+		this.selectedIndex = index
+		this.updateState()
 	}
 	
 	setTypes(...searchTypes:SearchType[]) {
@@ -673,14 +726,13 @@ export class SearchProvider {
 	/**
 	 * Select a search result
 	 *
-	 * @param searchId
 	 * @param item
 	 * @returns {(dispatch:any, getState:any)=>Promise<any>}
 	 */
-	select(searchId:string,item:SearchItem) {
+	select(item:SearchItem) {
 		
-		this.onSelectHandler && this.onSelectHandler(item)
-		
+		this.emit(SearchEvent.ItemSelected,item)
+		EventHub.emit(EventHub.SearchItemSelected,this.searchId,item)
 		// const
 		// 	handler = getSearchSelectHandler(item.type)
 		//
@@ -691,7 +743,7 @@ export class SearchProvider {
 
 }
 
-export default SearchProvider
+export default SearchController
 
 
 // if (module.hot) {
@@ -721,3 +773,106 @@ export default SearchProvider
 // 	})
 // 	module.hot.accept(() => log.info('hot reload',__filename))
 // }
+
+
+export namespace SearchController {
+	
+//
+// 	/**
+// 	 * Clone the current issue filter
+// 	 *
+// 	 * @returns {IIssueFilter} - deep copied
+// 	 */
+// 	function newIssueFilter() {
+// 		return cloneObject(getIssueActions().state.issueFilter)
+// 	}
+//
+// 	[SearchType.Issue]: (searchId:string, item:SearchItem) => {
+// 	const
+// 		model = item.value
+//
+// 	assert(model.$$clazz === Issue.$$clazz)
+// 	getIssueActions().setSelectedIssueIds([ model.id ])
+// },
+// 	[SearchType.Assignee]: (searchId:string, item:SearchItem) => {
+// 	const
+// 		user:User = item.value,
+// 		newFilter = newIssueFilter()
+//
+// 	let
+// 		assigneeIds = newFilter.assigneeIds || (newFilter.assigneeIds = [])
+//
+// 	if (assigneeIds.includes(user.id))
+// 		return
+//
+// 	assigneeIds.push(user.id)
+// 	getIssueActions().setFilteringAndSorting(newFilter)
+// },
+// 	[SearchType.Label]: (searchId:string, item:SearchItem) => {
+// 	const
+// 		newFilter = newIssueFilter(),
+// 		label:Label = item.value,
+// 		labelUrls = newFilter.labelUrls || (newFilter.labelUrls = []),
+// 		labelIndex = labelUrls.indexOf(label.url)
+//
+// 	if (labelIndex === -1)
+// 		labelUrls.push(label.url)
+// 	else
+// 		labelUrls.splice(labelIndex, 1)
+//
+// 	getIssueActions().setFilteringAndSorting(newFilter)
+// },
+// 	[SearchType.Milestone]: (searchId:string, item:SearchItem) => {
+// 	const
+// 		newFilter = newIssueFilter(),
+// 		milestone:Milestone = item.value,
+// 		milestoneIds = newFilter.milestoneIds || (newFilter.milestoneIds = []),
+// 		milestoneIndex = milestoneIds.indexOf(milestone.id)
+//
+// 	if (milestoneIndex === -1)
+// 		milestoneIds.push(milestone.id)
+// 	else
+// 		milestoneIds.splice(milestoneIndex, 1)
+//
+// 	getIssueActions().setFilteringAndSorting(newFilter)
+// },
+	
+	/**
+	 * All current handlers
+	 */
+	export const DefaultHandlers:{[searchType:number]:TSearchSelectHandler} = {
+		[SearchType.AvailableRepo]: (searchId:string, item:SearchItem) => {
+			const
+				model = item.value
+			
+			assert(model.$$clazz === AvailableRepo.$$clazz)
+			getRepoActions().setRepoEnabled(model, !model.enabled)
+		},
+		[SearchType.Repo]: (searchId:string, item:SearchItem) => {
+			const
+				model = item.value
+			
+			assert(model.$$clazz === Repo.$$clazz)
+			getRepoActions().createAvailableRepo(model)
+		},
+		
+		[SearchType.Action]: (searchId:string, item:SearchItem) => {
+			const
+				cmd = item.value as ICommand
+			
+			log.debug(`Selected action (${cmd.id}), executing`)
+			cmd.execute(cmd)
+		}
+		
+	}
+	
+	/**
+	 * Get a search select handler
+	 *
+	 * @param type
+	 * @returns {TSearchSelectHandler}
+	 */
+	export function getDefaultHandler(type:SearchType):TSearchSelectHandler {
+		return DefaultHandlers[ type ]
+	}
+}

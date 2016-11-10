@@ -290,6 +290,7 @@
     "react-addons-transition-group": "15.3.2",
     "react-animate.css": "0.0.4",
     "react-component-resizable": "1.0.0",
+    "react-deep-force-update": "^2.0.1",
     "react-dnd": "^2.1.4",
     "react-dnd-html5-backend": "^2.1.2",
     "react-dom": "15.3.2",

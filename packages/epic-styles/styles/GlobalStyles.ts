@@ -1,7 +1,5 @@
 import {create as FreeStyleCreate,FreeStyle} from 'free-style'
 
-import { addThemeListener } from "../ThemeState"
-
 const
 	globalStyleConfigs = [] as any,
 	shortId = require('short-id')
@@ -45,9 +43,7 @@ export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):
 		remove,
 		create,
 		element: create(),
-		removeListener: addThemeListener(() => {
-			config.create()
-		}),
+		removeListener: EventHub.on(EventHub.ThemeChanged,() => config.create()),
 		clean() {
 			if (!config.removeListener)
 				throw new Error(`ThemeStyle has already been remove ${id}`)

@@ -3,12 +3,13 @@
  */
 
 // Imports
-import {SearchItem} from "epic-typedux"
 import { ThemedStyles } from "epic-styles"
 import { SearchResultsList } from "./SearchResultsList"
-import { shallowEquals } from  "epic-global"
-import { ISearchState } from "epic-typedux"
-import { SearchPanel } from "../search"
+
+
+import { PureRender } from "epic-ui-components/common/PureRender"
+import { SearchEvent, ISearchState, SearchItem, SearchController } from "./SearchController"
+import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 
 
 // Constants
@@ -75,15 +76,13 @@ const baseStyles = (topStyles,theme,palette) => {
 /**
  * ISearchResultsProps
  */
-export interface ISearchResultsProps {
-	theme?:any
-	styles?:any
+export interface ISearchResultsProps extends IThemedAttributes {
+	
 	anchor?: string | React.ReactElement<any>
 	searchId:string
-	searchPanel:SearchPanel
 	containerStyle?:any
 	inline?: boolean
-	searchState:ISearchState
+	controller:SearchController
 	open:boolean
 	
 	onResultSelected?:(item:SearchItem) => void
@@ -102,6 +101,7 @@ interface ISearchResultsState {
  **/
 
 @ThemedStyles(baseStyles)
+@PureRender
 export class SearchResults extends React.Component<ISearchResultsProps,ISearchResultsState> {
 
 
@@ -110,11 +110,21 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 */
 	private node:HTMLElement
 	
+	private get controller() {
+		return this.props.controller
+	}
+	
 	/**
 	 * On search results mounted
 	 */
 	componentDidMount() {
 		this.node = doc.createElement('div')
+		this.controller.on(SearchEvent.StateChanged,(eventType,newSearchState:ISearchState) => {
+			
+			this.setState({
+				searchState: newSearchState
+			})
+		})
 		
 		Object
 			.assign(this.node.style,
@@ -125,6 +135,9 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		this.renderResults(this.props)
 	}
 	
+	
+	
+	
 	/**
 	 * New props received
 	 *
@@ -132,15 +145,22 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * @param nextContext
 	 */
 	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
-		const
-			shouldUpdate = !shallowEquals(nextProps,this.props) || !shallowEquals(nextProps,this.props,
-				'searchState.items',
-				'searchState.selectedIndex')
-		
-		log.debug(`Going to update results`,shouldUpdate,`SearchState`,this.props.searchState)
-		
-		if (!nextProps.inline && shouldUpdate)
+		log.debug(`new props received`,nextProps)
+		if (!nextProps.inline) {
 			this.renderResults(nextProps)
+		}
+		// const
+		// 	shouldUpdate = !shallowEquals(nextProps,this.props,
+		// 			'searchState',
+		// 			'searchState.items',
+		// 			'searchState.selectedIndex'
+		// 		)
+		//
+		//
+		// log.debug(`Going to update results`,shouldUpdate,`SearchState`,this.props.searchState)
+		//
+		// if (shouldUpdate)
+			
 	}
 	
 	/**
@@ -193,12 +213,13 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * @returns {any}
 	 */
 	renderResults(props) {
+		log.debug(`Results render: ${props.open}`,props.searchState)
 		if (!props.open)
 			return React.DOM.noscript()
 		
 		const
-			{styles,theme,searchState,onResultHover,onResultSelected,open,inline,searchPanel} = props,
-			{palette} = theme
+			{styles,palette,theme,searchState,onResultHover,onResultSelected,open,inline,searchPanel} = props
+			
 
 		
 		
@@ -230,27 +251,24 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			log.debug('rendering results',{anchor,node:this.node,containerStyle})
 			resultsStyle = makeStyle(resultsStyle)
 			
-			const
-				resultsElement = <SearchResultsList
-					open={this.props.open}
-					searchPanel={this.props.searchPanel}
-					searchState={searchState}
-					onResultHover={onResultHover}
-					onResultSelected={onResultSelected}
-					className="searchResults"
-					style={resultsStyle}/>
+			
 			
 			
 			Object.assign(this.node.style,
 				containerStyle
 			)
 			
-			setImmediate(() => ReactDOM.render(resultsElement, this.node))
+			ReactDOM.render(<SearchResultsList
+				open={props.open}
+				controller={this.controller}
+				onResultHover={onResultHover}
+				onResultSelected={onResultSelected}
+				className="searchResults"
+				style={resultsStyle}/>, this.node)
 		} else {
 			return <SearchResultsList
 				open={this.props.open}
-				searchPanel={this.props.searchPanel}
-				searchState={searchState}
+				controller={this.controller}
 				onResultHover={onResultHover}
 				onResultSelected={onResultSelected}
 				className="searchResults"
@@ -262,6 +280,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * Render results when inline
 	 */
 	render() {
+		log.debug(`Rendering`,this.props.inline,this.controller.getState())
 		return (this.props.inline) ?
 			this.renderResults(this.props) :
 			<div></div>

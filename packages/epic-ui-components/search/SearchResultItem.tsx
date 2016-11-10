@@ -1,12 +1,13 @@
 // Imports
 import { PureRender, RepoName, Icon } from "epic-ui-components"
-import { SearchItem, SearchType } from "epic-typedux"
-import { shallowEquals, getValue } from "epic-global"
+
+import { shallowEquals} from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "epic-models"
 import filterProps from "react-valid-props"
-import { SearchPanel } from "epic-ui-components/search"
+
 import { ICommand } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
+import { SearchItem, SearchType ,SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
 
 // Constants
 const log = getLogger(__filename)
@@ -88,7 +89,7 @@ function baseStyles(topStyles,theme,palette) {
  * ISearchResultItemProps
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
-	searchPanel:SearchPanel
+	controller:SearchController
 	item:SearchItem
 }
 
@@ -116,12 +117,22 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		super(props,context)
 		
 		
-		const
-			[selectedIndex,item] = props.searchPanel.getSelectedIndexAndItem()
-		
 		this.state = {
-			selected: (item && item.id) === getValue(() => props.item.id)
+			selected: this.isSelected(props)
 		}
+		
+	}
+	
+	get controller() {
+		return this.props.controller
+	}
+	
+	isSelected(props = this.props) {
+		const
+			searchState = this.controller.getState(),
+			item = searchState.items.get(searchState.selectedIndex)
+
+		return item && item.id === props.item.id
 		
 	}
 	
@@ -279,23 +290,20 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	 */
 	setSelected(selected:boolean) {
 		if (this.state.selected !== selected)
-			this.setState({selected})
+			setTimeout(() => this.setState({selected}),100)
 	}
 	
 	
-	selectionChange = (selectedIndex,item) => {
-		if (!item)
-			return
-		
-		this.setSelected(this.props.item.id === item.id)
+	onSearchStateChange = (eventType) => {
+		this.setSelected(this.isSelected())
 	}
 	
 	componentWillMount():void {
-		this.props.searchPanel.addSelectionListener(this.selectionChange)
+		this.controller.on(SearchEvent.StateChanged,this.onSearchStateChange)
 	}
 	
 	componentWillUnmount():void {
-		this.props.searchPanel.removeSelectionListener(this.selectionChange)
+		this.controller.removeListener(SearchEvent.StateChanged,this.onSearchStateChange)
 	}
 	
 	/**

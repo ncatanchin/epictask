@@ -1,4 +1,4 @@
-import * as msgpack from 'msgpack-lite'
+import * as  msgpack from 'msgpack-lite'
 import {isString} from 'typeguard'
 import {Counter} from "epic-global"
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"

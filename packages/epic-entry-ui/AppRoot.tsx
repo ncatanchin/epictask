@@ -38,7 +38,6 @@ import {
 	makeHeightConstraint,
 	Fill,
 	Themed,
-	ThemeEvents,
 	ThemeEvent
 } from "epic-styles"
 
@@ -79,6 +78,7 @@ export interface IAppRootProps {
 export interface IAppRootState {
 	windowStyle?:any
 	routeViewRef?:RouteView
+	routeView?: any
 }
 
 const
@@ -262,7 +262,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	constructor(props, context) {
 		super(props, context)
 		
-		this.state = {}
+		this.state = {
+			routeView: null
+		}
 	}
 	
 	/**
@@ -317,7 +319,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
+		
 		this.checkRoute()
+		
 	}
 	
 	
@@ -329,6 +333,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	 * On unmount - remove window listener,
 	 */
 	componentWillUnmount() {
+		this.setState({
+			routeView: null
+		})
 		// window.removeEventListener('resize', this.onWindowResize)
 	}
 	
@@ -392,7 +399,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		const
 			{ theme } = this.props
 		
-		return <StyleRoot>
+		return <StyleRoot style={Fill}>
 				
 				<CommandRoot
 				component={this}

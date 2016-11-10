@@ -93,8 +93,8 @@ export interface IIDERootState {
 	sheetURI: sheetURISelector,
 	toolPanels: toolPanelsSelector,
 	toolDragging: toolDraggingSelector,
-	modalOpen: modalWindowOpenSelector,
-},createDeepEqualSelector))
+	modalOpen: modalWindowOpenSelector
+}))
 @ThemedStyles(baseStyles,'homePage')
 @PureRender
 export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
@@ -103,8 +103,6 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
 	componentWillMount = () => {
 		
-		// MAKE SURE WE HAVE AT LEAST 1 VIEW
-		getUIActions().ensureDefaultView()
 		
 		this.setState(this.getNewState())
 	}
@@ -122,8 +120,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
 	render() {
 		const
-			{theme,styles,toolDragging,toolPanels} = this.props,
-			{palette} = theme,
+			{theme,styles,palette,toolDragging,toolPanels} = this.props,
 			{accent} = palette,
 			
 			panelMinOpen = convertRem(20),
@@ -131,7 +128,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
 			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
-			toolCount = (panel:IToolPanel) => getValue(() => panel.toolIds.length,0),
+			toolCount = (panel:IToolPanel) => getValue(() => panel.toolIds.size,0),
 			
 			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[panel.location].minDim),
 			panelMinSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),

@@ -2,12 +2,9 @@
  * Created by jglanz on 5/30/16.
  */
 // Imports
-import { ObservableStore } from "typedux"
-
 import { Map, List } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import { PureRender } from "../../common"
 import { IssueDetailPanel } from "./IssueDetailPanel"
 import { Issue } from "epic-models"
 import {
@@ -16,8 +13,7 @@ import {
 	IIssueListItem,
 	IssueListItemType,
 	TIssueEditInlineConfig,
-	getIssueActions,
-	SearchType
+	getIssueActions
 } from "epic-typedux"
 import {
 	CommandComponent,
@@ -27,15 +23,16 @@ import {
 	CommandContainer
 } from "epic-command-manager-ui"
 import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, ContainerNames } from "epic-command-manager"
-import { ThemedStyles, IThemedAttributes, FlexColumnCenter } from "epic-styles"
-import { SearchPanel } from "epic-ui-components/search"
+import { IThemedAttributes, FlexColumnCenter } from "epic-styles"
+import { SearchPanel,SearchType } from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
-import { getValue, unwrapRef, MenuIds, isNumber, IssueKey } from "epic-global"
+import { getValue, unwrapRef, MenuIds, isNumber} from "epic-global"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
 import { shallowEquals } from "epic-global/ObjectUtil"
+
 
 
 // Constants & Non-typed Components

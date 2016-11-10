@@ -68,58 +68,16 @@ let
 
 
 
-
-/**
- * Theme listener type, eventually will be typed
- */
-export type TThemeListener = (theme:any,palette:IPalette) => any
-
-
-/**
- * All listeners
- *
- * @type {TThemeListener[]}
- */
-const
-	themeListeners = getHot(module,'themeListeners',[]) as TThemeListener[]
-
-
 export enum ThemeEvent {
 	Changed
 }
 
-/**
- * Event emitter for user theme changed=s
- *
- * @type {EnumEventEmitter<ThemeEvent>}
- */
-export const ThemeEvents = new EnumEventEmitter<ThemeEvent>(ThemeEvent)
-
-/**
- * Add a theme listener
- *
- * @param listener
- * @returns {()=>undefined}
- */
-export function addThemeListener(listener:TThemeListener) {
-	themeListeners.push(listener)
-	
-	return () => {
-		const
-			index = themeListeners.findIndex(item => item === listener)
-		
-		if (index > -1)
-			themeListeners.splice(index,1)
-	}
-}
 
 /**
  * Notify all listeners of update
  */
 function notifyListeners(newTheme:TTheme,newPalette:IPalette) {
-	const listenersCopy = [...themeListeners]
-	//log.info(`Notifying listeners`,listenersCopy,'of new theme',newTheme)
-	listenersCopy.forEach(listener => listener(newTheme,newPalette))
+	EventHub.emit(EventHub.ThemeChanged,newTheme,newPalette)
 }
 
 
@@ -168,7 +126,7 @@ function setPalette(newPalette:IPaletteCreator) {
 		})
 	
 	// Assign app props to the body & to html
-	notifyListeners(getTheme(),palette)
+	//notifyListeners(getTheme(),palette)
 }
 
 /**
@@ -178,7 +136,6 @@ function setPalette(newPalette:IPaletteCreator) {
  */
 export function setPaletteCreator(creator:IPaletteCreator) {
 	setPalette(creator)
-	ThemeEvents.emit(ThemeEvent.Changed)
 }
 
 
@@ -234,8 +191,6 @@ function setTheme(newThemeCreator:IThemeCreator) {
  */
 export function setThemeCreator(creator:IThemeCreator) {
 	setTheme(creator)
-	//ThemeEvents.emit(ThemeEvent.Changed)
-	EventHub.broadcast(EventHub.ThemeChanged)
 }
 
 
@@ -369,6 +324,5 @@ assignGlobal({
 
 // HMR CONFIG
 setDataOnHotDispose(module,() => ({
-	ThemeState,
-	themeListeners
+	ThemeState
 }))

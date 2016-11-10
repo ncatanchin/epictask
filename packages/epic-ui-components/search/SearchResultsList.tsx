@@ -3,18 +3,18 @@ import CSSTransitionGroup from 'react-addons-css-transition-group'
 
 import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles } from "epic-styles"
-import { SearchItem, ISearchState } from "epic-typedux"
+
 
 import { shallowEquals, getValue } from  "epic-global"
 import { SearchResultItem } from "./SearchResultItem"
-import { SearchPanel } from "./SearchPanel"
+import { SearchItem, ISearchState, SearchController, SearchEvent } from './SearchController'
 
 // Constants
 const
 	log = getLogger(__filename)
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 function baseStyles(topStyles,theme,palette) {
 	const
@@ -35,8 +35,7 @@ export interface ISearchResultsListProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	open?:boolean
-	searchPanel:SearchPanel
-	searchState:ISearchState
+	controller:SearchController
 	onResultSelected?:(item:SearchItem) => void
 	onResultHover?:(item:SearchItem) => void
 }
@@ -48,6 +47,8 @@ export interface ISearchResultsListState {
 	itemCache?:{[id:string]:SearchResultItem}
 	items?:SearchResultItem[]
 	ids?:number[]
+	
+	unsubscribe?:Function
 }
 
 /**
@@ -71,6 +72,10 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		}
 	}
 	
+	private get controller() {
+		return this.props.controller
+	}
+	
 	/**
 	 * Update state - create new items, remove old ones, etc
 	 */
@@ -81,7 +86,25 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	/**
 	 * On mount - update state
 	 */
-	componentWillMount = this.updateState
+	componentWillMount() {
+		this.updateState()
+		
+		this.setState({
+			unsubscribe: this.controller.on(SearchEvent.StateChanged,() => this.updateState())
+		})
+	}
+	
+	componentWillUnmount() {
+		const
+			unsubscribe = getValue(() => this.state.unsubscribe)
+		
+		if (unsubscribe) {
+			unsubscribe()
+			this.setState({
+				unsubscribe: null
+			})
+		}
+	}
 	
 	
 	/**
@@ -91,19 +114,16 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 * @param nextState
 	 * @returns {boolean}
 	 */
-	searchItemsChanged(nextProps:ISearchResultsListProps,nextState) {
-		return !getValue(() => this.state.items) || !shallowEquals(
+	shouldComponentUpdate(nextProps:ISearchResultsListProps,nextState) {
+		return !shallowEquals(
 			this.props,
 			nextProps,
 			'theme',
 				'style',
-				'styles',
-			'searchState',
-			'searchState.items') || !shallowEquals(
+				'styles') || !shallowEquals(
 				this.state,
 				nextState,
-				'theme',
-				'styles',
+				'results',
 				'items')
 	}
 	/**
@@ -157,7 +177,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 */
 	updateResults(props:ISearchResultsListProps) {
 		const
-			{styles,onResultHover,onResultSelected,searchPanel,searchState} = props,
+			{controller} = this,
+			searchState = controller.getState(),
 			{items: searchItems,selectedIndex} = searchState,
 			currentIds = [],
 			{ itemCache } = this.state
@@ -191,7 +212,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				if (!item) {
 					item = itemCache[ id ] = <SearchResultItem key={id}
 					                                    item={searchItem}
-					                                    searchPanel={searchPanel}
+					                                    controller={controller}
 					                                    onMouseEnter={this.onHover(searchItem)}
 					                                    onClick={this.onClick(searchItem)}
 					                                    onMouseDown={this.onClick(searchItem)}
@@ -230,15 +251,16 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	render() {
 		const
 			{props,state} = this,
-			{ theme, styles ,style} = props
+			{ theme, styles ,style} = props,
+			items = getValue(() => this.state.items)
 		
-		return !this.state || !this.state.items ? React.DOM.noscript() : <div style={style}>
+		return !items ? React.DOM.noscript() : <div style={style}>
 			<CSSTransitionGroup
 				transitionName="results"
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 				
-				{getValue(() => this.state.items)}
+				{items}
 			
 			</CSSTransitionGroup>
 		</div>

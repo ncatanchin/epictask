@@ -78,15 +78,14 @@ export class UIState extends UIStateRecord implements State {
 		
 		// Make sure tool ids are set
 		toolPanelList.forEach((panel:IToolPanel) => {
-			panel.toolIds = getValue(() => panel.toolIds.length,0) ?
-				panel.toolIds :
-				Object.keys(panel.tools)
+			panel.toolIds = getValue(() => panel.toolIds.size,0) ?
+				panel.toolIds : List(panel.tools.keySeq()) as any
 			
 			toolPanels = toolPanels.set(panel.id,cloneObjectShallow(panel))
 				
 		})
 		
-		return new UIState(Object.assign({},o,{
+		return new UIState(assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
 			viewStates: List(o.viewStates),

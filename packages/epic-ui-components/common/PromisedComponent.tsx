@@ -29,6 +29,8 @@ export interface IPromisedComponentState {
 	
 	attachedPromise?:Promise<TComponent>
 	attachedLoader?:TPromisedComponentLoader
+	
+	Component:TComponent
 }
 
 /**
@@ -42,7 +44,7 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	
 	private mounted = false
 	
-	private component:TComponent
+	
 	/**
 	 * Attach to the current promise
 	 *
@@ -63,11 +65,11 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 			}
 			
 			attachedPromise = props.loader()
-			this.component = null
 			
 			this.setState({
 				attachedPromise,
-				attachedLoader: props.loader
+				attachedLoader: props.loader,
+				Component: null
 			})
 			
 		} else {
@@ -78,11 +80,11 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 			
 			// SET THE PROMISE
 			attachedPromise = props.promise
-			this.component = null
 			
 			this.setState({
 				attachedPromise,
-				attachedLoader:props.loader
+				attachedLoader:props.loader,
+				Component: null
 			})
 			
 		}
@@ -90,13 +92,16 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 		
 		// ADD COMPONENT SETTER
 		attachedPromise
-			.then(component => {
+			.then(Component => {
 				if (this.mounted) {
-					this.component = component
-					setImmediate(() => this.forceUpdate())
+					this.setState({
+						Component
+					})
+					//setImmediate(() => this.forceUpdate())
 					
 				}
 			})
+			.catch(err => log.error(`Failed to load component`, err))
 		
 	}
 	
@@ -116,14 +121,15 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	componentWillUnmount() {
 		this.mounted = false
 		this.setState({
-			attachedPromise:null
+			attachedPromise:null,
+			Component: null
 		})
 	}
 	
 	render() {
 		const
 			{componentProps} = this.props,
-			Component = getValue(() => this.component)
+			Component = getValue(() => this.state.Component)
 		
 		return !Component ? React.DOM.noscript() : <Component {...componentProps}/>
 	}

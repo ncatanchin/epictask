@@ -108,6 +108,7 @@ process.on("unhandledRejection", unhandledRejection)
 function uncaughtException(err) {
 	const log = getErrorLogger()
 	
+	
 	console.error('Unhandled exception', err)
 	log ? log.error('Unhandled exception', err) : console.error('unhandled', err)
 }
@@ -123,9 +124,9 @@ function systemWarning(warning) {
 	const
 		log = getErrorLogger()
 	
-	if (warning instanceof Error) {
-		deepTrace(warning)
-	}
+	// if (warning instanceof Error) {
+	// 	deepTrace(warning)
+	// }
 	
 	log ? log.error('WARNING', warning) : console.warn(warning)
 }

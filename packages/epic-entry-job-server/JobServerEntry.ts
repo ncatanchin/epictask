@@ -10,8 +10,6 @@ const
 
 
 
-
-
 /**
  * Creates and is responsible for the JobServer process
  *

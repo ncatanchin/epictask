@@ -357,6 +357,9 @@ export class WindowManager  {
 		const
 			win = this.getWindowInstance(id)
 		
+		if (!win)
+			return
+		
 		win.heartbeatCount++
 		log.debug('Updating heartbeat',win.heartbeatCount)
 		
@@ -375,7 +378,7 @@ export class WindowManager  {
 		const
 			win = this.getWindowInstance(id)
 		
-		if (win.heartbeatTimeoutId) {
+		if (win && win.heartbeatTimeoutId) {
 			clearTimeout(win.heartbeatTimeoutId)
 			win.heartbeatTimeoutId = null
 		}
@@ -494,7 +497,7 @@ export class WindowManager  {
 				
 				win = this.getWindowInstance(id)
 				
-				if (!win.heartbeatTimeoutId && this.isRunning(id) && !win.connectedFlag.promise.isPending()) {
+				if (win && !win.heartbeatTimeoutId && this.isRunning(id) && !win.connectedFlag.promise.isPending()) {
 					
 					this.sendMessage(id,'ping', null, (err) => {
 						if (err) {

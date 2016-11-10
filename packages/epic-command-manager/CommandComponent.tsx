@@ -145,7 +145,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	private onFocus = (event:React.FocusEvent<any>) => {
+	onFocus = (event:React.FocusEvent<any>) => {
 		
 		
 		const
@@ -179,7 +179,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 *
 	 * @param event
 	 */
-	private onBlur = (event:React.FocusEvent<any>) => {
+	onBlur = (event:React.FocusEvent<any>) => {
 		const
 			{ instance, id } = this,
 			{ focused } = this.state

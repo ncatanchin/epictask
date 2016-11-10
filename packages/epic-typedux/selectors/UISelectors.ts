@@ -13,6 +13,7 @@ import { INotificationMessage } from "epic-global"
 
 import { getValue } from  "epic-global"
 import { TSelector } from "epic-global/SelectorTypes"
+import { ITool } from "epic-global/ToolTypes"
 
 const
 	log = getLogger(__filename)
@@ -41,27 +42,15 @@ export const sheetURISelector: (state) => string = createSelector(
 /**
  * Get all tool panels
  */
-export const toolPanelsSelector:(state) => Map<string,IToolPanel> = createSelector(
-	uiStateSelector,
-	(state:UIState) =>
-		state.toolPanels
-)
-
-/**
- * Tool is currently being dragged
- */
-export const toolDraggingSelector = createSelector(
-	uiStateSelector,
-	(state:UIState) => state.toolDragging
-)
+export const toolPanelsSelector:(state) => Map<string,IToolPanel> =
+	(state) => uiStateSelector(state).toolPanels
+	// uiStateSelector,
+	// (state:any) => state.toolPanels
+	// (state:any) => state.get(UIKey).toolPanels,
+	// (toolPanels) => toolPanels
+//)
 
 
-export const createToolPanelLocationSelector: () => (state) => {id:string,location:ToolPanelLocation} =
-	() => createDeepEqualSelector(
-		(state,props) => _.pick(props || {}, 'id', 'location'),
-		(panelLocation) => panelLocation
-	)
-	
 export const messagesSelector:(state) => List<INotificationMessage> = createSelector(
 	uiStateSelector,
 	(state:UIState) => state.messages
@@ -73,6 +62,34 @@ export const messagesSortedSelector:(state) => List<INotificationMessage> = crea
 		messages.sortBy(message => message.createdAt) as List<INotificationMessage>
 )
 
+
+/**
+ * Tool is currently being dragged
+ */
+export const toolDraggingSelector = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.toolDragging
+)
+
+
+
+
+
+export const createToolPanelIdSelector: () => (state) => string =
+	() => createDeepEqualSelector(
+		(state,props) => getValue(() => props),
+		(props) => props.id
+	)
+
+
+export const createToolPanelLocationSelector: () => (state) => ToolPanelLocation =
+	() => createDeepEqualSelector(
+		(state,props) => getValue(() => props.location),
+		(panelLocation) => panelLocation
+	)
+
+	
+
 // (state):INotificationMessage[] => _.orderBy(
 // 	.toArray().map(msg => _.toJS(msg)) || [],
 // 	['createdAt'],
@@ -83,16 +100,26 @@ export const messagesSortedSelector:(state) => List<INotificationMessage> = crea
  */
 export function createToolPanelSelector() {
 	return createSelector(
-		uiStateSelector,
+		toolPanelsSelector,
+		createToolPanelIdSelector(),
 		createToolPanelLocationSelector(),
-		(uiState:UIState, { id, location }) => {
+		(toolPanels, id,location) => {
 			id = id || ToolPanelLocation[ location ]
 			
 			//log.info(`Got id ${id} and location ${location} and tool panels = `, uiState.toolPanels)
 			
-			return uiState.toolPanels.get(id)
+			return toolPanels.get(id)
 			
 		}
 	)
 }
+
+
+export const createToolsSelector:() => TSelector<Map<string,ITool>> =
+	() => createSelector(
+		createToolPanelSelector() as any,
+		(toolPanel:IToolPanel) => getValue(() => toolPanel.tools)
+		// (state,props) => getValue(() => props.location),
+		// (panelLocation) => panelLocation
+	)as any
 

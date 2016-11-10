@@ -9,7 +9,7 @@ import {
 
 //import AppRoot from "epic-entry-ui/AppRoot"
 import {getReduxStore} from 'epic-typedux/store/AppStore'
-import { ThemeEvents, ThemeEvent } from "epic-styles/ThemeState"
+import { ThemeEvent } from "epic-styles/ThemeState"
 const
 	log = getLogger(__filename),
 	windowId = process.env.EPIC_WINDOW_ID,
@@ -18,7 +18,8 @@ const
 let
 	rootElement = document.getElementById('root'),
 	AppRoot,
-	appRef
+	appRef,
+	renderCount = 1
 
 /**
  * Render App in appRoot node
@@ -28,7 +29,7 @@ function render() {
 	AppRoot = require('./AppRoot').default
 	
 	win.appRefDirect = ReactDOM.render(
-		<AppRoot store={getReduxStore()}/>,
+		<AppRoot key={renderCount} store={getReduxStore()}/>,
 		
 		// ROOT ELEMENT TO MOUNT ON
 		rootElement,
@@ -68,17 +69,33 @@ function render() {
  */
 function remount() {
 	
-	ReactDOM.unmountComponentAtNode(rootElement)
+	// try {
+	// 	// let
+	// 	// 	rootNode = ReactDOM.findDOMNode(rootElement)
+	// 	//
+	// 	ReactDOM.unmountComponentAtNode(rootElement)
+	// } catch (err) {
+	// 	log.warn(`Failed to unmount`,err)
+	// }
+	// $('#root').remove()
+	//
+	//
+	//
+	//
+	// const
+	// 	AppRootResolvedPath = require.resolve('./AppRoot'),
+	// 	webContents = require('electron').remote.getCurrentWebContents()
+	//
+	// log.info(`Unmounted!`, win.appRefDirect)
+	// delete win.appRefDirect
+	// delete require.cache[AppRootResolvedPath]
+	//
+	// setTimeout(() => {
+	// 	renderCount++
+	// 	rootElement = $(`<div id="root"></div>`).appendTo($('body'))[0]
+	// 	render()
+	// },300)
 	
-	$('#root').remove()
-	rootElement = $(`<div id="root"></div>`).appendTo($('body'))[0]
-	
-	
-	
-	const
-		webContents = require('electron').remote.getCurrentWebContents()
-	
-	log.info(`Unmounted!`,(window as any).appRefDirect)
 	// Object
 	// 	.keys(require.cache)
 	// 	.forEach(key => delete require.cache[key])
@@ -86,6 +103,13 @@ function remount() {
 	// render()
 	
 	//webContents.reload()
+}
+
+if (DEBUG) {
+	assignGlobal({
+		epicRender: render,
+		epicRemount: remount
+	})
 }
 
 function themeChangeListener() {
@@ -104,10 +128,10 @@ export function loadUI(pendingResources:Promise<void>) {
 		/**
 		 * On a complete theme change, destroy everything
 		 */
-		ThemeEvents.on(ThemeEvent.Changed,themeChangeListener)
+		EventHub.on(EventHub.ThemeChanged,themeChangeListener)
 		
 		// ADD HMR REMOVE
-		addHotDisposeHandler(module,() => ThemeEvents.removeListener(ThemeEvent.Changed,themeChangeListener))
+		addHotDisposeHandler(module,() => EventHub.on(EventHub.ThemeChanged,themeChangeListener))
 		
 		render()
 		
