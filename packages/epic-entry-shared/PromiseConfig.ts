@@ -7,6 +7,9 @@ import * as Bluebird from 'bluebird'// = require('bluebird')
  */
 require('babel-runtime/core-js/promise').default = Bluebird
 
+Object.assign(global as any,{
+	Promise: Bluebird
+})
 
 /**
  * Configure
@@ -108,13 +111,10 @@ Object.assign(Bluebird as any, {
 	}
 })
 
-Object.assign(global as any, {
-	Promise: Bluebird
-})
 
 
 export {
 	Bluebird
 }
 
-export default Promise
+export default Bluebird

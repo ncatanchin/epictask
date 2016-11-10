@@ -1,8 +1,9 @@
 ///<reference path="./LoDashMixins.ts"/>
 ///<reference path="./Globals.ts"/>
 ///<reference path="./Env.ts"/>
-///<reference path="./PromiseConfig.ts"/>
+
 import './SourceMapSupport'
+import "./PromiseConfig"
 import "./LogCategories"
 import "./ProcessConfig"
 
@@ -10,7 +11,7 @@ import "./ProcessConfig"
 
 import "./Env"
 import "./NamespaceConfig"
-import "./PromiseConfig"
+
 import "./LogConfig"
 import "./Globals"
 import "./EventHub"

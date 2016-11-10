@@ -9,11 +9,11 @@ import "./MainShutdownHandler"
 
 // LOAD DEPS
 import { showSplashWindow, hideSplashWindow } from "epic-entry-main/SplashWindow"
-import { Events } from "epic-global"
 import { app, BrowserWindow } from 'electron'
 import checkSingleInstance from "./CheckSingleInstance"
-import './MainAppSwitches'
 import makeBootLoader from "epic-entry-shared/BootLoader"
+import './MainAppSwitches'
+
 
 const
 	log = getLogger(__filename)

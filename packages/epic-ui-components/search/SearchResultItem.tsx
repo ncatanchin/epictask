@@ -91,13 +91,14 @@ function baseStyles(topStyles,theme,palette) {
 export interface ISearchResultItemProps extends IThemedAttributes {
 	controller:SearchController
 	item:SearchItem
+	selected?:boolean
 }
 
 /**
  * ISearchResultItemState
  */
 export interface ISearchResultItemState {
-	selected:boolean
+	
 }
 
 /**
@@ -288,23 +289,23 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	 *
 	 * @param selected
 	 */
-	setSelected(selected:boolean) {
-		if (this.state.selected !== selected)
-			setTimeout(() => this.setState({selected}),100)
-	}
-	
-	
-	onSearchStateChange = (eventType) => {
-		this.setSelected(this.isSelected())
-	}
-	
-	componentWillMount():void {
-		this.controller.on(SearchEvent.StateChanged,this.onSearchStateChange)
-	}
-	
-	componentWillUnmount():void {
-		this.controller.removeListener(SearchEvent.StateChanged,this.onSearchStateChange)
-	}
+	// setSelected(selected:boolean) {
+	// 	if (this.state.selected !== selected)
+	// 		setTimeout(() => this.setState({selected}),100)
+	// }
+	//
+	//
+	// onSearchStateChange = (eventType) => {
+	// 	this.setSelected(this.isSelected())
+	// }
+	//
+	// componentWillMount():void {
+	// 	this.controller.on(SearchEvent.StateChanged,this.onSearchStateChange)
+	// }
+	//
+	// componentWillUnmount():void {
+	// 	this.controller.removeListener(SearchEvent.StateChanged,this.onSearchStateChange)
+	// }
 	
 	/**
 	 * On new props
@@ -324,16 +325,15 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextState,this.state,'selected')
+		return !shallowEquals(nextProps,this.props,'selected')
 	}
 	
 	
 	render() {
 		const
 			{props,state} = this,
-			{ styles,item } = props,
-			{type} = item,
-			{selected} = state
+			{ styles,item,selected } = props,
+			{type} = item
 		
 		const
 			resultRenderer:any = this.renderFns[type],

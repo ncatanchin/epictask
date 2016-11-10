@@ -9,7 +9,7 @@ const
 	noWebpack = ['true','1','on'].includes(process.env.NO_WEBPACK || '')
 
 
-require('babel-runtime/core-js/promise').default = global.Promise = require('bluebird')
+require('babel-runtime/core-js/promise').default = global.Promise = require('bluebird').default
 
 if (noWebpack) {
 	require('./epictask-polyfill-webpack')

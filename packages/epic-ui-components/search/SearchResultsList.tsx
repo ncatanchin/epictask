@@ -1,5 +1,5 @@
 // Imports
-import CSSTransitionGroup from 'react-addons-css-transition-group'
+import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
 import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles } from "epic-styles"
@@ -16,15 +16,11 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-function baseStyles(topStyles,theme,palette) {
+function baseStyles(topStyles, theme, palette) {
 	const
 		{ accent, primary, text, secondary } = palette
 	
-	return {
-		
-		
-		
-	}
+	return {}
 }
 
 
@@ -47,7 +43,7 @@ export interface ISearchResultsListState {
 	itemCache?:{[id:string]:SearchResultItem}
 	items?:SearchResultItem[]
 	ids?:number[]
-	
+	selectedIndex?:number
 	unsubscribe?:Function
 }
 
@@ -59,45 +55,46 @@ export interface ISearchResultsListState {
  **/
 
 
-@ThemedStyles(baseStyles,'searchResults')
-@PureRender
+@ThemedStyles(baseStyles, 'searchResults')
+//@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
 	
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {
-			itemCache: {}
+			itemCache: {},
+			selectedIndex: 0
 		}
 	}
 	
 	private get controller() {
 		return this.props.controller
 	}
-	
-	/**
-	 * Update state - create new items, remove old ones, etc
-	 */
-	updateState = (props = this.props) => {
-		this.updateResults(props)
-	}
+	//
+	// /**
+	//  * Update state - create new items, remove old ones, etc
+	//  */
+	// updateState = (props = this.props) => {
+	// 	//this.updateResults(props)
+	// }
 	
 	/**
 	 * On mount - update state
 	 */
 	componentWillMount() {
-		this.updateState()
-		
 		this.setState({
-			unsubscribe: this.controller.on(SearchEvent.StateChanged,() => this.updateState())
+			unsubscribe: this.controller.on(SearchEvent.StateChanged, () => {
+				this.forceUpdate()
+			})
 		})
 	}
 	
 	componentWillUnmount() {
 		const
 			unsubscribe = getValue(() => this.state.unsubscribe)
-		
+
 		if (unsubscribe) {
 			unsubscribe()
 			this.setState({
@@ -114,25 +111,29 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 * @param nextState
 	 * @returns {boolean}
 	 */
-	shouldComponentUpdate(nextProps:ISearchResultsListProps,nextState) {
+	shouldComponentUpdate(nextProps:ISearchResultsListProps, nextState) {
 		return !shallowEquals(
-			this.props,
-			nextProps,
-			'theme',
+				this.props,
+				nextProps,
+				'controller.state.items',
+				'controller.state.selectedIndex',
+				'theme',
 				'style',
 				'styles') || !shallowEquals(
 				this.state,
 				nextState,
 				'results',
+				'selectedIndex',
 				'items')
 	}
-	/**
-	 * On new props - update the state
-	 *
-	 * @param nextProps
-	 */
-	componentWillReceiveProps = (nextProps) => this.updateState(nextProps)
 	
+	// /**
+	//  * On new props - update the state
+	//  *
+	//  * @param nextProps
+	//  */
+	// componentWillReceiveProps = (nextProps) => this.updateState(nextProps)
+	//
 	
 	/**
 	 * On click
@@ -142,13 +143,13 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 * @returns {(event:any)=>undefined}
 	 */
 	onClick = (item:SearchItem) => (event) => {
-		log.debug(`Clicked for event`,item)
+		log.debug(`Clicked for event`, item)
 		
 		event.preventDefault()
 		event.stopPropagation()
 		
 		const
-			{onResultSelected} = this.props,
+			{ onResultSelected } = this.props,
 			isFn = _.isFunction(onResultSelected)
 		
 		if (isFn) {
@@ -162,9 +163,9 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 */
 	onHover = (item:SearchItem) => (event) => {
 		const
-			{onResultHover} = this.props
+			{ onResultHover } = this.props
 		
-		log.debug(`Hovering over search item`,item)
+		log.debug(`Hovering over search item`, item)
 		
 		onResultHover && onResultHover(item)
 	}
@@ -177,21 +178,23 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	 */
 	updateResults(props:ISearchResultsListProps) {
 		const
-			{controller} = this,
-			searchState = controller.getState(),
-			{items: searchItems,selectedIndex} = searchState,
+			{ controller } = this,
+			searchState = controller.getState() as ISearchState,
+			{ items: searchItems, selectedIndex } = searchState,
 			currentIds = [],
 			{ itemCache } = this.state
 		
 		const
 			items:SearchResultItem[] = []
 		
-		log.debug('updating results from search state',searchState)
+		log.debug('updating results from search state', searchState)
 		
 		if (searchItems) {
 			
 			log.debug(`Selected index in results ${selectedIndex}`)
 			
+			const
+				selectedItem = searchItems && searchItems.get(selectedIndex)
 			
 			/**
 			 * Iterate results, create items for each
@@ -206,18 +209,20 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				
 				currentIds.push(id)
 				
-				let
-					item = itemCache[ id ]
+				// let
+				// 	item = itemCache[ id ]
 				
-				if (!item) {
-					item = itemCache[ id ] = <SearchResultItem key={id}
-					                                    item={searchItem}
-					                                    controller={controller}
-					                                    onMouseEnter={this.onHover(searchItem)}
-					                                    onClick={this.onClick(searchItem)}
-					                                    onMouseDown={this.onClick(searchItem)}
-					/> as any
-				}
+				// if (!item) {
+				// 	item = itemCache[ id ] =
+				let item = <SearchResultItem key={id}
+				                             selected={selectedItem && selectedItem.id === searchItem.id}
+				                             item={searchItem}
+				                             controller={controller}
+				                             onMouseEnter={this.onHover(searchItem)}
+				                             onClick={this.onClick(searchItem)}
+				                             onMouseDown={this.onClick(searchItem)}
+				/> as any
+				//}
 				
 				items.push(item)
 			})
@@ -225,34 +230,37 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		
 		// REMOVE OLD OBJECTS
 		
-		Object
-			.keys(itemCache)
-			.filter(id => !currentIds.includes(id))
-			.forEach(id => {
-				delete itemCache[id]
-			})
+		// Object
+		// 	.keys(itemCache)
+		// 	.filter(id => !currentIds.includes(id))
+		// 	.forEach(id => {
+		// 		delete itemCache[id]
+		// 	})
 		
-		const
-			ids = getValue(() => this.state.ids)
-		
+		// const
+		// 	ids = getValue(() => this.state.ids)
+		//
 		// IF NO CHANGE - RETURN
-		if (
-			ids &&
-			ids.length === currentIds.length &&
-			currentIds.every((id,index) => ids[index] === id)
-		)
-			return
+		// if (
+		// 	ids &&
+		// 	ids.length === currentIds.length &&
+		// 	currentIds.every((id, index) => ids[ index ] === id)
+		// )
+		// 	return
 		
-		log.debug(`Settings items`,items,currentIds)
-		this.setState({items,ids:currentIds})
-		
+		log.debug(`Settings items`, items, currentIds)
+		// this.setState({
+		// 	items,
+		// 	ids: currentIds
+		// })
+		return items
 	}
 	
 	render() {
 		const
-			{props,state} = this,
-			{ theme, styles ,style} = props,
-			items = getValue(() => this.state.items)
+			{ props, state } = this,
+			{ theme, styles, style } = props,
+			items = getValue(() => this.controller.getState().items)
 		
 		return !items ? React.DOM.noscript() : <div style={style}>
 			<CSSTransitionGroup
@@ -260,7 +268,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
 				
-				{items}
+				{this.updateResults(this.props)}
 			
 			</CSSTransitionGroup>
 		</div>

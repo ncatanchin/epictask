@@ -68,7 +68,7 @@ export class ViewContainer extends React.Component<IViewContainerProps,IViewCont
 	render() {
 		const { styles, viewStates } = this.props
 		
-		return <div style={Fill}>
+		return <div style={makeStyle(FlexColumn,FlexScale,FillHeight)}>
 			{viewStates.map(viewState => <View key={viewState.id} viewState={viewState}/>)}
 		</div>
 	}

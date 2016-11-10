@@ -324,7 +324,7 @@
     "typestore": "^0.2.20",
     "typestore-mocks": "^0.2.20",
     "typestore-plugin-pouchdb": "^0.2.20",
-    "typetransform": "0.0.14",
+    "typetransform": "0.0.15",
     "urlsearchparams": "densebrain/URLSearchParams",
     "utf8-encoding": "^0.1.2",
     "winston": "^2.2.0"

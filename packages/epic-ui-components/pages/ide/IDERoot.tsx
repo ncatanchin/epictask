@@ -62,7 +62,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		
 		page: [],
 		bodyWrapper: [ FlexScale, Fill ],
-		viewWrapper: [ FlexScale, Fill, {
+		viewWrapper: [ FlexScale, FillHeight,FlexColumn,OverflowHidden, {
 			borderStyle: 'solid',
 			borderWidth: rem(0.1),
 			borderColor: colorAlpha(primary.hue2,0.9)
