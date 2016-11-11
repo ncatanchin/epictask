@@ -1,5 +1,5 @@
 import {
-	writeFile, getHot, getUserDataFilename, writeFileAsync
+	writeFile, getHot, getUserDataFilename, writeFileAsync, addHotDisposeHandler
 } from "epic-global"
 
 import { IFilterConfig, fromPlainObject, toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
@@ -7,10 +7,14 @@ import { readFileAsync } from "epic-global/Files"
 import { AppKey, JobKey } from "epic-global/Constants"
 import { isMap } from "typeguard"
 import * as msgpack from 'msgpack-lite'
+import { getWindowManagerClient } from "epic-process-manager-client"
 
 const
 	log = getLogger(__filename),
 	stateFilename = getUserDataFilename(`epictask-store-state-${getProcessId()}.json`)
+
+// DEBUG
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	persistingState = false,
@@ -140,15 +144,48 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	// SUBSCRIBE TO SYSTEM EVENTS & UPDATES
 	const
 		Electron = require('electron'),
-		{app} = Env.isMain ? Electron : Electron.remote,
 		makeStatePersist = name => () => {
 			console.log(`Saving state ${name}`)
 			writeStoreState(false)
 		}
 	
 	//process.on('beforeExit',makeStatePersist('processBeforeExit'))
-	if (Env.isMain)
-		app.on('before-quit',makeStatePersist('beforeQuit'))
+	if (Env.isMain) {
+		const
+			{app} = Electron
+		
+		log.debug(`Persisting store in main process`)
+		app.on('before-quit', makeStatePersist('main, before quit'))
+	} else {
+		
+		window.addEventListener('beforeunload',() => {
+			const
+				winId = getWindowId()
+			if (getWindowManagerClient().isWindowInstancePersistent(winId)) {
+				log.info(`Persisting state on shutdown: ${winId}`)
+				makeStatePersist('window, on shutdown')()
+				
+				log.info(`Persisted state, notifying main that shutdown is complete`)
+				ProcessClient.sendMessage(WindowEvents.ShutdownComplete)
+			} else {
+				log.info(`Window is not persistent: ${winId}`)
+			}
+		})
+		// const
+		// 	remover = ProcessClient.addMessageHandler(
+		// 		WindowEvents.Shutdown,
+		// 		() => {
+		// 			log.debug('Persisting state on shutdown')
+		// 			makeStatePersist('window, on shutdown')()
+		//
+		// 			log.debug(`Persisted state, notifying main that shutdown is complete`)
+		// 			ProcessClient.sendMessage(WindowEvents.ShutdownComplete)
+		// 		}
+		// 	)
+		//
+		// addHotDisposeHandler(module,remover)
+		
+	}
 	// app.on('will-quit',makeStatePersist('eWillQuit'))
 	 
 	store.subscribe(onChange)
@@ -162,14 +199,14 @@ export function configureStorePersistence(store,getStoreStateIn) {
 		existingRemoveListener()
 	
 	
-
-	// On unload write the state
-	if (typeof window !== 'undefined' && ProcessConfig.isUI) {
-		window.addEventListener('beforeunload', () => {
-			log.info(`Writing current state (shutdown) to: ${stateFilename}`)
-			writeStoreState()
-		})
-	}
+	//
+	// // On unload write the state
+	// if (typeof window !== 'undefined' && ProcessConfig.isUI) {
+	// 	window.addEventListener('beforeunload', () => {
+	// 		log.info(`Writing current state (shutdown) to: ${stateFilename}`)
+	// 		writeStoreState()
+	// 	})
+	// }
 	
 }
 

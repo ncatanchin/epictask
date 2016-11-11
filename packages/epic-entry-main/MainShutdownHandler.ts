@@ -2,6 +2,7 @@
 import Electron from 'epic-electron'
 
 
+
 const
 	log = getLogger(__filename),
 	{BrowserWindow,app} = Electron
@@ -25,19 +26,25 @@ function isShuttingDown() {
 assignGlobal({isShuttingDown})
 
 
+function setShuttingDown() {
+	assignGlobal({
+		shutdownInProgress: true
+	})
+	shutdown = true
+}
+
+
 /**
  * Global shutdown function
  */
 export function shutdownApp() {
 	log.debug(`Received quit request, current quit started=${shutdown}`)
-	_.assignGlobal({
-		shutdownInProgress: true
-	})
+	
 	
 	if (!shutdown) {
+		setShuttingDown()
 		
 		log.debug(`Quitting/Shutting down`)
-		shutdown = true
 		app.quit()
 	}
 }
@@ -63,7 +70,7 @@ export function setupShutdownOnWindowClose(mainWindow:Electron.BrowserWindow) {
  */
 function onShutdown(event) {
 	
-	shutdownApp()
+	setShuttingDown()
 	
 	if (!processesStopping) {
 		processesStopping = true
@@ -71,21 +78,33 @@ function onShutdown(event) {
 		event.preventDefault()
 		
 		const
-			killAll = () => {
+			killAll = async () => {
 				// try {
 				// 	windowManager.closeAll()
 				// } catch (err) {
 				// 	log.warn(`Failed to cleanly shutdown processes`)
 				// }
-				log.info(`Closing all windows`)
 				
-				BrowserWindow.getAllWindows().forEach(win => {
-					try {
-						win.isClosable() && window.close()
-					} catch (err) {
-						log.warn(`Failed to destroy window`,err)
-					}
-				})
+				log.info(`Starting window shutdown`)
+				
+				try {
+					const
+						windowManager = require("epic-process-manager/WindowManager").getWindowManager()
+					
+					await windowManager.shutdown()
+					log.info(`All windows shutdown`)
+				} catch (err) {
+					log.error(`Failed to shutdown cleanly - going to force close`,err)
+					
+					BrowserWindow.getAllWindows().forEach(win => {
+						try {
+							win.isClosable() && win.close()
+						} catch (err) {
+							log.warn(`Failed to destroy window`,err)
+						}
+					})
+				}
+				
 				
 				app.exit(0)
 				

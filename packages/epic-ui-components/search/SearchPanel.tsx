@@ -727,7 +727,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					tabIndex={-1}
 					autoFocus={autoFocus}
 					underlineStyle={makeStyle(underlineStyle)}
-					underlineFocusStyle={focused && underlineFocusStyle}
+					underlineFocusStyle={makeStyle(focused && underlineFocusStyle)}
 					onFocus={(event) => {
 						
 						log.debug(`Received text box focus event`,event,commandContainer);

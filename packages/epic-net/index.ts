@@ -1,5 +1,4 @@
 import { Transport, ITransportConstructor, TransportScheme, ITransportOptions } from "./Transport"
-export * from "./NetworkConfig"
 export * from "./Transport"
 export * from "./IPCTransport"
 export * from "./IPCUtil"

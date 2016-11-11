@@ -2,7 +2,7 @@
 import {List} from 'immutable'
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import { PureRender } from "../../common"
+import { PureRender } from "epic-ui-components/common"
 import {
 	ThemedStyles,
 	FlexRow,
@@ -21,12 +21,11 @@ import {
 	IThemedAttributes,
 	colorAlpha
 } from "epic-styles"
+
 import { ToolPanelLocation, IToolPanel, ITool, addRegistryListener, RegistryEvent } from "epic-global"
-import { createToolPanelSelector, toolDraggingSelector } from "epic-typedux"
 import { ToolGutter } from "./ToolGutter"
 import { ToolWrapper } from "./ToolWrapper"
-import { createDeepEqualSelector } from "epic-global/SelectorUtil"
-import { createToolsSelector } from "epic-typedux/selectors/UISelectors"
+import { createToolPanelSelector, toolDraggingSelector,createToolsSelector } from "epic-typedux/selectors"
 
 
 // Constants
@@ -185,7 +184,9 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 			{styles,style,panel,dragging,location} = this.props,
 			{tools,toolIds} = panel || {} as IToolPanel,
 			toolList:List<ITool> = toolIds.map(id => tools.get(id)) as any
-		log.info(`Tool panel with tools`,tools,toolIds)
+		
+		log.debug(`Tool panel with tools`,tools,toolIds)
+		
 		return <div style={[styles.root,styles.root[location],style]}>
 			{/* The Gutter of toggle controls and decorations */}
 			

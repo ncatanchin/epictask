@@ -88,14 +88,21 @@ export class UIState extends UIStateRecord implements State {
 		return new UIState(assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
-			viewStates: List(o.viewStates),
+			viewStates: List(!o.viewStates ?
+				[] :
+				o.viewStates
+					.filter(viewState => viewState.type && viewState.id && viewState.name)
+					.map(viewState => ViewState.fromJS(viewState))),
 			toolPanels
 		}))
 	}
 	
 	toJS() {
 		
-		return toPlainObject(this,
+		return toPlainObject(
+			cloneObjectShallow(super.toJS(),{
+				viewStates: this.viewStates.map(viewState => viewState.toJS())
+			}),
 			excludeFilterConfig(
 				...excludeFilter('messages','ready','toolDragging')
 			))

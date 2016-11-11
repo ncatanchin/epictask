@@ -104,7 +104,12 @@ export const WindowModalDefaultOpts = Object.assign({}, WindowDefaultOpts, Windo
 /**
  * Background window defaults
  */
-export const WindowBackgroundDefaultOpts = Object.assign({},WindowDefaultOpts)
+export const WindowBackgroundDefaultOpts = Object.assign(
+	{},
+	WindowDefaultOpts,{
+		show: false
+	}
+)
 
 /**
  * Map WindowType -> BrowserWindowOptions
@@ -166,7 +171,7 @@ export const WindowConfigBackgroundDefaults = {
 	uri: "",
 	singleWindow: true,
 	autoRestart: true,
-	showDevTools: true,
+	showDevTools: false,
 	storeWindowState: true,
 	opts: WindowBackgroundDefaultOpts
 }
@@ -207,3 +212,9 @@ export const Dialogs = {
 	RepoAddTool: 'RepoAddTool',
 	IssueCommentDialog: 'IssueCommentDialog'
 }
+
+
+/**
+ * Default dev tools position
+ */
+export const DevToolsPositionDefault:TDevToolsPosition = 'undocked'

@@ -12,15 +12,12 @@ import {
 	attachEvents,
 	cloneObjectShallow,
 	Events,
-	getValue
+	getValue,
+	SimpleEventEmitter,
+	HEARTBEAT_TIMEOUT
 } from "epic-global"
-import {
-	DevToolsPositionDefault
-} from "epic-process-manager-client/WindowTypes"
-import { ProcessType } from "epic-entry-shared/ProcessType"
-import { HEARTBEAT_TIMEOUT } from "epic-net"
-import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import { WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
+
+import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client"
 import { List } from "immutable"
 
 
@@ -29,7 +26,7 @@ const
 	
 	windowStateKeeper = require('electron-window-state'),
 	
-	{BrowserWindow,app,ipcMain} = Electron,
+	{ BrowserWindow, app, ipcMain } = Electron,
 	
 	// Container to support hot reloading
 	instanceContainer = ((global as any).instanceContainer || {}) as {
@@ -43,14 +40,14 @@ const
 
 /**
  * Crate a window state keeper
- * 
+ *
  * @param id
  * @param config
  * @returns {any}
  */
-function createWindowStateKeeper(id:string,config:IWindowConfig) {
+function createWindowStateKeeper(id:string, config:IWindowConfig) {
 	const
-		{opts = {}} = config,
+		{ opts = {} } = config,
 		{
 			width:defaultWidth,
 			height:defaultHeight
@@ -69,10 +66,8 @@ function createWindowStateKeeper(id:string,config:IWindowConfig) {
  * Window message handler
  */
 export interface IWindowMessageHandler {
-	(manager:WindowManager,instance:IWindowInstance,type:string,body?:any):any
+	(manager:WindowManager, instance:IWindowInstance, type:string, body?:any):any
 }
-
-
 
 
 /**
@@ -82,12 +77,12 @@ export interface IWindowMessageHandler {
  * @param params
  * @returns {string}
  */
-function appendURLParams(url:string,params:{[key:string]:any}) {
+function appendURLParams(url:string, params:{[key:string]:any}) {
 	return url + (url.includes('?') ? '&' : '?') +
 		Object.keys(params)
-			.map(key => `${key}=${encodeURIComponent(params[key])}`)
+			.map(key => `${key}=${encodeURIComponent(params[ key ])}`)
 			.join('&')
-		
+	
 }
 
 /**
@@ -101,6 +96,7 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 		'heartbeatTimestamp',
 		'heartbeatTimeoutId',
 		'connectedFlag',
+		'shutdownFlag',
 		'heartbeatCount',
 		'config',
 		'window',
@@ -115,7 +111,7 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 //noinspection JSValidateJSDoc
 /**
  * Create window options
- * 
+ *
  * @param type
  * @param opts
  * @returns {Electron.BrowserWindowOptions}
@@ -141,7 +137,7 @@ function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOp
 /**
  * The command manager - menu, shortcuts, containers, etc
  */
-export class WindowManager  {
+export class WindowManager {
 	
 	
 	static getInstance() {
@@ -162,7 +158,7 @@ export class WindowManager  {
 	 */
 	private constructor() {
 		
-		ipcMain.on(Events.ProcessMessage,this.onProcessMessage)
+		ipcMain.on(Events.ProcessMessage, this.onProcessMessage)
 	}
 	
 	/**
@@ -172,15 +168,15 @@ export class WindowManager  {
 	 * @param type
 	 * @param body
 	 */
-	private onProcessMessage = (event,type,body) => {
+	private onProcessMessage = (event, type, body) => {
 		const
 			senderWebContents:Electron.WebContents = event.sender,
 			win = this.getWindowInstance(senderWebContents)
 		
 		if (!win)
-			return log.error(`Received a message on main from an unknown sender ${type}`,senderWebContents)
+			return log.error(`Received a message on main from an unknown sender ${type}`, senderWebContents)
 		
-		win.onMessage(type,body)
+		win.onMessage(type, body)
 	}
 	
 	/**
@@ -197,7 +193,46 @@ export class WindowManager  {
 	 * @returns {IWindowInstance}
 	 */
 	getWindowInstance(idOrContents:string|Electron.WebContents) {
-		return this.windows.find(win => [win.id,win.webContents].includes(idOrContents))
+		return this.windows.find(win =>
+			[ win.id, win.name, win.webContents ].includes(idOrContents))
+	}
+	
+	isWindowInstancePersistent(idOrContents:string|Electron.WebContents) {
+		const
+			win = this.getWindowInstance(idOrContents)
+		
+		return win && !win.closed &&  (win.type === WindowType.Background ||
+			(WindowType.Normal === win.type))
+	}
+	
+	/**
+	 * Gracefully shutdown all windows
+	 */
+	async shutdown() {
+		
+		const
+			closePromises = this.windows
+				.filter(win =>
+					// NOT ALREADY SHUTDOWN && NORMAL/BACKGROUND
+					!win.shutdownFlag &&
+					this.isWindowInstancePersistent(win.id)
+				)
+				.map(win => {
+					win.shutdownFlag = Promise.defer()
+					win.window.webContents.send(WindowEvents.Shutdown)
+					
+					return win.shutdownFlag
+						.promise
+						.timeout(5000)
+						.catch(err => {
+							log.error(`Failed to shutdown ${win.id}`,err)
+							return Promise.resolve(true)
+						})
+				})
+		
+		log.debug(`Waiting for ${closePromises.length} shutdown promises`)
+		await Promise.all(closePromises)
+		log.debug(`All windows shutdown`)
 	}
 	
 	/**
@@ -206,6 +241,7 @@ export class WindowManager  {
 	closeAll() {
 		this.close(...this.windows)
 	}
+	
 	
 	
 	/**
@@ -227,7 +263,7 @@ export class WindowManager  {
 				idOrWindowInstances.find(criteria => isString(criteria) ?
 					
 					// IF IDS OR CONFIG NAMES - MATCH
-					[ it.id, it.config.uri,it.url ].includes(criteria) :
+					[ it.id, it.config.uri, it.url ].includes(criteria) :
 					
 					// IF WINDOW INSTANCES
 					(it === criteria || it.id === criteria.id)
@@ -283,8 +319,8 @@ export class WindowManager  {
 	 * Pushes the window states to AppState
 	 */
 	pushWindowStates = _.debounce(() => {
-		app.emit(Events.WindowStatesChanged,this.getWindowStates())
-	},150)
+		app.emit(Events.WindowStatesChanged, this.getWindowStates())
+	}, 150)
 	
 	/**
 	 * Patch window state
@@ -294,7 +330,7 @@ export class WindowManager  {
 	 * @param remove - singleWindows delete themselves on close
 	 *
 	 */
-	private updateWindowState(id:string,patch:any,remove = false) {
+	private updateWindowState(id:string, patch:any, remove = false) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -303,11 +339,15 @@ export class WindowManager  {
 			return
 		}
 		
+		if (win.closed && win.shutdownFlag && !win.shutdownFlag.promise.isResolved()) {
+			win.shutdownFlag.resolve(true)
+		}
+		
 		const
 			index = this.windows.findIndex(it => it.id === win.id)
 		
 		if (remove) {
-			this.windows.splice(index,1)
+			this.windows.splice(index, 1)
 		} else {
 			this.windows[ index ] = cloneObjectShallow(win, patch)
 		}
@@ -321,16 +361,18 @@ export class WindowManager  {
 	 *
 	 * @param id
 	 * @param patch
+	 * @param remove
 	 */
-	private onWindowExit(id:string,patch) {
+	private onWindowExit(id:string, patch,remove:boolean = false) {
 		this.updateWindowState(
 			id,
-			assign(patch,{
-				connected:false,
-				running:false
-			}))
+			assign(patch, {
+				connected: false,
+				running: false
+			}),
+			remove)
 		
-		log.warn(`Window exited early we believe`,patch)
+		log.info(`Window exited`, patch)
 		
 	}
 	
@@ -358,7 +400,7 @@ export class WindowManager  {
 			return
 		
 		win.heartbeatCount++
-		log.debug('Updating heartbeat',win.heartbeatCount)
+		log.debug('Updating heartbeat', win.heartbeatCount)
 		
 		
 		this.clearHeartbeatTimeout(id)
@@ -389,7 +431,7 @@ export class WindowManager  {
 	 * @param body
 	 * @param callback
 	 */
-	sendMessage(id,type:string, body:any = {}, callback?:(err:Error) => void) {
+	sendMessage(id, type:string, body:any = {}, callback?:(err:Error) => void) {
 		if (!this.isRunning(id)) {
 			return log.error(`Process is not ready for messages ${id}/${type}`)
 		}
@@ -399,7 +441,7 @@ export class WindowManager  {
 		
 		log.debug(`Sending Message (${type})`)
 		
-		win.webContents.send('message',{type,body})
+		win.webContents.send('message', { type, body })
 	}
 	
 	
@@ -411,7 +453,7 @@ export class WindowManager  {
 			win = this.getWindowInstance(id)
 		
 		if (this.isRunning(id)) {
-			win.heartbeatTimeoutId = global.setTimeout(() => this.sendHeartbeat(id),HEARTBEAT_TIMEOUT)
+			win.heartbeatTimeoutId = global.setTimeout(() => this.sendHeartbeat(id), HEARTBEAT_TIMEOUT)
 		}
 	}
 	
@@ -428,7 +470,7 @@ export class WindowManager  {
 			win = this.getWindowInstance(id)
 		
 		
-		this.sendMessage(id,'ping')
+		this.sendMessage(id, WindowEvents.Ping)
 		this.scheduleHeartbeat(id)
 	}
 	
@@ -438,20 +480,24 @@ export class WindowManager  {
 	 * @returns {(type:any, message:any)=>undefined}
 	 */
 	private makeOnIpcMessage(id) {
-		return (type,body) => {
+		return (type, body) => {
 			
 			const
 				win = this.getWindowInstance(id)
 			
 			switch (type) {
-				case 'pong':
+				case WindowEvents.Pong:
 					if (!win.connectedFlag.promise.isResolved())
 						win.connectedFlag.resolve(true)
 					
 					this.heartbeat(id)
 					break
+				case WindowEvents.ShutdownComplete:
+					log.debug(`Window shutdown completed: ${id}`)
+					win.shutdownFlag.resolve(true)
+					break
 				default:
-					this.messageEmitter.emit(this,win,type,body)
+					this.messageEmitter.emit(this, win, type, body)
 			}
 		}
 	}
@@ -499,7 +545,7 @@ export class WindowManager  {
 				
 				if (win && !win.heartbeatTimeoutId && this.isRunning(id) && !win.connectedFlag.promise.isPending()) {
 					
-					this.sendMessage(id,'ping', null, (err) => {
+					this.sendMessage(id, WindowEvents.Ping, null, (err) => {
 						if (err) {
 							log.warn('Can not send message to worker', err)
 						}
@@ -561,7 +607,7 @@ export class WindowManager  {
 			config:IWindowConfig = cloneObject(configOrConfigs) as IWindowConfig
 		
 		let
-			{opts = {}} = config
+			{ opts = {} } = config
 		
 		const
 			windowCreateDeferred = Promise.defer(),
@@ -572,77 +618,78 @@ export class WindowManager  {
 				storeWindowState = false,
 				singleWindow = false,
 				autoRestart = false,
-				showDevTools = true,
+				showDevTools = Env.isDev,
 				processType = ProcessType.UI
 			} = config
 		
 		assert(!singleWindow || !this.windows.find(it => it.config.name === config.name),
-			`Window ${config.name} is marked as a single instance, but there is already one open` )
-			
+			`Window ${config.name} is marked as a single instance, but there is already one open`)
+		
 		
 		try {
 			
 			const
-				newWindowOpts = makeBrowserWindowOptions(type,opts)
+				newWindowOpts = makeBrowserWindowOptions(type, opts)
 			
 			// ID IS NAME FOR SINGLE WINDOWS
 			const
-				id = config.id  || (singleWindow ? config.name : shortId())
+				id = config.id || (singleWindow ? config.name : shortId())
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
 			let
-				savedWindowState = storeWindowState  && createWindowStateKeeper(id,config) 
-					
+				savedWindowState = storeWindowState && createWindowStateKeeper(id, config)
+			
 			
 			// TODO: REMOVE - TEST
 			
 			// CREATE WINDOW AND GET TO WORK
 			const
-				newWindow = new Electron.BrowserWindow(Object.assign({}, newWindowOpts,savedWindowState)),
+				newWindow = new Electron.BrowserWindow(Object.assign({}, newWindowOpts, savedWindowState)),
 				templateURL = getAppEntryHtmlPath()
 			
 			let
-				url = appendURLParams(`file://${templateURL}#${uri}`,{
+				url = appendURLParams(`file://${templateURL}#${uri}`, {
 					EPIC_ENTRY: ProcessConfig.getTypeName(processType),
 					EPIC_WINDOW_ID: id
 				})
 			
 			
 			const
-				windowInstance = this.windows[ this.windows.length ] = cloneObjectShallow(config,{
+				windowInstance = this.windows[ this.windows.length ] = cloneObjectShallow(config, {
 					id,
 					type,
 					opts: newWindowOpts as any,
 					uri,
 					url,
 					autoRestart,
-					destroyed:false,
-					crashed:false,
-					closed:false,
-					unresponsive:false,
-					focused:false,
-					visible:false,
+					destroyed: false,
+					crashed: false,
+					closed: false,
+					unresponsive: false,
+					focused: false,
+					visible: false,
 					killed: false,
 					running: true,
 					connected: false,
 					
-					heartbeatTimestamp:0,
-					heartbeatCount:0,
+					heartbeatTimestamp: 0,
+					heartbeatCount: 0,
 					window: newWindow,
-					allEventRemovers:[],
+					allEventRemovers: [],
 					
 					config
 				}) as IWindowInstance
 			
-			assign(windowInstance,{
+			assign(windowInstance, {
 				onMessage: this.makeOnIpcMessage(id),
 				connectedFlag: windowCreateDeferred
 			})
 			
-			process.on('beforeExit',() => {
+			process.on('beforeExit', () => {
 				try {
 					newWindow.close()
-				} catch (err) {}
+				} catch (err) {
+				}
 			})
 			
 			// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
@@ -655,7 +702,7 @@ export class WindowManager  {
 			
 			
 			// OPEN DEV TOOLS IF CONFIGURED
-			if (DEBUG &&  showDevTools) {
+			if (DEBUG && showDevTools) {
 				newWindow.show()
 				newWindow.webContents.openDevTools({
 					mode: DevToolsPositionDefault
@@ -665,37 +712,38 @@ export class WindowManager  {
 			
 			// EVENTS
 			const
-				makeOnFocus = (focused:boolean) => () => this.updateWindowState(id,{focused}),
-				makeOnUnresponsive = (unresponsive:boolean) => () => this.updateWindowState(id,{unresponsive}),
-				makeOnShow = (shown:boolean) => () => this.updateWindowState(id,{visible:shown})
-				
+				makeOnFocus = (focused:boolean) => () => this.updateWindowState(id, { focused }),
+				makeOnUnresponsive = (unresponsive:boolean) => () => this.updateWindowState(id, { unresponsive }),
+				makeOnShow = (shown:boolean) => () => this.updateWindowState(id, { visible: shown })
 			
 			
-			windowInstance.allEventRemovers.push(attachEvents(log,newWindow,{
-				close: (event) => {
+			windowInstance.allEventRemovers.push(attachEvents(log, newWindow, {
+				closed: (event) => {
 					log.info(`Window closed: ${id}`)
-					this.updateWindowState(id, { closed: true },singleWindow || autoRestart)
+					this.onWindowExit(id,{closed:true}, singleWindow || autoRestart)
+					//this.updateWindowState(id, { closed: true }, singleWindow || autoRestart)
 					if (!shutdownInProgress && !isShuttingDown() && autoRestart) {
 						log.warn(`Auto Restarting Window: ${id}`)
 						setImmediate(() => this.open(originalConfig))
 					}
-						
+					
 				},
 				responsive: makeOnUnresponsive(false),
-				unresponsive:makeOnUnresponsive(true),
-				focus:makeOnFocus(true),
-				blur:makeOnFocus(false),
-				show:makeOnShow(true),
-				hide:makeOnShow(false),
-				'ready-to-show':() => {
+				unresponsive: makeOnUnresponsive(true),
+				focus: makeOnFocus(true),
+				blur: makeOnFocus(false),
+				show: makeOnShow(true),
+				hide: makeOnShow(false),
+				'ready-to-show': () => {
 					log.debug(`Ready to show for window ${id}`)
+					if (type === WindowType.Background && showDevTools !== true) {
+						log.debug(`${id} is a background window, dont show unless dev tools enabled, which means it's already shown`)
+						return
+					}
 					newWindow.show()
 					newWindow.focus()
 				}
 			}))
-			
-			
-			
 			
 			
 			// newWindow.on('close', () => {
@@ -707,21 +755,21 @@ export class WindowManager  {
 			
 			// SET WEB-CONTENTS
 			const
-				{webContents} = newWindow
+				{ webContents } = newWindow
 			
-			assign(windowInstance,{webContents})
+			assign(windowInstance, { webContents })
 			
 			// WEB-CONTENTS EVENTS
 			const
-				onNavigate = (event, url) => this.updateWindowState(id,{url})
+				onNavigate = (event, url) => this.updateWindowState(id, { url })
 			
-			windowInstance.allEventRemovers.push(attachEvents(log,webContents,{
+			windowInstance.allEventRemovers.push(attachEvents(log, webContents, {
 				'did-navigate': onNavigate,
 				'did-navigate-in-page': onNavigate,
 				'ipc-message': windowInstance.onMessage,
 				'dom-ready': this.makeConnect(id),
-				crashed: (event, killed) => this.onWindowExit(id,{crashed:true,killed:true}),
-				destroyed: () => this.onWindowExit(id,{destroyed:true}),
+				crashed: (event, killed) => this.onWindowExit(id, { crashed: true, killed: true }),
+				destroyed: () => this.onWindowExit(id, { closed: true, destroyed: true }),
 			}))
 			windowCreateDeferred.resolve()
 			
@@ -761,12 +809,10 @@ export const getWindowManager = getHot(module, 'getWindowManager', new Proxy(fun
 })) as () => WindowManager
 
 
-
 /**
  * Default export is the singleton getter
  */
 export default getWindowManager
-
 
 
 /**
@@ -780,8 +826,6 @@ assignGlobal({
 })
 
 
-
-
 // HMR
 if (module.hot) {
 	
@@ -791,7 +835,7 @@ if (module.hot) {
 	}
 	
 	// ON DISPOSE, SAVE getWindowManager
-	setDataOnHotDispose(module, () => ({getWindowManager}))
+	setDataOnHotDispose(module, () => ({ getWindowManager }))
 
 // ACCEPT SELF
 	acceptHot(module, log)

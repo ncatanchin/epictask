@@ -200,24 +200,33 @@ class IssuePanelController {
 			store.observe(this.makeStatePath('issueFiler'),this.onFilterSortChanged),
 			store.observe(this.makeStatePath('selectedIssueIds'),this.onSelectedIssueIdsChanged)
 		]
+		
 		this.loadIssues()
 	}
 	
 	/**
 	 * Updates the current issues
 	 */
-	loadIssues = () => {
-		setImmediate(async () => {
-			const
-				{issueSort,issueFilter} = this.state,
-				actions = new IssueActionFactory(),
-				issues = await actions.queryIssues(issueSort,issueFilter)
-			
-			
-			this.updateState({issues})
-		})
+	loadIssues = _.debounce(OneAtATime({},async () => {
+		const
+			{issueSort,issueFilter,selectedIssueIds} = this.state,
+			actions = new IssueActionFactory(),
+			issues = await actions.queryIssues(issueSort,issueFilter)
 		
-	}
+		
+		this.updateState({issues})
+		
+		if (selectedIssueIds && selectedIssueIds.size === 1) {
+				const
+					selectedIssueId = selectedIssueIds.get(0),
+					issue = issues.find(it => it.id === selectedIssueId)
+			
+				if (issue)
+					this.loadActivity(issue)
+		}
+	}),100)
+	
+	
 	
 	/**
 	 * Load activity for an issue

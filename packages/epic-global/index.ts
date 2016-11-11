@@ -19,8 +19,13 @@ export * from "./Counter"
 export * from "./DateUtil"
 export * from "./Decorations"
 export * from "./ElectronUtil"
+
 export * from "./EnumUtil"
+
+
 export * from "./EnumEventEmitter"
+export * from "./SimpleEventEmitter"
+
 export * from "./Files"
 export * from "./HotUtils"
 export * from "./IdUtil"
@@ -35,16 +40,14 @@ export * from "./ProtoExts"
 export * from "./ProxyProvided"
 export * from "./ProxyUtil"
 export * from "./RepoUtils"
-export * from "./SelectorTypes"
+
 export * from "./SelectorUtil"
 export * from "./TemplateUtil"
 export * from "./UIUtil"
 export * from "./ValueCache"
 export * from "./VariableProxy"
-export * from "./WorkerEventType"
-export * from "./GithubSyncStatus"
-export * from './ProcessClient'
 
+export * from "./GithubSyncStatus"
 
 export * from './settings'
 export * from './Config'

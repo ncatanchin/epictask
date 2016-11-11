@@ -1,8 +1,8 @@
 import * as  msgpack from 'msgpack-lite'
 import {isString} from 'typeguard'
-import {Counter} from "epic-global"
+import { Counter, START_TIMEOUT_DEFAULT } from "epic-global"
 import Transport, {ITransportOptions, TransportScheme, TransportEvents} from "./Transport"
-import { START_TIMEOUT_DEFAULT } from "./NetworkConfig"
+
 import { makeIPCServerId } from "./IPCUtil"
 import IPCBufferedMessage,{ makeIPCMsgPackReadStream } from "./IPCBufferedMessage"
 

@@ -1,19 +1,17 @@
-
-import {Map,List} from 'immutable'
-import {createSelector} from 'reselect'
-
-import {UIKey} from "epic-global"
-import {UIState} from "../state/UIState"
+import { Map, List } from "immutable"
+import { createSelector } from "reselect"
+import { UIState } from "../state/UIState"
 import ViewState from "epic-typedux/state/window/ViewState"
+import {
+	ToolPanelLocation,
+	IToolPanel,
+	createDeepEqualSelector,
+	INotificationMessage,
+	UIKey,
+	ITool,
+	getValue
+} from "epic-global"
 
-
-import { ToolPanelLocation, IToolPanel } from "epic-global"
-import { createDeepEqualSelector } from  "epic-global"
-import { INotificationMessage } from "epic-global"
-
-import { getValue } from  "epic-global"
-import { TSelector } from "epic-global/SelectorTypes"
-import { ITool } from "epic-global/ToolTypes"
 
 const
 	log = getLogger(__filename)

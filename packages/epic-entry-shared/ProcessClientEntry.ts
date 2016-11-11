@@ -1,23 +1,27 @@
+import "./ProcessClient"
+
 import {ipcRenderer} from 'electron'
 import {ProcessType} from './ProcessType'
-import { ProcessClient } from "epic-global/ProcessClient"
-import { START_TIMEOUT_DEFAULT } from "epic-net/NetworkConfig"
 import {getServiceManager} from "epic-services"
+import { START_TIMEOUT_DEFAULT } from "epic-global"
+
+interface IMessageHandlers {
+	[messageType:string]:ProcessClient.TProcessMessageHandler
+}
 
 const
-	log = getLogger(__filename)
-
-
-//region WorkerClient
-const defaultMessageHandlers:{[messageType:string]:ProcessClient.TProcessMessageHandler} = {
-	ping(workerEntry, messageType:string, data:any) {
-		if (workerEntry.running) {
-			ProcessClient.sendMessage('pong')
-		} else {
-			log.info(`Worker is not yet ready`)
+	log = getLogger(__filename),
+	
+	// DEFAULT MESSAGE HANDLERS
+	defaultMessageHandlers:IMessageHandlers = {
+		ping(workerEntry, messageType:string, data:any) {
+			if (workerEntry.running) {
+				ProcessClient.sendMessage('pong')
+			} else {
+				log.info(`Worker is not yet ready`)
+			}
 		}
 	}
-}
 
 
 
@@ -100,14 +104,15 @@ async function startProcessClient(
 	
 	
 	// Now bind to all the process events
-	ipcRenderer.on('message',(event,{type,body}) => {
-		const
-			handler = ProcessClient.getMessageHandler(type)
-		
-		assert(handler,`No handler defined for ${type}`)
-		
-		handler(type,body)
-	})
+	ipcRenderer.on('message',(event,{type,body}) =>
+		ProcessClient.emit(type,body)
+		// const
+		// 	handler = getMessageHandler(type)
+		//
+		// assert(handler,`No handler defined for ${type}`)
+		//
+		// handler(type,body)
+	)
 	
 	log.info(`Starting Worker Entry`)
 	try {

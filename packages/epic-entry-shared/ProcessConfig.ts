@@ -155,8 +155,6 @@ Object.assign(global as any,{
 
 
 const
-	TypeLogger = require('typelogger'),
 	processType = ProcessType[ process.env.EPIC_ENTRY ] || ProcessType.Main
 
 ProcessConfig.setType(processType as any)
-TypeLogger.setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)

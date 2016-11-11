@@ -1,16 +1,14 @@
-import { ProcessClient} from 'epic-global/ProcessClient'
-import {AppStoreServerName} from 'epic-entry-shared/ProcessType'
-import {getHot, setDataOnHotDispose } from "epic-global/HotUtils"
-import {uuid} from 'epic-global/IdUtil'
-import { REQUEST_TIMEOUT, Transport, getDefaultTransport } from "epic-net"
+import { ActionMessage } from "typedux"
+
+
+import { AppStoreServerName } from "epic-entry-shared/ProcessType"
+import { Transport, getDefaultTransport } from "epic-net"
+import { ActionMessageFilter } from "epic-typedux/filter"
+import { cloneObjectShallow ,getHot, setDataOnHotDispose, uuid, REQUEST_TIMEOUT, getValue, AppStoreServerEventNames } from "epic-global"
+import { fromPlainObject, toPlainObject } from "typetransform"
+
 
 import TWorkerProcessMessageHandler = ProcessClient.TMessageHandler
-import {ActionMessage} from 'typedux'
-import { ActionMessageFilter } from "epic-typedux/filter"
-import { getValue,AppStoreServerEventNames } from "epic-global"
-import { fromPlainObject,toPlainObject } from "typetransform"
-import { cloneObjectShallow } from "epic-global/ObjectUtil"
-
 
 
 const
@@ -55,7 +53,7 @@ export function setStoreReady(ready:boolean) {
 	
 	if (ready && pendingActions.length) {
 		pushStoreAction(...pendingActions) &&
-			(pendingActions = [])
+		(pendingActions = [])
 	}
 }
 
@@ -72,14 +70,14 @@ interface ObserveWrapper {
 
 
 const
-	actionProxies = getHot(module,'actionProxies',{}),
-	observers:{[id:string]:ObserveWrapper} = getHot(module,'observers',{}),
-	stateRequests = getHot(module,'stateRequests',{})
+	actionProxies = getHot(module, 'actionProxies', {}),
+	observers:{[id:string]:ObserveWrapper} = getHot(module, 'observers', {}),
+	stateRequests = getHot(module, 'stateRequests', {})
 
 let
-	transport = getHot(module,'transport',null) as Transport
+	transport = getHot(module, 'transport', null) as Transport
 
-setDataOnHotDispose(module,() => ({
+setDataOnHotDispose(module, () => ({
 	actionProxies,
 	observers,
 	stateRequests,
@@ -92,20 +90,20 @@ setDataOnHotDispose(module,() => ({
  */
 const sendMessage = (type:string, body:any = {}) => {
 	return connect().then(() => {
-		transport.emit(type,body)
+		transport.emit(type, body)
 	})
 }
 
 
 /**
  * Create a new action client
- * 
+ *
  * @param leaf
  * @param type
  */
-function newActionClient(leaf,type) {
-	return function(...args) {
-		return sendMessage(AppStoreServerEventNames.ActionRequest,{
+function newActionClient(leaf, type) {
+	return function (...args) {
+		return sendMessage(AppStoreServerEventNames.ActionRequest, {
 			leaf,
 			type,
 			args
@@ -115,23 +113,23 @@ function newActionClient(leaf,type) {
 
 /**
  * get an action client
- * 
+ *
  * @param leaf
  * @returns {any}
  */
 export function getActionClient(leaf:string):any {
-	return new Proxy({},{
-		get(target,type) {
+	return new Proxy({}, {
+		get(target, type) {
 			const fullName = `${leaf}.${type}`
 			
-			return actionProxies[fullName] ||
-				(actionProxies[fullName] = newActionClient(leaf,type))
+			return actionProxies[ fullName ] ||
+				(actionProxies[ fullName ] = newActionClient(leaf, type))
 		}
 	})
 }
 
 
-export type TClientStateHandler = (newValue,oldValue) => any
+export type TClientStateHandler = (newValue, oldValue) => any
 
 /**
  * Push a message to the server,
@@ -140,24 +138,22 @@ export type TClientStateHandler = (newValue,oldValue) => any
  * @param action
  */
 export const sendStoreAction = ActionMessageFilter((action:ActionMessage<any>) => {
-	action = toPlainObject(cloneObjectShallow(action,{
+	action = toPlainObject(cloneObjectShallow(action, {
 		windowId: getWindowId(),
 		fromChildId: id
 	}))
-	sendMessage(AppStoreServerEventNames.ChildStoreAction,{id,action})
+	sendMessage(AppStoreServerEventNames.ChildStoreAction, { id, action })
 })
 
 /**
  * Observer a state value @ at given keypath
- * 
+ *
  * @param keyPath
  * @param handler
  * @returns {Promise<Function>}
  */
-export function clientObserveState(
-	keyPath:string|string[], 
-	handler:TClientStateHandler
-):Promise<Function> {
+export function clientObserveState(keyPath:string|string[],
+                                   handler:TClientStateHandler):Promise<Function> {
 	
 	const
 		id = uuid(),
@@ -185,7 +181,7 @@ export function clientObserveState(
 
 /**
  * Retrieve a state value
- * 
+ *
  * @param keyPath
  */
 export async function getStateValue(...keyPath:string[]):Promise<any> {
@@ -216,10 +212,6 @@ export async function getStateValue(...keyPath:string[]):Promise<any> {
 }
 
 
-
-
-
-
 /**
  * Connect function - runs serially
  */
@@ -241,7 +233,7 @@ function connect():Promise<any> {
 			})
 			
 			.catch(err => {
-				log.error(`Failed to connect to store server`,err)
+				log.error(`Failed to connect to store server`, err)
 				transport = null
 				
 				throw err
@@ -262,22 +254,22 @@ function connect():Promise<any> {
 function attachEvents(transport) {
 	
 	
-	transport.on(AppStoreServerEventNames.ChildStoreActionReducer,({action}) => {
+	transport.on(AppStoreServerEventNames.ChildStoreActionReducer, ({ action }) => {
 		action = fromPlainObject(action)
-		log.debug(`Received reducer action from server`,action)
+		log.debug(`Received reducer action from server`, action)
 		// if (!childStoreWrapper)
 		// 	return log.error(`Unknown child store ${id}`)
 		//
 		const
-			{fromChildId,fromWindowId,windowId} = action,
-			ids = [fromChildId,fromWindowId,windowId],
+			{ fromChildId, fromWindowId, windowId } = action,
+			ids = [ fromChildId, fromWindowId, windowId ],
 			isNewAction = !ids.includes(id) && !ids.includes(getWindowId())
 		
 		if (!isNewAction) {
 			log.debug(`I sent this so no need to dispatch again`)
 			return
 		}
-			
+		
 		pushStoreAction(action)
 	})
 	
@@ -325,7 +317,7 @@ function attachEvents(transport) {
 			request = stateRequests[ id ]
 		
 		if (!request) {
-			return log.error(`Got response for unknown state request ${id}`, id,  value, err)
+			return log.error(`Got response for unknown state request ${id}`, id, value, err)
 		}
 		
 		if (err) {

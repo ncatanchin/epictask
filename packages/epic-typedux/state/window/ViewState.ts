@@ -1,6 +1,8 @@
 import { Map, Record, List } from "immutable"
 import { shortId } from "epic-global/IdUtil"
 import { reviveImmutable } from "epic-global/ModelUtil"
+import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
+import { cloneObjectShallow } from "epic-global"
 
 
 /**
@@ -18,10 +20,7 @@ export const ViewStateRecord = Record({
 	id: shortId(),
 	index:-1,
 	name: null,
-	stateClazz: null,
-	controller: null,
-	controllerClazz: null,
-	componentLoader: null,
+	type: null,
 	state: Map<any,any>()
 })
 
@@ -44,6 +43,14 @@ class ViewState extends ViewStateRecord implements IViewConfig{
 		)
 	}
 	
+	toJS() {
+		return toPlainObject(
+			cloneObjectShallow(super.toJS(),{
+				state: this.state.toJS ? this.state.toJS() : this.state
+			}),
+			excludeFilterConfig()
+		)
+	}
 	
 	constructor(o:any = {}) {
 		super(o)
@@ -55,11 +62,8 @@ class ViewState extends ViewStateRecord implements IViewConfig{
 	id:string
 	index:number
 	name:string
-	componentLoader: TPromisedComponentLoader
-	controllerClazz: any
-	controller: any
+	type: string
 	state: Map<any,any>
-	stateClazz:{new():Map<any,any>}
 }
 
 export default ViewState

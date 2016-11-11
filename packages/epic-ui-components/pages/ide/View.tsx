@@ -1,12 +1,11 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
-import { createStructuredSelector, createSelector } from 'reselect'
 import { PureRender } from 'epic-ui-components/common'
-import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+import { IThemedAttributes} from 'epic-styles'
 
 import ViewState from "epic-typedux/state/window/ViewState"
 import { PromisedComponent } from "epic-ui-components/common/PromisedComponent"
+import DefaultViews from "epic-typedux/state/window/DefaultViews"
+import { getValue } from "typeguard"
 
 // Constants
 const
@@ -61,11 +60,12 @@ export class View extends React.Component<IViewProps,IViewState> {
 			} = this.props,
 			componentProps = {
 				viewState,
-				viewStateId: viewState.id,
-				viewController: viewState.controller
-			}
+				viewStateId: viewState.id
+			},
+			componentLoader = getValue(() => DefaultViews[viewState.type].loader)
 		
-		return <PromisedComponent loader={viewState.componentLoader} componentProps={componentProps}  />
+		log.debug(`View state type`,viewState.type,componentLoader)
+		return !componentLoader ? React.DOM.noscript() : <PromisedComponent loader={componentLoader} componentProps={componentProps}  />
 	}
 	
 }

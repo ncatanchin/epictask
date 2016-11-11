@@ -1,5 +1,6 @@
 
 import {List,Map} from 'immutable'
+import "./WindowTypes"
 
 import Electron from 'epic-electron'
 

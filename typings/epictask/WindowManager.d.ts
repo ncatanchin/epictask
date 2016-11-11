@@ -1,14 +1,5 @@
 
 
-/**
- * Window Type
- */
-declare enum WindowType {
-	Normal,
-	Dialog,
-	Modal,
-	Background
-}
 
 
 /**
@@ -116,5 +107,6 @@ declare interface IWindowInstance extends IWindowState {
 	allEventRemovers?:any
 	heartbeatTimeoutId:any
 	connectedFlag:Promise.Resolver<boolean>
+	shutdownFlag:Promise.Resolver<boolean>
 }
 

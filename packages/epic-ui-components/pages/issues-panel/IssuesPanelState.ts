@@ -83,7 +83,7 @@ class IssuesPanelState extends IssuesPanelStateRecord {
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
-			['issueIds','commentIds','issueEventIds'],
+			['issueIds','commentIds','issueEventIds','selectedIssueIds','focusedIssueIds'],
 			['groupVisibility']
 		)
 	}
@@ -93,6 +93,8 @@ class IssuesPanelState extends IssuesPanelStateRecord {
 			...excludeFilter(
 				'activityLoading',
 				'issues',
+				'issuesEvents',
+				'comments',
 				/^edit/,
 				/^issueSav/
 			)))

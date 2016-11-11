@@ -1,11 +1,12 @@
 
 import './LogCategories'
 
-import {getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
+import {setPrefixGlobal,getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
 import _ from './LoDashMixins'
 import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"
+import { getValue, isString } from "typeguard"
 
 let
 	Reactotron = null
@@ -18,6 +19,10 @@ export interface IEpicLogger extends ILogger {
 	tronWarn(...args):any
 	tronError(...args):any
 }
+
+
+setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
+
 
 /**
  * Load Reactotron
@@ -34,6 +39,9 @@ function loadReactotron() {
 
 loadReactotron()
 
+function getLogPrefix() {
+	return getValue(() => getWindowId(),ProcessConfig.getTypeName())
+}
 
 /**
  * Custom log Factory
@@ -48,7 +56,19 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 	function makeTronLevel(level,tronLevel) {
 			return (...args) => {
 				rootLogger[level](...args)
-				Reactotron && Reactotron[tronLevel](...args)
+				
+				if (Reactotron) {
+					const
+						preview = `${getLogPrefix()} >> ${getValue(() => args[0].toString(),'no value')}`
+					
+					Reactotron[tronLevel](preview,{
+						level: tronLevel,
+						preview,
+						value:args,
+						important: ['warn','error'].includes(tronLevel)
+					})
+				}
+				
 			}
 	}
 	
@@ -56,6 +76,7 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 		logger = Object.assign({},rootLogger)
 	
 	logger.tron = makeTronLevel('info','log')
+	logger.info = logger.tronInfo = makeTronLevel('info','log')
 	logger.warn = logger.tronWarn = makeTronLevel('warn','warn')
 	logger.error = logger.tronError = makeTronLevel('error','error')
 	

@@ -22,7 +22,6 @@ import {
 } from "epic-typedux/selectors/RepoSelectors"
 
 import {createSelector} from 'reselect'
-import { TSelector } from "epic-global/SelectorTypes"
 import { getValue } from "typeguard"
 import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"

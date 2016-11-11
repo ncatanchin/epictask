@@ -23,6 +23,7 @@ import { makePromisedComponent } from "epic-global/UIUtil"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
+import DefaultViews from "epic-typedux/state/window/DefaultViews"
 
 
 
@@ -602,12 +603,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		return state => {
 			const
 				id = shortId(),
-				initialState = new (viewConfig.stateClazz)(),
+				//initialState = new (viewConfig.stateClazz)(),
 				viewState = new ViewState(cloneObjectShallow(viewConfig,{
 					id,
 					index: state.viewStates.size,
-					controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
-					state: initialState
+					//controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
+					//state: initialState
 				}))
 			
 			
@@ -638,13 +639,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 	
 	createDefaultView = () => ({
+		type: DefaultViews.IssuesPanel.type,
 		name: 'Issues Panel',
-		stateClazz: IssuesPanelState,
-		controllerClazz: IssuePanelController,
-		componentLoader: makePromisedComponent(resolver => require.ensure([],function(require:any) {
-			resolver.resolve(require('epic-ui-components/pages/issues-panel').IssuesPanel)
-		}))
-	
+		// stateClazz: IssuesPanelState,
+		// controllerClazz: IssuePanelController,
 	})
 	
 	ensureDefaultView() {

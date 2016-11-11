@@ -34,6 +34,8 @@ import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
 import { shallowEquals, guard } from "epic-global/ObjectUtil"
 import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { Pages } from "epic-entry-ui/routes/Routes"
+import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 
 
 
@@ -156,7 +158,7 @@ function makeSelector() {
  * @class IssuesPanel
  * @constructor
  **/
-
+@ViewRoot(IssuePanelController,IssuesPanelState)
 @connect(makeSelector)
 @CommandComponent()
 @ThemedStylesWithOptions({enableRef: true},baseStyles, 'issuesPanel')

@@ -67,7 +67,7 @@ export function benchmarkLoadTime(to:string) {
 }
 
 
-export type TPropsFn = (props) => any
+export type TPropsFn = (props,mapper?:IPropMapper) => any
 export type TWatchedPropTest = string|string[]|TPropsFn
 
 /**
@@ -86,7 +86,7 @@ function testPropWatch(value,props,propWatch) {
 }
 
 
-export interface IPropMapper {
+export interface IPropMapper extends React.Component<any,any> {
 	remap:Function
 }
 
@@ -139,13 +139,13 @@ export function MappedProps(
 				
 				this.setState({
 					lastProps: props,
-					mappedProps: propsFn(props)
+					mappedProps: propsFn(props,this)
 				})
 			}
 			
 			
 			shouldComponentUpdate(nextProps,nextState) {
-				return !shallowEquals(this.state.mappedProps,nextState.mappedProps)
+				return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state.mappedProps,nextState.mappedProps)
 			}
 			
 			remap() {

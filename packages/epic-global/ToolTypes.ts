@@ -1,5 +1,4 @@
 
-import React from 'react'
 import {Map,List} from 'immutable'
 import { isMap } from "typeguard"
 

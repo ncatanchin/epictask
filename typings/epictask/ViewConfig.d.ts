@@ -28,8 +28,5 @@ declare type TPromisedComponentLoader = () => Promise<TComponentAny>
 
 declare interface IViewConfig {
 	name:string
-	componentLoader:TPromisedComponentLoader
-	stateClazz:any
-	controllerClazz?:any
-	
+	type:string
 }
