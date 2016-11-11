@@ -1,9 +1,7 @@
 import * as fs from "fs"
 import { ClassType } from "react"
-import { WindowType, IWindowConfig } from "./WindowTypes"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { searchPathsForFile } from "epic-global/Files"
-
 import { ProcessNames } from "epic-entry-shared/ProcessType"
 
 

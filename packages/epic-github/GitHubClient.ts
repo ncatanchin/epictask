@@ -623,7 +623,7 @@ export class GitHubClient {
 		
 		let result = await response.json()
 		
-		return _.merge(cloneObject(milestone),result)
+		return cloneObject(milestone,result)
 	}
 	
 	
@@ -631,18 +631,19 @@ export class GitHubClient {
 	 * Create or update a label
 	 *
 	 * @param repo
+	 * @param labelName
 	 * @param label
 	 *
 	 * @returns {Label}
 	 */
-	async labelSave(repo:Repo,label:Label) {
+	async labelSave(repo:Repo,labelName:string,label:Label) {
 		let
 			json = _.pick(label,'name','color') as any
 		
 		
 		const
 			[uri,method] = label.url ?
-				[`/repos/${repo.full_name}/labels/${encodeURIComponent(label.name)}`,HttpMethod.PATCH] :
+				[`/repos/${repo.full_name}/labels/${encodeURIComponent(labelName)}`,HttpMethod.PATCH] :
 				[`/repos/${repo.full_name}/labels`,HttpMethod.POST]
 		
 		const
@@ -674,7 +675,7 @@ export class GitHubClient {
 		let
 			result = await response.json()
 		
-		return _.merge(cloneObject(label),result)
+		return cloneObject(label,result)
 	}
 	
 	

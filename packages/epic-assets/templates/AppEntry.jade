@@ -183,7 +183,7 @@ html(lang="en")
 
 		script.
 
-			global.__NO_WEBPACK__ = !!require('electron').remote.getGlobal('__NO_WEBPACK__')
+			global.__NO_WEBPACK__ = false //!!require('electron').remote.getGlobal('__NO_WEBPACK__')
 			if (global.__NO_WEBPACK__)
 				require("./bin/epictask-polyfill-webpack")
 

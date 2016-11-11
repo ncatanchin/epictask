@@ -52,9 +52,9 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 	/**
 	 * Hide the repo add panel
 	 */
-	hide = () => {
+	hide = _.debounce(() => {
 		getUIActions().closeSheet()
-	}
+	},50)
 	
 	/**
 	 * On search result selected
@@ -62,17 +62,16 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 	 * @param searchId
 	 * @param item
 	 */
-	private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
+	private onResultSelected = _.debounce((eventType,searchId:string,item:SearchItem) => {
 		if (searchId !== FindActionSearchId || !getValue(() => item.type === SearchType.Action,false))
 			return
 		
 		
-		this.hide()
-		setTimeout(() =>
-			SearchController.getDefaultHandler(SearchType.Action)(searchId,item)
-		,100)
 		
-	}
+		
+		SearchController.getDefaultHandler(SearchType.Action)(searchId,item)
+		this.hide()
+	},100)
 	
 	/**
 	 * On mount create initial state & bind listeners
@@ -132,7 +131,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			             onEscape={this.hide}
 			             open={true}
 			             focused={true}
-			             hint='Execute an Epic action'
+			             hint={FindActionSearchId}
 			             resultsHidden={false}
 			             searchId='find-action-search'
 			             types={[SearchType.Action]}

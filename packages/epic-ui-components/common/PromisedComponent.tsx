@@ -18,7 +18,7 @@ const
  */
 export interface IPromisedComponentProps extends IThemedAttributes {
 	componentProps?:any
-	promise?:Promise<TComponent>
+	promise?:Promise<TComponentAny>
 	loader?:TPromisedComponentLoader
 }
 
@@ -27,10 +27,10 @@ export interface IPromisedComponentProps extends IThemedAttributes {
  */
 export interface IPromisedComponentState {
 	
-	attachedPromise?:Promise<TComponent>
+	attachedPromise?:Promise<TComponentAny>
 	attachedLoader?:TPromisedComponentLoader
 	
-	Component:TComponent
+	Component:TComponentAny
 }
 
 /**

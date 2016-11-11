@@ -31,7 +31,9 @@ import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
-import { shallowEquals } from "epic-global/ObjectUtil"
+import { shallowEquals, guard } from "epic-global/ObjectUtil"
+import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { Pages } from "epic-entry-ui/routes/Routes"
 
 
 
@@ -213,7 +215,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CIDS.NewIssue,
 				CommandType.App,
 				'New Issue',
-				(item, event) => getIssueActions().newIssue(),
+				(item, event) => getUIActions().openWindow(Pages.IssueEditDialog.path),
 				"CommandOrControl+n"
 			)
 			
@@ -803,7 +805,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	onSearchEscape = () => {
 		log.info(`Search escape`)
-		// getValue(() => unwrapRef(this.state.searchPanelRef).blur())
+		//guard(() => unwrapRef(this.state.searchPanelRef).blur())
 		
 		setTimeout(() => {
 			getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
@@ -886,10 +888,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			noItemsContentNode = this.makeNoContent(styles,itemsAvailable,allItemsFiltered),
 			noItemsNode = !itemsAvailable && <div style={styles.noItems}>
-					<div style={styles.noItems.text}>
-						{noItemsContentNode}
-					</div>
-						</div>
+				<div style={styles.noItems.text}>
+					{noItemsContentNode}
+				</div>
+			</div>
 		
 		
 		return <CommandRoot

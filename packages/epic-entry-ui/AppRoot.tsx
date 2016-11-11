@@ -36,9 +36,7 @@ import {
 	FillWindow,
 	makeWidthConstraint,
 	makeHeightConstraint,
-	Fill,
-	Themed,
-	ThemeEvent
+	Fill
 } from "epic-styles"
 
 // STYLES
@@ -62,7 +60,7 @@ const
 	
 	
 //DEBUG LOG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Properties for App/State

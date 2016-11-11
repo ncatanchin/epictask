@@ -211,7 +211,9 @@ export namespace DatabaseLocalAdapter {
 					filename: dbPath,
 					
 					// OVERWRITE ON CONFLICT
-					overwriteConflicts: true
+					overwriteConflicts: true,
+					
+					skipIndexes: !ProcessConfig.isType(ProcessType.DatabaseServer)
 				},
 				
 				// OPTIONS ONLY FOR LEVELDB

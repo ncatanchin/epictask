@@ -5,17 +5,17 @@
 // }
 
 
-
+declare type TComponent<P> = React.ComponentClass<P>
 
 /**
  * React component class
  */
-declare type TComponent = React.ComponentClass<any>
+declare type TComponentAny = TComponent<any>
 
 /**
  * Component resolver
  */
-declare type TComponentResolver = Promise.Resolver<TComponent>
+declare type TComponentResolver = Promise.Resolver<TComponentAny>
 
 /**
  * Component loader shape
@@ -23,7 +23,7 @@ declare type TComponentResolver = Promise.Resolver<TComponent>
 declare type TComponentLoader = (resolver:TComponentResolver) => any
 
 
-declare type TPromisedComponentLoader = () => Promise<TComponent>
+declare type TPromisedComponentLoader = () => Promise<TComponentAny>
 
 
 declare interface IViewConfig {

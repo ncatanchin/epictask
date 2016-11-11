@@ -123,7 +123,7 @@ export class IPCServer {
 				const
 					payload = getRawPayload(eventOrBuf,data)
 				
-				this.ipc.server.emit(socket,msgpack.encode(`@@dataStart-${payload.length}`))
+				//this.ipc.server.emit(socket,msgpack.encode(`@@dataStart-${payload.length}`))
 				this.ipc.server.emit(socket, payload)
 			}
 		} catch (err) {
@@ -151,9 +151,12 @@ export class IPCServer {
 		} else {
 			const
 				payload = getRawPayload(eventOrBuf,data)
-			
-			this.ipc.server.broadcast(msgpack.encode(`@@dataStart-${payload.length}`))
-			this.ipc.server.broadcast(payload)
+			try {
+				//this.ipc.server.broadcast(msgpack.encode(`@@dataStart-${payload.length}`))
+				this.ipc.server.broadcast(payload)
+			} catch (err) {
+				log.error(`Failed to broadcast msg`,this.name,eventOrBuf,data,err)
+			}
 		}
 	}
 	

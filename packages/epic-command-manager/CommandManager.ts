@@ -45,6 +45,13 @@ export interface ICommandContainerRegistration {
 	menuItems?:ICommandMenuItem[]
 }
 
+
+function getGlobalShortcut() {
+	const
+		electron = require('electron')
+	
+	return getValue(() => Env.isMain ? electron.globalShortcut : electron.remote.globalShortcut)
+}
  
 
 /**
@@ -312,16 +319,16 @@ export class CommandManager {
 				}
 				
 				this.browserListeners = {
-					focus: {
-						listener:this.onWindowFocus,
-						attacher: addBrowserWindowListener,
-						detacher: removeBrowserWindowListener
-					},
-					blur: {
-						listener: this.onWindowBlur,
-						attacher: addBrowserWindowListener,
-						detacher: removeBrowserWindowListener
-					}
+					// focus: {
+					// 	listener:this.onWindowFocus,
+					// 	attacher: addBrowserWindowListener,
+					// 	detacher: removeBrowserWindowListener
+					// },
+					// blur: {
+					// 	listener: this.onWindowBlur,
+					// 	attacher: addBrowserWindowListener,
+					// 	detacher: removeBrowserWindowListener
+					// }
 				}
 				
 				
@@ -455,8 +462,7 @@ export class CommandManager {
 		}
 		
 		const
-			electron = require('electron'),
-			globalShortcut = getValue(() => electron.remote.globalShortcut) || getValue(() => electron.globalShortcut)
+			globalShortcut = getGlobalShortcut()
 		
 		if (!globalShortcut)
 			return
@@ -486,7 +492,10 @@ export class CommandManager {
 	 */
 	private updateGlobalCommands(commands:ICommand[]) {
 		const
-			globalShortcut = getValue(() => Electron.remote.globalShortcut) || Electron.globalShortcut
+			globalShortcut = getGlobalShortcut()
+		
+		if (!globalShortcut)
+			return
 		
 		commands
 			.filter(it => it.type === CommandType.Global)

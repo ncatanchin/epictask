@@ -1,7 +1,6 @@
 import {IToolProps, IToolConfig, IToolRegistration} from "./ToolTypes"
 
 import {ActionFactory} from 'typedux'
-import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { decorateConstructor } from "./Decorations"
 import { getValue } from "./ObjectUtil"
 

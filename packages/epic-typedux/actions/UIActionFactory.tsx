@@ -17,7 +17,6 @@ import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
  
 import {getWindowManagerClient} from "epic-process-manager-client"
-import { IWindowConfig } from "epic-process-manager-client/WindowTypes"
 import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { makePromisedComponent } from "epic-global/UIUtil"

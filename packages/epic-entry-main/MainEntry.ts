@@ -83,14 +83,17 @@ function loadMainApp() {
 	function loadCommandManager() {
 		const
 			commandManagerMod = require('epic-command-manager'),
-			commandManager = commandManagerMod.getCommandManager(),
-			
-			electronMenuProvider =
-				require('epic-command-manager')
-					.ElectronMainManagerProvider
-		
-		
-		commandManager.setMenuManagerProvider(electronMenuProvider)
+			commandManager = commandManagerMod.getCommandManager()
+		//
+		// 	electronMenuProvider =
+		// 		require('epic-command-manager')
+		// 			.ElectronMainManagerProvider
+		//
+		//
+		commandManager.setMenuManagerProvider(
+			require('epic-command-manager/CommandElectronMenuManager')
+				.CommandElectronMenuManager
+		)
 		return commandManager
 	}
 	

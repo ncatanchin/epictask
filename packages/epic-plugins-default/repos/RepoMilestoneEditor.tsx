@@ -25,6 +25,7 @@ import { TextField, DatePicker } from "material-ui"
 import { List } from "immutable"
 import { milestonesSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
+import { cloneObjectShallow } from "epic-global/ObjectUtil"
 
 
 // Constants
@@ -103,7 +104,6 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface IRepoMilestoneEditorProps extends IThemedAttributes {
 	repo:AvailableRepo
-	milestones?:List<Milestone>
 }
 
 /**
@@ -113,6 +113,7 @@ export interface IRepoMilestoneEditorState {
 	milestone?:Milestone
 	errors?:any
 	textFieldRef?:any
+	saving?:boolean
 }
 
 /**
@@ -122,9 +123,6 @@ export interface IRepoMilestoneEditorState {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	milestones: milestonesSelector
-}))
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
@@ -136,10 +134,14 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 		super(props,context)
 		this.state = {
 			milestone: new Milestone(),
-			errors: {}
+			errors: {},
+			saving: false
 		}
 	}
 	
+	private get saving() {
+		return this.state.saving === true
+	}
 	
 	private get milestone() {
 		return getValue(() => this.state.milestone)
@@ -150,7 +152,11 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 			{milestone} = this,
 			dueOn = getValue(() => milestone.due_on)
 		
-		return dueOn && new Date(dueOn)
+		return dueOn && new Date(moment(dueOn).utc().valueOf())
+	}
+	
+	private formatDate = (date) => {
+		return moment(date).utc().format('MM-DD-YY')
 	}
 	
 	private get textField() {
@@ -172,6 +178,37 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 		})
 	}
 	
+	/**
+	 * Execute an update fn
+	 *
+	 * @param fn
+	 */
+	private doUpdate(fn:() => Promise<any>) {
+		if (this.saving)
+			return
+		
+		this.setState({
+			saving: true
+		},async () => {
+			try {
+				
+				// EXECUTE THE FUNCTION - ON FAIL CLEAR
+				await fn()
+				
+				this.setState({
+					milestone: new Milestone()
+				})
+			} catch (err) {
+				log.error('updated failed',err)
+				
+			}finally {
+				this.setState({
+					saving:false
+				})
+			}
+			
+		})
+	}
 	
 	
 	
@@ -184,8 +221,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	
 	
 	private patchMilestone = (patch) => this.setState({
-		milestone: assign(
-			{},
+		milestone: cloneObjectShallow(
 			getValue(() => this.state.milestone, {}),
 			patch
 		) as any
@@ -207,13 +243,41 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 		return true
 	}
 	
+	private onDelete = (milestone) => {
+		this.doUpdate(
+			() => getRepoActions().deleteMilestone(this.props.repo.repo,milestone) as any
+		)
+	}
+	
+	
+	/**
+	 * On save handler
+	 */
 	private onSave = () => {
-		const
-			repo = getValue(() => this.props.repo.repo),
-			{milestone} = this
+		this.doUpdate(
+			async () => {
+				try {
+					const
+						repo = getValue(() => this.props.repo.repo),
+						{ milestone } = this
+					
+					log.debug(`Saving milestone`,milestone)
+					if (this.validate()) {
+						await getRepoActions().saveMilestone(repo, milestone)
+						getNotificationCenter().addMessage(`Saved label: ${milestone.title}`)
+					} else {
+						//noinspection ExceptionCaughtLocallyJS
+						throw new Error(`Invalid tag name or color`)
+					}
+					
+					
+				} catch (err) {
+					log.error(`Failed to save label`,err)
+					getNotificationCenter().addErrorMessage(`Unable to persist label: ${err.message}`)
+				}
+			}
+		)
 		
-		if (this.validate())
-			getRepoActions().saveMilestone(repo,milestone)
 	}
 	
 	
@@ -235,7 +299,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	
 	render() {
 		const
-			{ styles,repo,milestones } = this.props,
+			{ styles,repo } = this.props,
 			{milestone,milestoneDueOn} = this,
 			
 			milestoneEditFields = <div key="edit-fields" style={styles.form.fields}>
@@ -249,8 +313,10 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 				<div style={[styles.form.dueOn]}>
 					<DatePicker hintText="due on"
 					            mode="landscape"
+					            autoOk={true}
+					            formatDate={this.formatDate}
 					            onChange={this.onDateChange}
-					            value={getValue(() => this.milestoneDueOn)}
+					            value={milestoneDueOn}
 					            container="inline"
 					/>
 				</div>
@@ -282,8 +348,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 			
 			<div style={styles.list}>
 				{
-					milestones
-						.filter(it => it.repoId === repo.id)
+					repo.milestones
 						.map(it => getValue(() => this.milestone.url === it.url) ?
 							milestoneEditFields :
 							<div key={it.url}
@@ -297,14 +362,20 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 								</div>
 								<div style={styles.row.spacer}/>
 								<div style={styles.row.milestone.dueOn}>
-									{!it.due_on ? 'no due date' : `due on ` + moment(it.due_on).format('MM-DD-YY')}
+									{!it.due_on ? 'no due date' : `due on ` + moment(it.due_on).utc().format('MM-DD-YY')}
 								</div>
+								
+								{/* EDIT */}
 								<div style={styles.row.actions}>
-									<Button onClick={() => this.editMilestone(it)}><Icon>edit</Icon></Button>
+									<Button onClick={() => this.editMilestone(it)}>
+										<Icon>edit</Icon>
+									</Button>
 								</div>
+								
+								{/* DELETE */}
 								<div style={styles.row.actions}>
 									<Button onClick={() => {
-											getRepoActions().deleteMilestone(repo.repo,it)
+											this.onDelete(it)
 										}}><Icon>delete</Icon></Button>
 								</div>
 							</div>

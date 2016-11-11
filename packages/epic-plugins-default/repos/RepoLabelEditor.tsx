@@ -20,10 +20,11 @@ import {
 	makeWidthConstraint
 } from "epic-styles"
 import { Label, AvailableRepo } from "epic-models"
-import { TextField } from "material-ui"
+import { TextField, CircularProgress } from "material-ui"
 import { List } from "immutable"
 import { labelsSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
+import { FlexColumnCenter } from "epic-styles/styles/CommonRules"
 
 
 // Constants
@@ -45,7 +46,9 @@ function baseStyles(topStyles, theme, palette) {
 		}],
 			
 		list: [FlexColumn,FlexScale,OverflowAuto],
-			
+		
+		saving: [FlexColumnCenter,FlexScale],
+		
 		edit: [{} ],
 		
 		form: [FlexRowCenter,FlexAuto, makeTransition(['height','max-height','min-height']),{
@@ -106,6 +109,7 @@ export interface IRepoLabelEditorState {
 	label?:Label
 	errors?:any
 	textFieldRef?:any
+	saving?:boolean
 }
 
 /**
@@ -129,10 +133,14 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 		super(props,context)
 		this.state = {
 			label: new Label(),
-			errors: {}
+			errors: {},
+			saving: false
 		}
 	}
 	
+	private get saving() {
+		return this.state.saving === true
+	}
 	
 	private get label() {
 		return getValue(() => this.state.label)
@@ -192,13 +200,73 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 		return true
 	}
 	
-	private onSave = () => {
-		const
-			repo = getValue(() => this.props.repo.repo),
-			{label} = this
+	/**
+	 * Execute an update fn
+	 *
+	 * @param fn
+	 */
+	private doUpdate(fn:() => Promise<any>) {
+		if (this.saving)
+			return
 		
-		if (this.validate())
-			getRepoActions().saveLabel(repo,label)
+		this.setState({
+			saving: true
+		},async () => {
+			try {
+				
+				await fn()
+				
+				this.setState({
+					label: new Label()
+				})
+				
+			} catch (err) {
+				log.error('updated failed',err)
+				
+			}finally {
+				this.setState({
+					saving:false
+				})
+			}
+		
+		})
+	}
+	
+	/**
+	 * On delete handler
+	 *
+	 * @param label
+	 */
+	private onDelete = (label:Label) => {
+		this.doUpdate(
+			() => getRepoActions().deleteLabel(this.props.repo.repo,label) as any
+		)
+	}
+	
+	private onSave = () => {
+		this.doUpdate(
+			async () => {
+				try {
+					const
+						repo = getValue(() => this.props.repo.repo),
+						{ label } = this
+					
+					if (this.validate()) {
+						await getRepoActions().saveLabel(repo, label)
+						getNotificationCenter().addMessage(`Saved label: ${label.name}`)
+					} else {
+						//noinspection ExceptionCaughtLocallyJS
+						throw new Error(`Invalid tag name or color`)
+					}
+					
+					
+				} catch (err) {
+					log.error(`Failed to save label`,err)
+					getNotificationCenter().addErrorMessage(`Unable to persist label: ${err.message}`)
+				}
+			}
+		)
+		
 	}
 	
 	
@@ -218,7 +286,7 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 	
 	render() {
 		const 
-			{ styles,repo,labels } = this.props,
+			{ styles,theme,repo,labels } = this.props,
 			{label} = this.state,
 			
 			labelEditFields = <div key="edit-fields" style={styles.form.fields}>
@@ -259,13 +327,19 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 				</div>
 				
 				<div style={styles.list}>
-					{
+					{ this.saving ? <div style={styles.saving}>
+						<CircularProgress
+							color={theme.progressIndicatorColor}
+							size={50}/>
+					</div> :
 					labels
 						.filter(it => it.repoId === repo.id)
 						.map(it => getValue(() => this.label.url === it.url) ?
 							labelEditFields :
+							
 							<div key={it.url}
 							     style={styles.row}>
+								
 								<div style={styles.row.label}>
 									<LabelChip
 										label={it}
@@ -273,14 +347,14 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 										textStyle={styles.row.label.chip}
 									/>
 								</div>
+								
 								<div style={styles.row.spacer}/>
+								
 								<div style={styles.row.actions}>
 									<Button onClick={() => this.editLabel(it)}><Icon>edit</Icon></Button>
 								</div>
 								<div style={styles.row.actions}>
-									<Button onClick={() => {
-											getRepoActions().deleteLabel(repo.repo,it)
-										}}><Icon>delete</Icon></Button>
+									<Button onClick={() => this.onDelete(it)}><Icon>delete</Icon></Button>
 								</div>
 							</div>
 						)}

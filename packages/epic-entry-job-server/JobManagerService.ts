@@ -79,18 +79,22 @@ export class JobManagerService extends BaseService {
 	 *
 	 * @type {TJobIMap}
 	 */
-	private workingJobs = Map<string,IJobContainer>().asMutable()
-	
-	
+	private workingJobs = getHot(module,'workingJobs', Map<string,IJobContainer>().asMutable())
 	
 	/**
 	 * Unsubscribe from store updates
 	 */
 	private unsubscriber:Function
 	
+	/**
+	 * Dependencies
+	 *
+	 * @returns {[any]}
+	 */
 	dependencies(): IServiceConstructor[] {
 		const
 			{DatabaseClientService} = require("epic-services/DatabaseClientService") as any
+		
 		return [DatabaseClientService]
 	}
 	
@@ -98,6 +102,10 @@ export class JobManagerService extends BaseService {
 		super()
 		
 		assert(!jobManager,`Job Manager can only be instantiated once`)
+		
+		setDataOnHotDispose(module,() => ({
+			workingJobs: this.workingJobs
+		}))
 	}
 	
 	

@@ -15,11 +15,7 @@ import {
 	getValue
 } from "epic-global"
 import {
-	IWindowConfig,
-	WindowType,
-	DevToolsPositionDefault,
-	IWindowInstance,
-	IWindowState
+	DevToolsPositionDefault
 } from "epic-process-manager-client/WindowTypes"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { HEARTBEAT_TIMEOUT } from "epic-net"
@@ -303,7 +299,8 @@ export class WindowManager  {
 			win = this.getWindowInstance(id)
 		
 		if (!win) {
-			return log.warn(`Unknown window: ${id}`)
+			log.warn(`Unknown window: ${id}`)
+			return
 		}
 		
 		const
@@ -516,6 +513,20 @@ export class WindowManager  {
 		}
 	}
 	
+	/**
+	 * Open without waiting for a result
+	 *
+	 * @param config
+	 */
+	openAndReturn(config:IWindowConfig)
+	openAndReturn(configs:List<IWindowConfig>|Array<IWindowConfig>)
+	openAndReturn(configOrConfigs:IWindowConfig|List<IWindowConfig>|Array<IWindowConfig>) {
+		setImmediate(() =>
+			//EventHub.emit(WindowOpen,configOrConfigs)
+			this.open(configOrConfigs as any)
+		)
+		return null
+	}
 	
 	/**
 	 * Open a new dialog with a given config
@@ -664,7 +675,7 @@ export class WindowManager  {
 				close: (event) => {
 					log.info(`Window closed: ${id}`)
 					this.updateWindowState(id, { closed: true },singleWindow || autoRestart)
-					if (!isShuttingDown() && autoRestart) {
+					if (!shutdownInProgress && !isShuttingDown() && autoRestart) {
 						log.warn(`Auto Restarting Window: ${id}`)
 						setImmediate(() => this.open(originalConfig))
 					}
@@ -707,7 +718,7 @@ export class WindowManager  {
 			windowInstance.allEventRemovers.push(attachEvents(log,webContents,{
 				'did-navigate': onNavigate,
 				'did-navigate-in-page': onNavigate,
-				'ipc=-message': windowInstance.onMessage,
+				'ipc-message': windowInstance.onMessage,
 				'dom-ready': this.makeConnect(id),
 				crashed: (event, killed) => this.onWindowExit(id,{crashed:true,killed:true}),
 				destroyed: () => this.onWindowExit(id,{destroyed:true}),
@@ -729,9 +740,12 @@ export class WindowManager  {
 /**
  * We ONLY want the interface exported, we don't want the module loaded
  */
-export interface IWindowManagerClient extends WindowManager {
-	
+declare global {
+	interface IWindowManagerClient extends WindowManager {
+		
+	}
 }
+
 
 // SET THE CLASS
 instanceContainer.clazz = WindowManager

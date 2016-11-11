@@ -5,7 +5,6 @@ import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
 import { Map } from "immutable"
 import { TWindowMap } from "epic-typedux/state/AppState"
-import { WindowType } from "epic-process-manager-client/WindowTypes"
 import { Settings } from "epic-global/settings/Settings"
 
 

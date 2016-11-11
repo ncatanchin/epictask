@@ -3,7 +3,6 @@ import { List, Record, Map } from "immutable"
 import { INotificationMessage, Settings, RegisterModel } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
-import { IWindowState } from "epic-process-manager-client/WindowTypes"
 import { reviveImmutable } from "epic-global/ModelUtil"
 import { getValue } from "epic-global/ObjectUtil"
 

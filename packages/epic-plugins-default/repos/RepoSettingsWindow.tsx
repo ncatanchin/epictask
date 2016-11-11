@@ -158,7 +158,12 @@ export interface IRepoSettingsWindowState {
 @PureRender
 export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps,IRepoSettingsWindowState> {
 	
-	
+	/**
+	 * Create a settings window
+	 *
+	 * @param props
+	 * @param context
+	 */
 	constructor(props, context) {
 		super(props, context)
 		
@@ -190,11 +195,12 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 * Hide/close the window
 	 */
 	private hide = () => {
-		const
-			windowId = getWindowId()
-		
-		if (windowId)
-			getUIActions().closeWindow(windowId)
+		getCurrentWindow().close()
+		// const
+		// 	windowId = getWindowId()
+		//
+		// if (windowId)
+		// 	getUIActions().closeWindow(windowId)
 	}
 	
 	/**
@@ -202,21 +208,32 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 */
 	private close = this.hide
 	
-	
+	/**
+	 *
+	 * @param props
+	 */
 	private checkState = (props = this.props) => {
 		let
-			selectedRepo = getValue(() => this.state.selectedRepo)
+			{selectedRepo} = this.state
+		
+		log.debug(`Checking state`,props,'selected repo',selectedRepo)
 		
 		const
-			{ repos } = props
+			repos = this.getEditableRepos(props)
 		
-		if (selectedRepo && repos.find(repo => repo.id === selectedRepo.id))
-			return
+		if (!selectedRepo && repos.size) {
+				this.setState({
+					selectedRepo: repos.size && repos.get(0)
+				})
+		}
 		
-		selectedRepo = repos.size && repos.get(0)
-		
-		if (selectedRepo)
-			this.setState({ selectedRepo })
+		// if (selectedRepo && repos.find(repo => repo.id === selectedRepo.id))
+		// 	return
+		//
+		// selectedRepo = repos.size && repos.get(0)
+		//
+		// if (selectedRepo)
+		// 	this.setState({ selectedRepo })
 		
 	}
 	
@@ -253,18 +270,33 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 		})
 	}
 	
+	/**
+	 * get editable repos
+	 *
+	 * @returns {List<Repo>}
+	 */
+	getEditableRepos(props = this.props) {
+		return props.repos
+			.filter(repo => canEditRepo(repo.repo))
+	}
 	
 	render() {
 		const
-			{ repos, styles, theme, palette } = this.props,
-			{ selectedRepo, activeTab } = this.state,
+			{ repos, styles, theme, palette } = this.props
+		
+		if (!repos || !repos.size)
+			return React.DOM.noscript()
+		
+		const
+			{ activeTab } = this.state,
+			selectedRepoId = getValue(() => this.state.selectedRepo.id),
+			selectedRepo = repos.find(it => it.id === selectedRepoId),
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				Repo Settings
 			</div>,
 			
-			repoItems = repos
-				.filter(repo => canEditRepo(repo.repo))
+			repoItems = this.getEditableRepos()
 				.map(repo => ({
 					key: repo.id,
 					value: repo.id,

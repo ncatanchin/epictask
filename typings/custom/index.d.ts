@@ -3,7 +3,6 @@
 /// <reference path="./webpack-env.d.ts" />
 /// <reference path="./element-class.d.ts" />
 /// <reference path="./lodash-mixins.d.ts" />
-/// <reference path="./react-hotkeys.d.ts" />
 /// <reference path="./short-id.d.ts" />
 /// <reference path="./typescript-ioc.d.ts" />
 /// <reference path="./reselect.d.ts" />

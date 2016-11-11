@@ -8,6 +8,7 @@ import filterProps from "react-valid-props"
 import { ICommand } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchItem, SearchType ,SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
+import { MappedProps } from "epic-global/UIUtil"
 
 // Constants
 const log = getLogger(__filename)
@@ -110,6 +111,28 @@ export interface ISearchResultItemState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
+@MappedProps((props) => {
+	const
+		{item,controller} = props,
+		{items,selectedIndex} = controller.getState(),
+		selectedItem = items && items.get(selectedIndex)
+	
+	return {
+		selected: selectedItem && selectedItem.id === item.id
+	}
+},{
+	watchedProps: ['controller.state'],
+	onMount(mapper,props,data) {
+		data.onChange = () => mapper.remap()
+		data.unsubscribe = props.controller.on(SearchEvent.StateChanged,data.onChange)
+	},
+	onUnmount(mapper,props,data) {
+		if (data.unsubscribe) {
+			data.unsubscribe()
+			data.unsubscribe = null
+		}
+	}
+})
 @ThemedStyles(baseStyles)
 @PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {

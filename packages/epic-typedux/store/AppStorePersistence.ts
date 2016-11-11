@@ -138,18 +138,19 @@ export function configureStorePersistence(store,getStoreStateIn) {
 	
 	
 	// SUBSCRIBE TO SYSTEM EVENTS & UPDATES
-	if (Env.isMain) {
-		const
-			{app} = require('electron'),
-			makeStatePersist = name => () => {
-				console.log(`Saving state ${name}`)
-				writeStoreState(false)
-			}
-		
-		process.on('beforeExit',makeStatePersist('processBeforeExit'))
-		app.on('before-quit',makeStatePersist('eBeforeQuit'))
-		app.on('will-quit',makeStatePersist('eWillQuit'))
-	}
+	const
+		Electron = require('electron'),
+		{app} = Env.isMain ? Electron : Electron.remote,
+		makeStatePersist = name => () => {
+			console.log(`Saving state ${name}`)
+			writeStoreState(false)
+		}
+	
+	//process.on('beforeExit',makeStatePersist('processBeforeExit'))
+	if (Env.isMain)
+		app.on('before-quit',makeStatePersist('beforeQuit'))
+	// app.on('will-quit',makeStatePersist('eWillQuit'))
+	 
 	store.subscribe(onChange)
 	
 

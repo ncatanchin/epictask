@@ -17,7 +17,7 @@ if (Env.isMain) {
 			
 			guard(() => require('epic-typedux/provider')
 				.getAppActions()
-				.updateWindow(...windowStates))
+				.updateWindow(true,...windowStates))
 		}
 	)
 }

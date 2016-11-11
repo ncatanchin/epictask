@@ -6,6 +6,12 @@ const
 	log = getLogger(__filename),
 	{BrowserWindow,app} = Electron
 
+log.setOverrideLevel(LogLevel.DEBUG)
+
+_.assignGlobal({
+	shutdownInProgress: false
+})
+
 
 let
 	shutdown = false,
@@ -13,7 +19,7 @@ let
 
 
 function isShuttingDown() {
-	return shutdown
+	return shutdown || (global as any).shutdownInProgress
 }
 
 assignGlobal({isShuttingDown})
@@ -24,7 +30,12 @@ assignGlobal({isShuttingDown})
  */
 export function shutdownApp() {
 	log.debug(`Received quit request, current quit started=${shutdown}`)
+	_.assignGlobal({
+		shutdownInProgress: true
+	})
+	
 	if (!shutdown) {
+		
 		log.debug(`Quitting/Shutting down`)
 		shutdown = true
 		app.quit()
@@ -52,6 +63,7 @@ export function setupShutdownOnWindowClose(mainWindow:Electron.BrowserWindow) {
  */
 function onShutdown(event) {
 	
+	shutdownApp()
 	
 	if (!processesStopping) {
 		processesStopping = true
@@ -65,6 +77,7 @@ function onShutdown(event) {
 				// } catch (err) {
 				// 	log.warn(`Failed to cleanly shutdown processes`)
 				// }
+				log.info(`Closing all windows`)
 				
 				BrowserWindow.getAllWindows().forEach(win => {
 					try {
@@ -83,9 +96,11 @@ function onShutdown(event) {
 }
 
 
+app.on('before-quit',shutdownApp)
+
 // ON ALL WINDOWS CLOSED - QUIT
 app.on('window-all-closed',(event) => {
-	log.debug(`All windows closed - quitting`)
+	log.info(`All windows closed - quitting`)
 	if (!Env.isMac)
 		shutdownApp()
 })

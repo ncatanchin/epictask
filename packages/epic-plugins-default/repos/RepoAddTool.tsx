@@ -6,9 +6,12 @@ import { getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
 import { ThemedStyles } from "epic-styles"
 import { SearchType } from "epic-ui-components/search"
+import { SearchController } from "epic-ui-components/search/SearchController"
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	RepoAddSearchId = 'repo-add-search'
 
 const baseStyles = createStyles((topStyles,theme,palette) => {
 	const
@@ -61,6 +64,9 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	 */
 	onResultSelected = (result) => {
 		log.info(`Repo add result was selected`,result)
+		
+		SearchController.getDefaultHandler(SearchType.Repo)(RepoAddSearchId,result)
+		
 		this.hide()
 	}
 	
@@ -133,7 +139,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 			             focused={true}
 			             open={true}
 			             resultsHidden={false}
-			             searchId='repo-add-search'
+			             searchId={RepoAddSearchId}
 			             types={[SearchType.Repo]}
 			             inlineResults={true}
 			             expanded={false}

@@ -239,7 +239,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				'Close Dialog',
 				this.hide,
 				"Escape")
-			
+
 			.make()
 	
 	
@@ -250,11 +250,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * Hide/close the window
 	 */
 	private hide = () => {
-		const
-			windowId = getWindowId()
-		
-		if (windowId)
-			getUIActions().closeWindow(windowId)
+		getCurrentWindow().close()
+		// const
+		// 	windowId = getWindowId()
+		//
+		// if (windowId)
+		// 	getUIActions().closeWindow(windowId)
 	}
 	
 	/**

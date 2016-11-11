@@ -1,7 +1,11 @@
 import Electron from 'epic-electron'
-import { IWindowManagerClient } from "epic-process-manager/WindowManager"
 
 
+
+
+let
+	windowManagerClientProvider:() => IWindowManagerClient,
+	windowManagerClientProxy
 
 /**
  * If on the main process, return the real thing
@@ -10,8 +14,25 @@ import { IWindowManagerClient } from "epic-process-manager/WindowManager"
  * @returns {WindowManager}
  */
 export function getWindowManagerClient():IWindowManagerClient {
+	if (windowManagerClientProvider)
+		return windowManagerClientProvider()
 	
-	return Env.isMain ?
-		require('epic-process-manager/WindowManager').getWindowManager() :
-		Electron.remote.getGlobal('getWindowManager')()
+	if (Env.isMain) {
+		windowManagerClientProvider = require('epic-process-manager/WindowManager').getWindowManager()
+	} else {
+		windowManagerClientProxy = new Proxy({},{
+			get: function(target,prop,receiver) {
+				if (prop === 'open')
+					prop = "openAndReturn"
+				
+				const
+					windowManager = Electron.remote.getGlobal('getWindowManager')()
+				
+				return windowManager[prop]
+			}
+		})
+		windowManagerClientProvider = () => windowManagerClientProxy
+	}
+	
+	return windowManagerClientProvider()
 }

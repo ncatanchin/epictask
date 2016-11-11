@@ -105,15 +105,18 @@ function getCurrentWindowGlobal(flushCache = false):Electron.BrowserWindow {
 			Electron = require('electron')
 		
 		try {
-			return Electron.remote ?
-				Electron.remote.getCurrentWindow() :
-				Electron.BrowserWindow.getFocusedWindow()
+			return Env.isMain ?
+				Electron.BrowserWindow.getFocusedWindow() :
+				Electron.remote.getCurrentWindow()
+				
 			
 		} catch (err) {
-			if (!flushCache)
-				return getCurrentWindowGlobal(true)
-			else
-				return (Electron.remote || Electron).BrowserWindow.getFocusedWindow()
+			console.error(`Failed to get current window`,err)
+			return null
+			// if (!flushCache)
+			// 	return getCurrentWindowGlobal(true)
+			// else
+			//	return (Electron.remote || Electron).BrowserWindow.getFocusedWindow()
 		}
 	} catch (err) {
 		console.error(`Unable to find any current window`,err)
@@ -171,6 +174,11 @@ function installGlobals() {
 		assign: Object.assign.bind(Object),
 		assignGlobal: _.assignGlobal.bind(_),
 		EventHub,
+		isShuttingDown() {
+			return Env.isMain ?
+				(global as any).shutdownInProgress :
+				require('electron').remote.getGlobal('shutdownInProgress')
+		},
 		setStoreReady(ready:boolean) {
 			g.GlobalStoreReady = true
 			
@@ -241,7 +249,7 @@ declare global {
 	// }
 
 	function isShuttingDown():boolean
-	
+	let shutdownInProgress:boolean
 	
 	// GLOBAL WHEN RUNNING STANDALONE
 	let __NO_WEBPACK__:boolean

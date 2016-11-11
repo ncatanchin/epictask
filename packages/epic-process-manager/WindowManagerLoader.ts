@@ -5,11 +5,6 @@ import { windowsSelector } from "epic-typedux/selectors"
 import {
 	WindowConfigNormalDefaults, JobServerWindowConfig, DatabaseServerWindowConfig
 } from "epic-process-manager-client/WindowConfig"
-import {
-	WindowType,
-	
-	IWindowConfig
-} from "epic-process-manager-client/WindowTypes"
 
 import { getWindowManager } from "epic-process-manager"
 import { cloneObject } from "epic-global/ObjectUtil"

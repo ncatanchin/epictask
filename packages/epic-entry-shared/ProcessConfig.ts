@@ -139,7 +139,7 @@ declare global {
 	//const ProcessConfig:typeof ProcessConfigGlobal
 	
 	//noinspection JSUnusedLocalSymbols
-	const ProcessType:typeof ProcessTypeGlobal
+	//const ProcessType:typeof ProcessTypeGlobal
 }
 
 // Assign to global

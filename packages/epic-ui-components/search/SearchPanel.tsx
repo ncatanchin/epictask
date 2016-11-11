@@ -18,7 +18,6 @@ import {
 } from "epic-command-manager-ui"
 import { ThemedStyles } from "epic-styles"
 import {
-	SearchResult,
 	SearchType,
 	SearchItem,
 	ISearchState,
@@ -38,7 +37,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // STYLES
@@ -207,6 +206,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					log.info('Escape key received', event, onEscape)
 					if (onEscape && onEscape() === true) {
 						(this.textField as any).blur()
+						this.setState({
+							focused: true
+						})
 					}
 					//this.onBlur(event)
 					
@@ -223,7 +225,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 				(cmd, event) => {
 					event.preventDefault()
 					event.stopPropagation()
-					this.onResultSelected(null)
+					this.onResultSelected(null,null)
 					
 				},
 				CommonKeys.Enter, {
@@ -309,8 +311,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	isFocused = (props = this.props):boolean => {
 		return props.focused ||
-			getValue(() => this.state.focused, false) ||
-			props.commandContainer.isFocused()
+			getValue(() => this.state.focused, false)
+			// ||
+			// props.commandContainer.isFocused()
 	}
 	
 	
@@ -410,10 +413,13 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	
 	onFocus = (event) => {
 		log.info('Search panel gained focus query = ', this.query)
+		this.setState({
+			focused: true
+		})
 		// setImmediate(() => this.updateState(this.props,true))
 		
 		//this.focusTextField()
-		this.updateState(this.props, true)
+		//this.updateState(this.props, true)
 		// if (this.query.length) {
 		// 	this.select()
 		// }
@@ -474,21 +480,27 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		
 	}
 	
+	
+	
 	/**
 	 * Search result is selected
 	 *
+	 * @param event
 	 * @param item
+	 * @param fromController - sent from controller handler
 	 */
-	onResultSelected = (item:SearchItem) => {
+	onResultSelected = (event:SearchEvent,item:SearchItem, fromController = false) => {
 		
-		item = item || _.get(this, 'state.selectedItem', null)
+		item = item || _.get(this.state, 'selectedItem', null)
 		
 		log.info(`Result selected`, item, this.state)
 		
 		const
-			{ controller, searchState } = this.state,
-			{ items, selectedIndex } = searchState,
-			{ onResultSelected } = this.props
+			{ onResultSelected } = this.props,
+			{ controller } = this.state,
+			searchState = controller.getState(),
+			{ items, selectedIndex } = searchState
+			
 		
 		if (!item) {
 			if (items && isNumber(selectedIndex)) {
@@ -501,14 +513,17 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			}
 		}
 		
-		controller.select(item)
-		this.setState({ focused: false })
 		
 		
 		log.info(`Calling panel owner`, onResultSelected)
 		if (onResultSelected) {
 			onResultSelected(item)
 		} else {
+			
+			// IF THE SELECTION DID NOT COME FROM THE CONTROLLER THEN EMIT IT
+			if (!fromController)
+				controller.select(item)
+			
 			const
 				$ = require('jquery'),
 				inputElement = this.inputElement
@@ -519,6 +534,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		
 		
 	}
+	
+	/**
+	 * Curried handler for selection from controller
+	 * @param event
+	 * @param item
+	 * @returns {undefined}
+	 */
+	onResultSelectedFromController = (event,item) =>  this.onResultSelected(event,item,true)
+	
 	
 	/**
 	 * On search item hover
@@ -562,7 +586,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			{ controller } = this.state
 		
 		let
-			{ totalItemCount } = this.state,
+			totalItemCount = controller.getState().items.size,
 			endIndex = Math.max(totalItemCount - 1, 0),
 			
 			newSelectedIndex = selectedIndex < 0 ? endIndex :
@@ -575,10 +599,21 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		
 	}
 	
+	/**
+	 * Move the current selection
+	 *
+	 * @param increment
+	 */
 	moveSelection = (increment:number) => {
-		log.info('move selection trigger')
+		log.debug('move selection trigger',increment)
 		
-		this.setSelectedIndex(getValue(() => this.state.searchState.selectedIndex, 0) + increment)
+		let
+			selectedIndex = this.state.controller.getState().selectedIndex
+		
+		if (!isNumber(selectedIndex))
+			selectedIndex = 0
+		
+		this.setSelectedIndex(selectedIndex + increment)
 	}
 	
 	
@@ -592,7 +627,10 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * On mount
 	 */
-	componentWillMount = () => this.updateState(this.props)
+	componentWillMount = () => {
+		this.state.controller.on(SearchEvent.ItemSelected,this.onResultSelectedFromController)
+		this.updateState(this.props)
+	}
 	
 	/**
 	 * Did mount
@@ -601,17 +639,13 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	
 	
 	componentWillUnmount = () => {
+		this.state.controller.off(SearchEvent.ItemSelected,this.onResultSelectedFromController)
 		this.mounted = false
 		
 		const
-			unsubscribe:any = getValue(() => this.state.unsubscribe, null) as any
-		
-		const
+			unsubscribe:any = this.state.unsubscribe,
 			newState = {
-				provider: null,
-				searchState: assign({}, assign(this.state.searchState, {
-					provider: null
-				}))
+				searchState: this.state.controller.getState()
 			} as any
 		
 		if (unsubscribe) {
@@ -627,26 +661,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param nextProps
 	 */
 	componentWillReceiveProps = (nextProps:ISearchPanelProps) => {
-		const
-			{ searchState } = this.state,
-			selectedIndex:number = searchState.selectedIndex,
-			selectedItem = isNumber(selectedIndex) && selectedIndex > -1 && searchState.items.get(selectedIndex),
-			newState = this.updateState(nextProps)
-		
-		let
-			newSelectedIndex = 0
-		
-		if (selectedItem) {
-			newSelectedIndex = (newState.items || [])
-				.findIndex(newItem => newItem.id === selectedItem.id)
-		}
-		
-		if (isNumber(selectedIndex))
-			this.setState({
-				searchState: assign(searchState, {
-					selectedIndex: newSelectedIndex
-				})
-			})
+		this.updateState(nextProps)
 	}
 	
 	
@@ -726,16 +741,16 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					inputStyle={inputStyle}
 					defaultValue={query || ''}
 				/>
-				<SearchResults ref={(resultsListRef) => this.setState({resultsListRef})}
+				{focused && <SearchResults ref={(resultsListRef) => this.setState({resultsListRef})}
 				               anchor={'#' + searchPanelId}
 				               controller={this.state.controller}
 				               searchId={searchId}
 				               open={focused}
 				               inline={inlineResults}
 				               onResultHover={this.onHover}
-				               onResultSelected={this.onResultSelected}
+				               onResultSelected={(item) => this.onResultSelected(null,item)}
 				               containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}
-				/>
+				/>}
 			</div>
 		
 		

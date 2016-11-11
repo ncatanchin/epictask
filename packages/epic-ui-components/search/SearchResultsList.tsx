@@ -56,7 +56,7 @@ export interface ISearchResultsListState {
 
 
 @ThemedStyles(baseStyles, 'searchResults')
-//@PureRender
+@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
 	
 	
@@ -102,30 +102,30 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			})
 		}
 	}
-	
-	
-	/**
-	 * Have items changed
-	 *
-	 * @param nextProps
-	 * @param nextState
-	 * @returns {boolean}
-	 */
-	shouldComponentUpdate(nextProps:ISearchResultsListProps, nextState) {
-		return !shallowEquals(
-				this.props,
-				nextProps,
-				'controller.state.items',
-				'controller.state.selectedIndex',
-				'theme',
-				'style',
-				'styles') || !shallowEquals(
-				this.state,
-				nextState,
-				'results',
-				'selectedIndex',
-				'items')
-	}
+	//
+	//
+	// /**
+	//  * Have items changed
+	//  *
+	//  * @param nextProps
+	//  * @param nextState
+	//  * @returns {boolean}
+	//  */
+	// shouldComponentUpdate(nextProps:ISearchResultsListProps, nextState) {
+	// 	return !shallowEquals(
+	// 			this.props,
+	// 			nextProps,
+	// 			'controller.state.items',
+	// 			'controller.state.selectedIndex',
+	// 			'theme',
+	// 			'style',
+	// 			'styles') || !shallowEquals(
+	// 			this.state,
+	// 			nextState,
+	// 			'results',
+	// 			'selectedIndex',
+	// 			'items')
+	// }
 	
 	// /**
 	//  * On new props - update the state
@@ -193,8 +193,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			
 			log.debug(`Selected index in results ${selectedIndex}`)
 			
-			const
-				selectedItem = searchItems && searchItems.get(selectedIndex)
 			
 			/**
 			 * Iterate results, create items for each
@@ -215,7 +213,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				// if (!item) {
 				// 	item = itemCache[ id ] =
 				let item = <SearchResultItem key={id}
-				                             selected={selectedItem && selectedItem.id === searchItem.id}
 				                             item={searchItem}
 				                             controller={controller}
 				                             onMouseEnter={this.onHover(searchItem)}

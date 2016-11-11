@@ -13,6 +13,8 @@ import { GitHubClient, createClient } from "epic-github"
 import { getCommandManager, ICommand } from "epic-command-manager"
 import { ValueCache, Benchmark ,cloneObjectShallow,EnumEventEmitter } from "epic-global"
 import {  getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { isNumber, getValue } from "typeguard"
+import { nilFilterList } from "epic-global/ListUtil"
 
 
 const
@@ -175,7 +177,7 @@ function textSearchFilter(query:string,items:List<any>,props:string[], limit:num
 
 	let matchCount = 0
 	
-	return List(items.filter(item => {
+	return items.filter(item => {
 		if (limit !== -1 && matchCount > limit)
 			return false
 
@@ -187,7 +189,7 @@ function textSearchFilter(query:string,items:List<any>,props:string[], limit:num
 			matchCount++
 
 		return match
-	}))
+	})
 }
 
 export enum SearchEvent {
@@ -274,6 +276,8 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 			
 		})
 		
+		this.updateState()
+		
 	}
 	
 	/**
@@ -288,7 +292,7 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 				{perSourceLimit} = this
 			
 			let
-				{items} = result
+				items = getValue(() => result.items,List())
 			
 			items = (!perSourceLimit || perSourceLimit < 1 || result.items.size <= perSourceLimit) ?
 				items :
@@ -305,7 +309,7 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 			results: this.results || [],
 			controller: this,
 			working: this.working,
-			selectedIndex: this.selectedIndex
+			selectedIndex: isNumber(this.selectedIndex) ? this.selectedIndex : 0
 		}
 		this.fireEvent(SearchEvent.StateChanged,this.state)
 		return this.state
@@ -696,12 +700,13 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 			
 			
 			log.debug(`Waiting for all type searches to return: ${searchId}`)
+			
 			const
 				results = await Promise.all(searchPromises)
 			
 			log.debug(`Got Results for ${query}`,results)
 			log.info(`Results`)
-			this.setResults(results)
+			this.setResults(nilFilterList(results as any))
 			
 		} catch (err) {
 			log.error(`Search failed`,err)

@@ -5,7 +5,8 @@ import { shutdownApp } from "./MainShutdownHandler"
 const
 	{
 		BrowserWindow,
-		Menu
+		Menu,
+		app
 	} = Electron,
 	log = getLogger(__filename)
 
@@ -75,7 +76,7 @@ export function makeMainMenu() {
 	
 	const
 		template = [ {
-			label: 'EpicTask',
+			label: app.getName(),
 			submenu: [ {
 				label: 'About EpicTask',
 				selector: 'orderFrontStandardAboutPanel:'
@@ -102,7 +103,7 @@ export function makeMainMenu() {
 			}, {
 				label: 'Quit',
 				accelerator: 'Command+Q',
-				click: shutdownApp
+				role: 'quit'
 			} ]
 		}, {
 			label: 'Edit',

@@ -14,7 +14,7 @@ import {
 	GithubSyncStatus
 } from "epic-global"
 import { getStores,chunkRemove } from "epic-database-client"
-import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
+import { ActionFactory, ActionReducer, ActionThunk, ActionPromise } from "typedux"
 import { RepoMessage, RepoState } from "../state/RepoState"
 
 import {
@@ -503,7 +503,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	/**
 	 * Load all available repo resources
 	 */
-	@ActionThunk()
+	@ActionPromise()
 	loadAvailableRepos(prepareOnBoot = false) {
 		return async (dispatch,getState) => {
 			log.debug(`Getting available repos`)
@@ -639,36 +639,45 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	@ActionThunk()
 	createAvailableRepo(repo:Repo) {
 		return async(dispatch, getState) => {
-			const
-				actions = this.withDispatcher(dispatch, getState),
-				repoStore = getStores().repo,
-				availRepoStore = getStores().availableRepo
-
-			let availRepo:AvailableRepo = new AvailableRepo({
-				id: repo.id,
-				repoId: repo.id,
-				enabled: true,
-				deleted: false
-			})
-
-			let
-				savedRepo = await repoStore.get(repo.id)
-			
-			if (!savedRepo) {
-				log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
-				await repoStore.save(repo)
+			try {
+				const
+					actions = this.withDispatcher(dispatch, getState),
+					repoStore = getStores().repo,
+					availRepoStore = getStores().availableRepo
+				
+				let availRepo:AvailableRepo = new AvailableRepo({
+					id: repo.id,
+					repoId: repo.id,
+					enabled: true,
+					deleted: false
+				})
+				
+				let
+					savedRepo = await repoStore.get(repo.id)
+				
+				if (!savedRepo) {
+					log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
+					await repoStore.save(repo)
+				}
+				
+				const
+					existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)
+				
+				log.debug('Saving new available repo as ', availRepo.repoId, 'existing', existingAvailRepo && JSON.stringify(existingAvailRepo, null, 4))
+				if (existingAvailRepo)
+					availRepo = cloneObjectShallow(existingAvailRepo, availRepo)
+				
+				await availRepoStore.save(availRepo)
+				await actions.loadAvailableRepos()
+				
+				this.setRepoEnabled(repo.id, true)
+				
+				actions.syncRepo([ availRepo.repoId ], true)
+				getNotificationCenter().addMessage(`Added ${repo.full_name}, initiating sync now`)
+			} catch (err) {
+				log.error(`Failed to create/import repo`,err)
+				getNotificationCenter().addErrorMessage(`Import of ${repo.full_name} failed: ${err.message}`)
 			}
-			
-			const
-				existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)
-			
-			log.debug('Saving new available repo as ',availRepo.repoId,'existing',existingAvailRepo && JSON.stringify(existingAvailRepo,null,4))
-			if (existingAvailRepo)
-				availRepo = assign(existingAvailRepo,availRepo)
-		
-			await availRepoStore.save(availRepo)
-			actions.loadAvailableRepos()
-			actions.syncRepo([availRepo.repoId],true)
 			
 		}
 	}
@@ -830,87 +839,89 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	@ActionThunk()
-	saveMilestone(repo:Repo,milestone:Milestone) {
-		return async (dispatch,getState) => {
-			const
-				milestoneStore = getStores().milestone,
-				client = createClient()
+	
+	async saveMilestone(repo:Repo,milestone:Milestone) {
+		
+		const
+			milestoneStore = getStores().milestone,
+			client = createClient()
+		
+		const
+			updatedMilestone = await client.milestoneSave(repo,milestone)
 			
-			const
-				updatedMilestone = await client.milestoneSave(repo,milestone)
-				
+		
+		if (!updatedMilestone.repoId)
+			updatedMilestone.repoId = repo.id
+		
+		const
+			savedMilestone = await milestoneStore.save(updatedMilestone),
+		
+			availableRepos = availableReposSelector(getStoreState()),
+			availableRepo = cloneObjectShallow(availableRepos.find(it => it.id === repo.id))
+		
+		availableRepo.milestones = [savedMilestone]
+			.concat(availableRepo.milestones
+			.filter(it => it.id !== savedMilestone.id))
 			
-			if (!updatedMilestone.repoId)
-				updatedMilestone.repoId = repo.id
-			
-			const
-				savedMilestone = await milestoneStore.save(updatedMilestone),
-			
-				availableRepos = availableReposSelector(getState()),
-				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
-			
-			availableRepo.milestones = availableRepo.milestones
-				.filter(it => it.id !== savedMilestone.id)
-				.concat([savedMilestone])
-			
-			this.updateAvailableRepos([availableRepo])
-		}
+		
+		this.updateAvailableRepos([availableRepo])
+	
 	}
 	
-	@ActionThunk()
-	deleteMilestone(repo:Repo,milestone:Milestone) {
-		return async (dispatch,getState) => {
-			const
-				milestoneStore = getStores().milestone,
-				client = createClient()
-			
-			await client.milestoneDelete(repo,milestone)
-			
-			await milestoneStore.remove(Milestone.makeId(milestone))
-			
-			const
-				availableRepos = availableReposSelector(getState()),
-				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
-			
-			availableRepo.milestones = availableRepo
-				.milestones
-				.filter(it => it.id !== milestone.id)
-			
-			this.updateAvailableRepos([availableRepo])
-		}
+	async deleteMilestone(repo:Repo,milestone:Milestone) {
+		
+		const
+			milestoneStore = getStores().milestone,
+			client = createClient()
+		
+		await client.milestoneDelete(repo,milestone)
+		
+		await milestoneStore.remove(Milestone.makeId(milestone))
+		
+		const
+			availableRepos = availableReposSelector(getStoreState()),
+			availableRepo = cloneObjectShallow(availableRepos.find(it => it.id === repo.id))
+		
+		availableRepo.milestones = cloneObjectShallow(availableRepo
+			.milestones
+			.filter(it => it.id !== milestone.id))
+		
+		this.updateAvailableRepos([availableRepo])
+	
 	}
 	
-	@ActionThunk()
-	saveLabel(repo:Repo,label:Label) {
-		return async (dispatch,getState) => {
-			const
-				labelStore = getStores().label,
-				client = createClient()
-			
-			
-			
-			const
-				updatedLabel = await client.labelSave(repo,label)
-			
-			if (!updatedLabel.repoId)
-				updatedLabel.repoId = repo.id
-			
-			const
-				savedLabel = await labelStore.save(updatedLabel),
-			
-				availableRepos = availableReposSelector(getState()),
-				availableRepo = _.clone(availableRepos.find(it => it.id === repo.id))
-			
-			
-			
-			availableRepo.labels = availableRepo
-				.labels
-				.filter(it => it.url !== label.url)
-				.concat([savedLabel])
-			
-			this.updateAvailableRepos([availableRepo])
-		}
+	//@ActionThunk()
+	async saveLabel(repo:Repo,label:Label) {
+		
+		const
+			labelStore = getStores().label,
+			oldLabel = await labelStore.get(Label.makeId(label)),
+			client = createClient()
+		
+		const
+			updatedLabel = await client.labelSave(repo,(oldLabel || label).name,label)
+		
+		if (!updatedLabel.repoId)
+			updatedLabel.repoId = repo.id
+		
+		
+		const
+			availableRepos = availableReposSelector(getStoreState()),
+			availableRepo = cloneObjectShallow(availableRepos.find(it => it.id === repo.id))
+		
+		if (!label.repoId)
+			label.repoId = repo.id
+		
+		const
+			savedLabel = await labelStore.save(updatedLabel)
+		
+		availableRepo.labels = availableRepo
+			.labels
+			.filter(it => it.url !== label.url)
+			.concat([savedLabel])
+		
+		this.updateAvailableRepos([availableRepo])
+		
 	}
 	
 	

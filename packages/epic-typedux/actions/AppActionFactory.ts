@@ -112,15 +112,20 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	/**
 	 * Update window state(s) on AppState
 	 *
+	 * @param clear
 	 * @param id
 	 * @param windowState
 	 * @returns {(state:AppState)=>Map<string, Map<string, IWindowState>>}
 	 */
 	@ActionReducer()
-	updateWindow(...windowState) {
+	updateWindow(clear:boolean,...windowState:IWindowState[]) {
 		return (state:AppState) => state.set(
 			'windows',
 			state.windows.withMutations(newWindowMap => {
+				if (clear) {
+					newWindowMap = newWindowMap.clear()
+				}
+				
 				windowState.forEach(winState => {
 					newWindowMap.set(winState.id,cloneObjectShallow(winState))
 				})

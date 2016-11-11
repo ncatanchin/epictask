@@ -161,8 +161,8 @@ export class Select extends React.Component<ISelectProps,ISelectState> {
 	 * @param nextContext
 	 */
 	componentWillReceiveProps(nextProps:ISelectProps, nextContext:any):void {
-		if (!shallowEquals(this.props,nextProps,'items'))
-			this.updateState(nextProps)
+		//if (!shallowEquals(this.props,nextProps,'items','value'))
+		this.updateState(nextProps)
 	}
 	
 	render() {

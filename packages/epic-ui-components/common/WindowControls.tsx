@@ -3,7 +3,8 @@
 
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import { PureRender } from "./PureRender"
-import { colorAlpha, colorDarken } from "epic-styles"
+import { colorDarken } from "epic-styles"
+
 
 
 function baseStyles(topStyles,theme,palette) {
@@ -61,7 +62,11 @@ export class WindowControls extends React.Component<IThemedAttributes,void> {
 	/**
 	 * Close window
 	 */
-	private close = () => getWindow() && getWindow().close()
+	private close = (event) => {
+		event.preventDefault()
+		setImmediate(() => getCurrentWindow().close())
+		
+	}
 	
 	/**
 	 * Max/un-max window

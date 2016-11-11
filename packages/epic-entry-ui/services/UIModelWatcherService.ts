@@ -21,7 +21,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Manages data state changes and takes appropriate action

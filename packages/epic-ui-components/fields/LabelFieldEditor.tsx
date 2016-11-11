@@ -129,8 +129,8 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			{ availableLabels, labels } = props,
 			filteredAvailableLabels = _.sortBy(
 				_.nilFilter(availableLabels)
-					.filter((availLabel:Label) => !labels
-						.find(label => label.url === availLabel.url)),
+					.filter((availLabel:Label) =>
+						!labels.find(label => label && label.url === availLabel.url)),
 				(label:Label) => _.toLower(label.name)
 			)
 		
@@ -196,6 +196,9 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	 * @returns {{cursor: string, backgroundColor: string, color: any}}
 	 */
 	labelColorStyle(item:Label) {
+		if (!item)
+			return null
+		
 		const
 			{ theme } = this.props,
 			backgroundColor = '#' + item.color,
@@ -213,6 +216,9 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	}
 	
 	renderChip = (item:Label) => {
+		if (!item)
+			return React.DOM.noscript()
+		
 		const
 			{ theme, chipStyle } = this.props,
 			styles = mergeStyles(
@@ -224,7 +230,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 				this.labelColorStyle(item)
 			)
 		
-		return <div key={item.url} className='chip' style={styles.chip}>
+		return !item ? React.DOM.noscript() : <div key={item.url} className='chip' style={styles.chip}>
 			<div style={chipContentStyle}>
 				<Icon style={styles.chipContent.control}
 				      onClick={() => this.onChipRemoved(item)}>
@@ -282,7 +288,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			filterChip={this.chipFilter}
 			renderChip={this.renderChip}
 			renderChipSearchItem={this.renderChipSearchItem}
-			allChips={availableLabels}
+			allChips={_.nilFilter(availableLabels)}
 			selectedChips={labels}
 			onChipSelected={this.onChipSelected}
 			keySource={(item:Label) => item.url}

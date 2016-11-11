@@ -82,7 +82,6 @@ export const Pages = {
 		path: 'dialog/settings',
 		showDevTools: false,
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
-			
 		require.ensure([],function(require:any) {
 			resolver.resolve(require('epic-ui-components/pages/settings').SettingsWindow)
 		}))
