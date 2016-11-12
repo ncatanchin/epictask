@@ -7,9 +7,10 @@ import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue } from "epic-models"
-import { getIssueActions } from "epic-typedux"
+
 import { shallowEquals } from "epic-global/ObjectUtil"
 import {List} from 'immutable'
+import { getIssueActions } from "epic-typedux/provider"
 // Constants
 const
 	log = getLogger(__filename)
@@ -26,7 +27,8 @@ function baseStyles(topStyles,theme,palette) {
 		root: [PositionRelative, {
 			
 			toggle: [ {
-				cursor: 'pointer'
+				cursor: 'pointer',
+				':hover': {}
 			} ],
 			
 			':hover': {}
@@ -65,6 +67,7 @@ function baseStyles(topStyles,theme,palette) {
 					backgroundColor: success.hue1
 				},
 				
+				[CSSHoverState]: [],
 				
 				borderRadius: rem(0.2),
 				zIndex: 5,
@@ -129,11 +132,13 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	constructor(props,context) {
 		super(props,context)
 		
-		this.state = {}
+		this.state = {
+			
+		}
 	}
 	
-	shouldComponentUpdate(nextProps) {
-		return !shallowEquals(nextProps,this.props,'issue.state')
+	shouldComponentUpdate(nextProps,nextState) {
+		return !shallowEquals(nextProps,this.props,'issue.id','issue.state') || !shallowEquals(nextState,this.state)
 	}
 	
 	private toggleState = () => {
@@ -145,7 +150,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 		
 		getIssueActions()
 			.setIssueStatus(
-				List<Issue>(issue),
+				List<Issue>([issue]),
 				issue.state === 'open' ?
 					'closed' :
 					'open'

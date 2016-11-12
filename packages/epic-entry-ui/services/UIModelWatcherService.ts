@@ -1,7 +1,5 @@
-import { ObservableStore } from "typedux"
 import { ProcessType, IssueKey } from "epic-global"
-import { getIssueActions, getRepoActions } from "epic-typedux"
-import { getStores } from "epic-database-client"
+import { getRepoActions } from "epic-typedux"
 import { acceptHot } from "epic-global/HotUtils"
 import {
 	addDatabaseChangeListener, removeDatabaseChangeListener
@@ -10,7 +8,6 @@ import { Issue,User ,Milestone,Label ,AvailableRepo,Comment ,Repo } from "epic-m
 
 import { BaseService, IServiceConstructor, RegisterService } from "epic-services/internal"
 import { DatabaseClientService } from "epic-services/DatabaseClientService"
-import { nilFilter } from "epic-global/ListUtil"
 import { changesToModels, changesToDeletedIds } from "epic-database-client/DatabaseUtil"
 import { getAppActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { getValue } from "epic-global/ObjectUtil"

@@ -15,15 +15,6 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-function baseStyles(topStyles, theme, palette) {
-	
-	const
-		{ text, primary, accent, background } = palette
-	
-	return [ FlexColumn, FlexAuto, {} ]
-}
-
-
 /**
  * IViewProps
  */
@@ -45,23 +36,18 @@ export interface IViewState {
  * @constructor
  **/
 
-
-// If you have a specific theme key you want to
-// merge provide it as the second param
-// @ThemedStyles(baseStyles)
 @PureRender
 export class View extends React.Component<IViewProps,IViewState> {
 	
 	render() {
 		const
-			{
-				styles,
-				viewState
-			} = this.props,
+			{viewState} = this.props,
+			
 			componentProps = {
 				viewState,
 				viewStateId: viewState.id
 			},
+			
 			componentLoader = getValue(() => DefaultViews[viewState.type].loader)
 		
 		log.debug(`View state type`,viewState.type,componentLoader)

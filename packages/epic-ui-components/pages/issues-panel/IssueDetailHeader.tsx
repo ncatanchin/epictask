@@ -31,12 +31,13 @@ import {
 import {
 	enabledLabelsSelector,
 	enabledAssigneesSelector,
-	enabledMilestonesSelector,
-	getIssueActions
-} from "epic-typedux"
+	enabledMilestonesSelector
+} from "epic-typedux/selectors"
+
 import { Issue, Milestone, Label, User } from "epic-models"
 import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { IssueActionFactory } from "epic-typedux/actions"
 
 // Constants
 const
@@ -225,6 +226,7 @@ function makeSelector() {
 @PureRender
 export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,IIssueDetailHeaderState> {
 	
+	issueActions = new IssueActionFactory()
 	
 	/**
 	 * Stop editing the issue
@@ -266,11 +268,20 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param event
 	 */
 	private editSave = async (event:React.KeyboardEvent<any> = null) => {
-		event && event.preventDefault()
+		if (event) {
+			event && event.preventDefault()
+			
+				
+		}
+		const
+			actions = new IssueActionFactory(),
+			updateIssue = this.getEditIssue()
 		
-		await getIssueActions().saveIssue(this.state.editIssue)
+		log.info(`Saving issue`,updateIssue)
+		
+		await actions.saveIssue(updateIssue)
+		
 		this.stopEditingIssue()
-		
 	}
 	
 	/**
@@ -332,13 +343,13 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param labels
 	 */
-	private setEditLabels = (labels:Label[]) => {
+	private setEditLabels = _.debounce(async (labels:Label[]) => {
 		this.setState({
-			editIssue: assign({},this.getEditIssue(),{
-				labels
+			editIssue: cloneObjectShallow(this.getEditIssue(),{
+				labels: [...labels]
 			})
 		}, () => this.editSave())
-	}
+	},50)
 	
 	/**
 	 * Assign the issue
@@ -396,7 +407,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param issues
 	 */
 	private unassignIssue = (...issues:Issue[]) =>
-		getIssueActions().applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
+		this.issueActions.applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
 	
 	/**
 	 * Callback for label or milestone remove
@@ -408,14 +419,14 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		
 		log.debug(`Removing item from issue`, item)
 		
-		if (!(item as any).id) {
+		if (item.$$clazz === Label.$$clazz) {
 			const
 				label:Label = item as any,
 				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
 			
-			getIssueActions().applyPatchToIssues({ labels }, true, List<Issue>(issue))
+			this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([issue]))
 		} else {
-			getIssueActions().applyPatchToIssues({ milestone: null }, true, List<Issue>(issue))
+			this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([issue]))
 		}
 	}
 	
@@ -491,19 +502,21 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 					                labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
 					                avatarStyle={makeStyle(makePaddingRem(0))}
 					                onSelect={this.setEditAssignee}/>
-					<Avatar user={issue.assignee}
-					        labelPlacement='before'
-					        onRemove={
-			        	issue.assignee &&
-				            canAssignIssue(issue.repo) &&
-				                (() => this.unassignIssue(issue))
-			        }
-					        onClick={canAssignIssue(issue.repo) && (() => this.editAssignee())}
-					        prefix={issue.assignee ? 'assigned to' : null}
-					        prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
-					        style={makeStyle(styles.row1.assignee,editAssignee && styles.hidden)}
-					        labelStyle={styles.username}
-					        avatarStyle={styles.avatar}/>
+					
+				<Avatar
+					user={issue.assignee}
+					labelPlacement='before'
+					onRemove={
+			      issue.assignee &&
+				    canAssignIssue(issue.repo) &&
+				      (() => this.unassignIssue(issue))
+			    }
+	        onClick={canAssignIssue(issue.repo) && (() => this.editAssignee())}
+	        prefix={issue.assignee ? 'assigned to' : null}
+	        prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
+	        style={makeStyle(styles.row1.assignee,editAssignee && styles.hidden)}
+	        labelStyle={styles.username}
+	        avatarStyle={styles.avatar}/>
 				
 			
 			</div>
@@ -511,29 +524,32 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			{/* ROW 2 */}
 			<div style={[styles.row2,saving && {opacity: 0}]}>
 				
+				{editTitle &&
 					<TextField defaultValue={issue.title || ''}
-					           onChange={(event,value) => this.setEditTitle(value)}
-					           onKeyDown={this.onEditKeyDown}
-					           errorStyle={{transform: 'translate(0,1rem)'}}
-					           errorText={getGithubErrorText(saveError,'title')}
-					           hintText="TITLE"
-					           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
-					           style={makeStyle(FlexScale,makePaddingRem(1,0),!editTitle && styles.hidden)}
-					           inputStyle={styles.input}
-					           underlineStyle={styles.underline.disabled}
-					           underlineDisabledStyle={styles.underline.disabled}
-					           underlineFocusStyle={styles.underline.focus}
-					           underlineShow={true}
-					           
-					           autoFocus/>
+					                          onChange={(event,value) => this.setEditTitle(value)}
+					                          onKeyDown={this.onEditKeyDown}
+					                          errorStyle={{transform: 'translate(0,1rem)'}}
+					                          errorText={getGithubErrorText(saveError,'title')}
+					                          hintText="TITLE"
+					                          hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
+					                          style={makeStyle(FlexScale,makePaddingRem(1,0),!editTitle && styles.hidden)}
+					                          inputStyle={styles.input}
+					                          underlineStyle={styles.underline.disabled}
+					                          underlineDisabledStyle={styles.underline.disabled}
+					                          underlineFocusStyle={styles.underline.focus}
+					                          underlineShow={true}
 					
+					/>
+				}
 					<Textfit mode='multi'
 					         onClick={canEditIssue(issue.repo,issue) && this.editTitle}
 					         style={makeStyle(
 					         	styles.title,
 					         	canEditIssue(issue.repo,issue) && styles.title.canEdit,
 					          editTitle && styles.hidden
-				           )}>{issue.title}</Textfit>
+				           )}>
+						{issue.title}
+					</Textfit>
 				
 				{/* TIME */}
 				<div
@@ -564,6 +580,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				
 				
 					{/*EDIT MODE*/}
+				{editLabels ?
 					<LabelFieldEditor
 						style={makeStyle(FlexScale,!editLabels && styles.hidden)}
 						labels={getValue(() => editIssue.labels,issue.labels)}
@@ -572,17 +589,18 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 						onKeyDown={this.onEditKeyDown}
 						id="issueDetailsLabelEditor"
 						hint="Labels"
-						mode="normal" />
+						mode="normal"/> :
+						
+						
+						/*VIEW MODE*/
+						<IssueLabelsAndMilestones labels={issue.labels}
+						                          showIcon={true}
+						                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
+						                          labelStyle={styles.row3.label}
+						                          afterAllNode={editLabelsControl}
+						                          style={makeStyle(styles.row3.labels,editLabels && styles.hidden)}/>
 					
-					{/*VIEW MODE*/}
-					<IssueLabelsAndMilestones labels={issue.labels}
-					                          showIcon={true}
-					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
-					                          labelStyle={styles.row3.label}
-					                          afterAllNode={editLabelsControl}
-					                          style={makeStyle(styles.row3.labels,editLabels && styles.hidden)}/>
-				
-			
+				}
 			</div>
 			
 			{saving && <div style={[{top:0,left:0,right:0,bottom:0},PositionAbsolute,FlexColumnCenter,Fill]}>

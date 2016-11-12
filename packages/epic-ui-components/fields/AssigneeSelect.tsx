@@ -80,7 +80,7 @@ export interface IAssigneeSelectState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles,'dialog')
 @PureRender
 export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssigneeSelectState> {
 	

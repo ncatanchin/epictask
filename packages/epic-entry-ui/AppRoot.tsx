@@ -30,7 +30,7 @@ import {
 	CommandMenuItemType,
 	ContainerNames
 } from "epic-command-manager"
-import { getUIActions, getIssueActions, getRepoActions } from "epic-typedux/provider"
+import { getUIActions, getRepoActions, getIssueActions } from "epic-typedux/provider"
 
 import {
 	FillWindow,

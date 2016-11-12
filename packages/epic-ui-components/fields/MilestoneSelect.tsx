@@ -17,6 +17,10 @@ const log = getLogger(__filename)
 const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn, FlexAuto, {} ],
 	
+	label: [{
+		paddingTop: rem(1)
+	}],
+	
 	labelChip: [{
 		//height: '3rem',
 		borderRadius: '1.5rem',
@@ -180,7 +184,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 		return <Select
 			{...filterProps(this.props)}
 			underlineShow={underlineShow}
-			labelStyle={{paddingTop: rem(1)}}
+			labelStyle={styles.label}
 			iconStyle={makeStyle(styles.icon,iconStyle)}
 			itemStyle={makeStyle(FlexRow,FillWidth,{alignItems: 'flex-start',paddingLeft: 0})}
 			value={milestone ? milestone.id : ''}

@@ -131,6 +131,12 @@ export function DefaultTheme(palette) {
 		
 		progressIndicatorColor: accent.hue1,// secondary.hue1,
 		
+		
+		textField: {
+			hintColor: text.secondary,
+			backgroundColor: primary.hue3
+		},
+		
 		/**
 		 * Job Monitor widget
 		 */

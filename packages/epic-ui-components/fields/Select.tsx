@@ -106,7 +106,7 @@ export interface ISelectState {
  * @constructor
  **/
 
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles,'dialog')
 @PureRender
 export class Select extends React.Component<ISelectProps,ISelectState> {
 	
@@ -181,6 +181,7 @@ export class Select extends React.Component<ISelectProps,ISelectState> {
 			
 			menuStyle={makeStyle(styles.menu,menuStyle)}
 			menuListStyle={makeStyle(styles.list,listStyle)}
+			
 			underlineStyle={styles.input.underlineDisabled}
 			underlineDisabledStyle={styles.input.underlineDisabled}
 			underlineFocusStyle={styles.input.underlineFocus}

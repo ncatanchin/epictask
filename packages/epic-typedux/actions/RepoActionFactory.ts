@@ -31,12 +31,13 @@ import {
 	User
 } from "epic-models"
 import {repoIdPredicate, enabledRepoIdsSelector, availableReposSelector} from '../selectors'
-import { getIssueActions } from "epic-typedux/provider"
+
 import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import { shallowEquals } from "epic-global/ObjectUtil"
 import { isList } from "typeguard"
+import { getIssueActions } from "epic-typedux/provider"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')

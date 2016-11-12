@@ -14,8 +14,7 @@ import {
 	IIssueGroup,
 	enabledAssigneesSelector,
 	enabledMilestonesSelector,
-	enabledLabelsSelector,
-	getIssueActions
+	enabledLabelsSelector
 } from "epic-typedux"
 import { createStructuredSelector } from "reselect"
 import {
@@ -32,7 +31,7 @@ import {
 import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon } from "material-ui/svg-icons"
 import { getValue } from "epic-global"
-import { getUIActions } from "epic-typedux/provider"
+import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 

@@ -87,7 +87,9 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 	setAutoCompleteRef = (autoCompleteRef) => this.setState({autoCompleteRef})
 
 	setQuery = (newQuery) => {
-		this.setState({internalQuery: newQuery})
+		this.setState({
+			internalQuery: newQuery
+		})
 
 		this.props.onInputChanged && this.props.onInputChanged(newQuery)
 	}
@@ -97,7 +99,7 @@ export class TypeAheadSelect extends React.Component<ITypeAheadSelectProps,IType
 		log.info(`item selected @ index ${index}`,chosenRequest,index)
 		this.props.onItemSelected && this.props.onItemSelected(chosenRequest, index)
 
-		this.onInputChanged("")
+		//this.onInputChanged("")
 
 	}
 

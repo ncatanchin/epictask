@@ -507,7 +507,7 @@ export class IssueActionFactory  {
 	 */
 	
 	async applyPatchToIssues(patch: any, useAssign: boolean, issues:List<Issue>) {
-		issues = cloneObjectShallow(issues)
+		
 		
 		
 			if (!issues.size)
@@ -528,8 +528,13 @@ export class IssueActionFactory  {
 					issues = issues.filter(issue => patch.assignee.repoIds && patch.assignee.repoIds.includes(issue.repoId)) as any
 				}
 				
+				let
+					updatedIssues = List<Issue>()
 				// Now apply the patch to clones
 				issues.forEach(issue => {
+					
+					issue = cloneObjectShallow(issue)
+					
 					const
 						patchCopy = cloneObjectShallow(patch)
 					
@@ -552,7 +557,7 @@ export class IssueActionFactory  {
 									
 									removeLabelUrls = patchCopy.labels
 										.filter(({action}:IIssuePatchLabel) => action === 'remove')
-										.map(({label}:IIssuePatchLabel) => label.url)
+										.map(({label}:IIssuePatchLabel) => label.id)
 								
 								
 								// Add new labels and filter out old ones
@@ -561,7 +566,7 @@ export class IssueActionFactory  {
 											.filter(label => label && label.repoId === issue.repoId)
 										)
 										, 'url'
-									).filter(label => label && !removeLabelUrls.includes(label.url))
+									).filter(label => label && !removeLabelUrls.includes(label.id))
 								
 								log.debug(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
 								break
@@ -580,6 +585,8 @@ export class IssueActionFactory  {
 						}
 					})
 					
+					updatedIssues = updatedIssues.push(issue)
+					
 					if (!issue.id)
 						throw new Error('issue id CANNOT be null')
 					
@@ -587,7 +594,7 @@ export class IssueActionFactory  {
 				
 				// const issueStore:IssueStore = this.stores.issue
 				// One by one update the issues on GitHub
-				await Promise.all(issues.map(async (issue: Issue, index) => {
+				await Promise.all(updatedIssues.map(async (issue: Issue, index) => {
 					const
 						repo = issue.repo || await stores.repo.get(issue.repoId)
 					
@@ -624,20 +631,17 @@ export class IssueActionFactory  {
 		// behind the persistent rev,
 		// lets update it first
 		// TODO: HACKISH - investigate
-		if (issue['$$doc']) {
-			delete issue['$$doc']
-			
-			const
-				existingIssue = await issueStore.get(Issue.makeIssueId(issue))
-			
-			if (existingIssue)
-				issue['$$doc'] = existingIssue['$$doc']
-		}
+		
+		const
+			existingIssue = await issueStore.get(Issue.makeIssueId(issue))
+		
+		if (existingIssue)
+		 issue = cloneObjectShallow(existingIssue,issue)
 		
 		// First save to github
 		const
 			savedIssue:Issue = await client.issueSave(repo, issue),
-			mergedIssue = _.merge({}, issue, savedIssue)
+			mergedIssue = cloneObjectShallow(issue, savedIssue)
 		
 		log.debug(`Issue save, our version`,issue,'github version',savedIssue,'merged version',mergedIssue)
 		
@@ -659,18 +663,16 @@ export class IssueActionFactory  {
 	 * Save an issue and update it in GitHub
 	 *
 	 * @param issue
-	 * @param childWindowId - if triggered from a dialog
 	 */
 	async saveIssue(issue: Issue) {
 		
-			const
-				client = Container.get(GitHubClient),
-				stores = getStores(),
-				repo = issue.repo || await stores.repo.get(issue.repoId)
+		const
+			client = Container.get(GitHubClient),
+			stores = getStores(),
+			repo = issue.repo || await stores.repo.get(issue.repoId),
+			updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue)
 		
-		
-		
-		return await this.saveAndUpdateIssueModel(client, repo, issue)
+		return updatedIssue
 		
 		
 	}
@@ -1223,13 +1225,12 @@ export class IssueActionFactory  {
 	
 	async setIssueStatus(issues: List<Issue>,newState: TIssueState) {
 		
-			
-		
 		log.debug(`Going to delete ${issues.size} issues`)
 		
 		const
 			client = Container.get(GitHubClient),
-			closeIssues = issues.toArray().map(it => cloneObjectShallow(it))
+			closeIssues = issues.toArray()
+				.map(it => cloneObjectShallow(it))
 		
 		
 		for (let issue of closeIssues) {

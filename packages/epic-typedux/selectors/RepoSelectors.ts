@@ -33,9 +33,9 @@ function getRepoId(o:any):number {
 }
 export const repoIdPredicate = (o:any) => {
 	const repoId = getRepoId(o)
-	assert(repoId > 0, 'Must provided a repoId or object with repo id')
+	//assert(, 'Must provided a repoId or object with repo id')
 
-	return (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
+	return !repoId || repoId < 1 ? (item) => false : (item) => _.isNumber(item) ? item === repoId : item.repoId === repoId
 }
 
 

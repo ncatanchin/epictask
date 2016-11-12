@@ -208,8 +208,9 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> imple
 
 
 	private onChipSelected = (item) => {
-		this.props.onChipSelected(item)
-		this.setState({query: null})
+		this.setState({
+			query: null
+		},() => this.props.onChipSelected(item))
 	}
 
 	private dataSourceFilter = (query, index) => {

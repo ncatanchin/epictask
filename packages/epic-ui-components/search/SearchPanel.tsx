@@ -27,17 +27,14 @@ import {
 } from "./SearchController"
 
 const
-	$ = require('jquery')
+	// Key mapping tools
+	{ CommonKeys:Keys } = KeyMaps,
 
-// Key mapping tools
-const { CommonKeys:Keys } = KeyMaps
-
-// Constants
-const
+	// Constants
 	log = getLogger(__filename)
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // STYLES

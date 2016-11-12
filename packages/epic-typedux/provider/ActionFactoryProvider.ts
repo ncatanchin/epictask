@@ -72,15 +72,16 @@ export function getRepoActions():RepoActionFactory {
 }
 
 export function getIssueActions():IssueActionFactory {
-	return ActionFactoryProviders[IssueKey]
+	const
+		{IssueActionFactory} = require('../actions/IssueActionFactory')
+	
+	return new IssueActionFactory()
 }
 
 /**
  * Load all the action factories
  */
 export function loadActionFactories() {
-	
-	
 	
 	const
 		allActions = require('../actions/index')
@@ -122,7 +123,7 @@ export function loadActionFactories() {
 	
 	
 	if (module.hot) {
-		module.hot.accept(['../actions/index'], (updates) => {
+		module.hot.accept(['../actions/index','../actions/IssueActionFactory'], (updates) => {
 			log.info(`HMR update action factories`,updates)
 			loadActionFactories()
 		})

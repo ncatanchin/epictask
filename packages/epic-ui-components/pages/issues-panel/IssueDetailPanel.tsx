@@ -11,9 +11,7 @@ import { Button, VisibleList } from "epic-ui-components"
 import { Issue, Comment, IssuesEvent, isComment, isIssue, getEventGroupType } from "epic-models"
 
 import { ThemedStyles } from "epic-styles"
-import {
-	getIssueActions
-} from "epic-typedux"
+
 import baseStyles from "./IssueDetailPanel.styles"
 import { shallowEquals, uuid,getValue, unwrapRef } from "epic-global"
 import { EventGroup, isEventGroup } from "./IssueEventGroup"
@@ -33,6 +31,7 @@ import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPane
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { PureRender } from "epic-ui-components/common/PureRender"
+import { getIssueActions } from "epic-typedux/provider"
 // Other stuff
 const
 	{ Textfit } = require('react-textfit'),
@@ -281,7 +280,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 				Milestone
 			</Button>
 		</div>
-		<IssueMultiInlineList issues={issues} />
+		
+		<IssueMultiInlineList
+			issues={issues} />
 		
 	</div>
 	
@@ -454,6 +455,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		return <CommandRoot
 			component={this}
 			id='issueDetailPanel'
+			autoFocus
 			style={!noSelectedIssues && styles.root}
 		>
 			{

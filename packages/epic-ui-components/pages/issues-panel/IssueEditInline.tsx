@@ -29,7 +29,7 @@ import {
 } from  "epic-command-manager-ui"
 
 import { cloneObject } from "epic-global"
-import { getIssueActions, getUIActions } from "epic-typedux/provider"
+import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
 import { IRowState } from "epic-ui-components/common/VisibleList"
 import { getValue, isNumber } from "typeguard"

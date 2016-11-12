@@ -47,7 +47,7 @@ export class NotificationCenter {
 		const
 			payload = _.pick(err, 'message', 'code', 'stack', 'description') as any
 		
-		//this.uiActions.addErrorMessage(payload)
+		this.uiActions.addErrorMessage(payload)
 	}
 }
 

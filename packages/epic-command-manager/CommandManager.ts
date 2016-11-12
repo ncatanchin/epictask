@@ -255,7 +255,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private handleFocus = (event:FocusEvent) => {
-		log.debug(`focus received`,event)
+		log.debug(`win focus received`,event)
 	}
 	
 	/**
@@ -264,7 +264,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private handleBlur = (event:FocusEvent) => {
-		log.debug(`blur received`,event)
+		log.debug(`win blur received`,event)
 	}
 	
 	/**
@@ -283,6 +283,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowBlur = (event) => {
+		log.debug(`blur event`,event)
 		this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
 	}
 		
@@ -292,6 +293,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowFocus = (event) => {
+		log.debug(`focus event`,event)
 		this.mountMenuItems(...this.menuItems)
 	}
 	
@@ -830,7 +832,8 @@ export class CommandManager {
 				this.mountCommand(...commands)
 			} else {
 				const
-					containerCommands = commands.filter(it => it.type === CommandType.Container)
+					containerCommands = commands
+						.filter(it => it.type === CommandType.Container)
 				
 				// ONLY UNMOUNT CONTAINER COMMANDS
 				this.unmountCommand(...containerCommands)

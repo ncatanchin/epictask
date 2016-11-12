@@ -15,8 +15,8 @@ import {
 	repoIdPredicate,
 	availableReposSelector,
 	appUserSelector,
-	getUIActions,
-	getIssueActions
+	getUIActions
+
 } from "epic-typedux"
 import {
 	ThemedStyles,
@@ -30,6 +30,7 @@ import {
 import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
+import { getIssueActions } from "epic-typedux/provider"
 
 
 const
@@ -85,7 +86,7 @@ const baseStyles = (topStyles, theme, palette) => {
 			} ],
 			
 			floatingLabelFocus: [ {
-				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
+				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -20px, 0px)'
 			} ],
 			
 			underlineFocus: [ {
@@ -102,7 +103,8 @@ const baseStyles = (topStyles, theme, palette) => {
 			title: [ {
 				flex: '1 0 50%',
 				padding: "1rem 0",
-				height: 72
+				height: 50,
+				marginBottom: rem(2.2)
 			} ],
 			
 			repo: [ FlexScale, {
@@ -136,7 +138,7 @@ const baseStyles = (topStyles, theme, palette) => {
 				} ],
 				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
 					label: [ FlexScale, Ellipsis, {
-						fontSize: makeThemeFontSize(1.2),
+						fontSize: makeThemeFontSize(1),
 						padding: '0 0 0 1rem'
 					} ]
 				} ]
@@ -187,11 +189,10 @@ const baseStyles = (topStyles, theme, palette) => {
  * IIssueEditDialogProps
  */
 export interface IIssueEditDialogProps extends IThemedAttributes {
-	saveError?:any
-	editingIssue?:Issue
+	
 	availableRepos?:List<AvailableRepo>
 	user?:User
-	saving?:boolean
+	
 }
 
 export interface IIssueEditDialogState {
@@ -203,6 +204,11 @@ export interface IIssueEditDialogState {
 	repoMenuItems?:any[]
 	
 	mdEditor?:MarkdownEditor
+	
+	editingIssue?:Issue
+	
+	saveError?:any
+	saving?:boolean
 }
 
 /**
@@ -245,6 +251,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	commandComponentId = ContainerNames.IssueEditDialog
 	
+	private get editingIssue() {
+		return getValue(() => this.state.editingIssue,new Issue())
+	}
 	
 	/**
 	 * Hide/close the window
@@ -269,12 +278,33 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param event
 	 */
 	private onSave = async (event) => {
-		!this.props.saving &&
-		await getIssueActions().saveIssue(
-			cloneObjectShallow(this.props.editingIssue, this.textInputState())
-		)
+		if (this.state.saving)
+			return
 		
-		getUIActions().closeWindow(getWindowId())
+		this.setState({
+			saving: true
+		})
+		
+		await Promise.setImmediate()
+		
+		const
+			savingIssue = this.editingIssue
+		
+		try {
+			await getIssueActions().saveIssue(
+				cloneObjectShallow(savingIssue, this.textInputState())
+			)
+			getUIActions().closeWindow(getWindowId())
+		} catch (err) {
+			log.error(`failed to save issue`,err)
+			getNotificationCenter().addErrorMessage(`Unable to save issue: ${!savingIssue ? '' : savingIssue.title}`)
+			
+			this.setState({
+				saving: false,
+				saveError: err
+			})
+		}
+		
 	}
 	
 	
@@ -283,7 +313,15 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		body: this.state.bodyValue
 	})
 	
-	private updateIssueState = (newIssueProps) => {}
+	private updateIssueState = (newIssueProps) => {
+		let
+			{editingIssue} = this
+		
+		this.setState({
+			editingIssue: cloneObjectShallow(editingIssue,newIssueProps)
+		})
+	}
+	
 	// getIssueActions().setEditingIssue(
 	// 	new Issue(Object.assign(
 	// 		{},
@@ -333,8 +371,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param value
 	 */
 	onRepoChange = (event, index, value) => {
-		const editingIssue = new Issue(assign({}, this.props.editingIssue, this.textInputState()))
-		editingIssue.repoId = value
+		const
+			editingIssue = new Issue(cloneObjectShallow(
+				this.state.editingIssue || new Issue(),
+				this.textInputState(),{
+					repoId: value
+				}
+			))
+		
+		this.setState({
+			editingIssue
+		})
 		
 		//getIssueActions().setEditingIssue(editingIssue)
 	}
@@ -349,10 +396,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 	
 	onLabelsChanged = (newLabels:Label[]) => {
-		const { editingIssue } = this.props
+		const {
+			editingIssue
+		} = this.state
 		
 		if (editingIssue) {
-			this.updateIssueState({ labels: newLabels })
+			this.updateIssueState({
+				labels: newLabels
+			})
 		}
 	}
 	
@@ -375,9 +426,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		)
 		
 		return availableRepos.map(availRepoItem => (
-			<MenuItem key={availRepoItem.repoId}
+			<MenuItem key={availRepoItem.id}
 			          className='issueEditDialogFormMenuItem'
-			          value={availRepoItem.repoId}
+			          value={availRepoItem.id}
 			          style={s.menuItem}
 			          primaryText={makeRepoLabel(availRepoItem)}
 			/>
@@ -392,13 +443,21 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	getNewState(props:IIssueEditDialogProps) {
 		const
-			{ styles, editingIssue, open } = props,
-			repoId = editingIssue && editingIssue.repoId
+			{
+				styles,
+				open
+			} = props
+			
+			
 		
 		let
+			{
+				editingIssue
+			} = this,
 			{ availableRepos } = props
 		
 		const
+			repoId = editingIssue && editingIssue.repoId,
 			newState = {
 				repoMenuItems: this.makeRepoMenuItems(availableRepos, styles)
 			}
@@ -435,8 +494,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			titleValue = _.get(editingIssue, 'title', '')
 				
 		
+		let
+			availableRepo = editingIssue && availableRepos.find(repoIdPredicate(editingIssue))
+		
+		if (!availableRepo && availableRepos.size) {
+			editingIssue = cloneObjectShallow(editingIssue)
+			availableRepo = availableRepos.get(0)
+			editingIssue.repoId = availableRepo.id
+		}
 		return Object.assign(newState,{
-			availableRepo: editingIssue && availableRepos.find(repoIdPredicate(editingIssue)),
+			editingIssue,
+			availableRepo,
 			bodyValue,
 			titleValue,
 			labels
@@ -486,17 +554,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	render() {
 		
 		const
-			{ styles, palette, theme, open, user, saveError, saving } = this.props,
-			{ labels, availableRepo } = this.state,
+			{ styles, palette, theme, open, user} = this.props,
+			{ labels, availableRepo ,saveError, saving } = this.state,
 			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
 		
 		let
-			editingIssue:Issue = null
-		
-		if (!editingIssue) {
-			editingIssue = this.props.editingIssue || new Issue()
-				//return <div/>
-		}
+			editingIssue:Issue = this.editingIssue
 		
 		const
 			canAssign = canAssignIssue(repo),
@@ -536,7 +599,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						           errorStyle={{transform: 'translate(0,1rem)'}}
 						           errorText={getGithubErrorText(saveError,'title')}
 						           hintText="TITLE"
-						           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
+						           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,0rem)'})}
 						           style={styles.form.title}
 						           inputStyle={styles.input}
 						           underlineStyle={styles.input.underlineDisabled}
@@ -584,6 +647,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						{/* MILESTONE */}
 						<MilestoneSelect
 							style={makeStyle(styles.form.milestone,styles.menu)}
+							styles={{
+								label: {
+									paddingTop: 0
+								},
+								labelChip:{
+									height: rem(2),
+									text: {
+										fontSize: rem(1.2)
+									}
+								}
+							}}
 							milestone={editingIssue.milestone}
 							repoId={editingIssue.repoId}
 							iconStyle={{top:8,right:-14}}

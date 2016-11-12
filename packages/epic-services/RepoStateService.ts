@@ -2,7 +2,7 @@ import { ObservableStore } from "typedux"
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import { ProcessType, IssueKey } from "epic-global"
 import { DatabaseClientService } from "./DatabaseClientService"
-import { getIssueActions, getRepoActions } from "epic-typedux"
+import { getRepoActions } from "epic-typedux"
 import { getStores } from "epic-database-client"
 import { acceptHot } from "epic-global/HotUtils"
 

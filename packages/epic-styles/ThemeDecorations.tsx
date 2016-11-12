@@ -134,6 +134,9 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 						{state = {}} = this,
 						{theme,palette} = state
 					
+					if (!props)
+						props = this.props
+					
 					if (!theme || !palette || !isObject(theme) || !isObject(palette)) {
 						log.warn(`Invalid theme & palette`, theme, palette)
 						return
@@ -141,18 +144,18 @@ export function makeThemedComponent(Component,opts:IThemedOptions = {},baseStyle
 					
 					// IF ANY PARTS CHANGED - UPDATE
 					if (
-						// THEME
-					theme !== newTheme ||
-					
-					// PALETTE
-					palette !== newPalette ||
-					
-					// PASSED PROP STYLES
-					!shallowEquals(props.styles,this.props.styles)
+						/* THEME */ theme !== newTheme ||
+						/* PALETTE */ palette !== newPalette ||
+						/* PASSED PROP STYLES */ !shallowEquals(props.styles,this.props.styles)
 					) {
 						
 						this.setState(
-							this.getNewState(props,baseStyles,newTheme,newPalette)
+							this.getNewState(
+								props || this.props,
+								baseStyles,
+								newTheme,
+								newPalette
+							)
 						)
 					}
 					

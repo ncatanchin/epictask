@@ -20,6 +20,8 @@ import {
 import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
 import { IIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { RepoKey, UIKey } from "epic-global/Constants"
+import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
+import { availableReposSelector } from "epic-typedux/selectors"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -29,7 +31,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 type TIssuesPanelStateUpdater = (...args) => (state:IssuesPanelState) => any
@@ -171,6 +173,17 @@ class IssuePanelController {
 		
 	}
 	
+	
+	
+	private onIssuesChanged = (changes:IDatabaseChange[]) => {
+		const
+			models = changes.map(it => it.model)
+		
+		log.debug(`Updating models`,models)
+		this.updateIssuesInState(List(models))
+	}
+	
+	
 	makeStatePath(...keys) {
 		return [UIKey,'viewStates',this.viewState.index,'state',...keys]
 	}
@@ -188,13 +201,18 @@ class IssuePanelController {
 			this.unsubscribers = null
 		}
 		
-		if (!mounted)
+		if (!mounted) {
+			removeDatabaseChangeListener(Issue,this.onIssuesChanged)
 			return
+		}
 		
 		const
 			store = getStore()
 		
+		addDatabaseChangeListener(Issue,this.onIssuesChanged)
+		
 		this.unsubscribers = [
+			
 			store.observe([RepoKey,'availableRepos'],this.onReposChanged),
 			store.observe(this.makeStatePath('issueSort'),this.onFilterSortChanged),
 			store.observe(this.makeStatePath('issueFiler'),this.onFilterSortChanged),
@@ -246,14 +264,21 @@ class IssuePanelController {
 	private updateIssuesInState = this.makeViewStateUpdate((updatedIssues:List<Issue>) => {
 		return (state:IssuesPanelState) => state.withMutations((newState:IssuesPanelState) => {
 			let
-				{ issues } = newState
+				{ issues } = newState,
+				availRepos = availableReposSelector(getStoreState())
 			
 			updatedIssues.forEach(updatedIssue => {
 				const
 					issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
 				
+				if (!updatedIssue.repo) {
+					updatedIssue.repo = getValue(() =>
+						availRepos.find(it => it.id === updatedIssue.repoId).repo
+					)
+				}
+				
 				issues = (issueIndex > -1) ?
-					issues.set(issueIndex, updatedIssue) :
+					issues.set(issueIndex, cloneObjectShallow(issues.get(issueIndex),updatedIssue)) :
 					issues.push(updatedIssue)
 			})
 			

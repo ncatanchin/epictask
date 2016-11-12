@@ -15,8 +15,7 @@ import {
 	IssueListItemType,
 	EditIssueInlineIndex,
 	isEditInlineListItem,
-	TIssueEditInlineConfig,
-	getIssueActions
+	TIssueEditInlineConfig
 } from "epic-typedux"
 import { ThemedStyles, FlexRowCenter, TransitionDurationLong, IThemedAttributes } from "epic-styles"
 import { IssueItem } from "./IssueItem"

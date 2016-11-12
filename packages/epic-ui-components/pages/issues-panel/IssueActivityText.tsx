@@ -14,13 +14,14 @@ import { canEditComment, canEditIssue, shallowEquals } from "epic-global"
 import { EventGroup, isEventGroup } from "./IssueEventGroup"
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
-import { getIssueActions } from "epic-typedux/provider"
+
 import { IRowState } from "epic-ui-components/common/VisibleList"
 import { TDetailItem } from "epic-ui-components/pages/issues-panel/IssueDetailPanel"
 import { getValue } from "typeguard"
 import { isIssue } from "epic-models/Issue"
 import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import {createSelector} from 'reselect'
+import { getIssueActions } from "epic-typedux/provider"
 // Constants
 const log = getLogger(__filename)
 

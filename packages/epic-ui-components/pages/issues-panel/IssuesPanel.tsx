@@ -12,8 +12,7 @@ import {
 	getIssueGroupId,
 	IIssueListItem,
 	IssueListItemType,
-	TIssueEditInlineConfig,
-	getIssueActions
+	TIssueEditInlineConfig
 } from "epic-typedux"
 import {
 	CommandComponent,
@@ -36,6 +35,7 @@ import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { Pages } from "epic-entry-ui/routes/Routes"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import { getIssueActions } from "epic-typedux/provider"
 
 
 
@@ -181,22 +181,34 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommandType.Container,
 				'Move down',
 				(cmd,event) => this.moveDown(event),
-				CommonKeys.MoveDown,{hidden:true})
+				CommonKeys.MoveDown,{
+					hidden:true,
+					overrideInput: true
+				})
 			.command(
 				CommandType.Container,
 				'Move down select',
 				(cmd,event) => this.moveDown(event),
-				CommonKeys.MoveDownSelect,{hidden:true})
+				CommonKeys.MoveDownSelect,{
+					hidden:true,
+					overrideInput: true
+				})
 			.command(
 				CommandType.Container,
 				'Move up',
 				(cmd,event) => this.moveUp(event),
-				CommonKeys.MoveUp,{hidden:true})
+				CommonKeys.MoveUp,{
+					hidden:true,
+					overrideInput: true
+				})
 			.command(
 				CommandType.Container,
 				'Move up select',
 				(cmd,event) => this.moveUp(event),
-				CommonKeys.MoveUpSelect,{hidden:true})
+				CommonKeys.MoveUpSelect,{
+					hidden:true,
+					overrideInput: true
+				})
 			
 			// NEW COMMENT
 			// .command(
@@ -206,12 +218,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			// 	(cmd, event) => getIssueActions().newComment(),
 			// 	"Ctrl+m")
 			
-			// MARK ISSUE FOCUSED
-			// .command(
-			// 	CommandType.Container,
-			// 	'Mark selected issues focused',
-			// 	(cmd,event) => getIssueActions().toggleSelectedAsFocused(),
-			// 	CommonKeys.Space)
+			//MARK ISSUE FOCUSED
+			.command(
+				CommandType.Container,
+				'Mark selected issues focused',
+				(cmd,event) => this.props.viewController.toggleSelectedAsFocused(),
+				CommonKeys.Space)
 			
 			.command(
 				CIDS.NewIssue,
@@ -711,7 +723,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			return
 		}
 		
-		this.updateSelectedIssueIds(List<number>(issue.id))
+		this.updateSelectedIssueIds(List<number>([issue.id]))
 		getIssueActions().editIssue(issue)
 		
 	}

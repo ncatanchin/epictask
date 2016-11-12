@@ -9,8 +9,8 @@ import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
 import {
-	getUIActions,
-	getIssueActions
+	getUIActions
+
 } from "epic-typedux"
 import { CommandType, ContainerNames } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
@@ -18,6 +18,7 @@ import { MarkdownEditor } from "epic-ui-components/fields"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
 import { FileDrop, RepoName } from "epic-ui-components/common"
 import { TEditCommentRequest } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import { getIssueActions } from "epic-typedux/provider"
 
 
 // Constants

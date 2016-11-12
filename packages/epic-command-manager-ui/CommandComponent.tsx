@@ -147,12 +147,11 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	private onFocus = (event:React.FocusEvent<any>) => {
 		
-		
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.debug(`focused`, id, instance)
+		log.debug(`focused`, id,event, instance)
 		
 		if (!instance) {
 				return log.warn(`No instance but focused`,instance,this)
@@ -180,11 +179,13 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * @param event
 	 */
 	private onBlur = (event:React.FocusEvent<any>) => {
+		
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.debug(`blurred`, id)
+		log.debug(`On blur`,event,id)
+		
 		if(!instance)
 			return log.warn(`Blur, but no instance???`)
 		//assert(instance, `Blur, but no instance???`)
@@ -382,6 +383,26 @@ export interface ICommandRootProps extends React.HTMLAttributes<any> {
  */
 export class CommandRoot extends React.Component<ICommandRootProps,void> {
 	
+	componentDidMount() {
+		if (this.props.autoFocus) {
+			const
+				elem = ReactDOM.findDOMNode(this)
+			
+			if (elem)
+				$(elem).focus()
+		}
+	}
+	
+	componentWillUnmount() {
+		if (this.props.autoFocus) {
+			const
+				elem = ReactDOM.findDOMNode(this)
+			
+			if (elem)
+				$(elem).blur()
+		}
+	}
+	
 	render() {
 		const
 			{ props } = this,
@@ -452,7 +473,13 @@ export class CommandContainerBuilder {
 		
 		// Deconstruct
 		const
-			[type,name,execute,defaultAccelerator,opts = {}] = args as [
+			[
+				type,
+				name,
+				execute,
+				defaultAccelerator,
+				opts = {}
+			] = args as [
 				CommandType,
 				string,
 				TCommandExecutor,

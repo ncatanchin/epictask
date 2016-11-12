@@ -18,12 +18,13 @@ import {
 	enabledAssigneesSelector,
 	enabledLabelsSelector,
 	enabledMilestonesSelector,
-	getIssueActions,
+
 	getUIActions
 } from "epic-typedux"
 import { CommonKeys } from "epic-command-manager"
 import { IssueMultiInlineList } from "epic-ui-components/pages/issues-panel/IssueMultiInlineList"
 import { IssuePatchModes, TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import { getIssueActions } from "epic-typedux/provider"
 
 
 // Constants

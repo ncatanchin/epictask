@@ -16,6 +16,7 @@ import {PullRequest} from './PullRequest'
 
 import {RegisterModel} from 'epic-global'
 import { isNumber, isObjectType, isObject } from  "epic-global"
+import { getValue } from "typeguard"
 
 
 
@@ -32,19 +33,29 @@ export function makeIssueId(issue:Issue)
 export function makeIssueId(repo:Repo,issue:Issue)
 export function makeIssueId(repoId:number,issueNumber:number)
 export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNumber:Issue|number = null) {
-	let repoId = -1, issueNumber = -1
-	if (isObject(issueOrRepoOrRepoId) && _.get(issueOrRepoOrRepoId,'repoId')) {
-		({repoId,number:issueNumber} = issueOrRepoOrRepoId as Issue)
-	} else if (isObjectType(issueOrRepoOrRepoId,Repo) && isObjectType(issueOrIssueNumber,Issue)) {
-		repoId = issueOrRepoOrRepoId.id
-		issueNumber = issueOrIssueNumber.number
-	} else if (isNumber(issueOrIssueNumber) && isNumber(issueOrRepoOrRepoId)) {
-		repoId = issueOrRepoOrRepoId
-		issueNumber = issueOrIssueNumber
-	}
-
-
-	return `${makeIssuePrefix(repoId)}${issueNumber}`
+	return getValue(() => {
+		let
+			repoId = -1,
+			issueNumber = -1
+		
+		if (isObject(issueOrRepoOrRepoId) && _.get(issueOrRepoOrRepoId,'repoId')) {
+			let
+				issue = issueOrRepoOrRepoId as Issue
+			
+			repoId = issue.repoId
+			issueNumber = issue.number
+		} else if (isObjectType(issueOrRepoOrRepoId,Repo) && isObjectType(issueOrIssueNumber,Issue)) {
+			repoId = issueOrRepoOrRepoId.id
+			issueNumber = issueOrIssueNumber.number
+		} else if (isNumber(issueOrIssueNumber) && isNumber(issueOrRepoOrRepoId)) {
+			repoId = issueOrRepoOrRepoId
+			issueNumber = issueOrIssueNumber
+		}
+		
+		
+		return `${makeIssuePrefix(repoId)}${issueNumber}`
+	})
+	
 }
 
 @RegisterModel
