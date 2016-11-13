@@ -9,7 +9,7 @@ import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFacto
 import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
 import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
 
-import { Issue,Label,Comment,Milestone } from "epic-models"
+import { Issue, Label, Comment, Milestone } from "epic-models"
 import { addErrorMessage } from "epic-global/NotificationCenterClient"
 import { TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { IssuesEvent } from "epic-models/IssuesEvent"
@@ -21,7 +21,9 @@ import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
 import { IIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
-import { availableReposSelector } from "epic-typedux/selectors"
+import { availableReposSelector, availableRepoIdsSelector, enabledAvailableReposSelector } from "epic-typedux/selectors"
+import {EventEmitter} from 'events'
+import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -38,17 +40,17 @@ type TIssuesPanelStateUpdater = (...args) => (state:IssuesPanelState) => any
 
 
 export function getIssuesPanelSelector(fn:(selectors:TIssuesPanelSelectors) => any) {
-	return (state,props) => getValue(() => fn(props.viewController.selectors)(state,props))
+	return (state, props) => getValue(() => fn(props.viewController.selectors)(state, props))
 }
 
 
 /**
- * IssuePanelController
+ * IssuesPanelController
  *
- * @class IssuePanelController
+ * @class IssuesPanelController
  * @constructor
  **/
-class IssuePanelController {
+class IssuesPanelController extends EventEmitter implements IViewController<IssuesPanelState> {
 	
 	
 	selectors
@@ -60,13 +62,27 @@ class IssuePanelController {
 		return this.selectors.viewStateSelector(getStoreState())
 	}
 	
+	/**
+	 * Getter for state
+	 *
+	 * @returns {IssuesPanelState}
+	 */
 	get state():IssuesPanelState {
 		return getValue(() =>
-			this.selectors.issuesPanelStateSelector(getStoreState()),
+				this.selectors.issuesPanelStateSelector(getStoreState()),
 			this.initialState)
 	}
 	
-	private makeViewStateUpdate<T extends TIssuesPanelStateUpdater>(updater:T):T {
+	/**
+	 * Get the current state
+	 *
+	 * @returns {IssuesPanelState}
+	 */
+	getState() {
+		return this.state
+	}
+	
+	makeStateUpdate<T extends TIssuesPanelStateUpdater>(updater:T):T {
 		return ((...args) => {
 			
 			const
@@ -79,14 +95,19 @@ class IssuePanelController {
 			}
 			
 			const
-				newViewState = this.viewState.set('state',updatedState) as ViewState
+				newViewState = this.viewState.set('state', updatedState) as ViewState
 			
 			getUIActions().updateView(newViewState)
 			
-		}) as T
+			return updatedState
+		}) as any
 	}
 	
-	private updateState(patch:{[prop:string]:any}) {
+	
+	
+	
+	
+	updateState(patch:{[prop:string]:any}) {
 		
 		patch = cloneObjectShallow(patch)
 		
@@ -94,38 +115,45 @@ class IssuePanelController {
 			keys = getValue(() => Object.keys(patch))
 		
 		if (!patch || !keys || !keys.length)
-			return
+			return this.state
 		
 		
 		//setImmediate(() => {
-			let
-				viewState = this.selectors
-					.viewStateSelector(getStoreState())
-			
-			if (!viewState) {
-				return log.warn('our view state does not exist',this.id)
-			}
-			const
-				state = viewState.state.withMutations(newState => {
-					for (let key of keys) {
-						const
-							newVal = patch[key]
-						
-						if (newState.get(key) !== newVal)
-							newState = newState.set(key,newVal)
-					}
+		let
+			viewState = this.selectors
+				.viewStateSelector(getStoreState())
+		
+		if (!viewState) {
+			log.warn('our view state does not exist', this.id)
+			return this.state
+		}
+		
+		const
+			state = viewState.state.withMutations(newState => {
+				for (let key of keys) {
+					const
+						newVal = patch[ key ]
 					
-					return newState
-				}) as IssuesPanelState
-			
-			if (state !== this.state) {
-				getUIActions().updateView(viewState.set('state',state))
-			}
+					if (newState.get(key) !== newVal)
+						newState = newState.set(key, newVal)
+				}
+				
+				return newState
+			}) as IssuesPanelState
+		
+		if (state !== this.state) {
+			getUIActions().updateView(viewState.set('state', state))
+			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],state)
+		}
+		
+		return state
 		//})
 	}
 	
 	
 	constructor(public id:string, public initialState:IssuesPanelState = new IssuesPanelState()) {
+		super()
+		
 		this.selectors = makeIssuesPanelStateSelectors(id)
 		
 		//this.loadIssues()
@@ -135,26 +163,26 @@ class IssuePanelController {
 	/**
 	 * Observer for repo changes
 	 */
-	private onReposChanged = (newAvailRepos,oldAvailRepos) => {
+	private onReposChanged = (newAvailRepos, oldAvailRepos) => {
 		const
 			newIds = newAvailRepos && newAvailRepos.filter(it => it.enabled).map(it => it.id),
 			oldIds = oldAvailRepos && oldAvailRepos.filter(it => it.enabled).map(it => it.id)
 		
-		if (newIds && !Immutable.is(newIds,oldIds)) {
-			log.debug(`Enabled repos changed`,newIds,oldIds)
+		if (newIds && !Immutable.is(newIds, oldIds)) {
+			log.debug(`Enabled repos changed`, newIds, oldIds)
 			this.loadIssues()
 		}
 	}
 	
-	private onFilterSortChanged = (newVal,oldVal) => {
-		log.debug(`Filter/Sort changed`,newVal,oldVal)
+	private onFilterSortChanged = (newVal, oldVal) => {
+		log.debug(`Filter/Sort changed`, newVal, oldVal)
 		
 		this.loadIssues()
 	}
 	
-	private onSelectedIssueIdsChanged = (newVal:List<number>,oldVal:List<number>) => {
-		log.debug(`Selected issue ids changed`,newVal,oldVal)
-		if (getValue(() => newVal.size,0) !== 1) {
+	private onSelectedIssueIdsChanged = (newVal:List<number>, oldVal:List<number>) => {
+		log.debug(`Selected issue ids changed`, newVal, oldVal)
+		if (getValue(() => newVal.size, 0) !== 1) {
 			return
 		}
 		
@@ -163,29 +191,129 @@ class IssuePanelController {
 			issue = this.state.issues.find(it => it.id === id)
 		
 		if (!issue) {
-			log.warn(`Issue id selected, but issue is not available`,id)
+			log.warn(`Issue id selected, but issue is not available`, id)
 			return
 		}
 		
 		this.loadActivity(issue)
+		
+		
+	}
+	
+	
+	private databaseChangeHandlers = {
+		
+		// ISSUES
+		[Issue.$$clazz]: function(changes:IDatabaseChange[]) {
+			const
+				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+				models = changes
+					.map(it => it.model)
+					.filter(it => it && repoIds.includes(it.repoId))
 			
+			log.debug(`Updating models`, models)
+			
+			this.updateIssuesInState(List(models))
+		},
 		
-		
+		// COMMENTS
+		[Comment.$$clazz]: function (changes:IDatabaseChange[])  {
+			const
+				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+				models = changes
+					.map(it => it.model)
+					.filter(it => it && repoIds.includes(it.repoId))
+			
+			log.debug(`Updating models`, models)
+			
+			let
+				{comments} = this.state,
+				selectedIssue = this.selectors.selectedIssueSelector(getStoreState())
+			
+			models.forEach(model => {
+				const
+					index = comments.findIndex(it => it.id === model.id)
+					
+				
+				if (index > -1) {
+					comments = comments.set(index,model)
+				} else if (
+					selectedIssue &&
+					selectedIssue.number === model.issueNumber &&
+					selectedIssue.repoId === model.repoId
+				) {
+					comments = comments.push(model)
+				}
+			})
+			
+			if (comments !== this.state.comments) {
+				this.updateState({comments})
+			}
+		},
+		// COMMENTS
+		[IssuesEvent.$$clazz]: function (changes:IDatabaseChange[]) {
+			const
+				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+				models = changes
+					.map(it => it.model)
+					.filter(it => it && repoIds.includes(it.repoId))
+			
+			log.debug(`Updating models`, models)
+			
+			let
+				{issuesEvents} = this.state,
+				selectedIssue = this.selectors.selectedIssueSelector(getStoreState())
+			
+			models.forEach(model => {
+				const
+					index = issuesEvents.findIndex(it => it.id === model.id)
+				
+				
+				if (index > -1) {
+					issuesEvents = issuesEvents.set(index,model)
+				} else if (
+					selectedIssue &&
+					selectedIssue.number === model.issueNumber &&
+					selectedIssue.repoId === model.repoId
+				) {
+					issuesEvents = issuesEvents.push(model)
+				}
+			})
+			
+			if (issuesEvents !== this.state.issuesEvents) {
+				this.updateState({issuesEvents})
+			}
+		}
 	}
 	
 	
-	
-	private onIssuesChanged = (changes:IDatabaseChange[]) => {
+	/**
+	 * When issues change in the database
+	 *
+	 * @param allChanges
+	 */
+	private onDatabaseChanged = (allChanges:IDatabaseChange[]) => {
 		const
-			models = changes.map(it => it.model)
+			groups = _.groupBy(allChanges,it => it.type)
 		
-		log.debug(`Updating models`,models)
-		this.updateIssuesInState(List(models))
+		Object
+			.keys(groups)
+			.forEach(type => {
+				this.databaseChangeHandlers[type].apply(this,[groups[type]])
+			})
+		
 	}
 	
 	
+	
+	/**
+	 * Create a view state path
+	 *
+	 * @param keys
+	 * @returns {[string,string,any,string,any]}
+	 */
 	makeStatePath(...keys) {
-		return [UIKey,'viewStates',this.viewState.index,'state',...keys]
+		return [ UIKey, 'viewStates', this.viewState.index, 'state', ...keys ]
 	}
 	
 	/**
@@ -202,21 +330,25 @@ class IssuePanelController {
 		}
 		
 		if (!mounted) {
-			removeDatabaseChangeListener(Issue,this.onIssuesChanged)
+			removeDatabaseChangeListener(Issue, this.onDatabaseChanged)
+			removeDatabaseChangeListener(IssuesEvent, this.onDatabaseChanged)
+			removeDatabaseChangeListener(Comment, this.onDatabaseChanged)
 			return
 		}
 		
 		const
 			store = getStore()
 		
-		addDatabaseChangeListener(Issue,this.onIssuesChanged)
+		addDatabaseChangeListener(Issue, this.onDatabaseChanged)
+		addDatabaseChangeListener(IssuesEvent, this.onDatabaseChanged)
+		addDatabaseChangeListener(Comment, this.onDatabaseChanged)
 		
 		this.unsubscribers = [
 			
-			store.observe([RepoKey,'availableRepos'],this.onReposChanged),
-			store.observe(this.makeStatePath('issueSort'),this.onFilterSortChanged),
-			store.observe(this.makeStatePath('issueFiler'),this.onFilterSortChanged),
-			store.observe(this.makeStatePath('selectedIssueIds'),this.onSelectedIssueIdsChanged)
+			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged),
+			store.observe(this.makeStatePath('issueSort'), this.onFilterSortChanged),
+			store.observe(this.makeStatePath('issueFiler'), this.onFilterSortChanged),
+			store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged)
 		]
 		
 		this.loadIssues()
@@ -225,70 +357,72 @@ class IssuePanelController {
 	/**
 	 * Updates the current issues
 	 */
-	loadIssues = _.debounce(OneAtATime({},async () => {
+	loadIssues = _.debounce(OneAtATime({}, async() => {
 		const
-			{issueSort,issueFilter,selectedIssueIds} = this.state,
+			{ issueSort, issueFilter, selectedIssueIds } = this.state,
 			actions = new IssueActionFactory(),
-			issues = await actions.queryIssues(issueSort,issueFilter)
+			issues = await actions.queryIssues(issueSort, issueFilter)
 		
 		
-		this.updateState({issues})
+		this.updateState({ issues })
 		
 		if (selectedIssueIds && selectedIssueIds.size === 1) {
-				const
-					selectedIssueId = selectedIssueIds.get(0),
-					issue = issues.find(it => it.id === selectedIssueId)
+			const
+				selectedIssueId = selectedIssueIds.get(0),
+				issue = issues.find(it => it.id === selectedIssueId)
 			
-				if (issue)
-					this.loadActivity(issue)
+			if (issue)
+				this.loadActivity(issue)
 		}
-	}),100)
-	
+	}), 100)
 	
 	
 	/**
 	 * Load activity for an issue
 	 */
-	loadActivity = _.debounce(OneAtATime({}, async (issue:Issue) => {
+	loadActivity = _.debounce(OneAtATime({}, async(issue:Issue) => {
 		
-			const
-				actions = new IssueActionFactory(),
-				{comments,issuesEvents} = await actions.getActivity(issue)
-			
-			this.setActivity(comments,issuesEvents)
-	}),400)
+		const
+			actions = new IssueActionFactory(),
+			{ comments, issuesEvents } = await actions.getActivity(issue)
+		
+		this.setActivity(comments, issuesEvents)
+	}), 400)
 	
 	/**
 	 * Update issues in the current panel
 	 */
-	private updateIssuesInState = this.makeViewStateUpdate((updatedIssues:List<Issue>) => {
+	private updateIssuesInState = this.makeStateUpdate((updatedIssues:List<Issue>) => {
 		return (state:IssuesPanelState) => state.withMutations((newState:IssuesPanelState) => {
 			let
 				{ issues } = newState,
-				availRepos = availableReposSelector(getStoreState())
+				availRepos = enabledAvailableReposSelector(getStoreState()),
+				repoIds = availRepos.map(it => it.id)
 			
-			updatedIssues.forEach(updatedIssue => {
-				const
-					issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
-				
-				if (!updatedIssue.repo) {
-					updatedIssue.repo = getValue(() =>
-						availRepos.find(it => it.id === updatedIssue.repoId).repo
-					)
-				}
-				
-				issues = (issueIndex > -1) ?
-					issues.set(issueIndex, cloneObjectShallow(issues.get(issueIndex),updatedIssue)) :
-					issues.push(updatedIssue)
-			})
+			updatedIssues
+				.filter(updatedIssue => repoIds.includes(updatedIssue.repoId))
+				.forEach(updatedIssue => {
+					const
+						issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
+					
+					if (!updatedIssue.repo) {
+						updatedIssue.repo = getValue(() =>
+							availRepos.find(it => it.id === updatedIssue.repoId).repo
+						)
+					}
+					
+					issues = (issueIndex > -1) ?
+						issues.set(issueIndex, cloneObjectShallow(issues.get(issueIndex), updatedIssue)) :
+						issues.push(updatedIssue)
+				})
 			
 			return newState.set('issues', issues)
 		})
 	})
 	
 	
-	private filteringAndSorting = this.makeViewStateUpdate((issueFilter: IIssueFilter = null, issueSort: IIssueSort = null) =>
-		(state: IssuesPanelState) => state.withMutations((newState: IssuesPanelState) => {
+	private filteringAndSorting = this.makeStateUpdate((issueFilter:IIssueFilter = null, issueSort:IIssueSort = null) =>
+		(state:IssuesPanelState) => state.withMutations((newState:IssuesPanelState) => {
 			
 			if (issueFilter)
 				newState.set('issueFilter', cloneObjectShallow(issueFilter))
@@ -300,7 +434,7 @@ class IssuePanelController {
 		}))
 	
 	
-	setActivity(comments:List<Comment>,issuesEvents:List<IssuesEvent>) {
+	setActivity(comments:List<Comment>, issuesEvents:List<IssuesEvent>) {
 		this.updateState({
 			comments,
 			issuesEvents
@@ -329,22 +463,20 @@ class IssuePanelController {
 	 * @returns {(state:IssueState)=>Map<string, any>}
 	 */
 	
-	private setIssues = this.makeViewStateUpdate((issues:List<Issue>) => (state:IssuesPanelState) => state.set(
-			'issues',
-			state.issues.withMutations(newIssues => {
-				issues.forEach(issue => {
-					const
-						index = newIssues.findIndex(it => it.id === issue.id)
-					
-					newIssues = index === -1 ?
-						newIssues.push(issue) :
-						newIssues.set(index,issue)
-					
-				})
+	private setIssues = this.makeStateUpdate((issues:List<Issue>) => (state:IssuesPanelState) => state.set(
+		'issues',
+		state.issues.withMutations(newIssues => {
+			issues.forEach(issue => {
+				const
+					index = newIssues.findIndex(it => it.id === issue.id)
+				
+				newIssues = index === -1 ?
+					newIssues.push(issue) :
+					newIssues.set(index, issue)
+				
 			})
-		))
-	
-	
+		})
+	))
 	
 	
 	/**
@@ -360,8 +492,7 @@ class IssuePanelController {
 	}
 	
 	
-	
-	private setPatchIssues(patchIssues: List<Issue>, patchMode: TIssuePatchMode = null) {
+	private setPatchIssues(patchIssues:List<Issue>, patchMode:TIssuePatchMode = null) {
 		this.updateState({
 			patchIssues,
 			patchMode: patchMode || this.state.patchMode
@@ -378,7 +509,7 @@ class IssuePanelController {
 	 * @returns {(state:IssueState)=>Map<string, number[]>}
 	 */
 	
-	setSelectedIssueIds(selectedIssueIds: List<number>) {
+	setSelectedIssueIds(selectedIssueIds:List<number>) {
 		this.updateState({
 			selectedIssueIds,
 			editingInline: false
@@ -392,7 +523,7 @@ class IssuePanelController {
 	 */
 	toggleSelectedAsFocused() {
 		let
-			{selectedIssueIds,focusedIssueIds = List<number>()} = this.state
+			{ selectedIssueIds, focusedIssueIds = List<number>() } = this.state
 		
 		if (!selectedIssueIds || !selectedIssueIds.size)
 			return
@@ -402,7 +533,7 @@ class IssuePanelController {
 		
 		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
 			selectedIssueIds.forEach(id => {
-				focusedIssueIds = focusedIssueIds.splice(focusedIssueIds.indexOf(id),1) as List<number>
+				focusedIssueIds = focusedIssueIds.splice(focusedIssueIds.indexOf(id), 1) as List<number>
 			})
 		} else {
 			focusedIssueIds = focusedIssueIds.concat(selectedIssueIds) as List<number>
@@ -424,7 +555,7 @@ class IssuePanelController {
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
 		let
-			{focusedIssueIds = List<number>()} = this.state
+			{ focusedIssueIds = List<number>() } = this.state
 		
 		if (focusedIssueIds.includes(issueId)) {
 			log.debug(`Issue id ${issueId} is already focused`)
@@ -447,7 +578,7 @@ class IssuePanelController {
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
 		let
-			{focusedIssueIds = List<number>()} = this.state
+			{ focusedIssueIds = List<number>() } = this.state
 		
 		if (!focusedIssueIds.includes(issueId)) {
 			log.debug(`Issue id ${issueId} does not have focus`)
@@ -465,7 +596,6 @@ class IssuePanelController {
 	}
 	
 	
-	
 	/**
 	 * Clear all current issue filters
 	 */
@@ -478,10 +608,10 @@ class IssuePanelController {
 	 *
 	 * @param groupBy
 	 */
-	setGroupBy(groupBy: string) {
+	setGroupBy(groupBy:string) {
 		const
-			{issueSort} = this.state,
-			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
+			{ issueSort } = this.state,
+			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
 				groupBy
 			})
 		
@@ -494,7 +624,7 @@ class IssuePanelController {
 	toggleGroupByDirection() {
 		const
 			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = cloneObjectShallow(issueSort,{
+			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
 				groupByDirection: (issueSort.groupByDirection === 'asc') ?
 					'desc' :
 					'asc'
@@ -504,18 +634,17 @@ class IssuePanelController {
 	}
 	
 	
-	
 	/**
 	 * Set the sorting field
 	 *
 	 * @param field
 	 */
-	setSortByField(field: string) {
+	setSortByField(field:string) {
 		const
 			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = assign(
+			newIssueSort:IIssueSort = assign(
 				_.cloneDeep(issueSort),
-				{fields: [field]}
+				{ fields: [ field ] }
 			)
 		
 		this.setFilteringAndSorting(null, newIssueSort)
@@ -527,7 +656,7 @@ class IssuePanelController {
 	toggleSortByDirection() {
 		const
 			issueSort = this.state.issueSort,
-			newIssueSort: IIssueSort = _.assign(
+			newIssueSort:IIssueSort = _.assign(
 				_.cloneDeep(issueSort),
 				{
 					direction: (issueSort.direction === 'asc') ?
@@ -544,8 +673,8 @@ class IssuePanelController {
 	 *
 	 * @param milestone
 	 */
-	toggleIssueFilterMilestone(milestone: Milestone) {
-		const {issueFilter} = this.state
+	toggleIssueFilterMilestone(milestone:Milestone) {
+		const { issueFilter } = this.state
 		const
 			newIssueFilter = _.cloneDeep(issueFilter),
 			milestoneIds = newIssueFilter.milestoneIds || (newIssueFilter.milestoneIds = []),
@@ -566,8 +695,8 @@ class IssuePanelController {
 	 *
 	 * @param label
 	 */
-	toggleIssueFilterLabel(label: Label) {
-		const {issueFilter} = this.state
+	toggleIssueFilterLabel(label:Label) {
+		const { issueFilter } = this.state
 		const
 			newIssueFilter = _.cloneDeep(issueFilter),
 			labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
@@ -583,7 +712,6 @@ class IssuePanelController {
 	}
 	
 	
-	
 	/**
 	 * Set filtering and sorting
 	 *
@@ -592,15 +720,13 @@ class IssuePanelController {
 	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
 	 */
 	
-	setFilteringAndSorting(
-		issueFilter: IIssueFilter = this.getFilter(), issueSort: IIssueSort = this.getSort()
-	) {
+	setFilteringAndSorting(issueFilter:IIssueFilter = this.getFilter(), issueSort:IIssueSort = this.getSort()) {
 		return this.filteringAndSorting(issueFilter, issueSort)
 	}
 	
 	
-	toggleGroupVisibility = this.makeViewStateUpdate((id:string,visible:boolean) => {
-		return (state:IssuesPanelState) => state.set('groupVisibility',state.groupVisibility.set(id,visible))
+	toggleGroupVisibility = this.makeStateUpdate((id:string, visible:boolean) => {
+		return (state:IssuesPanelState) => state.set('groupVisibility', state.groupVisibility.set(id, visible))
 	})
 	
 	
@@ -609,8 +735,8 @@ class IssuePanelController {
 	 *
 	 * @param includeClosed
 	 */
-	includeClosedIssues(includeClosed: boolean) {
-		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter), {includeClosed})
+	includeClosedIssues(includeClosed:boolean) {
+		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter), { includeClosed })
 		this.setFilteringAndSorting(updatedFilter)
 	}
 	
@@ -624,10 +750,6 @@ class IssuePanelController {
 	}
 	
 	
-	
-	
-	
-	
 	/**
 	 * Set the current issue being edited
 	 *
@@ -636,7 +758,7 @@ class IssuePanelController {
 	 * @return {(state:IssueState)=>Map<string, Issue>}
 	 */
 	
-	setEditingIssue(editingIssue: Issue, inline: boolean = false) {
+	setEditingIssue(editingIssue:Issue, inline:boolean = false) {
 		this.updateState({
 			editingIssue,
 			editingInline: inline
@@ -649,7 +771,7 @@ class IssuePanelController {
 	 * @param inline
 	 * @returns {(state:IssueState)=>Map<string, boolean>}
 	 */
-	setEditingInline(inline: boolean) {
+	setEditingInline(inline:boolean) {
 		!inline && this.updateState({
 			exitInlineConfig: null,
 			editingIssue: null
@@ -689,16 +811,15 @@ class IssuePanelController {
 	 * @returns {List<Issue>}
 	 */
 	getItem(index:number):IIssueListItem<any> {
-		return getValue(() => this.selectors.issueItemsSelector(getStoreState()).get(index),null)
+		return getValue(() => this.selectors.issueItemsSelector(getStoreState()).get(index), null)
 	}
 	
 	
-	
-	private startEditInline(issue:Issue,fromIssueId,index:number) {
+	private startEditInline(issue:Issue, fromIssueId, index:number) {
 		this.updateState({
 			editingInline: true,
 			editingIssue: issue,
-			editInlineConfig:{
+			editInlineConfig: {
 				index,
 				fromIssueId
 			}
@@ -714,40 +835,37 @@ class IssuePanelController {
 	
 	editInline() {
 		
-			let
-				items = this.selectors.issueItemsSelector(getStoreState()),
-				selectedIssue = this.selectors.selectedIssueSelector(getStoreState()),
-				index = selectedIssue && items.findIndex(item => item.id === selectedIssue.id)
-			
-			
-			if (!selectedIssue || isNil(index) || index === -1) {
-				log.warn('Issue index not found',index)
-				return
-			}
-			
-			// Increment here to show the create below the current issue
-			index++
-			
+		let
+			items = this.selectors.issueItemsSelector(getStoreState()),
+			selectedIssue = this.selectors.selectedIssueSelector(getStoreState()),
+			index = selectedIssue && items.findIndex(item => item.id === selectedIssue.id)
 		
-			const
-				newIssue = new Issue(cloneObject(_.pick(
-					selectedIssue,
-					'repoId',
-					'milestone',
-					'labels',
-					'assignee',
-					'collaborators'
-				)))
-			
-			this.startEditInline(newIssue,selectedIssue.id,index)
+		
+		if (!selectedIssue || isNil(index) || index === -1) {
+			log.warn('Issue index not found', index)
+			return
+		}
+		
+		// Increment here to show the create below the current issue
+		index++
+		
+		
+		const
+			newIssue = new Issue(cloneObject(_.pick(
+				selectedIssue,
+				'repoId',
+				'milestone',
+				'labels',
+				'assignee',
+				'collaborators'
+			)))
+		
+		this.startEditInline(newIssue, selectedIssue.id, index)
 		
 		
 	}
 	
 	
-	
-	
-	
 }
 
-export default IssuePanelController
+export default IssuesPanelController

@@ -8,6 +8,7 @@ const
 	g = global as any,
 	isDev = process.env.NODE_ENV === 'development',
 	isRemote = typeof process.env.REMOTE !== 'undefined',
+	skipSplash = !_.isNil(process.env.SKIP_SPLASH),
 	isMac = process.platform === 'darwin',
 	isWin32 = process.platform === 'win32',
 	isLinux = !isMac && !isWin32,
@@ -28,6 +29,7 @@ process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 
 const EnvGlobal = {
 	Config,
+	skipSplash,
 	envName,
 	isMac,
 	isWin32,

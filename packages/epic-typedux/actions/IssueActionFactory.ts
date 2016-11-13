@@ -335,6 +335,9 @@ export class IssueActionFactory  {
 	 * @returns {List<Issue>}
 	 */
 	fillIssueResources(partialIssues,...availRepos:AvailableRepo[]) {
+		if (!availRepos.length)
+			availRepos = availableReposSelector(getStoreState()).toArray()
+		
 		const
 			filledIssues = partialIssues
 				.filter(issue => {
@@ -367,11 +370,28 @@ export class IssueActionFactory  {
 						// Find milestones
 						milestone: (
 							issue.milestone &&
-							availRepo.milestones.find(it => it.id === issue.milestone.id)
+							getValue(
+								() => availRepo.milestones.find(it => it.id === issue.milestone.id),
+								issue.milestone
+							)
 						)
 					})
 				})
 		return List.isList(filledIssues) ? filledIssues : List<Issue>(filledIssues)
+	}
+	
+	/**
+	 * Load a single issue
+	 * @param issueKey
+	 *
+	 * @returns {Issue}
+	 */
+	async loadIssue(issueKey:string):Promise<Issue> {
+		let
+			issue = await getStores().issue.get(issueKey),
+			results = this.fillIssueResources([issue])
+		
+		return results.size && results.get(0)
 	}
 	
 	/**
@@ -847,7 +867,7 @@ export class IssueActionFactory  {
 				body: ''
 			})
 		
-		uiActions.openWindow(Pages.IssueCommentDialog.makeURI(issue,comment))
+		uiActions.openWindow(Pages.CommentEditDialog.makeURI(issue,comment))
 	}
 	
 	

@@ -19,9 +19,6 @@ import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focus
 import {getWindowManagerClient} from "epic-process-manager-client"
 import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
 import ViewState from "epic-typedux/state/window/ViewState"
-import { makePromisedComponent } from "epic-global/UIUtil"
-import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 import DefaultViews from "epic-typedux/state/window/DefaultViews"
 
@@ -638,19 +635,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
-	createDefaultView = () => ({
-		type: DefaultViews.IssuesPanel.type,
-		name: 'Issues Panel',
-		// stateClazz: IssuesPanelState,
-		// controllerClazz: IssuePanelController,
-	})
 	
-	ensureDefaultView() {
-		const
-			uiState = getStoreState().get(UIKey) as UIState
-		
-		uiState.viewStates.size < 1 && this.createView(this.createDefaultView())
-	}
 
 
 

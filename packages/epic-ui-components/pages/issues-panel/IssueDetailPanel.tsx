@@ -28,10 +28,10 @@ import { IssueMultiInlineList } from "./IssueMultiInlineList"
 
 import { IssueActivityText } from "./IssueActivityText"
 import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
-import { PureRender } from "epic-ui-components/common/PureRender"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { getIssueActions } from "epic-typedux/provider"
+
 // Other stuff
 const
 	{ Textfit } = require('react-textfit'),
@@ -48,10 +48,11 @@ export type TDetailItem = Comment|EventGroup|Issue
 export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	theme?:any
 	styles?:any
-	viewController:IssuePanelController
+	viewController:IssuesPanelController
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>
+	selectedIssues?:List<Issue>
 	activity?:TIssueActivity
 	
 }
@@ -80,6 +81,7 @@ function makeSelector() {
 	
 	return createStructuredSelector({
 		selectedIssueIds: getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
+		selectedIssues: getIssuesPanelSelector(selectors => selectors.selectedIssuesSelector),
 		selectedIssue: getIssuesPanelSelector(selectors => selectors.selectedIssueSelector),
 		issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
 		activity: getIssuesPanelSelector(selectors => selectors.activitySelector),
@@ -247,42 +249,42 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 
 		return !shallowEquals(this.state, nextState, 'items') ||
 			!shallowEquals(this.props, nextProps,
-				'activity','selectedIssue','selectedIssueIds') || themeChanged
+				'activity','selectedIssue','selectedIssueIds','selectedIssues') || themeChanged
 	}
 	
 	/**
 	 * Render when multiple styles are selected
 	 *
-	 * @param issues
+	 * @param selectedIssues
 	 * @param styles
 	 */
-	renderMulti = (issues:List<Issue>, styles) => <div style={styles.multi}>
+	renderMulti = (selectedIssues:List<Issue>, styles) => <div style={styles.multi}>
 		<div style={styles.multi.title}>
-			{issues.size} selected issues
+			{selectedIssues.size} selected issues
 		</div>
 		<div style={styles.multi.title}>
 			<Button mode='raised'
 			        sizing='big'
 			        style={styles.multi.button}
-			        onClick={() => getIssueActions().patchIssuesAssignee(issues)}>
+			        onClick={() => getIssueActions().patchIssuesAssignee(selectedIssues)}>
 				Assign
 			</Button>
 			<Button mode='raised'
 			        sizing='big'
 			        style={styles.multi.button}
-			        onClick={() => getIssueActions().patchIssuesLabel(issues)}>
+			        onClick={() => getIssueActions().patchIssuesLabel(selectedIssues)}>
 				Labels
 			</Button>
 			<Button mode='raised'
 			        sizing='big'
 			        style={styles.multi.button}
-			        onClick={() => getIssueActions().patchIssuesMilestone(issues)}>
+			        onClick={() => getIssueActions().patchIssuesMilestone(selectedIssues)}>
 				Milestone
 			</Button>
 		</div>
 		
 		<IssueMultiInlineList
-			issues={issues} />
+			issues={selectedIssues} />
 		
 	</div>
 	
@@ -444,7 +446,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	render() {
 		const
-			{ selectedIssueIds, activity, issues, theme, styles } = this.props,
+			{ selectedIssues,selectedIssueIds, activity, issues, theme, styles } = this.props,
 			{ items } = this.state,
 			{ selectedIssue } = activity,
 			noSelectedIssues = !selectedIssueIds || !selectedIssueIds.size
@@ -461,7 +463,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			{
 				noSelectedIssues ? <div/> :
 					!selectedIssue ?
-						this.renderMulti(issues.filter(it => it && selectedIssueIds.includes(it.id)) as List<Issue>, styles) :
+						this.renderMulti(selectedIssues, styles) :
 						this.renderIssue(selectedIssue, items, styles, theme.palette)
 			}
 		</CommandRoot>

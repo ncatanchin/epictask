@@ -4,7 +4,7 @@
 // Imports
 
 import { connect } from "react-redux"
-import { createDeepEqualSelector, getValue } from "epic-global"
+import { createDeepEqualSelector, getValue, cloneObjectShallow } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
@@ -19,6 +19,9 @@ import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/d
 import { FileDrop, RepoName } from "epic-ui-components/common"
 import { TEditCommentRequest } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
+import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { CommentEditState } from "epic-ui-components/pages/comment-edit/CommentEditState"
+import CommentEditController from "epic-ui-components/pages/comment-edit/CommentEditController"
 
 
 // Constants
@@ -72,17 +75,18 @@ function baseStyles(topStyles, theme, palette) {
 /**
  * IIssueCommentDialogProps
  */
-export interface IIssueCommentDialogProps extends IThemedAttributes {
+export interface ICommentEditDialogProps extends IThemedAttributes {
 	saving?:boolean
 	savingError?:Error
-	editCommentRequest?:TEditCommentRequest
+	
+	viewControllerState?:CommentEditState
+	viewController?:CommentEditController
 }
 
 /**
  * IIssueCommentDialogState
  */
-export interface IIssueCommentDialogState {
-	comment?:Comment
+export interface ICommentEditDialogState {
 	mdEditor?:MarkdownEditor
 }
 
@@ -92,6 +96,7 @@ export interface IIssueCommentDialogState {
  * @class IssueCommentDialog
  * @constructor
  **/
+@ViewRoot(CommentEditController,CommentEditState)
 @connect(createStructuredSelector({
 	// editCommentRequest: editCommentRequestSelector,
 	// saving: (state) => issueStateSelector(state).issueSaving,
@@ -103,7 +108,7 @@ export interface IIssueCommentDialogState {
 // merge provide it as the second param
 @CommandComponent()
 @ThemedStyles(baseStyles, 'dialog')
-export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps,IIssueCommentDialogState> {
+export class CommentEditDialog extends React.Component<ICommentEditDialogProps,ICommentEditDialogState> {
 	
 	
 	commandItems = (builder:CommandContainerBuilder) =>
@@ -118,6 +123,23 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	
 	
 	commandComponentId = ContainerNames.CommentEditDialog
+	
+	
+	private get viewState():CommentEditState {
+		return getValue(() => this.props.viewControllerState)
+	}
+	
+	private get viewController() {
+		return getValue(() => this.props.viewController)
+	}
+	
+	private get editingComment() {
+		return getValue(() => this.viewState.editingComment,new Comment())
+	}
+	
+	private get issue() {
+		return getValue(() => this.viewState.issue,new Issue())
+	}
 	
 	
 	/**
@@ -142,14 +164,16 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 */
 	onSave = (event = null) => {
 		
-		const
-			issue = _.get(this.props.editCommentRequest, 'issue') as Issue,
-			{ comment } = this.state
+		this.viewController.save()
 		
-		log.debug('Adding comment to issue', comment, issue)
-		
-		!this.props.saving &&
-		getIssueActions().saveComment(issue, comment)
+		// const
+		// 	issue = _.get(this.props.editCommentRequest, 'issue') as Issue,
+		// 	{ comment } = this.state
+		//
+		// log.debug('Adding comment to issue', comment, issue)
+		//
+		// !this.props.saving &&
+		// getIssueActions().saveComment(issue, comment)
 	}
 	
 	/**
@@ -160,18 +184,9 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	onMarkdownChange = (value) => {
 		log.debug('markdown change', value)
 		
-		const
-			comment = _.get(this.state, 'comment') as Comment
-		
-		assert(comment, 'Comment can not be null on a markdown update')
-		
-		const
-			updatedComment = assign({}, comment, { body: value })
-		
-		
-		this.setState({
-			comment: updatedComment
-		})
+		this.viewController.setEditingComment(
+			cloneObjectShallow(this.editingComment, { body: value })
+		)
 	}
 	
 	/**
@@ -196,32 +211,18 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	}
 	
 	
-	/**
-	 * Update the component state, create data source,
-	 * options, etc
-	 *
-	 * @param props
-	 */
-	updateState(props:IIssueCommentDialogProps) {
-		if (!props.editCommentRequest)
-			return
-		
-		const
-			{ comment } = props.editCommentRequest,
-			currentComment = _.get(this.state, 'comment') as Comment
-		
-		if (this.state && (!comment || (currentComment && currentComment.issueNumber === comment.issueNumber)))
-			return
-		
-		this.setState({ comment })
-		
-	}
 	
 	/**
 	 * Before mount update the state
 	 */
 	componentWillMount() {
-		this.updateState(this.props)
+		
+		this.viewController.setMounted(
+			true,
+			this.props
+		)
+		
+		
 	}
 	
 	/**
@@ -230,26 +231,24 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	 * @param newProps
 	 */
 	componentWillReceiveProps(newProps) {
-		this.updateState(newProps)
+		
 	}
 	
 	render() {
-		if (!this.props.editCommentRequest)
+		const
+			{editingComment:comment,issue} = this,
+			ready = this.viewState.ready
+		
+		if (!ready || !comment || !issue)
 			return React.DOM.noscript()
 		
 		const
 			{
 				theme,
 				palette,
-				editCommentRequest,
 				styles,
 				saving
-			} = this.props,
-			
-			{ issue } = editCommentRequest,
-			
-			{ comment } = this.state
-		
+			} = this.props
 		
 		const
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
@@ -295,20 +294,20 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 				          dropEffect='all'
 				          style={rootStyle}>
 					
-					<form style={[styles.form,saving && styles.form.saving]}>
+					
 						
 						<MarkdownEditor
 							ref={this.setMarkdownEditor}
 							autoFocus={true}
 							
 							onChange={this.onMarkdownChange}
-							defaultValue={getValue(() => issue.body)}
+							defaultValue={getValue(() => comment.body)}
 							onKeyDown={(event) => getCommandManager().handleKeyDown(event as any,true)}
 							style={styles.form.editor}
 						/>
 					
 					
-					</form>
+					
 				
 				</FileDrop>
 			
@@ -319,4 +318,4 @@ export class IssueCommentDialog extends React.Component<IIssueCommentDialogProps
 	
 }
 
-export default IssueCommentDialog
+export default CommentEditDialog

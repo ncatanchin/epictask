@@ -75,8 +75,7 @@ function setupUI() {
 	require('epic-styles')
 	benchmarkLoadTime(`Styles Loaded`)
 	
-	// ENSURE AT LEAST 1 VIEW EXISTS
-	getUIActions().ensureDefaultView()
+	
 	
 	const
 		loadUI = require('./App').loadUI as typeof LoadUIGlobal

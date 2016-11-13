@@ -6,7 +6,7 @@ import * as path from 'path'
 import _ from './LoDashMixins'
 import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"
-import { getValue, isString } from "typeguard"
+import { getValue, isString, isObject } from "typeguard"
 
 let
 	Reactotron = null
@@ -61,10 +61,12 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 					const
 						preview = `${getLogPrefix()} >> ${getValue(() => args[0].toString(),'no value')}`
 					
-					Reactotron[tronLevel](preview,{
-						level: tronLevel,
+					Reactotron.display({
+						name: tronLevel,
 						preview,
-						value:args,
+						value: args.length === 1 ?
+							args[0] :
+							args.filter(it => !isObject(it)),
 						important: ['warn','error'].includes(tronLevel)
 					})
 				}

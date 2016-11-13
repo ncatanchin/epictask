@@ -27,8 +27,8 @@ import { SearchPanel,SearchType } from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber} from "epic-global"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
 import { shallowEquals, guard } from "epic-global/ObjectUtil"
 import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
@@ -105,7 +105,7 @@ function baseStyles(topStyles,theme,palette) {
 export interface IIssuesPanelProps extends IThemedAttributes {
 	commandContainer?:CommandContainer
 	
-	viewController?:IssuePanelController
+	viewController?:IssuesPanelController
 	
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
@@ -158,11 +158,10 @@ function makeSelector() {
  * @class IssuesPanel
  * @constructor
  **/
-@ViewRoot(IssuePanelController,IssuesPanelState)
+@ViewRoot(IssuesPanelController,IssuesPanelState)
 @connect(makeSelector)
 @CommandComponent()
 @ThemedStylesWithOptions({enableRef: true},baseStyles, 'issuesPanel')
-//@PureRender
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
 	
 	shouldComponentUpdate(nextProps) {
@@ -211,12 +210,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				})
 			
 			// NEW COMMENT
-			// .command(
-			// 	CIDS.NewComment,
-			// 	CommandType.Container,
-			// 	'New Comment',
-			// 	(cmd, event) => getIssueActions().newComment(),
-			// 	"Ctrl+m")
+			.command(
+				CIDS.NewComment,
+				CommandType.Container,
+				'New Comment',
+				(cmd, event) => {
+					const
+						selectedIssue = this.viewController.getSelectedIssue()
+					
+					getUIActions().openWindow(Pages.CommentEditDialog.makeURI(selectedIssue))},
+				"Ctrl+m")
 			
 			//MARK ISSUE FOCUSED
 			.command(

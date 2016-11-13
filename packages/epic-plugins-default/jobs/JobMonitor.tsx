@@ -112,7 +112,23 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 		monitorController: React.PropTypes.object
 	}
 	
-
+	/**
+	 * Get child context
+	 *
+	 * @returns {{monitorController: (any|string|null)}}
+	 */
+	getChildContext() {
+		return {
+			monitorController: this.state.controller
+		}
+	}
+	
+	/**
+	 * Create Job Monitor
+	 *
+	 * @param props
+	 * @param context
+	 */
 	constructor(props,context) {
 		super(props,context)
 		
@@ -130,16 +146,7 @@ export class JobMonitor extends React.Component<IJobMonitorProps,IJobMonitorStat
 		}))
 	}
 	
-	/**
-	 * Get child context
-	 *
-	 * @returns {{monitorController: (any|string|null)}}
-	 */
-	getChildContext() {
-		return {
-			monitorController: this.state.controller
-		}
-	}
+	
 	
 	render() {
 		

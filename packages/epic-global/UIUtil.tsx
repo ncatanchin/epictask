@@ -1,6 +1,7 @@
 
 import { getValue, isFunction } from "typeguard"
 import { shallowEquals } from "epic-global/ObjectUtil"
+import { cloneObjectShallow } from "epic-global"
 const
 	log = getLogger(__filename)
 
@@ -94,12 +95,14 @@ export interface IMapPropsOpts<P> {
 	watchedProps?:Array<TWatchedPropTest>
 	onMount?:(mapper:IPropMapper,props:P,data:any) => any
 	onUnmount?:(mapper:IPropMapper,props:P,data:any) => any
+	onRender?:(mapper:IPropMapper,defaultRender:() => any,props:P,data:any) => any
+	
 }
 export function MappedProps(
 	propsFn:TPropsFn,opts:IMapPropsOpts<any> = {} as any) {
 	
 	const
-		{watchedProps,onMount,onUnmount} = opts
+		{watchedProps,onMount,onUnmount, onRender} = opts
 	
 	return (Component):any => {
 		return class MapPropsOnChange extends React.Component<any,any> {
@@ -148,8 +151,10 @@ export function MappedProps(
 				return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state.mappedProps,nextState.mappedProps)
 			}
 			
-			remap() {
+			remap = () => {
+				
 				this.setState({
+					lastProps: null,
 					values: null
 				},() => this.mapProps())
 			}
@@ -191,11 +196,24 @@ export function MappedProps(
 			/**
 			 *
 			 */
-			render() {
+			defaultRender = () => {
 				const
 					{mappedProps} = this.state
 				
 				return <Component {...this.props} {...mappedProps} />
+			}
+			
+			render() {
+				if (onRender) {
+					return onRender(
+						this,
+						this.defaultRender,
+						cloneObjectShallow(this.props,this.state.mappedProps),
+						this.state.data)
+				}
+				
+				return this.defaultRender()
+				
 			}
 		} as any
 	}

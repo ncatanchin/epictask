@@ -36,7 +36,7 @@ import {
 
 import { Issue, Milestone, Label, User } from "epic-models"
 import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
 
 // Constants
@@ -176,7 +176,7 @@ const
  * IIssueDetailHeaderProps
  */
 export interface IIssueDetailHeaderProps extends IThemedAttributes {
-	viewController:IssuePanelController
+	viewController:IssuesPanelController
 	selectedIssue?:Issue
 	labels?:List<Label>
 	milestones?:List<Milestone>

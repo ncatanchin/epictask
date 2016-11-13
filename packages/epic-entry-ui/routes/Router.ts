@@ -92,9 +92,8 @@ export type TComponentProvider<ParamsType> = () =>
 
 
 
-const Routers = getHot(module,'Routes',{
-	
-}) as {[id:string]:Router}
+const
+	Routers = getHot(module,'Routes',{}) as {[id:string]:Router}
 
 setDataOnHotDispose(module,() => ({
 	Routers: Routers
