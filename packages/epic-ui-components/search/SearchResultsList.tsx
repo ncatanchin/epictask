@@ -255,8 +255,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	
 	render() {
 		const
-			{ props, state } = this,
-			{ theme, styles, style } = props,
+			{ props } = this,
+			{ style } = props,
 			items = getValue(() => this.controller.getState().items)
 		
 		return !items ? React.DOM.noscript() : <div style={style}>

@@ -167,10 +167,11 @@ function makeExternals() {
 				// /react-hot-loader\/webpack/,
 			
 			]
-		}),
-		{
-			electron: true
-		}
+		})
+		// ,
+		// {
+		// 	electron: true
+		// }
 	]
 }
 
