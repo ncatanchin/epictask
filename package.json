@@ -302,7 +302,7 @@
     "react-simplemde-editor": "=3.0.0",
     "react-split-pane": "^0.1.44",
     "react-tap-event-plugin": "^1.0.0",
-    "react-textfit": "https://github.com/densebrain/react-textfit",
+    "react-textfit": "https://github.com/densebrain/react-textfit/releases/download/v0.1.11/react-textfit-0.1.11.tgz",
     "react-timeout": "^1.0.0",
     "react-valid-props": "^1.0.10",
     "recompose": "^0.20.2",
