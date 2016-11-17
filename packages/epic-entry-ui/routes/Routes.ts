@@ -122,17 +122,17 @@ export const Pages = {
 		
 		
 	},
-	IssueCommentDialog: {
-		name: 'IssueCommentDialog',
+	CommentEditDialog: {
+		name: 'CommentEditDialog',
 		showDevTools: false,
-		path: 'dialog/issue-comment/:issueId/:commentId',
+		path: 'dialog/comment-edit/:issueId/:commentId',
 		makeURI(issue:Issue,comment:Comment = null) {
-			return `dialog/issue-comment/${Issue.makeIssueId(issue)}/${
+			return `dialog/comment-edit/${Issue.makeIssueId(issue)}/${
 				!comment ? -1 : Comment.makeCommentId(comment)}`
 		},
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/issue-comment').IssueCommentDialog)
+				resolver.resolve(require('epic-ui-components/pages/comment-edit/CommentEditDialog').CommentEditDialog)
 			}))
 		
 	}

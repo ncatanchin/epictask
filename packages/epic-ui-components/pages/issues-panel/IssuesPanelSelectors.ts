@@ -118,6 +118,15 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				issuesPanelStateSelector,
 				(issueState:IssuesPanelState) => issueState.selectedIssueIds
 			),
+			
+			selectedIssuesSelector:TSelector<List<Issue>> = createSelector(
+				selectedIssueIdsSelector,
+				issuesSelector,
+				(selectedIssueIds,issues) =>
+					!issues ?
+						List<Issue>() :
+						issues.filter(issue => issue && selectedIssueIds.includes(issue.id)) as List<Issue>
+			),
 			selectedIssueIdSelector = createSelector(
 				selectedIssueIdsSelector,
 				(selectedIssuesIds:List<number>) => selectedIssuesIds && selectedIssuesIds.size === 1 &&
@@ -136,14 +145,14 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				selectedIssueId && issues && issues.find(it => it.id === selectedIssueId)
 			),
 			
-			selectedIssuesSelector:TSelector<List<Issue>> = createSelector(
-				selectedIssueIdsSelector,
-				issuesSelector,
-				(selectedIssueIds:List<number>, issues:List<Issue>):List<Issue> =>
-					selectedIssueIds && issues ?
-						nilFilterList(selectedIssueIds.map(id => issues.find(it => it.id === id)) as any) :
-						List<Issue>()
-			),
+			// selectedIssuesSelector:TSelector<List<Issue>> = createSelector(
+			// 	selectedIssueIdsSelector,
+			// 	issuesSelector,
+			// 	(selectedIssueIds:List<number>, issues:List<Issue>):List<Issue> =>
+			// 		selectedIssueIds && issues ?
+			// 			nilFilterList(selectedIssueIds.map(id => issues.find(it => it.id === id)) as any) :
+			// 			List<Issue>()
+			// ),
 			
 			// PATCH
 			patchIssuesSelector:(state) => Issue[] = createSelector(

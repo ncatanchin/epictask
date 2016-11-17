@@ -85,7 +85,7 @@ export class RepoStateService extends BaseService {
 		await super.start()
 		
 		
-		getRepoActions().loadAvailableRepos(true)
+		await getRepoActions().loadAvailableRepos(true)
 		
 		// this.unsubscribe = this.store
 		// 	.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)

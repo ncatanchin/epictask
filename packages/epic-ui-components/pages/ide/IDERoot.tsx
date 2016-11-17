@@ -15,13 +15,12 @@ import {
 } from "epic-typedux/selectors"
 
 // TODO: Move to IDEView
-import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
 import Header from "epic-ui-components/pages/ide/Header"
 import { StatusBar } from "epic-ui-components/status-bar"
 import { SheetRoot } from "epic-ui-components/layout/sheet"
 import { rem, colorAlpha, FillWindow, FlexColumn, FlexRowCenter, FlexScale, PositionRelative } from "epic-styles/styles"
 import { ViewContainer } from "epic-ui-components/pages/ide/ViewContainer"
-import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
+import DefaultViews from "epic-typedux/state/window/DefaultViews"
 
 
 const
@@ -33,6 +32,16 @@ const
 const
 	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
 	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
+
+
+const DefaultViewConfig = {
+	type: DefaultViews.IssuesPanel.type,
+	name: 'Issues Panel',
+	// stateClazz: IssuesPanelState,
+	// controllerClazz: IssuesPanelController,
+}
+
+
 
 const baseStyles = (topStyles,theme,palette) => {
 	
@@ -212,7 +221,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							           maxSize={panelMaxSize(rightPanel)}
 							           pane2Style={makePanelConstraint(rightPanel)}>
 								<div style={styles.viewWrapper}>
-									<ViewContainer />
+									<ViewContainer defaultViewConfig={DefaultViewConfig} />
 								</div>
 								<ToolPanel location={ToolPanelLocation.Right}/>
 							</SplitPane>

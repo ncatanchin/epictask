@@ -35,7 +35,7 @@ import { IRowState } from "epic-ui-components/common/VisibleList"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
 import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 
 // Constants
 const log = getLogger(__filename)
@@ -220,7 +220,7 @@ export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
 	milestones?:List<Milestone>
 	labels?:List<Label>
 	assignees?:List<User>
-	viewController?:IssuePanelController
+	viewController?:IssuesPanelController
 	rowState?:IRowState<string,string,number>
 }
 

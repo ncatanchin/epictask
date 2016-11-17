@@ -10,14 +10,8 @@ import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor } fro
 import { Icon, RepoName, getGithubErrorText, FileDrop, PureRender } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
 import { MenuItem, SelectField, TextField } from "material-ui"
-import { cloneObject, getValue, canAssignIssue, canCreateIssue } from "epic-global"
-import {
-	repoIdPredicate,
-	availableReposSelector,
-	appUserSelector,
-	getUIActions
-
-} from "epic-typedux"
+import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow } from "epic-global"
+import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
 import {
 	ThemedStyles,
 	makeThemeFontSize,
@@ -29,8 +23,11 @@ import {
 } from "epic-styles"
 import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
-import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
 import { getIssueActions } from "epic-typedux/provider"
+import { IRouterLocation } from "epic-entry-ui/routes"
+import IssueEditState from "epic-ui-components/pages/issue-edit/IssueEditState"
+import IssueEditController from "epic-ui-components/pages/issue-edit/IssueEditController"
+import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 
 
 const
@@ -188,7 +185,9 @@ const baseStyles = (topStyles, theme, palette) => {
 /**
  * IIssueEditDialogProps
  */
-export interface IIssueEditDialogProps extends IThemedAttributes {
+export interface IIssueEditDialogProps extends IThemedAttributes, IRouterLocation {
+	viewControllerState?:IssueEditState
+	viewController?:IssueEditController
 	
 	availableRepos?:List<AvailableRepo>
 	user?:User
@@ -199,16 +198,12 @@ export interface IIssueEditDialogState {
 	availableRepo?:AvailableRepo
 	titleValue?:string
 	bodyValue?:string
-	labels?:Label[]
 	
 	repoMenuItems?:any[]
 	
 	mdEditor?:MarkdownEditor
 	
-	editingIssue?:Issue
 	
-	saveError?:any
-	saving?:boolean
 }
 
 /**
@@ -219,6 +214,7 @@ export interface IIssueEditDialogState {
  **/
 
 
+@ViewRoot(IssueEditController,IssueEditState)
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	//editingIssue: editingIssueSelector,
@@ -227,6 +223,7 @@ export interface IIssueEditDialogState {
 	// saveError: issueSaveErrorSelector
 	
 }))
+
 @CommandComponent()
 @ThemedStyles(baseStyles, 'dialog', 'issueEditDialog', 'form')
 @PureRender
@@ -251,8 +248,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	commandComponentId = ContainerNames.IssueEditDialog
 	
+	
+	private get viewState():IssueEditState {
+		return getValue(() => this.props.viewControllerState)
+	}
+	
+	private get viewController() {
+		return getValue(() => this.props.viewController)
+	}
+	
 	private get editingIssue() {
-		return getValue(() => this.state.editingIssue,new Issue())
+		return getValue(() => this.viewState.editingIssue,new Issue())
 	}
 	
 	/**
@@ -278,13 +284,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param event
 	 */
 	private onSave = async (event) => {
-		if (this.state.saving)
+		if (this.viewState.saving)
 			return
 		
-		this.setState({
-			saving: true
-		})
-		
+		this.viewController.setSaving(true)
+				
 		await Promise.setImmediate()
 		
 		const
@@ -299,10 +303,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			log.error(`failed to save issue`,err)
 			getNotificationCenter().addErrorMessage(`Unable to save issue: ${!savingIssue ? '' : savingIssue.title}`)
 			
-			this.setState({
-				saving: false,
-				saveError: err
-			})
+			this.viewController.setSaveError(err)
+			this.viewController.setSaving(false)
+			
 		}
 		
 	}
@@ -313,23 +316,19 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		body: this.state.bodyValue
 	})
 	
+	/**
+	 * Update the editing issue
+	 * @param newIssueProps
+	 */
 	private updateIssueState = (newIssueProps) => {
 		let
 			{editingIssue} = this
 		
-		this.setState({
-			editingIssue: cloneObjectShallow(editingIssue,newIssueProps)
-		})
+		
+		this.viewController.setEditingIssue(
+			cloneObjectShallow(editingIssue,newIssueProps)
+		)
 	}
-	
-	// getIssueActions().setEditingIssue(
-	// 	new Issue(Object.assign(
-	// 		{},
-	// 		this.props.editingIssue,
-	// 		this.textInputState(),
-	// 		newIssueProps
-	// 	))
-	// )
 	
 	
 	/**
@@ -373,15 +372,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	onRepoChange = (event, index, value) => {
 		const
 			editingIssue = new Issue(cloneObjectShallow(
-				this.state.editingIssue || new Issue(),
+				this.editingIssue || new Issue(),
 				this.textInputState(),{
 					repoId: value
 				}
 			))
 		
-		this.setState({
-			editingIssue
-		})
+		this.viewController.setEditingIssue(editingIssue)
 		
 		//getIssueActions().setEditingIssue(editingIssue)
 	}
@@ -396,9 +393,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 	
 	onLabelsChanged = (newLabels:Label[]) => {
-		const {
-			editingIssue
-		} = this.state
+		const
+			{
+				editingIssue
+			} = this
 		
 		if (editingIssue) {
 			this.updateIssueState({
@@ -439,22 +437,22 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * Create a new state for dialog
 	 *
 	 * @param props
-	 * @returns {{availableRepo: any, bodyValue: any, titleValue: any, repoMenuItems: any[], milestoneMenuItems: (any[]|any), assigneeMenuItems: any}}
+	 * @returns {any}
+	 * @param editingIssue
 	 */
-	getNewState(props:IIssueEditDialogProps) {
+	getNewState(props:IIssueEditDialogProps, editingIssue:Issue = null) {
 		const
 			{
 				styles,
 				open
 			} = props
 			
-			
+		if (!editingIssue)
+			editingIssue = this.editingIssue
 		
 		let
-			{
-				editingIssue
-			} = this,
 			{ availableRepos } = props
+			//repo = availableRepos.find()
 		
 		const
 			repoId = editingIssue && editingIssue.repoId,
@@ -475,13 +473,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		}
 		
 		
-		// SET REPO LABELS, MILESTONES, COLLABS
-		if (editingIssue.repoId) {
-			let
-				availRepo = availableRepos.find(it => it.id === editingIssue.repoId)
-			
-			labels = !availRepo ? [] : availRepo.labels
-		}
 		
 		let
 			bodyValue = getValue(() => this.state.bodyValue,_.get(editingIssue, 'body', '')),
@@ -506,8 +497,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			editingIssue,
 			availableRepo,
 			bodyValue,
-			titleValue,
-			labels
+			titleValue
 		})
 	}
 	
@@ -535,7 +525,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	/**
 	 * On mount
 	 */
-	componentWillMount = () => this.setState(this.getNewState(this.props))
+	componentWillMount = () => {
+		this.viewController.setMounted(
+			true,
+			this.props,
+			() => this.setState(this.getNewState(this.props))
+		)
+		
+		
+		log.info(`Edit dialog mounted with params`,this.props.params,this.props.uri)
+		
+	}
 	
 	
 	/**
@@ -554,19 +554,32 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	render() {
 		
 		const
-			{ styles, palette, theme, open, user} = this.props,
-			{ labels, availableRepo ,saveError, saving } = this.state,
-			repo = availableRepo && availableRepo.repo ? availableRepo.repo : {} as Repo
+			{ styles, palette, theme, open, user,availableRepos} = this.props,
+			{ready,saveError, saving} = this.viewState
 		
 		let
-			editingIssue:Issue = this.editingIssue
+			editingIssue = this.editingIssue
+		
+		const
+			availableRepo = getValue(() => availableRepos.find(it => it.id === editingIssue.repoId))
+		
+		let
+			repo = editingIssue && (editingIssue.repo || getValue(() => availableRepo.repo))
+		
+		log.info('ready/repo',ready,repo,editingIssue)
+		if (!ready || !repo)
+			return React.DOM.noscript()
+		
+		
+		
+		
 		
 		const
 			canAssign = canAssignIssue(repo),
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				{editingIssue.id ? <div style={styles.titleBar.label}>
-					<RepoName repo={editingIssue.repo}
+					<RepoName repo={repo}
 					          style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
 					<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
 				</div> : `CREATE`}
@@ -594,7 +607,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				          style={styles.form}>
 					
 					<div style={styles.form.row1}>
-						<TextField defaultValue={this.state.titleValue || ''}
+						<TextField value={this.state.titleValue || ''}
 						           onChange={this.onTitleChange}
 						           errorStyle={{transform: 'translate(0,1rem)'}}
 						           errorText={getGithubErrorText(saveError,'title')}
@@ -674,7 +687,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					                  mode="normal"
 					                  hintAlways={true}
 					                  style={{marginBottom: rem(1.5)}}
-					                  availableLabels={labels}
+					                  availableLabels={availableRepo.labels || []}
 					                  onLabelsChanged={this.onLabelsChanged}
 					                  onKeyDown={(event) => {
 					                  	getCommandManager().handleKeyDown(event as any,true)

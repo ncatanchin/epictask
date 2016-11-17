@@ -8,11 +8,11 @@ import baseStyles from "./IssueItem.styles"
 import { IRowState } from "epic-ui-components/common/VisibleList"
 import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { guard } from "epic-global/ObjectUtil"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { connect } from "react-redux"
 import {createSelector,createStructuredSelector} from 'reselect'
 import {List} from 'immutable'
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 
 const
 	log = getLogger(__filename)
@@ -23,7 +23,7 @@ const
 export interface IIssueItemProps extends IThemedAttributes {
 	
 	
-	viewController?:IssuePanelController
+	viewController?:IssuesPanelController
 	onOpen?:(event:any, issue:Issue) => void
 	onSelected:(event:any, issue:Issue) => void
 	

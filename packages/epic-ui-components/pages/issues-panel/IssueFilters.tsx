@@ -32,8 +32,8 @@ import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { NavigationArrowDropRight as SvgArrowRight, ContentFilterList as SvgFilterIcon } from "material-ui/svg-icons"
 import { getValue } from "epic-global"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 
 
 const
@@ -131,7 +131,7 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	milestones?:List<Milestone>
 	assignees?:List<User>
 	
-	viewController:IssuePanelController
+	viewController:IssuesPanelController
 }
 
 

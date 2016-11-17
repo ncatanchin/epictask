@@ -176,7 +176,7 @@ export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
 	// ANY NON-STANDARD PANELS ARE RE-ADDED HERE
 	Object
 		.keys(fromPanels)
-		.filter(id => panels.findIndex(it => it.id === id) === -1)
+		.filter(id => panels.findIndex(it => it && it.id === id) === -1)
 		.forEach(id => panels.push(fromPanels[id]))
 	
 	// REDUCE ALL PANELS TO MAP

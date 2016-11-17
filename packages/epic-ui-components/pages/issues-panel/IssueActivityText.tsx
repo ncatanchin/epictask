@@ -19,9 +19,11 @@ import { IRowState } from "epic-ui-components/common/VisibleList"
 import { TDetailItem } from "epic-ui-components/pages/issues-panel/IssueDetailPanel"
 import { getValue } from "typeguard"
 import { isIssue } from "epic-models/Issue"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import {createSelector} from 'reselect'
-import { getIssueActions } from "epic-typedux/provider"
+import { getIssueActions, getUIActions } from "epic-typedux/provider"
+import { Pages } from "epic-entry-ui/routes/Routes"
+import { CSSHoverState } from "epic-styles/styles"
 // Constants
 const log = getLogger(__filename)
 
@@ -156,7 +158,7 @@ export interface IIssueActivityTextProps extends React.HTMLAttributes<any> {
 	
 	issue?:Issue
 	
-	viewController?:IssuePanelController
+	viewController?:IssuesPanelController
 	hideBottomBorder?:boolean
 	
 	activityActionText?:string
@@ -195,9 +197,14 @@ function makeSelector() {
 
 @connect(makeSelector)
 @ThemedStyles(baseStyles,'issueActivityText')
-// @PureRender
 export class IssueActivityText extends React.Component<IIssueActivityTextProps,IIssueActivityTextState> {
 	
+	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
+	}
 	
 	/**
 	 * Create a the component state
@@ -247,9 +254,15 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	}
 	
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextProps,this.props,'issue')
+		return !shallowEquals(nextProps,this.props,'issue','comment') ||
+			!shallowEquals(nextState,this.state)
 	}
 	
+	/**
+	 * On issue edit
+	 *
+	 * @param issue
+	 */
 	makeOnIssueEditClick = (issue) => event =>
 		getIssueActions().editIssue(issue)
 	
@@ -260,7 +273,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param comment
 	 */
 	makeOnCommentEditClick = (issue,comment) => event =>
-		getIssueActions().editComment(issue,comment)
+		getUIActions().openWindow(Pages.CommentEditDialog.makeURI(issue,comment))
+		
 	
 	
 	/**
@@ -321,10 +335,16 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 
 			// Hovering header
 			hovering = Radium.getState(this.state,'activity',':hover'),
-
+			
+			
+			
 			// Grab the activity type style
-			rootStyle = _.merge({},styles.activityContent,activityStyle.all,activityStyle[activityType],styles[activityType]),
-
+			rootStyle = mergeStyles(
+				styles.activityContent,
+				activityStyle.all,
+				activityStyle[activityType],
+				styles[activityType]),
+			
 			// Time styles
 			timeStyle = rootStyle.details.time,
 
@@ -335,7 +355,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				rootStyle.user
 			],
 			
-			controlStyle = makeStyle(
+			controlStyle = mergeStyles(
 				rootStyle.details.control,
 				hovering && rootStyle.details.control.hover
 			),

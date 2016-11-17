@@ -1,6 +1,6 @@
 -
-	var fontStyles = eval(require('!!css!sass!assets/fonts/fonts.global.scss'))
-	var mainStyles = eval(require('!!css!sass!styles/MainEntry.global.scss'))
+	var fontStyles = eval(require('!!css-loader!sass!assets/fonts/fonts.global.scss'))
+	var mainStyles = eval(require('!!css-loader!sass!styles/MainEntry.global.scss'))
 doctype html
 html(lang="en")
 	head
@@ -12,11 +12,11 @@ html(lang="en")
 		meta(name="viewport" content="width=device-width, initial-scale=1")
 		style!=fontStyles
 		style!=mainStyles
-		style!=eval(require('!!css!sass!styles/split-pane.global.scss'))
-		style!=eval(require('!!css!animate.css/animate.css'))
-		style!=eval(require('!!css!font-awesome/css/font-awesome.min.css'))
-		style!=eval(require('!!css!highlight.js/styles/dark.css'))
-		style!=eval(require('!!css!simplemde/dist/simplemde.min.css'))
+		style!=eval(require('!!css-loader!sass!styles/split-pane.global.scss'))
+		style!=eval(require('!!css-loader!animate.css/animate.css'))
+		style!=eval(require('!!css-loader!font-awesome/css/font-awesome.min.css'))
+		style!=eval(require('!!css-loader!highlight.js/styles/dark.css'))
+		style!=eval(require('!!css-loader!simplemde/dist/simplemde.min.css'))
 		style!=eval(require('!!css!sass!assets/styles/MarkdownEditor.SimpleMDE.global.scss'))
 
 		// Splash screen load

@@ -126,10 +126,15 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 	
 	render() {
 		const
-			{promise} = this.state
+			{promise,route} = this.state,
+			{uri,params} = route || {} as any,
+			componentProps = {
+				uri,
+				params
+			}
 		
 		return !promise ?
 			React.DOM.noscript() :
-			<PromisedComponent promise={promise} />
+			<PromisedComponent promise={promise} componentProps={componentProps} />
 	}
 }

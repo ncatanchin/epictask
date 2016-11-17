@@ -18,6 +18,7 @@ const
 
 export const ViewStateRecord = Record({
 	id: shortId(),
+	parentId: null,
 	index:-1,
 	name: null,
 	type: null,
@@ -25,13 +26,17 @@ export const ViewStateRecord = Record({
 })
 
 
+export enum ViewStateEvent {
+	Changed
+}
+
 /**
  * ViewState
  *
  * @class ViewState
  * @constructor
  **/
-class ViewState extends ViewStateRecord implements IViewConfig{
+export class ViewState extends ViewStateRecord implements IViewConfig{
 	
 	
 	static fromJS(o:any = {}) {
@@ -60,6 +65,7 @@ class ViewState extends ViewStateRecord implements IViewConfig{
 	
 	
 	id:string
+	parentId:string
 	index:number
 	name:string
 	type: string

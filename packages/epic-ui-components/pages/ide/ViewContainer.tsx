@@ -8,6 +8,7 @@ import { viewStatesSelector } from "epic-typedux/selectors/UISelectors"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { View } from "epic-ui-components/pages/ide/View"
 import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { cloneObjectShallow } from "epic-global"
 
 // Constants
 const
@@ -31,6 +32,7 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface IViewContainerProps extends IThemedAttributes {
 	viewStates?: List<ViewState>
+	defaultViewConfig?:IViewConfig
 }
 
 /**
@@ -58,10 +60,14 @@ export interface IViewContainerState {
 export class ViewContainer extends React.Component<IViewContainerProps,IViewContainerState> {
 	
 	componentWillMount() {
-		if (this.props.viewStates.size < 1) {
+		const
+			{viewStates,defaultViewConfig} = this.props
+		
+		if (viewStates.size < 1 && defaultViewConfig) {
+			
 			
 			// MAKE SURE WE HAVE AT LEAST 1 VIEW
-			//getUIActions().ensureDefaultView()
+			getUIActions().createView(cloneObjectShallow(defaultViewConfig))
 		}
 	}
 	

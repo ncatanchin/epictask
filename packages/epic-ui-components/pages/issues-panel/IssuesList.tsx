@@ -26,8 +26,8 @@ import { uuid, shallowEquals, shallowEqualsArrayOrList, createDeepEqualSelector 
 import { getValue } from "epic-global/ObjectUtil"
 import { IRowState, IRowTypeConfig } from "epic-ui-components/common/VisibleList"
 import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
-import IssuePanelController from "epic-ui-components/pages/issues-panel/IssuePanelController"
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuePanelController"
+import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
 import { PureRender } from "epic-ui-components/common/PureRender"
 
@@ -111,7 +111,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 
 export interface IIssueGroupHeaderProps extends IThemedAttributes {
 	styles:any
-	viewController?:IssuePanelController
+	viewController?:IssuesPanelController
 	rowState?:IRowState<string,string,number>
 }
 
@@ -268,7 +268,7 @@ class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,IIssueGrou
  * IIssuesPanelProps
  */
 export interface IIssuesListProps extends IThemedAttributes {
-	viewController:IssuePanelController
+	viewController:IssuesPanelController
 	issues?:List<Issue>
 	items?:List<IIssueListItem<any>>
 	groups?:List<IIssueGroup>

@@ -52,13 +52,10 @@ export type TBooleanTest =  TBooleanTestFn | TBooleanTestTruthy
 export function If(tests:TBooleanTest[]|TBooleanTest,fn:Function,elseFn?:Function) {
 	tests = (Array.isArray(tests) ? tests : [tests])
 	
-	for (let test of tests) {
-		if ((isFunction(test) && !test()) || !test) {
-			return elseFn ? elseFn() : false
-		}
-	}
-	
-	return fn()
+	const
+		results = tests.map(test => isFunction(test) ? test() : test),
+		pass = results.every(result => result !== null && result !== undefined && result !== false && result !== 0)
+	return pass ? fn(...results) : elseFn ? elseFn(...results) : false
 }
 
 /**

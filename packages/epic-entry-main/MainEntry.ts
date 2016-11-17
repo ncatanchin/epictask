@@ -111,7 +111,7 @@ function loadMainApp() {
 		Env.isDev && (() => require('./MainDevConfig')),
 		
 		// SPLASH WINDOW
-		() => showSplashWindow(),
+		() => Env.skipSplash ? Promise.resolve() : showSplashWindow(),
 		
 		// NAV MANAGER
 		() => require('./NavManager').start(),
@@ -138,7 +138,7 @@ function loadMainApp() {
 		],
 		
 		// HIDE SPLASH
-		() => hideSplashWindow(),
+		() => Env.skipSplash ? Promise.resolve() : hideSplashWindow(),
 	)
 	
 	
