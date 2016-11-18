@@ -1,1 +1,1 @@
-export * from './IssueCommentDialog'
+export * from './CommentEditDialog'

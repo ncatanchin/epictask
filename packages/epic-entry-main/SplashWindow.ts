@@ -1,7 +1,9 @@
-import Electron,{BrowserWindow,screen} from 'electron'
+import Electron,{BrowserWindow,screen,ipcMain} from 'electron'
 import { getSplashEntryHtmlPath } from "epic-global/TemplateUtil"
+import { createDevWindowMenu } from "epic-entry-main/MainMenu"
 
 const
+	log = getLogger(__filename),
 	splashTemplateURL = 'file://' + getSplashEntryHtmlPath()
 
 let
@@ -17,13 +19,16 @@ function loadSplashWindow() {
 		return splashWindow
 	
 	const
-		screenSize = screen.getPrimaryDisplay().workAreaSize,
-		splashDim = Math.min(screenSize.width,screenSize.height) / 3
+		primaryScreen = screen.getPrimaryDisplay(),
+		screenSize = primaryScreen.workAreaSize,
+		splashDim = Math.floor(Math.min(screenSize.width,screenSize.height) / 3)
 	
 	
 	splashWindow = new BrowserWindow({
-		center: true,
+		//center: true,
 		//alwaysOnTop: true,
+		backgroundColor: "#212124",
+		show:false,
 		transparent: true,
 		width: splashDim,
 		height: splashDim,
@@ -32,12 +37,46 @@ function loadSplashWindow() {
 	
 	splashWindow.loadURL(splashTemplateURL)
 	
-	splashWindow.once('ready-to-show',() => {
+	// if (!Env.isMac && DEBUG) {
+	// 	splashWindow.setMenu(createDevWindowMenu())
+	// }
+	
+	ipcMain.once('splash-loaded',(event,width,height) => {
+		log.debug(`Splash Image size`,width,height,splashDim)
+		
+		let
+			maxDim = Math.max(width,height),
+			minDim = Math.min(width,height),
+			scale = splashDim / maxDim
+			
+		minDim = Math.floor(scale * minDim)
+		
+		if (width > height) {
+			width = splashDim
+			height = minDim
+		} else {
+			width = minDim
+			height = splashDim
+		}
+		
+		const
+			bounds = {
+				width: Math.floor(width),
+				height: Math.floor(height),
+				x: Math.floor((screenSize.width - width) / 2)+ primaryScreen.bounds.x,
+				y: Math.floor((screenSize.height - height) / 2) + primaryScreen.bounds.y
+			}
+		
 		readyToShow = true
 		
+		splashWindow.setBounds(bounds)
 		splashWindow.show()
-		
 		!Env.isDev && splashWindow.focus()
+		
+	})
+	
+	splashWindow.once('ready-to-show',() => {
+		log.debug(`Ready to show`)
 	})
 	
 	return splashWindow

@@ -93,7 +93,7 @@ export type TComponentProvider<ParamsType> = () =>
 
 
 const
-	Routers = getHot(module,'Routes',{}) as {[id:string]:Router}
+	Routers = getHot(module,'Routers',{}) as {[id:string]:Router}
 
 setDataOnHotDispose(module,() => ({
 	Routers: Routers
@@ -227,6 +227,24 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 		Object
 			.keys(routeMap)
 			.forEach(path => this.addRoute(path,routeMap[path] as any))
+		
+		return this
+	}
+	
+	reloadRoutes(routeMap:TRouteMap) {
+		const
+			{route} = this
+		
+		this.routes.clear()
+		
+		Object
+			.keys(routeMap)
+			.forEach(path => this.addRoute(path,routeMap[path] as any))
+		
+		if (route) {
+			log.info(`Updating current route`)
+			this.setURI(route.uri,route.params)
+		}
 		
 		return this
 	}

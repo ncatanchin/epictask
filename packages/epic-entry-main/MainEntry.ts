@@ -113,6 +113,9 @@ function loadMainApp() {
 		// SPLASH WINDOW
 		() => Env.skipSplash ? Promise.resolve() : showSplashWindow(),
 		
+		// DEV CONFIG
+		(Env.isMac || Env.isDev) && (() => require('./MainMenu').execute()),
+		
 		// NAV MANAGER
 		() => require('./NavManager').start(),
 		

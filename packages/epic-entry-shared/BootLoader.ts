@@ -24,6 +24,9 @@ export default function makeBootLoader(...steps:any[]) {
 				results = []
 			
 			for (let part of parts) {
+				if (!part)
+					continue
+				
 				if (isString(part)) {
 					log.debug(`Boot: ${part}`)
 					continue

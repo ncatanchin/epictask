@@ -10,7 +10,7 @@ const
 	iconFile =
 		__NO_WEBPACK__ ?
 			__non_webpack_require__('assets/images/icons/icon-256x256.png') :
-			require('!!file!buildResources/icons/256x256.png'),
+			require('!!file-loader!buildResources/icons/256x256.png'),
 	
 	dataUrl = require('dataurl')
 	
@@ -217,4 +217,4 @@ export const Dialogs = {
 /**
  * Default dev tools position
  */
-export const DevToolsPositionDefault:TDevToolsPosition = 'undocked'
+export const DevToolsPositionDefault:TDevToolsPosition = 'bottom'

@@ -1,4 +1,7 @@
 doctype html
+-
+	var imgUrl = require('../images/splash/splash-page.png')
+
 html(lang="en")
 	head
 		style.
@@ -18,5 +21,21 @@ html(lang="en")
 			img {
 				object-fit: contain;
 			}
+		script.
+			window.$ = require('jquery')
+
+			const Electron = require('electron')
+			const img = document.createElement('img')
+			img.src = "#{imgUrl}"
+			img.onload = function() {
+				let
+					{width,height} = img
+
+				console.log(`Loaded splash image`,img,width,height)
+				Electron.ipcRenderer.send('splash-loaded',width,height)
+
+				document.body.appendChild(img)
+			}
+
+
 	body
-		img(src=require('../images/splash/splash-page.png'))

@@ -331,8 +331,8 @@ function patchConfig(config) {
 const
 	devtool = isDev ?
 		//'#inline-source-map' :
-		//'#cheap-module-eval-source-map' :
-		'#cheap-module-inline-source-map' :
+		'#cheap-module-eval-source-map' :
+		//'#cheap-module-inline-source-map' :
 		"source-map"
 
 // Webpack Config

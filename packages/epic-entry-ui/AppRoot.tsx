@@ -41,7 +41,7 @@ import {
 
 // STYLES
 import { RouteView, WindowHashURIProvider, IRoute, IRouteInstance, Router, RouterEvent } from "./routes"
-import { Pages, Routes } from "./routes/Routes"
+
 import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/selectors"
 
 import { AppStateType } from "epic-typedux/state/app"
@@ -57,10 +57,22 @@ const
 	win = window as any,
 	$ = require('jquery'),
 	windowId = process.env.EPIC_WINDOW_ID
-	
-	
+
+
 //DEBUG LOG
 //log.setOverrideLevel(LogLevel.DEBUG)
+
+
+// We dont import to allow for HMR to work
+let
+	Pages:any,
+	Routes:any
+
+function reloadRoutes() {
+	({Routes,Pages} = require("./routes/Routes"))
+}
+
+reloadRoutes()
 
 /**
  * Properties for App/State
@@ -77,6 +89,9 @@ export interface IAppRootState {
 	windowStyle?:any
 	routeViewRef?:RouteView
 	routeView?: any
+	
+	Routes?:any
+	Pages?:any
 }
 
 const
@@ -312,11 +327,28 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		})
 	}
 	
+	private onRoutesChanged = () => {
+		log.info(`Routes Loaded/Changed - loading`)
+		reloadRoutes()
+		
+		this.setState({
+			Routes,Pages
+		})
+			
+	}
 	
 	/**
 	 * On mount create state and start listening to size
 	 */
 	componentWillMount() {
+		this.onRoutesChanged()
+		
+		EventHub.on(EventHub.RoutesLoaded,this.onRoutesChanged)
+		// if (module.hot)
+		// 	module.hot.accept(["./routes/Routes"],(updates) => {
+		// 		log.info(`HMR Updated`,updates)
+		// 		this.onRoutesChanged()
+		// 	})
 		
 		this.checkRoute()
 		
@@ -334,6 +366,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		this.setState({
 			routeView: null
 		})
+		// if (module.hot)
+		// 	module.hot.(["./routes/Routes"],this.reloadRoutes)
+		
 		// window.removeEventListener('resize', this.onWindowResize)
 	}
 	
@@ -395,7 +430,8 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	render() {
 		
 		const
-			{ theme } = this.props
+			{ theme } = this.props,
+			{Routes} = this.state
 		
 		return <StyleRoot style={Fill}>
 				

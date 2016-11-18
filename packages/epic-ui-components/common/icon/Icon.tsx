@@ -83,11 +83,17 @@ export class Icon extends React.Component<IIconProps,any> {
 		}
 
 
-		const iconContent = (iconSet === FontAwesome) ?
-			iconCode(FAIcons,iconName) : (iconSet === Octicons) ?
-			iconCode(GHIcons,iconName) :
-			children
+		let
+			iconContent = (iconSet === FontAwesome) ?
+				iconCode(FAIcons,iconName) : (iconSet === Octicons) ?
+				iconCode(GHIcons,iconName) :
+				children
 
+		if (iconName && iconSet === MaterialIcons) {
+			iconContent = iconName
+			iconName = null
+		}
+		
 		return <span {...filterProps(this.props)} {..._.pick(this.props,'onClick')}  style={style} className={className}>
 			{iconContent}
 		</span>

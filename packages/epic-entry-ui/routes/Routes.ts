@@ -3,6 +3,8 @@ import { makePromisedComponent, toJSON } from "epic-global"
 import { Issue,Comment } from "epic-models"
 import {List} from 'immutable'
 
+const
+	log = getLogger(__filename)
 
 export const Pages = {
 	
@@ -145,8 +147,13 @@ export const Routes:TRouteMap = Object.values(Pages)
 		return routes
 	},{})
 
+if (module.hot) {
+	module.hot.accept((err) => {
+		log.info(`HMR update`,err)
+	})
+}
 
-
+EventHub.emit(EventHub.RoutesLoaded)
 // REGISTER ALL CONFIGS
 // Object
 // 	.values(DialogConfigs)

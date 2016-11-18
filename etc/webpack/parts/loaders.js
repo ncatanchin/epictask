@@ -46,14 +46,14 @@ module.exports = {
 		// ASSETS / FONTS
 		{
 			test: /\.(eot|svg|ttf|woff|woff2)\w*/,
-			loaders: ['file?name=assets/fonts/[name].[hash].[ext]']
+			loaders: ['file-loader?name=assets/fonts/[name].[hash].[ext]']
 			
 		},
 		
 		// ASSETS / IMAGES & ICONS
 		{
 			test: /\.(png|jpg|gif|ico)$/,
-			loaders: ['file?name=assets/images/[name].[hash].[ext]'],
+			loaders: ['file-loader?name=assets/images/[name].[hash].[ext]'],
 			
 		},
 		
@@ -68,7 +68,7 @@ module.exports = {
 		},
 		{
 			test: /node_modules.*\.css$/,
-			loaders: ['file?name=assets/images/[name].[hash].[ext]']
+			loaders: ['file-loader?name=assets/images/[name].[hash].[ext]']
 		},
 		{
 			test: /^((?!\.global).)*\.css$/,
@@ -85,7 +85,7 @@ module.exports = {
 			loaders: [
 				'style-loader',
 				'css-loader',
-				`sass?includePaths=${path.resolve(baseDir, "./src/assets")}`
+				`sass-loader?includePaths=${path.resolve(baseDir, "./src/assets")}`
 			]
 		},
 		{
@@ -94,10 +94,12 @@ module.exports = {
 			loaders: [
 				'style-loader',
 				'css-loader?modules&sourceMap&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]',
-				`sass?includePaths=${path.resolve(baseDir, "./src/assets")}`
+				`sass-loader?includePaths=${path.resolve(baseDir, "./src/assets")}`
 			]
 		}
 	]
 }
+
+
 
 

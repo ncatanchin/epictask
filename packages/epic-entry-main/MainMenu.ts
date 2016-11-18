@@ -6,10 +6,78 @@ const
 	{
 		BrowserWindow,
 		Menu,
-		app
+		app,
+		globalShortcut
 	} = Electron,
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	
+	DevToolCommands = [
+		{
+			// Toggle developer tools
+			label: 'Toggle Developer Tools',
+			accelerator: 'Alt+CommandOrControl+I',
+			click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
+		},
+		// Start Perf
+		{
+			label: 'Start Perf',
+			accelerator: 'Ctrl+P',
+			click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('Perf.start()')
+		},
+		
+		// Stop Perf
+		{
+			label: 'Stop Perf',
+			accelerator: 'Ctrl+Shift+P',
+			click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript(`
+					Perf.stop();
+					measurements = Perf.getLastMeasurements();
+					Perf.printInclusive(measurements);
+					Perf.printWasted(measurements);
+				`)
+		},
+		
+		// Reload
+		{
+			label: 'Reload',
+			accelerator: 'Command+Shift+R',
+			click: () => BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache()
+		},
+		
+		// Break
+		{
+			label: 'Break',
+			accelerator: 'Control+F8',
+			click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('debugger;')
+		},
+		
+		// CLEAN
+		{
+			label: 'Clean / Reset App',
+			click: () => Cleaner.restartAndClean()
+		}
+	
+	]
 
+
+function onBlur() {
+	log.info(`Window blur - removing accelerators`)
+	DevToolCommands
+		.filter((cmd:any) => cmd.accelerator && cmd.click)
+		.forEach((cmd:any) => globalShortcut.unregister(cmd.accelerator))
+}
+
+function onFocus() {
+	log.info(`Window focus - adding accelerators`)
+	DevToolCommands
+		.filter((cmd:any) => cmd.accelerator && cmd.click)
+		.forEach((cmd:any) => globalShortcut.register(cmd.accelerator,cmd.click))
+}
+
+function setupShortcuts() {
+	app.on('browser-window-focus',onFocus)
+	app.on('browser-window-blur',onBlur)
+}
 
 /**
  * Create Dev Menu
@@ -17,63 +85,28 @@ const
 function makeDevMenu() {
 	return {
 		label: 'Dev',
-		submenu: [
-			{
-				// Toggle developer tools
-				label: 'Toggle Developer Tools',
-				accelerator: 'Alt+Command+I',
-				click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
-			},
-			// Start Perf
-			{
-				label: 'Start Perf',
-				accelerator: 'Ctrl+P',
-				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('Perf.start()')
-			},
-			
-			// Stop Perf
-			{
-				label: 'Stop Perf',
-				accelerator: 'Ctrl+Shift+P',
-				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript(`
-					Perf.stop();
-					measurements = Perf.getLastMeasurements();
-					Perf.printInclusive(measurements);
-					Perf.printWasted(measurements);
-				`)
-			},
-			
-			// Reload
-			{
-				label: 'Reload',
-				accelerator: 'Command+Shift+R',
-				click: () => BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache()
-			},
-			
-			// Break
-			{
-				label: 'Break',
-				accelerator: 'Control+F8',
-				click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('debugger;')
-			},
-			
-			// CLEAN
-			{
-				label: 'Clean / Reset App',
-				click: () => Cleaner.restartAndClean()
-			}
-		
-		]
+		submenu: DevToolCommands
 	}
 }
+
+/**
+ * For dev purposes - create s simple menu
+ *
+ * @returns {any}
+ */
+export function createDevWindowMenu() {
+	return Menu.buildFromTemplate([makeDevMenu()])
+}
+
 
 
 export function makeMainMenu() {
 	
 	
-	if (!Env.isMac)
+	if (!Env.isMac) {
+		
 		return null
-	
+	}
 	const
 		template = [ {
 			label: app.getName(),
@@ -165,8 +198,9 @@ export function makeMainMenu() {
  */
 export function execute() {
 	// ONLY SET MAIN MENU ON MAC
-	if (!Env.isMac)
+	if (!Env.isMac) {
+		setupShortcuts()
 		return
-	
+	}
 	Menu.setApplicationMenu(makeMainMenu())
 }

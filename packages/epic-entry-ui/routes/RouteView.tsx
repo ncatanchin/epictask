@@ -124,6 +124,12 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		router.removeListener(RouterEvent.RouteChanged,this.onRouteChanged)
 	}
 	
+	componentWillReceiveProps(nextProps) {
+		if (nextProps.routes !== this.props.routes) {
+			this.state.router.reloadRoutes(nextProps.routes)
+		}
+	}
+	
 	render() {
 		const
 			{promise,route} = this.state,

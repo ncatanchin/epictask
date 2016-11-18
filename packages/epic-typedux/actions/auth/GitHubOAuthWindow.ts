@@ -100,14 +100,14 @@ export default class GitHubOAuthWindow {
 					{webContents} = this.window = new BrowserWindow({
 						center: true,
 						//parent: this.parentWindow,
-						modal: !DEBUG,
+						modal: true,// !DEBUG,
 						autoHideMenuBar: true,
 						alwaysOnTop: true
 					})
 				
 				webContents.enableDeviceEmulation({fitToView:true} as any)
 				
-				webContents.openDevTools()
+				//webContents.openDevTools()
 				webContents.on('did-finish-load', this.onFinishLoad)
 	
 				webContents.on('did-fail-load',this.onFailLoad)
@@ -136,6 +136,7 @@ export default class GitHubOAuthWindow {
 
 	async requestGithubToken(id, secret, scopes, code, callback) {
 		const onFinish = () => {
+			//require('electron').remote.getCurrentWindow().close()
 			this.window.close()
 		}
 
