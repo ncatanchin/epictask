@@ -20,7 +20,8 @@
     "install-material-ui": "npm i material-ui@../material-ui/build",
     "install-app": "babel-node ./etc/scripts/package.js --install",
     "storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "kill-electron": "pkill -9 Electron || pkill -9 electron"
   },
   "build": {
     "appId": "com.densebrain.epictask",

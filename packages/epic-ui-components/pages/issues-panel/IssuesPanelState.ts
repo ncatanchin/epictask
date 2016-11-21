@@ -23,18 +23,6 @@ export type TIssueActivity = {
 	selectedIssue:Issue
 }
 
-export type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
-
-export interface IIssuePatchLabel {
-	action:'add'|'remove'
-	label:Label
-}
-
-export type TEditCommentRequest = {
-	issue:Issue,
-	comment:Comment
-}
-
 /**
  * Issue sort and filter type
  */

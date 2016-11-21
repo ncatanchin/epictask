@@ -479,10 +479,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	setTheme(theme:any) {
 		return (state:UIState) => state.set('theme',theme)
 	}
-
 	
 	
-	closeWindow(windowId:string) {
+	/**
+	 * Close a window
+	 *
+	 * @param windowId
+	 */
+	closeWindow(windowId:string = getWindowId()) {
 		getWindowManagerClient().close(windowId)
 	}
 	

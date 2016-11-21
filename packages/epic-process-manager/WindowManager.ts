@@ -126,9 +126,9 @@ function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOp
 		cloneObject(WindowOptionDefaults[ type ]),
 		
 		// CONFIG DEFAULTS
-		([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
-			parent: BrowserWindow.getFocusedWindow()
-		},
+		// ([ WindowType.Dialog, WindowType.Modal ].includes(type)) && {
+		// 	parent: BrowserWindow.getFocusedWindow()
+		// },
 		
 		// CUSTOM OPTS
 		opts

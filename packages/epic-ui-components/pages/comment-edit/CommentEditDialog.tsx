@@ -17,8 +17,6 @@ import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-com
 import { MarkdownEditor } from "epic-ui-components/fields"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
 import { FileDrop, RepoName } from "epic-ui-components/common"
-import { TEditCommentRequest } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import { getIssueActions } from "epic-typedux/provider"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { CommentEditState } from "epic-ui-components/pages/comment-edit/CommentEditState"
 import CommentEditController from "epic-ui-components/pages/comment-edit/CommentEditController"

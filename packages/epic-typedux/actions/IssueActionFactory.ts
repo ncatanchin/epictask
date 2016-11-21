@@ -42,7 +42,7 @@ import {
 import { GitHubClient } from "epic-github"
 import { ContainerNames } from "epic-command-manager"
 import { Pages } from "epic-entry-ui/routes/Routes"
-import { TIssuePatchMode, IIssuePatchLabel } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+
 import { getDatabaseClient } from "epic-database-client/DatabaseClient"
 import { getValue, toNumber } from "typeguard"
 
@@ -381,6 +381,20 @@ export class IssueActionFactory  {
 	}
 	
 	/**
+	 * Load multiple issues
+	 *
+	 * @param issueKeys
+	 * @returns {List<Issue>|List<any>|any}
+	 */
+	async loadIssues(issueKeys:List<string>):Promise<List<Issue>> {
+		let
+			issues = await getStores().issue.bulkGet(...issueKeys.toArray()),
+			results = this.fillIssueResources(issues)
+		
+		return List<Issue>(results)
+	}
+	
+	/**
 	 * Load a single issue
 	 * @param issueKey
 	 *
@@ -388,10 +402,9 @@ export class IssueActionFactory  {
 	 */
 	async loadIssue(issueKey:string):Promise<Issue> {
 		let
-			issue = await getStores().issue.get(issueKey),
-			results = this.fillIssueResources([issue])
+			issues = await this.loadIssues(List([issueKey]))
 		
-		return results.size && results.get(0)
+		return issues.size && issues.get(0)
 	}
 	
 	/**
@@ -514,7 +527,7 @@ export class IssueActionFactory  {
 			return
 		}
 		
-		getUIActions().openWindow(Pages.IssuePatchDialog.makeURI(issues))
+		getUIActions().openWindow(Pages.IssuePatchDialog.makeURI(mode,issues))
 	}
 	
 	/**

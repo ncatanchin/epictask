@@ -7,6 +7,7 @@ export const ContainerNames = {
 	AppRoot: 'AppRoot',
 	CommentEditDialog: 'CommentEditDialog',
 	IssuesPanel: 'IssuesPanel',
+	IssuePatchDialog: 'IssuePatchDialog',
 	IssueDetailPanel: 'IssueDetailPanel',
 	IssueEditDialog: 'IssueEditDialog',
 	Header: 'Header',

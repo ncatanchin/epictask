@@ -28,8 +28,6 @@ import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelS
 import { UIState } from "epic-typedux/state/UIState"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { TIssueSortAndFilter } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import { TEditCommentRequest } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import { TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 
 

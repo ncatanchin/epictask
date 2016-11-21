@@ -38,7 +38,7 @@ export class EnumEventEmitter<E> {
 		this.enumConstants = Object.keys(enumValues).filter(it => isNumber(it))
 	}
 	
-	
+		
 	
 	
 	/**
@@ -92,6 +92,47 @@ export class EnumEventEmitter<E> {
 	
 	listeners(event: E): Function[] {
 		return this.emitter.listeners(this.eventName(event))
+	}
+	
+	/**
+	 * Helper to set unlimited listeners
+	 *
+	 * @returns {EnumEventEmitter}
+	 */
+	setUnlimitedListeners() {
+		this.emitter.setMaxListeners(0)
+		return this
+	}
+	
+	/**
+	 * Set the max listener count
+	 *
+	 * @param listenerCount
+	 * @returns {EnumEventEmitter}
+	 */
+	setMaxListeners(listenerCount:number) {
+		this.emitter.setMaxListeners(listenerCount)
+		
+		return this
+	}
+	
+	/**
+	 * Get the max number of listeners
+	 *
+	 * @returns {any}
+	 */
+	getMaxListeners() {
+		return this.emitter.getMaxListeners()
+	}
+	
+	/**
+	 * Current listener count
+	 *
+	 * @param eventName
+	 * @returns {any}
+	 */
+	listenerCount(eventName:string) {
+		return this.emitter.listenerCount(eventName)
 	}
 	
 	/**

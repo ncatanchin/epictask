@@ -10,7 +10,7 @@ import { MenuItem } from "material-ui"
 import { PureRender, LabelChip, Avatar, IssueLabelsAndMilestones } from "../../common"
 import { DialogRoot, createSaveCancelActions } from "../../layout/dialog"
 import { TypeAheadSelect } from "epic-ui-components/fields"
-import { createDeepEqualSelector } from "epic-global"
+import { createDeepEqualSelector, getValue } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
@@ -21,16 +21,23 @@ import {
 
 	getUIActions
 } from "epic-typedux"
-import { CommonKeys } from "epic-command-manager"
+import { CommonKeys, CommandType, ContainerNames } from "epic-command-manager"
 import { IssueMultiInlineList } from "epic-ui-components/pages/issues-panel/IssueMultiInlineList"
-import { IssuePatchModes, TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import { IssuePatchModes } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
+import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import IssuePatchController from "epic-ui-components/pages/issue-patch/IssuePatchController"
+import { IssuePatchState } from "epic-ui-components/pages/issue-patch/IssuePatchState"
+import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
+import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
 
 
 // Constants
-const log = getLogger(__filename)
-const tinycolor = require('tinycolor2')
+const
+	log = getLogger(__filename),
+	tinycolor = require('tinycolor2')
 
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Add global themed styles
@@ -216,14 +223,13 @@ export const IssuePatchFns = {
 export interface IIssuePatchDialogProps extends IThemedAttributes {
 	saving?:boolean
 	saveError?:Error
-	mode?:TIssuePatchMode
-	repoIds?:number[]
-	issuesIds?:number[]
-	issues?:Issue[]
+		
 	availableAssignees?:List<User>
 	availableMilestones?:List<Milestone>
 	availableLabels?:List<Label>
 	
+	viewController?:IssuePatchController
+	viewControllerState?:IssuePatchState
 }
 
 /**
@@ -242,24 +248,62 @@ export interface IIssuePatchDialogState {
  * @class IssuePatchDialog
  * @constructor
  **/
+
+@ViewRoot(IssuePatchController,IssuePatchState)
 @connect(createStructuredSelector({
-	availableAssignees: enabledAssigneesSelector,
-	availableLabels: enabledLabelsSelector,
-	availableMilestones: enabledMilestonesSelector,
-	repoIds: enabledRepoIdsSelector,
+	availableAssignees: assigneesSelector,
+	availableLabels: labelsSelector,
+	availableMilestones: milestonesSelector,
+	
 	// issues: patchIssuesSelector,
 	// mode: patchModeSelector,
 	// saving: (state) => issueStateSelector(state).issueSaving,
 	// saveError: (state) => issueStateSelector(state).issueSaveError,
 
-}, createDeepEqualSelector))
-
+}))
+@CommandComponent()
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'issuePatchDialog')
 @PureRender
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
 	
+	
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder
+			.command(CommandType.Container,
+				'Save Comment',
+				(cmd, event) => this.onSave(event),
+				"CommandOrControl+Enter")
+			.command(CommandType.Container,
+				'Close Dialog',
+				this.hide,
+				"Escape")
+			
+			.make()
+	
+	commandComponentId = ContainerNames.IssuePatchDialog
+	
+	private get viewState():IssuePatchState {
+		return getValue(() => this.props.viewControllerState)
+	}
+	
+	private get viewController() {
+		return getValue(() => this.props.viewController)
+	}
+	
+	get mode():TIssuePatchMode {
+		return getValue(() => this.viewState.mode)
+	}
+	
+	/**
+	 * Get current issues
+	 *
+	 * @returns {T}
+	 */
+	get issues() {
+		return getValue(() => this.viewState.issues,List<Issue>())
+	}
 	
 	/**
 	 * Get currently selected new items
@@ -288,29 +332,29 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	/**
 	 * Hide and focus on issue panel
 	 */
-	hide = () => {
-		getUIActions().closeWindow(getWindowId())
-		
-	}
+	hide = () => getUIActions().closeWindow()
 	
 	/**
 	 * onSave
 	 *
 	 * @param event
 	 */
-	onSave = (event = null) => {
+	onSave = async (event = null) => {
+		if (this.viewState.saving)
+			return
+		
 		const
-			selectedItem = _.get(this.state, 'selectedItem'),
-			patch = IssuePatchFns[ this.props.mode ](this.state.newItems || [])
+			patch = IssuePatchFns[ this.mode ](getValue(() => this.state.newItems, []))
 		
 		log.info('Applying patch to issue', patch)
 		
-		!this.props.saving &&
-		getIssueActions().applyPatchToIssues(
+		await getIssueActions().applyPatchToIssues(
 			patch,
-			this.props.mode !== 'Label',
-			List<Issue>(this.props.issues)
+			this.mode !== 'Label',
+			this.issues
 		)
+		
+		getUIActions().closeWindow()
 	}
 	
 	
@@ -323,7 +367,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	onItemSelected = (value, index) => {
 		const
-			{ mode } = this.props,
+			{ mode } = this,
 			item = (value && value.item) || _.get(this, `state.dataSource[${index}].item`)
 		
 		log.info(`Item selected @ index ${index}`, item)
@@ -378,8 +422,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeMilestoneDataSource(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
-			{ availableMilestones, issues } = props,
-			{ query, newItems } = this,
+			{ availableMilestones } = props,
+			{ query, newItems,issues } = this,
 			items = availableMilestones
 			
 			// Filter out repos that don't apply to these issues
@@ -394,7 +438,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					!issues.every((issue:Issue) => _.get(issue, 'milestone.id') === item.id)
 				))
 				
-				// Convert to JS Arraytyp
+				// Convert to JS Array
 				.toArray()
 		
 		const newDataSource = items.map(item => ({
@@ -422,8 +466,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeLabelDataSource(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
-			{ availableLabels, issues } = props,
-			{ query, newItems } = this,
+			{ availableLabels } = props,
+			{ query, newItems,issues } = this,
 			
 			items = availableLabels
 			
@@ -478,10 +522,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	makeAssigneeDataSource(props:IIssuePatchDialogProps, repoIds) {
 		
-		const
-			{ issues } = props
+		
+			
 		
 		const
+			{ issues } = this,
 			collaborators = issues
 				.reduce((allUsers, issue:Issue) => {
 					
@@ -538,17 +583,22 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param props
 	 */
 	updateState(props:IIssuePatchDialogProps) {
-		if (!props.open || !props.issues || !props.issues.length)
+		const
+			viewState = props.viewControllerState
+		
+		if (!viewState || !viewState.mode || !viewState.issues.size)
 			return
 		
 		const
-			{
-				mode,
-				issues
-			} = props,
+			
+			{mode,issues} = viewState,
 			
 			// Get the repo ids for the selected issues only
-			repoIds = _.nilFilter(_.uniq(issues.map(issue => issue.repoId))),
+			repoIds = _.nilFilter(_.uniq(issues.map(issue => issue.repoId).toArray()))
+		
+		log.debug(`Making datasource for mode`,mode,`repoIds`,repoIds)
+		
+		const
 			
 			// Now get the datasource
 			dataSource = (mode === 'Milestone') ?
@@ -563,7 +613,13 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	/**
 	 * Before mount update the state
 	 */
-	componentWillMount = () => this.updateState(this.props)
+	componentWillMount = () => {
+		this.viewController.setMounted(
+			true,
+			this.props,
+			() => this.updateState(this.props)
+		)
+	}
 	
 	
 	/**
@@ -583,34 +639,18 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	}
 	
 	/**
-	 * Hot key handlers
+	 * Render root
+	 *
+	 * @returns {any}
 	 */
-	keyHandlers = {
-		[CommonKeys.Enter]: (event) => {
-			log.info('Enter pressed')
-			
-			//event.stopPropagation()
-			//event.preventDefault()
-			//event.cancelBubble = true
-		},
-		
-		[CommonKeys.MoveDown]: (event) => {
-			log.info('Down pressed', event, this.typeAheadRef)
-			
-			// event.stopPropagation()
-			// event.preventDefault()
-			// event.cancelBubble = true
-		}
-		
-	}
-	
-	
 	render() {
 		const
 			{
-				theme,
 				issues,
-				mode,
+				mode
+			} = this,
+			{
+				theme,
 				styles,
 				saving,
 				palette,
@@ -618,7 +658,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			} = this.props,
 			newItems = this.newItems,
 			
-			title = mode === IssuePatchModes.Label ? 'Add Label to' :
+			title = mode === IssuePatchModes.Label ? 'Add Label' :
 				mode === IssuePatchModes.Assignee ? 'Assign Issues' :
 					'Set Milestone',
 			
@@ -628,7 +668,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide)
 			
 		
-		return <DialogRoot
+		return <CommandRoot
+			id={ContainerNames.IssuePatchDialog}
+			component={this}
+			style={makeStyle(Fill)}>
+			<DialogRoot
 			titleNode={titleNode}
 			titleActionNodes={titleActionNodes}
 			saving={saving}
@@ -670,6 +714,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				
 				</div>
 		</DialogRoot>
+		</CommandRoot>
 	}
 	
 }

@@ -21,14 +21,14 @@ const
 		// Start Perf
 		{
 			label: 'Start Perf',
-			accelerator: 'Ctrl+P',
+			accelerator: 'Ctrl+Alt+P',
 			click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript('Perf.start()')
 		},
 		
 		// Stop Perf
 		{
 			label: 'Stop Perf',
-			accelerator: 'Ctrl+Shift+P',
+			accelerator: 'Ctrl+Shift+Alt+P',
 			click: () => BrowserWindow.getFocusedWindow().webContents.executeJavaScript(`
 					Perf.stop();
 					measurements = Perf.getLastMeasurements();

@@ -3,6 +3,7 @@ import { makePromisedComponent, toJSON } from "epic-global"
 import { Issue,Comment } from "epic-models"
 import {List} from 'immutable'
 
+
 const
 	log = getLogger(__filename)
 
@@ -105,16 +106,20 @@ export const Pages = {
 		
 		
 	},
+	
+	/**
+	 * Issue patch dialog
+	 */
 	IssuePatchDialog: {
 		name: 'IssuePatchDialog',
 		path: 'dialog/issue-patch',
-		makeURI(issues:List<Issue>) {
+		makeURI(mode:TIssuePatchMode,issues:List<Issue>) {
 			const
-				issueIds = toJSON(
-					issues.map(issue => Issue.makeIssueId(issue))
+				issueKeys = toJSON(
+					issues.map(issue => Issue.makeIssueId(issue)).toArray()
 				)
 			
-			return `dialog/issue-patch?issueIds=${encodeURIComponent(issueIds)}`
+			return `dialog/issue-patch?mode=${mode}&issueKeys=${encodeURIComponent(issueKeys)}`
 		},
 		showDevTools: false,
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
@@ -124,6 +129,10 @@ export const Pages = {
 		
 		
 	},
+	
+	/**
+	 * Comment edit dialog
+	 */
 	CommentEditDialog: {
 		name: 'CommentEditDialog',
 		showDevTools: false,

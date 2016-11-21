@@ -51,6 +51,7 @@ import { Tab, Tabs } from "material-ui"
 import { makeHeightConstraint } from "epic-styles/styles"
 import { TabTemplate } from "epic-ui-components/common"
 import { KeyMapEditor } from "epic-ui-components/pages/settings/KeyMapEditor"
+import { SettingsSection, SettingsField } from "epic-ui-components/pages/settings/SettingsElements"
 
 const
 	log = getLogger(__filename),
@@ -413,27 +414,3 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 
 export default SettingsWindow
 
-
-function SettingsSection({styles,iconSet = 'fa',iconName,title,children= null}) {
-	
-	return <div>
-		<div style={styles.form.title}>
-			<Icon style={styles.form.title.icon}
-			      iconSet={iconSet as any}
-			      iconName={iconName}/>
-			<span>{title}</span>
-		</div>
-		{children}
-	</div>
-}
-
-function SettingsField({styles,label,children = null}) {
-	return <div style={styles.form.row}>
-		<div style={styles.form.labelCell}>
-			{label}
-		</div>
-		
-		{children}
-	
-	</div>
-}

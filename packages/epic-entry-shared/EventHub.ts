@@ -11,12 +11,18 @@ const
 	{isMain} = Env
 
 
+/**
+ * Internal message shape
+ */
 interface IEventHubMessage {
 	source:string
 	type:EventType
 	args:any[]
 }
 
+/**
+ * Intersected type of events and hub
+ */
 export type TEventHub = EnumEventEmitter<EventType> & typeof EventType & {
 	broadcast(type:EventType,...args:any[])
 }
@@ -28,19 +34,20 @@ export type TEventHub = EnumEventEmitter<EventType> & typeof EventType & {
  * @type {TEventHub}
  */
 const
-	EventHub = new EnumEventEmitter<EventType>(EventType) as TEventHub
+	EventHub = (new EnumEventEmitter<EventType>(EventType) as TEventHub).setUnlimitedListeners()
 
+/**
+ * Internal event names
+ *
+ * @type {{Broadcast: string}}
+ */
 const
 	InternalEvents = {
 		Broadcast: "@@EVENT-HUB-BROADCAST"
-	},
-	eventTypeValues = enumValueMap(EventType)
+	}
+	
+	
 
-	
-	
-// ADD EVENT TYPE MIXED IN
-//Object.assign(EventHub,eventTypeValues)
-Object.assign(EventHub,EventType)
 
 /**
  * On renderer message received
@@ -58,7 +65,9 @@ function onMainMessage(event,data) {
 	notifyChildren(msg,event.sender.id)
 }
 
-
+/**
+ * Main process subscribe
+ */
 function subscribeMain() {
 	const
 		{ipcMain} = Electron
@@ -167,38 +176,12 @@ function broadcast(type:EventType,...args:any[]) {
 	}
 }
 
-
-Object.assign(EventHub,{broadcast})
-
-
-
-function onRemoteMessage(data) {
-	const
-		msg = fromPlainObject(data) as IEventHubMessage
-	
-	
-}
-
-
-
 /**
- * Underlying emitter
- *
- * @type {EnumEventEmitter<EventType>}
+ * Mixin the broadcast function and EventTypes
  */
-// class EventHubImpl extends  {
-//
-//
-// 	constructor() {
-// 		super(EventType)
-//
-//
-// 	}
-//
-// 	broadcast
-// }
-//
-// const EventHub = new EventHubImpl()
+Object.assign(EventHub,{
+	broadcast
+},EventType)
 
 
 export default EventHub

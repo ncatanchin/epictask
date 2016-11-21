@@ -11,7 +11,6 @@ import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
 
 import { Issue, Label, Comment, Milestone } from "epic-models"
 import { addErrorMessage } from "epic-global/NotificationCenterClient"
-import { TIssuePatchMode } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { IssuesEvent } from "epic-models/IssuesEvent"
 import {
 	makeIssuesPanelStateSelectors,

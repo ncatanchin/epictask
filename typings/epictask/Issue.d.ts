@@ -1,4 +1,19 @@
 
+
+
+declare type TIssuePatchMode = "Label" | "Milestone" | "Assignee"
+
+declare interface IIssuePatchLabel {
+	action:'add'|'remove'
+	label:ILabel
+}
+
+declare type TEditCommentRequest = {
+	issue:IIssue,
+	comment:IComment
+}
+
+
 declare type TIssueState = "open" | "closed"
 
 declare interface IIssue {
