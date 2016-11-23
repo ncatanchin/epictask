@@ -20,7 +20,7 @@ import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
 import { IIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
-import { availableReposSelector, availableRepoIdsSelector, enabledAvailableReposSelector } from "epic-typedux/selectors"
+import { enabledAvailableReposSelector } from "epic-typedux/selectors"
 import {EventEmitter} from 'events'
 import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
 
@@ -150,12 +150,16 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	}
 	
 	
+	/**
+	 * Create the controller
+	 *
+	 * @param id
+	 * @param initialState
+	 */
 	constructor(public id:string, public initialState:IssuesPanelState = new IssuesPanelState()) {
 		super()
 		
 		this.selectors = makeIssuesPanelStateSelectors(id)
-		
-		//this.loadIssues()
 		
 	}
 	
@@ -199,7 +203,11 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 		
 	}
 	
-	
+	/**
+	 * Handle database changes
+	 *
+	 * @type {{}}
+	 */
 	private databaseChangeHandlers = {
 		
 		// ISSUES
@@ -513,8 +521,6 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 			selectedIssueIds,
 			editingInline: false
 		})
-		
-		
 	}
 	
 	/**

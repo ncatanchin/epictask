@@ -291,14 +291,7 @@ export function DefaultTheme(palette) {
 		 * Issue state icon
 		 */
 		issueStateIcon: {
-			open: {
-				backgroundColor: 'rgba(101,181,73,1)',
-				color: text.primary
-			},
-			closed: {
-				color: text.primary,
-				backgroundColor: warn.hue1
-			}
+			
 		},
 		
 		app: {
@@ -782,62 +775,6 @@ export function DefaultTheme(palette) {
 				activities: {
 					activity: {
 						
-						all: {
-							details: {
-								control: {
-									button: {
-										backgroundColor: 'transparent',
-										color: tc(text.primary).setAlpha(0.8).toRgbString(),
-										':hover': {
-											color: tc(text.primary).setAlpha(1).toRgbString(),
-										}
-									},
-									
-									icon: {
-										fontSize: themeFontSize(1.3)
-									}
-								}
-							}
-						},
-						
-						post: {
-							backgroundColor: primary.hue2,
-							//borderColor:     accent.hue1,
-							borderColor: Transparent,
-							
-							user: {
-								backgroundColor: primary.hue3,
-								//borderColor: accent.hue1,
-								borderColor: Transparent,
-								transform: 'translate(0.2rem,0)'
-							},
-							
-							details: {
-								backgroundColor: primary.hue3,
-								color: text.primary,
-								
-								
-							}
-						},
-						
-						comment: {
-							backgroundColor: primary.hue2,
-							//borderColor:     secondary.hue1,
-							borderColor: Transparent,
-							
-							user: {
-								backgroundColor: primary.hue3,
-								//borderColor:     secondary.hue1,
-								borderColor: Transparent,
-								transform: 'translate(0.2rem,0)'
-							},
-							
-							details: {
-								//backgroundColor: secondary.hue1,
-								backgroundColor: primary.hue3,
-								color: text.primary
-							}
-						}
 					}
 				}
 			},

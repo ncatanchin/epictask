@@ -243,10 +243,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		const
 			themeChanged = !shallowEquals(this.props,'theme')
 
-		// setTimeout(() => {
-		// 	getValue(() => unwrapRef(this.state.listRef).forceUpdate())
-		// },150)
-
 		return !shallowEquals(this.state, nextState, 'items') ||
 			!shallowEquals(this.props, nextProps,
 				'activity','selectedIssue','selectedIssueIds','selectedIssues') || themeChanged

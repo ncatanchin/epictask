@@ -142,7 +142,7 @@ export function RegisterModel<T extends IModelConstructor<any>>(target:T):T {
 		},target) as T
 	
 	log.info(`Registering model: ${clazzName}`)
-	
+										
 	
 	registerModel(clazzName,decoratedClazz)
 	

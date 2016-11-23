@@ -10,8 +10,8 @@ import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssue
 import { guard } from "epic-global/ObjectUtil"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { connect } from "react-redux"
-import {createSelector,createStructuredSelector} from 'reselect'
-import {List} from 'immutable'
+import { createSelector, createStructuredSelector } from 'reselect'
+import { List } from 'immutable'
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 
 const
@@ -41,29 +41,27 @@ export interface IIssueItemProps extends IThemedAttributes {
 }
 
 
-
-
 // State is connected at the item level to minimize redraws for the whole issue list
 @connect(() => {
 	const
-		realIndexSelector = (state,props:IIssueItemProps) => props.rowState.item,
+		realIndexSelector = (state, props:IIssueItemProps) => props.rowState.item,
 		
 		itemSelector = createSelector(
 			realIndexSelector,
 			getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
-			(realIndex:number,items: List<IIssueListItem<any>>) => items.get(realIndex)
+			(realIndex:number, items:List<IIssueListItem<any>>) => items.get(realIndex)
 		),
 		
 		issueSelector = createSelector(
 			itemSelector,
 			(item:IIssueListItem<any>) => item && isIssueListItem(item) && item.item
 		),
-			
+		
 		isFocusedSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.focusedIssueIdsSelector),
 			(issue:Issue, focusedIssueIds:List<number>) =>
-				issue && focusedIssueIds && focusedIssueIds.includes(issue.id)
+			issue && focusedIssueIds && focusedIssueIds.includes(issue.id)
 		),
 		isSelectedSelector = createSelector(
 			issueSelector,
@@ -77,9 +75,8 @@ export interface IIssueItemProps extends IThemedAttributes {
 			(issue:Issue, selectedIssueIds:List<number>):boolean =>
 			issue && selectedIssueIds.includes(issue.id) && selectedIssueIds.size > 0
 		)
-		
-
-
+	
+	
 	return createStructuredSelector({
 		realIndex: realIndexSelector,
 		item: itemSelector,
@@ -91,11 +88,11 @@ export interface IIssueItemProps extends IThemedAttributes {
 	})
 })
 
-@ThemedStyles(baseStyles,'issueItem')
+@ThemedStyles(baseStyles, 'issueItem')
 export class IssueItem extends React.Component<IIssueItemProps,void> {
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 	}
 	
 	/**
@@ -118,6 +115,9 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			this.props,
 			'rowState',
 			'style',
+			'styles',
+			'theme',
+			'palette',
 			'issue',
 			'isFocused',
 			'isSelected',
@@ -127,12 +127,12 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	
 	
 	private onDoubleClick = (event) => {
-		guard(() => this.props.onOpen(event,this.issue))
+		guard(() => this.props.onOpen(event, this.issue))
 		
 	}
 	
 	private onClick = (event) => {
-		guard(() => this.props.onSelected(event,this.issue))
+		guard(() => this.props.onSelected(event, this.issue))
 	}
 	
 	/**
@@ -143,7 +143,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		
 		const
-			{props,state} = this,
+			{ props, state } = this,
 			{
 				style:styleParam,
 				styles,
@@ -155,13 +155,13 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				isSelected,
 				isSelectedMulti
 			} = props
-						
-			
+		
+		
 		if (!issue)
 			return React.DOM.noscript()
-
+		
 		const
-			{labels} = issue,
+			{ labels } = issue,
 			
 			issueStyles = makeStyle(
 				styles,
@@ -177,18 +177,24 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				isSelected && styles.title.selected,
 				isSelectedMulti && styles.title.selected.multi
 			)
-
+		
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
 		                                    className={(isSelected ? 'selected' : '')}
 		                                    onDoubleClick={this.onDoubleClick}
 		                                    onClick={this.onClick}>
-
+			
 			{/*<div style={stylesMarkers}></div>*/}
 			<div style={styles.details}>
 				
-				<div style={styles.row1}>
-					<div style={styles.repo}>
+				{/* ASSIGNEE */}
+				<IssueItemAvatarAndState styles={styles} issue={issue}/>
+				<div style={styles.content}>
+					
+					
+					<div style={styles.row1}>
+						
+						<div style={styles.repo}>
 						<span style={[
 							styles.number,
 							isFocused && styles.number.focused,
@@ -196,61 +202,71 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 						]}>
 							#{issue.number}&nbsp;&nbsp;
 						</span>
-						<Renderers.RepoName repo={issue.repo} style={
+							<Renderers.RepoName repo={issue.repo} style={
 							makeStyle(
 								styles.repo,
 								isFocused && styles.repo.focused,
 								isSelected && styles.repo.selected
 							)}/>
 						
-					</div>
-				
-					{/* ASSIGNEE */}
-					<Avatar user={issue.assignee}
-					        style={styles.avatar}
-					        labelPlacement='before'
-					        labelStyle={styles.username}
-					        avatarStyle={styles.avatar}/>
-				
-				</div>
-
-
-				<div style={styles.row2}>
-					<div style={issueTitleStyle}>{issue.title}</div>
-					<div style={styles.time}>{moment(issue.updated_at).fromNow()}</div>
-				</div>
-
-				<div style={styles.row3}>
-
-					{/* LABELS */}
-					<div style={styles.labels.wrapper}>
-						<IssueLabelsAndMilestones
-							showIcon
-							labels={labels}
-							milestones={issue.milestone ? [issue.milestone] : []}
-							style={styles.labels}
-							labelStyle={styles.labels.label}
-						/>
+						</div>
+						
+						
+						
+						{/* LAST UPDATED */}
+						<div style={styles.time}>{moment(issue.updated_at).fromNow()}</div>
+						
 					</div>
 					
 					
+					<div style={styles.row2}>
+						<div style={issueTitleStyle}>{issue.title}</div>
+					</div>
 					
-					<IssueStateIcon styles={[styles.state]}
-					                issue={issue}/>
+					<div style={styles.row3}>
+						
+						{/* LABELS */}
+						<div style={styles.labels.wrapper}>
+							<IssueLabelsAndMilestones
+								showIcon
+								labels={labels}
+								milestones={issue.milestone ? [issue.milestone] : []}
+								style={styles.labels}
+								labelStyle={styles.labels.label}
+							/>
+						</div>
 					
+					
+					</div>
 				</div>
 			</div>
-			
 			{/* FOCUSED MARKING BAR */}
 			<div style={[
 				styles.bar,
 				isSelected && styles.selected.bar,
 				isFocused && styles.focused.bar
 			]}/>
-			
+		
 		</div>
-
+		
 	}
+}
+
+
+function IssueItemAvatarAndState({styles,issue}) {
+	return <div style={styles.avatarAndState}>
+		
+		<Avatar user={issue.assignee}
+		        style={styles.avatar}
+		        labelStyle={styles.username}
+		        avatarStyle={styles.avatar}/>
+		
+		{/* IF CLOSED, SHOW CHECK */}
+		{issue.state === 'closed' && <IssueStateIcon styles={[styles.state]}
+		                                             issue={issue}/> }
+	
+	
+	</div>
 }
 
 export default IssueItem

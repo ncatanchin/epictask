@@ -25,127 +25,194 @@ import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import { Pages } from "epic-entry-ui/routes/Routes"
 import { CSSHoverState } from "epic-styles/styles"
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename),
+	tc = require('tinycolor2')
 
-const baseStyles = (topStyles,theme,palette) => ({
-	root: {},
-
-	activityContent: [FlexColumn,FlexScale,OverflowHidden,{
-		borderWidth: '0.1rem',
-		borderStyle: 'solid',
-		borderRadius: '0 0.2rem 0.2rem 0.2rem',
-
-		eventGroup: [
-			FlexRow,
-			PositionRelative,
-			makeFlexAlign('center','flex-start'),
-			makePaddingRem(1,1,1,5), {
-			
-			boxSizing: 'border-box',
-			
-			verticalDots: [PositionAbsolute,{
-				width: rem(1.2),
-				height: '100%',
-				borderRightWidth: rem(0.1),
-				borderRightStyle: 'dashed'
-			}],
-				
-			horizontalDots: [PositionAbsolute,{
-				height: rem(0.2),
-				bottom: 0,
-				left: rem(6.2),
-				right: 0,
-				borderBottomWidth: rem(0.1),
-				borderBottomStyle: 'dashed'
-			}],
-			
-			fontSize: themeFontSize(1.1),
-			
-			icon: [FlexAuto,FlexColumnCenter,makePaddingRem(0,0,0,0),makeMarginRem(0,1,0,0),{
-				fontSize: rem(1.3),
-				borderRadius: '50%',
-				width: rem(2.4),
-				height: rem(2.4),
-				zIndex: 2
-			}],
-			
-			avatar: [makePaddingRem(0,1,0,0.5),{
-				
-				height: rem(2.6),
-				width: rem(2.6),
-				
-				label: [makePaddingRem(0,1,0,0),{
-					fontSize: themeFontSize(1.1),
-					fontWeight: 500
-				}]
-			}],
-			
-			timestamp: [FlexAuto,makePaddingRem(0,0,0,1),{
-				fontStyle: 'italic',
-				fontWeight: 300
-			}],
-			
-			description: [FlexRow, makeFlexAlign('center','flex-start'),{
-				flexShrink: 1,
-				flexBasis: 'auto',
-				flexGrow: 0,
-				flexWrap: 'wrap',
-				lineHeight: rem(3)
-			}]
-		}],
+const baseStyles = (topStyles,theme,palette) => {
+	const
+		{text, primary, secondary,accent} = palette
+	
+	return {
+		root: {},
 		
-		details: [makeTransition(['opacity','flex-basis','width','max-width']),FlexRow,makeFlexAlign('center','flex-start'),FlexAuto,PositionRelative,{
-			padding: '0.3rem 1rem',
-			height: 40,
-			fontSize: themeFontSize(1.1),
+		activityContent: [ FlexColumn, FlexScale, OverflowHidden, {
+			borderWidth: '0.1rem',
+			borderStyle: 'solid',
+			borderRadius: '0 0.2rem 0.2rem 0.2rem',
 			
-			username: [FlexScale,{
-				fontWeight: 700
-			}],
+			activity: [ {
+				
+				all: {
+					details: {
+						control: {
+							button: {
+								backgroundColor: 'transparent',
+								color: tc(text.primary).setAlpha(0.8).toRgbString(),
+								':hover': {
+									color: tc(text.primary).setAlpha(1).toRgbString(),
+								}
+							},
+							
+							icon: {
+								fontSize: themeFontSize(1.3)
+							}
+						}
+					}
+				},
+				
+				post: {
+					backgroundColor: primary.hue2,
+					//borderColor:     accent.hue1,
+					borderColor: Transparent,
+					
+					user: {
+						backgroundColor: primary.hue3,
+						//borderColor: accent.hue1,
+						borderColor: Transparent,
+						transform: 'translate(0.2rem,0)'
+					},
+					
+					details: {
+						backgroundColor: primary.hue3,
+						color: text.primary,
+						
+						
+					}
+				},
+				
+				comment: {
+					backgroundColor: primary.hue2,
+					//borderColor:     secondary.hue1,
+					borderColor: Transparent,
+					
+					user: {
+						backgroundColor: primary.hue3,
+						//borderColor:     secondary.hue1,
+						borderColor: Transparent,
+						transform: 'translate(0.2rem,0)'
+					},
+					
+					details: {
+						//backgroundColor: secondary.hue1,
+						backgroundColor: primary.hue3,
+						color: text.primary
+					}
+				}
+			} ],
 			
-			time: [FlexColumn,{
+			eventGroup: [
+				FlexRow,
+				PositionRelative,
+				makeFlexAlign('center', 'flex-start'),
+				makePaddingRem(1, 1, 1, 5), {
+					
+					boxSizing: 'border-box',
+					
+					verticalDots: [ PositionAbsolute, {
+						width: rem(1.2),
+						height: '100%',
+						borderRightWidth: rem(0.1),
+						borderRightStyle: 'dashed'
+					} ],
+					
+					horizontalDots: [ PositionAbsolute, {
+						height: rem(0.2),
+						bottom: 0,
+						left: rem(6.2),
+						right: 0,
+						borderBottomWidth: rem(0.1),
+						borderBottomStyle: 'dashed'
+					} ],
+					
+					fontSize: themeFontSize(1.1),
+					
+					icon: [ FlexAuto, FlexColumnCenter, makePaddingRem(0, 0, 0, 0), makeMarginRem(0, 1, 0, 0), {
+						fontSize: rem(1.3),
+						borderRadius: '50%',
+						width: rem(2.4),
+						height: rem(2.4),
+						zIndex: 2
+					} ],
+					
+					avatar: [ makePaddingRem(0, 1, 0, 0.5), {
+						
+						height: rem(2.6),
+						width: rem(2.6),
+						
+						label: [ makePaddingRem(0, 1, 0, 0), {
+							fontSize: themeFontSize(1.1),
+							fontWeight: 500
+						} ]
+					} ],
+					
+					timestamp: [ FlexAuto, makePaddingRem(0, 0, 0, 1), {
+						fontStyle: 'italic',
+						fontWeight: 300
+					} ],
+					
+					description: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
+						flexShrink: 1,
+						flexBasis: 'auto',
+						flexGrow: 0,
+						flexWrap: 'wrap',
+						lineHeight: rem(3)
+					} ]
+				} ],
+			
+			details: [ makeTransition([ 'opacity', 'flex-basis', 'width', 'max-width' ]), FlexRow, makeFlexAlign('center', 'flex-start'), FlexAuto, PositionRelative, {
+				padding: '0.3rem 1rem',
+				height: 40,
 				fontSize: themeFontSize(1.1),
-				padding: '0rem 0 0 0.5rem',
 				
-				createdAt: [],
-				updatedAt: []
-			}],
+				username: [ FlexScale, {
+					fontWeight: 700
+				} ],
+				
+				time: [ FlexColumn, {
+					fontSize: themeFontSize(1.1),
+					padding: '0rem 0 0 0.5rem',
+					
+					createdAt: [],
+					updatedAt: []
+				} ],
+				
+				
+				control: [ FlexRow, makeTransition([ 'opacity', 'flex', 'padding', 'flex-basis', 'width', 'max-width' ]), OverflowHidden, {
+					maxWidth: 0,
+					width: 0,
+					opacity: 0,
+					flex: '0 0 0',
+					padding: 0,
+					alignItems: 'flex-end',
+					justifyContent: 'flex-end',
+					textAlign: 'right',
+					
+					hover: [ {
+						flex: '0 0 auto',
+						opacity: 1,
+						maxWidth: rem(4),
+						width: rem(4),
+						padding: makePaddingRem(0.2, 0, 0.2, 1)
+					} ],
+					
+					
+					icon: [ FlexAuto, makeTransition('color') ]
+				} ]
+			} ],
 			
 			
-			control: [FlexRow,makeTransition(['opacity','flex','padding','flex-basis','width','max-width']),OverflowHidden,{
-				maxWidth: 0,
-				width: 0,
-				opacity: 0,
-				flex: '0 0 0',
-				padding: 0,
-				alignItems: 'flex-end',
-				justifyContent: 'flex-end',
-				textAlign: 'right',
+			body: makeStyle(FlexColumn, FlexAuto, {
+				padding: '1rem',
 				
-				hover: [{
-					flex: '0 0 auto',
-					opacity: 1,
-					maxWidth: rem(4),
-					width: rem(4),
-					padding: makePaddingRem(0.2,0,0.2,1)
-				}],
-				
-				
-				icon: [FlexAuto,makeTransition('color')]
-			}]
-		}],
-
-
-		body: makeStyle(FlexColumn,FlexAuto,{
-			padding: '1rem',
-
-		}),
-
-		commenter: [{
-			padding: '0rem'
-		}]
-	}]
-})
+			}),
+			
+			commenter: [ {
+				padding: '0rem'
+			} ]
+		} ]
+	}
+}
 
 
 
@@ -254,7 +321,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	}
 	
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextProps,this.props,'issue','comment') ||
+		return !shallowEquals(nextProps,this.props,'activityStyle','issue','comment','theme','palette','styles') ||
 			!shallowEquals(nextState,this.state)
 	}
 	
@@ -310,7 +377,6 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 		const
 			{
 				styles,
-				activityStyle,
 				issue,
 				activityType,
 				activityActionText,
@@ -332,7 +398,9 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				createdAt,
 				eventGroup
 			} = values,
-
+			
+			activityStyle = mergeStyles(this.props.activityStyle,styles.activityContent.activity),
+			
 			// Hovering header
 			hovering = Radium.getState(this.state,'activity',':hover'),
 			

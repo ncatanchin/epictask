@@ -62,10 +62,24 @@ export default function baseStyles(topStyles, theme, palette) {
 				}]
 			}],
 			
-			details: [FlexColumn, FlexScale, OverflowHidden, makePaddingRem(0,0.5)],
+			content: [FlexColumn, FlexScale, OverflowHidden,makePaddingRem(0,0.5)],
+			
+			details: [FlexRowCenter,FlexAuto,FillWidth,{
+				
+			}],
+			
+			avatarAndState: [FlexColumnCenter,FlexAuto],
 			
 			// AVATAR
-			avatar: [makePaddingRem()],
+			avatar: [
+				FlexAuto,
+				FlexColumnCenter,
+				makePaddingRem(),
+				makeWidthConstraint(rem(4)),
+				makeHeightConstraint(rem(4)), {
+					borderRadius: '50%'
+				}
+			],
 			
 			number: [{
 				fontSize: themeFontSize(1),
@@ -80,6 +94,7 @@ export default function baseStyles(topStyles, theme, palette) {
 				makeHeightConstraint(rem(2.5)),
 				makePaddingRem(0,0,0.5,0),
 				{
+					overflow: 'visible',
 					pointerEvents: 'none',
 				}
 			],
@@ -174,7 +189,8 @@ export default function baseStyles(topStyles, theme, palette) {
 			
 			state: [{
 				root:[{
-					marginLeft: rem(0.5)
+					transform: 'scale(1.3)',
+					marginTop: rem(0.5)
 				}]
 			}]
 		}

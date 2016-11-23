@@ -920,7 +920,7 @@ export const getCommandManager = getHot(module,'getCommandManager',new Proxy(fun
 	apply: function(target,thisArg,args) {
 		return instanceContainer.clazz.getInstance()
 	}
-})) as () => CommandManager
+})) as () => ICommandManager
 
 
 // ADD REMOVE GLOBAL SHORTCUTS
@@ -956,6 +956,17 @@ assignGlobal({getCommandManager})
  * getCommandManager global declaration
  */
 declare global {
+	
+	/**
+	 * Expose the interface globally
+	 */
+	interface ICommandManager extends CommandManager {
+		
+	}
+	
+	/**
+	 * Global getCommandManager
+	 */
 	const getCommandManager:getCommandManagerType
 }
 

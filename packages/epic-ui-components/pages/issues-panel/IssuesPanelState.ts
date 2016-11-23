@@ -71,7 +71,7 @@ class IssuesPanelState extends IssuesPanelStateRecord {
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
-			['issueIds','commentIds','issueEventIds','selectedIssueIds','focusedIssueIds'],
+			['issues','comments','issuesEvents','selectedIssueIds','focusedIssueIds'],
 			['groupVisibility']
 		)
 	}

@@ -327,6 +327,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		})
 	}
 	
+	/**
+	 * When a route changes
+	 */
 	private onRoutesChanged = () => {
 		log.info(`Routes Loaded/Changed - loading`)
 		reloadRoutes()
@@ -344,17 +347,17 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		this.onRoutesChanged()
 		
 		EventHub.on(EventHub.RoutesLoaded,this.onRoutesChanged)
-		// if (module.hot)
-		// 	module.hot.accept(["./routes/Routes"],(updates) => {
-		// 		log.info(`HMR Updated`,updates)
-		// 		this.onRoutesChanged()
-		// 	})
 		
 		this.checkRoute()
 		
 	}
 	
 	
+	/**
+	 * Component will receive props
+	 *
+	 * @param nextProps
+	 */
 	componentWillReceiveProps(nextProps) {
 		this.checkRoute(nextProps)
 	}
@@ -366,10 +369,6 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		this.setState({
 			routeView: null
 		})
-		// if (module.hot)
-		// 	module.hot.(["./routes/Routes"],this.reloadRoutes)
-		
-		// window.removeEventListener('resize', this.onWindowResize)
 	}
 	
 	private checkRoute = _.debounce((props = this.props,router:Router = null,route:IRouteInstance<any> = null) => {

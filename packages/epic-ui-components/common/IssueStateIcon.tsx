@@ -3,7 +3,6 @@
  */
 // Imports
 
-import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue } from "epic-models"
@@ -11,6 +10,7 @@ import { Issue } from "epic-models"
 import { shallowEquals } from "epic-global/ObjectUtil"
 import {List} from 'immutable'
 import { getIssueActions } from "epic-typedux/provider"
+import { colorAlpha } from "epic-styles/styles"
 // Constants
 const
 	log = getLogger(__filename)
@@ -21,9 +21,19 @@ const
 function baseStyles(topStyles,theme,palette) {
 	
 	const
-		{text,primary,secondary,accent,warn,success} = palette
+		{text,alternateText,primary,secondary,accent,warn,success} = palette
 	
 	return {
+		open: {
+			//backgroundColor: 'rgba(101,181,73,1)',
+			color: colorAlpha(text.disabled,0.1)
+		},
+		closed: {
+			//color: text.primary,
+			color: success.hue1
+			//backgroundColor: warn.hue1
+		},
+		
 		root: [PositionRelative, {
 			
 			toggle: [ {
@@ -34,7 +44,11 @@ function baseStyles(topStyles,theme,palette) {
 			':hover': {}
 		} ],
 		
+		
+		
 		icon: [{
+			
+			fontSize: rem(1.6),
 			padding: rem(0.3),
 			borderRadius: rem(0.3),
 			':hover': {}
@@ -48,7 +62,7 @@ function baseStyles(topStyles,theme,palette) {
 				overflow: 'hidden',
 				flexWrap: 'nowrap',
 				opacity: 0,
-				//maxWidth: '100%',
+				//maxWidth: '100%',transform: ''
 				width: 0,
 				top: 0,
 				left: 0,
@@ -58,13 +72,17 @@ function baseStyles(topStyles,theme,palette) {
 				//paddingLeft: '100%',
 				padding: rem(0.3),
 				
+				icon: [ {
+					color: alternateText.secondary
+				}],
 				
 				close: {
 					backgroundColor: warn.hue1
 				},
 				
 				open: {
-					backgroundColor: success.hue1
+					backgroundColor: success.hue1,
+					
 				},
 				
 				[CSSHoverState]: [],
@@ -138,7 +156,14 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	}
 	
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextProps,this.props,'issue.id','issue.state') || !shallowEquals(nextState,this.state)
+		return !shallowEquals(nextProps,this.props,
+				'style',
+				'styles',
+				'theme',
+				'palette',
+				'issue.id',
+				'issue.state'
+			) || !shallowEquals(nextState,this.state)
 	}
 	
 	private toggleState = () => {
@@ -171,20 +196,33 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 		
 		log.debug(`Hovering: ${hovering}`)
 		return <div ref="issueState" onClick={showToggle && this.toggleState} style={[styles.root,showToggle && styles.root.toggle]}>
-			<Icon style={[styles.icon,iconStyle]}
-		             iconSet='octicon'
-		             iconName={iconName}/>
+			{/*<Icon style={[styles.icon,iconStyle]}*/}
+		             {/*iconSet='octicon'*/}
+		             {/*iconName={iconName}/>*/}
 			
+			<Icon style={[FillHeight,styles.icon,iconStyle]}
+			      iconSet='fa'
+			      iconName={'check-circle-o'}/>
+		             
 			{/* IF TOGGLE ENABLED */}
 			{showToggle && <div style={[
 				styles.toggle,
 				state === 'open' ? styles.toggle.close : styles.toggle.open,
 				hovering && styles.toggle.hovering
 			]}>
-				<Icon style={[FillHeight,styles.icon,iconStyle]}
-				      iconSet='octicon'
-				      iconName={iconName}/>
-				<div style={[styles.toggle.label]}>{state === 'open' ? 'Close ' : 'Reopen '} Issue</div>
+				{/*<Icon style={[FillHeight,styles.icon,iconStyle]}*/}
+				      {/*iconSet='octicon'*/}
+				      {/*iconName={iconName}/>*/}
+				<Icon
+					style={[
+						FillHeight,
+						styles.icon,
+						iconStyle,
+						styles.toggle.icon
+					]}
+		      iconSet='fa'
+		      iconName={'check-circle-o'}/>
+				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done": 'Reopen'}</div>
 			</div>}
 		</div>
 	}

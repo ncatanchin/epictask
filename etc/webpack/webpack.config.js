@@ -332,8 +332,8 @@ const
 	devtool = isDev ?
 		//"source-map" :
 		//'#inline-source-map' :
-		//'#cheap-module-eval-source-map' :
-		'#cheap-module-inline-source-map' :
+		'#cheap-module-eval-source-map' :
+		//'#cheap-module-inline-source-map' :
 		"source-map"
 
 // Webpack Config
