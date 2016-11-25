@@ -49,66 +49,7 @@ const baseStyles = createStyles({
 	}],
 	logs: [FlexScale,FlexColumn,FillWidth,OverflowHidden,{
 		
-		levels: [{
-			warn: {
-				fontWeight: 500
-			},
-			error: {
-				fontWeight: 700,
-				fontStyle: 'italic'
-			}
-		}],
 		
-		entry: [FlexColumn,FlexAuto,makeTransition('background-color'),{
-			cursor: 'pointer',
-			
-			
-			row: [
-				FlexRowCenter,
-				FlexAuto,
-				OverflowHidden,
-				makeTransition(['background-color','height','max-height','min-height','flex-basis','flex-grow','flex-shrink']),
-				{
-					margin: '0 0.3rem',
-					flexGrow: 0,
-					flexShrink: 0,
-					flexBasis: 'auto',
-					hidden: [{
-						flexBasis: 0
-					}]
-				}
-			],
-			
-			// Hovered style - applied to kids when hovering
-			hovered: {
-				transform: 'scale(1.1)'
-			},
-			
-			level: [Ellipsis,makeTransition('transform'),{
-				paddingLeft: rem(0.5),
-				flex: '0 0 7rem'
-				
-			}],
-			message: [FlexScale, makeTransition('transform'),makePaddingRem(1,1),{
-				transformOrigin: 'left center'
-			}],
-			
-			time: [Ellipsis,makeTransition('transform'),{
-				width: rem(12),
-				paddingRight: rem(0.5),
-				fontWeight: 300,
-				fontSize: rem(1.1),
-				textAlign: 'right',
-				transformOrigin: 'right center'
-			}],
-			
-			details: [FlexScale,{overflowX: 'auto'}],
-			
-			divider: [{
-				borderBottomWidth: rem(0.2),
-				borderBottomStyle: 'solid'
-			}]
-		}]
 	}]
 })
 
@@ -189,7 +130,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		if (watcher.lineCount !== getValue(() => this.state.lineCount,0)) {
 			this.setState({
 				lineCount: watcher.lineCount,
-				allLogs: watcher.allJsons
+				allLogs: watcher.allLines
 			})
 		}
 	},1000, {
@@ -234,7 +175,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 		log.debug(`Got watcher`,watcher)
 		this.setState({
 			lineCount: watcher.lineCount,
-			allLogs: watcher.allJsons,
+			allLogs: watcher.allLines,
 			watcher,
 			watcherEventRemovers: watcher.addAllListener(this.onWatcherEvent)
 		})
@@ -297,7 +238,12 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 	 */
 	private renderLogItem = (rowType):IRowTypeConfig<any,string,IJobLog> => {
 		
-		return {clazz: JobLogRow}
+		return {
+			clazz: JobLogRow,
+			props: {
+				controller: this.controller
+			}
+		}
 		// const
 		// 	{styles, selectedLogId} = this.props,
 		// 	logItem = logItems[index],
@@ -404,7 +350,7 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 						itemCount={lineCount}
 					  items={List<any>(allLogs)}
 					  itemBuilder={this.renderLogItem}
-					  itemKeyFn={(logItems,logItem,index) => `${job.id}-${index}`}
+					  itemKeyFn={(logItems,logItem,index) => `${job.id}-${logItem.id}`}
 					/>
 					
 				</div>

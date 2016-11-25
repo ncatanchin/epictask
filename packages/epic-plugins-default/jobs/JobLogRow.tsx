@@ -7,6 +7,7 @@ import { IJobLog } from "epic-typedux/state/jobs/JobTypes"
 import { getValue } from "typeguard"
 import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
 import { TimeAgo } from "epic-ui-components/common/TimeAgo"
+import { isHovering } from "epic-styles/styles"
 
 
 // Constants
@@ -14,7 +15,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {
@@ -22,7 +23,76 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexColumn, FlexAuto, {} ]
+	return [ FlexColumn, FlexAuto, {
+		levels: [{
+			warn: {
+				fontWeight: 500
+			},
+			error: {
+				fontWeight: 700,
+				fontStyle: 'italic'
+			}
+		}],
+		
+		entry: [FlexColumn,FlexAuto,makeTransition('background-color'),{
+			cursor: 'pointer',
+			
+			':hover': {
+				backgroundColor: primary.hue1,
+			},
+		
+			
+			
+			row: [
+				FlexRowCenter,
+				FlexAuto,
+				OverflowHidden,
+				makeTransition(['background-color','height','max-height','min-height','flex-basis','flex-grow','flex-shrink']),
+				{
+					margin: '0 0.3rem',
+					flexGrow: 0,
+					flexShrink: 0,
+					flexBasis: 'auto',
+					hidden: [{
+						flexBasis: 0
+					}]
+				}
+			],
+			
+			// Hovered style - applied to kids when hovering
+			hovered: {
+				transform: 'scale(1.1)'
+			},
+			
+			level: [Ellipsis,makeTransition('transform'),{
+				paddingLeft: rem(0.5),
+				flex: '0 0 7rem'
+				
+			}],
+			message: [FlexScale, makeTransition('transform'),makePaddingRem(1,1),{
+				transformOrigin: 'left center'
+			}],
+			
+			time: [Ellipsis,makeTransition('transform'),{
+				color: text.secondary,
+				width: rem(12),
+				paddingRight: rem(0.5),
+				fontWeight: 300,
+				fontSize: rem(1.1),
+				textAlign: 'right',
+				transformOrigin: 'right center'
+			}],
+			
+			details: [FlexScale,{overflowX: 'auto'}],
+			
+			divider: [{
+				borderBottomColor: primary.hue1,
+				borderBottomWidth: rem(0.1),
+				borderBottomStyle: 'solid'
+			}]
+		}]
+		
+	} ]
 }
 
 
@@ -30,14 +100,8 @@ function baseStyles(topStyles, theme, palette) {
  * IJobLogRowProps
  */
 export interface IJobLogRowProps extends IThemedAttributes {
-	
-}
-
-/**
- * IJobLogRowState
- */
-export interface IJobLogRowState {
 	rowState?:IRowState<any,string,IJobLog>
+	controller?:JobMonitorController
 }
 
 /**
@@ -47,94 +111,83 @@ export interface IJobLogRowState {
  * @constructor
  **/
 
-// If you have a specific theme key you want to
-// merge provide it as the second param
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles,'jobLog')
 @PureRender
-export class JobLogRow extends React.Component<IJobLogRowProps,IJobLogRowState> implements IVisibleListRowComponent<any,string,IJobLog> {
-	
-	static contextTypes = {
-		monitorController:React.PropTypes.object
-	}
+export class JobLogRow extends React.Component<IJobLogRowProps,void> implements IVisibleListRowComponent<any,string,IJobLog> {
 	
 	/**
 	 * Get job monitor from context typed
 	 *
-	 * @returns {JobMonitor}
+	 * @returns {JobMonitorController}
 	 */
 	private get controller() {
-		return getValue(() => (this.context as any).monitorController) as JobMonitorController
+		return this.props.controller
 	}
 	
 	
-	setRowState(rowState:IRowState<any,string,IJobLog>) {
-		this.setState({
-			rowState
-		})
-	}
 	
-	getRowState() {
-		return getValue(() => this.state.rowState)
-	}
 	/**
 	 * Get log level style
 	 *
 	 * @param logItem
 	 */
 	private levelStyle = (logItem:IJobLog) =>
-		this.props.styles.logs.levels['WARN' === logItem.level ? 'warn' : 'ERROR' === logItem.level ? 'error' : 'DEBUG' === logItem.level ? 'success' : 'info']
+		this.props.styles.levels[
+			'WARN' === logItem.level ? 'warn' :
+				'ERROR' === logItem.level ? 'error' :
+					'DEBUG' === logItem.level ? 'success' :
+						'info']
 	
 	
 	
 	render() {
 		
 		const
-			{styles} = this.props,
-			rowState = getValue(() => this.state.rowState)
+			{styles,rowState} = this.props
+	
+		log.debug(`Row state`,rowState)
 		
 		if (!rowState)
 			return React.DOM.noscript()
 		
 		const
 			selectedLogId = getValue(() => this.controller.selectedLogId),
-			{items,index,key} = rowState,
+			{item:logItem,index,key} = rowState,
 			
-			logItem = items.get(index),
 			isError = logItem.level === 'ERROR',
 			errorDetails = logItem.errorDetails,
 			errorStyle = isError && this.levelStyle(logItem),
 			logKey = logItem.id,
 			selected = selectedLogId === logItem.id,
 			hoverStyle =
-				(selected || Radium.getState(this.state,logKey,':hover')) &&
-				styles.logs.entry.hovered
+				(selected || isHovering(this,logKey)) &&
+				styles.entry.hovered
 		
 		
 		return <div key={key}
 		            onClick={() => !selected && this.controller.setSelectedLogId(logItem.id)}
 		            style={[
-									styles.logs.entry,
-									index < items.size - 1 &&
-										styles.logs.entry.divider
+									styles.entry,
+										styles.entry.divider
 								]}>
-			<div style={[styles.logs.entry.row]}>
-				<div style={[styles.logs.entry.level,hoverStyle,this.levelStyle(logItem)]}>
+			<div style={[styles.entry.row]}>
+				<div style={[styles.entry.level,hoverStyle,this.levelStyle(logItem)]}>
 					{logItem.level}
 				</div>
-				<div style={[styles.logs.entry.message,hoverStyle,errorStyle]}>
+				<div style={[styles.entry.message,hoverStyle,errorStyle]}>
 					{logItem.message}
 				</div>
-				<div style={[styles.logs.entry.time,errorStyle]}>
+				<div style={[styles.entry.time,errorStyle]}>
 					<TimeAgo timestamp={logItem.timestamp}/>
 				</div>
 			</div>
 			
 			{/* Error stack details */}
-			{isError && errorDetails && <div style={[styles.logs.entry.row, !selected && styles.logs.entry.row.hidden ]}>
-				<div style={[styles.logs.entry.level]}>
+			{isError && errorDetails && <div style={[styles.entry.row, !selected && styles.entry.row.hidden ]}>
+				<div style={[styles.entry.level]}>
 					{/* Empty spacing place holder */}
 				</div>
-				<pre style={[styles.logs.entry.details]}>
+				<pre style={[styles.entry.details]}>
 					<div>Error details: </div>
 					<div>{errorDetails.message}</div>
 					<div>{errorDetails.stack}</div>

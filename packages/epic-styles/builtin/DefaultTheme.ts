@@ -137,11 +137,29 @@ export function DefaultTheme(palette) {
 			hintColor: text.secondary,
 			backgroundColor: primary.hue3
 		},
+	
+		jobLog: {
+			levels: {
+				info: {
+					color: success.hue1
+				},
+				warn: {
+					color: accent.hue1
+				},
+				success: {
+					color: success.hue1
+				},
+				error: {
+					color: warn.hue1
+				}
+			}
+		},
 		
 		/**
 		 * Job Monitor widget
 		 */
 		jobs: {
+			
 			root: {
 				backgroundColor: primary.hue1,
 				color: text.primary
@@ -194,33 +212,12 @@ export function DefaultTheme(palette) {
 				logs: {
 					backgroundColor: background,
 					
-					levels: {
-						info: {
-							color: success.hue1
-						},
-						warn: {
-							color: accent.hue1
-						},
-						success: {
-							color: success.hue1
-						},
-						error: {
-							color: warn.hue1
-						}
-					},
+					
 					
 					entry: {
-						':hover': {
-							backgroundColor: primary.hue1,
-						},
 						
-						time: {
-							color: text.secondary
-						},
 						
-						divider: {
-							borderBottomColor: primary.hue1
-						}
+						
 					}
 				}
 				

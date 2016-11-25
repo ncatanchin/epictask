@@ -28,7 +28,7 @@ setPrefixGlobal(`(${ProcessConfig.getTypeName()}Proc)`)
  * Load Reactotron
  */
 function loadReactotron() {
-	if (DEBUG && !ProcessConfig.isType(ProcessType.Test) && process.platform === 'darwin') {
+	if (DEBUG && !ProcessConfig.isType(ProcessType.Test)) {
 		try {
 			Reactotron = require('reactotron-react-js').default
 		} catch (err) {

@@ -121,16 +121,16 @@ export class IssueActionFactory  {
 		let
 			viewName:string = "withSortFields"
 		
-		switch(issueSort.groupBy) {
-			case 'milestone':
-				viewName = "byMilestones"
-				break
-			case 'labels':
-				viewName = "byLabels"
-				break
-			case 'assignee':
-				viewName = "byAssignee"
-		}
+		// switch(issueSort.groupBy) {
+		// 	case 'milestone':
+		// 		viewName = "byMilestones"
+		// 		break
+		// 	case 'labels':
+		// 		viewName = "byLabels"
+		// 		break
+		// 	case 'assignee':
+		// 		viewName = "byAssignee"
+		// }
 		
 		
 		const
@@ -143,11 +143,19 @@ export class IssueActionFactory  {
 		log.debug(`Got raw issues`,results)
 		
 		
-		const
+		let
+			values
+		
+		// if (issueSort.groupBy === 'none') {
 			values = getValue(() => results.rows
-				.filter(it => Array.isArray(it.value) && Array.isArray(it.value[0]))
-				.map(it => it.value && it.value[0]),[]),
-			
+				.filter(it => Array.isArray(it.value) && Array.isArray(it.value[ 0 ]))
+				.map(it => it.value && it.value[ 0 ]), [])
+		// }
+		// else {
+		// 	values =
+		// }
+		
+		const
 			availableRepos = availableReposSelector(getStoreState()),
 			matchUser = (repo:AvailableRepo,userId) => repo.collaborators.find(it => it.id === toNumber(userId)),
 			issues = values.map(value => {

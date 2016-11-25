@@ -57,33 +57,6 @@ export interface IRowState<RowType,ItemKeyType,ItemType> {
 	config: IRowTypeConfig<RowType,ItemKeyType,ItemType>
 }
 
-type TRowStateListener = (outRowState:IRowState<any,any,any>) => any
-
-// class RowState<RowType,ItemKeyType,ItemType> implements IRowState<RowType,ItemKeyType,ItemType> {
-//
-// 	type:RowType
-// 	item:ItemType
-// 	items:TItems<ItemType>
-// 	key:ItemKeyType
-// 	index:number
-// 	style:any
-// 	available:boolean
-// 	component?:VisibleListRowWrapper
-// 	config: IRowTypeConfig<RowType,ItemKeyType,ItemType>
-//
-// 	constructor() {
-// 		super()
-//
-// 	}
-//
-// 	update(newState) {
-// 		assign(this,newState)
-// 	}
-//
-// }
-//
-
-
 
 export interface IVisibleListRowComponentConstructor<RowType,ItemKeyType,ItemType> {
 	new (
@@ -105,9 +78,6 @@ export type TVisibleListRowComponentProps<RowType,ItemKeyType,ItemType> = IVisib
 export interface IVisibleListRowComponent<RowType,ItemKeyType,ItemType>
 extends React.Component<TVisibleListRowComponentProps<RowType,ItemKeyType,ItemType>,any> {
 	
-	// setRowState:(rowState:IRowState<RowType,ItemKeyType,ItemType>) => void
-	//
-	// getRowState:() => IRowState<RowType,ItemKeyType,ItemType>
 }
 
 

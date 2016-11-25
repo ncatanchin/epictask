@@ -3,7 +3,11 @@
 import * as fs from 'fs'
 import {EnumEventEmitter} from  "./EnumEventEmitter"
 
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
+
+// DEBUG
+if (DEBUG) log.setOverrideLevel(LogLevel.DEBUG)
 
 export enum LogWatcherEvent {
 	Start = 1,
@@ -36,24 +40,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	 */
 	private _watching:boolean = false
 	
-	get watching() {
-		return this._watching
-	}
-	
-	
-	/**
-	 * All string lines
-	 *
-	 * @type {string[]}
-	 */
-	allLines:string[] = []
-	
-	/**
-	 * All Json Objects
-	 * @type {any[]}
-	 */
-	allJsons:any[] = []
-	
+
 	private position = 0
 	
 	private lastFileSize = 0
@@ -66,8 +53,27 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	
 	private fileExistTimer
 	
+	get watching() {
+		return this._watching
+	}
+	
+	
+	/**
+	 * All string lines
+	 *
+	 * @type {string[]}
+	 */
+	allLinesRaw:string[] = []
+	
+	/**
+	 * All Json Objects
+	 * @type {any[]}
+	 */
+	allLines:any[] = []
+	
+	
 	get lineCount() {
-		return this.allLines && this.allLines.length
+		return this.allLinesRaw && this.allLinesRaw.length
 	}
 	
 	get fileExists() {
@@ -107,7 +113,7 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 	 * @param filename
 	 */
 	private onWatchEvent = (eventType,filename) => {
-		if (!this.stream && eventType === 'change')
+		if (eventType === 'change')
 			this.openStream()
 	}
 	
@@ -161,14 +167,14 @@ export class LogWatcher extends EnumEventEmitter<LogWatcherEvent> {
 			
 			
 			// Trigger events
-			this.allLines.push(lineStr)
+			this.allLinesRaw.push(lineStr)
 			this.emit(LogWatcherEvent.Line, lineStr)
 			if (this.isJson) {
 				try {
 					const
 						json = JSON.parse(lineStr)
 					
-					this.allJsons.push(json)
+					this.allLines.push(json)
 					log.debug(`Parsed json from ${this.filename}`,json)
 					this.emit(LogWatcherEvent.JsonObject, this, json, lineStr)
 					

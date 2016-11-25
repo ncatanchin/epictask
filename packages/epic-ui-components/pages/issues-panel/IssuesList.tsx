@@ -5,8 +5,8 @@
 import { Map, List } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import { Issue, Milestone } from "epic-models"
 import {
+	Issue,
 	IIssueGroup,
 	getIssueGroupId,
 	IIssueListItem,
@@ -17,25 +17,21 @@ import {
 	isEditInlineListItem,
 	IIssueEditInlineConfig
 } from "epic-models"
-import { ThemedStyles, FlexRowCenter, TransitionDurationLong, IThemedAttributes } from "epic-styles"
+import { VisibleList, IRowTypeConfig, PureRender } from "epic-ui-components"
+import { getValue, shallowEqualsArrayOrList } from "epic-global"
+import { ThemedStylesWithOptions,FlexRowCenter, TransitionDurationLong, IThemedAttributes } from "epic-styles"
+
 import { IssueItem } from "./IssueItem"
 import { IssueFilters } from "./IssueFilters"
-import { Icon, IssueLabelsAndMilestones, VisibleList } from "epic-ui-components"
 import { IssueEditInline } from "./IssueEditInline"
-import { uuid, shallowEquals, shallowEqualsArrayOrList, createDeepEqualSelector } from "epic-global"
-import { getValue } from "epic-global/ObjectUtil"
-import { IRowState, IRowTypeConfig } from "epic-ui-components/common/VisibleList"
-import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
-import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
-import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
-import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
-import { PureRender } from "epic-ui-components/common/PureRender"
+import IssuesPanelController, { getIssuesPanelSelector } from "./IssuesPanelController"
+import { IssueGroupHeader } from "./IssueGroupHeader"
 
 
 // Constants & Non-typed Components
 const
-	log = getLogger(__filename),
-	NO_LABELS_ITEM = { name: 'No Labels', color: 'ffffff' }
+	log = getLogger(__filename)
+
 
 
 const baseStyles = (topStyles, theme, palette) => ({
@@ -80,6 +76,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 		
 		// Header Controls
 		control: [ makeTransition([ 'transform' ], TransitionDurationLong), {
+			cursor: 'pointer',
 			width: rem(3),
 			display: 'block',
 			
@@ -109,160 +106,9 @@ const baseStyles = (topStyles, theme, palette) => ({
 
 
 
-export interface IIssueGroupHeaderProps extends IThemedAttributes {
-	styles:any
-	viewController?:IssuesPanelController
-	rowState?:IRowState<string,string,number>
-}
-
-export interface IIssueGroupHeaderState {
-	rowState?:IRowState<string,string,number>
-	group?:IIssueGroup
-	realIndex?:number
-	item?:IIssueListItem<any>
-	
-	expanded?:boolean
-}
 
 
-/**
- * Issue group header component
- *
- */
 
-@Radium
-class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,IIssueGroupHeaderState> {
-	
-	static contextTypes = {
-		issuesPanel:React.PropTypes.object
-	}
-	
-	constructor(props, context) {
-		super(props, context)
-		
-		this.state = {}
-	}
-	
-	private get viewController() {
-		return this.props.viewController
-	}
-	
-	setGroupVisible(id:string, visible:boolean) {
-		this.viewController.toggleGroupVisibility(id, visible)
-	}
-	
-	/**
-	 * Get issues panel from context
-	 *
-	 * @returns {IssuesPanel}
-	 */
-	private get issuesPanel() {
-		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
-	}
-	
-	
-	
-	/**
-	 * Update state
-	 *
-	 * @param props
-	 */
-	private updateState = (props = this.props) => {
-		const
-			{rowState} = props,
-			realIndex:number = rowState.item,
-			panel = this.issuesPanel,
-			item = panel.getItem(realIndex),
-			group = item && isGroupListItem(item) && item.item
-		
-		this.setState({
-			rowState,
-			realIndex,
-			group,
-			item
-		})
-	}
-	
-	/**
-	 * On mount update state
-	 */
-	componentWillMount = this.updateState
-	
-	/**
-	 * On new props update state
-	 */
-	componentWillReceiveProps = this.updateState
-	
-	
-	/**
-	 * Checks whether expanded has changed OR group.id has changed
-	 *
-	 * @param nextProps
-	 * @returns {boolean}
-	 */
-	shouldComponentUpdate(nextProps:IIssueGroupHeaderProps):boolean {
-		log.debug(`Shallow equal update check`)
-		return !shallowEquals(this.props, nextProps, 'expanded', 'group.id')
-	}
-	
-	render() {
-		const
-			{ style, styles, onClick} = this.props,
-			{group,expanded} = this.state
-		if (!group)
-			return React.DOM.noscript()
-		
-		const
-			{ groupByItem, groupBy } = group,
-			headerStyles = styles.issueGroupHeader,
-			issueCount = group.issueIndexes.length
-		
-		log.debug(`Group by`, groupBy, `item`, groupByItem, group)
-		
-		return <div style={[headerStyles,expanded && headerStyles.expanded,style]}
-		            id={`group-${group.id}`}
-		            onClick={onClick}>
-			<div style={[headerStyles.control,expanded && headerStyles.control.expanded]}>
-				<Icon style={[]}
-				      iconSet='fa'
-				      iconName={'chevron-right'}/>
-			</div>
-			
-			{/* GROUPING */}
-			{
-				//GROUP BY MILESTONES
-				(groupBy === 'milestone') ?
-					<IssueLabelsAndMilestones
-						style={headerStyles.labels}
-						showIcon
-						labels={[]}
-						milestones={[!groupByItem ? Milestone.EmptyMilestone : groupByItem]}/> :
-					
-					// GROUP BY LABELS
-					(groupBy === 'labels') ?
-						<IssueLabelsAndMilestones
-							style={styles.issueGroupHeader.labels}
-							showIcon
-							labels={(!groupByItem || groupByItem.length === 0) ?
-							[NO_LABELS_ITEM] :
-							Array.isArray(groupByItem) ? groupByItem : [groupByItem]}/> :
-						
-						// GROUP BY ASSIGNEE
-						<div
-							style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
-			}
-			
-			
-			{/* STATS */}
-			<div style={[headerStyles.stats]}>
-					<span style={headerStyles.stats.number}>
-						{issueCount}
-					</span>
-				&nbsp;Issue{issueCount !== 1 ? 's' : ''}
-			</div>
-		</div>
-	}
-}
 
 /**
  * IIssuesPanelProps
@@ -275,7 +121,7 @@ export interface IIssuesListProps extends IThemedAttributes {
 	groupVisibility?:Map<string,boolean>
 	onIssueSelected:(event:MouseEvent, issue:Issue) => any
 	onIssueOpen:(event:MouseEvent, issue:Issue) => any
-	
+
 	editingInline?:boolean
 	editInlineConfig?:IIssueEditInlineConfig
 	
@@ -553,7 +399,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			{
 				clazz: IssueGroupHeader,
 				props: {
-					onClick:this.toggleGroupVisible,
+					onToggle:this.toggleGroupVisible,
 					styles,
 					viewController: this.viewController
 				}
