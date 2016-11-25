@@ -25,7 +25,7 @@ module.exports = {
 			test: srcTest,
 			//include: [path.resolve(process.cwd(),'packages')],
 			exclude: [/node_modules/],
-			loaders: ['awesome-typescript-loader','source-map-loader',proxyProvidedLoaderPath],
+			loaders: ['awesome-typescript-loader',proxyProvidedLoaderPath],
 		},
 		// {
 		// 	test: srcTest,

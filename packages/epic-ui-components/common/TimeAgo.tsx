@@ -1,5 +1,6 @@
 // Imports
 import {PureRender} from "./PureRender"
+import { getValue } from "epic-global"
 
 
 // Constants
@@ -37,7 +38,9 @@ export class TimeAgo extends React.Component <ITimeAgoProps, ITimeAgoState> {
 	}
 	
 	componentWillUnmount() {
-		const updateTimer = _.get(this.state,'updateTimer') as number
+		const
+			updateTimer = getValue(() => this.state.updateTimer)
+		
 		if (updateTimer) {
 			clearInterval(updateTimer)
 		}

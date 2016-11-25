@@ -30,7 +30,7 @@ import { appUserSelector, getUIActions, availableReposSelector, milestonesSelect
 import { DialogRoot } from "epic-ui-components/layout/dialog"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
-import { PureRender,  RepoName, Icon, TabTemplate } from "epic-ui-components"
+import { PureRender,  RepoLabel, Icon, TabTemplate } from "epic-ui-components"
 import {Select, ISelectItem} from 'epic-ui-components/fields'
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
@@ -300,7 +300,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				.map(repo => ({
 					key: repo.id,
 					value: repo.id,
-					node: <RepoName style={styles.repoSelect.repoName} repo={repo.repo}/>
+					node: <RepoLabel style={styles.repoSelect.repoName} repo={repo.repo}/>
 				})).toArray(),
 			
 			iconStyle = styles.tabs.items.icon,

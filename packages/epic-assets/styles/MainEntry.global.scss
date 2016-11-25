@@ -1,6 +1,6 @@
 @import "mixins.global";
 @import 'github-markdown';
-
+@import "LabelChip";
 
 * {
 	box-sizing: border-box;
@@ -10,8 +10,8 @@
 	user-select: none;
 	
 	-webkit-font-smoothing: subpixel-antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	font-smooth: always;
+	-moz-osx-font-smoothing: auto;
+	font-smooth: auto;
 }
 
 .fill-height {
@@ -121,6 +121,15 @@ body {
 	display: none;
 }
 
+
+//#tooltipGlobal {
+//	pointer-events: auto !important;
+//
+//	&:hover {
+//		visibility: visible !important;
+//		opacity: 1 !important;
+//	}
+//}
 
 // Import global styles
 @import "MarkdownEditor.SimpleMDE.global";

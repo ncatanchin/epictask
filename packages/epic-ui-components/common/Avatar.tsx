@@ -7,82 +7,105 @@ import { ThemedStyles } from "epic-styles"
 import { Icon } from "./icon/Icon"
 import { PureRender } from "./PureRender"
 import filterProps from "react-valid-props"
+import { CSSHoverState, FlexAuto, FlexRowCenter, Ellipsis, PositionRelative, colorAlpha, rem } from "epic-styles/styles"
 
 // Constants
-const log = getLogger(__filename)
-const baseStyles = (topStyles,theme,palette) => ({
-	root: [ FlexAuto, FlexRowCenter, Ellipsis, PositionRelative, {
-		fontSize: themeFontSize(1),
-		clickable: [
-			makeTransition('background-color'),
-			CursorPointer,
-			makePaddingRem(0.3, 0.5), {
-				borderRadius: rem(0.2)
-			} ],
-		':hover': {}
-	} ],
+const
+	log = getLogger(__filename)
+
+const baseStyles = (topStyles, theme, palette) => {
+	const
+		{ text, accent, primary, secondary } = palette
 	
-	
-	// Accessories
-	accessory: [ FlexAuto, FlexRowCenter, {
-		height: "100%",
+	return {
+		root: [
+			FlexAuto,
+			FlexRowCenter,
+			Ellipsis,
+			PositionRelative, {
+				
+				fontSize: themeFontSize(1),
+				
+				clickable: [
+					makeTransition('background-color'),
+					CursorPointer,
+					makePaddingRem(0.3, 0.5), {
+						borderRadius: rem(0.2),
+						
+						[CSSHoverState]: [ {
+							backgroundColor: accent.hue1
+						} ],
+					} ],
+				
+				[CSSHoverState]: {}
+			}
+		],
 		
-		// icon decoration
-		icon: [ makePaddingRem(0.6), {
-			fontSize: themeFontSize(1),
-			lineHeight: 1
-		} ],
 		
-		right: [ PositionAbsolute, {
-			right: 0,
-			top: 0,
-			bottom: 0
-		} ],
-		
-		left: [ PositionAbsolute, {
-			left: 0,
-			top: 0,
-			bottom: 0
-		} ],
-		
-		// remove control
-		remove: [ makeTransition([ 'opacity', 'width', 'padding', 'background-color', 'color' ]), makePaddingRem(0), OverflowHidden, {
-			fontSize: themeFontSize(1),
-			cursor: 'pointer',
-			lineHeight: 1,
-			display: 'block',
-			opacity: 0,
-			width: 0,
-			maxWidth: 0,
+		// Accessories
+		accessory: [ FlexAuto, FlexRowCenter, {
+			height: "100%",
 			
-			hover: [ makePaddingRem(0.6), {
-				width: 'auto',
-				maxWidth: 'none',
-				opacity: 1
+			// icon decoration
+			icon: [ makePaddingRem(0.6), {
+				fontSize: themeFontSize(1),
+				lineHeight: 1
+			} ],
+			
+			right: [ PositionAbsolute, {
+				right: 0,
+				top: 0,
+				bottom: 0
+			} ],
+			
+			left: [ PositionAbsolute, {
+				left: 0,
+				top: 0,
+				bottom: 0
+			} ],
+			
+			// remove control
+			remove: [ makeTransition([ 'opacity', 'width', 'padding', 'background-color', 'color' ]), makePaddingRem(0), OverflowHidden, {
+				fontSize: themeFontSize(1),
+				cursor: 'pointer',
+				lineHeight: 1,
+				display: 'block',
+				opacity: 0,
+				width: 0,
+				maxWidth: 0,
+				
+				hover: [ makePaddingRem(0.6), {
+					width: 'auto',
+					maxWidth: 'none',
+					opacity: 1
+				} ]
 			} ]
-		} ]
+			
+			
+		} ],
+		
+		avatar: [ makeMarginRem(0), {
+			borderColor: primary.hue1,
+			backgroundColor: primary.hue1,
+			backgroundRepeat: 'no-repeat',
+			backgroundSize: '100%',
+			width: 25,
+			height: 25,
+			borderRadius: '10%',
+			borderWidth: rem(0.2),
+			borderStyle: 'solid',
+			
+			
+			
+			labelBefore: [ makeMarginRem(0, 0, 0, 1), {} ],
+			labelAfter: [ makeMarginRem(0, 1, 0, 0), {} ],
+		} ],
 		
 		
-	} ],
+		label: [ makePaddingRem(0), {} ]
+	}
 	
-	avatar: [ makeMarginRem(0), {
-		backgroundRepeat: 'no-repeat',
-		backgroundSize: '100%',
-		width: 25,
-		height: 25,
-		borderRadius: '10%',
-		borderWidth: '0.2rem',
-		borderStyle: 'solid',
-		borderColor: 'transparent',
-		
-		
-		labelBefore: [ makeMarginRem(0, 0, 0, 1), {} ],
-		labelAfter: [ makeMarginRem(0, 1, 0, 0), {} ],
-	} ],
-	
-	
-	label: [ makePaddingRem(0), {} ]
-})
+}
 
 /**
  * IAvatarProps
@@ -112,6 +135,7 @@ export interface IAvatarProps extends React.HTMLAttributes<any> {
 @PureRender
 export class Avatar extends React.Component<IAvatarProps,any> {
 	
+	
 	render() {
 		const
 			{ props } = this,
@@ -124,7 +148,12 @@ export class Avatar extends React.Component<IAvatarProps,any> {
 			hovering = Radium.getState(this.state, 'avatar', ':hover')
 		
 		const prefix = <div
-			style={makeStyle(styles.prefix,props.prefixStyle)}>{(props.prefix) ? ' ' + props.prefix : ''}</div>
+			style={makeStyle(
+				styles.prefix,
+				props.prefixStyle
+			)}>
+			{(props.prefix) ? ' ' + props.prefix : ''}
+		</div>
 		
 		const usernameLabel = <div style={makeStyle(styles.label,props.labelStyle)}>
 			{user ?
@@ -141,7 +170,7 @@ export class Avatar extends React.Component<IAvatarProps,any> {
 				user && { backgroundImage: `url(${user.avatar_url})` },
 				(isBefore) ? styles.avatar.labelBefore :
 					(isAfter) ? styles.avatar.labelAfter :
-					{}
+						{}
 			)
 		
 		return <div

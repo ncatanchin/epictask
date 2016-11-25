@@ -3,9 +3,6 @@ import "epic-entry-shared/AppEntry"
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './App'
 import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
-import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
-import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
-
 
 const
 	{ProcessClientEntry} = loadProcessClientEntry()
@@ -17,12 +14,8 @@ benchmarkLoadTime(`Starting UIEntry`)
 
 const
 	log = getLogger(__filename),
-	startupPromises = []
-	
-let
-	stopAppStoreServer = null
-
-export const UIResourcesLoaded = Promise.defer()
+	startupPromises = [],
+	UIResourcesLoaded = Promise.defer()
 
 /**
  * Setup dev tools

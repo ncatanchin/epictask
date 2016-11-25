@@ -5,13 +5,13 @@
 import { List } from "immutable"
 import { connect } from "react-redux"
 import { PureRender, Icon, IssueLabelsAndMilestones } from "epic-ui-components"
-import { Milestone, Label, Issue, User } from "epic-models"
-import {
-	IssueSortableFields,
+import { IssueSortableFields,
 	IssueGroupByFields,
 	IssueGroupByNames,
 	IssueSortableFieldNames,
 	IIssueGroup,
+	Milestone, Label, Issue, User } from "epic-models"
+import {
 	enabledAssigneesSelector,
 	enabledMilestonesSelector,
 	enabledLabelsSelector

@@ -17,7 +17,13 @@ import {RegisterModel} from 'epic-global'
 	onlyMapDefinedAttributes: true
 })
 export class User extends DefaultModel implements IUser {
-
+	
+	static UnknownUser = new User({
+		id: -1,
+		login: 'n/a',
+		avatar_url: require('assets/images/avatar/avatar-unknown.png')
+	})
+	
 	/**
 	 * Revive from JS/JSON
 	 *

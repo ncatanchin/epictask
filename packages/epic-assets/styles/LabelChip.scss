@@ -1,0 +1,11 @@
+
+.labelTooltip {
+	background: transparent !important;
+	border: 0 !important;
+	margin-top: 0 !important;
+	
+	&:after {
+		content: "" !important;
+		border-top: 0 !important;
+	}
+}

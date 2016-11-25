@@ -11,3 +11,8 @@ export * from './Permission'
 export * from './Sync'
 export * from './RepoEvent'
 export * from './IssuesEvent'
+
+
+export * from './IIssueFilter'
+export * from "./IIssueListItems"
+export * from "./IIssueSort"

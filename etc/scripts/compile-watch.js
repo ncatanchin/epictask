@@ -18,7 +18,8 @@ require('shelljs/global')
 
 const
 	path = require('path')
-	
+
+mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
 exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --colors`)
 
 //exec(`${gulpCmd} compile-watch`)

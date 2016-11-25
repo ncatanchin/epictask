@@ -2,7 +2,8 @@
 const log = getLogger(__filename)
 
 try {
-	const Reactotron = process.platform === 'darwin' && require('reactotron-react-js').default
+	const
+		Reactotron = require('reactotron-react-js').default
 	
 	Reactotron
 		.configure() // we can use plugins here -- more on this later
@@ -21,8 +22,6 @@ if (Env.isDev) {
 		Perf:require('react-addons-perf')
 	})
 }
-
-
 
 export {
 	

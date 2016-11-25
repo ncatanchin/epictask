@@ -1,16 +1,44 @@
-import { DefaultIssueSort } from "epic-typedux/state/issue/IIssueSort"
-
-
-import { Map,Record,List } from "immutable"
-import { reviveImmutable } from "epic-global/ModelUtil"
-import { RegisterModel } from "epic-global/Registry"
-import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
-import { IssuesEvent,Issue,Comment } from "epic-models"
+import { Map, Record, List } from "immutable"
+import { reviveImmutable, RegisterModel } from "epic-global"
+import {
+	DefaultIssueSort,
+	IIssueEditInlineConfig,
+	DefaultIssueFilter,
+	IssuesEvent,
+	Issue,
+	Comment,
+	Label,
+	Milestone
+} from "epic-models"
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
-import { TIssueEditInlineConfig } from "epic-typedux/state/issue/IIssueListItems"
-import { Label } from "epic-models/Label"
-import { Milestone } from "epic-models/Milestone"
 
+
+/**
+ * Declare the interface first
+ */
+declare global {
+	// Expose interface
+	interface IIssuesPanelState  {
+		issues?:List<Issue>
+		comments?:List<Comment>
+		issuesEvents?:List<IssuesEvent>
+		
+		issueSort?:IIssueSort
+		issueFilter?:IIssueFilter
+		
+		groupVisibility?:Map<string,boolean>
+		
+		selectedIssueIds?:List<number>
+		focusedIssueIds?:List<number>
+		
+		issueSaving?:boolean
+		issueSaveError?: Error
+		
+		editInlineConfig?:IIssueEditInlineConfig
+		editingIssue?:Issue
+		
+	}
+}
 
 
 
@@ -50,22 +78,15 @@ export const IssuesPanelStateRecord = Record({
 	issueSort:DefaultIssueSort,
 	issueFilter:DefaultIssueFilter,
 	
-	activityLoading: false,
-	
-	editingInline:false,
 	editInlineConfig:null,
 	editingIssue:null,
-	editCommentRequest:null,
-	
-	patchIssues:null,
-	patchMode:null,
 	
 	issueSaveError: null,
 	issueSaving: false,
-})
+} as IIssuesPanelState)
 
 @RegisterModel
-class IssuesPanelState extends IssuesPanelStateRecord {
+export class IssuesPanelState extends IssuesPanelStateRecord implements IssuesPanelState {
 	
 	static fromJS(o:any = {}) {
 		return reviveImmutable(
@@ -92,11 +113,6 @@ class IssuesPanelState extends IssuesPanelStateRecord {
 	comments:List<Comment>
 	issuesEvents:List<IssuesEvent>
 	
-	//
-	// issueIds:List<number>
-	// commentIds:List<number>
-	// issuesEventIds:List<number>
-	//
 	issueSort:IIssueSort
 	issueFilter:IIssueFilter
 	
@@ -105,23 +121,15 @@ class IssuesPanelState extends IssuesPanelStateRecord {
 	selectedIssueIds:List<number>
 	focusedIssueIds:List<number>
 	
-	activityLoading: boolean
-	
 	issueSaving:boolean
 	issueSaveError: Error
 	
-	editInlineConfig:TIssueEditInlineConfig
-	patchIssues:Issue[]
-	patchMode:TIssuePatchMode
-	editCommentRequest:TEditCommentRequest
+	editInlineConfig:IIssueEditInlineConfig
 	editingIssue:Issue
-	editingInline:boolean
-	
 	
 	constructor(o:any = {}) {
 		super(o)
 	}
 }
-
 
 export default IssuesPanelState

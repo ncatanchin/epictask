@@ -53,7 +53,7 @@ import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 const
 	{ StyleRoot } = Radium,
 	log = getLogger(__filename),
-	
+	Tooltip = require('react-tooltip'),
 	win = window as any,
 	$ = require('jquery'),
 	windowId = process.env.EPIC_WINDOW_ID
@@ -438,7 +438,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				component={this}
 				id="appRoot"
 				style={Fill}>
-				
+					<Tooltip  />
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							

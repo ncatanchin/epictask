@@ -1,9 +1,10 @@
 import {Map} from 'immutable'
-import {Issue} from "epic-models"
+import {Issue} from "./Issue"
 
 
-export type TIssueEditInlineConfig = {
-	index:number,
+export interface IIssueEditInlineConfig {
+	index:number
+	fromIssue:Issue
 	fromIssueId:number
 }
 
@@ -69,7 +70,7 @@ export enum IssueListItemType {
  * All items for issue list,
  * created by selector
  */
-export interface IIssueListItem<T extends Issue|IIssueGroup|TIssueEditInlineConfig> {
+export interface IIssueListItem<T extends Issue|IIssueGroup|IIssueEditInlineConfig> {
 	type:IssueListItemType
 	id:string|number
 	item:T
@@ -83,7 +84,7 @@ export function isGroupListItem(item:IIssueListItem<any>):item is IIssueListItem
 	return item.type === IssueListItemType.Group
 }
 
-export function isEditInlineListItem(item:IIssueListItem<any>):item is IIssueListItem<TIssueEditInlineConfig> {
+export function isEditInlineListItem(item:IIssueListItem<any>):item is IIssueListItem<IIssueEditInlineConfig> {
 	return item.type === IssueListItemType.EditIssueInline
 }
 

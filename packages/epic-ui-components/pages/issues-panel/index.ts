@@ -9,3 +9,4 @@
 // export * from "./IssueItem"
 // export * from "./IssuesList"
 export * from "./IssuesPanel"
+export * from "./IssuesPanelController"

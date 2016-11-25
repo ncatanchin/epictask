@@ -4,13 +4,15 @@
 // Imports
 
 import { Icon } from "./icon/Icon"
-import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { Issue } from "epic-models"
+import { ThemedStyles, IThemedAttributes, colorAlpha, CSSHoverState } from "epic-styles"
 
-import { shallowEquals } from "epic-global/ObjectUtil"
-import {List} from 'immutable'
+import { List } from 'immutable'
 import { getIssueActions } from "epic-typedux/provider"
-import { colorAlpha } from "epic-styles/styles"
+
+import { Issue } from "epic-models"
+import { shallowEquals } from "epic-global"
+
+
 // Constants
 const
 	log = getLogger(__filename)
@@ -18,15 +20,15 @@ const
 // DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-function baseStyles(topStyles,theme,palette) {
+function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{text,alternateText,primary,secondary,accent,warn,success} = palette
+		{ text, alternateText, primary, secondary, accent, warn, success } = palette
 	
 	return {
 		open: {
 			//backgroundColor: 'rgba(101,181,73,1)',
-			color: colorAlpha(text.disabled,0.1)
+			color: colorAlpha(text.disabled, 0.1)
 		},
 		closed: {
 			//color: text.primary,
@@ -34,7 +36,7 @@ function baseStyles(topStyles,theme,palette) {
 			//backgroundColor: warn.hue1
 		},
 		
-		root: [PositionRelative, {
+		root: [ PositionRelative, {
 			
 			toggle: [ {
 				cursor: 'pointer',
@@ -45,18 +47,17 @@ function baseStyles(topStyles,theme,palette) {
 		} ],
 		
 		
-		
-		icon: [{
+		icon: [ {
 			
 			fontSize: rem(1.6),
 			padding: rem(0.3),
 			borderRadius: rem(0.3),
 			':hover': {}
-		}],
+		} ],
 		
 		toggle: [
-			makeTransition(['opacity','max-width','left','top','bottom','margin-left','padding-left','width']),
-			PositionAbsolute, FlexRowCenter,  {
+			makeTransition([ 'opacity', 'max-width', 'left', 'top', 'bottom', 'margin-left', 'padding-left', 'width' ]),
+			PositionAbsolute, FlexRowCenter, {
 				
 				
 				overflow: 'hidden',
@@ -74,7 +75,7 @@ function baseStyles(topStyles,theme,palette) {
 				
 				icon: [ {
 					color: alternateText.secondary
-				}],
+				} ],
 				
 				close: {
 					backgroundColor: warn.hue1
@@ -90,7 +91,7 @@ function baseStyles(topStyles,theme,palette) {
 				borderRadius: rem(0.2),
 				zIndex: 5,
 				
-				hovering: [{
+				hovering: [ {
 					overflow: 'visible',
 					opacity: 1,
 					width: 'auto',
@@ -98,12 +99,12 @@ function baseStyles(topStyles,theme,palette) {
 					top: rem(-0.3),
 					left: rem(-0.3),
 					bottom: rem(-0.3)
-				}],
+				} ],
 				
-				label: [FillHeight,FlexRowCenter,makePaddingRem(0,0.6,0,1),{
+				label: [ FillHeight, FlexRowCenter, makePaddingRem(0, 0.6, 0, 1), {
 					whiteSpace: 'nowrap',
 					color: text.primary
-				}]
+				} ]
 			}
 		]
 	}
@@ -116,16 +117,17 @@ function baseStyles(topStyles,theme,palette) {
 export interface IIssueStateIconProps extends IThemedAttributes {
 	issue:Issue
 	showToggle?:boolean
+	
+	iconSet?:TIconSet
+	iconName?:string
 }
 
 /**
  * IIssueStateIconState
  */
 export interface IIssueStateIconState {
-
+	
 }
-
-
 
 
 /**
@@ -138,8 +140,14 @@ export interface IIssueStateIconState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'issueStateIcon')
+@ThemedStyles(baseStyles, 'issueStateIcon')
 export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueStateIconState> {
+	
+	
+	static defaultProps = {
+		iconSet: 'fa',
+		iconName: 'check-circle-o'
+	}
 	
 	/**
 	 * Component must have state to get radium state
@@ -147,35 +155,33 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	 * @param props
 	 * @param context
 	 */
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
-		this.state = {
-			
-		}
+		this.state = {}
 	}
 	
-	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextProps,this.props,
+	shouldComponentUpdate(nextProps, nextState) {
+		return !shallowEquals(nextProps, this.props,
 				'style',
 				'styles',
 				'theme',
 				'palette',
 				'issue.id',
 				'issue.state'
-			) || !shallowEquals(nextState,this.state)
+			) || !shallowEquals(nextState, this.state)
 	}
 	
 	private toggleState = () => {
 		const
-			{showToggle, issue} = this.props
+			{ showToggle, issue } = this.props
 		
 		if (!showToggle)
 			return
 		
 		getIssueActions()
 			.setIssueStatus(
-				List<Issue>([issue]),
+				List<Issue>([ issue ]),
 				issue.state === 'open' ?
 					'closed' :
 					'open'
@@ -184,47 +190,48 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	
 	render() {
 		const
-			{issue,theme, styles,showToggle} = this.props,
-			{state} = issue,
-			{palette} = theme,
-			[iconName,iconStyle] = (state === 'open') ?
-				['issue-opened',styles.open] :
-				['issue-closed',styles.closed],
-			
-			hovering = Radium.getState(this.state,'issueState',':hover')
+			{ issue, styles, showToggle } = this.props,
+			{ state } = issue,
+			isOpen = state === 'open',
+			hovering = Radium.getState(this.state, 'issueState', ':hover')
 		
-		
-		log.debug(`Hovering: ${hovering}`)
-		return <div ref="issueState" onClick={showToggle && this.toggleState} style={[styles.root,showToggle && styles.root.toggle]}>
-			{/*<Icon style={[styles.icon,iconStyle]}*/}
-		             {/*iconSet='octicon'*/}
-		             {/*iconName={iconName}/>*/}
+		return <div
+			ref="issueState"
+			onClick={showToggle && this.toggleState}
+			style={[
+				styles.root,showToggle && styles.root.toggle
+			]}>
 			
-			<Icon style={[FillHeight,styles.icon,iconStyle]}
-			      iconSet='fa'
-			      iconName={'check-circle-o'}/>
-		             
+			{makeIcon(this.props as any, isOpen)}
+			
 			{/* IF TOGGLE ENABLED */}
 			{showToggle && <div style={[
 				styles.toggle,
 				state === 'open' ? styles.toggle.close : styles.toggle.open,
 				hovering && styles.toggle.hovering
 			]}>
-				{/*<Icon style={[FillHeight,styles.icon,iconStyle]}*/}
-				      {/*iconSet='octicon'*/}
-				      {/*iconName={iconName}/>*/}
-				<Icon
-					style={[
-						FillHeight,
-						styles.icon,
-						iconStyle,
-						styles.toggle.icon
-					]}
-		      iconSet='fa'
-		      iconName={'check-circle-o'}/>
-				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done": 'Reopen'}</div>
+				
+				{makeIcon(this.props as any, isOpen)}
+				
+				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done" : 'Reopen'}</div>
 			</div>}
 		</div>
 	}
+	
+}
 
+
+function makeIcon({ iconName, iconSet, styles }, isOpen:boolean, isToggleIcon:boolean = false) {
+	const
+		iconStyle = mergeStyles(
+			isOpen ? styles.open : styles.closed,
+			FillHeight,
+			styles.icon,
+			isToggleIcon && styles.toggle.icon
+		)
+	
+	
+	return <Icon style={iconStyle}
+	             iconSet={iconSet}
+	             iconName={iconName}/>
 }

@@ -16,7 +16,7 @@ import { CommandType, ContainerNames } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { MarkdownEditor } from "epic-ui-components/fields"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
-import { FileDrop, RepoName } from "epic-ui-components/common"
+import { FileDrop, RepoLabel } from "epic-ui-components/common"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { CommentEditState } from "epic-ui-components/pages/comment-edit/CommentEditState"
 import CommentEditController from "epic-ui-components/pages/comment-edit/CommentEditController"
@@ -251,8 +251,8 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 		const
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				<div style={styles.titleBar.label}>
-					<RepoName repo={issue.repo}
-					          style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
+					<RepoLabel repo={issue.repo}
+					           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
 				
 				</div>
 			

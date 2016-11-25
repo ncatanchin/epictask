@@ -3,7 +3,6 @@
 import {List} from 'immutable'
 
 import {Icon} from "epic-ui-components"
-import * as Renderers from "epic-ui-components"
 import {AvailableRepo} from "epic-models"
 import {connect} from 'react-redux'
 import {ThemedStyles} from "epic-styles"
@@ -17,6 +16,7 @@ import { getRepoActions } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
 import { CircularProgress} from "material-ui"
 import { PureRender } from "epic-ui-components/common/PureRender"
+import { RepoLabel } from "epic-ui-components/common"
 
 /**
  * Displays a list of repos
@@ -220,7 +220,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						<Icon style={styles.list.item.icon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
 
 						{/* Repo */}
-						<Renderers.RepoName repo={repo} style={styles.list.item.label}/>
+						<RepoLabel repo={repo} style={styles.list.item.label}/>
 						
 						{/* LOADING INDICATOR */}
 						

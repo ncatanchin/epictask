@@ -7,7 +7,7 @@ import { List } from "immutable"
 import { connect } from "react-redux"
 import { Issue, AvailableRepo, Repo, User, Label } from "epic-models"
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor } from "epic-ui-components/fields"
-import { Icon, RepoName, getGithubErrorText, FileDrop, PureRender } from "epic-ui-components/common"
+import { Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
 import { MenuItem, SelectField, TextField } from "material-ui"
 import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow } from "epic-global"
@@ -418,7 +418,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const makeRepoLabel = (availRepoItem) => (
 			<div style={s.form.repo.item}>
 				<Icon iconSet='octicon' iconName='repo'/>
-				<RepoName repo={availRepoItem.repo} style={s.form.repo.item.label}/>
+				<RepoLabel repo={availRepoItem.repo} style={s.form.repo.item.label}/>
 			
 			</div>
 		)
@@ -579,8 +579,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				{editingIssue.id ? <div style={styles.titleBar.label}>
-					<RepoName repo={repo}
-					          style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
+					<RepoLabel repo={repo}
+					           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
 					<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
 				</div> : `CREATE`}
 			</div>,

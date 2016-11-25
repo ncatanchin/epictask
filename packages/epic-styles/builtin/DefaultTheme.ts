@@ -2,6 +2,7 @@ import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "epic-global"
 import { Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
+import { colorAlpha } from "epic-styles/styles"
 
 
 
@@ -318,17 +319,7 @@ export function DefaultTheme(palette) {
 		 * Avatar
 		 */
 		avatar: {
-			root: {
-				clickable: {
-					':hover': {
-						backgroundColor: accent.hue1
-					}
-				}
-			},
-			avatar: {
-				borderColor: secondary.hue1,
-				backgroundColor: accent.hue1
-			}
+			
 		},
 		
 		button: {
@@ -450,15 +441,7 @@ export function DefaultTheme(palette) {
 		issueActivityText: {
 			activityContent: {
 				eventGroup: {
-					verticalDots: {
-						borderRightColor: primary.hue3
-					},
-					horizontalDots: {
-						borderBottomColor: primary.hue3
-					},
-					icon: {
-						backgroundColor: tc(primary.hue3).setAlpha(1).toRgbString()
-					}
+					
 				}
 			}
 		},
@@ -700,51 +683,7 @@ export function DefaultTheme(palette) {
 		 */
 		issueItem: {
 			
-			selected: [{
-				backgroundColor: secondary.hue1,//colorAlpha(secondary.hue1,0.5),
-				color: alternateText.primary,
-				bar: [{
-					backgroundColor: Transparent
-					//backgroundColor: secondary.hue2
-				}]
-			}],
 			
-			focused: [{
-				backgroundColor: accent.hue1,
-				color: alternateText.primary,
-				bar: [{
-					backgroundColor: Transparent
-					//backgroundColor: accent.hue2
-				}]
-			}],
-			
-			
-			number: [{
-				selected:[{
-					color: alternateText.primary,
-				}],
-				focused:[{
-					color: alternateText.primary,
-				}]
-			}],
-			
-			repo:[{
-				selected:[{
-					color: alternateText.primary,
-				}],
-				focused:[{
-					color: alternateText.primary,
-				}]
-			}],
-			
-			title: [{
-				selected:[{
-					color: alternateText.primary,
-				}],
-				focused:[{
-					color: alternateText.primary,
-				}],
-			}]
 			
 		},
 		
@@ -758,7 +697,7 @@ export function DefaultTheme(palette) {
 			
 			header: {
 				//backgroundColor: accent.hue1,
-				backgroundColor: tc(primary.hue2).setAlpha(0.5).toRgbString(),
+				backgroundColor: primary.hue3,
 				color: text.primary,
 				
 				row1: {
@@ -769,7 +708,7 @@ export function DefaultTheme(palette) {
 			},
 			
 			content: {
-				backgroundColor: primary.hue1, //secondary.hue1,
+				backgroundColor: background,//primary.hue2, //secondary.hue1,
 				color: text.primary,
 				
 				activities: {

@@ -1,34 +1,34 @@
-
-import {Map,List} from 'immutable'
-
-
-import {createDeepEqualSelector,isListType, nilFilterList,IssueKey,isNumber} from "epic-global"
-
-import {Comment,Issue,Label, Milestone, User, IssuesEvent } from "epic-models"
-
-
-
-
-
+import { Map, List } from "immutable"
+import { createDeepEqualSelector, isListType, isNumber } from "epic-global"
 import {
-	IIssueGroup, getIssueGroupId, IssueListItemType, IIssueListItem,
-	IIssueItemGroupProps, EditIssueInlineIndex,
-	TIssueEditInlineConfig
-	
-} from 'epic-typedux/state/issue'
+	Comment,
+	Issue,
+	Label,
+	Milestone,
+	User,
+	IssuesEvent,
+	IIssueGroup,
+	getIssueGroupId,
+	IssueListItemType,
+	IIssueListItem,
+	IIssueItemGroupProps,
+	EditIssueInlineIndex,
+	IIssueEditInlineConfig
+} from "epic-models"
 //import {IssueState,TIssuePatchMode,TIssueSortAndFilter, TEditCommentRequest, TIssueActivity} from "epic-typedux/state/IssueState"
 import {
-	enabledMilestonesSelector, enabledLabelsSelector, enabledAssigneesSelector
+	enabledMilestonesSelector,
+	enabledLabelsSelector,
+	enabledAssigneesSelector
 } from "epic-typedux/selectors/RepoSelectors"
-
-import {createSelector} from 'reselect'
-import { getValue } from "typeguard"
+import { createSelector } from "reselect"
 import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
-import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
+import IssuesPanelState, {
+	TIssueSortAndFilter,
+	TIssueActivity
+} from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { UIState } from "epic-typedux/state/UIState"
 import ViewState from "epic-typedux/state/window/ViewState"
-import { TIssueSortAndFilter } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
-import { TIssueActivity } from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 
 
 const
@@ -152,15 +152,6 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			// 			List<Issue>()
 			// ),
 			
-			// PATCH
-			patchIssuesSelector:(state) => Issue[] = createSelector(
-				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.patchIssues
-			),
-			patchModeSelector:(state) => TIssuePatchMode = createSelector(
-				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.patchMode
-			),
 			
 			//EDIT INLINE
 			editingIssueSelector:(state) => Issue = createSelector(
@@ -169,9 +160,9 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			),
 			editingInlineIssueSelector: (state) => boolean = createSelector(
 				issuesPanelStateSelector,
-				(state:IssuesPanelState) => state.editingIssue && state.editingInline
+				(state:IssuesPanelState) => !!state.editInlineConfig
 			),
-			editInlineConfigIssueSelector:(state) => TIssueEditInlineConfig = createSelector(
+			editInlineConfigIssueSelector:(state) => IIssueEditInlineConfig = createSelector(
 				issuesPanelStateSelector,
 				(state:IssuesPanelState) => state.editInlineConfig && state.editingIssue && state.editInlineConfig
 			),
@@ -182,10 +173,6 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			issueSaveErrorSelector:(state) => Error = createSelector(
 				issuesPanelStateSelector,
 				(state:IssuesPanelState) => state.issueSaveError
-			),
-			editCommentRequestSelector:(state) => TEditCommentRequest = createSelector(
-				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.editCommentRequest
 			),
 	
 	
@@ -211,7 +198,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				issueFilterSelector,
 				enabledAssigneesSelector,
 				editInlineConfigIssueSelector,
-				(issues:List<Issue>, issueSort:IIssueSort, issueFilter:IIssueFilter, assignees:List<User>, editInlineConfig:TIssueEditInlineConfig):List<number> => {
+				(issues:List<Issue>, issueSort:IIssueSort, issueFilter:IIssueFilter, assignees:List<User>, editInlineConfig:IIssueEditInlineConfig):List<number> => {
 					
 					const
 						{ groupBy } = issueSort,
@@ -436,10 +423,10 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				orderedIssueIndexesSelector,
 				issueGroupsSelector,
 				editInlineConfigIssueSelector,
-				(issues:List<Issue>,issueIndexes:List<number>,groups:List<IIssueGroup>,editInlineConfig:TIssueEditInlineConfig):List<IIssueListItem<any>> =>  {
+				(issues:List<Issue>,issueIndexes:List<number>,groups:List<IIssueGroup>,editInlineConfig:IIssueEditInlineConfig):List<IIssueListItem<any>> =>  {
 					
 					// IF EDIT INLINE THEN CREATE ITEM, THE PLACEHOLDER WILL BE IN THE INDEXES
-					function makeEditInlineItem():IIssueListItem<TIssueEditInlineConfig> {
+					function makeEditInlineItem():IIssueListItem<IIssueEditInlineConfig> {
 						return {
 							type:IssueListItemType.EditIssueInline,
 							id: EditIssueInlineIndex,
@@ -545,9 +532,6 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		
 		selectedIssuesSelector,
 		
-		// PATCH
-		patchIssuesSelector,
-		patchModeSelector,
 		
 		//EDIT INLINE
 		editingIssueSelector,
@@ -555,7 +539,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		editInlineConfigIssueSelector,
 		issueSavingSelector,
 		issueSaveErrorSelector,
-		editCommentRequestSelector,
+	
 		
 		
 		issueFilterAssigneeSelector,

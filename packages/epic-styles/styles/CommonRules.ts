@@ -295,6 +295,17 @@ function getRootElementFontSize( ) {
 	);
 }
 
+/**
+ * Is component in hover state
+ *
+ * @param component
+ * @param keys
+ * @returns {boolean}
+ */
+export function isHovering(component,...keys:string[]) {
+	return keys.some(it => Radium.getState(component.state, it, ':hover'))
+}
+
 export function convertRem(value) {
 	return value * getRootElementFontSize();
 }

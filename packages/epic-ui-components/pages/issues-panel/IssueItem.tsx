@@ -1,18 +1,20 @@
 // Imports
-import { Renderers, Avatar, IssueLabelsAndMilestones, IssueStateIcon } from "epic-ui-components"
+import { Avatar, IssueLabelsAndMilestones, IssueStateIcon } from "epic-ui-components"
 import filterProps from "react-valid-props"
-import { Issue } from "epic-models"
+import { Issue, User } from "epic-models"
 import { shallowEquals, getValue } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import baseStyles from "./IssueItem.styles"
 import { IRowState } from "epic-ui-components/common/VisibleList"
-import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
+import { IIssueListItem, isIssueListItem } from "epic-models"
 import { guard } from "epic-global/ObjectUtil"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { connect } from "react-redux"
 import { createSelector, createStructuredSelector } from 'reselect'
 import { List } from 'immutable'
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { TimeAgo, LabelChip, MilestoneLabel, RepoLabel } from "epic-ui-components/common"
+import { Icon } from "epic-ui-components/common/icon/Icon"
 
 const
 	log = getLogger(__filename)
@@ -171,10 +173,10 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				styleParam,
 				rowState.style// PARAM PASSED FROM LIST
 			),
+			specialStyle = isSelected ? 'selected' : isFocused ? 'focused' : -1,
 			issueTitleStyle = makeStyle(
 				styles.title,
-				isFocused && styles.title.focused,
-				isSelected && styles.title.selected,
+				styles.title[specialStyle],
 				isSelectedMulti && styles.title.selected.multi
 			)
 		
@@ -184,15 +186,29 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 		                                    onDoubleClick={this.onDoubleClick}
 		                                    onClick={this.onClick}>
 			
+			
 			{/*<div style={stylesMarkers}></div>*/}
 			<div style={styles.details}>
 				
+				
+				
 				{/* ASSIGNEE */}
-				<IssueItemAvatarAndState styles={styles} issue={issue}/>
+				<IssueItemAvatar
+					styles={styles}
+					issue={issue}
+					specialStyle={specialStyle}/>
+				
+				
 				<div style={styles.content}>
 					
 					
 					<div style={styles.row1}>
+						
+						{/* IF CLOSED, SHOW CHECK OR IF MILESTONED*/}
+						{issue.state === 'closed' &&
+							<IssueStateIcon styles={[styles.markings.state]}
+							                iconName="check"
+							                issue={issue}/>}
 						
 						<div style={styles.repo}>
 						<span style={[
@@ -202,7 +218,9 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 						]}>
 							#{issue.number}&nbsp;&nbsp;
 						</span>
-							<Renderers.RepoName repo={issue.repo} style={
+							
+							
+							<RepoLabel repo={issue.repo} style={
 							makeStyle(
 								styles.repo,
 								isFocused && styles.repo.focused,
@@ -213,32 +231,31 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 						
 						
 						
-						{/* LAST UPDATED */}
-						<div style={styles.time}>{moment(issue.updated_at).fromNow()}</div>
-						
 					</div>
 					
 					
 					<div style={styles.row2}>
 						<div style={issueTitleStyle}>{issue.title}</div>
+						{
+							getValue(() => issue.labels.length,0) > 0 &&
+								<div style={styles.labels}>
+									{issue.labels.map(label =>
+										<LabelChip
+											key={label.id}
+											label={label}
+											labelStyle={styles.labels.label}
+											mode='dot' />)}
+								</div>
+						}
 					</div>
 					
-					<div style={styles.row3}>
-						
-						{/* LABELS */}
-						<div style={styles.labels.wrapper}>
-							<IssueLabelsAndMilestones
-								showIcon
-								labels={labels}
-								milestones={issue.milestone ? [issue.milestone] : []}
-								style={styles.labels}
-								labelStyle={styles.labels.label}
-							/>
-						</div>
-					
-					
-					</div>
+				
 				</div>
+				
+				<IssueItemMarkings
+					styles={styles}
+					issue={issue}
+					specialStyle={specialStyle}/>
 			</div>
 			{/* FOCUSED MARKING BAR */}
 			<div style={[
@@ -252,18 +269,66 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	}
 }
 
+/**
+ * Item markings
+ *
+ * @param styles
+ * @param issue
+ * @param specialStyle
+ * @returns {any}
+ * @constructor
+ */
+function IssueItemMarkings({styles,issue,specialStyle}) {
+	const
+		{
+			markings: markingsStyle,
+			milestone: milestoneStyle
+		} = styles
+		
+	return <div style={markingsStyle}>
+		<TimeAgo
+			style={makeStyle(styles.time,styles.time[specialStyle])}
+			timestamp={issue.updated_at as any}/>
+		
+		
+		{
+			issue.milestone && <MilestoneLabel
+				milestone={issue.milestone}
+				style={milestoneStyle}
+				iconStyle={[
+					styles.milestone.icon,
+					styles.milestone[specialStyle]
+				]}
+				textStyle={[
+					styles.milestone.text,
+					styles.milestone[specialStyle]
+				]}
+			/>
+		}
+		
+	</div>
+}
 
-function IssueItemAvatarAndState({styles,issue}) {
-	return <div style={styles.avatarAndState}>
+/**
+ * Avatar and state
+ *
+ * @param styles
+ * @param issue
+ * @returns {any}
+ * @constructor
+ * @param specialStyle
+ */
+function IssueItemAvatar({ styles, issue,specialStyle }) {
+	const
+		{ avatarAndState: avatarAndStateStyle} = styles,
+		{ avatar: avatarStyle} = avatarAndStateStyle
+	
+	return <div style={avatarAndStateStyle}>
 		
-		<Avatar user={issue.assignee}
-		        style={styles.avatar}
-		        labelStyle={styles.username}
-		        avatarStyle={styles.avatar}/>
 		
-		{/* IF CLOSED, SHOW CHECK */}
-		{issue.state === 'closed' && <IssueStateIcon styles={[styles.state]}
-		                                             issue={issue}/> }
+		<Avatar user={issue.assignee || User.UnknownUser}
+		        style={makeStyle(avatarStyle,avatarStyle.root)}
+		        avatarStyle={makeStyle(avatarStyle,avatarStyle.image)}/>
 	
 	
 	</div>

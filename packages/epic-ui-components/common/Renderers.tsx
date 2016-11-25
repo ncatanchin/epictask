@@ -1,22 +1,100 @@
-
-
-import {FontBlack} from "epic-styles"
-import {IGithubValidationError, GithubErrorCodes} from "epic-github"
+import { FontBlack } from "epic-styles"
+import { IGithubValidationError, GithubErrorCodes } from "epic-github"
 
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { CommandAccelerator } from  "epic-command-manager"
+import { Icon } from "./icon/Icon"
 
 
-const repoBaseStyles = (topStyles,theme,palette) => {
+/**
+ * Milestone base styles
+ *
+ * @param topStyles
+ * @param theme
+ * @param palette
+ * @returns {[any,any,any,any,any,{flexDirection: string, fontSize: any, icon: [any,any,{color: (string|MaterialColorSet|MaterialColorPalette|number|Array|any), fontSize: any, fontWeight: number}], text: [any,any,any,{fontSize: any, fontWeight: number}]}]}
+ */
+const milestoneBaseStyles = (topStyles, theme, palette) => {
 	
-	return [FlexRow,PositionRelative,{
+	const
+		{ text, alternateText, primary, secondary, accent, background } = palette
+	
+	return [
+		FlexRow,
+		FlexAuto,
+		OverflowHidden,
+		makePaddingRem(0),
+		makeMarginRem(0),
+		{
+			
+			flexDirection: 'row-reverse',
+			fontSize: themeFontSize(1.2),
+			//height: rem(2),
+			
+			// ICON
+			icon: [
+				FlexAuto,
+				makePaddingRem(0, 0, 0, 0.3), {
+					
+					color: text.secondary,
+					fontSize: themeFontSize(1),
+					fontWeight: 500
+				}
+			],
+			
+			
+			text: [
+				FlexAuto,
+				makePaddingRem(0),
+				makeMarginRem(0), {
+					
+					color: text.secondary,
+					fontSize: themeFontSize(1),
+					fontWeight: 500
+				} ]
+		} ]
+}
+
+/**
+ * Milestone label
+ *
+ * @type {any}
+ */
+export const MilestoneLabel = ThemedStyles(milestoneBaseStyles)(
+	({
+		milestone,
+		styles = {} as any,
+		style = {},
+		textStyle = {},
+		iconStyle = {}
+	}) => {
+		return !milestone ? React.DOM.noscript() : <div style={[styles,style]}>
+			<Icon style={mergeStyles(styles.icon,iconStyle)}
+			      iconSet='octicon'
+			      iconName='milestone'/>
+			
+			<span style={mergeStyles(styles.text,textStyle)}>
+				{milestone.title}
+		</span>
+		</div>
+	})
+
+/**
+ * Repo style factory
+ *
+ * @param topStyles
+ * @param theme
+ * @param palette
+ * @returns {[any,any,{fontSize: any, text: [any,any,{}]}]}
+ */
+const repoBaseStyles = (topStyles, theme, palette) => {
+	
+	return [ FlexRow, PositionRelative, {
 		fontSize: themeFontSize(1.2),
 		//height: rem(2),
 		
-		text: [FlexRowCenter,FillHeight,{
-			
-		}]
-	}]
+		text: [ FlexRowCenter, FillHeight, {} ]
+	} ]
 }
 
 /**
@@ -26,16 +104,16 @@ const repoBaseStyles = (topStyles,theme,palette) => {
  * @param style
  * @returns {any}
  */
-export const RepoName = ThemedStyles(repoBaseStyles)(({repo,styles = {} as any,style = {}}) => {
+export const RepoLabel = ThemedStyles(repoBaseStyles)(({ repo, styles = {} as any, style = {}, textStyle,slashStyle }) => {
 	if (!repo || !repo.full_name)
 		return <div>No repo</div>
-
+	
 	const
 		parts = repo.full_name.split('/')
 	return <div style={[styles,style]}>
-		<div style={styles.text}>{parts[0]}</div>
-		<div style={styles.text}>/</div>
-		<div style={[styles.text,FontBlack]}>{parts[1]}</div>
+		<div style={[styles.text,textStyle]}>{parts[ 0 ]}</div>
+		<div style={[styles.text,slashStyle]}>/</div>
+		<div style={[styles.text,FontBlack,textStyle]}>{parts[ 1 ]}</div>
 	</div>
 })
 
@@ -72,12 +150,9 @@ export const RepoName = ThemedStyles(repoBaseStyles)(({repo,styles = {} as any,s
  */
 
 
-const kbdBaseStyles = (topStyles,theme,palette) => {
+const kbdBaseStyles = (topStyles, theme, palette) => {
 	
-	return [FlexRowCenter,PositionRelative,{
-		
-		
-	}]
+	return [ FlexRowCenter, PositionRelative, {} ]
 }
 
 
@@ -89,7 +164,7 @@ export interface IKeyboardAcceleratorProps extends IThemedAttributes {
 export const KeyboardAccelerator = ThemedStyles(kbdBaseStyles)((props:IKeyboardAcceleratorProps) => {
 	
 	const
-		{style,separator = "+",styles} = props,
+		{ style, separator = "+", styles } = props,
 		accel = props.accelerator,
 		parts = []
 	
@@ -108,7 +183,7 @@ export const KeyboardAccelerator = ThemedStyles(kbdBaseStyles)((props:IKeyboardA
 	parts.push(...accel.codes.map(code => code.toUpperCase()))
 	
 	
-	return <div style={makeStyle(styles,style)}>{parts.map((part,index) =>
+	return <div style={makeStyle(styles,style)}>{parts.map((part, index) =>
 		<div key={index}>
 			{part}
 			{/*<kbd ></kbd>*/}
@@ -116,7 +191,7 @@ export const KeyboardAccelerator = ThemedStyles(kbdBaseStyles)((props:IKeyboardA
 			{index + 1 < parts.length && <span>&nbsp;</span>}
 			
 			{(separator && separator.length && index + 1 < parts.length) &&
-				<span>+&nbsp;</span>
+			<span>+&nbsp;</span>
 			}
 		</div>)
 	}</div>
@@ -129,11 +204,11 @@ export const KeyboardAccelerator = ThemedStyles(kbdBaseStyles)((props:IKeyboardA
  * @param field
  * @returns {null}
  */
-export function getGithubErrorText(saveError,field:string) {
+export function getGithubErrorText(saveError, field:string) {
 	const
-		errors = _.get(saveError,'errors',[]),
+		errors = _.get(saveError, 'errors', []),
 		validationErr:IGithubValidationError = errors
 			.find(err => err.field === 'title')
-
-	return !validationErr ? null : GithubErrorCodes[validationErr.code]
+	
+	return !validationErr ? null : GithubErrorCodes[ validationErr.code ]
 }

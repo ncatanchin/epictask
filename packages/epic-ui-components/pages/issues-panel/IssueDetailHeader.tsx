@@ -6,7 +6,7 @@ import {createSelector} from 'reselect'
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
 import {
 	PureRender,
-	RepoName,
+	RepoLabel,
 	getGithubErrorText,
 	Avatar,
 	makeComponentStyles,
@@ -94,8 +94,7 @@ const
 				repo: [ FlexScale, makePaddingRem(0.5,0), {
 					fontSize: themeFontSize(1.4),
 					fontWeight: 500,
-					fontSmooth: 'always',
-					WebkitFontSmoothing: 'antialiased',
+					
 					
 					color: TinyColor(text.secondary).setAlpha(0.7).toRgbString(),
 					[CSSHoverState]: {
@@ -489,7 +488,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				                issue={issue}/>
 				
 				<div style={[styles.row1.repo]}>
-					<RepoName repo={issue.repo}/>
+					<RepoLabel repo={issue.repo}/>
 				</div>
 				
 				{/* ASSIGNEE */}

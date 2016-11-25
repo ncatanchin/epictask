@@ -462,7 +462,7 @@ const
 			
 			new HtmlWebpackPlugin({
 				filename: "app-entry.html",
-				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
+				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
 				inject: false,
 				isDev
 			}),
@@ -528,7 +528,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 			}),
 			new HtmlWebpackPlugin({
 				filename: "app-entry.html",
-				template: `${process.cwd()}/packages/epic-assets/templates/AppEntry.jade`,
+				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
 				inject: false,
 				isDev
 			}),

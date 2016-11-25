@@ -10,6 +10,9 @@ import {GHIcons} from "./IconOpticonNames"
 import { PureRender } from "../PureRender"
 
 
+declare global {
+	type TIconSet = 'material-icons'|'fa'|'octicon'
+}
 // Constants
 const
 	log = getLogger(__filename),
@@ -25,7 +28,7 @@ export interface IIconProps extends React.HTMLAttributes<any> {
 	className?:string
 	style?:any
 	theme?:any
-	iconSet?:'material-icons'|'fa'|'octicon'
+	iconSet?:TIconSet
 	iconName?: string,
 	fontSize?:any
 }

@@ -15,8 +15,8 @@ import {
 	IssueListItemType,
 	EditIssueInlineIndex,
 	isEditInlineListItem,
-	TIssueEditInlineConfig
-} from "epic-typedux"
+	IIssueEditInlineConfig
+} from "epic-models"
 import { ThemedStyles, FlexRowCenter, TransitionDurationLong, IThemedAttributes } from "epic-styles"
 import { IssueItem } from "./IssueItem"
 import { IssueFilters } from "./IssueFilters"
@@ -277,7 +277,7 @@ export interface IIssuesListProps extends IThemedAttributes {
 	onIssueOpen:(event:MouseEvent, issue:Issue) => any
 	
 	editingInline?:boolean
-	editInlineConfig?:TIssueEditInlineConfig
+	editInlineConfig?:IIssueEditInlineConfig
 	
 	// WHEN ALL ITEMS HAVE BEEN FILTERED
 	allItemsFilteredMessage?:any
@@ -345,7 +345,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	                            issues:List<Issue>,
 	                            groups:List<IIssueGroup>,
 	                            groupVisibility:Map<string,boolean>,
-	                            editInlineConfig:TIssueEditInlineConfig):List<number> {
+	                            editInlineConfig:IIssueEditInlineConfig):List<number> {
 		
 		let
 			excludeEditInline = false
@@ -612,8 +612,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			item.type === IssueListItemType.Group ?
 				convertRem(4) :
 				item.type === IssueListItemType.EditIssueInline ?
-					convertRem(21.2) :
-					convertRem(10)
+					convertRem(8.5) :
+					convertRem(5)
 	}
 	
 	/**
@@ -650,12 +650,12 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 					itemCount={itemCount}
 					itemBuilder={this.buildItem}
 					itemKeyFn={(listItems,item,index) => {
-				             	const
-				             	  foundItem = checkedItems.get(itemIndexes.get(index))
-				             	  
-				             	
-				             	return `${_.get(foundItem,'id',index)}`
-				             }}
+            const
+              foundItem = checkedItems.get(itemIndexes.get(index))
+              
+            
+            return `${_.get(foundItem,'id',index)}`
+          }}
 					initialItemsPerPage={50}
 					rowTypeProvider={this.getRowType}
 					itemHeight={this.getItemHeight}

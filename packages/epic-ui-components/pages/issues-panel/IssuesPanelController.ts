@@ -1,15 +1,12 @@
-import { Map, Record, List } from "immutable"
-import * as Immutable from 'immutable'
+import * as Immutable from "immutable"
+import { List } from "immutable"
 import { OneAtATime } from "epic-global/Decorations"
-import ViewState from "epic-typedux/state/window/ViewState"
+import ViewState, { ViewStateEvent } from "epic-typedux/state/window/ViewState"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { isNumber, isNil, getValue } from "typeguard"
-
 import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
-import { DefaultIssueFilter } from "epic-typedux/state/issue/IIssueFilter"
-
-import { Issue, Label, Comment, Milestone } from "epic-models"
+import { DefaultIssueFilter, Issue, Label, Comment, Milestone, IIssueListItem } from "epic-models"
 import { addErrorMessage } from "epic-global/NotificationCenterClient"
 import { IssuesEvent } from "epic-models/IssuesEvent"
 import {
@@ -17,12 +14,10 @@ import {
 	TIssuesPanelSelectors
 } from "epic-ui-components/pages/issues-panel/IssuesPanelSelectors"
 import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
-import { IIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
 import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import { enabledAvailableReposSelector } from "epic-typedux/selectors"
-import {EventEmitter} from 'events'
-import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import { EventEmitter } from "events"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -49,7 +44,7 @@ export function getIssuesPanelSelector(fn:(selectors:TIssuesPanelSelectors) => a
  * @class IssuesPanelController
  * @constructor
  **/
-class IssuesPanelController extends EventEmitter implements IViewController<IssuesPanelState> {
+export class IssuesPanelController extends EventEmitter implements IViewController<IssuesPanelState> {
 	
 	
 	selectors
@@ -448,6 +443,8 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 		})
 	}
 	
+	
+	
 	/**
 	 * Create a new comment
 	 */
@@ -499,13 +496,6 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	}
 	
 	
-	private setPatchIssues(patchIssues:List<Issue>, patchMode:TIssuePatchMode = null) {
-		this.updateState({
-			patchIssues,
-			patchMode: patchMode || this.state.patchMode
-		})
-		
-	}
 	
 	/**
 	 * The the selected issue ids
@@ -519,7 +509,7 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	setSelectedIssueIds(selectedIssueIds:List<number>) {
 		this.updateState({
 			selectedIssueIds,
-			editingInline: false
+			editInlineConfig: null
 		})
 	}
 	
@@ -763,10 +753,9 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	 * @return {(state:IssueState)=>Map<string, Issue>}
 	 */
 	
-	setEditingIssue(editingIssue:Issue, inline:boolean = false) {
+	setEditingIssue(editingIssue:Issue) {
 		this.updateState({
-			editingIssue,
-			editingInline: inline
+			editingIssue
 		})
 	}
 	
@@ -778,7 +767,7 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	 */
 	setEditingInline(inline:boolean) {
 		!inline && this.updateState({
-			exitInlineConfig: null,
+			editInlineConfig: null,
 			editingIssue: null
 		})
 	}
@@ -820,17 +809,6 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	}
 	
 	
-	private startEditInline(issue:Issue, fromIssueId, index:number) {
-		this.updateState({
-			editingInline: true,
-			editingIssue: issue,
-			editInlineConfig: {
-				index,
-				fromIssueId
-			}
-		})
-		
-	}
 	
 	/**
 	 * Begin editing inline
@@ -838,15 +816,14 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 	 * @returns {(dispatch:any, getState:any)=>undefined}
 	 */
 	
-	editInline() {
+	editInline(fromIssue:Issue) {
 		
 		let
 			items = this.selectors.issueItemsSelector(getStoreState()),
-			selectedIssue = this.selectors.selectedIssueSelector(getStoreState()),
-			index = selectedIssue && items.findIndex(item => item.id === selectedIssue.id)
+			index = fromIssue && items.findIndex(item => item.id === fromIssue.id)
 		
 		
-		if (!selectedIssue || isNil(index) || index === -1) {
+		if (!fromIssue || isNil(index) || index === -1) {
 			log.warn('Issue index not found', index)
 			return
 		}
@@ -854,18 +831,21 @@ class IssuesPanelController extends EventEmitter implements IViewController<Issu
 		// Increment here to show the create below the current issue
 		index++
 		
-		
-		const
-			newIssue = new Issue(cloneObject(_.pick(
-				selectedIssue,
+		this.updateState({
+			editingIssue: new Issue(cloneObject(_.pick(
+				fromIssue,
 				'repoId',
 				'milestone',
 				'labels',
 				'assignee',
 				'collaborators'
-			)))
-		
-		this.startEditInline(newIssue, selectedIssue.id, index)
+			),{ state: 'open' })),
+			editInlineConfig: {
+				index,
+				fromIssueId: fromIssue.id,
+				fromIssue: cloneObjectShallow(fromIssue)
+			}
+		})
 		
 		
 	}

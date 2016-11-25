@@ -23,7 +23,7 @@ import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesP
 import {createSelector} from 'reselect'
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import { Pages } from "epic-entry-ui/routes/Routes"
-import { CSSHoverState } from "epic-styles/styles"
+import { CSSHoverState, colorAlpha } from "epic-styles/styles"
 // Constants
 const
 	log = getLogger(__filename),
@@ -62,7 +62,7 @@ const baseStyles = (topStyles,theme,palette) => {
 				},
 				
 				post: {
-					backgroundColor: primary.hue2,
+					backgroundColor: primary.hue3,
 					//borderColor:     accent.hue1,
 					borderColor: Transparent,
 					
@@ -74,7 +74,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					},
 					
 					details: {
-						backgroundColor: primary.hue3,
+						backgroundColor: primary.hue2,
 						color: text.primary,
 						
 						
@@ -82,7 +82,7 @@ const baseStyles = (topStyles,theme,palette) => {
 				},
 				
 				comment: {
-					backgroundColor: primary.hue2,
+					backgroundColor: primary.hue3,
 					//borderColor:     secondary.hue1,
 					borderColor: Transparent,
 					
@@ -95,7 +95,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					
 					details: {
 						//backgroundColor: secondary.hue1,
-						backgroundColor: primary.hue3,
+						backgroundColor: primary.hue2,
 						color: text.primary
 					}
 				}
@@ -110,6 +110,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					boxSizing: 'border-box',
 					
 					verticalDots: [ PositionAbsolute, {
+						borderRightColor: primary.hue1,
 						width: rem(1.2),
 						height: '100%',
 						borderRightWidth: rem(0.1),
@@ -117,6 +118,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					} ],
 					
 					horizontalDots: [ PositionAbsolute, {
+						borderBottomColor: primary.hue1,
 						height: rem(0.2),
 						bottom: 0,
 						left: rem(6.2),
@@ -132,7 +134,9 @@ const baseStyles = (topStyles,theme,palette) => {
 						borderRadius: '50%',
 						width: rem(2.4),
 						height: rem(2.4),
-						zIndex: 2
+						zIndex: 2,
+						
+						backgroundColor: tc(primary.hue3).setAlpha(1).toRgbString()
 					} ],
 					
 					avatar: [ makePaddingRem(0, 1, 0, 0.5), {

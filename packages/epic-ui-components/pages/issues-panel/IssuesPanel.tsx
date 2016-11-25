@@ -12,8 +12,8 @@ import {
 	getIssueGroupId,
 	IIssueListItem,
 	IssueListItemType,
-	TIssueEditInlineConfig
-} from "epic-typedux"
+	IIssueEditInlineConfig
+} from "epic-models"
 import {
 	CommandComponent,
 	ICommandComponent,
@@ -115,7 +115,7 @@ export interface IIssuesPanelProps extends IThemedAttributes {
 	
 	hasAvailableRepos?: boolean
 	saving?: boolean
-	editInlineConfig?: TIssueEditInlineConfig
+	editInlineConfig?: IIssueEditInlineConfig
 	
 }
 
@@ -253,7 +253,19 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				CommonKeys.Enter,{
 					hidden:true
 				})
-			
+			// ESCAPE EDIT INLINE
+			.command(
+				CommandType.Container,
+				'Cancel editing',
+				(cmd,event) => {
+					if (this.props.editInlineConfig) {
+						this.viewController.setEditingInline(false)
+					}
+				},
+				CommonKeys.Escape,{
+					overrideInput:true
+					
+				})
 			// LABEL ISSUES
 			.command(
 				CIDS.LabelIssues,
@@ -469,12 +481,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		log.debug('Enter pressed', selectedIssueIds, selectedIssue)
 		
 		
-		// One issue selected
+		
 		if (selectedIssue) {
-			//this.issueActions.editInline()
-		}
-		// Otherwise move down and clear selection
-		else if (selectedIssueIds.size) {
+			// One issue selected
+			this.viewController.editInline(selectedIssue)
+		} else if (selectedIssueIds.size) {
+			// Otherwise move down and clear selection
 			this.moveDown()
 		}
 	}

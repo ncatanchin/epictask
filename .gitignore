@@ -3,7 +3,6 @@
 #libs/**/*.*
 
 # Typestore Files
-src/**/*.js
 src/**/*.map
 src/**/*.d.ts
 dist

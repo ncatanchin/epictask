@@ -1,7 +1,7 @@
 // Imports
 
 import { List } from "immutable"
-import { RepoName, PureRender } from "../../common"
+import { RepoLabel, PureRender } from "../../common"
 import { PositionRelative, ThemedStyles, IThemedAttributes, makeWidthConstraint } from "epic-styles"
 import { Issue } from "epic-models"
 
@@ -86,7 +86,7 @@ export class IssueMultiInlineList extends React.Component<IIssueMultiInlineListP
 					<div style={styles.issue.row}>
 						<div style={styles.issue.number}>#{issue.number}</div>
 						<div style={styles.issue.title}>{issue.title}</div>
-						<RepoName style={styles.issue.repo} repo={issue.repo}/>
+						<RepoLabel style={styles.issue.repo} repo={issue.repo}/>
 					</div>
 				
 				</div>

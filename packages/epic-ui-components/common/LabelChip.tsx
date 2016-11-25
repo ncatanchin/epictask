@@ -2,14 +2,19 @@
  * Created by jglanz on 8/9/16.
  */
 // Imports
+
 import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles } from "epic-styles"
 import { Label, Milestone } from "epic-models"
 import { getValue } from "epic-global"
 import { isLabel } from "epic-models/Label"
+import { makePaddingRem, FlexColumnCenter, FlexRowCenter, FlexAuto, isHovering } from "epic-styles/styles"
 
-const tinycolor = require('tinycolor2')
+const
+	tinycolor = require('tinycolor2'),
+	Tooltip = require('react-tooltip')
+	
 
 // Constants
 //noinspection JSUnusedLocalSymbols
@@ -29,7 +34,7 @@ const
 		'color'
 	])
 
-export const baseStyles = (topStyles,theme,palette) => ({
+export const baseStyles = (topStyles, theme, palette) => ({
 	label: [ makeTransition('width'), PositionRelative, FlexAuto, FlexRowCenter, {
 		display: 'flex',
 		borderRadius: accessoryDimHalf,
@@ -98,8 +103,9 @@ export const baseStyles = (topStyles,theme,palette) => ({
 })
 
 
-
 export type TLabelCallback = (label:Label|Milestone) => void
+
+export type TLabelChipMode = 'normal' | 'dot'
 
 /**
  * ILabelChipProps
@@ -108,9 +114,11 @@ export interface ILabelChipProps {
 	theme?:any
 	styles?:any
 	onClick?:React.MouseEventHandler<any>
+	mode?:TLabelChipMode
 	label:Label|Milestone
 	labelStyle?:any
 	textStyle?:any
+	iconStyle?:any
 	showIcon?:boolean
 	showDueOn?:boolean
 	showRemove?:boolean
@@ -127,10 +135,12 @@ export interface ILabelChipProps {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles, 'labelChip')
-@PureRender
-export class LabelChip extends React.Component<ILabelChipProps,any> {
+
+class BaseLabelChip extends React.Component<ILabelChipProps,any> {
 	
+	static defaultProps = {
+		mode: 'normal'
+	}
 	
 	private updateState(props) {
 		this.setState({ hovering: Radium.getState(this.state, 'label', ':hover') })
@@ -176,84 +186,163 @@ export class LabelChip extends React.Component<ILabelChipProps,any> {
 		
 	}
 	
+	/**
+	 * Create label style
+	 *
+	 * @param styles
+	 * @param labelStyle
+	 * @param label
+	 * @returns {any}
+	 */
+	makeLabelStyle = ({styles,labelStyle},label:Label) => {
+		return makeStyle(styles.label, this.labelColorStyle(label), labelStyle)
+	}
+	
+	
+	/**
+	 * Create milestone style
+	 *
+	 * @param styles
+	 * @param labelStyle
+	 * @param milestone
+	 * @returns {any}
+	 */
+	makeMilestoneStyle = ({styles,labelStyle},milestone:Milestone) => {
+		return makeStyle(styles.label, {
+			backgroundColor: 'black',
+			color: 'white'
+		}, labelStyle)
+	}
+	
 	render() {
 		const
+			{props} = this,
 			{
-				theme,
 				styles,
 				showIcon,
 				onClick,
 				onRemove,
-				showRemove,
+				mode,
 				showDueOn,
 				label,
-				labelStyle,
+				iconStyle,
 				textStyle
-			} = this.props,
-			{ palette } = theme,
-			isMilestone = !isLabel(label)
+			} = props,
+			isMilestone = !isLabel(label),
 		
 		
-		const
-			makeLabelStyle = (label:Label) => {
-				return makeStyle(styles.label, this.labelColorStyle(label), labelStyle)
-			},
-			makeMilestoneStyle = (milestone:Milestone) => {
-				return makeStyle(styles.label, {
-					backgroundColor: 'black',
-					color: 'white'
-				}, labelStyle)
-			}
-		
-		
-		// Is the label in hover state
-		const
-			finalLabelStyle = (!isMilestone) ?
-				makeLabelStyle(label as Label) :
-				makeMilestoneStyle(label as Milestone),
 			
-			hovering = Radium.getState(this.state, 'label', ':hover')
+			finalLabelStyle = (!isMilestone) ?
+				this.makeLabelStyle(props as any,label as Label) :
+				this.makeMilestoneStyle(props as any,label as Milestone),
+			
+			hovering = isHovering(this,'label','labelDot'),
+			tooltipId = `label-tooltip-${label.id}`
 		
 		
-		return <div ref='label' className="labelChip" style={[finalLabelStyle]} onClick={onClick}>
-			{onRemove ?
+		
+		
+		return mode === 'dot' ?
+			// DOT CHIP
+			
+				<div ref="labelDot" data-for={tooltipId} data-tip style={finalLabelStyle}>
+					{/*<Tooltip title={(label as Label).name}>*/}
+					<Tooltip id={tooltipId} class="labelTooltip" key={tooltipId}>
+						<LabelChip label={label} style={{padding: 0}} />
+					</Tooltip>
+				</div>
+			 :
+			
+			// REGULAR CHIP
+			<div
+				ref='label'
+				className="labelChip"
+				style={[finalLabelStyle]}
+				onClick={onClick}>
+				
+				 
+				
+				<LabelChipAccessory
+					styles={styles}
+					label={label}
+					labelStyle={finalLabelStyle}
+					iconStyle={iconStyle}
+					isMilestone={isMilestone}
+					onRemove={onRemove}
+					showIcon={showIcon}
+					hovering={hovering}
+				/>
+				
 				<div style={[
+						styles.text,
+						(showIcon || onRemove) && styles.text.withLeftIcon,
+						textStyle
+					]}>
+					
+					{
+						isLabel(label) ?
+							label.name :
+							`${label.title}${!showDueOn ? '' :
+								this.formatDueOn(label)}`
+					}
+					
+				</div>
+			
+			
+			</div>
+	}
+	
+}
+
+/**
+ * Render remove or icon accessory
+ *
+ * @param styles
+ * @param label
+ * @param labelStyle
+ * @param iconStyle
+ * @param isMilestone
+ * @param onRemove
+ * @param showIcon
+ * @param hovering
+ * @returns {any}
+ * @constructor
+ */
+function LabelChipAccessory({ styles, label, labelStyle, iconStyle, isMilestone, onRemove, showIcon, hovering }) {
+	return onRemove ?
+		<div style={[
 					styles.accessory,
-					finalLabelStyle.accessory,
+					labelStyle.accessory,
 					hovering && styles.accessory.hover,
 					hovering && styles.accessory.remove.hover
 					]} className="removeControl">
-					<Icon
-						style={makeStyle(
+			<Icon
+				style={makeStyle(
 								styles.accessory.icon,
 								styles.accessory.remove.icon,
 								hovering && styles.accessory.remove.hover.icon
 								
 							)}
-						onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}>
-						clear
-					</Icon>
-				</div> :
-				showIcon ?
-					<div style={[
+				onClick={(event) => (onRemove(label), event.stopPropagation(),event.preventDefault())}>
+				clear
+			</Icon>
+		</div> :
+		
+		showIcon ?
+			<div style={[
 						styles.accessory,
-						finalLabelStyle.accessory
+						labelStyle.accessory,
+						iconStyle
 					]}>
-						<Icon style={styles.accessory.icon}
-						      iconSet='octicon'
-						      iconName={isMilestone ? 'milestone' : 'tag'}/>
-					</div> :
-					React.DOM.noscript()
-			}
-			
-			<div style={[styles.text, (showIcon || onRemove) && styles.text.withLeftIcon,textStyle]}>
-				{isLabel(label) ? label.name : `${label.title}${!showDueOn ? '' : this.formatDueOn(label)}`}
-			</div>
-		
-		
-		</div>
-	}
-	
+				<Icon style={[styles.accessory.icon,iconStyle]}
+				      iconSet='octicon'
+				      iconName={isMilestone ? 'milestone' : 'tag'}/>
+			</div> :
+			React.DOM.noscript()
 }
+
+PureRender(BaseLabelChip)
+
+export const LabelChip = ThemedStyles(baseStyles, 'labelChip')(BaseLabelChip)
 
 export default LabelChip

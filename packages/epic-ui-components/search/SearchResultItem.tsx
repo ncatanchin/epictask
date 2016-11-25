@@ -1,5 +1,5 @@
 // Imports
-import { PureRender, RepoName, Icon } from "epic-ui-components"
+import { PureRender, RepoLabel, Icon } from "epic-ui-components"
 
 import { shallowEquals} from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "epic-models"
@@ -204,7 +204,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	renderRepo = (item:SearchItem, repo:Repo, isSelected) => {
 		
 		return this.renderResult(
-			<RepoName repo={repo}/>,
+			<RepoLabel repo={repo}/>,
 			`${repo.open_issues_count} open issues`,
 			'Add issue repo',
 			'repo',
@@ -243,7 +243,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		const repo = null//repoModels && repoModels.get(`${issue.repoId}`)
 		return this.renderResult(
 			issue.title,
-			repo ? <RepoName repo={repo}/> : '',
+			repo ? <RepoLabel repo={repo}/> : '',
 			'Select issue',
 			'issue-opened',
 			isSelected
@@ -255,7 +255,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		const repo = null//repoModels && repoModels.get(`${milestone.repoId}`)
 		return this.renderResult(
 			milestone.title,
-			repo ? <RepoName repo={repo}/> : '',
+			repo ? <RepoLabel repo={repo}/> : '',
 			'Filter milestone',
 			'milestone',
 			isSelected
@@ -267,7 +267,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		const repo = null//repoModels && repoModels.get(`${label.repoId}`)
 		return this.renderResult(
 			label.name,
-			repo ? <RepoName repo={repo}/> : '',
+			repo ? <RepoLabel repo={repo}/> : '',
 			'Filter label',
 			'tag',
 			isSelected

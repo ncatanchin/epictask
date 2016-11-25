@@ -2,13 +2,15 @@
  * Created by jglanz on 7/21/16.
  */
 // Imports
-import {  Icon, Button, RepoName, getGithubErrorText } from "epic-ui-components"
-import {LabelFieldEditor} from 'epic-ui-components/fields/LabelFieldEditor'
+import {FormEvent} from "react"
+import { TextField ,Icon, Button, RepoLabel, getGithubErrorText } from "epic-ui-components"
+
+import { LabelFieldEditor } from "epic-ui-components/fields/LabelFieldEditor"
 import { List } from "immutable"
-import { Issue, Label, Milestone, AvailableRepo, User } from "epic-models"
+import { Issue, Label, Milestone, AvailableRepo, User, IIssueListItem } from "epic-models"
 import filterProps from "react-valid-props"
-import { TextField, CircularProgress, MenuItem, SelectField } from "material-ui"
-import { ThemedStyles, makeThemeFontSize } from "epic-styles"
+ 
+import { ThemedStyles, makeThemeFontSize, IThemedAttributes } from "epic-styles"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import {
@@ -17,211 +19,99 @@ import {
 	enabledLabelsSelector,
 	enabledMilestonesSelector
 } from "epic-typedux"
-import {
-	CommonKeys,
-	getCommandManager,
-	
-	ContainerNames
-} from "epic-command-manager"
-import {
-	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder,ICommandComponentProps
-} from  "epic-command-manager-ui"
-
-import { cloneObject } from "epic-global"
+import { CommonKeys, getCommandManager, ContainerNames } from "epic-command-manager"
+import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
-import { cloneObjectShallow } from "../../../epic-global/ObjectUtil"
-import { IRowState } from "epic-ui-components/common/VisibleList"
+import { cloneObjectShallow, cloneObject, shallowEquals, addErrorMessage } from "epic-global"
+import { IRowState, MilestoneLabel, SaveIndicator } from "epic-ui-components/common"
 import { getValue, isNumber } from "typeguard"
-import { IssuesPanel } from "epic-ui-components/pages/issues-panel/IssuesPanel"
-import { IIssueListItem, isIssueListItem } from "epic-typedux/state/issue/IIssueListItems"
-import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { IssuesPanel, IssuesPanelController, getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel"
+import { MilestoneSelect } from "epic-ui-components/fields"
+import {
+	FlexAuto, makePaddingRem, makeStyle, FlexScale, Ellipsis, colorAlpha, FlexRowCenter,
+	FillWidth, OverflowHidden, rem, FlexColumnCenter, FlexColumn, makeTransition, PositionRelative
+} from "epic-styles/styles"
+
+
 
 // Constants
-const log = getLogger(__filename)
-const ReactTimeout = require('react-timeout')
+const
+	log = getLogger(__filename)
 
 //region Styles
-const baseStyles = (topStyles,theme,palette) => ({
-	root: [FlexColumn,FillWidth,FlexAuto,makeTransition('opacity')],
-	savingIndicator: [makeTransition('opacity'),PositionAbsolute,FlexColumnCenter,Fill,makeAbsolute(),{
-		opacity: 0,
-		pointerEvents: 'none'
-	}],
-
-	issueRepo: makeStyle(Ellipsis, FlexRow, FlexScale, {
-		fontSize: themeFontSize(1),
-		padding:  '0 0 0.5rem 0rem'
-	}),
-
-	issue: [
+const baseStyles = (topStyles, theme, palette) => {
+	const
+		{ text, accent, primary, background, secondary } = palette
+	
+	return [
+		OverflowHidden,
 		FlexColumn,
-		FlexAuto,
 		FillWidth,
-		FlexAlignStart,
-		PositionRelative,
-		makeTransition(['background-color']), {
-
-			padding: '0.5rem 1rem',
-			cursor: 'pointer',
-			boxShadow: 'inset 0 0.4rem 0.6rem -0.6rem black',
-
-			// Issue selected
-			selected: [],
-
-			// Avatar component
-			avatar: [{
-				padding: '0'
-			}],
-
-			labels: [FlexScale, {
-				padding: '0 0 0 0',
-				flexWrap: 'wrap',
-				label: {
-					margin: '0.5rem 0.7rem 0rem 0',
+		FlexAuto,
+		makeTransition('opacity'),
+		
+		{
+			
+			backgroundColor: background,
+			
+		
+			issue: [
+				FillWidth,
+				PositionRelative,
+				makeTransition([ 'background-color' ]), {
+					// COLORS
+					backgroundColor: background,
+					color: text.secondary,
+					borderBottom: '0.1rem solid ' + colorAlpha(text.secondary, 0.1),
+						
+					cursor: 'pointer',
+					
+					// Issue selected
+					selected: [],
+					
+					// Avatar component
+					avatar: [ {
+					} ],
+					
+					
 				}
-
-			}],
-			repo: [FlexRow, makeFlexAlign('flex-start', 'flex-start'), {
-				text: [{
-
-				}]
-			}]
+			],
+			
+			
+			row: [ FlexRowCenter, FillWidth, OverflowHidden, {
+				
+				spacer: [ FlexScale ],
+				
+				action: [ FlexRowCenter, FlexAuto, {
+					borderRadius: 0,
+					height: rem(3),
+					icon: [ FlexAuto, FlexColumnCenter, makePaddingRem(0.3,1,0.3,0), {
+						fontSize: makeThemeFontSize(1.3)
+					} ],
+					label: [ FlexAuto, FlexColumnCenter ]
+				} ]
+			} ]
 		}
-	],
-
-	input: {
-		height: 38,
-		fontWeight: 300,
-		padding: '0.5rem 1rem',
-		margin: '0.5rem 0',
-
-		hint: {
-			zIndex: 10,
-			paddingLeft: rem(1)
-		}
-
-	},
-
-	menu: {
-		width: 'auto',
-		lineHeight: rem(3),
-	},
-
-	form: [{
-
-		title: [{
-			flex: '1 0 50%',
-			padding: "0",
-		}],
-
-		repo: [{
-			flexShrink: 1,
-			padding: "0 0",
-			margin: '0 0 1rem 0',
-			menu: [{
-				transform: 'translate(0,25%)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				lineHeight: "3rem",
-				fontSize: rem(1),
-				fontWeight: 400,
-				label: [FlexScale, Ellipsis, {
-					padding: '0 0 0 1rem',
-
-				}]
-			}]
-		}],
-
-
-		milestone: [FlexScale, {
-
-			padding: 0,
-			margin: '0 0 1rem 0',
-			menu: [{
-				transform: 'translate(0,25%)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				lineHeight: "3rem",
-				fontSize: rem(1),
-				fontWeight: 400,
-				label: [FlexScale, Ellipsis, {
-					padding: '0 0 0 1rem'
-				}]
-			}]
-		}],
-
-		assignee: [FlexScale, {
-			height: 72,
-			padding: "1rem 1rem 1rem 0",
-			menu: [{
-				transform: 'translate(0,-8px)'
-			}],
-			list: [{
-				padding: '0 0 0 0 !important'
-			}],
-			item: [FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: [FlexScale, Ellipsis, {
-					padding: '0 0 0 1rem'
-				}]
-			}],
-
-			avatar: makeStyle(FlexRow, makeFlexAlign('center', 'flex-start'), {
-				label: {
-					fontWeight: 500,
-				},
-				avatar: {
-					height: 22,
-					width: 22,
-				}
-
-			})
-		}],
-
-
-
-	}],
-	row: [FlexRow, FlexAlignStart, FillWidth, OverflowHidden,{
-		alignItems: 'center',
-		spacer: [FlexScale],
-		action: [FlexRowCenter,FlexAuto,{
-			height: rem(3),
-			icon: [FlexAuto,FlexColumnCenter,{
-				fontSize: makeThemeFontSize(1.3),
-				padding: '0.3rem 1rem 0.3rem 0'
-			}],
-			label: [FlexAuto,FlexColumnCenter]
-		}]
-	}]
-
-
-})
+	]
+}
 //endregion
 
 
 /**
  * IIssueEditInlineProps
  */
-export interface IIssueEditInlineProps extends React.HTMLAttributes<any> {
-	styles?: any
-	theme?: any
-	saveError?:Error
-	saving?:boolean
+export interface IIssueEditInlineProps extends IThemedAttributes {
+	
+	
 	editingIssue?:Issue
-	setTimeout?:Function
-	clearTimeout?:Function
+	
+	
 	availableRepos?:List<AvailableRepo>
-	milestones?:List<Milestone>
-	labels?:List<Label>
-	assignees?:List<User>
+	
 	viewController?:IssuesPanelController
+	
 	rowState?:IRowState<string,string,number>
+	items?:List<IIssueListItem<any>>
 }
 
 /**
@@ -231,9 +121,9 @@ export interface IIssueEditInlineState {
 	textField?:any
 	focused?:boolean
 	labelField?:any
-	hideTimer?:any
 	
-	
+	saving?:boolean
+	error?:Error
 	
 	realIndex?:number
 	item?:IIssueListItem<any>
@@ -247,91 +137,95 @@ export interface IIssueEditInlineState {
  **/
 
 
-@connect(createStructuredSelector({
-	//editingIssue: editingIssueSelector,
+@connect(() => createStructuredSelector({
+	editingIssue: getIssuesPanelSelector(selectors => selectors.editingIssueSelector),
 	availableRepos: availableReposSelector,
-	milestones: enabledMilestonesSelector,
-	labels: enabledLabelsSelector,
-	assignees: enabledAssigneesSelector,
-	// saving: issueSavingSelector,
-	// saveError: issueSaveErrorSelector
+	items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector)
 }))
-@ThemedStyles(baseStyles,'inline','issueEditDialog','form')
 @CommandComponent()
-@ReactTimeout
+@ThemedStyles(baseStyles, 'inline', 'issueEditDialog', 'form')
 export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> implements ICommandComponent {
-
-
+	
+	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder.make()
 	
+	readonly commandComponentId:string = 'IssueEditInline'
 	
+	issueActions = getIssueActions()
 	
+	uiActions = getUIActions()
+	
+	/**
+	 * Check for changes to editing issue
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 *
+	 * @returns {boolean}
+	 */
+	shouldComponentUpdate = (nextProps, nextState) => {
+		return !shallowEquals(this.props, nextProps, 'editingIssue', 'styles', 'theme', 'palette') || !shallowEquals(this.state, nextState)
+	}
 	
 	/**
 	 * Get issues panel from context
 	 *
 	 * @returns {IssuesPanel}
 	 */
-	private get issuesPanel() {
-		return getValue(() => (this.context as any).issuesPanel) as IssuesPanel
+	private get controller() {
+		return this.props.viewController
 	}
 	
 	
 	updateState = (props = this.props) => {
 		const
-			{rowState} = props,
+			{ items, rowState } = props,
 			realIndex:number = rowState.item,
-			panel = this.issuesPanel,
-			item = isNumber(realIndex) && panel.getItem(realIndex)
+			item = isNumber(realIndex) && items.get(realIndex)
 		
 		this.setState({
 			item,
-			realIndex,
+			realIndex
 		})
 	}
 	
+	/**
+	 * On mount update state
+	 *
+	 * @type {(props?:any)=>any}
+	 */
 	componentWillMount = this.updateState
 	
+	/**
+	 * On new props update state
+	 */
 	componentWillReceiveProps = this.updateState
 	
-	readonly commandComponentId:string = 'IssueEditInline'
 	
-	
-	issueActions = getIssueActions()
-	uiActions = getUIActions()
-
+	/**
+	 * Internal issue accessor
+	 *
+	 * @returns {Issue}
+	 */
 	private get issue():Issue {
 		return this.props.editingIssue
 	}
+	
 
-
-	/**
-	 * Key handlers
-	 */
-	keyHandlers = {
-		[CommonKeys.Escape]: () => {
-			this.hide()
-			getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-		},
-		[CommonKeys.Delete]: () => {},
-		[CommonKeys.Enter]: () => {
-			log.info('Consuming enter pressed')
-		}
-	}
-
-
-
-
+	
 	/**
 	 * Title input changed
 	 *
 	 */
-	onTitleChange = (event,title) => {}
-		// this.issueActions.setEditingIssue(
-		// 	cloneObject(this.issue,{title}))
-
-
+	onTitleChange = (event:FormEvent<HTMLInputElement>) => {
+		this.controller.setEditingIssue(
+			cloneObjectShallow(this.issue, {
+				title: event.currentTarget.value
+			})
+		)
+	}
+	
 	/**
 	 * Selected repo changed
 	 *
@@ -341,88 +235,73 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 	onRepoChange = (event, index, repoId) => {
 		const
-			{editingIssue} = this.props
-
-
-		// this.issueActions.setEditingIssue(cloneObject(editingIssue,{
-		// 	milestone:null,
-		// 	labels:[],
-		// 	repoId
-		// }),true)
+			{ editingIssue } = this.props
+		
+		
+		this.controller.setEditingIssue(cloneObjectShallow(editingIssue, {
+			milestone: null,
+			labels: [],
+			repoId
+		}))
 	}
-
+	
 	/**
 	 * Selected milestone changed
 	 *
-	 * @param event
-	 * @param index
-	 * @param value
+	 * @param milestone
 	 */
-	onMilestoneChange = (event, index, value) => {
-
+	onMilestoneChange = (milestone:Milestone) => {
+		
 		const
-			{milestones,editingIssue} = this.props,
-
-			milestone = milestones.find(item => item.id === value),
-			newIssue = cloneObjectShallow(editingIssue,{
+			{ issue } = this,
+			newIssue = cloneObjectShallow(issue, {
 				milestone
 			})
 		
-		log.info('Milestone set issue=',editingIssue,'milestone',milestone,'value',value,'milestones',milestones,'newIssue',newIssue)
+		log.info('Milestone set issue=', issue, 'milestone', milestone, 'updated issue', newIssue)
 		
-		//this.issueActions.setEditingIssue(newIssue,true)
+		this.controller.setEditingIssue(newIssue)
 		
-
 	}
-
-
-	onAssigneeChange = (event, index, value) => {
-		const
-			{assignees,editingIssue} = this.props,
-			assignee = assignees.find(it => it.id === value)
-			
-		//this.issueActions.setEditingIssue(cloneObject(editingIssue,{assignee}))
-		// const assignee = !editingIssue || !editingIssue.collaborators ? null :
-		// 	editingIssue.collaborators.find(item => item.login === value)
-
-		//this.updateIssueState({assignee})
-	}
-
-	onLabelsChanged = (labels:Label[]) => {
-		const
-			{issue} = this,
-			newIssue = cloneObjectShallow(issue,{labels})
-		
-		//this.issueActions.setEditingIssue(newIssue,true)
-
-	}
-
+	
+	
 	setTextField = (textField) => {
-		// if (textField)
-		// 	textField.focus()
 		if (textField)
-			this.setState({textField})
+			this.setState({ textField })
 	}
-
-	setLabelFieldRef = (labelField) => {
-		this.setState({labelField})
-	}
-
+	
+	/**
+	 * Set saving flag
+	 *
+	 * @param saving
+	 */
+	setSaving = (saving:boolean) => this.setState({ saving })
+	
 	/**
 	 * Hide the editor field
 	 */
-
+	
 	hide = () => {
-		//this.issueActions.setEditingInline(false)
+		this.controller.setEditingInline(false)
 	}
-
+	
 	/**
 	 * Save the issue
 	 */
-	save = () => {
-		//this.issueActions.issueSave(cloneObject(this.issue))
+	save = async() => {
+		this.setSaving(true)
+		try {
+			await getIssueActions().saveIssue(cloneObject(this.issue))
+			this.hide()
+		} catch (error) {
+			log.error(`Failed to save inline issue`, error)
+			this.setState({ error })
+			addErrorMessage(`Unable to save issue: ${error.message}`)
+		} finally {
+			this.setSaving(false)
+		}
 	}
-
+	
 	/**
 	 * When blurred, hide after delay in case another field is selected
 	 * in inline form
@@ -431,20 +310,21 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 *
 	 */
 	onBlur = (event) => {
-		log.info('Inline edit blurred',document.activeElement)
-
-		if (ReactDOM.findDOMNode(this).contains(document.activeElement) || document.activeElement === document.body) {
-			log.info('we still have focus, probably clicked another window')
-			return
-		}
-
-		this.setState({
-			focused:false,
-			hideTimer: this.props.setTimeout(this.hide,500)
-		})
-
+		log.info('Inline edit blurred', document.activeElement)
+		
+		// if (ReactDOM.findDOMNode(this).contains(document.activeElement) || document.activeElement === document.body) {
+		// 	log.info('we still have focus, probably clicked another window')
+		// 	return
+		// }
+		if (!this.state.saving)
+			this.hide()
+		
+		// this.setState({
+		// 	focused: false,
+		// }, this.hide)
+		
 	}
-
+	
 	/**
 	 * on focus event
 	 *
@@ -452,192 +332,75 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 */
 	onFocus = (event) => {
 		log.info('inline edit focused')
-
-		const hideTimer = _.get(this,'state.hideTimer')
-		if (hideTimer)
-			this.props.clearTimeout(hideTimer)
-
-		this.setState({focused:true,hideTimer:void 0})
-
-
 	}
-
+	
+	/**
+	 * Watch for the enter key
+	 *
+	 * @param event
+	 * @returns {boolean}
+	 */
 	onKeyDown = (event:React.KeyboardEvent<any>) => {
 		if (event.keyCode === 13) {
-			const {labelField,textField} = this.state,
-				labelFieldInputElem = $('input',ReactDOM.findDOMNode(labelField)),
-				textFieldInputElem = $('input',ReactDOM.findDOMNode(textField))
-
-			if (labelFieldInputElem && event.currentTarget === textFieldInputElem[0]) {
-				labelFieldInputElem.focus()
-			} else {
-				this.save()
-			}
-
+			this.save()
+			
 			event.preventDefault()
 			event.stopPropagation()
 			return false
 		}
 	}
-
-
-
-
-	/**
-	 * Make repo items
-	 *
-	 * @returns {any}
-	 */
-	makeRepoMenuItems() {
-		const
-			{props,state,issue} = this,
-			{
-				styles,
-				availableRepos,
-				theme,
-				saveError,
-				labels,
-				saving
-			} = props
-
-
-		const makeRepoLabel = (availRepoItem) => (
-			<div style={styles.form.repo.item}>
-				<Icon iconSet='octicon' iconName='repo'/>
-				<RepoName repo={availRepoItem.repo} style={styles.form.repo.item.label}/>
-			</div>
-		)
-
-		return availableRepos.map(availRepoItem => (
-			<MenuItem key={availRepoItem.repoId}
-			          className='issueEditDialogFormMenuItem'
-			          value={availRepoItem.repoId}
-			          style={styles.menuItem}
-			          primaryText={makeRepoLabel(availRepoItem)}
-			/>
-		))
-	}
-
-
-
-	makeMilestoneItems() {
-		let
-			{issue} = this,
-			{milestones,styles} = this.props
-
-		const
-			items = [
-				<MenuItem key='empty-milestones'
-                       className='issueEditDialogFormMenuItem'
-                       style={styles.menuItem}
-                       value={null}
-                       primaryText={<div style={styles.form.milestone.item}>
-					<Icon iconSet='octicon' iconName='milestone'/>
-					<div style={styles.form.milestone.item.label}>No milestones</div>
-				</div>}/>
-			]
-
-		if (!milestones.size) {
-			return items
-		}
-
-		const makeMilestoneLabel = (milestone:Milestone) => (
-			<div style={styles.form.milestone.item}>
-				<Icon iconSet='octicon' iconName='milestone'/>
-				<div style={styles.form.milestone.item.label}>
-					{milestone.title}
-				</div>
-			</div>
-		)
-
-		//milestones = _.uniqBy(milestones,'id')
-		log.info('using milestones',milestones)
-		
-		const
-			milestoneItems = milestones
-				.filter(milestone => milestone.repoId === issue.repoId)
-				.map(milestone => <MenuItem key={milestone.url}
-				                            className='issueEditDialogFormMenuItem'
-				                            value={milestone.url}
-				                            style={styles.menuItem}
-				                            primaryText={makeMilestoneLabel(milestone)}/>
-				).toArray()
-		
-		return items.concat(milestoneItems)
-	}
-
-
+	
+	
 	render() {
 		const
-			{issue,props,state} = this,
-			{styles,theme,style,saveError,labels,saving} = props
-
-
+			{ issue, props, state } = this,
+			{ styles, style, availableRepos } = props,
+			{ saving, error } = state,
+			availRepo = issue && availableRepos && availableRepos.find(it => it.id === issue.repoId),
+			repo = availRepo && availRepo.repo
+		
+		
 		if (!issue)
 			return <div/>
-
+		
 		const
 			issueStyles = makeStyle(
 				styles.issue,
 				styles.issue.selected
 			),
-			issueTitleStyle = makeStyle(
-				styles.issueTitle,
-				styles.issueTitleSelected
-			),
-			selectProps = {
-				style:makeStyle(styles.form.repo,styles.menu,{marginRight:rem(1),flexShrink:0.5}),
-				inputStyle:makeStyle(styles.input,{height:30}),
-				labelStyle:makeStyle(styles.menu,{paddingRight:34}),
-				iconStyle:makeStyle(styles.menu,{top: 0}),
-
-				underlineStyle:styles.input.underlineDisabled,
-				underlineDisabledStyle:styles.input.underlineDisabled,
-				underlineFocusStyle:styles.input.underlineFocus,
-				menuListStyle:makeStyle(styles.select.list),
-				menuStyle:makeStyle(styles.menu,styles.form.repo.menu),
-				underlineShow:false,
-				autoWidth:true,
-				fullWidth:false
-			}
-
-		const titleError = getGithubErrorText(saveError,'title') || _.get(saveError,'message')
-
+			
+			// ERROR
+			titleError = getValue(
+				() => getGithubErrorText(error, 'title'),
+				getValue(() => error.message)
+			)
+		
 		return <CommandRoot
-					{...filterProps(props)}
-					component={this}
-					style={makeStyle(issueStyles,style)}
-					className={'selected'}>
-
+			{...filterProps(props)}
+			component={this}
+			style={makeStyle(issueStyles,style)}
+			className={'selected'}>
+			
 			{/*<div style={styles.issueMarkers}></div>*/}
-			<div style={makeStyle(styles.root,saving && {opacity:0,pointerEvents:'none'})}>
-
-				<div style={styles.row}>
-					{/* REPO */}
-					<SelectField
-						{...selectProps}
-						value={issue.repoId}
-					    onChange={this.onRepoChange}
-
-					>
-
-						{this.makeRepoMenuItems()}
-					</SelectField>
+			{!saving && <div style={ styles}>
+				
+				{/* REPO -> MILESTONE -> ACTIONS */}
+				<div style={makeStyle(styles.row, makePaddingRem(0,0,0,1))}>
+					<RepoLabel repo={repo} style={FlexScale} textStyle={Ellipsis}/>
+					
+					<div style={styles.row.spacer}/>
+					
 					{/* MILESTONE */}
-					<SelectField
-						{...selectProps}
-						value={_.get(issue.milestone,'url',null)}
-						onChange={this.onMilestoneChange}
-					>
-						
-						{this.makeMilestoneItems()}
-					</SelectField>
-					<div style={styles.row.spacer} />
-
+					<MilestoneLabel
+						style={makeStyle(makePaddingRem(0,1,0,0.7),FlexAuto)}
+						milestone={issue.milestone}/>
+					
+					
+					{/* ACTIONS */}
 					<Button style={styles.row.action}
 					        mode='flat'
 					        onClick={this.hide}>
-						<Icon style={[styles.row.action.icon,{padding: rem(0.1)}]}
+						<Icon style={[styles.row.action.icon,makePaddingRem(0.1)]}
 						      iconSet='material-icons'>
 							close
 						</Icon>
@@ -645,81 +408,34 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 					<Button style={styles.row.action}
 					        mode='flat'
 					        onClick={this.save}>
-						<Icon style={[styles.row.action.icon,{padding: rem(0.1)}]}
+						<Icon style={[styles.row.action.icon,makePaddingRem(0.1)]}
 						      iconSet='material-icons'>
 							save
 						</Icon>
 					</Button>
 				</div>
-
-
-				<div style={styles.row}>
-					<TextField ref={this.setTextField}
-					           defaultValue={issue.title}
-					           onChange={this.onTitleChange}
-					           onKeyDown={this.onKeyDown}
-					           errorStyle={{transform: 'translate(0,0.5rem)'}}
-					           errorText={titleError}
-					           hintText="title..."
-					           hintStyle={styles.input.hint}
-					           style={makeStyle(
-					           	    styles.form.title,
-					           	    titleError && {
-					           	        marginBottom: 15
-				                    }
-					           )}
-					           inputStyle={styles.input}
-					           underlineShow={false}
-					           fullWidth={true}
-					           tabIndex={1}
-					           autoFocus/>
-				</div>
-
-				<div>
-
-
-					<LabelFieldEditor labels={issue.labels || []}
-					                  ref={this.setLabelFieldRef}
-					                  onKeyDown={this.onKeyDown}
-					                  id="issueEditInlineLabels"
-					                  mode="fixed-scroll-x"
-					                  hint="labels..."
-					                  hintAlways={true}
-					                  hintStyle={makeStyle(styles.input.hint,{bottom: 5})}
-					                  inputStyle={makeStyle(styles.input,{
-					                  	margin: "2rem 0 0 0",
-					                  	height: "3.8rem"
-					                  })}
-					                  tabIndex={2}
-					                  underlineShow={false}
-					                  availableLabels={labels.filter(label => label.repoId === issue.repoId).toArray()}
-					                  onLabelsChanged={this.onLabelsChanged}
-					                  />
-
-				</div>
-				{/*<div style={styles.row}>*/}
-					{/**/}
-					{/*<div style={styles.row.spacer} />*/}
 				
-					{/*<Button style={styles.row.action}*/}
-					        {/*mode='raised'*/}
-					        {/*onClick={this.save}>*/}
-						{/*<Icon style={styles.row.action.icon}*/}
-						      {/*iconSet='material-icons'>*/}
-							{/*save*/}
-						{/*</Icon>*/}
-						{/*<div style={styles.row.action.label}>save</div>*/}
-					{/*</Button>*/}
-				{/*</div>*/}
-				{/* Saving progress indicator */}
-
-			</div>
-			<div style={makeStyle(styles.savingIndicator,saving && {opacity: 1})}>
-				<CircularProgress
-					color={theme.progressIndicatorColor}
-					size={1} />
-			</div>
+				{/* ISSUE TITLE */}
+				<div style={[styles.row,makePaddingRem(0.5,0)]}>
+					<TextField
+						ref={this.setTextField}
+						defaultValue={issue.title}
+						placeholder="title"
+						onChange={this.onTitleChange}
+						onBlur={this.onBlur}
+						onKeyDown={this.onKeyDown}
+						style={FlexScale}
+						inputStyle={FlexScale}
+						error={titleError}
+					  autoFocus
+					  tabIndex={1}
+					/>
+					
+				</div>
+			</div>}
+			{/* Saving progress indicator */}
+			<SaveIndicator open={saving}/>
 		</CommandRoot>
 	}
-
+	
 }

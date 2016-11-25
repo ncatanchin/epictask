@@ -1,9 +1,8 @@
 // Imports
 import { ThemedStyles } from "epic-styles"
-import { CircularProgress} from "material-ui"
 import { makeHeightConstraint, makeWidthConstraint, createStyles } from "epic-styles"
 
-import { Icon,WindowControls } from "../../common"
+import { Icon, WindowControls, SaveIndicator } from "../../common"
 
 
 // Constants
@@ -275,11 +274,7 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 						</div>
 					}
 					{/* Saving progress indicator */}
-					{saving && <div style={[styles.savingIndicator,saving && {opacity: 1}]}>
-						<CircularProgress
-							color={theme.progressIndicatorColor}
-							size={50}/>
-					</div>}
+					<SaveIndicator open={saving} />
 				</div>
 			
 			
