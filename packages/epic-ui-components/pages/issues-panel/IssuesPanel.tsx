@@ -97,8 +97,8 @@ function baseStyles(topStyles,theme,palette) {
 				backgroundColor: Transparent,
 				color: text.secondary,
 				borderBottom: `0.1rem solid ${colorAlpha(text.secondary,0.1)}`,
-				fontWeight: 700,
-				
+				fontWeight: 500,
+				fontSize: themeFontSize(1.7),
 				':focus': {
 					
 				}

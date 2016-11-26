@@ -56,47 +56,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 	} ],
 	
 	
-	/**
-	 * Issue group header
-	 */
-	issueGroupHeader: [ FlexRowCenter, FlexAuto, FillWidth, makeTransition('background-color', TransitionDurationLong), {
-		padding: '1rem 0.5rem',
-		
-		spacer: [ FlexScale ],
-		
-		middle: [ FlexColumnCenter, FlexScale, {
-			top: [ FlexRow, FillWidth, makePaddingRem(0, 0, 1, 0) ],
-			bottom: [ FlexRow, FillWidth ],
-		} ],
-		
-		text: [ FlexScale, {
-			fontWeight: 700,
-			fontSize: rem(1.3)
-		} ],
-		
-		// Header Controls
-		control: [ makeTransition([ 'transform' ], TransitionDurationLong), {
-			cursor: 'pointer',
-			width: rem(3),
-			display: 'block',
-			
-			padding: '0 1rem',
-			backgroundColor: 'transparent',
-			transform: 'rotate(0deg)',
-			expanded: [ {
-				transform: 'rotate(90deg)'
-			} ]
-		} ],
-		labels: [ FlexScale, OverflowAuto ],
-		stats: [ FlexAuto, {
-			number: {
-				fontWeight: 700
-			},
-			fontWeight: 100,
-			padding: '0 1rem',
-			textTransform: 'uppercase'
-		} ]
-	} ],
+	
 	
 	
 })
@@ -400,7 +360,6 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				clazz: IssueGroupHeader,
 				props: {
 					onToggle:this.toggleGroupVisible,
-					styles,
 					viewController: this.viewController
 				}
 			}

@@ -19,7 +19,8 @@ const
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ text, alternateText,primary, accent, background } = palette
+		{ text, alternateText,primary, accent, background } = palette,
+		{fontFamily} = theme
 	
 	let
 		tiny = require('tinycolor2'),
@@ -46,7 +47,7 @@ function baseStyles(topStyles, theme, palette) {
 					color: fg,
 					borderBottom: `0.1rem solid ${colorAlpha(fg,0.1)}`,
 					boxShadow: 'none',
-					
+					fontFamily,
 					
 					
 					':focus': {

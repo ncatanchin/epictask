@@ -3,11 +3,12 @@ import { Map, Record, List } from "immutable"
 import { connect } from 'react-redux'
 import { createStructuredSelector, createSelector } from 'reselect'
 import { IRowState, IssueLabelsAndMilestones } from 'epic-ui-components/common'
-import { IThemedAttributes, Themed } from 'epic-styles'
+import { IThemedAttributes, Themed, ThemedStyles } from 'epic-styles'
 import { getIssuesPanelSelector, IssuesPanel, IssuesPanelController } from "epic-ui-components/pages/issues-panel"
 import { getValue, shallowEquals } from "epic-global"
 import { isGroupListItem, IIssueGroup, Milestone, IIssueListItem } from "epic-models"
 import { Icon } from "epic-ui-components/common/icon/Icon"
+import { TransitionDurationLong } from "epic-styles/styles"
 
 
 // Constants
@@ -24,7 +25,44 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexColumn, FlexAuto, {} ]
+	return [ FlexRowCenter, FlexAuto, FillWidth, makeTransition('background-color', TransitionDurationLong), {
+		padding: '1rem 0.5rem',
+		
+		spacer: [ FlexScale ],
+		
+		middle: [ FlexColumnCenter, FlexScale, {
+			top: [ FlexRow, FillWidth, makePaddingRem(0, 0, 1, 0) ],
+			bottom: [ FlexRow, FillWidth ],
+		} ],
+		
+		text: [ FlexScale, {
+			fontWeight: 700,
+			fontSize: rem(1.3)
+		} ],
+		
+		// Header Controls
+		control: [ makeTransition([ 'transform' ], TransitionDurationLong), {
+			cursor: 'pointer',
+			width: rem(3),
+			display: 'block',
+			
+			padding: '0 1rem',
+			backgroundColor: 'transparent',
+			transform: 'rotate(0deg)',
+			expanded: [ {
+				transform: 'rotate(90deg)'
+			} ]
+		} ],
+		labels: [ FlexScale, OverflowAuto ],
+		stats: [ FlexAuto, {
+			number: {
+				fontWeight: 700
+			},
+			fontWeight: 100,
+			padding: '0 1rem',
+			textTransform: 'uppercase'
+		} ]
+	} ]
 }
 
 
@@ -74,7 +112,7 @@ export interface IIssueGroupHeaderState {
 		group: groupSelector
 	})
 })
-@Themed
+@ThemedStyles(baseStyles,'issueGroupHeader')
 export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,void> {
 	
 	private get viewController() {
@@ -93,7 +131,7 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 	 */
 	shouldComponentUpdate(nextProps:IIssueGroupHeaderProps):boolean {
 		log.debug(`Shallow equal update check`)
-		return !shallowEquals(this.props, nextProps, 'groupVisibility', 'group')
+		return !shallowEquals(this.props, nextProps, 'groupVisibility', 'group','styles','theme','palette')
 	}
 	
 	render() {
@@ -106,7 +144,7 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 		const
 			expanded = groupVisibility.get(group.id),
 			{ groupByItem, groupBy } = group,
-			headerStyles = styles.issueGroupHeader,
+			headerStyles = styles,
 			issueCount = group.issueIndexes.length
 		
 		log.debug(`Group by`, groupBy, `item`, groupByItem, group)
