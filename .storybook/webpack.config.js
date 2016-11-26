@@ -39,7 +39,7 @@ module.exports = function (storybookBaseConfig, configType) {
 	
 	// LOADERS
 	moduleConfig.loaders.push(...epicConfig.module.loaders)
-	moduleConfig.preLoaders = (moduleConfig.preLoaders || []).concat(epicConfig.module.preLoaders)
+	//moduleConfig.preLoaders = (moduleConfig.preLoaders || []).concat(epicConfig.module.preLoaders)
 	//module
 	
 	const

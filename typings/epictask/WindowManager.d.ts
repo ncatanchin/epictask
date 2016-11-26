@@ -1,6 +1,11 @@
+/// <reference path="../../node_modules/@types/electron/index.d.ts"/>
 
-
-
+declare enum WindowType {
+	Normal = 1,
+	Dialog = 2,
+	Modal = 3,
+	Background = 4
+}
 
 /**
  * Dev tools position

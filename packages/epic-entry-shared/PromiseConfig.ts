@@ -51,15 +51,17 @@ Bluebird.config({
 declare global {
 	var Promise:typeof Bluebird
 	
-	interface CancelablePromiseResolver extends Promise.Resolver<any> {
+	interface CancelablePromiseResolver<T> extends Promise.Resolver<T> {
 		isCancelled():boolean
+		getResult():T
 		cancel():void
 		onCancel(cancelCallback:(CancelablePromiseResolver) => any):void
 	}
 	
 	interface PromiseConstructor {
 		setImmediate():Promise<void>
-		defer():CancelablePromiseResolver
+		defer():CancelablePromiseResolver<any>
+		defer<T>():CancelablePromiseResolver<T>
 	}
 	
 }
@@ -73,13 +75,17 @@ Object.assign(Bluebird as any, {
 		let
 			resolve,
 			reject,
+			result,
 			onCancel,
 			ref,
 			cancelled = false,
 			cancelCallbacks = []
 		
 		const promise = new Promise(function (resolver, rejecter, onCancelRegistrar) {
-			resolve = resolver
+			resolve = (resolvedResult) => {
+				result = resolvedResult
+				return resolver(resolvedResult)
+			}
 			reject = rejecter
 			onCancel = onCancelRegistrar
 			
@@ -97,6 +103,7 @@ Object.assign(Bluebird as any, {
 				promise.cancel()
 			},
 			promise: promise,
+			getResult: () => result,
 			isCancelled: () => cancelled,
 			onCancel: (callback) => cancelCallbacks.push(callback)
 		}

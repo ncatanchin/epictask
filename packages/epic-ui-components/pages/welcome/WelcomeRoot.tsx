@@ -5,9 +5,11 @@ import { connect } from "react-redux"
 import { ThemedStyles, Transparent, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
 import { createDeepEqualSelector } from "epic-global"
 import { uiStateSelector,getAppActions } from "epic-typedux"
-import { SearchType,SearchPanel } from "epic-ui-components/search"
-import { SearchItem, SearchController } from "epic-ui-components/search/SearchController"
+import { RepoSearchProvider, GitHubSearchProvider ,SearchPanel } from "epic-ui-components/search"
+
 import { getValue } from "typeguard"
+import { SearchItem, Repo } from "epic-models"
+
 
 const
 	log = getLogger(__filename),
@@ -79,10 +81,10 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	 * @param item
 	 */
 	private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
-		if (searchId !== WelcomeSearchId || !getValue(() => item.type === SearchType.Repo,false))
+		if (searchId !== WelcomeSearchId || !getValue(() => item.provider.id === Repo.$$clazz,false))
 			return
 		
-		SearchController.getDefaultHandler(SearchType.Repo)(searchId,item)
+		item.provider.handleItem(item)
 	}
 	
 	/**
@@ -132,24 +134,22 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 			
 			<div style={styles.bodyWrapper}>
 				<Logo eHidden style={styles.logo} />
+				
+				{/*hint={*/}
+				{/*<span>*/}
+							{/*Import <i><strong>angular</strong></i>*/}
+							{/*&nbsp;&nbsp;or <i><strong>docker</strong></i>&nbsp;&nbsp;or one of your repos*/}
+						{/*</span>*/}
+			{/*}*/}
 				<SearchPanel
 					ref={this.setSearchPanelRef}
 					searchId={WelcomeSearchId}
-					types={[SearchType.Repo]}
-					hint={
-						<span>
-							Import <i><strong>angular</strong></i>
-							&nbsp;&nbsp;or <i><strong>docker</strong></i>&nbsp;&nbsp;or one of your repos
-						</span>
-					}
-					inlineResults={false}
-					expanded={false}
+					providers={[GitHubSearchProvider,RepoSearchProvider]}
+					
 					focused={true}
-					panelStyle={styles.search}
-					fieldStyle={styles.search.field}
 					inputStyle={styles.search.input}
 					onEscape={this.onEscape}
-					mode={'repos'}/>
+					/>
 			</div>
 		</Page>
 	}

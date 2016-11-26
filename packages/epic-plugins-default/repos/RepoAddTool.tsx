@@ -3,10 +3,11 @@
 import { SearchPanel } from "epic-ui-components/search"
 import { PureRender } from "epic-ui-components/common"
 import { getUIActions } from "epic-typedux"
-import { getValue } from "epic-global"
+import { getValue, guard } from "epic-global"
 import { ThemedStyles } from "epic-styles"
-import { SearchType } from "epic-ui-components/search"
 import { SearchController } from "epic-ui-components/search/SearchController"
+import { isFunction } from "typeguard"
+import { RepoSearchProvider, GitHubSearchProvider } from "epic-ui-components/search/DefaultSearchProviders"
 
 // Constants
 const
@@ -60,12 +61,12 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	/**
 	 * When a result is selected
 	 *
-	 * @param result
+	 * @param item
 	 */
-	onResultSelected = (result) => {
-		log.info(`Repo add result was selected`,result)
+	onItemSelected = (item:ISearchItem) => {
+		log.info(`Repo add result was selected`,item)
 		
-		SearchController.getDefaultHandler(SearchType.Repo)(RepoAddSearchId,result)
+		guard(() => item.provider.handleItem(item))
 		
 		this.hide()
 	}
@@ -129,22 +130,15 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 		
 			<SearchPanel ref={this.setSearchPanel}
 			             inputStyle={styles.search.input}
-			             panelStyle={styles.search.panel}
-			             fieldStyle={styles.search.field}
-			             hintStyle={styles.search.hint}
-			             underlineStyle={styles.search.underline}
+			             style={styles.search.panel}
 			             autoFocus={true}
-			             modal={true}
 			             onEscape={this.hide}
 			             focused={true}
 			             open={true}
 			             resultsHidden={false}
 			             searchId={RepoAddSearchId}
-			             types={[SearchType.Repo]}
-			             inlineResults={true}
-			             expanded={false}
-			             mode='repos'
-			             onResultSelected={this.onResultSelected}
+			             providers={[RepoSearchProvider,GitHubSearchProvider]}
+			             onItemSelected={this.onItemSelected}
 						       hidden={false}/>
 			
 		</div>

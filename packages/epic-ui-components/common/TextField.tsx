@@ -4,7 +4,7 @@ import { PureRender } from 'epic-ui-components/common'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import {
 	colorAlpha, makePaddingRem, FlexAuto, FlexRow, makeTransition, FlexRowCenter,
-	mergeStyles, makeMarginRem, makeBorderRem
+	mergeStyles, makeMarginRem, makeBorderRem, makeHeightConstraint, rem
 } from "epic-styles/styles"
 import filterProps from 'react-valid-props'
 
@@ -19,25 +19,43 @@ const
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ text, primary, accent, background } = palette
+		{ text, alternateText,primary, accent, background } = palette
+	
+	let
+		tiny = require('tinycolor2'),
+		[bg,fg] = tiny(text.primary).isLight() ?
+			[text.secondary,alternateText.primary] :
+			[alternateText.secondary,text.primary]
 	
 	return [
 		FlexRowCenter,
 		makePaddingRem(0.7,1),
+		
 		makeTransition(['opacity','background-color','box-shadow','border-bottom']),{
+			minHeight: rem(4.2),
+		
 			input: [
 				makePaddingRem(0.6,1),
 				makeMarginRem(0),
 				makeBorderRem(0),
 				FlexAuto,{
+					minHeight: rem(3),
 					outline: 0,
 					
-					borderBottom: `0.2rem solid ${text.disabled}`,
+					backgroundColor: bg,
+					color: fg,
+					borderBottom: `0.1rem solid ${colorAlpha(fg,0.1)}`,
 					boxShadow: 'none',
-						
+					
+					
+					
 					':focus': {
+						backgroundColor: bg,
+						color: fg,
+						
 						boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1,1)}`,
-						borderBottom: 0
+						borderBottom: `0.1rem solid ${colorAlpha(fg,0.3)}`,
+						// borderBottom: 0
 					}
 				}]
 			
@@ -78,6 +96,12 @@ export interface ITextFieldState {
 @PureRender
 export class TextField extends React.Component<ITextFieldProps,ITextFieldState> {
 	
+	constructor(props,context) {
+		super(props,context)
+		
+		this.state = {}
+	}
+	
 	render() {
 		const
 			{
@@ -91,6 +115,7 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 		return <div style={[styles,style]}>
 			<input
 				{...filterProps(this.props)}
+				ref='inputField'
 				style={mergeStyles(styles.input,inputStyle)}
 				defaultValue={defaultValue}
 			

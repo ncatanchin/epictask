@@ -27,7 +27,7 @@ export class RepoStateService extends BaseService {
 	
 	private store:ObservableStore<any>
 	
-	private pendingActivityLoad:CancelablePromiseResolver
+	private pendingActivityLoad:CancelablePromiseResolver<any>
 	
 	/**
 	 * DatabaseClientService must be loaded first

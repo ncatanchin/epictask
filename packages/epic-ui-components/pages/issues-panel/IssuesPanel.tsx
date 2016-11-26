@@ -23,10 +23,9 @@ import {
 } from "epic-command-manager-ui"
 import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, ContainerNames } from "epic-command-manager"
 import { IThemedAttributes, FlexColumnCenter } from "epic-styles"
-import { SearchPanel,SearchType } from "epic-ui-components/search"
+import { SearchPanel} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber} from "epic-global"
-import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
@@ -36,6 +35,11 @@ import { Pages } from "epic-entry-ui/routes/Routes"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
+import {
+	MilestoneSearchProvider, LabelSearchProvider,
+	AssigneeSearchProvider, IssueSearchProvider
+} from "epic-ui-components/search/DefaultSearchProviders"
+import { colorAlpha } from "epic-styles/styles"
 
 
 
@@ -82,15 +86,24 @@ function baseStyles(topStyles,theme,palette) {
 		}],
 		
 		search: [ FlexAuto,makePaddingRem(0, 1), {
-			backgroundColor: Transparent,
+			//backgroundColor: Transparent,
 			borderBottom: `0.1rem solid ${primary.hue3}`,
 			
 			field: [ {
-				backgroundColor: Transparent
+				//backgroundColor: Transparent
 			} ],
+			
 			input: [ {
-				backgroundColor: Transparent
+				backgroundColor: Transparent,
+				color: text.secondary,
+				borderBottom: `0.1rem solid ${colorAlpha(text.secondary,0.1)}`,
+				fontWeight: 700,
+				
+				':focus': {
+					
+				}
 			} ],
+			
 			hint: [ {} ]
 			
 		} ]
@@ -560,7 +573,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	makeMoveSelector(increment: number) {
 		
 		return (event: React.KeyboardEvent<any> = null) => {
-			log.info(`Move selector`,event)
+			log.debug(`Move selector`,event)
 			
 			const
 				{groups} = this.props,
@@ -935,21 +948,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{itemsAvailable && <SearchPanel
 				ref={this.setSearchPanelRef}
 				searchId='issues-search'
-				types={[
-					SearchType.Milestone,
-					SearchType.Label,
-					SearchType.Assignee,
-					SearchType.Issue
+				providers={[
+					MilestoneSearchProvider,
+					LabelSearchProvider,
+					AssigneeSearchProvider,
+					IssueSearchProvider
 				]}
-				inlineResults={false}
-				expanded={false}
-				underlineStyle={makeStyle({borderBottomColor: Transparent})}
-				underlineFocusStyle={{borderBottomColor: palette.primary.hue3}}
-				panelStyle={styles.search}
-				fieldStyle={styles.search.field}
 				inputStyle={styles.search.input}
 				onEscape={this.onSearchEscape}
-				mode={'issues'}/>
+				/>
 			}
 			
 			

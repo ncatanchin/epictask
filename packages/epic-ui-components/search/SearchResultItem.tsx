@@ -2,13 +2,14 @@
 import { PureRender, RepoLabel, Icon } from "epic-ui-components"
 
 import { shallowEquals} from "epic-global"
-import { AvailableRepo, Issue, Milestone, Label, Repo, User } from "epic-models"
+import { AvailableRepo, Issue, Milestone, Label, Repo, User, SearchItem } from "epic-models"
 import filterProps from "react-valid-props"
 
 import { ICommand } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { SearchItem, SearchType ,SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
+import { SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
 import { MappedProps } from "epic-global/UIUtil"
+import { getValue } from "typeguard"
 
 // Constants
 const log = getLogger(__filename)
@@ -264,7 +265,9 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	
 	renderLabel = (item:SearchItem,label:Label,isSelected) => {
 		
-		const repo = null//repoModels && repoModels.get(`${label.repoId}`)
+		const
+			repo = getValue(() => item.value.repo) //repoModels && repoModels.get(`${label.repoId}`)
+		
 		return this.renderResult(
 			label.name,
 			repo ? <RepoLabel repo={repo}/> : '',
@@ -298,47 +301,14 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	}
 	
 	private renderFns = {
-		[SearchType.Repo]: this.renderRepo,
-		[SearchType.AvailableRepo]: this.renderAvailableRepo,
-		[SearchType.Issue]: this.renderIssue,
-		[SearchType.Milestone]: this.renderMilestone,
-		[SearchType.Label]: this.renderLabel,
-		[SearchType.Assignee]: this.renderAssignee,
-		[SearchType.Action]: this.renderAction,
-	}
-	
-	/**
-	 * Set selected
-	 *
-	 * @param selected
-	 */
-	// setSelected(selected:boolean) {
-	// 	if (this.state.selected !== selected)
-	// 		setTimeout(() => this.setState({selected}),100)
-	// }
-	//
-	//
-	// onSearchStateChange = (eventType) => {
-	// 	this.setSelected(this.isSelected())
-	// }
-	//
-	// componentWillMount():void {
-	// 	this.controller.on(SearchEvent.StateChanged,this.onSearchStateChange)
-	// }
-	//
-	// componentWillUnmount():void {
-	// 	this.controller.removeListener(SearchEvent.StateChanged,this.onSearchStateChange)
-	// }
-	
-	/**
-	 * On new props
-	 *
-	 * @param nextProps
-	 * @param nextContext
-	 */
-	componentWillReceiveProps(nextProps:ISearchResultItemProps, nextContext:any):void {
-		
-		
+		[Repo.$$clazz]: this.renderRepo,
+		['Github']: this.renderRepo,
+		[AvailableRepo.$$clazz]: this.renderAvailableRepo,
+		[Issue.$$clazz]: this.renderIssue,
+		[Milestone.$$clazz]: this.renderMilestone,
+		[Label.$$clazz]: this.renderLabel,
+		['Assignee']: this.renderAssignee,
+		['Action']: this.renderAction,
 	}
 	
 	/**
@@ -354,13 +324,15 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	
 	render() {
 		const
-			{props,state} = this,
-			{ styles,item,selected } = props,
-			{type} = item
+			{props} = this,
+			{item,selected } = props,
+			{provider} = item
 		
 		const
-			resultRenderer:any = this.renderFns[type],
-			itemContent = resultRenderer(item,item.value,selected)
+			resultRenderer:any = this.renderFns[provider.id],
+			itemContent = provider.render ?
+				provider.render(item,selected) :
+				resultRenderer(item,item.value,selected)
 		
 		
 		return <div {...filterProps(props)} className={`${props.className || ''} ${selected && 'selected'}`}>

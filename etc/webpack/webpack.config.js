@@ -481,7 +481,7 @@ const
 
 
 
-module.exports = noWebpack ? [makeHtmlConfig()] : [
+module.exports = noWebpack ? makeHtmlConfig() :
 	
 	makeConfig('epic-app',[],{
 		// "epic-app-all": makeHotEntry([
@@ -541,7 +541,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 			})
 
 		)
-	}),
+	})
 	
 	// BROWSER ENTRY
 	//makeHtmlConfig()
@@ -568,7 +568,7 @@ module.exports = noWebpack ? [makeHtmlConfig()] : [
 	//
 	
 	 
-]
+
 
 
 

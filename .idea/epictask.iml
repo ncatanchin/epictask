@@ -23,5 +23,6 @@
     <orderEntry type="library" name="immutable-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="reselect-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="epic-types" level="project" />
+    <orderEntry type="library" name="node_modules" level="project" />
   </component>
 </module>

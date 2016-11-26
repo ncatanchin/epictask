@@ -4,10 +4,10 @@ import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles } from "epic-styles"
 
-
+import {SearchItem} from 'epic-models'
 import { shallowEquals, getValue } from  "epic-global"
 import { SearchResultItem } from "./SearchResultItem"
-import { SearchItem, ISearchState, SearchController, SearchEvent } from './SearchController'
+import { ISearchState, SearchController, SearchEvent } from './SearchController'
 
 // Constants
 const

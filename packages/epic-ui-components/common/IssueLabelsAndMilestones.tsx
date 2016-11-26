@@ -100,7 +100,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 			           labelStyle={labelStyle}
 			/>
 		).concat(_.nilFilter(labels || []).map((label:Label, index:number) =>
-			<LabelChip key={label.url}
+			<LabelChip key={label.id}
 			           label={label}
 			           showRemove={!!onRemove}
 			           showIcon={showIcon}
@@ -114,8 +114,14 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 	}
 	
 	render() {
+		const
+			hasValues = this.props.labels || this.props.milestones
+		
 		return <div style={makeStyle(this.props.styles.root,this.props.style)}>
-			{(this.props.labels || this.props.milestones) && this.renderLabels()}{this.props.afterAllNode}
+			{ hasValues && this.renderLabels() }
+			{
+				this.props.afterAllNode
+			}
 		</div>
 	}
 	

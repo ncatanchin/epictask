@@ -13,7 +13,7 @@ import {
 	availableReposSelector
 } from "epic-typedux"
 import { getRepoActions } from "epic-typedux"
-import { shallowEquals } from  "epic-global"
+
 import { CircularProgress} from "material-ui"
 import { PureRender } from "epic-ui-components/common/PureRender"
 import { RepoLabel } from "epic-ui-components/common"

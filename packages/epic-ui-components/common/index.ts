@@ -1,8 +1,12 @@
+
 export * from "./PureRender"
 
-export * from "./SaveIndicator"
+export * from './RenderToLayer'
+
 export * from "./PromisedComponent"
-export * from "./Renderers"
+
+export * from "./SaveIndicator"
+export * from "./Labels"
 
 
 

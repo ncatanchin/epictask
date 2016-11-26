@@ -3,8 +3,10 @@ import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
-import { SearchPanel,SearchType } from "epic-ui-components/search"
-import { SearchController, SearchItem } from "epic-ui-components/search/SearchController"
+import { SearchPanel } from "epic-ui-components/search"
+
+import { ActionSearchProvider } from "epic-ui-components/search/DefaultSearchProviders"
+import { SearchItem } from "epic-models"
 
 // Constants
 const
@@ -63,13 +65,11 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 	 * @param item
 	 */
 	private onResultSelected = _.debounce((eventType,searchId:string,item:SearchItem) => {
-		if (searchId !== FindActionSearchId || !getValue(() => item.type === SearchType.Action,false))
+		if (searchId !== FindActionSearchId || !getValue(() => item.provider.id === 'Action',false))
 			return
 		
+		item.provider.handleItem(item)
 		
-		
-		
-		SearchController.getDefaultHandler(SearchType.Action)(searchId,item)
 		this.hide()
 	},100)
 	
@@ -120,24 +120,16 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			
 			<SearchPanel ref={this.setSearchPanel}
 			             inputStyle={styles.search.input}
-			             panelStyle={styles.search.panel}
-			             fieldStyle={styles.search.field}
-			             hintStyle={styles.search.hint}
-			             underlineStyle={styles.search.underline}
 			             allowEmptyQuery={true}
 			             autoFocus={true}
-			             modal={true}
-			             perSourceLimit={-1}
+			             perProviderLimit={-1}
 			             onEscape={this.hide}
 			             open={true}
 			             focused={true}
-			             hint={FindActionSearchId}
+			             placeholder={FindActionSearchId}
 			             resultsHidden={false}
 			             searchId='find-action-search'
-			             types={[SearchType.Action]}
-			             inlineResults={true}
-			             expanded={false}
-			             mode='actions'
+			             providers={[ActionSearchProvider]}
 			             hidden={false}/>
 		
 		</div>

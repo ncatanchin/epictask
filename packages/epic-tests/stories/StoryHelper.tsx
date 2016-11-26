@@ -1,3 +1,5 @@
+import 'epic-entry-shared/AppEntry'
+import "epic-ui-components/UIGlobals"
 //require('source-map-support').install()
 import 'reflect-metadata'
 ProcessConfig.setType(ProcessType.Storybook)
@@ -5,7 +7,7 @@ ProcessConfig.setType(ProcessType.Storybook)
 
 //import 'shared/RendererLogging'
 
-
+import * as React from 'react'
 
 // Now the theme manager
 import "epic-styles"

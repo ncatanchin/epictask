@@ -23,12 +23,7 @@ _.assignGlobal({
 })
 
 declare global {
-	enum WindowType {
-		Normal = 1,
-		Dialog = 2,
-		Modal = 3,
-		Background = 4
-	}
+	
 	
 	let WindowEvents:TWindowEvents
 	

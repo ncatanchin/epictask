@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "node ./etc/scripts/clean.js",
     "dev:clean-workspace": "node ./etc/scripts/clean-dev-electron.js",
-    "dev:storybook": "./etc/scripts/configure-dev-env.sh && start-storybook -s ./ -p 6006",
+    "dev:storybook": "start-storybook -s ./ -p 6006",
     "dev:storybook-build": "build-storybook",
     "dev:kill": "pkill -9 Electron || pkill -9 electron",
     "dev:watch-workspace": "babel-node ./etc/scripts/watch/watch-workspace.js",

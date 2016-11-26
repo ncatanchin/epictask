@@ -8,8 +8,11 @@ import { SearchResultsList } from "./SearchResultsList"
 
 
 import { PureRender } from "epic-ui-components/common/PureRender"
-import { SearchEvent, ISearchState, SearchItem, SearchController } from "./SearchController"
+import { SearchEvent, ISearchState, SearchController } from "./SearchController"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
+import { SearchItem } from "epic-models"
+import { makeStyle } from "epic-styles/styles"
+import { isString } from "typeguard"
 
 
 // Constants
@@ -77,16 +80,16 @@ const baseStyles = (topStyles,theme,palette) => {
  * ISearchResultsProps
  */
 export interface ISearchResultsProps extends IThemedAttributes {
-	
-	anchor?: string | React.ReactElement<any>
-	searchId:string
-	containerStyle?:any
-	inline?: boolean
 	controller:SearchController
-	open:boolean
+	searchId:string
 	
-	onResultSelected?:(item:SearchItem) => void
-	onResultHover?:(item:SearchItem) => void
+	anchor: string | React.ReactElement<any>
+	containerStyle?:any
+	
+	onItemSelected?:(item:SearchItem) => void
+	onItemHover?:(item:SearchItem) => void
+	
+	state:ISearchState
 }
 
 interface ISearchResultsState {
@@ -104,11 +107,6 @@ interface ISearchResultsState {
 @PureRender
 export class SearchResults extends React.Component<ISearchResultsProps,ISearchResultsState> {
 
-
-	/**
-	 * Mount node for search results
-	 */
-	private node:HTMLElement
 	
 	private get controller() {
 		return this.props.controller
@@ -118,7 +116,6 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * On search results mounted
 	 */
 	componentDidMount() {
-		this.node = doc.createElement('div')
 		this.controller.on(SearchEvent.StateChanged,(eventType,newSearchState:ISearchState) => {
 			
 			this.setState({
@@ -126,13 +123,6 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			})
 		})
 		
-		Object
-			.assign(this.node.style,
-				this.props.styles.resultsModal
-			)
-
-		body.appendChild(this.node)
-		this.renderResults(this.props)
 	}
 	
 	
@@ -146,29 +136,13 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 */
 	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
 		log.debug(`new props received`,nextProps)
-		if (!nextProps.inline) {
-			this.renderResults(nextProps)
-		}
-		// const
-		// 	shouldUpdate = !shallowEquals(nextProps,this.props,
-		// 			'searchState',
-		// 			'searchState.items',
-		// 			'searchState.selectedIndex'
-		// 		)
-		//
-		//
-		// log.debug(`Going to update results`,shouldUpdate,`SearchState`,this.props.searchState)
-		//
-		// if (shouldUpdate)
-			
 	}
 	
 	/**
 	 * On unmount cleanup
 	 */
 	componentWillUnmount():void {
-		ReactDOM.unmountComponentAtNode(this.node)
-		body.removeChild(this.node)
+		
 	}
 	
 	
@@ -178,14 +152,26 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * @param anchor
 	 * @param theme
 	 */
-	private getContainerStyle(anchor,theme) {
+	private getContainerStyle() {
+		let
+			{anchor,theme} = this.props
+		
+		anchor = (typeof anchor === 'string' ?
+			document.querySelector(anchor) :
+			anchor) as any
+		
+		if (!anchor || isString(anchor)) {
+			log.warn(`Unable to determine anchor`,anchor)
+			return null
+		}
 		
 		const
-			rect =  anchor && anchor.getBoundingClientRect(),
+			rect =  anchor && (anchor as any).getBoundingClientRect(),
 			top = (rect.height + rect.top),
 			winHeight = window.innerHeight,
 			maxHeight = winHeight - top - (winHeight * .1),
 			maxHeightStr = `${maxHeight - 48}px`,
+			
 			style = {
 				position: 'absolute',
 				display: 'block',
@@ -206,6 +192,23 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	}
 	
+	componentDidUpdate = () => {
+		const
+			elem = ReactDOM.findDOMNode(this),
+			containerStyle = this.getContainerStyle()
+		
+		if (!elem || !containerStyle) {
+			log.warn(`Container can not be styled`,elem,containerStyle,this.props)
+			return
+		}
+		
+		$(elem).parent().css(containerStyle)
+		
+		
+	}
+	
+	componentDidMount = this.componentDidUpdate as any
+	
 	/**
 	 * Render results list
 	 *
@@ -213,18 +216,28 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 * @returns {any}
 	 */
 	renderResults(props) {
-		log.debug(`Results render: ${props.open}`,props.searchState)
-		if (!props.open)
-			return React.DOM.noscript()
 		
-		const
-			{styles,palette,theme,searchState,onResultHover,onResultSelected,open,inline,searchPanel} = props
-			
-
+	}
+	
+	/**
+	 * Render results when inline
+	 */
+	render() {
+		let
+			{props,controller} = this,
+			{
+				styles,
+				palette,
+				theme,
+				onItemHover,
+				onItemSelected,
+				anchor,
+				state:searchState
+			} = props
 		
+		log.debug(`Results render`,searchState)
 		
 		let
-			{anchor} = props,
 			resultsStyle = makeStyle(
 				styles.results,
 				{
@@ -232,58 +245,21 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 					color: palette.alternateTextColor
 				}
 			)
-
-		log.debug('rendering results inline:',inline,'open',open,'anchor',props.anchor)
+		
+		log.debug('rendering results anchor',props.anchor)
 		
 		
 		
-		if (!props.inline) {
-			anchor = typeof anchor === 'string' ?
-				document.querySelector(anchor) :
-				props.anchor
-			
-
-			const
-				containerStyle = open && anchor ? this.getContainerStyle(anchor,theme) : {
-					maxHeight: '0px'
-				}
-
-			log.debug('rendering results',{anchor,node:this.node,containerStyle})
-			resultsStyle = makeStyle(resultsStyle)
-			
-			
-			
-			
-			Object.assign(this.node.style,
-				containerStyle
-			)
-			
-			ReactDOM.render(<SearchResultsList
-				open={props.open}
+		resultsStyle = makeStyle(resultsStyle)
+		
+		
+		return <SearchResultsList
 				controller={this.controller}
-				onResultHover={onResultHover}
-				onResultSelected={onResultSelected}
-				className="searchResults"
-				style={resultsStyle}/>, this.node)
-		} else {
-			return <SearchResultsList
-				open={this.props.open}
-				controller={this.controller}
-				onResultHover={onResultHover}
-				onResultSelected={onResultSelected}
+				onResultHover={onItemHover}
+				onResultSelected={onItemSelected}
 				className="searchResults"
 				style={resultsStyle}/>
-		}
-	}
-	
-	/**
-	 * Render results when inline
-	 */
-	render() {
-		log.debug(`Rendering`,this.props.inline,this.controller.getState())
-		return (this.props.inline) ?
-			this.renderResults(this.props) :
-			<div></div>
+		
 	}
 
 }

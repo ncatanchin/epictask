@@ -11,7 +11,9 @@ require('./init-scripts')
 Object.assign(process.env,{
 	HOT:1,
 	DEBUG:1,
-	NODE_ENV:'development'
+	NODE_ENV:'development',
+	COLOR: 0,
+	COLORS: 0
 })
 
 require('shelljs/global')
@@ -20,7 +22,7 @@ const
 	path = require('path')
 
 mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
-exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --colors`)
+exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --no-colors --no-color`)
 
 //exec(`${gulpCmd} compile-watch`)
 

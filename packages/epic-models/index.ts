@@ -16,3 +16,5 @@ export * from './IssuesEvent'
 export * from './IIssueFilter'
 export * from "./IIssueListItems"
 export * from "./IIssueSort"
+
+export * from './SearchDomain'
