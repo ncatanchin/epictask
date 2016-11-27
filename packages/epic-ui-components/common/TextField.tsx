@@ -114,9 +114,7 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 				value,
 			} = this.props,
 			
-			inputProps = assign({
-				defaultValue
-			}, value && {value})
+			inputProps = value ? {value} : {defaultValue}
 		
 		
 			

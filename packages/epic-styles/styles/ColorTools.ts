@@ -10,3 +10,7 @@ export function colorAlpha(color,alpha:number) {
 export function colorDarken(color,amount:number) {
 	return tc(color).darken(amount).toRgbString()
 }
+
+export function colorLighten(color,amount:number) {
+	return tc(color).lighten(amount).toRgbString()
+}

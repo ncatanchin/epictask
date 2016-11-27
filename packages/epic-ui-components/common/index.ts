@@ -3,7 +3,8 @@ export * from "./PureRender"
 export * from './RenderToLayer'
 export * from "./PromisedComponent"
 export * from './FlexLayout'
-
+export * from './icon/Icon'
+export * from './Chip'
 export * from "./SaveIndicator"
 export * from "./Labels"
 export * from './TextField'
@@ -12,7 +13,7 @@ export * from "./VisibleList"
 export * from './IssueLabelsAndMilestones'
 export * from "./LabelChip"
 
-export * from './icon/Icon'
+
 export * from './Avatar'
 export * from "./Button"
 export * from './IssueStateIcon'

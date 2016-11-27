@@ -260,27 +260,27 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			log.debug(`Updating models`, models)
 			
 			let
-				{ issuesEvents } = this.state,
+				{ events } = this.state,
 				selectedIssue = this.selectors.selectedIssueSelector(getStoreState())
 			
 			models.forEach(model => {
 				const
-					index = issuesEvents.findIndex(it => it.id === model.id)
+					index = events.findIndex(it => it.id === model.id)
 				
 				
 				if (index > -1) {
-					issuesEvents = issuesEvents.set(index, model)
+					events = events.set(index, model)
 				} else if (
 					selectedIssue &&
 					selectedIssue.number === model.issueNumber &&
 					selectedIssue.repoId === model.repoId
 				) {
-					issuesEvents = issuesEvents.push(model)
+					events = events.push(model)
 				}
 			})
 			
-			if (issuesEvents !== this.state.issuesEvents) {
-				this.updateState({ issuesEvents })
+			if (events !== this.state.events) {
+				this.updateState({ events })
 			}
 		}
 	}
@@ -382,9 +382,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		
 		const
 			actions = new IssueActionFactory(),
-			{ comments, issuesEvents } = await actions.getActivity(issue)
+			{ comments, events } = await actions.getActivity(issue)
 		
-		this.setActivity(comments, issuesEvents)
+		this.setActivity(comments, events)
 	}), 400)
 	
 	/**
@@ -426,10 +426,10 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	)
 	
 	
-	setActivity(comments:List<Comment>, issuesEvents:List<IssuesEvent>) {
+	setActivity(comments:List<Comment>, events:List<IssuesEvent>) {
 		this.updateState({
 			comments,
-			issuesEvents
+			events
 		})
 	}
 	

@@ -132,6 +132,9 @@ export function DefaultTheme(palette) {
 		
 		progressIndicatorColor: accent.hue1,// secondary.hue1,
 		
+		search: {
+			itemHeight: rem(4.8)
+		},
 		
 		textField: {
 			hintColor: text.secondary,

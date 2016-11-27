@@ -1,6 +1,7 @@
 
 //import {getTheme,getPalette} from '../ThemeState'
 
+import { isNumber } from "typeguard"
 declare global {
 	interface IStyle {
 		
@@ -116,6 +117,32 @@ export function makeTransition(props:string[]|string = null,duration = Transitio
 		transition: props
             .map(prop => `${prop} ${duration}s ${easing}`)
             .join(', '),
+	}
+}
+
+/**
+ * Create a border style
+ *
+ * @param width
+ * @param style
+ * @param color
+ * @returns {string}
+ */
+export function makeBorder(width:number|string = rem(0.1), style = 'solid', color = Transparent) {
+	return `${isNumber(width) ? `${width}px` : width} ${style} ${color}`
+}
+
+/**
+ * Create icon config
+ *
+ * @param iconSet
+ * @param iconName
+ * @returns {{iconSet: string, iconName: string}}
+ */
+export function makeIcon(iconSet:string,iconName:string) {
+	return {
+		iconSet,
+		iconName
 	}
 }
 

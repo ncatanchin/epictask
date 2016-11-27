@@ -186,7 +186,7 @@ const baseStyles = (topStyles, theme, palette) => {
  * IIssueEditDialogProps
  */
 export interface IIssueEditDialogProps extends IThemedAttributes, IRouterLocation {
-	viewControllerState?:IssueEditState
+	viewState?:IssueEditState
 	viewController?:IssueEditController
 	
 	availableRepos?:List<AvailableRepo>
@@ -250,7 +250,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	
 	private get viewState():IssueEditState {
-		return getValue(() => this.props.viewControllerState)
+		return getValue(() => this.props.viewState)
 	}
 	
 	private get viewController() {

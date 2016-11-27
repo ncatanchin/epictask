@@ -295,7 +295,7 @@ export class ChipsField extends React.Component<IChipsFieldProps<any>,any> imple
 			} = props,
 			s = mergeStyles(styles, theme.component),
 
-			query = this.state.query ? this.state.query : '',
+			query = this.state.text ? this.state.text : '',
 
 			hasValue = (query && query.length > 0),
 

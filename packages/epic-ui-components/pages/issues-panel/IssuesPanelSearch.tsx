@@ -15,6 +15,7 @@ import {
 } from "epic-typedux/selectors"
 import { SearchItem, User, Label, Milestone, Repo } from "epic-models"
 import { isString } from "typeguard"
+import { IssuesPanelSearchItem } from "epic-ui-components/pages/issues-panel/IssuesPanelSearchItem"
 
 const
 	searchQueryParser = require('search-query-parser')
@@ -222,10 +223,20 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	}
 	
 }
+
+export const IssuesPanelSearchKeywords = {
+	groupKeywords: ['milestone','assignee','repo','label'],
+	sortKeywords: ['updated','created','repo','title','assignee'],
+	directionKeywords: ['asc','desc'],
+	closedKeywords: ['closed'],
+}
+
+const Keywords = IssuesPanelSearchKeywords
+
 /**
  * Search provider
  */
-class IssuesPanelSearchProvider implements ISearchProvider {
+export class IssuesPanelSearchProvider implements ISearchProvider {
 	
 	static SortByKeywordToFields = {
 		'updated': 'updated_at',
@@ -263,8 +274,12 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 	 * @return {any}
 	 */
 	render(item:ISearchItem,selected:boolean) {
-		
-		return <div>{item.value.label}</div>
+		log.debug(`Render item`,item,'selected',selected)
+		return <IssuesPanelSearchItem
+			item={item.value}
+		  selected={selected}
+		/>
+			
 	}
 	
 	
@@ -272,8 +287,10 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 	
 	private closedMatched = (results:List<ISearchItem>,keyword:string,text:string) => {
 		results.push(new SearchItem(`closed-true`,this,{
+			id: 'includeClosed',
 			type: 'includeClosed',
-			field: true
+			field: true,
+			label: 'includeClosed: true'
 		}))
 		
 		return false
@@ -281,8 +298,10 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 	
 	private directionMatched = (results:List<ISearchItem>,keyword:string,text:string) => {
 		results.push(new SearchItem(`direction-${keyword}`,this,{
+			id: `direction-${keyword}`,
 			type: 'direction',
-			field: keyword
+			field: keyword,
+			label: `direction: ${keyword}`
 		}))
 		
 		return false
@@ -293,8 +312,10 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 			sortBy = IssuesPanelSearchProvider.SortByKeywordToFields[keyword]
 		
 		results.push(new SearchItem(`sortBy-${sortBy}`,this,{
-			type: 'groupBy',
-			field: sortBy
+			id: `sortBy-${sortBy}`,
+			type: 'sortBy',
+			field: sortBy,
+			label: `sortBy: ${keyword}`
 		}))
 	}
 	
@@ -303,6 +324,7 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 			groupBy = IssuesPanelSearchProvider.GroupByKeywordToFields[keyword]
 		
 		results.push(new SearchItem(`groupBy-${groupBy}`,this,{
+			id: `groupBy-${groupBy}`,
 			type: 'groupBy',
 			value: groupBy,
 			label: `groupBy: ${keyword}`
@@ -317,7 +339,7 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 	 * @param text
 	 * @param matchedFn
 	 */
-	private matchKeywords(
+	matchKeywords(
 		results:List<ISearchItem>,
 		keywords:string[],
 		text:string,
@@ -326,7 +348,7 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 		const
 			textParts = text.split(' ')
 		
-		for (let keyword in keywords) {
+		for (let keyword of keywords) {
 			if (textParts.some(part => new RegExp(part,"i").test(keyword))) {
 				if (matchedFn(results,keyword,text) === false)
 					return
@@ -350,6 +372,7 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 		items.forEach(item => {
 			if (props.some(prop => textRegEx.test(_.get(item,prop,'')))) {
 				results.push(new SearchItem(`${type}-${item.id}`,this,{
+					id: `${type}-${item.id}`,
 					type,
 					value: item,
 					label: `${type.toLowerCase()}: ${_.get(item,labelProp)}`
@@ -373,20 +396,17 @@ class IssuesPanelSearchProvider implements ISearchProvider {
 		
 		// GET DATA
 		const
-			groupKeywords = ['milestone','assignee','repo','label'],
-			sortKeywords = ['updated','created','repo','title','assignee'],
-			directionKeywords = ['asc','desc'],
-			closedKeywords = ['closed'],
+			
 			
 			milestones = enabledMilestonesSelector(storeState),
 			labels = enabledLabelsSelector(storeState),
 			assignees = enabledAssigneesSelector(storeState),
 			repos = enabledAvailableReposSelector(storeState)
-			
-		this.matchKeywords(results,groupKeywords,text,this.groupByMatched)
-		this.matchKeywords(results,sortKeywords,text,this.sortByMatched)
-		this.matchKeywords(results,directionKeywords,text,this.directionMatched)
-		this.matchKeywords(results,closedKeywords,text,this.closedMatched)
+			9
+		this.matchKeywords(results,Keywords.groupKeywords,text,this.groupByMatched)
+		this.matchKeywords(results,Keywords.sortKeywords,text,this.sortByMatched)
+		this.matchKeywords(results,Keywords.directionKeywords,text,this.directionMatched)
+		this.matchKeywords(results,Keywords.closedKeywords,text,this.closedMatched)
 		
 		this.matchProps(results,assignees,['name','login','email'],User,'login',text)
 		this.matchProps(results,labels,['name'],Label,'name',text)

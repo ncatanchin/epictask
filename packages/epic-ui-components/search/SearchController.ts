@@ -6,20 +6,17 @@ import { ValueCache, Benchmark ,cloneObjectShallow,EnumEventEmitter } from "epic
 import {  getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { isNumber, getValue, isFunction, isNil, isList } from "typeguard"
 import { nilFilterList } from "epic-global/ListUtil"
-
+import { SearchState } from "epic-ui-components/search/SearchState"
+import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import { EventEmitter } from "events"
 
 const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
 
-export interface ISearchState {
-	items:List<SearchItem>
-	results:List<SearchResult>
-	working?:boolean
-	selectedIndex:number
-	controller:SearchController
-}
+log.setOverrideLevel(LogLevel.DEBUG)
+
 
 
 export type TOnSearchSelectHandler = (item:SearchItem) => any
@@ -44,7 +41,7 @@ export type TSearchSelectHandler = (searchId:string,item:SearchItem) => any
  *
  * TODO: Redesign this
  */
-export class SearchController extends EnumEventEmitter<SearchEvent> {
+export class SearchController extends EventEmitter implements IViewController<SearchState> {
 	
 
 	
@@ -54,8 +51,12 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	
 	private items:List<SearchItem>
 	
-	private state:ISearchState
+	private state:SearchState
 	
+	
+	makeStateUpdate<T extends Function>(updater:T):T {
+		return null
+	}
 	
 	/**
 	 * All search providers
@@ -81,11 +82,6 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	results = List<SearchResult>()
 	
 	/**
-	 * Keeps track of the selected index
-	 */
-	selectedIndex:number
-	
-	/**
 	 * Listener map
 	 */
 	listenerMap:{[eventType:string]:TSearchListener[]} = {}
@@ -101,18 +97,15 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	searchId:string
 	
 	constructor() {
-		super(SearchEvent)
+		super()
 		
-		// if (!searchId)
-		// 	throw new Error(`Search id can not be null`)
-		//
+		this.state = new SearchState()
+		
 		this.queryCache = new ValueCache((newValue,oldValue) => {
 			if (!this.pendingSearch)
 				this.pendingSearch = this.runSearch(newValue)
 			
 		})
-		
-		this.updateState()
 		
 	}
 	
@@ -141,22 +134,59 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	}
 	
 	
-	private updateState() {
-		this.state = {
-			items: this.makeItems(this.results),
-			results: this.results,
-			controller: this,
-			working: this.working,
-			selectedIndex: isNumber(this.selectedIndex) ? this.selectedIndex : 0
+	/**
+	 * Update/patch the current state
+	 *
+	 * @param patch
+	 * @returns {any}
+	 */
+	updateState(patch:{[prop:string]:any}) {
+		patch = cloneObjectShallow(patch)
+		
+		const
+			keys = getValue(() => Object.keys(patch))
+		
+		
+		if (!patch || !keys || !keys.length)
+			return this.state
+		
+		const
+			updatedState = this.state.withMutations(state => {
+				for (let key of keys) {
+					const
+						newVal = patch[ key ]
+					
+					if (state.get(key) !== newVal)
+						state = state.set(key, newVal)
+				}
+				
+				return state
+			}) as SearchState
+		
+		if (updatedState !== this.state) {
+			
+			this.state = updatedState
+			log.tron(`Updated search state, focused=${updatedState.focused}`)
+			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
+			this.emit(SearchEvent[SearchEvent.StateChanged],this.state)
 		}
-		this.fireEvent(SearchEvent.StateChanged,this.state)
+		
+		return updatedState
+	}
+	
+	private setResults(results:List<SearchResult>) {
+		this.updateState({
+			items: this.makeItems(results),
+			results: results,
+			working: false
+		})
 		return this.state
 	}
 	
 	
 	
 	getState() {
-		return this.state || this.updateState()
+		return this.state
 	}
 	
 	/**
@@ -167,46 +197,32 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 		this.providers =  providers.map((it:any) => isFunction(it.query) ? it : new it()) as ISearchProvider[]
 	}
 	
-	/**
-	 * Fire an event to all listeners
-	 *
-	 * @param event
-	 * @param args
-	 */
-	private fireEvent(event:SearchEvent,...args:any[]) {
-		this.emit(event,...args)
-	}
-	
-	/**
-	 * Update the results and notify
-	 *
-	 * @param results
-	 */
-	private setResults(results:List<SearchResult>) {
-		this.results = results
-		this.updateState()
-		
-	}
 	
 	
 	private setStarted() {
-		this.working = true
-		this.updateState()
+		this.updateState({
+			working: true
+		})
 	}
 	
 	private setFinished() {
-		this.working = false
-		this.updateState()
+		this.updateState({
+			working: false
+		})
 	}
 	
 	
 	
 	setSelectedIndex(index:number) {
-		this.selectedIndex = index
-		this.updateState()
+		this.updateState({
+			selectedIndex:index
+		})
 	}
 	
 	
+	setFocused(focused:boolean) {
+		this.updateState({focused})
+	}
 	
 	/**
 	 * Update the query
@@ -294,7 +310,7 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	 */
 	select(item:SearchItem) {
 		
-		this.emit(SearchEvent.ItemSelected,item)
+		this.emit(SearchEvent[SearchEvent.ItemSelected],item)
 		EventHub.emit(EventHub.SearchItemSelected,this.searchId,item)
 		// const
 		// 	handler = getSearchSelectHandler(item.type)

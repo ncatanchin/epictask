@@ -1,3 +1,4 @@
+export * from './SearchState'
 export * from './SearchController'
 export * from './SearchPanel'
 export * from "./SearchResultItem"

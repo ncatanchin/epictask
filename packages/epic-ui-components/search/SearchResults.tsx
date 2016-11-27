@@ -8,11 +8,13 @@ import { SearchResultsList } from "./SearchResultsList"
 
 
 import { PureRender } from "epic-ui-components/common/PureRender"
-import { SearchEvent, ISearchState, SearchController } from "./SearchController"
+
+import { SearchEvent, SearchController } from "./SearchController"
+import { SearchState } from "./SearchState"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { SearchItem } from "epic-models"
 import { makeStyle } from "epic-styles/styles"
-import { isString } from "typeguard"
+import { isString, getValue } from "typeguard"
 
 
 // Constants
@@ -81,6 +83,7 @@ const baseStyles = (topStyles,theme,palette) => {
  */
 export interface ISearchResultsProps extends IThemedAttributes {
 	controller:SearchController
+	
 	searchId:string
 	
 	anchor: string | React.ReactElement<any>
@@ -89,11 +92,12 @@ export interface ISearchResultsProps extends IThemedAttributes {
 	onItemSelected?:(item:SearchItem) => void
 	onItemHover?:(item:SearchItem) => void
 	
-	state:ISearchState
+	
 }
 
-interface ISearchResultsState {
-	
+
+export interface ISearchResultsState {
+	searchState:SearchState
 }
 
 /**
@@ -104,7 +108,7 @@ interface ISearchResultsState {
  **/
 
 @ThemedStyles(baseStyles)
-@PureRender
+//@PureRender
 export class SearchResults extends React.Component<ISearchResultsProps,ISearchResultsState> {
 
 	
@@ -112,21 +116,11 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		return this.props.controller
 	}
 	
-	/**
-	 * On search results mounted
-	 */
-	componentDidMount() {
-		this.controller.on(SearchEvent.StateChanged,(eventType,newSearchState:ISearchState) => {
-			
-			this.setState({
-				searchState: newSearchState
-			})
+	onSearchStateChanged = () => {
+		this.setState({
+			searchState: this.props.controller.getState()
 		})
-		
 	}
-	
-	
-	
 	
 	/**
 	 * New props received
@@ -138,19 +132,11 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		log.debug(`new props received`,nextProps)
 	}
 	
-	/**
-	 * On unmount cleanup
-	 */
-	componentWillUnmount():void {
-		
-	}
 	
 	
 	/**
 	 * getContainerStyle
 	 *
-	 * @param anchor
-	 * @param theme
 	 */
 	private getContainerStyle() {
 		let
@@ -172,13 +158,16 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			maxHeight = winHeight - top - (winHeight * .1),
 			maxHeightStr = `${maxHeight - 48}px`,
 			
+			elem = ReactDOM.findDOMNode(this),
+			height = !elem || !elem.scrollHeight ? maxHeightStr : elem.scrollHeight + 'px',
+			
 			style = {
 				position: 'absolute',
 				display: 'block',
 				width: rect.width + 'px',
 				top: `${top}px`,
 				left: rect.left + 'px',
-				//height: height + 'px',
+				height,
 				maxHeight: maxHeightStr,
 				overflow: 'auto',
 				fontFamily: theme.fontFamily,
@@ -186,7 +175,8 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				zIndex: 99999
 			}
 		
-		log.debug(`Container style`,rect,top,winHeight,maxHeight)
+			
+		log.tron(`Container style`,getValue(() => elem.scrollHeight),rect,top,winHeight,maxHeight)
 		
 		return style
 	
@@ -209,6 +199,15 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	componentDidMount = this.componentDidUpdate as any
 	
+	
+	componentWillMount() {
+		this.props.controller.on(SearchEvent[SearchEvent.StateChanged],this.onSearchStateChanged)
+	}
+	
+	componentWillUnmount() {
+		this.props.controller.removeListener(SearchEvent[SearchEvent.StateChanged],this.onSearchStateChanged)
+	}
+	
 	/**
 	 * Render results list
 	 *
@@ -224,16 +223,16 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 */
 	render() {
 		let
-			{props,controller} = this,
+			{props,state,controller} = this,
 			{
 				styles,
 				palette,
 				theme,
 				onItemHover,
 				onItemSelected,
-				anchor,
-				state:searchState
-			} = props
+				anchor
+			} = props,
+			{searchState} = state
 		
 		log.debug(`Results render`,searchState)
 		
@@ -255,6 +254,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		
 		return <SearchResultsList
 				controller={this.controller}
+				state={searchState}
 				onResultHover={onItemHover}
 				onResultSelected={onItemSelected}
 				className="searchResults"

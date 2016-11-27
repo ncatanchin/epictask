@@ -10,6 +10,11 @@ import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
 import { MappedProps } from "epic-global/UIUtil"
 import { getValue } from "typeguard"
+import {
+	PositionRelative, FlexRowCenter, FillWidth, makeTransition, rem, FillHeight,
+	FlexAuto, Ellipsis
+} from "epic-styles/styles"
+import { SearchState } from "epic-ui-components/search"
 
 // Constants
 const log = getLogger(__filename)
@@ -17,10 +22,15 @@ const log = getLogger(__filename)
 
 function baseStyles(topStyles,theme,palette) {
 	const
-		{ accent, primary, text, secondary } = palette
+		{ accent, primary, text, secondary } = palette,
+		{itemHeight} = theme.search
 	
-	return [ makeTransition([ 'background-color', 'color' ]), PositionRelative, FlexRowCenter, FillWidth, {
-			height: 48,
+	return [
+		makeTransition([ 'background-color', 'color' ]),
+		PositionRelative,
+		FlexRowCenter,
+		FillWidth, {
+			height: itemHeight,
 			cursor: 'pointer',
 			borderBottom: `0.1rem solid ${accent.hue1}`,
 			color: primary.hue1,
@@ -75,7 +85,7 @@ function baseStyles(topStyles,theme,palette) {
 				fontSize: rem(1.3),
 				textStyle: 'italic',
 				padding: rem(0.3),
-				width: 48,
+				width: itemHeight,
 				background: Transparent,
 				//borderRight: `0.1rem solid ${accent.hue1}`,
 				
@@ -91,7 +101,6 @@ function baseStyles(topStyles,theme,palette) {
  * ISearchResultItemProps
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
-	controller:SearchController
 	item:SearchItem
 	selected?:boolean
 }
@@ -110,30 +119,6 @@ export interface ISearchResultItemState {
  * @constructor
  **/
 
-// If you have a specific theme key you want to
-// merge provide it as the second param
-@MappedProps((props) => {
-	const
-		{item,controller} = props,
-		{items,selectedIndex} = controller.getState(),
-		selectedItem = items && items.get(selectedIndex)
-	
-	return {
-		selected: selectedItem && selectedItem.id === item.id
-	}
-},{
-	watchedProps: ['controller.state'],
-	onMount(mapper,props,data) {
-		data.onChange = () => mapper.remap()
-		data.unsubscribe = props.controller.on(SearchEvent.StateChanged,data.onChange)
-	},
-	onUnmount(mapper,props,data) {
-		if (data.unsubscribe) {
-			data.unsubscribe()
-			data.unsubscribe = null
-		}
-	}
-})
 @ThemedStyles(baseStyles)
 @PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {
@@ -141,26 +126,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	constructor(props:ISearchResultItemProps,context) {
 		super(props,context)
 		
-		
-		this.state = {
-			selected: this.isSelected(props)
-		}
-		
 	}
-	
-	get controller() {
-		return this.props.controller
-	}
-	
-	isSelected(props = this.props) {
-		const
-			searchState = this.controller.getState(),
-			item = searchState.items.get(searchState.selectedIndex)
-
-		return item && item.id === props.item.id
-		
-	}
-	
 	
 	renderResult(label:any,labelSecond:any,actionLabel,iconName,isSelected) {
 		const
@@ -311,15 +277,15 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		['Action']: this.renderAction,
 	}
 	
-	/**
-	 * Only change on selection change
-	 * @param nextProps
-	 * @param nextState
-	 * @returns {boolean}
-	 */
-	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(nextProps,this.props,'selected')
-	}
+	// /**
+	//  * Only change on selection change
+	//  * @param nextProps
+	//  * @param nextState
+	//  * @returns {boolean}
+	//  */
+	// shouldComponentUpdate(nextProps,nextState) {
+	// 	return !shallowEquals(nextProps,this.props,'item','selected')
+	// }
 	
 	
 	render() {

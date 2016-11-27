@@ -58,7 +58,7 @@ export function ViewRoot<S,VC extends IViewControllerConstructor<S>>(
 				
 				return {
 					viewController,
-					viewControllerState: viewController.getState()
+					viewState: viewController.getState()
 				}
 			},
 			{

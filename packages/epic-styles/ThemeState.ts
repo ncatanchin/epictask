@@ -1,3 +1,4 @@
+import {getValue} from 'typeguard'
 import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent, EnumEventEmitter } from "epic-global"
 import { TTheme } from "./Theme"
 import { IPalette } from "./material"
@@ -29,9 +30,9 @@ export let
 // Internal ref to the current theme
 const
 	ThemeState = getHot(module,'ThemeState',{
-		themeName: getSettings().themeName as any,
+		themeName: getValue(() => getSettings().themeName as any),
 		theme:null as any,
-		paletteName: getSettings().paletteName as string,
+		paletteName: getValue(() => getSettings().paletteName as string),
 		palette:null as any
 	})
 
@@ -62,6 +63,7 @@ assignGlobal({
 
 
 import * as BuiltInsType from "./builtin"
+
 
 let
 	BuiltIns:typeof BuiltInsType = null
@@ -109,6 +111,9 @@ function setPalette(newPalette:IPaletteCreator) {
 		log.error(`Null theme, requiring dark palette directly`,newPalette)
 		newPalette = BuiltIns.LightPalette
 	}
+	
+	if (!newPalette)
+		return log.warn(`No palette found`)
 	
 	assert(_.isFunction(newPalette),`Palette MUST be a function`)
 	

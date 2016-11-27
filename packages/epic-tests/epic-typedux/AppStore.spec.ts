@@ -1,17 +1,8 @@
-import 'jest'
-
-jest.mock('electron')
-jest.mock('node-uuid')
-
-//jest.mock('typelogger')
-import 'epic-entry-shared/LogConfig'
-import 'epic-entry-shared/Globals'
-assignGlobal({assert:require('assert')})
+import "../TestSetup"
 
 import { AuthState } from "epic-typedux/state/AuthState"
 import { fromPlainObject } from "typetransform"
 import { isNil, isMap } from "typeguard"
-
 
 
 test(`Everything is running`,() => {

@@ -1,5 +1,5 @@
 
-import Electron from 'epic-electron'
+import * as Electron from 'electron'
 import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
 import { EventType } from "epic-global/Constants"
 import { fromPlainObject, toPlainObject } from "typetransform"
@@ -115,7 +115,8 @@ function subscribe() {
 		
 }
 
-subscribe()
+if (!ProcessConfig.isTest())
+	subscribe()
 
 /**
  * Broadcast event to all child windows

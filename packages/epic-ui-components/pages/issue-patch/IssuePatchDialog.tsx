@@ -229,7 +229,7 @@ export interface IIssuePatchDialogProps extends IThemedAttributes {
 	availableLabels?:List<Label>
 	
 	viewController?:IssuePatchController
-	viewControllerState?:IssuePatchState
+	viewState?:IssuePatchState
 }
 
 /**
@@ -285,7 +285,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	commandComponentId = ContainerNames.IssuePatchDialog
 	
 	private get viewState():IssuePatchState {
-		return getValue(() => this.props.viewControllerState)
+		return getValue(() => this.props.viewState)
 	}
 	
 	private get viewController() {
@@ -584,7 +584,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 */
 	updateState(props:IIssuePatchDialogProps) {
 		const
-			viewState = props.viewControllerState
+			viewState = props.viewState
 		
 		if (!viewState || !viewState.mode || !viewState.issues.size)
 			return

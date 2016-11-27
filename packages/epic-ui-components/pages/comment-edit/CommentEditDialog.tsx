@@ -77,7 +77,7 @@ export interface ICommentEditDialogProps extends IThemedAttributes {
 	saving?:boolean
 	savingError?:Error
 	
-	viewControllerState?:CommentEditState
+	viewState?:CommentEditState
 	viewController?:CommentEditController
 }
 
@@ -95,13 +95,6 @@ export interface ICommentEditDialogState {
  * @constructor
  **/
 @ViewRoot(CommentEditController,CommentEditState)
-@connect(createStructuredSelector({
-	// editCommentRequest: editCommentRequestSelector,
-	// saving: (state) => issueStateSelector(state).issueSaving,
-	// saveError: (state) => issueStateSelector(state).issueSaveError
-	
-}, createDeepEqualSelector))
-
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @CommandComponent()
@@ -124,7 +117,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	
 	
 	private get viewState():CommentEditState {
-		return getValue(() => this.props.viewControllerState)
+		return getValue(() => this.props.viewState)
 	}
 	
 	private get viewController() {

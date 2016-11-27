@@ -96,7 +96,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 			           textStyle={textStyle}
 			           showRemove={!!onRemove}
 			           onClick={(event) => (onMilestoneClick && onMilestoneClick(milestone,index))}
-			           onRemove={!!onRemove && ((milestone) => onRemove(milestone,index))}
+			           onRemove={!!onRemove && ((milestone) => onRemove(milestone as Milestone,index))}
 			           labelStyle={labelStyle}
 			/>
 		).concat(_.nilFilter(labels || []).map((label:Label, index:number) =>
@@ -107,7 +107,7 @@ export class IssueLabelsAndMilestones extends React.Component<IIssueLabelsAndMil
 			           textStyle={textStyle}
 			           iconStyle={iconStyle}
 			           onClick={(event) => (onLabelClick && onLabelClick(label,index))}
-			           onRemove={!!onRemove && ((label) => onRemove(label,index))}
+			           onRemove={!!onRemove && ((label) => onRemove(label as Label,index))}
 			           labelStyle={labelStyle}
 			/>
 		) as any)

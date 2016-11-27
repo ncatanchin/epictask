@@ -10,8 +10,8 @@
     "dev:storybook-build": "build-storybook",
     "dev:kill": "pkill -9 Electron || pkill -9 electron",
     "dev:watch-workspace": "babel-node ./etc/scripts/watch/watch-workspace.js",
-    "test": "gulp compile test",
-    "test:watch": "gulp compile-watch",
+    "test": "jest  --no-cache",
+    "test:watch": "jest --watch  --no-cache",
     "start": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./bin/epictask-start.js",
     "compile": "gulp compile",
     "compile:watch": "babel-node ./etc/scripts/compile-watch.js",
@@ -99,11 +99,14 @@
     "globals": {
       "__TS_CONFIG__": {
         "target": "es5",
-        "module": "commonjs"
+        "module": "commonjs",
+        "jsx": "react"
       }
     },
-    "scriptPreprocessor": "./node_modules/ts-jest/preprocessor.js",
-    "testRegex": "packages\\/epic-tests.*AppStore\\.spec\\.(ts|tsx)$",
+    "transform": {
+      ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "packages\\/epic-tests\\/(epic-typedux|ui).*\\.spec\\.(ts|tsx)$",
     "setupFiles": [
       "etc/mocha/test-setup.js"
     ],
@@ -111,6 +114,9 @@
       "./node_modules",
       "./packages"
     ],
+    "moduleNameMapper": {
+      "epic-config": "<rootDir>/etc/config/default-config.js"
+    },
     "moduleFileExtensions": [
       "ts",
       "tsx",

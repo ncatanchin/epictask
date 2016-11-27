@@ -128,7 +128,8 @@ function systemWarning(warning) {
 	// 	deepTrace(warning)
 	// }
 	
-	log ? log.error('WARNING', warning) : console.warn(warning)
+	//log ? log.error('WARNING', warning) : console.warn(warning)
+	console.warn(warning)
 }
 
 process.on("warning", systemWarning)

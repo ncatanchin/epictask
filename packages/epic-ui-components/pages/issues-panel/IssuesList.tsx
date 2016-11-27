@@ -444,7 +444,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		
 		return <div style={styles.listContent}>
 			{/* ISSUE FILTERS */}
-			<IssueFilters viewController={this.props.viewController}/>
+			{/*<IssueFilters viewController={this.props.viewController}/>*/}
 			
 			
 			{/* ROOT LIST - groups or issues */}

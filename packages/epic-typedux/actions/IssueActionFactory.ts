@@ -1103,14 +1103,14 @@ export class IssueActionFactory  {
 				(commentStore:CommentStore,nextRequest:FinderRequest) =>
 					commentStore.findByCommentPrefix(nextRequest,issue.repoId, issue.number)
 			),
-			issuesEvents:List<IssuesEvent> = await pagedFinder(IssuesEvent,FinderItemsPerPage,getStores().issuesEvent,
+			events:List<IssuesEvent> = await pagedFinder(IssuesEvent,FinderItemsPerPage,getStores().issuesEvent,
 				(issuesEventStore:IssuesEventStore,nextRequest:FinderRequest) =>
 					issuesEventStore.findByIssue(nextRequest,issue)
 			)
 		
 		return {
 			comments,
-			issuesEvents
+			events
 		}
 		
 	}

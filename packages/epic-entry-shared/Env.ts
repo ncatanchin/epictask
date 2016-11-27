@@ -1,5 +1,5 @@
 
-import Electron from 'epic-electron'
+import * as Electron from 'electron'
 import { getValue } from "typeguard"
 
 const

@@ -13,7 +13,7 @@ import {
 	IssueStateIcon,
 	IssueLabelsAndMilestones
 } from "epic-ui-components"
-import { baseStyles as labelBaseStylesFn } from "../../common/LabelChip"
+import { baseStyles as labelBaseStylesFn } from "epic-ui-components/common/Chip"
 import { createStructuredSelector } from "reselect"
 import {
 	IThemedAttributes,
