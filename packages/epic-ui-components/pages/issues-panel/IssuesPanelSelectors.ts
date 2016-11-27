@@ -62,7 +62,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			),
 			issuesEventsSelector:TSelector<List<IssuesEvent>> = createSelector(
 				issuesPanelStateSelector,
-				(state:IssuesPanelState) => state.issuesEvents
+				(state:IssuesPanelState) => state.events
 			),
 			groupVisibilitySelector:(state) => Map<string,boolean> = createSelector(
 				issuesPanelStateSelector,
@@ -84,33 +84,21 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				(state:IssuesPanelState) => state.comments
 			),
 			
-			issueSortSelector = createSelector(
+			issueCriteriaSelector = createSelector(
 				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.issueSort
-			),
-			issueFilterSelector = createSelector(
-				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.issueFilter
+				(issueState:IssuesPanelState) => issueState.criteria
 			),
 			issueFilterLabelsSelector = createSelector(
-				issueFilterSelector,
+				issueCriteriaSelector,
 				enabledLabelsSelector,
-				(filter:IIssueFilter, labels:List<Label>):List<Label> =>
-					labels.filter(label => filter && filter.labelUrls && filter.labelUrls.includes(label.url)) as any
+				(filter:IIssueCriteria, labels:List<Label>):List<Label> =>
+					labels.filter(label => filter && filter.labelIds && filter.labelIds.includes(label.id)) as any
 			),
 			issueFilterMilestonesSelector = createSelector(
-				issueFilterSelector,
+				issueCriteriaSelector,
 				enabledMilestonesSelector,
-				(filter:IIssueFilter, milestones:List<Milestone>):List<Milestone> =>
+				(filter:IIssueCriteria, milestones:List<Milestone>):List<Milestone> =>
 					milestones.filter(milestone => filter && filter.milestoneIds && filter.milestoneIds.includes(milestone.id)) as any
-			),
-			issueSortAndFilterSelector:(state) => TIssueSortAndFilter = createDeepEqualSelector(
-				issueSortSelector,
-				issueFilterSelector,
-				(issueSort:IIssueSort, issueFilter:IIssueFilter) => ({
-					issueSort,
-					issueFilter
-				})
 			),
 			selectedIssueIdsSelector = createSelector(
 				issuesPanelStateSelector,
@@ -168,18 +156,18 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			),
 			issueSavingSelector:(state) => boolean = createSelector(
 				issuesPanelStateSelector,
-				(state:IssuesPanelState) => state.issueSaving
+				(state:IssuesPanelState) => state.saving
 			),
 			issueSaveErrorSelector:(state) => Error = createSelector(
 				issuesPanelStateSelector,
-				(state:IssuesPanelState) => state.issueSaveError
+				(state:IssuesPanelState) => state.saveError
 			),
 	
 	
 			issueFilterAssigneeSelector = createDeepEqualSelector(
-				issueFilterSelector,
+				issueCriteriaSelector,
 				enabledAssigneesSelector,
-				(issueFilter:IIssueFilter, assignees:List<User>) => {
+				(issueFilter:IIssueCriteria, assignees:List<User>) => {
 					const
 						assigneeIds = issueFilter.assigneeIds || []
 					
@@ -189,18 +177,18 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				}
 			),
 			groupBySelector = createSelector(
-				issueSortSelector,
-				(issueSort:IIssueSort) => issueSort.groupBy
+				issueCriteriaSelector,
+				(criteria:IIssueCriteria) => criteria.sort.groupBy
 			),
 			orderedIssueIndexesSelector = createSelector(
 				issuesSelector,
-				issueSortSelector,
-				issueFilterSelector,
+				issueCriteriaSelector,
 				enabledAssigneesSelector,
 				editInlineConfigIssueSelector,
-				(issues:List<Issue>, issueSort:IIssueSort, issueFilter:IIssueFilter, assignees:List<User>, editInlineConfig:IIssueEditInlineConfig):List<number> => {
+				(issues:List<Issue>, criteria:IIssueCriteria, assignees:List<User>, editInlineConfig:IIssueEditInlineConfig):List<number> => {
 					
 					const
+						issueSort = criteria.sort,
 						{ groupBy } = issueSort,
 						{ fields:sortFields, direction:sortDirection } = issueSort,
 						isReverse = sortDirection === 'desc'
@@ -211,12 +199,12 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 					
 					// Get all the filters & sort criteria
 					let
-						{ text, issueId, milestoneIds, labelUrls, assigneeIds } = issueFilter,
+						{ text, issueId, milestoneIds, labelIds, assigneeIds } = criteria,
 						inlineEditIndex = -1
 					
 					
 					milestoneIds = _.nilFilter(milestoneIds || [])
-					labelUrls = _.nilFilter(labelUrls || [])
+					labelIds = _.nilFilter(labelIds || [])
 					assigneeIds = _.nilFilter(assigneeIds || [])
 					
 					
@@ -234,15 +222,15 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 								
 								// Include Closed
 								let matches =
-									(issue.state === 'open' || issueFilter.includeClosed)
+									(issue.state === 'open' || criteria.includeClosed)
 								
 								// Milestones
 								if (matches && milestoneIds.length)
 									matches = issue.milestone && milestoneIds.includes(issue.milestone.id)
 								
 								// Labels
-								if (matches && labelUrls.length)
-									matches = issue.labels && labelUrls.some(url => issue.labels.findIndex(label => label && label.url === url) > -1)
+								if (matches && labelIds.length)
+									matches = issue.labels && labelIds.some(id => issue.labels.findIndex(label => label && label.id === id) > -1)
 								
 								// Assignee
 								if (matches && assigneeIds.length)
@@ -298,12 +286,13 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			
 			
 			issueGroupsSelector = createSelector(
-				issueSortSelector,
+				issueCriteriaSelector,
 				issuesSelector,
 				orderedIssueIndexesSelector,
-				(issueSort:IIssueSort,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
+				(criteria:IIssueCriteria,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
 					
 					const
+						issueSort = criteria.sort,
 						groupBy = issueSort.groupBy
 					
 					
@@ -518,12 +507,10 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		issueIdsSelector,
 		
 		commentsSelector,
+		issueCriteriaSelector,
 		
-		issueSortSelector,
-		issueFilterSelector,
 		issueFilterLabelsSelector,
 		issueFilterMilestonesSelector,
-		issueSortAndFilterSelector,
 		selectedIssueIdsSelector,
 		selectedIssueIdSelector,
 		

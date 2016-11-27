@@ -65,7 +65,7 @@ export class SearchItem {
 	component:React.ReactElement<any>
 	
 	
-	constructor(id:string|number, provider:ISearchProvider, value, score:number)
+	constructor(id:string|number, provider:ISearchProvider, value, score?:number)
 	constructor(obj:any)
 	constructor(idOrObject:any, provider:ISearchProvider = null, value = null, score:number = 1) {
 		if (_.isNumber(idOrObject) || _.isString(idOrObject)) {
@@ -102,7 +102,15 @@ export class SearchResult {
 		return getValue(() => this.deferred.getResult(),List<SearchItem>())
 	}
 	
-	constructor(public searchId:string,public provider:ISearchProvider) {
+	/**
+	 * New SearchResult
+	 *
+	 * @param criteria
+	 * @param text
+	 * @param searchId
+	 * @param provider
+	 */
+	constructor(public searchId:string,public provider:ISearchProvider,public criteria:any, public text:string) {
 		
 	}
 	

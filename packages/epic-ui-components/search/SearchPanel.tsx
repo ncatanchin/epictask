@@ -6,8 +6,8 @@ import { List } from "immutable"
 import * as KeyMaps from "epic-command-manager"
 import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
-import { isNumber, getValue, guard, Dom, unwrapRef } from "epic-global"
-import { PureRender, TextField, RenderToLayer } from "epic-ui-components/common"
+import { isNumber, getValue, guard, Dom, unwrapRef, cloneObjectShallow, shallowEquals } from "epic-global"
+import { PureRender, TextField, RenderToLayer, FlexRowCenter } from "epic-ui-components/common"
 import {
 	CommandComponent,
 	ICommandComponent,
@@ -82,9 +82,24 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	styles?:any
 	commandContainer?:CommandContainer
 	
-	criteria?:any
-	allowEmptyQuery?:boolean
+	/**
+	 * Plain text search value
+	 */
+	text?:string
 	
+	searchOnEmpty?:boolean
+	
+	/**
+	 * Criteria Object - overrides text
+	 */
+	criteria?:any
+	
+	/**
+	 * Renderer for criteria - required when criteria is provided
+	 *
+	 * @param criteria
+	 */
+	criteriaRenderer?:(criteria:any) => React.ReactElement<any>[]
 	
 	inputStyle?:any
 	
@@ -95,14 +110,31 @@ export interface ISearchPanelProps extends React.HTMLAttributes<any> {
 	 */
 	perProviderLimit?:number
 	
+	/**
+	 * Identifier for this search panel
+	 */
 	searchId:string
+	
+	/**
+	 * Search providers
+	 */
 	providers:Array<ISearchProviderConstructor|ISearchProvider>
 	
 	focused?:boolean
 	resultsHidden?:boolean
 	hidden?:boolean
 	
+	/**
+	 * When escape key is pressed while in focus
+	 */
 	onEscape?:() => any
+	
+	/**
+	 * Input text changed
+	 *
+	 * @param text
+	 */
+	onTextChanged?:(text:string) => any
 	
 	onItemsChanged?:(items:List<SearchItem>) => void
 	onItemSelected?:(item:SearchItem) => void
@@ -145,7 +177,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		expanded: false,
 		modal: false,
 		perSourceLimit: 5,
-		allowEmptyQuery: false,
+		searchOnEmpty: false,
 		hint: <span>Search issues, comments, labels &amp; milestones</span>
 	}
 	
@@ -246,8 +278,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		const
 			controller = new SearchController()
 		
-		if (this.props.allowEmptyQuery)
-			controller.setQuery('')
+		if (this.props.searchOnEmpty)
+			controller.setQuery(props.criteria,props.text || '')
 		this.state = {
 			controller,
 			searchState: controller.getState()
@@ -308,6 +340,38 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		// props.commandContainer.isFocused()
 	}
 	
+	/**
+	 * On click away
+	 *
+	 * @param event
+	 */
+	private onClickAway = (event:MouseEvent) => {
+		
+		const
+			elem = ReactDOM.findDOMNode(this),
+			isDescendant = Dom.isDescendant(elem,event.target)
+		
+		log.debug(`Click away`,elem,event.target)
+		if (isDescendant)
+			return
+		
+		guard(this.props.onEscape)
+	}
+	
+	/**
+	 * Results layer
+	 *
+	 * @param resultsLayerRef
+	 */
+	private setResultsLayerRef = (resultsLayerRef) =>  this.setState({resultsLayerRef})
+	
+	/**
+	 * Set the results ref
+	 *
+	 * @param resultsListRef
+	 */
+	private setResultsListRef = (resultsListRef) => this.setState({resultsListRef})
+	
 	
 	/**
 	 * Calculate a new state
@@ -315,7 +379,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param props
 	 * @param focused
 	 */
-	getNewState = (props:ISearchPanelProps, focused:boolean) => {
+	private getNewState = (props:ISearchPanelProps, focused:boolean) => {
 		
 		const
 			newState:any = {},
@@ -346,9 +410,9 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 		}
 		
 		controller.searchId = props.searchId
+		controller.allowEmptyQuery = props.searchOnEmpty
 		controller.setProviders(props.providers)
-		controller.setCriteria(props.criteria)
-		controller.allowEmptyQuery = props.allowEmptyQuery
+		
 		
 		let
 			searchState = controller.getState()
@@ -371,10 +435,15 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 */
 	updateState = (props:ISearchPanelProps = null, focused:boolean = getValue(() => this.state.focused)) => {
 		const
+			criteriaOrTextChanged = !shallowEquals(props,this.props,'criteria','text'),
 			newState = this.getNewState(props, focused)
 		
+		log.debug(`Criteria or text changed`,criteriaOrTextChanged,props,this.props)
 		//if (!shallowEquals(this.state,newState))
-		this.setState(newState, () => this.forceUpdate())
+		this.setState(
+			newState,
+			() => criteriaOrTextChanged && this.updateSearchResults(props.criteria,props.text || this.state.query)
+		)
 		
 		return newState
 	}
@@ -384,8 +453,11 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * Select text in query
 	 */
 	select() {
-		const textField = this.state.textField
-		if (!textField) return
+		const
+			textField = this.state.textField
+		
+		if (!textField)
+			return
 		
 		const
 			$ = require('jquery'),
@@ -441,7 +513,8 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 	
 	
-	updateSearchResults = query => this.state.controller.setQuery(query)
+	updateSearchResults = (criteria,query) =>
+		this.state.controller.setQuery(criteria,query)
 	
 	
 	/**
@@ -449,25 +522,34 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 *
 	 * @param event
 	 */
-	
-	
-	onInputChange(event) {
+	private onInputChange = (event) => {
 		const
 			query = event.target.value,
+			{text, onTextChanged} = this.props,
 			{ searchState } = this.state
+		
 		log.debug('Search value: ' + query)
-		if (!query || !query.length) {
+		if (getValue(() => onTextChanged(query)) === false) {
+			log.debug(`Internal update prevented by onTextChanged`)
+			return false
+		} else if (!query || !query.length) {
 			this.setState({
 				query,
-				searchState: assign({}, assign(searchState, {
+				searchState: cloneObjectShallow(searchState, {
 					selectedIndex: 0,
 					results: [],
 					items: List<SearchItem>()
-				}))
+				})
 			})
 		} else {
-			this.setState({ query })
-			this.updateSearchResults(query)
+			
+			this.setState({
+				query
+			},() => this.updateSearchResults(
+				this.props.criteria,
+				this.props.text || query)
+			)
+			
 		}
 		
 	}
@@ -614,6 +696,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 	
 	
+	
 	/**
 	 * On mount
 	 */
@@ -655,32 +738,6 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	}
 	
 	
-	private onClickAway = (event:MouseEvent) => {
-		
-		const
-			elem = ReactDOM.findDOMNode(this),
-			isDescendant = Dom.isDescendant(elem,event.target)
-		
-		log.debug(`Click away`,elem,event.target)
-		if (isDescendant)
-			return
-		
-		guard(this.props.onEscape)
-	}
-	
-	/**
-	 * Results layer
-	 *
-	 * @param resultsLayerRef
-	 */
-	private setResultsLayerRef = (resultsLayerRef) =>  this.setState({resultsLayerRef})
-	
-	/**
-	 * Set the results ref
-	 *
-	 * @param resultsListRef
-	 */
-	private setResultsListRef = (resultsListRef) => this.setState({resultsListRef})
 	
 	/**
 	 * Render the results layer
@@ -708,10 +765,12 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	render() {
 		const
 			{
-				commandContainer,
 				styles,
 				placeholder,
 				autoFocus,
+				criteria,
+				criteriaRenderer,
+				text,
 				searchId
 			} = this.props,
 			{ searchState, query } = this.state,
@@ -748,24 +807,24 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			
 			
 			<div tabIndex={-1} style={[styles.field.wrapper]}>
-				<TextField
-					id={searchPanelId}
-					ref={this.setTextFieldRef}
-					tabIndex={-1}
-					autoFocus={autoFocus}
-					onFocus={(event) => {
-						
-						log.debug(`Received text box focus event`,event,commandContainer);
-						this.onFocus(event)
-						//getCommandManager().setContainerFocused(this.commandComponentId,commandContainer,true,event)
-						//commandContainer && commandContainer.onFocus(event)
-					}}
-					placeholder={placeholder}
-					onChange={(e) => this.onInputChange(e)}
-					style={fieldStyle}
-					inputStyle={inputStyle}
-					defaultValue={query || ''}
-				/>
+				<FlexRowCenter >
+					{/* RENDER CRITERIA */}
+					{ getValue(() => criteriaRenderer(criteria)) }
+					
+					<TextField
+						id={searchPanelId}
+						ref={this.setTextFieldRef}
+						tabIndex={-1}
+						autoFocus={autoFocus}
+						onFocus={this.onFocus}
+						placeholder={placeholder}
+						onChange={this.onInputChange}
+						style={fieldStyle}
+						inputStyle={inputStyle}
+						value={text || query || ''}
+					/>
+				
+				</FlexRowCenter>
 				
 				<RenderToLayer
 					ref={this.setResultsLayerRef}
@@ -774,7 +833,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 					useLayerForClickAway={false}
 					componentClickAway={this.onClickAway}
 				/>
-			
+				
 			</div>
 		
 		

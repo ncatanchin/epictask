@@ -6,7 +6,7 @@ import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelS
 import { isNumber, isNil, getValue } from "typeguard"
 import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
-import { DefaultIssueFilter, Issue, Label, Comment, Milestone, IIssueListItem } from "epic-models"
+import { DefaultIssueFilter, Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria } from "epic-models"
 import { addErrorMessage } from "epic-global/NotificationCenterClient"
 import { IssuesEvent } from "epic-models/IssuesEvent"
 import {
@@ -98,9 +98,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	}
 	
 	
-	
-	
-	
 	updateState(patch:{[prop:string]:any}) {
 		
 		patch = cloneObjectShallow(patch)
@@ -137,7 +134,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		
 		if (state !== this.state) {
 			getUIActions().updateView(viewState.set('state', state))
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],state)
+			this.emit(ViewStateEvent[ ViewStateEvent.Changed ], state)
 		}
 		
 		return state
@@ -206,7 +203,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	private databaseChangeHandlers = {
 		
 		// ISSUES
-		[Issue.$$clazz]: function(changes:IDatabaseChange[]) {
+		[Issue.$$clazz]: function (changes:IDatabaseChange[]) {
 			const
 				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
@@ -219,7 +216,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		},
 		
 		// COMMENTS
-		[Comment.$$clazz]: function (changes:IDatabaseChange[])  {
+		[Comment.$$clazz]: function (changes:IDatabaseChange[]) {
 			const
 				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
@@ -229,16 +226,16 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			log.debug(`Updating models`, models)
 			
 			let
-				{comments} = this.state,
+				{ comments } = this.state,
 				selectedIssue = this.selectors.selectedIssueSelector(getStoreState())
 			
 			models.forEach(model => {
 				const
 					index = comments.findIndex(it => it.id === model.id)
-					
+				
 				
 				if (index > -1) {
-					comments = comments.set(index,model)
+					comments = comments.set(index, model)
 				} else if (
 					selectedIssue &&
 					selectedIssue.number === model.issueNumber &&
@@ -249,7 +246,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			})
 			
 			if (comments !== this.state.comments) {
-				this.updateState({comments})
+				this.updateState({ comments })
 			}
 		},
 		// COMMENTS
@@ -263,7 +260,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			log.debug(`Updating models`, models)
 			
 			let
-				{issuesEvents} = this.state,
+				{ issuesEvents } = this.state,
 				selectedIssue = this.selectors.selectedIssueSelector(getStoreState())
 			
 			models.forEach(model => {
@@ -272,7 +269,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 				
 				
 				if (index > -1) {
-					issuesEvents = issuesEvents.set(index,model)
+					issuesEvents = issuesEvents.set(index, model)
 				} else if (
 					selectedIssue &&
 					selectedIssue.number === model.issueNumber &&
@@ -283,7 +280,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			})
 			
 			if (issuesEvents !== this.state.issuesEvents) {
-				this.updateState({issuesEvents})
+				this.updateState({ issuesEvents })
 			}
 		}
 	}
@@ -296,16 +293,15 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	private onDatabaseChanged = (allChanges:IDatabaseChange[]) => {
 		const
-			groups = _.groupBy(allChanges,it => it.type)
+			groups = _.groupBy(allChanges, it => it.type)
 		
 		Object
 			.keys(groups)
 			.forEach(type => {
-				this.databaseChangeHandlers[type].apply(this,[groups[type]])
+				this.databaseChangeHandlers[ type ].apply(this, [ groups[ type ] ])
 			})
 		
 	}
-	
 	
 	
 	/**
@@ -361,9 +357,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	loadIssues = _.debounce(OneAtATime({}, async() => {
 		const
-			{ issueSort, issueFilter, selectedIssueIds } = this.state,
+			{ criteria, selectedIssueIds } = this.state,
 			actions = new IssueActionFactory(),
-			issues = await actions.queryIssues(issueSort, issueFilter)
+			issues = await actions.queryIssues(criteria)
 		
 		
 		this.updateState({ issues })
@@ -423,17 +419,11 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	})
 	
 	
-	private filteringAndSorting = this.makeStateUpdate((issueFilter:IIssueFilter = null, issueSort:IIssueSort = null) =>
-		(state:IssuesPanelState) => state.withMutations((newState:IssuesPanelState) => {
-			
-			if (issueFilter)
-				newState.set('issueFilter', cloneObjectShallow(issueFilter))
-			
-			if (issueSort)
-				newState.set('issueSort', cloneObjectShallow(issueSort))
-			
-			return newState
-		}))
+	private updateCriteria = this.makeStateUpdate((criteria:IIssueCriteria = null) =>
+		(state:IssuesPanelState) => (criteria) ?
+			state.set('criteria', cloneObjectShallow(criteria)) :
+			state
+	)
 	
 	
 	setActivity(comments:List<Comment>, issuesEvents:List<IssuesEvent>) {
@@ -442,7 +432,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issuesEvents
 		})
 	}
-	
 	
 	
 	/**
@@ -494,7 +483,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			focusedIssueIds
 		})
 	}
-	
 	
 	
 	/**
@@ -595,7 +583,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * Clear all current issue filters
 	 */
 	clearFilters() {
-		this.filteringAndSorting(DefaultIssueFilter)
+		this.updateCriteria(DefaultIssueCriteria)
 	}
 	
 	/**
@@ -605,12 +593,12 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	setGroupBy(groupBy:string) {
 		const
-			{ issueSort } = this.state,
+			issueSort = this.getSort(),
 			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
 				groupBy
 			})
 		
-		this.setFilteringAndSorting(null, newIssueSort)
+		this.setCriteria(cloneObjectShallow(this.getCriteria(), { sort: newIssueSort }))
 	}
 	
 	/**
@@ -618,14 +606,14 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	toggleGroupByDirection() {
 		const
-			issueSort = this.state.issueSort,
+			issueSort = this.getSort(),
 			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
 				groupByDirection: (issueSort.groupByDirection === 'asc') ?
 					'desc' :
 					'asc'
 			})
 		
-		this.setFilteringAndSorting(null, newIssueSort)
+		this.setCriteria(cloneObjectShallow(this.getCriteria(),{sort:newIssueSort}))
 	}
 	
 	
@@ -636,13 +624,13 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	setSortByField(field:string) {
 		const
-			issueSort = this.state.issueSort,
-			newIssueSort:IIssueSort = assign(
-				_.cloneDeep(issueSort),
-				{ fields: [ field ] }
-			)
+			{ criteria } = this.state,
+			issueSort = criteria.sort,
+			newIssueSort:IIssueSort =
+				cloneObject(issueSort, { fields: [ field ] })
 		
-		this.setFilteringAndSorting(null, newIssueSort)
+		
+		this.setCriteria(cloneObjectShallow(criteria, { sort: newIssueSort }))
 	}
 	
 	/**
@@ -650,17 +638,18 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	toggleSortByDirection() {
 		const
-			issueSort = this.state.issueSort,
-			newIssueSort:IIssueSort = _.assign(
-				_.cloneDeep(issueSort),
-				{
+			{ criteria } = this.state,
+			issueSort = criteria.sort,
+			newIssueSort:IIssueSort =
+				cloneObject(issueSort, {
 					direction: (issueSort.direction === 'asc') ?
 						'desc' :
 						'asc'
-				}
-			) as any
+				})
 		
-		this.setFilteringAndSorting(null, newIssueSort)
+		
+		this.setCriteria(cloneObjectShallow(criteria, { sort: newIssueSort }))
+		
 	}
 	
 	/**
@@ -669,10 +658,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @param milestone
 	 */
 	toggleIssueFilterMilestone(milestone:Milestone) {
-		const { issueFilter } = this.state
-		const
-			newIssueFilter = _.cloneDeep(issueFilter),
-			milestoneIds = newIssueFilter.milestoneIds || (newIssueFilter.milestoneIds = []),
+		let
+			{ criteria } = this.state,
+			milestoneIds = cloneObjectShallow(criteria.milestoneIds || []),
 			index = milestoneIds.indexOf(milestone.id)
 		
 		if (index === -1) {
@@ -681,8 +669,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			milestoneIds.splice(index, 1)
 		}
 		
-		
-		this.setFilteringAndSorting(newIssueFilter)
+		this.setCriteria(cloneObjectShallow(criteria, { milestoneIds }))
 	}
 	
 	/**
@@ -691,32 +678,31 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @param label
 	 */
 	toggleIssueFilterLabel(label:Label) {
-		const { issueFilter } = this.state
-		const
-			newIssueFilter = _.cloneDeep(issueFilter),
-			labelUrls = newIssueFilter.labelUrls || (newIssueFilter.labelUrls = []),
-			index = labelUrls.indexOf(label.url)
+		let
+			{ criteria } = this.state,
+			labelIds = cloneObjectShallow(criteria.labelIds || []),
+			index = labelIds.indexOf(label.id)
 		
 		if (index === -1) {
-			labelUrls.push(label.url)
+			labelIds.push(label.id)
 		} else {
-			labelUrls.splice(index, 1)
+			labelIds.splice(index, 1)
 		}
 		
-		this.setFilteringAndSorting(newIssueFilter)
+		this.setCriteria(cloneObjectShallow(criteria, { labelIds }))
+		
 	}
 	
 	
 	/**
 	 * Set filtering and sorting
 	 *
-	 * @param issueFilter
-	 * @param issueSort
+	 * @param criteria
 	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
 	 */
 	
-	setFilteringAndSorting(issueFilter:IIssueFilter = this.getFilter(), issueSort:IIssueSort = this.getSort()) {
-		return this.filteringAndSorting(issueFilter, issueSort)
+	setCriteria(criteria:IIssueCriteria = this.getCriteria()) {
+		return this.updateCriteria(criteria)
 	}
 	
 	
@@ -731,17 +717,16 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @param includeClosed
 	 */
 	includeClosedIssues(includeClosed:boolean) {
-		const updatedFilter = assign(_.cloneDeep(this.state.issueFilter), { includeClosed })
-		this.setFilteringAndSorting(updatedFilter)
+		this.setCriteria(cloneObjectShallow(this.getCriteria(), { includeClosed }))
 	}
 	
 	
-	getFilter() {
-		return this.state.issueFilter
+	getCriteria() {
+		return this.state.criteria
 	}
 	
 	getSort() {
-		return this.state.issueSort
+		return this.getCriteria().sort
 	}
 	
 	
@@ -809,7 +794,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	}
 	
 	
-	
 	/**
 	 * Begin editing inline
 	 *
@@ -839,7 +823,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 				'labels',
 				'assignee',
 				'collaborators'
-			),{ state: 'open' })),
+			), { state: 'open' })),
 			editInlineConfig: {
 				index,
 				fromIssueId: fromIssue.id,

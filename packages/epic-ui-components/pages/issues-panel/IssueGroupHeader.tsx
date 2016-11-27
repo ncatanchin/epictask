@@ -1,6 +1,7 @@
 // Imports
 import { Map, Record, List } from "immutable"
 import { connect } from 'react-redux'
+import * as Styles from "epic-styles/styles"
 import { createStructuredSelector, createSelector } from 'reselect'
 import { IRowState, IssueLabelsAndMilestones } from 'epic-ui-components/common'
 import { IThemedAttributes, Themed, ThemedStyles } from 'epic-styles'
@@ -8,12 +9,14 @@ import { getIssuesPanelSelector, IssuesPanel, IssuesPanelController } from "epic
 import { getValue, shallowEquals } from "epic-global"
 import { isGroupListItem, IIssueGroup, Milestone, IIssueListItem } from "epic-models"
 import { Icon } from "epic-ui-components/common/icon/Icon"
-import { TransitionDurationLong } from "epic-styles/styles"
+import { TransitionDurationLong, colorAlpha } from "epic-styles/styles"
+import { FlexRowCenter } from "epic-ui-components/common"
 
 
 // Constants
 const
 	log = getLogger(__filename),
+	tiny = require('tinycolor2'),
 	NO_LABELS_ITEM = { name: 'No Labels', color: 'ffffff' }
 
 // DEBUG OVERRIDE
@@ -25,44 +28,46 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexRowCenter, FlexAuto, FillWidth, makeTransition('background-color', TransitionDurationLong), {
-		padding: '1rem 0.5rem',
-		
-		spacer: [ FlexScale ],
-		
-		middle: [ FlexColumnCenter, FlexScale, {
-			top: [ FlexRow, FillWidth, makePaddingRem(0, 0, 1, 0) ],
-			bottom: [ FlexRow, FillWidth ],
-		} ],
-		
-		text: [ FlexScale, {
-			fontWeight: 700,
-			fontSize: rem(1.3)
-		} ],
-		
-		// Header Controls
-		control: [ makeTransition([ 'transform' ], TransitionDurationLong), {
-			cursor: 'pointer',
-			width: rem(3),
-			display: 'block',
+	return [
+		Styles.FlexAuto,
+		Styles.FillWidth,
+		Styles.makeTransition('background-color', TransitionDurationLong),
+		Styles.makePaddingRem(1,0.5),{
 			
-			padding: '0 1rem',
-			backgroundColor: 'transparent',
-			transform: 'rotate(0deg)',
-			expanded: [ {
-				transform: 'rotate(90deg)'
+			color: text.primary,
+			boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + colorAlpha(primary.hue2,0.3),
+			backgroundColor: tiny(primary.hue2).lighten(10).setAlpha(0.6),
+			
+			text: [ FlexScale, {
+				fontWeight: 700,
+				fontSize: rem(1.3)
+			} ],
+			
+			// Header Controls
+			control: [
+				Styles.makeTransition([ 'transform' ], TransitionDurationLong),
+				Styles.makePaddingRem(0,1),{
+					cursor: 'pointer',
+					width: rem(3),
+					display: 'block',
+					
+					backgroundColor: 'transparent',
+					transform: 'rotate(0deg)',
+					expanded: [ {
+						transform: 'rotate(90deg)'
+					} ]
+				}
+			],
+			labels: [ Styles.FlexScale, Styles.OverflowAuto ],
+			stats: [ Styles.FlexAuto, {
+				number: {
+					fontWeight: 700
+				},
+				fontWeight: 100,
+				padding: '0 1rem',
+				textTransform: 'uppercase'
 			} ]
-		} ],
-		labels: [ FlexScale, OverflowAuto ],
-		stats: [ FlexAuto, {
-			number: {
-				fontWeight: 700
-			},
-			fontWeight: 100,
-			padding: '0 1rem',
-			textTransform: 'uppercase'
 		} ]
-	} ]
 }
 
 
@@ -149,7 +154,7 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 		
 		log.debug(`Group by`, groupBy, `item`, groupByItem, group)
 		
-		return <div style={[headerStyles,expanded && headerStyles.expanded,style]}
+		return <FlexRowCenter style={[styles,style]}
 		            id={`group-${group.id}`}
 		            onClick={onToggle && ((event) => onToggle(event,group))}>
 			<div style={[headerStyles.control,expanded && headerStyles.control.expanded]}>
@@ -163,7 +168,7 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 				//GROUP BY MILESTONES
 				(groupBy === 'milestone') ?
 					<IssueLabelsAndMilestones
-						style={headerStyles.labels}
+						style={styles.labels}
 						showIcon
 						labels={[]}
 						milestones={[!groupByItem ? Milestone.EmptyMilestone : groupByItem]}/> :
@@ -171,7 +176,7 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 					// GROUP BY LABELS
 					(groupBy === 'labels') ?
 						<IssueLabelsAndMilestones
-							style={styles.issueGroupHeader.labels}
+							style={styles.labels}
 							showIcon
 							labels={(!groupByItem || groupByItem.length === 0) ?
 							[NO_LABELS_ITEM] :
@@ -179,18 +184,18 @@ export class IssueGroupHeader extends React.Component<IIssueGroupHeaderProps,voi
 						
 						// GROUP BY ASSIGNEE
 						<div
-							style={styles.issueGroupHeader.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
+							style={styles.labels}>{!groupByItem ? 'Not assigned' : groupByItem.login}</div>
 			}
 			
 			
 			{/* STATS */}
-			<div style={[headerStyles.stats]}>
-					<span style={headerStyles.stats.number}>
+			<div style={[styles.stats]}>
+					<span style={styles.stats.number}>
 						{issueCount}
 					</span>
 				&nbsp;Issue{issueCount !== 1 ? 's' : ''}
 			</div>
-		</div>
+		</FlexRowCenter>
 	}
 }
 

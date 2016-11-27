@@ -56,7 +56,6 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	
 	private state:ISearchState
 	
-	criteria:any = {}
 	
 	/**
 	 * All search providers
@@ -169,15 +168,6 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	}
 	
 	/**
-	 * Set criteria
-	 *
-	 * @param criteria
-	 */
-	setCriteria(criteria) {
-		this.criteria = criteria
-	}
-	
-	/**
 	 * Fire an event to all listeners
 	 *
 	 * @param event
@@ -221,22 +211,25 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 	/**
 	 * Update the query
 	 */
-	setQuery = _.debounce((query:string) => {
-		this.queryCache.set(query)
+	setQuery = _.debounce((criteria,text:string) => {
+		this.queryCache.set({criteria,text})
 	},250)
 	
 	
 	/**
 	 * Execute the search
 	 *
-	 * @param text
+	 * @param criteriaAndText
 	 * @return {undefined}
 	 */
-	private async runSearch(text:string) {
+	private async runSearch(criteriaAndText) {
+		const
+			{text,criteria} = criteriaAndText
+		
 		log.info(`Running search with query: ${text}`)
 		
 		const nextSearch = () => {
-			this.pendingSearch = (text   !== this.queryCache.get()) ?
+			this.pendingSearch = (criteriaAndText !== this.queryCache.get()) ?
 				this.runSearch(this.queryCache.get()) :
 				null
 		}
@@ -249,7 +242,7 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 		
 		try {
 			let
-				results = List(this.providers.map(provider => new SearchResult(this.searchId,provider)))
+				results = List(this.providers.map(provider => new SearchResult(this.searchId,provider,criteria,text)))
 			
 			this.setResults(results)
 			
@@ -257,7 +250,7 @@ export class SearchController extends EnumEventEmitter<SearchEvent> {
 				{searchId} = this,
 				searchPromises = results.map(async (result,index) => {
 					const
-						items = await result.provider.query(this.criteria, text)
+						items = await result.provider.query(criteria, text)
 					
 					result.resolve(items)
 					

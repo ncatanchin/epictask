@@ -650,9 +650,6 @@ export function DefaultTheme(palette) {
 		},
 		
 		issueGroupHeader: {
-			color: text.primary,
-			boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),
-			backgroundColor: tc(primary.hue2).lighten(10).setAlpha(0.6).toRgbString(),
 			
 			expanded: {
 				boxShadow: 'inset 0.1rem 0.1rem 0.3rem ' + tc(primary.hue2).setAlpha(0.3).toRgbString(),

@@ -96,8 +96,10 @@ export class IssueActionFactory  {
 	constructor() {
 	}
 	
-	async queryIssues(issueSort:IIssueSort,issueFilter:IIssueFilter):Promise<List<Issue>> {
+	async queryIssues(criteria:IIssueCriteria):Promise<List<Issue>> {
+		
 		const
+			issueSort = criteria.sort,
 			availRepos = enabledAvailableReposSelector(getStoreState()),
 			enabledRepoIds = availRepos
 				.map(it => it.id)

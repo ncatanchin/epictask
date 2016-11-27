@@ -1,9 +1,8 @@
 import { Map, Record, List } from "immutable"
 import { reviveImmutable, RegisterModel } from "epic-global"
 import {
-	DefaultIssueSort,
 	IIssueEditInlineConfig,
-	DefaultIssueFilter,
+	DefaultIssueCriteria,
 	IssuesEvent,
 	Issue,
 	Comment,
@@ -13,26 +12,30 @@ import {
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 
 
+
+
 /**
  * Declare the interface first
  */
 declare global {
+	
+	
+	
 	// Expose interface
 	interface IIssuesPanelState  {
 		issues?:List<Issue>
 		comments?:List<Comment>
-		issuesEvents?:List<IssuesEvent>
+		events?:List<IssuesEvent>
 		
-		issueSort?:IIssueSort
-		issueFilter?:IIssueFilter
+		criteria?:IIssueCriteria
 		
 		groupVisibility?:Map<string,boolean>
 		
 		selectedIssueIds?:List<number>
 		focusedIssueIds?:List<number>
 		
-		issueSaving?:boolean
-		issueSaveError?: Error
+		saving?:boolean
+		saveError?: Error
 		
 		editInlineConfig?:IIssueEditInlineConfig
 		editingIssue?:Issue
@@ -56,43 +59,48 @@ export type TIssueActivity = {
  */
 export type TIssueSortAndFilter = {issueFilter:IIssueFilter,issueSort:IIssueSort}
 
-
+/**
+ * Patch modes
+ */
 export const IssuePatchModes = {
 	Label:Label.$$clazz,
 	Milestone:Milestone.$$clazz,
 	Assignee:'Assignee',
 }
 
-
-
+/**
+ * Immutable record
+ *
+ * @type {Record.Class}
+ */
 export const IssuesPanelStateRecord = Record({
 	issues:List<Issue>(),
 	
 	comments:List<Comment>(),
-	issuesEvents:List<IssuesEvent>(),
+	events:List<IssuesEvent>(),
 	
 	groupVisibility:Map<string,boolean>(),
 	
 	selectedIssueIds:List<number>(),
 	focusedIssueIds: List<number>(),
-	issueSort:DefaultIssueSort,
-	issueFilter:DefaultIssueFilter,
+	
+	criteria: DefaultIssueCriteria,
 	
 	editInlineConfig:null,
 	editingIssue:null,
 	
-	issueSaveError: null,
-	issueSaving: false,
+	saveError: null,
+	saving: false,
 } as IIssuesPanelState)
 
 @RegisterModel
-export class IssuesPanelState extends IssuesPanelStateRecord implements IssuesPanelState {
+export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesPanelState {
 	
 	static fromJS(o:any = {}) {
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
-			['issues','comments','issuesEvents','selectedIssueIds','focusedIssueIds'],
+			['issues','comments','events','selectedIssueIds','focusedIssueIds'],
 			['groupVisibility']
 		)
 	}
@@ -102,27 +110,26 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IssuesPa
 			...excludeFilter(
 				'activityLoading',
 				'issues',
-				'issuesEvents',
+				'events',
 				'comments',
 				/^edit/,
-				/^issueSav/
+				/^sav/
 			)))
 	}
 	
 	issues:List<Issue>
 	comments:List<Comment>
-	issuesEvents:List<IssuesEvent>
+	events:List<IssuesEvent>
 	
-	issueSort:IIssueSort
-	issueFilter:IIssueFilter
+	criteria:IIssueCriteria
 	
 	groupVisibility:Map<string,boolean>
 	
 	selectedIssueIds:List<number>
 	focusedIssueIds:List<number>
 	
-	issueSaving:boolean
-	issueSaveError: Error
+	saving:boolean
+	saveError: Error
 	
 	editInlineConfig:IIssueEditInlineConfig
 	editingIssue:Issue

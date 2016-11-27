@@ -1,15 +1,15 @@
 
-
-
 declare interface IIssueFilter {
 	// Milestone Ids
 	milestoneIds?:number[]
 	
 	// Label Urls
-	labelUrls?:string[]
+	labelIds?:number[]
 	
 	// User ids
 	assigneeIds?:number[]
+	
+	repoIds?:number[]
 	
 	includeClosed:boolean
 	
@@ -23,3 +23,9 @@ declare interface IIssueFilter {
 	limit:number
 }
 
+
+declare interface IIssueCriteria extends IIssueFilter {
+	text: string
+	sort: IIssueSort
+	exclude: IIssueFilter
+}

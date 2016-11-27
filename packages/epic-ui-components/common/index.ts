@@ -1,19 +1,11 @@
 
 export * from "./PureRender"
-
 export * from './RenderToLayer'
-
 export * from "./PromisedComponent"
+export * from './FlexLayout'
 
 export * from "./SaveIndicator"
 export * from "./Labels"
-
-
-
-
-
-
-
 export * from './TextField'
 
 export * from "./VisibleList"

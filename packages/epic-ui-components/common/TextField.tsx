@@ -110,16 +110,24 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 				inputStyle,
 				style,
 				errorStyle,
-				defaultValue = ''
-			} = this.props
+				defaultValue = '',
+				value,
+			} = this.props,
+			
+			inputProps = assign({
+				defaultValue
+			}, value && {value})
+		
+		
+			
+		
 		
 		return <div style={[styles,style]}>
 			<input
 				{...filterProps(this.props)}
+				{...inputProps}
 				ref='inputField'
 				style={mergeStyles(styles.input,inputStyle)}
-				defaultValue={defaultValue}
-			
 			/>
 		</div>
 	}

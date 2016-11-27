@@ -120,7 +120,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			
 			<SearchPanel ref={this.setSearchPanel}
 			             inputStyle={styles.search.input}
-			             allowEmptyQuery={true}
+			             searchOnEmpty={true}
 			             autoFocus={true}
 			             perProviderLimit={-1}
 			             onEscape={this.hide}

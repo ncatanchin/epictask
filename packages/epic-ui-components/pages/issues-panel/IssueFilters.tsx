@@ -5,12 +5,14 @@
 import { List } from "immutable"
 import { connect } from "react-redux"
 import { PureRender, Icon, IssueLabelsAndMilestones } from "epic-ui-components"
-import { IssueSortableFields,
+import {
+	IssueSortableFields,
 	IssueGroupByFields,
 	IssueGroupByNames,
 	IssueSortableFieldNames,
 	IIssueGroup,
-	Milestone, Label, Issue, User } from "epic-models"
+	Milestone, Label, Issue, User
+} from "epic-models"
 import {
 	enabledAssigneesSelector,
 	enabledMilestonesSelector,
@@ -44,68 +46,68 @@ const
 
 
 // Styles
-function baseStyles(topStyles,theme,palette) {
+function baseStyles(topStyles, theme, palette) {
 	return {
-		root: [makeTransition(['max-height','height','opacity']),FlexAuto, FillWidth, {
+		root: [ makeTransition([ 'max-height', 'height', 'opacity' ]), FlexAuto, FillWidth, {
 			padding: '0.5rem 0rem 0.5rem 1rem',
 			height: 'auto',
 			
 			empty: [ {
 				padding: 0,
 				maxHeight: 0,
-			}]
-		}],
+			} ]
+		} ],
 		
-		filters: [FlexRowCenter, FillWidth, {
+		filters: [ FlexRowCenter, FillWidth, {
 			
-			none: [FlexScale, {
+			none: [ FlexScale, {
 				fontWeight: 400,
 				fontSize: themeFontSize(1.2)
-			}],
-			labels: [FlexScale, {
+			} ],
+			labels: [ FlexScale, {
 				flexWrap: 'wrap',
-				label: [{
+				label: [ {
 					margin: '0.5rem 1rem 0.5rem 0'
-				}]
-			}],
+				} ]
+			} ],
 			
 			// Right side controls & stats
-			controls: [FlexColumn, makeFlexAlign('flex-end','center'), {
-				groupBy: [FlexAuto, FlexRowCenter, {
+			controls: [ FlexColumn, makeFlexAlign('flex-end', 'center'), {
+				groupBy: [ FlexAuto, FlexRowCenter, {
 					padding: '0.2rem 0 0.2rem 1.4rem',
 					borderRadius: '0.3rem',
 					margin: '0 0.2rem 0 0',
 					boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)'
-				}],
-				stats: [Ellipsis,{
+				} ],
+				stats: [ Ellipsis, {
 					margin: '1rem 1rem 0.5rem 1rem',
 					fontSize: rem(1),
 					fontWeight: 300
-				}]
-			}]
+				} ]
+			} ]
 			
-		}],
+		} ],
 		
 		list: {
 			item: {
 				
-				text: [FlexRowCenter, FillWidth, {
+				text: [ FlexRowCenter, FillWidth, {
 					value: {
 						width: 300,
 					},
-					primary: [FlexAuto, Ellipsis, {
+					primary: [ FlexAuto, Ellipsis, {
 						padding: '0 0 0 1rem',
 						fontWeight: 700,
 						flexGrow: 1
-					}],
-					secondary: [FlexScale, Ellipsis, {
+					} ],
+					secondary: [ FlexScale, Ellipsis, {
 						fontWeight: 300
-					}],
-					spacer: [FlexScale],
-					icon: [FlexAuto, {
+					} ],
+					spacer: [ FlexScale ],
+					icon: [ FlexAuto, {
 						width: 18
-					}]
-				}]
+					} ]
+				} ]
 			}
 			
 		}
@@ -121,8 +123,7 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	unfilteredIssueIds?:number[]
 	issues?:Issue[],
 	issuesGrouped?:IIssueGroup[],
-	issueSort?:IIssueSort
-	issueFilter?:IIssueFilter
+	issueCriteria?:IIssueCriteria
 	
 	issueFilterLabels?:List<Label>
 	issueFilterMilestones?:List<Milestone>
@@ -135,8 +136,6 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 }
 
 
-
-
 /**
  * IssueFilters
  *
@@ -145,18 +144,17 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
  **/
 
 @connect(() => createStructuredSelector({
-	issueSort: getIssuesPanelSelector(selectors => selectors.issueSortSelector),
-	issueFilter: getIssuesPanelSelector(selectors => selectors.issueFilterSelector),
+	issueCriteria: getIssuesPanelSelector(selectors => selectors.issueCriteriaSelector),
 	issueFilterLabels: getIssuesPanelSelector(selectors => selectors.issueFilterLabelsSelector),
 	issueFilterMilestones: getIssuesPanelSelector(selectors => selectors.issueFilterMilestonesSelector),
 	labels: enabledLabelsSelector,
 	milestones: enabledMilestonesSelector,
 	assignees: enabledAssigneesSelector
-}),null,null,{withRef:true})
+}), null, null, { withRef: true })
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender
 export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
-
+	
 	get uiActions() {
 		return getUIActions()
 	}
@@ -173,12 +171,12 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 	 * Event handlers
 	 */
 	onSortDirectionChanged = () => this.viewController.toggleSortByDirection()
-
+	
 	/**
 	 * Group by direction change
 	 */
 	onGroupByDirectionChanged = () => this.viewController.toggleGroupByDirection()
-
+	
 	/**
 	 * Remove a label/milestone filter
 	 *
@@ -191,64 +189,64 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 		else
 			this.viewController.toggleIssueFilterMilestone(item)
 	}
-
+	
 	
 	onClearFilters = () => {
 		this.viewController.clearFilters()
 	}
-
+	
 	/**
 	 * Toggle the inclusion of closed issues
 	 */
 	onToggleIncludeClosed = () => this.viewController.includeClosedIssues(
-		!this.props.issueFilter.includeClosed
+		!this.props.issueCriteria.includeClosed
 	)
-
+	
 	makeOnMilestoneSelected(milestone:Milestone) {
 		return (event) => {
 			log.info('Milestone toggled', event)
 			this.viewController.toggleIssueFilterMilestone(milestone)
 		}
 	}
-
+	
 	makeOnLabelSelected(label:Label) {
 		return (event) => {
 			log.info('Label selected', event)
 			this.viewController.toggleIssueFilterLabel(label)
 		}
 	}
-
+	
 	makeOnSortBySelected(field:string) {
 		return (event) => {
 			log.info('Sort by selected', event)
 			this.viewController.setSortByField(field)
 		}
 	}
-
+	
 	makeOnGroupBySelected(field:string) {
 		return (event) => {
 			log.info('Group by selected', event)
 			this.viewController.setGroupBy(field)
 		}
 	}
-
+	
 	/**
 	 * Render all label items
 	 *
 	 * @returns {any[]}
 	 */
 	renderLabelItems() {
-
-
+		
+		
 		const
 			{
 				theme,
 				styles,
-				issueFilter,
+				issueCriteria,
 				labels,
 			} = this.props,
-			{palette} = theme
-
+			{ palette } = theme
+		
 		return labels.map(label => {
 			const
 				backgroundColor = `#${label.color}`,
@@ -261,8 +259,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 					backgroundColor,
 					color
 				}),
-				selected = issueFilter.labelUrls && issueFilter.labelUrls.includes(label.url)
-
+				selected = issueCriteria.labelIds && issueCriteria.labelIds.includes(label.id)
+			
 			const primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
@@ -280,8 +278,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				</div>
 				<div style={styles.list.item.text.spacer}/>
 			</div>
-
-
+			
+			
 			return <MenuItem
 				onTouchTap={this.makeOnLabelSelected(label)}
 				style={labelStyle}
@@ -289,30 +287,29 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			/>
 		})
 	}
-
-
+	
+	
 	/**
 	 * Render milestone items
 	 *
 	 * @returns {any[]}
 	 */
 	renderMilestoneItems() {
-
-
+		
+		
 		const {
 			theme,
 			styles,
-			issueSort,
-			issueFilter,
+			issueCriteria,
 			milestones,
 		} = this.props
-
-		const {palette} = theme
-
+		
+		const { palette } = theme
+		
 		return milestones.map(milestone => {
-
+			
 			const
-				selected = issueFilter.milestoneIds && issueFilter.milestoneIds.includes(milestone.id),
+				selected = issueCriteria.milestoneIds && issueCriteria.milestoneIds.includes(milestone.id),
 				primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
@@ -328,47 +325,48 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 					<div style={styles.list.item.text.primary}>
 						{milestone.title}
 					</div>
-	
+					
 					<div style={styles.list.item.text.secondary}>
 						{milestone.due_on ? moment(milestone.due_on).fromNow() : 'No Due Date'}
 					</div>
 				</div>
-
+			
 			return <MenuItem
 				onTouchTap={this.makeOnMilestoneSelected(milestone)}
 				style={styles.list.item}
 				primaryText={primaryText}/>
-
+			
 		})
 	}
-
+	
 	/**
 	 * Render milestone items
 	 *
 	 * @returns {any[]}
 	 */
 	renderSortByItems() {
-
-
+		
+		
 		const
 			{
 				theme,
 				styles,
-				issueSort
+				issueCriteria
 			} = this.props,
-
+			issueSort = issueCriteria.sort,
+			
 			fields = IssueSortableFields,
 			
 			fieldNames = IssueSortableFieldNames,
-			sortedField = issueSort.fields[0],
-			{palette} = theme
-
+			sortedField = issueSort.fields[ 0 ],
+			{ palette } = theme
+		
 		return (fields).map((field, index) => {
-
+			
 			const
 				selected = field === sortedField,
-				fieldName = fieldNames[index]
-
+				fieldName = fieldNames[ index ]
+			
 			const primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
@@ -384,41 +382,43 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<div style={styles.list.item.text.primary}>
 					{fieldName}
 				</div>
-
+				
 				<div style={styles.list.item.text.spacer}/>
-
+			
 			</div>
-
+			
 			return <MenuItem
 				onTouchTap={this.makeOnSortBySelected(field)}
 				style={styles.list.item}
 				primaryText={primaryText}/>
-
+			
 		})
 	}
-
-
+	
+	
 	/**
 	 * Group By Menu Items
 	 */
 	renderGroupByItems() {
-		const {
-			theme,
-			styles,
-			issueSort
-		} = this.props
-
+		const
+			{
+				theme,
+				styles,
+				issueCriteria
+			} = this.props,
+			issueSort = issueCriteria.sort
+		
 		const fields = IssueGroupByFields
 		const fieldNames = IssueGroupByNames
 		const groupBy = issueSort.groupBy
-		const {palette} = theme
-
+		const { palette } = theme
+		
 		return (fields).map((field, index) => {
-
+			
 			const
 				selected = field === groupBy,
-				fieldName = fieldNames[index]
-
+				fieldName = fieldNames[ index ]
+			
 			const primaryText = <div style={makeStyle(
 					styles.list.item.text,
 					styles.list.item.text.value
@@ -434,26 +434,26 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<div style={styles.list.item.text.primary}>
 					{fieldName}
 				</div>
-
+				
 				<div style={styles.list.item.text.spacer}/>
-
+			
 			</div>
-
+			
 			return <MenuItem
 				onTouchTap={this.makeOnGroupBySelected(field)}
 				style={styles.list.item}
 				primaryText={primaryText}/>
-
+			
 		})
 	}
-
+	
 	/**
 	 * Render filters
 	 *
 	 * @returns {any}
 	 */
 	render() {
-
+		
 		const
 			{
 				theme,
@@ -461,23 +461,22 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				issues = [],
 				unfilteredIssueIds = [],
 				issuesGrouped = [],
-				issueSort,
-				issueFilter,
+				issueCriteria,
 				issueFilterMilestones,
 				issueFilterLabels,
 				labels,
 				milestones,
 			} = this.props,
-			
+			issueSort = issueCriteria.sort,
 			
 			
 			isGrouped = issueSort.groupBy !== 'none',
 			hasFilters =
-				getValue(() => issueFilter.labelUrls.length,0) +
-				getValue(() => issueFilter.milestoneIds.length,0) > 0
-
-
-		log.debug('Issue filter, has filters',hasFilters, 'labels',issueFilterLabels,'milestones',issueFilterMilestones)
+				getValue(() => issueCriteria.labelIds.length, 0) +
+				getValue(() => issueCriteria.milestoneIds.length, 0) > 0
+		
+		
+		log.debug('Issue filter, has filters', hasFilters, 'labels', issueFilterLabels, 'milestones', issueFilterMilestones)
 		
 		// LABEL
 		const labelMenuItemText = <div style={styles.list.item.text}>
@@ -494,7 +493,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<SvgArrowRight style={{display:'block'}}/>
 			</div>
 		</div>
-
+		
 		// MILESTONE
 		const milestoneMenuItemText = <div style={styles.list.item.text}>
 			<div>
@@ -510,8 +509,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<SvgArrowRight style={{display:'block'}}/>
 			</div>
 		</div>
-
-
+		
+		
 		// SORT ORDER
 		let isAscending = issueSort.direction === 'asc'
 		const sortOrderMenuItemText = <div style={styles.list.item.text}>
@@ -525,7 +524,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 			<div style={styles.list.item.text.spacer}/>
 		</div>
-
+		
 		// SORT BY
 		const sortByMenuItemText = <div style={styles.list.item.text}>
 			<div>
@@ -539,8 +538,8 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<SvgArrowRight style={{display:'block'}}/>
 			</div>
 		</div>
-
-
+		
+		
 		// GROUP BY DIRECTION
 		isAscending = issueSort.groupByDirection === 'asc'
 		const groupByDirectionMenuItemText = <div style={styles.list.item.text}>
@@ -554,7 +553,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			</div>
 			<div style={styles.list.item.text.spacer}/>
 		</div>
-
+		
 		// GROUP BY
 		const groupByMenuItemText = <div style={styles.list.item.text}>
 			<div>
@@ -570,27 +569,27 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 				<SvgArrowRight style={{display:'block'}}/>
 			</div>
 		</div>
-
+		
 		// INCLUDE CLOSED
-
+		
 		const includeClosedMenuItemText = <div style={styles.list.item.text}>
 			<div>
 				<Icon style={makeStyle(styles.list.item.text.icon,{
 					fontSize: 12
-				})} iconSet='fa' iconName={issueFilter.includeClosed ? 'check-circle-o' : 'circle-thin'}/>
+				})} iconSet='fa' iconName={issueCriteria.includeClosed ? 'check-circle-o' : 'circle-thin'}/>
 			</div>
 			<div style={styles.list.item.text.primary}>
 				Issues Closed Issues
 			</div>
 			<div style={styles.list.item.text.spacer}/>
 		</div>
-
-
-		const filterIconStyle:any = {height: 24, padding: 0}
+		
+		
+		const filterIconStyle:any = { height: 24, padding: 0 }
 		if (hasFilters && !isGrouped)
 			filterIconStyle.color = theme.issueFilters.hasFiltersColor
-
-
+		
+		
 		/* Filter menu */
 		const filterMenu = <IconMenu
 			iconButtonElement={<IconButton style={filterIconStyle} iconStyle={filterIconStyle}><SvgFilterIcon /></IconButton>}
@@ -598,55 +597,55 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			listStyle={theme.list}>
 			
 			{hasFilters &&
-				// CLEAR FILTERS
-				<MenuItem primaryText={'Clear Filters'}
-					listStyle={theme.list}
-					onTouchTap={this.onClearFilters}/>
+			// CLEAR FILTERS
+			<MenuItem primaryText={'Clear Filters'}
+			          listStyle={theme.list}
+			          onTouchTap={this.onClearFilters}/>
 			}
 			
 			{/* SORT ORDER */}
 			<MenuItem primaryText={sortOrderMenuItemText}
 			          listStyle={theme.list}
 			          onTouchTap={this.onSortDirectionChanged}/>
-
+			
 			{/* SORT BY */}
 			<MenuItem primaryText={sortByMenuItemText}
 			          listStyle={theme.list}
 			          menuItems={this.renderSortByItems()}/>
-
+			
 			<Divider />
-
+			
 			{/* SORT ORDER */}
 			{ issueSort.groupBy !== 'none' &&
 			<MenuItem primaryText={groupByDirectionMenuItemText}
 			          listStyle={theme.list}
 			          onTouchTap={this.onGroupByDirectionChanged}/>
 			}
-
+			
 			{/* GROUP BY */}
 			<MenuItem primaryText={groupByMenuItemText}
 			          listStyle={theme.list}
 			          menuItems={this.renderGroupByItems()}
 			/>
-
+			
 			<Divider />
-
+			
 			{/* LABELS */}
 			<MenuItem primaryText={labelMenuItemText}
 			          listStyle={theme.list}
 			          menuItems={this.renderLabelItems()}/>
-
+			
 			{/* MILESTONES */}
 			<MenuItem primaryText={milestoneMenuItemText}
 			          menuItems={this.renderMilestoneItems()}/>
-
+			
 			{/* TOGGLE INCLUDE CLOSED */}
 			<MenuItem primaryText={includeClosedMenuItemText}
 			          listStyle={theme.list}
 			          onTouchTap={this.onToggleIncludeClosed}/>
 		</IconMenu>
-
-
+		
+		
 		// ASSEMBLE
 		return <div
 			style={[
@@ -656,7 +655,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 			]}>
 			
 			<div style={styles.filters}>
-
+				
 				{!hasFilters ?
 					<div style={styles.filters.none}>no filters</div> :
 					<IssueLabelsAndMilestones
@@ -668,7 +667,7 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 						milestones={issueFilterMilestones.toArray()}
 					/>
 				}
-
+				
 				{/* SPACER to fill empty if any */}
 				<div style={styles.filters.controls}>
 					{isGrouped ?
@@ -677,19 +676,19 @@ export class IssueFilters extends React.Component<IIssueFiltersProps,any> {
 							{filterMenu}
 						</div> :
 						filterMenu}
-
+					
 					<div style={styles.filters.controls.stats}>
 						{isGrouped && `${issuesGrouped.length} Groups with `}
 						{issues.size} Issues
 						{hasFilters && ` of ${unfilteredIssueIds.size} Issues`}
 					</div>
-
+				
 				</div>
-
+			
 			</div>
-
-
+		
+		
 		</div>
 	}
-
+	
 }

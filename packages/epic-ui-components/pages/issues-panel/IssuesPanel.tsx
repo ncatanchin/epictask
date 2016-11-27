@@ -25,7 +25,7 @@ import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, Contai
 import { IThemedAttributes, FlexColumnCenter } from "epic-styles"
 import { SearchPanel} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
-import { getValue, unwrapRef, MenuIds, isNumber} from "epic-global"
+import { getValue, unwrapRef, MenuIds, isNumber, cloneObjectShallow } from "epic-global"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
@@ -40,7 +40,7 @@ import {
 	AssigneeSearchProvider, IssueSearchProvider
 } from "epic-ui-components/search/DefaultSearchProviders"
 import { colorAlpha } from "epic-styles/styles"
-
+import { IssuesPanelSearch } from "epic-ui-components/pages/issues-panel/IssuesPanelSearch"
 
 
 // Constants & Non-typed Components
@@ -85,28 +85,6 @@ function baseStyles(topStyles,theme,palette) {
 			
 		}],
 		
-		search: [ FlexAuto,makePaddingRem(0, 1), {
-			//backgroundColor: Transparent,
-			borderBottom: `0.1rem solid ${primary.hue3}`,
-			
-			field: [ {
-				//backgroundColor: Transparent
-			} ],
-			
-			input: [ {
-				backgroundColor: Transparent,
-				color: text.secondary,
-				borderBottom: `0.1rem solid ${colorAlpha(text.secondary,0.1)}`,
-				fontWeight: 500,
-				fontSize: themeFontSize(1.7),
-				':focus': {
-					
-				}
-			} ],
-			
-			hint: [ {} ]
-			
-		} ]
 		
 	}
 }
@@ -119,6 +97,8 @@ export interface IIssuesPanelProps extends IThemedAttributes {
 	commandContainer?:CommandContainer
 	
 	viewController?:IssuesPanelController
+	
+	
 	
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
@@ -157,6 +137,7 @@ const
 function makeSelector() {
 		
 		return createStructuredSelector({
+			criteria: getIssuesPanelSelector(selectors => selectors.issueCriteriaSelector),
 			hasSelectedIssues: getIssuesPanelSelector(selectors => selectors.hasSelectedIssuesSelector),
 			issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
 			items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
@@ -842,21 +823,6 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 
 
 
-	/**
-	 * On escape sequence close the search
-	 */
-	onSearchEscape = () => {
-		log.info(`Search escape`)
-		//guard(() => unwrapRef(this.state.searchPanelRef).blur())
-		
-		setTimeout(() => {
-			getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
-			// getValue(() => unwrapRef(this.state.listRef).focus())
-			
-		},100)
-		return true
-	}
-
 	
 	componentWillMount() {
 		this.viewController.setMounted(true)
@@ -875,6 +841,8 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		// 	this.selectedIssueIdsUnsubscribe = null
 		// }
 	}
+	
+	
 	
 	
 	private makeNoContent(styles,itemsAvailable,allItemsFiltered) {
@@ -945,19 +913,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			       {/*rules={styles.panelSplitPane}/>*/}
 			
 			
-			{itemsAvailable && <SearchPanel
+			<IssuesPanelSearch
 				ref={this.setSearchPanelRef}
-				searchId='issues-search'
-				providers={[
-					MilestoneSearchProvider,
-					LabelSearchProvider,
-					AssigneeSearchProvider,
-					IssueSearchProvider
-				]}
-				inputStyle={styles.search.input}
-				onEscape={this.onSearchEscape}
+				viewController={this.viewController}
 				/>
-			}
+			
 			
 			
 			{/* ISSUE SEARCH AND FILTERING */}
