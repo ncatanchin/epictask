@@ -19,12 +19,12 @@ const
 	commandContainerItems = new WeakMap<CommandContainer,ICommandContainerItems>()
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 export interface ICommandContainerItems {
-	commands: ICommand[]
-	menuItems: ICommandMenuItem[]
+	commands:ICommand[]
+	menuItems:ICommandMenuItem[]
 }
 
 /**
@@ -122,7 +122,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * @returns {boolean}
 	 */
 	isFocused() {
-		return getValue(() => this.state.focused,false)
+		return getValue(() => this.state.focused, false)
 	}
 	
 	/**
@@ -144,31 +144,40 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * On focus
 	 *
 	 * @param event
+	 * @param fromComponent
+	 * @return {any|void|{color}|{fontWeight}}
 	 */
-	private onFocus = (event:React.FocusEvent<any>) => {
+	onFocus = (event:React.FocusEvent<any>, fromComponent = false) => {
 		
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.debug(`focused`, id,event, instance)
+		log.debug(`focused`, id, event, instance)
 		
 		if (!instance) {
-				return log.warn(`No instance but focused`,instance,this)
+			return log.warn(`No instance but focused`, instance, this)
 		}
 		
 		if (focused) {
 			log.debug(`Already focused`)
 		} else {
-			this.setState({ focused: true })
+			this.setState({
+				focused: true
+			},() => {
+				if (event) {
+					setImmediate(() => {
+						getCommandManager().setContainerFocused(id, this, true, event)
+						if (!fromComponent && instance.onFocus) {
+							instance.onFocus(event)
+						}
+					})
+				}
+			})
 		}
 		
-		setImmediate(() => {
-			getCommandManager().setContainerFocused(id, this, true, event)
-			
-			if (instance.onFocus)
-				instance.onFocus(event)
-		})
+		
+		
 		
 		
 	}
@@ -177,33 +186,43 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * On blur event
 	 *
 	 * @param event
+	 * @param fromComponent
+	 * @return {any|void|{color}|{fontWeight}}
 	 */
-	private onBlur = (event:React.FocusEvent<any>) => {
+	onBlur = (event:React.FocusEvent<any>, fromComponent = false) => {
 		
 		const
 			{ instance, id } = this,
 			{ focused } = this.state
 		
-		log.debug(`On blur`,event,id)
+		log.debug(`On blur`, event, id)
 		
-		if(!instance)
+		if (!instance)
 			return log.warn(`Blur, but no instance???`)
 		//assert(instance, `Blur, but no instance???`)
 		
 		if (!focused) {
 			log.debug(`Blur, but not focused`)
 		} else {
-			this.setState({ focused: false })
+			this.setState({
+				focused: false
+			},() => {
+				if (event) {
+					setImmediate(() => {
+						getCommandManager().setContainerFocused(id, this, false, event)
+					})
+					
+					if (!fromComponent && instance.onBlur)
+						instance.onBlur(event)
+				}
+			})
 		}
 		
-		setImmediate(() => {
-			getCommandManager().setContainerFocused(id, this, false, event)
-		})
+				
 		
-		
-		if (instance.onBlur)
-			instance.onBlur(event)
 	}
+	
+	
 	
 	
 	/**
@@ -227,10 +246,10 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			log.debug(`Registering commands on container ${id}`)
 			
 			const
-				{commands,menuItems} = this.getItems()
+				{ commands, menuItems } = this.getItems()
 			
 			getCommandManager()
-				.registerContainerItems(this.id, this, commands,menuItems)
+				.registerContainerItems(this.id, this, commands, menuItems)
 			
 			this.setState({ registered: true })
 		}
@@ -247,10 +266,10 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			items = commandContainerItems.get(this)
 		
 		if (!items) {
-		
+			
 			items = this.instance.commandItems(new CommandContainerBuilder(this))
 			
-			commandContainerItems.set(this,items)
+			commandContainerItems.set(this, items)
 		}
 		
 		return items
@@ -269,11 +288,20 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		return <Wrapper.commandComponent
 			tabIndex="-1"
-			{..._.omit(this.props,'ref', 'onFocus', 'onBlur')}
+			{..._.omit(this.props, 'ref', 'onFocus', 'onBlur')}
 			onFocus={this.onFocus}
 			onBlur={this.onBlur}
 			commandContainer={this}
 			ref={this.setInstance}/>
+	}
+}
+
+/**
+ * Declare shape globally
+ */
+declare global {
+	interface ICommandContainer extends CommandContainer {
+		
 	}
 }
 
@@ -343,7 +371,7 @@ export function CommandComponent<T extends TCommandComponentConstructor>(opts:IC
 			 *
 			 * @param commandContainerRef
 			 */
-			private setCommandContainer = (commandContainerRef) => this.setState({commandContainerRef})
+			private setCommandContainer = (commandContainerRef) => this.setState({ commandContainerRef })
 			
 			/**
 			 * Get the command container ref
@@ -360,7 +388,8 @@ export function CommandComponent<T extends TCommandComponentConstructor>(opts:IC
 			 * @returns {any}
 			 */
 			render() {
-				return <CommandContainer ref={this.setCommandContainer} commandComponent={TargetComponent as any} {...this.props} />
+				return <CommandContainer ref={this.setCommandContainer}
+				                         commandComponent={TargetComponent as any} {...this.props} />
 			}
 		} as any
 	}) as any
@@ -421,7 +450,6 @@ export class CommandRoot extends React.Component<ICommandRootProps,void> {
 }
 
 
-
 /**
  * Command builder
  */
@@ -454,21 +482,20 @@ export class CommandContainerBuilder {
 	        execute?:TCommandExecutor,
 	        defaultAccelerator?:TCommandDefaultAccelerator,
 	        opts?:ICommand)
-	command(
-		id:string,
-		type:CommandType,
-    name:string,
-    execute?:TCommandExecutor,
-    defaultAccelerator?:TCommandDefaultAccelerator,
-		opts?:ICommand)
+	command(id:string,
+	        type:CommandType,
+	        name:string,
+	        execute?:TCommandExecutor,
+	        defaultAccelerator?:TCommandDefaultAccelerator,
+	        opts?:ICommand)
 	
 	command(...args:any[]) {
 		
 		// Check for ID first
 		let
 			id:string = null
-			
-		if (isString(args[0]))
+		
+		if (isString(args[ 0 ]))
 			id = args.shift()
 		
 		// Deconstruct
@@ -485,7 +512,7 @@ export class CommandContainerBuilder {
 				TCommandExecutor,
 				TCommandDefaultAccelerator,
 				ICommand
-			]
+				]
 		
 		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
 		
@@ -497,10 +524,10 @@ export class CommandContainerBuilder {
 				name,
 				defaultAccelerator,
 				container: this.container
-			},opts || {}) as ICommand
+			}, opts || {}) as ICommand
 		
 		this.commands.push(cmd)
-			
+		
 		return this
 	}
 	
@@ -513,12 +540,10 @@ export class CommandContainerBuilder {
 	 * @param icon
 	 * @param opts
 	 */
-	makeMenuItem(
-		type:CommandMenuItemType,
-		label:string,
-		icon?:TCommandIcon,
-		opts?:ICommandMenuItem
-	)
+	makeMenuItem(type:CommandMenuItemType,
+	             label:string,
+	             icon?:TCommandIcon,
+	             opts?:ICommandMenuItem)
 	/**
 	 * Make menu item
 	 *
@@ -527,12 +552,10 @@ export class CommandContainerBuilder {
 	 * @param icon
 	 * @param opts
 	 */
-	makeMenuItem(
-		id:string,
-		commandId:string,
-		icon?:TCommandIcon,
-		opts?:ICommandMenuItem
-	)
+	makeMenuItem(id:string,
+	             commandId:string,
+	             icon?:TCommandIcon,
+	             opts?:ICommandMenuItem)
 	
 	/**
 	 * Make menu item
@@ -543,16 +566,12 @@ export class CommandContainerBuilder {
 	 * @param icon
 	 * @param opts
 	 */
-	makeMenuItem(
-		id:string,
-		type:CommandMenuItemType,
-		label:string,
-		icon?:TCommandIcon,
-		opts?:ICommandMenuItem
-	)
-	makeMenuItem(
-		...args:any[]
-	) {
+	makeMenuItem(id:string,
+	             type:CommandMenuItemType,
+	             label:string,
+	             icon?:TCommandIcon,
+	             opts?:ICommandMenuItem)
+	makeMenuItem(...args:any[]) {
 		
 		let
 			id:string,
@@ -562,13 +581,13 @@ export class CommandContainerBuilder {
 			commandId:string,
 			opts:ICommandMenuItem
 		
-		if (isNumber(args[0])) {
-			([type,label,icon,opts] = args)
-		} else if (isString(args[1])) {
-			([id,commandId,icon,opts] = args)
+		if (isNumber(args[ 0 ])) {
+			([ type, label, icon, opts ] = args)
+		} else if (isString(args[ 1 ])) {
+			([ id, commandId, icon, opts ] = args)
 			type = CommandMenuItemType.Command
 		} else {
-			([id,type,label,icon,opts] = args)
+			([ id, type, label, icon, opts ] = args)
 		}
 		
 		opts = opts || {}
@@ -578,13 +597,13 @@ export class CommandContainerBuilder {
 		}
 		
 		return _.assign({
-				id,
-				type,
-				commandId,
-				containerId: this.container.id,
-				label,
-				icon
-			},opts) as ICommandMenuItem
+			id,
+			type,
+			commandId,
+			containerId: this.container.id,
+			label,
+			icon
+		}, opts) as ICommandMenuItem
 		
 	}
 	
@@ -596,29 +615,20 @@ export class CommandContainerBuilder {
 	 * @param icon
 	 * @param opts
 	 */
-	menuItem(
-		type:CommandMenuItemType,
-	  label:string,
-	  icon?:TCommandIcon,
-	  opts?:ICommandMenuItem
-	)
-	menuItem(
-		id:string,
-		commandId:string,
-		icon?:TCommandIcon,
-		opts?:ICommandMenuItem
-	)
-	menuItem(
-		id:string,
-		type:CommandMenuItemType,
-		label:string,
-		icon?:TCommandIcon,
-		opts?:ICommandMenuItem
-	)
-	menuItem(
-		...args:any[]
-	)
-	{
+	menuItem(type:CommandMenuItemType,
+	         label:string,
+	         icon?:TCommandIcon,
+	         opts?:ICommandMenuItem)
+	menuItem(id:string,
+	         commandId:string,
+	         icon?:TCommandIcon,
+	         opts?:ICommandMenuItem)
+	menuItem(id:string,
+	         type:CommandMenuItemType,
+	         label:string,
+	         icon?:TCommandIcon,
+	         opts?:ICommandMenuItem)
+	menuItem(...args:any[]) {
 		
 		this.menuItems.push((this.makeMenuItem as any)(...args))
 		

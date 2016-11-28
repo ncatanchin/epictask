@@ -13,7 +13,7 @@ const
 	TIMEOUT = 180000
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Pending database request - internal

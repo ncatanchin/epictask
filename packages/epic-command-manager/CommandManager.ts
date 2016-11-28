@@ -1,6 +1,9 @@
 import Electron from 'epic-electron'
 
-import { getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow } from "epic-global"
+import {
+	getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow,
+	guard
+} from "epic-global"
 import {
 	ICommand,
 	TCommandContainer,
@@ -133,7 +136,7 @@ export class CommandManager {
 	private focusedContainers():ICommandContainerRegistration[] {
 		return Object
 			.values(this.containers)
-			.filter(it => it.focused && it.element)
+			.filter(it => it.element && (it.focused || it.element.contains(document.activeElement) || it.element === document.activeElement))
 			.sort((c1,c2) =>
 				c1.element.contains(c2.element) ? 1 :
 			  c2.element.contains(c1.element) ? -1 : 0)
@@ -293,7 +296,7 @@ export class CommandManager {
 	 * @param event
 	 */
 	private onWindowFocus = (event) => {
-		log.debug(`focus event`,event)
+		log.info(`focus event`,event)
 		this.mountMenuItems(...this.menuItems)
 	}
 	
@@ -808,6 +811,7 @@ export class CommandManager {
 	}
 	
 	
+	
 	/**
 	 * Set container as focused
 	 *
@@ -817,27 +821,66 @@ export class CommandManager {
 	 * @param event
 	 * @returns {ICommandContainerRegistration}
 	 */
-	setContainerFocused(id:string,container:TCommandContainer,focused:boolean, event:React.FocusEvent<any> = null) {
-		log.debug(`Focused on container ${id}`)
+	setContainerFocused(id:string,srcContainer:TCommandContainer,focused:boolean, event:React.FocusEvent<any> = null) {
+		log.debug(`Focused on container ${id}, target element`,event.target,`activeElement`,document.activeElement)
 		
 		const
-			status = this.getContainerRegistration(id,container,true),
-			{commands} = status
+			allContainers = Object
+				.values(this.containers),
+			focusedContainers =
+				allContainers
+					.filter(it => it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
+					.sort((c1,c2) =>
+						c1.element.contains(c2.element) ? 1 :
+							c2.element.contains(c1.element) ? -1 : 0)
 		
-		//TODO: mark others as not focused
-		status.focused = focused
-		
-		if (commands) {
-			if (focused) {
-				this.mountCommand(...commands)
-			} else {
+		Object
+			.entries(this.containers)
+			.forEach(([id,status]) => {
 				const
-					containerCommands = commands
-						.filter(it => it.type === CommandType.Container)
+					//status = this.getContainerRegistration(id,container,true),
+					{commands} = status
 				
-				// ONLY UNMOUNT CONTAINER COMMANDS
-				this.unmountCommand(...containerCommands)
-			}
+				//TODO: mark others as not focused
+				status.focused = focusedContainers.includes(status)
+				
+				if (status.focused && status.container) {
+					guard(() => (status.container as any).onFocus(event))
+				} else if (!status.focused && status.container) {
+					guard(() => (status.container as any).onBlur())
+				}
+				
+				if (commands) {
+					if (status.focused) {
+						this.mountCommand(...commands)
+					} else {
+						const
+							containerCommands = commands
+								.filter(it => it.type === CommandType.Container)
+						
+						// ONLY UNMOUNT CONTAINER COMMANDS
+						this.unmountCommand(...containerCommands)
+					}
+				}
+				
+			})
+		
+		// LOG THE FOCUS IDS
+		if (DEBUG && Env.isRenderer) {
+			$("#focusedContainers").remove()
+			$(`<div id="focusedContainers">${
+				this.focusedContainers()
+					.map(it => it.element.id)
+					.join(', ')
+			}</div>`)
+				.css({
+					position: 'absolute',
+					right: 0,
+					bottom: 0,
+					background: 'white',
+					color: 'back',
+					zIndex: 100000
+				}).appendTo($('body'))
 		}
 		
 		return status

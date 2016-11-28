@@ -146,13 +146,18 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 			id="sheetRoot"
 			style={[styles, sheetPromise && styles.visible]}>
 			
-			{sheetPromise && <div ref={this.setSheetContent} style={[styles.content]}>
+			{sheetPromise && <div
+				ref={this.setSheetContent}
+				style={[styles.content]}>
+				
 				<div style={[styles.header]}>
 					<div style={[styles.header.title]}>{sheetConfig.title}</div>
 				</div>
-				<div style={[styles.body]}>
+				
+				<div style={[styles.body]} autoFocus>
 					<PromisedComponent promise={sheetPromise}/>
 				</div>
+			
 			</div>
 			}
 		</CommandRoot>

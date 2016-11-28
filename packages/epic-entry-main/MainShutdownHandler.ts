@@ -7,7 +7,7 @@ const
 	log = getLogger(__filename),
 	{BrowserWindow,app} = Electron
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 _.assignGlobal({
 	shutdownInProgress: false

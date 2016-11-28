@@ -2,7 +2,7 @@
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
 import { PureRender } from "epic-ui-components/common"
-import { ThemedStyles } from "epic-styles"
+import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 import { SearchItem } from 'epic-models'
 import { shallowEquals, getValue } from  "epic-global"
@@ -28,9 +28,7 @@ function baseStyles(topStyles, theme, palette) {
 /**
  * ISearchResultsListProps
  */
-export interface ISearchResultsListProps extends React.HTMLAttributes<any> {
-	theme?:any
-	styles?:any
+export interface ISearchResultsListProps extends IThemedAttributes {
 	open?:boolean
 	controller:SearchController
 	state:SearchState
@@ -96,28 +94,44 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	}
 	
 	
-	
 	render() {
 		const
 			{ props } = this,
-			{ style, state:searchState } = props,
+			{
+				open,
+				palette,
+				state:searchState
+			} = props,
+			
 			items = getValue(() => searchState.items)
 		
-		return !items ? React.DOM.noscript() : <div style={style}>
+		let
+			resultsStyle = makeStyle(
+				makeTransition([ 'background-color', 'color' ]),
+				{
+					overflow: 'hidden',
+					maxHeight: "80vh",
+					backgroundColor: palette.alternateBgColor,
+					color: palette.alternateTextColor
+				}
+			)
+		
+		return open === false ? null : <div style={resultsStyle}>
+			
 			<CSSTransitionGroup
 				transitionName="results"
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
-				
-				{items.map((item, index) => <SearchResultItem
-						key={item.id}
-						item={item}
-						selected={index === searchState.selectedIndex}
-						onMouseEnter={this.onHover(item)}
-						onClick={this.onClick(item)}
-						onMouseDown={this.onClick(item)}
-					/>
-				)}
+				{!items ? React.DOM.noscript() :
+					items.map((item, index) => <SearchResultItem
+							key={item.id}
+							item={item}
+							selected={index === searchState.selectedIndex}
+							onMouseEnter={this.onHover(item)}
+							onClick={this.onClick(item)}
+							onMouseDown={this.onClick(item)}
+						/>
+					)}
 			
 			</CSSTransitionGroup>
 		</div>

@@ -45,7 +45,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const
 	baseStyles = (topStyles,theme,palette) => {

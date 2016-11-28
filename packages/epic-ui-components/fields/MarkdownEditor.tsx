@@ -10,7 +10,7 @@ const
 	SimpleMDE = require('react-simplemde-editor')
 
 //DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn, FlexAuto, {} ]

@@ -35,7 +35,7 @@ const
 	{ Style } = Radium
 
 // DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = (topStyles, theme, palette) => {
 	const

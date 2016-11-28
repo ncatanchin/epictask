@@ -18,7 +18,7 @@ const
 	hostname = 'https://api.github.com'
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	APICallHistory = List<any>(),

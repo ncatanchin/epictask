@@ -84,7 +84,8 @@ export enum CommandType {
 	Container
 }
 
-export type TCommandContainer = React.Component<any, any>|Electron.Menu
+
+export type TCommandContainer = ICommandContainer|Electron.Menu
 
 
 /**
@@ -242,8 +243,6 @@ export class Command implements ICommand {
 		assign(this,{
 			disableKeyReassign: !isNil(this.disableKeyReassign) ? this.disableKeyReassign : !!this.hidden,
 		})
-		
-		
 	}
 }
 

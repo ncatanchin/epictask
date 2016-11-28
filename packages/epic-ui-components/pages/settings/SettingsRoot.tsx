@@ -58,7 +58,7 @@ const
 	{ Style } = Radium
 
 // DEBUG
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // Settings Sections

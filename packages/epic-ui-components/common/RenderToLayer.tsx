@@ -2,6 +2,9 @@ import {Component, PropTypes} from 'react'
 import {unstable_renderSubtreeIntoContainer, unmountComponentAtNode} from 'react-dom'
 import { Dom } from "epic-global"
 
+const
+	log = getLogger(__filename)
+
 export interface IRenderToLayerProps {
 	componentClickAway?:Function
 	open:boolean
@@ -72,6 +75,8 @@ export class RenderToLayer extends React.Component<IRenderToLayerProps,any> {
 		if (!this.layer) {
 			return
 		}
+		
+		log.info(`Un-mounting node`,this.layer)
 		
 		if (this.props.useLayerForClickAway) {
 			this.layer.style.position = 'relative'

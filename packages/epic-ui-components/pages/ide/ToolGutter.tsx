@@ -13,7 +13,7 @@ import {Map,List} from 'immutable'
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 

@@ -13,7 +13,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 export enum CommandSimpleMenuManagerEventType {
 	MenuChanged = 1

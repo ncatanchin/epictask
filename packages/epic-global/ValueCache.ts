@@ -29,7 +29,8 @@ export class ValueCache {
 	}
 
 	set(newValue:any) {
-		if ((this.shallow && newValue === this.value) || (!this.shallow && _.isEqual(newValue,this.value))) {
+		//if ((this.shallow && newValue === this.value) || (!this.shallow && _.isEqual(newValue,this.value))) {
+		if (newValue === this.value) {
 			log.debug('no change')
 			return false
 		} else {

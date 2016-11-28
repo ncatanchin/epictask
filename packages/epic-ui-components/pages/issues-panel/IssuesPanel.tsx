@@ -362,14 +362,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private openFindIssues = (cmdOrMenuItem,event) => {
 		
-		const
-			{searchPanel} = this,
-			inputElement = searchPanel && searchPanel.inputElement
-		
-		log.debug('Fuzzy find',searchPanel,inputElement)
-		
-		if (inputElement)
-			$(inputElement).focus()
+		guard(() => $(ReactDOM.findDOMNode(this.state.searchPanelRef)).find('input').focus())
+		// const
+		// 	{searchPanel} = this,
+		// 	inputElement = searchPanel && searchPanel.inputElement
+		//
+		// log.debug('Fuzzy find',searchPanel,inputElement)
+		//
+		// if (inputElement)
+		// 	$(inputElement).focus()
 		
 	}
 	

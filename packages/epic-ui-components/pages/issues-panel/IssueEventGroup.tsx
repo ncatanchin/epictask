@@ -1,6 +1,7 @@
 import { List } from "immutable"
 import { IssuesEvent, TIssueEventGroupType, getEventGroupType, User } from "epic-models"
 import { LabelChip } from "epic-ui-components"
+import { FlexRow, FlexRowCenter } from "epic-ui-components/common"
 
 const
 	log = getLogger(__filename)
@@ -128,11 +129,14 @@ export class EventGroup {
 			else if (type === 'tag') {
 				
 				return events.map((event,index) =>
-					<span key={event.id}>
+					<FlexRowCenter
+						key={event.id}
+					  style={{flexWrap: 'nowrap'}}
+					>
 							{event.event === 'labeled' ? 'added' : 'removed'}&nbsp;&nbsp;
 							<LabelChip showIcon={true} label={event.label} styles={chipStyles}/>
 						{makeEventSpacer(index)}
-						</span>
+						</FlexRowCenter>
 				)
 			}
 			
@@ -152,11 +156,14 @@ export class EventGroup {
 			else if (type === 'milestone') {
 				
 				return events.map((event,index) =>
-					<span key={event.id}>
+					<FlexRowCenter
+						key={event.id}
+						style={{flexWrap: 'nowrap'}}
+					>
 						{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}
 						<LabelChip showIcon={true} label={assign({id:'-1'},event.milestone)} styles={chipStyles}/>
 						{makeEventSpacer(index)}
-					</span>
+					</FlexRowCenter>
 				)
 				
 			}

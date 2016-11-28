@@ -5,8 +5,7 @@ import { PureRender } from "epic-ui-components/common"
 import { getUIActions } from "epic-typedux"
 import { getValue, guard } from "epic-global"
 import { ThemedStyles } from "epic-styles"
-import { SearchController } from "epic-ui-components/search/SearchController"
-import { isFunction } from "typeguard"
+
 import { RepoSearchProvider, GitHubSearchProvider } from "epic-ui-components/search/DefaultSearchProviders"
 
 // Constants
@@ -14,13 +13,11 @@ const
 	log = getLogger(__filename),
 	RepoAddSearchId = 'repo-add-search'
 
-const baseStyles = createStyles((topStyles,theme,palette) => {
+const baseStyles = createStyles((topStyles, theme, palette) => {
 	const
-		{primary,text,accent,secondary} = palette
+		{ primary, text, accent, secondary } = palette
 	
-	return {
-		
-	}
+	return {}
 })
 
 
@@ -45,7 +42,7 @@ export interface IRepoAddToolState {
  * @constructor
  **/
 
-@ThemedStyles(baseStyles,'dialog','repoAddDialog','sheet')
+@ThemedStyles(baseStyles, 'dialog', 'repoAddDialog', 'sheet')
 @PureRender
 export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolState> {
 	
@@ -64,7 +61,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	 * @param item
 	 */
 	onItemSelected = (item:ISearchItem) => {
-		log.info(`Repo add result was selected`,item)
+		log.info(`Repo add result was selected`, item)
 		
 		guard(() => item.provider.handleItem(item))
 		
@@ -77,9 +74,9 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	 * @param searchPanel
 	 */
 	setSearchPanel = (searchPanel) => {
-		log.info(`Got search panel`,searchPanel)
+		log.info(`Got search panel`, searchPanel)
 		//, () => this.setFocused()
-		this.setState({searchPanel})
+		this.setState({ searchPanel })
 		
 	}
 	
@@ -88,7 +85,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	 */
 	get searchPanel() {
 		
-		return getValue(() => this.state.searchPanel,null)
+		return getValue(() => this.state.searchPanel, null)
 	}
 	
 	
@@ -101,48 +98,51 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	getNewState(props:IRepoAddToolProps) {
 		
 		return {}
-
+		
 	}
-
+	
 	/**
 	 * On new props - update the state
 	 *
 	 * @param nextProps
 	 */
-	componentWillReceiveProps =(nextProps:IRepoAddToolProps) => this.setState(this.getNewState(nextProps))
-
-
+	componentWillReceiveProps = (nextProps:IRepoAddToolProps) => this.setState(this.getNewState(nextProps))
+	
+	
 	/**
 	 * on mount update state
 	 */
 	componentWillMount = () => this.setState(this.getNewState(this.props))
-
-
-
+	
+	
 	render() {
-
+		
 		const
-			{styles} = this.props
-			
-
+			{ styles } = this.props
+		
+		
 		return <div
 			style={[FlexColumn]}>
-		
+			
 			<SearchPanel ref={this.setSearchPanel}
 			             inputStyle={styles.search.input}
 			             style={styles.search.panel}
 			             autoFocus={true}
+			             tabIndex={-1}
 			             onEscape={this.hide}
 			             focused={true}
 			             open={true}
 			             resultsHidden={false}
 			             searchId={RepoAddSearchId}
-			             providers={[RepoSearchProvider,GitHubSearchProvider]}
+			             providers={[
+			             	RepoSearchProvider,
+			             	GitHubSearchProvider
+		               ]}
 			             onItemSelected={this.onItemSelected}
-						       hidden={false}/>
-			
+			             hidden={false}/>
+		
 		</div>
 	}
-
+	
 }
 

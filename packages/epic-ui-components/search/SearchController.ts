@@ -2,7 +2,7 @@ import { List,Map } from "immutable"
 import { AvailableRepo, Repo, SearchItem, SearchResult } from "epic-models"
 
 import { getCommandManager, ICommand } from "epic-command-manager"
-import { ValueCache, Benchmark ,cloneObjectShallow,EnumEventEmitter } from "epic-global"
+import { ValueCache, Benchmark, cloneObjectShallow, EnumEventEmitter, shallowEquals } from "epic-global"
 import {  getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { isNumber, getValue, isFunction, isNil, isList } from "typeguard"
 import { nilFilterList } from "epic-global/ListUtil"
@@ -15,7 +15,7 @@ const
 	Benchmarker = Benchmark(__filename)
 
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 
@@ -105,7 +105,7 @@ export class SearchController extends EventEmitter implements IViewController<Se
 			if (!this.pendingSearch)
 				this.pendingSearch = this.runSearch(newValue)
 			
-		})
+		},true)
 		
 	}
 	
@@ -224,11 +224,30 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		this.updateState({focused})
 	}
 	
+	
+	private criteriaAndText = null
 	/**
 	 * Update the query
 	 */
 	setQuery = _.debounce((criteria,text:string) => {
-		this.queryCache.set({criteria,text})
+		log.tron(`Setting search text ${text} and criteria`,criteria)
+		const
+			newCriteriaText = {criteria,text},
+			changed = !shallowEquals(newCriteriaText,text)
+		
+		log.tron(`Criteria and text changed=${changed}`,newCriteriaText)
+		if (changed) {
+			this.criteriaAndText = newCriteriaText
+			
+			if (this.pendingSearch) {
+				log.tron(`Search is pending - returning`)
+				return
+			}
+			
+			this.runSearch(newCriteriaText)
+		}
+		
+		
 	},250)
 	
 	
@@ -244,13 +263,17 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 		log.info(`Running search with query: ${text}`)
 		
+		
+		
 		const nextSearch = () => {
-			this.pendingSearch = (criteriaAndText !== this.queryCache.get()) ?
-				this.runSearch(this.queryCache.get()) :
+			this.pendingSearch = (criteriaAndText !== this.criteriaAndText) ?
+				this.runSearch(this.criteriaAndText) :
 				null
 		}
 		
+		
 		if (!this.allowEmptyQuery && (!text || !text.length)) {
+			log.tron(`Not running search text=${text} allow empty = ${this.allowEmptyQuery}`)
 			return nextSearch()
 		}
 		

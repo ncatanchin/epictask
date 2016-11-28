@@ -77,8 +77,8 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 	const
 		logger = Object.assign({},rootLogger)
 	
-	logger.tron = makeTronLevel('info','log')
-	logger.info = logger.tronInfo = makeTronLevel('info','log')
+	logger.tron = makeTronLevel('info','tron')
+	logger.info = logger.tronInfo = makeTronLevel('info','info')
 	logger.warn = logger.tronWarn = makeTronLevel('warn','warn')
 	logger.error = logger.tronError = makeTronLevel('error','error')
 	

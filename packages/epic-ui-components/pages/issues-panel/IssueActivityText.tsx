@@ -467,7 +467,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 					        labelPlacement='after'
 					        avatarStyle={makeStyle(styles.avatar,activityStyle.avatar,styles.activityContent.eventGroup.avatar)} />
 					
-					<div style={[styles.activityContent.eventGroup.description]}>
+					<div style={[styles.activityContent.eventGroup.description,FlexScale]}>
 						{eventGroup.getDescription(activityStyle,styles.activityContent.eventGroup)}
 					</div>
 					<div style={[styles.activityContent.eventGroup.timestamp]}>

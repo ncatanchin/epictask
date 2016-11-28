@@ -122,6 +122,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			             inputStyle={styles.search.input}
 			             searchOnEmpty={true}
 			             autoFocus={true}
+			             tabIndex={-1}
 			             perProviderLimit={-1}
 			             onEscape={this.hide}
 			             open={true}
