@@ -216,7 +216,11 @@ class BaseChip extends React.Component<IChipProps,any> {
 			
 			text = item.label || item.name || item.title,
 			
-			itemStyle = makeStyle(styles, this.colorStyle(item), style),
+			itemStyle = makeStyle(
+				styles,
+				this.colorStyle(item),
+				...(Array.isArray(style) ? style : [style])
+			),
 			
 			hovering = isHovering(this,'label','labelDot'),
 			tooltipId = `chip-tooltip-${item.id}`

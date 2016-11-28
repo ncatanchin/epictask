@@ -137,7 +137,7 @@ const
 function makeSelector() {
 		
 		return createStructuredSelector({
-			criteria: getIssuesPanelSelector(selectors => selectors.issueCriteriaSelector),
+			criteria: getIssuesPanelSelector(selectors => selectors.criteriaSelector),
 			hasSelectedIssues: getIssuesPanelSelector(selectors => selectors.hasSelectedIssuesSelector),
 			issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
 			items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector),

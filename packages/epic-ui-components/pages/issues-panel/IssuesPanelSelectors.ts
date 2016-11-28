@@ -84,18 +84,24 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				(state:IssuesPanelState) => state.comments
 			),
 			
-			issueCriteriaSelector = createSelector(
+			criteriaSelector = createSelector(
 				issuesPanelStateSelector,
 				(issueState:IssuesPanelState) => issueState.criteria
 			),
+			
+			searchTextSelector = createSelector(
+				issuesPanelStateSelector,
+				(issueState:IssuesPanelState) => issueState.searchText
+			),
+			
 			issueFilterLabelsSelector = createSelector(
-				issueCriteriaSelector,
+				criteriaSelector,
 				enabledLabelsSelector,
 				(filter:IIssueCriteria, labels:List<Label>):List<Label> =>
 					labels.filter(label => filter && filter.labelIds && filter.labelIds.includes(label.id)) as any
 			),
 			issueFilterMilestonesSelector = createSelector(
-				issueCriteriaSelector,
+				criteriaSelector,
 				enabledMilestonesSelector,
 				(filter:IIssueCriteria, milestones:List<Milestone>):List<Milestone> =>
 					milestones.filter(milestone => filter && filter.milestoneIds && filter.milestoneIds.includes(milestone.id)) as any
@@ -165,7 +171,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 	
 	
 			issueFilterAssigneeSelector = createDeepEqualSelector(
-				issueCriteriaSelector,
+				criteriaSelector,
 				enabledAssigneesSelector,
 				(issueFilter:IIssueCriteria, assignees:List<User>) => {
 					const
@@ -177,21 +183,28 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				}
 			),
 			groupBySelector = createSelector(
-				issueCriteriaSelector,
+				criteriaSelector,
 				(criteria:IIssueCriteria) => criteria.sort.groupBy
 			),
 			orderedIssueIndexesSelector = createSelector(
 				issuesSelector,
-				issueCriteriaSelector,
+				criteriaSelector,
 				enabledAssigneesSelector,
 				editInlineConfigIssueSelector,
 				(issues:List<Issue>, criteria:IIssueCriteria, assignees:List<User>, editInlineConfig:IIssueEditInlineConfig):List<number> => {
 					
 					const
 						issueSort = criteria.sort,
-						{ groupBy } = issueSort,
-						{ fields:sortFields, direction:sortDirection } = issueSort,
+						{
+							groupBy
+						} = issueSort,
+						{
+							fields: sortFields,
+							direction:sortDirection = 'desc'
+						} = issueSort,
 						isReverse = sortDirection === 'desc'
+					
+					
 					
 					// If data not avail then return empty
 					if (!issues || !isListType(issues, Issue))
@@ -286,7 +299,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			
 			
 			issueGroupsSelector = createSelector(
-				issueCriteriaSelector,
+				criteriaSelector,
 				issuesSelector,
 				orderedIssueIndexesSelector,
 				(criteria:IIssueCriteria,issues:List<Issue>,issueIndexes:List<number>):List<IIssueGroup> => {
@@ -507,7 +520,8 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		issueIdsSelector,
 		
 		commentsSelector,
-		issueCriteriaSelector,
+		criteriaSelector,
+		searchTextSelector,
 		
 		issueFilterLabelsSelector,
 		issueFilterMilestonesSelector,

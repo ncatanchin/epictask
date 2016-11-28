@@ -76,7 +76,7 @@ export class RenderToLayer extends React.Component<IRenderToLayerProps,any> {
 			return
 		}
 		
-		log.info(`Un-mounting node`,this.layer)
+		log.debug(`Un-mounting node`,this.layer)
 		
 		if (this.props.useLayerForClickAway) {
 			this.layer.style.position = 'relative'

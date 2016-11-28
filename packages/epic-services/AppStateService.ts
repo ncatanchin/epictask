@@ -89,20 +89,15 @@ export default class AppStateService extends BaseService {
 		}
 		
 		
-		log.info(`Checking auth token: (${token},${newValue})`)
+		log.debug(`Checking auth token: (${token},${newValue})`)
 		if (!token && newValue !== AppStateType.AuthLogin) {
-			log.info(`Sending to LOGIN`)
+			log.debug(`Sending to LOGIN`)
 			return appActions.setStateType(AppStateType.AuthLogin)
 		} else if (token && newValue === AppStateType.AuthLogin) {
 			return appActions.setStateType(AppStateType.Authenticated)
 		}
 		
-		log.info('New App State', newValue)
-		//this.stateType = newStateType
-
-		// if (newValue === AppStateType.AuthVerify) {
-		// 	getAuthActions().verify()
-		// }
+		log.debug('New App State', newValue)
 	}
 }
 

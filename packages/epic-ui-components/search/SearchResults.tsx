@@ -88,7 +88,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			anchor) as any
 		
 		if (!anchor || isString(anchor)) {
-			log.warn(`Unable to determine anchor`, anchor)
+			DEBUG && log.warn(`Unable to determine anchor`, anchor)
 			return null
 		}
 		
@@ -131,7 +131,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		//log.debug(`Component did update`, elem, containerStyle)
 		
 		if (!elem || !containerStyle) {
-			log.warn(`Container can not be styled`, elem, containerStyle, this.props,this.controller.getState())
+			DEBUG && log.warn(`Container can not be styled`, elem, containerStyle, this.props,this.controller.getState())
 			return
 		}
 		

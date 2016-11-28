@@ -4,14 +4,17 @@ const
 	globalStyleConfigs = [] as any,
 	shortId = require('short-id')
 
-
-export interface IGlobalThemedStyle {
-	id:string
-	fn:(theme:any,Style:FreeStyle) => any
-	remove:() => void
-	create: () => void
-	element: typeof $
-	clean:() => void
+declare global {
+	interface IGlobalThemedStyle {
+		id:string
+		fn:(theme:any,Style:FreeStyle) => any
+		remove:() => void
+		create: () => void
+		element: typeof $
+		clean:() => void
+	}
+	
+	function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):IGlobalThemedStyle
 }
 
 export function CreateGlobalThemedStyles(fn:(theme:any,Style:FreeStyle) => any):IGlobalThemedStyle {

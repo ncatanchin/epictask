@@ -28,6 +28,8 @@ declare global {
 		FlexAlignCenter:any,
 		FlexAlignStart:any,
 		FlexAlignEnd:any,
+		FlexNoWrap:any,
+		FlexWrap:any,
 		
 		Ellipsis:any,
 		PositionRelative:any,

@@ -9,7 +9,7 @@ export const IssueGroupByNames = ['No Grouping','Milestone','Assignee','Labels']
 
 export const DefaultIssueSort = {
 	fields:['created_at'],
-		direction:'desc',
+	direction:null,
 	groupBy: 'none',
-	groupByDirection: 'asc'
+	groupByDirection: null
 } as IIssueSort

@@ -144,7 +144,7 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
  **/
 
 @connect(() => createStructuredSelector({
-	issueCriteria: getIssuesPanelSelector(selectors => selectors.issueCriteriaSelector),
+	issueCriteria: getIssuesPanelSelector(selectors => selectors.criteriaSelector),
 	issueFilterLabels: getIssuesPanelSelector(selectors => selectors.issueFilterLabelsSelector),
 	issueFilterMilestones: getIssuesPanelSelector(selectors => selectors.issueFilterMilestonesSelector),
 	labels: enabledLabelsSelector,

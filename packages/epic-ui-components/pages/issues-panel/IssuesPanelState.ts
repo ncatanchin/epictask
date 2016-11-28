@@ -29,6 +29,8 @@ declare global {
 		
 		criteria?:IIssueCriteria
 		
+		searchText?:string
+		
 		groupVisibility?:Map<string,boolean>
 		
 		selectedIssueIds?:List<number>
@@ -36,6 +38,8 @@ declare global {
 		
 		saving?:boolean
 		saveError?: Error
+		
+		
 		
 		editInlineConfig?:IIssueEditInlineConfig
 		editingIssue?:Issue
@@ -86,6 +90,8 @@ export const IssuesPanelStateRecord = Record({
 	
 	criteria: DefaultIssueCriteria,
 	
+	searchText: '',
+	
 	editInlineConfig:null,
 	editingIssue:null,
 	
@@ -122,6 +128,7 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	events:List<IssuesEvent>
 	
 	criteria:IIssueCriteria
+	searchText:string
 	
 	groupVisibility:Map<string,boolean>
 	

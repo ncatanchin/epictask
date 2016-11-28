@@ -16,35 +16,32 @@ declare namespace NodeJS {
 	}
 }
 
-
-declare var __NO_WEBPACK__:boolean
+/**
+ * No webpack mode
+ */
+declare let __NO_WEBPACK__:boolean
 
 
 /**
  * Is in development mode
  */
-declare var isDev:boolean
+declare let isDev:boolean
 
-// import {Map as MapGlobal} from 'immutable'
-
-// declare var MapConstructor:typeof MapGlobal
-// declare var Map:typeof MapGlobal
-
-
-
+// GLOBALS
+import ReactGlobal from 'react'
+import RadiumGlobal from 'radium'
 import {install} from 'source-map-support'
 
+/**
+ * Source Map Support
+ */
 interface NodeRequireFunction {
 	(moduleName: 'source-map-support'): typeof install;
 }
 
 
-// GLOBALS
-import ReactGlobal from 'react'
-import RadiumGlobal from 'radium'
-//import * as JQueryGlobal from 'jquery'
 
 
-declare var React:typeof ReactGlobal
-declare var Radium:typeof RadiumGlobal
-declare var $:any
+declare let React:typeof ReactGlobal
+declare let Radium:typeof RadiumGlobal
+declare let $:any

@@ -6,8 +6,8 @@ import { List } from "immutable"
 import * as KeyMaps from "epic-command-manager"
 import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
-import { isNumber, getValue, guard, Dom, unwrapRef, cloneObjectShallow, shallowEquals } from "epic-global"
-import { PureRender, TextField, RenderToLayer, FlexRowCenter } from "epic-ui-components/common"
+import { isNumber, getValue, guard, Dom, unwrapRef, shallowEquals } from "epic-global"
+import { PureRender, TextField, RenderToLayer, FlexRowCenter, Popover } from "epic-ui-components/common"
 import {
 	CommandComponent,
 	ICommandComponent,
@@ -21,10 +21,12 @@ import {
 	TOnSearchSelectHandler,
 	SearchController
 } from "./SearchController"
-import { SearchItem, SearchResult } from "epic-models"
-import { isFunction } from "typeguard"
+import { SearchItem } from "epic-models"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { SearchState } from "epic-ui-components/search"
+import { PositionRelative, FillWidth, rem, Transparent, OverflowAuto } from "epic-styles/styles"
+import { isNil } from "typeguard"
+import baseStyles from './SearchPanel.styles'
 const
 	// Key mapping tools
 	{ CommonKeys:Keys } = KeyMaps,
@@ -35,45 +37,6 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-
-// STYLES
-const baseStyles = (topStyles, theme, palette) => {
-	const
-		{ primary, accent, text, background } = palette
-	
-	
-	return [ {
-		wrapper: [ PositionRelative, FillWidth, {
-			borderRadius: rem(0.2),
-			backgroundColor: Transparent
-		} ],
-		
-		hint: [ {
-			backgroundColor: 'transparent',
-			color: text.secondary,
-			fontWeight: 400
-		} ],
-		
-		field: [ FillWidth, PositionRelative, {
-			
-			
-			wrapper: [ PositionRelative, OverflowAuto, FillWidth, FlexColumn, {
-				maxHeight: '100%'
-			} ],
-			
-			input: [ FillWidth, makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {
-				// backgroundColor: ,
-				//color: text.primary
-			} ],
-		} ],
-		
-		
-		focused: [ {
-			// backgroundColor: primary.hue4,
-			// color: text.primary
-		} ]
-	} ]
-}
 
 /**
  * ISearchPanelProps
@@ -215,7 +178,7 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 						inputElement = this.inputElement as any,
 						{ onEscape } = this.props
 					
-					log.info('Escape key received', event, onEscape, inputElement)
+					log.debug('Escape key received', event, onEscape, inputElement)
 					
 					if (onEscape && onEscape() === true) {
 						guard(inputElement.blur)
@@ -454,25 +417,26 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	/**
 	 * Focus the command container after everything settles
 	 */
-	private containerFocus = _.debounce((event) => {
-		guard(() => this.props.commandContainer.onFocus(event, true))
-	}, 250)
-	
-	private containerBlur = _.debounce((event) => {
-		guard(() => this.props.commandContainer.onBlur(event, true))
-	}, 150)
-	
+	// private containerFocus = _.debounce((event) => {
+	// 	guard(() => this.props.commandContainer.onFocus(event, true))
+	// }, 250)
+	//
+	// private containerBlur = _.debounce((event) => {
+	// 	guard(() => this.props.commandContainer.onBlur(event, true))
+	// }, 150)
+	//
 	/**
 	 * On text field focus
 	 *
 	 * @param event
 	 */
 	onTextFocus = (event) => {
-		log.info('Search panel gained focus query = ', this.query)
+		log.debug('Search panel gained focus query = ', this.query)
 		
 		this.controller.setFocused(true)
 		this.updateSearchResults()
-		this.containerFocus(event)
+		guard(() => this.props.commandContainer.onFocus(event, true))
+		//this.containerFocus(event)
 	}
 	
 	
@@ -483,10 +447,11 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 	 * @param event
 	 */
 	onTextBlur = (event) => {
-		log.info('search panel blur')
+		log.debug('search panel blur')
 		
 		this.controller.setFocused(false)
-		this.containerBlur(event)
+		guard(() => this.props.commandContainer.onBlur(event, true))
+		//this.containerBlur(event)
 	}
 	
 	
@@ -754,21 +719,23 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 			
 			{ searchPanelId } = this
 		
-		log.tron(`Rendering with focus ${focused}`)
 		return <CommandRoot
 			id={searchPanelId}
 			component={this}
 			style={panelStyle}
 		>
 			
-			<div tabIndex={-1} style={[styles.field.wrapper]}>
-				<FlexRowCenter >
+			<div tabIndex={-1} style={[styles.container]}>
+				
+				<FlexRowCenter style={styles.inputContainer}>
+					
 					{/* RENDER CRITERIA */}
 					{ getValue(() => criteriaRenderer(criteria)) }
 					
 					<TextField
 						id={`${searchPanelId}-input`}
 						ref={this.setTextFieldRef}
+						autoComplete="off"
 						tabIndex={-1}
 						autoFocus={autoFocus}
 						onFocus={this.onTextFocus}
@@ -777,18 +744,36 @@ export class SearchPanel extends React.Component<ISearchPanelProps,ISearchPanelS
 						onChange={this.onInputChange}
 						style={fieldStyle}
 						inputStyle={inputStyle}
-						value={text || stateText || ''}
+						value={!isNil(text) ? text : stateText ? stateText : ''}
 					/>
 				
 				</FlexRowCenter>
 				
-				<RenderToLayer
-					ref={this.setResultsLayerRef}
+				
+				<Popover
+					canAutoPosition={false}
 					open={focused}
-					render={this.renderResultsLayer}
+					anchorOrigin={{
+						vertical: 'bottom',
+						horizontal: 'left',
+					}}
+					targetOrigin={{
+						vertical: 'top',
+						horizontal: 'left',
+					}}
+				  anchorEl={getValue(() => ReactDOM.findDOMNode(this.state.textField))}
 					useLayerForClickAway={false}
-					componentClickAway={this.onClickAway}
-				/>
+				  >
+					{this.renderResultsLayer()}
+				</Popover>
+				
+				{/*<RenderToLayer*/}
+					{/*ref={this.setResultsLayerRef}*/}
+					{/**/}
+					{/*render={this.renderResultsLayer}*/}
+					{/*useLayerForClickAway={false}*/}
+					{/*componentClickAway={this.onClickAway}*/}
+				{/*/>*/}
 			
 			</div>
 		

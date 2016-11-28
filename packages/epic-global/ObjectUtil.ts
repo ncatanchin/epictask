@@ -19,7 +19,11 @@ export function isListType<T>(o:any,type:{new():T}):o is List<T> {
 	return (List.isList(o))
 }
 
-
+export function safePush(arr:Array<any>,value:any) {
+	return (arr || [])
+		.filter(it => it !== value)
+		.concat([value])
+}
 
 /**
  * Execute a function guarded from exception

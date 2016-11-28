@@ -421,7 +421,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	
 	private updateCriteria = this.makeStateUpdate((criteria:IIssueCriteria = null) =>
 		(state:IssuesPanelState) => (criteria) ?
-			state.set('criteria', cloneObjectShallow(criteria)) :
+			state
+				.set('criteria', cloneObjectShallow(criteria))
+				.set('searchText',''):
 			state
 	)
 	
@@ -703,6 +705,10 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	
 	setCriteria(criteria:IIssueCriteria = this.getCriteria()) {
 		return this.updateCriteria(criteria)
+	}
+	
+	setSearchText(searchText:string) {
+		return this.updateState({searchText})
 	}
 	
 	

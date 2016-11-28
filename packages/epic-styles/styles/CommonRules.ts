@@ -265,6 +265,14 @@ export const FlexAlignEnd = makeFlexAlign('flex-end')
 
 export const FlexScale = makeFlex()
 
+export const FlexWrap = {
+	flexWrap: 'wrap'
+}
+
+export const FlexNowrap = {
+	flexWrap: 'nowrap'
+}
+
 export const FlexAuto = makeFlex(0,0,'auto')
 
 export const FlexRow = makeStyle(Flex,{

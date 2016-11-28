@@ -261,7 +261,7 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		const
 			{text,criteria} = criteriaAndText
 		
-		log.info(`Running search with query: ${text}`)
+		log.debug(`Running search with query: ${text}`)
 		
 		
 		
@@ -273,7 +273,8 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 		
 		if (!this.allowEmptyQuery && (!text || !text.length)) {
-			log.tron(`Not running search text=${text} allow empty = ${this.allowEmptyQuery}`)
+			log.debug(`Not running search text=${text} allow empty = ${this.allowEmptyQuery}`)
+			this.setResults(List<SearchResult>())
 			return nextSearch()
 		}
 		
@@ -302,7 +303,6 @@ export class SearchController extends EventEmitter implements IViewController<Se
 			await Promise.all(searchPromises.toArray())
 			
 			log.debug(`Got Results for ${text}`,results)
-			log.info(`Results`)
 			this.setResults(nilFilterList(results as any))
 			
 		} catch (err) {

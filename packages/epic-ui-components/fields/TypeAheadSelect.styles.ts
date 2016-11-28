@@ -1,6 +1,5 @@
 
 
-
 const inputStyle = {
 	display: 'flex',
 	flexDirection: 'row',
@@ -10,6 +9,9 @@ const inputStyle = {
 	boxSizing: 'border-box'
 }
 
+let
+	styleSheet:IGlobalThemedStyle
+
 const baseStyles = (topStyles,theme,palette) => {
 	
 	/**
@@ -17,8 +19,6 @@ const baseStyles = (topStyles,theme,palette) => {
 	 */
 	
 	const
-		FreeStyle = require('free-style'),
-		Style = FreeStyle.create(),
 	
 		styles = createStyles({
 			
@@ -46,13 +46,19 @@ const baseStyles = (topStyles,theme,palette) => {
 			}]
 		})
 	
-	Style.registerRule(`.${styles.className}`,createStyles([{
-		'input': [FlexRow,inputStyle, {
-			flexGrow: 1
-		}]
-	}]))
-	
-	Style.inject()
+	// IF ALREADY EXISTS, REMOVE
+	if (styleSheet) {
+		styleSheet.remove()
+	}
+		
+	// CREATE STYLE SHEET
+	styleSheet = CreateGlobalThemedStyles((aTheme,Style) => ({
+		[`.${styles.className}`]: createStyles([{
+			'input': [FlexRow,inputStyle, {
+				flexGrow: 1
+			}]
+		}])
+	}))
 	
 	return styles
 }

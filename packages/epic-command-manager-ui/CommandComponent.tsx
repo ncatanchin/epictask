@@ -159,9 +159,13 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 			return log.warn(`No instance but focused`, instance, this)
 		}
 		
+		
 		if (focused) {
 			log.debug(`Already focused`)
 		} else {
+			if (event)
+				event.persist()
+			
 			this.setState({
 				focused: true
 			},() => {
@@ -177,9 +181,6 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		}
 		
 		
-		
-		
-		
 	}
 	
 	/**
@@ -193,9 +194,11 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		const
 			{ instance, id } = this,
-			{ focused } = this.state
+			{ mounted, focused } = this.state
 		
-		log.debug(`On blur`, event, id)
+		log.debug(`On blur`, event, id,'mounted',mounted)
+		if (!mounted)
+			return log.debug(`Not mounted`)
 		
 		if (!instance)
 			return log.warn(`Blur, but no instance???`)
@@ -204,16 +207,20 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		if (!focused) {
 			log.debug(`Blur, but not focused`)
 		} else {
+			if (event)
+				event.persist()
+			
 			this.setState({
 				focused: false
 			},() => {
 				if (event) {
-					setImmediate(() => {
+					setImmediate(() =>{
 						getCommandManager().setContainerFocused(id, this, false, event)
+						
+						
+						if (!fromComponent && instance.onBlur)
+							instance.onBlur(event)
 					})
-					
-					if (!fromComponent && instance.onBlur)
-						instance.onBlur(event)
 				}
 			})
 		}
