@@ -2,8 +2,6 @@ import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "epic-global"
 import { Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
-import { colorAlpha } from "epic-styles/styles"
-
 
 
 /**
@@ -582,7 +580,7 @@ export function DefaultTheme(palette) {
 		/**
 		 * Search Panel
 		 */
-		searchPanel: {
+		searchField: {
 			
 			
 			wrapper: {

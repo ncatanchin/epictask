@@ -3,7 +3,7 @@ import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { getUIActions } from "epic-typedux"
 import { getValue } from "epic-global"
-import { SearchPanel } from "epic-ui-components/search"
+import { SearchField } from "epic-ui-components/search"
 
 import { ActionSearchProvider } from "epic-ui-components/search/DefaultSearchProviders"
 import { SearchItem } from "epic-models"
@@ -36,7 +36,7 @@ export interface IFindActionToolProps extends IThemedAttributes {
  * IFindActionToolState
  */
 export interface IFindActionToolState {
-	searchPanel?:any
+	searchField?:any
 }
 
 /**
@@ -93,19 +93,19 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 	/**
 	 * Sets a reference to the search panel
 	 *
-	 * @param searchPanel
+	 * @param searchField
 	 */
-	setSearchPanel = (searchPanel) => {
-		log.debug(`Got search panel`,searchPanel)
-		this.setState({searchPanel})
+	setSearchField = (searchField) => {
+		log.debug(`Got search panel`,searchField)
+		this.setState({searchField})
 		
 	}
 	
 	/**
 	 * Helper to get search panel
 	 */
-	get searchPanel() {
-		return getValue(() => this.state.searchPanel,null)
+	get searchField() {
+		return getValue(() => this.state.searchField,null)
 	}
 	
 	
@@ -118,7 +118,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 		return <div
 			style={[FlexColumn]}>
 			
-			<SearchPanel ref={this.setSearchPanel}
+			<SearchField ref={this.setSearchField}
 			             inputStyle={styles.search.input}
 			             searchOnEmpty={true}
 			             autoFocus={true}

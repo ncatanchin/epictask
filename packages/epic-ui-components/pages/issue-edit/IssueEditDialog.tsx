@@ -684,16 +684,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					<LabelFieldEditor labels={editingIssue.labels || []}
 					                  id="issueEditDialogLabels"
 					                  hint="Labels"
-					                  mode="normal"
-					                  hintAlways={true}
+					             
 					                  style={{marginBottom: rem(1.5)}}
 					                  availableLabels={availableRepo.labels || []}
 					                  onLabelsChanged={this.onLabelsChanged}
 					                  onKeyDown={(event) => {
 					                  	getCommandManager().handleKeyDown(event as any,true)
 					                  }}
-					                  chipStyle={makeMarginRem(1,0.5)}
-					                  hintStyle={makeStyle(styles.input.hint,{left:10,bottom: 8})}
+					                  
 					/>
 					
 					<MarkdownEditor

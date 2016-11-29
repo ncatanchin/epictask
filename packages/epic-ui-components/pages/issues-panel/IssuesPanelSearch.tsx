@@ -7,7 +7,7 @@ import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import { getIssuesPanelSelector, IssuesPanelController } from "epic-ui-components/pages/issues-panel"
 import { colorAlpha, makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
 import { cloneObjectShallow, cloneObject, safePush } from "epic-global"
-import { SearchPanel } from "epic-ui-components/search"
+import { SearchField } from "epic-ui-components/search"
 import { ContainerNames, getCommandManager } from "epic-command-manager"
 import {
 	enabledMilestonesSelector, enabledAvailableReposSelector,
@@ -504,7 +504,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				searchText
 			} = this.props
 		
-		return !criteria ? React.DOM.noscript() : <SearchPanel
+		return !criteria ? React.DOM.noscript() : <SearchField
 			
 			searchId='issues-search'
 			open={open}
@@ -553,7 +553,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		'repo': 'repos'
 	}
 	
-	constructor(private issuesSearchPanel:IssuesPanelSearch) {
+	constructor(private issuesSearchField:IssuesPanelSearch) {
 		
 	}
 	
@@ -680,7 +680,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		
 		const
 			storeState = getStoreState(),
-			{ viewController } = this.issuesSearchPanel,
+			{ viewController } = this.issuesSearchField,
 			results = List<ISearchItem>().asMutable()
 		
 		// GET DATA

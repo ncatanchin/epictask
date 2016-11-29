@@ -5,7 +5,7 @@ import { connect } from "react-redux"
 import { ThemedStyles, Transparent, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
 import { createDeepEqualSelector } from "epic-global"
 import { uiStateSelector,getAppActions } from "epic-typedux"
-import { RepoSearchProvider, GitHubSearchProvider ,SearchPanel } from "epic-ui-components/search"
+import { RepoSearchProvider, GitHubSearchProvider ,SearchField } from "epic-ui-components/search"
 
 import { getValue } from "typeguard"
 import { SearchItem, Repo } from "epic-models"
@@ -58,7 +58,7 @@ export interface IWelcomeRootProps extends IThemedAttributes {
  */
 export interface IWelcomeRootState {
 	width?:number
-	searchPanelRef?:any
+	searchFieldRef?:any
 }
 
 
@@ -117,8 +117,8 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	private onEscape = () => {}
 	
 	
-	private setSearchPanelRef = (searchPanelRef) => this.setState({
-		searchPanelRef
+	private setSearchFieldRef = (searchFieldRef) => this.setState({
+		searchFieldRef
 	})
 	
 	render() {
@@ -141,8 +141,8 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 							{/*&nbsp;&nbsp;or <i><strong>docker</strong></i>&nbsp;&nbsp;or one of your repos*/}
 						{/*</span>*/}
 			{/*}*/}
-				<SearchPanel
-					ref={this.setSearchPanelRef}
+				<SearchField
+					ref={this.setSearchFieldRef}
 					searchId={WelcomeSearchId}
 					providers={[GitHubSearchProvider,RepoSearchProvider]}
 					

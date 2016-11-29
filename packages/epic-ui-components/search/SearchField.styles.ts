@@ -1,4 +1,7 @@
-import { FillWidth, PositionRelative, rem, Transparent, OverflowAuto, FlexWrap } from "epic-styles/styles"
+import {
+	FillWidth, PositionRelative, rem, Transparent, OverflowAuto, FlexWrap,
+	makeFlexAlign
+} from "epic-styles/styles"
 export default function baseStyles(topStyles, theme, palette) {
 	const
 		{ primary, accent, text, background } = palette
@@ -19,10 +22,11 @@ export default function baseStyles(topStyles, theme, palette) {
 			PositionRelative,
 			FillWidth,
 			FlexWrap,
-			FlexRow
+			makeFlexAlign('flex-start','center')
 		],
 		
 		field: [
+			PositionRelative,
 			FlexScale,
 			{
 				minWidth: '30%',

@@ -21,6 +21,7 @@ import {
 	removeWindowListener,
 	getCommandBrowserWindow
 } from "./CommandManagerUtil"
+import { isNil } from "typeguard"
 
 
 const
@@ -40,6 +41,7 @@ const
  * Command container registration
  */
 export interface ICommandContainerRegistration {
+	id:string
 	container:TCommandContainer
 	element?:HTMLElement
 	available:boolean
@@ -130,13 +132,17 @@ export class CommandManager {
 		
 	}
 	
+	isFocused(idOrContainer) {
+		return !isNil(this.focusedContainers().find(reg => reg.id === idOrContainer || reg.container === idOrContainer))
+	}
+	
 	/**
 	 * All Focused Containers
 	 */
-	private focusedContainers():ICommandContainerRegistration[] {
+	focusedContainers():ICommandContainerRegistration[] {
 		return Object
 			.values(this.containers)
-			.filter(it => it.element && (it.focused || it.element.contains(document.activeElement) || it.element === document.activeElement))
+			.filter(it => it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
 			.sort((c1,c2) =>
 				c1.element.contains(c2.element) ? 1 :
 			  c2.element.contains(c1.element) ? -1 : 0)
@@ -386,19 +392,22 @@ export class CommandManager {
 	 */
 	private getContainerRegistration(id:string, container:TCommandContainer, available:boolean):ICommandContainerRegistration  {
 		let
-			reg = this.containers[id]
+			reg = this.containers[id],
+			element = isReactComponent(container) &&
+				ReactDOM.findDOMNode(container) as HTMLElement
 		
 		if (!reg) {
 			reg = this.containers[id] = {
+				id,
 				container,
 				available,
 				focused: false,
 				commands: [],
 				menuItems: [],
-				element: isReactComponent(container) &&
-					ReactDOM.findDOMNode(container) as HTMLElement
+				element
 			}
 		} else {
+			reg.element = element
 			reg.available = available
 			if (!available)
 				reg.focused = false
@@ -755,6 +764,23 @@ export class CommandManager {
 		return _.uniqBy(this.getMenuItemsFromCommands(commands).concat(menuItems),'id')
 	}
 	
+	unregisterContainer(id:string,container:TCommandContainer) {
+		if (this.containers[id]) {
+			delete this.containers[ id ]
+		} else {
+			const
+				keys = Object.keys(this.containers)
+			
+			for (let key of keys) {
+				if (this.containers[key].container === container) {
+					delete this.containers[key]
+					break
+				}
+				
+			}
+		}
+	}
+	
 	/**
 	 * Register a command
 	 *
@@ -845,9 +871,10 @@ export class CommandManager {
 				status.focused = focusedContainers.includes(status)
 				
 				if (status.focused && status.container) {
-					guard(() => (status.container as any).onFocus(event))
+					//guard(() => (status.element as any).onFocus(event))
 				} else if (!status.focused && status.container) {
-					guard(() => (status.container as any).onBlur())
+					//guard(() => (status.container as any).onBlur())
+					//guard(() => (status.element as any).onBlur())
 				}
 				
 				if (commands) {
@@ -870,8 +897,8 @@ export class CommandManager {
 			$("#focusedContainers").remove()
 			$(`<div id="focusedContainers">${
 				this.focusedContainers()
-					.map(it => it.element.id)
-					.join(', ')
+					.map(it => it.element.id || `${it.element.tagName}`)
+					.join(' >>> ')
 			}</div>`)
 				.css({
 					position: 'absolute',

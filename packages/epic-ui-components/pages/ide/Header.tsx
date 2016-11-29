@@ -1,5 +1,5 @@
 import * as React from "react"
-import { SearchPanel } from "epic-ui-components/search"
+import { SearchField } from "epic-ui-components/search"
 import { makeAbsolute, makeHeightConstraint, ThemedStyles, IThemedAttributes } from "epic-styles"
 import { TextField } from "material-ui/TextField"
 import {
@@ -89,7 +89,7 @@ export interface IHeaderProps extends IThemedAttributes {
 }
 
 export interface IHeaderState {
-	searchPanel?:SearchPanel
+	searchField?:SearchField
 	hotKeys?:any
 	resultsHidden?:boolean
 	forceBlur?:boolean
@@ -116,13 +116,13 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 		super(props,context)
 	}
 
-	get searchPanel():SearchPanel {
-		const panel = _.get(this,'state.searchPanel') as any
+	get searchField():SearchField {
+		const panel = _.get(this,'state.searchField') as any
 		return panel && panel.getWrappedInstance ? panel.getWrappedInstance() : panel
 	}
 
 	get textField():TextField {
-		return _.get(this,'searchPanel.textField') as any
+		return _.get(this,'searchField.textField') as any
 	}
 
 
@@ -140,8 +140,8 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 		log.info('window max')
 	}
 
-	setSearchPanelRef = (searchPanel) => {
-		this.setState({searchPanel})
+	setSearchFieldRef = (searchField) => {
+		this.setState({searchField})
 	}
 
 	setHotKeysRef = (hotKeys) => {
@@ -160,10 +160,10 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 		//
 		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 		
-		// const {searchPanel} = this
+		// const {searchField} = this
 		//
-		// if (searchPanel) {
-		// 	const textField:any = searchPanel.textField
+		// if (searchField) {
+		// 	const textField:any = searchField.textField
 		// 	if (textField) {
 		// 		textField.blur()
 		// 	} else {

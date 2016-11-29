@@ -48,7 +48,7 @@ interface ICommandContainerProps extends React.HTMLAttributes<any> {
 interface ICommandContainerState {
 	instance?:ICommandComponent
 	mounted?:boolean
-	focused?:boolean
+	//focused?:boolean
 	registered?:boolean
 }
 
@@ -63,7 +63,6 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		this.state = {
 			mounted: false,
-			focused: false,
 			registered: false
 		}
 	}
@@ -73,7 +72,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 */
 	get instance():ICommandComponent {
 		let
-			i = _.get(this, 'state.instance', null) as any
+			i = getValue(() => this.state.instance, null) as any
 		
 		if (i && i.getWrappedInstance)
 			i = i.getWrappedInstance()
@@ -112,7 +111,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * On unmount, set 'mounted' = false, then update the commands (remove them)
 	 */
 	componentWillUnmount = () => this.setState({
-		mounted: false
+		mounted: false,
+		registered: false
 	}, this.updateRegistration)
 	
 	
@@ -122,7 +122,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * @returns {boolean}
 	 */
 	isFocused() {
-		return getValue(() => this.state.focused, false)
+		return getValue(() => this.id && getCommandManager().isFocused(this.id), false)
 	}
 	
 	/**
@@ -131,13 +131,15 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * @param instance
 	 */
 	private setInstance = (instance:ICommandComponent) => {
-		if (!instance) {
-			log.debug(`Instance set to null`, this)
-			return
-		}
+		// if (!instance) {
+		// 	log.debug(`Instance set to null`, this)
+		// 	return
+		// }
 		
 		// JUST IN CASE ITS WRAPPED IN RADIUM OR CONNECT/REDUX
-		this.setState({ instance }, this.updateRegistration)
+		this.setState({
+			instance
+		}, this.updateRegistration)
 	}
 	
 	/**
@@ -151,7 +153,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		const
 			{ instance, id } = this,
-			{ focused } = this.state
+			focused = this.isFocused()
 		
 		log.debug(`focused`, id, event, instance)
 		
@@ -163,21 +165,16 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		if (focused) {
 			log.debug(`Already focused`)
 		} else {
-			if (event)
+			if (event) {
 				event.persist()
-			
-			this.setState({
-				focused: true
-			},() => {
-				if (event) {
-					setImmediate(() => {
-						getCommandManager().setContainerFocused(id, this, true, event)
-						if (!fromComponent && instance.onFocus) {
-							instance.onFocus(event)
-						}
-					})
-				}
-			})
+				setImmediate(() => {
+					getCommandManager().setContainerFocused(id, this, true, event)
+					if (!fromComponent && instance.onFocus) {
+						instance.onFocus(event)
+					}
+				})
+			}
+		
 		}
 		
 		
@@ -194,7 +191,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		const
 			{ instance, id } = this,
-			{ mounted, focused } = this.state
+			{ mounted } = this.state,
+			focused = this.isFocused()
 		
 		log.debug(`On blur`, event, id,'mounted',mounted)
 		if (!mounted)
@@ -207,13 +205,12 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		if (!focused) {
 			log.debug(`Blur, but not focused`)
 		} else {
-			if (event)
-				event.persist()
 			
-			this.setState({
-				focused: false
-			},() => {
+				
+			
+			
 				if (event) {
+					event.persist()
 					setImmediate(() =>{
 						getCommandManager().setContainerFocused(id, this, false, event)
 						
@@ -222,7 +219,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 							instance.onBlur(event)
 					})
 				}
-			})
+			
 		}
 		
 				
@@ -242,14 +239,18 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		log.debug(`Updating commands for ${id}`)
 		
-		if (!instance || !id) {
-			log.warn(`Instance is not set yet, can not do anything, mounted=${mounted}, id=${id}`)
+		if (!id) {
+			log.warn(`id not set, mounted=${mounted}, id=${id}`)
 			return
 		}
 		
 		
 		// REGISTER
-		if (!registered) {
+		if (!mounted || (registered && !instance)) {
+			getCommandManager().unregisterContainer(this.id,this)
+			if (this.state.registered)
+				this.setState({registered:false})
+		} else if (mounted && !registered && instance) {
 			log.debug(`Registering commands on container ${id}`)
 			
 			const

@@ -9,8 +9,7 @@ import { List } from "immutable"
 import { MenuItem } from "material-ui"
 import { PureRender, LabelChip, Avatar, IssueLabelsAndMilestones } from "../../common"
 import { DialogRoot, createSaveCancelActions } from "../../layout/dialog"
-import { TypeAheadSelect } from "epic-ui-components/fields"
-import { createDeepEqualSelector, getValue } from "epic-global"
+import { getValue } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
@@ -30,6 +29,7 @@ import IssuePatchController from "epic-ui-components/pages/issue-patch/IssuePatc
 import { IssuePatchState } from "epic-ui-components/pages/issue-patch/IssuePatchState"
 import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
 import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
+import { SearchField } from "epic-ui-components/search"
 
 
 // Constants
@@ -38,103 +38,6 @@ const
 	tinycolor = require('tinycolor2')
 
 //log.setOverrideLevel(LogLevel.DEBUG)
-
-/**
- * Add global themed styles
- */
-// const styleSheet = CreateGlobalThemedStyles((theme, Style) => {
-// 	const
-// 		{ secondary, accent } = theme.palette,
-// 		focusBgColor = tinycolor(accent.hue3).setAlpha(0.2).toRgbString(),
-// 		focusColor = accent.hue1,
-// 		focusBorderColor = tinycolor(accent.hue1).setAlpha(1).toRgbString(),
-// 		hoverColor = secondary.hue1,
-// 		pulseAnimation = Style.registerKeyframes({
-// 			"0%": {
-// 				transform: "translate(0,-50%) scale(0)",
-// 				opacity: "0.0"
-// 			},
-// 			'25%': {
-// 				transform: 'translate(0,-50%) scale(0.25)',
-// 				opacity: 0.3,
-// 			},
-// 			'50%': {
-// 				transform: "translate(0,-50%) scale(0.6)",
-// 				opacity: 0.5
-// 			},
-// 			'65%': {
-// 				transform: 'translate(0,-50%) scale(1)',
-// 				opacity: 0.7
-// 			},
-// 			'85%': {
-// 				transform: 'translate(0,-50%) scale(0.8)',
-// 				opacity: 0.3
-// 			},
-// 			'100%': {
-// 				transform: 'translate(0,-50%) scale(0.5)',
-// 				opacity: 0.0,
-// 			}
-// 		})
-//
-//
-// 	return createStyles({
-// 		'.patchMenuItem:after,.patchMenuItem:before': [ makeTransition([ 'opacity', 'box-shadow', 'color' ]), {
-// 			opacity: 0
-// 		} ],
-// 		'.patchMenuItem:after': {
-// 			zIndex: 10,
-// 			content: '\' \'',
-// 			position: 'absolute',
-// 			top: 0,
-// 			left: 0,
-// 			right: 0,
-// 			bottom: 0
-// 		},
-// 		'.patchMenuItem:before': {
-// 			zIndex: 12,
-// 			content: `'${String.fromCodePoint(parseInt('f111'/*'f192'*/, 16))}'`,// '\'\\2022\''
-// 			fontFamily: 'FontAwesome',
-// 			position: 'absolute',
-// 			fontSize: rem(1.3),
-// 			right: rem(0.5),
-// 			lineHeight: rem(2),
-// 			top: '50%',
-// 			transform: 'translate(0,-50%)',
-// 			width: 'auto'
-//
-// 		},
-// 		// Hover or focus - make opaque
-// 		'div[data-hover=true] .patchMenuItem:before,  div[data-hover=true] .patchMenuItem:after, div[data-keyboard-focused=true] .patchMenuItem:before, div[data-keyboard-focused=true] .patchMenuItem:after': {
-// 			opacity: 1
-// 		},
-//
-// 		// Hover states
-// 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:before': {
-// 			color: hoverColor,
-// 			animation: `${pulseAnimation} 1.2s ease-out`,
-// 			animationIterationCount: 'infinite'
-// 		},
-//
-// 		'div[data-hover=true]:not([data-keyboard-focus=true]) .patchMenuItem:after': {
-// 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${hoverColor} !important`
-// 		},
-//
-// 		// Focus states
-// 		'div[data-keyboard-focused=true] .patchMenuItem:before': {
-// 			color: focusColor,
-// 			animation: `${pulseAnimation} 1.2s ease-out`,
-// 			animationIterationCount: 'infinite'
-// 		},
-// 		'div[data-keyboard-focused=true] .patchMenuItem:after': {
-// 			boxShadow: `inset 0rem 0rem 0.2rem 0.2rem ${focusBorderColor} !important`
-//
-// 		}
-//
-// 	})
-// })
-
-// ADD HMR CLEANER
-//addHotDisposeHandler(module, styleSheet.clean)
 
 
 /**
@@ -689,22 +592,22 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			
 			/>
 			
-			{this.state.dataSource &&
-			<TypeAheadSelect
-				ref={this.setTypeAheadRef}
-				style={styles.input}
-				autoFocus={true}
-				fullWidth={true}
-				hintText={`${mode && mode.toUpperCase()}...`}
-				menuProps={{maxHeight:'30%'}}
-				onEscKeyDown={this.hide}
-				onItemSelected={this.onItemSelected}
-				onInputChanged={this.onInputChanged}
-				dataSource={this.state.dataSource}
-				openOnFocus={true}
-				openAlways={true}
-				underlineShow={true}/>
-			}
+			{/*{this.state.dataSource &&*/}
+			{/*<SearchField*/}
+				{/*ref={this.setTypeAheadRef}*/}
+				{/*style={styles.input}*/}
+				{/*autoFocus={true}*/}
+				{/*fullWidth={true}*/}
+				{/*hintText={`${mode && mode.toUpperCase()}...`}*/}
+				{/*menuProps={{maxHeight:'30%'}}*/}
+				{/*onEscKeyDown={this.hide}*/}
+				{/*onItemSelected={this.onItemSelected}*/}
+				{/*onInputChanged={this.onInputChanged}*/}
+				{/*dataSource={this.state.dataSource}*/}
+				{/*openOnFocus={true}*/}
+				{/*openAlways={true}*/}
+				{/*underlineShow={true}/>*/}
+			{/*}*/}
 			
 			<div style={styles.issues}>
 				<IssueMultiInlineList issues={List<Issue>(issues)} style={styles.issues.list}/>

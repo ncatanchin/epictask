@@ -1,6 +1,6 @@
 // Imports
 
-import { SearchPanel } from "epic-ui-components/search"
+import { SearchField } from "epic-ui-components/search"
 import { PureRender } from "epic-ui-components/common"
 import { getUIActions } from "epic-typedux"
 import { getValue, guard } from "epic-global"
@@ -32,7 +32,7 @@ export interface IRepoAddToolProps extends React.HTMLAttributes<any> {
 
 export interface IRepoAddToolState {
 	
-	searchPanel?:any
+	searchField?:any
 }
 
 /**
@@ -71,21 +71,21 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 	/**
 	 * Sets a reference to the search panel
 	 *
-	 * @param searchPanel
+	 * @param searchField
 	 */
-	setSearchPanel = (searchPanel) => {
-		log.info(`Got search panel`, searchPanel)
+	setSearchField = (searchField) => {
+		log.info(`Got search panel`, searchField)
 		//, () => this.setFocused()
-		this.setState({ searchPanel })
+		this.setState({ searchField })
 		
 	}
 	
 	/**
 	 * Helper to get search panel
 	 */
-	get searchPanel() {
+	get searchField() {
 		
-		return getValue(() => this.state.searchPanel, null)
+		return getValue(() => this.state.searchField, null)
 	}
 	
 	
@@ -124,7 +124,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 		return <div
 			style={[FlexColumn]}>
 			
-			<SearchPanel ref={this.setSearchPanel}
+			<SearchField ref={this.setSearchField}
 			             inputStyle={styles.search.input}
 			             style={styles.search.panel}
 			             autoFocus={true}

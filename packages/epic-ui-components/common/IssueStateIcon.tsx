@@ -10,7 +10,8 @@ import { List } from 'immutable'
 import { getIssueActions } from "epic-typedux/provider"
 
 import { Issue } from "epic-models"
-import { shallowEquals } from "epic-global"
+import { shallowEquals, cloneObjectShallow } from "epic-global"
+import { rem, FillHeight, FlexRowCenter, makePaddingRem } from "epic-styles/styles"
 
 
 // Constants
@@ -28,7 +29,7 @@ function baseStyles(topStyles, theme, palette) {
 	return {
 		open: {
 			//backgroundColor: 'rgba(101,181,73,1)',
-			color: colorAlpha(text.disabled, 0.1)
+			color: colorAlpha(text.primary,0.4),
 		},
 		closed: {
 			//color: text.primary,
@@ -74,7 +75,7 @@ function baseStyles(topStyles, theme, palette) {
 				padding: rem(0.3),
 				
 				icon: [ {
-					color: alternateText.secondary
+					color: alternateText.primary
 				} ],
 				
 				close: {
@@ -145,8 +146,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	
 	
 	static defaultProps = {
-		iconSet: 'fa',
-		iconName: 'check-circle-o'
+		iconSet: 'fa'
 	}
 	
 	/**
@@ -190,10 +190,17 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 	
 	render() {
 		const
-			{ issue, styles, showToggle } = this.props,
+			{ issue, styles, showToggle,iconName } = this.props,
 			{ state } = issue,
 			isOpen = state === 'open',
 			hovering = Radium.getState(this.state, 'issueState', ':hover')
+		
+		const
+			createIcon = () => makeIcon(
+				cloneObjectShallow(this.props as any,{
+					iconName: iconName || (isOpen ? 'circle-o' : 'check-circle-o')}
+				), isOpen)
+			
 		
 		return <div
 			ref="issueState"
@@ -202,7 +209,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 				styles.root,showToggle && styles.root.toggle
 			]}>
 			
-			{makeIcon(this.props as any, isOpen)}
+			{createIcon()}
 			
 			{/* IF TOGGLE ENABLED */}
 			{showToggle && <div style={[
@@ -211,7 +218,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 				hovering && styles.toggle.hovering
 			]}>
 				
-				{makeIcon(this.props as any, isOpen)}
+				{createIcon()}
 				
 				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done" : 'Reopen'}</div>
 			</div>}

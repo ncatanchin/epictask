@@ -23,7 +23,7 @@ import {
 } from "epic-command-manager-ui"
 import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, ContainerNames } from "epic-command-manager"
 import { IThemedAttributes, FlexColumnCenter } from "epic-styles"
-import { SearchPanel} from "epic-ui-components/search"
+import { SearchField} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber, cloneObjectShallow } from "epic-global"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
@@ -118,7 +118,7 @@ export interface IIssuesPanelState {
 	srcItems?: List<IIssueListItem<any>>
 	groupsVisibility?:Map<string,boolean>
 	listRef?:any
-	searchPanelRef?:any
+	searchFieldRef?:any
 	
 }
 
@@ -362,12 +362,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 */
 	private openFindIssues = (cmdOrMenuItem,event) => {
 		
-		guard(() => $(ReactDOM.findDOMNode(this.state.searchPanelRef)).find('input').focus())
+		guard(() => $(ReactDOM.findDOMNode(this.state.searchFieldRef)).find('input').focus())
 		// const
-		// 	{searchPanel} = this,
-		// 	inputElement = searchPanel && searchPanel.inputElement
+		// 	{searchField} = this,
+		// 	inputElement = searchField && searchField.inputElement
 		//
-		// log.debug('Fuzzy find',searchPanel,inputElement)
+		// log.debug('Fuzzy find',searchField,inputElement)
 		//
 		// if (inputElement)
 		// 	$(inputElement).focus()
@@ -398,18 +398,18 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	/**
 	 * Get search panel
 	 *
-	 * @returns {SearchPanel}
+	 * @returns {SearchField}
 	 */
-	private get searchPanel():SearchPanel {
-		return unwrapRef<SearchPanel>(getValue(() => this.state.searchPanelRef))
+	private get searchField():SearchField {
+		return unwrapRef<SearchField>(getValue(() => this.state.searchFieldRef))
 	}
 	
 	/**
 	 * Set search panel ref
 	 *
-	 * @param searchPanelRef
+	 * @param searchFieldRef
 	 */
-	private setSearchPanelRef = (searchPanelRef) => this.setState({searchPanelRef})
+	private setSearchFieldRef = (searchFieldRef) => this.setState({searchFieldRef})
 	
 	/**
 	 * Helper to get the current selected issue ids
@@ -915,7 +915,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			
 			<IssuesPanelSearch
-				ref={this.setSearchPanelRef}
+				ref={this.setSearchFieldRef}
 				viewController={this.viewController}
 				/>
 			

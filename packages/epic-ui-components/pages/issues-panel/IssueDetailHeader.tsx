@@ -1,8 +1,8 @@
 // Imports
 import { List } from "immutable"
-import { TextField, CircularProgress } from "material-ui"
+import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
-import {createSelector} from 'reselect'
+import { createSelector } from 'reselect'
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
 import {
 	PureRender,
@@ -38,6 +38,8 @@ import { Issue, Milestone, Label, User } from "epic-models"
 import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
+import { TextField } from "epic-ui-components/common"
+import { makeStyle } from "epic-styles/styles"
 
 // Constants
 const
@@ -48,12 +50,12 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 const
-	baseStyles = (topStyles,theme,palette) => {
-			
+	baseStyles = (topStyles, theme, palette) => {
+		
 		
 		const
-			labelBaseStyles = createStyles(labelBaseStylesFn,null,theme,palette),
-			{background,primary,accent,text,secondary} = palette,
+			labelBaseStyles = createStyles(labelBaseStylesFn, null, theme, palette),
+			{ background, primary, accent, text, secondary } = palette,
 			flexTransition = makeTransition([
 				'opacity',
 				'width',
@@ -65,33 +67,33 @@ const
 				'padding-bottom',
 				'padding-top',
 				'padding-right',
-				'padding-left'])
+				'padding-left' ])
 		
-		return [flexTransition,makeComponentStyles(theme,palette),{
-				
-			root: [flexTransition, FlexAuto, FlexColumn,PositionRelative, {
+		return [ flexTransition, makeComponentStyles(theme, palette), {
+			
+			root: [ flexTransition, FlexAuto, FlexColumn, PositionRelative, {
 				padding: "1rem",
 				backgroundColor: TinyColor(primary.hue1).setAlpha(0.7).toRgbString(),
 				color: text.primary
-			}],
+			} ],
 			
-			hidden: [makeBorderRem(0),makePaddingRem(0),makeMarginRem(0),makeFlex(0,0,0),{
+			hidden: [ makeBorderRem(0), makePaddingRem(0), makeMarginRem(0), makeFlex(0, 0, 0), {
 				opacity: 0,
 				height: 0,
 				width: 0,
 				pointerEvents: 'none'
-			}],
+			} ],
 			
-			row1: [ flexTransition,FlexRowCenter, FlexAuto, {
+			row1: [ flexTransition, FlexRowCenter, FlexAuto, {
 				
-				state: [{
-					root:[{
+				state: [ {
+					root: [ {
 						marginRight: rem(1)
-					}]
-				}],
+					} ]
+				} ],
 				
 				// REPO
-				repo: [ FlexScale, makePaddingRem(0.5,0), {
+				repo: [ FlexScale, makePaddingRem(0.5, 0), {
 					fontSize: themeFontSize(1.4),
 					fontWeight: 500,
 					
@@ -103,27 +105,20 @@ const
 				} ],
 				
 				// ASSIGNEE
-				assignee: [ OverflowHidden,makeMarginRem(0, 0, 0, 1), {
+				assignee: [ OverflowHidden, makeMarginRem(0, 0, 0, 1), {
 					opacity: 1,
 					height: 'auto'
 				} ]
 			} ],
 			
-			row2: [ flexTransition,FlexRowCenter, FlexAuto, PositionRelative,makePaddingRem(0.5,0,1,0), {
-				
-				
-				
-				
-			} ],
+			row2: [ flexTransition, FlexRowCenter, FlexAuto, PositionRelative, makePaddingRem(0.5, 0, 1, 0), {} ],
 			
 			// Row 3 - Labels + title
 			row3: [ flexTransition, FlexRowCenter, FlexAuto, {
 				label: {
 					marginTop: rem(0.5)
 				},
-				milestone: [FlexAuto,FlexAlignStart,{
-					
-				}],
+				milestone: [ FlexAuto, FlexAlignStart, {} ],
 				labels: [ FlexScale, FlexAlignStart, {
 					flexWrap: 'wrap',
 					
@@ -163,12 +158,12 @@ const
 				maxHeight: '4.4rem',
 				maxWidth: '100%',
 				
-				canEdit: [{
+				canEdit: [ {
 					cursor: 'pointer'
-				}]
+				} ]
 			} ],
 			
-		}]
+		} ]
 	}
 
 /**
@@ -200,7 +195,7 @@ function makeSelector() {
 	
 	const
 		selectedIssueSelector = createSelector(
-			(state,props:IIssueDetailHeaderProps) => getValue(() =>
+			(state, props:IIssueDetailHeaderProps) => getValue(() =>
 				props.viewController.selectors.selectedIssueSelector(state)),
 			(selectedIssue:Issue) => selectedIssue
 		)
@@ -253,7 +248,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			issue = getValue(() =>
 				this.props.selectedIssue)
 			
-			assert(issue,`Issue should never be null here`)
+			assert(issue, `Issue should never be null here`)
 			
 			issue = cloneObjectShallow(issue)
 		}
@@ -266,17 +261,17 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param event
 	 */
-	private editSave = async (event:React.KeyboardEvent<any> = null) => {
+	private editSave = async(event:React.KeyboardEvent<any> = null) => {
 		if (event) {
 			event && event.preventDefault()
 			
-				
+			
 		}
 		const
 			actions = new IssueActionFactory(),
 			updateIssue = this.getEditIssue()
 		
-		log.info(`Saving issue`,updateIssue)
+		log.info(`Saving issue`, updateIssue)
 		
 		await actions.saveIssue(updateIssue)
 		
@@ -289,18 +284,19 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param event
 	 */
 	private onEditKeyDown = (event:React.KeyboardEvent<any>) => {
-		log.debug(`Edit key down`, event, event.keyCode,event.key,event.charCode)
+		log.debug(`Edit key down`, event, event.keyCode, event.key, event.charCode)
 		
-		event.stopPropagation()
-		
-		switch (event.key) {
-			case 'Enter':
-				this.editSave()
-				break
-			case 'Escape':
-				this.stopEditingIssue()
-				break
+		if ((Env.isMac ? event.metaKey : event.ctrlKey) && event.key === 'Enter') {
+			this.editSave()
+			event.stopPropagation()
 		}
+	}
+	
+	/**
+	 * On escape stop
+	 */
+	onEscape = () => {
+		this.stopEditingIssue()
 	}
 	
 	/**
@@ -308,8 +304,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private editMilestone = () => {
 		this.setState({
-			editMilestone:true,
-			editLabels:true,
+			editMilestone: true,
+			editLabels: true,
 			editIssue: this.getEditIssue()
 		})
 	}
@@ -320,7 +316,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private setEditMilestone = (milestone:Milestone) => {
 		this.setState({
-			editIssue: assign({},this.getEditIssue(),{
+			editIssue: assign({}, this.getEditIssue(), {
 				milestone
 			})
 		}, () => this.editSave())
@@ -331,8 +327,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private editLabels = () => {
 		this.setState({
-			editMilestone:true,
-			editLabels:true,
+			editMilestone: true,
+			editLabels: true,
 			editIssue: this.getEditIssue()
 		})
 	}
@@ -342,20 +338,20 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param labels
 	 */
-	private setEditLabels = _.debounce(async (labels:Label[]) => {
+	private setEditLabels = _.debounce(async(labels:Label[]) => {
 		this.setState({
-			editIssue: cloneObjectShallow(this.getEditIssue(),{
-				labels: [...labels]
+			editIssue: cloneObjectShallow(this.getEditIssue(), {
+				labels: [ ...labels ]
 			})
 		}, () => this.editSave())
-	},50)
+	}, 50)
 	
 	/**
 	 * Assign the issue
 	 */
 	private editAssignee = () => {
 		this.setState({
-			editAssignee:true,
+			editAssignee: true,
 			editIssue: this.getEditIssue()
 		})
 	}
@@ -367,7 +363,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private setEditAssignee = (assignee:User) => {
 		this.setState({
-			editIssue: assign({},this.getEditIssue(),{
+			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				assignee
 			})
 		}, () => this.editSave())
@@ -378,7 +374,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private editTitle = () => {
 		this.setState({
-			editTitle:true,
+			editTitle: true,
 			editIssue: this.getEditIssue()
 		})
 	}
@@ -390,7 +386,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private setEditTitle = (title:string) => {
 		this.setState({
-			editIssue: assign({},this.getEditIssue(),{
+			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				title
 			})
 		})
@@ -423,12 +419,18 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				label:Label = item as any,
 				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
 			
-			this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([issue]))
+			this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([ issue ]))
 		} else {
-			this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([issue]))
+			this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([ issue ]))
 		}
 	}
 	
+	/**
+	 * On title change set it on the state
+	 *
+	 * @param event
+	 */
+	private onTitleChange = (event) => this.setEditTitle((event.target as any).value)
 	
 	/**
 	 * When we get new props - check to see if the issue changed
@@ -439,7 +441,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param nextContext
 	 */
 	componentWillReceiveProps(nextProps:IIssueDetailHeaderProps, nextContext:any):void {
-		if (!shallowEquals(this.props,nextProps,'selectedIssue')) {
+		if (!shallowEquals(this.props, nextProps, 'selectedIssue')) {
 			this.stopEditingIssue()
 		}
 	}
@@ -449,8 +451,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	render() {
 		const
-			{ theme, palette,styles,selectedIssue,saving,saveError } = this.props,
-			{editLabels, editMilestone, editTitle, editAssignee, editIssue} = this.state,
+			{ theme, palette, styles, selectedIssue, saving, saveError } = this.props,
+			{ editLabels, editMilestone, editTitle, editAssignee, editIssue } = this.state,
 			
 			issue = editIssue || selectedIssue,
 			
@@ -493,15 +495,15 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				
 				{/* ASSIGNEE */}
 				
-					<AssigneeSelect
-					                assignee={issue.assignee}
-					                repoId={issue.repoId}
-					                onKeyDown={this.onEditKeyDown}
-					                style={makeStyle({opacity: 1, width: 'auto'},makePaddingRem(0,0,0,0),!editAssignee && styles.hidden)}
-					                labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
-					                avatarStyle={makeStyle(makePaddingRem(0))}
-					                onSelect={this.setEditAssignee}/>
-					
+				<AssigneeSelect
+					assignee={issue.assignee}
+					repoId={issue.repoId}
+					onKeyDown={this.onEditKeyDown}
+					style={makeStyle({opacity: 1, width: 'auto'},makePaddingRem(0,0,0,0),!editAssignee && styles.hidden)}
+					labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
+					avatarStyle={makeStyle(makePaddingRem(0))}
+					onSelect={this.setEditAssignee}/>
+				
 				<Avatar
 					user={issue.assignee}
 					labelPlacement='before'
@@ -510,13 +512,13 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				    canAssignIssue(issue.repo) &&
 				      (() => this.unassignIssue(issue))
 			    }
-	        onClick={canAssignIssue(issue.repo) && (() => this.editAssignee())}
-	        prefix={issue.assignee ? 'assigned to' : null}
-	        prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
-	        style={makeStyle(styles.row1.assignee,editAssignee && styles.hidden)}
-	        labelStyle={styles.username}
-	        avatarStyle={styles.avatar}/>
-				
+					onClick={canAssignIssue(issue.repo) && (() => this.editAssignee())}
+					prefix={issue.assignee ? 'assigned to' : null}
+					prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
+					style={makeStyle(styles.row1.assignee,editAssignee && styles.hidden)}
+					labelStyle={styles.username}
+					avatarStyle={styles.avatar}/>
+			
 			
 			</div>
 			
@@ -524,31 +526,31 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			<div style={[styles.row2,saving && {opacity: 0}]}>
 				
 				{editTitle &&
-					<TextField defaultValue={issue.title || ''}
-					                          onChange={(event,value) => this.setEditTitle(value)}
-					                          onKeyDown={this.onEditKeyDown}
-					                          errorStyle={{transform: 'translate(0,1rem)'}}
-					                          errorText={getGithubErrorText(saveError,'title')}
-					                          hintText="TITLE"
-					                          hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,-1rem)'})}
-					                          style={makeStyle(FlexScale,makePaddingRem(1,0),!editTitle && styles.hidden)}
-					                          inputStyle={styles.input}
-					                          underlineStyle={styles.underline.disabled}
-					                          underlineDisabledStyle={styles.underline.disabled}
-					                          underlineFocusStyle={styles.underline.focus}
-					                          underlineShow={true}
-					
-					/>
+				//errorText={getGithubErrorText(saveError,'title')}
+				<TextField value={editIssue.title || ''}
+				           onChange={this.onTitleChange}
+				           onKeyDown={this.onEditKeyDown}
+				           errorStyle={{transform: 'translate(0,1rem)'}}
+				           placeholder="TITLE"
+				           style={makeStyle(
+				           	 FlexScale,
+				           	 makePaddingRem(0,1,0,0),
+				           	 !editTitle && styles.hidden
+			             )}
+				           inputStyle={makeStyle(FlexScale,styles.input)}
+				
+				
+				/>
 				}
-					<Textfit mode='multi'
-					         onClick={canEditIssue(issue.repo,issue) && this.editTitle}
-					         style={makeStyle(
+				<Textfit mode='multi'
+				         onClick={canEditIssue(issue.repo,issue) && this.editTitle}
+				         style={makeStyle(
 					         	styles.title,
 					         	canEditIssue(issue.repo,issue) && styles.title.canEdit,
 					          editTitle && styles.hidden
 				           )}>
-						{issue.title}
-					</Textfit>
+					{issue.title}
+				</Textfit>
 				
 				{/* TIME */}
 				<div
@@ -559,26 +561,24 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			{/* ROW 3 // LABELS & MILESTONES */}
 			<div style={[styles.row3,saving && {opacity: 0}]}>
 				
-						{/* EDIT MILESTONE*/}
-						<MilestoneSelect
-							style={makeStyle({width: 'auto',marginRight: rem(1)},!editLabels && styles.hidden)}
-							milestone={issue.milestone}
-							repoId={issue.repoId}
-							underlineShow={false}
-							onKeyDown={this.onEditKeyDown}
-							onSelect={this.setEditMilestone}
-						  />
+				{/* EDIT MILESTONE*/}
+				{editMilestone ? <MilestoneSelect
+					style={makeStyle({width: 'auto',marginRight: rem(1)},!editLabels && styles.hidden)}
+					milestone={issue.milestone}
+					repoId={issue.repoId}
+					underlineShow={false}
+					onKeyDown={this.onEditKeyDown}
+					onSelect={this.setEditMilestone}
+				/> :
 					<IssueLabelsAndMilestones showIcon={true}
 					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
 					                          milestones={issue.milestone && [issue.milestone]}
 					                          onMilestoneClick={canEditIssue(issue.repo,issue) && (() => this.editMilestone())}
 					                          labelStyle={styles.row3.label}
 					                          style={makeStyle(styles.row3.milestone,editLabels && styles.hidden)}/>
-				
-				
-				
-				
-					{/*EDIT MODE*/}
+					
+				}
+				{/*EDIT MODE*/}
 				{editLabels ?
 					<LabelFieldEditor
 						style={makeStyle(FlexScale,!editLabels && styles.hidden)}
@@ -586,27 +586,30 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 						availableLabels={this.props.labels.filter(it => it.repoId === issue.repoId).toArray()}
 						onLabelsChanged={this.setEditLabels}
 						onKeyDown={this.onEditKeyDown}
+						onEscape={this.onEscape}
+						autoFocus={true}
+						tabIndex={-1}
 						id="issueDetailsLabelEditor"
 						hint="Labels"
-						mode="normal"/> :
-						
-						
-						/*VIEW MODE*/
-						<IssueLabelsAndMilestones labels={issue.labels}
-						                          showIcon={true}
-						                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
-						                          labelStyle={styles.row3.label}
-						                          afterAllNode={editLabelsControl}
-						                          style={makeStyle(styles.row3.labels,editLabels && styles.hidden)}/>
+					/> :
+					
+					
+					/*VIEW MODE*/
+					<IssueLabelsAndMilestones labels={issue.labels}
+					                          showIcon={true}
+					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
+					                          labelStyle={styles.row3.label}
+					                          afterAllNode={editLabelsControl}
+					                          style={makeStyle(styles.row3.labels,editLabels && styles.hidden)}/>
 					
 				}
 			</div>
 			
 			{saving && <div style={[{top:0,left:0,right:0,bottom:0},PositionAbsolute,FlexColumnCenter,Fill]}>
 				
-					<CircularProgress
-						color={theme.progressIndicatorColor}
-						size={30}/>
+				<CircularProgress
+					color={theme.progressIndicatorColor}
+					size={30}/>
 			</div>}
 		</div>
 	}
