@@ -10,6 +10,7 @@
 /// <reference path="./reactotron.d.ts"/>
 
 
+
 declare namespace NodeJS {
 	interface Global {
 		MainBooted:boolean
@@ -28,8 +29,8 @@ declare let __NO_WEBPACK__:boolean
 declare let isDev:boolean
 
 // GLOBALS
-import ReactGlobal from 'react'
-import RadiumGlobal from 'radium'
+// import ReactGlobal from 'react'
+// import RadiumGlobal from 'radium'
 import {install} from 'source-map-support'
 
 /**
@@ -40,8 +41,8 @@ interface NodeRequireFunction {
 }
 
 
-
-
-declare let React:typeof ReactGlobal
-declare let Radium:typeof RadiumGlobal
-declare let $:any
+//
+//
+// declare let React:typeof ReactGlobal
+// declare let Radium:typeof RadiumGlobal
+// declare let $:any

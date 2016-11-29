@@ -5,6 +5,16 @@ declare interface IChipItem extends IIdObject {
 	label?:string
 	title?:string
 	color?:string
+	
+	/**
+	 * Used for things like avatar url
+	 */
+	iconImageUrl?:string
+	
+	/**
+	 * Store random stuff
+	 */
+	data?:any
 }
 
 

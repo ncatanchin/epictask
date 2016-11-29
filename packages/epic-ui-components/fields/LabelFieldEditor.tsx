@@ -228,6 +228,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		return <ChipsField
 			{...filterProps(props)}
 			id={id}
+			
 			maxSearchResults={10}
 			modelType={Label}
 			filterChip={this.chipFilter}

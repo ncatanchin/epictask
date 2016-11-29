@@ -30,6 +30,7 @@ import { IssuePatchState } from "epic-ui-components/pages/issue-patch/IssuePatch
 import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
 import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
 import { SearchField } from "epic-ui-components/search"
+import { ChipsField } from "epic-ui-components/fields"
 
 
 // Constants
@@ -139,9 +140,9 @@ export interface IIssuePatchDialogProps extends IThemedAttributes {
  * IIssuePatchDialogState
  */
 export interface IIssuePatchDialogState {
-	newItems?:any
+	newItems?:IChipItem[]
 	query?:string
-	dataSource?:any
+	allItems?:IChipItem[]
 	typeAheadRef?:any
 }
 
@@ -246,8 +247,14 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		if (this.viewState.saving)
 			return
 		
+		let newItems = getValue(() => this.state.newItems, [])
+		
+		// For users, unwrap
+		if (this.mode === IssuePatchModes.Assignee)
+			newItems = newItems.map(it => it.data)
+		
 		const
-			patch = IssuePatchFns[ this.mode ](getValue(() => this.state.newItems, []))
+			patch = IssuePatchFns[ this.mode ](newItems)
 		
 		log.info('Applying patch to issue', patch)
 		
@@ -265,18 +272,23 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * On item selected, if the patch mode is NOT Label
 	 * then this will call save
 	 *
-	 * @param value - MenuItem DataSource element
-	 * @param index - DataSource Index
+	 * @param item - MenuItem DataSource element
 	 */
-	onItemSelected = (value, index) => {
+	onItemSelected = (item:IChipItem) => {
 		const
-			{ mode } = this,
-			item = (value && value.item) || _.get(this, `state.dataSource[${index}].item`)
+			{ mode } = this
 		
-		log.info(`Item selected @ index ${index}`, item)
+		log.info(`Item selected`, item)
+		
+		// Update newItems
+		let newItems = getValue(() => this.state.newItems,[]).concat([item])
+		
+		// Ensure unique
+		newItems = _.uniqBy(newItems,'id')
+		
 		
 		this.setState(
-			{ newItems: (mode === IssuePatchModes.Label) ? _.uniq(this.newItems.concat([ item ])) : [ item ] },
+			{ newItems },
 			
 			// After new items are set
 			// Update the state & if mode isnt Label
@@ -309,10 +321,12 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 *
 	 * @param item
 	 */
-	onNewItemRemove = (item) => {
+	onItemRemoved = (item) => {
 		log.info(`New item removed: `, item)
 		
-		this.setState({ newItems: this.newItems.filter(it => it !== item) })
+		this.setState({
+			newItems: this.newItems.filter(it => it.id !== item.id)
+		})
 	}
 	
 	/**
@@ -322,7 +336,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {{item: Milestone, text: string, value: any}[]}
 	 */
-	makeMilestoneDataSource(props:IIssuePatchDialogProps, repoIds) {
+	makeMilestoneItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
 			{ availableMilestones } = props,
@@ -344,19 +358,9 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				// Convert to JS Array
 				.toArray()
 		
-		const newDataSource = items.map(item => ({
-			item,
-			text: '',
-			value: <MenuItem manualFocusEnabled={false} primaryText={
-						<LabelChip label={item}
-								   showRemove={false}
-								   showIcon={true}
-					    />
-					}/>
-		}))
 		
-		log.info('new milestone data source =', newDataSource)
-		return newDataSource
+		log.info('new milestone data source =', items)
+		return items
 	}
 	
 	/**
@@ -366,7 +370,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {{item: Label, text: string, value: any}[]}
 	 */
-	makeLabelDataSource(props:IIssuePatchDialogProps, repoIds) {
+	makeLabelItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
 			{ availableLabels } = props,
@@ -389,30 +393,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				))
 				
 				// Convert to JS Array
-				.toArray(),
+				.toArray()
 			
-			newDataSource = items.map(item => ({
-				item,
-				text: '',
-				value: <MenuItem style={{padding:0}}
-				                 className='patchMenuItem'
-				                 manualFocusEnabled={false}
-				                 innerDivStyle={{padding:0,paddingRight:0,paddingLeft:0}}
-				                 primaryText={
-	
-		                    <LabelChip label={item}
-									   labelStyle={makeStyle(makeMarginRem(0,0,0,0),{
-									    borderRadius: 0,
-									    padding:'1rem 1rem'
-									   })}
-									   showRemove={false}
-									   showIcon={true}
-						    />
-						}/>
-			}))
-		
-		log.info('new label data source =', newDataSource)
-		return newDataSource
+			
+		log.debug('new label data source =', items)
+		return items
 	}
 	
 	
@@ -423,10 +408,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param repoIds
 	 * @returns {any}
 	 */
-	makeAssigneeDataSource(props:IIssuePatchDialogProps, repoIds) {
-		
-		
-			
+	makeAssigneeItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
 			{ issues } = this,
@@ -441,41 +423,19 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			// Convert to array
 			items = Object
 				.values(collaborators)
-				
-				// Filter out repos that don't apply to these issues
-				.filter((item:User) => !issues.every((issue:Issue) => _.get(issue, 'assignee.id') === item.id))
+				.map((user:User) => ({
+					id: user.id,
+					label: user.login,
+					iconImageUrl: user.avatar_url,
+					data: user
+				}))
+				// IF SOMEONE IS ALREADY ASSIGN TO ALL FILTER OUT - DISABLED
+				// .filter((item:User) =>
+				// 	!issues.every((issue:Issue) => _.get(issue, 'assignee.id') === item.id))
 		
-		log.info(`Assignee data source`, items, 'from', collaborators, 'for issues', issues)
+		log.debug(`Assignee data source`, items, 'from', collaborators, 'for issues', issues)
 		
-		/*
-		 style={s.form.assignee.avatar}
-		 avatarStyle={s.form.assignee.avatar.avatar}
-		 labelStyle={s.form.assignee.avatar.label}
-		 */
-		const makeCollabLabel = (collab:User) => (
-			<Avatar user={collab}
-			        labelPlacement='after'
-			        labelTextFn={(user:User) =>
-			            <span>assign to&nbsp;&nbsp;<span style={{
-			            	fontWeight: 700,
-			            	color:this.props.theme.palette.accent.hue1
-			            }}>{user.name || user.login}</span></span>}
-			        labelStyle={makeStyle(FlexScale,{fontSize:rem(1.3)})}
-			        avatarStyle={{width:rem(4),height:rem(4),borderRadius: '50%'}}
-			/>
-		
-		)
-		
-		return items.map(item => ({
-			item,
-			text: '',
-			//style={s.menuItem}
-			value: <MenuItem key={item.id}
-			                 value={item.id}
-			
-			                 primaryText={makeCollabLabel(item)}
-			/>
-		}))
+		return items
 		
 	}
 	
@@ -504,12 +464,12 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		const
 			
 			// Now get the datasource
-			dataSource = (mode === 'Milestone') ?
-				this.makeMilestoneDataSource(props, repoIds) : (mode === 'Label') ?
-				this.makeLabelDataSource(props, repoIds) :
-				this.makeAssigneeDataSource(props, repoIds)
+			allItems = (mode === 'Milestone') ?
+				this.makeMilestoneItems(props, repoIds) : (mode === 'Label') ?
+				this.makeLabelItems(props, repoIds) :
+				this.makeAssigneeItems(props, repoIds)
 		
-		this.setState({ dataSource })
+		this.setState({ allItems })
 		
 	}
 	
@@ -542,6 +502,20 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	}
 	
 	/**
+	 * Chip search filter
+	 *
+	 * @param item
+	 * @param query
+	 * @returns {boolean}
+	 */
+	private chipFilter = (item:IChipItem, query:string):boolean => {
+		const
+			allText = (item.name || '') + '||' + (item.label || '') + '||' + (item.title || '')
+		
+		return _(allText).toLower().includes(_.toLower(query))
+	}
+	
+	/**
 	 * Render root
 	 *
 	 * @returns {any}
@@ -559,6 +533,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				palette,
 				saveError
 			} = this.props,
+			{allItems} = this.state,
 			newItems = this.newItems,
 			
 			title = mode === IssuePatchModes.Label ? 'Add Label' :
@@ -569,8 +544,13 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				{title}
 			</div>,
 			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide)
-			
 		
+		// style={/* FIELD STYLES */ makeStyle(styles.root,props.style)}
+		//
+		// inputStyle={/* INPUT STYLES */ makeStyle(styles.input,inputStyle)}
+		//
+		// labelStyle={/* LABEL STYLE */ makeStyle(styles.label,labelStyle)}
+		//
 		return <CommandRoot
 			id={ContainerNames.IssuePatchDialog}
 			component={this}
@@ -581,16 +561,34 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			saving={saving}
 			style={styles}>
 			<div style={styles.root}>
+				
+				<ChipsField
+					id={`issue-patch-chips`}
+					maxSearchResults={10}
+					modelType={Label}
+					filterChip={this.chipFilter}
+					allChips={allItems}
+					selectedChips={newItems}
+					onChipSelected={this.onItemSelected}
+					onChipRemoved={this.onItemRemoved}
+					keySource={(item:Label) => item.id}
+					
+					hint='labels'
+					
+					onEscape={this.hide}
+					
+				
+				/>
+				
+				{/*<IssueLabelsAndMilestones*/}
+				{/*style={makeStyle(styles.labelsAndMilestones)}*/}
+				{/*labels={mode === IssuePatchModes.Label && newItems}*/}
+				{/*milestones={mode === IssuePatchModes.Milestone && newItems}*/}
+				{/*showIcon={true}*/}
+				{/*onRemove={this.onNewItemRemove}*/}
+				{/*labelStyle={{}}*/}
 			
-			<IssueLabelsAndMilestones
-				style={makeStyle(styles.labelsAndMilestones)}
-				labels={mode === IssuePatchModes.Label && newItems}
-				milestones={mode === IssuePatchModes.Milestone && newItems}
-				showIcon={true}
-				onRemove={this.onNewItemRemove}
-				labelStyle={{}}
-			
-			/>
+			{/*/>*/}
 			
 			{/*{this.state.dataSource &&*/}
 			{/*<SearchField*/}

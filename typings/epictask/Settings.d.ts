@@ -1,4 +1,3 @@
-///<reference path="CommonTypes.d.ts"/>
 ///<reference path="User.d.ts"/>
 
 declare interface ISettingsProps {

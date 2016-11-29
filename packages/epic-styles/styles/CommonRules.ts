@@ -73,8 +73,7 @@ export function mergeStyles(...styles):any {
 	return _.merge({},...styles)
 }
 
-export function makeFlexAlign(alignItems,justifyContent = null) {
-	justifyContent = justifyContent || alignItems
+export function makeFlexAlign(alignItems,justifyContent = alignItems) {
 	return {justifyContent,alignItems}
 }
 

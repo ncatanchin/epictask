@@ -52,6 +52,9 @@ export interface ISearchFieldProps extends React.HTMLAttributes<any> {
 	 */
 	text?:string
 	
+	/**
+	 * Search with no input
+	 */
 	searchOnEmpty?:boolean
 	
 	/**

@@ -12,6 +12,7 @@ import { getIssueActions } from "epic-typedux/provider"
 import { Issue } from "epic-models"
 import { shallowEquals, cloneObjectShallow } from "epic-global"
 import { rem, FillHeight, FlexRowCenter, makePaddingRem } from "epic-styles/styles"
+import { PureRender } from "epic-ui-components/common"
 
 
 // Constants
@@ -26,16 +27,30 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, alternateText, primary, secondary, accent, warn, success } = palette
 	
-	return {
-		open: {
-			//backgroundColor: 'rgba(101,181,73,1)',
-			color: colorAlpha(text.primary,0.4),
-		},
-		closed: {
-			//color: text.primary,
-			color: success.hue1
-			//backgroundColor: warn.hue1
-		},
+	
+	
+	return [{
+		
+		icon: [ {
+			
+			fontSize: rem(1.6),
+			padding: rem(0.3),
+			borderRadius: rem(0.3),
+			[CSSHoverState]: [{
+				
+			}],
+			
+			open: [{
+				color: colorAlpha(text.primary,0.4),
+			}],
+			
+			closed: [{
+				color: success.hue1
+			}],
+			
+		} ],
+		
+		
 		
 		root: [ PositionRelative, {
 			
@@ -48,13 +63,7 @@ function baseStyles(topStyles, theme, palette) {
 		} ],
 		
 		
-		icon: [ {
-			
-			fontSize: rem(1.6),
-			padding: rem(0.3),
-			borderRadius: rem(0.3),
-			':hover': {}
-		} ],
+		
 		
 		toggle: [
 			makeTransition([ 'opacity', 'max-width', 'left', 'top', 'bottom', 'margin-left', 'padding-left', 'width' ]),
@@ -108,7 +117,7 @@ function baseStyles(topStyles, theme, palette) {
 				} ]
 			}
 		]
-	}
+	}]
 }
 
 
@@ -118,18 +127,9 @@ function baseStyles(topStyles, theme, palette) {
 export interface IIssueStateIconProps extends IThemedAttributes {
 	issue:Issue
 	showToggle?:boolean
-	
 	iconSet?:TIconSet
 	iconName?:string
 }
-
-/**
- * IIssueStateIconState
- */
-export interface IIssueStateIconState {
-	
-}
-
 
 /**
  * IssueStateIcon
@@ -138,39 +138,26 @@ export interface IIssueStateIconState {
  * @constructor
  **/
 
-
-// If you have a specific theme key you want to
-// merge provide it as the second param
 @ThemedStyles(baseStyles, 'issueStateIcon')
-export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueStateIconState> {
+@PureRender
+export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 	
 	
 	static defaultProps = {
 		iconSet: 'fa'
 	}
+
 	
-	/**
-	 * Component must have state to get radium state
-	 *
-	 * @param props
-	 * @param context
-	 */
-	constructor(props, context) {
-		super(props, context)
-		
-		this.state = {}
-	}
-	
-	shouldComponentUpdate(nextProps, nextState) {
-		return !shallowEquals(nextProps, this.props,
-				'style',
-				'styles',
-				'theme',
-				'palette',
-				'issue.id',
-				'issue.state'
-			) || !shallowEquals(nextState, this.state)
-	}
+	// shouldComponentUpdate(nextProps, nextState) {
+	// 	return !shallowEquals(nextProps, this.props,
+	// 			'style',
+	// 			'styles',
+	// 			'theme',
+	// 			'palette',
+	// 			'issue.id',
+	// 			'issue.state'
+	// 		) || !shallowEquals(nextState, this.state)
+	// }
 	
 	private toggleState = () => {
 		const
@@ -188,6 +175,40 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 			)
 	}
 	
+	
+	
+	
+	/**
+	 * Create Icon
+	 *
+	 * @param iconName
+	 * @param iconSet
+	 * @param styles
+	 * @param isOpen
+	 * @param isToggleIcon
+	 * @returns {any}
+	 */
+	private stateIcon({ iconName, iconSet, styles }, isOpen:boolean, isToggleIcon:boolean = false) {
+		const
+			iconStyle = mergeStyles(
+				isOpen ? styles.open : styles.closed,
+				FillHeight,
+				styles.icon,
+				isToggleIcon && styles.toggle.icon
+			)
+		
+		
+		return <Icon style={iconStyle}
+		             iconSet={iconSet}
+		             iconName={iconName}/>
+	}
+	
+	
+	createIcon = (iconName,isOpen) => this.stateIcon(
+		cloneObjectShallow(this.props as any,{
+			iconName: iconName || (isOpen ? 'circle-o' : 'check-circle-o')}
+		), isOpen)
+	
 	render() {
 		const
 			{ issue, styles, showToggle,iconName } = this.props,
@@ -195,11 +216,6 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 			isOpen = state === 'open',
 			hovering = Radium.getState(this.state, 'issueState', ':hover')
 		
-		const
-			createIcon = () => makeIcon(
-				cloneObjectShallow(this.props as any,{
-					iconName: iconName || (isOpen ? 'circle-o' : 'check-circle-o')}
-				), isOpen)
 			
 		
 		return <div
@@ -209,7 +225,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 				styles.root,showToggle && styles.root.toggle
 			]}>
 			
-			{createIcon()}
+			{this.createIcon(iconName,isOpen)}
 			
 			{/* IF TOGGLE ENABLED */}
 			{showToggle && <div style={[
@@ -218,7 +234,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 				hovering && styles.toggle.hovering
 			]}>
 				
-				{createIcon()}
+				{this.createIcon(iconName,isOpen)}
 				
 				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done" : 'Reopen'}</div>
 			</div>}
@@ -228,17 +244,3 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,IIssueS
 }
 
 
-function makeIcon({ iconName, iconSet, styles }, isOpen:boolean, isToggleIcon:boolean = false) {
-	const
-		iconStyle = mergeStyles(
-			isOpen ? styles.open : styles.closed,
-			FillHeight,
-			styles.icon,
-			isToggleIcon && styles.toggle.icon
-		)
-	
-	
-	return <Icon style={iconStyle}
-	             iconSet={iconSet}
-	             iconName={iconName}/>
-}

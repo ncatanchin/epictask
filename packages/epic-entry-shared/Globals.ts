@@ -307,12 +307,12 @@ declare global {
 	
 	
 	var moment:typeof momentGlobal
-	
 	var React:typeof ReactGlobal
 	var ReactDOM:typeof ReactDOMGlobal
 	var Notification:any
-	//var logError:typeof logErrorGlobal
 	var $:typeof JQueryGlobal
+	//var logError:typeof logErrorGlobal
+	
 	var Radium:typeof RadiumGlobal
 	
 	interface Window {

@@ -102,6 +102,7 @@ export interface IChipsFieldProps extends IThemedAttributes {
 	filterChip:(item:IChipItem, query:string) => boolean
 	selectedChips:IChipItem[]
 	onChipSelected:(item:IChipItem) => any
+	onChipRemoved?:(item:IChipItem) => any
 	keySource:(item:IChipItem) => string|number
 	
 	inputStyle?:any
@@ -138,9 +139,6 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 		super(props, context)
 	}
 	
-	get commandComponentId():string {
-		return this.id
-	}
 	
 	
 	private onChipSelected = (item) => {
@@ -181,7 +179,11 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 	
 	
 	private criteriaRenderer = (selectedChips) => {
-		return selectedChips.map(item => <Chip key={item.id} item={item}/>)
+		return selectedChips.map(item =>
+			<Chip
+				onRemove={this.props.onChipRemoved}
+				key={item.id}
+				item={item}/>)
 	}
 	
 	render() {
@@ -206,6 +208,7 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 		return <div style={makeStyle(FlexScale,PositionRelative)}><SearchField
 			{..._.omit(filterProps(this.props), 'id')}
 			searchId={id}
+			searchOnEmpty={true}
 			placeholder={getValue(() => hint.toUpperCase(),'')}
 			onItemSelected={this.onItemSelectedOrEnterPressed}
 			providers={[this.chipsSearchProvider]}
@@ -268,6 +271,7 @@ class ChipSearchProvider implements ISearchProvider {
 }
 
 interface IChipsFieldSearchItemProps extends IThemedAttributes {
+	onRemove?:(item:IChipItem) => any
 	item:IIssuePanelSearchItem
 	selected?:boolean
 }
@@ -279,7 +283,13 @@ class ChipsFieldSearchItem extends React.Component<IChipsFieldSearchItemProps,vo
 	
 	render() {
 		const
-			{ styles, item, selected:isSelected } = this.props,
+			{
+				styles,
+				item,
+				onRemove,
+				selected: isSelected
+			} = this.props,
+			
 			resultStyle = makeStyle(
 				styles,
 				styles.normal,
@@ -288,7 +298,7 @@ class ChipsFieldSearchItem extends React.Component<IChipsFieldSearchItemProps,vo
 		
 		return <div style={resultStyle}>
 			<div style={styles.info}>
-				<Chip item={item}/>
+				<Chip onRemove={onRemove} item={item}/>
 			</div>
 		</div>
 	}
