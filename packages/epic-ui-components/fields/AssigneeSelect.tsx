@@ -10,7 +10,7 @@ import { User } from "epic-models"
 
 
 
-import { Select, ISelectItem } from "./Select"
+import { SelectField} from "./SelectField"
 import { assigneesSelector,enabledAssigneesSelector } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
 import filterProps from 'react-valid-props'
@@ -63,7 +63,7 @@ export interface IAssigneeSelectProps {
  * IMilestoneSelectState
  */
 export interface IAssigneeSelectState {
-	items:ISelectItem[]
+	items:ISelectFieldItem[]
 }
 
 /**
@@ -124,7 +124,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 				key: 'empty-assignee',
 				value: '',
 				node: this.makeItemNode({id:-1,login: 'unassigned'} as any)
-			}] as ISelectItem[]
+			}] as ISelectFieldItem[]
 		
 		
 		
@@ -156,7 +156,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 	 *
 	 * @param item
 	 */
-	private onSelect = (item:ISelectItem) => {
+	private onSelect = (item:ISelectFieldItem) => {
 		this.props.onSelect(item && item.data as User)
 	}
 	
@@ -188,7 +188,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 		
 		
 		//labelStyle={styles.form.assignee.item.label}
-		return <Select
+		return <SelectField
 			{...filterProps(this.props)}
 			underlineShow={underlineShow}
 			labelStyle={makeStyle({},labelStyle)}
@@ -199,7 +199,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 			onSelect={this.onSelect}
 		>
 		
-		</Select>
+		</SelectField>
 	}
 	
 }

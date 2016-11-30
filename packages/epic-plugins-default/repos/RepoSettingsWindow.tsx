@@ -31,7 +31,7 @@ import { DialogRoot } from "epic-ui-components/layout/dialog"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
 import { PureRender,  RepoLabel, Icon, TabTemplate } from "epic-ui-components"
-import {Select, ISelectItem} from 'epic-ui-components/fields'
+import {SelectField} from 'epic-ui-components/fields'
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
 import { Tab, Tabs } from "material-ui"
@@ -264,7 +264,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 *
 	 * @param item
 	 */
-	private selectRepo = (item:ISelectItem) => {
+	private selectRepo = (item:ISelectFieldItem) => {
 		this.setState({
 			selectedRepo: this.props.repos.find(it => it.id === item.value)
 		})
@@ -321,12 +321,11 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				titleMode='horizontal'
 				titleNode={titleNode}
 				titleActionNodes={
-					<Select items={repoItems}
-									style={styles.repoSelect}
-									labelStyle={styles.repoSelect.label}
-					        onSelect={this.selectRepo}
-					        underlineShow={false}
-					        value={selectedRepo.id} />
+					<SelectField
+						items={repoItems}
+						style={styles.repoSelect}
+						onItemSelected={this.selectRepo}
+					  value={selectedRepo.id} />
 				}
 				styles={styles.dialog}
 			>

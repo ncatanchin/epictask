@@ -54,4 +54,7 @@ export * from './GlobalStyles'
 // 		Styles:typeof CommonStyles
 // }
 
-Object.assign(global as any,CommonStyles,{Styles:CommonStyles})
+Object.assign(global as any,
+	CommonStyles,
+	{ Styles: CommonStyles }
+)

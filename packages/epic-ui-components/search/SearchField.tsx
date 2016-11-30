@@ -780,13 +780,6 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 					{this.renderResultsLayer()}
 				</Popover>
 				
-				{/*<RenderToLayer*/}
-					{/*ref={this.setResultsLayerRef}*/}
-					{/**/}
-					{/*render={this.renderResultsLayer}*/}
-					{/*useLayerForClickAway={false}*/}
-					{/*componentClickAway={this.onClickAway}*/}
-				{/*/>*/}
 			
 			</div>
 		

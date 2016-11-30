@@ -7,7 +7,7 @@ import { shallowEquals } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import { Milestone } from "epic-models"
-import { Select, ISelectItem } from "./Select"
+import { SelectField} from "./SelectField"
 import { enabledMilestonesSelector,milestonesSelector } from "epic-typedux"
 import filterProps from "react-valid-props"
 
@@ -57,7 +57,7 @@ export interface IMilestoneSelectProps {
  * IMilestoneSelectState
  */
 export interface IMilestoneSelectState {
-	items:ISelectItem[]
+	items:ISelectFieldItem[]
 }
 
 /**
@@ -117,7 +117,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 				key: 'empty-milestone',
 				value: '',
 				node: this.makeItemNode(Milestone.EmptyMilestone)
-			}] as ISelectItem[]
+			}] as ISelectFieldItem[]
 			
 		
 		
@@ -149,7 +149,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 	 *
 	 * @param item
 	 */
-	private onSelect = (item:ISelectItem) => {
+	private onSelect = (item:ISelectFieldItem) => {
 			this.props.onSelect(item && item.data as Milestone)
 	}
 	
@@ -181,18 +181,14 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 		
 		
 		//labelStyle={styles.form.milestone.item.label}
-		return <Select
+		return <SelectField
 			{...filterProps(this.props)}
-			underlineShow={underlineShow}
-			labelStyle={styles.label}
-			iconStyle={makeStyle(styles.icon,iconStyle)}
-			itemStyle={makeStyle(FlexRow,FillWidth,{alignItems: 'flex-start',paddingLeft: 0})}
 			value={milestone ? milestone.id : ''}
 			items={items}
-			onSelect={this.onSelect}
+			onItemSelected={this.onSelect}
 		>
 			
-		</Select>
+		</SelectField>
 	}
 	
 }

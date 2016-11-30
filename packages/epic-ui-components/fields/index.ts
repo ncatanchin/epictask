@@ -5,4 +5,4 @@ export * from "./AssigneeSelect"
 export * from "./ChipsField"
 export * from "./LabelFieldEditor"
 export * from "./MarkdownEditor"
-export * from './Select'
+export * from './SelectField'

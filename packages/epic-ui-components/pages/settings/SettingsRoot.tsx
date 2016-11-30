@@ -40,7 +40,7 @@ import {
 } from  "epic-command-manager-ui"
 
 import { ContainerNames } from "epic-command-manager"
-import {Select, ISelectItem} from '../../fields'
+import {SelectField} from '../../fields'
 import {DialogRoot} from '../../layout/dialog'
 import { PureRender, Icon, Button } from "epic-ui-components"
 import { getValue } from "epic-global"

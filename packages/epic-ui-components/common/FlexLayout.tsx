@@ -57,11 +57,7 @@ function makeFlex(defaultProps):(props:IFlexProps) => React.ReactElement<IFlexPr
 		props = assign({},defaultProps,props)
 		
 		const
-			style = !props.style ?
-				{} :
-				Array.isArray(props.style) ?
-					makeStyle(...props.style) :
-					props.style
+			style = makeStyle(props.style)
 		
 		let
 			{align,justify,flex,direction} = props
