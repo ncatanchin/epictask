@@ -197,7 +197,7 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 				inputStyle,
 				labelStyle,
 				hint,
-				
+				style
 			} = props,
 			{ id } = this,
 			s = mergeStyles(styles, theme.component),
@@ -205,7 +205,7 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 			query = this.state.text ? this.state.text : ''
 		
 		
-		return <div style={makeStyle(FlexScale,PositionRelative)}><SearchField
+		return <div style={makeStyle(FlexScale,PositionRelative,style)}><SearchField
 			{..._.omit(filterProps(this.props), 'id')}
 			searchId={id}
 			searchOnEmpty={true}

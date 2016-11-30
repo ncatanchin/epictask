@@ -564,6 +564,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				
 				<ChipsField
 					id={`issue-patch-chips`}
+					style={FillWidth}
 					maxSearchResults={10}
 					modelType={Label}
 					filterChip={this.chipFilter}

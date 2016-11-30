@@ -58,7 +58,15 @@ export function createStyles(styles:any,topStyles:any = null,theme = getTheme(),
 }
 
 export function makeStyle(...styles) {
-	return Object.assign({},...styles)
+	
+	return Object.assign({},...styles.reduce((allStyles,style) => {
+		if (Array.isArray(style)) {
+			allStyles.push(...style)
+		} else {
+			allStyles.push(style)
+		}
+		return allStyles
+	},[]))
 }
 
 export function mergeStyles(...styles):any {
