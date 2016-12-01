@@ -106,7 +106,8 @@ export class RepoSelect extends React.Component<IRepoSelectProps,IRepoSelectStat
 				.map(repo => ({
 					key: repo.id,
 					value: repo,
-					content: <RepoLabel repo={repo.repo}/>
+					content: <RepoLabel repo={repo.repo}/>,
+					contentText: repo.repo.full_name
 				})).toArray()
 		
 		

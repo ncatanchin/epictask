@@ -21,7 +21,7 @@ declare interface IChipItem extends IIdObject {
 /**
  * Callback for chip item
  */
-declare type TChipCallback = (object:IChipItem) => void
+declare type TChipCallback = (object:IChipItem,event?:any) => void
 
 /**
  * Chip modes

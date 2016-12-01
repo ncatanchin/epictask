@@ -1,6 +1,7 @@
 // Imports
 import { PureRender, Chip, searchItemBaseStyles } from 'epic-ui-components/common'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+import { getValue } from "typeguard"
 
 
 // Constants
@@ -54,12 +55,16 @@ export class IssuesPanelSearchItem extends React.Component<IIssuesPanelSearchIte
 				styles,
 				styles.normal,
 				isSelected && styles.selected
-			)
+			),
+			
+			color = getValue(() => item.value.color,null),
+			
+			extraProps = assign({},color && {color})
 			
 		
 		return <div style={resultStyle}>
 			<div style={styles.info}>
-				<Chip item={item}/>
+				<Chip {...extraProps} item={item}/>
 			</div>
 			
 		</div>

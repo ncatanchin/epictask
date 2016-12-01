@@ -40,6 +40,11 @@ const
 	}
 
 
+function uniqueLabels(labels) {
+	return _.uniqBy(labels,'id') as Label[]
+}
+	
+	
 /**
  * ILabelFieldEditorProps
  */
@@ -107,28 +112,6 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		this.setState(this.getNewState(nextProps))
 	}
 	
-	chipDataSource = (query) => {
-		query = _.toLower(query)
-		
-		const { availableLabels, labels } = this.props
-		
-		function testQuery(name:string) {
-			return !query || query.length === 0 ||
-				_(name).toLower().startsWith(query)
-			
-		}
-		
-		function testAvailRepo(availLabel:Label) {
-			const selected = !_.isNil(labels.find(label => label.url === availLabel.url))
-			return !selected && testQuery(availLabel.name)
-		}
-		
-		
-		const results = availableLabels.filter(testAvailRepo)
-		log.debug('return available labels', results)
-		return results
-		
-	}
 	/**
 	 * On chip selected
 	 *
@@ -136,7 +119,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	 */
 	onChipSelected = (newLabel) => {
 		log.debug('selected label', newLabel)
-		this.props.onLabelsChanged(this.props.labels.concat([ newLabel ]))
+		this.props.onLabelsChanged(uniqueLabels(this.props.labels.concat([ newLabel ])))
 	}
 	
 	/**
@@ -146,7 +129,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 	 */
 	onChipRemoved = (oldLabel) => {
 		log.debug('removed label', oldLabel)
-		this.props.onLabelsChanged(this.props.labels.filter(label => label.url !== oldLabel.url))
+		this.props.onLabelsChanged(uniqueLabels(this.props.labels.filter(label => label.url !== oldLabel.url)))
 	}
 	
 	/**

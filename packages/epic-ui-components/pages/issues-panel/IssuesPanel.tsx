@@ -923,7 +923,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			{/* ISSUE SEARCH AND FILTERING */}
 			{!itemsAvailable && !allItemsFiltered ? noItemsNode :
-				<div style={[FlexScale,FillWidth,PositionRelative,OverflowHidden]}>
+				<div style={[FlexScale,FillWidth,PositionRelative,OverflowHidden,makeTransition(['flex-grow','flex-shrink','flex-basis'])]}>
 					<SplitPane split="vertical"
 					           allowResize={allowResize}
 					           minSize={listMinWidth}

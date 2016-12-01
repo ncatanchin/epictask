@@ -8,11 +8,15 @@ export default function baseStyles(topStyles, theme, palette) {
 	
 	
 	return [ {
-		wrapper: [ PositionRelative, FillWidth, theme.inputBorder, {
-			borderRadius: rem(0.2),
-			backgroundColor: primary.hue3,
-			//backgroundColor: Transparent
-		} ],
+		wrapper: [
+			Styles.PositionRelative,
+			Styles.FillWidth,
+			theme.inputBorder,
+			Styles.makeTransition(['height','min-height','max-height']),{
+				borderRadius: rem(0.2),
+				backgroundColor: primary.hue3,
+				//backgroundColor: Transparent
+			} ],
 		
 		
 		container: [ PositionRelative, OverflowAuto, FillWidth, FlexColumn, {

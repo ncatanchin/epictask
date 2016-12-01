@@ -14,6 +14,11 @@ declare interface ISelectFieldItem  {
 	style?: any
 	
 	content: any
+	
+	/**
+	 * Specific text for filtering purposes
+	 */
+	contentText?: string
 	contentStyle?: any
 	
 	leftAccessory?: any

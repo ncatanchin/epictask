@@ -6,7 +6,7 @@ import { PureRender, Chip, RepoLabel, FlexRow, FlexRowCenter } from 'epic-ui-com
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import { getIssuesPanelSelector, IssuesPanelController } from "epic-ui-components/pages/issues-panel"
 import { colorAlpha, makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
-import { cloneObjectShallow, cloneObject, safePush } from "epic-global"
+import { cloneObjectShallow, cloneObject, safePush, guard } from "epic-global"
 import { SearchField } from "epic-ui-components/search"
 import { ContainerNames, getCommandManager } from "epic-command-manager"
 import {
@@ -14,18 +14,18 @@ import {
 	enabledAssigneesSelector, enabledLabelsSelector
 } from "epic-typedux/selectors"
 import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort } from "epic-models"
-import { isString, isNil } from "typeguard"
+import { isString, isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "epic-ui-components/pages/issues-panel/IssuesPanelSearchItem"
 
-const
-	searchQueryParser = require('search-query-parser')
+// const
+// 	searchQueryParser = require('search-query-parser')
 
 // Constants
 const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {
@@ -33,26 +33,27 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexAuto, makePaddingRem(0, 1), {
-		//backgroundColor: Transparent,
-		borderBottom: `0.1rem solid ${primary.hue3}`,
-		
-		field: [ {
-			//backgroundColor: Transparent
-		} ],
-		
-		input: [ {
-			backgroundColor: Transparent,
-			color: text.secondary,
-			borderBottom: `0.1rem solid ${colorAlpha(text.secondary, 0.1)}`,
-			fontWeight: 500,
-			fontSize: themeFontSize(1.7),
-			':focus': {}
-		} ],
-		
-		hint: [ {} ]
-		
-	} ]
+	return [
+		makePaddingRem(0, 1),
+		{
+			//backgroundColor: Transparent,
+			wrapper: [
+				makeFlex(0, 0, rem(5.5)),
+				makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ])
+			],
+			
+			borderBottom: `0.1rem solid ${primary.hue3}`,
+			
+			input: [ {
+				backgroundColor: Transparent,
+				color: text.secondary,
+				fontWeight: 500,
+				fontSize: themeFontSize(1.7),
+				':focus': [ {} ]
+			} ]
+			
+			
+		} ]
 }
 
 
@@ -60,16 +61,16 @@ function baseStyles(topStyles, theme, palette) {
  * IIssuesPanelSearchProps
  */
 export interface IIssuesPanelSearchProps extends IThemedAttributes {
-	viewController:IssuesPanelController
-	criteria?:IIssueCriteria
-	searchText?:string
+	viewController: IssuesPanelController
+	criteria?: IIssueCriteria
+	searchText?: string
 }
 
 /**
  * IIssuesPanelSearchState
  */
 export interface IIssuesPanelSearchState {
-	
+	focused?: boolean
 }
 
 /**
@@ -91,6 +92,11 @@ export interface IIssuesPanelSearchState {
 export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,IIssuesPanelSearchState> {
 	
 	/**
+	 * Refs
+	 */
+	refs: any
+	
+	/**
 	 * Search provider
 	 */
 	private searchProvider = new IssuesPanelSearchProvider(this)
@@ -99,12 +105,23 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 		return this.props.viewController
 	}
 	
-	private makeCriteriaChange(fn:(criteria:IIssueCriteria) => IIssueCriteria):Function {
-		return () => {
+	private makeCriteriaChange(fn: (criteria: IIssueCriteria) => IIssueCriteria): Function {
+		return (item, event) => {
 			const
 				criteria = cloneObjectShallow(this.props.criteria)
 			
 			this.viewController.setCriteria(fn(criteria))
+			
+			// ATTEMPT TO KEEP FOCUS ON LAST ELEMENT REMOVAL
+			// if (getValue(() => this.state.focused && this.refs.searchField)) {
+			// 	event.preventDefault()
+			// 	event.stopPropagation()
+			//
+			// 	setTimeout(() =>
+			// 		guard(() => $(ReactDOM.findDOMNode(this.refs.searchField)).focus())
+			// 	,200)
+			// }
+			
 		}
 	}
 	
@@ -114,7 +131,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	 * @param criteria
 	 * @returns {Array}
 	 */
-	private criteriaRenderer = (criteria:IIssueCriteria) => {
+	private criteriaRenderer = (criteria: IIssueCriteria) => {
 		const
 			{ sort } = criteria,
 			storeState = getStoreState(),
@@ -127,8 +144,10 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 		const
 			chips = [],
 			chipStyle = makeStyle(
-				makeMarginRem(0, 0, 0, 0.5),
-				makeHeightConstraint(rem(3))
+				makeMarginRem(0, 0.3, 0, 0.5),
+				makeHeightConstraint(rem(2.6)), {
+					borderRadius: rem(1.3)
+				}
 			)
 		
 		// TEXT
@@ -142,7 +161,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				key='text'
 				item={{
 					id: criteria.text,
-					label: `contains text: criteria.text`,
+					label: `contains text: ${criteria.text}`,
 					color: 'ffffff'
 				}}
 			/>)
@@ -151,6 +170,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 		// CLOSED
 		if (criteria.includeClosed) {
 			chips.push(<Chip
+				
 				style={[chipStyle]}
 				onRemove={
 					this.makeCriteriaChange(criteria =>
@@ -235,8 +255,11 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 					}
 					key={`repo-${it.id}`}
 					item={{
-						id: `label-${it.id}`,
-						label: <FlexRowCenter><div style={repoLabelStyle}>repo:</div><RepoLabel repo={it.repo}/></FlexRowCenter>,
+						id: `repo-${it.id}`,
+						label: <FlexRowCenter>
+							<div style={repoLabelStyle}>repo:</div>
+							<RepoLabel repo={it.repo}/>
+						</FlexRowCenter>,
 						color: '000000'
 					}}
 				/>)
@@ -285,7 +308,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				item={{
 					id: `groupBy`,
 					label: `group by: ${sort.groupBy}`,
-					color: 'blue'
+					color: '0000ff'
 				}}
 			/>)
 			
@@ -310,7 +333,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 					item={{
 						id: `sortBy-${it}`,
 						label: `sort by: ${it}`,
-						color: 'blue'
+						color: '0000ff'
 					}}
 				/>)
 			)
@@ -332,7 +355,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				item={{
 					id: `sortByDirection`,
 					label: `sort by direction: ${sort.direction}`,
-					color: 'blue'
+					color: '0000ff'
 				}}
 			/>)
 			
@@ -341,11 +364,26 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	}
 	
 	/**
+	 * On focus
+	 *
+	 * @param event
+	 */
+	onFocus = (event) => this.setState({ focused: true })
+	
+	/**
+	 * on blur
+	 *
+	 * @param event
+	 */
+	
+	onBlur = (event) => this.setState({ focused: false })
+	
+	/**
 	 * On search chip selected
 	 *
 	 * @param resultItem
 	 */
-	onItemSelected = (resultItem:ISearchItem) => {
+	onItemSelected = (resultItem: ISearchItem) => {
 		log.info(`Selected criteria`, resultItem)
 		
 		
@@ -411,73 +449,6 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	private onSearchTextChanged = (newText) => {
 		this.viewController.setSearchText(newText)
 		return false
-		
-		// const
-		// 	{criteria} = this.props,
-		// 	opts = {
-		// 		keywords: ['label','milestone','assignee','groupBy','repo','closed','sort','sortDirection']
-		// 	}
-		//
-		// USER CHIPS - FUTURE
-		// const
-		// 	query = searchQueryParser.parse(newText,opts)
-		//
-		// let
-		// 	updatedCriteria = cloneObjectShallow(criteria),
-		// 	searchText = isString(query) ? query :
-		// 		isString(query.text) ? query.text :
-		// 			(newText || '')
-		//
-		// log.debug(`New search text`,newText,'parsed',query,'criteria',updatedCriteria,'viewController',this.viewController)
-		//
-		// FIRST SET THE TEXT
-		//updatedCriteria.text = queryText
-		
-		
-		// if (searchText !== newText) {
-		// 	[false,true].forEach(exclude => {
-		// 		const
-		// 			keys = (exclude ? query.exclude : query)
-		// 				.filter(key => !['exclude','text'].includes(key))
-		//
-		// 		log.debug(`Updating criteria (exclude=${exclude}) with keys`,keys)
-		//
-		// 		keys.forEach(key => {
-		// 			key = key.toLowerCase()
-		//
-		// 			switch (key) {
-		// 				case 'label':
-		//
-		// 					break
-		// 				case 'milestone':
-		//
-		// 					break
-		// 				case 'assignee':
-		//
-		// 					break
-		// 				case 'closed':
-		//
-		// 					break
-		// 				case 'repo':
-		//
-		// 					break
-		// 				case 'groupBy':
-		//
-		// 					break
-		// 				case 'sort':
-		//
-		// 					break
-		// 				case 'sortDirection':
-		//
-		// 					break
-		// 			}
-		// 		})
-		// 	})
-		//
-		// 	// this.viewController.setCriteria(updatedCriteria)
-		// }
-		
-		
 	}
 	
 	
@@ -495,6 +466,31 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	}
 	
 	
+	isVisible() {
+		let
+			criteria = this.props.criteria || { sort: {} } as any
+		
+		
+		const
+			hasText = getValue(() => criteria.text.length, 0) > 0,
+			hasSort =
+				getValue(() => criteria.sort.fields.length > 0 && !(criteria.sort.fields.length === 1 && criteria.sort.fields[ 0 ] === 'created_at')
+					, false) || ![ 'desc', null ].includes(criteria.sort.direction) || ![ 'none', null ].includes(criteria.sort.groupBy) || ![ 'asc', null ].includes(criteria.sort.groupByDirection),
+			hasFilter =
+				criteria.includeClosed === true ||
+				criteria.issueId ||
+				getValue(() => criteria.labelIds.length, 0) > 0 ||
+				getValue(() => criteria.milestoneIds.length, 0) > 0 ||
+				getValue(() => criteria.repoIds.length, 0) > 0 ||
+				getValue(() => criteria.assigneeIds.length, 0) > 0,
+			hasFocus = getValue(() => this.state.focused)
+		
+		log.debug(`Visibility`, hasText, hasSort, hasFilter, hasFocus, criteria.sort)
+		
+		return getValue(() => hasFocus || hasSort || hasFilter || hasText, false) as boolean
+		
+	}
+	
 	render() {
 		const
 			{
@@ -502,10 +498,12 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				open,
 				criteria = {} as any,
 				searchText
-			} = this.props
+			} = this.props,
+			isVisible = this.isVisible()
 		
 		return !criteria ? React.DOM.noscript() : <SearchField
-			
+			ref="searchField"
+			styles={mergeStyles(styles,!isVisible && {wrapper: makeFlex(0,0,rem(0))})}
 			searchId='issues-search'
 			open={open}
 			criteria={criteria}
@@ -517,6 +515,8 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				this.searchProvider
 			]}
 			inputStyle={styles.input}
+			onFocus={this.onFocus}
+			onBlur={this.onBlur}
 			onEscape={this.onSearchEscape}
 		/>
 	}
@@ -553,7 +553,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		'repo': 'repos'
 	}
 	
-	constructor(private issuesSearchField:IssuesPanelSearch) {
+	constructor(private issuesSearchField: IssuesPanelSearch) {
 		
 	}
 	
@@ -568,7 +568,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 	 * @param selected
 	 * @return {any}
 	 */
-	render(item:ISearchItem, selected:boolean) {
+	render(item: ISearchItem, selected: boolean) {
 		log.debug(`Render item`, item, 'selected', selected)
 		return <IssuesPanelSearchItem
 			item={item.value}
@@ -578,7 +578,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 	}
 	
 	
-	private closedMatched = (results:List<ISearchItem>, keyword:string, text:string) => {
+	private closedMatched = (results: List<ISearchItem>, keyword: string, text: string) => {
 		results.push(new SearchItem(`closed-true`, this, {
 			id: 'includeClosed',
 			type: 'includeClosed',
@@ -589,7 +589,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		return false
 	}
 	
-	private directionMatched = (results:List<ISearchItem>, keyword:string, text:string) => {
+	private directionMatched = (results: List<ISearchItem>, keyword: string, text: string) => {
 		results.push(new SearchItem(`sortDirection-${keyword}`, this, {
 			id: `sortDirection-${keyword}`,
 			type: 'sortDirection',
@@ -600,7 +600,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		return false
 	}
 	
-	private sortByMatched = (results:List<ISearchItem>, keyword:string, text:string) => {
+	private sortByMatched = (results: List<ISearchItem>, keyword: string, text: string) => {
 		const
 			sortBy = IssuesPanelSearchProvider.SortByKeywordToFields[ keyword ]
 		
@@ -612,7 +612,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		}))
 	}
 	
-	private groupByMatched = (results:List<ISearchItem>, keyword:string, text:string) => {
+	private groupByMatched = (results: List<ISearchItem>, keyword: string, text: string) => {
 		const
 			groupBy = IssuesPanelSearchProvider.GroupByKeywordToFields[ keyword ]
 		
@@ -632,10 +632,10 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 	 * @param text
 	 * @param matchedFn
 	 */
-	matchKeywords(results:List<ISearchItem>,
-	              keywords:string[],
-	              text:string,
-	              matchedFn:(results, keyword, text) => any) {
+	matchKeywords(results: List<ISearchItem>,
+	              keywords: string[],
+	              text: string,
+	              matchedFn: (results, keyword, text) => any) {
 		const
 			textParts = text.split(' ')
 		
@@ -648,12 +648,12 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 	}
 	
 	
-	private matchProps(results:List<ISearchItem>,
-	                   items:List<any>,
-	                   props:string[],
-	                   clazz:IModelConstructor<any>,
-	                   labelProp:string,
-	                   text:string) {
+	private matchProps(results: List<ISearchItem>,
+	                   items: List<any>,
+	                   props: string[],
+	                   clazz: IModelConstructor<any>,
+	                   labelProp: string,
+	                   text: string) {
 		const
 			textRegEx = new RegExp(text, "i"),
 			type = clazz.$$clazz
@@ -676,7 +676,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 	 * @param criteria
 	 * @param text
 	 */
-	async query(criteria, text):Promise<List<ISearchItem>> {
+	async query(criteria, text): Promise<List<ISearchItem>> {
 		
 		const
 			storeState = getStoreState(),

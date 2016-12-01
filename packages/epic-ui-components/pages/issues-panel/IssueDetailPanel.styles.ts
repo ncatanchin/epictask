@@ -43,23 +43,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		} ],
 		
 		input: [ {
-			padding: '0.3rem 1rem',
-			fontWeight: 400,
-			
-			floatingLabel: [ {
-				left: rem(1)
-			} ],
-			
-			floatingLabelFocus: [ {
-				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -40px, 0px)'
-			} ],
-			
-			underlineFocus: [ {
-				width: 'auto',
-				left: 10,
-				right: 10
-			} ]
-			
+						
 		} ],
 		
 		issue: [ flexTransition, FlexColumn, FlexScale, {} ],

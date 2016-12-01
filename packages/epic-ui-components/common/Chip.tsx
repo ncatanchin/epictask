@@ -32,6 +32,7 @@ const
 export function baseStyles(topStyles, theme, palette) {
 	
 	const
+		{primary} = palette,
 		accessoryDim = rem(2.4),
 		accessoryDimHalf = rem(1.2),
 		accessoryTransition = makeTransition([
@@ -56,7 +57,7 @@ export function baseStyles(topStyles, theme, palette) {
 			marginBottom: 0,
 			marginLeft: 0,
 			boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
-			
+			backgroundColor: primary.hue3,
 			[CSSHoverState]: [{
 				
 			}],
@@ -173,14 +174,19 @@ class BaseChip extends React.Component<IChipProps,any> {
 		const
 			{
 				theme,
-				color:propColor
+				color:propColor,
+				palette
 			} = this.props,
+			
+			{text} = palette,
+			
+			
 			
 			// BG COLOR props -> item -> black
 			backgroundColor = '#' + (propColor || item.color || '000000'),
 			
 			color = tiny.mostReadable(backgroundColor, [
-				theme.textColor,
+				text.primary,
 				tiny(theme.alternateTextColor).lighten(20)
 			]).toRgbString()
 		
@@ -306,7 +312,7 @@ function ChipAccessory({ styles, item, itemStyle, iconStyle, onRemove, icon, hov
 								hovering && styles.accessory.remove.hover.icon
 								
 							)}
-				onClick={(event) => (onRemove(item), event.stopPropagation(),event.preventDefault())}>
+				onClick={(event) => (onRemove(item,event), event.stopPropagation(),event.preventDefault())}>
 				clear
 			</Icon>
 		</div> :

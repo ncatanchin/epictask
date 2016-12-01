@@ -36,7 +36,7 @@ function baseStyles(topStyles, theme, palette) {
 			fontSize: rem(1.6),
 			padding: rem(0.3),
 			borderRadius: rem(0.3),
-			[CSSHoverState]: [{
+			[Styles.CSSHoverState]: [{
 				
 			}],
 			
@@ -52,22 +52,25 @@ function baseStyles(topStyles, theme, palette) {
 		
 		
 		
-		root: [ PositionRelative, {
-			
-			toggle: [ {
-				cursor: 'pointer',
+		root: [
+			Styles.FlexColumnCenter,
+			Styles.PositionRelative, {
+				
+				toggle: [ {
+					cursor: 'pointer',
+					':hover': {}
+				} ],
+				
 				':hover': {}
 			} ],
-			
-			':hover': {}
-		} ],
 		
 		
 		
 		
 		toggle: [
 			makeTransition([ 'opacity', 'max-width', 'left', 'top', 'bottom', 'margin-left', 'padding-left', 'width' ]),
-			PositionAbsolute, FlexRowCenter, {
+			Styles.PositionAbsolute,
+			Styles.FlexRowCenter, {
 				
 				
 				overflow: 'hidden',
@@ -96,7 +99,7 @@ function baseStyles(topStyles, theme, palette) {
 					
 				},
 				
-				[CSSHoverState]: [],
+				[Styles.CSSHoverState]: [],
 				
 				borderRadius: rem(0.2),
 				zIndex: 5,
@@ -111,7 +114,7 @@ function baseStyles(topStyles, theme, palette) {
 					bottom: rem(-0.3)
 				} ],
 				
-				label: [ FillHeight, FlexRowCenter, makePaddingRem(0, 0.6, 0, 1), {
+				label: [ Styles.FillHeight, Styles.FlexRowCenter, makePaddingRem(0, 0.6, 0, 1), {
 					whiteSpace: 'nowrap',
 					color: text.primary
 				} ]
@@ -148,17 +151,9 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 	}
 
 	
-	// shouldComponentUpdate(nextProps, nextState) {
-	// 	return !shallowEquals(nextProps, this.props,
-	// 			'style',
-	// 			'styles',
-	// 			'theme',
-	// 			'palette',
-	// 			'issue.id',
-	// 			'issue.state'
-	// 		) || !shallowEquals(nextState, this.state)
-	// }
-	
+	/**
+	 * Toggle issue state
+	 */
 	private toggleState = () => {
 		const
 			{ showToggle, issue } = this.props
@@ -204,10 +199,18 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 	}
 	
 	
-	createIcon = (iconName,isOpen) => this.stateIcon(
-		cloneObjectShallow(this.props as any,{
-			iconName: iconName || (isOpen ? 'circle-o' : 'check-circle-o')}
-		), isOpen)
+	/**
+	 * Create state icon instance
+	 *
+	 * @param iconName
+	 * @param isOpen
+	 */
+	private createIcon(iconName,isOpen){
+		return this.stateIcon(
+			cloneObjectShallow(this.props as any,{
+				iconName: iconName || (isOpen ? 'circle-o' : 'check-circle-o')}
+			), isOpen)
+	}
 	
 	render() {
 		const
@@ -222,7 +225,8 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 			ref="issueState"
 			onClick={showToggle && this.toggleState}
 			style={[
-				styles.root,showToggle && styles.root.toggle
+				styles.root,
+				showToggle && styles.root.toggle
 			]}>
 			
 			{this.createIcon(iconName,isOpen)}
@@ -230,13 +234,15 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 			{/* IF TOGGLE ENABLED */}
 			{showToggle && <div style={[
 				styles.toggle,
-				state === 'open' ? styles.toggle.close : styles.toggle.open,
+				isOpen ? styles.toggle.close : styles.toggle.open,
 				hovering && styles.toggle.hovering
 			]}>
 				
 				{this.createIcon(iconName,isOpen)}
 				
-				<div style={[styles.toggle.label]}>{state === 'open' ? "I'm Done" : 'Reopen'}</div>
+				<div style={[styles.toggle.label]}>
+					{isOpen ? "I'm Done" : 'Reopen'}
+					</div>
 			</div>}
 		</div>
 	}

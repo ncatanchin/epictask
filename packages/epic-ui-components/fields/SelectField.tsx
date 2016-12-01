@@ -1,9 +1,9 @@
 // Imports
 import { PureRender, makeComponentStyles } from "epic-ui-components"
-import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { shallowEquals, shortId, guard } from "epic-global"
+import { ThemedStyles, IThemedAttributes, Themed } from "epic-styles"
+import { shallowEquals, shortId, guard, focusNextFormField } from "epic-global"
 import filterProps from "react-valid-props"
-import { Flex,FlexScale, FlexColumnCenter, FlexRowCenter, TextField, Popover } from "../common"
+import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter, TextField, Popover } from "../common"
 import { getValue, isNil } from "typeguard"
 import {
 	CommandComponent,
@@ -18,9 +18,10 @@ import { isHovering, makeWidthConstraint } from "epic-styles/styles"
 import baseStyles from "./SelectField.styles"
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
-
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * ISelectProps
@@ -134,10 +135,10 @@ export interface ISelectFieldState {
  * @class Select
  * @constructor
  **/
-@CommandComponent()
-@ThemedStyles(baseStyles)
+
+@ThemedStyles(baseStyles,'select')
 @PureRender
-export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldState>  implements ICommandComponent  {
+export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldState> {
 	
 	static defaultProps = {
 		showOpenControl: true
@@ -154,14 +155,6 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		}
 		
 	}
-	
-	commandItems = makeCommandBuilder(this)
-	
-	
-	get commandComponentId() {
-		return this.id
-	}
-	
 	
 	get id(): string {
 		return (
@@ -181,29 +174,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		rootRefElem: ReactDOM.findDOMNode(rootRef)
 	})
 	
-	/**
-	 * Filter text change
-	 *
-	 * @param event
-	 */
-	onFilterChanged = event => {
-	}
 	
-	/**
-	 * Filter focus
-	 *
-	 * @param event
-	 */
-	onFilterFocus = event => {
-	}
-	
-	/**
-	 * Filter blur
-	 *
-	 * @param event
-	 */
-	onFilterBlur = event => {
-	}
 	
 	/**
 	 * On item selected
@@ -231,7 +202,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			{ items, value } = props
 		
 		let
-			{ selectedIndex, visibleItems } = this.state,
+			{ selectedIndex, visibleItems, filterText } = this.state,
 			selectedItem = visibleItems[ selectedIndex ]
 		
 		let
@@ -241,8 +212,13 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		if (!valueContent)
 			valueContent = getValue(() => valueItem.content,<div>No Value Provided</div>)
 		
-		visibleItems = items.filter(item => !valueItem ||
-		(item !== valueItem))
+		visibleItems = items.filter(item =>
+			(!valueItem ||
+			(item !== valueItem)) &&
+			(!filterText || _.isEmpty(filterText) ||
+				getValue(() => item.contentText.toLowerCase().indexOf(
+					filterText.toLowerCase()) > -1))
+		)
 		
 		selectedIndex = visibleItems.findIndex(item => item === selectedItem)
 		
@@ -256,6 +232,14 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		})
 	}
 	
+	get selectedIndex() {
+		return getValue(() => this.state.selectedIndex, -1)
+	}
+	
+	get selectedItem() {
+		return getValue(() => this.state.visibleItems[ this.selectedIndex ], null) as ISelectFieldItem
+	}
+	
 	/**
 	 * Set the selected index
 	 *
@@ -263,11 +247,24 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 */
 	private setSelectedIndex = selectedIndex => this.setState({ selectedIndex })
 	
-	
+	/**
+	 * Make on mouseover handler
+	 *
+	 * @param item
+	 * @param index
+	 * @returns {(event:React.MouseEvent<any>)=>any}
+	 */
 	private makeOnItemMouseOver = (item: ISelectFieldItem, index) => {
 		return (event: React.MouseEvent<any>) => this.setSelectedIndex(index)
 	}
 	
+	/**
+	 * Make on click handler
+	 *
+	 * @param item
+	 * @param index
+	 * @returns {(event:React.MouseEvent<any>)=>undefined}
+	 */
 	private makeOnItemClick = (item: ISelectFieldItem, index) => {
 		return (event: React.MouseEvent<any>) => {
 			this.props.onItemSelected(item)
@@ -284,8 +281,18 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 *
 	 * @param increment
 	 */
-	moveSelection = increment => {
+	private moveSelection = increment => {
+		let
+			{selectedIndex,visibleItems} = this.state
 		
+		selectedIndex = Math.max(Math.min(selectedIndex,visibleItems.length - 1),0) + increment
+		
+		if (selectedIndex < 0)
+			selectedIndex = visibleItems.length - 1
+		else if (selectedIndex >= visibleItems.length)
+			selectedIndex = 0
+		
+		this.setSelectedIndex(selectedIndex)
 	}
 	
 	/**
@@ -305,16 +312,162 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 					const
 						inputElem = $(rootRefElem).find('input')
 					
-					log.debug(`Focusing on`, inputElem, rootRefElem)
-					inputElem.focus()
+					
+					
+					setTimeout(() => {
+						if (!inputElem.length || inputElem.is(':focus'))
+							return
+						
+						log.debug(`Focusing on`, inputElem, rootRefElem)
+						inputElem.focus()
+					},200)
+					
 				}
 			}))
 	}
 	
 	/**
+	 * Set the filter text
+	 *
+	 * @param filterText
+	 */
+	private setFilterText(filterText) {
+		this.setState({ filterText },this.updateState)
+	}
+	
+	/**
+	 * On keydown - handle movement and filtering
+	 *
+	 * @param event
+	 */
+	private onKeyDown = event => {
+		log.debug(`On key down`, event, event.key, event.charCode, event.keyCode)
+		
+		const
+			stopEvent = () => {
+				event.preventDefault()
+				event.stopPropagation()
+			},
+			
+			{ key } = event
+		
+		let
+			filterText = getValue(() => this.state.filterText, '')
+		
+		switch (key) {
+			case 'Up':
+			case 'ArrowUp':
+				this.moveSelection(-1)
+				stopEvent()
+				break
+			case 'Down':
+			case 'ArrowDown':
+				if (!this.state.open) {
+					this.toggleOpen()
+					break
+				}
+				this.moveSelection(1)
+				stopEvent()
+				break
+			case 'Escape':
+				const
+					isOpen = getValue(() => this.state.open, false)
+				
+				if (isOpen) {
+					this.toggleOpen()
+				} else {
+					$(ReactDOM.findDOMNode(this)).find('input').blur()
+				}
+				
+				stopEvent()
+				break
+			
+			case 'Enter':
+				event.preventDefault()
+				event.stopPropagation()
+				
+				if (!this.state.open) {
+					this.toggleOpen()
+					break
+				}
+				
+				const
+					{ selectedItem, selectedIndex } = this
+				
+				if (selectedItem) {
+					log.debug(`Selected`, selectedIndex, selectedItem)
+					guard(() => this.props.onItemSelected(selectedItem))
+					
+					this.toggleOpen()
+					
+					focusNextFormField(this)
+					
+				} else {
+					log.debug(`no item selected`, selectedIndex, selectedItem, this.state)
+				}
+				
+				stopEvent()
+				break
+			case 'Backspace':
+			case 'Delete':
+				if (filterText.length > 0) {
+					this.setFilterText(filterText.substring(0, filterText.length - 1))
+				}
+				
+				stopEvent()
+				break
+			default:
+				if (key.length === 1 && /[a-zA-Z0-9\s]/.test(key)) {
+					this.setFilterText(filterText + key)
+					
+					stopEvent()
+				}
+			
+			
+		}
+	}
+	
+	
+	/**
 	 * On click away - close it down
 	 */
 	private onClickAway = () => this.state.open && this.toggleOpen()
+	
+	/**
+	 * On focus, open
+	 */
+	private onFocus = () => !this.state.open && this.toggleOpen()
+	
+	/**
+	 * On blur, close
+	 */
+	private onBlur = this.onClickAway
+	
+	/**
+	 * Create the result style for the popover
+	 *
+	 * @param styles
+	 * @param anchorElem
+	 * @returns {any}
+	 */
+	private makeResultsStyle = (styles, anchorElem) => {
+		
+		const
+			rect = getValue(() => anchorElem.getBoundingClientRect(), {} as any),
+			{ width, left, top, height } = rect,
+			winWidth = window.innerWidth
+		
+		return makeStyle(
+			{
+				//width: width || 'auto',
+				minWidth: width || 'auto',
+				maxWidth: isNil(left) ? "auto" : winWidth - left
+			},
+			styles.items,
+			styles.items[ ':focus' ]
+		)
+	}
+	
 	
 	/**
 	 * On mount update the state
@@ -331,45 +484,29 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 */
 	componentWillReceiveProps = this.updateState
 	
-	makeResultStyle = (styles,anchorElem) => {
-		
-		const
-			rect = getValue(() => anchorElem.getBoundingClientRect(), {} as any),
-			{width,left,top,height} = rect,
-			winWidth = window.innerWidth
-		
-		return makeStyle(
-			{
-				//width: width || 'auto',
-				minWidth: width || 'auto',
-				maxWidth: isNil(left) ? "auto" :  winWidth - left
-			},
-			styles.items,
-			styles.items[':focus']
-		)
-	}
-	
 	
 	render() {
 		const
-			{ commandContainer, placeholder, styles, style, showOpenControl, showFilter, filterStyle, filterInputStyle, iconStyle } = this.props,
+			{ commandContainer,tabIndex, palette, placeholder, styles, style, showOpenControl, showFilter, filterStyle, filterInputStyle, iconStyle } = this.props,
 			{ rootRefElem, filterText, open, visibleItems, valueContent, selectedIndex } = this.state,
 			{ id } = this,
 			focused = commandContainer && commandContainer.isFocused()
 		
 		
 		const
-			resultsStyle = this.makeResultStyle(styles,rootRefElem)
+			resultsStyle = this.makeResultsStyle(styles, rootRefElem)
 		
 		
-		return <CommandRoot
+		return <div
 			id={this.state.id}
-			component={this}
 			ref={this.setRootRef}
+			key={this.state.id}
+			
+			onKeyDown={this.onKeyDown}
 			data-focused={focused}
 			style={makeStyle(
 				styles,
-				focused && styles[':focus'],
+				(open || focused) && styles[':focus'],
 				style
 			)}
 			onClick={this.toggleOpen}
@@ -381,22 +518,21 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			
 			{/* OPEN CONTROL */}
 			{showOpenControl &&
-				<FlexColumnCenter style={styles.control}>
-					<Icon iconSet='fa' iconName='chevron-down'/>
-				</FlexColumnCenter>
+			<FlexColumnCenter style={styles.control}>
+				<Icon iconSet='fa' iconName='chevron-down'/>
+			</FlexColumnCenter>
 			}
 			
 			{/* RENDER CRITERIA */}
 			<TextField
 				{...filterProps(this.props)}
+				{...(open || focused ? {autoFocus:true} : {})}
 				id={`${id}-filter-input`}
 				autoComplete="off"
-				tabIndex={-1}
-				autoFocus={true}
-				onFocus={this.onFilterFocus}
-				onBlur={this.onFilterBlur}
+				onFocus={this.onFocus}
+				onBlur={this.onBlur}
+				tabIndex={isNil(tabIndex) ? 0 : tabIndex}
 				placeholder={placeholder}
-				onChange={this.onFilterChanged}
 				style={makeStyle(
 					OverflowHidden,
 					PositionAbsolute,{
@@ -430,6 +566,8 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			>
 				
 				<div style={resultsStyle}>
+					
+					{filterText && filterText.length && <SelectFilterText filterText={filterText}/>}
 					{visibleItems
 						.map((item, index) =>
 							<SelectFieldItem
@@ -445,7 +583,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			
 			
 			</Popover>
-		</CommandRoot>
+		</div>
 	}
 	
 }
@@ -479,7 +617,6 @@ class SelectFieldItem extends React.Component<ISelectFieldItemProps,any> {
 		const
 			{
 				styles,
-				key = 'null',
 				value,
 				style,
 				index,
@@ -522,60 +659,27 @@ class SelectFieldItem extends React.Component<ISelectFieldItemProps,any> {
 }
 
 /**
- * Commands
+ * Filter text component
+ *
+ * @type {any}
  */
-function makeCommandBuilder(selectField: SelectField) {
-	return (builder: CommandContainerBuilder) =>
-		builder
-		//MOVEMENT
-			.command(
-				CommandType.Container,
-				'Move down',
-				(cmd, event) => selectField.moveSelection(1),
-				CommonKeys.MoveDown, {
-					hidden: true,
-					overrideInput: true
-				})
-			.command(
-				CommandType.Container,
-				'Move up',
-				(cmd, event) => selectField.moveSelection(-1),
-				CommonKeys.MoveUp, {
-					hidden: true,
-					overrideInput: true
-				})
-			
-			// ESCAPE
-			.command(
-				CommandType.Container,
-				'Close results',
-				(cmd, event) => guard(selectField.props.onEscape as any),
-				CommonKeys.Escape,
+const SelectFilterText = Themed(({ filterText, palette }) =>
+	<div style={[
+			PositionAbsolute,
+			Styles.FlexRowCenter,
+			makePaddingRem(0.5),
+			{
+				right: 0,
+				top: 0,
+				height: rem(2.2),
+				width: 'auto',
+				fontWeight: 500,
 				
-				// OPTS
-				{
-					hidden: true,
-					overrideInput: true
-				})
-			
-			// SELECT
-			.command(
-				CommandType.Container,
-				'Select this issue',
-				(cmd, event) => {
-					event.preventDefault()
-					event.stopPropagation()
-					selectField.onItemSelected()
-					
-				},
-				CommonKeys.Enter, {
-					hidden: true,
-					overrideInput: true
-				})
-			
-			
-			
-			.make()
-	
-	
-}
+				zIndex: 9999999,
+				border: `1px solid ${palette.primary.hue3}`,
+				background: palette.primary.hue2,
+				color: palette.text.primary
+			}
+		]}>
+		{filterText}
+	</div>)

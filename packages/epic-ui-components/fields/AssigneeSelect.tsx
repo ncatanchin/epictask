@@ -115,7 +115,8 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 					content: <Avatar
 						user={assignee}
 						labelPlacement='after'
-					/>
+					/>,
+					contentText: assignee.login + '||' + assignee.name + '||' + assignee.email
 				})).toArray()
 		
 		

@@ -5,7 +5,7 @@ import { PureRender } from "epic-ui-components/common"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 import { SearchItem } from 'epic-models'
-import { shallowEquals, getValue } from  "epic-global"
+import { shallowEquals, getValue, guard } from  "epic-global"
 import { SearchResultItem } from "./SearchResultItem"
 import { SearchController, SearchEvent } from './SearchController'
 import { SearchState } from "./SearchState"
@@ -84,13 +84,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		event.preventDefault()
 		event.stopPropagation()
 		
-		const
-			{ onResultSelected } = this.props,
-			isFn = _.isFunction(onResultSelected)
-		
-		if (isFn) {
-			onResultSelected(item)
-		}
+		guard(() => this.props.onResultSelected(item))
 	}
 	
 	/**

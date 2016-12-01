@@ -92,16 +92,16 @@ const baseStyles = (topStyles, theme, palette) => {
 			
 			assignee: [ FlexScale,{
 				
-				avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-					label: {
-						fontWeight: 500,
-					},
-					avatar: {
-						height: 22,
-						width: 22,
-					}
-					
-				} ]
+				// avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
+				// 	label: {
+				// 		fontWeight: 500,
+				// 	},
+				// 	avatar: {
+				// 		height: 22,
+				// 		width: 22,
+				// 	}
+				//
+				// } ]
 			} ],
 			
 			/**
@@ -392,17 +392,15 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			availableRepos = availableRepos.filter(it => canCreateIssue(it.repo)) as List<AvailableRepo>
 		}
 		
-		
-		
 		let
-			bodyValue = getValue(() => this.state.bodyValue,_.get(editingIssue, 'body', '')),
-			titleValue = getValue(() => this.state.titleValue)
+			bodyValue = getValue(() => this.state.bodyValue,editingIssue.body),
+			titleValue = getValue(() => this.state.titleValue,editingIssue.title)
 		
 		if (!bodyValue || !bodyValue.length)
 			bodyValue = _.get(editingIssue, 'body', '')
 		
-		if (!titleValue || !titleValue.length)
-			titleValue = _.get(editingIssue, 'title', '')
+		// if (!titleValue || !titleValue.length)
+		// 	titleValue = _.get(editingIssue, 'title', '')
 				
 		
 		let
@@ -478,7 +476,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			{ready,saveError, saving} = this.viewState
 		
 		let
-			editingIssue = this.editingIssue,
+			{editingIssue} = this,
+			titleValue = getValue(() => this.state.titleValue,editingIssue.title || ''),
 			repoId = editingIssue.repoId
 		
 		const
@@ -528,7 +527,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				          style={styles.form}>
 					
 					<div style={styles.form.row1}>
-						<TextField value={this.state.titleValue || ''}
+						<TextField value={titleValue}
 						           onChange={this.onTitleChange}
 						           errorStyle={{transform: 'translate(0,1rem)'}}
 						           error={getGithubErrorText(saveError,'title')}

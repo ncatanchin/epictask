@@ -7,6 +7,7 @@ import {
 	mergeStyles, makeMarginRem, makeBorderRem, makeHeightConstraint, rem
 } from "epic-styles/styles"
 import filterProps from 'react-valid-props'
+import { isNil } from "typeguard"
 
 // Constants
 const
@@ -31,7 +32,6 @@ function baseStyles(topStyles, theme, palette) {
 	return [
 		FlexRowCenter,
 		makePaddingRem(0.7,1),
-		
 		makeTransition(['opacity','background-color','box-shadow','border-bottom']),
 		theme.inputBorder,{
 			minHeight: rem(4.2),
@@ -112,7 +112,8 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 				styles,
 				inputStyle,
 				style,
-				errorStyle
+				errorStyle,
+				tabIndex
 			} = this.props
 			
 			//inputProps = _.omit(filterProps(this.props),'value','defaultValue')
@@ -122,6 +123,7 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 		return <div style={[styles,style]}>
 			<input
 				{...filterProps(this.props)}
+				tabIndex={isNil(tabIndex) ? 0 : tabIndex}
 				ref='inputField'
 				style={mergeStyles(styles.input,inputStyle)}
 			/>

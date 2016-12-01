@@ -2,8 +2,11 @@
 import { getValue, isFunction } from "typeguard"
 import { shallowEquals } from "epic-global/ObjectUtil"
 import { cloneObjectShallow } from "epic-global"
+
 const
 	log = getLogger(__filename)
+
+log.setOverrideLevel(LogLevel.DEBUG)
 
 export function focusElementById(id:string,timeout = 50) {
 	if (ProcessConfig.isType(ProcessType.UI))
@@ -250,3 +253,87 @@ export const Dom = {
 		}
 	}
 }
+
+
+export function nextFormField(srcElem,wrap = true) {
+	let
+		elem = srcElem
+	if (!elem)
+		return null
+	
+	if (!(elem instanceof HTMLElement)) {
+		elem = ReactDOM.findDOMNode(srcElem)
+	}
+	
+	if (!(elem instanceof HTMLElement)) {
+		log.debug(`No html element found`,elem,srcElem)
+		return null
+	}
+	
+	if (!['input','select','textarea'].includes(elem.tagName.toLowerCase())) {
+		log.debug(`Elem is not a field, looking for a child INPUT`,elem.tagName,elem,srcElem)
+		elem = $(elem).find('input')
+		
+		if (!['input','select','textarea'].includes(getValue(() => elem[0].tagName.toLowerCase(),''))) {
+			log.debug(`Still no input`)
+			return null
+		}
+	}
+	
+	elem = $(elem)
+	
+	const
+		elemRaw = elem[0],
+		form = elem.closest('form')
+	
+	log.debug(`Found form`,form)
+	if (!form.length) {
+		return null
+	}
+	
+	const
+		fields = form.find('input,select,textarea,[tab-index]')
+	
+	let
+		index = -1
+	
+	for (let i = 0; i < fields.length; i++) {
+		const
+			field = fields[i]
+		
+		if (field === elemRaw) {
+			index = i
+			break
+		}
+	}
+	
+	log.debug(`Found index`,index,elem,fields,form)
+	if (index === -1) {
+		return null
+	}
+	
+	index += 1
+	
+	if (wrap && index >= fields.length)
+		index = 0
+	
+	return fields[index]
+	
+	
+	
+	
+	
+}
+
+
+
+export function focusNextFormField(elem,wrap = true) {
+	const
+		nextElem = nextFormField(elem,wrap)
+
+	log.debug(`Found next element to focus`,nextElem,elem)
+	if (nextElem) {
+		$(nextElem).focus()
+	}
+}
+

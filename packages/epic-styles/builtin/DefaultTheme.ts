@@ -104,18 +104,29 @@ export function DefaultTheme(palette) {
 		
 		
 		// INPUT
+		inputHighlight = {
+			border: `${convertRem(0.1)}px solid transparent`,
+			backgroundColor: accent.hue1,
+			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
+		},
+		
 		inputBorder = {
 			border: `${convertRem(0.1)}px solid ${primary.hue1}`
+			
 		},
+		
 		inputStyle = [makeTransition(['border','box-shadow','background-color']),inputBorder,{
 			minHeight: rem(4),
+			':focus': inputHighlight
 			
-			':focus': {
-				border: `${convertRem(0.1)}px solid transparent`,
-				backgroundColor: accent.hue1,
-				boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
-			}
-		}]
+		}],
+	
+		selectStyle = {
+			':hover': inputHighlight,
+			':focus': inputHighlight
+		}
+		
+		
 		
 	return Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		ThemeName: 'DefaultTheme',
@@ -136,6 +147,8 @@ export function DefaultTheme(palette) {
 		
 		input: inputStyle,
 		inputBorder,
+		
+		select: selectStyle,
 		
 		search: {
 			itemHeight: rem(4.8)

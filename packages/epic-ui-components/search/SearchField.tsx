@@ -134,10 +134,9 @@ export interface ISearchFieldState {
  * @constructor
  **/
 @ViewRoot(SearchController, SearchState)
-@CommandComponent()
 @ThemedStyles(baseStyles, 'searchField')
 @PureRender
-export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldState> implements ICommandComponent {
+export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldState> {
 	
 	static defaultProps? = {
 		inlineResults: false,
@@ -152,88 +151,54 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	private mounted = false
 	
 	/**
-	 * Commands
+	 * onKeys
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
-		builder
-		//MOVEMENT
-			.command(
-				CommandType.Container,
-				'Move down',
-				(cmd, event) => this.moveSelection(1),
-				CommonKeys.MoveDown, {
-					hidden: true,
-					overrideInput: true
-				})
-			.command(
-				CommandType.Container,
-				'Move up',
-				(cmd, event) => this.moveSelection(-1),
-				CommonKeys.MoveUp, {
-					hidden: true,
-					overrideInput: true
-				})
+	onKeyDown = (event:React.KeyboardEvent<any>) => {
+		const
+			stopEvent = () => {
+				event.preventDefault()
+				event.stopPropagation()
+			}
 			
-			// ESCAPE
-			.command(
-				CommandType.Container,
-				'Close results',
-				(cmd, event) => {
-					const
-						inputElement = this.inputElement as any,
-						{ onEscape } = this.props
-					
-					log.debug('Escape key received', event, onEscape, inputElement)
-					
-					if (onEscape && onEscape() === true) {
-						guard(inputElement.blur)
-						
-						this.onTextBlur(null)
-					}
-					
-					
-				},
-				CommonKeys.Escape,
+		switch (event.key) {
+			case 'Up':
+			case 'ArrowUp':
+				this.moveSelection(-1)
+				stopEvent()
+				break
+			case 'Down':
+			case 'ArrowDown':
+				this.moveSelection(1)
+				stopEvent()
+				break
+			case 'Escape':
+				const
+					inputElement = this.inputElement as any,
+					{ onEscape } = this.props
 				
-				// OPTS
-				{
-					hidden: true,
-					overrideInput: true
-				})
-			
-			// SELECT
-			.command(
-				CommandType.Container,
-				'Select this issue',
-				(cmd, event) => {
-					event.preventDefault()
-					event.stopPropagation()
-					this.onResultSelected(null, null)
+				log.debug('Escape key received', event, onEscape, inputElement)
+				
+				if (onEscape && onEscape() === true) {
+					guard(inputElement.blur)
 					
-				},
-				CommonKeys.Enter, {
-					hidden: true,
-					overrideInput: true
-				})
-			
-			
-			
-			.make()
+					this.onTextBlur(null)
+				}
+				stopEvent()
+				break
+			case 'Enter':
+				event.preventDefault()
+				event.stopPropagation()
+				this.onResultSelected(null, null)
+				stopEvent()
+				break
+		}
+	}
 	
 	
 	get controller() {
 		return this.props.viewController
 	}
 	
-	/**
-	 * Command container id
-	 */
-	get commandComponentId():string {
-		const
-			componentId = `SearchField-${this.props.searchId}`
-		log.debug(`Search panel with id = ${componentId}`)
-		return componentId
-	}
 	
 	/**
 	 * ID of search panel
@@ -420,17 +385,6 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	}
 	
 	/**
-	 * Focus the command container after everything settles
-	 */
-	private containerFocus = _.debounce((event) => {
-		guard(() => this.props.commandContainer.onFocus(event, true))
-	}, 250)
-
-	private containerBlur = _.debounce((event) => {
-		guard(() => this.props.commandContainer.onBlur(event, true))
-	}, 150)
-
-	/**
 	 * On text field focus
 	 *
 	 * @param event
@@ -442,7 +396,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		this.updateSearchResults()
 		
 		event.persist()
-		this.containerFocus(event)
+		guard(() => this.props.onFocus(event))
 	}
 	
 	
@@ -456,6 +410,12 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		log.debug('search panel blur')
 		
 		this.controller.setFocused(false)
+		guard(() => this.props.onBlur(event))
+		
+		if (event) {
+			event.preventDefault()
+			event.stopPropagation()
+		}
 		//guard(() => this.props.commandContainer.onBlur(event, true))
 		// event.persist()
 		// this.containerBlur(event)
@@ -506,9 +466,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 */
 	onResultSelected = (event:SearchEvent, item:SearchItem, fromController = false) => {
 		
-		item = item || _.get(this.state, 'selectedItem', null)
-		
-		log.info(`Result selected`, item, this.state)
+		log.debug(`Result selected`, item, this.state)
 		
 		const
 			{ onItemSelected, viewState:searchState } = this.props,
@@ -517,22 +475,16 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		
 		
 		if (!item) {
-			if (items && isNumber(selectedIndex)) {
-				item = items.get(selectedIndex)
-			}
+			item = getValue(() => items.get(selectedIndex),null)
 			
 			if (!item) {
-				log.info(`no model item found, can not select`)
-				return
+				return log.info(`no model item found, can not select`)
 			}
 		}
 		
-		
-		log.info(`Calling panel owner`, onItemSelected)
 		if (onItemSelected) {
 			onItemSelected(item)
 		} else {
-			
 			// IF THE SELECTION DID NOT COME FROM THE CONTROLLER THEN EMIT IT
 			if (!fromController)
 				controller.select(item)
@@ -701,6 +653,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 				criteriaRenderer,
 				text,
 				searchId,
+				tabIndex,
 				viewState: searchState
 			} = this.props,
 			{ text:stateText } = this.state,
@@ -729,9 +682,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 			
 			{ searchFieldId } = this
 		
-		return <CommandRoot
+		return <div
 			id={searchFieldId}
-			component={this}
 			style={panelStyle}
 		>
 			
@@ -745,12 +697,15 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 					{ getValue(() => criteriaRenderer(criteria)) }
 					
 					<TextField
+						{...(autoFocus || focused ? {autoFocus: true} : {})}
 						{...filterProps(this.props)}
+						key={`${searchFieldId}-input`}
+						styles={{border: 'none'}}
 						id={`${searchFieldId}-input`}
 						ref={this.setTextFieldRef}
 						autoComplete="off"
-						tabIndex={-1}
-						autoFocus={autoFocus}
+						tabIndex={isNil(tabIndex) ? 0 : tabIndex}
+						
 						onFocus={this.onTextFocus}
 						onBlur={this.onTextBlur}
 						placeholder={placeholder}
@@ -758,7 +713,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						style={fieldStyle}
 						inputStyle={inputStyle}
 						value={text || stateText || ''}
-					  
+					  onKeyDown={this.onKeyDown}
 					/>
 				
 				</FlexRow>
@@ -786,7 +741,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 			</div>
 		
 		
-		</CommandRoot>
+		</div>
 		
 	}
 	

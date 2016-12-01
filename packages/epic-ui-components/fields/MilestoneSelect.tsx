@@ -121,7 +121,8 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 			.map(milestone => ({
 				key: milestone.id,
 				value: milestone,
-				content: <LabelChip showIcon label={milestone} />
+				content: <LabelChip showIcon label={milestone} />,
+				contentText: milestone.title
 			})).toArray() as ISelectFieldItem[]]
 	}
 	

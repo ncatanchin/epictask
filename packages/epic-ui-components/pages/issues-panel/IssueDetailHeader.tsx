@@ -39,7 +39,7 @@ import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShall
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
 import { TextField } from "epic-ui-components/common"
-import { makeStyle } from "epic-styles/styles"
+import { makeStyle, colorAlpha } from "epic-styles/styles"
 
 // Constants
 const
@@ -71,13 +71,19 @@ const
 		
 		return [ flexTransition, makeComponentStyles(theme, palette), {
 			
-			root: [ flexTransition, FlexAuto, FlexColumn, PositionRelative, {
-				padding: "1rem",
-				backgroundColor: TinyColor(primary.hue1).setAlpha(0.7).toRgbString(),
-				color: text.primary
-			} ],
+			root: [
+				flexTransition,
+				FlexAuto,
+				FlexColumn,
+				PositionRelative,
+				makePaddingRem(0.5,0.5,1,0.5),{
+					
+					backgroundColor: TinyColor(primary.hue1).setAlpha(0.7).toRgbString(),
+					color: text.primary
+				} ],
 			
-			hidden: [ makeBorderRem(0), makePaddingRem(0), makeMarginRem(0), makeFlex(0, 0, 0), {
+			hidden: [ makePaddingRem(0), makeMarginRem(0), makeFlex(0, 0, 0), {
+				border: 0,
 				opacity: 0,
 				height: 0,
 				width: 0,
@@ -88,7 +94,7 @@ const
 				
 				state: [ {
 					root: [ {
-						marginRight: rem(1)
+						marginRight: rem(0.25)
 					} ]
 				} ],
 				
@@ -98,7 +104,7 @@ const
 					fontWeight: 500,
 					
 					
-					color: TinyColor(text.secondary).setAlpha(0.7).toRgbString(),
+					color: colorAlpha(text.secondary,0.7),
 					[CSSHoverState]: {
 						color: secondary.hue1
 					}
@@ -111,7 +117,7 @@ const
 				} ]
 			} ],
 			
-			row2: [ flexTransition, FlexRowCenter, FlexAuto, PositionRelative, makePaddingRem(0.5, 0, 1, 0), {} ],
+			row2: [ flexTransition, FlexRowCenter, FlexAuto, PositionRelative, makePaddingRem(0, 0, 1, 0), {} ],
 			
 			// Row 3 - Labels + title
 			row3: [ flexTransition, FlexRow, FlexAuto, {
@@ -505,7 +511,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				           placeholder="TITLE"
 				           style={makeStyle(
 				           	 FlexScale,
-				           	 makePaddingRem(0,1,0,0),
+				           	 makePaddingRem(0),
+				           	 makeMarginRem(0,1,0,0),
 				           	 !editTitle && styles.hidden
 			             )}
 				           inputStyle={makeStyle(FlexScale,styles.input)}

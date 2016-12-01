@@ -51,7 +51,6 @@ declare interface IIssueFilter {
 
 
 declare interface IIssueCriteria extends IIssueFilter {
-	text: string
 	sort: IIssueSort
 	exclude: IIssueFilter
 }

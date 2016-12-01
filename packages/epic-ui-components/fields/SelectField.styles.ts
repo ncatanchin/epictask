@@ -20,7 +20,6 @@ export default function (topStyles, theme, palette) {
 			
 			
 			value: [makePaddingRem(0.5,1), {
-				
 				color: text.primary
 			}],
 			

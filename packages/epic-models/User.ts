@@ -66,7 +66,37 @@ export class User extends DefaultModel implements IUser {
 	
 	@Attribute()
 	site_admin: boolean;
-
+	
+	@Attribute()
+	company: string
+	
+	@Attribute()
+	blog: string
+	
+	@Attribute()
+	location: string
+	
+	@Attribute()
+	email: string
+	
+	@Attribute()
+	hireable: boolean
+	
+	@Attribute()
+	bio: string
+	
+	@Attribute()
+	public_repos: number
+	
+	@Attribute()
+	public_gists: number
+	
+	@Attribute()
+	followers: number
+	
+	@Attribute()
+	following: number
+	
 	constructor(props = {}) {
 		super()
 		Object.assign(this,props)

@@ -172,7 +172,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	private onFilterSortChanged = (newVal, oldVal) => {
 		log.debug(`Filter/Sort changed`, newVal, oldVal)
 		
-		this.loadIssues()
+		//this.loadIssues()
 	}
 	
 	private onSelectedIssueIdsChanged = (newVal:List<number>, oldVal:List<number>) => {
@@ -344,8 +344,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		this.unsubscribers = [
 			
 			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged),
-			store.observe(this.makeStatePath('issueSort'), this.onFilterSortChanged),
-			store.observe(this.makeStatePath('issueFiler'), this.onFilterSortChanged),
 			store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged)
 		]
 		

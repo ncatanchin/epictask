@@ -164,8 +164,13 @@ const baseStyles = (topStyles,theme,palette) => {
 					} ]
 				} ],
 			
-			details: [ makeTransition([ 'opacity', 'flex-basis', 'width', 'max-width' ]), FlexRow, makeFlexAlign('center', 'flex-start'), FlexAuto, PositionRelative, {
-				padding: '0.3rem 1rem',
+			details: [
+				Styles.makeTransition([ 'opacity', 'flex-basis', 'width', 'max-width' ]),
+				Styles.FlexRow,
+				Styles.makeFlexAlign('center', 'flex-start'),
+				Styles.FlexAuto,
+				Styles.PositionRelative,
+				Styles.makePaddingRem(0.3,1),{
 				height: 40,
 				fontSize: themeFontSize(1.1),
 				
