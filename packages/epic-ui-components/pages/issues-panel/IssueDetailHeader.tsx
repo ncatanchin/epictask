@@ -114,39 +114,10 @@ const
 			row2: [ flexTransition, FlexRowCenter, FlexAuto, PositionRelative, makePaddingRem(0.5, 0, 1, 0), {} ],
 			
 			// Row 3 - Labels + title
-			row3: [ flexTransition, FlexRowCenter, FlexAuto, {
-				label: {
-					marginTop: rem(0.5)
-				},
-				milestone: [ FlexAuto, FlexAlignStart, {} ],
-				labels: [ FlexScale, FlexAlignStart, {
-					flexWrap: 'wrap',
-					
-					add: [
-						labelBaseStyles.label,
-						FlexRowCenter,
-						FlexAuto,
-						makeTransition([ 'transform', 'font-size', 'font-weight', 'opacity' ]),
-						makeMarginRem(0.5, 0.5, 0, 0),
-						makePaddingRem(0),
-						{
-							//margin: makeMarginRem(0.5,0.5,0,0),//"0.5rem 0.5rem 0 0",
-							height: rem(2.4),
-							width: rem(2.4),
-							position: 'relative',
-							fontSize: rem(1.2),
-							opacity: 0.5,
-							fontWeight: 900,
-							cursor: 'pointer',
-							
-							':hover': {
-								opacity: 1,
-								transform: 'scale(1.1)'
-							}
-							
-						}
-					]
-				} ],
+			row3: [ flexTransition, FlexRow, FlexAuto, {
+				milestone: [ FlexAuto],
+				labels: [ FlexScale]
+				
 				
 				
 			} ],
@@ -502,7 +473,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 					style={makeStyle({opacity: 1, width: 'auto'},makePaddingRem(0,0,0,0),!editAssignee && styles.hidden)}
 					labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
 					avatarStyle={makeStyle(makePaddingRem(0))}
-					onSelect={this.setEditAssignee}/>
+					onItemSelected={this.setEditAssignee}/>
 				
 				<Avatar
 					user={issue.assignee}
@@ -568,7 +539,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 					repoId={issue.repoId}
 					underlineShow={false}
 					onKeyDown={this.onEditKeyDown}
-					onSelect={this.setEditMilestone}
+					onItemSelected={this.setEditMilestone}
 				/> :
 					<IssueLabelsAndMilestones showIcon={true}
 					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}

@@ -758,6 +758,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						style={fieldStyle}
 						inputStyle={inputStyle}
 						value={text || stateText || ''}
+					  
 					/>
 				
 				</FlexRow>
@@ -766,6 +767,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 				<Popover
 					canAutoPosition={false}
 					open={focused}
+					noAdjustment={true}
 					anchorOrigin={{
 						vertical: 'bottom',
 						horizontal: 'left',

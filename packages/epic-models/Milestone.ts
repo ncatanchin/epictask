@@ -27,8 +27,8 @@ export class Milestone extends DefaultModel implements IMilestone {
 	static EmptyMilestone = new Milestone({
 		id: -1,
 		repoId: 0,
-		title: "No Milestone",
-		description: "No Milestone"
+		title: "not scheduled",
+		description: "not scheduled"
 	})
 	
 	/**

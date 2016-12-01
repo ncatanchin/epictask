@@ -119,7 +119,7 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 function makeBrowserWindowOptions(type:WindowType, opts:Electron.BrowserWindowOptions = {}):Electron.BrowserWindowOptions {
 	return _.merge(
 		{
-			backgroundColor: require('epic-styles').getPalette().background
+			//backgroundColor: require('epic-styles').getPalette().background
 		},
 		
 		// TYPE DEFAULTS

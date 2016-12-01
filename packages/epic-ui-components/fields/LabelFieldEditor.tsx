@@ -31,47 +31,11 @@ const
 			root: [ FlexColumn, FlexAuto, {} ],
 			
 			
+			chipWrapper: [makePaddingRem(0.5, 0,0.5,0.5)],
 			
+			inputContainer: []
+	
 			
-			
-			chip: [ FlexAuto, PositionRelative, {
-				cursor: 'pointer',
-				height: '3.4rem',
-				padding: '1rem 1rem 0 0',
-			} ],
-			
-			chipContent: makeStyle(FlexAuto, FlexRowCenter, {
-				display: 'flex',
-				borderRadius: '1.5rem',
-				height: '2.4rem',
-				
-				
-				
-				control: makeStyle(makeTransition([ 'background-color', 'font-weight', 'border-radius' ]), FlexAuto, FlexRowCenter, {
-					padding: '0.2rem 2rem',
-					borderRadius: '1.2rem',
-					height: '2.4rem',
-					width: '2.4rem',
-					boxSizing: 'border-box',
-					backgroundColor: 'rgba(0,0,0,0.2)',
-					cursor: 'pointer',
-					fontWeight: 400,
-					fontSize: '1.5rem',
-					
-					':hover': {
-						backgroundColor: 'white',
-						borderRadius: '0rem',
-						fontWeight: 700,
-						// fontSize: '2rem',
-					}
-				}),
-				
-				label: makeStyle(FlexAuto, FlexRowCenter, OverflowHidden, {
-					padding: '0 2rem 0 1rem',
-					fontSize: rem(1.5),
-					fontWeight: 700
-				})
-			})
 		}]
 	}
 
@@ -165,17 +129,33 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 		return results
 		
 	}
-	
+	/**
+	 * On chip selected
+	 *
+	 * @param newLabel
+	 */
 	onChipSelected = (newLabel) => {
 		log.debug('selected label', newLabel)
 		this.props.onLabelsChanged(this.props.labels.concat([ newLabel ]))
 	}
 	
+	/**
+	 * Callback when a chip is removed
+	 *
+	 * @param oldLabel
+	 */
 	onChipRemoved = (oldLabel) => {
 		log.debug('removed label', oldLabel)
 		this.props.onLabelsChanged(this.props.labels.filter(label => label.url !== oldLabel.url))
 	}
 	
+	/**
+	 * Filter available chips
+	 *
+	 * @param item
+	 * @param query
+	 * @returns {boolean}
+	 */
 	chipFilter = (item:Label, query:string):boolean => {
 		return _(item.name).toLower().includes(_.toLower(query))
 	}
@@ -235,11 +215,14 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			allChips={availableLabels}
 			selectedChips={labels}
 			onChipSelected={this.onChipSelected}
+			onChipRemoved={this.onChipRemoved}
+			
 			keySource={(item:Label) => item.id}
 			
 			hint='labels'
 			
 			onEscape={this.props.onEscape}
+			styles={props.styles}
 			style={/* FIELD STYLES */ makeStyle(styles.root,props.style)}
 						
 			inputStyle={/* INPUT STYLES */ makeStyle(styles.input,inputStyle)}

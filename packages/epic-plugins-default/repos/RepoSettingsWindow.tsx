@@ -37,6 +37,7 @@ import { canEditRepo, getValue } from "epic-global"
 import { Tab, Tabs } from "material-ui"
 import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
 import { RepoLabelEditor } from "./RepoLabelEditor"
+import { RepoSelect } from "epic-ui-components/fields/RepoSelect"
 
 
 const
@@ -262,11 +263,11 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	/**
 	 * Select a different repo
 	 *
-	 * @param item
+	 * @param selectedRepo
 	 */
-	private selectRepo = (item:ISelectFieldItem) => {
+	private onRepoItemSelected = (selectedRepo:AvailableRepo) => {
 		this.setState({
-			selectedRepo: this.props.repos.find(it => it.id === item.value)
+			selectedRepo
 		})
 	}
 	
@@ -277,7 +278,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 */
 	getEditableRepos(props = this.props) {
 		return props.repos
-			.filter(repo => canEditRepo(repo.repo))
+			.filter(repo => canEditRepo(repo.repo)) as List<AvailableRepo>
 	}
 	
 	render() {
@@ -296,20 +297,14 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				Repo Settings
 			</div>,
 			
-			repoItems = this.getEditableRepos()
-				.map(repo => ({
-					key: repo.id,
-					value: repo.id,
-					node: <RepoLabel style={styles.repoSelect.repoName} repo={repo.repo}/>
-				})).toArray(),
 			
 			iconStyle = styles.tabs.items.icon,
 			
 			activeIconStyle = makeStyle(iconStyle, styles.tabs.items.active),
 			
 			getIconStyle = (tabName) => activeTab === tabName ? activeIconStyle : iconStyle
-		
-		log.info(`Repo items`, repoItems, repos, selectedRepo, 'labels', getValue(() => selectedRepo.labels))
+	
+		//log.info(`Repo items`, repoItems, repos, selectedRepo, 'labels', getValue(() => selectedRepo.labels))
 		
 		//[createCancelButton(theme,palette,this.close)]
 		return <CommandRoot
@@ -321,11 +316,11 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 				titleMode='horizontal'
 				titleNode={titleNode}
 				titleActionNodes={
-					<SelectField
-						items={repoItems}
+					<RepoSelect
+						repos={this.getEditableRepos()}
 						style={styles.repoSelect}
-						onItemSelected={this.selectRepo}
-					  value={selectedRepo.id} />
+						onItemSelected={this.onRepoItemSelected}
+					  repo={selectedRepo} />
 				}
 				styles={styles.dialog}
 			>

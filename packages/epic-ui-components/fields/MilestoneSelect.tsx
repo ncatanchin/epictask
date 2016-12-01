@@ -3,13 +3,14 @@
 import { connect } from "react-redux"
 import { List } from "immutable"
 import { PureRender, LabelChip } from "epic-ui-components"
-import { shallowEquals } from "epic-global"
+import { shallowEquals, cloneObjectShallow } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import { Milestone } from "epic-models"
 import { SelectField} from "./SelectField"
 import { enabledMilestonesSelector,milestonesSelector } from "epic-typedux"
 import filterProps from "react-valid-props"
+import { getValue } from "typeguard"
 
 // Constants
 const log = getLogger(__filename)
@@ -23,14 +24,14 @@ const baseStyles = (topStyles,theme,palette) => ({
 	
 	labelChip: [{
 		//height: '3rem',
-		borderRadius: '1.5rem',
-		height: '2.4rem',
+		//borderRadius: '1.5rem',
+		//height: '2.4rem',
 		
-		text: [FlexScale,Ellipsis,{
-			flexShrink: 1,
-			fontWeight: 700,
-			fontSize: rem(1.5),
-		}]
+		// text: [FlexScale,Ellipsis,{
+		// 	flexShrink: 1,
+		// 	fontWeight: 700,
+		// 	fontSize: rem(1.5),
+		// }]
 	}]
 })
 
@@ -49,7 +50,7 @@ export interface IMilestoneSelectProps {
 	milestones?:List<Milestone>
 	enabledMilestones?:List<Milestone>
 	milestone:Milestone
-	onSelect: (milestone:Milestone) => any
+	onItemSelected: (milestone:Milestone) => any
 	repoId:number
 }
 
@@ -78,56 +79,50 @@ export interface IMilestoneSelectState {
 @PureRender
 export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMilestoneSelectState> {
 	
+	static NoMilestone = {
+		key: null,
+		value: Milestone.EmptyMilestone,
+		content: <LabelChip
+			styles={{
+				backgroundColor: 'white',
+				//border: `${convertRem(0.1)}px solid black`
+			}}
+			showIcon
+			label={cloneObjectShallow(Milestone.EmptyMilestone,{color: 'ffffff'})} />
+	}
+	
 	static defaultProps = {
 		underlineShow: true
 	}
 	
-	/**
-	 * Create Label
-	 *
-	 * @param milestone
-	 * @returns {any}
-	 */
-	private makeItemNode = (milestone:Milestone) => {
-		const
-			{styles} = this.props
-		
-		return <LabelChip key={milestone.id}
-		                  label={milestone}
-		                  labelStyle={styles.labelChip}
-		                  textStyle={styles.labelChip.text}
-		                  showIcon={true}/>
-		
-	}
 	
 	/**
 	 * Create menu items
 	 *
-	 * @param milestones
+	 * @param props
 	 * @returns {any[]}
 	 */
-	makeItems(milestones:List<Milestone>) {
+	makeItems(props) {
 		
 		const
 			{
-				styles
-			} = this.props,
+				styles,
+				milestones,
+				repoId
+			} = props
 			
-			items = [{
-				key: 'empty-milestone',
-				value: '',
-				node: this.makeItemNode(Milestone.EmptyMilestone)
-			}] as ISelectFieldItem[]
+			
 			
 		
 		
 		
-		return items.concat(milestones.map(milestone => ({
-			key: milestone.url,
-			value: milestone.id,
-			node: this.makeItemNode(milestone),
-			data: milestone
-		})).toArray())
+		return [MilestoneSelect.NoMilestone,...milestones
+			.filter(it => !repoId || it.repoId === repoId)
+			.map(milestone => ({
+				key: milestone.id,
+				value: milestone,
+				content: <LabelChip showIcon label={milestone} />
+			})).toArray() as ISelectFieldItem[]]
 	}
 	
 	/**
@@ -137,10 +132,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 	 */
 	private updateState = (props = this.props) => {
 		this.setState({
-			items: this.makeItems(props
-				.milestones
-				.filter(it => it.repoId === props.repoId) as List<Milestone>)
-				
+			items: this.makeItems(props)
 		})
 	}
 	
@@ -149,8 +141,8 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 	 *
 	 * @param item
 	 */
-	private onSelect = (item:ISelectFieldItem) => {
-			this.props.onSelect(item && item.data as Milestone)
+	private onItemSelected = (item:ISelectFieldItem) => {
+			this.props.onItemSelected(item && item.value as Milestone)
 	}
 	
 	/**
@@ -177,15 +169,18 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 	render() {
 		const
 			{underlineShow, theme, iconStyle,styles,milestone } = this.props,
-			{items} = this.state
+			{items} = this.state,
+			
+			milestoneId = getValue(() => milestone.id,null),
+			value = items.find(it => milestoneId  === it.key)
 		
 		
 		//labelStyle={styles.form.milestone.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
-			value={milestone ? milestone.id : ''}
+			value={milestoneId}
 			items={items}
-			onItemSelected={this.onSelect}
+			onItemSelected={this.onItemSelected}
 		>
 			
 		</SelectField>

@@ -1,7 +1,15 @@
 
 
-declare interface ISelectFieldItemProps {
+
+
+declare interface ISelectFieldItem  {
+	key: number|string
 	value: any
+	
+	/**
+	 * Optional value to use with filtering
+	 */
+	textContent?:string
 	
 	style?: any
 	
@@ -13,9 +21,4 @@ declare interface ISelectFieldItemProps {
 	
 	rightAccessory?: any
 	rightAccessoryStyle?: any
-	
-}
-
-declare interface ISelectFieldItem extends ISelectFieldItemProps {
-	
 }

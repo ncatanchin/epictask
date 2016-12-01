@@ -11,6 +11,8 @@ import { SearchState } from "./SearchState"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { SearchItem } from "epic-models"
 import { isString, getValue } from "typeguard"
+import { PureRender } from "epic-ui-components/common"
+import { shallowEquals } from "epic-global"
 
 
 // Constants
@@ -18,7 +20,7 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
@@ -50,6 +52,7 @@ export interface ISearchResultsState {
  * @constructor
  **/
 
+
 export class SearchResults extends React.Component<ISearchResultsProps,ISearchResultsState> {
 	
 	
@@ -72,6 +75,11 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
 		log.debug(`new props received`, nextProps)
 	}
+	
+	shouldComponentUpdate(nextProps,nextState) {
+		return !shallowEquals(this.state,nextState,'searchState.items','open','anchor')
+	}
+	
 	
 	
 	/**
@@ -96,11 +104,11 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			rect = anchor && (anchor as any).getBoundingClientRect(),
 			top = (rect.height + rect.top),
 			winHeight = window.innerHeight,
-			maxHeight = winHeight - top - (winHeight * .1),
-			maxHeightStr = `${maxHeight - 48}px`,
+			maxHeight = winHeight - top - 50, //(winHeight * .1),
+			maxHeightStr = `${maxHeight}px`,
 			
 			elem = ReactDOM.findDOMNode(this),
-			height = !elem || !elem.scrollHeight ? maxHeightStr : elem.scrollHeight + 'px',
+			height = 'auto', //!elem || !elem.scrollHeight ? maxHeightStr : elem.scrollHeight + 'px',
 			
 			style = {
 				position: 'absolute',
@@ -108,16 +116,16 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				width: rect.width + 'px',
 				top: `${top}px`,
 				left: rect.left + 'px',
-				height,
-				maxHeight: maxHeightStr,
-				overflow: 'auto',
+				
+				height: maxHeightStr,
+				overflow: 'hidden',
 				fontFamily: theme.fontFamily,
 				fontWidth: theme.fontWeight,
 				zIndex: 99999
 			}
 		
 		
-		log.debug(`Container style`, getValue(() => elem.scrollHeight), rect, top, winHeight, maxHeight)
+		log.debug(`Container style`, getValue(() => elem.scrollHeight), rect, top, winHeight, maxHeight,anchor)
 		
 		return style
 		
@@ -152,15 +160,6 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		this.props.controller.removeListener(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
 	}
 	
-	/**
-	 * Render results list
-	 *
-	 * @param props
-	 * @returns {any}
-	 */
-	renderResults(props) {
-		
-	}
 	
 	/**
 	 * Render results when inline

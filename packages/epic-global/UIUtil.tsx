@@ -152,11 +152,12 @@ export function MappedProps(
 			}
 			
 			remap = () => {
-				
-				this.setState({
-					lastProps: null,
-					values: null
-				},() => this.mapProps())
+				setImmediate(() =>
+					this.setState({
+						lastProps: null,
+						values: null
+					},() => this.mapProps())
+				)
 			}
 			
 			/**

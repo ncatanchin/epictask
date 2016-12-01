@@ -29,7 +29,7 @@ export interface IPopoverProps {
 	/**
 	 * The content of the popover.
 	 */
-	children?: any,
+	children?: any
 	
 	/**
 	 * Callback function fired when the popover is requested to be closed.
@@ -37,15 +37,15 @@ export interface IPopoverProps {
 	 * @param {string} reason The reason for the close request. Possibles values
 	 * are 'clickAway' and 'offScreen'.
 	 */
-	onRequestClose?: Function,
+	onRequestClose?: Function
 	/**
 	 * If true, the popover is visible.
 	 */
-	open: boolean,
+	open: boolean
 	/**
 	 * Override the inline-styles of the root element.
 	 */
-	style?: any,
+	style?: any
 	/**
 	 * This is the point on the popover which will attach to
 	 * the anchor's origin.
@@ -53,17 +53,19 @@ export interface IPopoverProps {
 	 * vertical: [top, middle, bottom]
 	 * horizontal: [left, center, right].
 	 */
-	targetOrigin?: TOrigin,
+	targetOrigin?: TOrigin
 	/**
 	 * If true, the popover will render on top of an invisible
 	 * layer, which will prevent clicks to the underlying
 	 * elements, and trigger an `onRequestClose('clickAway')` call.
 	 */
-	useLayerForClickAway?: boolean,
+	useLayerForClickAway?: boolean
+	
+	noAdjustment?: boolean
 	/**
 	 * The zDepth of the popover.
 	 */
-	zDepth?: TZDepth,
+	zDepth?: TZDepth
 }
 
 export class Popover extends Component<IPopoverProps,any> {
@@ -230,7 +232,7 @@ export class Popover extends Component<IPopoverProps,any> {
 			return
 		}
 		
-		const {targetOrigin, anchorOrigin} = this.props
+		const {targetOrigin, anchorOrigin,noAdjustment} = this.props
 		
 		const anchor = this.getAnchorPosition(anchorEl)
 		let target = this.getTargetPosition(targetEl)
@@ -244,14 +246,17 @@ export class Popover extends Component<IPopoverProps,any> {
 			this.autoCloseWhenOffScreen(anchor)
 		}
 		
-		if (this.props.canAutoPosition) {
-			target = this.getTargetPosition(targetEl) // update as height may have changed
-			targetPosition = this.applyAutoPositionIfNeeded(anchor, target, targetOrigin, anchorOrigin, targetPosition)
+		if (noAdjustment !== true) {
+			if (this.props.canAutoPosition) {
+				target = this.getTargetPosition(targetEl) // update as height may have changed
+				targetPosition = this.applyAutoPositionIfNeeded(anchor, target, targetOrigin, anchorOrigin, targetPosition)
+			}
+			
+			
+			targetEl.style.top = `${Math.max(0, targetPosition.top)}px`
+			targetEl.style.left = `${Math.max(0, targetPosition.left)}px`
+			targetEl.style.maxHeight = `${window.innerHeight}px`
 		}
-		
-		targetEl.style.top = `${Math.max(0, targetPosition.top)}px`
-		targetEl.style.left = `${Math.max(0, targetPosition.left)}px`
-		targetEl.style.maxHeight = `${window.innerHeight}px`
 	}
 	
 	autoCloseWhenOffScreen(anchorPosition) {

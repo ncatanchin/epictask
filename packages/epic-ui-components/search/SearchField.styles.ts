@@ -8,9 +8,10 @@ export default function baseStyles(topStyles, theme, palette) {
 	
 	
 	return [ {
-		wrapper: [ PositionRelative, FillWidth, {
+		wrapper: [ PositionRelative, FillWidth, theme.inputBorder, {
 			borderRadius: rem(0.2),
-			backgroundColor: Transparent
+			backgroundColor: primary.hue3,
+			//backgroundColor: Transparent
 		} ],
 		
 		
@@ -30,12 +31,6 @@ export default function baseStyles(topStyles, theme, palette) {
 			FlexScale,
 			{
 				minWidth: '30%',
-				
-				hint: [ {
-					backgroundColor: Transparent,
-					color: text.secondary,
-					fontWeight: 400
-				} ],
 				
 				
 				input: [ FillWidth, makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {

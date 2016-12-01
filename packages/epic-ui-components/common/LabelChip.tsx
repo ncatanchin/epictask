@@ -25,7 +25,7 @@ const
  * ILabelChipProps
  */
 export interface ILabelChipProps {
-	theme?:any
+	style?:any
 	styles?:any
 	onClick?:React.MouseEventHandler<any>
 	mode?:TChipMode
@@ -72,7 +72,9 @@ export class LabelChip extends React.Component<ILabelChipProps,any> {
 				label,
 				labelStyle,
 				iconStyle,
-				textStyle
+				textStyle,
+				styles,
+				style
 			} = props,
 			isMilestone = !isLabel(label),
 			
@@ -84,7 +86,8 @@ export class LabelChip extends React.Component<ILabelChipProps,any> {
 				onClick,
 				iconStyle,
 				textStyle,
-				style: labelStyle
+				style: makeStyle(style,labelStyle),
+				styles
 			}
 		
 		return <Chip

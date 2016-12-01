@@ -219,7 +219,7 @@ class BaseChip extends React.Component<IChipProps,any> {
 			itemStyle = makeStyle(
 				styles,
 				this.colorStyle(item),
-				...(Array.isArray(style) ? style : [style])
+				style
 			),
 			
 			hovering = isHovering(this,'label','labelDot'),

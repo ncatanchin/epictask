@@ -7,9 +7,9 @@ import { List } from "immutable"
 import { connect } from "react-redux"
 import { Issue, AvailableRepo, Repo, User, Label } from "epic-models"
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor } from "epic-ui-components/fields"
-import { Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender } from "epic-ui-components/common"
+import { Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender, TextField } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
-import { MenuItem, SelectField, TextField } from "material-ui"
+
 import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow } from "epic-global"
 import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
 import {
@@ -28,6 +28,7 @@ import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "epic-ui-components/pages/issue-edit/IssueEditState"
 import IssueEditController from "epic-ui-components/pages/issue-edit/IssueEditController"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { RepoSelect } from "epic-ui-components/fields/RepoSelect"
 
 
 const
@@ -74,88 +75,22 @@ const baseStyles = (topStyles, theme, palette) => {
 		} ],
 		
 		
-		input: [ {
-			padding: '0.3rem 1rem',
-			fontWeight: 400,
-			
-			floatingLabel: [ {
-				left: rem(1)
-			} ],
-			
-			floatingLabelFocus: [ {
-				transform: 'perspective(1px) scale(0.75) translate3d(-10px, -20px, 0px)'
-			} ],
-			
-			underlineFocus: [ {
-				width: 'auto',
-				left: 10,
-				right: 10
-			} ]
-			
-		} ],
-		
 		
 		form: [ FlexScale, FlexColumn, FillWidth, {
 			
-			title: [ {
-				flex: '1 0 50%',
-				padding: "1rem 0",
-				height: 50,
-				marginBottom: rem(2.2)
-			} ],
+			title: [ FlexScale ],
 			
-			repo: [ FlexScale, {
-				height: 50,
-				margin: "1.1rem 0 1.1rem 0.5rem",
-				padding: "1rem 0",
-				menu: [ {
-					transform: 'translate(0,-30%)'
-				} ],
-				list: [ {
-					padding: '0 0 0 0 !important'
-				} ],
-				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-					label: [ FlexScale, Ellipsis, {
-						fontSize: makeThemeFontSize(1.2),
-						padding: '0 0 0 1rem'
-					} ]
-				} ]
+			repo: [ FlexScale,{
+				
+				
 			} ],
 			
 			
-			milestone: [ FlexScale, {
-				height: 50,
-				margin: "1.1rem 0 1.1rem 0.5rem",
-				padding: "1rem 0",
-				menu: [ {
-					transform: 'translate(0,-30%)'
-				} ],
-				list: [ {
-					padding: '0 0 0 0 !important'
-				} ],
-				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-					label: [ FlexScale, Ellipsis, {
-						fontSize: makeThemeFontSize(1),
-						padding: '0 0 0 1rem'
-					} ]
-				} ]
+			milestone: [ FlexScale,{
+				
 			} ],
 			
-			assignee: [ FlexScale, {
-				height: 50,
-				margin: "1.1rem 0 1.1rem 0rem",
-				padding: "1rem 0",
-				menu: [ {
-					transform: 'translate(0,-30%)'
-				} ],
-				list: [ {
-					padding: '0 0 0 0 !important'
-				} ],
-				item: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-					label: [ FlexScale, Ellipsis, {
-						padding: '0 0 0 1rem'
-					} ]
-				} ],
+			assignee: [ FlexScale,{
 				
 				avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
 					label: {
@@ -169,7 +104,12 @@ const baseStyles = (topStyles, theme, palette) => {
 				} ]
 			} ],
 			
-			row1: [ ...rowStyle, { overflow: 'visible' } ],
+			/**
+			 * Label editor styling
+			 */
+			labels: [],
+			
+			row1: [ ...rowStyle,{ marginBottom: rem(0.8) } ],
 			row2: [ ...rowStyle, { marginBottom: rem(0.8) } ],
 			row3: [ ...rowStyle, {} ],
 			
@@ -324,10 +264,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		let
 			{editingIssue} = this
 		
+		editingIssue = cloneObjectShallow(editingIssue,newIssueProps)
 		
-		this.viewController.setEditingIssue(
-			cloneObjectShallow(editingIssue,newIssueProps)
-		)
+		this.viewController.setEditingIssue(editingIssue)
+		
+		return editingIssue
 	}
 	
 	
@@ -355,26 +296,27 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * Title change
 	 *
 	 * @param event
-	 * @param value
 	 */
-	onTitleChange = (event, value) => {
+	onTitleChange = event => {
+		const
+			{value} = event.target as any
+		
 		log.debug(`Title change`,value)
+		
 		this.setState({ titleValue: value })
 	}
 	
 	/**
 	 * Repo Change
 	 *
-	 * @param event
-	 * @param index
-	 * @param value
+	 * @param repo
 	 */
-	onRepoChange = (event, index, value) => {
+	onRepoChange = (repo:AvailableRepo) => {
 		const
 			editingIssue = new Issue(cloneObjectShallow(
 				this.editingIssue || new Issue(),
 				this.textInputState(),{
-					repoId: value
+					repoId: repo.id
 				}
 			))
 		
@@ -383,12 +325,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		//getIssueActions().setEditingIssue(editingIssue)
 	}
 	
-	onMilestoneChange = (milestone) => {
+	onMilestoneItemSelected = (milestone) => {
 		this.updateIssueState({ milestone })
 		
 	}
 	
-	onAssigneeChange = (assignee) => {
+	onAssigneeItemSelected = (assignee) => {
 		this.updateIssueState({ assignee })
 	}
 	
@@ -406,33 +348,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 	
 	
-	/**
-	 * Create repo menu items
-	 *
-	 * @param availableRepos
-	 * @param s
-	 * @returns {any[]}
-	 */
-	makeRepoMenuItems(availableRepos:List<AvailableRepo>, s) {
-		
-		const makeRepoLabel = (availRepoItem) => (
-			<div style={s.form.repo.item}>
-				<Icon iconSet='octicon' iconName='repo'/>
-				<RepoLabel repo={availRepoItem.repo} style={s.form.repo.item.label}/>
-			
-			</div>
-		)
-		
-		return availableRepos.map(availRepoItem => (
-			<MenuItem key={availRepoItem.id}
-			          className='issueEditDialogFormMenuItem'
-			          value={availRepoItem.id}
-			          style={s.menuItem}
-			          primaryText={makeRepoLabel(availRepoItem)}
-			/>
-		))
-	}
-	
+
 	/**
 	 * Create a new state for dialog
 	 *
@@ -443,8 +359,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	getNewState(props:IIssueEditDialogProps, editingIssue:Issue = null) {
 		const
 			{
-				styles,
-				open
+				styles
 			} = props
 			
 		if (!editingIssue)
@@ -454,12 +369,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			{ availableRepos } = props
 			//repo = availableRepos.find()
 		
-		const
-			repoId = editingIssue && editingIssue.repoId,
-			newState = {
-				repoMenuItems: this.makeRepoMenuItems(availableRepos, styles)
-			}
+		if (availableRepos.size < 1)
+			return {}
 		
+		let
+			repoId = editingIssue && editingIssue.repoId,
+			newState = {}
+		
+		if (!repoId)	{
+			editingIssue = this.updateIssueState({repoId: availableRepos.get(0).id})
+		}
+			
 		if (!editingIssue)
 			return newState as any
 		
@@ -558,15 +478,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			{ready,saveError, saving} = this.viewState
 		
 		let
-			editingIssue = this.editingIssue
+			editingIssue = this.editingIssue,
+			repoId = editingIssue.repoId
 		
 		const
-			availableRepo = getValue(() => availableRepos.find(it => it.id === editingIssue.repoId))
+			availableRepo = getValue(() => availableRepos.find(it => it.id === repoId))
 		
 		let
 			repo = editingIssue && (editingIssue.repo || getValue(() => availableRepo.repo))
 		
-		log.info('ready/repo',ready,repo,editingIssue)
+		log.info('ready/repo',ready,repoId,repo,editingIssue)
 		if (!ready || !repo)
 			return React.DOM.noscript()
 		
@@ -610,82 +531,50 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						<TextField value={this.state.titleValue || ''}
 						           onChange={this.onTitleChange}
 						           errorStyle={{transform: 'translate(0,1rem)'}}
-						           errorText={getGithubErrorText(saveError,'title')}
-						           hintText="TITLE"
-						           hintStyle={makeStyle(styles.input.hint,{transform: 'translate(1.3rem,0rem)'})}
+						           error={getGithubErrorText(saveError,'title')}
+						           placeholder="TITLE"
 						           style={styles.form.title}
-						           inputStyle={styles.input}
-						           underlineStyle={styles.input.underlineDisabled}
-						           underlineDisabledStyle={styles.input.underlineDisabled}
-						           underlineFocusStyle={styles.input.underlineFocus}
-						           underlineShow={true}
-						           fullWidth={true}
-						           
-						           autoFocus/>
+						           inputStyle={FlexScale}
+						           autoFocus />
 						
 					</div>
 					<div style={styles.form.row2}>
 						{/* REPO */}
 						{!editingIssue.id &&
 						
-						<SelectField value={editingIssue.repoId}
-						             style={makeStyle(styles.form.repo,styles.menu)}
-						             inputStyle={styles.input}
-						             labelStyle={styles.form.repo.item.label}
-						             iconStyle={styles.menu}
-						             onChange={this.onRepoChange}
-						             underlineStyle={styles.input.underlineDisabled}
-						             underlineDisabledStyle={styles.input.underlineDisabled}
-						             underlineFocusStyle={styles.input.underlineFocus}
-						             menuListStyle={makeStyle(styles.select.list)}
-						             menuStyle={makeStyle(styles.menu,styles.form.repo.menu)}
-						             underlineShow={true}
-						             fullWidth={true}
-						>
-							
-							{this.state.repoMenuItems}
-						</SelectField>
+						<RepoSelect
+							repo={availableRepo}
+						  onItemSelected={this.onRepoChange}
+							style={makeStyle(styles.form.repo,makeMarginRem(0.5,canAssign ? 0.5 : 0,0.5,0))}
+						  />
 						}
 						{/* Only show assignee drop down if push permission */}
 						{canAssign &&
-						<AssigneeSelect
-							style={makeStyle(styles.form.assignee,styles.menu)}
-							assignee={editingIssue.assignee}
-							repoId={editingIssue.repoId}
-							underlineShow={true}
-							onSelect={this.onAssigneeChange}/>
+							<AssigneeSelect
+								style={makeStyle(styles.form.assignee,makeMarginRem(0.5,0.5,0.5,0))}
+								assignee={editingIssue.assignee}
+								repoId={editingIssue.repoId}
+								onItemSelected={this.onAssigneeItemSelected}/>
 						}
 						
 						
 						{/* MILESTONE */}
-						<MilestoneSelect
-							style={makeStyle(styles.form.milestone,styles.menu)}
-							styles={{
-								label: {
-									paddingTop: 0
-								},
-								labelChip:{
-									height: rem(2),
-									text: {
-										fontSize: rem(1.2)
-									}
-								}
-							}}
+						{canAssign && <MilestoneSelect
+							style={makeStyle(styles.form.milestone,makeMarginRem(0.5,0))}
 							milestone={editingIssue.milestone}
 							repoId={editingIssue.repoId}
-							iconStyle={{top:8,right:-14}}
-							underlineShow={true}
-							onSelect={this.onMilestoneChange}
-						/>
+							onItemSelected={this.onMilestoneItemSelected}
+						/>}
 					
 					
 					</div>
 					
+					<div style={styles.form.row2}>
 					<LabelFieldEditor labels={editingIssue.labels || []}
 					                  id="issueEditDialogLabels"
 					                  hint="Labels"
-					             
-					                  style={{marginBottom: rem(1.5)}}
+					                  styles={styles.form.labels}
+					                  style={makeStyle(Styles.FillWidth,{marginBottom: rem(1.5)})}
 					                  availableLabels={availableRepo.labels || []}
 					                  onLabelsChanged={this.onLabelsChanged}
 					                  onKeyDown={(event) => {
@@ -693,7 +582,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					                  }}
 					                  
 					/>
-					
+					</div>
 					<MarkdownEditor
 						ref={this.setMarkdownEditor}
 						autoFocus={false}

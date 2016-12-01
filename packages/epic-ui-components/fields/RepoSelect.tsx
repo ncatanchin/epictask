@@ -2,18 +2,18 @@
 
 import { connect } from 'react-redux'
 import { List } from 'immutable'
-import { Avatar, PureRender } from "../common"
+import { Avatar, PureRender, RepoLabel } from "../common"
 
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { User } from "epic-models"
-
+import { Repo, AvailableRepo } from "epic-models"
+import {createSelector} from 'reselect'
 
 import { SelectField } from "./SelectField"
-import { assigneesSelector } from "epic-typedux"
 import { shallowEquals } from  "epic-global"
 import filterProps from 'react-valid-props'
 import { getValue } from "typeguard"
+import { availableReposSelector } from "epic-typedux/selectors"
 
 // Constants
 const log = getLogger(__filename)
@@ -23,7 +23,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 	//
 	// avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
 	// 	height: rem(3),
-	//
+	//	
 	// 	label: {
 	// 		fontWeight: 500,
 	// 	},
@@ -31,7 +31,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 	// 		height: rem(2.2),
 	// 		width: rem(2.2),
 	// 	}
-	//
+	//	
 	// } ]
 })
 
@@ -39,26 +39,22 @@ const baseStyles = (topStyles, theme, palette) => ({
 /**
  * IMilestoneSelectProps
  */
-export interface IAssigneeSelectProps extends IThemedAttributes {
+export interface IRepoSelectProps extends IThemedAttributes {
 	
 	labelStyle?: any
-	avatarStyle?: any
-	avatarLabelStyle?: any
-	avatarImageStyle?: any
 	
+	repos?: List<AvailableRepo>
 	
-	assignees?: List<User>
+	repo: AvailableRepo
 	
-	assignee: User
+	onItemSelected: (repo: AvailableRepo) => any
 	
-	onItemSelected: (assignee: User) => any
-	repoId: number
 }
 
 /**
  * IMilestoneSelectState
  */
-export interface IAssigneeSelectState {
+export interface IRepoSelectState {
 	items:ISelectFieldItem[]
 }
 
@@ -69,26 +65,27 @@ export interface IAssigneeSelectState {
  * @constructor
  **/
 
-@connect(createStructuredSelector({
-	assignees: assigneesSelector
-}))
+@connect(() => {
+	const
+		reposSelector = createSelector(
+			availableReposSelector,
+			(state,props) => props.repos,
+			(allRepos,propRepos) => propRepos || allRepos
+		)
+	return createStructuredSelector({
+		repos: reposSelector
+	})
+})
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles, 'dialog')
 @PureRender
-export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssigneeSelectState> {
+export class RepoSelect extends React.Component<IRepoSelectProps,IRepoSelectState> {
 	
-	static UnassignedItem = {
-		key: null,
-		value: null,
-		content: <Avatar
-			user={User.UnknownUser}
-			labelPlacement='after'
-		/>
-	}
 	
 	static defaultProps = {}
+	
 	
 	/**
 	 * Create menu items
@@ -101,25 +98,18 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 		const
 			{
 				styles,
-				repoId,
-				assignees
-			} = this.props,
+				repos
+			} = props
 			
 			// MAP ITEMS
-			items = assignees
-				.filter(assignee => !repoId ||
-				getValue(() => assignee.repoIds.includes(repoId), false))
-				.map(assignee => ({
-					key: assignee.id,
-					value: assignee,
-					content: <Avatar
-						user={assignee}
-						labelPlacement='after'
-					/>
+		return repos
+				.map(repo => ({
+					key: repo.id,
+					value: repo,
+					content: <RepoLabel repo={repo.repo}/>
 				})).toArray()
 		
 		
-		return [ AssigneeSelect.UnassignedItem, ...items ]
 	}
 	
 	/**
@@ -130,6 +120,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 	private updateState = (props = this.props) => {
 		this.setState({
 			items: this.makeItems(props)
+			
 		})
 	}
 	
@@ -139,7 +130,7 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 	 * @param item
 	 */
 	private onItemSelected = (item: ISelectFieldItem) => {
-		this.props.onItemSelected(item && item.value as User)
+		this.props.onItemSelected(item && item.value as AvailableRepo)
 	}
 	
 	/**
@@ -153,8 +144,8 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 	 * @param nextProps
 	 * @param nextContext
 	 */
-	componentWillReceiveProps(nextProps: IAssigneeSelectProps, nextContext: any): void {
-		if (!shallowEquals(this.props, nextProps, 'assignees', 'assignee', 'repoId'))
+	componentWillReceiveProps(nextProps: IRepoSelectProps, nextContext: any): void {
+		if (!shallowEquals(this.props, nextProps, 'repos', 'repo'))
 			this.updateState(nextProps)
 	}
 	
@@ -165,19 +156,19 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 	 */
 	render() {
 		const
-			{ labelStyle, theme, styles, assignees, assignee } = this.props,
+			{ labelStyle, theme, styles, repos, repo } = this.props,
 			{items} = this.state,
 			
 			// GET SELECTED ITEM AS VALUE
-			value = assignee && items.find(item =>
-				item.key === getValue(() => assignee.id))
+			value = repo && items.find(item =>
+				item.key === getValue(() => repo.id))
 		
 		
-		//labelStyle={styles.form.assignee.item.label}
+		//labelStyle={styles.form.repo.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
 			value={value}
-			items={items.filter(it => !value || it.key !== value.key)}
+			items={items}
 			onItemSelected={this.onItemSelected}
 		/>
 	}

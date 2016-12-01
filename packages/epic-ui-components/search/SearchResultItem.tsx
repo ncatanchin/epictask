@@ -102,6 +102,7 @@ function baseStyles(topStyles,theme,palette) {
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
 	item:SearchItem
+	controller:SearchController
 	selected?:boolean
 }
 
@@ -118,7 +119,35 @@ export interface ISearchResultItemState {
  * @class SearchResultItem
  * @constructor
  **/
-
+@MappedProps((props:ISearchResultItemProps,mapper) => {
+	const
+		{item,controller} = props,
+		state = controller.getState(),
+		{selectedIndex,items} = state,
+		index = items.indexOf(item)
+	
+	return {
+		selected: index === selectedIndex
+	}
+}, {
+	onMount(mapper, props, data) {
+		data.onStateChange = () => {
+			log.debug(`Remapping with props`,props)
+			setImmediate(() => mapper.remap())
+		}
+		props.controller.addListener(SearchEvent[SearchEvent.StateChanged],data.onStateChange)
+	},
+	
+	onUnmount(mapper,props,data) {
+		if (data.onStateChange)
+			props.controller.removeListener(SearchEvent[SearchEvent.StateChanged],data.onStateChange)
+		
+		data.onStateChange = null
+	}
+	
+	
+	
+})
 @ThemedStyles(baseStyles)
 @PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {

@@ -3,107 +3,54 @@ import { PureRender, makeComponentStyles } from "epic-ui-components"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { shallowEquals, shortId, guard } from "epic-global"
 import filterProps from "react-valid-props"
-import { FlexScale, FlexRowCenter, TextField, Popover } from "../common"
-import { getValue } from "typeguard"
+import { Flex,FlexScale, FlexColumnCenter, FlexRowCenter, TextField, Popover } from "../common"
+import { getValue, isNil } from "typeguard"
 import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
 	CommandContainerBuilder,
-	CommandContainer
+	CommandContainer, ICommandComponentProps
 } from "epic-command-manager-ui"
 import { CommonKeys, CommandType } from "epic-command-manager"
+import { Icon } from "epic-ui-components/common/icon/Icon"
+import { isHovering, makeWidthConstraint } from "epic-styles/styles"
+import baseStyles from "./SelectField.styles"
 
 // Constants
 const log = getLogger(__filename)
-
-const baseStyles = (topStyles,theme,palette) => {
-	
-	const
-		{primary,accent,text,secondary} = palette
-	
-	return [makeComponentStyles(theme,palette),{
-		color: text.primary,
-		fill: text.secondary,
-		backgroundColor: Transparent,//primary.hue2 //primary.hue2//,text.primary
-		
-		menu: [{
-			
-		}],
-		
-		icon: [{
-			fill: text.secondary,
-			transform: 'translate(0,-0.6rem)'
-		}],
-		
-		list: {
-			padding: 0,
-			paddingTop: 0,
-			paddingBottom: 0,
-			backgroundColor: 'transparent'
-		},
-		
-		menuItem: [{
-			//color: accent.hue1,
-			
-			content: [{
-				//color: accent.hue1
-			}]
-		}],
-		
-		item: [FlexRowCenter,makePaddingRem(0,1,0,0),{
-			backgroundColor: primary.hue2,
-			color: text.primary,
-			hover: {
-				color: text.primary + ' !important',
-				backgroundColor: accent.hue1 + ' !important'
-			}
-			
-		}],
-		
-		label: [FlexScale, FillHeight,FlexRow,makeFlexAlign('center','flex-start'),Ellipsis, makePaddingRem(0,2,0,0), {
-			color: accent.hue1,
-			fontWeight: 500,
-			letterSpacing: rem(0.1),
-			fontSize: themeFontSize(1.2),
-			top: 'auto'
-			
-		}]
-	}]
-}
-
 
 
 
 /**
  * ISelectProps
  */
-export interface ISelectFieldProps extends IThemedAttributes {
+export interface ISelectFieldProps extends IThemedAttributes, ICommandComponentProps {
 	
 	/**
 	 * Id is required
 	 */
-	id?:string
+	id?: string
 	
 	/**
 	 * Show drop down arrow
 	 */
-	showIcon?:boolean
+	showOpenControl?: boolean
 	
 	/**
 	 * Style drop down arrow
 	 */
-	iconStyle?:any
+	iconStyle?: any
 	
 	/**
 	 * All the items in the list
 	 */
-	items:ISelectFieldItemProps[]
+	items: ISelectFieldItem[]
 	
 	/**
 	 * Currently selected item - must be a "value" in the list of items
 	 */
-	value:any
+	value: any
 	
 	/**
 	 * On item selected
@@ -111,28 +58,28 @@ export interface ISelectFieldProps extends IThemedAttributes {
 	 * @param item
 	 * @param index
 	 */
-	onItemSelected:(item:ISelectFieldItem,index?:number) => any
+	onItemSelected: (item: ISelectFieldItem, index?: number) => any
 	
 	/**
 	 * On escape key pressed
 	 */
-	onEscape?:() => any
+	onEscape?: () => any
 	
 	
 	/**
 	 * Enable filtering by text
 	 */
-	showFilter?:boolean
+	showFilter?: boolean
 	
 	/**
 	 * Filter field style
 	 */
-	filterStyle?:any
+	filterStyle?: any
 	
 	/**
 	 * Filter input style
 	 */
-	filterInputStyle?:any
+	filterInputStyle?: any
 	
 }
 
@@ -143,32 +90,42 @@ export interface ISelectFieldState {
 	/**
 	 * Open or closed
 	 */
-	open?:boolean
+	open?: boolean
 	
 	/**
 	 * Selected index
 	 */
-	selectedIndex?:number
+	selectedIndex?: number
 	
 	/**
 	 * Backup id
 	 */
-	id?:string
+	id?: string
 	
 	/**
 	 * Filtering text
 	 */
-	filterText?:string
+	filterText?: string
 	
 	/**
 	 * Component ref
 	 */
-	rootRef?:any
+	rootRef?: any
 	
 	/**
 	 * DOM node ref
 	 */
-	rootRefElem?:any
+	rootRefElem?: any
+	
+	/**
+	 * Value content
+	 */
+	valueContent?: any
+	
+	/**
+	 * Currently visible items
+	 */
+	visibleItems?: ISelectFieldItem[]
 }
 
 /**
@@ -177,35 +134,36 @@ export interface ISelectFieldState {
  * @class Select
  * @constructor
  **/
-
-@ThemedStyles(baseStyles,'dialog')
+@CommandComponent()
+@ThemedStyles(baseStyles)
 @PureRender
-export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldState> {
+export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldState>  implements ICommandComponent  {
 	
 	static defaultProps = {
-		underlineShow: true
+		showOpenControl: true
 	}
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {
 			open: false,
 			id: `select-field-${shortId()}`,
-			selectedIndex: 0
+			selectedIndex: 0,
+			visibleItems: []
 		}
-	
+		
 	}
-
+	
 	commandItems = makeCommandBuilder(this)
 	
 	
 	get commandComponentId() {
 		return this.id
 	}
-
 	
-	get id():string {
+	
+	get id(): string {
 		return (
 			this.props.id ?
 				`select-field-${this.props.id}` :
@@ -253,14 +211,14 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 * @param item
 	 * @param index
 	 */
-	onItemSelected = (item?:ISelectFieldItem,index?:number) => {
+	onItemSelected = (item?: ISelectFieldItem, index?: number) => {
 		
 		if (!item) {
 			index = this.state.selectedIndex
 			item = this.props.items[ index ]
 		}
 		
-		guard(() => this.props.onItemSelected(item,index))
+		guard(() => this.props.onItemSelected(item, index))
 	}
 	
 	/**
@@ -269,7 +227,56 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 * @returns {any}
 	 */
 	private updateState = (props = this.props) => {
+		const
+			{ items, value } = props
 		
+		let
+			{ selectedIndex, visibleItems } = this.state,
+			selectedItem = visibleItems[ selectedIndex ]
+		
+		let
+			valueContent = getValue(() => value.content),
+			valueItem = getValue(() => items.find(it => [ it.value, it.key ].includes(value)))
+		
+		if (!valueContent)
+			valueContent = getValue(() => valueItem.content,<div>No Value Provided</div>)
+		
+		visibleItems = items.filter(item => !valueItem ||
+		(item !== valueItem))
+		
+		selectedIndex = visibleItems.findIndex(item => item === selectedItem)
+		
+		if (selectedIndex === -1)
+			selectedIndex = 0
+		
+		this.setState({
+			selectedIndex,
+			valueContent,
+			visibleItems
+		})
+	}
+	
+	/**
+	 * Set the selected index
+	 *
+	 * @param selectedIndex
+	 */
+	private setSelectedIndex = selectedIndex => this.setState({ selectedIndex })
+	
+	
+	private makeOnItemMouseOver = (item: ISelectFieldItem, index) => {
+		return (event: React.MouseEvent<any>) => this.setSelectedIndex(index)
+	}
+	
+	private makeOnItemClick = (item: ISelectFieldItem, index) => {
+		return (event: React.MouseEvent<any>) => {
+			this.props.onItemSelected(item)
+			event.preventDefault()
+			event.stopPropagation()
+			
+			this.toggleOpen()
+			//this.setSelectedIndex(index)
+		}
 	}
 	
 	/**
@@ -280,6 +287,34 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	moveSelection = increment => {
 		
 	}
+	
+	/**
+	 * Toggle the open state
+	 */
+	private toggleOpen = () => {
+		const
+			open = !this.state.open
+		
+		this.setState({ open }, open && (() => {
+				
+				const
+					{ rootRefElem } = this.state
+				
+				
+				if (rootRefElem) {
+					const
+						inputElem = $(rootRefElem).find('input')
+					
+					log.debug(`Focusing on`, inputElem, rootRefElem)
+					inputElem.focus()
+				}
+			}))
+	}
+	
+	/**
+	 * On click away - close it down
+	 */
+	private onClickAway = () => this.state.open && this.toggleOpen()
 	
 	/**
 	 * On mount update the state
@@ -296,44 +331,60 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 */
 	componentWillReceiveProps = this.updateState
 	
+	makeResultStyle = (styles,anchorElem) => {
+		
+		const
+			rect = getValue(() => anchorElem.getBoundingClientRect(), {} as any),
+			{width,left,top,height} = rect,
+			winWidth = window.innerWidth
+		
+		return makeStyle(
+			{
+				//width: width || 'auto',
+				minWidth: width || 'auto',
+				maxWidth: isNil(left) ? "auto" :  winWidth - left
+			},
+			styles.items,
+			styles.items[':focus']
+		)
+	}
+	
 	
 	render() {
 		const
-			{ placeholder,styles,style,showFilter,filterStyle,filterInputStyle,iconStyle,value,items } = this.props,
-			{filterText,open} = this.state,
-			{id} = this
+			{ commandContainer, placeholder, styles, style, showOpenControl, showFilter, filterStyle, filterInputStyle, iconStyle } = this.props,
+			{ rootRefElem, filterText, open, visibleItems, valueContent, selectedIndex } = this.state,
+			{ id } = this,
+			focused = commandContainer && commandContainer.isFocused()
+		
+		
+		const
+			resultsStyle = this.makeResultStyle(styles,rootRefElem)
+		
 		
 		return <CommandRoot
 			id={this.state.id}
 			component={this}
 			ref={this.setRootRef}
+			data-focused={focused}
 			style={makeStyle(
-				Styles.FlexRow,
-				makeFlexAlign('center','flex-start'),
+				styles,
+				focused && styles[':focus'],
 				style
 			)}
+			onClick={this.toggleOpen}
 		>
+			{/* SELECTED VALUE */}
+			<FlexScale style={[PositionRelative,styles.value]}>
+				{valueContent}
+			</FlexScale>
 			
-			
-			
-			<Popover
-				canAutoPosition={false}
-				open={open}
-				anchorOrigin={{
-						vertical: 'bottom',
-						horizontal: 'left',
-					}}
-				targetOrigin={{
-						vertical: 'top',
-						horizontal: 'left',
-					}}
-				anchorEl={this.state.rootRefElem}
-				useLayerForClickAway={false}
-			>
-			
-				<div style={styles.items}>
-					
-				</div>
+			{/* OPEN CONTROL */}
+			{showOpenControl &&
+				<FlexColumnCenter style={styles.control}>
+					<Icon iconSet='fa' iconName='chevron-down'/>
+				</FlexColumnCenter>
+			}
 			
 			{/* RENDER CRITERIA */}
 			<TextField
@@ -346,24 +397,58 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				onBlur={this.onFilterBlur}
 				placeholder={placeholder}
 				onChange={this.onFilterChanged}
-				style={makeStyle({
-					zIndex:999,
-					top:0,
-					left:0,
-					maxWidth: '60%'
-				},filterStyle)}
+				style={makeStyle(
+					OverflowHidden,
+					PositionAbsolute,{
+						pointerEvents:'none',
+						opacity: 0,
+						zIndex:999,
+						top:0,
+						left:0,
+						width: 1,
+						height: 1
+					})
+				}
 				inputStyle={filterInputStyle}
 				value={filterText || ''}
 			/>
 			
-		 
-		
+			<Popover
+				canAutoPosition={false}
+				open={open}
+				onRequestClose={this.onClickAway}
+				anchorOrigin={{
+						vertical: 'bottom',
+						horizontal: 'left',
+					}}
+				targetOrigin={{
+						vertical: 'top',
+						horizontal: 'left',
+					}}
+				anchorEl={this.state.rootRefElem}
+				useLayerForClickAway={true}
+			>
+				
+				<div style={resultsStyle}>
+					{visibleItems
+						.map((item, index) =>
+							<SelectFieldItem
+								{...item}
+								styles={styles}
+								onMouseEnter={this.makeOnItemMouseOver(item,index)}
+								onClick={this.makeOnItemClick(item,index)}
+								key={item.key || index}
+								selected={selectedIndex === index}
+								index={index}/>
+						)}
+				</div>
+			
+			
 			</Popover>
 		</CommandRoot>
 	}
 	
 }
-
 
 
 /*
@@ -373,45 +458,74 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
  innerDivStyle={makePaddingRem(0.3,0.5)}
  primaryText={<div style={styles.menuItem.content}>{item.node}</div>} />
  */
-
-
-function SelectFieldItem(props:ISelectFieldItemProps) {
-	
-	const
-		{
-			value,
-			style,
-			content,
-			contentStyle,
-			leftAccessory,
-			leftAccessoryStyle,
-			rightAccessory,
-			rightAccessoryStyle
-		} = props
-	
-	return <FlexRowCenter style={style}>
-		{/* LEFT ACCESSORY*/}
-		{leftAccessory && <Flex style={leftAccessoryStyle} /> }
-		
-		{/* CONTENT */}
-		<FlexScale style={[
-			Styles.FlexScale,
-			contentStyle
-		]}>
-			{content}
-		</FlexScale>
-		
-		{/* RIGHT ACCESSORY*/}
-		{rightAccessory && <Flex style={rightAccessoryStyle} /> }
-	</FlexRowCenter>
+interface ISelectFieldItemProps extends ISelectFieldItem {
+	styles: any
+	index: number
+	selected: boolean
+	onMouseEnter: React.MouseEventHandler<any>
+	onClick: React.MouseEventHandler<any>
 }
 
+@Radium
+@PureRender
+class SelectFieldItem extends React.Component<ISelectFieldItemProps,any> {
+	constructor(props, context) {
+		super(props, context)
+		
+		this.state = {}
+	}
+	
+	render() {
+		const
+			{
+				styles,
+				key = 'null',
+				value,
+				style,
+				index,
+				selected,
+				content,
+				contentStyle,
+				leftAccessory,
+				leftAccessoryStyle,
+				rightAccessory,
+				rightAccessoryStyle,
+				onMouseEnter,
+				onClick
+			} = this.props
+		
+		
+		return <FlexRowCenter
+			onMouseEnter={onMouseEnter}
+			onClick={onClick}
+			data-selected={selected}
+			style={makeStyle(
+				styles.item,
+				selected && styles.item.selected,
+				style
+			)}>
+			
+			{/* LEFT ACCESSORY*/}
+			{leftAccessory && <Flex style={leftAccessoryStyle}/> }
+			
+			{/* CONTENT */}
+			<FlexScale style={[
+				contentStyle
+			]}>
+				{content}
+			</FlexScale>
+			
+			{/* RIGHT ACCESSORY*/}
+			{rightAccessory && <Flex style={rightAccessoryStyle}/> }
+		</FlexRowCenter>
+	}
+}
 
 /**
  * Commands
  */
-function makeCommandBuilder(selectField:SelectField) {
- return (builder:CommandContainerBuilder) =>
+function makeCommandBuilder(selectField: SelectField) {
+	return (builder: CommandContainerBuilder) =>
 		builder
 		//MOVEMENT
 			.command(

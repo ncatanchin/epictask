@@ -32,20 +32,25 @@ function baseStyles(topStyles, theme, palette) {
 		FlexRowCenter,
 		makePaddingRem(0.7,1),
 		
-		makeTransition(['opacity','background-color','box-shadow','border-bottom']),{
+		makeTransition(['opacity','background-color','box-shadow','border-bottom']),
+		theme.inputBorder,{
 			minHeight: rem(4.2),
-		
+			
+			
+			
+			backgroundColor: primary.hue3,
+			
 			input: [
+				theme.input,
 				makePaddingRem(0.6,1),
 				makeMarginRem(0),
-				makeBorderRem(0),
 				FlexAuto,{
-					minHeight: rem(3),
+					//minHeight: rem(3),
 					outline: 0,
 					
 					backgroundColor: bg,
 					color: fg,
-					borderBottom: `0.1rem solid ${colorAlpha(fg,0.1)}`,
+					//borderBottom: `0.1rem solid ${colorAlpha(fg,0.1)}`,
 					boxShadow: 'none',
 					fontFamily,
 					
@@ -54,8 +59,7 @@ function baseStyles(topStyles, theme, palette) {
 						backgroundColor: bg,
 						color: fg,
 						
-						boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1,1)}`,
-						borderBottom: `0.1rem solid ${colorAlpha(fg,0.3)}`,
+						//borderBottom: `0.1rem solid ${colorAlpha(fg,0.3)}`,
 						// borderBottom: 0
 					}
 				}]
@@ -72,7 +76,6 @@ export interface ITextFieldProps extends IThemedAttributes {
 	
 	inputStyle?:any
 	errorStyle?:any
-	
 	error?:string
 	defaultValue?:any
 }

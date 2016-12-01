@@ -23,67 +23,8 @@ const
 
 const baseStyles = (topStyles, theme, palette) => ({
 	root: makeStyle(FlexColumn, FlexAuto, PositionRelative, {
-		minHeight: 72,
-		padding: '1rem 0',
-		boxSizing: 'border-box',
 		
-		noLabel: {
-			minHeight: 30,
-			padding: 0
-		}
-	}),
-	chips: makeStyle(makeTransition([ 'padding-top' ]), FlexRow, FlexAuto, PositionRelative, makeFlexAlign('center', 'flex-start'), {
-		flexWrap: 'wrap',
-		boxSizing: 'border-box',
-		
-		hasValue: {
-			paddingTop: 25
-		},
-		
-		
-		// Fixed scroll mode
-		'fixed-scroll-x': {
-			flexWrap: 'nowrap',
-			overflowX: 'auto'
-		}
-	}),
-	
-	
-	input: makeStyle({
-		flex: '1 0 20rem',
-		width: 'auto',
-		boxSizing: 'border-box'
-		
-	}),
-	
-	inputRules: makeStyle({
-		'> div:first-child, div.chipAutoComplete': makeStyle({
-			display: 'flex !important',
-			flexDirection: 'row',
-			width: 'auto !important',
-			boxSizing: 'border-box'
-		}),
-		' div.chipAutoComplete': {
-			flex: '1 0 20rem !important',
-		},
-		' div.chipAutoComplete.hasValue': {
-			flex: '1 0 20rem !important',
-			
-		},
-		'> div:first-child > div:first-child': makeStyle({
-			boxSizing: 'border-box'
-		}),
-		' input': {
-			//width: 'auto !important',
-			flex: '1 0 20rem !important',
-			boxSizing: 'border-box',
-			marginTop: '14px !important',
-			padding: '0 1rem !important',
-			transform: 'translate(0,-25%)'
-		}
 	})
-	
-	
 })
 
 
@@ -180,10 +121,13 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 	
 	private criteriaRenderer = (selectedChips) => {
 		return selectedChips.map(item =>
-			<Chip
-				onRemove={this.props.onChipRemoved}
-				key={item.id}
-				item={item}/>)
+			<div style={makeStyle(FlexAuto,getValue(() => this.props.styles.chipWrapper,{}))}>
+				<Chip
+					styles={getValue(() => this.props.styles.chip,{})}
+					onRemove={this.props.onChipRemoved}
+					key={item.id}
+					item={item}/>
+			</div>)
 	}
 	
 	render() {
@@ -214,7 +158,7 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 			providers={[this.chipsSearchProvider]}
 			criteria={selectedChips}
 			criteriaRenderer={this.criteriaRenderer}
-			styles={{field:{minWidth: rem(30)}}}
+			styles={[{field:{minWidth: rem(30)}},props.styles]}
 			onEscape={this.props.onEscape}
 			text={query}/>
 		</div>

@@ -175,8 +175,14 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	}
 	
 	private setResults(results:List<SearchResult>) {
+		let
+			items = this.makeItems(results)
+		
+		if (_.isEqual(items.toJS(),this.state.items.toJS())) {
+			items = this.state.items
+		}
 		this.updateState({
-			items: this.makeItems(results),
+			items,
 			results: results,
 			working: false
 		})

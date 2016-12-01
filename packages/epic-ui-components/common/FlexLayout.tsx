@@ -46,6 +46,7 @@ const
 	}
 
 export interface IFlexProps extends React.HTMLAttributes<any> {
+	ref?:any
 	align?:TFlexAlign
 	justify?:TFlexAlign,
 	direction?:TFlexDirection

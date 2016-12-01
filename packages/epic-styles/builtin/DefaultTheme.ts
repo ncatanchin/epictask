@@ -2,6 +2,7 @@ import * as Styles from 'material-ui/styles'
 
 import {ToolPanelLocation} from "epic-global"
 import { Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
+import { colorAlpha } from "epic-styles/styles/ColorTools"
 
 
 /**
@@ -100,18 +101,21 @@ export function DefaultTheme(palette) {
 			alternateText
 		} = palette,
 	
+		
+		
 		// INPUT
-		InputStyle = {
-			color: text.primary,
-			backgroundColor: Transparent,
+		inputBorder = {
+			border: `${convertRem(0.1)}px solid ${primary.hue1}`
+		},
+		inputStyle = [makeTransition(['border','box-shadow','background-color']),inputBorder,{
+			minHeight: rem(4),
 			
-			hint: {
-				zIndex: 5,
-				textTransform: 'uppercase',
-				color: primary.hue4,
-				backgroundColor: 'transparent'
+			':focus': {
+				border: `${convertRem(0.1)}px solid transparent`,
+				backgroundColor: accent.hue1,
+				boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
 			}
-		}
+		}]
 		
 	return Styles.getMuiTheme(_.merge(baseTheme, createStyles({
 		ThemeName: 'DefaultTheme',
@@ -129,6 +133,9 @@ export function DefaultTheme(palette) {
 		alternateTextColor: alternateText.primary,
 		
 		progressIndicatorColor: accent.hue1,// secondary.hue1,
+		
+		input: inputStyle,
+		inputBorder,
 		
 		search: {
 			itemHeight: rem(4.8)
@@ -278,7 +285,7 @@ export function DefaultTheme(palette) {
 		 * TypeAheadSelect styling
 		 */
 		typeAheadSelect: {
-			root: InputStyle
+			root: inputStyle
 		},
 		
 		/**

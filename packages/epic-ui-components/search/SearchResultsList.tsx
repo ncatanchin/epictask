@@ -21,7 +21,17 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ accent, primary, text, secondary } = palette
 	
-	return {}
+	return [
+		makeTransition([ 'background-color', 'color' ]),
+		OverflowAuto,
+		PositionRelative,
+		{
+			maxHeight: '100%',
+			backgroundColor: palette.alternateBgColor,
+			color: palette.alternateTextColor,
+			
+			
+		}]
 }
 
 
@@ -51,11 +61,14 @@ export interface ISearchResultsListState {
 
 
 @ThemedStyles(baseStyles, 'searchResults')
-@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
 	
 	private get controller() {
 		return this.props.controller
+	}
+	
+	shouldComponentUpdate(nextProps) {
+		return !shallowEquals(this.props,nextProps,'state.items','open')
 	}
 	
 	/**
@@ -99,40 +112,33 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			{ props } = this,
 			{
 				open,
-				palette,
+				styles,
 				state:searchState
 			} = props,
 			
 			items = getValue(() => searchState.items)
 		
-		let
-			resultsStyle = makeStyle(
-				makeTransition([ 'background-color', 'color' ]),
-				{
-					overflow: 'hidden',
-					maxHeight: "80vh",
-					backgroundColor: palette.alternateBgColor,
-					color: palette.alternateTextColor
-				}
-			)
+		// let
+		// 	resultsStyle = makeStyle(styles)
 		
-		return open === false ? null : <div style={resultsStyle}>
+		return open === false ? null : <div style={styles}>
 			
 			<CSSTransitionGroup
 				transitionName="results"
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
+				
 				{!items ? React.DOM.noscript() :
 					items.map((item, index) => <SearchResultItem
 							key={item.id}
 							item={item}
-							selected={index === searchState.selectedIndex}
+							controller={this.controller}
 							onMouseEnter={this.onHover(item)}
 							onClick={this.onClick(item)}
 							onMouseDown={this.onClick(item)}
 						/>
 					)}
-			
+				
 			</CSSTransitionGroup>
 		</div>
 		

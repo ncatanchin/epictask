@@ -215,7 +215,12 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 		const
 			{ onChange,autoFocus,defaultValue,style} = this.props
 		
-		return <div style={[style,FlexColumn]} ref={this.setWrapper}><SimpleMDE onChange={this.onChange}
+		return <div
+			style={[style,FlexColumn]}
+			className="epic-markdown-editor"
+			ref={this.setWrapper}>
+			
+			<SimpleMDE onChange={this.onChange}
 		                  ref={this.setSimpleMDE}
 		                  style={style}
 		                  onDragOver={(event) => log.info(`Dragging over markdown editor`,event)}

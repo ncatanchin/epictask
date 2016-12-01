@@ -32,7 +32,7 @@ import {
 	setThemeCreator,
 	setPaletteCreator
 } from "epic-styles"
-import {Checkbox} from "material-ui"
+import { Checkbox } from "material-ui"
 import { getUIActions, getAppActions } from "epic-typedux"
 import {
 	CommandComponent, CommandRoot,
@@ -40,8 +40,8 @@ import {
 } from  "epic-command-manager-ui"
 
 import { ContainerNames } from "epic-command-manager"
-import {SelectField} from '../../fields'
-import {DialogRoot} from '../../layout/dialog'
+import { SelectField } from '../../fields'
+import { DialogRoot } from '../../layout/dialog'
 import { PureRender, Icon, Button } from "epic-ui-components"
 import { getValue } from "epic-global"
 import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
@@ -83,7 +83,6 @@ const baseStyles = (topStyles, theme, palette) => {
 			minHeight: 500,
 			minWidth: 500
 		} ],
-		
 		
 		
 		root: [ FlexColumn, FlexAuto ],
@@ -146,9 +145,7 @@ const baseStyles = (topStyles, theme, palette) => {
 			inputCell: [ makeFlex(0, 0, '35%'), {
 				backgroundColor: primary.hue3
 			} ],
-			checkboxCell: [ makeFlex(0, 0, '35%'), {
-				
-			} ],
+			checkboxCell: [ makeFlex(0, 0, '35%'), {} ],
 			
 			labelCell: [ FlexScale, Ellipsis, makePaddingRem(1, 1, 1, 3), {
 				
@@ -164,12 +161,12 @@ const baseStyles = (topStyles, theme, palette) => {
  * ISettingsWindowProps
  */
 export interface ISettingsWindowProps extends IThemedAttributes {
-	settings?:Settings
+	settings?: Settings
 	
 }
 
 export interface ISettingsWindowState {
-	activeTab?:any
+	activeTab?: any
 }
 
 /**
@@ -191,7 +188,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	 *
 	 * @param builder
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder: CommandContainerBuilder) =>
 		builder
 			
 			.make()
@@ -205,8 +202,8 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	commandComponentId = ContainerNames.SettingsWindow
 	
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {
 			activeTab: General
@@ -236,7 +233,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	 *
 	 * @param item
 	 */
-	private changeTheme = (item:ISelectItem) => {
+	private changeTheme = (item: ISelectFieldItem) => {
 		
 		const
 			themeName = item.value as string,
@@ -252,7 +249,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	 *
 	 * @param item
 	 */
-	private changePalette = (item:ISelectItem) => {
+	private changePalette = (item: ISelectFieldItem) => {
 		const
 			paletteName = item.value as string,
 			palette = getPaletteCreator(paletteName)
@@ -271,11 +268,10 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	})
 	
 	
-	
 	render() {
 		const
 			{ styles, settings } = this.props,
-			{activeTab } = this.state,
+			{ activeTab } = this.state,
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				Settings
@@ -284,14 +280,14 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			themeItems = getThemeNames().map(themeName => ({
 				key: themeName,
 				value: themeName,
-				node: <span>{themeName}</span>
+				content: <span>{themeName}</span>
 			})),
 			themeName = getThemeName(),
 			
 			paletteItems = getPaletteNames().map(name => ({
 				key: name,
 				value: name,
-				node: <span>{name}</span>
+				content: <span>{name}</span>
 			})),
 			paletteName = getPaletteName(),
 			
@@ -336,32 +332,33 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 								<SettingsSection styles={styles}
 								                 iconName="color_lens"
 								                 iconSet="material-icons"
-								                 title="Theme and Palette" >
+								                 title="Theme and Palette">
 									
 									<SettingsField styles={styles} label="Theme">
 										<div style={styles.form.inputCell}>
-											<Select items={themeItems}
-											        onSelect={this.changeTheme}
-											        underlineShow={false}
-											        value={themeName}/>
+											<SelectField
+												items={themeItems}
+												onItemSelected={this.changeTheme}
+												value={themeItems.find(it => it.value === themeName)}
+											/>
 										</div>
 									</SettingsField>
 									
 									<SettingsField styles={styles} label="Palette">
 										<div style={styles.form.inputCell}>
-											<Select items={paletteItems}
-											        onSelect={this.changePalette}
-											        underlineShow={false}
-											        value={paletteName}/>
+											<SelectField
+												items={paletteItems}
+												onItemSelected={this.changePalette}
+												value={paletteItems.find(it => it.value === paletteName)}
+											/>
 										</div>
 									</SettingsField>
-									
+								
 								</SettingsSection>
 								
 								
-								
 								{/* NATIVE NOTIFICATIONS */}
-								<SettingsSection styles={styles} iconName="globe" iconSet="fa" title="Notifications" >
+								<SettingsSection styles={styles} iconName="globe" iconSet="fa" title="Notifications">
 									<SettingsField styles={styles} label="Desktop notifications (suggested) or in-app only.">
 										<Checkbox style={styles.form.checkboxCell}
 										          checked={getValue(() => settings.nativeNotificationsEnabled)}
@@ -370,24 +367,23 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							          	updateSettings({
 							          		nativeNotificationsEnabled: isChecked
 							          	})
-							          }} />
+							          }}/>
 									</SettingsField>
 								</SettingsSection>
 								
 								
-								
 								{/* RESET APP */}
-								<SettingsSection styles={styles} iconName="clear_all" iconSet="material-icons" title="Reset" >
+								<SettingsSection styles={styles} iconName="clear_all" iconSet="material-icons" title="Reset">
 									<SettingsField styles={styles}
 									               label="Remove all internal files and settings.">
 										<Button style={styles.form.inputCell} onClick={() => getAppActions().clean()}>RESET</Button>
 									</SettingsField>
 								</SettingsSection>
-								
+							
 							</div>
 						</div>
-						
-						
+					
+					
 					</Tab>
 					
 					
@@ -399,10 +395,9 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 						label={<span style={makeStyle(activeTab === Keys && styles.tabs.items.active)}>SHORTCUTS</span>}
 					>
 						
-						<KeyMapEditor styles={styles} />
+						<KeyMapEditor styles={styles}/>
 					</Tab>
 				</Tabs>
-				
 			
 			
 			</DialogRoot>

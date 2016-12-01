@@ -4,19 +4,31 @@
 	comment/issue dialogs
 */
 
-.editor-toolbar {
-	background-color: white;
-	opacity: 1;
-	border-radius: 0 !important;
-}
 
-.CodeMirror {
-	flex: 1 1 0;
-}
-
-.editor-preview-side {
+.epic-markdown-editor {
 	
-	&.editor-preview-active-side {
-		color: black;
+	> div {
+		flex: 1 1 0;
+		display: flex;
+		flex-direction: column;
 	}
+	
+	.editor-toolbar {
+		background-color: white;
+		opacity: 1;
+		border-radius: 0 !important;
+	}
+	
+	.CodeMirror {
+		flex: 1 1 0;
+	}
+	
+	.editor-preview-side {
+		
+		&.editor-preview-active-side {
+			color: black;
+		}
+	}
+
 }
+
