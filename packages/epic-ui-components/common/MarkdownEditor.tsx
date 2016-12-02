@@ -1,7 +1,5 @@
 // Imports
-
-import { PureRender } from "epic-ui-components"
-
+import { PureRender } from "./PureRender"
 import { getValue } from  "epic-global"
 
 // Constants

@@ -2,21 +2,14 @@
  * Created by jglanz on 7/24/16.
  */
 // Imports
-
-import { connect } from "react-redux"
-import { createDeepEqualSelector, getValue, cloneObjectShallow } from "epic-global"
-import { createStructuredSelector } from "reselect"
+import { getValue, cloneObjectShallow } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
-import {
-	getUIActions
-
-} from "epic-typedux"
+import { getUIActions } from "epic-typedux"
 import { CommandType, ContainerNames } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
-import { MarkdownEditor } from "epic-ui-components/fields"
+import { MarkdownEditor, FileDrop, RepoLabel } from "epic-ui-components/common"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
-import { FileDrop, RepoLabel } from "epic-ui-components/common"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { CommentEditState } from "epic-ui-components/pages/comment-edit/CommentEditState"
 import CommentEditController from "epic-ui-components/pages/comment-edit/CommentEditController"

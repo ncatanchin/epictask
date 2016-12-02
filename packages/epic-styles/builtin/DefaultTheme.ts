@@ -523,18 +523,16 @@ export function DefaultTheme(palette) {
 				},
 				
 				container: {
-					
-					borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
-					
+					borderColor: colorAlpha(primary.hue2,0.9)
 				}
 			},
 			
 			tools: {
 				// borderColor: primary.hue3
-				[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-				[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-				[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue3).setAlpha(1).toRgbString() },
-				[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+				[ToolPanelLocation.Left]: { borderLeftColor: colorAlpha(primary.hue3,0.9) },
+				[ToolPanelLocation.Right]: { borderRightColor: colorAlpha(primary.hue3,0.9)},
+				[ToolPanelLocation.Bottom]: { borderBottomColor: colorAlpha(primary.hue3,1) },
+				[ToolPanelLocation.Popup]: { borderTopColor: colorAlpha(primary.hue3,0.9) },
 				
 			}
 		},

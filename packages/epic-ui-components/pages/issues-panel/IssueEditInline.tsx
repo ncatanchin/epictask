@@ -2,36 +2,37 @@
  * Created by jglanz on 7/21/16.
  */
 // Imports
-import {FormEvent} from "react"
-import { TextField ,Icon, Button, RepoLabel, getGithubErrorText } from "epic-ui-components"
-
-import { LabelFieldEditor } from "epic-ui-components/fields/LabelFieldEditor"
+import { FormEvent } from "react"
+import { TextField, Icon, Button, RepoLabel, getGithubErrorText } from "epic-ui-components"
 import { List } from "immutable"
-import { Issue, Label, Milestone, AvailableRepo, User, IIssueListItem } from "epic-models"
+import { Issue, Milestone, AvailableRepo, IIssueListItem } from "epic-models"
 import filterProps from "react-valid-props"
- 
 import { ThemedStyles, makeThemeFontSize, IThemedAttributes } from "epic-styles"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import {
-	availableReposSelector,
-	enabledAssigneesSelector,
-	enabledLabelsSelector,
-	enabledMilestonesSelector
-} from "epic-typedux"
-import { CommonKeys, getCommandManager, ContainerNames } from "epic-command-manager"
+import { availableReposSelector } from "epic-typedux"
 import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import { cloneObjectShallow, cloneObject, shallowEquals, addErrorMessage } from "epic-global"
-import { IRowState, MilestoneLabel, SaveIndicator } from "epic-ui-components/common"
+import { IRowState, MilestoneLabel, WorkIndicator } from "epic-ui-components/common"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanel, IssuesPanelController, getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel"
-import { MilestoneSelect } from "epic-ui-components/fields"
 import {
-	FlexAuto, makePaddingRem, makeStyle, FlexScale, Ellipsis, colorAlpha, FlexRowCenter,
-	FillWidth, OverflowHidden, rem, FlexColumnCenter, FlexColumn, makeTransition, PositionRelative
+	FlexAuto,
+	makePaddingRem,
+	makeStyle,
+	FlexScale,
+	Ellipsis,
+	colorAlpha,
+	FlexRowCenter,
+	FillWidth,
+	OverflowHidden,
+	rem,
+	FlexColumnCenter,
+	FlexColumn,
+	makeTransition,
+	PositionRelative
 } from "epic-styles/styles"
-
 
 
 // Constants
@@ -434,7 +435,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 				</div>
 			</div>}
 			{/* Saving progress indicator */}
-			<SaveIndicator open={saving}/>
+			<WorkIndicator open={saving}/>
 		</CommandRoot>
 	}
 	

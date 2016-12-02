@@ -1,20 +1,14 @@
 // Imports
-import { PureRender, makeComponentStyles } from "epic-ui-components"
+
 import { ThemedStyles, IThemedAttributes, Themed } from "epic-styles"
 import { shallowEquals, shortId, guard, focusNextFormField } from "epic-global"
 import filterProps from "react-valid-props"
-import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter, TextField, Popover } from "../common"
+import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter} from "./FlexLayout"
+import { PureRender} from "./PureRender"
+import {TextField } from './TextField'
+import {Popover} from "./Popover"
 import { getValue, isNil } from "typeguard"
-import {
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
-	CommandContainer, ICommandComponentProps
-} from "epic-command-manager-ui"
-import { CommonKeys, CommandType } from "epic-command-manager"
-import { Icon } from "epic-ui-components/common/icon/Icon"
-import { isHovering, makeWidthConstraint } from "epic-styles/styles"
+import { Icon } from "./icon/Icon"
 import baseStyles from "./SelectField.styles"
 
 // Constants
@@ -26,7 +20,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 /**
  * ISelectProps
  */
-export interface ISelectFieldProps extends IThemedAttributes, ICommandComponentProps {
+export interface ISelectFieldProps extends IThemedAttributes {
 	
 	/**
 	 * Id is required
@@ -127,6 +121,11 @@ export interface ISelectFieldState {
 	 * Currently visible items
 	 */
 	visibleItems?: ISelectFieldItem[]
+	
+	/**
+	 * Field is focused
+	 */
+	focused?:boolean
 }
 
 /**
@@ -431,17 +430,17 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	/**
 	 * On click away - close it down
 	 */
-	private onClickAway = () => this.state.open && this.toggleOpen()
+	private onClickAway = () =>  this.state.open && this.toggleOpen()
 	
 	/**
 	 * On focus, open
 	 */
-	private onFocus = () => !this.state.open && this.toggleOpen()
+	private onFocus = () => this.setState({focused: true},() => !this.state.open && this.toggleOpen())
 	
 	/**
 	 * On blur, close
 	 */
-	private onBlur = this.onClickAway
+	private onBlur = () => this.setState({focused: false},this.onClickAway)
 	
 	/**
 	 * Create the result style for the popover
@@ -487,10 +486,10 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	
 	render() {
 		const
-			{ commandContainer,tabIndex, palette, placeholder, styles, style, showOpenControl, showFilter, filterStyle, filterInputStyle, iconStyle } = this.props,
-			{ rootRefElem, filterText, open, visibleItems, valueContent, selectedIndex } = this.state,
-			{ id } = this,
-			focused = commandContainer && commandContainer.isFocused()
+			{ tabIndex, palette, placeholder, styles, style, showOpenControl, showFilter, filterStyle, filterInputStyle, iconStyle } = this.props,
+			{ focused,rootRefElem, filterText, open, visibleItems, valueContent, selectedIndex } = this.state,
+			{ id } = this
+			  
 		
 		
 		const
@@ -524,7 +523,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			}
 			
 			{/* RENDER CRITERIA */}
-			<TextField
+				{showFilter && <TextField
 				{...filterProps(this.props)}
 				{...(open || focused ? {autoFocus:true} : {})}
 				id={`${id}-filter-input`}
@@ -547,7 +546,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				}
 				inputStyle={filterInputStyle}
 				value={filterText || ''}
-			/>
+			/> }
 			
 			<Popover
 				canAutoPosition={false}
@@ -567,7 +566,11 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				
 				<div style={resultsStyle}>
 					
-					{filterText && filterText.length && <SelectFilterText filterText={filterText}/>}
+					{/* SHOW FILTER TEXT */}
+					{showFilter && filterText && filterText.length &&
+						<SelectFilterText style={filterStyle} filterText={filterText}/>
+					}
+					
 					{visibleItems
 						.map((item, index) =>
 							<SelectFieldItem
@@ -663,7 +666,7 @@ class SelectFieldItem extends React.Component<ISelectFieldItemProps,any> {
  *
  * @type {any}
  */
-const SelectFilterText = Themed(({ filterText, palette }) =>
+const SelectFilterText = Themed(({ style,filterText, palette }) =>
 	<div style={[
 			PositionAbsolute,
 			Styles.FlexRowCenter,
@@ -679,7 +682,8 @@ const SelectFilterText = Themed(({ filterText, palette }) =>
 				border: `1px solid ${palette.primary.hue3}`,
 				background: palette.primary.hue2,
 				color: palette.text.primary
-			}
+			},
+			style
 		]}>
 		{filterText}
 	</div>)

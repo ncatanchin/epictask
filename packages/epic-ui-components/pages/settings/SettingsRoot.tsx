@@ -40,9 +40,9 @@ import {
 } from  "epic-command-manager-ui"
 
 import { ContainerNames } from "epic-command-manager"
-import { SelectField } from '../../fields'
+
 import { DialogRoot } from '../../layout/dialog'
-import { PureRender, Icon, Button } from "epic-ui-components"
+import { PureRender, Icon, Button,SelectField } from "epic-ui-components"
 import { getValue } from "epic-global"
 import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
 import { Settings } from "epic-global/settings/Settings"

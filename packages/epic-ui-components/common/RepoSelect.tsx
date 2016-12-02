@@ -18,22 +18,9 @@ import { availableReposSelector } from "epic-typedux/selectors"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles = (topStyles, theme, palette) => ({
-	// root: [ FlexColumn, FlexAuto, {} ],
-	//
-	// avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-	// 	height: rem(3),
-	//	
-	// 	label: {
-	// 		fontWeight: 500,
-	// 	},
-	// 	image: {
-	// 		height: rem(2.2),
-	// 		width: rem(2.2),
-	// 	}
-	//	
-	// } ]
-})
+function baseStyles(topStyles, theme, palette) {
+	return []
+}
 
 
 /**

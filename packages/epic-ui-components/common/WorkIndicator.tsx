@@ -14,30 +14,31 @@ const
 
 
 /**
- * ISaveIndicatorProps
+ * IWorkIndicatorProps
  */
-export interface ISaveIndicatorProps extends IThemedAttributes {
+export interface IWorkIndicatorProps extends IThemedAttributes {
 	open:boolean
 }
 
 
 /**
- * SaveIndicator
+ * WorkIndicator
  *
- * @class SaveIndicator
+ * @class WorkIndicator
  * @constructor
  **/
 
 @Themed
 @PureRender
-export class SaveIndicator extends React.Component<ISaveIndicatorProps,void> {
+export class WorkIndicator extends React.Component<IWorkIndicatorProps,void> {
 	
 	render() {
 		const { open, theme } = this.props
 		
 		return !open ? React.DOM.noscript() : <div style={[PositionAbsolute,Fill,FlexColumnCenter,{
 			top: 0,
-			left: 0
+			left: 0,
+			zIndex: 89889786686
 		}]}>
 			<CircularProgress
 				color={theme.progressIndicatorColor}

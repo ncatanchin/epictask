@@ -1,39 +1,25 @@
 // Imports
+import { connect } from "react-redux"
+import { List } from "immutable"
+import { createStructuredSelector } from "reselect"
+import { shallowEquals } from "epic-global"
+import filterProps from "react-valid-props"
+import { getValue } from "typeguard"
+import { assigneesSelector } from "epic-typedux"
 
-import { connect } from 'react-redux'
-import { List } from 'immutable'
-import { Avatar, PureRender } from "../common"
-
-import { createStructuredSelector } from 'reselect'
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { User } from "epic-models"
-
-
+import { Avatar } from "./Avatar"
+import { PureRender } from "./PureRender"
 import { SelectField } from "./SelectField"
-import { assigneesSelector } from "epic-typedux"
-import { shallowEquals } from  "epic-global"
-import filterProps from 'react-valid-props'
-import { getValue } from "typeguard"
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
-const baseStyles = (topStyles, theme, palette) => ({
-	// root: [ FlexColumn, FlexAuto, {} ],
-	//
-	// avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-	// 	height: rem(3),
-	//
-	// 	label: {
-	// 		fontWeight: 500,
-	// 	},
-	// 	image: {
-	// 		height: rem(2.2),
-	// 		width: rem(2.2),
-	// 	}
-	//
-	// } ]
-})
+function baseStyles(topStyles, theme, palette) {
+	return []
+}
 
 
 /**

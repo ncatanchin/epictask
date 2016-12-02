@@ -3,7 +3,7 @@ import { List } from "immutable"
 import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
 import { createSelector } from 'reselect'
-import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
+import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/common"
 import {
 	PureRender,
 	RepoLabel,
@@ -13,7 +13,7 @@ import {
 	IssueStateIcon,
 	IssueLabelsAndMilestones
 } from "epic-ui-components"
-import { baseStyles as labelBaseStylesFn } from "epic-ui-components/common/Chip"
+import { chipStyles } from "epic-ui-components/common"
 import { createStructuredSelector } from "reselect"
 import {
 	IThemedAttributes,
@@ -54,7 +54,7 @@ const
 		
 		
 		const
-			labelBaseStyles = createStyles(labelBaseStylesFn, null, theme, palette),
+			labelBaseStyles = createStyles(chipStyles, null, theme, palette),
 			{ background, primary, accent, text, secondary } = palette,
 			flexTransition = makeTransition([
 				'opacity',

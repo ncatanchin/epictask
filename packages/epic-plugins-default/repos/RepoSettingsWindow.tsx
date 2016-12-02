@@ -31,13 +31,13 @@ import { DialogRoot } from "epic-ui-components/layout/dialog"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
 import { PureRender,  RepoLabel, Icon, TabTemplate } from "epic-ui-components"
-import {SelectField} from 'epic-ui-components/fields'
+
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
 import { Tab, Tabs } from "material-ui"
 import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
 import { RepoLabelEditor } from "./RepoLabelEditor"
-import { RepoSelect } from "epic-ui-components/fields/RepoSelect"
+import { SelectField,RepoSelect } from "epic-ui-components/common"
 
 
 const

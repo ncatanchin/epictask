@@ -18,6 +18,7 @@ const
 const
 	ScratchDevToolId = "alploljligeomonipppgaahpkenfnfkn",
 	ExtendedJsConsoleId = "ieoofkiofkkmikbdnmaoaemncamdnhnd",
+	BigConsoleId = 'klommbdmeefgobphaflhmnieheipjajm',
 	ImmutableObjectFormat = "hgldghadipiblonfkkicmgcbbijnpeog",
 	JetBrainsId = "hmhgeddbohgjknpmjagkdomcpobmllji"
 
@@ -26,7 +27,8 @@ installExtension(REACT_PERF)
 installExtension(JQUERY_DEBUGGER)
 installExtension(REDUX_DEVTOOLS)
 //installExtension(JetBrainsId)
-//installExtension(ScratchDevToolId)
+installExtension(BigConsoleId)
+installExtension(ScratchDevToolId)
 //installExtension(ExtendedJsConsoleId)
 installExtension(ImmutableObjectFormat)
 

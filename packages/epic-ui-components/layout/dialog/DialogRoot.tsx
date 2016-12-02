@@ -1,13 +1,13 @@
 // Imports
-import { ThemedStyles } from "epic-styles"
-import { makeHeightConstraint, makeWidthConstraint, createStyles } from "epic-styles"
-
-import { Icon, WindowControls, SaveIndicator } from "../../common"
+import { ThemedStyles, makeWidthConstraint, createStyles } from "epic-styles"
+import { Icon, WindowControls, WorkIndicator } from "../../common"
+import { makeHeightConstraint, colorAlpha } from "epic-styles/styles"
 
 
 // Constants
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	{FlexColumn, FillWidth, rem,makeFlexAlign,FillHeight, FlexScale, FlexRowCenter, makePaddingRem} = Styles
 
 const baseStyles = (topStyles,theme,palette) => {
 	const
@@ -27,7 +27,7 @@ const baseStyles = (topStyles,theme,palette) => {
 			backgroundColor: background,
 			//backgroundImage: makeLinearGradient('to top', background, primary.hue1),
 			//boxShadow: `inset 0 0.1rem 0 ${primary.hue2}`,
-			borderBottom: `0.1rem solid ${TinyColor(primary.hue1).setAlpha(0.2).toRgbString()}`
+			borderBottom: `0.1rem solid ${colorAlpha(primary.hue1,0.2)}`
 			
 			// borderBottomImage: makeLinearGradient('to bottom', primary.hue1, primary.hue2),
 		} ],
@@ -64,14 +64,7 @@ const baseStyles = (topStyles,theme,palette) => {
 				horizontal: [ FlexAuto, makePaddingRem(0, 0, 0, 0), {
 					textAlign: 'right'
 				} ]
-			} ],
-			
-			avatar: [{
-				color: text.secondary,
-				avatar: {
-					borderColor: Transparent
-				}
-			}]
+			} ]
 			
 		} ],
 		
@@ -201,6 +194,7 @@ export interface IDialogRootProps extends React.HTMLAttributes<any> {
 	saving?:boolean
 	titleActionNodes?:any
 	actionNodes?:any
+	hideActions?:boolean
 }
 
 
@@ -226,7 +220,7 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 	
 	render() {
 		const
-			{ titleNode,subTitleNode,actionNodes,titleActionNodes,saving,theme, styles } = this.props,
+			{ titleNode,subTitleNode,actionNodes,titleActionNodes,saving,theme, styles,hideActions } = this.props,
 			titleMode = this.props.titleMode || 'vertical'
 		
 		return <div style={styles.root}>
@@ -257,24 +251,14 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 					</div>
 					
 					
-					<form style={[
-					      	styles.body,
-					      	styles.form,
-					      	saving && {
-						        opacity: 0,
-						        pointerEvents: 'none'
-						      }
-					      ]}>
-						{this.props.children}
-					</form>
+					{this.props.children}
+					
 					
 					{actionNodes &&
-						<div style={[styles.actions]}>
+						<div style={[styles.actions,hideActions && makeHeightConstraint(0)]}>
 							{actionNodes}
 						</div>
 					}
-					{/* Saving progress indicator */}
-					<SaveIndicator open={saving} />
 				</div>
 			
 			
