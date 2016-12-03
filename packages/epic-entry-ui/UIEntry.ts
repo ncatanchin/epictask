@@ -153,6 +153,15 @@ export class UIEntry extends ProcessClientEntry {
 
 export const uiEntry = getHot(module,'uiEntry',new UIEntry())
 
+if (module.hot) {
+	module.hot.addStatusHandler(newStatus => {
+		if (['abort','fail'].includes(newStatus)) {
+			log.error(`HMR failed - reloading`)
+			require('electron').remote.getCurrentWindow().webContents.reloadIgnoringCache()
+		}
+	})
+}
+
 setDataOnHotDispose(module,() => ({
 	uiEntry
 }))

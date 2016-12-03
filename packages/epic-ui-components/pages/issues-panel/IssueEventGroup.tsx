@@ -110,9 +110,10 @@ export class EventGroup {
 			
 			// LABEL CHIP STYLES
 			chipStyles = {
+				marginRight:0,
 				label:{
 					display: 'inline-flex',
-					marginRight:0
+					
 				}
 			}
 		
@@ -160,7 +161,7 @@ export class EventGroup {
 						key={event.id}
 						style={{flexWrap: 'nowrap'}}
 					>
-						{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}
+						{event.event === 'milestoned' ? 'added this to ' : 'removed this from '}&nbsp;&nbsp;
 						<LabelChip showIcon={true} label={assign({id:'-1'},event.milestone)} styles={chipStyles}/>
 						{makeEventSpacer(index)}
 					</FlexRowCenter>

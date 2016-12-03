@@ -10,8 +10,8 @@ export function chipStyles(topStyles, theme, palette) {
 	
 	const
 		{primary} = palette,
-		accessoryDim = rem(2.4),
-		accessoryDimHalf = rem(1.2),
+		accessoryDim = convertRem(1.8),
+		accessoryDimHalf = accessoryDim / 2,
 		accessoryTransition = makeTransition([
 			'background-color',
 			'font-weight',
@@ -24,15 +24,17 @@ export function chipStyles(topStyles, theme, palette) {
 			'color'
 		])
 	
-	return [ makeTransition('width'), PositionRelative, FlexAuto, FlexRowCenter, {
+	return [
+		makeTransition('width'),
+		PositionRelative,
+		FlexAuto,
+		FlexRowCenter,
+		makeMarginRem(0,1,0,0),{
 		display: 'flex',
 		borderRadius: accessoryDimHalf,
 		height: accessoryDim,
-		//borderRadius: '0.3rem',
-		marginTop: 0,
-		marginRight: rem(1),
-		marginBottom: 0,
-		marginLeft: 0,
+		
+			//borderRadius: '0.3rem',
 		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
 		backgroundColor: primary.hue3,
 		[CSSHoverState]: [{
@@ -64,14 +66,14 @@ export function chipStyles(topStyles, theme, palette) {
 				hover: [ {
 					borderRadius: 0,
 					fontWeight: 700,
-					fontSize: rem(1.5),
+					fontSize: rem(1.1),
 					icon: [ {} ]
 				} ],
 				
 				// REMOVE CONTROL
 				remove: [ OverflowHidden, {
 					//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
-					fontSize: themeFontSize(1),
+					fontSize: rem(1),
 					cursor: 'pointer',
 					
 					// ICON REMOVE
@@ -87,6 +89,7 @@ export function chipStyles(topStyles, theme, palette) {
 			} ],
 		
 		text: [ makePaddingRem(0, 1.2, 0, 1.2), {
+			fontSize: rem(1),
 			textAlign: 'baseline',
 			withLeftIcon: [ makePaddingRem(0, 1.2, 0, 0.6) ]
 		} ]

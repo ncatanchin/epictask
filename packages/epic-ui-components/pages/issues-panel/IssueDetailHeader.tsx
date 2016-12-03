@@ -2,20 +2,23 @@
 import { List } from "immutable"
 import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
-import { createSelector } from 'reselect'
-import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, Form } from "epic-ui-components/common"
-
+import { createSelector, createStructuredSelector } from "reselect"
 import {
+	LabelFieldEditor,
+	MilestoneSelect,
+	AssigneeSelect,
+	Form,
+	FormValidators,
+	chipStyles,
+	TextField,
 	PureRender,
 	RepoLabel,
-	getGithubErrorText,
 	Avatar,
 	makeComponentStyles,
 	IssueStateIcon,
 	IssueLabelsAndMilestones
-} from "epic-ui-components"
-import { chipStyles } from "epic-ui-components/common"
-import { createStructuredSelector } from "reselect"
+} from "epic-ui-components/common"
+
 import {
 	IThemedAttributes,
 	ThemedStyles,
@@ -24,22 +27,15 @@ import {
 	makeTransition,
 	makeMarginRem,
 	FlexScale,
-	FlexAlignStart,
 	PositionRelative,
 	makePaddingRem,
 	FlexColumn
 } from "epic-styles"
-import {
-	enabledLabelsSelector,
-	enabledAssigneesSelector,
-	enabledMilestonesSelector
-} from "epic-typedux/selectors"
-
+import { enabledLabelsSelector, enabledAssigneesSelector, enabledMilestonesSelector } from "epic-typedux/selectors"
 import { Issue, Milestone, Label, User } from "epic-models"
 import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
 import IssuesPanelController from "epic-ui-components/pages/issues-panel/IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
-import { TextField } from "epic-ui-components/common"
 import { makeStyle, colorAlpha } from "epic-styles/styles"
 
 // Constants
@@ -493,7 +489,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			onInvalid={this.onFormInvalid}
 			onValid={this.onFormValid}
 			onValidSubmit={this.onFormValidSubmit}
-			style={[styles.root]}>
+			styles={[styles.root]}>
 			
 			{/* ROW 1 */}
 			<div style={[styles.row1,saving && {opacity: 0}]}>
@@ -542,18 +538,22 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				{editTitle &&
 				//errorText={getGithubErrorText(saveError,'title')}
 				<TextField value={editIssue.title || ''}
-				           validators={[Form.makeMinLengthValidator(1)]}
+				           validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
 				           onChange={this.onTitleChange}
 				           onKeyDown={this.onEditKeyDown}
 				           errorStyle={{transform: 'translate(0,1rem)'}}
 				           placeholder="TITLE"
-				           style={makeStyle(
+				           styles={[
 				           	 FlexScale,
 				           	 makePaddingRem(0),
-				           	 makeMarginRem(0,1,0,0),
-				           	 !editTitle && styles.hidden
-			             )}
-				           inputStyle={makeStyle(FlexScale,styles.input)}
+				           	 !editTitle && styles.hidden,
+				           	 
+				           	 {
+				           	 	marginRight: rem(1),
+				           	 	input: [FlexScale,styles.input]
+				           	 }
+			             ]}
+				           
 				
 				
 				/>

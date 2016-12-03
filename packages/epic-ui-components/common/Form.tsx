@@ -452,15 +452,11 @@ export namespace Form {
 	export const FormFormFieldContextTypes = {
 		form: React.PropTypes.object
 	}
-	
-	export function makeMinLengthValidator(minLength:number) {
-		return (value) => {
-			const
-				valid = value && isString(value) && value.length >= minLength
-			
-			return valid ? valid : `Value must be at least ${minLength} characters`
-		}
 
-	}
+	
+	
 	
 }
+
+
+

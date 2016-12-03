@@ -7,10 +7,7 @@ import { PureRender } from "./PureRender"
 import { Icon } from "./icon/Icon"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import {chipStyles} from './Chip.styles'
-import {
-	makePaddingRem, FlexColumnCenter, FlexRowCenter, FlexAuto, isHovering,
-	makeTransition, rem, PositionRelative, CSSHoverState
-} from "epic-styles/styles"
+import {isHovering} from "epic-styles/styles"
 
 const
 	tiny = require('tinycolor2'),

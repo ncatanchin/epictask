@@ -243,6 +243,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			{/* SHEET ROOT */}
 			<SheetRoot />
+			
 			<ToolDragLayer />
 				
 				

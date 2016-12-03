@@ -110,12 +110,13 @@ export function DefaultTheme(palette) {
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
 		},
 		
-		inputInvalid = [{
-			boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`,
-			[CSSFocusState]: [{
-				boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`
-			}]
-			
+		invalidStyle = {
+			boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`
+		},
+		
+		inputInvalid = [invalidStyle,{
+			focused: invalidStyle,
+			hovering: invalidStyle
 		}],
 		
 		inputBorder = {
@@ -127,15 +128,15 @@ export function DefaultTheme(palette) {
 			minHeight: rem(4),
 			
 			// FOCUS STATE
-			':focus': inputHighlight,
+			focused: inputHighlight,
 			
 			// INVALID STATE
-			invalid: [inputInvalid]
+			invalid: inputInvalid
 		}],
 	
 		selectStyle = {
-			':hover': inputHighlight,
-			':focus': inputHighlight,
+			hovering: inputHighlight,
+			focused: inputHighlight,
 			
 			// INVALID STATE
 			invalid: inputInvalid
@@ -296,7 +297,7 @@ export function DefaultTheme(palette) {
 		 */
 		labelChip: {
 			text: {
-				fontSize: themeFontSize(1),
+				fontSize: rem(1),
 				fontWeight: 500
 			},
 			

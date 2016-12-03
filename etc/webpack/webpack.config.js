@@ -214,7 +214,7 @@ function makeHotEntry(entry,devEntries) {
 	// HMR ENTRY ADDITION
 	if (isDev) {
 		
-			entry.unshift("webpack/hot/only-dev-server")
+			entry.unshift("webpack/hot/dev-server")
 			entry.unshift('webpack/hot/poll.js?500')
 		
 	}

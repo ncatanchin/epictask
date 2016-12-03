@@ -47,6 +47,7 @@ export * from "./FileDrop"
 export * from "./Other"
 
 // FORM
+export * from "./FormValidators"
 export * from "./Form"
 export * from "./FormFieldComponent"
 

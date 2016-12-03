@@ -438,7 +438,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				component={this}
 				id="appRoot"
 				style={Fill}>
-					<Tooltip  />
+					
 					<MuiThemeProvider muiTheme={theme}>
 						<Provider store={this.props.store}>
 							
@@ -454,7 +454,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					
 				
 			</CommandRoot>
-		
+			
 		</StyleRoot>
 		
 	}
