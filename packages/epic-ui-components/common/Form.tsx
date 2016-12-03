@@ -12,7 +12,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {
@@ -28,8 +28,9 @@ function baseStyles(topStyles, theme, palette) {
 		/**
 		 * Saving style
 		 */
-		working: [{
-			opacity: 0,
+		indicator: [{
+			opacity: 1,
+			background,
 			pointerEvents: 'none'
 		}]
 		
@@ -161,7 +162,7 @@ export interface IFormProps extends IThemedAttributes {
  * @constructor
  **/
 
-@ThemedStyles(baseStyles)
+
 @PureRender
 export class Form extends React.Component<IFormProps,IFormState> {
 	
@@ -351,29 +352,35 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * Validate the form
 	 */
 	validate(submit = false) {
-		const
-			values = this.fields.map(this.getFieldValue) as List<IFormFieldValue>,
-			valid = values.every(it => it.valid)
+		try {
+			const
+				values = this.fields.map(this.getFieldValue) as List<IFormFieldValue>,
+				valid = values.every(it => it.valid)
 			
-
-		this.updateState({
-			valid,
-			values
-		},() => {
-			
-			// INVALID
-			if (!valid) {
-				guard(() => this.props.onInvalid(values.toArray()))
-				this.events.emit(FormEvent.Invalid,values)
-				return
-			}
-			
-			
-			//VALID
-			guard(() => this.props.onValid(values.toArray()))
-			this.events.emit(FormEvent.Valid,values)
-			submit && this.submit()
-		})
+			log.debug(`Setting state valid = ${valid}`)
+			this.updateState({
+				valid,
+				values
+			}, () => {
+				log.debug(`state callback`)
+				
+				// INVALID
+				if (!valid) {
+					log.warn(`not all valid`,values)
+					guard(() => this.props.onInvalid(values.toArray()))
+					this.events.emit(FormEvent.Invalid, values)
+					return
+				}
+				
+				
+				//VALID
+				guard(() => this.props.onValid(values.toArray()))
+				this.events.emit(FormEvent.Valid, values)
+				submit && this.startSubmit()
+			})
+		} catch (err) {
+			log.error(`failed to validate`,err)
+		}
 	}
 	
 	/**
@@ -381,17 +388,23 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	private submitHandler = async () => {
 		try {
-			
+			log.debug(`submitHandler()`)
 			this.events.emit(FormEvent.Submitted,this)
 			
 			const
-				values = this.values.toArray(),
+				values = this.values,
 				model = values.reduce((model,value) => {
 					model[value.name] = value.value
 					return model
 				},{} as any)
 			
-			await this.props.onValidSubmit(this, model, values)
+			const
+				{onValidSubmit} = this.props
+			
+			log.debug(`submitting to `,onValidSubmit)
+			if (onValidSubmit)
+				await onValidSubmit(this, model, values.toArray())
+			
 		} catch (error) {
 			log.error(`Form submit failed`,error)
 			this.updateState({error})
@@ -405,10 +418,30 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	/**
 	 * Submit the form
 	 */
-	submit = () => {
+	startSubmit = () => {
+		log.debug(`startSubmit()`)
+		if (this.state.working) {
+			return log.warn(`Already working`)
+		}
 		this.updateState({
 			working: true
 		}, this.submitHandler)
+		
+	}
+	
+	/**
+	 * On submit - validate > submit = true
+	 * @param event
+	 */
+	submit = (event?:React.FormEvent<any>) => {
+		log.debug(`Submit called`,event)
+		if (event) {
+			event.preventDefault()
+			event.stopPropagation()
+		}
+		
+		this.validate(true)
+		
 		
 	}
 	
@@ -419,8 +452,10 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	render() {
 		const
+			styles = mergeStyles(createStyles(baseStyles),this.props.styles,this.props.style)
+		
+		const
 			{
-				styles,
 				name,
 				id
 			} = this.props,
@@ -429,12 +464,13 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			} = this.state
 		
 		return <form
-			style={[
-				styles
-      ]}>
+			id={id}
+			name={name}
+			onSubmit={this.submit}
+			style={styles}>
 			{this.props.children}
 			{/* Saving progress indicator */}
-			<WorkIndicator open={working} />
+			<WorkIndicator style={styles.indicator} open={working} />
 			</form>
 	
 		

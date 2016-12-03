@@ -7,10 +7,13 @@ import { List } from "immutable"
 import { connect } from "react-redux"
 import { Issue, AvailableRepo, Repo, User, Label } from "epic-models"
 
-import { RepoSelect,LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor,Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender, TextField } from "epic-ui-components/common"
+import {
+	RepoSelect, LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor, Icon, RepoLabel,
+	getGithubErrorText, FileDrop, PureRender, TextField, Form, FormValidators
+} from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
 
-import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow } from "epic-global"
+import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow, guard } from "epic-global"
 import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
 import {
 	ThemedStyles,
@@ -169,14 +172,14 @@ export interface IIssueEditDialogState {
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
 	
-	
+	refs:any
 	
 	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.command(CommandType.Container,
 				'Save Comment',
-				(cmd, event) => this.onSave(event),
+				(cmd, event) => guard(() => this.refs.form.submit()),
 				"CommandOrControl+Enter")
 			.command(CommandType.Container,
 				'Close Dialog',
@@ -223,7 +226,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param event
 	 */
-	private onSave = async (event) => {
+	private onSave = async () => {
 		if (this.viewState.saving)
 			return
 		
@@ -455,6 +458,35 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		
 	}
 	
+	/**
+	 * on form valid
+	 *
+	 * @param values
+	 */
+	private onFormValid = (values:IFormFieldValue[]) => {
+		log.debug(`onValid`,values)
+	}
+	
+	/**
+	 * On form invalid
+	 *
+	 * @param values
+	 */
+	private onFormInvalid = (values:IFormFieldValue[]) => {
+		log.debug(`onInvalid`,values)
+	}
+	
+	/**
+	 * On submit when the form is valid
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
+	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => {
+		return this.onSave()
+	}
+	
 	
 	/**
 	 * On drop event handler
@@ -505,7 +537,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				</div> : `CREATE`}
 			</div>,
 			
-			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.onCancel)
+			titleActionNodes = createSaveCancelActions(
+				theme,
+				palette,
+				() => this.refs.form.submit(),
+				this.onCancel)
+		
+		//error={getGithubErrorText(saveError,'title')}
 		
 		return <CommandRoot
 			id={ContainerNames.IssueEditDialog}
@@ -520,7 +558,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				styles={styles.dialog}
 			>
 				
-				
+				<Form
+					id="issue-edit-form"
+					ref="form"
+					onInvalid={this.onFormInvalid}
+					onValid={this.onFormValid}
+					onValidSubmit={this.onFormValidSubmit}
+					styles={[FlexColumn,FlexScale]}>
+					
 				<FileDrop onFilesDropped={this.onDrop}
 				          acceptedTypes={[/image/]}
 				          dropEffect='all'
@@ -529,8 +574,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					<div style={styles.form.row1}>
 						<TextField value={titleValue}
 						           onChange={this.onTitleChange}
-						           errorStyle={{transform: 'translate(0,1rem)'}}
-						           error={getGithubErrorText(saveError,'title')}
+						           validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
 						           placeholder="TITLE"
 						           style={styles.form.title}
 						           inputStyle={FlexScale}
@@ -593,7 +637,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					/>
 				
 				</FileDrop>
-			
+				</Form>
 			</DialogRoot>
 		</CommandRoot>
 	}

@@ -70,15 +70,15 @@ export function makeStyle(...styles) {
 }
 
 export function mergeStyles(...styles):any {
-	styles = styles.reduce((allStyles,style) => {
+	const finalStyles = styles.reduce((allStyles,style) => {
 		if (Array.isArray(style))
-			allStyles.push(...style)
+			allStyles.push(mergeStyles(...style))
 		else
 			allStyles.push(style)
 		
 		return allStyles
 	},[])
-	return _.merge({},...styles)
+	return _.merge({},...finalStyles)
 }
 
 export function makeFlexAlign(alignItems,justifyContent = alignItems) {

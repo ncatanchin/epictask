@@ -91,7 +91,7 @@ function baseStyles(topStyles, theme, palette) {
 					['tooltip']: [{
 						maxWidth: "50vw",
 						fontSize: rem(1.5),
-						right: rem(0.5),
+						right: rem(1.5),
 						top: '50%',
 						height: rem(1.5),
 						width: rem(1.5),
@@ -174,12 +174,19 @@ export class TextField extends FormFieldComponent<ITextFieldProps,ITextFieldStat
 	/**
 	 * on focus
 	 */
-	private onFocus = () => this.setState({ focused: true })
+	private onFocus = event => {
+		guard(() => this.props.onFocus(event))
+		this.setState({ focused: true })
+		
+	}
 	
 	/**
 	 * On blur
 	 */
-	private onBlur = () => this.setState({ focused: false })
+	private onBlur = event => {
+		this.setState({ focused: false })
+		guard(() => this.props.onBlur(event))
+	}
 	
 	/**
 	 * On change handler
@@ -218,7 +225,7 @@ export class TextField extends FormFieldComponent<ITextFieldProps,ITextFieldStat
 				styles[errorMode],
 				focused && styles.focused,
 				hovering && styles.hovering,
-				!valid && styles.invalid,
+				//!valid && styles.invalid,
 				style
 			]}>
 			<input

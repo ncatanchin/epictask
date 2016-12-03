@@ -10,6 +10,7 @@ import {Popover} from "./Popover"
 import { getValue, isNil } from "typeguard"
 import { Icon } from "./icon/Icon"
 import baseStyles from "./SelectField.styles"
+import { isHovering } from "epic-styles/styles"
 
 // Constants
 const
@@ -140,8 +141,11 @@ export interface ISelectFieldState {
 export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldState> {
 	
 	static defaultProps = {
-		showOpenControl: true
+		showOpenControl: true,
+		showFilter: true
 	}
+	
+	refs:any
 	
 	constructor(props, context) {
 		super(props, context)
@@ -303,25 +307,30 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		
 		this.setState({ open }, open && (() => {
 				
-				const
-					{ rootRefElem } = this.state
+			const
+				{filterInput} = this.refs
 				
-				
-				if (rootRefElem) {
-					const
-						inputElem = $(rootRefElem).find('input')
-					
-					
-					
-					setTimeout(() => {
-						if (!inputElem.length || inputElem.is(':focus'))
-							return
-						
-						log.debug(`Focusing on`, inputElem, rootRefElem)
-						inputElem.focus()
-					},200)
-					
-				}
+			log.debug(`focusing on filter input`,filterInput)
+			guard(() => filterInput.focus())
+				// const
+				// 	{ rootRefElem } = this.state
+				//
+				//
+				// if (rootRefElem) {
+				// 	const
+				// 		inputElem = $(rootRefElem).find('input')
+				//
+				//
+				//
+				// 	setTimeout(() => {
+				// 		if (!inputElem.length || inputElem.is(':focus'))
+				// 			return
+				//
+				// 		log.debug(`Focusing on`, inputElem, rootRefElem)
+				// 		inputElem.focus()
+				// 	},200)
+				//
+				// }
 			}))
 	}
 	
@@ -463,7 +472,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				maxWidth: isNil(left) ? "auto" : winWidth - left
 			},
 			styles.items,
-			styles.items[ ':focus' ]
+			styles.items.focused
 		)
 	}
 	
@@ -498,14 +507,17 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 		
 		return <div
 			id={this.state.id}
+			
 			ref={this.setRootRef}
 			key={this.state.id}
 			
 			onKeyDown={this.onKeyDown}
 			data-focused={focused}
-			style={makeStyle(
+			style={mergeStyles(
 				styles,
-				(open || focused) && styles[':focus'],
+				{[CSSHoverState]: {}},
+				(open || focused) && styles.focused,
+				isHovering(this,this.state.id) && styles.hovering,
 				style
 			)}
 			onClick={this.toggleOpen}
@@ -523,11 +535,12 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			}
 			
 			{/* RENDER CRITERIA */}
-				{showFilter && <TextField
+				{showFilter && <input
 				{...filterProps(this.props)}
 				{...(open || focused ? {autoFocus:true} : {})}
 				id={`${id}-filter-input`}
 				autoComplete="off"
+				ref="filterInput"
 				onFocus={this.onFocus}
 				onBlur={this.onBlur}
 				tabIndex={isNil(tabIndex) ? 0 : tabIndex}
@@ -542,9 +555,8 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 						left:0,
 						width: 1,
 						height: 1
-					})
-				}
-				inputStyle={filterInputStyle}
+					}
+				)}
 				value={filterText || ''}
 			/> }
 			

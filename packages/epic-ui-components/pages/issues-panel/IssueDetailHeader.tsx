@@ -44,7 +44,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 const
 	baseStyles = (topStyles, theme, palette) => {
@@ -194,7 +194,13 @@ function makeSelector() {
 @PureRender
 export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,IIssueDetailHeaderState> {
 	
+	refs:any
+	
 	issueActions = new IssueActionFactory()
+	
+	get form():IForm {
+		return this.refs.form
+	}
 	
 	/**
 	 * Stop editing the issue
@@ -256,8 +262,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param model
 	 * @param values
 	 */
-	private onFormValidSubmit = async (form:IForm,model:any,values:IFormFieldValue[]) => {
-		
+	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => {
+		return this.save()
 	}
 	
 	/**
@@ -292,8 +298,10 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		log.debug(`Edit key down`, event, event.keyCode, event.key, event.charCode)
 		
 		if ((Env.isMac ? event.metaKey : event.ctrlKey) && event.key === 'Enter') {
-			this.editSave()
+			event.preventDefault()
 			event.stopPropagation()
+			
+			this.form.submit()
 		}
 	}
 	
@@ -486,6 +494,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		
 		return <Form
 			id="issue-detail-header-form"
+			ref="form"
 			onInvalid={this.onFormInvalid}
 			onValid={this.onFormValid}
 			onValidSubmit={this.onFormValidSubmit}
@@ -541,7 +550,6 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				           validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
 				           onChange={this.onTitleChange}
 				           onKeyDown={this.onEditKeyDown}
-				           errorStyle={{transform: 'translate(0,1rem)'}}
 				           placeholder="TITLE"
 				           styles={[
 				           	 FlexScale,

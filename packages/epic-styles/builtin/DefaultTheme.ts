@@ -135,6 +135,8 @@ export function DefaultTheme(palette) {
 		}],
 	
 		selectStyle = {
+			[CSSHoverState]: inputHighlight,
+			[CSSFocusState]: inputHighlight,
 			hovering: inputHighlight,
 			focused: inputHighlight,
 			

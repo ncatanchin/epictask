@@ -33,13 +33,21 @@ export interface IWorkIndicatorProps extends IThemedAttributes {
 export class WorkIndicator extends React.Component<IWorkIndicatorProps,void> {
 	
 	render() {
-		const { open, theme } = this.props
+		const { open, style,theme } = this.props
 		
-		return !open ? React.DOM.noscript() : <div style={[PositionAbsolute,Fill,FlexColumnCenter,{
-			top: 0,
-			left: 0,
-			zIndex: 89889786686
-		}]}>
+		return !open ? React.DOM.noscript() :
+			<div
+				style={[
+					makeTransition(['opacity','background','background-color']),
+					PositionAbsolute,
+					Fill,
+					FlexColumnCenter,{
+						top: 0,
+						left: 0,
+						zIndex: 89889786686
+					},
+					style
+				]}>
 			<CircularProgress
 				color={theme.progressIndicatorColor}
 				size={50}/>
