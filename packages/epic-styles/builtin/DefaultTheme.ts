@@ -110,6 +110,14 @@ export function DefaultTheme(palette) {
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
 		},
 		
+		inputInvalid = [{
+			boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`,
+			[CSSFocusState]: [{
+				boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`
+			}]
+			
+		}],
+		
 		inputBorder = {
 			border: `${convertRem(0.1)}px solid ${primary.hue1}`
 			
@@ -117,13 +125,20 @@ export function DefaultTheme(palette) {
 		
 		inputStyle = [makeTransition(['border','box-shadow','background-color']),inputBorder,{
 			minHeight: rem(4),
-			':focus': inputHighlight
 			
+			// FOCUS STATE
+			':focus': inputHighlight,
+			
+			// INVALID STATE
+			invalid: [inputInvalid]
 		}],
 	
 		selectStyle = {
 			':hover': inputHighlight,
-			':focus': inputHighlight
+			':focus': inputHighlight,
+			
+			// INVALID STATE
+			invalid: inputInvalid
 		}
 		
 		
@@ -147,6 +162,7 @@ export function DefaultTheme(palette) {
 		
 		input: inputStyle,
 		inputBorder,
+		inputInvalid,
 		
 		select: selectStyle,
 		
@@ -523,18 +539,16 @@ export function DefaultTheme(palette) {
 				},
 				
 				container: {
-					
-					borderColor: tc(primary.hue2).setAlpha(0.9).toRgbString()
-					
+					borderColor: colorAlpha(primary.hue2,0.9)
 				}
 			},
 			
 			tools: {
 				// borderColor: primary.hue3
-				[ToolPanelLocation.Left]: { borderLeftColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-				[ToolPanelLocation.Right]: { borderRightColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
-				[ToolPanelLocation.Bottom]: { borderBottomColor: tc(primary.hue3).setAlpha(1).toRgbString() },
-				[ToolPanelLocation.Popup]: { borderTopColor: tc(primary.hue3).setAlpha(0.9).toRgbString() },
+				[ToolPanelLocation.Left]: { borderLeftColor: colorAlpha(primary.hue3,0.9) },
+				[ToolPanelLocation.Right]: { borderRightColor: colorAlpha(primary.hue3,0.9)},
+				[ToolPanelLocation.Bottom]: { borderBottomColor: colorAlpha(primary.hue3,1) },
+				[ToolPanelLocation.Popup]: { borderTopColor: colorAlpha(primary.hue3,0.9) },
 				
 			}
 		},

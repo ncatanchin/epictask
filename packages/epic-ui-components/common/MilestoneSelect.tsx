@@ -2,7 +2,8 @@
 
 import { connect } from "react-redux"
 import { List } from "immutable"
-import { PureRender, LabelChip } from "epic-ui-components"
+import { PureRender} from "./PureRender"
+import {LabelChip } from "./LabelChip"
 import { shallowEquals, cloneObjectShallow } from "epic-global"
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"

@@ -1,15 +1,12 @@
-
-
 /**
  * Created by jglanz on 6/14/16.
  */
 // Imports
-
-import filterProps from 'react-valid-props'
+import filterProps from "react-valid-props"
 import { Label } from "epic-models"
-import { makeComponentStyles, PureRender, Icon } from "epic-ui-components"
+import { makeComponentStyles } from "./Common.styles"
+import { PureRender } from "./PureRender"
 import { ChipsField } from "./ChipsField"
-import { MenuItem } from "material-ui"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 
@@ -193,7 +190,7 @@ export class LabelFieldEditor extends React.Component<ILabelFieldEditorProps,any
 			id={id}
 			
 			maxSearchResults={10}
-			modelType={Label}
+			
 			filterChip={this.chipFilter}
 			allChips={availableLabels}
 			selectedChips={labels}

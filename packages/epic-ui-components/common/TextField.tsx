@@ -1,13 +1,15 @@
 // Imports
 
-import { PureRender } from 'epic-ui-components/common'
-import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+import { PureRender } from './PureRender'
+import { ThemedStyles } from 'epic-styles'
 import {
 	colorAlpha, makePaddingRem, FlexAuto, FlexRow, makeTransition, FlexRowCenter,
 	mergeStyles, makeMarginRem, makeBorderRem, makeHeightConstraint, rem
 } from "epic-styles/styles"
 import filterProps from 'react-valid-props'
-import { isNil } from "typeguard"
+import { isNil,getValue } from "typeguard"
+import { FormFieldComponent } from "./FormFieldComponent"
+import { guard } from "epic-global"
 
 // Constants
 const
@@ -39,6 +41,8 @@ function baseStyles(topStyles, theme, palette) {
 			
 			
 			backgroundColor: primary.hue3,
+			
+			invalid: theme.inputInvalid,
 			
 			input: [
 				theme.input,
@@ -72,8 +76,7 @@ function baseStyles(topStyles, theme, palette) {
 /**
  * ITextFieldProps
  */
-export interface ITextFieldProps extends IThemedAttributes {
-	
+export interface ITextFieldProps extends IFormFieldComponentProps {
 	inputStyle?:any
 	errorStyle?:any
 	error?:string
@@ -83,7 +86,7 @@ export interface ITextFieldProps extends IThemedAttributes {
 /**
  * ITextFieldState
  */
-export interface ITextFieldState {
+export interface ITextFieldState extends IFormFieldComponentState {
 	
 }
 
@@ -98,12 +101,35 @@ export interface ITextFieldState {
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
 @PureRender
-export class TextField extends React.Component<ITextFieldProps,ITextFieldState> {
+export class TextField extends FormFieldComponent<ITextFieldProps,ITextFieldState> {
+	
+	refs:any
 	
 	constructor(props,context) {
 		super(props,context)
 		
 		this.state = {}
+	}
+	
+	/**
+	 * Get the text field value
+	 *
+	 * @returns {any}
+	 */
+	getValue(): any {
+		return getValue(() => this.refs.inputField.value,this.props.value)
+	}
+	
+	
+	/**
+	 * On change handler
+	 *
+	 * @param event
+	 */
+	private onChange = (event) => {
+		this.validate()
+		
+		guard(() => this.props.onChange(event))
 	}
 	
 	render() {
@@ -114,18 +140,30 @@ export class TextField extends React.Component<ITextFieldProps,ITextFieldState> 
 				style,
 				errorStyle,
 				tabIndex
-			} = this.props
+			} = this.props,
+			
+			valid = this.isValid()
 			
 			//inputProps = _.omit(filterProps(this.props),'value','defaultValue')
 		
 		//assign(inputProps,value ? {value} : {defaultValue})
 		
-		return <div style={[styles,style]}>
+		return <div style={[
+			styles,
+			style,
+			!valid && styles.invalid
+		]}>
 			<input
-				{...filterProps(this.props)}
+				{...filterProps(_.omit(this.props,'onChange'))}
+				onChange={this.onChange}
 				tabIndex={isNil(tabIndex) ? 0 : tabIndex}
 				ref='inputField'
-				style={mergeStyles(styles.input,inputStyle)}
+				style={mergeStyles(
+					styles.input,
+					
+					inputStyle,
+					!valid && styles.invalid
+				)}
 			/>
 		</div>
 	}

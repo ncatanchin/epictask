@@ -6,8 +6,8 @@ import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
 import { connect } from "react-redux"
 import { Issue, AvailableRepo, Repo, User, Label } from "epic-models"
-import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor } from "epic-ui-components/fields"
-import { Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender, TextField } from "epic-ui-components/common"
+
+import { RepoSelect,LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor,Icon, RepoLabel, getGithubErrorText, FileDrop, PureRender, TextField } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
 
 import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow } from "epic-global"
@@ -28,7 +28,7 @@ import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "epic-ui-components/pages/issue-edit/IssueEditState"
 import IssueEditController from "epic-ui-components/pages/issue-edit/IssueEditController"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
-import { RepoSelect } from "epic-ui-components/fields/RepoSelect"
+
 
 
 const

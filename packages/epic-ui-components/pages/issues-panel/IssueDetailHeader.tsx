@@ -3,7 +3,7 @@ import { List } from "immutable"
 import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
 import { createSelector } from 'reselect'
-import { LabelFieldEditor, MilestoneSelect, AssigneeSelect } from "epic-ui-components/fields"
+import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, Form } from "epic-ui-components/common"
 import {
 	PureRender,
 	RepoLabel,
@@ -13,7 +13,7 @@ import {
 	IssueStateIcon,
 	IssueLabelsAndMilestones
 } from "epic-ui-components"
-import { baseStyles as labelBaseStylesFn } from "epic-ui-components/common/Chip"
+import { chipStyles } from "epic-ui-components/common"
 import { createStructuredSelector } from "reselect"
 import {
 	IThemedAttributes,
@@ -54,7 +54,7 @@ const
 		
 		
 		const
-			labelBaseStyles = createStyles(labelBaseStylesFn, null, theme, palette),
+			labelBaseStyles = createStyles(chipStyles, null, theme, palette),
 			{ background, primary, accent, text, secondary } = palette,
 			flexTransition = makeTransition([
 				'opacity',
@@ -233,17 +233,41 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		return issue
 	}
 	
+	
 	/**
-	 * On enter key
+	 * on form valid
 	 *
-	 * @param event
+	 * @param values
 	 */
-	private editSave = async(event:React.KeyboardEvent<any> = null) => {
-		if (event) {
-			event && event.preventDefault()
-			
-			
-		}
+	private onFormValid = (values:IFormFieldValue[]) => {
+		log.debug(`onValid`,values)
+	}
+	
+	/**
+	 * On form invalid
+	 *
+	 * @param values
+	 */
+	private onFormInvalid = (values:IFormFieldValue[]) => {
+		log.debug(`onInvalid`,values)
+	}
+	
+	/**
+	 * On submit when the form is valid
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
+	private onFormValidSubmit = async (form:IForm,model:any,values:IFormFieldValue[]) => {
+		
+	}
+	
+	/**
+	 * Save the issue
+	 */
+	private save = async() => {
+		
 		const
 			actions = new IssueActionFactory(),
 			updateIssue = this.getEditIssue()
@@ -254,6 +278,13 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		
 		this.stopEditingIssue()
 	}
+	
+	/**
+	 * On enter key
+	 *
+	 * @param event
+	 */
+	private editSave = this.save
 	
 	/**
 	 * On Key down event in edit field
@@ -456,7 +487,12 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 					}
 				</div>
 		
-		return <div style={[styles.root]}>
+		return <Form
+			id="issue-detail-header-form"
+			onInvalid={this.onFormInvalid}
+			onValid={this.onFormValid}
+			onValidSubmit={this.onFormValidSubmit}
+			style={[styles.root]}>
 			
 			{/* ROW 1 */}
 			<div style={[styles.row1,saving && {opacity: 0}]}>
@@ -505,6 +541,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				{editTitle &&
 				//errorText={getGithubErrorText(saveError,'title')}
 				<TextField value={editIssue.title || ''}
+				           validators={[Form.makeMinLengthValidator(1)]}
 				           onChange={this.onTitleChange}
 				           onKeyDown={this.onEditKeyDown}
 				           errorStyle={{transform: 'translate(0,1rem)'}}
@@ -589,7 +626,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 					color={theme.progressIndicatorColor}
 					size={30}/>
 			</div>}
-		</div>
+		</Form>
 	}
 	
 	

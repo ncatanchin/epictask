@@ -1,44 +1,37 @@
 /**
  * Created by jglanz on 6/14/16.
  */
-
 // Imports
-
-import { PureRender } from "../common/PureRender"
-
-import { shortId, guard } from  "epic-global"
-
-import filterProps from 'react-valid-props'
+import { PureRender } from "./PureRender"
+import { shortId } from "epic-global"
+import filterProps from "react-valid-props"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchField } from "epic-ui-components/search"
-import { searchItemBaseStyles, Chip } from "epic-ui-components/common"
-import { List } from 'immutable'
+import { searchItemBaseStyles } from "./SearchFieldItem.styles"
+import { Chip } from "./Chip"
+import { List } from "immutable"
 import { SearchItem } from "epic-models"
 import { getValue } from "typeguard"
 
 const
-	{ Style } = Radium,
-	toaster = getNotificationCenter(),
 	log = getLogger(__filename)
 
-const baseStyles = (topStyles, theme, palette) => ({
-	root: makeStyle(FlexColumn, FlexAuto, PositionRelative, {
-		
-	})
-})
+function baseStyles(topStyles, theme, palette) {
+	return{
+		root: [FlexColumn, FlexAuto, PositionRelative]
+	}
+}
 
 
 /**
  * IChipsFieldProps
  */
 export interface IChipsFieldProps extends IThemedAttributes {
-	theme?:any
 	id:string
 	
 	label?:string
 	hint?:string
 	
-	modelType:{new():IChipItem}
 	allChips:IChipItem[]
 	filterChip:(item:IChipItem, query:string) => boolean
 	selectedChips:IChipItem[]

@@ -30,7 +30,7 @@ import { IssuePatchState } from "epic-ui-components/pages/issue-patch/IssuePatch
 import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
 import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
 import { SearchField } from "epic-ui-components/search"
-import { ChipsField } from "epic-ui-components/fields"
+import { ChipsField } from "epic-ui-components/common"
 
 
 // Constants
@@ -566,7 +566,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					id={`issue-patch-chips`}
 					style={FillWidth}
 					maxSearchResults={10}
-					modelType={Label}
+					
 					filterChip={this.chipFilter}
 					allChips={allItems}
 					selectedChips={newItems}
