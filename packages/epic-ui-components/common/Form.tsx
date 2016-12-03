@@ -2,6 +2,7 @@
 import { List } from "immutable"
 import { PureRender, WorkIndicator } from 'epic-ui-components/common'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+
 import { getValue, isString } from "typeguard"
 import { guard, EnumEventEmitter } from "epic-global"
 
@@ -72,6 +73,7 @@ declare global {
 		errorFormatter?:(errorText:string) => string
 	}
 	
+
 	interface IFormFieldConstructor {
 		new (props,context):IFormField
 	}
@@ -92,7 +94,6 @@ declare global {
 	interface IForm extends Form {
 		
 	}
-	
 	
 	interface IFormFieldValue {
 		name:string
@@ -134,6 +135,7 @@ export interface IFormProps extends IThemedAttributes {
 	/**
 	 * Additional validator added to field validators
 	 */
+
 	validator?:(form:IForm,values:IFormFieldValue[]) => Promise<IFormFieldValue[]>
 	
 	/**
@@ -162,7 +164,6 @@ export interface IFormProps extends IThemedAttributes {
 @ThemedStyles(baseStyles)
 @PureRender
 export class Form extends React.Component<IFormProps,IFormState> {
-	
 	
 	/**
 	 * Child context types
@@ -354,6 +355,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			values = this.fields.map(this.getFieldValue) as List<IFormFieldValue>,
 			valid = values.every(it => it.valid)
 			
+
 		this.updateState({
 			valid,
 			values
@@ -458,6 +460,7 @@ export namespace Form {
 			
 			return valid ? valid : `Value must be at least ${minLength} characters`
 		}
+
 	}
 	
 }

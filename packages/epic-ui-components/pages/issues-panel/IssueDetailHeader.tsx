@@ -4,6 +4,7 @@ import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
 import { createSelector } from 'reselect'
 import { LabelFieldEditor, MilestoneSelect, AssigneeSelect, Form } from "epic-ui-components/common"
+
 import {
 	PureRender,
 	RepoLabel,
