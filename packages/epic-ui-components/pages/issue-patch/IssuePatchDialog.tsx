@@ -604,7 +604,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					onChipRemoved={this.onItemRemoved}
 					keySource={(item:Label) => item.id}
 					
-					hint='labels'
+					hint={title}
 					
 					onEscape={this.hide}
 					

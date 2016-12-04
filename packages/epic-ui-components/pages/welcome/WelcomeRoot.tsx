@@ -3,7 +3,7 @@ import { createStructuredSelector } from "reselect"
 import { Page, PureRender, Logo } from "epic-ui-components/common"
 import { connect } from "react-redux"
 import { ThemedStyles, Transparent, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
-import { createDeepEqualSelector } from "epic-global"
+import { createDeepEqualSelector, guard } from "epic-global"
 import { uiStateSelector,getAppActions } from "epic-typedux"
 import { RepoSearchProvider, GitHubSearchProvider ,SearchField } from "epic-ui-components/search"
 
@@ -74,24 +74,24 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	
 	appActions = getAppActions()
 	
-	/**
-	 * On search result selected
-	 * @param eventType
-	 * @param searchId
-	 * @param item
-	 */
-	private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
-		if (searchId !== WelcomeSearchId || !getValue(() => item.provider.id === Repo.$$clazz,false))
-			return
-		
-		item.provider.handleItem(item)
-	}
+	// /**
+	//  * On search result selected
+	//  * @param eventType
+	//  * @param searchId
+	//  * @param item
+	//  */
+	// private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
+	// 	if (searchId !== WelcomeSearchId || !getValue(() => item.provider.id === Repo.$$clazz,false))
+	// 		return
+	//
+	// 	item.provider.handleItem(item)
+	// }
 	
 	/**
 	 * On mount create initial state & bind listeners
 	 */
 	componentWillMount = () => {
-		EventHub.on(EventHub.SearchItemSelected,this.onResultSelected)
+		//EventHub.on(EventHub.SearchItemSelected,this.onResultSelected)
 		this.setState(this.getNewState())
 	}
 	
@@ -99,7 +99,7 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	 * On unmount - unbind
 	 */
 	componentWillUnmount = () => {
-		EventHub.off(EventHub.SearchItemSelected,this.onResultSelected)
+		//EventHub.off(EventHub.SearchItemSelected,this.onResultSelected)
 	}
 	
 	/**
@@ -110,6 +110,18 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	})
 	
 	updateState = () => this.setState(this.getNewState())
+	
+	
+	/**
+	 * When a result is selected
+	 *
+	 * @param item
+	 */
+	private onItemSelected = (item:ISearchItem) => {
+		log.info(`Repo add result was selected`, item)
+		
+		guard(() => item.provider.handleItem(item))
+	}
 	
 	/**
 	 * on escape sequence from search panel
@@ -145,8 +157,13 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 					ref={this.setSearchFieldRef}
 					searchId={WelcomeSearchId}
 					providers={[GitHubSearchProvider,RepoSearchProvider]}
-					
+					autoFocus={true}
+					tabIndex={0}
+					placeholder='Search for any repo'
+					open={true}
 					focused={true}
+					onItemSelected={this.onItemSelected}
+					resultsHidden={false}
 					inputStyle={styles.search.input}
 					onEscape={this.onEscape}
 					/>

@@ -1,6 +1,6 @@
 
 import * as Electron from 'electron'
-import { getValue } from "typeguard"
+import { getValue, isNil } from "typeguard"
 
 const
 	_ = require('lodash'),
@@ -29,6 +29,7 @@ process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 
 const EnvGlobal = {
 	Config,
+	EnableDebug: !isNil(process.env.EPIC_DEBUG),
 	skipSplash,
 	envName,
 	isMac,

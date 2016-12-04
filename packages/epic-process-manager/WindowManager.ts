@@ -618,7 +618,7 @@ export class WindowManager {
 				storeWindowState = false,
 				singleWindow = false,
 				autoRestart = false,
-				showDevTools = Env.isDev,
+				showDevTools = false,//Env.isDev,
 				processType = ProcessType.UI
 			} = config
 		

@@ -7,6 +7,7 @@ const
 	log = getLogger(__filename),
 	{BrowserWindow,app} = Electron
 
+
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 _.assignGlobal({
@@ -105,8 +106,13 @@ function onShutdown(event) {
 					})
 				}
 				
+				app.quit()
+				setTimeout(() => {
+					console.log(`Hard stop`)
+					app.exit(0)
+					process.exit(0)
+				},10000)
 				
-				app.exit(0)
 				
 			}
 		

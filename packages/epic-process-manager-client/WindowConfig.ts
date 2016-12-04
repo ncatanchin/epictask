@@ -132,7 +132,7 @@ export const WindowConfigNormalDefaults = {
 	uri: "",
 	singleWindow: false,
 	autoRestart: false,
-	showDevTools: true,
+	showDevTools: false, //Env.isDev,
 	storeWindowState: true,
 	opts: WindowDefaultOpts
 }

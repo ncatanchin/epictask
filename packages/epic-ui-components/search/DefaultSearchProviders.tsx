@@ -72,6 +72,19 @@ function textSearchFilter(query:string, items:List<any>, props:string[], limit:n
 
 
 /**
+ * Handler to create AvailableRepo
+ *
+ * @param item
+ */
+function createAvailableRepoHandler(item:SearchItem) {
+	const
+		model = item.value
+	
+	assert(model.$$clazz === Repo.$$clazz)
+	getRepoActions().createAvailableRepo(model)
+}
+
+/**
  * Search repos
  *
  * @param query
@@ -98,14 +111,7 @@ export class RepoSearchProvider implements ISearchProvider {
 		
 	}
 	
-	handleItem(item:SearchItem) {
-		const
-			model = item.value
-		
-		assert(model.$$clazz === Repo.$$clazz)
-		getRepoActions().createAvailableRepo(model)
-		
-	}
+	handleItem = createAvailableRepoHandler
 }
 
 /**
@@ -118,6 +124,8 @@ export class RepoSearchProvider implements ISearchProvider {
 export class GitHubSearchProvider implements ISearchProvider {
 	id = 'Github'
 	name = 'Github'
+	
+	handleItem = createAvailableRepoHandler
 	
 	@Benchmarker
 	async query(criteria, text):Promise<List<SearchItem>> {

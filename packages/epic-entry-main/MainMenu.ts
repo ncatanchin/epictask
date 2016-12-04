@@ -75,8 +75,10 @@ function onFocus() {
 }
 
 function setupShortcuts() {
-	app.on('browser-window-focus',onFocus)
-	app.on('browser-window-blur',onBlur)
+	if (Env.isDev || Env.EnableDebug) {
+		app.on('browser-window-focus', onFocus)
+		app.on('browser-window-blur', onBlur)
+	}
 }
 
 /**

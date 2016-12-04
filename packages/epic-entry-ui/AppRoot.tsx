@@ -102,7 +102,8 @@ const
 		FindAction: 'FindAction',
 		CloseWindow: 'CloseWindow',
 		Settings: 'Settings',
-		RepoSettings: 'RepoSettings'
+		RepoSettings: 'RepoSettings',
+		Quit: 'Quit'
 	}
 /**
  * Root App Component
@@ -122,6 +123,18 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	 * All global app root window commands
 	 */
 	commandItems = (builder:CommandContainerBuilder) => {
+		
+		if (!Env.isMac) {
+			builder
+				.command(
+					CommandType.App,
+					'Quit',
+					(item, event) => require('electron').remote.app.quit(),
+					"CommandOrControl+q",{
+						id: CIDS.Quit
+					}
+				)
+		}
 		
 		If(ProcessConfig.isUI(), () => {
 			builder

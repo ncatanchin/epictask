@@ -152,6 +152,8 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 					
 					
 					appActions.setAuthenticated(user, token)
+					
+					await Promise.delay(200)
 					getRepoActions().syncUserRepos()
 					
 					success = true
