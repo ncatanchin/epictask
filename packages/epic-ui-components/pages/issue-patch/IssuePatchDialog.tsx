@@ -7,17 +7,12 @@ import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
 import { MenuItem } from "material-ui"
-import { PureRender, LabelChip, Avatar, IssueLabelsAndMilestones } from "../../common"
+import { PureRender, LabelChip, Avatar, IssueLabelsAndMilestones, Form } from "../../common"
 import { DialogRoot, createSaveCancelActions } from "../../layout/dialog"
-import { getValue } from "epic-global"
+import { getValue, guard } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import {
-	enabledRepoIdsSelector,
-	enabledAssigneesSelector,
-	enabledLabelsSelector,
-	enabledMilestonesSelector,
-
 	getUIActions
 } from "epic-typedux"
 import { CommonKeys, CommandType, ContainerNames } from "epic-command-manager"
@@ -38,7 +33,7 @@ const
 	log = getLogger(__filename),
 	tinycolor = require('tinycolor2')
 
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
@@ -153,30 +148,28 @@ export interface IIssuePatchDialogState {
  * @constructor
  **/
 
-@ViewRoot(IssuePatchController,IssuePatchState)
+
 @connect(createStructuredSelector({
 	availableAssignees: assigneesSelector,
 	availableLabels: labelsSelector,
-	availableMilestones: milestonesSelector,
-	
-	// issues: patchIssuesSelector,
-	// mode: patchModeSelector,
-	// saving: (state) => issueStateSelector(state).issueSaving,
-	// saveError: (state) => issueStateSelector(state).issueSaveError,
-
+	availableMilestones: milestonesSelector
 }))
+@ViewRoot(IssuePatchController,IssuePatchState)
 @CommandComponent()
-// If you have a specific theme key you want to
-// merge provide it as the second param
 @ThemedStyles(baseStyles, 'issuePatchDialog')
 @PureRender
 export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIssuePatchDialogState> {
+	
+	/**
+	 * Tracks refs
+	 */
+	refs:any
 	
 	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.command(CommandType.Container,
-				'Save Comment',
+				'Save Issue',
 				(cmd, event) => this.onSave(event),
 				"CommandOrControl+Enter")
 			.command(CommandType.Container,
@@ -189,7 +182,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	commandComponentId = ContainerNames.IssuePatchDialog
 	
 	private get viewState():IssuePatchState {
-		return getValue(() => this.props.viewState)
+		return getValue(() => this.viewController.getState())
 	}
 	
 	private get viewController() {
@@ -198,6 +191,15 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	
 	get mode():TIssuePatchMode {
 		return getValue(() => this.viewState.mode)
+	}
+	
+	/**
+	 * Get the form object
+	 *
+	 * @returns {IForm}
+	 */
+	get form():IForm {
+		return this.refs.form as IForm
 	}
 	
 	/**
@@ -267,6 +269,41 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 		getUIActions().closeWindow()
 	}
 	
+	
+	
+	/**
+	 * on form valid
+	 *
+	 * @param values
+	 */
+	private onFormValid = (values:IFormFieldValue[]) => {
+		log.debug(`onValid`,values)
+	}
+	
+	/**
+	 * On form invalid
+	 *
+	 * @param values
+	 */
+	private onFormInvalid = (values:IFormFieldValue[]) => {
+		log.debug(`onInvalid`,values)
+	}
+	
+	/**
+	 * On submit when the form is valid
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
+	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => {
+		return this.onSave()
+	}
+	
+	/**
+	 * Submit the form
+	 */
+	private submit = () => guard(() => this.form.submit())
 	
 	/**
 	 * On item selected, if the patch mode is NOT Label
@@ -346,11 +383,12 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			// Filter out repos that don't apply to these issues
 				.filter((item:Milestone) => (
 					// In current repo and not selected
-					repoIds.includes(item.repoId) && !newItems.includes(item) &&
+					repoIds.includes(item.repoId) &&
+					!newItems.includes(item) &&
 					
-					// Query match
-					(_.isEmpty(query) || _.toLower(item.title).indexOf(_.toLower(query)) > -1) &&
-					
+					// // Query match
+					// (_.isEmpty(query) || _.toLower(item.title).indexOf(_.toLower(query)) > -1) &&
+					//
 					// Label does not already exist on every item
 					!issues.every((issue:Issue) => _.get(issue, 'milestone.id') === item.id)
 				))
@@ -359,7 +397,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				.toArray()
 		
 		
-		log.info('new milestone data source =', items)
+		log.debug('new milestone data source =', items,availableMilestones,newItems,issues)
 		return items
 	}
 	
@@ -448,7 +486,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	updateState(props:IIssuePatchDialogProps) {
 		const
 			viewState = props.viewState
-		
+		log.debug(`Updating state, viewState = `,viewState)
 		if (!viewState || !viewState.mode || !viewState.issues.size)
 			return
 		
@@ -491,13 +529,6 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	 * @param newProps
 	 */
 	componentWillReceiveProps = (newProps) => {
-		if (this.props.open !== newProps.open) {
-			this.setState({
-				query: "",
-				newItems: []
-			})
-		}
-		
 		this.updateState(newProps)
 	}
 	
@@ -530,8 +561,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				theme,
 				styles,
 				saving,
-				palette,
-				saveError
+				palette
 			} = this.props,
 			{allItems} = this.state,
 			newItems = this.newItems,
@@ -543,14 +573,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				{title}
 			</div>,
-			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide)
+			titleActionNodes = createSaveCancelActions(theme, palette, this.submit, this.hide)
 		
-		// style={/* FIELD STYLES */ makeStyle(styles.root,props.style)}
-		//
-		// inputStyle={/* INPUT STYLES */ makeStyle(styles.input,inputStyle)}
-		//
-		// labelStyle={/* LABEL STYLE */ makeStyle(styles.label,labelStyle)}
-		//
 		return <CommandRoot
 			id={ContainerNames.IssuePatchDialog}
 			component={this}
@@ -560,13 +584,19 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			titleActionNodes={titleActionNodes}
 			saving={saving}
 			style={styles}>
-			<div style={styles.root}>
+			<Form
+				id="issue-patch-form"
+				ref="form"
+				onInvalid={this.onFormInvalid}
+				onValid={this.onFormValid}
+				onValidSubmit={this.onFormValidSubmit}
+				styles={styles.root}>
 				
 				<ChipsField
 					id={`issue-patch-chips`}
 					style={FillWidth}
 					maxSearchResults={10}
-					
+					autoFocus
 					filterChip={this.chipFilter}
 					allChips={allItems}
 					selectedChips={newItems}
@@ -614,7 +644,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			
 			
 				
-				</div>
+				</Form>
 		</DialogRoot>
 		</CommandRoot>
 	}

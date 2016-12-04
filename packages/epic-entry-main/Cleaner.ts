@@ -1,5 +1,5 @@
 import * as  path from 'path'
-
+import * as fs from 'fs'
 
 
 namespace Cleaner {
@@ -18,17 +18,20 @@ namespace Cleaner {
 				{ app } = require('electron'),
 				
 				dataPath = path.resolve(app.getPath('userData')),
+				dataFiles = fs.readdirSync(dataPath),
 				
 				cmds = require('shelljs')
 			
-			for (let file of [ 'epictask-*', 'store-state', 'settings.json', 'sync-status.json' ]) {
-				const
-					fullPath = `${dataPath}${path.sep}${file}`
-				
-				console.log(`Cleaning ${fullPath}`)
-				
-				cmds.rm('-Rf', fullPath)
-				
+			for (let file of dataFiles) {
+				if ([ 'epic', 'store-state', 'indexeddb','local','cache','databases','settings.json', 'sync-status.json' ].some(name => file.toLowerCase().indexOf(name) > -1)) {
+					const
+						fullPath = `${dataPath}${path.sep}${file}`
+					
+					
+					console.log(`Cleaning ${fullPath}`)
+					
+					cmds.rm('-Rf', fullPath)
+				}
 				// child_process.execSync(cmd,{
 				// 	stdio: 'inherit'
 				// })
@@ -62,9 +65,21 @@ namespace Cleaner {
 		
 		// if (DEBUG)
 		// 	opts.args.unshift(process.argv[ process.argv.length - 1 ])
+		const
+			browserWindows = [...Electron.BrowserWindow.getAllWindows()]
+		
+		for (let browserWindow of browserWindows) {
+			try {
+				browserWindow.close()
+			} catch (err) {
+				console.log(`unable to close window`,err)
+			}
+		}
+		
 		
 		console.log(`relaunching with args: ${opts.args}`)
 		app.relaunch(opts)
+		app.quit()
 		app.exit(0)
 	}
 

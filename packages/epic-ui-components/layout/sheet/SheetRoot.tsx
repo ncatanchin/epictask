@@ -72,7 +72,7 @@ const baseStyles = (topStyles, theme, palette) => {
 			body: [ FillWidth, FlexColumn, {
 				flexShrink: 1,
 				maxHeight: '50vh',
-				color: text.secondary
+				color: text.primary
 			} ]
 			
 			

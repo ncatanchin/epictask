@@ -42,7 +42,7 @@ export interface IRepoAddToolState {
  * @constructor
  **/
 
-@ThemedStyles(baseStyles, 'dialog', 'repoAddDialog', 'sheet')
+@ThemedStyles(baseStyles, 'sheet')
 @PureRender
 export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolState> {
 	
@@ -122,13 +122,14 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 		
 		
 		return <div
-			style={[FlexColumn]}>
+			style={[styles,FlexColumn]}>
 			
 			<SearchField ref={this.setSearchField}
 			             inputStyle={styles.search.input}
-			             style={styles.search.panel}
+			             styles={styles.search}
 			             autoFocus={true}
-			             tabIndex={-1}
+			             tabIndex={0}
+			             placeholder='Search for any repo'
 			             onEscape={this.hide}
 			             focused={true}
 			             open={true}

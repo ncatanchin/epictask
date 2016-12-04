@@ -42,14 +42,14 @@ import {
 import { ContainerNames } from "epic-command-manager"
 
 import { DialogRoot } from '../../layout/dialog'
-import { PureRender, Icon, Button,SelectField } from "epic-ui-components"
+
 import { getValue } from "epic-global"
 import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
 import { Settings } from "epic-global/settings/Settings"
 
 import { Tab, Tabs } from "material-ui"
 import { makeHeightConstraint } from "epic-styles/styles"
-import { TabTemplate } from "epic-ui-components/common"
+import { PureRender, Icon, Button,SelectField,TabTemplate } from "epic-ui-components/common"
 import { KeyMapEditor } from "epic-ui-components/pages/settings/KeyMapEditor"
 import { SettingsSection, SettingsField } from "epic-ui-components/pages/settings/SettingsElements"
 

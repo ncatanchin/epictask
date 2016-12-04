@@ -46,7 +46,7 @@ export function ViewRoot<S,VC extends IViewControllerConstructor<S>>(
 					if (!viewState) {
 						viewController.on(
 							ViewStateEvent[ ViewStateEvent.Changed ],
-							(updatedState) => mapper.remap()
+							(updatedState) => setImmediate(() => mapper.remap())
 						)
 					}
 					

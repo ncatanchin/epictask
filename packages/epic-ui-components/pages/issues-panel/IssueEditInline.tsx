@@ -13,8 +13,8 @@ import { createStructuredSelector } from "reselect"
 import { availableReposSelector } from "epic-typedux"
 import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
-import { cloneObjectShallow, cloneObject, shallowEquals, addErrorMessage } from "epic-global"
-import { IRowState, MilestoneLabel, WorkIndicator } from "epic-ui-components/common"
+import { cloneObjectShallow, cloneObject, shallowEquals, addErrorMessage, guard } from "epic-global"
+import { IRowState, MilestoneLabel, WorkIndicator, RepoSelect, Form, FormValidators } from "epic-ui-components/common"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanel, IssuesPanelController, getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel"
 import {
@@ -31,8 +31,9 @@ import {
 	FlexColumnCenter,
 	FlexColumn,
 	makeTransition,
-	PositionRelative
+	PositionRelative, makeHeightConstraint
 } from "epic-styles/styles"
+import { enabledAvailableReposSelector } from "epic-typedux/selectors"
 
 
 // Constants
@@ -40,61 +41,62 @@ const
 	log = getLogger(__filename)
 
 //region Styles
-const baseStyles = (topStyles, theme, palette) => {
-	const
-		{ text, accent, primary, background, secondary } = palette
-	
-	return [
-		OverflowHidden,
-		FlexColumn,
-		FillWidth,
-		FlexAuto,
-		makeTransition('opacity'),
+const
+	actionHeight = rem(3),
+	baseStyles = (topStyles, theme, palette) => {
+		const
+			{ text, accent, primary, background, secondary } = palette
 		
-		{
+		return [
+			OverflowHidden,
+			FlexColumn,
+			FillWidth,
+			FlexAuto,
+			makeTransition('opacity'),
 			
-			backgroundColor: background,
-			
-		
-			issue: [
-				FillWidth,
-				PositionRelative,
-				makeTransition([ 'background-color' ]), {
-					// COLORS
-					backgroundColor: background,
-					color: text.secondary,
-					borderBottom: '0.1rem solid ' + colorAlpha(text.secondary, 0.1),
+			{
+				
+				backgroundColor: background,
+				
+				
+				issue: [
+					FillWidth,
+					PositionRelative,
+					makeTransition([ 'background-color' ]), {
+						// COLORS
+						backgroundColor: background,
+						color: text.secondary,
+						borderBottom: '0.1rem solid ' + colorAlpha(text.secondary, 0.1),
 						
-					cursor: 'pointer',
-					
-					// Issue selected
-					selected: [],
-					
-					// Avatar component
-					avatar: [ {
-					} ],
-					
-					
-				}
-			],
-			
-			
-			row: [ FlexRowCenter, FillWidth, OverflowHidden, {
+						cursor: 'pointer',
+						
+						// Issue selected
+						selected: [],
+						
+						// Avatar component
+						avatar: [ {} ],
+						
+						
+					}
+				],
 				
-				spacer: [ FlexScale ],
 				
-				action: [ FlexRowCenter, FlexAuto, {
-					borderRadius: 0,
-					height: rem(3),
-					icon: [ FlexAuto, FlexColumnCenter, makePaddingRem(0.3,1,0.3,0), {
-						fontSize: makeThemeFontSize(1.3)
-					} ],
-					label: [ FlexAuto, FlexColumnCenter ]
+				row: [ FlexRowCenter, FillWidth, {
+					
+					spacer: [ FlexScale ],
+					
+					action: [ FlexRowCenter, FlexAuto, {
+						borderRadius: 0,
+						height: actionHeight,
+						icon: [ FlexAuto, FlexColumnCenter, makePaddingRem(0.3, 1, 0.3, 0), {
+							fontSize: makeThemeFontSize(1.3)
+						} ],
+						label: [ FlexAuto, FlexColumnCenter ]
+					} ]
 				} ]
-			} ]
-		}
-	]
-}
+			}
+		]
+	}
 //endregion
 
 
@@ -104,30 +106,27 @@ const baseStyles = (topStyles, theme, palette) => {
 export interface IIssueEditInlineProps extends IThemedAttributes {
 	
 	
-	editingIssue?:Issue
+	editingIssue?: Issue
 	
 	
-	availableRepos?:List<AvailableRepo>
+	availableRepos?: List<AvailableRepo>
 	
-	viewController?:IssuesPanelController
+	viewController?: IssuesPanelController
 	
-	rowState?:IRowState<string,string,number>
-	items?:List<IIssueListItem<any>>
+	rowState?: IRowState<string,string,number>
+	items?: List<IIssueListItem<any>>
 }
 
 /**
  * IIssueEditInlineState
  */
 export interface IIssueEditInlineState {
-	textField?:any
-	focused?:boolean
-	labelField?:any
+	textField?: any
+	focused?: boolean
+	labelField?: any
 	
-	saving?:boolean
-	error?:Error
-	
-	realIndex?:number
-	item?:IIssueListItem<any>
+	realIndex?: number
+	item?: IIssueListItem<any>
 }
 
 /**
@@ -140,22 +139,30 @@ export interface IIssueEditInlineState {
 
 @connect(() => createStructuredSelector({
 	editingIssue: getIssuesPanelSelector(selectors => selectors.editingIssueSelector),
-	availableRepos: availableReposSelector,
+	availableRepos: enabledAvailableReposSelector,
 	items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector)
 }))
 @CommandComponent()
-@ThemedStyles(baseStyles, 'inline', 'issueEditDialog', 'form')
+@ThemedStyles(baseStyles)
 export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssueEditInlineState> implements ICommandComponent {
 	
+	refs: any
 	
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder: CommandContainerBuilder) =>
 		builder.make()
 	
-	readonly commandComponentId:string = 'IssueEditInline'
+	readonly commandComponentId: string = 'IssueEditInline'
 	
-	issueActions = getIssueActions()
 	
-	uiActions = getUIActions()
+	/**
+	 * Get the form
+	 *
+	 * @returns {IForm}
+	 */
+	get form() {
+		return this.refs.form as IForm
+	}
+	
 	
 	/**
 	 * Check for changes to editing issue
@@ -166,7 +173,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * @returns {boolean}
 	 */
 	shouldComponentUpdate = (nextProps, nextState) => {
-		return !shallowEquals(this.props, nextProps, 'editingIssue', 'styles', 'theme', 'palette') || !shallowEquals(this.state, nextState)
+		return !shallowEquals(this.props, nextProps, 'availableRepos', 'editingIssue', 'styles', 'theme', 'palette') || !shallowEquals(this.state, nextState)
 	}
 	
 	/**
@@ -179,10 +186,15 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	}
 	
 	
-	updateState = (props = this.props) => {
+	/**
+	 * Update the internal state
+	 *
+	 * @param props
+	 */
+	private updateState = (props = this.props) => {
 		const
 			{ items, rowState } = props,
-			realIndex:number = rowState.item,
+			realIndex: number = rowState.item,
 			item = isNumber(realIndex) && items.get(realIndex)
 		
 		this.setState({
@@ -209,17 +221,16 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 *
 	 * @returns {Issue}
 	 */
-	private get issue():Issue {
+	private get issue(): Issue {
 		return this.props.editingIssue
 	}
 	
-
 	
 	/**
 	 * Title input changed
 	 *
 	 */
-	onTitleChange = (event:FormEvent<HTMLInputElement>) => {
+	onTitleChange = (event: FormEvent<HTMLInputElement>) => {
 		this.controller.setEditingIssue(
 			cloneObjectShallow(this.issue, {
 				title: event.currentTarget.value
@@ -230,53 +241,31 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	/**
 	 * Selected repo changed
 	 *
-	 * @param event
-	 * @param index
-	 * @param repoId
+	 * @param repo
 	 */
-	onRepoChange = (event, index, repoId) => {
+	private onRepoItemSelected = (repo) => {
 		const
 			{ editingIssue } = this.props
 		
+		if (editingIssue.repoId === repo.id)
+			return
 		
 		this.controller.setEditingIssue(cloneObjectShallow(editingIssue, {
 			milestone: null,
 			labels: [],
-			repoId
+			repoId: repo.id
 		}))
 	}
 	
 	/**
-	 * Selected milestone changed
+	 * Text field ref
 	 *
-	 * @param milestone
+	 * @param textField
 	 */
-	onMilestoneChange = (milestone:Milestone) => {
-		
-		const
-			{ issue } = this,
-			newIssue = cloneObjectShallow(issue, {
-				milestone
-			})
-		
-		log.info('Milestone set issue=', issue, 'milestone', milestone, 'updated issue', newIssue)
-		
-		this.controller.setEditingIssue(newIssue)
-		
-	}
-	
-	
-	setTextField = (textField) => {
+	private setTextField = (textField) => {
 		if (textField)
 			this.setState({ textField })
 	}
-	
-	/**
-	 * Set saving flag
-	 *
-	 * @param saving
-	 */
-	setSaving = (saving:boolean) => this.setState({ saving })
 	
 	/**
 	 * Hide the editor field
@@ -290,17 +279,8 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * Save the issue
 	 */
 	save = async() => {
-		this.setSaving(true)
-		try {
-			await getIssueActions().saveIssue(cloneObject(this.issue))
-			this.hide()
-		} catch (error) {
-			log.error(`Failed to save inline issue`, error)
-			this.setState({ error })
-			addErrorMessage(`Unable to save issue: ${error.message}`)
-		} finally {
-			this.setSaving(false)
-		}
+		await getIssueActions().saveIssue(cloneObject(this.issue))
+		this.hide()
 	}
 	
 	/**
@@ -311,18 +291,15 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 *
 	 */
 	onBlur = (event) => {
-		log.info('Inline edit blurred', document.activeElement)
+		log.debug('Inline edit blurred', document.activeElement)
 		
-		// if (ReactDOM.findDOMNode(this).contains(document.activeElement) || document.activeElement === document.body) {
-		// 	log.info('we still have focus, probably clicked another window')
-		// 	return
-		// }
-		if (!this.state.saving)
-			this.hide()
+		if (getValue(() => this.form.isWorking())) {
+			
+		} else {
+			guard(() => this.props.onBlur(event))
+			//this.hide()
+		}
 		
-		// this.setState({
-		// 	focused: false,
-		// }, this.hide)
 		
 	}
 	
@@ -332,7 +309,9 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * @param event
 	 */
 	onFocus = (event) => {
-		log.info('inline edit focused')
+		log.debug('inline edit focused')
+		
+		guard(() => this.props.onFocus(event))
 	}
 	
 	/**
@@ -341,9 +320,9 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	 * @param event
 	 * @returns {boolean}
 	 */
-	onKeyDown = (event:React.KeyboardEvent<any>) => {
+	private onKeyDown = (event: React.KeyboardEvent<any>) => {
 		if (event.keyCode === 13) {
-			this.save()
+			this.form.submit()
 			
 			event.preventDefault()
 			event.stopPropagation()
@@ -352,11 +331,41 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	}
 	
 	
+	/**
+	 * on form valid
+	 *
+	 * @param values
+	 */
+	private onFormValid = (values: IFormFieldValue[]) => {
+		log.debug(`onValid`, values)
+	}
+	
+	/**
+	 * On form invalid
+	 *
+	 * @param values
+	 */
+	private onFormInvalid = (values: IFormFieldValue[]) => {
+		log.debug(`onInvalid`, values)
+	}
+	
+	/**
+	 * On submit when the form is valid
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
+	private onFormValidSubmit = (form: IForm, model: any, values: IFormFieldValue[]) => {
+		return this.save()
+	}
+	
+	
 	render() {
 		const
 			{ issue, props, state } = this,
 			{ styles, style, availableRepos } = props,
-			{ saving, error } = state,
+			
 			availRepo = issue && availableRepos && availableRepos.find(it => it.id === issue.repoId),
 			repo = availRepo && availRepo.repo
 		
@@ -368,13 +377,8 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			issueStyles = makeStyle(
 				styles.issue,
 				styles.issue.selected
-			),
-			
-			// ERROR
-			titleError = getValue(
-				() => getGithubErrorText(error, 'title'),
-				getValue(() => error.message)
 			)
+		
 		
 		return <CommandRoot
 			{...filterProps(props)}
@@ -383,13 +387,25 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 			className={'selected'}>
 			
 			{/*<div style={styles.issueMarkers}></div>*/}
-			{!saving && <div style={ styles}>
-				
+			
+			
+			<Form
+				id="issue-edit-inline-form"
+				ref="form"
+				onInvalid={this.onFormInvalid}
+				onValid={this.onFormValid}
+				onValidSubmit={this.onFormValidSubmit}
+				styles={styles}
+			>
 				{/* REPO -> MILESTONE -> ACTIONS */}
-				<div style={makeStyle(styles.row, makePaddingRem(0,0,0,1))}>
-					<RepoLabel repo={repo} style={FlexScale} textStyle={Ellipsis}/>
+				<div style={[styles.row, makePaddingRem(0)]}>
 					
-					<div style={styles.row.spacer}/>
+					<RepoSelect
+						onItemSelected={this.onRepoItemSelected}
+						repos={availableRepos}
+						repo={availRepo}
+						style={makeStyle(FlexScale,makeMarginRem(0.3,2,0,0.5),makeHeightConstraint(actionHeight))}/>
+					
 					
 					{/* MILESTONE */}
 					<MilestoneLabel
@@ -414,12 +430,13 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 							save
 						</Icon>
 					</Button>
-				</div>
 				
+				</div>
 				{/* ISSUE TITLE */}
 				<div style={[styles.row,makePaddingRem(0.5,0)]}>
 					<TextField
 						ref={this.setTextField}
+						validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
 						defaultValue={issue.title}
 						placeholder="title"
 						onChange={this.onTitleChange}
@@ -427,15 +444,13 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 						onKeyDown={this.onKeyDown}
 						style={FlexScale}
 						inputStyle={FlexScale}
-						error={titleError}
+						tabIndex={0}
 					  autoFocus
-					  tabIndex={1}
 					/>
-					
 				</div>
-			</div>}
-			{/* Saving progress indicator */}
-			<WorkIndicator open={saving}/>
+			
+			</Form>
+		
 		</CommandRoot>
 	}
 	

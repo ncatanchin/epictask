@@ -20,6 +20,7 @@ const milestoneBaseStyles = (topStyles, theme, palette) => {
 		{ text, alternateText, primary, secondary, accent, background } = palette
 	
 	return [
+		Ellipsis,
 		FlexRow,
 		FlexAuto,
 		OverflowHidden,
@@ -90,10 +91,10 @@ export const MilestoneLabel = ThemedStyles(milestoneBaseStyles)(
 const repoBaseStyles = (topStyles, theme, palette) => {
 	
 	return [ FlexRow, PositionRelative, {
-		fontSize: themeFontSize(1.2),
+		fontSize: themeFontSize(1.1),
 		//height: rem(2),
 		
-		text: [ FlexRowCenter, FillHeight, {} ]
+		text: [ FlexRowCenter, FillHeight, Ellipsis, {} ]
 	} ]
 }
 

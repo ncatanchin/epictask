@@ -1,7 +1,7 @@
 // Imports
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
-import { PureRender } from "epic-ui-components/common"
+import { PureRender, WorkIndicator } from "epic-ui-components/common"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 import { SearchItem } from 'epic-models'
@@ -9,6 +9,7 @@ import { shallowEquals, getValue, guard } from  "epic-global"
 import { SearchResultItem } from "./SearchResultItem"
 import { SearchController, SearchEvent } from './SearchController'
 import { SearchState } from "./SearchState"
+import { makeHeightConstraint } from "epic-styles/styles"
 
 // Constants
 const
@@ -107,6 +108,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 			{
 				open,
 				styles,
+				theme,
 				state:searchState
 			} = props,
 			
@@ -121,6 +123,12 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				transitionName="results"
 				transitionEnterTimeout={250}
 				transitionLeaveTimeout={150}>
+				
+				{searchState.working &&
+					<div style={makeHeightConstraint(theme.search.itemHeight)}>
+						<WorkIndicator open={true} />
+					</div>
+				}
 				
 				{!items ? React.DOM.noscript() :
 					items.map((item, index) => <SearchResultItem

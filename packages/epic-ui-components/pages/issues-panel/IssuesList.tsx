@@ -417,7 +417,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			item.type === IssueListItemType.Group ?
 				convertRem(4) :
 				item.type === IssueListItemType.EditIssueInline ?
-					convertRem(8.5) :
+					convertRem(9.2) :
 					convertRem(5)
 	}
 	

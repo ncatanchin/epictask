@@ -42,11 +42,15 @@ function themeFontSize(multiplier:number) {
  * @param accent
  * @param primary
  */
-function makeSheetTheme({accent,primary}) {
-	return {
+function makeSheetTheme({text,alternateText,accent,primary}) {
+	return [{
+		
+		backgroundColor: primary.hue1,
+		
 		search: {
-			panel: [{
-				backgroundColor: Transparent
+			wrapper: [makePaddingRem(0.6,1),{
+				backgroundColor: Transparent,
+				
 			}],
 			
 			underline: [{
@@ -59,13 +63,13 @@ function makeSheetTheme({accent,primary}) {
 			field: [{
 				height: rem(3.6),
 				backgroundColor: Transparent,
-				color: primary.hue1
+				color: alternateText.primary
 			}],
 			
 			input: [makePaddingRem(0,1),{
 				fontWeight: 500,
-				color: primary.hue1,
-				backgroundColor: Transparent
+				color: text.primary,
+				backgroundColor: primary.hue3
 			}],
 			
 			hint: [makePaddingRem(0,1),{
@@ -76,7 +80,7 @@ function makeSheetTheme({accent,primary}) {
 				backgroundColor: Transparent
 			}],
 		}
-	}
+	}]
 }
 
 /**
@@ -363,26 +367,6 @@ export function DefaultTheme(palette) {
 			
 		},
 		
-		/**
-		 * Form
-		 */
-		form: {
-			menuItem: [ {
-				cursor: 'pointer'
-			} ],
-			select: {
-				
-				list: {
-					padding: 0,
-					paddingTop: 0,
-					paddingBottom: 0,
-					backgroundColor: 'transparent'
-				},
-				item: [ {
-					cursor: 'pointer'
-				} ]
-			}
-		},
 		
 		/**
 		 * This styling is for material-ui Lists

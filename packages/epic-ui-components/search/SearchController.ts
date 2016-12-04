@@ -118,6 +118,9 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	private makeItems(results = List<SearchResult>()):List<SearchItem> {
 		return results
 			.reduce((allItems,result) => {
+				if (!result)
+					return allItems
+				
 				const
 					{perSourceLimit} = this
 				
@@ -176,11 +179,14 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	
 	private setResults(results:List<SearchResult>) {
 		let
-			items = this.makeItems(results)
+			items = this.makeItems(results),
+			currentItems = getValue(() => this.state.items)
 		
-		if (_.isEqual(items.toJS(),this.state.items.toJS())) {
-			items = this.state.items
+		
+		if (currentItems && getValue(() => _.isEqual(items.toJS(),currentItems.toJS()),false)) {
+			items = currentItems
 		}
+		
 		this.updateState({
 			items,
 			results: results,
