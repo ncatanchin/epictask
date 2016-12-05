@@ -27,6 +27,7 @@ const
 	{env} = process,
 	APP_SEARCH_PATHS = [
 		'../dist/app',
+		'../dist/app-package',
 		'../app',
 		'..',
 		'.',

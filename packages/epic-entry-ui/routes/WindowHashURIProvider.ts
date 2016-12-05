@@ -17,6 +17,34 @@ const
 
 
 /**
+ * Set the window location
+ *
+ * @param location
+ */
+function setWindowLocation(location:IRouterLocation|string) {
+	if (isString(location)) {
+		location = {uri:location,params:{}}
+	}
+	
+	let
+		{uri,params} = location
+	
+	params = params || {} as any
+	params.__cacheBuster = Math.random() * Date.now()
+	
+	const
+		paramKeys = Object.keys(params),
+		newHash = `#${uri}?${paramKeys
+			.map(key => `${key}=${encodeURIComponent(params[key])}`)
+			.join('&')
+			}`
+	
+	setImmediate(() => {
+		log.debug(`Setting new hash`,newHash)
+		window.location.hash = newHash
+	})
+}
+/**
  * WindowHashURIProvider
  *
  * @class WindowHashURIProvider
@@ -43,28 +71,8 @@ export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListen
 	 *
 	 * @param location
 	 */
-	setLocation(location:IRouterLocation) {
-		let
-			{uri,params} = location
+	setLocation = setWindowLocation
 		
-		params = params || {} as any
-		params.__cacheBuster = Math.random() * Date.now()
-		
-		const
-			paramKeys = Object.keys(params),
-			newHash = `#${uri}?${paramKeys
-					.map(key => `${key}=${encodeURIComponent(params[key])}`)
-					.join('&')
-			}`
-		
-		setImmediate(() => {
-			log.debug(`Setting new hash`,newHash)
-			window.location.hash = newHash
-		})
-		
-		
-		
-	}
 	
 	/**
 	 * on hash change handler
@@ -116,8 +124,12 @@ export class WindowHashURIProvider extends SimpleEventEmitter<TRouteChangeListen
 		window.removeEventListener("hashchange",this.onHashChange)
 	}
 	
-	
-	
+}
+
+if (DEBUG) {
+	assignGlobal({
+		setWindowLocation
+	})
 }
 
 addHotDisposeHandler(module,() => hashListeners.forEach(it => it.detach()))

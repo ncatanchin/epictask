@@ -3,7 +3,7 @@ import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { getAuthActions, authenticatingSelector } from "epic-typedux"
 
-import { PureRender,Page,Icon,Logo  } from "../../common"
+import { PureRender,Page,Icon,RainbowIndicator  } from "../../common"
 import {
 	ThemedStyles,
 	IThemedAttributes,
@@ -15,6 +15,7 @@ import {
 } from "epic-styles"
 
 import { getValue } from "epic-global"
+import { colorAlpha } from "epic-styles/styles"
 
 const
 	log = getLogger(__filename)
@@ -65,49 +66,16 @@ function baseStyles(topStyles,theme,palette) {
 			':hover': {}
 		} ],
 		
-		label: [ PositionAbsolute, makeTransition('opacity'), {
-			left: '50%',
-			top: '50%',
-			transform: 'translate(-50%,-50%)',
-			opacity: 1,
-			color: text.primary,
-			textAlign: 'center',
-			pointerEvents: 'none',
-			letterSpacing: rem(1),
-			//fontStyle: 'italic',
-			fontWeight: 400,
-			hovering: [ {
-				opacity: 0
-			} ]
+		label: [ CursorPointer, makeTransition('opacity'), {
+			fontSize: rem(4),
+			color: colorAlpha('#ffffff',0.8),
+			fontWeight: 500
 		} ],
 		
-		sublabel: [ PositionAbsolute, makeTransition('opacity'), {
-			left: '50%',
-			top: '65%',
-			transform: 'translate(-50%,-50%)',
-			opacity: 0,
-			color: text.primary,
-			textAlign: 'center',
-			pointerEvents: 'none',
-			letterSpacing: rem(0.5),
-			//fontStyle: 'italic',
-			fontWeight: 400,
-			hovering: [ {
-				opacity: 1
-			} ]
-		} ],
 		
-		icon: [ PositionAbsolute, makeTransition('opacity'), {
-			left: '50%',
-			top: '50%',
-			transform: 'translate(-50%,-50%)',
-			opacity: 0,
-			pointerEvents: 'none',
-			textAlign: 'center',
-			color: text.primary,
-			hovering: [ {
-				opacity: 1
-			} ]
+		icon: [ makeTransition('opacity'), {
+			color: colorAlpha('#ffffff',0.8),
+			marginLeft: rem(1.5)
 		} ]
 	}
 }
@@ -191,71 +159,42 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 	render() {
 		const
 			{props} = this,
-			{authenticating,styles} = props,
-			buttonHovering = Radium.getState(this.state,'authButton',':hover'),
-			sublabelFontSize = getValue(() => this.state.buttonStyle.fontSize / 9,rem(2) as any),
-			sublabelIconFontSize = getValue(() => this.state.buttonStyle.fontSize / 7,rem(3) as any)
-		
+			{authenticating,styles} = props
 			
 		log.debug(`testing`)
 
 		return (
-			<Page style={makeStyle(
-							styles.page)}
-			      id='loginPage'>
+			<Page
+				style={[
+					Fill,
+					FlexColumnCenter,
+					{backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`}
+				]}
+				id='loginPage'>
 				
-				<Logo style={makeStyle(styles.logo,getValue(() => this.state.logoStyle))}
-				      eHidden={true}
-				      spinnerStyle={styles.logo.spinner} />
-				      
-			
+				
+				<img
+					height="250"
+					width="auto"
+					src={require("assets/images/splash/e.png")}/>
+				
 				<div ref="authButton"
 				     onClick={this.startAuth}
-				     style={makeStyle(
-								styles.button,
-								getValue(() => this.state.buttonStyle),
-								authenticating && styles.authenticating
-							)}
+				     style={[FlexRowCenter,styles.label]}
 				     >
-					<Icon
-						style={makeStyle(
-							styles.icon,
-							getValue(() => this.state.iconStyle),
-							buttonHovering && styles.icon.hovering,
-							authenticating && styles.authenticating
-						)}
-						iconName='user'
-						iconSet='fa' />
-					<div style={makeStyle(
-							styles.label,
-							//getValue(() => this.state.buttonStyle),
-							{
-								fontSize: getValue(() => this.state.buttonStyle.fontSize / 6,rem(2) as any)
-							},
-							buttonHovering && styles.label.hovering,
-							authenticating && styles.authenticating
-						)}>
-						press
+					
+					
+					<div style={[]}>
+						login via
 					</div>
-					
-					
-				</div>
-				<div style={makeStyle(
-							styles.sublabel,
-							//getValue(() => this.state.buttonStyle),
-							{
-								fontSize: sublabelFontSize
-							},
-							buttonHovering && styles.sublabel.hovering,
-							authenticating && styles.authenticating
-						)}>
-					authenticate&nbsp;
 					<Icon
-						style={{fontSize: sublabelIconFontSize}}
+						style={[styles.icon]}
 						iconSet="fa"
 						iconName="github"/>
+					
 				</div>
-			
+				
+				
 			</Page>
 		)
 	}

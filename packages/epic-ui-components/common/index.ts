@@ -3,12 +3,20 @@ export * from "./Common.styles"
 export * from './SearchFieldItem.styles'
 export * from './Chip.styles'
 
+export * from "./Loader"
+export * from "./RainbowIndicator"
+
 export * from "./PureRender"
 export * from './RenderToLayer'
 export * from './Popover'
+export * from "./WindowControls"
+
+
 
 export * from "./PromisedComponent"
+
 export * from './FlexLayout'
+export * from './TimeAgo'
 export * from './icon/Icon'
 export * from './Chip'
 export * from "./WorkIndicator"
@@ -34,13 +42,12 @@ export * from "./TabTemplate"
 
 
 
-export * from "./WindowControls"
-
-export * from "./Loader"
-export * from "./Logo"
 
 
-export * from './TimeAgo'
+
+
+
+
 
 export * from "./FileDrop"
 

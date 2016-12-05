@@ -6,7 +6,7 @@ const
 const
 	Module = require('module'),
 	baseRequire = Module.prototype.require,
-	searchPaths = ["../","../dist/app/"],
+	searchPaths = ["../","../dist/app/","../dist/app-package/"],
 	epicEnsure = function(deps,fn) {
 		fn(require)
 	}

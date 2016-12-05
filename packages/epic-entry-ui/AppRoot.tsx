@@ -413,8 +413,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					})
 				}
 			} else if (isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
+				//log.warn(`temp - remove route change`)
 				log.debug(`Scheduling redirect to welcome/ide`)
-				
+
 				uriProvider.setLocation({
 					uri: repoCount < 1 ? Pages.Welcome.path : Pages.IDE.path,
 					params

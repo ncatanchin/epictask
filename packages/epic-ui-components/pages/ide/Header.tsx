@@ -11,7 +11,7 @@ import {
 	ContainerNames
 } from "epic-command-manager"
 import { CommandMenuRoot } from "epic-ui-components/layout/ide/CommandMenuRoot"
-import { WindowControls,Logo,PureRender } from "epic-ui-components/common"
+import { WindowControls,RainbowIndicator,PureRender } from "epic-ui-components/common"
 
 export const
 	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
@@ -238,9 +238,10 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 			
 			<div style={FlexScale}/>
 			
-			<Logo style={styles.logo}
-			      eHidden
-			      spinnerStyle={styles.logo.spinner}/>
+			<RainbowIndicator
+				style={styles.logo}
+			  eHidden
+			  spinnerStyle={styles.logo.spinner}/>
 			
 			<CommandMenuRoot />
 		</CommandRoot>

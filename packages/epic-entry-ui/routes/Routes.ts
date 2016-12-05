@@ -23,7 +23,7 @@ export const Pages = {
 	
 	Welcome: {
 		name: 'welcome',
-		path: "pages/welcome",
+		path: "welcome",
 		defaultRoute: true,
 		title: 'Welcome',
 		provider: makePromisedComponent((resolver:TComponentResolver) =>

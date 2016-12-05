@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 require('./init-scripts')
 
+// SET PACKAGING ENV VAR
+env['EPIC_PACKAGE'] = 'true'
 
 const
 	path = require('path'),
@@ -33,11 +35,11 @@ if (!skipBuild) {
 	}
 	
 	echo("Copy resources")
-	mkdir('-p', 'dist/app/bin')
+	mkdir('-p', 'dist/app-package/bin')
 	
 }
 
-cp('bin/epictask-start.js', 'dist/app/bin')
+cp('bin/epictask-start.js', 'dist/app-package/bin')
 
 
 const
@@ -50,7 +52,7 @@ echo('material-ui tweak')
 
 // WRITE APP PKG
 fs.writeFileSync(
-	'dist/app/package.json',
+	'dist/app-package/package.json',
 	JSON.stringify(appPkg,null,2)
 )
 

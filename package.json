@@ -12,7 +12,7 @@
     "dev:watch-workspace": "babel-node ./etc/scripts/watch/watch-workspace.js",
     "test": "jest  --no-cache",
     "test:watch": "jest --watch  --no-cache",
-    "start": "./node_modules/.bin/cross-env HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./bin/epictask-start.js",
+    "start": "./node_modules/.bin/cross-env DEBUG=1 HOT=1 NODE_ENV=development ./node_modules/.bin/electron ./bin/epictask-start.js",
     "compile": "gulp compile",
     "compile:watch": "babel-node ./etc/scripts/compile-watch.js",
     "package": "babel-node ./etc/scripts/package.js",
@@ -67,7 +67,7 @@
     ]
   },
   "directories": {
-    "app": "dist/app",
+    "app": "dist/app-package",
     "buildResources": "build",
     "output": "dist/build"
   },

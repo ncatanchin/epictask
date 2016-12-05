@@ -24,7 +24,7 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexScale, PositionRelative, makeTransition(['height','max-height','min-height']), {
+	return [ FlexScale, PositionRelative, OverflowAuto, makeTransition(['height','max-height','min-height']), {
 			hidden: [makeHeightConstraint(0)]
 	} ]
 }

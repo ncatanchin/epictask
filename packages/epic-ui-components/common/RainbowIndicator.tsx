@@ -179,7 +179,7 @@ function baseStyles(topStyles,theme,palette) {
 /**
  * ILogoProps
  */
-export interface ILogoProps {
+export interface IRainbowIndicatorProps {
 	styles?:any
 	theme?:any
 	style?:any
@@ -192,12 +192,6 @@ export interface ILogoProps {
 	
 }
 
-/**
- * ILogoState
- */
-export interface ILogoState {
-	
-}
 
 /**
  * Logo
@@ -208,7 +202,7 @@ export interface ILogoState {
 
 @ThemedStyles(baseStyles)
 @PureRender
-export class Logo extends React.Component<ILogoProps,ILogoState> {
+export class RainbowIndicator extends React.Component<IRainbowIndicatorProps,void> {
 	
 	static defaultProps = {
 		expanded: false,

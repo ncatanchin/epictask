@@ -278,9 +278,12 @@ export async function getDataUrlFromUrl(url:string,mimetype:string = 'image/png'
 export const searchPathDefaults = [
 	'.',
 	'./dist/app',
+	'./dist/app-package',
 	'./build',
 	'dist/app',
+	'dist/app-package',
 	'../dist/app',
+	'../dist/app-package',
 	'../app',
 	'..',
 	'../../../app'

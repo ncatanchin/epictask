@@ -18,6 +18,7 @@ const
 		baseDir,
 		srcRootDir
 	} = global,
+	isPackaging = !_.isNil(process.env.EPIC_PACKAGE),
 	CircularDependencyPlugin = require("circular-dependency-plugin"),
 	webpack = require('webpack'),
 	assert = require('assert'),
@@ -57,7 +58,7 @@ const
 	moduleDirs = resolveDirs(srcRootDir,'node_modules'),
 	
 	// Output Directory
-	distDir = `${baseDir}/dist/app`,
+	distDir = `${baseDir}/dist/${isPackaging ? 'app-package' : 'app'}`,
 	
 	// Env
 	DefinedEnv = {

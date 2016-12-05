@@ -1,14 +1,15 @@
 
-import { createStructuredSelector } from "reselect"
-import { Page, PureRender, Logo } from "epic-ui-components/common"
-import { connect } from "react-redux"
-import { ThemedStyles, Transparent, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
-import { createDeepEqualSelector, guard } from "epic-global"
-import { uiStateSelector,getAppActions } from "epic-typedux"
+import { Page, PureRender } from "epic-ui-components/common"
+import { ThemedStyles, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
+import { guard } from "epic-global"
+import { getAppActions } from "epic-typedux"
 import { RepoSearchProvider, GitHubSearchProvider ,SearchField } from "epic-ui-components/search"
+
+import baseStyles from './WelcomeRoot.styles'
 
 import { getValue } from "typeguard"
 import { SearchItem, Repo } from "epic-models"
+import { makeHeightConstraint } from "epic-styles/styles"
 
 
 const
@@ -16,35 +17,7 @@ const
 	WelcomeSearchId = 'welcome-repo-search'
 
 
-const
-	baseStyles = (topStyles,theme,palette) => ({
-		
-		page:[],
-		bodyWrapper: [FlexRowCenter,Fill, makePaddingRem(1)],
-		viewWrapper:[FlexScale,Fill,{
-			borderStyle: 'solid',
-			borderWidth: rem(0.1)
-		}],
-		
-		logo: [makeMarginRem(0,2,0,0)],//[makeMarginRem(0,0,3,0)],
-		
-		search: [ {
-			backgroundColor: Transparent,
-			minWidth: 'auto',
-			maxWidth: 600,
-			
-			
-			field: [ {
-				backgroundColor: Transparent
-			}],
-			input: [ {
-				backgroundColor: Transparent
-			} ],
-			hint: [ {} ]
-			
-		} ]
-		
-	})
+
 
 /**
  * WelcomeProps
@@ -65,10 +38,7 @@ export interface IWelcomeRootState {
 /**
  * The root container for the app
  */
-@connect(createStructuredSelector({
-	toolPanels: (state) => _.nilListFilter(uiStateSelector(state).toolPanels as any)
-}, createDeepEqualSelector))
-@ThemedStyles(baseStyles,'homePage')
+@ThemedStyles(baseStyles)
 @PureRender
 export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootState> {
 	
@@ -141,11 +111,26 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 		
 		return <Page
 			onResize={this.updateState}
-			style={[Fill,FlexColumnCenter]}
+			style={[
+				Fill,
+				FlexColumnCenter,
+				{backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`}
+			]}
 			id="welcomePage">
 			
-			<div style={styles.bodyWrapper}>
-				<Logo eHidden style={styles.logo} />
+			
+				
+				{/*<img*/}
+					{/*height="250"*/}
+					{/*width="auto"*/}
+					{/*style={{marginBottom: rem(3)}}*/}
+					{/*src={require("assets/images/icons/icon.png")}/>*/}
+			<img
+				height="250"
+				width="auto"
+				style={{marginBottom: rem(3)}}
+				src={require("assets/images/splash/e.png")}/>
+			
 				
 				{/*hint={*/}
 				{/*<span>*/}
@@ -159,15 +144,15 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 					providers={[GitHubSearchProvider,RepoSearchProvider]}
 					autoFocus={true}
 					tabIndex={0}
-					placeholder='Search for any repo'
+					placeholder='Import your first project, start managing like a boss..'
 					open={true}
 					focused={true}
 					onItemSelected={this.onItemSelected}
 					resultsHidden={false}
-					inputStyle={styles.search.input}
+					styles={styles.search}
 					onEscape={this.onEscape}
 					/>
-			</div>
+			
 		</Page>
 	}
 }

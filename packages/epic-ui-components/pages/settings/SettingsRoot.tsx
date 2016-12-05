@@ -123,7 +123,7 @@ const baseStyles = (topStyles, theme, palette) => {
 			} ]
 		} ],
 		
-		form: [ FlexColumn, OverflowAuto, Fill, {
+		form: [ FlexColumn, OverflowAuto, FlexScale,Fill, {
 			content: [ FillWidth, makePaddingRem(3, 5), {
 				maxWidth: 800
 			} ],

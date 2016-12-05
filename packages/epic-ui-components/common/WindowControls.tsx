@@ -1,10 +1,5 @@
-
-
-
-import { IThemedAttributes, ThemedStyles } from "epic-styles"
+import { IThemedAttributes, ThemedStyles, colorDarken } from "epic-styles"
 import { PureRender } from "./PureRender"
-import { colorDarken } from "epic-styles"
-
 
 
 function baseStyles(topStyles,theme,palette) {
