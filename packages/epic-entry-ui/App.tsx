@@ -12,7 +12,7 @@ import {getReduxStore} from 'epic-typedux/store/AppStore'
 import { ThemeEvent } from "epic-styles/ThemeState"
 const
 	log = getLogger(__filename),
-	windowId = process.env.EPIC_WINDOW_ID,
+	windowId = getWindowId(),
 	win = window as any
 
 let

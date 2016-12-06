@@ -21,7 +21,7 @@ src/tsconfig.json
 
 
 # Any log file
-
+Thumbs.db
 *.log
 target
 

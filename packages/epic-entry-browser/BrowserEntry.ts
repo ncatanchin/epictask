@@ -102,7 +102,6 @@ export function initBrowser(isDev) {
 		isChildWindow = processType === 'UIChildWindow'
 	
 	_.assign(process.env, {
-		EPIC_WINDOW_ID: params.EPIC_WINDOW_ID,
 		EPIC_ENTRY: processType
 	})
 	

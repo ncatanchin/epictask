@@ -56,7 +56,7 @@ const
 	Tooltip = require('react-tooltip'),
 	win = window as any,
 	$ = require('jquery'),
-	windowId = process.env.EPIC_WINDOW_ID
+	windowId = getWindowId()
 
 
 //DEBUG LOG

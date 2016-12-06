@@ -31,7 +31,7 @@ if (hostname === 'linux-dev' && !awCacheExists) {
 	exec(`sudo ${mkRamDiskCmd} epic-ramdisk 6g ${process.cwd()}/dist`)
 }
 mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
-exec(`${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details --display-chunks --no-colors --no-color`)
+exec(`node --max-old-space-size=4000 ${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details`)
 
 //exec(`${gulpCmd} compile-watch`)
 

@@ -5,8 +5,8 @@ module.exports = global.WebpackStatsConfig = {
 	warnings: true,
 	timings: true,
 	errorDetails: true,
-	assets: true, //true - shows all output assets
-	//chunks: true,
+	assets: false, //true - shows all output assets
+	chunks: false,
 	chunkModules: false,
 	hash: false,
 	reasons: false,

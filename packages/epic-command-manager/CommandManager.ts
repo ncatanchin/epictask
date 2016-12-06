@@ -678,7 +678,7 @@ export class CommandManager {
 	 */
 	registerItems(commands:ICommand[], menuItems:ICommandMenuItem[]) {
 		const
-			windowId = process.env.EPIC_WINDOW_ID && process.env.EPIC_WINDOW_ID !== 'undefined' ? process.env.EPIC_WINDOW_ID : null,
+			windowId = getWindowId(),
 			expandId = (id:string) => {
 				if (windowId && id.indexOf(`${windowId}-`) !== 0) {
 					id = `${windowId}-${id}`

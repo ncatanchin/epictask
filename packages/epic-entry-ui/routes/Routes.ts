@@ -2,12 +2,23 @@ import { TRouteMap } from "./Router"
 import { makePromisedComponent, toJSON } from "epic-global"
 import { Issue,Comment } from "epic-models"
 import {List} from 'immutable'
-
+import EmptyRoute from './EmptyRoute'
 
 const
 	log = getLogger(__filename)
 
 export const Pages = {
+	
+	Empty: {
+		name: 'empty',
+		path: "empty",
+		defaultRoute: true,
+		title: 'empty',
+		provider: makePromisedComponent((resolver:TComponentResolver) =>
+			require.ensure([],function(require:any) {
+				resolver.resolve(EmptyRoute)
+			}))
+	},
 	
 	Login: {
 		name: 'login',

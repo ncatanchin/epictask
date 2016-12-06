@@ -67,9 +67,7 @@ _.assignGlobal({
  * @returns {null}
  */
 function getWindowIdGlobal() {
-	const
-		windowId = process.env.EPIC_WINDOW_ID
-	return  windowId && windowId !== 'undefined' ? windowId : null
+	return !Electron.remote ? 'main' : Electron.remote.getCurrentWindow().id
 }
 
 /**

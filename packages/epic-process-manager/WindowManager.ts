@@ -14,8 +14,10 @@ import {
 	Events,
 	getValue,
 	SimpleEventEmitter,
-	HEARTBEAT_TIMEOUT
+	HEARTBEAT_TIMEOUT, makeAppEntryURL
 } from "epic-global"
+
+import WindowFactory from "./WindowFactory"
 
 import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client"
 import { List } from "immutable"
@@ -69,21 +71,6 @@ export interface IWindowMessageHandler {
 	(manager:WindowManager, instance:IWindowInstance, type:string, body?:any):any
 }
 
-
-/**
- * Append params to a url
- *
- * @param url
- * @param params
- * @returns {string}
- */
-function appendURLParams(url:string, params:{[key:string]:any}) {
-	return url + (url.includes('?') ? '&' : '?') +
-		Object.keys(params)
-			.map(key => `${key}=${encodeURIComponent(params[ key ])}`)
-			.join('&')
-	
-}
 
 /**
  * shallow clones window instance omitting complex objects
@@ -648,9 +635,8 @@ export class WindowManager {
 				templateURL = getAppEntryHtmlPath()
 			
 			let
-				url = appendURLParams(`file://${templateURL}#${uri}`, {
-					EPIC_ENTRY: ProcessConfig.getTypeName(processType),
-					EPIC_WINDOW_ID: id
+				url = makeAppEntryURL(uri, {
+					EPIC_ENTRY: ProcessConfig.getTypeName(processType)
 				})
 			
 			
@@ -685,12 +671,6 @@ export class WindowManager {
 				connectedFlag: windowCreateDeferred
 			})
 			
-			process.on('beforeExit', () => {
-				try {
-					newWindow.close()
-				} catch (err) {
-				}
-			})
 			
 			// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
 			if (savedWindowState) {

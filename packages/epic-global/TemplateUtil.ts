@@ -28,6 +28,23 @@ export function toDataUrl(template:Function|string,locals:any = {},mimetype:stri
 	return dataUrl.format({mimetype,data:template})
 }
 
+
+/**
+ * Append params to a url
+ *
+ * @param url
+ * @param params
+ * @returns {string}
+ */
+function appendURLParams(url:string, params:{[key:string]:any}) {
+	return url + (url.includes('?') ? '&' : '?') +
+		Object.keys(params)
+			.map(key => `${key}=${encodeURIComponent(params[ key ])}`)
+			.join('&')
+	
+}
+
+
 /**
  * Gets an entry file
  *
@@ -55,6 +72,12 @@ export function getSplashEntryHtmlPath() {
  */
 export function getAppEntryHtmlPath() {
 	return getEntryFile("./app-entry.html")
+}
+
+
+
+export function makeAppEntryURL(uri:string, params:{[key:string]:any} = {}) {
+	return appendURLParams(`file://${getAppEntryHtmlPath()}#${uri}`,params)
 }
 
 /**
