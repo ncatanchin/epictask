@@ -12,7 +12,7 @@ const
 	errorLogger ||
 	(errorLogger = require('typelogger').create(__filename))
 
-if (typeof window !== 'undefined') {
+if (!ProcessConfig.isTest() && typeof window !== 'undefined') {
 	const log = getLogger(__filename)
 	window.onerror = function (message, url, line) {
 		console.error('Window error occurred', message, url, line)
@@ -88,11 +88,13 @@ function deepTrace(reason) {
  * @param promise
  */
 function unhandledRejection(reason, promise) {
+	
 	const log = getErrorLogger()
 	
 	//deepTrace(reason)
 	//console.error('Unhandled rejection', reason)
-	log && log.error('Unhandled rejection', reason, promise)
+	
+	log && log.warn('Unhandled rejection', reason, promise)
 	
 	
 	deepTrace(reason)
@@ -113,7 +115,8 @@ function uncaughtException(err) {
 	log ? log.error('Unhandled exception', err) : console.error('unhandled', err)
 }
 
-process.on("uncaughtException", uncaughtException)
+if (!ProcessConfig.isTest())
+	process.on("uncaughtException", uncaughtException)
 
 /**
  * on warning
@@ -124,24 +127,11 @@ function systemWarning(warning) {
 	const
 		log = getErrorLogger()
 	
-	// if (warning instanceof Error) {
-	// 	deepTrace(warning)
-	// }
-	
-	//log ? log.error('WARNING', warning) : console.warn(warning)
 	console.warn(warning)
 }
 
+// ADD ON WARNING HANDLER
 process.on("warning", systemWarning)
-
-// process.on("rejectionHandled", function (reason, promise) {
-// 	const log = getErrorLogger()
-//
-// 	//deepTrace(reason)
-//
-// 	console.error('Handled rejection', reason, promise)
-// 	log.error('Handled rejection', reason, promise)
-// })
 
 
 export {}

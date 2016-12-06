@@ -106,7 +106,7 @@
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
-    "testRegex": "packages\\/epic-tests\\/(epic-typedux|ui).*\\.spec\\.(ts|tsx)$",
+    "testRegex": "packages\\/epic-tests\\/jest\\/.*\\.spec\\.(ts|tsx)$",
     "setupFiles": [
       "etc/mocha/test-setup.js"
     ],
@@ -115,7 +115,8 @@
       "./packages"
     ],
     "moduleNameMapper": {
-      "epic-config": "<rootDir>/etc/config/default-config.js"
+      "epic-config": "<rootDir>/etc/config/default-config.js",
+      "epic-electron": "epic-global/Electron"
     },
     "moduleFileExtensions": [
       "ts",
@@ -162,7 +163,6 @@
     "awesome-typescript-loader": "^2.2.4",
     "aws-sdk": "^2.6.9",
     "aws-sdk-typescript": "github:densebrain/aws-sdk-typescript#v0.0.4",
-    "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "babel-cli": "^6.11.4",
     "babel-core": "^6.13.1",
     "babel-eslint": "^7.1.1",
@@ -212,6 +212,7 @@
     "html-webpack-plugin": "^2.17.0",
     "immutable-devtools": "0.0.7",
     "jest": "^17.0.3",
+    "jest-cli": "^17.0.3",
     "json-loader": "^0.5.4",
     "loader-utils": "^0.2.15",
     "merge2": "^1.0.2",
@@ -249,6 +250,7 @@
     "typescript": "2.1.0-dev.20161015",
     "typestore-mocks": "^0.2.23",
     "typetransform": "0.0.16",
+    "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "url-loader": "^0.5.7",
     "warning": "^3.0.0",
     "webpack": "^2.1.0-beta.25",

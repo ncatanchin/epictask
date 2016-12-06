@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="storybook" type="js.build_tools.npm" factoryName="npm" singleton="false">
     <package-json value="$PROJECT_DIR$/package.json" />
-    <command value="run-script" />
+    <command value="run" />
     <scripts>
       <script value="storybook" />
     </scripts>

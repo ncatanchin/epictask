@@ -31,6 +31,7 @@ import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "epic-ui-components/pages/issue-edit/IssueEditState"
 import IssueEditController from "epic-ui-components/pages/issue-edit/IssueEditController"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { getWindowManagerClient } from "epic-process-manager-client";
 
 
 
@@ -207,14 +208,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	/**
 	 * Hide/close the window
 	 */
-	private hide = () => {
-		getCurrentWindow().close()
-		// const
-		// 	windowId = getWindowId()
-		//
-		// if (windowId)
-		// 	getUIActions().closeWindow(windowId)
-	}
+	private hide = () => getWindowManagerClient().close(getWindowId())
 	
 	/**
 	 * On cancel - call hide

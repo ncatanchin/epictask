@@ -66,8 +66,8 @@ _.assignGlobal({
  *
  * @returns {null}
  */
-function getWindowIdGlobal() {
-	return !Electron.remote ? 'main' : Electron.remote.getCurrentWindow().id
+function getWindowIdGlobal():string {
+	return !Electron.remote ? 'main' : `${Electron.remote.getCurrentWindow().id}`
 }
 
 /**

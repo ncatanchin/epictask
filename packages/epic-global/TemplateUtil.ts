@@ -77,7 +77,11 @@ export function getAppEntryHtmlPath() {
 
 
 export function makeAppEntryURL(uri:string, params:{[key:string]:any} = {}) {
-	return appendURLParams(`file://${getAppEntryHtmlPath()}#${uri}`,params)
+	return `file://${getAppEntryHtmlPath()}#` + makeURIHash(uri,params)
+}
+
+export function makeURIHash(uri:string, params:{[key:string]:any} = {}) {
+	return appendURLParams(uri,params)
 }
 
 /**

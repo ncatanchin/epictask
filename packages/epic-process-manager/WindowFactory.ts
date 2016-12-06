@@ -15,7 +15,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
@@ -109,7 +109,7 @@ class WindowFactory {
 	 */
 	async create(): Promise<Electron.BrowserWindow> {
 		let
-			newWindowId:number  = -1
+			newWindowId:string  = '-1'
 		
 		const
 			deferred = Promise.defer(),
@@ -132,13 +132,16 @@ class WindowFactory {
 		
 		try {
 			newWindow = new Electron.BrowserWindow(cloneObject(this.opts))
-			newWindowId = newWindow.id
+			newWindowId = `${newWindow.id}`
 			
 			const
-				url = makeAppEntryURL('empty')
+				url = makeAppEntryURL('empty', {
+					EPIC_ENTRY: ProcessType[this.processType]
+				})
 			
 			// LOAD THE EMPTY URL OR PROCESS TYPE SPECIFIC URL
 			newWindow.loadURL(url)
+			//newWindow.show()
 			
 			process.on('beforeExit', () => {
 				guard(() => newWindow.close())

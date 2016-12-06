@@ -1,13 +1,16 @@
 import 'jest'
 
-//jest.mock('electron')
-//jest.mock('epic-electron')
+jest.mock('electron')
+jest.mock('epic-electron')
 jest.mock('node-uuid')
 //jest.mock('epic-entry-shared/EventHub')
 
-//jest.mock('typelogger')
+
 import 'epic-entry-shared/ProcessConfig'
 ProcessConfig.setType(ProcessType.Test)
+
+//jest.mock('typelogger')
+import 'epic-entry-shared/PromiseConfig'
 
 
 

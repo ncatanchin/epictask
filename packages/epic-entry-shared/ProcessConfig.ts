@@ -1,4 +1,6 @@
 import ProcessTypeGlobal from './ProcessType'
+import * as assert from 'assert'
+import { isNumber, isNil, isString } from "typeguard"
 
 
 export namespace ProcessConfigGlobal {
@@ -31,6 +33,15 @@ export namespace ProcessConfigGlobal {
 	 */
 	export function isType(...testProcessTypes:ProcessTypeGlobal[]) {
 		return testProcessTypes.includes(processType)
+	}
+	
+	/**
+	 * Assert valid type
+	 *
+	 * @param type
+	 */
+	export function assertType(type:ProcessTypeGlobal) {
+		assert(isNumber(type) && isString(ProcessTypeGlobal[type]),`Invalid process type: ${processType}`)
 	}
 	
 	/**
@@ -128,7 +139,8 @@ declare global {
 		function getTypeName(processTypeIn?:ProcessTypeGlobal):string
 		function getType():ProcessTypeGlobal
 		function setType(newProcessType:ProcessTypeGlobal)
-		function isType(...testProcessTypes:ProcessTypeGlobal[])
+		function isType(...testProcessTypes:ProcessTypeGlobal[]):boolean
+		function assertType(newProcessType:ProcessTypeGlobal)
 		const Type:ProcessTypeGlobal
 	}
 	

@@ -108,6 +108,7 @@ declare interface IWindowState extends IWindowConfig {
 declare interface IWindowInstance extends IWindowState {
 	window:Electron.BrowserWindow
 	webContents?:Electron.WebContents
+	pool?:any
 	config?:IWindowConfig
 	allEventRemovers?:any
 	heartbeatTimeoutId:any

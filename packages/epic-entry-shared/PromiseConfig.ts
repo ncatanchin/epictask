@@ -18,6 +18,8 @@ const
 	{env} = process
 
 env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+env.BLUEBIRD_DEBUG = '0'
+
 if (!env.NODE_ENV) {
 	env.NODE_ENV = 'production'
 }

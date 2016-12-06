@@ -1,3 +1,5 @@
+import { List } from "immutable"
+
 import Electron from "epic-electron"
 
 import {
@@ -14,14 +16,13 @@ import {
 	Events,
 	getValue,
 	SimpleEventEmitter,
-	HEARTBEAT_TIMEOUT, makeAppEntryURL
+	HEARTBEAT_TIMEOUT, makeAppEntryURL, guard
 } from "epic-global"
 
-import WindowFactory from "./WindowFactory"
-
 import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client"
-import { List } from "immutable"
+import WindowPool from "./WindowPool"
 
+assert(Env.isMain,`WindowManager ONLY loads on main`)
 
 const
 	log = getLogger(__filename),
@@ -222,66 +223,6 @@ export class WindowManager {
 		log.debug(`All windows shutdown`)
 	}
 	
-	/**
-	 * Close all windows
-	 */
-	closeAll() {
-		this.close(...this.windows)
-	}
-	
-	
-	
-	/**
-	 * Close a dialog with a specific id
-	 *
-	 * @param idsOrNames
-	 */
-	close(...idsOrNames:string[])
-	/**
-	 * Window instances
-	 * @param windowInstances
-	 */
-	close(...windowInstances:IWindowState[])
-	close(...idOrWindowInstances:Array<IWindowState|string>) {
-		let
-			
-			// CREATE REMOVE LIST
-			windowsToClose:IWindowInstance[] = this.windows.filter(it =>
-				idOrWindowInstances.find(criteria => isString(criteria) ?
-					
-					// IF IDS OR CONFIG NAMES - MATCH
-					[ it.id, it.config.uri, it.url ].includes(criteria) :
-					
-					// IF WINDOW INSTANCES
-					(it === criteria || it.id === criteria.id)
-				)
-			)
-		
-		//log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
-		
-		// ITERATE AND DESTROY/REMOVE
-		while (windowsToClose.length) {
-			const
-				win:IWindowInstance = windowsToClose.shift(),
-				index = this.windows.findIndex(it => it.id === win.id)
-			
-			log.debug(`Closing win`, win)
-			
-			try {
-				if (win.window.isClosable()) {
-					win.window.close()
-				}
-			} catch (err) {
-				log.warn(`Unable to close window, probably destroyed`, err)
-			}
-			
-			
-			if (index > -1) {
-				this.windows.splice(index, 1)
-			}
-		}
-		
-	}
 	
 	/**
 	 * Get the list
@@ -546,6 +487,81 @@ export class WindowManager {
 		}
 	}
 	
+	
+	
+	/**
+	 * Close all windows
+	 */
+	closeAll() {
+		this.close(...this.windows)
+	}
+	
+	
+	
+	/**
+	 * Close a dialog with a specific id
+	 *
+	 * @param idsOrNames
+	 */
+	close(...idsOrNames:string[])
+	/**
+	 * Window instances
+	 * @param windowInstances
+	 */
+	close(...windowInstances:IWindowState[])
+	close(...idOrWindowInstances:Array<IWindowState|string>) {
+		let
+			
+			// CREATE REMOVE LIST
+			windowsToClose:IWindowInstance[] = this.windows.filter(it =>
+				idOrWindowInstances.find(criteria => isString(criteria) ?
+					
+					// IF IDS OR CONFIG NAMES - MATCH
+					[ it.id, it.config.uri, it.url ].includes(criteria) :
+					
+					// IF WINDOW INSTANCES
+					(it === criteria || it.id === criteria.id)
+				)
+			)
+		
+		//log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
+		
+		// ITERATE AND DESTROY/REMOVE
+		while (windowsToClose.length) {
+			const
+				win:IWindowInstance = windowsToClose.shift(),
+				{pool,window,id:windowId,type:windowType,processType} = win,
+				index = this.windows.findIndex(it => it.id === win.id)
+				 
+			
+			
+			try {
+				log.debug(`Cleaning window for reuse: ${windowId}`)
+				
+				log.debug(`Removing event listeners: ${windowId}`)
+				win.allEventRemovers.forEach(it => guard(it))
+				
+				if (window.isVisible()) {
+					log.debug(`Hiding: ${windowId}`)
+					window.hide()
+				}
+				
+				log.debug(`Returning window to pool: ${windowId}`)
+				pool.release(window)
+			} catch (err) {
+				log.warn(`Unable to recycle window - destroying in pool: ${windowId}`, err)
+				
+				pool.destroy(window)
+			}
+			
+			
+			if (index > -1) {
+				this.windows.splice(index, 1)
+			}
+		}
+		
+	}
+	
 	/**
 	 * Open without waiting for a result
 	 *
@@ -619,30 +635,27 @@ export class WindowManager {
 				newWindowOpts = makeBrowserWindowOptions(type, opts)
 			
 			// ID IS NAME FOR SINGLE WINDOWS
-			const
-				id = config.id || (singleWindow ? config.name : shortId())
+			// const
+			// 	id = config.id || (singleWindow ? config.name : shortId())
 			
 			// IF STORE STATE ENABLED, CREATE STATE MANAGER
-			let
-				savedWindowState = storeWindowState && createWindowStateKeeper(id, config)
-			
-			
-			// TODO: REMOVE - TEST
+			// let
+			// 	savedWindowState = storeWindowState && createWindowStateKeeper(id, config)
 			
 			// CREATE WINDOW AND GET TO WORK
 			const
-				newWindow = new Electron.BrowserWindow(Object.assign({}, newWindowOpts, savedWindowState)),
-				templateURL = getAppEntryHtmlPath()
-			
-			let
-				url = makeAppEntryURL(uri, {
-					EPIC_ENTRY: ProcessConfig.getTypeName(processType)
-				})
-			
+				pool = WindowPool.get(processType,type),
+				newWindow = await pool.acquire(), //new Electron.BrowserWindow(Object.assign({}, newWindowOpts, savedWindowState)),
+				id = `${newWindow.id}`
 			
 			const
+				// URL
+				url = makeAppEntryURL(uri),
+				
+				// INSTANCE OBJECT
 				windowInstance = this.windows[ this.windows.length ] = cloneObjectShallow(config, {
 					id,
+					pool,
 					type,
 					opts: newWindowOpts as any,
 					uri,
@@ -673,13 +686,16 @@ export class WindowManager {
 			
 			
 			// IF WE HAVE A WINDOW STATE MANAGER THEN GO TO WORK
-			if (savedWindowState) {
-				savedWindowState.manage(newWindow)
-			}
+			// if (savedWindowState) {
+			// 	savedWindowState.manage(newWindow)
+			// }
 			
 			log.debug(`Loading dialog ${id} with URL:`, url)
-			newWindow.loadURL(url)
-			
+			//newWindow.loadURL(url)
+			newWindow.webContents.executeJavaScript((`
+				console.log("Setting Route URL in config: ${url}");
+				window.location.href = "${url}";
+			`))
 			
 			// OPEN DEV TOOLS IF CONFIGURED
 			if (DEBUG && showDevTools) {
@@ -714,15 +730,15 @@ export class WindowManager {
 				blur: makeOnFocus(false),
 				show: makeOnShow(true),
 				hide: makeOnShow(false),
-				'ready-to-show': () => {
-					log.debug(`Ready to show for window ${id}`)
-					if (type === WindowType.Background && showDevTools !== true) {
-						log.debug(`${id} is a background window, dont show unless dev tools enabled, which means it's already shown`)
-						return
-					}
-					newWindow.show()
-					newWindow.focus()
-				}
+				// 'ready-to-show': () => {
+				// 	log.debug(`Ready to show for window ${id}`)
+				// 	if (type === WindowType.Background && showDevTools !== true) {
+				// 		log.debug(`${id} is a background window, dont show unless dev tools enabled, which means it's already shown`)
+				// 		return
+				// 	}
+				// 	newWindow.show()
+				// 	newWindow.focus()
+				// }
 			}))
 			
 			
@@ -747,10 +763,22 @@ export class WindowManager {
 				'did-navigate': onNavigate,
 				'did-navigate-in-page': onNavigate,
 				'ipc-message': windowInstance.onMessage,
-				'dom-ready': this.makeConnect(id),
+				// Execute immediately now since window already exists
+				// 'dom-ready': this.makeConnect(id),
 				crashed: (event, killed) => this.onWindowExit(id, { crashed: true, killed: true }),
 				destroyed: () => this.onWindowExit(id, { closed: true, destroyed: true }),
 			}))
+			
+			log.debug(`Starting connect process: ${newWindow.id}`)
+			
+			this.makeConnect(id)
+			
+			if (processType === ProcessType.UI) {
+				log.debug(`Showing and focusing`)
+				newWindow.show()
+				newWindow.focus()
+			}
+			
 			windowCreateDeferred.resolve()
 			
 		} catch (err) {
