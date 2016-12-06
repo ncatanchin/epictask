@@ -1,4 +1,4 @@
-
+import * as React from 'react'
 
 export class EmptyRoute extends React.Component<any,any> {
 	

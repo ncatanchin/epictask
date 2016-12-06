@@ -1,7 +1,9 @@
 import { Map, Record, List } from "immutable"
 import WindowFactory from "epic-process-manager/WindowFactory"
-import { getHot } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot } from "epic-global"
 import * as Pool from 'generic-pool'
+import { WindowConfigDefaults } from "epic-process-manager-client"
+import { isNumber } from "typeguard"
 
 /**
  * Created by jglanz on 12/5/16.
@@ -28,10 +30,11 @@ export class WindowPool {
 	
 	constructor(
 		public id:string,
+		public processType:ProcessType,
 		public opts:Electron.BrowserWindowOptions,
 		public poolOpts:Pool.Options = DefaultPoolOpts
 	) {
-		this.factory = new WindowFactory(id,opts)
+		this.factory = new WindowFactory(id,processType,opts)
 		this.pool = Pool.createPool(this.factory,poolOpts)
 	}
 	exit
@@ -82,5 +85,56 @@ export class WindowPool {
 	
 }
 
+export namespace WindowPool {
+	
+	const
+		pools = getHot(module,'pools',Map<string,WindowPool>().asMutable())
+	
+	// SUPPORT HMR
+	setDataOnHotDispose(module,() => ({
+		pools
+	}))
+	
+	/**
+	 * Create a pool id
+	 *
+	 * @param windowType
+	 * @param processType
+	 * @returns {string}
+	 */
+	function makePoolId(windowType:WindowType,processType:ProcessType) {
+		return `${WindowType[windowType]}-${ProcessType[processType]}`
+	}
+	
+	
+	/**
+	 * Get/create a pool
+	 *
+	 * @param windowType
+	 * @param processType
+	 */
+	export function get(windowType:WindowType,processType:ProcessType) {
+		const
+			poolId = makePoolId(windowType,processType)
+		
+		if (pools.has(poolId))
+			return pools.get(poolId)
+		
+		log.debug(`Creating pool id: ${poolId}`)
+		
+		let
+			pool = new WindowPool(poolId,processType,WindowConfigDefaults[windowType].opts)
+		
+		pools.set(poolId,pool)
+		
+		return pool
+	}
+	
+	
+}
+
 
 export default WindowPool
+
+// HMR
+acceptHot(module)

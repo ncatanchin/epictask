@@ -10,6 +10,7 @@ export enum WindowType {
 export const WindowEvents = {
 	Ping: 'Ping',
 	Pong: 'Pong',
+	AllResourcesLoaded: 'AllResourcesLoaded',
 	Shutdown: 'Shutdown',
 	ShutdownComplete: 'ShutdownComplete'
 }

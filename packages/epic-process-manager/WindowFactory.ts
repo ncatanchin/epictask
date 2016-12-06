@@ -1,8 +1,9 @@
 import Electron from 'epic-electron'
 import { guard, cloneObject, getAppEntryHtmlPath, makeAppEntryURL } from "epic-global"
+import { WindowEvents } from "epic-entry-shared/WindowTypes"
 
 const
-	{ BrowserWindow } = Electron,
+	{ BrowserWindow,ipcMain } = Electron,
 	
 	WindowCreateTimeout = 25000
 
@@ -107,21 +108,38 @@ class WindowFactory {
 	 * @returns {null}
 	 */
 	async create(): Promise<Electron.BrowserWindow> {
-		const
-			deferred = Promise.defer()
+		let
+			newWindowId:number  = -1
 		
+		const
+			deferred = Promise.defer(),
+			listener = (event,fromWindowId) => {
+				log.debug(`Received window loaded (${fromWindowId}), waiting for (${newWindowId})`)
+				
+				if (fromWindowId === newWindowId) {
+					log.debug(`Window is ready ${newWindowId}`)
+					deferred.resolve()
+				}
+			}
+		
+		// START LISTENING IMMEDIATELY
+		ipcMain.on(WindowEvents.AllResourcesLoaded,listener)
+			
 		let
 			newWindow:Electron.BrowserWindow
 		
+		
+		
 		try {
 			newWindow = new Electron.BrowserWindow(cloneObject(this.opts))
+			newWindowId = newWindow.id
 			
 			const
-					templateURL = getAppEntryHtmlPath()
-			
-			let
 				url = makeAppEntryURL('empty')
-					
+			
+			// LOAD THE EMPTY URL OR PROCESS TYPE SPECIFIC URL
+			newWindow.loadURL(url)
+			
 			process.on('beforeExit', () => {
 				guard(() => newWindow.close())
 			})
@@ -129,9 +147,14 @@ class WindowFactory {
 			await deferred.promise.timeout(WindowCreateTimeout)
 		} catch (err) {
 			log.error(`Unable to create browser window for pool`, err)
+			
+			if (newWindow && !newWindow.isDestroyed())
+				guard(() => newWindow.destroy())
+			
+			throw err
+		} finally {
+			ipcMain.removeListener(WindowEvents.AllResourcesLoaded,listener)
 		}
-		
-		
 		
 		return newWindow
 	}

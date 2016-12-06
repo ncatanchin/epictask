@@ -1,9 +1,11 @@
 import "./ProcessClient"
 
 import {ipcRenderer} from 'electron'
+
 import {ProcessType} from './ProcessType'
 import {getServiceManager} from "epic-services"
 import { START_TIMEOUT_DEFAULT } from "epic-global"
+import { WindowEvents } from "epic-entry-shared/WindowTypes"
 
 interface IMessageHandlers {
 	[messageType:string]:ProcessClient.TProcessMessageHandler
@@ -106,18 +108,17 @@ async function startProcessClient(
 	// Now bind to all the process events
 	ipcRenderer.on('message',(event,{type,body}) =>
 		ProcessClient.emit(type,body)
-		// const
-		// 	handler = getMessageHandler(type)
-		//
-		// assert(handler,`No handler defined for ${type}`)
-		//
-		// handler(type,body)
 	)
 	
 	log.info(`Starting Worker Entry`)
 	try {
+		const
+			windowId = getWindowId()
+		
+		log.debug(`Initializing ${windowId}`)
 		await workerInit()
 		
+		log.debug(`Services Starting ${windowId}`)
 		if (workerEntry.servicesEnabled()) {
 			log.info('Starting all services')
 			await Promise
@@ -125,10 +126,13 @@ async function startProcessClient(
 				.timeout(START_TIMEOUT_DEFAULT)
 		}
 		
+		log.debug(`Workload Starting ${windowId}`)
 		await workerStart()
-		log.info(`Worker start successfully`)
 		
 		
+		log.debug(`Process fully started: ${windowId}`)
+		log.tron(`Process fully started: ${windowId}`)
+		ipcRenderer.send(WindowEvents.AllResourcesLoaded,windowId)
 		startDeferred.resolve(true)
 	} catch (err) {
 		log.error('Failed to start worker',err)

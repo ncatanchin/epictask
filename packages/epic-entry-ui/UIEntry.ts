@@ -131,9 +131,6 @@ export class UIEntry extends ProcessClientEntry {
 		}
 		
 		startupPromises.push(setupCommandManager())
-		
-		
-		
 		startupPromises.push(setupUI())
 		
 		await Promise.all(startupPromises)
