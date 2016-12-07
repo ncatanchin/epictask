@@ -1,7 +1,7 @@
 // Imports
 import { PureRender, RepoLabel, Icon } from "epic-ui-components"
 
-import { shallowEquals} from "epic-global"
+import { shallowEquals } from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User, SearchItem } from "epic-models"
 import filterProps from "react-valid-props"
 
@@ -10,100 +10,19 @@ import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
 import { MappedProps } from "epic-global/UIUtil"
 import { getValue } from "typeguard"
-import {
-	PositionRelative, FlexRowCenter, FillWidth, makeTransition, rem, FillHeight,
-	FlexAuto, Ellipsis
-} from "epic-styles/styles"
-import { SearchState } from "epic-ui-components/search"
-
+import baseStyles from './SearchResultItem.styles'
+import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common'
 // Constants
 const log = getLogger(__filename)
-
-
-function baseStyles(topStyles,theme,palette) {
-	const
-		{ accent, primary, text, secondary } = palette,
-		{itemHeight} = theme.search
-	
-	return [
-		makeTransition([ 'background-color', 'color' ]),
-		PositionRelative,
-		FlexRowCenter,
-		FillWidth, {
-			height: itemHeight,
-			cursor: 'pointer',
-			borderBottom: `0.1rem solid ${accent.hue1}`,
-			color: primary.hue1,
-			
-			normal: {
-				backgroundColor: text.primary,
-				color: primary.hue1
-			},
-			
-			selected: [{
-				backgroundColor: accent.hue1,
-				color: text.primary
-			}],
-			
-			
-			info: [
-				FlexScale,
-				FlexColumnCenter,
-				makePaddingRem(0.2,2,0.2,1),
-				makeFlexAlign('stretch', 'center'), {
-				
-				}
-			],
-			
-			label: [Ellipsis, FlexAuto, makePaddingRem(0, 1), {
-				flexShrink: 1,
-				fontWeight: 300,
-				fontSize: rem(1.6),
-				
-				second: [FlexAuto, {
-					fontWeight: 100,
-					fontSize: rem(1.2)
-				}],
-				
-				selected: [{
-					fontWeight: 500
-				}]
-			}],
-			
-			action: [{
-				fontWeight: 300,
-				fontSize: rem(1.3),
-				textStyle: 'italic',
-				
-				selected: [{
-					
-				}]
-			}],
-			
-			type: [ FillHeight, FlexRowCenter, FlexAuto, Ellipsis, {
-				fontWeight: 300,
-				fontSize: rem(1.3),
-				textStyle: 'italic',
-				padding: rem(0.3),
-				width: itemHeight,
-				background: Transparent,
-				//borderRight: `0.1rem solid ${accent.hue1}`,
-				
-				selected: [{}]
-			} ]
-			
-		} ]
-	
-}
 
 
 /**
  * ISearchResultItemProps
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
-	item:SearchItem
-	controller:SearchController
-	selected?:boolean
+	item: SearchItem
+	controller: SearchController
+	selected?: boolean
 }
 
 /**
@@ -119,11 +38,11 @@ export interface ISearchResultItemState {
  * @class SearchResultItem
  * @constructor
  **/
-@MappedProps((props:ISearchResultItemProps,mapper) => {
+@MappedProps((props: ISearchResultItemProps, mapper) => {
 	const
-		{item,controller} = props,
+		{ item, controller } = props,
 		state = controller.getState(),
-		{selectedIndex,items} = state,
+		{ selectedIndex, items } = state,
 		index = items.indexOf(item)
 	
 	return {
@@ -132,19 +51,18 @@ export interface ISearchResultItemState {
 }, {
 	onMount(mapper, props, data) {
 		data.onStateChange = () => {
-			log.debug(`Remapping with props`,props)
+			log.debug(`Remapping with props`, props)
 			setImmediate(() => mapper.remap())
 		}
-		props.controller.addListener(SearchEvent[SearchEvent.StateChanged],data.onStateChange)
+		props.controller.addListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
 	},
 	
-	onUnmount(mapper,props,data) {
+	onUnmount(mapper, props, data) {
 		if (data.onStateChange)
-			props.controller.removeListener(SearchEvent[SearchEvent.StateChanged],data.onStateChange)
+			props.controller.removeListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
 		
 		data.onStateChange = null
 	}
-	
 	
 	
 })
@@ -152,14 +70,25 @@ export interface ISearchResultItemState {
 @PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {
 	
-	constructor(props:ISearchResultItemProps,context) {
-		super(props,context)
+	constructor(props: ISearchResultItemProps, context) {
+		super(props, context)
 		
 	}
 	
-	renderResult(label:any,labelSecond:any,actionLabel,iconName,isSelected) {
+	/**
+	 * Default render for an item
+	 *
+	 * @param item
+	 * @param label
+	 * @param labelSecond
+	 * @param actionLabel
+	 * @param iconName
+	 * @param isSelected
+	 * @returns {any}
+	 */
+	renderResult(item: SearchItem, label: any, labelSecond: any, actionLabel, iconName, isSelected) {
 		const
-			{styles} = this.props,
+			{ styles } = this.props,
 			
 			// Make style
 			resultStyle = makeStyle(
@@ -178,28 +107,41 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 				isSelected && styles.type.selected
 			)
 		
-		return <div style={resultStyle}>
-			<div style={typeStyle}>
-				<Icon iconSet='octicon' iconName={iconName}/>
-				{/*{typeLabel}*/}
-			</div>
-			<div style={styles.info}>
-				<div style={labelStyle}>
-					{label}
+		return <FlexRowCenter style={[resultStyle,Styles.FlexScale]}>
+			<Flex style={[typeStyle,{width: '25%'}]}>
+				{item.providerResultIndex === 0 &&
+				<FlexRowCenter style={[FlexScale,FillWidth]}>
+					<Icon style={[Styles.FlexAuto,Styles.makePaddingRem(0,2,0,1)]} iconSet='octicon' iconName={iconName}/>
+					<FlexScale style={[Styles.Ellipsis]}>
+						{item.provider.name}
+					</FlexScale>
+				</FlexRowCenter>
+				}
+			</Flex>
+			
+			<FlexScale>
+				<div style={resultStyle}>
+					
+					<div style={styles.info}>
+						<div style={labelStyle}>
+							{label}
+						</div>
+					</div>
+					<div style={makeStyle(labelStyle,styles.label.second)}>
+						{labelSecond}
+					</div>
+				
 				</div>
-			</div>
-			<div style={makeStyle(labelStyle,styles.label.second)}>
-				{labelSecond}
-			</div>
+			</FlexScale>
+		</FlexRowCenter>
 		
-		</div>
 	}
 	
 	
-	
-	renderRepo = (item:SearchItem, repo:Repo, isSelected) => {
+	renderRepo = (item: SearchItem, repo: Repo, isSelected) => {
 		
 		return this.renderResult(
+			item,
 			<RepoLabel repo={repo}/>,
 			`${repo.open_issues_count} open issues`,
 			'Add issue repo',
@@ -216,7 +158,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	 * @param isSelected
 	 * @returns {any}
 	 */
-	renderAvailableRepo = (item:SearchItem,availRepo:AvailableRepo,isSelected) => {
+	renderAvailableRepo = (item: SearchItem, availRepo: AvailableRepo, isSelected) => {
 		// const
 		// 	// Get data
 		// 	availRepoSelected = availRepo.enabled,
@@ -235,9 +177,10 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		
 	}
 	
-	renderIssue = (item:SearchItem,issue:Issue,isSelected) => {
+	renderIssue = (item: SearchItem, issue: Issue, isSelected) => {
 		const repo = null//repoModels && repoModels.get(`${issue.repoId}`)
 		return this.renderResult(
+			item,
 			issue.title,
 			repo ? <RepoLabel repo={repo}/> : '',
 			'Select issue',
@@ -246,10 +189,11 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		)
 	}
 	
-	renderMilestone = (item:SearchItem,milestone:Milestone,isSelected) => {
+	renderMilestone = (item: SearchItem, milestone: Milestone, isSelected) => {
 		
 		const repo = null//repoModels && repoModels.get(`${milestone.repoId}`)
 		return this.renderResult(
+			item,
 			milestone.title,
 			repo ? <RepoLabel repo={repo}/> : '',
 			'Filter milestone',
@@ -258,12 +202,13 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		)
 	}
 	
-	renderLabel = (item:SearchItem,label:Label,isSelected) => {
+	renderLabel = (item: SearchItem, label: Label, isSelected) => {
 		
 		const
 			repo = getValue(() => item.value.repo) //repoModels && repoModels.get(`${label.repoId}`)
 		
 		return this.renderResult(
+			item,
 			label.name,
 			repo ? <RepoLabel repo={repo}/> : '',
 			'Filter label',
@@ -272,9 +217,10 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		)
 	}
 	
-	renderAssignee = (item:SearchItem,user:User,isSelected) => {
+	renderAssignee = (item: SearchItem, user: User, isSelected) => {
 		
 		return this.renderResult(
+			item,
 			user.login,
 			user.login,
 			'Filter Assignee',
@@ -284,9 +230,10 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	}
 	
 	
-	renderAction = (item:SearchItem,cmd:ICommand,isSelected) => {
+	renderAction = (item: SearchItem, cmd: ICommand, isSelected) => {
 		
 		return this.renderResult(
+			item,
 			cmd.name,
 			cmd.description,
 			'Execute',
@@ -295,7 +242,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		)
 	}
 	
-	private renderFns = {
+	private itemRenderContentFns = {
 		[Repo.$$clazz]: this.renderRepo,
 		['Github']: this.renderRepo,
 		[AvailableRepo.$$clazz]: this.renderAvailableRepo,
@@ -306,28 +253,28 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 		['Action']: this.renderAction,
 	}
 	
-	// /**
-	//  * Only change on selection change
-	//  * @param nextProps
-	//  * @param nextState
-	//  * @returns {boolean}
-	//  */
-	// shouldComponentUpdate(nextProps,nextState) {
-	// 	return !shallowEquals(nextProps,this.props,'item','selected')
-	// }
 	
+	private resultRender(provider, item, selected) {
+		const
+			content = (this.itemRenderContentFns[ provider.id ] as any)(
+				item,
+				item.value,
+				selected
+			)
+		
+		return content
+	}
 	
 	render() {
 		const
-			{props} = this,
-			{item,selected } = props,
-			{provider} = item
+			{ props } = this,
+			{ item, selected } = props,
+			{ provider } = item
 		
 		const
-			resultRenderer:any = this.renderFns[provider.id],
 			itemContent = provider.render ?
-				provider.render(item,selected) :
-				resultRenderer(item,item.value,selected)
+				provider.render(item, selected) :
+				this.resultRender(provider, item, selected)
 		
 		
 		return <div {...filterProps(props)} className={`${props.className || ''} ${selected && 'selected'}`}>

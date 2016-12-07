@@ -21,58 +21,63 @@ declare interface IWindowConfig {
 	/**
 	 * An id can be provided
 	 */
-	id?:string
+	id?: string
+	
+	/**
+	 * Id used for position state
+	 */
+	positionId: string
 	
 	/**
 	 * Configuration name
 	 */
-	name:string
+	name: string
 	
 	
 	/**
 	 * Window type, this drivers parent/child enforcement
 	 */
-		type:WindowType
+	type: WindowType
 	
 	
 	/**
-	 * The process type, only application if type = backgroundworker
+	 * The process type, only application if type = background worker
 	 */
-	processType?:ProcessType
+	processType?: ProcessType
 	
 	
 	/**
 	 * THe entry URI
 	 */
-	uri?:string
+	uri?: string
 	
 	/**
 	 * Should the window auto restart
 	 */
-	autoRestart:boolean
+	autoRestart: boolean
 	
 	/**
 	 * In dev mode - show dev tools
 	 */
-	showDevTools?:boolean
+	showDevTools?: boolean
 	
-	devToolsPosition?:TDevToolsPosition
+	devToolsPosition?: TDevToolsPosition
 	
 	/**
 	 * Store the windows state for future openings
 	 */
 	
-	storeWindowState?:boolean
+	storeWindowState?: boolean
 	
 	/**
 	 * Only allow this config to exist 1 at a time
 	 */
-	singleWindow?:boolean
+	singleWindow?: boolean
 	
 	/**
 	 * Window options (Browser Window)
 	 */
-	opts?:Electron.BrowserWindowOptions
+	opts?: Electron.BrowserWindowOptions
 	
 }
 
@@ -80,39 +85,40 @@ declare interface IWindowConfig {
  * Window state
  */
 declare interface IWindowState extends IWindowConfig {
-	id:string
+	id: string
 	
-	url:string
+	url: string
 	
 	
 	running: boolean
 	connected: boolean
-	killed:boolean
-	destroyed:boolean
-	crashed:boolean
-	closed:boolean
-	unresponsive:boolean
-	focused:boolean
-	visible:boolean
+	killed: boolean
+	destroyed: boolean
+	crashed: boolean
+	closed: boolean
+	unresponsive: boolean
+	focused: boolean
+	visible: boolean
 	
 	
-	heartbeatTimestamp:number
-	heartbeatCount:number
+	heartbeatTimestamp: number
+	heartbeatCount: number
 	
-	onMessage: (type,body) => any
+	onMessage: (type, body) => any
 }
 
 /**
  * Actual instance
  */
 declare interface IWindowInstance extends IWindowState {
-	window:Electron.BrowserWindow
-	webContents?:Electron.WebContents
-	pool?:any
-	config?:IWindowConfig
-	allEventRemovers?:any
-	heartbeatTimeoutId:any
-	connectedFlag:Promise.Resolver<boolean>
-	shutdownFlag:Promise.Resolver<boolean>
+	window: Electron.BrowserWindow
+	windowPositionManager?: IWindowPositionManager
+	webContents?: Electron.WebContents
+	pool?: any
+	config?: IWindowConfig
+	allEventRemovers?: any
+	heartbeatTimeoutId: any
+	connectedFlag: Promise.Resolver<boolean>
+	shutdownFlag: Promise.Resolver<boolean>
 }
 

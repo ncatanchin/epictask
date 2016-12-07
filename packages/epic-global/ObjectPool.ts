@@ -6,7 +6,8 @@ const
 
 export interface IPoolOptions {
 	min?:number
-	max?:number
+	max?:number,
+	limit?:number
 }
 
 
@@ -47,20 +48,46 @@ export class Pool<T> {
 	constructor(private factory:IPoolResourceFactory<T>, private opts:IPoolOptions = {}) {
 		_.defaults(this.opts,{
 			min: 0,
-			max: -1
+			max: -1,
+			limit: -1
 		})
 		
-		this.init()
+		this.checkInventory()
 	}
 	
 	
 	/**
 	 * Start the pool
 	 */
-	private init() {
-		Array
-			.from(Array(this.opts.min).keys())
-			.map(this.createResource)
+	private checkInventory() {
+		let
+			{min,max,limit} = this.opts,
+			activeResources = this.getActiveResources(),
+			activeCount = activeResources.size,
+			availableResources = this.getAvailableResources(),
+			availableCount = availableResources.size,
+			newCount = min < 1 || availableCount >= min ?
+				0 :
+				min - availableCount,
+			destroyCount = max < 1 || availableCount <= max ?
+				0:
+				availableCount - max
+		
+		// CHECK THE MAX VALUES
+		if (limit > 0 && newCount + activeCount > limit)
+			newCount = limit - availableCount
+		
+		for (let i = 0; i < newCount;i++) {
+			this.createResource()
+		}
+		
+		for (let i = 0; i < destroyCount;i++) {
+			this.destroy(availableResources.get(i).resource)
+		}
+		
+		// Array
+		// 	.from(Array(this.opts.min).keys())
+		// 	.map(this.createResource)
 		
 	}
 	
@@ -173,9 +200,9 @@ export class Pool<T> {
 	
 	canCreateResource() {
 		const
-			{max} = this.opts
+			{limit} = this.opts
 		
-		return (max < 1 || this.resources.size < max)
+		return (limit < 1 || this.getActiveResources().size < limit)
 	}
 	
 	/**
@@ -216,6 +243,8 @@ export class Pool<T> {
 			
 		}
 		
+		this.checkInventory()
+		
 		return poolResource.resource
 	
 	}
@@ -247,6 +276,8 @@ export class Pool<T> {
 		Object.assign(poolResource,{
 			reserved: false
 		})
+		
+		this.checkInventory()
 	}
 	
 	/**
@@ -263,20 +294,25 @@ export class Pool<T> {
 		if (!poolResource)
 			return
 		
+		Object.assign(resource,{
+			reserved: true,
+			status: PoolResourceStatus.Destroyed
+		})
+		
+		
 		// IF NOT ALREADY DESTROYED, START THE PROCESS
 		if (!poolResource.destroyDeferred) {
 			poolResource.destroyDeferred = Promise.defer()
 			
 			this.factory
 				.destroy(resource)
-				.then(() => poolResource.destroyDeferred.resolve())
+				.then(() => {
+					poolResource.destroyDeferred.resolve()
+					
+				})
 		}
 		
-		Object.assign(resource,{
-			reserved: true,
-			status: PoolResourceStatus.Destroyed
-		})
-		
+		this.checkInventory()
 	}
 	
 	/**

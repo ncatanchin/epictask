@@ -4,6 +4,8 @@ import { Pool, IPoolResourceFactory } from 'epic-global/ObjectPool'
 import {List} from 'immutable'
 import { isString } from "typeguard"
 
+
+
 const
 	factory = {
 		create() {
@@ -29,15 +31,21 @@ test(`Create pool`,async () => {
 test(`Acquire more than max`,async () => {
 	
 	const
-		pool = new Pool(factory,{max: 1}),
+		pool = new Pool(factory,{limit: 1}),
 		val1 = await pool.acquire()
 	
 	expect(val1).toBe('hello')
+	
+	let
+		error = null
+	
 	try {
 		await pool.acquire()
 	} catch (err) {
-		expect(err.name).toBe('AssertionError')
+		error  = err
 	}
+	expect(error).toBeTruthy()
+	expect(error.name).toBe('AssertionError')
 	
 	await pool.release(val1)
 	

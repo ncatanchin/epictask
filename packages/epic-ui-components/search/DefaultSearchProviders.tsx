@@ -11,10 +11,9 @@ import {
 
 import { GitHubClient, createClient } from "epic-github"
 import { getCommandManager, ICommand } from "epic-command-manager"
-import { ValueCache, Benchmark, cloneObjectShallow, EnumEventEmitter } from "epic-global"
+import { Benchmark, cloneObjectShallow} from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
-import { isNumber, getValue } from "typeguard"
-import { nilFilterList } from "epic-global/ListUtil"
+
 
 
 const

@@ -21,15 +21,18 @@ import {
 
 import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client"
 import WindowPool from "./WindowPool"
+import { WindowPositionManager } from "epic-process-manager/WindowPositionManager"
 
 assert(Env.isMain,`WindowManager ONLY loads on main`)
 
 const
-	log = getLogger(__filename),
+	log = getLogger(__filename)
 	
-	windowStateKeeper = require('electron-window-state'),
-	
-	{ BrowserWindow, app, ipcMain } = Electron,
+// DEBUG ENABLE
+//log.setOverrideLevel(LogLevel.DEBUG)
+
+const
+	{ app, ipcMain } = Electron,
 	
 	// Container to support hot reloading
 	instanceContainer = ((global as any).instanceContainer || {}) as {
@@ -37,32 +40,6 @@ const
 		instance:WindowManager,
 		hotInstance:WindowManager
 	}
-
-// DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
-
-/**
- * Crate a window state keeper
- *
- * @param id
- * @param config
- * @returns {any}
- */
-function createWindowStateKeeper(id:string, config:IWindowConfig) {
-	const
-		{ opts = {} } = config,
-		{
-			width:defaultWidth,
-			height:defaultHeight
-		} = opts
-	
-	
-	return windowStateKeeper({
-		file: `epic-window-state-${id}`,
-		defaultWidth,
-		defaultHeight
-	})
-}
 
 
 /**
@@ -87,7 +64,9 @@ function convertInstanceToState(instance:IWindowInstance):IWindowState {
 		'shutdownFlag',
 		'heartbeatCount',
 		'config',
+		'pool',
 		'window',
+		'windowPositionManager',
 		'allEventRemovers',
 		'webContents',
 		'onMessage',
@@ -632,7 +611,8 @@ export class WindowManager {
 		try {
 			
 			const
-				newWindowOpts = makeBrowserWindowOptions(type, opts)
+				newWindowOpts = makeBrowserWindowOptions(type, opts),
+				positionId = config.positionId || (singleWindow ? config.name : shortId())
 			
 			// ID IS NAME FOR SINGLE WINDOWS
 			// const
@@ -648,13 +628,19 @@ export class WindowManager {
 				newWindow = await pool.acquire(), //new Electron.BrowserWindow(Object.assign({}, newWindowOpts, savedWindowState)),
 				id = `${newWindow.id}`
 			
+			
+			
 			const
+				// POSITION MANAGER
+				windowPositionManager = new WindowPositionManager(newWindow,positionId),
+				
 				// URL
 				url = makeAppEntryURL(uri),
 				
 				// INSTANCE OBJECT
 				windowInstance = this.windows[ this.windows.length ] = cloneObjectShallow(config, {
 					id,
+					positionId,
 					pool,
 					type,
 					opts: newWindowOpts as any,
@@ -670,11 +656,11 @@ export class WindowManager {
 					killed: false,
 					running: true,
 					connected: false,
-					
+					windowPositionManager,
 					heartbeatTimestamp: 0,
 					heartbeatCount: 0,
 					window: newWindow,
-					allEventRemovers: [],
+					allEventRemovers: [windowPositionManager.attach()],
 					
 					config
 				}) as IWindowInstance
@@ -800,6 +786,8 @@ declare global {
 	interface IWindowManagerClient extends WindowManager {
 		
 	}
+	
+	function getWindowManager():IWindowManagerClient
 }
 
 

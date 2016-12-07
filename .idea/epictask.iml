@@ -25,5 +25,6 @@
     <orderEntry type="library" name="epic-types" level="project" />
     <orderEntry type="library" name="node_modules" level="project" />
     <orderEntry type="library" name="epictask-globals" level="project" />
+    <orderEntry type="library" name="jest-DefinitelyTyped" level="application" />
   </component>
 </module>

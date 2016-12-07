@@ -1,9 +1,8 @@
 import { List,Map } from "immutable"
 import { AvailableRepo, Repo, SearchItem, SearchResult } from "epic-models"
 
-import { getCommandManager, ICommand } from "epic-command-manager"
 import { ValueCache, Benchmark, cloneObjectShallow, EnumEventEmitter, shallowEquals } from "epic-global"
-import {  getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
+
 import { isNumber, getValue, isFunction, isNil, isList } from "typeguard"
 import { nilFilterList } from "epic-global/ListUtil"
 import { SearchState } from "epic-ui-components/search/SearchState"
@@ -116,7 +115,7 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	 * @returns {SearchItem[]}
 	 */
 	private makeItems(results = List<SearchResult>()):List<SearchItem> {
-		return results
+		const items = results
 			.reduce((allItems,result) => {
 				if (!result)
 					return allItems
@@ -134,6 +133,33 @@ export class SearchController extends EventEmitter implements IViewController<Se
 					
 				return allItems.concat(items) as List<SearchItem>
 			},List<SearchItem>())
+			
+			// FINALLY sort the items by provider and score
+			.sortBy(item => {
+				const
+					{provider,score} = item,
+					providerIndex = this.providers.indexOf(provider)
+				
+				return `${providerIndex}|||${score}`
+			}) as List<SearchItem>
+		
+		let
+			lastProvider,
+			providerIndex
+		
+		// Finally index the items within each provider set
+		items.forEach(item => {
+			if (!lastProvider || lastProvider !== item.provider) {
+				lastProvider = item.provider
+				providerIndex = -1
+			}
+			
+			providerIndex++
+			item.providerResultIndex = providerIndex
+			
+		})
+		
+		return items
 	}
 	
 	

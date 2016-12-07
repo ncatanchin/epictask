@@ -10,23 +10,32 @@ const
 
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-_.assignGlobal({
-	shutdownInProgress: false
-})
-
 
 let
 	shutdown = false,
 	processesStopping = false
 
 
+/**
+ * Check if a shutdown is in progress
+ *
+ * @returns {boolean}
+ */
 function isShuttingDown() {
 	return shutdown || (global as any).shutdownInProgress
 }
 
-assignGlobal({isShuttingDown})
+/**
+ * Expose public shutdown helpers
+ */
+assignGlobal({
+	shutdownInProgress: false,
+	isShuttingDown
+})
 
-
+/**
+ * Mark everything as shutting down
+ */
 function setShuttingDown() {
 	assignGlobal({
 		shutdownInProgress: true
@@ -120,15 +129,53 @@ function onShutdown(event) {
 	}
 }
 
-
+/**
+ * Before quit, begin a standard shutdown
+ * to preserve state etc
+ */
 app.on('before-quit',shutdownApp)
 
-// ON ALL WINDOWS CLOSED - QUIT
+/**
+ * Same as before, except immediate
+ */
+app.on('will-quit',onShutdown)
+
+/**
+ * On create add a close listener
+ * so we can always check UI windows when
+ * a window closes
+ */
+app.on('browser-window-created',(event,window) => {
+	window.on('close', () => {
+		try {
+			if (shutdown)
+				return
+			
+			const
+				hasUIWindows = getWindowManager()
+					.getWindowInstances().some(it =>
+						it.type !== WindowType.Background &&
+						it.running &&
+						it.window !== window)
+			
+			if (!hasUIWindows) {
+				log.info(`No more UI windows, shutting down`)
+				shutdownApp()
+			}
+		} catch (err) {
+			log.error(`Unable to check for running UI windows`,err)
+		}
+	})
+})
+
+
+/**
+ * On all windows closed, shut it down
+ */
 app.on('window-all-closed',(event) => {
 	log.info(`All windows closed - quitting`)
-	if (!Env.isMac)
+	if (!shutdown)
 		shutdownApp()
 })
 
-// WHEN APP IS GOING TO QUIT
-app.on('will-quit',onShutdown)
+

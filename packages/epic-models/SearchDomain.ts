@@ -60,6 +60,7 @@ export class SearchItem {
 	
 	id:string|number
 	provider:ISearchProvider
+	providerResultIndex:number
 	score:number
 	value:any
 	component:React.ReactElement<any>
