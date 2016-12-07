@@ -1,16 +1,30 @@
 import { createSelector } from "reselect"
 import { User } from "epic-models"
-import { AppKey, getValue } from "epic-global"
+import { AppKey, getValue} from "epic-global"
 import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
 import { Map } from "immutable"
 import { TWindowMap } from "epic-typedux/state/AppState"
 import { Settings } from "epic-global/settings/Settings"
+import { List } from "immutable"
+
 
 
 export const appStateSelector:(state) => AppState = createSelector(
 	(state:Map<string,any>) => state.get(AppKey) as AppState,
 	(appState:AppState) => appState
+)
+
+export const messagesSelector:(state) => List<INotification> = createSelector(
+	appStateSelector,
+	(state:AppState) => state.messages
+)
+
+
+export const messagesSortedSelector:(state) => List<INotification> = createSelector(
+	messagesSelector,
+	(messages:List<INotification>) =>
+		messages.sortBy(message => message.createdAt) as List<INotification>
 )
 
 export const appUserSelector:(state) => User = createSelector(

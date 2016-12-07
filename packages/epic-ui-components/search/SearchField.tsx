@@ -183,10 +183,10 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 				stopEvent()
 				break
 			case 'Enter':
-				event.preventDefault()
-				event.stopPropagation()
-				this.onResultSelected(null, null)
-				stopEvent()
+				if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+					this.onResultSelected(null, null)
+					stopEvent()
+				}
 				break
 		}
 	}

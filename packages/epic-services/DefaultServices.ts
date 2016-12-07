@@ -7,7 +7,8 @@ import './DatabaseClientService'
 import './AppStateService'
 import './UIStateService'
 import './RepoStateService'
-import './ToastService'
+import './NotificationService'
+import './NotificationService'
 
 if (module.hot) {
 	module.hot.accept([
@@ -15,7 +16,7 @@ if (module.hot) {
 		'./AppStateService',
 		'./UIStateService',
 		'./RepoStateService',
-		'./ToastService'
+		'./NotificationService'
 	],(updates) => {
 		
 		log.info(`HMR Updates`,updates)
@@ -24,6 +25,6 @@ if (module.hot) {
 		require('./AppStateService')
 		require('./UIStateService')
 		require('./RepoStateService')
-		require('./ToastService')
+		require('./NotificationService')
 	})
 }

@@ -2,7 +2,7 @@
 
 import { connect } from "react-redux"
 import { PureRender, ToastMessage } from "../common"
-import { createDeepEqualSelector, getValue, INotification } from "epic-global"
+import { createDeepEqualSelector, getValue} from "epic-global"
 import { createStructuredSelector,createSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import baseStyles from "./StatusBar.styles"
@@ -11,11 +11,11 @@ import {
 	jobDetailsSelector,
 	TJobMap,
 	IJobStatusDetail,
-	getUIActions,
-	messagesSortedSelector
+	getUIActions
 } from "epic-typedux"
 import { JobItem } from "epic-plugins-default/jobs/JobItem"
 import { BuiltInTools, getBuiltInToolId } from "../tools"
+import { messagesSortedSelector } from "epic-typedux/selectors"
 
 // Constants
 const

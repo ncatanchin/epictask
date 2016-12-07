@@ -7,39 +7,48 @@ import { ProcessNames } from "epic-entry-shared/ProcessType"
 
 const
 	// WEBPACK REMOVE TWEAKS
-	iconFile =
-		__NO_WEBPACK__ ?
-			__non_webpack_require__('assets/images/icons/icon-256x256.png') :
-			require('!!file-loader!buildResources/icons/256x256.png'),
+	iconFile256 =
+		require('!!file-loader!buildResources/icons/256x256.png'),
+	iconFile128 =
+		require('!!file-loader!buildResources/icons/128x128.png'),
 	
 	dataUrl = require('dataurl')
 	
 let
-	iconPath = searchPathsForFile(iconFile),
-	iconRawData = fs.readFileSync(iconPath),
-	iconUrl = dataUrl.format({
+	iconPath256 = searchPathsForFile(iconFile256),
+	iconRawData256 = fs.readFileSync(iconPath256),
+	iconUrl256 = dataUrl.format({
 		mimetype:'image/png',
-		data:iconRawData
+		data:iconRawData256
+	}),
+	iconPath128 = searchPathsForFile(iconFile128),
+	iconRawData128 = fs.readFileSync(iconPath128),
+	iconUrl128 = dataUrl.format({
+		mimetype:'image/png',
+		data:iconRawData128
 	})
 	
 	
 	//iconRawData = require('!!raw!build/icon.icns'),
 	//iconPath = 'build/icons/128x128.png',
 	
-console.log(`Original icon file: ${iconFile} / path ${iconPath}`)
+console.log(`Original icon file: ${iconFile256} / path ${iconPath256}`)
 
-if (!iconPath) {
+if (!iconPath256) {
 	console.log(`Icon not resolved, using url`)
-	iconPath = iconUrl
+	iconPath256 = iconUrl256
 }
 
 /**
  * Window Icon
  */
 export const
-	WindowIconUrl = iconUrl,
-	WindowIconPath = iconPath,
-	WindowIcon = iconPath
+	WindowIconUrl256 = iconUrl256,
+	WindowIconPath256 = iconPath256,
+	WindowIcon256 = iconPath256,
+	WindowIconUrl128 = iconUrl128,
+	WindowIconPath128 = iconPath128,
+	WindowIcon128 = iconPath128
 
 
 
@@ -66,7 +75,7 @@ export const
 			
 		}
 	},!Env.isMac && {
-		icon: WindowIcon
+		icon: WindowIcon256
 	},Env.isMac && {
 		//titleBarStyle: 'hidden'
 		// darkTheme:true,
@@ -81,7 +90,7 @@ export const WindowDefaultOpts = Object.assign(AllWindowDefaults, {
 	minWidth: 200,
 	width: 1024,
 	height: 728,
-	icon: WindowIcon
+	icon: WindowIcon256
 })
 
 /**
@@ -132,7 +141,7 @@ export const WindowConfigNormalDefaults = {
 	uri: "",
 	singleWindow: false,
 	autoRestart: false,
-	showDevTools: false, //Env.isDev,
+	showDevTools: Env.isDev,
 	storeWindowState: true,
 	opts: WindowDefaultOpts
 }
@@ -194,11 +203,13 @@ export const
 		processType: ProcessType.DatabaseServer
 	},Object.assign({},WindowConfigBackgroundDefaults)),
 	
-	JobServerWindowConfig:IWindowConfig = Object.assign({
-		id: ProcessNames.JobServer,
-		name: ProcessNames.JobServer,
-		processType: ProcessType.JobServer
-	},Object.assign({},WindowConfigBackgroundDefaults))
+	JobServerWindowConfig:IWindowConfig = Object.assign({},
+		WindowConfigBackgroundDefaults,{
+			id: ProcessNames.JobServer,
+			name: ProcessNames.JobServer,
+			processType: ProcessType.JobServer,
+			showDevTools: false
+		})
 
 
 /**

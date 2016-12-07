@@ -614,16 +614,10 @@ export class IssueActionFactory  {
 								log.debug(`Patching labels, adding`,addLabels,`Removing urls`,removeLabelUrls,'updated issue',issue)
 								break
 							case 'milestone':
-								if (!patchCopy.milestone)
-									delete issue['milestone']
-								else
-									issue.milestone = patchCopy.milestone
+								issue.milestone = patchCopy.milestone
 								break
 							case 'assignee':
-								if (!patchCopy.assignee)
-									delete issue['assignee']
-								else
-									issue.assignee = patchCopy.assignee
+								issue.assignee = patchCopy.assignee
 								break
 						}
 					})
@@ -646,10 +640,12 @@ export class IssueActionFactory  {
 					await this.saveAndUpdateIssueModel(client, repo, issue)
 				}).toArray())
 				
-				
+				getNotificationCenter().notifyInfo(
+					`${updatedIssues.map(it => `#${it.number}`).join(', ')} Updated Successfully`)
 				
 			} catch (err) {
 				log.error('issue patching failed', err, patch, issues, originalIssues)
+				getNotificationCenter().notifyError(err)
 				throw err
 			}
 		
@@ -664,6 +660,10 @@ export class IssueActionFactory  {
 	 * @returns {Issue}
 	 */
 	private async saveAndUpdateIssueModel(client: GitHubClient, repo: Repo, issue: Issue) {
+		
+		const
+			hasNullMilestone = !issue.milestone && issue.hasOwnProperty('milestone'),
+			hasNullAssignee = !issue.assignee && issue.hasOwnProperty('assignee')
 		
 		issue = cloneObjectShallow(issue)
 		
@@ -681,10 +681,21 @@ export class IssueActionFactory  {
 		if (existingIssue)
 		 issue = cloneObjectShallow(existingIssue,issue)
 		
+		if (hasNullAssignee) {
+			issue.assignee = null
+		}
+		
+		if (hasNullMilestone) {
+			issue.milestone = null
+		}
+			
+		
 		// First save to github
 		const
 			savedIssue:Issue = await client.issueSave(repo, issue),
 			mergedIssue = cloneObjectShallow(issue, savedIssue)
+		
+		
 		
 		log.debug(`Issue save, our version`,issue,'github version',savedIssue,'merged version',mergedIssue)
 		

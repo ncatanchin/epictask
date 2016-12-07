@@ -15,7 +15,7 @@ const
 		{
 			// Toggle developer tools
 			label: 'Toggle Developer Tools',
-			accelerator: 'Alt+CommandOrControl+I',
+			accelerator: 'CommandOrControl+Alt+I',
 			click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
 		},
 		// Start Perf

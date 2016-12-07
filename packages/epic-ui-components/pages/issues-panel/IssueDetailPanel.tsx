@@ -306,54 +306,6 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	 */
 	renderFooter = (issue, styles) => <div style={styles.footer}/>
 	
-	
-	/**
-	 * Render the issue body if it has one
-	 *
-	 * @param items
-	 * @param item
-	 * @param selectedIssue
-	 * @param index
-	 * @param styles
-	 */
-	// renderBody = (items:List<TDetailItem>, item:Issue, selectedIssue:Issue, index, styles) =>
-	
-	
-	/**
-	 * Render a comment
-	 *
-	 * @param items
-	 * @param comment
-	 * @param selectedIssue
-	 * @param index
-	 * @param styles
-	 * @returns {any}
-	 */
-	// renderComment = (items:List<TDetailItem>, comment:Comment, selectedIssue:Issue, index, styles) => <IssueActivityText
-	// 	key={comment.id}
-	// 	issue={selectedIssue}
-	// 	comment={comment}
-	// 	activityActionText='commented'
-	// 	activityType='comment'
-	// 	activityStyle={styles.content.activities.activity}/>
-	//
-	/**
-	 *
-	 *
-	 * @param items
-	 * @param eventGroup
-	 * @param selectedIssue
-	 * @param index
-	 * @param styles
-	 */
-	// renderEventGroup = (items:List<TDetailItem>, eventGroup:EventGroup, selectedIssue:Issue, index, styles) =>
-	// 	<IssueActivityText
-	// 		key={eventGroup.id}
-	// 		eventGroup={eventGroup}
-	// 		hideBottomBorder={index !== items.size - 1 && !isEventGroup(items.get(index+1))}
-	// 		activityType='eventGroup'
-	// 		activityStyle={styles.content.activities.activity}/>
-	
 	/**
 	 * Render an item for the activity list
 	 *

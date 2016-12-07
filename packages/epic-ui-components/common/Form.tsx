@@ -3,7 +3,7 @@ import { List } from "immutable"
 import { PureRender, WorkIndicator } from 'epic-ui-components/common'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 
-import { getValue, isString } from "typeguard"
+import { getValue, isString, isFunction, isPromise } from "typeguard"
 import { guard, EnumEventEmitter } from "epic-global"
 
 
@@ -131,6 +131,18 @@ export enum FormEvent {
 export interface IFormProps extends IThemedAttributes {
 	id:string
 	
+	/**
+	 * Submit form on Command (mac) / Control (linux/win) + Enter
+	 */
+	submitOnCmdCtrlEnter?:boolean
+	
+	/**
+	 * On submit callback
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
 	onValidSubmit:(form:IForm,model:any,values:IFormFieldValue[]) => Promise<any>
 	
 	/**
@@ -152,6 +164,14 @@ export interface IFormProps extends IThemedAttributes {
 	 */
 	onInvalid?:(values:IFormFieldValue[]) => any
 	
+	
+	/**
+	 * Submit result handler
+	 * @param result
+	 * @param err
+	 */
+	onSubmitResult?:(result:any,err:Error) => any
+	
 }
 
 
@@ -165,6 +185,10 @@ export interface IFormProps extends IThemedAttributes {
 
 @PureRender
 export class Form extends React.Component<IFormProps,IFormState> {
+	
+	static defaultProps = {
+		submitOnCmdCtrlEnter: false
+	}
 	
 	/**
 	 * Child context types
@@ -351,7 +375,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	/**
 	 * Validate the form
 	 */
-	validate(submit = false) {
+	validate(submit = false,validSubmitOverrideFn = null) {
 		try {
 			const
 				values = this.fields.map(this.getFieldValue) as List<IFormFieldValue>,
@@ -376,7 +400,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 				//VALID
 				guard(() => this.props.onValid(values.toArray()))
 				this.events.emit(FormEvent.Valid, values)
-				submit && this.startSubmit()
+				submit && this.startSubmit(validSubmitOverrideFn)
 			})
 		} catch (err) {
 			log.error(`failed to validate`,err)
@@ -386,9 +410,12 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	/**
 	 * Handles the execution of a form submit
 	 */
-	private submitHandler = async () => {
+	private submitHandler = async (validSubmitOverrideFn:Function = null) => {
+		let
+			result = null,
+			error:Error = null
+		
 		try {
-			log.debug(`submitHandler()`)
 			this.events.emit(FormEvent.Submitted,this)
 			
 			const
@@ -399,33 +426,38 @@ export class Form extends React.Component<IFormProps,IFormState> {
 				},{} as any)
 			
 			const
-				{onValidSubmit} = this.props
+				onValidSubmit = validSubmitOverrideFn && isFunction(validSubmitOverrideFn) ?
+					validSubmitOverrideFn : this.props.onValidSubmit
 			
-			log.debug(`submitting to `,onValidSubmit)
-			if (onValidSubmit)
-				await onValidSubmit(this, model, values.toArray())
+			result = onValidSubmit(this, model, values.toArray())
+		
+			if (isPromise(result))
+				result = await result
 			
-		} catch (error) {
-			log.error(`Form submit failed`,error)
-			this.updateState({error})
-		} finally {
-			this.updateState({
-				working: false
-			})
+		} catch (err) {
+			log.error(`Form submit failed`,err)
+			error = err
 		}
+		
+		this.updateState({
+			error,
+			working: false
+		})
+		
+		guard(() => this.props.onSubmitResult(result,error))
 	}
 	
 	/**
 	 * Submit the form
 	 */
-	startSubmit = () => {
+	startSubmit = (validSubmitOverrideFn:Function = null) => {
 		log.debug(`startSubmit()`)
 		if (this.state.working) {
 			return log.warn(`Already working`)
 		}
 		this.updateState({
 			working: true
-		}, this.submitHandler)
+		}, () => this.submitHandler(validSubmitOverrideFn))
 		
 	}
 	
@@ -433,16 +465,34 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * On submit - validate > submit = true
 	 * @param event
 	 */
-	submit = (event?:React.FormEvent<any>) => {
+	submit = (event?:React.FormEvent<any>|Function) => {
 		log.debug(`Submit called`,event)
-		if (event) {
+		
+		if (event && !isFunction(event)) {
 			event.preventDefault()
 			event.stopPropagation()
 		}
 		
-		this.validate(true)
+		this.validate(true,event && isFunction(event) && event)
 		
 		
+	}
+	
+	/**
+	 * On key down in form
+	 * @param event
+	 */
+	onKeyDown = event => {
+		log.debug(`Form key down`,event)
+		
+		if (event && this.props.submitOnCmdCtrlEnter) {
+			if ((Env.isMac ? event.metaKey : event.ctrlKey) && event.key === 'Enter') {
+				event.preventDefault()
+				event.stopPropagation()
+				
+				this.submit()
+			}
+		}
 	}
 	
 	/**
@@ -466,6 +516,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 		return <form
 			id={id}
 			name={name}
+			onKeyDown={this.onKeyDown}
 			onSubmit={this.submit}
 			style={styles}>
 			{this.props.children}

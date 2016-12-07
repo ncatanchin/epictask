@@ -362,21 +362,6 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	makeOnCommentDeleteClick = (issue,comment) => event =>
 		getIssueActions().deleteComment(comment)
 	
-	
-	
-	/**
-	 * When the component mounts, create the state
-	 */
-	//componentWillMount = () => this.setState(this.getNewState(this.props))
-
-
-	/**
-	 * Update the state when new props arrive
-	 *
-	 * @param newProps
-	 */
-	//componentWillReceiveProps = (newProps) =>this.setState(this.getNewState(newProps))
-
 	/**
 	 * Render the issue activity component
 	 *

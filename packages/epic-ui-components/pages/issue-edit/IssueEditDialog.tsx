@@ -192,6 +192,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	
 	commandComponentId = ContainerNames.IssueEditDialog
 	
+	get form():Form {
+		return getValue(() => this.refs.form)
+	}
 	
 	private get viewState():IssueEditState {
 		return getValue(() => this.props.viewState)
@@ -258,8 +261,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param newIssueProps
 	 */
 	private updateIssueState = (newIssueProps) => {
+		if (!this.viewState.ready)
+			return
+		
 		let
 			{editingIssue} = this
+		
 		
 		editingIssue = cloneObjectShallow(editingIssue,newIssueProps)
 		
@@ -555,6 +562,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				<Form
 					id="issue-edit-form"
 					ref="form"
+					submitOnCmdCtrlEnter={true}
 					onInvalid={this.onFormInvalid}
 					onValid={this.onFormValid}
 					onValidSubmit={this.onFormValidSubmit}
@@ -623,10 +631,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					<MarkdownEditor
 						ref={this.setMarkdownEditor}
 						autoFocus={false}
-						onKeyDown={(event) => getCommandManager().handleKeyDown(event as any,true)}
+						onKeyDown={getValue(() => this.form.onKeyDown)}
 						onChange={this.onMarkdownChange}
-						
-						defaultValue={_.get(editingIssue,'body','')}
+						defaultValue={getValue(() => editingIssue.body,'')}
 						style={styles.form.editor}
 					/>
 				

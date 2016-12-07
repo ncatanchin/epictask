@@ -1,40 +1,9 @@
 
 
-/**
- * Notification types
- */
-export enum NotificationType {
-	Debug = 1,
-	Info,
-	Success,
-	Error
-}
-
-/**
- * Notification actions
- */
-export interface INotificationAction {
-	label:string
-	execute:Function
-}
-
-
-/**
- * Notification message shape
- */
-export interface INotification {
-	id:string
-	createdAt:number
-	type:NotificationType
-	notify?:boolean
-	floatVisible?:boolean
-	content:any
-	actions?:INotificationAction[]
-}
 
 
 export function clearNotifications() {
-	this.uiActions.clearNotifications()
+	this.appActions.clearNotifications()
 }
 
 /**

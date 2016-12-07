@@ -2,8 +2,6 @@ import { ActionFactory, ActionReducer,  ActionMessage } from "typedux"
 import { List, Map } from "immutable"
 import {
 	UIKey,
-	INotification,
-	NotificationType,
 	isNumber,
 	isString,
 	ToolPanelLocation,
@@ -29,14 +27,6 @@ const
 	log = getLogger(__filename),
 	{Left,Right,Bottom,Popup} = ToolPanelLocation
 
-export function makeToastMessage(opts:any) {
-	return Object.assign({},opts,{
-		id: uuid(),
-		createdAt:Date.now(),
-		floatVisible: true,
-		content: opts.content || 'No content provided - DANGER will robinson'
-	})
-}
 
 
 @RegisterActionFactory
@@ -425,51 +415,10 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	
 
 
-	@ActionReducer()
-	addNotification(message:INotification) {
-		return (state:UIState) => {
-			let
-				{messages} = state
-			
-			const
-				msgIndex = messages
-					.findIndex(item => _.toJS(item).id === message.id)
-			
-			messages = (msgIndex > -1) ?
-				 messages.set(msgIndex,_.clone(message)) :
-				messages.push(_.clone(message))
-			
-			if (messages.size > 5)
-					messages = messages.splice(0, messages.size - 5) as any
-					
-			return state.set('messages',messages)
-			
-		}
-	}
-
-
-	addErrorMessage(err:Error|string) {
-		err = ((_.isString(err)) ? new Error(err) : err) as Error
-		const message = makeToastMessage({
-			type: NotificationType.Error,
-			content: err.message || err.toString(),
-			stack: err.stack
-		})
-		return this.addNotification(message)
-	}
 	
-	
-	updateMessage(message:INotification) {
-		return this.addNotification(message)
-	}
 
-	@ActionReducer()
-	removeMessage(id:string) {
-		return (state:UIState) => state.set(
-			'messages',
-			state.messages.filter(msg => msg.id !== id)
-		)
-	}
+
+	
 
 
 

@@ -275,11 +275,17 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			actions = new IssueActionFactory(),
 			updateIssue = this.getEditIssue()
 		
-		log.info(`Saving issue`, updateIssue)
-		
-		await actions.saveIssue(updateIssue)
-		
-		this.stopEditingIssue()
+		log.debug(`Saving issue`, updateIssue)
+		try {
+			await actions.saveIssue(updateIssue)
+			
+			getNotificationCenter().notifyInfo(`#${updateIssue.number} Updated Successfully`)
+			this.stopEditingIssue()
+		} catch (err) {
+			log.error(`failed to save issue`,err)
+			
+			getNotificationCenter().notifyError(err)
+		}
 	}
 	
 	/**
@@ -297,12 +303,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	private onEditKeyDown = (event:React.KeyboardEvent<any>) => {
 		log.debug(`Edit key down`, event, event.keyCode, event.key, event.charCode)
 		
-		if ((Env.isMac ? event.metaKey : event.ctrlKey) && event.key === 'Enter') {
-			event.preventDefault()
-			event.stopPropagation()
-			
-			this.form.submit()
-		}
+		
 	}
 	
 	/**
@@ -356,7 +357,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				labels: [ ...labels ]
 			})
-		}, () => this.editSave())
+		}, () => this.form.submit())
 	}, 50)
 	
 	/**
@@ -415,7 +416,9 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param issues
 	 */
 	private unassignIssue = (...issues:Issue[]) =>
-		this.issueActions.applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
+		this.form.submit(async () => {
+			await this.issueActions.applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
+		})
 	
 	/**
 	 * Callback for label or milestone remove
@@ -424,18 +427,20 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param item
 	 */
 	private removeItem = (issue:Issue, item:Label|Milestone) => {
-		
-		log.debug(`Removing item from issue`, item)
-		
-		if (item.$$clazz === Label.$$clazz) {
-			const
-				label:Label = item as any,
-				labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
+		this.form.submit(async () => {
+			log.debug(`Removing item from issue`, item)
 			
-			this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([ issue ]))
-		} else {
-			this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([ issue ]))
-		}
+			
+			if (item.$$clazz === Label.$$clazz) {
+				const
+					label:Label = item as any,
+					labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
+				
+				await this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([ issue ]))
+			} else {
+				await this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([ issue ]))
+			}
+		})
 	}
 	
 	/**
@@ -495,6 +500,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		return <Form
 			id="issue-detail-header-form"
 			ref="form"
+			submitOnCmdCtrlEnter={true}
 			onInvalid={this.onFormInvalid}
 			onValid={this.onFormValid}
 			onValidSubmit={this.onFormValidSubmit}
@@ -549,7 +555,6 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				<TextField value={editIssue.title || ''}
 				           validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
 				           onChange={this.onTitleChange}
-				           onKeyDown={this.onEditKeyDown}
 				           placeholder="TITLE"
 				           styles={[
 				           	 FlexScale,

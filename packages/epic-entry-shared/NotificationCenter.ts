@@ -1,16 +1,26 @@
 import * as uuid from 'node-uuid'
 import { isString } from  "typeguard"
 import {Container} from 'typescript-ioc'
-import { INotification, NotificationType } from "epic-global/NotificationCenterClient"
 
+
+enum NotificationType {
+	Debug = 1,
+	Info = 2,
+	Success = 3,
+	Error = 4
+}
+
+Object.assign(global,{
+	NotificationType
+})
 
 /**
  * NotificationCenter functions for use globally
  */
 export class NotificationCenter {
 	
-	get uiActions() {
-		return require("epic-typedux/provider").getUIActions()
+	get appActions():IAppActionFactory {
+		return require("epic-typedux/provider").getAppActions()
 	}
 	
 	notify(message:INotification|string, type:NotificationType = NotificationType.Info) {
@@ -25,7 +35,7 @@ export class NotificationCenter {
 		} else {
 			message.type = type
 		}
-		this.uiActions.addNotification(message)
+		this.appActions.addNotification(message)
 	}
 	
 	notifyDebug(message:INotification|string) {
@@ -47,7 +57,7 @@ export class NotificationCenter {
 		const
 			payload = _.pick(err, 'message', 'code', 'stack', 'description') as any
 		
-		this.uiActions.addErrorMessage(payload)
+		this.appActions.notifyError(payload)
 	}
 }
 

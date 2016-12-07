@@ -113,8 +113,12 @@ export class ChipsField extends React.Component<IChipsFieldProps,any> {
 	
 	
 	private criteriaRenderer = (selectedChips) => {
-		return selectedChips.map(item =>
-			<div style={makeStyle(FlexAuto,getValue(() => this.props.styles.chipWrapper,{}))}>
+		return selectedChips.map((item,index) =>
+			<div style={makeStyle(
+				FlexAuto,
+				getValue(() => this.props.styles.chipWrapper,{}),
+				index === 0 && {marginLeft: rem(1)}
+			)}>
 				<Chip
 					styles={getValue(() => this.props.styles.chip,{})}
 					onRemove={this.props.onChipRemoved}

@@ -1,12 +1,14 @@
 import { ObservableStore } from "typedux"
 
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
-import { ProcessType, NotificationType, UIKey } from "epic-global"
+import { ProcessType, UIKey, AppKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
 import { PersistentValueEvent, cloneObjectShallow } from "epic-global"
 import { SettingsPath } from "epic-global/Constants"
 import { addHotDisposeHandler, acceptHot } from "epic-global/HotUtils"
+import { getAppActions } from "epic-typedux/provider"
+import { WindowIconUrl256, WindowIconPath256, WindowIconPath128 } from "epic-process-manager-client"
 
 const
 	log = getLogger(__filename)
@@ -19,8 +21,8 @@ const
 
 
 
-@RegisterService(ProcessType.UI)
-export class ToastService extends BaseService {
+@RegisterService(ProcessType.JobServer)
+export class NotificationService extends BaseService {
 
 	private unsubscribe:Function
 	private pendingTimers = {}
@@ -80,7 +82,7 @@ export class ToastService extends BaseService {
 							const
 								newMsg = cloneObjectShallow(msg, { floatVisible: false })
 							
-							getUIActions().updateMessage(newMsg)
+							getAppActions().updateNotification(newMsg)
 							
 							// CLEAR NATIVE TOO
 							this.clearNativeNotification(msg)
@@ -101,7 +103,7 @@ export class ToastService extends BaseService {
 					}
 					
 					const
-						timeout = isError ? 60000 : 5000,
+						timeout = isError ? 120000 : 30000,
 						{nativeNotificationsEnabled} = getSettings()
 					
 					log.info(`Native notification`, nativeNotificationsEnabled, msg)
@@ -111,7 +113,8 @@ export class ToastService extends BaseService {
 						
 						this.pendingNotifications[msg.id] = new Notification(title,{
 							//title:
-							body: msg.content || msg.message || 'no message available'
+							body: msg.content || msg.message || 'no message available',
+							icon: WindowIconPath128
 						})
 					}
 					
@@ -172,7 +175,7 @@ export class ToastService extends BaseService {
 		
 		
 		this.unsubscribe = this.store.observe(
-			[UIKey, 'messages'],
+			[AppKey, 'messages'],
 			this.onMessagesChanged
 		)
 		
@@ -193,6 +196,6 @@ export class ToastService extends BaseService {
 }
 
 
-export default ToastService
+export default NotificationService
 
 acceptHot(module,log)

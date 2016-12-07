@@ -113,6 +113,9 @@ export namespace GithubSyncStatus {
 	}
 	
 	export function clearPrefix(prefix:string) {
+		if (!status)
+			return
+		
 		for (let map of [status.eTags,status.timestamps]) {
 			Object
 				.keys(map)

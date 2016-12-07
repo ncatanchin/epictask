@@ -1,6 +1,5 @@
 import { List, Record, Map } from "immutable"
 import {
-	INotification,
 	RegisterModel,
 	IToolPanel,
 	makeToolPanels,
@@ -48,7 +47,7 @@ export const UIStateRecord = Record({
 	user: null,
 	
 	sheetURI:null,
-	messages: List<INotification>(),
+	//messages: List<INotification>(),
 	
 	toolPanels: makeToolPanels(),
 	toolDragging: false,
@@ -112,7 +111,7 @@ export class UIState extends UIStateRecord implements State {
 	ready:boolean
 	user:User
 	sheetURI:string
-	messages:List<INotification>
+	//messages:List<INotification>
 	
 	toolPanels:Map<string,IToolPanel>
 	toolDragging:boolean

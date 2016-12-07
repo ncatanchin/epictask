@@ -1,6 +1,6 @@
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 import { List, Record, Map } from "immutable"
-import { INotification, Settings, RegisterModel } from "epic-global"
+import { Settings, RegisterModel } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-global/ModelUtil"

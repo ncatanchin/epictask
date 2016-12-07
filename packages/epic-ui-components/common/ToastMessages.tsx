@@ -2,16 +2,13 @@
 import * as  CSSTransitionGroup from "react-addons-css-transition-group"
 
 import { connect } from "react-redux"
-import {
-	INotification
-} from "epic-global"
+
 import { PureRender } from "./PureRender"
 import { ThemedStyles } from "epic-styles"
 import { createStructuredSelector } from "reselect"
 import { ToastMessage } from "./ToastMessage"
-import { getUIActions } from "epic-typedux/provider"
-import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
-import { messagesSelector } from "epic-typedux/selectors/UISelectors"
+import { getAppActions } from "epic-typedux/provider"
+import { messagesSelector ,settingsSelector } from "epic-typedux/selectors/AppSelectors"
 import { getValue } from "epic-global/ObjectUtil"
 
 import {List} from 'immutable'
@@ -21,8 +18,7 @@ const
 	dataUrl = require('dataurl'),
 	{Style} = Radium
 
-const
-	NotificationEvents = ['click','timeout']
+
 
 	
 
@@ -90,74 +86,6 @@ export interface INotificationMessagesProps {
 //endregion
 
 
-let lastMessages = null
-const messageNotifications = {}
-
-/**
- * Clear a notification
- *
- * @param msgId
- */
-function clearNotification(msgId:string) {
-	const
-		notification = messageNotifications[msgId]
-	
-	notification.close()
-	
-	delete messageNotifications[msgId]
-}
-
-
-/**
- * Process current notifications
- *
- * @param newMessages
- */
-//TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
-function processNotifications(newMessages:List<INotification>) {
-	if (newMessages === lastMessages)
-		return
-
-	Object.keys(messageNotifications)
-		.forEach(msgId => {
-			if (newMessages.find(msg => msg.id === msgId)) {
-				log.debug('Message still exists, return')
-				return
-			}
-
-			clearNotification(msgId)
-
-		})
-
-	lastMessages = newMessages
-	
-	newMessages
-		.filter(msg => !messageNotifications[msg.id] && msg.notify === true)
-		.forEach(msg => {
-
-			const
-				clearMessage = () => getUIActions().removeMessage(msg.id),
-
-				// TODO: add 'tag' and 'sticky' for error
-				notification = new Notification('epictask',{
-					title: 'epictask',
-					body: msg.content,
-					tag: msg.id
-				})
-
-
-			// Add Notification events
-			NotificationEvents
-				.forEach(event => {
-					notification[`on${event}`] = clearMessage
-				})
-
-			messageNotifications[msg.id] = notification
-
-		})
-
-
-}
 
 
 
@@ -197,8 +125,7 @@ export class ToastMessages extends React.Component<INotificationMessagesProps,an
 	 * @param props
 	 */
 	private processNotifications = (props = this.props) => {
-		if (getValue(() => props.settings.nativeNotificationsEnabled))
-			processNotifications(props.messages)
+		// MOVED TO NOTIFICATION CENTER
 	}
 	
 	/**

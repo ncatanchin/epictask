@@ -587,6 +587,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			<Form
 				id="issue-patch-form"
 				ref="form"
+				submitOnCmdCtrlEnter={true}
 				onInvalid={this.onFormInvalid}
 				onValid={this.onFormValid}
 				onValidSubmit={this.onFormValidSubmit}

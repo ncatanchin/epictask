@@ -3,8 +3,8 @@ import {PureRender} from "./PureRender"
 import {Button} from "./Button"
 import {Icon} from "./icon/Icon"
 import {ThemedStyles} from "epic-styles"
-import {INotification, NotificationType} from "epic-global"
-import { getUIActions } from "epic-typedux"
+
+import { getAppActions } from "epic-typedux/provider"
 
 // Constants
 const log = getLogger(__filename)
@@ -112,7 +112,7 @@ export class ToastMessage extends React.Component<INotificationMessageProps,void
 		log.info(`Toast message with id: ${msg.id}`)
 		return <div key={msg.id}
 		            className={'toastMessage ' + (animate ? 'animated bounce' : '')}
-		            onClick={() => getUIActions().removeMessage(msg.id)}
+		            onClick={() => getAppActions().removeNotification(msg.id)}
 		            style={styles.root}>
 			
 			<div style={makeStyle(styles.content)}>
@@ -120,7 +120,7 @@ export class ToastMessage extends React.Component<INotificationMessageProps,void
 				
 				<span style={makeStyle(styles.text,fg)}>{msg.content}</span>
 				{isError && <Button style={[styles.action,actionColors]}
-				                    onClick={() => getUIActions().removeMessage(msg.id)}>
+				                    onClick={() => getAppActions().removeNotification(msg.id)}>
 					Acknowledge
 				</Button>}
 			</div>

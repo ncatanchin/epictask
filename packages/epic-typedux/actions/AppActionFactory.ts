@@ -1,5 +1,8 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
-import { RegisterActionFactory, Events, AppKey, Provided, cloneObjectShallow } from "epic-global"
+import {
+	RegisterActionFactory, Events, AppKey, Provided, cloneObjectShallow,
+	shortId
+} from "epic-global"
 
 import { User } from "epic-models"
 import { AppState } from "../state/AppState"
@@ -9,24 +12,6 @@ import { Settings } from "epic-global/settings/Settings"
 
 const
 	log = getLogger(__filename)
-
-// /**
-//  * Update the transient values on an issue
-//  *
-//  * @param issue
-//  * @param availableRepos
-//  */
-// function updateIssueTransients(issue,availableRepos) {
-//
-// 	const
-// 		{repoId} = issue,
-// 		availRepo = availableRepos.find(availRepo => availRepo.repoId === repoId)
-//
-// 	assert.ok(availRepo,'Unable to find repo with id: ' + repoId)
-//
-// 	// Assign all transient props
-// 	Object.assign(issue,_.pick(availRepo.repo,RepoTransientProps))
-// }
 
 
 /**
@@ -48,6 +33,68 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 */
 	leaf():string {
 		return AppKey;
+	}
+	
+	
+	private makeNotification(opts:any) {
+		return Object.assign({},opts,{
+			id: shortId(),
+			createdAt:Date.now(),
+			floatVisible: true,
+			content: opts.content || 'No content provided - DANGER will robinson'
+		})
+	}
+	
+	
+	/**
+	 * Add notification
+	 *
+	 * @param message
+	 * @returns {(state:UIState)=>Map<string, V>}
+	 */
+	@ActionReducer()
+	addNotification(message:INotification) {
+		return (state:AppState) => {
+			let
+				{messages} = state
+			
+			const
+				msgIndex = messages
+					.findIndex(item => _.toJS(item).id === message.id)
+			
+			messages = (msgIndex > -1) ?
+				messages.set(msgIndex,_.clone(message)) :
+				messages.push(_.clone(message))
+			
+			if (messages.size > 5)
+				messages = messages.splice(0, messages.size - 5) as any
+			
+			return state.set('messages',messages)
+			
+		}
+	}
+	
+	notifyError(err:Error|string) {
+		err = ((_.isString(err)) ? new Error(err) : err) as Error
+		const message = this.makeNotification({
+			type: NotificationType.Error,
+			content: err.message || err.toString(),
+			stack: err.stack
+		})
+		return this.addNotification(message)
+	}
+	
+	
+	updateNotification(message:INotification) {
+		return this.addNotification(message)
+	}
+	
+	@ActionReducer()
+	removeNotification(id:string) {
+		return (state:AppState) => state.set(
+			'messages',
+			state.messages.filter(msg => msg.id !== id)
+		)
 	}
 	
 	/**
@@ -154,6 +201,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	
+}
+
+declare global {
+	interface IAppActionFactory extends AppActionFactory {
+		
+	}
 }
 
 /**
