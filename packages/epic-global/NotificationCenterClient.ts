@@ -3,7 +3,7 @@
 /**
  * Notification types
  */
-export enum NotificationMessageType {
+export enum NotificationType {
 	Debug = 1,
 	Info,
 	Success,
@@ -13,7 +13,7 @@ export enum NotificationMessageType {
 /**
  * Notification actions
  */
-export interface INotificationMessageAction {
+export interface INotificationAction {
 	label:string
 	execute:Function
 }
@@ -22,23 +22,19 @@ export interface INotificationMessageAction {
 /**
  * Notification message shape
  */
-export interface INotificationMessage {
+export interface INotification {
 	id:string
 	createdAt:number
-	type:NotificationMessageType
+	type:NotificationType
 	notify?:boolean
 	floatVisible?:boolean
 	content:any
-	actions?:INotificationMessageAction[]
+	actions?:INotificationAction[]
 }
 
-const
-	log = getLogger(__filename)
 
-
-
-export function clearMessages() {
-	this.uiActions.clearMessages()
+export function clearNotifications() {
+	this.uiActions.clearNotifications()
 }
 
 /**
@@ -47,20 +43,20 @@ export function clearMessages() {
  * @param message
  * @param type
  */
-export function addMessage(message:INotificationMessage|string,type:NotificationMessageType = NotificationMessageType.Info) {
-	getNotificationCenter().addMessage(message,type)
+export function notify(message:INotification|string, type:NotificationType = NotificationType.Info) {
+	getNotificationCenter().notify(message,type)
 }
 
-export function addSuccessMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addSuccessMessage(message)
+export function notifySuccess(message:INotification|string) {
+	getNotificationCenter().notifySuccess(message)
 }
 
-export function addDebugMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addDebugMessage(message)
+export function notifyDebug(message:INotification|string) {
+	getNotificationCenter().notifyDebug(message)
 }
 
-export function addInfoMessage(message:INotificationMessage|string) {
-	getNotificationCenter().addInfoMessage(message)
+export function notifyInfo(message:INotification|string) {
+	getNotificationCenter().notifyInfo(message)
 }
 
 
@@ -69,7 +65,7 @@ export function addInfoMessage(message:INotificationMessage|string) {
  *
  * @param err
  */
-export function addErrorMessage(err:Error|string) {
-	getNotificationCenter().addErrorMessage(err)
+export function notifyError(err:Error|string) {
+	getNotificationCenter().notifyError(err)
 }
 

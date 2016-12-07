@@ -6,7 +6,7 @@ import {
 	ToolPanelLocation,
 	IToolPanel,
 	createDeepEqualSelector,
-	INotificationMessage,
+	INotification,
 	UIKey,
 	ITool,
 	getValue
@@ -49,15 +49,15 @@ export const toolPanelsSelector:(state) => Map<string,IToolPanel> =
 //)
 
 
-export const messagesSelector:(state) => List<INotificationMessage> = createSelector(
+export const messagesSelector:(state) => List<INotification> = createSelector(
 	uiStateSelector,
 	(state:UIState) => state.messages
 )
 
-export const messagesSortedSelector:(state) => List<INotificationMessage> = createSelector(
+export const messagesSortedSelector:(state) => List<INotification> = createSelector(
 	messagesSelector,
-	(messages:List<INotificationMessage>) =>
-		messages.sortBy(message => message.createdAt) as List<INotificationMessage>
+	(messages:List<INotification>) =>
+		messages.sortBy(message => message.createdAt) as List<INotification>
 )
 
 

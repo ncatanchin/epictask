@@ -238,7 +238,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			getUIActions().closeWindow(getWindowId())
 		} catch (err) {
 			log.error(`failed to save issue`,err)
-			getNotificationCenter().addErrorMessage(`Unable to save issue: ${!savingIssue ? '' : savingIssue.title}`)
+			getNotificationCenter().notifyError(`Unable to save issue: ${!savingIssue ? '' : savingIssue.title}`)
 			
 			this.viewController.setSaveError(err)
 			this.viewController.setSaving(false)

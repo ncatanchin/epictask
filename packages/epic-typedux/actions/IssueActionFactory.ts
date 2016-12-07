@@ -12,8 +12,8 @@ import {
 	nilFilter,
 	cloneObjectShallow,
 	shallowEquals,
-	addErrorMessage,
-	addMessage,
+	notifyError,
+	notify,
 	getSettings,
 	Provided,
 	RegisterActionFactory,
@@ -1278,7 +1278,7 @@ export class IssueActionFactory  {
 		
 		for (let issue of closeIssues) {
 			if (!hasEditPermission(issue)) {
-				addErrorMessage(`You don't have permission to close this issue: ${issue.number}`)
+				notifyError(`You don't have permission to close this issue: ${issue.number}`)
 				return
 			}
 		}
@@ -1295,7 +1295,7 @@ export class IssueActionFactory  {
 						
 					} catch (err) {
 						log.error('set issue state failed', err)
-						addErrorMessage(`Unable set set issue state for #${issue.number}: ${err.message}`)
+						notifyError(`Unable set set issue state for #${issue.number}: ${err.message}`)
 					}
 				}),
 			
@@ -1303,7 +1303,7 @@ export class IssueActionFactory  {
 			results = await Promise.all(promises)
 		
 		
-		addMessage(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
+		notify(`${newState === 'closed' ? 'Closed' : 'Reopened'} ${results.length} issues successfully`)
 		
 		// Now we simply update the state - removed
 		//this.loadIssuesAction(dispatch, getState)

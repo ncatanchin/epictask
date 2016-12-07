@@ -2,8 +2,8 @@ import { ActionFactory, ActionReducer,  ActionMessage } from "typedux"
 import { List, Map } from "immutable"
 import {
 	UIKey,
-	INotificationMessage,
-	NotificationMessageType,
+	INotification,
+	NotificationType,
 	isNumber,
 	isString,
 	ToolPanelLocation,
@@ -418,7 +418,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 
 	@ActionReducer()
-	clearMessages() {
+	clearNotifications() {
 		return (state:UIState) => state.set('messages',List())
 	}
 	
@@ -426,7 +426,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 
 
 	@ActionReducer()
-	addMessage(message:INotificationMessage) {
+	addNotification(message:INotification) {
 		return (state:UIState) => {
 			let
 				{messages} = state
@@ -451,16 +451,16 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	addErrorMessage(err:Error|string) {
 		err = ((_.isString(err)) ? new Error(err) : err) as Error
 		const message = makeToastMessage({
-			type: NotificationMessageType.Error,
+			type: NotificationType.Error,
 			content: err.message || err.toString(),
 			stack: err.stack
 		})
-		return this.addMessage(message)
+		return this.addNotification(message)
 	}
 	
 	
-	updateMessage(message:INotificationMessage) {
-		return this.addMessage(message)
+	updateMessage(message:INotification) {
+		return this.addNotification(message)
 	}
 
 	@ActionReducer()

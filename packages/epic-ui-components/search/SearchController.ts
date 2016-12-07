@@ -13,8 +13,7 @@ const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
-
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 
@@ -90,7 +89,7 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	 *
 	 * @type {number}
 	 */
-	perSourceLimit:number = -1
+	perProviderLimit:number = -1
 	
 	
 	searchId:string
@@ -121,15 +120,15 @@ export class SearchController extends EventEmitter implements IViewController<Se
 					return allItems
 				
 				const
-					{perSourceLimit} = this
+					{perProviderLimit} = this
 				
 				let
 					{items} = result
 				
 				if (isList(items))
-					items = (!perSourceLimit || perSourceLimit < 1 || result.items.size <= perSourceLimit) ?
+					items = (!perProviderLimit || perProviderLimit < 1 || result.items.size <= perProviderLimit) ?
 						items :
-						items.slice(0,perSourceLimit) as List<SearchItem>
+						items.slice(0,perProviderLimit) as List<SearchItem>
 					
 				return allItems.concat(items) as List<SearchItem>
 			},List<SearchItem>())
@@ -138,9 +137,11 @@ export class SearchController extends EventEmitter implements IViewController<Se
 			.sortBy(item => {
 				const
 					{provider,score} = item,
-					providerIndex = this.providers.indexOf(provider)
+					providerIndex = this.providers.findIndex(it => it.id === provider.id),
+					sortKey = `${providerIndex}|||${score}`
 				
-				return `${providerIndex}|||${score}`
+				log.debug(`item sortkey=${sortKey}`)
+				return sortKey
 			}) as List<SearchItem>
 		
 		let
@@ -320,9 +321,10 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 		try {
 			let
-				results = List(this.providers.map(provider => new SearchResult(this.searchId,provider,criteria,text)))
+				results = List(this.providers.map(provider =>
+					new SearchResult(this.searchId,provider,criteria,text))).asMutable()
 			
-			this.setResults(results)
+			this.setResults(results.asImmutable())
 			
 			const
 				{searchId} = this,
@@ -332,8 +334,8 @@ export class SearchController extends EventEmitter implements IViewController<Se
 					
 					result.resolve(items)
 					
-					results = this.results.set(index,cloneObjectShallow(result))
-					this.setResults(results)
+					results.set(index,cloneObjectShallow(result))
+					this.setResults(results.asImmutable())
 				})
 			
 			
@@ -352,12 +354,6 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 		nextSearch()
 		
-			
-		
-		
-		
-				
-
 	}
 	
 	
@@ -373,10 +369,6 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 		this.emit(SearchEvent[SearchEvent.ItemSelected],item)
 		EventHub.emit(EventHub.SearchItemSelected,this.searchId,item)
-		// const
-		// 	handler = getSearchSelectHandler(item.type)
-		//
-		// handler(searchId,item)
 		
 	}
 	

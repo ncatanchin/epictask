@@ -252,7 +252,7 @@ function registerTool(reg:IToolRegistration,clazz:IToolConstructor) {
 		
 	} catch (err) {
 		log.error(`Failed to register tool`,err)
-		getNotificationCenter().addErrorMessage(err)
+		getNotificationCenter().notifyError(err)
 		
 		return clazz
 	}

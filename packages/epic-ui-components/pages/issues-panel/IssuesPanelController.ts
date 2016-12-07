@@ -7,7 +7,7 @@ import { isNumber, isNil, getValue } from "typeguard"
 import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
 import { DefaultIssueFilter, Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria } from "epic-models"
-import { addErrorMessage } from "epic-global/NotificationCenterClient"
+import { notifyError } from "epic-global/NotificationCenterClient"
 import { IssuesEvent } from "epic-models/IssuesEvent"
 import {
 	makeIssuesPanelStateSelectors,
@@ -442,7 +442,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issue = this.selectors.selectedIssueSelector(getStoreState())
 		
 		if (!issue) {
-			return addErrorMessage('You can only add a comment when exactly one issue is selected')
+			return notifyError('You can only add a comment when exactly one issue is selected')
 		}
 		
 		getIssueActions().editComment(issue)

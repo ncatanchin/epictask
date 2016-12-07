@@ -57,6 +57,7 @@ module.exports = function (storybookBaseConfig, configType) {
 			'process.env.BASEDIR': path.resolve(__dirname, '..'),
 			'process.env.GITHUB_API_TOKEN': process.env.GITHUB_API_TOKEN && JSON.stringify(process.env.GITHUB_API_TOKEN),
 			'ProcessConfig.isStorybook()': true,
+			
 			'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
 			'Env.isElectron': false
 		}),
@@ -86,8 +87,6 @@ module.exports = function (storybookBaseConfig, configType) {
 		'core-js',
 		'highlight.js',
 		'react-split-pane',
-		'react-hotkeys',
-		'remote-redux-devtools',
 		'reselect',
 		'lodash',
 		'immutable',
@@ -98,9 +97,13 @@ module.exports = function (storybookBaseConfig, configType) {
 	
 	
 	_.merge(storybookBaseConfig, _.pick(epicConfig,['sassLoader']), {
-		devtool: 'eval',
+		//devtool: 'eval',
+		devtool: '#cheap-module-inline-source-map',
+		//devtool: 'inline-source-map',
 		output: {
 			devtoolModuleFilenameTemplate: "http://localhost:6006/[absolute-resource-path]"
+			//devtoolModuleFilenameTemplate: "[absolute-resource-path]",
+			//devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
 		},
 		externals: [
 			//externals,

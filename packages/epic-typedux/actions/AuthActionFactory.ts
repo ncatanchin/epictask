@@ -6,7 +6,7 @@ import { AuthState, AuthMessage } from "../state/AuthState"
 import { AppStateType } from "../state/app/AppStateType"
 import { authenticatingSelector } from "../selectors"
 import { User } from "epic-models"
-import { addErrorMessage } from "epic-global/NotificationCenterClient"
+import { notifyError } from "epic-global/NotificationCenterClient"
 
 const log = getLogger(__filename)
 
@@ -83,7 +83,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 								${this.client.getRateLimitInfoAsString()}` :
 					err.message
 			
-			addErrorMessage(
+			notifyError(
 				`Verification of Github API token failed:
 					${errorMessage}`)
 			
@@ -140,7 +140,7 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				appActions.setStateType(AppStateType.AuthLogin)
 				
 				log.error('GH token received: ' + token,err)
-				getNotificationCenter().addErrorMessage(err)
+				getNotificationCenter().notifyError(err)
 			} else {
 				
 				const

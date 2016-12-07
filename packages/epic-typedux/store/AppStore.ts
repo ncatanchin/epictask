@@ -75,7 +75,7 @@ function onError(err:Error, reducer?:ILeafReducer<any,any>) {
 	
 	log.error('Reducer error occurred', reducer, err, err.stack)
 	setImmediate(() => {
-		toaster.addErrorMessage(err)
+		toaster.notifyError(err)
 	})
 	
 }

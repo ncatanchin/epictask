@@ -9,13 +9,6 @@ import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
 import { isNumber, getValue, guard, Dom, unwrapRef, shallowEquals } from "epic-global"
 import { PureRender, TextField, RenderToLayer, FlexRowCenter, Popover, FlexRow } from "epic-ui-components/common"
-import {
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
-	CommandContainer
-} from "epic-command-manager-ui"
 import { ThemedStyles } from "epic-styles"
 import {
 	SearchEvent,
@@ -25,7 +18,6 @@ import {
 import { SearchItem } from "epic-models"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { SearchState } from "epic-ui-components/search"
-import { PositionRelative, FillWidth, rem, Transparent, OverflowAuto, makeFlexAlign } from "epic-styles/styles"
 import { isNil } from "typeguard"
 import baseStyles from './SearchField.styles'
 const
@@ -45,7 +37,11 @@ const
 export interface ISearchFieldProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
-	commandContainer?:CommandContainer
+	
+	/**
+	 * Group results by provider
+	 */
+	groupByProvider?:boolean
 	
 	/**
 	 * Plain text search value
@@ -143,6 +139,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		expanded: false,
 		modal: false,
 		perSourceLimit: 5,
+		groupByProvider: true,
 		searchOnEmpty: false,
 		hint: <span>Search issues, comments, labels &amp; milestones</span>
 	}
@@ -209,17 +206,6 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		return `searchField-${this.props.searchId}`
 	}
 	
-	constructor(props, context) {
-		super(props, context)
-		
-		const
-			controller = new SearchController()
-		
-		if (this.props.searchOnEmpty)
-			controller.setQuery(props.criteria, props.text || '')
-		
-	}
-	
 	
 	/**
 	 * Get the textField component
@@ -268,10 +254,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 */
 	isFocused = (props = this.props):boolean => {
 		return props.focused ||
-			getValue(() => this.props.viewState.focused, false) ||
-			getValue(() => props.commandContainer.isFocused())
-		// ||
-		// props.commandContainer.isFocused()
+			getValue(() => this.props.viewState.focused, false)
+		
 	}
 	
 	/**
@@ -321,6 +305,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		
 		controller.searchId = props.searchId
 		controller.allowEmptyQuery = props.searchOnEmpty
+		controller.perProviderLimit = props.perProviderLimit
 		controller.setProviders(props.providers)
 		
 		
@@ -631,6 +616,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 			ref={this.setResultsListRef}
 			anchor={`#${this.searchFieldId}-input`}
 			controller={this.controller}
+			groupByProvider={this.props.groupByProvider}
 			searchId={this.props.searchId}
 			onItemHover={this.onHover}
 			onItemSelected={(item) => this.onResultSelected(null,item)}

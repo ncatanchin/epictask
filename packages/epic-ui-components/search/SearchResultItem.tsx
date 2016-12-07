@@ -21,6 +21,7 @@ const log = getLogger(__filename)
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
 	item: SearchItem
+	groupByProvider:boolean
 	controller: SearchController
 	selected?: boolean
 }
@@ -88,13 +89,16 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	 */
 	renderResult(item: SearchItem, label: any, labelSecond: any, actionLabel, iconName, isSelected) {
 		const
-			{ styles } = this.props,
+			{ styles, groupByProvider } = this.props,
+			
+			firstProviderResult = item.providerResultIndex === 0,
 			
 			// Make style
 			resultStyle = makeStyle(
 				styles,
 				styles.normal,
-				isSelected && styles.selected
+				isSelected && styles.selected,
+				groupByProvider && !firstProviderResult && {borderTop: '0.1rem solid transparent'}
 			),
 			
 			labelStyle = makeStyle(
@@ -108,19 +112,24 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 			)
 		
 		return <FlexRowCenter style={[resultStyle,Styles.FlexScale]}>
-			<Flex style={[typeStyle,{width: '25%'}]}>
-				{item.providerResultIndex === 0 &&
-				<FlexRowCenter style={[FlexScale,FillWidth]}>
-					<Icon style={[Styles.FlexAuto,Styles.makePaddingRem(0,2,0,1)]} iconSet='octicon' iconName={iconName}/>
-					<FlexScale style={[Styles.Ellipsis]}>
-						{item.provider.name}
-					</FlexScale>
-				</FlexRowCenter>
-				}
-			</Flex>
+			
+			{/* IF GROUPING THEN SHOW PROVIDER LABEL */}
+			{groupByProvider ?
+				<Flex style={[typeStyle,{width: '25%'}]}>
+					{firstProviderResult &&
+					<FlexRowCenter style={[FlexScale,FillWidth]}>
+						<Icon style={[Styles.FlexAuto,Styles.makePaddingRem(0,2,0,1)]} iconSet='octicon' iconName={iconName}/>
+						<FlexScale style={[Styles.Ellipsis]}>
+							{item.provider.name}
+						</FlexScale>
+					</FlexRowCenter>
+					}
+				</Flex> :
+				<Icon style={[Styles.FlexAuto,Styles.makePaddingRem(0,2,0,1)]} iconSet='octicon' iconName={iconName}/>
+			}
 			
 			<FlexScale>
-				<div style={resultStyle}>
+				<div style={[resultStyle,{borderTop: 'none'}]}>
 					
 					<div style={styles.info}>
 						<div style={labelStyle}>

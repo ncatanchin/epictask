@@ -1,17 +1,19 @@
-//require('source-map-support').install()
-const Promise = require('../../node_modules/bluebird')
-//global.Promise = require('bluebird')
+import "epic-entry-shared/AppEntry"
 
-Promise.config({
-	cancellation: true,
-	longStackTraces: true,
-	warnings: true,
-	monitoring: true
-})
-
-require('babel-runtime/core-js/promise').default = Promise
-require("babel-polyfill")
-require('reflect-metadata')
+// //require('source-map-support').install()
+// const Promise = require('../../node_modules/bluebird')
+// //global.Promise = require('bluebird')
+//
+// Promise.config({
+// 	cancellation: true,
+// 	longStackTraces: true,
+// 	warnings: true,
+// 	monitoring: true
+// })
+//
+// require('babel-runtime/core-js/promise').default = Promise
+// require("babel-polyfill")
+// require('reflect-metadata')
 
 global._ = require('epic-entry-shared/LoDashMixins').default
 global.assert =  (test,msg) => {

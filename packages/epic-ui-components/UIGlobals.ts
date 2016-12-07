@@ -17,7 +17,7 @@ function getErrorLogger() {
  * @param err
  */
 function logErrorGlobal(err:Error|string) {
-	getNotificationCenter().addErrorMessage(err)
+	getNotificationCenter().notifyError(err)
 }
 
 

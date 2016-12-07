@@ -253,7 +253,7 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 					
 					if (this.validate()) {
 						await getRepoActions().saveLabel(repo, label)
-						getNotificationCenter().addMessage(`Saved label: ${label.name}`)
+						getNotificationCenter().notify(`Saved label: ${label.name}`)
 					} else {
 						//noinspection ExceptionCaughtLocallyJS
 						throw new Error(`Invalid tag name or color`)
@@ -262,7 +262,7 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 					
 				} catch (err) {
 					log.error(`Failed to save label`,err)
-					getNotificationCenter().addErrorMessage(`Unable to persist label: ${err.message}`)
+					getNotificationCenter().notifyError(`Unable to persist label: ${err.message}`)
 				}
 			}
 		)

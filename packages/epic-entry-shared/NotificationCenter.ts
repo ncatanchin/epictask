@@ -1,7 +1,7 @@
 import * as uuid from 'node-uuid'
 import { isString } from  "typeguard"
 import {Container} from 'typescript-ioc'
-import { INotificationMessage, NotificationMessageType } from "epic-global/NotificationCenterClient"
+import { INotification, NotificationType } from "epic-global/NotificationCenterClient"
 
 
 /**
@@ -13,7 +13,7 @@ export class NotificationCenter {
 		return require("epic-typedux/provider").getUIActions()
 	}
 	
-	addMessage(message:INotificationMessage|string,type:NotificationMessageType = NotificationMessageType.Info) {
+	notify(message:INotification|string, type:NotificationType = NotificationType.Info) {
 		if (_.isString(message)) {
 			message = {
 				id: uuid.v4(),
@@ -25,22 +25,22 @@ export class NotificationCenter {
 		} else {
 			message.type = type
 		}
-		this.uiActions.addMessage(message)
+		this.uiActions.addNotification(message)
 	}
 	
-	addDebugMessage(message:INotificationMessage|string) {
-		this.addMessage(message,NotificationMessageType.Debug)
+	notifyDebug(message:INotification|string) {
+		this.notify(message,NotificationType.Debug)
 	}
 	
-	addInfoMessage(message:INotificationMessage|string) {
-		this.addMessage(message,NotificationMessageType.Info)
+	notifyInfo(message:INotification|string) {
+		this.notify(message,NotificationType.Info)
 	}
 	
-	addSuccessMessage(message:INotificationMessage|string) {
-		this.addMessage(message,NotificationMessageType.Success)
+	notifySuccess(message:INotification|string) {
+		this.notify(message,NotificationType.Success)
 	}
 	
-	addErrorMessage(err:Error|string) {
+	notifyError(err:Error|string) {
 		if (isString(err)) {
 			err = new Error(err)
 		}

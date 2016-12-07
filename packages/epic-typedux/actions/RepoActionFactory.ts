@@ -674,10 +674,10 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				this.setRepoEnabled(repo.id, true)
 				
 				actions.syncRepo([ availRepo.repoId ], true)
-				getNotificationCenter().addMessage(`Added ${repo.full_name}, initiating sync now`)
+				getNotificationCenter().notify(`Added ${repo.full_name}, initiating sync now`)
 			} catch (err) {
 				log.error(`Failed to create/import repo`,err)
-				getNotificationCenter().addErrorMessage(`Import of ${repo.full_name} failed: ${err.message}`)
+				getNotificationCenter().notifyError(`Import of ${repo.full_name} failed: ${err.message}`)
 			}
 			
 		}

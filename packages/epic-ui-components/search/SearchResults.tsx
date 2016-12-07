@@ -29,6 +29,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 export interface ISearchResultsProps extends IThemedAttributes {
 	controller:SearchController
 	
+	groupByProvider?:boolean
 	searchId:string
 	
 	anchor:string | React.ReactElement<any>
@@ -170,6 +171,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			{
 				onItemHover,
 				onItemSelected,
+				groupByProvider,
 				anchor
 			} = props,
 			{ searchState } = state
@@ -181,6 +183,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 			open={searchState.focused}
 			controller={this.controller}
 			state={searchState}
+			groupByProvider={groupByProvider}
 			onResultHover={onItemHover}
 			onResultSelected={onItemSelected}
 			className="searchResults"/>

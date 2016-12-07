@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 import { getValue } from "typeguard"
 import {Comment} from 'epic-models'
-import { cloneObjectShallow, addErrorMessage } from "epic-global"
+import { cloneObjectShallow, notifyError } from "epic-global"
 import { getIssueActions } from "epic-typedux/provider"
 import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
 import CommentEditState from "epic-ui-components/pages/comment-edit/CommentEditState"
@@ -109,7 +109,7 @@ class CommentEditController extends EventEmitter implements IViewController<Comm
 			getCurrentWindow().close()
 		} catch (err) {
 			log.error(`Failed to save comment`,issue,comment,err)
-			addErrorMessage(`Failed to save comment`)
+			notifyError(`Failed to save comment`)
 			
 			this.updateState({
 				saving: false,

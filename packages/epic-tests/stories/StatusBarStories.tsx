@@ -7,7 +7,7 @@ import {JobType, IJob, JobStatus} from "epic-typedux/state/jobs/JobTypes"
 import {Button} from "epic-ui-components"
 import {jobStateSelector} from "epic-typedux"
 
-import {addErrorMessage, addMessage, addSuccessMessage, clearMessages} from "epic-global"
+import {notifyError, notify, notifySuccess, clearNotifications} from "epic-global"
 import {JobDAO} from "epic-typedux"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
@@ -21,24 +21,24 @@ storiesOf('StatusBar',module)
 	
 	// Single Job - no updates
 	.add('With Info Message', () => {
-		clearMessages()
-		addMessage('Some info can be nice ;)')
+		clearNotifications()
+		notify('Some info can be nice ;)')
 		
 		return <StatusBar />
 	})
 	
 	// Single Job - no updates
 	.add('With Success Message', () => {
-		clearMessages()
-		addSuccessMessage('Good = good / ALWAYS')
+		clearNotifications()
+		notifySuccess('Good = good / ALWAYS')
 		
 		return <StatusBar />
 	})
 	
 	// Single Job - no updates
 	.add('With Error Message', () => {
-		clearMessages()
-		addErrorMessage('Arg an error occurred!')
+		clearNotifications()
+		notifyError('Arg an error occurred!')
 		
 		return <StatusBar />
 	})
@@ -53,8 +53,8 @@ storiesOf('StatusBar',module)
 	
 	// Job & Message
 	.add('With Job & Message', () => {
-		clearMessages()
-		addSuccessMessage('This is good')
+		clearNotifications()
+		notifySuccess('This is good')
 		
 		JobDAO.create(JobType.GetUserRepos)
 		

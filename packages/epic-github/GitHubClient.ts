@@ -3,7 +3,7 @@ import {Container} from 'typescript-ioc'
 import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-global"
 
 import {IssuesEvent,RepoEvent,Repo,Issue,User,Label,Milestone,Comment} from 'epic-models'
-import {  addInfoMessage, addErrorMessage,isString, isNumber, toNumber, isPromise } from  "epic-global"
+import {  notifyInfo, notifyError,isString, isNumber, toNumber, isPromise } from  "epic-global"
 import {List} from 'immutable'
 import { getValue } from "epic-global/ObjectUtil"
 
@@ -48,7 +48,7 @@ const doFetch:typeof fetch = async (url,...args) => {
 		
 		if (APICallHistory.size > APIRateLimit) {
 			log.error(`Local rate limit exceeded: ${APICallHistory.size}`, APICallHistory.toArray())
-			addErrorMessage(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
+			notifyError(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
 			
 			throw new Error(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
 		}
@@ -79,7 +79,7 @@ const doFetch:typeof fetch = async (url,...args) => {
 		}
 		
 		if (rateLimit - rateLimitRemaining > (rateLimit / 3) * 2)
-			addInfoMessage(`Github Rate Limit is less than 50%, limit=${rateLimit} remaining=${rateLimitRemaining} resets @ ${new Date(rateLimitResetTimestamp)}`)
+			notifyInfo(`Github Rate Limit is less than 50%, limit=${rateLimit} remaining=${rateLimitRemaining} resets @ ${new Date(rateLimitResetTimestamp)}`)
 		
 	}
 	

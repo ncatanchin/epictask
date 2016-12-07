@@ -3,7 +3,7 @@ import * as  CSSTransitionGroup from "react-addons-css-transition-group"
 
 import { connect } from "react-redux"
 import {
-	INotificationMessage
+	INotification
 } from "epic-global"
 import { PureRender } from "./PureRender"
 import { ThemedStyles } from "epic-styles"
@@ -85,7 +85,7 @@ export interface INotificationMessagesProps {
 	theme?:any
 	styles?:any
 	settings?:ISettings
-	messages?:List<INotificationMessage>
+	messages?:List<INotification>
 }
 //endregion
 
@@ -114,7 +114,7 @@ function clearNotification(msgId:string) {
  * @param newMessages
  */
 //TODO: Move to node process and use either node-notify or somhting else or another browser window just for notifications
-function processNotifications(newMessages:List<INotificationMessage>) {
+function processNotifications(newMessages:List<INotification>) {
 	if (newMessages === lastMessages)
 		return
 

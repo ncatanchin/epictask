@@ -123,6 +123,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 			             searchOnEmpty={true}
 			             autoFocus={true}
 			             tabIndex={-1}
+			             groupByProvider={false}
 			             perProviderLimit={-1}
 			             onEscape={this.hide}
 			             open={true}

@@ -2,7 +2,7 @@
 
 import { connect } from "react-redux"
 import { PureRender, ToastMessage } from "../common"
-import { createDeepEqualSelector, getValue, INotificationMessage } from "epic-global"
+import { createDeepEqualSelector, getValue, INotification } from "epic-global"
 import { createStructuredSelector,createSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import baseStyles from "./StatusBar.styles"
@@ -40,7 +40,7 @@ export interface IStatusBarProps extends React.HTMLAttributes<any> {
 	autoHide?:boolean
 	jobs?:TJobMap
 	details?:IJobStatusDetail[]
-	messages?:INotificationMessage[]
+	messages?:INotification[]
 	hasItems?:boolean
 }
 

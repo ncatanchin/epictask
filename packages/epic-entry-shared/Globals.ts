@@ -1,8 +1,8 @@
-
+import { getValue } from "typeguard"
 import {List,Map} from 'immutable'
 import "./WindowTypes"
 
-import Electron from 'epic-electron'
+//import Electron from 'epic-electron'
 
 import LodashGlobal from './LoDashMixins'
 
@@ -55,6 +55,7 @@ import EventHub,{TEventHub} from  './EventHub'
 import * as Constants from 'epic-global/Constants'
 import { EventType } from "epic-global/Constants"
 
+
 // ADD EVENTS TO GLOBAL
 _.assignGlobal({
 	Constants
@@ -67,6 +68,9 @@ _.assignGlobal({
  * @returns {null}
  */
 function getWindowIdGlobal():string {
+	let
+		Electron = require('electron')
+	
 	return !Electron.remote ? 'main' : `${Electron.remote.getCurrentWindow().id}`
 }
 
@@ -189,7 +193,7 @@ function installGlobals() {
 			return g.GlobalStoreReady === true
 		},
 		getAppConfig: require('./AppConfig').getAppConfig,
-		node_require: __non_webpack_require__,
+		node_require: getValue(() => __non_webpack_require__,null),
 		
 		
 		getWindowId: getWindowIdGlobal,

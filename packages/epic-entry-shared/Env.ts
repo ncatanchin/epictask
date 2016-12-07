@@ -1,5 +1,7 @@
 
-import * as Electron from 'electron'
+
+//import * as Electron from 'electron'
+
 import { getValue, isNil } from "typeguard"
 
 const
@@ -15,7 +17,7 @@ const
 	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
 	isMain = process.type === 'browser',
 	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production')),
-	MainEnv = getValue(() => !isMain && Electron.remote.getGlobal('Env'),{}) as any
+	MainEnv = getValue(() => !isMain && require('electron').remote.getGlobal('Env'),{}) as any
 
 
 const
@@ -42,7 +44,7 @@ const EnvGlobal = {
 	isRemote,
 	isRenderer,
 	isMain,
-	isElectron: ['browser','renderer'].includes(process.type),
+	isElectron: getValue(() => !isNil(require('electron')),false) &&  ['browser','renderer'].includes(process.type),
 	isWebpack: !['true','1','on'].includes(process.env.NO_WEBPACK),
 	
 	baseDir: path.resolve(__dirname,'../..')

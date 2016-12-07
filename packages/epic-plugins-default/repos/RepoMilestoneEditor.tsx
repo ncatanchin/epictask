@@ -264,7 +264,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 					log.debug(`Saving milestone`,milestone)
 					if (this.validate()) {
 						await getRepoActions().saveMilestone(repo, milestone)
-						getNotificationCenter().addMessage(`Saved label: ${milestone.title}`)
+						getNotificationCenter().notify(`Saved label: ${milestone.title}`)
 					} else {
 						//noinspection ExceptionCaughtLocallyJS
 						throw new Error(`Invalid tag name or color`)
@@ -273,7 +273,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 					
 				} catch (err) {
 					log.error(`Failed to save label`,err)
-					getNotificationCenter().addErrorMessage(`Unable to persist label: ${err.message}`)
+					getNotificationCenter().notifyError(`Unable to persist label: ${err.message}`)
 				}
 			}
 		)

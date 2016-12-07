@@ -11,8 +11,9 @@ export default function baseStyles(topStyles,theme,palette) {
 		FillWidth, {
 			height: itemHeight,
 			cursor: 'pointer',
-			borderBottom: `0.1rem solid ${accent.hue1}`,
+			borderTop: `0.1rem solid ${accent.hue1}`,
 			color: primary.hue1,
+			
 			
 			normal: {
 				backgroundColor: text.primary,

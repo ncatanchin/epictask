@@ -11,7 +11,7 @@ import {
 
 import { GitHubClient, createClient } from "epic-github"
 import { getCommandManager, ICommand } from "epic-command-manager"
-import { Benchmark, cloneObjectShallow} from "epic-global"
+import { Benchmark, cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 
@@ -20,10 +20,14 @@ const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
+log.setOverrideLevel(LogLevel.DEBUG)
 
-function mapResultsToSearchItems(provider:ISearchProvider,
-                                 idProperty:string,
-                                 results:FinderResultArray<any>) {
+function mapResultsToSearchItems(
+	provider:ISearchProvider,
+	idProperty: string,
+	results: FinderResultArray<any>,
+	scoreMapper?: (val) => number
+) {
 	const md = results.itemMetadata
 	return List<SearchItem>(results.map((item, index) => {
 		const score = (md && md.length > index && md[ index ]) ?
@@ -33,7 +37,7 @@ function mapResultsToSearchItems(provider:ISearchProvider,
 			item[ idProperty ],
 			provider,
 			item,
-			score || 1
+			scoreMapper ? scoreMapper(item) : (score || 1)
 		)
 	}))
 }
@@ -100,12 +104,19 @@ export class RepoSearchProvider implements ISearchProvider {
 		const repoStore:RepoStore = getStores().repo
 		
 		const
-			results = await
-				
-				repoStore.findWithText(new FinderRequest(4), query)
-		log.info(`Found repos`, results)
+			results = await repoStore.findWithText(new FinderRequest(4), query)
 		
-		return mapResultsToSearchItems(this, 'id', results)
+		log.debug(`Found repos`, results)
+		
+		return mapResultsToSearchItems(this, 'id', results, (repo) => {
+			const
+				canEdit = canEditRepo(repo),
+				score = canEdit ? 0 : 1
+			
+			log.debug(`Scoring ${repo.full_name}: edit=${canEdit} score=${score}`)
+			
+			return score
+		})
 		
 		
 	}
@@ -156,7 +167,7 @@ export class GitHubSearchProvider implements ISearchProvider {
 					
 					
 					items = items.push(
-						new SearchItem(repo.id, this, repo, (repo as any).score || 1)
+						new SearchItem(repo.id, this, repo, canEditRepo(repo) ? 0 : 1)
 					) as any
 				}
 				

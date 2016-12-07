@@ -41,6 +41,7 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface ISearchResultsListProps extends IThemedAttributes {
 	open?:boolean
+	groupByProvider?:boolean
 	controller:SearchController
 	state:SearchState
 	onResultSelected?:(item:SearchItem) => void
@@ -109,6 +110,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				open,
 				styles,
 				theme,
+				groupByProvider,
 				state:searchState
 			} = props,
 			
@@ -132,8 +134,9 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				
 				{!items ? React.DOM.noscript() :
 					items.map((item, index) => <SearchResultItem
-							key={item.id}
+							key={`${item.provider.id}-${item.id}`}
 							item={item}
+							groupByProvider={groupByProvider}
 							controller={this.controller}
 							onMouseEnter={this.onHover(item)}
 							onClick={this.onClick(item)}

@@ -1,6 +1,6 @@
 import { Map, Record, List } from "immutable"
 import IssuePatchState from "epic-ui-components/pages/issue-patch/IssuePatchState"
-import { cloneObjectShallow, parseJSON, addErrorMessage } from "epic-global"
+import { cloneObjectShallow, parseJSON, notifyError } from "epic-global"
 import { getValue } from "typeguard"
 import { Issue } from "epic-models"
 import { getIssueActions } from "epic-typedux/provider"
@@ -61,7 +61,7 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 			})
 		
 		if (!issueKeys || !issueKeys.size) {
-			addErrorMessage(`No issues were provided`)
+			notifyError(`No issues were provided`)
 			setReady()
 			cb && cb()
 		} else {
@@ -86,7 +86,7 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 			issues = await getIssueActions().loadIssues(issueKeys)
 		
 		if (!issues) {
-			addErrorMessage(`No issues loaded for ${issueKeys.size}`)
+			notifyError(`No issues loaded for ${issueKeys.size}`)
 			return
 		}
 		this.setIssues(issues)

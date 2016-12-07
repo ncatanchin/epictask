@@ -129,6 +129,7 @@ export class RepoAddTool extends React.Component<IRepoAddToolProps,IRepoAddToolS
 			             styles={styles.search}
 			             autoFocus={true}
 			             tabIndex={0}
+			             perProviderLimit={10}
 			             placeholder='Search for any repo'
 			             onEscape={this.hide}
 			             focused={true}

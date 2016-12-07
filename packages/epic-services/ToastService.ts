@@ -1,7 +1,7 @@
 import { ObservableStore } from "typedux"
 
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
-import { ProcessType, NotificationMessageType, UIKey } from "epic-global"
+import { ProcessType, NotificationType, UIKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
 import { PersistentValueEvent, cloneObjectShallow } from "epic-global"
@@ -42,7 +42,7 @@ export class ToastService extends BaseService {
 			.keys(this.pendingTimers)
 			.forEach(timerId => clearTimeout(this[timerId]))
 		
-		getUIActions().clearMessages()
+		getUIActions().clearNotifications()
 	}
 	
 	
@@ -88,7 +88,7 @@ export class ToastService extends BaseService {
 							
 							delete this.pendingTimers[ msg.id ]
 						},
-						isError = msg.type === NotificationMessageType.Error
+						isError = msg.type === NotificationType.Error
 					
 					
 					// Don't add a remove timer for Error messages
@@ -132,7 +132,7 @@ export class ToastService extends BaseService {
 	private onNotificationConfigChange = () => {
 		//this.clear()
 		
-		getNotificationCenter().addMessage("Notification configuration changed successfully")
+		getNotificationCenter().notify("Notification configuration changed successfully")
 	}
 	
 	/**

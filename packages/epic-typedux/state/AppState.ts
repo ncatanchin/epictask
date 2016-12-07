@@ -1,6 +1,6 @@
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 import { List, Record, Map } from "immutable"
-import { INotificationMessage, Settings, RegisterModel } from "epic-global"
+import { INotification, Settings, RegisterModel } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-global/ModelUtil"
@@ -19,7 +19,7 @@ export const AppStateRecord:Record.Class = Record({
 	settings: new Settings(),
 	ready: false,
 	user: null,
-	messages:List<INotificationMessage>(),
+	messages:List<INotification>(),
 	windows:Map<string,IWindowState>()
 })
 
@@ -57,7 +57,7 @@ export class AppState extends AppStateRecord {
 	ready:boolean
 	settings:Settings
 	user:User
-	messages:List<INotificationMessage>
+	messages:List<INotification>
 	windows:Map<string,IWindowState>
 
 

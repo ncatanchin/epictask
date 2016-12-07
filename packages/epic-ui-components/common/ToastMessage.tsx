@@ -3,7 +3,7 @@ import {PureRender} from "./PureRender"
 import {Button} from "./Button"
 import {Icon} from "./icon/Icon"
 import {ThemedStyles} from "epic-styles"
-import {INotificationMessage, NotificationMessageType} from "epic-global"
+import {INotification, NotificationType} from "epic-global"
 import { getUIActions } from "epic-typedux"
 
 // Constants
@@ -59,7 +59,7 @@ const baseStyles = (topStyles,theme,palette) => ({
 export interface INotificationMessageProps extends React.HTMLAttributes<any> {
 	theme?: any
 	styles?: any
-	msg: INotificationMessage
+	msg: INotification
 	animate?: boolean
 }
 
@@ -81,9 +81,9 @@ export class ToastMessage extends React.Component<INotificationMessageProps,void
 	render() {
 		const
 			{styles,animate,msg} = this.props,
-			isError = msg.type === NotificationMessageType.Error,
-			isSuccess = msg.type === NotificationMessageType.Success,
-			isInfo = msg.type === NotificationMessageType.Info
+			isError = msg.type === NotificationType.Error,
+			isSuccess = msg.type === NotificationType.Success,
+			isInfo = msg.type === NotificationType.Info
 		
 		
 		

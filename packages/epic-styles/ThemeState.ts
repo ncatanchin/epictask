@@ -125,7 +125,10 @@ function setPalette(newPalette:IPaletteCreator) {
 		palette
 	})
 	
-	if (getSettings().paletteName !== ThemeState.paletteName)
+	const
+		settings = getSettings()
+	
+	if (!settings || settings.paletteName !== ThemeState.paletteName)
 		updateSettings({
 			paletteName:ThemeState.paletteName
 		})
@@ -170,7 +173,10 @@ function setTheme(newThemeCreator:IThemeCreator) {
 		theme: newTheme
 	})
 	
-	if (getSettings().themeName !== ThemeState.themeName)
+	const
+		settings = getSettings()
+	
+	if (!settings || settings.themeName !== ThemeState.themeName)
 		updateSettings({
 			themeName:ThemeState.themeName
 		})
