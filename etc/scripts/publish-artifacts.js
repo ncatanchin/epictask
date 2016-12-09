@@ -26,7 +26,11 @@ if (AWS) {
 			Promise = require('bluebird'),
 			Bucket = 'epictask-releases',
 			s3 = new AWS.S3(),
-			artifactPath = isMac ? 'dist/build/mac' : 'dist/build'
+			[artifactPath,extensions] =
+				isMac ? ['dist/build/mac',["*.dmg", "*.zip"]] :
+					process.platform === 'win32' ? ['dist',['*.exe']] :
+					['dist/build',["*.deb","*.rpm","*.AppImage"]]
+			
 		
 		cd(artifactPath)
 		
@@ -39,7 +43,7 @@ if (AWS) {
 		//echo(`Publishing from ${newRoot}`)
 		
 		
-		for (let filePath of ["*.dmg", "*.zip", "*.exe", "*.deb"]) {
+		for (let filePath of extensions) {
 			files = files.concat(await glob(filePath))
 		}
 		

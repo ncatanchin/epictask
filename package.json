@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "bin/epictask-start.js",
   "scripts": {
@@ -19,7 +19,8 @@
     "package:all": "babel-node ./etc/scripts/package.js --win --linux",
     "package:make-icons": "babel-node ./etc/scripts/make-icons.js",
     "install:material-ui": "npm i material-ui@../material-ui/build",
-    "install:app": "babel-node ./etc/scripts/package.js --install"
+    "install:app": "babel-node ./etc/scripts/package.js --install",
+    "tool:release-manifest": "babel-node ./etc/scripts/release-manifest.js"
   },
   "build": {
     "appId": "com.densebrain.epictask",
