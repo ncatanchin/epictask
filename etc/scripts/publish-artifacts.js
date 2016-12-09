@@ -28,7 +28,7 @@ if (AWS) {
 			s3 = new AWS.S3(),
 			[artifactPath,extensions] =
 				isMac ? ['dist/build/mac',["*.dmg", "*.zip"]] :
-					process.platform === 'win32' ? ['dist',['*.exe']] :
+					process.platform === 'win32' ? ['dist/build',['*.exe']] :
 					['dist/build',["*.deb","*.rpm","*.AppImage"]]
 			
 		
