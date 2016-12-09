@@ -10,8 +10,12 @@ const
 
 prepareDirs()
 
+const
+	cmd = process.platform === 'win32' ?
+		webpackCmd :
+		`node --max-old-space-size=4000 ${webpackCmd}`
 
-exec(`node --max-old-space-size=4000 ${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details`)
+exec(`${cmd} --config etc/webpack/webpack.config.js --watch --display-error-details`)
 
 //exec(`${gulpCmd} compile-watch`)
 

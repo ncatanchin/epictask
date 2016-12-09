@@ -9,8 +9,9 @@ const
 
 prepareDirs()
 
+
 //exec(`node ${webpackCmd} --config etc/webpack/webpack.config.js --display-error-details`)
 
-exec(`node ${gulpCmd} compile`)
+exec(`${gulpCmd} compile`)
 
 //exec('node --max-old-space-size=1500 ./node_modules/gulp/bin/gulp.js compile-watch')

@@ -1,4 +1,4 @@
-import * as _get from 'lodash/get'
+import _get = require('lodash/get')
 
 const
 	log = getLogger(__filename)
@@ -43,7 +43,7 @@ export function inElectron():boolean {
 	try {
 		const
 			electron = require('electron')
-		
+
 		return !!electron.app || !!electron.remote.app
 	} catch (err) {
 		return false
@@ -61,10 +61,10 @@ export function inElectron():boolean {
 export function testPlatform(browserTest:RegExp,nodeTest:RegExp) {
 	const
 		navPlatform = typeof window !== 'undefined' && _get(window,'navigator.platform') as string
-	
+
 	if  (navPlatform)
 		return browserTest.test(navPlatform.toLowerCase())
-	
+
 	return nodeTest.test(process.platform || '')
 }
 
@@ -80,4 +80,3 @@ export function isWindows() {
 export function isLinux() {
 	return testPlatform(/linux/,/linux|freebsd/)
 }
-
