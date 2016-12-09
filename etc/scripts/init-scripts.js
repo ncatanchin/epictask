@@ -90,6 +90,7 @@ Object.assign(global,{
 		}
 		
 		mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
+		mkdir('-p',path.resolve(process.cwd(),'dist/build'))
 	},
 	
 	/**
