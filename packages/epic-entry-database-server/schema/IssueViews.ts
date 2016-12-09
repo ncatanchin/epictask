@@ -24,7 +24,8 @@ const
 		attrs.assignee && attrs.assignee.id,
 		attrs.assignee && attrs.assignee.login,
 		attrs.updated_at,
-		attrs.created_at
+		attrs.created_at,
+		attrs.focused
 	]`
 
 

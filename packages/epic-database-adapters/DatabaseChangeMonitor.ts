@@ -4,7 +4,7 @@ import { PouchDBRepo } from "typestore-plugin-pouchdb"
 import { setDataOnHotDispose, getHot } from "epic-global/HotUtils"
 import { getValue } from "epic-global/ObjectUtil"
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 
 import {Map} from 'immutable'
 
@@ -46,7 +46,7 @@ function cancelCurrentSubscription(modelType:string) {
  */
 const broadcast = _.throttle(() => {
 	try {
-		EventHub.broadcast(EventType.DatabaseChanges,[...pendingChanges])
+		EventHub.broadcast(AppEventType.DatabaseChanges,[...pendingChanges])
 		
 		
 		// CLEAR THE LIST IF IT SUCCEEDED

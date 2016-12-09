@@ -1,6 +1,7 @@
 
 import './LogCategories'
 
+import * as TypeLogger from 'typelogger'
 import {setPrefixGlobal,getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
 import * as path from 'path'
 import _ from './LoDashMixins'
@@ -82,12 +83,14 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 	logger.warn = logger.tronWarn = makeTronLevel('warn','warn')
 	logger.error = logger.tronError = makeTronLevel('error','error')
 	
+	if (process.env.NODE_ENV !== 'development') {
+		logger.setOverrideLevel = (newLevel) => {
+			console.warn(`You no in dev bitch - no overrides`)
+		}
+	}
 	return logger
 }
 
-_.assignGlobal({
-	getLogger: EpicLoggerFactory
-})
 
 declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst

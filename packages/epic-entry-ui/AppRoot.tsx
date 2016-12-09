@@ -124,6 +124,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	 */
 	commandItems = (builder:CommandContainerBuilder) => {
 		
+		// NOT MAC THEN ADD QUIT COMMAND
 		if (!Env.isMac) {
 			builder
 				.command(
@@ -135,6 +136,16 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					}
 				)
 		}
+		
+		builder
+			.command(
+				CommandType.App,
+				'Close Window',
+				(cmd, event) => getUIActions().closeWindow(),
+				"CommandOrControl+w",{
+					id: CIDS.CloseWindow
+				}
+			)
 		
 		If(ProcessConfig.isUI(), () => {
 			builder
@@ -252,32 +263,6 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				)
 			
 			
-		}, () => {
-			
-			builder
-				
-				.command(
-					CommandType.App,
-					'Close Window',
-					(cmd, event) => getUIActions().closeWindow(windowId),
-					"CommandOrControl+w",{
-						id: CIDS.CloseWindow
-					}
-				)
-				.menuItem(
-					MenuIds.Navigate,
-					CommandMenuItemType.Menu,
-					'Find',
-					{iconSet: 'fa', iconName: 'search'},
-					{
-						subItems: [{
-							id: 'close-window-menu-item',
-							type: CommandMenuItemType.Command,
-							commandId: CIDS.CloseWindow
-						}]
-					}
-				)
-				
 		})
 		
 		

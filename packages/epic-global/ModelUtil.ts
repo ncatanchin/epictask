@@ -2,7 +2,9 @@
 import {Map,List} from 'immutable'
 
 import { shallowEquals, cloneObject, cloneObjectShallow } from "./ObjectUtil"
-import { isMap } from "typeguard"
+
+const
+	log = getLogger(__filename)
 
 /**
  * Compare a new and existing model either oin updated_at (the default method) or a set of properties provided
@@ -45,6 +47,10 @@ export function checkUpdatedAndAssign(logger,id:string|number,newModel,existingM
 }
 
 
+function makeInstance(type,val) {
+	return new (type as any)(val)
+}
+
 /**
  * Revive an immutable object tree
  *
@@ -55,60 +61,63 @@ export function checkUpdatedAndAssign(logger,id:string|number,newModel,existingM
  * @returns {any}
  */
 export function reviveImmutable<T>(val:any,type:{new():T},listProps:string[] = [],mapProps:string[] = []):T {
-	val = val || {}
-
-	
-	// SET LIST PROPS
-	listProps.forEach(prop => {
+	try {
+		val = val || {}
 		
-		let
-			propVal = val.get ? val.get(prop) : val[prop]
 		
-		if (!propVal)
-			propVal = List()
+		// SET LIST PROPS
+		listProps.forEach(prop => {
+			
+			let
+				propVal = val.get ? val.get(prop) : val[ prop ]
+			
+			if (!propVal)
+				propVal = List()
+			
+			if (!List.isList(propVal)) {
+				propVal = List(propVal)
+			}
+			
+			if (val.withMutations) {
+				val = val.set(prop, propVal)
+			} else {
+				val[ prop ] = propVal
+			}
+		})
 		
-		if (!List.isList(propVal)) {
-			propVal = List(propVal)
-		}
+		//SET MAP PROPS
+		mapProps.forEach(prop => {
+			
+			let
+				propVal = val.get ? val.get(prop) : val[ prop ]
+			
+			if (!propVal)
+				propVal = Map()
+			
+			if (!Map.isMap(propVal)) {
+				propVal = Map(propVal)
+			}
+			
+			if (val.withMutations) {
+				val = val.set(prop, propVal)
+			} else {
+				val[ prop ] = propVal
+			}
+			
+		})
 		
-		if (val.withMutations) {
-			val = val.set(prop, propVal)
-		}else {
-			val[prop] = propVal
-		}
-	})
-	
-	//SET MAP PROPS
-	mapProps.forEach(prop => {
 		
-		let
-			propVal = val.get ? val.get(prop) : val[prop]
 		
-		if (!propVal)
-			propVal = Map()
 		
-		if (!Map.isMap(propVal)) {
-			propVal = Map(propVal)
-		}
-		
-		if (val.withMutations) {
-			val = val.set(prop, propVal)
-		}else {
-			val[prop] = propVal
-		}
-		
-	})
-	
-
-	const makeInstance = () => {
-		return new (type as any)(val)
+		return val && val instanceof type ?
+			
+			// IF ALREADY IMMUTABLE INSTANCE
+			val :
+			
+			// OBJECT TYPE
+			makeInstance(type,val)
+	} catch (err) {
+		log.warn(`Failed to revive immutable`,err)
+		return makeInstance(type,{})
 	}
-	
-	return val && val instanceof type ?
-		
-		// IF ALREADY IMMUTABLE INSTANCE
-		val :
-		
-		// OBJECT TYPE
-		makeInstance()
 }

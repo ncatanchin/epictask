@@ -53,7 +53,7 @@ import RadiumGlobal from 'radium'
 
 import EventHub,{TEventHub} from  './EventHub'
 import * as Constants from 'epic-global/Constants'
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 
 
 // ADD EVENTS TO GLOBAL
@@ -67,11 +67,18 @@ _.assignGlobal({
  *
  * @returns {null}
  */
+let windowId = null
+
 function getWindowIdGlobal():string {
+	if (windowId)
+		return windowId
+	
 	let
 		Electron = require('electron')
 	
-	return !Electron.remote ? 'main' : `${Electron.remote.getCurrentWindow().id}`
+	windowId = !Electron.remote ? 'main' : `${Electron.remote.getCurrentWindow().id}`
+	
+	return windowId
 }
 
 /**
@@ -186,7 +193,7 @@ function installGlobals() {
 			g.GlobalStoreReady = true
 			
 			if (isStoreReady()) {
-				EventHub.emit(EventType.StoreReady)
+				EventHub.emit(AppEventType.StoreReady)
 			}
 		},
 		isStoreReady() {

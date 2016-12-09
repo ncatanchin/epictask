@@ -19,25 +19,25 @@ export default function baseStyles(topStyles, theme, palette) {
 			} ],
 		
 		
-		container: [ PositionRelative, OverflowAuto, FillWidth, FlexColumn, {
+		container: [ Styles.PositionRelative, Styles.OverflowAuto, Styles.FillWidth, Styles.FlexColumn, {
 			maxHeight: '100%'
 		} ],
 		
 		inputContainer: [
-			PositionRelative,
-			FillWidth,
-			FlexWrap,
+			Styles.PositionRelative,
+			Styles.FillWidth,
+			Styles.FlexWrap,
 			makeFlexAlign('flex-start','center')
 		],
 		
 		field: [
-			PositionRelative,
-			FlexScale,
+			Styles.PositionRelative,
+			Styles.FlexScale,
 			{
 				minWidth: '30%',
 				
 				
-				input: [ FillWidth, makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {
+				input: [ FillWidth, Styles.makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {
 					
 					// backgroundColor: ,
 					//color: text.primary

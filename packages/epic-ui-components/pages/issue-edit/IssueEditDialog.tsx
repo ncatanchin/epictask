@@ -5,25 +5,24 @@
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
 import { connect } from "react-redux"
-import { Issue, AvailableRepo, Repo, User, Label } from "epic-models"
-
+import { Issue, AvailableRepo, User, Label } from "epic-models"
 import {
-	RepoSelect, LabelFieldEditor, MilestoneSelect, AssigneeSelect, MarkdownEditor, Icon, RepoLabel,
-	getGithubErrorText, FileDrop, PureRender, TextField, Form, FormValidators
+	RepoSelect,
+	LabelFieldEditor,
+	MilestoneSelect,
+	AssigneeSelect,
+	MarkdownEditor,
+	RepoLabel,
+	FileDrop,
+	PureRender,
+	TextField,
+	Form,
+	FormValidators
 } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
-
 import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow, guard } from "epic-global"
 import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
-import {
-	ThemedStyles,
-	makeThemeFontSize,
-	FlexColumn,
-	FlexAuto,
-	FlexRowCenter,
-	FillHeight,
-	IThemedAttributes
-} from "epic-styles"
+import { ThemedStyles, FlexColumn, IThemedAttributes } from "epic-styles"
 import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { getIssueActions } from "epic-typedux/provider"
@@ -31,8 +30,8 @@ import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "epic-ui-components/pages/issue-edit/IssueEditState"
 import IssueEditController from "epic-ui-components/pages/issue-edit/IssueEditController"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
-import { getWindowManagerClient } from "epic-process-manager-client";
-
+import { getWindowManagerClient } from "epic-process-manager-client"
+import baseStyles from "./IssueEditDialog.styles"
 
 
 const
@@ -42,110 +41,27 @@ const
 // DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-const baseStyles = (topStyles, theme, palette) => {
-	const
-		{
-			accent,
-			warn,
-			text,
-			secondary
-		} = palette,
-		
-		rowStyle = [ FlexRow, FlexAuto, FlexAlignStart, FillWidth, makePaddingRem(0, 1) ]
-	
-	return {
-		dialog: [ {
-			minHeight: 500,
-			minWidth: 500
-		} ],
-		root: [ FlexColumn, FlexAuto ],
-		
-		actions: [ FlexRowCenter, FillHeight ],
-		
-		
-		titleBar: [ {
-			label: [ FlexRowCenter, {
-				fontSize: rem(1.6),
-				
-				repo: [ makePaddingRem(0, 0.6, 0, 0), {} ],
-				
-				number: [ {
-					paddingTop: rem(0.3),
-					fontSize: rem(1.4),
-					fontWeight: 100,
-					color: text.secondary
-				} ]
-			} ]
-		} ],
-		
-		
-		
-		form: [ FlexScale, FlexColumn, FillWidth, {
-			
-			title: [ FlexScale ],
-			
-			repo: [ FlexScale,{
-				
-				
-			} ],
-			
-			
-			milestone: [ FlexScale,{
-				
-			} ],
-			
-			assignee: [ FlexScale,{
-				
-				// avatar: [ FlexRow, makeFlexAlign('center', 'flex-start'), {
-				// 	label: {
-				// 		fontWeight: 500,
-				// 	},
-				// 	avatar: {
-				// 		height: 22,
-				// 		width: 22,
-				// 	}
-				//
-				// } ]
-			} ],
-			
-			/**
-			 * Label editor styling
-			 */
-			labels: [],
-			
-			row1: [ ...rowStyle,{ marginBottom: rem(0.8) } ],
-			row2: [ ...rowStyle, { marginBottom: rem(0.8) } ],
-			row3: [ ...rowStyle, {} ],
-			
-			editor: [ FlexScale, FillWidth ]
-			
-		} ],
-		
-		
-	}
-}
-
 
 /**
  * IIssueEditDialogProps
  */
 export interface IIssueEditDialogProps extends IThemedAttributes, IRouterLocation {
-	viewState?:IssueEditState
-	viewController?:IssueEditController
+	viewState?: IssueEditState
+	viewController?: IssueEditController
 	
-	availableRepos?:List<AvailableRepo>
-	user?:User
+	availableRepos?: List<AvailableRepo>
+	user?: User
 	
 }
 
 export interface IIssueEditDialogState {
-	availableRepo?:AvailableRepo
-	titleValue?:string
-	bodyValue?:string
+	availableRepo?: AvailableRepo
+	titleValue?: string
+	bodyValue?: string
 	
-	repoMenuItems?:any[]
+	repoMenuItems?: any[]
 	
-	mdEditor?:MarkdownEditor
+	mdEditor?: MarkdownEditor
 	
 	
 }
@@ -158,7 +74,7 @@ export interface IIssueEditDialogState {
  **/
 
 
-@ViewRoot(IssueEditController,IssueEditState)
+@ViewRoot(IssueEditController, IssueEditState)
 @connect(createStructuredSelector({
 	user: appUserSelector,
 	//editingIssue: editingIssueSelector,
@@ -168,35 +84,18 @@ export interface IIssueEditDialogState {
 	
 }))
 
-@CommandComponent()
+
 @ThemedStyles(baseStyles, 'dialog', 'issueEditDialog', 'form')
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {
 	
-	refs:any
+	refs: any
 	
-	
-	commandItems = (builder:CommandContainerBuilder) =>
-		builder
-			.command(CommandType.Container,
-				'Save Comment',
-				(cmd, event) => guard(() => this.refs.form.submit()),
-				"CommandOrControl+Enter")
-			.command(CommandType.Container,
-				'Close Dialog',
-				this.hide,
-				"Escape")
-
-			.make()
-	
-	
-	commandComponentId = ContainerNames.IssueEditDialog
-	
-	get form():Form {
+	get form(): Form {
 		return getValue(() => this.refs.form)
 	}
 	
-	private get viewState():IssueEditState {
+	private get viewState(): IssueEditState {
 		return getValue(() => this.props.viewState)
 	}
 	
@@ -205,7 +104,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 	
 	private get editingIssue() {
-		return getValue(() => this.viewState.editingIssue,new Issue())
+		return getValue(() => this.viewState.editingIssue, new Issue())
 	}
 	
 	/**
@@ -223,12 +122,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param event
 	 */
-	private onSave = async () => {
+	private onSave = async() => {
 		if (this.viewState.saving)
 			return
 		
 		this.viewController.setSaving(true)
-				
+		
 		await Promise.setImmediate()
 		
 		const
@@ -240,7 +139,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			)
 			getUIActions().closeWindow(getWindowId())
 		} catch (err) {
-			log.error(`failed to save issue`,err)
+			log.error(`failed to save issue`, err)
 			getNotificationCenter().notifyError(`Unable to save issue: ${!savingIssue ? '' : savingIssue.title}`)
 			
 			this.viewController.setSaveError(err)
@@ -265,10 +164,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			return
 		
 		let
-			{editingIssue} = this
+			{ editingIssue } = this
 		
 		
-		editingIssue = cloneObjectShallow(editingIssue,newIssueProps)
+		editingIssue = cloneObjectShallow(editingIssue, newIssueProps)
 		
 		this.viewController.setEditingIssue(editingIssue)
 		
@@ -291,7 +190,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param mdEditor
 	 */
-	private setMarkdownEditor = (mdEditor:MarkdownEditor) => {
+	private setMarkdownEditor = (mdEditor: MarkdownEditor) => {
 		this.setState({ mdEditor })
 	}
 	
@@ -303,9 +202,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 */
 	onTitleChange = event => {
 		const
-			{value} = event.target as any
+			{ value } = event.target as any
 		
-		log.debug(`Title change`,value)
+		log.debug(`Title change`, value)
 		
 		this.setState({ titleValue: value })
 	}
@@ -315,11 +214,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param repo
 	 */
-	onRepoChange = (repo:AvailableRepo) => {
+	onRepoChange = (repo: AvailableRepo) => {
 		const
 			editingIssue = new Issue(cloneObjectShallow(
 				this.editingIssue || new Issue(),
-				this.textInputState(),{
+				this.textInputState(), {
 					repoId: repo.id
 				}
 			))
@@ -338,7 +237,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		this.updateIssueState({ assignee })
 	}
 	
-	onLabelsChanged = (newLabels:Label[]) => {
+	onLabelsChanged = (newLabels: Label[]) => {
 		const
 			{
 				editingIssue
@@ -352,7 +251,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	}
 	
 	
-
 	/**
 	 * Create a new state for dialog
 	 *
@@ -360,18 +258,18 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @returns {any}
 	 * @param editingIssue
 	 */
-	getNewState(props:IIssueEditDialogProps, editingIssue:Issue = null) {
+	getNewState(props: IIssueEditDialogProps, editingIssue: Issue = null) {
 		const
 			{
 				styles
 			} = props
-			
+		
 		if (!editingIssue)
 			editingIssue = this.editingIssue
 		
 		let
 			{ availableRepos } = props
-			//repo = availableRepos.find()
+		//repo = availableRepos.find()
 		
 		if (availableRepos.size < 1)
 			return {}
@@ -380,10 +278,10 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			repoId = editingIssue && editingIssue.repoId,
 			newState = {}
 		
-		if (!repoId)	{
-			editingIssue = this.updateIssueState({repoId: availableRepos.get(0).id})
+		if (!repoId) {
+			editingIssue = this.updateIssueState({ repoId: availableRepos.get(0).id })
 		}
-			
+		
 		if (!editingIssue)
 			return newState as any
 		
@@ -397,15 +295,15 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		}
 		
 		let
-			bodyValue = getValue(() => this.state.bodyValue,editingIssue.body),
-			titleValue = getValue(() => this.state.titleValue,editingIssue.title)
+			bodyValue = getValue(() => this.state.bodyValue, editingIssue.body),
+			titleValue = getValue(() => this.state.titleValue, editingIssue.title)
 		
 		if (!bodyValue || !bodyValue.length)
 			bodyValue = _.get(editingIssue, 'body', '')
 		
 		// if (!titleValue || !titleValue.length)
 		// 	titleValue = _.get(editingIssue, 'title', '')
-				
+		
 		
 		let
 			availableRepo = editingIssue && availableRepos.find(repoIdPredicate(editingIssue))
@@ -415,7 +313,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			availableRepo = availableRepos.get(0)
 			editingIssue.repoId = availableRepo.id
 		}
-		return Object.assign(newState,{
+		return Object.assign(newState, {
 			editingIssue,
 			availableRepo,
 			bodyValue,
@@ -455,7 +353,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		)
 		
 		
-		log.info(`Edit dialog mounted with params`,this.props.params,this.props.uri)
+		log.info(`Edit dialog mounted with params`, this.props.params, this.props.uri)
 		
 	}
 	
@@ -464,8 +362,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param values
 	 */
-	private onFormValid = (values:IFormFieldValue[]) => {
-		log.debug(`onValid`,values)
+	private onFormValid = (values: IFormFieldValue[]) => {
+		log.debug(`onValid`, values)
 	}
 	
 	/**
@@ -473,8 +371,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param values
 	 */
-	private onFormInvalid = (values:IFormFieldValue[]) => {
-		log.debug(`onInvalid`,values)
+	private onFormInvalid = (values: IFormFieldValue[]) => {
+		log.debug(`onInvalid`, values)
 	}
 	
 	/**
@@ -484,7 +382,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param model
 	 * @param values
 	 */
-	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => {
+	private onFormValidSubmit = (form: IForm, model: any, values: IFormFieldValue[]) => {
 		return this.onSave()
 	}
 	
@@ -494,7 +392,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 *
 	 * @param data
 	 */
-	onDrop = (data:DataTransfer) => {
+	onDrop = (data: DataTransfer) => {
 		const
 			mde = getValue(() => this.state.mdEditor)
 		
@@ -505,12 +403,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	render() {
 		
 		const
-			{ styles, palette, theme, open, user,availableRepos} = this.props,
-			{ready,saveError, saving} = this.viewState
+			{ styles, palette, theme, open, user, availableRepos } = this.props,
+			{ ready, saveError, saving } = this.viewState
 		
 		let
-			{editingIssue} = this,
-			titleValue = getValue(() => this.state.titleValue,editingIssue.title || ''),
+			{ editingIssue } = this,
+			titleValue = getValue(() => this.state.titleValue, editingIssue.title || ''),
 			repoId = editingIssue.repoId
 		
 		const
@@ -519,12 +417,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		let
 			repo = editingIssue && (editingIssue.repo || getValue(() => availableRepo.repo))
 		
-		log.info('ready/repo',ready,repoId,repo,editingIssue)
+		log.info('ready/repo', ready, repoId, repo, editingIssue)
 		if (!ready || !repo)
 			return React.DOM.noscript()
-		
-		
-		
 		
 		
 		const
@@ -546,28 +441,23 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		
 		//error={getGithubErrorText(saveError,'title')}
 		
-		return <CommandRoot
-			id={ContainerNames.IssueEditDialog}
-			component={this}
-			style={makeStyle(Fill)}>
+		return <DialogRoot
+			titleMode='horizontal'
+			titleNode={titleNode}
+			titleActionNodes={titleActionNodes}
+			saving={saving}
+			styles={styles.dialog}
+		>
 			
-			<DialogRoot
-				titleMode='horizontal'
-				titleNode={titleNode}
-				titleActionNodes={titleActionNodes}
-				saving={saving}
-				styles={styles.dialog}
-			>
+			<Form
+				id="issue-edit-form"
+				ref="form"
+				submitOnCmdCtrlEnter={true}
+				onInvalid={this.onFormInvalid}
+				onValid={this.onFormValid}
+				onValidSubmit={this.onFormValidSubmit}
+				styles={[FlexColumn,FlexScale]}>
 				
-				<Form
-					id="issue-edit-form"
-					ref="form"
-					submitOnCmdCtrlEnter={true}
-					onInvalid={this.onFormInvalid}
-					onValid={this.onFormValid}
-					onValidSubmit={this.onFormValidSubmit}
-					styles={[FlexColumn,FlexScale]}>
-					
 				<FileDrop onFilesDropped={this.onDrop}
 				          acceptedTypes={[/image/]}
 				          dropEffect='all'
@@ -580,8 +470,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						           placeholder="TITLE"
 						           style={styles.form.title}
 						           inputStyle={FlexScale}
-						           autoFocus />
-						
+						           autoFocus/>
+					
 					</div>
 					<div style={styles.form.row2}>
 						{/* REPO */}
@@ -589,17 +479,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						
 						<RepoSelect
 							repo={availableRepo}
-						  onItemSelected={this.onRepoChange}
+							onItemSelected={this.onRepoChange}
 							style={makeStyle(styles.form.repo,makeMarginRem(0.5,canAssign ? 0.5 : 0,0.5,0))}
-						  />
+						/>
 						}
 						{/* Only show assignee drop down if push permission */}
 						{canAssign &&
-							<AssigneeSelect
-								style={makeStyle(styles.form.assignee,makeMarginRem(0.5,0.5,0.5,0))}
-								assignee={editingIssue.assignee}
-								repoId={editingIssue.repoId}
-								onItemSelected={this.onAssigneeItemSelected}/>
+						<AssigneeSelect
+							style={makeStyle(styles.form.assignee,makeMarginRem(0.5,0.5,0.5,0))}
+							assignee={editingIssue.assignee}
+							repoId={editingIssue.repoId}
+							onItemSelected={this.onAssigneeItemSelected}/>
 						}
 						
 						
@@ -615,18 +505,18 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					</div>
 					
 					<div style={styles.form.row2}>
-					<LabelFieldEditor labels={editingIssue.labels || []}
-					                  id="issueEditDialogLabels"
-					                  hint="Labels"
-					                  styles={styles.form.labels}
-					                  style={makeStyle(Styles.FillWidth,{marginBottom: rem(1.5)})}
-					                  availableLabels={availableRepo.labels || []}
-					                  onLabelsChanged={this.onLabelsChanged}
-					                  onKeyDown={(event) => {
+						<LabelFieldEditor labels={editingIssue.labels || []}
+						                  id="issueEditDialogLabels"
+						                  hint="Labels"
+						                  styles={styles.form.labels}
+						                  style={makeStyle(Styles.FillWidth,{marginBottom: rem(1.5)})}
+						                  availableLabels={availableRepo.labels || []}
+						                  onLabelsChanged={this.onLabelsChanged}
+						                  onKeyDown={(event) => {
 					                  	getCommandManager().handleKeyDown(event as any,true)
 					                  }}
-					                  
-					/>
+						
+						/>
 					</div>
 					<MarkdownEditor
 						ref={this.setMarkdownEditor}
@@ -638,9 +528,9 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 					/>
 				
 				</FileDrop>
-				</Form>
-			</DialogRoot>
-		</CommandRoot>
+			</Form>
+		</DialogRoot>
+		
 	}
 	
 }

@@ -1,5 +1,5 @@
 
-import { makeComponentStyles } from "epic-ui-components"
+
 
 export default function (topStyles, theme, palette) {
 	
@@ -8,7 +8,7 @@ export default function (topStyles, theme, palette) {
 	
 	return [
 		theme.input,
-		makeComponentStyles(theme, palette),
+
 		Styles.FlexRow,
 		Styles.CursorPointer,
 		makeFlexAlign('center', 'flex-start'),

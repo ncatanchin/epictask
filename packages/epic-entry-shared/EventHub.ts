@@ -1,7 +1,7 @@
 
 import * as Electron from 'electron'
 import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 import { fromPlainObject, toPlainObject } from "typetransform"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { enumValueMap } from "epic-global/EnumUtil"
@@ -16,15 +16,15 @@ const
  */
 interface IEventHubMessage {
 	source:string
-	type:EventType
+	type:AppEventType
 	args:any[]
 }
 
 /**
  * Intersected type of events and hub
  */
-export type TEventHub = EnumEventEmitter<EventType> & typeof EventType & {
-	broadcast(type:EventType,...args:any[])
+export type TEventHub = EnumEventEmitter<AppEventType> & typeof AppEventType & {
+	broadcast(type:AppEventType, ...args:any[])
 }
 
 /**
@@ -33,7 +33,7 @@ export type TEventHub = EnumEventEmitter<EventType> & typeof EventType & {
  * @type {TEventHub}
  */
 const
-	EventHub = (new EnumEventEmitter<EventType>(EventType) as TEventHub).setUnlimitedListeners()
+	EventHub = (new EnumEventEmitter<AppEventType>(AppEventType) as TEventHub).setUnlimitedListeners()
 
 
 function startEventHub() {
@@ -160,7 +160,7 @@ function startEventHub() {
 	 * @param type
 	 * @param args
 	 */
-	function broadcast(type: EventType, ...args: any[]) {
+	function broadcast(type: AppEventType, ...args: any[]) {
 		EventHub.emit(type, ...args)
 		
 		const
@@ -182,7 +182,7 @@ function startEventHub() {
 	 */
 	Object.assign(EventHub, {
 		broadcast
-	}, EventType)
+	}, AppEventType)
 	
 }
 

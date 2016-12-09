@@ -11,7 +11,6 @@ import { colorAlpha } from "epic-styles/styles/ColorTools"
 const
 	tc = require('tinycolor2'),
 	{colors:c} = Styles,
-	baseTheme = _.cloneDeep(Styles.darkBaseTheme),
 	
 	navBarHeight = 50,
 	windowControlDim = navBarHeight / 5,
@@ -31,6 +30,11 @@ const
 	
 	// STATUS BAR HEIGHT
 	statusBarHeight = 2.6
+
+
+//CRITICAL - WE MUST DELETE ANY STYLES WITH SIMILAR NAMES FROM MATERIAL-UI STYLE
+const baseTheme = Styles.getMuiTheme(_.cloneDeep(Styles.darkBaseTheme))
+delete baseTheme['textField']
 
 function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
@@ -56,7 +60,7 @@ function makeSheetTheme({text,alternateText,accent,primary}) {
 			underline: [{
 				transform: 'scaleX(1)',
 				borderBottom: `0.1rem solid ${accent.hue1}`,
-				borderBottomColor: accent.hue1,
+				//borderBottomColor: accent.hue1,
 				bottom: '0px'
 			}],
 			
@@ -128,15 +132,16 @@ export function DefaultTheme(palette) {
 			
 		},
 		
-		inputStyle = [makeTransition(['border','box-shadow','background-color']),inputBorder,{
-			minHeight: rem(4),
-			
-			// FOCUS STATE
-			focused: inputHighlight,
-			
-			// INVALID STATE
-			invalid: inputInvalid
-		}],
+		inputStyle = [
+			makeTransition(['border','box-shadow','background-color']),inputBorder,{
+				minHeight: rem(4),
+				
+				// FOCUS STATE
+				focused: inputHighlight,
+				
+				// INVALID STATE
+				invalid: inputInvalid
+			}],
 	
 		selectStyle = {
 			[CSSHoverState]: inputHighlight,
@@ -150,7 +155,7 @@ export function DefaultTheme(palette) {
 		
 		
 		
-	return Styles.getMuiTheme(_.merge(baseTheme, createStyles({
+	return _.merge(baseTheme, createStyles({
 		ThemeName: 'DefaultTheme',
 		
 		/**
@@ -442,13 +447,11 @@ export function DefaultTheme(palette) {
 				},
 				
 				underlineDisabled: {
-					borderColor: primary.hue2,//'transparent',
 					borderBottomWidth: `0.1rem`,
 					transform: 'scaleX(1)'
 				},
 				
 				underlineFocus: {
-					borderColor: primary.hue3,
 					borderBottomWidth: `0.1rem`
 				}
 				
@@ -518,7 +521,7 @@ export function DefaultTheme(palette) {
 				header: {
 					color: text.primary,
 					backgroundColor: primary.hue2,
-					//borderColor: primary.hue3,
+					borderColor: primary.hue3,
 					
 					label: {
 						color: text.secondary,
@@ -575,7 +578,7 @@ export function DefaultTheme(palette) {
 					},
 					
 					enabled: {
-						borderColor: accent.hue1,
+						//borderColor: accent.hue1,
 						color: text.primary,
 						opacity: 1
 					},
@@ -604,22 +607,23 @@ export function DefaultTheme(palette) {
 		searchField: {
 			
 			
-			wrapper: {
+			wrapper: {},
+			
+		},
+		
+		/**
+		 * Search Issues Panel
+		 */
+		issuesPanelSearch: {
+			
+			// EMBEDDED SearchField -> input
+			input: {
+				backgroundColor: primary.hue2,
 				
-				expanded: {
-					
+				':focus': {
+					backgroundColor: primary.hue1
 				}
-			},
-			
-			hint: {
-				backgroundColor: 'transparent',
-				color: text.secondary,
-				fontWeight: 400
-			},
-			
-			
-			
-			
+			}
 		},
 		
 		/**
@@ -840,7 +844,7 @@ export function DefaultTheme(palette) {
 			accent,
 			background
 		}
-	})))
+	}))
 }
 
 export namespace DefaultTheme {

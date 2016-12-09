@@ -13,7 +13,7 @@ import { ProcessType } from "epic-entry-shared/ProcessType"
 import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import { Benchmark, benchmark } from "epic-global/Benchmark"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 
 
@@ -34,7 +34,7 @@ const
  * @param eventType
  * @param ungroupedChanges
  */
-function onDatabaseChange(eventType:EventType,ungroupedChanges:IDatabaseChange[]) {
+function onDatabaseChange(eventType:AppEventType, ungroupedChanges:IDatabaseChange[]) {
 	log.debug(`Change received`,ungroupedChanges)
 	
 	const
@@ -56,11 +56,11 @@ function onDatabaseChange(eventType:EventType,ungroupedChanges:IDatabaseChange[]
 /**
  * Subscribe for database updates
  */
-EventHub.on(EventType.DatabaseChanges,onDatabaseChange)
+EventHub.on(AppEventType.DatabaseChanges,onDatabaseChange)
 
 // HMR dispose handler
 addHotDisposeHandler(module,() => {
-	EventHub.removeListener(EventType.DatabaseChanges,onDatabaseChange)
+	EventHub.removeListener(AppEventType.DatabaseChanges,onDatabaseChange)
 })
 
 /**

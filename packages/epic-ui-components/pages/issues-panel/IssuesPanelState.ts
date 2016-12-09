@@ -86,7 +86,6 @@ export const IssuesPanelStateRecord = Record({
 	groupVisibility:Map<string,boolean>(),
 	
 	selectedIssueIds:List<number>(),
-	focusedIssueIds: List<number>(),
 	
 	criteria: DefaultIssueCriteria,
 	
@@ -106,7 +105,7 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
-			['issues','comments','events','selectedIssueIds','focusedIssueIds'],
+			['issues','comments','events','selectedIssueIds'],
 			['groupVisibility']
 		)
 	}
@@ -133,7 +132,6 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	groupVisibility:Map<string,boolean>
 	
 	selectedIssueIds:List<number>
-	focusedIssueIds:List<number>
 	
 	saving:boolean
 	saveError: Error

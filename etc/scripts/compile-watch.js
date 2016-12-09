@@ -22,7 +22,7 @@ const
 	path = require('path'),
 	hostname = require('os').hostname(),
 	homeDir = process.env.HOME,
-	mkRamDiskCmd = `${homeDir}/Dropbox/Home/bin/mk-ramdisk.sh`
+	mkRamDiskCmd = `${homeDir}/Dropbox/Home/bin/mk-ramdisk.sh`,
 	awCacheExists = test('-d','dist/.awcache')
 
 if (hostname === 'linux-dev' && !awCacheExists) {

@@ -85,15 +85,36 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	
+	/**
+	 * Update a notification
+	 *
+	 * @param message
+	 */
 	updateNotification(message:INotification) {
 		return this.addNotification(message)
 	}
 	
+	/**
+	 * Remove a notification
+	 *
+	 * @param id
+	 */
 	@ActionReducer()
 	removeNotification(id:string) {
 		return (state:AppState) => state.set(
 			'messages',
 			state.messages.filter(msg => msg.id !== id)
+		)
+	}
+	
+	/**
+	 * Remove all notifications
+	 */
+	@ActionReducer()
+	clearNotifications() {
+		return (state:AppState) => state.set(
+			'messages',
+			state.messages.clear()
 		)
 	}
 	

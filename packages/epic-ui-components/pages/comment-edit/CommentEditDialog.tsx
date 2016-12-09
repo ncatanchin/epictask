@@ -6,9 +6,7 @@ import { getValue, cloneObjectShallow } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Comment, Issue } from "epic-models"
 import { getUIActions } from "epic-typedux"
-import { CommandType, ContainerNames } from "epic-command-manager"
-import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
-import { MarkdownEditor, FileDrop, RepoLabel } from "epic-ui-components/common"
+import { MarkdownEditor, FileDrop, RepoLabel, Form } from "epic-ui-components/common"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import { CommentEditState } from "epic-ui-components/pages/comment-edit/CommentEditState"
@@ -67,18 +65,18 @@ function baseStyles(topStyles, theme, palette) {
  * IIssueCommentDialogProps
  */
 export interface ICommentEditDialogProps extends IThemedAttributes {
-	saving?:boolean
-	savingError?:Error
+	saving?: boolean
+	savingError?: Error
 	
-	viewState?:CommentEditState
-	viewController?:CommentEditController
+	viewState?: CommentEditState
+	viewController?: CommentEditController
 }
 
 /**
  * IIssueCommentDialogState
  */
 export interface ICommentEditDialogState {
-	mdEditor?:MarkdownEditor
+	mdEditor?: MarkdownEditor
 }
 
 /**
@@ -87,78 +85,98 @@ export interface ICommentEditDialogState {
  * @class IssueCommentDialog
  * @constructor
  **/
-@ViewRoot(CommentEditController,CommentEditState)
+@ViewRoot(CommentEditController, CommentEditState)
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@CommandComponent()
 @ThemedStyles(baseStyles, 'dialog')
 export class CommentEditDialog extends React.Component<ICommentEditDialogProps,ICommentEditDialogState> {
 	
+	refs:any
 	
-	commandItems = (builder:CommandContainerBuilder) =>
-		builder
-			.command(CommandType.Container,
-				'Save Changes',
-				(cmd, event) => this.onSave(event),
-				"CommandOrControl+Enter", {
-					hidden: true
-				})
-			.make()
+	get form():Form {
+		return getValue(() => this.refs.form)
+	}
 	
-	
-	commandComponentId = ContainerNames.CommentEditDialog
-	
-	
-	private get viewState():CommentEditState {
+	/**
+	 * State
+	 *
+	 * @returns {CommentEditState}
+	 */
+	private get viewState(): CommentEditState {
 		return getValue(() => this.props.viewState)
 	}
 	
-	private get viewController() {
+	/**
+	 * Get view controller
+	 *
+	 * @returns {CommentEditController}
+	 */
+	private get viewController(): CommentEditController {
 		return getValue(() => this.props.viewController)
 	}
 	
-	private get editingComment() {
-		return getValue(() => this.viewState.editingComment,new Comment())
+	/**
+	 * Get the comment being edited
+	 *
+	 * @returns {Comment}
+	 */
+	private get editingComment():Comment {
+		return getValue(() => this.viewState.editingComment, new Comment())
 	}
 	
-	private get issue() {
+	/**
+	 * Get the parent issue
+	 *
+	 * @returns {Issue}
+	 */
+	private get issue():Issue {
 		return getValue(() => this.viewState.issue,new Issue())
 	}
 	
 	
 	/**
+	 * on form valid
+	 *
+	 * @param values
+	 */
+	private onFormValid = (values:IFormFieldValue[]) => {
+		log.debug(`onValid`,values)
+	}
+	
+	/**
+	 * On form invalid
+	 *
+	 * @param values
+	 */
+	private onFormInvalid = (values:IFormFieldValue[]) => {
+		log.debug(`onInvalid`,values)
+	}
+	
+	/**
+	 * On submit when the form is valid
+	 *
+	 * @param form
+	 * @param model
+	 * @param values
+	 */
+	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => this.onSave()
+	
+	
+	/**
 	 * Hide and focus on issue panel
 	 */
-	hide = () => {
-		getUIActions().closeWindow(getWindowId())
+	private hide = () => {
+		getUIActions().closeWindow()
 	}
-	//
-	// /**
-	//  * onBlur
-	//  */
-	// onBlur = () => {
-	// 	log.debug('blur hide')
-	// 	this.hide()
-	// }
 	
 	/**
 	 * onSave
 	 *
 	 * @param event
 	 */
-	onSave = (event = null) => {
+	private onSave = (event = null) => this.viewController.save()
 		
-		this.viewController.save()
-		
-		// const
-		// 	issue = _.get(this.props.editCommentRequest, 'issue') as Issue,
-		// 	{ comment } = this.state
-		//
-		// log.debug('Adding comment to issue', comment, issue)
-		//
-		// !this.props.saving &&
-		// getIssueActions().saveComment(issue, comment)
-	}
+	
 	
 	/**
 	 * On body change, just update the state
@@ -178,7 +196,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @param mdEditor
 	 */
-	private setMarkdownEditor = (mdEditor:MarkdownEditor) => {
+	private setMarkdownEditor = (mdEditor: MarkdownEditor) => {
 		this.setState({ mdEditor })
 	}
 	
@@ -187,13 +205,12 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @param data
 	 */
-	onDrop = (data:DataTransfer) => {
+	onDrop = (data: DataTransfer) => {
 		const
 			mde = getValue(() => this.state.mdEditor)
 		
 		mde.onDrop(data)
 	}
-	
 	
 	
 	/**
@@ -220,7 +237,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	
 	render() {
 		const
-			{editingComment:comment,issue} = this,
+			{ editingComment:comment, issue } = this,
 			ready = this.viewState.ready
 		
 		if (!ready || !comment || !issue)
@@ -259,12 +276,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 			rootStyle = makeStyle(Fill, FlexScale, FlexColumn)
 		
 		
-		return <CommandRoot
-			id={ContainerNames.CommentEditDialog}
-			component={this}
-			style={rootStyle}>
-			
-			<DialogRoot
+		return <DialogRoot
 				titleMode='horizontal'
 				titleNode={titleNode}
 				subTitleNode={subTitleNode}
@@ -272,13 +284,21 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 				saving={saving}
 			>
 				
-				
-				<FileDrop onFilesDropped={this.onDrop}
-				          acceptedTypes={[/image/]}
-				          dropEffect='all'
-				          style={rootStyle}>
+				<Form
+					id="issue-edit-form"
+					ref="form"
+					submitOnCmdCtrlEnter={true}
+					onInvalid={this.onFormInvalid}
+					onValid={this.onFormValid}
+					onValidSubmit={this.onFormValidSubmit}
+					styles={[FlexColumn,FlexScale]}>
 					
 					
+					<FileDrop onFilesDropped={this.onDrop}
+					          acceptedTypes={[/image/]}
+					          dropEffect='all'
+					          style={rootStyle}>
+						
 						
 						<MarkdownEditor
 							ref={this.setMarkdownEditor}
@@ -286,18 +306,16 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 							
 							onChange={this.onMarkdownChange}
 							defaultValue={getValue(() => comment.body)}
-							onKeyDown={(event) => getCommandManager().handleKeyDown(event as any,true)}
+							onKeyDown={getValue(() => this.form.onKeyDown)}
 							style={styles.form.editor}
 						/>
 					
 					
-					
+					</FileDrop>
 				
-				</FileDrop>
-			
-			
+				</Form>
 			</DialogRoot>
-		</CommandRoot>
+		
 	}
 	
 }

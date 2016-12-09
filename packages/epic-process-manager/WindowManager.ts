@@ -505,6 +505,7 @@ export class WindowManager {
 		
 		//log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
 		
+		
 		// ITERATE AND DESTROY/REMOVE
 		while (windowsToClose.length) {
 			const
@@ -537,6 +538,11 @@ export class WindowManager {
 			if (index > -1) {
 				this.windows.splice(index, 1)
 			}
+		}
+		
+		// IF ALL WINDOWS ARE CLOSED THEN NOTIFY
+		if (this.windows.filter(it => it.type !== WindowType.Background)) {
+			EventHub.emit(EventHub.AllWindowsClosed)
 		}
 		
 	}

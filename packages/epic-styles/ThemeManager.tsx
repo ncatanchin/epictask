@@ -5,7 +5,7 @@ import {
 	makeThemeFontSize, getThemeName, getThemeCreator, setThemeCreator, getPaletteName,
 	getPaletteCreator, setPaletteCreator
 } from "./ThemeState"
-import { EventType, SettingsPath } from "epic-global/Constants"
+import { AppEventType, SettingsPath } from "epic-global/Constants"
 
 
 
@@ -50,7 +50,7 @@ function subscribe() {
 		}
 		
 		if (changed) {
-			EventHub.emit(EventType.ThemeChanged,getTheme(),getPalette())
+			EventHub.emit(AppEventType.ThemeChanged,getTheme(),getPalette())
 		}
 	})
 	
@@ -58,7 +58,7 @@ function subscribe() {
 }
 
 // LISTEN FOR STORE READY
-EventHub.once(EventType.StoreReady,subscribe)
+EventHub.once(AppEventType.StoreReady,subscribe)
 
 // SEE IF IT IS READY NOW
 if (isStoreReady()) {

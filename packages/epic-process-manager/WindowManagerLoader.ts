@@ -8,7 +8,7 @@ import {
 
 import { getWindowManager } from "epic-process-manager"
 import { cloneObject } from "epic-global/ObjectUtil"
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 
 const
 	log = getLogger(__filename)
@@ -33,7 +33,7 @@ export async function start() {
 	const
 		dbReady = Promise.defer()
 	
-	EventHub.on(EventType.DatabaseReady,(event:EventType,errJson:any) => {
+	EventHub.on(AppEventType.DatabaseReady,(event:AppEventType, errJson:any) => {
 		if (errJson) {
 			const
 				err = new Error(errJson.message)

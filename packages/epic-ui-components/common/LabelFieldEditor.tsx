@@ -4,7 +4,7 @@
 // Imports
 import filterProps from "react-valid-props"
 import { Label } from "epic-models"
-import { makeComponentStyles } from "./Common.styles"
+
 import { PureRender } from "./PureRender"
 import { ChipsField } from "./ChipsField"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
@@ -24,7 +24,7 @@ const
 				warn
 			} = palette
 		
-		return [makeComponentStyles(theme,palette),{
+		return [{
 			root: [ FlexColumn, FlexAuto, {} ],
 			
 			

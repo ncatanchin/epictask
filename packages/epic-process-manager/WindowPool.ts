@@ -1,7 +1,7 @@
 import { Map, Record, List } from "immutable"
 import {BrowserWindow} from 'electron'
 import WindowFactory from "epic-process-manager/WindowFactory"
-import { getHot, setDataOnHotDispose, acceptHot } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, addHotDisposeHandler } from "epic-global"
 import { WindowConfigDefaults } from "epic-process-manager-client"
 import { isNumber } from "typeguard"
 import { Pool, IPoolOptions } from "epic-global/ObjectPool"
@@ -77,10 +77,20 @@ export namespace WindowPool {
 	const
 		pools = getHot(module,'pools',Map<string,WindowPool>().asMutable())
 	
-	// SUPPORT HMR
-	setDataOnHotDispose(module,() => ({
-		pools
-	}))
+	function destroyAll() {
+		pools.valueSeq().forEach(pool => pool.drain())
+	}
+	
+	process.on('beforeExit',destroyAll)
+	
+	
+	// HMR
+	setDataOnHotDispose(module,() => ({pools}))
+	
+	// HMR
+	addHotDisposeHandler(module,() => process.removeListener('beforeExit',destroyAll))
+	
+	
 	
 	/**
 	 * Create a pool id
@@ -123,6 +133,7 @@ export namespace WindowPool {
 	}
 	
 	
+	
 	// TYPE OF POOL CONFIG ENTRIES
 	type TWindowConfigEntry = [ProcessType,Array<WindowType>]
 	
@@ -155,6 +166,7 @@ export namespace WindowPool {
 		})
 	}
 }
+
 
 
 export default WindowPool

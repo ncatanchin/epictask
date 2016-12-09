@@ -76,7 +76,11 @@ export class Issue extends DefaultModel implements IIssue {
 	 * @param o
 	 */
 	static fromJS = (o:any) => !o ? null : o instanceof Issue ? o : new Issue(o)
-
+	
+	// FOCUSED IS A CUSTOM ATTRIBUTE
+	@Attribute()
+	focused: boolean
+	
 	@Attribute({primaryKey:true})
 	id: number;
 
@@ -132,6 +136,9 @@ export class Issue extends DefaultModel implements IIssue {
 	events_url: string;
 	
 	html_url: string;
+	
+	
+	
 	
 	@Attribute()
 	number: number;

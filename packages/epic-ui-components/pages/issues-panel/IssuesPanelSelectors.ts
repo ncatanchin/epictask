@@ -258,13 +258,14 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 					
 					
 					let
+						sortField = sortFields[ 0 ],
 						sortedIssueIndexes = filteredIndexes
 							.sortBy((issueIndex) => {
 								const
 									issue = issues.get(issueIndex)
 								
 								let
-									val = _.get(issue, sortFields[ 0 ])
+									val = _.get(issue, sortField)
 								
 								if (_.isString(val))
 									val = _.toLower(val)
@@ -272,7 +273,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 								return val
 							}) as List<number>
 					
-					if (isReverse)
+					if (sortField === 'focused' || isReverse)
 						sortedIssueIndexes = sortedIssueIndexes.reverse() as List<number>
 					
 					// CHECK INLINE EDIT INDEX
@@ -482,14 +483,6 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			
 			
 			/**
-			 * Selector for focused issue ids
-			 */
-			focusedIssueIdsSelector:(state) => List<number> = createSelector(
-				issuesPanelStateSelector,
-				(state:IssuesPanelState) => state.focusedIssueIds
-			),
-			
-			/**
 			 * All current issue activity
 			 */
 			activitySelector:(state) => TIssueActivity = createSelector(
@@ -546,7 +539,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		issueFilterAssigneeSelector,
 		groupBySelector,
 		orderedIssueIndexesSelector,
-		focusedIssueIdsSelector,
+		
 		
 		
 		issueGroupsSelector,

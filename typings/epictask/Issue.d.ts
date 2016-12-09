@@ -59,6 +59,7 @@ declare interface IIssue {
 	
 	state: TIssueState;
 	
+	focused: boolean
 	
 	repository_url: string;
 	

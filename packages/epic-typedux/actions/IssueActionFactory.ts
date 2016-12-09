@@ -177,7 +177,8 @@ export class IssueActionFactory  {
 						assigneeId,
 						assigneeLogin,
 						created_at,
-						updated_at
+						updated_at,
+						focused
 					] = value
 				
 				const
@@ -200,6 +201,7 @@ export class IssueActionFactory  {
 					assignee: assigneeId && matchUser(repo,assigneeId),
 					created_at,
 					updated_at,
+					focused,
 					$$doc: {
 						_id
 					}
@@ -713,22 +715,57 @@ export class IssueActionFactory  {
 		
 	}
 	
+	
+	/**
+	 * Save issues and update it in GitHub
+	 *
+	 * @param issues
+	 * @param skipGithub - when updating local attributes, skip github
+	 */
+	async saveIssues(issues: List<Issue>,skipGithub = false) {
+		const
+			client = Container.get(GitHubClient),
+			stores = getStores()
+		
+		if (skipGithub) {
+			return List(await stores.issue.bulkSave(...issues.toArray()))
+		}
+		
+		const
+			promises:Promise<Issue>[] = issues.map(issue => {
+				let
+					
+					repo = issue.repo,
+					persist = () => this.saveAndUpdateIssueModel(client, repo, issue)
+				
+				
+				
+				return repo ?
+					persist() :
+					stores.repo.get(issue.repoId).then(it => {
+						repo = it
+						return persist()
+					})
+						
+			}).toArray(),
+			
+			results = await Promise.all(promises)
+		
+		return List<Issue>(results)
+	}
+	
 	/**
 	 * Save an issue and update it in GitHub
 	 *
 	 * @param issue
+	 * @param skipGithub - when updating local attributes, skip github
 	 */
-	async saveIssue(issue: Issue) {
-		
+	
+	async saveIssue(issue: Issue,skipGithub = false) {
 		const
-			client = Container.get(GitHubClient),
-			stores = getStores(),
-			repo = issue.repo || await stores.repo.get(issue.repoId),
-			updatedIssue = await this.saveAndUpdateIssueModel(client, repo, issue)
+			results = await this.saveIssues(List<Issue>([issue]),skipGithub)
 		
-		return updatedIssue
-		
-		
+		return results.get(0)
 	}
 	
 	

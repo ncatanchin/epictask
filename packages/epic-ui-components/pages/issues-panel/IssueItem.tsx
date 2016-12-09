@@ -59,12 +59,6 @@ export interface IIssueItemProps extends IThemedAttributes {
 			(item:IIssueListItem<any>) => item && isIssueListItem(item) && item.item
 		),
 		
-		isFocusedSelector = createSelector(
-			issueSelector,
-			getIssuesPanelSelector(selectors => selectors.focusedIssueIdsSelector),
-			(issue:Issue, focusedIssueIds:List<number>) =>
-			issue && focusedIssueIds && focusedIssueIds.includes(issue.id)
-		),
 		isSelectedSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
@@ -84,7 +78,6 @@ export interface IIssueItemProps extends IThemedAttributes {
 		item: itemSelector,
 		issue: issueSelector,
 		
-		isFocused: isFocusedSelector,
 		isSelected: isSelectedSelector,
 		isSelectedMulti: isSelectedMultiSelector
 	})
@@ -121,7 +114,6 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			'theme',
 			'palette',
 			'issue',
-			'isFocused',
 			'isSelected',
 			'isSelectedMulti'
 		)
@@ -153,7 +145,6 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				onSelected,
 				rowState,
 				issue,
-				isFocused,
 				isSelected,
 				isSelectedMulti
 			} = props
@@ -163,7 +154,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			return React.DOM.noscript()
 		
 		const
-			{ labels } = issue,
+			isFocused = issue.focused,
 			
 			issueStyles = makeStyle(
 				styles,
@@ -220,17 +211,13 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 						</span>
 							
 							
-							<RepoLabel repo={issue.repo} style={
-							makeStyle(
+							<RepoLabel repo={issue.repo} style={makeStyle(
 								styles.repo,
 								isFocused && styles.repo.focused,
 								isSelected && styles.repo.selected
 							)}/>
 						
 						</div>
-						
-						
-						
 					</div>
 					
 					
@@ -288,7 +275,7 @@ function IssueItemMarkings({styles,issue,specialStyle}) {
 	return <div style={markingsStyle}>
 		<TimeAgo
 			style={makeStyle(styles.time,styles.time[specialStyle])}
-			timestamp={issue.updated_at as any}/>
+			timestamp={issue.created_at as any}/>
 		
 		
 		{

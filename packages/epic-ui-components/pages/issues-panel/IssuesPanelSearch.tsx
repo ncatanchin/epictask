@@ -13,7 +13,7 @@ import {
 	enabledMilestonesSelector, enabledAvailableReposSelector,
 	enabledAssigneesSelector, enabledLabelsSelector
 } from "epic-typedux/selectors"
-import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort } from "epic-models"
+import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort, IssueCriteriaKeywords } from "epic-models"
 import { isString, isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "epic-ui-components/pages/issues-panel/IssuesPanelSearchItem"
 
@@ -42,10 +42,12 @@ function baseStyles(topStyles, theme, palette) {
 				makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ])
 			],
 			
-			borderBottom: `0.1rem solid ${primary.hue3}`,
+			//borderBottom: `0.1rem solid ${primary.hue3}`,
+			
+			
 			
 			input: [ {
-				backgroundColor: Transparent,
+				border: `${convertRem(0.1)}px solid ${Transparent}`,
 				color: text.secondary,
 				fontWeight: 500,
 				fontSize: themeFontSize(1.7),
@@ -87,7 +89,7 @@ export interface IIssuesPanelSearchState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles,'issuesPanelSearch')
 @PureRender
 export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,IIssuesPanelSearchState> {
 	
@@ -111,17 +113,6 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				criteria = cloneObjectShallow(this.props.criteria)
 			
 			this.viewController.setCriteria(fn(criteria))
-			
-			// ATTEMPT TO KEEP FOCUS ON LAST ELEMENT REMOVAL
-			// if (getValue(() => this.state.focused && this.refs.searchField)) {
-			// 	event.preventDefault()
-			// 	event.stopPropagation()
-			//
-			// 	setTimeout(() =>
-			// 		guard(() => $(ReactDOM.findDOMNode(this.refs.searchField)).focus())
-			// 	,200)
-			// }
-			
 		}
 	}
 	
@@ -297,7 +288,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				style={[chipStyle]}
 				onRemove={
 						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
+							cloneObjectShallow(criteria,{
 								sort: assign(sort,{
 									groupBy: 'none'
 								})
@@ -322,8 +313,8 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 					style={[chipStyle]}
 					onRemove={
 						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								sort: assign(sort,{
+							cloneObjectShallow(criteria,{
+								sort: cloneObjectShallow(sort,{
 									fields: sort.fields.filter(field => it !== field)
 								})
 							}))
@@ -404,7 +395,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				break
 			
 			case "sortBy":
-				sort.fields = safePush(sort.fields, item.value)
+				sort.fields = [item.value]
 				break
 			
 			case "groupBy":
@@ -523,35 +514,19 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	
 }
 
-export const IssuesPanelSearchKeywords = {
-	groupKeywords: [ 'milestone', 'assignee', 'repo', 'label' ],
-	sortKeywords: [ 'updated', 'created', 'repo', 'title', 'assignee' ],
-	directionKeywords: [ 'asc', 'desc' ],
-	closedKeywords: [ 'closed' ],
-}
 
-const Keywords = IssuesPanelSearchKeywords
+
+const Keywords = IssueCriteriaKeywords
 
 /**
  * Search provider
  */
 export class IssuesPanelSearchProvider implements ISearchProvider {
 	
-	static SortByKeywordToFields = {
-		'updated': 'updated_at',
-		'created': 'created_at',
-		'assignee': 'assignee.login',
-		'title': 'title',
-		'repo': 'repoId'
-	}
+	static SortByKeywordToFields = IssueCriteriaKeywords.sortKeywordsToFields
 	
 	
-	static GroupByKeywordToFields = {
-		'milestone': 'milestone',
-		'assignee': 'assignee',
-		'label': 'labels',
-		'repo': 'repos'
-	}
+	static GroupByKeywordToFields = IssueCriteriaKeywords.groupKeywordsToFields
 	
 	constructor(private issuesSearchField: IssuesPanelSearch) {
 		
@@ -607,7 +582,7 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		results.push(new SearchItem(`sortBy-${sortBy}`, this, {
 			id: `sortBy-${sortBy}`,
 			type: 'sortBy',
-			field: sortBy,
+			value: sortBy,
 			label: `sortBy: ${keyword}`
 		}))
 	}

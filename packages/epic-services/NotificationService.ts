@@ -44,7 +44,7 @@ export class NotificationService extends BaseService {
 			.keys(this.pendingTimers)
 			.forEach(timerId => clearTimeout(this[timerId]))
 		
-		getUIActions().clearNotifications()
+		getAppActions().clearNotifications()
 	}
 	
 	

@@ -22,7 +22,7 @@ import { IPCServer } from "epic-net/IPCServer"
 import { isPromise, isFunction } from "typeguard"
 import { benchmark } from "epic-global/Benchmark"
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
-import { EventType } from "epic-global/Constants"
+import { AppEventType } from "epic-global/Constants"
 
 // Logger
 const
@@ -127,12 +127,12 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 				
 				
 			}
-			EventHub.broadcast(EventType.DatabaseReady)
+			EventHub.broadcast(AppEventType.DatabaseReady)
 			startDeferred.resolve()
 			
 		} catch (err) {
 			log.error(`Failed to start db server`,err)
-			EventHub.broadcast(EventType.DatabaseReady,_.pick(err,'message','code','stack'))
+			EventHub.broadcast(AppEventType.DatabaseReady,_.pick(err,'message','code','stack'))
 			startDeferred.reject(err)
 			throw err
 		}

@@ -397,40 +397,6 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 
 	/**
-	 * Set the repo panel open/closed
-	 *
-	 * @param open
-	 * @returns {(state:UIState)=>Map<string, boolean>}
-	 */
-	@ActionReducer()
-	setRepoPanelOpen(open:boolean) {
-		return (state:UIState) => state.set('repoPanelOpen',open)
-	}
-
-	@ActionReducer()
-	clearNotifications() {
-		return (state:UIState) => state.set('messages',List())
-	}
-	
-	
-
-
-	
-
-
-	
-
-
-
-
-
-	@ActionReducer()
-	setTheme(theme:any) {
-		return (state:UIState) => state.set('theme',theme)
-	}
-	
-	
-	/**
 	 * Close a window
 	 *
 	 * @param windowId
@@ -439,28 +405,17 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		getWindowManagerClient().close(windowId)
 	}
 	
-	
-	
-	
-	// @ActionThunk()
-	// setDialogOpen(name:string,open:boolean) {
-	// 	return (state:UIState) => {
-	//
-	// 		if (ProcessConfig.isType(ProcessType.UI)) {
-	// 			const
-	// 				windowManager = getWindowManager()
-	//
-	// 			if (open)
-	// 				windowManager.openDialog(name)
-	// 			else
-	// 				windowManager.close(name)
-	// 		}
-	//
-	// 		this.internalSetDialogOpen(name,open)
-	// 	}
-	// }
-	
+	/**
+	 * Open a window with a URI
+	 *
+	 * @param uri
+	 */
 	openWindow(uri:string)
+	/**
+	 * Open a window with a config
+	 *
+	 * @param config
+	 */
 	openWindow(config:IWindowConfig)
 	openWindow(configOrURI:IWindowConfig|string){
 		let
@@ -476,24 +431,6 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		getWindowManagerClient().open(config)
 	}
 	
-		
-	// /**
-	//  * Close all dialogs
-	//  *
-	//  * @returns {(dispatch:any, getState:any)=>undefined}
-	//  */
-	// @ActionThunk()
-	// closeAllWindows() {
-	// 	return (dispatch,getState) => {
-	//
-	// 		if (ProcessConfig.isType(ProcessType.UI)) {
-	// 			getWindowManager().closeAll()
-	// 		}
-	//
-	// 		this.internalCloseAllWindows()
-	// 	}
-	// }
-
 	/**
 	 * Focus on app root
 	 */

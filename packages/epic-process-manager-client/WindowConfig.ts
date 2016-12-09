@@ -197,11 +197,13 @@ export const WindowConfigDefaults = {
  * Background configs
  */
 export const
-	DatabaseServerWindowConfig:IWindowConfig = Object.assign({
-		id: ProcessNames.DatabaseServer,
-		name: ProcessNames.DatabaseServer,
-		processType: ProcessType.DatabaseServer
-	},Object.assign({},WindowConfigBackgroundDefaults)),
+	DatabaseServerWindowConfig:IWindowConfig = Object.assign({},
+		WindowConfigBackgroundDefaults, {
+			id: ProcessNames.DatabaseServer,
+			name: ProcessNames.DatabaseServer,
+			processType: ProcessType.DatabaseServer,
+			showDevTools: false
+		}),
 	
 	JobServerWindowConfig:IWindowConfig = Object.assign({},
 		WindowConfigBackgroundDefaults,{

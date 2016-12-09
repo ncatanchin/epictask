@@ -143,9 +143,6 @@ class WindowFactory {
 			newWindow.loadURL(url)
 			//newWindow.show()
 			
-			process.on('beforeExit', () => {
-				guard(() => newWindow.close())
-			})
 			
 			await deferred.promise.timeout(WindowCreateTimeout)
 		} catch (err) {

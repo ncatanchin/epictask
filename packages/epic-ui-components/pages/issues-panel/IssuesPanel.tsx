@@ -35,11 +35,6 @@ import { Pages } from "epic-entry-ui/routes/Routes"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import IssuesPanelState from "epic-ui-components/pages/issues-panel/IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
-import {
-	MilestoneSearchProvider, LabelSearchProvider,
-	AssigneeSearchProvider, IssueSearchProvider
-} from "epic-ui-components/search/DefaultSearchProviders"
-import { colorAlpha } from "epic-styles/styles"
 import { IssuesPanelSearch } from "epic-ui-components/pages/issues-panel/IssuesPanelSearch"
 
 
@@ -213,7 +208,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						selectedIssue = this.viewController.getSelectedIssue()
 					
 					getUIActions().openWindow(Pages.CommentEditDialog.makeURI(selectedIssue))},
-				"Ctrl+m")
+				"m")
 			
 			//MARK ISSUE FOCUSED
 			.command(

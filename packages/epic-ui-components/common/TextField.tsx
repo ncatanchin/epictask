@@ -25,7 +25,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ text, alternateText, primary, warn, accent, background } = palette,
+		{ text, alternateText, primary, warn, background } = palette,
 		{ fontFamily } = theme
 	
 	let
@@ -35,12 +35,13 @@ function baseStyles(topStyles, theme, palette) {
 			[ alternateText.secondary, text.primary ]
 	
 	return [
-		FlexRowCenter,
-		PositionRelative,
-		makePaddingRem(0.7, 1),
-		makeMarginRem(0),
-		makeTransition([ 'opacity', 'background-color', 'box-shadow', 'border-bottom' ]),
-		theme.inputBorder, {
+		Styles.FlexRowCenter,
+		Styles.PositionRelative,
+		Styles.makePaddingRem(0.7, 1),
+		Styles.makeMarginRem(0),
+		theme.inputBorder,
+		Styles.makeTransition([ 'opacity', 'background-color', 'box-shadow', 'border-bottom' ]),
+		{
 			minHeight: rem(4.2),
 			
 			// ERROR MODES FOR MARGINS
@@ -55,32 +56,27 @@ function baseStyles(topStyles, theme, palette) {
 			
 			input: [
 				theme.input,
-				makePaddingRem(0.6, 1),
-				makeMarginRem(0),
+				Styles.makePaddingRem(0.6, 1),
+				Styles.makeMarginRem(0),
 				FlexAuto, {
-					//minHeight: rem(3),
 					outline: 0,
 					
 					backgroundColor: bg,
 					color: fg,
-					//borderBottom: `0.1rem solid ${colorAlpha(fg,0.1)}`,
 					boxShadow: 'none',
 					fontFamily,
 					
 					
 					focused: {
 						backgroundColor: bg,
-						color: fg,
-						
-						//borderBottom: `0.1rem solid ${colorAlpha(fg,0.3)}`,
-						// borderBottom: 0
+						color: fg
 					}
 				} ],
 			
 			
 			//	ERROR MESSAGE
 			errorMessage: [
-				PositionAbsolute,
+				Styles.PositionAbsolute,
 				{
 					fontWeight: 500,
 					fontSize: rem(1.1),
@@ -96,6 +92,8 @@ function baseStyles(topStyles, theme, palette) {
 						height: rem(1.5),
 						width: rem(1.5),
 						transform: `translate(0,-50%)`,
+						//minHeight: rem(3),
+						
 					}],
 					
 					// MODE - MESSAGE ON RIGHT BELOW
@@ -144,7 +142,7 @@ export interface ITextFieldState extends IFormFieldComponentState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles)
+@ThemedStyles(baseStyles, 'textField')
 @PureRender
 export class TextField extends FormFieldComponent<ITextFieldProps,ITextFieldState> {
 	

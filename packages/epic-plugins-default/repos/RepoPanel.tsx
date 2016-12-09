@@ -124,55 +124,28 @@ function getHeaderControls() {
 @ThemedStyles(baseStyles,'repoPanel')
 export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
-	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
 			.make()
 		
-	
 	readonly commandComponentId:string = ContainerNames.RepoPanel
 	
 	/**
-	 * Repo Action
-	 *
-	 * @type {ToolPanelLocation}
+	 * On blur - clear selected repos
 	 */
-	
-	private repoActions = getRepoActions()
-	
-	
-	/**
-	 * UI Actions
-	 *
-	 * @type {UIActionFactory}
-	 */
-	private uiActions = getUIActions()
-	
-	
-	
-	setRepoPanelOpen = (event, open:boolean) => {
-		this.uiActions.setRepoPanelOpen(open)
-	}
-
-
-
-	onBlur = () => {
-		this.repoActions.clearSelectedRepos()
-	}
+	onBlur = () => getRepoActions().clearSelectedRepos()
 	
 		
 	render() {
 		const
-			{theme,styles,style,visible} = this.props,
+			{styles,style} = this.props,
 			
 			panelStyle = [
 				styles.panel,
 				styles.root,
 				style
-			],
+			]
 
-			headerStyle = [styles.header],
-			headerButtonStyle = [styles.header.button]
 
 		//handlers={this.keyHandlers}
 		return <CommandRoot

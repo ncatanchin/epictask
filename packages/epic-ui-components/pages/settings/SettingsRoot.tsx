@@ -123,32 +123,32 @@ const baseStyles = (topStyles, theme, palette) => {
 			} ]
 		} ],
 		
-		form: [ FlexColumn, OverflowAuto, FlexScale,Fill, {
-			content: [ FillWidth, makePaddingRem(3, 5), {
+		form: [ Styles.FlexColumn, Styles.OverflowAuto, Styles.FlexScale,Styles.Fill, {
+			content: [ Styles.FillWidth, makePaddingRem(3, 5), {
 				maxWidth: 800
 			} ],
 			
-			title: [ FlexAuto, FlexRow, makeFlexAlign('center', 'flex-start'), makePaddingRem(2, 1, 3, 1), {
+			title: [ Styles.FlexAuto, Styles.FlexRow, Styles.makeFlexAlign('center', 'flex-start'), Styles.makePaddingRem(2, 1, 3, 1), {
 				color: accent.hue1,
-				fontSize: rem(2),
+				fontSize: Styles.rem(2),
 				
-				icon: [ makePaddingRem(0, 1, 0, 0), {
-					fontSize: rem(3),
+				icon: [ Styles.makePaddingRem(0, 1, 0, 0), {
+					fontSize: Styles.rem(3),
 				} ]
 			} ],
 			
-			row: [ FlexAuto, FlexRowCenter, makePaddingRem(1, 2), {
+			row: [ FlexAuto, FlexRowCenter, Styles.makePaddingRem(1, 2), {
 				//backgroundColor: primary.hue2,
 				
 			} ],
 			
-			inputCell: [ makeFlex(0, 0, '35%'), {
+			inputCell: [ Styles.makeFlex(0, 0, '35%'), {
 				backgroundColor: primary.hue3
 			} ],
-			checkboxCell: [ makeFlex(0, 0, '35%'), {} ],
+			checkboxCell: [ Styles.makeFlex(0, 0, '35%'), {} ],
 			
-			labelCell: [ FlexScale, Ellipsis, makePaddingRem(1, 1, 1, 3), {
-				
+			labelCell: [ Styles.FlexScale, Styles.Ellipsis, Styles.makePaddingRem(1, 1, 1, 3), {
+				color: text.primary,
 				fontSize: rem(1.5),
 				fontWeight: 400
 			} ]

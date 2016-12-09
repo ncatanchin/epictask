@@ -14,7 +14,6 @@ import {
 	PureRender,
 	RepoLabel,
 	Avatar,
-	makeComponentStyles,
 	IssueStateIcon,
 	IssueLabelsAndMilestones
 } from "epic-ui-components/common"
@@ -66,7 +65,7 @@ const
 				'padding-right',
 				'padding-left' ])
 		
-		return [ flexTransition, makeComponentStyles(theme, palette), {
+		return [ flexTransition, {
 			
 			root: [
 				flexTransition,

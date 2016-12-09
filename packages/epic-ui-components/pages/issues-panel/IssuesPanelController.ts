@@ -15,7 +15,7 @@ import {
 } from "epic-ui-components/pages/issues-panel/IssuesPanelSelectors"
 import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
 import { RepoKey, UIKey } from "epic-global/Constants"
-import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
+import { addDatabaseChangeListener, removeDatabaseChangeListener, getStores } from "epic-database-client"
 import { enabledAvailableReposSelector } from "epic-typedux/selectors"
 import { EventEmitter } from "events"
 
@@ -74,6 +74,32 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	getState() {
 		return this.state
+	}
+	
+	/**
+	 * All Current issues
+	 *
+	 * @returns {T}
+	 */
+	get issues():List<Issue> {
+		return getValue(() => this.state.issues,List<Issue>())
+	}
+	
+	/**
+	 * All focused issues in state
+	 *
+	 */
+	get focusedIssues():List<Issue> {
+		return getValue(() => this.issues.filter(it => it.focused)) as List<Issue>
+	}
+	
+	/**
+	 * Focused issue ids
+	 *
+	 * @returns {T}
+	 */
+	get focusedIssueIds():List<number> {
+		return getValue(() => this.focusedIssues.map(it => it.id)) as List<number>
 	}
 	
 	makeStateUpdate<T extends TIssuesPanelStateUpdater>(updater:T):T {
@@ -420,7 +446,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	private updateCriteria = this.makeStateUpdate((criteria:IIssueCriteria = null) =>
 		(state:IssuesPanelState) => (criteria) ?
 			state
-				.set('criteria', cloneObjectShallow(criteria))
+				.set('criteria', cloneObject(criteria))
 				.set('searchText',''):
 			state
 	)
@@ -472,18 +498,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	))
 	
 	
-	/**
-	 * Set the current focused issue ids
-	 *
-	 * @param focusedIssueIds
-	 */
-	
-	setFocusedIssueIds(focusedIssueIds:List<number>) {
-		this.updateState({
-			focusedIssueIds
-		})
-	}
-	
 	
 	/**
 	 * The the selected issue ids
@@ -506,25 +520,40 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	toggleSelectedAsFocused() {
 		let
-			{ selectedIssueIds, focusedIssueIds = List<number>() } = this.state
+			{ selectedIssueIds,issues } = this.state
 		
 		if (!selectedIssueIds || !selectedIssueIds.size)
 			return
 		
 		// COPY
-		focusedIssueIds = cloneObjectShallow(focusedIssueIds)
+		let
+			{focusedIssues,focusedIssueIds} = this
+		
+		let
+			updatedIssues
 		
 		if (selectedIssueIds.every(id => focusedIssueIds.includes(id))) {
-			selectedIssueIds.forEach(id => {
-				focusedIssueIds = focusedIssueIds.splice(focusedIssueIds.indexOf(id), 1) as List<number>
-			})
+			updatedIssues = selectedIssueIds
+				.map(id => focusedIssues.find(it => it.id === id))
+				.filter(it => !isNil(it))
+				.map(it => cloneObjectShallow(it,{
+					focused: false
+				})) as List<Issue>
 		} else {
-			focusedIssueIds = focusedIssueIds.concat(selectedIssueIds) as List<number>
+			updatedIssues = selectedIssueIds
+				.map(id => issues.find(it => it.id === id))
+				.filter(it => !isNil(it) && !it.focused)
+				.map(it => cloneObjectShallow(it,{
+					focused: true
+				})) as List<Issue>
 		}
 		
-		this.setFocusedIssueIds(focusedIssueIds)
+		getIssueActions().saveIssues(updatedIssues,true)
+		this.updateIssuesInState(updatedIssues)
 		
 	}
+	
+	
 	
 	/**
 	 * Set focus on an issue
@@ -538,14 +567,17 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
 		let
-			{ focusedIssueIds = List<number>() } = this.state
+			issue = this.issues.find(it => it.id === issueId)
 		
-		if (focusedIssueIds.includes(issueId)) {
-			log.debug(`Issue id ${issueId} is already focused`)
+		if (!issue || issue.focused) {
+			log.debug(`Issue id ${issueId} is already focused`,issue)
 			return
 		}
 		
-		this.setFocusedIssueIds(focusedIssueIds.push(issueId))
+		issue.focused = true
+		getIssueActions().saveIssue(issue,true)
+		
+		this.updateIssuesInState(List([issue]))
 		
 	}
 	
@@ -561,21 +593,18 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
 		let
-			{ focusedIssueIds = List<number>() } = this.state
+			issue = this.issues.find(it => it.id === issueId)
 		
-		if (!focusedIssueIds.includes(issueId)) {
-			log.debug(`Issue id ${issueId} does not have focus`)
+		if (!issue || !issue.focused) {
+			log.debug(`Issue id ${issueId} is already NOT focused`,issue)
 			return
 		}
 		
+		issue.focused = false
+		getIssueActions().saveIssue(issue,true)
 		
-		this.setFocusedIssueIds(
-			focusedIssueIds
-				.splice(
-					focusedIssueIds.indexOf(issueId),
-					1
-				) as List<number>
-		)
+		this.updateIssuesInState(List([issue]))
+		
 	}
 	
 	
@@ -826,6 +855,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 				'milestone',
 				'labels',
 				'assignee',
+				'focused',
 				'collaborators'
 			), { state: 'open' })),
 			editInlineConfig: {

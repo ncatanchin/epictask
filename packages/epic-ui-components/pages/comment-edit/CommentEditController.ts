@@ -1,8 +1,8 @@
 import { EventEmitter } from "events"
 import { getValue } from "typeguard"
 import {Comment} from 'epic-models'
-import { cloneObjectShallow, notifyError } from "epic-global"
-import { getIssueActions } from "epic-typedux/provider"
+import { cloneObjectShallow, notifyError, notifySuccess } from "epic-global"
+import { getIssueActions, getUIActions } from "epic-typedux/provider"
 import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
 import CommentEditState from "epic-ui-components/pages/comment-edit/CommentEditState"
 import { getStores } from "epic-database-client"
@@ -106,9 +106,11 @@ class CommentEditController extends EventEmitter implements IViewController<Comm
 			await getIssueActions().saveComment(issue,comment)
 			
 			// this.setSaving(false)
-			getCurrentWindow().close()
+			notifySuccess(`Saved Comment for: ${issue.repo.full_name} #${issue.number}`)
+			getUIActions().closeWindow()
 		} catch (err) {
 			log.error(`Failed to save comment`,issue,comment,err)
+			
 			notifyError(`Failed to save comment`)
 			
 			this.updateState({

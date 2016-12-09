@@ -1,5 +1,4 @@
 
-export * from "./Common.styles"
 export * from './SearchFieldItem.styles'
 export * from './Chip.styles'
 
