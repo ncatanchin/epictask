@@ -41,7 +41,7 @@ const
  */
 function resolveDirs(...dirs) {
 	return dirs.map(dir => {
-		return (['C','/','.'].includes(dir.charAt(0))) ?
+		return (['c','C','/','.'].includes(dir.charAt(0))) ?
 			path.resolve(dir) :
 			path.join(baseDir, dir)
 	})
@@ -129,7 +129,7 @@ function makePackageAliases() {
 		
 		
 	return Object.values(getPackages()).reduce((aliasMap = {},{name}) => {
-		aliasMap[name] = path.resolve(process.cwd(),'packages',name)
+		//aliasMap[name] = path.join('.','packages',name)// path.resolve(process.cwd(),'packages',name)
 		return aliasMap
 	},{})
 }
