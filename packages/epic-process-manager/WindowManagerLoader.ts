@@ -64,6 +64,6 @@ export async function start() {
 	
 	await windowManager.open(windows)
 	
-	// PUSH WINDOW STATES (DEBOUNCED)
+	// PUSH WINDOW STATES (DE-BOUNCED)
 	windowManager.pushWindowStates()
 }

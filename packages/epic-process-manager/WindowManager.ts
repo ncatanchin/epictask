@@ -682,11 +682,15 @@ export class WindowManager {
 			// 	savedWindowState.manage(newWindow)
 			// }
 			
-			log.debug(`Loading dialog ${id} with URL:`, url)
+			let
+				cleanedUrl = url.replace(/\\/g,'/')
+				//cleanedUrl = url.replace(/\\/g,'\\\\')
+			
+			log.debug(`Loading dialog ${id} with URL:`, cleanedUrl)
 			//newWindow.loadURL(url)
 			newWindow.webContents.executeJavaScript((`
-				console.log("Setting Route URL in config: ${url}");
-				window.location.href = "${url}";
+				console.log("Setting Route URL in config: ${cleanedUrl}");
+				window.location.href = "${cleanedUrl}";
 			`))
 			
 			// OPEN DEV TOOLS IF CONFIGURED

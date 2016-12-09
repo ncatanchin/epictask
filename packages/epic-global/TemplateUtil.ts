@@ -62,7 +62,7 @@ function getEntryFile(file:string) {
  * @returns {string}
  */
 export function getSplashEntryHtmlPath() {
-	return getEntryFile("./splash-entry.html")
+	return getEntryFile("splash-entry.html")
 }
 
 /**
@@ -71,7 +71,7 @@ export function getSplashEntryHtmlPath() {
  * @returns {string}
  */
 export function getAppEntryHtmlPath() {
-	return getEntryFile("./app-entry.html")
+	return getEntryFile("app-entry.html")
 }
 
 

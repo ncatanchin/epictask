@@ -320,7 +320,7 @@ export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 	for (let searchPath of searchPaths) {
 		try {
 			const
-				baseResourcePath = `${searchPath}/${filename}`
+				baseResourcePath = path.join(searchPath,filename)
 			
 			log.info(`Looking for ${filename} using base path ${baseResourcePath} @ ${searchPath}`)
 			try {
