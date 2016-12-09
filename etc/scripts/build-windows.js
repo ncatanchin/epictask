@@ -2,11 +2,9 @@ const
 	fs = require('fs'),
 	{execSync} = require('child_process')
 
-execSync('npm init -f')
-
-execSync('npm i babel-polyfill shelljs')
-
-require('shelljs/global')
+//execSync('npm init -f')
+//execSync('npm i babel-polyfill shelljs')
+//require('shelljs/global')
 
 /**
  * Exec cmd
@@ -28,5 +26,5 @@ function execNoError(cmd,onError = null) {
 }
 
 
-execNoError('npm.cmd i')
-execNoError('npm.cmd run package')
+execNoError('npm i')
+execNoError('npm run package')
