@@ -19,17 +19,13 @@ Object.assign(process.env,{
 require('shelljs/global')
 
 const
-	path = require('path'),
-	hostname = require('os').hostname(),
-	homeDir = process.env.HOME,
-	mkRamDiskCmd = `${homeDir}/Dropbox/Home/bin/mk-ramdisk.sh`,
-	awCacheExists = test('-d','dist/.awcache')
+	path = require('path')
+	
+	
+	
 
-if (hostname === 'linux-dev' && !awCacheExists) {
-	echo(`Creating ramdisk`)
-	exec(`sudo rm -R ${process.cwd()}/dist`)
-	exec(`sudo ${mkRamDiskCmd} epic-ramdisk 6g ${process.cwd()}/dist`)
-}
+prepareDirs()
+
 mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
 exec(`node --max-old-space-size=4000 ${webpackCmd} --config etc/webpack/webpack.config.js --watch --display-error-details`)
 

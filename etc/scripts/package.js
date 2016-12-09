@@ -26,6 +26,8 @@ process.env.NODE_ENV = 'production'
 if (!skipBuild) {
 	require('./clean')
 	
+	echo(`Making directories`)
+	prepareDirs()
 	echo("Starting Compilation")
 	
 	
