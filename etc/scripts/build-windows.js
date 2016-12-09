@@ -3,6 +3,7 @@ const
 	{execSync} = require('child_process')
 
 execSync('npm init -f')
+
 execSync('npm i babel-polyfill shelljs')
 
 require('shelljs/global')

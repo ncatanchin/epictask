@@ -55,6 +55,19 @@ Object.assign(global,{
 	WindowsEpicPath: `c:/users/jglanz/development/densebrain/epictask-workspace/epictask`,
 	
 	/**
+	 * Setup Dev ENV
+	 */
+	devEnv() {
+		Object.assign(process.env,{
+			HOT:1,
+			DEBUG:1,
+			NODE_ENV:'development',
+			COLOR: 0,
+			COLORS: 0
+		})
+	},
+	
+	/**
 	 * Ensures that required directories exist
 	 */
 	prepareDirs() {
@@ -75,6 +88,8 @@ Object.assign(global,{
 				mkdir(`-p`,`dist/.awcache`)
 			}
 		}
+		
+		mkdir('-p',path.resolve(process.cwd(),'dist/.awcache'))
 	},
 	
 	/**
@@ -86,6 +101,17 @@ Object.assign(global,{
 			'node_modules',
 			'.bin',
 			`webpack${process.platform === 'win32' ? '.cmd' : ''}`
+		),
+	
+	/**
+	 * Gulp command
+	 */
+	gulpCmd: path
+		.resolve(
+			process.cwd(),
+			'node_modules',
+			'.bin',
+			`gulp${process.platform === 'win32' ? '.cmd' : ''}`
 		)
 	
 })
