@@ -35,7 +35,7 @@ export * from './Page'
 export * from "./ToastMessage"
 export * from "./ToastMessages"
 
-export * from "./TabTemplate"
+export * from "./tabs"
 
 
 

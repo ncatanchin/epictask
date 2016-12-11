@@ -1,6 +1,6 @@
 // Imports
 import { connect } from "react-redux"
-import { PureRender } from "./PureRender"
+import { PureRender } from "../PureRender"
 import { createStructuredSelector } from "reselect"
 import {
 	ThemedStyles,
@@ -24,7 +24,7 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ FlexScale, PositionRelative, OverflowAuto, makeTransition(['height','max-height','min-height']), {
+	return [ Styles.FlexScale, Styles.FlexColumn,Styles.PositionRelative, Styles.OverflowAuto, Styles.makeTransition(['height','max-height','min-height']), {
 			hidden: [makeHeightConstraint(0)]
 	} ]
 }
@@ -65,7 +65,7 @@ export class TabTemplate extends React.Component<ITabTemplateProps,ITabTemplateS
 	render() {
 		const { styles,children,selected } = this.props
 		
-		return <div style={[styles,!selected && styles.hidden]}>
+		return <div style={[styles]}>
 			{children}
 		</div>
 	}

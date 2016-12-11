@@ -20,11 +20,11 @@ import {
 	makeWidthConstraint
 } from "epic-styles"
 import { Label, AvailableRepo } from "epic-models"
-import { TextField, CircularProgress } from "material-ui"
 import { List } from "immutable"
 import { labelsSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
 import { FlexColumnCenter } from "epic-styles/styles/CommonRules"
+import { WorkIndicator, TextField } from "epic-ui-components/common"
 
 
 // Constants
@@ -291,10 +291,11 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 			
 			labelEditFields = <div key="edit-fields" style={styles.form.fields}>
 				<div style={styles.form.name}>
-					<TextField hintText="new label..."
+					<TextField placeholder="new label..."
+					           styles={{input:Styles.FlexScale}}
+					           inputStyle={Styles.FlexScale}
 					           ref={(textFieldRef) => this.setState({textFieldRef})}
-					           defaultValue={getValue(() => this.label.name,"")}
-					           fullWidth={true}
+					           value={getValue(() => this.label.name,"")}
 					           onChange={this.onNameChange}/>
 				</div>
 				<div style={[styles.form.color]}>
@@ -328,9 +329,7 @@ export class RepoLabelEditor extends React.Component<IRepoLabelEditorProps,IRepo
 				
 				<div style={styles.list}>
 					{ this.saving ? <div style={styles.saving}>
-						<CircularProgress
-							color={theme.progressIndicatorColor}
-							size={50}/>
+						<WorkIndicator />
 					</div> :
 					labels
 						.filter(it => it.repoId === repo.id)

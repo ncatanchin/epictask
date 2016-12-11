@@ -21,11 +21,12 @@ import {
 	makeWidthConstraint
 } from "epic-styles"
 import { Milestone, AvailableRepo } from "epic-models"
-import { TextField, DatePicker } from "material-ui"
+import { DatePicker } from "material-ui"
 import { List } from "immutable"
 import { milestonesSelector, getRepoActions } from "epic-typedux"
 import { getValue } from "epic-global"
 import { cloneObjectShallow } from "epic-global/ObjectUtil"
+import { TextField } from "epic-ui-components/common"
 
 
 // Constants
@@ -41,40 +42,36 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [{
-		root: [FlexScale,FlexColumn,FillWidth,FillHeight,{
+	return [ {
+		root: [ FlexScale, FlexColumn, FillWidth, FillHeight, {} ],
+		
+		list: [ FlexColumn, FlexScale, OverflowAuto ],
+		
+		edit: [ {} ],
+		
+		form: [ FlexRowCenter, FlexAuto, makeTransition([ 'height', 'max-height', 'min-height' ]), {
+			hidden: [ makeHeightConstraint(0) ],
 			
-		}],
-		
-		list: [FlexColumn,FlexScale,OverflowAuto],
-		
-		edit: [{} ],
-		
-		form: [FlexRowCenter,FlexAuto, makeTransition(['height','max-height','min-height']),{
-			hidden: [makeHeightConstraint(0)],
-			
-			fields: [FlexRowCenter,FillWidth,makePaddingRem(0.5,1),makeHeightConstraint(rem(6)),{
+			fields: [ FlexRowCenter, FillWidth, makePaddingRem(0.5, 1), makeHeightConstraint(rem(6)), {
 				background: primary.hue2
 				
-			}],
-			name: [ FlexScale,makePaddingRem(0,2,0,0),{} ],
-			dueOn: [{}],
-			button: [ FlexAuto, FlexRowCenter, makePaddingRem(0.5, 1, 1),makeMarginRem(0.5,0,0.5,1),makeHeightConstraint(rem(3)),{
+			} ],
+			name: [ FlexScale, makePaddingRem(0, 2, 0, 0), {} ],
+			dueOn: [ {} ],
+			button: [ FlexAuto, FlexRowCenter, makePaddingRem(0.5, 1, 1), makeMarginRem(0.5, 0, 0.5, 1), makeHeightConstraint(rem(3)), {
 				fontSize: rem(1.4),
 				
-				icon: [makePaddingRem(0,1,0,0),{
+				icon: [ makePaddingRem(0, 1, 0, 0), {
 					fontSize: rem(1.8)
-				}]
+				} ]
 			} ],
 			
 			actions: [
 				FlexRowCenter,
-				makeTransition(['width','max-width','min-width']),
+				makeTransition([ 'width', 'max-width', 'min-width' ]),
 				makeWidthConstraint(rem(20)),
 				{
-					hide: [makeWidthConstraint(0),{
-						
-					}]
+					hide: [ makeWidthConstraint(0), {} ]
 				}
 			]
 		} ],
@@ -86,11 +83,11 @@ function baseStyles(topStyles, theme, palette) {
 					fontSize: rem(1.2)
 				} ],
 				
-				dueOn: [FlexAuto,makePaddingRem(0,1),{
+				dueOn: [ FlexAuto, makePaddingRem(0, 1), {
 					color: text.secondary,
 					fontSize: rem(1.2),
 					fontWeight: 400
-				}]
+				} ]
 			} ],
 			spacer: [ FlexScale ],
 			actions: [ FlexAuto, makePaddingRem(0, 0, 0, 1) ]
@@ -103,17 +100,17 @@ function baseStyles(topStyles, theme, palette) {
  * IRepoMilestoneEditorProps
  */
 export interface IRepoMilestoneEditorProps extends IThemedAttributes {
-	repo:AvailableRepo
+	repo: AvailableRepo
 }
 
 /**
  * IRepoMilestoneEditorState
  */
 export interface IRepoMilestoneEditorState {
-	milestone?:Milestone
-	errors?:any
-	textFieldRef?:any
-	saving?:boolean
+	milestone?: Milestone
+	errors?: any
+	textFieldRef?: any
+	saving?: boolean
 }
 
 /**
@@ -130,8 +127,8 @@ export interface IRepoMilestoneEditorState {
 @PureRender
 export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorProps,IRepoMilestoneEditorState> {
 	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		this.state = {
 			milestone: new Milestone(),
 			errors: {},
@@ -149,7 +146,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	
 	private get milestoneDueOn() {
 		const
-			{milestone} = this,
+			{ milestone } = this,
 			dueOn = getValue(() => milestone.due_on)
 		
 		return dueOn && new Date(moment(dueOn).utc().valueOf())
@@ -168,7 +165,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	}
 	
 	private clearMilestone = () => {
-		this.setState({milestone: new Milestone()},() => {
+		this.setState({ milestone: new Milestone() }, () => {
 			// const
 			// 	{textFieldElement} = this,
 			// 	input = textFieldElement && $(textFieldElement).find('input')
@@ -183,13 +180,13 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	 *
 	 * @param fn
 	 */
-	private doUpdate(fn:() => Promise<any>) {
+	private doUpdate(fn: () => Promise<any>) {
 		if (this.saving)
 			return
 		
 		this.setState({
 			saving: true
-		},async () => {
+		}, async() => {
 			try {
 				
 				// EXECUTE THE FUNCTION - ON FAIL CLEAR
@@ -199,11 +196,11 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 					milestone: new Milestone()
 				})
 			} catch (err) {
-				log.error('updated failed',err)
+				log.error('updated failed', err)
 				
-			}finally {
+			} finally {
 				this.setState({
-					saving:false
+					saving: false
 				})
 			}
 			
@@ -211,13 +208,12 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	}
 	
 	
-	
 	/**
 	 * Set the milestone being edited
 	 *
 	 * @param milestone
 	 */
-	private editMilestone = milestone => this.setState({milestone})
+	private editMilestone = milestone => this.setState({ milestone })
 	
 	
 	private patchMilestone = (patch) => this.setState({
@@ -231,9 +227,13 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 		title: event.target.value
 	})
 	
-	private onDateChange = (event,date:Date) => {
+	private onDateChange = (event) => {
+		const
+			dateStr = event.target.value
+		log.info(`Date changed to ${dateStr}`)
+		
 		this.patchMilestone({
-			due_on: moment(date).format()
+			due_on: moment(dateStr,'YYYY-MM-DD').format()
 		})
 	}
 	
@@ -245,7 +245,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	
 	private onDelete = (milestone) => {
 		this.doUpdate(
-			() => getRepoActions().deleteMilestone(this.props.repo.repo,milestone) as any
+			() => getRepoActions().deleteMilestone(this.props.repo.repo, milestone) as any
 		)
 	}
 	
@@ -255,13 +255,13 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	 */
 	private onSave = () => {
 		this.doUpdate(
-			async () => {
+			async() => {
 				try {
 					const
 						repo = getValue(() => this.props.repo.repo),
 						{ milestone } = this
 					
-					log.debug(`Saving milestone`,milestone)
+					log.debug(`Saving milestone`, milestone)
 					if (this.validate()) {
 						await getRepoActions().saveMilestone(repo, milestone)
 						getNotificationCenter().notify(`Saved label: ${milestone.title}`)
@@ -272,7 +272,7 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 					
 					
 				} catch (err) {
-					log.error(`Failed to save label`,err)
+					log.error(`Failed to save label`, err)
 					getNotificationCenter().notifyError(`Unable to persist label: ${err.message}`)
 				}
 			}
@@ -283,41 +283,40 @@ export class RepoMilestoneEditor extends React.Component<IRepoMilestoneEditorPro
 	
 	private isMilestoneValid = () => {
 		const
-			{milestone} = this
+			{ milestone } = this
 		
-		return getValue(() => milestone.title.length,0)
+		return getValue(() => milestone.title.length, 0)
 	}
 	
 	private areActionsVisible = () => {
 		const
-			{milestone} = this
+			{ milestone } = this
 		
 		return milestone && (milestone.id || this.isMilestoneValid())
 	}
 	
 	
-	
 	render() {
 		const
-			{ styles,repo } = this.props,
-			{milestone,milestoneDueOn} = this,
+			{ styles, repo } = this.props,
+			{ milestone, milestoneDueOn } = this,
+			milestoneDate = moment(milestoneDueOn || new Date()).format('YYYY-MM-DD'),
 			
 			milestoneEditFields = <div key="edit-fields" style={styles.form.fields}>
 				<div style={styles.form.name}>
-					<TextField hintText="new milestone..."
+					<TextField placeholder="new milestone..."
+					           styles={{input:Styles.FlexScale}}
+					           inputStyle={Styles.FlexScale}
 					           ref={(textFieldRef) => this.setState({textFieldRef})}
 					           value={getValue(() => this.milestone.title,"")}
-					           fullWidth={true}
 					           onChange={this.onTitleChange}/>
+				
 				</div>
 				<div style={[styles.form.dueOn]}>
-					<DatePicker hintText="due on"
-					            mode="landscape"
-					            autoOk={true}
-					            formatDate={this.formatDate}
-					            onChange={this.onDateChange}
-					            value={milestoneDueOn}
-					            container="inline"
+					<input type='date'
+					       placeholder="due on"
+					       onChange={this.onDateChange}
+					       value={milestoneDate}
 					/>
 				</div>
 				<div style={[styles.form.actions, !this.areActionsVisible() && styles.form.actions.hide]}>

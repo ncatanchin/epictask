@@ -47,9 +47,9 @@ import { getValue } from "epic-global"
 import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
 import { Settings } from "epic-global/settings/Settings"
 
-import { Tab, Tabs } from "material-ui"
+
 import { makeHeightConstraint } from "epic-styles/styles"
-import { PureRender, Icon, Button,SelectField,TabTemplate } from "epic-ui-components/common"
+import { FlexColumnCenter,PureRender, Icon, Button,SelectField,Tabs } from "epic-ui-components/common"
 import { KeyMapEditor } from "./KeyMapEditor"
 import { SettingsSection, SettingsField } from "./SettingsElements"
 
@@ -92,12 +92,10 @@ const baseStyles = (topStyles, theme, palette) => {
 				makeHeightConstraint(rem(12)), {
 					
 					active: [ {
-						color: accent.hue1
 					} ],
 					
 					icon: [ makePaddingRem(1.5, 1), {
 						fontSize: rem(4),
-						
 						
 					} ]
 				}
@@ -124,7 +122,7 @@ const baseStyles = (topStyles, theme, palette) => {
 		} ],
 		
 		form: [ Styles.FlexColumn, Styles.OverflowAuto, Styles.FlexScale,Styles.Fill, {
-			content: [ Styles.FillWidth, makePaddingRem(3, 5), {
+			content: [ Styles.FillWidth, makePaddingRem(3, 5), Styles.OverflowAuto, {
 				maxWidth: 800
 			} ],
 			
@@ -179,7 +177,7 @@ export interface ISettingsWindowState {
 	settings: settingsSelector
 }))
 @CommandComponent()
-@ThemedStyles(baseStyles, 'dialog', 'SettingsWindow', 'form')
+@ThemedStyles(baseStyles, 'SettingsWindow')
 @PureRender
 export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettingsWindowState> {
 	
@@ -268,15 +266,9 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	})
 	
 	
-	render() {
+	renderGeneralSettings() {
 		const
 			{ styles, settings } = this.props,
-			{ activeTab } = this.state,
-			
-			titleNode = <div style={makeStyle(styles.titleBar.label)}>
-				Settings
-			</div>,
-			
 			themeItems = getThemeNames().map(themeName => ({
 				key: themeName,
 				value: themeName,
@@ -289,7 +281,79 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 				value: name,
 				content: <span>{name}</span>
 			})),
-			paletteName = getPaletteName(),
+			paletteName = getPaletteName()
+			
+			
+		return <div style={styles.form}>
+			<div style={styles.form.content}>
+				
+				
+				{/* PALETTES & THEMES */}
+				<SettingsSection styles={styles}
+				                 iconName="color_lens"
+				                 iconSet="material-icons"
+				                 title="Theme and Palette">
+					
+					<SettingsField styles={styles} label="Theme">
+						<div style={styles.form.inputCell}>
+							<SelectField
+								items={themeItems}
+								onItemSelected={this.changeTheme}
+								value={themeItems.find(it => it.value === themeName)}
+							/>
+						</div>
+					</SettingsField>
+					
+					<SettingsField styles={styles} label="Palette">
+						<div style={styles.form.inputCell}>
+							<SelectField
+								items={paletteItems}
+								onItemSelected={this.changePalette}
+								value={paletteItems.find(it => it.value === paletteName)}
+							/>
+						</div>
+					</SettingsField>
+				
+				</SettingsSection>
+				
+				
+				{/* NATIVE NOTIFICATIONS */}
+				<SettingsSection styles={styles} iconName="globe" iconSet="fa" title="Notifications">
+					<SettingsField styles={styles} label="Desktop notifications (suggested) or in-app only.">
+						<Checkbox style={styles.form.checkboxCell}
+						          checked={getValue(() => settings.nativeNotificationsEnabled)}
+						          onCheck={(event,isChecked) => {
+							          	log.info(`Setting notifications enabled`,isChecked)
+							          	updateSettings({
+							          		nativeNotificationsEnabled: isChecked
+							          	})
+							          }}/>
+					</SettingsField>
+				</SettingsSection>
+				
+				
+				{/* RESET APP */}
+				<SettingsSection styles={styles} iconName="clear_all" iconSet="material-icons" title="Reset">
+					<SettingsField styles={styles}
+					               label="Remove all internal files and settings.">
+						<Button style={styles.form.inputCell} onClick={() => getAppActions().clean()}>RESET</Button>
+					</SettingsField>
+				</SettingsSection>
+			
+			</div>
+		</div>
+		
+	}
+	
+	render() {
+		const
+			{ styles, settings } = this.props,
+			{ activeTab } = this.state,
+			
+			titleNode = <div style={makeStyle(styles.titleBar.label)}>
+				Settings
+			</div>,
+			
 			
 			iconStyle = styles.tabs.items.icon,
 			
@@ -309,95 +373,28 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			>
 				
 				<Tabs
-					style={makeStyle(FlexColumn,FlexScale)}
-					tabItemContainerStyle={styles.tabs.items}
-					contentContainerStyle={makeStyle(FlexColumn,FlexScale)}
-					tabTemplate={TabTemplate}
-				>
-					
-					<Tab
-						iconStyle={getIconStyle(General)}
-						icon={<Icon  >settings</Icon> }
-						onActive={this.makeOnActive(General)}
-						style={FillHeight}
-						label={<span style={makeStyle(activeTab === General && styles.tabs.items.active)}>GENERAL</span>}
-					>
-						
-						
-						<div style={styles.form}>
-							<div style={styles.form.content}>
-								
-								
-								{/* PALETTES & THEMES */}
-								<SettingsSection styles={styles}
-								                 iconName="color_lens"
-								                 iconSet="material-icons"
-								                 title="Theme and Palette">
-									
-									<SettingsField styles={styles} label="Theme">
-										<div style={styles.form.inputCell}>
-											<SelectField
-												items={themeItems}
-												onItemSelected={this.changeTheme}
-												value={themeItems.find(it => it.value === themeName)}
-											/>
-										</div>
-									</SettingsField>
-									
-									<SettingsField styles={styles} label="Palette">
-										<div style={styles.form.inputCell}>
-											<SelectField
-												items={paletteItems}
-												onItemSelected={this.changePalette}
-												value={paletteItems.find(it => it.value === paletteName)}
-											/>
-										</div>
-									</SettingsField>
-								
-								</SettingsSection>
-								
-								
-								{/* NATIVE NOTIFICATIONS */}
-								<SettingsSection styles={styles} iconName="globe" iconSet="fa" title="Notifications">
-									<SettingsField styles={styles} label="Desktop notifications (suggested) or in-app only.">
-										<Checkbox style={styles.form.checkboxCell}
-										          checked={getValue(() => settings.nativeNotificationsEnabled)}
-										          onCheck={(event,isChecked) => {
-							          	log.info(`Setting notifications enabled`,isChecked)
-							          	updateSettings({
-							          		nativeNotificationsEnabled: isChecked
-							          	})
-							          }}/>
-									</SettingsField>
-								</SettingsSection>
-								
-								
-								{/* RESET APP */}
-								<SettingsSection styles={styles} iconName="clear_all" iconSet="material-icons" title="Reset">
-									<SettingsField styles={styles}
-									               label="Remove all internal files and settings.">
-										<Button style={styles.form.inputCell} onClick={() => getAppActions().clean()}>RESET</Button>
-									</SettingsField>
-								</SettingsSection>
+					tabs={[
+						{
+							title: <FlexColumnCenter>
+								<Icon style={styles.tabs.items.icon}>settings</Icon>
+								<div style={makeStyle(activeTab === General && styles.tabs.items.active)}>GENERAL</div>
+							</FlexColumnCenter>,
 							
-							</div>
-						</div>
+							content:this.renderGeneralSettings()
+						},
+						{
+							title: <FlexColumnCenter>
+								<Icon style={styles.tabs.items.icon}>keyboard</Icon>
+								<div style={makeStyle(activeTab === General && styles.tabs.items.active)}>SHORTCUTS</div>
+							</FlexColumnCenter>,
+							
+							content:<KeyMapEditor styles={styles}/>
+						}
+					]}
+					style={makeStyle(FlexColumn,FlexScale)}
+				/>
 					
 					
-					</Tab>
-					
-					
-					<Tab
-						iconStyle={getIconStyle(Keys)}
-						icon={<Icon >keyboard</Icon> }
-						onActive={this.makeOnActive(Keys)}
-						style={FillHeight}
-						label={<span style={makeStyle(activeTab === Keys && styles.tabs.items.active)}>SHORTCUTS</span>}
-					>
-						
-						<KeyMapEditor styles={styles}/>
-					</Tab>
-				</Tabs>
 			
 			
 			</DialogRoot>

@@ -26,18 +26,14 @@ import {
 	FlexAlignStart,
 	IThemedAttributes
 } from "epic-styles"
-import { appUserSelector, getUIActions, availableReposSelector, milestonesSelector } from "epic-typedux"
-import { DialogRoot } from "epic-ui-components/layout/dialog"
+import { appUserSelector, availableReposSelector, milestonesSelector } from "epic-typedux"
+import { DialogRoot, PureRender, FlexColumnCenter, Icon, RepoSelect, Tabs } from "epic-ui-components"
 import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
-import { PureRender,  RepoLabel, Icon, TabTemplate } from "epic-ui-components"
-
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
-import { Tab, Tabs } from "material-ui"
-import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
 import { RepoLabelEditor } from "./RepoLabelEditor"
-import { SelectField,RepoSelect } from "epic-ui-components/common"
+import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
 
 
 const
@@ -326,39 +322,28 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 			>
 				
 				<Tabs
-					style={makeStyle(FlexColumn,FlexScale)}
-					tabItemContainerStyle={styles.tabs.items}
-					contentContainerStyle={makeStyle(FlexColumn,FlexScale)}
-					tabTemplate={TabTemplate}
-				>
-					<Tab
-						iconStyle={getIconStyle(Tags)}
-						icon={<Icon iconSet="octicon" iconName="tag"/> }
-						onActive={this.makeOnActive(Tags)}
-						style={FillHeight}
-						label={<span style={makeStyle(activeTab === Tags && styles.tabs.items.active)}>TAGS</span>}
-					>
+					tabs={[
 						{
-							selectedRepo &&
-							activeTab === Tags &&
-							<RepoLabelEditor repo={selectedRepo}/>}
-					</Tab>
-					
-					
-					<Tab
-						iconStyle={getIconStyle(Milestones)}
-						icon={<Icon iconSet="octicon" iconName="milestone"/> }
-						onActive={this.makeOnActive(Milestones)}
-						style={FillHeight}
-						label={<span style={makeStyle(activeTab === Milestones && styles.tabs.items.active)}>MILESTONES</span>}
-					>
+							title: <FlexColumnCenter>
+								<Icon iconSet="octicon" iconName="tag"/>
+								<div>TAGS</div>
+							</FlexColumnCenter>,
+							
+							content: selectedRepo && <RepoLabelEditor repo={selectedRepo}/>
+						},
+						{
+							title: <FlexColumnCenter>
+								<Icon iconSet="octicon" iconName="milestone"/>
+								<div>MILESTONES</div>
+							</FlexColumnCenter>,
+							
+							content: selectedRepo && <RepoMilestoneEditor repo={selectedRepo}/>
+						},
 						
-						{
-							selectedRepo &&
-							activeTab === Milestones &&
-							<RepoMilestoneEditor repo={selectedRepo}/>}
-					</Tab>
-				</Tabs>
+					]}
+					style={makeStyle(FlexColumn,FlexScale)}
+				/>
+				
 			
 			
 			</DialogRoot>

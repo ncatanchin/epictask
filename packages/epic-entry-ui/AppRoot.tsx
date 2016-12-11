@@ -237,6 +237,14 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					}
 				)
 				
+				.command(
+					CommandType.App,
+					'Repository Labels, Milestones & Settings',
+					(cmd, event) => getUIActions().openWindow(getRoutes().RepoSettings.uri),
+					"CommandOrControl+Shift+Comma", {
+						id: CIDS.RepoSettings
+					})
+				
 				.menuItem(
 					'repo-settings-menu-item',
 					CommandMenuItemType.Command,

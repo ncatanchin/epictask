@@ -1,7 +1,7 @@
 import * as React from "react"
 import { SearchField } from "epic-ui-components/search"
 import { makeAbsolute, makeHeightConstraint, ThemedStyles, IThemedAttributes } from "epic-styles"
-import { TextField } from "material-ui/TextField"
+
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
@@ -119,10 +119,6 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 	get searchField():SearchField {
 		const panel = _.get(this,'state.searchField') as any
 		return panel && panel.getWrappedInstance ? panel.getWrappedInstance() : panel
-	}
-
-	get textField():TextField {
-		return _.get(this,'searchField.textField') as any
 	}
 
 

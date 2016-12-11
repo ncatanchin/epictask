@@ -17,7 +17,7 @@ const
  * IWorkIndicatorProps
  */
 export interface IWorkIndicatorProps extends IThemedAttributes {
-	open:boolean
+	open?:boolean
 }
 
 
@@ -31,6 +31,9 @@ export interface IWorkIndicatorProps extends IThemedAttributes {
 @Themed
 @PureRender
 export class WorkIndicator extends React.Component<IWorkIndicatorProps,void> {
+	static defaultProps = {
+		open: true
+	}
 	
 	render() {
 		const { open, style,theme } = this.props
