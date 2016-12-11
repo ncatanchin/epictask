@@ -1,5 +1,4 @@
 import {
-	ICommand,
 	CommandType,
 	TCommandExecutor,
 	TCommandDefaultAccelerator,

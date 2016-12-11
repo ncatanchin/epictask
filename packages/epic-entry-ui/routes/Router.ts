@@ -50,7 +50,7 @@ export interface IRouteComponentProps<ParamsType> {
  * Route shape
  */
 export interface IRoute<ParamsType> {
-	path:string
+	uri:string
 	provider:TComponentProvider<ParamsType>
 	onSelect?: (router:Router) => any
 	defaultRoute?:boolean
@@ -64,7 +64,7 @@ export interface IRoute<ParamsType> {
  * @returns {boolean}
  */
 function isRoute(o):o is IRoute<any> {
-	return getValue(() => o.hasOwnProperty('provider') && o.hasOwnProperty('path'),false)
+	return getValue(() => o.hasOwnProperty('provider') && o.hasOwnProperty('uri'),false)
 }
 
 
@@ -169,54 +169,54 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 	/**
 	 * Set the default route
 	 *
-	 * @param path
+	 * @param uri
 	 */
-	setDefaultRoute(path:string) {
+	setDefaultRoute(uri:string) {
 		this.routes
 			.valueSeq()
-			.filter(it => it.path !== path && it.defaultRoute)
+			.filter(it => it.uri !== uri && it.defaultRoute)
 			.forEach(route => route.defaultRoute = false)
 		
 		const
-			route = this.routes.get(path)
+			route = this.routes.get(uri)
 		
 		if (route) {
-			log.debug(`Setting default route to ${path} for router ${this.id}`)
+			log.debug(`Setting default route to ${uri} for router ${this.id}`)
 			route.defaultRoute = true
 		} else {
-			log.debug(`No route matching path ${path} for router ${this.id}`)
+			log.debug(`No route matching path ${uri} for router ${this.id}`)
 		}
 	}
 	
 	/**
 	 * Add a route
 	 *
-	 * @param path
+	 * @param uri
 	 * @param route
 	 */
-	addRoute<ParamsType>(path:string, route:IRoute<ParamsType>):this
+	addRoute<ParamsType>(uri:string, route:IRoute<ParamsType>):this
 	
 	/**
 	 * Add route
 	 *
-	 * @param path
+	 * @param uri
 	 * @param provider
 	 * @param defaultRoute
 	 */
-	addRoute<ParamsType>(path:string, provider:TComponentProvider<ParamsType>, defaultRoute?:boolean):this
-	addRoute<ParamsType>(path:string, providerOrRoute:TComponentProvider<ParamsType>|IRoute<ParamsType>, defaultRoute = false):this {
-		log.debug(`Adding route for path ${path}`)
+	addRoute<ParamsType>(uri:string, provider:TComponentProvider<ParamsType>, defaultRoute?:boolean):this
+	addRoute<ParamsType>(uri:string, providerOrRoute:TComponentProvider<ParamsType>|IRoute<ParamsType>, defaultRoute = false):this {
+		log.debug(`Adding route for uri ${uri}`)
 		let
 			route:IRoute<ParamsType> = isRoute(providerOrRoute) ? providerOrRoute : {
 				defaultRoute,
 				provider: providerOrRoute,
-				path
+					uri
 			}
 		
-		this.routes.set(path,route)
+		this.routes.set(uri,route)
 		
 		if (route.defaultRoute) {
-			this.setDefaultRoute(route.path)
+			this.setDefaultRoute(route.uri)
 		}
 		
 		return this
@@ -309,7 +309,7 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 	private matchRouteToURI(route:IRoute<any>,uri:string) {
 		const
 			uriParts = getValue(() => uri.split('/'),[]),
-			pathParts = getValue(() => route.path.split('/'),[])
+			pathParts = getValue(() => route.uri.split('/'),[])
 		
 		if (uriParts.length !== pathParts.length)
 			return false
@@ -368,7 +368,7 @@ export class Router extends EnumEventEmitter<RouterEvent> {
 		
 		// IF ROUTE THEN EXTRACT ADDITIONAL params from path
 		if (route) {
-			params = cloneObjectShallow(params,this.extractPathParams(route.path,uri))
+			params = cloneObjectShallow(params,this.extractPathParams(route.uri,uri))
 		}
 		
 		this.route = !route ? null : cloneObjectShallow(route,{

@@ -121,7 +121,7 @@ export class RouteRegistryScope implements IRegistryScope<IRegistryEntryRoute> {
 		return this
 			.all()
 			.reduce((routes,root) => {
-				routes[root.path] = root
+				routes[root.uri] = root
 				return routes
 			},{})
 	}
@@ -154,7 +154,7 @@ export class RouteRegistryScope implements IRegistryScope<IRegistryEntryRoute> {
 	/**
 	 * Emit routes changed
 	 */
-	private routesChanged = _.debounce(() => EventHub.emit(EventHub.RoutesChanged,this.all()),250)
+	private routesChanged = _.debounce(() => EventHub.emit(EventHub.RoutesChanged,this.all()),100)
 }
 
 
@@ -213,12 +213,20 @@ declare global {
 	namespace RegistryScope {
 		let Route:RouteRegistryScope
 	}
+	
+	/**
+	 * Global pages accessor
+	 */
+	function getRoutes():any
 }
 
 RegistryScope.Route = routeRegistryScope
 Registry.addScope(routeRegistryScope)
 
 assignGlobal({
+	getRoutes() {
+		return routeRegistryScope.asMap()
+	},
 	RouteRegistryScope: routeRegistryScope
 })
 

@@ -22,7 +22,7 @@ import { makePromisedComponent } from "epic-global"
  */
 
 const
-	RouteConfigs = {
+	RepoRouteConfigs = {
 		RepoSettings: {
 			name: 'RepoSettings',
 			uri: 'dialog/repo-settings',
@@ -44,7 +44,7 @@ const
 		}
 	}
 
-Object.values(RouteConfigs).forEach(RouteRegistryScope.Register)
+Object.values(RepoRouteConfigs).forEach(RouteRegistryScope.Register)
 
 
 export * from "./RepoAddTool"

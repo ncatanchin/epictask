@@ -3,19 +3,19 @@ import { PureRender } from "epic-ui-components/common/PureRender"
 import { RepoLabel } from "epic-ui-components/common/Labels"
 import { Icon } from "epic-ui-components/common/icon/Icon"
 
-import { shallowEquals } from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User, SearchItem } from "epic-models"
 import filterProps from "react-valid-props"
 
-import { ICommand } from "epic-command-manager"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
 import { MappedProps } from "epic-global/UIUtil"
 import { getValue } from "typeguard"
 import baseStyles from './SearchResultItem.styles'
 import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common/FlexLayout'
+
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 
 /**

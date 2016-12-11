@@ -36,7 +36,7 @@ export enum ViewStateEvent {
  * @class ViewState
  * @constructor
  **/
-export class ViewState extends ViewStateRecord implements IViewConfig{
+export class ViewState extends ViewStateRecord {
 	
 	
 	static fromJS(o:any = {}) {

@@ -30,8 +30,8 @@ const
 		["typedux/dist","typedux/dist"],
 		["material-ui/build","material-ui"],
 		//["../typelogger/dist","typelogger/dist"],
-		["../typeguard/dist","typeguard/dist"],
-		["../typetransform/dist","typetransform/dist"]
+		["typeguard/dist","typeguard/dist"],
+		["typetransform/dist","typetransform/dist"]
 	)
 
 client.capabilityCheck({optional:[], required:[]},

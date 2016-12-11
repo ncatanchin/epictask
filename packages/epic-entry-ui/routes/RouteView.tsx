@@ -10,7 +10,8 @@ import { TRouteComponent, TRouteChangeListener, IRoute } from "epic-entry-ui/rou
 import { getValue } from "epic-global"
 
 
-
+const
+	log = getLogger(__filename)
 
 /**
  * Route view props
@@ -65,6 +66,7 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		const
 			route = router.getRoute()
 		
+		log.info(`Setting route`,route)
 		this.state = {
 			router,
 			route,
@@ -81,6 +83,8 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 	private updateRoute = (route:IRouteInstance<any>) => {
 		if (route === this.state.route)
 			return
+		
+		log.info(`Setting route`,route)
 		
 		this.setState({
 			route,

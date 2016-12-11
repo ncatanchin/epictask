@@ -1,7 +1,7 @@
 // Setup story environment
 import {getDecorator} from "./StoryHelper"
 
-import {StatusBar} from "epic-ui-components/status-bar"
+import {StatusBar} from "epic-ui-core/status-bar"
 import {JobActionFactory} from "epic-typedux"
 import {JobType, IJob, JobStatus} from "epic-typedux/state/jobs/JobTypes"
 import {Button} from "epic-ui-components"

@@ -15,7 +15,6 @@ const
 let
 	unsubscribe:Function
 
-
 addHotDisposeHandler(module,() => {
 	if (unsubscribe) {
 		unsubscribe()
@@ -25,8 +24,12 @@ addHotDisposeHandler(module,() => {
 
 // SUBSCRIBE FOR SETTINGS UPDATES
 function subscribe() {
-	if (!isStoreReady() || unsubscribe)
+	if (!isStoreReady() || unsubscribe) {
+		log.info(`Can not subscribe`,isStoreReady())
 		return
+	}
+	
+	log.info(`Subscribing for theme updates`)
 	
 	unsubscribe = getStore().observe(SettingsPath,(newSettings:ISettings) => {
 		const
@@ -61,10 +64,12 @@ function subscribe() {
 EventHub.once(AppEventType.StoreReady,subscribe)
 
 // SEE IF IT IS READY NOW
-if (isStoreReady()) {
-	subscribe()
-}
 
+subscribe()
+
+export {
+	
+}
 
 /**
  * Export getTheme globally

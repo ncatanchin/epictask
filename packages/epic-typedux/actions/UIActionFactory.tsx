@@ -4,18 +4,15 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter,
-	uuid
+	nilFilter
 } from "epic-global"
 import { UIState } from "../state/UIState"
-import { Provided, shortId, cloneObjectShallow, getValue, cloneObject, If, focusElementById } from "epic-global"
+import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
  
 import {getWindowManagerClient} from "epic-process-manager-client"
 import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
-import DefaultViews from "epic-typedux/state/window/DefaultViews"
-
 
 
 // Import only as type - in case we are not on Renderer

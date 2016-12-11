@@ -71,6 +71,7 @@ function setupUI() {
 	
 	require.ensure([], function(require:any) {
 		
+		require('epic-ui-core')
 		require('epic-ui-issues')
 		require('epic-ui-repos')
 		require('epic-ui-jobs')

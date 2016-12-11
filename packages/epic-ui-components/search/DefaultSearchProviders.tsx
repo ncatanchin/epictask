@@ -10,7 +10,7 @@ import {
 } from "epic-typedux/selectors/RepoSelectors"
 
 import { GitHubClient, createClient } from "epic-github"
-import { getCommandManager, ICommand } from "epic-command-manager"
+import { getCommandManager } from "epic-command-manager"
 import { Benchmark, cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 

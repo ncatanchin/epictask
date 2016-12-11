@@ -18,6 +18,28 @@ const
 			accelerator: 'CommandOrControl+Alt+I',
 			click: () => BrowserWindow.getFocusedWindow().webContents.toggleDevTools()
 		},
+		{
+			// Toggle developer tools
+			label: 'Dev Tools Bottom',
+			accelerator: 'F9',
+			click: () => {
+				const
+					{webContents} = BrowserWindow.getFocusedWindow()
+				webContents.closeDevTools()
+				webContents.openDevTools({mode:'bottom'})
+			}
+		},
+		{
+			// Toggle developer tools
+			label: 'Dev Tools right',
+			accelerator: 'F10',
+			click: () => {
+				const
+					{webContents} = BrowserWindow.getFocusedWindow()
+				webContents.closeDevTools()
+				webContents.openDevTools({mode:'right'})
+			}
+		},
 		// Start Perf
 		{
 			label: 'Start Perf',

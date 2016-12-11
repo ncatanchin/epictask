@@ -16,6 +16,7 @@ import {
 	CommonKeys
 } from "epic-command-manager"
 import { sheetURISelector } from "epic-typedux/selectors"
+import { makeHeightConstraint, makeWidthConstraint } from "epic-styles/styles"
 
 // Constants
 const
@@ -23,14 +24,47 @@ const
 
 const baseStyles = (topStyles, theme, palette) => {
 	const
-		{ text, accent, primary, secondary } = palette
+		{ text, accent, primary, secondary } = palette,
+		transition = makeTransition([ '-webkit-filter','filter','transform', 'left', 'width' ,'top', 'height', 'max-height', 'min-height', 'opacity' ], 0.4)
 	
 	return [
 		PositionAbsolute,
 		OverflowHidden,
-		makeTransition([ 'transform', 'left', 'width' ]),
-		makeTransition([ 'top', 'height', 'max-height', 'min-height', 'opacity' ], 0.4),
+		
+		transition,
 		{
+			
+			root: [transition,makeHeightConstraint('100vh'),makeWidthConstraint('100vw'),{
+				position: 'fixed',
+				top: 0,
+				left: 0,
+				pointerEvents: 'none',
+				opacity: 0,
+				zIndex: 2,
+				visible: [{
+					pointerEvents: 'auto',
+					opacity: 1
+				}]
+			}],
+			
+			background: [transition,makeHeightConstraint('100vh'),makeWidthConstraint('100vw'),{
+				position: 'fixed',
+				top: 0,
+				left: 0,
+				pointerEvents: 'none',
+				opacity: 0,
+				zIndex: 2,
+				backgroundImage: "linear-gradient(to top right, rgba(43, 40, 50, 0.8) 0%, rgba(83, 86, 99, 0.8) 45%, rgba(69, 77, 91, 0.6) 60%)",
+				
+				visible: [{
+					
+					opacity: 1,
+					WebkitFilter: 'blur(10px)',
+					filter: 'blur(10px)',
+					pointerEvents: 'auto',
+				}]
+			}],
+			
 			height: 0,
 			maxHeight: 0,
 			pointerEvents: 'none',
@@ -135,17 +169,23 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	
 	render() {
 		const
-			Routes = RouteRegistryScope.routeMap(),
+			Routes = RouteRegistryScope.asRouteMap(),
 			{ styles, sheetURI } = this.props,
 			// TODO: Implement routeView for sheet root
 			sheetConfig = Routes[sheetURI] as any,
 			sheetPromise = sheetConfig && getValue(() => sheetConfig.provider())
 		
 		
-		return <CommandRoot
+		return <div style={[styles.root,sheetPromise && styles.root.visible]}>
+			<div
+				style={[styles.background,sheetPromise && styles.background.visible]}
+			  onClick={() => getUIActions().closeSheet()} />
+			<CommandRoot
 			component={this}
 			id="sheetRoot"
 			style={[styles, sheetPromise && styles.visible]}>
+			
+			
 			
 			{sheetPromise && <div
 				ref={this.setSheetContent}
@@ -162,6 +202,7 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 			</div>
 			}
 		</CommandRoot>
+		</div>
 	}
 	
 }

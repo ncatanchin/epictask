@@ -60,7 +60,7 @@ const
 
 
 //DEBUG LOG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 let
@@ -164,7 +164,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				.command(
 					CommandType.App,
 					'Settings',
-					(cmd, event) => getUIActions().openWindow(Pages.Settings.path),
+					(cmd, event) => getUIActions().openWindow(Pages.Settings.uri),
 					"CommandOrControl+Comma", {
 						id: CIDS.Settings
 					})
@@ -184,7 +184,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 					'Find action',
 					(item, event) => {
 						log.debug(`Triggering find action`)
-						getUIActions().openSheet(Pages.FindAction.path)
+						getUIActions().openSheet(getRoutes().FindAction.uri)
 					},
 					"CommandOrControl+Shift+p",{
 						id: CIDS.FindAction,
@@ -369,9 +369,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				{uri,params} = !uriProvider ? ({} as any) : uriProvider.getLocation(),
 				{repoCount,appStateType} = props,
 				isAuthenticated = appStateType !== AppStateType.AuthLogin,
-				isLogin = uri === Pages.Login.path,
-				isWelcome = uri === Pages.Welcome.path,
-				isIDERoot = [null,'',Pages.IDE.path].includes(uri)
+				isLogin = uri === Pages.Login.uri,
+				isWelcome = uri === Pages.Welcome.uri,
+				isIDERoot = [null,'',Pages.IDE.uri].includes(uri)
 			
 			log.debug(`Checking root: ${uri} for IDE and no repos`,uri,path,isAuthenticated, isLogin,isIDERoot,repoCount)
 			
@@ -379,16 +379,16 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				if (!isLogin) {
 					log.debug(`Scheduling redirect to login`)
 					uriProvider.setLocation({
-						uri: Pages.Login.path,
+						uri: Pages.Login.uri,
 						params
 					})
 				}
-			} else if (isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
+			} else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
 				//log.warn(`temp - remove route change`)
 				log.debug(`Scheduling redirect to welcome/ide`)
 
 				uriProvider.setLocation({
-					uri: repoCount < 1 ? Pages.Welcome.path : Pages.IDE.path,
+					uri: repoCount < 1 ? Pages.Welcome.uri : Pages.IDE.uri,
 					params
 				})
 				
@@ -420,7 +420,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		return <StyleRoot style={Fill}>
 				
 				<CommandRoot
-				component={this}
+					autoFocus
+					tabIndex={-1}
+					component={this}
 				id="appRoot"
 				style={Fill}>
 					

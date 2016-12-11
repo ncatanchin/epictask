@@ -5,7 +5,6 @@ import {
 	guard
 } from "epic-global"
 import {
-	ICommand,
 	TCommandContainer,
 	CommandType,
 	ICommandMenuManagerProvider,

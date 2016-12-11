@@ -40,7 +40,7 @@ import {
 } from '../provider'
 import { GitHubClient } from "epic-github"
 import { ContainerNames } from "epic-command-manager"
-import { Pages } from "epic-entry-ui/routes/Routes"
+
 
 import { getDatabaseClient } from "epic-database-client/DatabaseClient"
 import { getValue, toNumber } from "typeguard"
@@ -52,6 +52,11 @@ import { getValue, toNumber } from "typeguard"
 
 const
 	log = getLogger(__filename)
+
+
+function getPages() {
+	return RouteRegistryScope.asMap() as any
+}
 
 
 /**
@@ -565,7 +570,7 @@ export class IssueActionFactory  {
 			return
 		}
 		
-		getUIActions().openWindow(Pages.IssuePatchDialog.makeURI(mode,issues))
+		getUIActions().openWindow(getPages().IssuePatchDialog.makeURI(mode,issues))
 	}
 	
 	/**
@@ -917,7 +922,7 @@ export class IssueActionFactory  {
 	}
 	
 	newIssueDialog() {
-		getUIActions().openWindow(Pages.IssueEditDialog.makeURI())
+		getUIActions().openWindow(getPages().IssueEditDialog.makeURI())
 	}
 
 	
@@ -938,7 +943,7 @@ export class IssueActionFactory  {
 		const
 			editingIssue = cloneObject(issue)
 		
-		uiActions.openWindow(Pages.IssueEditDialog.makeURI(editingIssue))
+		uiActions.openWindow(getPages().IssueEditDialog.makeURI(editingIssue))
 	}
 	
 	/**
@@ -964,7 +969,7 @@ export class IssueActionFactory  {
 				body: ''
 			})
 		
-		uiActions.openWindow(Pages.CommentEditDialog.makeURI(issue,comment))
+		uiActions.openWindow(getPages().CommentEditDialog.makeURI(issue,comment))
 	}
 	
 	

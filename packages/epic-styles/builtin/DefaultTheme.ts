@@ -157,7 +157,7 @@ export function DefaultTheme(palette) {
 		
 		
 		
-	return _.merge(baseTheme, createStyles({
+	return _.merge({},baseTheme, createStyles({
 		ThemeName: 'DefaultTheme',
 		
 		/**
