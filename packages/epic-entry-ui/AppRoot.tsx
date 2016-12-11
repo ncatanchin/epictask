@@ -63,13 +63,14 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-// We dont import to allow for HMR to work
 let
 	Pages:any,
 	Routes:any
 
 function reloadRoutes() {
-	({Routes,Pages} = require("./routes/Routes"))
+	Routes = RouteRegistryScope.asRouteMap()
+	Pages = RouteRegistryScope.asMap()
+	//({Routes,Pages} = require("./routes/Routes"))
 }
 
 reloadRoutes()
@@ -150,14 +151,6 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		If(ProcessConfig.isUI(), () => {
 			builder
 				
-				.command(
-					CommandType.App,
-					'Import Repository',
-					(item, event) => getUIActions().openSheet(Pages.RepoImport.path),
-					"CommandOrControl+Shift+n",{
-						id: CIDS.GithubImport
-					}
-				)
 				
 				.command(
 					CommandType.App,
@@ -176,14 +169,6 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 						id: CIDS.Settings
 					})
 				
-				
-				.command(
-					CommandType.App,
-					'Repository Labels, Milestones & Settings',
-					(cmd, event) => getUIActions().openWindow(Pages.RepoSettings.path),
-					"CommandOrControl+Shift+Comma", {
-						id: CIDS.RepoSettings
-					})
 				
 				.command(
 					CommandType.Global,
@@ -331,10 +316,11 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	private onRoutesChanged = () => {
 		log.info(`Routes Loaded/Changed - loading`)
 		reloadRoutes()
+			
 		
 		this.setState({
 			Routes,Pages
-		})
+		},this.checkRoute)
 			
 	}
 	
@@ -344,7 +330,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	componentWillMount() {
 		this.onRoutesChanged()
 		
-		EventHub.on(EventHub.RoutesLoaded,this.onRoutesChanged)
+		EventHub.on(EventHub.RoutesChanged,this.onRoutesChanged)
 		
 		this.checkRoute()
 		
@@ -372,13 +358,13 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	private checkRoute = _.debounce((props = this.props,router:Router = null,route:IRouteInstance<any> = null) => {
 		setImmediate(() => {
 			router = router || getValue(() => this.state.routeViewRef.getRouter())
-			route = route || getValue(() => router.getRoute())
+			route = route || getValue(() => router.getRoute()) || Object.values(Pages).find(it => it.defaultRoute)
 			
 			if (!router || !route)
-				return log.warn(`Router and route can not be null`)
+				return log.warn(`Router and route can not be null`,router,route)
 			
 			const
-				{path} = route,
+				{uri:path} = route,
 				{uriProvider} = router,
 				{uri,params} = !uriProvider ? ({} as any) : uriProvider.getLocation(),
 				{repoCount,appStateType} = props,

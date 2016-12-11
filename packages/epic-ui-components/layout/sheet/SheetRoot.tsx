@@ -15,11 +15,11 @@ import {
 	ContainerNames,
 	CommonKeys
 } from "epic-command-manager"
-import {  Routes } from "epic-entry-ui/routes/Routes"
 import { sheetURISelector } from "epic-typedux/selectors"
 
 // Constants
-const log = getLogger(__filename)
+const
+	log = getLogger(__filename)
 
 const baseStyles = (topStyles, theme, palette) => {
 	const
@@ -135,6 +135,7 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	
 	render() {
 		const
+			Routes = RouteRegistryScope.routeMap(),
 			{ styles, sheetURI } = this.props,
 			// TODO: Implement routeView for sheet root
 			sheetConfig = Routes[sheetURI] as any,

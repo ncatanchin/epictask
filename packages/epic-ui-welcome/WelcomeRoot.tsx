@@ -1,15 +1,9 @@
-
 import { Page, PureRender } from "epic-ui-components/common"
-import { ThemedStyles, Fill, FlexScale, rem, IThemedAttributes } from "epic-styles"
+import { ThemedStyles, Fill, rem, IThemedAttributes } from "epic-styles"
 import { guard } from "epic-global"
 import { getAppActions } from "epic-typedux"
-import { RepoSearchProvider, GitHubSearchProvider ,SearchField } from "epic-ui-components/search"
-
-import baseStyles from './WelcomeRoot.styles'
-
-import { getValue } from "typeguard"
-import { SearchItem, Repo } from "epic-models"
-import { makeHeightConstraint } from "epic-styles/styles"
+import { RepoSearchProvider, GitHubSearchProvider, SearchField } from "epic-ui-components/search"
+import baseStyles from "./WelcomeRoot.styles"
 
 
 const
@@ -43,19 +37,6 @@ export interface IWelcomeRootState {
 export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootState> {
 	
 	appActions = getAppActions()
-	
-	// /**
-	//  * On search result selected
-	//  * @param eventType
-	//  * @param searchId
-	//  * @param item
-	//  */
-	// private onResultSelected = (eventType,searchId:string,item:SearchItem) => {
-	// 	if (searchId !== WelcomeSearchId || !getValue(() => item.provider.id === Repo.$$clazz,false))
-	// 		return
-	//
-	// 	item.provider.handleItem(item)
-	// }
 	
 	/**
 	 * On mount create initial state & bind listeners
@@ -118,26 +99,12 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 			]}
 			id="welcomePage">
 			
-			
-				
-				{/*<img*/}
-					{/*height="250"*/}
-					{/*width="auto"*/}
-					{/*style={{marginBottom: rem(3)}}*/}
-					{/*src={require("assets/images/icons/icon.png")}/>*/}
 			<img
 				height="250"
 				width="auto"
 				style={{marginBottom: rem(3)}}
 				src={require("assets/images/splash/e.png")}/>
 			
-				
-				{/*hint={*/}
-				{/*<span>*/}
-							{/*Import <i><strong>angular</strong></i>*/}
-							{/*&nbsp;&nbsp;or <i><strong>docker</strong></i>&nbsp;&nbsp;or one of your repos*/}
-						{/*</span>*/}
-			{/*}*/}
 				<SearchField
 					ref={this.setSearchFieldRef}
 					searchId={WelcomeSearchId}

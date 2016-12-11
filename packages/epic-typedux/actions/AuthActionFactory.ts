@@ -191,10 +191,14 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 				}
 			}
 			
-			
 			this.setAuthenticated(success,false,!success && err)
 
 		}
+	}
+	
+	
+	isAuthenticated() {
+		return getSettings().token
 	}
 }
 

@@ -2,7 +2,7 @@ import { Map, Record, List } from "immutable"
 import {BrowserWindow} from 'electron'
 import WindowFactory from "epic-process-manager/WindowFactory"
 import { getHot, setDataOnHotDispose, acceptHot, addHotDisposeHandler } from "epic-global"
-import { WindowConfigDefaults } from "epic-process-manager-client"
+import { WindowConfigDefaults } from "epic-process-manager-client/WindowConfig"
 import { isNumber } from "typeguard"
 import { Pool, IPoolOptions } from "typepool"
 

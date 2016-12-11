@@ -1,4 +1,4 @@
-import { TRouteMap } from "./Router"
+
 import { makePromisedComponent, toJSON } from "epic-global"
 import { Issue,Comment } from "epic-models"
 import {List} from 'immutable'
@@ -20,28 +20,6 @@ export const Pages = {
 			}))
 	},
 	
-	Login: {
-		name: 'login',
-		path: "pages/login",
-		defaultRoute: true,
-		anonymous: true,
-		title: 'Login',
-		provider: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/login').LoginRoot)
-			}))
-	},
-	
-	Welcome: {
-		name: 'welcome',
-		path: "welcome",
-		defaultRoute: true,
-		title: 'Welcome',
-		provider: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-ui-components/pages/welcome').WelcomeRoot)
-			}))
-	},
 	
 	IDE: {
 		name: 'IDE',
@@ -56,15 +34,7 @@ export const Pages = {
 	
 	
 	
-	RepoImport: {
-		name: 'RepoImport',
-		path: "sheet/repo-import",
-		title: 'Import Repository',
-		provider: makePromisedComponent((resolver:TComponentResolver) =>
-			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-plugins-default/repos/RepoAddTool').RepoAddTool)
-			}))
-	},
+	
 	
 	
 	FindAction: {
@@ -79,17 +49,6 @@ export const Pages = {
 		
 	},
 
-
-	RepoSettings: {
-		name: 'RepoSettings',
-		path: 'dialog/repo-settings',
-		showDevTools: true,
-		provider: makePromisedComponent((resolver:TComponentResolver) =>
-				
-			require.ensure([],function(require:any) {
-				resolver.resolve(require('epic-plugins-default/repos/RepoSettingsWindow').RepoSettingsWindow)
-			}))
-	},
 	
 	Settings: {
 		name: 'Settings',
@@ -161,19 +120,13 @@ export const Pages = {
 }
 
 
-export const Routes:TRouteMap = Object.values(Pages)
-	.reduce((routes,root) => {
-		routes[root.path] = root
-		return routes
-	},{})
-
 if (module.hot) {
 	module.hot.accept((err) => {
 		log.info(`HMR update`,err)
 	})
 }
 
-EventHub.emit(EventHub.RoutesLoaded)
+
 // REGISTER ALL CONFIGS
 // Object
 // 	.values(DialogConfigs)

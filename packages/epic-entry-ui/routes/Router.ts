@@ -8,13 +8,17 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
+declare global {
+	type TRouteMap = {[path:string]:TComponentProvider<any>|IRoute<any>}
+}
+
 
 export type TRouteChangeListener = (
 	uriProvider:IRouteURIProvider,
   uri:string,
 	params?:any) => any
 
-export type TRouteMap = {[path:string]:TComponentProvider<any>|IRoute<any>}
+
 
 export interface IRouterLocation {
 	uri:string

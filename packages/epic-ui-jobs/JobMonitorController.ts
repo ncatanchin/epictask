@@ -1,6 +1,6 @@
 
 
-import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
+import { SimpleEventEmitter } from "epic-global"
 const
 	log = getLogger(__filename)
 

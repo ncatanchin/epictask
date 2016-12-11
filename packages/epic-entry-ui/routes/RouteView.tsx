@@ -3,7 +3,7 @@
 
 
 import { PureRender, PromisedComponent } from "epic-ui-components/common"
-import { TRouteMap, IRouteURIProvider, IRouteInstance, Router } from "./Router"
+import { IRouteURIProvider, IRouteInstance, Router } from "./Router"
 import { WindowHashURIProvider } from "epic-entry-ui/routes/WindowHashURIProvider"
 import { RouterEvent } from "./Router"
 import { TRouteComponent, TRouteChangeListener, IRoute } from "epic-entry-ui/routes"

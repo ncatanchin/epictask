@@ -1,9 +1,7 @@
-
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { getAuthActions, authenticatingSelector } from "epic-typedux"
-
-import { PureRender,Page,Icon,RainbowIndicator  } from "../../common"
+import { PureRender, Page, Icon } from "epic-ui-components"
 import {
 	ThemedStyles,
 	IThemedAttributes,
@@ -13,9 +11,8 @@ import {
 	FillWindow,
 	Fill
 } from "epic-styles"
-
-import { getValue } from "epic-global"
 import { colorAlpha } from "epic-styles/styles"
+
 
 const
 	log = getLogger(__filename)
@@ -166,9 +163,11 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 		return (
 			<Page
 				style={[
-					Fill,
-					FlexColumnCenter,
-					{backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`}
+					Styles.Fill,
+					Styles.FlexColumnCenter,
+					{
+						backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`
+					}
 				]}
 				id='loginPage'>
 				

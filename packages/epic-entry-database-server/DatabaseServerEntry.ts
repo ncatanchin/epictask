@@ -21,7 +21,7 @@ import { IPCServer } from "epic-net/IPCServer"
 
 import { isPromise, isFunction } from "typeguard"
 import { benchmark } from "epic-global/Benchmark"
-import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
+import { DatabaseAdapter,getDatabaseAdapter } from "epic-database-adapters"
 import { AppEventType } from "epic-global/Constants"
 
 // Logger
@@ -104,7 +104,7 @@ export class DatabaseServerEntry extends ProcessClientEntry {
 		try {
 			log.info('Starting Database Server')
 			
-			dbAdapter = DatabaseAdapter.get()
+			dbAdapter = getDatabaseAdapter()
 			
 			await dbAdapter.start()
 			

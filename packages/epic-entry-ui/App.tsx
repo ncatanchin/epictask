@@ -9,7 +9,7 @@ import {
 
 //import AppRoot from "epic-entry-ui/AppRoot"
 import {getReduxStore} from 'epic-typedux/store/AppStore'
-import { ThemeEvent } from "epic-styles/ThemeState"
+
 const
 	log = getLogger(__filename),
 	windowId = getWindowId(),
@@ -49,8 +49,6 @@ function render() {
 			If(ProcessConfig.isUI(), () => {
 				require('electron').ipcRenderer.send(Events.UIReady)
 			})
-			
-			require("epic-plugins-default")
 		}
 	)
 	

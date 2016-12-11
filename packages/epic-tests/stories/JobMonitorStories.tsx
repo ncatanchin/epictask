@@ -13,7 +13,7 @@ import {
 	JobDAO
 } from "epic-typedux"
 import { Button, BuiltInTools, getBuiltInToolId } from "epic-ui-components"
-import { JobMonitor } from "epic-plugins-default"
+import { JobMonitor } from "epic-ui-jobs/JobMonitor"
 import { makeDefaultToolPanel, makeDefaultTool } from "epic-util"
 
 const {storiesOf, action, linkTo} = require('@kadira/storybook')

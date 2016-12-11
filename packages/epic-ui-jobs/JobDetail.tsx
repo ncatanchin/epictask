@@ -18,8 +18,8 @@ import { TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus
 import { TimeAgo, VisibleList } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
 import { LogWatcher, LogWatcherEvent, getValue, shallowEquals } from "epic-global"
-import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
-import { JobLogRow } from "epic-plugins-default/jobs/JobLogRow"
+import JobMonitorController from "./JobMonitorController"
+import { JobLogRow } from "./JobLogRow"
 import { IRowTypeConfig } from "epic-ui-components/common/VisibleList"
 import {IEnumEventRemover} from 'type-enum-events'
 

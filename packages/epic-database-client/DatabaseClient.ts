@@ -14,7 +14,7 @@ import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
 import { Benchmark, benchmark } from "epic-global/Benchmark"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { AppEventType } from "epic-global/Constants"
-import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
+import { DatabaseAdapter, getDatabaseAdapter } from "epic-database-adapters"
 
 
 const
@@ -168,7 +168,7 @@ export class DatabaseClient {
 	/**
 	 * Internal adapter to use
 	 */
-	private adapter:DatabaseAdapter = DatabaseAdapter.get()
+	private adapter:DatabaseAdapter = getDatabaseAdapter()
 	
 	
 	

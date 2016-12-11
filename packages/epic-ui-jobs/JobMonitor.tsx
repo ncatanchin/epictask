@@ -13,7 +13,7 @@ import { JobDetail } from "./JobDetail"
 
 import { jobsSelector, jobDetailsSelector} from "epic-typedux/selectors/JobSelectors"
 
-import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
+import JobMonitorController from "./JobMonitorController"
 import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 // Constants

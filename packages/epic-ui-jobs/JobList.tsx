@@ -2,12 +2,11 @@
 import { List } from "immutable"
 import { PureRender } from "epic-ui-components"
 import { ThemedStyles, makePaddingRem } from "epic-styles"
-import { TJobIMap, getJobActions, IJobStatusDetail, IJob } from "epic-typedux"
+import { TJobIMap, IJobStatusDetail, IJob } from "epic-typedux"
 import { JobItem } from "./JobItem"
-import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { getValue } from "epic-global/ObjectUtil"
 
-import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
+import JobMonitorController from "./JobMonitorController"
 
 
 // Constants

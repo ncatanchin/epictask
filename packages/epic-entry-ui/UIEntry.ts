@@ -69,11 +69,22 @@ function setupUI() {
 	benchmarkLoadTime(`Styles Loaded`)
 	
 	
+	require.ensure([], function(require:any) {
+		
+		require('epic-ui-issues')
+		require('epic-ui-repos')
+		require('epic-ui-jobs')
+		require('epic-ui-login')
+		require('epic-ui-welcome')
+		
+		const
+			loadUI = require('./App').loadUI as typeof LoadUIGlobal
+		
+		loadUI(UIResourcesLoaded.promise)
+	})
 	
-	const
-		loadUI = require('./App').loadUI as typeof LoadUIGlobal
 	
-	loadUI(UIResourcesLoaded.promise)
+	
 	deferred.resolve()
 	
 	return deferred.promise

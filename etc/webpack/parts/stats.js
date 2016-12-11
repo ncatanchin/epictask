@@ -1,6 +1,6 @@
 module.exports = global.WebpackStatsConfig = {
-	colors: process.env.COLORS !== '0',
-	//colors: true,
+	//colors: process.env.COLORS !== '0',
+	colors: true,
 	errors: true,
 	warnings: true,
 	timings: true,

@@ -13,7 +13,6 @@ import {
 	IJobStatusDetail,
 	getUIActions
 } from "epic-typedux"
-import { JobItem } from "epic-plugins-default/jobs/JobItem"
 import { BuiltInTools, getBuiltInToolId } from "../tools"
 import { messagesSortedSelector } from "epic-typedux/selectors"
 
@@ -131,14 +130,17 @@ export class StatusBar extends React.Component<IStatusBarProps,IStatusBarState> 
 			</div>}
 				
 			
-			{/* Job Status */}
-			{detail && <div style={[styles.status]}>
-				<JobItem onClick={() => getUIActions()
-									.toggleTool(getBuiltInToolId(BuiltInTools.JobMonitor))}
-				         styles={{root:styles.status.item}}
-				         job={job}
-				         detail={detail} />
-			</div>}
+			{
+				//TODO: REIMPLEMENT STATUS BAR WITH REGISTRY
+				/* Job Status*/
+			}
+			{/*{detail && <div style={[styles.status]}>*/}
+				{/*<JobItem onClick={() => getUIActions()*/}
+									{/*.toggleTool(getBuiltInToolId(BuiltInTools.JobMonitor))}*/}
+				         {/*styles={{root:styles.status.item}}*/}
+				         {/*job={job}*/}
+				         {/*detail={detail} />*/}
+			{/*</div>}*/}
 				
 			
 		</div>

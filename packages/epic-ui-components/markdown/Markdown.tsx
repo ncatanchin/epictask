@@ -1,21 +1,14 @@
-/**
- * Created by jglanz on 6/13/16.
- */
-
 // Imports
-import {ThemedNoRadium} from "epic-styles"
+import { ThemedNoRadium } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')
-const hljs = require('highlight.js')
+const highlightJS = require('highlight.js')
 
 // Constants
-const log = getLogger(__filename)
-
-const baseStyles = (topStyles,theme,palette) => ({
-	root: makeStyle(FlexColumn, FlexAuto, {})
-})
+const
+	log = getLogger(__filename)
 
 /**
  * Map theme into props - very shorthand
@@ -24,30 +17,28 @@ const baseStyles = (topStyles,theme,palette) => ({
 
 const CodeBlock = React.createClass({
 	displayName: 'CodeBlock',
-	mixins: [PureRenderMixin],
+	mixins: [ PureRenderMixin ],
 	propTypes: {
 		literal: React.PropTypes.string,
 		language: React.PropTypes.string
 	},
-
-	componentDidMount: function() {
+	
+	componentDidMount: function () {
 		this.highlightCode();
 	},
-
-	componentDidUpdate: function() {
+	
+	componentDidUpdate: function () {
 		this.highlightCode();
 	},
-
-	highlightCode: function() {
-		hljs.highlightBlock(this.refs.code);
+	
+	highlightCode: function () {
+		highlightJS.highlightBlock(this.refs.code);
 	},
-
-	render: function() {
-		return (
-			<pre>
-                <code ref="code" className={this.props.language}>{this.props.literal}</code>
-            </pre>
-		);
+	
+	render: function () {
+		return <pre>
+      <code ref="code" className={this.props.language}>{this.props.literal}</code>
+    </pre>
 	}
 })
 
@@ -55,9 +46,9 @@ const CodeBlock = React.createClass({
  * IMarkdownProps
  */
 export interface IMarkdownProps extends IThemedAttributes {
-	source?:any
-	className?:string
-	style?:any
+	source?: any
+	className?: string
+	style?: any
 }
 
 /**
@@ -69,21 +60,23 @@ export interface IMarkdownProps extends IThemedAttributes {
 
 @ThemedNoRadium
 export class Markdown extends React.Component<IMarkdownProps,any> {
-
-
+	
+	
 	constructor(props) {
 		super(props)
 	}
-
-
+	
+	
 	render() {
 		const
-			{theme,styles} = this.props,
-			s = mergeStyles(styles, theme.component)
-
+			{ theme, styles } = this.props
+		
 		return <ReactMarkdown {...this.props}
-			renderers={Object.assign({},ReactMarkdown.renderers,{CodeBlock})}
+			renderers={{
+				...ReactMarkdown.renderers,
+				CodeBlock
+			}}
 		/>
 	}
-
+	
 }

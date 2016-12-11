@@ -1,13 +1,9 @@
 // Imports
-import { PureRender } from 'epic-ui-components/common'
-import { ThemedStyles } from 'epic-styles'
-import { IThemedAttributes } from "epic-styles/ThemeDecorations"
-import { IVisibleListRowComponent, IRowState } from "epic-ui-components/common/VisibleList"
-import { IJobLog } from "epic-typedux/state/jobs/JobTypes"
 import { getValue } from "typeguard"
-import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
-import { TimeAgo } from "epic-ui-components/common/TimeAgo"
-import { isHovering } from "epic-styles/styles"
+import { PureRender, IVisibleListRowComponent, IRowState, TimeAgo } from "epic-ui-components/common"
+import { ThemedStyles, IThemedAttributes, isHovering } from "epic-styles"
+import { IJobLog } from "epic-typedux/state/jobs/JobTypes"
+import JobMonitorController from "./JobMonitorController"
 
 
 // Constants

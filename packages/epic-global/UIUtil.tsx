@@ -1,7 +1,6 @@
-
 import { getValue, isFunction } from "typeguard"
-import { shallowEquals } from "epic-global/ObjectUtil"
-import { cloneObjectShallow } from "epic-global"
+
+import { shallowEquals,cloneObjectShallow } from "./ObjectUtil"
 
 const
 	log = getLogger(__filename)
