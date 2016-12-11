@@ -19,7 +19,7 @@ import {
 	HEARTBEAT_TIMEOUT, makeAppEntryURL, guard
 } from "epic-global"
 
-import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client"
+import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
 import WindowPool from "./WindowPool"
 import { WindowPositionManager } from "epic-process-manager/WindowPositionManager"
 

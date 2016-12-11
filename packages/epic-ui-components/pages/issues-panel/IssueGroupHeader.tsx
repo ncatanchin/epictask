@@ -1,16 +1,15 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
+import { Map, List } from "immutable"
+import { connect } from "react-redux"
 import * as Styles from "epic-styles/styles"
-import { createStructuredSelector, createSelector } from 'reselect'
-import { IRowState, IssueLabelsAndMilestones } from 'epic-ui-components/common'
-import { IThemedAttributes, Themed, ThemedStyles } from 'epic-styles'
-import { getIssuesPanelSelector, IssuesPanel, IssuesPanelController } from "epic-ui-components/pages/issues-panel"
-import { getValue, shallowEquals } from "epic-global"
-import { isGroupListItem, IIssueGroup, Milestone, IIssueListItem } from "epic-models"
-import { Icon } from "epic-ui-components/common/icon/Icon"
 import { TransitionDurationLong, colorAlpha } from "epic-styles/styles"
-import { FlexRowCenter } from "epic-ui-components/common"
+import { createStructuredSelector, createSelector } from "reselect"
+import { Icon,IRowState, IssueLabelsAndMilestones, FlexRowCenter } from "epic-ui-components/common"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
+import { getIssuesPanelSelector, IssuesPanelController } from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { getValue, shallowEquals } from "epic-global"
+import { IIssueGroup, Milestone, IIssueListItem } from "epic-models"
+
 
 
 // Constants

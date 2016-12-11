@@ -1,4 +1,4 @@
-import { RegisterModel, reviveImmutable } from "epic-global"
+import { reviveImmutable } from "epic-global"
 import { Record, List, Map } from "immutable"
 import { ActionMessage } from "typedux"
 import { AvailableRepo } from "epic-models"
@@ -20,7 +20,7 @@ export const RepoStateRecord = Record({
 /**
  * Repository State
  */
-@RegisterModel
+@ModelRegistryScope.Register
 export class RepoState extends RepoStateRecord {
 
 	static fromJS(o:any) {

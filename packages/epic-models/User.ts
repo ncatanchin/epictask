@@ -7,12 +7,12 @@ import {
 } from 'typestore'
 
 
-import {RegisterModel} from 'epic-global'
+
 
 /**
  * User model from GitHub schema
  */
-@RegisterModel
+@ModelRegistryScope.Register
 @Model({
 	onlyMapDefinedAttributes: true
 })

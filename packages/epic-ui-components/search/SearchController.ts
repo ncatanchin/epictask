@@ -1,8 +1,8 @@
 import { List,Map } from "immutable"
 import { AvailableRepo, Repo, SearchItem, SearchResult } from "epic-models"
 
-import { ValueCache, Benchmark, cloneObjectShallow, EnumEventEmitter, shallowEquals } from "epic-global"
-
+import { ValueCache, Benchmark, cloneObjectShallow, shallowEquals } from "epic-global"
+import {EnumEventEmitter} from 'type-enum-events'
 import { isNumber, getValue, isFunction, isNil, isList } from "typeguard"
 import { nilFilterList } from "epic-global/ListUtil"
 import { SearchState } from "epic-ui-components/search/SearchState"

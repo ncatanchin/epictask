@@ -9,7 +9,7 @@ import {PouchDBModel} from 'typestore-plugin-pouchdb'
 import {User} from './User'
 import {Issue} from './Issue'
 import { Repo } from "./Repo"
-import { RegisterModel,isNumber, isObject, isObjectType } from  "epic-global"
+import { isNumber, isObject, isObjectType } from  "epic-global"
 
 export function makeCommentIdPrefix(repoId:number,issueNumber:number)
 export function makeCommentIdPrefix(repo:Repo,issue:Issue)
@@ -49,7 +49,7 @@ export function makeCommentId(repoOrRepoIdOrComment:number|Comment|Repo,issueOrI
 	return `${makeCommentIdPrefix(repoId,issueNumber)}${commentId}`
 }
 
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeCommentId,
 	onlyMapDefinedAttributes: true

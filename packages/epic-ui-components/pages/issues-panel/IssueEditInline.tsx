@@ -16,7 +16,9 @@ import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import { cloneObjectShallow, cloneObject, shallowEquals, notifyError, guard } from "epic-global"
 import { IRowState, MilestoneLabel, WorkIndicator, RepoSelect, Form, FormValidators } from "epic-ui-components/common"
 import { getValue, isNumber } from "typeguard"
-import { IssuesPanel, IssuesPanelController, getIssuesPanelSelector } from "epic-ui-components/pages/issues-panel"
+import { IssuesPanel} from "epic-ui-components/pages/issues-panel/IssuesPanel"
+import {getIssuesPanelSelector ,IssuesPanelController} from './IssuesPanelController'
+ 
 import {
 	FlexAuto,
 	makePaddingRem,

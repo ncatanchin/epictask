@@ -6,7 +6,7 @@ import { loadProcessClientEntry } from "epic-entry-shared"
 const
 	{ProcessClientEntry} = loadProcessClientEntry()
 
-import { IDatabaseRequest, DatabaseEvents } from "epic-database-client"
+import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 
 import {
 	acceptHot,

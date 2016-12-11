@@ -1,20 +1,28 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
-import { createStructuredSelector, createSelector } from 'reselect'
-import { PureRender, Chip, RepoLabel, FlexRow, FlexRowCenter } from 'epic-ui-components/common'
-import { IThemedAttributes, ThemedStyles } from 'epic-styles'
-import { getIssuesPanelSelector, IssuesPanelController } from "epic-ui-components/pages/issues-panel"
-import { colorAlpha, makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
-import { cloneObjectShallow, cloneObject, safePush, guard } from "epic-global"
+import { List } from "immutable"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
+import { FlexRowCenter } from "epic-ui-components/common/FlexLayout"
+import { PureRender } from "epic-ui-components/common/PureRender"
+import { Chip } from "epic-ui-components/common/Chip"
+import { RepoLabel } from "epic-ui-components/common/Labels"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
+import {
+	getIssuesPanelSelector,
+	IssuesPanelController
+} from "epic-ui-components/pages/issues-panel/IssuesPanelController"
+import { makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
+import { cloneObjectShallow, cloneObject, safePush } from "epic-global"
 import { SearchField } from "epic-ui-components/search"
 import { ContainerNames, getCommandManager } from "epic-command-manager"
 import {
-	enabledMilestonesSelector, enabledAvailableReposSelector,
-	enabledAssigneesSelector, enabledLabelsSelector
+	enabledMilestonesSelector,
+	enabledAvailableReposSelector,
+	enabledAssigneesSelector,
+	enabledLabelsSelector
 } from "epic-typedux/selectors"
 import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort, IssueCriteriaKeywords } from "epic-models"
-import { isString, isNil, getValue } from "typeguard"
+import { isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "epic-ui-components/pages/issues-panel/IssuesPanelSearchItem"
 
 // const

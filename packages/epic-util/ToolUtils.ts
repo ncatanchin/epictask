@@ -1,96 +1,5 @@
-
 import {Map,List} from 'immutable'
 import { isMap } from "typeguard"
-
-const log = getLogger(__filename)
-
-/**
- * Tool panel location
- */
-export enum ToolPanelLocation {
-	Left = 1,
-	Right = 2,
-	Bottom = 3,
-	Popup = 4
-}
-
-/**
- * Map of tools by id
- */
-export type TToolMap = Map<string,ITool>
-
-/**
- * Denotes an available tool in the system
- */
-export interface IToolConfig {
-	/**
-	 * Unique string identifying tool
-	 */
-	readonly id:string
-	
-	/**
-	 * Optional label value
-	 */
-	readonly label:string
-	
-	/**
-	 * Optional gutter button label
-	 */
-	readonly buttonLabel?:string
-	
-	/**
-	 * Default tool location
-	 */
-	readonly defaultLocation?:ToolPanelLocation
-}
-
-/**
- * Tool Registration
- */
-export interface IToolRegistration extends IToolConfig {
-	getHeaderControls?: () => React.ReactElement<any>[]
-}
-
-
-/**
- * Tool Shape w/State Info
- */
-export interface ITool extends IToolConfig {
-	
-	/**
-	 * Set/Get active status
-	 */
-	active:boolean
-	
-	/**
-	 * Any extra data
-	 */
-	data?:any
-}
-
-
-
-/**
- * Tool Panel Status
- */
-export interface IToolPanel {
-	id:string
-	location:ToolPanelLocation
-	tools:Map<string,ITool>
-	toolIds:List<string>
-	open:boolean
-	isDefault?:boolean
-	data?:any
-}
-
-/**
- * Base props for Tool Component
- */
-export interface IToolProps extends React.HTMLAttributes<any> {
-	tool:ITool
-	visible:boolean
-	panel:IToolPanel
-}
 
 /**
  * Create tool shape
@@ -150,7 +59,7 @@ export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
 			ToolPanelLocation.Left,
 			ToolPanelLocation.Bottom
 		],
-	
+		
 		panels = defaultLocations
 			.map(location => ({
 				id:ToolPanelLocation[location],
@@ -186,3 +95,4 @@ export function makeToolPanels(fromPanels = {}):Map<string,IToolPanel> {
 		},Map<string,IToolPanel>())
 	
 }
+

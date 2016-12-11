@@ -134,6 +134,10 @@ class WindowFactory {
 			newWindow = new Electron.BrowserWindow(cloneObject(this.opts))
 			newWindowId = `${newWindow.id}`
 			
+			// USE TO DEBUG WHEN WINDOWS NOT OPENING
+			// newWindow.show()
+			// newWindow.webContents.openDevTools()
+			
 			const
 				url = makeAppEntryURL('empty', {
 					EPIC_ENTRY: ProcessType[this.processType]

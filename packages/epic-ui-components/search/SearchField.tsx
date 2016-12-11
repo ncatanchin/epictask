@@ -8,7 +8,10 @@ import * as KeyMaps from "epic-command-manager"
 import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
 import { isNumber, getValue, guard, Dom, unwrapRef, shallowEquals } from "epic-global"
-import { PureRender, TextField, RenderToLayer, FlexRowCenter, Popover, FlexRow } from "epic-ui-components/common"
+import { PureRender} from 'epic-ui-components/common/PureRender'
+import { TextField} from 'epic-ui-components/common/TextField'
+import {Popover} from 'epic-ui-components/common/Popover'
+import {FlexRow } from "epic-ui-components/common/FlexLayout"
 import { ThemedStyles } from "epic-styles"
 import {
 	SearchEvent,
@@ -17,7 +20,7 @@ import {
 } from "./SearchController"
 import { SearchItem } from "epic-models"
 import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
-import { SearchState } from "epic-ui-components/search"
+import { SearchState } from "epic-ui-components/search/SearchState"
 import { isNil } from "typeguard"
 import baseStyles from './SearchField.styles'
 const
@@ -36,6 +39,7 @@ const
  */
 export interface ISearchFieldProps extends React.HTMLAttributes<any> {
 	theme?:any
+			
 	styles?:any
 	
 	/**

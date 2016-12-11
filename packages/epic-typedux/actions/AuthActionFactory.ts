@@ -1,6 +1,6 @@
 import { ActionFactory, ActionReducer, ActionThunk } from "typedux"
 import { GitHubClient, createClient as createGithubClient } from "epic-github"
-import { AuthKey, Provided, RegisterActionFactory, GitHubConfig } from "epic-global"
+import { AuthKey, Provided, GitHubConfig } from "epic-global"
 import { getRepoActions, getAppActions } from "epic-typedux/provider"
 import { AuthState, AuthMessage } from "../state/AuthState"
 import { AppStateType } from "../state/app/AppStateType"
@@ -10,9 +10,38 @@ import { notifyError } from "epic-global/NotificationCenterClient"
 
 const log = getLogger(__filename)
 
-@RegisterActionFactory
+
+
+declare global {
+	
+	interface IAuthActionFactory extends AuthActionFactory {
+	}
+	
+	/**
+	 * Add the AuthActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const AuthActions: IInjector<IAuthActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			const AuthActions:IAuthActionFactory
+		}
+	}
+}
+
+
+@ServiceRegistryScope.Register
 @Provided
 export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
+	
+	static ServiceName = "AuthActions"
 	
 	static leaf = AuthKey
 	

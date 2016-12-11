@@ -11,7 +11,6 @@ import { SearchState } from "./SearchState"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { SearchItem } from "epic-models"
 import { isString, getValue } from "typeguard"
-import { PureRender } from "epic-ui-components/common"
 import { shallowEquals } from "epic-global"
 
 

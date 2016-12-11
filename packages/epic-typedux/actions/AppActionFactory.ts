@@ -1,6 +1,6 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
 import {
-	RegisterActionFactory, Events, AppKey, Provided, cloneObjectShallow,
+	Events, AppKey, Provided, cloneObjectShallow,
 	shortId
 } from "epic-global"
 
@@ -14,12 +14,39 @@ const
 	log = getLogger(__filename)
 
 
+declare global {
+	
+	interface IAppActionFactory extends AppActionFactory {
+	}
+	
+	/**
+	 * Add the AppActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const AppActions: IInjector<IAppActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			let AppActions:IAppActionFactory
+		}
+	}
+}
+
 /**
  * Core EpicTask actions
  */
-@RegisterActionFactory
+
 @Provided
+@ServiceRegistryScope.Register
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
+	
+	static ServiceName = "AppActions"
 	
 	static leaf = AppKey
 	

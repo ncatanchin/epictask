@@ -1,7 +1,9 @@
 import * as Styles from 'material-ui/styles'
 
-import {ToolPanelLocation} from "epic-global"
-import { Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
+import {
+	CSSHoverState,
+	CSSFocusState,
+	convertRem,makeTransition,Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
 import { colorAlpha } from "epic-styles/styles/ColorTools"
 
 

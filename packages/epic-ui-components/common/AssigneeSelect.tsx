@@ -156,15 +156,15 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 			{items} = this.state,
 			
 			// GET SELECTED ITEM AS VALUE
-			value = assignee && items.find(item =>
-				item.key === getValue(() => assignee.id))
+			value = assignee && items
+					.find(item => item && item.key === getValue(() => assignee.id))
 		
 		
 		//labelStyle={styles.form.assignee.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
 			value={value}
-			items={items.filter(it => !value || it.key !== value.key)}
+			items={items.filter(it => it && (!value || it.key !== value.key))}
 			onItemSelected={this.onItemSelected}
 		/>
 	}

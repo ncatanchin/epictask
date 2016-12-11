@@ -22,7 +22,7 @@ import {
 	colorAlpha
 } from "epic-styles"
 
-import { ToolPanelLocation, IToolPanel, ITool, addRegistryListener, RegistryEvent } from "epic-global"
+
 import { ToolGutter } from "./ToolGutter"
 import { ToolWrapper } from "./ToolWrapper"
 import { createToolPanelSelector, toolDraggingSelector,createToolsSelector } from "epic-typedux/selectors"
@@ -166,7 +166,7 @@ export class ToolPanelComponent extends React.Component<IToolPanelProps,any> {
 	private unsubscribe = null
 	
 	componentWillMount() {
-		this.unsubscribe = addRegistryListener((event,...args) => {
+		this.unsubscribe = EventHub.on(EventHub.ToolsChanged, (event,...args) => {
 			log.info(`Registry event received: ${RegistryEvent[event]}`,args)
 			this.forceUpdate()
 		})

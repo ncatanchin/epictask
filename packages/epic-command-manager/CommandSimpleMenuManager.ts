@@ -1,6 +1,8 @@
-import { getHot, setDataOnHotDispose, acceptHot, getValue, EnumEventEmitter, cloneObjectShallow } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, getValue,  cloneObjectShallow } from "epic-global"
+
 import { ICommandMenuManager, ICommandMenuItem, CommandMenuItemType } from "./Command"
 import { OrderedMap } from "immutable"
+import {EnumEventEmitter} from 'type-enum-events'
 
 const
 	log = getLogger(__filename),

@@ -1,7 +1,5 @@
 // Imports
 import { PureRender } from "epic-ui-components"
-import { getToolComponent, getToolHeaderControls } from "epic-global"
-import { IToolPanel, ITool } from "epic-global"
 
 // Constants
 const
@@ -41,8 +39,8 @@ export class ToolWrapper extends React.Component<IToolWrapperProps,any> {
 			{styles,tool,panel} = this.props,
 			{location} = panel,
 			toolStyles = styles.tool,
-			ToolComponent = getToolComponent(tool.id),
-			ToolHeaderControls = getToolHeaderControls(tool.id)
+			ToolComponent = ToolRegistryScope.getToolComponent(tool.id),
+			ToolHeaderControls = ToolRegistryScope.getToolHeaderControls(tool.id)
 		
 		return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
 			<div style={[toolStyles.header,toolStyles.header[location]]}>

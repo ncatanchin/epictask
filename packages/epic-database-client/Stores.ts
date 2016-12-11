@@ -12,7 +12,9 @@ import {
 } from "epic-models"
 import { AvailableRepoStore } from "epic-models/AvailableRepo"
 
-
+declare global {
+	interface IStores extends Stores {}
+}
 
 /**
  * All repo stores container

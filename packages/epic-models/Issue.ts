@@ -14,8 +14,7 @@ import {Repo} from './Repo'
 import {Milestone} from './Milestone'
 import {PullRequest} from './PullRequest'
 
-import {RegisterModel} from 'epic-global'
-import { isNumber, isObjectType, isObject } from  "epic-global"
+import { isNumber, isObjectType, isObject } from  "typeguard"
 import { getValue } from "typeguard"
 
 
@@ -58,7 +57,7 @@ export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNu
 	
 }
 
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeIssueId,
 	onlyMapDefinedAttributes: true

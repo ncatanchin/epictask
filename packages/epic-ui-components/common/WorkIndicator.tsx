@@ -1,5 +1,5 @@
 // Imports
-import { PureRender } from 'epic-ui-components/common'
+import { PureRender } from './PureRender'
 import { IThemedAttributes, Themed } from 'epic-styles'
 import { Fill, PositionAbsolute, FlexColumnCenter } from "epic-styles/styles"
 

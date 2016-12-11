@@ -8,8 +8,6 @@ export * from 'epic-entry-shared/ProcessConfig'
 export * from "./Constants"
 export * from "./UIConstants"
 
-export * from "./Registry"
-export * from './ToolTypes'
 export * from './NotificationCenterClient'
 
 
@@ -20,10 +18,8 @@ export * from "./DateUtil"
 export * from "./Decorations"
 export * from "./ElectronUtil"
 
-export * from "./EnumUtil"
 
 
-export * from "./EnumEventEmitter"
 export * from "./SimpleEventEmitter"
 
 export * from "./Files"
@@ -34,7 +30,7 @@ export * from "./ListUtil"
 export * from "./LogWatcher"
 export * from "./ModelUtil"
 export * from "./PagedArray"
-export * from "./Permission"
+export * from "./PermissionUtil"
 export * from "./PersistentValue"
 export * from "./ProtoExts"
 export * from "./ProxyProvided"

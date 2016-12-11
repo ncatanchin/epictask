@@ -1,8 +1,5 @@
 import { List, Record, Map } from "immutable"
 import {
-	RegisterModel,
-	IToolPanel,
-	makeToolPanels,
 	getValue,
 	cloneObjectShallow
 } from "epic-global"
@@ -10,6 +7,7 @@ import { User } from "epic-models"
 import { State } from "typedux"
 import { toPlainObject,excludeFilterConfig,excludeFilter } from "typetransform"
 import ViewState from "epic-typedux/state/window/ViewState"
+import { makeToolPanels } from "epic-util"
 
 
 const
@@ -64,7 +62,7 @@ export const UIStateRecord = Record({
 /**
  * UIState class
  */
-@RegisterModel
+@ModelRegistryScope.Register
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {

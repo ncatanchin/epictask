@@ -5,7 +5,7 @@ import { ReduxDebugSessionKey, If, getHot, setDataOnHotDispose } from "epic-glob
 import { getReducers } from "./Reducers"
 import { setStoreProvider, ILeafReducer, ObservableStore } from "typedux"
 
-import { loadActionFactories } from "../provider"
+//import { loadActionFactories } from "../provider"
 
 import { configureStorePersistence } from "./AppStorePersistence"
 import addDevMiddleware from "./AppStoreDevConfig"
@@ -145,9 +145,9 @@ function initStore(devToolsMode = false, defaultState = null, enhancer = null) {
 	
 	
 	// Initialize all action factories
-	if (!devToolsMode) {
-		loadActionFactories()
-	}
+	// if (!devToolsMode) {
+	// 	loadActionFactories()
+	// }
 	
 	configureStorePersistence(newStore,getStoreState)
 	return store
@@ -182,7 +182,7 @@ export function loadAndInitStorybookStore() {
 	
 	store = newStore
 	setStoreProvider(newStore)
-	loadActionFactories()
+	//loadActionFactories()
 	
 	
 	// PERSISTENCE
@@ -203,7 +203,7 @@ export function loadAndInitStorybookStore() {
  */
 
 export async function loadAndInitStore(defaultStateValue = null, enhancer = null) {
-	loadActionFactories()
+	//loadActionFactories()
 	
 	return initStore(false, defaultStateValue,enhancer)
 }

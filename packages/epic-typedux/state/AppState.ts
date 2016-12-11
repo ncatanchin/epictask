@@ -1,6 +1,6 @@
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 import { List, Record, Map } from "immutable"
-import { Settings, RegisterModel } from "epic-global"
+import { Settings } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-global/ModelUtil"
@@ -26,7 +26,7 @@ export const AppStateRecord:Record.Class = Record({
 /**
  * The global app state
  */
-@RegisterModel
+@ModelRegistryScope.Register
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any):AppState {

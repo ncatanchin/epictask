@@ -1,11 +1,12 @@
 // Imports
 import { List } from "immutable"
-import { PureRender, WorkIndicator } from 'epic-ui-components/common'
+import { PureRender } from 'epic-ui-components/common/PureRender'
+import {WorkIndicator} from 'epic-ui-components/common/WorkIndicator'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 
 import { getValue, isString, isFunction, isPromise } from "typeguard"
-import { guard, EnumEventEmitter } from "epic-global"
-
+import { guard } from "epic-global"
+import {EnumEventEmitter} from 'type-enum-events'
 
 // Constants
 const

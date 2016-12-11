@@ -4,15 +4,15 @@
 // Imports
 
 import { Icon } from "./icon/Icon"
-import { ThemedStyles, IThemedAttributes, colorAlpha, CSSHoverState } from "epic-styles"
+import { rem, FillHeight, FlexRowCenter, makePaddingRem,ThemedStyles, IThemedAttributes, colorAlpha, CSSHoverState } from "epic-styles"
 
 import { List } from 'immutable'
 import { getIssueActions } from "epic-typedux/provider"
 
 import { Issue } from "epic-models"
-import { shallowEquals, cloneObjectShallow } from "epic-global"
-import { rem, FillHeight, FlexRowCenter, makePaddingRem } from "epic-styles/styles"
-import { PureRender } from "epic-ui-components/common"
+import { cloneObjectShallow } from "epic-global"
+
+import { PureRender } from "./PureRender"
 
 
 // Constants

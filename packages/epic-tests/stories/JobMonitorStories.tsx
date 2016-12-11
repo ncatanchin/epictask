@@ -14,8 +14,8 @@ import {
 } from "epic-typedux"
 import { Button, BuiltInTools, getBuiltInToolId } from "epic-ui-components"
 import { JobMonitor } from "epic-plugins-default"
+import { makeDefaultToolPanel, makeDefaultTool } from "epic-util"
 
-import { makeDefaultToolPanel, ToolPanelLocation, makeDefaultTool } from "epic-global"
 const {storiesOf, action, linkTo} = require('@kadira/storybook')
 
 

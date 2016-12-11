@@ -3,11 +3,8 @@ import { createSelector } from "reselect"
 import { UIState } from "../state/UIState"
 import ViewState from "epic-typedux/state/window/ViewState"
 import {
-	ToolPanelLocation,
-	IToolPanel,
 	createDeepEqualSelector,
 	UIKey,
-	ITool,
 	getValue
 } from "epic-global"
 

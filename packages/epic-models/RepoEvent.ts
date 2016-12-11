@@ -11,7 +11,7 @@ import {
 	PouchDBModel,
 } from 'typestore-plugin-pouchdb'
 
-import { isNumber,RegisterModel } from "epic-global"
+import { isNumber} from "typeguard"
 
 
 import { User} from "./User"
@@ -120,7 +120,7 @@ export function makeRepoEventId(repoEventOrRepoId:number|RepoEvent<any>,eventId:
 /**
  * Represents event from /repos/<repoName>/events
  */
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeRepoEventId
 })

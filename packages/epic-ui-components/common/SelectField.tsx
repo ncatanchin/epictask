@@ -584,6 +584,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 					}
 					
 					{visibleItems
+						.filter(item => !isNil(item))
 						.map((item, index) =>
 							<SelectFieldItem
 								{...item}

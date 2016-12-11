@@ -11,7 +11,7 @@ import {PouchDBModel} from 'typestore-plugin-pouchdb'
 
 import {User} from './User'
 import {Permission} from './Permission'
-import {RegisterModel} from 'epic-global'
+
 
 export interface ISyncChanges {
 	repoId:number
@@ -20,7 +20,7 @@ export interface ISyncChanges {
 	issueNumbersChanged?:number[]
 }
 
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: (repo:Repo) => `${repo.id}`,
 	onlyMapDefinedAttributes: true

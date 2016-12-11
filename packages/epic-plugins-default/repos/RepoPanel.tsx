@@ -12,9 +12,8 @@ import {UIActionFactory} from "epic-typedux"
 import {ThemedStyles, createThemedStyles} from "epic-styles"
 
 
-import {RegisterTool} from "epic-global/Registry"
+
 import {getBuiltInToolId, BuiltInTools} from "epic-ui-components"
-import {ToolPanelLocation,IToolProps} from "epic-global"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
 	CommandContainerBuilder
@@ -113,7 +112,7 @@ function getHeaderControls() {
  * @class RepoPanel
  * @constructor
  **/
-@RegisterTool({
+@ToolRegistryScope.Register({
 	id:getBuiltInToolId(BuiltInTools.RepoPanel),
 	defaultLocation: ToolPanelLocation.Left,
 	label:'Repositories',

@@ -1,7 +1,7 @@
 
 
 import * as fs from 'fs'
-import {EnumEventEmitter} from  "./EnumEventEmitter"
+import {EnumEventEmitter} from 'type-enum-events'
 
 const
 	log = getLogger(__filename)

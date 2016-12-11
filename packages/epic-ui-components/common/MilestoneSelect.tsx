@@ -174,7 +174,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 			{items} = this.state,
 			
 			milestoneId = getValue(() => milestone.id,null),
-			value = items.find(it => milestoneId  === it.key)
+			value = items.find(it => it && milestoneId  === it.key)
 		
 		
 		//labelStyle={styles.form.milestone.item.label}

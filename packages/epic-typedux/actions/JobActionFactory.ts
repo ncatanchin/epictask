@@ -3,12 +3,36 @@ import { ActionFactory, ActionMessage, ActionReducer } from "typedux"
 import { List, Map } from "immutable"
 import { JobState } from "../state/JobState"
 import { IJobStatusDetail, IJob, JobStatus, IJobSchedule, TJobIMap } from "../state/jobs/JobTypes"
-import { JobKey, JobsMaxCompleted, Provided, cloneObjectShallow, RegisterActionFactory } from "epic-global"
+import { JobKey, JobsMaxCompleted, Provided, cloneObjectShallow } from "epic-global"
 
 
 const
 	log = getLogger(__filename)
 
+
+declare global {
+	interface IJobActionFactory extends JobActionFactory {
+		
+	}
+	
+	/**
+	 * Add the AppActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const JobActions: IInjector<IJobActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			const JobActions:IJobActionFactory
+		}
+	}
+}
 
 /**
  * RepoActionFactory.ts
@@ -16,9 +40,12 @@ const
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@RegisterActionFactory
+@ServiceRegistryScope.Register
 @Provided
 export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobState>> {
+	
+	static ServiceName = "JobActions"
+	
 	
 	static leaf = JobKey
 	

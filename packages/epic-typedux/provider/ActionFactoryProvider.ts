@@ -1,15 +1,7 @@
 import {
-	IActionFactoryConstructor, JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey, If,
+	JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey, If,
 	isFunction
 } from "epic-global"
-import {
-	JobActionFactory,
-	AppActionFactory,
-	IssueActionFactory,
-	RepoActionFactory,
-	UIActionFactory,
-	AuthActionFactory
-} from "../actions"
 
 const log = getLogger(__filename)
 
@@ -20,18 +12,24 @@ const log = getLogger(__filename)
  * Map of string literal types to action factory types
  */
 export type IActionFactoryKeyMap = {
-	["JobState"]:JobActionFactory
-	["AuthState"]:AuthActionFactory
-	["AppState"]:AppActionFactory
-	["IssueState"]:IssueActionFactory
-	["RepoState"]:RepoActionFactory
-	["UIState"]:UIActionFactory
+	["JobState"]:IJobActionFactory
+	["AuthState"]:IAuthActionFactory
+	["AppState"]:IAppActionFactory
+	["IssueState"]:IIssueActionFactory
+	["RepoState"]:IRepoActionFactory
+	["UIState"]:IUIActionFactory
 }
 
-/**
- * Internal leaf to action factory class map
- */
-const actionFactoryClazzMap = {} as any
+export const ActionFactoryKeyMap = {
+	["JobState"]:"JobActions",
+	["AuthState"]:"AuthActions",
+	["AppState"]:"AppActions",
+	["IssueState"]:"IssueActions",
+	["RepoState"]:"RepoActions",
+	["UIState"]:"UIActions"
+}
+
+
 
 /**
  * A proxy provider map that either returns a class instance
@@ -42,90 +40,33 @@ const actionFactoryClazzMap = {} as any
 export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 	get(target,leafKey) {
 		//log.info(`Getting action factory for leaf ${leafKey}`)
-		if (![ProcessType.DatabaseServer,ProcessType.Storybook].includes(ProcessConfig.getType()) && actionFactoryClazzMap[leafKey]) {
-			return new actionFactoryClazzMap[leafKey]()
-		} else {
+		if ([ProcessType.DatabaseServer,ProcessType.Storybook].includes(ProcessConfig.getType())) {
 			return require("../store/AppStoreClient").getActionClient(leafKey)
 		}
 	}
 }) as any
 
 
-export function getJobActions():JobActionFactory {
-	return ActionFactoryProviders[JobKey]
+export function getJobActions():IJobActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[JobKey]]
 }
 
-export function getUIActions():UIActionFactory {
-	return ActionFactoryProviders[UIKey]
+export function getUIActions():IUIActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[UIKey]]
 }
 
-export function getAuthActions():AuthActionFactory {
-	return ActionFactoryProviders[AuthKey]
+export function getAuthActions():IAuthActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[AuthKey]]
 }
 
-export function getAppActions():AppActionFactory {
-	return ActionFactoryProviders[AppKey]
+export function getAppActions():IAppActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[AppKey]]
 }
 
-export function getRepoActions():RepoActionFactory {
-	return ActionFactoryProviders[RepoKey]
+export function getRepoActions():IRepoActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[RepoKey]]
 }
 
-export function getIssueActions():IssueActionFactory {
-	const
-		{IssueActionFactory} = require('../actions/IssueActionFactory')
-	
-	return new IssueActionFactory()
-}
-
-/**
- * Load all the action factories
- */
-export function loadActionFactories() {
-	
-	const
-		allActions = require('../actions/index')
-	
-	Object.keys(allActions)
-		.filter(modName => modName.endsWith('ActionFactory'))
-		.forEach(modName => {
-			
-			const
-				mod = allActions[modName],
-				actionFactoryClazz = (isFunction(mod) ? mod : mod.default) as IActionFactoryConstructor
-			
-			
-			if (!actionFactoryClazz) {
-				return log.debug(`Unable to get action clazz from ${modName}`)
-			}
-			
-			const
-				{leaf} = actionFactoryClazz
-			
-			actionFactoryClazzMap[leaf] = actionFactoryClazz
-			
-			const actionFactoryProvider = () => {
-				return ActionFactoryProviders[leaf]
-			}
-			
-			
-			Container
-				.bind(actionFactoryClazz)
-				.provider({
-					get: actionFactoryProvider
-				})
-		})
-	
-	// IN DEBUG EXPOSE ALL PROVIDERS
-	If(DEBUG,() => {
-		assignGlobal(exports)
-	})
-	
-	
-	if (module.hot) {
-		module.hot.accept(['../actions/index','../actions/IssueActionFactory'], (updates) => {
-			log.info(`HMR update action factories`,updates)
-			loadActionFactories()
-		})
-	}
+export function getIssueActions():IIssueActionFactory {
+	return Registry.Service[ActionFactoryKeyMap[IssueKey]]
 }

@@ -1,6 +1,7 @@
 
 import { JobManagerService } from "./JobManagerService"
-import { EnumEventEmitter,uuid } from "epic-global"
+import { uuid } from "epic-global"
+import {EnumEventEmitter} from 'type-enum-events'
 import {
 	JobStatus,
 	IJob,

@@ -1,7 +1,7 @@
 import { setDataOnHotDispose,getHot } from "epic-global/HotUtils"
 import {OrderedMap} from 'immutable'
-import { getValue, EnumEventEmitter, cloneObjectShallow } from "epic-global"
-
+import { getValue, cloneObjectShallow } from "epic-global"
+import {EnumEventEmitter} from 'type-enum-events'
 const
 	log = getLogger(__filename)
 

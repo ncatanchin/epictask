@@ -1,12 +1,15 @@
 import { JobHandler, JobHandlerEventType } from "./JobHandler"
 import { IJobExecutorConstructor, IJobExecutor } from "./JobTypes"
-import { IEnumEventRemover, JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
+import { JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
 import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux/state/jobs"
 import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
 import { jobsSelector, jobDetailsSelector } from "epic-typedux/selectors/JobSelectors"
 import { ObservableStore } from "typedux"
 import { TJobMap } from "epic-typedux/state/jobs/JobTypes"
 import {Map} from 'immutable'
+import {IEnumEventRemover,EnumEventEmitter} from 'type-enum-events'
+
+
 
 const
 	log = getLogger(__filename)

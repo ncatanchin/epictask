@@ -16,7 +16,6 @@ import {
 	notify,
 	getSettings,
 	Provided,
-	RegisterActionFactory,
 	pagedFinder,
 	isListType
 } from "epic-global"
@@ -83,6 +82,29 @@ export interface IIssueDataUpdate {
 }
 
 
+declare global {
+	interface IIssueActionFactory extends IssueActionFactory {
+		
+	}
+	
+	/**
+	 * Add the AppActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const IssueActions: IInjector<IIssueActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			const IssueActions:IIssueActionFactory
+		}
+	}
+}
 
 
 /**
@@ -91,7 +113,11 @@ export interface IIssueDataUpdate {
  * @class RepoActionFactory.ts
  * @constructor
  **/
+@ServiceRegistryScope.Register
+@Provided
 export class IssueActionFactory  {
+	
+	static ServiceName = "IssueActions"
 	
 	constructor() {
 	}

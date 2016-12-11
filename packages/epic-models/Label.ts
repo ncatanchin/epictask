@@ -6,7 +6,6 @@ import {
 } from 'typestore'
 
 import {PouchDBModel} from 'typestore-plugin-pouchdb'
-import {RegisterModel} from 'epic-global'
 import { Repo } from "./Repo"
 
 /**
@@ -21,7 +20,7 @@ export function makeLabelId(label:Label) {
 
 
 
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeLabelId,
 	onlyMapDefinedAttributes: true

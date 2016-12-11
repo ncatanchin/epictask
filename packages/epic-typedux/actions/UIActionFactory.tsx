@@ -4,11 +4,7 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	ToolPanelLocation,
-	ITool,
-	IToolPanel,
-	RegisterActionFactory,
-	getToolRegistrations, nilFilter,
+	nilFilter,
 	uuid
 } from "epic-global"
 import { UIState } from "../state/UIState"
@@ -28,10 +24,36 @@ const
 	{Left,Right,Bottom,Popup} = ToolPanelLocation
 
 
+declare global {
+	
+	interface IUIActionFactory extends UIActionFactory {
+	}
+	
+	/**
+	 * Add the UIActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const UIActions: IInjector<IUIActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			const UIActions:IUIActionFactory
+		}
+	}
+}
 
-@RegisterActionFactory
+
+@ServiceRegistryScope.Register
 @Provided
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
+	
+	static ServiceName = "UIActions"
 	
 	static leaf = UIKey
 	
@@ -99,7 +121,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	updateRegisteredTools() {
 		const
-			regs = getToolRegistrations(),
+			regs = ToolRegistryScope.getToolRegistrations(),
 			tools =
 				nilFilter(regs)
 					.map(reg => {

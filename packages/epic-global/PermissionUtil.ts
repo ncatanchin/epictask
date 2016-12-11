@@ -1,8 +1,5 @@
 
-
-//import {Repo,Issue,Comment} from 'epic-models'
-import {getSettings} from './settings/getSettings'
-import { getValue } from  "./ObjectUtil"
+import { getValue } from  "typeguard"
 
 const getUserId = () => getValue(() => getSettings().user.id,-2)
 

@@ -17,10 +17,11 @@ import { LinearProgress } from "material-ui"
 import { TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux/state"
 import { TimeAgo, VisibleList } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
-import { LogWatcher, LogWatcherEvent, IEnumEventRemover, getValue, shallowEquals } from "epic-global"
+import { LogWatcher, LogWatcherEvent, getValue, shallowEquals } from "epic-global"
 import JobMonitorController from "epic-plugins-default/jobs/JobMonitorController"
 import { JobLogRow } from "epic-plugins-default/jobs/JobLogRow"
 import { IRowTypeConfig } from "epic-ui-components/common/VisibleList"
+import {IEnumEventRemover} from 'type-enum-events'
 
 // Constants
 const log = getLogger(__filename)

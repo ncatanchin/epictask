@@ -1,9 +1,11 @@
 try {
 	require('babel-core/register')
-} catch (err) {}
+} catch (err) {
+}
 try {
 	require('babel-polyfill')
-} catch (err) {}
+} catch (err) {
+}
 
 // GET SHELL JS
 require('shelljs/global')
@@ -26,11 +28,10 @@ const
 	fs = require('fs'),
 	CopyWebpackPlugin = require('copy-webpack-plugin'),
 	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	{ForkCheckerPlugin,TsConfigPathsPlugin} = require('awesome-typescript-loader')
-	
+	{ForkCheckerPlugin, TsConfigPathsPlugin} = require('awesome-typescript-loader')
+
 
 // Import globals
-
 
 
 /**
@@ -41,21 +42,20 @@ const
  */
 function resolveDirs(...dirs) {
 	return dirs.map(dir => {
-		return (['c','C','/','.'].includes(dir.charAt(0))) ?
+		return (['c', 'C', '/', '.'].includes(dir.charAt(0))) ?
 			path.resolve(dir) :
 			path.join(baseDir, dir)
 	})
 }
 
 
-
-assert(fs.existsSync(srcRootDir),`TypeScript must be compiled to ${path.resolve(srcRootDir)}`)
+assert(fs.existsSync(srcRootDir), `TypeScript must be compiled to ${path.resolve(srcRootDir)}`)
 
 const
 	noWebpack = process.env.NO_WEBPACK,
 	
 	// Module Directories
-	moduleDirs = resolveDirs(srcRootDir,'node_modules'),
+	moduleDirs = resolveDirs(srcRootDir, 'node_modules'),
 	
 	// Output Directory
 	distDir = `${baseDir}/dist/${isPackaging ? 'app-package' : 'app'}`,
@@ -82,8 +82,7 @@ const
 	
 	// EXTERNALS / makes all node_modules external
 	nodeExternals = require('webpack-node-externals')
-	
-	
+
 
 //log.info(chalk.green.bold.underline(`Using module directories: ${moduleDirs.join(', ')}`))
 
@@ -126,23 +125,22 @@ function getTypeScriptCompilerOptions() {
  */
 function makePackageAliases() {
 	
-		
-		
-	return Object.values(getPackages()).reduce((aliasMap = {},{name}) => {
+	
+	return Object.values(getPackages()).reduce((aliasMap = {}, {name}) => {
 		//aliasMap[name] = path.join('.','packages',name)// path.resolve(process.cwd(),'packages',name)
 		return aliasMap
-	},{})
+	}, {})
 }
 
 
 function makeAliases() {
-	return _.assign(makePackageAliases(),{
+	return _.assign(makePackageAliases(), {
 		buildResources: path.resolve(baseDir, 'build'),
 		libs: path.resolve(baseDir, 'libs'),
 		"epic-electron": tsAlias('epic-global/Electron'),
 		styles: tsAlias('epic-assets/styles'),
 		assets: tsAlias('epic-assets'),
-		'epic-config': path.resolve(baseDir,'etc','config','default-config.js')
+		'epic-config': path.resolve(baseDir, 'etc', 'config', 'default-config.js')
 		
 	})
 }
@@ -183,7 +181,7 @@ function makeExternals() {
  * @returns {string}
  */
 function resolvePkgIndex(name) {
-	return path.resolve(srcRootDir,name,'index.ts')
+	return path.resolve(srcRootDir, name, 'index.ts')
 }
 
 /**
@@ -199,8 +197,8 @@ function makeModuleConfig() {
 function makeEntry(pkg) {
 	const
 		entry = [`./index`]
-		
-
+	
+	
 	// HMR ENTRY ADDITION
 	if (isDev && pkg.entry === true) {
 		entry.unshift('webpack/hot/poll.js?500')
@@ -211,12 +209,12 @@ function makeEntry(pkg) {
 	}
 }
 
-function makeHotEntry(entry,devEntries) {
+function makeHotEntry(entry, devEntries) {
 	// HMR ENTRY ADDITION
 	if (isDev) {
 		
-			entry.unshift("webpack/hot/dev-server")
-			entry.unshift('webpack/hot/poll.js?500')
+		entry.unshift("webpack/hot/dev-server")
+		entry.unshift('webpack/hot/poll.js?500')
 		
 	}
 	if (devEntries)
@@ -226,21 +224,21 @@ function makeHotEntry(entry,devEntries) {
 }
 
 
-function makeOutputConfig(name,isEntry = false) {
+function makeOutputConfig(name, isEntry = false) {
 	const
 		outputConfig = {
 			path: `${distDir}/`,
-				publicPath: "./",
+			publicPath: "./",
 			// libraryTarget: 'commonjs2'
 		}
 	
 	
 	outputConfig.filename = '[name].js'
 	
-
+	
 	if (isEntry !== true)
 		outputConfig.library = `${name}`
-
+	
 	return outputConfig
 }
 
@@ -255,7 +253,7 @@ function makeResolveConfig() {
 		modules: moduleDirs,
 		
 		// EXTENSIONS
-		extensions: ['.ts','.tsx','.js', '.jsx']
+		extensions: ['.ts', '.tsx', '.js', '.jsx']
 		
 	}
 }
@@ -276,10 +274,10 @@ function unwrapDependencies(dependencies) {
 	
 	while (true) {
 		const
-			depsOut = _.uniq(depsIn.reduce((nextDeps,dep) => {
+			depsOut = _.uniq(depsIn.reduce((nextDeps, dep) => {
 				nextDeps.push(...(packages[dep].dependencies || []))
 				return nextDeps
-			},[]).concat(depsIn))
+			}, []).concat(depsIn))
 		
 		if (depsIn.length === depsOut.length)
 			break
@@ -296,7 +294,7 @@ function patchConfig(config) {
 	if (isDev) {
 		_.merge(config, {
 			// In development specify absolute path - better debugger support
-			output:  {
+			output: {
 				devtoolModuleFilenameTemplate: "[absolute-resource-path]",
 				devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
 			},
@@ -310,10 +308,10 @@ function patchConfig(config) {
 		config.plugins.push(new webpack.optimize.UglifyJsPlugin({
 			mangle: false,
 			mangleProperties: false,
-			compress:{
+			compress: {
 				warnings: true
 			}
-		}),new webpack.LoaderOptionsPlugin({
+		}), new webpack.LoaderOptionsPlugin({
 			minimize: true,
 			debug: false
 		}))
@@ -323,26 +321,22 @@ function patchConfig(config) {
 }
 
 
-//In development, use inline source maps
-//devtool: '#cheap-module-source-map',
-// devtool: '#inline-source-map',
-//devtool: '#cheap-module-inline-source-map',
-//devtool: 'eval',
-//devtool: 'cheap-module-eval-source-map',
+
 const
-	devtool = isDev ?
-		//"source-map" :
-		//'#inline-source-map' :
-		'#cheap-module-eval-source-map' :
-		//'#cheap-module-inline-source-map' :
-		"source-map"
+	DevTools = {
+		//'eval-source-map', //'#cheap-module-eval-source-map',
+		'development': 'inline-source-map',
+		'production': 'source-map'
+	}
+	
+	devtool = DevTools[process.env.NODE_ENV]
 
 // Webpack Config
-function makeConfig(name,dependencies,entry,configFn) {
+function makeConfig(name, dependencies, entry, configFn) {
 	
 	let
 		config = {
-		
+			
 			name,
 			dependencies,
 			/**
@@ -368,10 +362,10 @@ function makeConfig(name,dependencies,entry,configFn) {
 			 * Output configuration
 			 */
 			// output: makeOutputConfig(name,isEntry || false),
-			output: makeOutputConfig(null,true),
+			output: makeOutputConfig(null, true),
 			
 			// LOADERS
-			module:  makeModuleConfig(),
+			module: makeModuleConfig(),
 			cache: true,
 			recordsPath: `${distDir}/records__${name}`,
 			
@@ -382,34 +376,34 @@ function makeConfig(name,dependencies,entry,configFn) {
 			
 			// Currently we need to add '.ts' to the resolve.extensions array.
 			resolve: makeResolveConfig(),
-						
 			
-			// PLUGINS
+			
+			/**
+			 * Plugins
+			 */
 			plugins: [
 				
-				//new webpack.optimize.DedupePlugin(),
-				
-				// FORK CHECKER IF TYPESCRIPT / OTHERWISE - IGNORE TS(X) FILES
-				//new TsConfigPathsPlugin(),
-				new ForkCheckerPlugin(),
-				
-				
-				//new CircularDependencyPlugin(),
-				
-				// BASICS
-				//new webpack.IgnorePlugin(/vertx/),
-				
+				// NO ERRORS
 				new webpack.NoErrorsPlugin(),
 				
+				// AVOID CIRCULAR
+				new CircularDependencyPlugin(),
+				
+				// ENV
 				new DefinePlugin(DefinedEnv),
 				
+				// NAMED MODULES
 				new webpack.NamedModulesPlugin(),
+				
+				// ALWAYS BLUEBIRD
 				new webpack.ProvidePlugin({
 					'Promise': 'bluebird'
 				})
 			],
 			
-			// NODE SHIMS
+			/**
+			 * Node Shims
+			 */
 			node: {
 				__dirname: true,
 				__filename: true,
@@ -417,7 +411,9 @@ function makeConfig(name,dependencies,entry,configFn) {
 				process: true
 			},
 			
-			// Configure all node_modules as external if in electron
+			/**
+			 * Externals
+			 */
 			externals: makeExternals()
 		}
 	
@@ -431,16 +427,16 @@ function makeConfig(name,dependencies,entry,configFn) {
 const
 	glob = require('glob'),
 	globOpts = {
-		cwd:srcRootDir,
-		nodir:true
+		cwd: srcRootDir,
+		nodir: true
 	}
-	
+
 const
-	makeHtmlConfig = () => makeConfig('epic-html',[],{
+	makeHtmlConfig = () => makeConfig('epic-html', [], {
 		"epic-entry-browser": makeHotEntry([
 			"./epic-entry-browser/index"
 		]),
-	},config => {
+	}, config => {
 		
 		if (noWebpack) {
 			config.plugins.unshift(new CopyWebpackPlugin([
@@ -460,7 +456,6 @@ const
 		}
 		
 		config.plugins.push(
-			
 			new HtmlWebpackPlugin({
 				filename: "app-entry.html",
 				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
@@ -474,17 +469,13 @@ const
 				inject: false,
 				isDev
 			})
-		
 		)
 	})
 
 
-
-
-
 module.exports = noWebpack ? makeHtmlConfig() :
 	
-	makeConfig('epic-app',[],{
+	makeConfig('epic-app', [], {
 		// "epic-app-all": makeHotEntry([
 		// 	"./epic-entry-database-server/index",
 		// 	"./epic-entry-job-server/index",
@@ -509,9 +500,9 @@ module.exports = noWebpack ? makeHtmlConfig() :
 		"epic-entry-main": makeHotEntry([
 			"./epic-entry-main/MainEntry"
 		]),
-		"epic-entry-ui":  makeHotEntry([
+		"epic-entry-ui": makeHotEntry([
 			"./epic-entry-ui/index"
-			
+		
 		]),
 		//,["react-hot-loader/patch"]
 		
@@ -540,33 +531,32 @@ module.exports = noWebpack ? makeHtmlConfig() :
 				inject: false,
 				isDev
 			})
-
 		)
 	})
-	
-	// BROWSER ENTRY
-	//makeHtmlConfig()
-	
-	// makeConfig('epic_libs',[],{
-	// 	"epic_libs": makeHotEntry([
-	// 		"./epic-entry-shared",
-	// 		"./epic-global",
-	// 		"./epic-net",
-	// 		"./epic-github",
-	// 		"./epic-database-client",
-	// 		"./epic-database-adapter",
-	// 		"./epic-process-manager",
-	// 		"./epic-process-manager-client",
-	// 		"./epic-typedux",
-	// 		"./epic-services"
-	// 	])
-	// }, config => {
-	// 	config.plugins.unshift(new webpack.DllPlugin({
-	// 		name: `epic_libs`,
-	// 		path: path.resolve(distDir,`manifest.epic_libs.json`)
-	// 	}))
-	// }),
-	//
+
+// BROWSER ENTRY
+//makeHtmlConfig()
+
+// makeConfig('epic_libs',[],{
+// 	"epic_libs": makeHotEntry([
+// 		"./epic-entry-shared",
+// 		"./epic-global",
+// 		"./epic-net",
+// 		"./epic-github",
+// 		"./epic-database-client",
+// 		"./epic-database-adapter",
+// 		"./epic-process-manager",
+// 		"./epic-process-manager-client",
+// 		"./epic-typedux",
+// 		"./epic-services"
+// 	])
+// }, config => {
+// 	config.plugins.unshift(new webpack.DllPlugin({
+// 		name: `epic_libs`,
+// 		path: path.resolve(distDir,`manifest.epic_libs.json`)
+// 	}))
+// }),
+//
 	
 	 
 

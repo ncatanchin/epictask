@@ -13,7 +13,7 @@ import {
 
 
 
-import { isNumber,RegisterModel } from "epic-global"
+import { isNumber} from "typeguard"
 
 
 import { User} from "./User"
@@ -218,7 +218,7 @@ export function makeIssuesEventId(eventOrRepoId:number|IssuesEvent,issueNumber:n
 /**
  * Represents event from /repos/<repoName>/issues/events
  */
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeIssuesEventId
 })

@@ -1,4 +1,4 @@
-import * as Bluebird from 'bluebird'// = require('bluebird')
+import * as Bluebird from 'bluebird'
 
 /**
  * Update Babel Runtime
@@ -11,18 +11,18 @@ Object.assign(global as any,{
 	Promise: Bluebird
 })
 
-/**
- * Configure
- */
-const
-	{env} = process
-
-env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
-env.BLUEBIRD_DEBUG = '0'
-
-if (!env.NODE_ENV) {
-	env.NODE_ENV = 'production'
-}
+// /**
+//  * Configure
+//  */
+// const
+// 	{env} = process
+//
+// env.BLUEBIRD_W_FORGOTTEN_RETURN = '0'
+// env.BLUEBIRD_DEBUG = '0'
+//
+// if (!env.NODE_ENV) {
+// 	env.NODE_ENV = 'production'
+// }
 
 /**
  * CONFIGURE PROMISES FIRST
@@ -30,22 +30,12 @@ if (!env.NODE_ENV) {
 
 Bluebird.config({
 	cancellation: true,
-	longStackTraces: env.NODE_ENV === 'development',
+	longStackTraces: process.env.NODE_ENV === 'development',
 	warnings: {
 		wForgottenReturn: false
 	},
-	monitoring: env.NODE_ENV === 'development'
+	monitoring: process.env.NODE_ENV === 'development'
 })
-
-// ORIGINAL PROMISE CONFIG
-// Bluebird.config({
-// 	cancellation: true,
-// 	//longStackTraces: true,
-// 	warnings: {
-// 		wForgottenReturn: false
-// 	},
-// 	monitoring: true
-// })
 
 /**
  * Update global promise definition

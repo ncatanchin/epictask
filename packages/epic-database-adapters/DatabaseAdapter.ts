@@ -2,7 +2,7 @@
 import { Repo as TSRepo} from "typestore"
 
 import { Stores } from "epic-database-client/Stores"
-import { IDatabaseRequest, IDatabaseResponse } from "epic-database-client/DatabaseRequestResponse"
+
 
 
 let

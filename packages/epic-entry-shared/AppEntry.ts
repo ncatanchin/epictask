@@ -10,8 +10,12 @@ import "./NamespaceConfig"
 
 
 import "./Globals"
+
 import "./EventHub"
+import "epic-registry"
 import './NotificationCenter'
+
+
 
 // HMR ACCEPT
 if (module.hot) {

@@ -6,7 +6,7 @@ import {
 
 import {PouchDBModel} from 'typestore-plugin-pouchdb'
 import {User} from './User'
-import {RegisterModel} from 'epic-global'
+
 
 
 
@@ -15,7 +15,7 @@ export function makeMilestoneId(milestone:Milestone) {
 	return `${milestone.repoId}-${milestone.id}`
 }
 
-@RegisterModel
+@ModelRegistryScope.Register
 @PouchDBModel({
 	keyMapper: makeMilestoneId,
 	onlyMapDefinedAttributes: true

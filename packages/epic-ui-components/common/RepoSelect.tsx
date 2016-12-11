@@ -2,7 +2,8 @@
 
 import { connect } from 'react-redux'
 import { List } from 'immutable'
-import { Avatar, PureRender, RepoLabel } from "../common"
+import { PureRender } from "./PureRender"
+import {RepoLabel} from './Labels'
 
 import { createStructuredSelector } from 'reselect'
 import { ThemedStyles, IThemedAttributes } from "epic-styles"

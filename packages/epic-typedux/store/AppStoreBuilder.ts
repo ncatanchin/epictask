@@ -4,8 +4,8 @@ import { SynchronizedStateKeys } from "epic-global/Constants"
 
 import {Map} from 'immutable'
 import { loadStateFromDisk } from "epic-typedux/store/AppStorePersistence"
-import { isMap } from "typeguard"
-import { getModel } from "epic-global/Registry"
+import { isMap, isFunction } from "typeguard"
+import { If } from "epic-global"
 
 const
 	log = getLogger(__filename)
@@ -14,6 +14,9 @@ export async function storeBuilder(enhancer = null) {
 	
 	const
 		AppStore = require('./AppStore')
+	
+	log.debug(`Loading Action Factories`)
+	loadActionFactories()
 	
 	let
 		client,
@@ -40,7 +43,7 @@ export async function storeBuilder(enhancer = null) {
 		
 		SynchronizedStateKeys.forEach((leaf,index) => {
 			const
-				clazz = getModel(leaf),
+				clazz = ModelRegistryScope.getModel(leaf),
 				leafState = clazz.fromJS(leafStates[index])
 			
 			isMap(initialState) ?
@@ -71,6 +74,61 @@ export async function storeBuilder(enhancer = null) {
 	return store
 }
 
+/**
+ * Internal leaf to action factory class map
+ */
+const actionFactoryClazzMap = {} as any
 
+/**
+ * Load all the action factories
+ */
+export function loadActionFactories() {
+	
+	const
+		allActions = require('epic-typedux/actions/index')
+	
+	Object.keys(allActions)
+		.filter(modName => modName.endsWith('ActionFactory'))
+		.forEach(modName => {
+			
+			const
+				mod = allActions[modName],
+				actionFactoryClazz = (isFunction(mod) ? mod : mod.default)
+			
+			
+			if (!actionFactoryClazz) {
+				return log.debug(`Unable to get action clazz from ${modName}`)
+			}
+			
+			const
+				{leaf,name,ServiceName} = actionFactoryClazz
+			
+			actionFactoryClazzMap[leaf] = actionFactoryClazz
+			
+			const actionFactoryProvider = () => {
+				return Registry.Service[ServiceName] || Registry.Service[name]
+			}
+			
+			
+			Container
+				.bind(actionFactoryClazz)
+				.provider({
+					get: actionFactoryProvider
+				})
+		})
+	
+	// IN DEBUG EXPOSE ALL PROVIDERS
+	If(DEBUG,() => {
+		assignGlobal(exports)
+	})
+	
+	
+	if (module.hot) {
+		module.hot.accept(['epic-typedux/actions/index'], (updates) => {
+			log.info(`HMR update action factories`,updates)
+			loadActionFactories()
+		})
+	}
+}
 
 export default storeBuilder

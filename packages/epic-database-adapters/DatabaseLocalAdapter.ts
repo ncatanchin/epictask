@@ -1,5 +1,5 @@
 
-import { Stores, IDatabaseRequest, DatabaseEvents } from "epic-database-client"
+import { Stores } from "epic-database-client/Stores"
 
 import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
 
@@ -23,7 +23,6 @@ import { LabelStoreImpl } from "./stores/LabelStoreImpl"
 import { IssuesEventStoreImpl } from "./stores/IssuesEventStoreImpl"
 import { RepoEventStoreImpl } from "./stores/RepoEventStoreImpl"
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
-import { IDatabaseResponse } from "epic-database-client/DatabaseRequestResponse"
 
 const
 	log = getLogger(__filename)

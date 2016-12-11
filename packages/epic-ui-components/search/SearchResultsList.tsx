@@ -1,7 +1,7 @@
 // Imports
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 
-import { PureRender, WorkIndicator } from "epic-ui-components/common"
+import { WorkIndicator } from "epic-ui-components/common/WorkIndicator"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 
 import { SearchItem } from 'epic-models'

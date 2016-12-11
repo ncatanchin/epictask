@@ -1,5 +1,7 @@
 // Imports
-import { PureRender, RepoLabel, Icon } from "epic-ui-components"
+import { PureRender } from "epic-ui-components/common/PureRender"
+import { RepoLabel } from "epic-ui-components/common/Labels"
+import { Icon } from "epic-ui-components/common/icon/Icon"
 
 import { shallowEquals } from "epic-global"
 import { AvailableRepo, Issue, Milestone, Label, Repo, User, SearchItem } from "epic-models"
@@ -11,7 +13,7 @@ import { SearchController, SearchEvent } from "epic-ui-components/search/SearchC
 import { MappedProps } from "epic-global/UIUtil"
 import { getValue } from "typeguard"
 import baseStyles from './SearchResultItem.styles'
-import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common'
+import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common/FlexLayout'
 // Constants
 const log = getLogger(__filename)
 
@@ -21,7 +23,7 @@ const log = getLogger(__filename)
  */
 export interface ISearchResultItemProps extends IThemedAttributes {
 	item: SearchItem
-	groupByProvider:boolean
+	groupByProvider: boolean
 	controller: SearchController
 	selected?: boolean
 }
@@ -98,7 +100,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 				styles,
 				styles.normal,
 				isSelected && styles.selected,
-				groupByProvider && !firstProviderResult && {borderTop: '0.1rem solid transparent'}
+				groupByProvider && !firstProviderResult && { borderTop: '0.1rem solid transparent' }
 			),
 			
 			labelStyle = makeStyle(

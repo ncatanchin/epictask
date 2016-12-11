@@ -1,6 +1,6 @@
 
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { ITool, IToolPanel, ToolPanelLocation, DragTypes } from "epic-global"
+import { DragTypes } from "epic-global"
 import { getUIActions } from "epic-typedux"
 import { Icon,Button,PureRender } from "../../common"
 import { DragSource, DragSourceConnector, DragSourceMonitor } from "react-dnd"

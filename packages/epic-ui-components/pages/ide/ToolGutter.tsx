@@ -4,7 +4,7 @@ import { DropTarget, DropTargetConnector, DropTargetMonitor } from "react-dnd"
 import { PureRender } from "../../common"
 import { IThemedAttributes } from "epic-styles"
 import { DraggableToolGutterButton } from "./ToolGutterButton"
-import { TToolMap, IToolPanel, ITool, DragTypes, getValue } from "epic-global"
+import { DragTypes, getValue } from "epic-global"
 import filterProps from "react-valid-props"
 import { getUIActions } from "epic-typedux"
 import {Map,List} from 'immutable'

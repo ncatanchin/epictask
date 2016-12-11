@@ -4,7 +4,7 @@ import { connect } from "react-redux"
 import { List } from "immutable"
 import { getBuiltInToolId, BuiltInTools } from "epic-ui-components/tools/ToolConfig"
 import { PureRender, Button, Icon } from "epic-ui-components/common"
-import { RegisterTool, ToolPanelLocation, IToolProps } from "epic-global"
+
 import { createStructuredSelector } from "reselect"
 import { ThemedStyles, createThemedStyles, FlexScale, FlexColumn } from "epic-styles"
 import { IJobStatusDetail, TJobIMap} from "epic-typedux/state/jobs"
@@ -90,7 +90,7 @@ function getHeaderControls() {
  * @constructor
  **/
 
-@RegisterTool({
+@ToolRegistryScope.Register({
 	id: getBuiltInToolId(BuiltInTools.JobMonitor),
 	label: 'Job Monitor',
 	buttonLabel: 'Jobs',

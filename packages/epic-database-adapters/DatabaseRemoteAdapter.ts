@@ -1,7 +1,7 @@
 
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 import { Stores } from "epic-database-client/Stores"
-import { IDatabaseRequest, IDatabaseResponse } from "epic-database-client/DatabaseRequestResponse"
+
 import { Transport } from "epic-net/Transport"
 import { getDefaultTransport } from "epic-net/index"
 import { DatabaseServerName } from "epic-entry-shared/ProcessType"

@@ -1,7 +1,7 @@
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import {DatabaseClientService} from './DatabaseClientService'
 import { ObservableStore } from "typedux"
-import {  ProcessType, AppKey, addRegistryListener, RegistryEvent } from "epic-global"
+import { ProcessType, AppKey, AppEventType } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
 
 const
@@ -29,10 +29,8 @@ export default class UIStateService extends BaseService {
 		return [DatabaseClientService]
 	}
 	
-	private onRegistryEvent = (event:RegistryEvent,...args:any[]) => {
-		if (event === RegistryEvent.ToolRegistered) {
-			getUIActions().updateRegisteredTools()
-		}
+	private onRegistryEvent = (event:AppEventType,...args:any[]) => {
+		getUIActions().updateRegisteredTools()
 	}
 	
 	
@@ -60,7 +58,7 @@ export default class UIStateService extends BaseService {
 	async start():Promise<this> {
 		
 		getUIActions().updateRegisteredTools()
-		this.unsubscribeRegistry = addRegistryListener(this.onRegistryEvent)
+		this.unsubscribeRegistry = EventHub.on(EventHub.ToolsChanged,this.onRegistryEvent)
 		
 		return super.start()
 	}

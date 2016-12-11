@@ -10,7 +10,6 @@ import {Milestone} from './Milestone'
 import {User} from './User'
 import {Repo} from './Repo'
 
-import {RegisterModel} from 'epic-global'
 import { Transient } from  "epic-global"
 
 
@@ -36,7 +35,7 @@ assignGlobal({
  * to real repos
  *
  */
-@RegisterModel
+@ModelRegistryScope.Register
 @Model()
 export class AvailableRepo extends DefaultModel implements IAvailableRepo {
 

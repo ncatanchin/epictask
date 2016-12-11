@@ -9,7 +9,6 @@ import {
 	getValue,
 	nilFilter,
 	cloneObjectShallow,
-	RegisterActionFactory,
 	pagedFinder,
 	GithubSyncStatus
 } from "epic-global"
@@ -44,6 +43,30 @@ const uuid = require('node-uuid')
 const Benchmarker = Benchmark('RepoActionFactory')
 
 
+declare global {
+	
+	interface IRepoActionFactory extends RepoActionFactory {
+	}
+	
+	/**
+	 * Add the RepoActions Injector
+	 */
+	namespace Inject {
+		namespace Service {
+			const RepoActions: IInjector<IRepoActionFactory>
+		}
+	}
+	
+	/**
+	 * Add the service to the registry
+	 */
+	namespace Registry {
+		namespace Service {
+			const RepoActions:IRepoActionFactory
+		}
+	}
+}
+
 
 /**
  * RepoActionFactory.ts
@@ -51,9 +74,12 @@ const Benchmarker = Benchmark('RepoActionFactory')
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@RegisterActionFactory
+@ServiceRegistryScope.Register
 @Provided
 export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
+	
+	static ServiceName = "RepoActions"
+	
 	
 	static leaf = RepoKey
 	

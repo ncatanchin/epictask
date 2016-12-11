@@ -1,5 +1,5 @@
 import {getValue} from 'typeguard'
-import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent, EnumEventEmitter } from "epic-global"
+import { getHot, setDataOnHotDispose, PersistentValue, PersistentValueEvent } from "epic-global"
 import { TTheme } from "./Theme"
 import { IPalette } from "./material"
 

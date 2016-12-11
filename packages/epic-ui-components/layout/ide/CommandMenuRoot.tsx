@@ -9,13 +9,13 @@ import {
 	getCommandManager
 } from "epic-command-manager"
 import { ICommandMenuItem, CommandMenuItemType, isCommandFontIcon, isCommandImageIcon } from "epic-command-manager"
-import { IEnumEventRemover, getValue } from "epic-global"
+import { getValue } from "epic-global"
 import { NavigationChevronLeft as SvgArrowLeft, NavigationMoreVert as SvgNavMoreIcon } from "material-ui/svg-icons"
 import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { isString } from "epic-global"
 import { Icon,KeyboardAccelerator,PureRender } from "epic-ui-components/common"
 
-
+import {IEnumEventRemover} from 'type-enum-events'
 // Constants
 const
 	log = getLogger(__filename)

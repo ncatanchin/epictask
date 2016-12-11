@@ -4,7 +4,7 @@ import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
 import { PureRender,ToastMessages,Page } from "epic-ui-components/common"
 import { ThemedStyles, makeLinearGradient, convertRem, IThemedAttributes } from "epic-styles"
-import { createDeepEqualSelector, ToolPanelLocation, IToolPanel, getValue } from "epic-global"
+import { getValue } from "epic-global"
 import { ToolPanelComponent as ToolPanel } from "./ToolPanel"
 import { ToolDragLayer } from "./ToolDragLayer"
 import {

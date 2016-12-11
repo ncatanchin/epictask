@@ -1,10 +1,9 @@
 
 import * as Electron from 'electron'
-import { EnumEventEmitter } from "epic-global/EnumEventEmitter"
+import { enumValueMap, EnumEventEmitter} from 'type-enum-events'
 import { AppEventType } from "epic-global/Constants"
 import { fromPlainObject, toPlainObject } from "typetransform"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
-import { enumValueMap } from "epic-global/EnumUtil"
 
 const
 	log = getLogger(__filename),

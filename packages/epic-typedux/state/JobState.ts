@@ -2,7 +2,7 @@
 
 // Imports
 import {List,Map,Record} from 'immutable'
-import {RegisterModel} from "epic-global"
+
 import { IJob, IJobSchedule, IJobStatusDetail, TJobMap } from "./jobs/JobTypes"
 import { toPlainObject } from "typetransform"
 import { reviveImmutable } from "epic-global/ModelUtil"
@@ -29,7 +29,7 @@ export const JobStateRecord = Record({
  * Keeps track of ongoing job
  * information status and scheduling
  */
-@RegisterModel
+@ModelRegistryScope.Register
 export class JobState extends JobStateRecord {
 
 	static fromJS(o:any) {
