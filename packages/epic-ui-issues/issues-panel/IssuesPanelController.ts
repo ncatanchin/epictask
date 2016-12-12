@@ -15,34 +15,24 @@ import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import { enabledAvailableReposSelector } from "epic-typedux/selectors"
 import { EventEmitter } from "events"
-import { Provided } from "epic-global"
+import { Provided, ContextMenu } from "epic-global"
 
 /**
  * Created by jglanz on 11/5/16.
  */
 
 const
-	log = getLogger(__filename),
-	{remote} = require('electron'),
-	{Menu,MenuItem} = remote
+	log = getLogger(__filename)
 
-
-function addMenuCommand(menu:Electron.Menu,command:ICommand,execute:() => any) {
-	menu.append(new MenuItem({
-		label: command.description || command.name,
-		click: execute,
-		accelerator: command.defaultAccelerator
-	}))
-}
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-type TIssuesPanelStateUpdater = (...args) => (state:IssuesPanelState) => any
+type TIssuesPanelStateUpdater = (...args) => (state: IssuesPanelState) => any
 
 
-export function getIssuesPanelSelector(fn:(selectors:TIssuesPanelSelectors) => any) {
+export function getIssuesPanelSelector(fn: (selectors: TIssuesPanelSelectors) => any) {
 	return (state, props) => getValue(() => fn(props.viewController.selectors)(state, props))
 }
 
@@ -59,8 +49,8 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	
 	selectors
 	
-	private mounted:boolean
-	private unsubscribers:Function[]
+	private mounted: boolean
+	private unsubscribers: Function[]
 	
 	get viewState() {
 		return this.selectors.viewStateSelector(getStoreState())
@@ -71,7 +61,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {IssuesPanelState}
 	 */
-	get state():IssuesPanelState {
+	get state(): IssuesPanelState {
 		return getValue(() =>
 				this.selectors.issuesPanelStateSelector(getStoreState()),
 			this.initialState)
@@ -91,15 +81,15 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {T}
 	 */
-	get issues():List<Issue> {
-		return getValue(() => this.state.issues,List<Issue>())
+	get issues(): List<Issue> {
+		return getValue(() => this.state.issues, List<Issue>())
 	}
 	
 	/**
 	 * All focused issues in state
 	 *
 	 */
-	get focusedIssues():List<Issue> {
+	get focusedIssues(): List<Issue> {
 		return getValue(() => this.issues.filter(it => it.focused)) as List<Issue>
 	}
 	
@@ -108,11 +98,11 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {T}
 	 */
-	get focusedIssueIds():List<number> {
+	get focusedIssueIds(): List<number> {
 		return getValue(() => this.focusedIssues.map(it => it.id)) as List<number>
 	}
 	
-	makeStateUpdate<T extends TIssuesPanelStateUpdater>(updater:T):T {
+	makeStateUpdate<T extends TIssuesPanelStateUpdater>(updater: T): T {
 		return ((...args) => {
 			
 			const
@@ -134,7 +124,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	}
 	
 	
-	updateState(patch:{[prop:string]:any}) {
+	updateState(patch: { [prop: string]: any }) {
 		
 		patch = cloneObjectShallow(patch)
 		
@@ -184,7 +174,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @param id
 	 * @param initialState
 	 */
-	constructor(public id:string, public initialState:IssuesPanelState = new IssuesPanelState()) {
+	constructor(public id: string, public initialState: IssuesPanelState = new IssuesPanelState()) {
 		super()
 		
 		this.selectors = makeIssuesPanelStateSelectors(id)
@@ -211,7 +201,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		//this.loadIssues()
 	}
 	
-	private onSelectedIssueIdsChanged = (newVal:List<number>, oldVal:List<number>) => {
+	private onSelectedIssueIdsChanged = (newVal: List<number>, oldVal: List<number>) => {
 		log.debug(`Selected issue ids changed`, newVal, oldVal)
 		if (getValue(() => newVal.size, 0) !== 1) {
 			return
@@ -239,7 +229,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	private databaseChangeHandlers = {
 		
 		// ISSUES
-		[Issue.$$clazz]: function (changes:IDatabaseChange[]) {
+		[Issue.$$clazz]: function (changes: IDatabaseChange[]) {
 			const
 				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
@@ -252,7 +242,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		},
 		
 		// COMMENTS
-		[Comment.$$clazz]: function (changes:IDatabaseChange[]) {
+		[Comment.$$clazz]: function (changes: IDatabaseChange[]) {
 			const
 				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
@@ -286,7 +276,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			}
 		},
 		// COMMENTS
-		[IssuesEvent.$$clazz]: function (changes:IDatabaseChange[]) {
+		[IssuesEvent.$$clazz]: function (changes: IDatabaseChange[]) {
 			const
 				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
@@ -327,7 +317,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param allChanges
 	 */
-	private onDatabaseChanged = (allChanges:IDatabaseChange[]) => {
+	private onDatabaseChanged = (allChanges: IDatabaseChange[]) => {
 		const
 			groups = _.groupBy(allChanges, it => it.type)
 		
@@ -355,7 +345,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param mounted
 	 */
-	setMounted(mounted:boolean) {
+	setMounted(mounted: boolean) {
 		this.mounted = mounted
 		
 		if (this.unsubscribers) {
@@ -412,7 +402,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	/**
 	 * Load activity for an issue
 	 */
-	loadActivity = _.debounce(OneAtATime({}, async(issue:Issue) => {
+	loadActivity = _.debounce(OneAtATime({}, async(issue: Issue) => {
 		
 		const
 			actions = new IssueActionFactory(),
@@ -424,8 +414,8 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	/**
 	 * Update issues in the current panel
 	 */
-	private updateIssuesInState = this.makeStateUpdate((updatedIssues:List<Issue>) => {
-		return (state:IssuesPanelState) => state.withMutations((newState:IssuesPanelState) => {
+	private updateIssuesInState = this.makeStateUpdate((updatedIssues: List<Issue>) => {
+		return (state: IssuesPanelState) => state.withMutations((newState: IssuesPanelState) => {
 			let
 				{ issues } = newState,
 				availRepos = enabledAvailableReposSelector(getStoreState()),
@@ -453,16 +443,16 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	})
 	
 	
-	private updateCriteria = this.makeStateUpdate((criteria:IIssueCriteria = null) =>
-		(state:IssuesPanelState) => (criteria) ?
+	private updateCriteria = this.makeStateUpdate((criteria: IIssueCriteria = null) =>
+		(state: IssuesPanelState) => (criteria) ?
 			state
 				.set('criteria', cloneObject(criteria))
-				.set('searchText',''):
+				.set('searchText', '') :
 			state
 	)
 	
 	
-	setActivity(comments:List<Comment>, events:List<IssuesEvent>) {
+	setActivity(comments: List<Comment>, events: List<IssuesEvent>) {
 		this.updateState({
 			comments,
 			events
@@ -492,7 +482,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @returns {(state:IssueState)=>Map<string, any>}
 	 */
 	
-	private setIssues = this.makeStateUpdate((issues:List<Issue>) => (state:IssuesPanelState) => state.set(
+	private setIssues = this.makeStateUpdate((issues: List<Issue>) => (state: IssuesPanelState) => state.set(
 		'issues',
 		state.issues.withMutations(newIssues => {
 			issues.forEach(issue => {
@@ -508,7 +498,6 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	))
 	
 	
-	
 	/**
 	 * The the selected issue ids
 	 *
@@ -518,7 +507,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @returns {(state:IssueState)=>Map<string, number[]>}
 	 */
 	
-	setSelectedIssueIds(selectedIssueIds:List<number>) {
+	setSelectedIssueIds(selectedIssueIds: List<number>) {
 		this.updateState({
 			selectedIssueIds,
 			editInlineConfig: null
@@ -530,14 +519,14 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 */
 	toggleSelectedAsFocused() {
 		let
-			{ selectedIssueIds,issues } = this.state
+			{ selectedIssueIds, issues } = this.state
 		
 		if (!selectedIssueIds || !selectedIssueIds.size)
 			return
 		
 		// COPY
 		let
-			{focusedIssues,focusedIssueIds} = this
+			{ focusedIssues, focusedIssueIds } = this
 		
 		let
 			updatedIssues
@@ -546,23 +535,22 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			updatedIssues = selectedIssueIds
 				.map(id => focusedIssues.find(it => it.id === id))
 				.filter(it => !isNil(it))
-				.map(it => cloneObjectShallow(it,{
+				.map(it => cloneObjectShallow(it, {
 					focused: false
 				})) as List<Issue>
 		} else {
 			updatedIssues = selectedIssueIds
 				.map(id => issues.find(it => it.id === id))
 				.filter(it => !isNil(it) && !it.focused)
-				.map(it => cloneObjectShallow(it,{
+				.map(it => cloneObjectShallow(it, {
 					focused: true
 				})) as List<Issue>
 		}
 		
-		getIssueActions().saveIssues(updatedIssues,true)
+		getIssueActions().saveIssues(updatedIssues, true)
 		this.updateIssuesInState(updatedIssues)
 		
 	}
-	
 	
 	
 	/**
@@ -570,9 +558,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param issue
 	 */
-	focusOnIssue(issue:Issue)
-	focusOnIssue(issueId:number)
-	focusOnIssue(issueOrIssueId:Issue|number) {
+	focusOnIssue(issue: Issue)
+	focusOnIssue(issueId: number)
+	focusOnIssue(issueOrIssueId: Issue|number) {
 		const
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
@@ -580,14 +568,14 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issue = this.issues.find(it => it.id === issueId)
 		
 		if (!issue || issue.focused) {
-			log.debug(`Issue id ${issueId} is already focused`,issue)
+			log.debug(`Issue id ${issueId} is already focused`, issue)
 			return
 		}
 		
 		issue.focused = true
-		getIssueActions().saveIssue(issue,true)
+		getIssueActions().saveIssue(issue, true)
 		
-		this.updateIssuesInState(List([issue]))
+		this.updateIssuesInState(List([ issue ]))
 		
 	}
 	
@@ -596,9 +584,9 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param issue
 	 */
-	removeIssueFocus(issue:Issue)
-	removeIssueFocus(issueId:number)
-	removeIssueFocus(issueOrIssueId:Issue|number) {
+	removeIssueFocus(issue: Issue)
+	removeIssueFocus(issueId: number)
+	removeIssueFocus(issueOrIssueId: Issue|number) {
 		const
 			issueId = isNumber(issueOrIssueId) ? issueOrIssueId : issueOrIssueId.id
 		
@@ -606,14 +594,14 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			issue = this.issues.find(it => it.id === issueId)
 		
 		if (!issue || !issue.focused) {
-			log.debug(`Issue id ${issueId} is already NOT focused`,issue)
+			log.debug(`Issue id ${issueId} is already NOT focused`, issue)
 			return
 		}
 		
 		issue.focused = false
-		getIssueActions().saveIssue(issue,true)
+		getIssueActions().saveIssue(issue, true)
 		
-		this.updateIssuesInState(List([issue]))
+		this.updateIssuesInState(List([ issue ]))
 		
 	}
 	
@@ -630,10 +618,10 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param groupBy
 	 */
-	setGroupBy(groupBy:string) {
+	setGroupBy(groupBy: string) {
 		const
 			issueSort = this.getSort(),
-			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
+			newIssueSort: IIssueSort = cloneObjectShallow(issueSort, {
 				groupBy
 			})
 		
@@ -646,13 +634,13 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	toggleGroupByDirection() {
 		const
 			issueSort = this.getSort(),
-			newIssueSort:IIssueSort = cloneObjectShallow(issueSort, {
+			newIssueSort: IIssueSort = cloneObjectShallow(issueSort, {
 				groupByDirection: (issueSort.groupByDirection === 'asc') ?
 					'desc' :
 					'asc'
 			})
 		
-		this.setCriteria(cloneObjectShallow(this.getCriteria(),{sort:newIssueSort}))
+		this.setCriteria(cloneObjectShallow(this.getCriteria(), { sort: newIssueSort }))
 	}
 	
 	
@@ -661,11 +649,11 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param field
 	 */
-	setSortByField(field:string) {
+	setSortByField(field: string) {
 		const
 			{ criteria } = this.state,
 			issueSort = criteria.sort,
-			newIssueSort:IIssueSort =
+			newIssueSort: IIssueSort =
 				cloneObject(issueSort, { fields: [ field ] })
 		
 		
@@ -679,7 +667,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		const
 			{ criteria } = this.state,
 			issueSort = criteria.sort,
-			newIssueSort:IIssueSort =
+			newIssueSort: IIssueSort =
 				cloneObject(issueSort, {
 					direction: (issueSort.direction === 'asc') ?
 						'desc' :
@@ -696,7 +684,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param milestone
 	 */
-	toggleIssueFilterMilestone(milestone:Milestone) {
+	toggleIssueFilterMilestone(milestone: Milestone) {
 		let
 			{ criteria } = this.state,
 			milestoneIds = cloneObjectShallow(criteria.milestoneIds || []),
@@ -716,7 +704,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param label
 	 */
-	toggleIssueFilterLabel(label:Label) {
+	toggleIssueFilterLabel(label: Label) {
 		let
 			{ criteria } = this.state,
 			labelIds = cloneObjectShallow(criteria.labelIds || []),
@@ -740,17 +728,17 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @returns {(issueState:IssueState, getState:any)=>Map<(value:Map<any, any>)=>Map<any, any>, V>}
 	 */
 	
-	setCriteria(criteria:IIssueCriteria = this.getCriteria()) {
+	setCriteria(criteria: IIssueCriteria = this.getCriteria()) {
 		return this.updateCriteria(criteria)
 	}
 	
-	setSearchText(searchText:string) {
-		return this.updateState({searchText})
+	setSearchText(searchText: string) {
+		return this.updateState({ searchText })
 	}
 	
 	
-	toggleGroupVisibility = this.makeStateUpdate((id:string, visible:boolean) => {
-		return (state:IssuesPanelState) => state.set('groupVisibility', state.groupVisibility.set(id, visible))
+	toggleGroupVisibility = this.makeStateUpdate((id: string, visible: boolean) => {
+		return (state: IssuesPanelState) => state.set('groupVisibility', state.groupVisibility.set(id, visible))
 	})
 	
 	
@@ -759,7 +747,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @param includeClosed
 	 */
-	includeClosedIssues(includeClosed:boolean) {
+	includeClosedIssues(includeClosed: boolean) {
 		this.setCriteria(cloneObjectShallow(this.getCriteria(), { includeClosed }))
 	}
 	
@@ -781,7 +769,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @return {(state:IssueState)=>Map<string, Issue>}
 	 */
 	
-	setEditingIssue(editingIssue:Issue) {
+	setEditingIssue(editingIssue: Issue) {
 		this.updateState({
 			editingIssue
 		})
@@ -793,7 +781,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @param inline
 	 * @returns {(state:IssueState)=>Map<string, boolean>}
 	 */
-	setEditingInline(inline:boolean) {
+	setEditingInline(inline: boolean) {
 		!inline && this.updateState({
 			editInlineConfig: null,
 			editingIssue: null
@@ -805,7 +793,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {any}
 	 */
-	getSelectedIssue():Issue {
+	getSelectedIssue(): Issue {
 		return this.selectors.selectedIssueSelector(getStoreState())
 	}
 	
@@ -814,7 +802,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {List<Issue>}
 	 */
-	getSelectedIssues():List<Issue> {
+	getSelectedIssues(): List<Issue> {
 		return this.selectors.selectedIssuesSelector(getStoreState())
 	}
 	
@@ -823,7 +811,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {List<Issue>}
 	 */
-	getSelectedIssueIds():List<number> {
+	getSelectedIssueIds(): List<number> {
 		return getValue(() => this.state.selectedIssueIds)
 	}
 	
@@ -832,7 +820,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 *
 	 * @returns {List<Issue>}
 	 */
-	getItem(index:number):IIssueListItem<any> {
+	getItem(index: number): IIssueListItem<any> {
 		return getValue(() => this.selectors.issueItemsSelector(getStoreState()).get(index), null)
 	}
 	
@@ -843,7 +831,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @returns {(dispatch:any, getState:any)=>undefined}
 	 */
 	
-	editInline(fromIssue:Issue) {
+	editInline(fromIssue: Issue) {
 		
 		let
 			items = this.selectors.issueItemsSelector(getStoreState()),
@@ -882,7 +870,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * Show a context menu for an issue
 	 * @param issue
 	 */
-	showIssueContextMenu = (issue:Issue) => {
+	showIssueContextMenu = (issue: Issue) => {
 		if (!issue)
 			return
 		
@@ -890,66 +878,46 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			selectedIssues = this.getSelectedIssues()
 		
 		if (!selectedIssues.find(it => it.id === issue.id)) {
-			selectedIssues = List<Issue>([issue])
-			this.setSelectedIssueIds(List<number>([issue.id]))
+			selectedIssues = List<Issue>([ issue ])
+			this.setSelectedIssueIds(List<number>([ issue.id ]))
 		}
 		
 		
-		const
-			menu = new Menu()
-		
-		// LABEL
-		menu.append(new MenuItem({
-			label: selectedIssues.size === 1 ?
+		ContextMenu
+			.create()
+			.addLabel(selectedIssues.size === 1 ?
 				`Issue #${issue.number} in ${issue.repo.full_name}` :
 				`Issues: ${selectedIssues.map(it => `#${it.number}`).join(', ')}`
-		}))
+			)
+			.addSeparator()
+			
+			.addCommand(`Edit Issue: #${issue.number} ${issue.title}`, () => getIssueActions().editIssue(issue))
+			.addSeparator()
+			
+			.addCommand(
+				Commands.LabelIssues,
+				() => getIssueActions().patchIssuesLabel(selectedIssues)
+			)
+			.addCommand(
+				Commands.MilestoneIssues,
+				() => getIssueActions().patchIssuesLabel(selectedIssues)
+			)
+			.addCommand(
+				Commands.AssignIssues,
+				() => getIssueActions().patchIssuesAssignee(selectedIssues)
+			)
+			.addSeparator()
+			.addCommand(
+				Commands.ToggleFocusIssues,
+				() => this.toggleSelectedAsFocused()
+			)
+			.addSeparator()
+			.addCommand(
+				Commands.CloseIssues,
+				() => getIssueActions().setIssueStatus(selectedIssues, 'closed')
+			)
+			.popup()
 		
-		// SEP
-		menu.append(new MenuItem({type: 'separator'}))
-		
-		
-		
-		// LABELS
-		addMenuCommand(
-			menu,
-			Commands.LabelIssues,
-			() => getIssueActions().patchIssuesLabel(selectedIssues)
-		)
-		
-		// MILESTONE
-		addMenuCommand(
-			menu,
-			Commands.MilestoneIssues,
-			() => getIssueActions().patchIssuesLabel(selectedIssues)
-		)
-		
-		// ASSIGN
-		addMenuCommand(
-			menu,
-			Commands.AssignIssues,
-			() => getIssueActions().patchIssuesAssignee(selectedIssues)
-		)
-		
-		menu.append(new MenuItem({type: 'separator'}))
-		
-		// FOCUS
-		addMenuCommand(
-			menu,
-			Commands.ToggleFocusIssues,
-			() => this.toggleSelectedAsFocused()
-		)
-		
-		menu.append(new MenuItem({type: 'separator'}))
-		
-		// CLOSE
-		addMenuCommand(
-			menu,
-			Commands.CloseIssues,
-			() => getIssueActions().setIssueStatus(selectedIssues,'closed')
-		)
-		
-		menu.popup(remote.getCurrentWindow())
 		
 	}
 	

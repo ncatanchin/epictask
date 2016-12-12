@@ -480,7 +480,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			},
 			canEdit = canEditIssue(issue.repo, issue),
 			editLabelsControl = canEdit &&
-				<div style={FlexRowCenter}>
+				
+				<div style={[Styles.FlexRowCenter,Styles.CursorPointer]}>
 					
 					{/* Add a tag/label */}
 					<i key={`${issue.id}LabelEditIcon`}
@@ -633,14 +634,17 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				}
 			</div>
 			
-			{saving && <div style={[{top:0,left:0,right:0,bottom:0},PositionAbsolute,FlexColumnCenter,Fill]}>
-				
-				<CircularProgress
-					color={theme.progressIndicatorColor}
-					size={30}/>
-			</div>}
+			
 		</Form>
 	}
+	/*
+	 {saving && <div style={[{top:0,left:0,right:0,bottom:0},PositionAbsolute,FlexColumnCenter,Fill]}>
+	 
+	 <WorkIn
+	 color={theme.progressIndicatorColor}
+	 size={30}/>
+	 </div>}
+	 */
 	
 	
 }

@@ -1,5 +1,5 @@
 
-import { makePromisedComponent } from "epic-global"
+import { makePromisedComponent, acceptHot } from "epic-global"
 
 RouteRegistryScope.Register({
 	name: 'Login',
@@ -12,3 +12,4 @@ RouteRegistryScope.Register({
 			resolver.resolve(require('./LoginRoot').LoginRoot)
 		}))
 })
+acceptHot(module)

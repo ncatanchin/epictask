@@ -1,5 +1,5 @@
 
-import { makePromisedComponent } from "epic-global"
+import { makePromisedComponent, acceptHot } from "epic-global"
 
 /*
  
@@ -53,3 +53,6 @@ export * from "./RepoList"
 export * from "./RepoMilestoneEditor"
 export * from "./RepoPanel"
 export * from "./RepoSettingsWindow"
+
+acceptHot(module)
+

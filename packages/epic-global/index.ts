@@ -48,3 +48,5 @@ export * from "./GithubSyncStatus"
 export * from './settings'
 export * from './Config'
 export * from "./EventUtil"
+
+export * from "./ContextMenu"

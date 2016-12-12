@@ -1,6 +1,6 @@
 
 
-import { makePromisedComponent, toJSON } from "epic-global"
+import { makePromisedComponent, toJSON, acceptHot } from "epic-global"
 import {Issue,Comment} from 'epic-models'
 import { List } from "immutable"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
@@ -144,3 +144,6 @@ CommandRegistryScope.Register({
 	name: "New issue inline",
 	defaultAccelerator: CommonKeys.Enter
 })
+
+
+acceptHot(module)

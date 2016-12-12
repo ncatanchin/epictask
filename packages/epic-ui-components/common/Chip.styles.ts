@@ -9,7 +9,7 @@
 export function chipStyles(topStyles, theme, palette) {
 	
 	const
-		{primary} = palette,
+		{primary,warn,secondary,accent,text} = palette,
 		accessoryDim = convertRem(1.8),
 		accessoryDimHalf = accessoryDim / 2,
 		accessoryTransition = makeTransition([
@@ -55,6 +55,7 @@ export function chipStyles(topStyles, theme, palette) {
 				height: accessoryDim,
 				width: accessoryDim,
 				borderRadius: accessoryDimHalf,
+				backgroundColor: Styles.Transparent,
 				
 				// icon decoration
 				icon: [ accessoryTransition, FlexColumnCenter, makePaddingRem(0, 0, 0, 0), {
@@ -62,6 +63,7 @@ export function chipStyles(topStyles, theme, palette) {
 					width: accessoryDim,
 					fontSize: accessoryDimHalf
 				} ],
+				
 				
 				hover: [ {
 					borderRadius: 0,
@@ -71,7 +73,9 @@ export function chipStyles(topStyles, theme, palette) {
 				} ],
 				
 				// REMOVE CONTROL
-				remove: [ OverflowHidden, {
+				remove: [ OverflowHidden, {backgroundColor: 'white',
+					color: warn.hue1,
+					
 					//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
 					fontSize: rem(1),
 					cursor: 'pointer',
@@ -81,7 +85,12 @@ export function chipStyles(topStyles, theme, palette) {
 					
 					// HOVER REMOVE
 					hover: [ {
-						icon: [ {} ]
+						
+						
+						icon: [ {
+							//backgroundColor: 'white',
+							//color: warn.hue1,
+						} ]
 					} ]
 				} ]
 				

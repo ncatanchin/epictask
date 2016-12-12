@@ -1,4 +1,4 @@
-import { makePromisedComponent } from "epic-global"
+import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions } from "epic-typedux/provider"
 
@@ -84,3 +84,5 @@ CommandRegistryScope.Register({
 	defaultAccelerator: "CommandOrControl+Comma",
 	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
 })
+
+acceptHot(module)

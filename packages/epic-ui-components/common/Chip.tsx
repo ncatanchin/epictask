@@ -201,13 +201,14 @@ class BaseChip extends React.Component<IChipProps,any> {
  * @constructor
  */
 function ChipAccessory({ styles, item, itemStyle, iconStyle, onRemove, icon, hovering }) {
+	
 	return onRemove ?
-		<div style={[
+		<div style={makeStyle(
 					styles.accessory,
 					itemStyle.accessory,
 					hovering && styles.accessory.hover,
 					hovering && styles.accessory.remove.hover
-					]} className="removeControl">
+					)} className="removeControl">
 			<Icon
 				style={makeStyle(
 								styles.accessory.icon,
@@ -222,14 +223,14 @@ function ChipAccessory({ styles, item, itemStyle, iconStyle, onRemove, icon, hov
 		
 		// ICON
 		icon ?
-			<div style={[
+			<div style={makeStyle(
 						styles.accessory,
 						itemStyle.accessory,
 						iconStyle
-					]}>
+					)}>
 				<Icon
 					{...icon}
-					style={[styles.accessory.icon,iconStyle]}
+					style={makeStyle(styles.accessory.icon,iconStyle)}
 				/>
 			</div> :
 			React.DOM.noscript()
