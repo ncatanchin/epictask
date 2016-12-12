@@ -10,7 +10,7 @@ import { getValue, guard } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
 import { getUIActions } from "epic-typedux"
-import { CommandType, ContainerNames } from "epic-command-manager"
+import { CommandType, ContainerNames, CommonKeys } from "epic-command-manager"
 import { IssueMultiInlineList } from "../issues-panel/IssueMultiInlineList"
 import { IssuePatchModes } from "../issues-panel/IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
@@ -161,15 +161,10 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
-			.command(CommandType.Container,
-				'Save Issue',
-				(cmd, event) => this.onSave(event),
-				"CommandOrControl+Enter")
-			.command(CommandType.Container,
-				'Close Dialog',
-				this.hide,
-				"Escape")
-			
+			.command(
+				CommonKeys.Escape,
+				this.hide
+			)
 			.make()
 	
 	commandComponentId = ContainerNames.IssuePatchDialog

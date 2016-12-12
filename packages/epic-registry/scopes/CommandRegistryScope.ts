@@ -42,13 +42,15 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	/**
 	 * Scope container
 	 */
-	private scope
+	scope
 	
 	/**
 	 * Create the scope
 	 */
 	constructor() {
 		this.scope = Registry.getScope(CommandScope)
+		
+		
 	}
 	
 	/**
@@ -76,11 +78,14 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	 * Auto register a class
 	 * so it can be dynamically recreated in revivers etc
 	 *
-	 * @param config
+	 * @param configs
 	 */
-	Register = (config:ICommand) => {
-		log.debug(`Registered command: ${config.name}`)
-		this.scope[config.name] = config
+	Register = (...configs:ICommand[]) => {
+		configs.forEach(config => {
+			log.debug(`Registered command (${config.id}): ${config.name}`)
+			this.scope[config.id] = config
+		})
+		
 		this.commandsChanged()
 	}
 	
@@ -115,9 +120,9 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	 * @param name
 	 * @returns {any}
 	 */
-	get(name):ICommand {
+	get(id):ICommand {
 		const
-			command = this.scope[name]
+			command = this.scope[id]
 		
 		assert(command, `Command not found for ${name}`)
 		
@@ -158,6 +163,11 @@ declare global {
 	function getCommands():TCommandConfigMap
 	
 	/**
+	 * All registered commands
+	 */
+	const Commands:any
+	
+	/**
 	 * Command Registry Scope
 	 */
 	namespace CommandRegistryScope {
@@ -168,7 +178,7 @@ declare global {
 		 * @param config
 		 * @constructor
 		 */
-		function Register(config:ICommand)
+		function Register(...configs:ICommand[])
 		
 		/**
 		 * Get all registered commands
@@ -208,6 +218,7 @@ RegistryScope.Command = commandRegistryScope
 Registry.addScope(commandRegistryScope)
 
 assignGlobal({
+	Commands: commandRegistryScope.scope,
 	getCommands() {
 		return commandRegistryScope.asMap()
 	},

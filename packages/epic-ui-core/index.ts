@@ -1,5 +1,6 @@
 import { makePromisedComponent } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
+import { getUIActions, getRepoActions } from "epic-typedux/provider"
 
 
 
@@ -55,3 +56,31 @@ const CoreRouteConfigs = {
 	
 }
 Object.values(CoreRouteConfigs).forEach(RouteRegistryScope.Register)
+
+
+
+CommandRegistryScope.Register({
+	id: 'Quit',
+	type: CommandType.App,
+	name: "Quit",
+	defaultAccelerator: "CommandOrControl+q",
+	execute: (item, event) => require('electron').remote.app.quit()
+},{
+	id: 'CloseWindow',
+	type: CommandType.App,
+	name: "Close Window",
+	defaultAccelerator: "CommandOrControl+w",
+	execute: (item, event) => getUIActions().closeWindow()
+},{
+	id: 'SyncEverything',
+	type: CommandType.App,
+	name: "Github > Sync Everything",
+	defaultAccelerator: "CommandOrControl+s",
+	execute: (item, event) => getRepoActions().syncAll()
+}, {
+	id: 'Settings',
+	type: CommandType.App,
+	name: "Settings",
+	defaultAccelerator: "CommandOrControl+Comma",
+	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
+})

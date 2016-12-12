@@ -21,7 +21,17 @@ import { EventEmitter } from "events"
  */
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	{remote} = require('electron'),
+	{Menu,MenuItem} = remote
+
+
+function addMenuCommand(menu:Electron.Menu,command:ICommand,execute:() => any) {
+	menu.append(new MenuItem({
+		label: command.description || command.name,
+		click: execute
+	}))
+}
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
@@ -862,6 +872,81 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 			}
 		})
 		
+		
+	}
+	
+	/**
+	 * Show a context menu for an issue
+	 * @param issue
+	 */
+	showIssueContextMenu = (issue:Issue) => {
+		if (!issue)
+			return
+		
+		let
+			selectedIssues = this.getSelectedIssues()
+		
+		if (!selectedIssues.find(it => it.id === issue.id)) {
+			selectedIssues = List<Issue>([issue])
+			this.setSelectedIssueIds(List<number>([issue.id]))
+		}
+		
+		
+		const
+			menu = new Menu()
+		
+		// LABEL
+		menu.append(new MenuItem({
+			label: selectedIssues.size === 1 ?
+				`Issue #${issue.number} in ${issue.repo.full_name}` :
+				`Issues: ${selectedIssues.map(it => `#${it.number}`).join(', ')}`
+		}))
+		
+		// SEP
+		menu.append(new MenuItem({type: 'separator'}))
+		
+		
+		
+		// LABELS
+		addMenuCommand(
+			menu,
+			Commands.LabelIssues,
+			() => getIssueActions().patchIssuesLabel(selectedIssues)
+		)
+		
+		// MILESTONE
+		addMenuCommand(
+			menu,
+			Commands.MilestoneIssues,
+			() => getIssueActions().patchIssuesLabel(selectedIssues)
+		)
+		
+		// ASSIGN
+		addMenuCommand(
+			menu,
+			Commands.AssignIssues,
+			() => getIssueActions().patchIssuesAssignee(selectedIssues)
+		)
+		
+		menu.append(new MenuItem({type: 'separator'}))
+		
+		// FOCUS
+		addMenuCommand(
+			menu,
+			Commands.ToggleFocusIssues,
+			() => this.toggleSelectedAsFocused()
+		)
+		
+		menu.append(new MenuItem({type: 'separator'}))
+		
+		// CLOSE
+		addMenuCommand(
+			menu,
+			Commands.CloseIssues,
+			() => getIssueActions().setIssueStatus(selectedIssues,'closed')
+		)
+		
+		menu.popup(remote.getCurrentWindow())
 		
 	}
 	

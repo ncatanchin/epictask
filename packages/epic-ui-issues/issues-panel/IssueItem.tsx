@@ -129,6 +129,16 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 		guard(() => this.props.onSelected(event, this.issue))
 	}
 	
+	private onContextMenu = (event) => {
+		const
+			{issue} = this
+		
+		log.info(`Context Menu for issue`,issue)
+		this.props.viewController.showIssueContextMenu(issue)
+		
+	}
+	
+	
 	/**
 	 * Render the item
 	 *
@@ -137,12 +147,10 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		
 		const
-			{ props, state } = this,
+			{ props} = this,
 			{
 				style:styleParam,
 				styles,
-				onOpen,
-				onSelected,
 				rowState,
 				issue,
 				isSelected,
@@ -174,6 +182,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
 		                                    style={issueStyles}
 		                                    className={(isSelected ? 'selected' : '')}
+		                                    onContextMenu={this.onContextMenu}
 		                                    onDoubleClick={this.onDoubleClick}
 		                                    onClick={this.onClick}>
 			

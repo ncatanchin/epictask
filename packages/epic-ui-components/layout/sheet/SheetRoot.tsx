@@ -151,10 +151,9 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 		builder
 		// CLOSE THE SHEET
 			.command(
-				CommandType.Container,
-				'Hide sheet...',
+				CommonKeys.Escape,
 				(cmd, event) => getUIActions().closeSheet(),
-				CommonKeys.Escape, {
+				 {
 					hidden: true,
 					overrideInput: true
 				})

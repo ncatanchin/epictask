@@ -9,7 +9,7 @@ import {
 } from "epic-command-manager"
 
 import filterProps from "react-valid-props"
-import { getValue, isNumber, isString } from "epic-global"
+import { getValue, isNumber, isString, shortId } from "epic-global"
 import { makeStyle } from "epic-styles/styles"
 
 
@@ -475,63 +475,45 @@ export class CommandContainerBuilder {
 		
 	}
 	
+	useCommand(
+		command:ICommand,
+		execute:TCommandExecutor,
+		opts:ICommand = {}
+	) {
+		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
+		assert(command && command.id && !command.execute,`Command must be valid with ID and execute must be null`)
+		
+		const
+			cmd = _.assign({},command,{execute},opts) as ICommand
+		
+		this.commands.push(cmd)
+		
+		return this
+	}
+	
 	/**
 	 * Command factory function
 	 *
-	 * @param type
-	 * @param name
-	 * @param execute
 	 * @param defaultAccelerator
+	 * @param execute
 	 * @param opts
 	 */
-	command(type:CommandType,
-	        name:string,
-	        execute?:TCommandExecutor,
-	        defaultAccelerator?:TCommandDefaultAccelerator,
-	        opts?:ICommand)
-	command(id:string,
-	        type:CommandType,
-	        name:string,
-	        execute?:TCommandExecutor,
-	        defaultAccelerator?:TCommandDefaultAccelerator,
-	        opts?:ICommand)
-	
-	command(...args:any[]) {
-		
-		// Check for ID first
-		let
-			id:string = null
-		
-		if (isString(args[ 0 ]))
-			id = args.shift()
-		
-		// Deconstruct
-		const
-			[
-				type,
-				name,
-				execute,
-				defaultAccelerator,
-				opts = {}
-			] = args as [
-				CommandType,
-				string,
-				TCommandExecutor,
-				TCommandDefaultAccelerator,
-				ICommand
-				]
+	command(
+		defaultAccelerator:TCommandDefaultAccelerator,
+		execute:TCommandExecutor,
+    opts:ICommand = {}
+	) {
 		
 		assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
 		
 		const
 			cmd = _.assign({
-				id: id || opts.id || `${this.container.id}-${name}`,
-				type,
+				id: opts.id || `${this.container.id}-${shortId()}`,
+				type: CommandType.Container,
 				execute,
-				name,
 				defaultAccelerator,
 				container: this.container
-			}, opts || {}) as ICommand
+			}, opts) as ICommand
 		
 		this.commands.push(cmd)
 		

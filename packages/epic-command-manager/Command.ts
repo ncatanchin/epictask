@@ -1,5 +1,3 @@
-
-
 export enum CommonKeys {
 	MoveUp = 1,
 	MoveDown,
@@ -45,20 +43,15 @@ export const GlobalKeys = {
 	
 }
 
-export const App = Object.assign({},GlobalKeys,{
-	
-})
+export const App = Object.assign({}, GlobalKeys, {})
 
-export const Main = Object.assign({},GlobalKeys,{
-	
-})
+export const Main = Object.assign({}, GlobalKeys, {})
 
 
 import { isNil, isNumber, isString } from  "epic-global"
 
 const
 	log = getLogger(__filename)
-
 
 
 export type TCommandDefaultAccelerator = string|CommonKeys|any
@@ -73,15 +66,25 @@ export enum CommandType {
 	 */
 	Global,
 		
-	/**
-	 * App-Wide
-	 */
+		/**
+		 * App-Wide
+		 */
 	App,
 		
-	/**
-	 * Container or selector based
-	 */
+		/**
+		 * Container or selector based
+		 */
 	Container
+}
+
+assignGlobal({
+	CommandType
+})
+
+type TCommandType = typeof CommandType
+
+declare global {
+	const CommandType:TCommandType
 }
 
 
@@ -92,17 +95,16 @@ export type TCommandContainer = ICommandContainer|Electron.Menu
  * Command updater set on registration
  */
 export interface ICommandUpdater {
-	setEnabled:(enabled:boolean) => any
-	setHidden:(hidden:boolean) => any
-	update:(cmd:ICommand) => any
+	setEnabled: (enabled: boolean) => any
+	setHidden: (hidden: boolean) => any
+	update: (cmd: ICommand) => any
 }
 
 
 /**
  * Executor shape
  */
-export type TCommandExecutor = (command:ICommand,event?:any) => any
-
+export type TCommandExecutor = (command: ICommand, event?: any) => any
 
 
 /**
@@ -209,20 +211,20 @@ declare global {
 export class Command implements ICommand {
 	
 	
-	id:string
-	container:TCommandContainer
-	defaultAccelerator:TCommandDefaultAccelerator
-	overrideInput:boolean = false
-	hidden:boolean = false
-	menuItem:ICommandMenuItem
-	disableKeyReassign:boolean
+	id: string
+	container: TCommandContainer
+	defaultAccelerator: TCommandDefaultAccelerator
+	overrideInput: boolean = false
+	hidden: boolean = false
+	menuItem: ICommandMenuItem
+	disableKeyReassign: boolean
 	
 	/**
 	 * Create a command from a command object - anything that implements the interface
 	 *
 	 * @param command
 	 */
-	constructor(command:ICommand)
+	constructor(command: ICommand)
 	
 	/**
 	 * Create a command with required values
@@ -233,20 +235,19 @@ export class Command implements ICommand {
 	 * @param name
 	 * @param description
 	 */
-	constructor(id:string,type:CommandType,execute:TCommandExecutor, name?:string,description?:string)
-	constructor(idOrCommand:string|ICommand = null,public type:CommandType = null,public execute:TCommandExecutor = null,public name:string = null,public description:string = null) {
+	constructor(id: string, type: CommandType, execute: TCommandExecutor, name?: string, description?: string)
+	constructor(idOrCommand: string|ICommand = null, public type: CommandType = null, public execute: TCommandExecutor = null, public name: string = null, public description: string = null) {
 		if (isString(idOrCommand)) {
 			this.id = idOrCommand
 		} else if (idOrCommand) {
 			assign(this, idOrCommand)
 		}
 		
-		assign(this,{
+		assign(this, {
 			disableKeyReassign: !isNil(this.disableKeyReassign) ? this.disableKeyReassign : !!this.hidden,
 		})
 	}
 }
-
 
 
 /**
@@ -262,16 +263,16 @@ export enum CommandMenuItemType {
 /**
  * Executor shape
  */
-export type TCommandMenuItemExecutor = (item:ICommandMenuItem,event?:any) => any
+export type TCommandMenuItemExecutor = (item: ICommandMenuItem, event?: any) => any
 
 
 export interface ICommandFontIcon {
-	iconSet:string
-	iconName:string
+	iconSet: string
+	iconName: string
 }
 
 export interface ICommandImageIcon {
-	url:string
+	url: string
 }
 
 
@@ -282,7 +283,7 @@ export type TCommandIcon = string|ICommandFontIcon|ICommandImageIcon
  *
  * @param o
  */
-export function isCommandFontIcon(o:any):o is ICommandFontIcon {
+export function isCommandFontIcon(o: any): o is ICommandFontIcon {
 	return o && o.iconSet && o.iconName
 }
 
@@ -292,7 +293,7 @@ export function isCommandFontIcon(o:any):o is ICommandFontIcon {
  * @param o
  * @returns {any}
  */
-export function isCommandImageIcon(o:any):o is ICommandImageIcon {
+export function isCommandImageIcon(o: any): o is ICommandImageIcon {
 	return o && o.url
 }
 
@@ -304,31 +305,31 @@ export interface ICommandMenuItem {
 	/**
 	 * Menu item id
 	 */
-	id?:string
+	id?: string
 	
-	containerId?:string
+	containerId?: string
 	
-	icon?:TCommandIcon
+	icon?: TCommandIcon
 	
-	type?:CommandMenuItemType
+	type?: CommandMenuItemType
 	
-	subItems?:ICommandMenuItem[]
+	subItems?: ICommandMenuItem[]
 	
-	commandId?:string
+	commandId?: string
 	
-	mountsWithContainer?:boolean
+	mountsWithContainer?: boolean
 	
-	label?:string
+	label?: string
 	
-	subLabel?:string
+	subLabel?: string
 	
-	enabled?:boolean
+	enabled?: boolean
 	
-	hidden?:boolean
+	hidden?: boolean
 	
-	menuPath?:string[]
+	menuPath?: string[]
 	
-	execute?:TCommandMenuItemExecutor
+	execute?: TCommandMenuItemExecutor
 	
 }
 
@@ -342,14 +343,14 @@ export interface ICommandMenuManager {
 	 *
 	 * @param menuItems
 	 */
-	updateItem(...menuItems:ICommandMenuItem[]):void
+	updateItem(...menuItems: ICommandMenuItem[]): void
 	
 	/**
 	 * Remove items
 	 *
 	 * @param menuItems
 	 */
-	removeItem(...menuItems:ICommandMenuItem[]):void
+	removeItem(...menuItems: ICommandMenuItem[]): void
 	
 	
 	/**
@@ -357,7 +358,7 @@ export interface ICommandMenuManager {
 	 *
 	 * @param menuItems
 	 */
-	showItem(...menuItems:ICommandMenuItem[]):void
+	showItem(...menuItems: ICommandMenuItem[]): void
 	
 	
 	/**
@@ -365,7 +366,7 @@ export interface ICommandMenuManager {
 	 *
 	 * @param menuItemIds
 	 */
-	hideItem(...menuItemIds:string[]):void
+	hideItem(...menuItemIds: string[]): void
 }
 
 
@@ -373,5 +374,5 @@ export interface ICommandMenuManager {
  * Provider interface
  */
 export interface ICommandMenuManagerProvider {
-	():ICommandMenuManager
+	(): ICommandMenuManager
 }

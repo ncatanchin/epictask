@@ -172,166 +172,89 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		builder
 			//MOVEMENT
 			.command(
-				CommandType.Container,
-				'Move down',
-				(cmd,event) => this.moveDown(event),
-				CommonKeys.MoveDown,{
+				CommonKeys.MoveDown,
+				(cmd,event) => this.moveDown(event),{
+					hidden:true,
+					overrideInput: true
+				}
+			)
+			.command(
+				CommonKeys.MoveDownSelect,
+				(cmd,event) => this.moveDown(event),{
 					hidden:true,
 					overrideInput: true
 				})
 			.command(
-				CommandType.Container,
-				'Move down select',
-				(cmd,event) => this.moveDown(event),
-				CommonKeys.MoveDownSelect,{
-					hidden:true,
-					overrideInput: true
-				})
-			.command(
-				CommandType.Container,
-				'Move up',
+				CommonKeys.MoveUp,
 				(cmd,event) => this.moveUp(event),
-				CommonKeys.MoveUp,{
+				{
 					hidden:true,
 					overrideInput: true
 				})
 			.command(
-				CommandType.Container,
-				'Move up select',
+				CommonKeys.MoveUpSelect,
 				(cmd,event) => this.moveUp(event),
-				CommonKeys.MoveUpSelect,{
+				{
 					hidden:true,
 					overrideInput: true
 				})
 			
 			// NEW COMMENT
-			.command(
-				CIDS.NewComment,
-				CommandType.Container,
-				'New Comment',
+			.useCommand(
+				Commands.NewComment,
 				(cmd, event) => {
 					const
 						selectedIssue = this.viewController.getSelectedIssue()
 					
-					getUIActions().openWindow(getPages().CommentEditDialog.makeURI(selectedIssue))},
-				"m")
+					getUIActions().openWindow(getPages().CommentEditDialog.makeURI(selectedIssue))
+				})
 			
 			//MARK ISSUE FOCUSED
-			.command(
-				CommandType.Container,
-				'Mark selected issues focused',
+			.useCommand(
+				Commands.ToggleFocusIssues,
 				(cmd,event) => this.props.viewController.toggleSelectedAsFocused(),
-				CommonKeys.Space)
-			
-			.command(
-				CIDS.NewIssue,
-				CommandType.App,
-				'New Issue',
-				(item, event) => getUIActions().openWindow(getPages().IssueEditDialog.path),
-				"CommandOrControl+n"
-			)
+				)
 			
 			// CLOSE ISSUES
-			.command(
-				CIDS.CloseIssues,
-				CommandType.Container,
-				'Close selected issues',
+			.useCommand(
+				Commands.CloseIssues,
 				(cmd,event) => this.onDelete(event),
-				CommonKeys.Delete)
-			
+			)
 			
 			// CREATE INLINE
-			.command(
-				CommandType.Container,
-				'Create a new issue inline',
-				(cmd,event) => this.onEnter(event),
-				CommonKeys.Enter,{
-					hidden:true
-				})
+			.useCommand(
+				Commands.NewIssueInline,
+				(cmd,event) => this.onEnter(event)
+			)
 			// ESCAPE EDIT INLINE
 			.command(
-				CommandType.Container,
-				'Cancel editing',
+				CommonKeys.Escape,
 				(cmd,event) => {
 					if (this.props.editInlineConfig) {
 						this.viewController.setEditingInline(false)
 					}
 				},
-				CommonKeys.Escape,{
-					overrideInput:true
-					
-				})
-			// LABEL ISSUES
-			.command(
-				CIDS.LabelIssues,
-				CommandType.Container,
-				'Label selected issues',
-				(cmd,event) => getIssueActions().patchIssuesLabel(this.viewController.getSelectedIssues()),
-				"CommandOrControl+t")
-			
-			// MILESTONE ISSUES
-			.command(
-				CIDS.MilestoneIssues,
-				CommandType.Container,
-				'Milestone selected issues',
-				(cmd,event) => getIssueActions().patchIssuesMilestone(this.viewController.getSelectedIssues()),
-				"CommandOrControl+m")
-				
-			// FIND/FUZZY
-			.command(
-				CIDS.FindIssues,
-				CommandType.Container,
-				'Find Issues, Labels & Milestones...',
-				this.openFindIssues,
-				"CommandOrControl+f",{
-					menuPath: ['Edit']
-				})
-			
-			// INSERT INTO NAV MENU
-			.menuItem(
-				'find-issues-menu-item',
-				CIDS.FindIssues,
-				null,
 				{
-					menuPath: [MenuIds.Navigate]
+					overrideInput:true
 				}
 			)
+			// LABEL ISSUES
+			.useCommand(
+				Commands.LabelIssues,
+				(cmd,event) => getIssueActions().patchIssuesLabel(this.viewController.getSelectedIssues())
+			)
 			
-			
-			.menuItem(
-				MenuIds.Issues,
-				CommandMenuItemType.Menu,
-				'Issues',
-				{iconSet: 'octicon', iconName: 'issue-opened'},
-				{
-					mountsWithContainer: true,
-					label: 'Issues',
-					subItems: [
-						{
-							id: 'new-issue',
-							type: CommandMenuItemType.Command,
-							commandId: CIDS.NewIssue
-						},
-						{
-							id: 'issues-sep-1',
-							type:CommandMenuItemType.Separator
-						},
-						{
-							id: 'milestone-issues',
-							type: CommandMenuItemType.Command,
-							commandId: CIDS.MilestoneIssues
-						},{
-							id: 'label-issues',
-							type: CommandMenuItemType.Command,
-							commandId: CIDS.LabelIssues
-						},{
-							id: 'new-comment',
-							type: CommandMenuItemType.Command,
-							commandId: CIDS.NewComment
-						}
-					
-					]
-				})
+			// MILESTONE ISSUES
+			.useCommand(
+				Commands.MilestoneIssues,
+				(cmd,event) => getIssueActions().patchIssuesMilestone(this.viewController.getSelectedIssues())
+			)
+				
+			// FIND/FUZZY
+			.useCommand(
+				Commands.FindIssues,
+				this.openFindIssues
+			)
 			
 			.make()
 		
