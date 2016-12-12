@@ -34,6 +34,7 @@ export interface IChipProps extends IThemedAttributes {
 	color?:string
 	item:IChipItem
 	icon?:IIcon
+	accessoryStyle?:any
 	textStyle?:any
 	iconStyle?:any
 	onRemove?:TChipCallback
@@ -119,13 +120,14 @@ class BaseChip extends React.Component<IChipProps,any> {
 				style,
 				icon,
 				iconStyle,
-				textStyle
+				textStyle,
+				accessoryStyle
 			} = props,
 			
 			
 			text = item.label || item.name || item.title,
 			
-			itemStyle = makeStyle(
+			itemStyle = mergeStyles(
 				styles,
 				this.colorStyle(item),
 				style
@@ -163,6 +165,7 @@ class BaseChip extends React.Component<IChipProps,any> {
 				
 				<ChipAccessory
 					styles={styles}
+					accessoryStyle={accessoryStyle}
 					item={item}
 					itemStyle={itemStyle}
 					iconStyle={iconStyle}
@@ -200,22 +203,23 @@ class BaseChip extends React.Component<IChipProps,any> {
  * @returns {DOMElement<HTMLAttributes<HTMLElement>, HTMLElement>}
  * @constructor
  */
-function ChipAccessory({ styles, item, itemStyle, iconStyle, onRemove, icon, hovering }) {
+const ChipAccessory = Radium(({ styles,accessoryStyle, item, itemStyle, iconStyle, onRemove, icon, hovering }) => {
 	
 	return onRemove ?
-		<div style={makeStyle(
+		<div style={[
 					styles.accessory,
 					itemStyle.accessory,
 					hovering && styles.accessory.hover,
-					hovering && styles.accessory.remove.hover
-					)} className="removeControl">
+					hovering && styles.accessory.remove.hover,
+					accessoryStyle
+					]} className="removeControl">
 			<Icon
-				style={makeStyle(
-								styles.accessory.icon,
-								styles.accessory.remove.icon,
-								hovering && styles.accessory.remove.hover.icon
-								
-							)}
+				style={mergeStyles(
+					styles.accessory.icon,
+					styles.accessory.remove.icon,
+					hovering && styles.accessory.remove.hover.icon,
+					accessoryStyle && accessoryStyle.icon
+				)}
 				onClick={(event) => (onRemove(item,event), event.stopPropagation(),event.preventDefault())}>
 				clear
 			</Icon>
@@ -223,18 +227,19 @@ function ChipAccessory({ styles, item, itemStyle, iconStyle, onRemove, icon, hov
 		
 		// ICON
 		icon ?
-			<div style={makeStyle(
-						styles.accessory,
-						itemStyle.accessory,
-						iconStyle
-					)}>
+			<div style={[
+				styles.accessory,
+				itemStyle.accessory,
+				iconStyle,
+				accessoryStyle
+			]}>
 				<Icon
 					{...icon}
-					style={makeStyle(styles.accessory.icon,iconStyle)}
+					style={mergeStyles(styles.accessory.icon,iconStyle,accessoryStyle && accessoryStyle.icon)}
 				/>
 			</div> :
 			React.DOM.noscript()
-}
+})
 
 /**
  * Add PureRender Decoration

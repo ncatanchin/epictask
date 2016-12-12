@@ -53,7 +53,6 @@ function baseStyles(topStyles, theme, palette) {
 			//borderBottom: `0.1rem solid ${primary.hue3}`,
 			
 			
-			
 			input: [ {
 				border: `${convertRem(0.1)}px solid ${Transparent}`,
 				color: text.secondary,
@@ -97,7 +96,7 @@ export interface IIssuesPanelSearchState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
-@ThemedStyles(baseStyles,'issuesPanelSearch')
+@ThemedStyles(baseStyles, 'issuesPanelSearch')
 @PureRender
 export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,IIssuesPanelSearchState> {
 	
@@ -132,6 +131,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 	 */
 	private criteriaRenderer = (criteria: IIssueCriteria) => {
 		const
+			{palette} = this.props,
 			{ sort } = criteria,
 			storeState = getStoreState(),
 			
@@ -145,66 +145,94 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			chipStyle = makeStyle(
 				makeMarginRem(0, 0.3, 0, 0.5),
 				makeHeightConstraint(rem(2.6)), {
-					borderRadius: rem(1.3)
+					borderRadius: rem(1.3),
+					text: {
+						fontSize: rem(1.2),
+						fontWeight: 500
+					}
 				}
-			)
+			),
+			chipAccessoryStyle = makeStyle({
+				borderRadius: rem(1.3),
+				height: rem(2.6),
+				width: rem(2.6),
+				[Styles.CSSHoverState]: {
+					backgroundColor: 'white',
+					color: this.props.palette.warn.hue1
+				},
+				icon: {
+					fontSize: rem(1.4),
+					[Styles.CSSHoverState]: {
+						fontSize: rem(1.6)
+					}
+				}
+			
+			}),
+			
+			labelStyle = {
+				fontWeight: 400
+			},
+			
+			valueStyle = {
+				fontWeight: 700
+			},
+			
+			makeLabel = (labelText, valueText) =>
+				<FlexRowCenter>
+					<div style={labelStyle}>{labelText}:&nbsp;</div>
+					<div style={valueStyle}>{valueText}</div>
+				</FlexRowCenter>
+		
+		
 		
 		// TEXT
 		if (criteria.text) {
-			chips.push(<Chip
-				style={[chipStyle]}
-				onRemove={
+			chips.push({onRemove:
 					this.makeCriteriaChange(criteria =>
-						assign(criteria,{text:null}))
-				}
-				key='text'
-				item={{
+						assign(criteria,{text:null})),
+				
+				key:'text',
+				item:{
 					id: criteria.text,
-					label: `contains text: ${criteria.text}`,
-					color: 'ffffff'
-				}}
-			/>)
+					label: makeLabel(`contains`,criteria.text),
+					color: palette.secondary.hue1.substring(1)
+				}
+			})
 		}
 		
 		// CLOSED
 		if (criteria.includeClosed) {
-			chips.push(<Chip
-				
-				style={[chipStyle]}
-				onRemove={
-					this.makeCriteriaChange(criteria =>
-						assign(criteria,{includeClosed:false}))
-				}
-				key='includeClosed'
-				item={{
+			chips.push({
+				onRemove: this.makeCriteriaChange(criteria =>
+					assign(criteria, { includeClosed: false })),
+				key: 'includeClosed',
+				item: {
 					id: 'includeClosed',
 					label: 'include closed',
-					color: 'ffffff'
-				}}
-			/>)
+					color: palette.warn.hue1.substring(1)
+				}
+			})
 		}
 		// MILESTONES
 		if (criteria.milestoneIds) {
 			chips.push(...criteria.milestoneIds
 				.map(id => milestones.find(it => it.id === id))
 				.filter(it => !isNil(it))
-				.map(it => <Chip
-					style={[chipStyle]}
-					onRemove={
-						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								milestoneIds: criteria
-									.milestoneIds
-									.filter(id => it.id !== id)
-							}))
-					}
-					key={`milestone-${it.id}`}
-					item={{
+				.map(it => ({
+					onRemove: this.makeCriteriaChange(criteria =>
+						assign(criteria, {
+							milestoneIds: criteria
+								.milestoneIds
+								.filter(id => it.id !== id)
+						}))
+					,
+					key: `milestone-${it.id}`,
+					item: {
 						id: `milestone-${it.id}`,
-						label: `milestone: ${it.title}`,
+						label: makeLabel('milestone',it.title),
 						color: '000000'
-					}}
-				/>)
+					}
+				}))
 			)
 		}
 		// ASSIGNEES
@@ -212,23 +240,23 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			chips.push(...criteria.assigneeIds
 				.map(id => assignees.find(it => it.id === id))
 				.filter(it => !isNil(it))
-				.map(it => <Chip
-					style={[chipStyle]}
-					onRemove={
-						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								assigneeIds: criteria
-									.assigneeIds
-									.filter(id => it.id !== id)
-							}))
-					}
-					key={`assignee-${it.id}`}
-					item={{
-						id: `assignee-${it.id}`,
-						label: `assigned to: ${it.name || it.login}`,
-						color: 'ffffff'
-					}}
-				/>)
+				.map(it => ({
+							onRemove: this.makeCriteriaChange(criteria =>
+								assign(criteria, {
+									assigneeIds: criteria
+										.assigneeIds
+										.filter(id => it.id !== id)
+								}))
+							,
+							key: `assignee-${it.id}`,
+							item: {
+								id: `assignee-${it.id}`,
+								label: `assigned to: ${it.name || it.login}`,
+								color: 'ffffff'
+							}
+						}
+					)
+				)
 			)
 		}
 		// REPOS
@@ -241,27 +269,25 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			chips.push(...criteria.repoIds
 				.map(id => repos.find(it => it.id === id))
 				.filter(it => !isNil(it))
-				.map(it => <Chip
-					style={[chipStyle]}
-					onRemove={
-						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								repoIds: criteria
-									.repoIds
-									.filter(id => it.id !== id)
-							}))
-						
-					}
-					key={`repo-${it.id}`}
-					item={{
+				.map(it => ({
+					onRemove: this.makeCriteriaChange(criteria =>
+						assign(criteria, {
+							repoIds: criteria
+								.repoIds
+								.filter(id => it.id !== id)
+						})),
+					
+					
+					key: `repo-${it.id}`,
+					item: {
 						id: `repo-${it.id}`,
 						label: <FlexRowCenter>
 							<div style={repoLabelStyle}>repo:</div>
 							<RepoLabel repo={it.repo}/>
 						</FlexRowCenter>,
 						color: '000000'
-					}}
-				/>)
+					}
+				}))
 			)
 		}
 		// LABELS
@@ -269,47 +295,51 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			chips.push(...criteria.labelIds
 				.map(id => labels.find(it => it.id === id))
 				.filter(it => !isNil(it))
-				.map(it => <Chip
-					style={[chipStyle]}
-					onRemove={
-						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								labelIds: criteria
-									.labelIds
-									.filter(id => it.id !== id)
-							}))
-						
-					}
-					key={`label-${it.id}`}
-					item={{
+				.map(it => ({
+					onRemove: this.makeCriteriaChange(criteria =>
+						assign(criteria, {
+							labelIds: criteria
+								.labelIds
+								.filter(id => it.id !== id)
+						})),
+					
+					key: `label-${it.id}`,
+					item: {
 						id: `label-${it.id}`,
 						label: `label: ${it.name}`,
 						color: it.color
-					}}
-				/>)
+					}
+				}))
 			)
 		}
 		
 		// GROUP BY
 		if (sort.groupBy && sort.groupBy !== 'none') {
-			chips.push(<Chip
-				style={[chipStyle]}
-				onRemove={
-						this.makeCriteriaChange(criteria =>
-							cloneObjectShallow(criteria,{
-								sort: assign(sort,{
-									groupBy: 'none'
-								})
-							}))
-						
+			chips.push({
+					onRemove: this.makeCriteriaChange(criteria =>
+						cloneObjectShallow(criteria, {
+							sort: assign(sort, {
+								groupBy: 'none'
+							})
+						})),
+					
+					// style: makeStyle(Styles.makeBorderRem(0.2),{
+					// 	borderColor: palette.accent.hue1
+					// }),
+					//
+					// accessoryStyle: makeStyle(Styles.makeBorderRem(0.1),{
+					// 	borderColor: palette.accent.hue1,
+					// 	borderStyle: 'solid'
+					// }),
+				
+					key: `groupBy`,
+					item: {
+						id: `groupBy`,
+						label: makeLabel(`group by`, sort.groupBy),
+						color: palette.success.hue1.substring(1)
 					}
-				key={`groupBy`}
-				item={{
-					id: `groupBy`,
-					label: `group by: ${sort.groupBy}`,
-					color: '0000ff'
-				}}
-			/>)
+				}
+			)
 			
 		}
 		
@@ -317,49 +347,51 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 		if (sort.fields) {
 			chips.push(...sort.fields
 				.filter(it => it !== 'created_at')
-				.map(it => <Chip
-					style={[chipStyle]}
-					onRemove={
-						this.makeCriteriaChange(criteria =>
-							cloneObjectShallow(criteria,{
-								sort: cloneObjectShallow(sort,{
+				.map(it => ({
+						onRemove: this.makeCriteriaChange(criteria =>
+							cloneObjectShallow(criteria, {
+								sort: cloneObjectShallow(sort, {
 									fields: sort.fields.filter(field => it !== field)
 								})
-							}))
+							})),
 						
-					}
-					key={`sortBy-${it}`}
-					item={{
-						id: `sortBy-${it}`,
-						label: `sort by: ${it}`,
-						color: '0000ff'
-					}}
-				/>)
+						
+						key: `sortBy-${it}`,
+						item: {
+							id: `sortBy-${it}`,
+							label: makeLabel('sort by',it),
+							color: palette.accent.hue1.substring(1)
+						}
+					})
+				)
 			)
 		}
 		// SORT DIRECTION
 		if (sort.direction) {
-			chips.push(<Chip
-				style={[chipStyle]}
-				onRemove={
-						this.makeCriteriaChange(criteria =>
-							assign(criteria,{
-								sort: assign(sort,{
-									direction: null
-								})
-							}))
-						
+			chips.push({
+					onRemove: this.makeCriteriaChange(criteria =>
+						assign(criteria, {
+							sort: assign(sort, {
+								direction: null
+							})
+						})),
+					
+					
+					key: `sortByDirection`,
+					item: {
+						id: `sortByDirection`,
+						label: makeLabel('sort direction',sort.direction),
+						color: palette.accent.hue1.substring(1)
 					}
-				key={`sortByDirection`}
-				item={{
-					id: `sortByDirection`,
-					label: `sort by direction: ${sort.direction}`,
-					color: '0000ff'
-				}}
-			/>)
+				}
+			)
 			
 		}
-		return chips
+		return chips.map(props => <Chip {...props}
+			style={mergeStyles(chipStyle,props.style)}
+			textStyle={chipStyle.text}
+			accessoryStyle={mergeStyles(chipAccessoryStyle,props.accessoryStyle)}
+		/>)
 	}
 	
 	/**
@@ -403,7 +435,7 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				break
 			
 			case "sortBy":
-				sort.fields = [item.value]
+				sort.fields = [ item.value ]
 				break
 			
 			case "groupBy":
@@ -501,27 +533,26 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			isVisible = this.isVisible()
 		
 		return !criteria ? React.DOM.noscript() : <SearchField
-			ref="searchField"
-			styles={mergeStyles(styles,!isVisible && {wrapper: makeFlex(0,0,rem(0))})}
-			searchId='issues-search'
-			open={open}
-			criteria={criteria}
-			criteriaRenderer={this.criteriaRenderer}
-			text={searchText || ""}
-			onTextChanged={this.onSearchTextChanged}
-			onItemSelected={this.onItemSelected}
-			providers={[
+				ref="searchField"
+				styles={mergeStyles(styles,!isVisible && {wrapper: makeFlex(0,0,rem(0))})}
+				searchId='issues-search'
+				open={open}
+				criteria={criteria}
+				criteriaRenderer={this.criteriaRenderer}
+				text={searchText || ""}
+				onTextChanged={this.onSearchTextChanged}
+				onItemSelected={this.onItemSelected}
+				providers={[
 				this.searchProvider
 			]}
-			inputStyle={styles.input}
-			onFocus={this.onFocus}
-			onBlur={this.onBlur}
-			onEscape={this.onSearchEscape}
-		/>
+				inputStyle={styles.input}
+				onFocus={this.onFocus}
+				onBlur={this.onBlur}
+				onEscape={this.onSearchEscape}
+			/>
 	}
 	
 }
-
 
 
 const Keywords = IssueCriteriaKeywords

@@ -236,23 +236,54 @@ export class CommandManager {
 		
 		log.debug(`Key down received`, event,`Ordered containers: `, containers.map(it => it.element))
 		
+		let
+			cmd
+		
 		for (let container of containers) {
 			
 			const
-				match = this.matchAcceleratorAndCommand(container.commands,event)
-			if (match) {
+				testMatch = this.matchAcceleratorAndCommand(container.commands,event)
+			
+			if (testMatch) {
 				const
-					[cmd,accel] = match
+					[testCmd,accel] = testMatch
 				
 				
-				if (cmd && (!isInputTarget || cmd.overrideInput || accel.hasNonInputModifier)) {
-					cmd.execute(cmd, event)
-					event.preventDefault()
-					event.stopPropagation()
-					event.stopImmediatePropagation()
+				if (testCmd && (!isInputTarget || testCmd.overrideInput || accel.hasNonInputModifier)) {
+					cmd = testCmd
 					break
 				}
 			}
+		}
+		
+		if (!cmd) {
+			const
+				appCommands = Object
+					.values(Commands)
+					.filter(it => it.type === CommandType.App) as ICommand[]
+			
+			for (let appCmd of appCommands) {
+				const
+					testMatch = this.matchAcceleratorAndCommand([appCmd],event)
+				
+				if (testMatch) {
+					const
+						[testCmd,accel] = testMatch
+					
+					
+					if (testCmd && (!isInputTarget || testCmd.overrideInput || accel.hasNonInputModifier)) {
+						cmd = testCmd
+						break
+					}
+				}
+			}
+		}
+		
+		if (cmd) {
+				cmd.execute(cmd, event)
+				event.preventDefault()
+				event.stopPropagation()
+				event.stopImmediatePropagation()
 		}
 	}
 	

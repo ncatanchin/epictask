@@ -10,9 +10,9 @@ export function chipStyles(topStyles, theme, palette) {
 	
 	const
 		{primary,warn,secondary,accent,text} = palette,
-		accessoryDim = convertRem(1.8),
+		accessoryDim = Styles.convertRem(1.8),
 		accessoryDimHalf = accessoryDim / 2,
-		accessoryTransition = makeTransition([
+		accessoryTransition = Styles.makeTransition([
 			'background-color',
 			'font-weight',
 			'font-size',
@@ -25,84 +25,87 @@ export function chipStyles(topStyles, theme, palette) {
 		])
 	
 	return [
-		makeTransition('width'),
-		PositionRelative,
-		FlexAuto,
-		FlexRowCenter,
-		makeMarginRem(0,1,0,0),{
-		display: 'flex',
-		borderRadius: accessoryDimHalf,
-		height: accessoryDim,
-		
-			//borderRadius: '0.3rem',
-		boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
-		backgroundColor: primary.hue3,
-		[CSSHoverState]: [{
+		Styles.makeTransition('width'),
+		Styles.PositionRelative,
+		Styles.FlexAuto,
+		Styles.FlexRowCenter,
+		Styles.makeMarginRem(0,1,0,0),
+		Styles.makeBorderRem(0.1),{
+			borderColor: Styles.Transparent,
+			borderStyle: 'solid',
+			display: 'flex',
+			borderRadius: accessoryDimHalf,
+			height: accessoryDim,
 			
-		}],
-		
-		collapsed: [ {
-			width: rem(2.4)
-		} ],
-		
-		
-		
-		// Accessories
-		accessory: [
-			accessoryTransition,
-			FlexAuto, FlexRowCenter,
-			makePaddingRem(0, 0, 0, 0), {
-				height: accessoryDim,
-				width: accessoryDim,
-				borderRadius: accessoryDimHalf,
-				backgroundColor: Styles.Transparent,
+				//borderRadius: '0.3rem',
+			boxShadow: '0.1rem 0.1rem 0.1rem rgba(0,0,0,0.4)',
+			backgroundColor: primary.hue3,
+			[Styles.CSSHoverState]: [{
 				
-				// icon decoration
-				icon: [ accessoryTransition, FlexColumnCenter, makePaddingRem(0, 0, 0, 0), {
+			}],
+			
+			collapsed: [ {
+				width: rem(2.4)
+			} ],
+			
+			
+			
+			// Accessories
+			accessory: [
+				accessoryTransition,
+				Styles.FlexAuto, Styles.FlexRowCenter,
+				Styles.makePaddingRem(0, 0, 0, 0), {
 					height: accessoryDim,
 					width: accessoryDim,
-					fontSize: accessoryDimHalf
-				} ],
-				
-				
-				hover: [ {
-					borderRadius: 0,
-					fontWeight: 700,
-					fontSize: rem(1.1),
-					icon: [ {} ]
-				} ],
-				
-				// REMOVE CONTROL
-				remove: [ OverflowHidden, {backgroundColor: 'white',
-					color: warn.hue1,
+					borderRadius: accessoryDimHalf,
+					backgroundColor: Styles.Transparent,
 					
-					//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
-					fontSize: rem(1),
-					cursor: 'pointer',
+					// icon decoration
+					icon: [ accessoryTransition, Styles.FlexColumnCenter, Styles.makePaddingRem(0, 0, 0, 0), {
+						height: accessoryDim,
+						width: accessoryDim,
+						fontSize: accessoryDimHalf
+					} ],
 					
-					// ICON REMOVE
-					icon: [ {} ],
 					
-					// HOVER REMOVE
 					hover: [ {
+						borderRadius: 0,
+						fontWeight: 700,
+						fontSize: Styles.rem(1.1),
+						icon: [ {} ]
+					} ],
+					
+					// REMOVE CONTROL
+					remove: [ Styles.OverflowHidden, {backgroundColor: 'white',
+						color: warn.hue1,
 						
+						//hovering && {backgroundColor: palette.errorColor,color:palette.textColor}
+						fontSize: rem(1),
+						cursor: 'pointer',
 						
-						icon: [ {
-							//backgroundColor: 'white',
-							//color: warn.hue1,
+						// ICON REMOVE
+						icon: [ {} ],
+						
+						// HOVER REMOVE
+						hover: [ {
+							
+							
+							icon: [ {
+								//backgroundColor: 'white',
+								//color: warn.hue1,
+							} ]
 						} ]
 					} ]
-				} ]
-				
-				
-			} ],
-		
-		text: [ makePaddingRem(0, 1.2, 0, 1.2), {
-			fontSize: rem(1),
-			textAlign: 'baseline',
-			withLeftIcon: [ makePaddingRem(0, 1.2, 0, 0.6) ]
-		} ]
-		
+					
+					
+				} ],
+			
+			text: [ Styles.makePaddingRem(0, 1.2, 0, 1.2), {
+				fontSize: rem(1),
+				textAlign: 'baseline',
+				withLeftIcon: [ Styles.makePaddingRem(0, 1.2, 0, 0.6) ]
+			} ]
+			
 	}]
 }
 

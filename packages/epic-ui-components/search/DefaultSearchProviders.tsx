@@ -13,6 +13,7 @@ import { GitHubClient, createClient } from "epic-github"
 import { getCommandManager } from "epic-command-manager"
 import { Benchmark, cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { isNil } from "typeguard"
 
 
 
@@ -322,7 +323,9 @@ export class ActionSearchProvider {
 	@Benchmarker
 	async query(criteria, query:string):Promise<List<SearchItem>> {
 		const
-			allCommands = getCommandManager().allCommands()
+			allCommands = Object
+				.values(Commands)
+				.filter(it => it.type === CommandType.App && it.hidden !== true && !isNil(it.name)) as ICommand[]//getCommandManager().allCommands()
 		
 		let
 			results = List<ICommand>()

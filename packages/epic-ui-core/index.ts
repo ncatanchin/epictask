@@ -83,6 +83,13 @@ CommandRegistryScope.Register({
 	name: "Settings",
 	defaultAccelerator: "CommandOrControl+Comma",
 	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
+}, {
+	id: 'FindAction',
+	type: CommandType.App,
+	name: "Find Action",
+	defaultAccelerator: "CommandOrControl+Shift+p",
+	execute: (item, event) => getUIActions().openSheet(getRoutes().FindAction.uri),
+	hidden: true
 })
 
 acceptHot(module)
