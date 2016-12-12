@@ -15,6 +15,7 @@ import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import { enabledAvailableReposSelector } from "epic-typedux/selectors"
 import { EventEmitter } from "events"
+import { Provided } from "epic-global"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -29,7 +30,8 @@ const
 function addMenuCommand(menu:Electron.Menu,command:ICommand,execute:() => any) {
 	menu.append(new MenuItem({
 		label: command.description || command.name,
-		click: execute
+		click: execute,
+		accelerator: command.defaultAccelerator
 	}))
 }
 
@@ -51,6 +53,7 @@ export function getIssuesPanelSelector(fn:(selectors:TIssuesPanelSelectors) => a
  * @class IssuesPanelController
  * @constructor
  **/
+@Provided
 export class IssuesPanelController extends EventEmitter implements IViewController<IssuesPanelState> {
 	
 	
