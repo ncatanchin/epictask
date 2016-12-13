@@ -70,14 +70,14 @@ export function getSplashEntryHtmlPath() {
  *
  * @returns {string}
  */
-export function getAppEntryHtmlPath() {
-	return getEntryFile("app-entry.html")
+export function getBrowserEntryHtmlPath() {
+	return getEntryFile("browser-entry.html")
 }
 
 
 
-export function makeAppEntryURL(uri:string, params:{[key:string]:any} = {}) {
-	return `file://${getAppEntryHtmlPath()}#` + makeURIHash(uri,params)
+export function makeBrowserEntryURL(uri:string, params:{[key:string]:any} = {}) {
+	return `file://${getBrowserEntryHtmlPath()}#` + makeURIHash(uri,params)
 }
 
 export function makeURIHash(uri:string, params:{[key:string]:any} = {}) {

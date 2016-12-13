@@ -867,6 +867,17 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	}
 	
 	/**
+	 * Set item indexes
+	 *
+	 * @param itemIndexes
+	 */
+	setItemIndexes = (itemIndexes:List<number>) => {
+		this.updateState({
+			itemIndexes
+		})
+	}
+	
+	/**
 	 * Show a context menu for an issue
 	 * @param issue
 	 */

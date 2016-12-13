@@ -19,7 +19,7 @@ import {
 } from "epic-models"
 import { VisibleList, IRowTypeConfig, PureRender } from "epic-ui-components"
 import { getValue, shallowEqualsArrayOrList } from "epic-global"
-import { ThemedStylesWithOptions, IThemedAttributes } from "epic-styles"
+import { ThemedStylesWithOptions, IThemedAttributes, ThemedStyles } from "epic-styles"
 
 import { IssueItem } from "./IssueItem"
 import { IssueEditInline } from "./IssueEditInline"
@@ -36,11 +36,11 @@ const
 const baseStyles = (topStyles, theme, palette) => ({
 	panel: [ Fill, {} ],
 	panelSplitPane: [ Fill, {
-		' > .Pane2': makeStyle(OverflowHidden, {})
+		' > .Pane2': makeStyle(Styles.OverflowHidden, {})
 		
 	} ],
 	
-	listHeader: [ FlexRow, FlexAuto, FillWidth, {
+	listHeader: [ Styles.FlexRow, Styles.FlexAuto, Styles.FillWidth, {
 		padding: '0.5rem 1rem',
 		
 	} ],
@@ -49,8 +49,17 @@ const baseStyles = (topStyles, theme, palette) => ({
 	list: [ {
 		width: 400
 	} ],
-	listContent: [ FlexColumn, FlexScale, Fill, OverflowHidden],
-	listContainer: [ FlexColumn, FlexScale, FillWidth, {
+	
+	listContent: [
+		Styles.FlexColumn,
+		Styles.FlexScale,
+		Styles.Fill,
+		Styles.OverflowHidden, {
+			[Styles.CSSFocusState]: [theme.elementFocus]
+		}
+	],
+	
+	listContainer: [ Styles.FlexColumn, Styles.FlexScale, Styles.FillWidth, {
 		overflow: 'auto'
 	} ],
 	
@@ -115,7 +124,7 @@ class IssueItemVisibleList extends VisibleList<string,string,number> {
 	groupVisibility: getIssuesPanelSelector(selectors => selectors.groupVisibilitySelector),
 	editInlineConfig: getIssuesPanelSelector(selectors => selectors.editInlineConfigIssueSelector)
 }), null, null, { withRef: true })
-@ThemedStylesWithOptions({enableRef:true},baseStyles, 'issuesPanel')
+@ThemedStyles(baseStyles, 'issuesPanel')
 @PureRender
 export class IssuesList extends React.Component<IIssuesListProps,IIssuesListState> {
 	
@@ -441,7 +450,11 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 			transitionProps = {}
 		
 		
-		return <div style={styles.listContent} tabIndex={0} autoFocus>
+		return <div
+			className='focusable'
+			style={styles.listContent}
+			tabIndex={0}
+			autoFocus>
 			{/* ISSUE FILTERS */}
 			{/*<IssueFilters viewController={this.props.viewController}/>*/}
 			

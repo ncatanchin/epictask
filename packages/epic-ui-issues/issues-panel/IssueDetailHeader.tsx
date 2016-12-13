@@ -471,7 +471,12 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			{ theme, palette, styles, selectedIssue, saving, saveError } = this.props,
 			{ editLabels, editMilestone, editTitle, editAssignee, editIssue } = this.state,
 			
-			issue = editIssue || selectedIssue,
+			issue = editIssue || selectedIssue
+		
+		if (!issue)
+			return React.DOM.noscript()
+		
+		const
 			
 			// EDIT CONTROLS
 			controlStyle = {

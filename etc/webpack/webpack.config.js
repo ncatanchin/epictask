@@ -457,7 +457,7 @@ const
 		
 		config.plugins.push(
 			new HtmlWebpackPlugin({
-				filename: "app-entry.html",
+				filename: "browser-entry.html",
 				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
 				inject: false,
 				isDev
@@ -476,21 +476,6 @@ const
 module.exports = noWebpack ? makeHtmlConfig() :
 	
 	makeConfig('epic-app', [], {
-		// "epic-app-all": makeHotEntry([
-		// 	"./epic-entry-database-server/index",
-		// 	"./epic-entry-job-server/index",
-		// 	"./epic-entry-main/MainEntry",
-		// 	"./epic-entry-ui/index"
-		// ]),
-		// "epic-entry-job-server": makeHotEntry([
-		//
-		// ]),
-		// "epic-entry-main": makeHotEntry([
-		//
-		// ]),
-		// "epic-entry-ui": makeHotEntry([
-		//
-		// ]),
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"
 		]),
@@ -502,13 +487,12 @@ module.exports = noWebpack ? makeHtmlConfig() :
 		]),
 		"epic-entry-ui": makeHotEntry([
 			"./epic-entry-ui/index"
-		
 		]),
 		
 	}, config => {
 		config.plugins.unshift(
 			new HtmlWebpackPlugin({
-				filename: "app-entry.html",
+				filename: "browser-entry.html",
 				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
 				inject: false,
 				isDev
@@ -523,30 +507,6 @@ module.exports = noWebpack ? makeHtmlConfig() :
 		)
 	})
 
-// BROWSER ENTRY
-//makeHtmlConfig()
-
-// makeConfig('epic_libs',[],{
-// 	"epic_libs": makeHotEntry([
-// 		"./epic-entry-shared",
-// 		"./epic-global",
-// 		"./epic-net",
-// 		"./epic-github",
-// 		"./epic-database-client",
-// 		"./epic-database-adapter",
-// 		"./epic-process-manager",
-// 		"./epic-process-manager-client",
-// 		"./epic-typedux",
-// 		"./epic-services"
-// 	])
-// }, config => {
-// 	config.plugins.unshift(new webpack.DllPlugin({
-// 		name: `epic_libs`,
-// 		path: path.resolve(distDir,`manifest.epic_libs.json`)
-// 	}))
-// }),
-//
-	
 	 
 
 

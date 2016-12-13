@@ -22,7 +22,7 @@ import {
 	CommandContainer
 } from "epic-command-manager-ui"
 import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, ContainerNames } from "epic-command-manager"
-import { IThemedAttributes, FlexColumnCenter } from "epic-styles"
+import { IThemedAttributes, FlexColumnCenter, ThemedStyles } from "epic-styles"
 import { SearchField} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef, MenuIds, isNumber, cloneObjectShallow } from "epic-global"
@@ -50,7 +50,7 @@ function getPages() {
 	
 	
 //DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 //region STYLES
 function baseStyles(topStyles,theme,palette) {
@@ -123,18 +123,6 @@ export interface IIssuesPanelState {
 }
 
 
-const
-	CIDS = {
-		NewIssue: 'NewIssue',
-		LabelIssues: 'LabelIssues',
-		MilestoneIssues: 'MilestoneIssues',
-		FindIssues: 'FindIssues',
-		CloseIssues: 'CloseIssues',
-		NewComment: 'NewComment'
-	}
-
-
-
 function makeSelector() {
 		
 	return createStructuredSelector({
@@ -155,12 +143,18 @@ function makeSelector() {
  **/
 @ViewRoot(IssuesPanelController,IssuesPanelState)
 @connect(makeSelector)
+@ThemedStyles(baseStyles, 'issuesPanel')
 @CommandComponent()
-@ThemedStylesWithOptions({enableRef: true},baseStyles, 'issuesPanel')
 export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelState> implements ICommandComponent {
 	
-	shouldComponentUpdate(nextProps) {
-		return !shallowEquals(this.props,nextProps,'hasSelectedIssues','issues','items','groups','editInlineConfig')
+	/**
+	 * Element refs
+	 */
+	refs:any
+	
+	shouldComponentUpdate(nextProps,nextState) {
+		return !shallowEquals(this.props,nextProps,'hasSelectedIssues','issues','items','groups','editInlineConfig') ||
+			!shallowEquals(this.state,nextState,'listRef')
 	}
 	
 	/**
@@ -173,7 +167,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			//MOVEMENT
 			.command(
 				CommonKeys.MoveDown,
-				(cmd,event) => this.moveDown(event),{
+				(cmd,event) => {
+					log.info(`Move down`,this)
+					this.moveDown(event)
+				},{
 					hidden:true,
 					overrideInput: true
 				}
@@ -376,12 +373,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	/**
 	 * Move selection up
 	 */
-	private moveUp = this.makeMoveSelector(-1)
+	private moveUp(event = null) {
+		this.moveSelection(-1,event)
+	}
 	
 	/**
 	 * Move selection down
 	 */
-	private moveDown = this.makeMoveSelector(1)
+	private moveDown(event = null) {
+		this.moveSelection(1,event)
+	}
 	
 	/**
 	 * On enter, clear selection if more than
@@ -474,91 +475,91 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	 * Create a move selector for key handlers
 	 *
 	 * @param increment
-	 * @returns {(event:any)=>undefined}
+	 * @param event
 	 */
-	makeMoveSelector(increment: number) {
+	moveSelection(increment: number, event: React.KeyboardEvent<any> = null) {
+	
+	
+		log.debug(`Move selector/update`,event)
 		
-		return (event: React.KeyboardEvent<any> = null) => {
-			log.debug(`Move selector`,event)
-			
+		const
+			{groups} = this.props,
+			selectedIssueIds = this.selectedIssueIds,
+			{itemIndexes} = this,
+			itemCount = itemIndexes.size,
+			issueCount = itemCount - groups.size
+		
+		let
+			{firstSelectedIndex = -1} = this.state,
+			index = ((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
+		
+		
+		
+		// If more than one issue is selected then use
+		// bounds to determine new selection index
+		if (selectedIssueIds && selectedIssueIds.size > 1) {
 			const
-				{groups} = this.props,
-				selectedIssueIds = this.selectedIssueIds,
-				{itemIndexes} = this,
-				itemCount = itemIndexes.size,
-				issueCount = itemCount - groups.size
+				{startIndex, endIndex} = this.getSelectionBounds()
 			
-			let
-				{firstSelectedIndex = -1} = this.state,
-				index = ((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
-			
-			
-			
-			// If more than one issue is selected then use
-			// bounds to determine new selection index
-			if (selectedIssueIds && selectedIssueIds.size > 1) {
-				const
-					{startIndex, endIndex} = this.getSelectionBounds()
-				
-				if (startIndex < firstSelectedIndex) {
-					index = startIndex + increment
-				} else {
-					index = endIndex + increment
-				}
-				
+			if (startIndex < firstSelectedIndex) {
+				index = startIndex + increment
+			} else {
+				index = endIndex + increment
 			}
-			
-			// Make sure we don't keyboard select a group
-			const isNewItemAGroup = (newIndex) => {
-				const
-					item = newIndex > -1 && this.getItemAtIndex(newIndex)
-				
-				return item && item.type === IssueListItemType.Group
-			}
-			
-			while (isNewItemAGroup(index)) {
-				index += (increment < 0) ? -1 : 1
-			}
-			
-			
-			const
-				adjustedIndex = Math.max(0, Math.min(itemCount - 1, index)),
-				item = this.getItemAtIndex(adjustedIndex)
-			
-			if (!item) {
-				log.info('No issue at index ' + index)
-				return
-			}
-			
-			
-			// Calculate new selected ids
-			let newSelectedIssueIds:List<number> = (event && event.shiftKey) ?
-				
-				// Select block continuation
-				this.calculateSelectedIssueIds(adjustedIndex, firstSelectedIndex) : // YOU ARE HERE - just map array of ids
-				
-				// Issue item
-				List<number>(!item ? [] : [item.id as number])
-				
-					
-					
-			
-			if (!event || !event.shiftKey)
-				this.setState({firstSelectedIndex: index})
-			
-			
-			log.debug('Keyed move', {
-				increment,
-				index,
-				firstSelectedIndex,
-				selectedIssueIds,
-				newSelectedIssueIds,
-			})
-			
-			
-			this.updateSelectedIssueIds(newSelectedIssueIds)
 			
 		}
+		
+		// Make sure we don't keyboard select a group
+		const isNewItemAGroup = (newIndex) => {
+			const
+				item = newIndex > -1 && this.getItemAtIndex(newIndex)
+			
+			return item && item.type === IssueListItemType.Group
+		}
+		
+		while (isNewItemAGroup(index)) {
+			index += (increment < 0) ? -1 : 1
+		}
+		
+		
+		const
+			adjustedIndex = Math.max(0, Math.min(itemCount - 1, index)),
+			item = this.getItemAtIndex(adjustedIndex)
+		
+		if (!item) {
+			log.info('No issue at index' + index,item,adjustedIndex,itemCount,this.itemIndexes,unwrapRef(this.state.listRef),this.state.listRef)
+			return
+		}
+		
+		
+		// Calculate new selected ids
+		let newSelectedIssueIds:List<number> = (event && event.shiftKey) ?
+			
+			// Select block continuation
+			this.calculateSelectedIssueIds(adjustedIndex, firstSelectedIndex) : // YOU ARE HERE - just map array of ids
+			
+			// Issue item
+			List<number>(!item ? [] : [item.id as number])
+			
+				
+				
+		
+		if (!event || !event.shiftKey)
+			this.setState({firstSelectedIndex: index})
+		
+		
+		log.debug('Keyed move', {
+			increment,
+			index,
+			firstSelectedIndex,
+			selectedIssueIds,
+			newSelectedIssueIds,
+		})
+		
+		
+		this.updateSelectedIssueIds(newSelectedIssueIds)
+		
+	
 		
 	}
 	
@@ -768,7 +769,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	
-	
+	private setListRef = (listRef) => {
+		log.debug(`Setting list ref`,listRef)
+		
+		if (listRef)
+			this.setState({listRef})
+	}
 	
 	private makeNoContent(styles,itemsAvailable,allItemsFiltered) {
 		if (itemsAvailable)
@@ -848,7 +854,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			{/* ISSUE SEARCH AND FILTERING */}
 			{!itemsAvailable && !allItemsFiltered ? noItemsNode :
 				<div style={[FlexScale,FillWidth,PositionRelative,OverflowHidden,makeTransition(['flex-grow','flex-shrink','flex-basis'])]}>
-					<SplitPane split="vertical"
+					<SplitPane split="horizontal"
 					           allowResize={allowResize}
 					           minSize={listMinWidth}
 					           maxSize={listMaxWidth}
@@ -857,7 +863,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 						{/* LIST CONTROLS FILTER/SORT */}
 						<IssuesList
 							viewController={this.viewController}
-							ref={(listRef) => this.setState({listRef})}
+							ref={this.setListRef}
 							onIssueOpen={this.onIssueOpen}
 							onIssueSelected={this.onIssueSelected}
 							allItemsFilteredMessage={allItemsFiltered && noItemsNode}

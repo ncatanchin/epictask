@@ -151,6 +151,7 @@ export function createCancelButton(theme,palette,cancelAction) {
 	
 	return <div
 		onClick={cancelAction}
+		tabIndex={0}
 		key='cancelButton'
 		style={[
 			styles.action,
@@ -174,7 +175,11 @@ export function createSaveCancelActions(theme,palette,saveAction, cancelAction) 
 	
 	return [
 		createCancelButton(theme,palette,cancelAction),
-		<div onClick={saveAction} key='saveButton' style={[styles.action,styles.action.save]}>
+		<div
+			onClick={saveAction}
+		  key='saveButton'
+		  tabIndex={0}
+			style={[styles.action,styles.action.save]}>
 			<Icon style={[styles.action.icon]}>save</Icon>
 		</div>
 	]

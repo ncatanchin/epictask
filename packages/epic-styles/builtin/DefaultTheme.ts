@@ -119,11 +119,15 @@ export function DefaultTheme(palette) {
 		
 	// INPUT
 	const
-		inputHighlight = {
+		elementFocus = {
+			//boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
+		},
+		
+		inputHighlight = makeStyle({
 			border: `${convertRem(0.1)}px solid transparent`,
 			backgroundColor: accent.hue1,
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
-		},
+		}),
 		
 		invalidStyle = {
 			boxShadow: `0 0 0.5rem ${colorAlpha(warn.hue1, 1)}`
@@ -178,6 +182,8 @@ export function DefaultTheme(palette) {
 		alternateTextColor: alternateText.primary,
 		
 		progressIndicatorColor: accent.hue1,// secondary.hue1,
+		
+		elementFocus,
 		
 		input: inputStyle,
 		inputBorder,

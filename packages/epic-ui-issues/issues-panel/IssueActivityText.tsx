@@ -467,6 +467,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 				
 				// COMMENT
 				<div {...filterProps(this.props)}
+					tabIndex={0}
 					key='activity'
 					style={[activityStyle,{':hover': {}}]}>
 				

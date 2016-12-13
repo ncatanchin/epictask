@@ -7,7 +7,7 @@ import {
 	setDataOnHotDispose,
 	acceptHot,
 	shortId,
-	getAppEntryHtmlPath,
+	getBrowserEntryHtmlPath,
 	isString,
 	isList,
 	cloneObject,
@@ -16,7 +16,7 @@ import {
 	Events,
 	getValue,
 	SimpleEventEmitter,
-	HEARTBEAT_TIMEOUT, makeAppEntryURL, guard
+	HEARTBEAT_TIMEOUT, makeBrowserEntryURL, guard
 } from "epic-global"
 
 import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
@@ -641,7 +641,7 @@ export class WindowManager {
 				windowPositionManager = new WindowPositionManager(newWindow,positionId),
 				
 				// URL
-				url = makeAppEntryURL(uri),
+				url = makeBrowserEntryURL(uri),
 				
 				// INSTANCE OBJECT
 				windowInstance = this.windows[ this.windows.length ] = cloneObjectShallow(config, {

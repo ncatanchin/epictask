@@ -14,11 +14,11 @@ import { makeStyle } from "epic-styles/styles"
 
 
 const
-	log = getLogger(__filename),
-	commandContainerItems = new WeakMap<CommandContainer,ICommandContainerItems>()
+	log = getLogger(__filename)
+	//commandContainerItems = new WeakMap<CommandContainer,ICommandContainerItems>()
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 export interface ICommandContainerItems {
@@ -46,9 +46,12 @@ interface ICommandContainerProps extends React.HTMLAttributes<any> {
  */
 interface ICommandContainerState {
 	instance?:ICommandComponent
+	lastPrototype?: any
+	
 	mounted?:boolean
 	//focused?:boolean
 	registered?:boolean
+	
 }
 
 
@@ -62,7 +65,8 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		
 		this.state = {
 			mounted: false,
-			registered: false
+			registered: false,
+			lastPrototype: null
 		}
 	}
 	
@@ -135,10 +139,22 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 		// 	return
 		// }
 		
-		// JUST IN CASE ITS WRAPPED IN RADIUM OR CONNECT/REDUX
+		log.debug(`Setting instance`,instance)
+		
 		this.setState({
-			instance
+			instance,
+			registered: false
 		}, this.updateRegistration)
+	
+		// JUST IN CASE ITS WRAPPED IN RADIUM OR CONNECT/REDUX
+		// if (this.state.instance && instance !== this.state.instance) {
+		// 	this.setState({
+		// 		registered: false
+		// 	},completeUpdate)
+		// } else {
+		// 	completeUpdate()
+		// }
+		
 	}
 	
 	/**
@@ -269,17 +285,7 @@ export class CommandContainer extends React.Component<ICommandContainerProps,ICo
 	 * @returns {ICommandContainerItems}
 	 */
 	private getItems() {
-		let
-			items = commandContainerItems.get(this)
-		
-		if (!items) {
-			
-			items = this.instance.commandItems(new CommandContainerBuilder(this))
-			
-			commandContainerItems.set(this, items)
-		}
-		
-		return items
+		return this.instance.commandItems(new CommandContainerBuilder(this))
 	}
 	
 	/**
@@ -420,23 +426,23 @@ export interface ICommandRootProps extends React.HTMLAttributes<any> {
 export class CommandRoot extends React.Component<ICommandRootProps,void> {
 	
 	componentDidMount() {
-		if (this.props.autoFocus) {
-			const
-				elem = ReactDOM.findDOMNode(this)
-			
-			if (elem)
-				$(elem).focus()
-		}
+		// if (this.props.autoFocus) {
+		// 	const
+		// 		elem = ReactDOM.findDOMNode(this)
+		//
+		// 	if (elem)
+		// 		$(elem).focus()
+		// }
 	}
 	
 	componentWillUnmount() {
-		if (this.props.autoFocus) {
-			const
-				elem = ReactDOM.findDOMNode(this)
-			
-			if (elem)
-				$(elem).blur()
-		}
+		// if (this.props.autoFocus) {
+		// 	const
+		// 		elem = ReactDOM.findDOMNode(this)
+		//
+		// 	if (elem)
+		// 		$(elem).blur()
+		// }
 	}
 	
 	render() {

@@ -216,7 +216,7 @@ export function makeMarginRem(top = 0, right = top, bottom = top, left = right) 
 
 export const CSSHoverState = ':hover'
 export const CSSActiveState = ':active'
-export const CSSFocusState = ':active'
+export const CSSFocusState = ':focus'
 
 export const Transparent = 'transparent'
 

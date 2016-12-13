@@ -726,14 +726,9 @@ export class CommandManager {
 			ensureValidId(cmd)
 			
 			// ADD OR UPDATE
-			const
-				currentCmd = this.commands[cmd.id]
+			delete this.commands[cmd.id]
 			
-			if (currentCmd) {
-				cmd = Object.assign(currentCmd,cmd)
-			} else {
-				this.commands[cmd.id] = cmd
-			}
+			this.commands[cmd.id] = cmd
 			
 			// IF AN UPDATE MANAGER IS PROVIDED THEN SEND AN UPDATER
 			if (cmd.updateManager) {
@@ -827,11 +822,7 @@ export class CommandManager {
 			reg = this.getContainerRegistration(id,container,true)
 		
 		// UPDATE COMMANDS ON CONTAINER REG
-		reg.commands =
-			reg
-				.commands
-				.filter(cmd => !commands.find(it => it.id === cmd.id))
-				.concat(commands)
+		reg.commands = commands
 		
 		const
 			allMenuItems = this.getAllMenuItems(commands,menuItems)

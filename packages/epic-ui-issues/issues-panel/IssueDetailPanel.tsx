@@ -258,6 +258,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 		<div style={styles.multi.title}>
 			{selectedIssues.size} selected issues
 		</div>
+		{selectedIssues.size > 0 &&
 		<div style={styles.multi.title}>
 			<Button mode='raised'
 			        sizing='big'
@@ -278,7 +279,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 				Milestone
 			</Button>
 		</div>
-		
+		}
 		<IssueMultiInlineList
 			issues={selectedIssues} />
 		

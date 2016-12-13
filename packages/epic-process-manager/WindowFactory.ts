@@ -1,5 +1,5 @@
 import Electron from 'epic-electron'
-import { guard, cloneObject, getAppEntryHtmlPath, makeAppEntryURL } from "epic-global"
+import { guard, cloneObject, getBrowserEntryHtmlPath, makeBrowserEntryURL } from "epic-global"
 import { WindowEvents } from "epic-entry-shared/WindowTypes"
 
 const
@@ -139,7 +139,7 @@ class WindowFactory {
 			// newWindow.webContents.openDevTools()
 			
 			const
-				url = makeAppEntryURL('empty', {
+				url = makeBrowserEntryURL('empty', {
 					EPIC_ENTRY: ProcessType[this.processType]
 				})
 			

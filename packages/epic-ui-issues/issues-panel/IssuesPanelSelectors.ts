@@ -168,7 +168,12 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 				issuesPanelStateSelector,
 				(state:IssuesPanelState) => state.saveError
 			),
-	
+			
+			
+			itemIndexesSelector:(state) => List<number> = createSelector(
+				issuesPanelStateSelector,
+				(state:IssuesPanelState) => state.itemIndexes
+			),
 	
 			issueFilterAssigneeSelector = createDeepEqualSelector(
 				criteriaSelector,
@@ -511,7 +516,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		
 		issuesSelector,
 		issueIdsSelector,
-		
+		itemIndexesSelector,
 		commentsSelector,
 		criteriaSelector,
 		searchTextSelector,

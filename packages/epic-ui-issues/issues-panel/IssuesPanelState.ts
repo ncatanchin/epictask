@@ -39,7 +39,7 @@ declare global {
 		saving?:boolean
 		saveError?: Error
 		
-		
+		itemIndexes?:List<number>
 		
 		editInlineConfig?:IIssueEditInlineConfig
 		editingIssue?:Issue
@@ -89,6 +89,8 @@ export const IssuesPanelStateRecord = Record({
 	
 	criteria: DefaultIssueCriteria,
 	
+	itemIndexes: List<number>(),
+	
 	searchText: '',
 	
 	editInlineConfig:null,
@@ -117,6 +119,7 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 				'issues',
 				'events',
 				'comments',
+				'itemIndexes',
 				/^edit/,
 				/^sav/
 			)))
@@ -128,6 +131,8 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	
 	criteria:IIssueCriteria
 	searchText:string
+	
+	itemIndexes:List<number>
 	
 	groupVisibility:Map<string,boolean>
 	
