@@ -3,6 +3,7 @@ __non_webpack_require__('source-map-support').install()
 __non_webpack_require__('reflect-metadata')
 
 
+console.log(`Loading BrowserEntry`)
 
 const
 	win = window as any
@@ -24,10 +25,16 @@ function logBenchmark(name) {
 function loadApp() {
 	const
 		loadPkg = (pkgName:string) => {
-			if (!(global as any).__NO_WEBPACK__)
-				pkgName = `./${pkgName}.js`
+			console.log(`Loading pkg "${pkgName}"`)
+			try {
+				if (!(global as any).__NO_WEBPACK__)
+					pkgName = `./${pkgName}.js`
 				
-			__non_webpack_require__(pkgName)
+				
+				__non_webpack_require__(pkgName)
+			} catch (err) {
+				console.error(`Failed to load package`,err)
+			}
 		}
 	
 	// LOAD THE DLL
@@ -37,7 +44,7 @@ function loadApp() {
 	// 	})
 	// }
 	//
-	
+	console.log(`Loading pkg for entry "${process.env.EPIC_ENTRY}"`)
 	switch(process.env.EPIC_ENTRY) {
 		case "DatabaseServer":
 			loadPkg("epic-entry-database-server")

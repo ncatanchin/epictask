@@ -9,8 +9,9 @@ import {
 	OneAtATime,
 	cloneObjectShallow
 } from "epic-global"
-import { isRepoSyncPending } from "./executors/RepoSyncExecutor"
+
 import { getValue } from "typeguard"
+import { isRepoSyncPending } from "epic-entry-job-server/executors/RepoSyncState"
 
 
 const

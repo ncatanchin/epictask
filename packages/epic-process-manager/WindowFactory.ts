@@ -118,7 +118,7 @@ class WindowFactory {
 				
 				if (fromWindowId === newWindowId) {
 					log.debug(`Window is ready ${newWindowId}`)
-					deferred.resolve()
+					deferred.resolve(newWindow)
 				}
 			}
 		
@@ -149,6 +149,8 @@ class WindowFactory {
 			
 			
 			await deferred.promise.timeout(WindowCreateTimeout)
+				.then(newWindow => `Window is now ready: ${newWindow.id}`)
+			
 		} catch (err) {
 			log.error(`Unable to create browser window for pool`, err)
 			

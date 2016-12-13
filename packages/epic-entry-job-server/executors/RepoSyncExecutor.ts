@@ -13,31 +13,15 @@ import JobProgressTracker from "../JobProgressTracker"
 import { RepoSyncManager } from "../GithubSyncHandlers"
 
 import { getHot, setDataOnHotDispose, acceptHot } from "epic-global"
+import { getRepoSync, setRepoSync, deleteRepoSync } from "epic-entry-job-server/executors/RepoSyncState"
 
-
-interface IRepoSyncPending {
-	resolver:Promise.Resolver<any>
-	started:boolean
-}
 
 const
 	log = getLogger(__filename),
-	Benchmarker = Benchmark(__filename),
-	repoSyncMap = getHot(module,'repoSyncMap',{}) as {[repoId:number]:IRepoSyncPending}
-
-setDataOnHotDispose(module,() => ({
-	repoSyncMap
-}))
+	Benchmarker = Benchmark(__filename)
 
 
-/**
- * Check to see if a pending repo sync exists
- *
- * @param repoId
- */
-export function isRepoSyncPending(repoId:number) {
-	return !!repoSyncMap[repoId] && !repoSyncMap[repoId].started
-}
+
 
 @JobExecutor
 export class RepoSyncExecutor implements IJobExecutor {
@@ -196,7 +180,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 			repoId = repo.id,
 		
 			// CHECK FOR PENDING SYNC
-			pendingSync = repoSyncMap[repoId],
+			pendingSync = getRepoSync(repoId),
 			pendingResolver = pendingSync && pendingSync.resolver,
 			pendingPromise = pendingResolver && pendingResolver.promise
 		
@@ -264,7 +248,7 @@ export class RepoSyncExecutor implements IJobExecutor {
 		
 		
 		// SET OUR RESOLVER AS THE CURRENT ONE
-		repoSyncMap[repoId] = thisSync
+		setRepoSync(repoId,thisSync)
 		
 		if (pendingSync && pendingPromise.isResolved() && pendingPromise.isRejected()) {
 			this.logger.info(`Already syncing ${repo.full_name} / will continue when it completes`)
@@ -280,8 +264,8 @@ export class RepoSyncExecutor implements IJobExecutor {
 		return deferred
 			.promise
 			.finally(() => {
-				if (thisSync === repoSyncMap[repoId]) {
-					delete repoSyncMap[repoId]
+				if (thisSync === getRepoSync(repoId)) {
+					deleteRepoSync(repoId)
 				}
 			})
 	}

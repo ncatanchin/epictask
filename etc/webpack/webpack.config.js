@@ -504,20 +504,9 @@ module.exports = noWebpack ? makeHtmlConfig() :
 			"./epic-entry-ui/index"
 		
 		]),
-		//,["react-hot-loader/patch"]
-		
-		"epic-entry-browser": [
-			"./epic-entry-browser/index"
-		]
-		
-		//
 		
 	}, config => {
 		config.plugins.unshift(
-			new webpack.optimize.CommonsChunkPlugin({
-				name: "epic-common-2",
-				async: true
-			}),
 			new HtmlWebpackPlugin({
 				filename: "app-entry.html",
 				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,

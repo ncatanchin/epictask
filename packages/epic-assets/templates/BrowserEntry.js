@@ -8,6 +8,8 @@ global.__NO_WEBPACK__ = false //!!require('electron').remote.getGlobal('__NO_WEB
 
 window.startLoadTime = Date.now()
 
+console.log(`Loading BrowserEntry`)
+
 const
 	isDev = "#{htmlWebpackPlugin.options.isDev}" === 'true',
 	$ = require('jquery'),
@@ -20,11 +22,16 @@ function logBenchmark(name) {
 
 function loadApp() {
 	const loadPkg = function(pkgName) {
+		console.info(`Loading pkg ${pkgName}`)
 		pkgName = `./${pkgName}.js`
 		
-		require(pkgName)
+		try {
+			require(pkgName)
+		} catch (err) {
+			console.error(`Failed to load pkg`,err)
+		}
 	}
-	
+	console.info(`Choosing pkg for "${process.env.EPIC_ENTRY}"`)
 	switch (process.env.EPIC_ENTRY) {
 		case "DatabaseServer":
 			loadPkg("epic-entry-database-server")
@@ -99,6 +106,8 @@ window.startEpic = function () {
 		processType = params.EPIC_ENTRY || 'UI',
 		isChildWindow = processType === 'UIChildWindow'
 	
+	log.info(`Process type = ${processType}`,params)
+	
 	_.assign(process.env, {
 		EPIC_ENTRY: processType
 	})
@@ -111,7 +120,7 @@ window.startEpic = function () {
 			return console
 		}
 	})
-	logBenchmark('After globals')
+	//logBenchmark('After globals')
 	
 	try {
 		_.assign(global,{
@@ -124,13 +133,13 @@ window.startEpic = function () {
 		log.info('Failed to inject tap event handler = HMR??')
 	}
 	
-	if (isDev && !isChildWindow) {
-		try {
-			//__non_webpack_require__('devtron').install()
-		} catch (err) {
-			log.info(`Dev tron is prob already loaded`)
-		}
-	}
+	// if (isDev && !isChildWindow) {
+	// 	try {
+	// 		//__non_webpack_require__('devtron').install()
+	// 	} catch (err) {
+	// 		log.info(`Dev tron is prob already loaded`)
+	// 	}
+	// }
 	
 	
 	function loadUI() {
@@ -143,10 +152,10 @@ window.startEpic = function () {
 	}
 	
 	// IN DEV MODE - install debug menu
-	if (isDev) {
-		require('debug-menu').install()
-	}
-	
+	// if (isDev) {
+	// 	require('debug-menu').install()
+	// }
+	log.info(`Going to load`)
 	logBenchmark('To load')
 	if (processType === 'UI' || processType === 'UIChildWindow') {
 		loadUI()

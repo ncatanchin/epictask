@@ -40,7 +40,7 @@ const
 		},
 		[WindowType.Normal]: NormalPoolOpts,
 		[WindowType.Dialog]: NormalPoolOpts,
-		[WindowType.Modal]: NormalPoolOpts
+		//[WindowType.Modal]: NormalPoolOpts
 	},
 	
 	/**

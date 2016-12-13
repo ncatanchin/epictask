@@ -109,11 +109,16 @@ export function DefaultTheme(palette) {
 			background,
 			text,
 			alternateText
-		} = palette,
+		} = palette
 	
 		
+	const
+		focusStyle = {
+			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
+		}
 		
-		// INPUT
+	// INPUT
+	const
 		inputHighlight = {
 			border: `${convertRem(0.1)}px solid transparent`,
 			backgroundColor: accent.hue1,

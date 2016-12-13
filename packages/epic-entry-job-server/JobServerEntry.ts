@@ -1,14 +1,13 @@
 import "epic-entry-shared/AppEntry"
-import {loadProcessClientEntry} from "epic-entry-shared"
 import { ProcessType } from "epic-entry-shared/ProcessType"
-
+import {loadProcessClientEntry} from "epic-entry-shared"
 
 const
 	{ProcessClientEntry} = loadProcessClientEntry(),
 	log = getLogger(__filename)
 
 
-
+log.info(`Starting job server`)
 
 /**
  * Creates and is responsible for the JobServer process
