@@ -14,6 +14,7 @@ import { createSelector, createStructuredSelector } from 'reselect'
 import { List } from 'immutable'
 import { getIssuesPanelSelector } from "./IssuesPanelController"
 import { TimeAgo, LabelChip, MilestoneLabel, RepoLabel } from "epic-ui-components/common"
+import { isHovering } from "epic-styles/styles"
 
 const
 	log = getLogger(__filename)
@@ -83,10 +84,12 @@ export interface IIssueItemProps extends IThemedAttributes {
 })
 
 @ThemedStyles(baseStyles, 'issueItem')
-export class IssueItem extends React.Component<IIssueItemProps,void> {
+export class IssueItem extends React.Component<IIssueItemProps,any> {
 	
 	constructor(props, context) {
 		super(props, context)
+		
+		this.state = {}
 	}
 	
 	/**
@@ -101,9 +104,10 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * selected, selectedMulti and item ref
 	 *
 	 * @param nextProps
+	 * @param nextState
 	 * @returns {boolean}
 	 */
-	shouldComponentUpdate(nextProps: IIssueItemProps) {
+	shouldComponentUpdate(nextProps: IIssueItemProps,nextState) {
 		return !shallowEquals(
 			nextProps,
 			this.props,
@@ -115,7 +119,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			'issue',
 			'isSelected',
 			'isSelectedMulti'
-		)
+		) || !shallowEquals(nextState,this.state)
 	}
 	
 	
@@ -161,6 +165,8 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			return React.DOM.noscript()
 		
 		const
+			itemId = `issue-item-${issue.id}`,
+			
 			isFocused = issue.focused,
 			
 			issueStyles = makeStyle(
@@ -171,22 +177,29 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				styleParam,
 				rowState.style// PARAM PASSED FROM LIST
 			),
+			
+			hovering = isHovering(this,'itemRoot'),
+			
 			specialStyle = isSelected ? 'selected' : isFocused ? 'focused' : -1,
+			
 			issueTitleStyle = makeStyle(
 				styles.title,
 				styles.title[ specialStyle ],
 				isSelectedMulti && styles.title.selected.multi
 			)
 		
-		return <div {...filterProps(props)} id={`issue-item-${issue.id}`}
-		                                    style={issueStyles}
-		                                    className={(isSelected ? 'selected' : '')}
-		                                    onContextMenu={this.onContextMenu}
-		                                    onDoubleClick={this.onDoubleClick}
-		                                    onClick={this.onClick}>
+		return <div
+			{...filterProps(props)}
+			id={itemId}
+			ref='itemRoot'
+      style={issueStyles}
+      className={(isSelected ? 'selected' : '')}
+      onContextMenu={this.onContextMenu}
+      onDoubleClick={this.onDoubleClick}
+      onClick={this.onClick}
+		>
 			
 			
-			{/*<div style={stylesMarkers}></div>*/}
 			<div style={styles.details}>
 				
 				
@@ -194,7 +207,9 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 				<IssueItemAvatar
 					styles={styles}
 					issue={issue}
-					specialStyle={specialStyle}/>
+					highlight={isFocused || isSelected || hovering}
+					specialStyle={specialStyle}
+				/>
 				
 				
 				<div style={styles.content}>
@@ -334,16 +349,16 @@ function IssueItemMarkings({ styles, issue, specialStyle }) {
  * @constructor
  * @param specialStyle
  */
-function IssueItemAvatar({ styles, issue, specialStyle }) {
+function IssueItemAvatar({ styles, issue, highlight, specialStyle }) {
 	const
 		{ avatarAndState: avatarAndStateStyle } = styles,
 		{ avatar: avatarStyle } = avatarAndStateStyle
 	
-	return <div style={avatarAndStateStyle}>
+	return <div style={mergeStyles(avatarAndStateStyle,highlight && avatarAndStateStyle.highlight)}>
 		
 		
 		<Avatar user={issue.assignee || User.UnknownUser}
-		        style={makeStyle(avatarStyle,avatarStyle.root)}
+		        style={makeStyle(avatarStyle,avatarStyle.root,highlight && avatarStyle.root.highlight)}
 		        avatarStyle={makeStyle(avatarStyle,avatarStyle.image)}/>
 	
 	

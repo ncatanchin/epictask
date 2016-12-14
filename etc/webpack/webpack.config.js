@@ -431,48 +431,6 @@ const
 		nodir: true
 	}
 
-// const
-// 	makeHtmlConfig = () => makeConfig('epic-html', [], {
-// 		"epic-entry-browser": makeHotEntry([
-// 			"./epic-entry-browser/index"
-// 		]),
-// 	}, config => {
-//
-// 		if (noWebpack) {
-// 			config.plugins.unshift(new CopyWebpackPlugin([
-// 				{
-// 					from: 'epic-assets',
-// 					to: 'assets'
-// 				},
-// 				{
-// 					from: path.resolve(process.cwd(), 'bin'),
-// 					to: 'bin'
-// 				}
-// 			], {
-// 				ignore: ["**/*.psd"],
-// 				debug: 'info'
-//
-// 			}))
-// 		}
-//
-// 		config.plugins.push(
-// 			new HtmlWebpackPlugin({
-// 				filename: "browser-entry.html",
-// 				template: `${process.cwd()}/packages/epic-assets/templates/BrowserEntry.jade`,
-// 				inject: false,
-// 				isDev
-// 			}),
-//
-// 			new HtmlWebpackPlugin({
-// 				filename: "splash-entry.html",
-// 				template: `${process.cwd()}/packages/epic-assets/templates/SplashEntry.jade`,
-// 				inject: false,
-// 				isDev
-// 			})
-// 		)
-// 	})
-
-
 module.exports = makeConfig('epic-app', [], {
 		"epic-entry-database-server": makeHotEntry([
 			"./epic-entry-database-server/index"

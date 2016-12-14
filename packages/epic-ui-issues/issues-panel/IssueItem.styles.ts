@@ -12,7 +12,7 @@ export default function baseStyles(topStyles, theme, palette) {
 		{ background, primary, accent, secondary, success, alternateText, text } = palette
 	
 	let
-		avatarDim = Math.floor(convertRem(2.8))
+		avatarDim = Math.floor(convertRem(3.2))
 	
 	if (avatarDim % 2 !== 0) {
 		avatarDim -= 1
@@ -20,12 +20,12 @@ export default function baseStyles(topStyles, theme, palette) {
 	
 	return [
 		makeTransition([ 'height', 'flex-grow', 'flex-shrink', 'flex-basis', 'box-shadow' ]),
-		FlexRowCenter,
-		FlexAuto,
-		FillWidth,
-		FillHeight,
-		FlexAlignStart,
-		makePaddingRem(0.6),
+		Styles.FlexRowCenter,
+		Styles.FlexAuto,
+		Styles.FillWidth,
+		Styles.FillHeight,
+		Styles.FlexAlignStart,
+		makePaddingRem(0.6,0.6,0.6,0),
 		{
 			// COLORS
 			backgroundColor: background,
@@ -36,6 +36,8 @@ export default function baseStyles(topStyles, theme, palette) {
 			height: rem(9.4),
 			cursor: 'pointer',
 			
+			// EMPTY HOVER STATE - Used programmaticly
+			[Styles.CSSHoverState]: [],
 			
 			selected: [ {
 				backgroundColor: secondary.hue1,//colorAlpha(secondary.hue1,0.5),
@@ -125,8 +127,8 @@ export default function baseStyles(topStyles, theme, palette) {
 			 */
 			
 			labels: [
-				FlexRowCenter,
-				OverflowAuto,
+				Styles.FlexRowCenter,
+				Styles.OverflowAuto,
 				makeHeightConstraint(rem(1.2)),
 				makePaddingRem(0,0.2,0,0.5),
 				makeFlex(0,1,'auto'),{
@@ -145,12 +147,10 @@ export default function baseStyles(topStyles, theme, palette) {
 				
 			
 			//region MILESTONE
-			milestone: [
+			milestone: [Styles.FlexAuto,
 				{
 					paddingLeft: rem(1),
-					
 					maxHeight: rem(2),
-					maxWidth: '100%',
 					
 					// TITLE
 					text: [ Ellipsis, makeFlex(0, 1, 'auto') ],
@@ -168,10 +168,8 @@ export default function baseStyles(topStyles, theme, palette) {
 			
 			//region TIME
 			time: [
-				FillWidth,
-				FlexAuto,
-				Ellipsis,
-				makeMarginRem(0,0,0.5,0),
+				Styles.FlexAuto,
+				Styles.makeMarginRem(0,0,0.5,0),
 				makeHeightConstraint(rem(1.7)),{
 					textAlign: 'right',
 					fontSize: themeFontSize(1),
@@ -186,7 +184,7 @@ export default function baseStyles(topStyles, theme, palette) {
 			//endregion
 			
 			
-			bar: [ PositionAbsolute, makeWidthConstraint(rem(0.6)), {
+			bar: [ Styles.PositionAbsolute, makeWidthConstraint(rem(0.6)), {
 				top: 0,
 				left: 0,
 				bottom: 0,
@@ -195,31 +193,50 @@ export default function baseStyles(topStyles, theme, palette) {
 				
 			} ],
 			
-			content: [ FlexColumn, FlexScale, OverflowHidden, makePaddingRem(0, 0.5, 0, 0) ],
+			content: [ Styles.FlexColumn, Styles.FlexScale, Styles.OverflowHidden, makePaddingRem(0, 0.5, 0, 0) ],
 			
-			details: [ FlexRow, FlexAuto, FillWidth, {} ],
+			details: [ Styles.FlexRow, Styles.FlexAuto, Styles.FillWidth, {} ],
 			
 			/**
 			 * Avatar and state on left
 			 */
 			avatarAndState: [
-				FlexColumnCenter,
-				makePaddingRem(0, 1, 0, 0), {
+				Styles.FlexColumnCenter,
+				Styles.PositionRelative,
+				makeTransition(['opacity']),
+				makePaddingRem(0, 1, 0, 0.5), {
+					
+					opacity: 0.7,
+					
+					highlight: [{
+						opacity: 1
+					}],
 					
 					// AVATAR
 					avatar: [
-						FlexAuto,
-						FlexColumnCenter,
+						Styles.FlexAuto,
+						Styles.FlexColumnCenter,
 						makePaddingRem(),
-						makeWidthConstraint(avatarDim),
+						makeWidthConstraint(avatarDim ),
 						makeHeightConstraint(avatarDim), {
 							borderRadius: avatarDim / 2,
 							
-							root: {
+							zIndex: 2,
+							
+							
+							
+							root: [makeTransition('transform'),{
 								boxShadow: `0rem 0.2rem 0.2rem ${colorAlpha(primary.text,0.3)}`,
 								backgroundColor: Transparent,
-								borderColor: Transparent
-							},
+								borderColor: Transparent,
+								
+								// transform: 'translate(-50%,0)',
+								//
+								// highlight: {
+								// 	transform: 'translate(0,0)'
+								// },
+							}],
+							
 							
 							image: [{
 								
@@ -231,9 +248,9 @@ export default function baseStyles(topStyles, theme, palette) {
 			
 			
 			row1: [
-				FlexRow,
+				Styles.FlexRow,
 				makeFlexAlign('center', 'center'),
-				FlexAuto,
+				Styles.FlexAuto,
 				makePaddingRem(0, 0, 0.5, 0),
 				{
 					overflow: 'visible',
@@ -241,12 +258,10 @@ export default function baseStyles(topStyles, theme, palette) {
 				}
 			],
 			
-			row2: [ makeTransition([ 'height' ]), FlexRowCenter, FillWidth, OverflowHidden, makePaddingRem(0), {
-				//pointerEvents: 'none'
-			} ],
+			row2: [ makeTransition([ 'height' ]), Styles.FlexRowCenter, Styles.FillWidth, Styles.OverflowHidden, makePaddingRem(0)],
 			
 			
-			row3: makeStyle(FlexRowCenter, {
+			row3: makeStyle(Styles.FlexRowCenter, {
 				margin: '0rem 0 0.3rem 0',
 				overflow: 'auto'
 			}),
@@ -258,33 +273,24 @@ export default function baseStyles(topStyles, theme, palette) {
 			 * Markings are in the top left of the issue item
 			 */
 			markings: [
-				//PositionAbsolute,
-				FlexAuto,
-				FlexColumn,
+				Styles.FlexAuto,
+				Styles.FlexColumn,
 				makeFlexAlign('flex-end', 'flex-start'),
 				{
 					
 					maxWidth: rem(7),
-					// zIndex: 2,
-					// bottom: 0,
-					// right: 0,
-					// color: alternateText.primary,
-					// backgroundColor: text.primary,
 					color: text.primary,
-					//backgroundColor: alternateText.primary,
-					
 					
 					state: [ {
-						icon: [ makeHeightConstraint(rem(1.2)), FlexAuto, {
+						icon: [ makeHeightConstraint(rem(1.2)), Styles.FlexAuto, {
 							fontSize: rem(1),
 							fontWeight: 400,
 							padding: 0,
 							margin: 0,
-							//color: alternateText.primary
 							color: success.hue1
 						} ],
 						root: [
-							FlexColumnCenter,
+							Styles.FlexColumnCenter,
 							makePaddingRem(0, 0.1),
 							makeWidthConstraint(rem(1.7)),
 							makeHeightConstraint(rem(1.7)), {
