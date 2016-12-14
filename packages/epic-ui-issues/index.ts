@@ -77,7 +77,8 @@ Object.values(IssueRouteConfigs).forEach(RouteRegistryScope.Register)
  * Register Views
  */
 ViewRegistryScope.Register({
-	name: "IssuesPanel",
+	id: "IssuesPanel",
+	name: "Issues Panel",
 	type: "IssuesPanel",
 	defaultView: true,
 	provider: makePromisedComponent(resolver => require.ensure([],function(require:any) {

@@ -15,6 +15,7 @@ const
 declare global {
 	
 	interface IViewConfig {
+		id:string
 		name:string
 		type:string
 		defaultView?:boolean
@@ -91,7 +92,7 @@ export class ViewRegistryScope implements IRegistryScope<IRegistryEntryView> {
 	 */
 	Register = (config:IViewConfig) => {
 		log.debug(`Registered view: ${config.name}`)
-		this.scope[config.name] = config
+		this.scope[config.id] = config
 		this.viewsChanged()
 	}
 	

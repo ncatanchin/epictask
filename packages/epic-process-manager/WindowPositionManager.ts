@@ -153,13 +153,13 @@ export class WindowPositionManager {
 					const
 						win = this.window
 					
+					win.setBounds(position.bounds)
+					
 					// UPDATE THE WINDOW
 					if (position.isMaximized) {
 						win.maximize()
 					} else if (position.isFullScreen) {
 						win.setFullScreen(true)
-					} else {
-						win.setBounds(position.bounds)
 					}
 					
 				}

@@ -221,6 +221,13 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	}
 	
 	/**
+	 * Debounce the update just in case
+	 */
+	private notifyNativeNotifications = _.debounce(() =>
+		getNotificationCenter().notify("Notification configuration changed successfully")
+	,150)
+	
+	/**
 	 * Set selected palette
 	 *
 	 * @param item
@@ -311,6 +318,8 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							          	updateSettings({
 							          		nativeNotificationsEnabled: isChecked
 							          	})
+							          	
+							          	this.notifyNativeNotifications()
 							          }}/>
 					</SettingsField>
 				</SettingsSection>

@@ -133,9 +133,9 @@ export class NotificationService extends BaseService {
 	 * On notification config change then update stuff
 	 */
 	private onNotificationConfigChange = () => {
+		log.debug(`Notification configuration changed`)
 		//this.clear()
-		
-		getNotificationCenter().notify("Notification configuration changed successfully")
+		//getNotificationCenter().notify("Notification configuration changed successfully")
 	}
 	
 	/**
