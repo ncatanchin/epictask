@@ -226,6 +226,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 * @returns {boolean} - true if changed, false otherwise
 	 */
 	private updateState = (props = this.props) => {
+		
 		const
 			{ groupVisibility, items, issues, groups, editInlineConfig } = props
 		
@@ -289,8 +290,8 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 	 *
 	 * @param newSelectedIssueIds
 	 */
-	private adjustScroll(newSelectedIssueIds) {
-		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds[ newSelectedIssueIds.length - 1 ]
+	adjustScroll = _.debounce((newSelectedIssueIds) => {
+		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds.last()
 		if (lastIssueId) {
 			const elem = $(`#issue-item-${lastIssueId}`)[ 0 ] as any
 			if (elem) {
@@ -298,7 +299,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				elem.scrollIntoViewIfNeeded()
 			}
 		}
-	}
+	},150)
 	
 	
 	private get viewController() {

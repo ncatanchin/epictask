@@ -110,6 +110,8 @@ export interface IIssuesPanelProps extends IThemedAttributes {
 	saving?: boolean
 	editInlineConfig?: IIssueEditInlineConfig
 	
+	horizontalView?:boolean
+	
 }
 
 export interface IIssuesPanelState {
@@ -131,7 +133,8 @@ function makeSelector() {
 		issues: getIssuesPanelSelector(selectors => selectors.issuesSelector),
 		items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
 		groups: getIssuesPanelSelector(selectors => selectors.issueGroupsSelector),
-		editInlineConfig: getIssuesPanelSelector(selectors => selectors.editInlineConfigIssueSelector)
+		editInlineConfig: getIssuesPanelSelector(selectors => selectors.editInlineConfigIssueSelector),
+		horizontalView: getIssuesPanelSelector(selectors => selectors.horizontalViewSelector),
 	})
 }
 	
@@ -153,7 +156,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	refs:any
 	
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(this.props,nextProps,'hasSelectedIssues','issues','items','groups','editInlineConfig') ||
+		return !shallowEquals(this.props,nextProps,'horizontalView','hasSelectedIssues','issues','items','groups','editInlineConfig') ||
 			!shallowEquals(this.state,nextState,'listRef')
 	}
 	
@@ -196,6 +199,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					overrideInput: true
 				})
 			
+			// TOGGLE VIEW
+			.useCommand(
+				Commands.ToggleIssuesPanelView,
+				(cmd, event) => this.viewController.toggleView())
+				
 			// NEW COMMENT
 			.useCommand(
 				Commands.NewComment,
@@ -564,12 +572,12 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	}
 	
 	adjustScroll(newSelectedIssueIds) {
-		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds[newSelectedIssueIds.length - 1]
+		//guard(() => (this.state.listRef as IssuesList).adjustScroll(newSelectedIssueIds))
+		const lastIssueId = newSelectedIssueIds && newSelectedIssueIds.last()
 		if (lastIssueId) {
-			const elem = $(`#issue-item-${lastIssueId}`)[0] as any
+			const elem = $(`#issue-item-${lastIssueId}`)[ 0 ] as any
 			if (elem) {
-				log.info('scrolling into view', elem)
-				//elem.scrollIntoView({block: "start", behavior: "smooth"})
+				log.debug('scrolling into view', elem)
 				elem.scrollIntoViewIfNeeded()
 			}
 		}
@@ -639,11 +647,16 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			startIndex = Math.max(0, Math.min(issueIndex, firstSelectedIndex)),
 			endIndex = Math.min(items.size - 1, Math.max(issueIndex, firstSelectedIndex))
 		
-		return itemIndexes
+		let
+			selectedIds = itemIndexes
 			.slice(startIndex, endIndex + 1)
 			.map(itemIndex => items.get(itemIndex))
 			.filter(item => !!item)
 			.map(item => item.id) as List<number>
+		
+		return ((issueIndex < firstSelectedIndex) ?
+			selectedIds.reverse() :
+			selectedIds) as List<number>
 	}
 	
 	/**
@@ -752,20 +765,10 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	
 	componentWillMount() {
 		this.viewController.setMounted(true)
-		// const
-		// 	store:ObservableStore<any> = Container.get(ObservableStore as any) as any
-		//
-		// this.selectedIssueIdsUnsubscribe = store.observe(
-		// 	this.viewController.makeStatePath('selectedIssueIds'),
-		// 	(selectedIssueIds) => this.selectedIssueIds = selectedIssueIds)
 	}
 	
 	componentWillUnmount() {
 		this.viewController.setMounted(false)
-		// if (this.selectedIssueIdsUnsubscribe) {
-		// 	this.selectedIssueIdsUnsubscribe()
-		// 	this.selectedIssueIdsUnsubscribe = null
-		// }
 	}
 	
 	
@@ -800,11 +803,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		const
 			{
 				styles,
-				palette,
 				issues,
 				items,
 				commandContainer,
-				hasSelectedIssues
+				hasSelectedIssues,
+				horizontalView
 			} = this.props,
 			
 			// FOCUSED BASED ON CONTAINER
@@ -853,8 +856,14 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 			
 			{/* ISSUE SEARCH AND FILTERING */}
 			{!itemsAvailable && !allItemsFiltered ? noItemsNode :
-				<div style={[FlexScale,FillWidth,PositionRelative,OverflowHidden,makeTransition(['flex-grow','flex-shrink','flex-basis'])]}>
-					<SplitPane split="horizontal"
+				<div style={makeStyle(
+					Styles.FlexScale,
+					Styles.FillWidth,
+					Styles.PositionRelative,
+					Styles.OverflowHidden,
+					Styles.makeTransition(['flex-grow','flex-shrink','flex-basis'])
+				)}>
+					<SplitPane split={horizontalView ? 'horizontal' : 'vertical'}
 					           allowResize={allowResize}
 					           minSize={listMinWidth}
 					           maxSize={listMaxWidth}

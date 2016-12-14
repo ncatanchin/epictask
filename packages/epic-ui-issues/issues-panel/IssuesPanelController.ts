@@ -878,6 +878,15 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	}
 	
 	/**
+	 * Toggle View Horizontal/Vertical
+	 */
+	toggleView() {
+		this.updateState({
+			horizontalView: !this.getState().horizontalView
+		})
+	}
+	
+	/**
 	 * Show a context menu for an issue
 	 * @param issue
 	 */

@@ -14,7 +14,6 @@ import { createSelector, createStructuredSelector } from 'reselect'
 import { List } from 'immutable'
 import { getIssuesPanelSelector } from "./IssuesPanelController"
 import { TimeAgo, LabelChip, MilestoneLabel, RepoLabel } from "epic-ui-components/common"
-import { Icon } from "epic-ui-components/common/icon/Icon"
 
 const
 	log = getLogger(__filename)
@@ -25,20 +24,20 @@ const
 export interface IIssueItemProps extends IThemedAttributes {
 	
 	
-	viewController?:IssuesPanelController
-	onOpen?:(event:any, issue:Issue) => void
-	onSelected:(event:any, issue:Issue) => void
+	viewController?: IssuesPanelController
+	onOpen?: (event: any, issue: Issue) => void
+	onSelected: (event: any, issue: Issue) => void
 	
-	rowState?:IRowState<string,string,number>
+	rowState?: IRowState<string,string,number>
 	
-	isSelected?:boolean
-	isSelectedMulti?:boolean
+	isSelected?: boolean
+	isSelectedMulti?: boolean
 	
-	isFocused?:boolean
+	isFocused?: boolean
 	
-	issue?:Issue
-	realIndex?:number
-	item?:IIssueListItem<any>
+	issue?: Issue
+	realIndex?: number
+	item?: IIssueListItem<any>
 	
 }
 
@@ -46,29 +45,29 @@ export interface IIssueItemProps extends IThemedAttributes {
 // State is connected at the item level to minimize redraws for the whole issue list
 @connect(() => {
 	const
-		realIndexSelector = (state, props:IIssueItemProps) => props.rowState.item,
+		realIndexSelector = (state, props: IIssueItemProps) => props.rowState.item,
 		
 		itemSelector = createSelector(
 			realIndexSelector,
 			getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
-			(realIndex:number, items:List<IIssueListItem<any>>) => items.get(realIndex)
+			(realIndex: number, items: List<IIssueListItem<any>>) => items.get(realIndex)
 		),
 		
 		issueSelector = createSelector(
 			itemSelector,
-			(item:IIssueListItem<any>) => item && isIssueListItem(item) && item.item
+			(item: IIssueListItem<any>) => item && isIssueListItem(item) && item.item
 		),
 		
 		isSelectedSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
-			(issue:Issue, selectedIssueIds:List<number>):boolean =>
+			(issue: Issue, selectedIssueIds: List<number>): boolean =>
 			issue && selectedIssueIds.includes(issue.id)
 		),
 		isSelectedMultiSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
-			(issue:Issue, selectedIssueIds:List<number>):boolean =>
+			(issue: Issue, selectedIssueIds: List<number>): boolean =>
 			issue && selectedIssueIds.includes(issue.id) && selectedIssueIds.size > 0
 		)
 	
@@ -93,7 +92,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	/**
 	 * Get the item's issue
 	 */
-	private get issue():Issue {
+	private get issue(): Issue {
 		return this.props.issue
 	}
 	
@@ -104,7 +103,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	 * @param nextProps
 	 * @returns {boolean}
 	 */
-	shouldComponentUpdate(nextProps:IIssueItemProps) {
+	shouldComponentUpdate(nextProps: IIssueItemProps) {
 		return !shallowEquals(
 			nextProps,
 			this.props,
@@ -131,9 +130,9 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	
 	private onContextMenu = (event) => {
 		const
-			{issue} = this
+			{ issue } = this
 		
-		log.info(`Context Menu for issue`,issue)
+		log.info(`Context Menu for issue`, issue)
 		this.props.viewController.showIssueContextMenu(issue)
 		
 	}
@@ -147,7 +146,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 	render() {
 		
 		const
-			{ props} = this,
+			{ props } = this,
 			{
 				style:styleParam,
 				styles,
@@ -175,7 +174,7 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			specialStyle = isSelected ? 'selected' : isFocused ? 'focused' : -1,
 			issueTitleStyle = makeStyle(
 				styles.title,
-				styles.title[specialStyle],
+				styles.title[ specialStyle ],
 				isSelectedMulti && styles.title.selected.multi
 			)
 		
@@ -189,7 +188,6 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 			
 			{/*<div style={stylesMarkers}></div>*/}
 			<div style={styles.details}>
-				
 				
 				
 				{/* ASSIGNEE */}
@@ -206,9 +204,9 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 						
 						{/* IF CLOSED, SHOW CHECK OR IF MILESTONED*/}
 						{issue.state === 'closed' &&
-							<IssueStateIcon styles={[styles.markings.state]}
-							                iconName="check"
-							                issue={issue}/>}
+						<IssueStateIcon styles={[styles.markings.state]}
+						                iconName="check"
+						                issue={issue}/>}
 						
 						<div style={styles.repo}>
 						<span style={[
@@ -225,6 +223,11 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 								isFocused && styles.repo.focused,
 								isSelected && styles.repo.selected
 							)}/>
+							
+							<TimeAgo
+								style={makeStyle(styles.time,styles.time[specialStyle])}
+								timestamp={issue.created_at as any}/>
+						
 						
 						</div>
 					</div>
@@ -233,25 +236,42 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
 					<div style={styles.row2}>
 						<div style={issueTitleStyle}>{issue.title}</div>
 						{
-							getValue(() => issue.labels.length,0) > 0 &&
-								<div style={styles.labels}>
-									{issue.labels.map(label =>
-										<LabelChip
-											key={label.id}
-											label={label}
-											labelStyle={styles.labels.label}
-											mode='dot' />)}
-								</div>
+							getValue(() => issue.labels.length, 0) > 0 &&
+							<div style={styles.labels}>
+								
+								{/* LABELS */}
+								{issue.labels.map(label =>
+									<LabelChip
+										key={label.id}
+										label={label}
+										labelStyle={styles.labels.label}
+										mode='dot'/>)}
+								
+								{
+									issue.milestone && <MilestoneLabel
+										milestone={issue.milestone}
+										style={styles.milestone}
+										iconStyle={[
+											styles.milestone.icon,
+											styles.milestone[specialStyle]
+										]}
+										textStyle={[
+											styles.milestone.text,
+											styles.milestone[specialStyle]
+										]}
+									/>
+								}
+							</div>
 						}
 					</div>
-					
+				
 				
 				</div>
 				
-				<IssueItemMarkings
-					styles={styles}
-					issue={issue}
-					specialStyle={specialStyle}/>
+				{/*<IssueItemMarkings*/}
+				{/*styles={styles}*/}
+				{/*issue={issue}*/}
+				{/*specialStyle={specialStyle}/>*/}
 			</div>
 			{/* FOCUSED MARKING BAR */}
 			<div style={[
@@ -274,13 +294,13 @@ export class IssueItem extends React.Component<IIssueItemProps,void> {
  * @returns {any}
  * @constructor
  */
-function IssueItemMarkings({styles,issue,specialStyle}) {
+function IssueItemMarkings({ styles, issue, specialStyle }) {
 	const
 		{
 			markings: markingsStyle,
 			milestone: milestoneStyle
 		} = styles
-		
+	
 	return <div style={markingsStyle}>
 		<TimeAgo
 			style={makeStyle(styles.time,styles.time[specialStyle])}
@@ -301,7 +321,7 @@ function IssueItemMarkings({styles,issue,specialStyle}) {
 				]}
 			/>
 		}
-		
+	
 	</div>
 }
 
@@ -314,10 +334,10 @@ function IssueItemMarkings({styles,issue,specialStyle}) {
  * @constructor
  * @param specialStyle
  */
-function IssueItemAvatar({ styles, issue,specialStyle }) {
+function IssueItemAvatar({ styles, issue, specialStyle }) {
 	const
-		{ avatarAndState: avatarAndStateStyle} = styles,
-		{ avatar: avatarStyle} = avatarAndStateStyle
+		{ avatarAndState: avatarAndStateStyle } = styles,
+		{ avatar: avatarStyle } = avatarAndStateStyle
 	
 	return <div style={avatarAndStateStyle}>
 		

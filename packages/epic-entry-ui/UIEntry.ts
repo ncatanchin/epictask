@@ -1,3 +1,6 @@
+// SCSS FIRST
+import 'styles/UIEntry.global.scss'
+
 import "epic-entry-shared/AppEntry"
 
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"

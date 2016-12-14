@@ -36,6 +36,8 @@ declare global {
 		selectedIssueIds?:List<number>
 		focusedIssueIds?:List<number>
 		
+		horizontalView?: boolean
+		
 		saving?:boolean
 		saveError?: Error
 		
@@ -98,6 +100,8 @@ export const IssuesPanelStateRecord = Record({
 	
 	saveError: null,
 	saving: false,
+	
+	horizontalView: false,
 } as IIssuesPanelState)
 
 @ModelRegistryScope.Register
@@ -137,6 +141,8 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	groupVisibility:Map<string,boolean>
 	
 	selectedIssueIds:List<number>
+	
+	horizontalView: boolean
 	
 	saving:boolean
 	saveError: Error

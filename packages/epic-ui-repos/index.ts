@@ -1,25 +1,20 @@
 
 import { makePromisedComponent, acceptHot } from "epic-global"
+import { getUIActions } from "epic-typedux/provider"
 
-/*
- 
- .command(
- CommandType.App,
- 'Import Repository',
- (item, event) => getUIActions().openSheet(Pages.RepoImport.path),
- "CommandOrControl+Shift+n",{
- id: CIDS.GithubImport
- }
- )
- 
- .command(
- CommandType.App,
- 'Repository Labels, Milestones & Settings',
- (cmd, event) => getUIActions().openWindow(Pages.RepoSettings.path),
- "CommandOrControl+Shift+Comma", {
- id: CIDS.RepoSettings
- })
- */
+CommandRegistryScope.Register({
+	id: 'RepoImport',
+	type: CommandType.App,
+	name: 'Import Repository',
+	execute: (item, event) => getUIActions().openSheet(getRoutes().RepoImport.uri),
+	defaultAccelerator: "CommandOrControl+Shift+n"
+}, {
+	id: 'RepoSettings',
+	type: CommandType.App,
+	name: 'Repository Labels, Milestones & Settings',
+	execute: (item, event) => getUIActions().openWindow(getRoutes().RepoSettings.uri),
+	defaultAccelerator: "CommandOrControl+Shift+Comma"
+})
 
 const
 	RepoRouteConfigs = {

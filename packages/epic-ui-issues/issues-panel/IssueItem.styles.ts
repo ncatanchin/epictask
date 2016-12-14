@@ -5,6 +5,7 @@ import {
 	makeFlexAlign, FlexColumn, makeWidthConstraint
 } from "epic-styles"
 import { FlexColumnCenter, makeMarginRem, makeFlex, convertRem, OverflowAuto } from "epic-styles/styles"
+
 export default function baseStyles(topStyles, theme, palette) {
 	
 	const
@@ -146,26 +147,24 @@ export default function baseStyles(topStyles, theme, palette) {
 			//region MILESTONE
 			milestone: [
 				{
+					paddingLeft: rem(1),
+					
 					maxHeight: rem(2),
 					maxWidth: '100%',
 					
-					
-					
 					// TITLE
-					text: [
-						Ellipsis,
-						makeFlex(0, 1, 'auto')
-						
-					],
+					text: [ Ellipsis, makeFlex(0, 1, 'auto') ],
 					
 					selected: [ {
 						color: alternateText.secondary,
 					} ],
+					
 					focused: [ {
 						color: alternateText.secondary,
 					} ],
 				} ],
 			//endregion
+			
 			
 			//region TIME
 			time: [

@@ -147,6 +147,12 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 			// ),
 			
 			
+			//VIEW
+			horizontalViewSelector:(state) => boolean = createSelector(
+				issuesPanelStateSelector,
+				(state:IssuesPanelState) => state.horizontalView
+			),
+			
 			//EDIT INLINE
 			editingIssueSelector:(state) => Issue = createSelector(
 				issuesPanelStateSelector,
@@ -525,6 +531,8 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 		issueFilterMilestonesSelector,
 		selectedIssueIdsSelector,
 		selectedIssueIdSelector,
+		
+		horizontalViewSelector,
 		
 		selectedIssueSelector,
 		hasSelectedIssuesSelector,

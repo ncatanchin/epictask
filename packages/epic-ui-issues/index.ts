@@ -104,6 +104,11 @@ CommandRegistryScope.Register({
 	defaultAccelerator: "CommandOrControl+n",
 	execute: (cmd, event) => getUIActions().openWindow(getRoutes().IssueEditDialog.uri)
 },{
+	id: 'ToggleIssuesPanelView',
+	type: CommandType.Container,
+	name: "Toggle view horizontal/vertical",
+	defaultAccelerator: 'CommandOrControl+l'
+},{
 	id: 'NewComment',
 	type: CommandType.Container,
 	name: "New Comment",

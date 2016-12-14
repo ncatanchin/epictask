@@ -1,13 +1,14 @@
 -
 	var fontStyles = eval(require('!!css-loader!sass-loader!assets/fonts/fonts.global.scss'))
-	var mainStyles = eval(require('!!css-loader!sass-loader!styles/MainEntry.global.scss'))
+	//var mainStyles = eval(require('!!css-loader!sass-loader!styles/MainEntry.global.scss'))
+
 doctype html
 html(lang="en")
 	head
 		meta(charset='utf-8')
 		meta(name="viewport" content="width=device-width, initial-scale=1")
 		style!=fontStyles
-		style!=mainStyles
+		//style!=mainStyles
 		style!=eval(require('!!css-loader!sass-loader!styles/split-pane.global.scss'))
 		style!=eval(require('!!css-loader!animate.css/animate.css'))
 		style!=eval(require('!!css-loader!font-awesome/css/font-awesome.min.css'))
