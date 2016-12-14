@@ -1,4 +1,5 @@
 // Imports
+import filterProps from 'react-valid-props'
 import { List } from "immutable"
 import { PureRender } from 'epic-ui-components/common/PureRender'
 import {WorkIndicator} from 'epic-ui-components/common/WorkIndicator'
@@ -515,8 +516,10 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			} = this.state
 		
 		return <form
+			{...filterProps(this.props)}
 			id={id}
 			name={name}
+			
 			onKeyDown={this.onKeyDown}
 			onSubmit={this.submit}
 			style={styles}>

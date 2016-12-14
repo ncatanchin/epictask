@@ -146,7 +146,7 @@ export function makeBorder(width:number|string = rem(0.1), style = 'solid', colo
  * @param iconName
  * @returns {{iconSet: string, iconName: string}}
  */
-export function makeIcon(iconSet:string,iconName:string) {
+export function makeIcon(iconSet:TIconSet,iconName:string):IIcon {
 	return {
 		iconSet,
 		iconName

@@ -1,10 +1,20 @@
-import { colorAlpha } from "epic-styles"
 import {
-	rem, makeHeightConstraint, makeTransition, FlexScale, FlexRow, Ellipsis,
-	FlexRowCenter, FillWidth, OverflowHidden, FlexAuto, makeStyle, makePaddingRem, Transparent, PositionAbsolute,
-	makeFlexAlign, FlexColumn, makeWidthConstraint
+	colorAlpha,
+	rem,
+	makeHeightConstraint,
+	makeTransition,
+	FlexScale,
+	FlexRow,
+	Ellipsis,
+	makeStyle,
+	makePaddingRem,
+	Transparent,
+	makeFlexAlign,
+	makeWidthConstraint,
+	makeMarginRem,
+	makeFlex,
+	convertRem
 } from "epic-styles"
-import { FlexColumnCenter, makeMarginRem, makeFlex, convertRem, OverflowAuto } from "epic-styles/styles"
 
 export default function baseStyles(topStyles, theme, palette) {
 	

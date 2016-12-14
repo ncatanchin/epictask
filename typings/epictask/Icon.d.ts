@@ -2,6 +2,6 @@
  * Icon set/name
  */
 declare interface IIcon {
-	iconSet:string
+	iconSet:TIconSet
 	iconName:string
 }

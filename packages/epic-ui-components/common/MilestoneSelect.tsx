@@ -6,7 +6,7 @@ import { PureRender} from "./PureRender"
 import {LabelChip } from "./LabelChip"
 import { shallowEquals, cloneObjectShallow } from "epic-global"
 import { createStructuredSelector } from "reselect"
-import { ThemedStyles } from "epic-styles"
+import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Milestone } from "epic-models"
 import { SelectField} from "./SelectField"
 import { enabledMilestonesSelector,milestonesSelector } from "epic-typedux"
@@ -40,14 +40,8 @@ const baseStyles = (topStyles,theme,palette) => ({
 /**
  * IMilestoneSelectProps
  */
-export interface IMilestoneSelectProps {
-	theme?:any
-	styles?:any
-	style?:any
+export interface IMilestoneSelectProps extends IThemedAttributes {
 	iconStyle?:any
-	onKeyDown?:(event:React.KeyboardEvent<any>) => any
-	underlineShow?:boolean
-	
 	milestones?:List<Milestone>
 	enabledMilestones?:List<Milestone>
 	milestone:Milestone
@@ -72,7 +66,7 @@ export interface IMilestoneSelectState {
 @connect(createStructuredSelector({
 	milestones: milestonesSelector,
 	enabledMilestones: enabledMilestonesSelector
-}))
+}),null,null,{withRef:true})
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
@@ -170,7 +164,7 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 	 */
 	render() {
 		const
-			{underlineShow, theme, iconStyle,styles,milestone } = this.props,
+			{milestone } = this.props,
 			{items} = this.state,
 			
 			milestoneId = getValue(() => milestone.id,null),
@@ -180,7 +174,8 @@ export class MilestoneSelect extends React.Component<IMilestoneSelectProps,IMile
 		//labelStyle={styles.form.milestone.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
-			value={milestoneId}
+			placeholder={this.props.placeholder || 'Not milestoned'}
+			value={value}
 			items={items}
 			onItemSelected={this.onItemSelected}
 		>

@@ -185,6 +185,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	/**
 	 * When a route changes
 	 */
+	
 	private onRoutesChanged = () => {
 		log.info(`Routes Loaded/Changed - loading`)
 		reloadRoutes()

@@ -57,7 +57,7 @@ export interface IAssigneeSelectState {
 
 @connect(createStructuredSelector({
 	assignees: assigneesSelector
-}))
+}),null,null,{withRef:true})
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
@@ -163,8 +163,9 @@ export class AssigneeSelect extends React.Component<IAssigneeSelectProps,IAssign
 		//labelStyle={styles.form.assignee.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
+			placeholder={this.props.placeholder || 'Unassigned'}
 			value={value}
-			items={items.filter(it => it && (!value || it.key !== value.key))}
+			items={items}
 			onItemSelected={this.onItemSelected}
 		/>
 	}

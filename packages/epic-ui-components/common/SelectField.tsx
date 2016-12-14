@@ -213,7 +213,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			valueItem = getValue(() => items.find(it => [ it.value, it.key ].includes(value)))
 		
 		if (!valueContent)
-			valueContent = getValue(() => valueItem.content,<div>No Value Provided</div>)
+			valueContent = getValue(() => valueItem.content,<div>{this.props.placeholder || 'No Value Provided'}</div>)
 		
 		visibleItems = items.filter(item =>
 			(!valueItem ||
@@ -255,7 +255,6 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 *
 	 * @param item
 	 * @param index
-	 * @returns {(event:React.MouseEvent<any>)=>any}
 	 */
 	private makeOnItemMouseOver = (item: ISelectFieldItem, index) => {
 		return (event: React.MouseEvent<any>) => this.setSelectedIndex(index)
@@ -312,25 +311,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				
 			log.debug(`focusing on filter input`,filterInput)
 			guard(() => filterInput.focus())
-				// const
-				// 	{ rootRefElem } = this.state
-				//
-				//
-				// if (rootRefElem) {
-				// 	const
-				// 		inputElem = $(rootRefElem).find('input')
-				//
-				//
-				//
-				// 	setTimeout(() => {
-				// 		if (!inputElem.length || inputElem.is(':focus'))
-				// 			return
-				//
-				// 		log.debug(`Focusing on`, inputElem, rootRefElem)
-				// 		inputElem.focus()
-				// 	},200)
-				//
-				// }
+				
 			}))
 	}
 	

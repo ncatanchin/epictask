@@ -15,7 +15,7 @@ import {
 	RepoLabel,
 	Avatar,
 	IssueStateIcon,
-	IssueLabelsAndMilestones
+	IssueLabelsAndMilestones, FormButton
 } from "epic-ui-components/common"
 
 import {
@@ -32,10 +32,14 @@ import {
 } from "epic-styles"
 import { enabledLabelsSelector, enabledAssigneesSelector, enabledMilestonesSelector } from "epic-typedux/selectors"
 import { Issue, Milestone, Label, User } from "epic-models"
-import { canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow } from "epic-global"
+import {
+	canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow, unwrapRef,
+	guard
+} from "epic-global"
 import IssuesPanelController from "./IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
-import { makeStyle, colorAlpha } from "epic-styles/styles"
+import { makeStyle, colorAlpha, makeIcon } from "epic-styles/styles"
+import { CommonKeys, GlobalKeys } from "epic-command-manager"
 
 // Constants
 const
@@ -69,10 +73,10 @@ const
 			
 			root: [
 				flexTransition,
-				FlexAuto,
-				FlexColumn,
-				PositionRelative,
-				makePaddingRem(0.5,0.5,1,0.5),{
+				Styles.FlexAuto,
+				Styles.FlexColumn,
+				Styles.PositionRelative,
+				makePaddingRem(0.5, 0.5, 1, 0.5), {
 					
 					backgroundColor: TinyColor(primary.hue1).setAlpha(0.7).toRgbString(),
 					color: text.primary
@@ -100,7 +104,7 @@ const
 					fontWeight: 500,
 					
 					
-					color: colorAlpha(text.secondary,0.7),
+					color: colorAlpha(text.secondary, 0.7),
 					[CSSHoverState]: {
 						color: secondary.hue1
 					}
@@ -113,13 +117,12 @@ const
 				} ]
 			} ],
 			
-			row2: [ flexTransition, FlexRowCenter, FlexAuto, PositionRelative, makePaddingRem(0, 0, 1, 0), {} ],
+			row2: [ flexTransition, Styles.FlexRowCenter, Styles.FlexAuto, Styles.PositionRelative, makePaddingRem(0.7, 0, 1.2, 0.5), {} ],
 			
 			// Row 3 - Labels + title
-			row3: [ flexTransition, FlexRow, FlexAuto, {
-				milestone: [ FlexAuto],
-				labels: [ FlexScale]
-				
+			row3: [ flexTransition, Styles.FlexRow, Styles.FlexAuto, makePaddingRem(0,0.5,0,0), {
+				milestone: [ Styles.FlexAuto ],
+				labels: [ Styles.FlexScale ]
 				
 				
 			} ],
@@ -143,24 +146,21 @@ const
  * IIssueDetailHeaderProps
  */
 export interface IIssueDetailHeaderProps extends IThemedAttributes {
-	viewController:IssuesPanelController
-	selectedIssue?:Issue
-	labels?:List<Label>
-	milestones?:List<Milestone>
-	assignees?:List<User>,
-	saving?:boolean
-	saveError?:any
+	viewController: IssuesPanelController
+	selectedIssue?: Issue
+	labels?: List<Label>
+	milestones?: List<Milestone>
+	assignees?: List<User>,
+	saving?: boolean
+	saveError?: any
 }
 
 /**
  * IIssueDetailHeaderState
  */
 export interface IIssueDetailHeaderState {
-	editIssue?:Issue
-	editMilestone?:boolean
-	editAssignee?:boolean
-	editLabels?:boolean
-	editTitle?:boolean
+	editIssue?: Issue
+	editFocusField?:string
 }
 
 
@@ -168,9 +168,9 @@ function makeSelector() {
 	
 	const
 		selectedIssueSelector = createSelector(
-			(state, props:IIssueDetailHeaderProps) => getValue(() =>
+			(state, props: IIssueDetailHeaderProps) => getValue(() =>
 				props.viewController.selectors.selectedIssueSelector(state)),
-			(selectedIssue:Issue) => selectedIssue
+			(selectedIssue: Issue) => selectedIssue
 		)
 	
 	return createStructuredSelector({
@@ -193,11 +193,11 @@ function makeSelector() {
 @PureRender
 export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,IIssueDetailHeaderState> {
 	
-	refs:any
+	refs: any
 	
 	issueActions = new IssueActionFactory()
 	
-	get form():IForm {
+	get form(): IForm {
 		return this.refs.form
 	}
 	
@@ -209,10 +209,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	private stopEditingIssue() {
 		this.setState({
 			editIssue: null,
-			editLabels: false,
-			editMilestone: false,
-			editAssignee: false,
-			editTitle: false
+			editFocusField: null
 		})
 	}
 	
@@ -221,7 +218,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 */
 	private getEditIssue = () => {
 		let
-			issue:Issue = getValue(() => this.state.editIssue)
+			issue: Issue = getValue(() => this.state.editIssue)
 		
 		if (!issue) {
 			issue = getValue(() =>
@@ -241,8 +238,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param values
 	 */
-	private onFormValid = (values:IFormFieldValue[]) => {
-		log.debug(`onValid`,values)
+	private onFormValid = (values: IFormFieldValue[]) => {
+		log.debug(`onValid`, values)
 	}
 	
 	/**
@@ -250,8 +247,8 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param values
 	 */
-	private onFormInvalid = (values:IFormFieldValue[]) => {
-		log.debug(`onInvalid`,values)
+	private onFormInvalid = (values: IFormFieldValue[]) => {
+		log.debug(`onInvalid`, values)
 	}
 	
 	/**
@@ -261,7 +258,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param model
 	 * @param values
 	 */
-	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => {
+	private onFormValidSubmit = (form: IForm, model: any, values: IFormFieldValue[]) => {
 		return this.save()
 	}
 	
@@ -281,7 +278,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 			getNotificationCenter().notifyInfo(`#${updateIssue.number} Updated Successfully`)
 			this.stopEditingIssue()
 		} catch (err) {
-			log.error(`failed to save issue`,err)
+			log.error(`failed to save issue`, err)
 			
 			getNotificationCenter().notifyError(err)
 		}
@@ -299,97 +296,88 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param event
 	 */
-	private onEditKeyDown = (event:React.KeyboardEvent<any>) => {
+	private onEditKeyDown = (event: React.KeyboardEvent<any>) => {
 		log.debug(`Edit key down`, event, event.keyCode, event.key, event.charCode)
 		
+		if (event.key === GlobalKeys[CommonKeys.Escape]) {
+			this.onEscape()
+		}
 		
 	}
 	
 	/**
 	 * On escape stop
 	 */
-	onEscape = () => {
+	private onEscape = () => {
 		this.stopEditingIssue()
 	}
 	
-	/**
-	 * Edit the milestones
-	 */
-	private editMilestone = () => {
-		this.setState({
-			editMilestone: true,
-			editLabels: true,
-			editIssue: this.getEditIssue()
-		})
-	}
 	/**
 	 * Update the milestone
 	 *
 	 * @param milestone
 	 */
-	private setEditMilestone = (milestone:Milestone) => {
+	private setEditMilestone = (milestone: Milestone) => {
 		this.setState({
-			editIssue: assign({}, this.getEditIssue(), {
+			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				milestone
 			})
-		}, () => this.editSave())
-	}
-	
-	/**
-	 * Edit label
-	 */
-	private editLabels = () => {
-		this.setState({
-			editMilestone: true,
-			editLabels: true,
-			editIssue: this.getEditIssue()
 		})
 	}
+	
 	
 	/**
 	 * Update the labels
 	 *
 	 * @param labels
 	 */
-	private setEditLabels = _.debounce(async(labels:Label[]) => {
+	private setEditLabels = _.debounce(async(labels: Label[]) => {
 		this.setState({
 			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				labels: [ ...labels ]
 			})
-		}, () => this.form.submit())
+		})
 	}, 50)
 	
-	/**
-	 * Assign the issue
-	 */
-	private editAssignee = () => {
-		this.setState({
-			editAssignee: true,
-			editIssue: this.getEditIssue()
-		})
-	}
 	
 	/**
 	 * Update the assignee
 	 *
 	 * @param assignee
 	 */
-	private setEditAssignee = (assignee:User) => {
+	private setEditAssignee = (assignee: User) => {
 		this.setState({
 			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				assignee
 			})
-		}, () => this.editSave())
+		})
 	}
 	
 	/**
 	 * Edit title
 	 */
-	private editTitle = () => {
+	private startEdit = editFocusField => event => {
 		this.setState({
-			editTitle: true,
-			editIssue: this.getEditIssue()
+			editIssue: this.getEditIssue(),
+			editFocusField
 		})
+		// , () => setTimeout(() => {
+		// 	let
+		// 		elem = unwrapRef(this.refs[focusField])
+		//
+		//
+		//
+		// 		const
+		// 			inputElem = elem && $(elem).find('input')[0]
+		//
+		// 		log.debug(`Focusing on ${focusField}`,elem,inputElem)
+		//
+		// 		if (inputElem)
+		// 			elem = inputElem
+		//
+		// 		elem && elem.focus && elem.focus()
+		//
+		// },250))
 	}
 	
 	/**
@@ -397,7 +385,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 *
 	 * @param title
 	 */
-	private setEditTitle = (title:string) => {
+	private setEditTitle = (title: string) => {
 		this.setState({
 			editIssue: cloneObjectShallow(this.getEditIssue(), {
 				title
@@ -405,17 +393,13 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 		})
 	}
 	
-	// Container.get(IssueActionFactory)
-	// 	.patchIssues("Assignee", ...issues)
-	//
-	
 	/**
 	 * Unassign the issues
 	 *
 	 * @param issues
 	 */
-	private unassignIssue = (...issues:Issue[]) =>
-		this.form.submit(async () => {
+	private unassignIssue = (...issues: Issue[]) =>
+		this.form.submit(async() => {
 			await this.issueActions.applyPatchToIssues({ assignee: null }, true, List<Issue>(issues))
 		})
 	
@@ -425,14 +409,14 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param issue
 	 * @param item
 	 */
-	private removeItem = (issue:Issue, item:Label|Milestone) => {
-		this.form.submit(async () => {
+	private removeItem = (issue: Issue, item: Label|Milestone) => {
+		this.form.submit(async() => {
 			log.debug(`Removing item from issue`, item)
 			
 			
 			if (item.$$clazz === Label.$$clazz) {
 				const
-					label:Label = item as any,
+					label: Label = item as any,
 					labels = [ { action: 'remove', label } ] //issue.labels.filter(it => it.url !== label.url)
 				
 				await this.issueActions.applyPatchToIssues({ labels }, true, List<Issue>([ issue ]))
@@ -440,6 +424,11 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				await this.issueActions.applyPatchToIssues({ milestone: null }, true, List<Issue>([ issue ]))
 			}
 		})
+	}
+	
+	private focusProps(field) {
+		return getValue(() => this.state.editFocusField) === field ?
+			{autoFocus:true} : {}
 	}
 	
 	/**
@@ -457,7 +446,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	 * @param nextProps
 	 * @param nextContext
 	 */
-	componentWillReceiveProps(nextProps:IIssueDetailHeaderProps, nextContext:any):void {
+	componentWillReceiveProps(nextProps: IIssueDetailHeaderProps, nextContext: any): void {
 		if (!shallowEquals(this.props, nextProps, 'selectedIssue')) {
 			this.stopEditingIssue()
 		}
@@ -469,7 +458,7 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 	render() {
 		const
 			{ theme, palette, styles, selectedIssue, saving, saveError } = this.props,
-			{ editLabels, editMilestone, editTitle, editAssignee, editIssue } = this.state,
+			{ editIssue } = this.state,
 			
 			issue = editIssue || selectedIssue
 		
@@ -484,19 +473,24 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				color: palette.textColor
 			},
 			canEdit = canEditIssue(issue.repo, issue),
+			
+			editableProps = !canEdit ? {} : {
+					tabIndex: 0
+				},
+			
 			editLabelsControl = canEdit &&
 				
 				<div style={[Styles.FlexRowCenter,Styles.CursorPointer]}>
 					
 					{/* Add a tag/label */}
 					<i key={`${issue.id}LabelEditIcon`}
-					   onClick={() => this.editLabels()}
+					   onClick={this.startEdit('labels')}
 					   style={[styles.row3.labels.add, controlStyle]}
 					   className='material-icons'>edit</i>
 					
 					{/* Add/change milestone */}
 					{!issue.milestone && <i key={`${issue.id}MilestoneEditIcon`}
-					                        onClick={() => this.editMilestone()}
+					                        onClick={this.startEdit('milestone')}
 					                        style={[styles.row3.labels.add, controlStyle]}
 					                        className='octicon octicon-milestone'/>
 					}
@@ -525,123 +519,168 @@ export class IssueDetailHeader extends React.Component<IIssueDetailHeaderProps,I
 				
 				{/* ASSIGNEE */}
 				
-				<AssigneeSelect
-					assignee={issue.assignee}
-					repoId={issue.repoId}
-					onKeyDown={this.onEditKeyDown}
-					style={makeStyle({opacity: 1, width: 'auto'},makePaddingRem(0,0,0,0),!editAssignee && styles.hidden)}
-					labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
-					avatarStyle={makeStyle(makePaddingRem(0))}
-					onItemSelected={this.setEditAssignee}/>
+				{editIssue ?
 				
-				<Avatar
-					user={issue.assignee}
-					labelPlacement='before'
-					onRemove={
-			      issue.assignee &&
-				    canAssignIssue(issue.repo) &&
-				      (() => this.unassignIssue(issue))
-			    }
-					onClick={canAssignIssue(issue.repo) && (() => this.editAssignee())}
-					prefix={issue.assignee ? 'assigned to' : null}
-					prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
-					style={makeStyle(styles.row1.assignee,editAssignee && styles.hidden)}
-					labelStyle={styles.username}
-					avatarStyle={styles.avatar}/>
+					<div style={[Styles.makeFlexAlign('center','flex-end'),Styles.FlexAuto,Styles.FlexRow]}>
+						<FormButton
+							onClick={this.onEscape}
+							key='cancelButton'
+							hoverHighlight='warn'
+							icon={makeIcon('material-icons','close')}
+						/>
+						<FormButton
+							onClick={this.save}
+							key='saveButton'
+							icon={makeIcon('material-icons','save')}
+						/>
+					</div>
+					
+					:
+					<Avatar
+						{...editableProps}
+						user={issue.assignee}
+						labelPlacement='before'
+						onRemove={
+				      issue.assignee &&
+					    canAssignIssue(issue.repo) &&
+					      (() => this.unassignIssue(issue))
+				    }
+						onClick={canAssignIssue(issue.repo) && this.startEdit('assignee')}
+						prefix={issue.assignee ? 'assigned to' : null}
+						prefixStyle={issue.assignee && makePaddingRem(0,0.5,0,0)}
+						style={styles.row1.assignee}
+						labelStyle={styles.username}
+						avatarStyle={styles.avatar}/>
+				}
 			
-			
+				
 			</div>
 			
 			{/* ROW 2 */}
-			<div style={[styles.row2,saving && {opacity: 0}]}>
+			<div style={[
+				styles.row2
+			]}>
 				
-				{editTitle &&
-				//errorText={getGithubErrorText(saveError,'title')}
-				<TextField value={editIssue.title || ''}
-				           validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
-				           onChange={this.onTitleChange}
-				           placeholder="TITLE"
-				           styles={[
-				           	 FlexScale,
-				           	 makePaddingRem(0),
-				           	 !editTitle && styles.hidden,
-				           	 
-				           	 {
-				           	 	marginRight: rem(1),
-				           	 	input: [FlexScale,styles.input]
-				           	 }
-			             ]}
-				           
-				
-				
-				/>
+				{editIssue ?
+					//errorText={getGithubErrorText(saveError,'title')}
+					<TextField
+						{...this.focusProps('title')}
+						ref="title"
+						onKeyDown={this.onEditKeyDown}
+						value={editIssue.title || ''}
+						validators={[FormValidators.makeLengthValidator(1,9999,'Issue title must be provided')]}
+						onChange={this.onTitleChange}
+						placeholder="TITLE"
+						styles={[
+	           Styles.FlexScale,
+	           makePaddingRem(0),
+	           
+	           {
+	            marginRight: rem(1),
+	            input: [
+	            	Styles.FlexScale,
+	            	styles.input
+              ]
+	           }
+	         ]}
+					/> :
+					
+					<Textfit
+						{...editableProps}
+						mode='multi'
+						onClick={canEditIssue(issue.repo,issue) && this.startEdit('title')}
+						style={makeStyle(
+		          styles.title,
+		          canEditIssue(issue.repo,issue) && styles.title.canEdit
+	           )}>
+						{issue.title}
+					</Textfit>
 				}
-				<Textfit mode='multi'
-				         onClick={canEditIssue(issue.repo,issue) && this.editTitle}
-				         style={makeStyle(
-					         	styles.title,
-					         	canEditIssue(issue.repo,issue) && styles.title.canEdit,
-					          editTitle && styles.hidden
-				           )}>
-					{issue.title}
-				</Textfit>
 				
 				{/* TIME */}
-				<div
-					style={[styles.time,canAssignIssue(issue.repo) && {marginRight:rem(0.5)}]}>{moment(issue.updated_at).fromNow()}</div>
-			
+				{ editIssue ?
+					<AssigneeSelect
+						{...this.focusProps('assignee')}
+						ref="assignee"
+						assignee={issue.assignee}
+						repoId={issue.repoId}
+						tabIndex={0}
+						onKeyDown={this.onEditKeyDown}
+						style={makeStyle({opacity: 1, width: 'auto'},makePaddingRem(0,0,0,0))}
+						labelStyle={makeStyle(makePaddingRem(0,1,0,0))}
+						avatarStyle={makeStyle(makePaddingRem(0))}
+						onItemSelected={this.setEditAssignee}/>
+					:
+					<div
+						style={[
+							styles.time,
+							canAssignIssue(issue.repo) && {marginRight:rem(0.5)}
+						]}>
+						{moment(issue.updated_at).fromNow()}
+					</div>
+				}
 			</div>
 			
 			{/* ROW 3 // LABELS & MILESTONES */}
 			<div style={[styles.row3,saving && {opacity: 0}]}>
 				
 				{/* EDIT MILESTONE*/}
-				{editMilestone ? <MilestoneSelect
-					style={makeStyle({width: 'auto',marginRight: rem(1)},!editLabels && styles.hidden)}
-					milestone={issue.milestone}
-					repoId={issue.repoId}
-					underlineShow={false}
-					onKeyDown={this.onEditKeyDown}
-					onItemSelected={this.setEditMilestone}
-				/> :
-					<IssueLabelsAndMilestones showIcon={true}
-					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
-					                          milestones={issue.milestone && [issue.milestone]}
-					                          onMilestoneClick={canEditIssue(issue.repo,issue) && (() => this.editMilestone())}
-					                          labelStyle={styles.row3.label}
-					                          style={makeStyle(styles.row3.milestone,editLabels && styles.hidden)}/>
+				{editIssue ? <MilestoneSelect
+						{...this.focusProps('milestone')}
+						ref="milestone"
+						tabIndex={0}
+						style={makeStyle({width: 'auto',marginRight: rem(1)})}
+						milestone={issue.milestone}
+						repoId={issue.repoId}
+						onKeyDown={this.onEditKeyDown}
+						onItemSelected={this.setEditMilestone}
+					/> :
+					<IssueLabelsAndMilestones
+						{...editableProps}
+						showIcon={true}
+						onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
+						milestones={issue.milestone && [issue.milestone]}
+						onMilestoneClick={canEditIssue(issue.repo,issue) && this.startEdit('milestone')}
+						labelStyle={styles.row3.label}
+						style={styles.row3.milestone}/>
 					
 				}
 				{/*EDIT MODE*/}
-				{editLabels ?
+				{editIssue ?
 					<LabelFieldEditor
-						style={makeStyle(FlexScale,!editLabels && styles.hidden)}
+						{...this.focusProps('labels')}
+						ref="labels"
+						style={Styles.FlexScale}
 						labels={getValue(() => editIssue.labels,issue.labels)}
 						availableLabels={this.props.labels.filter(it => it.repoId === issue.repoId).toArray()}
 						onLabelsChanged={this.setEditLabels}
 						onKeyDown={this.onEditKeyDown}
 						onEscape={this.onEscape}
-						autoFocus={true}
-						tabIndex={-1}
+						tabIndex={0}
 						id="issueDetailsLabelEditor"
 						hint="Labels"
 					/> :
 					
 					
 					/*VIEW MODE*/
-					<IssueLabelsAndMilestones labels={issue.labels}
-					                          showIcon={true}
-					                          onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
-					                          labelStyle={styles.row3.label}
-					                          afterAllNode={editLabelsControl}
-					                          style={makeStyle(styles.row3.labels,editLabels && styles.hidden)}/>
+					<IssueLabelsAndMilestones
+						{...editableProps}
+						labels={issue.labels}
+						showIcon={true}
+						onRemove={canEditIssue(issue.repo,issue) && ((item) => this.removeItem(issue,item))}
+						labelStyle={styles.row3.label}
+						afterAllNode={editLabelsControl}
+						style={styles.row3.labels}/>
+					
 					
 				}
 			</div>
 			
 			
+		
 		</Form>
 	}
+	
 	/*
 	 {saving && <div style={[{top:0,left:0,right:0,bottom:0},PositionAbsolute,FlexColumnCenter,Fill]}>
 	 

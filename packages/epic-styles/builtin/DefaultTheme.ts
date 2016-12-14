@@ -124,9 +124,11 @@ export function DefaultTheme(palette) {
 		},
 		
 		inputHighlight = makeStyle({
-			border: `${convertRem(0.1)}px solid transparent`,
+			//border: `${convertRem(0.1)}px solid transparent`,
+			border: `${convertRem(0.1)}px solid ${accent.hue1}`,
 			backgroundColor: accent.hue1,
-			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
+			//boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
+			boxShadow: "0 0 0.4rem 0.2rem rgba(0, 145, 234,0.9) inset"
 		}),
 		
 		invalidStyle = {

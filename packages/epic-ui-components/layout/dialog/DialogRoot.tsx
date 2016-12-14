@@ -1,13 +1,13 @@
 // Imports
 import { ThemedStyles, makeWidthConstraint, createStyles } from "epic-styles"
-import { Icon, WindowControls, WorkIndicator } from "../../common"
-import { makeHeightConstraint, colorAlpha } from "epic-styles/styles"
+import { Icon, WindowControls, WorkIndicator, FormButton } from "../../common"
+import { makeHeightConstraint, colorAlpha, makeIcon } from "epic-styles/styles"
 
 
 // Constants
 const
 	log = getLogger(__filename),
-	{FlexColumn, FillWidth, rem,makeFlexAlign,FillHeight, FlexScale, FlexRowCenter, makePaddingRem} = Styles
+	{FlexColumn, FillWidth, rem,makeFlexAlign,FillHeight, FlexRow,FlexScale, FlexRowCenter, makePaddingRem} = Styles
 
 const baseStyles = (topStyles,theme,palette) => {
 	const
@@ -149,16 +149,13 @@ export function createCancelButton(theme,palette,cancelAction) {
 	const
 		styles = createStyles(actionBaseStyles,{},theme,palette)
 	
-	return <div
-		onClick={cancelAction}
-		tabIndex={0}
-		key='cancelButton'
-		style={[
-			styles.action,
-			styles.action.cancel
-		]}>
-		<Icon style={[styles.action.icon]}>close</Icon>
-	</div>
+	return <FormButton
+			onClick={cancelAction}
+			key='cancelButton'
+			hoverHighlight='warn'
+			icon={makeIcon('material-icons','close')}
+		/>
+		
 }
 
 /**
@@ -175,13 +172,12 @@ export function createSaveCancelActions(theme,palette,saveAction, cancelAction) 
 	
 	return [
 		createCancelButton(theme,palette,cancelAction),
-		<div
+		<FormButton
 			onClick={saveAction}
 		  key='saveButton'
-		  tabIndex={0}
-			style={[styles.action,styles.action.save]}>
-			<Icon style={[styles.action.icon]}>save</Icon>
-		</div>
+		  icon={makeIcon('material-icons','save')}
+		  />
+			
 	]
 	
 }
