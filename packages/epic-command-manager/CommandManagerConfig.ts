@@ -22,7 +22,7 @@ try {
 export const
 	CommandOrControl = 'CommandOrControl',
 	Super = 'super',
-	Command = 'control',
+	Command = 'command',
 	Cmd = 'cmd',
 	Meta = 'meta',
 	Control = 'control',

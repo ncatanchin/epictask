@@ -7,14 +7,14 @@ import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import { getValue, isNil, isFunction, isString } from "typeguard"
 import { TabTemplate } from "./TabTemplate"
 import { colorAlpha } from "epic-styles/styles"
-
+import { guard } from "epic-global"
 
 // Constants
 const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {
@@ -63,6 +63,7 @@ function baseStyles(topStyles, theme, palette) {
  * Shape of tabs to be passed in
  */
 export interface ITab {
+	id?: string
 	title: any
 	content: React.ReactNode
 	
@@ -72,7 +73,9 @@ export interface ITab {
  * ITabsProps
  */
 export interface ITabsProps extends IThemedAttributes {
+	tabId?:string
 	tabs: ITab[]
+	onTabChanged?:(tab:ITab,index?:number) => any
 	template?: any
 }
 
@@ -152,11 +155,18 @@ export class Tabs extends React.Component<ITabsProps,ITabsState> {
 	
 	render() {
 		const
-			{ tabs, styles, template:TabContentWrapper } = this.props,
-			{ selectedIndex } =  this,
+			{ tabId,tabs, onTabChanged,styles, template:TabContentWrapper } = this.props
+		let
+			{ selectedIndex } =  this
+		
+		if (!isNil(tabId))
+			selectedIndex = tabs.findIndex(it => it.id === tabId)
+		
+		
+		let
 			content = getValue(() => tabs[ selectedIndex ].content,null)
 		
-		if (!content || tabs.length === 0)
+		if (selectedIndex === -1 || !content || tabs.length === 0)
 			return React.DOM.noscript()
 		
 		return <FlexColumn flex="scale" style={[Styles.FillWidth,Styles.FlexScale]}>
@@ -168,7 +178,12 @@ export class Tabs extends React.Component<ITabsProps,ITabsState> {
 					return <TabButton
 						key={index}
 						styles={styles.tabs.tab}
-						onClick={() => this.selectedIndex = index}
+						onClick={() => {
+							log.debug(`Tab button pressed`,tab,index,onTabChanged)
+							guard(() => onTabChanged(tab,index))
+							if (isNil(tabId))
+								this.selectedIndex = index
+						}}
 						title={tab.title}
 						tab={tab}
 						index={index}

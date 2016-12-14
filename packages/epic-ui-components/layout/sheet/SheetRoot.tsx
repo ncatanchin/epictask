@@ -15,8 +15,9 @@ import {
 	ContainerNames,
 	CommonKeys
 } from "epic-command-manager"
-import { sheetURISelector } from "epic-typedux/selectors"
+import { sheetURISelector, sheetParamsSelector } from "epic-typedux/selectors"
 import { makeHeightConstraint, makeWidthConstraint } from "epic-styles/styles"
+import { isDefined, isString } from "typeguard"
 
 // Constants
 const
@@ -120,6 +121,8 @@ const baseStyles = (topStyles, theme, palette) => {
  */
 export interface ISheetRootProps extends IThemedAttributes {
 	sheetURI?:string
+	sheetParams?:any
+	allowedURIs?:Array<string|RegExp>
 }
 
 /**
@@ -137,7 +140,8 @@ export interface ISheetRootState {
  **/
 
 @connect(createStructuredSelector({
-	sheetURI: sheetURISelector
+	sheetURI: sheetURISelector,
+	sheetParams: sheetParamsSelector
 }))
 @CommandComponent()
 @ThemedStyles(baseStyles)
@@ -149,7 +153,7 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	 */
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
-		// CLOSE THE SHEET
+			// CLOSE THE SHEET
 			.command(
 				CommonKeys.Escape,
 				(cmd, event) => getUIActions().closeSheet(),
@@ -169,7 +173,22 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	render() {
 		const
 			Routes = RouteRegistryScope.asRouteMap(),
-			{ styles, sheetURI } = this.props,
+			{ styles, allowedURIs,sheetParams,sheetURI } = this.props
+		
+		if (!sheetURI ||
+			(isDefined(allowedURIs) &&
+				allowedURIs.findIndex(test =>
+					isString(test) ?
+						test === sheetURI :
+						test.test(sheetURI)) === -1)
+		) {
+			if (sheetURI)
+				log.debug(`Access to sheet @ ${sheetURI} is restricted in this sheet.  Allowed URIs are: ${allowedURIs.join(', ')}`)
+			
+			return React.DOM.noscript()
+		}
+		
+		const
 			// TODO: Implement routeView for sheet root
 			sheetConfig = Routes[sheetURI] as any,
 			sheetPromise = sheetConfig && getValue(() => sheetConfig.provider())
@@ -195,7 +214,10 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 				</div>
 				
 				<div style={[styles.body]} autoFocus>
-					<PromisedComponent promise={sheetPromise}/>
+					<PromisedComponent
+						componentProps={{sheetURI,sheetParams}}
+						promise={sheetPromise}
+					/>
 				</div>
 			
 			</div>

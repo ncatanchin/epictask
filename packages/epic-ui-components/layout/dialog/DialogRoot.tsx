@@ -1,7 +1,6 @@
 // Imports
-import { ThemedStyles, makeWidthConstraint, createStyles } from "epic-styles"
-import { Icon, WindowControls, WorkIndicator, FormButton } from "../../common"
-import { makeHeightConstraint, colorAlpha, makeIcon } from "epic-styles/styles"
+import { ThemedStyles, makeWidthConstraint, makeHeightConstraint, colorAlpha, makeIcon } from "epic-styles"
+import { WindowControls, FormButton } from "../../common"
 
 
 // Constants
@@ -99,44 +98,6 @@ const baseStyles = (topStyles,theme,palette) => {
 }
 
 
-/**
- * Default Action Styles
- */
-
-function actionBaseStyles(topStyles,theme,palette) {
-	const
-		{
-			accent,
-			warn,
-			text,
-			secondary
-		} = palette
-		
-	return {
-		action: [makePaddingRem(1,1.5),FlexColumnCenter,FillHeight,{
-			cursor: 'pointer',
-			
-			icon: [makeHeightConstraint(rem(1.8)),{
-				fontSize: rem(1.8),
-				cursor: 'pointer',
-			}],
-			
-			
-			cancel: [makeTransition('background-color'),{
-				[CSSHoverState]: [{
-					backgroundColor: warn.hue1
-				}]
-			}],
-			
-			save: [makeTransition('background-color'),{
-				[CSSHoverState]: [{
-					backgroundColor: accent.hue1
-				}]
-			}]
-			
-		}]
-	}
-}
 
 /**
  * Create a cancel/close button
@@ -146,9 +107,6 @@ function actionBaseStyles(topStyles,theme,palette) {
  * @returns {any}
  */
 export function createCancelButton(theme,palette,cancelAction) {
-	const
-		styles = createStyles(actionBaseStyles,{},theme,palette)
-	
 	return <FormButton
 			onClick={cancelAction}
 			key='cancelButton'
@@ -167,9 +125,6 @@ export function createCancelButton(theme,palette,cancelAction) {
  * @param cancelAction
  */
 export function createSaveCancelActions(theme,palette,saveAction, cancelAction) {
-	const
-		styles = createStyles(actionBaseStyles,{},theme,palette)
-	
 	return [
 		createCancelButton(theme,palette,cancelAction),
 		<FormButton

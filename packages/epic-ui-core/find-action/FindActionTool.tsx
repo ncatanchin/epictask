@@ -113,7 +113,7 @@ export class FindActionTool extends React.Component<IFindActionToolProps,IFindAc
 		
 		
 		return <div
-			style={[FlexColumn]}>
+			style={[Styles.FlexColumn]}>
 			
 			<SearchField ref={this.setSearchField}
 			             inputStyle={styles.search.input}

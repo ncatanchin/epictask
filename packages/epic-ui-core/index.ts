@@ -51,6 +51,19 @@ const CoreRouteConfigs = {
 			}))
 		
 		
+	},
+	
+	
+	CaptureAccelerator: {
+		name: 'CaptureAccelerator',
+		uri: 'sheet/capture-accelerator',
+		title: 'Set Accelerator',
+		provider: makePromisedComponent((resolver:TComponentResolver) =>
+			require.ensure([],function(require:any) {
+				resolver.resolve(require('./settings/CaptureAcceleratorSheet').CaptureAcceleratorSheet)
+			}))
+		
+		
 	}
 	
 	

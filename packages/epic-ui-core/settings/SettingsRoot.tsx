@@ -34,16 +34,12 @@ import {
 } from "epic-styles"
 import { Checkbox } from "material-ui"
 import { getUIActions, getAppActions } from "epic-typedux"
-import {
-	CommandComponent, CommandRoot,
-	CommandContainerBuilder
-} from  "epic-command-manager-ui"
 
 import { ContainerNames } from "epic-command-manager"
 
 import { DialogRoot } from 'epic-ui-components'
 
-import { getValue } from "epic-global"
+import { getValue, cloneObjectShallow, PersistentValue } from "epic-global"
 import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
 import { Settings } from "epic-global/settings/Settings"
 
@@ -52,13 +48,15 @@ import { makeHeightConstraint } from "epic-styles/styles"
 import { FlexColumnCenter,PureRender, Icon, Button,SelectField,Tabs } from "epic-ui-components/common"
 import { KeyMapEditor } from "./KeyMapEditor"
 import { SettingsSection, SettingsField } from "./SettingsElements"
+import { ITab } from "epic-ui-components/common/tabs"
+import { SheetRoot } from "epic-ui-components/layout/sheet"
 
 const
 	log = getLogger(__filename),
 	{ Style } = Radium
 
 // DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 // Settings Sections
@@ -164,7 +162,7 @@ export interface ISettingsWindowProps extends IThemedAttributes {
 }
 
 export interface ISettingsWindowState {
-	activeTab?: any
+	tabValue?: any
 }
 
 /**
@@ -176,35 +174,15 @@ export interface ISettingsWindowState {
 @connect(createStructuredSelector({
 	settings: settingsSelector
 }))
-@CommandComponent()
 @ThemedStyles(baseStyles, 'SettingsWindow')
 @PureRender
 export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettingsWindowState> {
-	
-	/**
-	 * Command items
-	 *
-	 * @param builder
-	 */
-	commandItems = (builder: CommandContainerBuilder) =>
-		builder
-			
-			.make()
-	
-	
-	/**
-	 * Component id
-	 *
-	 * @type {string}
-	 */
-	commandComponentId = ContainerNames.SettingsWindow
-	
 	
 	constructor(props, context) {
 		super(props, context)
 		
 		this.state = {
-			activeTab: General
+			tabValue: new PersistentValue<string>('settingsTab',General)
 		}
 	}
 	
@@ -259,11 +237,17 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 	/**
 	 * Set the active tab
 	 *
-	 * @param tabName
+	 * @param tab
+	 * @param index
 	 */
-	private makeOnActive = (tabName) => () => this.setState({
-		activeTab: tabName
-	})
+	private onTabChanged = (tab:ITab,index) => {
+		log.debug(`Tab changed`,tab,index)
+		this.state.tabValue.set(tab.id)
+		
+		this.setState({
+			tabValue: cloneObjectShallow(this.state.tabValue)
+		})
+	}
 	
 	
 	renderGeneralSettings() {
@@ -345,10 +329,23 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 		
 	}
 	
+	renderKeymapEditor() {
+		const
+			{styles} = this.props
+		
+		return <div style={styles.form}>
+			<div style={styles.form.content}>
+				<KeyMapEditor styles={styles}/>
+			</div>
+		</div>
+	}
+	
 	render() {
 		const
 			{ styles, settings } = this.props,
-			{ activeTab } = this.state,
+			{ tabValue } = this.state,
+		
+			tabId = tabValue.get(),
 			
 			titleNode = <div style={makeStyle(styles.titleBar.label)}>
 				Settings
@@ -359,11 +356,10 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			
 			activeIconStyle = makeStyle(iconStyle, styles.tabs.items.active),
 			
-			getIconStyle = (tabName) => activeTab === tabName ? activeIconStyle : iconStyle
+			getIconStyle = (tabName) => tabId === tabName ? activeIconStyle : iconStyle
 		
-		return <CommandRoot
+		return <div
 			id={ContainerNames.SettingsWindow}
-			component={this}
 			style={makeStyle(Fill)}>
 			
 			<DialogRoot
@@ -373,22 +369,26 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			>
 				
 				<Tabs
+					tabId={tabId}
+					onTabChanged={this.onTabChanged}
 					tabs={[
 						{
+							id: General,
 							title: <FlexColumnCenter>
 								<Icon style={styles.tabs.items.icon}>settings</Icon>
-								<div style={makeStyle(activeTab === General && styles.tabs.items.active)}>GENERAL</div>
+								<div style={makeStyle(tabId === General && styles.tabs.items.active)}>GENERAL</div>
 							</FlexColumnCenter>,
 							
 							content:this.renderGeneralSettings()
 						},
 						{
+							id: Keys,
 							title: <FlexColumnCenter>
 								<Icon style={styles.tabs.items.icon}>keyboard</Icon>
-								<div style={makeStyle(activeTab === General && styles.tabs.items.active)}>SHORTCUTS</div>
+								<div style={makeStyle(tabId === General && styles.tabs.items.active)}>SHORTCUTS</div>
 							</FlexColumnCenter>,
 							
-							content:<KeyMapEditor styles={styles}/>
+							content:this.renderKeymapEditor()
 						}
 					]}
 					style={makeStyle(FlexColumn,FlexScale)}
@@ -398,7 +398,9 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			
 			
 			</DialogRoot>
-		</CommandRoot>
+			
+			<SheetRoot allowedURIs={[/capture-accelerator/]}/>
+		</div>
 	}
 	
 }

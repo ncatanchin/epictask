@@ -34,6 +34,14 @@ export const sheetURISelector: (state) => string = createSelector(
 )
 
 /**
+ * Retrieve the current UI sheet params
+ */
+export const sheetParamsSelector: (state) => string = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.sheetParams
+)
+
+/**
  * Get all tool panels
  */
 export const toolPanelsSelector:(state) => Map<string,IToolPanel> =

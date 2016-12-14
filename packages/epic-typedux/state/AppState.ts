@@ -19,6 +19,7 @@ export const AppStateRecord:Record.Class = Record({
 	settings: new Settings(),
 	ready: false,
 	user: null,
+	customAccelerators: Map<string,string>(),
 	messages:List<INotification>(),
 	windows:Map<string,IWindowState>()
 })
@@ -37,7 +38,7 @@ export class AppState extends AppStateRecord {
 			o,
 			AppState,
 			['messages'],
-			['windows']
+			['windows','customAccelerators']
 		)
 		
 		if (!settings || !(settings instanceof Settings))
@@ -59,6 +60,7 @@ export class AppState extends AppStateRecord {
 	user:User
 	messages:List<INotification>
 	windows:Map<string,IWindowState>
+	customAccelerators: Map<string,string>
 
 
 }

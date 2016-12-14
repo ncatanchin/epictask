@@ -489,10 +489,13 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * Set the open sheet
 	 *
 	 * @param sheetURI
+	 * @param sheetParams
 	 */
 	@ActionReducer()
-	openSheet(sheetURI:string) {
-		return (state:UIState) => state.set('sheetURI',sheetURI)
+	openSheet(sheetURI:string,sheetParams = {}) {
+		return (state:UIState) => state
+			.set('sheetURI',sheetURI)
+			.set('sheetParams',sheetParams)
 	}
 	
 	/**

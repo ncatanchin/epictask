@@ -19,6 +19,10 @@ export function isKeyboardEvent(o:any):o is KeyboardEvent {
 export class CommandAccelerator {
 	
 	
+	static create(str:string) {
+		return new CommandAccelerator(str)
+	}
+	
 	/**
 	 * Accelerator comparator
 	 *
@@ -89,7 +93,7 @@ export class CommandAccelerator {
 		
 		if (code) {
 			//code.toLowerCase()
-			code = (MappedKeys[code] || code).replace(/^Key/i,'').toLowerCase()
+			code = (MappedKeys[code] || MappedKeys[code.toLowerCase()] || code).replace(/^Key/i,'').toLowerCase()
 			
 			if (ModifiedKeyNames.includes(code))
 				this[`${code}Key`] = true

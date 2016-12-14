@@ -93,7 +93,7 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	 * Get all current commands
 	 */
 	all() {
-		return Object.values(this.scope).filter(it => it.name && it.provider)
+		return Object.values(this.scope).filter(it => it.name)
 	}
 	
 	/**

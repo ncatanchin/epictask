@@ -1,13 +1,9 @@
 import { createSelector } from "reselect"
 import { User } from "epic-models"
-import { AppKey, getValue} from "epic-global"
-import { AppState } from "../state/AppState"
+import { AppKey, getValue, Settings } from "epic-global"
+import { Map, List } from "immutable"
 import { AppStateType } from "../state/app/AppStateType"
-import { Map } from "immutable"
-import { TWindowMap } from "epic-typedux/state/AppState"
-import { Settings } from "epic-global/settings/Settings"
-import { List } from "immutable"
-
+import { AppState, TWindowMap } from "epic-typedux/state/AppState"
 
 
 export const appStateSelector:(state) => AppState = createSelector(
@@ -20,6 +16,10 @@ export const messagesSelector:(state) => List<INotification> = createSelector(
 	(state:AppState) => state.messages
 )
 
+export const customAcceleratorsSelector:(state) => Map<string,string> = createSelector(
+	appStateSelector,
+	(state:AppState) => state.customAccelerators
+)
 
 export const messagesSortedSelector:(state) => List<INotification> = createSelector(
 	messagesSelector,

@@ -2,7 +2,7 @@ import { FontBlack } from "epic-styles"
 import { IGithubValidationError, GithubErrorCodes } from "epic-github"
 
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
-import { CommandAccelerator } from  "epic-command-manager"
+import { CommandAccelerator } from  "epic-command-manager/CommandAccelerator"
 import { Icon } from "./icon/Icon"
 
 
@@ -187,8 +187,6 @@ export const KeyboardAccelerator = ThemedStyles(kbdBaseStyles)((props:IKeyboardA
 	return <div style={makeStyle(styles,style)}>{parts.map((part, index) =>
 		<div key={index}>
 			{part}
-			{/*<kbd ></kbd>*/}
-			
 			{index + 1 < parts.length && <span>&nbsp;</span>}
 			
 			{(separator && separator.length && index + 1 < parts.length) &&

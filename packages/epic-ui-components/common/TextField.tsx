@@ -21,18 +21,38 @@ const
 // DEBUG OVERRIDE
 log.setOverrideLevel(LogLevel.DEBUG)
 
+let
+	styleSheet:IGlobalThemedStyle = null
 
 function baseStyles(topStyles, theme, palette) {
+	
 	
 	const
 		{ text, alternateText, primary, warn, background } = palette,
 		{ fontFamily } = theme
 	
 	let
+		inputClassName = null,
 		tiny = require('tinycolor2'),
 		[bg,fg] = tiny(text.primary).isLight() ?
 			[ text.secondary, alternateText.primary ] :
 			[ alternateText.secondary, text.primary ]
+	
+	
+	if (styleSheet) {
+		styleSheet.clean()
+	}
+	
+	styleSheet = CreateGlobalThemedStyles((themeCopy, Style) => {
+		inputClassName = Style.registerStyle({
+			'&::-webkit-input-placeholder': {
+				fontWeight: '700',
+				[require('free-style').IS_UNIQUE]: true
+				
+			}
+		})
+		return {}
+	})
 	
 	return [
 		Styles.FlexRowCenter,
@@ -54,11 +74,17 @@ function baseStyles(topStyles, theme, palette) {
 			
 			invalid: theme.inputInvalid,
 			
+			// FROM FREESTYLE
+			inputClassName,
+			
 			input: [
 				theme.input,
 				Styles.makePaddingRem(0.6, 1),
 				Styles.makeMarginRem(0),
 				FlexAuto, {
+					
+					
+				
 					outline: 0,
 					
 					backgroundColor: bg,
@@ -70,7 +96,9 @@ function baseStyles(topStyles, theme, palette) {
 					focused: {
 						backgroundColor: bg,
 						color: fg
-					}
+					},
+					
+					
 				} ],
 			
 			
@@ -228,6 +256,7 @@ export class TextField extends FormFieldComponent<ITextFieldProps,ITextFieldStat
 			]}>
 			<input
 				{...filterProps(_.omit(this.props, 'onChange'))}
+				className={styles.inputClassName}
 				onChange={this.onChange}
 				onFocus={this.onFocus}
 				onBlur={this.onBlur}

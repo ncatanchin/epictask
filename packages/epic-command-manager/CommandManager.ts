@@ -1,5 +1,5 @@
 import Electron from 'epic-electron'
-
+import {EnumEventEmitter} from 'type-enum-events'
 import {
 	getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow,
 	guard
@@ -56,12 +56,31 @@ function getGlobalShortcut() {
 	
 	return getValue(() => Env.isMain ? electron.globalShortcut : electron.remote.globalShortcut)
 }
- 
+
+/**
+ * Command accelerator data source
+ *
+ * used for providing accelerator overrides
+ */
+export interface ICommandAcceleratorDataSource {
+	getAccelerator(commandId:string,command:ICommand):string
+}
+
+/**
+ * Key interceptor used for things like capturing custom accelerators
+ *
+ * if a key interceptor returns boolean(false) then the event is not consumed by the command manager
+ */
+export type TCommandKeyInterceptor = (event:KeyboardEvent) => any
+
+export enum CommandManagerEvent {
+	KeyDown = 1
+}
 
 /**
  * The command manager - menu, shortcuts, containers, etc
  */
-export class CommandManager {
+export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	
 	
 	static getInstance() {
@@ -111,9 +130,12 @@ export class CommandManager {
 	private browserListeners
 	
 	
+	/**
+	 * Accelerator data source for custom key mappings
+	 */
+	private acceleratorDataSource:ICommandAcceleratorDataSource
 	
-	
-	
+	private keyInterceptor:TCommandKeyInterceptor
 	
 	
 	
@@ -126,6 +148,8 @@ export class CommandManager {
 	 * Private constructor for creating the command manager
 	 */
 	private constructor() {
+		super(CommandManagerEvent)
+		
 		this.attachEventHandlers()
 		this.load()
 		
@@ -175,6 +199,24 @@ export class CommandManager {
 	 */
 	setMenuManagerProvider(menuManagerProvider:ICommandMenuManagerProvider) {
 		this.menuManagerProvider = menuManagerProvider
+	}
+	
+	
+	/**
+	 * Set or clear (null) a key interceptor
+	 * @param keyInterceptor
+	 */
+	setKeyInterceptor(keyInterceptor:TCommandKeyInterceptor) {
+		this.keyInterceptor = keyInterceptor
+	}
+	
+	/**
+	 * Set a custom accelerator datasource
+	 *
+	 * @param acceleratorDataSource
+	 */
+	setAcceleratorDataSource(acceleratorDataSource:ICommandAcceleratorDataSource) {
+		this.acceleratorDataSource = acceleratorDataSource
 	}
 	
 	/**
@@ -228,6 +270,11 @@ export class CommandManager {
 	 */
 	handleKeyDown = (event:KeyboardEvent,fromInputOverride = false) => {
 		
+		if (this.keyInterceptor && this.keyInterceptor(event) === false) {
+			event.preventDefault()
+			event.stopPropagation()
+			return
+		}
 		const
 			containers = this.focusedContainers(),
 			isInputTarget =

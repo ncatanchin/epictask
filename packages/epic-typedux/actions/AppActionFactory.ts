@@ -63,6 +63,26 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	
+	/**
+	 * Set an accelerator override
+	 *
+	 * @param commandId
+	 * @param accelerator
+	 * @returns {(state:AppState)=>Map<string, Map<string, string>>}
+	 */
+	@ActionReducer()
+	setCustomAccelerator(commandId:string,accelerator:string) {
+		return (state:AppState) =>
+			state.set('customAccelerators',state.customAccelerators.set(commandId,accelerator))
+	}
+	
+	
+	/**
+	 * Create a notification object
+	 *
+	 * @param opts
+	 * @returns {{}&U&{id: string, createdAt: number, floatVisible: boolean, content: string}}
+	 */
 	private makeNotification(opts:any) {
 		return Object.assign({},opts,{
 			id: shortId(),
@@ -71,6 +91,9 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 			content: opts.content || 'No content provided - DANGER will robinson'
 		})
 	}
+	
+	
+	
 	
 	
 	/**

@@ -36,7 +36,7 @@ import {
 	FillWindow,
 	makeWidthConstraint,
 	makeHeightConstraint,
-	Fill
+	Fill, IThemedAttributes
 } from "epic-styles"
 
 // STYLES
@@ -78,9 +78,8 @@ reloadRoutes()
 /**
  * Properties for App/State
  */
-export interface IAppRootProps {
+export interface IAppRootProps extends IThemedAttributes {
 	store?:any
-	theme?:any
 	repoCount?:number
 	appStateType?:AppStateType
 	
@@ -287,10 +286,10 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	render() {
 		
 		const
-			{ theme } = this.props,
+			{ theme,palette } = this.props,
 			{Routes} = this.state
 		
-		return <StyleRoot style={Fill}>
+		return <StyleRoot style={makeStyle(Fill,{color: palette.text.primary})}>
 				
 				<CommandRoot
 					autoFocus

@@ -45,6 +45,7 @@ export const UIStateRecord = Record({
 	user: null,
 	
 	sheetURI:null,
+	sheetParams:null,
 	//messages: List<INotification>(),
 	
 	toolPanels: makeToolPanels(),
@@ -101,7 +102,7 @@ export class UIState extends UIStateRecord implements State {
 				viewStates: this.viewStates.map(viewState => viewState.toJS())
 			}),
 			excludeFilterConfig(
-				...excludeFilter('messages','ready','toolDragging')
+				...excludeFilter('messages','ready','toolDragging','sheetURI','sheetParams')
 			))
 	
 	}
@@ -109,6 +110,7 @@ export class UIState extends UIStateRecord implements State {
 	ready:boolean
 	user:User
 	sheetURI:string
+	sheetParams:any
 	//messages:List<INotification>
 	
 	toolPanels:Map<string,IToolPanel>
