@@ -1,4 +1,5 @@
 import Electron from 'epic-electron'
+import { Map} from "immutable"
 import {EnumEventEmitter} from 'type-enum-events'
 import {
 	getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow,
@@ -63,7 +64,7 @@ function getGlobalShortcut() {
  * used for providing accelerator overrides
  */
 export interface ICommandAcceleratorDataSource {
-	getAccelerator(commandId:string,command:ICommand):string
+	():Map<string,string>
 }
 
 /**
@@ -250,12 +251,15 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * Find a matching command and accelerator
 	 *
 	 * @param commands
+	 * @param customAccelerators
 	 * @param event
 	 * @returns {[ICommand,CommandAccelerator]}
 	 */
-	private matchAcceleratorAndCommand(commands:ICommand[],event):[ICommand,CommandAccelerator] {
+	private matchAcceleratorAndCommand(commands:ICommand[],customAccelerators:Map<string,string>,event):[ICommand,CommandAccelerator] {
 		for (let cmd of commands) {
-			if (CommandAccelerator.matchToEvent(cmd.defaultAccelerator,event)) {
+			const
+				accel = customAccelerators.get(cmd.id) ||  cmd.defaultAccelerator
+			if (CommandAccelerator.matchToEvent(accel,event)) {
 				return [cmd,new CommandAccelerator(event)]
 			}
 		}
@@ -277,6 +281,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		}
 		const
 			containers = this.focusedContainers(),
+			customAccelerators = getValue(() => this.acceleratorDataSource(),Map<string,string>()),
 			isInputTarget =
 				(event.target && InputTagNames.includes((event.target as HTMLElement).tagName)) ||
 				fromInputOverride
@@ -285,11 +290,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		
 		let
 			cmd
+			
 		
 		for (let container of containers) {
 			
 			const
-				testMatch = this.matchAcceleratorAndCommand(container.commands,event)
+				testMatch = this.matchAcceleratorAndCommand(container.commands,customAccelerators,event)
 			
 			if (testMatch) {
 				const
@@ -311,7 +317,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			
 			for (let appCmd of appCommands) {
 				const
-					testMatch = this.matchAcceleratorAndCommand([appCmd],event)
+					testMatch = this.matchAcceleratorAndCommand([appCmd],customAccelerators,event)
 				
 				if (testMatch) {
 					const
