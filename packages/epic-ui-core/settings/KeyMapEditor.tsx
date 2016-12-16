@@ -8,7 +8,7 @@ import { isDefined, getValue } from "typeguard"
 import { CommandAccelerator } from "epic-command-manager/CommandAccelerator"
 import { SettingsSection, SettingsField } from "./SettingsElements"
 import { makeWidthConstraint } from "epic-styles/styles"
-import { getUIActions } from "epic-typedux/provider"
+import { getUIActions, getAppActions } from "epic-typedux/provider"
 import { customAcceleratorsSelector } from "epic-typedux/selectors"
 
 
@@ -27,12 +27,21 @@ function baseStyles(topStyles, theme, palette) {
 	
 	return [ Styles.FlexColumn, Styles.FlexAuto, {
 		
-		accelerator: [Styles.makePaddingRem(0.5,1),{
+		accelerator: [ Styles.makePaddingRem(0.5, 1), {
 			borderRadius: rem(0.3),
 			color: text.primary,
-			backgroundColor: accent.hue1,
-			fontWeight: 700
-		}]
+			border: `0.1rem solid ${accent.hue1}`,
+			backgroundColor: Styles.Transparent,
+			fontWeight: 700,
+			
+			custom: [ {
+				backgroundColor: accent.hue1
+			} ]
+		} ],
+		
+		reset: [ Styles.FlexRowCenter, Styles.PositionRelative, makeWidthConstraint(rem(10)), {
+			button: [ Styles.FillWidth ]
+		} ]
 	} ]
 }
 
@@ -41,7 +50,7 @@ function baseStyles(topStyles, theme, palette) {
  * IKeyMapEditorProps
  */
 export interface IKeyMapEditorProps extends IThemedAttributes {
-	customAccelerators?: Map<string,string>
+	customAccelerators?:Map<string,string>
 }
 
 /**
@@ -67,13 +76,13 @@ export interface IKeyMapEditorState {
 export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEditorState> {
 	
 	
-	private captureAccelerator = (cmd: ICommand) => {
+	private captureAccelerator = (cmd:ICommand) => {
 		getUIActions().openSheet(getRoutes().CaptureAccelerator.uri, {
 			commandId: cmd.id
 		})
 	}
 	
-	onFilterChange = (event:React.FormEvent<any>) => {
+	private onFilterChange = (event:React.FormEvent<any>) => {
 		const
 			filterText = (event.target as any).value
 		
@@ -82,10 +91,24 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 		})
 	}
 	
+	/**
+	 * Clear a custom accelerator
+	 *
+	 * @param cmd
+	 */
+	private clearAccelerator(cmd:ICommand) {
+		getAppActions().setCustomAccelerator(cmd.id, null)
+	}
+	
+	/**
+	 * Render the list
+	 *
+	 * @returns {any}
+	 */
 	render() {
 		const
 			{ customAccelerators, styles } = this.props,
-			{filterText} = this.state
+			{ filterText } = this.state
 		
 		if (DEBUG) {
 			log.debug(`Custom accelerators`, customAccelerators.toJS())
@@ -111,7 +134,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 					.filter(cmd =>
 						isDefined(cmd.defaultAccelerator) &&
 						(
-							getValue(() => filterText.length,0) < 1 ||
+							getValue(() => filterText.length, 0) < 1 ||
 							cmd.name.toLowerCase().indexOf(filterText.toLowerCase()) > -1
 						)
 					)
@@ -127,7 +150,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 							<div style={[Styles.FlexRow,Styles.makeFlexAlign('center','flex-end')]}>
 								
 								<KeyboardAccelerator
-									style={styles.accelerator}
+									style={makeStyle(styles.accelerator,customAccelerator && styles.accelerator.custom)}
 									accelerator={accelerator}/>
 								
 								<Button
@@ -135,6 +158,15 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 									onClick={() => this.captureAccelerator(cmd)}>
 									SET
 								</Button>
+								
+								<div style={styles.reset}>
+									{customAccelerator &&
+									<Button
+										style={styles.reset.button}
+										mode="warn"
+										onClick={() => this.clearAccelerator(cmd)}>reset</Button>
+									}
+								</div>
 							</div>
 						
 						</SettingsField>

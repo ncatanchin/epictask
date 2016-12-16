@@ -16,7 +16,7 @@ const log = getLogger(__filename)
 const baseStyles = (topStyles,theme,palette) => {
 	
 	const
-		{text,accent,primary,secondary,background} = palette
+		{text,accent,warn,primary,secondary,background} = palette
 	
 	return {
 		root: [ PositionRelative,OverflowHidden, makeTransition(['border','background-color','color','font-size','font-weight']),makeMarginRem(0), {
@@ -36,6 +36,15 @@ const baseStyles = (topStyles,theme,palette) => {
 		normal: [makePaddingRem(0.5,1),{
 			fontWeight: 300,
 			fontSize: themeFontSize(1.3)
+		}],
+		
+		// NORMAL SIZE
+		warn: [makePaddingRem(0.5,1),{
+			backgroundColor: warn.hue2,
+			color: text.secondary,
+			':hover': {
+				backgroundColor: warn.hue1
+			}
 		}],
 		
 		// BIG SIZE
@@ -82,7 +91,7 @@ export interface IButtonProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
 	ripple?:boolean
-	mode?:'flat'|'raised'|'fab'
+	mode?:'flat'|'raised'|'fab'|'warn'
 	sizing?:'big'|'normal'
 	disabled?:boolean
 }
