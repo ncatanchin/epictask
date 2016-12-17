@@ -23,9 +23,12 @@ log.setOverrideLevel(LogLevel.DEBUG)
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ text, primary, accent, background } = palette
+		{ text, primary, accent, background } = palette,
+		resetWidth = rem(10)
 	
 	return [ Styles.FlexColumn, Styles.FlexAuto, {
+		
+		filterSpacer: [makeWidthConstraint(resetWidth)],
 		
 		accelerator: [ Styles.makePaddingRem(0.5, 1), {
 			borderRadius: rem(0.3),
@@ -39,7 +42,7 @@ function baseStyles(topStyles, theme, palette) {
 			} ]
 		} ],
 		
-		reset: [ Styles.FlexRowCenter, Styles.PositionRelative, makeWidthConstraint(rem(10)), {
+		reset: [ Styles.FlexRowCenter, Styles.PositionRelative, makeWidthConstraint(resetWidth), {
 			button: [ Styles.FillWidth ]
 		} ]
 	} ]
@@ -121,6 +124,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 					onChange={this.onFilterChange}
 					defaultValue=''
 					placeholder='filter...'/>
+				<div style={styles.filterSpacer}/>
 			</div>
 		
 		return <div style={styles.root}>
