@@ -57,7 +57,8 @@ export const UIStateRecord = Record({
 	
 	jobs: {},
 		
-	viewStates: List<ViewState>()
+	viewStates: List<ViewState>(),
+	selectedViewStateId: null
 })
 
 /**
@@ -116,6 +117,8 @@ export class UIState extends UIStateRecord implements State {
 	toolPanels:Map<string,IToolPanel>
 	toolDragging:boolean
 	
+	
+	
 	statusBar:{
 		visible:boolean
 	}
@@ -133,6 +136,7 @@ export class UIState extends UIStateRecord implements State {
 		selectedLogId:string
 	}
 	
+	selectedViewStateId:string
 	viewStates: List<ViewState>
 	
 

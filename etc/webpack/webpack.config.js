@@ -325,7 +325,7 @@ function patchConfig(config) {
 const
 	DevTools = {
 		//'eval-source-map', //'#cheap-module-eval-source-map',
-		'development': 'inline-source-map',
+		'development': '#cheap-module-eval-source-map',//'inline-source-map',
 		'production': 'source-map'
 	}
 	

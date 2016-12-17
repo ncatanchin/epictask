@@ -2,7 +2,8 @@ import { DragDropContext } from "react-dnd"
 import HTML5Backend from "react-dnd-html5-backend"
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
-import { PureRender, ToastMessages, Page, ViewContainer, SheetRoot } from "epic-ui-components"
+import { PureRender, ToastMessages, Page, SheetRoot } from "epic-ui-components"
+import {IDETabbedViewContainer} from './IDETabbedViewContainer'
 import { ThemedStyles, makeLinearGradient, convertRem, IThemedAttributes } from "epic-styles"
 import { getValue, guard } from "epic-global"
 import { ToolPanelComponent as ToolPanel } from "./ToolPanel"
@@ -78,7 +79,6 @@ export interface IIDERootProps extends IThemedAttributes {
 
 export interface IIDERootState {
 	width?:number
-	defaultView?:IViewConfig
 	unsubscribe?:() => any
 }
 
@@ -124,8 +124,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	 * Get new state
 	 */
 	private getNewState = (props = this.props) => ({
-		width:window.innerWidth,
-		defaultView: ViewRegistryScope.getDefault()
+		width:window.innerWidth
 	})
 	
 	/**
@@ -137,7 +136,6 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	render() {
 		const
 			{theme,styles,palette,toolDragging,toolPanels} = this.props,
-			{defaultView} = this.state,
 			{accent} = palette,
 			
 			panelMinOpen = convertRem(20),
@@ -229,7 +227,9 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							           maxSize={panelMaxSize(rightPanel)}
 							           pane2Style={makePanelConstraint(rightPanel)}>
 								<div style={styles.viewWrapper}>
-									<ViewContainer defaultViewConfig={defaultView} />
+									
+									<IDETabbedViewContainer />
+								
 								</div>
 								<ToolPanel location={ToolPanelLocation.Right}/>
 							</SplitPane>

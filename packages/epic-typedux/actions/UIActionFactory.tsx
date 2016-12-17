@@ -506,7 +506,23 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 	
 	
+	/**
+	 * Set the selected view state id
+	 *
+	 * @param selectedViewStateId
+	 * @returns {(state:UIState)=>Map<string, string>}
+	 */
+	@ActionReducer()
+	setSelectedViewStateId(selectedViewStateId:string) {
+		return (state:UIState) => state.set("selectedViewStateId",selectedViewStateId)
+	}
 	
+	/**
+	 * Create a new view
+	 *
+	 * @param viewConfig
+	 * @returns {(state:any)=>any}
+	 */
 	@ActionReducer()
 	createView(viewConfig:IViewConfig) {
 		return state => {
@@ -526,6 +542,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
+	/**
+	 * Update view
+	 *
+	 * @param viewState
+	 * @returns {(state:UIState)=>(UIState|Map<string, List<ViewState>>)}
+	 */
 	@ActionReducer()
 	updateView(viewState:ViewState) {
 		return (state:UIState) => {
@@ -547,8 +569,30 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
-	
-
+	/**
+	 * Remove a view
+	 *
+	 * @param id
+	 * @returns {(state:UIState)=>UIState}
+	 */
+	@ActionReducer()
+	removeView(id:string) {
+		return (state:UIState) => {
+			const
+				index = state.viewStates.findIndex(it => it.id === id)
+			
+			if (state.viewStates.size > 1) {
+				if (index > -1)
+					state = state.set('viewStates', state.viewStates.remove(index)) as any
+				
+				if (state.selectedViewStateId === id)
+					state = state.set('selectedViewStateId', state.viewStates.get(0)) as any
+			}
+			
+			return state
+		}
+			
+	}
 
 
 }

@@ -15,7 +15,7 @@ const
 		webpackCmd :
 		`node --max-old-space-size=4000 ${webpackCmd}`
 
-exec(`${cmd} --config etc/webpack/webpack.config.js --watch --display-error-details`)
+exec(`${cmd} --config etc/webpack/webpack.config.js --watch --display-error-details --hide-modules`)
 
 //exec(`${gulpCmd} compile-watch`)
 

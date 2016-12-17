@@ -97,7 +97,7 @@ export interface IIssuesPanelProps extends IThemedAttributes {
 	commandContainer?:CommandContainer
 	
 	viewController?:IssuesPanelController
-	
+	viewState?:IssuesPanelState
 	
 	
 	issues?:List<Issue>
@@ -157,7 +157,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 	
 	shouldComponentUpdate(nextProps,nextState) {
 		return !shallowEquals(this.props,nextProps,'horizontalView','hasSelectedIssues','issues','items','groups','editInlineConfig') ||
-			!shallowEquals(this.state,nextState,'listRef')
+			!shallowEquals(this.state,nextState,'listRef') || !this.props.viewState
 	}
 	
 	/**
@@ -807,9 +807,15 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 				items,
 				commandContainer,
 				hasSelectedIssues,
-				horizontalView
-			} = this.props,
+				horizontalView,
+				viewState
+			} = this.props
+		
+		if (!viewState) {
+			return React.DOM.noscript()
+		}
 			
+		const
 			// FOCUSED BASED ON CONTAINER
 			focused = commandContainer.isFocused(),
 			
