@@ -1,6 +1,7 @@
 import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions } from "epic-typedux/provider"
+import { getWindowManagerClient } from "epic-process-manager-client"
 
 
 
@@ -70,33 +71,52 @@ const CoreRouteConfigs = {
 }
 Object.values(CoreRouteConfigs).forEach(RouteRegistryScope.Register)
 
+/**
+ * Quit Epictask
+ */
+function quitApp() {
+	require('electron').remote.app.quit()
+}
 
-
-CommandRegistryScope.Register({
+CommandRegistryScope.Register(
+// QUIT
+{
 	id: 'Quit',
 	type: CommandType.App,
 	name: "Quit",
 	defaultAccelerator: "CommandOrControl+q",
-	execute: (item, event) => require('electron').remote.app.quit()
-},{
+	execute: (item, event) => quitApp()
+},
+
+// CLOSE WINDOW
+{
 	id: 'CloseWindow',
 	type: CommandType.App,
 	name: "Close Window",
 	defaultAccelerator: "CommandOrControl+w",
-	execute: (item, event) => getUIActions().closeWindow()
-},{
+	execute: (item, event) => getWindowManagerClient().getWindowStates().length > 1 ? getUIActions().closeWindow() : quitApp()
+},
+
+// SYNC EVERYTHING
+{
 	id: 'SyncEverything',
 	type: CommandType.App,
 	name: "Github > Sync Everything",
 	defaultAccelerator: "CommandOrControl+s",
 	execute: (item, event) => getRepoActions().syncAll()
-}, {
+},
+
+// SETTINGS
+{
 	id: 'Settings',
 	type: CommandType.App,
 	name: "Settings",
 	defaultAccelerator: "CommandOrControl+Comma",
 	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
-}, {
+},
+
+// FIND ACTION
+{
 	id: 'FindAction',
 	type: CommandType.App,
 	name: "Find Action",

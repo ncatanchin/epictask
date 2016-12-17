@@ -531,6 +531,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 				//initialState = new (viewConfig.stateClazz)(),
 				viewState = new ViewState(cloneObjectShallow(viewConfig,{
 					id,
+					name: viewConfig.name,
 					index: state.viewStates.size,
 					//controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
 					//state: initialState

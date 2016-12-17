@@ -1,6 +1,8 @@
 
 import { makePromisedComponent, acceptHot } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
+import { BuiltInTools } from "epic-ui-components"
+import { getBuiltInToolId } from "epic-ui-components/tools"
 
 CommandRegistryScope.Register({
 	id: 'RepoImport',
@@ -14,6 +16,12 @@ CommandRegistryScope.Register({
 	name: 'Repository Labels, Milestones & Settings',
 	execute: (item, event) => getUIActions().openWindow(getRoutes().RepoSettings.uri),
 	defaultAccelerator: "CommandOrControl+Shift+Comma"
+}, {
+	id: 'ToggleRepoTool',
+	type: CommandType.App,
+	name: 'Toggle Repo Tool',
+	execute: (item, event) => getUIActions().toggleTool(getBuiltInToolId(BuiltInTools.RepoPanel)),
+	defaultAccelerator: "CommandOrControl+1"
 })
 
 const

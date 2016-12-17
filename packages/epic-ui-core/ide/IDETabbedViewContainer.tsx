@@ -1,19 +1,14 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
-import { createStructuredSelector} from 'reselect'
-import { View,PureRender } from 'epic-ui-components'
-import { IThemedAttributes, Themed, ThemedStyles } from 'epic-styles'
-import { viewStatesSelector } from "epic-typedux/selectors/UISelectors"
-import ViewState from "epic-typedux/state/window/ViewState"
-
-import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
+import { List } from "immutable"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
 import { cloneObjectShallow, guard, ContextMenu } from "epic-global"
-import { getValue, isDefined } from 'typeguard'
-import { selectedViewStateIdSelector } from "epic-typedux/selectors"
-import { Icon } from "epic-ui-components/common/icon/Icon"
-import baseStyles from "epic-ui-core/ide/IDETabbedViewController.styles"
-import { isHovering } from "epic-styles/styles"
+import { View, PureRender, Icon } from "epic-ui-components"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
+import { ViewState,viewStatesSelector, getUIActions, selectedViewStateIdSelector } from "epic-typedux"
+import { getValue } from "typeguard"
+import baseStyles from "./IDETabbedViewContainer.styles"
+import ViewStateTab from "./ViewStateTab"
 
 // Constants
 const
@@ -21,10 +16,6 @@ const
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
-
-const
-	{FlexColumn,FlexRowCenter,FlexAuto,FlexScale,FillWidth,FillHeight} = Styles
-
 
 /**
  * IViewContainerProps
@@ -208,48 +199,3 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	
 }
 
-/**
- * View state tab component
- */
-@Radium
-@PureRender
-class ViewStateTab extends React.Component<any,any> {
-	
-	constructor(props,context) {
-		super(props,context)
-		this.state = {}
-	}
-	
-	onClick = () => {
-		const
-			{viewState} = this.props
-		
-		log.info(`Clicked`,viewState.id,viewState)
-		
-	}
-	
-	render() {
-		const
-			{styles,viewState,selected,closeEnabled} = this.props,
-			id = viewState.id,
-			hovering = isHovering(this,"tab")
-		
-		log.info(`view state tab: ${id}`)
-		return <div ref="tab"
-		            style={[styles, selected && styles.selected]}
-		            onClick={() => {
-		            	log.info(`Clicked: ${id}`,viewState)
-		            	getUIActions().setSelectedViewStateId(id)
-		            }}>
-			<div style={[styles.label]}>
-				{viewState.title || 'No name'}
-			</div>
-			
-			{closeEnabled &&
-			<Icon
-				onClick={() => getUIActions().removeView(id)}
-				style={makeStyle(styles.closeButton,hovering && styles.closeButton.visible)}>close</Icon>
-			}
-		</div>
-	}
-}

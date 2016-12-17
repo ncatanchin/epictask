@@ -1,5 +1,5 @@
 
-import { cloneObjectShallow } from "epic-global"
+import { cloneObjectShallow, guard } from "epic-global"
 import filterProps from 'react-valid-props'
 
 import EventListener from 'react-event-listener'
@@ -150,7 +150,9 @@ export class Popover extends Component<IPopoverProps,any> {
 				animated, // eslint-disable-line no-unused-vars
 				animation,
 				children,
-				style
+				style,
+				useLayerForClickAway,
+				onRequestClose
 			} = this.props,
 			other = _.omit(this.props,'animated','animation','children','style')
 		
@@ -164,7 +166,11 @@ export class Popover extends Component<IPopoverProps,any> {
 	
 		
 		return !this.state.open ? React.DOM.noscript() :
-			<div {...filterProps(other)} style={styleRoot} open={this.state.open && !this.state.closing}>
+			<div {...filterProps(other)}
+				style={styleRoot}
+				open={this.state.open && !this.state.closing}
+			  onClick={useLayerForClickAway && onRequestClose &&
+			    ((event) => guard(() => onRequestClose('clickAway')))}>
 				{children}
 			</div>
 		

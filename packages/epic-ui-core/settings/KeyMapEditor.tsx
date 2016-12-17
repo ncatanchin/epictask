@@ -17,8 +17,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
-
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 function baseStyles(topStyles, theme, palette) {
 	
@@ -42,7 +41,8 @@ function baseStyles(topStyles, theme, palette) {
 			} ]
 		} ],
 		
-		reset: [ Styles.FlexRowCenter, Styles.PositionRelative, makeWidthConstraint(resetWidth), {
+		
+		reset: [ Styles.makeMarginRem(0,0,0,1.5),Styles.FlexRowCenter, Styles.PositionRelative, makeWidthConstraint(resetWidth), {
 			button: [ Styles.FillWidth ]
 		} ]
 	} ]

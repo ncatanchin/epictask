@@ -93,7 +93,7 @@ export class CommandAccelerator {
 		
 		if (code) {
 			//code.toLowerCase()
-			code = (MappedKeys[code] || MappedKeys[code.toLowerCase()] || code).replace(/^Key/i,'').toLowerCase()
+			code = (MappedKeys[code] || MappedKeys[code.toLowerCase()] || code).replace(/^Key/i,'').toLowerCase().replace(/digit/,'')
 			
 			if (ModifiedKeyNames.includes(code))
 				this[`${code}Key`] = true

@@ -267,15 +267,17 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 *
 	 * @param event
 	 */
-	private onClickAway = (event:MouseEvent) => {
+	private onClickAway = (event) => {
 		
-		const
-			elem = ReactDOM.findDOMNode(this),
-			isDescendant = Dom.isDescendant(elem, event.target)
-		
-		log.debug(`Click away`, elem, event.target)
-		if (isDescendant)
-			return
+		if (event !== 'clickAway') {
+			const
+				elem = ReactDOM.findDOMNode(this),
+				isDescendant = Dom.isDescendant(elem, event.target)
+			
+			log.debug(`Click away`, elem, event.target)
+			if (isDescendant)
+				return
+		}
 		
 		guard(() => this.props.onEscape())
 	}
@@ -710,6 +712,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 				
 				
 				<Popover
+					onRequestClose={this.onClickAway}
 					canAutoPosition={false}
 					open={focused}
 					noAdjustment={true}
@@ -722,7 +725,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						horizontal: 'left',
 					}}
 				  anchorEl={this.state.textFieldElem}
-					useLayerForClickAway={false}
+					useLayerForClickAway={true}
 				  >
 					{this.renderResultsLayer()}
 				</Popover>

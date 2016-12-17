@@ -18,7 +18,7 @@ const
 	//commandContainerItems = new WeakMap<CommandContainer,ICommandContainerItems>()
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 export interface ICommandContainerItems {
