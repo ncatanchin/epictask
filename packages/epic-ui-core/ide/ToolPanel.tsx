@@ -75,6 +75,7 @@ function baseStyles(topStyles,theme,palette) {
 			
 		} ],
 		
+		
 		tools: [ FlexScale, OverflowHidden, makeBorderRem(), {
 			
 			
@@ -92,7 +93,7 @@ function baseStyles(topStyles,theme,palette) {
 			
 			header: [ FlexRowCenter, Styles.OverflowHidden,makeFlex(0, 0, theme.tabBarHeight), makeHeightConstraint(theme.tabBarHeight),{
 				//boxSizing: 'border-box',
-				borderBottom: theme.tabBarSeparator,
+				//borderBottom: theme.tabBarSeparator,
 				
 				label: [ FlexScale, Ellipsis, {
 					fontSize: themeFontSize(1.2),
@@ -107,6 +108,8 @@ function baseStyles(topStyles,theme,palette) {
 		} ],
 		
 		gutter: [ makeTransition(['background-color','border','width','height','min-width','min-height']),{
+			backgroundColor: primary.hue1,
+			
 			[Left]: [ ...gutterVertical ],
 			[Right]: [ ...gutterVertical ],
 			[Popup]: [ ...gutterHorizontal ],

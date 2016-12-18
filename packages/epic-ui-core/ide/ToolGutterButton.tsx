@@ -31,9 +31,17 @@ function baseStyles(topStyles,theme,palette) {
 			
 		}],
 		
-		[Left]: [ { width: gutterHorizDim } ],
-		[Right]: [ { width: gutterHorizDim } ],
-		[Bottom]: [ { height: gutterVertDim } ],
+		[Left]: [ {
+			width: gutterHorizDim,
+		} ],
+		[Right]: [ {
+			width: gutterHorizDim,
+			
+		} ],
+		[Bottom]: [ {
+			height: gutterVertDim,
+			
+		} ],
 		[Popup]: [ { height: gutterVertDim } ],
 		
 		button: [ FlexAlignCenter, makeFlex(0, 1, 'auto'), makePaddingRem(0), {
@@ -46,11 +54,15 @@ function baseStyles(topStyles,theme,palette) {
 			
 			[Left]: [ FillWidth, FlexColumnReverse, {
 				width: gutterHorizDim,
-				maxWidth: gutterHorizDim
+				maxWidth: gutterHorizDim,
+				borderBottom: theme.tabBarSeparator,
+				borderBottomWidth: 1,
+				borderRadius: 0
 			} ],
 			[Right]: [ FillWidth, FlexColumn, makePaddingRem(0.5, 0), {
 				width: gutterHorizDim,
-				maxWidth: gutterHorizDim
+				maxWidth: gutterHorizDim,
+				//borderBottom: theme.tabBarSeparator,
 			} ],
 			[Popup]: [ FillHeight, FlexRow, makePaddingRem(0, 0.5), {
 				height: gutterHorizDim

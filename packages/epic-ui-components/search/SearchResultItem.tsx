@@ -279,7 +279,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	render() {
 		const
 			{ props } = this,
-			{ item, selected } = props,
+			{ item, selected,controller } = props,
 			{ provider } = item
 		
 		const
@@ -287,6 +287,8 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 				provider.render(item, selected) :
 				this.resultRender(provider, item, selected)
 		
+		if (selected)
+			controller.ensureItemVisible(this)
 		
 		return <div {...filterProps(props)} className={`${props.className || ''} ${selected && 'selected'}`}>
 			{itemContent}

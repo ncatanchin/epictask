@@ -554,6 +554,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		
 	}
 	
+	
+	
 	/**
 	 * Move the current selection
 	 *

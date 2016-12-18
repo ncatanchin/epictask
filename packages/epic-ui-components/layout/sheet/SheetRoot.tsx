@@ -41,7 +41,7 @@ const baseStyles = (topStyles, theme, palette) => {
 				left: 0,
 				pointerEvents: 'none',
 				opacity: 0,
-				zIndex: 2,
+				zIndex: 99999999,
 				visible: [{
 					pointerEvents: 'auto',
 					opacity: 1

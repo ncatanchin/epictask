@@ -1,7 +1,7 @@
 // Imports
 
 import { ThemedStyles, IThemedAttributes, Themed } from "epic-styles"
-import { shallowEquals, shortId, guard, focusNextFormField } from "epic-global"
+import { shallowEquals, shortId, guard, focusNextFormField, makeStopEvent } from "epic-global"
 import filterProps from "react-valid-props"
 import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter} from "./FlexLayout"
 import { PureRender} from "./PureRender"
@@ -16,7 +16,7 @@ import { isHovering } from "epic-styles/styles"
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * ISelectProps
@@ -213,7 +213,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			valueItem = getValue(() => items.find(it => [ it.value, it.key ].includes(value)))
 		
 		if (!valueContent)
-			valueContent = getValue(() => valueItem.content,<div>{this.props.placeholder || 'No Value Provided'}</div>)
+			valueContent = getValue(() => valueItem.content,<div>{this.props.placeholder || 'none'}</div>)
 		
 		visibleItems = items.filter(item =>
 			(!valueItem ||
@@ -240,7 +240,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	}
 	
 	get selectedItem() {
-		return getValue(() => this.state.visibleItems[ this.selectedIndex ], null) as ISelectFieldItem
+		return getValue(() => this.state.visibleItems[ this.selectedIndex + 1 ], null) as ISelectFieldItem
 	}
 	
 	/**
@@ -330,13 +330,10 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	 * @param event
 	 */
 	private onKeyDown = event => {
-		log.debug(`On key down`, event, event.key, event.charCode, event.keyCode)
+		log.debug(`On key down`, event, event.key, event.charCode, event.keyCode,'current selected index = ',this.selectedIndex)
 		
 		const
-			stopEvent = () => {
-				event.preventDefault()
-				event.stopPropagation()
-			},
+			stopEvent = makeStopEvent(event),
 			
 			{ key } = event
 		
@@ -372,8 +369,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 				break
 			
 			case 'Enter':
-				event.preventDefault()
-				event.stopPropagation()
+				stopEvent()
 				
 				if (!this.state.open) {
 					this.toggleOpen()

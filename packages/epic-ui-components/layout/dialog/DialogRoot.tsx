@@ -6,18 +6,19 @@ import { WindowControls, FormButton, PureRender } from "../../common"
 // Constants
 const
 	log = getLogger(__filename),
-	{FlexColumn, FillWidth, rem,makeFlexAlign,FillHeight, FlexRow,FlexScale, FlexRowCenter, makePaddingRem} = Styles
+	{Ellipsis,FlexColumn,FillWindow,PositionRelative,OverflowAuto,makeFlex, FillWidth, rem,makeFlexAlign,FillHeight, FlexRow,FlexScale, FlexRowCenter, makePaddingRem} = Styles
 
 const baseStyles = (topStyles,theme,palette) => {
 	const
 		{text,accent,primary,secondary,background} = palette,
 		
-		actionStyle = {
+		actionStyle = makeStyle(makeHeightConstraint(rem(2.8)),{
 			border: `1px solid ${primary.hue1}`,
 			borderRadius: 3,
 			backgroundColor: primary.hue2,
 			color: text.primary
-		}
+			
+		})
 	
 	return {
 		root: [ FillWindow, FlexColumn, {
@@ -25,22 +26,29 @@ const baseStyles = (topStyles,theme,palette) => {
 			backgroundColor: background
 		} ],
 		
-		header: [ FlexRow, makeFlexAlign( 'center','flex-end'), makePaddingRem(0,1,0,0),FillWidth, makeHeightConstraint(rem(2.5)), {
-			hasActions: [makeHeightConstraint(rem(5))],
+		header: [ FlexRow, makeFlexAlign( 'center','flex-end'), makePaddingRem(0),FillWidth, makeHeightConstraint(rem(2.5)), {
+			hasActions: [makeHeightConstraint(rem(5.3))],
+			
+			// SPACER - push actions right
+			spacer: [makeFlex(1,1,0)],
 			
 			// ACTION NODES
 			titleActions: [Styles.FlexAuto,FlexRow, makeFlexAlign( 'center','flex-end'),actionStyle],
 			titleAction: [FillHeight],
-			actions: [ FlexRow, makePaddingRem(0, 1), makeFlexAlign( 'flex-end','center'), actionStyle,{
+			actions: [ FlexRow, makePaddingRem(0, 0,0,1), makeFlexAlign( 'flex-end','center'), actionStyle,{
 				
 			} ],
+			
+			subLabel: [Ellipsis,makeFlex(2,1,'auto'),{}],
+			
+			toolbar: [FlexRowCenter,FlexScale,PositionRelative,makePaddingRem(1.8,1,0,1)]
 		}],
 			
 		// WINDOW CONTROLS ARE FAR LEFT
 		//windowControls: [ makeWidthConstraint(rem(10)), {} ],
 		
 		// TITLE IS BETWEEN WINDOW CONTROLS AND TITLE ACTION NODES
-		form: [ FlexScale, FlexColumn, FillWidth, PositionRelative, OverflowAuto, {
+		form: [ FlexScale, FlexColumn, FillWidth, PositionRelative, OverflowAuto, makePaddingRem(1,0,0,0),{
 			backgroundColor: background,
 			fontSize: themeFontSize(2),
 			color: text.primary,
@@ -201,14 +209,29 @@ class DialogHeader extends React.Component<any,any> {
 				{/*</div>}*/}
 			</div>
 			{/* TITLE BAR ACTION CONTROLS */}
-			{!titleActionNodes ? React.DOM.noscript() : Array.isArray(titleActionNodes) ?
-					<div style={[styles.titleActions]}>
-						{!Array.isArray(titleActionNodes) ?
-							titleActionNodes :
-							titleActionNodes.map((action,index) => <div style={styles.titleAction} key={index}>{action}</div>)}
-					</div> :
-					titleActionNodes
-			}
+			<div style={[styles.toolbar]}>
+				
+				{subTitleNode && <div style={[styles.subLabel,styles.subLabel[titleMode]]}>
+					{subTitleNode}
+				</div>}
+				
+				{titleActionNodes &&
+					<div style={styles.spacer}/>
+				}
+				
+				{titleActionNodes &&
+				<div style={[styles.titleActions]}>
+					{Array.isArray(titleActionNodes) ?
+						titleActionNodes :
+						titleActionNodes.map ?
+							titleActionNodes.map((action,index) => <div style={styles.titleAction} key={index}>{action}</div>) :
+						titleActionNodes
+					
+					}
+				</div>
+				}
+				
+			</div>
 		</div>
 	}
 }

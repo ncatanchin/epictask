@@ -119,11 +119,12 @@ export function DefaultTheme(palette) {
 	
 		
 	const
+		inactiveColor = colorDarken(primary.hue1,20),
 		focusStyle = {
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
 		},
 		tabBarHeightNumber = 2.5,
-		tabBarSeparator = `${convertRem(0.1)}px solid ${colorDarken(primary.hue1,20)}`
+		tabBarSeparator = `${convertRem(0.1)}px solid ${inactiveColor}}`
 		
 	// INPUT
 	const
@@ -182,6 +183,8 @@ export function DefaultTheme(palette) {
 		/**
 		 * Global
 		 */
+		
+		inactiveColor,
 		
 		fontFamily,
 		fontWeight,
@@ -543,9 +546,7 @@ export function DefaultTheme(palette) {
 			[ToolPanelLocation.Bottom]: { minDim: 2.4 },
 			[ToolPanelLocation.Popup]: { minDim: 2.4 },
 			
-			gutter: {
-				backgroundColor: tc(primary.hue2).lighten(5).toRgbString(),
-			},
+			
 			
 			
 			tool: {
@@ -566,10 +567,10 @@ export function DefaultTheme(palette) {
 			
 			tools: {
 				// borderColor: primary.hue3
-				[ToolPanelLocation.Left]: { borderLeftColor: colorAlpha(primary.hue3,0.9) },
-				[ToolPanelLocation.Right]: { borderRightColor: colorAlpha(primary.hue3,0.9)},
-				[ToolPanelLocation.Bottom]: { borderBottomColor: colorAlpha(primary.hue3,1) },
-				[ToolPanelLocation.Popup]: { borderTopColor: colorAlpha(primary.hue3,0.9) },
+				// [ToolPanelLocation.Left]: { borderLeftColor: colorAlpha(primary.hue3,0.9) },
+				// [ToolPanelLocation.Right]: { borderRightColor: colorAlpha(primary.hue3,0.9)},
+				// [ToolPanelLocation.Bottom]: { borderBottomColor: colorAlpha(primary.hue3,1) },
+				// [ToolPanelLocation.Popup]: { borderTopColor: colorAlpha(primary.hue3,0.9) },
 				
 			}
 		},

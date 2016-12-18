@@ -195,8 +195,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param newIssueProps
 	 */
 	private updateIssueState = (newIssueProps) => {
-		// if (!this.viewState.ready)
-		// 	return null
+		if (!this.viewState.ready && this.props.params.issueId !== '-1')
+			return null
 		
 		let
 			{ editingIssue } = this
@@ -478,7 +478,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		
 		return <DialogRoot
 			titleMode='horizontal'
-			titleNode={editingIssue.id ? `editing issue #{editingIssue.number}` : `create issue`}
+			titleNode={editingIssue.id ? `editing issue #${editingIssue.number}` : `create issue`}
+			subTitleNode={editingIssue.title}
 			titleActionNodes={titleActionNodes}
 			saving={saving}
 			styles={styles.dialog}
@@ -491,7 +492,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				onInvalid={this.onFormInvalid}
 				onValid={this.onFormValid}
 				onValidSubmit={this.onFormValidSubmit}
-				styles={[FlexColumn,FlexScale]}>
+				styles={[Styles.FlexColumn, Styles.FlexScale, Styles.makePaddingRem(1,0,0,0)]}>
 				
 				<FileDrop onFilesDropped={this.onDrop}
 				          acceptedTypes={[/image/]}

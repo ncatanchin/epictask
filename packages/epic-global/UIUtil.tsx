@@ -340,3 +340,13 @@ export function focusNextFormField(elem,wrap = true) {
 	}
 }
 
+
+
+export function stopEvent(event) {
+	event.preventDefault()
+	event.stopPropagation()
+}
+
+export function makeStopEvent(event) {
+	return () => stopEvent(event)
+}

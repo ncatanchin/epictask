@@ -19,10 +19,8 @@ const baseStyles = (topStyles,theme,palette) => {
 		{text,accent,warn,primary,secondary,background} = palette
 	
 	return {
-		root: [ PositionRelative,OverflowHidden, makeTransition(['border','background-color','color','font-size','font-weight']),makeMarginRem(0), {
+		root: [ Styles.PositionRelative,Styles.OverflowHidden,Styles.makeBorderRem(0), Styles.makeTransition(['border','background-color','color','font-size','font-weight']),Styles.makeMarginRem(0), {
 			cursor: 'pointer',
-			border: 0,
-			
 			
 			outline: 0,
 			width: 'auto',

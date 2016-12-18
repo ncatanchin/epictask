@@ -581,6 +581,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				onValidSubmit={this.onFormValidSubmit}
 				styles={styles.root}>
 				
+				<div style={styles.issues}>
+					<IssueMultiInlineList issues={List<Issue>(issues)} style={styles.issues.list}/>
+				</div>
+				
+				{/*onEscape={this.hide}*/}
 				<ChipsField
 					id={`issue-patch-chips`}
 					style={FillWidth}
@@ -595,7 +600,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					
 					hint={title}
 					
-					onEscape={this.hide}
+					
 					
 				
 				/>
@@ -627,9 +632,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				{/*underlineShow={true}/>*/}
 			{/*}*/}
 			
-			<div style={styles.issues}>
-				<IssueMultiInlineList issues={List<Issue>(issues)} style={styles.issues.list}/>
-			</div>
+			
 			
 			
 				

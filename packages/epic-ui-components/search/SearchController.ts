@@ -91,8 +91,10 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	 */
 	perProviderLimit:number = -1
 	
-	
 	searchId:string
+	
+	
+	
 	
 	constructor() {
 		super()
@@ -106,6 +108,19 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		},true)
 		
 	}
+	
+	/**
+	 * Ensure selected item index is visible
+	 *
+	 * @type {(())&_.Cancelable}
+	 */
+	ensureItemVisible = _.debounce((item) => {
+		try {
+			(ReactDOM.findDOMNode(item) as any).scrollIntoViewIfNeeded()
+		} catch (err) {
+			log.error(`Failed to scroll into view`,err)
+		}
+	},150)
 	
 	/**
 	 * Flatten all items in a result set

@@ -121,11 +121,11 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		
 		return open === false ? null : <div style={styles}>
 			
-			<CSSTransitionGroup
-				transitionName="results"
-				transitionEnterTimeout={250}
-				transitionLeaveTimeout={150}>
-				
+			{/*<CSSTransitionGroup*/}
+				{/*transitionName="results"*/}
+				{/*transitionEnterTimeout={250}*/}
+				{/*transitionLeaveTimeout={150}>*/}
+				{/**/}
 				{searchState.working &&
 					<div style={makeHeightConstraint(theme.search.itemHeight)}>
 						<WorkIndicator open={true} />
@@ -143,8 +143,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 							onMouseDown={this.onClick(item)}
 						/>
 					)}
+				{/*</CSSTransitionGroup>*/}
 				
-			</CSSTransitionGroup>
 		</div>
 		
 	}
