@@ -68,16 +68,16 @@ export interface IUISheet {
 export const
 	AllWindowDefaults = Object.assign({
 		show: false,
-		frame: false,
+		frame: !Env.isMac,
 		acceptFirstMouse: true,
-		title: '',
+		title: 'Epictask',
 		webPreferences: {
 			
 		}
 	},!Env.isMac && {
 		icon: WindowIcon256
 	},Env.isMac && {
-		//titleBarStyle: 'hidden'
+		titleBarStyle: 'hidden'
 		// darkTheme:true,
 	}) as any
 

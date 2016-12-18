@@ -26,6 +26,7 @@ import {
 import { ToolGutter } from "./ToolGutter"
 import { ToolWrapper } from "./ToolWrapper"
 import { createToolPanelSelector, toolDraggingSelector,createToolsSelector } from "epic-typedux/selectors"
+import { makeHeightConstraint } from "epic-styles/styles"
 
 
 // Constants
@@ -89,9 +90,9 @@ function baseStyles(topStyles,theme,palette) {
 			[Bottom]: [ FillHeight ],
 			[Popup]: [ FillHeight ],
 			
-			header: [ FlexRowCenter, makeFlex(0, 0, rem(2)), {
-				// borderBottomStyle: 'solid',
-				// borderBottomWidth: rem(0.1),
+			header: [ FlexRowCenter, Styles.OverflowHidden,makeFlex(0, 0, theme.tabBarHeight), makeHeightConstraint(theme.tabBarHeight),{
+				//boxSizing: 'border-box',
+				borderBottom: theme.tabBarSeparator,
 				
 				label: [ FlexScale, Ellipsis, {
 					fontSize: themeFontSize(1.2),

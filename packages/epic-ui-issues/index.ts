@@ -92,18 +92,22 @@ ViewRegistryScope.Register({
 })
 
 
+function openNewIssue() {
+	getUIActions().openWindow(getRoutes().IssueEditDialog.makeURI())
+}
+
 CommandRegistryScope.Register({
 	id: 'NewIssueGlobal',
 	type: CommandType.Global,
 	name: "New Issue",
-	execute: (cmd, event) => getIssueActions().newIssue(),
+	execute: (cmd, event) => openNewIssue(),
 	defaultAccelerator: "Control+Alt+n"
 },{
 	id: 'NewIssue',
 	type: CommandType.App,
 	name: "New Issue",
 	defaultAccelerator: "CommandOrControl+n",
-	execute: (cmd, event) => getUIActions().openWindow(getRoutes().IssueEditDialog.uri)
+	execute: (cmd, event) => openNewIssue()
 },{
 	id: 'ToggleIssuesPanelView',
 	type: CommandType.Container,

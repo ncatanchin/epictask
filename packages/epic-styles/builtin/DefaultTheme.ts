@@ -3,8 +3,14 @@ import * as Styles from 'material-ui/styles'
 import {
 	CSSHoverState,
 	CSSFocusState,
-	convertRem,makeTransition,Transparent, createStyles,rem, makePaddingRem } from "../styles/CommonRules"
-import { colorAlpha } from "epic-styles/styles/ColorTools"
+	convertRem,makeTransition,
+	makeLinearGradient,
+	PositionRelative,
+	Transparent,
+	createStyles,rem, makePaddingRem } from "../styles/CommonRules"
+import { colorLighten ,colorAlpha } from "epic-styles/styles/ColorTools"
+import { colorDarken } from "epic-styles/styles"
+
 
 
 /**
@@ -115,7 +121,9 @@ export function DefaultTheme(palette) {
 	const
 		focusStyle = {
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
-		}
+		},
+		tabBarHeightNumber = 2.5,
+		tabBarSeparator = `${convertRem(0.1)}px solid ${colorDarken(primary.hue1,20)}`
 		
 	// INPUT
 	const
@@ -179,6 +187,9 @@ export function DefaultTheme(palette) {
 		fontWeight,
 		fontSize,
 		
+		tabBarHeightNumber,
+		tabBarHeight: rem(tabBarHeightNumber),
+		tabBarSeparator,
 		
 		textColor: text.primary,
 		alternateTextColor: alternateText.primary,
@@ -186,6 +197,8 @@ export function DefaultTheme(palette) {
 		progressIndicatorColor: accent.hue1,// secondary.hue1,
 		
 		elementFocus,
+		
+		navBarHeight,
 		
 		input: inputStyle,
 		inputBorder,
@@ -493,25 +506,28 @@ export function DefaultTheme(palette) {
 			}
 		},
 		
-		header: {
-			logo: {},
-			controlStyle: {
-				color: 'white',
-				height: windowControlDim,
-				width: windowControlDim,
-				fontSize: windowControlDim * 0.7,
-				backgroundColor: 'white',
-				borderRadius: windowControlDim / 2,
-				borderColor: 'rgba(255,255,255,0.2)',
-				margin: '0.2rem'
-			},
-			style: {
-				color: text.primary,
-				backgroundColor: background,
-				height: navBarHeight
+		header: [PositionRelative,{
+			
+			backgroundImage: makeLinearGradient('to top',`${primary.hue1} 0`,`${primary.hue3} 100%`),
+			borderBottom: `1px solid ${colorDarken(primary.hue1,15)}`,
+			height: navBarHeight,
+			
+			title: [{
+				position: 'absolute',
+				left: '50%',
+				top: 0,
 				
-			}
-		},
+				textTransform: 'lowercase',
+				fontSize: themeFontSize(1.4),
+				fontWeight: 500,
+				
+				transform: 'translate(-50%,0)',
+				cursor: 'move',
+				WebkitUserSelect: 'none',
+				WebkitAppRegion: 'drag',
+				
+			}],
+		}],
 		
 		ideRoot: {
 			
@@ -536,7 +552,7 @@ export function DefaultTheme(palette) {
 				header: {
 					color: text.primary,
 					backgroundColor: primary.hue2,
-					borderColor: primary.hue3,
+					//borderColor: primary.hue3,
 					
 					label: {
 						color: text.secondary,
@@ -574,6 +590,7 @@ export function DefaultTheme(palette) {
 				// padding: '1rem 1rem'
 			},
 			headerButton: {
+				borderLeft: tabBarSeparator,
 				backgroundColor: primary.hue2,
 				color: text.secondary,
 				':hover': {

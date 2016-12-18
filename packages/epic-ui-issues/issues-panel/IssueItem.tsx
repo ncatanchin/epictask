@@ -25,20 +25,21 @@ const
 export interface IIssueItemProps extends IThemedAttributes {
 	
 	
-	viewController?: IssuesPanelController
-	onOpen?: (event: any, issue: Issue) => void
-	onSelected: (event: any, issue: Issue) => void
+	viewController?:IssuesPanelController
+	onOpen?:(event:any, issue:Issue) => void
+	onSelected:(event:any, issue:Issue) => void
 	
-	rowState?: IRowState<string,string,number>
+	rowState?:IRowState<string,string,number>
 	
-	isSelected?: boolean
-	isSelectedMulti?: boolean
+	isSelected?:boolean
+	isSelectedMulti?:boolean
 	
-	isFocused?: boolean
+	isFocused?:boolean
 	
-	issue?: Issue
-	realIndex?: number
-	item?: IIssueListItem<any>
+	mode?:'detailed'|'simple'
+	issue?:Issue
+	realIndex?:number
+	item?:IIssueListItem<any>
 	
 }
 
@@ -46,29 +47,29 @@ export interface IIssueItemProps extends IThemedAttributes {
 // State is connected at the item level to minimize redraws for the whole issue list
 @connect(() => {
 	const
-		realIndexSelector = (state, props: IIssueItemProps) => props.rowState.item,
+		realIndexSelector = (state, props:IIssueItemProps) => props.rowState.item,
 		
 		itemSelector = createSelector(
 			realIndexSelector,
 			getIssuesPanelSelector(selectors => selectors.issueItemsSelector),
-			(realIndex: number, items: List<IIssueListItem<any>>) => items.get(realIndex)
+			(realIndex:number, items:List<IIssueListItem<any>>) => items.get(realIndex)
 		),
 		
 		issueSelector = createSelector(
 			itemSelector,
-			(item: IIssueListItem<any>) => item && isIssueListItem(item) && item.item
+			(item:IIssueListItem<any>) => item && isIssueListItem(item) && item.item
 		),
 		
 		isSelectedSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
-			(issue: Issue, selectedIssueIds: List<number>): boolean =>
+			(issue:Issue, selectedIssueIds:List<number>):boolean =>
 			issue && selectedIssueIds.includes(issue.id)
 		),
 		isSelectedMultiSelector = createSelector(
 			issueSelector,
 			getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
-			(issue: Issue, selectedIssueIds: List<number>): boolean =>
+			(issue:Issue, selectedIssueIds:List<number>):boolean =>
 			issue && selectedIssueIds.includes(issue.id) && selectedIssueIds.size > 0
 		)
 	
@@ -86,6 +87,10 @@ export interface IIssueItemProps extends IThemedAttributes {
 @ThemedStyles(baseStyles, 'issueItem')
 export class IssueItem extends React.Component<IIssueItemProps,any> {
 	
+	static defaultProps = {
+		mode: 'simple'
+	}
+	
 	constructor(props, context) {
 		super(props, context)
 		
@@ -95,7 +100,7 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 	/**
 	 * Get the item's issue
 	 */
-	private get issue(): Issue {
+	private get issue():Issue {
 		return this.props.issue
 	}
 	
@@ -107,19 +112,19 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 	 * @param nextState
 	 * @returns {boolean}
 	 */
-	shouldComponentUpdate(nextProps: IIssueItemProps,nextState) {
+	shouldComponentUpdate(nextProps:IIssueItemProps, nextState) {
 		return !shallowEquals(
-			nextProps,
-			this.props,
-			'rowState',
-			'style',
-			'styles',
-			'theme',
-			'palette',
-			'issue',
-			'isSelected',
-			'isSelectedMulti'
-		) || !shallowEquals(nextState,this.state)
+				nextProps,
+				this.props,
+				'rowState',
+				'style',
+				'styles',
+				'theme',
+				'palette',
+				'issue',
+				'isSelected',
+				'isSelectedMulti'
+			) || !shallowEquals(nextState, this.state)
 	}
 	
 	
@@ -157,7 +162,8 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 				rowState,
 				issue,
 				isSelected,
-				isSelectedMulti
+				isSelectedMulti,
+				mode
 			} = props
 		
 		
@@ -178,12 +184,13 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 				rowState.style// PARAM PASSED FROM LIST
 			),
 			
-			hovering = isHovering(this,'itemRoot'),
+			hovering = isHovering(this, 'itemRoot'),
 			
 			specialStyle = isSelected ? 'selected' : isFocused ? 'focused' : -1,
 			
 			issueTitleStyle = makeStyle(
 				styles.title,
+				styles.title[mode],
 				styles.title[ specialStyle ],
 				isSelectedMulti && styles.title.selected.multi
 			)
@@ -192,30 +199,21 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 			{...filterProps(props)}
 			id={itemId}
 			ref='itemRoot'
-      style={issueStyles}
-      className={(isSelected ? 'selected' : '')}
-      onContextMenu={this.onContextMenu}
-      onDoubleClick={this.onDoubleClick}
-      onClick={this.onClick}
+			style={issueStyles}
+			className={(isSelected ? 'selected' : '')}
+			onContextMenu={this.onContextMenu}
+			onDoubleClick={this.onDoubleClick}
+			onClick={this.onClick}
 		>
 			
 			
-			<div style={styles.details}>
+			{mode === 'simple' ?
 				
-				
-				{/* ASSIGNEE */}
-				<IssueItemAvatar
-					styles={styles}
-					issue={issue}
-					highlight={isFocused || isSelected || hovering}
-					specialStyle={specialStyle}
-				/>
-				
-				
-				<div style={styles.content}>
+				// DETAILED MODE
+				<div style={styles.simple}>
 					
 					
-					<div style={styles.row1}>
+					
 						
 						{/* IF CLOSED, SHOW CHECK OR IF MILESTONED*/}
 						{issue.state === 'closed' &&
@@ -223,71 +221,144 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 						                iconName="check"
 						                issue={issue}/>}
 						
-						<div style={styles.repo}>
-						<span style={[
-							styles.number,
-							isFocused && styles.number.focused,
-							isSelected && styles.number.selected
-						]}>
-							#{issue.number}&nbsp;&nbsp;
-						</span>
-							
-							
-							<RepoLabel repo={issue.repo} style={makeStyle(
-								styles.repo,
-								isFocused && styles.repo.focused,
-								isSelected && styles.repo.selected
-							)}/>
-							
-							<TimeAgo
-								style={makeStyle(styles.time,styles.time[specialStyle])}
-								timestamp={issue.created_at as any}/>
-						
-						
+						<div>
+							<span style={[
+								styles.number,
+								styles.number.simple,
+								isFocused && styles.number.focused,
+								isSelected && styles.number.selected
+							]}>
+								#{issue.number}&nbsp;&nbsp;
+							</span>
 						</div>
-					</div>
+						
+						<div style={issueTitleStyle}>
+							{issue.title}
+							{/* LABELS */}
+							{issue.labels.map(label =>
+								<LabelChip
+									key={label.id}
+									label={label}
+									labelStyle={makeStyle(styles.labels.label.simple)}
+								/>)}
+						</div>
 					
+					<div>
+						
+						<TimeAgo
+							style={makeStyle(styles.time,styles.time.simple,styles.time[specialStyle])}
+							timestamp={issue.created_at as any}/>
+						
 					
-					<div style={styles.row2}>
-						<div style={issueTitleStyle}>{issue.title}</div>
-						{
-							getValue(() => issue.labels.length, 0) > 0 &&
-							<div style={styles.labels}>
-								
-								{/* LABELS */}
-								{issue.labels.map(label =>
-									<LabelChip
-										key={label.id}
-										label={label}
-										labelStyle={styles.labels.label}
-										mode='dot'/>)}
-								
-								{
-									issue.milestone && <MilestoneLabel
-										milestone={issue.milestone}
-										style={styles.milestone}
-										iconStyle={[
-											styles.milestone.icon,
-											styles.milestone[specialStyle]
-										]}
-										textStyle={[
-											styles.milestone.text,
-											styles.milestone[specialStyle]
-										]}
-									/>
-								}
-							</div>
-						}
+					{
+						issue.milestone && <MilestoneLabel
+							milestone={issue.milestone}
+							style={styles.milestone}
+							iconStyle={[
+												styles.milestone.icon,
+												styles.milestone[specialStyle]
+											]}
+							textStyle={[
+												styles.milestone.text,
+												styles.milestone[specialStyle]
+											]}
+						/>
+					}
 					</div>
-				
-				
 				</div>
+				// END SIMPLE
+				:
 				
-				{/*<IssueItemMarkings*/}
-				{/*styles={styles}*/}
-				{/*issue={issue}*/}
-				{/*specialStyle={specialStyle}/>*/}
-			</div>
+				//DETAILED MODE
+				<div style={styles.details}>
+					
+					
+					{/* ASSIGNEE */}
+					<IssueItemAvatar
+						styles={styles}
+						issue={issue}
+						highlight={isFocused || isSelected || hovering}
+						specialStyle={specialStyle}
+					/>
+					
+					
+					<div style={styles.content}>
+						
+						
+						<div style={styles.row1}>
+							
+							{/* IF CLOSED, SHOW CHECK OR IF MILESTONED*/}
+							{issue.state === 'closed' &&
+							<IssueStateIcon styles={[styles.markings.state]}
+							                iconName="check"
+							                issue={issue}/>}
+							
+							<div style={styles.repo}>
+							<span style={[
+								styles.number,
+								isFocused && styles.number.focused,
+								isSelected && styles.number.selected
+							]}>
+								#{issue.number}&nbsp;&nbsp;
+							</span>
+								
+								
+								<RepoLabel repo={issue.repo} style={makeStyle(
+									styles.repo,
+									isFocused && styles.repo.focused,
+									isSelected && styles.repo.selected
+								)}/>
+								
+								<TimeAgo
+									style={makeStyle(styles.time,styles.time[specialStyle])}
+									timestamp={issue.created_at as any}/>
+							
+							
+							</div>
+						</div>
+						
+						
+						<div style={styles.row2}>
+							<div style={issueTitleStyle}>{issue.title}</div>
+							{
+								getValue(() => issue.labels.length, 0) > 0 &&
+								<div style={styles.labels}>
+									
+									{/* LABELS */}
+									{issue.labels.map(label =>
+										<LabelChip
+											key={label.id}
+											label={label}
+											labelStyle={styles.labels.label}
+											mode='dot'/>)}
+									
+									{
+										issue.milestone && <MilestoneLabel
+											milestone={issue.milestone}
+											style={styles.milestone}
+											iconStyle={[
+												styles.milestone.icon,
+												styles.milestone[specialStyle]
+											]}
+											textStyle={[
+												styles.milestone.text,
+												styles.milestone[specialStyle]
+											]}
+										/>
+									}
+								</div>
+							}
+						</div>
+					
+					
+					</div>
+					
+					{/*<IssueItemMarkings*/}
+					{/*styles={styles}*/}
+					{/*issue={issue}*/}
+					{/*specialStyle={specialStyle}/>*/}
+				</div>
+			}
 			{/* FOCUSED MARKING BAR */}
 			<div style={[
 				styles.bar,

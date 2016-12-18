@@ -48,7 +48,7 @@ class IssueEditController extends EventEmitter implements IViewController<IssueE
 				ready: true
 			})
 		
-		if (!issueId) {
+		if (!issueId || ["-1",-1,0,null].includes(issueId)) {
 			setReady()
 			cb && cb()
 		} else {

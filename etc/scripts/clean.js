@@ -3,7 +3,7 @@ require('./init-scripts')
 
 echo(`Cleaning`)
 
-for (let dir of ['dist/*', 'dist']) {
+for (let dir of ['dist/*', 'dist/.awcache']) {
 	try {
 		rm('-Rf', dir)
 	} catch (err) {

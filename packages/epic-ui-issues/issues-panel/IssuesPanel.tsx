@@ -59,7 +59,9 @@ function baseStyles(topStyles,theme,palette) {
 		{primary,accent,text,background} = palette
 	
 	return {
-		panel: [ Fill,FlexColumn, {} ],
+		panel: [ Styles.Fill,Styles.FlexColumn, {
+			
+		} ],
 		panelSplitPane: [ Fill, {
 			' > .Pane2': makeStyle(OverflowHidden, {})
 			

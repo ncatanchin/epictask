@@ -36,7 +36,7 @@ function baseStyles(topStyles, theme, palette) {
 		tiny = require('tinycolor2'),
 		[bg,fg] = tiny(text.primary).isLight() ?
 			[ text.secondary, alternateText.primary ] :
-			[ alternateText.secondary, text.primary ]
+			[ background, text.primary ]
 	
 	
 	if (styleSheet) {
@@ -46,7 +46,7 @@ function baseStyles(topStyles, theme, palette) {
 	styleSheet = CreateGlobalThemedStyles((themeCopy, Style) => {
 		inputClassName = Style.registerStyle({
 			'&::-webkit-input-placeholder': {
-				fontWeight: '700',
+				fontWeight: '300',
 				[require('free-style').IS_UNIQUE]: true
 				
 			}

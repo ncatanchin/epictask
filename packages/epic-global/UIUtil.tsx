@@ -109,6 +109,8 @@ export function MappedProps(
 	return (Component):any => {
 		return class MapPropsOnChange extends React.Component<any,any> {
 			
+			private mounted = false
+			
 			constructor(props,context) {
 				super(props,context)
 				
@@ -142,7 +144,7 @@ export function MappedProps(
 					}
 				}
 				
-				this.setState({
+				this.mounted && this.setState({
 					lastProps: props,
 					mappedProps: propsFn(props,this)
 				})
@@ -153,19 +155,20 @@ export function MappedProps(
 				return !shallowEquals(this.props,nextProps) || !shallowEquals(this.state.mappedProps,nextState.mappedProps)
 			}
 			
-			remap = () => {
-				setImmediate(() =>
-					this.setState({
+			/**
+			 * Debounced remap()
+			 */
+			remap = _.debounce(() => this.mounted && this.setState({
 						lastProps: null,
 						values: null
 					},() => this.mapProps())
-				)
-			}
+			,100)
 			
 			/**
 			 * On mount check props
 			 */
 			componentWillMount = () => {
+				this.mounted = true
 				if (onMount) {
 					const
 						data = Object.assign({},this.state.data)
@@ -179,7 +182,8 @@ export function MappedProps(
 				}
 			}
 			
-			componentWillUnmount() {
+			componentWillUnmount = () => {
+				this.mounted = false
 				if (onUnmount) {
 					const
 						data = Object.assign({},this.state.data)

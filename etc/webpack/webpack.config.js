@@ -327,7 +327,7 @@ const
 		//'eval-source-map', //'#cheap-module-eval-source-map',
 		'development': '#cheap-module-eval-source-map',//'inline-source-map',
 		'production': 'source-map'
-	}
+	},
 	
 	devtool = DevTools[process.env.NODE_ENV]
 

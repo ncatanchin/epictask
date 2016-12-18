@@ -11,7 +11,8 @@ import {
 	ContainerNames
 } from "epic-command-manager"
 import { CommandMenuRoot } from "epic-ui-components"
-import { WindowControls,RainbowIndicator,PureRender } from "epic-ui-components/common"
+import { WindowControls, RainbowIndicator, PureRender } from "epic-ui-components/common"
+import { colorDarken } from "epic-styles/styles"
 
 export const
 	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
@@ -20,67 +21,58 @@ const
 	log = getLogger(__filename)
 
 
-
-const baseStyles = (topStyles,theme,palette) => {
+const baseStyles = (topStyles, theme, palette) => {
 	
 	const
-		{primary,accent,text,secondary,background} = palette
+		{ primary, accent, text, secondary, background } = palette
 	
-	return {
-		header: [
-			makeTransition(['height','max-height','min-height','opacity']),
-			makeHeightConstraint('50px'),
-			FlexRowCenter,
-			FillWidth,
-			FlexAuto,
-			PositionRelative,
-			makePaddingRem(0,0,0,10),
-			{
-				WebkitUserSelect: 'none',
-				WebkitAppRegion: 'drag',
-				border: 0,
-				opacity: 1,
-				
-				hidden: [makeHeightConstraint('0px'),makePaddingRem(0),{
-					opacity: 0
-				}]
-			}
-		],
-		
-		
-		
-		
-		controls: makeStyle(makeAbsolute(), {
-			WebkitAppRegion: 'no-drag',
+	return [
+		Styles.makeTransition([ 'height', 'max-height', 'min-height', 'opacity' ]),
+		makeHeightConstraint('50px'),
+		Styles.FlexRow,
+		Styles.FillWidth,
+		Styles.FlexAuto,
+		Styles.PositionRelative,
+		Styles.makePaddingRem(0, 0, 0, 10), {
+			
+			WebkitUserSelect: 'none',
+			WebkitAppRegion: 'drag',
+			//border: 0,
 			opacity: 1,
-			border: '0.2rem solid transparent',
-			padding: 0
-		}),
-		
-		controlButton: makeStyle(makeTransition(), FlexRowCenter, {
-			display: 'inline-flex',
-			border: '0.2rem solid transparent'
-		}),
-		
-		controlButtonBefore: makeStyle(makeTransition()),
-		
-		logo: [
-			makeTransition(['opacity']),
-			//PositionAbsolute,
-			{
-				transform: 'scale(0.7)',
-				// top: 0,
-				// right: 10,
-				
-				spinner: [{
-					animationDuration: '5s'
-				}]
-			}
-		],
-		
-		
-		
-	}
+			height: theme.navBarHeight,
+			
+			
+			
+			hidden: [ makeHeightConstraint('0px'), Styles.makePaddingRem(0), {
+				opacity: 0
+			} ],
+			
+			
+			
+			controls: makeStyle(makeAbsolute(), {
+				WebkitAppRegion: 'no-drag',
+				opacity: 1,
+				border: '0.2rem solid transparent',
+				padding: 0
+			}),
+			
+			controlButton: makeStyle(Styles.makeTransition(), Styles.FlexRowCenter, {
+				display: 'inline-flex',
+				border: '0.2rem solid transparent'
+			}),
+			
+			controlButtonBefore: makeStyle(Styles.makeTransition()),
+			
+			logo: [
+				Styles.makeTransition([ 'opacity' ]),
+				{
+					transform: 'scale(0.7)',
+					spinner: [ {
+						animationDuration: '5s'
+					} ]
+				}
+			]
+		} ]
 	
 }
 
@@ -97,53 +89,44 @@ export interface IHeaderState {
 }
 
 
-
 /**
  * The app header component, title/logo/settings
  */
-@CommandComponent()
-@ThemedStyles(baseStyles,'header')
+@ThemedStyles(baseStyles, 'header')
 @PureRender
-export default class Header extends React.Component<IHeaderProps,IHeaderState> implements ICommandComponent {
+export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 	
 	
-	commandItems = (builder:CommandContainerBuilder) =>
-		builder.make()
-	
-	readonly commandComponentId:string = 'Header'
-	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 	}
-
+	
 	get searchField():SearchField {
-		const panel = _.get(this,'state.searchField') as any
+		const panel = _.get(this, 'state.searchField') as any
 		return panel && panel.getWrappedInstance ? panel.getWrappedInstance() : panel
 	}
-
-
-
-
+	
+	
 	windowClose = () => {
 		log.info('window close')
 	}
-
+	
 	windowMin = () => {
 		log.info('window min')
 	}
-
+	
 	windowMax = () => {
 		log.info('window max')
 	}
-
+	
 	setSearchFieldRef = (searchField) => {
-		this.setState({searchField})
+		this.setState({ searchField })
 	}
-
+	
 	setHotKeysRef = (hotKeys) => {
-		this.setState({hotKeys})
+		this.setState({ hotKeys })
 	}
-
+	
 	/**
 	 * On escape sequence close the header unless expanded
 	 */
@@ -170,37 +153,35 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 		
 		//ActionFactoryProviders[UIKey].focusIssuesPanel()
 	}
-
+	
 	/**
 	 * onBlur - exiting find
 	 *
 	 * @param event
 	 */
-
+	
 	onBlur = (event) => {
 		this.setState({
-			focused:false
+			focused: false
 		})
 	}
-
+	
 	/**
 	 * On focus - usually for find
 	 *
 	 * @param event
 	 */
 	onFocus = (event) => {
-		this.setState({resultsHidden:false,focused:true})
+		this.setState({ resultsHidden: false, focused: true })
 	}
-
-	keyHandlers = {}
-
 	
-
+	keyHandlers = {}
+	
+	
 	/**
 	 * on mount clear the state
 	 */
 	componentWillMount = () => !this.state && this.setState({})
-
 	
 	
 	/**
@@ -210,37 +191,32 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> i
 	 */
 	render() {
 		const
-			{theme,styles,style} = this.props,
-		
-			themeHeight = theme.header.style.height
-
-			
+			{ theme, styles, style } = this.props
 		
 		
 		const
 			headerStyle = makeStyle(
-				theme.header.style,
-				style,
-				styles.header
+				styles,
+				style
 			)
 		
-
-		return <CommandRoot
-			component={this}
-      id="header"
-      style={headerStyle}>
+		
+		return <div
+			id="header"
+			style={headerStyle}>
 			
-			<WindowControls />
+			{!Env.isMac && <WindowControls />}
 			
+			<div style={styles.title}>epictask</div>
 			<div style={FlexScale}/>
 			
-			<RainbowIndicator
-				style={styles.logo}
-			  eHidden
-			  spinnerStyle={styles.logo.spinner}/>
+			{/*<RainbowIndicator*/}
+			{/*style={styles.logo}*/}
+			{/*eHidden*/}
+			{/*spinnerStyle={styles.logo.spinner}/>*/}
 			
 			<CommandMenuRoot />
-		</CommandRoot>
+		</div>
 	}
 }
 

@@ -46,15 +46,21 @@ function baseStyles(topStyles, theme, palette) {
 		{
 			//backgroundColor: Transparent,
 			wrapper: [
-				makeFlex(0, 0, rem(5.5)),
-				makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ])
+				Styles.makeFlex(0, 0, rem(5.5)),
+				Styles.makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ]), {
+					border: `none`,
+					backgroundColor: primary.hue2,
+				}
 			],
 			
 			//borderBottom: `0.1rem solid ${primary.hue3}`,
-			
-			
+			field: [{
+				backgroundColor: primary.hue2,
+			}],
 			input: [ {
-				border: `${convertRem(0.1)}px solid ${Transparent}`,
+				backgroundColor: primary.hue3,
+				
+				border: `${convertRem(0.1)}px solid ${Styles.Transparent}`,
 				color: text.secondary,
 				fontWeight: 500,
 				fontSize: themeFontSize(1.7),
@@ -534,9 +540,10 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 		
 		return !criteria ? React.DOM.noscript() : <SearchField
 				ref="searchField"
-				styles={mergeStyles(styles,!isVisible && {wrapper: makeFlex(0,0,rem(0))})}
+				styles={mergeStyles(styles,!isVisible && {wrapper: Styles.makeFlex(0,0,rem(0))})}
 				searchId='issues-search'
 				open={open}
+				placeholder="Search labels, repos, milestones, assignees, anything"
 				criteria={criteria}
 				criteriaRenderer={this.criteriaRenderer}
 				text={searchText || ""}

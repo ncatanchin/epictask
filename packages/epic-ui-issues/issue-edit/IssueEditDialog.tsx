@@ -5,7 +5,7 @@
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
 import { connect } from "react-redux"
-import { Issue, AvailableRepo, User, Label } from "epic-models"
+import { Issue, AvailableRepo, User, Label, Repo } from "epic-models"
 import {
 	RepoSelect,
 	LabelFieldEditor,
@@ -77,11 +77,7 @@ export interface IIssueEditDialogState {
 @ViewRoot(IssueEditController, IssueEditState)
 @connect(createStructuredSelector({
 	user: appUserSelector,
-	//editingIssue: editingIssueSelector,
-	availableRepos: availableReposSelector,
-	// saving: issueSavingSelector,
-	// saveError: issueSaveErrorSelector
-	
+	availableRepos: availableReposSelector
 }))
 
 
@@ -103,8 +99,47 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		return getValue(() => this.props.viewController)
 	}
 	
+	private get repo() {
+		const
+			{availableRepos} = this.props,
+			issue = getValue(() => this.viewState.editingIssue)
+		
+		let
+			repo:Repo
+		
+		
+		if (issue) {
+			if (issue.repo) {
+				return issue.repo
+			} else if (issue.repoId) {
+				const
+					availRepo = availableRepos.find(it => it.id === issue.repoId)
+				
+				repo = getValue(() => availRepo.repo,null)
+			}
+		}
+		
+		if (!repo)
+			repo = getValue(() => availableRepos.get(0).repo)
+		
+		return repo
+	}
+	
 	private get editingIssue() {
-		return getValue(() => this.viewState.editingIssue, new Issue())
+		let
+			issue = getValue(() => this.viewState.editingIssue)
+		
+		if (!issue) {
+			const
+				{repo} = this
+			
+			issue = new Issue({
+				repo,
+				repoId: repo.id
+			})
+		}
+		
+		return issue
 	}
 	
 	/**
@@ -160,8 +195,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param newIssueProps
 	 */
 	private updateIssueState = (newIssueProps) => {
-		if (!this.viewState.ready)
-			return
+		// if (!this.viewState.ready)
+		// 	return null
 		
 		let
 			{ editingIssue } = this
@@ -417,21 +452,21 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		let
 			repo = editingIssue && (editingIssue.repo || getValue(() => availableRepo.repo))
 		
-		log.info('ready/repo', ready, repoId, repo, editingIssue)
+		log.info('ready/repo', ready, repoId, repo, editingIssue,availableRepos)
 		if (!ready || !repo)
-			return React.DOM.noscript()
+			return <div />
 		
 		
 		const
 			canAssign = canAssignIssue(repo),
 			
-			titleNode = <div style={makeStyle(styles.titleBar.label)}>
-				{editingIssue.id ? <div style={styles.titleBar.label}>
-					<RepoLabel repo={repo}
-					           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
-					<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
-				</div> : `CREATE`}
-			</div>,
+			// titleNode = <div style={makeStyle(styles.titleBar.label)}>
+			// 	{editingIssue.id ? <div style={styles.titleBar.label}>
+			// 		<RepoLabel repo={repo}
+			// 		           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
+			// 		<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
+			// 	</div> : `CREATE`}
+			// </div>,
 			
 			titleActionNodes = createSaveCancelActions(
 				theme,
@@ -443,7 +478,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		
 		return <DialogRoot
 			titleMode='horizontal'
-			titleNode={titleNode}
+			titleNode={editingIssue.id ? `editing issue #{editingIssue.number}` : `create issue`}
 			titleActionNodes={titleActionNodes}
 			saving={saving}
 			styles={styles.dialog}

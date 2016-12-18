@@ -106,7 +106,7 @@ const baseStyles = (topStyles, theme, palette) => {
 		
 		titleBar: [ {
 			label: [ FlexRowCenter, {
-				fontSize: rem(1.6),
+				//fontSize: rem(1.6),
 				
 				repo: [ makePaddingRem(0, 0.6, 0, 0), {} ],
 				
@@ -373,7 +373,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			
 			<DialogRoot
 				titleMode='horizontal'
-				titleNode={titleNode}
+				titleNode='settings'
 				styles={styles.dialog}
 			>
 				

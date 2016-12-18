@@ -131,6 +131,7 @@ export default class ViewStateTab extends React.Component<IViewStateTabProps,IVi
 					autoFocus={true}
 					styles={styles.nameField}
 					value={newName}
+					onBlur={this.onTextBlur}
 					onChange={this.onTextChange}
 				  onKeyDown={this.onTextKeyDown}
 			  />}

@@ -28,53 +28,53 @@ import { ContainerNames,CommonKeys as Keys } from "epic-command-manager"
 // Constants
 const log = getLogger(__filename)
 
-const baseStyles:any = createStyles({
-	cover: makeStyle(FlexColumn,FlexScale,Fill,{
-
-	}),
-
-	panel: [makeTransition(['opacity']),FlexColumn,FlexScale,Fill,{
-		opacity: 1
-	}],
-
-	
-	drawerWrapper: [makeTransition(['width','minWidth','maxWidth']), FlexColumn,FlexScale,Fill,{
-		minWidth: rem(20),
-		position: 'relative',
-
+const baseStyles:any = (topStyles, theme, palette) => {
+	return [ {
+		cover: makeStyle(FlexColumn, FlexScale, Fill, {}),
 		
-	}],
-
-	drawer: makeStyle(FlexColumn,FlexScale,FillWidth,{
-		minWidth: 200,
-		position: 'relative'
-	}),
-
-	header: [Ellipsis,FlexRowCenter,FlexAuto, {
-		title: [Ellipsis,FlexScale,{
-			fontSize: themeFontSize(1.2),
-			padding: '0.4rem 0.5rem'
-		}],
+		panel: [ makeTransition([ 'opacity' ]), FlexColumn, FlexScale, Fill, {
+			opacity: 1
+		} ],
 		
-		button: [FlexRowCenter,{
-			height: rem(2),
-			borderRadius: 0,
+		
+		drawerWrapper: [ makeTransition([ 'width', 'minWidth', 'maxWidth' ]), FlexColumn, FlexScale, Fill, {
+			minWidth: rem(20),
+			position: 'relative',
 			
-			label: {
-				fontSize: rem(0.9),
-				padding: '0 0.5rem 0 0'
-			},
-			icon: {
-				fontSize: rem(1)
-			},
-		}]
-	}],
-
-	listContainer: [FlexColumn,FlexScale, {
-		overflow: 'hidden'
-	}]
-
-})
+			
+		} ],
+		
+		drawer: makeStyle(FlexColumn, FlexScale, FillWidth, {
+			minWidth: 200,
+			position: 'relative'
+		}),
+		
+		header: [ Ellipsis, FlexRowCenter, FlexAuto, {
+			title: [ Ellipsis, FlexScale, {
+				fontSize: themeFontSize(1.2),
+				padding: '0.4rem 0.5rem'
+			} ],
+			
+			button: [ FlexRowCenter, {
+				height: theme.tabBarHeight,
+				borderRadius: 0,
+				
+				label: {
+					fontSize: rem(0.9),
+					padding: '0 0.5rem 0 0'
+				},
+				icon: {
+					fontSize: rem(1)
+				},
+			} ]
+		} ],
+		
+		listContainer: [ FlexColumn, FlexScale, {
+			overflow: 'hidden'
+		} ]
+		
+	} ]
+}
 
 /**
  * IRepoDrawerProps

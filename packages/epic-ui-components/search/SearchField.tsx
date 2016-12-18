@@ -725,7 +725,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						horizontal: 'left',
 					}}
 				  anchorEl={this.state.textFieldElem}
-					useLayerForClickAway={true}
+					useLayerForClickAway={false}
 				  >
 					{this.renderResultsLayer()}
 				</Popover>

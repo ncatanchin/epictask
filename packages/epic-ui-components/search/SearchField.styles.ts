@@ -37,7 +37,7 @@ export default function baseStyles(topStyles, theme, palette) {
 				minWidth: '30%',
 				
 				
-				input: [ FillWidth, Styles.makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {
+				input: [ Styles.FillWidth, Styles.makeTransition([ 'color', 'background-color', 'border', 'padding' ]), {
 					
 					// backgroundColor: ,
 					//color: text.primary

@@ -172,24 +172,26 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		
 		
 		return <div style={styles}>
-			<div style={[styles.tabs]}>
+			<div style={[styles.tabBar]}>
 				
-				{/* New Tab Button */}
-				<Icon
-					style={styles.tabs.newTabButton}
-				  onClick={this.showViewConfigs}>
-					add
-				</Icon>
-				
-				{viewStates.map(it =>
+				<div key="tabs" style={styles.tabBar.tabs}>
+				{viewStates.map((it,index) =>
 					<ViewStateTab
 						key={it.id}
 						selected={selectedViewStateId === it.id}
-						styles={styles.tabs.tab}
+						styles={mergeStyles(styles.tabBar.tab,index === 0 && styles.tabBar.tab.first)}
 						closeEnabled={viewStates.size > 1}
 						viewState={it}/>)
 				}
-				<div key="spacer" style={styles.tabs.spacer}/>
+				</div>
+				{/* New Tab Button */}
+				<Icon
+					style={styles.tabBar.newTabButton}
+					onClick={this.showViewConfigs}>
+					add
+				</Icon>
+				
+				<div key="bottomBorder" style={styles.tabBar.bottomBorder} />
 			</div>
 			<div id="viewContainerContent" style={[styles.content]}>
 				<View key={viewState.id} viewState={viewState}/>

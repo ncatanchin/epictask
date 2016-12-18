@@ -21,21 +21,10 @@ module.exports = {
 		
 		// SourceCode
 		{
-			//,'source-map-loader'
 			test: srcTest,
-			//include: [path.resolve(process.cwd(),'packages')],
 			exclude: [/node_modules/],
-			loaders: ['awesome-typescript-loader',proxyProvidedLoaderPath,'source-map-loader'],
+			loaders: [`awesome-typescript-loader?cacheDirectory=dist/.awcache-${isDev ? 'dev' : 'prod'}`,proxyProvidedLoaderPath,'source-map-loader'],
 		},
-		// {
-		// 	test: srcTest,
-		// 	exclud
-		//
-		// e: [/node_modules/],
-		// 	loaders: ["react-hot-loader/webpack",'ts','source-map-loader',proxyProvidedLoaderPath],
-		// },
-		
-		
 		
 		// JADE
 		{

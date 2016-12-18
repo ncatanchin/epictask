@@ -15,6 +15,7 @@ import {
 	makeFlex,
 	convertRem
 } from "epic-styles"
+import { colorLighten } from "epic-styles/styles"
 
 export default function baseStyles(topStyles, theme, palette) {
 	
@@ -38,7 +39,7 @@ export default function baseStyles(topStyles, theme, palette) {
 		makePaddingRem(0.6,0.6,0.6,0),
 		{
 			// COLORS
-			backgroundColor: background,
+			backgroundColor: colorLighten(background,15),
 			color: text.secondary,
 			borderBottom: '0.1rem solid ' + colorAlpha(text.secondary, 0.1),
 			
@@ -84,7 +85,16 @@ export default function baseStyles(topStyles, theme, palette) {
 				} ],
 				focused: [ {
 					color: alternateText.primary,
-				} ]
+				} ],
+				
+				// SIMPLE MODE
+				simple: [{
+					fontSize: themeFontSize(1.2),
+					marginRight: rem(1),
+					marginLeft: rem(1),
+					color: text.disabled,
+					fontWeight: 400,
+				}]
 			} ],
 			
 			repo: [
@@ -109,11 +119,11 @@ export default function baseStyles(topStyles, theme, palette) {
 					} ]
 				} ],
 			
-			title: [ makeTransition([ 'font-size', 'font-weight' ]), Ellipsis, FlexScale, makePaddingRem(0, 1, 0, 0), {
-				display: 'block',
+			title: [ makeTransition([ 'font-size', 'font-weight' ]), Styles.FlexScale, makePaddingRem(0, 1, 0, 0), {
+				
 				
 				color: text.primary,
-				fontWeight: 400,
+				fontWeight: 500,
 				fontSize: themeFontSize(1.4),
 				
 				/* Selected */
@@ -130,6 +140,16 @@ export default function baseStyles(topStyles, theme, palette) {
 				focused: [ {
 					color: alternateText.primary,
 				} ],
+				
+				detailed: [Styles.Ellipsis, {
+					display: 'block',
+				}],
+				
+				simple: [{
+					display: '-webkit-box',
+					WebkitLineClamp: 2,
+					WebkitBoxOrient: 'vertical'
+				}]
 			} ],
 			
 			/**
@@ -149,8 +169,16 @@ export default function baseStyles(topStyles, theme, palette) {
 						makeHeightConstraint(rem(0.8)),
 						makeWidthConstraint(rem(0.8)),
 						makeMarginRem(0,0,0,0.5),{
-							overflow: 'visible'
+							overflow: 'visible',
+							
+							simple: [makeHeightConstraint(rem(1.3)),{
+								display: 'inline-flex',
+								marginLeft: rem(0.6),
+								marginRight: 0,
+								transform: 'translate(0,-0.3rem)'
+							}]
 						}
+						
 					]
 				}
 			],
@@ -159,7 +187,9 @@ export default function baseStyles(topStyles, theme, palette) {
 			//region MILESTONE
 			milestone: [Styles.FlexAuto,
 				{
-					paddingLeft: rem(1),
+					marginLeft: rem(1),
+					marginTop: rem(0.5),
+					marginRight: rem(0.5),
 					maxHeight: rem(2),
 					
 					// TITLE
@@ -190,6 +220,11 @@ export default function baseStyles(topStyles, theme, palette) {
 					focused: [ {
 						color: alternateText.primary,
 					} ],
+					
+					simple: [Styles.makeMarginRem(0,0.5,0,0),{
+						fontSize: themeFontSize(1.2),
+						color: text.secondary
+					}]
 				} ],
 			//endregion
 			
@@ -206,6 +241,7 @@ export default function baseStyles(topStyles, theme, palette) {
 			content: [ Styles.FlexColumn, Styles.FlexScale, Styles.OverflowHidden, makePaddingRem(0, 0.5, 0, 0) ],
 			
 			details: [ Styles.FlexRow, Styles.FlexAuto, Styles.FillWidth, {} ],
+			simple: [ Styles.FlexRowCenter, Styles.FlexScale,Styles.FillWidth,Styles.FillHeight, {} ],
 			
 			/**
 			 * Avatar and state on left

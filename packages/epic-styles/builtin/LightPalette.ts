@@ -1,13 +1,14 @@
 
 
 import {makePalette, Palettes} from '../material/MaterialTools'
+import { colorDarken } from "epic-styles/styles/ColorTools"
 
 export function LightPalette() {
 	const
 		palette = makePalette(
 			'LightPalette',
 			Palettes.grey,
-			[ 'l300', 'l200', 'l100', 'l700' ],
+			[ 'l400', 'l300', 'l100', 'l700' ],
 			//[ 'l100', 'l200', 'l300', 'l700' ],
 			Palettes.purple,
 			[ 'A400', 'A200', 'A100', 'l100' ],
@@ -21,7 +22,7 @@ export function LightPalette() {
 			[ 'l400', 'l200', 'l100', 'l50' ],
 			Palettes.green,
 			[ 'A700', 'A400', 'A200', 'A100' ],
-			Palettes.white,
+			colorDarken(Palettes.white,10),
 			false
 		)
 	
