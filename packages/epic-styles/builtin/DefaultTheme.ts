@@ -510,7 +510,8 @@ export function DefaultTheme(palette) {
 		},
 		
 		header: [PositionRelative,{
-			
+			WebkitUserSelect: 'none',
+			WebkitAppRegion: 'drag',
 			backgroundImage: makeLinearGradient('to top',`${primary.hue1} 0`,`${primary.hue3} 100%`),
 			borderBottom: `1px solid ${colorDarken(primary.hue1,15)}`,
 			height: navBarHeight,
@@ -526,8 +527,7 @@ export function DefaultTheme(palette) {
 				
 				transform: 'translate(-50%,0)',
 				cursor: 'move',
-				WebkitUserSelect: 'none',
-				WebkitAppRegion: 'drag',
+				
 				
 			}],
 		}],

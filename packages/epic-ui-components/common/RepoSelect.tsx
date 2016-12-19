@@ -156,6 +156,7 @@ export class RepoSelect extends React.Component<IRepoSelectProps,IRepoSelectStat
 		//labelStyle={styles.form.repo.item.label}
 		return <SelectField
 			{...filterProps(this.props)}
+			placeholder={"Select repo"}
 			value={value}
 			items={items}
 			onItemSelected={this.onItemSelected}

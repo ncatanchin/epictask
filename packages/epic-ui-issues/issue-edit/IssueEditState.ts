@@ -13,7 +13,7 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 export const IssueEditStateRecord = Record({
-	editingIssue: new Issue(),
+	editingIssue: null,
 	
 	saveError:null,
 	saving:false,

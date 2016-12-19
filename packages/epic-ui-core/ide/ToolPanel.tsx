@@ -108,7 +108,7 @@ function baseStyles(topStyles,theme,palette) {
 		} ],
 		
 		gutter: [ makeTransition(['background-color','border','width','height','min-width','min-height']),{
-			backgroundColor: primary.hue1,
+			backgroundColor: theme.inactiveColor,
 			
 			[Left]: [ ...gutterVertical ],
 			[Right]: [ ...gutterVertical ],

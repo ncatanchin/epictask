@@ -16,8 +16,6 @@ import { CommandAccelerator } from "./CommandAccelerator"
 import { isMain, InputTagNames, isElectron } from "./CommandManagerConfig"
 import {
 	addWindowListener,
-	addBrowserWindowListener,
-	removeBrowserWindowListener,
 	removeWindowListener,
 	getCommandBrowserWindow
 } from "./CommandManagerUtil"
@@ -128,7 +126,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	/**
 	 * Browser window listeners for electronm
 	 */
-	private browserListeners
+	private bodyListeners
 	
 	
 	/**
@@ -341,23 +339,23 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	}
 	
 	
-	/**
-	 * Focus event for any component
-	 *
-	 * @param event
-	 */
-	private handleFocus = (event:FocusEvent) => {
-		log.debug(`win focus received`,event)
-	}
-	
-	/**
-	 * Blur event for any component
-	 *
-	 * @param event
-	 */
-	private handleBlur = (event:FocusEvent) => {
-		log.debug(`win blur received`,event)
-	}
+	// /**
+	//  * Focus event for any component
+	//  *
+	//  * @param event
+	//  */
+	// private handleFocus = (event:FocusEvent) => {
+	// 	log.debug(`win focus received`,event)
+	// }
+	//
+	// /**
+	//  * Blur event for any component
+	//  *
+	//  * @param event
+	//  */
+	// private handleBlur = (event:FocusEvent) => {
+	// 	log.debug(`win blur received`,event)
+	// }
 	
 	/**
 	 * Before unload - UNBIND - EVERYTHING
@@ -376,7 +374,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	private onWindowBlur = (event) => {
 		log.debug(`blur event`,event)
-		this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
+		//this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
 	}
 		
 	/**
@@ -385,8 +383,26 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 */
 	private onWindowFocus = (event) => {
-		log.info(`focus event`,event)
-		this.mountMenuItems(...this.menuItems)
+		log.debug(`focus event`,event,'active element is',document.activeElement)
+		//this.mountMenuItems(...this.menuItems)
+	}
+	
+	/**
+	 * on body focus
+	 *
+	 * @param event
+	 */
+	private onBodyFocus = (event) => {
+		log.debug(`body focus event`,event,'active element is',document.activeElement)
+	}
+	
+	/**
+	 * on doc body blur
+	 *
+	 * @param event
+	 */
+	private onBodyBlur = (event) => {
+		log.debug(`body blur event`,event)
 	}
 	
 	
@@ -398,10 +414,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			if (!this.windowListeners) {
 				this.windowListeners = {
 					focus: {
-						listener: this.handleFocus
+						listener: this.onWindowFocus
 					},
 					blur: {
-						listener: this.handleBlur
+						listener: this.onWindowBlur
 					},
 					keydown: {
 						listener: this.handleKeyDown
@@ -412,7 +428,9 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 					
 				}
 				
-				this.browserListeners = {
+				this.bodyListeners = {
+					focus: this.onBodyFocus,
+					blur: this.onBodyBlur
 					// focus: {
 					// 	listener:this.onWindowFocus,
 					// 	attacher: addBrowserWindowListener,
@@ -433,9 +451,9 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 					})
 				
 				Object
-					.keys(this.browserListeners)
+					.keys(this.bodyListeners)
 					.forEach(eventName => {
-						addBrowserWindowListener(eventName,this.browserListeners[eventName].listener)
+						document && document.body && document.body.addEventListener(eventName, this.bodyListeners[eventName])
 					})
 			}
 		}
@@ -456,13 +474,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 				})
 			
 			Object
-				.keys(this.browserListeners)
+				.keys(this.bodyListeners)
 				.forEach(eventName => {
-					removeBrowserWindowListener(eventName,this.browserListeners[eventName].listener)
+					document && document.body && document.body.removeEventListener(eventName, this.bodyListeners[eventName])
 				})
 			
 			this.windowListeners = null
-			this.browserListeners = null
+			this.bodyListeners = null
 		}
 	}
 	

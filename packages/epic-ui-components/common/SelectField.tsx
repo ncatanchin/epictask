@@ -1,11 +1,10 @@
 // Imports
 
 import { ThemedStyles, IThemedAttributes, Themed } from "epic-styles"
-import { shallowEquals, shortId, guard, focusNextFormField, makeStopEvent } from "epic-global"
+import { shortId, guard, focusNextFormField, makeStopEvent } from "epic-global"
 import filterProps from "react-valid-props"
 import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter} from "./FlexLayout"
 import { PureRender} from "./PureRender"
-import {TextField } from './TextField'
 import {Popover} from "./Popover"
 import { getValue, isNil } from "typeguard"
 import { Icon } from "./icon/Icon"
@@ -216,14 +215,14 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 			valueContent = getValue(() => valueItem.content,<div>{this.props.placeholder || 'none'}</div>)
 		
 		visibleItems = items.filter(item =>
-			(!valueItem ||
-			(item !== valueItem)) &&
 			(!filterText || _.isEmpty(filterText) ||
 				getValue(() => item.contentText.toLowerCase().indexOf(
 					filterText.toLowerCase()) > -1))
 		)
 		
-		selectedIndex = visibleItems.findIndex(item => item === selectedItem)
+		selectedIndex = visibleItems
+			.filter(it => !isNil(it))
+			.findIndex(item => item === selectedItem)
 		
 		if (selectedIndex === -1)
 			selectedIndex = 0
@@ -240,7 +239,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 	}
 	
 	get selectedItem() {
-		return getValue(() => this.state.visibleItems[ this.selectedIndex + 1 ], null) as ISelectFieldItem
+		return getValue(() => this.state.visibleItems.filter(it => !isNil(it))[ this.selectedIndex ], null) as ISelectFieldItem
 	}
 	
 	/**
@@ -380,7 +379,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 					{ selectedItem, selectedIndex } = this
 				
 				if (selectedItem) {
-					log.debug(`Selected`, selectedIndex, selectedItem)
+					log.debug(`Selected`,event.target, selectedIndex, selectedItem,this.state.visibleItems)
 					guard(() => this.props.onItemSelected(selectedItem))
 					
 					this.toggleOpen()
@@ -388,7 +387,7 @@ export class SelectField extends React.Component<ISelectFieldProps,ISelectFieldS
 					focusNextFormField(this)
 					
 				} else {
-					log.debug(`no item selected`, selectedIndex, selectedItem, this.state)
+					log.debug(`no item selected`, event.target,selectedIndex, selectedItem, this.state)
 				}
 				
 				stopEvent()

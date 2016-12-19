@@ -20,7 +20,7 @@ import {
 	FormValidators
 } from "epic-ui-components/common"
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
-import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow, guard } from "epic-global"
+import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow, guard, PersistentValue } from "epic-global"
 import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
 import { ThemedStyles, FlexColumn, IThemedAttributes } from "epic-styles"
 import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
@@ -39,8 +39,11 @@ const
 	{ Style } = Radium
 
 // DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
+
+const
+	repoIdValue = new PersistentValue<number>('createIssueRepoId')
 
 /**
  * IIssueEditDialogProps
@@ -119,8 +122,17 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			}
 		}
 		
-		if (!repo)
-			repo = getValue(() => availableRepos.get(0).repo)
+		if (!repo) {
+			const
+				repoId = repoIdValue.get()
+			
+			if (repoId) {
+				repo = getValue(() => availableRepos.find(it => it.repo.id === repoId).repo)
+			}
+			
+			if (!repo)
+				repo = getValue(() => availableRepos.get(0).repo)
+		}
 		
 		return repo
 	}
@@ -130,8 +142,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 			issue = getValue(() => this.viewState.editingIssue)
 		
 		if (!issue) {
+			
 			const
 				{repo} = this
+			
+			log.debug(`Creating new issue using repo`,repo,`stored repo id is`,repoIdValue.get())
 			
 			issue = new Issue({
 				repo,
@@ -250,9 +265,12 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param repo
 	 */
 	onRepoChange = (repo: AvailableRepo) => {
+		if (repo)
+			repoIdValue.set(repo.id)
+		
 		const
 			editingIssue = new Issue(cloneObjectShallow(
-				this.editingIssue || new Issue(),
+				this.editingIssue,
 				this.textInputState(), {
 					repoId: repo.id
 				}
@@ -460,21 +478,11 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		const
 			canAssign = canAssignIssue(repo),
 			
-			// titleNode = <div style={makeStyle(styles.titleBar.label)}>
-			// 	{editingIssue.id ? <div style={styles.titleBar.label}>
-			// 		<RepoLabel repo={repo}
-			// 		           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
-			// 		<span style={[styles.titleBar.label.number]}>#{editingIssue.number}</span>
-			// 	</div> : `CREATE`}
-			// </div>,
-			
 			titleActionNodes = createSaveCancelActions(
 				theme,
 				palette,
 				() => this.refs.form.submit(),
 				this.onCancel)
-		
-		//error={getGithubErrorText(saveError,'title')}
 		
 		return <DialogRoot
 			titleMode='horizontal'

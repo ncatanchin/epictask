@@ -27,6 +27,8 @@ const baseStyles = (topStyles,theme,palette) => {
 		} ],
 		
 		header: [ FlexRow, makeFlexAlign( 'center','flex-end'), makePaddingRem(0),FillWidth, makeHeightConstraint(rem(2.5)), {
+			WebkitUserSelect: 'none',
+			WebkitAppRegion: 'drag',
 			hasActions: [makeHeightConstraint(rem(5.3))],
 			
 			// SPACER - push actions right

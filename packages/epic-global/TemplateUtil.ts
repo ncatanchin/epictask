@@ -37,6 +37,8 @@ export function toDataUrl(template:Function|string,locals:any = {},mimetype:stri
  * @returns {string}
  */
 function appendURLParams(url:string, params:{[key:string]:any}) {
+	params['cacheBuster'] = Date.now()
+	
 	return url + (url.includes('?') ? '&' : '?') +
 		Object.keys(params)
 			.map(key => `${key}=${encodeURIComponent(params[ key ])}`)

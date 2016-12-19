@@ -117,7 +117,12 @@ CommandRegistryScope.Register({
 	id: 'NewComment',
 	type: CommandType.Container,
 	name: "New Comment",
-	defaultAccelerator: 'm'
+	defaultAccelerator: 'c'
+},{
+	id: 'ClearFilterSort',
+	type: CommandType.Container,
+	name: "Clear Filter & Sort",
+	defaultAccelerator: 'Alt+c'
 },{
 	id: 'LabelIssues',
 	type: CommandType.Container,

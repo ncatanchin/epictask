@@ -46,8 +46,10 @@ function baseStyles(topStyles, theme, palette) {
 		{
 			//backgroundColor: Transparent,
 			wrapper: [
-				Styles.makeFlex(0, 0, rem(5.5)),
-				Styles.makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ]), {
+				Styles.makeFlex(0, 0, 'auto'),
+				Styles.makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ]),
+				Styles.makePaddingRem(0.5),{
+					minHeight: rem(5.5),
 					border: `none`,
 					backgroundColor: primary.hue2,
 				}

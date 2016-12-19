@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "node ./etc/scripts/clean.js",
     "dev:clean-workspace": "node ./etc/scripts/clean-dev-electron.js",
+    "dev:reactotron": "node ./node_modules/reactotron-cli/dist/index.js",
     "dev:storybook": "start-storybook -s ./ -p 6006",
     "dev:storybook-build": "build-storybook",
     "dev:kill": "pkill -9 Electron || pkill -9 electron",
@@ -232,6 +233,7 @@
     "react-addons-test-utils": "^15.3.2",
     "react-hot-loader": "^3.0.0-beta.6",
     "react-transform-hmr": "^1.0.4",
+    "reactotron-cli": "^1.6.0",
     "reactotron-react-js": "^1.0.0",
     "reactotron-redux": "^1.0.0",
     "redux-logger": "^2.6.1",

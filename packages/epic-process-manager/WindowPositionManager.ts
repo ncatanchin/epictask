@@ -151,9 +151,13 @@ export class WindowPositionManager {
 				if (getValue(() => !isNil(this.position.bounds.width),false)) {
 					
 					const
-						win = this.window
+						win = this.window,
+						finalBounds = cloneObjectShallow(position.bounds,{
+							width: Math.max(position.bounds.width, 800),
+							height: Math.max(position.bounds.height, 500)
+						})
 					
-					win.setBounds(position.bounds)
+					win.setBounds(finalBounds)
 					
 					// UPDATE THE WINDOW
 					if (position.isMaximized) {

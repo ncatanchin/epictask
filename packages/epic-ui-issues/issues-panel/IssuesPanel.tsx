@@ -200,7 +200,11 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 					hidden:true,
 					overrideInput: true
 				})
-			
+			// TOGGLE VIEW
+			.useCommand(
+				Commands.ClearFilterSort,
+				(cmd, event) => this.viewController.clearFilters())
+	
 			// TOGGLE VIEW
 			.useCommand(
 				Commands.ToggleIssuesPanelView,
@@ -847,6 +851,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		
 		
 		return <CommandRoot
+			autoFocus={true}
 			component={this}
 			style={styles.panel}
       id="issuesPanel">
