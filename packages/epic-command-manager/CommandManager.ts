@@ -1,9 +1,9 @@
 import Electron from 'epic-electron'
-import { Map} from "immutable"
-import {EnumEventEmitter} from 'type-enum-events'
+import { Map } from "immutable"
+import { EnumEventEmitter } from 'type-enum-events'
 import {
 	getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow,
-	guard
+	getZIndex
 } from "epic-global"
 import {
 	TCommandContainer,
@@ -19,14 +19,15 @@ import {
 	removeWindowListener,
 	getCommandBrowserWindow
 } from "./CommandManagerUtil"
-import { isNil } from "typeguard"
+import { isNil} from "typeguard"
+import { windowsSelector } from "epic-typedux/selectors"
 
 
 const
 	log = getLogger(__filename),
 	
 	// Container to support hot reloading
-	instanceContainer = getHot(module,'instanceContainer',{}) as {
+	instanceContainer = getHot(module, 'instanceContainer', {}) as {
 		clazz:typeof CommandManager,
 		instance:CommandManager,
 		hotInstance:CommandManager
@@ -104,18 +105,20 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	/**
 	 * Global command list
 	 */
-	private globalCommands:{[id:string]:{
-		id:string,
-		electronAccelerator:string,
-		registered:boolean,
-		conflict:boolean,
-		cmd:ICommand
-	}} = {}
+	private globalCommands:{
+		[id:string]:{
+			id:string,
+			electronAccelerator:string,
+			registered:boolean,
+			conflict:boolean,
+			cmd:ICommand
+		}
+	} = {}
 	
 	/**
 	 * Map of all currently registered commands
 	 */
-	private commands:{[commandId:string]:ICommand} = {}
+	private commands:{ [commandId:string]:ICommand } = {}
 	
 	
 	/**
@@ -137,11 +140,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	private keyInterceptor:TCommandKeyInterceptor
 	
 	
-	
 	/**
 	 * Map of all current containers
 	 */
-	private containers:{[containerId:string]:ICommandContainerRegistration} = {}
+	private containers:{ [containerId:string]:ICommandContainerRegistration } = {}
 	
 	/**
 	 * Private constructor for creating the command manager
@@ -162,24 +164,44 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * All Focused Containers
 	 */
 	focusedContainers():ICommandContainerRegistration[] {
-		return Object
-			.values(this.containers)
-			.filter(it => it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
-			.sort((c1,c2) =>
-				c1.element.contains(c2.element) ? 1 :
-			  c2.element.contains(c1.element) ? -1 : 0)
+		const
+			allContainers = Object.values(this.containers)
+		
+		let
+			containers = allContainers
+				.filter(it => it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
+				.sort((c1, c2) =>
+					c1.element.contains(c2.element) ? 1 :
+						c2.element.contains(c1.element) ? -1 : 0)
+		
+		// IF NO CONTAINERS THEN FIND THE TOP VISIBLE CONTAINER
+		if (!containers.length)
+			containers = allContainers
+				.filter(it => $(it.element).is(':visible') &&  allContainers.every(container => container === it || !$(container.element).is(':visible') || !container.element.contains(it.element)))
+				.sort((c1, c2) => {
+					const
+						zIndex1 = getZIndex(c1.element),
+						zIndex2 = getZIndex(c2.element)
+					
+					return zIndex1 > zIndex2 ?
+						1 :
+						zIndex2 < zIndex1 ? -1 :
+							0
+				})
+		return containers
+		
 	}
 	
-	private executeMenuItem(item:ICommandMenuItem,event:any = null) {
+	private executeMenuItem(item:ICommandMenuItem, event:any = null) {
 		const
 			cmd = item.commandId && this.getCommand(item.commandId)
 		
-		cmd && cmd.execute(cmd,event)
+		cmd && cmd.execute(cmd, event)
 		
 	}
 	
 	private makeExecuteMenuItem(item:ICommandMenuItem) {
-		return (event) => this.executeMenuItem(item,event)
+		return (event) => this.executeMenuItem(item, event)
 	}
 	
 	/**
@@ -188,7 +210,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @returns {ICommandMenuManager}
 	 */
 	getMenuManager():ICommandMenuManager {
-		return getValue(() => this.menuManagerProvider(),null)
+		return getValue(() => this.menuManagerProvider(), null)
 	}
 	
 	/**
@@ -226,7 +248,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	getCommand(commandId:string) {
 		let
-			cmd = this.commands[commandId]
+			cmd = this.commands[ commandId ]
 		
 		if (!cmd) {
 			cmd = Object.values(this.commands).find(it => it.name && it.name.endsWith(commandId) || it.id.endsWith(commandId))
@@ -253,12 +275,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 * @returns {[ICommand,CommandAccelerator]}
 	 */
-	private matchAcceleratorAndCommand(commands:ICommand[],customAccelerators:Map<string,string>,event):[ICommand,CommandAccelerator] {
+	private matchAcceleratorAndCommand(commands:ICommand[], customAccelerators:Map<string,string>, event):[ ICommand, CommandAccelerator ] {
 		for (let cmd of commands) {
 			const
-				accel = customAccelerators.get(cmd.id) ||  cmd.defaultAccelerator
-			if (CommandAccelerator.matchToEvent(accel,event)) {
-				return [cmd,new CommandAccelerator(event)]
+				accel = customAccelerators.get(cmd.id) || cmd.defaultAccelerator
+			if (CommandAccelerator.matchToEvent(accel, event)) {
+				return [ cmd, new CommandAccelerator(event) ]
 			}
 		}
 		return null
@@ -270,7 +292,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 * @param fromInputOverride - for md editing really
 	 */
-	handleKeyDown = (event:KeyboardEvent,fromInputOverride = false) => {
+	private onKeyDown = (event:KeyboardEvent, fromInputOverride = false) => {
 		
 		if (this.keyInterceptor && this.keyInterceptor(event) === false) {
 			event.preventDefault()
@@ -279,25 +301,25 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		}
 		const
 			containers = this.focusedContainers(),
-			customAccelerators = getValue(() => this.acceleratorDataSource(),Map<string,string>()),
+			customAccelerators = getValue(() => this.acceleratorDataSource(), Map<string,string>()),
 			isInputTarget =
 				(event.target && InputTagNames.includes((event.target as HTMLElement).tagName)) ||
 				fromInputOverride
 		
-		log.debug(`Key down received`, event,`Ordered containers: `, containers.map(it => it.element))
+		log.debug(`Key down received`, event, `Ordered containers: `, containers.map(it => it.element))
 		
 		let
 			cmd
-			
+		
 		
 		for (let container of containers) {
 			
 			const
-				testMatch = this.matchAcceleratorAndCommand(container.commands,customAccelerators,event)
+				testMatch = this.matchAcceleratorAndCommand(container.commands, customAccelerators, event)
 			
 			if (testMatch) {
 				const
-					[testCmd,accel] = testMatch
+					[ testCmd, accel ] = testMatch
 				
 				
 				if (testCmd && (!isInputTarget || testCmd.overrideInput || accel.hasNonInputModifier)) {
@@ -308,6 +330,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		}
 		
 		if (!cmd) {
+			
 			const
 				appCommands = Object
 					.values(Commands)
@@ -315,11 +338,11 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			
 			for (let appCmd of appCommands) {
 				const
-					testMatch = this.matchAcceleratorAndCommand([appCmd],customAccelerators,event)
+					testMatch = this.matchAcceleratorAndCommand([ appCmd ], customAccelerators, event)
 				
 				if (testMatch) {
 					const
-						[testCmd,accel] = testMatch
+						[ testCmd, accel ] = testMatch
 					
 					
 					if (testCmd && (!isInputTarget || testCmd.overrideInput || accel.hasNonInputModifier)) {
@@ -331,10 +354,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		}
 		
 		if (cmd) {
-				cmd.execute(cmd, event)
-				event.preventDefault()
-				event.stopPropagation()
-				event.stopImmediatePropagation()
+			cmd.execute(cmd, event)
+			event.preventDefault()
+			event.stopPropagation()
+			event.stopImmediatePropagation()
 		}
 	}
 	
@@ -373,17 +396,17 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 */
 	private onWindowBlur = (event) => {
-		log.debug(`blur event`,event)
+		log.debug(`blur event`, event)
 		//this.unmountMenuItems(...this.menuItems.filter(item => item.mountsWithContainer))
 	}
-		
+	
 	/**
 	 * on window focus
 	 *
 	 * @param event
 	 */
 	private onWindowFocus = (event) => {
-		log.debug(`focus event`,event,'active element is',document.activeElement)
+		log.debug(`focus event`, event, 'active element is', document.activeElement)
 		//this.mountMenuItems(...this.menuItems)
 	}
 	
@@ -393,7 +416,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 */
 	private onBodyFocus = (event) => {
-		log.debug(`body focus event`,event,'active element is',document.activeElement)
+		log.debug(`body focus event`, event, 'active element is', document.activeElement)
 	}
 	
 	/**
@@ -402,7 +425,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param event
 	 */
 	private onBodyBlur = (event) => {
-		log.debug(`body blur event`,event)
+		log.debug(`body blur event`, event)
 	}
 	
 	
@@ -420,7 +443,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 						listener: this.onWindowBlur
 					},
 					keydown: {
-						listener: this.handleKeyDown
+						listener: this.onKeyDown
 					},
 					unload: {
 						listener: this.unload
@@ -447,13 +470,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 				Object
 					.keys(this.windowListeners)
 					.forEach(eventName => {
-						addWindowListener(eventName,this.windowListeners[eventName].listener)
+						addWindowListener(eventName, this.windowListeners[ eventName ].listener)
 					})
 				
 				Object
 					.keys(this.bodyListeners)
 					.forEach(eventName => {
-						document && document.body && document.body.addEventListener(eventName, this.bodyListeners[eventName])
+						document && document.body && document.body.addEventListener(eventName, this.bodyListeners[ eventName ])
 					})
 			}
 		}
@@ -470,13 +493,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			Object
 				.keys(this.windowListeners)
 				.forEach(eventName => {
-					removeWindowListener(eventName,this.windowListeners[eventName].listener)
+					removeWindowListener(eventName, this.windowListeners[ eventName ].listener)
 				})
 			
 			Object
 				.keys(this.bodyListeners)
 				.forEach(eventName => {
-					document && document.body && document.body.removeEventListener(eventName, this.bodyListeners[eventName])
+					document && document.body && document.body.removeEventListener(eventName, this.bodyListeners[ eventName ])
 				})
 			
 			this.windowListeners = null
@@ -491,14 +514,14 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param container
 	 * @param available
 	 */
-	private getContainerRegistration(id:string, container:TCommandContainer, available:boolean):ICommandContainerRegistration  {
+	private getContainerRegistration(id:string, container:TCommandContainer, available:boolean):ICommandContainerRegistration {
 		let
-			reg = this.containers[id],
+			reg = this.containers[ id ],
 			element = isReactComponent(container) &&
 				ReactDOM.findDOMNode(container) as HTMLElement
 		
 		if (!reg) {
-			reg = this.containers[id] = {
+			reg = this.containers[ id ] = {
 				id,
 				container,
 				available,
@@ -531,9 +554,9 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @returns {any}
 	 */
 	private mapMenuItem = (item:ICommandMenuItem) => {
-		return cloneObjectShallow(item,item.execute && {
-			execute: this.makeExecuteMenuItem(item)
-		})
+		return cloneObjectShallow(item, item.execute && {
+				execute: this.makeExecuteMenuItem(item)
+			})
 	}
 	
 	/**
@@ -586,16 +609,16 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			.filter(it => it.type === CommandType.Global)
 			.forEach(it => {
 				const
-					shortcut = this.globalCommands[it.id]
+					shortcut = this.globalCommands[ it.id ]
 				
 				if (!shortcut) {
-					log.debug(`No short cut for command`,it)
+					log.debug(`No short cut for command`, it)
 					return
 				}
 				
 				log.debug(`Removing global shortcut: ${it.id}`)
 				globalShortcut.unregister(shortcut.electronAccelerator)
-				delete this.globalCommands[it.id]
+				delete this.globalCommands[ it.id ]
 			})
 	}
 	
@@ -605,9 +628,22 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 *
 	 * @param commands
 	 */
-	private updateGlobalCommands(commands:ICommand[]) {
+	updateGlobalCommands(commands:ICommand[]) {
 		const
-			globalShortcut = getGlobalShortcut()
+			windows = windowsSelector(getStoreState()).valueSeq(),
+			wConfig = windows.find(win => win.id === getWindowId()),
+			windowIds = windows.filter(win => win.type === WindowType.Normal).map(win => win.id),
+			minWindowId = windowIds.reduce((minId,winId) => Math.min(winId,minId),10000),
+			shouldRegister = wConfig && wConfig.type === WindowType.Normal && getWindowId() === minWindowId
+		
+		log.debug(`Register global commands, proceed=${shouldRegister} / windowId=${getWindowId()} / min window id = ${minWindowId} and ids = ${windowIds}`)
+		if (!shouldRegister)
+			return
+		
+		
+		const
+			globalShortcut = getGlobalShortcut(),
+			customAccelerators = getValue(() => this.acceleratorDataSource(), Map<string,string>())
 		
 		if (!globalShortcut)
 			return
@@ -615,32 +651,33 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		commands
 			.filter(it => it.type === CommandType.Global)
 			.forEach(it => {
-				if (this.globalCommands[it.id]) {
-					log.debug('un-registering global shortcut first',it)
+				if (this.globalCommands[ it.id ]) {
+					log.debug('un-registering global shortcut first', it)
 					this.removeGlobalShortcut(it)
 				}
 				
 				const
+					accel = getValue(() => customAccelerators.get(it.id),it.defaultAccelerator),
 					electronAccelerator =
-						new CommandAccelerator(it.defaultAccelerator).toElectronAccelerator(),
+						new CommandAccelerator(accel).toElectronAccelerator(),
 					
-					shortcut = this.globalCommands[it.id] = {
+					shortcut = this.globalCommands[ it.id ] = {
 						id: it.id,
 						cmd: it,
 						electronAccelerator,
 						registered: false,
 						conflict: globalShortcut.isRegistered(electronAccelerator)
 					}
-					
-				log.debug(`Registering shortcut`,shortcut)
+				
+				log.debug(`Registering shortcut`, shortcut)
 				const
-					result = shortcut.registered = (globalShortcut.register(electronAccelerator,() => {
+					result = shortcut.registered = (globalShortcut.register(electronAccelerator, () => {
 						log.debug(`Executing global shortcut`, shortcut)
 						shortcut.cmd.execute(shortcut.cmd)
 					})) as any
 				
 				log.debug(`Command was registered success=${result}`)
-					
+				
 			})
 	}
 	
@@ -699,7 +736,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 					.findIndex(it => it.id === item.id)
 			
 			if (index > -1) {
-				this.menuItems.splice(index,1)
+				this.menuItems.splice(index, 1)
 			}
 		}
 		
@@ -728,7 +765,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		const
 			menuItemIds = items.map(it => it.id)
 		
-		log.debug(`Unmounting menu command`,...menuItemIds)
+		log.debug(`Unmounting menu command`, ...menuItemIds)
 		
 		this.menuManagerFn(manager => manager.hideItem(...menuItemIds))
 		
@@ -742,7 +779,6 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	private mountCommand(...commands:ICommand[]) {
 		this.mountMenuItems(...this.getMenuItemsFromCommands(commands))
-		
 		
 		
 	}
@@ -765,9 +801,9 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	private makeCommandUpdater(cmd:ICommand) {
 		return (patch) => {
 			const
-				patchedCmd = _.assign(_.clone(cmd),patch)
+				patchedCmd = _.assign(_.clone(cmd), patch)
 			
-			this.registerItems([patchedCmd],[])
+			this.registerItems([ patchedCmd ], [])
 		}
 	}
 	
@@ -792,14 +828,14 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		
 		commands.forEach(cmd => {
 			cmd.id = cmd.id || cmd.name
-			assert(cmd.id,`A command can not be registered without an id & name`)
+			assert(cmd.id, `A command can not be registered without an id & name`)
 			
 			ensureValidId(cmd)
 			
 			// ADD OR UPDATE
-			delete this.commands[cmd.id]
+			delete this.commands[ cmd.id ]
 			
-			this.commands[cmd.id] = cmd
+			this.commands[ cmd.id ] = cmd
 			
 			// IF AN UPDATE MANAGER IS PROVIDED THEN SEND AN UPDATER
 			if (cmd.updateManager) {
@@ -824,12 +860,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			allMenuItems:ICommandMenuItem[] = (menuItems || []).concat(this.getMenuItemsFromCommands(commands))
 		
 		allMenuItems.forEach(item => {
-			assert(item.id || item.label,`Menu ID or label is required`)
+			assert(item.id || item.label, `Menu ID or label is required`)
 			ensureValidId(item)
 		})
 		
 		// FINALLY UPDATE MENU ITEMS
-		log.debug(`Mounting menu command`,allMenuItems.map(it => it.id))
+		log.debug(`Mounting menu command`, allMenuItems.map(it => it.id))
 		this.updateMenuItems(allMenuItems)
 		this.updateGlobalCommands(commands)
 	}
@@ -840,13 +876,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param commands
 	 * @param menuItems
 	 */
-	unregisterItems(commands:ICommand[],menuItems:ICommandMenuItem[]) {
+	unregisterItems(commands:ICommand[], menuItems:ICommandMenuItem[]) {
 		commands.forEach(cmd => {
-			delete this.commands[cmd.id]
+			delete this.commands[ cmd.id ]
 		})
 		
 		// FINALLY MAKE SURE MENU ITEMS ARE REMOVED
-		this.removeMenuItems(this.getAllMenuItems(commands,menuItems))
+		this.removeMenuItems(this.getAllMenuItems(commands, menuItems))
 	}
 	
 	/**
@@ -856,20 +892,20 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param commands
 	 * @param menuItems
 	 */
-	private getAllMenuItems(commands:ICommand[],menuItems:ICommandMenuItem[]):ICommandMenuItem[] {
-		return _.uniqBy(this.getMenuItemsFromCommands(commands).concat(menuItems),'id')
+	private getAllMenuItems(commands:ICommand[], menuItems:ICommandMenuItem[]):ICommandMenuItem[] {
+		return _.uniqBy(this.getMenuItemsFromCommands(commands).concat(menuItems), 'id')
 	}
 	
-	unregisterContainer(id:string,container:TCommandContainer) {
-		if (this.containers[id]) {
+	unregisterContainer(id:string, container:TCommandContainer) {
+		if (this.containers[ id ]) {
 			delete this.containers[ id ]
 		} else {
 			const
 				keys = Object.keys(this.containers)
 			
 			for (let key of keys) {
-				if (this.containers[key].container === container) {
-					delete this.containers[key]
+				if (this.containers[ key ].container === container) {
+					delete this.containers[ key ]
 					break
 				}
 				
@@ -885,25 +921,24 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 * @param commands
 	 * @param menuItems
 	 */
-	registerContainerItems(id:string, container:TCommandContainer,commands:ICommand[],menuItems:ICommandMenuItem[]) {
+	registerContainerItems(id:string, container:TCommandContainer, commands:ICommand[], menuItems:ICommandMenuItem[]) {
 		
-		this.registerItems(commands,menuItems)
+		this.registerItems(commands, menuItems)
 		
 		const
-			reg = this.getContainerRegistration(id,container,true)
+			reg = this.getContainerRegistration(id, container, true)
 		
 		// UPDATE COMMANDS ON CONTAINER REG
 		reg.commands = commands
 		
 		const
-			allMenuItems = this.getAllMenuItems(commands,menuItems)
+			allMenuItems = this.getAllMenuItems(commands, menuItems)
 		
 		reg.menuItems =
 			reg
 				.menuItems
 				.filter(item => !allMenuItems.find(it => it.id === item.id))
 				.concat(allMenuItems)
-		
 		
 		
 	}
@@ -917,30 +952,29 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	unregisterContainerCommand(id:string, container:TCommandContainer, ...commands:ICommand[]) {
 		commands.forEach(cmd => {
-			log.debug(`Removing command`,cmd.id)
-			delete this.commands[cmd.id]
+			log.debug(`Removing command`, cmd.id)
+			delete this.commands[ cmd.id ]
 		})
 		
 		const
-			reg = this.getContainerRegistration(id,container,false)
+			reg = this.getContainerRegistration(id, container, false)
 		
 		//status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
-		this.unregisterItems(reg.commands,reg.menuItems)
+		this.unregisterItems(reg.commands, reg.menuItems)
 	}
-	
 	
 	
 	/**
 	 * Set container as focused
 	 *
 	 * @param id
-	 * @param container
+	 * @param srcContainer
 	 * @param focused
 	 * @param event
 	 * @returns {ICommandContainerRegistration}
 	 */
-	setContainerFocused(id:string,srcContainer:TCommandContainer,focused:boolean, event:React.FocusEvent<any> = null) {
-		log.debug(`Focused on container ${id}, target element`,event.target,`activeElement`,document.activeElement)
+	setContainerFocused(id:string, srcContainer:TCommandContainer, focused:boolean, event:React.FocusEvent<any> = null) {
+		log.debug(`Focused on container ${id}, target element`, event.target, `activeElement`, document.activeElement)
 		
 		const
 			allContainers = Object
@@ -948,16 +982,16 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 			focusedContainers =
 				allContainers
 					.filter(it => it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
-					.sort((c1,c2) =>
+					.sort((c1, c2) =>
 						c1.element.contains(c2.element) ? 1 :
 							c2.element.contains(c1.element) ? -1 : 0)
 		
 		Object
 			.entries(this.containers)
-			.forEach(([id,status]) => {
+			.forEach(([ id, status ]) => {
 				const
 					//status = this.getContainerRegistration(id,container,true),
-					{commands} = status
+					{ commands } = status
 				
 				//TODO: mark others as not focused
 				status.focused = focusedContainers.includes(status)
@@ -991,7 +1025,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 				this.focusedContainers()
 					.map(it => it.element.id || `${it.element.tagName}`)
 					.join(' >>> ')
-			}</div>`)
+				}</div>`)
 				.css({
 					position: 'absolute',
 					right: 0,
@@ -1014,13 +1048,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	setContainerMounted(id:string, container:TCommandContainer, available:boolean) {
 		const
-			reg = this.getContainerRegistration(id,container,available)
+			reg = this.getContainerRegistration(id, container, available)
 		
-		if (getValue(() => reg.commands.length,0) || getValue(() => reg.menuItems.length,0)) {
+		if (getValue(() => reg.commands.length, 0) || getValue(() => reg.menuItems.length, 0)) {
 			if (available) {
-				this.registerItems(reg.commands,reg.menuItems)
+				this.registerItems(reg.commands, reg.menuItems)
 			} else {
-				this.unregisterItems(reg.commands,reg.menuItems)
+				this.unregisterItems(reg.commands, reg.menuItems)
 			}
 		}
 		
@@ -1034,12 +1068,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	focusOnContainer(containerId:string, skipEvent = false) {
 		const
-			containerReg = this.containers[containerId]
+			containerReg = this.containers[ containerId ]
 		
 		// if (DEBUG) {
 		// 	assert(containerReg, `Unknown container ${containerId}`)
-		// 	assert(containerReg.container && containerReg.element, `only ui containers can be focused, element is not available`)
-		// }
+		// 	assert(containerReg.container && containerReg.element, `only ui containers can be focused, element is not
+		// available`) }
 		
 		if (!containerReg || !containerReg.element) {
 			log.warn(`No container found for ${containerId}`)
@@ -1050,7 +1084,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 		const
 			doFocus = () => {
 				const
-					{element} = containerReg
+					{ element } = containerReg
 				
 				// log.debug(`Focusing on ${containerId}`, element)
 				// const
@@ -1078,8 +1112,9 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
  * Get the command manager from anywhere
  * @type {()=>CommandManager}
  */
-export const getCommandManager = getHot(module,'getCommandManager',new Proxy(function(){},{
-	apply: function(target,thisArg,args) {
+export const getCommandManager = getHot(module, 'getCommandManager', new Proxy(function () {
+}, {
+	apply: function (target, thisArg, args) {
 		return instanceContainer.clazz.getInstance()
 	}
 })) as () => ICommandManager
@@ -1091,12 +1126,12 @@ if (isElectron) {
 		removeShortcuts = () => getCommandManager().removeGlobalShortcut()
 	
 	if (isMain) {
-		Electron.app.on('will-quit',() => {
+		Electron.app.on('will-quit', () => {
 			removeShortcuts()
 			Electron.globalShortcut.unregisterAll()
 		})
 	} else {
-		Electron.remote.getCurrentWindow().on('close',removeShortcuts)
+		Electron.remote.getCurrentWindow().on('close', removeShortcuts)
 	}
 }
 
@@ -1112,7 +1147,7 @@ export type getCommandManagerType = typeof getCommandManager
 /**
  * Add getCommandManager onto the global scope
  */
-assignGlobal({getCommandManager})
+assignGlobal({ getCommandManager })
 
 /**
  * getCommandManager global declaration
@@ -1133,7 +1168,6 @@ declare global {
 }
 
 
-
 /**
  * Update the singleton on HMR reload & set root clazz
  */
@@ -1141,16 +1175,16 @@ instanceContainer.clazz = CommandManager
 
 if (instanceContainer.hotInstance) {
 	instanceContainer.hotInstance.detachEventHandlers()
-	Object.setPrototypeOf(instanceContainer.hotInstance,CommandManager.prototype)
+	Object.setPrototypeOf(instanceContainer.hotInstance, CommandManager.prototype)
 	instanceContainer.hotInstance.attachEventHandlers()
 }
 
-setDataOnHotDispose(module,() => ({
+setDataOnHotDispose(module, () => ({
 	// Tack on a ref to the hot instance so we know it's there
-	instanceContainer:assign(instanceContainer,{
+	instanceContainer: assign(instanceContainer, {
 		hotInstance: instanceContainer.instance
 	}),
 	getCommandManager
 }))
 
-acceptHot(module,log)
+acceptHot(module, log)

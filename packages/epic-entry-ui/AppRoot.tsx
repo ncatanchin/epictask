@@ -10,7 +10,6 @@ import {
 } from "epic-global"
 
 
-
 benchmarkLoadTime(`Starting to loading AppRoot`)
 
 import { Provider } from "react-redux"
@@ -46,7 +45,7 @@ import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/s
 
 import { AppStateType } from "epic-typedux/state/app"
 import { connect } from "react-redux"
-import {createStructuredSelector} from 'reselect'
+import { createStructuredSelector } from 'reselect'
 import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 
 // Logger, Store +++
@@ -88,7 +87,7 @@ export interface IAppRootProps extends IThemedAttributes {
 export interface IAppRootState {
 	windowStyle?:any
 	routeViewRef?:RouteView
-	routeView?: any
+	routeView?:any
 	
 	Routes?:any
 	Pages?:any
@@ -112,18 +111,11 @@ const
 	appStateType: appStateTypeSelector,
 	repoCount: availableRepoCountSelector
 }))
-@CommandComponent()
-@ThemedWithOptions({enableRef:true})
+@ThemedWithOptions({ enableRef: true })
 @PureRender
-class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements ICommandComponent {
+class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 	
 	uriProvider = new WindowHashURIProvider()
-	
-	/**
-	 * All global app root window commands
-	 */
-	commandItems = (builder:CommandContainerBuilder) =>
-		builder.make()
 	
 	
 	constructor(props, context) {
@@ -134,10 +126,6 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		}
 	}
 	
-	/**
-	 * Container id
-	 */
-	readonly commandComponentId:string = ContainerNames.AppRoot
 	
 	/**
 	 * On focus
@@ -188,12 +176,12 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	private onRoutesChanged = () => {
 		log.info(`Routes Loaded/Changed - loading`)
 		reloadRoutes()
-			
+		
 		
 		this.setState({
-			Routes,Pages
-		},this.checkRoute)
-			
+			Routes, Pages
+		}, this.checkRoute)
+		
 	}
 	
 	/**
@@ -202,7 +190,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	componentWillMount() {
 		this.onRoutesChanged()
 		
-		EventHub.on(EventHub.RoutesChanged,this.onRoutesChanged)
+		EventHub.on(EventHub.RoutesChanged, this.onRoutesChanged)
 		
 		this.checkRoute()
 		
@@ -227,25 +215,25 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 		})
 	}
 	
-	private checkRoute = _.debounce((props = this.props,router:Router = null,route:IRouteInstance<any> = null) => {
+	private checkRoute = _.debounce((props = this.props, router:Router = null, route:IRouteInstance<any> = null) => {
 		setImmediate(() => {
 			router = router || getValue(() => this.state.routeViewRef.getRouter())
 			route = route || getValue(() => router.getRoute()) || Object.values(Pages).find(it => it.defaultRoute)
 			
 			if (!router || !route)
-				return log.warn(`Router and route can not be null`,router,route)
+				return log.warn(`Router and route can not be null`, router, route)
 			
 			const
-				{uri:path} = route,
-				{uriProvider} = router,
-				{uri,params} = !uriProvider ? ({} as any) : uriProvider.getLocation(),
-				{repoCount,appStateType} = props,
+				{ uri:path } = route,
+				{ uriProvider } = router,
+				{ uri, params } = !uriProvider ? ({} as any) : uriProvider.getLocation(),
+				{ repoCount, appStateType } = props,
 				isAuthenticated = appStateType !== AppStateType.AuthLogin,
 				isLogin = uri === Pages.Login.uri,
 				isWelcome = uri === Pages.Welcome.uri,
-				isIDERoot = [null,'',Pages.IDE.uri].includes(uri)
+				isIDERoot = [ null, '', Pages.IDE.uri ].includes(uri)
 			
-			log.debug(`Checking root: ${uri} for IDE and no repos`,uri,path,isAuthenticated, isLogin,isIDERoot,repoCount)
+			log.debug(`Checking root: ${uri} for IDE and no repos`, uri, path, isAuthenticated, isLogin, isIDERoot, repoCount)
 			
 			if (!isAuthenticated) {
 				if (!isLogin) {
@@ -258,7 +246,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 			} else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
 				//log.warn(`temp - remove route change`)
 				log.debug(`Scheduling redirect to welcome/ide`)
-
+				
 				uriProvider.setLocation({
 					uri: repoCount < 1 ? Pages.Welcome.uri : Pages.IDE.uri,
 					params
@@ -266,7 +254,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 				
 			}
 		})
-	},100)
+	}, 100)
 	
 	/**
 	 * When the route changes come here
@@ -275,8 +263,8 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	 * @param router
 	 * @param route
 	 */
-	private onRouteChange = (event:RouterEvent,router:Router,route:IRouteInstance<any>) => {
-		this.checkRoute(this.props,router,route)
+	private onRouteChange = (event:RouterEvent, router:Router, route:IRouteInstance<any>) => {
+		this.checkRoute(this.props, router, route)
 	}
 	
 	
@@ -286,40 +274,35 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> implements IC
 	render() {
 		
 		const
-			{ theme,palette } = this.props,
-			{Routes} = this.state
+			{ theme, palette } = this.props,
+			{ Routes } = this.state
 		
 		return <StyleRoot style={makeStyle(Fill,{color: palette.text.primary})}>
-				
-				<CommandRoot
-					autoFocus
-					tabIndex={-1}
-					component={this}
+			
+			<div
 				id="appRoot"
 				style={Fill}>
-					
-					<MuiThemeProvider muiTheme={theme}>
-						<Provider store={this.props.store}>
-							
-							<RouteView
-								ref={(routeViewRef) => this.setState({routeViewRef},() => this.checkRoute())}
-								routerId="app-root"
-								routes={Routes}
-								onRouteChange={this.onRouteChange}
-								uriProvider={this.uriProvider}/>
-						
-						</Provider>
-					</MuiThemeProvider>
-					
 				
-			</CommandRoot>
+				<MuiThemeProvider muiTheme={theme}>
+					<Provider store={this.props.store}>
+						
+						<RouteView
+							ref={(routeViewRef) => this.setState({routeViewRef},() => this.checkRoute())}
+							routerId="app-root"
+							routes={Routes}
+							onRouteChange={this.onRouteChange}
+							uriProvider={this.uriProvider}/>
+					
+					</Provider>
+				</MuiThemeProvider>
 			
+			
+			</div>
+		
 		</StyleRoot>
 		
 	}
 }
-
-
 
 
 export default AppRoot

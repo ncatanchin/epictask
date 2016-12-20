@@ -109,7 +109,7 @@ class WindowFactory {
 	 */
 	async create(): Promise<Electron.BrowserWindow> {
 		let
-			newWindowId:string  = '-1'
+			newWindowId:number  = -1
 		
 		const
 			deferred = Promise.defer(),
@@ -132,7 +132,7 @@ class WindowFactory {
 		
 		try {
 			newWindow = new Electron.BrowserWindow(cloneObject(this.opts))
-			newWindowId = `${newWindow.id}`
+			newWindowId = newWindow.id
 			
 			// USE TO DEBUG WHEN WINDOWS NOT OPENING
 			// newWindow.show()

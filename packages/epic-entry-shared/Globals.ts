@@ -76,7 +76,7 @@ function getWindowIdGlobal():string {
 	let
 		Electron = require('electron')
 	
-	windowId = !Electron.remote ? 'main' : `${Electron.remote.getCurrentWindow().id}`
+	windowId = !Electron.remote ? -1 : Electron.remote.getCurrentWindow().id
 	
 	return windowId
 }
@@ -268,7 +268,7 @@ declare global {
 	function polyfillRequire(r:any)
 	
 	
-	function getWindowId():string
+	function getWindowId():number
 	function getProcessId():string
 	
 	function isStoreReady():boolean

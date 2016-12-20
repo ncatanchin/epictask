@@ -15,6 +15,7 @@ import { List } from 'immutable'
 import { getIssuesPanelSelector } from "./IssuesPanelController"
 import { TimeAgo, LabelChip, MilestoneLabel, RepoLabel } from "epic-ui-components/common"
 import { isHovering } from "epic-styles/styles"
+import { isNil } from "typeguard"
 
 const
 	log = getLogger(__filename)
@@ -235,7 +236,7 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 						<div style={issueTitleStyle}>
 							{issue.title}
 							{/* LABELS */}
-							{issue.labels.map(label =>
+							{issue.labels.filter(label => !isNil(label)).map(label =>
 								<LabelChip
 									key={label.id}
 									label={label}
@@ -325,7 +326,7 @@ export class IssueItem extends React.Component<IIssueItemProps,any> {
 								<div style={styles.labels}>
 									
 									{/* LABELS */}
-									{issue.labels.map(label =>
+									{issue.labels.filter(label => !isNil(label)).map(label =>
 										<LabelChip
 											key={label.id}
 											label={label}

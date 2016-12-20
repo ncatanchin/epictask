@@ -420,7 +420,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 *
 	 * @param windowId
 	 */
-	closeWindow(windowId:string = getWindowId()) {
+	closeWindow(windowId:number = getWindowId()) {
 		getWindowManagerClient().close(windowId)
 	}
 	

@@ -851,6 +851,7 @@ export class IssuesPanel extends React.Component<IIssuesPanelProps,IIssuesPanelS
 		
 		
 		return <CommandRoot
+			tabIndex={0}
 			autoFocus={true}
 			component={this}
 			style={styles.panel}

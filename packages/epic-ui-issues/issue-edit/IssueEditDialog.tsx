@@ -141,19 +141,6 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		let
 			issue = getValue(() => this.viewState.editingIssue)
 		
-		if (!issue) {
-			
-			const
-				{repo} = this
-			
-			log.debug(`Creating new issue using repo`,repo,`stored repo id is`,repoIdValue.get())
-			
-			issue = new Issue({
-				repo,
-				repoId: repo.id
-			})
-		}
-		
 		return issue
 	}
 	
@@ -210,11 +197,13 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	 * @param newIssueProps
 	 */
 	private updateIssueState = (newIssueProps) => {
-		if (!this.viewState.ready && this.props.params.issueId !== '-1')
-			return null
 		
 		let
 			{ editingIssue } = this
+		
+		if (!editingIssue || (!this.viewState.ready && this.props.params.issueId !== '-1'))
+			return null
+		
 		
 		
 		editingIssue = cloneObjectShallow(editingIssue, newIssueProps)
@@ -456,11 +445,16 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 	render() {
 		
 		const
-			{ styles, palette, theme, open, user, availableRepos } = this.props,
-			{ ready, saveError, saving } = this.viewState
+			{ styles, palette, theme, open, user, availableRepos } = this.props
 		
 		let
-			{ editingIssue } = this,
+			{ ready, editingIssue, saveError, saving } = this.viewState
+		
+		if (!ready || !editingIssue) {
+			return <div />
+		}
+		
+		let
 			titleValue = getValue(() => this.state.titleValue, editingIssue.title || ''),
 			repoId = editingIssue.repoId
 		
@@ -556,9 +550,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 						                  style={makeStyle(Styles.FillWidth,{marginBottom: rem(1.5)})}
 						                  availableLabels={availableRepo.labels || []}
 						                  onLabelsChanged={this.onLabelsChanged}
-						                  onKeyDown={(event) => {
-					                  	getCommandManager().handleKeyDown(event as any,true)
-					                  }}
+						                  
 						
 						/>
 					</div>

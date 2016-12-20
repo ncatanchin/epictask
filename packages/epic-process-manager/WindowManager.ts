@@ -22,6 +22,7 @@ import {
 import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-manager-client/WindowConfig"
 import WindowPool from "./WindowPool"
 import { WindowPositionManager } from "epic-process-manager/WindowPositionManager"
+import { isNumber } from "typeguard"
 
 assert(Env.isMain,`WindowManager ONLY loads on main`)
 
@@ -159,12 +160,12 @@ export class WindowManager {
 	 * @param idOrContents
 	 * @returns {IWindowInstance}
 	 */
-	getWindowInstance(idOrContents:string|Electron.WebContents) {
+	getWindowInstance(idOrContents:number|Electron.WebContents) {
 		return this.windows.find(win =>
 			[ win.id, win.name, win.webContents ].includes(idOrContents))
 	}
 	
-	isWindowInstancePersistent(idOrContents:string|Electron.WebContents) {
+	isWindowInstancePersistent(idOrContents:number|Electron.WebContents) {
 		const
 			win = this.getWindowInstance(idOrContents)
 		
@@ -237,7 +238,7 @@ export class WindowManager {
 	 * @param remove - singleWindows delete themselves on close
 	 *
 	 */
-	private updateWindowState(id:string, patch:any, remove = false) {
+	private updateWindowState(id:number, patch:any, remove = false) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -270,7 +271,7 @@ export class WindowManager {
 	 * @param patch
 	 * @param remove
 	 */
-	private onWindowExit(id:string, patch,remove:boolean = false) {
+	private onWindowExit(id:number, patch,remove:boolean = false) {
 		this.updateWindowState(
 			id,
 			assign(patch, {
@@ -288,7 +289,7 @@ export class WindowManager {
 	 *
 	 * @returns {boolean}
 	 */
-	isRunning(id:string):boolean {
+	isRunning(id:number):boolean {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -299,7 +300,7 @@ export class WindowManager {
 	/**
 	 * Update heartbeat and schedule next
 	 */
-	private heartbeat(id:string) {
+	private heartbeat(id:number) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -320,7 +321,7 @@ export class WindowManager {
 	 *
 	 * @param id
 	 */
-	private clearHeartbeatTimeout(id:string) {
+	private clearHeartbeatTimeout(id:number) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -355,7 +356,7 @@ export class WindowManager {
 	/**
 	 * Schedule next heartbeat
 	 */
-	private scheduleHeartbeat(id:string) {
+	private scheduleHeartbeat(id:number) {
 		const
 			win = this.getWindowInstance(id)
 		
@@ -367,7 +368,7 @@ export class WindowManager {
 	/**
 	 * Send heartbeat message
 	 */
-	private sendHeartbeat(id:string) {
+	private sendHeartbeat(id:number) {
 		this.clearHeartbeatTimeout(id)
 		
 		if (!this.isRunning(id))
@@ -412,7 +413,7 @@ export class WindowManager {
 	/**
 	 * Completes connection to client webview
 	 */
-	private makeConnect(id:string) {
+	private makeConnect(id:number) {
 		return () => {
 			
 			let
@@ -482,18 +483,18 @@ export class WindowManager {
 	 *
 	 * @param idsOrNames
 	 */
-	close(...idsOrNames:string[])
+	close(...idsOrNames:number[])
 	/**
 	 * Window instances
 	 * @param windowInstances
 	 */
 	close(...windowInstances:IWindowState[])
-	close(...idOrWindowInstances:Array<IWindowState|string>) {
+	close(...idOrWindowInstances:Array<IWindowState|number>) {
 		let
 			
 			// CREATE REMOVE LIST
 			windowsToClose:IWindowInstance[] = this.windows.filter(it =>
-				idOrWindowInstances.find(criteria => isString(criteria) ?
+				idOrWindowInstances.find(criteria => isNumber(criteria) || isString(criteria) ?
 					
 					// IF IDS OR CONFIG NAMES - MATCH
 					[ it.id, it.config.uri, it.url ].includes(criteria) :
@@ -632,7 +633,7 @@ export class WindowManager {
 			const
 				pool = WindowPool.get(processType,type),
 				newWindow = await pool.acquire(), //new Electron.BrowserWindow(Object.assign({}, newWindowOpts, savedWindowState)),
-				id = `${newWindow.id}`
+				id = newWindow.id
 			
 			
 			

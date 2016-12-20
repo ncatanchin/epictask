@@ -1,11 +1,12 @@
 import { Map, Record, List } from "immutable"
 import IssueEditState from "./IssueEditState"
-import { cloneObjectShallow } from "epic-global"
+import { cloneObjectShallow, PersistentValue } from "epic-global"
 import { getValue } from "typeguard"
-import { Issue } from "epic-models"
+import { Issue, Repo } from "epic-models"
 import { getIssueActions } from "epic-typedux/provider"
 import {EventEmitter} from 'events'
 import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import { availableReposSelector } from "epic-typedux/selectors"
 /**
  * Created by jglanz on 11/12/16.
  */
@@ -15,6 +16,10 @@ const
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
+
+const
+	repoIdValue = new PersistentValue<number>('createIssueRepoId')
+
 
 /**
  * IssueEditController
@@ -35,7 +40,76 @@ class IssueEditController extends EventEmitter implements IViewController<IssueE
 		this.state = initialState
 	}
 	
+	/**
+	 * Get the current editing issue repo
+	 *
+	 * @returns {Repo}
+	 */
+	private get repo():Repo {
+		const
+			availableRepos = availableReposSelector(getStoreState()),
+			issue = getValue(() => this.state.editingIssue)
+		
+		if (!availableRepos.size)
+			return getValue(() => issue.repo)
+		
+		let
+			repo:Repo
+		
+		
+		if (issue) {
+			if (issue.repo) {
+				return issue.repo
+			} else if (issue.repoId) {
+				const
+					availRepo = availableRepos.find(it => `${it.id}` === `${issue.repoId}`)
+				
+				repo = getValue(() => availRepo.repo,null)
+			}
+		}
+		
+		if (!repo) {
+			const
+				repoId = repoIdValue.get()
+			
+			if (repoId) {
+				repo = getValue(() => availableRepos.find(it => `${it.repo.id}` === `${repoId}`).repo)
+			}
+			
+			if (!repo)
+				repo = getValue(() => availableRepos.get(0).repo)
+		}
+		
+		return repo
+	}
+	
+	newIssue() {
+		const
+			{repo} = this
+		
+		if (!repo)
+			return null
+		
+		log.debug(`Creating new issue using repo`,repo,`stored repo id is`,repoIdValue.get())
+		
+		this.setEditingIssue(new Issue({
+				repo,
+				repoId: repo.id
+		}))
+		
+		
+		
+		
+	}
+	
 	setMounted(mounted:boolean,props,cb) {
+		// ALWAYS NULL ISSUE ON MOUNT
+		if (mounted) {
+			this.updateState({
+				editingIssue: null
+			})
+		}
+		
 		if (this.init)
 			return
 		
@@ -49,6 +123,7 @@ class IssueEditController extends EventEmitter implements IViewController<IssueE
 			})
 		
 		if (!issueId || ["-1",-1,0,null].includes(issueId)) {
+			this.newIssue()
 			setReady()
 			cb && cb()
 		} else {

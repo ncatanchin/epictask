@@ -10,6 +10,8 @@ import { SettingsSection, SettingsField } from "./SettingsElements"
 import { makeWidthConstraint } from "epic-styles/styles"
 import { getUIActions, getAppActions } from "epic-typedux/provider"
 import { customAcceleratorsSelector } from "epic-typedux/selectors"
+import { CommandType } from "epic-command-manager"
+import { isEmpty } from "epic-global"
 
 
 // Constants
@@ -119,7 +121,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 		
 		const
 			title = <div style={makeStyle(Styles.FlexRowCenter,Styles.FlexScale)}>
-				<div style={Styles.FlexScale}>Shortcuts</div>
+				<div style={Styles.FlexScale}>Global Shortcuts</div>
 				<TextField
 					onChange={this.onFilterChange}
 					defaultValue=''
@@ -136,51 +138,82 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 				
 				{CommandRegistryScope.all()
 					.filter(cmd =>
+						cmd.type === CommandType.Global &&
+						isDefined(cmd.defaultAccelerator) &&
+						(isEmpty(filterText) || cmd.name.toLowerCase().indexOf(filterText.toLowerCase()) > -1))
+					
+					.map((cmd) => <KeyField
+						key={cmd.name}
+						cmd={cmd}
+						customAccelerators={customAccelerators}
+						editor={this}
+						styles={styles}/>)}
+			
+			</SettingsSection>
+			
+			<SettingsSection
+				styles={styles}
+				iconName="keyboard"
+				iconSet="material-icons"
+				title='App Shortcuts'>
+				
+				{CommandRegistryScope.all()
+					.filter(cmd =>
+						cmd.type !== CommandType.Global &&
 						isDefined(cmd.defaultAccelerator) &&
 						(
 							getValue(() => filterText.length, 0) < 1 ||
 							cmd.name.toLowerCase().indexOf(filterText.toLowerCase()) > -1
 						)
 					)
-					.map((cmd) => {
-						const
-							customAccelerator = customAccelerators.get(cmd.id),
-							accelerator = new CommandAccelerator(customAccelerator || cmd.defaultAccelerator)
-						
-						if (customAccelerator)
-							log.debug(`Custom "${cmd.name}" mapped to accelerator: ${customAccelerator}, parsed as ${accelerator.toElectronAccelerator()}`)
-						
-						return <SettingsField key={cmd.id} styles={styles} label={cmd.name}>
-							<div style={[Styles.FlexRow,Styles.makeFlexAlign('center','flex-end')]}>
-								
-								<KeyboardAccelerator
-									style={makeStyle(styles.accelerator,customAccelerator && styles.accelerator.custom)}
-									accelerator={accelerator}/>
-								
-								<Button
-									style={Styles.makeMarginRem(0,0,0,1.5)}
-									onClick={() => this.captureAccelerator(cmd)}>
-									SET
-								</Button>
-								
-								<div style={styles.reset}>
-									{customAccelerator &&
-									<Button
-										style={styles.reset.button}
-										mode="warn"
-										onClick={() => this.clearAccelerator(cmd)}>reset</Button>
-									}
-								</div>
-							</div>
-						
-						</SettingsField>
-					})}
+					
+					.map((cmd) => <KeyField
+						key={cmd.name}
+						cmd={cmd}
+						customAccelerators={customAccelerators}
+						editor={this}
+						styles={styles}/>)}
 			
 			</SettingsSection>
 		
 		</div>
 	}
 	
+}
+
+function KeyField({styles,cmd,customAccelerators,editor}) {
+	const
+		customAccelerator = customAccelerators.get(cmd.id),
+		accelerator = new CommandAccelerator(customAccelerator || cmd.defaultAccelerator)
+	
+	if (customAccelerator)
+		log.debug(`Custom "${cmd.name}" mapped to accelerator: ${customAccelerator}, parsed as ${accelerator.toElectronAccelerator()}`)
+	
+	
+	return <SettingsField key={cmd.id} styles={styles} label={cmd.name}>
+		<div style={makeStyle(Styles.FlexRow,Styles.makeFlexAlign('center','flex-end'))}>
+			
+			<KeyboardAccelerator
+				style={makeStyle(styles.accelerator,customAccelerator && styles.accelerator.custom)}
+				accelerator={accelerator}/>
+			
+			<Button
+				style={Styles.makeMarginRem(0,0,0,1.5)}
+				onClick={() => editor.captureAccelerator(cmd)}>
+				SET
+			</Button>
+			
+			<div style={styles.reset}>
+				{customAccelerator &&
+				<Button
+					style={styles.reset.button}
+					mode="warn"
+					onClick={() => editor.clearAccelerator(cmd)}>reset</Button>
+				}
+			</div>
+		</div>
+	
+	</SettingsField>
 }
 
 

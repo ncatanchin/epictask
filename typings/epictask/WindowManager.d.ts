@@ -21,7 +21,7 @@ declare interface IWindowConfig {
 	/**
 	 * An id can be provided
 	 */
-	id?: string
+	id?: number
 	
 	/**
 	 * Id used for position state
@@ -85,7 +85,6 @@ declare interface IWindowConfig {
  * Window state
  */
 declare interface IWindowState extends IWindowConfig {
-	id: string
 	
 	url: string
 	

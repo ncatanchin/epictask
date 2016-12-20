@@ -41,7 +41,7 @@ function loadReactotron() {
 loadReactotron()
 
 function getLogPrefix() {
-	return getValue(() => getWindowId(),ProcessConfig.getTypeName())
+	return getValue(() => '' + getWindowId(),ProcessConfig.getTypeName())
 }
 
 /**

@@ -7,7 +7,7 @@ import { reviveImmutable } from "epic-global/ModelUtil"
 import { getValue } from "epic-global/ObjectUtil"
 
 
-export type TWindowMap = Map<string,IWindowState>
+export type TWindowMap = Map<number,IWindowState>
 
 /**
  * The underlying app state record for immutability
@@ -59,7 +59,7 @@ export class AppState extends AppStateRecord {
 	settings:Settings
 	user:User
 	messages:List<INotification>
-	windows:Map<string,IWindowState>
+	windows:Map<number,IWindowState>
 	customAccelerators: Map<string,string>
 
 

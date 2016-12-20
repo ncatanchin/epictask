@@ -2,7 +2,7 @@ import {List} from 'immutable'
 
 
 
-import { isObject,getValue as getValueGlobal } from  "typeguard"
+import { isObject, getValue as getValueGlobal, isNil } from  "typeguard"
 
 export const getValue = getValueGlobal
 
@@ -246,3 +246,6 @@ export function convertEnumValuesToString(obj) {
 	return obj;
 }
 
+export function isEmpty(o:any) {
+	return isNil(o) || getValue(() => o.length, 0) < 1
+}

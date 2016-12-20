@@ -2,6 +2,7 @@ import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions } from "epic-typedux/provider"
 import { getWindowManagerClient } from "epic-process-manager-client"
+import { windowsSelector } from "epic-typedux/selectors"
 
 
 
@@ -94,7 +95,19 @@ CommandRegistryScope.Register(
 	type: CommandType.App,
 	name: "Close Window",
 	defaultAccelerator: "CommandOrControl+w",
-	execute: (item, event) => getWindowManagerClient().getWindowStates().length > 1 ? getUIActions().closeWindow() : quitApp()
+	execute: (item, event) => {
+		const
+			windows = windowsSelector(getStoreState()),
+			wConfig = windows.find(it => it.id === getWindowId())
+		
+		
+		if (wConfig.type !== WindowType.Normal || windows.filter(it => it.type === WindowType.Normal).size > 1) {
+			getUIActions().closeWindow()
+		}	else {
+			quitApp()
+		}
+				 
+	}
 },
 
 // SYNC EVERYTHING

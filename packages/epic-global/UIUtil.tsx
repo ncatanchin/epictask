@@ -1,4 +1,4 @@
-import { getValue, isFunction } from "typeguard"
+import { getValue, isFunction, isString } from "typeguard"
 
 import { shallowEquals,cloneObjectShallow } from "./ObjectUtil"
 
@@ -349,4 +349,17 @@ export function stopEvent(event) {
 
 export function makeStopEvent(event) {
 	return () => stopEvent(event)
+}
+
+export function getZIndex (element) {
+	let
+		z = window.document.defaultView.getComputedStyle(element).getPropertyValue('z-index') as any
+	
+	if (isString(z))
+		z = parseInt(z,10)
+	
+	if (isNaN(z))
+		return getZIndex(element.parentNode)
+	
+	return z
 }

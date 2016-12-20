@@ -18,7 +18,7 @@ export function getWindowManagerClient():IWindowManagerClient {
 		return windowManagerClientProvider()
 	
 	if (Env.isMain) {
-		windowManagerClientProvider = require('epic-process-manager/WindowManager').getWindowManager()
+		windowManagerClientProvider = () => require('epic-process-manager/WindowManager').getWindowManager()
 	} else {
 		windowManagerClientProxy = new Proxy({},{
 			get: function(target,prop,receiver) {
