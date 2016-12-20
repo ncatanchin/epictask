@@ -3,19 +3,11 @@ import { SearchField } from "epic-ui-components/search"
 import { makeAbsolute, makeHeightConstraint, ThemedStyles, IThemedAttributes } from "epic-styles"
 
 import {
-	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder
-} from  "epic-command-manager-ui"
-import {
 	getCommandManager,
 	ContainerNames
 } from "epic-command-manager"
 import { CommandMenuRoot } from "epic-ui-components"
-import { WindowControls, RainbowIndicator, PureRender } from "epic-ui-components/common"
-import { colorDarken } from "epic-styles/styles"
-
-export const
-	ImageLogoFile = require('assets/images/epictask-logo-rainbow.png')
+import { WindowControls, PureRender } from "epic-ui-components/common"
 
 const
 	log = getLogger(__filename)

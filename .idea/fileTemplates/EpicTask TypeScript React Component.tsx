@@ -7,7 +7,7 @@
 import { Map,Record,List } from "immutable"
 import {connect} from 'react-redux'
 import {createStructuredSelector,createSelector} from 'reselect'
-import {PureRender} from 'epic-ui-components/common'
+import {PureRender} from 'epic-ui-components'
 import {IThemedAttributes,ThemedStyles} from 'epic-styles'
 
 

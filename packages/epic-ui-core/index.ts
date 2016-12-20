@@ -72,12 +72,7 @@ const CoreRouteConfigs = {
 }
 Object.values(CoreRouteConfigs).forEach(RouteRegistryScope.Register)
 
-/**
- * Quit Epictask
- */
-function quitApp() {
-	require('electron').remote.app.quit()
-}
+
 
 CommandRegistryScope.Register(
 // QUIT
@@ -86,7 +81,7 @@ CommandRegistryScope.Register(
 	type: CommandType.App,
 	name: "Quit",
 	defaultAccelerator: "CommandOrControl+q",
-	execute: (item, event) => quitApp()
+	execute: (item, event) => getUIActions().quit()
 },
 
 // CLOSE WINDOW
@@ -95,19 +90,7 @@ CommandRegistryScope.Register(
 	type: CommandType.App,
 	name: "Close Window",
 	defaultAccelerator: "CommandOrControl+w",
-	execute: (item, event) => {
-		const
-			windows = windowsSelector(getStoreState()),
-			wConfig = windows.find(it => it.id === getWindowId())
-		
-		
-		if (wConfig.type !== WindowType.Normal || windows.filter(it => it.type === WindowType.Normal).size > 1) {
-			getUIActions().closeWindow()
-		}	else {
-			quitApp()
-		}
-				 
-	}
+	execute: (item, event) => getUIActions().closeWindow()
 },
 
 // SYNC EVERYTHING

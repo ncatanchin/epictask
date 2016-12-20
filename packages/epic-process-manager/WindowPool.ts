@@ -1,5 +1,4 @@
-import { Map, Record, List } from "immutable"
-import {BrowserWindow} from 'electron'
+import { Map } from "immutable"
 import WindowFactory from "epic-process-manager/WindowFactory"
 import { getHot, setDataOnHotDispose, acceptHot, addHotDisposeHandler } from "epic-global"
 import { WindowConfigDefaults } from "epic-process-manager-client/WindowConfig"
@@ -38,6 +37,7 @@ const
 		[WindowType.Background]: {
 			testOnBorrow: true
 		},
+		[WindowType.Tray]: NormalPoolOpts,
 		[WindowType.Normal]: NormalPoolOpts,
 		[WindowType.Dialog]: NormalPoolOpts,
 		//[WindowType.Modal]: NormalPoolOpts
@@ -49,9 +49,7 @@ const
 	 * ProcessType -> [WindowType]
 	 */
 	DefaultPoolConfigs = {
-		[ProcessType.UI]: [WindowType.Normal,WindowType.Modal,WindowType.Dialog]
-		// [ProcessType.DatabaseServer]: [WindowType.Background],
-		// [ProcessType.JobServer]: [WindowType.Background]
+		[ProcessType.UI]: [WindowType.Normal,WindowType.Tray,WindowType.Modal,WindowType.Dialog]
 	}
 
 

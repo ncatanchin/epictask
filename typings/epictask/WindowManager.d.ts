@@ -2,9 +2,10 @@
 
 declare enum WindowType {
 	Normal = 1,
-	Dialog = 2,
-	Modal = 3,
-	Background = 4
+	Tray = 2,
+	Dialog = 3,
+	Modal = 4,
+	Background = 5
 }
 
 /**

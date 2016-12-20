@@ -86,19 +86,29 @@ export const
  * Default window props for all but Background processes
  */
 export const WindowDefaultOpts = Object.assign(AllWindowDefaults, {
-	minHeight: 200,
-	minWidth: 200,
+	minWidth: 700,
+	minHeight: 500,
 	width: 1024,
 	height: 728,
 	icon: WindowIcon256
 })
 
 /**
+ * Tray Window Defaults
+ */
+export const WindowTrayDefaultOpts = Object.assign({}, WindowDefaultOpts, {
+	minWidth: 400,
+	minHeight: 400,
+	width: 400,
+	height: 400
+})
+
+/**
  * Dialog defaults
  */
 export const WindowDialogDefaultOpts = Object.assign({}, WindowDefaultOpts, {
+	minWidth: 700,
 	minHeight: 500,
-	minWidth: 500,
 	width: 800,
 	height: 600
 })
@@ -125,6 +135,7 @@ export const WindowBackgroundDefaultOpts = Object.assign(
  */
 export const WindowOptionDefaults = {
 	[WindowType.Normal]: WindowDefaultOpts,
+	[WindowType.Tray]: WindowTrayDefaultOpts,
 	[WindowType.Dialog]: WindowDialogDefaultOpts,
 	[WindowType.Modal]: WindowModalDefaultOpts,
 	[WindowType.Background]: WindowBackgroundDefaultOpts
@@ -144,6 +155,19 @@ export const WindowConfigNormalDefaults = {
 	showDevTools: Env.isDev,
 	storeWindowState: true,
 	opts: WindowDefaultOpts
+}
+
+/**
+ * Tray defaults
+ */
+export const WindowConfigTrayDefaults = {
+	type: WindowType.Tray,
+	processType: ProcessType.UI,
+	singleWindow: true,
+	autoRestart: false,
+	showDevTools: Env.isDev,
+	storeWindowState: false,
+	opts: WindowTrayDefaultOpts
 }
 
 /**
@@ -187,6 +211,7 @@ export const WindowConfigBackgroundDefaults = {
 
 export const WindowConfigDefaults = {
 	[WindowType.Normal]: WindowConfigNormalDefaults,
+	[WindowType.Tray]: WindowConfigTrayDefaults,
 	[WindowType.Dialog]: WindowConfigDialogDefaults,
 	[WindowType.Modal]: WindowConfigModalDefaults,
 	[WindowType.Background]: WindowConfigBackgroundDefaults

@@ -52,8 +52,10 @@ import JQueryGlobal from 'jquery'
 import RadiumGlobal from 'radium'
 
 import EventHub,{TEventHub} from  './EventHub'
+
 import * as Constants from 'epic-global/Constants'
 import { AppEventType } from "epic-global/Constants"
+
 
 
 // ADD EVENTS TO GLOBAL
@@ -204,6 +206,13 @@ function installGlobals() {
 		
 		
 		getWindowId: getWindowIdGlobal,
+		getWindowConfig() {
+			const
+				windowId = getWindowIdGlobal(),
+				windows = getStoreState().get(Constants.AppKey).windows
+				
+		  return windows.find(it => it.id === windowId)
+		},
 		getProcessId,
 		getCurrentWindow: getCurrentWindowGlobal
 	})
@@ -267,7 +276,7 @@ declare global {
 	// POLYFILL REQUIRE
 	function polyfillRequire(r:any)
 	
-	
+	function getWindowConfig():IWindowState
 	function getWindowId():number
 	function getProcessId():string
 	
@@ -314,14 +323,22 @@ declare global {
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var node_require:typeof __non_webpack_require__
 	
-	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var moment:typeof momentGlobal
-	var React:typeof ReactGlobal
-	var ReactDOM:typeof ReactDOMGlobal
-	var Notification:any
-	var $:typeof JQueryGlobal
-	//var logError:typeof logErrorGlobal
 	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var React:typeof ReactGlobal
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var ReactDOM:typeof ReactDOMGlobal
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var Notification:any
+	
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var $:typeof JQueryGlobal
+	
+	//var logError:typeof logErrorGlobal
 	var Radium:typeof RadiumGlobal
 	
 	interface Window {

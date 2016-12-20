@@ -137,7 +137,8 @@ function loadMainApp() {
 		// MARK ALL READY
 		[
 			"set app ready",
-			() => require('epic-typedux/provider').getAppActions().setReady(true)
+			() => require('epic-typedux/provider').getAppActions().setReady(true),
+			() => require('./TrayLauncher').default.start()
 		],
 		
 		// HIDE SPLASH

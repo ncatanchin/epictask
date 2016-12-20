@@ -18,6 +18,7 @@ export const AppStateRecord:Record.Class = Record({
 	stateType:AppStateType.AuthLogin,
 	settings: new Settings(),
 	ready: false,
+	trayOpen: false,
 	user: null,
 	customAccelerators: Map<string,string>(),
 	messages:List<INotification>(),
@@ -56,6 +57,7 @@ export class AppState extends AppStateRecord {
 	
 	stateType:AppStateType
 	ready:boolean
+	trayOpen:boolean
 	settings:Settings
 	user:User
 	messages:List<INotification>

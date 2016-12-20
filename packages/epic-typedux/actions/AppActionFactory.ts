@@ -8,6 +8,7 @@ import { User } from "epic-models"
 import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
 import { Settings } from "epic-global/settings/Settings"
+import { getWindowManagerClient } from "epic-process-manager-client"
 
 
 const
@@ -251,6 +252,55 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 				return newWindowMap
 			})
 		)
+	}
+	
+	/**
+	 * State reducer for the trayOpen value
+	 *
+	 * @param open
+	 */
+	@ActionReducer()
+	private setTrayOpen(open:boolean) {
+		return (state:AppState) => state.set('trayOpen',open)
+	}
+	
+	private getTrayWindow() {
+		const
+			{windows} = this.state
+		
+		const
+			winState = windows.find(it => it.type === WindowType.Tray)
+		
+		assert(winState,`Win state does not exist for a tray window`)
+		
+		return getWindowManagerClient().getWindowInstance(winState.id)
+		
+	}
+	
+	/**
+	 * Open the tray window
+	 */
+	
+	openTray() {
+		if (this.state.trayOpen) {
+			return log.debug(`Tray is already open`)
+		}
+		
+		this.getTrayWindow().window.show()
+		this.setTrayOpen(true)
+	}
+	
+	/**
+	 * Close the tray window
+	 */
+	
+	closeTray() {
+		if (!this.state.trayOpen) {
+			return log.debug(`Tray is already closed`)
+		}
+		
+		this.getTrayWindow().window.hide()
+		this.setTrayOpen(false)
 	}
 	
 	/**

@@ -14,6 +14,21 @@ const IssueRouteConfigs = {
 	/**
 	 * Issue Edit Dialog
 	 */
+	IssueTray: {
+		name: 'IssueTray',
+		uri: 'dialog/issue-tray',
+		showDevTools: false,
+		provider: makePromisedComponent((resolver: TComponentResolver) =>
+			require.ensure([], function (require: any) {
+				resolver.resolve(require('epic-ui-issues/issue-tray').IssueTray)
+			}))
+		
+		
+	},
+	
+	/**
+	 * Issue Edit Dialog
+	 */
 	IssueEditDialog: {
 		name: 'IssueEditDialog',
 		uri: 'dialog/issue-edit/:issueId',

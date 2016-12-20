@@ -11,6 +11,11 @@ export const appStateSelector:(state) => AppState = createSelector(
 	(appState:AppState) => appState
 )
 
+export const trayOpenSelector:TSelector<boolean> = createSelector(
+	appStateSelector,
+	(appState:AppState) => appState.trayOpen
+)
+
 export const messagesSelector:(state) => List<INotification> = createSelector(
 	appStateSelector,
 	(state:AppState) => state.messages

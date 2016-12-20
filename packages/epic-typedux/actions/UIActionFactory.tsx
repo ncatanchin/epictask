@@ -13,12 +13,20 @@ import {getWindowManagerClient} from "epic-process-manager-client"
 import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
 import ViewState from "epic-typedux/state/window/ViewState"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
+import { windowsSelector } from "epic-typedux/selectors"
 
 
 // Import only as type - in case we are not on Renderer
 const
 	log = getLogger(__filename),
 	{Left,Right,Bottom,Popup} = ToolPanelLocation
+
+/**
+ * Quit Epictask
+ */
+function quitApp() {
+	require('electron').remote.app.quit()
+}
 
 
 declare global {
@@ -414,14 +422,46 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		this.updateTool(completeTool)
 		
 	}
-
+	
+	/**
+	 * Quit the app
+	 */
+	quit() {
+		quitApp()
+	}
+	
+	/**
+	 * Create a window config with default opts and a url
+	 *
+	 * @param opts
+	 * @param uri
+	 */
+	private makeWindowConfig(opts,uri:string = null):IWindowConfig {
+		return cloneObjectShallow(WindowConfigDialogDefaults,uri && {
+			uri
+		}) as IWindowConfig
+	}
+	
 	/**
 	 * Close a window
 	 *
 	 * @param windowId
 	 */
 	closeWindow(windowId:number = getWindowId()) {
-		getWindowManagerClient().close(windowId)
+		const
+			windows = windowsSelector(getStoreState()),
+			wConfig = windows.find(it => it.id === getWindowId()),
+			normalWindowCount = windows.filter(it => it.type === WindowType.Normal).size
+		
+		if (wConfig.type === WindowType.Tray) {
+			getWindowManagerClient().close(windowId)
+		} else if (wConfig.type !== WindowType.Normal || normalWindowCount > 1) {
+			getWindowManagerClient().close(windowId)
+		}	else {
+			quitApp()
+		}
+		
+		
 	}
 	
 	/**
@@ -441,14 +481,14 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			config:IWindowConfig
 		
 		if (isString(configOrURI)) {
-			config = cloneObjectShallow(WindowConfigDialogDefaults,{
-				uri:configOrURI
-			}) as any
-		} else
-			config = cloneObjectShallow(configOrURI)
+			config = this.makeWindowConfig(WindowConfigDialogDefaults,configOrURI)
+		} else {
+			config = this.makeWindowConfig(configOrURI)
+		}
 		
 		getWindowManagerClient().open(config)
 	}
+	
 	
 	/**
 	 * Focus on app root

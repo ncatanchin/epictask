@@ -505,8 +505,6 @@ export class WindowManager {
 			)
 		
 		//log.debug(`Going to close windows`,windowsToClose,'from config',idOrWindowInstances)
-		
-		
 		// ITERATE AND DESTROY/REMOVE
 		while (windowsToClose.length) {
 			const
