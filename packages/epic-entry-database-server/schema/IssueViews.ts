@@ -129,6 +129,22 @@ const IssueViews = {
 		}`,
 		
 		reduce: reduceIssuesToMap
+	},
+	
+	byFocused: {
+		map: `function (doc) {
+			if (doc && doc.attrs && doc.attrs.focused === true) {
+				
+				let
+					attrs = doc.attrs,
+					sortFields = ${SortFieldsTemplate}
+				
+				emit([ attrs.repoId], [sortFields])
+			}
+			
+		}`,
+		
+		reduce: reduceIssuesToMap
 	}
 	
 	

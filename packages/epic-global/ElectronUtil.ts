@@ -51,6 +51,46 @@ export function inElectron():boolean {
 }
 
 
+
+declare global {
+	interface Point {
+		x:number
+		y:number
+	}
+}
+
+
+export function isPointInBounds({x,y}:Point,bounds:Electron.Rectangle) {
+	return bounds.x <= x && bounds.x + bounds.width >= x &&
+		bounds.y <= y && bounds.y + bounds.y + bounds.height >= y
+}
+
+export function isBoundsWithinBounds(bounds:Electron.Rectangle,test:Electron.Rectangle) {
+	const
+		points = [
+			{x:bounds.x,y:bounds.y},
+			{x:bounds.x + bounds.width,y:bounds.y},
+			{x:bounds.x + bounds.width,y:bounds.y + bounds.height},
+			{x:bounds.x,y:bounds.y + bounds.height}
+		]
+	
+	return points.every(p => isPointInBounds(p,test))
+}
+
+
+
+export function getDisplayForPoint(p:Point):Electron.Display {
+	let
+		electron = require('electron')
+	
+	electron = electron.remote as any || electron
+	
+	const
+		displays = electron.screen.getAllDisplays()
+	
+	return displays.find(it => isPointInBounds(p,it.bounds))
+}
+
 /**
  * Test platform
  *

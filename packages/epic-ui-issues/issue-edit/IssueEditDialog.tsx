@@ -82,8 +82,6 @@ export interface IIssueEditDialogState {
 	user: appUserSelector,
 	availableRepos: availableReposSelector
 }))
-
-
 @ThemedStyles(baseStyles, 'dialog', 'issueEditDialog', 'form')
 @PureRender
 export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssueEditDialogState> {

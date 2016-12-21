@@ -4,7 +4,7 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter
+	nilFilter, guard
 } from "epic-global"
 import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
@@ -450,11 +450,15 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	closeWindow(windowId:number = getWindowId()) {
 		const
 			windows = windowsSelector(getStoreState()),
-			wConfig = windows.find(it => it.id === getWindowId()),
+			wConfig = windows.find(it => it.id === windowId),
 			normalWindowCount = windows.filter(it => it.type === WindowType.Normal).size
 		
 		if (wConfig.type === WindowType.Tray) {
-			getWindowManagerClient().close(windowId)
+			const
+				wm = require('epic-process-manager-client').getWindowManagerClient(),
+				wInstance = wm.getWindowInstance(windowId)
+			
+			guard(() => wInstance.window.hide())
 		} else if (wConfig.type !== WindowType.Normal || normalWindowCount > 1) {
 			getWindowManagerClient().close(windowId)
 		}	else {

@@ -602,7 +602,6 @@ export class WindowManager {
 			{
 				type,
 				uri,
-				storeWindowState = false,
 				singleWindow = false,
 				autoRestart = false,
 				showDevTools = false,//Env.isDev,
@@ -618,14 +617,6 @@ export class WindowManager {
 			const
 				newWindowOpts = makeBrowserWindowOptions(type, opts),
 				positionId = config.positionId || (singleWindow ? config.name : shortId())
-			
-			// ID IS NAME FOR SINGLE WINDOWS
-			// const
-			// 	id = config.id || (singleWindow ? config.name : shortId())
-			
-			// IF STORE STATE ENABLED, CREATE STATE MANAGER
-			// let
-			// 	savedWindowState = storeWindowState && createWindowStateKeeper(id, config)
 			
 			// CREATE WINDOW AND GET TO WORK
 			const
@@ -694,7 +685,7 @@ export class WindowManager {
 			
 			// OPEN DEV TOOLS IF CONFIGURED
 			if (DEBUG && showDevTools) {
-				newWindow.show()
+				//newWindow.show()
 				newWindow.webContents.openDevTools({
 					mode: DevToolsPositionDefault
 				})
@@ -725,24 +716,8 @@ export class WindowManager {
 				blur: makeOnFocus(false),
 				show: makeOnShow(true),
 				hide: makeOnShow(false),
-				// 'ready-to-show': () => {
-				// 	log.debug(`Ready to show for window ${id}`)
-				// 	if (type === WindowType.Background && showDevTools !== true) {
-				// 		log.debug(`${id} is a background window, dont show unless dev tools enabled, which means it's already shown`)
-				// 		return
-				// 	}
-				// 	newWindow.show()
-				// 	newWindow.focus()
-				// }
 			}))
 			
-			
-			// newWindow.on('close', () => {
-			// 	log.debug(`Window closed ${id}`)
-			//
-			// 	// REMOVE THE WINDOW
-			// 	this.close(id)
-			// })
 			
 			// SET WEB-CONTENTS
 			const
@@ -758,8 +733,6 @@ export class WindowManager {
 				'did-navigate': onNavigate,
 				'did-navigate-in-page': onNavigate,
 				'ipc-message': windowInstance.onMessage,
-				// Execute immediately now since window already exists
-				// 'dom-ready': this.makeConnect(id),
 				crashed: (event, killed) => this.onWindowExit(id, { crashed: true, killed: true }),
 				destroyed: () => this.onWindowExit(id, { closed: true, destroyed: true }),
 			}))
@@ -768,7 +741,7 @@ export class WindowManager {
 			
 			this.makeConnect(id)
 			
-			if (processType === ProcessType.UI) {
+			if (processType === ProcessType.UI && windowInstance.hide !== true) {
 				log.debug(`Showing and focusing`)
 				newWindow.show()
 				newWindow.focus()

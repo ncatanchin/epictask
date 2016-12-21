@@ -127,12 +127,12 @@ export class IssueActionFactory  {
 	constructor() {
 	}
 	
-	async queryIssues(criteria:IIssueCriteria):Promise<List<Issue>> {
+	async queryIssues(criteria:IIssueCriteria, overrideRepoIds:List<number> = null):Promise<List<Issue>> {
 		
 		const
 			issueSort = criteria.sort,
-			availRepos = enabledAvailableReposSelector(getStoreState()),
-			enabledRepoIds = availRepos
+			enabledAvailRepos = enabledAvailableReposSelector(getStoreState()),
+			enabledRepoIds = enabledAvailRepos
 				.map(it => it.id)
 				.sort()
 				
@@ -140,7 +140,10 @@ export class IssueActionFactory  {
 		let
 			queryOpts:any = {
 				reduce: true,
-				keys: enabledRepoIds.map(it => [it]).toArray(), // MAP TO ARRAY OF ARRAYS
+				keys: (overrideRepoIds ?
+					overrideRepoIds : // IF ONLY-FOCUSED THEN ALL
+					enabledRepoIds // OTHERWISE ONLY ENABLED
+				).map(it => [it]).toArray(), // MAP TO ARRAY OF ARRAYS
 				reverse: issueSort.direction === 'desc'
 			}
 		
@@ -152,7 +155,7 @@ export class IssueActionFactory  {
 		}
 		
 		let
-			viewName:string = "withSortFields"
+			viewName:string = criteria.onlyFocused === true ? 'byFocused' : "withSortFields"
 		
 		// switch(issueSort.groupBy) {
 		// 	case 'milestone':
@@ -177,16 +180,9 @@ export class IssueActionFactory  {
 		
 		
 		let
-			values
-		
-		// if (issueSort.groupBy === 'none') {
 			values = getValue(() => results.rows
 				.filter(it => Array.isArray(it.value) && Array.isArray(it.value[ 0 ]))
 				.map(it => it.value && it.value[ 0 ]), [])
-		// }
-		// else {
-		// 	values =
-		// }
 		
 		const
 			availableRepos = availableReposSelector(getStoreState()),

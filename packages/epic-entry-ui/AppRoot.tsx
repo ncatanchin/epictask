@@ -231,9 +231,13 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 				isAuthenticated = appStateType !== AppStateType.AuthLogin,
 				isLogin = uri === Pages.Login.uri,
 				isWelcome = uri === Pages.Welcome.uri,
-				isIDERoot = [ null, '', Pages.IDE.uri ].includes(uri)
+				isRoot = [ null, '', Pages.IDE.uri, Pages.IssueTray.uri ].includes(uri),
+				
+				wConfig = getValue(() => getWindowConfig()),
+				wType = wConfig && wConfig.type
 			
-			log.debug(`Checking root: ${uri} for IDE and no repos`, uri, path, isAuthenticated, isLogin, isIDERoot, repoCount)
+			
+			log.info('Window type', wType, 'name', WindowType[wType],`Checking root: ${uri} for IDE and no repos`, uri, path, isAuthenticated, isLogin, isRoot, repoCount)
 			
 			if (!isAuthenticated) {
 				if (!isLogin) {
@@ -243,12 +247,11 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 						params
 					})
 				}
-			} else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isIDERoot && repoCount < 1)) {
-				//log.warn(`temp - remove route change`)
+			} else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isRoot && repoCount < 1)) {
 				log.debug(`Scheduling redirect to welcome/ide`)
 				
 				uriProvider.setLocation({
-					uri: repoCount < 1 ? Pages.Welcome.uri : Pages.IDE.uri,
+					uri: repoCount < 1 ? Pages.Welcome.uri : wType === WindowType.Tray ? Pages.IssueTray.uri : Pages.IDE.uri,
 					params
 				})
 				

@@ -80,6 +80,11 @@ declare interface IWindowConfig {
 	 */
 	opts?: Electron.BrowserWindowOptions
 	
+	
+	/**
+	 * Start hidden
+	 */
+	hide?:boolean
 }
 
 /**

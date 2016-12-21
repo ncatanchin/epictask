@@ -1,7 +1,7 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
 import {
 	Events, AppKey, Provided, cloneObjectShallow,
-	shortId
+	shortId, getDisplayForPoint, isBoundsWithinBounds
 } from "epic-global"
 
 import { User } from "epic-models"
@@ -14,6 +14,7 @@ import { getWindowManagerClient } from "epic-process-manager-client"
 const
 	log = getLogger(__filename)
 
+log.setOverrideLevel(LogLevel.DEBUG)
 
 declare global {
 	
@@ -264,7 +265,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return (state:AppState) => state.set('trayOpen',open)
 	}
 	
-	private getTrayWindow() {
+	/**
+	 * Get the tray window reference
+	 *
+	 * @returns {IWindowInstance}
+	 */
+	getTrayWindow() {
 		const
 			{windows} = this.state
 		
@@ -281,12 +287,45 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * Open the tray window
 	 */
 	
-	openTray() {
-		if (this.state.trayOpen) {
-			return log.debug(`Tray is already open`)
-		}
+	openTray(trayBounds:Electron.Rectangle) {
+		log.debug(`Opening tray from bounds`, trayBounds)
 		
-		this.getTrayWindow().window.show()
+		const
+			
+			display = getDisplayForPoint(trayBounds),
+			displayBounds = display.bounds,
+			win = this.getTrayWindow().window,
+			winSizePair = win.getSize(),
+			winSize = {width:winSizePair[0],height:winSizePair[1]},
+			makeBoundsFromPoint = (x,y) => {
+				return {
+					x,y,
+					...winSize
+				}
+			},
+			placements = [
+				// TOP RIGHT
+				makeBoundsFromPoint(trayBounds.x - winSize.width + trayBounds.width,trayBounds.y + trayBounds.height),
+				
+				// TOP LEFT
+				makeBoundsFromPoint(trayBounds.x + winSize.width,trayBounds.y + trayBounds.height),
+				
+				// BOTTOM RIGHT
+				makeBoundsFromPoint(trayBounds.x - winSize.width + trayBounds.width,trayBounds.y - winSize.height),
+				
+				// BOTTOM LEFT
+				makeBoundsFromPoint(trayBounds.x + winSize.width,trayBounds.y - winSize.height),
+			],
+			bounds = placements.find(it => isBoundsWithinBounds(it,displayBounds))
+		
+		log.debug(`Using placement`,bounds,'tested placements',placements)
+		
+		assert(`No placements worked?????`)
+		
+		win.setBounds(bounds)
+		win.show()
+		win.focus()
+		
 		this.setTrayOpen(true)
 	}
 	

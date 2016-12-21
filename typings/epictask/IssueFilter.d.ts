@@ -39,6 +39,9 @@ declare interface IIssueFilter {
 	
 	includeClosed:boolean
 	
+	// ONLY FOCUSED ISSUES
+	onlyFocused:boolean
+	
 	// Specific issue id
 	issueId?:number
 	

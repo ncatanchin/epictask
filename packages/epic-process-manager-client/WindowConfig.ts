@@ -96,12 +96,17 @@ export const WindowDefaultOpts = Object.assign(AllWindowDefaults, {
 /**
  * Tray Window Defaults
  */
-export const WindowTrayDefaultOpts = Object.assign({}, WindowDefaultOpts, {
+export const WindowTrayDefaultOpts = {
+	show: false,
+	frame: false,
+	acceptFirstMouse: true,
 	minWidth: 400,
 	minHeight: 400,
+	// maxWidth: 400,
+	// maxHeight: 400,
 	width: 400,
 	height: 400
-})
+}
 
 /**
  * Dialog defaults
@@ -161,10 +166,13 @@ export const WindowConfigNormalDefaults = {
  * Tray defaults
  */
 export const WindowConfigTrayDefaults = {
+	name: "Tray",
+	uri: "dialog/issue-tray",
 	type: WindowType.Tray,
 	processType: ProcessType.UI,
 	singleWindow: true,
 	autoRestart: false,
+	hide: true,
 	showDevTools: Env.isDev,
 	storeWindowState: false,
 	opts: WindowTrayDefaultOpts

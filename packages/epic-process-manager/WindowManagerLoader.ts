@@ -9,6 +9,7 @@ import {
 import { getWindowManager } from "epic-process-manager"
 import { cloneObject } from "epic-global/ObjectUtil"
 import { AppEventType } from "epic-global/Constants"
+import { WindowConfigTrayDefaults } from "epic-process-manager-client"
 
 const
 	log = getLogger(__filename)
@@ -45,18 +46,19 @@ export async function start() {
 		dbReady.resolve()
 	})
 	
-	log.info(`Starting DB Window`)
+	log.debug(`Starting DB Window`)
 	const
 		windowManager = getWindowManager()
 	
 	await windowManager.open(DatabaseServerWindowConfig)
 	await dbReady.promise
 	
-	log.info(`DB is ready`)
+	log.debug(`DB is ready`)
 	
 	const
 		windows:IWindowConfig[] = [
-			JobServerWindowConfig,
+			cloneObject(JobServerWindowConfig) as any,
+			cloneObject(WindowConfigTrayDefaults) as any,
 			...normalWindows
 		]
 	

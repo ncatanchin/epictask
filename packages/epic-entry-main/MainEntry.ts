@@ -138,11 +138,14 @@ function loadMainApp() {
 		[
 			"set app ready",
 			() => require('epic-typedux/provider').getAppActions().setReady(true),
-			() => require('./TrayLauncher').default.start()
+			
 		],
 		
 		// HIDE SPLASH
-		() => Env.skipSplash ? Promise.resolve() : hideSplashWindow(),
+		[
+			() => require('./TrayLauncher').default.start(),
+			() => Env.skipSplash ? Promise.resolve() : hideSplashWindow()
+		]
 	)
 	
 	
