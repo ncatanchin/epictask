@@ -5,10 +5,11 @@ import { createStructuredSelector } from "reselect"
 import { cloneObjectShallow, guard, ContextMenu } from "epic-global"
 import { View, PureRender, Icon } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { ViewState,viewStatesSelector, getUIActions, selectedViewStateIdSelector } from "epic-typedux"
+import { ViewState,viewStatesSelector, getUIActions } from "epic-typedux"
 import { getValue } from "typeguard"
 import baseStyles from "./IDETabbedViewContainer.styles"
 import ViewStateTab from "./ViewStateTab"
+import { ideViewStatesSelector, ideSelectedViewStateIdSelector } from "epic-typedux/selectors"
 
 // Constants
 const
@@ -43,8 +44,8 @@ export interface IIDETabbedViewContainerState {
  **/
 
 @connect(createStructuredSelector({
-	viewStates: viewStatesSelector,
-	selectedViewStateId: selectedViewStateIdSelector
+	viewStates: ideViewStatesSelector,
+	selectedViewStateId: ideSelectedViewStateIdSelector
 }))
 @ThemedStyles(baseStyles)
 @PureRender
@@ -86,7 +87,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		
 		// MAKE SURE WE HAVE AT LEAST 1 VIEW
 		if (viewStates.size < 1 && defaultViewConfig) {
-			getUIActions().createView(cloneObjectShallow(defaultViewConfig))
+			getUIActions().createView(cloneObjectShallow(defaultViewConfig),false)
 		}
 	}
 	
@@ -143,7 +144,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		
 		viewConfigs.forEach(viewConfig => {
 			menu
-				.addCommand(viewConfig.name, () => getUIActions().createView(viewConfig))
+				.addCommand(viewConfig.name, () => getUIActions().createView(viewConfig,false))
 		})
 		
 		// SHOW THE MENU

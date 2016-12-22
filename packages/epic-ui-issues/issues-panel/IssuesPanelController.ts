@@ -13,9 +13,13 @@ import { makeIssuesPanelStateSelectors, TIssuesPanelSelectors } from "./IssuesPa
 import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
 import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
-import { enabledAvailableReposSelector } from "epic-typedux/selectors"
+import {
+	enabledAvailableReposSelector, availableRepoIdsSelector, enabledRepoIdsSelector,
+	availableReposSelector
+} from "epic-typedux/selectors"
 import { EventEmitter } from "events"
 import { Provided, ContextMenu } from "epic-global"
+import { ViewController } from "epic-typedux/state/window/ViewController"
 
 /**
  * Created by jglanz on 11/5/16.
@@ -26,7 +30,7 @@ const
 
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 type TIssuesPanelStateUpdater = (...args) => (state: IssuesPanelState) => any
@@ -44,16 +48,46 @@ export function getIssuesPanelSelector(fn: (selectors: TIssuesPanelSelectors) =>
  * @constructor
  **/
 @Provided
-export class IssuesPanelController extends EventEmitter implements IViewController<IssuesPanelState> {
+export class IssuesPanelController extends ViewController<IssuesPanelState> implements IViewController<IssuesPanelState> {
 	
 	
 	selectors
 	
+	/**
+	 * Use local state vs store state
+	 */
+	useLocalState: boolean
+	
+	/**
+	 * Local state
+	 */
+	private localState:IssuesPanelState
+	
+	
+	/**
+	 * Use all repo ids
+	 */
+	private useAllRepoIds:boolean
+	
+	/**
+	 * Mounted
+	 */
 	private mounted: boolean
+	
+	/**
+	 * All un-subs for destruction
+	 */
 	private unsubscribers: Function[]
 	
-	get viewState() {
-		return this.selectors.viewStateSelector(getStoreState())
+	
+	
+	/**
+	 * Get view state from redux
+	 *
+	 * @returns {string}
+	 */
+	get viewState():ViewState {
+		return getValue(() => this.selectors.viewStateSelector(getStoreState()),getValue(() => this.opts.storeViewStateProvider()))
 	}
 	
 	/**
@@ -62,9 +96,30 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 	 * @returns {IssuesPanelState}
 	 */
 	get state(): IssuesPanelState {
+		// if (this.useLocalState)
+		// 	return this.localState
+		//
 		return getValue(() =>
 				this.selectors.issuesPanelStateSelector(getStoreState()),
 			this.initialState)
+	}
+	
+	
+	setState(state) {
+		let
+			{ viewState } = this
+		
+		getUIActions().updateView(viewState.set('state', state) as ViewState)
+		// if (this.useLocalState) {
+		// 	this.localState = state
+		// } else {
+		// 	let
+		// 		{ viewState } = this
+		//
+		// 	getUIActions().updateView(viewState.set('state', state))
+		// }
+		
+		this.emit(ViewStateEvent[ ViewStateEvent.Changed ], state)
 	}
 	
 	/**
@@ -102,83 +157,42 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		return getValue(() => this.focusedIssues.map(it => it.id)) as List<number>
 	}
 	
-	makeStateUpdate<T extends TIssuesPanelStateUpdater>(updater: T): T {
-		return ((...args) => {
-			
-			const
-				stateUpdater = updater(...args),
-				updatedState = stateUpdater(this.state) as IssuesPanelState
-			
-			if (updatedState === this.state) {
-				log.debug(`No state update`, args)
-				return
-			}
-			
-			const
-				newViewState = this.viewState.set('state', updatedState) as ViewState
-			
-			getUIActions().updateView(newViewState)
-			
-			return updatedState
-		}) as any
-	}
-	
-	
-	updateState(patch: { [prop: string]: any }) {
-		
-		patch = cloneObjectShallow(patch)
-		
-		const
-			keys = getValue(() => Object.keys(patch))
-		
-		if (!patch || !keys || !keys.length)
-			return this.state
-		
-		
-		//setImmediate(() => {
-		let
-			viewState = this.selectors
-				.viewStateSelector(getStoreState())
-		
-		if (!viewState) {
-			log.warn('our view state does not exist', this.id)
-			return this.state
-		}
-		
-		const
-			state = viewState.state.withMutations(newState => {
-				for (let key of keys) {
-					const
-						newVal = patch[ key ]
-					
-					if (newState.get(key) !== newVal)
-						newState = newState.set(key, newVal)
-				}
-				
-				return newState
-			}) as IssuesPanelState
-		
-		if (state !== this.state) {
-			getUIActions().updateView(viewState.set('state', state))
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ], state)
-		}
-		
-		return state
-		//})
-	}
-	
-	
 	/**
 	 * Create the controller
 	 *
 	 * @param id
 	 * @param initialState
+	 * @param opts
 	 */
-	constructor(public id: string, public initialState: IssuesPanelState = new IssuesPanelState()) {
+	constructor(public id: string, public initialState: IssuesPanelState = new IssuesPanelState(),private opts:any = {}) {
 		super()
 		
-		this.selectors = makeIssuesPanelStateSelectors(id)
+		this.localState = this.initialState
+		assign(this,opts)
 		
+		const
+			viewStateProvider = opts.storeViewStateProvider
+		
+		this.selectors = makeIssuesPanelStateSelectors(id,() => viewStateProvider().state)
+		
+	}
+	
+	/**
+	 * Use local state vs store state
+	 *
+	 * @param useLocalState
+	 */
+	setUseLocalState(useLocalState) {
+		this.useLocalState = useLocalState
+		
+		return this
+	}
+	
+	
+	setUseAllRepoIds(useAllRepoIds) {
+		this.useAllRepoIds = useAllRepoIds
+		
+		return this
 	}
 	
 	/**
@@ -201,6 +215,12 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		//this.loadIssues()
 	}
 	
+	/**
+	 * On selected issue ids changed
+	 *
+	 * @param newVal
+	 * @param oldVal
+	 */
 	private onSelectedIssueIdsChanged = (newVal: List<number>, oldVal: List<number>) => {
 		log.debug(`Selected issue ids changed`, newVal, oldVal)
 		if (getValue(() => newVal.size, 0) !== 1) {
@@ -230,8 +250,8 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		
 		// ISSUES
 		[Issue.$$clazz]: function (changes: IDatabaseChange[]) {
-			const
-				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+			let
+				repoIds = (this.useAllRepoIds ? availableRepoIdsSelector : enabledRepoIdsSelector)(getStoreState()),
 				models = changes
 					.map(it => it.model)
 					.filter(it => it && repoIds.includes(it.repoId))
@@ -368,13 +388,41 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		addDatabaseChangeListener(Comment, this.onDatabaseChanged)
 		
 		this.unsubscribers = [
-			
-			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged),
-			store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged)
+			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged)
 		]
+		
+		if (!this.useLocalState)
+			this.unsubscribers.push(store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged))
 		
 		this.loadIssues()
 	}
+	
+	
+	
+	showViewer() {
+		const
+			{selectedIssueIds} = this.getState()
+		
+		if (getValue(() => selectedIssueIds.size) !== 1) {
+			return log.debug(`Can only open viewer for a single selected issue`)
+		}
+		
+		const
+			uri = (<any>RouteRegistryScope.asMap()).IssueViewDialog.makeURI(this.getSelectedIssue())
+		
+		getUIActions().openWindow(uri)
+	}
+	
+	/**
+	 * Load a single issue - for issue viewer really
+	 */
+	loadSingleIssue = _.debounce(async (issueKey) => {
+		const
+			issue = await getIssueActions().loadIssue(issueKey)
+		
+		this.setIssues(List([issue]))
+		this.setSelectedIssueIds(List([issue.id]))
+	}, 100)
 	
 	/**
 	 * Updates the current issues
@@ -383,9 +431,10 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		const
 			{ criteria, selectedIssueIds } = this.state,
 			actions = new IssueActionFactory(),
-			issues = await actions.queryIssues(criteria)
+			repoIds = availableRepoIdsSelector(getStoreState()),
+			issues = await actions.queryIssues(criteria,this.useAllRepoIds && repoIds)
 		
-		
+		log.debug(`Loaded issues`,issues,repoIds)
 		this.updateState({ issues })
 		
 		if (selectedIssueIds && selectedIssueIds.size === 1) {
@@ -418,7 +467,7 @@ export class IssuesPanelController extends EventEmitter implements IViewControll
 		return (state: IssuesPanelState) => state.withMutations((newState: IssuesPanelState) => {
 			let
 				{ issues } = newState,
-				availRepos = enabledAvailableReposSelector(getStoreState()),
+				availRepos = (this.useAllRepoIds ? availableReposSelector :  enabledAvailableReposSelector)(getStoreState()),
 				repoIds = availRepos.map(it => it.id)
 			
 			updatedIssues

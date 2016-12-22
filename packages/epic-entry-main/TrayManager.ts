@@ -3,6 +3,7 @@ import { Map, Record, List } from "immutable"
 import {app,Tray} from 'electron'
 import { addHotDisposeHandler, acceptHot, setDataOnHotDispose, getHot, searchPathsForFile } from "epic-global"
 import { getAppActions } from "epic-typedux/provider"
+import { getValue } from "typeguard"
 
 const
 	dataUrl = require('dataurl'),
@@ -54,13 +55,34 @@ export namespace TrayLauncher {
 		return getTrayWindowInstance().window
 	}
 	
+	/**
+	 * Open tray - assigned to global scope too
+	 * @param bounds
+	 */
+	export function openTray(bounds = getValue(() => tray.getBounds())) {
+		getAppActions().openTray(bounds)
+	}
+	
+	/**
+	 * Close the tray
+	 */
+	export function closeTray() {
+		getAppActions().closeTray()
+	}
+	
+	const
+		unsubscribers = [
+			EventHub.on(EventHub.TrayOpen,() => openTray()),
+			EventHub.on(EventHub.TrayClose,() => closeTray())
+		]
+	
 	
 	/**
 	 * On try click, show window
 	 */
 	function onClick(event,bounds) {
 		log.debug(`tray clicked, opening`,event,bounds)
-		getAppActions().openTray(bounds)
+		openTray(bounds)
 	}
 	
 	function onFocus() {
@@ -70,7 +92,7 @@ export namespace TrayLauncher {
 	function onBlur() {
 		log.debug(`tray blur`)
 		
-		getTrayWindow().hide()
+		//getTrayWindow().hide()
 	}
 	
 	function onClose() {
@@ -144,11 +166,14 @@ export namespace TrayLauncher {
 	
 	// HMR ON DISPOSE DESTROY
 	addHotDisposeHandler(module,() => {
+		unsubscribers.forEach(it => it())
+		
 		if (tray)
 			tray.destroy()
 	})
 	
 }
+
 
 
 

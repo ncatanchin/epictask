@@ -22,6 +22,7 @@ export const ViewStateRecord = Record({
 	index:-1,
 	name: null,
 	type: null,
+	temp: true,
 	state: Map<any,any>()
 })
 
@@ -49,6 +50,9 @@ export class ViewState extends ViewStateRecord {
 	}
 	
 	toJS() {
+		if (this.temp)
+			return null
+		
 		return toPlainObject(
 			cloneObjectShallow(super.toJS(),{
 				state: this.state.toJS ? this.state.toJS() : this.state
@@ -69,6 +73,7 @@ export class ViewState extends ViewStateRecord {
 	index:number
 	name:string
 	type: string
+	temp:boolean
 	state: Map<any,any>
 }
 

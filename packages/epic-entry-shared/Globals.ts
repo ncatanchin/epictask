@@ -71,16 +71,35 @@ _.assignGlobal({
  */
 let windowId = null
 
-function getWindowIdGlobal():string {
+function getWindowIdGlobal():number {
 	if (windowId)
 		return windowId
 	
 	let
 		Electron = require('electron')
 	
-	windowId = !Electron.remote ? -1 : Electron.remote.getCurrentWindow().id
+	return (windowId = !Electron.remote ? -1 : Electron.remote.getCurrentWindow().id)
+}
+
+function getWindowStates():List<IWindowConfig> {
+	return getStoreState().get(Constants.AppKey).windows
+}
+
+/**
+ * Is master UI window - for global commands etc
+ *
+ * @returns {IWindowConfig|boolean}
+ */
+function isWindowMaster() {
+	const
+		windows = getWindowStates(),
+		wConfig = windows.find(win => win.id === getWindowId()),
+		windowIds = windows.filter(win => win.type === WindowType.Normal).map(win => win.id),
+		minWindowId = windowIds.reduce((minId,winId) => Math.min(winId,minId),10000)
+		
 	
-	return windowId
+	return wConfig && wConfig.type === WindowType.Normal && getWindowId() === minWindowId
+			
 }
 
 /**
@@ -206,10 +225,11 @@ function installGlobals() {
 		
 		
 		getWindowId: getWindowIdGlobal,
+		isWindowMaster,
 		getWindowConfig() {
 			const
 				windowId = getWindowIdGlobal(),
-				windows = getStoreState().get(Constants.AppKey).windows
+				windows = getWindowStates()
 				
 		  return windows.find(it => it.id === windowId)
 		},
@@ -278,6 +298,7 @@ declare global {
 	
 	function getWindowConfig():IWindowState
 	function getWindowId():number
+	function isWindowMaster():boolean
 	function getProcessId():string
 	
 	function isStoreReady():boolean

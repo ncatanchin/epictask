@@ -1,6 +1,5 @@
 
 import { getHot, setDataOnHotDispose, acceptHot } from "epic-global/HotUtils"
-import {decorateConstructor} from 'epic-global/Decorations'
 import {Registry} from "../Registry"
 
 
@@ -18,8 +17,9 @@ declare global {
 		id:string
 		name:string
 		type:string
+		state?: any
 		defaultView?:boolean
-		provider: TPromisedComponentLoader
+		provider?: TPromisedComponentLoader
 	}
 	
 	interface IRegistryEntryView extends IRegistryEntry<IViewConfig> {

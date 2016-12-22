@@ -26,6 +26,24 @@ const IssueRouteConfigs = {
 		
 	},
 	
+	
+	/**
+	 * Issue View Dialog
+	 */
+	IssueViewDialog: {
+		name: 'IssueViewDialog',
+		uri: 'dialog/issue-view/:issueKey',
+		makeURI(issue: Issue = null) {
+			return `dialog/issue-view/${!issue ? -1 : Issue.makeIssueId(issue)}`
+		},
+		showDevTools: false,
+		provider: makePromisedComponent((resolver: TComponentResolver) =>
+			require.ensure([], function (require: any) {
+				resolver.resolve(require('epic-ui-issues/issue-view').IssueViewDialog)
+			}))
+		
+	},
+	
 	/**
 	 * Issue Edit Dialog
 	 */
@@ -138,6 +156,11 @@ CommandRegistryScope.Register({
 	type: CommandType.Container,
 	name: "Clear Filter & Sort",
 	defaultAccelerator: 'Alt+c'
+},{
+	id: 'IssueViewer',
+	type: CommandType.Container,
+	name: "View issue in separate window",
+	defaultAccelerator: 'v'
 },{
 	id: 'LabelIssues',
 	type: CommandType.Container,

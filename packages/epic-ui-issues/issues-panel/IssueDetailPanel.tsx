@@ -3,17 +3,14 @@
  */
 // Imports
 import { List } from "immutable"
-
 import { Style } from "radium"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { Button, VisibleList } from "epic-ui-components"
 import { Issue, Comment, IssuesEvent, isComment, isIssue, getEventGroupType } from "epic-models"
-
 import { ThemedStyles } from "epic-styles"
-
 import baseStyles from "./IssueDetailPanel.styles"
-import { shallowEquals, uuid,getValue, unwrapRef } from "epic-global"
+import { shallowEquals, getValue } from "epic-global"
 import { EventGroup, isEventGroup } from "./IssueEventGroup"
 import {
 	CommandComponent,
@@ -25,11 +22,9 @@ import {
 import { ContainerNames } from "epic-command-manager"
 import { IssueDetailHeader } from "./IssueDetailHeader"
 import { IssueMultiInlineList } from "./IssueMultiInlineList"
-
 import { IssueActivityText } from "./IssueActivityText"
-import { TIssueActivity } from "./IssuesPanelState"
-import IssuesPanelController from "./IssuesPanelController"
-import { getIssuesPanelSelector } from "./IssuesPanelController"
+import { TIssueActivity, IssuesPanelState } from "./IssuesPanelState"
+import IssuesPanelController, { getIssuesPanelSelector } from "./IssuesPanelController"
 import { getIssueActions } from "epic-typedux/provider"
 
 // Other stuff
@@ -49,6 +44,7 @@ export interface IIssueDetailPanelProps extends ICommandComponentProps {
 	theme?:any
 	styles?:any
 	viewController:IssuesPanelController
+	viewState?:IssuesPanelState
 	selectedIssueIds?:number[]
 	selectedIssue?:Issue
 	issues?:List<Issue>

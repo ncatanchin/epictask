@@ -8,5 +8,9 @@
 // export * from "./IssueItem.styles"
 // export * from "./IssueItem"
 // export * from "./IssuesList"
-export * from "./IssuesPanel"
+export * from './IssuesPanelState'
 export * from "./IssuesPanelController"
+export * from "./BaseIssuePanel"
+export * from "./IssuesList"
+export * from "./IssueDetailPanel"
+export * from "./IssuesPanel"

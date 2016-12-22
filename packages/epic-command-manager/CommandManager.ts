@@ -34,7 +34,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration
@@ -630,14 +630,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 	 */
 	updateGlobalCommands(commands:ICommand[]) {
 		const
-			windows = windowsSelector(getStoreState()).valueSeq(),
-			wConfig = windows.find(win => win.id === getWindowId()),
-			windowIds = windows.filter(win => win.type === WindowType.Normal).map(win => win.id),
-			minWindowId = windowIds.reduce((minId,winId) => Math.min(winId,minId),10000),
-			shouldRegister = wConfig && wConfig.type === WindowType.Normal && getWindowId() === minWindowId
+			isMaster = isWindowMaster()
 		
-		log.debug(`Register global commands, proceed=${shouldRegister} / windowId=${getWindowId()} / min window id = ${minWindowId} and ids = ${windowIds}`)
-		if (!shouldRegister)
+		log.debug(`Register global commands, proceed=${isMaster} / windowId=${getWindowId()}`)
+		if (!isMaster)
 			return
 		
 		

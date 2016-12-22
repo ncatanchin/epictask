@@ -467,8 +467,31 @@ export class WindowManager {
 		}
 	}
 	
-	
-	
+	/**
+	 * On window closed
+	 *
+	 * @param event
+	 * @param windowInstance
+	 */
+	onWindowClosed = (event,windowInstance:IWindowInstance = null) => {
+		if (windowInstance) {
+			const
+				{singleWindow,autoRestart,id,config} = windowInstance
+			
+			log.info(`Window closed: ${id}`)
+			this.onWindowExit(id, { closed: true }, singleWindow || autoRestart)
+			//this.updateWindowState(id, { closed: true }, singleWindow || autoRestart)
+			if (!shutdownInProgress && !isShuttingDown()) {
+				if (autoRestart) {
+					log.warn(`Auto Restarting Window: ${id}`)
+					setImmediate(() => this.open(config))
+				}
+				
+			}
+		}
+		
+		EventHub.broadcast(EventHub.WindowClosed)
+	}
 	/**
 	 * Close all windows
 	 */
@@ -533,10 +556,14 @@ export class WindowManager {
 				pool.destroy(window)
 			}
 			
+			this.onWindowClosed(null,win)
+			
 			
 			if (index > -1) {
 				this.windows.splice(index, 1)
 			}
+			
+			
 		}
 		
 		// IF ALL WINDOWS ARE CLOSED THEN NOTIFY
@@ -701,14 +728,7 @@ export class WindowManager {
 			
 			windowInstance.allEventRemovers.push(attachEvents(log, newWindow, {
 				closed: (event) => {
-					log.info(`Window closed: ${id}`)
-					this.onWindowExit(id,{closed:true}, singleWindow || autoRestart)
-					//this.updateWindowState(id, { closed: true }, singleWindow || autoRestart)
-					if (!shutdownInProgress && !isShuttingDown() && autoRestart) {
-						log.warn(`Auto Restarting Window: ${id}`)
-						setImmediate(() => this.open(originalConfig))
-					}
-					
+					this.onWindowClosed(event,windowInstance)
 				},
 				responsive: makeOnUnresponsive(false),
 				unresponsive: makeOnUnresponsive(true),

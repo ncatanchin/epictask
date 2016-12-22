@@ -74,12 +74,12 @@ export const IssuePatchModes = {
 	Assignee:'Assignee',
 }
 
-/**
- * Immutable record
- *
- * @type {Record.Class}
- */
-export const IssuesPanelStateRecord = Record({
+
+export const IssuesPanelStateRecordDefaults = {
+	
+	// SPECIFICALLY FOR TRAY AND ALTERNATE USE
+	repoIds:List<number>(),
+	
 	issues:List<Issue>(),
 	
 	comments:List<Comment>(),
@@ -102,7 +102,14 @@ export const IssuesPanelStateRecord = Record({
 	saving: false,
 	
 	horizontalView: false,
-} as IIssuesPanelState)
+} as IIssuesPanelState
+
+/**
+ * Immutable record
+ *
+ * @type {Record.Class}
+ */
+export const IssuesPanelStateRecord = Record(IssuesPanelStateRecordDefaults)
 
 @ModelRegistryScope.Register
 export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesPanelState {
@@ -128,6 +135,12 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 				/^sav/
 			)))
 	}
+	
+	/**
+	 * For tray use, etc
+	 */
+	repoIds:List<number>
+	
 	
 	issues:List<Issue>
 	comments:List<Comment>

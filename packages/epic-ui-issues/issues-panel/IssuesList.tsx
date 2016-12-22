@@ -25,6 +25,7 @@ import { IssueItem } from "./IssueItem"
 import { IssueEditInline } from "./IssueEditInline"
 import IssuesPanelController, { getIssuesPanelSelector } from "./IssuesPanelController"
 import { IssueGroupHeader } from "./IssueGroupHeader"
+import { IssuesPanelState } from "./IssuesPanelState"
 
 
 // Constants & Non-typed Components
@@ -82,6 +83,7 @@ const baseStyles = (topStyles, theme, palette) => ({
  * IIssuesPanelProps
  */
 export interface IIssuesListProps extends IThemedAttributes {
+	viewState?:IssuesPanelState
 	viewController:IssuesPanelController
 	issues?:List<Issue>
 	items?:List<IIssueListItem<any>>
@@ -250,7 +252,7 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 		
 		log.debug(`ITEMS CHANGED`, itemsChanged)
 		
-		if (itemsChanged) {
+		if (items && itemsChanged) {
 			
 			checkedItems = items
 			itemIds = checkedItems.map(it => it.id) as List<number>
@@ -386,7 +388,10 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 				props: {
 					onOpen: onIssueOpen,
 					onSelected: onIssueSelected,
-					viewController: this.viewController
+					viewController: this.viewController,
+					
+					// THIS IS ONLY VALID WHEN COMING FROM NON-STORE/BACKED DATA
+					viewState: this.props.viewState
 				}
 			}
 				

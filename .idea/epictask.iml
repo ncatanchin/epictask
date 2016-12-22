@@ -25,5 +25,8 @@
     <orderEntry type="library" name="epictask-globals" level="project" />
     <orderEntry type="library" name="jest-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="epictask-typed-libs" level="project" />
+    <orderEntry type="library" name="immutable-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="reselect-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="node-DefinitelyTyped" level="application" />
   </component>
 </module>

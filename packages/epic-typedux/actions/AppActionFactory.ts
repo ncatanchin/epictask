@@ -70,7 +70,6 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 *
 	 * @param commandId
 	 * @param accelerator
-	 * @returns {(state:AppState)=>Map<string, Map<string, string>>}
 	 */
 	@ActionReducer()
 	setCustomAccelerator(commandId:string,accelerator:string) {
@@ -284,10 +283,28 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	/**
+	 * toggle tray open/closed
+	 */
+	toggleTray() {
+		if (this.state.trayOpen) {
+			this.closeTray()
+		} else {
+			this.openTray()
+		}
+	}
+	
+	/**
 	 * Open the tray window
 	 */
 	
-	openTray(trayBounds:Electron.Rectangle) {
+	openTray(trayBounds:Electron.Rectangle = null) {
+		if (!Env.isMain) {
+			log.debug(`Notifying main to open tray`)
+			return EventHub.broadcast(EventHub.TrayOpen)
+		}
+		
+		assert(trayBounds,`tray bounds are required`)
+		
 		log.debug(`Opening tray from bounds`, trayBounds)
 		
 		const
@@ -337,6 +354,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		if (!this.state.trayOpen) {
 			return log.debug(`Tray is already closed`)
 		}
+		
+		if (!Env.isMain) {
+			log.debug(`Notifying main to open tray`)
+			return EventHub.broadcast(EventHub.TrayClose)
+		}
+		
 		
 		this.getTrayWindow().window.hide()
 		this.setTrayOpen(false)

@@ -1,6 +1,6 @@
 import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
-import { getUIActions, getRepoActions } from "epic-typedux/provider"
+import { getUIActions, getRepoActions, getAppActions } from "epic-typedux/provider"
 import { getWindowManagerClient } from "epic-process-manager-client"
 import { windowsSelector } from "epic-typedux/selectors"
 
@@ -111,6 +111,15 @@ CommandRegistryScope.Register(
 	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
 },
 
+// OPEN TRAY
+{
+	id: 'ShowTrayGlobal',
+	type: CommandType.Global,
+	name: "Show Focused Issue Tray",
+	execute: (cmd, event) => getAppActions().toggleTray(),
+	defaultAccelerator: "Control+Shift+e"
+},
+	
 // FIND ACTION
 {
 	id: 'FindAction',

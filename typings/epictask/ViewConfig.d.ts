@@ -57,11 +57,13 @@ declare interface IViewController<S> extends NodeJS.EventEmitter {
 	 * @param updater
 	 */
 	makeStateUpdate<T extends Function>(updater:T):T
+	
+	useLocalState?:boolean
 }
 
 
 declare interface IViewControllerConstructor<S> {
-	new (id:string, initialState?:S):IViewController<S>
+	new (id:string, initialState?:S, opts?:any):IViewController<S>
 }
 
 /**

@@ -25,10 +25,22 @@ export const viewStatesSelector:TSelector<List<ViewState>> = createSelector(
 	(uiState:UIState) => uiState.viewStates
 )
 
-export const selectedViewStateIdSelector:TSelector<string> = createSelector(
+// export const selectedViewStateIdSelector:TSelector<string> = createSelector(
+// 	uiStateSelector,
+// 	(uiState:UIState) => uiState.selectedViewStateId
+// )
+
+export const ideViewStatesSelector:TSelector<List<ViewState>> = createSelector(
+	viewStatesSelector,
+	(viewStates:List<ViewState>) => viewStates.filter(state => state.temp !== true) as List<ViewState>
+)
+
+export const ideSelectedViewStateIdSelector:TSelector<string> = createSelector(
 	uiStateSelector,
 	(uiState:UIState) => uiState.selectedViewStateId
 )
+
+
 
 /**
  * Retrieve the current UI sheet

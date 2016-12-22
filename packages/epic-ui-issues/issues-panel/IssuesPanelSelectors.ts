@@ -29,6 +29,7 @@ import IssuesPanelState, {
 } from "./IssuesPanelState"
 import { UIState } from "epic-typedux/state/UIState"
 import ViewState from "epic-typedux/state/window/ViewState"
+import { isNil, getValue } from "typeguard"
 
 
 const
@@ -42,19 +43,33 @@ const makeViewStateIdSelector = () => createSelector(
 
 
 
+export type TViewStateProvider = () => ViewState
 
-
-export function makeIssuesPanelStateSelectors(id:string = null) {
+export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewStateProvider = null) {
 	
+		
 	
 		const
+			
+			storeViewStateSelector = createSelector(
+				(state,props) => props && props.storeViewState,
+				(storeViewState:ViewState) => storeViewState
+			),
+			
 			viewStateIdSelector = id ? (() => id) : makeViewStateIdSelector(),
 			viewStateSelector = createSelector(
 				uiStateSelector,
 				viewStateIdSelector,
-				(uiState:UIState, viewStateId:string) =>
-					uiState.viewStates.find(it => it.id === viewStateId)
+				storeViewStateSelector,
+				(uiState:UIState, viewStateId:string,storeViewState:ViewState) =>
+					getValue(() => uiState.viewStates.find(it => it.id === viewStateId),getState && getState())
 			),
+			
+			// localStateSelector:TSelector<IssuesPanelState> = createSelector(
+			// 	(props) => getState(),
+			// 	(state:IssuesPanelState) => state
+			// ),
+			
 			issuesPanelStateSelector:TSelector<IssuesPanelState> = createSelector(
 				viewStateSelector,
 				(viewState:ViewState) =>
@@ -223,7 +238,7 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 					
 					// Get all the filters & sort criteria
 					let
-						{ text, issueId, milestoneIds, labelIds, assigneeIds } = criteria,
+						{ text, issueId, milestoneIds, labelIds, assigneeIds,onlyFocused } = criteria,
 						inlineEditIndex = -1
 					
 					
@@ -247,6 +262,9 @@ export function makeIssuesPanelStateSelectors(id:string = null) {
 								// Include Closed
 								let matches =
 									(issue.state === 'open' || criteria.includeClosed)
+								
+								if (matches && onlyFocused)
+									matches = issue.focused === true
 								
 								// Milestones
 								if (matches && milestoneIds.length)

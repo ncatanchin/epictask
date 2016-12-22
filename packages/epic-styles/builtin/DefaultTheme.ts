@@ -7,6 +7,7 @@ import {
 	makeLinearGradient,
 	PositionRelative,
 	Transparent,
+	Ellipsis,
 	createStyles,rem, makePaddingRem } from "../styles/CommonRules"
 import { colorLighten ,colorAlpha } from "epic-styles/styles/ColorTools"
 import { colorDarken } from "epic-styles/styles"
@@ -516,8 +517,9 @@ export function DefaultTheme(palette) {
 			borderBottom: `1px solid ${colorDarken(primary.hue1,15)}`,
 			height: navBarHeight,
 			
-			title: [{
+			title: [Ellipsis,{
 				position: 'absolute',
+				maxWidth: '70%',
 				left: '50%',
 				top: 0,
 				

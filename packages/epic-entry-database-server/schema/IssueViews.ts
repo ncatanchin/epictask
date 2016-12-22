@@ -139,7 +139,7 @@ const IssueViews = {
 					attrs = doc.attrs,
 					sortFields = ${SortFieldsTemplate}
 				
-				emit([ attrs.repoId], [sortFields])
+				emit([ attrs.repoId], [sortFields,[true]])
 			}
 			
 		}`,

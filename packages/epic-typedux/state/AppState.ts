@@ -51,7 +51,7 @@ export class AppState extends AppStateRecord {
 
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-			...excludeFilter('ready','messages')
+			...excludeFilter('ready','messages','trayOpen')
 		))
 	}
 	

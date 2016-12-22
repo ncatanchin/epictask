@@ -441,7 +441,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					
 					const
 						repoId = availableRepo.id,
-						repoLabels = labels.filter(it =>it.repoId === repoId)
+						repoLabels = labels && labels.filter(it =>it.repoId === repoId)
 					
 					if (!repoLabels.length)
 						return
@@ -484,7 +484,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					
 					const
 						repoId = availableRepo.id,
-						repoCollabs = collaborators.filter(it =>
+						repoCollabs = collaborators && collaborators.filter(it =>
 							it.repoIds && it.repoIds.includes(repoId)
 						)
 					
@@ -496,8 +496,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 					
 					// THIS FILTERS UPDATES AND DELETES
 					let
-						updatedCollabs =  availableRepo
-							.collaborators
+						updatedCollabs =  (availableRepo.collaborators || [])
 							.filter(collab => !updatedCollabIds.includes(collab.id))
 							.concat(repoCollabs)
 					

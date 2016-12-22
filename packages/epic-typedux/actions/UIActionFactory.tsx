@@ -9,8 +9,8 @@ import {
 import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
  
-import {getWindowManagerClient} from "epic-process-manager-client"
-import { WindowConfigDialogDefaults } from "epic-process-manager-client/WindowConfig"
+import {WindowConfigDialogDefaults,getWindowManagerClient} from "epic-process-manager-client"
+
 import ViewState from "epic-typedux/state/window/ViewState"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 import { windowsSelector } from "epic-typedux/selectors"
@@ -566,20 +566,24 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 *
 	 * @param viewConfig
 	 * @returns {(state:any)=>any}
+	 * @param temp
 	 */
 	@ActionReducer()
-	createView(viewConfig:IViewConfig) {
+	createView(viewConfig:IViewConfig|ViewState,temp:boolean = true) {
 		return state => {
 			const
 				id = shortId(),
 				//initialState = new (viewConfig.stateClazz)(),
-				viewState = new ViewState(cloneObjectShallow(viewConfig,{
-					id,
-					name: viewConfig.name,
-					index: state.viewStates.size,
-					//controller: viewConfig.controllerClazz && new (viewConfig.controllerClazz)(id,initialState),
-					//state: initialState
-				}))
+				viewState = viewConfig instanceof ViewState ?
+					viewConfig
+						.set('index',state.viewStates.size)
+						.set('temp',temp):
+					new ViewState(cloneObjectShallow(viewConfig,{
+						id,
+						name: viewConfig.name,
+						index: state.viewStates.size,
+						temp
+					}))
 			
 			
 			

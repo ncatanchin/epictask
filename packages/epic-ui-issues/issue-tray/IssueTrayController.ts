@@ -6,6 +6,7 @@ import { getValue } from "typeguard"
 import { ViewStateEvent } from "epic-typedux/state/window"
 import { getIssueActions } from "epic-typedux/provider"
 import { DefaultIssueCriteria } from "epic-models"
+import { ViewController } from "epic-typedux/state/window/ViewController"
 
 /**
  * Created by jglanz on 12/20/16.
@@ -23,7 +24,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
  * @class IssueTrayController
  * @constructor
  **/
-export class IssueTrayController extends EventEmitter implements IViewController<IssueTrayState> {
+export class IssueTrayController extends ViewController<IssueTrayState> implements IViewController<IssueTrayState> {
 	
 	private state:IssueTrayState
 	
@@ -33,6 +34,15 @@ export class IssueTrayController extends EventEmitter implements IViewController
 		this.state = initialState
 		
 		getStore().observe([RepoKey,'availableRepos'],this.onReposChanged)
+	}
+	
+	
+	setState(state:IssueTrayState) {
+		this.state = state
+	}
+	
+	getState():IssueTrayState {
+		return this.state
 	}
 	
 	/**
@@ -76,74 +86,7 @@ export class IssueTrayController extends EventEmitter implements IViewController
 		this.updateState({ issues })
 	},150)
 	
-	/**
-	 * Get the view state
-	 *
-	 * @returns {IssueTrayState}
-	 */
-	getState():IssueTrayState {
-		return this.state
-	}
 	
-	/**
-	 * Patch the view state
-	 *
-	 * @param patch
-	 * @returns {IssueTrayState}
-	 */
-	updateState(patch:{ [p:string]:any }):IssueTrayState {
-		patch = cloneObjectShallow(patch)
-		
-		const
-			keys = getValue(() => Object.keys(patch))
-		
-		
-		if (!patch || !keys || !keys.length)
-			return this.state
-		
-		const
-			updatedState = this.state.withMutations(state => {
-				for (let key of keys) {
-					const
-						newVal = patch[ key ]
-					
-					if (state.get(key) !== newVal)
-						state = state.set(key, newVal)
-				}
-				
-				return state
-			}) as IssueTrayState
-		
-		if (updatedState !== this.state) {
-			this.state = updatedState
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
-		}
-		
-		return updatedState
-	}
-	
-	/**
-	 * Make state updater
-	 *
-	 * @param updater
-	 */
-	makeStateUpdate<T extends Function>(updater:T):T {
-		return ((...args) => {
-			
-			const
-				stateUpdater = updater(...args),
-				updatedState = stateUpdater(this.state) as IssueTrayState
-			
-			if (updatedState === this.state) {
-				log.debug(`No state update`, args)
-				return this.state
-			}
-			
-			this.state = updatedState
-			return updatedState
-			
-		}) as any
-	}
 	
 	
 	

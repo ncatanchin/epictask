@@ -100,7 +100,9 @@ export class UIState extends UIStateRecord implements State {
 		
 		return toPlainObject(
 			cloneObjectShallow(super.toJS(),{
-				viewStates: this.viewStates.map(viewState => viewState.toJS())
+				viewStates: this.viewStates
+					.filter(state => state.temp !== true)
+					.map(viewState => viewState.toJS())
 			}),
 			excludeFilterConfig(
 				...excludeFilter('messages','ready','toolDragging','sheetURI','sheetParams')
