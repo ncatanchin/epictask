@@ -1,7 +1,7 @@
 import { Map, List } from "immutable"
 import { createSelector } from "reselect"
 import { UIState } from "../state/UIState"
-import ViewState from "epic-typedux/state/window/ViewState"
+import View from "epic-typedux/state/window/View"
 import {
 	createDeepEqualSelector,
 	UIKey,
@@ -20,24 +20,40 @@ export const uiStateSelector: (state) => UIState = createSelector(
 
 
 
-export const viewStatesSelector:TSelector<List<ViewState>> = createSelector(
+export const viewsSelector:TSelector<List<View>> = createSelector(
 	uiStateSelector,
-	(uiState:UIState) => uiState.viewStates
+	(uiState:UIState) => uiState.views
 )
 
-// export const selectedViewStateIdSelector:TSelector<string> = createSelector(
+
+export function makeViewSelector():TSelector<View> {
+	return createSelector(
+		viewsSelector,
+		(state,props) => props.viewId as string,
+		(views:List<View>,viewId:string) => views && views.find(it => it.id === viewId)
+	)
+}
+
+export function makeViewStateSelector():TSelector<any> {
+	return createSelector(
+		makeViewSelector(),
+		(view:View) => view && view.state
+	)
+}
+
+// export const selectedViewIdSelector:TSelector<string> = createSelector(
 // 	uiStateSelector,
-// 	(uiState:UIState) => uiState.selectedViewStateId
+// 	(uiState:UIState) => uiState.selectedViewId
 // )
 
-export const ideViewStatesSelector:TSelector<List<ViewState>> = createSelector(
-	viewStatesSelector,
-	(viewStates:List<ViewState>) => viewStates.filter(state => state.temp !== true) as List<ViewState>
+export const ideViewsSelector:TSelector<List<View>> = createSelector(
+	viewsSelector,
+	(views:List<View>) => views.filter(state => state.temp !== true) as List<View>
 )
 
-export const ideSelectedViewStateIdSelector:TSelector<string> = createSelector(
+export const ideSelectedViewIdSelector:TSelector<string> = createSelector(
 	uiStateSelector,
-	(uiState:UIState) => uiState.selectedViewStateId
+	(uiState:UIState) => uiState.selectedViewId
 )
 
 

@@ -6,7 +6,7 @@ import {
 import { User } from "epic-models"
 import { State } from "typedux"
 import { toPlainObject,excludeFilterConfig,excludeFilter } from "typetransform"
-import ViewState from "epic-typedux/state/window/ViewState"
+import View from "epic-typedux/state/window/View"
 import { makeToolPanels } from "epic-util"
 
 
@@ -57,8 +57,8 @@ export const UIStateRecord = Record({
 	
 	jobs: {},
 		
-	viewStates: List<ViewState>(),
-	selectedViewStateId: null
+	views: List<View>(),
+	selectedViewId: null
 })
 
 /**
@@ -87,11 +87,11 @@ export class UIState extends UIStateRecord implements State {
 		return new UIState(assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
-			viewStates: List(!o.viewStates ?
+			views: List(!o.views ?
 				[] :
-				o.viewStates
-					.filter(viewState => viewState.type && viewState.id && viewState.name)
-					.map(viewState => ViewState.fromJS(viewState))),
+				o.views
+					.filter(view => view.type && view.id && view.name)
+					.map(view => View.fromJS(view))),
 			toolPanels
 		}))
 	}
@@ -100,9 +100,9 @@ export class UIState extends UIStateRecord implements State {
 		
 		return toPlainObject(
 			cloneObjectShallow(super.toJS(),{
-				viewStates: this.viewStates
+				views: this.views
 					.filter(state => state.temp !== true)
-					.map(viewState => viewState.toJS())
+					.map(view => view.toJS())
 			}),
 			excludeFilterConfig(
 				...excludeFilter('messages','ready','toolDragging','sheetURI','sheetParams')
@@ -138,8 +138,8 @@ export class UIState extends UIStateRecord implements State {
 		selectedLogId:string
 	}
 	
-	selectedViewStateId:string
-	viewStates: List<ViewState>
+	selectedViewId:string
+	views: List<View>
 	
 
 

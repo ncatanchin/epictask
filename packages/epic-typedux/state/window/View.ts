@@ -16,7 +16,7 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-export const ViewStateRecord = Record({
+export const ViewRecord = Record({
 	id: shortId(),
 	parentId: null,
 	index:-1,
@@ -27,7 +27,7 @@ export const ViewStateRecord = Record({
 })
 
 
-export enum ViewStateEvent {
+export enum ViewEvent {
 	Changed
 }
 
@@ -37,13 +37,13 @@ export enum ViewStateEvent {
  * @class ViewState
  * @constructor
  **/
-export class ViewState extends ViewStateRecord {
+export class View extends ViewRecord {
 	
 	
 	static fromJS(o:any = {}) {
 		return reviveImmutable(
 			o,
-			ViewState,
+			View,
 			[],
 			['state']
 		)
@@ -77,4 +77,4 @@ export class ViewState extends ViewStateRecord {
 	state: Map<any,any>
 }
 
-export default ViewState
+export default View

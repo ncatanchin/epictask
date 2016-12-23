@@ -10,7 +10,12 @@ import { SearchResultItem } from "./SearchResultItem"
 import { SearchController, SearchEvent } from './SearchController'
 import { SearchState } from "./SearchState"
 import { makeHeightConstraint } from "epic-styles/styles"
-
+import { connect } from "react-redux"
+import {createStructuredSelector,createSelector} from 'reselect'
+import { makeViewStateSelector, viewsSelector } from "epic-typedux/selectors"
+import { PureRender } from "epic-ui-components/common/PureRender"
+import {List} from 'immutable'
+import { View } from "epic-typedux/state/window"
 // Constants
 const
 	log = getLogger(__filename)
@@ -42,8 +47,8 @@ function baseStyles(topStyles, theme, palette) {
 export interface ISearchResultsListProps extends IThemedAttributes {
 	open?:boolean
 	groupByProvider?:boolean
-	controller:SearchController
-	state:SearchState
+	viewController:SearchController
+	searchState?:SearchState
 	onResultSelected?:(item:SearchItem) => void
 	onResultHover?:(item:SearchItem) => void
 }
@@ -61,12 +66,18 @@ export interface ISearchResultsListState {
  * @constructor
  **/
 
-
+@connect(() => {
+	return createStructuredSelector({
+		searchState: SearchController.makeSearchStateSelector()
+		
+	})
+})
 @ThemedStyles(baseStyles, 'searchResults')
+@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
 	
 	private get controller() {
-		return this.props.controller
+		return this.props.viewController
 	}
 	
 	shouldComponentUpdate(nextProps) {
@@ -111,7 +122,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				styles,
 				theme,
 				groupByProvider,
-				state:searchState
+				searchState,
+				viewController
 			} = props,
 			
 			items = getValue(() => searchState.items)
@@ -121,11 +133,11 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		
 		return open === false ? null : <div style={styles}>
 			
-			{/*<CSSTransitionGroup*/}
-				{/*transitionName="results"*/}
-				{/*transitionEnterTimeout={250}*/}
-				{/*transitionLeaveTimeout={150}>*/}
-				{/**/}
+			<CSSTransitionGroup
+				transitionName="results"
+				transitionEnterTimeout={250}
+				transitionLeaveTimeout={150}>
+				
 				{searchState.working &&
 					<div style={makeHeightConstraint(theme.search.itemHeight)}>
 						<WorkIndicator open={true} />
@@ -133,17 +145,19 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				}
 				
 				{!items ? React.DOM.noscript() :
+					
 					items.map((item, index) => <SearchResultItem
 							key={`${item.provider.id}-${item.id}`}
 							item={item}
+							viewController={viewController}
+							selected={searchState.selectedIndex === index}
 							groupByProvider={groupByProvider}
-							controller={this.controller}
 							onMouseEnter={this.onHover(item)}
 							onClick={this.onClick(item)}
 							onMouseDown={this.onClick(item)}
 						/>
 					)}
-				{/*</CSSTransitionGroup>*/}
+				</CSSTransitionGroup>
 				
 		</div>
 		

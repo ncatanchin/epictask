@@ -19,7 +19,7 @@ import {
 	SearchController
 } from "./SearchController"
 import { SearchItem } from "epic-models"
-import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { ViewRoot } from "epic-ui-components/layout/view"
 import { SearchState } from "epic-ui-components/search/SearchState"
 import { isNil } from "typeguard"
 import baseStyles from './SearchField.styles'
@@ -31,13 +31,13 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
  * ISearchFieldProps
  */
-export interface ISearchFieldProps extends React.HTMLAttributes<any> {
+export interface ISearchFieldProps extends React.HTMLAttributes<any>, IViewRootProps<SearchController,SearchState> {
 	theme?:any
 			
 	styles?:any
@@ -107,8 +107,6 @@ export interface ISearchFieldProps extends React.HTMLAttributes<any> {
 	onItemsChanged?:(items:List<SearchItem>) => void
 	onItemSelected?:(item:SearchItem) => void
 	
-	viewController?:SearchController
-	viewState?:SearchState
 }
 
 export type TSearchSelectionListener = (selectedIndex:number, id:any) => any
@@ -155,6 +153,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 * onKeys
 	 */
 	onKeyDown = (event:React.KeyboardEvent<any>) => {
+		log.debug(`Key down`,event.key,event)
+		
 		const
 			stopEvent = () => {
 				event.preventDefault()
@@ -316,7 +316,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		
 		
 		let
-			searchState = controller.getState()
+			searchState = props.viewState
 		
 		
 		log.debug(`New Search State`, searchState)
@@ -549,6 +549,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 					selectedIndex
 		
 		
+		log.debug(`Setting selectedIndex to`,selectedIndex,'item count',totalItemCount,'viewState props',this.props.viewState.items,'viewState controller',controller.state.items,'props view state',this.props.viewState,this.props.view,this.props.viewId)
+		
 		controller.setSelectedIndex(newSelectedIndex)
 		
 		
@@ -562,7 +564,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 * @param increment
 	 */
 	moveSelection = (increment:number) => {
-		log.debug('move selection trigger', increment)
+		
 		
 		let
 			selectedIndex = this.props.viewState.selectedIndex
@@ -570,7 +572,10 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		if (!isNumber(selectedIndex))
 			selectedIndex = 0
 		
-		this.setSelectedIndex(selectedIndex + increment)
+		const
+			newSelectedIndex = selectedIndex + increment
+		log.debug('move selection trigger', increment,'result',newSelectedIndex,'selectedIndex was ',selectedIndex)
+		this.setSelectedIndex(newSelectedIndex)
 	}
 	
 	
@@ -623,7 +628,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		<SearchResults
 			ref={this.setResultsListRef}
 			anchor={`#${this.searchFieldId}-input`}
-			controller={this.controller}
+			viewController={this.controller}
+			viewId={this.props.viewId}
 			groupByProvider={this.props.groupByProvider}
 			searchId={this.props.searchId}
 			onItemHover={this.onHover}

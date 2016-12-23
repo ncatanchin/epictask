@@ -29,7 +29,7 @@ import { getIssueActions } from "epic-typedux/provider"
 import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "./IssueEditState"
 import IssueEditController from "./IssueEditController"
-import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { ViewRoot } from "epic-ui-components/layout"
 import { getWindowManagerClient } from "epic-process-manager-client"
 import baseStyles from "./IssueEditDialog.styles"
 
@@ -48,10 +48,7 @@ const
 /**
  * IIssueEditDialogProps
  */
-export interface IIssueEditDialogProps extends IThemedAttributes, IRouterLocation {
-	viewState?: IssueEditState
-	viewController?: IssueEditController
-	
+export interface IIssueEditDialogProps extends IThemedAttributes, IRouterLocation, IViewRootProps<IssueEditController,IssueEditState> {
 	availableRepos?: List<AvailableRepo>
 	user?: User
 	
@@ -100,46 +97,8 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		return getValue(() => this.props.viewController)
 	}
 	
-	private get repo() {
-		const
-			{availableRepos} = this.props,
-			issue = getValue(() => this.viewState.editingIssue)
-		
-		let
-			repo:Repo
-		
-		
-		if (issue) {
-			if (issue.repo) {
-				return issue.repo
-			} else if (issue.repoId) {
-				const
-					availRepo = availableRepos.find(it => it.id === issue.repoId)
-				
-				repo = getValue(() => availRepo.repo,null)
-			}
-		}
-		
-		if (!repo) {
-			const
-				repoId = repoIdValue.get()
-			
-			if (repoId) {
-				repo = getValue(() => availableRepos.find(it => it.repo.id === repoId).repo)
-			}
-			
-			if (!repo)
-				repo = getValue(() => availableRepos.get(0).repo)
-		}
-		
-		return repo
-	}
-	
-	private get editingIssue() {
-		let
-			issue = getValue(() => this.viewState.editingIssue)
-		
-		return issue
+	get editingIssue() {
+		return getValue(() => this.viewState.editingIssue)
 	}
 	
 	/**
@@ -448,6 +407,7 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 		let
 			{ ready, editingIssue, saveError, saving } = this.viewState
 		
+		log.info(`ready/issue`,ready,editingIssue)
 		if (!ready || !editingIssue) {
 			return <div />
 		}

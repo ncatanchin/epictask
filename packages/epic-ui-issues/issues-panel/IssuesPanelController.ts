@@ -1,26 +1,28 @@
 import * as Immutable from "immutable"
 import { List } from "immutable"
-import { OneAtATime } from "epic-global/Decorations"
-import ViewState, { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import {
+	OneAtATime,
+	cloneObjectShallow,
+	cloneObject,
+	notifyError,
+	RepoKey,
+	UIKey,
+	Provided,
+	ContextMenu
+} from "epic-global"
 import IssuesPanelState from "./IssuesPanelState"
 import { isNumber, isNil, getValue } from "typeguard"
-import { getUIActions, getIssueActions } from "epic-typedux/provider/ActionFactoryProvider"
-import { cloneObjectShallow, cloneObject } from "epic-global/ObjectUtil"
-import { Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria } from "epic-models"
-import { notifyError } from "epic-global/NotificationCenterClient"
-import { IssuesEvent } from "epic-models/IssuesEvent"
+import { getUIActions, getIssueActions, IssueActionFactory } from "epic-typedux"
+import { Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria, IssuesEvent } from "epic-models"
 import { makeIssuesPanelStateSelectors, TIssuesPanelSelectors } from "./IssuesPanelSelectors"
-import { IssueActionFactory } from "epic-typedux/actions/IssueActionFactory"
-import { RepoKey, UIKey } from "epic-global/Constants"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import {
-	enabledAvailableReposSelector, availableRepoIdsSelector, enabledRepoIdsSelector,
+	enabledAvailableReposSelector,
+	availableRepoIdsSelector,
+	enabledRepoIdsSelector,
 	availableReposSelector
 } from "epic-typedux/selectors"
-import { EventEmitter } from "events"
-import { Provided, ContextMenu } from "epic-global"
-import { ViewController } from "epic-typedux/state/window/ViewController"
-
+import { StoreViewController } from "epic-ui-components/layout"
 /**
  * Created by jglanz on 11/5/16.
  */
@@ -31,9 +33,6 @@ const
 
 // DEBUG OVERRIDE
 log.setOverrideLevel(LogLevel.DEBUG)
-
-
-type TIssuesPanelStateUpdater = (...args) => (state: IssuesPanelState) => any
 
 
 export function getIssuesPanelSelector(fn: (selectors: TIssuesPanelSelectors) => any) {
@@ -48,20 +47,10 @@ export function getIssuesPanelSelector(fn: (selectors: TIssuesPanelSelectors) =>
  * @constructor
  **/
 @Provided
-export class IssuesPanelController extends ViewController<IssuesPanelState> implements IViewController<IssuesPanelState> {
+export class IssuesPanelController extends StoreViewController<IssuesPanelState> implements IViewController<IssuesPanelState> {
 	
 	
 	selectors
-	
-	/**
-	 * Use local state vs store state
-	 */
-	useLocalState: boolean
-	
-	/**
-	 * Local state
-	 */
-	private localState:IssuesPanelState
 	
 	
 	/**
@@ -80,56 +69,6 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 	private unsubscribers: Function[]
 	
 	
-	
-	/**
-	 * Get view state from redux
-	 *
-	 * @returns {string}
-	 */
-	get viewState():ViewState {
-		return getValue(() => this.selectors.viewStateSelector(getStoreState()),getValue(() => this.opts.storeViewStateProvider()))
-	}
-	
-	/**
-	 * Getter for state
-	 *
-	 * @returns {IssuesPanelState}
-	 */
-	get state(): IssuesPanelState {
-		// if (this.useLocalState)
-		// 	return this.localState
-		//
-		return getValue(() =>
-				this.selectors.issuesPanelStateSelector(getStoreState()),
-			this.initialState)
-	}
-	
-	
-	setState(state) {
-		let
-			{ viewState } = this
-		
-		getUIActions().updateView(viewState.set('state', state) as ViewState)
-		// if (this.useLocalState) {
-		// 	this.localState = state
-		// } else {
-		// 	let
-		// 		{ viewState } = this
-		//
-		// 	getUIActions().updateView(viewState.set('state', state))
-		// }
-		
-		this.emit(ViewStateEvent[ ViewStateEvent.Changed ], state)
-	}
-	
-	/**
-	 * Get the current state
-	 *
-	 * @returns {IssuesPanelState}
-	 */
-	getState() {
-		return this.state
-	}
 	
 	/**
 	 * All Current issues
@@ -164,30 +103,17 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 	 * @param initialState
 	 * @param opts
 	 */
-	constructor(public id: string, public initialState: IssuesPanelState = new IssuesPanelState(),private opts:any = {}) {
-		super()
+	constructor(id: string, initialState: IssuesPanelState = new IssuesPanelState(),opts:any = {}) {
+		super(id,initialState,opts)
 		
-		this.localState = this.initialState
 		assign(this,opts)
 		
 		const
-			viewStateProvider = opts.storeViewStateProvider
+			viewProvider = opts.storeViewProvider
 		
-		this.selectors = makeIssuesPanelStateSelectors(id,() => viewStateProvider().state)
+		this.selectors = makeIssuesPanelStateSelectors(id,() => viewProvider().state)
 		
 	}
-	
-	/**
-	 * Use local state vs store state
-	 *
-	 * @param useLocalState
-	 */
-	setUseLocalState(useLocalState) {
-		this.useLocalState = useLocalState
-		
-		return this
-	}
-	
 	
 	setUseAllRepoIds(useAllRepoIds) {
 		this.useAllRepoIds = useAllRepoIds
@@ -221,8 +147,8 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 	 * @param newVal
 	 * @param oldVal
 	 */
-	private onSelectedIssueIdsChanged = (newVal: List<number>, oldVal: List<number>) => {
-		log.debug(`Selected issue ids changed`, newVal, oldVal)
+	private onSelectedIssueIdsChanged = _.debounce((newVal: List<number>) => {
+		log.debug(`Selected issue ids changed`, newVal)
 		if (getValue(() => newVal.size, 0) !== 1) {
 			return
 		}
@@ -238,8 +164,7 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 		
 		this.loadActivity(issue)
 		
-		
-	}
+	},100)
 	
 	/**
 	 * Handle database changes
@@ -350,15 +275,15 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 	}
 	
 	
-	/**
-	 * Create a view state path
-	 *
-	 * @param keys
-	 * @returns {[string,string,any,string,any]}
-	 */
-	makeStatePath(...keys) {
-		return [ UIKey, 'viewStates', this.viewState.index, 'state', ...keys ]
-	}
+	// /**
+	//  * Create a view state path
+	//  *
+	//  * @param keys
+	//  * @returns {[string,string,any,string,any]}
+	//  */
+	// makeStatePath(...keys) {
+	// 	return [ UIKey, 'views', this.view.index, 'state', ...keys ]
+	// }
 	
 	/**
 	 * Set mounted
@@ -391,8 +316,8 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged)
 		]
 		
-		if (!this.useLocalState)
-			this.unsubscribers.push(store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged))
+		// if (!this.useLocalState)
+		//this.unsubscribers.push(store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged))
 		
 		this.loadIssues()
 	}
@@ -561,6 +486,9 @@ export class IssuesPanelController extends ViewController<IssuesPanelState> impl
 			selectedIssueIds,
 			editInlineConfig: null
 		})
+		
+		this.onSelectedIssueIdsChanged(selectedIssueIds)
+		
 	}
 	
 	/**

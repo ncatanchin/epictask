@@ -9,17 +9,20 @@ import { PureRender, Form, DialogRoot, createSaveCancelActions, ChipsField } fro
 import { getValue, guard } from "epic-global"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Issue, User, Label, Milestone } from "epic-models"
-import { getUIActions } from "epic-typedux"
-import { CommandType, ContainerNames, CommonKeys } from "epic-command-manager"
+import {
+	getUIActions,
+	getIssueActions,
+	labelsSelector,
+	assigneesSelector,
+	milestonesSelector
+} from "epic-typedux"
+import { ContainerNames, CommonKeys } from "epic-command-manager"
 import { IssueMultiInlineList } from "../issues-panel/IssueMultiInlineList"
 import { IssuePatchModes } from "../issues-panel/IssuesPanelState"
-import { getIssueActions } from "epic-typedux/provider"
-import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
 import IssuePatchController from "./IssuePatchController"
 import { IssuePatchState } from "./IssuePatchState"
-import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
 import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
-
+import { ViewRoot } from "epic-ui-components/layout"
 
 // Constants
 const
@@ -112,7 +115,7 @@ export const IssuePatchFns = {
 /**
  * IIssuePatchDialogProps
  */
-export interface IIssuePatchDialogProps extends IThemedAttributes {
+export interface IIssuePatchDialogProps extends IThemedAttributes, IViewRootProps<IssuePatchController,IssuePatchState> {
 	saving?:boolean
 	saveError?:Error
 		
@@ -120,8 +123,6 @@ export interface IIssuePatchDialogProps extends IThemedAttributes {
 	availableMilestones?:List<Milestone>
 	availableLabels?:List<Label>
 	
-	viewController?:IssuePatchController
-	viewState?:IssuePatchState
 }
 
 /**
@@ -141,13 +142,12 @@ export interface IIssuePatchDialogState {
  * @constructor
  **/
 
-
+@ViewRoot(IssuePatchController,IssuePatchState)
 @connect(createStructuredSelector({
 	availableAssignees: assigneesSelector,
 	availableLabels: labelsSelector,
 	availableMilestones: milestonesSelector
 }))
-@ViewRoot(IssuePatchController,IssuePatchState)
 @CommandComponent()
 @ThemedStyles(baseStyles, 'issuePatchDialog')
 @PureRender
@@ -170,7 +170,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	commandComponentId = ContainerNames.IssuePatchDialog
 	
 	private get viewState():IssuePatchState {
-		return getValue(() => this.viewController.getState())
+		return getValue(() => this.props.viewState)
 	}
 	
 	private get viewController() {
@@ -364,8 +364,9 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeMilestoneItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
-			{ availableMilestones } = props,
-			{ query, newItems,issues } = this,
+			{ availableMilestones,viewState } = props,
+			{issues} = viewState,
+			{ query, newItems } = this,
 			items = availableMilestones
 			
 			// Filter out repos that don't apply to these issues
@@ -399,8 +400,9 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeLabelItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
-			{ availableLabels } = props,
-			{ query, newItems,issues } = this,
+			{ availableLabels , viewState} = props,
+			{issues} = viewState,
+			{ query, newItems } = this,
 			
 			items = availableLabels
 			
@@ -437,7 +439,8 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	makeAssigneeItems(props:IIssuePatchDialogProps, repoIds) {
 		
 		const
-			{ issues } = this,
+			{viewState} = props,
+			{issues} = viewState,
 			collaborators = issues
 				.reduce((allUsers, issue:Issue) => {
 					
@@ -474,9 +477,12 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	updateState(props:IIssuePatchDialogProps) {
 		const
 			viewState = props.viewState
+		
 		log.debug(`Updating state, viewState = `,viewState)
-		if (!viewState || !viewState.mode || !viewState.issues.size)
-			return
+		
+		if (!viewState || !viewState.mode || !viewState.issues.size) {
+			return log.info(`Unable to create patch state`,viewState,viewState.issues)
+		}
 		
 		const
 			
@@ -505,8 +511,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	componentWillMount = () => {
 		this.viewController.setMounted(
 			true,
-			this.props,
-			() => this.updateState(this.props)
+			this.props
 		)
 	}
 	
@@ -562,7 +567,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 				{title}
 			</div>,
 			titleActionNodes = createSaveCancelActions(theme, palette, this.submit, this.hide)
-		
+		//file:///Users/jglanz/Development/densebrain/epictask-workspace/epictask/dist/app/browser-entry.html#dialog/issue-patch?mode=Label&issueKeys=%7B%220%22%3A%2258922079-146%22%2C%22length%22%3A1%2C%22size%22%3A1%7D&cacheBuster=1482458824764
 		return <CommandRoot
 			id={ContainerNames.IssuePatchDialog}
 			component={this}
@@ -597,12 +602,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 					onChipSelected={this.onItemSelected}
 					onChipRemoved={this.onItemRemoved}
 					keySource={(item:Label) => item.id}
-					
 					hint={title}
-					
-					
-					
-				
 				/>
 				
 				{/*<IssueLabelsAndMilestones*/}

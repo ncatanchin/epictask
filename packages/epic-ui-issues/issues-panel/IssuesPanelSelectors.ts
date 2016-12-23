@@ -28,7 +28,7 @@ import IssuesPanelState, {
 	TIssueActivity
 } from "./IssuesPanelState"
 import { UIState } from "epic-typedux/state/UIState"
-import ViewState from "epic-typedux/state/window/ViewState"
+import {View} from "epic-typedux/state/window/View"
 import { isNil, getValue } from "typeguard"
 
 
@@ -36,33 +36,33 @@ const
 	log = getLogger(__filename)
 
 // GET THE ID FROM PROPS
-const makeViewStateIdSelector = () => createSelector(
-	(state,props) => props.viewStateId,
-	viewStateId => viewStateId
+const makeViewIdSelector = () => createSelector(
+	(state,props) => props.viewId,
+	viewId => viewId
 )
 
 
 
-export type TViewStateProvider = () => ViewState
+export type TViewProvider = () => View
 
-export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewStateProvider = null) {
+export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewProvider = null) {
 	
 		
 	
 		const
 			
-			storeViewStateSelector = createSelector(
-				(state,props) => props && props.storeViewState,
-				(storeViewState:ViewState) => storeViewState
+			storeViewSelector = createSelector(
+				(state,props) => props && props.view,
+				(storeView:View) => storeView
 			),
 			
-			viewStateIdSelector = id ? (() => id) : makeViewStateIdSelector(),
-			viewStateSelector = createSelector(
+			viewIdSelector = id ? (() => id) : makeViewIdSelector(),
+			viewSelector = createSelector(
 				uiStateSelector,
-				viewStateIdSelector,
-				storeViewStateSelector,
-				(uiState:UIState, viewStateId:string,storeViewState:ViewState) =>
-					getValue(() => uiState.viewStates.find(it => it.id === viewStateId),getState && getState())
+				viewIdSelector,
+				storeViewSelector,
+				(uiState:UIState, viewId:string,storeView:View) =>
+					getValue(() => uiState.views.find(it => it.id === viewId),getState && getState())
 			),
 			
 			// localStateSelector:TSelector<IssuesPanelState> = createSelector(
@@ -71,9 +71,9 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewSt
 			// ),
 			
 			issuesPanelStateSelector:TSelector<IssuesPanelState> = createSelector(
-				viewStateSelector,
-				(viewState:ViewState) =>
-					viewState.state as IssuesPanelState
+				viewSelector,
+				(view:View) =>
+					view.state as IssuesPanelState
 			),
 			issuesEventsSelector:TSelector<List<IssuesEvent>> = createSelector(
 				issuesPanelStateSelector,
@@ -532,8 +532,8 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewSt
 		
 		
 	return {
-		viewStateIdSelector,
-		viewStateSelector,
+		viewIdSelector,
+		viewSelector,
 		issuesPanelStateSelector,
 		issuesEventsSelector,
 		groupVisibilitySelector,

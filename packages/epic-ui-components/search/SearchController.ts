@@ -1,13 +1,11 @@
-import { List,Map } from "immutable"
-import { AvailableRepo, Repo, SearchItem, SearchResult } from "epic-models"
-
-import { ValueCache, Benchmark, cloneObjectShallow, shallowEquals } from "epic-global"
-import {EnumEventEmitter} from 'type-enum-events'
-import { isNumber, getValue, isFunction, isNil, isList } from "typeguard"
-import { nilFilterList } from "epic-global/ListUtil"
-import { SearchState } from "epic-ui-components/search/SearchState"
-import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
-import { EventEmitter } from "events"
+import { List } from "immutable"
+import { SearchItem, SearchResult } from "epic-models"
+import { ValueCache, Benchmark, cloneObjectShallow, shallowEquals, nilFilterList } from "epic-global"
+import { getValue, isFunction, isList } from "typeguard"
+import { SearchState } from "./SearchState"
+import { View, viewsSelector } from "epic-typedux"
+import { createSelector } from "reselect"
+import { StoreViewController } from "epic-ui-components/layout/view"
 
 const
 	log = getLogger(__filename),
@@ -39,7 +37,7 @@ export type TSearchSelectHandler = (searchId:string,item:SearchItem) => any
  *
  * TODO: Redesign this
  */
-export class SearchController extends EventEmitter implements IViewController<SearchState> {
+export class SearchController extends StoreViewController<SearchState> {
 	
 
 	
@@ -49,7 +47,6 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	
 	private items:List<SearchItem>
 	
-	private state:SearchState
 	
 	
 	makeStateUpdate<T extends Function>(updater:T):T {
@@ -96,10 +93,8 @@ export class SearchController extends EventEmitter implements IViewController<Se
 	
 	
 	
-	constructor() {
-		super()
-		
-		this.state = new SearchState()
+	constructor(id:string,initialState = new SearchState,opts) {
+		super(id,initialState,opts)
 		
 		this.queryCache = new ValueCache((newValue,oldValue) => {
 			if (!this.pendingSearch)
@@ -178,46 +173,21 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		return items
 	}
 	
-	
-	/**
-	 * Update/patch the current state
-	 *
-	 * @param patch
-	 * @returns {any}
-	 */
-	updateState(patch:{[prop:string]:any}) {
-		patch = cloneObjectShallow(patch)
-		
-		const
-			keys = getValue(() => Object.keys(patch))
-		
-		
-		if (!patch || !keys || !keys.length)
-			return this.state
-		
-		const
-			updatedState = this.state.withMutations(state => {
-				for (let key of keys) {
-					const
-						newVal = patch[ key ]
-					
-					if (state.get(key) !== newVal)
-						state = state.set(key, newVal)
-				}
-				
-				return state
-			}) as SearchState
-		
-		if (updatedState !== this.state) {
-			
-			this.state = updatedState
-			log.tron(`Updated search state, focused=${updatedState.focused}`)
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
-			this.emit(SearchEvent[SearchEvent.StateChanged],this.state)
-		}
-		
-		return updatedState
-	}
+	//
+	// /**
+	//  * Update/patch the current state
+	//  *
+	//  * @param patch
+	//  * @returns {any}
+	//  */
+	// updateState(patch:{[prop:string]:any}) {
+	// 	const
+	// 		updatedState = super.updateState(patch)
+	//
+	// 	//this.emit(ViewEvent[ ViewEvent.Changed ],updatedState)
+	//
+	// 	return updatedState
+	// }
 	
 	private setResults(results:List<SearchResult>) {
 		let
@@ -229,19 +199,16 @@ export class SearchController extends EventEmitter implements IViewController<Se
 			items = currentItems
 		}
 		
-		this.updateState({
+		log.debug(`Updating results`,results, 'view id',this.id)
+		
+		return this.updateState({
 			items,
-			results: results,
+			results,
 			working: false
 		})
-		return this.state
+		
 	}
 	
-	
-	
-	getState() {
-		return this.state
-	}
 	
 	/**
 	 * Set providers
@@ -387,7 +354,20 @@ export class SearchController extends EventEmitter implements IViewController<Se
 		
 	}
 	
-
+	
+	static makeSearchStateSelector() {
+		const
+			viewSelector = createSelector(
+				viewsSelector,
+				(state,props) => props.viewController.id,
+				(views:List<View>,viewId:string) => views.find(it => it.id === viewId)
+			)
+		
+		return createSelector(
+			viewSelector,
+			(view:View) => view.state as SearchState
+		)
+	}
 }
 
 export default SearchController

@@ -3,9 +3,10 @@ import { getValue } from "typeguard"
 import {Comment} from 'epic-models'
 import { cloneObjectShallow, notifyError, notifySuccess } from "epic-global"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
-import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import { ViewEvent } from "epic-typedux/state/window/View"
 import CommentEditState from "./CommentEditState"
 import { getStores } from "epic-database-client"
+import { StoreViewController } from "epic-ui-components"
 /**
  * Created by jglanz on 11/12/16.
  */
@@ -22,17 +23,13 @@ const
  * @class CommentEditController
  * @constructor
  **/
-class CommentEditController extends EventEmitter implements IViewController<CommentEditState> {
-	
-	private state:CommentEditState
-	
+class CommentEditController extends StoreViewController<CommentEditState> {
 	
 	private init = false
 	
-	constructor(public id:string,initialState:CommentEditState = new CommentEditState()) {
-		super()
+	constructor(id:string,initialState:CommentEditState = new CommentEditState(),opts:any = {}) {
+		super(id,initialState,opts)
 		
-		this.state = initialState
 	}
 	
 	setMounted(mounted:boolean,props,cb = null) {
@@ -88,9 +85,6 @@ class CommentEditController extends EventEmitter implements IViewController<Comm
 	}
 	
 	
-	getState():CommentEditState {
-		return this.state
-	}
 	
 	/**
 	 * Save the comment
@@ -121,42 +115,6 @@ class CommentEditController extends EventEmitter implements IViewController<Comm
 		}
 	}
 	
-	/**
-	 * Update/patch the current state
-	 *
-	 * @param patch
-	 * @returns {any}
-	 */
-	updateState(patch:{[prop:string]:any}) {
-		patch = cloneObjectShallow(patch)
-		
-		const
-			keys = getValue(() => Object.keys(patch))
-		
-		
-		if (!patch || !keys || !keys.length)
-			return this.state
-		
-		const
-			updatedState = this.state.withMutations(state => {
-				for (let key of keys) {
-					const
-						newVal = patch[ key ]
-					
-					if (state.get(key) !== newVal)
-						state = state.set(key, newVal)
-				}
-				
-				return state
-			}) as CommentEditState
-		
-		if (updatedState !== this.state) {
-			this.state = updatedState
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
-		}
-		
-		return updatedState
-	}
 	
 	
 	/**
@@ -188,23 +146,6 @@ class CommentEditController extends EventEmitter implements IViewController<Comm
 		})
 	}
 	
-	makeStateUpdate<T extends Function>(updater:T):T {
-		return ((...args) => {
-			
-			const
-				stateUpdater = updater(...args),
-				updatedState = stateUpdater(this.state) as CommentEditState
-			
-			if (updatedState === this.state) {
-				log.debug(`No state update`, args)
-				return this.state
-			}
-			
-			this.state = updatedState
-			return updatedState
-			
-		}) as any
-	}
 }
 
 export default CommentEditController

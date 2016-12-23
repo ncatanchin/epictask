@@ -71,7 +71,7 @@ const IssueRouteConfigs = {
 		makeURI(mode: TIssuePatchMode, issues: List<Issue>) {
 			const
 				issueKeys = toJSON(
-					issues.map(issue => Issue.makeIssueId(issue)).toArray()
+					issues.map(issue => Issue.makeIssueId(issue)).toJS()
 				)
 			
 			return `dialog/issue-patch?mode=${mode}&issueKeys=${encodeURIComponent(issueKeys)}`

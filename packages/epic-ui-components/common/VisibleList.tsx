@@ -562,7 +562,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		// let
 		// 	contentHeight = itemHeightTotal//((items as any).size || (items as any).length) * itemHeightMin
 		
-		return <Resizable style={[styles.root,PositionRelative]}
+		return <Resizable style={makeStyle(styles.root,Styles.PositionRelative)}
 		                  ref={this.setRootRef}
 		                  onResize={this.onResize}>
 			<div style={styles.list}

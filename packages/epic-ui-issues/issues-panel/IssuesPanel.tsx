@@ -6,33 +6,30 @@ import { Map, List } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { IssueDetailPanel } from "./IssueDetailPanel"
-import { Issue } from "epic-models"
+
 import {
 	IIssueGroup,
 	getIssueGroupId,
 	IIssueListItem,
-	IssueListItemType,
 	IIssueEditInlineConfig
 } from "epic-models"
 import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
-	CommandContainerBuilder,
-	CommandContainer
+	CommandContainerBuilder
 } from "epic-command-manager-ui"
-import { CommonKeys, CommandType, CommandMenuItemType, getCommandManager, ContainerNames } from "epic-command-manager"
-import { IThemedAttributes, FlexColumnCenter, ThemedStyles } from "epic-styles"
+import { CommonKeys, ContainerNames } from "epic-command-manager"
+import { FlexColumnCenter, ThemedStyles } from "epic-styles"
 import { SearchField} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
-import { getValue, unwrapRef, MenuIds, isNumber, cloneObjectShallow } from "epic-global"
+import { getValue, unwrapRef } from "epic-global"
 import IssuesPanelController from "./IssuesPanelController"
 import { getIssuesPanelSelector } from "./IssuesPanelController"
-import { ThemedStylesWithOptions } from "epic-styles/ThemeDecorations"
 import { shallowEquals, guard } from "epic-global/ObjectUtil"
 import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 
-import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+import { ViewRoot } from "epic-ui-components/layout"
 import IssuesPanelState from "./IssuesPanelState"
 import { getIssueActions } from "epic-typedux/provider"
 import { IssuesPanelSearch } from "./IssuesPanelSearch"
@@ -152,7 +149,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	
 	shouldComponentUpdate(nextProps,nextState) {
 		return !shallowEquals(this.props,nextProps,'horizontalView','hasSelectedIssues','issues','items','groups','editInlineConfig') ||
-			!shallowEquals(this.state,nextState,'listRef') || !this.props.viewState
+			!shallowEquals(this.state,nextState,'listRef') || !this.props.view
 	}
 	
 	/**

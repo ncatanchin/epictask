@@ -8,6 +8,7 @@ import { unwrapRef } from "epic-global"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanelController } from "epic-ui-issues/issues-panel/IssuesPanelController"
 import { IssuesPanelState } from "epic-ui-issues/issues-panel/IssuesPanelState"
+import { View } from "epic-typedux/state/window"
 
 const
 	log = getLogger(__filename)
@@ -16,11 +17,8 @@ const
 /**
  * IIssuesPanelProps
  */
-export interface IBaseIssuesPanelProps extends IThemedAttributes {
+export interface IBaseIssuesPanelProps extends IThemedAttributes, IViewRootProps<IssuesPanelController,IssuesPanelState> {
 	commandContainer?:CommandContainer
-	
-	viewController?:IssuesPanelController
-	viewState?:IssuesPanelState
 	
 	issues?:List<Issue>
 	groups?: List<IIssueGroup>
@@ -43,11 +41,27 @@ export interface IBaseIssuesPanelState {
 export abstract class BaseIssuePanel<P extends IBaseIssuesPanelProps,S extends IBaseIssuesPanelState> extends React.Component<P,S> {
 	
 	
-	
-	
+	/**
+	 * View controller
+	 */
 	get viewController() {
 		return this.props.viewController
 	}
+	
+	/**
+	 * Get the state
+	 */
+	get viewState():IssuesPanelState {
+		return this.props.viewState
+	}
+	
+	/**
+	 * View State
+	 */
+	get view():View {
+		return this.props.view
+	}
+	
 	
 	get selectedIssue() {
 		return this.viewController.getSelectedIssue()

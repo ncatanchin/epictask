@@ -7,7 +7,7 @@ import { PureRender } from 'epic-ui-components'
 import { ThemedStyles } from 'epic-styles'
 import { availableReposSelector, trayOpenSelector } from "epic-typedux/selectors"
 import { AvailableRepo, DefaultIssueCriteria } from "epic-models"
-import { ViewRoot } from "epic-typedux/state/window"
+import { ViewRoot } from "epic-ui-components/layout"
 import {
 	IssuesPanelState, IssuesPanelController, IssuesList, BaseIssuePanel,
 	IBaseIssuesPanelProps,getIssuesPanelSelector
@@ -139,19 +139,7 @@ export class IssueTray extends BaseIssuePanel<IIssueTrayProps,IIssueTrayState> i
 			this.setState({listRef})
 	}
 	
-	/**
-	 * View controller
-	 */
-	get viewController() {
-		return this.props.viewController
-	}
 	
-	/**
-	 * View State
-	 */
-	get viewState() {
-		return this.props.viewState
-	}
 	
 	/**
 	 * Create tray

@@ -3,13 +3,13 @@ import { List } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { cloneObjectShallow, guard, ContextMenu } from "epic-global"
-import { View, PureRender, Icon } from "epic-ui-components"
+import { ViewProvider, PureRender, Icon } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { ViewState,viewStatesSelector, getUIActions } from "epic-typedux"
+import { View,viewsSelector, getUIActions } from "epic-typedux"
 import { getValue } from "typeguard"
 import baseStyles from "./IDETabbedViewContainer.styles"
-import ViewStateTab from "./ViewStateTab"
-import { ideViewStatesSelector, ideSelectedViewStateIdSelector } from "epic-typedux/selectors"
+import ViewTab from "./ViewTab"
+import { ideViewsSelector, ideSelectedViewIdSelector } from "epic-typedux/selectors"
 
 // Constants
 const
@@ -22,8 +22,8 @@ const
  * IViewContainerProps
  */
 export interface IIDETabbedViewContainerProps extends IThemedAttributes {
-	viewStates?: List<ViewState>
-	selectedViewStateId?:string
+	views?: List<View>
+	selectedViewId?:string
 }
 
 /**
@@ -44,8 +44,8 @@ export interface IIDETabbedViewContainerState {
  **/
 
 @connect(createStructuredSelector({
-	viewStates: ideViewStatesSelector,
-	selectedViewStateId: ideSelectedViewStateIdSelector
+	views: ideViewsSelector,
+	selectedViewId: ideSelectedViewIdSelector
 }))
 @ThemedStyles(baseStyles)
 @PureRender
@@ -56,14 +56,14 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 *
 	 * @returns {any}
 	 */
-	private get selectedViewStateId() {
+	private get selectedViewId() {
 		let
-			{viewStates,selectedViewStateId} =  this.props
+			{views,selectedViewId} =  this.props
 		
 		const
-			exists = selectedViewStateId && viewStates.findIndex(it => it.id === selectedViewStateId) > -1
+			exists = selectedViewId && views.findIndex(it => it.id === selectedViewId) > -1
 		
-		return exists ? selectedViewStateId : getValue(() => viewStates.get(0).id)
+		return exists ? selectedViewId : getValue(() => views.get(0).id)
 		
 	}
 	
@@ -74,7 +74,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 */
 	private checkDefaultView = (props = this.props) => {
 		const
-			{viewStates} = props
+			{views} = props
 		
 		let
 			defaultViewConfig = getValue(() => this.state.defaultViewConfig)
@@ -86,7 +86,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		}
 		
 		// MAKE SURE WE HAVE AT LEAST 1 VIEW
-		if (viewStates.size < 1 && defaultViewConfig) {
+		if (views.size < 1 && defaultViewConfig) {
 			getUIActions().createView(cloneObjectShallow(defaultViewConfig),false)
 		}
 	}
@@ -159,15 +159,15 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 */
 	render() {
 		let
-			{ styles, viewStates } = this.props,
-			{selectedViewStateId} = this
+			{ styles, views } = this.props,
+			{selectedViewId} = this
 		
-		viewStates = viewStates.filter(it => getValue(() => it.id,null) !== null) as any
+		views = views.filter(it => getValue(() => it.id,null) !== null) as any
 		
 		const
-			viewState = viewStates.find(it => it.id === selectedViewStateId)
+			view = views.find(it => it.id === selectedViewId)
 		
-		if (!viewState || !viewStates || !viewStates.size || !selectedViewStateId)
+		if (!view || !views || !views.size || !selectedViewId)
 			return React.DOM.noscript()
 		
 		
@@ -176,13 +176,13 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 			<div style={[styles.tabBar]}>
 				
 				<div key="tabs" style={styles.tabBar.tabs}>
-				{viewStates.map((it,index) =>
-					<ViewStateTab
+				{views.map((it,index) =>
+					<ViewTab
 						key={it.id}
-						selected={selectedViewStateId === it.id}
+						selected={selectedViewId === it.id}
 						styles={mergeStyles(styles.tabBar.tab,index === 0 && styles.tabBar.tab.first)}
-						closeEnabled={viewStates.size > 1}
-						viewState={it}/>)
+						closeEnabled={views.size > 1}
+						view={it}/>)
 				}
 				</div>
 				{/* New Tab Button */}
@@ -195,7 +195,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 				<div key="bottomBorder" style={styles.tabBar.bottomBorder} />
 			</div>
 			<div id="viewContainerContent" style={[styles.content]}>
-				<View key={viewState.id} viewState={viewState}/>
+				<ViewProvider key={view.id} view={view}/>
 			</div>
 		</div>
 	}

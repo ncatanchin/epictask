@@ -1,7 +1,7 @@
 import {EventEmitter} from 'events'
 import { cloneObjectShallow } from "epic-global"
 import { getValue } from "typeguard"
-import { ViewStateEvent } from "./ViewState"
+import { ViewEvent } from "epic-typedux"
 
 
 const
@@ -58,7 +58,7 @@ export abstract class ViewController<S extends Immutable.Map<any,any>> extends E
 		
 		if (updatedState !== startState) {
 			this.setState(updatedState)
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
+			this.emit(ViewEvent[ ViewEvent.Changed ],updatedState)
 		}
 		
 		return updatedState

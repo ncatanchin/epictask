@@ -1,21 +1,21 @@
 import { Icon, PureRender } from "epic-ui-components"
 import { getUIActions } from "epic-typedux"
 import { isHovering } from "epic-styles"
-import { ViewState } from "epic-typedux/state/window/ViewState"
+import { View } from "epic-typedux/state/window/View"
 import { getValue } from "typeguard"
 import { TextField } from "epic-ui-components/common"
 
 const
 	log = getLogger(__filename)
 
-export interface IViewStateTabProps {
+export interface IViewTabProps {
 	styles:any
-	viewState:ViewState
+	view:View
 	selected:boolean
 	closeEnabled:boolean
 }
 
-export interface IViewStateTabState {
+export interface IViewTabState {
 	editing?:boolean
 	newName?:string
 }
@@ -25,7 +25,7 @@ export interface IViewStateTabState {
  */
 @Radium
 @PureRender
-export default class ViewStateTab extends React.Component<IViewStateTabProps,IViewStateTabState> {
+export default class ViewTab extends React.Component<IViewTabProps,IViewTabState> {
 	
 	get editing() {
 		return getValue(() => this.state.editing,false)
@@ -41,7 +41,7 @@ export default class ViewStateTab extends React.Component<IViewStateTabProps,IVi
 	 * Save name editing
 	 */
 	private save = () => {
-		getUIActions().updateView(this.props.viewState.set('name',getValue(() => this.state.newName,"empty")) as ViewState)
+		getUIActions().updateView(this.props.view.set('name',getValue(() => this.state.newName,"empty")) as View)
 		this.setState({editing: false})
 	}
 	
@@ -59,12 +59,12 @@ export default class ViewStateTab extends React.Component<IViewStateTabProps,IVi
 	 */
 	private onTextClick = (event) => {
 		const
-			{viewState,selected} = this.props
+			{view,selected} = this.props
 		
 		if (selected && !this.editing) {
 			this.setState({
 				editing: true,
-				newName: viewState.name || ''
+				newName: view.name || ''
 			})
 		}
 		
@@ -114,17 +114,17 @@ export default class ViewStateTab extends React.Component<IViewStateTabProps,IVi
 	
 	render() {
 		const
-			{styles,viewState,selected,closeEnabled} = this.props,
+			{styles,view,selected,closeEnabled} = this.props,
 			{editing,newName} = this.state,
-			id = viewState.id,
+			id = view.id,
 			hovering = isHovering(this,"tab")
 		
-		log.info(`view state tab: ${id}`)
+		log.debug(`view state tab: ${id}`)
 		return <div ref="tab"
 		            style={[styles, selected && styles.selected]}
 		            onClick={() => {
-		            	log.info(`Clicked: ${id}`,viewState)
-		            	getUIActions().setSelectedViewStateId(id)
+		            	log.info(`Clicked: ${id}`,view)
+		            	getUIActions().setSelectedViewId(id)
 		            }}>
 			{editing &&
 				<TextField
@@ -137,7 +137,7 @@ export default class ViewStateTab extends React.Component<IViewStateTabProps,IVi
 			  />}
 			
 			{!editing && <div style={[styles.label]} onClick={this.onTextClick}>
-				{viewState.name || 'No name'}
+				{view.name || 'No name'}
 			</div>}
 			
 			{/* IF CLOSE ENABLED, > 1 VIEW STATE */}

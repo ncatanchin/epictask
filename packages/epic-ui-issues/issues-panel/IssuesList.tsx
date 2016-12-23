@@ -85,6 +85,7 @@ const baseStyles = (topStyles, theme, palette) => ({
 export interface IIssuesListProps extends IThemedAttributes {
 	viewState?:IssuesPanelState
 	viewController:IssuesPanelController
+	
 	issues?:List<Issue>
 	items?:List<IIssueListItem<any>>
 	groups?:List<IIssueGroup>

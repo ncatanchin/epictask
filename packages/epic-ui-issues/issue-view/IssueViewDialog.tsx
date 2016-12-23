@@ -4,7 +4,8 @@ import { createStructuredSelector } from "reselect"
 import * as React from 'react'
 import { PureRender } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { availableReposSelector, ViewRoot } from "epic-typedux"
+import { availableReposSelector} from "epic-typedux"
+import { ViewRoot } from "epic-ui-components/layout"
 import {
 	IssuesPanelController, IssuesPanelState, IssueDetailPanel, BaseIssuePanel,
 	IBaseIssuesPanelProps, IBaseIssuesPanelState
@@ -34,7 +35,7 @@ function baseStyles(topStyles, theme, palette) {
 /**
  * IIssueViewDialogProps
  */
-export interface IIssueViewDialogProps extends IBaseIssuesPanelProps, IRouterLocation {
+export interface IIssueViewDialogProps extends IBaseIssuesPanelProps, IRouterLocation,IViewRootProps<IssuesPanelController,IssuesPanelState> {
 	viewController?:IssuesPanelController
 	viewState?:IssuesPanelState
 }

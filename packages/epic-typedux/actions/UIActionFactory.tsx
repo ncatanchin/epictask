@@ -11,7 +11,7 @@ import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById }
  
 import {WindowConfigDialogDefaults,getWindowManagerClient} from "epic-process-manager-client"
 
-import ViewState from "epic-typedux/state/window/ViewState"
+import {View} from "epic-typedux/state/window"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 import { windowsSelector } from "epic-typedux/selectors"
 
@@ -553,12 +553,12 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Set the selected view state id
 	 *
-	 * @param selectedViewStateId
+	 * @param selectedViewId
 	 * @returns {(state:UIState)=>Map<string, string>}
 	 */
 	@ActionReducer()
-	setSelectedViewStateId(selectedViewStateId:string) {
-		return (state:UIState) => state.set("selectedViewStateId",selectedViewStateId)
+	setSelectedViewId(selectedViewId:string) {
+		return (state:UIState) => state.set("selectedViewId",selectedViewId)
 	}
 	
 	/**
@@ -569,73 +569,74 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param temp
 	 */
 	@ActionReducer()
-	createView(viewConfig:IViewConfig|ViewState,temp:boolean = true) {
-		return state => {
+	createView(viewConfig:IViewConfig|View,temp:boolean = true) {
+		return (state:UIState) => {
 			const
 				id = shortId(),
 				//initialState = new (viewConfig.stateClazz)(),
-				viewState = viewConfig instanceof ViewState ?
+				viewState = viewConfig instanceof View ?
 					viewConfig
-						.set('index',state.viewStates.size)
-						.set('temp',temp):
-					new ViewState(cloneObjectShallow(viewConfig,{
+						.set('index',state.views.size)
+						.set('temp',temp) as View :
+					new View(cloneObjectShallow(viewConfig,{
 						id,
 						name: viewConfig.name,
-						index: state.viewStates.size,
+						index: state.views.size,
 						temp
 					}))
 			
 			
 			
-			return state.set('viewStates', state.viewStates.push(viewState))
+			return state.set('views', state.views.push(viewState))
 		}
 	}
 	
 	/**
 	 * Update view
 	 *
-	 * @param viewState
-	 * @returns {(state:UIState)=>(UIState|Map<string, List<ViewState>>)}
+	 * @param view
 	 */
 	@ActionReducer()
-	updateView(viewState:ViewState) {
+	updateView(view:View) {
 		return (state:UIState) => {
 			const
-				index = state.viewStates.findIndex(it => it.id === viewState.id)
+				{views} = state,
+				index = views.findIndex(it => it.id === view.id)
 			
 			if (index === -1) {
-				log.warn(`Unable to find view state in views`,viewState)
+				log.warn(`Unable to find view state in views`,view)
 				return state
 			}
 			
 			
 			
-			return state.set('viewStates',
-				state.viewStates.set(
-					index,
-					viewState.set('index',index) as ViewState)
-			)
+			return state.set('views',views.set(index,view))
 		}
 	}
 	
 	/**
 	 * Remove a view
 	 *
-	 * @param id
+	 * @param idOrView
 	 * @returns {(state:UIState)=>UIState}
 	 */
 	@ActionReducer()
-	removeView(id:string) {
+	removeView(idOrView:string|View) {
 		return (state:UIState) => {
 			const
-				index = state.viewStates.findIndex(it => it.id === id)
+				id = isString(idOrView) ? idOrView : idOrView.id,
+				{views} = state,
+				index =  views.findIndex(it => it.id === id),
+				view = index > -1 && views.get(index)
 			
-			if (state.viewStates.size > 1) {
-				if (index > -1)
-					state = state.set('viewStates', state.viewStates.remove(index)) as any
+			if (!view)
+				return state
+			
+			if (view.temp || views.size > 1) {
+				state = state.set('views', views.remove(index)) as any
 				
-				if (state.selectedViewStateId === id)
-					state = state.set('selectedViewStateId', state.viewStates.get(0)) as any
+				if (state.selectedViewId === id)
+					state = state.set('selectedViewId', views.get(0).id) as any
 			}
 			
 			return state

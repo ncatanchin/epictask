@@ -8,7 +8,8 @@ import { Comment, Issue } from "epic-models"
 import { getUIActions } from "epic-typedux"
 import { MarkdownEditor, FileDrop, RepoLabel, Form } from "epic-ui-components/common"
 import { createSaveCancelActions, DialogRoot } from "epic-ui-components/layout/dialog"
-import { ViewRoot } from "epic-typedux/state/window/ViewRoot"
+
+import { ViewRoot } from "epic-ui-components/layout"
 import { CommentEditState } from "./CommentEditState"
 import CommentEditController from "./CommentEditController"
 
@@ -42,13 +43,14 @@ function baseStyles(topStyles, theme, palette) {
 				number: [ {
 					fontStyle: 'italic',
 					paddingTop: rem(0.3),
-					fontSize: rem(1.5),
-					fontWeight: 500,
+					//fontSize: rem(1.5),
+					fontWeight: 700,
+					paddingRight: rem(0.5),
 					color: text.secondary
 				} ]
 			} ],
 			
-			subTitle: [ makePaddingRem(0, 1.5, 0, 0), {
+			subTitle: [ Styles.FlexRow,Styles.makePaddingRem(0, 1.5, 0, 0), {
 				textTransform: 'uppercase',
 				fontSize: rem(1.6)
 			} ]
@@ -64,12 +66,10 @@ function baseStyles(topStyles, theme, palette) {
 /**
  * IIssueCommentDialogProps
  */
-export interface ICommentEditDialogProps extends IThemedAttributes {
+export interface ICommentEditDialogProps extends IThemedAttributes, IViewRootProps<CommentEditController,CommentEditState> {
 	saving?: boolean
 	savingError?: Error
 	
-	viewState?: CommentEditState
-	viewController?: CommentEditController
 }
 
 /**
@@ -252,17 +252,16 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 			} = this.props
 		
 		const
-			titleNode = <div style={makeStyle(styles.titleBar.label)}>
-				<div style={styles.titleBar.label}>
-					<RepoLabel repo={issue.repo}
-					           style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>
-				
-				</div>
 			
-			</div>,
-			subTitleNode = <div style={styles.titleBar.subTitle}>
+			subTitleNode = <div style={[Styles.FlexRowCenter,Styles.makePaddingRem(0.5,0,0,0)]}>
 				{/*<span>Comment</span>&nbsp;&nbsp;*/}
-				<span style={[styles.titleBar.label.number]}>#{issue.number}</span>
+				{/*<RepoLabel repo={issue.repo}*/}
+				           {/*style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>*/}
+				
+				<div style={[Styles.Ellipsis,Styles.FlexScale]}>
+					<span style={[styles.titleBar.label.number]}>#{issue.number}:</span>
+					{issue.title}
+				</div>
 			</div>,
 			// subTitleNode = <span key={issue.id} style={styles.title.issue}>
 			// 		<span style={styles.title.issueNumber}>
@@ -277,8 +276,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 		
 		
 		return <DialogRoot
-				titleMode='horizontal'
-				titleNode={titleNode}
+				titleNode={(comment.id ? `edit` : `create`) + ` comment`}
 				subTitleNode={subTitleNode}
 				titleActionNodes={titleActionNodes}
 				saving={saving}

@@ -1,11 +1,11 @@
-import { Map, Record, List } from "immutable"
+import { List } from "immutable"
 import IssuePatchState from "./IssuePatchState"
-import { cloneObjectShallow, parseJSON, notifyError } from "epic-global"
+import { parseJSON, notifyError } from "epic-global"
 import { getValue } from "typeguard"
 import { Issue } from "epic-models"
 import { getIssueActions } from "epic-typedux/provider"
-import {EventEmitter} from 'events'
-import { ViewStateEvent } from "epic-typedux/state/window/ViewState"
+import { StoreViewController } from "epic-ui-components/layout"
+
 /**
  * Created by jglanz on 11/12/16.
  */
@@ -22,17 +22,13 @@ const
  * @class IssuePatchController
  * @constructor
  **/
-class IssuePatchController extends EventEmitter implements IViewController<IssuePatchState> {
-	
-	private state:IssuePatchState
-	
+class IssuePatchController extends StoreViewController<IssuePatchState> {
 	
 	private init = false
 	
-	constructor(public id:string,initialState:IssuePatchState = new IssuePatchState()) {
-		super()
+	constructor(id:string,initialState:IssuePatchState = new IssuePatchState(),opts:any = {}) {
+		super(id,initialState,opts)
 		
-		this.state = initialState
 	}
 	
 	/**
@@ -40,9 +36,8 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 	 *
 	 * @param mounted
 	 * @param props
-	 * @param cb
 	 */
-	setMounted(mounted:boolean,props,cb) {
+	setMounted(mounted:boolean,props) {
 		if (this.init)
 			return
 		
@@ -60,14 +55,13 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 				ready: true
 			})
 		
+		log.info(`Issue keys`,issueKeys)
 		if (!issueKeys || !issueKeys.size) {
 			notifyError(`No issues were provided`)
 			setReady()
-			cb && cb()
 		} else {
 			this.loadIssues(issueKeys).then((issues) => {
 				log.debug(`Loaded issues`, issues)
-				cb && cb()
 				setReady()
 			})
 		}
@@ -94,48 +88,6 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 	
 	}
 	
-	
-	getState():IssuePatchState {
-		return this.state
-	}
-	
-	
-	/**
-	 * Update/patch the current state
-	 *
-	 * @param patch
-	 * @returns {any}
-	 */
-	updateState(patch:{[prop:string]:any}) {
-		patch = cloneObjectShallow(patch)
-		
-		const
-			keys = getValue(() => Object.keys(patch))
-		
-		
-		if (!patch || !keys || !keys.length)
-			return this.state
-		
-		const
-			updatedState = this.state.withMutations(state => {
-				for (let key of keys) {
-					const
-						newVal = patch[ key ]
-					
-					if (state.get(key) !== newVal)
-						state = state.set(key, newVal)
-				}
-				
-				return state
-			}) as IssuePatchState
-		
-		if (updatedState !== this.state) {
-			this.state = updatedState
-			this.emit(ViewStateEvent[ ViewStateEvent.Changed ],updatedState)
-		}
-		
-		return updatedState
-	}
 	
 	
 	/**
@@ -168,23 +120,6 @@ class IssuePatchController extends EventEmitter implements IViewController<Issue
 		})
 	}
 	
-	makeStateUpdate<T extends Function>(updater:T):T {
-		return ((...args) => {
-			
-			const
-				stateUpdater = updater(...args),
-				updatedState = stateUpdater(this.state) as IssuePatchState
-			
-			if (updatedState === this.state) {
-				log.debug(`No state update`, args)
-				return this.state
-			}
-			
-			this.state = updatedState
-			return updatedState
-			
-		}) as any
-	}
 }
 
 export default IssuePatchController

@@ -2,7 +2,7 @@
 import { PureRender } from './PureRender'
 import { IThemedAttributes} from 'epic-styles'
 
-import ViewState from "epic-typedux/state/window/ViewState"
+import View from "epic-typedux/state/window/View"
 import { PromisedComponent } from "./PromisedComponent"
 import { getValue } from "typeguard"
 
@@ -18,13 +18,13 @@ const
  * IViewProps
  */
 export interface IViewProps extends IThemedAttributes {
-	viewState:ViewState
+	view:View
 }
 
 /**
- * IViewState
+ * IView
  */
-export interface IViewState {
+export interface IView {
 	
 }
 
@@ -36,20 +36,20 @@ export interface IViewState {
  **/
 
 @PureRender
-export class View extends React.Component<IViewProps,IViewState> {
+export class ViewProvider extends React.Component<IViewProps,IView> {
 	
 	render() {
 		const
-			{viewState} = this.props,
+			{view} = this.props,
 			
 			componentProps = {
-				viewState,
-				viewStateId: viewState.id
+				view,
+				viewId: view.id
 			},
 			
-			componentLoader = getValue(() => getViews()[viewState.type].provider)
+			componentLoader = getValue(() => getViews()[view.type].provider)
 		
-		log.debug(`View state type`,viewState.type,componentLoader)
+		log.debug(`View state type`,view.type,componentLoader)
 		return !componentLoader ? React.DOM.noscript() : <PromisedComponent loader={componentLoader} componentProps={componentProps}  />
 	}
 	

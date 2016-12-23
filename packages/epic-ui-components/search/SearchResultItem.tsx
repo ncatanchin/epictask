@@ -12,7 +12,10 @@ import { MappedProps } from "epic-global/UIUtil"
 import { getValue } from "typeguard"
 import baseStyles from './SearchResultItem.styles'
 import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common/FlexLayout'
-
+import { SearchState } from "./SearchState"
+import { connect } from "react-redux"
+import { makeViewStateSelector } from "epic-typedux/selectors"
+import {createStructuredSelector,createSelector} from 'reselect'
 // Constants
 const
 	log = getLogger(__filename)
@@ -24,7 +27,8 @@ const
 export interface ISearchResultItemProps extends IThemedAttributes {
 	item: SearchItem
 	groupByProvider: boolean
-	controller: SearchController
+	viewController:SearchController
+	//searchState?:SearchState
 	selected?: boolean
 }
 
@@ -41,34 +45,42 @@ export interface ISearchResultItemState {
  * @class SearchResultItem
  * @constructor
  **/
-@MappedProps((props: ISearchResultItemProps, mapper) => {
-	const
-		{ item, controller } = props,
-		state = controller.getState(),
-		{ selectedIndex, items } = state,
-		index = items.indexOf(item)
-	
-	return {
-		selected: index === selectedIndex
-	}
-}, {
-	onMount(mapper, props, data) {
-		data.onStateChange = () => {
-			log.debug(`Remapping with props`, props)
-			setImmediate(() => mapper.remap())
-		}
-		props.controller.addListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
-	},
-	
-	onUnmount(mapper, props, data) {
-		if (data.onStateChange)
-			props.controller.removeListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
-		
-		data.onStateChange = null
-	}
-	
-	
-})
+// @MappedProps((props: ISearchResultItemProps, mapper) => {
+// 	const
+// 		{ item, controller } = props,
+// 		state = controller.getState(),
+// 		{ selectedIndex, items } = state,
+// 		index = items.indexOf(item)
+//
+// 	return {
+// 		selected: index === selectedIndex
+// 	}
+// }, {
+// 	onMount(mapper, props, data) {
+// 		data.onStateChange = () => {
+// 			log.debug(`Remapping with props`, props)
+// 			setImmediate(() => mapper.remap())
+// 		}
+// 		props.controller.addListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
+// 	},
+//
+// 	onUnmount(mapper, props, data) {
+// 		if (data.onStateChange)
+// 			props.controller.removeListener(SearchEvent[ SearchEvent.StateChanged ], data.onStateChange)
+//
+// 		data.onStateChange = null
+// 	}
+//
+//
+// })
+// @connect(() => createStructuredSelector({
+// 	selected: createSelector(
+// 		SearchController.makeSearchStateSelector(),
+// 		(state,props) => props.item,
+// 		(searchState:SearchState,item) =>
+// 			searchState.selectedIndex === searchState.items.indexOf(item)
+// 	)
+// }))
 @ThemedStyles(baseStyles)
 @PureRender
 export class SearchResultItem extends React.Component<ISearchResultItemProps,ISearchResultItemState> {
@@ -279,7 +291,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 	render() {
 		const
 			{ props } = this,
-			{ item, selected,controller } = props,
+			{ item, selected,viewController } = props,
 			{ provider } = item
 		
 		const
@@ -288,7 +300,7 @@ export class SearchResultItem extends React.Component<ISearchResultItemProps,ISe
 				this.resultRender(provider, item, selected)
 		
 		if (selected)
-			controller.ensureItemVisible(this)
+			viewController.ensureItemVisible(this)
 		
 		return <div {...filterProps(props)} className={`${props.className || ''} ${selected && 'selected'}`}>
 			{itemContent}

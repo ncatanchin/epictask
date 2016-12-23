@@ -5,13 +5,17 @@
 // Imports
 import { SearchResultsList } from "./SearchResultsList"
 
-
+import { Provider } from "react-redux"
 import { SearchEvent, SearchController } from "./SearchController"
 import { SearchState } from "./SearchState"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { SearchItem } from "epic-models"
 import { isString, getValue } from "typeguard"
 import { shallowEquals } from "epic-global"
+import { PureRender } from "epic-ui-components/common"
+import { connect } from "react-redux"
+import {createStructuredSelector} from 'reselect'
+import { makeViewStateSelector } from "epic-typedux/selectors"
 
 
 // Constants
@@ -26,7 +30,8 @@ log.setOverrideLevel(LogLevel.DEBUG)
  * ISearchResultsProps
  */
 export interface ISearchResultsProps extends IThemedAttributes {
-	controller:SearchController
+	viewController:SearchController
+	viewId:string
 	
 	groupByProvider?:boolean
 	searchId:string
@@ -57,7 +62,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	
 	private get controller() {
-		return this.props.controller
+		return this.props.viewController
 	}
 	
 	onSearchStateChanged = () => {
@@ -153,11 +158,11 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	
 	componentWillMount() {
 		this.onSearchStateChanged()
-		this.props.controller.on(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
+		//this.props.viewController.on(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
 	}
 	
 	componentWillUnmount() {
-		this.props.controller.removeListener(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
+		//this.props.viewController.removeListener(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
 	}
 	
 	
@@ -178,15 +183,15 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		log.debug(`Results Container render`, searchState, 'anchor', props.anchor)
 		
 		
-		return <SearchResultsList
+		return <Provider store={getStore()}>
+			<SearchResultsList
 			open={searchState.focused}
-			controller={this.controller}
-			state={searchState}
+			viewController={this.controller}
 			groupByProvider={groupByProvider}
 			onResultHover={onItemHover}
 			onResultSelected={onItemSelected}
 			className="searchResults"/>
-		
+		</Provider>
 	}
 	
 }

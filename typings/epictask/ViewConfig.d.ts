@@ -69,6 +69,6 @@ declare interface IViewControllerConstructor<S> {
 /**
  * View state constructor
  */
-declare interface IViewStateConstructor extends IModelConstructor<any> {
+declare interface IViewConstructor extends IModelConstructor<any> {
 	new (fromState?:any):IModel
 }

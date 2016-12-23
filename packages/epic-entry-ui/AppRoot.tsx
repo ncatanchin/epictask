@@ -1,52 +1,19 @@
 // import 'epic-entry-shared/AppEntry'
 // import 'epic-ui-components/UIGlobals'
-
-import {
-	If,
-	getValue,
-	shallowEquals,
-	benchmarkLoadTime,
-	MenuIds
-} from "epic-global"
+import { getValue, shallowEquals, benchmarkLoadTime } from "epic-global"
+import { Provider, connect } from "react-redux"
+import { MuiThemeProvider } from "material-ui/styles"
+import { PureRender } from "epic-ui-components/common"
+import { FillWindow, makeWidthConstraint, makeHeightConstraint, Fill, IThemedAttributes } from "epic-styles"
+// STYLES
+import { RouteView, WindowHashURIProvider, IRouteInstance, Router, RouterEvent } from "./routes"
+import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/selectors"
+import { AppStateType } from "epic-typedux/state/app"
+import { createStructuredSelector } from "reselect"
+import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 
 
 benchmarkLoadTime(`Starting to loading AppRoot`)
-
-import { Provider } from "react-redux"
-import { MuiThemeProvider } from "material-ui/styles"
-import { PureRender } from "epic-ui-components/common"
-
-import {
-	CommandComponent,
-	ICommandComponent,
-	CommandRoot,
-	CommandContainerBuilder,
-} from 'epic-command-manager-ui'
-
-import {
-	
-	CommandType,
-	CommandMenuItemType,
-	ContainerNames
-} from "epic-command-manager"
-import { getUIActions, getRepoActions, getIssueActions } from "epic-typedux/provider"
-
-import {
-	FillWindow,
-	makeWidthConstraint,
-	makeHeightConstraint,
-	Fill, IThemedAttributes
-} from "epic-styles"
-
-// STYLES
-import { RouteView, WindowHashURIProvider, IRoute, IRouteInstance, Router, RouterEvent } from "./routes"
-
-import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/selectors"
-
-import { AppStateType } from "epic-typedux/state/app"
-import { connect } from "react-redux"
-import { createStructuredSelector } from 'reselect'
-import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 
 // Logger, Store +++
 const

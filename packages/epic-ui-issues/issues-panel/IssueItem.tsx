@@ -16,7 +16,6 @@ import { getIssuesPanelSelector } from "./IssuesPanelController"
 import { TimeAgo, LabelChip, MilestoneLabel, RepoLabel } from "epic-ui-components/common"
 import { isHovering } from "epic-styles/styles"
 import { isNil } from "typeguard"
-import { OnViewStateChanged } from "epic-typedux/state/window"
 
 const
 	log = getLogger(__filename)

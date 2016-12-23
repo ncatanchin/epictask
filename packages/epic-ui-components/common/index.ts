@@ -39,15 +39,6 @@ export * from "./tabs"
 
 
 
-
-
-
-
-
-
-
-
-
 export * from "./FileDrop"
 
 export * from "./Other"
@@ -72,4 +63,4 @@ export * from "./MilestoneSelect"
 export * from "./AssigneeSelect"
 
 export * from './CommandMenuRoot'
-export * from './View'
+export * from './ViewProvider'
