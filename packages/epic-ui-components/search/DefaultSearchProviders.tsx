@@ -298,7 +298,7 @@ export class AvailableRepoSearchProvider {
 			model = item.value
 		
 		assert(model.$$clazz === AvailableRepo.$$clazz)
-		getRepoActions().setRepoEnabled(model, !model.enabled)
+		
 		
 	}
 }

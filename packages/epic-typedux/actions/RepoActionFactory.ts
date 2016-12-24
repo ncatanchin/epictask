@@ -678,8 +678,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 				await availRepoStore.save(availRepo)
 				await actions.loadAvailableRepos()
 				
-				this.setRepoEnabled(repo.id, true)
-				
 				actions.syncRepo([ availRepo.repoId ], true)
 				getNotificationCenter().notify(`Added ${repo.full_name}, initiating sync now`)
 			} catch (err) {
@@ -824,28 +822,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 
 
-	/**
-	 * Enabled and disable repos
-	 *
-	 * @param availRepoId
-	 * @param enabled
-	 * @returns {(dispatch:any, getState:any)=>Promise<undefined|boolean>}
-	 */
-	@ActionThunk()
-	setRepoEnabled(availRepoId,enabled:boolean) {
-		return (dispatch,getState) => {
-			let
-				availableRepos = availableReposSelector(getState()),
-				availRepo = availableRepos.find(it => it.id === availRepoId)
-			
-			this.patchAvailableRepos({
-				enabled
-			},availRepo)
-			
-			log.debug('Saved avail repo, setting enabled to',enabled)
-			
-		}
-	}
 	
 	
 	async saveMilestone(repo:Repo,milestone:Milestone) {

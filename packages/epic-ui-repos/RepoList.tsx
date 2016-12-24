@@ -164,7 +164,6 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 				repoActions.clearSelectedRepos()
 			}
 
-			repoActions.setRepoEnabled(availRepo.id, !availRepo.enabled)
 		}
 	}
 
@@ -196,7 +195,6 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 						id = availRepo.id,
 						{repo} = availRepo, //_.find(repos,(it) => it.id === availRepo.repoId)
 						isSelected = !!selectedRepoIds.includes(availRepo.repoId),
-						isEnabled = availRepo.enabled,
 						isHovering = this.state.hoverId === availRepo.repoId,
 						isLoading = availRepo.repoLoadStatus === LoadStatus.Loading || availRepo.issuesLoadStatus === LoadStatus.Loading
 						
@@ -212,12 +210,11 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 					           }
 					           style={[
 				                styles.list.item,
-				                isEnabled && styles.list.item.enabled,
 				                isHovering && styles.list.item.hover,
 				                isSelected && styles.list.item.selected,
 				                (isSelected && isHovering) && styles.list.item.selected.hover
 			                ]}>
-						<Icon style={styles.list.item.icon}>{isEnabled ? 'check' : 'radio_button_unchecked'}</Icon>
+						
 
 						{/* Repo */}
 						<RepoLabel repo={repo} style={styles.list.item.label}/>

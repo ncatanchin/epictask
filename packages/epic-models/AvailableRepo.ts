@@ -63,11 +63,6 @@ export class AvailableRepo extends DefaultModel implements IAvailableRepo {
 	@Attribute({index:{unique:true,name:'repoId'}})
 	repoId:number
 	
-	/**
-	 * Enabled or not enabled
-	 */
-	@Transient
-	enabled:boolean
 	
 	/**
 	 * Is this repo deleted

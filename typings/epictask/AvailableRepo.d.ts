@@ -17,11 +17,6 @@ declare interface IAvailableRepo {
 	
 	repoId:number
 	
-	/**
-	 * Enabled or not enabled
-	 */
-	
-	enabled:boolean
 	
 	/**
 	 * Is this repo deleted
