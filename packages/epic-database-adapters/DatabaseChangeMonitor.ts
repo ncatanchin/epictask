@@ -3,7 +3,6 @@ import { Stores } from "epic-database-client"
 import { PouchDBRepo } from "typestore-plugin-pouchdb"
 import { setDataOnHotDispose, getHot } from "epic-global/HotUtils"
 import { getValue } from "epic-global/ObjectUtil"
-import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 import { AppEventType } from "epic-global/Constants"
 
 import {Map} from 'immutable'
@@ -48,13 +47,12 @@ const broadcast = _.throttle(() => {
 	try {
 		EventHub.broadcast(AppEventType.DatabaseChanges,[...pendingChanges])
 		
-		
 		// CLEAR THE LIST IF IT SUCCEEDED
 		pendingChanges.length = 0
 	} catch (err) {
 		log.error(`Failed to broadcast db changes`,err)
 	}
-},2000)
+},1500)
 
 /**
  * Add a pending change to the queue and trigger
@@ -78,10 +76,10 @@ export function watchChanges(
 	getPouchDB = inGetPouchDB
 	
 	const
-		allStores = Object.values(stores),
-		filteredStores = allStores.filter(store => getValue(() => getPouchDB(store) || (<any>store).pouchDB))
-	debugger
-	filteredStores
+		pouchStores = Object.values(stores)
+			.filter(store => getValue(() => getPouchDB(store) || (<any>store).pouchDB))
+	
+	pouchStores
 		.forEach((store:PouchDBRepo<any>) => {
 			
 			const

@@ -1,9 +1,13 @@
 
 import { makePromisedComponent, acceptHot } from "epic-global"
-import { getUIActions } from "epic-typedux/provider"
-import { BuiltInTools } from "epic-ui-components"
-import { getBuiltInToolId } from "epic-ui-components/tools"
+import { getUIActions, getRepoActions } from "epic-typedux/provider"
 
+const
+	log = getLogger(__dirname)
+
+/**
+ * Commands
+ */
 CommandRegistryScope.Register({
 	id: 'RepoImport',
 	type: CommandType.App,
@@ -14,48 +18,59 @@ CommandRegistryScope.Register({
 	id: 'RepoSettings',
 	type: CommandType.App,
 	name: 'Repository Labels, Milestones & Settings',
-	execute: (item, event) => getUIActions().openWindow(getRoutes().RepoSettings.uri),
+	execute: (item, event) => getRepoActions().openRepoSettings(),
 	defaultAccelerator: "CommandOrControl+Shift+Comma"
-}, {
-	id: 'ToggleRepoTool',
-	type: CommandType.App,
-	name: 'Toggle Repo Tool',
-	execute: (item, event) => getUIActions().toggleTool(getBuiltInToolId(BuiltInTools.RepoPanel)),
-	defaultAccelerator: "CommandOrControl+1"
 })
 
-const
-	RepoRouteConfigs = {
-		RepoSettings: {
-			name: 'RepoSettings',
-			uri: 'dialog/repo-settings',
-			showDevTools: true,
-			provider: makePromisedComponent((resolver: TComponentResolver) =>
-				require.ensure([], function (require: any) {
-					resolver.resolve(require('./RepoSettingsWindow').RepoSettingsWindow)
-				}))
-		},
+
+/**
+ * Register Views
+ */
+ViewRegistryScope.Register({
+	id: "ReposPanel",
+	name: "Repos Panel",
+	type: "ReposPanel",
+	defaultView: true,
+	provider: makePromisedComponent(resolver => require.ensure([],function(require:any) {
+		const
+			modId = require.resolve('epic-ui-repos/ReposPanel'),
+			mod = __webpack_require__(modId)
 		
-		RepoImport: {
-			name: 'RepoImport',
-			uri: "sheet/repo-import",
-			title: 'Import Repository',
-			provider: makePromisedComponent((resolver:TComponentResolver) =>
-				require.ensure([],function(require:any) {
-					resolver.resolve(require('./RepoAddTool').RepoAddTool)
-				}))
-		}
-	}
+		log.debug(`Loaded repos panel module`,mod.id,modId,mod)
+		resolver.resolve(mod.ReposPanel)
+	}))
+})
+/**
+ * Route Configs
+ */
 
-Object.values(RepoRouteConfigs).forEach(RouteRegistryScope.Register)
+RouteRegistryScope.Register({
+	name: 'RepoSettings',
+	uri: 'dialog/repo-settings/:repoId',
+	makeURI(repoId:number = 0) {
+		return `dialog/repo-settings/${repoId}`
+	},
+	provider: makePromisedComponent((resolver: TComponentResolver) =>
+		require.ensure([], function (require: any) {
+			resolver.resolve(require('./RepoSettingsWindow').RepoSettingsWindow)
+		}))
+},{
+	name: 'RepoImport',
+	uri: "sheet/repo-import",
+	title: 'Import Repository',
+	provider: makePromisedComponent((resolver:TComponentResolver) =>
+		require.ensure([],function(require:any) {
+			resolver.resolve(require('./RepoAddTool').RepoAddTool)
+		}))
+})
 
 
-export * from "./RepoAddTool"
-export * from "./RepoLabelEditor"
-export * from "./RepoList"
-export * from "./RepoMilestoneEditor"
-export * from "./RepoPanel"
-export * from "./RepoSettingsWindow"
+// export * from "./RepoAddTool"
+// export * from "./RepoLabelEditor"
+// export * from "./RepoList"
+// export * from "./RepoMilestoneEditor"
+// export * from "./ReposPanel"
+// export * from "./RepoSettingsWindow"
 
 acceptHot(module)
 

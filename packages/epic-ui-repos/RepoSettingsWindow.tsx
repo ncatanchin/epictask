@@ -34,6 +34,7 @@ import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
 import { RepoLabelEditor } from "./RepoLabelEditor"
 import { RepoMilestoneEditor } from "./RepoMilestoneEditor"
+import { IRouterLocation } from "epic-entry-ui/routes"
 
 
 const
@@ -124,7 +125,7 @@ const baseStyles = (topStyles, theme, palette) => {
 /**
  * IRepoSettingsWindowProps
  */
-export interface IRepoSettingsWindowProps extends IThemedAttributes {
+export interface IRepoSettingsWindowProps extends IThemedAttributes, IRouterLocation {
 	user?:User
 	repos?:List<AvailableRepo>
 	
@@ -219,9 +220,13 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 			repos = this.getEditableRepos(props)
 		
 		if (!selectedRepo && repos.size) {
-				this.setState({
-					selectedRepo: repos.size && repos.get(0)
-				})
+			const
+				repoId = getValue(() => parseInt(props.params.repoId,10)),
+				repo = (repoId && repos.find(it => it.id === repoId)) || repos.get(0)
+			
+			this.setState({
+				selectedRepo: repo
+			})
 		}
 		
 		// if (selectedRepo && repos.find(repo => repo.id === selectedRepo.id))

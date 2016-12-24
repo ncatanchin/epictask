@@ -1,7 +1,6 @@
 
 export enum BuiltInTools {
-	RepoPanel = 1,
-	JobMonitor
+	JobMonitor = 1
 }
 
 const DefaultTools = Object

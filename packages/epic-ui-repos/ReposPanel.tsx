@@ -9,7 +9,7 @@ import {RepoList} from './RepoList'
 //import * as KeyMaps from 'epic-command-manager'
 import {UIActionFactory} from "epic-typedux"
 
-import {ThemedStyles, createThemedStyles} from "epic-styles"
+import { ThemedStyles, createThemedStyles, IThemedAttributes } from "epic-styles"
 
 
 
@@ -20,6 +20,9 @@ import {
 } from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
 import { ContainerNames,CommonKeys as Keys } from "epic-command-manager"
+import { ViewRoot } from "epic-ui-components/layout/view"
+import ReposPanelController from "epic-ui-repos/ReposPanelController"
+import ReposPanelState from "epic-ui-repos/ReposPanelState"
 
 
 
@@ -79,9 +82,8 @@ const baseStyles:any = (topStyles, theme, palette) => {
 /**
  * IRepoDrawerProps
  */
-export interface IRepoPanelProps extends IToolProps {
-	theme?:any
-	styles?:any
+export interface IRepoPanelProps extends IThemedAttributes, IViewRootProps<ReposPanelController,ReposPanelState> {
+	
 }
 
 function getHeaderControls() {
@@ -112,16 +114,10 @@ function getHeaderControls() {
  * @class RepoPanel
  * @constructor
  **/
-@ToolRegistryScope.Register({
-	id:getBuiltInToolId(BuiltInTools.RepoPanel),
-	defaultLocation: ToolPanelLocation.Left,
-	label:'Repositories',
-	getHeaderControls,
-	buttonLabel: 'Repos'
-})
+@ViewRoot(ReposPanelController,ReposPanelState)
 @CommandComponent()
 @ThemedStyles(baseStyles,'repoPanel')
-export class RepoPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
+export class ReposPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
 	commandItems = (builder:CommandContainerBuilder) =>
 		builder
@@ -132,12 +128,14 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> implements I
 	/**
 	 * On blur - clear selected repos
 	 */
-	onBlur = () => getRepoActions().clearSelectedRepos()
+	onBlur = () => {
+		
+	}
 	
 		
 	render() {
 		const
-			{styles,style} = this.props,
+			{styles,style,viewController,viewState} = this.props,
 			
 			panelStyle = [
 				styles.panel,
@@ -155,7 +153,7 @@ export class RepoPanel extends React.Component<IRepoPanelProps,any> implements I
 
 				{/* List */}
 				<div style={styles.listContainer} className="listContainer">
-					<RepoList />
+					<RepoList viewController={viewController} viewState={viewState}/>
 				</div>
 
 			</CommandRoot>

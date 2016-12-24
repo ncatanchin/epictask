@@ -602,38 +602,41 @@ export function DefaultTheme(palette) {
 			},
 			
 			list: {
-				item: {
-					backgroundColor: primary.hue3,
-					opacity: 0.6,
+				
+				
+			},
+			
+			item: [{
+				// backgroundColor: primary.hue3,
+				// opacity: 0.6,
+				
+				hover: [{
+					backgroundColor: accent.hue1,
+					color: text.primary,
+					opacity: 1
+				}],
+				
+				enabled: [{
+					//borderColor: accent.hue1,
+					color: text.primary,
+					opacity: 1
+				}],
+				
+				selected: [{
+					backgroundColor: secondary.hue1,
+					color: alternateText.primary,
+					opacity: 1,
 					
 					hover: {
-						backgroundColor: accent.hue2,
-						color: text.primary,
-						opacity: 1
-					},
-					
-					enabled: {
-						//borderColor: accent.hue1,
-						color: text.primary,
-						opacity: 1
-					},
-					
-					selected: {
 						backgroundColor: accent.hue1,
 						color: text.primary,
-						opacity: 1,
-						
-						hover: {
-							backgroundColor: accent.hue2,
-							color: text.primary,
-							opacity: 1
-						}
+						opacity: 1
 					}
-					
-				}
+				}]
 				
-				
-			}
+			}]
+			
+			
 		},
 		
 		/**

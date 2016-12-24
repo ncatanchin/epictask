@@ -1,14 +1,12 @@
 import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions, getAppActions } from "epic-typedux/provider"
-import { getWindowManagerClient } from "epic-process-manager-client"
-import { windowsSelector } from "epic-typedux/selectors"
 
 
 
-const CoreRouteConfigs = {
+RouteRegistryScope.Register(
 	
-	Empty: {
+	{
 		name: 'Empty',
 		uri: "empty",
 		title: 'empty',
@@ -19,7 +17,7 @@ const CoreRouteConfigs = {
 	},
 	
 	
-	IDE: {
+	{
 		name: 'IDE',
 		uri: "pages/ide",
 		title: 'IDE',
@@ -30,7 +28,7 @@ const CoreRouteConfigs = {
 	},
 	
 	
-	FindAction: {
+	{
 		name: 'FindAction',
 		uri: 'sheet/find-action',
 		title: 'Find an Epic action',
@@ -43,20 +41,17 @@ const CoreRouteConfigs = {
 	},
 	
 	
-	Settings: {
+	{
 		name: 'Settings',
 		uri: 'dialog/settings',
-		showDevTools: false,
 		provider: makePromisedComponent((resolver:TComponentResolver) =>
 			require.ensure([],function(require:any) {
 				resolver.resolve(require('./settings').SettingsWindow)
 			}))
-		
-		
 	},
 	
 	
-	CaptureAccelerator: {
+	{
 		name: 'CaptureAccelerator',
 		uri: 'sheet/capture-accelerator',
 		title: 'Set Accelerator',
@@ -64,13 +59,9 @@ const CoreRouteConfigs = {
 			require.ensure([],function(require:any) {
 				resolver.resolve(require('./settings/CaptureAcceleratorSheet').CaptureAcceleratorSheet)
 			}))
-		
-		
 	}
-	
-	
-}
-Object.values(CoreRouteConfigs).forEach(RouteRegistryScope.Register)
+)
+
 
 
 

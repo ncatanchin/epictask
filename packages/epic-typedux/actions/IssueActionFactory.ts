@@ -156,19 +156,6 @@ export class IssueActionFactory {
 		
 		let
 			viewName:string = "withSortFields"
-		//viewName:string = criteria.onlyFocused === true ? 'byFocused' : "withSortFields"
-		
-		// switch(issueSort.groupBy) {
-		// 	case 'milestone':
-		// 		viewName = "byMilestones"
-		// 		break
-		// 	case 'labels':
-		// 		viewName = "byLabels"
-		// 		break
-		// 	case 'assignee':
-		// 		viewName = "byAssignee"
-		// }
-		
 		
 		const
 			viewPath = `issues/${viewName}`,
@@ -246,6 +233,13 @@ export class IssueActionFactory {
 		return List<Issue>(issues)
 		
 		
+	}
+	
+	/**
+	 * Open a new issue window
+	 */
+	newIssueWindow() {
+		getUIActions().openWindow(getRoutes().IssueEditDialog.makeURI())
 	}
 	
 	/**

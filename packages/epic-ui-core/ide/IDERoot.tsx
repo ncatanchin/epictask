@@ -168,8 +168,8 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			
 		const
-			rightPanel = getPanel(ToolPanelLocation.Right),
-			leftPanel = getPanel(ToolPanelLocation.Left),
+			// rightPanel = getPanel(ToolPanelLocation.Right),
+			// leftPanel = getPanel(ToolPanelLocation.Left),
 			bottomPanel = getPanel(ToolPanelLocation.Bottom),
 			
 			borderGradientColorCap = TinyColor(accent.hue2).setAlpha(0.2).toRgbString(),
@@ -198,6 +198,12 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			              rules={splitPaneStyles}
 			/>
 			
+			<Radium.Style scopeSelector=".toolPanelSplitPane"
+			              rules={{
+			              	'> .Pane1': Styles.OverflowHidden
+			              }}
+			/>
+			
 			{/* HEADER */}
 			<Header/>
 			
@@ -213,32 +219,12 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 					           maxSize={panelMaxSize(bottomPanel)}
 					           pane2Style={makePanelConstraint(bottomPanel)}>
 						
-						{/* Tool Panel Left Split*/}
-						<SplitPane className="toolPanelSplitPane"
-						           split="vertical"
-						           minSize={panelMinSize(leftPanel)}
-						           maxSize={panelMaxSize(leftPanel)}
-						           pane1Style={makePanelConstraint(leftPanel)}>
-							
-							<ToolPanel location={ToolPanelLocation.Left}/>
-							
-							{/* PRIMARY CONTENT + Tool Panel Right Split */}
-							<SplitPane className="toolPanelSplitPane"
-							           split="vertical"
-							           primary="second"
-							           minSize={panelMinSize(rightPanel)}
-							           maxSize={panelMaxSize(rightPanel)}
-							           pane2Style={makePanelConstraint(rightPanel)}>
-								<div style={styles.viewWrapper}>
-									
-									<IDETabbedViewContainer />
-								
-								</div>
-								<ToolPanel location={ToolPanelLocation.Right}/>
-							</SplitPane>
-						</SplitPane>
+						<div style={styles.viewWrapper}>
+							<IDETabbedViewContainer />
+						</div>
 						
 						<ToolPanel location={ToolPanelLocation.Bottom}/>
+						
 					</SplitPane>
 				</div>
 			
@@ -247,8 +233,8 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			{/* TOASTER */}
 			<ToastMessages/>
 			
-			{/* STATUS BAR */}
-			<StatusBar />
+			{/*/!* STATUS BAR *!/*/}
+			{/*<StatusBar />*/}
 		
 			
 			

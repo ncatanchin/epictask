@@ -91,19 +91,22 @@ export class RouteRegistryScope implements IRegistryScope<IRegistryEntryRoute> {
 	 * Auto register a class
 	 * so it can be dynamically recreated in revivers etc
 	 *
-	 * @param config
+	 * @param configs
 	 */
-	Register = (config:IRouteConfig) => {
-		if (config.defaultRoute) {
-			const
-				defaultRoute = Object.values(this.scope).find(it => it.defaultRoute === true)
+	Register = (...configs:IRouteConfig[]) => {
+		configs.forEach(config => {
+			if (config.defaultRoute) {
+				const
+					defaultRoute = Object.values(this.scope).find(it => it.defaultRoute === true)
+				
+				if (defaultRoute)
+					assert(!defaultRoute,`A default route already exists (${defaultRoute.name}) - can not register ${config.name} as a default route`)
+			}
 			
-			if (defaultRoute)
-				assert(!defaultRoute,`A default route already exists (${defaultRoute.name}) - can not register ${config.name} as a default route`)
-		}
+			log.debug(`Registered route: ${config.name}`)
+			this.scope[config.name] = config
+		})
 		
-		log.debug(`Registered route: ${config.name}`)
-		this.scope[config.name] = config
 		this.routesChanged()
 	}
 	
@@ -185,7 +188,7 @@ declare global {
 		 * @param config
 		 * @constructor
 		 */
-		function Register(config:IRouteConfig)
+		function Register(...configs:IRouteConfig[])
 		
 		/**
 		 * Get all registered routes

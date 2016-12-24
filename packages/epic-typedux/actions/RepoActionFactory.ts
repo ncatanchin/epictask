@@ -36,7 +36,7 @@ import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import { shallowEquals } from "epic-global/ObjectUtil"
 import { isList } from "typeguard"
-import { getIssueActions } from "epic-typedux/provider"
+import { getIssueActions, getUIActions } from "epic-typedux/provider"
 
 const log = getLogger(__filename)
 const uuid = require('node-uuid')
@@ -613,31 +613,16 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 		}
 	}
 	
-	/**
-	 * Clear selected repos
-	 *
-	 * @returns {(state:RepoState)=>Map<string, Array>}
-	 */
-	@ActionReducer()
-	clearSelectedRepos() {
-		return (state:RepoState) => state.set('selectedRepoIds',[])
-	}
 	
 	/**
-	 * Select a repo in the repo list
+	 * Open repo settings
 	 *
-	 * @param selectedRepoId
-	 * @param selected
+	 * @param repoId - select this repo by default
 	 */
-	@ActionReducer()
-	setRepoSelected(selectedRepoId:number,selected:boolean) {
-		return (state:RepoState) => state.set(
-			'selectedRepoIds',
-			state
-				.selectedRepoIds.filter(repoIdPredicate(selectedRepoId))
-				.concat(selected ? [selectedRepoId] : [])
-		)
+	openRepoSettings(repoId:number = 0) {
+		return getUIActions().openWindow(getRoutes().RepoSettings.makeURI(repoId))
 	}
+	
 	
 	/**
 	 * Mark a repo as an 'AvailableRepo'
