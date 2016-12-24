@@ -58,6 +58,13 @@ function EpicLoggerFactory(name:string): IEpicLogger {
 			return (...args) => {
 				rootLogger[level](...args)
 				
+				if (level === 'error' && deepTrace) {
+					const
+						errors = args.filter(arg => arg instanceof Error)
+					
+					errors.forEach(deepTrace)
+				}
+				
 				if (Reactotron) {
 					const
 						preview = `${getLogPrefix()} >> ${getValue(() => args[0].toString(),'no value')}`

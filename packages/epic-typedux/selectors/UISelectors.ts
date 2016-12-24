@@ -25,6 +25,10 @@ export const viewsSelector:TSelector<List<View>> = createSelector(
 	(uiState:UIState) => uiState.views
 )
 
+export const tabViewsSelector:TSelector<List<View>> = createSelector(
+	uiStateSelector,
+	(uiState:UIState) => uiState.tabViews
+)
 
 export function makeViewSelector():TSelector<View> {
 	return createSelector(
@@ -46,14 +50,10 @@ export function makeViewStateSelector():TSelector<any> {
 // 	(uiState:UIState) => uiState.selectedViewId
 // )
 
-export const ideViewsSelector:TSelector<List<View>> = createSelector(
-	viewsSelector,
-	(views:List<View>) => views.filter(state => state.temp !== true) as List<View>
-)
 
-export const ideSelectedViewIdSelector:TSelector<string> = createSelector(
+export const selectedTabViewIdSelector:TSelector<string> = createSelector(
 	uiStateSelector,
-	(uiState:UIState) => uiState.selectedViewId
+	(uiState:UIState) => uiState.selectedTabViewId
 )
 
 

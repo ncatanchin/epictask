@@ -1,7 +1,10 @@
 import { makePromisedComponent, acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions, getAppActions } from "epic-typedux/provider"
+import { selectedTabViewIdSelector } from "epic-typedux/selectors"
 
+const
+	log = getLogger(__dirname)
 
 
 RouteRegistryScope.Register(
@@ -63,62 +66,99 @@ RouteRegistryScope.Register(
 )
 
 
-
+log.info(`Registering commands`)
 
 CommandRegistryScope.Register(
-// QUIT
-{
-	id: 'Quit',
-	type: CommandType.App,
-	name: "Quit",
-	defaultAccelerator: "CommandOrControl+q",
-	execute: (item, event) => getUIActions().quit()
-},
-
-// CLOSE WINDOW
-{
-	id: 'CloseWindow',
-	type: CommandType.App,
-	name: "Close Window",
-	defaultAccelerator: "CommandOrControl+w",
-	execute: (item, event) => getUIActions().closeWindow()
-},
-
-// SYNC EVERYTHING
-{
-	id: 'SyncEverything',
-	type: CommandType.App,
-	name: "Github > Sync Everything",
-	defaultAccelerator: "CommandOrControl+s",
-	execute: (item, event) => getRepoActions().syncAll()
-},
-
-// SETTINGS
-{
-	id: 'Settings',
-	type: CommandType.App,
-	name: "Settings",
-	defaultAccelerator: "CommandOrControl+Comma",
-	execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
-},
-
-// OPEN TRAY
-{
-	id: 'ShowTrayGlobal',
-	type: CommandType.Global,
-	name: "Show Focused Issue Tray",
-	execute: (cmd, event) => getAppActions().toggleTray(),
-	defaultAccelerator: "Control+Shift+e"
-},
+	// QUIT
+	{
+		id: 'Quit',
+		type: CommandType.App,
+		name: "Quit",
+		defaultAccelerator: "CommandOrControl+q",
+		execute: (item, event) => getUIActions().quit()
+	},
 	
-// FIND ACTION
-{
-	id: 'FindAction',
-	type: CommandType.App,
-	name: "Find Action",
-	defaultAccelerator: "CommandOrControl+Shift+p",
-	execute: (item, event) => getUIActions().openSheet(getRoutes().FindAction.uri),
-	hidden: true
-})
+	// CLOSE WINDOW
+	{
+		id: 'CloseWindow',
+		type: CommandType.App,
+		name: "Close Window",
+		defaultAccelerator: "CommandOrControl+w",
+		execute: (item, event) => getUIActions().closeWindow()
+	},
+	
+	// CLOSE TAB
+	{
+		id: 'CloseTab',
+		type: CommandType.App,
+		name: "Close Tab",
+		defaultAccelerator: "Alt+w",
+		execute: (item, event) => {
+			log.info(`Close tab`)
+			getUIActions().removeTabView(selectedTabViewIdSelector(getStoreState()))
+		}
+	},
+	
+	// PREV TAB
+	{
+		id: 'PreviousTab',
+		type: CommandType.App,
+		name: "Previous Tab",
+		defaultAccelerator: "Alt+[",
+		execute: (item, event) => {
+			log.info(`Move tab left`)
+			getUIActions().moveTabView(-1)
+		}
+	},
+	
+	// NEXT TAB
+	{
+		id: 'NextTab',
+		type: CommandType.App,
+		name: "Next Tab",
+		defaultAccelerator: "Alt+]",
+		execute: (item, event) => {
+			log.info(`Move tab right`)
+			getUIActions().moveTabView(1)
+		}
+	},
+	
+	// SYNC EVERYTHING
+	{
+		id: 'SyncEverything',
+		type: CommandType.App,
+		name: "Github > Sync Everything",
+		defaultAccelerator: "CommandOrControl+s",
+		execute: (item, event) => getRepoActions().syncAll()
+	},
+	
+	// SETTINGS
+	{
+		id: 'Settings',
+		type: CommandType.App,
+		name: "Settings",
+		defaultAccelerator: "CommandOrControl+Comma",
+		execute: (item, event) => getUIActions().openWindow(getRoutes().Settings.uri),
+	},
+	
+	// OPEN TRAY
+	{
+		id: 'ShowTrayGlobal',
+		type: CommandType.Global,
+		name: "Show Focused Issue Tray",
+		execute: (cmd, event) => getAppActions().toggleTray(),
+		defaultAccelerator: "Control+Shift+e"
+	},
+		
+	// FIND ACTION
+	{
+		id: 'FindAction',
+		type: CommandType.App,
+		name: "Find Action",
+		defaultAccelerator: "CommandOrControl+Shift+p",
+		execute: (item, event) => getUIActions().openSheet(getRoutes().FindAction.uri),
+		hidden: true
+	}
+)
 
 acceptHot(module)

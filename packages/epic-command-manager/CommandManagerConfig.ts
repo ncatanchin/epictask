@@ -39,7 +39,12 @@ export const
 		[Control]: Ctrl,
 		[Super]: Meta,
 		[Command]: Meta,
-		[Cmd]: Meta
+		[Cmd]: Meta,
+		"ShiftLeft": Shift,
+		"AltLeft": Alt,
+		"BracketLeft": "[",
+		"BracketRight": "]"
+			
 	},
 	
 	// KEY CODE -> ELECTRON KEY CODE

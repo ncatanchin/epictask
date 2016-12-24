@@ -23,6 +23,7 @@ export const ViewRecord = Record({
 	name: null,
 	type: null,
 	temp: true,
+	tab: false,
 	state: Map<any,any>()
 })
 
@@ -73,6 +74,7 @@ export class View extends ViewRecord {
 	index:number
 	name:string
 	type: string
+	tab:boolean
 	temp:boolean
 	state: Map<any,any>
 }

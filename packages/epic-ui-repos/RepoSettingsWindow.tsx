@@ -59,7 +59,13 @@ const baseStyles = (topStyles, theme, palette) => {
 			secondary
 		} = palette,
 		
-		rowStyle = [ FlexRow, FlexAuto, FlexAlignStart, FillWidth, makePaddingRem(0, 1) ]
+		rowStyle = [
+			Styles.FlexRow,
+			Styles.FlexAuto,
+			Styles.FlexAlignStart,
+			Styles.FillWidth,
+			Styles.makePaddingRem(0, 1)
+		]
 	
 	return {
 		dialog: [ {

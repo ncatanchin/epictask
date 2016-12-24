@@ -78,8 +78,13 @@ function deepTrace(reason) {
 	} catch (err) {
 		console.error('Deep trace failed', err)
 	}
-	
 }
+
+declare global {
+	function deepTrace(reason)
+}
+
+Object.assign(global as any,{deepTrace})
 
 /**
  * Unhandled rejection

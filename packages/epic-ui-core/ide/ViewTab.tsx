@@ -4,6 +4,7 @@ import { isHovering } from "epic-styles"
 import { View } from "epic-typedux/state/window/View"
 import { getValue } from "typeguard"
 import { TextField } from "epic-ui-components/common"
+import { stopEvent } from "epic-global"
 
 const
 	log = getLogger(__filename)
@@ -91,8 +92,7 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 			isEscape = event.key === 'Escape'
 		
 		if (isEnter || isEscape) {
-			event.preventDefault()
-			event.stopPropagation()
+			stopEvent(event)
 			
 			isEnter ? this.save() : this.cancel()
 		}
@@ -112,6 +112,16 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 		}
 	}
 	
+	private onSelectTab = () => {
+		const
+			{view} = this.props,
+			{id} = view
+		
+		log.info(`Clicked: ${id}`,view)
+		getUIActions().setSelectedTabViewId(id)
+	}
+	
+	
 	render() {
 		const
 			{styles,view,selected,closeEnabled} = this.props,
@@ -122,10 +132,7 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 		log.debug(`view state tab: ${id}`)
 		return <div ref="tab"
 		            style={[styles, selected && styles.selected]}
-		            onClick={() => {
-		            	log.info(`Clicked: ${id}`,view)
-		            	getUIActions().setSelectedViewId(id)
-		            }}>
+		            onClick={this.onSelectTab}>
 			{editing &&
 				<TextField
 					autoFocus={true}
@@ -143,7 +150,7 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 			{/* IF CLOSE ENABLED, > 1 VIEW STATE */}
 			{!editing && closeEnabled &&
 			<Icon
-				onClick={() => getUIActions().removeView(id)}
+				onClick={() => getUIActions().removeTabView(id)}
 				style={makeStyle(styles.closeButton,hovering && styles.closeButton.visible)}>
 				close
 			</Icon>

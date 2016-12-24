@@ -3,7 +3,7 @@ import HTML5Backend from "react-dnd-html5-backend"
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
 import { PureRender, ToastMessages, Page, SheetRoot } from "epic-ui-components"
-import {IDETabbedViewContainer} from './IDETabbedViewContainer'
+import { IDETabbedViewContainer } from './IDETabbedViewContainer'
 import { ThemedStyles, makeLinearGradient, convertRem, IThemedAttributes } from "epic-styles"
 import { getValue, guard } from "epic-global"
 import { ToolPanelComponent as ToolPanel } from "./ToolPanel"
@@ -28,16 +28,15 @@ const
 
 
 const
-	transition = makeTransition(['width','minWidth','maxWidth','flex','flexBasis','flexShrink','flexGrow']),
-	paneTransition = makeTransition(['min-width','max-width','min-height','max-height'])
+	transition = makeTransition([ 'width', 'minWidth', 'maxWidth', 'flex', 'flexBasis', 'flexShrink', 'flexGrow' ]),
+	paneTransition = makeTransition([ 'min-width', 'max-width', 'min-height', 'max-height' ])
 
 
-const baseStyles = (topStyles,theme,palette) => {
+const baseStyles = (topStyles, theme, palette) => {
 	
 	const
-		{primary,text,secondary,accent} = palette,
-		viewWrapperBorder = `0.1rem solid ${colorAlpha(primary.hue2,0.9)}`
-		
+		{ primary, text, secondary, accent } = palette,
+		viewWrapperBorder = `0.1rem solid ${colorAlpha(primary.hue2, 0.9)}`
 	
 	
 	return {
@@ -47,9 +46,7 @@ const baseStyles = (topStyles,theme,palette) => {
 		
 		header: [ makeTransition([ 'height', 'width', 'opacity' ]), FlexRowCenter, {} ],
 		
-		content: [ makeTransition([ 'height', 'width', 'opacity' ]), FlexScale,FlexColumn, PositionRelative, {
-			
-		} ],
+		content: [ makeTransition([ 'height', 'width', 'opacity' ]), FlexScale, FlexColumn, PositionRelative, {} ],
 		
 		collapsed: [ {
 			flexGrow: 0
@@ -61,13 +58,8 @@ const baseStyles = (topStyles,theme,palette) => {
 		} ],
 		
 		page: [],
-		bodyWrapper: [ FlexScale, Fill ],
-		viewWrapper: [ FlexScale, FillHeight,FlexColumn,OverflowHidden, {
-			borderLeft: theme.tabBarSeparator,
-			// borderRight: viewWrapperBorder,
-			// borderBottom: viewWrapperBorder,
-			// borderLeft: viewWrapperBorder,
-		} ]
+		bodyWrapper: [ Styles.FlexScale, Styles.Fill ]
+		
 		
 	}
 }
@@ -97,7 +89,7 @@ export interface IIDERootState {
 	toolDragging: toolDraggingSelector,
 	modalOpen: modalWindowOpenSelector
 }))
-@ThemedStyles(baseStyles,'homePage')
+@ThemedStyles(baseStyles, 'homePage')
 @PureRender
 export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
@@ -107,8 +99,8 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	 */
 	componentWillMount() {
 		this.setState({
-			unsubscribe: EventHub.on(EventHub.ViewsChanged,() => this.updateState())
-		},this.updateState)
+			unsubscribe: EventHub.on(EventHub.ViewsChanged, () => this.updateState())
+		}, this.updateState)
 	}
 	
 	/**
@@ -127,46 +119,46 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	 * Get new state
 	 */
 	private getNewState = (props = this.props) => ({
-		width:window.innerWidth
+		width: window.innerWidth
 	})
 	
 	/**
 	 * Update state
 	 */
 	private updateState = (props = this.props) => this.setState(this.getNewState(props))
-
+	
 	
 	render() {
 		const
-			{theme,styles,palette,toolDragging,toolPanels} = this.props,
-			{accent} = palette,
+			{ theme, styles, palette, toolDragging, toolPanels } = this.props,
+			{ accent } = palette,
 			
 			panelMinOpen = convertRem(20),
 			
 			
-			getPanel = (location) => toolPanels.get(ToolPanelLocation[location]),
+			getPanel = (location) => toolPanels.get(ToolPanelLocation[ location ]),
 			getTools = (panel:IToolPanel) => !panel ? {} : panel.tools || {},
-			toolCount = (panel:IToolPanel) => getValue(() => panel.toolIds.size,0),
+			toolCount = (panel:IToolPanel) => getValue(() => panel.toolIds.size, 0),
 			
-			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[panel.location].minDim),
+			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[ panel.location ].minDim),
 			panelMinSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),
 			panelMaxSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel),
 			
 			
-			constraintNames = (panel:IToolPanel) => [ToolPanelLocation.Popup,ToolPanelLocation.Bottom].includes(panel.location) ?
-				['minHeight','maxHeight'] : ['minWidth','maxWidth'],
+			constraintNames = (panel:IToolPanel) => [ ToolPanelLocation.Popup, ToolPanelLocation.Bottom ].includes(panel.location) ?
+				[ 'minHeight', 'maxHeight' ] : [ 'minWidth', 'maxWidth' ],
 			
 			makePanelConstraint = (panel:IToolPanel) => {
 				const
-					[min,max] = constraintNames(panel)
+					[ min, max ] = constraintNames(panel)
 				
 				return {
 					[min]: panelMinSize(panel),
 					[max]: panelMaxSize(panel)
 				}
 			}
-			
-			
+		
+		
 		const
 			// rightPanel = getPanel(ToolPanelLocation.Right),
 			// leftPanel = getPanel(ToolPanelLocation.Left),
@@ -176,22 +168,22 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			borderGradientColor = TinyColor(accent.hue2).setAlpha(0.7).toRgbString(),
 			
 			splitPaneStyles = createStyles({
-				' > .Pane': [paneTransition],
-				' > .Resizer.vertical::after': [{
-					background: makeLinearGradient('to right',borderGradientColorCap,borderGradientColor,borderGradientColorCap),
+				' > .Pane': [ paneTransition ],
+				' > .Resizer.vertical::after': [ {
+					background: makeLinearGradient('to right', borderGradientColorCap, borderGradientColor, borderGradientColorCap),
 					
-				}],
-				' > .Resizer.horizontal::after': [{
-					background: makeLinearGradient(borderGradientColorCap,borderGradientColor,borderGradientColorCap),
-				}],
+				} ],
+				' > .Resizer.horizontal::after': [ {
+					background: makeLinearGradient(borderGradientColorCap, borderGradientColor, borderGradientColorCap),
+				} ],
 			})
 		
-			
+		
 		return <Page
 			onResize={this.updateState}
 			className='root-content'
-		  id="homePage"
-		  style={makeStyle(styles.app)}
+			id="homePage"
+			style={makeStyle(styles.app)}
 		>
 			
 			<Radium.Style scopeSelector=".SplitPane"
@@ -207,24 +199,23 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			{/* HEADER */}
 			<Header/>
 			
-			
 			<div style={[styles.content]}>
-			
 				<div style={styles.bodyWrapper}>
-					{/* Tool Panel bottom Split */}
-					<SplitPane className="toolPanelSplitPane"
-					           split="horizontal"
-					           primary="second"
-					           minSize={panelMinSize(bottomPanel)}
-					           maxSize={panelMaxSize(bottomPanel)}
-					           pane2Style={makePanelConstraint(bottomPanel)}>
+					
+					{/* TOOL PANEL BOTTOM */}
+					<SplitPane
+						className="toolPanelSplitPane"
+						split="horizontal"
+						primary="second"
+						minSize={panelMinSize(bottomPanel)}
+						maxSize={panelMaxSize(bottomPanel)}
+						pane2Style={makePanelConstraint(bottomPanel)}>
 						
-						<div style={styles.viewWrapper}>
-							<IDETabbedViewContainer />
-						</div>
+						
+						<IDETabbedViewContainer />
 						
 						<ToolPanel location={ToolPanelLocation.Bottom}/>
-						
+					
 					</SplitPane>
 				</div>
 			
@@ -235,15 +226,14 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			{/*/!* STATUS BAR *!/*/}
 			{/*<StatusBar />*/}
-		
 			
 			
 			{/* SHEET ROOT */}
 			<SheetRoot />
 			
 			<ToolDragLayer />
-				
-				
+		
+		
 		</Page>
 	}
 }

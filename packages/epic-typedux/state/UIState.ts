@@ -58,7 +58,9 @@ export const UIStateRecord = Record({
 	jobs: {},
 		
 	views: List<View>(),
-	selectedViewId: null
+	tabViews: List<View>(),
+	
+	selectedTabViewId: null
 })
 
 /**
@@ -88,9 +90,10 @@ export class UIState extends UIStateRecord implements State {
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
 			views: List(!o.views ?
-				[] :
-				o.views
-					.filter(view => view.type && view.id && view.name)
+				[] : o.views .filter(view => view.type && view.id && view.name)
+				.map(view => View.fromJS(view))),
+			tabViews: List(!o.tabViews ?
+				[] : o.tabViews.filter(view => view.type && view.id && view.name)
 					.map(view => View.fromJS(view))),
 			toolPanels
 		}))
@@ -138,7 +141,8 @@ export class UIState extends UIStateRecord implements State {
 		selectedLogId:string
 	}
 	
-	selectedViewId:string
+	selectedTabViewId:string
+	tabViews: List<View>
 	views: List<View>
 	
 

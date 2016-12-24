@@ -5,11 +5,10 @@ import { createStructuredSelector } from "reselect"
 import { cloneObjectShallow, guard, ContextMenu } from "epic-global"
 import { ViewProvider, PureRender, Icon } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { View,viewsSelector, getUIActions } from "epic-typedux"
+import { View, getUIActions, tabViewsSelector, selectedTabViewIdSelector } from "epic-typedux"
 import { getValue } from "typeguard"
 import baseStyles from "./IDETabbedViewContainer.styles"
 import ViewTab from "./ViewTab"
-import { ideViewsSelector, ideSelectedViewIdSelector } from "epic-typedux/selectors"
 
 // Constants
 const
@@ -22,8 +21,8 @@ const
  * IViewContainerProps
  */
 export interface IIDETabbedViewContainerProps extends IThemedAttributes {
-	views?: List<View>
-	selectedViewId?:string
+	tabViews?:List<View>
+	selectedTabViewId?:string
 }
 
 /**
@@ -44,8 +43,8 @@ export interface IIDETabbedViewContainerState {
  **/
 
 @connect(createStructuredSelector({
-	views: ideViewsSelector,
-	selectedViewId: ideSelectedViewIdSelector
+	tabViews: tabViewsSelector,
+	selectedTabViewId: selectedTabViewIdSelector
 }))
 @ThemedStyles(baseStyles)
 @PureRender
@@ -56,14 +55,14 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 *
 	 * @returns {any}
 	 */
-	private get selectedViewId() {
+	private get selectedTabViewId() {
 		let
-			{views,selectedViewId} =  this.props
+			{ tabViews, selectedTabViewId } =  this.props
 		
 		const
-			exists = selectedViewId && views.findIndex(it => it.id === selectedViewId) > -1
+			exists = selectedTabViewId && tabViews.findIndex(it => it.id === selectedTabViewId) > -1
 		
-		return exists ? selectedViewId : getValue(() => views.get(0).id)
+		return exists ? selectedTabViewId : getValue(() => tabViews.get(0).id)
 		
 	}
 	
@@ -74,20 +73,22 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 */
 	private checkDefaultView = (props = this.props) => {
 		const
-			{views} = props
+			{ tabViews } = props
 		
 		let
 			defaultViewConfig = getValue(() => this.state.defaultViewConfig)
 		
+		
+		// MAKE SURE WE HAVE A DEFAULT
 		if (defaultViewConfig !== ViewRegistryScope.getDefault()) {
 			defaultViewConfig = ViewRegistryScope.getDefault()
 			
-			this.setState({defaultViewConfig})
+			this.setState({ defaultViewConfig })
 		}
 		
 		// MAKE SURE WE HAVE AT LEAST 1 VIEW
-		if (views.size < 1 && defaultViewConfig) {
-			getUIActions().createView(cloneObjectShallow(defaultViewConfig),false)
+		if (tabViews.size < 1 && defaultViewConfig) {
+			getUIActions().createTabView(cloneObjectShallow(defaultViewConfig))
 		}
 	}
 	
@@ -104,13 +105,13 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	private onViewConfigsChanged = () => this.updateViewConfigs()
 	
 	/**
-	 * On mount check views
+	 * On mount check tabViews
 	 */
 	componentWillMount() {
 		this.setState({
 			viewConfigs: ViewRegistryScope.all(),
-			unsubscribe: EventHub.on(EventHub.ViewsChanged,this.onViewConfigsChanged)
-		},this.checkDefaultView)
+			unsubscribe: EventHub.on(EventHub.ViewsChanged, this.onViewConfigsChanged)
+		}, this.checkDefaultView)
 	}
 	
 	componentWillUnmount() {
@@ -122,7 +123,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	}
 	
 	/**
-	 * On new props check views
+	 * On new props check tabViews
 	 */
 	componentWillReceiveProps = this.checkDefaultView
 	
@@ -134,22 +135,18 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		const
 			viewConfigs = getValue(() => this.state.viewConfigs),
 			menu =
-				ContextMenu
-					.create()
-					// .addLabel(`Select view...`)
-					// .addSeparator()
+				ContextMenu.create()
 		
-		if (getValue(() => viewConfigs.length,0) < 1)
+		if (getValue(() => viewConfigs.length, 0) < 1)
 			return
 		
-		viewConfigs.forEach(viewConfig => {
-			menu
-				.addCommand(viewConfig.name, () => getUIActions().createView(viewConfig,false))
-		})
+		viewConfigs.forEach(viewConfig =>
+			menu.addCommand(viewConfig.name, () => getUIActions().createTabView(viewConfig))
+		)
 		
 		// SHOW THE MENU
 		menu.popup()
-			 
+		
 	}
 	
 	/**
@@ -159,43 +156,49 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 */
 	render() {
 		let
-			{ styles, views } = this.props,
-			{selectedViewId} = this
+			{ styles, tabViews } = this.props,
+			{ selectedTabViewId } = this
 		
-		views = views.filter(it => getValue(() => it.id,null) !== null) as any
+		tabViews = tabViews.filter(it => getValue(() => it.id, null) !== null) as any
 		
 		const
-			view = views.find(it => it.id === selectedViewId)
+			view = tabViews.find(it => it.id === selectedTabViewId)
 		
-		if (!view || !views || !views.size || !selectedViewId)
+		if (!view || !tabViews || !tabViews.size || !selectedTabViewId)
 			return React.DOM.noscript()
 		
 		
-		
-		return <div style={styles}>
-			<div style={[styles.tabBar]}>
-				
-				<div key="tabs" style={styles.tabBar.tabs}>
-				{views.map((it,index) =>
-					<ViewTab
-						key={it.id}
-						selected={selectedViewId === it.id}
-						styles={mergeStyles(styles.tabBar.tab,index === 0 && styles.tabBar.tab.first)}
-						closeEnabled={views.size > 1}
-						view={it}/>)
-				}
+		return <div style={[
+			Styles.FlexScale,
+			Styles.FillHeight,
+			Styles.FlexColumn,
+			Styles.OverflowHidden
+		]}>
+			<div style={styles}>
+				<div style={[styles.tabBar]}>
+					
+					<div key="tabs" style={styles.tabBar.tabs}>
+						{tabViews.map((it, index) =>
+							<ViewTab
+								key={it.id}
+								selected={selectedTabViewId === it.id}
+								styles={mergeStyles(styles.tabBar.tab,index === 0 && styles.tabBar.tab.first)}
+								closeEnabled={tabViews.size > 1}
+								view={it}/>)
+						}
+					</div>
+					{/* New Tab Button */}
+					<Icon
+						style={styles.tabBar.newTabButton}
+						onClick={this.showViewConfigs}>
+						add
+					</Icon>
+					
+					<div key="bottomBorder" style={styles.tabBar.bottomBorder}/>
 				</div>
-				{/* New Tab Button */}
-				<Icon
-					style={styles.tabBar.newTabButton}
-					onClick={this.showViewConfigs}>
-					add
-				</Icon>
-				
-				<div key="bottomBorder" style={styles.tabBar.bottomBorder} />
-			</div>
-			<div id="viewContainerContent" style={[styles.content]}>
-				<ViewProvider key={view.id} view={view}/>
+				<div id="viewContainerContent" style={[styles.content]}>
+					<ViewProvider key={view.id} view={view}/>
+				</div>
 			</div>
 		</div>
 	}

@@ -14,12 +14,15 @@ import {WindowConfigDialogDefaults,getWindowManagerClient} from "epic-process-ma
 import {View} from "epic-typedux/state/window"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 import { windowsSelector } from "epic-typedux/selectors"
+import { isNil } from "typeguard"
 
 
 // Import only as type - in case we are not on Renderer
 const
 	log = getLogger(__filename),
 	{Left,Right,Bottom,Popup} = ToolPanelLocation
+
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Quit Epictask
@@ -553,23 +556,64 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	/**
 	 * Set the selected view state id
 	 *
-	 * @param selectedViewId
+	 * @param selectedTabViewId
 	 * @returns {(state:UIState)=>Map<string, string>}
 	 */
 	@ActionReducer()
-	setSelectedViewId(selectedViewId:string) {
-		return (state:UIState) => state.set("selectedViewId",selectedViewId)
+	setSelectedTabViewId(selectedTabViewId:string) {
+		return (state:UIState) => state.set("selectedTabViewId",selectedTabViewId)
+	}
+	
+	@ActionReducer()
+	moveTabView(increment: number) {
+		return (state:UIState) => {
+			let
+				{tabViews,selectedTabViewId} = state,
+				total = tabViews.size,
+				index = tabViews.findIndex(it => it.id === selectedTabViewId)
+			
+			if (isNil(index) || !isNumber(index))
+				index = 0
+			
+			let
+				newIndex = index + increment
+			
+			newIndex = newIndex < 0 ?
+				newIndex = total - 1 :
+				newIndex >= total ? 0 :
+				newIndex
+			
+			// SANITY CHECK
+			newIndex = Math.max(0,Math.min(total - 1, newIndex))
+			
+			
+			const
+				selectedTabView = tabViews.get(newIndex)
+			
+			log.debug(`New selected tab view`,selectedTabView,'index',newIndex)
+			
+			return !selectedTabView ? state : state.set('selectedTabViewId',selectedTabView.id)
+		}
+	}
+	
+	/**
+	 * Create a new tab
+	 *
+	 * @param viewConfig
+	 */
+	createTabView(viewConfig:IViewConfig|View) {
+		return this.createView(viewConfig,false,true)
 	}
 	
 	/**
 	 * Create a new view
 	 *
 	 * @param viewConfig
-	 * @returns {(state:any)=>any}
 	 * @param temp
+	 * @param tab
 	 */
 	@ActionReducer()
-	createView(viewConfig:IViewConfig|View,temp:boolean = true) {
+	createView(viewConfig:IViewConfig|View,temp:boolean = true,tab:boolean = false) {
 		return (state:UIState) => {
 			const
 				id = shortId(),
@@ -582,12 +626,16 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 						id,
 						name: viewConfig.name,
 						index: state.views.size,
+						tab,
 						temp
 					}))
 			
 			
 			
-			return state.set('views', state.views.push(viewState))
+			return state.set(
+				tab ? 'tabViews' : 'views',
+				(tab ? state.tabViews : state.views).push(viewState)
+			)
 		}
 	}
 	
@@ -599,9 +647,11 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	@ActionReducer()
 	updateView(view:View) {
 		return (state:UIState) => {
-			const
-				{views} = state,
-				index = views.findIndex(it => it.id === view.id)
+			let
+				id = view.id,
+				useTabs = view.tab,
+				views = useTabs ? state.tabViews : state.views,
+				index =  views.findIndex(it => it.id === id)
 			
 			if (index === -1) {
 				log.warn(`Unable to find view state in views`,view)
@@ -609,34 +659,46 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			}
 			
 			
-			
-			return state.set('views',views.set(index,view))
+			return state.set(useTabs ? 'tabViews' : 'views',views.set(index,view))
 		}
+	}
+	
+	/**
+	 * Remove a tab view
+	 *
+	 * @param idOrView
+	 * @returns {(state:UIState)=>(UIState|UIState)}
+	 */
+	removeTabView(idOrView:string|View) {
+		return this.removeView(idOrView,true)
 	}
 	
 	/**
 	 * Remove a view
 	 *
 	 * @param idOrView
-	 * @returns {(state:UIState)=>UIState}
+	 * @returns {(state:UIState)=>(UIState|UIState)}
+	 * @param tab
 	 */
 	@ActionReducer()
-	removeView(idOrView:string|View) {
+	removeView(idOrView:string|View,tab = false) {
 		return (state:UIState) => {
-			const
+			let
 				id = isString(idOrView) ? idOrView : idOrView.id,
-				{views} = state,
-				index =  views.findIndex(it => it.id === id),
+				views = tab ? state.tabViews : state.views,
+				index = views.findIndex(it => it.id === id),
 				view = index > -1 && views.get(index)
 			
 			if (!view)
 				return state
 			
 			if (view.temp || views.size > 1) {
-				state = state.set('views', views.remove(index)) as any
+				views = views.remove(index) as any
 				
-				if (state.selectedViewId === id)
-					state = state.set('selectedViewId', views.get(0).id) as any
+				state = state.set(tab ? 'tabViews' : 'views', views) as any
+				
+				if (tab && state.selectedTabViewId === id)
+					state = state.set('selectedTabViewId', views.get(0).id) as any
 			}
 			
 			return state
