@@ -9,7 +9,7 @@ import { createStructuredSelector } from "reselect"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { Milestone } from "epic-models"
 import { SelectField} from "./SelectField"
-import { enabledMilestonesSelector,milestonesSelector } from "epic-typedux"
+import { milestonesSelector } from "epic-typedux"
 import filterProps from "react-valid-props"
 import { getValue } from "typeguard"
 
@@ -43,7 +43,6 @@ const baseStyles = (topStyles,theme,palette) => ({
 export interface IMilestoneSelectProps extends IThemedAttributes {
 	iconStyle?:any
 	milestones?:List<Milestone>
-	enabledMilestones?:List<Milestone>
 	milestone:Milestone
 	onItemSelected: (milestone:Milestone) => any
 	repoId:number
@@ -64,8 +63,7 @@ export interface IMilestoneSelectState {
  **/
 
 @connect(createStructuredSelector({
-	milestones: milestonesSelector,
-	enabledMilestones: enabledMilestonesSelector
+	milestones: milestonesSelector
 }),null,null,{withRef:true})
 
 // If you have a specific theme key you want to

@@ -30,7 +30,7 @@ import {
 	makePaddingRem,
 	FlexColumn
 } from "epic-styles"
-import { enabledLabelsSelector, enabledAssigneesSelector, enabledMilestonesSelector } from "epic-typedux/selectors"
+
 import { Issue, Milestone, Label, User } from "epic-models"
 import {
 	canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow, unwrapRef,
@@ -40,6 +40,7 @@ import IssuesPanelController from "./IssuesPanelController"
 import { IssueActionFactory } from "epic-typedux/actions"
 import { makeStyle, colorAlpha, makeIcon } from "epic-styles/styles"
 import { CommonKeys, GlobalKeys } from "epic-command-manager"
+import { labelsSelector, assigneesSelector, milestonesSelector } from "epic-typedux/selectors"
 
 // Constants
 const
@@ -175,9 +176,9 @@ function makeSelector() {
 	
 	return createStructuredSelector({
 		selectedIssue: selectedIssueSelector,
-		labels: enabledLabelsSelector,
-		assignees: enabledAssigneesSelector,
-		milestones: enabledMilestonesSelector
+		labels: labelsSelector,
+		assignees: assigneesSelector,
+		milestones: milestonesSelector
 	})
 }
 

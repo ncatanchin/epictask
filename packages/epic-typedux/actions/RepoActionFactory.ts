@@ -29,7 +29,7 @@ import {
 	makeCommentId,
 	User
 } from "epic-models"
-import {repoIdPredicate, enabledRepoIdsSelector, availableReposSelector} from '../selectors'
+import { repoIdPredicate, availableReposSelector, availableRepoIdsSelector } from '../selectors'
 
 import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
@@ -223,7 +223,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			
 			this.syncUserRepos()
 			this.syncRepo(
-				enabledRepoIdsSelector(getState()).toArray(),
+				availableRepoIdsSelector(getState()).toArray(),
 				true
 			)
 		}
@@ -509,24 +509,6 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	}
 	
 	/**
-	 * Check if a repo has already been loaded into the state
-	 *
-	 * @param availRepo
-	 * @returns {boolean}
-	 */
-	private repoInState(availRepo) {
-		const
-			{availableRepos} = this.state,
-			currentRepo = availableRepos && availableRepos
-				.find(it =>
-					it.id === availRepo.id &&
-					it.repoLoadStatus &&
-					it.repoLoadStatus > LoadStatus.NotLoaded)
-		return !isNil(currentRepo)
-			
-	}
-	
-	/**
 	 * Load all available repo resources
 	 */
 	@ActionPromise()
@@ -559,7 +541,7 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 			let
 				availRepos = (await stores.availableRepo.findAll())
 					// FILTER DELETED && ALREADY IN STATE (IF NOT BOOTING)
-					.filter(availRepo => !availRepo.deleted && (prepareOnBoot || !this.repoInState(availRepo))),
+					.filter(availRepo => !availRepo.deleted),
 				
 				availRepoIds = availRepos.map(it => it.id)
 			

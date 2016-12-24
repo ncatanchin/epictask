@@ -32,7 +32,7 @@ import {
 	IssuesEvent
 } from "epic-models"
 
-import { enabledRepoIdsSelector, enabledAvailableReposSelector, availableReposSelector } from "../selectors"
+import { availableReposSelector } from "../selectors"
 
 import {
 	getRepoActions,
@@ -131,8 +131,8 @@ export class IssueActionFactory {
 		
 		const
 			issueSort = criteria.sort,
-			enabledAvailRepos = enabledAvailableReposSelector(getStoreState()),
-			enabledRepoIds = enabledAvailRepos
+			availRepos = availableReposSelector(getStoreState()),
+			repoIds = availRepos
 				.map(it => it.id)
 				.sort()
 		
@@ -142,7 +142,7 @@ export class IssueActionFactory {
 				reduce: true,
 				keys: (overrideRepoIds ?
 						overrideRepoIds : // IF ONLY-FOCUSED THEN ALL
-						enabledRepoIds // OTHERWISE ONLY ENABLED
+						repoIds // OTHERWISE ONLY ENABLED
 				).map(it => [ it ]).toArray(), // MAP TO ARRAY OF ARRAYS
 				reverse: issueSort.direction === 'desc'
 			}

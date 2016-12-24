@@ -99,53 +99,53 @@ export const assigneesSelector = createSelector(
 	},List<User>())
 )
 
-
-export const enabledAvailableReposSelector = createSelector(
-	availableReposSelector,
-	(availRepos:List<AvailableRepo>) => availRepos.filter(availRepo => availRepo.enabled) as List<AvailableRepo>
-)
-
-
-/**
- * All enabled milestones
- */
-export const enabledMilestonesSelector = createSelector(
-	enabledAvailableReposSelector,
-	(availRepos:List<AvailableRepo>) => availRepos.reduce((allMilestones,availRepo) => {
-		(availRepo.milestones || [])
-			.filter(milestone => !allMilestones.find(it => it.id === milestone.id))
-			.forEach(milestone => allMilestones = allMilestones.push(milestone))
-		return allMilestones
-	},List<Milestone>())
-)
-
-
-/**
- * All enabled labels
- */
-export const enabledLabelsSelector = createSelector(
-	enabledAvailableReposSelector,
-	(availRepos:List<AvailableRepo>) => availRepos.reduce((allLabels,availRepo) => {
-		(availRepo.labels || [])
-			.filter(label => !allLabels.find(it => it.url === label.url))
-			.forEach(label => allLabels = allLabels.push(label))
-		return allLabels
-	},List<Label>())
-)
-
-
-/**
- * All enabled milestones
- */
-export const enabledAssigneesSelector = createSelector(
-	enabledAvailableReposSelector,
-	(availRepos:List<AvailableRepo>) => availRepos.reduce((allAssignees,availRepo) => {
-		(availRepo.collaborators || [])
-			.filter(assignee => !allAssignees.find(it => it.id === assignee.id))
-			.forEach(assignee => allAssignees = allAssignees.push(assignee))
-		return allAssignees
-	},List<User>())
-)
+//
+// export const enabledAvailableReposSelector = createSelector(
+// 	availableReposSelector,
+// 	(availRepos:List<AvailableRepo>) => availRepos.filter(availRepo => availRepo.enabled) as List<AvailableRepo>
+// )
+//
+//
+// /**
+//  * All enabled milestones
+//  */
+// export const enabledMilestonesSelector = createSelector(
+// 	enabledAvailableReposSelector,
+// 	(availRepos:List<AvailableRepo>) => availRepos.reduce((allMilestones,availRepo) => {
+// 		(availRepo.milestones || [])
+// 			.filter(milestone => !allMilestones.find(it => it.id === milestone.id))
+// 			.forEach(milestone => allMilestones = allMilestones.push(milestone))
+// 		return allMilestones
+// 	},List<Milestone>())
+// )
+//
+//
+// /**
+//  * All enabled labels
+//  */
+// export const enabledLabelsSelector = createSelector(
+// 	enabledAvailableReposSelector,
+// 	(availRepos:List<AvailableRepo>) => availRepos.reduce((allLabels,availRepo) => {
+// 		(availRepo.labels || [])
+// 			.filter(label => !allLabels.find(it => it.url === label.url))
+// 			.forEach(label => allLabels = allLabels.push(label))
+// 		return allLabels
+// 	},List<Label>())
+// )
+//
+//
+// /**
+//  * All enabled milestones
+//  */
+// export const enabledAssigneesSelector = createSelector(
+// 	enabledAvailableReposSelector,
+// 	(availRepos:List<AvailableRepo>) => availRepos.reduce((allAssignees,availRepo) => {
+// 		(availRepo.collaborators || [])
+// 			.filter(assignee => !allAssignees.find(it => it.id === assignee.id))
+// 			.forEach(assignee => allAssignees = allAssignees.push(assignee))
+// 		return allAssignees
+// 	},List<User>())
+// )
 
 /**
  * Available repos - only ids
@@ -157,15 +157,15 @@ export const availableRepoIdsSelector = createSelector(
 	
 
 
-/**
- * Only available repo ids
- */
+// /**
+//  * Only available repo ids
+//  */
 
-export const enabledRepoIdsSelector = createSelector(
-	enabledAvailableReposSelector,
-	(availRepos:List<AvailableRepo>):List<number> => availRepos
-		.map(availRepo => availRepo.id) as List<number>
-)
+// export const enabledRepoIdsSelector = createSelector(
+// 	enabledAvailableReposSelector,
+// 	(availRepos:List<AvailableRepo>):List<number> => availRepos
+// 		.map(availRepo => availRepo.id) as List<number>
+// )
 
 
 /**

@@ -34,7 +34,8 @@ import {
 	makeTransition,
 	PositionRelative, makeHeightConstraint
 } from "epic-styles/styles"
-import { enabledAvailableReposSelector } from "epic-typedux/selectors"
+import { availableReposSelector } from "epic-typedux/selectors"
+
 
 
 // Constants
@@ -140,7 +141,7 @@ export interface IIssueEditInlineState {
 
 @connect(() => createStructuredSelector({
 	editingIssue: getIssuesPanelSelector(selectors => selectors.editingIssueSelector),
-	availableRepos: enabledAvailableReposSelector,
+	availableRepos: availableReposSelector,
 	items: getIssuesPanelSelector(selectors => selectors.issueItemsSelector)
 }))
 @CommandComponent()

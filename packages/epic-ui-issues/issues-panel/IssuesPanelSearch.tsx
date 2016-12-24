@@ -15,15 +15,11 @@ import { makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
 import { cloneObjectShallow, cloneObject, safePush } from "epic-global"
 import { SearchField } from "epic-ui-components/search"
 import { ContainerNames, getCommandManager } from "epic-command-manager"
-import {
-	enabledMilestonesSelector,
-	enabledAvailableReposSelector,
-	enabledAssigneesSelector,
-	enabledLabelsSelector
-} from "epic-typedux/selectors"
+
 import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort, IssueCriteriaKeywords } from "epic-models"
 import { isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "./IssuesPanelSearchItem"
+import { availableReposSelector, assigneesSelector, labelsSelector, milestonesSelector } from "epic-typedux/selectors"
 
 // const
 // 	searchQueryParser = require('search-query-parser')
@@ -143,10 +139,10 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			{ sort } = criteria,
 			storeState = getStoreState(),
 			
-			milestones = enabledMilestonesSelector(storeState),
-			labels = enabledLabelsSelector(storeState),
-			assignees = enabledAssigneesSelector(storeState),
-			repos = enabledAvailableReposSelector(storeState)
+			milestones = milestonesSelector(storeState),
+			labels = labelsSelector(storeState),
+			assignees = assigneesSelector(storeState),
+			repos = availableReposSelector(storeState)
 		
 		const
 			chips = [],
@@ -708,10 +704,10 @@ export class IssuesPanelSearchProvider implements ISearchProvider {
 		
 		// GET DATA
 		const
-			milestones = enabledMilestonesSelector(storeState),
-			labels = enabledLabelsSelector(storeState),
-			assignees = enabledAssigneesSelector(storeState),
-			repos = enabledAvailableReposSelector(storeState)
+			milestones = milestonesSelector(storeState),
+			labels = labelsSelector(storeState),
+			assignees = assigneesSelector(storeState),
+			repos = availableReposSelector(storeState)
 		
 		this.matchKeywords(results, Keywords.groupKeywords, text, this.groupByMatched)
 		this.matchKeywords(results, Keywords.sortKeywords, text, this.sortByMatched)

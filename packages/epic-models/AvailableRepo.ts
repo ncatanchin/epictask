@@ -11,6 +11,7 @@ import {User} from './User'
 import {Repo} from './Repo'
 
 import { Transient } from  "epic-global"
+import { PouchDBModel } from "typestore-plugin-pouchdb"
 
 
 const
@@ -36,7 +37,9 @@ assignGlobal({
  *
  */
 @ModelRegistryScope.Register
-@Model()
+@PouchDBModel({
+	onlyMapDefinedAttributes: true
+})
 export class AvailableRepo extends DefaultModel implements IAvailableRepo {
 
 	$$clazz = 'AvailableRepo'

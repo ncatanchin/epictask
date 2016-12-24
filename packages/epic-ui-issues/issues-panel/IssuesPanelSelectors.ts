@@ -16,11 +16,6 @@ import {
 	IIssueEditInlineConfig
 } from "epic-models"
 //import {IssueState,TIssuePatchMode,TIssueSortAndFilter, TEditCommentRequest, TIssueActivity} from "epic-typedux/state/IssueState"
-import {
-	enabledMilestonesSelector,
-	enabledLabelsSelector,
-	enabledAssigneesSelector
-} from "epic-typedux/selectors/RepoSelectors"
 import { createSelector } from "reselect"
 import { uiStateSelector } from "epic-typedux/selectors/UISelectors"
 import IssuesPanelState, {
@@ -30,6 +25,7 @@ import IssuesPanelState, {
 import { UIState } from "epic-typedux/state/UIState"
 import {View} from "epic-typedux/state/window/View"
 import { isNil, getValue } from "typeguard"
+import { labelsSelector, milestonesSelector, assigneesSelector } from "epic-typedux/selectors"
 
 
 const
@@ -111,13 +107,13 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 			
 			issueFilterLabelsSelector = createSelector(
 				criteriaSelector,
-				enabledLabelsSelector,
+				labelsSelector,
 				(filter:IIssueCriteria, labels:List<Label>):List<Label> =>
 					labels.filter(label => filter && filter.labelIds && filter.labelIds.includes(label.id)) as any
 			),
 			issueFilterMilestonesSelector = createSelector(
 				criteriaSelector,
-				enabledMilestonesSelector,
+				milestonesSelector,
 				(filter:IIssueCriteria, milestones:List<Milestone>):List<Milestone> =>
 					milestones.filter(milestone => filter && filter.milestoneIds && filter.milestoneIds.includes(milestone.id)) as any
 			),
@@ -198,7 +194,7 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 	
 			issueFilterAssigneeSelector = createDeepEqualSelector(
 				criteriaSelector,
-				enabledAssigneesSelector,
+				assigneesSelector,
 				(issueFilter:IIssueCriteria, assignees:List<User>) => {
 					const
 						assigneeIds = issueFilter.assigneeIds || []
@@ -215,7 +211,7 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 			orderedIssueIndexesSelector = createSelector(
 				issuesSelector,
 				criteriaSelector,
-				enabledAssigneesSelector,
+				assigneesSelector,
 				editInlineConfigIssueSelector,
 				(issues:List<Issue>, criteria:IIssueCriteria, assignees:List<User>, editInlineConfig:IIssueEditInlineConfig):List<number> => {
 					
@@ -238,10 +234,11 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 					
 					// Get all the filters & sort criteria
 					let
-						{ text, issueId, milestoneIds, labelIds, assigneeIds,onlyFocused } = criteria,
+						{ text, issueId, repoIds,milestoneIds, labelIds, assigneeIds,onlyFocused } = criteria,
 						inlineEditIndex = -1
 					
 					
+					repoIds = _.nilFilter(repoIds || [])
 					milestoneIds = _.nilFilter(milestoneIds || [])
 					labelIds = _.nilFilter(labelIds || [])
 					assigneeIds = _.nilFilter(assigneeIds || [])
@@ -265,6 +262,10 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 								
 								if (matches && onlyFocused)
 									matches = issue.focused === true
+								
+								// Repos
+								if (matches && repoIds.length)
+									matches = repoIds.includes(issue.repoId)
 								
 								// Milestones
 								if (matches && milestoneIds.length)

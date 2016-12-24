@@ -17,9 +17,7 @@ import { Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria,
 import { makeIssuesPanelStateSelectors, TIssuesPanelSelectors } from "./IssuesPanelSelectors"
 import { addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import {
-	enabledAvailableReposSelector,
 	availableRepoIdsSelector,
-	enabledRepoIdsSelector,
 	availableReposSelector
 } from "epic-typedux/selectors"
 import { StoreViewController } from "epic-ui-components/layout"
@@ -176,7 +174,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		// ISSUES
 		[Issue.$$clazz]: function (changes: IDatabaseChange[]) {
 			let
-				repoIds = (this.useAllRepoIds ? availableRepoIdsSelector : enabledRepoIdsSelector)(getStoreState()),
+				repoIds = availableRepoIdsSelector(getStoreState()),
 				models = changes
 					.map(it => it.model)
 					.filter(it => it && repoIds.includes(it.repoId))
@@ -189,7 +187,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		// COMMENTS
 		[Comment.$$clazz]: function (changes: IDatabaseChange[]) {
 			const
-				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+				repoIds = availableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
 					.map(it => it.model)
 					.filter(it => it && repoIds.includes(it.repoId))
@@ -223,7 +221,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		// COMMENTS
 		[IssuesEvent.$$clazz]: function (changes: IDatabaseChange[]) {
 			const
-				repoIds = enabledAvailableReposSelector(getStoreState()).map(it => it.id),
+				repoIds = availableReposSelector(getStoreState()).map(it => it.id),
 				models = changes
 					.map(it => it.model)
 					.filter(it => it && repoIds.includes(it.repoId))
@@ -392,7 +390,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		return (state: IssuesPanelState) => state.withMutations((newState: IssuesPanelState) => {
 			let
 				{ issues } = newState,
-				availRepos = (this.useAllRepoIds ? availableReposSelector :  enabledAvailableReposSelector)(getStoreState()),
+				availRepos = availableReposSelector(getStoreState()),
 				repoIds = availRepos.map(it => it.id)
 			
 			updatedIssues

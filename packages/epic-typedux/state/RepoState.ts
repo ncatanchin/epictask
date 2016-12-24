@@ -38,7 +38,7 @@ export class RepoState extends RepoStateRecord {
 	toJS() {
 		return toPlainObject(this,
 			excludeFilterConfig(
-				...excludeFilter('reposLoading','selectedRepoIds')
+				...excludeFilter('reposLoading','selectedRepoIds','availableRepos')
 			))
 	}
 	

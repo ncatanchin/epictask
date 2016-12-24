@@ -1,8 +1,6 @@
-import {
-	Repo as PouchDBRepo
-} from 'typestore'
 
-import {PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
+
+import {PouchDBRepo,PouchDBMangoFinder,PouchDBFullTextFinder} from 'typestore-plugin-pouchdb'
 import { AvailableRepo } from "epic-models"
 import { AvailableRepoStore } from "epic-models/AvailableRepo"
 

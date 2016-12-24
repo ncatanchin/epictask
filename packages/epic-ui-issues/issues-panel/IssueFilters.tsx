@@ -13,11 +13,6 @@ import {
 	IIssueGroup,
 	Milestone, Label, Issue, User
 } from "epic-models"
-import {
-	enabledAssigneesSelector,
-	enabledMilestonesSelector,
-	enabledLabelsSelector
-} from "epic-typedux"
 import { createStructuredSelector } from "reselect"
 import {
 	ThemedStyles,
@@ -36,6 +31,7 @@ import { getValue } from "epic-global"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import IssuesPanelController from "./IssuesPanelController"
 import { getIssuesPanelSelector } from "./IssuesPanelController"
+import { assigneesSelector, milestonesSelector, labelsSelector } from "epic-typedux/selectors"
 
 
 const
@@ -147,9 +143,9 @@ export interface IIssueFiltersProps extends React.HTMLAttributes<any> {
 	issueCriteria: getIssuesPanelSelector(selectors => selectors.criteriaSelector),
 	issueFilterLabels: getIssuesPanelSelector(selectors => selectors.issueFilterLabelsSelector),
 	issueFilterMilestones: getIssuesPanelSelector(selectors => selectors.issueFilterMilestonesSelector),
-	labels: enabledLabelsSelector,
-	milestones: enabledMilestonesSelector,
-	assignees: enabledAssigneesSelector
+	labels: labelsSelector,
+	milestones: milestonesSelector,
+	assignees: assigneesSelector
 }), null, null, { withRef: true })
 @ThemedStyles(baseStyles, 'issueFilters')
 @PureRender

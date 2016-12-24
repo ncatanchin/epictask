@@ -3,17 +3,11 @@ import { FinderRequest, FinderResultArray } from "typestore"
 import { RepoStore, AvailableRepo, Repo, Issue, Label, Milestone, User, SearchItem } from "epic-models"
 import { getStores } from "epic-database-client"
 
-import {
-	enabledLabelsSelector,
-	enabledMilestonesSelector,
-	enabledAssigneesSelector
-} from "epic-typedux/selectors/RepoSelectors"
-
 import { GitHubClient, createClient } from "epic-github"
-import { getCommandManager } from "epic-command-manager"
 import { Benchmark, cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { isNil } from "typeguard"
+import { assigneesSelector, milestonesSelector, labelsSelector } from "epic-typedux/selectors"
 
 
 
@@ -229,7 +223,7 @@ export class AssigneeSearchProvider implements ISearchProvider {
 	@Benchmarker
 	async query(query:string):Promise<List<SearchItem>> {
 		const
-			assignees = enabledAssigneesSelector(getStoreState()),
+			assignees = assigneesSelector(getStoreState()),
 			items = textSearchFilter(
 				query,
 				assignees,
@@ -248,7 +242,7 @@ export class MilestoneSearchProvider implements ISearchProvider {
 	
 	async query(criteria, query:string):Promise<List<SearchItem>> {
 		const
-			milestones = enabledMilestonesSelector(getStoreState()),
+			milestones = milestonesSelector(getStoreState()),
 			items = textSearchFilter(
 				query,
 				milestones,
@@ -269,7 +263,7 @@ export class LabelSearchProvider implements ISearchProvider {
 	@Benchmarker
 	async query(criteria, query:string):Promise<List<SearchItem>> {
 		const
-			labels = enabledLabelsSelector(getStoreState()),
+			labels = labelsSelector(getStoreState()),
 			items = textSearchFilter(
 				query,
 				labels,

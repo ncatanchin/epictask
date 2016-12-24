@@ -77,9 +77,11 @@ export function watchChanges(
 	
 	getPouchDB = inGetPouchDB
 	
-	Object
-		.values(stores)
-		.filter(store => store instanceof PouchDBRepo && getPouchDB(store))
+	const
+		allStores = Object.values(stores),
+		filteredStores = allStores.filter(store => getValue(() => getPouchDB(store) || (<any>store).pouchDB))
+	debugger
+	filteredStores
 		.forEach((store:PouchDBRepo<any>) => {
 			
 			const
@@ -87,10 +89,10 @@ export function watchChanges(
 			
 			cancelCurrentSubscription(modelType)
 			
-			log.debug(`Subscribing ${modelType}`)
+			log.info(`Subscribing ${modelType}`)
 			
 			const
-				db = store.getPouchDB(),
+				db = (store as any).pouchDB || store.getPouchDB(),
 				changes = changeSubscriptions[modelType] = db.changes({
 					live: true,
 					since: 'now',
