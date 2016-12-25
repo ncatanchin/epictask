@@ -25,15 +25,17 @@ import { SearchField} from "epic-ui-components/search"
 import { IssuesList } from "./IssuesList"
 import { getValue, unwrapRef } from "epic-global"
 import IssuesPanelController from "./IssuesPanelController"
+import IssuesPanelState from "./IssuesPanelState"
 import { getIssuesPanelSelector } from "./IssuesPanelController"
 import { shallowEquals, guard } from "epic-global/ObjectUtil"
 import { getUIActions } from "epic-typedux/provider/ActionFactoryProvider"
 
 import { ViewRoot } from "epic-ui-components/layout"
-import IssuesPanelState from "./IssuesPanelState"
+
 import { getIssueActions } from "epic-typedux/provider"
 import { IssuesPanelSearch } from "./IssuesPanelSearch"
 import { BaseIssuePanel, IBaseIssuesPanelProps } from "epic-ui-issues/issues-panel/BaseIssuePanel"
+import { IssueLists } from "./IssueLists"
 
 
 // Constants & Non-typed Components
@@ -64,6 +66,10 @@ function baseStyles(topStyles,theme,palette) {
 			' > .Pane2': makeStyle(OverflowHidden, {})
 			
 		} ],
+		
+		// HOLDS SEARCH AND ISSUE LISTS
+		criteriaRow: [Styles.FlexRow,Styles.FillWidth,Styles.FlexAuto],
+		
 		
 		noItems: [Fill,FlexColumnCenter,{
 			text: [{
@@ -500,7 +506,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 				viewState
 			} = this.props
 		
-		if (!viewState) {
+		if (!viewState || !issues) {
 			return React.DOM.noscript()
 		}
 			
@@ -543,12 +549,15 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 			{/*<Style scopeSelector=".issuePanelSplitPane"*/}
 			       {/*rules={styles.panelSplitPane}/>*/}
 			
-			
-			<IssuesPanelSearch
-				ref={this.setSearchFieldRef}
-				viewController={this.viewController}
+			<div style={styles.criteriaRow}>
+				<IssuesPanelSearch
+					ref={this.setSearchFieldRef}
+					viewController={this.viewController}
 				/>
-			
+				<IssueLists
+					viewController={this.viewController}
+				/>
+			</div>
 			
 			
 			{/* ISSUE SEARCH AND FILTERING */}

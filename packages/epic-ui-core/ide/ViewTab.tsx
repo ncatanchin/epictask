@@ -1,9 +1,7 @@
-import { Icon, PureRender } from "epic-ui-components"
-import { getUIActions } from "epic-typedux"
+import { Icon, PureRender, TextField } from "epic-ui-components"
+import { getUIActions, View } from "epic-typedux"
 import { isHovering } from "epic-styles"
-import { View } from "epic-typedux/state/window/View"
 import { getValue } from "typeguard"
-import { TextField } from "epic-ui-components/common"
 import { stopEvent } from "epic-global"
 
 const
@@ -144,7 +142,7 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 			  />}
 			
 			{!editing && <div style={[styles.label]} onClick={this.onTextClick}>
-				{view.name || 'No name'}
+				{view.name || '(Untitled)'}
 			</div>}
 			
 			{/* IF CLOSE ENABLED, > 1 VIEW STATE */}

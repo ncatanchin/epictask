@@ -11,6 +11,9 @@ import {
 	ContextMenu
 } from "epic-global"
 import IssuesPanelState from "./IssuesPanelState"
+import { IssueListConfig } from "./models/IssueListConfig"
+import { IssueListConfigManager } from "./models/IssueListConfigManager"
+
 import { isNumber, isNil, getValue } from "typeguard"
 import { getUIActions, getIssueActions, IssueActionFactory } from "epic-typedux"
 import { Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria, IssuesEvent } from "epic-models"
@@ -272,6 +275,21 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		
 	}
 	
+	/**
+	 * Update list configs
+	 *
+	 * @returns {List<IssueListConfig>}
+	 */
+	private updateListConfigs = () => {
+		const
+			listConfigs = IssueListConfigManager.all()
+		
+		this.updateState({
+			listConfigs
+		})
+		
+		return listConfigs
+	}
 	
 	// /**
 	//  * Create a view state path
@@ -297,6 +315,8 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		}
 		
 		if (!mounted) {
+			IssueListConfigManager.removeListener(this.updateListConfigs)
+			
 			removeDatabaseChangeListener(Issue, this.onDatabaseChanged)
 			removeDatabaseChangeListener(IssuesEvent, this.onDatabaseChanged)
 			removeDatabaseChangeListener(Comment, this.onDatabaseChanged)
@@ -306,6 +326,8 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		const
 			store = getStore()
 		
+		IssueListConfigManager.addListener(this.updateListConfigs)
+		
 		addDatabaseChangeListener(Issue, this.onDatabaseChanged)
 		addDatabaseChangeListener(IssuesEvent, this.onDatabaseChanged)
 		addDatabaseChangeListener(Comment, this.onDatabaseChanged)
@@ -314,8 +336,18 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 			store.observe([ RepoKey, 'availableRepos' ], this.onReposChanged)
 		]
 		
-		// if (!this.useLocalState)
-		//this.unsubscribers.push(store.observe(this.makeStatePath('selectedIssueIds'), this.onSelectedIssueIdsChanged))
+		this.updateListConfigs()
+		
+		const
+			{listConfigId,listConfigs} = this.state
+		
+		if (listConfigId) {
+			const
+				listConfig = listConfigs.find(it => it.id === listConfigId)
+			
+			if (listConfig)
+				this.updateState({listConfig})
+		}
 		
 		this.loadIssues()
 	}
@@ -352,7 +384,8 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 */
 	loadIssues = _.debounce(OneAtATime({}, async() => {
 		const
-			{ criteria, selectedIssueIds } = this.state,
+			{ listConfig, selectedIssueIds } = this.state,
+			{criteria} = listConfig,
 			actions = new IssueActionFactory(),
 			repoIds = availableRepoIdsSelector(getStoreState()),
 			issues = await actions.queryIssues(criteria,this.useAllRepoIds && repoIds)
@@ -414,11 +447,92 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		})
 	})
 	
+	/**
+	 * Change list config
+	 *
+	 * @param id
+	 */
+	setListConfig(id:string) {
+		const
+			listConfig = IssueListConfigManager.get(id)
+		
+		assert(listConfig,`Unable to find list config with id: ${id}`)
+		
+		this.updateState({listConfigId: id})
+		this.updateListConfig(listConfig)
+		
+	}
+	
+	/**
+	 * Create an empty blank list config
+	 */
+	newListConfig() {
+		this.updateListConfig(IssueListConfig.create())
+		this.updateState({listConfigId: null})
+	}
+	
+	/**
+	 * Set list config name
+	 *
+	 * @param name
+	 */
+	setListConfigName(name:string) {
+		const
+			{listConfig} = this.state
+		
+		this.updateListConfig(listConfig.set('name',name) as any)
+		
+		this.saveListConfig()
+	}
+	
+	/**
+	 * Save the list config
+	 */
+	saveListConfig() {
+		const
+			{listConfig} = this.state
+		
+		IssueListConfigManager.save(listConfig)
+		
+		this.updateState({
+			listConfigId: listConfig.id
+		})
+	}
+	
+	/**
+	 * Delete list config
+	 *
+	 * @param id - if null then the current list config is deleted
+	 */
+	deleteListConfig(id:string = null) {
+		const
+			{listConfig} = this.state
+		
+		if (!id)
+			id = listConfig.id
+		
+		IssueListConfigManager.remove(id)
+		
+		if (id === listConfig.id) {
+			this.newListConfig()
+		}
+	}
+	
+	/**
+	 * Update list config
+	 */
+	updateListConfig = this.makeStateUpdate((listConfig: IssueListConfig = null) =>
+		(state: IssuesPanelState) => (listConfig) ?
+			state
+				.set('listConfig', cloneObjectShallow(listConfig))
+				.set('searchText', '') :
+			state
+	)
 	
 	private updateCriteria = this.makeStateUpdate((criteria: IIssueCriteria = null) =>
 		(state: IssuesPanelState) => (criteria) ?
 			state
-				.set('criteria', cloneObject(criteria))
+				.set('listConfig', state.listConfig.set('criteria',cloneObject(criteria)))
 				.set('searchText', '') :
 			state
 	)
@@ -626,7 +740,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 */
 	setSortByField(field: string) {
 		const
-			{ criteria } = this.state,
+			{ criteria } = this.state.listConfig,
 			issueSort = criteria.sort,
 			newIssueSort: IIssueSort =
 				cloneObject(issueSort, { fields: [ field ] })
@@ -640,7 +754,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 */
 	toggleSortByDirection() {
 		const
-			{ criteria } = this.state,
+			{ criteria } = this.state.listConfig,
 			issueSort = criteria.sort,
 			newIssueSort: IIssueSort =
 				cloneObject(issueSort, {
@@ -661,7 +775,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 */
 	toggleIssueFilterMilestone(milestone: Milestone) {
 		let
-			{ criteria } = this.state,
+			{ criteria } = this.state.listConfig,
 			milestoneIds = cloneObjectShallow(criteria.milestoneIds || []),
 			index = milestoneIds.indexOf(milestone.id)
 		
@@ -681,7 +795,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 */
 	toggleIssueFilterLabel(label: Label) {
 		let
-			{ criteria } = this.state,
+			{ criteria } = this.state.listConfig,
 			labelIds = cloneObjectShallow(criteria.labelIds || []),
 			index = labelIds.indexOf(label.id)
 		
@@ -728,7 +842,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	
 	
 	getCriteria() {
-		return this.state.criteria
+		return this.state.listConfig.criteria
 	}
 	
 	getSort() {

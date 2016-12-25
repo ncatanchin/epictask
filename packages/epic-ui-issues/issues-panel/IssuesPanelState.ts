@@ -1,5 +1,6 @@
 import { Map, Record, List } from "immutable"
 import { reviveImmutable } from "epic-global"
+
 import {
 	IIssueEditInlineConfig,
 	DefaultIssueCriteria,
@@ -10,7 +11,8 @@ import {
 	Milestone
 } from "epic-models"
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
-
+import { IssueListConfig } from "./models/IssueListConfig"
+import { IssueListConfigManager } from "./models/IssueListConfigManager"
 
 
 
@@ -27,7 +29,17 @@ declare global {
 		comments?:List<Comment>
 		events?:List<IssuesEvent>
 		
-		criteria?:IIssueCriteria
+		/**
+		 * List configs currently available
+		 */
+		listConfigs?:List<IssueListConfig>
+		
+		/**
+		 * Current list config
+		 */
+		listConfig?:IssueListConfig
+		
+		listConfigId?:string
 		
 		searchText?:string
 		
@@ -85,6 +97,10 @@ export const IssuesPanelStateRecordDefaults = {
 	comments:List<Comment>(),
 	events:List<IssuesEvent>(),
 	
+	listConfigs: IssueListConfigManager.all(),
+	listConfig: IssueListConfig.create(),
+	listConfigId: null,
+	
 	groupVisibility:Map<string,boolean>(),
 	
 	selectedIssueIds:List<number>(),
@@ -115,6 +131,9 @@ export const IssuesPanelStateRecord = Record(IssuesPanelStateRecordDefaults)
 export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesPanelState {
 	
 	static fromJS(o:any = {}) {
+		if (o && o.listConfig && !(o instanceof IssueListConfig)) {
+			o.listConfig = IssueListConfig.fromJS(o.listConfig)
+		}
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
@@ -130,6 +149,7 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 				'issues',
 				'events',
 				'comments',
+				'listConfigs',
 				'itemIndexes',
 				/^edit/,
 				/^sav/
@@ -146,7 +166,18 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	comments:List<Comment>
 	events:List<IssuesEvent>
 	
-	criteria:IIssueCriteria
+	/**
+	 * Available list configs
+	 */
+	listConfigs:List<IssueListConfig>
+	
+	/**
+	 * Current list config
+	 */
+	listConfig:IssueListConfig
+	
+	listConfigId:string
+	
 	searchText:string
 	
 	itemIndexes:List<number>

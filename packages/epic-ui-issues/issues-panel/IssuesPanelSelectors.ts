@@ -26,6 +26,7 @@ import { UIState } from "epic-typedux/state/UIState"
 import {View} from "epic-typedux/state/window/View"
 import { isNil, getValue } from "typeguard"
 import { labelsSelector, milestonesSelector, assigneesSelector } from "epic-typedux/selectors"
+import { IssueListConfig } from "epic-ui-issues/issues-panel/models/IssueListConfig"
 
 
 const
@@ -95,9 +96,24 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 				(state:IssuesPanelState) => state.comments
 			),
 			
-			criteriaSelector = createSelector(
+			listConfigIdSelector = createSelector(
 				issuesPanelStateSelector,
-				(issueState:IssuesPanelState) => issueState.criteria
+				(issueState:IssuesPanelState) => issueState.listConfigId
+			),
+			
+			listConfigsSelector = createSelector(
+				issuesPanelStateSelector,
+				(issueState:IssuesPanelState) => issueState.listConfigs
+			),
+			
+			listConfigSelector = createSelector(
+				issuesPanelStateSelector,
+				(issueState:IssuesPanelState) => issueState.listConfig
+			),
+			
+			criteriaSelector = createSelector(
+				listConfigSelector,
+				(listConfig:IssueListConfig) => listConfig.criteria
 			),
 			
 			searchTextSelector = createSelector(
@@ -538,7 +554,9 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 		issuesPanelStateSelector,
 		issuesEventsSelector,
 		groupVisibilitySelector,
-		
+		listConfigsSelector,
+		listConfigSelector,
+		listConfigIdSelector,
 		issuesSelector,
 		issueIdsSelector,
 		itemIndexesSelector,

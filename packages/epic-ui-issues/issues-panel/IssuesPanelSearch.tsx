@@ -2,24 +2,16 @@
 import { List } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import { FlexRowCenter } from "epic-ui-components/common/FlexLayout"
-import { PureRender } from "epic-ui-components/common/PureRender"
-import { Chip } from "epic-ui-components/common/Chip"
-import { RepoLabel } from "epic-ui-components/common/Labels"
-import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import {
-	getIssuesPanelSelector,
-	IssuesPanelController
-} from "./IssuesPanelController"
-import { makePaddingRem, makeHeightConstraint, rem } from "epic-styles/styles"
+import { FlexRowCenter, PureRender, Chip, RepoLabel, SearchField } from "epic-ui-components"
+import { IThemedAttributes, ThemedStyles, makePaddingRem, makeHeightConstraint, rem } from "epic-styles"
+import { getIssuesPanelSelector, IssuesPanelController } from "./IssuesPanelController"
 import { cloneObjectShallow, cloneObject, safePush } from "epic-global"
-import { SearchField } from "epic-ui-components/search"
 import { ContainerNames, getCommandManager } from "epic-command-manager"
-
 import { SearchItem, User, Label, Milestone, Repo, DefaultIssueSort, IssueCriteriaKeywords } from "epic-models"
 import { isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "./IssuesPanelSearchItem"
-import { availableReposSelector, assigneesSelector, labelsSelector, milestonesSelector } from "epic-typedux/selectors"
+import { availableReposSelector, assigneesSelector, labelsSelector, milestonesSelector } from "epic-typedux"
+import { IssuesPanelState } from "./IssuesPanelState"
 
 // const
 // 	searchQueryParser = require('search-query-parser')
@@ -42,7 +34,8 @@ function baseStyles(topStyles, theme, palette) {
 		{
 			//backgroundColor: Transparent,
 			wrapper: [
-				Styles.makeFlex(0, 0, 'auto'),
+				//Styles.makeFlex(0, 0, 'auto'),
+				Styles.FlexScale,
 				Styles.makeTransition([ 'flex-grow', 'flex-shrink', 'flex-basis', 'height', 'min-height', 'max-height' ]),
 				Styles.makePaddingRem(0.5),{
 					minHeight: rem(5.5),
@@ -75,6 +68,7 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface IIssuesPanelSearchProps extends IThemedAttributes {
 	viewController: IssuesPanelController
+	//viewState: IssuesPanelState
 	criteria?: IIssueCriteria
 	searchText?: string
 }
@@ -536,7 +530,9 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			} = this.props,
 			isVisible = this.isVisible()
 		
-		return !criteria ? React.DOM.noscript() : <SearchField
+		return !criteria ? React.DOM.noscript() :
+			<div style={[Styles.FlexScale,Styles.PositionRelative]}>
+				<SearchField
 				ref="searchField"
 				styles={mergeStyles(styles,!isVisible && {wrapper: Styles.makeFlex(0,0,rem(0))})}
 				searchId='issues-search'
@@ -548,13 +544,14 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 				onTextChanged={this.onSearchTextChanged}
 				onItemSelected={this.onItemSelected}
 				providers={[
-				this.searchProvider
-			]}
+					this.searchProvider
+				]}
 				inputStyle={styles.input}
 				onFocus={this.onFocus}
 				onBlur={this.onBlur}
 				onEscape={this.onSearchEscape}
 			/>
+			</div>
 	}
 	
 }

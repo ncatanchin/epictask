@@ -10,8 +10,6 @@ export * from "./UIConstants"
 
 export * from './NotificationCenterClient'
 
-
-
 export * from "./Benchmark"
 export * from "./Counter"
 export * from "./DateUtil"
@@ -42,7 +40,7 @@ export * from "./TemplateUtil"
 export * from "./UIUtil"
 export * from "./ValueCache"
 export * from "./VariableProxy"
-
+export * from "./ProxyWrap"
 export * from "./GithubSyncStatus"
 
 export * from './settings'
