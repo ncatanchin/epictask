@@ -40,6 +40,8 @@ export const
 		[Super]: Meta,
 		[Command]: Meta,
 		[Cmd]: Meta,
+		"Equal": "=",
+		"Minus": "-",
 		"ShiftLeft": Shift,
 		"AltLeft": Alt,
 		"BracketLeft": "[",

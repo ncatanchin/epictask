@@ -1,24 +1,43 @@
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
 import {DatabaseClientService} from './DatabaseClientService'
 import { ObservableStore } from "typedux"
-import { ProcessType, AppKey, AppEventType } from "epic-global"
+import { ProcessType, AppKey, AppEventType, guard } from "epic-global"
 import { getUIActions } from "epic-typedux/provider"
 
 const
 	log = getLogger(__filename)
 
+log.setOverrideLevel(LogLevel.DEBUG)
+
 @RegisterService(ProcessType.UI)
 export default class UIStateService extends BaseService {
 	
 	/**
-	 * ObservableStore
-	 */
-	private store:ObservableStore<any>
-	
-	/**
 	 * Unsubscribe
 	 */
-	private unsubscribeRegistry
+	private unsubscribers
+	
+	
+	private onRegistryEvent = (event:AppEventType,...args:any[]) => {
+		getUIActions().updateRegisteredTools()
+	}
+	
+	private updateZoom = (newZoom = null) => {
+		if (!newZoom)
+			newZoom = getStoreState().get(AppKey).zoom
+		
+		log.debug(`Setting zoom to: ${newZoom}`)
+		guard(() => require('electron').remote.getCurrentWebContents().setZoomFactor(newZoom))
+	}
+	
+	
+	
+	/**
+	 * Create the service
+	 */
+	constructor() {
+		super()
+	}
 	
 	/**
 	 * DatabaseClientService must be loaded first
@@ -29,17 +48,6 @@ export default class UIStateService extends BaseService {
 		return [DatabaseClientService]
 	}
 	
-	private onRegistryEvent = (event:AppEventType,...args:any[]) => {
-		getUIActions().updateRegisteredTools()
-	}
-	
-	
-	/**
-	 * Create the service
-	 */
-	constructor() {
-		super()
-	}
 	
 	/**
 	 * Init
@@ -58,7 +66,12 @@ export default class UIStateService extends BaseService {
 	async start():Promise<this> {
 		
 		getUIActions().updateRegisteredTools()
-		this.unsubscribeRegistry = EventHub.on(EventHub.ToolsChanged,this.onRegistryEvent)
+		this.unsubscribers = [
+			EventHub.on(EventHub.ToolsChanged,this.onRegistryEvent),
+			getStore().observe([AppKey,'zoom'],this.updateZoom)
+		]
+		
+		this.updateZoom()
 		
 		return super.start()
 	}
@@ -69,9 +82,8 @@ export default class UIStateService extends BaseService {
 	 * @returns {Promise<BaseService>}
 	 */
 	async stop():Promise<this> {
-		if (this.unsubscribeRegistry) {
-			this.unsubscribeRegistry()
-			this.unsubscribeRegistry = null
+		if (this.unsubscribers) {
+			this.unsubscribers.forEach(guard)
 		}
 		return super.stop()
 	}

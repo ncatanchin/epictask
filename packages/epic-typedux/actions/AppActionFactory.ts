@@ -209,7 +209,26 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		})
 	}
 	
+	/**
+	 * Set zoom explicitly
+	 *
+	 * @param zoom
+	 * @returns {(state:AppState)=>Map<string, number>}
+	 */
+	@ActionReducer()
+	setZoom(zoom:number) {
+		return (state:AppState) => state.set('zoom',Math.max(0.75,Math.min(2.5,zoom)))
+	}
 	
+	/**
+	 * Zoom by an increment
+	 *
+	 * @param increment
+	 * @returns {any}
+	 */
+	zoom(increment:number) {
+		return this.setZoom(this.state.zoom + increment)
+	}
 	
 	/**
 	 * Update app settings

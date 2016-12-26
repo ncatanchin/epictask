@@ -23,7 +23,11 @@ module.exports = {
 		{
 			test: srcTest,
 			exclude: [/node_modules/],
-			loaders: [`awesome-typescript-loader?cacheDirectory=dist/.awcache-${isDev ? 'dev' : 'prod'}`,proxyProvidedLoaderPath,'source-map-loader'],
+			loaders: [
+				`awesome-typescript-loader?cacheDirectory=dist/.awcache-${isDev ? 'dev' : 'prod'}`,
+				proxyProvidedLoaderPath,
+				//'source-map-loader'
+			],
 		},
 		
 		// JADE

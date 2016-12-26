@@ -20,7 +20,6 @@ import {
 	getCommandBrowserWindow
 } from "./CommandManagerUtil"
 import { isNil} from "typeguard"
-import { windowsSelector } from "epic-typedux/selectors"
 
 
 const
@@ -34,7 +33,7 @@ const
 	}
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration

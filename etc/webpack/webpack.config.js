@@ -141,7 +141,8 @@ function makeAliases() {
 		"epic-electron": tsAlias('epic-global/Electron'),
 		styles: tsAlias('epic-assets/styles'),
 		assets: tsAlias('epic-assets'),
-		'epic-config': path.resolve(baseDir, 'etc', 'config', 'default-config.js')
+		"epic-config": path.resolve(baseDir, 'etc', 'config', 'default-config.js'),
+		"inline-attachment":path.resolve(baseDir,'libs','inline-attachment')
 		
 	})
 }

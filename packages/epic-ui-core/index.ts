@@ -136,6 +136,33 @@ CommandRegistryScope.Register(
 		}
 	},
 	
+	// ZOOM IN
+	{
+		id: 'ZoomIn',
+		type: CommandType.App,
+		name: "Zoom In",
+		defaultAccelerator: "CommandOrControl+=",
+		execute: (item, event) => getAppActions().zoom(0.15)
+	},
+	
+	// ZOOM OUT
+	{
+		id: 'ZoomOut',
+		type: CommandType.App,
+		name: "Zoom Out",
+		defaultAccelerator: "CommandOrControl+-",
+		execute: (item, event) => getAppActions().zoom(-0.15)
+	},
+	
+	// ZOOM DEFAULT
+	{
+		id: 'ZoomStandard',
+		type: CommandType.App,
+		name: "Zoom Standard",
+		defaultAccelerator: "CommandOrControl+0",
+		execute: (item, event) => getAppActions().setZoom(1)
+	},
+	
 	// SYNC EVERYTHING
 	{
 		id: 'SyncEverything',

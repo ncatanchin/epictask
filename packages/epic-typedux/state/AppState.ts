@@ -22,6 +22,8 @@ export const AppStateRecord:Record.Class = Record({
 	user: null,
 	customAccelerators: Map<string,string>(),
 	messages:List<INotification>(),
+	
+	zoom: 1,
 	windows:Map<string,IWindowState>()
 })
 
@@ -60,6 +62,7 @@ export class AppState extends AppStateRecord {
 	trayOpen:boolean
 	settings:Settings
 	user:User
+	zoom:number
 	messages:List<INotification>
 	windows:Map<number,IWindowState>
 	customAccelerators: Map<string,string>

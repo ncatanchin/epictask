@@ -257,7 +257,7 @@
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "url-loader": "^0.5.7",
     "warning": "^3.0.0",
-    "webpack": "^2.1.0-beta.27",
+    "webpack": "^2.1.0-beta.28",
     "webpack-dashboard": "^0.2.0",
     "webpack-dev-middleware": "^1.6.1",
     "webpack-dev-server": "^2.1.0-beta.0",

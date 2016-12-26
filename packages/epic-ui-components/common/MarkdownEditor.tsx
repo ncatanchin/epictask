@@ -1,3 +1,11 @@
+// INLINE ATTACHMENT POLLUTE
+import '!!script-loader!inline-attachment/src/inline-attachment.js'
+import '!!script-loader!inline-attachment/src/codemirror-4.inline-attachment.js'
+
+declare global {
+	let inlineAttachment:any
+}
+
 // Imports
 import { PureRender } from "./PureRender"
 import { getValue } from  "epic-global"
@@ -10,7 +18,7 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-const baseStyles = (topStyles,theme,palette) => ({
+const baseStyles = (topStyles, theme, palette) => ({
 	root: [ FlexColumn, FlexAuto, {} ]
 })
 
@@ -25,8 +33,8 @@ export interface IMarkdownEditorProps {
 	style?:any
 	autoFocus?:boolean
 	defaultValue?:string
-	onChange: (value:string) => any
-	onKeyDown?: (event:KeyboardEvent) => any
+	onChange:(value:string) => any
+	onKeyDown?:(event:KeyboardEvent) => any
 }
 
 /**
@@ -82,10 +90,10 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 	 */
 	onDrop(data:DataTransfer) {
 		const
-			{files,items} = data,
+			{ files, items } = data,
 			mde = getValue(() => this.state.simplemde)
 		
-		log.debug(`Received data transfer`,data,mde)
+		log.debug(`Received data transfer`, data, mde)
 		
 		if (!mde)
 			return
@@ -106,7 +114,7 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 		// CHECK FILES FIRST
 		if (files && files.length === 1) {
 			const
-				file = files[0]
+				file = files[ 0 ]
 			
 			if (/image/.test(file.type)) {
 				const
@@ -120,9 +128,9 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 		
 		// THEN CHECK ITEMS
 		if (items && items.length) {
-			for (let i = 0; i < items.length;i++) {
+			for (let i = 0; i < items.length; i++) {
 				const
-					item = items[i]
+					item = items[ i ]
 				
 				if (/uri/.test(item.type)) {
 					item.getAsString(insertImage)
@@ -138,7 +146,7 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 	 */
 	private onChange = (value) => {
 		const
-			{onChange} = this.props
+			{ onChange } = this.props
 		
 		onChange && onChange(value)
 	}
@@ -148,7 +156,7 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 	 *
 	 * @param wrapper
 	 */
-	private setWrapper = (wrapper) => this.setState({wrapper})
+	private setWrapper = (wrapper) => this.setState({ wrapper })
 	
 	/**
 	 * Receive the ref and assign
@@ -158,15 +166,15 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 	 */
 	private setSimpleMDE = (simpleMdeReact) => {
 		const
-			{onKeyDown} = this.props,
+			{ onKeyDown } = this.props,
 			simplemde = getValue(() => simpleMdeReact.simplemde),
 			codemirror = getValue(() => simplemde.codemirror)
 		
-		log.debug(`Markdown editor received`,simpleMdeReact,simplemde,codemirror)
+		log.debug(`Markdown editor received`, simpleMdeReact, simplemde, codemirror)
 		
 		if (codemirror) {
-			for (let eventName of ['dragstart','dragenter','dragover','dragleave','drop']) {
-				codemirror.on(eventName,(cm,event) => {
+			for (let eventName of [ 'dragstart', 'dragenter', 'dragover', 'dragleave', 'drop' ]) {
+				codemirror.on(eventName, (cm, event) => {
 					event.codemirrorIgnore = true
 				})
 			}
@@ -175,7 +183,7 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 				const
 					wrapper = getValue(() => this.state.wrapper)
 				
-				log.debug(`Propagating md focus/blur`,eventName,wrapper)
+				log.debug(`Propagating md focus/blur`, eventName, wrapper)
 				if (wrapper) {
 					eventName === 'focus' ? wrapper.focus() : wrapper.blur()
 				}
@@ -183,14 +191,16 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 				// 	wrapper.dispatchEvent(event)
 			}
 			
-			codemirror.on('focus',makeFocusHandler('focus'))
-			codemirror.on('blur',makeFocusHandler('blur'))
+			codemirror.on('focus', makeFocusHandler('focus'))
+			codemirror.on('blur', makeFocusHandler('blur'))
 			
 			if (onKeyDown) {
-				codemirror.on('keydown',(cm,event) => {
+				codemirror.on('keydown', (cm, event) => {
 					onKeyDown(event)
 				})
 			}
+			
+			inlineAttachment.editors.codemirror4.attach(codemirror)
 		}
 		
 		this.setState({
@@ -211,24 +221,27 @@ export class MarkdownEditor extends React.Component<IMarkdownEditorProps,IMarkdo
 	 */
 	render() {
 		const
-			{ onChange,autoFocus,defaultValue,style} = this.props
+			{ onChange, autoFocus, defaultValue, style } = this.props,
+			
+			opts = {
+				autoDownloadFontAwesome: false,
+				spellChecker: false,
+				status: false,
+				initialValue: defaultValue,
+				autoFocus
+			}
 		
 		return <div
 			style={[style,FlexColumn]}
 			className="epic-markdown-editor"
 			ref={this.setWrapper}>
 			
-			<SimpleMDE onChange={this.onChange}
-		                  ref={this.setSimpleMDE}
-		                  style={style}
-		                  onDragOver={(event) => log.info(`Dragging over markdown editor`,event)}
-		                  options={{
-						            autoDownloadFontAwesome: false,
-						            spellChecker: false,
-						            status: false,
-						            initialValue: defaultValue,
-						            autoFocus
-						           }}/></div>
+			<SimpleMDE
+				onChange={this.onChange}
+				ref={this.setSimpleMDE}
+				style={style}
+				onDragOver={(event) => log.info(`Dragging over markdown editor`,event)}
+				options={opts}/></div>
 	}
 	
 }
