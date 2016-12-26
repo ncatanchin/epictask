@@ -76,9 +76,9 @@ function baseStyles(topStyles, theme, palette) {
 
 
 /**
- * IIssueListsProps
+ * IIssueListsControlProps
  */
-export interface IIssueListsProps extends IThemedAttributes {
+export interface IIssueListsControlProps extends IThemedAttributes {
 	viewController?:IssuesPanelController
 	listConfig?:IssueListConfig
 	listConfigs?:List<IssueListConfig>
@@ -86,17 +86,17 @@ export interface IIssueListsProps extends IThemedAttributes {
 }
 
 /**
- * IIssueListsState
+ * IIssueListsControlState
  */
-export interface IIssueListsState {
+export interface IIssueListsControlState {
 	editing?:boolean
 	newName?:string
 }
 
 /**
- * IssueLists
+ * IssueListsControl
  *
- * @class IssueLists
+ * @class IssueListsControl
  * @constructor
  **/
 
@@ -110,7 +110,7 @@ export interface IIssueListsState {
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
 @PureRender
-export class IssueLists extends React.Component<IIssueListsProps,IIssueListsState> {
+export class IssueListsControl extends React.Component<IIssueListsControlProps,IIssueListsControlState> {
 	
 	get viewController() {
 		return this.props.viewController
@@ -262,7 +262,7 @@ export class IssueLists extends React.Component<IIssueListsProps,IIssueListsStat
 					<Icon
 						onClick={this.showListConfigs}
 						style={styles.name.action}
-						iconName="arrow_drop_down"
+						iconName="settings"
 					/>
 				</div>
 			

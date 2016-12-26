@@ -131,7 +131,8 @@ CommandRegistryScope.Register({
 	type: CommandType.Global,
 	name: "New Issue",
 	execute: (cmd, event) => getIssueActions().newIssueWindow(),
-	defaultAccelerator: "Control+Alt+n"
+	defaultAccelerator: "Control+Alt+n",
+	hidden: true
 },{
 	id: 'NewIssue',
 	type: CommandType.App,

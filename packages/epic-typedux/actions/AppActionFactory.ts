@@ -285,11 +285,11 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	/**
 	 * toggle tray open/closed
 	 */
-	toggleTray() {
+	toggleTray(bounds = null) {
 		if (this.state.trayOpen) {
 			this.closeTray()
 		} else {
-			this.openTray()
+			this.openTray(bounds)
 		}
 	}
 	

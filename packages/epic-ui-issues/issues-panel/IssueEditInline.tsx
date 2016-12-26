@@ -3,27 +3,30 @@
  */
 // Imports
 import { FormEvent } from "react"
-import { TextField, Icon, Button, RepoLabel, getGithubErrorText } from "epic-ui-components"
-import { List } from "immutable"
-import { Issue, Milestone, AvailableRepo, IIssueListItem } from "epic-models"
-import filterProps from "react-valid-props"
-import { ThemedStyles, makeThemeFontSize, IThemedAttributes } from "epic-styles"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
-import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
-import { getUIActions, getIssueActions } from "epic-typedux/provider"
-import { cloneObjectShallow, cloneObject, shallowEquals, notifyError, guard } from "epic-global"
-import { IRowState, MilestoneLabel, WorkIndicator, RepoSelect, Form, FormValidators } from "epic-ui-components/common"
 import { getValue, isNumber } from "typeguard"
-import { IssuesPanel} from "./IssuesPanel"
-import {getIssuesPanelSelector ,IssuesPanelController} from './IssuesPanelController'
- 
+import { List } from "immutable"
+import filterProps from "react-valid-props"
 import {
+	TextField,
+	Icon,
+	Button,
+	IRowState,
+	MilestoneLabel,
+	RepoSelect,
+	Form,
+	FormValidators
+} from "epic-ui-components"
+import { Issue, AvailableRepo, IIssueListItem } from "epic-models"
+import {
+	ThemedStyles,
+	makeThemeFontSize,
+	IThemedAttributes,
 	FlexAuto,
 	makePaddingRem,
 	makeStyle,
 	FlexScale,
-	Ellipsis,
 	colorAlpha,
 	FlexRowCenter,
 	FillWidth,
@@ -32,10 +35,14 @@ import {
 	FlexColumnCenter,
 	FlexColumn,
 	makeTransition,
-	PositionRelative, makeHeightConstraint
-} from "epic-styles/styles"
-import { availableReposSelector } from "epic-typedux/selectors"
-
+	PositionRelative,
+	makeHeightConstraint
+} from "epic-styles"
+import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
+import { getIssueActions, availableReposSelector } from "epic-typedux"
+import { cloneObjectShallow, cloneObject, shallowEquals, guard } from "epic-global"
+import { IssuesPanel } from "./IssuesPanel"
+import { getIssuesPanelSelector, IssuesPanelController } from "./IssuesPanelController"
 
 
 // Constants
@@ -95,7 +102,13 @@ const
 						} ],
 						label: [ FlexAuto, FlexColumnCenter ]
 					} ]
-				} ]
+				} ],
+				
+				titleField: [{
+					input: {
+						fontSize: themeFontSize(1.3)
+					}
+				}]
 			}
 		]
 	}
@@ -444,7 +457,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 						onChange={this.onTitleChange}
 						onBlur={this.onBlur}
 						onKeyDown={this.onKeyDown}
-						style={FlexScale}
+						style={styles.titleField}
 						inputStyle={FlexScale}
 						tabIndex={0}
 					  autoFocus

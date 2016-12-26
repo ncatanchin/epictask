@@ -1,6 +1,6 @@
 import { Map, Record, List } from "immutable"
 
-import {app,Tray} from 'electron'
+import {app,screen,Tray} from 'electron'
 import { addHotDisposeHandler, acceptHot, setDataOnHotDispose, getHot, searchPathsForFile } from "epic-global"
 import { getAppActions } from "epic-typedux/provider"
 import { getValue } from "typeguard"
@@ -23,7 +23,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Tray
@@ -59,8 +59,29 @@ export namespace TrayLauncher {
 	 * Open tray - assigned to global scope too
 	 * @param bounds
 	 */
-	export function openTray(bounds = getValue(() => tray.getBounds())) {
+	export function openTray(bounds = null) {
+		if (!bounds)
+			bounds = getValue(() => tray.getBounds())
+				
+		
+		if (bounds.y === 0) {
+			const
+				display = screen.getDisplayNearestPoint(_.pick(bounds,'x','y') as any)
+			
+			bounds.y = display.bounds.y
+			
+		}
+		log.debug(`Opening with bounds`,bounds)
 		getAppActions().openTray(bounds)
+	}
+	
+	/**
+	 * Toggle tray open/closed
+	 *
+	 * @param bounds
+	 */
+	export function toggleTray(bounds = getValue(() => tray.getBounds())) {
+		getAppActions().toggleTray(bounds)
 	}
 	
 	/**

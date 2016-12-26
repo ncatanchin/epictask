@@ -475,10 +475,10 @@ export class IssuesList extends React.Component<IIssuesListProps,IIssuesListStat
 					itemBuilder={this.buildItem}
 					itemKeyFn={(listItems,item,index) => {
             const
-              foundItem = checkedItems.get(itemIndexes.get(index))
+              foundItem = getValue(() => checkedItems.get(itemIndexes.get(index)))
               
             
-            return `${_.get(foundItem,'id',index)}`
+            return `${getValue(() => foundItem.id,index)}`
           }}
 					initialItemsPerPage={50}
 					rowTypeProvider={this.getRowType}

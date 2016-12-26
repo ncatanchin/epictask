@@ -319,7 +319,10 @@ export class ActionSearchProvider {
 		const
 			allCommands = Object
 				.values(Commands)
-				.filter(it => it.type === CommandType.App && it.hidden !== true && !isNil(it.name)) as ICommand[]//getCommandManager().allCommands()
+				.filter(it =>
+					[CommandType.App,CommandType.Global].includes(it.type) &&
+					it.hidden !== true &&
+					!isNil(it.name)) as ICommand[]//getCommandManager().allCommands()
 		
 		let
 			results = List<ICommand>()

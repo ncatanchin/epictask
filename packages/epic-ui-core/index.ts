@@ -158,7 +158,7 @@ CommandRegistryScope.Register(
 	{
 		id: 'ShowTrayGlobal',
 		type: CommandType.Global,
-		name: "Show Focused Issue Tray",
+		name: "Show Tray",
 		execute: (cmd, event) => getAppActions().toggleTray(),
 		defaultAccelerator: "Control+Shift+e"
 	},

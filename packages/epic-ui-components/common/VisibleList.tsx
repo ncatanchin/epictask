@@ -536,13 +536,13 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 			{itemKeyProperty,itemKeyFn} = this.props,
 			item = !items ? null : Array.isArray(items) ? items[index] : items.get(index)
 		
-		const itemId =
+		const itemId = getValue(() =>
 			itemKeyProperty ?
 				_.get(item,itemKeyProperty,index) :
 				itemKeyFn ?
 					itemKeyFn(items,item,index) :
 					index
-		
+		)
 		return (isNil(itemId) ? index : itemId) as ItemKeyType
 	}
 	

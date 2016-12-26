@@ -35,7 +35,7 @@ import { ViewRoot } from "epic-ui-components/layout"
 import { getIssueActions } from "epic-typedux/provider"
 import { IssuesPanelSearch } from "./IssuesPanelSearch"
 import { BaseIssuePanel, IBaseIssuesPanelProps } from "epic-ui-issues/issues-panel/BaseIssuePanel"
-import { IssueLists } from "./IssueLists"
+import { IssueListsControl } from "./IssueListsControl"
 
 
 // Constants & Non-typed Components
@@ -563,7 +563,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 					ref={this.setSearchFieldRef}
 					viewController={this.viewController}
 				/>
-				<IssueLists
+				<IssueListsControl
 					viewController={this.viewController}
 				/>
 			</div>
