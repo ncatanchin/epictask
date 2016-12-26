@@ -87,6 +87,19 @@ CommandRegistryScope.Register(
 		execute: (item, event) => getUIActions().closeWindow()
 	},
 	
+	// NEW TAB
+	{
+		id: 'NewTab',
+		type: CommandType.App,
+		name: "New Tab",
+		defaultAccelerator: "CommandOrControl+t",
+		execute: (item, event) => {
+			log.info(`New tab`)
+			getUIActions().showNewTabPopup()
+		}
+	},
+	
+	
 	// CLOSE TAB
 	{
 		id: 'CloseTab',

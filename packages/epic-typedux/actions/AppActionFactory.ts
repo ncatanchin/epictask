@@ -14,7 +14,7 @@ import { getWindowManagerClient } from "epic-process-manager-client"
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 declare global {
 	
@@ -337,9 +337,13 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		
 		log.debug(`Using placement`,bounds,'tested placements',placements)
 		
-		assert(`No placements worked?????`)
+		//assert(bounds,`No placements worked?????`)
 		
-		win.setBounds(bounds)
+		if (bounds)
+			win.setBounds(bounds)
+		else
+			win.center()
+		
 		win.show()
 		win.focus()
 		

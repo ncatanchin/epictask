@@ -11,6 +11,7 @@ import { SelectField, TextField } from "epic-ui-components/common"
 import { Icon } from "epic-ui-components/common/icon/Icon"
 import { ContextMenu, isEmpty, stopEvent } from "epic-global"
 import { getValue } from "typeguard"
+import { makeHeightConstraint, colorLighten } from "epic-styles/styles"
 
 
 // Constants
@@ -27,8 +28,49 @@ function baseStyles(topStyles, theme, palette) {
 		{ text, primary, accent, background } = palette
 	
 	return [ Styles.FlexRowCenter, Styles.FlexAuto, Styles.makePaddingRem(0,1), {
+		backgroundColor: primary.hue2,
 		maxWidth: '40vw',
-		width: rem(30)
+		width: rem(30),
+		
+		name: [Styles.FlexRowCenter,Styles.FlexScale,{
+			backgroundColor: colorLighten(primary.hue2,5),
+			
+			border: `0.1rem solid ${theme.inactiveColor}`,
+			
+			text: [Styles.FlexScale,Styles.makePaddingRem(0.5,1),{
+				fontSize: rem(1.4)
+			}],
+			
+			action: [Styles.CursorPointer,Styles.FlexAuto,Styles.makePaddingRem(1),{
+				fontSize: rem(1.7)
+			}]
+		}],
+		
+		
+		
+		nameField: [Styles.FlexScale,Styles.makePaddingRem(0.5,1),{
+			backgroundColor: primary.hue2,
+			color: text.primary,
+			
+			
+			input: [Styles.FlexScale,Styles.makePaddingRem(0.2),{
+				backgroundColor: primary.hue2,
+				color: text.primary,
+				border: 0,
+				fontSize: rem(1.4),
+				
+				[Styles.CSSFocusState]: {
+					boxShadow: 'none',
+					backgroundColor: primary.hue2,
+					color: text.primary,
+					border: 0,
+				}
+			}]
+			
+		}]
+		
+		
+		
 	} ]
 }
 
@@ -175,8 +217,13 @@ export class IssueLists extends React.Component<IIssueListsProps,IIssueListsStat
 		const
 			{listConfigs,listConfig,viewController} = this.props,
 			menu = ContextMenu.create()
-				.addLabel(`Choose a list config...`)
-				.addSeparator()
+				.addCommand(`New list`,() => viewController.newListConfig())
+				//.addLabel(`Choose a list config...`)
+		
+		if (listConfig.saved)
+			menu.addCommand(`Delete list`,() => viewController.deleteListConfig(listConfig.id))
+				
+		menu.addSeparator()
 				
 		if (listConfigs.size) {
 			listConfigs.forEach(config =>
@@ -194,8 +241,11 @@ export class IssueLists extends React.Component<IIssueListsProps,IIssueListsStat
 			{ listConfig,styles } = this.props,
 			{editing,newName} = this.state
 		
+		if (!listConfig)
+			return React.DOM.noscript()
+		
 		return <div style={styles}>
-			{editing &&
+			{editing ?
 			<TextField
 				autoFocus={true}
 				styles={styles.nameField}
@@ -204,16 +254,20 @@ export class IssueLists extends React.Component<IIssueListsProps,IIssueListsStat
 				onBlur={this.onTextBlur}
 				onChange={this.onTextChange}
 				onKeyDown={this.onTextKeyDown}
-			/>}
+			/> :
+				<div style={[styles.name]}>
+					<div style={[styles.name.text]} onClick={this.onTextClick}>
+						{listConfig.name || 'Untitled List'}
+					</div>
+					<Icon
+						onClick={this.showListConfigs}
+						style={styles.name.action}
+						iconName="arrow_drop_down"
+					/>
+				</div>
 			
-			{!editing && <div style={[styles.label]} onClick={this.onTextClick}>
-				{listConfig.name || 'Untitled List'}
-			</div>}
-			<Icon
-				onClick={this.showListConfigs}
-				style={[Styles.CursorPointer]}
-			  iconName="arrow_drop_down"
-			/>
+			}
+			
 		</div>
 	}
 	

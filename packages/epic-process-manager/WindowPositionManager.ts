@@ -14,7 +14,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 
@@ -156,6 +156,7 @@ export class WindowPositionManager {
 							width: Math.max(position.bounds.width, 800),
 							height: Math.max(position.bounds.height, 500)
 						})
+					
 					
 					win.setBounds(finalBounds)
 					

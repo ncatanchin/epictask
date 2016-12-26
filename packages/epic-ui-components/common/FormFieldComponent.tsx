@@ -9,7 +9,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {

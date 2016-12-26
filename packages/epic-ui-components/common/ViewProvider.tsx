@@ -15,28 +15,28 @@ const
 
 
 /**
- * IViewProps
+ * IViewProviderProps
  */
-export interface IViewProps extends IThemedAttributes {
+export interface IViewProviderProps extends IThemedAttributes {
 	view:View
 }
 
 /**
- * IView
+ * IViewProviderState
  */
-export interface IView {
+export interface IViewProviderState {
 	
 }
 
 /**
- * View
+ * ViewProvider
  *
- * @class View
+ * @class ViewProvider
  * @constructor
  **/
 
 @PureRender
-export class ViewProvider extends React.Component<IViewProps,IView> {
+export class ViewProvider extends React.Component<IViewProviderProps,IViewProviderState> {
 	
 	render() {
 		const

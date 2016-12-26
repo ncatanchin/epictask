@@ -45,14 +45,22 @@ function cancelCurrentSubscription(modelType:string) {
  */
 const broadcast = _.throttle(() => {
 	try {
-		EventHub.broadcast(AppEventType.DatabaseChanges,[...pendingChanges])
+		const
+			changeCount = Math.min(300,pendingChanges.length),
+			changes = pendingChanges.slice(0,changeCount)
+		
+		EventHub.emit(AppEventType.DatabaseChanges,[...pendingChanges])
 		
 		// CLEAR THE LIST IF IT SUCCEEDED
-		pendingChanges.length = 0
+		pendingChanges.splice(0,changeCount)
+		
+		if (pendingChanges.length)
+			broadcast()
+		
 	} catch (err) {
 		log.error(`Failed to broadcast db changes`,err)
 	}
-},1500)
+},500)
 
 /**
  * Add a pending change to the queue and trigger
@@ -113,7 +121,8 @@ export function watchChanges(
 								doc,
 								clazz: store.modelClazz as any,
 								type: modelType,
-								model
+								model,
+								from: `${ProcessConfig.getTypeName()}-${getWindowId()}`
 							}
 					
 					if (!model) {

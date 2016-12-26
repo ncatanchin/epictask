@@ -11,7 +11,7 @@ const
 	log = getLogger(__filename),
 	Benchmarker = Benchmark(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 

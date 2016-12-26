@@ -1,9 +1,14 @@
 import { guard, shortId, UIKey, shallowEquals } from "epic-global"
-import { getValue, isDefined } from "typeguard"
+import { getValue, isDefined, isFunction } from "typeguard"
 import { getUIActions } from "epic-typedux/provider"
 import { ViewEvent, View } from "epic-typedux/state/window/View"
 import { List, Map } from "immutable"
 import { uiStateSelector } from "epic-typedux/selectors"
+
+const
+	log = getLogger(__filename)
+
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 declare global {
 	
@@ -68,11 +73,24 @@ export function ViewRoot<S,VC extends IViewControllerConstructor<S>>(
 			/**
 			 * Get the view
 			 *
-			 * @param viewId
 			 * @returns {View}
 			 */
 			getView() {
-				return getValue(() => uiStateSelector(getStoreState()).views.find(it => it.id === this.getViewId()))
+				const
+					viewId = this.getViewId()
+				
+				for (let viewType of ['views','tabViews']) {
+					const
+						views = uiStateSelector(getStoreState())[viewType],
+						view = getValue(() => views.find(it => it.id === viewId))
+					
+					log.debug(`looking for view`,viewId,`in ${viewType}`,views,`found`,view)
+					
+					if (view)
+						return view
+				}
+				
+				return null
 			}
 			
 			/**
@@ -97,6 +115,7 @@ export function ViewRoot<S,VC extends IViewControllerConstructor<S>>(
 				// GRAB VIEW IF MISSING
 				view = view || this.getView()
 				
+				
 				const
 					viewId = this.getViewId(),
 					isValid = !view || view instanceof View
@@ -107,13 +126,18 @@ export function ViewRoot<S,VC extends IViewControllerConstructor<S>>(
 					{viewController} = this.state,
 					state = getValue(() => view.state)
 				
+				// if (state && state.toJS)
+				// 	state = state.toJS()
 				
 				if (stateClazz && (!state || !(state instanceof stateClazz))) {
-					state = stateClazz.fromJS(state)
+					state = stateClazz.fromJS(isFunction(getValue(() => state.toJS)) ? state.toJS() : state)
 					
 					if (view) {
 						view = view.set('state', state) as View
 						getUIActions().updateView(view)
+						
+						// RETURNING HERE IS MEGA IMPORTANT
+						return
 					} else {
 						getUIActions().createView(new View({
 							id: viewId,

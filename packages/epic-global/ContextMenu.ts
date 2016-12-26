@@ -1,7 +1,6 @@
 
 import Electron = require('electron')
-import { isString, getValue } from "typeguard"
-import { shortId } from "./IdUtil"
+import { Menu } from "./Menu"
 
 const
 	log = getLogger(__filename)
@@ -11,7 +10,7 @@ const
 
 const
 	{remote} = Electron,
-	{BrowserWindow,Menu,MenuItem} = remote || Electron
+	{BrowserWindow,MenuItem} = remote || Electron
 
 
 function addMenuCommand(menu:Electron.Menu,command:ICommand,execute:() => any) {
@@ -23,57 +22,12 @@ function addMenuCommand(menu:Electron.Menu,command:ICommand,execute:() => any) {
 }
 
 
-export class ContextMenu {
+
+
+export class ContextMenu extends Menu {
 	
 	static create() {
 		return new ContextMenu()
-	}
-	
-	private menu = new Menu()
-	
-	
-	
-	/**
-	 * Add a simple label
-	 *
-	 * @param label
-	 * @returns {ContextMenu}
-	 */
-	addLabel(label:string) {
-		this.menu.append(new MenuItem({label}))
-		
-		return this
-	}
-	
-	/**
-	 * Add a command
-	 *
-	 * @param command
-	 * @param execute
-	 * @returns {ContextMenu}
-	 */
-	addCommand(command:ICommand|string,execute:() => any) {
-		if (isString(command))
-			command = getValue(() => Commands[<string>command],{
-				type: CommandType.Container,
-				name: command,
-				id: shortId()
-			})
-		
-		addMenuCommand(this.menu,command,execute)
-		
-		return this
-	}
-	
-	/**
-	 * Add a seperator
-	 *
-	 * @returns {ContextMenu}
-	 */
-	addSeparator() {
-		this.menu.append(new MenuItem({type: 'separator'}))
-		
-		return this
 	}
 	
 	/**

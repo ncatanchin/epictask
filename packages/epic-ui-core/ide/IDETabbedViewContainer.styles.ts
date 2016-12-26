@@ -114,6 +114,10 @@ export default function baseStyles(topStyles, theme, palette) {
 						flexGrow: 1
 					} ],
 					
+					viewTitle: [{
+						fontWeight: 400
+					}],
+					
 					nameField: [makeHeightConstraint(rem(2)),{
 						backgroundColor: primary.hue2,
 						color: text.primary,

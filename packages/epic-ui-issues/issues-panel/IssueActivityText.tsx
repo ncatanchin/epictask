@@ -349,7 +349,8 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 	 * @param comment
 	 */
 	makeOnCommentEditClick = (issue,comment) => event =>
-		getUIActions().openWindow(RouteRegistryScope.get('CommentEditDialog').makeURI(issue,comment))
+		this.props.viewController.editComment(issue,comment)
+		
 		
 	
 	

@@ -143,6 +143,7 @@ export default class ViewTab extends React.Component<IViewTabProps,IViewTabState
 			
 			{!editing && <div style={[styles.label]} onClick={this.onTextClick}>
 				{view.name || '(Untitled)'}
+				{view.title && <span style={styles.viewTitle}>&nbsp;({view.title})</span>}
 			</div>}
 			
 			{/* IF CLOSE ENABLED, > 1 VIEW STATE */}

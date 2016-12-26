@@ -50,7 +50,7 @@ function getPages() {
 	
 	
 //DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 //region STYLES
 function baseStyles(topStyles,theme,palette) {
@@ -154,8 +154,23 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	refs:any
 	
 	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(this.props,nextProps,'horizontalView','hasSelectedIssues','issues','items','groups','editInlineConfig') ||
-			!shallowEquals(this.state,nextState,'listRef') || !this.props.view
+		return !shallowEquals(
+			this.props,
+				nextProps,
+				'horizontalView',
+				'hasSelectedIssues',
+				'viewId',
+				'viewController',
+				'issues',
+				'items',
+				'groups',
+				'editInlineConfig'
+			) || !shallowEquals(this.state,nextState,'listRef') ||
+			
+			// THESE 3 ARE FOR INIT PURPOSES, IF PRIOR VALUE WAS NOT SET/NIL
+			!this.props.view ||
+			!this.props.viewState ||
+			!this.props.issues
 	}
 	
 	/**
@@ -168,10 +183,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 			//MOVEMENT
 			.command(
 				CommonKeys.MoveDown,
-				(cmd,event) => {
-					log.info(`Move down`,this)
-					this.moveDown(event)
-				},{
+				(cmd,event) => this.moveDown(event),{
 					hidden:true,
 					overrideInput: true
 				}
@@ -216,12 +228,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 			// NEW COMMENT
 			.useCommand(
 				Commands.NewComment,
-				(cmd, event) => {
-					const
-						selectedIssue = this.viewController.getSelectedIssue()
-					
-					getUIActions().openWindow(getPages().CommentEditDialog.makeURI(selectedIssue))
-				})
+				(cmd, event) => this.viewController.newComment())
 			
 			//MARK ISSUE FOCUSED
 			.useCommand(
@@ -392,7 +399,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 		
 		// Set the 'first' selected index if not set
 		// or no modifier
-		log.info(`Issue selected`,issue,'at index',issueIndex)
+		log.debug(`Issue selected`,issue,'at index',issueIndex)
 		if (
 				issueIndex > -1 && (
 						selectedIssueIds.size === 0 ||
@@ -505,6 +512,8 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 				horizontalView,
 				viewState
 			} = this.props
+		
+		log.debug(`render with view state`,viewState,`issues`,issues)
 		
 		if (!viewState || !issues) {
 			return React.DOM.noscript()

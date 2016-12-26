@@ -10,6 +10,7 @@ declare interface IDatabaseChange {
 	doc?:any
 	model?:any
 	deleted?:boolean
+	from?:string
 }
 
 

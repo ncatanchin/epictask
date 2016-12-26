@@ -30,6 +30,7 @@ if (DEBUG)
 process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 
 const EnvGlobal = {
+	version: VERSION,
 	Config,
 	EnableDebug: !isNil(process.env.EPIC_DEBUG),
 	skipSplash,
@@ -56,6 +57,8 @@ Object.assign(global as any,{
 })
 
 declare global {
+		
+		
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var Env:typeof EnvGlobal
 }

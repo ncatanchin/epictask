@@ -9,7 +9,7 @@ import {
 	getCommandManager
 } from "epic-command-manager"
 import { ICommandMenuItem, CommandMenuItemType, isCommandFontIcon, isCommandImageIcon } from "epic-command-manager"
-import { getValue } from "epic-global"
+import { getValue, ContextMenu } from "epic-global"
 import { NavigationChevronLeft as SvgArrowLeft, NavigationMoreVert as SvgNavMoreIcon } from "material-ui/svg-icons"
 import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
 import { isString } from "epic-global"
@@ -18,6 +18,7 @@ import { Icon} from "./icon/Icon"
 import { KeyboardAccelerator} from "./Labels"
 
 import {IEnumEventRemover} from 'type-enum-events'
+import { makeWidthConstraint, makeHeightConstraint } from "epic-styles/styles"
 // Constants
 const
 	log = getLogger(__filename)
@@ -32,51 +33,25 @@ function baseStyles(topStyles, theme, palette) {
 		{ text, primary, accent,secondary, background } = palette
 	
 	
-	return [ {
-		root: [{
-			WebkitAppRegion: 'no-drag'
-		}],
-		menuItem: [makePaddingRem(0)],
-		item: [FlexRowCenter,FillHeight,FillWidth,makePaddingRem(0),{
-			textAlign: 'right',
-			borderBottom: `0.1rem solid ${colorAlpha(primary.hue1,0.8)}`,
-			minWidth: rem(20)
-		}],
-		
-		button: {
-			color: text.primary
-		},
-		
-		icon: [FlexAuto,FillHeight,FlexRowCenter,makeMarginRem(0,1,0,1),{
-			width: rem(2.4),
+	return [
+		Styles.FlexAuto,
+		Styles.FillHeight,
+		Styles.FlexRowCenter,
+		Styles.CursorPointer,
+		Styles.makePaddingRem(0,1,0,1),
+		makeHeightConstraint(theme.navBarHeight),
+		makeWidthConstraint(theme.navBarHeight),{
+			WebkitAppRegion: 'no-drag',
+			color: text.primary,
+			
+			fontSize: rem(2.6),
 			
 			
-			label: [{
-				
-				left: [{
-					color: text.secondary
-				}],
-				right: [{
-					color: secondary.hue1,
-					fontWeight: 700
-				}]
-			}],
-			
-			right: [{
-				
+			[Styles.CSSHoverState]: [{
+				backgroundColor: accent.hue1
 			}]
 			
-		}],
-		
-		label: [makePaddingRem(0,1),FlexScale,Ellipsis],
-		
-		accelerator: [FillHeight,FlexAuto,makePaddingRem(0,1,0,1),{
-			fontWeight: 700,
-			fontSize: rem(1.3),
-			color: accent.hue1
 		}]
-		
-	} ]
 }
 
 
@@ -118,6 +93,45 @@ export class CommandMenuRoot extends React.Component<ICommandMenuRootProps,IComm
 	 * @type {CommandManager}
 	 */
 	private commandManager = getCommandManager()
+	
+	private showMenu = () => {
+		const
+			menu = ContextMenu.create()
+				.addLabel(`Epictask / Version ${Env.version}`)
+				.addSeparator(),
+			viewMenu = menu.addSubmenu(`View`),
+			windowMenu = menu.addSubmenu(`Window`),
+			findMenu = menu.addSubmenu(`Find`),
+			ghMenu = menu.addSeparator().addSubmenu(`Github`)
+		
+		viewMenu
+			.addCommand(Commands.ShowTrayGlobal)
+			
+		windowMenu
+			.addCommand(Commands.NewTab)
+			.addCommand(Commands.CloseTab)
+			.addSeparator()
+			.addCommand(Commands.NextTab)
+			.addCommand(Commands.PreviousTab)
+			.addSeparator()
+			.addCommand(Commands.CloseWindow)
+			
+			
+		
+		findMenu.addCommand(Commands.FindAction)
+		
+		ghMenu
+			.addCommand(Commands.SyncEverything)
+		
+		menu
+			.addSeparator()
+			.addCommand(Commands.Settings)
+			.addCommand(Commands.Quit)
+		
+		menu.popup()
+		
+		
+	}
 	
 	/**
 	 * Make menu items array
@@ -290,9 +304,9 @@ export class CommandMenuRoot extends React.Component<ICommandMenuRootProps,IComm
 	
 	render() {
 		const
-			menuNode = getValue(() => this.state.menuNode,<div/>)
+			{styles} = this.props
 		
-		return menuNode
+		return <Icon style={styles} onClick={this.showMenu}>menu</Icon>
 	}
 	
 }

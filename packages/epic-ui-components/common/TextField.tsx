@@ -19,7 +19,7 @@ const
 	Tooltip = require('react-tooltip')
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	styleSheet:IGlobalThemedStyle = null

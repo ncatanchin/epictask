@@ -91,11 +91,11 @@ function baseStyles(topStyles, theme, palette) {
 				} ],
 				
 				close: {
-					backgroundColor: warn.hue1
+					backgroundColor: success.hue1
 				},
 				
 				open: {
-					backgroundColor: success.hue1,
+					backgroundColor: warn.hue1,
 					
 				},
 				
@@ -241,7 +241,7 @@ export class IssueStateIcon extends React.Component<IIssueStateIconProps,any> {
 				{this.createIcon(iconName,isOpen)}
 				
 				<div style={[styles.toggle.label]}>
-					{isOpen ? "I'm Done" : 'Reopen'}
+					{isOpen ? "Mark Complete" : 'Reopen'}
 					</div>
 			</div>}
 		</div>

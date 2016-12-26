@@ -202,6 +202,9 @@ export function DefaultTheme(palette) {
 		
 		elementFocus,
 		
+		/**
+		 * Header / Nav bar height
+		 */
 		navBarHeight,
 		
 		input: inputStyle,

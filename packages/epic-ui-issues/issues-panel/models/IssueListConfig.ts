@@ -16,7 +16,9 @@ const
 const IssueListConfigRecord = Record({
 	id: null,
 	name: null,
-	criteria: DefaultIssueCriteria
+	criteria: DefaultIssueCriteria,
+	saved: false,
+	updatedAt: Date.now()
 	
 })
 
@@ -39,19 +41,26 @@ export class IssueListConfig extends IssueListConfigRecord {
 		return new IssueListConfig({id:shortId()})
 	}
 	
+	id:string
+	name:string
+	criteria:IIssueCriteria
+	saved:boolean
+	updatedAt: number
+	
 	private constructor(o:any = {}) {
 		super(o)
 	}
 	
-	// constructor(o:any = {}) {
-	// 	super(o && !o.id && !(o instanceof IssueListConfig) ? assign(o,{id:shortId()}) : o)
-	//
-	//
-	//
-	// }
 	
-	id:string
-	name:string
-	criteria:IIssueCriteria
+	/**
+	 * Timestamp the object
+	 * @returns {Map<string, V>}
+	 */
+	timestamp():this {
+		return this.merge({
+			updatedAt:Date.now()
+		}) as this
+	}
+	
 	
 }

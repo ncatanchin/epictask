@@ -47,4 +47,12 @@ export * from './settings'
 export * from './Config'
 export * from "./EventUtil"
 
+/**
+ * Menu
+ */
+export * from "./Menu"
+
+/**
+ * Context Menu
+ */
 export * from "./ContextMenu"

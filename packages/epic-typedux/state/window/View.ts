@@ -21,6 +21,7 @@ export const ViewRecord = Record({
 	parentId: null,
 	index:-1,
 	name: null,
+	title: null,
 	type: null,
 	temp: true,
 	tab: false,
@@ -73,6 +74,7 @@ export class View extends ViewRecord {
 	parentId:string
 	index:number
 	name:string
+	title:string
 	type: string
 	tab:boolean
 	temp:boolean

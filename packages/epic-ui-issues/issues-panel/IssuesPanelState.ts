@@ -61,7 +61,7 @@ declare global {
 	}
 }
 
-
+//
 
 const
 	log = getLogger(__filename)
@@ -97,15 +97,13 @@ export const IssuesPanelStateRecordDefaults = {
 	comments:List<Comment>(),
 	events:List<IssuesEvent>(),
 	
-	listConfigs: IssueListConfigManager.all(),
+	listConfigs: IssueListConfigManager.allConfigs(),
 	listConfig: IssueListConfig.create(),
 	listConfigId: null,
 	
 	groupVisibility:Map<string,boolean>(),
 	
 	selectedIssueIds:List<number>(),
-	
-	criteria: DefaultIssueCriteria,
 	
 	itemIndexes: List<number>(),
 	
@@ -134,6 +132,16 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 		if (o && o.listConfig && !(o instanceof IssueListConfig)) {
 			o.listConfig = IssueListConfig.fromJS(o.listConfig)
 		}
+		
+		// if (o && !o.listConfig) {
+		// 	const
+		// 		listConfig = IssueListConfig.create()
+		//
+		// 	o.set ?
+		// 		(o = o.set('listConfig',listConfig)) :
+		// 		o.listConfig = listConfig
+		// }
+		
 		return reviveImmutable(
 			o,
 			IssuesPanelState,
@@ -143,7 +151,8 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 	}
 	
 	toJS() {
-		return toPlainObject(this,excludeFilterConfig(
+		 
+		let o = toPlainObject(super.toJS(),excludeFilterConfig(
 			...excludeFilter(
 				'activityLoading',
 				'issues',
@@ -154,6 +163,10 @@ export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesP
 				/^edit/,
 				/^sav/
 			)))
+		
+		//o.listConfig = this.listConfig && this.listConfig.toJS()
+		
+		return o
 	}
 	
 	/**

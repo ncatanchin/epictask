@@ -4,7 +4,7 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter, guard
+	nilFilter, guard, ContextMenu
 } from "epic-global"
 import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
@@ -22,7 +22,7 @@ const
 	log = getLogger(__filename),
 	{Left,Right,Bottom,Popup} = ToolPanelLocation
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Quit Epictask
@@ -594,6 +594,27 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			
 			return !selectedTabView ? state : state.set('selectedTabViewId',selectedTabView.id)
 		}
+	}
+	
+	/**
+	 * Show new tab popup
+	 */
+	showNewTabPopup() {
+		const
+			viewConfigs = ViewRegistryScope.all(),
+			menu =
+				ContextMenu.create()
+		
+		if (getValue(() => viewConfigs.length, 0) < 1)
+			return
+		
+		viewConfigs.forEach(viewConfig =>
+			menu.addCommand(viewConfig.name, () => this.createTabView(viewConfig))
+		)
+		
+		// SHOW THE MENU
+		menu.popup()
+		
 	}
 	
 	/**

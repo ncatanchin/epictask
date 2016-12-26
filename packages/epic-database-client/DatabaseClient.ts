@@ -25,21 +25,24 @@ const
 	log = getLogger(__filename)
 
 // DEBUG LOGGING
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
-/**
- * On database changes received, emit them
- *
- * @param eventType
- * @param ungroupedChanges
- */
-function onDatabaseChange(eventType:AppEventType, ungroupedChanges:IDatabaseChange[]) {
-	log.debug(`Change received`,ungroupedChanges)
+const
+	pendingUnGroupedChanges:IDatabaseChange[] = []
+
+
+const emitChanges = _.debounce(() => {
 	
 	const
+		changeCount = Math.min(300,pendingUnGroupedChanges.length),
+		ungroupedChanges = pendingUnGroupedChanges.slice(0,changeCount),
 		changesByType = _.groupBy(ungroupedChanges,it => it.type)
 	
+	// CLEAR PENDING LIST
+	pendingUnGroupedChanges.splice(0,changeCount)
+	
+	// EMIT
 	Object
 		.keys(changesByType)
 		.forEach(type => {
@@ -50,6 +53,24 @@ function onDatabaseChange(eventType:AppEventType, ungroupedChanges:IDatabaseChan
 			getChangeEmitter(type).emit(changes)
 		})
 	
+	if (pendingUnGroupedChanges.length)
+		emitChanges()
+	
+},500)
+
+/**
+ * On database changes received, emit them
+ *
+ * @param eventType
+ * @param ungroupedChanges
+ */
+function onDatabaseChange(eventType:AppEventType, ungroupedChanges:IDatabaseChange[]) {
+	//log.debug(`Change received`,ungroupedChanges)
+	log.debug(`Received ${ungroupedChanges.length} changes`,_.uniq(ungroupedChanges.map(it => it.from)).join(', '))
+	
+	// QUEUE AND EMIT DEBOUNCED
+	pendingUnGroupedChanges.push(...ungroupedChanges)
+	emitChanges()
 }
 
 

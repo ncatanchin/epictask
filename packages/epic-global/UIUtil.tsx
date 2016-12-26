@@ -5,7 +5,7 @@ import { shallowEquals,cloneObjectShallow } from "./ObjectUtil"
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 export function focusElementById(id:string,timeout = 50) {
 	if (ProcessConfig.isType(ProcessType.UI))

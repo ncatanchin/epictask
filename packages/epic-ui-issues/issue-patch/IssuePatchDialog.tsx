@@ -29,7 +29,7 @@ const
 	log = getLogger(__filename),
 	tinycolor = require('tinycolor2')
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**

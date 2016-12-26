@@ -13,11 +13,12 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 interface IConfigStore {
 	configs: Map<string,IssueListConfig>
+	tabIds: Map<string,string>
 }
 
 /**
@@ -28,6 +29,7 @@ interface IConfigStore {
 function serializeConfig(store:IConfigStore) {
 	store = cloneObject(store)
 	store.configs = store.configs.toJS()
+	store.tabIds = store.tabIds.toJS()
 	
 	return JSON.stringify(store)
 }
@@ -39,7 +41,8 @@ function serializeConfig(store:IConfigStore) {
  */
 function deserializeConfig(value) {
 	const
-		configs = Map<string,IssueListConfig>().asMutable()
+		configs = Map<string,IssueListConfig>().asMutable(),
+		tabIds = Map<string,string>().asMutable()
 	
 	let
 		store = (value && JSON.parse(value)) || {} as any
@@ -50,7 +53,13 @@ function deserializeConfig(value) {
 			configs.set(config.id,IssueListConfig.fromJS(config))
 		})
 	
+	store.tabIds && Object.entries(store.tabIds)
+		.forEach(([tabId,configId]) => {
+			tabIds.set(tabId,configId)
+		})
+	
 	store.configs = configs.asImmutable()
+	store.tabIds = tabIds.asImmutable()
 	
 	return store as IConfigStore
 	
@@ -59,7 +68,8 @@ function deserializeConfig(value) {
 
 const
 	DefaultIssueListConfigStore = {
-		configs: Map<string,IssueListConfig>()
+		configs: Map<string,IssueListConfig>(),
+		tabIds: Map<string,string>()
 	},
 	IssueListConfigStoreValue = new PersistentValue('IssueListConfigStore',DefaultIssueListConfigStore,serializeConfig,deserializeConfig)
 
@@ -107,13 +117,33 @@ namespace IssueListConfigManager {
 		return events.removeListener(listener)
 	}
 	
+	export function setTabConfigId(tabId:string,configId:string) {
+		const
+			store = cloneObjectShallow(IssueListConfigStoreValue.get())
+		
+		store.tabIds = store.tabIds.set(tabId,configId)
+		IssueListConfigStoreValue.set(store)
+		
+	}
+	
+	export function getTabConfigId(tabId:string) {
+		return IssueListConfigStoreValue.get().tabIds.get(tabId)
+	}
+	
+	export function getTabConfig(tabId:string):IssueListConfig {
+		const
+			configId = IssueListConfigStoreValue.get().configs.get(tabId)
+		
+		return (!configId) ? IssueListConfig.create() : this.getConfig(configId)
+	}
+	
 	/**
 	 * Get a config
 	 *
 	 * @param id
 	 * @returns {V}
 	 */
-	export function get(id:string):IssueListConfig {
+	export function getConfig(id:string):IssueListConfig {
 		return IssueListConfigStoreValue.get().configs.get(id)
 	}
 	
@@ -122,7 +152,7 @@ namespace IssueListConfigManager {
 	 *
 	 * @returns {List<IssueListConfig>}
 	 */
-	export function all():List<IssueListConfig> {
+	export function allConfigs():List<IssueListConfig> {
 		return IssueListConfigStoreValue.get().configs.valueSeq() as any
 	}
 	
@@ -131,7 +161,7 @@ namespace IssueListConfigManager {
 	 *
 	 * @param config
 	 */
-	export function save(config:IssueListConfig) {
+	export function saveConfig(config:IssueListConfig) {
 		const
 			store = cloneObjectShallow(IssueListConfigStoreValue.get())
 		

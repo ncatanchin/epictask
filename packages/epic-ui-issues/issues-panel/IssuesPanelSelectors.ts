@@ -13,7 +13,7 @@ import {
 	IIssueListItem,
 	IIssueItemGroupProps,
 	EditIssueInlineIndex,
-	IIssueEditInlineConfig
+	IIssueEditInlineConfig, DefaultIssueCriteria
 } from "epic-models"
 //import {IssueState,TIssuePatchMode,TIssueSortAndFilter, TEditCommentRequest, TIssueActivity} from "epic-typedux/state/IssueState"
 import { createSelector } from "reselect"
@@ -59,7 +59,17 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 				viewIdSelector,
 				storeViewSelector,
 				(uiState:UIState, viewId:string,storeView:View) =>
-					getValue(() => uiState.views.find(it => it.id === viewId),getState && getState())
+					getValue(() => {
+						for (let viewType of ['tabViews','views']) {
+							const
+								view = uiState[ viewType ].find(it => it.id === viewId)
+							
+							if (view)
+								return view
+						}
+						
+						return null
+					})
 			),
 			
 			// localStateSelector:TSelector<IssuesPanelState> = createSelector(
@@ -113,7 +123,7 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 			
 			criteriaSelector = createSelector(
 				listConfigSelector,
-				(listConfig:IssueListConfig) => listConfig.criteria
+				(listConfig:IssueListConfig) => listConfig ? listConfig.criteria : DefaultIssueCriteria
 			),
 			
 			searchTextSelector = createSelector(

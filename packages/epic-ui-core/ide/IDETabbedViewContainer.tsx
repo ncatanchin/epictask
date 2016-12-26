@@ -131,23 +131,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	/**
 	 * SHow create popup
 	 */
-	private showViewConfigs = () => {
-		const
-			viewConfigs = getValue(() => this.state.viewConfigs),
-			menu =
-				ContextMenu.create()
-		
-		if (getValue(() => viewConfigs.length, 0) < 1)
-			return
-		
-		viewConfigs.forEach(viewConfig =>
-			menu.addCommand(viewConfig.name, () => getUIActions().createTabView(viewConfig))
-		)
-		
-		// SHOW THE MENU
-		menu.popup()
-		
-	}
+	private showViewConfigs = () => getUIActions().showNewTabPopup()
 	
 	/**
 	 * Render the view container
@@ -162,9 +146,9 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		tabViews = tabViews.filter(it => getValue(() => it.id, null) !== null) as any
 		
 		const
-			view = tabViews.find(it => it.id === selectedTabViewId)
+			tabView = tabViews.find(it => it.id === selectedTabViewId)
 		
-		if (!view || !tabViews || !tabViews.size || !selectedTabViewId)
+		if (!tabView || !tabViews || !tabViews.size || !selectedTabViewId)
 			return React.DOM.noscript()
 		
 		
@@ -197,7 +181,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 					<div key="bottomBorder" style={styles.tabBar.bottomBorder}/>
 				</div>
 				<div id="viewContainerContent" style={[styles.content]}>
-					<ViewProvider key={view.id} view={view}/>
+					<ViewProvider key={tabView.id} view={tabView}/>
 				</div>
 			</div>
 		</div>

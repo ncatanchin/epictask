@@ -64,6 +64,7 @@ const
 	DefinedEnv = {
 		__DEV__: isDev,
 		DEBUG: isDev,
+		VERSION: JSON.stringify(JSON.parse(fs.readFileSync(path.resolve(baseDir,'package.json'),'utf-8')).version),
 		'Env.isDev': isDev,
 		'process.env.__DEV__': isDev,
 		'process.env.NODE_ENV': JSON.stringify(env),
@@ -295,8 +296,10 @@ function patchConfig(config) {
 		_.merge(config, {
 			// In development specify absolute path - better debugger support
 			output: {
-				devtoolModuleFilenameTemplate: "[absolute-resource-path]",
-				devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
+				// devtoolModuleFilenameTemplate: "[absolute-resource-path]",
+				// devtoolFallbackModuleFilenameTemplate: "[absolute-resource-path]"
+				devtoolModuleFilenameTemplate: "file://[absolute-resource-path]",
+				devtoolFallbackModuleFilenameTemplate: "file://[absolute-resource-path]"
 			},
 			
 		})
@@ -325,8 +328,9 @@ function patchConfig(config) {
 const
 	DevTools = {
 		//'eval-source-map', //'#cheap-module-eval-source-map',
-		'development': 'cheap-module-eval-source-map',//'inline-source-map',
+		//'development': 'cheap-module-eval-source-map',//'inline-source-map',
 		//'development': 'inline-source-map',
+		'development': 'cheap-inline-source-map',
 		'production': 'source-map'
 	},
 	

@@ -14,7 +14,7 @@ import IssuesPanelState from "./IssuesPanelState"
 import { IssueListConfig } from "./models/IssueListConfig"
 import { IssueListConfigManager } from "./models/IssueListConfigManager"
 
-import { isNumber, isNil, getValue } from "typeguard"
+import { isNumber, isNil, getValue, isString } from "typeguard"
 import { getUIActions, getIssueActions, IssueActionFactory } from "epic-typedux"
 import { Issue, Label, Comment, Milestone, IIssueListItem, DefaultIssueCriteria, IssuesEvent } from "epic-models"
 import { makeIssuesPanelStateSelectors, TIssuesPanelSelectors } from "./IssuesPanelSelectors"
@@ -33,7 +33,7 @@ const
 
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 
 export function getIssuesPanelSelector(fn: (selectors: TIssuesPanelSelectors) => any) {
@@ -130,8 +130,8 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 			newIds = newAvailRepos && newAvailRepos.filter(it => it.enabled).map(it => it.id),
 			oldIds = oldAvailRepos && oldAvailRepos.filter(it => it.enabled).map(it => it.id)
 		
-		if (newIds && !Immutable.is(newIds, oldIds)) {
-			log.debug(`Enabled repos changed`, newIds, oldIds)
+		if (newIds && (!oldIds || newIds.size !== oldIds.size || !newIds.every(it => oldIds && oldIds.includes(it)))) {
+			log.info(`Repos changed`, newIds, oldIds)
 			this.loadIssues()
 		}
 	}
@@ -280,14 +280,28 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 *
 	 * @returns {List<IssueListConfig>}
 	 */
-	private updateListConfigs = () => {
+	private updateListConfigs = (newListStore = null) => {
 		const
-			listConfigs = IssueListConfigManager.all()
+			listConfigs = newListStore ? newListStore.configs.valueSeq() : IssueListConfigManager.allConfigs()
 		
 		this.updateState({
 			listConfigs
 		})
 		
+		const
+			{listConfigId} = this.state
+		
+		log.debug(`Updated list configs`,listConfigs,`current list config id is: ${listConfigId} and current list config is: `, this.state.listConfig)
+		
+		
+		if (listConfigId) {
+			const
+				listConfig = listConfigs.find(it => it.id === listConfigId)
+			
+			if (listConfig)
+				this.updateState({listConfig})
+		}
+			
 		return listConfigs
 	}
 	
@@ -338,17 +352,6 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 		
 		this.updateListConfigs()
 		
-		const
-			{listConfigId,listConfigs} = this.state
-		
-		if (listConfigId) {
-			const
-				listConfig = listConfigs.find(it => it.id === listConfigId)
-			
-			if (listConfig)
-				this.updateState({listConfig})
-		}
-		
 		this.loadIssues()
 	}
 	
@@ -385,7 +388,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	loadIssues = _.debounce(OneAtATime({}, async() => {
 		const
 			{ listConfig, selectedIssueIds } = this.state,
-			{criteria} = listConfig,
+			criteria = getValue(() => listConfig.criteria,DefaultIssueCriteria),
 			actions = new IssueActionFactory(),
 			repoIds = availableRepoIdsSelector(getStoreState()),
 			issues = await actions.queryIssues(criteria,this.useAllRepoIds && repoIds)
@@ -419,48 +422,56 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	/**
 	 * Update issues in the current panel
 	 */
-	private updateIssuesInState = this.makeStateUpdate((updatedIssues: List<Issue>) => {
-		return (state: IssuesPanelState) => state.withMutations((newState: IssuesPanelState) => {
-			let
-				{ issues } = newState,
-				availRepos = availableReposSelector(getStoreState()),
-				repoIds = availRepos.map(it => it.id)
+	private updateIssuesInState = (updatedIssues: List<Issue>) => {
+		this.updateState({
+			issues: (this.state.issues || List<Issue>()).withMutations((issues:List<Issue>) => {
+				let
+					availRepos = availableReposSelector(getStoreState()),
+					repoIds = availRepos.map(it => it.id)
+				
+				updatedIssues
+					.filter(updatedIssue => repoIds.includes(updatedIssue.repoId))
+					.forEach(updatedIssue => {
+						const
+							issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
+						
+						if (!updatedIssue.repo) {
+							updatedIssue.repo = getValue(() =>
+								availRepos.find(it => it.id === updatedIssue.repoId).repo
+							)
+						}
+						
+						issues = (issueIndex > -1) ?
+							issues.set(issueIndex, cloneObjectShallow(issues.get(issueIndex), updatedIssue)) :
+							issues.push(updatedIssue)
+					})
+				
+				return issues
+			})
 			
-			updatedIssues
-				.filter(updatedIssue => repoIds.includes(updatedIssue.repoId))
-				.forEach(updatedIssue => {
-					const
-						issueIndex = issues.findIndex(issue => issue.id === updatedIssue.id)
-					
-					if (!updatedIssue.repo) {
-						updatedIssue.repo = getValue(() =>
-							availRepos.find(it => it.id === updatedIssue.repoId).repo
-						)
-					}
-					
-					issues = (issueIndex > -1) ?
-						issues.set(issueIndex, cloneObjectShallow(issues.get(issueIndex), updatedIssue)) :
-						issues.push(updatedIssue)
-				})
 			
-			return newState.set('issues', issues)
 		})
-	})
+	}
 	
 	/**
 	 * Change list config
 	 *
-	 * @param id
+	 * @param configIdOrConfig
 	 */
-	setListConfig(id:string) {
+	setListConfig(configIdOrConfig:string|IssueListConfig) {
 		const
-			listConfig = IssueListConfigManager.get(id)
+			listConfig = isString(configIdOrConfig) ?
+				IssueListConfigManager.getConfig(configIdOrConfig) :
+				configIdOrConfig,
+			configId = listConfig ? listConfig.id : configIdOrConfig
 		
-		assert(listConfig,`Unable to find list config with id: ${id}`)
+		assert(listConfig,`Unable to find list config with id: ${configId}`)
 		
-		this.updateState({listConfigId: id})
+		IssueListConfigManager.setTabConfigId(this.id,listConfig.id)
+		this.updateState({listConfigId: listConfig.id})
 		this.updateListConfig(listConfig)
 		
+		return listConfig
 	}
 	
 	/**
@@ -476,27 +487,34 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	 *
 	 * @param name
 	 */
-	setListConfigName(name:string) {
-		const
-			{listConfig} = this.state
+	setListConfigName = (name:string) => {
+		let
+			listConfig = this.getState().get('listConfig')
 		
-		this.updateListConfig(listConfig.set('name',name) as any)
 		
-		this.saveListConfig()
+		listConfig = listConfig.set('name',name) as any
+		
+		this.updateListConfig(listConfig)
+		this.saveListConfig(listConfig)
 	}
 	
 	/**
 	 * Save the list config
 	 */
-	saveListConfig() {
-		const
-			{listConfig} = this.state
+	saveListConfig(listConfig = this.state.listConfig) {
 		
-		IssueListConfigManager.save(listConfig)
+		if (!listConfig.saved) {
+			listConfig = (listConfig.set('saved', true) as IssueListConfig).timestamp()
+			this.updateState({listConfig})
+		}
 		
-		this.updateState({
-			listConfigId: listConfig.id
-		})
+		IssueListConfigManager.saveConfig(listConfig)
+		
+		//this.setListConfig(listConfig)
+		this.updateListConfig(listConfig)
+		if (listConfig.name)
+			this.setViewTitle(listConfig.name)
+		
 	}
 	
 	/**
@@ -521,30 +539,43 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	/**
 	 * Update list config
 	 */
-	updateListConfig = this.makeStateUpdate((listConfig: IssueListConfig = null) =>
-		(state: IssuesPanelState) => (listConfig) ?
-			state
-				.set('listConfig', cloneObjectShallow(listConfig))
-				.set('searchText', '') :
-			state
-	)
-	
-	private updateCriteria = this.makeStateUpdate((criteria: IIssueCriteria = null) =>
-		(state: IssuesPanelState) => (criteria) ?
-			state
-				.set('listConfig', state.listConfig.set('criteria',cloneObject(criteria)))
-				.set('searchText', '') :
-			state
-	)
-	
-	
-	setActivity(comments: List<Comment>, events: List<IssuesEvent>) {
+	updateListConfig = (listConfig: IssueListConfig = null) => {
+		if (!listConfig)
+			return
 		this.updateState({
-			comments,
-			events
+			listConfig: listConfig
 		})
 	}
 	
+	private updateCriteria = (criteria: IIssueCriteria = null) => {
+		if (!criteria)
+			return
+		
+		const
+			{state} = this,
+			listConfig = (state.listConfig.set('criteria', cloneObject(criteria)) as IssueListConfig).timestamp()
+			
+		if (listConfig.saved)
+			this.saveListConfig(listConfig)
+		
+		this.updateState({
+			listConfig,
+			searchText: ''
+		})
+	}
+	
+	
+	
+	
+	/**
+	 * Edit an existing comment
+	 *
+	 * @param issue
+	 * @param comment
+	 */
+	editComment(issue,comment) {
+		getUIActions().openWindow(RouteRegistryScope.get('CommentEditDialog').makeURI(issue,comment))
+	}
 	
 	/**
 	 * Create a new comment
@@ -557,8 +588,20 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 			return notifyError('You can only add a comment when exactly one issue is selected')
 		}
 		
-		getIssueActions().editComment(issue)
-		//this.editComment(issue)
+		getUIActions().openWindow(getRoutes().CommentEditDialog.makeURI(issue))
+	}
+	
+	/**
+	 * Set activity data for an issue
+	 *
+	 * @param comments
+	 * @param events
+	 */
+	private setActivity(comments: List<Comment>, events: List<IssuesEvent>) {
+		this.updateState({
+			comments,
+			events
+		})
 	}
 	
 	/**
@@ -842,7 +885,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	
 	
 	getCriteria() {
-		return this.state.listConfig.criteria
+		return getValue(() => this.state.listConfig.criteria,DefaultIssueCriteria)
 	}
 	
 	getSort() {
@@ -1001,6 +1044,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 			.addSeparator()
 			
 			.addCommand(`Edit Issue: #${issue.number} ${issue.title}`, () => getIssueActions().editIssue(issue))
+			.addCommand(`Create Comment #${issue.number} ${issue.title}`,() => this.newComment())
 			.addSeparator()
 			
 			.addCommand(

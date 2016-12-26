@@ -1,10 +1,39 @@
 import { ViewEvent, View, getUIActions, viewsSelector } from "epic-typedux"
 import { getValue } from "typeguard"
 import { ViewController } from "./ViewController"
+import { uiStateSelector } from "epic-typedux/selectors"
+
+const
+	log = getLogger(__filename)
 
 export abstract class StoreViewController<S extends Immutable.Map<any,any>> extends ViewController<S> {
 	
 	private internalState:S
+	
+	private newTitle = null
+	
+	/**
+	 * Get the view
+	 *
+	 * @returns {View}
+	 */
+	getView() {
+		const
+			viewId = this.id
+		
+		for (let viewType of ['views','tabViews']) {
+			const
+				views = uiStateSelector(getStoreState())[viewType],
+				view = getValue(() => views.find(it => it.id === viewId))
+			
+			log.debug(`looking for view`,viewId,`in ${viewType}`,views,`found`,view)
+			
+			if (view)
+				return view
+		}
+		
+		return null
+	}
 	
 	/**
 	 * Get view state from redux
@@ -12,7 +41,7 @@ export abstract class StoreViewController<S extends Immutable.Map<any,any>> exte
 	 * @returns {string}
 	 */
 	get view():View {
-		return getValue(() => viewsSelector(getStoreState()).find(it => it.id === this.id))
+		return this.getView()
 	}
 	
 	/**
@@ -37,10 +66,18 @@ export abstract class StoreViewController<S extends Immutable.Map<any,any>> exte
 	 * Push state to store
 	 */
 	private pushState() {
-		const { view } = this
+		let { view } = this
 		
 		if (view) {
-			getUIActions().updateView(view.set('state', this.internalState) as View)
+			view = view.set('state', this.internalState) as View
+			
+			// UPDATE TITLE IF SET
+			if (this.newTitle) {
+				view = view.set('title',this.newTitle) as View
+				this.newTitle = null
+			}
+			
+			getUIActions().updateView(view)
 			this.fireChanged()
 		}
 	}
@@ -78,6 +115,31 @@ export abstract class StoreViewController<S extends Immutable.Map<any,any>> exte
 		return this.state
 	}
 	
+	/**
+	 * Set name
+	 *
+	 * @param name
+	 */
+	setViewName(name:string) {
+		const
+			view = this.getView()
+		
+		if (!view)
+			return
+		
+		getUIActions().updateView(view.merge({name}))
+	}
+	
+	
+	/**
+	 * Set title
+	 *
+	 * @param title
+	 */
+	setViewTitle(title:string) {
+		this.newTitle = title
+		this.pushState()
+	}
 	
 	constructor(public id:string, private initialState:S, public opts:any = {}) {
 		super()

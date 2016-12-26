@@ -191,17 +191,17 @@ declare namespace __WebpackModuleApi {
  *
  * e.g. __resourceQuery === "?test" // Inside "file.js?test"
  */
-declare var __resourceQuery: string;
+declare let __resourceQuery: string;
 
 /**
  * Equals the config options output.publicPath.
  */
-declare var __webpack_public_path__: string;
+declare let __webpack_public_path__: string;
 
 /**
  * The raw require function. This expression isn’t parsed by the Parser for dependencies.
  */
-declare var __webpack_require__: any;
+declare let __webpack_require__: any;
 
 /**
  * The internal chunk loading function
@@ -209,29 +209,34 @@ declare var __webpack_require__: any;
  * @param chunkId The id for the chunk to load.
  * @param callback A callback function called once the chunk is loaded.
  */
-declare var __webpack_chunk_load__: (chunkId: any, callback: (require: (id: string) => any) => void) => void;
+declare let __webpack_chunk_load__: (chunkId: any, callback: (require: (id: string) => any) => void) => void;
 
 /**
  * Access to the internal object of all modules.
  */
-declare var __webpack_modules__: any[];
+declare let __webpack_modules__: any[];
 
 /**
  * Access to the hash of the compilation.
  *
  * Only available with the HotModuleReplacementPlugin or the ExtendedAPIPlugin
  */
-declare var __webpack_hash__: any;
+declare let __webpack_hash__: any;
 
 /**
  * Generates a require function that is not parsed by webpack. Can be used to do cool stuff with a global require function if available.
  */
-declare var __non_webpack_require__: any;
+declare let __non_webpack_require__: any;
 
 /**
  * Equals the config option debug
  */
-declare var DEBUG: boolean;
+declare let DEBUG: boolean;
+
+/**
+ * Version from package.json
+ */
+declare let VERSION: string;
 
 //declare var module: __WebpackModuleApi.Module;
 

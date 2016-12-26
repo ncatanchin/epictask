@@ -17,8 +17,8 @@ function baseStyles(topStyles,theme,palette) {
 	
 	const
 		// Gutter min dimension with content
-		gutterHorizDim = rem(2),
-		gutterVertDim = rem(2),
+		gutterHorizDim = rem(2.4),
+		gutterVertDim = rem(2.4),
 		{Left,Right,Bottom,Popup} = ToolPanelLocation
 	
 	return [ makeTransition([ 'opacity' ]), FlexAuto, makeMarginRem(0), makePaddingRem(0), {
