@@ -1,8 +1,6 @@
-import { Map, Record, List } from "immutable"
-
-import {app,screen,Tray} from 'electron'
-import { addHotDisposeHandler, acceptHot, setDataOnHotDispose, getHot, searchPathsForFile } from "epic-global"
-import { getAppActions } from "epic-typedux/provider"
+import { screen, Tray } from "electron"
+import { addHotDisposeHandler, acceptHot, setDataOnHotDispose, getHot, searchPathsForFile, AppKey } from "epic-global"
+import { getAppActions, trayAutoHideSelector, trayStateSelector, TrayState } from "epic-typedux"
 import { getValue } from "typeguard"
 
 const
@@ -91,6 +89,26 @@ export namespace TrayLauncher {
 		getAppActions().closeTray()
 	}
 	
+	/**
+	 * On tray config changed
+	 *
+	 */
+	function setTrayConfig() {
+		const
+			win = getValue(() => getTrayWindow())
+		
+		
+		const
+			trayState = trayStateSelector(getStore().getState())
+		
+		log.info(`Set tray config`, trayState && trayState.toJS())
+	
+		if (!win || !trayState)
+			return log.info(`Tray window is not yet available`)
+		
+		win.setAlwaysOnTop(trayState.alwaysOnTop,'screen-saver')
+	}
+	
 	const
 		unsubscribers = [
 			EventHub.on(EventHub.TrayOpen,() => openTray()),
@@ -111,9 +129,14 @@ export namespace TrayLauncher {
 	}
 	
 	function onBlur() {
-		log.debug(`tray blur`)
 		
-		//getTrayWindow().hide()
+		const
+			{autoHide,alwaysOnTop} = trayStateSelector(getStoreState())
+		
+		log.debug(`tray blur, autoHide=${autoHide},alwaysOnTop=${alwaysOnTop}`)
+		if (alwaysOnTop !== true && autoHide !== false) {
+			getTrayWindow().hide()
+		}
 	}
 	
 	function onClose() {
@@ -134,6 +157,7 @@ export namespace TrayLauncher {
 			tryWin = () => {
 				try {
 					win = getTrayWindow()
+					
 					deferred.resolve()
 				} catch (err) {
 					log.warn(`tray window isn't ready yet`)
@@ -147,12 +171,17 @@ export namespace TrayLauncher {
 		
 		tryWin()
 		
+		
+		
 		// WAIT FOR THE WINDOW
 		await deferred.promise.timeout(10000)
 		
 		if (tray) {
 			return log.warn(`Tray already exists`)
 		}
+		
+		
+		unsubscribers.push(getStore().observe([AppKey,'tray'],setTrayConfig))
 		
 		tray = new Tray(TrayIcon)
 		tray.on('click',onClick)
@@ -161,6 +190,8 @@ export namespace TrayLauncher {
 			.on('focus',onFocus)
 			.on('blur',onBlur)
 			.on('close',onClose)
+		
+		setTrayConfig()
 		
 		// REMOVE ON HMR
 		addHotDisposeHandler(module,() => {

@@ -267,6 +267,8 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 				</MuiThemeProvider>
 			
 			
+				
+				<EnvMarker/>
 			</div>
 		
 		</StyleRoot>
@@ -277,3 +279,23 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 
 export default AppRoot
 
+
+
+function EnvMarker() {
+	if (DEBUG) {
+		return <div
+			style={{
+				position: 'fixed',
+				textTransform: 'uppercase',
+				right: 50,
+				top:0,
+				backgroundColor: 'red',
+				color: 'white',
+				fontSize: 10
+			}}>
+			{process.env.NODE_ENV}
+		</div>
+	} else {
+		return React.DOM.noscript()
+	}
+}

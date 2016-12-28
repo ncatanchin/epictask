@@ -35,7 +35,7 @@ function baseStyles(topStyles, theme, palette) {
 				transform: 'translate(-50%,-50%)',
 			}],
 			
-			icon: [Styles.PositionAbsolute,Styles.makePaddingRem(0,0.5),{
+			icon: [Styles.PositionAbsolute,Styles.makePaddingRem(0,1),{
 				right:0,
 				top: '50%',
 				transform: 'translate(0,-50%)'
