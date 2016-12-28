@@ -21,3 +21,10 @@ export class TrayState extends TrayStateRecord {
 	alwaysOnTop:boolean
 	autoHide:boolean
 }
+
+
+declare global {
+	interface ITrayState extends TrayState {
+		
+	}
+}

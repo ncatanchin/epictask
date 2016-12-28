@@ -4,6 +4,7 @@ import { AppKey, getValue, Settings } from "epic-global"
 import { Map, List } from "immutable"
 import { AppStateType } from "../state/app/AppStateType"
 import { AppState, TWindowMap } from "epic-typedux/state/AppState"
+import { TrayState } from "epic-typedux/state/TrayState"
 
 
 export const appStateSelector:(state) => AppState = createSelector(
@@ -11,19 +12,28 @@ export const appStateSelector:(state) => AppState = createSelector(
 	(appState:AppState) => appState
 )
 
-export const trayOpenSelector:TSelector<boolean> = createSelector(
+
+export const trayStateSelector:TSelector<TrayState> = createSelector(
 	appStateSelector,
-	(appState:AppState) => appState.tray.open
+	(appState:AppState) => {
+		return appState.tray instanceof TrayState ? appState.tray : new TrayState(appState.tray)
+	}
+)
+
+
+export const trayOpenSelector:TSelector<boolean> = createSelector(
+	trayStateSelector,
+	(trayState:TrayState) => trayState.open
 )
 
 export const trayAlwaysOnTopSelector:TSelector<boolean> = createSelector(
-	appStateSelector,
-	(appState:AppState) => appState.tray.alwaysOnTop
+	trayStateSelector,
+	(trayState:TrayState) => trayState.alwaysOnTop
 )
 
 export const trayAutoHideSelector:TSelector<boolean> = createSelector(
-	appStateSelector,
-	(appState:AppState) => appState.tray.autoHide
+	trayStateSelector,
+	(trayState:TrayState) => trayState.autoHide
 )
 
 export const messagesSelector:(state) => List<INotification> = createSelector(
