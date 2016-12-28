@@ -230,6 +230,8 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return this.setZoom(this.state.zoom + increment)
 	}
 	
+	
+	
 	/**
 	 * Update app settings
 	 *
@@ -294,6 +296,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return (state:AppState) => state.set('tray',state.tray.merge({alwaysOnTop}))
 	}
 	
+	/**
+	 * Set tray to auto-hide
+	 *
+	 * @param autoHide
+	 * @returns {(state:AppState)=>Map<string, Map<string, any>>}
+	 */
 	@ActionReducer()
 	setTrayAutoHide(autoHide:boolean) {
 		return (state:AppState) => state.set('tray',state.tray.merge({autoHide}))

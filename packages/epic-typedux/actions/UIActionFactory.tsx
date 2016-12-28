@@ -623,7 +623,13 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 * @param viewConfig
 	 */
 	createTabView(viewConfig:IViewConfig|View) {
-		return this.createView(viewConfig,false,true)
+		const
+			id = shortId()
+		
+		viewConfig = cloneObjectShallow(viewConfig,{id})
+		
+		this.createView(viewConfig,false,true)
+		this.setSelectedTabViewId(viewConfig.id)
 	}
 	
 	/**
@@ -637,7 +643,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	createView(viewConfig:IViewConfig|View,temp:boolean = true,tab:boolean = false) {
 		return (state:UIState) => {
 			const
-				id = shortId(),
+				id = viewConfig.id || shortId(),
 				//initialState = new (viewConfig.stateClazz)(),
 				viewState = viewConfig instanceof View ?
 					viewConfig
