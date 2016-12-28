@@ -4,7 +4,7 @@ import { Settings } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-global/ModelUtil"
-import { getValue } from "epic-global/ObjectUtil"
+import { TrayState } from "./TrayState"
 
 
 export type TWindowMap = Map<number,IWindowState>
@@ -18,7 +18,7 @@ export const AppStateRecord:Record.Class = Record({
 	stateType:AppStateType.AuthLogin,
 	settings: new Settings(),
 	ready: false,
-	trayOpen: false,
+	tray: new TrayState(),
 	user: null,
 	customAccelerators: Map<string,string>(),
 	messages:List<INotification>(),
@@ -37,6 +37,13 @@ export class AppState extends AppStateRecord {
 		let
 			settings = o && (o.get ? o.get('settings') : o.settings)
 		
+		if (o && o.tray) {
+			const
+				tray = TrayState.fromJS(o.tray)
+			
+			o.set ? o.set('tray',tray) : o.tray = tray
+		}
+		
 		let appState = reviveImmutable(
 			o,
 			AppState,
@@ -50,16 +57,21 @@ export class AppState extends AppStateRecord {
 		return appState
 		
 	}
-
+	
+	/**
+	 * To plain JS object
+	 *
+	 * @returns {any}
+	 */
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-			...excludeFilter('ready','messages','trayOpen')
+			...excludeFilter('ready','messages')
 		))
 	}
 	
 	stateType:AppStateType
 	ready:boolean
-	trayOpen:boolean
+	tray:TrayState
 	settings:Settings
 	user:User
 	zoom:number

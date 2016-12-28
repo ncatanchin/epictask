@@ -280,7 +280,23 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 */
 	@ActionReducer()
 	private setTrayOpen(open:boolean) {
-		return (state:AppState) => state.set('trayOpen',open)
+		return (state:AppState) => state.set('tray',state.tray.merge({open}))
+	}
+	
+	/**
+	 * Set always on top
+	 *
+	 * @param alwaysOnTop
+	 * @returns {(state:AppState)=>Map<string, Map<string, any>>}
+	 */
+	@ActionReducer()
+	setTrayAlwaysOnTop(alwaysOnTop:boolean) {
+		return (state:AppState) => state.set('tray',state.tray.merge({alwaysOnTop}))
+	}
+	
+	@ActionReducer()
+	setTrayAutoHide(autoHide:boolean) {
+		return (state:AppState) => state.set('tray',state.tray.merge({autoHide}))
 	}
 	
 	/**
@@ -305,7 +321,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 * toggle tray open/closed
 	 */
 	toggleTray(bounds = null) {
-		if (this.state.trayOpen) {
+		if (this.state.tray.open) {
 			this.closeTray()
 		} else {
 			this.openTray(bounds)
@@ -374,7 +390,7 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	 */
 	
 	closeTray() {
-		if (!this.state.trayOpen) {
+		if (!this.state.tray.open) {
 			return log.debug(`Tray is already closed`)
 		}
 		

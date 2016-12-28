@@ -115,7 +115,8 @@
     /**
      * URL where the file will be send
      */
-    uploadUrl: 'http://localhost:3000/image-upload',
+    //uploadUrl: 'http://localhost:3000/image-upload',
+    uploadUrl: 'https://epictask.densebrain.com/image-upload',
 
     /**
      * Which method will be used to send the file to the upload URL

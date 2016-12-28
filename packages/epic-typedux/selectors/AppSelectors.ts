@@ -13,7 +13,17 @@ export const appStateSelector:(state) => AppState = createSelector(
 
 export const trayOpenSelector:TSelector<boolean> = createSelector(
 	appStateSelector,
-	(appState:AppState) => appState.trayOpen
+	(appState:AppState) => appState.tray.open
+)
+
+export const trayAlwaysOnTopSelector:TSelector<boolean> = createSelector(
+	appStateSelector,
+	(appState:AppState) => appState.tray.alwaysOnTop
+)
+
+export const trayAutoHideSelector:TSelector<boolean> = createSelector(
+	appStateSelector,
+	(appState:AppState) => appState.tray.autoHide
 )
 
 export const messagesSelector:(state) => List<INotification> = createSelector(

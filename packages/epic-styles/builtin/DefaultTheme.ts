@@ -533,8 +533,9 @@ export function DefaultTheme(palette) {
 				transform: 'translate(-50%,0)',
 				cursor: 'move',
 				
-				
-			}],
+			}]
+			
+			
 		}],
 		
 		ideRoot: {

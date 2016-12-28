@@ -55,6 +55,23 @@ export class Menu {
 	}
 	
 	/**
+	 * Add a checkbox
+	 *
+	 * @param label
+	 * @param checked
+	 * @param execute
+	 */
+	addCheckbox(label:string,checked:boolean,execute:() => any) {
+		this.menu.append(new MenuItem({
+			label,
+			checked,
+			type: 'checkbox',
+			click:execute
+		}))
+		return this
+	}
+	
+	/**
 	 * Add a submenu
 	 *
 	 * @param label
