@@ -144,27 +144,41 @@ export class GitHubSearchProvider implements ISearchProvider {
 				const
 					repoStore:RepoStore = getStores().repo,
 					client:GitHubClient = createClient(),
-					results = await client.searchRepos(`fork:false ${text}`)
+					results = await client.searchRepos(`fork:false ${text}`),
+					ids = results.items
+						.filter(it => !!it.id)
+						.map(it => it.id),
+					existingRepos = await repoStore.bulkGet(...ids),
+					existingIds = existingRepos.map(it => it.id)
 				
-				for (let repo of results.items) {
-					if (!repo.id)
-						continue
+				items = List<SearchItem>(
+					results
+						.items
+						.filter(it => !existingIds.includes(it.id))
+						.map(it => new SearchItem(it.id, this, it, canEditRepo(it) ? 0 : 1))
+				)
+				
 					
-					const
-						existingRepo = await repoStore.get(repo.id)
+				//
+				// for (let repo of results.items) {
+				// 	if (!repo.id)
+				// 		continue
 					
-					if (existingRepo) {
-						repo = cloneObjectShallow(existingRepo, repo)
-					}
-					
-					
-					await repoStore.save(repo)
-					
-					
-					items = items.push(
-						new SearchItem(repo.id, this, repo, canEditRepo(repo) ? 0 : 1)
-					) as any
-				}
+					// const
+					// 	existingRepo = await repoStore.get(repo.id)
+					//
+					// if (existingRepo) {
+					// 	repo = cloneObjectShallow(existingRepo, repo)
+					// }
+					//
+					//
+					// await repoStore.save(repo)
+					//
+				//
+				// 	items = items.push(
+				// 		new SearchItem(repo.id, this, repo, canEditRepo(repo) ? 0 : 1)
+				// 	) as any
+				// }
 				
 				
 			} catch (err) {
