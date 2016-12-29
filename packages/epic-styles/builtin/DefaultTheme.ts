@@ -21,7 +21,7 @@ const
 	tc = require('tinycolor2'),
 	{colors:c} = Styles,
 	
-	navBarHeight = 50,
+	navBarHeight = Env.isMac ? 50 : 20,
 	windowControlDim = navBarHeight / 5,
 
 

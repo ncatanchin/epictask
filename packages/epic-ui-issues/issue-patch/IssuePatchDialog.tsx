@@ -573,10 +573,11 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 			component={this}
 			style={makeStyle(Fill)}>
 			<DialogRoot
-			titleNode={titleNode}
-			titleActionNodes={titleActionNodes}
-			saving={saving}
-			style={styles}>
+				title={title}
+				titleNode={titleNode}
+				titleActionNodes={titleActionNodes}
+				saving={saving}
+				style={styles}>
 			<Form
 				id="issue-patch-form"
 				ref="form"

@@ -372,6 +372,7 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			style={makeStyle(Fill)}>
 			
 			<DialogRoot
+				title="settings"
 				titleMode='horizontal'
 				titleNode='settings'
 				styles={styles.dialog}

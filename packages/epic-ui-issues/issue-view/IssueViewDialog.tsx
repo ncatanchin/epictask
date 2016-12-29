@@ -115,6 +115,7 @@ export class IssueViewDialog extends BaseIssuePanel<IIssueViewDialogProps,IIssue
 			issue = this.viewController.getSelectedIssue()
 		
 		return <DialogRoot
+			title={issue && issue.title}
 			titleNode={issue && issue.title}
 			styles={styles.dialog}
 		>

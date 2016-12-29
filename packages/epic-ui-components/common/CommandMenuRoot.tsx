@@ -44,7 +44,7 @@ function baseStyles(topStyles, theme, palette) {
 			WebkitAppRegion: 'no-drag',
 			color: text.primary,
 			
-			fontSize: rem(2.6),
+			fontSize: rem(Env.isMac ? 2.6 : 1.6),
 			
 			
 			[Styles.CSSHoverState]: [{

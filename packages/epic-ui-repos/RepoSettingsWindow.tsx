@@ -320,6 +320,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 			style={makeStyle(Fill)}>
 			
 			<DialogRoot
+				title='Repo Settings'
 				titleMode='horizontal'
 				titleNode={titleNode}
 				titleActionNodes={

@@ -699,6 +699,9 @@ export class WindowManager {
 			// 	savedWindowState.manage(newWindow)
 			// }
 			
+			//REMOVE DEFAULT MENU
+			newWindow.setMenu(null)
+			
 			let
 				cleanedUrl = url.replace(/\\/g,'/')
 				//cleanedUrl = url.replace(/\\/g,'\\\\')

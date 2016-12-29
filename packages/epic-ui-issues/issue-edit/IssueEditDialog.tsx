@@ -434,11 +434,14 @@ export class IssueEditDialog extends React.Component<IIssueEditDialogProps,IIssu
 				theme,
 				palette,
 				() => this.refs.form.submit(),
-				this.onCancel)
+				this.onCancel),
+		
+			title = editingIssue.id ? `editing issue #${editingIssue.number}` : `create issue`
 		
 		return <DialogRoot
 			titleMode='horizontal'
-			titleNode={editingIssue.id ? `editing issue #${editingIssue.number}` : `create issue`}
+			title={title}
+			titleNode={title}
 			subTitleNode={editingIssue.title}
 			titleActionNodes={titleActionNodes}
 			saving={saving}

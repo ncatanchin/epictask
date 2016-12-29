@@ -26,24 +26,32 @@ const baseStyles = (topStyles,theme,palette) => {
 			backgroundColor: background
 		} ],
 		
-		header: [ FlexRow, makeFlexAlign( 'center','flex-end'), makePaddingRem(0),FillWidth, makeHeightConstraint(rem(2.5)), {
+		header: [ FlexRow, makeFlexAlign( 'center','flex-end'), makePaddingRem(0),FillWidth, makeHeightConstraint(Env.isMac ? rem(2.5) : theme.navBarHeight), {
+			
+			
+			
 			WebkitUserSelect: 'none',
 			WebkitAppRegion: 'drag',
-			hasActions: [makeHeightConstraint(rem(5.3))],
+			
+			hasActions: [makeHeightConstraint(Env.isMac ? rem(5.3) : rem(3))],
 			
 			// SPACER - push actions right
 			spacer: [makeFlex(1,1,0)],
+			
+			empty: [!Env.isMac && makeHeightConstraint(0)],
 			
 			// ACTION NODES
 			titleActions: [Styles.FlexAuto,FlexRow, makeFlexAlign( 'center','flex-end'),actionStyle],
 			titleAction: [FillHeight],
 			actions: [ FlexRow, makePaddingRem(0, 0,0,1), makeFlexAlign( 'flex-end','center'), actionStyle,{
-				
+			
 			} ],
 			
-			subLabel: [Ellipsis,makeFlex(2,1,'auto'),{}],
+			subLabel: [Ellipsis,makeFlex(0,1,'auto'),{}],
 			
-			toolbar: [FlexRowCenter,FlexScale,PositionRelative,makePaddingRem(1.8,1,0,1)]
+			toolbar: [FlexRowCenter,FlexScale,PositionRelative,makePaddingRem(Env.isMac ? 1.8 : 0,1,0,1),{
+				flexDirection: Env.isMac ? 'row' : 'row-reverse',
+			}]
 		}],
 			
 		// WINDOW CONTROLS ARE FAR LEFT
@@ -118,7 +126,7 @@ export function createSaveCancelActions(theme,palette,saveAction, cancelAction) 
 export interface IDialogRootProps extends React.HTMLAttributes<any> {
 	theme?:any
 	styles?:any
-	
+	title:string
 	titleNode:React.ReactNode|string
 	subTitleNode?:React.ReactNode|string
 	titleMode?:'vertical'|'horizontal'
@@ -149,6 +157,19 @@ export interface IDialogRootState {
 @ThemedStyles(baseStyles,'dialog')
 @PureRender
 export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootState> {
+	
+	private updateTitle() {
+		!Env.isMac && require('electron').remote.getCurrentWindow().setTitle(this.props.title)
+	}
+	
+	componentWillMount() {
+		this.updateTitle()
+	}
+	
+	componentWillReceiveProps() {
+		this.updateTitle()
+	}
+	
 	
 	render() {
 		const
@@ -198,18 +219,12 @@ class DialogHeader extends React.Component<any,any> {
 			
 		styles = mergeStyles(styles,theme.header)
 			
-		return <div style={[styles,titleActionNodes && styles.hasActions]}>
-			{/*<div style={[styles.windowControls]}></div>*/}
-			<div style={[styles.title]}>
+		return <div style={[styles,titleActionNodes && styles.hasActions, !titleActionNodes && !subTitleNode && styles.empty]}>
+			{/* ONLY SHOW TOP TITLE ON MAC */}
+			{Env.isMac && <div style={[styles.title]}>
 				{titleNode}
-				{/*<div style={[styles.title.label, styles.title.label[titleMode]]}>*/}
-					{/**/}
-				{/*</div>*/}
-				
-				{/*{subTitleNode && <div style={[styles.title.subLabel,styles.title.subLabel[titleMode]]}>*/}
-					{/*{subTitleNode}*/}
-				{/*</div>}*/}
-			</div>
+			</div>}
+			
 			{/* TITLE BAR ACTION CONTROLS */}
 			<div style={[styles.toolbar]}>
 				

@@ -36,6 +36,8 @@ function baseStyles(topStyles, theme, palette) {
 			}],
 			
 			icon: [Styles.PositionAbsolute,Styles.makePaddingRem(0,1),{
+				WebkitAppRegion: 'no-drag',
+				
 				right:0,
 				top: '50%',
 				transform: 'translate(0,-50%)'

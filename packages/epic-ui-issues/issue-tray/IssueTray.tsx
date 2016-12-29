@@ -69,8 +69,9 @@ export interface IIssueTrayState {
 	groups: getIssuesPanelSelector(selectors => selectors.issueGroupsSelector),
 	selectedIssueIds: getIssuesPanelSelector(selectors => selectors.selectedIssueIdsSelector),
 }))
-@ThemedStyles(baseStyles)
+
 @CommandComponent()
+@ThemedStyles(baseStyles)
 @PureRender
 export class IssueTray extends BaseIssuePanel<IIssueTrayProps,IIssueTrayState> implements ICommandComponent {
 	
@@ -193,6 +194,7 @@ export class IssueTray extends BaseIssuePanel<IIssueTrayProps,IIssueTrayState> i
 		
 		return <div style={styles}>
 			<TrayHeader styles={styles.header} title="Focused Issues"/>
+			<div style={[Styles.FlexScale,Styles.PositionRelative]}>
 			<IssuesList
 				viewController={this.viewController}
 				viewState={this.viewState}
@@ -201,6 +203,7 @@ export class IssueTray extends BaseIssuePanel<IIssueTrayProps,IIssueTrayState> i
 				onIssueSelected={this.onIssueSelected}
 				allItemsFilteredMessage={this.viewState.issues.size === 0 && 'No focused items'}
 			/>
+			</div>
 		</div>
 	}
 	

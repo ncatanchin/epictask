@@ -50,7 +50,7 @@ function baseStyles(topStyles, theme, palette) {
 				} ]
 			} ],
 			
-			subTitle: [ Styles.FlexRow,Styles.makePaddingRem(0, 1.5, 0, 0), {
+			subTitle: [ Styles.FlexRow, Styles.makePaddingRem(0, 1.5, 0, 0), {
 				textTransform: 'uppercase',
 				fontSize: rem(1.6)
 			} ]
@@ -91,9 +91,9 @@ export interface ICommentEditDialogState {
 @ThemedStyles(baseStyles, 'dialog')
 export class CommentEditDialog extends React.Component<ICommentEditDialogProps,ICommentEditDialogState> {
 	
-	refs:any
+	refs: any
 	
-	get form():Form {
+	get form(): Form {
 		return getValue(() => this.refs.form)
 	}
 	
@@ -120,7 +120,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @returns {Comment}
 	 */
-	private get editingComment():Comment {
+	private get editingComment(): Comment {
 		return getValue(() => this.viewState.editingComment, new Comment())
 	}
 	
@@ -129,8 +129,8 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @returns {Issue}
 	 */
-	private get issue():Issue {
-		return getValue(() => this.viewState.issue,new Issue())
+	private get issue(): Issue {
+		return getValue(() => this.viewState.issue, new Issue())
 	}
 	
 	
@@ -139,8 +139,8 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @param values
 	 */
-	private onFormValid = (values:IFormFieldValue[]) => {
-		log.debug(`onValid`,values)
+	private onFormValid = (values: IFormFieldValue[]) => {
+		log.debug(`onValid`, values)
 	}
 	
 	/**
@@ -148,8 +148,8 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 *
 	 * @param values
 	 */
-	private onFormInvalid = (values:IFormFieldValue[]) => {
-		log.debug(`onInvalid`,values)
+	private onFormInvalid = (values: IFormFieldValue[]) => {
+		log.debug(`onInvalid`, values)
 	}
 	
 	/**
@@ -159,7 +159,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 * @param model
 	 * @param values
 	 */
-	private onFormValidSubmit = (form:IForm,model:any,values:IFormFieldValue[]) => this.onSave()
+	private onFormValidSubmit = (form: IForm, model: any, values: IFormFieldValue[]) => this.onSave()
 	
 	
 	/**
@@ -175,7 +175,6 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 * @param event
 	 */
 	private onSave = (event = null) => this.viewController.save()
-		
 	
 	
 	/**
@@ -256,7 +255,7 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 			subTitleNode = <div style={[Styles.FlexRowCenter,Styles.makePaddingRem(0.5,0,0,0)]}>
 				{/*<span>Comment</span>&nbsp;&nbsp;*/}
 				{/*<RepoLabel repo={issue.repo}*/}
-				           {/*style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>*/}
+				{/*style={makeStyle(styles.titleBar.label,styles.titleBar.label.repo)}/>*/}
 				
 				<div style={[Styles.Ellipsis,Styles.FlexScale]}>
 					<span style={[styles.titleBar.label.number]}>#{issue.number}:</span>
@@ -272,47 +271,49 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 			// 		</span>
 			// 	</span>,
 			titleActionNodes = createSaveCancelActions(theme, palette, this.onSave, this.hide),
+			title = (comment.id ? `edit` : `create`) + ` comment`,
 			rootStyle = makeStyle(Fill, FlexScale, FlexColumn)
 		
 		
 		return <DialogRoot
-				titleNode={(comment.id ? `edit` : `create`) + ` comment`}
-				subTitleNode={subTitleNode}
-				titleActionNodes={titleActionNodes}
-				saving={saving}
-			>
+			title={title}
+			titleNode={title}
+			subTitleNode={subTitleNode}
+			titleActionNodes={titleActionNodes}
+			saving={saving}
+		>
+			
+			<Form
+				id="issue-edit-form"
+				ref="form"
+				submitOnCmdCtrlEnter={true}
+				onInvalid={this.onFormInvalid}
+				onValid={this.onFormValid}
+				onValidSubmit={this.onFormValidSubmit}
+				styles={[FlexColumn,FlexScale]}>
 				
-				<Form
-					id="issue-edit-form"
-					ref="form"
-					submitOnCmdCtrlEnter={true}
-					onInvalid={this.onFormInvalid}
-					onValid={this.onFormValid}
-					onValidSubmit={this.onFormValidSubmit}
-					styles={[FlexColumn,FlexScale]}>
-					
-					
-					<FileDrop onFilesDropped={this.onDrop}
-					          acceptedTypes={[/image/]}
-					          dropEffect='all'
-					          style={rootStyle}>
-						
-						
-						<MarkdownEditor
-							ref={this.setMarkdownEditor}
-							autoFocus={true}
-							
-							onChange={this.onMarkdownChange}
-							defaultValue={getValue(() => comment.body)}
-							onKeyDown={getValue(() => this.form.onKeyDown)}
-							style={styles.form.editor}
-						/>
-					
-					
-					</FileDrop>
 				
-				</Form>
-			</DialogRoot>
+				<FileDrop onFilesDropped={this.onDrop}
+				          acceptedTypes={[/image/]}
+				          dropEffect='all'
+				          style={rootStyle}>
+					
+					
+					<MarkdownEditor
+						ref={this.setMarkdownEditor}
+						autoFocus={true}
+						
+						onChange={this.onMarkdownChange}
+						defaultValue={getValue(() => comment.body)}
+						onKeyDown={getValue(() => this.form.onKeyDown)}
+						style={styles.form.editor}
+					/>
+				
+				
+				</FileDrop>
+			
+			</Form>
+		</DialogRoot>
 		
 	}
 	

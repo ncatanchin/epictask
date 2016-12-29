@@ -20,13 +20,15 @@ const baseStyles = (topStyles, theme, palette) => {
 	
 	return [
 		Styles.makeTransition([ 'height', 'max-height', 'min-height', 'opacity' ]),
-		makeHeightConstraint('50px'),
+		makeHeightConstraint(theme.navBarHeight),
 		Styles.FlexRow,
 		Styles.FillWidth,
 		Styles.FlexAuto,
 		Styles.PositionRelative,
-		Styles.makePaddingRem(0, 0, 0, 10), {
+		Styles.makePaddingRem(0, 0, 0, Env.isMac ? 10 : 0), {
 			
+			flexDirection: Env.isMac ? 'row' : 'row-reverse',
+		
 			WebkitUserSelect: 'none',
 			WebkitAppRegion: 'drag',
 			//border: 0,
@@ -126,25 +128,10 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 		
 		log.info(`Header on escape`)
 		
-		// if (this.textField)
-		// 	this.textField.blur()
-		//
 		getCommandManager().focusOnContainer(ContainerNames.IssuesPanel)
 		
-		// const {searchField} = this
-		//
-		// if (searchField) {
-		// 	const textField:any = searchField.textField
-		// 	if (textField) {
-		// 		textField.blur()
-		// 	} else {
-		// 		const doc = document as any
-		// 		doc.activeElement.blur()
-		// 	}
-		// }
-		
-		//ActionFactoryProviders[UIKey].focusIssuesPanel()
 	}
+	
 	
 	/**
 	 * onBlur - exiting find
@@ -173,7 +160,11 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 	/**
 	 * on mount clear the state
 	 */
-	componentWillMount = () => !this.state && this.setState({})
+	componentWillMount = () => {
+		!Env.isMac && require('electron').remote.getCurrentWindow().setTitle('epictask')
+		
+		!this.state && this.setState({})
+	}
 	
 	
 	/**
@@ -189,6 +180,7 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 		const
 			headerStyle = makeStyle(
 				styles,
+				!Env.isMac && styles.win32,
 				style
 			)
 		
@@ -197,10 +189,13 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 			id="header"
 			style={headerStyle}>
 			
+			{/* OLD WINDOW CONTROLS
 			{!Env.isMac && <WindowControls />}
+			*/}
 			
-			<div style={styles.title}>epictask</div>
-			<div style={FlexScale}/>
+			{Env.isMac && <div style={styles.title}>epictask</div>}
+			
+			<div style={Styles.FlexScale}/>
 			
 			{/*<RainbowIndicator*/}
 			{/*style={styles.logo}*/}
