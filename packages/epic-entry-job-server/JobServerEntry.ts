@@ -31,7 +31,7 @@ class JobServerEntry extends ProcessClientEntry {
 		
 		require('./JobManagerService')
 		require('./JobSchedulerService')
-		require('./GithubEventMonitorService')
+		require('./GithubSyncService')
 		require("./JobExecutors").loadAllExecutors()
 		
 	}

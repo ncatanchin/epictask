@@ -8,7 +8,8 @@ import {
 	IssueStore,
 	CommentStore,
 	IssuesEventStore,
-	RepoEventStore
+	RepoEventStore,
+	GithubNotificationStore
 } from "epic-models"
 import { AvailableRepoStore } from "epic-models/AvailableRepo"
 
@@ -21,6 +22,7 @@ declare global {
  */
 export class Stores {
 
+	notification:GithubNotificationStore
 	issue:IssueStore
 	issuesEvent:IssuesEventStore
 	repo: RepoStore

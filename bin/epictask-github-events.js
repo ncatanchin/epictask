@@ -24,7 +24,7 @@ require(`${srcRoot}/epic-global/Globals`)
 
 const
 	log = getLogger(__filename),
-	eventMonitor = require(`${srcRoot}/epic-global/github/GithubEventMonitor`).getGithubEventMonitor()
+	eventMonitor = require(`${srcRoot}/epic-global/github/GithubEventMonitor`).getGithubSyncMonitor()
 
 log.info(`Starting event monitor`)
 

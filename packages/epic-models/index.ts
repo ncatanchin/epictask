@@ -16,5 +16,6 @@ export * from './IssuesEvent'
 export * from './IssueCriteria'
 export * from "./IIssueListItems"
 
+export * from './GithubNotification'
 
 export * from './SearchDomain'

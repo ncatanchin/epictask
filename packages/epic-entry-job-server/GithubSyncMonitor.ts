@@ -14,8 +14,8 @@ const
 	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
-		instance:GithubEventMonitor,
-		hotInstance:GithubEventMonitor
+		instance:GithubSyncMonitor,
+		hotInstance:GithubSyncMonitor
 	}
 
 // DEBUG ENABLE
@@ -24,7 +24,10 @@ const
 /**
  * Receives either or both repo events and issue events
  */
-export interface IGithubEventListener {
+export interface IGithubPollListener {
+	allNotificationsReceived?:(eTag:string,...notifications:IGithubNotification[]) => any
+	notificationsReceived?:(eTag:string,...notifications:IGithubNotification[]) => any
+	
 	repoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
 	issuesEventsReceived?:(eTag:string,...events:IssuesEvent[]) => any
 	allRepoEventsReceived?:(eTag:string,...events:RepoEvent<any>[]) => any
@@ -33,7 +36,7 @@ export interface IGithubEventListener {
 }
 
 
-export interface IGithubRepoInfo {
+export interface IGithubPollInfo {
 	id:number
 	fullName:string
 	repoLastETag?:string
@@ -42,10 +45,10 @@ export interface IGithubRepoInfo {
 	issuesLastTimestamp?:number
 }
 
-interface IGithubEventPollConfig {
+interface IGithubPollConfig {
 	eTag:string
 	pollIntervalMillis:number
-	pollTimer:number
+	pollTimer?:number
 	polledTimestamp?:number
 	nextPollTimestamp?:number
 	running:boolean
@@ -58,9 +61,15 @@ interface IGithubMonitorConfig {
 	id:number
 	fullName:string
 	started:boolean
-	repoConfig?:IGithubEventPollConfig
-	issuesConfig?:IGithubEventPollConfig
-	listeners:IGithubEventListener[]
+	repoConfig?:IGithubPollConfig
+	issuesConfig?:IGithubPollConfig
+	listeners:IGithubPollListener[]
+}
+
+interface IGithubNotificationState {
+	started:boolean
+	notificationConfig:IGithubPollConfig
+	listeners:IGithubPollListener[]
 }
 
 
@@ -75,17 +84,44 @@ export type IGithubRepoMonitorConfigMap = {
 }
 
 /**
+ * Invoke listener function
+ *
+ * @param listeners
+ * @param fnName
+ * @param args
+ * @returns {Promise<void>}
+ */
+async function invokeListenerFn(listeners:IGithubPollListener[], fnName:string, ...args) {
+	let
+		shouldContinue = true
+	
+	for (let listener of listeners) {
+		if (!listener.allIssuesEventsReceived)
+			continue
+		
+		let
+			result = listener[fnName](...args)
+		
+		if (isPromise(result))
+			await result
+		else if (result === false)
+			shouldContinue = false
+	}
+	
+	return shouldContinue
+}
+/**
  * Monitor github events on repos and issues
  */
 
-export class GithubEventMonitor {
+export class GithubSyncMonitor {
 	
 	/**
 	 * Singleton accessor
 	 */
 	static getInstance() {
 		if (!instanceContainer.instance)
-			instanceContainer.instance = new GithubEventMonitor()
+			instanceContainer.instance = new GithubSyncMonitor()
 		
 		return instanceContainer.instance
 	}
@@ -102,6 +138,12 @@ export class GithubEventMonitor {
 	 */
 	private monitoredRepos:IGithubRepoMonitorConfigMap = {}
 	
+	
+	/**
+	 * Notification state/status
+	 */
+	private notificationState:IGithubNotificationState
+	
 	/**
 	 * Create a new monitor
 	 */
@@ -116,6 +158,158 @@ export class GithubEventMonitor {
 	 */
 	getMonitoredRepoIds() {
 		return Object.keys(this.monitoredRepos).map(repoIdStr => parseInt(repoIdStr,10))
+	}
+	
+	/**
+	 * Start polling for notifications
+	 *
+	 * @param eTag
+	 * @param lastTimestamp
+	 * @param listener
+	 */
+	startNotificationPolling(eTag:string,lastTimestamp:number,listener:IGithubPollListener = null) {
+		if (this.notificationState) {
+			log.info(`Notification state already created`)
+		} else {
+			this.notificationState = {
+				started: true,
+				listeners: [],
+				notificationConfig: {
+					eTag,
+					polledTimestamp: lastTimestamp,
+					pollIntervalMillis: 60000,
+					running: false
+				}
+			}
+		}
+		
+		const
+			{listeners} = this.notificationState
+		
+		if (listener && !listeners.includes(listener)) {
+			listeners.push(listener)
+		}
+		
+		this.pollNotifications()
+	}
+	
+	/**
+	 * Start polling notifications
+	 */
+	private pollNotifications() {
+		log.info(`Polling notifications`)
+		
+		const
+			{notificationConfig} = this.notificationState
+		
+		if (notificationConfig && notificationConfig.running) {
+			log.warn(`Notification polling already started`)
+			return
+		}
+		
+		
+		
+		notificationConfig.running = true
+		
+		if (notificationConfig.pollTimer)
+			clearTimeout(notificationConfig.pollTimer)
+		
+		// POLL REPO EVENTS
+		const doNotificationsPoll = async () => {
+			
+			const
+				client = createClient()
+			
+			let
+				newestTimestamp:number,
+				firstPageReceived = false
+			
+			try {
+				
+				//noinspection RedundantConditionalExpressionJS
+				const allEvents = await client.notifications({
+					eTag: notificationConfig.eTag,
+					reverse: !notificationConfig.eTag ? true : false,
+					
+					// CALLED AFTER EACH PAGE
+					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IGithubNotification>, headers:any) => {
+						
+						let
+							eTag = headers.get( 'ETag' ),
+							pollInterval = headers.get('X-Poll-Interval')
+						
+						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
+						if (!firstPageReceived) {
+							firstPageReceived = true
+							log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
+							if (eTag)
+								notificationConfig.eTag = eTag
+							
+							if (pollInterval)
+								notificationConfig.pollIntervalMillis = pollInterval * 1000
+						}
+						
+						// ITERATE LISTENERS & EMIT EVENTS
+						const
+							listenersWantToContinue = await invokeListenerFn(this.notificationState.listeners,'notificationsReceived',eTag,...items)
+						
+						
+						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
+						const
+							firstItemTimestamp = items[0] && items[0].updated_at.getTime(),
+							lastItem = items[ items.length - 1 ],
+							lastItemTimestamp = lastItem && lastItem.updated_at.getTime(),
+							shouldContinue =
+								// NO LISTENER EXPLICITLY RETURNED FALSE
+								(listenersWantToContinue === true) &&
+								
+								// ALL DATA IS NEWER THEN OUR LAST POLL
+								(!notificationConfig.polledTimestamp || lastItemTimestamp > notificationConfig.polledTimestamp)
+						
+						// KEEP TRACK OF THE OLDEST TIMESTAMP
+						
+						if (!newestTimestamp || (firstItemTimestamp > newestTimestamp)) {
+							newestTimestamp = lastItemTimestamp
+							log.debug(`Set newest timestamp to newestTimestamp`)
+						}
+						
+						log.debug(`Received notifications events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
+						return shouldContinue
+						
+					}
+				})
+				
+				// CALLBACK AFTER ALL EVENTS
+				await invokeListenerFn(this.notificationState.listeners,'allNotificationsReceived',notificationConfig.eTag,...allEvents)
+				
+				log.debug(`All notifications events - count ${allEvents.length}`)
+			} catch (err) {
+				if (err && err.statusCode === 304) {
+					log.debug(`Content has not been updated based on the previous eTag ${notificationConfig.eTag}`)
+					return
+				}
+				
+				log.error(`Failed to get notifications events`,err)
+			}
+			
+			if (newestTimestamp) {
+				notificationConfig.polledTimestamp = newestTimestamp + 1
+				log.debug(`Set last polled timestamp to ${notificationConfig.polledTimestamp}`)
+			}
+			
+			
+		}
+		
+		// Start the poll, add a finally handler to set running to false
+		doNotificationsPoll().finally(() => {
+			notificationConfig.running = false
+			
+			const
+				pollIntervalMillis = notificationConfig.pollIntervalMillis || DefaultPollIntervalMillis
+			
+			log.debug(`Scheduling next notifications poll in ${pollIntervalMillis / 1000}s`)
+			notificationConfig.pollTimer = setTimeout(() => this.pollNotifications(),pollIntervalMillis) as any
+		})
 	}
 	
 	/**
@@ -160,7 +354,6 @@ export class GithubEventMonitor {
 					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IssuesEvent>, headers:any) => {
 						
 						let
-							listenersWantToContinue = true,
 							eTag = headers.get( 'ETag' ),
 							pollInterval = headers.get('X-Poll-Interval')
 						
@@ -176,27 +369,9 @@ export class GithubEventMonitor {
 						}
 						
 						// ITERATE LISTENERS & EMIT EVENTS
-						for (let listener of config.listeners) {
-							if (!listener.issuesEventsReceived)
-								continue
-							
-							let
-								result = listener.issuesEventsReceived(eTag, ...items)
-							
-							if (isPromise(result)) {
-								result = await result
-							}
-							
-							if (result === false) {
-								listenersWantToContinue = false
-							}
-						}
+						const
+							listenersWantToContinue = await invokeListenerFn(config.listeners,'issuesEventsReceived',eTag,...items)
 						
-						// config.listeners.forEach(listener => {
-						// 	if (listener.issuesEventsReceived && listener.issuesEventsReceived(eTag, ...items) === false) {
-						// 		listenersWantToContinue = false
-						// 	}
-						// })
 						
 						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
 						const
@@ -224,17 +399,7 @@ export class GithubEventMonitor {
 				})
 				
 				// CALLBACK AFTER ALL EVENTS
-				for (let listener of config.listeners) {
-					if (!listener.allIssuesEventsReceived)
-						continue
-					
-					let
-						result = listener.allIssuesEventsReceived(issuesConfig.eTag,...allEvents)
-					
-					if (isPromise(result))
-						await result
-				}
-				
+				await invokeListenerFn(config.listeners,'allIssuesEventsReceived',issuesConfig.eTag,...allEvents)
 				
 				log.debug(`All issues events - count ${allEvents.length}`)
 			} catch (err) {
@@ -310,7 +475,6 @@ export class GithubEventMonitor {
 					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<RepoEvent<any>>, headers:any) => {
 						
 						let
-							listenersWantToContinue = true,
 							eTag = headers.get( 'ETag' ),
 							pollInterval = headers.get('X-Poll-Interval')
 						
@@ -326,20 +490,8 @@ export class GithubEventMonitor {
 						}
 						
 						// ITERATE LISTENERS & EMIT EVENTS
-						for (let listener of config.listeners) {
-							if (!listener.repoEventsReceived)
-								continue
-							
-							let
-								result = listener.repoEventsReceived(eTag, ...items)
-							
-							if (isPromise(result))
-								result = await result
-									
-							if (result === false) {
-								listenersWantToContinue = false
-							}
-						}
+						const
+							listenersWantToContinue = await invokeListenerFn(config.listeners,'repoEventsReceived',eTag, ...items)
 						
 						
 						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
@@ -368,16 +520,7 @@ export class GithubEventMonitor {
 				})
 				
 				// CALLBACK AFTER ALL EVENTS
-				for (let listener of config.listeners) {
-					if (!listener.allRepoEventsReceived)
-						continue
-					
-					let
-						result = listener.allRepoEventsReceived(repoConfig.eTag,...allEvents)
-					
-					if (isPromise(result))
-						await result
-				}
+				await invokeListenerFn(config.listeners,'allRepoEventsReceived',repoConfig.eTag,...allEvents)
 				
 				log.debug(`All repo events - count ${allEvents.length}`)
 			} catch (err) {
@@ -430,7 +573,7 @@ export class GithubEventMonitor {
 	 * @param config
 	 * @param pollType
 	 */
-	private startPolling(config:IGithubMonitorConfig,pollType:GithubPollType) {
+	private startPollingEvents(config:IGithubMonitorConfig, pollType:GithubPollType) {
 		if (config.started) {
 			log.warn(`A repo can config can only be started once`,config)
 			return
@@ -448,8 +591,10 @@ export class GithubEventMonitor {
 	 *
 	 * @param repo
 	 * @param listener
+	 *
+	 * @return a kill function
 	 */
-	addRepoListener(repo:IGithubRepoInfo,listener:IGithubEventListener) {
+	addRepoListener(repo:IGithubPollInfo, listener:IGithubPollListener) {
 		assert(repo && listener && !this.killed,`Both a repoId and a listener must be provided to enabled listening - and we can't be killed`)
 		
 		const
@@ -479,7 +624,7 @@ export class GithubEventMonitor {
 		repoConfig.listeners.push(listener)
 		
 		if (!repoConfig.started) {
-			this.startPolling(repoConfig, GithubPollType.Both)
+			this.startPollingEvents(repoConfig, GithubPollType.Both)
 		}
 		
 		return () => {
@@ -552,26 +697,26 @@ export class GithubEventMonitor {
 
 
 /**
- * Get the GithubEventMonitorService singleton
+ * Get the GithubMonitorService singleton
  *
- * @return {getGithubEventMonitor}
+ * @return {getGithubSyncMonitor}
  */
-export const getGithubEventMonitor = getHot(module,'getGithubEventMonitor',new Proxy(function(){},{
+export const getGithubSyncMonitor = getHot(module,'getGithubEventMonitor',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {
-		return GithubEventMonitor.getInstance()
+		return GithubSyncMonitor.getInstance()
 	}
-})) as () => GithubEventMonitor
+})) as () => GithubSyncMonitor
 
 
 
 // BIND TO PROVIDER
-Container.bind(GithubEventMonitor).provider({get: getGithubEventMonitor})
+Container.bind(GithubSyncMonitor).provider({get: getGithubSyncMonitor})
 
-export default getGithubEventMonitor
+export default getGithubSyncMonitor
 
 if (DEBUG)
 	_.assignGlobal({
-		getGithubEventMonitor
+		getGithubSyncMonitor
 	})
 
 
@@ -587,7 +732,7 @@ if (instanceContainer.hotInstance) {
 		newProto
 	
 	if (fromInstance) {
-		Object.setPrototypeOf(fromInstance,GithubEventMonitor.prototype)
+		Object.setPrototypeOf(fromInstance,GithubSyncMonitor.prototype)
 		newProto = Object.getPrototypeOf(fromInstance)
 		fromInstance.forcePolling()
 	}
@@ -599,7 +744,7 @@ setDataOnHotDispose(module,() => ({
 	instanceContainer:assign(instanceContainer,{
 		hotInstance: instanceContainer.instance
 	}),
-	getGithubEventMonitor
+	getGithubSyncMonitor
 }))
 acceptHot(module,log)
 

@@ -22,6 +22,7 @@ import { CommentStoreImpl } from "./stores/CommentStoreImpl"
 import { LabelStoreImpl } from "./stores/LabelStoreImpl"
 import { IssuesEventStoreImpl } from "./stores/IssuesEventStoreImpl"
 import { RepoEventStoreImpl } from "./stores/RepoEventStoreImpl"
+import { GithubNotificationStoreImpl } from "./stores/GithubNotificationStoreImpl"
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 
 const
@@ -306,7 +307,8 @@ export namespace DatabaseLocalAdapter {
 			label: getStore(LabelStoreImpl),
 			user: getStore(UserStoreImpl),
 			issuesEvent: getStore(IssuesEventStoreImpl),
-			repoEvent: getStore(RepoEventStoreImpl)
+			repoEvent: getStore(RepoEventStoreImpl),
+			notification: getStore(GithubNotificationStoreImpl)
 		})
 		
 		

@@ -38,23 +38,11 @@ export class AppState extends AppStateRecord {
 			settings = o && (o.get ? o.get('settings') : o.settings)
 		
 		if (o) {
-			const
-				trayState = new TrayState(o.tray || {})
+			const trayState = new TrayState(o.tray || {})
 			
 			o.set ? o.set('tray',trayState) : o.tray = trayState
 		}
-		// if (o && o.tray) {
-		// 	const
-		// 		tray = TrayState.fromJS(o.tray)
-		//
-		// 	o.set ? o.set('tray',tray) : o.tray = tray
-		// }
-		//
-		// if (o && !o.tray)
-		// 	o.tray = new TrayState()
-		// else if (o && !(o.tray instanceof TrayState)) {
-		// 	o.tray = new TrayState()
-		// }
+		
 		let appState = reviveImmutable(
 			o,
 			AppState,

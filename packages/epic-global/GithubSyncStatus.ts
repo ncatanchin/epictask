@@ -184,12 +184,16 @@ export namespace GithubSyncStatus {
 	 * Get a set of params, github style {since:timestamp8601}
 	 *
 	 * @param url
+	 * @param maxAgeMillis
 	 * @returns {{}|{since: string}}
 	 */
-	export function getSinceTimestampParams(url:string) {
-		const
+	export function getSinceTimestampParams(url:string, maxAgeMillis = -1) {
+		let
 			timestamp = getTimestamp(url)
 		
+		if (!timestamp && maxAgeMillis > 0) {
+			timestamp = Date.now() - maxAgeMillis
+		}
 		return !timestamp ? {} : {
 			since: moment(timestamp).format()
 		}

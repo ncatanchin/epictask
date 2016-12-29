@@ -777,6 +777,30 @@ export class GitHubClient {
 	
 	
 	/**
+	 * Helper function for building paged gets
+	 *
+	 * @param modelType
+	 * @param url
+	 * @param defaultRequestOptions
+	 * @returns {function(Repo, RequestOptions=): Promise<PagedArray<M>>}
+	 */
+	private makePagedGetter<M>(
+		modelType:{new():M;},
+		url:string,
+		defaultRequestOptions:RequestOptions = null
+	) {
+		return async (opts:RequestOptions = null) => {
+			
+				
+			if (defaultRequestOptions) {
+				opts = _.merge({},_.cloneDeep(defaultRequestOptions),opts)
+			}
+			
+			return await this.get<PagedArray<M>>(url,modelType,opts)
+		}
+	}
+	
+	/**
 	 * Helper function for building paged gets with repo param
 	 *
 	 * @param modelType
@@ -812,7 +836,15 @@ export class GitHubClient {
 	/**
 	 * Get issue events
 	 */
+	notifications = this.makePagedGetter(IssuesEvent,'/notifications')
+	
+	
+	/**
+	 * Get issue events
+	 */
 	issuesEvents = this.makePagedRepoGetter(IssuesEvent,'/repos/<repoName>/issues/events')
+	
+	
 	
 	/**
 	 * Get repo events, you should pass an eTag
@@ -915,6 +947,9 @@ export function createClient(token:string = getValue(() => getSettings().token))
 	return new GitHubClient(token)
 }
 
+/**
+ * Add globally in DEBUG
+ */
 if (DEBUG) {
 	assignGlobal({
 		getGithubClient() {

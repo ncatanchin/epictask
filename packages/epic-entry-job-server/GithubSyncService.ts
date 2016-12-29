@@ -1,23 +1,12 @@
-import {List,Map} from 'immutable'
-
-
-
-import {BaseService, RegisterService, IServiceConstructor} from "epic-services/internal"
-import {DatabaseClientService} from "epic-services/DatabaseClientService"
-
-import { RepoKey } from "epic-global"
-import { getHot, setDataOnHotDispose, acceptHot } from  "epic-global/HotUtils"
-import { AvailableRepo } from "epic-models"
-
-import {getGithubEventMonitor} from './GithubEventMonitor'
-import {RepoSyncManager} from './GithubSyncHandlers'
-import {GithubSyncStatus as SyncStatus} from "epic-global/GithubSyncStatus"
-import {IssuesEvent,RepoEvent} from 'epic-models'
-import { availableReposSelector } from "epic-typedux/selectors/RepoSelectors"
+import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
+import { DatabaseClientService } from "epic-services/DatabaseClientService"
+import { getHot, setDataOnHotDispose, acceptHot, GithubSyncStatus as SyncStatus, NotificationsKey } from "epic-global"
+import { AvailableRepo, IssuesEvent, RepoEvent } from "epic-models"
+import { getGithubSyncMonitor } from "./GithubSyncMonitor"
+import { RepoSyncManager } from "./GithubSyncHandlers"
 import { addDatabaseChangeListener } from "epic-database-client/DatabaseClient"
 import { getStores } from "epic-database-client/Stores"
-
-
+import { NotificationSync } from "./NotificationSync"
 
 
 const
@@ -25,8 +14,8 @@ const
 	
 	// Container to support hot reloading
 	instanceContainer = getHot(module,'instanceContainer',{}) as {
-		instance:GithubEventService,
-		hotInstance:GithubEventService
+		instance:GithubSyncService,
+		hotInstance:GithubSyncService
 	}
 
 
@@ -34,12 +23,12 @@ const
  * Job Service for managing all operations
  */
 @RegisterService(ProcessType.JobServer)
-export class GithubEventService extends BaseService {
+export class GithubSyncService extends BaseService {
 
 	
 	static getInstance() {
 		if (!instanceContainer.instance)
-			instanceContainer.instance = new GithubEventService()
+			instanceContainer.instance = new GithubSyncService()
 		
 		return instanceContainer.instance
 	}
@@ -70,6 +59,28 @@ export class GithubEventService extends BaseService {
 		assert(!instanceContainer.instance,`GithubSyncManager can only be instantiated once`)
 	}
 	
+	private startNotificationPolling() {
+		const
+			lastTimestamp = SyncStatus.getTimestamp(NotificationsKey),
+			eTag = SyncStatus.getETag(NotificationsKey)
+		
+		getGithubSyncMonitor().startNotificationPolling(eTag,lastTimestamp,{
+			notificationsReceived: (eTag,...notifications:IGithubNotification[]) => {
+				SyncStatus.setETag(NotificationsKey,eTag)
+				SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+			},
+			allNotificationsReceived:(eTag,...notifications:IGithubNotification[]) => {
+				SyncStatus.setETag(NotificationsKey,eTag)
+				SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+				
+				this.syncNotifications()
+			}
+		})
+	}
+	
+	private syncNotifications() {
+		NotificationSync.execute()
+	}
 	
 	/**
 	 * Make sure we are monitoring the correct available repos
@@ -82,14 +93,15 @@ export class GithubEventService extends BaseService {
 			availableRepos = (await stores.availableRepo.findAll())
 				.filter(it => !it.deleted)
 		
-		for (let availRepo of availableRepos) {
-			availRepo.repo = await stores.repo.get(availRepo.id)
-		}
+		await Promise.all(
+			availableRepos.map(
+				async (availRepo) => availRepo.repo = await stores.repo.get(availRepo.id)
+			))
 		
 		log.debug(`Received available repos`,availableRepos.map(availRepo => _.get(availRepo.repo,'full_name','no-name')).join(', '))
 		
 		const
-			monitor = getGithubEventMonitor(),
+			monitor = getGithubSyncMonitor(),
 			currentRepoIds = monitor.getMonitoredRepoIds()
 		
 		log.info(`Checking for removed repos`)
@@ -211,6 +223,8 @@ export class GithubEventService extends BaseService {
 		log.debug(`Sync status loaded, subscribing for repo updates from state`)
 		
 		addDatabaseChangeListener(AvailableRepo,this.onAvailableReposUpdated)
+		
+		this.startNotificationPolling()
 		this.onAvailableReposUpdated()
 	
 		
@@ -242,22 +256,22 @@ export class GithubEventService extends BaseService {
 
 
 /**
- * Get the GithubEventMonitorService singleton
+ * Get the GithubMonitorService singleton
  *
- * @return {GithubEventService}
+ * @return {GithubSyncService}
  */
-export const getGithubEventService = getHot(module,'getGithubEventService',new Proxy(function(){},{
+export const getGithubSyncService = getHot(module,'getGithubSyncService',new Proxy(function(){},{
 	apply: function(target,thisArg,args) {
-		return GithubEventService.getInstance()
+		return GithubSyncService.getInstance()
 	}
-})) as () => GithubEventService
+})) as () => GithubSyncService
 
 
 
 // BIND TO PROVIDER
-Container.bind(GithubEventService).provider({get: getGithubEventService})
+Container.bind(GithubSyncService).provider({get: getGithubSyncService})
 
-export default getGithubEventService
+export default getGithubSyncService
 
 // HMR - SETUP
 if (instanceContainer.instance) {
@@ -269,7 +283,7 @@ setDataOnHotDispose(module,() => ({
 	instanceContainer:assign(instanceContainer,{
 		hotInstance: instanceContainer.instance
 	}),
-	getGithubEventService
+	getGithubSyncService
 }))
 acceptHot(module,log)
 
