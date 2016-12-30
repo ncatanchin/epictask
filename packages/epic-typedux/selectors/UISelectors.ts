@@ -20,6 +20,12 @@ export const uiStateSelector: (state) => UIState = createSelector(
 
 
 
+export const notificationsOpenSelector:TSelector<boolean> = createSelector(
+	uiStateSelector,
+	(uiState:UIState) => uiState.notificationsOpen
+)
+
+
 export const viewsSelector:TSelector<List<View>> = createSelector(
 	uiStateSelector,
 	(uiState:UIState) => uiState.views

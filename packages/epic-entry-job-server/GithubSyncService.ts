@@ -1,6 +1,9 @@
 import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
 import { DatabaseClientService } from "epic-services/DatabaseClientService"
-import { getHot, setDataOnHotDispose, acceptHot, GithubSyncStatus as SyncStatus, NotificationsKey } from "epic-global"
+import {
+	getHot, setDataOnHotDispose, acceptHot, GithubSyncStatus as SyncStatus, NotificationsKey,
+	SettingKeys, SettingsPath
+} from "epic-global"
 import { AvailableRepo, IssuesEvent, RepoEvent } from "epic-models"
 import { getGithubSyncMonitor } from "./GithubSyncMonitor"
 import { RepoSyncManager } from "./GithubSyncHandlers"
@@ -40,7 +43,7 @@ export class GithubSyncService extends BaseService {
 	/**
 	 * Unsubscribe from store updates
 	 */
-	private unsubscriber:Function
+	private unsubscribers:Function[] = []
 	
 	/**
 	 * Service dependencies
@@ -234,6 +237,12 @@ export class GithubSyncService extends BaseService {
 		
 		addDatabaseChangeListener(AvailableRepo,this.onAvailableReposUpdated)
 		
+		// SUBSCRIBE FOR TOKEN CHANGES
+		this.unsubscribers.push(
+			getStore().observe(
+				[...SettingsPath,'token'],
+				(newToken) => newToken && this.syncNotifications()
+			))
 		this.startNotificationPolling()
 		this.onAvailableReposUpdated()
 		this.syncNotifications()
@@ -255,8 +264,7 @@ export class GithubSyncService extends BaseService {
 		//assert(module.hot,'kill can only be called for hmr')
 		this.killed = true
 		
-		if (this.unsubscriber)
-			this.unsubscriber()
+		this.unsubscribers.forEach(it => it && it())
 
 	}
 	

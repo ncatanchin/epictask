@@ -63,6 +63,7 @@ export function getAppActions():IAppActionFactory {
 	return Registry.Service[ActionFactoryKeyMap[AppKey]]
 }
 
+
 export function getRepoActions():IRepoActionFactory {
 	return Registry.Service[ActionFactoryKeyMap[RepoKey]]
 }

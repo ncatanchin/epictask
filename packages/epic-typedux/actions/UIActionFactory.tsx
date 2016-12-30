@@ -1,4 +1,4 @@
-import { ActionFactory, ActionReducer,  ActionMessage } from "typedux"
+import { ActionFactory, ActionReducer, ActionMessage, ActionThunk } from "typedux"
 import { List, Map } from "immutable"
 import {
 	UIKey,
@@ -15,6 +15,8 @@ import {View} from "epic-typedux/state/window"
 import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
 import { windowsSelector } from "epic-typedux/selectors"
 import { isNil } from "typeguard"
+import { getStores } from "epic-database-client"
+import { GithubNotification } from "epic-models"
 
 
 // Import only as type - in case we are not on Renderer
@@ -424,6 +426,90 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		
 		this.updateTool(completeTool)
 		
+	}
+	
+	
+	/**
+	 * Load notifications
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async loadNotifications() {
+		try {
+			const
+				{ notificationsLoading, notificationsLoaded } = this.state
+			
+			if (notificationsLoading || notificationsLoaded)
+				return
+			
+			this.setNotificationsLoading(true)
+			
+			const
+				nStore = getStores().notification,
+				notifications = await nStore.findAll()
+			
+			this.setNotifications(List(notifications))
+			
+			this.setNotificationsLoaded(true)
+		} catch (err) {
+			log.error(`failed to load notifications`,err)
+			
+		} finally {
+			this.setNotificationsLoading(false)
+		}
+	}
+	
+	
+	/**
+	 * Set notifications
+	 *
+	 * @param notifications
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setNotifications(notifications:List<GithubNotification>) {
+		return state => state.set('notifications',notifications)
+	}
+	
+	
+	/**
+	 * Set notifications loaded
+	 *
+	 * @param notificationsLoaded
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setNotificationsLoaded(notificationsLoaded:boolean) {
+		return state => state.merge({notificationsLoaded})
+	}
+	
+	/**
+	 * Set notifications loading
+	 *
+	 * @param notificationsLoading
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setNotificationsLoading(notificationsLoading:boolean) {
+		return state => state.merge({notificationsLoading})
+	}
+	
+	/**
+	 * Set notifications open
+	 *
+	 * @param notificationsOpen
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setNotificationsOpen(notificationsOpen:boolean) {
+		return state => state.merge({notificationsOpen})
+	}
+	
+	/**
+	 * Toggle notifications open
+	 */
+	toggleNotificationsOpen() {
+		this.setNotificationsOpen(!this.state.notificationsOpen)
 	}
 	
 	/**

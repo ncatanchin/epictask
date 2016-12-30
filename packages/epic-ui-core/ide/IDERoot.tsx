@@ -13,7 +13,7 @@ import {
 	toolDraggingSelector,
 	sheetURISelector,
 	availableRepoCountSelector,
-	modalWindowOpenSelector
+	modalWindowOpenSelector, notificationsOpenSelector
 } from "epic-typedux/selectors"
 // TODO: Move to IDEView
 import Header from "./Header"
@@ -65,6 +65,7 @@ const baseStyles = (topStyles, theme, palette) => {
 }
 
 export interface IIDERootProps extends IThemedAttributes {
+	notificationsOpen?:boolean
 	toolPanels:Map<string,IToolPanel>
 	toolDragging:boolean
 	hasAvailableRepos?:boolean
@@ -83,6 +84,7 @@ export interface IIDERootState {
  */
 @(DragDropContext as any)(HTML5Backend)
 @connect(createStructuredSelector({
+	notificationsOpen: notificationsOpenSelector,
 	hasAvailableRepos: availableRepoCountSelector,
 	sheetURI: sheetURISelector,
 	toolPanels: toolPanelsSelector,
@@ -130,7 +132,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
 	render() {
 		const
-			{ theme, styles, palette, toolDragging, toolPanels } = this.props,
+			{ theme, styles, palette, toolDragging, toolPanels,notificationsOpen } = this.props,
 			{ accent } = palette,
 			
 			panelMinOpen = convertRem(20),
@@ -160,6 +162,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 		
 		
 		const
+			notificationPanelStyle = mergeStyles(styles.notifications,notificationsOpen && styles.notifications.open),
 			// rightPanel = getPanel(ToolPanelLocation.Right),
 			// leftPanel = getPanel(ToolPanelLocation.Left),
 			bottomPanel = getPanel(ToolPanelLocation.Bottom),
@@ -211,9 +214,18 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 						maxSize={panelMaxSize(bottomPanel)}
 						pane2Style={makePanelConstraint(bottomPanel)}>
 						
-						
-						<IDETabbedViewContainer />
-						
+						{/* TOOL PANEL BOTTOM */}
+						<SplitPane
+							className="toolPanelSplitPane"
+							split="horizontal"
+							primary="second"
+							minSize={panelMinSize(bottomPanel)}
+							maxSize={panelMaxSize(bottomPanel)}
+							pane2Style={makePanelConstraint(bottomPanel)}>
+							
+							<IDETabbedViewContainer />
+							
+						</SplitPane>
 						<ToolPanel location={ToolPanelLocation.Bottom}/>
 					
 					</SplitPane>

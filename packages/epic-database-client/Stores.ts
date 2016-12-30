@@ -52,3 +52,8 @@ export class Stores {
 export function getStores():Stores {
 	return Container.get(Stores)
 }
+
+
+if (DEBUG) {
+	
+}

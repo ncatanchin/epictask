@@ -3,7 +3,7 @@ import {
 	getValue,
 	cloneObjectShallow
 } from "epic-global"
-import { User } from "epic-models"
+import { User, GithubNotification } from "epic-models"
 import { State } from "typedux"
 import { toPlainObject,excludeFilterConfig,excludeFilter } from "typetransform"
 import View from "epic-typedux/state/window/View"
@@ -44,6 +44,11 @@ export const UIStateRecord = Record({
 	ready: false,
 	user: null,
 	
+	notificationsOpen: false,
+	notificationsLoaded: false,
+	notificationsLoading: false,
+	notifications:List<GithubNotification>(),
+		
 	sheetURI:null,
 	sheetParams:null,
 	//messages: List<INotification>(),
@@ -89,6 +94,7 @@ export class UIState extends UIStateRecord implements State {
 		return new UIState(assign({},o,{
 			messages: List(o.messages),
 			dialogs: Map(o.dialogs),
+			notifications: List(o.notifications),
 			views: List(!o.views ?
 				[] : o.views .filter(view => view.type && view.id && view.name)
 				.map(view => View.fromJS(view))),
@@ -108,7 +114,16 @@ export class UIState extends UIStateRecord implements State {
 					.map(view => view.toJS())
 			}),
 			excludeFilterConfig(
-				...excludeFilter('messages','ready','toolDragging','sheetURI','sheetParams')
+				...excludeFilter(
+					'messages',
+					'ready',
+					'toolDragging',
+					'sheetURI',
+					'sheetParams',
+					'notificationsLoaded',
+					'notificationsLoading',
+					'notifications'
+				)
 			))
 	
 	}
@@ -122,7 +137,10 @@ export class UIState extends UIStateRecord implements State {
 	toolPanels:Map<string,IToolPanel>
 	toolDragging:boolean
 	
-	
+	notificationsOpen:boolean
+	notificationsLoaded: boolean
+	notificationsLoading: boolean
+	notifications:List<GithubNotification>
 	
 	statusBar:{
 		visible:boolean
