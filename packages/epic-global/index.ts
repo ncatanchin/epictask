@@ -1,6 +1,6 @@
 export * from './TypeChecks'
 export * from "./ObjectUtil"
-
+export * from './TimeUtil'
 
 export * from 'epic-entry-shared/ProcessType'
 export * from 'epic-entry-shared/ProcessConfig'

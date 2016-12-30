@@ -18,6 +18,8 @@ import {
 })
 export class User extends DefaultModel implements IUser {
 	
+	$$clazz = "User"
+	
 	static UnknownUser = new User({
 		id: -1,
 		login: 'n/a',

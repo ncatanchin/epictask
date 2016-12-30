@@ -173,7 +173,7 @@ export const WindowConfigTrayDefaults = {
 	singleWindow: true,
 	autoRestart: false,
 	hide: true,
-	showDevTools: true,//false,
+	showDevTools: false,
 	storeWindowState: false,
 	opts: WindowTrayDefaultOpts
 }

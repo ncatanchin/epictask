@@ -145,7 +145,7 @@ class WindowFactory {
 			
 			// LOAD THE EMPTY URL OR PROCESS TYPE SPECIFIC URL
 			newWindow.loadURL(url)
-			//newWindow.show()
+			
 			
 			
 			await deferred.promise.timeout(WindowCreateTimeout)
@@ -156,7 +156,7 @@ class WindowFactory {
 			
 			if (newWindow && !newWindow.isDestroyed())
 				guard(() => newWindow.destroy())
-			
+
 			throw err
 		} finally {
 			ipcMain.removeListener(WindowEvents.AllResourcesLoaded,listener)

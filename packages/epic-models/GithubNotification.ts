@@ -18,6 +18,9 @@ import {
 })
 export class GithubNotification extends DefaultModel implements IGithubNotification {
 	
+	$$clazz = "GithubNotification"
+	
+	
 	/**
 	 * Revive from JS/JSON
 	 *
@@ -48,15 +51,17 @@ export class GithubNotification extends DefaultModel implements IGithubNotificat
 	@Attribute()
 	url:string
 	
-	constructor(props = {}) {
+	constructor(o:any = {}) {
 		super()
-		Object.assign(this,props)
+		Object.assign(this,o,{
+			updated_at: new Date(o.updated_at)
+		})
 	}
 	
 }
 
 export interface GithubNotificationStore extends TSRepo<GithubNotification> {
 	
-	findByReason(...reasons:string[]):Promise<GithubNotification>
+	//findByReason(...reasons:string[]):Promise<GithubNotification>
 	findAll():Promise<GithubNotification[]>
 }

@@ -3,6 +3,7 @@ import * as fs from 'fs'
 
 import { getUserDataFilename} from  "./Files"
 import {toJSON, parseJSON } from "./JSONUtil"
+import { isNumber } from "typeguard"
 
 const
 	log = getLogger(__filename),
@@ -194,8 +195,8 @@ export namespace GithubSyncStatus {
 		if (!timestamp && maxAgeMillis > 0) {
 			timestamp = Date.now() - maxAgeMillis
 		}
-		return !timestamp ? {} : {
-			since: moment(timestamp).format()
+		return {
+			since: moment(!timestamp ? new Date(1) : isNumber(timestamp) ? new Date(timestamp) : timestamp).format()
 		}
 	}
 	

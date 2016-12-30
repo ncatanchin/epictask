@@ -18,6 +18,7 @@ const
 		hotInstance:GithubSyncService
 	}
 
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Job Service for managing all operations
@@ -66,20 +67,29 @@ export class GithubSyncService extends BaseService {
 		
 		getGithubSyncMonitor().startNotificationPolling(eTag,lastTimestamp,{
 			notificationsReceived: (eTag,...notifications:IGithubNotification[]) => {
-				SyncStatus.setETag(NotificationsKey,eTag)
-				SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+				if (eTag && eTag.length && eTag !== "W/\"\"") {
+					SyncStatus.setETag(NotificationsKey, eTag)
+					SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+				}
+				if (notifications.length) {
+					log.debug(`Syncing ${notifications.length}, going to sync notifications`)
+					this.syncNotifications(notifications)
+				}
 			},
 			allNotificationsReceived:(eTag,...notifications:IGithubNotification[]) => {
-				SyncStatus.setETag(NotificationsKey,eTag)
-				SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+				log.debug(`Got ${notifications.length}, going to sync notifications`)
 				
-				this.syncNotifications()
+				if (eTag && eTag.length && eTag !== "W/\"\"") {
+					SyncStatus.setETag(NotificationsKey, eTag)
+					SyncStatus.setMostRecentTimestamp(NotificationsKey, notifications, 'updated_at')
+				}
+				
 			}
 		})
 	}
 	
-	private syncNotifications() {
-		NotificationSync.execute()
+	private syncNotifications(notifications = null) {
+		NotificationSync.execute(notifications)
 	}
 	
 	/**
@@ -226,7 +236,7 @@ export class GithubSyncService extends BaseService {
 		
 		this.startNotificationPolling()
 		this.onAvailableReposUpdated()
-	
+		this.syncNotifications()
 		
 		
 		// Watch for job updates

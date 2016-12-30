@@ -1,7 +1,7 @@
 
 
 
-import { PagedArray,getHot, setDataOnHotDispose, acceptHot } from  "epic-global"
+import { PagedArray, getHot, setDataOnHotDispose, acceptHot, GithubSyncStatus, NotificationsKey } from  "epic-global"
 
 import {RepoEvent,IssuesEvent} from 'epic-models'
 import { createClient, GithubError } from "epic-github"
@@ -19,7 +19,7 @@ const
 	}
 
 // DEBUG ENABLE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Receives either or both repo events and issue events
@@ -96,7 +96,7 @@ async function invokeListenerFn(listeners:IGithubPollListener[], fnName:string, 
 		shouldContinue = true
 	
 	for (let listener of listeners) {
-		if (!listener.allIssuesEventsReceived)
+		if (!listener[fnName])
 			continue
 		
 		let
@@ -227,13 +227,17 @@ export class GithubSyncMonitor {
 			try {
 				
 				//noinspection RedundantConditionalExpressionJS
-				const allEvents = await client.notifications({
+				const allNotifications = await client.notifications({
 					eTag: notificationConfig.eTag,
-					reverse: !notificationConfig.eTag ? true : false,
-					
+					params: assign(GithubSyncStatus.getSinceTimestampParams(NotificationsKey),{
+						all: true,
+						//moment(new
+						// Date(notificationConfig.polledTimestamp || 1)).format()
+					}),
 					// CALLED AFTER EACH PAGE
 					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IGithubNotification>, headers:any) => {
 						
+						log.debug(`Got items on page ${pageNumber} or ${totalPages}`,items)
 						let
 							eTag = headers.get( 'ETag' ),
 							pollInterval = headers.get('X-Poll-Interval')
@@ -242,7 +246,7 @@ export class GithubSyncMonitor {
 						if (!firstPageReceived) {
 							firstPageReceived = true
 							log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
-							if (eTag)
+							if (eTag && eTag.length && eTag !== "W/\"\"")
 								notificationConfig.eTag = eTag
 							
 							if (pollInterval)
@@ -280,9 +284,9 @@ export class GithubSyncMonitor {
 				})
 				
 				// CALLBACK AFTER ALL EVENTS
-				await invokeListenerFn(this.notificationState.listeners,'allNotificationsReceived',notificationConfig.eTag,...allEvents)
+				await invokeListenerFn(this.notificationState.listeners,'allNotificationsReceived',notificationConfig.eTag,...allNotifications)
 				
-				log.debug(`All notifications events - count ${allEvents.length}`)
+				log.debug(`All notifications events - count ${allNotifications.length}, notified ${this.notificationState.listeners.length} listeners`)
 			} catch (err) {
 				if (err && err.statusCode === 304) {
 					log.debug(`Content has not been updated based on the previous eTag ${notificationConfig.eTag}`)

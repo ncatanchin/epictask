@@ -2,10 +2,10 @@ import {Container} from 'typescript-ioc'
 
 import {getSettings,PageLink, PageLinkType,PagedArray,cloneObject} from "epic-global"
 
-import {IssuesEvent,RepoEvent,Repo,Issue,User,Label,Milestone,Comment} from 'epic-models'
+import { IssuesEvent, RepoEvent, Repo, Issue, User, Label, Milestone, Comment, GithubNotification } from 'epic-models'
 import {  notifyInfo, notifyError,isString, isNumber, toNumber, isPromise } from  "epic-global"
 import {List} from 'immutable'
-import { getValue } from "epic-global/ObjectUtil"
+import { getValue } from "typeguard"
 
  
 
@@ -836,7 +836,7 @@ export class GitHubClient {
 	/**
 	 * Get issue events
 	 */
-	notifications = this.makePagedGetter(IssuesEvent,'/notifications')
+	notifications = this.makePagedGetter(GithubNotification,'/notifications')
 	
 	
 	/**

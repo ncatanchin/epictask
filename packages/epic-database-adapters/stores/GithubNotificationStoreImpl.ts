@@ -1,8 +1,3 @@
-import {
-	
-	FinderRequest
-} from 'typestore'
-
 
 import {
 	PouchDBRepo,
@@ -18,32 +13,31 @@ export class GithubNotificationStoreImpl extends PouchDBRepo<GithubNotification>
 	constructor() {
 		super(GithubNotificationStoreImpl,GithubNotification)
 	}
+	//
+	// /**
+	//  * Find all users who contribute to a repo
+	//  *
+	//  * @returns {null}
+	//  * @param reasons
+	//  */
+	// @PouchDBMangoFinder({
+	// 	indexFields: ['reason'],
+	// 	selector: (...reasons) => ({
+	// 		$or: reasons.map(reason => ({
+	// 			repoIds: {
+	// 				$elemMatch:{
+	// 					$eq: reason
+	// 				}
+	// 			}
+	// 		}))
+	// 	})
+	// })
+	// findByReason(...reasons:string[]):Promise<GithubNotification> {
+	// 	return null
+	// }
 	
-	/**
-	 * Find all users who contribute to a repo
-	 *
-	 * @returns {null}
-	 * @param reasons
-	 */
 	@PouchDBMangoFinder({
-		indexFields: ['reason'],
-		selector: (...reasons) => ({
-			$or: reasons.map(reason => ({
-				repoIds: {
-					$elemMatch:{
-						$eq: reason
-					}
-				}
-			}))
-		})
-	})
-	findByReason(...reasons:string[]):Promise<GithubNotification> {
-		return null
-	}
-	
-	@PouchDBMangoFinder({
-		all:true,
-		includeDocs:true
+		all:true
 	})
 	findAll():Promise<GithubNotification[]> {
 		return null
