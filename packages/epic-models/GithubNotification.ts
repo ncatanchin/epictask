@@ -49,6 +49,10 @@ export class GithubNotification extends DefaultModel implements IGithubNotificat
 	updated_at:Date
 	
 	@Attribute()
+	unread:boolean
+	
+	
+	@Attribute()
 	url:string
 	
 	constructor(o:any = {}) {

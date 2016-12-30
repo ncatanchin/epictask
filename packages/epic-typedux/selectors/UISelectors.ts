@@ -5,8 +5,9 @@ import View from "epic-typedux/state/window/View"
 import {
 	createDeepEqualSelector,
 	UIKey,
-	getValue
+	getValue, getMillis
 } from "epic-global"
+import { GithubNotification } from "epic-models"
 
 
 const
@@ -19,6 +20,36 @@ export const uiStateSelector: (state) => UIState = createSelector(
 )
 
 
+
+export const notificationsSelector:TSelector<List<GithubNotification>> = createSelector(
+	uiStateSelector,
+	(uiState:UIState) => uiState.notifications.sort((a,b) => {
+		
+		// SORT DESCENDING WITH PARTICIPATING AT TOP
+		const
+			aPart = a.reason !== 'subscribed',
+			bPart = b.reason !== 'subscribed',
+			aTime = a.updated_at,// new Date(a.updated_at).getTime(),
+			bTime = b.updated_at,//new Date(b.updated_at).getTime(),
+			timeComp = aTime === bTime ? 0 : aTime < bTime ? 1 : -1
+		
+		return ((aPart && bPart) || (!aPart && !bPart)) ?
+			timeComp : // SAME GROUP - SO SORT BY TIME
+			aPart ? -1 : // OR A IS PARTICIPATING
+				1 // OR B
+		
+	}) as List<GithubNotification>
+)
+
+export const unreadNotificationCountSelector:TSelector<number> = createSelector(
+	notificationsSelector,
+	(nList:List<GithubNotification>) => nList.count(it => it.unread === true)
+)
+
+export const participatingUnreadNotificationCountSelector:TSelector<number> = createSelector(
+	notificationsSelector,
+	(nList:List<GithubNotification>) => nList.count(it => it.reason !== 'subscribed' && it.unread === true)
+)
 
 export const notificationsOpenSelector:TSelector<boolean> = createSelector(
 	uiStateSelector,

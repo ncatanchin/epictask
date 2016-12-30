@@ -1,30 +1,44 @@
+import {List} from 'immutable'
 import { ObservableStore } from "typedux"
 import { BaseService, IServiceConstructor, RegisterService } from "./internal"
-import { ProcessType } from "epic-global"
+import { ProcessType, addHotDisposeHandler } from "epic-global"
 import { DatabaseClientService } from "./DatabaseClientService"
 import { getRepoActions } from "epic-typedux"
 import { getStores, addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import { acceptHot } from "epic-global/HotUtils"
-import { Repo, AvailableRepo } from "epic-models"
+import { Repo, AvailableRepo, GithubNotification } from "epic-models"
+import { getUIActions } from "epic-typedux/provider"
 
 const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
+
+let
+	instance:NotificationUIService
 
 /**
  * Manages data state changes and takes approriate action
  */
 @RegisterService(ProcessType.UI)
-export class GithubNotificationService extends BaseService {
+export class NotificationUIService extends BaseService {
 	
 	/**
 	 * Unsubscribe fns
 	 */
 	private unsubscribers = []
 	
-	private store:ObservableStore<any>
+	constructor() {
+		super()
+		
+		instance = this
+	}
+	
+	
+	private async loadGithubNotifications() {
+		await getUIActions().loadNotifications()
+	}
 	
 	/**
 	 * DatabaseClientService must be loaded first
@@ -34,6 +48,8 @@ export class GithubNotificationService extends BaseService {
 	dependencies(): IServiceConstructor[] {
 		return [DatabaseClientService]
 	}
+	
+	
 	
 	/**
 	 * Clean the repo state listeners
@@ -45,21 +61,6 @@ export class GithubNotificationService extends BaseService {
 		this.unsubscribers.length = 0
 	}
 
-	private async finishPendingDeletes() {
-		try {
-			const
-				pendingRepos = (await getStores().availableRepo.findAll())
-					.filter(availRepo => availRepo.deleted)
-			
-			log.debug(`Pending ${pendingRepos.size} repos to delete`)
-			
-			pendingRepos.forEach(pendingRepo =>
-				getRepoActions().removeAvailableRepo(pendingRepo.id))
-			
-		} catch (err) {
-			log.error(`Failed to remove pending deletes`,err)
-		}
-	}
 	
 	/**
 	 * Init the store
@@ -67,8 +68,6 @@ export class GithubNotificationService extends BaseService {
 	 * @returns {Promise<BaseService>}
 	 */
 	async init():Promise<this> {
-		this.store = Container.get(ObservableStore as any) as any
-		
 		return super.init()
 	}
 	
@@ -80,20 +79,20 @@ export class GithubNotificationService extends BaseService {
 	 * @param allChanges
 	 */
 	private onDatabaseChanged = (allChanges: IDatabaseChange[]) => {
-		// log.debug(`got database changes`,allChanges)
-		// const
-		// 	groups = _.groupBy(allChanges, it => it.type)
-		//
-		// Object
-		// 	.keys(groups)
-		// 	.forEach(type => {
-		// 		log.debug(`Change type ${type}`)
-		// 		if (type === AvailableRepo.$$clazz) {
-		// 			this.onDatabaseAvailableReposChanged(groups[type])
-		// 		}
-		//
-		// 	})
-		//
+		log.debug(`got database changes for Notifications`,allChanges)
+		const
+			groups = _.groupBy(allChanges, it => it.type)
+
+		Object
+			.keys(groups)
+			.forEach(type => {
+				log.debug(`Change type ${type}`)
+				if (type === GithubNotification.$$clazz) {
+					getUIActions().updateNotificationsInState(List(groups[type].map(it => it.model)))
+				}
+
+			})
+
 	}
 	
 	/**
@@ -104,19 +103,17 @@ export class GithubNotificationService extends BaseService {
 	async start():Promise<this> {
 		await super.start()
 		
+		log.debug(`Watching DB changes for Notifications`)
+		addDatabaseChangeListener(GithubNotification, this.onDatabaseChanged)
+		
+		log.debug('loading notifications')
+		await this.loadGithubNotifications()
 		
 		
-		log.debug(`Watching DB changes`)
-		//addDatabaseChangeListener(AvailableRepo, this.onDatabaseChanged)
 		
 		
-		// this.unsubscribe = this.store
-		// 	.observe([IssueKey,'selectedIssueIds'],this.selectedIssueIdsChanged)
+		addHotDisposeHandler(module,() => this.clean())
 		
-		if (module.hot) {
-			module.hot.dispose(() => this.clean())
-		}
-
 		return this
 	}
 	
@@ -141,12 +138,13 @@ export class GithubNotificationService extends BaseService {
 		return this
 	}
 	
-	
-	
-	
 }
 
-export default GithubNotificationService
+export function getNotificationUIService() {
+	return instance
+}
+
+export default NotificationUIService
 
 
 acceptHot(module,log)

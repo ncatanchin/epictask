@@ -8,6 +8,7 @@ import {
 } from "epic-command-manager"
 import { CommandMenuRoot } from "epic-ui-components"
 import { WindowControls, PureRender } from "epic-ui-components/common"
+import { AvailableNotificationIcon } from "epic-ui-core/notifications"
 
 const
 	log = getLogger(__filename)
@@ -202,6 +203,7 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 			{/*eHidden*/}
 			{/*spinnerStyle={styles.logo.spinner}/>*/}
 			
+			<AvailableNotificationIcon />
 			<CommandMenuRoot />
 		</div>
 	}

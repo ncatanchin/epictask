@@ -8,7 +8,7 @@ import './AppStateService'
 import './UIStateService'
 import './RepoStateService'
 import './NotificationService'
-import './NotificationService'
+import './NotificationUIService'
 
 if (module.hot) {
 	module.hot.accept([
@@ -16,6 +16,7 @@ if (module.hot) {
 		'./AppStateService',
 		'./UIStateService',
 		'./RepoStateService',
+		'./NotificationUIService',
 		'./NotificationService'
 	],(updates) => {
 		
@@ -26,5 +27,6 @@ if (module.hot) {
 		require('./UIStateService')
 		require('./RepoStateService')
 		require('./NotificationService')
+		require('./NotificationUIService')
 	})
 }

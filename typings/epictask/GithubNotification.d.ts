@@ -16,6 +16,8 @@ declare interface IGithubNotification {
 	
 	subject?:IGithubNotificationSubject
 	
+	unread?:boolean
+	
 	last_read_at?:Date
 	updated_at?:Date
 	url?:string

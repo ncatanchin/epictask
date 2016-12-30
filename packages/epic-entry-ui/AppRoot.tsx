@@ -287,7 +287,7 @@ function EnvMarker() {
 			style={{
 				position: 'fixed',
 				textTransform: 'uppercase',
-				right: 50,
+				right: 100,
 				top:0,
 				backgroundColor: 'red',
 				color: 'white',

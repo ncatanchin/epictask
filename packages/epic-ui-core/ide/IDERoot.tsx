@@ -19,6 +19,7 @@ import {
 import Header from "./Header"
 import { StatusBar } from "../status-bar"
 import { rem, colorAlpha, FillWindow, FlexColumn, FlexRowCenter, FlexScale, PositionRelative } from "epic-styles/styles"
+import { NotificationCenter } from "epic-ui-core/notifications/NotificationCenter"
 
 
 const
@@ -58,7 +59,19 @@ const baseStyles = (topStyles, theme, palette) => {
 		} ],
 		
 		page: [],
-		bodyWrapper: [ Styles.FlexScale, Styles.Fill ]
+		bodyWrapper: [ Styles.FlexScale, Styles.Fill ],
+		
+		notifications: [Styles.makeTransition(['min-width','max-width']),{
+			maxWidth: 0,
+			minWidth: 0,
+			//flexBasis: 0,
+			
+			open: [{
+				maxWidth: '50%',
+				minWidth: '15%',
+				//flexBasis: '25%'
+			}]
+		}]
 		
 		
 	}
@@ -217,13 +230,14 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 						{/* TOOL PANEL BOTTOM */}
 						<SplitPane
 							className="toolPanelSplitPane"
-							split="horizontal"
+							split="vertical"
 							primary="second"
-							minSize={panelMinSize(bottomPanel)}
-							maxSize={panelMaxSize(bottomPanel)}
-							pane2Style={makePanelConstraint(bottomPanel)}>
+							minSize={notificationsOpen ? '10%' : 0}
+							maxSize={notificationsOpen ? '50%' : 0}
+							pane2Style={notificationPanelStyle}>
 							
 							<IDETabbedViewContainer />
+							<NotificationCenter />
 							
 						</SplitPane>
 						<ToolPanel location={ToolPanelLocation.Bottom}/>

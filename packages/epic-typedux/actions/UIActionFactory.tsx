@@ -459,6 +459,28 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		}
 	}
 	
+	/**
+	 * Update notifications in state
+	 *
+	 * @param newNotifications
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	updateNotificationsInState(newNotifications:List<GithubNotification>) {
+		return state => {
+			let
+				{notifications} = state as UIState
+			
+			newNotifications.forEach(nn => {
+				const
+					index = notifications.findIndex(n => n.id === nn.id)
+				
+				notifications = index === -1 ? notifications.push(nn) : notifications.set(index,nn)
+			})
+			
+			return state.set('notifications',notifications)
+		}
+	}
 	
 	/**
 	 * Set notifications
