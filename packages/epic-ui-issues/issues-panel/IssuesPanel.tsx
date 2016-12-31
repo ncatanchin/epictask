@@ -290,40 +290,15 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	 * @param cmdOrMenuItem
 	 * @param event
 	 */
-	private openFindIssues = (cmdOrMenuItem,event) => {
-		
+	private openFindIssues = (cmdOrMenuItem,event) =>
 		guard(() => $(ReactDOM.findDOMNode(this.state.searchFieldRef)).find('input').focus())
-		// const
-		// 	{searchField} = this,
-		// 	inputElement = searchField && searchField.inputElement
-		//
-		// log.debug('Fuzzy find',searchField,inputElement)
-		//
-		// if (inputElement)
-		// 	$(inputElement).focus()
 		
-	}
-	
 	/**
 	 * Issue actions
 	 *
 	 * @type {IssueActionFactory}
 	 */
 	private issueActions = getIssueActions()
-	
-	
-	/**
-	 * Private ref for selected issue ids
-	 */
-	
-	//private _selectedIssueIds:List<number>
-	
-	/**
-	 * Internal select event emitter
-	 *
-	 * @type {SimpleEventEmitter<Function>}
-	 */
-	//private selectListeners = new SimpleEventEmitter<Function>()
 	
 	/**
 	 * Get search panel
@@ -340,9 +315,6 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	 * @param searchFieldRef
 	 */
 	private setSearchFieldRef = (searchFieldRef) => this.setState({searchFieldRef})
-	
-	
-	
 	
 	/**
 	 * On delete pressed
@@ -367,7 +339,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	 * @param event
 	 * @param issue
 	 */
-	onIssueOpen = (event: MouseEvent, issue) => {
+	private onIssueOpen = (event: MouseEvent, issue) => {
 		log.debug(`Received issue open`,issue)
 		if (!issue) {
 			return
@@ -384,7 +356,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	 * @param event
 	 * @param issue
 	 */
-	onIssueSelected = (event: MouseEvent, issue) => {
+	private onIssueSelected = (event: MouseEvent, issue) => {
 		let
 			selectedIssueIds = this.selectedIssueIds,
 			{items} = this.props,

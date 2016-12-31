@@ -838,6 +838,47 @@ export class GitHubClient {
 	 */
 	notifications = this.makePagedGetter(GithubNotification,'/notifications')
 	
+	/**
+	 * Mark a notification as read
+	 *
+	 * @param id
+	 */
+	async notificationRead(id:number)
+	async notificationRead(notification:GithubNotification)
+	async notificationRead(notificationOrId:number|GithubNotification) {
+		const
+			id = isNumber(notificationOrId) ? notificationOrId : notificationOrId.id,
+			uri = `/notifications/threads/${id}`
+			
+		
+		const
+			response = await doFetch(makeUrl(uri), this.initRequest(HttpMethod.PATCH))
+		
+		if (response.status >= 300) {
+			let result = null
+			
+			try {
+				result = await response.json()
+			} catch (err) {
+				log.error('Unable to get json error body',err)
+			}
+			
+			throw new GithubError(
+				_.get(result,'message',response.statusText),
+				response.status,
+				result && result.errors)
+		}
+		
+		let result = null
+		
+		try {
+			result = await response.json()
+		} catch (err) {
+			log.warn(`Unable to parse successful notification read patch`)
+		}
+		
+		return result
+	}
 	
 	/**
 	 * Get issue events

@@ -1,4 +1,4 @@
 
 
 export * from "./AvailableNotificationIcon"
-export * from "./NotificationCenter"
+export * from "./NotificationsPanel"

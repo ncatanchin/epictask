@@ -59,6 +59,12 @@ export class NotificationCenter {
 		
 		this.appActions.notifyError(payload)
 	}
+	
+	notifyWithSound(message:INotification|string,soundKey:TSoundKey) {
+		this.notify(message,NotificationType.Info)
+		
+		PlaySound(soundKey)
+	}
 }
 
 let notificationCenter:NotificationCenter = null

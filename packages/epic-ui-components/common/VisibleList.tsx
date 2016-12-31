@@ -142,7 +142,9 @@ interface IVisibleListRowWrapperProps extends IThemedAttributes {
 	rowState:IRowState<any,any,any>
 }
 
-//@PureRender
+/**
+ * Old Row Wrapper
+ */
 class VisibleListRowWrapper extends React.Component<IVisibleListRowWrapperProps,any> {
 	
 	render() {
@@ -151,9 +153,6 @@ class VisibleListRowWrapper extends React.Component<IVisibleListRowWrapperProps,
 			{config,style,key} = rowState,
 			{clazz:ComponentClazz,props:rowTypeProps = {}} = config
 			
-			// THE OUT ROW STATE IS A REF COPY
-			//{outRowState} = this.state
-		
 		return <ComponentClazz key={key} {...(rowTypeProps)} rowState={rowState}  />
 	}
 }
@@ -164,19 +163,32 @@ class VisibleListRowWrapper extends React.Component<IVisibleListRowWrapperProps,
  * @class VisibleList
  * @constructor
  **/
-
-
-// If you have a specific theme key you want to
-// merge provide it as the second param
-
 @Radium
 export class VisibleList<RowType extends any,ItemKeyType extends any,ItemType extends any>
 extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisibleListState<RowType,ItemKeyType,ItemType>> {
 	
+	/**
+	 * Default props
+	 */
 	static defaultProps = {
 		initialItemsPerPage: 20
 	}
 	
+	/**
+	 * Create a new visible list
+	 *
+	 * @returns
+	 */
+	static makeVisibleList<RowType,ItemKeyType,ItemType>() {
+		return class extends VisibleList<RowType,ItemKeyType,ItemType> {}
+	}
+	
+	/**
+	 * Constructor
+	 *
+	 * @param props
+	 * @param context
+	 */
 	constructor(props,context) {
 		super(props,context)
 		this.state = {

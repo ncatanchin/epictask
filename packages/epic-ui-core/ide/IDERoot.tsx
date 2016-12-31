@@ -19,7 +19,7 @@ import {
 import Header from "./Header"
 import { StatusBar } from "../status-bar"
 import { rem, colorAlpha, FillWindow, FlexColumn, FlexRowCenter, FlexScale, PositionRelative } from "epic-styles/styles"
-import { NotificationCenter } from "epic-ui-core/notifications/NotificationCenter"
+import { NotificationsPanel } from "epic-ui-core/notifications/NotificationsPanel"
 
 
 const
@@ -237,7 +237,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							pane2Style={notificationPanelStyle}>
 							
 							<IDETabbedViewContainer />
-							<NotificationCenter />
+							<NotificationsPanel />
 							
 						</SplitPane>
 						<ToolPanel location={ToolPanelLocation.Bottom}/>

@@ -3,7 +3,7 @@ import { Map, Record, List } from "immutable"
 import { connect } from 'react-redux'
 import { createStructuredSelector, createSelector } from 'reselect'
 import { PureRender } from 'epic-ui-components'
-import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+import { IThemedAttributes, ThemedStyles, Themed } from 'epic-styles'
 import {
 	unreadNotificationCountSelector, notificationsSelector,
 	participatingUnreadNotificationCountSelector, notificationsOpenSelector
@@ -12,6 +12,10 @@ import { GithubNotification } from "epic-models"
 import { VisibleList, IRowTypeConfig } from "epic-ui-components/common"
 import { getValue } from "typeguard"
 import { NotificationListItem } from "epic-ui-core/notifications/NotificationListItem"
+import { Icon } from "epic-ui-components/common/icon/Icon"
+import { makeHeightConstraint, makeWidthConstraint } from "epic-styles/styles"
+import { CommandComponent, CommandContainerBuilder } from "epic-command-manager-ui"
+import { CommonKeys } from "epic-command-manager"
 
 
 // Constants
@@ -34,9 +38,9 @@ function baseStyles(topStyles, theme, palette) {
 
 
 /**
- * INotificationCenterProps
+ * INotificationsPanelProps
  */
-export interface INotificationCenterProps extends IThemedAttributes {
+export interface INotificationsPanelProps extends IThemedAttributes {
 	notificationsOpen?:boolean
 	notifications?:List<GithubNotification>
 	unreadCount?:number
@@ -44,16 +48,16 @@ export interface INotificationCenterProps extends IThemedAttributes {
 }
 
 /**
- * INotificationCenterState
+ * INotificationsPanelState
  */
-export interface INotificationCenterState {
+export interface INotificationsPanelState {
 	
 }
 
 /**
- * NotificationCenter
+ * NotificationsPanel
  *
- * @class NotificationCenter
+ * @class NotificationsPanel
  * @constructor
  **/
 
@@ -64,14 +68,74 @@ export interface INotificationCenterState {
 	participatingUnreadCount: participatingUnreadNotificationCountSelector
 }))
 @ThemedStyles(baseStyles)
+@CommandComponent()
 @PureRender
-export class NotificationCenter extends React.Component<INotificationCenterProps,INotificationCenterState> {
+export class NotificationsPanel extends React.Component<INotificationsPanelProps,INotificationsPanelState> {
 	
-	buildItem = (rowType:string):IRowTypeConfig<string,string,GithubNotification> => {
+	/**
+	 * Build commands
+	 *
+	 * @param builder
+	 */
+	commandItems = (builder:CommandContainerBuilder) =>
+		builder
+			//MOVEMENT
+			.command(
+				CommonKeys.MoveDown,
+				(cmd,event) => this.moveDown(event),{
+					hidden:true,
+					overrideInput: true
+				}
+			)
+			.command(
+				CommonKeys.MoveDownSelect,
+				(cmd,event) => this.moveDown(event),{
+					hidden:true,
+					overrideInput: true
+				})
+			.command(
+				CommonKeys.MoveUp,
+				(cmd,event) => this.moveUp(event),
+				{
+					hidden:true,
+					overrideInput: true
+				})
+			.command(
+				CommonKeys.MoveUpSelect,
+				(cmd,event) => this.moveUp(event),
+				{
+					hidden:true,
+					overrideInput: true
+				})
+			.make()
+	
+	/**
+	 * Move selection up
+	 */
+	moveUp(event = null) {
+		this.moveSelection(-1,event)
+	}
+	
+	/**
+	 * Move selection down
+	 */
+	moveDown(event = null) {
+		this.moveSelection(1,event)
+	}
+	
+	/**
+	 * Create a move selector for key handlers
+	 *
+	 * @param increment
+	 * @param event
+	 */
+	moveSelection(increment: number, event: React.KeyboardEvent<any> = null) {
+		
+	}
+	
+	private buildItem = (rowType:string):IRowTypeConfig<string,string,GithubNotification> => {
 		const
-			{
-				styles
-			} = this.props
+			{styles} = this.props
 		
 		return {
 			clazz: NotificationListItem,
@@ -82,7 +146,7 @@ export class NotificationCenter extends React.Component<INotificationCenterProps
 		
 	}
 	
-	getRowType = (itemIndexes:List<GithubNotification>,index,key) => {
+	private getRowType = (itemIndexes:List<GithubNotification>,index,key) => {
 		return 'notification'
 	}
 	
@@ -94,7 +158,7 @@ export class NotificationCenter extends React.Component<INotificationCenterProps
 	 * @param index
 	 * @returns {number}
 	 */
-	getItemHeight = (listItems, listItem, index) => {
+	private getItemHeight = (listItems, listItem, index) => {
 		return convertRem(6)
 	}
 	
@@ -118,5 +182,7 @@ export class NotificationCenter extends React.Component<INotificationCenterProps
 }
 
 
-class NotificationsVisibleList extends VisibleList<string,number,GithubNotification> {
-}
+/**
+ * Notification List Component
+ */
+const NotificationsVisibleList = VisibleList.makeVisibleList<string,number,GithubNotification>()

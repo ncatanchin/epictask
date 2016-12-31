@@ -9,6 +9,7 @@ import './UIStateService'
 import './RepoStateService'
 import './NotificationService'
 import './NotificationUIService'
+import './SoundFXService'
 
 if (module.hot) {
 	module.hot.accept([
@@ -17,7 +18,8 @@ if (module.hot) {
 		'./UIStateService',
 		'./RepoStateService',
 		'./NotificationUIService',
-		'./NotificationService'
+		'./NotificationService',
+		'./SoundFXService'
 	],(updates) => {
 		
 		log.info(`HMR Updates`,updates)
@@ -28,5 +30,6 @@ if (module.hot) {
 		require('./RepoStateService')
 		require('./NotificationService')
 		require('./NotificationUIService')
+		require('./SoundFXService')
 	})
 }

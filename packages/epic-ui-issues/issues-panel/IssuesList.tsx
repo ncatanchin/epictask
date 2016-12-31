@@ -108,9 +108,8 @@ export interface IIssuesListState {
 	itemIds?:List<number>
 }
 
-class IssueItemVisibleList extends VisibleList<string,string,number> {
-}
-
+const
+	IssueItemVisibleList = VisibleList.makeVisibleList<string,string,number>()
 
 
 /**

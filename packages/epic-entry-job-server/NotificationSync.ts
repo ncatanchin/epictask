@@ -24,16 +24,21 @@ export namespace NotificationSync {
 			current = await nStore.bulkGet(...all.map(it => it.id)),
 			pending = []
 		
+		let updateCount = 0
+		
 		all.forEach(n => {
 			let
-				ignore = false
+				ignore = false,
+				isNew = true
 			
 			for (let existing of current) {
 				if (!existing)
 					continue
 				
 				if (existing.id === n.id) {
+					isNew = false
 					if (getMillis(existing.updated_at) >= getMillis(n.updated_at)) {
+						updateCount++
 						ignore = true
 					}
 					break
@@ -43,6 +48,10 @@ export namespace NotificationSync {
 			if (!ignore) {
 				pending.push(n)
 			}
+			
+			if (isNew)
+				updateCount++
+			
 		})
 		
 		log.debug(`Persisting ${pending.length} notifications of ${all.length} received`)
@@ -51,6 +60,9 @@ export namespace NotificationSync {
 			await chunkSave(pending,nStore)
 		
 		SyncStatus.setMostRecentTimestamp(NotificationsKey, pending, 'updated_at')
+		
+		if (updateCount)
+			getNotificationCenter().notifyWithSound(`${updateCount} notification updates received from GitHub`,"Ding")
 	}
 	
 	async function syncSince(client:GitHubClient) {

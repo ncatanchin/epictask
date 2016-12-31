@@ -1,10 +1,10 @@
 // Imports
-import { IThemedAttributes, ThemedStyles } from 'epic-styles'
+import { IThemedAttributes, ThemedStyles, Themed } from 'epic-styles'
 import { GithubNotification } from "epic-models"
 import { IRowState, RepoLabel, TimeAgo } from "epic-ui-components/common"
 import { Icon } from "epic-ui-components/common/icon/Icon"
 import { shallowEquals, getMillis } from "epic-global"
-import { colorDarken } from "epic-styles/styles"
+import { colorDarken, makeHeightConstraint, makeWidthConstraint, colorAlpha } from "epic-styles/styles"
 
 
 // Constants
@@ -38,8 +38,10 @@ function baseStyles(topStyles, theme, palette) {
 		
 		// IF PARTICIPATING IN THREAD - not 'subscribed'
 		participating: [{
-			backgroundColor: success.hue1,
-			borderBottom: `1px inset ${colorDarken(success.hue1,15)}`,
+			//backgroundColor: success.hue1,
+			//boxShadow: Styles.makeLinearGradient(),
+			boxShadow: `inset 0 0rem 0.1rem 0.2rem ${colorAlpha(success.hue1, 0.7)}`,
+			//borderBottom: `1px inset ${colorDarken(success.hue1,15)}`,
 		}],
 		
 		subjectIcon: [Styles.makePaddingRem(0.5,1,0.5,0),{
@@ -109,6 +111,7 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 			entityType = subject.type
 		
 		return <div style={[styles,participating && styles.participating,rowState.style]}>
+			<UnreadDot notification={notification} />
 			<Icon
 				style={styles.subjectIcon}
 				iconSet="octicon"
@@ -136,3 +139,22 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 	}
 	
 }
+
+
+/**
+ * Unread dot component
+ */
+
+
+const UnreadDot = Themed(({theme,palette,style,notification}) =>
+	<div style={[
+		style,
+		makeHeightConstraint(rem(1)),
+		makeWidthConstraint(rem(1)),
+		Styles.makeMarginRem(0,0.5,0,0),
+		Styles.FlexRowCenter,
+		{ color: notification.unread ? palette.success.hue1 : Styles.Transparent }
+	]}>
+		<Icon style={{fontSize: Styles.rem(0.5)}} iconSet="fa" iconName="circle" />
+	</div>
+)
