@@ -28,7 +28,7 @@ function baseStyles(topStyles, theme, palette) {
 		{ text, primary, accent, background } = palette
 	
 	return [ Styles.FlexColumn, Styles.FlexScale, Styles.Fill, {
-		overflow: 'auto'
+		overflow: 'hidden'
 	} ]
 }
 
@@ -95,7 +95,7 @@ export class NotificationCenter extends React.Component<INotificationCenterProps
 	 * @returns {number}
 	 */
 	getItemHeight = (listItems, listItem, index) => {
-		return convertRem(4)
+		return convertRem(6)
 	}
 	
 	render() {

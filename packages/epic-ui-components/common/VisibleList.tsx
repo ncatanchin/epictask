@@ -18,7 +18,7 @@ const
 
 
 // FOR DEBUG INFO
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn,FlexScale, PositionRelative, {
@@ -333,7 +333,6 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 			return
 		}
 		
-		
 		const
 			{state = {}} = this,
 			{itemCount,itemHeight,rowTypeProvider,itemBuilder} = props,
@@ -479,7 +478,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	):boolean {
 		//return !shallowEquals(this.state,nextState,'rowComponents.size')
 		//return !shallowEquals(this.props,nextProps,'items') || !shallowEquals(this.state,nextState,'rowStates')
-		return !shallowEquals(this.state,nextState,'rowStates')
+		return !shallowEquals(this.state,nextState,'rowStates','startIndex','endIndex')
 	}
 	
 	/**
@@ -555,12 +554,20 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 		const
 			{props,state = {}} = this,
 			{itemHeight,className} = props,
-			{rowStates,itemHeightTotal,styles} = state
+			{itemHeightTotal,styles} = state
 			
-			
+		let
+			{startIndex,endIndex,rowStates,itemsPerPage} = this.state
 		
-		// let
-		// 	contentHeight = itemHeightTotal//((items as any).size || (items as any).length) * itemHeightMin
+		
+		itemsPerPage = itemsPerPage || 50
+		startIndex = Math.max((startIndex || 0) - itemsPerPage,0)
+		endIndex = Math.min((endIndex || (startIndex + itemsPerPage)) + itemsPerPage,rowStates.size)
+		
+		if (rowStates) {
+			rowStates = rowStates.slice(startIndex,endIndex) as any
+		}
+		log.debug(`rendering with row states`,rowStates,` and indexes ${startIndex} / ${endIndex} with ${itemsPerPage} items per page and item height ${itemHeight} and total height ${itemHeightTotal}`)
 		
 		return <Resizable style={makeStyle(styles.root,Styles.PositionRelative)}
 		                  ref={this.setRootRef}
