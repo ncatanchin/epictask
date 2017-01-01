@@ -2,6 +2,8 @@ import * as uuid from 'node-uuid'
 import { isString } from  "typeguard"
 import {Container} from 'typescript-ioc'
 
+const
+	log = getLogger(__filename)
 
 enum NotificationType {
 	Debug = 1,
@@ -23,15 +25,16 @@ export class NotificationCenter {
 		return require("epic-typedux/provider").getAppActions()
 	}
 	
-	notify(message:INotification|string, type:NotificationType = NotificationType.Info) {
+	notify(message:INotification|string, type:NotificationType = NotificationType.Info,opts:any = {}) {
 		if (_.isString(message)) {
 			message = {
 				id: uuid.v4(),
 				createdAt: Date.now(),
 				type: type,
 				content: message,
-				floatVisible: true
-			}
+				floatVisible: true,
+				opts
+			} as INotification
 		} else {
 			message.type = type
 		}
@@ -61,7 +64,14 @@ export class NotificationCenter {
 	}
 	
 	notifyWithSound(message:INotification|string,soundKey:TSoundKey) {
-		this.notify(message,NotificationType.Info)
+		const
+			sound = Sounds[soundKey],
+			src = sound.src.find(it => it.endsWith('.webm')) || sound.src[0]
+		
+		log.tron(`Notification Sound src: ${src}`)
+		this.notify(
+			message,
+			NotificationType.Info)
 		
 		PlaySound(soundKey)
 	}

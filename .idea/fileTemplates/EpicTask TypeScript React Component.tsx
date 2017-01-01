@@ -5,6 +5,7 @@
 
 // Imports
 import { Map,Record,List } from "immutable"
+import * as React from 'react'
 import {connect} from 'react-redux'
 import {createStructuredSelector,createSelector} from 'reselect'
 import {PureRender} from 'epic-ui-components'
@@ -24,7 +25,7 @@ function baseStyles(topStyles,theme,palette) {
 	const
 		{text, primary, accent,background} = palette
 	
-	return [ FlexColumn, FlexAuto, {} ]
+	return [ Styles.FlexColumn, Styles.FlexAuto, {} ]
 }
 
 

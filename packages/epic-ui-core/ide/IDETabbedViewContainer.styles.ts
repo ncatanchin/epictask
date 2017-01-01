@@ -35,7 +35,7 @@ export default function baseStyles(topStyles, theme, palette) {
 		buttonDim = rem(buttonDimNumber),
 		
 		borderSelected = theme.tabBarSeparator,
-		inactiveBg = colorDarken(primary.hue1,15)
+		inactiveBg = theme.inactiveColor// colorDarken(primary.hue1,15)
 	
 	return [ FlexColumn, FlexScale, FillHeight, {
 		tabBar: [FlexRowCenter, FillWidth,makeHeightConstraint(buttonDim),{

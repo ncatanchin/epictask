@@ -31,12 +31,14 @@ function baseStyles(topStyles, theme, palette) {
 	
 	return [
 		Styles.PositionRelative,
-		Styles.FlexColumnCenter,
+		Styles.FlexRowCenter,
 		makeHeightConstraint(theme.navBarHeight),
-		makeWidthConstraint(theme.navBarHeight),
+		Styles.makePaddingRem(0, 1),
 		Styles.CursorPointer,
 		Styles.FlexAuto,
 		transition, {
+			transform: 'translate(0,-3%)',
+		
 			overflow: 'visible',
 			
 			icon: [ transition, {
@@ -51,14 +53,12 @@ function baseStyles(topStyles, theme, palette) {
 			badge: [
 				transition,
 				Styles.FlexRowCenter,
-				Styles.PositionAbsolute,
 				Styles.makePaddingRem(0.2, 0.5),
-				makeHeightConstraint(badgeHeight), {
-					transform: 'translate(0,-120%)',
+				Styles.makeMarginRem(0, 1),
+				 {
+					//transform: 'translate(0,-120%)',
 					fontSize: rem(1),
 					// right: rem(0.3),
-					left: '55%',
-					top: '50%',
 					borderRadius: rem(0.7),
 					fontWeight: 500,
 					
@@ -131,24 +131,27 @@ export class AvailableNotificationIcon extends React.Component<IAvailableNotific
 		const
 			{ styles, unreadCount, participatingUnreadCount, notifications } = this.props,
 			total = notifications.size,
-			hovering = isHovering(this, 'root')
+			hovering = isHovering(this, 'root'),
+			label = participatingUnreadCount ?
+				<div>{participatingUnreadCount} / {unreadCount}</div> :
+				<div>{unreadCount}</div>
 		
 		return <div ref="root" style={styles} onClick={this.onClick}>
-			<Icon
-				iconSet='octicon'
-				iconName='bell'
-				style={makeStyle(styles.icon,hovering && styles.icon.hovering)}/>
-			
 			<div
 				style={[
 					styles.badge,
 					participatingUnreadCount ? styles.participatingUnreadCount : styles.unreadCount,
 					hovering && (participatingUnreadCount ? styles.participatingUnreadCount.hovering : styles.unreadCount.hovering)
-				]}
-			>
-				{ participatingUnreadCount && <span>{participatingUnreadCount}&nbsp;/&nbsp;</span> }
-				{unreadCount}
+				]}>
+				{label}
 			</div>
+			
+			
+			<Icon
+				iconSet='octicon'
+				iconName='bell'
+				style={makeStyle(styles.icon,hovering && styles.icon.hovering)}/>
+			
 			
 		</div>
 	}

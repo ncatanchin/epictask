@@ -111,11 +111,11 @@ export class NotificationService extends BaseService {
 						const
 							title = isError ? 'an error occurred' : 'epictask'
 						
-						this.pendingNotifications[msg.id] = new Notification(title,{
+						this.pendingNotifications[msg.id] = new Notification(title,assign({
 							//title:
 							body: msg.content || msg.message || 'no message available',
 							icon: WindowIconPath128
-						})
+						},msg.opts))
 					}
 					
 					// Add the remove timer

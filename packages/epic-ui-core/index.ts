@@ -172,6 +172,15 @@ CommandRegistryScope.Register(
 		execute: (item, event) => getRepoActions().syncAll()
 	},
 	
+	// TOGGLE NOTIFICATIONS
+	{
+		id: 'ToggleNotifications',
+		type: CommandType.App,
+		name: "Toggle Notifications Panel",
+		defaultAccelerator: "CommandOrControl+1",
+		execute: (item, event) => getUIActions().toggleNotificationsOpen()
+	},
+	
 	// SETTINGS
 	{
 		id: 'Settings',

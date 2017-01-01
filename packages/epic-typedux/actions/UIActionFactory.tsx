@@ -4,7 +4,7 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter, guard, ContextMenu
+	nilFilter, guard, ContextMenu, notifyError
 } from "epic-global"
 import { UIState } from "../state/UIState"
 import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
@@ -17,6 +17,7 @@ import { windowsSelector } from "epic-typedux/selectors"
 import { isNil } from "typeguard"
 import { getStores } from "epic-database-client"
 import { GithubNotification } from "epic-models"
+import { createClient } from "epic-github"
 
 
 // Import only as type - in case we are not on Renderer
@@ -428,6 +429,23 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 		
 	}
 	
+	/**
+	 * Mark notification read
+	 *
+	 * @param notification
+	 * @returns {Promise<void>}
+	 */
+	async markNotificationRead(notification:GithubNotification) {
+		try {
+			await createClient().notificationRead(notification)
+			notification = cloneObjectShallow(notification,{unread:false})
+			await getStores().notification.save(notification)
+		} catch (err) {
+			log.error(`failed to mark read`,err)
+			notifyError(`Unable to mark read: ${err.message}`)
+			
+		}
+	}
 	
 	/**
 	 * Load notifications

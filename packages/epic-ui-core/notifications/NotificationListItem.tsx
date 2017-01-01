@@ -5,7 +5,9 @@ import { IRowState, RepoLabel, TimeAgo } from "epic-ui-components/common"
 import { Icon } from "epic-ui-components/common/icon/Icon"
 import { shallowEquals, getMillis } from "epic-global"
 import { colorDarken, makeHeightConstraint, makeWidthConstraint, colorAlpha } from "epic-styles/styles"
-
+import { IconButton } from "epic-ui-components/common/icon/IconButton"
+import filterProps from 'react-valid-props'
+import { getUIActions } from "epic-typedux/provider"
 
 // Constants
 const
@@ -29,15 +31,18 @@ const
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ success,alternateText,text, primary, accent, background } = palette
+		{ success,warn,alternateText,text, primary, accent, background } = palette
 	
-	return [ Styles.FlexRowCenter, Styles.FlexAuto, Styles.FillWidth, Styles.makePaddingRem(0.5,1),{
+	return [ Styles.FlexRowCenter, Styles.CursorPointer,Styles.FlexAuto, Styles.FillWidth, Styles.makePaddingRem(0.5,1),Styles.makeTransition(['box-shadow']),{
 		backgroundColor: background,
 		borderBottom: `1px solid ${colorDarken(theme.inactiveColor,5)}`,
-		
+		boxShadow: 'none',
+		[Styles.CSSHoverState]: [{
+			//boxShadow: `inset 0 0rem 0.3rem 0.5rem ${colorAlpha(warn.hue1, 0.7)}`,
+		}],
 		
 		// IF PARTICIPATING IN THREAD - not 'subscribed'
-		participating: [{
+		participatingUnread: [{
 			//backgroundColor: success.hue1,
 			//boxShadow: Styles.makeLinearGradient(),
 			boxShadow: `inset 0 0rem 0.1rem 0.2rem ${colorAlpha(success.hue1, 0.7)}`,
@@ -47,6 +52,32 @@ function baseStyles(topStyles, theme, palette) {
 		subjectIcon: [Styles.makePaddingRem(0.5,1,0.5,0),{
 			
 		}],
+		
+		
+		
+		markReadSpacer: [makeWidthConstraint(rem(4))],
+		markRead:[
+			Styles.makeMarginRem(0,0,0,1),
+			Styles.makeTransition(['color','background-color','font-size']),
+			makeHeightConstraint(rem(3)),
+			makeWidthConstraint(rem(3)),{
+				color: primary.hue3,
+				backgroundColor: Styles.Transparent,
+				borderRadius: '50%',
+				fontSize: rem(1.5),
+				
+				[Styles.CSSHoverState]: [{
+					fontSize: rem(2),
+					color: background,
+					backgroundColor: primary.hue3
+				}],
+				
+				[Styles.CSSActiveState]: [{
+					fontSize: rem(2),
+					color: background,
+					backgroundColor: warn.hue1
+				}]
+			}],
 		
 		repo: [Styles.makePaddingRem(0,0,0),{
 			
@@ -80,7 +111,6 @@ export interface INotificationListItemState {
 // If you have a specific theme key you want to
 // merge provide it as the second param
 @ThemedStyles(baseStyles)
-
 export class NotificationListItem extends React.Component<INotificationListItemProps,INotificationListItemState> {
 	
 	constructor(props,context) {
@@ -106,11 +136,12 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 		const
 			{ styles,rowState } = this.props,
 			notification = rowState.item,
+			{unread} = notification,
 			participating = notification.reason !== 'subscribed',
 			{subject} = notification,
 			entityType = subject.type
 		
-		return <div style={[styles,participating && styles.participating,rowState.style]}>
+		return <div style={[styles,participating && unread && styles.participatingUnread,rowState.style]}>
 			<UnreadDot notification={notification} />
 			<Icon
 				style={styles.subjectIcon}
@@ -124,7 +155,9 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 					Styles.Ellipsis
 				]}>
 				<RepoLabel
-					style={makeStyle(styles.repo,Styles.Ellipsis)} repo={notification.repository} />
+					showTooltip={true}
+					style={makeStyle(styles.repo,Styles.Ellipsis)}
+					repo={notification.repository} />
 				
 				<div style={Styles.Ellipsis}>
 					{notification.subject.title}
@@ -135,6 +168,16 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 				style={styles.timestamp}
 				timestamp={getMillis(notification.updated_at)} />
 			
+			{notification.unread ?
+				<IconButton
+					tooltip="Mark Read"
+					tooltipPos="left"
+					onClick={() => getUIActions().markNotificationRead(notification)}
+					style={styles.markRead}>
+					check
+				</IconButton> :
+				<div style={styles.markReadSpacer}/>
+			}
 		</div>
 	}
 	
@@ -144,8 +187,6 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 /**
  * Unread dot component
  */
-
-
 const UnreadDot = Themed(({theme,palette,style,notification}) =>
 	<div style={[
 		style,
@@ -153,8 +194,11 @@ const UnreadDot = Themed(({theme,palette,style,notification}) =>
 		makeWidthConstraint(rem(1)),
 		Styles.makeMarginRem(0,0.5,0,0),
 		Styles.FlexRowCenter,
-		{ color: notification.unread ? palette.success.hue1 : Styles.Transparent }
+		{
+			color: notification.unread ? palette.success.hue1 : Styles.Transparent
+		}
 	]}>
-		<Icon style={{fontSize: Styles.rem(0.5)}} iconSet="fa" iconName="circle" />
+		<Icon  style={{fontSize: Styles.rem(0.5)}}  iconSet="fa" iconName="circle" />
 	</div>
 )
+

@@ -4,7 +4,8 @@ import { IGithubValidationError, GithubErrorCodes } from "epic-github"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { CommandAccelerator } from  "epic-command-manager/CommandAccelerator"
 import { Icon } from "./icon/Icon"
-
+import filterProps from 'react-valid-props'
+import { Tooltip } from "./Tooltip"
 
 /**
  * Milestone base styles
@@ -90,11 +91,17 @@ export const MilestoneLabel = ThemedStyles(milestoneBaseStyles)(
  */
 const repoBaseStyles = (topStyles, theme, palette) => {
 	
-	return [ FlexRow, PositionRelative, {
+	return [ Styles.FlexRow, Styles.PositionRelative, Styles.Ellipsis, {
 		fontSize: themeFontSize(1.1),
+		maxWidth: '100%',
+		overflow: 'hidden',
 		//height: rem(2),
 		
-		text: [ FlexRowCenter, FillHeight, Ellipsis, {} ]
+		text: [ Styles.FillHeight,Styles.Ellipsis, {
+			owner: Styles.FlexAuto,//Styles.makeFlex(0,1,'auto'),
+			slash: Styles.FlexAuto,
+			name: Styles.makeFlex(0,4,'auto')
+		} ]
 	} ]
 }
 
@@ -105,16 +112,21 @@ const repoBaseStyles = (topStyles, theme, palette) => {
  * @param style
  * @returns {any}
  */
-export const RepoLabel = ThemedStyles(repoBaseStyles)(({ repo, styles = {} as any, style = {}, textStyle,slashStyle }) => {
+export const RepoLabel = ThemedStyles(repoBaseStyles)((props) => {
+	const
+		{ repo, showTooltip = false, styles = {} as any, style = {}, textStyle,slashStyle } = props
+	
 	if (!repo || !repo.full_name)
 		return <div>No repo</div>
 	
 	const
 		parts = repo.full_name.split('/')
-	return <div style={[styles,style]}>
-		<div style={[styles.text,textStyle]}>{parts[ 0 ]}</div>
-		<div style={[styles.text,slashStyle]}>/</div>
-		<div style={[styles.text,FontBlack,textStyle]}>{parts[ 1 ]}</div>
+	
+	return <div {...filterProps(props)} style={[styles,style]}>
+		{showTooltip && <Tooltip pos="left" text={repo.full_name}/>}
+		<div style={[styles.text,styles.text.owner,textStyle]}>{parts[ 0 ]}</div>
+		<div style={[styles.text,styles.text.slash,slashStyle]}>/</div>
+		<div style={[styles.text,styles.text.name,FontBlack,textStyle]}>{parts[ 1 ]}</div>
 	</div>
 })
 

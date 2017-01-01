@@ -8,6 +8,7 @@ import filterProps from 'react-valid-props'
 import {FAIcons} from "./IconFontAwesomeNames"
 import {GHIcons} from "./IconOpticonNames"
 import { PureRender } from "../PureRender"
+import { ITooltipNodeProps,Tooltip } from "../Tooltip"
 
 
 declare global {
@@ -24,13 +25,13 @@ const
 /**
  * IMIconProps
  */
-export interface IIconProps extends React.HTMLAttributes<any> {
-	className?:string
-	style?:any
+export interface IIconProps extends React.HTMLAttributes<any>,ITooltipNodeProps {
+	//className?:string
 	theme?:any
 	iconSet?:TIconSet
 	iconName?: string,
-	fontSize?:any
+	fontSize?:any,
+	tooltip?:string
 }
 
 function iconCode(codeSet,iconName) {
@@ -69,7 +70,7 @@ export class Icon extends React.Component<IIconProps,any> {
 
 	render() {
 		let
-			{className = '',style,iconName,children,fontSize} = this.props
+			{className = '',style,tooltip,tooltipPos,iconName,children,fontSize} = this.props
 			
 		if (Array.isArray(style)) {
 			style = mergeStyles(...style)
@@ -97,7 +98,8 @@ export class Icon extends React.Component<IIconProps,any> {
 			iconName = null
 		}
 		
-		return <span {...filterProps(this.props)} {..._.pick(this.props,'onClick')}  style={style} className={className}>
+		return <span {...filterProps(this.props)} style={style} className={className}>
+			{tooltip && <Tooltip text={tooltip} pos={tooltipPos}/>}
 			{iconContent}
 		</span>
 	}

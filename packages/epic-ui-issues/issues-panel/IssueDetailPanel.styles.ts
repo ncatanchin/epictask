@@ -22,6 +22,15 @@ const baseStyles = (topStyles,theme,palette) => {
 			minWidth: '36.5rem'
 		} ],
 		
+		top: [Styles.PositionAbsolute,{
+			height: rem(0.2),
+			width: '100%',
+			zIndex: 2,
+			top: 0,
+			left: 0,
+			backgroundColor: primary.hue3
+		}],
+		
 		// MULTI
 		multi: [PositionRelative, FlexColumnCenter, FlexScale,{
 			title: [ {

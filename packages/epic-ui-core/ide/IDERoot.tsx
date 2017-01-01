@@ -232,9 +232,9 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							className="toolPanelSplitPane"
 							split="vertical"
 							primary="second"
-							minSize={notificationsOpen ? '20%' : 0}
+							minSize={notificationsOpen ? rem(25) : 0}
 							maxSize={notificationsOpen ? '50%' : 0}
-							pane2Style={notificationPanelStyle}>
+							pane2Style={_.omit(notificationPanelStyle,'open')}>
 							
 							<IDETabbedViewContainer />
 							<NotificationsPanel />

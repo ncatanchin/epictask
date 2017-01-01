@@ -30,4 +30,5 @@ declare interface INotification {
 	floatVisible?:boolean
 	content:any
 	actions?:INotificationAction[]
+	opts?:any
 }

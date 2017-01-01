@@ -13,10 +13,11 @@ export * from "./WindowControls"
 
 
 export * from "./PromisedComponent"
-
+export * from './Tooltip'
 export * from './FlexLayout'
 export * from './TimeAgo'
 export * from './icon/Icon'
+export * from './icon/IconButton'
 export * from './Chip'
 export * from "./WorkIndicator"
 export * from "./Labels"

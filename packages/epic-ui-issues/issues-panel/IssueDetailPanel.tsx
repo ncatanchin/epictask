@@ -403,8 +403,9 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 			component={this}
 			id='issueDetailPanel'
 			autoFocus
-			style={!noSelectedIssues && styles.root}
+			style={mergeStyles(Styles.PositionRelative,!noSelectedIssues && styles.root)}
 		>
+			<div style={styles.top} />
 			{
 				noSelectedIssues ? <div/> :
 					!selectedIssue ?

@@ -31,8 +31,17 @@ function baseStyles(topStyles, theme, palette) {
 	const
 		{ text, primary, accent, background } = palette
 	
-	return [ Styles.FlexColumn, Styles.FlexScale, Styles.Fill, {
-		overflow: 'hidden'
+	return [ Styles.FlexColumn, Styles.FlexScale, Styles.Fill,Styles.PositionRelative, {
+		overflow: 'hidden',
+		
+		left: [Styles.PositionAbsolute,{
+			zIndex: 2,
+			top: 0,
+			left: 0,
+			height: '100%',
+			width: rem(0.2),
+			backgroundColor: primary.hue3
+		}]
 	} ]
 }
 
@@ -166,7 +175,8 @@ export class NotificationsPanel extends React.Component<INotificationsPanelProps
 		const { styles,notifications, notificationsOpen } = this.props
 		
 		return <div className="notificationList" style={styles}>
-			{notificationsOpen && <NotificationsVisibleList
+			<div style={styles.left}/>
+			<NotificationsVisibleList
 				items={notifications}
 				itemCount={notifications.size}
 				itemBuilder={this.buildItem}
@@ -175,7 +185,7 @@ export class NotificationsPanel extends React.Component<INotificationsPanelProps
 				rowTypeProvider={this.getRowType}
 				itemHeight={this.getItemHeight}
 			
-			/>}
+			/>
 		</div>
 	}
 	

@@ -120,7 +120,7 @@ export function DefaultTheme(palette) {
 	
 		
 	const
-		inactiveColor = colorDarken(primary.hue1,20),
+		inactiveColor = colorDarken(primary.hue1,15),
 		focusStyle = {
 			boxShadow: `0 0 0.5rem ${colorAlpha(accent.hue1, 1)}`
 		},
