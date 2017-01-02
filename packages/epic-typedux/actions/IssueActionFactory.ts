@@ -987,7 +987,7 @@ export class IssueActionFactory {
 			const
 				electron = require('electron'),
 				{remote} = electron,
-				dialog = getValue(() => remote && remote.dialog,electron.dialog)
+				{dialog,shell} = remote || electron
 			
 			dialog.showMessageBox(remote && remote.getCurrentWindow(),{
 				type: "question",
@@ -1002,6 +1002,11 @@ export class IssueActionFactory {
 						break
 					case 1:
 						//VIEW ON GITHUB
+						const
+							url = `https://github.com/${repo.full_name}/issues/${issue.number}`
+						
+						log.debug(`Opening URL: ${url}`)
+						shell.openExternal(url)
 						break
 					case 2:
 						//CANCEL
