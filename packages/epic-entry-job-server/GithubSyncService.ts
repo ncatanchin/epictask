@@ -21,7 +21,7 @@ const
 		hotInstance:GithubSyncService
 	}
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Job Service for managing all operations

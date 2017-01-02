@@ -7,7 +7,7 @@ import { getStores, chunkSave } from "epic-database-client"
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 export namespace NotificationSync {
 	

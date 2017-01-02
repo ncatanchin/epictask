@@ -21,7 +21,7 @@ const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 let
 	itemCount = 0
@@ -153,25 +153,32 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 			) || !shallowEquals(nextState, this.state)
 	}
 	
-	private openIssue = async (n:GithubNotification) => {
-		if (n.subject.type !== 'Issue')
-			return
-		
+	private openItem = async (n:GithubNotification) => {
 		const
-			{url} = n.subject,
+			electron = require('electron'),
+			{remote} = electron,
+			{shell} = remote || electron,
+			{ url } = n.subject,
 			parts = url.split('/'),
-			issueNumber = parseInt(parts[parts.length - 1],10),
+			itemNumber = parseInt(parts[ parts.length - 1 ], 10),
 			repoId = n.repository.id
 		
-		let
-			issue = new Issue({
-				'number':issueNumber,
-				title: n.subject.title,
-				repoId,
-				repo: n.repository
-			})
-		
-		getIssueActions().openIssueViewer(issue)
+		if (n.subject.type === 'Issue') {
+			
+			
+			
+			let
+				issue = new Issue({
+					'number': itemNumber,
+					title: n.subject.title,
+					repoId,
+					repo: n.repository
+				})
+			
+			getIssueActions().openIssueViewer(issue)
+		} else if (n.subject.type === 'PullRequest') {
+			shell.openExternal(`https://github.com/${n.repository.full_name}/pull/${itemNumber}`)
+		}
 	}
 	
 	private showOptions = () => {
@@ -189,7 +196,7 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 		
 		return <div
 			onContextMenu={this.showOptions}
-			onDoubleClick={() => this.openIssue(notification)}
+			onDoubleClick={() => this.openItem(notification)}
 			onClick={() => getUIActions().setSelectedNotificationId(notification.id)}
 			style={[styles,participating && unread && styles.participatingUnread,isSelected && styles.selected,rowState.style]}>
 			<UnreadDot notification={notification} />

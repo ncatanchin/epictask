@@ -962,6 +962,8 @@ export class IssueActionFactory {
 		uiActions.openWindow(getPages().CommentEditDialog.makeURI(issue, comment))
 	}
 	
+	
+	
 	/**
 	 * Open issue viewer for a specific issue
 	 *
@@ -991,22 +993,25 @@ export class IssueActionFactory {
 			
 			dialog.showMessageBox(remote && remote.getCurrentWindow(),{
 				type: "question",
-				buttons: ["Import Repo", "View on Github", "Cancel"],
+				buttons: ["View on Github","Import Repo", "Cancel"],
 				title: `View ${issue.title}`,
 				message: `The repo ${getValue(() => repo.full_name,'unknown')} has not been imported, would you like to import it or view the issue on Github`
+				
 			},(index) => {
 				log.debug(`selected index: ${index}`)
 				switch(index) {
 					case 0:
-						//IMPORT
-						break
-					case 1:
 						//VIEW ON GITHUB
 						const
 							url = `https://github.com/${repo.full_name}/issues/${issue.number}`
 						
 						log.debug(`Opening URL: ${url}`)
 						shell.openExternal(url)
+						break
+					case 1:
+						//IMPORT
+						getRepoActions().createAvailableRepo(repo.full_name)
+						
 						break
 					case 2:
 						//CANCEL

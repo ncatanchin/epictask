@@ -117,12 +117,10 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 		mkdir = require('mkdirp'),
 		winston = require('winston'),
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
-		
-		logDir = (DEBUG ?
-			path.dirname(cwd && cwd.length ? cwd : '/tmp') :
-			getAppConfig().paths.tempPath),
-		
-		logFilename = `${logDir}/logs/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
+		baseDir = !DEBUG ? getAppConfig().paths.tempPath : cwd && cwd.length ? cwd : '/tmp',
+		logDir = path.resolve(baseDir,'logs'),
+				
+		logFilename = `${logDir}/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
 	
 	// Create the log file root
 	mkdir.sync(logDir)

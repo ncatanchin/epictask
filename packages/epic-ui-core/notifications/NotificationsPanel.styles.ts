@@ -25,7 +25,7 @@ export default function baseStyles(topStyles, theme, palette) {
 			}],
 			
 			control: [Styles.FlexAuto,{
-				
+				fontSize: rem(1.8)
 			}]
 		}],
 		

@@ -70,19 +70,21 @@ function baseStyles(topStyles,theme,palette) {
 			
 			[Left]: [ FlexRow, FillHeight ],
 			[Right]: [ FlexRow, FillHeight ],
-			[Bottom]: [ FlexColumnReverse, FillWidth ],
+			[Bottom]: [ FlexColumnReverse, FillWidth,{
+				
+			} ],
 			[Popup]: [ FlexColumn, FillWidth ]
 			
 		} ],
 		
 		
 		tools: [ FlexScale, OverflowHidden, makeBorderRem(), {
-			
+			borderColor: primary.hue3,
 			
 			[Left]: [ FlexColumn, FillHeight, { borderLeftStyle: 'solid', borderLeftWidth: rem(0.1) } ],
 			[Right]: [ FlexColumn, FillHeight, { borderRightStyle: 'solid', borderRightWidth: rem(0.1) } ],
 			[Popup]: [ FlexRow, FillWidth, { borderTopStyle: 'solid', borderTopWidth: rem(0.1) } ],
-			[Bottom]: [ FlexRow, FillWidth, { borderBottomStyle: 'solid', borderBottomWidth: rem(0.1) } ],
+			[Bottom]: [ FlexRow, FillWidth, { borderBottomStyle: 'solid', borderBottomWidth: rem(0.2) } ],
 		} ],
 		
 		tool: [ FlexColumn, FlexScale, OverflowHidden, {

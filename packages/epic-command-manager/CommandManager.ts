@@ -33,7 +33,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Command container registration

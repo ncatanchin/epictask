@@ -35,7 +35,7 @@ import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import { shallowEquals } from "epic-global/ObjectUtil"
-import { isList } from "typeguard"
+import { isList, isNumber, isString } from "typeguard"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 
 const log = getLogger(__filename)
@@ -629,48 +629,64 @@ export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	 *
 	 * @param repo
 	 */
-	@ActionThunk()
-	createAvailableRepo(repo:Repo) {
-		return async(dispatch, getState) => {
-			try {
-				const
-					actions = this.withDispatcher(dispatch, getState),
-					repoStore = getStores().repo,
-					availRepoStore = getStores().availableRepo
-				
-				let availRepo:AvailableRepo = new AvailableRepo({
-					id: repo.id,
-					repoId: repo.id,
-					enabled: true,
-					deleted: false
-				})
+	async createAvailableRepo(repo:Repo)
+	async createAvailableRepo(repoName:string)
+	async createAvailableRepo(repoOrRepoName:Repo|string) {
+		let
+			repo:Repo
+		
+		try {
+			const
+				repoStore = getStores().repo,
+				availRepoStore = getStores().availableRepo
+			
+			if (isString(repoOrRepoName)) {
+				repo = await createClient().repo(repoOrRepoName)
 				
 				let
-					savedRepo = await repoStore.get(repo.id)
+					existingRepo = await repoStore.get(repo.id)
 				
-				if (!savedRepo) {
-					log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
-					await repoStore.save(repo)
-				}
+				if (existingRepo)
+					repo = cloneObjectShallow(existingRepo,repo)
 				
-				const
-					existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)
-				
-				log.debug('Saving new available repo as ', availRepo.repoId, 'existing', existingAvailRepo && JSON.stringify(existingAvailRepo, null, 4))
-				if (existingAvailRepo)
-					availRepo = cloneObjectShallow(existingAvailRepo, availRepo)
-				
-				await availRepoStore.save(availRepo)
-				await actions.loadAvailableRepos()
-				
-				actions.syncRepo([ availRepo.repoId ], true)
-				getNotificationCenter().notify(`Added ${repo.full_name}, initiating sync now`)
-			} catch (err) {
-				log.error(`Failed to create/import repo`,err)
-				getNotificationCenter().notifyError(`Import of ${repo.full_name} failed: ${err.message}`)
+				repo = await repoStore.save(repo)
+			} else {
+				repo = repoOrRepoName
 			}
 			
+			let availRepo:AvailableRepo = new AvailableRepo({
+				id: repo.id,
+				repoId: repo.id,
+				enabled: true,
+				deleted: false
+			})
+			
+			let
+				savedRepo = await repoStore.get(repo.id)
+			
+			if (!savedRepo) {
+				log.debug(`Create available repo request with a repo that isn't in the db - probably direct query result from GitHUb, adding`)
+				await repoStore.save(repo)
+			}
+			
+			const
+				existingAvailRepo:AvailableRepo = await availRepoStore.get(repo.id)
+			
+			log.debug('Saving new available repo as ', availRepo.repoId, 'existing', existingAvailRepo && JSON.stringify(existingAvailRepo, null, 4))
+			if (existingAvailRepo)
+				availRepo = cloneObjectShallow(existingAvailRepo, availRepo)
+			
+			await availRepoStore.save(availRepo)
+			await this.loadAvailableRepos()
+			
+			this.syncRepo([ availRepo.repoId ], true)
+			getNotificationCenter().notify(`Added ${repo.full_name}, initiating sync now`)
+		} catch (err) {
+			log.error(`Failed to create/import repo`,err)
+			getNotificationCenter().notifyError(`Import of ${getValue(() => repo.full_name,'repo is null')} failed: ${err.message}`)
 		}
+			
+		
 	}
 	
 	/**

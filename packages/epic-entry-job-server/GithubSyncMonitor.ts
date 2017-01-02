@@ -19,7 +19,7 @@ const
 	}
 
 // DEBUG ENABLE
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Receives either or both repo events and issue events

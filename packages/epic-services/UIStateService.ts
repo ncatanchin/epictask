@@ -7,7 +7,7 @@ import { getUIActions } from "epic-typedux/provider"
 const
 	log = getLogger(__filename)
 
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 @RegisterService(ProcessType.UI)
 export default class UIStateService extends BaseService {

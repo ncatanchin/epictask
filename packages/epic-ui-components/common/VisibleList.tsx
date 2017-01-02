@@ -18,7 +18,7 @@ const
 
 
 // FOR DEBUG INFO
-log.setOverrideLevel(LogLevel.DEBUG)
+//log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = (topStyles,theme,palette) => ({
 	root: [ FlexColumn,FlexScale, PositionRelative, {
