@@ -1,13 +1,20 @@
 // Imports
-import { IThemedAttributes, ThemedStyles, Themed } from 'epic-styles'
-import { GithubNotification } from "epic-models"
-import { IRowState, RepoLabel, TimeAgo } from "epic-ui-components/common"
-import { Icon } from "epic-ui-components/common/icon/Icon"
+import { connect } from "react-redux"
+import { createStructuredSelector, createSelector } from "reselect"
+import {
+	IThemedAttributes,
+	ThemedStyles,
+	Themed,
+	colorDarken,
+	makeHeightConstraint,
+	makeWidthConstraint,
+	colorAlpha
+} from "epic-styles"
+import { GithubNotification, Issue } from "epic-models"
+import { IRowState, RepoLabel, TimeAgo, PureRender, Icon, IconButton } from "epic-ui-components"
 import { shallowEquals, getMillis } from "epic-global"
-import { colorDarken, makeHeightConstraint, makeWidthConstraint, colorAlpha } from "epic-styles/styles"
-import { IconButton } from "epic-ui-components/common/icon/IconButton"
-import filterProps from 'react-valid-props'
-import { getUIActions } from "epic-typedux/provider"
+import { getUIActions, selectedNotificationIdSelector } from "epic-typedux"
+import { getIssueActions } from "epic-typedux/provider"
 
 // Constants
 const
@@ -31,12 +38,18 @@ const
 function baseStyles(topStyles, theme, palette) {
 	
 	const
-		{ success,warn,alternateText,text, primary, accent, background } = palette
+		{ success,secondary,warn,alternateText,text, primary, accent, background } = palette
 	
 	return [ Styles.FlexRowCenter, Styles.CursorPointer,Styles.FlexAuto, Styles.FillWidth, Styles.makePaddingRem(0.5,1),Styles.makeTransition(['box-shadow']),{
 		backgroundColor: background,
 		borderBottom: `1px solid ${colorDarken(theme.inactiveColor,5)}`,
 		boxShadow: 'none',
+		
+		selected: [{
+			backgroundColor: secondary.hue1,
+			boxShadow: 'none'
+		}],
+		
 		[Styles.CSSHoverState]: [{
 			//boxShadow: `inset 0 0rem 0.3rem 0.5rem ${colorAlpha(warn.hue1, 0.7)}`,
 		}],
@@ -110,7 +123,15 @@ export interface INotificationListItemState {
 
 // If you have a specific theme key you want to
 // merge provide it as the second param
+@connect(() => createStructuredSelector({
+	isSelected: createSelector(
+		selectedNotificationIdSelector,
+		(state,props:INotificationListItemProps) => props.rowState.item as GithubNotification,
+		(id,notification) => notification && notification.id === id
+	)
+}))
 @ThemedStyles(baseStyles)
+@PureRender
 export class NotificationListItem extends React.Component<INotificationListItemProps,INotificationListItemState> {
 	
 	constructor(props,context) {
@@ -132,16 +153,45 @@ export class NotificationListItem extends React.Component<INotificationListItemP
 			) || !shallowEquals(nextState, this.state)
 	}
 	
+	private openIssue = async (n:GithubNotification) => {
+		if (n.subject.type !== 'Issue')
+			return
+		
+		const
+			{url} = n.subject,
+			parts = url.split('/'),
+			issueNumber = parseInt(parts[parts.length - 1],10),
+			repoId = n.repository.id
+		
+		let
+			issue = new Issue({
+				'number':issueNumber,
+				title: n.subject.title,
+				repoId,
+				repo: n.repository
+			})
+		
+		getIssueActions().openIssueViewer(issue)
+	}
+	
+	private showOptions = () => {
+		
+	}
+	
 	render() {
 		const
-			{ styles,rowState } = this.props,
+			{ styles,rowState,isSelected } = this.props,
 			notification = rowState.item,
 			{unread} = notification,
 			participating = notification.reason !== 'subscribed',
 			{subject} = notification,
 			entityType = subject.type
 		
-		return <div style={[styles,participating && unread && styles.participatingUnread,rowState.style]}>
+		return <div
+			onContextMenu={this.showOptions}
+			onDoubleClick={() => this.openIssue(notification)}
+			onClick={() => getUIActions().setSelectedNotificationId(notification.id)}
+			style={[styles,participating && unread && styles.participatingUnread,isSelected && styles.selected,rowState.style]}>
 			<UnreadDot notification={notification} />
 			<Icon
 				style={styles.subjectIcon}

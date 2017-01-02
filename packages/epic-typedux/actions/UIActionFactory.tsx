@@ -4,20 +4,20 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter, guard, ContextMenu, notifyError
+	nilFilter, guard, ContextMenu, notifyError, notifySuccess
 } from "epic-global"
-import { UIState } from "../state/UIState"
+
 import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
  
 import {WindowConfigDialogDefaults,getWindowManagerClient} from "epic-process-manager-client"
 
-import {View} from "epic-typedux/state/window"
-import { toolPanelsSelector } from "epic-typedux/selectors/UISelectors"
-import { windowsSelector } from "epic-typedux/selectors"
+import {UIState,TNotificationsMode,View} from "epic-typedux/state"
+import { toolPanelsSelector,windowsSelector } from "epic-typedux/selectors"
 import { isNil } from "typeguard"
 import { getStores } from "epic-database-client"
 import { GithubNotification } from "epic-models"
 import { createClient } from "epic-github"
+
 
 
 // Import only as type - in case we are not on Renderer
@@ -430,6 +430,17 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	}
 	
 	/**
+	 * Set selected notification id
+	 *
+	 * @param selectedNotificationId
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setSelectedNotificationId(selectedNotificationId:number) {
+		return (state) => state.merge({selectedNotificationId})
+	}
+	
+	/**
 	 * Mark notification read
 	 *
 	 * @param notification
@@ -440,11 +451,46 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 			await createClient().notificationRead(notification)
 			notification = cloneObjectShallow(notification,{unread:false})
 			await getStores().notification.save(notification)
+			return true
 		} catch (err) {
 			log.error(`failed to mark read`,err)
 			notifyError(`Unable to mark read: ${err.message}`)
-			
+			return false
 		}
+	}
+	
+	/**
+	 * Mark all notifications as read
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async markAllNotificationsRead() {
+		const
+			notifications = this.state.notifications.filter(it => it.unread)
+		
+		let
+			result
+		
+		for (let n of notifications.toJS()) {
+			result = await this.markNotificationRead(n)
+			
+			if (result === false)
+				break
+		}
+		
+		if (result)
+			notifySuccess(`Marked ${notifications.size} notifications as read`)
+	}
+	
+	/**
+	 * Set notifications mode
+	 *
+	 * @param notificationsMode
+	 * @returns {(state:any)=>any}
+	 */
+	@ActionReducer()
+	setNotificationsMode(notificationsMode:TNotificationsMode) {
+		return state => state.merge({notificationsMode})
 	}
 	
 	/**

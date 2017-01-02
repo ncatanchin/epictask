@@ -1,21 +1,24 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
-import { createStructuredSelector, createSelector } from 'reselect'
-import { PureRender } from 'epic-ui-components'
-import { IThemedAttributes, ThemedStyles, Themed } from 'epic-styles'
+import { List } from "immutable"
+import { connect } from "react-redux"
+import { createStructuredSelector } from "reselect"
+import { PureRender, VisibleList, IRowTypeConfig, IconButton } from "epic-ui-components"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import {
-	unreadNotificationCountSelector, notificationsSelector,
-	participatingUnreadNotificationCountSelector, notificationsOpenSelector
-} from "epic-typedux/selectors"
+	unreadNotificationCountSelector,
+	notificationsSelector,
+	participatingUnreadNotificationCountSelector,
+	notificationsOpenSelector,
+	notificationsModeSelector,
+	getUIActions
+} from "epic-typedux"
 import { GithubNotification } from "epic-models"
-import { VisibleList, IRowTypeConfig } from "epic-ui-components/common"
-import { getValue } from "typeguard"
-import { NotificationListItem } from "epic-ui-core/notifications/NotificationListItem"
-import { Icon } from "epic-ui-components/common/icon/Icon"
-import { makeHeightConstraint, makeWidthConstraint } from "epic-styles/styles"
+import { NotificationListItem } from "./NotificationListItem"
 import { CommandComponent, CommandContainerBuilder } from "epic-command-manager-ui"
 import { CommonKeys } from "epic-command-manager"
+import baseStyles from "./NotificationsPanel.styles"
+import { ContextMenu } from "epic-global"
+import { Button } from "epic-ui-components"
 
 
 // Constants
@@ -26,34 +29,17 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-function baseStyles(topStyles, theme, palette) {
-	
-	const
-		{ text, primary, accent, background } = palette
-	
-	return [ Styles.FlexColumn, Styles.FlexScale, Styles.Fill,Styles.PositionRelative, {
-		overflow: 'hidden',
-		
-		left: [Styles.PositionAbsolute,{
-			zIndex: 2,
-			top: 0,
-			left: 0,
-			height: '100%',
-			width: rem(0.2),
-			backgroundColor: primary.hue3
-		}]
-	} ]
-}
 
 
 /**
  * INotificationsPanelProps
  */
 export interface INotificationsPanelProps extends IThemedAttributes {
-	notificationsOpen?:boolean
+	open?:boolean
 	notifications?:List<GithubNotification>
 	unreadCount?:number
 	participatingUnreadCount?:number
+	mode?:'unread'|'all'
 }
 
 /**
@@ -71,7 +57,8 @@ export interface INotificationsPanelState {
  **/
 
 @connect(createStructuredSelector({
-	notificationsOpen: notificationsOpenSelector,
+	mode: notificationsModeSelector,
+	open: notificationsOpenSelector,
 	notifications: notificationsSelector,
 	unreadCount: unreadNotificationCountSelector,
 	participatingUnreadCount: participatingUnreadNotificationCountSelector
@@ -80,6 +67,10 @@ export interface INotificationsPanelState {
 @CommandComponent()
 @PureRender
 export class NotificationsPanel extends React.Component<INotificationsPanelProps,INotificationsPanelState> {
+	
+	static defaultProps = {
+		mode: 'unread'
+	}
 	
 	/**
 	 * Build commands
@@ -171,21 +162,49 @@ export class NotificationsPanel extends React.Component<INotificationsPanelProps
 		return convertRem(6)
 	}
 	
+	
+	private showOptions = () => {
+		const
+			{mode} = this.props,
+			unreadOnly = mode === 'unread'
+		
+		ContextMenu.create()
+			.addCheckbox(`Unread notifications only`,unreadOnly,() => !unreadOnly && getUIActions().setNotificationsMode('unread'))
+			.addCheckbox(`All notifications`,!unreadOnly,() => unreadOnly && getUIActions().setNotificationsMode('all'))
+			.addSeparator()
+			.addCommand(`Mark all read`,this.markAllRead)
+			.popup()
+	}
+	
+	private markAllRead = () => getUIActions().markAllNotificationsRead()
+	
 	render() {
-		const { styles,notifications, notificationsOpen } = this.props
+		const
+			{ styles,notifications, mode,open } = this.props
 		
 		return <div className="notificationList" style={styles}>
 			<div style={styles.left}/>
-			<NotificationsVisibleList
-				items={notifications}
-				itemCount={notifications.size}
-				itemBuilder={this.buildItem}
-				itemKeyFn={(listItems,item,index) => index}
-				initialItemsPerPage={50}
-				rowTypeProvider={this.getRowType}
-				itemHeight={this.getItemHeight}
-			
-			/>
+			<div style={styles.header}>
+				<div style={styles.header.mode}>{mode === 'unread' ? "Unread notifications only" : "All notifications"}</div>
+				<IconButton
+					style={styles.header.control}
+					onClick={this.showOptions}>arrow_drop_down</IconButton>
+				{/*<Button onClick={this.markAllRead}>All Read</Button>*/}
+			</div>
+			{notifications.size < 1 ?
+				<div style={styles.empty}>
+					0 notifications
+				</div> :
+				<NotificationsVisibleList
+					items={notifications}
+					itemCount={notifications.size}
+					itemBuilder={this.buildItem}
+					itemKeyFn={(listItems,item,index) => index}
+					initialItemsPerPage={50}
+					rowTypeProvider={this.getRowType}
+					itemHeight={this.getItemHeight}
+				/>
+			}
 		</div>
 	}
 	

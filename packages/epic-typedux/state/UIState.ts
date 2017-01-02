@@ -21,7 +21,7 @@ export enum StatusType {
 	Loading
 }
 
-
+export type TNotificationsMode = 'unread'|'all'
 
 
 /**
@@ -44,6 +44,8 @@ export const UIStateRecord = Record({
 	ready: false,
 	user: null,
 	
+	selectedNotificationId: null,
+	notificationsMode: 'unread',
 	notificationsOpen: false,
 	notificationsLoaded: false,
 	notificationsLoading: false,
@@ -137,6 +139,8 @@ export class UIState extends UIStateRecord implements State {
 	toolPanels:Map<string,IToolPanel>
 	toolDragging:boolean
 	
+	selectedNotificationId:number
+	notificationsMode:TNotificationsMode
 	notificationsOpen:boolean
 	notificationsLoaded: boolean
 	notificationsLoading: boolean

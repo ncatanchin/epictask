@@ -962,6 +962,58 @@ export class IssueActionFactory {
 		uiActions.openWindow(getPages().CommentEditDialog.makeURI(issue, comment))
 	}
 	
+	/**
+	 * Open issue viewer for a specific issue
+	 *
+	 * @param issue
+	 */
+	async openIssueViewer(issue:Issue) {
+		
+		issue.repo = issue.repo || (issue.repoId && await getStores().repo.get(issue.repoId))
+		
+		const
+			{repo} = issue,
+			availRepo = repo && await getStores().availableRepo.get(issue.repo.id),
+			showLocalView = () => {
+				const
+					uri = (<any>RouteRegistryScope.asMap()).IssueViewDialog.makeURI(issue)
+				
+				getUIActions().openWindow(uri)
+			}
+		
+		if (availRepo) {
+			showLocalView()
+		} else {
+			const
+				electron = require('electron'),
+				{remote} = electron,
+				dialog = getValue(() => remote && remote.dialog,electron.dialog)
+			
+			dialog.showMessageBox(remote && remote.getCurrentWindow(),{
+				type: "question",
+				buttons: ["Import Repo", "View on Github", "Cancel"],
+				title: `View ${issue.title}`,
+				message: `The repo ${getValue(() => repo.full_name,'unknown')} has not been imported, would you like to import it or view the issue on Github`
+			},(index) => {
+				log.debug(`selected index: ${index}`)
+				switch(index) {
+					case 0:
+						//IMPORT
+						break
+					case 1:
+						//VIEW ON GITHUB
+						break
+					case 2:
+						//CANCEL
+						break
+				}
+			})
+		}
+		
+		
+		
+		
+	}
 	
 	//
 	//

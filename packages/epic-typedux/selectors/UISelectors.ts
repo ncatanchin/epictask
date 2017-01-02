@@ -8,6 +8,7 @@ import {
 	getValue, getMillis
 } from "epic-global"
 import { GithubNotification } from "epic-models"
+import { TNotificationsMode } from "epic-typedux/state/UIState"
 
 
 const
@@ -20,26 +21,53 @@ export const uiStateSelector: (state) => UIState = createSelector(
 )
 
 
+export const notificationsModeSelector:TSelector<TNotificationsMode> = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.notificationsMode
+)
+
 
 export const notificationsSelector:TSelector<List<GithubNotification>> = createSelector(
 	uiStateSelector,
-	(uiState:UIState) => uiState.notifications.sort((a,b) => {
+	notificationsModeSelector,
+	(uiState:UIState,mode:TNotificationsMode) => {
+		let
+			notifications = uiState.notifications.sort((a, b) => {
+			
+			// SORT DESCENDING WITH PARTICIPATING AT TOP
+			const
+				aPart = a.reason !== 'subscribed',
+				bPart = b.reason !== 'subscribed',
+				aTime = a.updated_at,// new Date(a.updated_at).getTime(),
+				bTime = b.updated_at,//new Date(b.updated_at).getTime(),
+				timeComp = aTime === bTime ? 0 : aTime < bTime ? 1 : -1
+			
+			return ((aPart && bPart) || (!aPart && !bPart)) ?
+				timeComp : // SAME GROUP - SO SORT BY TIME
+				aPart ? -1 : // OR A IS PARTICIPATING
+					1 // OR B
+			
+		}) as List<GithubNotification>
 		
-		// SORT DESCENDING WITH PARTICIPATING AT TOP
-		const
-			aPart = a.reason !== 'subscribed',
-			bPart = b.reason !== 'subscribed',
-			aTime = a.updated_at,// new Date(a.updated_at).getTime(),
-			bTime = b.updated_at,//new Date(b.updated_at).getTime(),
-			timeComp = aTime === bTime ? 0 : aTime < bTime ? 1 : -1
+		if (mode === 'unread')
+			notifications = notifications.filter(it => it.unread === true) as List<GithubNotification>
 		
-		return ((aPart && bPart) || (!aPart && !bPart)) ?
-			timeComp : // SAME GROUP - SO SORT BY TIME
-			aPart ? -1 : // OR A IS PARTICIPATING
-				1 // OR B
-		
-	}) as List<GithubNotification>
+		return notifications
+	}
 )
+
+
+export const selectedNotificationIdSelector:TSelector<number> = createSelector(
+	uiStateSelector,
+	(state:UIState) => state.selectedNotificationId
+)
+
+export const selectedNotificationSelector:TSelector<GithubNotification> = createSelector(
+	selectedNotificationIdSelector,
+	notificationsSelector,
+	(id:number,notifications:List<GithubNotification>) => notifications.find(it => it.id === id)
+)
+
 
 export const unreadNotificationCountSelector:TSelector<number> = createSelector(
 	notificationsSelector,

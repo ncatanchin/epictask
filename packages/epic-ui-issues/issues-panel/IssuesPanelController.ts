@@ -365,10 +365,8 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 			return log.debug(`Can only open viewer for a single selected issue`)
 		}
 		
-		const
-			uri = (<any>RouteRegistryScope.asMap()).IssueViewDialog.makeURI(this.getSelectedIssue())
+		getIssueActions().openIssueViewer(this.getSelectedIssue())
 		
-		getUIActions().openWindow(uri)
 	}
 	
 	/**
