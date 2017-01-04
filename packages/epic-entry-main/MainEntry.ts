@@ -45,23 +45,7 @@ function loadMainApp() {
 		await getServiceManager().stop()
 	}
 
-	/**
-	 * Callback from open if already running
-	 */
-	function onFocus() {
-		
-		// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
-		const
-			allWindows = BrowserWindow.getAllWindows(),
-			win = allWindows && allWindows[ 0 ]
-		
-		if (win) {
-			win && win.isMinimized() && win.restore()
-			win.focus()
-		}
-		
-		
-	}
+	
 	
 	
 	/**
@@ -151,43 +135,67 @@ function loadMainApp() {
 	/**
 	 * App started
 	 */
-	function onStart() {
-		// ATTACH SERVICE MANAGER STOP TO WILL-QUIT
-		app.on('will-quit', stop)
-		app.on('open-file', onOpen)
-		app.on('open-url', onOpen)
-		
-		Cleaner.registerCleaner()
-		
-		return boot()
-	}
 	
-	if (checkSingleInstance(app, onFocus)) {
-		log.debug(`Is single instance`)
-		
-		if (app.isReady())
-			onStart()
-		else
-			app.on('ready', onStart)
-	}
+	// ATTACH SERVICE MANAGER STOP TO WILL-QUIT
+	app.on('will-quit', stop)
+	app.on('open-file', onOpen)
+	app.on('open-url', onOpen)
+	
+	Cleaner.registerCleaner()
+	
+	boot()
+
 	
 	
-	if (module.hot)
-		module.hot.accept(() => log.info(`HMR reload`,__filename))
+	
 	
 	
 }
-
 
 /**
- * Clean if --clean is passed
+ * Start the entire app
  */
-
-if (Cleaner.isCleanRequested()) {
-	Cleaner.clean()
+function start() {
+	if (Cleaner.isCleanRequested()) {
+		Cleaner.clean()
+	}
+	require('./AppUpdateManager')
+	loadMainApp()
 }
 
-loadMainApp()
+/**
+ * Callback from open if already running
+ */
+function onSingletonFocus() {
+	
+	// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
+	const
+		allWindows = BrowserWindow.getAllWindows(),
+		win = allWindows && allWindows[ 0 ]
+	
+	if (win) {
+		win && win.isMinimized() && win.restore()
+		win.focus()
+	}
+	
+	
+}
+
+// FIRST - MAKE SURE WE ARE THE SINGLE INSTANCE
+if (checkSingleInstance(app, onSingletonFocus)) {
+	log.debug(`Is single instance`)
+	
+	if (app.isReady())
+		start()
+	else
+		app.on('ready', start)
+}
+
+
+if (module.hot)
+	module.hot.accept(() => log.info(`HMR reload`,__filename))
+
+
 
 export {
 	

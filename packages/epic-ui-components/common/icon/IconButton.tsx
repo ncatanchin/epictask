@@ -1,7 +1,4 @@
 // Imports
-import { Map, Record, List } from "immutable"
-import { connect } from 'react-redux'
-import { createStructuredSelector } from 'reselect'
 import { PureRender } from '../PureRender'
 import { ThemedStyles, IThemedAttributes } from 'epic-styles'
 import { Icon, IIconProps } from "./Icon"
@@ -45,13 +42,6 @@ export interface IIconButtonState {
  * @class IconButton
  * @constructor
  **/
-
-@connect(createStructuredSelector({
-	// Props mapping go here, use selectors
-}))
-
-// If you have a specific theme key you want to
-// merge provide it as the second param
 @ThemedStyles(baseStyles)
 @PureRender
 export class IconButton extends React.Component<IIconButtonProps,IIconButtonState> {

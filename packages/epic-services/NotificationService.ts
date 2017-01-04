@@ -114,7 +114,7 @@ export class NotificationService extends BaseService {
 						this.pendingNotifications[msg.id] = new Notification(title,assign({
 							//title:
 							body: msg.content || msg.message || 'no message available',
-							icon: WindowIconPath128
+							//icon: WindowIconPath128
 						},msg.opts))
 					}
 					

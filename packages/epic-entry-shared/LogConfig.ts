@@ -117,7 +117,7 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 		mkdir = require('mkdirp'),
 		winston = require('winston'),
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
-		baseDir = !DEBUG ? getAppConfig().paths.tempPath : cwd && cwd.length ? cwd : '/tmp',
+		baseDir = !DEBUG ? getAppConfig().paths.userDataPath : cwd && cwd.length ? cwd : '/tmp',
 		logDir = path.resolve(baseDir,'logs'),
 				
 		logFilename = `${logDir}/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
@@ -135,7 +135,9 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 		filename: logFilename,
 		tailable: true,
 		colorize: true,
-		json: false
+		json: false,
+		maxsize: 5000000,
+		maxFiles: 5
 	})
 	
 	// Expose the main logger - really so the UI/Renderer can attach if needed
