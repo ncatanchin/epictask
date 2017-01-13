@@ -1,6 +1,6 @@
 
 import { IThemedAttributes, ThemedStyles } from "epic-styles"
-import { DragTypes } from "epic-global"
+import { DragTypes, guard } from "epic-global"
 import { getUIActions } from "epic-typedux"
 import { Icon,Button,PureRender } from "epic-ui-components"
 import { DragSource, DragSourceConnector, DragSourceMonitor } from "react-dnd"
@@ -138,8 +138,10 @@ export class ToolGutterButton extends React.Component<IToolGutterButtonProps,any
 	 */
 	componentDidMount() {
 		if (this.props.dndPreview)
-			this.props.dndPreview(getEmptyImage(), {
-				captureDraggingState: true
+			guard(() => {
+				this.props.dndPreview(getEmptyImage(), {
+					captureDraggingState: true
+				})
 			})
 	}
 	
@@ -159,7 +161,12 @@ export class ToolGutterButton extends React.Component<IToolGutterButtonProps,any
 				dndDragging,
 				buttonStyle,
 				dndConnect
-			} = this.props,
+			} = this.props
+		
+		if (!panel)
+			return null
+		
+		const
 			{
 				location
 			} = panel,

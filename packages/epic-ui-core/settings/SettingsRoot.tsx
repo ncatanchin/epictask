@@ -33,7 +33,7 @@ import {
 	setPaletteCreator
 } from "epic-styles"
 import { Checkbox } from "material-ui"
-import { getUIActions, getAppActions } from "epic-typedux"
+import { getUIActions, getAppActions,getAuthActions } from "epic-typedux"
 
 import { ContainerNames } from "epic-command-manager"
 
@@ -50,6 +50,7 @@ import { KeyMapEditor } from "./KeyMapEditor"
 import { SettingsSection, SettingsField } from "./SettingsElements"
 import { ITab } from "epic-ui-components/common/tabs"
 import { SheetRoot } from "epic-ui-components/layout/sheet"
+
 
 const
 	log = getLogger(__filename),
@@ -133,7 +134,7 @@ const baseStyles = (topStyles, theme, palette) => {
 				} ]
 			} ],
 			
-			row: [ FlexAuto, FlexRowCenter, Styles.makePaddingRem(1, 2), {
+			row: [ Styles.FlexAuto, Styles.FlexRowCenter, Styles.makePaddingRem(1, 2), {
 				//backgroundColor: primary.hue2,
 				
 			} ],
@@ -272,7 +273,10 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 				value: name,
 				content: <span>{name}</span>
 			})),
-			paletteName = getPaletteName()
+			paletteName = getPaletteName(),
+		
+			// DROPBOX TOKEN
+			{dropboxToken} = settings
 			
 			
 		return <div style={styles.form}>
@@ -304,7 +308,6 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							/>
 						</div>
 					</SettingsField>
-				
 				</SettingsSection>
 				
 				
@@ -321,6 +324,29 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							          	
 							          	this.notifyNativeNotifications()
 							          }}/>
+					</SettingsField>
+				</SettingsSection>
+				
+				
+				{/* DROPBOX LINK */}
+				
+				<SettingsSection styles={styles} iconName="dropbox" iconSet="fa" title="Dropbox Asset Storage">
+					<SettingsField styles={styles}
+					               label="Link Dropbox for storing images in markdown editor">
+						
+						{!dropboxToken ?
+							<Button style={styles.form.inputCell} onClick={() => getAuthActions().startDropboxAuth()}>
+								<div>
+									<Icon iconSet="fa" iconName="dropbox"/> Link Dropbox
+								</div>
+							</Button>
+							:
+							<Button style={styles.form.inputCell} onClick={() => getAuthActions().unlinkDropbox()}>
+								<div>
+									<Icon iconSet="fa" iconName="dropbox"/> Unlink Dropbox
+								</div>
+							</Button>
+						}
 					</SettingsField>
 				</SettingsSection>
 				

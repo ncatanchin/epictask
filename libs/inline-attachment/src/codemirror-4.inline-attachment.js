@@ -5,8 +5,8 @@
  *
  * Call inlineAttachment.attach(editor) to attach to a codemirror instance
  */
-(function() {
-  'use strict';
+function init() {
+  
 
   var codeMirrorEditor = function(instance) {
 
@@ -86,4 +86,7 @@
 
   inlineAttachment.editors.codemirror4 = codeMirrorEditor4;
 
-})();
+  return inlineAttachment
+}
+
+module.exports = init()

@@ -122,7 +122,32 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		return user
 		
 	}
-
+	
+	/**
+	 * Link dropbox account
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async startDropboxAuth() {
+		
+		const
+			DropboxOAuthWindow = require('./auth/DropboxOAuthWindow').default,
+			authRequest = new DropboxOAuthWindow()
+		
+		authRequest.start((err,dropboxToken) => {
+			log.debug(`Dropbox auth result: ${dropboxToken}`,err)
+			
+			updateSettings({dropboxToken: !err && dropboxToken ? dropboxToken : null })
+		})
+	}
+	
+	/**
+	 * unlink dropbox account
+	 */
+	unlinkDropbox() {
+		updateSettings({dropboxToken: null })
+	}
+	
 	@ActionThunk()
 	startAuth() {
 		return (dispatch,getState) => {
@@ -155,6 +180,8 @@ export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 		}
 	}
 
+	
+	
 	@ActionThunk()
 	setAuthResult(err:Error,token:string) {
 		return async (dispatch,getState) => {

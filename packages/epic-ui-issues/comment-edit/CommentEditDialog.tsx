@@ -205,10 +205,17 @@ export class CommentEditDialog extends React.Component<ICommentEditDialogProps,I
 	 * @param data
 	 */
 	onDrop = (data: DataTransfer) => {
-		const
-			mde = getValue(() => this.state.mdEditor)
-		
-		mde.onDrop(data)
+		try {
+			const
+				mde = getValue(() => this.state.mdEditor)
+			
+			if (!mde) {
+				return log.warn(`MDE is null`)
+			}
+			mde.onDrop(data)
+		} catch (err) {
+			log.error(`drop failed`,err)
+		}
 	}
 	
 	

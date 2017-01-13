@@ -13,6 +13,7 @@ const
 export const SettingsRecord = Record({
 	token: null,
 	user: null,
+	dropboxToken:null,
 	nativeNotificationsEnabled: true,
 	themeName: null,
 	paletteName: null
@@ -38,6 +39,8 @@ export class Settings extends SettingsRecord implements ISettingsProps {
 	 * API Token
 	 */
 	token:string
+	
+	dropboxToken:string
 	
 	/**
 	 * The current authenticated user

@@ -26,10 +26,31 @@ const
 	SoundsGlobal = {
 		Ding: {
 			src: [require('!!file-loader!assets/sounds/ding.webm')],
-			volume: 0.6
+			volume: 0.6,
+			
+			// MIN INTERVAL 10 MINS
+			minInterval: 10 * (60 * 1000),
+			
+			lastTimestamp: 0
 		}
 	}
 
+function PlaySound(key:TSoundKey) {
+	const
+		soundConfig = Sounds[key],
+		{minInterval,lastTimestamp} = soundConfig
+	
+	if (minInterval && Date.now() - lastTimestamp < minInterval) {
+		return log.debug(`played sound ${key} to recently`)
+	}
+	
+	const
+		sound = new Howl(soundConfig)
+	
+	sound.play()
+	
+	soundConfig.lastTimestamp = Date.now()
+}
 
 // Global Declaration
 declare global {
@@ -39,17 +60,13 @@ declare global {
 	
 	let Sounds:TSounds
 	
-	function PlaySound(key:TSoundKey):void
+	function PlaySound(key:TSoundKey):boolean
 }
+
 
 assignGlobal({
 	Sounds:SoundsGlobal,
-	PlaySound(key:TSoundKey) {
-		const
-			sound = new Howl(Sounds[key])
-		
-		sound.play()
-	}
+	PlaySound
 })
 
 
