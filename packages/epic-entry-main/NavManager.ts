@@ -4,8 +4,9 @@ const
 	log = getLogger(__filename),
 	{shell,app} = Electron,
 	
-	ghUrlRegEx = /github\.com\/(login|api)/,
-	authCallbackUrlRegEx = /\.(com|run|io|net)\/\?code=/
+	ghUrlRegEx = /(github|dropbox)\.com\/(oauth|login|api)/,
+	localhostRegEx = /https?:\/\/localhost/,
+	authCallbackUrlRegEx = /\.(com|run|io|net)\/\?(code|access_token)=/
 
 // DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
@@ -14,7 +15,7 @@ export function start() {
 		webContents.on('will-navigate', (event:any, url) => {
 			log.debug(`App wants to navigate`, url)
 			
-			if (!ghUrlRegEx.test(url) && !authCallbackUrlRegEx.test(url)) {
+			if (!localhostRegEx.test(url) && !ghUrlRegEx.test(url) && !authCallbackUrlRegEx.test(url)) {
 				event.returnValue = false
 				event.preventDefault()
 				

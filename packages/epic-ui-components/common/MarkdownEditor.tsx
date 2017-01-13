@@ -1,6 +1,6 @@
 // INLINE ATTACHMENT POLLUTE
-import '!!script-loader!inline-attachment/src/inline-attachment.js'
-import '!!script-loader!inline-attachment/src/codemirror-4.inline-attachment.js'
+import 'inline-attachment/src/inline-attachment.js'
+import 'inline-attachment/src/codemirror-4.inline-attachment.js'
 
 declare global {
 	let inlineAttachment:any
@@ -8,7 +8,7 @@ declare global {
 
 // Imports
 import { PureRender } from "./PureRender"
-import { getValue } from  "epic-global"
+import { getValue } from  "typeguard"
 
 // Constants
 const

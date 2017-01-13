@@ -2,6 +2,7 @@
  * Install source map support with a custom handler
  * for NON absolute paths
  */
+
 require('source-map-support').install({
 	retrieveSourceMap(source) {
 		if (/^(\/|\.|http|file)/.test(source)) {

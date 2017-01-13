@@ -71,7 +71,9 @@ export class NotificationCenter {
 		log.tron(`Notification Sound src: ${src}`)
 		this.notify(
 			message,
-			NotificationType.Info)
+			NotificationType.Info,
+			{ silent: true }
+		)
 		
 		PlaySound(soundKey)
 	}

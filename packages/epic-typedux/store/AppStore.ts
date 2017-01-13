@@ -103,9 +103,7 @@ function hmrSetup() {
 function initStore(devToolsMode = false, defaultState = null, enhancer = null) {
 	
 	const
-		enhancers = [
-			applyMiddleware(...middleware)
-		]
+		enhancers = [applyMiddleware(...middleware)]
 	
 	// THE CLIENT ENHANCER IS THE DEFAULT, BUT MAIN-ENTRY HAS IT'S OWN
 	enhancers.push(enhancer)

@@ -19,7 +19,7 @@ export default class GitHubOAuthWindow {
 
 	scopeQuery
 	clientId
-	clientSecret
+	//clientSecret
 	waitForApp
 	remote:boolean
 	window:Electron.BrowserWindow
@@ -31,7 +31,7 @@ export default class GitHubOAuthWindow {
 		const
 			{
 				id,
-				secret,
+				//secret,
 				scopes = [],
 				waitForApp = false
 			} = obj
@@ -39,12 +39,12 @@ export default class GitHubOAuthWindow {
 			
 		
 		assert(id, 'Client ID is needed!')
-		assert(secret, 'Client Secret is needed!')
+		//assert(secret, 'Client Secret is needed!')
 		
 		assign(this,{
 			scopeQuery: scopes.length > 0 ? '&scope=' + scopes.join('%2C') : '',
 			clientId: id,
-			clientSecret: secret,
+			//clientSecret: secret,
 			waitForApp: waitForApp,
 			window: null,
 			parentWindow
@@ -128,22 +128,22 @@ export default class GitHubOAuthWindow {
 		let error = /\?error=(.+)$/.exec(url)
 
 		if (code) {
-			this.requestGithubToken(this.clientId, this.clientSecret, this.scopeQuery, code, callback)
+			//this.requestGithubToken(this.clientId, this.clientSecret, this.scopeQuery, code, callback)
+			this.requestGithubToken(this.clientId, this.scopeQuery, code, callback)
 		} else if (error) {
 			console.log(error)
 		}
 	}
 
-	async requestGithubToken(id, secret, scopes, code, callback) {
-		const onFinish = () => {
-			//require('electron').remote.getCurrentWindow().close()
-			this.window.close()
-		}
+	//async requestGithubToken(id, secret, scopes, code, callback) {
+	async requestGithubToken(id, scopes, code, callback) {
+		const
+			onFinish = () => this.window.close()
 
 		try {
 			const body = new FormData()
 			body.append('client_id', id)
-			body.append('client_secret', secret)
+			//body.append('client_secret', secret)
 			body.append('code', code)
 
 

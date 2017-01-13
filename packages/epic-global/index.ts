@@ -8,6 +8,8 @@ export * from 'epic-entry-shared/ProcessConfig'
 export * from "./Constants"
 export * from "./UIConstants"
 
+export * from './DropboxUtil'
+
 export * from './NotificationCenterClient'
 
 export * from "./Benchmark"

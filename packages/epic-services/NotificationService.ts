@@ -148,16 +148,16 @@ export class NotificationService extends BaseService {
 	}
 	
 	
+	/**
+	 * Initialize the store
+	 *
+	 * @returns {Promise<BaseService>}
+	 */
 	init(): Promise<this> {
 		this.store = Container.get(ObservableStore as any) as any
 		return super.init()
 	}
 	
-	
-	
-	
-	
-	 
 	
 	/**
 	 * Start the toast manager

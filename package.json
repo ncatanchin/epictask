@@ -32,7 +32,10 @@
     },
     "win": {
       "target": [
-        "nsis"
+        "nsis",
+        "squirrel",
+        "appx",
+        "zip"
       ],
       "icon": "build/icon.ico"
     },
@@ -274,6 +277,7 @@
     "balloon-css": "^0.4.0",
     "bluebird": "^3.4.0",
     "dataurl": "^0.1.0",
+    "dropbox": "^2.5.0",
     "electron-window-state": "^4.0.0",
     "events": "^1.1.1",
     "font-awesome": "^4.6.3",
