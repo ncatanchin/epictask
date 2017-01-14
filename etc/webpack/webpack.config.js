@@ -65,6 +65,7 @@ const
 		__DEV__: isDev,
 		DEBUG: isDev,
 		VERSION: JSON.stringify(JSON.parse(fs.readFileSync(path.resolve(baseDir,'package.json'),'utf-8')).version),
+		LOCAL_CONFIG: fs.readFileSync(path.resolve(baseDir,'epictask-local.json'),'utf-8'),
 		'Env.isDev': isDev,
 		'process.env.__DEV__': isDev,
 		'process.env.NODE_ENV': JSON.stringify(env),

@@ -32,6 +32,7 @@ process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 const EnvGlobal = {
 	version: VERSION,
 	Config,
+	LocalConfig: LOCAL_CONFIG,
 	EnableDebug: !isNil(process.env.EPIC_DEBUG),
 	skipSplash,
 	envName,
