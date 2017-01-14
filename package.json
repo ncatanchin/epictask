@@ -34,7 +34,6 @@
       "target": [
         "nsis",
         "squirrel",
-        "appx",
         "zip"
       ],
       "icon": "build/icon.ico"
