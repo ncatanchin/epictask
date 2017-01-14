@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "AN electron app for dealing with those darn git issues",
   "main": "bin/epictask-start.js",
   "scripts": {
@@ -276,7 +276,6 @@
     "balloon-css": "^0.4.0",
     "bluebird": "^3.4.0",
     "dataurl": "^0.1.0",
-    "dropbox": "^2.5.0",
     "electron-window-state": "^4.0.0",
     "events": "^1.1.1",
     "font-awesome": "^4.6.3",
