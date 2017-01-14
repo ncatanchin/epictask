@@ -8,6 +8,7 @@ src/**/*.d.ts
 dist
 logs
 
+epictask-local.json
 
 # Webpack Example - ignore loader cache
 .awcache
