@@ -160,7 +160,7 @@ export class PluginLoader {
 			const
 				entry = fileExists(mainBasename) ? mainBasename : mainBasenameExtended,
 				entrySrc = await Fs.readFile(entry,'utf8'),
-				mod = Module.prototype._compile(entrySrc,entry),
+				mod = nodeRequire(entry), //Module.prototype._compile(entrySrc,entry),
 				{load,unload,start,stop} = mod
 			
 			this.plugin = {

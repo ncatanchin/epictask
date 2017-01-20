@@ -5,7 +5,7 @@ import { PureRender, IconButton } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles, colorLighten } from "epic-styles"
 import { SettingsSection } from "./SettingsElements"
 import { pluginDirectoriesSelector } from "epic-typedux"
-import { PluginDefaultPath } from "epic-global"
+import { pluginDefaultPath } from "epic-global"
 import { PluginManager } from "epic-plugin-manager"
 
 
@@ -106,7 +106,7 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 					{pluginDirectories.map(dir => <div style={[ styles.pluginDirectories.directory ]} key={dir}>
 						<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>{dir}</div>
 						<div style={[ Styles.FlexAuto ]}>
-							{PluginDefaultPath !== dir ?
+							{pluginDefaultPath !== dir ?
 								<IconButton
 									onClick={() => PluginManager.removeDirectory(dir)}
 									iconSet="material-icons" iconName="delete"/> :

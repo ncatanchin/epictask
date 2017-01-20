@@ -12,7 +12,8 @@ const
  */
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	DebuggingWindowOpen = false
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
@@ -135,9 +136,10 @@ class WindowFactory {
 			newWindowId = newWindow.id
 			
 			// USE TO DEBUG WHEN WINDOWS NOT OPENING
-			// newWindow.show()
-			// newWindow.webContents.openDevTools()
-			
+			if (DebuggingWindowOpen) {
+				newWindow.show()
+				newWindow.webContents.openDevTools()
+			}
 			const
 				url = makeBrowserEntryURL('empty', {
 					EPIC_ENTRY: ProcessType[this.processType]
@@ -154,9 +156,10 @@ class WindowFactory {
 		} catch (err) {
 			log.error(`Unable to create browser window for pool`, err)
 			
-			if (newWindow && !newWindow.isDestroyed())
+			
+			if (!DebuggingWindowOpen && newWindow && !newWindow.isDestroyed())
 				guard(() => newWindow.destroy())
-
+		
 			throw err
 		} finally {
 			ipcMain.removeListener(WindowEvents.AllResourcesLoaded,listener)

@@ -1,10 +1,13 @@
 
 
+import { getValue } from "typeguard"
+
+
 export function getSettings():ISettings {
 	const
 		appActions = Registry.Service.AppActions as IAppActionFactory
 	
-	return appActions.state.settings as any
+	return getValue(() => appActions.state.settings as any)
 	
 	// return getValue(() =>
 	// 	getStoreState().get(AppKey).settings

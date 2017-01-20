@@ -1,6 +1,6 @@
 import { Map, Record, List } from "immutable"
 import {
-	getUserDataFilename, PluginDefaultPath, SettingsPath, guard, getHot, acceptHot,
+	getUserDataFilename, pluginDefaultPath, SettingsPath, guard, getHot, acceptHot,
 	setDataOnHotDispose
 } from 'epic-global'
 import * as Fs from 'fs'
@@ -44,7 +44,7 @@ export class PluginManager {
 export namespace PluginManager {
 	
 	const
-		DefaultPath = PluginDefaultPath,
+		DefaultPath = pluginDefaultPath,
 		directories = getHot(module,'directories',{} as any) as {[directory:string]:PluginDirectory},
 		plugins = getHot(module,'plugins',{} as any) as {[name:string]:IPlugin}
 	
@@ -69,7 +69,7 @@ export namespace PluginManager {
 	export function addDirectory(...dirs:string[]) {
 		updateSettings({
 			pluginDirectories: _.uniq([
-				PluginDefaultPath,
+				pluginDefaultPath,
 				...(getSettings().pluginDirectories || []),
 				...dirs.map(dir => Path.resolve(dir))
 			])
@@ -80,7 +80,7 @@ export namespace PluginManager {
 		updateSettings({
 			pluginDirectories:
 				_.uniq([
-					PluginDefaultPath,
+					pluginDefaultPath,
 					...(getSettings().pluginDirectories || [])
 				])
 				.filter(dir => !dirs.map(dir => Path.resolve(dir)).includes(dir))

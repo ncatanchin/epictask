@@ -10,7 +10,6 @@ const
 	fsp = Promise.promisifyAll(fs),
 	path = require('path'),
 	dataUrl = require('dataurl'),
-	
 	fileProto = 'file://',
 	httpProto = 'http://',
 	httpsProto = 'https://',
@@ -28,7 +27,7 @@ function getPaths() {
 	const
 		ensureDir = (dir) => {
 			if (!fs.existsSync(dir))
-				fs.mkdirSync(dir)
+				mkdirp.sync(dir)
 			
 			return dir
 		}
@@ -37,17 +36,18 @@ function getPaths() {
 		{
 			userDataPath,
 			cachePath,
-			tempPath
+			tempPath,
+			pluginDefaultPath
 		} = getAppConfig().paths
 	
 	return (ProcessConfig.isStorybook()) ?
-		[userDataPath,cachePath,tempPath] :
-		[userDataPath,cachePath,tempPath].map(ensureDir)
+		[userDataPath,cachePath,tempPath,pluginDefaultPath] :
+		[userDataPath,cachePath,tempPath,pluginDefaultPath].map(ensureDir)
 	
 }
 
 export const
-	[userDataPath,cachePath,tempPath] = getPaths()
+	[userDataPath,cachePath,tempPath,pluginDefaultPath] = getPaths()
 
 
 

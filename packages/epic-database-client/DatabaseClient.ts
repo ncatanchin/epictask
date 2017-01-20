@@ -15,7 +15,7 @@ import { Benchmark, benchmark } from "epic-global/Benchmark"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { AppEventType } from "epic-global/Constants"
 import { DatabaseAdapter, getDatabaseAdapter } from "epic-database-adapters"
-import { Stores } from "./Stores"
+//import { Stores } from "./Stores"
 
 
 const
@@ -250,7 +250,7 @@ export class DatabaseClient {
 		return readyDeferred.promise
 	}
 	
-	getStores():Stores {
+	getStores():IStores {
 		return this.adapter.getStores()
 	}
 	

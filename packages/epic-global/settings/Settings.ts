@@ -2,7 +2,7 @@
 import { Record } from "immutable"
 import { reviveImmutable } from "epic-global/ModelUtil"
 import { User } from "epic-models/User"
-import { PluginDefaultPath } from "../Constants"
+import { pluginDefaultPath } from "../Files"
 
 const
 	log = getLogger(__filename)
@@ -20,7 +20,7 @@ export const SettingsRecord = Record({
 	paletteName: null,
 	
 	pluginDirectories: [
-		PluginDefaultPath
+		pluginDefaultPath
 	]
 	
 } as ISettingsProps)

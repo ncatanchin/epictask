@@ -1,6 +1,6 @@
 
-import {makePalette, Palettes} from '../material/MaterialTools'
-import { IPalette } from "../material/MaterialTools"
+import {IPalette,makePalette, Palettes} from '../material/MaterialTools'
+
 
 export function DarkPalette():IPalette {
 	return makePalette(

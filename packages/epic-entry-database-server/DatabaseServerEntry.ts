@@ -2,10 +2,10 @@ import "epic-entry-shared/AppEntry"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 
 import { loadProcessClientEntry } from "epic-entry-shared"
-import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
+//import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
 //
-// export const
-// 	{ProcessClientEntry:ProcessClientEntryRef} = loadProcessClientEntry()
+export const
+ 	{ProcessClientEntry} = loadProcessClientEntry()
 
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 
@@ -71,7 +71,7 @@ const RequestHandlers = {
 /**
  * Database entry
  */
-export class DatabaseServerEntry extends ProcessClientEntry {
+class DatabaseServerEntry extends ProcessClientEntry {
 	
 	constructor() {
 		super(ProcessType.DatabaseServer)
@@ -208,8 +208,8 @@ const databaseServerEntry = new DatabaseServerEntry()
 /**
  * Export the singleton
  */
-export default databaseServerEntry
-
+//export default databaseServerEntry
+export {}
 
 /**
  * HMR - accept self - on dispose, close DB

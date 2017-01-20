@@ -5,9 +5,12 @@ import "epic-entry-shared/AppEntry"
 
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './App'
-import { ProcessType } from "epic-entry-shared"
-import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
-import { PluginManager } from "epic-plugin-manager"
+//import { ProcessType } from "epic-entry-shared"
+//import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
+import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
+
+const
+	{ProcessClientEntry} = loadProcessClientEntry()
 
 // const
 // 	{ProcessClientEntry} = loadProcessClientEntry()
@@ -100,7 +103,7 @@ function setupUI() {
 /**
  * UI entry point
  */
-export class UIEntry extends ProcessClientEntry {
+class UIEntry extends ProcessClientEntry {
 	
 	/**
 	 * Create UI Entry
@@ -139,6 +142,12 @@ export class UIEntry extends ProcessClientEntry {
 		UIResourcesLoaded.resolve()
 	}
 	
+	
+	
+	private getPluginManager() {
+		return require("epic-plugin-manager").PluginManager
+	}
+	
 	/**
 	 * Called to start the worker
 	 */
@@ -154,7 +163,7 @@ export class UIEntry extends ProcessClientEntry {
 		await Promise.all(startupPromises)
 		
 		log.debug(`Loading plugin manager`)
-		await PluginManager.init()
+		await this.getPluginManager().init()
 	}
 	
 	/**
@@ -169,7 +178,7 @@ export class UIEntry extends ProcessClientEntry {
 }
 
 
-export const uiEntry = getHot(module,'uiEntry',new UIEntry())
+const uiEntry = getHot(module,'uiEntry',new UIEntry())
 
 if (module.hot) {
 	module.hot.addStatusHandler(newStatus => {
@@ -184,5 +193,9 @@ setDataOnHotDispose(module,() => ({
 	uiEntry
 }))
 
+
+export {
+
+}
 
 acceptHot(module,log)

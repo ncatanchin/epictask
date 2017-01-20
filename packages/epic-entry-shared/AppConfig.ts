@@ -5,7 +5,8 @@ export interface AppConfig {
 	paths: {
 		userDataPath: string
 		cachePath: string
-		tempPath: string
+		tempPath: string,
+		pluginDefaultPath: string
 	}
 }
 
@@ -25,7 +26,8 @@ export function getAppConfig() {
 			paths: {
 				userDataPath: "/tmp",
 				cachePath: "/tmp",
-				tempPath: "/tmp"
+				tempPath: "/tmp",
+				pluginDefaultPath: "/tmp/epic-plugins"
 			}
 		}
 	}
@@ -48,7 +50,8 @@ export function getAppConfig() {
 			paths: {
 				userDataPath,
 				cachePath: `${userDataPath}/Cache`,
-				tempPath: app.getPath('temp')
+				tempPath: app.getPath('temp'),
+				pluginDefaultPath: `${userDataPath}/epictask-plugins/default`
 			}
 		}
 		

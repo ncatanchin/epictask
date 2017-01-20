@@ -1,7 +1,7 @@
 
 
 
-import { getUserDataFilename } from "./Files"
+//import { getUserDataFilename } from "./Files"
 export const DragTypes = {
 	GutterToolButton: 'GutterToolButton'
 }
@@ -259,4 +259,3 @@ export const
 	JobsMaxCompleted = 15,
 	JobsMaxConcurrency = 2
 
-export const PluginDefaultPath = getUserDataFilename('epic-plugins','default')
