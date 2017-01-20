@@ -28,7 +28,7 @@ import {
 } from "epic-styles"
 import { appUserSelector, availableReposSelector, milestonesSelector } from "epic-typedux"
 import { DialogRoot, PureRender, FlexColumnCenter, Icon, RepoSelect, Tabs } from "epic-ui-components"
-import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
+import { CommandComponent, CommandRoot, CommandContainerBuilder, ICommandContainerItems } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
 import { List } from "immutable"
 import { canEditRepo, getValue } from "epic-global"
@@ -181,7 +181,7 @@ export class RepoSettingsWindow extends React.Component<IRepoSettingsWindowProps
 	 *
 	 * @param builder
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			
 			.make()

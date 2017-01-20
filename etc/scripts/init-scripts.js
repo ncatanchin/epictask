@@ -42,12 +42,15 @@ function execNoError(cmd,onError = null) {
 
 const
 	{platform} = process,
+	Fs = require('fs'),
+	Path = require('path'),
 	isMac = platform	=== 'darwin',
 	isWindows = platform === 'win32'
 
 
 Object.assign(global,{
 	execNoError,
+	baseDir: process.cwd(),
 	isMac,
 	isWindows,
 	isLinux: !isMac && !isWindows,
@@ -113,6 +116,27 @@ Object.assign(global,{
 			'node_modules',
 			'.bin',
 			`gulp${process.platform === 'win32' ? '.cmd' : ''}`
-		)
+		),
+	
+	/**
+	 * Write object to json file
+	 *
+	 * @global
+	 * @param filename
+	 * @param o
+	 */
+	writeJsonFile(filename,o) {
+		Fs.writeFileSync(filename,JSON.stringify(o,null,2))
+	},
+	
+	/**
+	 * Read file as JSON object
+	 *
+	 * @param filename
+	 * @returns {any}
+	 */
+	readJsonFile(filename) {
+		return JSON.parse(Fs.readFileSync(filename,'utf8'))
+	},
 	
 })

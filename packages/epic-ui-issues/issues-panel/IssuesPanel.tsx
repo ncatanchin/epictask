@@ -17,7 +17,7 @@ import {
 	CommandComponent,
 	ICommandComponent,
 	CommandRoot,
-	CommandContainerBuilder
+	CommandContainerBuilder, ICommandContainerItems
 } from "epic-command-manager-ui"
 import { CommonKeys, ContainerNames } from "epic-command-manager"
 import { FlexColumnCenter, ThemedStyles } from "epic-styles"
@@ -178,7 +178,7 @@ export class IssuesPanel extends BaseIssuePanel<IIssuesPanelProps,IIssuesPanelSt
 	 *
 	 * @param builder
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			//MOVEMENT
 			.command(

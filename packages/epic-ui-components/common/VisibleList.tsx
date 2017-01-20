@@ -179,7 +179,7 @@ extends React.Component<IVisibleListProps<RowType,ItemKeyType,ItemType>,IVisible
 	 *
 	 * @returns
 	 */
-	static makeVisibleList<RowType,ItemKeyType,ItemType>() {
+	static makeVisibleList<RowType,ItemKeyType,ItemType>():({new(props,context): VisibleList<RowType,ItemKeyType,ItemType>}) {
 		return class extends VisibleList<RowType,ItemKeyType,ItemType> {}
 	}
 	

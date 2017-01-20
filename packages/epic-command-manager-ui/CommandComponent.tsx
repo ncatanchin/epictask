@@ -37,14 +37,14 @@ export interface ICommandContainerOptions {
 /**
  * Container props
  */
-interface ICommandContainerProps extends React.HTMLAttributes<any> {
+export interface ICommandContainerProps extends React.HTMLAttributes<any> {
 	commandComponent:ICommandComponentConstructor<any>
 }
 
 /**
  * Container state
  */
-interface ICommandContainerState {
+export interface ICommandContainerState {
 	instance?:ICommandComponent
 	lastPrototype?: any
 	

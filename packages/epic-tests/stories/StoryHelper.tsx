@@ -13,7 +13,7 @@ import * as React from 'react'
 import "epic-styles"
 
 import {Provider} from 'react-redux'
-import {MuiThemeProvider} from "material-ui/styles"
+
 import {loadAndInitStorybookStore,getReduxStore} from "epic-typedux"
 
 
@@ -33,8 +33,8 @@ require('styles/split-pane.global.scss')
 const { addDecorator } = require('@kadira/storybook')
 
 
-export const getDecorator = getStory => <MuiThemeProvider muiTheme={getTheme()}>
+export const getDecorator = getStory =>
 	<Provider store={getReduxStore()}>
 		<div style={Object.assign({},getTheme().app,{height: '100vh'},FillWidth)}>{getStory()}</div>
 	</Provider>
-</MuiThemeProvider>
+

@@ -23,6 +23,7 @@ export * from "./ElectronUtil"
 export * from "./SimpleEventEmitter"
 
 export * from "./Files"
+export * from "./FileWatcher"
 export * from "./HotUtils"
 export * from "./IdUtil"
 export * from "./JSONUtil"

@@ -5,7 +5,7 @@ import {Container} from 'typescript-ioc'
 const
 	log = getLogger(__filename)
 
-enum NotificationType {
+export enum NotificationType {
 	Debug = 1,
 	Info = 2,
 	Success = 3,

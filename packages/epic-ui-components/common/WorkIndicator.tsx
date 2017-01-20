@@ -1,13 +1,11 @@
 // Imports
-import { PureRender } from './PureRender'
-import { IThemedAttributes, Themed } from 'epic-styles'
-import { Fill, PositionAbsolute, FlexColumnCenter } from "epic-styles/styles"
-
+import { IThemedAttributes, Themed, Fill, PositionAbsolute, FlexColumnCenter } from "epic-styles"
+import { PureRender } from "./PureRender"
+import { CircularProgress } from "./MaterialUIComponents"
 
 // Constants
 const
-	log = getLogger(__filename),
-	CircularProgress = require("material-ui/CircularProgress").default
+	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)

@@ -1,6 +1,7 @@
 
 import { getHot, setDataOnHotDispose, acceptHot } from "epic-global/HotUtils"
 import {Registry} from "../Registry"
+import { isString } from "typeguard"
 
 
 const
@@ -49,8 +50,6 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	 */
 	constructor() {
 		this.scope = Registry.getScope(CommandScope)
-		
-		
 	}
 	
 	/**
@@ -70,7 +69,7 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	 * @param id
 	 */
 	unregister(id:string) {
-		
+		this.Unregister(id)
 	}
 	
 	
@@ -84,6 +83,24 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 		configs.forEach(config => {
 			log.debug(`Registered command (${config.id}): ${config.name}`)
 			this.scope[config.id] = config
+		})
+		
+		this.commandsChanged()
+	}
+	
+	/**
+	 * Unregister a specific command(s)
+	 *
+	 * @param idsOrCommands
+	 * @constructor
+	 */
+	Unregister = (...idsOrCommands:Array<string|ICommand>) => {
+		idsOrCommands.forEach(idOrCommand => {
+			if (isString(idOrCommand)) {
+				delete this.scope[idOrCommand]
+			} else {
+				delete this.scope[idOrCommand.id]
+			}
 		})
 		
 		this.commandsChanged()
@@ -117,7 +134,7 @@ export class CommandRegistryScope implements IRegistryScope<IRegistryEntryComman
 	/**
 	 * Retrieve the class constructor for a given name
 	 *
-	 * @param name
+	 * @param id
 	 * @returns {any}
 	 */
 	get(id):ICommand {
@@ -175,10 +192,18 @@ declare global {
 		/**
 		 * Register a command
 		 *
-		 * @param config
+		 * @param configs
 		 * @constructor
 		 */
 		function Register(...configs:ICommand[])
+		
+		/**
+		 * Un-Register a command
+		 *
+		 * @param idsOrCommands
+		 * @constructor
+		 */
+		function Unregister(...idsOrCommands:Array<string|ICommand>)
 		
 		/**
 		 * Get all registered commands
@@ -192,8 +217,6 @@ declare global {
 		
 		/**
 		 * Get a command by name
-		 *
-		 * @param name
 		 */
 		function getDefault():ICommand
 		

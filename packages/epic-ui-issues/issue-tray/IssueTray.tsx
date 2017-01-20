@@ -13,7 +13,10 @@ import {
 	IBaseIssuesPanelProps,getIssuesPanelSelector
 } from "epic-ui-issues/issues-panel"
 import { TrayHeader } from "epic-ui-core/ide/TrayHeader"
-import { CommandComponent, ICommandComponent, CommandContainerBuilder } from "epic-command-manager-ui"
+import {
+	CommandComponent, ICommandComponent, CommandContainerBuilder,
+	ICommandContainerItems
+} from "epic-command-manager-ui"
 import { CommonKeys } from "epic-command-manager"
 
 
@@ -90,7 +93,7 @@ export class IssueTray extends BaseIssuePanel<IIssueTrayProps,IIssueTrayState> i
 	 *
 	 * @param builder
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems  =>
 		builder
 		//MOVEMENT
 			.command(

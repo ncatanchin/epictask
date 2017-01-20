@@ -1,4 +1,3 @@
-//const Styles = require('material-ui/styles')
 //import * as c from './material/MaterialColorPalettes'
 import * as c from './material/Colors'
 

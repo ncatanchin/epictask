@@ -24,7 +24,7 @@
 //	}
 //}
 
-:focus {
+:focus:not(.no-focus-style) {
 	position: relative;
 	&:after {
 		content: ' ';

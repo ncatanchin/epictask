@@ -29,7 +29,7 @@ if (DEBUG)
 // SET POUCH MODULE
 process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
 
-const EnvGlobal = {
+export const EnvGlobal = {
 	version: VERSION,
 	Config,
 	LocalConfig: LOCAL_CONFIG,

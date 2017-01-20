@@ -46,7 +46,10 @@ function getPaths() {
 	
 }
 
-const [userDataPath,cachePath,tempPath] = getPaths()
+export const
+	[userDataPath,cachePath,tempPath] = getPaths()
+
+
 
 //log.info(`Using cache path: ${cachePath}`)
 if (!ProcessConfig.isStorybook())
@@ -70,8 +73,8 @@ function fixedEncodeURI (str) {
 	return encodeURI(str).replace(/%5B/g, '[').replace(/%5D/g, ']');
 }
 
-export function getUserDataFilename(filename:string) {
-	return `${userDataPath}/${filename}`
+export function getUserDataFilename(...filenameParts:string[]) {
+	return path.join(userDataPath,...filenameParts)
 }
 
 export function absoluteFilename(filename) {
@@ -350,4 +353,31 @@ export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 	
 	return resolvedPath
 	
+}
+
+/**
+ * File exists
+ *
+ * @param filename
+ * @returns {Promise<boolean>}
+ */
+export function fileExists(filename:string) {
+	try {
+		return fs.existsSync(filename)
+	} catch (err) {
+		return false
+	}
+}
+
+/**
+ * Is a file a directory
+ * @param dirname
+ * @returns {boolean}
+ */
+export function isDirectory(dirname:string) {
+	try {
+		return fs.statSync(dirname).isDirectory()
+	} catch (err) {
+		return false
+	}
 }

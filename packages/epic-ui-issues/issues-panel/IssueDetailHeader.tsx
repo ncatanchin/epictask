@@ -1,6 +1,5 @@
 // Imports
 import { List } from "immutable"
-import { CircularProgress } from "material-ui"
 import { connect } from "react-redux"
 import { createSelector, createStructuredSelector } from "reselect"
 import {

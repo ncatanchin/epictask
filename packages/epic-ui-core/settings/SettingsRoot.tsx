@@ -4,23 +4,18 @@
 // Imports
 import { createStructuredSelector } from "reselect"
 import { connect } from "react-redux"
-
 import {
 	ThemedStyles,
 	FlexColumn,
 	FlexAuto,
 	FlexRowCenter,
 	FillHeight,
-	makeFlex,
-	OverflowAuto,
 	FillWidth,
 	FlexScale,
-	Ellipsis,
 	makePaddingRem,
 	rem,
 	Fill,
 	makeStyle,
-	makeFlexAlign,
 	FlexRow,
 	IThemedAttributes,
 	getPaletteName,
@@ -30,26 +25,28 @@ import {
 	getThemeCreator,
 	getPaletteCreator,
 	setThemeCreator,
-	setPaletteCreator
+	setPaletteCreator,
+	makeHeightConstraint
 } from "epic-styles"
-import { Checkbox } from "material-ui"
-import { getUIActions, getAppActions,getAuthActions } from "epic-typedux"
-
+//import { Checkbox } from "material-ui"
+import { getUIActions, getAppActions, getAuthActions, settingsSelector } from "epic-typedux"
 import { ContainerNames } from "epic-command-manager"
-
-import { DialogRoot } from 'epic-ui-components'
-
-import { getValue, cloneObjectShallow, PersistentValue } from "epic-global"
-import { settingsSelector } from "epic-typedux/selectors/AppSelectors"
-import { Settings } from "epic-global/settings/Settings"
-
-
-import { makeHeightConstraint } from "epic-styles/styles"
-import { FlexColumnCenter,PureRender, Icon, Button,SelectField,Tabs } from "epic-ui-components/common"
+import {
+	DialogRoot,
+	FlexColumnCenter,
+	PureRender,
+	Icon,
+	Button,
+	SelectField,
+	Tabs,
+	Checkbox,
+	ITab,
+	SheetRoot
+} from "epic-ui-components"
+import { getValue, cloneObjectShallow, PersistentValue, Settings } from "epic-global"
 import { KeyMapEditor } from "./KeyMapEditor"
 import { SettingsSection, SettingsField } from "./SettingsElements"
-import { ITab } from "epic-ui-components/common/tabs"
-import { SheetRoot } from "epic-ui-components/layout/sheet"
+import { PluginConfigEditor } from "./PluginConfigEditor"
 
 
 const
@@ -63,7 +60,8 @@ const
 // Settings Sections
 const
 	General = "General",
-	Keys = "Keys"
+	Keys = "Keys",
+	Plugins = "Plugins"
 
 const baseStyles = (topStyles, theme, palette) => {
 	const
@@ -314,9 +312,9 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 				{/* NATIVE NOTIFICATIONS */}
 				<SettingsSection styles={styles} iconName="globe" iconSet="fa" title="Notifications">
 					<SettingsField styles={styles} label="Desktop notifications (suggested) or in-app only.">
-						<Checkbox style={styles.form.checkboxCell}
+						<Checkbox tabIndex={0}
 						          checked={getValue(() => settings.nativeNotificationsEnabled)}
-						          onCheck={(event,isChecked) => {
+						          onChange={(event,isChecked) => {
 							          	log.info(`Setting notifications enabled`,isChecked)
 							          	updateSettings({
 							          		nativeNotificationsEnabled: isChecked
@@ -362,6 +360,17 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 			</div>
 		</div>
 		
+	}
+	
+	renderPluginConfigEditor() {
+		const
+			{styles} = this.props
+		
+		return <div style={styles.form}>
+			<div style={styles.form.content}>
+				<PluginConfigEditor styles={styles}/>
+			</div>
+		</div>
 	}
 	
 	renderKeymapEditor() {
@@ -421,10 +430,19 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 							id: Keys,
 							title: <FlexColumnCenter>
 								<Icon style={styles.tabs.items.icon}>keyboard</Icon>
-								<div style={makeStyle(tabId === General && styles.tabs.items.active)}>SHORTCUTS</div>
+								<div style={makeStyle(tabId === Keys && styles.tabs.items.active)}>SHORTCUTS</div>
 							</FlexColumnCenter>,
 							
 							content:this.renderKeymapEditor()
+						},
+						{
+							id: Plugins,
+							title: <FlexColumnCenter>
+								<Icon style={styles.tabs.items.icon} iconSet="fa" iconName="plug"/>
+								<div style={makeStyle(tabId === Plugins && styles.tabs.items.active)}>PLUGINS</div>
+							</FlexColumnCenter>,
+							
+							content:this.renderPluginConfigEditor()
 						}
 					]}
 					style={makeStyle(FlexColumn,FlexScale)}

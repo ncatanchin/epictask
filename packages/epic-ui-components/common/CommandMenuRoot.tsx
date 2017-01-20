@@ -10,8 +10,7 @@ import {
 } from "epic-command-manager"
 import { ICommandMenuItem, CommandMenuItemType, isCommandFontIcon, isCommandImageIcon } from "epic-command-manager"
 import { getValue, ContextMenu } from "epic-global"
-import { NavigationChevronLeft as SvgArrowLeft, NavigationMoreVert as SvgNavMoreIcon } from "material-ui/svg-icons"
-import { IconMenu, IconButton, MenuItem, Divider } from "material-ui"
+
 import { isString } from "epic-global"
 import { PureRender } from "./PureRender"
 import { Icon} from "./icon/Icon"

@@ -1,3 +1,4 @@
+export * from "./MaterialUIComponents"
 
 export * from './SearchFieldItem.styles'
 export * from './Chip.styles'
@@ -42,7 +43,7 @@ export * from "./tabs"
 
 export * from "./FileDrop"
 
-export * from "./Other"
+export * from "./FilterProps"
 
 // FORM
 export * from "./FormButton"
@@ -52,7 +53,7 @@ export * from "./FormFieldComponent"
 
 
 // FIELDS
-
+export * from "./Checkbox"
 export * from "./ChipsField"
 export * from './SelectField'
 

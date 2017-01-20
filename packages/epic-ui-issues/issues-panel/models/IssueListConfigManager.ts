@@ -81,7 +81,7 @@ const
  * @class IssueListConfigManager
  * @constructor
  **/
-namespace IssueListConfigManager {
+export namespace IssueListConfigManagerInternal {
 	
 	const
 		events = new SimpleEventEmitter()
@@ -193,19 +193,18 @@ namespace IssueListConfigManager {
 
 if (DEBUG)
 	assignGlobal({
-		IssueListConfigManager,
+		IssueListConfigManager:IssueListConfigManagerInternal,
 		IssueListConfigStoreValue
 	})
+
+
+export type TIssueListConfigManager = typeof IssueListConfigManagerInternal
 
 /**
  * Create the proxy for HMR
  */
-const
-	wrappedProxy = ProxyWrap<typeof IssueListConfigManager>(module,__filename,IssueListConfigManager) as typeof IssueListConfigManager
-
-export {
-	wrappedProxy as IssueListConfigManager
-}
+export const
+	IssueListConfigManager = ProxyWrap<TIssueListConfigManager>(module,__filename,IssueListConfigManagerInternal) as TIssueListConfigManager
 
 // HMR
 acceptHot(module,log)

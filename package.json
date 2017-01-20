@@ -19,6 +19,7 @@
     "package": "babel-node ./etc/scripts/package.js",
     "package:all": "babel-node ./etc/scripts/package.js --win --linux",
     "package:make-icons": "babel-node ./etc/scripts/make-icons.js",
+    "package:plugin-env": "babel-node ./etc/scripts/package-plugin-env.js",
     "install:material-ui": "npm i material-ui@../material-ui/build",
     "install:app": "babel-node ./etc/scripts/package.js --install",
     "tool:release-manifest": "babel-node ./etc/scripts/release-manifest.js"
@@ -165,7 +166,7 @@
     "@types/source-map-support": "^0.2.27",
     "asar": "^0.12.1",
     "autoprefixer": "^6.3.7",
-    "awesome-typescript-loader": "^3.0.0-beta.10",
+    "awesome-typescript-loader": "^3.0.0-beta.18",
     "aws-sdk": "^2.6.9",
     "aws-sdk-typescript": "github:densebrain/aws-sdk-typescript#v0.0.4",
     "babel-cli": "^6.11.4",
@@ -259,7 +260,7 @@
     "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "url-loader": "^0.5.7",
     "warning": "^3.0.0",
-    "webpack": "^2.1.0-beta.28",
+    "webpack": "^2.2.0-rc.5",
     "webpack-dashboard": "^0.2.0",
     "webpack-dev-middleware": "^1.6.1",
     "webpack-dev-server": "^2.1.0-beta.0",
@@ -271,11 +272,13 @@
     "@exponent/electron-cookies": "^2.0.0",
     "@types/howler": "^2.0.0",
     "animate.css": "^3.5.1",
+    "async-file": "^2.0.2",
     "babel-polyfill": "^6.8.0",
     "babel-runtime": "^6.11.6",
     "balloon-css": "^0.4.0",
     "bluebird": "^3.4.0",
     "dataurl": "^0.1.0",
+    "decompress": "^4.0.0",
     "electron-window-state": "^4.0.0",
     "events": "^1.1.1",
     "font-awesome": "^4.6.3",
@@ -350,6 +353,7 @@
     "typetransform": "0.0.16",
     "urlsearchparams": "densebrain/URLSearchParams",
     "utf8-encoding": "^0.1.2",
+    "watchr": "^3.0.1",
     "winston": "^2.2.0"
   }
 }

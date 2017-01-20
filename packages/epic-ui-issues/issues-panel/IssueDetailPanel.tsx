@@ -17,7 +17,7 @@ import {
 	ICommandComponent,
 	CommandRoot,
 	CommandContainerBuilder,
-	ICommandComponentProps
+	ICommandComponentProps, ICommandContainerItems
 } from "epic-command-manager-ui"
 import { ContainerNames } from "epic-command-manager"
 import { IssueDetailHeader } from "./IssueDetailHeader"
@@ -107,7 +107,7 @@ export class IssueDetailPanel extends React.Component<IIssueDetailPanelProps,IIs
 	/**
 	 * Commands for the container
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems  =>
 	  // NEW COMMENT
 		builder
 			// .command(

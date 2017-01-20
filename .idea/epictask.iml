@@ -28,5 +28,6 @@
     <orderEntry type="library" name="immutable-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="reselect-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="node-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="shelljs-DefinitelyTyped" level="application" />
   </component>
 </module>

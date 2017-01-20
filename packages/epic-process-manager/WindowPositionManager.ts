@@ -1,9 +1,8 @@
-import { Map, Record, List } from "immutable"
 import Electron = require('electron')
 import { shortId, getUserDataFilename, readJSONFile, cloneObjectShallow, writeJSONFile } from "epic-global"
 import { getValue, isNil } from "typeguard"
 
-type BrowserWindow = Electron.BrowserWindow
+
 const {BrowserWindow,screen} = Electron
 
 /**
@@ -42,7 +41,7 @@ export class WindowPositionManager {
 	 * @param window
 	 * @param id
 	 */
-	constructor(private window:BrowserWindow, id:string) {
+	constructor(private window:Electron.BrowserWindow, id:string) {
 		this.filename = getUserDataFilename(`epic-window-state-${id}.json`)
 	}
 	

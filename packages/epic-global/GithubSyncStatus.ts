@@ -11,7 +11,7 @@ const
 
 log.debug(`SyncStatusFilename file: ${syncStatusFilename}`)
 
-interface IGithubSyncStatus {
+export interface IGithubSyncStatus {
 	eTags:{[url:string]:string}
 	timestamps:{[url:string]:number}
 }
@@ -209,7 +209,7 @@ export namespace GithubSyncStatus {
 	 * @param models
 	 * @param props
 	 */
-	export function setMostRecentTimestamp(url:string,models:any[],...props:string[]) {
+	export function setMostRecentTimestamp(url:string,models:any[],...props:string[]):void {
 		const
 			maxTimestamp = models.reduce((maxTimestamp,nextModel) => {
 				const modelTimestamp = props
@@ -237,14 +237,14 @@ export namespace GithubSyncStatus {
 /**
  * Export each namespace function individually
  */
-export const {
-	awaitLoaded,
-	clearPrefix,
-	getTimestamp,
-	setTimestamp,
-	getETag,
-	setETag
-} = GithubSyncStatus
+// export const {
+// 	awaitLoaded,
+// 	clearPrefix,
+// 	getTimestamp,
+// 	setTimestamp,
+// 	getETag,
+// 	setETag
+// } = GithubSyncStatus
 
 
 

@@ -131,7 +131,7 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 	}
 	
 	
-	get baseStyles() {
+	get baseStyles():any {
 		return baseStyles
 	}
 	

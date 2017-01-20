@@ -74,7 +74,7 @@ function textSearchFilter(query:string, items:List<any>, props:string[], limit:n
  *
  * @param item
  */
-function createAvailableRepoHandler(item:SearchItem) {
+export function createAvailableRepoHandler(item:SearchItem) {
 	const
 		model = item.value
 	

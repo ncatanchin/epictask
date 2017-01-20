@@ -3,7 +3,7 @@ import { ActionMessage } from "typedux"
 
 import { AppStoreServerName } from "epic-entry-shared/ProcessType"
 import { Transport, getDefaultTransport } from "epic-net"
-import { ActionMessageFilter } from "epic-typedux/filter"
+import { ActionMessageFilter, IActionMessageHandler } from "epic-typedux/filter"
 import { cloneObjectShallow ,getHot, setDataOnHotDispose, uuid, REQUEST_TIMEOUT, getValue, AppStoreServerEventNames } from "epic-global"
 import { fromPlainObject, toPlainObject } from "typetransform"
 
@@ -137,7 +137,7 @@ export type TClientStateHandler = (newValue, oldValue) => any
  *
  * @param action
  */
-export const sendStoreAction = ActionMessageFilter((action:ActionMessage<any>) => {
+export const sendStoreAction:((handler:IActionMessageHandler<any,any>) => IActionMessageHandler<any,any>) = ActionMessageFilter((action:ActionMessage<any>) => {
 	action = toPlainObject(cloneObjectShallow(action, {
 		windowId: getWindowId(),
 		fromChildId: id

@@ -7,8 +7,9 @@ export * from './ProcessConfig'
 
 import * as ProcessClientEntryType from './ProcessClientEntry'
 
-export function loadProcessClientEntry() {
-	return require('./ProcessClientEntry') as typeof ProcessClientEntryType
+export type TProcessClientEntry = typeof ProcessClientEntryType
+export function loadProcessClientEntry():TProcessClientEntry {
+	return require('./ProcessClientEntry') as TProcessClientEntry
 }
 
 export * from './AppConfig'

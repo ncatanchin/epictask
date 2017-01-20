@@ -22,7 +22,7 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 // Available Sounds
-const
+export const
 	SoundsGlobal = {
 		Ding: {
 			src: [require('!!file-loader!assets/sounds/ding.webm')],

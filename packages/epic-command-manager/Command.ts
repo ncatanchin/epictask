@@ -81,7 +81,7 @@ assignGlobal({
 	CommandType
 })
 
-type TCommandType = typeof CommandType
+export type TCommandType = typeof CommandType
 
 declare global {
 	const CommandType:TCommandType

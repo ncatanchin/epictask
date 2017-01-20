@@ -31,7 +31,7 @@ export interface IEpicLodashMixins  {
 	nilListFilter<T extends any>(a:List<T>):List<T>
 }
 
-type TLodash = typeof LodashGlobal
+export type TLodash = typeof LodashGlobal
 export type TEpicLodash = IEpicLodashMixins&TLodash&_.LoDashStatic
 
 const

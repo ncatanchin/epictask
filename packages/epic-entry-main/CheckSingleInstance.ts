@@ -1,7 +1,11 @@
 
-export default function checkSingleInstance(app,onFocus) {
+const
+	{app,BrowserWindow} = require('electron')
+
+function checkSingleInstance(app,onFocus) {
+	//noinspection UnnecessaryLocalVariableJS
 	const
-		log = getLogger(__filename),
+		log = console,
 		shouldQuit = app.makeSingleInstance(onFocus)
 	
 	/**
@@ -16,3 +20,17 @@ export default function checkSingleInstance(app,onFocus) {
 	return true
 	
 }
+
+checkSingleInstance(app,(event) => {
+	// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
+	const
+		allWindows = BrowserWindow.getAllWindows(),
+		win = allWindows && allWindows[ 0 ]
+	
+	if (win) {
+		win && win.isMinimized() && win.restore()
+		win.focus()
+	}
+})
+
+export {}

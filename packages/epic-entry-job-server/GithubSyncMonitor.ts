@@ -45,7 +45,7 @@ export interface IGithubPollInfo {
 	issuesLastTimestamp?:number
 }
 
-interface IGithubPollConfig {
+export interface IGithubPollConfig {
 	eTag:string
 	pollIntervalMillis:number
 	pollTimer?:number
@@ -57,7 +57,7 @@ interface IGithubPollConfig {
 /**
  * Internal shape of repo config
  */
-interface IGithubMonitorConfig {
+export interface IGithubMonitorConfig {
 	id:number
 	fullName:string
 	started:boolean
@@ -66,7 +66,7 @@ interface IGithubMonitorConfig {
 	listeners:IGithubPollListener[]
 }
 
-interface IGithubNotificationState {
+export interface IGithubNotificationState {
 	started:boolean
 	notificationConfig:IGithubPollConfig
 	listeners:IGithubPollListener[]

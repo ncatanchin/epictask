@@ -7,7 +7,7 @@ import { getUIActions } from "epic-typedux"
 import {  getValue } from "epic-global"
 import {
 	CommandComponent, CommandRoot,
-	CommandContainerBuilder
+	CommandContainerBuilder, ICommandContainerItems
 } from  "epic-command-manager-ui"
 
 import {
@@ -151,7 +151,7 @@ export class SheetRoot extends React.Component<ISheetRootProps,ISheetRootState> 
 	/**
 	 * Commands
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			// CLOSE THE SHEET
 			.command(

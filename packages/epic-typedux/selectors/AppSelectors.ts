@@ -101,3 +101,11 @@ export const settingsSelector:(state) => Settings = createSelector(
 	appStateSelector,
 	(state:AppState) => state.settings
 )
+
+
+export const pluginDirectoriesSelector:TSelector<string[]> = createSelector(
+	settingsSelector,
+	(settings:Settings) => settings.pluginDirectories
+)
+
+

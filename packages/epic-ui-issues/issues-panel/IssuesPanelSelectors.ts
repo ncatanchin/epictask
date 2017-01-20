@@ -634,10 +634,10 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 
 
 
-const
-	typedSelectors = makeIssuesPanelStateSelectors()
+export const
+	IssuesPanelStateSelectorsInstance = makeIssuesPanelStateSelectors()
 
-export type TIssuesPanelSelectors = typeof typedSelectors
+export type TIssuesPanelSelectors = typeof IssuesPanelStateSelectorsInstance
 
 
 

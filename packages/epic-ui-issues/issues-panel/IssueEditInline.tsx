@@ -38,7 +38,10 @@ import {
 	PositionRelative,
 	makeHeightConstraint
 } from "epic-styles"
-import { CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
+import {
+	CommandComponent, ICommandComponent, CommandRoot, CommandContainerBuilder,
+	ICommandContainerItems
+} from "epic-command-manager-ui"
 import { getIssueActions, availableReposSelector } from "epic-typedux"
 import { cloneObjectShallow, cloneObject, shallowEquals, guard } from "epic-global"
 import { IssuesPanel } from "./IssuesPanel"
@@ -163,7 +166,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 	
 	refs: any
 	
-	commandItems = (builder: CommandContainerBuilder) =>
+	commandItems = (builder: CommandContainerBuilder):ICommandContainerItems =>
 		builder.make()
 	
 	readonly commandComponentId: string = 'IssueEditInline'

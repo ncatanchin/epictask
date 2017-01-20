@@ -2,6 +2,7 @@
 import { Record } from "immutable"
 import { reviveImmutable } from "epic-global/ModelUtil"
 import { User } from "epic-models/User"
+import { PluginDefaultPath } from "../Constants"
 
 const
 	log = getLogger(__filename)
@@ -16,7 +17,11 @@ export const SettingsRecord = Record({
 	dropboxToken:null,
 	nativeNotificationsEnabled: true,
 	themeName: null,
-	paletteName: null
+	paletteName: null,
+	
+	pluginDirectories: [
+		PluginDefaultPath
+	]
 	
 } as ISettingsProps)
 
@@ -51,6 +56,11 @@ export class Settings extends SettingsRecord implements ISettingsProps {
 	nativeNotificationsEnabled: boolean
 	themeName: string
 	paletteName: string
+	
+	/**
+	 * All plugin directories currently configured
+	 */
+	pluginDirectories: string[]
 }
 
 export default Settings

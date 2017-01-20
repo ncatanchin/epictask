@@ -16,7 +16,7 @@ import { ThemedStyles, createThemedStyles, IThemedAttributes } from "epic-styles
 import {getBuiltInToolId, BuiltInTools} from "epic-ui-components"
 import {
 	CommandComponent, ICommandComponent, CommandRoot,
-	CommandContainerBuilder
+	CommandContainerBuilder, ICommandContainerItems
 } from  "epic-command-manager-ui"
 import { getUIActions, getRepoActions } from "epic-typedux"
 import { ContainerNames,CommonKeys as Keys } from "epic-command-manager"
@@ -119,7 +119,7 @@ function getHeaderControls() {
 @ThemedStyles(baseStyles,'repoPanel')
 export class ReposPanel extends React.Component<IRepoPanelProps,any> implements ICommandComponent {
 	
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			.make()
 		

@@ -1,7 +1,8 @@
 
 import {makePalette, Palettes} from '../material/MaterialTools'
+import { IPalette } from "../material/MaterialTools"
 
-export function DarkPalette() {
+export function DarkPalette():IPalette {
 	return makePalette(
 		'DarkPalette',
 		Palettes.grey,

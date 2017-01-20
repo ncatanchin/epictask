@@ -221,7 +221,7 @@ function installGlobals() {
 			return g.GlobalStoreReady === true
 		},
 		getAppConfig: require('./AppConfig').getAppConfig,
-		node_require: getValue(() => __non_webpack_require__,null),
+		nodeRequire: typeof __non_webpack_require__ === 'undefined' ? (modName => null) : getValue(() => __non_webpack_require__,null),
 		
 		
 		getWindowId: getWindowIdGlobal,
@@ -342,7 +342,7 @@ declare global {
 	}
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var node_require:typeof __non_webpack_require__
+	var nodeRequire:typeof __non_webpack_require__
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var moment:typeof momentGlobal

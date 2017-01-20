@@ -21,7 +21,7 @@ const
  *
  * @param location
  */
-function setWindowLocation(location:IRouterLocation|string) {
+export function setWindowLocation(location:IRouterLocation|string) {
 	if (isString(location)) {
 		location = {uri:location,params:{}}
 	}

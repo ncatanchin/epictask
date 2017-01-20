@@ -13,7 +13,7 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
-const IssueListConfigRecord = Record({
+export const IssueListConfigRecord = Record({
 	id: null,
 	name: null,
 	criteria: DefaultIssueCriteria,

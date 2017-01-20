@@ -250,7 +250,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 *
 	 * @returns {{form: Form}}
 	 */
-	getChildContext() {
+	getChildContext():any {
 		return {
 			form: this
 		}

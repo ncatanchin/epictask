@@ -2,8 +2,9 @@
 
 import {makePalette, Palettes} from '../material/MaterialTools'
 import { colorDarken } from "epic-styles/styles/ColorTools"
+import { IPalette } from "../material/MaterialTools"
 
-export function LightPalette() {
+export function LightPalette():IPalette {
 	const
 		palette = makePalette(
 			'LightPalette',

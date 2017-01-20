@@ -16,8 +16,8 @@ export const WindowEvents = {
 	ShutdownComplete: 'ShutdownComplete'
 }
 
-type TWindowEvents = typeof WindowEvents
-type TWindowType = typeof WindowType
+export type TWindowEvents = typeof WindowEvents
+export type TWindowType = typeof WindowType
 
 _.assignGlobal({
 	WindowType,

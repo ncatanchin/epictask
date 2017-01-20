@@ -275,7 +275,7 @@ export class RepoSyncManager {
 	/**
 	 * Sync milestones
 	 */
-	syncMilestones = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Milestone> = null, isDryRun = false) => {
+	syncMilestones:any = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Milestone> = null, isDryRun = false) => {
 		
 		const
 			client = createClient(),
@@ -362,7 +362,7 @@ export class RepoSyncManager {
 	 * @param isDryRun
 	 * @returns {Issue[]}
 	 */
-	syncIssues = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, syncChanges = null, onDataCallback:OnDataCallback<Issue> = null, isDryRun = false) => {
+	syncIssues:any = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, syncChanges = null, onDataCallback:OnDataCallback<Issue> = null, isDryRun = false) => {
 		
 		//this.progressTracker.increment(1)
 		
@@ -493,7 +493,7 @@ export class RepoSyncManager {
 	 * @param isDryRun
 	 * @returns {number}
 	 */
-	syncComments = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Comment> = null, isDryRun = false) => {
+	syncComments:any = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Comment> = null, isDryRun = false) => {
 		
 		let
 			pagesSet = false,
@@ -601,7 +601,7 @@ export class RepoSyncManager {
 	 * @param isDryRun
 	 * @returns {any}
 	 */
-	syncAssignees = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<User> = null, isDryRun = false) => {
+	syncAssignees:any = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<User> = null, isDryRun = false) => {
 		/*
 		 if (!(repo.permissions.push || repo.permissions.admin)) {
 		 log.debug(`Admin/Push access not granted for ${repo.full_name}, can not get collaborators`)
@@ -691,7 +691,7 @@ export class RepoSyncManager {
 	/**
 	 * Sync all the labels for a repo
 	 */
-	syncLabels = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Label> = null, isDryRun = false) => {
+	syncLabels:any = OneAtATime({}, async(stores:Stores, logger = null, progressTracker = null, onDataCallback:OnDataCallback<Label> = null, isDryRun = false) => {
 		
 		progressTracker && progressTracker.increment(2)
 		

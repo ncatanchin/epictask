@@ -1,3 +1,6 @@
+epictask-local.json
+tsconfig.epic-plugin.json
+
 .vscode/.*
 #build/
 #libs/**/*.*
@@ -8,7 +11,7 @@ src/**/*.d.ts
 dist
 logs
 
-epictask-local.json
+
 
 # Webpack Example - ignore loader cache
 .awcache

@@ -1,8 +1,5 @@
 // Imports
-
-import { connect } from "react-redux"
-import { PureRender, LabelChip, Button, Icon } from "epic-ui-components"
-import { createStructuredSelector } from "reselect"
+import { PureRender, LabelChip, Button, Icon, TextField } from "epic-ui-components"
 import {
 	ThemedStyles,
 	IThemedAttributes,
@@ -21,12 +18,8 @@ import {
 	makeWidthConstraint
 } from "epic-styles"
 import { Milestone, AvailableRepo } from "epic-models"
-import { DatePicker } from "material-ui"
-import { List } from "immutable"
-import { milestonesSelector, getRepoActions } from "epic-typedux"
-import { getValue } from "epic-global"
-import { cloneObjectShallow } from "epic-global/ObjectUtil"
-import { TextField } from "epic-ui-components/common"
+import { getRepoActions } from "epic-typedux"
+import { getValue, cloneObjectShallow } from "epic-global"
 
 
 // Constants

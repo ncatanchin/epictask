@@ -68,7 +68,7 @@ export interface IPopoverProps {
 	zDepth?: TZDepth
 }
 
-export class Popover extends Component<IPopoverProps,any> {
+export class Popover extends React.Component<IPopoverProps,any> {
 	
 	
 	static defaultProps = {

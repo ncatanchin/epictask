@@ -2,9 +2,10 @@ import "epic-entry-shared/AppEntry"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 
 import { loadProcessClientEntry } from "epic-entry-shared"
-
-const
-	{ProcessClientEntry} = loadProcessClientEntry()
+import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
+//
+// export const
+// 	{ProcessClientEntry:ProcessClientEntryRef} = loadProcessClientEntry()
 
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 
@@ -23,6 +24,7 @@ import { isPromise, isFunction } from "typeguard"
 import { benchmark } from "epic-global/Benchmark"
 import { DatabaseAdapter,getDatabaseAdapter } from "epic-database-adapters"
 import { AppEventType } from "epic-global/Constants"
+
 
 // Logger
 const

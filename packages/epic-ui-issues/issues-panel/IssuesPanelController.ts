@@ -8,7 +8,7 @@ import {
 	RepoKey,
 	UIKey,
 	Provided,
-	ContextMenu
+	ContextMenu, IOneAtATimeFn
 } from "epic-global"
 import IssuesPanelState from "./IssuesPanelState"
 import { IssueListConfig } from "./models/IssueListConfig"
@@ -383,7 +383,7 @@ export class IssuesPanelController extends StoreViewController<IssuesPanelState>
 	/**
 	 * Updates the current issues
 	 */
-	loadIssues = _.debounce(OneAtATime({}, async() => {
+	private loadIssues = _.debounce(OneAtATime({}, async() => {
 		const
 			{ listConfig, selectedIssueIds } = this.state,
 			criteria = getValue(() => listConfig.criteria,DefaultIssueCriteria),

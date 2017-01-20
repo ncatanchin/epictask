@@ -9,9 +9,7 @@ import {
 	Transparent,
 	Ellipsis,
 	createStyles,rem, makePaddingRem } from "../styles/CommonRules"
-import { colorLighten ,colorAlpha } from "epic-styles/styles/ColorTools"
-import { colorDarken } from "epic-styles/styles"
-
+import { colorDarken ,colorLighten ,colorAlpha } from "epic-styles/styles/ColorTools"
 
 
 /**
@@ -19,7 +17,6 @@ import { colorDarken } from "epic-styles/styles"
  */
 const
 	tc = require('tinycolor2'),
-	{colors:c} = Styles,
 	
 	navBarHeight = Env.isMac ? 50 : 20,
 	windowControlDim = navBarHeight / 5,

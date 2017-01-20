@@ -47,7 +47,7 @@ function getLogPrefix() {
 /**
  * Custom log Factory
  */
-function EpicLoggerFactory(name:string): IEpicLogger {
+export function EpicLoggerFactory(name:string): IEpicLogger {
 	
 	const
 		rootLogger = LoggerFactory(name) as any

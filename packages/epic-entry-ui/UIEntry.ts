@@ -5,10 +5,12 @@ import "epic-entry-shared/AppEntry"
 
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './App'
-import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
+import { ProcessType } from "epic-entry-shared"
+import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
+import { PluginManager } from "epic-plugin-manager"
 
-const
-	{ProcessClientEntry} = loadProcessClientEntry()
+// const
+// 	{ProcessClientEntry} = loadProcessClientEntry()
 
 
 polyfillRequire(__non_webpack_require__)
@@ -148,7 +150,11 @@ export class UIEntry extends ProcessClientEntry {
 		startupPromises.push(setupCommandManager())
 		startupPromises.push(setupUI())
 		
+		log.debug(`Starting internal ui`)
 		await Promise.all(startupPromises)
+		
+		log.debug(`Loading plugin manager`)
+		await PluginManager.init()
 	}
 	
 	/**

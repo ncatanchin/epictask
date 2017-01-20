@@ -32,6 +32,11 @@ declare interface ISettingsProps {
 	 * palette name
 	 */
 	paletteName?: string
+	
+	/**
+	 * All plugin directories currently configured
+	 */
+	pluginDirectories?: string[]
 }
 
 

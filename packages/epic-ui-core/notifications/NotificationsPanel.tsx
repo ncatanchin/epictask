@@ -14,7 +14,7 @@ import {
 } from "epic-typedux"
 import { GithubNotification } from "epic-models"
 import { NotificationListItem } from "./NotificationListItem"
-import { CommandComponent, CommandContainerBuilder } from "epic-command-manager-ui"
+import { CommandComponent, CommandContainerBuilder, ICommandContainerItems } from "epic-command-manager-ui"
 import { CommonKeys } from "epic-command-manager"
 import baseStyles from "./NotificationsPanel.styles"
 import { ContextMenu } from "epic-global"
@@ -77,7 +77,7 @@ export class NotificationsPanel extends React.Component<INotificationsPanelProps
 	 *
 	 * @param builder
 	 */
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			//MOVEMENT
 			.command(

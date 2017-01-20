@@ -38,7 +38,7 @@ export const ServiceScope = "Service"
 /**
  * Service Registry Scope
  */
-class ServiceRegistryScope implements IRegistryScope<IRegistryEntryService> {
+export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryService> {
 	
 	/**
 	 * Scope name

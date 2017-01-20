@@ -21,7 +21,7 @@ import { IssueMultiInlineList } from "../issues-panel/IssueMultiInlineList"
 import { IssuePatchModes } from "../issues-panel/IssuesPanelState"
 import IssuePatchController from "./IssuePatchController"
 import { IssuePatchState } from "./IssuePatchState"
-import { CommandContainerBuilder, CommandComponent, CommandRoot } from "epic-command-manager-ui"
+import { CommandContainerBuilder, CommandComponent, CommandRoot, ICommandContainerItems } from "epic-command-manager-ui"
 import { ViewRoot } from "epic-ui-components/layout"
 
 // Constants
@@ -159,7 +159,7 @@ export class IssuePatchDialog extends React.Component<IIssuePatchDialogProps,IIs
 	refs:any
 	
 	
-	commandItems = (builder:CommandContainerBuilder) =>
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
 		builder
 			.command(
 				CommonKeys.Escape,

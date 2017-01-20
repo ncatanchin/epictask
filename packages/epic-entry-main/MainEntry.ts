@@ -1,3 +1,4 @@
+import "./CheckSingleInstance"
 
 import Cleaner from './Cleaner'
 
@@ -10,7 +11,7 @@ import "./MainShutdownHandler"
 // LOAD DEPS
 import { showSplashWindow, hideSplashWindow } from "epic-entry-main/SplashWindow"
 import { app, BrowserWindow } from 'electron'
-import checkSingleInstance from "./CheckSingleInstance"
+
 import makeBootLoader from "epic-entry-shared/BootLoader"
 import './MainAppSwitches'
 
@@ -163,33 +164,14 @@ function start() {
 	loadMainApp()
 }
 
-/**
- * Callback from open if already running
- */
-function onSingletonFocus() {
-	
-	// APP FOCUS EVENT - LIKELY SOME TRYING TO START SECOND INSTANCE
-	const
-		allWindows = BrowserWindow.getAllWindows(),
-		win = allWindows && allWindows[ 0 ]
-	
-	if (win) {
-		win && win.isMinimized() && win.restore()
-		win.focus()
-	}
-	
-	
-}
 
 // FIRST - MAKE SURE WE ARE THE SINGLE INSTANCE
-if (checkSingleInstance(app, onSingletonFocus)) {
-	log.debug(`Is single instance`)
-	
-	if (app.isReady())
-		start()
-	else
-		app.on('ready', start)
-}
+
+if (app.isReady())
+	start()
+else
+	app.on('ready', start)
+
 
 
 if (module.hot)

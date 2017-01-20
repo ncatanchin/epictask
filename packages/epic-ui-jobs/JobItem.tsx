@@ -1,10 +1,10 @@
 // Imports
 
 import filterProps from "react-valid-props"
-import { PureRender, Icon } from "epic-ui-components"
+import { PureRender, Icon,LinearProgress } from "epic-ui-components"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { IJobStatusDetail, IJob, JobStatus, getJobDescription } from "epic-typedux"
-import { LinearProgress } from "material-ui"
+
 
 // Constants
 const log = getLogger(__filename)

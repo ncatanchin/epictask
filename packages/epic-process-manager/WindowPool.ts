@@ -55,7 +55,7 @@ const
 /**
  * generic-pool wrapper for windows
  */
-export class WindowPool extends Pool<BrowserWindow> {
+export class WindowPool extends Pool<Electron.BrowserWindow> {
 	
 	constructor(
 		public id:string,
