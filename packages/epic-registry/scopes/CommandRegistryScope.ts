@@ -7,7 +7,7 @@ import { isString } from "typeguard"
 const
 	log = getLogger(__filename)
 
-
+log.setOverrideLevel(LogLevel.DEBUG)
 /**
  * Global declarations
  */
