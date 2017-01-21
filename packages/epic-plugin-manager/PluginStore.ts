@@ -23,7 +23,7 @@ log.setOverrideLevel(LogLevel.DEBUG)
 
 export type TPluginLoaderMap = {[name:string]:PluginLoader}
 
-export enum PluginDirectoryEvent {
+export enum PluginStoreEvent {
 	Found,
 	Removed
 }
@@ -34,7 +34,7 @@ export enum PluginDirectoryEvent {
  * @class PluginDirectory
  * @constructor
  **/
-class PluginDirectory extends EnumEventEmitter<PluginDirectoryEvent> {
+class PluginStore extends EnumEventEmitter<PluginStoreEvent> {
 	
 	private watcher:FileWatcher
 	private watcherUnsubs:Function[]
@@ -52,7 +52,7 @@ class PluginDirectory extends EnumEventEmitter<PluginDirectoryEvent> {
 	}
 	
 	constructor(private dirname:string) {
-		super(PluginDirectoryEvent)
+		super(PluginStoreEvent)
 		this.dirname = Path.resolve(dirname)
 		
 		const
@@ -118,7 +118,7 @@ class PluginDirectory extends EnumEventEmitter<PluginDirectoryEvent> {
 			log.debug(`Init loader for ${file}`)
 			await loader.init()
 			
-			this.emit(PluginDirectoryEvent.Found,loader.getPlugin())
+			this.emit(PluginStoreEvent.Found,loader.plugin)
 		} catch (err) {
 			log.error(`Failed to create & init loader`,err)
 		}
@@ -203,4 +203,4 @@ class PluginDirectory extends EnumEventEmitter<PluginDirectoryEvent> {
 	
 }
 
-export default PluginDirectory
+export default PluginStore

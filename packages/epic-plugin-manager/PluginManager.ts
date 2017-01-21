@@ -1,18 +1,17 @@
-import { Map, Record, List } from "immutable"
 import {
-	getUserDataFilename, pluginDefaultPath, SettingsPath, guard, getHot, acceptHot,
+	getUserDataFilename,
+	pluginDefaultPath,
+	SettingsPath,
+	guard,
+	getHot,
+	acceptHot,
 	setDataOnHotDispose
 } from 'epic-global'
-import * as Fs from 'fs'
 import * as Path from 'path'
 import Glob = require('glob')
-import PluginDirectory from "./PluginDirectory"
-import { PluginDirectoryEvent } from "epic-plugin-manager/PluginDirectory"
-import { IPlugin } from "epic-plugin-manager/Plugin"
+import PluginStore,{ PluginStoreEvent }  from "./PluginStore"
 import { isString } from "typeguard"
-
-const
-	mkdirp = require('mkdirp')
+import mkdirp = require('mkdirp')
 
 /**
  * Created by jglanz on 1/15/17.
@@ -45,7 +44,7 @@ export namespace PluginManager {
 	
 	const
 		DefaultPath = pluginDefaultPath,
-		directories = getHot(module,'directories',{} as any) as {[directory:string]:PluginDirectory},
+		directories = getHot(module,'directories',{} as any) as {[directory:string]:PluginStore},
 		plugins = getHot(module,'plugins',{} as any) as {[name:string]:IPlugin}
 	
 	// HMR
@@ -66,7 +65,7 @@ export namespace PluginManager {
 	 *
 	 * @param dirs
 	 */
-	export function addDirectory(...dirs:string[]) {
+	export function addStore(...dirs:string[]) {
 		updateSettings({
 			pluginDirectories: _.uniq([
 				pluginDefaultPath,
@@ -76,7 +75,12 @@ export namespace PluginManager {
 		})
 	}
 	
-	export function removeDirectory(...dirs:string[]) {
+	/**
+	 * Remove directory
+	 *
+	 * @param dirs
+	 */
+	export function removeStore(...dirs:string[]) {
 		updateSettings({
 			pluginDirectories:
 				_.uniq([
@@ -93,11 +97,16 @@ export namespace PluginManager {
 	 */
 	export async function init() {
 		log.debug(`init plugin manager`)
-		unsubscribe = getStore().observe([...SettingsPath,'pluginDirectories'],loadDirectories)
-		await loadDirectories()
+		unsubscribe = getStore().observe([...SettingsPath,'pluginDirectories'],loadStores)
+		await loadStores()
 	}
 	
-	
+	/**
+	 * Register a plugin - usually from store event
+	 *
+	 * @param plugin
+	 * @returns {Promise<void>}
+	 */
 	export async function registerPlugin(plugin:IPlugin) {
 		if (plugins[plugin.name])
 			await unregisterPlugin(plugin)
@@ -117,6 +126,12 @@ export namespace PluginManager {
 		}
 	}
 	
+	/**
+	 * Unregister a plugin
+	 *
+	 * @param pluginOrName
+	 * @returns {Promise<void>}
+	 */
 	export async function unregisterPlugin(pluginOrName:IPlugin|string) {
 		const
 			name = isString(pluginOrName) ? pluginOrName : pluginOrName.name,
@@ -140,13 +155,25 @@ export namespace PluginManager {
 		delete plugins[name]
 	}
 	
-	export function onPluginFound(event:PluginDirectoryEvent,plugin:IPlugin) {
+	/**
+	 * On plugin found
+	 *
+	 * @param event
+	 * @param plugin
+	 */
+	export function onPluginFound(event:PluginStoreEvent, plugin:IPlugin) {
 		log.info(`Plugin found: ${plugin.name}`)
 		registerPlugin(plugin)
 		
 	}
 	
-	export function onPluginRemoved(event:PluginDirectoryEvent,plugin:IPlugin) {
+	/**
+	 * On plugin removed
+	 *
+	 * @param event
+	 * @param plugin
+	 */
+	export function onPluginRemoved(event:PluginStoreEvent, plugin:IPlugin) {
 		log.info(`Plugin removed: ${plugin.name}`)
 		unregisterPlugin(plugin)
 	}
@@ -161,7 +188,12 @@ export namespace PluginManager {
 		delete directories[dirname]
 	}
 	
-	async function loadDirectories() {
+	/**
+	 * Load all the stores
+	 * 
+	 * @returns {Promise<void>}
+	 */
+	async function loadStores() {
 		const
 			dirnames = getSettings().pluginDirectories
 		
@@ -185,10 +217,10 @@ export namespace PluginManager {
 			newDirnames.map(async (dirname) => {
 				try {
 					const
-						dir = directories[dirname] = new PluginDirectory(dirname)
+						dir = directories[dirname] = new PluginStore(dirname)
 					
-					dir.on(PluginDirectoryEvent.Found,onPluginFound)
-					dir.on(PluginDirectoryEvent.Removed,onPluginRemoved)
+					dir.on(PluginStoreEvent.Found,onPluginFound)
+					dir.on(PluginStoreEvent.Removed,onPluginRemoved)
 					
 					await dir.open()
 				} catch (err) {

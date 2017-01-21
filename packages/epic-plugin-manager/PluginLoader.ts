@@ -3,12 +3,13 @@ import shx = require('shelljs')
 import decompress = require('decompress')
 
 import { FileWatcherEvent, fileExists, cachePath, isDirectory, cloneObjectShallow } from "epic-global"
-import { IPlugin } from "./Plugin"
+
 
 import * as Path from 'path'
 import * as Fs from 'async-file'
 import { isDefined, getValue, isFunction } from "typeguard"
 import { unpackPluginZip } from "./PluginUtils"
+import { PluginModuleLoader } from "./PluginModuleLoader"
 
 const Module = require('module')
 
@@ -23,14 +24,22 @@ const
 log.setOverrideLevel(LogLevel.DEBUG)
 
 // Cache the plugin env
-nodeRequire.cache['epic-plugin-env'] = require('epic-plugin-env')
+//nodeRequire.cache['epic-plugin-env'] = require('epic-plugin-env')
 
 /**
  * Internal plugin rep
  */
 export interface IPluginInternal extends IPlugin {
-	mod:any
+	module:PluginModuleLoader
 }
+
+/**
+ * Lifecycle function
+ */
+export interface IPluginLifecycle {
+	():Promise<IPlugin>
+}
+
 
 /**
  * Plugin
@@ -94,16 +103,87 @@ export class PluginLoader {
 		
 	}
 	
+	/**
+	 * Directory that has the unpacked plugin
+	 */
 	private dirname:string
 	
+	/**
+	 * package.json
+	 */
 	private pkg:any
 	
+	/**
+	 * Is a directory
+	 */
 	private isDir:boolean
 	
+	/**
+	 * Is a zip
+	 */
 	private isZip:boolean
 	
-	private plugin:IPluginInternal
 	
+	/**
+	 * Plugin ref
+	 */
+	private _plugin:IPluginInternal
+	
+	/**
+	 * Get the plugin ref
+	 *
+	 * @returns {IPluginInternal}
+	 */
+	get plugin() {
+		return this._plugin
+	}
+	
+	/**
+	 * Create plugin facade wrapper for lifecycle events
+	 *
+	 * @param fnName
+	 * @returns {()=>Promise<IPluginInternal>}
+	 */
+	private makeFacade(fnName:string) {
+		return async () => {
+			if (isFunction(getValue(() => this.plugin.entry[fnName]))) {
+				try {
+					await this.plugin.entry[fnName]()
+				} catch (err) {
+					log.error(`Failed to ${fnName} plugin ${this.plugin.name}`,err)
+					throw err
+				}
+			}
+			return this.plugin
+		}
+	}
+	
+	/**
+	 * Call plugin load
+	 */
+	readonly load:IPluginLifecycle = this.makeFacade('load')
+	
+	/**
+	 * Call plugin unload
+	 */
+	readonly unload:IPluginLifecycle = this.makeFacade('unload')
+	
+	/**
+	 * Call plugin start
+	 */
+	readonly start:IPluginLifecycle = this.makeFacade('start')
+	
+	/**
+	 * Call plugin stop
+	 */
+	readonly stop:IPluginLifecycle = this.makeFacade('stop')
+	
+	
+	/**
+	 * Construct plugin loader
+	 *
+	 * @param dirOrZipname
+	 */
 	constructor(private dirOrZipname:string) {
 		assert(fileExists(dirOrZipname),`Directory or zip with filename does not exist: ${dirOrZipname}`)
 		
@@ -119,21 +199,14 @@ export class PluginLoader {
 		return this.plugin
 	}
 	
-	// private pluginRequire = (modName:string) => {
-	// 	if (modName === 'epic-plugin-env')
-	// 		return
-	//
-	// 	if (nodeRequire.cache[modName])
-	// 		return nodeRequire.cache[modName]
-	//
-	// 	if (this.internalRequireCache[modName])
-	// 		return this.internalRequireCache[modName]
-	//
-	//
-	// 	if (fileExists(Path.resolve()))
-	//
-	// 	nodeRequire(modName)
-	// }
+	/**
+	 * Set the plugin ref
+	 *
+	 * @param plugin
+	 */
+	private setPlugin(plugin:IPluginInternal) {
+		this._plugin = plugin
+	}
 	
 	/**
 	 * Initialize the loader
@@ -158,22 +231,23 @@ export class PluginLoader {
 			assert(fileExists(mainBasename) || fileExists(mainBasenameExtended),`Main file for plugin does not exist (${main}): ${mainBasename} / ${mainBasenameExtended}`)
 			
 			const
-				entry = fileExists(mainBasename) ? mainBasename : mainBasenameExtended,
-				entrySrc = await Fs.readFile(entry,'utf8'),
-				mod = nodeRequire(entry), //Module.prototype._compile(entrySrc,entry),
-				{load,unload,start,stop} = mod
+				entryFilename = fileExists(mainBasename) ? mainBasename : mainBasenameExtended,
+				module = new PluginModuleLoader(this,this.dirname), //Module.prototype._compile(entrySrc,entry),
+				entry = module.pluginRequire(entryFilename)
 			
-			this.plugin = {
+			this.setPlugin({
+				dirname: this.dirname,
 				name,
+				main: entryFilename,
 				description,
 				version,
 				entry,
-				mod,
+				module,
 				load: this.load,
 				unload: this.unload,
 				start: this.start,
 				stop: this.stop
-			}
+			})
 			
 			
 		} catch (err) {
@@ -183,55 +257,6 @@ export class PluginLoader {
 	}
 	
 	
-	
-	/**
-	 * Load the plugin
-	 *
-	 * @returns {Promise<IPlugin>}
-	 */
-	load = async ():Promise<IPlugin> => {
-		if (isFunction(getValue(() => this.plugin.mod.load))) {
-			try {
-				await this.plugin.mod.load()
-			} catch (err) {
-				log.error(`Failed to stop plugin ${this.plugin.name}`,err)
-			}
-		}
-		return this.plugin
-	}
-	
-	unload = async ():Promise<IPlugin> => {
-		if (isFunction(getValue(() => this.plugin.mod.unload))) {
-			try {
-				await this.plugin.mod.unload()
-			} catch (err) {
-				log.error(`Failed to stop plugin ${this.plugin.name}`,err)
-			}
-		}
-		return this.plugin
-	}
-	
-	start = async ():Promise<IPlugin> => {
-		if (isFunction(getValue(() => this.plugin.mod.start))) {
-			try {
-				await this.plugin.mod.start()
-			} catch (err) {
-				log.error(`Failed to stop plugin ${this.plugin.name}`,err)
-			}
-		}
-		return this.plugin
-	}
-	
-	stop = async ():Promise<IPlugin> => {
-		if (isFunction(getValue(() => this.plugin.mod.stop))) {
-			try {
-				await this.plugin.mod.stop()
-			} catch (err) {
-				log.error(`Failed to stop plugin ${this.plugin.name}`,err)
-			}
-		}
-		return this.plugin
-	}
 	
 	/**
 	 * Handle a file watcher event

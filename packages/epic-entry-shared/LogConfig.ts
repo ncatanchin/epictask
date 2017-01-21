@@ -149,12 +149,17 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 	
 	const wrappedLogger = [ 'trace', 'debug', 'info', 'warn', 'error' ].reduce((newLogger, levelName) => {
 		newLogger[ levelName ] = function (...args) {
-			MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
 			
-			if (typeof console !== 'undefined') {
-				const
-					fn = console[ levelName ] || console.log
-				fn.apply(console, args)
+			
+			try {
+				MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
+				if (typeof console !== 'undefined') {
+					const
+						fn = console[ levelName ] || console.log
+					fn.apply(console, args)
+				}
+			} catch (err) {
+				//console.warn(`logging failed: ${levelName}`,err)
 			}
 		}
 		return newLogger

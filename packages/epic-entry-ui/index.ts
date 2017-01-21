@@ -1,1 +1,1 @@
-export * from "./UIEntry"
+require("./UIEntry")

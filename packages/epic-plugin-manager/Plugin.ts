@@ -16,50 +16,64 @@ export function validatePlugin(o:any):o is IPlugin {
 /**
  * Plugin Shape
  */
-export interface IPlugin {
-	
-	/**
-	 * Unique name
-	 */
-	name:string
-	
-	/**
-	 * Description
-	 */
-	description?:string
-	
-	/**
-	 * The semver version
-	 */
-	version:string
-	
-	/**
-	 * Entry file (main in package.json)
-	 */
-	entry:string
-	
-	/**
-	 * in dev mode
-	 */
-	inDevMode?:boolean
-	
-	/**
-	 * Execute when loaded from filesystem
-	 */
-	load?:() => Promise<IPlugin>
-	
-	/**
-	 * Execute on unload
-	 */
-	unload?:() => Promise<IPlugin>
-	
-	/**
-	 * Start the plugin
-	 */
-	start():Promise<IPlugin>
-	
-	/**
-	 * Stop the plugin
-	 */
-	stop():Promise<IPlugin>
+declare global {
+	interface IPlugin {
+		
+		/**
+		 * Location of the plugin
+		 */
+		dirname:string
+		
+		/**
+		 * Unique name
+		 */
+		name:string
+		
+		/**
+		 * Description
+		 */
+		description?:string
+		
+		/**
+		 * Main entry filename
+		 */
+		main:string
+		
+		/**
+		 * The semver version
+		 */
+		version:string
+		
+		/**
+		 * Entry file (main in package.json)
+		 */
+		entry:string
+		
+		/**
+		 * in dev mode
+		 */
+		inDevMode?:boolean
+		
+		/**
+		 * Execute when loaded from filesystem
+		 */
+		load?:() => Promise<IPlugin>
+		
+		/**
+		 * Execute on unload
+		 */
+		unload?:() => Promise<IPlugin>
+		
+		/**
+		 * Start the plugin
+		 */
+		start():Promise<IPlugin>
+		
+		/**
+		 * Stop the plugin
+		 */
+		stop():Promise<IPlugin>
+	}
 }
+
+export {}

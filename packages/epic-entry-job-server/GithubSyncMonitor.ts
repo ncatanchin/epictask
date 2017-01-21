@@ -217,95 +217,104 @@ export class GithubSyncMonitor {
 		// POLL REPO EVENTS
 		const doNotificationsPoll = async () => {
 			
-			const
-				client = createClient()
-			
-			let
-				newestTimestamp:number,
-				firstPageReceived = false
-			
 			try {
-				
-				//noinspection RedundantConditionalExpressionJS
-				const allNotifications = await client.notifications({
-					eTag: notificationConfig.eTag,
-					params: assign(GithubSyncStatus.getSinceTimestampParams(NotificationsKey),{
-						all: true,
-						//moment(new
-						// Date(notificationConfig.polledTimestamp || 1)).format()
-					}),
-					// CALLED AFTER EACH PAGE
-					onDataCallback: async (pageNumber:number, totalPages:number, items:PagedArray<IGithubNotification>, headers:any) => {
-						
-						log.debug(`Got items on page ${pageNumber} or ${totalPages}`,items)
-						let
-							eTag = headers.get( 'ETag' ),
-							pollInterval = headers.get('X-Poll-Interval')
-						
-						// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
-						if (!firstPageReceived) {
-							firstPageReceived = true
-							log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
-							if (eTag && eTag.length && eTag !== "W/\"\"")
-								notificationConfig.eTag = eTag
-							
-							if (pollInterval)
-								notificationConfig.pollIntervalMillis = pollInterval * 1000
-						}
-						
-						// ITERATE LISTENERS & EMIT EVENTS
-						const
-							listenersWantToContinue = await invokeListenerFn(this.notificationState.listeners,'notificationsReceived',eTag,...items)
-						
-						
-						// CHECK IF WE SHOULD CONTINUE GETTING PAGES
-						const
-							firstItemTimestamp = items[0] && items[0].updated_at.getTime(),
-							lastItem = items[ items.length - 1 ],
-							lastItemTimestamp = lastItem && lastItem.updated_at.getTime(),
-							shouldContinue =
-								// NO LISTENER EXPLICITLY RETURNED FALSE
-								(listenersWantToContinue === true) &&
-								
-								// ALL DATA IS NEWER THEN OUR LAST POLL
-								(!notificationConfig.polledTimestamp || lastItemTimestamp > notificationConfig.polledTimestamp)
-						
-						// KEEP TRACK OF THE OLDEST TIMESTAMP
-						
-						if (!newestTimestamp || (firstItemTimestamp > newestTimestamp)) {
-							newestTimestamp = lastItemTimestamp
-							log.debug(`Set newest timestamp to newestTimestamp`)
-						}
-						
-						log.debug(`Received notifications events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
-						return shouldContinue
-						
-					}
-				})
-				
-				// CALLBACK AFTER ALL EVENTS
-				await invokeListenerFn(this.notificationState.listeners,'allNotificationsReceived',notificationConfig.eTag,...allNotifications)
-				
-				log.debug(`All notifications events - count ${allNotifications.length}, notified ${this.notificationState.listeners.length} listeners`)
-			} catch (err) {
-				if (err && err.statusCode === 304) {
-					log.debug(`Content has not been updated based on the previous eTag ${notificationConfig.eTag}`)
-					return
+				if (!getSettings().token) {
+					return log.info(`Token not set, can not poll notifications`)
 				}
 				
-				log.error(`Failed to get notifications events`,err)
+				
+				const
+					client = createClient()
+				
+				let
+					newestTimestamp:number,
+					firstPageReceived = false
+				
+				try {
+					
+					//noinspection RedundantConditionalExpressionJS
+					const allNotifications = await client.notifications({
+						eTag: notificationConfig.eTag,
+						params: assign(GithubSyncStatus.getSinceTimestampParams(NotificationsKey), {
+							all: true,
+							//moment(new
+							// Date(notificationConfig.polledTimestamp || 1)).format()
+						}),
+						// CALLED AFTER EACH PAGE
+						onDataCallback: async(pageNumber:number, totalPages:number, items:PagedArray<IGithubNotification>, headers:any) => {
+							
+							log.debug(`Got items on page ${pageNumber} or ${totalPages}`, items)
+							let
+								eTag = headers.get('ETag'),
+								pollInterval = headers.get('X-Poll-Interval')
+							
+							// UPDATE THE ETAG & INTERVAL ONLY ON THE FIRST PAGE
+							if (!firstPageReceived) {
+								firstPageReceived = true
+								log.debug(`On page ${pageNumber} we received eTag=${eTag} pollInterval=${pollInterval}s`)
+								if (eTag && eTag.length && eTag !== "W/\"\"")
+									notificationConfig.eTag = eTag
+								
+								if (pollInterval)
+									notificationConfig.pollIntervalMillis = pollInterval * 1000
+							}
+							
+							// ITERATE LISTENERS & EMIT EVENTS
+							const
+								listenersWantToContinue = await invokeListenerFn(this.notificationState.listeners, 'notificationsReceived', eTag, ...items)
+							
+							
+							// CHECK IF WE SHOULD CONTINUE GETTING PAGES
+							const
+								firstItemTimestamp = items[ 0 ] && items[ 0 ].updated_at.getTime(),
+								lastItem = items[ items.length - 1 ],
+								lastItemTimestamp = lastItem && lastItem.updated_at.getTime(),
+								shouldContinue =
+									// NO LISTENER EXPLICITLY RETURNED FALSE
+									(listenersWantToContinue === true) &&
+									
+									// ALL DATA IS NEWER THEN OUR LAST POLL
+									(!notificationConfig.polledTimestamp || lastItemTimestamp > notificationConfig.polledTimestamp)
+							
+							// KEEP TRACK OF THE OLDEST TIMESTAMP
+							
+							if (!newestTimestamp || (firstItemTimestamp > newestTimestamp)) {
+								newestTimestamp = lastItemTimestamp
+								log.debug(`Set newest timestamp to newestTimestamp`)
+							}
+							
+							log.debug(`Received notifications events, page ${pageNumber} of ${totalPages}, based on timestamps - continuing=${shouldContinue}`)
+							return shouldContinue
+							
+						}
+					})
+					
+					// CALLBACK AFTER ALL EVENTS
+					await invokeListenerFn(this.notificationState.listeners, 'allNotificationsReceived', notificationConfig.eTag, ...allNotifications)
+					
+					log.debug(`All notifications events - count ${allNotifications.length}, notified ${this.notificationState.listeners.length} listeners`)
+				} catch (err) {
+					if (err && err.statusCode === 304) {
+						log.debug(`Content has not been updated based on the previous eTag ${notificationConfig.eTag}`)
+						return
+					}
+					
+					log.error(`Failed to get notifications events`, err)
+				}
+				
+				if (newestTimestamp) {
+					notificationConfig.polledTimestamp = newestTimestamp + 1
+					log.debug(`Set last polled timestamp to ${notificationConfig.polledTimestamp}`)
+				}
+				
+				
+			} catch (err) {
+				log.error(`Notification polling failed`,err)
 			}
-			
-			if (newestTimestamp) {
-				notificationConfig.polledTimestamp = newestTimestamp + 1
-				log.debug(`Set last polled timestamp to ${notificationConfig.polledTimestamp}`)
-			}
-			
-			
 		}
 		
-		// Start the poll, add a finally handler to set running to false
-		doNotificationsPoll().finally(() => {
+		// Schedule Next Poll
+		const scheduleNextPoll = () => {
 			notificationConfig.running = false
 			
 			const
@@ -313,7 +322,10 @@ export class GithubSyncMonitor {
 			
 			log.debug(`Scheduling next notifications poll in ${pollIntervalMillis / 1000}s`)
 			notificationConfig.pollTimer = setTimeout(() => this.pollNotifications(),pollIntervalMillis) as any
-		})
+		}
+		
+		// Start the poll, add a finally handler to set running to false
+		doNotificationsPoll().finally(scheduleNextPoll)
 	}
 	
 	/**

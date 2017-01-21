@@ -2,12 +2,14 @@
 import 'styles/UIEntry.global.scss'
 
 import "epic-entry-shared/AppEntry"
+import { ProcessType } from "epic-entry-shared/ProcessType"
+import { loadProcessClientEntry} from "epic-entry-shared"
 
 import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './App'
 //import { ProcessType } from "epic-entry-shared"
 //import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
-import { loadProcessClientEntry, ProcessType } from "epic-entry-shared"
+
 
 const
 	{ProcessClientEntry} = loadProcessClientEntry()
@@ -24,6 +26,9 @@ const
 	log = getLogger(__filename),
 	startupPromises = [],
 	UIResourcesLoaded = Promise.defer()
+
+
+log.info(`Starting UIEntry`)
 
 /**
  * Setup dev tools
@@ -103,7 +108,7 @@ function setupUI() {
 /**
  * UI entry point
  */
-class UIEntry extends ProcessClientEntry {
+export class UIEntry extends ProcessClientEntry {
 	
 	/**
 	 * Create UI Entry
@@ -178,7 +183,7 @@ class UIEntry extends ProcessClientEntry {
 }
 
 
-const uiEntry = getHot(module,'uiEntry',new UIEntry())
+export const uiEntry:any = getHot(module,'uiEntry',new UIEntry())
 
 if (module.hot) {
 	module.hot.addStatusHandler(newStatus => {
@@ -194,8 +199,5 @@ setDataOnHotDispose(module,() => ({
 }))
 
 
-export {
-
-}
 
 acceptHot(module,log)

@@ -73,7 +73,7 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 		
 		
 		log.debug(`Adding new directories for plugins`, newDirs)
-		PluginManager.addDirectory(...newDirs)
+		PluginManager.addStore(...newDirs)
 		
 	}
 	
@@ -108,7 +108,7 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 						<div style={[ Styles.FlexAuto ]}>
 							{pluginDefaultPath !== dir ?
 								<IconButton
-									onClick={() => PluginManager.removeDirectory(dir)}
+									onClick={() => PluginManager.removeStore(dir)}
 									iconSet="material-icons" iconName="delete"/> :
 								<span style={styles.pluginDirectories.default}>DEFAULT</span>}
 						</div>

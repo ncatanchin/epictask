@@ -12,11 +12,10 @@ const
  */
 
 const
-	log = getLogger(__filename),
-	DebuggingWindowOpen = false
+	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
@@ -136,7 +135,7 @@ class WindowFactory {
 			newWindowId = newWindow.id
 			
 			// USE TO DEBUG WHEN WINDOWS NOT OPENING
-			if (DebuggingWindowOpen) {
+			if (Env.DebugWindowOpen) {
 				newWindow.show()
 				newWindow.webContents.openDevTools()
 			}
@@ -154,10 +153,10 @@ class WindowFactory {
 				.then(newWindow => `Window is now ready: ${newWindow.id}`)
 			
 		} catch (err) {
-			log.error(`Unable to create browser window for pool`, err)
+			log.error(`Window failed (${newWindowId})`, err)
 			
 			
-			if (!DebuggingWindowOpen && newWindow && !newWindow.isDestroyed())
+			if (!Env.DebugWindowOpen && newWindow && !newWindow.isDestroyed())
 				guard(() => newWindow.destroy())
 		
 			throw err
