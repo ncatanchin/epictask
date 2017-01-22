@@ -7,8 +7,7 @@ import {
 	FileWatcher, guard, FileWatcherEvent, fileExists, setDataOnHotDispose, getHot,
 	addHotDisposeHandler
 } from "epic-global"
-import { PluginLoader } from "epic-plugin-manager/PluginLoader"
-import { EnumEventEmitter } from "type-enum-events"
+import { PluginFile } from "./PluginFile"
 
 /**
  * Created by jglanz on 1/16/17.
@@ -21,12 +20,9 @@ const
 // DEBUG OVERRIDE
 log.setOverrideLevel(LogLevel.DEBUG)
 
-export type TPluginLoaderMap = {[name:string]:PluginLoader}
+export type TPluginFileMap = {[name:string]:PluginFile}
 
-export enum PluginStoreEvent {
-	Found,
-	Removed
-}
+
 
 /**
  * PluginDirectory
@@ -34,13 +30,13 @@ export enum PluginStoreEvent {
  * @class PluginDirectory
  * @constructor
  **/
-class PluginStore extends EnumEventEmitter<PluginStoreEvent> {
+class PluginStore {
 	
 	private watcher:FileWatcher
 	private watcherUnsubs:Function[]
 	private deferred:Promise.Resolver<boolean>
 	
-	private pluginLoaders:TPluginLoaderMap
+	private pluginFiles:TPluginFileMap
 	
 	/**
 	 * Get the directory path/name
@@ -52,15 +48,14 @@ class PluginStore extends EnumEventEmitter<PluginStoreEvent> {
 	}
 	
 	constructor(private dirname:string) {
-		super(PluginStoreEvent)
 		this.dirname = Path.resolve(dirname)
 		
 		const
 			pluginKey = `plugins-${this.dirname}`
 		
-		this.pluginLoaders = getHot(module,pluginKey,{})
+		this.pluginFiles = getHot(module,pluginKey,{})
 		
-		setDataOnHotDispose(module,() => ({[pluginKey]: this.pluginLoaders}))
+		setDataOnHotDispose(module,() => ({[pluginKey]: this.pluginFiles}))
 		addHotDisposeHandler(module,() => this.close())
 	}
 	
@@ -97,7 +92,7 @@ class PluginStore extends EnumEventEmitter<PluginStoreEvent> {
 		}
 		
 		const
-			isValidPlugin = await PluginLoader.isPluginFilename(file)
+			isValidPlugin = await PluginFile.isPluginFilename(file)
 		
 		if (!isValidPlugin) {
 			return log.debug(`${file} is not a valid plugin dir or zip`)
@@ -111,14 +106,16 @@ class PluginStore extends EnumEventEmitter<PluginStoreEvent> {
 			log.debug(`Creating loader for ${file}`)
 			
 			const
-				loader = new PluginLoader(file)
+				pluginFile = new PluginFile(file)
 			
-			this.pluginLoaders[file] = loader
+			this.pluginFiles[file] = pluginFile
 			
 			log.debug(`Init loader for ${file}`)
-			await loader.init()
+			const
+				fileInfo = await pluginFile.init()
 			
-			this.emit(PluginStoreEvent.Found,loader.plugin)
+			EventHub.emit(EventHub.PluginFound,fileInfo)
+			
 		} catch (err) {
 			log.error(`Failed to create & init loader`,err)
 		}

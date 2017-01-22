@@ -169,7 +169,11 @@ export enum AppEventType {
 	Authenticated,
 		
 	TrayOpen,
-	TrayClose
+	TrayClose,
+	
+	PluginFound,
+	PluginUpdate,
+	PluginRemoved
 	
 	
 }
@@ -205,6 +209,11 @@ export const Events = {
 	
 	// UI
 	UIReady: AppEventType[AppEventType.UIReady],
+	
+	// PLUGINS
+	PluginFound: AppEventType[AppEventType.PluginFound],
+	PluginUpdated: AppEventType[AppEventType.PluginUpdate],
+	PluginRemoved: AppEventType[AppEventType.PluginRemoved],
 	
 	// STORE
 	StoreReady: AppEventType[AppEventType.StoreReady],

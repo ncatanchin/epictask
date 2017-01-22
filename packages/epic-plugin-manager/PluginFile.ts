@@ -23,22 +23,6 @@ const
 // DEBUG OVERRIDE
 log.setOverrideLevel(LogLevel.DEBUG)
 
-// Cache the plugin env
-//nodeRequire.cache['epic-plugin-env'] = require('epic-plugin-env')
-
-/**
- * Internal plugin rep
- */
-export interface IPluginInternal extends IPlugin {
-	module:PluginModuleLoader
-}
-
-/**
- * Lifecycle function
- */
-export interface IPluginLifecycle {
-	():Promise<IPlugin>
-}
 
 
 /**
@@ -47,7 +31,7 @@ export interface IPluginLifecycle {
  * @class Plugin
  * @constructor
  **/
-export class PluginLoader {
+export class PluginFile {
 	
 	/**
 	 * Get the JSON descriptor for a plugin
@@ -66,7 +50,7 @@ export class PluginLoader {
 			const
 				pkgJson = await Fs.readFile(pkgFilename),
 				pkg = JSON.parse(pkgJson)
-				
+			
 			return pkg && pkg.epictaskPlugin && pkg.main ? pkg : null
 		} catch (err) {
 			return null
@@ -84,7 +68,7 @@ export class PluginLoader {
 			isDir = (await Fs.stat(filename)).isDirectory()
 		
 		return (isDir) ?
-			isDefined(await PluginLoader.getPluginDescriptor(filename)) :
+			isDefined(await PluginFile.getPluginDescriptor(filename)) :
 			false
 	}
 	
@@ -96,7 +80,7 @@ export class PluginLoader {
 	 */
 	static async isPluginFilename(filename:string) {
 		const
-			isDir = await PluginLoader.isPluginDir(filename),
+			isDir = await PluginFile.isPluginDir(filename),
 			isZip = !isDir && _.toLower(Path.extname(filename)) === '.zip'
 		
 		return isZip || isDir
@@ -124,87 +108,19 @@ export class PluginLoader {
 	private isZip:boolean
 	
 	
-	/**
-	 * Plugin ref
-	 */
-	private _plugin:IPluginInternal
-	
-	/**
-	 * Get the plugin ref
-	 *
-	 * @returns {IPluginInternal}
-	 */
-	get plugin() {
-		return this._plugin
-	}
-	
-	/**
-	 * Create plugin facade wrapper for lifecycle events
-	 *
-	 * @param fnName
-	 * @returns {()=>Promise<IPluginInternal>}
-	 */
-	private makeFacade(fnName:string) {
-		return async () => {
-			if (isFunction(getValue(() => this.plugin.entry[fnName]))) {
-				try {
-					await this.plugin.entry[fnName]()
-				} catch (err) {
-					log.error(`Failed to ${fnName} plugin ${this.plugin.name}`,err)
-					throw err
-				}
-			}
-			return this.plugin
-		}
-	}
-	
-	/**
-	 * Call plugin load
-	 */
-	readonly load:IPluginLifecycle = this.makeFacade('load')
-	
-	/**
-	 * Call plugin unload
-	 */
-	readonly unload:IPluginLifecycle = this.makeFacade('unload')
-	
-	/**
-	 * Call plugin start
-	 */
-	readonly start:IPluginLifecycle = this.makeFacade('start')
-	
-	/**
-	 * Call plugin stop
-	 */
-	readonly stop:IPluginLifecycle = this.makeFacade('stop')
+	fileInfo:IPluginFileInfo
 	
 	
 	/**
 	 * Construct plugin loader
 	 *
-	 * @param pluginFileInfo
+	 * @param dirOrZipname
 	 */
-	constructor(private pluginFileInfo:IPluginFileInfo) {
-	
+	constructor(private dirOrZipname:string) {
+		assert(Env.isMain,`Plugin file only loads on main`)
+		assert(fileExists(dirOrZipname),`Directory or zip with filename does not exist: ${dirOrZipname}`)
 	}
 	
-	/**
-	 * Get the plugin instance
-	 *
-	 * @returns {IPlugin}
-	 */
-	getPlugin():IPlugin {
-		return this.plugin
-	}
-	
-	/**
-	 * Set the plugin ref
-	 *
-	 * @param plugin
-	 */
-	private setPlugin(plugin:IPluginInternal) {
-		this._plugin = plugin
-	}
 	
 	/**
 	 * Initialize the loader
@@ -212,33 +128,40 @@ export class PluginLoader {
 	 * @returns {Promise<void>}
 	 */
 	async init() {
-		const
-			{entryFilename,description,version,unpackDirname} = this.pluginFileInfo
-		
 		try {
+			this.isDir = await PluginFile.isPluginDir(this.dirOrZipname)
+			this.isZip = !this.isDir && _.toLower(Path.extname(this.dirOrZipname)) === '.zip'
+			this.dirname = this.isZip ? (await unpackPluginZip(this.dirOrZipname)) : this.dirOrZipname
+			this.pkg = await PluginFile.getPluginDescriptor(this.dirname)
+			
 			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
 			const
-				module = new PluginModuleLoader(this,unpackDirname), //Module.prototype._compile(entrySrc,entry),
-				entry = module.pluginRequire(entryFilename)
+				{name,description,version,main} = this.pkg
 			
-			this.setPlugin({
-				dirname: this.dirname,
+			let
+				mainBasename = Path.resolve(this.dirname,main),
+				mainBasenameExtended = mainBasename + '.js'
+			
+			assert(fileExists(mainBasename) || fileExists(mainBasenameExtended),`Main file for plugin does not exist (${main}): ${mainBasename} / ${mainBasenameExtended}`)
+			
+			const
+				entryFilename = fileExists(mainBasename) ? mainBasename : mainBasenameExtended
+			
+			return this.fileInfo = {
 				name,
-				main: entryFilename,
 				description,
 				version,
-				entry,
-				module,
-				load: this.load,
-				unload: this.unload,
-				start: this.start,
-				stop: this.stop
-			})
+				entryFilename,
+				unpackDirname: this.dirname,
+				filename: this.dirOrZipname,
+				isZip: this.isZip,
+			}
+			
 			
 			
 		} catch (err) {
-			log.error(`Failed to init plugin: ${unpackDirname}`,err)
-			getNotificationCenter().notifyError(`Unable to init plugin (${unpackDirname}): ${err.message}`)
+			log.error(`Failed to init plugin: ${this.dirOrZipname}`,err)
+			getNotificationCenter().notifyError(`Unable to init plugin (${this.dirOrZipname}): ${err.message}`)
 		}
 	}
 	
@@ -257,8 +180,18 @@ export class PluginLoader {
 	
 }
 
-export default PluginLoader
+export default PluginFile
 
 declare global {
-	interface IPluginLoader extends PluginLoader {}
+	interface IPluginFile extends PluginFile {}
+	
+	interface IPluginFileInfo {
+		name:string
+		description:string
+		version:string
+		isZip:boolean
+		filename:string
+		unpackDirname:string
+		entryFilename:string
+	}
 }

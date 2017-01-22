@@ -9,7 +9,7 @@ import {
 } from 'epic-global'
 import * as Path from 'path'
 import Glob = require('glob')
-import PluginStore,{ PluginStoreEvent }  from "./PluginStore"
+import PluginStore  from "./PluginStore"
 import { isString } from "typeguard"
 import mkdirp = require('mkdirp')
 
@@ -161,7 +161,7 @@ export namespace PluginManager {
 	 * @param event
 	 * @param plugin
 	 */
-	export function onPluginFound(event:PluginStoreEvent, plugin:IPlugin) {
+	export function onPluginFound(event, plugin:IPlugin) {
 		log.info(`Plugin found: ${plugin.name}`)
 		registerPlugin(plugin)
 		
@@ -173,7 +173,7 @@ export namespace PluginManager {
 	 * @param event
 	 * @param plugin
 	 */
-	export function onPluginRemoved(event:PluginStoreEvent, plugin:IPlugin) {
+	export function onPluginRemoved(event, plugin:IPlugin) {
 		log.info(`Plugin removed: ${plugin.name}`)
 		unregisterPlugin(plugin)
 	}
@@ -219,8 +219,8 @@ export namespace PluginManager {
 					const
 						dir = directories[dirname] = new PluginStore(dirname)
 					
-					dir.on(PluginStoreEvent.Found,onPluginFound)
-					dir.on(PluginStoreEvent.Removed,onPluginRemoved)
+					EventHub.on(EventHub.PluginFound,onPluginFound)
+					EventHub.on(EventHub.PluginRemoved,onPluginRemoved)
 					
 					await dir.open()
 				} catch (err) {
