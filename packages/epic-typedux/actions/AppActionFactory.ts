@@ -5,10 +5,13 @@ import {
 } from "epic-global"
 
 import { User } from "epic-models"
+import { PluginState } from "../state/PluginState"
 import { AppState } from "../state/AppState"
 import { AppStateType } from "../state/app/AppStateType"
 import { Settings } from "epic-global/settings/Settings"
 import { getWindowManagerClient } from "epic-process-manager-client"
+import { isString } from "typeguard"
+
 
 
 const
@@ -421,6 +424,39 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	@ActionReducer()
 	setStateType(stateType:AppStateType) {
 		return (state:AppState) => state.set('stateType', stateType)
+	}
+	
+	/**
+	 * Set a plugin config
+	 *
+	 * @param pluginConfig
+	 */
+	@ActionReducer()
+	setPluginConfig(pluginConfig:IPluginConfig) {
+		return (state:AppState) => {
+			const
+				{plugins} = state
+			
+			let
+				pluginState = plugins.get(pluginConfig.name) || new PluginState()
+			
+			pluginState = pluginState.set('config',pluginConfig) as any
+			
+			return state.set('plugins', state.plugins.set(pluginConfig.name,pluginState))
+		}
+	}
+	
+	/**
+	 * Remove plugin config
+	 *
+	 * @param pluginConfigOrName
+	 */
+	@ActionReducer()
+	removePluginConfig(pluginConfigOrName:IPluginConfig) {
+		const
+			name = isString(pluginConfigOrName) ? pluginConfigOrName : pluginConfigOrName.name
+		
+		return (state:AppState) => state.set('plugins', state.plugins.remove(name))
 	}
 	
 	/**

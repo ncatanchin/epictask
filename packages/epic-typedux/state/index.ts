@@ -1,4 +1,5 @@
 export * from './TrayState'
+export * from './PluginState'
 export * from './AppState'
 export * from "./AuthState"
 export * from "./JobState"

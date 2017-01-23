@@ -173,7 +173,8 @@ export enum AppEventType {
 	
 	PluginFound,
 	PluginUpdate,
-	PluginRemoved
+	PluginRemoved,
+	PluginResourceChanged
 	
 	
 }
@@ -214,7 +215,7 @@ export const Events = {
 	PluginFound: AppEventType[AppEventType.PluginFound],
 	PluginUpdated: AppEventType[AppEventType.PluginUpdate],
 	PluginRemoved: AppEventType[AppEventType.PluginRemoved],
-	
+	PluginResourceChanged: AppEventType[AppEventType.PluginResourceChanged],
 	// STORE
 	StoreReady: AppEventType[AppEventType.StoreReady],
 	StoreGetMainState: AppEventType[AppEventType.StoreGetMainState],

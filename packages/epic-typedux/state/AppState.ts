@@ -5,6 +5,7 @@ import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-global/ModelUtil"
 import { TrayState } from "./TrayState"
+import {PluginState} from "./PluginState"
 
 
 export type TWindowMap = Map<number,IWindowState>
@@ -19,6 +20,7 @@ export const AppStateRecord:Record.Class = Record({
 	settings: new Settings(),
 	ready: false,
 	tray: new TrayState(),
+	plugins: Map<string,PluginState>(),
 	user: null,
 	customAccelerators: Map<string,string>(),
 	messages:List<INotification>(),
@@ -38,7 +40,8 @@ export class AppState extends AppStateRecord {
 			settings = o && (o.get ? o.get('settings') : o.settings)
 		
 		if (o) {
-			const trayState = new TrayState(o.tray || {})
+			const
+				trayState = new TrayState(o.tray || {})
 			
 			o.set ? o.set('tray',trayState) : o.tray = trayState
 		}
@@ -47,12 +50,29 @@ export class AppState extends AppStateRecord {
 			o,
 			AppState,
 			['messages'],
-			['windows','customAccelerators']
+			['windows','customAccelerators','plugins']
 		)
 		
 		if (!settings || !(settings instanceof Settings))
 			appState = appState.set('settings',new Settings(settings)) as any
-				
+		
+		let
+			updatePlugins = List<PluginState>(),
+			{plugins} = appState
+		
+		plugins.valueSeq().forEach(plugin => {
+			if (plugin instanceof PluginState)
+				return
+			
+			updatePlugins = updatePlugins.push(new PluginState(plugin))
+		})
+		
+		
+		
+		updatePlugins.forEach(plugin =>
+			plugins = plugins.set(plugin.config.name,plugin)
+		)
+		
 		return appState
 		
 	}
@@ -64,13 +84,14 @@ export class AppState extends AppStateRecord {
 	 */
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-			...excludeFilter('ready','messages')
+			...excludeFilter('ready','messages','plugins')
 		))
 	}
 	
 	stateType:AppStateType
 	ready:boolean
 	tray:TrayState
+	plugins: Map<string,PluginState>
 	settings:Settings
 	user:User
 	zoom:number

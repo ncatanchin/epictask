@@ -182,9 +182,9 @@ export class PluginLoader {
 	/**
 	 * Construct plugin loader
 	 *
-	 * @param pluginFileInfo
+	 * @param pluginConfig
 	 */
-	constructor(private pluginFileInfo:IPluginFileInfo) {
+	constructor(private pluginConfig:IPluginConfig) {
 	
 	}
 	
@@ -213,18 +213,20 @@ export class PluginLoader {
 	 */
 	async init() {
 		const
-			{entryFilename,description,version,unpackDirname} = this.pluginFileInfo
+			{name,main,description,version,dirname,isZip,filename} = this.pluginConfig
 		
 		try {
 			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
 			const
-				module = new PluginModuleLoader(this,unpackDirname), //Module.prototype._compile(entrySrc,entry),
-				entry = module.pluginRequire(entryFilename)
+				module = new PluginModuleLoader(this,dirname), //Module.prototype._compile(entrySrc,entry),
+				entry = module.pluginRequire(main)
 			
 			this.setPlugin({
+				filename,
+				isZip,
 				dirname: this.dirname,
 				name,
-				main: entryFilename,
+				main,
 				description,
 				version,
 				entry,
@@ -237,8 +239,8 @@ export class PluginLoader {
 			
 			
 		} catch (err) {
-			log.error(`Failed to init plugin: ${unpackDirname}`,err)
-			getNotificationCenter().notifyError(`Unable to init plugin (${unpackDirname}): ${err.message}`)
+			log.error(`Failed to init plugin: ${dirname}`,err)
+			getNotificationCenter().notifyError(`Unable to init plugin (${dirname}): ${err.message}`)
 		}
 	}
 	

@@ -1,4 +1,7 @@
 import {getAppConfig} from "epic-entry-shared/AppConfig"
+import { getValue } from "typeguard"
+
+import * as Path from 'path'
 
 const
 	log = getLogger(__filename),
@@ -8,7 +11,7 @@ const
 
 	fs = require('fs'),
 	fsp = Promise.promisifyAll(fs),
-	path = require('path'),
+	
 	dataUrl = require('dataurl'),
 	fileProto = 'file://',
 	httpProto = 'http://',
@@ -74,12 +77,12 @@ function fixedEncodeURI (str) {
 }
 
 export function getUserDataFilename(...filenameParts:string[]) {
-	return path.join(userDataPath,...filenameParts)
+	return Path.join(userDataPath,...filenameParts)
 }
 
 export function absoluteFilename(filename) {
 	return (fs.existsSync(filename)) ?
-		path.resolve(filename) : path.resolve(Env.baseDir,filename)
+		Path.resolve(filename) : Path.resolve(Env.baseDir,filename)
 }
 
 export function cacheFilename(basename:string) {
@@ -328,7 +331,7 @@ export function searchPathsForFile(filename:string,...searchPaths:string[]) {
 			log.info(`Looking for ${filename} using base path ${baseResourcePath} @ ${searchPath}`)
 			try {
 					const
-						hardPath = path.resolve(baseResourcePath)
+						hardPath = Path.resolve(baseResourcePath)
 				
 					if (fs.existsSync(hardPath)) {
 						resolvedPath = hardPath
@@ -380,4 +383,8 @@ export function isDirectory(dirname:string) {
 	} catch (err) {
 		return false
 	}
+}
+
+export function isZipFile(filename:string) {
+	return getValue(() => Path.extname(filename) === '.zip',false)
 }

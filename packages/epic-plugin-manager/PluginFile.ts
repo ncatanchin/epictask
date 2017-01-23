@@ -2,7 +2,7 @@ import { Map, Record, List } from "immutable"
 import shx = require('shelljs')
 import decompress = require('decompress')
 
-import { FileWatcherEvent, fileExists, cachePath, isDirectory, cloneObjectShallow } from "epic-global"
+import { FileWatcherEvent, fileExists, cachePath, isDirectory, cloneObjectShallow, isZipFile } from "epic-global"
 
 
 import * as Path from 'path'
@@ -107,8 +107,11 @@ export class PluginFile {
 	 */
 	private isZip:boolean
 	
+	private fileChanged = false
 	
-	fileInfo:IPluginFileInfo
+	private fileUpdateDeferred:Promise.Resolver<IPluginConfig>
+	
+	config:IPluginConfig
 	
 	
 	/**
@@ -123,15 +126,70 @@ export class PluginFile {
 	
 	
 	/**
+	 * unpack the zip file
+	 *
+	 * @returns {Promise<string>}
+	 */
+	private unpackZip() {
+		if (this.dirname && isDirectory(this.dirname)) {
+			log.debug(`Cleaning directory before unpack: ${this.dirname}`)
+			shx.rm('-Rf',this.dirname)
+		}
+		
+		return unpackPluginZip(this.dirOrZipname)
+	}
+	
+	/**
+	 * Update / this only does something if the file is a zip file
+	 * in which case it extracts the file again
+	 * @returns {Promise<IPluginConfig>}
+	 */
+	async update():Promise<IPluginConfig> {
+		const
+			{fileUpdateDeferred} = this
+		
+		if (fileUpdateDeferred) {
+			this.fileChanged = true
+			
+			return (await this.fileUpdateDeferred.promise)
+		}
+		
+		// WE ARE STARTING NOW, SO CLEAR FLAG
+		this.fileChanged = false
+		this.fileUpdateDeferred = Promise.defer()
+		
+		// UPDATE / Re-unpack the file
+		if (this.isZip) {
+			await this.unpackZip()
+		}
+		
+		
+		const
+			{fileChanged} = this
+		
+		this.fileChanged = false
+		this.fileUpdateDeferred = null
+		
+		// IF THE FILE CHANGED AGAIN
+		if (fileChanged) {
+			await this.update()
+		}
+		
+		fileUpdateDeferred.resolve(this.config)
+		return this.config
+		
+	}
+	
+	/**
 	 * Initialize the loader
 	 *
-	 * @returns {Promise<void>}
+	 * @returns {Promise<IPluginFileInfo>}
 	 */
-	async init() {
+	async init():Promise<IPluginConfig> {
 		try {
 			this.isDir = await PluginFile.isPluginDir(this.dirOrZipname)
-			this.isZip = !this.isDir && _.toLower(Path.extname(this.dirOrZipname)) === '.zip'
-			this.dirname = this.isZip ? (await unpackPluginZip(this.dirOrZipname)) : this.dirOrZipname
+			this.isZip = !this.isDir && isZipFile(this.dirOrZipname)
+			this.dirname = this.isZip ? (await this.unpackZip()) : this.dirOrZipname
 			this.pkg = await PluginFile.getPluginDescriptor(this.dirname)
 			
 			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
@@ -144,15 +202,13 @@ export class PluginFile {
 			
 			assert(fileExists(mainBasename) || fileExists(mainBasenameExtended),`Main file for plugin does not exist (${main}): ${mainBasename} / ${mainBasenameExtended}`)
 			
-			const
-				entryFilename = fileExists(mainBasename) ? mainBasename : mainBasenameExtended
 			
-			return this.fileInfo = {
+			return this.config = {
 				name,
 				description,
 				version,
-				entryFilename,
-				unpackDirname: this.dirname,
+				main: fileExists(mainBasename) ? mainBasename : mainBasenameExtended,
+				dirname: this.dirname,
 				filename: this.dirOrZipname,
 				isZip: this.isZip,
 			}
@@ -185,13 +241,5 @@ export default PluginFile
 declare global {
 	interface IPluginFile extends PluginFile {}
 	
-	interface IPluginFileInfo {
-		name:string
-		description:string
-		version:string
-		isZip:boolean
-		filename:string
-		unpackDirname:string
-		entryFilename:string
-	}
+	
 }

@@ -5,6 +5,7 @@ import shx = require('shelljs')
 import decompress = require('decompress')
 
 import { fileExists, cachePath } from "epic-global"
+import { getValue, isNil, isFunction } from "typeguard"
 
 const
 	log = getLogger(__filename)
@@ -41,4 +42,22 @@ export async function unpackPluginZip(zipFilename:string) {
 		throw err
 	}
 	
+}
+
+
+/**
+ * Validate a plugin is valid
+ *
+ * @param o
+ * @returns {boolean}
+ */
+export function validatePlugin(o:any):o is IPlugin {
+	return !isNil(o) &&
+		['name','version','context'].every(prop => o.hasOwnProperty(prop)) &&
+		['start','stop'].every(it => isFunction(o[it]))
+}
+
+
+export function isPluginEnabled(config:IPluginConfig) {
+	return getValue(() => config && config.enabled !== false, true)
 }

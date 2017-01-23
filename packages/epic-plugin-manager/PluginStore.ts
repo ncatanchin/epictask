@@ -8,6 +8,8 @@ import {
 	addHotDisposeHandler
 } from "epic-global"
 import { PluginFile } from "./PluginFile"
+import { getValue } from "typeguard"
+import { getAppActions } from "epic-typedux/provider"
 
 /**
  * Created by jglanz on 1/16/17.
@@ -73,9 +75,38 @@ class PluginStore {
 	 * @param event
 	 * @param filename
 	 */
-	private onWatcherEvent = (event:FileWatcherEvent,filename:string) => {
+	private onWatcherEvent = async (event:FileWatcherEvent,filename:string) => {
 		log.debug(`Event received (${FileWatcherEvent[event]}) for ${filename}`)
 		
+		const
+			parentDirname = Path.dirname(filename)
+		
+		if (parentDirname === this.dirname) {
+			log.debug(`Root file event: ${filename}`)
+			
+			const
+				pluginFile = this.pluginFiles[filename],
+				pluginConfig = getValue(() => pluginFile && pluginFile.config)
+			
+			// DELETED
+			if (event === FileWatcherEvent.Delete) {
+				if (pluginConfig) {
+					getAppActions().removePluginConfig(pluginConfig)
+					EventHub.broadcast(EventHub.PluginRemoved,pluginConfig)
+				}
+				
+				return
+			} else if (pluginConfig) {
+				await pluginFile.update()
+				getAppActions().setPluginConfig(pluginFile.config)
+				EventHub.broadcast(EventHub.PluginUpdate,pluginFile.config)
+			} else {
+				await this.processFile(filename)
+			}
+			
+		} else {
+			log.debug(`Child file event: ${filename}`)
+		}
 	}
 	
 	/**
@@ -84,6 +115,9 @@ class PluginStore {
 	 * @param file
 	 */
 	private processFile = async (file) => {
+		if (!Env.isMain)
+			return log.debug(`Only runs on main process`)
+		
 		if (!(await Fs.exists(file)))
 			file = Path.resolve(this.dirname,file)
 		
@@ -112,9 +146,10 @@ class PluginStore {
 			
 			log.debug(`Init loader for ${file}`)
 			const
-				fileInfo = await pluginFile.init()
+				pluginConfig = await pluginFile.init()
 			
-			EventHub.emit(EventHub.PluginFound,fileInfo)
+			getAppActions().setPluginConfig(pluginConfig)
+			EventHub.broadcast(EventHub.PluginFound,pluginConfig)
 			
 		} catch (err) {
 			log.error(`Failed to create & init loader`,err)
@@ -129,6 +164,9 @@ class PluginStore {
 	 * @returns {Promise<void>}
 	 */
 	private async processAllFiles() {
+		if (!Env.isMain)
+			return log.debug(`Only runs on main process`)
+		
 		const
 			files = await Fs.readdir(this.dirname)
 		
@@ -143,6 +181,9 @@ class PluginStore {
 	 * Clean the plugin directory
 	 */
 	private clean() {
+		if (!Env.isMain)
+			return log.debug(`Only runs on main process`)
+		
 		guard(() => this.watcherUnsubs.forEach(it => it()))
 		
 		if (this.deferred && !this.deferred.promise.isResolved()) {
@@ -161,6 +202,9 @@ class PluginStore {
 	 * Open and start watching
 	 */
 	async open():Promise<boolean> {
+		if (!Env.isMain) {
+			throw new Error(`Only runs on main process`)
+		}
 		
 		// CLEAN
 		this.clean()
@@ -178,6 +222,7 @@ class PluginStore {
 					this.deferred.reject(`No directory found at ${this.dirname}`)
 				} else {
 					await this.processAllFiles()
+					
 					this.watcher = new FileWatcher(this.dirname, true, this.onWatcherReady)
 					this.watcherUnsubs = this.watcher.onAll(this.onWatcherEvent)
 					await this.deferred.promise.timeout(TIMEOUT)

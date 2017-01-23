@@ -194,6 +194,10 @@ export namespace PluginManager {
 	 * @returns {Promise<void>}
 	 */
 	async function loadStores() {
+		if (!Env.isMain) {
+			return log.debug('only load plugin stores on main')
+		}
+		
 		const
 			dirnames = getSettings().pluginDirectories
 		

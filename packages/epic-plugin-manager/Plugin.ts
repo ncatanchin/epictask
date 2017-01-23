@@ -1,24 +1,22 @@
-
+import {Map,List,Record} from 'immutable'
 import { isNil, isFunction } from "typeguard"
 
-/**
- * Validate a plugin is valid
- *
- * @param o
- * @returns {boolean}
- */
-export function validatePlugin(o:any):o is IPlugin {
-	return !isNil(o) &&
-		['name','version','context'].every(prop => o.hasOwnProperty(prop)) &&
-		['start','stop'].every(it => isFunction(o[it]))
+export enum PluginStatus {
+	Processed = 1,
+	Updating = 2,
+	Running = 3,
+	Stopped = 4
 }
+
+assignGlobal({
+	PluginStatus
+})
 
 /**
  * Plugin Shape
  */
 declare global {
-	interface IPlugin {
-		
+	interface IPluginConfig {
 		/**
 		 * Location of the plugin
 		 */
@@ -34,10 +32,6 @@ declare global {
 		 */
 		description?:string
 		
-		/**
-		 * Main entry filename
-		 */
-		main:string
 		
 		/**
 		 * The semver version
@@ -47,12 +41,23 @@ declare global {
 		/**
 		 * Entry file (main in package.json)
 		 */
-		entry:string
+		main:string
 		
 		/**
 		 * in dev mode
 		 */
 		inDevMode?:boolean
+		
+		enabled?:boolean
+		
+		isZip:boolean
+		filename:string
+		
+	}
+	
+	interface IPlugin extends IPluginConfig {
+		
+		entry?: any
 		
 		/**
 		 * Execute when loaded from filesystem
@@ -73,6 +78,18 @@ declare global {
 		 * Stop the plugin
 		 */
 		stop():Promise<IPlugin>
+	}
+	
+	enum PluginStatus {
+		Processed = 1,
+		Updating = 2,
+		Running = 3,
+		Stopped = 4
+	}
+	
+	interface IPluginState extends Map<string,any> {
+		config:IPluginConfig
+		processStatus:Map<string,PluginStatus>
 	}
 }
 
