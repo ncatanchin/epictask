@@ -464,6 +464,8 @@ export class GitHubClient {
 	 * @param pageNumber
 	 * @param totalPages
 	 * @param results
+	 * @param headers
+	 * @return {any}
 	 */
 	private doDataCallback(opts:RequestOptions, pageNumber:number, totalPages:number, results,headers) {
 		if (opts.onDataCallback) {
@@ -548,7 +550,7 @@ export class GitHubClient {
 			}
 			
 			throw new GithubError(
-				_.get(result,'message',response.statusText),
+				getValue(() => result.message,response.statusText),
 				response.status,
 				result && result.errors
 			)
@@ -683,7 +685,6 @@ export class GitHubClient {
 	 * Delete comment
 	 *
 	 * @param repo
-	 * @param issue
 	 * @param comment
 	 * @returns {any}
 	 */
@@ -929,7 +930,6 @@ export class GitHubClient {
 	 * All comments for all issues in a repo
 	 *
 	 * @param repo
-	 * @param issue
 	 * @param opts
 	 * @returns {PagedArray<Comment>}
 	 */
@@ -969,19 +969,30 @@ export class GitHubClient {
 
 }
 
-// Create a new GitHubClient
+/**
+ * Extend the GitHub client prototype, you should extend the class typing
+ * with a declaration where the extension is created
+ *
+ * @param protoExt
+ */
+export function extendGithubClient(protoExt:{[fnName:string]:Function}) {
+	Object.assign(GitHubClient.prototype,protoExt)
+}
+
+/**
+ * Create a new client
+ * @param token
+ * @returns {GitHubClient}
+ */
 export function createClient(token:string = getValue(() => getSettings().token)) {
-	if (process.env.EPIC_CLI && !token) {
-		if (DEBUG) {
-			token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
-			log.debug(`Using API token ${token}`)
-		}
+	if (DEBUG && process.env.EPIC_CLI && !token) {
+		token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
+		log.debug(`Using API token ${token}`)
 	}
 	
 	
 	// If not set and env var exists then use it
 	//token = token ||	process.env.GITHUB_API_TOKEN
-		
 	if (!token)
 		throw new Error('No valid token available')
 
@@ -991,17 +1002,19 @@ export function createClient(token:string = getValue(() => getSettings().token))
 /**
  * Add globally in DEBUG
  */
-if (DEBUG) {
-	assignGlobal({
-		getGithubClient() {
-			log.debug(`You should be in DEBUG mode`)
-			
-			return createClient()
-		},
-		getGithubRateLimitInfo,
-		GitHubClient
-	})
+declare global {
+	interface IGitHubClient extends GitHubClient {}
+	function getGithubClient():IGitHubClient
 }
+
+assignGlobal({
+	getGithubClient() {
+		return createClient()
+	},
+	getGithubRateLimitInfo,
+	GitHubClient
+})
+
 
 
 Container.bind(GitHubClient).provider({ get: () => createClient()})

@@ -7,12 +7,15 @@ import { makeInjector } from "../Inject"
 
 
 
+
 const
 	log = getLogger(__filename)
 
 
 
-
+function getServiceManager() {
+	return require("epic-services/internal/ServiceManager").ServiceManager.getInstance()
+}
 /**
  * Scope name
  *
@@ -55,20 +58,21 @@ export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryServic
 	/**
 	 * Add component to the scope
 	 *
-	 * @param id
+	 * @param name
 	 * @param opts
 	 * @param target
 	 */
-	register(id:string,opts:IToolRegistration,target:any) {
-		this.registerService(id,target)
+	register(name:string,opts:IToolRegistration,target:any) {
+		log.debug(`Registering service: ${name}`)
+		getServiceManager().register(target)
 	}
 	
 	/**
 	 * Remove a component from the scope
 	 *
-	 * @param id
+	 * @param target
 	 */
-	unregister(id:string) {
+	unregister(target:any) {
 		
 	}
 	
@@ -87,7 +91,7 @@ export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryServic
 		log.info(`Registering model: ${clazzName}`)
 		
 		
-		this.registerService(clazzName,target)
+		this.register(clazzName,null,target)
 		
 		return target
 	}
@@ -100,32 +104,7 @@ export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryServic
 		log.info(`Registering model: ${clazzName}`)
 		
 		
-		this.registerService(clazzName,target)
-		
-		
-	}
-	
-	
-	
-	/**
-	 * Manual register a clazz
-	 *
-	 * @param name
-	 * @param clazz
-	 */
-	registerService<T>(name,clazz:IServiceConstructor) {
-		log.debug(`Registering service: ${name}`)
-		
-		let
-			service = this.scope[name]
-		
-		if (service) {
-			Object.setPrototypeOf(service, clazz.prototype)
-		} else {
-			this.scope[name] = new clazz()
-		}
-		
-		this.injectors[name] = makeInjector(ServiceScope,name)
+		this.unregister(target)
 		
 	}
 	
@@ -136,8 +115,8 @@ export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryServic
 	 * @param name
 	 * @returns {any}
 	 */
-	getService(name):any {
-		return this.scope[name]
+	get(name):IService {
+		return getServiceManager().getService(name)
 	}
 	
 }
@@ -222,6 +201,8 @@ declare global {
 			function Register(target:IServiceConstructor)
 			
 			function Unregister(target:IServiceConstructor)
+			
+			function get(name:string):IService
 		}
 	}
 	

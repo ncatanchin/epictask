@@ -1,17 +1,16 @@
 
 
 import { getValue } from "typeguard"
+import { ActionFactoryKeyMap ,AppKey } from "epic-global/Constants"
 
+
+
+function getAppActions() {
+	return Scopes.Services.get(ActionFactoryKeyMap[AppKey]) as IAppActionFactory
+}
 
 export function getSettings():ISettings {
-	const
-		appActions = Registry.Service.AppActions as IAppActionFactory
-	
-	return getValue(() => appActions.state.settings as any)
-	
-	// return getValue(() =>
-	// 	getStoreState().get(AppKey).settings
-	// )
+	return getValue(() => getStoreState().get(AppKey).settings as any)
 }
 
 export function updateSettings(newSettings:ISettingsProps) {
@@ -26,11 +25,7 @@ export function updateSettings(newSettings:ISettingsProps) {
 		settings = settings.set(key,newSettings[key])
 	})
 	
-	
-	const
-		appActions = Registry.Service.AppActions as IAppActionFactory
-	
-	appActions.setSettings(settings as any)
+	getAppActions().setSettings(settings as any)
 }
 
 

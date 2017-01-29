@@ -1,34 +1,10 @@
 import {
 	JobKey, IssueKey, RepoKey, AppKey, AuthKey, UIKey, If,
-	isFunction
+	isFunction, IActionFactoryKeyMap, ActionFactoryKeyMap
 } from "epic-global"
 
-const log = getLogger(__filename)
-
-// export interface IJobLeaf {
-// 	leaf: "Jo"
-// }
-/**
- * Map of string literal types to action factory types
- */
-export type IActionFactoryKeyMap = {
-	["JobState"]:IJobActionFactory
-	["AuthState"]:IAuthActionFactory
-	["AppState"]:IAppActionFactory
-	["IssueState"]:IIssueActionFactory
-	["RepoState"]:IRepoActionFactory
-	["UIState"]:IUIActionFactory
-}
-
-export const ActionFactoryKeyMap = {
-	["JobState"]:"JobActions",
-	["AuthState"]:"AuthActions",
-	["AppState"]:"AppActions",
-	["IssueState"]:"IssueActions",
-	["RepoState"]:"RepoActions",
-	["UIState"]:"UIActions"
-}
-
+const
+	log = getLogger(__filename)
 
 
 /**
@@ -48,26 +24,27 @@ export const ActionFactoryProviders:IActionFactoryKeyMap = new Proxy({},{
 
 
 export function getJobActions():IJobActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[JobKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[JobKey]) as any
 }
 
 export function getUIActions():IUIActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[UIKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[UIKey]) as any
+	
 }
 
 export function getAuthActions():IAuthActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[AuthKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[AuthKey]) as any
 }
 
 export function getAppActions():IAppActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[AppKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[AppKey]) as any
 }
 
 
 export function getRepoActions():IRepoActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[RepoKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[RepoKey]) as any
 }
 
 export function getIssueActions():IIssueActionFactory {
-	return Registry.Service[ActionFactoryKeyMap[IssueKey]]
+	return Scopes.Services.get(ActionFactoryKeyMap[IssueKey]) as any
 }

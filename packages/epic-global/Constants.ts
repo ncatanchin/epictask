@@ -110,6 +110,27 @@ export type TActionFactoryKeys =
 		'JobState'
 
 
+/**
+ * Map of string literal types to action factory types
+ */
+export type IActionFactoryKeyMap = {
+	["JobState"]:IJobActionFactory
+	["AuthState"]:IAuthActionFactory
+	["AppState"]:IAppActionFactory
+	["IssueState"]:IIssueActionFactory
+	["RepoState"]:IRepoActionFactory
+	["UIState"]:IUIActionFactory
+}
+
+export const ActionFactoryKeyMap = {
+	["JobState"]:"JobActions",
+	["AuthState"]:"AuthActions",
+	["AppState"]:"AppActions",
+	["IssueState"]:"IssueActions",
+	["RepoState"]:"RepoActions",
+	["UIState"]:"UIActions"
+}
+
 export const SynchronizedStateKeys = [
 	AppKey,JobKey
 ]

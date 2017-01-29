@@ -28,13 +28,13 @@ import {
 	makeCommentId,
 	User
 } from "epic-models"
-import { repoIdPredicate, availableReposSelector, availableRepoIdsSelector } from '../selectors'
+import { availableReposSelector, availableRepoIdsSelector } from '../selectors'
 
 import {JobType} from "../state/jobs/JobTypes"
 import JobDAO from "epic-typedux/state/jobs/JobDAO"
 import { createClient } from "epic-github"
 import { shallowEquals } from "epic-global/ObjectUtil"
-import { isList, isNumber, isString } from "typeguard"
+import { isList, isString } from "typeguard"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
 
 const log = getLogger(__filename)

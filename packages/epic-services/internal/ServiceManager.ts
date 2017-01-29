@@ -1,5 +1,6 @@
 import {setDataOnHotDispose, getHot, acceptHot } from  "epic-global/HotUtils"
 import {VariableProxy} from 'epic-global/VariableProxy'
+import { getValue, isFunction } from "typeguard"
 
 
 
@@ -34,6 +35,28 @@ export function getServiceManager() {
  * Service Manager for starting/stopping/loading/reloading all services
  */
 export class ServiceManager {
+	
+	
+	/**
+	 * Get singleton
+	 *
+	 * @returns {ServiceManager}
+	 */
+	static getInstance():ServiceManager {
+		if (!serviceManager) {
+			serviceManager = new ServiceManager()
+			
+			if (!serviceManagerProxy) {
+				log.info('Creating service manager proxy')
+				serviceManagerProxy = new VariableProxy(ServiceManager as any,serviceManager)
+			}
+			
+			Container.bind(ServiceManager).provider({
+				get: () => serviceManagerProxy.handler
+			})
+		}
+		return serviceManager
+	}
 	
 	/**
 	 * Internal variable proxy map
@@ -80,26 +103,6 @@ export class ServiceManager {
 		return this.started && !this.stopped
 	}
 	
-	/**
-	 * Get singleton
-	 *
-	 * @returns {ServiceManager}
-	 */
-	static getInstance():ServiceManager {
-		if (!serviceManager) {
-			serviceManager = new ServiceManager()
-			
-			if (!serviceManagerProxy) {
-				log.info('Creating service manager proxy')
-				serviceManagerProxy = new VariableProxy(ServiceManager as any,serviceManager)
-			}
-			
-			Container.bind(ServiceManager).provider({
-				get: () => serviceManagerProxy.handler
-			})
-		}
-		return serviceManager
-	}
 	
 	private constructor() {
 		
@@ -220,7 +223,11 @@ export class ServiceManager {
 	 */
 	register(serviceConstructor:IServiceConstructor) {
 		
-		const {name} = serviceConstructor
+		let
+			{name,ServiceName} = serviceConstructor
+		
+		if (ServiceName)
+			name = ServiceName
 		
 		// Check for existing reg
 		const reg:IServiceRegistration = this.registrations[name]
@@ -259,16 +266,19 @@ export class ServiceManager {
 		_.remove(this.pendingServices,it => it.name === name)
 		
 		// Add the new reg to the pending list
-		this.pendingServices.push(this.registrations[name] = {
-			name,
-			proxy,
-			service,
-			serviceConstructor,
-			loaded: false
-		})
+		const
+			hasLifecycle = isFunction(service.init) || isFunction(service.start),
+			serviceReg = this.registrations[name] = {
+				name,
+				proxy,
+				service,
+				serviceConstructor,
+				loaded: !hasLifecycle
+			}
+			
+		if (hasLifecycle)
+			this.pendingServices.push(serviceReg)
 	}
-	
-	
 	
 	
 	/**
@@ -285,6 +295,29 @@ export class ServiceManager {
 		await this.processPendingServices()
 	}
 	
+	
+	/**
+	 * Get service status, when available, otherwise running
+	 *
+	 * @param service
+	 */
+	getServiceStatus(service:IService) {
+		return getValue(() => service.status(),ServiceStatus.Created)
+	}
+	
+	/**
+	 * Get a service instance
+	 *
+	 * @param name
+	 * @returns {IService}
+	 */
+	getService(name:string):IService {
+		const
+			reg = this.registrations[name]
+		
+		assert(reg,`Unknown service name: ${name}`)
+		return reg.service
+	}
 	
 	/**
 	 * Process all pending services
@@ -310,8 +343,10 @@ export class ServiceManager {
 			
 			while (!allLoaded()) {
 				nextReg = pendingServices.find(it => {
-					return it.service.dependencies().length === 0 || it.service.dependencies().every(reg =>
-						this.registrations[reg.name] && this.registrations[reg.name].loaded)
+					const
+						deps = getValue(() => it.service.dependencies(),[])
+					
+					return deps.length === 0 || deps.every(reg => getValue(() => this.registrations[reg.name].loaded,true))
 				})
 				
 				if (!nextReg){
@@ -319,16 +354,20 @@ export class ServiceManager {
 					throw new Error('No available reg that has all deps satisfied')
 				}
 				
-				if (nextReg.service.status() > ServiceStatus.Created) {
+				
+				
+				if (this.getServiceStatus(nextReg.service) > ServiceStatus.Created) {
 					//noinspection ExceptionCaughtLocallyJS
 					throw new Error(`Can not init & start a service that is not in the Created state: ${nextReg.name} / ${nextReg.service.status()}`)
 				}
 				
 				log.info(`Init ${nextReg.name}`)
-				await nextReg.service.init()
+				if (isFunction(nextReg.service.init))
+					await nextReg.service.init()
 				
 				log.info(`Starting ${nextReg.name}`)
-				await nextReg.service.start()
+				if (isFunction(nextReg.service.start))
+					await nextReg.service.start()
 				
 				log.info(`Loaded successfully ${nextReg.name}`)
 				nextReg.loaded = true
@@ -346,9 +385,6 @@ export class ServiceManager {
 		}
 	}
 }
-
-
-
 
 // HMR
 setDataOnHotDispose(module,() => ({
