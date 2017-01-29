@@ -6,7 +6,7 @@ import {
 } from "epic-database-client/DatabaseClient"
 import { Issue,User ,Milestone,Label ,AvailableRepo,Comment ,Repo } from "epic-models"
 
-import { BaseService, IServiceConstructor, RegisterService } from "epic-services/internal"
+import { BaseService, RegisterService } from "epic-services/internal"
 import { DatabaseClientService } from "epic-services/DatabaseClientService"
 import { changesToModels, changesToDeletedIds } from "epic-database-client/DatabaseUtil"
 import { getAppActions } from "epic-typedux/provider/ActionFactoryProvider"
@@ -26,6 +26,7 @@ const
 @RegisterService(ProcessType.UI,ProcessType.JobServer)
 export class UIModelWatcherService extends BaseService {
 	
+	static readonly ServiceName = "UIModelWatcherService"
 	
 	/**
 	 * DatabaseClientService must be loaded first

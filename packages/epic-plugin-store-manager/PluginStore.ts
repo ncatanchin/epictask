@@ -1,6 +1,7 @@
+import "epic-plugin"
 import Path = require('path')
 import * as Fs from 'async-file'
-import Plugin from "./Plugin"
+
 
 import { Map, Record, List } from "immutable"
 import {
@@ -94,12 +95,9 @@ class PluginStore {
 					getAppActions().removePluginConfig(pluginConfig)
 					EventHub.broadcast(EventHub.PluginRemoved,pluginConfig)
 				}
-				
-				return
 			} else if (pluginConfig) {
 				await pluginFile.update()
-				getAppActions().setPluginConfig(pluginFile.config)
-				EventHub.broadcast(EventHub.PluginUpdate,pluginFile.config)
+				EventHub.broadcast(EventHub.PluginUpdate,pluginConfig)
 			} else {
 				await this.processFile(filename)
 			}
@@ -140,15 +138,17 @@ class PluginStore {
 			log.debug(`Creating loader for ${file}`)
 			
 			const
-				pluginFile = new PluginFile(file)
+				pluginFile = new PluginFile(this.dirname,file)
 			
 			this.pluginFiles[file] = pluginFile
 			
-			log.debug(`Init loader for ${file}`)
+			
 			const
 				pluginConfig = await pluginFile.init()
 			
-			getAppActions().setPluginConfig(pluginConfig)
+			log.debug(`Setting configuration for ${pluginConfig.name}`)
+			
+			
 			EventHub.broadcast(EventHub.PluginFound,pluginConfig)
 			
 		} catch (err) {

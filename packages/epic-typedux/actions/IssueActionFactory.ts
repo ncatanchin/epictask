@@ -39,10 +39,7 @@ import {
 	getUIActions
 } from '../provider'
 import { GitHubClient } from "epic-github"
-import { ContainerNames } from "epic-command-manager"
-
-
-import { getDatabaseClient } from "epic-database-client/DatabaseClient"
+import { getDatabaseClient } from "epic-database-client"
 import { getValue, toNumber, isDefined } from "typeguard"
 
 
@@ -88,27 +85,7 @@ export interface IIssueDataUpdate {
 
 
 declare global {
-	interface IIssueActionFactory extends IssueActionFactory {
-		
-	}
-	
-	/**
-	 * Add the AppActions Injector
-	 */
-	namespace Inject {
-		namespace Service {
-			const IssueActions:IInjector<IIssueActionFactory>
-		}
-	}
-	
-	/**
-	 * Add the service to the registry
-	 */
-	namespace Registry {
-		namespace Service {
-			const IssueActions:IIssueActionFactory
-		}
-	}
+	interface IIssueActionFactory extends IssueActionFactory {}
 }
 
 
@@ -118,11 +95,11 @@ declare global {
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@ServiceRegistryScope.Register
+@Scopes.Services.Register
 @Provided
 export class IssueActionFactory {
 	
-	static ServiceName = "IssueActions"
+	static readonly ServiceName = "IssueActions"
 	
 	constructor() {
 	}

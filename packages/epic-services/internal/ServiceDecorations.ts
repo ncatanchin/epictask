@@ -1,5 +1,4 @@
 
-import {IServiceConstructor} from "./Types"
 import {ServiceManager} from "./ServiceManager"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 

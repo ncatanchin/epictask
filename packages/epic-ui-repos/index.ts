@@ -1,6 +1,6 @@
 
 import { makePromisedComponent, acceptHot } from "epic-global"
-import { getUIActions, getRepoActions } from "epic-typedux/provider"
+import { getUIActions, getRepoActions } from "epic-typedux"
 
 const
 	log = getLogger(__dirname)
@@ -8,7 +8,7 @@ const
 /**
  * Commands
  */
-CommandRegistryScope.Register({
+Scopes.Commands.Register({
 	id: 'RepoImport',
 	type: CommandType.App,
 	name: 'Import Repository',
@@ -26,7 +26,7 @@ CommandRegistryScope.Register({
 /**
  * Register Views
  */
-ViewRegistryScope.Register({
+Scopes.Views.Register({
 	id: "ReposPanel",
 	name: "Repos Panel",
 	type: "ReposPanel",

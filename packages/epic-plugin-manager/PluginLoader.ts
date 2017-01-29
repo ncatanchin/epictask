@@ -8,7 +8,6 @@ import { FileWatcherEvent, fileExists, cachePath, isDirectory, cloneObjectShallo
 import * as Path from 'path'
 import * as Fs from 'async-file'
 import { isDefined, getValue, isFunction } from "typeguard"
-import { unpackPluginZip } from "./PluginUtils"
 import { PluginModuleLoader } from "./PluginModuleLoader"
 
 const Module = require('module')
@@ -205,7 +204,7 @@ export class PluginLoader {
 	private setPlugin(plugin:IPluginInternal) {
 		this._plugin = plugin
 	}
-	
+	i
 	/**
 	 * Initialize the loader
 	 *
@@ -213,7 +212,7 @@ export class PluginLoader {
 	 */
 	async init() {
 		const
-			{name,main,description,version,dirname,isZip,filename} = this.pluginConfig
+			{name,main,description,version,updatedAt,dirname,isZip,filename,storeDirname} = this.pluginConfig
 		
 		try {
 			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
@@ -222,6 +221,8 @@ export class PluginLoader {
 				entry = module.pluginRequire(main)
 			
 			this.setPlugin({
+				updatedAt,
+				storeDirname,
 				filename,
 				isZip,
 				dirname: this.dirname,

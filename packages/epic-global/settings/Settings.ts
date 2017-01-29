@@ -19,7 +19,8 @@ export const SettingsRecord = Record({
 	themeName: null,
 	paletteName: null,
 	
-	pluginDirectories: [
+	pluginsEnabled: {},
+	pluginStores: [
 		pluginDefaultPath
 	]
 	
@@ -60,7 +61,7 @@ export class Settings extends SettingsRecord implements ISettingsProps {
 	/**
 	 * All plugin directories currently configured
 	 */
-	pluginDirectories: string[]
+	pluginStores: string[]
 }
 
 export default Settings

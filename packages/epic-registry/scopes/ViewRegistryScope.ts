@@ -8,34 +8,13 @@ const
 	log = getLogger(__filename)
 
 
-/**
- * Global declarations
- */
-declare global {
-	
-	interface IViewConfig {
-		id:string
-		name:string
-		type:string
-		state?: any
-		defaultView?:boolean
-		provider?: TPromisedComponentLoader
-	}
-	
-	interface IRegistryEntryView extends IRegistryEntry<IViewConfig> {
-		
-	}
-	
-	
-}
-
 
 /**
  * Scope name
  *
  * @type {string}
  */
-export const ViewScope = "View"
+export const ViewScope = "Views"
 
 
 /**
@@ -160,7 +139,26 @@ const
 	viewRegistryScope = getHot(module,'hotInstance',new ViewRegistryScope())
 
 
+
+
+/**
+ * Global declarations
+ */
 declare global {
+	
+	interface IViewConfig {
+		id:string
+		name:string
+		type:string
+		state?: any
+		defaultView?:boolean
+		provider?: TPromisedComponentLoader
+	}
+	
+	
+	interface IRegistryEntryView extends IRegistryEntry<IViewConfig> {
+	
+	}
 	
 	type TViewConfigMap = {[type:string]:IViewConfig}
 	
@@ -169,54 +167,55 @@ declare global {
 	 */
 	function getViews():TViewConfigMap
 	
-	/**
-	 * View Registry Scope
-	 */
-	namespace ViewRegistryScope {
-		
+	
+	namespace Scopes {
 		/**
-		 * Register a view
-		 *
-		 * @param config
-		 * @constructor
+		 * View Registry Scope
 		 */
-		function Register(config:IViewConfig)
-		
-		/**
-		 * Get all registered views
-		 */
-		function all():IViewConfig[]
-		
-		/**
-		 * Get all as map
-		 */
-		function asMap():TViewConfigMap
-		
-		/**
-		 * Get a view by name
-		 *
-		 * @param name
-		 */
-		function getDefault():IViewConfig
-		
-		
-		/**
-		 * Get a view by name
-		 *
-		 * @param name
-		 */
-		function get(name:string):IViewConfig
-		
-		
+		namespace Views {
+			
+			/**
+			 * Register a view
+			 *
+			 * @param config
+			 * @constructor
+			 */
+			function Register(config:IViewConfig)
+			
+			/**
+			 * Get all registered views
+			 */
+			function all():IViewConfig[]
+			
+			/**
+			 * Get all as map
+			 */
+			function asMap():TViewConfigMap
+			
+			/**
+			 * Get a view by name
+			 *
+			 * @param name
+			 */
+			function getDefault():IViewConfig
+			
+			
+			/**
+			 * Get a view by name
+			 *
+			 * @param name
+			 */
+			function get(name:string):IViewConfig
+			
+			
+		}
 	}
 	
-	namespace RegistryScope {
-		let View:ViewRegistryScope
-	}
+	
 }
 
 
-RegistryScope.View = viewRegistryScope
+Scopes.Views = viewRegistryScope
 Registry.addScope(viewRegistryScope)
 
 assignGlobal({

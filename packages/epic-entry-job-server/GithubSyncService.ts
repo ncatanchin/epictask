@@ -1,4 +1,4 @@
-import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
+import { BaseService, RegisterService } from "epic-services/internal"
 import { DatabaseClientService } from "epic-services/DatabaseClientService"
 import {
 	getHot, setDataOnHotDispose, acceptHot, GithubSyncStatus as SyncStatus, NotificationsKey,
@@ -28,7 +28,8 @@ const
  */
 @RegisterService(ProcessType.JobServer)
 export class GithubSyncService extends BaseService {
-
+	
+	static readonly ServiceName = "GithubSyncService"
 	
 	static getInstance() {
 		if (!instanceContainer.instance)

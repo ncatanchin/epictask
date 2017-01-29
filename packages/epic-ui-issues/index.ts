@@ -109,7 +109,7 @@ RouteRegistryScope.Register(
 /**
  * Register Views
  */
-ViewRegistryScope.Register({
+Scopes.Views.Register({
 	id: "IssuesPanel",
 	name: "Issues Panel",
 	type: "IssuesPanel",
@@ -126,7 +126,7 @@ ViewRegistryScope.Register({
 
 
 
-CommandRegistryScope.Register({
+Scopes.Commands.Register({
 	id: 'NewIssueGlobal',
 	type: CommandType.Global,
 	name: "New Issue",

@@ -1,9 +1,7 @@
 import {List} from 'immutable'
-import { ObservableStore } from "typedux"
-import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { BaseService, RegisterService } from "./internal"
 import { ProcessType, addHotDisposeHandler } from "epic-global"
 import { DatabaseClientService } from "./DatabaseClientService"
-import { getRepoActions } from "epic-typedux"
 import { getStores, addDatabaseChangeListener, removeDatabaseChangeListener } from "epic-database-client"
 import { acceptHot } from "epic-global/HotUtils"
 import { Repo, AvailableRepo, GithubNotification } from "epic-models"
@@ -19,10 +17,12 @@ let
 	instance:NotificationUIService
 
 /**
- * Manages data state changes and takes approriate action
+ * Manages data state changes and takes appropriate action
  */
 @RegisterService(ProcessType.UI)
 export class NotificationUIService extends BaseService {
+	
+	static readonly ServiceName = "NotificationUIService"
 	
 	/**
 	 * Unsubscribe fns

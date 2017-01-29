@@ -11,20 +11,6 @@ const
 	log = getLogger(__filename)
 
 
-/**
- * Global declarations
- */
-declare global {
-	
-	interface IServiceConstructor {
-		ServiceName?:string
-		new ():any
-	}
-	
-	interface IRegistryEntryService extends IRegistryEntry<IServiceConstructor> {
-		
-	}
-}
 
 
 /**
@@ -106,6 +92,21 @@ export class ServiceRegistryScope implements IRegistryScope<IRegistryEntryServic
 		return target
 	}
 	
+	Unregister = <T extends IServiceConstructor>(target:T):void => {
+		const
+			clazzName = target.ServiceName || target.name
+		
+		
+		log.info(`Registering model: ${clazzName}`)
+		
+		
+		this.registerService(clazzName,target)
+		
+		
+	}
+	
+	
+	
 	/**
 	 * Manual register a clazz
 	 *
@@ -151,20 +152,86 @@ const
 
 
 declare global {
-	namespace ServiceRegistryScope {
-		function Register(target:any)
+	
+	const enum ServiceStatus {
+		Created = 1,
+		Initialized,
+		Started,
+		Stopped,
+		Destroyed
 	}
 	
-	namespace RegistryScope {
-		let Service:ServiceRegistryScope
+	interface IServiceRegistration {
+		proxy:IVariableProxy<IService>
+		serviceConstructor:IServiceConstructor
+		service:IService
+		name:string
+		loaded:boolean
 	}
+	
+	/**
+	 * IServices
+	 *
+	 * @class IServices
+	 * @constructor
+	 **/
+	interface IService {
+		
+		status?:() => ServiceStatus
+		
+		/**
+		 * All services that this service depends on
+		 */
+		dependencies?:() => IServiceConstructor[]
+		
+		/**
+		 * Initialize the service, called before dependency analysis
+		 */
+		init?:() => Promise<this>
+		
+		/**
+		 * Start the service
+		 */
+		start?:() => Promise<this>
+		
+		/**
+		 * Stop the service
+		 */
+		stop?:() => Promise<this>
+		
+		/**
+		 * Destroy the service
+		 */
+		destroy?:() => this
+		
+	}
+	
+	
+	interface IServiceConstructor {
+		ServiceName:string
+		getInstance?:() => IService
+		new ():IService
+	}
+	
+	interface IRegistryEntryService extends IRegistryEntry<IServiceConstructor> {
+	
+	}
+	
+	namespace Scopes {
+		namespace Services {
+			function Register(target:IServiceConstructor)
+			
+			function Unregister(target:IServiceConstructor)
+		}
+	}
+	
 }
 
 assignGlobal({
 	ServiceRegistryScope: serviceRegistryScope
 })
 
-RegistryScope.Service = serviceRegistryScope
+Scopes.Services = serviceRegistryScope
 Registry.addScope(serviceRegistryScope)
 
 

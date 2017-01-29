@@ -1,12 +1,13 @@
 // Imports
+import { Map } from "immutable"
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { PureRender, IconButton } from "epic-ui-components"
 import { IThemedAttributes, ThemedStyles, colorLighten } from "epic-styles"
 import { SettingsSection } from "./SettingsElements"
-import { pluginDirectoriesSelector } from "epic-typedux"
+import { pluginStoresSelector, getAppActions, PluginState, pluginsSelector } from "epic-typedux"
 import { pluginDefaultPath } from "epic-global"
-import { PluginManager } from "epic-plugin-manager"
+import { isPluginEnabled } from "epic-plugin"
 
 
 // Constants
@@ -24,7 +25,7 @@ function baseStyles(topStyles, theme, palette) {
 	
 	return [ Styles.FlexColumn, Styles.FlexAuto, {
 		
-		pluginDirectories: [ Styles.makeMarginRem(0, 1.5), Styles.makePaddingRem(0.5, 0.5), {
+		pluginStores: [ Styles.makeMarginRem(0, 1.5), Styles.makePaddingRem(0.5, 0.5), {
 			border: `1px solid ${primary.hue3}`,
 			background: primary.hue1,
 			directory: [ Styles.FlexRowCenter, Styles.makePaddingRem(0.5, 1) ],
@@ -42,7 +43,8 @@ function baseStyles(topStyles, theme, palette) {
  * IPluginConfigEditorProps
  */
 export interface IPluginConfigEditorProps extends IThemedAttributes {
-	pluginDirectories?:string[]
+	pluginStores?:string[]
+	plugins?:Map<string,PluginState>
 }
 
 /**
@@ -60,7 +62,8 @@ export interface IPluginConfigEditorState {
  **/
 
 @connect(createStructuredSelector({
-	pluginDirectories: pluginDirectoriesSelector
+	pluginStores: pluginStoresSelector,
+	plugins:pluginsSelector
 }))
 @ThemedStyles(baseStyles)
 @PureRender
@@ -73,7 +76,7 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 		
 		
 		log.debug(`Adding new directories for plugins`, newDirs)
-		PluginManager.addStore(...newDirs)
+		getAppActions().addPluginStore(...newDirs)
 		
 	}
 	
@@ -84,7 +87,7 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 	 */
 	render() {
 		const
-			{ pluginDirectories, styles } = this.props
+			{ pluginStores, plugins, styles } = this.props
 		
 		const
 			title = <div style={makeStyle(Styles.FlexRowCenter, Styles.FlexScale)}>
@@ -98,19 +101,48 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 		return <div style={styles.root}>
 			<SettingsSection
 				styles={styles}
+				iconName="settings_ethernet"
+				iconSet="material-icons"
+				title="Plugins">
+				
+				<div style={styles.pluginStores}>
+					{plugins.valueSeq().map(plugin => {
+						const
+							{config} = plugin,
+							{name} = config,
+							enabled = isPluginEnabled(config)
+						
+						return <div style={[ styles.pluginStores.directory ]} key={plugin.config.name}>
+							<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>{name}</div>
+							<div style={[ Styles.FlexAuto ]}>
+								<IconButton
+									onClick={() => getAppActions().setPluginEnabled(name,!enabled)}
+									iconSet="material-icons"
+									iconName={enabled ? "radio_button_checked" : "radio_button_unchecked"}/>
+								
+							</div>
+						</div>
+					})
+					}
+					
+				</div>
+			</SettingsSection>
+			
+			<SettingsSection
+				styles={styles}
 				iconName="folder"
 				iconSet="material-icons"
 				title={title}>
 				
-				<div style={styles.pluginDirectories}>
-					{pluginDirectories.map(dir => <div style={[ styles.pluginDirectories.directory ]} key={dir}>
+				<div style={styles.pluginStores}>
+					{pluginStores.map(dir => <div style={[ styles.pluginStores.directory ]} key={dir}>
 						<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>{dir}</div>
 						<div style={[ Styles.FlexAuto ]}>
 							{pluginDefaultPath !== dir ?
 								<IconButton
-									onClick={() => PluginManager.removeStore(dir)}
+									onClick={() => getAppActions().removePluginStore(dir)}
 									iconSet="material-icons" iconName="delete"/> :
-								<span style={styles.pluginDirectories.default}>DEFAULT</span>}
+								<span style={styles.pluginStores.default}>DEFAULT</span>}
 						</div>
 					</div>)
 					}

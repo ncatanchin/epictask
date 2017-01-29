@@ -80,8 +80,8 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 		
 		
 		// MAKE SURE WE HAVE A DEFAULT
-		if (defaultViewConfig !== ViewRegistryScope.getDefault()) {
-			defaultViewConfig = ViewRegistryScope.getDefault()
+		if (defaultViewConfig !== Scopes.Views.getDefault()) {
+			defaultViewConfig = Scopes.Views.getDefault()
 			
 			this.setState({ defaultViewConfig })
 		}
@@ -96,7 +96,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 * Update the view configs from the registry
 	 */
 	private updateViewConfigs = () => this.setState({
-		viewConfigs: ViewRegistryScope.all()
+		viewConfigs: Scopes.Views.all()
 	})
 	
 	/**
@@ -109,7 +109,7 @@ export class IDETabbedViewContainer extends React.Component<IIDETabbedViewContai
 	 */
 	componentWillMount() {
 		this.setState({
-			viewConfigs: ViewRegistryScope.all(),
+			viewConfigs: Scopes.Views.all(),
 			unsubscribe: EventHub.on(EventHub.ViewsChanged, this.onViewConfigsChanged)
 		}, this.checkDefaultView)
 	}

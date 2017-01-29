@@ -1,7 +1,6 @@
 
 import {ServiceManager} from "./internal/ServiceManager"
 
-export * from './internal/Types'
 export * from './internal/ServiceDecorations'
 export * from './internal/ServiceManager'
 export * from './internal/BaseService'

@@ -15,7 +15,6 @@ import {
 import { getStores,chunkRemove } from "epic-database-client"
 import { ActionFactory, ActionReducer, ActionThunk, ActionPromise } from "typedux"
 import { RepoMessage, RepoState } from "../state/RepoState"
-
 import {
 	Milestone,
 	Label,
@@ -57,14 +56,6 @@ declare global {
 		}
 	}
 	
-	/**
-	 * Add the service to the registry
-	 */
-	namespace Registry {
-		namespace Service {
-			const RepoActions:IRepoActionFactory
-		}
-	}
 }
 
 
@@ -74,7 +65,7 @@ declare global {
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@ServiceRegistryScope.Register
+@Scopes.Services.Register
 @Provided
 export class RepoActionFactory extends ActionFactory<RepoState,RepoMessage> {
 	

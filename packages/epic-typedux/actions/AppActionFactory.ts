@@ -1,9 +1,9 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
 import {
-	Events, AppKey, Provided, cloneObjectShallow,
+	Events, AppKey, pluginDefaultPath,Provided, cloneObjectShallow,
 	shortId, getDisplayForPoint, isBoundsWithinBounds
 } from "epic-global"
-
+import * as Path from 'path'
 import { User } from "epic-models"
 import { PluginState } from "../state/PluginState"
 import { AppState } from "../state/AppState"
@@ -46,9 +46,8 @@ declare global {
 /**
  * Core EpicTask actions
  */
-
+@Scopes.Services.Register
 @Provided
-@ServiceRegistryScope.Register
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> {
 	
 	static ServiceName = "AppActions"
@@ -427,6 +426,57 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 	}
 	
 	/**
+	 * Add a plugin directory (for dev really)
+	 *
+	 * @param dirs
+	 */
+	@ActionReducer()
+	addPluginStore(...dirs:string[]) {
+		updateSettings({
+			pluginStores: _.uniq([
+				pluginDefaultPath,
+				...(getSettings().pluginStores || []),
+				...dirs.map(dir => Path.resolve(dir))
+			])
+		})
+	}
+	
+	/**
+	 * Remove directory
+	 *
+	 * @param dirs
+	 */
+	@ActionReducer()
+	removePluginStore(...dirs:string[]) {
+		updateSettings({
+			pluginStores:
+				_.uniq([
+						pluginDefaultPath,
+						...(getSettings().pluginStores || [])
+					])
+					.filter(dir => !dirs.map(dir1 => Path.resolve(dir1)).includes(dir))
+		})
+	}
+	
+	/**
+	 * Set plugin enabled value
+	 *
+	 * @param name
+	 * @param enabled
+	 */
+	setPluginEnabled(name:string,enabled:boolean) {
+		const
+			settings = getSettings()
+		
+		updateSettings({
+			pluginsEnabled: {
+				...settings.pluginsEnabled,
+				[name]: enabled
+			}
+		})
+	}
+	
+	/**
 	 * Set a plugin config
 	 *
 	 * @param pluginConfig
@@ -438,9 +488,12 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 				{plugins} = state
 			
 			let
-				pluginState = plugins.get(pluginConfig.name) || new PluginState()
+				pluginState = plugins.get(pluginConfig.name) || new PluginState(),
+				currentPluginConfig = pluginState.config || {}
 			
-			pluginState = pluginState.set('config',pluginConfig) as any
+			pluginState = pluginState
+				.set('config',{...currentPluginConfig,...pluginConfig})
+				.set('timestamp',Date.now()) as any
 			
 			return state.set('plugins', state.plugins.set(pluginConfig.name,pluginState))
 		}

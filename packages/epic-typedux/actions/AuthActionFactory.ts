@@ -36,8 +36,7 @@ declare global {
 	}
 }
 
-
-@ServiceRegistryScope.Register
+@Scopes.Services.Register
 @Provided
 export class AuthActionFactory extends ActionFactory<AuthState,AuthMessage> {
 	

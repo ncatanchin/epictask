@@ -8,8 +8,8 @@ import { FileWatcherEvent, fileExists, cachePath, isDirectory, cloneObjectShallo
 import * as Path from 'path'
 import * as Fs from 'async-file'
 import { isDefined, getValue, isFunction } from "typeguard"
-import { unpackPluginZip } from "./PluginUtils"
-import { PluginModuleLoader } from "./PluginModuleLoader"
+import { unpackPluginZip } from "./PluginStoreUtils"
+
 
 const Module = require('module')
 
@@ -118,8 +118,9 @@ export class PluginFile {
 	 * Construct plugin loader
 	 *
 	 * @param dirOrZipname
+	 * @param storeDirname
 	 */
-	constructor(private dirOrZipname:string) {
+	constructor(private storeDirname:string, private dirOrZipname:string) {
 		assert(Env.isMain,`Plugin file only loads on main`)
 		assert(fileExists(dirOrZipname),`Directory or zip with filename does not exist: ${dirOrZipname}`)
 	}
@@ -204,9 +205,11 @@ export class PluginFile {
 			
 			
 			return this.config = {
+				storeDirname: this.storeDirname,
 				name,
 				description,
 				version,
+				updatedAt: (await Fs.stat(this.dirOrZipname)).mtime.getTime(),
 				main: fileExists(mainBasename) ? mainBasename : mainBasenameExtended,
 				dirname: this.dirname,
 				filename: this.dirOrZipname,

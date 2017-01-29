@@ -36,7 +36,12 @@ declare interface ISettingsProps {
 	/**
 	 * All plugin directories currently configured
 	 */
-	pluginDirectories?: string[]
+	pluginStores?: string[]
+	
+	/**
+	 * Plugins enabled/disabled status
+	 */
+	pluginsEnabled?: {[name:string]:boolean}
 }
 
 

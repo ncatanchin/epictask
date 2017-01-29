@@ -4,7 +4,7 @@
  */
 import 'howler'
 import { Map, Record, List } from "immutable"
-import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
+import { BaseService, RegisterService } from "epic-services/internal"
 
 import {
 	getHot, setDataOnHotDispose, acceptHot
@@ -76,6 +76,7 @@ assignGlobal({
 @RegisterService(ProcessType.UI)
 export class SoundFXService extends BaseService {
 	
+	static readonly ServiceName = "SoundFXService"
 	
 	static getInstance() {
 		if (!instanceContainer.instance)

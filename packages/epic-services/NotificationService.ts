@@ -1,6 +1,6 @@
 import { ObservableStore } from "typedux"
 
-import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { BaseService, RegisterService } from "./internal"
 import { ProcessType, UIKey, AppKey } from "epic-global"
 import DatabaseClientService from "./DatabaseClientService"
 import { getUIActions } from "epic-typedux"
@@ -23,7 +23,9 @@ const
 
 @RegisterService(ProcessType.JobServer)
 export class NotificationService extends BaseService {
-
+	
+	static readonly ServiceName = "NotificationService"
+	
 	private unsubscribe:Function
 	private pendingTimers = {}
 	private pendingNotifications = {}

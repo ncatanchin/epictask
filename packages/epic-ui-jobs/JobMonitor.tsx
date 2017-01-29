@@ -90,7 +90,7 @@ function getHeaderControls() {
  * @constructor
  **/
 
-@ToolRegistryScope.Register({
+@Scopes.Tools.Register({
 	id: getBuiltInToolId(BuiltInTools.JobMonitor),
 	label: 'Job Monitor',
 	buttonLabel: 'Jobs',

@@ -5,12 +5,14 @@ import { Map, List } from "immutable"
 import { AppStateType } from "../state/app/AppStateType"
 import { AppState, TWindowMap } from "epic-typedux/state/AppState"
 import { TrayState } from "epic-typedux/state/TrayState"
+import { PluginState } from "epic-typedux/state/PluginState"
 
 
 export const appStateSelector:(state) => AppState = createSelector(
 	(state:Map<string,any>) => state.get(AppKey) as AppState,
 	(appState:AppState) => appState
 )
+
 
 
 export const trayStateSelector:TSelector<TrayState> = createSelector(
@@ -103,9 +105,15 @@ export const settingsSelector:(state) => Settings = createSelector(
 )
 
 
-export const pluginDirectoriesSelector:TSelector<string[]> = createSelector(
+
+export const pluginsSelector:TSelector<Map<string,PluginState>> = createSelector(
+	appStateSelector,
+	(appState:AppState) => appState.plugins
+)
+
+export const pluginStoresSelector:TSelector<string[]> = createSelector(
 	settingsSelector,
-	(settings:Settings) => settings.pluginDirectories
+	(settings:Settings) => settings.pluginStores
 )
 
 

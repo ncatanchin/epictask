@@ -1,7 +1,7 @@
 
 import {JobHandler} from '../JobHandler'
 import {Stores} from "epic-database-client"
-import {Benchmark} from "epic-global"
+import { Benchmark, acceptHot } from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import {GitHubClient} from "epic-github"
 import {Repo} from "epic-models"
@@ -65,3 +65,6 @@ export class GetUserReposExecutor implements IJobExecutor {
 		logger.info(`Completed user repo sync, counts before=${beforeCount} and after=${afterCount}`)
 	}
 }
+
+
+acceptHot(module)

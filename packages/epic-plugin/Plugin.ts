@@ -32,6 +32,10 @@ declare global {
 		 */
 		description?:string
 		
+		/**
+		 * Store location of plugin
+		 */
+		storeDirname:string
 		
 		/**
 		 * The semver version
@@ -48,11 +52,22 @@ declare global {
 		 */
 		inDevMode?:boolean
 		
-		enabled?:boolean
 		
+		/**
+		 * Packaged/Unpackaged
+		 */
 		isZip:boolean
+		
+		
+		/**
+		 * Source filename dir or zip filename
+		 */
 		filename:string
 		
+		/**
+		 * Last updated/modified timestamp
+		 */
+		updatedAt:number
 	}
 	
 	interface IPlugin extends IPluginConfig {

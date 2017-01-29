@@ -57,7 +57,3 @@ export function validatePlugin(o:any):o is IPlugin {
 		['start','stop'].every(it => isFunction(o[it]))
 }
 
-
-export function isPluginEnabled(config:IPluginConfig) {
-	return getValue(() => config && config.enabled !== false, true)
-}

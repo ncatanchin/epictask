@@ -34,44 +34,21 @@ declare global {
 	 */
 	type TRegistry<T> = {[name:string]: IRegistryEntry<T>}
 	
-	/**
-	 * Scoping namespace
-	 */
-	namespace RegistryScope {
-		
-	}
+	
 	
 	namespace Registry {
 		function addScope(scope:IRegistryScope<any>)
 		
 		function getScope(scopeName:string):IRegistryScope<any>
 	}
+	
+	namespace Scopes {
+	
+	}
 }
 
 
 
-//
-//
-// export interface IToolConstructor extends React.ComponentClass<IToolProps> {
-//
-// }
-
-// export interface IViewConstructor {
-// 	new (...args:any[]):any
-// }
-//
-// export interface IActionFactoryConstructor {
-// 	new (...args:any[]):ActionFactory<any,any>
-// 	leaf: string
-// }
-
-// const emptyRegistries = {
-// 	[RegistryKey.Model]: {} as TRegistry<IModelConstructor<any>>,
-// 	[RegistryKey.Tool]: {} as TRegistry<IToolConstructor>,
-// 	[RegistryKey.View]: {} as TRegistry<IViewConstructor>,
-// 	[RegistryKey.WindowConfig]: {} as TRegistry<IWindowConfig>,
-// 	[RegistryKey.Service]: {} as TRegistry<IActionFactoryConstructor>
-// }
 /**
  * Internal map of all registries
  *
@@ -89,6 +66,13 @@ export namespace Registry {
 		Object.keys(HotRegistry).forEach(it => Registry[it] = HotRegistry[it])
 		setDataOnHotDispose(module, () => ({ Scopes, HotRegistry }))
 	}
+	
+	/**
+	 * Assign/Create global scopes
+	 */
+	assignGlobal({
+		Scopes
+	})
 	
 	/**
 	 * Get a scope

@@ -1,4 +1,4 @@
-import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { BaseService,  RegisterService } from "./internal"
 import {DatabaseClientService} from './DatabaseClientService'
 import { ObservableStore } from "typedux"
 import { ProcessType, AppKey, AppEventType, guard } from "epic-global"
@@ -11,6 +11,8 @@ const
 
 @RegisterService(ProcessType.UI)
 export default class UIStateService extends BaseService {
+	
+	static readonly ServiceName = "UIStateService"
 	
 	/**
 	 * Unsubscribe

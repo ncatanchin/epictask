@@ -68,7 +68,7 @@ RouteRegistryScope.Register(
 
 log.info(`Registering commands`)
 
-CommandRegistryScope.Register(
+Scopes.Commands.Register(
 	// QUIT
 	{
 		id: 'Quit',

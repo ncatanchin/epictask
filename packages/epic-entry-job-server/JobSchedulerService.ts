@@ -1,4 +1,4 @@
-import {BaseService, RegisterService, IServiceConstructor} from "epic-services/internal"
+import {BaseService, RegisterService} from "epic-services/internal"
 
 import DefaultJobSchedules from './JobSchedules'
 import {IJobSchedule} from "epic-typedux"
@@ -26,6 +26,8 @@ let jobScheduler:JobSchedulerService
 @RegisterService(ProcessType.JobServer)
 export class JobSchedulerService extends BaseService {
 	
+	static readonly ServiceName = "JobSchedulerService"
+	
 	static getInstance() {
 		if (!jobScheduler) {
 			jobScheduler = new JobSchedulerService()
@@ -33,6 +35,7 @@ export class JobSchedulerService extends BaseService {
 		
 		return jobScheduler
 	}
+	
 	
 	
 	/**

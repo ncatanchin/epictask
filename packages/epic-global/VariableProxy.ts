@@ -1,13 +1,27 @@
 
 //const log = getLogger(__filename)
 
+declare global {
+	type TConstructor<T> = {new ():T}
+	
+	interface IVariableProxy<T> {
+		readonly handler:T
+		
+		readonly target:any
+		
+		readonly targetConstructor:TConstructor<T>
+		
+		setTargets(targetConstructor,target)
+	}
+}
+
 /**
  * A reloadable proxy between a target object
  * and the end consumer.
  *
  * Implemented specifically for hot loading
  */
-export class VariableProxy<T> {
+export class VariableProxy<T> implements IVariableProxy<T> {
 	private _handler:T
 
 	

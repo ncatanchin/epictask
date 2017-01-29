@@ -24,7 +24,7 @@ declare global {
  *
  * @type {string}
  */
-export const CommandScope = "Command"
+export const CommandScope = "Commands"
 
 
 /**
@@ -184,68 +184,70 @@ declare global {
 	 */
 	const Commands:any
 	
-	/**
-	 * Command Registry Scope
-	 */
-	namespace CommandRegistryScope {
-		
-		/**
-		 * Register a command
-		 *
-		 * @param configs
-		 * @constructor
-		 */
-		function Register(...configs:ICommand[])
-		
-		/**
-		 * Un-Register a command
-		 *
-		 * @param idsOrCommands
-		 * @constructor
-		 */
-		function Unregister(...idsOrCommands:Array<string|ICommand>)
-		
-		/**
-		 * Get all registered commands
-		 */
-		function all():ICommand[]
-		
-		/**
-		 * Get all as map
-		 */
-		function asMap():TCommandConfigMap
-		
-		/**
-		 * Get a command by name
-		 */
-		function getDefault():ICommand
+	
+	namespace Scopes {
 		
 		
 		/**
-		 * Get a command by name
-		 *
-		 * @param name
+		 * Command Registry Scope
 		 */
-		function get(name:string):ICommand
-		
-		
+		namespace Commands {
+			
+			/**
+			 * Register a command
+			 *
+			 * @param configs
+			 * @constructor
+			 */
+			function Register(...configs:ICommand[])
+			
+			/**
+			 * Un-Register a command
+			 *
+			 * @param idsOrCommands
+			 * @constructor
+			 */
+			function Unregister(...idsOrCommands:Array<string|ICommand>)
+			
+			/**
+			 * Get all registered commands
+			 */
+			function all():ICommand[]
+			
+			/**
+			 * Get all as map
+			 */
+			function asMap():TCommandConfigMap
+			
+			/**
+			 * Get a command by name
+			 */
+			function getDefault():ICommand
+			
+			
+			/**
+			 * Get a command by name
+			 *
+			 * @param name
+			 */
+			function get(name:string):ICommand
+			
+			
+		}
 	}
 	
-	namespace RegistryScope {
-		let Command:CommandRegistryScope
-	}
+	
 }
 
 
-RegistryScope.Command = commandRegistryScope
+Scopes.Commands = commandRegistryScope
 Registry.addScope(commandRegistryScope)
 
 assignGlobal({
 	Commands: commandRegistryScope.scope,
 	getCommands() {
 		return commandRegistryScope.asMap()
-	},
-	CommandRegistryScope: commandRegistryScope
+	}
 })
 
 

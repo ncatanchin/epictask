@@ -1,5 +1,5 @@
 import { ObservableStore } from "typedux"
-import { BaseService, IServiceConstructor, RegisterService } from "./internal"
+import { BaseService, RegisterService } from "./internal"
 import { ProcessType } from "epic-global"
 import { DatabaseClientService } from "./DatabaseClientService"
 import { getRepoActions } from "epic-typedux"
@@ -18,6 +18,8 @@ const
  */
 @RegisterService(ProcessType.UI)
 export class RepoStateService extends BaseService {
+	
+	static readonly ServiceName = "RepoStateService"
 	
 	/**
 	 * Unsubscribe from store

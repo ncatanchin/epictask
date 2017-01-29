@@ -1,7 +1,7 @@
 import "./CheckSingleInstance"
-
 import Cleaner from './Cleaner'
 
+import { acceptHot } from "epic-global/HotUtils"
 
 
 // NOW LOAD COMMON ENTRY
@@ -14,6 +14,7 @@ import { app, BrowserWindow } from 'electron'
 
 import makeBootLoader from "epic-entry-shared/BootLoader"
 import './MainAppSwitches'
+
 
 
 const
@@ -128,7 +129,8 @@ function loadMainApp() {
 		
 		// HIDE SPLASH
 		[
-			() => Env.skipSplash ? Promise.resolve() : hideSplashWindow()
+			() => Env.skipSplash ? Promise.resolve() : hideSplashWindow(),
+			() => require('epic-plugin-store-manager').PluginStoreManager.init()
 		]
 	)
 	
@@ -174,8 +176,7 @@ else
 
 
 
-if (module.hot)
-	module.hot.accept(() => log.info(`HMR reload`,__filename))
+acceptHot(module)
 
 
 

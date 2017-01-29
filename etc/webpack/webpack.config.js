@@ -333,6 +333,7 @@ const
 		//'development': 'cheap-module-eval-source-map',//'inline-source-map',
 		//'development': 'inline-source-map',
 		'development': 'cheap-inline-source-map',
+		//'development': 'source-map',
 		'production': 'source-map'
 	},
 	

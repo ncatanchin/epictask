@@ -39,8 +39,8 @@ export class ToolWrapper extends React.Component<IToolWrapperProps,any> {
 			{styles,tool,panel} = this.props,
 			{location} = panel,
 			toolStyles = styles.tool,
-			ToolComponent = ToolRegistryScope.getToolComponent(tool.id),
-			ToolHeaderControls = ToolRegistryScope.getToolHeaderControls(tool.id)
+			ToolComponent = Scopes.Tools.getToolComponent(tool.id),
+			ToolHeaderControls = Scopes.Tools.getToolHeaderControls(tool.id)
 		
 		return <div style={[toolStyles,toolStyles[location]]} className="toolWrapper">
 			<div style={[toolStyles.header,toolStyles.header[location]]}>

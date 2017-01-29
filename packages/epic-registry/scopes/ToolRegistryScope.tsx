@@ -129,7 +129,7 @@ declare global {
  *
  * @type {string}
  */
-export const ToolScope = "Tool"
+export const ToolScope = "Tools"
 
 
 /**
@@ -193,6 +193,9 @@ export class ToolRegistryScope implements IRegistryScope<IRegistryEntryTool> {
 		}
 	}
 	
+	Unregister = (reg:IToolRegistration) => {
+	
+	}
 	
 	
 	/**
@@ -372,55 +375,73 @@ assignGlobal({
 })
 
 declare global {
-	namespace ToolRegistryScope {
+	namespace Scopes {
 		
-		function Register(reg:IToolRegistration)
-		
-		/**
-		 * Get all tool ids
-		 *
-		 * @returns {string[]}
-		 */
-		function getToolIds():string[]
-		
-		/**
-		 * Get all tool configs
-		 *
-		 * @returns {IToolRegistration[]}
-		 */
-		function getToolRegistrations():IToolConfig[]
-		
-		
-		/**
-		 * Retrieve the class constructor for a given name
-		 *
-		 * @param id
-		 * @returns {any}
-		 */
-		function getToolComponent(id:string):IToolConstructor
-		
-		/**
-		 * Get tool component class
-		 *
-		 * @param id
-		 * @returns {any}
-		 */
-		function getToolComponentClass(id:string):IToolConstructor
-		
-		/**
-		 * Get tool header controls
-		 *
-		 * @param id
-		 * @returns {React.ReactElement<any>[]|Array}
-		 */
-		function getToolHeaderControls(id:string):React.ReactElement<any>[]
+		namespace Tools {
+			
+			/**
+			 * Register a tool
+			 *
+			 * @param reg
+			 * @constructor
+			 */
+			function Register(reg:IToolRegistration)
+			
+			/**
+			 * Un-register a tool
+			 *
+			 * @param reg
+			 * @constructor
+			 */
+			function Unregister(reg:IToolRegistration)
+			
+			/**
+			 * Get all tool ids
+			 *
+			 * @returns {string[]}
+			 */
+			function getToolIds():string[]
+			
+			/**
+			 * Get all tool configs
+			 *
+			 * @returns {IToolRegistration[]}
+			 */
+			function getToolRegistrations():IToolConfig[]
+			
+			
+			/**
+			 * Retrieve the class constructor for a given name
+			 *
+			 * @param id
+			 * @returns {any}
+			 */
+			function getToolComponent(id:string):IToolConstructor
+			
+			/**
+			 * Get tool component class
+			 *
+			 * @param id
+			 * @returns {any}
+			 */
+			function getToolComponentClass(id:string):IToolConstructor
+			
+			/**
+			 * Get tool header controls
+			 *
+			 * @param id
+			 * @returns {React.ReactElement<any>[]|Array}
+			 */
+			function getToolHeaderControls(id:string):React.ReactElement<any>[]
+			
+		}
 	}
 	namespace RegistryScope {
 		let Tool:ToolRegistryScope
 	}
 }
 
-RegistryScope.Tool = toolRegistryScope
+Scopes.Tools = toolRegistryScope
 Registry.addScope(toolRegistryScope)
 
 

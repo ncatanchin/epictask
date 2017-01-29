@@ -2,7 +2,7 @@ import { JobHandler, JobHandlerEventType } from "./JobHandler"
 import { IJobExecutorConstructor, IJobExecutor } from "./JobTypes"
 import { JobKey, JobsMaxConcurrency, getHot, setDataOnHotDispose } from "epic-global"
 import { IJob, JobStatus, JobType, IJobStatusDetail } from "epic-typedux/state/jobs"
-import { BaseService, RegisterService, IServiceConstructor } from "epic-services/internal"
+import { BaseService, RegisterService } from "epic-services/internal"
 import { jobsSelector, jobDetailsSelector } from "epic-typedux/selectors/JobSelectors"
 import { ObservableStore } from "typedux"
 import { TJobMap } from "epic-typedux/state/jobs/JobTypes"
@@ -56,7 +56,9 @@ function isJob(jobOrString:IJob|string):jobOrString is IJob {
  */
 @RegisterService(ProcessType.JobServer)
 export class JobManagerService extends BaseService {
-
+	
+	static readonly ServiceName = "JobManagerService"
+	
 	static getInstance() {
 		if (!jobManager) {
 			jobManager = new JobManagerService()

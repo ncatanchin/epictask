@@ -84,7 +84,7 @@ export class AppState extends AppStateRecord {
 	 */
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-			...excludeFilter('ready','messages','plugins')
+			...excludeFilter('ready','messages') //,'plugins'
 		))
 	}
 	

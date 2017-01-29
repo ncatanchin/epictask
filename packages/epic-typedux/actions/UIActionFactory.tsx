@@ -59,8 +59,7 @@ declare global {
 	}
 }
 
-
-@ServiceRegistryScope.Register
+@Scopes.Services.Register
 @Provided
 export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState>> {
 	
@@ -132,7 +131,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	updateRegisteredTools() {
 		const
-			regs = ToolRegistryScope.getToolRegistrations(),
+			regs = Scopes.Tools.getToolRegistrations(),
 			tools =
 				nilFilter(regs)
 					.map(reg => {
@@ -773,7 +772,7 @@ export class UIActionFactory extends ActionFactory<UIState,ActionMessage<UIState
 	 */
 	showNewTabPopup() {
 		const
-			viewConfigs = ViewRegistryScope.all(),
+			viewConfigs = Scopes.Views.all(),
 			menu =
 				ContextMenu.create()
 		

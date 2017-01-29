@@ -70,10 +70,7 @@ export class PluginModuleLoader  {
 			moduleGlobal = cloneObjectShallow(global)
 		
 		assign(moduleGlobal,{
-			CommandRegistryScope,
-			ToolRegistryScope,
-			ServiceRegistryScope,
-			ViewRegistryScope,
+			Scopes,
 			global: moduleGlobal,
 			require: moduleRequire,
 			moduleRequire

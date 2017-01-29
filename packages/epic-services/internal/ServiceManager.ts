@@ -1,6 +1,5 @@
 import {setDataOnHotDispose, getHot, acceptHot } from  "epic-global/HotUtils"
 import {VariableProxy} from 'epic-global/VariableProxy'
-import {IService,IServiceConstructor,IServiceRegistration,ServiceStatus} from "./Types"
 
 
 

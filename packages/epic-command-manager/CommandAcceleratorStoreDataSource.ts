@@ -5,7 +5,7 @@ import { getCommandManager } from "./CommandManager"
 import { addHotDisposeHandler, AppKey } from "epic-global"
 
 function updateGlobalCommands() {
-	getCommandManager().updateGlobalCommands(CommandRegistryScope.all())
+	getCommandManager().updateGlobalCommands(Scopes.Commands.all())
 }
 
 updateGlobalCommands()

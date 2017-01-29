@@ -1,6 +1,5 @@
 
 
-import {IService,IServiceConstructor, ServiceStatus} from "./Types"
 
 /**
  * Base service implementation

@@ -8,7 +8,7 @@ export * from "./JobList"
 export * from "./JobMonitor"
 
 
-CommandRegistryScope.Register({
+Scopes.Commands.Register({
 	id: 'ToggleJobMonitor',
 	type: CommandType.App,
 	name: 'Toggle Job Monitor',

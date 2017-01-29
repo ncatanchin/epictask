@@ -40,7 +40,7 @@ declare global {
  * @class RepoActionFactory.ts
  * @constructor
  **/
-@ServiceRegistryScope.Register
+@Scopes.Services.Register
 @Provided
 export class JobActionFactory extends ActionFactory<JobState,ActionMessage<JobState>> {
 	

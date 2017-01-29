@@ -1,17 +1,20 @@
+import "epic-plugin"
+
+import {Map,List} from 'immutable'
 import {
 	getUserDataFilename,
 	pluginDefaultPath,
-	SettingsPath,
 	guard,
 	getHot,
 	acceptHot,
-	setDataOnHotDispose
+	setDataOnHotDispose, AppKey, addHotDisposeHandler
 } from 'epic-global'
 import * as Path from 'path'
 import Glob = require('glob')
-import PluginStore  from "./PluginStore"
-import { isString } from "typeguard"
-import mkdirp = require('mkdirp')
+import { isString, getValue } from "typeguard"
+
+import { pluginsSelector,PluginState } from "epic-typedux"
+import { isPluginEnabled } from "epic-plugin"
 
 /**
  * Created by jglanz on 1/15/17.
@@ -42,78 +45,133 @@ export class PluginManager {
  */
 export namespace PluginManager {
 	
+	
+	const
+		unsubscribers:Function[] = []
+	
+	
 	const
 		DefaultPath = pluginDefaultPath,
-		directories = getHot(module,'directories',{} as any) as {[directory:string]:PluginStore},
 		plugins = getHot(module,'plugins',{} as any) as {[name:string]:IPlugin}
 	
 	// HMR
 	setDataOnHotDispose(module,() => ({
-		directories,
 		plugins
 	}))
 		
 	
-	let
-		unsubscribe:Function
+	addHotDisposeHandler(module,() => unsubscribers
+		.forEach(unsubscribe => guard(() => unsubscribe())))
 	
-	log.debug(`Create if not exist: ${DefaultPath}`)
-	mkdirp.sync(DefaultPath)
 	
-	/**
-	 * Add a plugin directory (for dev really)
-	 *
-	 * @param dirs
-	 */
-	export function addStore(...dirs:string[]) {
-		updateSettings({
-			pluginDirectories: _.uniq([
-				pluginDefaultPath,
-				...(getSettings().pluginDirectories || []),
-				...dirs.map(dir => Path.resolve(dir))
-			])
-		})
+	
+	export function getPluginStatus(name:string) {
+		const
+			pluginState = getValue(
+				() => pluginsSelector(getStoreState()).get(name),
+				new PluginState()
+			)
+		
+		return pluginState.processStatus.get(getProcessId())
 	}
 	
+	
+	
+	
 	/**
-	 * Remove directory
+	 * PluginStates changed in store
 	 *
-	 * @param dirs
+	 * @param pluginStates
+	 * @param oldPluginStates
+	 * @returns {Promise<void>}
 	 */
-	export function removeStore(...dirs:string[]) {
-		updateSettings({
-			pluginDirectories:
-				_.uniq([
-					pluginDefaultPath,
-					...(getSettings().pluginDirectories || [])
-				])
-				.filter(dir => !dirs.map(dir => Path.resolve(dir)).includes(dir))
+	export async function onPluginStatesChanged(pluginStates:Map<string,PluginState>,oldPluginStates:Map<string,PluginState> = Map<string,PluginState>()) {
+		const
+			deletedPlugins = [],
+			newPlugins = [],
+			updatedPlugins = []
+		
+		// FIND NEW & UPDATED
+		pluginStates.keySeq().forEach(name => {
+			const
+				pluginState = pluginStates.get(name)
+			
+			let
+				oldPluginState:PluginState = null
+			
+			if (!oldPluginStates || !oldPluginStates.has(name)) {
+				newPlugins.push([name,pluginState])
+			} else if (getValue(() => oldPluginState.config.updatedAt < pluginState.config.updatedAt, false)) {
+			//} else if ((oldPluginState = oldPluginStates.get(name)) !== pluginState || oldPluginState.timestamp <
+				// pluginState.timestamp) {
+				updatedPlugins.push([name,pluginState])
+			}
+		})
+		
+		// FIND DELETED
+		if (oldPluginStates) {
+			oldPluginStates.keySeq().forEach(oldName => {
+				if (!pluginStates.has(oldName)) {
+					deletedPlugins.push([name,oldPluginStates.get(oldName)])
+				}
+			})
+		}
+		
+		
+		// REMOVE DELETED
+		deletedPlugins.forEach(([name,pluginState]) => {
+			const
+				{config,timestamp} = pluginState
+				
+			
+			log.debug(`Plugin ${name}: DELETED`)
+		})
+		
+		// UPDATED
+		updatedPlugins.forEach(([name,pluginState]) => {
+			const
+				{config,timestamp} = pluginState
+			
+			log.debug(`Plugin ${name}: UPDATED`)
+		})
+		
+		// NEW
+		newPlugins.forEach(([name,pluginState]) => {
+			const
+				{config,timestamp} = pluginState
+			
+			log.debug(`Plugin ${name}: NEW`)
 		})
 	}
-	
 	
 	/**
 	 * Initialize the plugins and subscribe for directory changes
 	 */
 	export async function init() {
 		log.debug(`init plugin manager`)
-		unsubscribe = getStore().observe([...SettingsPath,'pluginDirectories'],loadStores)
-		await loadStores()
+		
+		
+		// LOAD STORES ON MAIN
+		onPluginStatesChanged(pluginsSelector(getStoreState()))
+		unsubscribers.push(getStore().observe([AppKey,'plugins'],onPluginStatesChanged))
+		
+		
 	}
 	
 	/**
-	 * Register a plugin - usually from store event
+	 * Start plugin
 	 *
-	 * @param plugin
+	 * @param name
 	 * @returns {Promise<void>}
 	 */
-	export async function registerPlugin(plugin:IPlugin) {
-		if (plugins[plugin.name])
-			await unregisterPlugin(plugin)
+	export async function startPlugin(name:string) {
+		const
+			plugin = plugins[name],
+			pluginStatus = getPluginStatus(name)
 		
-		plugins[plugin.name] = plugin
-		
-		//TODO: Add disabled check (settings)
+		if (Env.isMain || !isPluginEnabled(plugin) || pluginStatus === PluginStatus.Running) {
+			return
+		}
 		
 		try {
 			log.info(`Loading ${plugin.name}`)
@@ -124,6 +182,56 @@ export namespace PluginManager {
 		} catch (err) {
 			log.error(`Failed to load plugin: ${name}`,err)
 		}
+	}
+	
+	/**
+	 * Stop plugin
+	 *
+	 * @param name
+	 * @returns {Promise<void>}
+	 */
+	export async function stopPlugin(name:string) {
+		const
+			plugin = plugins[name],
+			pluginStatus = getPluginStatus(name)
+		
+		if (pluginStatus !== PluginStatus.Running && (Env.isMain || !isPluginEnabled(plugin))) {
+			return
+		}
+		
+		try {
+			await plugin.stop()
+		} catch (err) {
+			log.error(`Failed to stop plugin: ${name}`,err)
+		}
+		
+		try {
+			await plugin.unload()
+		} catch (err) {
+			log.error(`Failed to unload plugin: ${name}`,err)
+		}
+		
+		delete plugins[name]
+		
+	}
+	
+	/**
+	 * Register a plugin - usually from store event
+	 *
+	 * @param plugin
+	 * @returns {Promise<void>}
+	 */
+	export async function registerPlugin(plugin:IPlugin) {
+		if (plugins[plugin.name]) {
+			log.debug(`Plugin is already registered (${plugin.name}) - unloading first`)
+			await unregisterPlugin(plugin)
+		}
+		
+		plugins[plugin.name] = plugin
+		
+		//TODO: Add disabled check (settings)
+		startPlugin(plugin.name)
+		
 	}
 	
 	/**
@@ -140,103 +248,10 @@ export namespace PluginManager {
 		if (!plugin)
 			return
 		
-		try {
-			await plugin.stop()
-		} catch (err) {
-			log.error(`Failed to stop plugin: ${name}`,err)
-		}
-		
-		try {
-			await plugin.unload()
-		} catch (err) {
-			log.error(`Failed to unload plugin: ${name}`,err)
-		}
-		
-		delete plugins[name]
-	}
-	
-	/**
-	 * On plugin found
-	 *
-	 * @param event
-	 * @param plugin
-	 */
-	export function onPluginFound(event, plugin:IPlugin) {
-		log.info(`Plugin found: ${plugin.name}`)
-		registerPlugin(plugin)
+		stopPlugin(name)
 		
 	}
 	
-	/**
-	 * On plugin removed
-	 *
-	 * @param event
-	 * @param plugin
-	 */
-	export function onPluginRemoved(event, plugin:IPlugin) {
-		log.info(`Plugin removed: ${plugin.name}`)
-		unregisterPlugin(plugin)
-	}
-	
-	/**
-	 * Close directory
-	 *
-	 * @param dirname
-	 */
-	export function closeDirectory(dirname:string) {
-		guard(() => directories[dirname].close())
-		delete directories[dirname]
-	}
-	
-	/**
-	 * Load all the stores
-	 * 
-	 * @returns {Promise<void>}
-	 */
-	async function loadStores() {
-		if (!Env.isMain) {
-			return log.debug('only load plugin stores on main')
-		}
-		
-		const
-			dirnames = getSettings().pluginDirectories
-		
-		log.debug(`Loading directories`,dirnames)
-		
-		// CLEAN FIRST
-		Object.entries(directories)
-			.forEach(([dirname,dir]) => {
-				if (!dirnames.includes(dirname)) {
-					dir.close()
-					delete directories[dirname]
-				}
-			})
-		
-		
-		const
-			existingDirnames = Object.keys(directories),
-			newDirnames = dirnames.filter(dirname => !existingDirnames.includes(dirname))
-		
-		await Promise.all(
-			newDirnames.map(async (dirname) => {
-				try {
-					const
-						dir = directories[dirname] = new PluginStore(dirname)
-					
-					EventHub.on(EventHub.PluginFound,onPluginFound)
-					EventHub.on(EventHub.PluginRemoved,onPluginRemoved)
-					
-					await dir.open()
-				} catch (err) {
-					log.error(`Failed to open directory: ${dirname}`)
-					closeDirectory(dirname)
-				}
-			})
-		)
-		
-	}
 }
 
 acceptHot(module,log)
-
-export default PluginManager

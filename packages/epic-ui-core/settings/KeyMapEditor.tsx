@@ -136,7 +136,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 				iconSet="material-icons"
 				title={title}>
 				
-				{CommandRegistryScope.all()
+				{Scopes.Commands.all()
 					.filter(cmd =>
 						cmd.type === CommandType.Global &&
 						isDefined(cmd.defaultAccelerator) &&
@@ -157,7 +157,7 @@ export class KeyMapEditor extends React.Component<IKeyMapEditorProps,IKeyMapEdit
 				iconSet="material-icons"
 				title='App Shortcuts'>
 				
-				{CommandRegistryScope.all()
+				{Scopes.Commands.all()
 					.filter(cmd =>
 						cmd.type !== CommandType.Global &&
 						isDefined(cmd.defaultAccelerator) &&

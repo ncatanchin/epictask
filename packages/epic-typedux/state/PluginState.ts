@@ -14,6 +14,7 @@ const
 
 export const PluginStateRecord = Record({
 	config:null,
+	timestamp: 0,
 	processStatus:Map<string,PluginStatus>()
 })
 
@@ -35,7 +36,7 @@ export class PluginState extends PluginStateRecord implements IPluginState {
 		))
 	}
 	
-	
+	timestamp: number
 	config:IPluginConfig
 	processStatus:Map<string, PluginStatus>
 }

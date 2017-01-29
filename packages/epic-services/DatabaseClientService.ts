@@ -3,7 +3,7 @@ import { acceptHot } from "epic-global/HotUtils"
 import {canProxyProperty} from 'epic-global/ProxyUtil'
 import { Stores, getDatabaseClient, chunkRemove, chunkSave } from "epic-database-client"
 import { BaseService } from "./internal/BaseService"
-import { IServiceConstructor} from './internal/Types'
+
 import {RegisterService} from './internal/ServiceDecorations'
 
 const
@@ -28,6 +28,7 @@ export class DatabaseClientService extends BaseService {
 
 	private _stores:Stores
 	
+	static readonly ServiceName = "DatabaseClientService"
 	
 	/**
 	 * All global repositories
