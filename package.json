@@ -111,17 +111,16 @@
     "transform": {
       ".(ts|tsx)": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
-    "testRegex": "packages\\/epic-tests\\/jest\\/.*\\.spec\\.(ts|tsx)$",
-    "setupFiles": [
-      "etc/mocha/test-setup.js"
-    ],
+    "testRegex": "packages\\/.*\\.spec\\.(ts|tsx)$",
     "moduleDirectories": [
-      "./node_modules",
-      "./packages"
+      "node_modules",
+      "packages"
     ],
     "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/etc/tests/file-mock.js",
       "epic-config": "<rootDir>/etc/config/default-config.js",
-      "epic-electron": "epic-global/Electron"
+      "epic-electron": "epic-global/Electron.ts",
+      "epic-database-config": "<rootDir>/packages/epic-database-adapters/DatabaseConfigTest.ts"
     },
     "moduleFileExtensions": [
       "ts",
@@ -144,7 +143,6 @@
     "@types/lunr": "^0.5.27",
     "@types/msgpack-lite": "^0.1.1",
     "@types/node": "^6.0.38",
-    "@types/node-uuid": "0.0.28",
     "@types/radium": "^0.18.19",
     "@types/react": "^0.14.34",
     "@types/react-addons-css-transition-group": "^0.14.16",
@@ -217,19 +215,19 @@
     "html-loader": "^0.4.3",
     "html-webpack-plugin": "^2.17.0",
     "immutable-devtools": "0.0.7",
-    "jest": "^17.0.3",
+    "jest": "^18.1.0",
     "jest-cli": "^17.0.3",
     "json-loader": "^0.5.4",
     "loader-utils": "^0.2.15",
     "merge2": "^1.0.2",
     "nock": "^9.0.2",
     "node-sass": "^3.7.0",
-    "node-uuid": "^1.4.7",
     "normalize.css": "^5.0.0",
     "postcss": "^5.0.21",
     "postcss-js": "^0.1.3",
     "postcss-loader": "^1.1.1",
     "postcss-modules": "^0.5.0",
+    "pouchdb": "^6.0.7",
     "pug": ">=2.0.0-beta6",
     "pug-loader": "^2.3.0",
     "raw-loader": "^0.5.1",
@@ -251,7 +249,7 @@
     "sinon": "^1.17.4",
     "source-map-loader": "^0.1.5",
     "style-loader": "^0.13.1",
-    "ts-jest": "^17.0.0",
+    "ts-jest": "^18.0.2",
     "ts-loader": "^1.2.2",
     "tslint": "^4.0.2",
     "typescript": "^2.1.4",
@@ -300,7 +298,6 @@
     "msgpack-lite": "^0.1.26",
     "node-fetch": "^1.5.3",
     "node-ipc": "^8.1.0",
-    "node-uuid": "^1.4.7",
     "pouchdb-browser": "^6.0.7",
     "pouchdb-find": "^0.10.3",
     "pouchdb-quick-search": "^1.2.0",
@@ -340,11 +337,11 @@
     "short-id": "0.1.0-1",
     "simplemde": "^1.10.1",
     "sinon": "^1.17.4",
-    "source-map-support": "0.4.3",
+    "source-map-support": "^0.4.11",
     "stacktrace-js": "^1.3.1",
     "tinycolor2": "^1.3.0",
     "type-enum-events": "^1.0.5",
-    "typedux": ">=0.1.12",
+    "typedux": "file:///Users/jglanz/Development/densebrain/epictask-workspace/typedux",
     "typeguard": "0.0.8",
     "typelogger": ">=1.0.25",
     "typepool": "^1.0.8",
@@ -354,6 +351,7 @@
     "typetransform": "0.0.16",
     "urlsearchparams": "densebrain/URLSearchParams",
     "utf8-encoding": "^0.1.2",
+    "uuid": "^3.0.1",
     "watchr": "^3.0.1",
     "winston": "^2.2.0"
   }

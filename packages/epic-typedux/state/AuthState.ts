@@ -3,7 +3,7 @@
 import {Record} from 'immutable'
 import {ActionMessage} from 'typedux'
 import { excludeFilterConfig, excludeFilter,toPlainObject } from "typetransform"
-import { reviveImmutable } from "epic-global/ModelUtil"
+import { reviveImmutable } from "epic-util"
 
 export const AuthStateRecord = Record({
 	authenticating: false,
@@ -12,7 +12,7 @@ export const AuthStateRecord = Record({
 })
 
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 export class AuthState extends AuthStateRecord {
 
 	static fromJS(o:any) {

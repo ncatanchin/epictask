@@ -1,7 +1,7 @@
 
 import Electron = require('electron')
 import { isString, getValue } from "typeguard"
-import { shortId } from "./IdUtil"
+import { shortId } from "epic-util"
 
 const
 	log = getLogger(__filename)

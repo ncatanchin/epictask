@@ -1,5 +1,5 @@
 import {isFunction} from "typeguard"
-import {JSONKey} from "./Constants"
+import {JSONKey} from "epic-global/Constants"
 
 export function toJSONObject(o) {
 	const

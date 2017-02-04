@@ -1,7 +1,8 @@
 
 import {JobHandler} from '../JobHandler'
 import {Stores} from "epic-database-client"
-import { Benchmark, acceptHot } from "epic-global"
+import { Benchmark } from "epic-util"
+import { acceptHot } from "epic-global"
 import {JobExecutor} from '../JobDecorations'
 import {GitHubClient} from "epic-github"
 import {Repo} from "epic-models"

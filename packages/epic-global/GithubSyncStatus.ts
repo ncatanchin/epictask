@@ -2,7 +2,7 @@ import * as fs from 'fs'
 
 
 import { getUserDataFilename} from  "./Files"
-import {toJSON, parseJSON } from "./JSONUtil"
+import {toJSON, parseJSON } from "epic-util"
 import { isNumber } from "typeguard"
 
 const

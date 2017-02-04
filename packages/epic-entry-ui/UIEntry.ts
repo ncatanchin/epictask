@@ -5,8 +5,9 @@ import "epic-entry-shared/AppEntry"
 import { ProcessType } from "epic-entry-shared/ProcessType"
 import { loadProcessClientEntry} from "epic-entry-shared"
 
-import { acceptHot, addHotDisposeHandler, benchmark, benchmarkLoadTime, getHot, setDataOnHotDispose } from "epic-global"
+import { acceptHot, addHotDisposeHandler,  getHot, setDataOnHotDispose } from "epic-global"
 import {loadUI as LoadUIGlobal} from './App'
+import { benchmark, benchmarkLoadTime } from "epic-util"
 //import { ProcessType } from "epic-entry-shared"
 //import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
 

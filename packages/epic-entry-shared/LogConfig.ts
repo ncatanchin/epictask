@@ -1,13 +1,18 @@
-
+import { getValue, isObject } from "typeguard"
+import "./LogDebugConfig"
 import './LogCategories'
-
-import * as TypeLogger from 'typelogger'
-import {setPrefixGlobal,getLogger as LoggerFactory,ILogger,setCategoryLevels,setLoggerOutput} from 'typelogger'
+import {
+	setPrefixGlobal,
+	getLogger as LoggerFactory,
+	ILogger,
+	setCategoryLevels,
+	setLoggerOutput
+} from 'typelogger'
 import * as path from 'path'
 import _ from './LoDashMixins'
 import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"
-import { getValue, isString, isObject } from "typeguard"
+
 
 let
 	Reactotron = null
@@ -37,8 +42,6 @@ function loadReactotron() {
 		}
 	}
 }
-
-loadReactotron()
 
 function getLogPrefix() {
 	return getValue(() => '' + getWindowId(),ProcessConfig.getTypeName())
@@ -90,22 +93,18 @@ export function EpicLoggerFactory(name:string): IEpicLogger {
 	logger.warn = logger.tronWarn = makeTronLevel('warn','warn')
 	logger.error = logger.tronError = makeTronLevel('error','error')
 	
-	if (process.env.NODE_ENV !== 'development') {
+	if (!['development','test'].includes(process.env.NODE_ENV)) {
 		logger.setOverrideLevel = (newLevel) => {
-			console.warn(`You no in dev bitch - no overrides`)
+			console.warn(`NODE_ENV=${process.env.NODE_ENV} / no overrides`)
 		}
 	}
 	return logger
 }
 
 
-declare global {
-	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var getLogger:typeof EpicLoggerFactory
-}
+loadReactotron()
 
-
-if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
+if (ProcessConfig.isStorybook()) {
 	Object.assign(global as any, {
 		LoggerFactory:EpicLoggerFactory,
 		getLogger: EpicLoggerFactory
@@ -119,15 +118,15 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 		processType = ProcessConfig.getTypeName() || process.env.EPIC_ENTRY,
 		baseDir = !DEBUG ? getAppConfig().paths.userDataPath : cwd && cwd.length ? cwd : '/tmp',
 		logDir = path.resolve(baseDir,'logs'),
-				
 		logFilename = `${logDir}/${processType || ProcessConfig.getTypeName(ProcessType.Main)}.log`
 	
 	// Create the log file root
 	mkdir.sync(logDir)
-	console.info('Using log file @', logFilename)
+	DEBUG_LOG('Using log file @', logFilename)
 	
 	// Create the Winston Logger
-	const MainLogger = new (winston.Logger)()
+	const
+		MainLogger = new (winston.Logger)()
 	
 	// Add file transport
 	MainLogger.add(winston.transports.File, {
@@ -140,6 +139,13 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 		maxFiles: 5
 	})
 	
+	if (!TEST && DEBUG) {
+		MainLogger.add(winston.transports.Console, {
+			colorize: true,
+			prettyPrint: true,
+			depth: 3
+		})
+	}
 	// Expose the main logger - really so the UI/Renderer can attach if needed
 	Object.assign(global as any, {
 		MainLogger,
@@ -150,17 +156,10 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 	const wrappedLogger = [ 'trace', 'debug', 'info', 'warn', 'error' ].reduce((newLogger, levelName) => {
 		newLogger[ levelName ] = function (...args) {
 			
-			
-			try {
-				MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
-				if (typeof console !== 'undefined') {
-					const
-						fn = console[ levelName ] || console.log
-					fn.apply(console, args)
-				}
-			} catch (err) {
-				//console.warn(`logging failed: ${levelName}`,err)
-			}
+			MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
+			// if (!ProcessConfig.isTest() && typeof console !== 'undefined') {
+			// 	guard(() => (console[ levelName ] || console.log).apply(console, args))
+			// }
 		}
 		return newLogger
 	}, {})
@@ -170,5 +169,11 @@ if (ProcessConfig.isStorybook() || ProcessConfig.isTest()) {
 }
 
 
-// Configure log levels
+// CATEGORY LOG LEVELS
 setCategoryLevels(require('./LogCategories'))
+
+
+declare global {
+	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
+	var getLogger:typeof EpicLoggerFactory
+}

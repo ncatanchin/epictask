@@ -33,115 +33,6 @@ let
 	startDeferred:Promise.Resolver<any> = null,
 	stopDeferred:Promise.Resolver<any> = null
 
-/**
- * Shut it down
- *
- * @param workerEntry
- * @param workerStop
- * @param exitCode
- */
-async function stopWorker(workerEntry,workerStop,exitCode = 0) {
-	if (stopDeferred) {
-		return stopDeferred.promise
-	}
-	
-	stopDeferred = Promise.defer()
-	
-
-	stopDeferred.promise
-		.finally(() => window.close())// process.env.EPIC_CHILD && process.exit(exitCode))
-	
-	if (workerEntry.running) {
-		log.info(`Stopping worker with exit code: ${exitCode}`)
-		
-		try {
-			await workerStop(exitCode)
-		} catch (err) {
-			log.error('failed to shutdown worker', err)
-		} finally {
-			try {
-				workerEntry.cleanup()
-			} catch (err) {
-				log.warn('Worker cleanup failed',err)
-			}
-		}
-	}
-	
-	stopDeferred.resolve()
-	
-	return stopDeferred.promise
-		
-}
-
-/**
- * Initialize & start the worker process
- *
- * @param processType
- * @param workerEntry
- * @param workerInit
- * @param workerStart
- */
-async function startProcessClient(
-	processType:ProcessType,
-	workerEntry:ProcessClientEntry,
-	workerInit:() => Promise<any>,
-	workerStart:() => Promise<any>
-) {
-	
-	// If already initialized then return
-	if (startDeferred)
-		return startDeferred.promise
-	
-	// Create the resolver
-	startDeferred = Promise.defer()
-	
-	// Add the default handlers first
-	Object
-		.keys(defaultMessageHandlers)
-		.forEach(messageType =>
-			ProcessClient.makeMessageHandler(
-				workerEntry,
-				messageType,
-				defaultMessageHandlers[messageType]))
-	
-	
-	// Now bind to all the process events
-	ipcRenderer.on('message',(event,{type,body}) =>
-		ProcessClient.emit(type,body)
-	)
-	
-	log.info(`Starting Worker Entry`)
-	try {
-		const
-			windowId = getWindowId()
-		
-		log.debug(`Initializing ${windowId}`)
-		await workerInit()
-		
-		log.debug(`Services Starting ${windowId}`)
-		if (workerEntry.servicesEnabled()) {
-			log.info('Starting all services')
-			await Promise
-				.resolve(getServiceManager().start())
-				.timeout(START_TIMEOUT_DEFAULT)
-		}
-		
-		log.debug(`Workload Starting ${windowId}`)
-		await workerStart()
-		
-		
-		log.debug(`Process fully started: ${windowId}`)
-		log.tron(`Process fully started: ${windowId}`)
-		ipcRenderer.send(WindowEvents.AllResourcesLoaded,windowId)
-		startDeferred.resolve(true)
-	} catch (err) {
-		log.error('Failed to start worker',err)
-		startDeferred.reject(err)
-		
-	}
-	
-	return startDeferred.promise
-}
 
 
 /**
@@ -150,14 +41,159 @@ async function startProcessClient(
  */
 export abstract class ProcessClientEntry {
 	
+	private static _AutoLaunch = true
 	
+	
+	/**
+	 * Set auto launch enable/disable
+	 *
+	 * @param autoLaunch
+	 */
+	static setAutoLaunch(autoLaunch = true) {
+		ProcessClientEntry._AutoLaunch = autoLaunch
+	}
+	
+	/**
+	 * Is AutoLaunch enabled or not
+	 *
+	 * @type {boolean}
+	 */
+	static get AutoLaunch() {
+		return ProcessClientEntry._AutoLaunch
+	}
+	
+	/**
+	 * Reset promises, etc for entry
+	 */
+	static resetEntry() {
+		startDeferred = null
+		stopDeferred = null
+	}
+	
+	/**
+	 * Shut it down
+	 *
+	 * @param workerEntry
+	 * @param workerStop
+	 * @param exitCode
+	 */
+	static async stopEntry(workerEntry, workerStop, exitCode = 0) {
+		if (stopDeferred) {
+			return stopDeferred.promise
+		}
+		
+		stopDeferred = Promise.defer()
+		
+		
+		stopDeferred.promise
+			.finally(() => window.close())// process.env.EPIC_CHILD && process.exit(exitCode))
+		
+		if (workerEntry.running) {
+			log.info(`Stopping worker with exit code: ${exitCode}`)
+			
+			try {
+				await workerStop(exitCode)
+			} catch (err) {
+				log.error('failed to shutdown worker', err)
+			} finally {
+				try {
+					workerEntry.cleanup()
+				} catch (err) {
+					log.warn('Worker cleanup failed', err)
+				}
+			}
+		}
+		
+		stopDeferred.resolve()
+		
+		return stopDeferred.promise
+		
+	}
+	
+	/**
+	 * Initialize & start the worker process
+	 *
+	 * @param processType
+	 * @param workerEntry
+	 * @param workerInit
+	 * @param workerStart
+	 */
+	static async startEntry(processType:ProcessType,
+	                 workerEntry:ProcessClientEntry,
+	                 workerInit:() => Promise<any>,
+	                 workerStart:() => Promise<any>) {
+		
+		// If already initialized then return
+		if (startDeferred)
+			return startDeferred.promise
+		
+		// Create the resolver
+		startDeferred = Promise.defer()
+		
+		// Add the default handlers first
+		Object
+			.keys(defaultMessageHandlers)
+			.forEach(messageType =>
+				ProcessClient.makeMessageHandler(
+					workerEntry,
+					messageType,
+					defaultMessageHandlers[ messageType ]))
+		
+		
+		// Now bind to all the process events
+		Env.isElectron && ipcRenderer.on('message', (event, { type, body }) =>
+			ProcessClient.emit(type, body)
+		)
+		
+		log.info(`Starting Worker Entry`)
+		try {
+			const
+				windowId = getWindowId()
+			
+			log.debug(`Initializing ${windowId}`)
+			await workerInit()
+			
+			log.debug(`Services Starting ${windowId}`)
+			if (workerEntry.servicesEnabled()) {
+				log.info('Starting all services')
+				await Promise
+					.resolve(getServiceManager().start())
+					.timeout(START_TIMEOUT_DEFAULT)
+			}
+			
+			log.debug(`Workload Starting ${windowId}`)
+			await workerStart()
+			
+			
+			log.debug(`Process fully started: ${windowId}`)
+			log.tron(`Process fully started: ${windowId}`)
+			Env.isElectron && ipcRenderer.send(WindowEvents.AllResourcesLoaded, windowId)
+			startDeferred.resolve(true)
+		} catch (err) {
+			log.error('Failed to start worker', err)
+			startDeferred.reject(err)
+			
+		}
+		
+		return startDeferred.promise
+	}
 	/**
 	 * Create a new WorkerEntry
 	 *
 	 * @param processType
 	 */
 	constructor(private processType:ProcessType) {
-		startProcessClient(processType,this, () => this.init(),() => this.start())
+		log.debug(`Auto Launch is ${ProcessClientEntry.AutoLaunch}`)
+		if (ProcessClientEntry.AutoLaunch) {
+			this.launch()
+		}
+	}
+	
+	/**
+	 * start the entry
+	 */
+	async launch() {
+		await ProcessClientEntry.startEntry(this.processType, this, () => this.init(),() => this.start())
 	}
 	
 	/**
@@ -217,7 +253,7 @@ export abstract class ProcessClientEntry {
 	 * @param exitCode
 	 */
 	async kill(exitCode = 0) {
-		stopWorker(this,() => this.stop(exitCode))
+		ProcessClientEntry.stopEntry(this,() => this.stop(exitCode))
 		
 	}
 	
@@ -226,5 +262,12 @@ export abstract class ProcessClientEntry {
 	}
 	
 }
+
+
+export namespace ProcessClientEntry {
+	
+	
+}
+
 
 export default ProcessClientEntry

@@ -4,10 +4,10 @@ import {
 	UIKey,
 	isNumber,
 	isString,
-	nilFilter, guard, ContextMenu, notifyError, notifySuccess
+	guard, ContextMenu, notifyError, notifySuccess
 } from "epic-global"
 
-import { Provided, shortId, cloneObjectShallow, getValue, If, focusElementById } from "epic-global"
+import { Provided, cloneObjectShallow, getValue, If } from "epic-global"
  
 import {WindowConfigDialogDefaults,getWindowManagerClient} from "epic-process-manager-client"
 
@@ -17,6 +17,7 @@ import { isNil } from "typeguard"
 import { getStores } from "epic-database-client"
 import { GithubNotification } from "epic-models"
 import { createClient } from "epic-github"
+import { nilFilter, shortId, focusElementById } from "epic-util"
 
 
 

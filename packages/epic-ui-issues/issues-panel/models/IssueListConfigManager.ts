@@ -1,9 +1,10 @@
 import {List,Map,Record} from 'immutable'
 import {
-	ProxyWrap, PersistentValue, PersistentValueEvent, cloneObjectShallow, SimpleEventEmitter,
+	PersistentValue, PersistentValueEvent, cloneObjectShallow, SimpleEventEmitter,
 	addHotDisposeHandler, acceptHot, cloneObject
 } from "epic-global"
 import { IssueListConfig } from "./IssueListConfig"
+import { ProxyWrap } from "epic-util"
 
 /**
  * Created by jglanz on 12/24/16.

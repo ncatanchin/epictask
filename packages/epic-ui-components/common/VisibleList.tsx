@@ -3,7 +3,8 @@ import {List,Map,Iterable} from 'immutable'
 import * as CSSTransitionGroup from 'react-addons-css-transition-group'
 import { createThemedStyles, getTheme } from "epic-styles"
 import { isNumber, isNil, isFunction } from  "epic-global"
-import {shallowEquals,uuid} from "epic-global"
+import {shallowEquals} from "epic-global"
+import {uuid} from 'epic-util'
 import { getValue, isList } from "typeguard"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { makeHeightConstraint } from "epic-styles/styles/CommonRules"

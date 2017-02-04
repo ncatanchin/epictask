@@ -6,7 +6,6 @@ import {
 	getHot,
 	setDataOnHotDispose,
 	acceptHot,
-	shortId,
 	getBrowserEntryHtmlPath,
 	isString,
 	isList,
@@ -23,6 +22,7 @@ import { DevToolsPositionDefault, WindowOptionDefaults } from "epic-process-mana
 import WindowPool from "./WindowPool"
 import { WindowPositionManager } from "epic-process-manager/WindowPositionManager"
 import { isNumber } from "typeguard"
+import { shortId } from "epic-util"
 
 assert(Env.isMain,`WindowManager ONLY loads on main`)
 

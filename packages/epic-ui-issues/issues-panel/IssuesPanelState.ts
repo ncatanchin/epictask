@@ -1,5 +1,5 @@
 import { Map, Record, List } from "immutable"
-import { reviveImmutable } from "epic-global"
+import { reviveImmutable } from "epic-util"
 
 import {
 	IIssueEditInlineConfig,
@@ -125,7 +125,7 @@ export const IssuesPanelStateRecordDefaults = {
  */
 export const IssuesPanelStateRecord = Record(IssuesPanelStateRecordDefaults)
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 export class IssuesPanelState extends IssuesPanelStateRecord implements IIssuesPanelState {
 	
 	static fromJS(o:any = {}) {

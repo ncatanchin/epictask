@@ -1,6 +1,6 @@
 
 import { acceptHot } from "epic-global/HotUtils"
-import {canProxyProperty} from 'epic-global/ProxyUtil'
+
 import { Stores, getDatabaseClient, chunkRemove, chunkSave } from "epic-database-client"
 import { BaseService } from "./internal/BaseService"
 

@@ -1,7 +1,7 @@
 import { ActionFactory, ActionReducer, ActionMessage } from "typedux"
 import {
 	Events, AppKey, pluginDefaultPath,Provided, cloneObjectShallow,
-	shortId, getDisplayForPoint, isBoundsWithinBounds
+	getDisplayForPoint, isBoundsWithinBounds
 } from "epic-global"
 import * as Path from 'path'
 import { User } from "epic-models"
@@ -11,6 +11,7 @@ import { AppStateType } from "../state/app/AppStateType"
 import { Settings } from "epic-global/settings/Settings"
 import { getWindowManagerClient } from "epic-process-manager-client"
 import { isString } from "typeguard"
+import { shortId } from "epic-util"
 
 
 

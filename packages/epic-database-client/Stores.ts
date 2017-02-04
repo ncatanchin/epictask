@@ -12,6 +12,8 @@ import {
 	GithubNotificationStore
 } from "epic-models"
 import { AvailableRepoStore } from "epic-models/AvailableRepo"
+import { isString } from "typeguard"
+import { getDatabaseClient } from "./DatabaseClient"
 
 declare global {
 	interface IStores extends Stores {}
@@ -33,15 +35,27 @@ export class Stores {
 	label: LabelStore
 	user: UserStore
 	
-	getModelStore<T extends IModel>(clazz:{new ():T}):TSRepo<T> {
-		const name = clazz.name && clazz.name.length ?
+	getModelStoreName<T extends IModel>(clazz:{new ():T}):string {
+		return clazz.name && clazz.name.length ?
 			clazz.name :
 			clazz.$$clazz
+	}
+	
+	getModelStore<T extends IModel>(clazz:{new ():T}):TSRepo<T> {
+		const
+			name = this.getModelStoreName(clazz)
 		
 		return this[name] || this[_.lowerFirst(name)]
 		
 	}
 	
+	addModelStore<T extends IModel,TC extends IModelConstructor<T>>(nameOrClazz:string|TC, store:TSRepo<T>):void {
+		
+		const
+			name = isString(nameOrClazz) ? nameOrClazz : this.getModelStoreName(nameOrClazz)
+		
+		this[_.lowerFirst(name)] = getDatabaseClient()
+	}
 }
 
 /**

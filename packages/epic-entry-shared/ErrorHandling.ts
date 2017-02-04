@@ -1,7 +1,11 @@
+process.setMaxListeners(1000000)
+
 const
 	StackTrace = !ProcessConfig.isTest() && require('stacktrace-js')
 
 Object.assign(global as any, { StackTrace })
+
+
 
 // Get an error logger
 let

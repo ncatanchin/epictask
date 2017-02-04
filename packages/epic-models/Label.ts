@@ -20,7 +20,7 @@ export function makeLabelId(label:Label) {
 
 
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeLabelId,
 	onlyMapDefinedAttributes: true

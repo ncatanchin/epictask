@@ -25,7 +25,7 @@ declare global {
  *
  * @type {string}
  */
-export const ModelScope = "Model"
+export const ModelScope = "Models"
 
 
 /**
@@ -147,18 +147,19 @@ const
 
 declare global {
 	
-	namespace ModelRegistryScope {
-		function Register(target:any)
-		
-		function getModel(clazz):IModelConstructor<any>
-	}
 	
-	namespace RegistryScope {
-		let Model:ModelRegistryScope
+	
+	namespace Scopes {
+		namespace Models {
+			function Register(target:any)
+			
+			function getModel(clazz):IModelConstructor<any>
+		}
+		
 	}
 }
 
-RegistryScope.Model = modelRegistryScope
+Scopes.Models = modelRegistryScope
 Registry.addScope(modelRegistryScope)
 
 assignGlobal({

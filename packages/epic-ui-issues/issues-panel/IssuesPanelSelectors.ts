@@ -1,5 +1,5 @@
 import { Map, List } from "immutable"
-import { createDeepEqualSelector, isListType, isNumber } from "epic-global"
+import { isListType, isNumber } from "epic-global"
 import {
 	Comment,
 	Issue,
@@ -27,6 +27,7 @@ import {View} from "epic-typedux/state/window/View"
 import { isNil, getValue } from "typeguard"
 import { labelsSelector, milestonesSelector, assigneesSelector } from "epic-typedux/selectors"
 import { IssueListConfig } from "epic-ui-issues/issues-panel/models/IssueListConfig"
+import { createDeepEqualSelector } from "epic-util"
 
 
 const

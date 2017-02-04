@@ -218,7 +218,7 @@ export function makeIssuesEventId(eventOrRepoId:number|IssuesEvent,issueNumber:n
 /**
  * Represents event from /repos/<repoName>/issues/events
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeIssuesEventId
 })

@@ -1,6 +1,7 @@
 
-import { makePromisedComponent, acceptHot } from "epic-global"
+import { acceptHot } from "epic-global"
 import { getUIActions, getRepoActions } from "epic-typedux"
+import { makePromisedComponent } from "epic-util"
 
 const
 	log = getLogger(__dirname)

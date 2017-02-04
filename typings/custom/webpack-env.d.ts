@@ -234,6 +234,11 @@ declare let __non_webpack_require__: any;
 declare let DEBUG: boolean;
 
 /**
+ * In tests
+ */
+declare let TEST: boolean;
+
+/**
  * Version from package.json
  */
 declare let VERSION: string;

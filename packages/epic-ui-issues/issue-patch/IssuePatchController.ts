@@ -1,6 +1,7 @@
 import { List } from "immutable"
 import IssuePatchState from "./IssuePatchState"
-import { parseJSON, notifyError } from "epic-global"
+import { parseJSON} from "epic-util"
+import { notifyError } from "epic-global"
 import { getValue } from "typeguard"
 import { Issue } from "epic-models"
 import { getIssueActions } from "epic-typedux/provider"

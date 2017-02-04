@@ -1,5 +1,5 @@
 import {ipcRenderer} from 'electron'
-import { shortId } from "epic-global/IdUtil"
+import { shortId } from "epic-util/IdUtil"
 import {EventEmitter} from 'events'
 
 

@@ -120,7 +120,7 @@ export function makeRepoEventId(repoEventOrRepoId:number|RepoEvent<any>,eventId:
 /**
  * Represents event from /repos/<repoName>/events
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeRepoEventId
 })

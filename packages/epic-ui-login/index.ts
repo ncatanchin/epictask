@@ -1,5 +1,6 @@
 
-import { makePromisedComponent, acceptHot } from "epic-global"
+import { acceptHot } from "epic-global"
+import { makePromisedComponent } from "epic-util"
 
 RouteRegistryScope.Register({
 	name: 'Login',

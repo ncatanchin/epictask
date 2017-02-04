@@ -1,10 +1,11 @@
 
 
-import { makePromisedComponent, toJSON, acceptHot } from "epic-global"
+import { makePromisedComponent, toJSON} from "epic-util"
 import {Issue,Comment} from 'epic-models'
 import { List } from "immutable"
 import { getUIActions, getIssueActions } from "epic-typedux/provider"
 import { CommonKeys } from "epic-command-manager"
+import { acceptHot } from "epic-global"
 
 const
 	log = getLogger(__filename)

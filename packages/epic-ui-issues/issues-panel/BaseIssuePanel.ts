@@ -4,7 +4,7 @@ import { IThemedAttributes } from "epic-styles"
 import { CommandContainer } from "epic-command-manager-ui"
 import {List,Map} from 'immutable'
 import { Issue, IIssueGroup, IIssueListItem, IssueListItemType } from "epic-models"
-import { unwrapRef } from "epic-global"
+import { unwrapRef } from "epic-util"
 import { getValue, isNumber } from "typeguard"
 import { IssuesPanelController } from "epic-ui-issues/issues-panel/IssuesPanelController"
 import { IssuesPanelState } from "epic-ui-issues/issues-panel/IssuesPanelState"

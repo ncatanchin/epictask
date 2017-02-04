@@ -1,5 +1,5 @@
 import Electron = require('electron')
-import { shortId, getUserDataFilename, readJSONFile, cloneObjectShallow, writeJSONFile } from "epic-global"
+import {  getUserDataFilename, readJSONFile, cloneObjectShallow, writeJSONFile } from "epic-global"
 import { getValue, isNil } from "typeguard"
 
 

@@ -1,7 +1,7 @@
 // Imports
 
 import { ThemedStyles, IThemedAttributes, Themed } from "epic-styles"
-import { shortId, guard, focusNextFormField, makeStopEvent } from "epic-global"
+import { shortId, focusNextFormField, makeStopEvent } from "epic-util"
 import filterProps from "react-valid-props"
 import { Flex, FlexScale, FlexColumnCenter, FlexRowCenter} from "./FlexLayout"
 import { PureRender} from "./PureRender"
@@ -10,6 +10,7 @@ import { getValue, isNil } from "typeguard"
 import { Icon } from "./icon/Icon"
 import baseStyles from "./SelectField.styles"
 import { isHovering } from "epic-styles/styles"
+import { guard } from "epic-global"
 
 // Constants
 const

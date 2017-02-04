@@ -57,7 +57,7 @@ export function makeIssueId(issueOrRepoOrRepoId:Issue|Repo|number,issueOrIssueNu
 	
 }
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeIssueId,
 	onlyMapDefinedAttributes: true

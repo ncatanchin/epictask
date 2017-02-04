@@ -8,7 +8,7 @@ import filterProps from "react-valid-props"
 
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchController, SearchEvent } from "epic-ui-components/search/SearchController"
-import { MappedProps } from "epic-global/UIUtil"
+import { MappedProps } from "epic-util"
 import { getValue } from "typeguard"
 import baseStyles from './SearchResultItem.styles'
 import { Flex, FlexRow, FlexRowCenter, FlexScale } from 'epic-ui-components/common/FlexLayout'

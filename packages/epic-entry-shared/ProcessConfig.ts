@@ -1,6 +1,7 @@
-import ProcessTypeGlobal from './ProcessType'
+import "./LogDebugConfig"
 import * as assert from 'assert'
-import { isNumber, isNil, isString } from "typeguard"
+import ProcessTypeGlobal from './ProcessType'
+import { isNumber,  isString } from "typeguard"
 
 
 export namespace ProcessConfigGlobal {
@@ -51,7 +52,7 @@ export namespace ProcessConfigGlobal {
 	 */
 	export function setType(newProcessType:ProcessTypeGlobal) {
 		processType = newProcessType
-		console.log('Process Type set to',getTypeName())
+		//DEBUG_LOG(console.log('Process Type set to',getTypeName()))
 	}
 	
 	/**

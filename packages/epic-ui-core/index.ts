@@ -1,4 +1,5 @@
-import { makePromisedComponent, acceptHot } from "epic-global"
+import { makePromisedComponent} from "epic-util"
+import { acceptHot } from "epic-global"
 import { EmptyRoute } from "epic-entry-ui/routes/EmptyRoute"
 import { getUIActions, getRepoActions, getAppActions } from "epic-typedux/provider"
 import { selectedTabViewIdSelector } from "epic-typedux/selectors"

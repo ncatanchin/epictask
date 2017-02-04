@@ -15,7 +15,7 @@ export function makeMilestoneId(milestone:Milestone) {
 	return `${milestone.repoId}-${milestone.id}`
 }
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeMilestoneId,
 	onlyMapDefinedAttributes: true

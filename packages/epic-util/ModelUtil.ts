@@ -1,7 +1,7 @@
 
 import {Map,List} from 'immutable'
 
-import { shallowEquals, cloneObject, cloneObjectShallow } from "./ObjectUtil"
+import { shallowEquals, cloneObject, cloneObjectShallow } from "epic-global/ObjectUtil"
 
 const
 	log = getLogger(__filename)

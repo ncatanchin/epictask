@@ -1,4 +1,5 @@
-import "epic-entry-shared/AppEntry"
+process.env.TEST = true
+require("epic-entry-shared/AppEntry")
 
 // //require('source-map-support').install()
 // const Promise = require('../../node_modules/bluebird')

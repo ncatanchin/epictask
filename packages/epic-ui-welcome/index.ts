@@ -1,5 +1,5 @@
 
-import { makePromisedComponent } from "epic-global"
+import { makePromisedComponent } from "epic-util"
 
 RouteRegistryScope.Register({
 	name: 'Welcome',

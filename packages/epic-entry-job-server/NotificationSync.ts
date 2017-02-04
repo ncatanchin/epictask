@@ -1,4 +1,5 @@
-import { GithubSyncStatus as SyncStatus, getMillis } from "epic-global"
+import { GithubSyncStatus as SyncStatus } from "epic-global"
+import {getMillis} from 'epic-util'
 import { createClient, GitHubClient } from "epic-github"
 import { getValue } from "typeguard"
 import { NotificationsKey } from "epic-global"

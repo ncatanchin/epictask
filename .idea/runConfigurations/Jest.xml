@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Jest" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="project" path-to-js-file="./node_modules/jest-cli/bin/jest.js" application-parameters="--watch --no-cache --runInBand" working-dir="$PROJECT_DIR$">
+  <configuration default="false" name="Jest" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="project" path-to-js-file="./node_modules/jest-cli/bin/jest.js" application-parameters="--no-cache --runInBand" working-dir="$PROJECT_DIR$">
     <envs>
       <env name="NODE_ENV" value="development" />
     </envs>

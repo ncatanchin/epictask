@@ -2,7 +2,7 @@ import { Icon, PureRender, TextField } from "epic-ui-components"
 import { getUIActions, View } from "epic-typedux"
 import { isHovering } from "epic-styles"
 import { getValue } from "typeguard"
-import { stopEvent } from "epic-global"
+import { stopEvent } from "epic-util"
 
 const
 	log = getLogger(__filename)

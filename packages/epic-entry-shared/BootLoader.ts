@@ -1,5 +1,5 @@
 
-import { nilFilter } from "epic-global/ListUtil"
+import { nilFilter } from "epic-util/ListUtil"
 import { isString } from "typeguard"
 
 

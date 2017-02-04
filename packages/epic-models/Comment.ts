@@ -49,7 +49,7 @@ export function makeCommentId(repoOrRepoIdOrComment:number|Comment|Repo,issueOrI
 	return `${makeCommentIdPrefix(repoId,issueNumber)}${commentId}`
 }
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: makeCommentId,
 	onlyMapDefinedAttributes: true

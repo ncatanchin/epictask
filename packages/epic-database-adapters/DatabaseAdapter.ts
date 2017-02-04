@@ -1,7 +1,6 @@
-
-import { Repo as TSRepo} from "typestore"
-
+import { Repo as TSRepo, IModel as TSIModel} from "typestore"
 import { Stores } from "epic-database-client/Stores"
+
 
 
 
@@ -30,6 +29,14 @@ export abstract class DatabaseAdapter {
 	 * Stop
 	 */
 	abstract async stop()
+	
+	/**
+	 * Add a model store
+	 *
+	 * @param clazz
+	 * @param storeClazz
+	 */
+	abstract addStore<T extends TSIModel,TC extends IModelConstructor<T>,TR extends TSRepo<T>>(clazz:TC,storeClazz:{new ():TR}):Promise<TR>
 	
 	/**
 	 * get the stores

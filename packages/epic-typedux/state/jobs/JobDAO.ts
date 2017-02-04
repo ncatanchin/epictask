@@ -1,6 +1,6 @@
 
 import { JobType, IJob, JobStatus, IJobStatusDetail} from "../jobs/JobTypes"
-import { uuid } from  "epic-global"
+import { uuid } from  "epic-util"
 import { tempFilename } from  "epic-global"
 import { getJobActions } from "epic-typedux/provider/ActionFactoryProvider"
 

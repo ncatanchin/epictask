@@ -1,5 +1,5 @@
 import {setDataOnHotDispose, getHot, acceptHot } from  "epic-global/HotUtils"
-import {VariableProxy} from 'epic-global/VariableProxy'
+import {VariableProxy} from 'epic-util'
 import { getValue, isFunction } from "typeguard"
 
 

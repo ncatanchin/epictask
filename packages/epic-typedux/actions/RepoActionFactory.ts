@@ -1,15 +1,12 @@
 import { FinderRequest } from "typestore"
 import { List } from "immutable"
 import {
-	Benchmark,
 	RepoKey,
 	isNil,
 	getSettings,
 	Provided,
 	getValue,
-	nilFilter,
 	cloneObjectShallow,
-	pagedFinder,
 	GithubSyncStatus
 } from "epic-global"
 import { getStores,chunkRemove } from "epic-database-client"
@@ -36,9 +33,10 @@ import { createClient } from "epic-github"
 import { shallowEquals } from "epic-global/ObjectUtil"
 import { isList, isString } from "typeguard"
 import { getIssueActions, getUIActions } from "epic-typedux/provider"
+import { Benchmark, nilFilter, pagedFinder } from "epic-util"
 
 const log = getLogger(__filename)
-const uuid = require('node-uuid')
+
 const Benchmarker = Benchmark('RepoActionFactory')
 
 

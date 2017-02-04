@@ -12,7 +12,7 @@ import {
 /**
  * User model from GitHub schema
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @Model({
 	onlyMapDefinedAttributes: true
 })

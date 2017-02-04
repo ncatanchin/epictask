@@ -6,8 +6,7 @@ import { fromPlainObject, toPlainObject } from "typetransform"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 
 const
-	log = getLogger(__filename),
-	{isMain} = Env
+	log = getLogger(__filename)
 
 
 /**

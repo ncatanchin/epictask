@@ -1,13 +1,13 @@
 
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 import { Stores } from "epic-database-client/Stores"
-
+import { Repo as TSRepo, IModel} from "typestore"
 import { Transport } from "epic-net/Transport"
 import { getDefaultTransport } from "epic-net/index"
 import { DatabaseServerName } from "epic-entry-shared/ProcessType"
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
-import { canProxyProperty,uuid,guard } from "epic-global"
-
+import { guard } from "epic-global"
+import {canProxyProperty,uuid} from 'epic-util'
 const
 	log = getLogger(__filename),
 	TIMEOUT = 180000
@@ -42,6 +42,7 @@ class DatabaseProxy {
 	constructor(private adapter:DatabaseAdapter,private store:string = null) {
 		
 	}
+	
 	
 	/**
 	 * Get proxy Function
@@ -124,6 +125,13 @@ export class DatabaseRemoteAdapter extends DatabaseAdapter {
 		} as any)
 	}
 	
+	
+	async addStore<T extends IModel, TC extends IModelConstructor<T>>(clazz:TC):Promise<TSRepo<T>>
+	async addStore<T extends IModel, TC extends IModelConstructor<T>>(name:string):Promise<TSRepo<T>>
+	async addStore<T extends IModel, TC extends IModelConstructor<T>>(nameOrClazz:string|TC):Promise<TSRepo<T>> {
+		return null
+	}
+	
 	async start():Promise<any> {
 		
 		// Connect the transport if not the DB server
@@ -165,7 +173,6 @@ export class DatabaseRemoteAdapter extends DatabaseAdapter {
 	getStores():Stores {
 		return this.stores
 	}
-	
 	
 	/**
 	 * Get a repo instance for the local database

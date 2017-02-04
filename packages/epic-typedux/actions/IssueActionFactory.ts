@@ -9,14 +9,12 @@ import {
 	isNumber,
 	cloneObject,
 	extractError,
-	nilFilter,
 	cloneObjectShallow,
 	shallowEquals,
 	notifyError,
 	notify,
 	getSettings,
 	Provided,
-	pagedFinder,
 	isListType
 } from "epic-global"
 import {
@@ -41,6 +39,7 @@ import {
 import { GitHubClient } from "epic-github"
 import { getDatabaseClient } from "epic-database-client"
 import { getValue, toNumber, isDefined } from "typeguard"
+import { nilFilter, pagedFinder } from "epic-util"
 
 
 /**

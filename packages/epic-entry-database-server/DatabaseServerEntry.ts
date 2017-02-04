@@ -1,29 +1,20 @@
 import "epic-entry-shared/AppEntry"
+import { benchmark } from "epic-util"
 import { ProcessType } from "epic-entry-shared/ProcessType"
-
 import { loadProcessClientEntry } from "epic-entry-shared"
-//import { ProcessClientEntry } from "epic-entry-shared/ProcessClientEntry"
-//
-export const
- 	{ProcessClientEntry} = loadProcessClientEntry()
-
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
-
 import {
 	acceptHot,
 	addHotDisposeHandler,
 	getHot,
 	setDataOnHotDispose
 } from "epic-global"
-
-
-
 import { IPCServer } from "epic-net/IPCServer"
-
-import { isPromise, isFunction } from "typeguard"
-import { benchmark } from "epic-global/Benchmark"
 import { DatabaseAdapter,getDatabaseAdapter } from "epic-database-adapters"
 import { AppEventType } from "epic-global/Constants"
+
+export const
+	{ProcessClientEntry} = loadProcessClientEntry()
 
 
 // Logger
@@ -43,11 +34,10 @@ let
 	startDeferred:Promise.Resolver<any> = getHot(module, 'startDeferred', null),
 	ipcServer = getHot(module,'ipcServer',null) as IPCServer,
 	dbAdapter = getHot(module,'dbAdapter',null) as DatabaseAdapter
-	
+
 
 
 // Database name and path
-
 setDataOnHotDispose(module, () => ({
 	startDeferred,
 	ipcServer,
@@ -71,12 +61,10 @@ const RequestHandlers = {
 /**
  * Database entry
  */
-class DatabaseServerEntry extends ProcessClientEntry {
+export class DatabaseServerEntry extends ProcessClientEntry {
 	
 	constructor() {
 		super(ProcessType.DatabaseServer)
-		
-		
 	}
 	
 	
@@ -89,6 +77,7 @@ class DatabaseServerEntry extends ProcessClientEntry {
 	servicesEnabled() {
 		return false
 	}
+	
 	
 	/**
 	 * Start the database server
@@ -114,27 +103,27 @@ class DatabaseServerEntry extends ProcessClientEntry {
 			
 			// IF USING REMOTE DB THEN SETUP IPC
 			if (Env.Config.RemoteDatabase) {
-					
-					// Configure IPC Server
-					if (!ipcServer) {
-						log.info('Starting IPC Server')
-						ipcServer = new IPCServer(DatabaseServerName, RequestHandlers, true)
-						
-						log.info(`Pending ipc server start`)
-						await ipcServer.start().timeout(10000, "IPC server took too long")
-						log.info(`IPC Server is ready`)
-					}
 				
+				// Configure IPC Server
+				if (!ipcServer) {
+					log.info('Starting IPC Server')
+					ipcServer = new IPCServer(DatabaseServerName, RequestHandlers, true)
 					
+					log.info(`Pending ipc server start`)
+					await ipcServer.start().timeout(10000, "IPC server took too long")
+					log.info(`IPC Server is ready`)
+				}
+				
+				
 				
 				
 			}
-			EventHub.broadcast(AppEventType.DatabaseReady)
+			Env.isElectron && EventHub.broadcast(AppEventType.DatabaseReady)
 			startDeferred.resolve()
 			
 		} catch (err) {
 			log.error(`Failed to start db server`,err)
-			EventHub.broadcast(AppEventType.DatabaseReady,_.pick(err,'message','code','stack'))
+			Env.isElectron && EventHub.broadcast(AppEventType.DatabaseReady,_.pick(err,'message','code','stack'))
 			startDeferred.reject(err)
 			throw err
 		}
@@ -150,9 +139,16 @@ class DatabaseServerEntry extends ProcessClientEntry {
 	 */
 	protected async stop():Promise<any> {
 		// Stop ipc server
-		await ipcServer.stop()
-		
-		await dbAdapter.stop()
+		try {
+			ipcServer && await ipcServer.stop()
+		} catch (err) {
+			log.error(`Failed to stop db ipc server`,err)
+		}
+		try {
+			dbAdapter && await dbAdapter.stop()
+		} catch (err) {
+			log.error(`Failed to stop db adapter`,err)
+		}
 		
 	}
 }
@@ -190,7 +186,7 @@ async function executeRequest(fromServer:IPCServer,socket, request:IDatabaseRequ
 		
 		const
 			{ id:requestId, store:storeName, fn:fnName, args } = request,
-		
+			
 			{result} = await benchmark(`Server query ${storeName}.${fnName}`,() => dbAdapter.execute(request))()
 		
 		respond(fromServer,socket,request,result)
@@ -202,13 +198,14 @@ async function executeRequest(fromServer:IPCServer,socket, request:IDatabaseRequ
 
 
 // Singleton
-const databaseServerEntry = new DatabaseServerEntry()
+const
+	databaseServerEntry = ProcessClientEntry.AutoLaunch ? new DatabaseServerEntry() : null
 
 
 /**
  * Export the singleton
  */
-//export default databaseServerEntry
+export default databaseServerEntry
 export {}
 
 /**
@@ -217,7 +214,7 @@ export {}
 
 addHotDisposeHandler(module, () => {
 	log.info('disposing database server')
-	databaseServerEntry.kill()
+	databaseServerEntry && databaseServerEntry.kill()
 	
 })
 

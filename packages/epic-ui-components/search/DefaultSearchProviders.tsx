@@ -4,10 +4,11 @@ import { RepoStore, AvailableRepo, Repo, Issue, Label, Milestone, User, SearchIt
 import { getStores } from "epic-database-client"
 
 import { GitHubClient, createClient } from "epic-github"
-import { Benchmark, cloneObjectShallow, canEditRepo } from "epic-global"
+import { cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
 import { isNil } from "typeguard"
 import { assigneesSelector, milestonesSelector, labelsSelector } from "epic-typedux/selectors"
+import { Benchmark } from "epic-util"
 
 
 

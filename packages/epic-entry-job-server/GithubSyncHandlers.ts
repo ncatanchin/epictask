@@ -4,7 +4,6 @@ import { createClient, OnDataCallback } from "epic-github"
 import { getRepoActions } from "epic-typedux"
 import {
 	shallowEquals,
-	checkUpdatedAndAssign,
 	GithubSyncStatus as SyncStatus,
 	OneAtATime,
 	cloneObjectShallow
@@ -12,6 +11,7 @@ import {
 
 import { getValue } from "typeguard"
 import { isRepoSyncPending } from "epic-entry-job-server/executors/RepoSyncState"
+import { checkUpdatedAndAssign } from "epic-util"
 
 
 const

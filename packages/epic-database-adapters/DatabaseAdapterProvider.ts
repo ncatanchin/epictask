@@ -2,7 +2,7 @@
 
 
 import { acceptHot, getHot, setDataOnHotDispose } from "epic-global"
-import { DatabaseAdapter } from "epic-database-adapters"
+import { DatabaseAdapter } from "./DatabaseAdapter"
 /**
  * Adapter reference
  * @type {DatabaseAdapter}

@@ -1,9 +1,9 @@
 import { getAllActions, getAction, ActionFactory } from "typedux"
 
 import { IPCServer, TIPCEventHandler } from "epic-net"
-import { getHot, setDataOnHotDispose, acceptHot, shortId, AppStoreServerName } from "epic-global"
+import { getHot, setDataOnHotDispose, acceptHot, AppStoreServerName } from "epic-global"
 import { ActionFactoryProviders } from "epic-typedux/provider"
-
+import {shortId} from 'epic-util'
 import { AppStoreServerEventNames } from "epic-global"
 import {isFunction} from 'typeguard'
 import { toPlainObject,fromPlainObject } from "typetransform"

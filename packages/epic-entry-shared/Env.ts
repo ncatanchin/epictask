@@ -1,7 +1,4 @@
-
-
-//import * as Electron from 'electron'
-
+import "./LogDebugConfig"
 import { getValue, isNil, isDefined } from "typeguard"
 
 function hasFlag(arg) {
@@ -11,7 +8,6 @@ function hasFlag(arg) {
 const
 	_ = require('lodash'),
 	path = require('path'),
-	g = global as any,
 	isDev = DEBUG || process.env.NODE_ENV === 'development' || hasFlag('--debug'),
 	isRemote = typeof process.env.REMOTE !== 'undefined',
 	skipSplash = hasFlag('SKIP_SPLASH'),
@@ -20,19 +16,20 @@ const
 	isLinux = !isMac && !isWin32,
 	isRenderer = typeof window !== 'undefined' || process.type === 'renderer',
 	isMain = process.type === 'browser',
+	isTest = [true,'true'].includes(process.env.EPIC_TEST),
 	envName =  _.toLower(process.env.NODE_ENV || (isDev ? 'dev' : 'production')),
-	MainEnv = getValue(() => !isMain && require('electron').remote.getGlobal('Env'),{}) as any,
 	DebugWindowOpen = hasFlag('--debug-window-open')
 
 
 const
 	Config = require('epic-config')()
 
-if (DEBUG)
-	console.log(`Parsed Config`, Config)
+//DEBUG_LOG(`Parsed Config`, Config)
 
 // SET POUCH MODULE
-process.env.POUCH_MODULE_NAME = Config.PouchModule || 'pouchdb-browser'
+process.env.POUCH_MODULE_NAME = isTest ?
+	'pouchdb' :
+	Config.PouchModule || 'pouchdb-browser'
 
 export const EnvGlobal = {
 	version: VERSION,
@@ -48,11 +45,11 @@ export const EnvGlobal = {
 	isDev,
 	isDebug: isDev,
 	isHot: !_.isNil(process.env.HOT),
-	isTest: !_.isNil(process.env.EPIC_TEST),
+	isTest,
 	isRemote,
 	isRenderer,
 	isMain,
-	isElectron: getValue(() => !isNil(require('electron')),false) &&  ['browser','renderer'].includes(process.type),
+	isElectron: getValue(() => !isNil(require('electron').ipcRenderer || require('electron').ipcMain),false) &&  ['browser','renderer'].includes(process.type),
 	isWebpack: !['true','1','on'].includes(process.env.NO_WEBPACK),
 	
 	baseDir: path.resolve(__dirname,'../..')

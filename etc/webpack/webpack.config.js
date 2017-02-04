@@ -9,8 +9,6 @@ try {
 
 // GET SHELL JS
 require('shelljs/global')
-
-echo(`Load global environment`)
 require('../tools/global-env')
 
 const
@@ -26,9 +24,7 @@ const
 	assert = require('assert'),
 	path = require('path'),
 	fs = require('fs'),
-	CopyWebpackPlugin = require('copy-webpack-plugin'),
-	HtmlWebpackPlugin = require('html-webpack-plugin'),
-	{ForkCheckerPlugin, TsConfigPathsPlugin} = require('awesome-typescript-loader')
+	HtmlWebpackPlugin = require('html-webpack-plugin')
 
 
 // Import globals
@@ -52,7 +48,6 @@ function resolveDirs(...dirs) {
 assert(fs.existsSync(srcRootDir), `TypeScript must be compiled to ${path.resolve(srcRootDir)}`)
 
 const
-	noWebpack = process.env.NO_WEBPACK,
 	
 	// Module Directories
 	moduleDirs = resolveDirs(srcRootDir, 'node_modules'),
@@ -61,19 +56,7 @@ const
 	distDir = `${baseDir}/dist/${isPackaging ? 'app-package' : 'app'}`,
 	
 	// Env
-	DefinedEnv = {
-		__DEV__: isDev,
-		DEBUG: isDev,
-		VERSION: JSON.stringify(JSON.parse(fs.readFileSync(path.resolve(baseDir,'package.json'),'utf-8')).version),
-		LOCAL_CONFIG: fs.readFileSync(path.resolve(baseDir,'epictask-local.json'),'utf-8'),
-		'Env.isDev': isDev,
-		'process.env.__DEV__': isDev,
-		'process.env.NODE_ENV': JSON.stringify(env),
-		'process.env.BASEDIR': baseDir,
-		'process.env.DefaultTransportScheme': JSON.stringify('IPC'),
-		'ProcessConfig.isStorybook()': false,
-		'Env.isElectron': true
-	},
+	DefinedEnv = require('./webpack.env'),
 	
 	// Import non-typed plugins
 	{
@@ -142,6 +125,7 @@ function makeAliases() {
 		"epic-electron": tsAlias('epic-global/Electron'),
 		styles: tsAlias('epic-assets/styles'),
 		assets: tsAlias('epic-assets'),
+		"epic-database-config": tsAlias('epic-database-adapters/DatabaseConfig'),
 		"epic-config": path.resolve(baseDir, 'etc', 'config', 'default-config.js'),
 		"inline-attachment":path.resolve(baseDir,'libs','inline-attachment')
 		

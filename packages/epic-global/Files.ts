@@ -6,7 +6,7 @@ import * as Path from 'path'
 const
 	log = getLogger(__filename),
 
-	uuid = !ProcessConfig.isStorybook() && require('node-uuid'),
+	uuid = !ProcessConfig.isStorybook() && require('epic-util').uuid,
 	mkdirp = !ProcessConfig.isStorybook() && require('mkdirp'),
 
 	fs = require('fs'),
@@ -90,7 +90,7 @@ export function cacheFilename(basename:string) {
 }
 
 export function tempFilename(basename:string,ext = 'tmp') {
-	return `${tempPath}/${encodeURIComponent(basename)}-${uuid ? uuid.v4() : Date.now()}.${ext}`
+	return `${tempPath}/${encodeURIComponent(basename)}-${uuid ? uuid() : Date.now()}.${ext}`
 }
 
 /**

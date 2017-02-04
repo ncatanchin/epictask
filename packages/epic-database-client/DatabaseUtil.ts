@@ -1,5 +1,5 @@
 import {Repo as TSRepo,IModel} from 'typestore'
-import { nilFilter } from "epic-global/ListUtil"
+import { nilFilter } from "epic-util/ListUtil"
 import { getValue } from "epic-global/ObjectUtil"
 
 const

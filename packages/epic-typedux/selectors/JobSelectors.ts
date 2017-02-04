@@ -1,5 +1,5 @@
 import { JobKey} from "epic-global/Constants"
-import {createDeepEqualSelector } from 'epic-global/SelectorUtil'
+import {createDeepEqualSelector } from 'epic-util'
 
 import { JobState } from "../state/JobState"
 import { IJob, TJobMap, IJobStatusDetail, IJobAndStatusDetail } from "../state/jobs"

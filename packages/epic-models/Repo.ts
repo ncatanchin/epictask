@@ -20,7 +20,7 @@ export interface ISyncChanges {
 	issueNumbersChanged?:number[]
 }
 
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	keyMapper: (repo:Repo) => `${repo.id}`,
 	onlyMapDefinedAttributes: true

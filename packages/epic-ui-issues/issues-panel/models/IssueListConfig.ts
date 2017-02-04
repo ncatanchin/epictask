@@ -1,6 +1,6 @@
 import { Map, Record, List } from "immutable"
 import { DefaultIssueCriteria } from "epic-models"
-import { shortId } from "epic-global"
+import { shortId } from "epic-util"
 
 /**
  * Created by jglanz on 12/24/16.
@@ -30,7 +30,7 @@ export const IssueListConfigRecord = Record({
  * @class IssueListConfig
  * @constructor
  **/
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 export class IssueListConfig extends IssueListConfigRecord {
 	
 	static fromJS(o:any = {}) {

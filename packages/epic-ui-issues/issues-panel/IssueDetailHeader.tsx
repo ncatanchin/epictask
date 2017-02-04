@@ -32,7 +32,7 @@ import {
 
 import { Issue, Milestone, Label, User } from "epic-models"
 import {
-	canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow, unwrapRef,
+	canEditIssue, canAssignIssue, getValue, shallowEquals, cloneObjectShallow,
 	guard
 } from "epic-global"
 import IssuesPanelController from "./IssuesPanelController"

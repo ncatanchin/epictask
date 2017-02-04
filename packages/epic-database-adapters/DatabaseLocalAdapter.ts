@@ -1,13 +1,12 @@
-
+import * as Path from 'path'
 import { Stores } from "epic-database-client/Stores"
 
-import { Coordinator as TSCoordinator, Repo as TSRepo, IModel, FinderRequest } from "typestore"
-
+import { Coordinator as TSCoordinator, Repo as TSRepo, IModel as TSIModel, FinderRequest } from "typestore"
 import {
 	tempFilename, getUserDataFilename, acceptHot, addHotDisposeHandler, getHot,
-	setDataOnHotDispose, getValue,uuid
+	setDataOnHotDispose, getValue
 } from "epic-global"
-
+import {uuid} from 'epic-util'
 import { watchChanges } from "./DatabaseChangeMonitor"
 import { isPromise, isFunction } from "typeguard"
 import { PouchDBRepo,IPouchDBOptions, PouchDBPlugin } from "typestore-plugin-pouchdb"
@@ -55,6 +54,10 @@ export class DatabaseLocalAdapter extends DatabaseAdapter {
 		 
 	}
 	
+	
+	async addStore<T extends TSIModel,TC extends IModelConstructor<T>,TR extends TSRepo<T>>(clazz:TC,storeClazz:{new ():TR}):Promise<TR> {
+		return null
+	}
 	
 	/**
 	 * Get the underlying pouch db
@@ -164,19 +167,12 @@ export class DatabaseLocalAdapter extends DatabaseAdapter {
 
 export namespace DatabaseLocalAdapter {
 	
-	const
-		dbName = Env.isTest ?
-			`epictask-test-${uuid()}` :
-			`epictask-${Env.envName}`,
-		
-		dbPath = Env.Config.UseIndexedDB ? dbName : Env.isTest ?
-			tempFilename(dbName + '.db') :
-			getUserDataFilename(dbName + '.db')
 	
-	log.debug('DB Path:', dbPath)
 	
 	
 	export let
+		pendingDBUpdate:Promise.Resolver<any>,
+		
 		// PouchDB Plugin
 		storePlugin:PouchDBPlugin = getHot(module, 'storePlugin') as PouchDBPlugin,
 		
@@ -193,6 +189,24 @@ export namespace DatabaseLocalAdapter {
 	}))
 	
 	
+	export function isStarting() {
+		return pendingDBUpdate && !pendingDBUpdate.promise.isResolved()
+	}
+	
+	export function isStarted() {
+		return storePlugin && coordinator && getValue(() => pendingDBUpdate.promise.isFulfilled(),false)
+	}
+	
+	async function waitForStarted() {
+		try {
+			if (pendingDBUpdate && !pendingDBUpdate.promise.isResolved()) {
+				await pendingDBUpdate.promise
+			}
+		} catch (err) {
+			log.error(`Failed to start DB`)
+		}
+	}
+	
 	/**
 	 * Create PouchDB store options
 	 *
@@ -201,28 +215,7 @@ export namespace DatabaseLocalAdapter {
 	function storeOptions() {
 		
 		const
-			opts:IPouchDBOptions = Object.assign(
-				// OPTIONS FOR LEVEL & INDEXED
-				{
-					// 1 DB PER MODEL/REPO
-					databasePerRepo: true,
-					
-					// FILENAME
-					filename: dbPath,
-					
-					// OVERWRITE ON CONFLICT
-					overwriteConflicts: true,
-					
-					skipIndexes: !ProcessConfig.isType(ProcessType.DatabaseServer)
-				},
-				
-				// OPTIONS ONLY FOR LEVELDB
-				Env.Config.UseIndexedDB  ? {} : {
-				
-				// BIG CACHE SIZE
-				cacheSize: 32 * 1024 * 1024
-			
-			})
+			opts:IPouchDBOptions = require('epic-database-config')
 	
 		
 		log.debug(`Created store opts`, opts)
@@ -237,7 +230,7 @@ export namespace DatabaseLocalAdapter {
 	 * @param repoClazz
 	 * @returns {T}
 	 */
-	export function getStore<T extends TSRepo<M>,M extends IModel>(repoClazz:{new():T}):T {
+	export function getStore<T extends TSRepo<M>,M extends TSIModel>(repoClazz:{new():T}):T {
 		const
 			store = coordinator.getRepo(repoClazz)
 		
@@ -246,11 +239,20 @@ export namespace DatabaseLocalAdapter {
 	}
 	
 	
+	/**
+	 * Get underlying pouch db instance
+	 *
+	 * @param store
+	 * @returns {any}
+	 */
 	function getPouchDB(store:PouchDBRepo<any>):any {
 		return getValue(() => store.getPouchDB(),null)
 	}
 	
 	
+	/**
+	 * Check if the adapter was reloaded
+	 */
 	export function checkReloaded() {
 		if (stores && coordinator) {
 			watchChanges(stores,getPouchDB)
@@ -259,16 +261,21 @@ export namespace DatabaseLocalAdapter {
 	
 	
 	export async function stopAdapter() {
+		if (!isStarted()) {
+			return log.debug(`Can not stop database, not started`)
+		}
+			
 		await coordinator.stop()
 		
 		coordinator = null
 		storePlugin = null
 		stores = null
+		pendingDBUpdate = null
 	}
 	
 	export async function startAdapter() {
 		
-		if (storePlugin && coordinator)
+		if (isStarted())
 			return
 		
 		

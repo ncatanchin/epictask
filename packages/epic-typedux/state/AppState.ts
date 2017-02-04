@@ -3,7 +3,7 @@ import { List, Record, Map } from "immutable"
 import { Settings } from "epic-global"
 import { User } from "epic-models"
 import { AppStateType } from "./app/AppStateType"
-import { reviveImmutable } from "epic-global/ModelUtil"
+import { reviveImmutable } from "epic-util"
 import { TrayState } from "./TrayState"
 import {PluginState} from "./PluginState"
 
@@ -32,7 +32,7 @@ export const AppStateRecord:Record.Class = Record({
 /**
  * The global app state
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any):AppState {

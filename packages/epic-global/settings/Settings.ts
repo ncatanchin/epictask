@@ -1,6 +1,6 @@
 
 import { Record } from "immutable"
-import { reviveImmutable } from "epic-global/ModelUtil"
+import { reviveImmutable } from "epic-util"
 import { User } from "epic-models/User"
 import { pluginDefaultPath } from "../Files"
 

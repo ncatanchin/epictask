@@ -9,8 +9,10 @@ import {
 } from "epic-command-manager"
 
 import filterProps from "react-valid-props"
-import { getValue, isNumber, isString, shortId } from "epic-global"
+import { getValue, isNumber, isString } from "epic-global"
+
 import { makeStyle } from "epic-styles/styles"
+import { shortId } from "epic-util"
 
 
 const

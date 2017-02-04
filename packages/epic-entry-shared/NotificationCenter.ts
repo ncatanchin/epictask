@@ -1,4 +1,4 @@
-import * as uuid from 'node-uuid'
+import {uuid} from 'epic-util'
 import { isString } from  "typeguard"
 import {Container} from 'typescript-ioc'
 
@@ -28,7 +28,7 @@ export class NotificationCenter {
 	notify(message:INotification|string, type:NotificationType = NotificationType.Info,opts:any = {}) {
 		if (_.isString(message)) {
 			message = {
-				id: uuid.v4(),
+				id: uuid(),
 				createdAt: Date.now(),
 				type: type,
 				content: message,

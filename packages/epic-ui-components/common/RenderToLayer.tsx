@@ -1,6 +1,6 @@
 import {Component, PropTypes} from 'react'
 import {unstable_renderSubtreeIntoContainer, unmountComponentAtNode} from 'react-dom'
-import { Dom } from "epic-global"
+import { Dom } from "epic-util"
 
 const
 	log = getLogger(__filename)

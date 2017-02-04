@@ -1,4 +1,5 @@
-import { guard, shortId, UIKey, shallowEquals } from "epic-global"
+import { guard,  UIKey, shallowEquals } from "epic-global"
+import {shortId} from 'epic-util'
 import { getValue, isDefined, isFunction } from "typeguard"
 import { getUIActions } from "epic-typedux/provider"
 import { ViewEvent, View } from "epic-typedux/state/window/View"

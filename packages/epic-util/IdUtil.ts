@@ -7,7 +7,7 @@ import {generate as generateShortId} from 'short-id'
  * @returns {string}
  */
 export function uuid():string {
-	return require('node-uuid').v4()
+	return require('uuid/v4')()
 }
 
 

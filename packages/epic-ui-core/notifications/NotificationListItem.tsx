@@ -12,9 +12,10 @@ import {
 } from "epic-styles"
 import { GithubNotification, Issue } from "epic-models"
 import { IRowState, RepoLabel, TimeAgo, PureRender, Icon, IconButton } from "epic-ui-components"
-import { shallowEquals, getMillis } from "epic-global"
+import { shallowEquals } from "epic-global"
 import { getUIActions, selectedNotificationIdSelector } from "epic-typedux"
 import { getIssueActions } from "epic-typedux/provider"
+import { getMillis } from "epic-util"
 
 // Constants
 const

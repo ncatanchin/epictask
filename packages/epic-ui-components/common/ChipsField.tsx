@@ -3,7 +3,7 @@
  */
 // Imports
 import { PureRender } from "./PureRender"
-import { shortId } from "epic-global"
+import { shortId } from "epic-util"
 import filterProps from "react-valid-props"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { SearchField } from "epic-ui-components/search/SearchField"

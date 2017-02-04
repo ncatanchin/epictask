@@ -2,13 +2,13 @@ import {
 	Events,
 	acceptHot,
 	addHotDisposeHandler,
-	If,
-	benchmarkLoadTime
+	If
 } from "epic-global"
 
 
 //import AppRoot from "epic-entry-ui/AppRoot"
 import {getReduxStore} from 'epic-typedux/store/AppStore'
+import { benchmarkLoadTime } from "epic-util"
 
 const
 	log = getLogger(__filename),

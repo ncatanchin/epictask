@@ -7,7 +7,7 @@ import filterProps from 'react-valid-props'
 import * as KeyMaps from "epic-command-manager"
 import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
-import { isNumber, getValue, guard, Dom, unwrapRef, shallowEquals } from "epic-global"
+import { isNumber, getValue, guard, shallowEquals } from "epic-global"
 import { PureRender} from 'epic-ui-components/common/PureRender'
 import { TextField} from 'epic-ui-components/common/TextField'
 import {Popover} from 'epic-ui-components/common/Popover'
@@ -23,6 +23,7 @@ import { ViewRoot } from "epic-ui-components/layout/view"
 import { SearchState } from "epic-ui-components/search/SearchState"
 import { isNil } from "typeguard"
 import baseStyles from './SearchField.styles'
+import { unwrapRef, Dom } from "epic-util"
 const
 	// Key mapping tools
 	{ CommonKeys:Keys } = KeyMaps,

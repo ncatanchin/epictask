@@ -1,5 +1,5 @@
 
-import { getHot, setDataOnHotDispose } from "./HotUtils"
+import { getHot, setDataOnHotDispose } from "epic-global/HotUtils"
 
 const
 	proxyWrapCache = getHot(module,'proxyWrapCache',{}) as any

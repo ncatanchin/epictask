@@ -1,8 +1,8 @@
 
 
-
 declare interface IModel {
-	toJS():any
+	toJS?:() => any
+	clazzType?: string;
 }
 
 
@@ -12,6 +12,7 @@ declare interface IModel {
 declare interface IModelConstructor<T> {
 	new <T extends IModel>(...args:any[]):T
 	fromJS(o:any):T
+	
 }
 
 

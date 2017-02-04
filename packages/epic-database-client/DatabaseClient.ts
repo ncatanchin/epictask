@@ -1,25 +1,19 @@
 
 
-import uuid from "node-uuid"
+import {uuid} from "epic-util"
 import { Map } from 'immutable'
+import {VariableProxy} from 'epic-util'
 import {
-	VariableProxy,
 	getHot,
 	setDataOnHotDispose,
 	acceptHot,
-	isString
+	isString, addHotDisposeHandler,AppEventType,SimpleEventEmitter
 } from "epic-global"
 import { ProcessType } from "epic-entry-shared/ProcessType"
-import { SimpleEventEmitter } from "epic-global/SimpleEventEmitter"
-import { Benchmark, benchmark } from "epic-global/Benchmark"
-import { addHotDisposeHandler } from "epic-global/HotUtils"
-import { AppEventType } from "epic-global/Constants"
+import { benchmark } from "epic-util"
 import { DatabaseAdapter, getDatabaseAdapter } from "epic-database-adapters"
 //import { Stores } from "./Stores"
 
-
-const
-	DatabaseServerType = ProcessType.DatabaseServer
 	
 
 const
@@ -227,7 +221,7 @@ export class DatabaseClient {
 				[null,storeOrFn,fnOrArgs]),
 				
 			request = {
-				id: `${store || 'db'}-${fn}-${uuid.v1()}`,
+				id: `${store || 'db'}-${fn}-${uuid()}`,
 				store,
 				fn,
 				args
@@ -299,3 +293,7 @@ setDataOnHotDispose(module,() => ({
 }))
 
 acceptHot(module,log)
+
+declare global {
+	interface IDatabaseClient extends DatabaseClient {}
+}

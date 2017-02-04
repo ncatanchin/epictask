@@ -36,7 +36,7 @@ assignGlobal({
  * to real repos
  *
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 @PouchDBModel({
 	onlyMapDefinedAttributes: true
 })

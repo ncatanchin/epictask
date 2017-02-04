@@ -1,19 +1,17 @@
-import {JobHandler} from '../JobHandler'
-import {GitHubClient, OnDataCallback} from "epic-github"
-import {User,Repo,Milestone,Label,Issue,AvailableRepo,Comment,ISyncChanges} from 'epic-models'
+import { JobHandler } from "../JobHandler"
+import { GitHubClient, OnDataCallback } from "epic-github"
+import { AvailableRepo, Comment, Issue, ISyncChanges, Label, Milestone, Repo, User } from "epic-models"
 
-import {Stores} from "epic-database-client"
-import {getSettings} from "epic-global"
-import {Benchmark} from "epic-global"
-import {JobExecutor} from '../JobDecorations'
-import { JobType, IJob, IJobLogger, JobStatus } from "epic-typedux"
-import {IJobExecutor} from "../JobTypes"
+import { Stores } from "epic-database-client"
+import { acceptHot, getSettings } from "epic-global"
+import { Benchmark } from "epic-util"
+import { JobExecutor } from "../JobDecorations"
+import { IJob, IJobLogger, JobStatus, JobType } from "epic-typedux"
+import { IJobExecutor } from "../JobTypes"
 import JobProgressTracker from "../JobProgressTracker"
 
 import { RepoSyncManager } from "../GithubSyncHandlers"
-
-import { getHot, setDataOnHotDispose, acceptHot } from "epic-global"
-import { getRepoSync, setRepoSync, deleteRepoSync } from "epic-entry-job-server/executors/RepoSyncState"
+import { deleteRepoSync, getRepoSync, setRepoSync } from "epic-entry-job-server/executors/RepoSyncState"
 
 
 const

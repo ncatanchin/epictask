@@ -73,7 +73,7 @@ export const UIStateRecord = Record({
 /**
  * UIState class
  */
-@ModelRegistryScope.Register
+@Scopes.Models.Register
 export class UIState extends UIStateRecord implements State {
 
 	static fromJS(o:any = {}) {

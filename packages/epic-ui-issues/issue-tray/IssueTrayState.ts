@@ -1,6 +1,6 @@
 import {Record,Map,List} from 'immutable'
 import { Issue } from "epic-models"
-import { reviveImmutable } from "epic-global"
+import { reviveImmutable } from "epic-util"
 import { IssuesPanelStateRecordDefaults } from "../issues-panel/IssuesPanelState"
 
 export const IssueTrayStateRecord = Record({

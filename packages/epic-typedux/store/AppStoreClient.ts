@@ -4,7 +4,8 @@ import { ActionMessage } from "typedux"
 import { AppStoreServerName } from "epic-entry-shared/ProcessType"
 import { Transport, getDefaultTransport } from "epic-net"
 import { ActionMessageFilter, IActionMessageHandler } from "epic-typedux/filter"
-import { cloneObjectShallow ,getHot, setDataOnHotDispose, uuid, REQUEST_TIMEOUT, getValue, AppStoreServerEventNames } from "epic-global"
+import {uuid} from 'epic-util'
+import { cloneObjectShallow ,getHot, setDataOnHotDispose, REQUEST_TIMEOUT, getValue, AppStoreServerEventNames } from "epic-global"
 import { fromPlainObject, toPlainObject } from "typetransform"
 
 

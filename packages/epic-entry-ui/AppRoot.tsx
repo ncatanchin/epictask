@@ -1,6 +1,6 @@
 // import 'epic-entry-shared/AppEntry'
 // import 'epic-ui-components/UIGlobals'
-import { getValue, shallowEquals, benchmarkLoadTime } from "epic-global"
+import { getValue, shallowEquals } from "epic-global"
 import { Provider, connect } from "react-redux"
 import { MuiThemeProvider } from "material-ui/styles"
 import { PureRender } from "epic-ui-components/common"
@@ -11,6 +11,7 @@ import { availableRepoCountSelector, appStateTypeSelector } from "epic-typedux/s
 import { AppStateType } from "epic-typedux/state/app"
 import { createStructuredSelector } from "reselect"
 import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
+import { benchmarkLoadTime } from "epic-util"
 
 
 benchmarkLoadTime(`Starting to loading AppRoot`)

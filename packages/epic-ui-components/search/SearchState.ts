@@ -1,6 +1,6 @@
 
 import { Map, Record, List } from "immutable"
-import { reviveImmutable } from "epic-global"
+import { reviveImmutable } from "epic-util"
 import { SearchItem, SearchResult } from "epic-models"
 
 

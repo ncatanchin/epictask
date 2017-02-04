@@ -15,15 +15,15 @@ const
 	dataUrl = require('dataurl')
 	
 let
-	iconPath256 = searchPathsForFile(iconFile256),
-	iconRawData256 = fs.readFileSync(iconPath256),
-	iconUrl256 = dataUrl.format({
+	iconPath256 = !Env.isTest && searchPathsForFile(iconFile256),
+	iconRawData256 = !Env.isTest && fs.readFileSync(iconPath256),
+	iconUrl256 = !Env.isTest && dataUrl.format({
 		mimetype:'image/png',
 		data:iconRawData256
 	}),
-	iconPath128 = searchPathsForFile(iconFile128),
-	iconRawData128 = fs.readFileSync(iconPath128),
-	iconUrl128 = dataUrl.format({
+	iconPath128 = !Env.isTest && searchPathsForFile(iconFile128),
+	iconRawData128 = !Env.isTest && fs.readFileSync(iconPath128),
+	iconUrl128 = !Env.isTest && dataUrl.format({
 		mimetype:'image/png',
 		data:iconRawData128
 	})
@@ -32,10 +32,7 @@ let
 	//iconRawData = require('!!raw!build/icon.icns'),
 	//iconPath = 'build/icons/128x128.png',
 	
-console.log(`Original icon file: ${iconFile256} / path ${iconPath256}`)
-
 if (!iconPath256) {
-	console.log(`Icon not resolved, using url`)
 	iconPath256 = iconUrl256
 }
 

@@ -9,9 +9,10 @@ import IssuesPanelState from "./IssuesPanelState"
 import { IssueListConfig } from "./models/IssueListConfig"
 import { SelectField, TextField } from "epic-ui-components/common"
 import { Icon } from "epic-ui-components/common/icon/Icon"
-import { ContextMenu, isEmpty, stopEvent } from "epic-global"
+import { ContextMenu, isEmpty } from "epic-global"
 import { getValue } from "typeguard"
 import { makeHeightConstraint, colorLighten } from "epic-styles/styles"
+import { stopEvent } from "epic-util"
 
 
 // Constants

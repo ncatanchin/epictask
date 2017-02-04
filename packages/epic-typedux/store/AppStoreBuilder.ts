@@ -43,7 +43,7 @@ export async function storeBuilder(enhancer = null) {
 		
 		SynchronizedStateKeys.forEach((leaf,index) => {
 			const
-				clazz = ModelRegistryScope.getModel(leaf),
+				clazz = Scopes.Models.getModel(leaf),
 				leafState = clazz.fromJS(leafStates[index])
 			
 			isMap(initialState) ?

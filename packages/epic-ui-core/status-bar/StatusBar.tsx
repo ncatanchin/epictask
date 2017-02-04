@@ -2,7 +2,7 @@
 
 import { connect } from "react-redux"
 import { PureRender, ToastMessage } from "epic-ui-components"
-import { createDeepEqualSelector, getValue} from "epic-global"
+import { getValue} from "epic-global"
 import { createStructuredSelector,createSelector } from "reselect"
 import { ThemedStyles } from "epic-styles"
 import baseStyles from "./StatusBar.styles"
@@ -15,6 +15,7 @@ import {
 } from "epic-typedux"
 
 import { messagesSortedSelector } from "epic-typedux/selectors"
+import { createDeepEqualSelector } from "epic-util"
 
 // Constants
 const

@@ -1,6 +1,6 @@
 import { Map, Record, List } from "immutable"
-import { shortId } from "epic-global/IdUtil"
-import { reviveImmutable } from "epic-global/ModelUtil"
+import { shortId } from "epic-util"
+import { reviveImmutable } from "epic-util"
 import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
 import { cloneObjectShallow } from "epic-global"
 

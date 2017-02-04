@@ -1,9 +1,13 @@
-import "../TestSetup"
-
+import "epic-tests/TestSetup"
 import { AuthState } from "epic-typedux/state/AuthState"
 import { fromPlainObject } from "typetransform"
 import { isNil, isMap } from "typeguard"
 
+
+const
+	log = getLogger(__filename)
+
+log.setOverrideLevel(LogLevel.DEBUG)
 
 test(`Everything is running`,() => {
 	const
@@ -21,7 +25,7 @@ test(`Everything is running`,() => {
 	
 	expect(!isNil(po.$$value)).toBe(true)
 	
-	console.log(po)
+	log.debug(po)
 	expect(po.$$value.authenticated).toBe(true)
 	
 	const

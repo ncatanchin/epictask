@@ -3,12 +3,12 @@ import { createSelector } from "reselect"
 import { UIState } from "../state/UIState"
 import View from "epic-typedux/state/window/View"
 import {
-	createDeepEqualSelector,
 	UIKey,
-	getValue, getMillis
+	getValue
 } from "epic-global"
 import { GithubNotification } from "epic-models"
 import { TNotificationsMode } from "epic-typedux/state/UIState"
+import { createDeepEqualSelector } from "epic-util"
 
 
 const

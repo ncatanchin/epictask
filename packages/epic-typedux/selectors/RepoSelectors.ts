@@ -1,6 +1,6 @@
 
 import {List} from 'immutable'
-import {createDeepEqualSelector} from  "epic-global"
+import {createDeepEqualSelector} from  "epic-util"
 import {createSelector} from 'reselect'
 import {AvailableRepo} from "epic-models"
 

@@ -1,11 +1,12 @@
 import { List } from "immutable"
 import { SearchItem, SearchResult } from "epic-models"
-import { ValueCache, Benchmark, cloneObjectShallow, shallowEquals, nilFilterList } from "epic-global"
+import { cloneObjectShallow, shallowEquals } from "epic-global"
 import { getValue, isFunction, isList } from "typeguard"
 import { SearchState } from "./SearchState"
 import { View, viewsSelector } from "epic-typedux"
 import { createSelector } from "reselect"
 import { StoreViewController } from "epic-ui-components/layout/view"
+import { Benchmark, ValueCache, nilFilterList } from "epic-util"
 
 const
 	log = getLogger(__filename),

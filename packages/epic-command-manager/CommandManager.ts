@@ -2,8 +2,7 @@ import Electron from 'epic-electron'
 import { Map } from "immutable"
 import { EnumEventEmitter } from 'type-enum-events'
 import {
-	getHot, setDataOnHotDispose, acceptHot, isReactComponent, getValue, cloneObjectShallow,
-	getZIndex
+	getHot, setDataOnHotDispose, acceptHot, getValue, cloneObjectShallow
 } from "epic-global"
 import {
 	TCommandContainer,
@@ -20,6 +19,7 @@ import {
 	getCommandBrowserWindow
 } from "./CommandManagerUtil"
 import { isNil} from "typeguard"
+import { getZIndex, isReactComponent } from "epic-util"
 
 
 const
