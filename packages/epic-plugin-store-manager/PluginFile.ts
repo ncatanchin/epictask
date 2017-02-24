@@ -51,7 +51,7 @@ export class PluginFile {
 				pkgJson = await Fs.readFile(pkgFilename),
 				pkg = JSON.parse(pkgJson)
 			
-			return pkg && pkg.epictaskPlugin && pkg.main ? pkg : null
+			return getValue(() => isDefined(pkg.epictask.main) && pkg)
 		} catch (err) {
 			return null
 		}
@@ -95,7 +95,7 @@ export class PluginFile {
 	/**
 	 * package.json
 	 */
-	private pkg:any
+	private descriptor:IPluginPackageDescriptor
 	
 	/**
 	 * Is a directory
@@ -191,11 +191,12 @@ export class PluginFile {
 			this.isDir = await PluginFile.isPluginDir(this.dirOrZipname)
 			this.isZip = !this.isDir && isZipFile(this.dirOrZipname)
 			this.dirname = this.isZip ? (await this.unpackZip()) : this.dirOrZipname
-			this.pkg = await PluginFile.getPluginDescriptor(this.dirname)
+			this.descriptor = await PluginFile.getPluginDescriptor(this.dirname)
 			
-			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
+			assert(this.descriptor,`failed to read package config from dir ${this.dirname}`)
 			const
-				{name,description,version,main} = this.pkg
+				{name,description,version,epictask:epictaskDescriptor} = this.descriptor,
+				{main} = epictaskDescriptor
 			
 			let
 				mainBasename = Path.resolve(this.dirname,main),
@@ -205,6 +206,7 @@ export class PluginFile {
 			
 			
 			return this.config = {
+				descriptor: epictaskDescriptor,
 				storeDirname: this.storeDirname,
 				name,
 				description,

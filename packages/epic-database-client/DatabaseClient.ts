@@ -252,6 +252,15 @@ export class DatabaseClient {
 		return this.adapter
 	}
 	
+	/**
+	 * Create data context for plugin
+	 *
+	 * @returns {Promise<void>}
+	 */
+	createPluginDataContext(name:string,...modelConfigs:IPluginModelStoreConfig[]) {
+		return this.getAdapter().createPluginDataContext(name,...modelConfigs)
+	}
+	
 	
 	/**
 	 * Stop the database

@@ -118,7 +118,7 @@ test(`Add model at runtime`,async () => {
 	const
 		client = getDatabaseClient()
 	
-	client.getAdapter().add
+	
 })
 
 //export {}

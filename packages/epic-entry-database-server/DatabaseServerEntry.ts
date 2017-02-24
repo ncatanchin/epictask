@@ -206,7 +206,7 @@ const
  * Export the singleton
  */
 export default databaseServerEntry
-export {}
+
 
 /**
  * HMR - accept self - on dispose, close DB

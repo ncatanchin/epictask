@@ -1,3 +1,4 @@
+export * from './ModelTypes'
 export * from './Repo'
 export * from './AvailableRepo'
 export * from './Label'

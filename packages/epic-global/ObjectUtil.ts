@@ -1,10 +1,6 @@
 import {List} from 'immutable'
-
-
-
-import { isObject, getValue as getValueGlobal, isNil } from  "typeguard"
-
-export const getValue = getValueGlobal
+import { isObject, getValue, guard, isNil } from  "typeguard"
+export {guard,getValue} from 'typeguard'
 
 
 
@@ -25,19 +21,6 @@ export function safePush(arr:Array<any>,value:any) {
 		.concat([value])
 }
 
-/**
- * Execute a function guarded from exception
- *
- * @param fn
- * @returns {(fn:()=>any)=>(fn:()=>any)=>any}
- */
-export function guard(fn:() => any) {
-	try {
-		fn()
-	} catch (err) {
-		return
-	}
-}
 
 
 

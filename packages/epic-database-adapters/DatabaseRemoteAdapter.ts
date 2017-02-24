@@ -1,19 +1,21 @@
 
 import { DatabaseAdapter } from "epic-database-adapters/DatabaseAdapter"
 import { Stores } from "epic-database-client/Stores"
-import { Repo as TSRepo, IModel} from "typestore"
+import { Repo as TSRepo, IModel as TSIModel} from "typestore"
 import { Transport } from "epic-net/Transport"
 import { getDefaultTransport } from "epic-net/index"
 import { DatabaseServerName } from "epic-entry-shared/ProcessType"
 import { DatabaseEvents } from "epic-database-client/DatabaseEvents"
 import { guard } from "epic-global"
 import {canProxyProperty,uuid} from 'epic-util'
+import { isString } from "typeguard"
+import { cleanupStoreName } from "epic-database-adapters/DatabaseAdapterUtil"
 const
 	log = getLogger(__filename),
 	TIMEOUT = 180000
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 /**
  * Pending database request - internal
@@ -108,7 +110,6 @@ export class DatabaseRemoteAdapter extends DatabaseAdapter {
 	 *
 	 * @type {{}}
 	 */
-		// private pendingRequests = new WeakMap<string,IDatabasePendingRequest>()
 	private pendingRequests:{[id:string]:IDatabasePendingRequest} = {}
 	
 	/**
@@ -125,11 +126,58 @@ export class DatabaseRemoteAdapter extends DatabaseAdapter {
 		} as any)
 	}
 	
+	isRunning():boolean {
+		return true
+	}
 	
-	async addStore<T extends IModel, TC extends IModelConstructor<T>>(clazz:TC):Promise<TSRepo<T>>
-	async addStore<T extends IModel, TC extends IModelConstructor<T>>(name:string):Promise<TSRepo<T>>
-	async addStore<T extends IModel, TC extends IModelConstructor<T>>(nameOrClazz:string|TC):Promise<TSRepo<T>> {
-		return null
+	
+	
+	/**
+	 * Close a plugin context - on remote - do nothing
+	 * @param context
+	 */
+	closePluginDataContext(context:IPluginStoreContext):Promise<void> {
+		return
+	}
+	
+	/**
+	 * Creates a plugin data store context
+	 *
+	 * @param name
+	 * @param modelConfigs
+	 * @returns {Promise<null>}
+	 */
+	async createPluginDataContext(name:string, ...modelConfigs):Promise<IPluginStoreContext> {
+		const
+			storeClazzes = modelConfigs.map(config => config.store),
+			dataStores = {} as any,
+			pluginContext = {
+				name,
+				internal: {
+					coordinator:null,
+					storePlugin:null
+				},
+				stores: dataStores
+			} as IPluginStoreContext
+		
+		log.debug(`Remote adapter, so no init or start for ${name}`)
+		
+		try {
+			storeClazzes.forEach((storeClazz:{new():TSRepo<any>}) => {
+				const
+					storeName = storeClazz.$$clazz || storeClazz.name
+				
+				const
+					cleanStoreName = cleanupStoreName(storeName)
+				
+				log.debug(`Creating REMOTE proxy store (${cleanStoreName}) from ${storeName}`)
+				dataStores[cleanStoreName] = this.getStore(cleanStoreName)
+			})
+		}	catch (err) {
+			log.error(`Failed to start REMOTE plugin data context`,err)
+			throw new err
+		}
+		return pluginContext
 	}
 	
 	async start():Promise<any> {

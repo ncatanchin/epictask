@@ -9,6 +9,7 @@ import * as Path from 'path'
 import * as Fs from 'async-file'
 import { isDefined, getValue, isFunction } from "typeguard"
 import { PluginModuleLoader } from "./PluginModuleLoader"
+import { getDatabaseClient } from "epic-database-client"
 
 const Module = require('module')
 
@@ -112,15 +113,6 @@ export class PluginLoader {
 	 */
 	private pkg:any
 	
-	/**
-	 * Is a directory
-	 */
-	private isDir:boolean
-	
-	/**
-	 * Is a zip
-	 */
-	private isZip:boolean
 	
 	
 	/**
@@ -137,6 +129,18 @@ export class PluginLoader {
 		return this._plugin
 	}
 	
+	private async executeEntryFn(fnName:string) {
+		if (isFunction(getValue(() => this.plugin.entry[fnName]))) {
+			try {
+				await this.plugin.entry[fnName]()
+			} catch (err) {
+				log.error(`Failed to ${fnName} plugin ${this.plugin.name}`,err)
+				throw err
+			}
+		}
+		return this.plugin
+	}
+	
 	/**
 	 * Create plugin facade wrapper for lifecycle events
 	 *
@@ -145,27 +149,61 @@ export class PluginLoader {
 	 */
 	private makeFacade(fnName:string) {
 		return async () => {
-			if (isFunction(getValue(() => this.plugin.entry[fnName]))) {
-				try {
-					await this.plugin.entry[fnName]()
-				} catch (err) {
-					log.error(`Failed to ${fnName} plugin ${this.plugin.name}`,err)
-					throw err
-				}
-			}
-			return this.plugin
+			return await this.executeEntryFn(fnName)
 		}
+	}
+	
+	/**
+	 * Create data context
+	 *
+	 * @returns {Promise<void>}
+	 */
+	private async createDataContext() {
+		const
+			modelDescriptors = getValue(() => this.plugin.descriptor.models,{}),
+			modelNames = getValue(() => Object.keys(modelDescriptors),[]),
+			modelCount = getValue(() => modelNames.length,0)
+		
+		log.debug(`Initializing (${modelCount}) models for plugin ${this.plugin.name}`)
+		
+		const
+			modelConfigs = modelNames.map(modelName => {
+				const
+					{model:modelFilename,store:storeFilename} = modelDescriptors[modelName]
+				
+				return {
+					name: modelName,
+					model: this.plugin.module.compileFile(modelFilename),
+					store: this.plugin.module.compileFile(storeFilename),
+				}
+				
+			}),
+			dataContext = await getDatabaseClient().createPluginDataContext(this.plugin.name,...modelConfigs)
+		
+		Object.assign(this.plugin.dataStores,dataContext)
+		
+		return this.plugin
+		
 	}
 	
 	/**
 	 * Call plugin load
 	 */
-	readonly load:IPluginLifecycle = this.makeFacade('load')
+	readonly load:IPluginLifecycle = async () => {
+		// CREATE DATA CONTEXT
+		await this.createDataContext()
+		
+		// THEN EXECUTE LOAD
+		await this.executeEntryFn('load')
+		
+		return this.plugin
+	}
 	
 	/**
 	 * Call plugin unload
 	 */
 	readonly unload:IPluginLifecycle = this.makeFacade('unload')
+	
 	
 	/**
 	 * Call plugin start
@@ -212,7 +250,7 @@ export class PluginLoader {
 	 */
 	async init() {
 		const
-			{name,main,description,version,updatedAt,dirname,isZip,filename,storeDirname} = this.pluginConfig
+			{descriptor,name,main,description,version,updatedAt,dirname,isZip,filename,storeDirname} = this.pluginConfig
 		
 		try {
 			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
@@ -221,6 +259,7 @@ export class PluginLoader {
 				entry = module.pluginRequire(main)
 			
 			this.setPlugin({
+				descriptor,
 				updatedAt,
 				storeDirname,
 				filename,
@@ -235,7 +274,8 @@ export class PluginLoader {
 				load: this.load,
 				unload: this.unload,
 				start: this.start,
-				stop: this.stop
+				stop: this.stop,
+				dataStores: {} as any
 			})
 			
 			

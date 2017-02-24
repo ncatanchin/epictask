@@ -31,7 +31,7 @@ export class PluginModuleLoader  {
 	}
 	
 	
-	private compileFile(filename:string) {
+	compileFile(filename:string) {
 		const
 			code = Fs.readFileSync(filename,'utf8')
 		
@@ -40,6 +40,24 @@ export class PluginModuleLoader  {
 			this.compile(code,filename)
 	}
 	
+	private makePluginContext() {
+		return {
+			getPlugin() {
+				return this.plugin
+			},
+			
+			
+		}
+		
+	}
+	
+	/**
+	 * Compile a source file
+	 *
+	 * @param code
+	 * @param filename
+	 * @returns {{}|any}
+	 */
 	private compile(code:string,filename:string = 'anonymous') {
 		const
 			basename = Path.basename(filename),
@@ -73,6 +91,7 @@ export class PluginModuleLoader  {
 			Scopes,
 			global: moduleGlobal,
 			require: moduleRequire,
+			pluginContext: this.makePluginContext(),
 			moduleRequire
 		})
 		

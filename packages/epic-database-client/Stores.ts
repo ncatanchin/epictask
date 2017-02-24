@@ -13,16 +13,28 @@ import {
 } from "epic-models"
 import { AvailableRepoStore } from "epic-models/AvailableRepo"
 import { isString } from "typeguard"
-import { getDatabaseClient } from "./DatabaseClient"
+import { getDatabaseAdapter } from "epic-database-adapters/DatabaseAdapterProvider"
+//import { getDatabaseClient } from "./DatabaseClient"
 
 declare global {
-	interface IStores extends Stores {}
+	interface IStores {
+		notification:GithubNotificationStore
+		issue:IssueStore
+		issuesEvent:IssuesEventStore
+		repo: RepoStore
+		repoEvent:RepoEventStore
+		availableRepo: AvailableRepoStore
+		milestone: MilestoneStore
+		comment: CommentStore
+		label: LabelStore
+		user: UserStore
+	}
 }
 
 /**
  * All repo stores container
  */
-export class Stores {
+export class Stores implements IStores {
 
 	notification:GithubNotificationStore
 	issue:IssueStore
@@ -49,12 +61,18 @@ export class Stores {
 		
 	}
 	
+	/**
+	 * Add a model store to the database coordinator
+	 *
+	 * @param nameOrClazz
+	 * @param store
+	 */
 	addModelStore<T extends IModel,TC extends IModelConstructor<T>>(nameOrClazz:string|TC, store:TSRepo<T>):void {
 		
 		const
 			name = isString(nameOrClazz) ? nameOrClazz : this.getModelStoreName(nameOrClazz)
 		
-		this[_.lowerFirst(name)] = getDatabaseClient()
+		this[_.lowerFirst(name)] = getDatabaseAdapter()
 	}
 }
 

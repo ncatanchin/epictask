@@ -1,9 +1,4 @@
 
-// namespace LocalImmutable {
-// 	import Immutable from 'immutable'
-// 	export = Immutable
-// }
-
 
 declare type TComponent<P> = React.ComponentClass<P>
 

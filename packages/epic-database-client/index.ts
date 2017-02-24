@@ -13,6 +13,7 @@ declare global {
 		error?:Error
 	}
 }
+
 export * from "./DatabaseClient"
 export * from "./DatabaseEvents"
 export * from "./DatabaseUtil"

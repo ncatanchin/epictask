@@ -342,7 +342,7 @@
     "tinycolor2": "^1.3.0",
     "type-enum-events": "^1.0.5",
     "typedux": "file:///Users/jglanz/Development/densebrain/epictask-workspace/typedux",
-    "typeguard": "0.0.8",
+    "typeguard": "0.0.12",
     "typelogger": ">=1.0.25",
     "typepool": "^1.0.8",
     "typescript-ioc": "^0.2.3",

@@ -1,11 +1,26 @@
 import {Repo as TSRepo,IModel} from 'typestore'
 import { nilFilter } from "epic-util/ListUtil"
 import { getValue } from "epic-global/ObjectUtil"
+import { IPouchDBOptions } from "typestore-plugin-pouchdb"
 
 const
 	CHUNK_SIZE = 50,
 	log = getLogger(__filename)
 
+/**
+ * Create PouchDB store options
+ *
+ * @returns {{filename: string}}
+ */
+export function getDatabaseConfig() {
+	
+	const
+		opts = require('epic-database-config') as IPouchDBOptions
+	
+	log.debug(`Created store opts`, opts)
+	
+	return opts
+}
 
 /**
  * Load all model classes

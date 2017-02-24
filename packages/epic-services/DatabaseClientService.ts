@@ -67,7 +67,7 @@ export class DatabaseClientService extends BaseService {
 		
 		await client.ready()
 		
-		this._stores = client.getStores()
+		this._stores = client.getStores() as Stores
 		
 		// In DEBUG mode expose repos on global
 		if (Env.isDev) {

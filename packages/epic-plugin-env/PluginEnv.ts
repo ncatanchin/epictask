@@ -20,6 +20,7 @@ export * from 'epic-styles/ThemeDecorations'
 export * from 'epic-styles/ThemeManager'
 
 import Electron = require('electron')
+export { Electron }
 
 /**
  * Export all the internal components
@@ -39,10 +40,6 @@ export namespace EpicPluginGlobal {
 }
 
 export const EpicPlugin = EpicPluginGlobal
-
-export {
-	Electron
-}
 
 export default EpicPlugin
 

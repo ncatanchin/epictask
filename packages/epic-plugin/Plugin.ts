@@ -1,22 +1,55 @@
 import {Map,List,Record} from 'immutable'
+import { Coordinator as TSCoordinator, Repo as TSRepo } from 'typestore'
 import { isNil, isFunction } from "typeguard"
+import { PouchDBPlugin as TSPouchDBPlugin } from "typestore-plugin-pouchdb"
 
-export enum PluginStatus {
-	Processed = 1,
-	Updating = 2,
-	Running = 3,
-	Stopped = 4
-}
+// export enum PluginStatus {
+// 	Processed = 1,
+// 	Updating = 2,
+// 	Running = 3,
+// 	Stopped = 4
+// }
+//
+// assignGlobal({
+// 	PluginStatus
+// })
 
-assignGlobal({
-	PluginStatus
-})
+
 
 /**
  * Plugin Shape
  */
 declare global {
+	
+	interface IPluginModelDescriptor {
+		model:string
+		store:string
+	}
+	
+	interface IPluginModelDescriptors {
+		[name:string]:IPluginModelDescriptor
+	}
+	
+	interface IPluginPackageDescriptor {
+		name: string
+		version:string
+		description?:string
+		epictask:IPluginDescriptor
+	}
+	
+	interface IPluginDescriptor {
+		main: string
+		models?:IPluginModelDescriptors
+	}
+	
 	interface IPluginConfig {
+		
+		/**
+		 * Plugin descriptor
+		 */
+		descriptor:IPluginDescriptor
+		
+		
 		/**
 		 * Location of the plugin
 		 */
@@ -54,7 +87,7 @@ declare global {
 		
 		
 		/**
-		 * Packaged/Unpackaged
+		 * Packaged/Un-packaged
 		 */
 		isZip:boolean
 		
@@ -70,6 +103,10 @@ declare global {
 		updatedAt:number
 	}
 	
+	
+	/**
+	 * Plugin config
+	 */
 	interface IPlugin extends IPluginConfig {
 		
 		entry?: any
@@ -93,9 +130,28 @@ declare global {
 		 * Stop the plugin
 		 */
 		stop():Promise<IPlugin>
+		
+		/**
+		 * Data store context
+		 */
+		dataStores?:IPluginStoreContext
 	}
 	
-	enum PluginStatus {
+	/**
+	 * Plugin store context
+	 */
+	interface IPluginStoreContext {
+		name:string
+		internal:{
+			coordinator:TSCoordinator
+			storePlugin:TSPouchDBPlugin
+		}
+		stores:{
+			[modelName:string]:TSRepo<any>
+		}
+	}
+	
+	const enum PluginStatus {
 		Processed = 1,
 		Updating = 2,
 		Running = 3,
@@ -105,6 +161,12 @@ declare global {
 	interface IPluginState extends Map<string,any> {
 		config:IPluginConfig
 		processStatus:Map<string,PluginStatus>
+	}
+	
+	interface IPluginModelStoreConfig {
+		name:string,
+		model:any,
+		store:any
 	}
 }
 

@@ -2,14 +2,11 @@ import "epic-plugin"
 
 import {Map,List} from 'immutable'
 import {
-	getUserDataFilename,
-	pluginDefaultPath,
 	guard,
 	getHot,
 	acceptHot,
 	setDataOnHotDispose, AppKey, addHotDisposeHandler
 } from 'epic-global'
-import * as Path from 'path'
 import Glob = require('glob')
 import { isString, getValue } from "typeguard"
 
@@ -34,10 +31,6 @@ log.setOverrideLevel(LogLevel.DEBUG)
  **/
 export class PluginManager {
 	
-	constructor() {
-		
-	}
-	
 }
 
 /**
@@ -47,11 +40,7 @@ export namespace PluginManager {
 	
 	
 	const
-		unsubscribers:Function[] = []
-	
-	
-	const
-		DefaultPath = pluginDefaultPath,
+		unsubscribers:Function[] = [],
 		plugins = getHot(module,'plugins',{} as any) as {[name:string]:IPlugin}
 	
 	// HMR

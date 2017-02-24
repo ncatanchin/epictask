@@ -1,4 +1,4 @@
-import { Repo as TSRepo, IModel as TSIModel} from "typestore"
+import { Repo as TSRepo, IModel as TSIModel, Coordinator as TSCoordinator} from "typestore"
 import { Stores } from "epic-database-client/Stores"
 
 
@@ -6,6 +6,7 @@ import { Stores } from "epic-database-client/Stores"
 
 let
 	instance:DatabaseAdapter
+
 
 
 /**
@@ -30,18 +31,27 @@ export abstract class DatabaseAdapter {
 	 */
 	abstract async stop()
 	
-	/**
-	 * Add a model store
-	 *
-	 * @param clazz
-	 * @param storeClazz
-	 */
-	abstract addStore<T extends TSIModel,TC extends IModelConstructor<T>,TR extends TSRepo<T>>(clazz:TC,storeClazz:{new ():TR}):Promise<TR>
+	abstract isRunning():boolean
 	
 	/**
 	 * get the stores
 	 */
 	abstract getStores():Stores
+	
+	/**
+	 * Create store context
+	 *
+	 * @param modelConfigs
+	 * @param name
+	 */
+	abstract createPluginDataContext(name:string,...modelConfigs:IPluginModelStoreConfig[]):Promise<IPluginStoreContext>
+	
+	/**
+	 * Close the plugin data context
+	 *
+	 * @param context
+	 */
+	abstract closePluginDataContext(context:IPluginStoreContext):Promise<void>
 	
 	/**
 	 * Execute a request
