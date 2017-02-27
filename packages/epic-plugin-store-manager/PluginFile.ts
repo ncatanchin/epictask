@@ -51,7 +51,7 @@ export class PluginFile {
 				pkgJson = await Fs.readFile(pkgFilename),
 				pkg = JSON.parse(pkgJson)
 			
-			return getValue(() => isDefined(pkg.epictask.main) && pkg)
+			return getValue(() => isDefined(pkg.epictask.main) ? pkg : null)
 		} catch (err) {
 			return null
 		}
@@ -221,7 +221,7 @@ export class PluginFile {
 			
 			
 		} catch (err) {
-			log.error(`Failed to init plugin: ${this.dirOrZipname}`,err)
+			log.error(`Failed to init plugin ${this.dirOrZipname}: ${err.message}`,err)
 			getNotificationCenter().notifyError(`Unable to init plugin (${this.dirOrZipname}): ${err.message}`)
 		}
 	}

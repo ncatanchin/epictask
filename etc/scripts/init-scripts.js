@@ -9,8 +9,6 @@ try {
 require('shelljs/global')
 
 
-
-
 const
 	path = require('path'),
 	{process} = global,

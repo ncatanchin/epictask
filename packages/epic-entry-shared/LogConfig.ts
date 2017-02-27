@@ -1,4 +1,4 @@
-import { getValue, isObject } from "typeguard"
+import { getValue, guard, isObject } from "typeguard"
 import "./LogDebugConfig"
 import './LogCategories'
 import {
@@ -86,7 +86,7 @@ export function EpicLoggerFactory(name:string): IEpicLogger {
 	}
 	
 	const
-		logger = Object.assign({},rootLogger)
+		logger = _.clone(rootLogger) //Object.assign({},rootLogger)
 	
 	logger.tron = makeTronLevel('info','tron')
 	logger.info = logger.tronInfo = makeTronLevel('info','info')
@@ -140,6 +140,7 @@ if (ProcessConfig.isStorybook()) {
 	})
 	
 	if (!TEST && DEBUG) {
+		DEBUG_LOG(`Adding console logger`)
 		MainLogger.add(winston.transports.Console, {
 			colorize: true,
 			prettyPrint: true,
@@ -157,9 +158,9 @@ if (ProcessConfig.isStorybook()) {
 		newLogger[ levelName ] = function (...args) {
 			
 			MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
-			// if (!ProcessConfig.isTest() && typeof console !== 'undefined') {
-			// 	guard(() => (console[ levelName ] || console.log).apply(console, args))
-			// }
+			if (!TEST && DEBUG) { //ProcessConfig.isTest() && typeof console !== 'undefined') {
+				guard(() => (console[ levelName ] || console.log).apply(console, args))
+			}
 		}
 		return newLogger
 	}, {})

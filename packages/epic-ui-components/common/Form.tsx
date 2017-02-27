@@ -58,7 +58,7 @@ declare global {
 	interface IFormFieldProps extends IThemedAttributes {
 		
 		/**
-		 * Error Mesage override
+		 * Error Message override
 		 */
 		errorMessage?:string
 		

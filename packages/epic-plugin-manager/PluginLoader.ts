@@ -47,7 +47,7 @@ export interface IPluginLifecycle {
  * @class Plugin
  * @constructor
  **/
-export class PluginLoader {
+export class PluginLoader  {
 	
 	/**
 	 * Get the JSON descriptor for a plugin
@@ -153,6 +153,7 @@ export class PluginLoader {
 		}
 	}
 	
+	
 	/**
 	 * Create data context
 	 *
@@ -169,18 +170,24 @@ export class PluginLoader {
 		const
 			modelConfigs = modelNames.map(modelName => {
 				const
-					{model:modelFilename,store:storeFilename} = modelDescriptors[modelName]
+					{model:modelFilename,store:storeFilename} = modelDescriptors[modelName],
+					modelMod = this.plugin.module.pluginRequire(modelFilename),
+					storeMod = this.plugin.module.pluginRequire(storeFilename)
 				
-				return {
-					name: modelName,
-					model: this.plugin.module.compileFile(modelFilename),
-					store: this.plugin.module.compileFile(storeFilename),
-				}
+				const
+					modelConfig = {
+						name: modelName,
+						model: modelMod.model || modelMod.default || modelMod,
+						store: storeMod.store || storeMod.default || storeMod,
+					}
+					
+				log.info(`Registering model`,modelConfig)
+				return modelConfig
 				
 			}),
 			dataContext = await getDatabaseClient().createPluginDataContext(this.plugin.name,...modelConfigs)
 		
-		Object.assign(this.plugin.dataStores,dataContext)
+		Object.assign(this.plugin.dataContext,dataContext)
 		
 		return this.plugin
 		
@@ -215,6 +222,9 @@ export class PluginLoader {
 	 */
 	readonly stop:IPluginLifecycle = this.makeFacade('stop')
 	
+	get descriptor() {
+		return getValue(() => this.plugin.descriptor)
+	}
 	
 	/**
 	 * Construct plugin loader
@@ -253,7 +263,7 @@ export class PluginLoader {
 			{descriptor,name,main,description,version,updatedAt,dirname,isZip,filename,storeDirname} = this.pluginConfig
 		
 		try {
-			assert(this.pkg,`failed to read package config from dir ${this.dirname}`)
+			assert(descriptor,`failed to read package config from dir ${this.dirname}`)
 			const
 				module = new PluginModuleLoader(this,dirname), //Module.prototype._compile(entrySrc,entry),
 				entry = module.pluginRequire(main)
@@ -275,7 +285,7 @@ export class PluginLoader {
 				unload: this.unload,
 				start: this.start,
 				stop: this.stop,
-				dataStores: {} as any
+				dataContext: {} as any
 			})
 			
 			

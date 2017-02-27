@@ -39,6 +39,12 @@ export namespace EpicPluginGlobal {
 		registry = registryRef
 }
 
+const ScopesGlobal = (global as any).Scopes as typeof Scopes
+
+export {
+	ScopesGlobal as Scopes
+}
+
 export const EpicPlugin = EpicPluginGlobal
 
 export default EpicPlugin

@@ -9,6 +9,7 @@ import { getValue, isNumber } from "typeguard"
 import { IssuesPanelController } from "epic-ui-issues/issues-panel/IssuesPanelController"
 import { IssuesPanelState } from "epic-ui-issues/issues-panel/IssuesPanelState"
 import { View } from "epic-typedux/state/window"
+import * as React from "react"
 
 const
 	log = getLogger(__filename)
@@ -111,7 +112,7 @@ export abstract class BaseIssuePanel<P extends IBaseIssuesPanelProps,S extends I
 	 */
 	get itemIndexes():List<number> {
 		const
-			listRef = unwrapRef(getValue(() => this.state.listRef))
+			listRef = unwrapRef(getValue(() => this.state.listRef)) as any
 		
 		return getValue(() => listRef.state.itemIndexes,List<number>()) as any
 	}
@@ -178,8 +179,8 @@ export abstract class BaseIssuePanel<P extends IBaseIssuesPanelProps,S extends I
 			issueCount = itemCount - getValue(() => groups.size,0)
 		
 		let
-			{firstSelectedIndex = -1} = this.state,
-			index = ((firstSelectedIndex === -1) ? 0 : firstSelectedIndex) + increment
+			firstSelectedIndex = getValue(() => this.state.firstSelectedIndex,0) as number,
+			index = firstSelectedIndex + increment
 		
 		
 		

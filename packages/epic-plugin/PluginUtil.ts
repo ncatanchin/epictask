@@ -1,6 +1,6 @@
 import { getValue } from "typeguard"
 
-export function isPluginEnabled(config:IPluginConfig) {
+export function isPluginEnabled(config:{name:string}) {
 	const
 		settings = getSettings()
 	

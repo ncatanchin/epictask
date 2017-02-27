@@ -81,7 +81,7 @@ export namespace PluginStoreManager {
 	 * Initialize the plugins and subscribe for directory changes
 	 */
 	export async function init() {
-		log.debug(`init plugin manager`)
+		log.info(`init plugin manager`)
 		
 		
 		// LOAD STORES

@@ -11,7 +11,8 @@ log.setOverrideLevel(LogLevel.DEBUG)
 const
 	FormData = require('form-data')
 
-fetch = require('node-fetch')
+const
+	fetch = getValue(() => window.fetch,require('node-fetch'))
 
 function getApp() {
 	return getValue(() => Electron.remote.app,Electron.app)

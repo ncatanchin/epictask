@@ -12,6 +12,7 @@ import { isString, getValue } from "typeguard"
 
 import { pluginsSelector,PluginState } from "epic-typedux"
 import { isPluginEnabled } from "epic-plugin"
+import { PluginLoader } from "epic-plugin-manager/PluginLoader"
 
 /**
  * Created by jglanz on 1/15/17.
@@ -41,11 +42,11 @@ export namespace PluginManager {
 	
 	const
 		unsubscribers:Function[] = [],
-		plugins = getHot(module,'plugins',{} as any) as {[name:string]:IPlugin}
+		pluginLoaders = getHot(module,'pluginLoaders',{} as any) as {[name:string]:PluginLoader}
 	
 	// HMR
 	setDataOnHotDispose(module,() => ({
-		plugins
+		pluginLoaders
 	}))
 		
 	
@@ -75,6 +76,7 @@ export namespace PluginManager {
 	 * @returns {Promise<void>}
 	 */
 	export async function onPluginStatesChanged(pluginStates:Map<string,PluginState>,oldPluginStates:Map<string,PluginState> = Map<string,PluginState>()) {
+		log.info(`Processing pluginLoaders: ${pluginStates.keySeq().join(', ')}`)
 		const
 			deletedPlugins = [],
 			newPlugins = [],
@@ -108,42 +110,50 @@ export namespace PluginManager {
 		
 		
 		// REMOVE DELETED
-		deletedPlugins.forEach(([name,pluginState]) => {
+		await Promise.all(deletedPlugins.map(async ([name,pluginState]) => {
 			const
 				{config,timestamp} = pluginState
 				
 			
 			log.debug(`Plugin ${name}: DELETED`)
-		})
+			await stopPlugin(name,config)
+		}))
 		
 		// UPDATED
-		updatedPlugins.forEach(([name,pluginState]) => {
+		await Promise.all(updatedPlugins.map(async ([name,pluginState]) => {
 			const
 				{config,timestamp} = pluginState
 			
 			log.debug(`Plugin ${name}: UPDATED`)
-		})
+			await stopPlugin(name,config)
+			await startPlugin(name,config)
+		}))
 		
 		// NEW
-		newPlugins.forEach(([name,pluginState]) => {
+		await Promise.all(newPlugins.map(async ([name,pluginState]) => {
 			const
 				{config,timestamp} = pluginState
 			
 			log.debug(`Plugin ${name}: NEW`)
-		})
+			await startPlugin(name,config)
+		}))
 	}
 	
 	/**
-	 * Initialize the plugins and subscribe for directory changes
+	 * Initialize the pluginLoaders and subscribe for directory changes
 	 */
 	export async function init() {
 		log.debug(`init plugin manager`)
 		
 		
 		// LOAD STORES ON MAIN
-		onPluginStatesChanged(pluginsSelector(getStoreState()))
 		unsubscribers.push(getStore().observe([AppKey,'plugins'],onPluginStatesChanged))
 		
+		const
+			appState = getStore().getState().get(AppKey) as IAppState
+		
+		log.info(`AppState`,appState)
+		onPluginStatesChanged(appState.plugins)
 		
 	}
 	
@@ -152,13 +162,20 @@ export namespace PluginManager {
 	 *
 	 * @param name
 	 * @returns {Promise<void>}
+	 * @param config
 	 */
-	export async function startPlugin(name:string) {
+	export async function startPlugin(name:string,config:IPluginConfig) {
 		const
-			plugin = plugins[name],
+			pluginLoader = pluginLoaders[name] = new PluginLoader(config)
+		
+		await pluginLoader.init()
+		
+		const
+			plugin = pluginLoader.plugin,
 			pluginStatus = getPluginStatus(name)
 		
 		if (Env.isMain || !isPluginEnabled(plugin) || pluginStatus === PluginStatus.Running) {
+			log.info(`Not starting plugin/isMain=${Env.isMain}/isPluginEnabled=${isPluginEnabled(plugin)}/running=${pluginStatus === PluginStatus.Running}/status=${pluginStatus}`)
 			return
 		}
 		
@@ -178,10 +195,12 @@ export namespace PluginManager {
 	 *
 	 * @param name
 	 * @returns {Promise<void>}
+	 * @param config
 	 */
-	export async function stopPlugin(name:string) {
+	export async function stopPlugin(name:string,config:IPluginConfig) {
 		const
-			plugin = plugins[name],
+			pluginLoader = pluginLoaders[name],
+			plugin = pluginLoader.plugin,
 			pluginStatus = getPluginStatus(name)
 		
 		if (pluginStatus !== PluginStatus.Running && (Env.isMain || !isPluginEnabled(plugin))) {
@@ -200,47 +219,59 @@ export namespace PluginManager {
 			log.error(`Failed to unload plugin: ${name}`,err)
 		}
 		
-		delete plugins[name]
+		delete pluginLoaders[name]
 		
 	}
+	//
+	// /**
+	//  * Register a plugin - usually from store event
+	//  *
+	//  * @param plugin
+	//  * @returns {Promise<void>}
+	//  */
+	// export async function registerPlugin(plugin:IPlugin) {
+	// 	if (pluginLoaders[plugin.name]) {
+	// 		log.debug(`Plugin is already registered (${plugin.name}) - unloading first`)
+	// 		await unregisterPlugin(plugin)
+	// 	}
+	//
+	// 	pluginLoaders[plugin.name] = plugin
+	//
+	// 	//TODO: Add disabled check (settings)
+	// 	startPlugin(plugin.name)
+	//
+	// }
 	
-	/**
-	 * Register a plugin - usually from store event
-	 *
-	 * @param plugin
-	 * @returns {Promise<void>}
-	 */
-	export async function registerPlugin(plugin:IPlugin) {
-		if (plugins[plugin.name]) {
-			log.debug(`Plugin is already registered (${plugin.name}) - unloading first`)
-			await unregisterPlugin(plugin)
+	// /**
+	//  * Unregister a plugin
+	//  *
+	//  * @param pluginOrName
+	//  * @returns {Promise<void>}
+	//  */
+	// export async function unregisterPlugin(pluginOrName:IPlugin|string) {
+	// 	const
+	// 		name = isString(pluginOrName) ? pluginOrName : pluginOrName.name,
+	// 		plugin = pluginLoaders[name]
+	//
+	// 	if (!plugin)
+	// 		return
+	//
+	// 	stopPlugin(name)
+	//
+	// }
+	//
+	if (getValue(() => (module.hot.data as any).pluginLoaders)) {
+		init()
+	}
+	
+}
+
+if (DEBUG) {
+	assignGlobal({
+		getPluginManager() {
+			return PluginManager
 		}
-		
-		plugins[plugin.name] = plugin
-		
-		//TODO: Add disabled check (settings)
-		startPlugin(plugin.name)
-		
-	}
-	
-	/**
-	 * Unregister a plugin
-	 *
-	 * @param pluginOrName
-	 * @returns {Promise<void>}
-	 */
-	export async function unregisterPlugin(pluginOrName:IPlugin|string) {
-		const
-			name = isString(pluginOrName) ? pluginOrName : pluginOrName.name,
-			plugin = plugins[name]
-		
-		if (!plugin)
-			return
-		
-		stopPlugin(name)
-		
-	}
-	
+	})
 }
 
 acceptHot(module,log)

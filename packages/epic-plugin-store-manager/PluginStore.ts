@@ -127,7 +127,7 @@ class PluginStore {
 			isValidPlugin = await PluginFile.isPluginFilename(file)
 		
 		if (!isValidPlugin) {
-			return log.debug(`${file} is not a valid plugin dir or zip`)
+			return log.info(`${file} is not a valid plugin dir or zip`)
 		}
 		
 		
@@ -152,7 +152,7 @@ class PluginStore {
 			EventHub.broadcast(EventHub.PluginFound,pluginConfig)
 			
 		} catch (err) {
-			log.error(`Failed to create & init loader`,err)
+			log.error(`Failed to create & init plugin (${file}): ${err.message}`,err)
 		}
 		
 		

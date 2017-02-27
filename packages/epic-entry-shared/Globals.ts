@@ -354,7 +354,7 @@ declare global {
 	var ReactDOM:typeof ReactDOMGlobal
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
-	var Notification:any
+	//var Notification:any
 	
 	//noinspection JSUnusedLocalSymbols,ES6ConvertVarToLetConst
 	var $:typeof JQueryGlobal

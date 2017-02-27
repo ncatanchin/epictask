@@ -4,17 +4,18 @@ import { FlexColumn, FlexRow,FlexScale, FlexColumnCenter, FlexRowCenter } from '
 import { PureRender } from '../PureRender'
 
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
-import { getValue, isNil, isFunction, isString } from "typeguard"
+import { getValue, isNil, isFunction, isString, isDefined } from "typeguard"
 import { TabTemplate } from "./TabTemplate"
 import { colorAlpha } from "epic-styles/styles"
 import { guard } from "epic-global"
+import * as React from "react"
 
 // Constants
 const
 	log = getLogger(__filename)
 
 // DEBUG OVERRIDE
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 function baseStyles(topStyles, theme, palette) {
@@ -162,12 +163,17 @@ export class Tabs extends React.Component<ITabsProps,ITabsState> {
 		if (!isNil(tabId))
 			selectedIndex = tabs.findIndex(it => it.id === tabId)
 		
+		if (selectedIndex === -1 && tabs.length) {
+			selectedIndex = 0
+		}
+		
 		
 		let
 			content = getValue(() => tabs[ selectedIndex ].content,null)
 		
-		if (selectedIndex === -1 || !content || tabs.length === 0)
+		if (selectedIndex === -1 || !content || tabs.length === 0) {
 			return React.DOM.noscript()
+		}
 		
 		return <FlexColumn flex="scale" style={[Styles.FillWidth,Styles.FlexScale]}>
 			<FlexRowCenter style={[Styles.FillWidth,styles.tabs]}>
@@ -224,7 +230,12 @@ class TabButton extends React.Component<any,any> {
 				key="label"
 				style={[Styles.FlexColumnCenter,styles.label,selected && styles.label.selected]}
 			>
-				{isFunction(title) ? <title {...{ index, selected, tab }} /> : title }
+				{isFunction(title) ? getValue(() => {
+					const
+						TitleComponent = title as any
+					
+					return <TitleComponent {...{ index, selected, tab }} />
+				}) : title }
 			</div>
 		</div>
 	}

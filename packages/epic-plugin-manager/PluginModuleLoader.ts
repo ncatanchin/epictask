@@ -32,12 +32,23 @@ export class PluginModuleLoader  {
 	
 	
 	compileFile(filename:string) {
-		const
-			code = Fs.readFileSync(filename,'utf8')
-		
-		return Path.extname(filename) === '.json' ?
-			JSON.parse(filename) :
-			this.compile(code,filename)
+		try {
+			log.info(`Compile/Loading: ${filename}`)
+			
+			const
+				code = Fs.readFileSync(filename, 'utf8')
+			
+			return Path.extname(filename) === '.json' ?
+				JSON.parse(filename) :
+				this.compile(code, filename)
+		} catch (err) {
+			try {
+				return nodeRequire(filename)
+			} catch (err2) {
+				log.error(`Failed to compile/load: ${filename} / ${err.message}`,err)
+				throw err
+			}
+		}
 	}
 	
 	private makePluginContext() {
@@ -91,6 +102,7 @@ export class PluginModuleLoader  {
 			Scopes,
 			global: moduleGlobal,
 			require: moduleRequire,
+			Reflect,
 			pluginContext: this.makePluginContext(),
 			moduleRequire
 		})
@@ -118,7 +130,7 @@ export class PluginModuleLoader  {
 		
 		
 		const
-			cached = this.cache[modName] || nodeRequire.cache[modName]
+			cached = this.cache[modName] || getValue(() => nodeRequire(modName)) || nodeRequire.cache[modName]
 
 		if (cached)
 			return cached

@@ -13,7 +13,7 @@ prepareDirs()
 const
 	cmd = process.platform === 'win32' ?
 		webpackCmd :
-		`node --max-old-space-size=4000 ${webpackCmd}`
+		`./node_modules/.bin/babel-node --max-old-space-size=4000 ${webpackCmd}`
 
 exec(`${cmd} --config etc/webpack/webpack.config.js --watch --display-error-details --hide-modules`)
 

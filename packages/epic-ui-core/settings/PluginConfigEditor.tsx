@@ -8,6 +8,8 @@ import { SettingsSection } from "./SettingsElements"
 import { pluginStoresSelector, getAppActions, PluginState, pluginsSelector } from "epic-typedux"
 import { pluginDefaultPath } from "epic-global"
 import { isPluginEnabled } from "epic-plugin"
+import * as React from "react"
+import { getValue } from "typeguard"
 
 
 // Constants
@@ -44,7 +46,7 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface IPluginConfigEditorProps extends IThemedAttributes {
 	pluginStores?:string[]
-	plugins?:Map<string,PluginState>
+	plugins?:Map<string, PluginState>
 }
 
 /**
@@ -63,11 +65,11 @@ export interface IPluginConfigEditorState {
 
 @connect(createStructuredSelector({
 	pluginStores: pluginStoresSelector,
-	plugins:pluginsSelector
+	plugins: pluginsSelector
 }))
 @ThemedStyles(baseStyles)
 @PureRender
-export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps,IPluginConfigEditorState> {
+export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps, IPluginConfigEditorState> {
 	
 	private showDirectoryPicker = () => {
 		const
@@ -87,7 +89,9 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 	 */
 	render() {
 		const
-			{ pluginStores, plugins, styles } = this.props
+			{ pluginStores, styles } = this.props
+		let
+			{plugins} = this.props
 		
 		const
 			title = <div style={makeStyle(Styles.FlexRowCenter, Styles.FlexScale)}>
@@ -106,25 +110,28 @@ export class PluginConfigEditor extends React.Component<IPluginConfigEditorProps
 				title="Plugins">
 				
 				<div style={styles.pluginStores}>
-					{plugins.valueSeq().map(plugin => {
-						const
-							{config} = plugin,
-							{name} = config,
-							enabled = isPluginEnabled(config)
-						
-						return <div style={[ styles.pluginStores.directory ]} key={plugin.config.name}>
-							<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>{name}</div>
-							<div style={[ Styles.FlexAuto ]}>
-								<IconButton
-									onClick={() => getAppActions().setPluginEnabled(name,!enabled)}
-									iconSet="material-icons"
-									iconName={enabled ? "radio_button_checked" : "radio_button_unchecked"}/>
+					{plugins.valueSeq()
+						.map(plugin => {
+							const
+								{ config } = plugin,
+								{ name } = config,
+								enabled = isPluginEnabled(config)
+							
+							return <div style={[ styles.pluginStores.directory ]} key={plugin.config.name}>
+								<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>{name}</div>
+								<div style={[ Styles.FlexAuto ]}>
+									<IconButton
+										onClick={() => getAppActions().setPluginEnabled(name, !enabled)}
+										iconSet="material-icons"
+										iconName={enabled ? "radio_button_checked" : "radio_button_unchecked"}/>
 								
+								</div>
 							</div>
-						</div>
-					})
+						})
 					}
-					
+					{!plugins.size && <div style={[ styles.pluginStores.directory ]} key="none">
+						<div style={[ Styles.FlexScale, Styles.Ellipsis ]}>No Plugins Loaded</div>
+					</div>}
 				</div>
 			</SettingsSection>
 			

@@ -47,6 +47,7 @@ import { getValue, cloneObjectShallow, PersistentValue, Settings } from "epic-gl
 import { KeyMapEditor } from "./KeyMapEditor"
 import { SettingsSection, SettingsField } from "./SettingsElements"
 import { PluginConfigEditor } from "./PluginConfigEditor"
+import * as React from "react"
 
 
 const
@@ -432,18 +433,18 @@ export class SettingsWindow extends React.Component<ISettingsWindowProps,ISettin
 								<Icon style={styles.tabs.items.icon}>keyboard</Icon>
 								<div style={makeStyle(tabId === Keys && styles.tabs.items.active)}>SHORTCUTS</div>
 							</FlexColumnCenter>,
-							
-							content:this.renderKeymapEditor()
-						},
-						{
-							id: Plugins,
-							title: <FlexColumnCenter>
-								<Icon style={styles.tabs.items.icon} iconSet="fa" iconName="plug"/>
-								<div style={makeStyle(tabId === Plugins && styles.tabs.items.active)}>PLUGINS</div>
-							</FlexColumnCenter>,
-							
-							content:this.renderPluginConfigEditor()
-						}
+						
+						 	content:this.renderKeymapEditor()
+						 },
+						 {
+						 	id: Plugins,
+						 	title: <FlexColumnCenter>
+						 		<Icon style={styles.tabs.items.icon} iconSet="fa" iconName="plug"/>
+						 		<div style={makeStyle(tabId === Plugins && styles.tabs.items.active)}>PLUGINS</div>
+						 	</FlexColumnCenter>,
+						
+						 	content:this.renderPluginConfigEditor()
+						 }
 					]}
 					style={makeStyle(FlexColumn,FlexScale)}
 				/>

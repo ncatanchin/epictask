@@ -12,6 +12,7 @@ import { isNil, getValue } from "typeguard"
 import { IssuesPanelSearchItem } from "./IssuesPanelSearchItem"
 import { availableReposSelector, assigneesSelector, labelsSelector, milestonesSelector } from "epic-typedux"
 import { IssuesPanelState } from "./IssuesPanelState"
+import * as React from "react"
 
 // const
 // 	searchQueryParser = require('search-query-parser')
@@ -169,11 +170,11 @@ export class IssuesPanelSearch extends React.Component<IIssuesPanelSearchProps,I
 			
 			labelStyle = {
 				fontWeight: 400
-			},
+			} as React.CSSProperties,
 			
 			valueStyle = {
 				fontWeight: 700
-			},
+			} as React.CSSProperties,
 			
 			makeLabel = (labelText, valueText) =>
 				<FlexRowCenter>

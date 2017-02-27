@@ -4,6 +4,8 @@ import { getValue } from "epic-global/ObjectUtil"
 const
 	log = getLogger(__filename),
 	FormData = require('form-data')
+
+const
 	fetch = require('node-fetch')
 
 function getApp() {

@@ -2,6 +2,7 @@
 import {  Form } from './Form'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import { getValue } from "typeguard"
+import * as React from "react"
 
 
 // Constants
@@ -179,7 +180,7 @@ extends React.Component<P,S> implements IFormField {
 		const
 			{ styles } = this.props
 		
-		return <div style={styles.root}>
+		return <div style={styles['root']}>
 		</div>
 	}
 	

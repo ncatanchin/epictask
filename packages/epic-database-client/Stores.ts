@@ -60,20 +60,6 @@ export class Stores implements IStores {
 		return this[name] || this[_.lowerFirst(name)]
 		
 	}
-	
-	/**
-	 * Add a model store to the database coordinator
-	 *
-	 * @param nameOrClazz
-	 * @param store
-	 */
-	addModelStore<T extends IModel,TC extends IModelConstructor<T>>(nameOrClazz:string|TC, store:TSRepo<T>):void {
-		
-		const
-			name = isString(nameOrClazz) ? nameOrClazz : this.getModelStoreName(nameOrClazz)
-		
-		this[_.lowerFirst(name)] = getDatabaseAdapter()
-	}
 }
 
 /**
@@ -86,6 +72,9 @@ export function getStores():Stores {
 }
 
 
+// DEBUG - Add stores
 if (DEBUG) {
-	
+	Object.assign(global,{
+		getStores
+	})
 }

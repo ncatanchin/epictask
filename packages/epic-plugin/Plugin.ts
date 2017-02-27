@@ -134,7 +134,7 @@ declare global {
 		/**
 		 * Data store context
 		 */
-		dataStores?:IPluginStoreContext
+		dataContext?:IPluginStoreContext
 	}
 	
 	/**

@@ -8,6 +8,7 @@ import { createStructuredSelector } from "reselect"
 import { selectedRepoIdsSelector, availableReposSelector, getRepoActions } from "epic-typedux"
 import ReposPanelController from "epic-ui-repos/ReposPanelController"
 import ReposPanelState from "epic-ui-repos/ReposPanelState"
+import * as React from "react"
 
 /**
  * Displays a list of repos
@@ -124,7 +125,7 @@ export interface IRepoListProps extends IThemedAttributes {
 export class RepoList extends React.Component<IRepoListProps,any> {
 	
 	
-	constructor(props = {}, context = {}) {
+	constructor(props:any = {}, context = {}) {
 		super(props, context)
 		
 		this.state = { hoverId: null }
@@ -178,7 +179,6 @@ export class RepoList extends React.Component<IRepoListProps,any> {
 		
 		const {
 			availableRepos,
-			theme,
 			styles,
 			viewState
 		} = this.props,

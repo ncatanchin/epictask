@@ -129,8 +129,8 @@ function loadMainApp() {
 		
 		// HIDE SPLASH
 		[
-			() => Env.skipSplash ? Promise.resolve() : hideSplashWindow(),
-			() => require('epic-plugin-store-manager').PluginStoreManager.init()
+			() => require('epic-plugin-store-manager').PluginStoreManager.init(),
+			() => Env.skipSplash ? Promise.resolve() : hideSplashWindow()
 		]
 	)
 	

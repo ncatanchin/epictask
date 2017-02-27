@@ -1,4 +1,4 @@
-import { toPlainObject, excludeFilterConfig, excludeFilter } from "typetransform"
+import { toPlainObject, excludeFilterConfig, excludeFilter, fromPlainObject } from "typetransform"
 import { List, Record, Map } from "immutable"
 import { Settings } from "epic-global"
 import { User } from "epic-models"
@@ -6,7 +6,9 @@ import { AppStateType } from "./app/AppStateType"
 import { reviveImmutable } from "epic-util"
 import { TrayState } from "./TrayState"
 import {PluginState} from "./PluginState"
+import { getValue, isFunction } from "typeguard"
 
+const log = getLogger(__filename)
 
 export type TWindowMap = Map<number,IWindowState>
 
@@ -36,8 +38,20 @@ export const AppStateRecord:Record.Class = Record({
 export class AppState extends AppStateRecord {
 
 	static fromJS(o:any):AppState {
+		
+		
+		const
+			getProp = name => o && (o.get ? o.get(name) : o[name])
+		
 		let
-			settings = o && (o.get ? o.get('settings') : o.settings)
+			settings = getProp('settings'),
+			srcPlugins = getProp('plugins') || {}
+			
+		if (srcPlugins.toJS) {
+			srcPlugins = srcPlugins.toJS()
+		}
+		
+		log.info(`Creating AppState with`,o,'srcPlugins',getValue(() => srcPlugins.toJS(),srcPlugins))
 		
 		if (o) {
 			const
@@ -57,22 +71,29 @@ export class AppState extends AppStateRecord {
 			appState = appState.set('settings',new Settings(settings)) as any
 		
 		let
-			updatePlugins = List<PluginState>(),
-			{plugins} = appState
+			plugins = Map<string,PluginState>()
 		
-		plugins.valueSeq().forEach(plugin => {
-			if (plugin instanceof PluginState)
-				return
-			
-			updatePlugins = updatePlugins.push(new PluginState(plugin))
-		})
+		Object
+			.values(srcPlugins)
+			.forEach((plugin:any) => {
+				if (!(plugin instanceof PluginState)) {
+					plugin = new PluginState(fromPlainObject(Map.isMap(plugin) ? plugin.toJS() : plugin))
+				}
+				
+				const
+					name = getValue(() => plugin.config.name)
+				
+				if (!name) {
+					log.info(`Skipping plugin, no name: ${JSON.stringify(plugin.toJS(),null,4)}`)
+					return
+				}
+				
+				log.info(`Re-mapping plugin ${name}`)
+				plugins = plugins.set(name,plugin)
+			})
 		
-		
-		
-		updatePlugins.forEach(plugin =>
-			plugins = plugins.set(plugin.config.name,plugin)
-		)
-		
+		appState = appState.set('plugins',plugins) as AppState
+		log.info(`Final AppState`,appState.toJS(),'plugins',plugins.toJS())
 		return appState
 		
 	}
@@ -100,4 +121,8 @@ export class AppState extends AppStateRecord {
 	customAccelerators: Map<string,string>
 
 
+}
+
+declare global {
+	interface IAppState extends AppState {}
 }

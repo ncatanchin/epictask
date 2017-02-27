@@ -108,6 +108,17 @@ export interface IIDERootState {
 @PureRender
 export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	
+	/**
+	 * Get new state
+	 */
+	private getNewState = (props = this.props) => ({
+		width: window.innerWidth
+	})
+	
+	/**
+	 * Update state
+	 */
+	private updateState = (props = this.props) => this.setState(this.getNewState(props))
 	
 	/**
 	 * On mount subscribe and update state
@@ -130,17 +141,6 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 		guard(this.state.unsubscribe)
 	}
 	
-	/**
-	 * Get new state
-	 */
-	private getNewState = (props = this.props) => ({
-		width: window.innerWidth
-	})
-	
-	/**
-	 * Update state
-	 */
-	private updateState = (props = this.props) => this.setState(this.getNewState(props))
 	
 	
 	render() {

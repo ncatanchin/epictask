@@ -4,6 +4,7 @@ import { getValue, shallowEquals } from  "epic-global"
 import { IPalette } from "./material"
 import { addHotDisposeHandler } from "epic-global/HotUtils"
 import { isObject } from "typeguard"
+import * as React from "react"
 
 const
 	Radium = require('radium'),

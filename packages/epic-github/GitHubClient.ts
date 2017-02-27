@@ -235,11 +235,11 @@ export class GitHubClient {
 		const
 			request:RequestInit = {
 				method: HttpMethod[method],
-				cache: "no-cache" as RequestCache,
+				cache: "no-cache",
 				headers: Object.assign({
 					Authorization: `token ${this.token}`
 				},headers),
-				mode: "cors" as RequestMode
+				mode: "cors"
 			}
 
 		if (body)

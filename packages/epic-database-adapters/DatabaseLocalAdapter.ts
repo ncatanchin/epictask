@@ -100,6 +100,7 @@ export class DatabaseLocalAdapter extends DatabaseAdapter {
 		
 		try {
 			log.debug(`Starting coordinator for ${name}`)
+			
 			await coordinator.start(...modelClazzes)
 			
 			storeClazzes.forEach((storeClazz:{new():TSRepo<any>}) => {
