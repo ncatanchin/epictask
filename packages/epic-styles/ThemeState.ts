@@ -109,7 +109,7 @@ export interface IThemeCreator {
 function setPalette(newPalette:IPaletteCreator) {
 	if (!newPalette) {
 		log.error(`Null theme, requiring dark palette directly`,newPalette)
-		newPalette = BuiltIns.LightPalette
+		newPalette = BuiltIns.DarkPalette
 	}
 	
 	if (!newPalette)
@@ -262,7 +262,7 @@ function loadBuiltIns() {
 	BuiltIns = require('./builtin')
 	
 	DefaultTheme = BuiltIns.DefaultTheme
-	DefaultPalette = BuiltIns.LightPalette
+	DefaultPalette = BuiltIns.DarkPalette
 	
 	ThemeCreators = {
 		DefaultTheme: BuiltIns.DefaultTheme,
