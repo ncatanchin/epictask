@@ -5,6 +5,7 @@ import {
 import { getWindowManager } from "epic-process-manager"
 import { AppEventType } from "epic-global/Constants"
 import Electron from 'epic-electron'
+import { handleError } from "epic-entry-main/BootErrorHandler"
 
 const
 	log = getLogger(__filename),
@@ -60,19 +61,8 @@ async function tryStart() {
 	} catch (err) {
 		log.error(`Failed to start database server`,err)
 		
-		const result = dialog.showMessageBox(null,{
-			type: 'error',
-			buttons: ['Reset','Exit'],
-			title: `Unable to open database & local data`,
-			message: `Database did not start, reason: ${err.message}`
-		})
+		handleError("Database Error",`Database did not start, reason: ${err.message}`,err)
 		
-		log.info(`Database failed user response: ${result}`)
-		if (result === 0) {
-			require('./Cleaner').default.restartAndClean()
-		} else {
-			app.exit(0)
-		}
 	}
 }
 

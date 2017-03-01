@@ -1,7 +1,8 @@
+import { acceptHot } from "epic-global/HotUtils"
+import { app } from 'electron'
 import "./CheckSingleInstance"
 import Cleaner from './Cleaner'
 
-import { acceptHot } from "epic-global/HotUtils"
 
 
 // NOW LOAD COMMON ENTRY
@@ -9,11 +10,9 @@ import 'epic-entry-shared/AppEntry'
 import "./MainShutdownHandler"
 
 // LOAD DEPS
-import { showSplashWindow, hideSplashWindow } from "epic-entry-main/SplashWindow"
-import { app, BrowserWindow } from 'electron'
-
-import makeBootLoader from "epic-entry-shared/BootLoader"
-import './MainAppSwitches'
+import { showSplashWindow, hideSplashWindow } from "./SplashWindow"
+import makeBootLoader from "./BootLoader"
+import { handleError } from "./BootErrorHandler"
 
 
 
@@ -83,7 +82,7 @@ function loadMainApp() {
 	 */
 	const boot = makeBootLoader(
 		
-		// DEV CONFIG
+		// DEV CONzFIG
 		Env.isDev && (() => require('./MainDevConfig')),
 		
 		// SPLASH WINDOW
@@ -139,7 +138,13 @@ function loadMainApp() {
 	
 	Cleaner.registerCleaner()
 	
-	boot()
+	boot().catch(err => {
+		log.error(`Failed to boot`,err)
+		handleError(
+			"Unable to start",
+			`Epictask could not start, do you want to delete the local app config and retry? (nothing on github will be deleted).  Reason: ${err.message}`,err
+		)
+	})
 
 	
 	

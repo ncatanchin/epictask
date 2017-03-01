@@ -5,6 +5,16 @@
 // 	.connect()
 
 import { acceptHot } from  "epic-global"
+import { RemoteDebuggingPort } from "epic-global/Constants"
+import {app} from 'electron'
+
+/**
+ * In debug mode enable remote debugging
+ */
+if (Env.isMain && Env.isDev) {
+	app.commandLine.appendSwitch('remote-debugging-port', RemoteDebuggingPort)
+}
+
 const
 	log = getLogger(__filename),
 	{
