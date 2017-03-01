@@ -59,27 +59,32 @@ namespace clientMessageHandlers {
 		log.debug(`Executing action on main: ${leaf}:${type}`)
 		
 		nextTick(() => {
-			if (actionReg.options.isReducer) {
-				
-				const
-					actions:ActionFactory<any,any> = Container.get(actionReg.actionFactory) as any,
-					msg = actions.newMessage(shortId(), leaf, actionReg.type, [], args, {
-						source: {
-							isReducer: true,
-							fromRenderer: true,
-							fromChildId
-						}
-					})
-				
-				store.dispatch(msg)
-				
-				const
-					actionCopy = cloneObjectShallow(action)
-				
-				nextTick(() => broadcastAppStoreAction(actionCopy))
-			} else {
-				actionReg
-					.action(factory => Container.get(factory), ...args)
+			try {
+				if (actionReg.options.isReducer) {
+					
+					const
+						ActionFactoryClazz = actionReg.actionFactory,
+						actions:ActionFactory<any, any> = new ActionFactoryClazz() as any,// Container.get(actionReg.actionFactory) as any,
+						msg = actions.newMessage(shortId(), leaf, actionReg.type, [], args, {
+							source: {
+								isReducer: true,
+								fromRenderer: true,
+								fromChildId
+							}
+						})
+					
+					store.dispatch(msg)
+					
+					const
+						actionCopy = cloneObjectShallow(action)
+					
+					nextTick(() => broadcastAppStoreAction(actionCopy))
+				} else {
+					actionReg
+						.action(factory => Container.get(factory), ...args)
+				}
+			} catch (err) {
+				log.error(`Failed to dispatch child action: ${leaf} / action factory class name = ${actionReg.actionFactory.name}`, err)
 			}
 		})
 	}

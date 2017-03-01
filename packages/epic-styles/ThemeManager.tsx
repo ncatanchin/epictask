@@ -7,8 +7,6 @@ import {
 } from "./ThemeState"
 import { AppEventType, SettingsPath } from "epic-global/Constants"
 
-
-
 const
 	log = getLogger(__filename)
 

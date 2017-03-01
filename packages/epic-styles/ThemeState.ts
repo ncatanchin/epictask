@@ -18,7 +18,7 @@ const
 
 export const
 	DefaultThemeName =  'DefaultTheme',
-	DefaultPaletteName =  'LightPalette'
+	DefaultPaletteName =  'DarkPalette'
 
 // ONLY LET FOR HMR
 export let

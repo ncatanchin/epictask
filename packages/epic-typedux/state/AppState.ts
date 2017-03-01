@@ -36,7 +36,13 @@ export const AppStateRecord:Record.Class = Record({
  */
 @Scopes.Models.Register
 export class AppState extends AppStateRecord {
-
+	
+	/**
+	 * Create AppState from plain JS
+	 *
+	 * @param o
+	 * @returns {AppState}
+	 */
 	static fromJS(o:any):AppState {
 		
 		
@@ -50,8 +56,6 @@ export class AppState extends AppStateRecord {
 		if (srcPlugins.toJS) {
 			srcPlugins = srcPlugins.toJS()
 		}
-		
-		log.info(`Creating AppState with`,o,'srcPlugins',getValue(() => srcPlugins.toJS(),srcPlugins))
 		
 		if (o) {
 			const
@@ -84,16 +88,14 @@ export class AppState extends AppStateRecord {
 					name = getValue(() => plugin.config.name)
 				
 				if (!name) {
-					log.info(`Skipping plugin, no name: ${JSON.stringify(plugin.toJS(),null,4)}`)
+					log.warn(`Skipping plugin, no name: ${JSON.stringify(plugin.toJS(),null,4)}`)
 					return
 				}
 				
-				log.info(`Re-mapping plugin ${name}`)
 				plugins = plugins.set(name,plugin)
 			})
 		
 		appState = appState.set('plugins',plugins) as AppState
-		log.info(`Final AppState`,appState.toJS(),'plugins',plugins.toJS())
 		return appState
 		
 	}
@@ -105,7 +107,7 @@ export class AppState extends AppStateRecord {
 	 */
 	toJS() {
 		return toPlainObject(this,excludeFilterConfig(
-			...excludeFilter('ready','messages') //,'plugins'
+			...excludeFilter('ready','messages')
 		))
 	}
 	

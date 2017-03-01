@@ -2,6 +2,7 @@ import { getValue, guard, isObject } from "typeguard"
 import "./LogDebugConfig"
 import './LogCategories'
 import {
+	LogLevel,
 	setPrefixGlobal,
 	getLogger as LoggerFactory,
 	ILogger,
@@ -150,6 +151,7 @@ if (ProcessConfig.isStorybook()) {
 	// Expose the main logger - really so the UI/Renderer can attach if needed
 	Object.assign(global as any, {
 		MainLogger,
+		LogLevel,
 		LoggerFactory:EpicLoggerFactory,
 		getLogger: EpicLoggerFactory
 	})
