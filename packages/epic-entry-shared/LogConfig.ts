@@ -15,6 +15,9 @@ import { getAppConfig } from "./AppConfig"
 import { ProcessType } from "./ProcessType"
 
 
+const
+	consoleLogEnabled = process.type !== 'browser' && !TEST && DEBUG
+
 let
 	Reactotron = null
 
@@ -140,7 +143,7 @@ if (ProcessConfig.isStorybook()) {
 		maxFiles: 5
 	})
 	
-	if (!TEST && DEBUG) {
+	if (!consoleLogEnabled) {
 		DEBUG_LOG(`Adding console logger`)
 		MainLogger.add(winston.transports.Console, {
 			colorize: true,
@@ -159,8 +162,11 @@ if (ProcessConfig.isStorybook()) {
 	const wrappedLogger = [ 'trace', 'debug', 'info', 'warn', 'error' ].reduce((newLogger, levelName) => {
 		newLogger[ levelName ] = function (...args) {
 			
+			// LOG VIA WINSTON
 			MainLogger[ levelName ](...args.filter(it => !_.isObject(it)))
-			if (!TEST && DEBUG) { //ProcessConfig.isTest() && typeof console !== 'undefined') {
+			
+			// LOG TO CONSOLE
+			if (consoleLogEnabled) { //ProcessConfig.isTest() && typeof console !== 'undefined') {
 				guard(() => (console[ levelName ] || console.log).apply(console, args))
 			}
 		}

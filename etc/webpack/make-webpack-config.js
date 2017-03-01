@@ -201,7 +201,9 @@ const
 		//'eval-source-map', //'#cheap-module-eval-source-map',
 		//'development': 'cheap-module-eval-source-map',//'inline-source-map',
 		//'development': 'inline-source-map',
-		'development': 'cheap-inline-source-map',
+		//'development': 'cheap-inline-source-map',
+		'development': 'cheap-source-map',
+		//'development': 'source-map',
 		//'development': 'source-map',
 		'production': 'source-map'
 	},

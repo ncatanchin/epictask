@@ -18,10 +18,13 @@ const
  * Load any pre-configured windows from state + background windows
  */
 export async function start() {
+	const
+		windowManager = getWindowManager()
+	
 	
 	let
 		windowMap = windowsSelector(getStoreState()),
-	
+		
 		normalWindows = windowMap
 			.valueSeq()
 			.filter(win => win.type === WindowType.Normal)
@@ -30,30 +33,6 @@ export async function start() {
 	// MAKE SURE WE HAVE AT LEAST ONE NORMAL WINDOW
 	if (!normalWindows.length)
 		normalWindows.push(cloneObject(WindowConfigNormalDefaults) as any)
-	
-	const
-		dbReady = Promise.defer()
-	
-	EventHub.on(AppEventType.DatabaseReady,(event:AppEventType, errJson:any) => {
-		if (errJson) {
-			const
-				err = new Error(errJson.message)
-			log.error(`DB failed to init`,errJson,err)
-			dbReady.reject(err)
-			return
-		}
-		
-		dbReady.resolve()
-	})
-	
-	log.debug(`Starting DB Window`)
-	const
-		windowManager = getWindowManager()
-	
-	await windowManager.open(DatabaseServerWindowConfig)
-	await dbReady.promise
-	
-	log.debug(`DB is ready`)
 	
 	const
 		windows:IWindowConfig[] = [

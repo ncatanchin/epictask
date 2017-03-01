@@ -23,8 +23,6 @@ const
 
 function loadMainApp() {
 		
-	
-	
 	// HMR
 	log.debug(`Hot reload mode enabled: ${Env.isHot}`)
 	
@@ -47,9 +45,6 @@ function loadMainApp() {
 		await getServiceManager().stop()
 	}
 
-	
-	
-	
 	/**
 	 * On open event handler
 	 *
@@ -70,12 +65,7 @@ function loadMainApp() {
 		const
 			commandManagerMod = require('epic-command-manager'),
 			commandManager = commandManagerMod.getCommandManager()
-		//
-		// 	electronMenuProvider =
-		// 		require('epic-command-manager')
-		// 			.ElectronMainManagerProvider
-		//
-		//
+		
 		commandManager.setMenuManagerProvider(
 			require('epic-command-manager/CommandElectronMenuManager')
 				.CommandElectronMenuManager
@@ -113,10 +103,13 @@ function loadMainApp() {
 			() => loadCommandManager(),
 			() => require("./AppStoreServer").start()
 		],
-		//
+		
+		// LOAD DATABASE
+		() => require('./DatabaseServerLoader').start(),
+		
 		// LOAD THE REST
 		[
-			() => require('epic-process-manager/WindowManagerLoader').start(),
+			() => require('./WindowManagerLoader').start(),
 			() => getServiceManager().start()
 		],
 		

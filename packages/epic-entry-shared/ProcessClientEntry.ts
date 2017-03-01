@@ -3,7 +3,7 @@ import "./ProcessClient"
 import {ipcRenderer} from 'electron'
 
 import {ProcessType} from './ProcessType'
-import {getServiceManager} from "epic-services"
+//import {getServiceManager} from "epic-services"
 import { START_TIMEOUT_DEFAULT } from "epic-global"
 import { WindowEvents } from "epic-entry-shared/WindowTypes"
 
@@ -111,6 +111,20 @@ export abstract class ProcessClientEntry {
 	}
 	
 	/**
+	 * Load services
+	 *
+	 * @returns {Promise<void>}
+	 */
+	static async loadServices(workerEntry:ProcessClientEntry) {
+		if (workerEntry.servicesEnabled()) {
+			log.info('Starting all services')
+			await Promise
+				.resolve(require('epic-services').getServiceManager().start())
+				.timeout(START_TIMEOUT_DEFAULT)
+		}
+	}
+	
+	/**
 	 * Initialize & start the worker process
 	 *
 	 * @param processType
@@ -153,20 +167,15 @@ export abstract class ProcessClientEntry {
 			log.debug(`Initializing ${windowId}`)
 			await workerInit()
 			
+			// LOAD SERVICES
 			log.debug(`Services Starting ${windowId}`)
-			if (workerEntry.servicesEnabled()) {
-				log.info('Starting all services')
-				await Promise
-					.resolve(getServiceManager().start())
-					.timeout(START_TIMEOUT_DEFAULT)
-			}
+			await ProcessClientEntry.loadServices(workerEntry)
 			
+			// START
 			log.debug(`Workload Starting ${windowId}`)
 			await workerStart()
 			
-			
 			log.debug(`Process fully started: ${windowId}`)
-			log.tron(`Process fully started: ${windowId}`)
 			Env.isElectron && ipcRenderer.send(WindowEvents.AllResourcesLoaded, windowId)
 			startDeferred.resolve(true)
 		} catch (err) {

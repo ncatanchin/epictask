@@ -37,6 +37,7 @@
         "squirrel",
         "zip"
       ],
+      "noMsi": false,
       "icon": "build/icon.ico"
     },
     "nsis": {

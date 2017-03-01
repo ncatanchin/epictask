@@ -81,7 +81,7 @@ export function makeIssuesPanelStateSelectors(id:string = null, getState:TViewPr
 			issuesPanelStateSelector:TSelector<IssuesPanelState> = createSelector(
 				viewSelector,
 				(view:View) =>
-					view.state as IssuesPanelState
+					view && view.state as IssuesPanelState
 			),
 			issuesEventsSelector:TSelector<List<IssuesEvent>> = createSelector(
 				issuesPanelStateSelector,

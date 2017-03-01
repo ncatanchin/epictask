@@ -12,7 +12,9 @@ const
 	
 	doInstall = process.argv.includes('--install'),
 	doWin = process.argv.includes('--win'),
-	doLinux = process.argv.includes('--linux'),
+	doLinux = process.argv.includes('--linux')
+
+let
 	buildCmd = path.join(process.cwd(),'node_modules','.bin',`build${isWindows ? '.cmd' : ''}`)
 
 echo(`Will use builder @ ${buildCmd}`)
@@ -50,7 +52,6 @@ const
 
 echo(`Tweaking package config`)
 echo('material-ui tweak')
-//appPkg.dependencies['material-ui'] = "../../../material-ui"
 
 // WRITE APP PKG
 fs.writeFileSync(
@@ -72,6 +73,8 @@ echo("Packaging")
 
 
 // OPTIONALLY BUILD OTHER
+if (doInstall)
+	buildCmd += " --dir"
 execNoError(`${buildCmd} ${platforms.join(' ')}`)
 
 require('./package-dev')(doWin,doLinux)
