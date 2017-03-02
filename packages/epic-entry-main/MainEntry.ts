@@ -1,9 +1,7 @@
 import { acceptHot } from "epic-global/HotUtils"
-import { app } from 'electron'
+import Electron from 'epic-electron'
 import "./CheckSingleInstance"
 import Cleaner from './Cleaner'
-
-
 
 // NOW LOAD COMMON ENTRY
 import 'epic-entry-shared/AppEntry'
@@ -17,7 +15,8 @@ import { handleError } from "./BootErrorHandler"
 
 
 const
-	log = getLogger(__filename)
+	log = getLogger(__filename),
+	{ app } = Electron
 
 
 function loadMainApp() {

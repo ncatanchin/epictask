@@ -1,5 +1,5 @@
 
-import Electron from 'electron'
+import Electron from 'epic-electron'
 
 const
 	{app,dialog} = Electron,

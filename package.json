@@ -1,7 +1,7 @@
 {
   "name": "epictask",
   "version": "1.0.8",
-  "description": "AN electron app for dealing with those darn git issues",
+  "description": "Epictask: Github Issue Manager",
   "main": "bin/epictask-start.js",
   "scripts": {
     "clean": "node ./etc/scripts/clean.js",
@@ -29,7 +29,7 @@
     "copyright": "Copyright © 2016 Densebrain, Inc.",
     "productName": "Epictask",
     "squirrelWindows": {
-      "msi": true
+      "iconUrl": "https://github.com/densebrain/epictask/blob/master/build/icon.ico?raw=true"
     },
     "win": {
       "target": [
@@ -37,12 +37,13 @@
         "squirrel",
         "zip"
       ],
-      "noMsi": false,
       "icon": "build/icon.ico"
     },
     "nsis": {
-      "oneClick": true,
-      "installerHeaderIcon": "build/icon.ico"
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerHeaderIcon": "build/icon.ico",
+      "installerIcon": "build/icon.ico"
     },
     "linux": {
       "category": "Development",
