@@ -27,7 +27,7 @@ if (AWS) {
 	const
 		ArtifactConfig = {
 			"darwin": ['dist/build/mac',["*.dmg", "*.zip"]],
-			"win32": ['dist/build',['**/*.exe','**/*.nupkg','*.msi','*.zip']],
+			"win32": ['dist/build/win',['*.exe','*.nupkg','*.msi','*.zip']],
 			"other": ['dist/build',["*.deb","*.rpm","*.AppImage"]]
 		}
 	
