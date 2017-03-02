@@ -2,7 +2,7 @@
 import Electron from 'epic-electron'
 
 const
-	{app,dialog} = Electron,
+	{app,dialog, BrowserWindow} = Electron,
 	log = getLogger(__filename)
 
 export function handleError(title:string,message:string,err:Error) {
@@ -17,6 +17,14 @@ export function handleError(title:string,message:string,err:Error) {
 	if (result === 0) {
 		require('./Cleaner').default.restartAndClean()
 	} else {
+		try {
+			BrowserWindow.getAllWindows().forEach(win => {
+				try {
+					win.destroy()
+				} catch (err) {}
+			})
+		} catch (err) {}
+		process.exit(0)
 		app.exit(0)
 	}
 }
