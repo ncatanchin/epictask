@@ -10,8 +10,11 @@ const
 	isLinux = !isWindows && !isMac,
 	platform = isWindows ? 'windows' : isMac ? 'macos' : 'linux',
 	//baseUrl = "http://localhost:3000",
+	//baseUrl = " http://10.0.1.5:3000",
 	baseUrl = "https://epictask.densebrain.com",
-	feedUrl = `${baseUrl}/update/electron/${platform}/${VERSION}`
+	feedUrl = isWindows ?
+		`${baseUrl}/windows/electron/windows` :
+		`${baseUrl}/update/electron/${platform}/${VERSION}`
 
 // DEBUG
 log.setOverrideLevel(LogLevel.DEBUG)

@@ -24,6 +24,7 @@ const
 
 
 process.env.NODE_ENV = 'production'
+//process.env.NODE_ENV = 'development'
 
 if (!skipBuild) {
 	require('./clean')
@@ -75,6 +76,7 @@ echo("Packaging")
 // OPTIONALLY BUILD OTHER
 if (doInstall)
 	buildCmd += " --dir"
+
 execNoError(`${buildCmd} ${platforms.join(' ')}`)
 
 require('./package-dev')(doWin,doLinux)

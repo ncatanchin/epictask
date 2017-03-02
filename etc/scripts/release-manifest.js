@@ -14,8 +14,17 @@ const
 	Bucket = 'epictask-releases'
 	
 
-function getFileInfo(filename) {
+async function getFileInfo(Key,filename) {
+	
 	const
+		result = await s3.headObject({
+			Bucket,
+			Key
+		}).promise(),
+		{sum,size} = result.Metadata || {
+			sum: "",
+			size: `${result.ContentLength}`
+		},
 		path = require('path'),
 		ext = path.extname(filename).substring(1),
 		basename = filename.replace('.' + ext,''),
@@ -24,9 +33,13 @@ function getFileInfo(filename) {
 		version = versionRegEx.exec(basename),
 		buildNumber = versionRegEx.exec(basename)
 	
-	return version && buildNumber && {
+	
+	
+	return version && {
+		sum,
+		size,
 		version: version[0],
-		buildNumber: buildNumber[0],
+		buildNumber: !buildNumber ? "0" : buildNumber[0],
 		ext,
 		platform: filename.split('-')[1],
 		type: ['dmg','exe'].includes(ext) ? 'Installer' : _.upperFirst(ext)
@@ -58,8 +71,8 @@ async function makeManifest() {
 			echo('Data is null')
 			break
 		}
-		Contents.forEach(s3Object => {
-			
+		
+		for (let s3Object of Contents) {
 			const
 				{Key,LastModified} = s3Object,
 				parts = Key.split('/')
@@ -67,7 +80,7 @@ async function makeManifest() {
 			echo(`Processing ${Key}`)
 			if (parts.length !== 2) {
 				echo(`${Key} has ${parts.length} path parts, can not handle`)
-				return
+				continue
 			}
 			
 			
@@ -75,11 +88,11 @@ async function makeManifest() {
 			const
 				filename = parts[1],
 				fileGroup = fileGroups[parts[0]] || (fileGroups[parts[0]] = []),
-				info = getFileInfo(filename)
+				info = await getFileInfo(Key,filename)
 			
 			if (!info) {
 				echo(`UNABLE TO GET INFO FOR ${filename}`)
-				return
+				continue
 			}
 			
 			fileGroup.push(_.assign(info,{
@@ -87,7 +100,7 @@ async function makeManifest() {
 				timestamp:LastModified
 			}))
 			
-		})
+		}
 		
 		if (!nextPageToken)
 			break

@@ -1,5 +1,8 @@
 require('./init-scripts')
 
+const
+	checksum = require('checksum'),
+	Bluebird = require('bluebird')
 
 const
 	AWS = require('./aws-init')
@@ -24,7 +27,7 @@ if (AWS) {
 	const
 		ArtifactConfig = {
 			"darwin": ['dist/build/mac',["*.dmg", "*.zip"]],
-			"win32": ['dist/build',['*.exe','**/*.nupkg','*.msi','*.zip']],
+			"win32": ['dist/build',['**/*.exe','**/*.nupkg','*.msi','*.zip']],
 			"other": ['dist/build',["*.deb","*.rpm","*.AppImage"]]
 		}
 	
@@ -60,17 +63,33 @@ if (AWS) {
 			
 			try {
 				const
+					sum = await Bluebird.fromCallback(callback =>
+						checksum.file(file,callback)
+					),
+					size = fs.statSync(file).size
+				
+				echo(`File ${file} is ${size} bytes with sum ${sum}`)
+				
+				const
 					stream = fs.createReadStream(file),
 					ext = path.extname(file),
-					releaseFilename = `epictask-${platformName}-v${version}-${buildNumber}${ext}`
+					//releaseFilename = `epictask-${platformName}-v${version}-${buildNumber}${ext}`
+					releaseFilename = `epictask-${platformName}-${version}${ext === '.nupkg' ? '-full' : `-${buildNumber}`}${ext}`
 				
 				echo(`Mapped filename ${releaseFilename}`)
+				
+				
+				
 				
 				await s3.putObject({
 					Bucket,
 					Key: `electron/${releaseFilename}`,
 					Body: stream,
-					ACL: 'public-read'
+					ACL: 'public-read',
+					Metadata: {
+						sum,
+						size: `${size}`
+					}
 				}).promise()
 				
 				echo(`Uploaded ${index} of ${files.length},${file}`)
@@ -85,7 +104,11 @@ if (AWS) {
 		echo(`All files uploaded`)
 		
 	}
-	if (!isEmpty(version) && !isEmpty(buildNumber))
+	if (!isEmpty(version) && !isEmpty(buildNumber)) {
 		upload()
-	
+	} else {
+		echo(`Not publishing`,version,buildNumber)
+	}
+} else {
+	echo(`AWS not configured`)
 }
