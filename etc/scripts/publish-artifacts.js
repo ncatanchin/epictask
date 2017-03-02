@@ -21,15 +21,19 @@ if (AWS) {
 		} = process.env
 	
 	
+	const
+		ArtifactConfig = {
+			"darwin": ['dist/build/mac',["*.dmg", "*.zip"]],
+			"win32": ['dist/build',['*.exe','**/*.nupkg','*.msi','*.zip']],
+			"other": ['dist/build',["*.deb","*.rpm","*.AppImage"]]
+		}
+	
 	async function upload() {
 		const
 			Promise = require('bluebird'),
 			Bucket = 'epictask-releases',
 			s3 = new AWS.S3(),
-			[artifactPath,extensions] =
-				isMac ? ['dist/build/mac',["*.dmg", "*.zip"]] :
-					process.platform === 'win32' ? ['dist/build',['*.exe','*.nupkg','*.msi','*.zip']] :
-					['dist/build',["*.deb","*.rpm","*.AppImage"]]
+			[artifactPath,extensions] = ArtifactConfig[process.platform] || ArtifactConfig.other
 			
 		
 		cd(artifactPath)

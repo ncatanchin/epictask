@@ -155,10 +155,44 @@ export interface RequestOptions {
 	 */
 	reverse?:boolean
 	
+	/**
+	 * Max number of retries, null === 0, or no retries
+	 */
+	retryMax?:number
+	
+	/**
+	 * Retry timeout in milliseconds, delay between failure and retry
+	 */
+	retryTimeout?:number
+	
+	/**
+	 * Retry timeout is multiplied by this value on each successive attempt, "backoff"
+	 */
+	retryTimeoutMultiplier?:number
+	
+	/**
+	 * Items per page
+	 */
 	perPage?:number
+	
+	/**
+	 * Current page
+	 */
 	page?:number
+	
+	/**
+	 * Key/Value pairs of params
+	 */
 	params?:any
+	
+	/**
+	 * eTag to use
+	 */
 	eTag?:string
+	
+	/**
+	 * On data received callback
+	 */
 	onDataCallback?:OnDataCallback<any>
 }
 
