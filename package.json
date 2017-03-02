@@ -1,6 +1,6 @@
 {
   "name": "epictask",
-  "version": "1.0.11",
+  "version": "1.0.13",
   "description": "Epictask: Github Issue Manager",
   "main": "bin/epictask-start.js",
   "scripts": {
