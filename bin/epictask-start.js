@@ -2,6 +2,15 @@ require('source-map-support').install()
 require('babel-polyfill')
 require('reflect-metadata')
 
+// CHECK UPDATES
+if(require('electron-squirrel-startup')) {
+	try {
+		require('electron').app.quit()
+	} catch (err) {
+		console.error(`Failed to quit`,err)
+	}
+	return
+}
 
 process.env.POUCH_MODULE_NAME = 'pouchdb-browser'
 

@@ -71,6 +71,24 @@ export function setupShutdownOnWindowClose(mainWindow:Electron.BrowserWindow) {
 }
 
 
+/**
+ * Force kill the app
+ */
+function forceKill() {
+
+	console.log(`HARD STOP`)
+	
+	BrowserWindow.getAllWindows().forEach(win => {
+		try {
+			win.destroy()
+		} catch (err) {
+			log.info(`Unable to destroy window: ${win.id}`,err)
+		}
+	})
+	
+	process.exit(0)
+	app.exit(0)
+}
 
 /**
  * On shutdown intercepts quit requests and makes sure
@@ -116,14 +134,9 @@ function onShutdown(event) {
 				}
 				
 				app.quit()
-				setTimeout(() => {
-					console.log(`Hard stop`)
-					app.exit(0)
-					process.exit(0)
-				},10000)
-				
-				
 			}
+		
+		setTimeout(forceKill,5000)
 		
 		killAll()
 	}

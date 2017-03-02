@@ -198,11 +198,6 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 			
 			<div style={Styles.FlexScale}/>
 			
-			{/*<RainbowIndicator*/}
-			{/*style={styles.logo}*/}
-			{/*eHidden*/}
-			{/*spinnerStyle={styles.logo.spinner}/>*/}
-			
 			<AvailableNotificationIcon />
 			<CommandMenuRoot />
 		</div>

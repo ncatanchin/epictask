@@ -143,14 +143,14 @@ if (ProcessConfig.isStorybook()) {
 		maxFiles: 5
 	})
 	
-	if (!consoleLogEnabled) {
+	//if (!consoleLogEnabled) {
 		DEBUG_LOG(`Adding console logger`)
 		MainLogger.add(winston.transports.Console, {
 			colorize: true,
 			prettyPrint: true,
 			depth: 3
 		})
-	}
+	//}
 	// Expose the main logger - really so the UI/Renderer can attach if needed
 	Object.assign(global as any, {
 		MainLogger,

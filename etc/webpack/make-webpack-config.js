@@ -8,6 +8,7 @@ import Path from 'path'
 import Fs from 'fs'
 import DefinedEnv from './webpack.env'
 import LoaderConfig from './parts/loaders'
+import {CheckerPlugin} from 'awesome-typescript-loader'
 
 // EXTERNALS / makes all node_modules external
 import nodeExternals from 'webpack-node-externals'
@@ -261,6 +262,8 @@ export function makeConfig(name, dependencies, entry, configFn) {
 			 * Plugins
 			 */
 			plugins: [
+				
+				new CheckerPlugin(),
 				
 				// NO ERRORS
 				new Webpack.NoEmitOnErrorsPlugin(),

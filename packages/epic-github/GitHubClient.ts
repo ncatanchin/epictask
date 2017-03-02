@@ -6,12 +6,13 @@ import { IssuesEvent, RepoEvent, Repo, Issue, User, Label, Milestone, Comment, G
 import {  notifyInfo, notifyError,isString, isNumber, toNumber, isPromise } from  "epic-global"
 import {List} from 'immutable'
 import { getValue } from "typeguard"
+import { checkRateLimit, getRateLimitInfo, getRateLimitInfoAsString, updateRateLimit } from "./GitHubRateLimit"
+import { GithubError, GithubRepoSearchResults,RequestOptions, HttpMethod } from "./GitHubTypes"
+
 
  
 
 const
-	APIRateLimit = 250,
-	APIRateLimitDuration = 60000,
 	{URLSearchParams} = require('urlsearchparams'),
 	PageIntervalDelay = 500,
 	log = getLogger(__filename),
@@ -20,13 +21,8 @@ const
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
 
-let
-	APICallHistory = List<any>(),
-	githubRateLimitInfo:any
 
-
-
-function makeUrl(path:string,query:any = null) {
+function makeUrl(path:string,query:any = null):string {
 	let url = `${hostname}${path}`
 	if (query)
 		url += `?${query.toString()}`
@@ -40,193 +36,57 @@ function makeUrl(path:string,query:any = null) {
  *
  * @param url
  * @param args
+ * @param opts
  * @returns {any}
  */
-const doFetch:typeof fetch = async (url,...args) => {
-	if (APICallHistory.size > APIRateLimit) {
-		APICallHistory = APICallHistory.filter(apiCall => apiCall.timestamp > Date.now() - APIRateLimitDuration) as List<any>
-		
-		if (APICallHistory.size > APIRateLimit) {
-			log.error(`Local rate limit exceeded: ${APICallHistory.size}`, APICallHistory.toArray())
-			notifyError(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
-			
-			throw new Error(`Overrate limit ${APICallHistory.size} in ${APIRateLimitDuration / 1000}s`)
-		}
-	}
-	
-	
-	APICallHistory.push({
-		url,
-		timestamp: Date.now()
-	})
-	
-	const
-		response = await (fetch as any)(url,...args),
-		{headers} = response
+const doFetch = async (url:string,opts:RequestOptions = {},...args) => {
 	
 	let
-		rateLimit = toNumber(headers.get('X-RateLimit-Limit'))
+		{retryMax = 1,retryTimeout = 1000,retryTimeoutMultiplier = 2} = opts,
+		tryCount = 0,
+		response
 	
-	if (rateLimit) {
-		const
-			rateLimitRemaining = toNumber(headers.get('X-RateLimit-Remaining')),
-			rateLimitResetTimestamp = toNumber(headers.get('X-RateLimit-Reset')) * 1000
+	assert(retryMax > 0,`Retry max must be greater than 0`)
+	assert(retryTimeout > 0,`Retry timeout must be greater than 0`)
+	
+	while (tryCount < retryMax || retryMax === -1) {
 		
-		githubRateLimitInfo = {
-			rateLimit,
-			rateLimitRemaining,
-			rateLimitResetTimestamp
+		// WAIT FIRST IF REQUIRED
+		if (tryCount > 0) {
+			await Promise.delay(retryTimeout)
+			
+			// UPDATE TIMEOUT FOR NEXT ITERATION
+			retryTimeout += retryTimeout * retryTimeoutMultiplier
 		}
 		
-		if (rateLimit - rateLimitRemaining > (rateLimit / 3) * 2)
-			notifyInfo(`Github Rate Limit is less than 50%, limit=${rateLimit} remaining=${rateLimitRemaining} resets @ ${new Date(rateLimitResetTimestamp)}`)
+		tryCount++
 		
+		try {
+			checkRateLimit(url)
+			
+			response = await (fetch as any)(url, ...args)
+			
+			updateRateLimit(response)
+			
+			if (response.status >= 500) {
+				log.info(`Request did not succeed: ${response.status}: ${response.statusText}`)
+			} else {
+				break
+			}
+		} catch (err) {
+			log.error(`Request failed`,err)
+		}
 	}
 	
 	return response
+	
 }
 
-/**
- * Get github rate limit info
- *
- * @returns {any}
- */
-export function getGithubRateLimitInfo() {
-	return githubRateLimitInfo
-}
 
 const DefaultGetOpts ={
 	traversePages:true,
-	page:0
-}
-
-enum HttpMethod {
-	GET,
-	POST,
-	PUT,
-	PATCH,
-	DELETE
-}
-
-export interface IGithubValidationError {
-	resource:string
-	field:string
-	code:string
-}
-
-export const GithubErrorCodes = {
-	missing: 'Resource can not be found',
-	missing_field: 'Field is required',
-	invalid: 'Invalid format',
-	already_exists: 'Duplicate resource'
-}
-
-/**
- * GitHub Client Error
- */
-export class GithubError extends Error {
-	constructor(
-		public message:string,
-		public statusCode:number,
-		public errors:IGithubValidationError[] = []
-	) {
-		super(message)
-	}
-}
-
-/**
- * If a callback returns FALSE - Nil/Null is ignored - then paging stops
- */
-export type OnDataCallback<M> = (pageNumber:number, totalPages:number, items:M[], responseHeaders?:{[headerName:string]:any}) => any
-
-/**
- * Request options for any/all API Requests
- */
-export interface RequestOptions {
-	traversePages?:boolean
-	
-	/**
-	 * Reverse ONLY applies when traverse is enabled,
-	 * it collects the first page, then collects the others from the end to
-	 * the beginning
-	 *
-	 * Finally appending the first page it received to the beginning
-	 *
-	 */
-	reverse?:boolean
-	
-	/**
-	 * Max number of retries, null === 0, or no retries
-	 */
-	retryMax?:number
-	
-	/**
-	 * Retry timeout in milliseconds, delay between failure and retry
-	 */
-	retryTimeout?:number
-	
-	/**
-	 * Retry timeout is multiplied by this value on each successive attempt, "backoff"
-	 */
-	retryTimeoutMultiplier?:number
-	
-	/**
-	 * Items per page
-	 */
-	perPage?:number
-	
-	/**
-	 * Current page
-	 */
-	page?:number
-	
-	/**
-	 * Key/Value pairs of params
-	 */
-	params?:any
-	
-	/**
-	 * eTag to use
-	 */
-	eTag?:string
-	
-	/**
-	 * On data received callback
-	 */
-	onDataCallback?:OnDataCallback<any>
-}
-
-/**
- * Search results wrapper
- */
-export class GithubSearchResults<T> {
-	
-	total_count:number
-	incomplete_results:boolean
-	items:T[]
-	
-	/**
-	 * Accepts the json results and a model type
-	 *
-	 * @param results
-	 * @param modelType
-	 */
-	constructor(results,public modelType:{new():T}) {
-		Object.assign(this,_.omit(results,'items'))
-		
-		this.items = !results.items ? [] :
-			results.items.map(it => new (modelType as any)(it))
-	}
-}
-
-/**
- * Repo search results
- */
-export class GithubRepoSearchResults extends GithubSearchResults<Repo> {
-	
-	constructor(results) {
-		super(results,Repo)
-	}
+	page:0,
+	retryMax:3
 }
 
 
@@ -265,7 +125,7 @@ export class GitHubClient {
 	 * @param headers
 	 * @returns {RequestInit}
 	 */
-	private initRequest(method:HttpMethod,body = null,headers:any = {}) {
+	private initRequest(method:HttpMethod,body = null,headers:any = {}):RequestInit {
 		const
 			request:RequestInit = {
 				method: HttpMethod[method],
@@ -284,14 +144,11 @@ export class GitHubClient {
 	
 	
 	getRateLimitInfo() {
-		return githubRateLimitInfo
+		return getRateLimitInfo()
 	}
 	
 	getRateLimitInfoAsString() {
-		const
-			info = githubRateLimitInfo
-		
-		return `limit=${info.rateLimit},remaining=${info.rateLimitRemaining},resets=${new Date(info.rateLimitResetTimestamp)}`
+		return getRateLimitInfoAsString()
 	}
 	
 	async get<T>(path:string,modelType:any,opts:RequestOptions = null):Promise<T> { // | PagedArray<T>
@@ -315,7 +172,8 @@ export class GitHubClient {
 		
 		let
 			url = makeUrl(path,query),
-			response =  await doFetch(url,this.initRequest(HttpMethod.GET,null,this.makeGetHeaders(opts)))
+			request = this.initRequest(HttpMethod.GET,null,this.makeGetHeaders(opts)),
+			response =  await doFetch(url,opts,request)
 
 		if (response.status >= 300) {
 			throw new GithubError(
@@ -374,7 +232,6 @@ export class GitHubClient {
 				let
 					timeoutId = null,
 					firstDataCallbackExecuted = false
-				
 				
 				const
 					allPagesDeferred = Promise.defer(),
@@ -530,7 +387,7 @@ export class GitHubClient {
 
 		const
 			payload = JSON.stringify(json),
-			response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
+			response = await doFetch(makeUrl(uri), {},this.initRequest(method,payload,{
 				'Accept': 'application/json',
 				'Content-Type': 'application/json'
 			}))
@@ -569,7 +426,7 @@ export class GitHubClient {
 	private async doDelete(uri) {
 		
 		const
-			response = await doFetch(makeUrl(uri), this.initRequest(HttpMethod.DELETE,null,{
+			response = await doFetch(makeUrl(uri), {}, this.initRequest(HttpMethod.DELETE,null,{
 				'Accept': 'application/json'
 			}))
 		
@@ -633,7 +490,7 @@ export class GitHubClient {
 		const
 			payload = JSON.stringify(json)
 		
-		const response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
+		const response = await doFetch(makeUrl(uri), {},this.initRequest(method,payload,{
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}))
@@ -685,7 +542,7 @@ export class GitHubClient {
 		const
 			payload = JSON.stringify(json)
 		
-		const response = await doFetch(makeUrl(uri), this.initRequest(method,payload,{
+		const response = await doFetch(makeUrl(uri), {}, this.initRequest(method,payload,{
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}))
@@ -761,7 +618,7 @@ export class GitHubClient {
 
 		const issuePayload = JSON.stringify(issueJson)
 
-		const response = await doFetch(makeUrl(uri), this.initRequest(method,issuePayload,{
+		const response = await doFetch(makeUrl(uri), {}, this.initRequest(method,issuePayload,{
 			'Accept': 'application/json',
 			'Content-Type': 'application/json'
 		}))
@@ -887,7 +744,7 @@ export class GitHubClient {
 			
 		
 		const
-			response = await doFetch(makeUrl(uri), this.initRequest(HttpMethod.PATCH))
+			response = await doFetch(makeUrl(uri), {}, this.initRequest(HttpMethod.PATCH))
 		
 		if (response.status >= 300) {
 			let result = null
@@ -1045,7 +902,6 @@ assignGlobal({
 	getGithubClient() {
 		return createClient()
 	},
-	getGithubRateLimitInfo,
 	GitHubClient
 })
 
