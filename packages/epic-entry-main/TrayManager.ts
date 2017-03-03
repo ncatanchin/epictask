@@ -1,7 +1,7 @@
 import { screen, Tray } from "electron"
 import { addHotDisposeHandler, acceptHot, setDataOnHotDispose, getHot, searchPathsForFile, AppKey } from "epic-global"
 import { getAppActions, trayAutoHideSelector, trayStateSelector, TrayState } from "epic-typedux"
-import { getValue } from "typeguard"
+import { getValue, guard } from "typeguard"
 
 const
 	dataUrl = require('dataurl'),
@@ -23,15 +23,14 @@ const
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
 
+
 /**
  * Tray
  *
  * @class Tray
  * @constructor
  **/
-export namespace TrayLauncher {
-	
-	
+export namespace TrayManager {
 	
 	let
 		tray:Electron.Tray
@@ -124,10 +123,16 @@ export namespace TrayLauncher {
 		openTray(bounds)
 	}
 	
+	/**
+	 * On focus
+	 */
 	function onFocus() {
 		log.debug(`tray focus`)
 	}
 	
+	/**
+	 * On blur
+	 */
 	function onBlur() {
 		
 		const
@@ -139,9 +144,28 @@ export namespace TrayLauncher {
 		}
 	}
 	
+	/**
+	 * On close
+	 */
 	function onClose() {
 		log.debug(`tray close`)
 	}
+	
+	/**
+	 * Destroy the tray
+	 */
+	export function shutdown() {
+		if (!tray)
+			return
+		
+		guard(() => !tray.isDestroyed() && tray.destroy())
+		tray = null
+	}
+	
+	/**
+	 * On shutdown, destroy
+	 */
+	EventHub.on(EventHub.Shutdown,shutdown)
 	
 	/**
 	 * Start the TrayLauncher
@@ -228,8 +252,6 @@ export namespace TrayLauncher {
 
 
 
-
-
-export default TrayLauncher
+export default TrayManager
 
 acceptHot(module,log)

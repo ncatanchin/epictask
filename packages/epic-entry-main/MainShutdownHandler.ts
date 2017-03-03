@@ -100,6 +100,9 @@ function onShutdown(event) {
 	
 	setShuttingDown()
 	
+	// EMIT SHUTDOWN
+	EventHub.broadcast(EventHub.Shutdown)
+	
 	if (!processesStopping) {
 		processesStopping = true
 		
@@ -107,11 +110,6 @@ function onShutdown(event) {
 		
 		const
 			killAll = async () => {
-				// try {
-				// 	windowManager.closeAll()
-				// } catch (err) {
-				// 	log.warn(`Failed to cleanly shutdown processes`)
-				// }
 				
 				log.info(`Starting window shutdown`)
 				
@@ -124,13 +122,7 @@ function onShutdown(event) {
 				} catch (err) {
 					log.error(`Failed to shutdown cleanly - going to force close`,err)
 					
-					BrowserWindow.getAllWindows().forEach(win => {
-						try {
-							win.isClosable() && win.close()
-						} catch (err) {
-							log.warn(`Failed to destroy window`,err)
-						}
-					})
+					killAll()
 				}
 				
 				app.quit()

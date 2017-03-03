@@ -815,7 +815,6 @@ export const getWindowManager = getHot(module, 'getWindowManager', new Proxy(fun
  */
 export default getWindowManager
 
-
 /**
  * Add getWindowManager onto the global scope
  */

@@ -158,6 +158,7 @@ export const SettingDefaults = {
 export enum AppEventType {
 	MainReady = 1,
 	MainBooted,
+	Shutdown,
 	ChildrenReady,
 	UIReady,
 	StoreReady,
@@ -204,6 +205,7 @@ export enum AppEventType {
  * Event Constants
  */
 export const Events = {
+	Shutdown: AppEventType[AppEventType.Shutdown],
 	TrayOpen: AppEventType[AppEventType.TrayOpen],
 	TrayClose: AppEventType[AppEventType.TrayClose],
 	RoutesLoaded: AppEventType[AppEventType.RoutesLoaded],
