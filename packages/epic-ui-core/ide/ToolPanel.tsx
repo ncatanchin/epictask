@@ -27,6 +27,7 @@ import { ToolGutter } from "./ToolGutter"
 import { ToolWrapper } from "./ToolWrapper"
 import { createToolPanelSelector, toolDraggingSelector,createToolsSelector } from "epic-typedux/selectors"
 import { makeHeightConstraint } from "epic-styles/styles"
+import * as React from "react"
 
 
 // Constants

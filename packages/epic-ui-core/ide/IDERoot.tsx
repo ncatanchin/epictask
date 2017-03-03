@@ -61,17 +61,17 @@ const baseStyles = (topStyles, theme, palette) => {
 		page: [],
 		bodyWrapper: [ Styles.FlexScale, Styles.Fill ],
 		
-		notifications: [Styles.makeTransition(['min-width','max-width']),{
+		notifications: [ Styles.makeTransition([ 'min-width', 'max-width' ]), {
 			maxWidth: 0,
 			minWidth: 0,
 			//flexBasis: 0,
 			
-			open: [{
+			open: [ {
 				maxWidth: '50%',
 				minWidth: '15%',
 				//flexBasis: '25%'
-			}]
-		}]
+			} ]
+		} ]
 		
 		
 	}
@@ -79,7 +79,7 @@ const baseStyles = (topStyles, theme, palette) => {
 
 export interface IIDERootProps extends IThemedAttributes {
 	notificationsOpen?:boolean
-	toolPanels:Map<string,IToolPanel>
+	toolPanels:Map<string, IToolPanel>
 	toolDragging:boolean
 	hasAvailableRepos?:boolean
 	modalOpen?:boolean
@@ -106,7 +106,7 @@ export interface IIDERootState {
 }))
 @ThemedStyles(baseStyles, 'homePage')
 @PureRender
-export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
+export class IDERoot extends React.Component<IIDERootProps, IIDERootState> {
 	
 	/**
 	 * Get new state
@@ -142,10 +142,9 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 	}
 	
 	
-	
 	render() {
 		const
-			{ theme, styles, palette, toolDragging, toolPanels,notificationsOpen } = this.props,
+			{ theme, styles, palette, toolDragging, toolPanels, notificationsOpen } = this.props,
 			{ accent } = palette,
 			
 			panelMinOpen = convertRem(20),
@@ -157,7 +156,12 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			panelMinDim = (panel:IToolPanel) => convertRem(theme.toolPanel[ panel.location ].minDim),
 			panelMinSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? panelMinOpen : panelMinDim(panel),
-			panelMaxSize = (panel:IToolPanel) => toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel),
+			panelMaxSize = (panel:IToolPanel) => {
+				const
+					maxSize = toolDragging ? panelMinDim(panel) : (!toolCount(panel)) ? 0 : panel.open ? this.state.width / 2 : panelMinDim(panel)
+				
+				return isNaN(maxSize) ? panelMinDim(panel) : maxSize
+			},
 			
 			
 			constraintNames = (panel:IToolPanel) => [ ToolPanelLocation.Popup, ToolPanelLocation.Bottom ].includes(panel.location) ?
@@ -175,7 +179,7 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 		
 		
 		const
-			notificationPanelStyle = mergeStyles(styles.notifications,notificationsOpen && styles.notifications.open),
+			notificationPanelStyle = mergeStyles(styles.notifications, notificationsOpen && styles.notifications.open),
 			// rightPanel = getPanel(ToolPanelLocation.Right),
 			// leftPanel = getPanel(ToolPanelLocation.Left),
 			bottomPanel = getPanel(ToolPanelLocation.Bottom),
@@ -208,14 +212,14 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 			
 			<Radium.Style scopeSelector=".toolPanelSplitPane"
 			              rules={{
-			              	'> .Pane1': Styles.OverflowHidden
+				              '> .Pane1': Styles.OverflowHidden
 			              }}
 			/>
 			
 			{/* HEADER */}
 			<Header/>
 			
-			<div style={[styles.content]}>
+			<div style={[ styles.content ]}>
 				<div style={styles.bodyWrapper}>
 					
 					{/* TOOL PANEL BOTTOM */}
@@ -234,11 +238,11 @@ export class IDERoot extends React.Component<IIDERootProps,IIDERootState> {
 							primary="second"
 							minSize={notificationsOpen ? rem(25) : 0}
 							maxSize={notificationsOpen ? '50%' : 0}
-							pane2Style={_.omit(notificationPanelStyle,'open')}>
+							pane2Style={_.omit(notificationPanelStyle, 'open')}>
 							
 							<IDETabbedViewContainer />
 							<NotificationsPanel />
-							
+						
 						</SplitPane>
 						<ToolPanel location={ToolPanelLocation.Bottom}/>
 					

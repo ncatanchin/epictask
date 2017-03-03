@@ -168,6 +168,7 @@ app.on('browser-window-created',(event,window) => {
 				hasUIWindows = getWindowManager()
 					.getWindowInstances().some(it =>
 						it.type !== WindowType.Background &&
+						it.type !== WindowType.Tray &&
 						it.running &&
 						it.window !== window)
 			

@@ -162,9 +162,10 @@ export class ServiceManager {
 		for (let reg of Object.values(this.registrations)) {
 			log.info(`Stopping ${reg.name}`)
 			try {
-				await reg.service.stop()
+				if (reg.service.stop) {
+					await reg.service.stop()
+				}
 				reg.loaded = false
-				
 			} catch (err) {
 				log.error(`Failed to shutdown: ${reg.name}`,err)
 			}

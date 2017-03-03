@@ -260,4 +260,4 @@ export const Dialogs = {
 /**
  * Default dev tools position
  */
-export const DevToolsPositionDefault:TDevToolsPosition = 'right'
+export const DevToolsPositionDefault:TDevToolsPosition = 'bottom'
