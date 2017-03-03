@@ -26,6 +26,10 @@ export const notificationsModeSelector:TSelector<TNotificationsMode> = createSel
 	(state:UIState) => state.notificationsMode
 )
 
+// export const notificationsOpenSelector:TSelector<boolean> = createSelector(
+// 	uiStateSelector,
+// 	(state:UIState) => state.notificationsOpen
+// )
 
 export const notificationsSelector:TSelector<List<GithubNotification>> = createSelector(
 	uiStateSelector,

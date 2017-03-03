@@ -6,8 +6,7 @@ import {
 	getCommandManager,
 	ContainerNames
 } from "epic-command-manager"
-import { CommandMenuRoot } from "epic-ui-components"
-import { WindowControls, PureRender } from "epic-ui-components/common"
+import { PureRender, CommandMenuRoot } from "epic-ui-components"
 import { AvailableNotificationIcon } from "epic-ui-core/notifications"
 
 const
@@ -195,10 +194,13 @@ export default class Header extends React.Component<IHeaderProps,IHeaderState> {
 			*/}
 			
 			{Env.isMac && <div style={styles.title}>epictask</div>}
-			
-			<div style={Styles.FlexScale}/>
+			{Env.isMac && <div style={Styles.FlexScale}></div>}
 			
 			<AvailableNotificationIcon />
+			
+			{/* ON WINDOWS/LINUX ADD A SPACER*/}
+			{!Env.isMac && <div style={Styles.FlexScale}></div>}
+			
 			<CommandMenuRoot />
 		</div>
 	}

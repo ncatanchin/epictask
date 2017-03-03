@@ -6,7 +6,7 @@ import { PureRender } from 'epic-ui-components'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 import {
 	notificationsSelector, unreadNotificationCountSelector,
-	participatingUnreadNotificationCountSelector
+	participatingUnreadNotificationCountSelector, notificationsOpenSelector
 } from "epic-typedux/selectors"
 import { GithubNotification } from "epic-models"
 import { Icon } from "epic-ui-components/common/icon/Icon"
@@ -85,10 +85,12 @@ function baseStyles(topStyles, theme, palette) {
 				} ]
 			} ],
 			
-			[Styles.CSSHoverState]: [ {
+			hovering: [ {
 				color: text.primary,
 				backgroundColor: accent.hue1,
-			} ]
+			} ],
+			
+			[Styles.CSSHoverState]: []
 		} ]
 }
 
@@ -98,6 +100,7 @@ function baseStyles(topStyles, theme, palette) {
  */
 export interface IAvailableNotificationIconProps extends IThemedAttributes {
 	notifications?:List<GithubNotification>
+	notificationsOpen?:boolean
 	unreadCount?:number
 	participatingUnreadCount?:number
 }
@@ -118,6 +121,7 @@ export interface IAvailableNotificationIconState {
 
 @connect(createStructuredSelector({
 	notifications: notificationsSelector,
+	notificationsOpen: notificationsOpenSelector,
 	unreadCount: unreadNotificationCountSelector,
 	participatingUnreadCount: participatingUnreadNotificationCountSelector
 }))
@@ -129,14 +133,14 @@ export class AvailableNotificationIcon extends React.Component<IAvailableNotific
 	
 	render() {
 		const
-			{ styles, unreadCount, participatingUnreadCount, notifications } = this.props,
+			{ styles, unreadCount, participatingUnreadCount, notificationsOpen,notifications } = this.props,
 			total = notifications.size,
-			hovering = isHovering(this, 'root'),
+			hovering = isHovering(this, 'root') || notificationsOpen,
 			label = participatingUnreadCount ?
 				<div>{participatingUnreadCount} / {unreadCount}</div> :
 				<div>{unreadCount}</div>
 		
-		return <div ref="root" style={styles} onClick={this.onClick}>
+		return <div ref="root" style={[styles,hovering && styles.hovering]} onClick={this.onClick}>
 			<div
 				style={[
 					styles.badge,
