@@ -158,6 +158,8 @@ export namespace TrayManager {
 		if (!tray)
 			return
 		
+		log.info(`Tray shutdown`)
+		
 		guard(() => !tray.isDestroyed() && tray.destroy())
 		tray = null
 	}

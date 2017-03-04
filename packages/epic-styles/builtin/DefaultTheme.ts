@@ -18,7 +18,7 @@ import { colorDarken ,colorLighten ,colorAlpha } from "epic-styles/styles/ColorT
 const
 	tc = require('tinycolor2'),
 	
-	navBarHeight = Env.isMac ? 50 : 20,
+	navBarHeight = Env.isMac ? 50 : 30,
 	windowControlDim = navBarHeight / 5,
 
 
