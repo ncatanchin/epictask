@@ -107,10 +107,10 @@ const
 					} ]
 				} ],
 				
-				titleField: [{
-					input: {
+				titleField: [FlexScale,{
+					input: [FlexScale,{
 						fontSize: themeFontSize(1.3)
-					}
+					}]
 				}]
 			}
 		]
@@ -461,7 +461,7 @@ export class IssueEditInline extends React.Component<IIssueEditInlineProps,IIssu
 						onBlur={this.onBlur}
 						onKeyDown={this.onKeyDown}
 						style={styles.titleField}
-						inputStyle={FlexScale}
+						inputStyle={styles.titleField.input}
 						tabIndex={0}
 					  autoFocus
 					/>

@@ -1,6 +1,7 @@
 // Imports
 import { ThemedNoRadium } from "epic-styles"
 import { IThemedAttributes } from "epic-styles"
+import * as React from "react"
 
 const PureRenderMixin = require('react-addons-pure-render-mixin')
 const ReactMarkdown = require('react-markdown')

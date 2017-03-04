@@ -67,7 +67,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					borderColor: Transparent,
 					
 					user: {
-						backgroundColor: primary.hue3,
+						backgroundColor: primary.hue2,
 						//borderColor: accent.hue1,
 						borderColor: Transparent,
 						transform: 'translate(0.2rem,0)'
@@ -87,7 +87,7 @@ const baseStyles = (topStyles,theme,palette) => {
 					borderColor: Transparent,
 					
 					user: {
-						backgroundColor: primary.hue3,
+						backgroundColor: primary.hue2,
 						//borderColor:     secondary.hue1,
 						borderColor: Transparent,
 						transform: 'translate(0.2rem,0)'
@@ -532,7 +532,7 @@ export class IssueActivityText extends React.Component<IIssueActivityTextProps,I
 					{/* Markdown of body */}
 					<Markdown className={`markdown issue-${issue.id}`}
 					          style={rootStyle.body}
-					          source={text || 'No Body'} />
+					          source={text || '*No description provided.*'} />
 	
 				</div>
 			</div>
