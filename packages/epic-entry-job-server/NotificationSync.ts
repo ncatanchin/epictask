@@ -14,10 +14,6 @@ export namespace NotificationSync {
 	
 	let working = false
 	
-	async function handleNotificationsPage(pageNumber:number, totalPages:number, items:GithubNotification[]) {
-		
-	}
-	
 	async function processNotifications(all:IGithubNotification[]) {
 		const
 			stores = getStores(),
@@ -39,8 +35,10 @@ export namespace NotificationSync {
 				if (existing.id === n.id) {
 					isNew = false
 					if (getMillis(existing.updated_at) >= getMillis(n.updated_at)) {
-						updateCount++
 						ignore = true
+					} else {
+						log.info('updated notification',n)
+						updateCount++
 					}
 					break
 				}
@@ -50,9 +48,10 @@ export namespace NotificationSync {
 				pending.push(n)
 			}
 			
-			if (isNew)
+			if (isNew) {
+				log.info('new notification',n)
 				updateCount++
-			
+			}
 		})
 		
 		log.debug(`Persisting ${pending.length} notifications of ${all.length} received`)

@@ -5,6 +5,11 @@ export default function baseStyles(topStyles, theme, palette) {
 		{text,primary,accent,secondary,success,warn} = palette
 	
 	return {
+		header: [Styles.makePaddingRem(3),{
+			fontSize: rem(3),
+			fontWeight: 500,
+			color: 'white'
+		}],
 		
 		search: [ {
 			

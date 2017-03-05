@@ -212,7 +212,7 @@ export function writeFile(filename:string, data:any) {
  * @returns {any}
  */
 export async function writeFileAsync(filename:string, data:any) {
-	return await fs.writeFile(filename,data)
+	return await Promise.fromCallback(callback => fs.writeFile(filename,data,callback))
 }
 
 

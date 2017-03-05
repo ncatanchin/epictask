@@ -8,6 +8,7 @@ import {uuid} from 'epic-util'
 import { getValue, isList } from "typeguard"
 import { IThemedAttributes } from "epic-styles/ThemeDecorations"
 import { makeHeightConstraint } from "epic-styles/styles/CommonRules"
+import * as React from "react"
 
 
 
@@ -22,15 +23,15 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 const baseStyles = (topStyles,theme,palette) => ({
-	root: [ FlexColumn,FlexScale, PositionRelative, {
+	root: [ Styles.FlexColumn,Styles.FlexScale, Styles.PositionRelative, {
 		
 	}],
-	list: [FlexScale,Fill,PositionRelative,{
+	list: [Styles.FlexScale,Styles.Fill,Styles.PositionRelative,{
 		display: 'block',
 		overflowY: 'auto',
 		overflowX: 'hidden',
 		
-		content: [FillWidth,PositionRelative,{
+		content: [Styles.FillWidth,Styles.PositionRelative,{
 			
 		}]
 	}]

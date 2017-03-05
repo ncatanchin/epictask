@@ -4,13 +4,12 @@ import { guard } from "epic-global"
 import { getAppActions } from "epic-typedux"
 import { RepoSearchProvider, GitHubSearchProvider, SearchField } from "epic-ui-components/search"
 import baseStyles from "./WelcomeRoot.styles"
+import * as React from "react"
 
 
 const
 	log = getLogger(__filename),
 	WelcomeSearchId = 'welcome-repo-search'
-
-
 
 
 /**
@@ -34,7 +33,7 @@ export interface IWelcomeRootState {
  */
 @ThemedStyles(baseStyles)
 @PureRender
-export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootState> {
+export class WelcomeRoot extends React.Component<IWelcomeRootProps, IWelcomeRootState> {
 	
 	appActions = getAppActions()
 	
@@ -57,7 +56,7 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	 * Create new state instance
 	 */
 	getNewState = () => ({
-		width:window.innerWidth
+		width: window.innerWidth
 	})
 	
 	updateState = () => this.setState(this.getNewState())
@@ -77,7 +76,8 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	/**
 	 * on escape sequence from search panel
 	 */
-	private onEscape = () => {}
+	private onEscape = () => {
+	}
 	
 	
 	private setSearchFieldRef = (searchFieldRef) => this.setState({
@@ -86,8 +86,8 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 	
 	render() {
 		const
-			{theme,palette,styles} = this.props,
-			{accent} = palette
+			{ theme, palette, styles } = this.props,
+			{ accent } = palette
 		
 		
 		return <Page
@@ -95,31 +95,32 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps,IWelcomeRootS
 			style={[
 				Fill,
 				FlexColumnCenter,
-				{backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`}
+				{ backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})` }
 			]}
 			id="welcomePage">
 			
-			<img
-				height="250"
-				width="auto"
-				style={{marginBottom: rem(3)}}
-				src={require("assets/images/splash/e.png")}/>
-			
-				<SearchField
-					ref={this.setSearchFieldRef}
-					searchId={WelcomeSearchId}
-					providers={[GitHubSearchProvider,RepoSearchProvider]}
-					autoFocus={true}
-					tabIndex={0}
-					placeholder='Import your first project, start managing like a boss..'
-					open={true}
-					focused={true}
-					onItemSelected={this.onItemSelected}
-					resultsHidden={false}
-					styles={styles.search}
-					onEscape={this.onEscape}
-					/>
-			
+			{/*<img*/}
+				{/*height="250"*/}
+				{/*width="auto"*/}
+				{/*style={{ marginBottom: rem(3) }}*/}
+				{/*src={require("assets/images/splash/e.png")}/>*/}
+			<h1 style={styles.header}>Import a repository</h1>
+			<SearchField
+				ref={this.setSearchFieldRef}
+				searchId={WelcomeSearchId}
+				providers={[ RepoSearchProvider,GitHubSearchProvider ]}
+				autoFocus={true}
+				tabIndex={0}
+				searchOnEmpty={true}
+				placeholder='Import your first project, start managing like a boss..'
+				open={true}
+				focused={true}
+				onItemSelected={this.onItemSelected}
+				resultsHidden={false}
+				styles={styles.search}
+				onEscape={this.onEscape}
+			/>
+		
 		</Page>
 	}
 }

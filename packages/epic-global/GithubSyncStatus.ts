@@ -120,7 +120,7 @@ export namespace GithubSyncStatus {
 		for (let map of [status.eTags,status.timestamps]) {
 			Object
 				.keys(map)
-				.filter(key => key.startsWith(prefix))
+				.filter(key => key.startsWith('' + prefix))
 				.forEach(key => {
 					delete map[key]
 				})

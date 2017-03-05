@@ -876,7 +876,7 @@ export function extendGithubClient(protoExt:{[fnName:string]:Function}) {
  * @returns {GitHubClient}
  */
 export function createClient(token:string = getValue(() => getSettings().token)) {
-	if (DEBUG && process.env.EPIC_CLI && !token) {
+	if (DEBUG && !token) {
 		token = process.env.EPIC_GITHUB_API_TOKEN || process.env.GITHUB_API_TOKEN
 		log.debug(`Using API token ${token}`)
 	}

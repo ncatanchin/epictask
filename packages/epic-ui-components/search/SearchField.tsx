@@ -8,10 +8,10 @@ import * as KeyMaps from "epic-command-manager"
 import { CommandType, CommonKeys } from "epic-command-manager"
 import { SearchResults } from "./SearchResults"
 import { isNumber, getValue, guard, shallowEquals } from "epic-global"
-import { PureRender} from 'epic-ui-components/common/PureRender'
-import { TextField} from 'epic-ui-components/common/TextField'
-import {Popover} from 'epic-ui-components/common/Popover'
-import {FlexRow } from "epic-ui-components/common/FlexLayout"
+import { PureRender } from 'epic-ui-components/common/PureRender'
+import { TextField } from 'epic-ui-components/common/TextField'
+import { Popover } from 'epic-ui-components/common/Popover'
+import { FlexRow } from "epic-ui-components/common/FlexLayout"
 import { ThemedStyles } from "epic-styles"
 import {
 	SearchEvent,
@@ -24,10 +24,12 @@ import { SearchState } from "epic-ui-components/search/SearchState"
 import { isNil } from "typeguard"
 import baseStyles from './SearchField.styles'
 import { unwrapRef, Dom } from "epic-util"
+import * as React from "react"
+import * as ReactDOM from "react-dom"
 const
 	// Key mapping tools
-	{ CommonKeys:Keys } = KeyMaps,
-	
+	{ CommonKeys: Keys } = KeyMaps,
+	Resizable = require('react-component-resizable'),
 	// Constants
 	log = getLogger(__filename)
 
@@ -38,9 +40,9 @@ const
 /**
  * ISearchFieldProps
  */
-export interface ISearchFieldProps extends React.HTMLAttributes<any>, IViewRootProps<SearchController,SearchState> {
+export interface ISearchFieldProps extends React.HTMLAttributes<any>, IViewRootProps<SearchController, SearchState> {
 	theme?:any
-			
+	
 	styles?:any
 	
 	/**
@@ -87,7 +89,7 @@ export interface ISearchFieldProps extends React.HTMLAttributes<any>, IViewRootP
 	/**
 	 * Search providers
 	 */
-	providers:Array<ISearchProviderConstructor|ISearchProvider>
+	providers:Array<ISearchProviderConstructor | ISearchProvider>
 	
 	focused?:boolean
 	resultsHidden?:boolean
@@ -135,7 +137,7 @@ export interface ISearchFieldState {
 @ViewRoot(SearchController, SearchState)
 @ThemedStyles(baseStyles, 'searchField')
 @PureRender
-export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldState> {
+export class SearchField extends React.Component<ISearchFieldProps, ISearchFieldState> {
 	
 	static defaultProps? = {
 		inlineResults: false,
@@ -154,14 +156,14 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 * onKeys
 	 */
 	onKeyDown = (event:React.KeyboardEvent<any>) => {
-		log.debug(`Key down`,event.key,event)
+		log.debug(`Key down`, event.key, event)
 		
 		const
 			stopEvent = () => {
 				event.preventDefault()
 				event.stopPropagation()
 			}
-			
+		
 		switch (event.key) {
 			case 'Up':
 			case 'ArrowUp':
@@ -216,7 +218,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 * Get the textField component
 	 * @returns {any}
 	 */
-	get textField():React.Component<any,any> {
+	get textField():React.Component<any, any> {
 		return getValue(() => unwrapRef(this.state.textField)) as any
 	}
 	
@@ -426,12 +428,12 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	private onInputChange = (event) => {
 		const
 			newText = event.target.value,
-			{ onTextChanged, viewState:searchState } = this.props
+			{ onTextChanged, viewState: searchState } = this.props
 		
 		
 		log.debug('Search value: ' + newText)
 		// SEARCH IS CONTROLLED EXTERNALLY
-		if (onTextChanged && getValue(() => onTextChanged(newText),true) === false) {
+		if (onTextChanged && getValue(() => onTextChanged(newText), true) === false) {
 			log.debug(`Internal update prevented by onTextChanged`)
 			return false
 		}
@@ -461,13 +463,13 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		log.debug(`Result selected`, item, this.state)
 		
 		const
-			{ onItemSelected, viewState:searchState } = this.props,
+			{ onItemSelected, viewState: searchState } = this.props,
 			{ controller } = this,
 			{ items, selectedIndex } = searchState
 		
 		
 		if (!item) {
-			item = getValue(() => items.get(selectedIndex),null)
+			item = getValue(() => items.get(selectedIndex), null)
 			
 			if (!item) {
 				return log.info(`no model item found, can not select`)
@@ -507,7 +509,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 	 */
 	onHover = (item:SearchItem) => {
 		const
-			{ viewState:searchState } = this.props,
+			{ viewState: searchState } = this.props,
 			{ items, selectedIndex } = searchState,
 			index = Math.max(
 				items.findIndex(findItem => findItem.id === item.id),
@@ -550,13 +552,12 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 					selectedIndex
 		
 		
-		log.debug(`Setting selectedIndex to`,selectedIndex,'item count',totalItemCount,'viewState props',this.props.viewState.items,'viewState controller',controller.state.items,'props view state',this.props.viewState,this.props.view,this.props.viewId)
+		log.debug(`Setting selectedIndex to`, selectedIndex, 'item count', totalItemCount, 'viewState props', this.props.viewState.items, 'viewState controller', controller.state.items, 'props view state', this.props.viewState, this.props.view, this.props.viewId)
 		
 		controller.setSelectedIndex(newSelectedIndex)
 		
 		
 	}
-	
 	
 	
 	/**
@@ -575,7 +576,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		
 		const
 			newSelectedIndex = selectedIndex + increment
-		log.debug('move selection trigger', increment,'result',newSelectedIndex,'selectedIndex was ',selectedIndex)
+		log.debug('move selection trigger', increment, 'result', newSelectedIndex, 'selectedIndex was ', selectedIndex)
 		this.setSelectedIndex(newSelectedIndex)
 	}
 	
@@ -620,7 +621,10 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 		this.updateState(nextProps)
 	}
 	
-	
+	onResize = () => {
+		log.debug(`Resized`)
+		this.forceUpdate()
+	}
 	/**
 	 * Render the results layer
 	 */
@@ -634,8 +638,8 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 			groupByProvider={this.props.groupByProvider}
 			searchId={this.props.searchId}
 			onItemHover={this.onHover}
-			onItemSelected={(item) => this.onResultSelected(null,item)}
-			containerStyle={{borderRadius: '0 0 0.4rem 0.4rem'}}
+			onItemSelected={(item) => this.onResultSelected(null, item)}
+			containerStyle={{ borderRadius: '0 0 0.4rem 0.4rem' }}
 		/>
 	
 	
@@ -657,7 +661,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 				tabIndex,
 				viewState: searchState
 			} = this.props,
-			{ text:stateText } = this.state,
+			{ text: stateText, textFieldElem } = this.state,
 			
 			focused = this.isFocused(),
 			
@@ -688,7 +692,7 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 			style={panelStyle}
 		>
 			
-			<div tabIndex={-1} style={[styles.container]}>
+			<Resizable onResize={this.onResize} tabIndex={-1} style={[ styles.container ]}>
 				
 				<FlexRow align='center'
 				         justify='flex-start'
@@ -698,10 +702,10 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 					{ getValue(() => criteriaRenderer(criteria)) }
 					
 					<TextField
-						{...(autoFocus || focused ? {autoFocus: true} : {})}
+						{...(autoFocus || focused ? { autoFocus: true } : {})}
 						{...filterProps(this.props)}
 						key={`${searchFieldId}-input`}
-						styles={{border: 'none'}}
+						styles={{ border: 'none' }}
 						id={`${searchFieldId}-input`}
 						ref={this.setTextFieldRef}
 						autoComplete="off"
@@ -714,12 +718,12 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						style={fieldStyle}
 						inputStyle={inputStyle}
 						value={text || stateText || ''}
-					  onKeyDown={this.onKeyDown}
+						onKeyDown={this.onKeyDown}
 					/>
 				
 				</FlexRow>
 				
-				
+				{textFieldElem &&
 				<Popover
 					onRequestClose={this.onClickAway}
 					canAutoPosition={false}
@@ -733,14 +737,15 @@ export class SearchField extends React.Component<ISearchFieldProps,ISearchFieldS
 						vertical: 'top',
 						horizontal: 'left',
 					}}
-				  anchorEl={this.state.textFieldElem}
+					anchorEl={textFieldElem}
 					useLayerForClickAway={false}
-				  >
+				>
 					{this.renderResultsLayer()}
 				</Popover>
-				
+				}
 			
-			</div>
+			
+			</Resizable>
 		
 		
 		</div>

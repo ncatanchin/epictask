@@ -16,6 +16,8 @@ import { PureRender } from "epic-ui-components/common"
 import { connect } from "react-redux"
 import {createStructuredSelector} from 'reselect'
 import { makeViewStateSelector } from "epic-typedux/selectors"
+import * as ReactDOM from "react-dom"
+import * as React from "react"
 
 
 // Constants
@@ -47,7 +49,7 @@ export interface ISearchResultsProps extends IThemedAttributes {
 
 
 export interface ISearchResultsState {
-	searchState:SearchState
+	rootRef:any
 }
 
 /**
@@ -65,25 +67,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		return this.props.viewController
 	}
 	
-	onSearchStateChanged = () => {
-		this.setState({
-			searchState: this.controller.getState()
-		})
-	}
-	
-	/**
-	 * New props received
-	 *
-	 * @param nextProps
-	 * @param nextContext
-	 */
-	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
-		log.debug(`new props received`, nextProps)
-	}
-	
-	shouldComponentUpdate(nextProps,nextState) {
-		return !shallowEquals(this.state,nextState,'searchState.items','open','anchor')
-	}
+	setRootRef = rootRef => this.setState({rootRef})
 	
 	
 	
@@ -119,11 +103,13 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				position: 'absolute',
 				display: 'block',
 				width: rect.width + 'px',
+				minWidth: rect.width + 'px',
 				top: `${top}px`,
 				left: rect.left + 'px',
 				
 				height: maxHeightStr,
-				overflow: 'hidden',
+				overflowX: 'hidden',
+				overflowY: 'auto',
 				fontFamily: theme.fontFamily,
 				fontWidth: theme.fontWeight,
 				zIndex: 99999
@@ -136,7 +122,7 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		
 	}
 	
-	componentDidUpdate = () => {
+	updateSize = () => {
 		const
 			elem = ReactDOM.findDOMNode(this),
 			containerStyle = this.getContainerStyle()
@@ -149,15 +135,40 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		}
 		
 		$(elem).parent().css(containerStyle)
-		
-		
 	}
+	
+	// onSearchStateChanged = () => {
+	// 	this.setState({
+	// 		searchState: this.controller.getState()
+	// 	})
+	// }
+	//
+	/**
+	 * New props received
+	 *
+	 * @param nextProps
+	 * @param nextContext
+	 */
+	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
+		log.debug(`new props received`, nextProps)
+		if (!shallowEquals(this.props,nextProps))
+			this.updateSize()
+	}
+	
+	shouldComponentUpdate(nextProps,nextState) {
+		return !shallowEquals(this.state,nextState,'searchState','open','anchor')
+	}
+	
+	
+	
+	componentDidUpdate = this.updateSize
 	
 	componentDidMount = this.componentDidUpdate as any
 	
 	
+	
 	componentWillMount() {
-		this.onSearchStateChanged()
+		//this.onSearchStateChanged()
 		//this.props.viewController.on(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
 	}
 	
@@ -177,21 +188,22 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 				onItemSelected,
 				groupByProvider,
 				anchor
-			} = props,
-			{ searchState } = state
+			} = props
 		
-		log.debug(`Results Container render`, searchState, 'anchor', props.anchor)
+		//log.debug(`Results Container render`, searchState, 'anchor', props.anchor)
 		
 		
-		return <Provider store={getStore()}>
+		return <div ref={this.setRootRef}>
+			<Provider store={getStore()}>
 			<SearchResultsList
-			open={searchState.focused}
+			
 			viewController={this.controller}
 			groupByProvider={groupByProvider}
 			onResultHover={onItemHover}
 			onResultSelected={onItemSelected}
 			className="searchResults"/>
 		</Provider>
+		</div>
 	}
 	
 }

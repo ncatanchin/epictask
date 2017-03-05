@@ -95,13 +95,13 @@ export class RouteRegistryScope implements IRegistryScope<IRegistryEntryRoute> {
 	 */
 	Register = (...configs:IRouteConfig[]) => {
 		configs.forEach(config => {
-			if (config.defaultRoute) {
-				const
-					defaultRoute = Object.values(this.scope).find(it => it.defaultRoute === true)
-				
-				if (defaultRoute)
-					assert(!defaultRoute,`A default route already exists (${defaultRoute.name}) - can not register ${config.name} as a default route`)
-			}
+			// if (config.defaultRoute) {
+			// 	const
+			// 		defaultRoute = Object.values(this.scope).find(it => it.defaultRoute === true)
+			//
+			// 	if (defaultRoute)
+			// 		assert(!defaultRoute,`A default route already exists (${defaultRoute.name}) - can not register ${config.name} as a default route`)
+			// }
 			
 			log.debug(`Registered route: ${config.name}`)
 			this.scope[config.name] = config

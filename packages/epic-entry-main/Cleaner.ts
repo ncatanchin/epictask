@@ -55,7 +55,14 @@ namespace Cleaner {
 	/**
 	 * Restart and clean the app
 	 */
-	export function restartAndClean() {
+	export async function restartAndClean() {
+		
+		updateSettings({
+			user: null,
+			token: null
+		})
+		
+		await Promise.delay(1000)
 		
 		const
 			Electron = require('electron'),

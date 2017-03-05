@@ -38,7 +38,7 @@ export class RepoStoreImpl extends PouchDBRepo<Repo> implements RepoStore {
 	 * @returns {Promise<Repo[]>}
 	 */
 	@PouchDBMangoFinder({all:true})
-	findAll():Promise<Repo[]> {
+	findAll():Promise<FinderResultArray<Repo>> {
 		return null
 	}
 }

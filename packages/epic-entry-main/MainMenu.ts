@@ -140,7 +140,14 @@ export function makeMainMenu() {
 				selector: 'orderFrontStandardAboutPanel:'
 			}, {
 				type: 'separator'
+			},
+			// CLEAN
+			{
+				label: 'Sign Out of Epictask',
+				click: () => Cleaner.restartAndClean()
 			}, {
+				type: 'separator'
+			},{
 				label: 'Services',
 				submenu: []
 			}, {

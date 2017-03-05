@@ -6,7 +6,7 @@ import { getStores } from "epic-database-client"
 import { GitHubClient, createClient } from "epic-github"
 import { cloneObjectShallow, canEditRepo } from "epic-global"
 import { getRepoActions } from "epic-typedux/provider/ActionFactoryProvider"
-import { isNil } from "typeguard"
+import { getValue, isNil } from "typeguard"
 import { assigneesSelector, milestonesSelector, labelsSelector } from "epic-typedux/selectors"
 import { Benchmark } from "epic-util"
 
@@ -97,22 +97,30 @@ export class RepoSearchProvider implements ISearchProvider {
 	
 	@Benchmarker
 	async query(criteria, query:string):Promise<List<SearchItem>> {
-		const repoStore:RepoStore = getStores().repo
-		
 		const
-			results = await repoStore.findWithText(new FinderRequest(4), query)
+			repoStore:RepoStore = getStores().repo,
+			results = await repoStore.findAll(),
+			filteredResults = results.filter(repo => {
+				const
+					{fork,name,full_name} = repo
+				
+				return !fork && (!query || [name,full_name].some(
+					text => getValue(() => text.toLowerCase().startsWith(query.toLowerCase())))
+				
+				)
+			})
 		
-		log.debug(`Found repos`, results)
-		
-		return mapResultsToSearchItems(this, 'id', results, (repo) => {
-			const
-				canEdit = canEditRepo(repo),
-				score = canEdit ? 0 : 1
-			
-			log.debug(`Scoring ${repo.full_name}: edit=${canEdit} score=${score}`)
-			
-			return score
-		})
+		return mapResultsToSearchItems(this, 'id',
+			new FinderResultArray<Repo>(filteredResults,filteredResults.length),
+			(repo) => {
+				const
+					canEdit = canEditRepo(repo),
+					score = canEdit ? 0 : 1
+				
+				log.debug(`Scoring ${repo.full_name}: edit=${canEdit} score=${score}`)
+				
+				return score
+			})
 		
 		
 	}
@@ -147,15 +155,15 @@ export class GitHubSearchProvider implements ISearchProvider {
 					client:GitHubClient = createClient(),
 					results = await client.searchRepos(`fork:false ${text}`),
 					ids = results.items
-						.filter(it => !!it.id)
-						.map(it => it.id),
+						.filter(it => getValue(() => !!it.id))
+						.map(it => getValue(() => it.id)),
 					existingRepos = await repoStore.bulkGet(...ids),
-					existingIds = existingRepos.map(it => it.id)
+					existingIds = existingRepos.map(it => it && it.id)
 				
 				items = List<SearchItem>(
 					results
 						.items
-						.filter(it => !existingIds.includes(it.id))
+						.filter(it => it && !existingIds.includes(it.id))
 						.map(it => new SearchItem(it.id, this, it, canEditRepo(it) ? 0 : 1))
 				)
 				

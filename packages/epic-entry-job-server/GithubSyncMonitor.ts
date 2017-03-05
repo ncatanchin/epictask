@@ -352,14 +352,18 @@ export class GithubSyncMonitor {
 		// POLL REPO EVENTS
 		const doIssuesPoll = async () => {
 			
-			const
-				client = createClient()
 			
 			let
 				newestTimestamp:number,
 				firstPageReceived = false
 			
 			try {
+				if (!getSettings().token) {
+					return log.info(`Token not set, can not poll notifications`)
+				}
+				
+				const
+					client = createClient()
 				
 				//noinspection RedundantConditionalExpressionJS
 				const allEvents = await client.issuesEvents(config.fullName, {
@@ -475,14 +479,15 @@ export class GithubSyncMonitor {
 		// POLL REPO EVENTS
 		const doRepoPoll = async () => {
 			
-			const
-				client = createClient()
-			
 			let
 				newestTimestamp:number,
 				firstPageReceived = false
 			
 			try {
+				
+				const
+					client = createClient()
+				
 				//noinspection RedundantConditionalExpressionJS
 				const allEvents = await client.repoEvents(config.fullName, {
 					eTag: repoConfig.eTag,

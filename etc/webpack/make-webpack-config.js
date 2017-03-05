@@ -110,7 +110,8 @@ function makeExternals() {
 		nodeExternals({
 			whitelist: [
 				/webpack/,
-				/webpack-hot/
+				/webpack-hot/,
+				/react-hot-loader/
 			]
 		})
 	]
@@ -126,6 +127,7 @@ function makeModuleConfig() {
 export function makeHotEntry(entry, devEntries) {
 	// HMR ENTRY ADDITION
 	if (isDev) {
+		entry.unshift('react-hot-loader/patch')
 		entry.unshift("webpack/hot/dev-server")
 		entry.unshift('webpack/hot/poll.js?500')
 	}

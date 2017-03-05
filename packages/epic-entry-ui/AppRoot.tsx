@@ -1,6 +1,6 @@
 // import 'epic-entry-shared/AppEntry'
 // import 'epic-ui-components/UIGlobals'
-import { getValue, shallowEquals } from "epic-global"
+import { cloneObjectShallow, getValue, shallowEquals } from "epic-global"
 import { Provider, connect } from "react-redux"
 import { MuiThemeProvider } from "material-ui/styles"
 import { PureRender } from "epic-ui-components/common"
@@ -12,6 +12,7 @@ import { AppStateType } from "epic-typedux/state/app"
 import { createStructuredSelector } from "reselect"
 import { ThemedWithOptions } from "epic-styles/ThemeDecorations"
 import { benchmarkLoadTime } from "epic-util"
+import * as React from "react"
 
 
 benchmarkLoadTime(`Starting to loading AppRoot`)
@@ -37,7 +38,6 @@ let
 function reloadRoutes() {
 	Routes = RouteRegistryScope.asRouteMap()
 	Pages = RouteRegistryScope.asMap()
-	//({Routes,Pages} = require("./routes/Routes"))
 }
 
 reloadRoutes()

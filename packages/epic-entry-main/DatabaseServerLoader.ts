@@ -6,16 +6,27 @@ import { getWindowManager } from "epic-process-manager"
 import { AppEventType } from "epic-global/Constants"
 import Electron from 'epic-electron'
 import { handleError } from "epic-entry-main/BootErrorHandler"
+import { acceptHot,setDataOnHotDispose,getHot } from "epic-global/HotUtils"
+
 
 const
 	log = getLogger(__filename),
 	{ dialog,app } = Electron
 
 let
-	dbStartCount = 0,
-	dbReady:Promise.Resolver<any>,
-	attemptDeferred:Promise.Resolver<any>,
-	windowManager:IWindowManagerClient
+	dbStartCount = getHot(module,'dbStartCount',0),
+	dbReady:Promise.Resolver<any> = getHot(module,'dbReady',null),
+	attemptDeferred:Promise.Resolver<any> = getHot(module,'attemptDeferred',null),
+	windowManager:IWindowManagerClient = getHot(module,'windowManager',null)
+
+setDataOnHotDispose(module,() => ({
+	dbStartCount,
+	dbReady,
+	attemptDeferred,
+	windowManager
+}))
+
+acceptHot(module)
 
 /**
  * Subscribe for db ready events
@@ -70,6 +81,9 @@ async function tryStart() {
  * Load any pre-configured windows from state + background windows
  */
 export async function start() {
+	if (dbReady)
+		return dbReady.promise
+	
 	// GET WINDOW MANAGER
 	windowManager = getWindowManager()
 	

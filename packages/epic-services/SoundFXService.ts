@@ -159,11 +159,11 @@ export class SoundFXService extends BaseService {
 
 
 /**
- * Get the GithubMonitorService singleton
+ * Get the SoundFXService singleton
  *
- * @return {GithubSyncService}
+ * @return {SoundFXService}
  */
-export const getSoundFXService = getHot(module, 'getSoundFXService', new Proxy(function () {
+export const getSoundFXService =  getHot(module, 'getSoundFXService', new Proxy(function () {
 }, {
 	apply: function (target, thisArg, args) {
 		return SoundFXService.getInstance()
@@ -176,11 +176,6 @@ Container.bind(SoundFXService).provider({ get: getSoundFXService })
 
 export default getSoundFXService
 
-// HMR - SETUP
-if (instanceContainer.instance) {
-	// TODO: HMR / Do state update stuff here
-	log.info(`Reloaded from HMR`)
-}
 setDataOnHotDispose(module, () => ({
 	// Tack on a ref to the hot instance so we know it's there
 	instanceContainer: assign(instanceContainer, {

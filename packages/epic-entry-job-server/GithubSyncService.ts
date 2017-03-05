@@ -297,6 +297,12 @@ if (instanceContainer.instance) {
 	// TODO: HMR / Do state update stuff here
 	log.info(`Reloaded from HMR`)
 }
+
+if (DEBUG)
+	assignGlobal({
+		getGithubSyncService
+	})
+
 setDataOnHotDispose(module,() => ({
 	// Tack on a ref to the hot instance so we know it's there
 	instanceContainer:assign(instanceContainer,{

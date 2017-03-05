@@ -83,7 +83,7 @@ function setupUI() {
 	benchmarkLoadTime(`Styles Loaded`)
 	
 	
-	require.ensure([], function(require:any) {
+	//require.ensure([], function(require:any) {
 		
 		require('epic-ui-core')
 		require('epic-ui-issues')
@@ -96,7 +96,7 @@ function setupUI() {
 			loadUI = require('./App').loadUI as typeof LoadUIGlobal
 		
 		loadUI(UIResourcesLoaded.promise)
-	})
+	//})
 	
 	
 	

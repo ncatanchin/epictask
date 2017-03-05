@@ -8,6 +8,8 @@ import { WindowHashURIProvider } from "epic-entry-ui/routes/WindowHashURIProvide
 import { RouterEvent } from "./Router"
 import { TRouteComponent, TRouteChangeListener, IRoute } from "epic-entry-ui/routes"
 import { getValue } from "epic-global"
+import { guard } from "typeguard"
+import * as React from "react"
 
 
 const
@@ -80,11 +82,11 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		return getValue(() => this.state.router)
 	}
 	
-	private updateRoute = (route:IRouteInstance<any>) => {
-		if (route === this.state.route)
+	private updateRoute = (route:IRouteInstance<any>, force = false) => {
+		if (route === this.state.route && !force)
 			return
 		
-		log.info(`Setting route`,route)
+		log.debug(`Setting route`,route)
 		
 		this.setState({
 			route,
@@ -103,6 +105,20 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		this.updateRoute(route)
 	}
 	
+	private onStatusUpdate = status => {
+		if (status === "apply") {
+			log.debug(`Webpack HMR Status Change: ${status}`, this.state.route)
+			//this.forceUpdate()
+			if (this.state.route) {
+				Promise.delay(100).then(() =>
+				this.updateRoute(this.state.route, true))
+			}
+		}
+	}
+	
+	
+	private removeListener = () => guard(() => module.hot.removeStatusHandler(this.onStatusUpdate))
+	
 	/**
 	 * On mount add listener
 	 */
@@ -115,8 +131,15 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 		// UPDATE THE ROUTE IF REQUIRED
 		//if (router.getRoute() !== route)
 		this.updateRoute(router.getRoute())
+		
+		if (module.hot) {
+			module.hot.status(this.onStatusUpdate)
+			guard(() => window.addEventListener('unload',this.removeListener))
 			
+		}
 	}
+	
+	
 	
 	/**
 	 * On unmount remove listener
@@ -126,6 +149,12 @@ export class RouteView extends React.Component<IRouteViewProps,IRouteViewState> 
 			{router} = this.state
 		
 		router.removeListener(RouterEvent.RouteChanged,this.onRouteChanged)
+		
+		if (module.hot) {
+			this.removeListener()
+		}
+		
+		
 	}
 	
 	componentWillReceiveProps(nextProps) {

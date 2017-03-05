@@ -55,9 +55,20 @@
         "node_modules.disk"
     ],
     "awesomeTypescriptLoaderOptions": {
+        "useBabel": false,
         "forkChecker": true,
         "useCache": true,
-        "cacheDirectory": "dist/.awcache"
+        "cacheDirectory": "dist/.awcache",
+        "babelOptions": {
+            "sourceMaps": "both",
+            "env": {
+                "development": {
+                    "plugins": [
+                        "react-hot-loader/babel"
+                    ]
+                }
+            }
+        }
     }
     
 }

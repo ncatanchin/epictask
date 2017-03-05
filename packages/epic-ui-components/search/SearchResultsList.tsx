@@ -16,6 +16,7 @@ import { makeViewStateSelector, viewsSelector } from "epic-typedux/selectors"
 import { PureRender } from "epic-ui-components/common/PureRender"
 import {List} from 'immutable'
 import { View } from "epic-typedux/state/window"
+import * as React from "react"
 // Constants
 const
 	log = getLogger(__filename)
@@ -45,7 +46,6 @@ function baseStyles(topStyles, theme, palette) {
  * ISearchResultsListProps
  */
 export interface ISearchResultsListProps extends IThemedAttributes {
-	open?:boolean
 	groupByProvider?:boolean
 	viewController:SearchController
 	searchState?:SearchState
@@ -69,11 +69,10 @@ export interface ISearchResultsListState {
 @connect(() => {
 	return createStructuredSelector({
 		searchState: SearchController.makeSearchStateSelector()
-		
 	})
 })
 @ThemedStyles(baseStyles, 'searchResults')
-@PureRender
+//@PureRender
 export class SearchResultsList extends React.Component<ISearchResultsListProps,ISearchResultsListState> {
 	
 	private get controller() {
@@ -81,9 +80,9 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 	}
 	
 	shouldComponentUpdate(nextProps) {
-		return !shallowEquals(this.props,nextProps,'state.items','open')
+		return !shallowEquals(this.props,nextProps,'searchState.items','open')
 	}
-	
+
 	/**
 	 * On click
 	 *
@@ -118,7 +117,6 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		const
 			{ props } = this,
 			{
-				open,
 				styles,
 				theme,
 				groupByProvider,
@@ -131,13 +129,9 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		// let
 		// 	resultsStyle = makeStyle(styles)
 		
-		return open === false ? null : <div style={styles}>
+		return searchState.focused === false ? null : <div style={styles}>
 			
-			<CSSTransitionGroup
-				transitionName="results"
-				transitionEnterTimeout={250}
-				transitionLeaveTimeout={150}>
-				
+			
 				{searchState.working &&
 					<div style={makeHeightConstraint(theme.search.itemHeight)}>
 						<WorkIndicator open={true} />
@@ -150,14 +144,14 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 							key={`${item.provider.id}-${item.id}`}
 							item={item}
 							viewController={viewController}
-							selected={searchState.selectedIndex === index}
+							index={index}
 							groupByProvider={groupByProvider}
 							onMouseEnter={this.onHover(item)}
 							onClick={this.onClick(item)}
 							onMouseDown={this.onClick(item)}
 						/>
 					)}
-				</CSSTransitionGroup>
+				
 				
 		</div>
 		

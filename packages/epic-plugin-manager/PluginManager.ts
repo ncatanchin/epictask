@@ -62,7 +62,7 @@ export namespace PluginManager {
 				new PluginState()
 			)
 		
-		return pluginState.processStatus.get(getProcessId())
+		return getValue(() => pluginState.processStatus.get(getProcessId()))
 	}
 	
 	
@@ -200,14 +200,16 @@ export namespace PluginManager {
 	export async function stopPlugin(name:string,config:IPluginConfig) {
 		const
 			pluginLoader = pluginLoaders[name],
-			plugin = pluginLoader.plugin,
+			plugin = pluginLoader && pluginLoader.plugin,
 			pluginStatus = getPluginStatus(name)
 		
-		if (pluginStatus !== PluginStatus.Running && (Env.isMain || !isPluginEnabled(plugin))) {
-			return
-		}
+		
 		
 		try {
+			if (pluginStatus !== PluginStatus.Running && (Env.isMain || !isPluginEnabled(plugin))) {
+				return
+			}
+			
 			await plugin.stop()
 		} catch (err) {
 			log.error(`Failed to stop plugin: ${name}`,err)

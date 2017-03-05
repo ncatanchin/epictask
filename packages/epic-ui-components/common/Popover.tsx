@@ -4,8 +4,12 @@ import filterProps from 'react-valid-props'
 
 import EventListener from 'react-event-listener'
 import { RenderToLayer } from "./RenderToLayer"
+import * as ReactDOM from "react-dom"
+import * as React from "react"
 
-const {Component,PropTypes} = React
+const
+	{Component,PropTypes} = React,
+	log = getLogger(__filename)
 
 export interface IPopoverProps {
 	anchorEl?:any
@@ -99,6 +103,8 @@ export class Popover extends React.Component<IPopoverProps,any> {
 	handleResize
 	handleScroll
 	
+	
+	
 	constructor(props, context) {
 		super(props, context)
 		
@@ -109,6 +115,10 @@ export class Popover extends React.Component<IPopoverProps,any> {
 			open: props.open,
 			closing: false,
 		}
+	}
+	
+	componentWillMount() {
+		this.anchorEl = this.props.anchorEl
 	}
 	
 	componentWillReceiveProps(nextProps) {
@@ -134,14 +144,18 @@ export class Popover extends React.Component<IPopoverProps,any> {
 				}
 			}
 		}
+		
+		
 	}
 	
 	componentDidUpdate() {
 		this.setPlacement()
+		
 	}
 	
 	componentWillUnmount() {
 		clearTimeout(this.timeout)
+	
 	}
 	
 	renderLayer = () => {
@@ -258,10 +272,12 @@ export class Popover extends React.Component<IPopoverProps,any> {
 				targetPosition = this.applyAutoPositionIfNeeded(anchor, target, targetOrigin, anchorOrigin, targetPosition)
 			}
 			
+			const
+				top = Math.max(0, targetPosition.top)
 			
-			targetEl.style.top = `${Math.max(0, targetPosition.top)}px`
+			targetEl.style.top = `${top}px`
 			targetEl.style.left = `${Math.max(0, targetPosition.left)}px`
-			targetEl.style.maxHeight = `${window.innerHeight}px`
+			targetEl.style.maxHeight = `${window.innerHeight - top}px`
 		}
 	}
 	
@@ -299,16 +315,16 @@ export class Popover extends React.Component<IPopoverProps,any> {
 		
 		if (overlap.y !== 'auto') {
 			a.vertical = a.vertical === 'top' ? 'bottom' : 'top'
-			if (overlap.y === 'inclusive') {
-				t.vertical = t.vertical
-			}
+			// if (overlap.y === 'inclusive') {
+			// 	t.vertical = t.vertical
+			// }
 		}
 		
 		if (overlap.x !== 'auto') {
 			a.horizontal = a.horizontal === 'left' ? 'right' : 'left'
-			if (overlap.y === 'inclusive') {
-				t.horizontal = t.horizontal
-			}
+			// if (overlap.y === 'inclusive') {
+			// 	t.horizontal = t.horizontal
+			// }
 		}
 		
 		return {

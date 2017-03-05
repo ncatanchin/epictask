@@ -105,10 +105,37 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 		
 	}
 	
+	reset(reattach = false) {
+		this.setState({
+			attachedPromise:null,
+			Component: null
+		}, () => {
+			if (reattach)
+				this.attachToPromise()
+		})
+	}
+	
+	
+	onStatusUpdate(status) {
+		if (status === 'apply') {
+			log.info(`Schedule reset of Promised Component`)
+			if (this.props.loader)
+				this.props.loader().then(Component => this.setState({Component}))
+			//this.reset(true)
+			// Promise
+			// 	.delay(100)
+			// 	.then(() => )
+		}
+	}
 	/**
 	 * On mount attach
 	 */
-	componentWillMount = this.attachToPromise
+	componentWillMount() {
+		this.attachToPromise()
+		// if (module.hot) {
+		// 	module.hot.status(() => this.onStatusUpdate)
+		// }
+	}
 	
 	/**
 	 * On new props - check the promise
@@ -120,10 +147,11 @@ export class PromisedComponent extends React.Component<IPromisedComponentProps,I
 	 */
 	componentWillUnmount() {
 		this.mounted = false
-		this.setState({
-			attachedPromise:null,
-			Component: null
-		})
+		this.reset()
+		
+		// if (module.hot) {
+		// 	module.hot.removeStatusHandler(this.onStatusUpdate)
+		// }
 	}
 	
 	render() {

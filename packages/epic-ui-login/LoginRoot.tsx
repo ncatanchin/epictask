@@ -1,81 +1,68 @@
 import { connect } from "react-redux"
 import { createStructuredSelector } from "reselect"
 import { getAuthActions, authenticatingSelector } from "epic-typedux"
-import { PureRender, Page, Icon } from "epic-ui-components"
+import { PureRender, Page, Icon, Button } from "epic-ui-components"
 import {
 	ThemedStyles,
 	IThemedAttributes,
 	makeHeightConstraint,
-	PositionAbsolute,
-	makeWidthConstraint,
-	FillWindow,
-	Fill
+	makeWidthConstraint
 } from "epic-styles"
 import { colorAlpha } from "epic-styles/styles"
 
+import * as React from "react"
 
 const
 	log = getLogger(__filename)
 
-function baseStyles(topStyles,theme,palette) {
+
+
+
+
+
+function baseStyles(topStyles, theme, palette) {
 	const
 		{text,primary} = palette
 	
 	return {
-		page: [ FillWindow, {
-			WebkitAppRegion: 'drag',
-		} ],
+		page: [
+			Styles.Fill,
+			Styles.FlexColumnCenter,{
+				WebkitAppRegion: 'drag',
+				backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`
+			}
+		],
+		
 		
 		authenticating: [ {
 			pointerEvents: 'none'
 		} ],
 		
 		
-		panel: [ FlexAuto, FlexColumn, {} ],
-		
-		logo: [
-			PositionAbsolute,
-			{
-				left: '50%',
-				top: '50%',
-				transform: 'translate(-50%,-50%)',
-				
-				spinner: [ Fill, {
-					//animationDuration: '6s'
-				} ]
-				
-			}
-		],
-		
-		button: [ makeTransition([ 'opacity', 'color', 'background-color' ]), PositionAbsolute, {
-			left: '50%',
-			top: '50%',
-			transform: 'translate(-50%,-50%)',
+		loginButton: [ Styles.FlexAuto, {
+			// left: '50%',
+			// top: '50%',
+			// transform: 'translate(-50%,-50%)',
 			cursor: 'pointer',
 			WebkitAppRegion: 'no-drag',
-			
+			fontSize: rem(1.6),
 			//border: `0.1rem solid ${palette.accent4ColorText}`,
 			//borderRadius: '0.2rem',
 			//height: 'auto',
-			opacity: 1,
-			backgroundColor: Transparent,
+			// opacity: 1,
+			// backgroundColor: Transparent,
 			
 			':hover': {}
 		} ],
 		
-		label: [ CursorPointer, makeTransition('opacity'), {
-			fontSize: rem(4),
-			color: colorAlpha('#ffffff',0.8),
-			fontWeight: 500
-		} ],
 		
-		
-		icon: [ makeTransition('opacity'), {
+		githubIcon: [ Styles.makeTransition('opacity'), Styles.FlexAuto, Styles.makePaddingRem(3),{
 			color: colorAlpha('#ffffff',0.8),
-			marginLeft: rem(1.5)
+			fontSize: '200px'
 		} ]
 	}
 }
+
 
 export interface ILoginRootProps extends IThemedAttributes {
 	authenticating?:boolean
@@ -161,37 +148,23 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 		log.debug(`testing`)
 
 		return (
-			<Page
-				style={[
-					Styles.Fill,
-					Styles.FlexColumnCenter,
-					{
-						backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})`
-					}
-				]}
-				id='loginPage'>
+			<Page id='loginPage' style={styles.page}>
 				
 				
-				<img
-					height="250"
-					width="auto"
-					src={require("assets/images/splash/e.png")}/>
 				
-				<div ref="authButton"
-				     onClick={this.startAuth}
-				     style={[FlexRowCenter,styles.label]}
-				     >
-					
-					
-					<div style={[]}>
-						login via
-					</div>
-					<Icon
-						style={[styles.icon]}
-						iconSet="fa"
-						iconName="github"/>
-					
-				</div>
+				{/*<img*/}
+					{/*height="250"*/}
+					{/*width="auto"*/}
+					{/*src={require("assets/images/splash/e.png")}/>*/}
+				
+				<Icon
+					style={styles.githubIcon}
+					iconSet="fa"
+					iconName="github"/>
+				
+				<Button ref="authButton" mode="flat" onClick={this.startAuth} style={styles.loginButton}>
+					Sign in
+				</Button>
 				
 				
 			</Page>

@@ -28,7 +28,6 @@ import {
 	setPaletteCreator,
 	makeHeightConstraint
 } from "epic-styles"
-//import { Checkbox } from "material-ui"
 import { getUIActions, getAppActions, getAuthActions, settingsSelector } from "epic-typedux"
 import { ContainerNames } from "epic-command-manager"
 import {

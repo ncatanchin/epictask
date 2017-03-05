@@ -3,6 +3,7 @@
 import filterProps from 'react-valid-props'
 import {ThemedStyles} from "epic-styles"
 import { CSSHoverState } from "epic-styles"
+import { colorDarken } from "epic-styles/styles"
 
 const Ink = require('react-ink')
 const tinycolor = require('tinycolor2')
@@ -51,10 +52,10 @@ const baseStyles = (topStyles,theme,palette) => {
 		}],
 		
 		flat: {
-			backgroundColor: primary.hue1,
+			backgroundColor: accent.hue1,//primary.hue1,
 			color: text.secondary,
 			':hover': {
-				backgroundColor: accent.hue1
+				backgroundColor: colorDarken(accent.hue1,5)
 			}
 		},
 		

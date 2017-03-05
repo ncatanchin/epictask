@@ -4,11 +4,9 @@ import {
 	addHotDisposeHandler,
 	If
 } from "epic-global"
-
-
-//import AppRoot from "epic-entry-ui/AppRoot"
 import {getReduxStore} from 'epic-typedux/store/AppStore'
 import { benchmarkLoadTime } from "epic-util"
+import {AppContainer} from 'react-hot-loader'
 
 const
 	log = getLogger(__filename),
@@ -29,7 +27,7 @@ function render() {
 	AppRoot = require('./AppRoot').default
 	
 	win.appRefDirect = ReactDOM.render(
-		<AppRoot key={renderCount} store={getReduxStore()}/>,
+		<AppContainer><AppRoot key={renderCount} store={getReduxStore()}/></AppContainer>,
 		
 		// ROOT ELEMENT TO MOUNT ON
 		rootElement,
@@ -143,11 +141,6 @@ export function loadUI(pendingResources:Promise<void>) {
  */
 //acceptHot(module, log)
 if (module.hot) {
-	
-	
-
-	
-	
 	module.hot.accept("./AppRoot", () => {
 		log.info('Reloading root')
 		render()
