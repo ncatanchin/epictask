@@ -231,9 +231,6 @@ export class GithubSyncService extends BaseService {
 	 */
 	async start():Promise<this> {
 		
-		log.debug(`Waiting for github sync status to load`)
-		await SyncStatus.awaitLoaded()
-		
 		log.debug(`Sync status loaded, subscribing for repo updates from state`)
 		
 		addDatabaseChangeListener(AvailableRepo,this.onAvailableReposUpdated)

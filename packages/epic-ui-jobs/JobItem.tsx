@@ -1,7 +1,7 @@
 // Imports
 
 import filterProps from "react-valid-props"
-import { PureRender, Icon,LinearProgress } from "epic-ui-components"
+import { PureRender, Icon,WorkIndicator } from "epic-ui-components"
 import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { IJobStatusDetail, IJob, JobStatus, getJobDescription } from "epic-typedux"
 
@@ -180,10 +180,7 @@ export class JobItem extends React.Component<IJobItemProps,void> {
 							// If the job is finished then hide the progress bar
 							//detail.status >= JobStatus.Completed && styles.progressBar.hidden
 						]}>
-							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-							                value={Math.min(100,detail.progress * 100)}
-							                color={theme.palette.accent1Color}
-							/>
+							<WorkIndicator />
 						</div>
 					}
 				</div>

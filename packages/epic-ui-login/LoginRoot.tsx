@@ -94,51 +94,47 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 	 * Show the auth popup
 	 *
 	 */
-	startAuth = () => {
-		
-		
-		getAuthActions().startAuth()
-		
-		// Start authentication
-		
-	}
-	
-	private updateStyles = () => {
-		const
-			dim = Math.min(window.innerHeight,window.innerWidth) / 5
-		
-		this.setState({
-			buttonStyle: makeStyle(
-				makeHeightConstraint(dim),
-				makeWidthConstraint(dim),
-				{
-					fontSize: dim
-				}
-			),
-			iconStyle: makeStyle(
-				// makeHeightConstraint(dim),
-				// makeWidthConstraint(dim),
-				{
-					fontSize: dim / 2
-				}
-			),
-			logoStyle: makeStyle(
-				makeHeightConstraint(dim),
-				makeWidthConstraint(dim)
-			)
-		})
-		
-	}
-	
-	
-	componentWillMount():void {
-		this.updateStyles()
-		window.addEventListener('resize',this.updateStyles)
-	}
-	
-	componentWillUnmount():void {
-		window.removeEventListener('resize',this.updateStyles)
-	}
+	private startAuth = () => getAuthActions().startAuth()
+	//
+	// /**
+	//  * Update Styles
+	//  */
+	// private updateStyles = () => {
+	// 	const
+	// 		dim = Math.min(window.innerHeight,window.innerWidth) / 5
+	//
+	// 	this.setState({
+	// 		buttonStyle: makeStyle(
+	// 			makeHeightConstraint(dim),
+	// 			makeWidthConstraint(dim),
+	// 			{
+	// 				fontSize: dim
+	// 			}
+	// 		),
+	// 		iconStyle: makeStyle(
+	// 			// makeHeightConstraint(dim),
+	// 			// makeWidthConstraint(dim),
+	// 			{
+	// 				fontSize: dim / 2
+	// 			}
+	// 		),
+	// 		logoStyle: makeStyle(
+	// 			makeHeightConstraint(dim),
+	// 			makeWidthConstraint(dim)
+	// 		)
+	// 	})
+	//
+	// }
+	//
+	//
+	// componentWillMount():void {
+	// 	this.updateStyles()
+	// 	window.addEventListener('resize',this.updateStyles)
+	// }
+	//
+	// componentWillUnmount():void {
+	// 	window.removeEventListener('resize',this.updateStyles)
+	// }
 	
 	render() {
 		const
@@ -150,13 +146,6 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 		return (
 			<Page id='loginPage' style={styles.page}>
 				
-				
-				
-				{/*<img*/}
-					{/*height="250"*/}
-					{/*width="auto"*/}
-					{/*src={require("assets/images/splash/e.png")}/>*/}
-				
 				<Icon
 					style={styles.githubIcon}
 					iconSet="fa"
@@ -166,10 +155,32 @@ export class LoginRoot extends React.Component<ILoginRootProps,any> {
 					Sign in
 				</Button>
 				
-				
 			</Page>
 		)
 	}
 }
 
 
+
+
+enum StepStatus {
+	NotCompleted,
+	Active,
+	Completed
+}
+
+interface StepProps extends IThemedAttributes {
+	index:number
+	status:StepStatus
+	label:string
+}
+
+function Step({styles,index,status,label}:StepProps) {
+	const
+		statusName = StepStatus[status]
+	
+	return <div style={styles.step && styles.step[statusName]}>
+		<div style={styles.step.number  && styles.step.number[statusName]}>{index+1}</div>
+		<div style={styles.step.label && styles.step.label[statusName]}>{label}</div>
+	</div>
+}

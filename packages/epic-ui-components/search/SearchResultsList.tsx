@@ -46,6 +46,7 @@ function baseStyles(topStyles, theme, palette) {
  * ISearchResultsListProps
  */
 export interface ISearchResultsListProps extends IThemedAttributes {
+	inline:boolean
 	groupByProvider?:boolean
 	viewController:SearchController
 	searchState?:SearchState
@@ -121,7 +122,8 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 				theme,
 				groupByProvider,
 				searchState,
-				viewController
+				viewController,
+				inline
 			} = props,
 			
 			items = getValue(() => searchState.items)
@@ -129,7 +131,7 @@ export class SearchResultsList extends React.Component<ISearchResultsListProps,I
 		// let
 		// 	resultsStyle = makeStyle(styles)
 		
-		return searchState.focused === false ? null : <div style={styles}>
+		return (!inline && searchState.focused === false) ? null : <div style={styles}>
 			
 			
 				{searchState.working &&

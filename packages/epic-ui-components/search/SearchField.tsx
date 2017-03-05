@@ -34,13 +34,16 @@ const
 	log = getLogger(__filename)
 
 //DEBUG
-//log.setOverrideLevel(LogLevel.DEBUG)
+log.setOverrideLevel(LogLevel.DEBUG)
 
 
 /**
  * ISearchFieldProps
  */
 export interface ISearchFieldProps extends React.HTMLAttributes<any>, IViewRootProps<SearchController, SearchState> {
+	
+	inlineResults?:boolean
+	
 	theme?:any
 	
 	styles?:any
@@ -348,7 +351,6 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 			() => criteriaOrTextChanged && this.updateSearchResults(props.criteria, props.text || this.state.text)
 		)
 		
-		
 		return newState
 	}
 	
@@ -416,9 +418,9 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 	}
 	
 	
-	updateSearchResults = (criteria = this.props.criteria, text = this.props.text || this.state.text) =>
+	updateSearchResults = (criteria = this.props.criteria, text = this.props.text || this.state.text) => {
 		this.controller.setQuery(criteria, text)
-	
+	}
 	
 	/**
 	 * When the search text field changes
@@ -432,6 +434,7 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 		
 		
 		log.debug('Search value: ' + newText)
+		
 		// SEARCH IS CONTROLLED EXTERNALLY
 		if (onTextChanged && getValue(() => onTextChanged(newText), true) === false) {
 			log.debug(`Internal update prevented by onTextChanged`)
@@ -596,6 +599,15 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 	 */
 	componentWillMount = () => {
 		this.controller.on(SearchEvent[ SearchEvent.ItemSelected ], this.onResultSelectedFromController)
+		
+		const
+			{ text } = this.state,
+			{ criteria, inlineResults, text: baseText } = this.props
+		
+		if (inlineResults) {
+			this.updateSearchResults(criteria, text || baseText || '')
+		}
+		
 		this.updateState(this.props)
 	}
 	
@@ -628,7 +640,7 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 	/**
 	 * Render the results layer
 	 */
-	private renderResultsLayer = () =>
+	private renderResultsLayer = (inline = false) =>
 		// FOCUSED
 		<SearchResults
 			ref={this.setResultsListRef}
@@ -640,6 +652,7 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 			onItemHover={this.onHover}
 			onItemSelected={(item) => this.onResultSelected(null, item)}
 			containerStyle={{ borderRadius: '0 0 0.4rem 0.4rem' }}
+		  inline={inline}
 		/>
 	
 	
@@ -659,6 +672,7 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 				text,
 				searchId,
 				tabIndex,
+				inlineResults,
 				viewState: searchState
 			} = this.props,
 			{ text: stateText, textFieldElem } = this.state,
@@ -670,6 +684,7 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 			
 			panelStyle = makeStyle(
 				styles.wrapper,
+				inlineResults && styles.wrapper.inline,
 				focusedStyle
 			),
 			
@@ -687,12 +702,11 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 			
 			{ searchFieldId } = this
 		
-		return <div
-			id={searchFieldId}
-			style={panelStyle}
-		>
+		log.debug(`focused=${focused}`)
+		
+		return <div id={searchFieldId} style={panelStyle}>
 			
-			<Resizable onResize={this.onResize} tabIndex={-1} style={[ styles.container ]}>
+			<Resizable onResize={this.onResize} tabIndex={-1} style={makeStyle(styles.container, inlineResults && styles.container.inline)}>
 				
 				<FlexRow align='center'
 				         justify='flex-start'
@@ -723,25 +737,25 @@ export class SearchField extends React.Component<ISearchFieldProps, ISearchField
 				
 				</FlexRow>
 				
-				{textFieldElem &&
-				<Popover
-					onRequestClose={this.onClickAway}
-					canAutoPosition={false}
-					open={focused}
-					noAdjustment={true}
-					anchorOrigin={{
-						vertical: 'bottom',
-						horizontal: 'left',
-					}}
-					targetOrigin={{
-						vertical: 'top',
-						horizontal: 'left',
-					}}
-					anchorEl={textFieldElem}
-					useLayerForClickAway={false}
-				>
-					{this.renderResultsLayer()}
-				</Popover>
+				{inlineResults ? this.renderResultsLayer(true) : textFieldElem &&
+					<Popover
+						onRequestClose={this.onClickAway}
+						canAutoPosition={false}
+						open={focused}
+						noAdjustment={true}
+						anchorOrigin={{
+							vertical: 'bottom',
+							horizontal: 'left',
+						}}
+						targetOrigin={{
+							vertical: 'top',
+							horizontal: 'left',
+						}}
+						anchorEl={textFieldElem}
+						useLayerForClickAway={false}
+					>
+						{this.renderResultsLayer()}
+					</Popover>
 				}
 			
 			

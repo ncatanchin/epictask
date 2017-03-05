@@ -1,7 +1,12 @@
 // Imports
-import { IThemedAttributes, Themed, Fill, PositionAbsolute, FlexColumnCenter } from "epic-styles"
+import "!!style-loader!css-loader!react-spinkit/css/double-bounce.css"
+import "!!style-loader!css-loader!react-spinkit/css/cube-grid.css"
+import Spinner = require('react-spinkit')
+import * as React from "react"
+import { Style } from "radium"
+
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import { PureRender } from "./PureRender"
-import { CircularProgress } from "./MaterialUIComponents"
 
 // Constants
 const
@@ -10,6 +15,31 @@ const
 // DEBUG OVERRIDE
 //log.setOverrideLevel(LogLevel.DEBUG)
 
+
+function baseStyles(topStyles, theme, palette) {
+	
+	const
+		{ text, primary, accent, background } = palette,
+	bounceStyle = {
+		backgroundColor: accent.hue1
+	}
+	
+	return [ {
+		
+		'.sk-cube-grid': {
+			width: 50,
+			height: 50
+		},
+		'.sk-cube': bounceStyle,
+		'.sk-double-bounce': {
+			width: 50,
+			height: 50
+		},
+		'.sk-double-bounce1': bounceStyle,
+		'.sk-double-bounce2': bounceStyle
+		
+	} ]
+}
 
 /**
  * IWorkIndicatorProps
@@ -26,33 +56,35 @@ export interface IWorkIndicatorProps extends IThemedAttributes {
  * @constructor
  **/
 
-@Themed
+@ThemedStyles(baseStyles)
 @PureRender
-export class WorkIndicator extends React.Component<IWorkIndicatorProps,void> {
+export class WorkIndicator extends React.Component<IWorkIndicatorProps, void> {
 	static defaultProps = {
 		open: true
 	}
 	
 	render() {
-		const { open, style,theme } = this.props
+		const
+			{ open, style,styles, theme } = this.props
 		
 		return !open ? React.DOM.noscript() :
 			<div
 				style={[
-					makeTransition(['opacity','background','background-color']),
-					PositionAbsolute,
-					Fill,
-					FlexColumnCenter,{
+					Styles.makeTransition([ 'opacity', 'background', 'background-color' ]),
+					Styles.PositionAbsolute,
+					Styles.Fill,
+					Styles.FlexColumnCenter, {
 						top: 0,
 						left: 0,
 						zIndex: 89889786686
 					},
 					style
 				]}>
-			<CircularProgress
-				color={theme.progressIndicatorColor}
-				size={50}/>
-		</div>
+				<Style
+					rules={styles}
+				/>
+				<Spinner spinnerName="cube-grid"/>
+			</div>
 		
 	}
 	

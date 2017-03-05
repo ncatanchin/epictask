@@ -12,22 +12,29 @@ export default function baseStyles(topStyles, theme, palette) {
 			Styles.PositionRelative,
 			Styles.FillWidth,
 			theme.inputBorder,
-			Styles.makeTransition(['height','min-height','max-height']),{
+			Styles.makeTransition([ 'height', 'min-height', 'max-height' ]), {
 				borderRadius: rem(0.2),
 				backgroundColor: primary.hue3,
 				//backgroundColor: Transparent
+				
+				inline: [Styles.FlexScale,Styles.FlexColumn,{
+					backgroundColor: Styles.Transparent
+				}]
 			} ],
 		
 		
 		container: [ Styles.PositionRelative, Styles.OverflowAuto, Styles.FillWidth, Styles.FlexColumn, {
-			maxHeight: '100%'
+			maxHeight: '100%',
+			inline: [Styles.FlexScale,{
+			
+			}]
 		} ],
 		
 		inputContainer: [
 			Styles.PositionRelative,
 			Styles.FillWidth,
 			Styles.FlexWrap,
-			makeFlexAlign('flex-start','center')
+			makeFlexAlign('flex-start', 'center')
 		],
 		
 		field: [

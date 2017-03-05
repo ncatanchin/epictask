@@ -2,12 +2,13 @@
 import filterProps from 'react-valid-props'
 import { List } from "immutable"
 import { PureRender } from 'epic-ui-components/common/PureRender'
-import {WorkIndicator} from 'epic-ui-components/common/WorkIndicator'
+import { WorkIndicator } from 'epic-ui-components/common/WorkIndicator'
 import { IThemedAttributes, ThemedStyles } from 'epic-styles'
 
 import { getValue, isString, isFunction, isPromise } from "typeguard"
 import { guard } from "epic-global"
-import {EnumEventEmitter} from 'type-enum-events'
+import { EnumEventEmitter } from 'type-enum-events'
+import * as React from "react"
 
 // Constants
 const
@@ -30,11 +31,11 @@ function baseStyles(topStyles, theme, palette) {
 		/**
 		 * Saving style
 		 */
-		indicator: [{
+		indicator: [ {
 			opacity: 1,
 			background,
 			pointerEvents: 'none'
-		}]
+		} ]
 		
 	} ]
 }
@@ -49,7 +50,7 @@ declare global {
 	 * On validate, either returns an error string or true if valid
 	 */
 	interface IFormFieldValidator {
-		(value:any,errorMessage:string):string|true
+		(value:any, errorMessage:string):string | true
 	}
 	
 	/**
@@ -76,9 +77,9 @@ declare global {
 		errorFormatter?:(errorText:string) => string
 	}
 	
-
+	
 	interface IFormFieldConstructor {
-		new (props,context):IFormField
+		new (props, context):IFormField
 	}
 	
 	/**
@@ -87,7 +88,7 @@ declare global {
 	interface IFormField {
 		props:IFormFieldProps
 		
-		setValid(valid:boolean,errors:string[]):any
+		setValid(valid:boolean, errors:string[]):any
 		
 		isValid():boolean
 		
@@ -114,7 +115,7 @@ declare global {
 		working?:boolean
 		valid?:boolean
 		fields?:List<IFormField>
-		values?: List<IFormFieldValue>
+		values?:List<IFormFieldValue>
 		error?:any
 	}
 	
@@ -145,13 +146,13 @@ export interface IFormProps extends IThemedAttributes {
 	 * @param model
 	 * @param values
 	 */
-	onValidSubmit:(form:IForm,model:any,values:IFormFieldValue[]) => Promise<any>
+	onValidSubmit:(form:IForm, model:any, values:IFormFieldValue[]) => Promise<any>
 	
 	/**
 	 * Additional validator added to field validators
 	 */
-
-	validator?:(form:IForm,values:IFormFieldValue[]) => Promise<IFormFieldValue[]>
+	
+	validator?:(form:IForm, values:IFormFieldValue[]) => Promise<IFormFieldValue[]>
 	
 	/**
 	 * On valid
@@ -172,7 +173,7 @@ export interface IFormProps extends IThemedAttributes {
 	 * @param result
 	 * @param err
 	 */
-	onSubmitResult?:(result:any,err:Error) => any
+	onSubmitResult?:(result:any, err:Error) => any
 	
 }
 
@@ -186,7 +187,7 @@ export interface IFormProps extends IThemedAttributes {
 
 
 @PureRender
-export class Form extends React.Component<IFormProps,IFormState> {
+export class Form extends React.Component<IFormProps, IFormState> {
 	
 	static defaultProps = {
 		submitOnCmdCtrlEnter: false
@@ -204,12 +205,11 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	events = new EnumEventEmitter(FormEvent)
 	
 	
-	
-	constructor(props,context) {
-		super(props,context)
+	constructor(props, context) {
+		super(props, context)
 		
 		this.state = {
-		 	working: false,
+			working: false,
 			valid: true,
 			fields: List<IFormField>().asMutable(),
 			values: List<IFormFieldValue>()
@@ -217,13 +217,14 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	}
 	
 	
-	private updateState(patch:any,onComplete?:() => any) {
-		this.setState(patch,() => {
+	private updateState(patch:any, onComplete?:() => any) {
+		this.setState(patch, () => {
 			guard(onComplete)
 			
-			this.events.emit(FormEvent.StateChanged,this.state)
+			this.events.emit(FormEvent.StateChanged, this.state)
 		})
 	}
+	
 	/**
 	 * Get all fields
 	 */
@@ -242,7 +243,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * Get all errors
 	 */
 	get errors() {
-	 	return this.values.filter(it => !it.valid || getValue(() => it.errors.length,0) > 0)
+		return this.values.filter(it => !it.valid || getValue(() => it.errors.length, 0) > 0)
 	}
 	
 	/**
@@ -274,7 +275,6 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	}
 	
 	
-	
 	/**
 	 * Register field
 	 *
@@ -282,7 +282,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	addField(field:IFormField) {
 		const
-			{fields} = this.state,
+			{ fields } = this.state,
 			index = fields.indexOf(field)
 		
 		if (index === -1)
@@ -296,7 +296,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	removeField(field:IFormField) {
 		const
-			{fields} = this.state,
+			{ fields } = this.state,
 			index = fields.indexOf(field)
 		
 		if (index === -1)
@@ -313,10 +313,10 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	onFieldChange(field:IFormField) {
 		const
-			{fields} = this.state,
+			{ fields } = this.state,
 			index = fields.indexOf(field)
 		
-		assert(index !== -1,`Unknown field: ${getValue(() => field.props.name)}`)
+		assert(index !== -1, `Unknown field: ${getValue(() => field.props.name)}`)
 		
 		this.validate()
 	}
@@ -326,7 +326,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * @param name
 	 */
 	getField(name:string) {
-		return this.fields.find(it => getValue(() => [it.props.id,it.props.name].includes(name),false))
+		return this.fields.find(it => getValue(() => [ it.props.id, it.props.name ].includes(name), false))
 	}
 	
 	/**
@@ -334,7 +334,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 *
 	 * @param field
 	 */
-	getFieldName = (field:IFormField) => getValue(() => field.props.name || field.props.id,'unknown')
+	getFieldName = (field:IFormField) => getValue(() => field.props.name || field.props.id, 'unknown')
 	
 	
 	/**
@@ -357,8 +357,8 @@ export class Form extends React.Component<IFormProps,IFormState> {
 		
 		validators.forEach(validator => {
 			const
-				res = validator(value,field.props.errorMessage)
-
+				res = validator(value, field.props.errorMessage)
+			
 			// IF INVALID - UPDATE ERRORS
 			if (res !== true) {
 				fieldValue.errors.push(res)
@@ -367,9 +367,9 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			
 		})
 		
-		field.setValid(fieldValue.valid,fieldValue.errors)
+		field.setValid(fieldValue.valid, fieldValue.errors)
 		
-			
+		
 		return fieldValue
 	}
 	
@@ -377,7 +377,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	/**
 	 * Validate the form
 	 */
-	validate(submit = false,validSubmitOverrideFn = null) {
+	validate(submit = false, validSubmitOverrideFn = null) {
 		try {
 			const
 				values = this.fields.map(this.getFieldValue) as List<IFormFieldValue>,
@@ -392,7 +392,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 				
 				// INVALID
 				if (!valid) {
-					log.warn(`not all valid`,values)
+					log.warn(`not all valid`, values)
 					guard(() => this.props.onInvalid(values.toArray()))
 					this.events.emit(FormEvent.Invalid, values)
 					return
@@ -405,7 +405,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 				submit && this.startSubmit(validSubmitOverrideFn)
 			})
 		} catch (err) {
-			log.error(`failed to validate`,err)
+			log.error(`failed to validate`, err)
 		}
 	}
 	
@@ -418,26 +418,26 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			error:Error = null
 		
 		try {
-			this.events.emit(FormEvent.Submitted,this)
+			this.events.emit(FormEvent.Submitted, this)
 			
 			const
 				values = this.values,
-				model = values.reduce((model,value) => {
-					model[value.name] = value.value
+				model = values.reduce((model, value) => {
+					model[ value.name ] = value.value
 					return model
-				},{} as any)
+				}, {} as any)
 			
 			const
 				onValidSubmit = validSubmitOverrideFn && isFunction(validSubmitOverrideFn) ?
 					validSubmitOverrideFn : this.props.onValidSubmit
 			
 			result = onValidSubmit(this, model, values.toArray())
-		
+			
 			if (isPromise(result))
 				result = await result
 			
 		} catch (err) {
-			log.error(`Form submit failed`,err)
+			log.error(`Form submit failed`, err)
 			error = err
 		}
 		
@@ -446,7 +446,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			working: false
 		})
 		
-		guard(() => this.props.onSubmitResult(result,error))
+		guard(() => this.props.onSubmitResult(result, error))
 	}
 	
 	/**
@@ -467,15 +467,15 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * On submit - validate > submit = true
 	 * @param event
 	 */
-	submit = (event?:React.FormEvent<any>|Function) => {
-		log.debug(`Submit called`,event)
+	submit = (event?:React.FormEvent<any> | Function) => {
+		log.debug(`Submit called`, event)
 		
 		if (event && !isFunction(event)) {
 			event.preventDefault()
 			event.stopPropagation()
 		}
 		
-		this.validate(true,event && isFunction(event) && event)
+		this.validate(true, event && isFunction(event) && event)
 		
 		
 	}
@@ -485,7 +485,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 * @param event
 	 */
 	onKeyDown = event => {
-		log.debug(`Form key down`,event)
+		log.debug(`Form key down`, event)
 		
 		if (event && this.props.submitOnCmdCtrlEnter) {
 			if ((Env.isMac ? event.metaKey : event.ctrlKey) && event.key === 'Enter') {
@@ -504,7 +504,7 @@ export class Form extends React.Component<IFormProps,IFormState> {
 	 */
 	render() {
 		const
-			styles = mergeStyles(createStyles(baseStyles),this.props.styles,this.props.style)
+			styles = mergeStyles(createStyles(baseStyles), this.props.styles, this.props.style)
 		
 		const
 			{
@@ -525,9 +525,9 @@ export class Form extends React.Component<IFormProps,IFormState> {
 			style={styles}>
 			{this.props.children}
 			{/* Saving progress indicator */}
-			<WorkIndicator style={styles.indicator} open={working} />
-			</form>
-	
+			<WorkIndicator style={styles.indicator} open={working}/>
+		</form>
+		
 		
 	}
 	
@@ -543,8 +543,6 @@ export namespace Form {
 	export const FormFormFieldContextTypes = {
 		form: React.PropTypes.object
 	}
-
-	
 	
 	
 }

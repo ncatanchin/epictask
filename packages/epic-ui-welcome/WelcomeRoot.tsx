@@ -23,8 +23,7 @@ export interface IWelcomeRootProps extends IThemedAttributes {
  * WelcomeState
  */
 export interface IWelcomeRootState {
-	width?:number
-	searchFieldRef?:any
+
 }
 
 
@@ -35,54 +34,13 @@ export interface IWelcomeRootState {
 @PureRender
 export class WelcomeRoot extends React.Component<IWelcomeRootProps, IWelcomeRootState> {
 	
-	appActions = getAppActions()
-	
-	/**
-	 * On mount create initial state & bind listeners
-	 */
-	componentWillMount = () => {
-		//EventHub.on(EventHub.SearchItemSelected,this.onResultSelected)
-		this.setState(this.getNewState())
-	}
-	
-	/**
-	 * On unmount - unbind
-	 */
-	componentWillUnmount = () => {
-		//EventHub.off(EventHub.SearchItemSelected,this.onResultSelected)
-	}
-	
-	/**
-	 * Create new state instance
-	 */
-	getNewState = () => ({
-		width: window.innerWidth
-	})
-	
-	updateState = () => this.setState(this.getNewState())
-	
-	
 	/**
 	 * When a result is selected
 	 *
 	 * @param item
 	 */
-	private onItemSelected = (item:ISearchItem) => {
-		log.info(`Repo add result was selected`, item)
-		
-		guard(() => item.provider.handleItem(item))
-	}
+	private onItemSelected = (item:ISearchItem) => guard(() => item.provider.handleItem(item))
 	
-	/**
-	 * on escape sequence from search panel
-	 */
-	private onEscape = () => {
-	}
-	
-	
-	private setSearchFieldRef = (searchFieldRef) => this.setState({
-		searchFieldRef
-	})
 	
 	render() {
 		const
@@ -91,25 +49,20 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps, IWelcomeRoot
 		
 		
 		return <Page
-			onResize={this.updateState}
 			style={[
-				Fill,
-				FlexColumnCenter,
+				Styles.Fill,
+				Styles.FlexColumnCenter,
+				Styles.makePaddingRem(3,0,3,0),
 				{ backgroundImage: `url(${require('assets/images/splash/intro-bg.png')})` }
 			]}
 			id="welcomePage">
 			
-			{/*<img*/}
-				{/*height="250"*/}
-				{/*width="auto"*/}
-				{/*style={{ marginBottom: rem(3) }}*/}
-				{/*src={require("assets/images/splash/e.png")}/>*/}
 			<h1 style={styles.header}>Import a repository</h1>
 			<SearchField
-				ref={this.setSearchFieldRef}
 				searchId={WelcomeSearchId}
 				providers={[ RepoSearchProvider,GitHubSearchProvider ]}
 				autoFocus={true}
+				inlineResults={true}
 				tabIndex={0}
 				searchOnEmpty={true}
 				placeholder='Import your first project, start managing like a boss..'
@@ -118,7 +71,6 @@ export class WelcomeRoot extends React.Component<IWelcomeRootProps, IWelcomeRoot
 				onItemSelected={this.onItemSelected}
 				resultsHidden={false}
 				styles={styles.search}
-				onEscape={this.onEscape}
 			/>
 		
 		</Page>

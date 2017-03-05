@@ -1,13 +1,6 @@
-import {
-	FinderRequest,
-	FinderResultArray,
-	
-} from 'typestore'
-
-
+import {FinderRequest,FinderResultArray} from 'typestore'
 import {PouchDBRepo,PouchDBFullTextFinder, PouchDBMangoFinder} from 'typestore-plugin-pouchdb'
 import { Repo, RepoStore } from "epic-models"
-
 
 export class RepoStoreImpl extends PouchDBRepo<Repo> implements RepoStore {
 	

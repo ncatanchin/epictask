@@ -14,12 +14,13 @@ import {
 } from "epic-styles"
 import { List } from "immutable"
 import { TJobIMap, getJobDescription, IJobStatusDetail, IJob, IJobLog, JobStatus } from "epic-typedux"
-import { VisibleList, LinearProgress, IRowTypeConfig } from "epic-ui-components"
+import { VisibleList, IRowTypeConfig } from "epic-ui-components"
 import { getJobStatusColors } from "./JobItem"
 import { LogWatcher, LogWatcherEvent, getValue, shallowEquals } from "epic-global"
 import JobMonitorController from "./JobMonitorController"
 import { JobLogRow } from "./JobLogRow"
 import { IEnumEventRemover } from "type-enum-events"
+import { WorkIndicator } from "epic-ui-components/common"
 
 // Constants
 const log = getLogger(__filename)
@@ -322,10 +323,9 @@ export class JobDetail extends React.Component<IJobDetailProps,IJobDetailState> 
 				
 					{detail.status < JobStatus.Completed &&
 						<div style={styles.header.progress}>
-							<LinearProgress mode={detail.progress > 0 ? 'determinate' : 'indeterminate'}
-							                value={Math.min(100,detail.progress * 100)}
-							                color={theme.palette.accent1Color}
-							/>
+							
+							<WorkIndicator />
+							
 						</div>
 						
 						

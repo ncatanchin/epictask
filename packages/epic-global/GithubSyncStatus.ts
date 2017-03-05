@@ -1,13 +1,20 @@
-import * as fs from 'fs'
-
-
 import { getUserDataFilename} from  "./Files"
 import {toJSON, parseJSON } from "epic-util"
 import { isNumber } from "typeguard"
+import { PersistentValue, PersistentValueEvent } from "epic-global/PersistentValue"
 
 const
 	log = getLogger(__filename),
-	syncStatusFilename = getUserDataFilename('epictask-sync-status.json')
+	syncStatusFilename = getUserDataFilename('epictask-sync-status.json'),
+	statusValue = new PersistentValue<IGithubSyncStatus>(
+		'GithubSyncStatus',
+		{
+			eTags: {},
+			timestamps: {}
+		} as IGithubSyncStatus,
+		val => toJSON(val),
+		val => parseJSON(val)
+	)
 
 log.debug(`SyncStatusFilename file: ${syncStatusFilename}`)
 
@@ -20,73 +27,18 @@ export interface IGithubSyncStatus {
 export namespace GithubSyncStatus {
 	
 	let
-		status:IGithubSyncStatus,
-		writePromise:Promise<any>,
-		loadPromise:Promise<any>,
-		savePromise:Promise<any>
+		status:IGithubSyncStatus = statusValue.get()
+	
+	// LISTEN FOR CHANGES
+	statusValue.on(PersistentValueEvent.Changed,(event,newStatus) => status = newStatus)
 	
 	/**
-	 * Load the new settings
+	 * Save status value
 	 *
-	 * @returns {{eTags: {}, resourcesQueriedAt: {}}}
+	 * @returns {Promise<void>}
 	 */
-	async function load() {
-	
-		log.info(`Check for status file ${syncStatusFilename}`)
-		if (writePromise)
-			await writePromise
-		
-		const
-			newStatus = {
-				eTags: {},
-				timestamps: {}
-			} as IGithubSyncStatus
-		
-		try {
-			if (fs.existsSync(syncStatusFilename)) {
-				const
-					jsonStr = await Promise.fromCallback(callback => fs.readFile(syncStatusFilename, callback)),
-					loadedStatus = parseJSON(jsonStr)
-				
-				log.info(`Loaded status`,loadedStatus)
-				_.assign(newStatus, loadedStatus)
-				
-				
-			}
-		} catch (err) {
-			log.error(`Failed to load sync status file - starting over`, err)
-		}
-		
-		log.info(`Setting sync status`,newStatus)
-		
-		status = newStatus
-	
-		
-	}
-	
-	async function save() {
-		if (savePromise && !savePromise.isResolved())
-			await savePromise
-		
-		const
-			deferred = Promise.defer()
-		
-		try {
-			
-			//noinspection JSUnusedAssignment
-			savePromise = deferred.promise
-			
-			const
-				syncStatusJson = toJSON(status)
-			
-			await Promise.fromCallback(callback => fs.writeFile(syncStatusFilename,syncStatusJson,callback))
-				
-		} catch (err) {
-			log.error(`Failed to write sync status to ${syncStatusFilename}`,err)
-		} finally {
-			deferred.resolve()
-			savePromise = null
-		}
+	function save() {
+		statusValue.set(status)
 	}
 	
 	
@@ -99,20 +51,11 @@ export namespace GithubSyncStatus {
 		assert(status,`Can not update or read sync status before loaded`)
 	}
 	
-	
 	/**
-	 * Wait until status is loaded and ready
+	 * Clear a given prefix
+	 *
+	 * @param prefix
 	 */
-	export async function awaitLoaded() {
-		if (!loadPromise)
-			loadPromise = load()
-		
-		if (loadPromise.isResolved())
-			return
-		
-		await loadPromise
-	}
-	
 	export function clearPrefix(prefix:string) {
 		if (!status)
 			return
@@ -164,7 +107,6 @@ export namespace GithubSyncStatus {
 		checkLoaded()
 		
 		status.timestamps[url] = timestamp instanceof Date ? timestamp.getTime() : timestamp
-		
 		save()
 	}
 	
@@ -196,7 +138,13 @@ export namespace GithubSyncStatus {
 			timestamp = Date.now() - maxAgeMillis
 		}
 		return {
-			since: moment(!timestamp ? new Date(1) : isNumber(timestamp) ? new Date(timestamp) : timestamp).format()
+			since:
+				moment(!timestamp ?
+					new Date(1) :
+					isNumber(timestamp) ?
+						new Date(timestamp) :
+						timestamp
+				).format()
 		}
 	}
 	

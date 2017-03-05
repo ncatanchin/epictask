@@ -1,23 +1,18 @@
 /**
  * Created by jglanz on 6/4/16.
  */
-
 // Imports
 import { SearchResultsList } from "./SearchResultsList"
 
 import { Provider } from "react-redux"
-import { SearchEvent, SearchController } from "./SearchController"
-import { SearchState } from "./SearchState"
-import { IThemedAttributes } from "epic-styles/ThemeDecorations"
+import { SearchController } from "./SearchController"
+import { IThemedAttributes, ThemedStyles } from "epic-styles"
 import { SearchItem } from "epic-models"
-import { isString, getValue } from "typeguard"
+import { getValue, isString } from "typeguard"
 import { shallowEquals } from "epic-global"
-import { PureRender } from "epic-ui-components/common"
-import { connect } from "react-redux"
-import {createStructuredSelector} from 'reselect'
-import { makeViewStateSelector } from "epic-typedux/selectors"
 import * as ReactDOM from "react-dom"
 import * as React from "react"
+import { FlexColumn, FlexScale, PositionRelative } from "epic-styles/styles"
 
 
 // Constants
@@ -27,6 +22,12 @@ const
 //DEBUG
 //log.setOverrideLevel(LogLevel.DEBUG)
 
+function baseStyles(topStyles, theme, palette) {
+	return [FlexScale, PositionRelative,FlexColumn,{
+		overflowY: 'auto',
+		overflowX: 'hidden'
+	}]
+}
 
 /**
  * ISearchResultsProps
@@ -44,6 +45,8 @@ export interface ISearchResultsProps extends IThemedAttributes {
 	onItemSelected?:(item:SearchItem) => void
 	onItemHover?:(item:SearchItem) => void
 	
+	inline?:boolean
+	
 	
 }
 
@@ -59,7 +62,7 @@ export interface ISearchResultsState {
  * @constructor
  **/
 
-
+@ThemedStyles(baseStyles)
 export class SearchResults extends React.Component<ISearchResultsProps,ISearchResultsState> {
 	
 	
@@ -122,7 +125,10 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		
 	}
 	
-	updateSize = () => {
+	private updateSize = (inline = this.props.inline) => {
+		if (inline)
+			return
+		
 		const
 			elem = ReactDOM.findDOMNode(this),
 			containerStyle = this.getContainerStyle()
@@ -137,12 +143,6 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 		$(elem).parent().css(containerStyle)
 	}
 	
-	// onSearchStateChanged = () => {
-	// 	this.setState({
-	// 		searchState: this.controller.getState()
-	// 	})
-	// }
-	//
 	/**
 	 * New props received
 	 *
@@ -152,29 +152,34 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	componentWillReceiveProps(nextProps:ISearchResultsProps, nextContext:any):void {
 		log.debug(`new props received`, nextProps)
 		if (!shallowEquals(this.props,nextProps))
-			this.updateSize()
+			this.updateSize(nextProps.inline)
 	}
 	
+	/**
+	 * Should update
+	 *
+	 * @param nextProps
+	 * @param nextState
+	 * @returns {boolean}
+	 */
 	shouldComponentUpdate(nextProps,nextState) {
 		return !shallowEquals(this.state,nextState,'searchState','open','anchor')
 	}
 	
 	
-	
+	/**
+	 * On update, update the size
+	 *
+	 * @type {(inline?:any)=>any}
+	 */
 	componentDidUpdate = this.updateSize
 	
+	/**
+	 * On mounted, call the update to resize
+	 *
+	 * @type {any}
+	 */
 	componentDidMount = this.componentDidUpdate as any
-	
-	
-	
-	componentWillMount() {
-		//this.onSearchStateChanged()
-		//this.props.viewController.on(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
-	}
-	
-	componentWillUnmount() {
-		//this.props.viewController.removeListener(SearchEvent[ SearchEvent.StateChanged ], this.onSearchStateChanged)
-	}
 	
 	
 	/**
@@ -182,27 +187,28 @@ export class SearchResults extends React.Component<ISearchResultsProps,ISearchRe
 	 */
 	render() {
 		let
-			{ props, state, controller } = this,
+			{ props} = this,
 			{
 				onItemHover,
 				onItemSelected,
 				groupByProvider,
-				anchor
+				styles,
+				inline
 			} = props
 		
 		//log.debug(`Results Container render`, searchState, 'anchor', props.anchor)
 		
 		
-		return <div ref={this.setRootRef}>
+		return <div ref={this.setRootRef} style={inline && styles}>
 			<Provider store={getStore()}>
-			<SearchResultsList
-			
-			viewController={this.controller}
-			groupByProvider={groupByProvider}
-			onResultHover={onItemHover}
-			onResultSelected={onItemSelected}
-			className="searchResults"/>
-		</Provider>
+				<SearchResultsList
+					viewController={this.controller}
+					groupByProvider={groupByProvider}
+					onResultHover={onItemHover}
+					onResultSelected={onItemSelected}
+					inline={inline}
+					className="searchResults"/>
+			</Provider>
 		</div>
 	}
 	

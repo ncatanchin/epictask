@@ -1,4 +1,3 @@
-export * from "./MaterialUIComponents"
 
 export * from './SearchFieldItem.styles'
 export * from './Chip.styles'

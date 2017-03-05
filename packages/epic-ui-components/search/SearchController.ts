@@ -7,6 +7,7 @@ import { View, viewsSelector } from "epic-typedux"
 import { createSelector } from "reselect"
 import { StoreViewController } from "epic-ui-components/layout/view"
 import { Benchmark, ValueCache, nilFilterList } from "epic-util"
+import * as ReactDOM from "react-dom"
 
 const
 	log = getLogger(__filename),
@@ -114,7 +115,7 @@ export class SearchController extends StoreViewController<SearchState> {
 		try {
 			(ReactDOM.findDOMNode(item) as any).scrollIntoViewIfNeeded()
 		} catch (err) {
-			log.error(`Failed to scroll into view`,err)
+			//log.error(`Failed to scroll into view`,err)
 		}
 	},150)
 	
@@ -253,9 +254,10 @@ export class SearchController extends StoreViewController<SearchState> {
 	 */
 	setQuery = _.debounce((criteria,text:string) => {
 		log.tron(`Setting search text ${text} and criteria`,criteria)
+		
 		const
 			newCriteriaText = {criteria,text},
-			changed = !shallowEquals(newCriteriaText,text)
+			changed = !_.isEqual(newCriteriaText,this.criteriaAndText)//!shallowEquals(newCriteriaText,text)
 		
 		log.tron(`Criteria and text changed=${changed}`,newCriteriaText)
 		if (changed) {

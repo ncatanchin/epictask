@@ -1,6 +1,7 @@
 // Imports
 import { ThemedStyles, makeWidthConstraint, makeHeightConstraint, colorAlpha, makeIcon, Themed } from "epic-styles"
 import { WindowControls, FormButton, PureRender } from "../../common"
+import * as React from "react"
 
 
 // Constants
@@ -179,7 +180,7 @@ export class DialogRoot extends React.Component<IDialogRootProps,IDialogRootStat
 		return <div style={styles.root}>
 			{/*<MuiThemeProvider theme={theme}>*/}
 			{/*<WindowControls />*/}
-				<div style={[Fill,FlexColumn,FlexScale]}>
+				<div style={[Styles.Fill,FlexColumn,FlexScale]}>
 					<DialogHeader {...{
 						styles: styles.header,
 						titleMode,

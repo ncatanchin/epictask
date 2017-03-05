@@ -81,7 +81,7 @@ const
 }))
 @ThemedWithOptions({ enableRef: true })
 @PureRender
-class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
+class AppRoot extends React.Component<IAppRootProps, IAppRootState> {
 	
 	uriProvider = new WindowHashURIProvider()
 	
@@ -192,7 +192,7 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 				return log.warn(`Router and route can not be null`, router, route)
 			
 			const
-				{ uri:path } = route,
+				{ uri: path } = route,
 				{ uriProvider } = router,
 				{ uri, params } = !uriProvider ? ({} as any) : uriProvider.getLocation(),
 				{ repoCount, appStateType } = props,
@@ -205,9 +205,9 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 				wType = wConfig && wConfig.type
 			
 			
-			log.info('Window type', wType, 'name', WindowType[wType],`Checking root: ${uri} for IDE and no repos`, uri, path, isAuthenticated, isLogin, isRoot, repoCount)
+			log.info('Window type', wType, 'name', WindowType[ wType ], `Checking root: ${uri} for IDE and no repos`, uri, path, isAuthenticated, isLogin, isRoot, repoCount)
 			
-			if (!isAuthenticated) {
+			if (!isAuthenticated || repoCount === 0) {
 				if (!isLogin) {
 					log.debug(`Scheduling redirect to login`)
 					uriProvider.setLocation({
@@ -215,15 +215,16 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 						params
 					})
 				}
-			} else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isRoot && repoCount < 1)) {
-				log.debug(`Scheduling redirect to welcome/ide`)
-				
-				uriProvider.setLocation({
-					uri: repoCount < 1 ? Pages.Welcome.uri : wType === WindowType.Tray ? Pages.IssueTray.uri : Pages.IDE.uri,
-					params
-				})
-				
 			}
+			// else if (uri === '' || isLogin || (isWelcome && repoCount > 0) || (isRoot && repoCount < 1)) {
+			// 	log.debug(`Scheduling redirect to welcome/ide`)
+			//
+			// 	uriProvider.setLocation({
+			// 		uri: repoCount < 1 ? Pages.Welcome.uri : wType === WindowType.Tray ? Pages.IssueTray.uri : Pages.IDE.uri,
+			// 		params
+			// 	})
+			//
+			// }
 		})
 	}, 100)
 	
@@ -248,28 +249,25 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 			{ theme, palette } = this.props,
 			{ Routes } = this.state
 		
-		return <StyleRoot style={makeStyle(Fill,{color: palette.text.primary})}>
+		return <StyleRoot style={makeStyle(Fill, { color: palette.text.primary })}>
 			
 			<div
 				id="appRoot"
 				style={Fill}>
 				
-				<MuiThemeProvider muiTheme={theme}>
-					<Provider store={this.props.store}>
-						
-						<RouteView
-							ref={(routeViewRef) => this.setState({routeViewRef},() => this.checkRoute())}
-							routerId="app-root"
-							routes={Routes}
-							onRouteChange={this.onRouteChange}
-							uriProvider={this.uriProvider}/>
-					
-					</Provider>
-				</MuiThemeProvider>
-			
-			
 				
+				<Provider store={this.props.store}>
+					<RouteView
+						ref={(routeViewRef) => this.setState({ routeViewRef }, () => this.checkRoute())}
+						routerId="app-root"
+						routes={Routes}
+						onRouteChange={this.onRouteChange}
+						uriProvider={this.uriProvider}/>
+				</Provider>
+				
+				{/* ENVIRONMENT MARKER */}
 				<EnvMarker/>
+				
 			</div>
 		
 		</StyleRoot>
@@ -281,7 +279,12 @@ class AppRoot extends React.Component<IAppRootProps,IAppRootState> {
 export default AppRoot
 
 
-
+/**
+ * Env Marker Component
+ *
+ * @returns {any}
+ * @constructor
+ */
 function EnvMarker() {
 	if (DEBUG) {
 		return <div
@@ -289,7 +292,7 @@ function EnvMarker() {
 				position: 'fixed',
 				textTransform: 'uppercase',
 				right: 100,
-				top:0,
+				top: 0,
 				backgroundColor: 'red',
 				color: 'white',
 				fontSize: 10

@@ -1,4 +1,4 @@
-import * as Styles from 'material-ui/styles'
+//import * as Styles from 'material-ui/styles'
 
 import {
 	CSSHoverState,
@@ -39,8 +39,8 @@ const
 
 
 //CRITICAL - WE MUST DELETE ANY STYLES WITH SIMILAR NAMES FROM MATERIAL-UI STYLE
-const baseTheme = Styles.getMuiTheme(_.cloneDeep(Styles.darkBaseTheme))
-delete baseTheme['textField']
+//const baseTheme = Styles.getMuiTheme(_.cloneDeep(Styles.darkBaseTheme))
+//delete baseTheme['textField']
 
 function themeFontSize(multiplier:number) {
 	return fontSize * multiplier
@@ -175,7 +175,8 @@ export function DefaultTheme(palette) {
 		
 		
 		
-	return _.merge({},baseTheme, createStyles({
+	//return _.merge({},baseTheme, createStyles({
+	return _.merge({},createStyles({
 		ThemeName: 'DefaultTheme',
 		
 		/**

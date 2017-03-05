@@ -23,7 +23,7 @@ namespace Cleaner {
 				cmds = require('shelljs')
 			
 			for (let file of dataFiles) {
-				if ([ 'epic', 'store-state', 'indexeddb','local','cache','databases','settings.json', 'sync-status.json' ].some(name => file.toLowerCase().indexOf(name) > -1)) {
+				if ([ 'epic', 'store-state', `Local Storage`, 'indexeddb','local','cache','databases','settings.json', 'sync-status.json' ].some(name => file.toLowerCase().indexOf(name) > -1)) {
 					const
 						fullPath = `${dataPath}${path.sep}${file}`
 					

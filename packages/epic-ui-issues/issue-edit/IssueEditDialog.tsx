@@ -5,14 +5,13 @@
 import { createStructuredSelector } from "reselect"
 import { List } from "immutable"
 import { connect } from "react-redux"
-import { Issue, AvailableRepo, User, Label, Repo } from "epic-models"
+import { Issue, AvailableRepo, User, Label } from "epic-models"
 import {
 	RepoSelect,
 	LabelFieldEditor,
 	MilestoneSelect,
 	AssigneeSelect,
 	MarkdownEditor,
-	RepoLabel,
 	FileDrop,
 	PureRender,
 	TextField,
@@ -22,9 +21,7 @@ import {
 import { DialogRoot, createSaveCancelActions } from "epic-ui-components/layout/dialog"
 import { getValue, canAssignIssue, canCreateIssue, cloneObjectShallow, guard, PersistentValue } from "epic-global"
 import { repoIdPredicate, availableReposSelector, appUserSelector, getUIActions } from "epic-typedux"
-import { ThemedStyles, FlexColumn, IThemedAttributes } from "epic-styles"
-import { CommandType, ContainerNames, getCommandManager } from "epic-command-manager"
-import { CommandComponent, CommandRoot, CommandContainerBuilder } from "epic-command-manager-ui"
+import { ThemedStyles, IThemedAttributes } from "epic-styles"
 import { getIssueActions } from "epic-typedux/provider"
 import { IRouterLocation } from "epic-entry-ui/routes"
 import IssueEditState from "./IssueEditState"
