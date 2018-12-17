@@ -1,1 +1,0 @@
-window.indexedDB.deleteDatabase('epictask-db-dev')
