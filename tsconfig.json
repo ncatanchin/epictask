@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "newLine": "lf",
+    "noEmitOnError": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "jsx": "react",
+    "baseUrl": "./src",
+    "outDir": "./dist/out",
+    "paths": {
+      "*": [
+        "*"
+      ]
+    }
+  },
+  "exclude": [
+    "data",
+    "tmp",
+    "dist",
+    "node_modules"
+  ]
+}
