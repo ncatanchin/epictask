@@ -8,12 +8,7 @@ import {connect} from "common/util/ReduxConnect"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme):StyleDeclaration {
-	const
-		{palette} = theme,
-		{primary, secondary} = palette
-	
-	return {
+export const elevationStyles = {
 		/* Shadow 0dp */
 		elevation0: {boxShadow: "none"},
 	
@@ -42,13 +37,12 @@ function baseStyles(theme):StyleDeclaration {
 	/* Shadow 24dp */
 		elevation24: {boxShadow: "0 24px 38px 3px rgba(0,0,0,0.14), 0 9px 46px 8px rgba(0,0,0,0.12), 0 11px 15px -7px rgba(0,0,0,0.20)"}
 	}
-}
+
 
 interface P extends IThemedProperties {
 	elevation: 0 | 2 | 4 | 6 | 8 | 9 | 12 | 16 | 24
 }
 
-@withStatefulStyles(baseStyles)
 export default class Elevation extends React.Component<P> {
 	
 	constructor(props:P) {
@@ -56,8 +50,8 @@ export default class Elevation extends React.Component<P> {
 	}
 	
 	render() {
-		const {classes,className,elevation,...props} = this.props
-		return <div className={mergeClasses(classes[`elevation${elevation}`],className)}>
+		const {className,elevation,...props} = this.props
+		return <div style={elevationStyles[`elevation${elevation}`]} className={className}>
 			{props.children}
 		</div>
 	}

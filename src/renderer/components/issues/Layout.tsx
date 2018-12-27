@@ -1,8 +1,9 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
+	CursorPointer,
 	Fill, FillWidth, FlexAuto,
-	FlexColumnCenter, FlexScale,
+	FlexColumnCenter, FlexRowCenter, FlexScale,
 	IThemedProperties, PositionRelative,
 	StyleDeclaration,
 	withStatefulStyles
@@ -21,6 +22,7 @@ import RepoSelect from "renderer/components/elements/RepoSelect"
 import {selectedOrgSelector, selectedRepoSelector} from "renderer/store/selectors/DataSelectors"
 import {IOrg} from "renderer/models/Org"
 import OrgSelect from "renderer/components/elements/OrgSelect"
+import {darken} from "@material-ui/core/styles/colorManipulator"
 
 
 const log = getLogger(__filename)
@@ -29,11 +31,18 @@ const log = getLogger(__filename)
 function baseStyles(theme):any {
 	const
 		{palette} = theme,
-		{primary,secondary} = palette
+		{action,primary,secondary} = palette
 	
 	return {
 		root: [Fill,FlexColumnCenter],
 		header: [FlexAuto],
+		controls: [FlexRowCenter,FlexAuto,{
+			backgroundColor: darken(primary.dark,0.3),
+			
+			"&:hover": [CursorPointer,{
+				backgroundColor: action.main,
+			}]
+		}],
 		content: [FlexScale, PositionRelative,FillWidth]
 	}
 }
@@ -79,10 +88,10 @@ class Layout extends React.Component<P,S> {
 	
 	private updateControls = () =>
 		this.props.header.setControls(
-			<>
+			<div className={this.props.classes.controls}>
 				<RepoSelect onSelection={this.onRepoSelection} value={this.props.selectedRepo}/>
 				<OrgSelect onSelection={this.onOrgSelection} value={this.props.selectedOrg}/>
-			</>
+			</div>
 		)
 	
 	

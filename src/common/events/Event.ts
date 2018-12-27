@@ -12,7 +12,8 @@ export enum Events {
 	AuthStart,
 	AuthComplete,
 	AuthError,
-	ConfigChanged
+	ConfigChanged,
+	RepoIssuesSynced
 }
 
 export type EventNames = keyof typeof Events
@@ -23,7 +24,7 @@ class EventHubEmitter {
 	private emitter = new EventEmitter()
 	
 	private onForwardEvent = (event:Electron.Event, eventName:EventNames,args:any[]) => {
-		log.info("On forwarded event",event,args)
+		//log.info("On forwarded event",event,args)
 		this.emitter.emit(eventName,...args)
 	}
 	
@@ -41,6 +42,7 @@ class EventHubEmitter {
 	on(event:"AuthComplete", listener: (accessToken:string,scope:Array<AuthScope>) => void)
 	on(event:"AuthError", listener: (err:Error | null) => void)
 	on(event:"ConfigChanged", listener: (config:IConfig) => void)
+	on(event:"RepoIssuesSynced", listener: (repoId:number,timestamp:number) => void)
 	on(event:EventNames, listener:(...args:any[]) => void) {
 		this.emitter.on(event,listener)
 	}
@@ -53,6 +55,7 @@ class EventHubEmitter {
 	emit(event:"AuthComplete", accessToken:string, scope:Array<AuthScope>)
 	emit(event:"AuthError", err:Error | null)
 	emit(event:"ConfigChanged", config:IConfig)
+	emit(event:"RepoIssuesSynced", repoId:number,timestamp:number)
 	emit(event:EventNames, ...args:any[]) {
 		this.emitter.emit(event,...args)
 		

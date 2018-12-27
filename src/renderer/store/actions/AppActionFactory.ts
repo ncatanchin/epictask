@@ -20,18 +20,9 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		return AppState.Key
 	}
 	
-	async loadUser(config:IConfig = this.state.config) {
-		try {
-			const
-				gh = getAPI(config),
-				user = (await gh.users.getAuthenticated({})).data as IUser
-			
-			log.debug("Got user",user)
-			this.setUserAndConfig(user,config)
-		} catch (err) {
-			log.error("Unable to load user", err)
-		}
-	}
+	// async loadUser(config:IConfig = this.state.config) {
+	//
+	// }
 	
 	setSelectedRepo(selectedRepo:IRepo) {
 		this.setSelectedRepoId(selectedRepo ? selectedRepo.id : 0)

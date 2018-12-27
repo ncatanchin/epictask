@@ -1,5 +1,6 @@
 export type StringMap<V> = { [key:string]:V }
 
+export type StringOrNumber = string | number
 
 export type Pair<T1, T2> = [T1, T2]
 
@@ -26,3 +27,15 @@ export function makeDataSet<T>(
 	}
 }
 
+export type DataType = "issues" | "repos" | "orgs" | "users"
+
+export interface IDataSyncRecord {
+	id: number
+	type: DataType
+	timestamp: number
+}
+
+export interface IDataSyncStatus {
+	type: DataType
+	records: {[id:number]:IDataSyncRecord}
+}

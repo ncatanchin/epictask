@@ -12,6 +12,9 @@ import {IOrg} from "renderer/models/Org"
 const log = getLogger(__filename)
 
 class OrgObjectManager extends ObjectManager<IOrg,number> {
+	
+	private syncing = false
+	
 	constructor() {
 		super(db.orgs)
 		
@@ -41,17 +44,18 @@ class OrgObjectManager extends ObjectManager<IOrg,number> {
 	
 	
 	async sync(...keys:number[]):Promise<boolean> {
+		if (this.syncing) return true
+		this.syncing = true
 		try {
 			const
-				gh = getAPI()
-			
-			const
+				gh = getAPI(),
+				syncedAt = Date.now(),
 				opts = (gh.orgs.listForAuthenticatedUser as any).endpoint.merge(),
 				orgs = await (gh as any).paginate(opts) as IOrg[]
 			
 			log.info(`Loaded ${orgs.length} orgs`)
 			await this.table.bulkPut(orgs)
-			this.emit(ObjectEvent.Loaded,orgs)
+			this.emit(ObjectEvent.Synced,syncedAt,orgs)
 			return true
 		} catch (err) {
 			log.error("Unable to sync orgs", err)

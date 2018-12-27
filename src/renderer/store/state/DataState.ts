@@ -1,5 +1,5 @@
 import {State} from "typedux"
-import {IDataSet, makeDataSet} from "common/Types"
+import {DataType, IDataSet, IDataSyncStatus, makeDataSet} from "common/Types"
 import {IRepo} from "renderer/models/Repo"
 import {IIssue} from "renderer/models/Issue"
 import {IOrg} from "renderer/models/Org"
@@ -13,6 +13,8 @@ export class DataState implements State<string> {
 	}
 	
 	type = DataState.Key
+	
+	syncs:{[table:string]:IDataSyncStatus}
 	
 	repos: IDataSet<IRepo> = makeDataSet()
 	issues: IDataSet<IIssue> = makeDataSet()

@@ -12,7 +12,8 @@ export enum ObjectEvent {
   Created = 1,
   Updated = 2,
   Deleted = 3,
-  Loaded = 4
+  Loaded = 4,
+  Synced = 5
 }
 
 export interface IObjectChange<T,PK> {
@@ -70,7 +71,7 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
    *
    * @param table
    */
-  protected constructor(protected table:Dexie.Table<T, PK>) {
+  protected constructor(public table:Dexie.Table<T, PK>) {
     super(ObjectEvent)
     ObjectManager.init()
     

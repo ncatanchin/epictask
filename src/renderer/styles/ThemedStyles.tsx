@@ -12,6 +12,7 @@ import {
   StyleRulesCallback, StyleRules
 } from "@material-ui/core/styles/withStyles"
 import {isArray} from "typedux"
+import {createMuiTheme} from "@material-ui/core"
 
 const
   $ = require("jquery"),
@@ -209,46 +210,73 @@ export const TransitionDuration = {
 
 export interface IThemePalette {
 	primary: Color
-	accent: Color
+	secondary: Color
 	background: Color
 	text: Color
 	textNight: Color
 	action: Color
 	success: Color
-	warn: Color
+	error: Color
 }
 
 
-export interface ITheme {
-	palette:IThemePalette
-}
 
 /**
  * Global theme/palette used throughout Saffron
  */
-const theme = {
-	palette: {
-		primary: makeMaterialPalette("#555555"), // app icons and text
-		accent: makeMaterialPalette("#445fe9"),
-		background: makeMaterialPalette("#F0F0F0"),
-		text: makeMaterialPalette("#00000070"),
-		textNight: makeMaterialPalette("#FFFFFF"),
-		warn: makeMaterialPalette("#ff3633"),
-		success: makeMaterialPalette("#3cff32"),
-		action: makeMaterialPalette("#5054ff")
-	} as IThemePalette
+const darkPalette = {
+	type: "dark",
+	primary: makeMaterialPalette("#555555","A200","A400","A700"), // app icons and text
+	secondary: makeMaterialPalette("#445fe9","A200","A400","A700"),
+	background: makeMaterialPalette("#F0F0F0","A200","A400","A700"),
+	text: makeMaterialPalette("#00000070","A200","A400","A700"),
+	textNight: makeMaterialPalette("#FFFFFF","A200","A400","A700"),
+	error: makeMaterialPalette("#ff3633","A200","A400","A700"),
+	success: makeMaterialPalette("#3cff32","A200","A400","A700"),
+	action: makeMaterialPalette("#5054ff","A100","A400","A700")
+} as IThemePalette
+
+
+function makeDarkTheme():any {
+	const
+		{action,primary,secondary} = darkPalette
+		
+	
+	return createMuiTheme(mergeStyles({
+		palette: darkPalette,
+		typography: {
+			useNextVariants: true,
+			
+			fontFamily: [
+				'AvenirNext',
+				'-apple-system',
+				'BlinkMacSystemFont',
+				'"Segoe UI"',
+				'Roboto',
+				'"Helvetica Neue"',
+				'Arial',
+				'sans-serif',
+				'"Apple Color Emoji"',
+				'"Segoe UI Emoji"',
+				'"Segoe UI Symbol"',
+			].join(','),
+			fontWeightLight: 300,
+			fontWeightRegular: 400,
+			fontWeightMedium: 500
+		},
+		dimensions: {
+			resizer: remToPx(0.6)
+		},
+		
+		focus: [makeTransition('box-shadow'), {
+			boxShadow: `inset 0px 0px 5px 5px ${action.main}`
+		}],
+		
+		
+	})) as any
 }
 
-
-/**
- * Get the global theme
- *
- * @returns {ITheme}
- */
-export function getTheme():ITheme {
-	return theme
-}
-
+export const darkTheme = makeDarkTheme()
 
 /**
  * Create a transition property with default config

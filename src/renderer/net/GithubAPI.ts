@@ -1,5 +1,6 @@
 import * as Octokit from "@octokit/rest"
 import {IConfig} from "common/config/Config"
+import moment from "moment"
 
 let gh:Octokit | null = null
 
@@ -25,4 +26,9 @@ export function getAPI(config:IConfig = getStoreState().AppState.config):Octokit
 		throw Error("No access token found")
 	
 	return gh
+}
+
+
+export function formatTimestamp(timestamp:number):string {
+	return moment(timestamp).format("YYYY-MM-DDTHH:mm:ssZ")
 }

@@ -7,6 +7,8 @@ import * as Fs from 'fs'
 import getLogger from "common/log/Logger"
 import {getUserDataDir} from "common/Paths"
 import {IActionFactoryBaseConstructor} from "../store/actions/ActionFactoryBase"
+import {DataState} from "renderer/store/state/DataState"
+import {DataActionFactory} from "renderer/store/actions/DataActionFactory"
 
 const
 	log = getLogger(__filename),
@@ -82,6 +84,7 @@ function setupLeafPersistence<S extends State<string>>(factoryConstructor:IActio
 // SETUP PERSISTENCE FOR ALL NODES
 async function init():Promise<void> {
 	setupLeafPersistence(AppActionFactory, AppState)
+	setupLeafPersistence(DataActionFactory, DataState)
 }
 
 export default init()

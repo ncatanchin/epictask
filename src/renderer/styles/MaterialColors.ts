@@ -1,3 +1,5 @@
+import {isDefined} from "typeguard"
+
 export type Contrast = 'light' | 'dark' | 'brown'
 export interface Color {
     50: string
@@ -14,12 +16,17 @@ export interface Color {
     A200: string
     A400: string
     A700: string
+    light: string
+    main: string
+    dark: string
     contrastDefaultColor: Contrast
 }
 
 const tinycolor = require('tinycolor2')
 
-export function makeMaterialPalette(hex:string):Color {
+export type PaletteAttribute = keyof Color
+export type PaletteDefault = "light" | "main" | "dark"
+export function makeMaterialPalette(hex:string,light:PaletteAttribute | null = null,main:PaletteAttribute | null = null,dark:PaletteAttribute | null = null):Color {
     const colors = [
         {
             hex: tinycolor(hex).lighten(52).toHexString(),
@@ -66,8 +73,15 @@ export function makeMaterialPalette(hex:string):Color {
         }
     ]
 
-    return colors.reduce((palette,nextColor) => {
+    const palette = colors.reduce((palette,nextColor) => {
         palette[nextColor.name] = nextColor.hex
         return palette
     },{}) as Color
+    
+    Array<[PaletteDefault,PaletteAttribute]>(["main",main],["light",light],["dark",dark])
+      .filter(pair => isDefined(pair[1]))
+      .forEach(([name,attr]) => {
+          palette[name] = palette[attr]
+      })
+    return palette
 }

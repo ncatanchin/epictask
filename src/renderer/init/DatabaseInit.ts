@@ -10,5 +10,6 @@ export async function init():Promise<void> {
 	
 	;(await (await import("../db/OrgObjectManager")).default()).start()
 	;(await (await import("../db/RepoObjectManager")).default()).start()
+	;(await (await import("../db/IssueObjectManager")).default()).start()
 	
 }

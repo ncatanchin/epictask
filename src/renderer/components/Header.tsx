@@ -5,20 +5,17 @@ import {
 	FillWidth, FlexAuto, FlexRowCenter, FlexScale,
 	IThemedProperties, makeDimensionConstraints,
 	makeHeightConstraint, makeTransition, makeWidthConstraint,
-	mergeClasses, PositionAbsolute, PositionRelative, rem,
+	mergeClasses, OverflowHidden, PositionAbsolute, PositionRelative, rem,
 	StyleDeclaration,
 	withStatefulStyles
 } from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
-import {IDataSet} from "common/Types"
-import {IRepo} from "renderer/models/Repo"
-import RepoSelect from "renderer/components/elements/RepoSelect"
 import {AppActionFactory} from "renderer/store/actions/AppActionFactory"
 import {darken} from "@material-ui/core/styles/colorManipulator"
 import {WindowControls} from "renderer/components/elements/WindowControls"
 import {guard} from "typeguard"
-
+import CheckIcon from "@material-ui/icons/Check"
 
 const log = getLogger(__filename)
 
@@ -26,12 +23,12 @@ const log = getLogger(__filename)
 function baseStyles(theme):StyleDeclaration {
 	const
 		{palette} = theme,
-		{primary, secondary} = palette
-	
+		{action, primary, secondary} = palette,
+		bgColor = `content-box radial-gradient(${darken(primary.dark,0.6)}, ${darken(primary.dark, 0.7)})`
 	return {
-		root: [makeHeightConstraint(rem(2)),FillWidth,FlexRowCenter,PositionRelative,{
-			backgroundColor: darken(primary.dark,0.7),
-			"& > .left, & > .right": [FlexRowCenter, FlexScale, {
+		root: [makeHeightConstraint(rem(2)),FillWidth,FlexRowCenter,PositionRelative,OverflowHidden,{
+			background: bgColor,//darken(primary.dark,0.7),
+			"& > .left, & > .right": [FlexRowCenter, FlexScale, FillHeight, {
 			
 			}],
 			"& > .left": [{
@@ -53,8 +50,10 @@ function baseStyles(theme):StyleDeclaration {
 				"&, & *, &:hover, &:hover *": {
 					cursor: "move !important",
 				},
-				"& > img": [makeDimensionConstraints(rem(1.2)),{
-					pointerEvents: "none"
+				"& > .icon": [makeDimensionConstraints(rem(1.2)),{
+					pointerEvents: "none",
+					borderRadius: rem(0.6),
+					backgroundColor: action.main
 				}],
 				"& > .overlay": [PositionAbsolute,makeTransition("box-shadow"),makeDimensionConstraints(rem(1.4)),{
 					pointerEvents: "all",
@@ -118,7 +117,8 @@ export default class Header extends React.Component<P, S> {
 			</div>
 			
 			<div className="logo">
-				<img  src={require("renderer/assets/images/logo.svg")}/>
+				{/*<img  src={require("renderer/assets/images/logo.svg")}/>*/}
+				<CheckIcon className="icon"/>
 				<div className="overlay"/>
 			</div>
 			

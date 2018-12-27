@@ -61,7 +61,14 @@ const Shortcuts = [
 		handler() {
 			BrowserWindow.getAllWindows().forEach(it => it.webContents.toggleDevTools())
 		}
+	},
+	{
+		accelerator: 'F8',
+		handler() {
+			BrowserWindow.getFocusedWindow().webContents.debugger.sendCommand("debugger;")
+		}
 	}
+	
 ]
 
 

@@ -37,7 +37,8 @@ function baseStyles(theme):StyleDeclaration {
 	return {
 		root: [{
 			"& > .button": [makeDimensionConstraints(rem(2)), makePaddingRem(0), {
-				"& img": [makeDimensionConstraints(rem(2))]
+				"& img": [makeDimensionConstraints(rem(2))],
+				//backgroundColor: darken(primary.dark,0.2)
 			}]
 		}],
 		
