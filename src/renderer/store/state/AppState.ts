@@ -14,8 +14,11 @@ export class AppState implements State<string> {
 	type = AppState.Key
 	config: IConfig
 	user: IUser | null
+	
 	selectedRepoId:number | null
 	selectedOrgId:number | null
+	
+	enabledRepoIds = Array<number>()
 	
 	constructor(o:any = {}) {
 		Object.assign(this,o,{

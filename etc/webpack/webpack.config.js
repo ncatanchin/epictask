@@ -29,6 +29,7 @@ module.exports = (isMain) => {
 				main: Path.resolve(rootPath, 'src', 'main'),
 				renderer: Path.resolve(rootPath, 'src', 'renderer'),
 				test: Path.resolve(rootPath, 'src', 'test'),
+				'react-dom': '@hot-loader/react-dom'
 			},
 			extensions: ['.webpack.js', '.web.js', '.js', '.ts', '.tsx']
 		},
@@ -106,7 +107,12 @@ module.exports = (isMain) => {
 							]
 						}
 					}
-				}
+				},
+				{
+					test: /\.jsx?$/,
+					include: /node_modules/,
+					use: ['react-hot-loader/webpack'],
+				},
 			]
 		},
 	}
@@ -116,6 +122,7 @@ module.exports = (isMain) => {
 		 * Externals
 		 */
 		config.externals = makeExternals()
+		
 	}
 	return config
 }

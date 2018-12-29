@@ -1,13 +1,21 @@
-import {createMuiTheme} from '@material-ui/core/styles'
+//import {createMuiTheme} from '@material-ui/core/styles'
 import MuiThemeProvider from '@material-ui/core/styles/MuiThemeProvider'
 import * as React from "react"
-import Loadable from "react-loadable"
+//import Loadable from "react-loadable"
 
 //import {makeTransition, mergeStyles, rem, remToPx} from "renderer/styles/ThemedStyles"
-import {hot} from 'react-hot-loader'
-import App from "renderer/components/App"
-import {darkTheme} from "renderer/styles/ThemedStyles"
+import {hot} from 'react-hot-loader/root'
 
+const log = getLogger(__filename)
+
+
+
+import App from "renderer/components/App"
+import {darkTheme} from "renderer/styles/Themes"
+import {Provider} from "react-redux"
+import getLogger from "common/log/Logger"
+
+import ThemeProvider from '@material-ui/styles/ThemeProvider'
 
 // const App = Loadable({
 //   loader: () => import("renderer/components/App"),
@@ -19,20 +27,24 @@ import {darkTheme} from "renderer/styles/ThemedStyles"
  */
 
 class Root extends React.Component<{}, {}> {
-	
-	constructor(props, context) {
-		super(props, context)
-	}
-	
-	render() {
-		// ConnectedRouter will use the store from the Provider automatically
-		return <MuiThemeProvider theme={darkTheme}>
-			<App/>
-		</MuiThemeProvider>
-		
-		
-	}
+  
+  constructor(props, context) {
+    super(props, context)
+  }
+  
+  render() {
+    // ConnectedRouter will use the store from the Provider automatically
+    return <Provider store={getReduxStore()}>
+      <MuiThemeProvider theme={darkTheme}>
+        <ThemeProvider theme={darkTheme}>
+          <App/>
+        </ThemeProvider>
+      </MuiThemeProvider>
+    </Provider>
+    
+    
+  }
 }
 
 
-export default hot(module)(Root)
+export default hot(Root)

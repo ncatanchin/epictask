@@ -1,4 +1,6 @@
 import {isDefined} from "typeguard"
+import {getContrastRatio} from "@material-ui/core/styles/colorManipulator"
+// import {dark, light} from "@material-ui/core/styles/createPalette"
 
 export type Contrast = 'light' | 'dark' | 'brown'
 export interface Color {
@@ -20,19 +22,20 @@ export interface Color {
     main: string
     dark: string
     contrastDefaultColor: Contrast
+    contrastText:string
 }
 
 const tinycolor = require('tinycolor2')
 
 export type PaletteAttribute = keyof Color
 export type PaletteDefault = "light" | "main" | "dark"
-export function makeMaterialPalette(hex:string,light:PaletteAttribute | null = null,main:PaletteAttribute | null = null,dark:PaletteAttribute | null = null):Color {
+export function makeMaterialPalette(hex:string, light:PaletteAttribute | null = null,main:PaletteAttribute | null = null,dark:PaletteAttribute | null = null):Color {
     const colors = [
         {
-            hex: tinycolor(hex).lighten(52).toHexString(),
+            hex: tinycolor(hex).lighten(46).toHexString(),
             name: '50'
         }, {
-            hex: tinycolor(hex).lighten(37).toHexString(),
+            hex: tinycolor(hex).lighten(34).toHexString(),
             name: '100'
         }, {
             hex: tinycolor(hex).lighten(26).toHexString(),
@@ -83,5 +86,34 @@ export function makeMaterialPalette(hex:string,light:PaletteAttribute | null = n
       .forEach(([name,attr]) => {
           palette[name] = palette[attr]
       })
+    
+    palette.contrastText = getContrastText(hex)
     return palette
+}
+
+const contrastThreshold = 3
+
+export function getContrastText(background:string):string {
+    // Use the same logic as
+    // Bootstrap: https://github.com/twbs/bootstrap/blob/1d6e3710dd447de1a200f29e8fa521f8a0908f70/scss/_functions.scss#L59
+    // and material-components-web https://github.com/material-components/material-components-web/blob/ac46b8863c4dab9fc22c4c662dc6bd1b65dd652f/packages/mdc-theme/_functions.scss#L54
+    //const contrastText =
+    //debugger
+    return  getContrastRatio(background, "#FFFFFF") >= contrastThreshold
+        ? "#FFFFFF"
+        : "#222222"
+    
+    // if (process.env.NODE_ENV !== 'production') {
+    //     const contrast = getContrastRatio(background, contrastText);
+    //     warning(
+    //       contrast >= 3,
+    //       [
+    //           `Material-UI: the contrast ratio of ${contrast}:1 for ${contrastText} on ${background}`,
+    //           'falls below the WACG recommended absolute minimum contrast ratio of 3:1.',
+    //           'https://www.w3.org/TR/2008/REC-WCAG20-20081211/#visual-audio-contrast-contrast',
+    //       ].join('\n'),
+    //     );
+    // }
+    
+    //return contrastText;
 }

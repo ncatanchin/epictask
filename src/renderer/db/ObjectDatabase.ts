@@ -5,6 +5,7 @@ import {IUser, UserIndexes} from "../models/User"
 import {IRepo, RepoIndexes} from "../models/Repo"
 import getLogger from "../../common/log/Logger"
 import {IOrg, OrgIndexes} from "renderer/models/Org"
+import {ILabel, LabelIndexes} from "renderer/models/Label"
 
 const log = getLogger(__filename)
 
@@ -16,6 +17,10 @@ class ObjectDatabase extends Dexie {
 	
 	get users(): Dexie.Table<IUser, number> {
 		return this.table("users")
+	}
+	
+	get labels(): Dexie.Table<ILabel, number> {
+		return this.table("labels")
 	}
 	
 	get repos(): Dexie.Table<IRepo, number> {
@@ -31,6 +36,7 @@ class ObjectDatabase extends Dexie {
 		
 		this.version(1).stores({
 			issues: IssueIndexes.v1,
+			labels: LabelIndexes.v1,
 			users: UserIndexes.v1,
 			repos: RepoIndexes.v1,
 			orgs: OrgIndexes.v1

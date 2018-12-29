@@ -23,21 +23,21 @@ export class DataActionFactory extends ActionFactory<DataState,ActionMessage<Dat
 	@ActionReducer()
 	setRepos(repos:Array<IRepo>) {
 		return (state:DataState) => patchState(state,{
-			repos: makeDataSet(repos)
+			repos: makeDataSet([...repos])
 		})
 	}
 	
 	@ActionReducer()
 	setOrgs(orgs:Array<IOrg>) {
 		return (state:DataState) => patchState(state,{
-			orgs: makeDataSet(orgs)
+			orgs: makeDataSet([...orgs])
 		})
 	}
 	
 	@ActionReducer()
 	setIssues(issues:Array<IIssue>) {
 		return (state:DataState) => patchState(state,{
-			issues: makeDataSet(issues)
+			issues: makeDataSet([...issues])
 		})
 	}
 	

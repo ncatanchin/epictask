@@ -8,6 +8,9 @@ import {guard} from "typeguard"
 import {AppState} from "../store/state/AppState"
 import {IUser} from "../models/User"
 import * as _ from 'lodash'
+import * as BBPromise from 'bluebird'
+import {getRepo} from "renderer/net/RepoAPI"
+import {APIConcurrency} from "common/Constants"
 
 const log = getLogger(__filename)
 
@@ -51,7 +54,8 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
         gh = getAPI(),
         state = getStoreState(),
         {user} = state.AppState,
-        orgs = await db.orgs.toArray()//state.DataState.orgs.data
+        orgs = await db.orgs.toArray(),
+        existingRepos = await this.all()
       
       if (!user) {
         log.warn("Can not sync repos, not authenticated")
@@ -70,8 +74,15 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
         repos = _.flatten(await Promise.all([
           personalRepos,
           ...orgRepos
-        ])) as Array<IRepo>
+        ])) as Array<IRepo>,
+        remainingRepos = existingRepos.filter(existingRepo => !repos.find(repo => repo.id === existingRepo.id)),
+        otherRepos = await BBPromise.map(
+          remainingRepos,
+          (repo:IRepo) => getRepo(repo.owner.login,repo.name),
+          {concurrency: APIConcurrency}
+        )
       
+      repos.push(...otherRepos)
       
       log.info(`Loaded ${repos.length} repos`)
       await this.table.bulkPut(repos)

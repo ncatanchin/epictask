@@ -3,9 +3,9 @@ import {DataState} from "renderer/store/state/DataState"
 import {createSelector} from "reselect"
 import {IOrg} from "renderer/models/Org"
 import {IRepo} from "renderer/models/Repo"
-import {appSelector} from "renderer/store/selectors/AppSelector"
 import {IDataSet} from "common/Types"
 import getLogger from "common/log/Logger"
+import {appSelector} from "renderer/store/selectors/AppSelectors"
 
 const log = getLogger(__filename)
 
@@ -40,5 +40,14 @@ export const selectedOrgReposSelector = createSelector(
 	selectedOrgSelector,
 	(repos:IDataSet<IRepo>,selectedOrg:IOrg | null):Array<IRepo> | null => {
 		return !selectedOrg ? [] : repos.data.filter(repo => repo.owner.login === selectedOrg.login)
+	}
+)
+
+
+export const isSelectedRepoEnabledSelector = createSelector(
+	appSelector(state => state.enabledRepoIds),
+	selectedRepoSelector,
+	(enabledRepoIds:Array<number>, selectedRepo:IRepo) => {
+		return !!enabledRepoIds && !!selectedRepo && enabledRepoIds.includes(selectedRepo.id)
 	}
 )

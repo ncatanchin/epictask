@@ -7,12 +7,12 @@ import {isString} from "typeguard"
 import { Color, makeMaterialPalette } from "./MaterialColors"
 import {
   StyledComponentProps,
-  default as withStyles,
   WithStylesOptions,
   StyleRulesCallback, StyleRules
 } from "@material-ui/core/styles/withStyles"
 import {isArray} from "typedux"
 import {createMuiTheme} from "@material-ui/core"
+import withStyles from "renderer/styles/withStyles"
 
 const
   $ = require("jquery"),
@@ -117,6 +117,10 @@ export function withStatefulStyles<ClassKey extends string = string>(
   return withStyles(
   	isFunction(style) ? (...args) => mergeStyles((style as any)(...args) as any) :
 		  mergeStyles(style as any),options) as any
+	
+	//Component.prototype.handleChange = e => log.info("Handle change",e)
+	//log.info("Component",component)
+	
 }
 
 
@@ -220,63 +224,6 @@ export interface IThemePalette {
 }
 
 
-
-/**
- * Global theme/palette used throughout Saffron
- */
-const darkPalette = {
-	type: "dark",
-	primary: makeMaterialPalette("#555555","A200","A400","A700"), // app icons and text
-	secondary: makeMaterialPalette("#445fe9","A200","A400","A700"),
-	background: makeMaterialPalette("#F0F0F0","A200","A400","A700"),
-	text: makeMaterialPalette("#00000070","A200","A400","A700"),
-	textNight: makeMaterialPalette("#FFFFFF","A200","A400","A700"),
-	error: makeMaterialPalette("#ff3633","A200","A400","A700"),
-	success: makeMaterialPalette("#3cff32","A200","A400","A700"),
-	action: makeMaterialPalette("#5054ff","A100","A400","A700")
-} as IThemePalette
-
-
-function makeDarkTheme():any {
-	const
-		{action,primary,secondary} = darkPalette
-		
-	
-	return createMuiTheme(mergeStyles({
-		palette: darkPalette,
-		typography: {
-			useNextVariants: true,
-			
-			fontFamily: [
-				'AvenirNext',
-				'-apple-system',
-				'BlinkMacSystemFont',
-				'"Segoe UI"',
-				'Roboto',
-				'"Helvetica Neue"',
-				'Arial',
-				'sans-serif',
-				'"Apple Color Emoji"',
-				'"Segoe UI Emoji"',
-				'"Segoe UI Symbol"',
-			].join(','),
-			fontWeightLight: 300,
-			fontWeightRegular: 400,
-			fontWeightMedium: 500
-		},
-		dimensions: {
-			resizer: remToPx(0.6)
-		},
-		
-		focus: [makeTransition('box-shadow'), {
-			boxShadow: `inset 0px 0px 5px 5px ${action.main}`
-		}],
-		
-		
-	})) as any
-}
-
-export const darkTheme = makeDarkTheme()
 
 /**
  * Create a transition property with default config
@@ -414,3 +361,10 @@ export function remToPx(rem:number):number {
 	return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 }
 
+export function directChild(className:string,state:string = ""):string {
+	return child(className,state,true)
+}
+
+export function child(className:string,state:string = "",direct:boolean = false):string {
+	return `&${state.isEmpty() ? "" : `:${state}`} ${direct ? ">" : ""} .${className}`
+}

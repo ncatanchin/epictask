@@ -1,4 +1,4 @@
-import {Selector} from "reselect"
+import {createSelector, Selector} from "reselect"
 
 import {AppState} from "renderer/store/state/AppState"
 
@@ -7,4 +7,6 @@ export function appSelector<T>(
 ):Selector<IRootState,T> {
 	return ((state:IRootState,props:any) => fn(state.AppState,props) as T) as any
 }
+
+export const userSelector = appSelector(state => state.user)
 

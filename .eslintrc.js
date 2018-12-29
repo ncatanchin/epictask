@@ -85,8 +85,8 @@ module.exports = {
         'typescript/no-array-constructor': 'error', // — Disallow generic Array constructors
         'typescript/no-explicit-any': 'off', // — Disallow usage of the any type (no-any from TSLint)
         'typescript/no-inferrable-types': 'off', // — Disallows explicit type declarations for variables or parameters initialized to a number, string, or boolean. (no-inferrable-types from TSLint)
-        'typescript/no-namespace': 'error', // — Disallow the use of custom TypeScript modules and namespaces
-        'typescript/no-triple-slash-reference': 'error', // — Disallow /// <reference path="" /> comments (no-reference from TSLint)
+        'typescript/no-namespace': 'off', // — Disallow the use of custom TypeScript modules and namespaces
+        'typescript/no-triple-slash-reference': 'off', // — Disallow /// <reference path="" /> comments (no-reference from TSLint)
         'typescript/no-unused-vars': 'error', // — Prevent TypeScript-specific constructs from being erroneously flagged as unused
         'typescript/no-var-requires': 'off', // — Disallows the use of require statements except in import statements (no-var-requires from TSLint)
         'typescript/type-annotation-spacing': ['off', {}] // — Require consistent spacing around type annotations

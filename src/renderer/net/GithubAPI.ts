@@ -18,6 +18,8 @@ function setup(accessToken:string | null):void {
 		type: 'oauth',
 		token: accessToken
 	})
+	
+	Object.assign(global,{gh})
 }
 
 export function getAPI(config:IConfig = getStoreState().AppState.config):Octokit {

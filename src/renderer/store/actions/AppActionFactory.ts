@@ -7,7 +7,7 @@ import {getAPI} from "renderer/net/GithubAPI"
 import {IUser} from "renderer/models/User"
 import {IRepo} from "renderer/models/Repo"
 import {IOrg} from "renderer/models/Org"
-
+import * as _ from 'lodash'
 const log = getLogger(__filename)
 
 export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppState>> implements IActionFactoryBase<AppState> {
@@ -46,6 +46,13 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 		})
 	}
 	
+	
+	@ActionReducer()
+	enableRepo(repo:IRepo) {
+		return (state:AppState) => patchState(state, {
+			enabledRepoIds: _.uniq([...state.enabledRepoIds,repo.id])
+		})
+	}
 	@ActionReducer()
 	setConfig(config:IConfig) {
 		return (state:AppState) => patchState(state,{config})

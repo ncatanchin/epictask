@@ -6,7 +6,8 @@ import getLogger from "../common/log/Logger"
 import {createMainWindow} from "./MainWindow"
 import EventHub from "../common/events/Event"
 import {isDarwin} from "common/Process"
-
+import Sugar from "sugar"
+Sugar.extend()
 
 const log = getLogger(__filename)
 
@@ -55,6 +56,10 @@ app.on('ready', async () => {
 	app.on("browser-window-blur", unregisterShortcuts)
 })
 
+async function getZoomFactor():Promise<number> {
+	return await (new Promise<number>(resolve => BrowserWindow.getFocusedWindow().webContents.getZoomFactor(resolve)))
+}
+
 const Shortcuts = [
 	{
 		accelerator: 'CommandOrControl+Option+I',
@@ -66,6 +71,30 @@ const Shortcuts = [
 		accelerator: 'F8',
 		handler() {
 			BrowserWindow.getFocusedWindow().webContents.debugger.sendCommand("debugger;")
+		}
+	},
+	{
+		accelerator: 'CommandOrControl+r',
+		handler() {
+			BrowserWindow.getFocusedWindow().webContents.reloadIgnoringCache()
+		}
+	},
+	{
+		accelerator: 'CommandOrControl+Shift+Plus',
+		handler: async ():Promise<void> => {
+			let zoom = await getZoomFactor()
+			zoom = Math.min(zoom + 0.2, 2.0)
+			log.info(`Setting zoom: ${zoom}`)
+			BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
+		}
+	},
+	{
+		accelerator: 'CommandOrControl+Shift+-',
+		handler: async ():Promise<void> => {
+			let zoom = await getZoomFactor()
+			zoom = Math.max(zoom - 0.2, 0.6)
+			log.info(`Setting zoom: ${zoom}`)
+			BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
 		}
 	}
 	

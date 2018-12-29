@@ -2,9 +2,10 @@ import * as React from "react"
 
 
 import {
+  FillWidth,
   FillWindow,
-  FlexColumn,
-  IThemedProperties,
+  FlexColumn, FlexScale,
+  IThemedProperties, PositionRelative,
   StyleDeclaration,
   withStatefulStyles
 } from "renderer/styles/ThemedStyles"
@@ -18,6 +19,7 @@ import IssuesLayout from "./issues/Layout"
 function baseStyles():StyleDeclaration {
   return {
     app: [FillWindow, FlexColumn, {
+      "& .content": [FlexScale,FillWidth,PositionRelative]
     }],
     "@global": {
       ".auth0-lock-container": [{
@@ -59,14 +61,14 @@ export class App extends React.Component<IThemedProperties,S> {
     const
       {classes} = this.props,
       {headerRef} = this.state
-    return <>
+    return <div className={classes.app}>
       <Header headerRef={this.setHeaderRef} className={classes.header}/>
       {headerRef &&
       <ConnectedRouter store={getReduxStore()} history={getRouterHistory()}>
         <HeaderContext.Provider value={headerRef}>
       
       
-          <div id="content" className={classes.app}>
+          <div id="content" className="content">
             <Route path="/issues" component={() => <IssuesLayout header={headerRef}/>}/>
             <Redirect to="/issues" path="/" exact/>
           </div>
@@ -74,7 +76,7 @@ export class App extends React.Component<IThemedProperties,S> {
         </HeaderContext.Provider>
       </ConnectedRouter>
       }
-    </>
+    </div>
   }
 }
 

@@ -20,14 +20,25 @@ import CheckIcon from "@material-ui/icons/Check"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme):StyleDeclaration {
+declare global {
+	interface IHeaderStyles {
+		colors: {
+			bg: string
+			logoBg: string
+			logoBoxShadow: string
+		}
+	}
+}
+
+function baseStyles(theme:Theme):StyleDeclaration {
 	const
-		{palette} = theme,
-		{action, primary, secondary} = palette,
-		bgColor = `content-box radial-gradient(${darken(primary.dark,0.6)}, ${darken(primary.dark, 0.7)})`
+		{palette,components:{Header}} = theme,
+		{action, primary, secondary} = palette
+		
 	return {
 		root: [makeHeightConstraint(rem(2)),FillWidth,FlexRowCenter,PositionRelative,OverflowHidden,{
-			background: bgColor,//darken(primary.dark,0.7),
+			background: Header.colors.bg,
+			boxShadow: Header.colors.boxShadow,
 			"& > .left, & > .right": [FlexRowCenter, FlexScale, FillHeight, {
 			
 			}],
@@ -53,7 +64,7 @@ function baseStyles(theme):StyleDeclaration {
 				"& > .icon": [makeDimensionConstraints(rem(1.2)),{
 					pointerEvents: "none",
 					borderRadius: rem(0.6),
-					backgroundColor: action.main
+					backgroundColor: Header.colors.logoBg
 				}],
 				"& > .overlay": [PositionAbsolute,makeTransition("box-shadow"),makeDimensionConstraints(rem(1.4)),{
 					pointerEvents: "all",
@@ -63,7 +74,7 @@ function baseStyles(theme):StyleDeclaration {
 					bottom:0,
 					zIndex: 100,
 					borderRadius: rem(0.6),
-					boxShadow: "inset 0 0 0.4rem rgba(10,10,10,0.5)"
+					boxShadow: Header.colors.logoBoxShadow
 				}]
 			}]
 		}],
@@ -77,7 +88,8 @@ interface P extends IThemedProperties {
 }
 
 interface S {
-	controls: React.ReactFragment | React.Component<any> | JSX.Element | null
+	rightControls: React.ReactFragment | React.Component<any> | JSX.Element | null
+	leftControls: React.ReactFragment | React.Component<any> | JSX.Element | null
 }
 
 @withStatefulStyles(baseStyles)
@@ -92,12 +104,17 @@ export default class Header extends React.Component<P, S> {
 		super(props)
 		
 		this.state = {
-			controls: null
+			rightControls: null,
+			leftControls: null
 		}
 	}
 	
-	setControls(controls: React.ReactFragment | React.Component<any> | JSX.Element | null) {
-		this.setState({controls})
+	setRightControls(rightControls: React.ReactFragment | React.Component<any> | JSX.Element | null) {
+		this.setState({rightControls})
+	}
+	
+	setLeftControls(leftControls: React.ReactFragment | React.Component<any> | JSX.Element | null) {
+		this.setState({leftControls})
 	}
 	
 	componentDidMount():void {
@@ -108,12 +125,13 @@ export default class Header extends React.Component<P, S> {
 	render() {
 		const
 			{classes,className} = this.props,
-			{controls} = this.state
+			{leftControls, rightControls} = this.state
 		
 		return <div className={mergeClasses(classes.root,className)}>
 			
 			<div className="left">
 				<WindowControls />
+				{leftControls}
 			</div>
 			
 			<div className="logo">
@@ -123,7 +141,7 @@ export default class Header extends React.Component<P, S> {
 			</div>
 			
 			<div className="right">
-				{controls}
+				{rightControls}
 			</div>
 		</div>
 	}

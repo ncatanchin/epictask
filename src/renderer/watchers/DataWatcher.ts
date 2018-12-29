@@ -45,26 +45,18 @@ async function getDataActions():Promise<DataActionFactory> {
 const setRepos = async (_event:ObjectEvent, syncedAt:number, repos:Array<IRepo> = []):Promise<void> => {
 	if (!getStoreState().AppState.user) return
 	const
-		dataActions = await getDataActions(),
-		orgId = getStoreState().AppState.selectedOrgId,
-		org = getStoreState().DataState.orgs.data.find(org => org.id === orgId)// selectedOrgSelector(,{})
+		dataActions = await getDataActions()
 	
-	log.info("Loading repos for",org)
 	if (syncedAt > 0 && repos.length) {
 		dataActions.setDataSynced("repos", repos.map(repo => repo.id), syncedAt)
 	}
 	
-	repos = Array<IRepo>()
-	if (!org) {
-		log.warn("No current org")
-	} else {
-		repos = await (await RepoObjectManager())
-			.table
-			.orderBy("url")
-			.filter(repo => repo.owner.login === org.login)
-			.toArray()
-	}
-	dataActions.setRepos(repos)
+	repos = await (await RepoObjectManager())
+		.table
+		.orderBy("url")
+		.toArray()
+
+	dataActions.setRepos(_.sortBy(repos,'full_name'))
 	
 	const
 		repoId = getStoreState().AppState.selectedRepoId,
@@ -83,18 +75,18 @@ const setIssues = async (_event:ObjectEvent | null = null, syncedAt:number = 0, 
 		dataActions = await getDataActions(),
 		repo = selectedRepoSelector(getStoreState(),{})
 	
-	if (syncedAt > 0 && issues.length) {
-		const
-			repoUrls = _.uniq(issues.map(issue => issue.repository_url)),
-			repoIds = (await Promise.all(repoUrls.map(async (url) => {
-				const
-					manager = await RepoObjectManager(),
-					repos = await manager.table.where("url").equals(url).toArray()
-				return getValue(() => repos[0].id,null)
-			}))).filter(id => isDefined(id))
-			
-		dataActions.setDataSynced("issues", repoIds, syncedAt)
-	}
+	// if (syncedAt > 0 && issues.length) {
+	// 	const
+	// 		repoUrls = _.uniq(issues.map(issue => issue.repository_url)),
+	// 		repoIds = (await Promise.all(repoUrls.map(async (url) => {
+	// 			const
+	// 				manager = await RepoObjectManager(),
+	// 				repos = await manager.table.where("url").equals(url).toArray()
+	// 			return getValue(() => repos[0].id,null)
+	// 		}))).filter(id => isDefined(id))
+	//
+	// 	dataActions.setDataSynced("issues", repoIds, syncedAt)
+	// }
 	
 	issues = Array<IIssue>()
 	if (!repo) {
@@ -165,7 +157,7 @@ async function init():Promise<void> {
 	Object
 		.values(ObjectEvent)
 		.filter(type => isNumber(type))
-		.forEach( type =>
+		.forEach( (type:ObjectEvent) =>
 		repoObjectManager.on(type, async () => {
 			try {
 				await setRepos(null, -1)
@@ -184,23 +176,32 @@ async function init():Promise<void> {
 	Object
 		.values(ObjectEvent)
 		.filter(type => isNumber(type))
-		.forEach(type => orgObjectManager.on(type, setOrgs))
+		.forEach((type:ObjectEvent) => orgObjectManager.on(type, setOrgs))
 	
 	Object
 		.values(ObjectEvent)
 		.filter(type => isNumber(type))
-		.forEach(type => issueObjectManager.on(type, setIssues))
+		.forEach((type:ObjectEvent) => issueObjectManager.on(type, setIssues))
 	
 	getStore().observe([AppState.Key,'selectedOrgId'],() => setRepos(null,-1))
 	getStore().observe([AppState.Key,'user'],async () => {
-		await orgObjectManager.sync()
-		//await repoObjectManager.sync()
+		await Promise.all([
+			orgObjectManager.sync(),
+			repoObjectManager.sync()
+		])
 	})
 	getStore().observe([DataState.Key,'orgs','data'], async () => {
 		await repoObjectManager.sync()
-		await issueObjectManager.sync()
 	})
-	getStore().observe([DataState.Key,'selectedRepoId'],() => setIssues(null,-1))
+	getStore().observe([AppState.Key,'selectedRepoId'],() =>
+		setIssues(null,-1)
+	)
+	getStore().observe([AppState.Key,'enabledRepoIds'], async () => {
+		await Promise.all([
+			issueObjectManager.sync(),
+			setIssues(null, -1)
+		])
+	})
 	
 	
 	
