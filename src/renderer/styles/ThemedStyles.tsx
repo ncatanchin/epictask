@@ -33,12 +33,11 @@ let viewportSize:any = null
 /**
  * Themed properties - merged with material-ui
  */
-export interface IThemedProperties extends React.HTMLAttributes<any>,StyledComponentProps<string> {
-  theme?:any
+export interface IThemedProperties<T = any,K extends string = string> extends React.HTMLAttributes<T>,StyledComponentProps<K> {
+  theme?:Theme
   viewportMode?:ViewportMode
   isMobile?:boolean
   isPortrait?:boolean
-  styles?:any
 }
 
 
@@ -51,14 +50,15 @@ export interface IThemedProperties extends React.HTMLAttributes<any>,StyledCompo
  */
 export function mergeStyles(...styles:any[]):StyleRules<string> {
   const finalStyles = styles.reduce((allStyles,style) => {
-    if (isFunction(style)) {
-      allStyles.push(mergeStyles(style()))
-    } else if (Array.isArray(style)) {
+    // if (isFunction(style)) {
+    //   allStyles.push(mergeStyles(style()))
+    // } else
+    if (Array.isArray(style)) {
       allStyles.push(mergeStyles(...style))
     } else if (isObject(style)) {
       allStyles.push(Object.entries(style).reduce((expandedStyle,[key,value]) => {
-        expandedStyle[key] = isArray(value) ? mergeStyles(...value) :
-          isObject(value) || isFunction(value) ? mergeStyles(value) :
+        expandedStyle[key] = isFunction(value) ? value : isArray(value) ? mergeStyles(...value) :
+          isObject(value) ? mergeStyles(value) :
             value
         return expandedStyle
       },{}))
@@ -74,12 +74,16 @@ export function mergeStyles(...styles:any[]):StyleRules<string> {
 export function mergeClasses(...classes:Array<String|null|false>):string {
 	return classes.filter(clazz => isString(clazz)).join(' ')
 }
+export type AnyCSSProperties = CSSProperties & any
 
+export type Style<P extends AnyCSSProperties = any> = Partial<P | {[className: string]: CSSProperties | {[subClass:string]:P | Array<P | {[subClass:string]:P | Array<P>}>}}>
 
-export type StyleDeclaration = {
-    [className: string]: CSSProperties | StyleDeclaration | Array<StyleDeclaration>
-} | Array<{[className: string]: CSSProperties | StyleDeclaration | Array<StyleDeclaration>}>
-& StyleRules<string>
+export type Styles = Array<Partial<Style>>
+
+export type NestedStyles = CSSProperties | {[key:string]: Style | Array<Styles | CSSProperties>} | Style | Styles
+
+export type StyleDeclaration = NestedStyles | CSSProperties
+
 
 
 
@@ -95,7 +99,7 @@ function updateSize():void {
           width >= 667 ? ViewportMode.Landscape :
             ViewportMode.Portrait
   
-  log.info(`Window resized: ${width}/${newSize}`)
+  log.debug(`Window resized: ${width}/${newSize}`)
   viewportSize = newSize
 }
 
@@ -111,12 +115,11 @@ $(window).resize(updateSize)
  * @returns {(C) => C}
  */
 export function withStatefulStyles<ClassKey extends string = string>(
-  style: StyleRulesCallback<ClassKey> | StyleRules<ClassKey> | Function,
+  style: StyleRulesCallback<ClassKey> | Function,
   options?: WithStylesOptions<ClassKey>
 ):(any) => any {
   return withStyles(
-  	isFunction(style) ? (...args) => mergeStyles((style as any)(...args) as any) :
-		  mergeStyles(style as any),options) as any
+  	(...args) => mergeStyles((style as any)(...args)),options) as any
 	
 	//Component.prototype.handleChange = e => log.info("Handle change",e)
 	//log.info("Component",component)
@@ -124,7 +127,7 @@ export function withStatefulStyles<ClassKey extends string = string>(
 }
 
 
-export function makeDimensionConstraint(dim:'width'|'height',val:string|number):StyleDeclaration {
+export function makeDimensionConstraint(dim:'width'|'height',val:string|number):React.CSSProperties {
 	const dimUpper = dim.charAt(0).toUpperCase() + dim.substring(1)
 	return {
 		[dim]: val,
@@ -135,15 +138,15 @@ export function makeDimensionConstraint(dim:'width'|'height',val:string|number):
 	
 }
 
-export function makeHeightConstraint(val:string|number):StyleDeclaration {
+export function makeHeightConstraint(val:string|number):React.CSSProperties {
 	return makeDimensionConstraint('height',val)
 }
 
-export function makeWidthConstraint(val:string|number):StyleDeclaration {
+export function makeWidthConstraint(val:string|number):React.CSSProperties {
 	return makeDimensionConstraint('width',val)
 }
 
-export function makeDimensionConstraints(width:string|number,height:string|number = width):StyleDeclaration {
+export function makeDimensionConstraints(width:string|number,height:string|number = width):React.CSSProperties {
 	return {...makeHeightConstraint(height),...makeWidthConstraint(width)}
 }
 
@@ -160,12 +163,6 @@ export const FillWindow = Object.assign(
 	makeWidthConstraint('100vw'),
 	makeHeightConstraint('100vh')
 )
-
-
-
-export const CSSHoverState = ':hover'
-export const CSSActiveState = ':active'
-export const CSSFocusState = ':focus'
 
 export const Transparent = 'transparent'
 
@@ -235,7 +232,7 @@ export interface IThemePalette {
  * @param easing
  * @returns {{transition: any}}
  */
-export function makeTransition(props:string[]|string|null = null,duration = TransitionDuration.Short,easing = 'ease-out'):StyleDeclaration {
+export function makeTransition(props:string[]|string|null = null,duration = TransitionDuration.Short,easing = 'ease-out'):React.CSSProperties {
 	if (isString(props))
 		props = [props] as any
 	
@@ -249,11 +246,11 @@ export function makeTransition(props:string[]|string|null = null,duration = Tran
 
 
 
-export function makeFlexAlign(alignItems,justifyContent = alignItems):StyleDeclaration {
+export function makeFlexAlign(alignItems,justifyContent = alignItems):React.CSSProperties {
 	return {justifyContent,alignItems}
 }
 
-export function makePaddingRem(top = 0, right = top, bottom = top, left = right):StyleDeclaration {
+export function makePaddingRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
 	return {
 		paddingTop: rem(top),
 		paddingRight: rem(right),
@@ -262,7 +259,7 @@ export function makePaddingRem(top = 0, right = top, bottom = top, left = right)
 	} as any
 }
 
-export function makeBorderRem(top = 0, right = top, bottom = top, left = right):StyleDeclaration {
+export function makeBorderRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
 	return {
 		borderTop: rem(top),
 		borderRight: rem(right),
@@ -345,7 +342,7 @@ export const FlexColumnReverse = makeStyle(Flex,{
 
 export const FlexColumnCenter = makeStyle(FlexColumn,FlexAlignCenter)
 
-export function makeStyle(...styles):StyleDeclaration {
+export function makeStyle(...styles):NestedStyles {
 	
 	return Object.assign({},...styles.reduce((allStyles,style) => {
 		if (Array.isArray(style)) {

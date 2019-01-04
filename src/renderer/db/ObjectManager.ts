@@ -2,9 +2,11 @@ import Dexie from "dexie"
 import {getValue, isDefined} from "typeguard"
 import db from "./ObjectDatabase"
 import getLogger from "../../common/log/Logger"
-import {AppState} from "../store/state/AppState"
+import {AppState} from "common/store/state/AppState"
 import * as _ from 'lodash'
 import {EnumEventEmitter} from "type-enum-events"
+import Deferred from "common/Deferred"
+import {nextTick} from "typedux"
 
 const log = getLogger(__filename)
 
@@ -75,19 +77,19 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
     super(ObjectEvent)
     ObjectManager.init()
     
-    ;(db as any).on('changes', (changes:Array<IObjectChange<T,PK>>) => {
-      const
-        tableChanges = changes.filter(change => change.table === this.table.name),
-        changesByType = Object.entries(_.groupBy(tableChanges,'type'))
-        .map(([type,changeGroup]) => changeGroup.reduce((changeGroupMap,change) => {
-          changeGroupMap.data.push(change.obj || change.oldObj)
-          return changeGroupMap
-        },{type,data:Array<T>()} as any)) as Array<{type:ObjectEvent,data:Array<T|Array<T>>}>
-      
-      changesByType.forEach(({type,data}) => {
-        this.emit(type,_.flatten(data))
-      })
-    })
+    // ;(db as any).on('changes', (changes:Array<IObjectChange<T,PK>>) => {
+    //   const
+    //     tableChanges = changes.filter(change => change.table === this.table.name),
+    //     changesByType = Object.entries(_.groupBy(tableChanges,'type'))
+    //     .map(([type,changeGroup]) => changeGroup.reduce((changeGroupMap,change) => {
+    //       changeGroupMap.data.push(change.obj || change.oldObj)
+    //       return changeGroupMap
+    //     },{type,data:Array<T>()} as any)) as Array<{type:ObjectEvent,data:Array<T|Array<T>>}>
+    //
+    //   changesByType.forEach(({type,data}) => {
+    //     this.emit(type,_.flatten(data))
+    //   })
+    // })
   }
   
   /**
@@ -170,12 +172,42 @@ export default abstract class ObjectManager<T, PK> extends EnumEventEmitter<Obje
     return await this.table.toArray()
   }
   
+  private syncDeferred:Deferred<boolean> | null = null
+  private syncsPending = Array<[PK[],Deferred<boolean>]>()
+  
+  protected abstract doSync(...keys:PK[]):Promise<boolean>
   /**
    * Sync with remote objects
    */
   async sync(...keys:PK[]):Promise<boolean> {
-    log.info(`sync() is not implemented for ${this.className}`)
-    return true
+    try {
+      if (this.syncDeferred) {
+        const deferred = new Deferred<boolean>()
+        this.syncsPending.push([keys, deferred])
+        return deferred.promise
+      } else {
+        this.syncDeferred = new Deferred<boolean>(this.doSync(...keys))
+    
+        return await this.syncDeferred.promise.then(async (result) => {
+          const syncsPending = this.syncsPending
+          this.syncsPending = []
+          this.syncDeferred = null
+      
+          if (syncsPending.length) {
+            nextTick(() => {
+              this.sync(...keys)
+                .then(result => {
+                  syncsPending.forEach(([keys, deferred]) => deferred.resolve(result))
+                })
+                .catch(err => log.error("Unable to sync", keys, err))
+            })
+          }
+          return result
+        })
+      }
+    } finally {
+      await navigator.storage.persist()
+    }
   }
   
   

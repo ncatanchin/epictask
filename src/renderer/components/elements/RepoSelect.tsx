@@ -3,9 +3,9 @@ import getLogger from "common/log/Logger"
 import {IThemedProperties, StyleDeclaration, withStatefulStyles} from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
-import {IRepo} from "renderer/models/Repo"
+import {IRepo} from "common/models/Repo"
 import AutoCompleteSelect from "renderer/components/elements/AutoCompleteSelect"
-import {selectedOrgReposSelector} from "renderer/store/selectors/DataSelectors"
+import {selectedOrgReposSelector} from "common/store/selectors/DataSelectors"
 import * as _ from 'lodash'
 import {guard} from "typeguard"
 const log = getLogger(__filename)
@@ -34,7 +34,7 @@ interface S {
 
 @withStatefulStyles(baseStyles, {withTheme: true})
 @connect(createStructuredSelector({
-	repos: selectedOrgReposSelector
+	repos: (state:IRootState) => state.DataState.repos.data,
 }))
 export default class RepoSelect extends React.Component<P,S> {
 	

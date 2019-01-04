@@ -1,14 +1,23 @@
 import {lighten} from "@material-ui/core/styles/colorManipulator"
 import {
-  mergeStyles,
   BorderBoxSizing,
   makeTransition,
   OverflowHidden,
   PositionRelative,
-  Transparent,
-  StyleDeclaration
+  NestedStyles
 } from "renderer/styles/ThemedStyles"
 
+
+declare global {
+  interface ISplitPaneStyles {
+    colors: {
+      splitter: string
+      splitterHover: string
+      pane1Bg: string
+      pane2Bg: string
+    }
+  }
+}
 
 /**
  * Styles
@@ -16,23 +25,23 @@ import {
  * @param theme
  */
 
-export default function baseStyles(theme):StyleDeclaration {
+export default function baseStyles(theme:Theme):NestedStyles {
   
   const
-    {palette, dimensions} = theme,
+    {palette, dimensions, components:{SplitPane}} = theme,
     {resizer: resizerDim} = dimensions,
     resizerHalfDim = resizerDim / 2,
-    hoverColor = palette.action.main,
+    hoverColor = SplitPane.colors.splitterHover,
     hoverBorder = `${resizerHalfDim}px solid ${hoverColor}`
   
-  return mergeStyles({
+  return {
     root: [],
-    resizer: [BorderBoxSizing,makeTransition('all'), {
+    resizer: [BorderBoxSizing,makeTransition(['background-color','border-left','border-right']), {
       //background: palette.primary.dark,
       opacity: 1,
       zIndex: 1,
       backgroundClip: 'padding-box',
-      background: palette.primary.dark,
+      background: SplitPane.colors.splitter,
       
       
       '&:hover': [{
@@ -69,7 +78,11 @@ export default function baseStyles(theme):StyleDeclaration {
       }],
     }],
     pane: [],
-    pane1: [OverflowHidden,PositionRelative],
-    pane2: [OverflowHidden,PositionRelative]
-  })
+    pane1: [OverflowHidden,PositionRelative, {
+      background: SplitPane.colors.pane1Bg
+    }],
+    pane2: [OverflowHidden,PositionRelative, {
+      background: SplitPane.colors.pane2Bg
+    }]
+  }
 }

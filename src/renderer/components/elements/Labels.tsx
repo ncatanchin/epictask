@@ -1,17 +1,17 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
-  child,
-  directChild, FillWidth, FlexRow, FlexRowCenter,
-  IThemedProperties, makeHeightConstraint, makeMarginRem, makePaddingRem, makeWidthConstraint,
-  mergeClasses, rem,
-  StyleDeclaration,
+  FlexRow,
+  IThemedProperties,
+  mergeClasses,
   withStatefulStyles
 } from "renderer/styles/ThemedStyles"
-import {ILabel} from "renderer/models/Label"
+import {ILabel} from "common/models/Label"
 import Label from "renderer/components/elements/Label"
-import AddIcon from "@material-ui/icons/Add"
-
+import {getValue} from "typeguard"
+import {Tag as TagIcon} from "@githubprimer/octicons-react"
+import BaseChip from "renderer/components/elements/BaseChip"
+const Octicon = require("@githubprimer/octicons-react").default
 
 const log = getLogger(__filename)
 
@@ -35,17 +35,8 @@ function baseStyles(theme:Theme):any {
     
     }],
     chip: {},
-    add: [FlexRowCenter,makeMarginRem(0.3,0.2,0.3,0),makePaddingRem(0,1.2),makeHeightConstraint(rem(1.8)),makeWidthConstraint(rem(2.4)),{
-      borderRadius: rem(0.9),
-      margin: theme.spacing.unit,
-      fontWeight: 500,
-      background: Labels.colors.addBg,
-      "&, & svg": {
-        fontSize: rem(1.1),
-        color: Labels.colors.add,
-        fill: Labels.colors.add
-      }
-    }]
+    label: {},
+    add: {}
   }
 }
 
@@ -56,7 +47,7 @@ interface P extends IThemedProperties {
 }
 
 
-@withStatefulStyles(baseStyles)
+@withStatefulStyles(baseStyles,{withTheme: true})
 export default class Labels extends React.Component<P> {
   static defaultProps:Partial<P> = {
     wrap: false
@@ -66,8 +57,12 @@ export default class Labels extends React.Component<P> {
     super(props)
   }
   
+  private onAdd = () => {
+  
+  }
+  
   render() {
-    const {labels, wrap, onAdd, classes,className} = this.props
+    const {labels, wrap, theme,onAdd, classes,className} = this.props
     return <div className={mergeClasses(classes.root, wrap && "wrap",className)}>
       {labels.map((label,index) =>
         <Label
@@ -76,9 +71,18 @@ export default class Labels extends React.Component<P> {
           style={Object.assign({},!index && {marginLeft: 0})}
           label={label}/>)
         }
-      {onAdd && <div className={classes.add} style={Object.assign({},!labels.length && {marginLeft: 0})}>
-        <AddIcon/>
-      </div>}
+      {onAdd && <BaseChip
+        color={theme.components.Labels.colors.addBg}
+        label={"+"}
+        actionIcon={<div className={classes.add}>
+          <Octicon className="icon" icon={TagIcon} />
+        </div>}
+        onAction={this.onAdd}
+        classes={{
+          chip: classes.chip,
+          label: classes.label
+        }}
+      />}
     </div>
   }
 }

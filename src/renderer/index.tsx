@@ -1,3 +1,5 @@
+///<reference path="../../typings/custom.d.ts"/>
+
 import 'source-map-support/register'
 import "./ReactHotConfig"
 import Sugar from "sugar"
@@ -8,14 +10,23 @@ import {EventEmitter} from "events"
 import "./Env"
 import * as React from "react"
 import * as ReactDOM from "react-dom"
-import {loadAndInitStore} from "./store/AppStore"
+import {loadAndInitStore} from "common/store/AppStore"
+import * as jQuery from 'jquery'
+
+declare global {
+  const $:typeof jQuery
+}
 
 Sugar.extend()
 
 EventEmitter.defaultMaxListeners = Number.MAX_VALUE
 
+Object.assign(global, {
+  $: jQuery
+})
+
+
 const
-  $ = require("jquery"),
   appEl = $("#app")
 
 
@@ -47,9 +58,9 @@ async function renderRoot():Promise<void> {
     )
   }
   
-  loadAndInitStore()
-  await (await import("./watchers")).default
+  await loadAndInitStore()
   await (await import("./init")).default
+  await (await import("common/watchers")).default
   
   doRender()
 }

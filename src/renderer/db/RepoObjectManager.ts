@@ -1,22 +1,22 @@
 import ObjectManager, {ObjectEvent} from "./ObjectManager"
-import {IRepo} from "../models/Repo"
+import {IRepo} from "common/models/Repo"
 import db from "./ObjectDatabase"
 import getLogger from "../../common/log/Logger"
 import {getAPI} from "../net/GithubAPI"
 import {ReposListForUserParams} from "@octokit/rest"
 import {guard} from "typeguard"
-import {AppState} from "../store/state/AppState"
-import {IUser} from "../models/User"
+import {AppState} from "common/store/state/AppState"
+import {IUser} from "common/models/User"
 import * as _ from 'lodash'
 import * as BBPromise from 'bluebird'
 import {getRepo} from "renderer/net/RepoAPI"
 import {APIConcurrency} from "common/Constants"
+import {nextTick} from "typedux"
 
 const log = getLogger(__filename)
 
 class RepoObjectManager extends ObjectManager<IRepo, number> {
   
-  private syncing = false
   
   constructor() {
     super(db.repos)
@@ -46,9 +46,7 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
   }
   
   
-  async sync(...keys:number[]):Promise<boolean> {
-    if (this.syncing) return true
-    this.syncing = true
+  protected async doSync(...keys:number[]):Promise<boolean> {
     try {
       const
         gh = getAPI(),
@@ -91,8 +89,6 @@ class RepoObjectManager extends ObjectManager<IRepo, number> {
     } catch (err) {
       log.error("Unable to sync repos", err)
       return false
-    } finally {
-      this.syncing = false
     }
   }
 }

@@ -3,7 +3,6 @@ import {IThemedProperties, withStatefulStyles} from "renderer/styles/ThemedStyle
 import * as React from "react"
 import baseStyles from "./SplitPane.styles"
 import getLogger from "common/log/Logger"
-import {hot} from "react-hot-loader"
 
 const
   log = getLogger(__filename),
@@ -24,7 +23,6 @@ export interface IVerticalSplitPaneState {}
 /**
  * App Navigation
  */
-@hot(module)
 @withStatefulStyles(baseStyles)
 export class VerticalSplitPane extends React.Component<IVerticalSplitPaneProps, IVerticalSplitPaneState> {
   
@@ -33,16 +31,18 @@ export class VerticalSplitPane extends React.Component<IVerticalSplitPaneProps, 
   }
   
   render() {
-    const {classes, children,...other} = this.props
+    const {classes, children,onChange,...other} = this.props
     
     return <SplitPane
-      {...other}
+      
       className={classes.root}
       resizerClassName={classes.resizer}
       paneClassName={classes.pane}
       pane1ClassName={classes.pane1}
       pane2ClassName={classes.pane2}
       split="vertical"
+      onDragFinished={onChange}
+      {...other}
     >
       {children}
     </SplitPane>

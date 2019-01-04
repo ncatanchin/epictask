@@ -10,7 +10,7 @@ import {
 } from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
-import {IOrg} from "renderer/models/Org"
+import {IOrg} from "common/models/Org"
 import Img from 'react-image'
 import {guard} from "typeguard"
 import Button from "@material-ui/core/Button"

@@ -1,18 +1,19 @@
 import * as _ from "lodash"
 
 import getLogger from "common/log/Logger"
-import {getValue, isDefined} from "typeguard"
+import {getValue, isDefined, isFunction} from "typeguard"
+import {FunctionOrValue} from "common/Types"
 
 const log = getLogger(__filename)
 
-export function getHot<T>(mod, key, defaultValue:() => T = null):T {
+export function getHot<T>(mod, key, defaultValue:FunctionOrValue<T> = null):T {
   if (module.hot) {
     const existingVal = _.get(mod, `hot.data.${key}`) as any
     if (isDefined(existingVal))
       return existingVal as T
   }
   
-  return getValue(() => defaultValue())
+  return getValue(() => isFunction(defaultValue) ? defaultValue() : defaultValue,defaultValue as any)
 }
 
 export function setDataOnHotDispose(mod, dataFn:() => any):void {
@@ -42,4 +43,4 @@ export function acceptHot(mod, logger = null):void {
   }
 }
 
-acceptHot(module, console)
+//acceptHot(module, console)

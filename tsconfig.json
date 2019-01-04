@@ -24,6 +24,8 @@
     "data",
     "tmp",
     "dist",
-    "node_modules"
+    "node_modules",
+    "node_modules/sugar/sugar-extended.d.ts",
+    "node_modules/sugar/sugar.d.ts"
   ]
 }

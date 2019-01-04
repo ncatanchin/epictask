@@ -1,3 +1,4 @@
+///<reference path="../../typings/custom.d.ts"/>
 import {app, BrowserWindow, globalShortcut, session} from "electron"
 
 import createMenu from "./Menu"
@@ -6,7 +7,9 @@ import getLogger from "../common/log/Logger"
 import {createMainWindow} from "./MainWindow"
 import EventHub from "../common/events/Event"
 import {isDarwin} from "common/Process"
-import Sugar from "sugar"
+//import Sugar from "sugar"
+
+const Sugar = require("sugar")
 Sugar.extend()
 
 const log = getLogger(__filename)
@@ -45,9 +48,14 @@ app.on('activate', async () => {
 
 // Create main BrowserWindow when electron is ready
 app.on('ready', async () => {
-	require('electron-context-menu')()
-	Auth.register()
 	createMenu()
+	require('electron-context-menu')()
+	
+	// BOOTSTRAP
+	await (await import("./Bootstrap")).default
+	
+	Auth.register()
+	
 	await createMainWindow()
 	await checkAuthenticated()
 	

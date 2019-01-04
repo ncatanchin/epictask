@@ -10,20 +10,23 @@ import {
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
 import ContainerDimensions from 'react-container-dimensions'
-import {IIssue} from "renderer/models/Issue"
+import {IIssue} from "common/models/Issue"
 import {IDataSet} from "common/Types"
-import { List,ListRowRenderer } from 'react-virtualized'
+import { ListRowRenderer } from 'react-virtualized'
 import IssueListItem from "renderer/components/elements/IssueListItem"
+import List from "renderer/components/elements/List"
 const log = getLogger(__filename)
 
 
-function baseStyles(theme):any {
+function baseStyles(theme:Theme):StyleDeclaration {
   const
     {palette} = theme,
     {primary, secondary} = palette
   
   return {
-    root: [Fill,PositionRelative],
+    root: [Fill,PositionRelative,{
+    
+    }],
     issue: [FlexRowCenter, FillHeight,{
     
     }]
@@ -71,19 +74,16 @@ export default class IssueList extends React.Component<P, S> {
   }
   
   render() {
-    const {classes,issues} = this.props
-    return <div className={classes.root}>
-      <ContainerDimensions>
-        {({width,height}) => <List
-          height={height}
-          width={width}
-          rowCount={issues.total}
-          rowHeight={75}
-          rowRenderer={this.rowRenderer}
-        >
-        
-        </List>}
-      </ContainerDimensions>
-    </div>
+    const {classes,issues,...other} = this.props
+    return <List
+      id="issues-list"
+      // classes={{
+      //   root: classes.root
+      // }}
+      dataSet={issues}
+      rowRenderer={this.rowRenderer}
+      rowHeight={70}
+      {...other as any}
+    />
   }
 }

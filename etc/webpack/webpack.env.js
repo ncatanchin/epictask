@@ -16,6 +16,7 @@ const
 module.exports = {
   isDev,
   __DEV__: isDev,
+  DEBUG: isDev,
   VERSION: JSON.stringify(pkgJson.version),
   MAPPER_ENV: JSON.stringify(envName),
   'process.env.MAPPER_ENV': JSON.stringify(envName),

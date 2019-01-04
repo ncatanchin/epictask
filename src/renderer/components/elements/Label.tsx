@@ -1,34 +1,43 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
-  IThemedProperties,
+  IThemedProperties, makeDimensionConstraints,
   makeHeightConstraint,
-  makeMarginRem, mergeClasses, rem,
-  StyleDeclaration,
+  makeMarginRem, makePaddingRem, makeTransition,
+  mergeClasses, NestedStyles,
+  rem,
   withStatefulStyles
 } from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
-import {ILabel} from "renderer/models/Label"
-import {Chip} from "@material-ui/core"
+import {ILabel} from "common/models/Label"
 import {getContrastText} from "renderer/styles/MaterialColors"
-
+import BaseChip from "renderer/components/elements/BaseChip"
+import {darken} from "@material-ui/core/styles/colorManipulator"
+import RemoveIcon from "@material-ui/icons/Close"
 
 const log = getLogger(__filename)
 
 
-function baseStyles(theme):any {
+function baseStyles(theme:Theme):NestedStyles {
   const
     {palette} = theme,
     {primary, secondary} = palette
   
   return {
     root: [],
-    chip: [makeMarginRem(0.3,0.5),makeHeightConstraint(rem(1.8)),{
-      borderRadius: rem(0.9),
-      margin: theme.spacing.unit,
-      fontWeight: 500,
-      fontSize: rem(0.8)
+    action: [makeDimensionConstraints(rem(1.5)),makePaddingRem(0.25),{
+      background: (props:P) => darken(`#${props.label.color}`,0.2),
+      borderRadius: rem(0.8),
+      "& > .icon": [makeTransition("color"),{
+        color: (props:P) => darken(getContrastText(`#${props.label.color}`),0.4),
+        pointerEvents: "none",
+        fontSize: rem(1),
+        "&,& > svg": [makeDimensionConstraints(rem(1))]
+      }],
+      "&:hover": {
+        "& > .icon": [{
+          color: (props:P) => getContrastText(`#${props.label.color}`),
+        }]
+      }
     }]
   }
 }
@@ -51,17 +60,21 @@ export default class Label extends React.Component<P> {
     
   }
   
+  private onDelete = () => {
+  
+  }
+  
   render() {
     const {label, classes, className, style} = this.props
-    return <Chip
-      style={{
-        backgroundColor: `#${label.color}`,
-        color: getContrastText(`#${label.color}`),
-        ...style
-      }}
-      className={mergeClasses(classes.chip, className)}
+    return <BaseChip
+      color={label.color}
       label={label.name}
-      
+      className={className}
+      classes={{...classes, action: classes.add, root:null, add: null}}
+      onAction={this.onDelete}
+      actionIcon={<div className={classes.action}>
+        <RemoveIcon className="icon" />
+      </div>}
     />
   }
 }

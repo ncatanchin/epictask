@@ -8,15 +8,15 @@ import {
 	FlexColumnCenter,
 	FlexRowCenter,
 	FlexScale,
-	IThemedProperties, makeDimensionConstraints, makeMarginRem, makePaddingRem, mergeClasses,
+	IThemedProperties, makeDimensionConstraints, makeMarginRem, makePaddingRem, mergeClasses, mergeStyles,
 	PositionRelative, rem,
 	withStatefulStyles
 } from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
 import {VerticalSplitPane} from "renderer/components/elements/VerticalSplitPane"
-import {IRepo} from "renderer/models/Repo"
-import {AppActionFactory} from "renderer/store/actions/AppActionFactory"
+import {IRepo} from "common/models/Repo"
+import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import {IDataSet} from "common/Types"
 import Header from "renderer/components/Header"
 import RepoSelect from "renderer/components/elements/RepoSelect"
@@ -24,8 +24,8 @@ import {
 	isSelectedRepoEnabledSelector,
 	selectedOrgSelector,
 	selectedRepoSelector
-} from "renderer/store/selectors/DataSelectors"
-import {IOrg} from "renderer/models/Org"
+} from "common/store/selectors/DataSelectors"
+import {IOrg} from "common/models/Org"
 import {darken} from "@material-ui/core/styles/colorManipulator"
 import {getValue} from "typeguard"
 import Img from 'react-image'
@@ -33,8 +33,15 @@ import {IconButton, Typography} from "@material-ui/core"
 import CheckIcon from "@material-ui/icons/Check"
 
 import IssueList from "renderer/components/elements/IssueList"
-import {userSelector} from "renderer/store/selectors/AppSelectors"
-import {IUser} from "renderer/models/User"
+import {userSelector} from "common/store/selectors/AppSelectors"
+import {IUser} from "common/models/User"
+import {
+	CommandComponent,
+	CommandContainerBuilder, CommandRoot, getCommandProps, ICommandComponentProps,
+	ICommandContainerItems,
+	TCommandItemsCreator
+} from "renderer/command-manager-ui"
+import {CommonKeys} from "common/command-manager"
 
 const AvatarDefaultURL = require("renderer/assets/images/avatar-default.png")
 
@@ -58,6 +65,8 @@ function baseStyles(theme:Theme):any {
 	
 	return {
 		root: [Fill,FlexColumnCenter, {
+			background: theme.background.global,
+			
 			"&.enable": [{
 				"& .repo": [makePaddingRem(0,1),{
 					borderRadius: rem(0.5),
@@ -82,13 +91,14 @@ function baseStyles(theme:Theme):any {
 	}
 }
 
-export interface P extends IThemedProperties {
+export interface P extends ICommandComponentProps,IThemedProperties {
 	header:Header
-	repos?: IDataSet<IRepo>
+	//repos?: IDataSet<IRepo>
 	repo?: IRepo
 	org?: IOrg
 	user?: IUser
 	isRepoEnabled?: boolean
+	splitter?: number | string
 }
 
 export interface S {
@@ -96,12 +106,13 @@ export interface S {
 }
 
 @withStatefulStyles(baseStyles)
+@CommandComponent()
 @connect(createStructuredSelector({
-	repos: (state:IRootState) => state.DataState.repos,
 	user: userSelector,
 	repo: selectedRepoSelector,
 	org: selectedOrgSelector,
-	isRepoEnabled: isSelectedRepoEnabledSelector
+	isRepoEnabled: isSelectedRepoEnabledSelector,
+	splitter: (state:IRootState) => state.AppState.issues.splitter
 }))
 class Layout extends React.Component<P,S> {
 	
@@ -124,23 +135,51 @@ class Layout extends React.Component<P,S> {
 		repoSelectOpen
 	})
 	
-	private updateControls = () =>
-		this.props.header.setRightControls(
-			<div className={mergeClasses(this.props.classes.controls,this.state.repoSelectOpen && "open")}>
+	private updateControls = () => {
+		
+		this.props.header.setRightControls(() =>
+			<div className={mergeClasses(this.props.classes.controls, this.state.repoSelectOpen && "open")}>
 				<RepoSelect onOpen={this.onRepoSelectOpen} onSelection={this.onRepoSelection} value={this.props.repo}/>
 				<Img
 					src={getValue(() => this.props.user.avatar_url)}
 					loader={<img src={AvatarDefaultURL}/>}
 				/>
 				{/*<Img*/}
-					{/*src={getValue(() => this.props.repo.owner.avatar_url)}*/}
-					{/*loader={<img src={AvatarDefaultURL}/>}*/}
+				{/*src={getValue(() => this.props.repo.owner.avatar_url)}*/}
+				{/*loader={<img src={AvatarDefaultURL}/>}*/}
 				{/*/>*/}
 				{/*<OrgSelect onSelection={this.onOrgSelection} value={this.props.selectedOrg}/>*/}
 			</div>
 		)
-	
+	}
 	private onEnableRepo = () => this.actions.enableRepo(this.props.repo)
+
+	private onSplitterChange = (newSize:number) => {
+		log.info("Splitter change",newSize)
+		this.actions.setIssuesSplitter(newSize)
+	}
+	
+	commandItems = (builder:CommandContainerBuilder):ICommandContainerItems =>
+		builder
+			.command(
+				CommonKeys.MoveDown,
+				(cmd,event) => console.log("hello"),
+				{
+					hidden:true,
+					overrideInput: true
+				}
+			)
+			.make()
+	
+	commandComponentId = "IssuesLayout"
+	
+	
+	onFocus = (event:React.FocusEvent<any>):void => {
+		log.info("On focus",event)
+	}
+	onBlur = (event:React.FocusEvent<any>):void => {
+		log.info("On blur",event)
+	}
 	
 	componentDidMount():void {
 		this.updateControls()
@@ -152,14 +191,14 @@ class Layout extends React.Component<P,S> {
 	
 	renderSelectRepo():JSX.Element {
 		const {classes} = this.props
-		return <div className={classes.root}>
+		return <div className={classes.root} {...getCommandProps(this)}>
 			<Typography variant="h2">Select a repository to start</Typography>
 		</div>
 	}
 	
 	renderRepoIsNotEnabled():JSX.Element {
 		const {classes,repo} = this.props
-		return <div className={mergeClasses(classes.root,"enable")}>
+		return <div className={mergeClasses(classes.root,"enable")} {...getCommandProps(this)}>
 			<Typography variant="h2">Enable <span className="repo">{repo.full_name}</span>?</Typography>
 			<IconButton className="button" onClick={this.onEnableRepo}>
 				<CheckIcon className="icon"/>
@@ -168,10 +207,10 @@ class Layout extends React.Component<P,S> {
 	}
 	
 	renderIssues():JSX.Element {
-		const {classes} = this.props
-		return <div className={classes.root}>
+		const {classes,splitter} = this.props
+		return <div className={classes.root} {...getCommandProps(this)}>
 			<div className={classes.content}>
-				<VerticalSplitPane  defaultSize={"50%"} minSize={400}>
+				<VerticalSplitPane  defaultSize={splitter} minSize={400} onChange={this.onSplitterChange}>
 					<IssueList/>
 					<div>pane2</div>
 				</VerticalSplitPane>

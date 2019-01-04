@@ -1,19 +1,19 @@
 import ObjectManager, {ObjectEvent} from "./ObjectManager"
-import {IRepo} from "../models/Repo"
+import {IRepo} from "common/models/Repo"
 import db from "./ObjectDatabase"
 import getLogger from "../../common/log/Logger"
 import {getAPI} from "../net/GithubAPI"
 import {ReposListForUserParams} from "@octokit/rest"
 import {guard} from "typeguard"
-import {AppState} from "../store/state/AppState"
-import {IUser} from "../models/User"
-import {IOrg} from "renderer/models/Org"
+import {AppState} from "common/store/state/AppState"
+import {IUser} from "common/models/User"
+import {IOrg} from "common/models/Org"
+import {nextTick} from "typedux"
 
 const log = getLogger(__filename)
 
 class OrgObjectManager extends ObjectManager<IOrg,number> {
 	
-	private syncing = false
 	
 	constructor() {
 		super(db.orgs)
@@ -43,9 +43,8 @@ class OrgObjectManager extends ObjectManager<IOrg,number> {
 	}
 	
 	
-	async sync(...keys:number[]):Promise<boolean> {
-		if (this.syncing) return true
-		this.syncing = true
+	protected async doSync(...keys:number[]):Promise<boolean> {
+		
 		try {
 			const
 				gh = getAPI(),
@@ -59,8 +58,9 @@ class OrgObjectManager extends ObjectManager<IOrg,number> {
 			return true
 		} catch (err) {
 			log.error("Unable to sync orgs", err)
-			return false
 		}
+		
+		return false
 	}
 }
 

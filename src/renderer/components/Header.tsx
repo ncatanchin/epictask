@@ -11,7 +11,7 @@ import {
 } from "renderer/styles/ThemedStyles"
 import {createStructuredSelector} from "reselect"
 import {connect} from "common/util/ReduxConnect"
-import {AppActionFactory} from "renderer/store/actions/AppActionFactory"
+import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import {darken} from "@material-ui/core/styles/colorManipulator"
 import {WindowControls} from "renderer/components/elements/WindowControls"
 import {guard} from "typeguard"
@@ -87,9 +87,11 @@ interface P extends IThemedProperties {
 	headerRef:(headerRef:Header) => void
 }
 
+export type ControlsCallback = (() => React.ReactFragment | React.Component<any> | JSX.Element | null)
+
 interface S {
-	rightControls: React.ReactFragment | React.Component<any> | JSX.Element | null
-	leftControls: React.ReactFragment | React.Component<any> | JSX.Element | null
+	rightControls: ControlsCallback | null
+	leftControls: ControlsCallback | null
 }
 
 @withStatefulStyles(baseStyles)
@@ -109,11 +111,11 @@ export default class Header extends React.Component<P, S> {
 		}
 	}
 	
-	setRightControls(rightControls: React.ReactFragment | React.Component<any> | JSX.Element | null) {
-		this.setState({rightControls})
+	setRightControls(rightControls: ControlsCallback | null) {
+		this.setState({rightControls},this.forceUpdate)
 	}
 	
-	setLeftControls(leftControls: React.ReactFragment | React.Component<any> | JSX.Element | null) {
+	setLeftControls(leftControls: ControlsCallback | null) {
 		this.setState({leftControls})
 	}
 	
@@ -131,7 +133,7 @@ export default class Header extends React.Component<P, S> {
 			
 			<div className="left">
 				<WindowControls />
-				{leftControls}
+				{leftControls && leftControls()}
 			</div>
 			
 			<div className="logo">
@@ -141,7 +143,7 @@ export default class Header extends React.Component<P, S> {
 			</div>
 			
 			<div className="right">
-				{rightControls}
+				{rightControls && rightControls()}
 			</div>
 		</div>
 	}

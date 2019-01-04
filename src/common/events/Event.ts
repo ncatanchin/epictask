@@ -3,6 +3,10 @@ import {AuthScope, IConfig} from "../config/Config"
 import {isMain} from "../Process"
 import * as Electron from 'electron'
 import getLogger from "../log/Logger"
+import {isString} from "typeguard"
+import {convertEnumValuesToString} from "common/ObjectUtil"
+import {ISyncActionMessage} from "common/store/AppStoreTypes"
+import {StringMap} from "common/Types"
 
 const
 	ForwardEvent = "forward-event",
@@ -13,7 +17,12 @@ export enum Events {
 	AuthComplete,
 	AuthError,
 	ConfigChanged,
-	RepoIssuesSynced
+	RepoIssuesSynced,
+	WindowClosed,
+	AcceleratorsChanged,
+	CommandsChanged,
+	ChildStoreAction,
+	ServerStoreAction
 }
 
 export type EventNames = keyof typeof Events
@@ -38,13 +47,18 @@ class EventHubEmitter {
 	
 	
 	
-	on(event:"AuthStart", listener: () => void)
-	on(event:"AuthComplete", listener: (accessToken:string,scope:Array<AuthScope>) => void)
-	on(event:"AuthError", listener: (err:Error | null) => void)
-	on(event:"ConfigChanged", listener: (config:IConfig) => void)
-	on(event:"RepoIssuesSynced", listener: (repoId:number,timestamp:number) => void)
-	on(event:EventNames, listener:(...args:any[]) => void) {
+	on(event:"AuthStart", listener: () => void):() => void
+	on(event:"AuthComplete", listener: (accessToken:string,scope:Array<AuthScope>) => void):() => void
+	on(event:"AuthError", listener: (err:Error | null) => void):() => void
+	on(event:"ConfigChanged", listener: (config:IConfig) => void):() => void
+	on(event:"RepoIssuesSynced", listener: (repoId:number,timestamp:number) => void):() => void
+	on(event:"WindowClosed", listener: () => void):() => void
+	on(event:"CommandsChanged", listener: () => void):() => void
+	on(event:"AcceleratorsChanged", listener: () => void):() => void
+	on(event:"ChildStoreAction" | "ServerStoreAction",listener: (actionMessage:ISyncActionMessage) => void):() => void
+	on(event:EventNames, listener:(...args:any[]) => void):() => void {
 		this.emitter.on(event,listener)
+		return () => this.emitter.off(event,listener)
 	}
 	
 	off(event:EventNames, listener?:(...args:any[]) => void) {
@@ -56,6 +70,10 @@ class EventHubEmitter {
 	emit(event:"AuthError", err:Error | null)
 	emit(event:"ConfigChanged", config:IConfig)
 	emit(event:"RepoIssuesSynced", repoId:number,timestamp:number)
+	emit(event:"WindowClosed")
+	emit(event:"CommandsChanged")
+	emit(event:"AcceleratorsChanged",accelerators:StringMap<string>)
+	emit(event:"ChildStoreAction" | "ServerStoreAction",actionMessage:ISyncActionMessage)
 	emit(event:EventNames, ...args:any[]) {
 		this.emitter.emit(event,...args)
 		
@@ -66,7 +84,14 @@ class EventHubEmitter {
 	}
 }
 
+export type EventNameMap = {[key in EventNames]:EventNames}
 
-export const EventHub = new EventHubEmitter()
+export type EventHubType = (EventHubEmitter & EventNameMap)
 
-export default EventHub
+function create():EventHubType {
+	const EventHub = new EventHubEmitter()
+	Object.assign(EventHub,Events)
+	return EventHub as any
+}
+
+export default create()

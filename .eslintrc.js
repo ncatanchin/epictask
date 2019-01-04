@@ -20,13 +20,13 @@ module.exports = {
   rules: {
     // allow debugger during development
     'no-debugger':
-      process.env.NODE_ENV && process.env.NODE_ENV.startsWith('dev') ? 0 : 2,
+      process.env.NODE_ENV === "production" ? 2 : 0,
 
     'prefer-const': 'error',
     'one-var': ['off'],
     'no-var': 'error',
     'no-return-assign': ['error', 'except-parens'],
-    'brace-style': ['error', '1tbs', { allowSingleLine: false }],
+    //'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'quote-props': ['error', 'as-needed'],
     curly: ['off', 'multi-or-nest', 'consistent'],
 
@@ -63,7 +63,7 @@ module.exports = {
         'no-unused-vars': 0,
 
         // typescript-specific rules
-        'typescript/adjacent-overload-signatures': 'error', // — Require that member overloads be consecutive
+        'typescript/adjacent-overload-signatures': 'off', // — Require that member overloads be consecutive
         'typescript/class-name-casing': 'error', // — Require PascalCased class and interface names (class-name from TSLint)
         'typescript/explicit-function-return-type': [
           'error',

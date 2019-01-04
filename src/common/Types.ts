@@ -4,6 +4,10 @@ export type StringOrNumber = string | number
 
 export type Pair<T1, T2> = [T1, T2]
 
+export type FunctionOrValue<T> = (() => T) | T | null
+
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
 export interface IDataSet<T> {
 	data:Array<T>
 	total:number
@@ -26,6 +30,8 @@ export function makeDataSet<T>(
 		loading: false
 	}
 }
+
+export type PromiseResolver<T = any,TResult1 = T> = ((value: T) => TResult1 | PromiseLike<TResult1>)
 
 export type DataType = "issues" | "repos" | "orgs" | "users"
 

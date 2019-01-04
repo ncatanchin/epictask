@@ -1,23 +1,22 @@
 import ObjectManager, {ObjectEvent} from "./ObjectManager"
-import {IIssue} from "../models/Issue"
+import {IIssue} from "common/models/Issue"
 import db from "./ObjectDatabase"
 import getLogger from "../../common/log/Logger"
 import {formatTimestamp, getAPI} from "../net/GithubAPI"
 import {getValue, guard} from "typeguard"
-import {AppState} from "../store/state/AppState"
-import {IUser} from "../models/User"
+import {AppState} from "common/store/state/AppState"
+import {IUser} from "common/models/User"
 import * as _ from 'lodash'
 import delay from "common/util/Delay"
 import EventHub from "common/events/Event"
 import {APIConcurrency} from "common/Constants"
-import {IRepo} from "renderer/models/Repo"
+import {IRepo} from "common/models/Repo"
 import * as BBPromise from 'bluebird'
-import {ILabel} from "renderer/models/Label"
+import {ILabel} from "common/models/Label"
+import {nextTick} from "typedux"
 const log = getLogger(__filename)
 
 class IssueObjectManager extends ObjectManager<IIssue, number> {
-	
-	private syncing = false
 	
 	constructor() {
 		super(db.issues)
@@ -47,16 +46,14 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 	}
 	
 	
-	async sync(...keys:number[]):Promise<boolean> {
-		if (this.syncing) return true
-		this.syncing = true
-		
+	protected async doSync(...keys:number[]):Promise<boolean> {
 		try {
 			const
 				gh = getAPI(),
 				state = getStoreState(),
 				{user,enabledRepoIds} = state.AppState,
 				repos = await db.repos.where("id").anyOf(enabledRepoIds).toArray()
+			
 			log.info("Syncing issues", repos)
 			if (!user) {
 				log.warn("Can not sync issues, not authenticated")
@@ -71,7 +68,7 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 			await BBPromise.map(repos, async (repo:IRepo) => {
 				try {
 					const
-						timestamp = getValue(() => getStoreState().DataState.syncs["issues"].records[repo.id].timestamp, 0) as number,
+						timestamp = getValue(() => getStoreState().AppState.syncs["issues"].records[repo.id].timestamp, 0) as number,
 						repoParams = {
 							owner: repo.owner.login,
 							repo: repo.name
@@ -116,10 +113,9 @@ class IssueObjectManager extends ObjectManager<IIssue, number> {
 			return true
 		} catch (err) {
 			log.error("Unable to sync issues", err)
-			return false
-		} finally {
-			this.syncing = false
 		}
+		
+		return false
 	}
 }
 

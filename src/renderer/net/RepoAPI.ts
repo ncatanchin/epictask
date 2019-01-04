@@ -1,4 +1,4 @@
-import {IRepo} from "renderer/models/Repo"
+import {IRepo} from "common/models/Repo"
 import {getAPI} from "renderer/net/GithubAPI"
 
 
