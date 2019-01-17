@@ -1,3 +1,4 @@
+import * as React from 'react'
 /**
  * Redux connect with type support
  *

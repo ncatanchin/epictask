@@ -15,13 +15,13 @@ const
 
 async function installDevTools():Promise<void> {
 	if (!isDev) return
-	
+
 	const {
 		default: installExtension,
-		REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS
+		REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS,REACT_PERF
 	} = require('electron-devtools-installer')
-	
-	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS].map((key:string) => {
+
+	await Promise.all([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS,REACT_PERF].map((key:string) => {
 		installExtension(key).then((name) => {
 			log.info(`Added Extension:  ${name}`)
 		}).catch((err) => console.log('An error occurred: ', err))
@@ -31,21 +31,21 @@ async function installDevTools():Promise<void> {
 export async function createMainWindow():Promise<BrowserWindow> {
 	if (mainWindow)
 		return mainWindow
-	
+
 	const
 		wdsPort = process.env.ELECTRON_WEBPACK_WDS_PORT,
 		indexFile = `${__dirname}/index.html`,
 		url = (wdsPort)
 			? `http://localhost:${process.env.ELECTRON_WEBPACK_WDS_PORT}`
 			: `file://${indexFile}`
-	
+
 	console.log(`Using URL: ${url}`)
-	
+
 	const winState = windowStateKeeper({
 		defaultWidth: WindowMinWidth,
 		defaultHeight: WindowMinHeight,
 	})
-	
+
 	mainWindow = new BrowserWindow({
 		webPreferences: {webSecurity: false},
 		minHeight: WindowMinHeight,
@@ -53,38 +53,38 @@ export async function createMainWindow():Promise<BrowserWindow> {
 		frame: false,
 		... _.pick(winState, 'x', 'y', 'width', 'height'),
 	})
-	
+
 	// if the render process crashes, reload the window
 	mainWindow.webContents.on('crashed', (event, killed) => {
 		console.error("CRASH", event, killed)
 	})
-	
+
 	winState.manage(mainWindow)
-	
-	
+
+
 	await installDevTools()
-	
-	
+
+
 	mainWindow.on("close", () => {
 		mainWindow = null
 	})
-	
+
 	mainWindow.on("ready-to-show", () => {
 		log.info("Ready to show")
 		mainWindow.setTitle("Epictask")
-		
+
 		if (isAuthenticated())
 			mainWindow.show()
 		else
 			mainWindow.hide()
 	})
-	
+
 	if (isDev) {
 		mainWindow.webContents.openDevTools()
 	}
-	
+
 	log.info("Loading URL and returning")
 	mainWindow.loadURL(url)
-	
+
 	return mainWindow
 }

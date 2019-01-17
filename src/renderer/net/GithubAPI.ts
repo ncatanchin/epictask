@@ -9,16 +9,16 @@ function setup(accessToken:string | null):void {
 		gh = null
 		return
 	}
-	
+
 	if (gh)
 		return
-	
+
 	gh = new Octokit()
 	gh.authenticate({
 		type: 'oauth',
 		token: accessToken
 	})
-	
+
 	Object.assign(global,{gh})
 }
 
@@ -26,7 +26,7 @@ export function getAPI(config:IConfig = getStoreState().AppState.config):Octokit
 	setup(config.accessToken)
 	if (!gh)
 		throw Error("No access token found")
-	
+
 	return gh
 }
 
@@ -34,3 +34,7 @@ export function getAPI(config:IConfig = getStoreState().AppState.config):Octokit
 export function formatTimestamp(timestamp:number):string {
 	return moment(timestamp).format("YYYY-MM-DDTHH:mm:ssZ")
 }
+
+Object.assign(global, {
+	getGithubAPI: getAPI
+})

@@ -9,14 +9,19 @@ const
   DefinedEnv = require('./webpack.env'),
   {isDev} = DefinedEnv
 
-/**
- * Create externals array
- */
-function makeExternals() {
-  return nodeExternals()//['fs', 'module']
-}
+
 
 module.exports = (isMain) => {
+  /**
+   * Create externals array
+   */
+  function makeExternals() {
+    const whitelist = isMain ? [] : [/webpack/,/react-hot/]
+  	return nodeExternals({
+			whitelist
+		})//['fs', 'module']
+  }
+
 	const config = {
 		devtool: "source-map",
 		output: {
@@ -48,7 +53,7 @@ module.exports = (isMain) => {
 			// ENV
 			new DefinePlugin(DefinedEnv),
 			new Webpack.NamedModulesPlugin()
-		
+
 		],
 		/**
 		 * Node Shims
@@ -57,13 +62,13 @@ module.exports = (isMain) => {
 			__filename: true,
 			global: true,
 			process: true,
-			
+
 		},
-		
+
 		cache: true,
-		
+
 		module: {
-			
+
 			rules: [
 				{
 					test: /^\.(scss|css)$/,
@@ -113,17 +118,25 @@ module.exports = (isMain) => {
 					include: /node_modules/,
 					use: ['react-hot-loader/webpack'],
 				},
+        {
+          test: /\.js$/,
+          use: ["source-map-loader"],
+          enforce: "pre"
+        }
 			]
 		},
 	}
-	
-	if (isMain) {
-		/**
-		 * Externals
-		 */
-		config.externals = makeExternals()
-		
-	}
+
+  console.log(config.externals = makeExternals())
+	// if (isMain) {
+	// 	/**
+	// 	 * Externals
+	// 	 */
+	// 	config.externals = makeExternals()
+	//
+	// } else {
+	//
+	// }
 	return config
 }
 

@@ -7,7 +7,7 @@ import {isString} from "typeguard"
 import { Color, makeMaterialPalette } from "./MaterialColors"
 import {
   StyledComponentProps,
-  WithStylesOptions,
+  WithStylesOptions as MUIWithStyleOptions,
   StyleRulesCallback, StyleRules
 } from "@material-ui/core/styles/withStyles"
 import {isArray} from "typedux"
@@ -84,7 +84,7 @@ export type NestedStyles = CSSProperties | {[key:string]: Style | Array<Styles |
 
 export type StyleDeclaration = NestedStyles | CSSProperties
 
-
+export type StyleCallback = (theme?:Theme) => StyleDeclaration
 
 
 /**
@@ -98,7 +98,7 @@ function updateSize():void {
         width >= 1024 ? ViewportMode.Desktop :
           width >= 667 ? ViewportMode.Landscape :
             ViewportMode.Portrait
-  
+
   log.debug(`Window resized: ${width}/${newSize}`)
   viewportSize = newSize
 }
@@ -106,6 +106,10 @@ function updateSize():void {
 updateSize()
 $(window).resize(updateSize)
 
+
+export type WithStylesOptions<ClassKey extends string> = MUIWithStyleOptions<ClassKey> & {
+	withRef?: boolean
+}
 
 /**
  * Wrap a stateful component in material-ui style system
@@ -120,14 +124,16 @@ export function withStatefulStyles<ClassKey extends string = string>(
 ):(any) => any {
   return withStyles(
   	(...args) => mergeStyles((style as any)(...args)),options) as any
-	
+
 	//Component.prototype.handleChange = e => log.info("Handle change",e)
 	//log.info("Component",component)
-	
+
 }
 
 
-export function makeDimensionConstraint(dim:'width'|'height',val:string|number):React.CSSProperties {
+export type CSSPropFn<P = any> = (props:P) => number|string
+
+export function makeDimensionConstraint<P = any>(dim:'width'|'height',val:string|number|CSSPropFn<P>):React.CSSProperties {
 	const dimUpper = dim.charAt(0).toUpperCase() + dim.substring(1)
 	return {
 		[dim]: val,
@@ -135,18 +141,18 @@ export function makeDimensionConstraint(dim:'width'|'height',val:string|number):
 		[`max${dimUpper}`]: val,
 		overflow: 'hidden'
 	} as any
-	
+
 }
 
-export function makeHeightConstraint(val:string|number):React.CSSProperties {
-	return makeDimensionConstraint('height',val)
+export function makeHeightConstraint<P = any>(val:string|number|CSSPropFn<P>):React.CSSProperties {
+	return makeDimensionConstraint<P>('height',val)
 }
 
-export function makeWidthConstraint(val:string|number):React.CSSProperties {
-	return makeDimensionConstraint('width',val)
+export function makeWidthConstraint<P = any>(val:string|number|CSSPropFn<P>):React.CSSProperties {
+	return makeDimensionConstraint<P>('width',val)
 }
 
-export function makeDimensionConstraints(width:string|number,height:string|number = width):React.CSSProperties {
+export function makeDimensionConstraints<P = any>(width:string|number|CSSPropFn<P>,height:string|number|CSSPropFn<P> = width):React.CSSProperties {
 	return {...makeHeightConstraint(height),...makeWidthConstraint(width)}
 }
 
@@ -235,7 +241,7 @@ export interface IThemePalette {
 export function makeTransition(props:string[]|string|null = null,duration = TransitionDuration.Short,easing = 'ease-out'):React.CSSProperties {
 	if (isString(props))
 		props = [props] as any
-	
+
 	props = props || ['all']
 	return {
 		transition: (props as any)
@@ -250,6 +256,9 @@ export function makeFlexAlign(alignItems,justifyContent = alignItems):React.CSSP
 	return {justifyContent,alignItems}
 }
 
+
+
+
 export function makePaddingRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
 	return {
 		paddingTop: rem(top),
@@ -258,6 +267,8 @@ export function makePaddingRem(top = 0, right = top, bottom = top, left = right)
 		paddingLeft: rem(left)
 	} as any
 }
+
+
 
 export function makeBorderRem(top = 0, right = top, bottom = top, left = right):React.CSSProperties {
 	return {
@@ -276,6 +287,9 @@ export function makeMarginRem(top = 0, right = top, bottom = top, left = right):
 		marginLeft: rem(left)
 	} as any
 }
+
+export const PaddingProps = Object.keys(makePaddingRem(0)).map(key => key.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`))
+export const MarginProps = Object.keys(makeMarginRem(0)).map(key => key.replace(/([A-Z])/g, (g) => `-${g[0].toLowerCase()}`))
 
 export function rem(val:number):string {
 	return `${val}rem`
@@ -343,7 +357,7 @@ export const FlexColumnReverse = makeStyle(Flex,{
 export const FlexColumnCenter = makeStyle(FlexColumn,FlexAlignCenter)
 
 export function makeStyle(...styles):NestedStyles {
-	
+
 	return Object.assign({},...styles.reduce((allStyles,style) => {
 		if (Array.isArray(style)) {
 			allStyles.push(...style)

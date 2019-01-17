@@ -1,6 +1,7 @@
 ///<reference path="../../typings/custom.d.ts"/>
+//import "@babel/polyfill"
 import {app, BrowserWindow, globalShortcut, session} from "electron"
-
+import "common/util/Ext"
 import createMenu from "./Menu"
 import * as Auth from "./Auth"
 import getLogger from "../common/log/Logger"
@@ -50,15 +51,15 @@ app.on('activate', async () => {
 app.on('ready', async () => {
 	createMenu()
 	require('electron-context-menu')()
-	
+
 	// BOOTSTRAP
 	await (await import("./Bootstrap")).default
-	
+
 	Auth.register()
-	
+
 	await createMainWindow()
 	await checkAuthenticated()
-	
+
 	registerShortcuts()
 	app.on("browser-window-focus", registerShortcuts)
 	app.on("browser-window-blur", unregisterShortcuts)
@@ -76,9 +77,10 @@ const Shortcuts = [
 		}
 	},
 	{
-		accelerator: 'F8',
+		accelerator: 'F7',
 		handler() {
-			BrowserWindow.getFocusedWindow().webContents.debugger.sendCommand("debugger;")
+			BrowserWindow.getFocusedWindow().webContents.executeJavaScript("debugger;")
+				.catch(err => log.error("Failed to execute debugger", err))
 		}
 	},
 	{
@@ -105,7 +107,7 @@ const Shortcuts = [
 			BrowserWindow.getAllWindows().forEach(win => win.webContents.setZoomFactor(zoom))
 		}
 	}
-	
+
 ]
 
 
@@ -114,7 +116,7 @@ function registerShortcuts():void {
 	Shortcuts.forEach(config => {
 		globalShortcut.register(config.accelerator,config.handler)
 	})
-	
+
 }
 
 function unregisterShortcuts():void {

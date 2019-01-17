@@ -1,6 +1,6 @@
 ///<reference path="../../typings/custom.d.ts"/>
-
-import 'source-map-support/register'
+//import 'source-map-support/register'
+import "common/util/Ext"
 import "./ReactHotConfig"
 import Sugar from "sugar"
 
@@ -12,9 +12,11 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import {loadAndInitStore} from "common/store/AppStore"
 import * as jQuery from 'jquery'
+import * as LoDash from 'lodash'
 
 declare global {
   const $:typeof jQuery
+  const _:typeof LoDash
 }
 
 Sugar.extend()
@@ -22,7 +24,8 @@ Sugar.extend()
 EventEmitter.defaultMaxListeners = Number.MAX_VALUE
 
 Object.assign(global, {
-  $: jQuery
+  $: jQuery,
+  _: LoDash
 })
 
 
@@ -47,21 +50,21 @@ async function renderRoot():Promise<void> {
   const doRender = ():void => {
     if (rendered)
       return
-    
+
     rendered = true
     const
       Root = require("./Root").default
-    
+
     ReactDOM.render(
       <Root/>,
       appEl[0]
     )
   }
-  
+
   await loadAndInitStore()
-  await (await import("./init")).default
-  await (await import("common/watchers")).default
-  
+  await require("./init").default
+  await require("common/watchers").default
+
   doRender()
 }
 

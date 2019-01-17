@@ -2,18 +2,19 @@
 import {DataState} from "common/store/state/DataState"
 import {createSelector} from "reselect"
 import {IOrg} from "common/models/Org"
-import {IRepo} from "common/models/Repo"
+import {ICollaborator, IRepo} from "common/models/Repo"
 import {IDataSet} from "common/Types"
 import getLogger from "common/log/Logger"
 import {appSelector} from "common/store/selectors/AppSelectors"
+import {IIssue} from "common/models/Issue"
 
 const log = getLogger(__filename)
 
 
-export function dataSelector<T>(
+export function dataSelector<T,P = any>(
 	fn:(state:DataState, props?:any) => T
-):(IRootState,any) => T {
-	return (state:IRootState,props:any) => fn(state.DataState,props) as T
+):(state:IRootState,props?:P) => T {
+	return (state:IRootState,props:P) => fn(state.DataState,props) as T
 }
 
 
@@ -50,4 +51,17 @@ export const isSelectedRepoEnabledSelector = createSelector(
 	(enabledRepoIds:Array<number>, selectedRepo:IRepo) => {
 		return !!enabledRepoIds && !!selectedRepo && enabledRepoIds.includes(selectedRepo.id)
 	}
+)
+
+
+export const selectedIssuesSelector = createSelector(
+  dataSelector(state => state.issues),
+  appSelector(state => state.selectedIssueIds),
+	(issues:IDataSet<IIssue>,ids:Array<number>):Array<IIssue> | null => {
+    return !issues || !ids ? [] : ids.map(id => issues.data.find(issue => issue.id === id)).filter(issue => !!issue)
+  }
+)
+
+export const collaboratorsSelector = dataSelector<Array<ICollaborator>>(state =>
+	state.collaborators.data
 )

@@ -8,16 +8,24 @@ import AutoCompleteSelect from "renderer/components/elements/AutoCompleteSelect"
 import {selectedOrgReposSelector} from "common/store/selectors/DataSelectors"
 import * as _ from 'lodash'
 import {guard} from "typeguard"
+import ReactSelect from 'react-select'
 const log = getLogger(__filename)
 
 
 function baseStyles(theme):StyleDeclaration {
 	const
-		{palette} = theme,
+		{palette,components:{Select}} = theme,
 		{primary, secondary} = palette
-	
+
 	return {
-		root: []
+		root: [],
+		paper: [Select.paper,{
+      position: 'absolute',
+      zIndex: 1,
+      //marginTop: theme.spacing.unit,
+      left: 0,
+      right: 0,
+		}]
 	}
 }
 
@@ -26,6 +34,7 @@ interface P extends IThemedProperties {
 	onOpen?:(open:boolean) => void
 	value:IRepo
 	repos?:Array<IRepo>
+  selectRef?: React.Ref<ReactSelect<IRepo>> | React.RefObject<ReactSelect<IRepo>>
 }
 
 interface S {
@@ -37,34 +46,40 @@ interface S {
 	repos: (state:IRootState) => state.DataState.repos.data,
 }))
 export default class RepoSelect extends React.Component<P,S> {
-	
+
 	constructor(props:P) {
 		super(props)
-		
+
 		this.state = {
 			open: false
 		}
 	}
-	
+
 	private makeOpenHandler = (open:boolean) => () => this.setState({
 		open
 	}, () => guard(() => this.props.onOpen(open)))
-	
+
 	render() {
 		const {
 			classes,
 			repos,
 			value,
-			theme
+			theme,
+			innerRef,
+      selectRef
 		} = this.props
 		return <AutoCompleteSelect
 			options={repos}
+      selectRef={selectRef}
 			onSelection={this.props.onSelection}
 			idGetter={(value:IRepo) => value.id.toString(10)}
 			labelGetter={(value:IRepo) => value.full_name}
 			value={value}
 			onMenuOpen={this.makeOpenHandler(true)}
 			onMenuClose={this.makeOpenHandler(false)}
+			classes={{
+				paper: classes.paper
+			}}
 			styles={{
 				input: (base,state,...other) => {
 					//log.info("Input base", base, state,other)
@@ -84,8 +99,8 @@ export default class RepoSelect extends React.Component<P,S> {
 					}
 				}
 			}}
-			
+
 		/>
-		
+
 	}
 }

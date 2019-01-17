@@ -1,5 +1,6 @@
 import getLogger from "common/log/Logger"
 import {isNil, isString} from "typeguard"
+import * as React from "react"
 
 export enum CommonKeys {
 	MoveUp = 1,
@@ -43,7 +44,7 @@ export const GlobalKeys = {
 	// [CommonKeys.SetMilestone]: ['alt+m','m'],
 	// [CommonKeys.AddLabels]: ['alt+t','t'],
 	// [CommonKeys.CreateComment]: ['alt+c','c']
-	
+
 }
 
 export const App = Object.assign({}, GlobalKeys, {})
@@ -68,12 +69,12 @@ export enum CommandType {
 	 * Registers a global shortcut in electron apps
 	 */
 	Global,
-		
+
 		/**
 		 * App-Wide
 		 */
 	App,
-		
+
 		/**
 		 * Container or selector based
 		 */
@@ -91,7 +92,7 @@ declare global {
 }
 
 
-export type TCommandContainer = ICommandContainer|Electron.Menu
+export type CommandContainer = HTMLElement | React.ReactElement<any> | React.ReactNode | Electron.Menu
 
 
 /**
@@ -107,7 +108,7 @@ export interface ICommandUpdater {
 /**
  * Executor shape
  */
-export type TCommandExecutor = (command:ICommand, event?:any) => any
+export type CommandExecutor = (command?:ICommand, event?:any) => any
 
 
 /**
@@ -119,29 +120,29 @@ declare global {
 		 * Unique identifier for command
 		 */
 		id?:string
-		
+
 		/**
 		 * Global, App or Regular command
 		 */
 		type?:CommandType
-		
+
 		/**
 		 * React Component
 		 */
-		container?:React.Component<any,any>|Electron.Menu
-		
+		container?:CommandContainer
+
 		/**
 		 * Execute the command, takes no args aside from the command
 		 *
 		 * @param command
 		 */
-		execute?:TCommandExecutor
-		
+		execute?:CommandExecutor
+
 		/**
 		 * Holder for electron accel
 		 */
 		electronAccelerator?:string
-		
+
 		/**
 		 * Electron styled accelerator (converted to mousetrap in browser window)
 		 *
@@ -150,55 +151,55 @@ declare global {
 		 * @see https://github.com/electron/electron/blob/master/docs/api/accelerator.md
 		 */
 		defaultAccelerator?:TCommandDefaultAccelerator
-		
-		
+
+
 		/**
 		 * Accelerator currently configured
 		 */
 		accelerator?:TCommandDefaultAccelerator
-		
+
 		/**
 		 * If the command does not have a modifier and an input/select/textarea
 		 * has focus, unless overrideInput is true, the command is not triggered
 		 */
 		overrideInput?:boolean
-		
+
 		/**
 		 * The visible name or label
 		 */
 		name?:string
-		
+
 		/**
 		 * Optional extended info
 		 */
 		description?:string
-		
+
 		/**
 		 * if not specified - assumes should show
 		 */
 		hidden?:boolean
-		
+
 		/**
 		 * Hide in allCommands result
 		 */
 		hideInAllCommands?:boolean
-		
+
 		/**
 		 * Current action is enabled
 		 */
 		enabled?:boolean
-		
+
 		/**
 		 * Path to the menu where this should be added
 		 */
 		menuItem?:ICommandMenuItem
-		
+
 		/**
 		 * if hidden disabled is assumed, but this prop
 		 * overrides all
 		 */
 		disableKeyReassign?:boolean
-		
+
 		/**
 		 * A function that accepts and updater for making changes to registered commands
 		 *
@@ -212,23 +213,23 @@ declare global {
  * Default Implementation of Command, any things that fits the shape can be used
  */
 export class Command implements ICommand {
-	
-	
+
+
 	id:string
-	container:TCommandContainer
+	container:CommandContainer
 	defaultAccelerator:TCommandDefaultAccelerator
 	overrideInput:boolean = false
 	hidden:boolean = false
 	menuItem:ICommandMenuItem
 	disableKeyReassign:boolean
-	
+
 	/**
 	 * Create a command from a command object - anything that implements the interface
 	 *
 	 * @param command
 	 */
 	constructor(command:ICommand)
-	
+
 	/**
 	 * Create a command with required values
 	 *
@@ -238,14 +239,14 @@ export class Command implements ICommand {
 	 * @param name
 	 * @param description
 	 */
-	constructor(id:string, type:CommandType, execute:TCommandExecutor, name?:string, description?:string)
-	constructor(idOrCommand:string|ICommand = null, public type:CommandType = null, public execute:TCommandExecutor = null, public name:string = null, public description:string = null) {
+	constructor(id:string, type:CommandType, execute:CommandExecutor, name?:string, description?:string)
+	constructor(idOrCommand:string|ICommand = null, public type:CommandType = null, public execute:CommandExecutor = null, public name:string = null, public description:string = null) {
 		if (isString(idOrCommand)) {
 			this.id = idOrCommand
 		} else if (idOrCommand) {
 			Object.assign(this, idOrCommand)
 		}
-		
+
 		Object.assign(this, {
 			disableKeyReassign: !isNil(this.disableKeyReassign) ? this.disableKeyReassign : !!this.hidden,
 		})
@@ -304,66 +305,66 @@ export function isCommandImageIcon(o:any):o is ICommandImageIcon {
  * Command menu item
  */
 export interface ICommandMenuItem {
-	
+
 	/**
 	 * Menu item id
 	 */
 	id?:string
-	
+
 	containerId?:string
-	
+
 	icon?:TCommandIcon
-	
+
 	type?:CommandMenuItemType
-	
+
 	subItems?:ICommandMenuItem[]
-	
+
 	commandId?:string
-	
+
 	mountsWithContainer?:boolean
-	
+
 	label?:string
-	
+
 	subLabel?:string
-	
+
 	enabled?:boolean
-	
+
 	hidden?:boolean
-	
+
 	menuPath?:string[]
-	
+
 	execute?:TCommandMenuItemExecutor
-	
+
 }
 
 
 export interface ICommandMenuManager {
-	
-	
-	
+
+
+
 	/**
 	 * Update menu items
 	 *
 	 * @param menuItems
 	 */
 	updateItem(...menuItems:ICommandMenuItem[]):void
-	
+
 	/**
 	 * Remove items
 	 *
 	 * @param menuItems
 	 */
 	removeItem(...menuItems:ICommandMenuItem[]):void
-	
-	
+
+
 	/**
 	 * Show items
 	 *
 	 * @param menuItems
 	 */
 	showItem(...menuItems:ICommandMenuItem[]):void
-	
-	
+
+
 	/**
 	 * Hide items
 	 *

@@ -1,28 +1,28 @@
 import {
-	CursorPointer,
-	Ellipsis, FillHeight,
-	FillWidth,
-	FlexAuto,
-	FlexRowCenter, makeHeightConstraint, makePaddingRem,
-	makeWidthConstraint,
-	PositionRelative,
-	rem,
-	StyleDeclaration
+  CursorPointer,
+  Ellipsis, FillHeight,
+  FillWidth,
+  FlexAuto, FlexRow,
+  FlexRowCenter, FlexScale, makeHeightConstraint, makePaddingRem,
+  makeWidthConstraint, OverflowHidden,
+  PositionRelative,
+  rem,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {darken, emphasize} from "@material-ui/core/styles/colorManipulator"
 
 export default function baseStyles(theme):StyleDeclaration {
 	const
-		{palette} = theme,
+		{palette,components:{Select}} = theme,
 		{primary, secondary} = palette
-	
+
 	return {
 		root: [FlexAuto,PositionRelative,{
-		
+
 		}],
 		input: [FlexRowCenter,FillWidth,makeHeightConstraint(rem(2)),{
 			padding: 0,
-			
+
 			"&:after": {
 				borderBottom: 0
 			}
@@ -55,20 +55,14 @@ export default function baseStyles(theme):StyleDeclaration {
 			left: 2,
 			fontSize: rem(1.2),
 		},
-		
-		option: {
-		
-		},
-		paper: {
-			background: darken(primary.dark,0.6),
-			position: 'absolute',
-			zIndex: 1,
-			//marginTop: theme.spacing.unit,
-			left: 0,
-			right: 0,
-		},
-		divider: {
-			height: theme.spacing.unit * 2,
-		}
+
+    optionRoot: [Select.option.root,FlexRow,OverflowHidden,Ellipsis,{
+			maxWidth: "100%"
+		}],
+    optionSelected: [Select.option.selected],
+    optionContent: [FlexScale,OverflowHidden,Ellipsis],
+
+		paper: [Select.paper],
+    divider: [Select.divider]
 	} as any
 }
