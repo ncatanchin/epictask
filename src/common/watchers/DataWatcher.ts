@@ -18,6 +18,7 @@ import {DataActionFactory} from "common/store/actions/DataActionFactory"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import delay from "common/util/Delay"
 import db from "renderer/db/ObjectDatabase"
+import {getIssueEvents} from "renderer/net/IssueAPI"
 
 const log = getLogger(__filename)
 
@@ -29,6 +30,16 @@ async function getAppActions():Promise<AppActionFactory> {
 async function getDataActions():Promise<DataActionFactory> {
 	const {DataActionFactory} = await import("common/store/actions/DataActionFactory")
 	return new DataActionFactory()
+}
+
+async function loadSelectedIssueData(issueIds = getStoreState().AppState.selectedIssueIds):Promise<void> {
+	if (!issueIds || issueIds.length !== 1) {
+		return
+	}
+
+	const data = await getIssueEvents(issueIds[0])
+
+	;(await getDataActions()).setIssueEventData(data)
 }
 
 /**
@@ -70,7 +81,6 @@ const setRepos = async (_event:ObjectEvent, syncedAt:number, repos:Array<IRepo> 
 		repoId = getStoreState().AppState.selectedRepoId,
 		repoExists = !!repos.find(repo => repo.id === repoId)
 
-	log.info("Checking selected repo",repoId,repos,repoExists)
 	if (repos.length && !repoExists) {
 		appActions.setSelectedRepo(repos[0])
 	}
@@ -221,11 +231,16 @@ async function init():Promise<void> {
 	getStore().observe([AppState.Key,'selectedRepoId'],() =>
 		setIssues(null,-1)
 	)
+  getStore().observe([AppState.Key,'selectedIssueIds'],() =>
+    loadSelectedIssueData()
+  )
 	getStore().observe([AppState.Key,'enabledRepoIds'], async () => {
 		await Promise.all([
 			issueObjectManager.sync()
 		])
 	})
+
+	await loadSelectedIssueData()
 
 	const dataActions = await getDataActions()
 	dataActions.setOrgs(await orgObjectManager.table.toArray())

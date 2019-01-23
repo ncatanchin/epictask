@@ -20,12 +20,10 @@ import {
   OverflowHidden,
   PositionAbsolute,
   PositionRelative,
-  rem
+  rem, CursorPointer, makeTransition, Transparent, remToPx
 } from "renderer/styles/ThemedStyles"
 import {Color} from "csstype"
 import {Run} from "common/util/fn"
-import {elevationStyles} from "renderer/components/elements/Elevation"
-
 
 declare global {
   type IssueDetailsColor =
@@ -50,9 +48,9 @@ declare global {
 
 export default function baseStyles(theme: Theme): NestedStyles {
   const
-    {palette, focus, components: {IssueListItem, IssueDetails}} = theme,
+    {palette, focus, dimensions, components: {IssueListItem, IssueDetails, Button}} = theme,
     {colors} = IssueDetails,
-    {primary, secondary} = palette
+    {primary, secondary,action} = palette
 
   return {
     root: [Fill, OverflowHidden, FlexColumnCenter, {
@@ -86,11 +84,13 @@ export default function baseStyles(theme: Theme): NestedStyles {
     }],
     events: Run(() => {
       const
-        commentBorder = `${rem(0.1)} ${colors.commentBorder} solid`,
-        connectionBorder = `${rem(0.1)} ${colors.connection} solid`
+        connectionBorder = `${rem(0.1)} ${colors.connection} solid`,
+        focusedBorder = `${rem(0.1)} ${action.main} solid`
 
-      return [FlexScale, FillWidth, FlexColumn, OverflowHidden, makePaddingRem(0, 0,1), {
-        [directChild("items")]: [FlexScale, FillWidth, FlexColumn, OverflowAuto, {
+      return [FlexScale, FillWidth, FlexColumn, OverflowHidden, makePaddingRem(0, 0, 1), {
+        [directChild("items")]: [PositionRelative, FlexScale, FillWidth, FlexColumn, makePaddingRem(0, 0, 0.2,0), {
+          overflowY: "auto",
+          overflowX: "hidden",
           [directChild("activity")]: [PositionRelative, FlexAuto, FlexRow, FillWidth, makePaddingRem(1, 2, 1, 3.5), {
             color: colors.commentText,
             [directChild("content")]: [FlexRow, makePaddingRem(0.5, 1, 0.5, 3), {
@@ -99,72 +99,148 @@ export default function baseStyles(theme: Theme): NestedStyles {
             [directChild("connection")]: [FillHeight, PositionAbsolute, makeWidthConstraint(rem(1.6)), {
               left: rem(3.2),
               bottom: 0,
-              [directChild("line")]: [PositionAbsolute, makeWidthConstraint(rem(0.2)), FillHeight, {
-                left: rem(0.8),
+              [directChild("line")]: [PositionAbsolute, makeWidthConstraint(rem(0.15)), FillHeight, {
+                left: rem(0.7),
                 top: 0,
-                background: colors.connection,
-                "&.last": [makeHeightConstraint("50%"), {}]
+                background: colors.connection
               }],
-              [directChild("icon")]: [PositionAbsolute, makeDimensionConstraints(rem(1.6)), {
+              [directChild("icon")]: [PositionAbsolute, makeDimensionConstraints(rem(1.4)), {
                 left: `50%`,
                 top: `50%`,
                 marginLeft: `-0.7rem`,
                 marginTop: `-0.7rem`,
-                borderRadius: rem(0.8),
+                borderRadius: rem(0.7),
                 background: colors.connection,
                 border: connectionBorder
               }]
             }],
-            [directChild("bottom")]: [PositionAbsolute,makeHeightConstraint(rem(0)),{
+            [directChild("bottom")]: [PositionAbsolute, makeHeightConstraint(rem(0)), {
               bottom: 0,
               left: rem(4),
-              right: 0,
+              right: rem(2),
               borderBottom: connectionBorder
             }]
 
           }],
 
-          [directChild("comment")]: [PositionRelative, FlexAuto, FlexRow, FillWidth, makePaddingRem(0, 1, 1.5, 1), {
-            [directChild("container")]: [PositionRelative, FlexScale, makeMarginRem(0, 0, 0, 2.2), {
-              color: colors.commentText,
-              border: commentBorder,
-              borderRadius: rem(0.2),
-              [directChild("content")]: [FlexColumn, {
-                background: colors.commentHeaderBg,
-                [directChild("top")]: [makePaddingRem(0, 1), FlexAuto, FlexRowCenter, FillWidth, makeHeightConstraint(rem(2.2)), {
-                  borderBottom: commentBorder,
-                  [directChild("text")]: [Ellipsis, FlexScale]
-                }],
-                [directChild("bottom")]: [makePaddingRem(1), FlexAuto, FlexRowCenter, FillWidth, {
-                  background: colors.commentBodyBg,
-                  borderBottom: commentBorder,
-                  [directChild("text")]: [Ellipsis, FlexScale]
+          [directChild("comment")]: [PositionRelative, FlexAuto, FillWidth, OverflowHidden, makePaddingRem(0, 1, 0.5, 1), FlexRow, { //
+            "& > .commentInternal": [FlexScale, FlexRow, {
+              maxWidth: "100%",
+              "&.first": [makePaddingRem(1, 1, 0.5, 1), {
+                "&::before": [PositionAbsolute, makeHeightConstraint(rem(1)), {
+                  left: rem(4),
+                  top: 0,
+                  content: "' '",
+                  //background: colors.connection,
+                  right: rem(2),
+                  borderLeft: connectionBorder,
+                  borderBottom: connectionBorder
                 }]
-              }]
-            }],
+              }],
 
-            [directChild("creator")]: [PositionAbsolute, FlexRowCenter, makeDimensionConstraints(rem(2.3)), makePaddingRem(0.1, 0.1, 0, 0), {
-              background: colors.commentHeaderBg,
-              top: 0,
-              left: rem(1),
-              borderTopLeftRadius: rem(1.2),
-              borderBottomLeftRadius: rem(1.2),
-              borderLeft: commentBorder,
-              borderTop: commentBorder,
-              borderBottom: commentBorder,
-              [directChild("avatar")]: [makeDimensionConstraints(rem(2)), {
-                borderRadius: rem(1)
-              }]
-            }],
-            [directChild("connection")]: [PositionAbsolute, makeWidthConstraint(rem(0.2)), makeHeightConstraint(rem(1.6)), {
-              left: rem(4),
-              bottom: 0,
-              background: colors.connection,
-              // borderLeft: connectionBorder,
-              // borderTop: connectionBorder,
-              // borderBottom: connectionBorder,
-              "&.last": [{
-                opacity: 0
+              // CONNECTORS WHEN UNDER A COMMENT AND MARKED LAST ARE NOT VISIBLE
+              "& > .connection": [makeHeightConstraint(rem(0.6)), {"&.last": [makeDimensionConstraints(0), {
+                opacity: 0,
+                background: Transparent
+              }]}],
+
+              [directChild("container")]: [makeTransition("border"),PositionRelative, FlexScale, makeMarginRem(0, 0, 0, 2.2), {
+                maxWidth: "100%",
+                "&.first": [{
+                  marginTop: rem(1)
+                }],
+                color: colors.commentText,
+                border: connectionBorder,
+                borderRadius: rem(0.2),
+                "&.focused": [{
+                  border: focusedBorder,
+                }],
+                [directChild("content")]: [PositionRelative, FlexColumn, {
+                  background: colors.commentHeaderBg,
+                  [directChild("top")]: [makePaddingRem(0, 1), FlexAuto, FlexRowCenter, FillWidth, makeHeightConstraint(rem(2.2)), {
+                    borderBottom: connectionBorder,
+                    [directChild("text")]: [Ellipsis, FlexScale]
+                  }],
+                  [directChild("bottom")]: [makePaddingRem(0.5, 1), PositionRelative, FlexAuto, FillWidth, {
+                    background: colors.commentBodyBg,
+                    //borderBottom: commentBorder,
+                    [directChild("text")]: [FlexScale, FlexRow, makePaddingRem(0.5), PositionRelative, OverflowHidden, {
+                      "&.edit": [makePaddingRem(0), {
+                        "& > .editor": [Fill, FlexColumn, FillWidth, {
+                          minHeight: rem(8),
+
+                          "& > .markdown": [FlexAuto, {
+                            minHeight: rem(5),
+                            flexGrow: 1
+                          }],
+                          "& > .controls": [FlexAuto, FlexRowCenter, FillWidth, makePaddingRem(1), {
+                            "& > .note": [FlexScale, {}],
+                            "& > .buttons": [FlexAuto, {
+                              "& > .button": [{
+                                "& .iconLeft": [{
+                                  marginRight: theme.spacing.unit
+                                }],
+                                "& .iconSmall": [{
+                                  fontSize: rem(1.6)
+                                }]
+
+                              }]
+                            }]
+                          }]
+                        }]
+                      }],
+                      [directChild("editButton")]: [Button.overlayFAB, FlexRowCenter, CursorPointer, PositionAbsolute, makeDimensionConstraints(dimensions.button.small * 1.5), {
+                        zIndex: 1,
+                        right: theme.spacing.unit / 2,
+                        top: theme.spacing.unit / 2,
+                        '& svg': [makeDimensionConstraints(dimensions.button.small)]
+                      }]
+                    }],
+                    "&.edit": [makePaddingRem(0)]
+                  }]
+                }]
+              }],
+
+              [directChild("creator")]: [makeTransition(["border-left","border-top","border-bottom"]),PositionAbsolute, FlexRowCenter, makeDimensionConstraints(rem(2.3)), makePaddingRem(0.1, 0.1, 0, 0), {
+                overflow: 'visible',
+                background: colors.commentHeaderBg,
+                top: 0,
+                left: rem(1),
+                borderTopLeftRadius: rem(1.2),
+                borderBottomLeftRadius: rem(1.2),
+                borderLeft: connectionBorder,
+                borderTop: connectionBorder,
+                borderBottom: connectionBorder,
+                "&::after": [PositionAbsolute,makeWidthConstraint(rem(0.3)),makeHeightConstraint(rem(0.1)),{
+                  top: -1.5,
+                  right: -1,
+                  //transform: `translate(${rem(0.2)},-1px)`,
+                  // top: rem(-0.1),
+                  // right:rem(-0.1),
+                  //borderTop: connectionBorder,
+                  background: colors.connection,
+                  content: "' '"
+                }],
+                "&.first": [{
+                  top: remToPx(1)
+                }],
+                "&.focused": {
+                  borderLeft: focusedBorder,
+                  borderTop: focusedBorder,
+                  borderBottom: focusedBorder,
+                  "&::after": [{
+                    //borderTop: focusedBorder,
+                    background: action.main,
+                  }]
+                },
+                [directChild("avatar")]: [makeDimensionConstraints(remToPx(2.05)), {
+                  borderRadius: remToPx(1)
+                }]
+              }],
+              [directChild("connection")]: [PositionAbsolute, makeWidthConstraint(rem(0.15)), makeHeightConstraint(rem(0.5)), {
+                left: rem(3.9),
+                bottom: 0,
+                background: colors.connection
               }]
             }]
           }]

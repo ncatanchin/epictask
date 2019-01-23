@@ -16,7 +16,7 @@ module.exports = (isMain) => {
    * Create externals array
    */
   function makeExternals() {
-    const whitelist = isMain ? [] : [/webpack/,/react-hot/]
+    const whitelist = isMain ? [] : [/webpack/,/react-hot/,/codemirror/,/highlight\.js/]
   	return nodeExternals({
 			whitelist
 		})//['fs', 'module']

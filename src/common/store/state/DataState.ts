@@ -1,10 +1,18 @@
 import {State} from "typedux"
 import {DataType, IDataSet, IDataSyncStatus, makeDataSet} from "common/Types"
 import {ICollaborator, IRepo} from "common/models/Repo"
-import {IIssue} from "common/models/Issue"
+import {IIssue, IIssueEvent, IIssueEventData} from "common/models/Issue"
 import {IOrg} from "common/models/Org"
 import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
+import {IComment} from "common/models/Comment"
+
+
+const DefaultIssueEventData = {
+  timeline: [],
+  comments: [],
+  events: []
+}
 
 
 export class DataState implements State<string> {
@@ -25,6 +33,9 @@ export class DataState implements State<string> {
   labels: IDataSet<ILabel> = makeDataSet()
   milestones: IDataSet<IMilestone> = makeDataSet()
 
+	issueData: IIssueEventData = {...DefaultIssueEventData}
+
+
 	constructor(o:any = {}) {
 		Object.assign(this,o)
 	}
@@ -34,6 +45,7 @@ export class DataState implements State<string> {
 			...this,
 			repos: makeDataSet(),
 			issues: makeDataSet(),
+      issueData: {...DefaultIssueEventData},
 			orgs: makeDataSet(),
       collaborators: makeDataSet(),
 			labels: makeDataSet(),

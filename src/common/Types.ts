@@ -14,21 +14,48 @@ export interface IDataSet<T> {
 	ready:boolean
 	loadedRange:Pair<number, number>
 	loading:boolean
+	idProperty:keyof T
 }
 
 export function makeDataSet<T>(
 	data:Array<T> = Array<T>(),
 	total:number = data.length,
 	loadedStart:number = 0,
-	loadedEnd:number = total
+	loadedEnd:number = total,
+	idProperty:keyof T = "id" as any
 ):IDataSet<T> {
 	return {
 		data,
 		total,
 		ready: total > -1,
 		loadedRange: [loadedStart, loadedEnd],
-		loading: false
+		loading: false,
+		idProperty
 	}
+}
+
+export function updateDataSet<T = any>(newData:Array<T>, oldDataSet:IDataSet<T> | null):IDataSet<T> {
+	const	newDataSet = makeDataSet(newData)
+	if (!oldDataSet)
+		return newDataSet
+	else if (_.isEqual(oldDataSet, newDataSet))
+		return oldDataSet
+
+	if (_.isEqual(newDataSet.data, oldDataSet.data)) {
+		return Object.assign(newDataSet,{data: oldDataSet.data})
+	}
+
+  oldDataSet.data.forEach(oldObj => {
+  	const
+			oldId = oldObj[oldDataSet.idProperty],
+			newObjIndex = newData.findIndex(newObj => newObj[newDataSet.idProperty] === oldId)
+
+		if (newObjIndex > -1 && _.isEqual(newData[newObjIndex], oldObj)) {
+			newDataSet.data[newObjIndex] = oldObj
+		}
+	})
+
+	return newDataSet
 }
 
 export type PromiseResolver<T = any,TResult1 = T> = ((value: T) => TResult1 | PromiseLike<TResult1>)

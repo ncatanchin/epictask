@@ -376,3 +376,7 @@ export function getZIndex (element):number {
 		return 0
 	}
 }
+
+export function isHTMLElement(e:any): e is HTMLElement {
+	return e instanceof HTMLElement
+}

@@ -3,10 +3,11 @@ import {DataState} from "common/store/state/DataState"
 import {createSelector} from "reselect"
 import {IOrg} from "common/models/Org"
 import {ICollaborator, IRepo} from "common/models/Repo"
-import {IDataSet} from "common/Types"
+import {IDataSet, makeDataSet} from "common/Types"
 import getLogger from "common/log/Logger"
 import {appSelector} from "common/store/selectors/AppSelectors"
 import {IIssue} from "common/models/Issue"
+import moment from "moment"
 
 const log = getLogger(__filename)
 
@@ -64,4 +65,16 @@ export const selectedIssuesSelector = createSelector(
 
 export const collaboratorsSelector = dataSelector<Array<ICollaborator>>(state =>
 	state.collaborators.data
+)
+
+export const issuesSortedAndFilteredSelector = createSelector(
+	dataSelector(state => state.issues),
+	(issues:IDataSet<IIssue>) => {
+		const
+			sortedData = [...issues.data]
+				.sortBy(issue => moment(issue.updated_at || issue.created_at).valueOf(),true),
+			sortedIssues = makeDataSet(sortedData)
+
+		return sortedIssues
+	}
 )

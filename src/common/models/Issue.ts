@@ -8,6 +8,7 @@ import {IMilestone} from "./Milestone"
 import {IBranch, IRepo} from "common/models/Repo"
 import {convertEnumValuesToString} from "common/ObjectUtil"
 import {IUser} from "common/models/User"
+import {IComment} from "common/models/Comment"
 
 export interface IIssue extends IssuesCreateResponse {
 	labels: Array<ILabel>
@@ -90,3 +91,20 @@ export type UIIssueEventTypes =
 	//"reopened" |
 	//"unmarked"
 
+
+
+export type IssueEventTimelineItemType = "comment" | "activity"
+
+export type IssueEventTimelineItemPayloadType<K extends IssueEventTimelineItemType> = K extends "activity" ? IIssueEvent : IComment
+
+export interface IIssueEventTimelineItem<K extends IssueEventTimelineItemType = any, P = IssueEventTimelineItemPayloadType<K>> {
+  type: K
+  timestamp: number
+  payload: IssueEventTimelineItemPayloadType<K>
+}
+
+export interface IIssueEventData {
+  events: Array<IIssueEvent>
+  comments: Array<IComment>
+  timeline: Array<IIssueEventTimelineItem>
+}

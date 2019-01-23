@@ -1,5 +1,5 @@
 import {List} from 'immutable'
-import {getValue, guard, isFunction, isNil, isObject} from "typeguard"
+import {getValue, guard, isFunction, isNil, isObject, isString} from "typeguard"
 import getLogger from "common/log/Logger"
 
 
@@ -221,16 +221,15 @@ export function extractError(error:Error):Error | null {
 
 //type EnumProp<E> = {[key in keyof E]:E}
 
-export function convertEnumValuesToString<T = any>(obj:T):{[key in keyof T]:keyof  T} {
-	Object.keys(obj).forEach(key => {
-		if (isNaN(+key)) {
-			Object.defineProperty(obj, key, {
-				value: key,
-				enumerable: true
-			})
-		}
-	})
-	return obj as any
+export type EnumValueMap<T> = {[key in keyof T]:keyof  T}
+
+export function convertEnumValuesToString<T = any>(enumClazz:T):EnumValueMap<T> {
+	return Object.keys(enumClazz)
+		.filter(key => isString(key))
+		.reduce((valueMap,key) => {
+			valueMap[key] = key
+			return valueMap
+		},{} as EnumValueMap<T>)
 }
 
 export function isEmpty(o:any):boolean {

@@ -9,6 +9,11 @@ import {selectedOrgReposSelector} from "common/store/selectors/DataSelectors"
 import * as _ from 'lodash'
 import {guard} from "typeguard"
 import ReactSelect from 'react-select'
+import {StyledComponent} from "renderer/components/elements/StyledComponent"
+import {useCallback, useEffect, useMemo, useState} from "react"
+import {useCommandManager} from "renderer/command-manager-ui"
+import CommandContainerIds from "renderer/CommandContainers"
+import {assert} from "common/ObjectUtil"
 const log = getLogger(__filename)
 
 
@@ -33,74 +38,88 @@ interface P extends IThemedProperties {
 	onSelection: (repo:IRepo) => void
 	onOpen?:(open:boolean) => void
 	value:IRepo
-	repos?:Array<IRepo>
   selectRef?: React.Ref<ReactSelect<IRepo>> | React.RefObject<ReactSelect<IRepo>>
 }
 
-interface S {
-	open: boolean
+interface SP {
+  repos:Array<IRepo>
 }
 
-@withStatefulStyles(baseStyles, {withTheme: true})
-@connect(createStructuredSelector({
+function idGetter(value:IRepo):string {
+  return value.id.toString(10)
+}
+
+function labelGetter(value:IRepo):string {
+  return value.full_name
+}
+
+export default StyledComponent<P,SP>(baseStyles,{
 	repos: (state:IRootState) => state.DataState.repos.data,
-}))
-export default class RepoSelect extends React.Component<P,S> {
-
-	constructor(props:P) {
-		super(props)
-
-		this.state = {
-			open: false
-		}
-	}
-
-	private makeOpenHandler = (open:boolean) => () => this.setState({
-		open
-	}, () => guard(() => this.props.onOpen(open)))
-
-	render() {
-		const {
-			classes,
-			repos,
-			value,
+},{withTheme: true})(function RepoSelect(props:P & SP):React.ReactElement<P> {
+	const
+		{
+		  id,
 			theme,
-			innerRef,
-      selectRef
-		} = this.props
-		return <AutoCompleteSelect
-			options={repos}
-      selectRef={selectRef}
-			onSelection={this.props.onSelection}
-			idGetter={(value:IRepo) => value.id.toString(10)}
-			labelGetter={(value:IRepo) => value.full_name}
-			value={value}
-			onMenuOpen={this.makeOpenHandler(true)}
-			onMenuClose={this.makeOpenHandler(false)}
-			classes={{
-				paper: classes.paper
-			}}
-			styles={{
-				input: (base,state,...other) => {
-					//log.info("Input base", base, state,other)
-					return {
-						...base,
-						color: theme.palette.primary.contrastText
-					}
-				},
-				menuPortal: (base,state) => {
-					//log.info("Portal base", base, state)
-					return {
-						..._.omit(base,'width','left'),
-						right: window.innerWidth - base.left - base.width,
-						minWidth: base.width,
-						maxWidth: "40vw",
-						zIndex: 9999,
-					}
-				}
-			}}
+      classes,
+      repos,
+      value,
+      innerRef,
+      selectRef,
+      onSelection,
+			...other
+		} = props,
+    [open, setOpen] = useState(false),
+		onOpen = useCallback(() => setOpen(true),[open]),
+    onClose = useCallback(() => setOpen(false),[open])
 
-		/>
+  assert(() => !!id,() => "ID is required")
 
-	}
-}
+  const
+    {props:commandManagerProps} = useCommandManager(
+			id,
+				builder => builder.make(),
+			selectRef as React.RefObject<any>
+		)
+
+	useEffect(() => {
+    guard(() => props.onOpen(open))
+	},[open])
+
+	const styles = useMemo(() => ({
+    input: (base,state,...other) => {
+      return {
+        ...base,
+        color: theme.palette.primary.contrastText
+      }
+    },
+    menuPortal: (base,state) => {
+      return {
+        ..._.omit(base,'width','left'),
+        right: window.innerWidth - base.left - base.width,
+        minWidth: base.width,
+        maxWidth: "40vw",
+        zIndex: 9999,
+      }
+    }
+  }),[theme,open])
+
+
+
+
+  return <AutoCompleteSelect
+    options={repos}
+    selectRef={selectRef}
+    onSelection={onSelection}
+    commandManagerProps={commandManagerProps}
+    idGetter={idGetter}
+    labelGetter={labelGetter}
+    value={value}
+    onMenuOpen={onOpen}
+    onMenuClose={onClose}
+    classes={{
+      paper: classes.paper
+    }}
+    styles={styles}
+
+  />
+})

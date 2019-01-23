@@ -1,9 +1,15 @@
 import {getAPI} from "renderer/net/GithubAPI"
-import {IIssue, IIssueEvent} from "common/models/Issue"
+import {
+  IIssue,
+  IIssueEvent,
+  IIssueEventData, IIssueEventTimelineItem,
+  IssueEventTimelineItemPayloadType,
+  IssueEventTimelineItemType
+} from "common/models/Issue"
 import db from "renderer/db/ObjectDatabase"
-import {IssuesUpdateParams} from "@octokit/rest"
+import {IssuesCreateParams, IssuesUpdateParams} from "@octokit/rest"
 import {DataActionFactory} from "common/store/actions/DataActionFactory"
-import {selectedRepoSelector} from "common/store/selectors/DataSelectors"
+import {selectedIssuesSelector, selectedRepoSelector} from "common/store/selectors/DataSelectors"
 import {getValue, isDefined, isNumber} from "typeguard"
 import {ICollaborator, IRepo} from "common/models/Repo"
 import {IComment} from "common/models/Comment"
@@ -12,8 +18,58 @@ import getLogger from "common/log/Logger"
 import moment from "moment"
 import {IMilestone} from "common/models/Milestone"
 import {ILabel} from "common/models/Label"
+import {Omit} from "common/Types"
 
 const log = getLogger(__filename)
+
+export async function patchComment(issue:IIssue | number, comment:IComment | number, body:string):Promise<IComment> {
+  if (isNumber(issue)) {
+    issue = await db.issues.get(issue)
+  }
+
+  const issueId = issue.id
+
+  if (isNumber(comment)) {
+    comment = await db.comments.get(comment)
+  }
+
+  const
+    gh = getAPI(),
+    repo = await db.repos.where("url").equals(issue.repository_url).first(),
+    updatedComment = await gh.issues.updateComment({
+      owner: repo.owner.login,
+      repo: repo.name,
+      body,
+      comment_id:comment.id
+    }),
+    newComment = {...comment,...updatedComment,issue_id: comment.issue_id}
+
+
+  await db.comments.put(newComment)
+
+  if (getValue(() => selectedIssuesSelector(getStoreState()).some(selectedIssue => selectedIssue.id === issueId))) {
+    new DataActionFactory().updateComment(newComment)
+  }
+
+  return newComment
+}
+
+
+export async function createIssue(repo:IRepo, params:Omit<IssuesCreateParams,"owner" | "repo">):Promise<IIssue> {
+  const
+    gh = getAPI(),
+    newIssue = (await gh.issues.create({
+      owner: repo.owner.login,
+      repo: repo.name,
+      ...params
+    })).data as IIssue
+
+  await db.issues.put(newIssue)
+
+  log.info("Created issue", newIssue)
+  new DataActionFactory().updateIssue(newIssue)
+  return newIssue
+}
 
 /**
  * Patch an issue on Github
@@ -33,16 +89,24 @@ export async function patchIssue(issue:IIssue | number,props:Partial<IssuesUpdat
   if (!repo)
     throw Error(`Unable to find repo: ${issue.repository_url}`)
 
-  const updatedIssue = (await gh.issues.update({
+
+  await gh.issues.update({
     owner: repo.owner.login,
     repo: repo.name,
     number:issue.number,
     ...props
-  })).data as IIssue
+  })
 
   const
-    dbIssue = await db.issues.get(issue.id),
-    newIssue = Object.assign({},dbIssue,updatedIssue) as IIssue
+    updatedIssue = (await gh.issues.get({
+      owner: repo.owner.login,
+      repo: repo.name,
+      number:issue.number
+    })).data as IIssue
+
+
+  const
+    newIssue = {...issue,...updatedIssue} as IIssue
 
   await db.issues.put(newIssue)
 
@@ -115,28 +179,17 @@ export async function findIssueIdFromEvent(repo:IRepo, event:IIssueEvent):Promis
 }
 
 
-export type IssueEventTimelineItemType = "comment" | "activity"
-
-export type IssueEventTimelineItemPayloadType<K extends IssueEventTimelineItemType> = K extends "activity" ? IIssueEvent : IComment
-
-export interface IIssueEventTimelineItem<K extends IssueEventTimelineItemType = any, P = IssueEventTimelineItemPayloadType<K>> {
-  type: K
-  timestamp: number
-  payload: IssueEventTimelineItemPayloadType<K>
-}
-
-export interface IIssueEventData {
-  events: Array<IIssueEvent>
-  comments: Array<IComment>
-  timeline: Array<IIssueEventTimelineItem>
-}
-
-//export const UIIssueEventTypes:Array =
-
 export async function getIssueEvents(issueId:number):Promise<IIssueEventData> {
   const
+    issue = await getIssue(issueId),
+    repo = await db.repos.where("url").equals(issue.repository_url).first(),
     events = await db.issueEvents.where("issue_id").equals(issueId).toArray(),
-    comments = await db.comments.where("issue_id").equals(issueId).toArray(),
+    comments = (await db.comments.where("issue_id").equals(issueId).toArray())
+      .map(comment => ({
+        ...comment,
+        repo,
+        repository_url: repo.url
+      })),
     timeline = [
       ...events.map(event => ({
         type: "activity",
@@ -156,6 +209,7 @@ export async function getIssueEvents(issueId:number):Promise<IIssueEventData> {
     timeline
   }
 }
+
 
 
 export function isTimelineComment<

@@ -1,7 +1,8 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
 import {
-  child, CursorPointer,
+  child,
+  CursorPointer,
   directChild,
   Ellipsis,
   Fill,
@@ -18,13 +19,13 @@ import {
   makeMarginRem,
   makePaddingRem,
   makeTransition,
-  makeWidthConstraint, mergeClasses, mergeStyles,
+  mergeClasses,
   OverflowAuto,
   OverflowHidden,
   PositionAbsolute,
   PositionRelative,
-  rem, Transparent,
-  withStatefulStyles
+  rem,
+  Transparent
 } from "renderer/styles/ThemedStyles"
 import {IIssue} from "common/models/Issue"
 import {Typography} from "@material-ui/core"
@@ -32,22 +33,28 @@ import Divider from "@material-ui/core/Divider"
 import {FlexSpacer} from "renderer/components/elements/FlexSpacer"
 import Labels from "renderer/components/elements/Labels"
 import {ILabel} from "common/models/Label"
-import {getValue} from "typeguard"
-import Avatar from "renderer/components/elements/Avatar"
 import Moment from "react-moment"
-import {darken} from "@material-ui/core/styles/colorManipulator"
 import Milestone from "./Milestone"
 import {IMilestone} from "common/models/Milestone"
-import {getIssue, patchIssue, patchIssueAssignees, patchIssueLabels, patchIssueMilestone} from "renderer/net/IssueAPI"
+import {getIssue, patchIssueAssignees, patchIssueLabels, patchIssueMilestone} from "renderer/net/IssueAPI"
 import {uiTask} from "renderer/util/UIHelper"
-import * as _ from 'lodash'
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {Color} from "csstype"
 import HorizontalScroll from "renderer/components/elements/HorizontalScroll"
 import Collaborators from "renderer/components/elements/Collaborators"
 import {ICollaborator} from "common/models/Repo"
+import {
+  GitPullRequest as PullRequestIcon,
+  IssueClosed as ClosedIcon,
+  IssueOpened as OpenIcon,
+  PrimitiveDot as DotIcon
+} from "@githubprimer/octicons-react"
+import IssueStateLabel from "renderer/components/elements/IssueStateLabel"
+import {useCallback} from "react"
 
-const log = getLogger(__filename)
+const
+  Octicon = require("@githubprimer/octicons-react").default,
+  log = getLogger(__filename)
 
 declare global {
   type IssueListItemColor = "bg" |
@@ -57,7 +64,10 @@ declare global {
     "outline" |
     "boxShadow" |
     "dividerBoxShadow" |
-    "text"
+    "text" |
+    "marker" |
+    "metadata"
+
   type IssueListItemColors = { [key in IssueListItemColor]: Color }
 
   interface IIssueListItemStyles {
@@ -68,14 +78,20 @@ declare global {
   }
 }
 
+function getColorCode({selected,info,issue}:P):string {
+  return selected || info ?
+    (issue.pull_request ? "pr" : (issue.state || "open")) :
+    "normal"
+}
+
 function baseStyles(theme): any {
   const
-    {palette, focus, components: {IssueListItem, Milestone}} = theme,
-    {primary, secondary, action} = palette
-
-  const
+    {palette, components: {IssueListItem, Milestone}} = theme,
     colorGetter = (color: IssueListItemColor): ((props: P) => Color) => (props: P) => {
-      const colors = IssueListItem.colors[props.selected ? "selected" : "normal"] || IssueListItem.colors.normal
+      const
+        type = getColorCode(props),
+        colors = IssueListItem.colors[type] || IssueListItem.colors.normal
+
       return colors[color]
     }
 
@@ -87,35 +103,42 @@ function baseStyles(theme): any {
       zIndex: 2,
       boxShadow: colorGetter("dividerBoxShadow")
     }],
-    outline: [makeTransition("box-shadow",100),PositionAbsolute,Fill,{
+    boxShadow: [makeTransition("box-shadow", 100), PositionAbsolute, Fill, {
       pointerEvents: "none",
       zIndex: 2,
       top: 0,
       left: 0,
-      boxShadow: colorGetter("outline")
+      //boxShadow: colorGetter("outline"),
+      boxShadow: colorGetter("boxShadow")
     }],
     root: [FillWidth, FlexColumn, PositionRelative, CursorPointer, {
+      "&.info": [{
+        minHeight: rem(5.5)
+      }],
       background: colorGetter("bg"),
-      boxShadow: colorGetter("boxShadow"),
       [directChild('content')]: [FlexScale, FillHeight, FlexRow, makePaddingRem(0), {
         [directChild("main")]: [FlexScale, FlexColumn, PositionRelative, OverflowHidden, {
           [directChild("top")]: [FlexRow, FillWidth, makeHeightConstraint(rem(2.5)), makePaddingRem(0.3, 0.5, 0), {
             background: colorGetter("topBg"),
             alignItems: 'center',
             [directChild("title")]: [FlexScale, makePaddingRem(0, 0.5, 0, 0), Ellipsis, {
-              fontSize: rem(1),
-              "& > .number": [makePaddingRem(0, 0.4, 0, 0), {
-                color: colorGetter("number")
-              }]
+              fontSize: rem(1.2),
+              fontWeight: 500
             }],
-            [directChild("updatedAt")]: [{
-              flexGrow: 0,
-              flexShrink: 2,
-              minWidth: "15%",
+            [directChild("metadata")]: [FlexAuto, {
               fontSize: rem(0.7),
-              color: colorGetter("updatedAt"),
-              textAlign: "right"
+              color: colorGetter("metadata")
+            }],
+            [directChild("dot")]: [FlexAuto, makePaddingRem(0, 0.5), {
+              color: colorGetter("metadata"),
+              fontSize: rem(0.3),
+              ["& svg"]: [makeDimensionConstraints(rem(0.3))]
             }]
+            // [directChild("updatedAt")]: [FlexAuto,{
+            //   fontSize: rem(0.7),
+            //   color: colorGetter("updatedAt"),
+            //   textAlign: "right"
+            // }]
           }],
           [directChild("bottomRow")]: [FlexAuto, FillWidth, OverflowAuto, FlexRowCenter, makePaddingRem(0.3, 0.4, 0.5, 0), {
             [directChild("labelsContainer")]: [FlexScale, PositionRelative, makeMarginRem(0), {
@@ -173,108 +196,102 @@ function baseStyles(theme): any {
 
 interface P extends IThemedProperties {
   issue: IIssue
-  index: number
-  selected: boolean
+  selected?: boolean
+  info?: boolean
 }
 
 
-export default StyledComponent(baseStyles, {withTheme: true})(function IssueListItem(props: P):React.ReactElement<P> {
+export default StyledComponent<P>(baseStyles, {withTheme: true})(function IssueListItem(props: P): React.ReactElement<P> {
 
   const
-    {issue, index, classes, selected, style, theme, ...other} = props
+    {issue, classes, selected = false, info = false, style, theme, ...other} = props
 
-  function onLabelsChanged(labels: Array<ILabel>): void {
+  const onLabelsChanged = useCallback((labels: Array<ILabel>): void => {
     uiTask(async () => {
-      const issue = await getIssue(props.issue.id)
-      await patchIssueLabels(issue, labels)
+      await patchIssueLabels(await getIssue(issue.id), labels)
     })
-  }
+  },[issue])
 
-  function onMilestoneSelected(milestone: IMilestone | null):void {
+  const onMilestoneSelected = useCallback((milestone: IMilestone | null): void => {
     uiTask(async () => {
-      await patchIssueMilestone(props.issue.id, milestone)
+      await patchIssueMilestone(issue.id, milestone)
     })
-  }
+  },[issue])
 
-  function onCollaboratorsSelected(collabs: Array<ICollaborator> | null):void {
+  const onCollaboratorsSelected = useCallback((collabs: Array<ICollaborator> | null): void => {
     uiTask(async () => {
-      await patchIssueAssignees(props.issue.id,collabs)
+      await patchIssueAssignees(issue.id, collabs)
     })
-  }
-
-  //function renderContent(selected: boolean): React.ReactElement<P> {
+  },[issue])
 
 
-    return <div
-      style={style}
-      className={mergeClasses(classes.root, selected && "selected")}
-      {...other}
-    >
-      <Divider classes={{
-        root: classes.divider
-      }}/>
-      <div className="content">
-        <div className="main">
-          <div className="top">
-            <Typography className="title" component="div"><span className="number">#{issue.number}</span> {issue.title}
-            </Typography>
-            <Typography className="updatedAt" component="div">
-              <Moment fromNow date={issue.updated_at}/>
-            </Typography>
+  return <div
+    style={style}
+    className={mergeClasses(classes.root, selected && "selected", info && "info")}
+    {...other}
+  >
+    {!info && <Divider classes={{
+      root: classes.divider
+    }}/>}
+    <div className="content">
+      <div className="main">
+        <div className="top">
+          <IssueStateLabel variant={selected || info ? "contrast" : "normal"} issue={issue} />
+          <Typography className="title" component="div">{issue.title}
+          </Typography>
+          <Typography className="metadata" component="div">
+            #{issue.number}
+          </Typography>
+          <div className="dot">
+            <Octicon icon={DotIcon}/>
           </div>
-          <FlexSpacer/>
-          <div className="bottomRow">
-            <Collaborators
-              id={`issue-list-item-${issue.id}-collabs`}
-              issue={issue}
-              onSelected={onCollaboratorsSelected}
-            />
-            <Milestone
-              id={`issue-list-item-${issue.id}-milestone`}
-              milestone={issue.milestone}
-              onSelected={onMilestoneSelected}
-              classes={{
-                chip: classes.milestoneChip,
-                root: classes.milestoneRoot
-              }}
-            />
-            <HorizontalScroll selector=".labels" shadow={{
-              from: theme.components.IssueListItem.colors[selected ? "selected" : "normal"].labelScrollFade,
-              to: Transparent,
-              length: rem(1)
-            }}>
-              {containerRef =>
-                <div ref={containerRef} className="labelsContainer">
-                  <Labels
-                    id={`issue-list-item-${issue.id}-labels`}
-                    labels={issue.labels}
-                    className="labels"
-                    classes={{
-                      chip: classes.labelChip,
-                      //add: classes.labelAdd,
-                      spacer: classes.labelsSpacer
-                    }}
-                    onChanged={onLabelsChanged}
-                    editable
-                  />
-                </div>
-              }
-            </HorizontalScroll>
-          </div>
+          <Typography className="metadata" component="div">
+            <Moment fromNow date={issue.updated_at}/>
+          </Typography>
         </div>
-        {/*<div className="secondary" style={makeWidthConstraint(style.height)}>*/}
-        {/*<Avatar square user={getValue(() => issue.assignees[0])} className="assignee"/>*/}
-        {/*<div className="subAssignees">*/}
-        {/*{getValue(() => issue.assignees.slice(1).map(user =>*/}
-        {/*<Avatar key={user.id} user={user} className="subAssignee"/>*/}
-        {/*))}*/}
-        {/*</div>*/}
-        {/*</div>*/}
+        <FlexSpacer/>
+        <div className="bottomRow">
+          <Collaborators
+            id={`issue-list-item-${issue.id}-collabs`}
+            issue={issue}
+            onSelected={onCollaboratorsSelected}
+          />
+          <Milestone
+            id={`issue-list-item-${issue.id}-milestone`}
+            milestone={issue.milestone}
+            onSelected={onMilestoneSelected}
+            classes={{
+              chip: classes.milestoneChip,
+              root: classes.milestoneRoot
+            }}
+          />
+          <HorizontalScroll selector=".labels" shadow={{
+            from: theme.components.IssueListItem.colors[getColorCode(props)].labelScrollFade,
+            to: Transparent,
+            length: rem(1)
+          }}>
+            {containerRef =>
+              <div ref={containerRef} className="labelsContainer">
+                <Labels
+                  id={`issue-list-item-${issue.id}-labels`}
+                  labels={issue.labels}
+                  className="labels"
+                  classes={{
+                    chip: classes.labelChip,
+                    spacer: classes.labelsSpacer
+                  }}
+                  onChanged={onLabelsChanged}
+                  editable
+                />
+              </div>
+            }
+          </HorizontalScroll>
+        </div>
       </div>
-
-      {/*{selected && <div className="selected"/>}*/}
-      <div className={classes.outline} />
     </div>
+
+    <div className={classes.boxShadow}/>
+  </div>
 
   // }
   //

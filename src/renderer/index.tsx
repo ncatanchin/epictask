@@ -61,6 +61,7 @@ async function renderRoot():Promise<void> {
     )
   }
 
+  await import("common/Scheduler")
   await loadAndInitStore()
   await require("./init").default
   await require("common/watchers").default

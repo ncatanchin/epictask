@@ -1,8 +1,8 @@
-import {makeMaterialPalette} from "renderer/styles/MaterialColors"
+import {Color, makeMaterialPalette} from "renderer/styles/MaterialColors"
 import createMuiTheme from "@material-ui/core/styles/createMuiTheme"
 import {
   Ellipsis, Fill,
-  IThemePalette, makePaddingRem,
+  IThemePalette, makeDimensionConstraints, makePaddingRem,
   makeTransition,
   mergeStyles, NestedStyles,
   OverflowHidden, PositionAbsolute, PositionRelative,
@@ -28,7 +28,10 @@ const darkPalette = {
   textNight: makeMaterialPalette("#FFFFFF", "A200", "A400", "A700"),
   error: makeMaterialPalette("#ff3633", "A200", "A400", "A700"),
   success: makeMaterialPalette("#3cff32", "A200", "A400", "A700"),
-  action: makeMaterialPalette("#5054ff", "A200", "A400", "A700")
+  action: makeMaterialPalette("#5054ff", "A200", "A400", "A700"),
+  open: makeMaterialPalette("#22993E", "A200", "A400", "A700"),
+  closed: makeMaterialPalette("#DD747F", "A200", "A400", "A700"),
+  pr: makeMaterialPalette("#C297FF", "A200", "A400", "A700")
 } as IThemePalette
 
 
@@ -60,7 +63,7 @@ declare global {
 
 function makeDarkTheme(): ITheme & any {
   const
-    {action, primary, secondary} = darkPalette,
+    {action, primary, secondary, open, closed, pr} = darkPalette,
     outlineFocused = `inset 0px 0px 0.1rem 0.1rem ${action.main}`,
     outline = {
       "&::after": [PositionAbsolute, Fill, makeTransition('box-shadow'), {
@@ -69,6 +72,14 @@ function makeDarkTheme(): ITheme & any {
         boxShadow: outlineFocused,
         content: "' '"
       }]
+    },
+    Dimensions = {
+      resizer: remToPx(0.6),
+      button: {
+        small: remToPx(1),
+        medium: remToPx(1.6),
+        large: remToPx(2.4)
+      }
     },
     Typography = {
       highlight: {
@@ -151,31 +162,40 @@ function makeDarkTheme(): ITheme & any {
         commentBorder: darken(primary.main, 0.8),
         commentBodyBg: darken(primary.main, 0.85),
         commentText: darken(primary.contrastText, 0.3),
-        connection: darken(primary.main, 0.7)
-
+        connection: darken(primary.main, 0.6)
       }
     }],
 
     IssueListItem = [{
       colors: Run(() => {
-        const normal = {
-          bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
-          labelScrollFade: darken(primary.dark, 0.4),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
-          number: darken(primary.contrastText, 0.5),
-          updatedAt: darken(primary.contrastText, 0.7),
-          subtitle: darken(primary.contrastText, 0.3),
-          topBg: `border-box radial-gradient(${darken(primary.dark, 0.6)}, ${darken(primary.dark, 0.7)})`,
-          boxShadow: "inset 0 0 0.2rem 0.2rem rgba(10,10,10,0.3)",
-          dividerBoxShadow: "0px 0rem 0.5rem 0.3rem rgba(3, 12, 7, 0.80)",
-          outline: Transparent,
-          text: primary.contrastText
-        }
+        const
+          normal = {
+            bg: `border-box radial-gradient(${darken(primary.dark, 0.4)}, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            labelScrollFade: darken(primary.dark, 0.4),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            metadata: darken(primary.contrastText, 0.7),
+            //updatedAt: darken(primary.contrastText, 0.7),
+            subtitle: darken(primary.contrastText, 0.3),
+            topBg: Transparent,//`border-box radial-gradient(${darken(primary.dark, 0.6)}, ${darken(primary.dark, 0.7)})`,
+            boxShadow: "inset 0 0 0.2rem 0.2rem rgba(10,10,10,0.3)",
+            dividerBoxShadow: "0px 0rem 0.5rem 0.3rem rgba(3, 12, 7, 0.80)",
+            outline: Transparent,
+            text: primary.contrastText,
+            marker: Transparent
+          },
+          makeStatusColor = (color: Color): any => Object.assign({}, normal, {
+            bg: `border-box radial-gradient(${color.main}, ${lighten(color.main, 0.2)})`,//darken(primary.dark,0.4),
+            topBg: Transparent,//`border-box radial-gradient(${lighten(color.main, 0.1)}, ${lighten(color.main, 0.3)})`,
+            labelScrollFade: lighten(color.main, 0.1),//`$, ${darken(primary.dark, 0.5)})`,//darken(primary.dark,0.4),
+            metadata: lighten(color.contrastText, 0.7),
+            subtitle: lighten(color.contrastText, 0.3)
+          })
+
+
         return {
           normal,
-          selected: Object.assign({}, normal, {
-            //context-box radial-gradient(${action.main}, ${darken(action.main, 0.1)})
-            outline: outlineFocused
-          })
+          open: makeStatusColor(open),
+          closed: makeStatusColor(closed),
+          pr: makeStatusColor(pr)
         }
 
       })
@@ -198,13 +218,26 @@ function makeDarkTheme(): ITheme & any {
     Avatar = [{
       colors: {
         bg: darken(primary.main, 0.9),
-        default: darken(primary.contrastText, 0.2),
+        default: darken(primary.contrastText, 0.2)
       }
     }],
     Chip = [{
       dimen: {
         small: 1.4,
         normal: 2
+      }
+    }],
+    Button = [{
+      overlayFAB: [makeTransition("opacity"),{
+        background: darken(primary.dark,0.4),
+        borderRadius: rem(0.2),
+        opacity: 0.8,
+        "&:hover": [{
+          opacity: 1
+        }]
+      }],
+      colors: {
+
       }
     }]
 
@@ -229,7 +262,8 @@ function makeDarkTheme(): ITheme & any {
       ].join(','),
       fontWeightLight: 300,
       fontWeightRegular: 400,
-      fontWeightMedium: 500
+      fontWeightMedium: 500,
+
     },
 
     spacing: {
@@ -240,9 +274,7 @@ function makeDarkTheme(): ITheme & any {
       global: primary.dark
     },
 
-    dimensions: {
-      resizer: remToPx(0.6)
-    },
+    dimensions: Dimensions,
 
     components: {
       Typography,
@@ -256,7 +288,8 @@ function makeDarkTheme(): ITheme & any {
       Header,
       Labels,
       Avatar,
-      Chip
+      Chip,
+      Button
     },
 
     outline,
@@ -272,8 +305,86 @@ function makeDarkTheme(): ITheme & any {
           height: rem(0.1)
         }
       }
-    }
+    },
 
+    highlightjs: {
+      ".hljs": {
+        display: "block",
+        overflowX: "auto",
+        padding: rem(0.5),
+        color: "#abb2bf",
+        background: "#282c34"
+      },
+
+      [`.hljs-comment,
+.hljs-quote`]: {
+        color: "#5c6370",
+        fontStyle: "italic"
+      },
+
+      [`.hljs-doctag,
+.hljs-keyword,
+.hljs-formula`]: {
+        color: "#c678dd"
+      },
+
+      [`.hljs-section,
+.hljs-name,
+.hljs-selector-tag,
+.hljs-deletion,
+.hljs-subst`]: {
+        color: "#e06c75"
+      },
+
+      ".hljs-literal": {
+        color: "#56b6c2"
+      },
+
+      [`.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attribute,
+.hljs-meta-string`]: {
+        color: "#98c379"
+      },
+
+      [`.hljs-built_in,
+.hljs-class .hljs-title`]: {
+        color: "#e6c07b"
+      },
+
+      [`.hljs-attr,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-type,
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-number`]: {
+        color: "#d19a66"
+      },
+
+      [`.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-title`]: {
+        color: "#61aeee"
+      },
+
+      [`.hljs-emphasis`]: {
+        fontStyle: "italic"
+      },
+
+      [`.hljs-strong`]: {
+        fontWeight: "bold"
+      },
+
+      [`.hljs-link`]: {
+        textDecoration: "underline"
+      }
+    }
   })) as any
 }
 

@@ -29,7 +29,6 @@ import {Person as PersonIcon} from "@githubprimer/octicons-react"
 
 const
   Octicon = require("@githubprimer/octicons-react").default,
-  DefaultAvatar = <Octicon className="picture default" icon={PersonIcon}/>,
   log = getLogger(__filename)
 
 function fillProps(props: P): P {
@@ -42,7 +41,10 @@ function fillProps(props: P): P {
 }
 
 function makeCollabs(props: P): Array<ICollaborator> {
-  const {collaboratorOptions: options, issue: {assignee, assignees}} = props
+  const {collaboratorOptions: options, issue} = props
+  if (!issue) return []
+
+  const {assignee, assignees = []} = issue
   const allAssignees = [...(assignee ? [assignee] : []), ...(assignees || [])]
   return _.uniqBy(
     allAssignees
@@ -70,43 +72,42 @@ function baseStyles(theme: Theme): NestedStyles {
     {primary, secondary} = palette,
     collabDimGetter = makeCollabDimGetter(theme),
     picDimGetter = propsFn(({variant}: P): string => rem(Chip.dimen[variant] - 0.2)),
-    horizontalPadding = 1,
+    horizontalPadding = theme.spacing.unit,
     calcWidth = (props: P): number | string => {
       const
         collabs = makeCollabs(props),
         dim = collabDimGetter(props)
 
-      return `calc((${rem(horizontalPadding)} * 2) + ${dim} + ((${dim} / 2) * ${Math.max(1,collabs.length - 1)}))`
+      return `calc((${horizontalPadding}px * 2) + ${dim} + ((${dim} / 2) * ${Math.max(1,collabs.length - 1)}))`
     }
 
   return {
     root: [
       PositionRelative,
       makeWidthConstraint(calcWidth),
-      makeHeightConstraint(propsFn(collabDimGetter)),
-      {
-        "& > .avatars": [Fill, makePaddingRem(0, horizontalPadding), PositionRelative, {
-          "& > .pictureWrapper": [PositionAbsolute, FlexRowCenter, FillHeight, makeDimensionConstraints(collabDimGetter), {
-            boxSizing: "content-box",
-            left: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`),
-            top: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`),
-            "& > .pictureOutline": [FlexAuto, FlexRowCenter, OverflowHidden, makeDimensionConstraints(collabDimGetter), {
-              background: Avatar.colors.bg,
-              borderRadius: propsFn((props: P) => `calc(${collabDimGetter(props)} / 2)`),
-              "& > .picture": [FlexAuto, OverflowHidden, makeDimensionConstraints(picDimGetter), {
-                borderRadius: propsFn((props: P) => `calc(${picDimGetter(props)} / 2)`),
-                "&.default": [{
-                  background: Avatar.colors.bg,
-                  color: Avatar.colors.default,
-                  fill: Avatar.colors.default
-                }]
-              }]
-            }]
-          }]
-        }]
+      makeHeightConstraint(propsFn(collabDimGetter)), {
+        paddingRight: `${horizontalPadding}px`,
+        paddingLeft: `${horizontalPadding}px`,
+      }],
+    avatars: [Fill, PositionRelative],
+    pictureWrapper: [PositionAbsolute, FlexRowCenter, FillHeight, makeDimensionConstraints(collabDimGetter), {
+      boxSizing: "content-box",
+      left: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`),
+      top: propsFn((props: P) => `calc(50% - (${collabDimGetter(props)} / 2))`)
 
-      }
-    ]
+    }],
+    pictureOutline: [FlexAuto, FlexRowCenter, OverflowHidden, makeDimensionConstraints(collabDimGetter), {
+      background: Avatar.colors.bg,
+      borderRadius: propsFn((props: P) => `calc(${collabDimGetter(props)} / 2)`)
+    }],
+    picture: [FlexAuto, OverflowHidden, makeDimensionConstraints(picDimGetter), {
+      borderRadius: propsFn((props: P) => `calc(${picDimGetter(props)} / 2)`),
+      "&.default": [{
+        background: Avatar.colors.bg,
+        color: Avatar.colors.default,
+        fill: Avatar.colors.default
+      }]
+    }]
   }
 }
 
@@ -142,14 +143,15 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
       ...other
     } = fullProps,
     [collabs, setCollabs] = useState(makeCollabs(fullProps)),
-    collabDim = makeCollabDimGetter(theme)(fullProps)
+    collabDim = makeCollabDimGetter(theme)(fullProps),
+    [DefaultAvatar] = useState<React.ReactNode>(() => <Octicon className={mergeClasses(classes.picture, "default")} icon={PersonIcon}/>)
 
   useEffect(() => {
     const newCollabs = makeCollabs(fullProps)
     if (!_.isEqual(collabs, newCollabs)) {
       setCollabs(newCollabs)
     }
-  }, [issue.assignee, issue.assignees])
+  }, [issue && issue.assignee, issue && issue.assignees])
 
   const
     [open, setOpen] = useState(false),
@@ -178,18 +180,18 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
 
   return <div className={classes.root} ref={anchorEl as any} aria-owns={open ? id : null}>
     <Tooltip title={tooltipTitle}>
-      <div className="avatars" onClick={() => setOpen(true)}>
+      <div className={classes.avatar} onClick={() => setOpen(true)}>
         {collabs.length ? collabs.map((collab, index) => <div
           key={collab.id}
-          className="pictureWrapper"
+          className={classes.pictureWrapper}
           style={{
             zIndex: collabs.length - index,
             marginLeft: `calc(${index} * (${collabDim} / 2))`
           }}
         >
-          <div className="pictureOutline">
+          <div className={classes.pictureOutline}>
             {collab.avatar_url ? <Img
-              className={mergeClasses("picture", className)}
+              className={mergeClasses(classes.picture, className)}
               src={getAvatarURL(collab)}
               loader={DefaultAvatar}
               {...other}
@@ -198,9 +200,9 @@ export default StyledComponent<P>(baseStyles, selectors, {withTheme: true})(func
         </div>) :
           <div
             key="add"
-            className="pictureWrapper"
+            className={classes.pictureWrapper}
           >
-            <div className="pictureOutline">
+            <div className={classes.pictureOutline}>
               {DefaultAvatar}
             </div>
           </div>

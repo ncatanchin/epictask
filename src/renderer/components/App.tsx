@@ -4,17 +4,16 @@ import * as React from "react"
 import {
   FillWidth,
   FillWindow,
-  FlexColumn, FlexScale,
-  IThemedProperties, PositionRelative,
-  StyleDeclaration,
-  withStatefulStyles
+  FlexColumn,
+  FlexScale,
+  IThemedProperties,
+  PositionRelative,
+  StyleDeclaration
 } from "renderer/styles/ThemedStyles"
 import {ConnectedRouter} from "react-router-redux"
 import {Redirect, Route} from "react-router"
-import Loadable from "react-loadable"
-import Header from "renderer/components/Header"
-import {HeaderContext} from "renderer/components/Context"
 import IssuesLayout from "./issues/Layout"
+import {StyledComponent} from "renderer/components/elements/StyledComponent"
 
 function baseStyles():StyleDeclaration {
   return {
@@ -29,55 +28,16 @@ function baseStyles():StyleDeclaration {
   } as any
 }
 
-// const IssuesLayoutLoader = Loadable({
-//   loader:  () => import("./issues/Layout"),
-//   loading: () => <div>loading</div>,
-//   // render(loaded:any, props) {
-//   //   let Component = loaded.namedExport;
-//   //   return <Component {...props}/>;
-//   // }
-// })
+export default StyledComponent(baseStyles)(function App(props:IThemedProperties): React.ReactElement<IThemedProperties> {
+  const
+    {classes} = props
 
-interface S {
-  headerRef:Header | null
-}
-
-@withStatefulStyles(baseStyles)
-export class App extends React.Component<IThemedProperties,S> {
-	
-  constructor(props,context) {
-		super(props,context)
-    
-    this.state = {
-		  headerRef: null
-    }
-	}
-	
-	private setHeaderRef = (headerRef:Header):void =>
-    this.setState({headerRef})
-  
-	
-  render() {
-    const
-      {classes} = this.props,
-      {headerRef} = this.state
-    return <div className={classes.app}>
-      <Header headerRef={this.setHeaderRef} className={classes.header}/>
-      {headerRef &&
-      <ConnectedRouter store={getReduxStore()} history={getRouterHistory()}>
-        <HeaderContext.Provider value={headerRef}>
-      
-      
-          <div id="content" className="content">
-            <Route path="/issues" component={() => <IssuesLayout header={headerRef}/>}/>
-            <Redirect to="/issues" path="/" exact/>
-          </div>
-    
-        </HeaderContext.Provider>
-      </ConnectedRouter>
-      }
-    </div>
-  }
-}
-
-export default App
+  return <div className={classes.app}>
+    <ConnectedRouter store={getReduxStore()} history={getRouterHistory()}>
+      <div id="content" className="content">
+        <Route path="/issues" component={() => <IssuesLayout />}/>
+        <Redirect to="/issues" path="/" exact/>
+      </div>
+    </ConnectedRouter>
+  </div>
+})

@@ -4,9 +4,12 @@ import {getConfig} from "common/config/ConfigHelper"
 import {IUser} from "common/models/User"
 import {IAcceleratorMap} from "common/models/CommandTypes"
 import {IDataSyncStatus} from "common/Types"
+import {IIssue} from "common/models/Issue"
 
-export interface IIssuesState {
 
+export interface IIssueEdit {
+  issue: IIssue | null
+  open: boolean
 }
 
 export class AppState implements State<string> {
@@ -23,6 +26,11 @@ export class AppState implements State<string> {
 	selectedRepoId:number | null
 	selectedOrgId:number | null
   selectedIssueIds = Array<number>()
+
+	editing: IIssueEdit = {
+		open: false,
+		issue: null
+	}
 
 	customAccelerators:IAcceleratorMap
 
@@ -41,7 +49,10 @@ export class AppState implements State<string> {
 	}
 
 	toJS():Object {
-		return {...this, config: null}
+		return {...this, config: null, editing: {
+        open: false,
+				issue: null
+      }}
 	}
 
 

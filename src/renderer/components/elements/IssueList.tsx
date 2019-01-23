@@ -3,21 +3,31 @@ import getLogger from "common/log/Logger"
 import {
   Fill, FillHeight,
   FlexRowCenter,
-  IThemedProperties, NestedStyles, PositionRelative
+  IThemedProperties, makeTransition, mergeClasses, NestedStyles, PositionAbsolute, PositionRelative
 } from "renderer/styles/ThemedStyles"
 import {IIssue} from "common/models/Issue"
 import {IDataSet} from "common/Types"
 import IssueListItem from "renderer/components/elements/IssueListItem"
 import List, {ListRowProps} from "renderer/components/elements/List"
-import {useEffect, useState} from "react"
+import {useCallback, useEffect, useMemo, useRef, useState} from "react"
 import {getValue} from "typeguard"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {selectedIssueIdsSelector} from "common/store/selectors/AppSelectors"
 import {AppActionFactory} from "common/store/actions/AppActionFactory"
 import * as _ from 'lodash'
+import {isEqual} from 'lodash'
+import {makeCommandManagerAutoFocus} from "common/command-manager"
+import {issuesSortedAndFilteredSelector} from "common/store/selectors/DataSelectors"
+import {useFocused} from "renderer/command-manager-ui/CommandComponent"
+import FocusedDiv from "renderer/components/elements/FocusedDiv"
+import CommandContainerIds from "renderer/CommandContainers"
 
 const log = getLogger(__filename)
 
+const commandManagerOptions = {
+  tabIndex: -1,
+  autoFocus: makeCommandManagerAutoFocus(50)
+}
 
 function baseStyles(theme: Theme): NestedStyles {
   const
@@ -26,43 +36,59 @@ function baseStyles(theme: Theme): NestedStyles {
 
   return {
     root: [Fill, PositionRelative, {}],
-    issue: [FlexRowCenter, FillHeight, {}]
+    focused: [makeTransition('box-shadow'),Fill, PositionAbsolute, {
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      pointerEvents: "none",
+      boxShadow: "none",
+      "&.active": [theme.focus]
+    }]
   }
 }
 
+
+
 interface P extends IThemedProperties {
-  issues?: IDataSet<IIssue>
-  selectedIssueIds?: Array<number>
+
 }
 
-export default StyledComponent(baseStyles,{
-  issues: (state: IRootState) => state.DataState.issues,
+interface SP {
+  sortedIssues: IDataSet<IIssue>
+  selectedIssueIds: Array<number>
+}
+
+export default StyledComponent<P,SP>(baseStyles,{
+  sortedIssues: issuesSortedAndFilteredSelector,
   selectedIssueIds: selectedIssueIdsSelector
-})(function IssueList(props: P): React.ReactElement<P> {
+})(function IssueList(props: P & SP): React.ReactElement<P & SP> {
   const
-    {classes, selectedIssueIds, issues, ...other} = props,
-    [selectedIndexes,setSelectedIndexes] = useState(Array<number>())
+    {classes, selectedIssueIds, sortedIssues, ...other} = props,
+    id = CommandContainerIds.IssueList,
+    makeSelectedIndexes = ():Array<number> => selectedIssueIds
+      .map(id => sortedIssues.data.findIndex(issue => issue.id === id) as number)
+      .filter(index => index !== -1)
+      .sort(),
+    [selectedIndexes,setSelectedIndexes] = useState(makeSelectedIndexes)
 
   useEffect(() => {
-    const indexes = selectedIssueIds.map(id => issues.data.findIndex(issue => issue.id === id)).sort()
-
-    if (!indexes.every(index => selectedIndexes.includes(index)))
-      setSelectedIndexes(indexes)
-
-  },[selectedIssueIds])
+    const indexes = makeSelectedIndexes()
+    setSelectedIndexes(prevIndexes => isEqual(indexes,selectedIndexes) ? prevIndexes : indexes)
+  },[sortedIssues,selectedIssueIds])
 
 
-  function rowRenderer(rowProps: ListRowProps): React.ReactNode {
+  const rowRenderer = useCallback((rowProps: ListRowProps): React.ReactNode => {
     const
       {
         key,
         index,
         onClick,
         style,
+        dataSet,
         selectedIndexesContext
       } = rowProps,
-      {issues} = props,
-      issue = issues.data[index],
+      issue = dataSet.data[index],
       Consumer = getValue(() => selectedIndexesContext.Consumer, null as React.Consumer<Array<number>> | null)
 
 
@@ -73,16 +99,17 @@ export default StyledComponent(baseStyles,{
       {(selectedIndexes: Array<number> | null) => <IssueListItem
         style={style}
         issue={issue}
-        index={index}
         onClick={onClick}
         selected={selectedIndexes && selectedIndexes.includes(index)}
       />}
     </Consumer>
 
 
-  }
+  },[selectedIndexes,selectedIssueIds])
 
-  const updateSelectedIssues = _.debounce((dataSet: IDataSet<IIssue>,indexes:Array<number>):void => {
+
+
+  const updateSelectedIssues = useCallback((dataSet: IDataSet<IIssue>,indexes:Array<number>):void => {
     setImmediate(() => {
       const
         {data} = dataSet,
@@ -91,17 +118,19 @@ export default StyledComponent(baseStyles,{
       setSelectedIndexes(indexes)
       new AppActionFactory().setSelectedIssueIds(ids)
     })
-  }, 350)
+  },[setSelectedIndexes])
 
-
-  return <List
-    id="issues-list"
-    dataSet={issues}
+  return <FocusedDiv classes={{root:classes.root}}>
+    <List
+    id={id}
+    dataSet={sortedIssues}
+    commandManagerOptions={commandManagerOptions}
     onSelectedIndexesChanged={updateSelectedIssues}
     selectedIndexes={selectedIndexes}
     rowRenderer={rowRenderer}
     rowHeight={70}
     {...other as any}
   />
+  </FocusedDiv>
 
-} as any)
+})

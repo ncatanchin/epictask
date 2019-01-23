@@ -92,7 +92,7 @@ declare global {
 }
 
 
-export type CommandContainer = HTMLElement | React.ReactElement<any> | React.ReactNode | Electron.Menu
+export type CommandContainerElement = HTMLElement | React.ReactElement<any> | React.ReactNode | Electron.Menu
 
 
 /**
@@ -129,7 +129,7 @@ declare global {
 		/**
 		 * React Component
 		 */
-		container?:CommandContainer
+		container?:CommandContainerElement
 
 		/**
 		 * Execute the command, takes no args aside from the command
@@ -216,7 +216,7 @@ export class Command implements ICommand {
 
 
 	id:string
-	container:CommandContainer
+	container:CommandContainerElement
 	defaultAccelerator:TCommandDefaultAccelerator
 	overrideInput:boolean = false
 	hidden:boolean = false

@@ -16,6 +16,7 @@ import {Provider} from "react-redux"
 import getLogger from "common/log/Logger"
 
 import ThemeProvider from '@material-ui/styles/ThemeProvider'
+import HighlightStyles from "renderer/components/markdown/HighlightStyles"
 
 // const App = Loadable({
 //   loader: () => import("renderer/components/App"),
@@ -27,22 +28,23 @@ import ThemeProvider from '@material-ui/styles/ThemeProvider'
  */
 
 class Root extends React.Component<{}, {}> {
-  
+
   constructor(props, context) {
     super(props, context)
   }
-  
+
   render() {
     // ConnectedRouter will use the store from the Provider automatically
     return <Provider store={getReduxStore()}>
       <MuiThemeProvider theme={darkTheme}>
         <ThemeProvider theme={darkTheme}>
+          <HighlightStyles/>
           <App/>
         </ThemeProvider>
       </MuiThemeProvider>
     </Provider>
-    
-    
+
+
   }
 }
 

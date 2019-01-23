@@ -12,20 +12,23 @@ const log = getLogger(__filename)
 
 
 
-interface DetailsProps extends IThemedProperties {
-  issues?: Array<IIssue>
+interface P extends IThemedProperties {
+
+}
+
+interface SP {
+  issues: Array<IIssue>
 }
 
 const selectors = {
   issues: selectedIssuesSelector
 }
 
-export default StyledComponent(baseStyles, selectors)(function IssueDetails(props: DetailsProps): React.ReactElement<DetailsProps> {
+export default StyledComponent<P>(baseStyles, selectors)(function IssueDetails(props: P & SP): React.ReactElement<P & SP> {
   const {classes, issues = [], ...other} = props
-  return !issues.length ? <NoSelectedIssues classes={classes}/> :
+  return !issues || !issues.length ? <NoSelectedIssues classes={classes}/> :
     issues.length === 1 ?
-      <IssueView classes={classes} issue={issues[0]} {...other} />
-
+      <IssueView classes={classes} {...other} />
       : <div/>
 })
 

@@ -1,5 +1,5 @@
 import {ActionFactory, ActionMessage, ActionReducer, patchState} from "typedux"
-import {AppState} from "common/store/state/AppState"
+import {AppState, IIssueEdit} from "common/store/state/AppState"
 import {IConfig} from "common/config/Config"
 import {IActionFactoryBase} from "./ActionFactoryBase"
 import getLogger from "common/log/Logger"
@@ -30,6 +30,11 @@ export class AppActionFactory extends ActionFactory<AppState,ActionMessage<AppSt
 				splitter
 			}
 		})
+	}
+
+	@ActionReducer()
+	setEditing(editing:IIssueEdit) {
+		return (state:AppState) => patchState(state,{editing})
 	}
 
 	setSelectedRepo(selectedRepo:IRepo) {

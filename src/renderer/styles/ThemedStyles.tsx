@@ -224,6 +224,9 @@ export interface IThemePalette {
 	action: Color
 	success: Color
 	error: Color
+  open: Color
+  closed: Color
+  pr: Color
 }
 
 

@@ -1,5 +1,5 @@
 import * as React from "react"
-import {useEffect, useLayoutEffect, useRef, useState} from "react"
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from "react"
 import getLogger from "common/log/Logger"
 import {Fill, PositionRelative, withStatefulStyles} from "renderer/styles/ThemedStyles"
 import {
@@ -16,6 +16,7 @@ import * as _ from 'lodash'
 import useForceUpdate from "renderer/util/useForceUpdate"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {useCommandManager} from "renderer/command-manager-ui"
+import {ICommandManagerOptions} from "common/command-manager"
 
 const log = getLogger(__filename)
 
@@ -30,24 +31,26 @@ function baseStyles(theme): any {
   }
 }
 
-export type ListRowProps = VListRowProps & {
+export type ListRowProps<T = any> = VListRowProps & {
+  dataSet: IDataSet<T>
   selectedIndexesContext:React.Context<Array<number>>,
   onClick: () => void
 }
 
-export type ListRowRenderer = (props: ListRowProps) => React.ReactNode;
+export type ListRowRenderer<T = any> = (props: ListRowProps<T>) => React.ReactNode;
 
 interface P<T> extends StyledComponentProps<string>, Omit<VListProps, "rowCount"> {
   onSelectedIndexesChanged?: (dataSet: IDataSet<T>,indexes: number[]) => void
   selectedIndexes?: number[]
-  rowRenderer: ListRowRenderer
+  rowRenderer: ListRowRenderer<T>
   dataSet: IDataSet<T>
   id: string
   selectable?: boolean
+  commandManagerOptions?: Partial<ICommandManagerOptions>
 }
 
 
-export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): React.ReactNode {
+export default StyledComponent<P<any>>(baseStyles)(function List<T = any>(props: P<T>): React.ReactElement<P<T>> {
 
   const
     listRef = useRef<VList>(null),
@@ -57,6 +60,7 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
       selectable = true,
       dataSet, classes,
       selectedIndexes,
+      commandManagerOptions,
       onSelectedIndexesChanged,
       rowRenderer:finalRowRenderer,
       rowHeight,
@@ -73,45 +77,42 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
       if (selectable)
         builder
           .command("CommandOrControl+a", selectAll, {
-            overrideInput: true
+            overrideInput: false
           })
           .command("Escape", deselectAll)
           .command("Shift+ArrowDown", makeMoveSelection(1,true), {
-            overrideInput: true
+            overrideInput: false
           })
           .command("Shift+ArrowUp", makeMoveSelection(-1, true), {
-            overrideInput: true
+            overrideInput: false
           })
           .command("ArrowDown", makeMoveSelection(1), {
-            overrideInput: true
+            overrideInput: false
           })
           .command("ArrowUp", makeMoveSelection(-1), {
-            overrideInput: true
+            overrideInput: false
           })
       return builder.make()
-    }, rootRef),
-    forceUpdate = useForceUpdate()
+    }, rootRef,commandManagerOptions)
 
 
 
 
   useEffect(() => {
+    log.info("Updating list dataset")
     if (!dataSet) return
     const
       prevDataSet = dataSetRef.current,
       dataChanged = !_.isEqual(prevDataSet,dataSet)
-      //   !(dataSet && prevDataSet && prevDataSet.data.length === dataSet.data.length && prevDataSet.data.every(prevValue =>
-      //   !!dataSet.data.find(value => _.isEqual(value, prevValue))
-      // ))
 
+    log.info("Updating list dataset - change",dataChanged, prevDataSet, dataSet)
     if (!dataChanged) {
-      log.info("List data unchanged2")
       return
     }
     dataSetRef.current = dataSet
 
     listRef.current && listRef.current.forceUpdateGrid()
-  }, [dataSet])
+  }, [dataSet, dataSet.data, dataSet.total])
 
 
   useLayoutEffect(() => {
@@ -121,18 +122,12 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
     }
   }, [selectedIndexes])
 
-  // useEffect(() => {
-  //   listRef.current && listRef.current.forceUpdateGrid()
-  // }, [dataSetRef.current, listRef.current])
-
-
-
   /**
    * Set selected indexes
    *
    * @param newSelectedIndexes
    */
-  function setSelectedIndexes(newSelectedIndexes:number[]):void {
+  const setSelectedIndexes = useCallback((newSelectedIndexes:number[]):void => {
     if (!selectable || _.isEqual(newSelectedIndexes,internalSelectedIndexesRef.current)) return
 
     newSelectedIndexes = [...newSelectedIndexes]
@@ -143,7 +138,7 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
     if (isFunction(onSelectedIndexesChanged)) {
       onSelectedIndexesChanged(dataSetRef.current, newSelectedIndexes)
     }
-  }
+  },[dataSetRef.current, internalSelectedIndexes, selectedIndexes])
 
   /**
    * Select all items in the list
@@ -205,8 +200,9 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
    *
    * @param rowProps
    */
-  function rowRenderer(rowProps:VListRowProps):React.ReactNode {
+  const rowRenderer = useCallback((rowProps:VListRowProps):React.ReactNode => {
     return finalRowRenderer(Object.assign({},rowProps,{
+      dataSet,
       selectedIndexesContext,
       onClick: (event:React.MouseEvent) => {
         let newSelectedIndexes = [...internalSelectedIndexes]
@@ -233,19 +229,19 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
         setSelectedIndexes(newSelectedIndexes)
       }
     }) as any)
-  }
+  },[internalSelectedIndexes, dataSet, dataSetRef.current])
 
   const {Provider:SelectedIndexesProvider} = selectedIndexesContext
 
   return <div ref={rootRef} className={classes.root} {...commandManagerProps}>
-    {dataSetRef.current.total > 0 &&
+    {dataSet.total > 0 &&
     <SelectedIndexesProvider value={internalSelectedIndexes}>
       <VAutoSizer>
         {({width, height}) => <VList
           ref={listRef}
           height={height}
           width={width}
-          rowCount={dataSetRef.current.total}
+          rowCount={dataSet.total}
           rowHeight={rowHeight}
           rowRenderer={rowRenderer}
 
@@ -253,4 +249,4 @@ export default StyledComponent(baseStyles)(function List<T = any>(props: P<T>): 
       </VAutoSizer>
     </SelectedIndexesProvider>}
   </div>
-} as any)
+})

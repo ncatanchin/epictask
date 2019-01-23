@@ -1,19 +1,11 @@
 import * as React from "react"
 import getLogger from "common/log/Logger"
-import {IThemedProperties, StyleDeclaration, withStatefulStyles, NestedStyles} from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
+import {IThemedProperties} from "renderer/styles/ThemedStyles"
 import {StyledComponent} from "renderer/components/elements/StyledComponent"
 import {IIssue} from "common/models/Issue"
-import {useState} from "react"
-import {getIssueEvents, IIssueEventData} from "renderer/net/IssueAPI"
-import {useLayoutEffect} from "react"
-import PromisedData from "renderer/components/elements/PromisedData"
 import baseStyles from "renderer/components/elements/IssueDetails.styles"
-import {Typography} from "@material-ui/core"
-import Moment from "react-moment"
-import {GithubDate} from "renderer/util/UIHelper"
-import Avatar from "renderer/components/elements/Avatar"
+import IssueListItem from "renderer/components/elements/IssueListItem"
+import {IssueComment} from "renderer/components/elements/IssueEvents"
 
 const log = getLogger(__filename)
 
@@ -25,21 +17,11 @@ interface P extends IThemedProperties {
 
 
 
-export default StyledComponent(baseStyles)(function IssueInfo(props: P): React.ReactElement<P> {
+export default StyledComponent<P>(baseStyles)(function IssueInfo(props: P): React.ReactElement<P> {
     const {classes, issue,...other} = props
 
-    return <div className={classes.info} {...other}>
-      <Typography variant="h6" className="number" component="div">
-        #{issue.number}
-      </Typography>
-      <div className="top">
-        <Typography variant="h6" className="title" component="div">
-          {issue.title}
-        </Typography>
-        <Typography variant="subtitle1" className="subtitle" component="div">
-          <Avatar user={issue.user} text picture={false}/> opened this issue on <GithubDate timestamp={issue.created_at}/> - {issue.comments} comments
-        </Typography>
-      </div>
-    </div>
+    return <>
+      <IssueListItem issue={issue} info />
+    </>
   }
 )

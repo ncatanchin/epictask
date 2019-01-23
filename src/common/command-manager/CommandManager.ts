@@ -4,30 +4,32 @@ import * as Electron from 'electron'
 import {EnumEventEmitter} from 'type-enum-events'
 import * as _ from 'lodash'
 import {
-  CommandContainer,
+  CommandContainerElement,
+  CommandExecutor,
+  CommandMenuItemType,
   CommandType,
-  ICommandMenuManagerProvider,
+  CommonKeys,
+  ICommandMenuItem,
   ICommandMenuManager,
-  ICommandMenuItem, CommandExecutor, TCommandDefaultAccelerator, CommandMenuItemType, TCommandIcon
+  ICommandMenuManagerProvider,
+  TCommandDefaultAccelerator,
+  TCommandIcon
 } from "./Command"
 import {CommandAccelerator} from "./CommandAccelerator"
 import {InputTagNames, isElectron} from "./CommandManagerConfig"
-import {
-  addWindowListener,
-  removeWindowListener,
-  getCommandBrowserWindow
-} from "./CommandManagerUtil"
-import {getValue, isNil, isNumber, isString} from "typeguard"
+import {addWindowListener, getCommandBrowserWindow, removeWindowListener} from "./CommandManagerUtil"
+import {getValue, guard, isNil, isNumber, isString} from "typeguard"
 import getLogger from "common/log/Logger"
 import {acceptHot, getHot, setDataOnHotDispose} from "common/HotUtil"
 import {isMain, isRenderer} from "common/Process"
-import {getZIndex, isReactComponent} from "common/UIUtil"
+import {getZIndex, isHTMLElement, isReactComponent} from "common/UIUtil"
 import Commands from "common/command-manager/CommandStore"
 import * as ReactDOM from "react-dom"
 import {cloneObjectShallow} from "common/ObjectUtil"
 import {getWindowId} from "common/ElectronUtil"
 import {StringMap} from "common/Types"
 import {shortId} from "common/IdUtil"
+import Scheduler, {ITimerRegistration} from "common/Scheduler"
 
 
 const
@@ -45,6 +47,36 @@ const
 //log.setOverrideLevel(LogLevel.DEBUG)
 
 
+export interface ICommandManagerAutoFocus {
+  enabled: boolean
+  priority: number
+}
+
+export interface ICommandManagerOptions {
+  autoFocus: ICommandManagerAutoFocus
+  tabIndex: number
+}
+
+
+export const DefaultCommandManagerOptions = {
+  tabIndex: -1,
+  autoFocus: {
+    enabled: false,
+    priority: 10
+  }
+} as ICommandManagerOptions
+
+/**
+ *
+ * @param priority - higher priority = more likely to gain focus
+ */
+export function makeCommandManagerAutoFocus(priority: number = 1):ICommandManagerAutoFocus {
+  return {
+    enabled: true,
+    priority
+  }
+}
+
 export interface ICommandContainerItems {
   commands: ICommand[]
   menuItems: ICommandMenuItem[]
@@ -57,9 +89,10 @@ export type CommandItemsCreator = (builder: CommandContainerBuilder) => ICommand
  */
 export interface ICommandContainerRegistration {
   id: string
-  container: CommandContainer
-  element?: CommandContainer
+  container: CommandContainerElement
+  element?: CommandContainerElement
   available: boolean
+  options: ICommandManagerOptions
   focused: boolean
   commands?: ICommand[]
   menuItems?: ICommandMenuItem[]
@@ -90,7 +123,8 @@ export interface ICommandAcceleratorDataSource {
 export type CommandKeyInterceptor = (event: KeyboardEvent) => any
 
 export enum CommandManagerEvent {
-  KeyDown = 1
+  FocusChanged = 1,
+  KeyDown = 2
 }
 
 /**
@@ -106,6 +140,8 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     return instanceContainer.instance
   }
 
+
+  private focusCheckInterval:ITimerRegistration | null = null
 
   /**
    * Menu Manager Provider
@@ -161,6 +197,10 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    */
   private containers: { [containerId: string]: ICommandContainerRegistration } = {}
 
+  private get containersArray():Array<ICommandContainerRegistration> {
+    return Object.values(this.containers)
+  }
+
   /**
    * Private constructor for creating the command manager
    */
@@ -172,12 +212,48 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 
   }
 
-  isFocused(idOrContainer) {
-    return !isNil(this.focusedContainers().find(reg => reg.id === idOrContainer || reg.container === idOrContainer))
+  private focusCheck = ():void => {
+    const focusedContainers = this.focusedContainers()
+    if (focusedContainers.length) return
+
+    const autoFocusContainers = this.containersArray
+      .filter(reg => getValue(() => reg.options.autoFocus.enabled,false))
+      .sortBy(reg => reg.options.autoFocus.priority,true)
+
+    //log.info("Auto focus containers", autoFocusContainers)
+    const focusContainer = autoFocusContainers[0]
+    if (focusContainer) {
+      this.focusOnContainer(focusContainer.id,false)
+    }
+
+  }
+
+  isFocused(idOrElement:string | HTMLElement) {
+    const
+      element = isString(idOrElement) ? document.querySelector(`#${idOrElement}`) : idOrElement,
+      id = isString(idOrElement) ? idOrElement : (element.getAttribute("id") || "none"),
+      focusedContainers = this.focusedContainers()
+
+    let focusedContainer = focusedContainers.find(reg => reg.id === id || reg.container === element || reg.element === element)
+    if (!focusedContainer && isHTMLElement(element)) {
+      focusedContainer = focusedContainers
+        .find(reg =>
+          reg.id === id ||
+          [reg.element,reg.container]
+            .some(parent =>
+              getValue(() => element.contains(parent as any)) ||
+              getValue(() => element === parent)
+            )
+        )
+    }
+    return !isNil(focusedContainer) && focusedContainer.focused
+
+          // getValue(() => idOrElement.contains(reg.element as HTMLElement)) ||
+          // getValue(() => idOrElement.contains(reg.container as HTMLElement))))
   }
 
   private static getContainerElement({element}: ICommandContainerRegistration) {
-    return (isReactComponent(element) ? ReactDOM.findDOMNode(element) : element) as HTMLElement
+    return element instanceof HTMLElement ? element : (isReactComponent(element) ? ReactDOM.findDOMNode(element) : element) as HTMLElement
   }
 
   private static isFocusedContainer(container: ICommandContainerRegistration) {
@@ -469,6 +545,13 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    */
   attachEventHandlers() {
     if (typeof window !== 'undefined') {
+      if (this.focusCheckInterval) {
+        Scheduler.clear(this.focusCheckInterval)
+        this.focusCheckInterval = null
+      }
+
+      this.focusCheckInterval = Scheduler.createInterval(this.focusCheck, 150)
+
       if (!this.windowListeners) {
         this.windowListeners = {
           focus: {
@@ -489,16 +572,6 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
         this.bodyListeners = {
           focus: this.onBodyFocus,
           blur: this.onBodyBlur
-          // focus: {
-          // 	listener:this.onWindowFocus,
-          // 	attacher: addBrowserWindowListener,
-          // 	detacher: removeBrowserWindowListener
-          // },
-          // blur: {
-          // 	listener: this.onWindowBlur,
-          // 	attacher: addBrowserWindowListener,
-          // 	detacher: removeBrowserWindowListener
-          // }
         }
 
 
@@ -548,13 +621,15 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param id
    * @param container
    * @param available
+   * @param options
+   * @return {ICommandContainerRegistration}
    */
-  private getContainerRegistration(id: string, container: CommandContainer, available: boolean): ICommandContainerRegistration {
+  private getContainerRegistration(id: string, container: CommandContainerElement, available: boolean, options: ICommandManagerOptions): ICommandContainerRegistration {
     let
       reg = this.containers[id]
 
     const
-      element: CommandContainer = (isReactComponent(container) &&
+      element: CommandContainerElement = (isReactComponent(container) &&
         ReactDOM.findDOMNode(container) as HTMLElement) || container
 
     if (!reg) {
@@ -565,8 +640,11 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
         focused: false,
         commands: [],
         menuItems: [],
-        element
+        element,
+        options
       }
+
+      log.info("Registered container", reg)
     } else {
       reg.element = element as any
       reg.available = available
@@ -935,7 +1013,7 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     return _.uniqBy(this.getMenuItemsFromCommands(...commands).concat(menuItems), 'id') as any
   }
 
-  unregisterContainer(id: string, container: CommandContainer) {
+  unregisterContainer(id: string, container: CommandContainerElement) {
     if (this.containers[id]) {
       delete this.containers[id]
     } else {
@@ -959,13 +1037,20 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param container
    * @param commands
    * @param menuItems
+   * @param options
    */
-  registerContainerItems(id: string, container: CommandContainer, commands: ICommand[], menuItems: ICommandMenuItem[]) {
+  registerContainerItems(
+    id: string,
+    container: CommandContainerElement,
+    commands: ICommand[],
+    menuItems: ICommandMenuItem[],
+    options: ICommandManagerOptions = {...DefaultCommandManagerOptions}
+  ) {
 
     this.registerItems(commands, menuItems)
 
     const
-      reg = this.getContainerRegistration(id, container, true)
+      reg = this.getContainerRegistration(id, container, true, options)
 
     // UPDATE COMMANDS ON CONTAINER REG
     reg.commands = commands
@@ -988,15 +1073,16 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param id
    * @param container
    * @param commands
+   * @param options
    */
-  unregisterContainerCommand(id: string, container: CommandContainer, ...commands: ICommand[]) {
+  unregisterContainerCommand(id: string, container: CommandContainerElement, options:ICommandManagerOptions, ...commands: ICommand[]) {
     commands.forEach(cmd => {
       log.debug(`Removing command`, cmd.id)
       delete this.commands[cmd.id]
     })
 
     const
-      reg = this.getContainerRegistration(id, container, false)
+      reg = this.getContainerRegistration(id, container, false,options)
 
     //status.commands = status.commands.filter(cmd => !commands.find(it => it.id === cmd.id))
     this.unregisterItems(reg.commands, reg.menuItems)
@@ -1027,34 +1113,16 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
             e2.contains(e1) ? -1 : 0
         })
 
-      // focusedContainers =
-      //   allContainers
-      //     .filter(it => !!it.element && (it.element.contains(document.activeElement) || it.element === document.activeElement))
-      //     .sort((c1, c2) =>
-      //       c1.element.contains(c2.element) ? 1 :
-      //         c2.element.contains(c1.element) ? -1 : 0)
-
-    // log.info(`Focused on container ${id}, target element`, event.target, `activeElement`, document.activeElement,
-    //   allContainers,
-    //   focusedContainers)
 
     Object
       .entries(this.containers)
       .forEach(([id, status]) => {
         const
-          //status = this.getContainerRegistration(id,container,true),
           {commands} = status
 
-        //TODO: mark others as not focused
 
         status.focused = focusedContainers.includes(status)
-        //log.info("focused commands", status)
-        if (status.focused && status.container) {
-          //guard(() => (status.element as any).onFocus(event))
-        } else if (!status.focused && status.container) {
-          //guard(() => (status.container as any).onBlur())
-          //guard(() => (status.element as any).onBlur())
-        }
+
 
         if (commands) {
           if (status.focused) {
@@ -1071,16 +1139,19 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
 
       })
 
+    log.debug("Focused", focusedContainers)
+    this.emit(CommandManagerEvent.FocusChanged)
+
     // LOG THE FOCUS IDS
     if (DEBUG && isRenderer()) {
       $("#focusedContainers").remove()
       $(`<div id="focusedContainers">${
-        this.focusedContainers()
+        focusedContainers
           .map(it => {
             const element = CommandManager.getContainerElement(it)
             return element.id || `${element.tagName}`
           })
-          .join(' >>> ')
+          .join(" >>> ")
         }</div>`)
         .css({
           position: 'absolute',
@@ -1089,7 +1160,8 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
           background: 'white',
           color: 'back',
           zIndex: 100000
-        }).appendTo($('body'))
+        })
+        .appendTo($(document.body))
     }
 
     return status
@@ -1101,10 +1173,12 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
    * @param id
    * @param container
    * @param available
+   * @param options
+   * @return {ICommandContainerRegistration}
    */
-  setContainerMounted(id: string, container: CommandContainer, available: boolean) {
+  setContainerMounted(id: string, container: CommandContainerElement, available: boolean, options:ICommandManagerOptions) {
     const
-      reg = this.getContainerRegistration(id, container, available)
+      reg = this.getContainerRegistration(id, container, available,options)
 
     if (getValue(() => reg.commands.length, 0) || getValue(() => reg.menuItems.length, 0)) {
       if (available) {
@@ -1126,40 +1200,25 @@ export class CommandManager extends EnumEventEmitter<CommandManagerEvent> {
     const
       containerReg = this.containers[containerId]
 
-    // if (DEBUG) {
-    // 	assert(containerReg, `Unknown container ${containerId}`)
-    // 	assert(containerReg.container && containerReg.element, `only ui containers can be focused, element is not
-    // available`) }
-
     if (!containerReg || !containerReg.element) {
       log.warn(`No container found for ${containerId}`)
       return
     }
 
-
     const
       doFocus = (): void => {
         const
-          {element} = containerReg
+          {element} = containerReg,
+        	focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
+        		relatedTarget: element as any
+        	}) : document.createEvent("FocusEvent")
 
-        // log.debug(`Focusing on ${containerId}`, element)
-        // const
-        // 	focusEvent = (window as any).FocusEvent ? new FocusEvent('focus', {
-        // 		relatedTarget: element
-        // 	}) : document.createEvent("FocusEvent")
-        //
-        // element.dispatchEvent(focusEvent)
+        ;(element as any).dispatchEvent(focusEvent)
+        $(element).focus()
         //$('#issuesPanel').focus()
       }
 
     doFocus()
-    // if (skipEvent) {
-    //
-    // } else if (document.activeElement) {
-    // 	$(document.activeElement).blur()
-    // 	setTimeout(doFocus,150)
-    // } else
-    // 	doFocus()
   }
 }
 
@@ -1226,9 +1285,29 @@ declare global {
  */
 export class CommandContainerBuilder {
 
+  static createCommand(
+    container: CommandContainerElement,
+    containerId: string,
+    defaultAccelerator: TCommandDefaultAccelerator,
+    execute: CommandExecutor,
+    opts: ICommand = {}
+  ) {
+
+    return _.assign({
+        id: opts.id || (containerId && `${containerId}-${shortId()}`),
+        type: CommandType.Container,
+        execute,
+        defaultAccelerator,
+        container,
+        element: container
+      }, opts) as ICommand
+  }
+
   private commands: ICommand[] = []
 
   private menuItems: ICommandMenuItem[] = []
+
+  private omitEscape = false
 
   /**
    * Create with a container
@@ -1236,24 +1315,56 @@ export class CommandContainerBuilder {
    * @param container
    * @param containerId
    */
-  constructor(public container: CommandContainer, public containerId: string = (container as any).id || $(container).attr("id")) {
+  constructor(
+    public container: CommandContainerElement,
+    public containerId: string = (container as any).id || $(container).attr("id")
+  ) {
+    this.commands = [CommandContainerBuilder.createCommand(
+      container,
+      containerId,
+      CommonKeys.Escape,
+      () => {
+        log.debug("Default blur", containerId, container)
+        guard(() => (container as any).blur())
+      },
+      {
+        id: "default-blur-focus",
+        overrideInput: true
+      }
+    )]
 
+  }
+
+  private pushCommand(newCmd:ICommand):this {
+    this.commands =
+      [
+        ...this.commands.filter(cmd => cmd.accelerator !== newCmd.defaultAccelerator),
+        ...(newCmd.defaultAccelerator === CommonKeys.Escape && this.omitEscape ? [] : [newCmd])
+      ]
+
+    return this
+  }
+
+  ignoreEscape(omitEscape:boolean = true):this {
+    this.omitEscape = omitEscape
+
+    if (omitEscape)
+      this.commands = this.commands.filter(cmd => cmd.defaultAccelerator !== CommonKeys.Escape)
+
+    return this
   }
 
   useCommand(
     command: ICommand,
     execute: CommandExecutor,
     opts: ICommand = {}
-  ) {
+  ):this {
     assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
     assert(command && command.id && !command.execute, `Command must be valid with ID and execute must be null`)
 
-    const
-      cmd = _.assign({}, command, {execute}, opts) as ICommand
+    const cmd = _.assign({}, command, {execute}, opts) as ICommand
 
-    this.commands.push(cmd)
-
-    return this
+    return this.pushCommand(cmd)
   }
 
   /**
@@ -1271,20 +1382,9 @@ export class CommandContainerBuilder {
 
     assert(this instanceof CommandContainerBuilder, 'Must be an instance of CommandContainerBuilder')
 
-    const
-      {containerId, container} = this,
-      cmd = _.assign({
-        id: opts.id || (containerId && `${containerId}-${shortId()}`),
-        type: CommandType.Container,
-        execute,
-        defaultAccelerator,
-        container,
-        element: container
-      }, opts) as ICommand
+    const cmd = CommandContainerBuilder.createCommand(this.container,this.containerId,defaultAccelerator,execute,opts)
 
-    this.commands.push(cmd)
-
-    return this
+    return this.pushCommand(cmd)
   }
 
 
@@ -1402,6 +1502,8 @@ export class CommandContainerBuilder {
   }
 
 }
+
+
 
 /**
  * Update the singleton on HMR reload & set root clazz

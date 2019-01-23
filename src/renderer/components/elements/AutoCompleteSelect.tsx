@@ -1,39 +1,20 @@
 import * as React from "react"
+import {useEffect, useMemo, useState} from "react"
 import getLogger from "common/log/Logger"
-import {
-  Ellipsis,
-  FillWidth,
-  FlexAuto, FlexRowCenter,
-  IThemedProperties,
-  makeWidthConstraint, mergeClasses, PositionRelative, rem,
-  StyleDeclaration, ViewportMode,
-  withStatefulStyles
-} from "renderer/styles/ThemedStyles"
-import {createStructuredSelector} from "reselect"
-import {connect} from "common/util/ReduxConnect"
+import {IThemedProperties, mergeClasses, ViewportMode} from "renderer/styles/ThemedStyles"
 import Typography from '@material-ui/core/Typography'
-import NoSsr from '@material-ui/core/NoSsr'
-import TextField, {TextFieldProps} from '@material-ui/core/TextField'
-import Paper from '@material-ui/core/Paper'
-import Chip from '@material-ui/core/Chip'
+import {TextFieldProps} from '@material-ui/core/TextField'
 import MenuItem from '@material-ui/core/MenuItem'
-import CancelIcon from '@material-ui/icons/Cancel'
-import {emphasize} from '@material-ui/core/styles/colorManipulator'
 
 import withStyles, {StyledComponentProps} from "@material-ui/core/styles/withStyles"
-import {ControlProps} from "react-select/lib/components/Control"
-import {getValue, guard} from "typeguard"
-import {hot} from "react-hot-loader"
+import {getValue} from "typeguard"
 import baseStyles from "renderer/components/elements/AutoCompleteSelect.styles"
-import Elevation, {elevationStyles} from "renderer/components/elements/Elevation"
-import {Input} from "@material-ui/core"
+import {elevationStyles} from "renderer/components/elements/Elevation"
 import {Props as SelectProps} from "react-select/lib/Select"
-import Tooltip from "@material-ui/core/Tooltip/Tooltip"
-import ListItem from "@material-ui/core/ListItem"
 import ReactSelect from "react-select"
 import {IRepo} from "common/models/Repo"
-import {useEffect, useState} from "react"
 import {StyledComponent, StyledElement} from "renderer/components/elements/StyledComponent"
+import {CommandManagerProps} from "renderer/command-manager-ui"
 
 const
   log = getLogger(__filename),
@@ -193,6 +174,7 @@ interface InnerP extends IThemedProperties {
 }
 
 interface P<T = any> extends SelectProps<T>, StyledComponentProps<string> {
+  commandManagerProps?: CommandManagerProps
   selectRef?: React.Ref<ReactSelect<IRepo>> | React.RefObject<ReactSelect<IRepo>>
   viewportMode?: ViewportMode
   isMobile?: boolean
@@ -222,9 +204,11 @@ interface P<T = any> extends SelectProps<T>, StyledComponentProps<string> {
 // }
 
 
-export default StyledComponent<any,any,P, any>(baseStyles, {withTheme: true, withRef: true})(function AutoCompleteSelect<T>(props:P<T>): StyledElement<P<T>> {
+export default StyledComponent<P>(baseStyles, {withTheme: true, withRef: true})(function AutoCompleteSelect<T>(props:P<T>): StyledElement<P<T>> {
   const
     {
+      id,
+      commandManagerProps = {},
       isClearable = false,
       options = Array<T>(),
       classes,
@@ -246,7 +230,7 @@ export default StyledComponent<any,any,P, any>(baseStyles, {withTheme: true, wit
     setCurrentOptions(options)
   },[options])
 
-  const selectStyles = {
+  const selectStyles = useMemo(() => ({
     menuPortal: base => {
       return ({
         ...base,
@@ -255,9 +239,16 @@ export default StyledComponent<any,any,P, any>(baseStyles, {withTheme: true, wit
       })
     },
     ...(styles || {})
-  }
+  }),[])
 
-  return <div ref={innerRef} className={mergeClasses(classes.root, customClasses.root)}>
+  // const {props = {}} = id ? useCommandManager(id,builder => builder.make(),ReactDOM.findDOMNode(innerRef as any)) : {props: {}}
+  //
+  return <div
+    id={id}
+    ref={innerRef}
+    className={mergeClasses(classes.root, customClasses.root)}
+    {...commandManagerProps}
+  >
     <Select
       ref={selectRef}
       styles={selectStyles}
@@ -276,7 +267,7 @@ export default StyledComponent<any,any,P, any>(baseStyles, {withTheme: true, wit
       menuPortalTarget={document.body}
       customClasses={customClasses}
       isSearchable
-      {...props}
+      {...other}
     />
   </div>
 })
